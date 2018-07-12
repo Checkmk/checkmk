@@ -8580,8 +8580,7 @@ class ModeNotifications(NotificationsMode):
             table.cell(_("Service"), context.get("SERVICEDESC", ""))
             output = context.get("SERVICEOUTPUT", context.get("HOSTOUTPUT"))
 
-            import cmk.gui.views as views
-            table.cell(_("Plugin output"), views.format_plugin_output(output))
+            table.cell(_("Plugin output"), utils.format_plugin_output(output, shall_escape=config.escape_plugin_output))
 
             # Add toggleable notitication context
             table.row(class_="notification_context hidden",

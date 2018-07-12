@@ -45,7 +45,7 @@ import cmk.gui.config as config
 import cmk.gui.sites as sites
 import cmk.gui.visuals as visuals
 import cmk.gui.forms as forms
-import cmk.gui.utils as utils
+import cmk.gui.utils
 from cmk.gui.log import logger
 from cmk.gui.htmllib import HTML
 from cmk.gui.i18n import _
@@ -339,69 +339,12 @@ def paint_stalified(row, text):
         return "", text
 
 
-# There is common code with modules/events.py:format_plugin_output(). Please check
-# whether or not that function needs to be changed too
-# TODO(lm): Find a common place to unify this functionality.
-def format_plugin_output(output, row = None):
-    ok_marker      = '<b class="stmark state0">OK</b>'
-    warn_marker    = '<b class="stmark state1">WARN</b>'
-    crit_marker    = '<b class="stmark state2">CRIT</b>'
-    unknown_marker = '<b class="stmark state3">UNKN</b>'
-
-    shall_escape = config.escape_plugin_output
-
-    # In case we have a host or service row use the optional custom attribute
-    # ESCAPE_PLUGIN_OUTPUT (set by host / service ruleset) to override the global
-    # setting.
-    if row:
-        custom_vars = row.get("service_custom_variables", row.get("host_custom_variables", {}))
-        if "ESCAPE_PLUGIN_OUTPUT" in custom_vars:
-            shall_escape = custom_vars["ESCAPE_PLUGIN_OUTPUT"] == "1"
-
-    if shall_escape:
-        output = html.attrencode(output)
-
-    output = output.replace("(!)", warn_marker) \
-              .replace("(!!)", crit_marker) \
-              .replace("(?)", unknown_marker) \
-              .replace("(.)", ok_marker)
-
-    if row and "[running on" in output:
-        a = output.index("[running on")
-        e = output.index("]", a)
-        hosts = output[a+12:e].replace(" ","").split(",")
-        css, h = paint_host_list(row["site"], hosts)
-        output = output[:a] + "running on " + h + output[e+1:]
-
-    if shall_escape:
-        # (?:&lt;A HREF=&quot;), (?: target=&quot;_blank&quot;&gt;)? and endswith(" </A>") is a special
-        # handling for the HTML code produced by check_http when "clickable URL" option is active.
-        output = re.sub("(?:&lt;A HREF=&quot;)?(http[s]?://[^\"'>\\s,]+)(?: target=&quot;_blank&quot;&gt;)?","'])")
-                         lambda p: '<a href="%s"><img class=pluginurl align=absmiddle title="%s" src="images/pluginurl.png"></a>' %
-                            (p.group(1).replace('&quot;', ''), p.group(1).replace('&quot;', '')), output)
-
-        if output.endswith(" &lt;/A&gt;"):
-            output = output[:-11]
-
-    return output
-
-
 def paint_host_list(site, hosts):
-    entries = []
-    for host in hosts:
-        args = [
-            ("view_name", "hoststatus"),
-            ("site",      site),
-            ("host",      host),
-        ]
+    return "", HTML(", ").join(cmk.gui.utils.get_host_list_links(site, hosts))
 
-        if html.var("display_options"):
-            args.append(("display_options", html.var("display_options")))
 
-        url = html.makeuri_contextless(args, filename="view.py")
-        entries.append(html.render_a(host, href=url))
-
-    return "", HTML(", ").join(entries)
+def format_plugin_output(output, row):
+    return cmk.gui.utils.format_plugin_output(output, row, shall_escape=config.escape_plugin_output)
 
 
 def link_to_view(content, row, view_name):
@@ -419,9 +362,7 @@ def url_to_view(row, view_name):
     if display_options.disabled(display_options.I):
         return None
 
-    # TODO: Restructure views.py to make this accessible here without local import
-    from cmk.gui.views import permitted_views
-    view = permitted_views().get(view_name)
+    view = get_permitted_views(load_all_views()).get(view_name)
     if view:
         # Get the context type of the view to link to, then get the parameters of this
         # context type and try to construct the context from the data of the row
@@ -575,7 +516,7 @@ def cmp_simple_number(column, r1, r2):
 
 
 def cmp_num_split(column, r1, r2):
-    return utils.cmp_num_split(r1[column].lower(), r2[column].lower())
+    return cmk.gui.utils.cmp_num_split(r1[column].lower(), r2[column].lower())
 
 
 def cmp_simple_string(column, r1, r2):
@@ -873,6 +814,173 @@ def render_cache_info(what, row):
     return text
 
 
+def load_all_views():
+    # Skip views which do not belong to known datasources
+    all_views = visuals.load('views', multisite_builtin_views,
+                    skip_func = lambda v: v['datasource'] not in multisite_datasources)
+    return _transform_old_views(all_views)
+
+
+def get_permitted_views(all_views):
+    return visuals.available('views', all_views)
+
+
+# Convert views that are saved in the pre 1.2.6-style
+# FIXME: Can be removed one day. Mark as incompatible change or similar.
+def _transform_old_views(all_views):
+    for view in all_views.values():
+        ds_name    = view['datasource']
+        datasource = multisite_datasources[ds_name]
+
+        if "context" not in view: # legacy views did not have this explicitly
+            view.setdefault("user_sortable", True)
+
+        if 'context_type' in view:
+            # This code transforms views from user_views.mk which have been migrated with
+            # daily snapshots from 2014-08 till beginning 2014-10.
+            visuals.transform_old_visual(view)
+
+        elif 'single_infos' not in view:
+            # This tries to map the datasource and additional settings of the
+            # views to get the correct view context
+            #
+            # This code transforms views from views.mk (legacy format) to the current format
+            try:
+                hide_filters = view.get('hide_filters')
+
+                if 'service' in hide_filters and 'host' in hide_filters:
+                    view['single_infos'] = ['service', 'host']
+                elif 'service' in hide_filters and 'host' not in hide_filters:
+                    view['single_infos'] = ['service']
+                elif 'host' in hide_filters:
+                    view['single_infos'] = ['host']
+                elif 'hostgroup' in hide_filters:
+                    view['single_infos'] = ['hostgroup']
+                elif 'servicegroup' in hide_filters:
+                    view['single_infos'] = ['servicegroup']
+                elif 'aggr_service' in hide_filters:
+                    view['single_infos'] = ['service']
+                elif 'aggr_name' in hide_filters:
+                    view['single_infos'] = ['aggr']
+                elif 'aggr_group' in hide_filters:
+                    view['single_infos'] = ['aggr_group']
+                elif 'log_contact_name' in hide_filters:
+                    view['single_infos'] = ['contact']
+                elif 'event_host' in hide_filters:
+                    view['single_infos'] = ['host']
+                elif hide_filters == ['event_id', 'history_line']:
+                    view['single_infos'] = ['history']
+                elif 'event_id' in hide_filters:
+                    view['single_infos'] = ['event']
+                elif 'aggr_hosts' in hide_filters:
+                    view['single_infos'] = ['host']
+                else:
+                    # For all other context types assume the view is showing multiple objects
+                    # and the datasource can simply be gathered from the datasource
+                    view['single_infos'] = []
+            except: # Exceptions can happen for views saved with certain GIT versions
+                if config.debug:
+                    raise
+
+        # Convert from show_filters, hide_filters, hard_filters and hard_filtervars
+        # to context construct
+        if 'context' not in view:
+            view['show_filters'] = view['hide_filters'] + view['hard_filters'] + view['show_filters']
+
+            single_keys = visuals.get_single_info_keys(view)
+
+            # First get vars for the classic filters
+            context = {}
+            filtervars = dict(view['hard_filtervars'])
+            all_vars = {}
+            for filter_name in view['show_filters']:
+                if filter_name in single_keys:
+                    continue # skip conflictings vars / filters
+
+                context.setdefault(filter_name, {})
+                try:
+                    f = visuals.get_filter(filter_name)
+                except:
+                    # The exact match filters have been removed. They where used only as
+                    # link filters anyway - at least by the builtin views.
+                    continue
+
+                for var in f.htmlvars:
+                    # Check whether or not the filter is supported by the datasource,
+                    # then either skip or use the filter vars
+                    if var in filtervars and f.info in datasource['infos']:
+                        value = filtervars[var]
+                        all_vars[var] = value
+                        context[filter_name][var] = value
+
+                # We changed different filters since the visuals-rewrite. This must be treated here, since
+                # we need to transform views which have been created with the old filter var names.
+                # Changes which have been made so far:
+                changed_filter_vars = {
+                    'serviceregex': { # Name of the filter
+                        # old var name: new var name
+                        'service': 'service_regex',
+                    },
+                    'hostregex': {
+                        'host': 'host_regex',
+                    },
+                    'hostgroupnameregex': {
+                        'hostgroup_name': 'hostgroup_regex',
+                    },
+                    'servicegroupnameregex': {
+                        'servicegroup_name': 'servicegroup_regex',
+                    },
+                    'opthostgroup': {
+                        'opthostgroup': 'opthost_group',
+                        'neg_opthostgroup': 'neg_opthost_group',
+                    },
+                    'optservicegroup': {
+                        'optservicegroup': 'optservice_group',
+                        'neg_optservicegroup': 'neg_optservice_group',
+                    },
+                    'hostgroup': {
+                        'hostgroup': 'host_group',
+                        'neg_hostgroup': 'neg_host_group',
+                    },
+                    'servicegroup': {
+                        'servicegroup': 'service_group',
+                        'neg_servicegroup': 'neg_service_group',
+                    },
+                    'host_contactgroup': {
+                        'host_contactgroup': 'host_contact_group',
+                        'neg_host_contactgroup': 'neg_host_contact_group',
+                    },
+                    'service_contactgroup': {
+                        'service_contactgroup': 'service_contact_group',
+                        'neg_service_contactgroup': 'neg_service_contact_group',
+                    },
+                }
+
+                if filter_name in changed_filter_vars and f.info in datasource['infos']:
+                    for old_var, new_var in changed_filter_vars[filter_name].items():
+                        if old_var in filtervars:
+                            value = filtervars[old_var]
+                            all_vars[new_var] = value
+                            context[filter_name][new_var] = value
+
+            # Now, when there are single object infos specified, add these keys to the
+            # context
+            for single_key in single_keys:
+                if single_key in all_vars:
+                    context[single_key] = all_vars[single_key]
+
+            view['context'] = context
+
+        # Cleanup unused attributes
+        for k in [ 'hide_filters', 'hard_filters', 'show_filters', 'hard_filtervars' ]:
+            try:
+                del view[k]
+            except KeyError:
+                pass
+
+    return all_views
+
+
 #.
 #   .--Cells---------------------------------------------------------------.
 #   |                           ____     _ _                               |
@@ -956,9 +1064,7 @@ class Cell(object):
             # Make sure that the information about the available views is present. If
             # called via the reporting, then this might not be the case
             # TODO: Move this to some better place.
-            # TODO: Restructure views.py to make this accessible here without local import
-            from cmk.gui.views import permitted_views
-            views = permitted_views()
+            views = get_permitted_views(load_all_views())
 
             if self._has_link():
                 link_view = self._link_view()
@@ -987,8 +1093,7 @@ class Cell(object):
 
     def _link_view(self):
         try:
-            import cmk.gui.views # TODO: Cleanup
-            return cmk.gui.views.get_view_by_name(self._link_view_name)
+            return get_permitted_views(load_all_views())[self._link_view_name]
         except KeyError:
             return None
 

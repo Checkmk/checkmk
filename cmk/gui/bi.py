@@ -33,6 +33,7 @@ import fcntl
 import md5
 import copy
 import multiprocessing
+import pprint
 from contextlib import contextmanager
 import traceback
 
@@ -42,6 +43,7 @@ import cmk
 import cmk.gui.config as config
 import cmk.gui.sites as sites
 import cmk.gui.i18n
+import cmk.gui.utils
 from cmk.gui.i18n import _
 from cmk.gui.htmllib import HTML
 from cmk.gui.log import logger
@@ -896,7 +898,6 @@ class BIJobManager(object):
 
     def _start_workers(self):
         site_data = g_bi_sitedata_manager.get_data()
-        import copy
         for x in range(self._maximum_workers):
             jobs = self._queued_jobs[x::self._maximum_workers]
             if not jobs:
@@ -3147,8 +3148,7 @@ class FoldableTreeRendererTree(FoldableTreeRenderer):
 
             html.close_span()
 
-        import views
-        output = views.format_plugin_output(effective_state["output"])
+        output = cmk.gui.utils.format_plugin_output(effective_state["output"], shall_escape=config.escape_plugin_output)
         if output:
             output = html.render_b(HTML("&diams;"), class_="bullet") + output
         else:
@@ -3446,8 +3446,7 @@ def table(columns, add_headers, only_sites, limit, filters):
 
             row["aggr_group"] = group
             rows.append(row)
-            import views
-            if not views.check_limit(rows, limit):
+            if not cmk.gui.utils.check_limit(rows, limit, config.user):
                 return rows
     return rows
 
@@ -3590,10 +3589,8 @@ def singlehost_table(columns, add_headers, only_sites, limit, filters, joinbynam
             row.update(new_row)
             row["aggr_group"] = group
             rows.append(row)
-            import views
-            if not views.check_limit(rows, limit):
+            if not cmk.gui.utils.check_limit(rows, limit, config.user):
                 return rows
-
 
     log("* Assembled %d rows." % len(rows))
     return rows
@@ -3607,7 +3604,6 @@ def singlehost_table(columns, add_headers, only_sites, limit, filters, joinbynam
 #                 |_|
 
 def debug(x):
-    import pprint
     p = pprint.pformat(x)
     html.write("<pre>%s</pre>\n" % p)
 

@@ -30,7 +30,7 @@ import subprocess
 from valuespec import *
 import cmk.store as store
 
-from gui_exceptions import MKInternalError, MKAuthException, MKUserError
+from cmk.gui.exceptions import MKInternalError, MKAuthException, MKUserError
 
 def get_gui_messages(user_id = None):
     if user_id is None:

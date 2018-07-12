@@ -34,7 +34,7 @@ import utils
 import config
 import watolib
 import userdb
-from gui_exceptions import MKGeneralException, MKUserError, MKAuthException, \
+from cmk.gui.exceptions import MKGeneralException, MKUserError, MKAuthException, \
                            MKException
 from valuespec import *
 

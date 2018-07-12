@@ -25,7 +25,7 @@
 # Boston, MA 02110-1301 USA.
 
 from htmllib import HTML
-from gui_exceptions import MKUserError
+from cmk.gui.exceptions import MKUserError
 
 # A input function with the same call syntax as htmllib.textinput()
 def input(valuespec, varprefix, defvalue):

@@ -37,7 +37,7 @@ import log
 import cmk.paths
 import cmk.store as store
 
-from gui_exceptions import MKConfigError, MKAuthException
+from cmk.gui.exceptions import MKConfigError, MKAuthException
 
 import cmk.gui.plugins.config
 

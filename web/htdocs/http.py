@@ -31,8 +31,8 @@ import time
 import Cookie
 import cgi
 import log
-import http_status
-from gui_exceptions import HTTPRedirect
+import cmk.gui.http_status
+from cmk.gui.exceptions import HTTPRedirect
 
 class Request(object):
     """Provides information about the users HTTP request to the application
@@ -288,7 +288,7 @@ class Response(object):
 
         self._request = request
 
-        self._status_code = http_status.HTTP_OK
+        self._status_code = cmk.gui.http_status.HTTP_OK
         self._output = []
         self._headers_out = []
 
@@ -358,7 +358,7 @@ class Response(object):
     @property
     def http_status(self):
         """Provides the HTTP response status header (code incl. text)"""
-        return http_status.status_with_reason(self._status_code)
+        return cmk.gui.http_status.status_with_reason(self._status_code)
 
 
     @property

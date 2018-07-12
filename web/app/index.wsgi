@@ -41,7 +41,7 @@ import http
 import cmk.paths
 import cmk.store as store
 
-from gui_exceptions import \
+from cmk.gui.exceptions import \
     MKUserError, \
     MKConfigError, \
     MKGeneralException, \

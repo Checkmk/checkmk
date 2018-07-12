@@ -38,7 +38,7 @@ import config, views, userdb, pagetypes
 import notify, werks
 import sites
 import modules
-from gui_exceptions import MKGeneralException, MKUserError, MKException
+from cmk.gui.exceptions import MKGeneralException, MKUserError, MKException
 from log import logger
 
 import json

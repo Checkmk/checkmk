@@ -30,7 +30,7 @@ import utils
 from valuespec import *
 import wato
 
-from gui_exceptions import MKGeneralException, MKAuthException, MKUserError
+from cmk.gui.exceptions import MKGeneralException, MKAuthException, MKUserError
 
 import json
 

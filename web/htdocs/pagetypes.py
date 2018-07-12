@@ -49,7 +49,7 @@ import forms
 import userdb
 from valuespec import *
 
-from gui_exceptions import MKUserError, MKGeneralException, MKAuthException
+from cmk.gui.exceptions import MKUserError, MKGeneralException, MKAuthException
 
 #   .--Base----------------------------------------------------------------.
 #   |                        ____                                          |

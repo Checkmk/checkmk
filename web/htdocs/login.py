@@ -36,7 +36,7 @@ from hashlib import md5
 
 import cmk.paths
 
-from gui_exceptions import MKInternalError, MKAuthException, MKUserError, FinalizeRequest
+from cmk.gui.exceptions import MKInternalError, MKAuthException, MKUserError, FinalizeRequest
 
 auth_type = None
 auth_logger = logger.getChild("auth")

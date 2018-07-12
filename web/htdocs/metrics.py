@@ -44,7 +44,7 @@ from collections import OrderedDict
 
 from log import logger
 from valuespec import *
-from gui_exceptions import MKGeneralException, MKUserError, MKInternalError, \
+from cmk.gui.exceptions import MKGeneralException, MKUserError, MKInternalError, \
                            MKUnauthenticatedException, MKAuthException
 
 import livestatus

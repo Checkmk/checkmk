@@ -34,7 +34,7 @@ import cmk.store as store
 
 import config
 import sites
-from gui_exceptions import MKException, MKGeneralException, MKException, MKAuthException
+from cmk.gui.exceptions import MKException, MKGeneralException, MKException, MKAuthException
 
 
 class MKGuitestFailed(MKException):

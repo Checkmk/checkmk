@@ -2282,7 +2282,7 @@ class ModeEventConsoleMIBs(EventConsoleMode):
                     return ""
                 else:
                     return
-        elif "_upload_mib" in html.uploads:
+        elif html.request.uploaded_file("_upload_mib"):
             uploaded_mib = html.request.uploaded_file("_upload_mib")
             filename, mimetype, content = uploaded_mib
             if filename:

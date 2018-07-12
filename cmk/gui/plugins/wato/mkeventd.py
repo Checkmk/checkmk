@@ -56,6 +56,7 @@ from . import (
     WatoModule,
     SNMPCredentials,
     HostnameTranslation,
+    TimeperiodSelection,
     GroupSelection,
     ConfigDomainEventConsole,
     rule_option_elements,

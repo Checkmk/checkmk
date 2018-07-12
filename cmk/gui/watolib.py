@@ -4198,11 +4198,6 @@ def delete_distributed_wato_file():
         store.save_file(p, "")
 
 
-def has_distributed_wato_file():
-    return os.path.exists(cmk.paths.check_mk_config_dir + "/distributed_wato.mk") \
-        and os.stat(cmk.paths.check_mk_config_dir + "/distributed_wato.mk").st_size != 0
-
-
 # Makes sure, that in distributed mode we monitor only
 # the hosts that are directly assigned to our (the local)
 # site.
@@ -4374,10 +4369,6 @@ def default_site():
         return config.default_site()
 
 
-def is_wato_slave_site():
-    return has_distributed_wato_file() and not config.has_wato_slave_sites()
-
-
 # Returns a list of site ids which gets the Event Console configuration replicated
 def get_event_console_sync_sites():
     return [ s[0] for s in config.get_event_console_site_choices() ]
@@ -4389,6 +4380,7 @@ def get_notification_sync_sites():
 
 
 # TODO: cleanup all call sites to this name
+is_wato_slave_site = config.is_wato_slave_site
 site_choices = config.site_choices
 
 
@@ -8550,6 +8542,26 @@ def save_timeperiods(timeperiods):
     store.save_to_mk_file(wato_root_dir + "timeperiods.mk", "timeperiods", timeperiods, pprint_value = config.wato_pprint_config)
 
 
+class TimeperiodSelection(DropdownChoice):
+    def __init__(self, **kwargs):
+        kwargs.setdefault("no_preselect", True)
+        kwargs.setdefault("no_preselect_title", _("Select a timeperiod"))
+        DropdownChoice.__init__(self, choices=self._get_choices, **kwargs)
+
+    def _get_choices(self):
+        timeperiods = load_timeperiods()
+        elements = [
+            (name, "%s - %s" % (name, tp["alias"])) for (name, tp) in timeperiods.items()
+        ]
+
+        always = ("24X7", _("Always"))
+        if always not in elements:
+            elements.insert(0, always)
+
+        return elements
+
+
+
 #.
 #   .--Groups--------------------------------------------------------------.
 #   |                    ____                                              |
@@ -9878,6 +9890,21 @@ def _single_folder_rule_match_condition():
                     "or in one of its subfolders."),
         ),
     )
+
+
+class FolderChoice(DropdownChoice):
+    def __init__(self, **kwargs):
+        kwargs["choices"] = Folder.folder_choices
+        kwargs.setdefault("title", _("Folder"))
+        DropdownChoice.__init__(self, **kwargs)
+
+
+class FullPathFolderChoice(DropdownChoice):
+    def __init__(self, **kwargs):
+        kwargs["choices"] = Folder.folder_choices_fulltitle
+        kwargs.setdefault("title", _("Folder"))
+        DropdownChoice.__init__(self, **kwargs)
+
 
 
 def transform_simple_to_multi_host_rule_match_conditions(value):

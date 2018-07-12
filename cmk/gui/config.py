@@ -906,6 +906,15 @@ def has_wato_slave_sites():
     return bool(wato_slave_sites())
 
 
+def is_wato_slave_site():
+    return _has_distributed_wato_file() and not has_wato_slave_sites()
+
+
+def _has_distributed_wato_file():
+    return os.path.exists(cmk.paths.check_mk_config_dir + "/distributed_wato.mk") \
+        and os.stat(cmk.paths.check_mk_config_dir + "/distributed_wato.mk").st_size != 0
+
+
 # TODO: All site listing functions should return the same data structure, e.g. a list of
 #       pairs (site_id, site)
 def get_login_sites():
@@ -1007,7 +1016,6 @@ def site_choices(filter_func=None):
 
 def get_event_console_site_choices():
     return site_choices(filter_func=lambda site_id, site: site_is_local(site_id) or site.get("replicate_ec"))
-
 
 #.
 #   .--Plugins-------------------------------------------------------------.

@@ -38,9 +38,9 @@ from cmk.gui.exceptions import MKUserError, MKGeneralException
 from cmk.gui.valuespec import (TextAscii, Dictionary, RadioChoice, Tuple,
     Checkbox, Integer, DropdownChoice, Alternative, Password, Transform,
     FixedValue, ListOf, RegExpUnicode, RegExp, TextUnicode, ElementSelection,
-    TimeperiodValuespec, OptionalDropdownChoice, Percentage, Float,
-    CascadingDropdown, ListChoice, ListOfStrings, TimeperiodSelection,
-    DualListChoice)
+    OptionalDropdownChoice, Percentage, Float,
+    CascadingDropdown, ListChoice, ListOfStrings,
+    DualListChoice, ValueSpec)
 
 from cmk.gui.wato.base_modes import WatoMode
 from cmk.gui.wato.context_buttons import (
@@ -62,6 +62,7 @@ from cmk.gui.wato.main_menu import (
     register_modules
 )
 
+import cmk.gui.watolib as watolib
 from cmk.gui.watolib import (
     service_levels,
     get_search_expression,
@@ -100,6 +101,7 @@ from cmk.gui.watolib import (
     LivestatusViaTCP,
     WatoBackgroundJob,
     UserSelection,
+    TimeperiodSelection,
     multifolder_host_rule_match_conditions,
     simple_host_rule_match_conditions,
     transform_simple_to_multi_host_rule_match_conditions,
@@ -107,7 +109,6 @@ from cmk.gui.watolib import (
 
 
 def rule_option_elements(disabling=True):
-    from cmk.gui.watolib import RuleComment
     elements = [
         ( "description",
           TextUnicode(
@@ -116,7 +117,7 @@ def rule_option_elements(disabling=True):
             size = 80,
           )
         ),
-        ( "comment", RuleComment()),
+        ( "comment", watolib.RuleComment()),
         ( "docu_url",
           TextAscii(
             title = _("Documentation URL"),
@@ -524,6 +525,43 @@ class GroupSelection(ElementSelection):
         return dict(elements)
 
 
+
+class PasswordFromStore(CascadingDropdown):
+    def __init__(self, *args, **kwargs):
+        kwargs["choices"] = [
+            ("password", _("Password"), Password(
+                allow_empty = kwargs.get("allow_empty", True),
+            )),
+            ("store", _("Stored password"), DropdownChoice(
+                choices = self._password_choices,
+                sorted = True,
+                invalid_choice = "complain",
+                invalid_choice_title = _("Password does not exist or using not permitted"),
+                invalid_choice_error = _("The configured password has either be removed or you "
+                                         "are not permitted to use this password. Please choose "
+                                         "another one."),
+            )),
+        ]
+        kwargs["orientation"] = "horizontal"
+
+        CascadingDropdown.__init__(self, *args, **kwargs)
+
+
+    def _password_choices(self):
+        return [ (ident, pw["title"]) for ident, pw
+                 in watolib.PasswordStore().usable_passwords().items() ]
+
+
+
+def IndividualOrStoredPassword(*args, **kwargs):
+    return Transform(
+        PasswordFromStore(*args, **kwargs),
+        forth = lambda v: ("password", v) if type(v) != tuple else v,
+    )
+
+
+
+
 def register_check_parameters(subgroup, checkgroup, title, valuespec, itemspec,
                                match_type, has_inventory=True, register_static_check=True,
                                deprecated=False):
@@ -568,7 +606,7 @@ def register_check_parameters(subgroup, checkgroup, title, valuespec, itemspec,
     if register_static_check:
         # Register rule for static checks
         elements = [
-            _CheckTypeGroupSelection(
+            CheckTypeGroupSelection(
                 checkgroup,
                 title = _("Checktype"),
                 help = _("Please choose the check plugin")) ]
@@ -605,15 +643,167 @@ def register_check_parameters(subgroup, checkgroup, title, valuespec, itemspec,
             deprecated = deprecated)
 
 
+class TimeperiodValuespec(ValueSpec):
+    tp_toggle_var        = "tp_toggle"        # Used by GUI switch
+    tp_current_mode      = "tp_active"        # The actual set mode
+                                              # "0" - no timespecific settings
+                                              # "1" - timespecific settings active
 
-class _CheckTypeGroupSelection(ElementSelection):
+    tp_default_value_key = "tp_default_value" # Used in valuespec
+    tp_values_key        = "tp_values"        # Used in valuespec
+
+
+    def __init__(self, valuespec):
+        super(TimeperiodValuespec, self).__init__(
+            title = valuespec.title(),
+            help  = valuespec.help()
+        )
+        self._enclosed_valuespec = valuespec
+
+
+    def default_value(self):
+        # If nothing is configured, simply return the default value of the enclosed valuespec
+        return self._enclosed_valuespec.default_value()
+
+
+    def render_input(self, varprefix, value):
+        # The display mode differs when the valuespec is activated
+        vars_copy = html.request.vars.copy()
+
+
+        # The timeperiod mode can be set by either the GUI switch or by the value itself
+        # GUI switch overrules the information stored in the value
+        if html.has_var(self.tp_toggle_var):
+            is_active = self._is_switched_on()
+        else:
+            is_active = self._is_active(value)
+
+        # Set the actual used mode
+        html.hidden_field(self.tp_current_mode, "%d" % is_active)
+
+        mode = _("Disable") if is_active else _("Enable")
+        vars_copy[self.tp_toggle_var] = "%d" % (not is_active)
+
+        toggle_url = html.makeuri(vars_copy.items())
+        html.buttonlink(toggle_url, _("%s timespecific parameters") % mode, style=["position: absolute", "right: 18px;"])
+
+        if is_active:
+            value = self._get_timeperiod_value(value)
+            self._get_timeperiod_valuespec().render_input(varprefix, value)
+        else:
+            value = self._get_timeless_value(value)
+            return self._enclosed_valuespec.render_input(varprefix, value)
+
+
+    def value_to_text(self, value):
+        text = ""
+        if self._is_active(value):
+            # TODO/Phantasm: highlight currently active timewindow
+            text += self._get_timeperiod_valuespec().value_to_text(value)
+        else:
+            text += self._enclosed_valuespec.value_to_text(value)
+        return text
+
+
+    def from_html_vars(self, varprefix):
+        if html.var(self.tp_current_mode) == "1":
+            # Fetch the timespecific settings
+            parameters = self._get_timeperiod_valuespec().from_html_vars(varprefix)
+            if parameters[self.tp_values_key]:
+                return parameters
+            else:
+                # Fall back to enclosed valuespec data when no timeperiod is set
+                return parameters[self.tp_default_value_key]
+        else:
+            # Fetch the data from the enclosed valuespec
+            return self._enclosed_valuespec.from_html_vars(varprefix)
+
+
+    def canonical_value(self):
+        return self._enclosed_valuespec.canonical_value()
+
+
+    def validate_datatype(self, value, varprefix):
+        if self._is_active(value):
+            self._get_timeperiod_valuespec().validate_datatype(value, varprefix)
+        else:
+            self._enclosed_valuespec.validate_datatype(value, varprefix)
+
+
+    def validate_value(self, value, varprefix):
+        if self._is_active(value):
+            self._get_timeperiod_valuespec().validate_value(value, varprefix)
+        else:
+            self._enclosed_valuespec.validate_value(value, varprefix)
+
+
+    def _get_timeperiod_valuespec(self):
+        return Dictionary(
+                elements = [
+                    (self.tp_values_key,
+                        ListOf(
+                            Tuple(
+                                elements = [
+                                    TimeperiodSelection(
+                                        title = _("Match only during timeperiod"),
+                                        help = _("Match this rule only during times where the "
+                                                 "selected timeperiod from the monitoring "
+                                                 "system is active."),
+                                    ),
+                                    self._enclosed_valuespec
+                                ]
+                            ),
+                            title = _("Configured timeperiod parameters"),
+                        )
+                    ),
+                    (self.tp_default_value_key,
+                        Transform(
+                            self._enclosed_valuespec,
+                            title = _("Default parameters when no timeperiod matches")
+                        )
+                    ),
+                ],
+                optional_keys = False,
+            )
+
+
+    # Checks whether the tp-mode is switched on through the gui
+    def _is_switched_on(self):
+        return html.var(self.tp_toggle_var) == "1"
+
+
+    # Checks whether the value itself already uses the tp-mode
+    def _is_active(self, value):
+        if isinstance(value, dict) and self.tp_default_value_key in value:
+            return True
+        else:
+            return False
+
+
+    # Returns simply the value or converts a plain value to a tp-value
+    def _get_timeperiod_value(self, value):
+        if isinstance(value, dict) and self.tp_default_value_key in value:
+            return value
+        else:
+            return {self.tp_values_key: [], self.tp_default_value_key: value}
+
+
+    # Returns simply the value or converts tp-value back to a plain value
+    def _get_timeless_value(self, value):
+        if isinstance(value, dict) and self.tp_default_value_key in value:
+            return value.get(self.tp_default_value_key)
+        else:
+            return value
+
+
+
+class CheckTypeGroupSelection(ElementSelection):
     def __init__(self, checkgroup, **kwargs):
-        super(_CheckTypeGroupSelection, self).__init__(**kwargs)
+        super(CheckTypeGroupSelection, self).__init__(**kwargs)
         self._checkgroup = checkgroup
 
     def get_elements(self):
-        from cmk.gui.watolib import check_mk_local_automation
-        checks = check_mk_local_automation("get-check-information")
+        checks = watolib.check_mk_local_automation("get-check-information")
         elements = dict([ (cn, "%s - %s" % (cn, c["title"])) for (cn, c) in checks.items()
                      if c.get("group") == self._checkgroup ])
         return elements
@@ -803,8 +993,7 @@ class CheckTypeSelection(DualListChoice):
         super(CheckTypeSelection, self).__init__(rows=25, **kwargs)
 
     def get_elements(self):
-        from cmk.gui.watolib import check_mk_local_automation
-        checks = check_mk_local_automation("get-check-information")
+        checks = watolib.check_mk_local_automation("get-check-information")
         elements = [ (cn, (cn + " - " + c["title"])[:60]) for (cn, c) in checks.items()]
         elements.sort()
         return elements

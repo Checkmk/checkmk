@@ -52,6 +52,7 @@ from . import (
     ServiceDescriptionTranslation,
     GroupSelection,
     CheckTypeSelection,
+    TimeperiodSelection,
 )
 
 #   .--Global Settings-----------------------------------------------------.

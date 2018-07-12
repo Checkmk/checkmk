@@ -174,6 +174,7 @@ from cmk.gui.plugins.wato import (
 # the current plugin API functions working
 from cmk.gui.watolib import (
     PasswordStore,
+    TimeperiodSelection,
     register_rulegroup,
     register_rule,
     register_configvar,

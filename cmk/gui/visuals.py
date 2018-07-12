@@ -29,6 +29,7 @@ import copy
 import sys
 import traceback
 import json
+import importlib
 
 import cmk.gui.pages
 import cmk.gui.utils as utils
@@ -1398,7 +1399,7 @@ def collect_context_links_of(visual_type_name, this_visual, active_filter_vars, 
     # FIXME: Make this cross module access cleaner
     visual_type = visual_types[visual_type_name]
     module_name = visual_type["module_name"]
-    thing_module = __import__(module_name)
+    thing_module = importlib.import_module(module_name)
     load_func_name = 'load_%s'% visual_type_name
     if load_func_name not in thing_module.__dict__:
         return context_links # in case of exception in "reporting", the load function might be missing
@@ -1507,7 +1508,7 @@ def ajax_popup_add():
     for visual_type_name, visual_type in visual_types.items():
         if "popup_add_handler" in visual_type:
             module_name = visual_type["module_name"]
-            visual_module = __import__(module_name)
+            visual_module = importlib.import_module(module_name)
 
             handler = visual_module.__dict__[visual_type["popup_add_handler"]]
             visuals = handler(add_type)
@@ -1556,7 +1557,7 @@ def ajax_add_visual():
     visual_type_name = html.var('visual_type') # dashboards / views / ...
     visual_type = visual_types[visual_type_name]
     module_name = visual_type["module_name"]
-    visual_module = __import__(module_name)
+    visual_module = importlib.import_module(module_name)
     handler = visual_module.__dict__[visual_type["add_visual_handler"]]
 
     visual_name = html.var("visual_name") # add to this visual

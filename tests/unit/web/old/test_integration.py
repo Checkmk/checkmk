@@ -6,6 +6,7 @@
 from classes import HTMLTester
 from html_tests import load_html_test
 
+from cmk.gui.htmllib import HTML
 
 def run_tests(function_name, tests=None):
     tests = load_html_test(function_name)
@@ -43,7 +44,7 @@ def test_popup_trigger():
 
 
 def test_header(monkeypatch):
-    import config
+    import cmk.gui.config as config
     monkeypatch.setattr(config, "custom_style_sheet", None, raising=False)
 
     for function_name in ["default_html_headers", "top_heading", "top_heading_left", "top_heading_right", "html_head", "header"]:
@@ -73,7 +74,7 @@ def test_context_buttons():
 
 
 def test_body_foot(monkeypatch):
-    import config
+    import cmk.gui.config as config
     monkeypatch.setattr(config, "custom_style_sheet", None, raising=False)
 
     for function_name in ["body_start", "html_foot"]:

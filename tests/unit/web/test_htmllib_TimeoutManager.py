@@ -3,7 +3,7 @@
 import time
 import pytest
 
-import htmllib
+import cmk.gui.htmllib as htmllib
 from cmk.gui.exceptions import RequestTimeout
 
 def test_htmllib_integration(register_builtin_html):

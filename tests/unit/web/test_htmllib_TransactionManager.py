@@ -4,7 +4,7 @@ import pytest
 import time
 
 import cmk.gui.http as http
-import htmllib
+import cmk.gui.htmllib as htmllib
 
 @pytest.fixture()
 def tm():

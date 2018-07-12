@@ -3,7 +3,7 @@
 
 import pytest
 
-import htmllib
+import cmk.gui.htmllib as htmllib
 
 def test_htmllib_integration(register_builtin_html):
     assert type(html.encoder) == htmllib.Encoder

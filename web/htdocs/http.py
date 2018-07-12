@@ -31,74 +31,8 @@ import time
 import Cookie
 import cgi
 import log
-
-# TODO: Use definitions from httplib (Python 3: http.HTTPStatus)
-HTTP_CONTINUE                     = 100
-HTTP_SWITCHING_PROTOCOLS          = 101
-HTTP_PROCESSING                   = 102
-HTTP_OK                           = 200
-HTTP_CREATED                      = 201
-HTTP_ACCEPTED                     = 202
-HTTP_NON_AUTHORITATIVE            = 203
-HTTP_NO_CONTENT                   = 204
-HTTP_RESET_CONTENT                = 205
-HTTP_PARTIAL_CONTENT              = 206
-HTTP_MULTI_STATUS                 = 207
-HTTP_MULTIPLE_CHOICES             = 300
-HTTP_MOVED_PERMANENTLY            = 301
-HTTP_MOVED_TEMPORARILY            = 302
-HTTP_SEE_OTHER                    = 303
-HTTP_NOT_MODIFIED                 = 304
-HTTP_USE_PROXY                    = 305
-HTTP_TEMPORARY_REDIRECT           = 307
-HTTP_BAD_REQUEST                  = 400
-HTTP_UNAUTHORIZED                 = 401
-HTTP_PAYMENT_REQUIRED             = 402
-HTTP_FORBIDDEN                    = 403
-HTTP_NOT_FOUND                    = 404
-HTTP_METHOD_NOT_ALLOWED           = 405
-HTTP_NOT_ACCEPTABLE               = 406
-HTTP_PROXY_AUTHENTICATION_REQUIRED= 407
-HTTP_REQUEST_TIME_OUT             = 408
-HTTP_CONFLICT                     = 409
-HTTP_GONE                         = 410
-HTTP_LENGTH_REQUIRED              = 411
-HTTP_PRECONDITION_FAILED          = 412
-HTTP_REQUEST_ENTITY_TOO_LARGE     = 413
-HTTP_REQUEST_URI_TOO_LARGE        = 414
-HTTP_UNSUPPORTED_MEDIA_TYPE       = 415
-HTTP_RANGE_NOT_SATISFIABLE        = 416
-HTTP_EXPECTATION_FAILED           = 417
-HTTP_UNPROCESSABLE_ENTITY         = 422
-HTTP_LOCKED                       = 423
-HTTP_FAILED_DEPENDENCY            = 424
-HTTP_UPGRADE_REQUIRED             = 426
-HTTP_INTERNAL_SERVER_ERROR        = 500
-HTTP_NOT_IMPLEMENTED              = 501
-HTTP_BAD_GATEWAY                  = 502
-HTTP_SERVICE_UNAVAILABLE          = 503
-HTTP_GATEWAY_TIME_OUT             = 504
-HTTP_VERSION_NOT_SUPPORTED        = 505
-HTTP_VARIANT_ALSO_VARIES          = 506
-HTTP_INSUFFICIENT_STORAGE         = 507
-HTTP_NOT_EXTENDED                 = 510
-
-def http_status(code):
-    if code == HTTP_OK:
-        return '200 OK'
-    elif code == HTTP_MOVED_TEMPORARILY:
-        return '301 Moved Permanently'
-    elif code == HTTP_MOVED_PERMANENTLY:
-        return '302 Found'
-    elif code == HTTP_NOT_MODIFIED:
-        return '304 Not Modified'
-    elif code == HTTP_INTERNAL_SERVER_ERROR:
-        return '500 Internal Server Error'
-    elif code == HTTP_NOT_FOUND:
-        return '404 Not Found'
-    else:
-        return str(code)
-
+import http_status
+from gui_exceptions import HTTPRedirect
 
 class Request(object):
     """Provides information about the users HTTP request to the application
@@ -354,7 +288,7 @@ class Response(object):
 
         self._request = request
 
-        self._status_code = HTTP_OK
+        self._status_code = http_status.HTTP_OK
         self._output = []
         self._headers_out = []
 
@@ -413,7 +347,6 @@ class Response(object):
 
     def http_redirect(self, url):
         """Finalize the currently processed page with a HTTP redirect to the given URL"""
-        from gui_exceptions import HTTPRedirect
         raise HTTPRedirect(url)
 
 
@@ -425,7 +358,7 @@ class Response(object):
     @property
     def http_status(self):
         """Provides the HTTP response status header (code incl. text)"""
-        return http_status(self._status_code)
+        return http_status.status_with_reason(self._status_code)
 
 
     @property

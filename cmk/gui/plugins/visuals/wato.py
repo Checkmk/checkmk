@@ -24,13 +24,23 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+import time
+
+import cmk.paths
+
 import cmk.gui.watolib as watolib
 import cmk.gui.sites as sites
-import cmk.paths
+import cmk.gui.config as config
+from cmk.gui.i18n import _
+
+from . import (
+    Filter,
+    declare_filter,
+)
 
 class FilterWatoFile(Filter):
     def __init__(self):
-        Filter.__init__(self, "wato_folder", _("WATO Folder"), "host", ["wato_folder"], [])
+        super(FilterWatoFile, self).__init__("wato_folder", _("WATO Folder"), "host", ["wato_folder"], [])
         self.last_wato_data_update = None
 
 
@@ -131,6 +141,3 @@ class FilterWatoFile(Filter):
 
 
 declare_filter(10, FilterWatoFile())
-
-if "wato_folder" not in ubiquitary_filters:
-    ubiquitary_filters.append("wato_folder") # show in all views

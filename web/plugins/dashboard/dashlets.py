@@ -890,11 +890,6 @@ dashlet_types["snapin"] = {
 #   '----------------------------------------------------------------------'
 
 
-def ajax_delete_user_notification():
-    msg_id = html.var("id")
-    notify.delete_gui_message(msg_id)
-
-
 def dashlet_notify_users(nr, dashlet):
 
     html.open_div(class_="notify_users")

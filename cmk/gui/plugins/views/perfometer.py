@@ -24,21 +24,26 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-# Painters for Perf-O-Meter
-import cmk.gui.utils as utils
 import math
+
+import cmk.gui.config as config
 import cmk.gui.metrics as metrics
+from cmk.gui.i18n import _
+from cmk.gui.htmllib import HTML
 from cmk.gui.log import logger
 
-perfometers = {}
+from cmk.gui.plugins.views.perfometers import (
+    perfometers,
+    render_metricometer,
+)
 
-# TODO: Umbau: alle Funktionen perfometer_.. geben eine logische Struktur
-# zurück.
-# perfometer_td() -> perfometer_segment() ergibt (breite_in_proz, farbe)
-# Ein perfometer ist eine Liste von Listen.
-# [ [segment, segment, segment], [segment, segment] ] --> horizontal gespaltet.
-# Darin die vertikalen Balken.
-
+from . import (
+    multisite_painters,
+    multisite_sorters,
+    is_stale,
+    display_options,
+    pnp_url,
+)
 
 class Perfometer(object):
     def __init__(self, row):
@@ -198,103 +203,6 @@ class Perfometer(object):
     def _has_legacy_perfometer(self):
         return self._check_command in perfometers
 
-
-
-
-#   .--Old Style-----------------------------------------------------------.
-#   |                ___  _     _   ____  _         _                      |
-#   |               / _ \| | __| | / ___|| |_ _   _| | ___                 |
-#   |              | | | | |/ _` | \___ \| __| | | | |/ _ \                |
-#   |              | |_| | | (_| |  ___) | |_| |_| | |  __/                |
-#   |               \___/|_|\__,_| |____/ \__|\__, |_|\___|                |
-#   |                                         |___/                        |
-#   +----------------------------------------------------------------------+
-#   |  Perf-O-Meter helper functions for old classical Perf-O-Meters.      |
-#   '----------------------------------------------------------------------'
-
-#helper function for perfometer tables
-def render_perfometer_td(perc, color):
-    style = ["width: %d%%;" % int(float(perc)), "background-color: %s" % color]
-    return html.render_td('', class_="inner", style=style)
-
-
-# render the perfometer table
-# data is expected to be a list of tuples [(perc, color), (perc2, color2), ...]
-def render_perfometer(data):
-    tds = HTML().join(render_perfometer_td(percentage, color) for percentage, color in data)
-    return html.render_table(html.render_tr(tds))
-
-
-# Paint linear performeter with one value
-def perfometer_linear(perc, color):
-    return render_perfometer([(perc, color), (100-perc, "white")])
-
-
-# Paint logarithm with base 10, half_value is being
-# displayed at 50% of the width
-def perfometer_logarithmic(value, half_value, base, color):
-    return render_metricometer([
-        metrics.MetricometerRendererLogarithmic(None, None).get_stack_from_values(value, half_value, base, color)
-    ])
-
-
-# prepare the rows for logarithmic perfometers (left or right)
-def calculate_half_row_logarithmic(left_or_right, value, color, half_value, base):
-        value = float(value)
-
-        if value == 0.0:
-            pos = 0
-        else:
-            half_value = float(half_value)
-            h = math.log(half_value, base) # value to be displayed at 50%
-            pos = 25 + 10.0 * (math.log(value, base) - h)
-            if pos < 1:
-                pos = 1
-            if pos > 49:
-                pos = 49
-        if left_or_right == "right":
-            return [(pos, color), (50 - pos, "white")]
-        else:
-            return [(50 - pos, "white"), (pos, color)]
-
-
-# Dual logarithmic Perf-O-Meter
-def perfometer_logarithmic_dual(value_left, color_left, value_right, color_right, half_value, base):
-    data = []
-    data.extend(calculate_half_row_logarithmic("left", value_left, color_left, half_value, base))
-    data.extend(calculate_half_row_logarithmic("right", value_right, color_right, half_value, base))
-    return render_perfometer(data)
-
-
-def perfometer_logarithmic_dual_independent\
-    (value_left, color_left, half_value_left, base_left, value_right, color_right, half_value_right, base_right):
-    data = []
-    data.extend(calculate_half_row_logarithmic("left", value_left, color_left, half_value_left, base_left))
-    data.extend(calculate_half_row_logarithmic("right", value_right, color_right, half_value_right, base_right))
-    return render_perfometer(data)
-
-
-#.
-#   .--New Style--(Metric-O-Meters)----------------------------------------.
-#   |            _   _                 ____  _         _                   |
-#   |           | \ | | _____      __ / ___|| |_ _   _| | ___              |
-#   |           |  \| |/ _ \ \ /\ / / \___ \| __| | | | |/ _ \             |
-#   |           | |\  |  __/\ V  V /   ___) | |_| |_| | |  __/             |
-#   |           |_| \_|\___| \_/\_/   |____/ \__|\__, |_|\___|             |
-#   |                                            |___/                     |
-#   +----------------------------------------------------------------------+
-#   |  Perf-O-Meters created by new metrics system                         |
-#   '----------------------------------------------------------------------'
-
-# Create HTML representation of Perf-O-Meter
-def render_metricometer(stack):
-    if len(stack) not in (1, 2):
-        raise MKGeneralException(_("Invalid Perf-O-Meter definition %r: only one or two entries are allowed") % stack)
-    h = HTML().join(map(render_perfometer, stack))
-    if len(stack) == 2:
-        h = html.render_div(h, class_="stacked")
-    return h
-
 #.
 #   .--Painter-------------------------------------------------------------.
 #   |                   ____       _       _                               |
@@ -330,7 +238,8 @@ def paint_perfometer(row):
     if display_options.enabled(display_options.X) \
        and row["service_pnpgraph_present"] != 0:
         if metrics.cmk_graphs_possible():
-            url = new_graphing_url(row, "service")
+            import cmk.gui.cee.plugins.views.graphs
+            url = cmk.gui.cee.plugins.views.graphs.cmk_graph_url(row, "service")
         else:
             url = pnp_url(row, "service")
         disabled = False
@@ -382,5 +291,3 @@ multisite_sorters["perfometer"] = {
     ],
     "cmp"     : cmp_perfometer,
 }
-
-utils.load_web_plugins("perfometer", globals())

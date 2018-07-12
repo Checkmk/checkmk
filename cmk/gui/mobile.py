@@ -34,6 +34,8 @@ import cmk.gui.metrics as metrics
 from cmk.gui.i18n import _
 from cmk.gui.exceptions import MKGeneralException, MKUserError
 
+from cmk.gui.plugins.views import painter_options
+
 # These regexes are taken from the public domain code of Matt Sullivan
 # http://sullerton.com/2011/03/django-mobile-browser-detection-middleware/
 reg_b = re.compile(r"android.+mobile|avantgo|bada\\/|blackberry|bb10|blazer|compal|elaine|fennec|hiptop|iemobile|ip(hone|od)|iris|kindle|lge |maemo|midp|mmp|opera m(ob|in)i|palm( os)?|phone|p(ixi|re)\\/|plucker|pocket|psp|symbian|treo|up\\.(browser|link)|vodafone|wap|windows (ce|phone)|xda|xiino", re.I|re.M)
@@ -213,7 +215,7 @@ def page_index():
             url = "mobile_view.py?view_name=%s" % view_name
             count = ""
             if not view.get("mustsearch"):
-                views.prepare_painter_options(view_name)
+                painter_options.load(view_name)
                 count = views.show_view(view, only_count = True)
                 count = '<span class="ui-li-count">%d</span>' % count
             items.append((view.get("topic"), url, '%s %s' % (view.get("linktitle", view["title"]), count)))
@@ -247,7 +249,7 @@ def page_view():
     title = views.view_title(view)
     mobile_html_head(title)
 
-    views.prepare_painter_options(view_name)
+    painter_options.load(view_name)
 
     try:
         views.show_view(view, show_heading = False, show_buttons = False,

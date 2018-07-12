@@ -24,6 +24,15 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+from cmk.gui.i18n import _
+from cmk.gui.htmllib import HTML
+
+from . import (
+    multisite_builtin_views,
+    multisite_layouts,
+    painter_options,
+)
+
 #   .--Views---------------------------------------------------------------.
 #   |                    __     ___                                        |
 #   |                    \ \   / (_) _____      _____                      |
@@ -843,4 +852,3 @@ multisite_layouts["mobiledataset"] = {
     "group"      : False,
     "checkboxes" : False,
 }
-

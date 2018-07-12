@@ -27,6 +27,10 @@
 # FIXME: Can be removed once all dashboards have been converted
 # to have the view definitions right inside the dashboards
 
+from . import (
+    multisite_builtin_views,
+)
+
 multisite_builtin_views.update({
 
 # A similar view, used in the dashboard
@@ -158,5 +162,3 @@ multisite_builtin_views.update({
             'title': 'Events of the last 4 hours (for the dashboard)',
             'topic': None},
 })
-
-

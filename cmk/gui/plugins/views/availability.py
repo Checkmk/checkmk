@@ -31,6 +31,10 @@ import cmk.gui.bi as bi
 from cmk.gui.i18n import _
 from cmk.gui.valuespec import *
 
+from . import (
+    view_title,
+    display_options,
+)
 
 # Variable name conventions
 # av_rawdata: a two tier dict: (site, host) -> service -> list(spans)

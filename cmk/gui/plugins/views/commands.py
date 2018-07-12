@@ -24,9 +24,24 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+# TODO: Refactor commands to class hierarchy
+
+import time
 import livestatus
+
+import cmk.gui.config as config
 import cmk.gui.utils as utils
+import cmk.gui.bi as bi
+import cmk.gui.sites as sites
+import cmk.gui.notifications as notifications
 from cmk.gui.i18n import _u, _
+from cmk.gui.exceptions import MKUserError
+from cmk.gui.valuespec import Age
+
+from . import (
+    register_command_group,
+    multisite_commands,
+)
 
 # Declarations of commands on monitoring objects. This file is
 # read in with execfile by views.py.
@@ -926,7 +941,6 @@ def command_acknowledge_failed_notification(cmdtag, spec, row):
     return str(row['log_time']), _("<b>acknowledge failed notifications up to</b>")
 
 def executor_acknowledge_failed_notification(command, site):
-    import cmk.gui.notifications as notifications
     acktime = int(command)
     notifications.acknowledge_failed_notifications(acktime)
 
@@ -938,4 +952,3 @@ multisite_commands.append({
     "action"     : command_acknowledge_failed_notification,
     "executor"   : executor_acknowledge_failed_notification
 })
-

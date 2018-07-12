@@ -47,6 +47,7 @@ import cmk.gui.inventory as inventory
 import cmk.gui.notifications as notifications
 import cmk.gui.valuespec as valuespec
 import cmk.gui.gui_background_job as gui_background_job
+import cmk.gui.plugins.views.inventory
 
 # map URLs to page rendering functions
 register_handlers({
@@ -63,7 +64,7 @@ register_handlers({
     "export_views"                  : views.ajax_export,
     "ajax_set_viewoption"           : views.ajax_set_viewoption,
     "view"                          : views.page_view,
-    "ajax_inv_render_tree"          : views.ajax_inv_render_tree,
+    "ajax_inv_render_tree"          : cmk.gui.plugins.views.inventory.ajax_inv_render_tree,
     "ajax_reschedule"               : views.ajax_reschedule,
     "host_inv_api"                  : inventory.page_host_inv_api,
     "host_service_graph_popup"      : metrics.page_host_service_graph_popup,

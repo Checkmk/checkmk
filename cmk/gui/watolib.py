@@ -7327,6 +7327,10 @@ def load_user_scripts(what):
     return scripts
 
 
+def load_notification_scripts():
+    return load_user_scripts("notifications")
+
+
 def user_script_choices(what):
     scripts = load_user_scripts(what)
     choices = [ (name, info["title"]) for (name, info) in scripts.items() ]

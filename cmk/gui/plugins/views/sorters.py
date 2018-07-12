@@ -57,7 +57,25 @@
 # one service, etc.
 # =================================================================== #
 
+import cmk.gui.config as config
 import cmk.gui.utils as utils
+from cmk.gui.i18n import _
+
+from . import (
+    multisite_sorters,
+    declare_simple_sorter,
+    declare_1to1_sorter,
+    cmp_num_split,
+    cmp_custom_variable,
+    cmp_simple_number,
+    cmp_simple_string,
+    cmp_service_name_equiv,
+    cmp_string_list,
+    cmp_ip_address,
+    get_host_tags,
+    get_perfdata_nth_value,
+    get_tag_group,
+)
 
 def cmp_state_equiv(r):
     if r["service_has_been_checked"] == 0:

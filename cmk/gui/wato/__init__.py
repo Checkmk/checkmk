@@ -126,6 +126,7 @@ from cmk.gui.exceptions import MKGeneralException, MKUserError, MKAuthException,
                            MKInternalError, MKException
 from cmk.gui.log import logger
 from cmk.gui.valuespec import *
+from cmk.gui.display_options import display_options
 from cmk.gui.plugins.userdb.htpasswd import encrypt_password
 from cmk.gui.wato.base_modes import WatoMode, WatoWebApiMode
 from cmk.gui.wato.pages.global_settings import GlobalSettingsMode, EditGlobalSettingMode
@@ -142,8 +143,6 @@ if cmk.is_managed_edition():
     import cmk.gui.cme.plugins.wato.managed
 else:
     managed = None
-
-display_options  = None
 
 ALL_HOSTS         = watolib.ALL_HOSTS
 ALL_SERVICES      = watolib.ALL_SERVICES
@@ -325,7 +324,7 @@ def page_handler():
     current_mode = html.var("mode") or "main"
     mode_permissions, mode_class = get_mode_permission_and_class(current_mode)
 
-    weblib.prepare_display_options(globals())
+    display_options.load_from_html()
 
     if display_options.disabled(display_options.N):
         html.add_body_css_class("inline")
@@ -9099,7 +9098,7 @@ class EditNotificationRuleMode(NotificationsMode):
 
         if "bulk" in rule or "bulk_period" in rule:
             if rule["notify_plugin"][0]:
-                info = load_notification_scripts()[rule["notify_plugin"][0]]
+                info = watolib.load_notification_scripts()[rule["notify_plugin"][0]]
                 if not info["bulk"]:
                     raise MKUserError(varprefix + "_p_notify_plugin",
                           _("The notification script %s does not allow bulking.") % info["title"])
@@ -9269,10 +9268,6 @@ class ModeEditPersonalNotificationRule(EditNotificationRuleMode):
     def buttons(self):
         html.context_button(_("All Rules"),
             watolib.folder_preserving_link([("mode", "user_notifications_p")]), "back")
-
-
-def load_notification_scripts():
-    return watolib.load_user_scripts("notifications")
 
 
 #.
@@ -11460,7 +11455,7 @@ class ModeEditUser(WatoMode):
 
     def page(self):
         # Let exceptions from loading notification scripts happen now
-        load_notification_scripts()
+        watolib.load_notification_scripts()
 
         html.begin_form("user", method="POST")
         html.prevent_password_auto_completion()

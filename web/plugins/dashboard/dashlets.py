@@ -684,9 +684,9 @@ def dashlet_view(nr, dashlet):
     html.set_var('_display_options', display_options)
     html.add_body_css_class('dashlet')
 
-    import views # FIXME: HACK, clean this up somehow
+    import cmk.gui.views as views # FIXME: HACK, clean this up somehow
     views.load_views()
-    views.prepare_painter_options()
+    views.painter_options.load(dashlet["name"])
     views.show_view(dashlet, True, True, True)
 
 def dashlet_view_add_url():
@@ -697,7 +697,7 @@ def dashlet_view_parameters():
     return dashlet_view_render_input, dashlet_view_handle_input
 
 def dashlet_view_render_input(dashlet):
-    import views # FIXME: HACK, clean this up somehow
+    import cmk.gui.views as views # FIXME: HACK, clean this up somehow
     views.load_views()
     views.transform_view_to_valuespec_value(dashlet)
     return views.render_view_config(dashlet)
@@ -705,7 +705,7 @@ def dashlet_view_render_input(dashlet):
 def dashlet_view_handle_input(ident, dashlet):
     dashlet['name'] = 'dashlet_%d' % ident
     dashlet.setdefault('title', _('View'))
-    import views # FIXME: HACK, clean this up somehow
+    import cmk.gui.views as views # FIXME: HACK, clean this up somehow
     views.load_views()
     return views.create_view_from_valuespec(dashlet, dashlet)
 

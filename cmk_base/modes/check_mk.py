@@ -833,7 +833,7 @@ modes.register(Mode(
             long_option="extraoid",
             argument=True,
             argument_descr="A",
-            argument_conv=lambda x: _extra_oids.append(x),
+            argument_conv=_extra_oids.append,
             short_help="Walk also on this OID, in addition to mib-2 and "
                        "enterprises. You can specify this option multiple "
                        "times.",
@@ -842,7 +842,7 @@ modes.register(Mode(
             long_option="oid",
             argument=True,
             argument_descr="A",
-            argument_conv=lambda x: _oids.append(x),
+            argument_conv=_oids.append,
             short_help="Walk on this OID instead of mib-2 and enterprises. "
                        "You can specify this option multiple times."
         ),

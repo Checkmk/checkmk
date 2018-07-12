@@ -1186,7 +1186,7 @@ def do_system_rw_backup(opts):
         t.start()
 
         # Process backup stream and write to destination file
-        s = BackupStream(stream=pipein, is_alive=lambda: t.is_alive(),
+        s = BackupStream(stream=pipein, is_alive=t.is_alive,
                          key_ident=g_job_config["encrypt"])
         for chunk in s.process():
             backup_file.write(chunk)
@@ -1204,7 +1204,7 @@ def do_system_data_backup(opts):
         t.start()
 
         # Process backup stream and write to destination file
-        s = BackupStream(stream=pipein, is_alive=lambda: t.is_alive(),
+        s = BackupStream(stream=pipein, is_alive=t.is_alive,
                          key_ident=g_job_config["encrypt"])
         for chunk in s.process():
             backup_file.write(chunk)

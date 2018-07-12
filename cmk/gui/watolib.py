@@ -2926,7 +2926,7 @@ class CREHost(WithPermissionsAndAttributes):
 
     def edit_url(self):
         return html.makeuri_contextless([
-            ("mode", "edit_cluster" if self.is_cluster() else "edit_host"),
+            ("mode", "edit_host"),
             ("folder", self.folder().path()),
             ("host", self.name()),
         ])

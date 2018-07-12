@@ -25,7 +25,7 @@
 # Boston, MA 02110-1301 USA.
 
 
-import http
+import http_status
 
 from cmk.exceptions import MKGeneralException, MKException
 
@@ -41,17 +41,17 @@ class FinalizeRequest(Exception):
     """Is used to end the HTTP request processing from deeper code levels"""
     # TODO: Drop this default and make exit code explicit for all call sites
     def __init__(self, code = None):
-        super(FinalizeRequest, self).__init__(http.http_status(code))
-        self.status = code or http.HTTP_OK
+        super(FinalizeRequest, self).__init__(http_status.status_with_reason(code))
+        self.status = code or http_status.HTTP_OK
 
 
 
 class HTTPRedirect(FinalizeRequest):
     """Is used to end the HTTP request processing from deeper code levels
     and making the client request another page after receiving the response."""
-    def __init__(self, url, code=http.HTTP_MOVED_TEMPORARILY):
+    def __init__(self, url, code=http_status.HTTP_MOVED_TEMPORARILY):
         super(HTTPRedirect, self).__init__(code)
-        if code not in [ http.HTTP_MOVED_PERMANENTLY, http.HTTP_MOVED_TEMPORARILY ]:
+        if code not in [ http_status.HTTP_MOVED_PERMANENTLY, http_status.HTTP_MOVED_TEMPORARILY ]:
             raise Exception("Invalid status code: %d" % code)
 
         self.url  = url

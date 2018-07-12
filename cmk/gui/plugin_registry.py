@@ -61,7 +61,16 @@ class Registry(object):
             if plugin_class.__subclasses__(): # pylint: disable=no-member
                 continue # Only use leaf classes
 
-            self.register(plugin_class)
+            # TODO: Create one base class for all plugin classes to provide a default for this
+            if hasattr(plugin_class, "auto_register") and not plugin_class.auto_register():
+                return
+
+            self.register(self._instanciate(plugin_class))
+
+
+    @abc.abstractmethod
+    def _instanciate(self, cls):
+        raise NotImplementedError()
 
 
     @abc.abstractmethod
@@ -87,3 +96,15 @@ class Registry(object):
 
     def get(self, key, deflt=None):
         return self._entries.get(key, deflt)
+
+
+
+class ClassRegistry(Registry):
+    def _instanciate(self, cls):
+        return cls
+
+
+
+class ObjectRegistry(Registry):
+    def _instanciate(self, cls):
+        return cls()

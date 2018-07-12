@@ -1,0 +1,144 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+from cmk.gui.valuespec import *
+from cmk.gui.i18n import _
+from . import UserAttribute
+
+class ForceAuthUserUserAttribute(UserAttribute):
+    def name(self):
+        return "force_authuser"
+
+
+    def valuespec(self):
+        return Checkbox(
+            title = _("Visibility of Hosts/Services"),
+            label = _("Only show hosts and services the user is a contact for"),
+            help = _("When this option is checked, then the status GUI will only "
+                     "display hosts and services that the user is a contact for - "
+                     "even if he has the permission for seeing all objects."),
+        )
+
+
+    def permission(self):
+        return "general.see_all"
+
+
+
+# TODO: Remove this with 1.5.0/1.6.0
+class ForceAuthUserWebserviceUserAttribute(UserAttribute):
+    def name(self):
+        return "force_authuser_webservice"
+
+
+    def valuespec(self):
+        return Checkbox(
+            title = _("Hosts/Service visibility (Webservice, Deprecated)"),
+            label = _("Export only hosts and services the user is a contact for. "
+                      "<b>Please don't use this option anymore, it is deprecated.</b>"),
+            help = _("When this option is checked, then the Multisite webservice "
+                     "will only export hosts and services that the user is a contact for - "
+                     "even if he has the permission for seeing all objects."),
+        )
+
+
+    def permission(self):
+        return "general.see_all"
+
+
+
+class DisableNotificationsUserAttribute(UserAttribute):
+    def name(self):
+        return "disable_notifications"
+
+
+    def valuespec(self):
+        return Transform(Dictionary(
+            title=_("Disable Notifications"),
+            help = _("When this option is active the you will not get <b>any</b> "
+                     "alerts or other notifications via email, SMS or similar. "
+                     "This overrides all other notification settings or rules, so make "
+                     "sure that you know what you do. Moreover you can customize a timerange "
+                     "within no notifications are generated."),
+            elements = [
+                ("disable", Checkbox(title=_("Temporarily disable <b>all</b> notifications!"), label=_("Disable"))),
+                ("timerange", Tuple(title=_("Customize timerange"), elements = [
+                    AbsoluteDate(title=_("From:"), include_time=True),
+                    AbsoluteDate(title=_("To:"), include_time=True),
+                ]))
+            ],
+        ), forth = self._transform_disable_notification)
+
+
+    def _transform_disable_notification(self, p):
+        if type(p) is not dict:
+            return {"disable": True}
+        else:
+            return p
+
+
+    def permission(self):
+        return "general.disable_notifications"
+
+
+    def domain(self):
+        return "check_mk"
+
+
+
+class StartURLUserAttribute(UserAttribute):
+    def name(self):
+        return "start_url"
+
+
+    def valuespec(self):
+        return Transform(
+            Alternative(
+                title = _("Start URL to display in main frame"),
+                style = "dropdown",
+                orientation = "horizontal",
+                elements = [
+                    FixedValue(None,
+                        title = _("Use the default start URL"),
+                        totext = "",
+                    ),
+                    TextAscii(
+                        title = _("Use this custom start URL"),
+                        help = _("When you point your browser to the Check_MK GUI, usually the dashboard "
+                                 "is shown in the main (right) frame. You can replace this with any other "
+                                 "URL you like here."),
+                        size = 80,
+                        default_value = "dashboard.py",
+                        attrencode = True
+                    ),
+                ],
+            ),
+            forth = lambda v: None if v == "" else v,
+        )
+
+
+    def domain(self):
+        return "multisite"

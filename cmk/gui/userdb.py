@@ -45,6 +45,8 @@ from cmk.gui.log import logger
 from cmk.gui.valuespec import *
 import cmk.gui.i18n
 from cmk.gui.i18n import _
+import cmk.gui.plugin_registry
+import cmk.gui.plugins.userdb
 
 # Datastructures and functions needed before plugins can be loaded
 loaded_with_language = False
@@ -59,18 +61,9 @@ connection_dict = {}
 g_connections   = {}
 auth_logger = logger.getChild("auth")
 
-# declare lobal vars
-multisite_user_connectors = {}
-
 # Load all userdb plugins
 def load_plugins(force):
-    global builtin_user_attribute_names
-
-    # Do not cache the custom user attributes. They can be created by the user
-    # during runtime, means they need to be loaded during each page request.
-    # But delete the old definitions before to also apply removals of attributes
-    if user_attributes:
-        declare_custom_user_attrs()
+    update_config_based_user_attributes()
 
     connection_dict.clear()
     for connection in config.user_connections:
@@ -84,18 +77,7 @@ def load_plugins(force):
     if loaded_with_language == cmk.gui.i18n.get_current_language() and not force:
         return
 
-    # clear global vars
-    user_attributes.clear()
-    multisite_user_connectors.clear()
-
     utils.load_web_plugins("userdb", globals())
-    builtin_user_attribute_names = user_attributes.keys()
-    declare_custom_user_attrs()
-
-    # Connectors have the option to perform migration of configuration options
-    # while the initial loading is performed
-    for connector_class in multisite_user_connectors.values():
-        connector_class.migrate_config()
 
     # This must be set after plugin loading to make broken plugins raise
     # exceptions all the time and not only the first time (when the plugins
@@ -113,7 +95,7 @@ def finalize():
 # connection id and the second element the connector specification dict
 def get_connections(only_enabled=False):
     connections = []
-    for connector_id, connector_class in multisite_user_connectors.items():
+    for connector_id, connector_class in user_connector_registry.items():
         if connector_id == 'htpasswd':
             # htpasswd connector is enabled by default and always executed first
             connections.insert(0, ('htpasswd', connector_class({})))
@@ -224,14 +206,10 @@ def create_non_existing_user(connection_id, username):
     connection = get_connection(connection_id)
     try:
         connection.do_sync(add_to_changelog=False, only_username=username)
-    except MKLDAPException, e:
+    except cmk.gui.plugins.userdb.ldap_connector.MKLDAPException, e:
         show_exception(connection_id, _("Error during sync"), e, debug=config.debug)
     except Exception, e:
         show_exception(connection_id, _("Error during sync"), e)
-
-
-def is_automation_user(user_id):
-    return os.path.isfile(cmk.paths.var_dir + "/web/" + user_id.encode("utf-8") + "/automation.secret")
 
 
 def is_customer_user_allowed_to_login(user_id):
@@ -504,25 +482,81 @@ def convert_session_info(value):
 #   |                                                                      |
 #   +----------------------------------------------------------------------+
 
+# TODO: Legacy plugin API. Converts to new internal structure. Drop this with 1.6 or later.
 def declare_user_attribute(name, vs, user_editable = True, permission = None,
                            show_in_table = False, topic = None, add_custom_macro = False,
-                           domain = "multisite"):
+                           domain = "multisite", from_config = False):
 
-    user_attributes[name] = {
-        'valuespec'         : vs,
-        'user_editable'     : user_editable,
-        'show_in_table'     : show_in_table,
-        'topic'             : topic and topic or 'personal',
-        'add_custom_macro'  : add_custom_macro,
-        'domain'            : domain,
-    }
+    user_attribute_registry.register(GenericUserAttribute(
+        name,
+        valuespec=vs,
+        user_editable=user_editable,
+        show_in_table=show_in_table,
+        topic=topic and topic or 'personal',
+        add_custom_macro=add_custom_macro,
+        domain=domain,
+        permission=permission,
+        from_config=from_config,
+    ))
 
-    # Permission needed for editing this attribute
-    if permission:
-        user_attributes[name]["permission"] = permission
+class GenericUserAttribute(cmk.gui.plugins.userdb.UserAttribute):
+    @classmethod
+    def auto_register(cls):
+        return False
+
+    def __init__(self, name, valuespec, user_editable, show_in_table, topic, add_custom_macro, domain, permission, from_config):
+        super(GenericUserAttribute, self).__init__()
+        self._name = name
+        self._valuespec = valuespec
+        self._user_editable = user_editable
+        self._show_in_table = show_in_table
+        self._topic = topic
+        self._add_custom_macro = add_custom_macro
+        self._domain = domain
+        self._permission = permission
+        self._from_config = from_config
+
+
+    def name(self):
+        return self._name
+
+
+    def valuespec(self):
+        return self._valuespec
+
+
+    def from_config(self):
+        return self._from_config
+
+
+    def user_editable(self):
+        return self._user_editable
+
+
+    def permission(self):
+        return self._permission
+
+
+    def show_in_table(self):
+        return self._show_in_table
+
+
+    def topic(self):
+        return self._topic
+
+
+    def add_custom_macro(self):
+        return self._add_custom_macro
+
+
+    def domain(self):
+        return self._domain
+
+
 
 def get_user_attributes():
-    return user_attributes.items()
+    return user_attribute_registry.items()
+
 
 def load_users(lock = False):
     filename = root_dir + "contacts.mk"
@@ -895,7 +929,7 @@ def create_cmk_automation_user():
         'alias'                 : u"Check_MK Automation - used for calling web services",
         'contactgroups'         : [],
         'automation_secret'     : secret,
-        'password'              : encrypt_password(secret),
+        'password'              : cmk.gui.plugins.userdb.htpasswd.encrypt_password(secret),
         'roles'                 : ['admin'],
         'locked'                : False,
         'serial'                : 0,
@@ -1067,21 +1101,24 @@ class GroupChoice(DualListChoice):
 #   | Mange custom attributes of users (in future hosts etc.)              |
 #   '----------------------------------------------------------------------'
 
-def declare_custom_user_attrs():
-    # First remove all previously registered custom host attributes
-    for attr_name in user_attributes.keys():
-        if attr_name not in builtin_user_attribute_names:
-            del user_attributes[attr_name]
+def update_config_based_user_attributes():
+    _clear_config_based_user_attributes()
 
-    # now declare the custom attributes
     for attr in config.wato_user_attrs:
         vs = globals()[attr['type']](title = attr['title'], help = attr['help'])
         declare_user_attribute(attr['name'], vs,
             user_editable = attr['user_editable'],
             show_in_table = attr.get('show_in_table', False),
             topic = attr.get('topic', 'personal'),
-            add_custom_macro = attr.get('add_custom_macro', False )
+            add_custom_macro = attr.get('add_custom_macro', False ),
+            from_config = True,
         )
+
+
+def _clear_config_based_user_attributes():
+    for attr in user_attribute_registry.values():
+        if attr.from_config():
+            del user_attribute_registry[attr.name()]
 
 #.
 #   .--ConnectorCfg--------------------------------------------------------.
@@ -1110,89 +1147,49 @@ def save_connection_config(connections, base_dir=None):
                           "user_connections", connections)
 
 #.
-#   .--ConnectorAPI--------------------------------------------------------.
-#   |     ____                            _              _    ____ ___     |
-#   |    / ___|___  _ __  _ __   ___  ___| |_ ___  _ __ / \  |  _ \_ _|    |
-#   |   | |   / _ \| '_ \| '_ \ / _ \/ __| __/ _ \| '__/ _ \ | |_) | |     |
-#   |   | |__| (_) | | | | | | |  __/ (__| || (_) | | / ___ \|  __/| |     |
-#   |    \____\___/|_| |_|_| |_|\___|\___|\__\___/|_|/_/   \_\_|  |___|    |
-#   |                                                                      |
-#   +----------------------------------------------------------------------+
-#   | Implements the base class for User Connector classes. It implements  |
-#   | basic mechanisms and default methods which might/should be           |
-#   | overridden by the specific connector classes.                        |
+
+
+#.
+#   .--Plugins-------------------------------------------------------------.
+#   |                   ____  _             _                              |
+#   |                  |  _ \| |_   _  __ _(_)_ __  ___                    |
+#   |                  | |_) | | | | |/ _` | | '_ \/ __|                   |
+#   |                  |  __/| | |_| | (_| | | | | \__ \                   |
+#   |                  |_|   |_|\__,_|\__, |_|_| |_|___/                   |
+#   |                                 |___/                                |
 #   '----------------------------------------------------------------------'
 
-# FIXME: How to declare methods/attributes forced to be overridden?
-class UserConnector(object):
-    def __init__(self, config):
-        super(UserConnector, self).__init__()
-        self._config = config
 
-    @classmethod
-    def type(cls):
-        return None
+class UserConnectorRegistry(cmk.gui.plugin_registry.ClassRegistry):
+    """The management object for all available user connector classes.
 
-    # The string representing this connector to humans
-    @classmethod
-    def title(cls):
-        return None
+    Have a look at the base class for details."""
+    def plugin_base_class(self):
+        return cmk.gui.plugins.userdb.UserConnector
 
 
-    @classmethod
-    def short_title(cls):
-        return _('htpasswd')
-
-    #
-    # USERDB API METHODS
-    #
-
-    @classmethod
-    def migrate_config(cls):
-        pass
-
-    # Optional: Hook function can be registered here to be executed
-    # to validate a login issued by a user.
-    # Gets parameters: username, password
-    # Has to return either:
-    #     '<user_id>' -> Login succeeded
-    #     False       -> Login failed
-    #     None        -> Unknown user
-    def check_credentials(self, user_id, password):
-        return None
-
-    # Optional: Hook function can be registered here to be executed
-    # to synchronize all users.
-    def do_sync(self, add_to_changelog, only_username):
-        pass
+    def register(self, connector_class):
+        connector_class.migrate_config()
+        self._entries[connector_class.type()] = connector_class
 
 
-    # Optional: Tells whether or not the synchronization (using do_sync()
-    # method) is needed.
-    def sync_is_needed(self):
-        return False
+user_connector_registry = UserConnectorRegistry()
+user_connector_registry.load_plugins()
 
 
-    # Optional: Tells whether or not the given user is currently
-    # locked which would mean that he is not allowed to login.
-    def is_locked(self, user_id):
-        return False
+class UserAttributeRegistry(cmk.gui.plugin_registry.ObjectRegistry):
+    """The management object for all available user attributes.
+    Have a look at the base class for details."""
+    def plugin_base_class(self):
+        return cmk.gui.plugins.userdb.UserAttribute
 
-    # Optional: Hook function can be registered here to be xecuted
-    # to save all users.
-    def save_users(self, users):
-        pass
 
-    # List of user attributes locked for all users attached to this
-    # connection. Those locked attributes are read-only in WATO.
-    def locked_attributes(self):
-        return []
+    def register(self, attribute_class):
+        self._entries[attribute_class.name()] = attribute_class
 
-    def multisite_attributes(self):
-        return []
 
-    def non_contact_attributes(self):
-        return []
+user_attribute_registry = UserAttributeRegistry()
+user_attribute_registry.load_plugins()
 
 
 #.
@@ -1273,7 +1270,7 @@ def general_userdb_job():
     # This is a good place to replace old api based files in the future.
     auth_php = cmk.paths.var_dir + '/wato/auth/auth.php'
     if not os.path.exists(auth_php) or os.path.getsize(auth_php) == 0:
-        create_auth_file("page_hook", load_users())
+        cmk.gui.plugins.userdb.hook_auth.create_auth_file("page_hook", load_users())
 
     # Create initial auth.serials file, same issue as auth.php above
     serials_file = '%s/auth.serials' % os.path.dirname(cmk.paths.htpasswd_file)

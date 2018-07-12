@@ -57,11 +57,14 @@ import ldap.filter
 from ldap.controls import SimplePagedResultsControl
 
 import cmk.paths
+import cmk.log
 
 import cmk.gui.config as config
-import cmk.gui.watolib as watolib
 import cmk.gui.log as log
-import cmk.log
+from cmk.gui.valuespec import *
+from cmk.gui.i18n import _
+from cmk.gui.exceptions import MKGeneralException, MKUserError
+from . import UserConnector
 
 # LDAP attributes are case insensitive, we only use lower case!
 # Please note: This are only default values. The user might override this
@@ -913,7 +916,8 @@ class LDAPUserConnector(UserConnector):
                     key = what + "_" + key
                 connection[key] = val
 
-        save_connection_config([connection])
+        import cmk.gui.userdb as userdb # TODO: Cleanup
+        userdb.save_connection_config([connection])
         config.user_connections.append(connection)
 
 
@@ -1011,7 +1015,8 @@ class LDAPUserConnector(UserConnector):
 
         ldap_users = self.get_users()
 
-        users = load_users(lock = True)
+        import cmk.gui.userdb as userdb # TODO: Cleanup
+        users = userdb.load_users(lock = True)
 
         changes = []
 
@@ -1020,14 +1025,14 @@ class LDAPUserConnector(UserConnector):
                 user = copy.deepcopy(users[user_id])
                 mode_create = False
             else:
-                user = new_user_template(self.id())
+                user = userdb.new_user_template(self.id())
                 mode_create = True
             return mode_create, user
 
         # Remove users which are controlled by this connector but can not be found in
         # LDAP anymore
         for user_id, user in users.items():
-            user_connection_id = cleanup_connection_id(user.get('connector'))
+            user_connection_id = userdb.cleanup_connection_id(user.get('connector'))
             if user_connection_id == connection_id and self.strip_suffix(user_id) not in ldap_users:
                 del users[user_id] # remove the user
                 if config.wato_enabled:
@@ -1035,7 +1040,7 @@ class LDAPUserConnector(UserConnector):
 
         for user_id, ldap_user in ldap_users.items():
             mode_create, user = load_user(user_id)
-            user_connection_id = cleanup_connection_id(user.get('connector'))
+            user_connection_id = userdb.cleanup_connection_id(user.get('connector'))
 
             if self.create_users_only_on_login() and mode_create:
                 self._logger.debug('  SKIP SYNC "%s" (Only create user of "%s" connector on login)' %
@@ -1054,7 +1059,7 @@ class LDAPUserConnector(UserConnector):
                 if self.has_suffix():
                     user_id = self.add_suffix(user_id)
                     mode_create, user = load_user(user_id)
-                    user_connection_id = cleanup_connection_id(user.get('connector'))
+                    user_connection_id = userdb.cleanup_connection_id(user.get('connector'))
                     if user_connection_id != connection_id:
                         self._logger.debug('  SKIP SYNC "%s" (name conflict after adding suffix '
                                  'with user from "%s" connector)' % (user_id, user_connection_id))
@@ -1113,9 +1118,10 @@ class LDAPUserConnector(UserConnector):
         self._logger.info('SYNC FINISHED - Duration: %0.3f sec', duration)
 
         if changes:
+            import cmk.gui.watolib as watolib # TODO: Cleanup
             watolib.add_change("edit-users", "<br>\n".join(changes), add_user=False)
 
-        save_users(users)
+        userdb.save_users(users)
 
         self.set_last_sync_time()
 
@@ -1153,11 +1159,13 @@ class LDAPUserConnector(UserConnector):
     # and disabled in Check_MK. When the user is locked in LDAP a login is
     # not possible.
     def is_locked(self, user_id):
-        return user_locked(user_id)
+        import cmk.gui.userdb as userdb # TODO: Cleanup
+        return userdb.user_locked(user_id)
 
 
     def is_enabled(self):
-        sync_config = user_sync_config()
+        import cmk.gui.userdb as userdb # TODO: Cleanup
+        sync_config = userdb.user_sync_config()
         if type(sync_config) == tuple and self.id() not in sync_config[1]:
             #self._ldap_logger('Skipping disabled connection %s' % (self.id()))
             return False
@@ -1209,8 +1217,6 @@ class LDAPUserConnector(UserConnector):
             attrs.update(ldap_attribute_plugins.get(key, {}).get('non_contact_attributes', []))
         return list(attrs)
 
-
-multisite_user_connectors['ldap'] = LDAPUserConnector
 
 #.
 #   .--Debugging-----------------------------------------------------------.
@@ -1332,10 +1338,11 @@ def register_user_attribute_sync_plugins():
     def needed_attributes(attr):
         return lambda connection, params: [ params.get('attr', connection.ldap_attr(attr)).lower() ]
 
-    for attr, val in get_user_attributes():
+    import cmk.gui.userdb as userdb # TODO: Cleanup
+    for attr, val in userdb.get_user_attributes():
         ldap_attribute_plugins[attr] = {
-            'title': val['valuespec'].title(),
-            'help':  val['valuespec'].help(),
+            'title': val.valuespec().title(),
+            'help':  val.valuespec().help(),
             'needed_attributes': needed_attributes(attr),
             'sync_func':         lambda connection, plugin, params, user_id, ldap_user, user: \
                                          ldap_sync_simple(user_id, ldap_user, user, plugin,
@@ -1358,7 +1365,8 @@ g_editing_connection_id = None
 
 # Helper function for gathering the default LDAP attribute names of a connection.
 def ldap_attr_of_connection(connection_id, attr):
-    connection = get_connection(connection_id)
+    import cmk.gui.userdb as userdb # TODO: Cleanup
+    connection = userdb.get_connection(connection_id)
     if not connection:
         # Handle "new connection" situation where there is no connection object existant yet.
         # The default type is "Active directory", so we use it here.
@@ -1369,7 +1377,8 @@ def ldap_attr_of_connection(connection_id, attr):
 
 # Helper function for gathering the default LDAP filters of a connection.
 def ldap_filter_of_connection(connection_id, *args, **kwargs):
-    connection = get_connection(connection_id)
+    import cmk.gui.userdb as userdb # TODO: Cleanup
+    connection = userdb.get_connection(connection_id)
     if not connection:
         # Handle "new connection" situation where there is no connection object existant yet.
         # The default type is "Active directory", so we use it here.
@@ -1391,7 +1400,8 @@ def get_connection_choices(add_this=True):
     if add_this:
         choices.append((None, _("This connection")))
 
-    for connection in load_connection_config():
+    import cmk.gui.userdb as userdb # TODO: Cleanup
+    for connection in userdb.load_connection_config():
         descr = connection['description']
         if not descr:
             descr = connection['id']
@@ -1407,13 +1417,15 @@ def get_group_member_cmp_val(connection, user_id, ldap_user):
 
 
 def get_groups_of_user(connection, user_id, ldap_user, cg_names, nested, other_connection_ids):
+    import cmk.gui.userdb as userdb # TODO: Cleanup
+
     # Figure out how to check group membership.
     user_cmp_val = get_group_member_cmp_val(connection, user_id, ldap_user)
 
     # Get list of LDAP connections to query
     connections = set([connection])
     for connection_id in other_connection_ids:
-        c = get_connection(connection_id)
+        c = userdb.get_connection(connection_id)
         if c:
             connections.add(c)
 
@@ -1661,7 +1673,8 @@ ldap_attribute_plugins['pager'] = {
 
 def ldap_sync_groups_to_contactgroups(connection, plugin, params, user_id, ldap_user, user):
     # Gather all group names to search for in LDAP
-    cg_names = load_group_information().get("contact", {}).keys()
+    import cmk.gui.userdb as userdb # TODO: Cleanup
+    cg_names = userdb.load_group_information().get("contact", {}).keys()
 
     return {"contactgroups": get_groups_of_user(connection, user_id, ldap_user, cg_names,
                                                 params.get('nested', False),
@@ -1704,7 +1717,8 @@ def ldap_sync_groups_to_attributes(connection, plugin, params, user_id, ldap_use
 
     # First clean all previously set values from attributes to be synced where
     # user is not a member of
-    user_attrs = dict(get_user_attributes())
+    import cmk.gui.userdb as userdb # TODO: Cleanup
+    user_attrs = dict(userdb.get_user_attributes())
     for group_spec in params["groups"]:
         attr_name, value = group_spec["attribute"]
         if group_spec["cn"] not in groups \
@@ -1713,7 +1727,7 @@ def ldap_sync_groups_to_attributes(connection, plugin, params, user_id, ldap_use
             # not member, but set -> set to default. Maybe it would be cleaner
             # to just remove the attribute from the user, but the sync plugin
             # API does not support this at the moment.
-            update[attr_name] = user_attrs[attr_name]['valuespec'].default_value()
+            update[attr_name] = user_attrs[attr_name].valuespec().default_value()
 
     # Set the values of the groups the user is a member of
     for group_spec in params["groups"]:
@@ -1736,8 +1750,9 @@ def ldap_locked_attributes_groups_to_attributes(params):
 
 def get_user_attribute_choices():
     choices = []
-    for attr, val in get_user_attributes():
-        choices.append((attr, val['valuespec'].title(), val['valuespec']))
+    import cmk.gui.userdb as userdb # TODO: Cleanup
+    for attr, val in userdb.get_user_attributes():
+        choices.append((attr, val.valuespec().title(), val.valuespec()))
     return choices
 
 
@@ -1787,12 +1802,14 @@ ldap_attribute_plugins['groups_to_attributes'] = {
 #   '----------------------------------------------------------------------'
 
 def ldap_sync_groups_to_roles(connection, plugin, params, user_id, ldap_user, user):
+    import cmk.gui.userdb as userdb # TODO: Cleanup
+
     # Load the needed LDAP groups, which match the DNs mentioned in the role sync plugin config
     groups_to_fetch = get_groups_to_fetch(connection, params)
 
     ldap_groups = {}
     for connection_id, group_dns in get_groups_to_fetch(connection, params).items():
-        conn = get_connection(connection_id)
+        conn = userdb.get_connection(connection_id)
         ldap_groups.update(dict(conn.get_group_memberships(group_dns,
                                 filt_attr = 'distinguishedname',
                                 nested = params.get('nested', False))))
@@ -1857,8 +1874,9 @@ def get_groups_to_fetch(connection, params):
 
 
 def ldap_list_roles_with_group_dn():
+    import cmk.gui.userdb as userdb # TODO: Cleanup
     elements = []
-    for role_id, role in load_roles().items():
+    for role_id, role in userdb.load_roles().items():
         elements.append((role_id, Transform(
             ListOf(
                 Transform(
@@ -1943,7 +1961,8 @@ ldap_attribute_plugins['groups_to_roles'] = {
 # change this to some kind of profile bulk sync per site.
 def synchronize_profile_to_sites(connection, user_id, profile):
     import cmk.gui.sites as sites
-    import wato # FIXME: Cleanup!
+    import cmk.gui.wato as wato # FIXME: Cleanup!
+    import cmk.gui.watolib as watolib # TODO: Cleanup
 
     remote_sites = [(site_id, config.site(site_id))
                     for site_id in config.sitenames()
@@ -1985,4 +2004,3 @@ def synchronize_profile_to_sites(connection, user_id, profile):
 
     connection._logger.debug('  Disabled: %d, Succeeded: %d, Failed: %d' %
                     (num_disabled, num_succeeded, num_failed))
-

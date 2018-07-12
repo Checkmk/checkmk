@@ -130,6 +130,7 @@ from cmk.gui.exceptions import MKGeneralException, MKUserError, MKAuthException,
                            MKInternalError, MKException
 from cmk.gui.log import logger
 from cmk.gui.valuespec import *
+from cmk.gui.plugins.userdb.htpasswd import encrypt_password
 
 if cmk.is_managed_edition():
     import cmk.gui.cme.managed as managed
@@ -6505,7 +6506,7 @@ class ModeLDAPConfig(LDAPMode):
 
 
     def page(self):
-        userdb.ldap_test_module()
+        cmk.gui.plugins.userdb.ldap_connector.ldap_test_module()
 
         table.begin()
         for index, connection in enumerate(userdb.load_connection_config()):
@@ -6998,7 +6999,7 @@ class ModeEditLDAPConnection(LDAPMode):
                          "Members of a nested group:<br> "
                          "<tt>(&(objectclass=user)(objectcategory=person)(memberof:1.2.840.113556.1.4.1941:=CN=cmk-users,OU=groups,DC=example,DC=com))</tt><br>"),
                 size = 80,
-                default_value = lambda: userdb.ldap_filter_of_connection(self._connection_id, 'users', False),
+                default_value = lambda: cmk.gui.plugins.userdb.ldap_connector.ldap_filter_of_connection(self._connection_id, 'users', False),
                 attrencode = True,
             )),
             ("user_filter_group", LDAPDistinguishedName(
@@ -7022,7 +7023,7 @@ class ModeEditLDAPConnection(LDAPMode):
                 help  = _("The attribute used to identify the individual users. It must have "
                           "unique values to make an user identifyable by the value of this "
                           "attribute."),
-                default_value = lambda: userdb.ldap_attr_of_connection(self._connection_id, 'user_id'),
+                default_value = lambda: cmk.gui.plugins.userdb.ldap_connector.ldap_attr_of_connection(self._connection_id, 'user_id'),
                 attrencode = True,
             )),
             ("lower_user_ids", FixedValue(
@@ -7082,13 +7083,13 @@ class ModeEditLDAPConnection(LDAPMode):
                          "subset of the groups below the given base DN.<br><br>"
                          "e.g. <tt>(objectclass=group)</tt>"),
                 size = 80,
-                default_value = lambda: userdb.ldap_filter_of_connection(self._connection_id, 'groups', False),
+                default_value = lambda: cmk.gui.plugins.userdb.ldap_connector.ldap_filter_of_connection(self._connection_id, 'groups', False),
                 attrencode = True,
             )),
             ("group_member", TextAscii(
                 title = _("Member Attribute"),
                 help  = _("The attribute used to identify users group memberships."),
-                default_value = lambda: userdb.ldap_attr_of_connection(self._connection_id, 'member'),
+                default_value = lambda: cmk.gui.plugins.userdb.ldap_connector.ldap_attr_of_connection(self._connection_id, 'member'),
                 attrencode = True,
             )),
         ]
@@ -7101,7 +7102,7 @@ class ModeEditLDAPConnection(LDAPMode):
                           'or disabled. When enabling a plugin, it is used upon the next synchonisation of '
                           'user accounts for gathering their attributes. The user options which get imported '
                           'into Check_MK from LDAP will be locked in WATO.'),
-                elements = lambda: userdb.ldap_attribute_plugins_elements(self._connection_id),
+                elements = lambda: cmk.gui.plugins.userdb.ldap_connector.ldap_attribute_plugins_elements(self._connection_id),
                 default_keys = ['email', 'alias', 'auth_expire' ],
             )),
             ("cache_livetime", Age(
@@ -7142,7 +7143,7 @@ class ModeEditLDAPConnection(LDAPMode):
                 ],
                 validate = self._validate_ldap_connection,
             ),
-            forth = userdb.LDAPUserConnector.transform_config,
+            forth = cmk.gui.plugins.userdb.ldap_connector.LDAPUserConnector.transform_config,
         )
 
 
@@ -11266,7 +11267,7 @@ class ModeUsers(WatoMode):
             (name, attr)
             for name, attr
             in userdb.get_user_attributes()
-            if attr.get('show_in_table', False)
+            if attr.show_in_table()
         ]
 
         users = userdb.load_users()
@@ -11422,7 +11423,7 @@ class ModeUsers(WatoMode):
 
             # the visible custom attributes
             for name, attr in visible_custom_attrs:
-                vs = attr['valuespec']
+                vs = attr.valuespec()
                 table.cell(_u(vs.title()))
                 html.write(vs.value_to_text(user.get(name, vs.default_value())))
 
@@ -11521,7 +11522,7 @@ class ModeEditUser(WatoMode):
         if auth_method == "secret":
             secret = html.var("secret", "").strip()
             user_attrs["automation_secret"] = secret
-            user_attrs["password"] = userdb.encrypt_password(secret)
+            user_attrs["password"] = encrypt_password(secret)
             increase_serial = True # password changed, reflect in auth serial
 
         else:
@@ -11542,7 +11543,7 @@ class ModeEditUser(WatoMode):
                     del user_attrs["password"] # which was the encrypted automation password!
 
             if password:
-                user_attrs["password"] = userdb.encrypt_password(password)
+                user_attrs["password"] = encrypt_password(password)
                 user_attrs["last_pw_change"] = int(time.time())
                 increase_serial = True # password changed, reflect in auth serial
 
@@ -11629,7 +11630,7 @@ class ModeEditUser(WatoMode):
 
         # Custom user attributes
         for name, attr in userdb.get_user_attributes():
-            value = attr['valuespec'].from_html_vars('ua_' + name)
+            value = attr.valuespec().from_html_vars('ua_' + name)
             user_attrs[name] = value
 
         # Generate user "object" to update
@@ -11980,10 +11981,10 @@ class ModeEditUser(WatoMode):
 
     def _show_custom_user_attributes(self, topic=None):
         for name, attr in userdb.get_user_attributes():
-            if topic is not None and topic != attr['topic']:
+            if topic is not None and topic != attr.topic():
                 continue # skip attrs of other topics
 
-            vs = attr['valuespec']
+            vs = attr.valuespec()
             forms.section(_u(vs.title()))
             if not self._is_locked(name):
                 vs.render_input("ua_" + name, self._user.get(name, vs.default_value()))
@@ -15326,9 +15327,9 @@ def page_user_profile(change_pw=False):
                     # Custom attributes
                     if config.user.may('general.edit_user_attributes'):
                         for name, attr in userdb.get_user_attributes():
-                            if attr['user_editable']:
-                                if not attr.get("permission") or config.user.may(attr["permission"]):
-                                    vs = attr['valuespec']
+                            if attr.user_editable():
+                                if not attr.permission() or config.user.may(attr.permission()):
+                                    vs = attr.valuespec()
                                     value = vs.from_html_vars('ua_' + name)
                                     vs.validate_value(value, "ua_" + name)
                                     users[config.user.id][name] = value
@@ -15356,7 +15357,7 @@ def page_user_profile(change_pw=False):
                         raise MKUserError("password2", _("The both new passwords do not match."))
 
                     watolib.verify_password_policy(password)
-                    users[config.user.id]['password'] = userdb.encrypt_password(password)
+                    users[config.user.id]['password'] = encrypt_password(password)
                     users[config.user.id]['last_pw_change'] = int(time.time())
 
                     if change_pw:
@@ -15477,11 +15478,11 @@ def page_user_profile(change_pw=False):
 
         if config.user.may('general.edit_user_attributes'):
             for name, attr in userdb.get_user_attributes():
-                if attr['user_editable']:
-                    vs = attr['valuespec']
+                if attr.user_editable():
+                    vs = attr.valuespec()
                     forms.section(_u(vs.title()))
                     value = user.get(name, vs.default_value())
-                    if not attr.get("permission") or config.user.may(attr["permission"]):
+                    if not attr.permission() or config.user.may(attr.permission()):
                         vs.render_input("ua_" + name, value)
                         html.help(_u(vs.help()))
                     else:
@@ -16141,7 +16142,7 @@ def declare_custom_host_attrs():
 
 
 def update_user_custom_attrs():
-    userdb.declare_custom_user_attrs()
+    userdb.update_config_based_user_attributes()
     userdb.rewrite_users()
 
 

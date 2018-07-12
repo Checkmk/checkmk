@@ -9266,7 +9266,7 @@ def validate_user_attributes(all_users, user_id, user_attrs, is_new_user = True)
     # Custom user attributes
     for name, attr in userdb.get_user_attributes():
         value = user_attrs.get(name)
-        attr['valuespec'].validate_value(value, "ua_" + name)
+        attr.valuespec().validate_value(value, "ua_" + name)
 
 
 def delete_users(users_to_delete):

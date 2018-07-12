@@ -36,4 +36,3 @@ def housekeeping():
     cmk.gui.background_job.BackgroundJobManager(logger).do_housekeeping(housekeep_classes)
 
 register_job(housekeeping)
-

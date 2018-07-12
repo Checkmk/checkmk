@@ -34,7 +34,7 @@ from pathlib2 import Path
 import config
 import livestatus
 import sites
-from gui_exceptions import MKGeneralException
+from cmk.gui.exceptions import MKGeneralException
 
 import cmk.paths
 import cmk.ec.settings

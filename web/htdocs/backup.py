@@ -42,7 +42,7 @@ import json
 import table
 import key_mgmt
 from valuespec import *
-from gui_exceptions import MKUserError, MKGeneralException
+from cmk.gui.exceptions import MKUserError, MKGeneralException
 import cmk.render as render
 import cmk.store as store
 from cmk.schedule import next_scheduled_time

@@ -30,7 +30,7 @@ import json
 
 import utils
 from log import logger
-from gui_exceptions import MKGeneralException, MKAuthException, MKUserError, MKInternalError
+from cmk.gui.exceptions import MKGeneralException, MKAuthException, MKUserError, MKInternalError
 from valuespec import *
 import config, table, userdb
 import pagetypes # That will replace visuals.py one day

@@ -39,7 +39,7 @@ import cmk.store as store
 import table
 import config
 from valuespec import *
-from gui_exceptions import MKUserError
+from cmk.gui.exceptions import MKUserError
 
 
 class KeypairStore(object):

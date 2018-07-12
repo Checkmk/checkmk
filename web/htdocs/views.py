@@ -33,7 +33,7 @@ import bi
 import inspect
 import livestatus
 from log import logger
-from gui_exceptions import MKGeneralException, MKUserError, MKInternalError
+from cmk.gui.exceptions import MKGeneralException, MKUserError, MKInternalError
 
 import cmk.paths
 

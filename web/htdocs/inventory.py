@@ -35,7 +35,7 @@ import config
 import userdb
 import sites
 import livestatus
-from gui_exceptions import MKException, MKGeneralException, MKAuthException, MKUserError
+from cmk.gui.exceptions import MKException, MKGeneralException, MKAuthException, MKUserError
 
 import cmk.paths
 import cmk.store as store

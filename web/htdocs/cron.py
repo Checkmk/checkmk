@@ -33,7 +33,7 @@ from log import logger
 import cmk.paths
 import cmk.store as store
 
-from gui_exceptions import MKGeneralException
+from cmk.gui.exceptions import MKGeneralException
 
 loaded_with_language = False
 multisite_cronjobs = []

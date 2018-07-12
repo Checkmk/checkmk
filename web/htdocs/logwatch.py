@@ -26,7 +26,7 @@
 
 import time, re, datetime, config, table, livestatus
 import views, sites
-from gui_exceptions import MKGeneralException, MKUserError, MKAuthException
+from cmk.gui.exceptions import MKGeneralException, MKUserError, MKAuthException
 
 
 #   .--HTML Output---------------------------------------------------------.

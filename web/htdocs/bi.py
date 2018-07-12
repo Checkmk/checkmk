@@ -42,7 +42,7 @@ import cmk
 import config
 import sites
 from log import logger
-from gui_exceptions import MKConfigError, MKGeneralException
+from cmk.gui.exceptions import MKConfigError, MKGeneralException
 
 # Datastructures and functions needed before plugins can be loaded
 loaded_with_language = False

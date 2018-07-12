@@ -28,7 +28,7 @@ import config
 import utils
 import re
 
-from gui_exceptions import MKUserError
+from cmk.gui.exceptions import MKUserError
 
 def ajax_tree_openclose():
     html.load_tree_states()

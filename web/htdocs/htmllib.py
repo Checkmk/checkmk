@@ -80,7 +80,7 @@ json.JSONEncoder.default = _default # replacement
 
 import cmk.paths
 from cmk.exceptions import MKGeneralException
-from gui_exceptions import MKUserError, RequestTimeout
+from cmk.gui.exceptions import MKUserError, RequestTimeout
 
 import utils
 import config

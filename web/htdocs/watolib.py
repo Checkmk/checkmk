@@ -78,7 +78,7 @@ import mkeventd
 import backup
 from log import logger
 from valuespec import *
-from gui_exceptions import MKGeneralException, MKAuthException, MKUserError
+from cmk.gui.exceptions import MKGeneralException, MKAuthException, MKUserError
 
 if cmk.is_managed_edition():
     import managed

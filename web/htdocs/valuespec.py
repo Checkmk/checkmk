@@ -56,7 +56,7 @@ import livestatus
 
 import forms
 import utils
-from gui_exceptions import MKUserError, MKGeneralException
+from cmk.gui.exceptions import MKUserError, MKGeneralException
 
 def type_name(v):
     try:

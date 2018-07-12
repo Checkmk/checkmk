@@ -117,7 +117,7 @@ import multitar
 import userdb
 import weblib
 import login
-from gui_exceptions import MKGeneralException, MKUserError, MKAuthException, \
+from cmk.gui.exceptions import MKGeneralException, MKUserError, MKAuthException, \
                            MKInternalError, MKException
 from log import logger
 from valuespec import *

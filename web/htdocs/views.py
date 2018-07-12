@@ -2166,7 +2166,7 @@ def show_context_links(thisview, datasource, show_filters,
 
 
     ## Small buttons
-    html.open_span(class_="context_buttons_small")
+    html.open_div(class_="context_buttons_small")
     filter_isopen = html.var("filled_in") != "filter" and thisview.get("mustsearch")
     if display_options.enabled(display_options.F):
         if html.var("filled_in") == "filter":
@@ -2206,7 +2206,7 @@ def show_context_links(thisview, datasource, show_filters,
             view_optiondial(thisview, "refresh", choices, _("Change the refresh rate"))
         else:
             view_optiondial_off("refresh")
-    html.close_span()
+    html.close_div()
 
     ## Large buttons
     if display_options.enabled(display_options.B):

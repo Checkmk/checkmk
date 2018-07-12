@@ -92,7 +92,7 @@ def get_pattern(pattern, line):
     p = re.compile(pattern)
     return p.findall(line)
 
-class Server:
+class Server(object):
     def __init__(self, host_address):
         self.netloc         = host_address
         self.session_handle = requests.Session()

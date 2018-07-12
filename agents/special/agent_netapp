@@ -199,7 +199,7 @@ else:
         reparsed = minidom.parseString(rough_string)
         return reparsed.toprettyxml(indent="\t")
 
-    class ErrorMessages():
+    class ErrorMessages(object):
         def __init__(self):
             self.messages = set()
 
@@ -217,7 +217,7 @@ else:
         def format_messages(self):
             return "\n".join(self.messages)
 
-    class NetAppConnection():
+    class NetAppConnection(object):
         def __init__(self, hostname, user, password):
             self.hostname = hostname
             self.user     = user
@@ -376,7 +376,7 @@ else:
 
 
     # NetApp Response Oject, holds the actual content in the NetAppNode member variable
-    class NetAppResponse():
+    class NetAppResponse(object):
         def __init__(self, response):
             self.content = None
             self.reason  = None

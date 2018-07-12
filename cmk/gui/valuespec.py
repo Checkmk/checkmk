@@ -58,6 +58,7 @@ import cmk.gui.pages
 import cmk.gui.forms as forms
 import cmk.gui.utils as utils
 from cmk.gui.i18n import _
+from cmk.gui.globals import html
 from cmk.gui.htmllib import HTML
 from cmk.gui.exceptions import MKUserError, MKGeneralException
 

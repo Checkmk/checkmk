@@ -49,6 +49,7 @@ import cmk.gui.utils
 from cmk.gui.log import logger
 from cmk.gui.htmllib import HTML
 from cmk.gui.i18n import _
+from cmk.gui.globals import html
 from cmk.gui.exceptions import MKGeneralException
 
 # TODO: Better name it PainterOptions or DisplayOptions? There are options which only affect

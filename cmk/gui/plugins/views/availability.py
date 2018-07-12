@@ -29,6 +29,7 @@ import cmk.gui.availability as availability
 import cmk.gui.table as table
 import cmk.gui.bi as bi
 from cmk.gui.i18n import _
+from cmk.gui.globals import html
 from cmk.gui.valuespec import *
 
 from . import (

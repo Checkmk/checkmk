@@ -36,6 +36,7 @@ import cmk.gui.userdb as userdb
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.valuespec import *
 from cmk.gui.i18n import _
+from cmk.gui.globals import html
 
 from . import (
     configvar_order,

@@ -31,6 +31,7 @@ import traceback
 import cmk.regex
 
 import cmk.gui.config as config
+from cmk.gui.globals import html
 from cmk.gui.htmllib import HTML
 
 modules = glob.glob(os.path.join(os.path.dirname(__file__), "*.py"))

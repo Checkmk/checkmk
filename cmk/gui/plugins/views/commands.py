@@ -35,6 +35,7 @@ import cmk.gui.bi as bi
 import cmk.gui.sites as sites
 import cmk.gui.notifications as notifications
 from cmk.gui.i18n import _u, _
+from cmk.gui.globals import html
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.valuespec import Age
 

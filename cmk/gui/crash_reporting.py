@@ -38,6 +38,7 @@ import livestatus
 import cmk.gui.pages
 import cmk.gui.i18n
 from cmk.gui.i18n import _
+from cmk.gui.globals import html
 from cmk.gui.htmllib import HTML
 import cmk.gui.sites as sites
 from cmk.gui.exceptions import MKGeneralException, MKUserError

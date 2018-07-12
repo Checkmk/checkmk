@@ -28,6 +28,7 @@ import json
 import time
 
 from cmk.gui.i18n import _
+from cmk.gui.globals import html
 
 from . import (
     multisite_layouts,

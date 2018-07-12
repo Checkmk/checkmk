@@ -32,6 +32,7 @@ import cmk.gui.inventory as inventory
 import cmk.defines as defines
 from cmk.gui.valuespec import (Age, DualListChoice)
 from cmk.gui.i18n import _
+from cmk.gui.globals import html
 from cmk.gui.exceptions import MKUserError
 
 from . import (

@@ -27,6 +27,7 @@
 import cmk.gui.mkeventd as mkeventd
 import cmk.gui.config as config
 from cmk.gui.i18n import _
+from cmk.gui.globals import html
 
 from . import (
     snapin_site_choice,

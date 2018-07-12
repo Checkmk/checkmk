@@ -32,6 +32,7 @@ import cmk.gui.watolib as watolib
 import cmk.gui.sites as sites
 import cmk.gui.config as config
 from cmk.gui.i18n import _
+from cmk.gui.globals import html
 
 from . import (
     Filter,

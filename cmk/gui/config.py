@@ -34,6 +34,7 @@ import copy
 import cmk.gui.utils as utils
 import cmk.gui.i18n
 from cmk.gui.i18n import _
+from cmk.gui.globals import html
 import cmk.gui.log as log
 import cmk.paths
 import cmk.store as store

@@ -39,6 +39,7 @@ import cmk.gui.utils as utils
 import cmk.gui.config as config
 import cmk.gui.table as table
 from cmk.gui.i18n import _
+from cmk.gui.globals import html
 from cmk.gui.valuespec import *
 
 acknowledgement_path = cmk.paths.var_dir + "/acknowledged_werks.mk"

@@ -28,6 +28,7 @@ import traceback
 
 import cmk.gui.gui_background_job as gui_background_job
 from cmk.gui.i18n import _
+from cmk.gui.globals import html
 from cmk.gui.log import logger
 
 from . import (

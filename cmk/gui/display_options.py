@@ -24,6 +24,8 @@
 # to the free software foundation, inc., 51 franklin st,  fifth floor,
 # boston, ma 02110-1301 usa.
 
+from cmk.gui.globals import html
+
 #.
 #   .--Display Opts.-------------------------------------------------------.
 #   |       ____  _           _                ___        _                |

@@ -26,6 +26,7 @@
 
 from cmk.gui.htmllib import HTML
 from cmk.gui.i18n import _
+from cmk.gui.globals import html
 from cmk.gui.exceptions import MKUserError
 
 # A input function with the same call syntax as htmllib.textinput()

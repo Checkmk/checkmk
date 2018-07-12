@@ -33,6 +33,7 @@ import cmk.gui.bi as bi
 import cmk.gui.sites as sites
 from cmk.gui.valuespec import *
 from cmk.gui.i18n import _
+from cmk.gui.globals import html
 
 
 #   .--Declarations--------------------------------------------------------.

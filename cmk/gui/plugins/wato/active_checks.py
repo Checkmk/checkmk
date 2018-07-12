@@ -26,6 +26,7 @@
 
 import cmk.gui.mkeventd as mkeventd
 from cmk.gui.i18n import _
+from cmk.gui.globals import html
 # TODO: Clean this * import up!
 from cmk.gui.valuespec import *
 

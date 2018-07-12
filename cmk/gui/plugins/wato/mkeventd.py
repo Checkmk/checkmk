@@ -47,6 +47,7 @@ import cmk.gui.hooks as hooks
 import cmk.gui.table as table
 from cmk.gui.valuespec import *
 from cmk.gui.i18n import _
+from cmk.gui.globals import html
 from cmk.gui.htmllib import HTML
 from cmk.gui.wato.pages.global_settings import GlobalSettingsMode, EditGlobalSettingMode
 

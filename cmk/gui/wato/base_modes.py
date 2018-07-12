@@ -29,6 +29,7 @@ import json
 
 import cmk.gui.config as config
 from cmk.gui.i18n import _
+from cmk.gui.globals import html
 from cmk.gui.exceptions import MKException
 from cmk.gui.log import logger
 from .context_buttons import global_buttons

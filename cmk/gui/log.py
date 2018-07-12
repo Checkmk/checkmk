@@ -30,6 +30,7 @@ import cmk.log
 import cmk.paths
 
 from cmk.gui.i18n import _
+from cmk.gui.globals import html
 
 class CMKWebLogger(_logging.getLoggerClass()):
     def exception(self, *args, **kwargs):

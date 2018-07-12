@@ -35,6 +35,7 @@ import cmk.gui.log as log
 from cmk.gui.log import logger
 from cmk.gui.valuespec import *
 from cmk.gui.i18n import _
+from cmk.gui.globals import html
 
 from . import (
     ConfigDomain,

@@ -35,6 +35,7 @@ from hashlib import md5
 import cmk.gui.config as config
 import cmk.gui.watolib as watolib
 from cmk.gui.i18n import _
+from cmk.gui.globals import html
 from cmk.gui.log import logger
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.valuespec import Hostname

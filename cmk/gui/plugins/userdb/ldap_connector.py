@@ -63,6 +63,7 @@ import cmk.gui.config as config
 import cmk.gui.log as log
 from cmk.gui.valuespec import *
 from cmk.gui.i18n import _
+from cmk.gui.globals import html
 from cmk.gui.exceptions import MKGeneralException, MKUserError
 from . import UserConnector
 

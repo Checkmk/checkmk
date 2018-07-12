@@ -27,6 +27,7 @@
 import cmk.gui.config as config
 import cmk.gui.watolib as watolib
 from cmk.gui.i18n import _
+from cmk.gui.globals import html
 
 class MainMenu(object):
     def __init__(self, items=None, columns=2):

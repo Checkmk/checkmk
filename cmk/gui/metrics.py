@@ -56,6 +56,7 @@ import cmk.gui.sites as sites
 import cmk.gui.i18n
 import cmk.gui.pages
 from cmk.gui.i18n import _
+from cmk.gui.globals import html
 
 from cmk.gui.log import logger
 from cmk.gui.valuespec import *

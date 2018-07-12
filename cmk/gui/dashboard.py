@@ -38,6 +38,7 @@ import cmk.gui.utils as utils
 from cmk.gui.valuespec import *
 import cmk.gui.i18n
 from cmk.gui.i18n import _u, _
+from cmk.gui.globals import html
 
 from cmk.gui.exceptions import MKGeneralException, MKAuthException, MKUserError
 

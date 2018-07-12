@@ -28,6 +28,7 @@ from typing import Optional # pylint: disable=unused-import
 
 import cmk.gui.http_status
 from cmk.gui.i18n import _
+from cmk.gui.globals import html
 
 from cmk.exceptions import MKGeneralException, MKException
 

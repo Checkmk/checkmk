@@ -30,6 +30,7 @@ import cmk.gui.bi as bi
 from cmk.gui.valuespec import (DropdownChoice)
 from cmk.gui.htmllib import HTML
 from cmk.gui.i18n import _
+from cmk.gui.globals import html
 
 from . import (
     painter_options,

@@ -32,6 +32,7 @@ import json
 
 import cmk.gui.config as config
 from cmk.gui.i18n import _, _u
+from cmk.gui.globals import html
 
 # Constants to be used in snapins
 snapin_width = 230

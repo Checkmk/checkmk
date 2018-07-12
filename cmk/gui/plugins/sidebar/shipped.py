@@ -47,6 +47,7 @@ import cmk.gui.notifications as notifications
 from cmk.gui.valuespec import *
 from cmk.gui.htmllib import HTML
 from cmk.gui.i18n import _u, _
+from cmk.gui.globals import html
 from cmk.gui.log import logger
 
 from . import (

@@ -122,6 +122,7 @@ import cmk.gui.pages
 import cmk.gui.plugin_registry
 import cmk.gui.wato.base_modes
 from cmk.gui.i18n import _u, _
+from cmk.gui.globals import html
 from cmk.gui.htmllib import HTML
 from cmk.gui.exceptions import MKGeneralException, MKUserError, MKAuthException, \
                            MKInternalError, MKException

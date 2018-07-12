@@ -26,6 +26,7 @@
 
 import cmk.gui.config as config
 from cmk.gui.i18n import _
+from cmk.gui.globals import html
 from cmk.gui.valuespec import (TextUnicode, Integer)
 
 from cmk.gui.plugins.visuals import declare_info

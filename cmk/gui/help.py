@@ -28,6 +28,7 @@ import json
 
 import cmk.gui.config as config
 import cmk.gui.pages
+from cmk.gui.globals import html
 
 @cmk.gui.pages.register("ajax_switch_help")
 def ajax_switch_help():

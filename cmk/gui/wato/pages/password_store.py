@@ -31,6 +31,7 @@ import cmk.gui.table as table
 # TODO: Does this import make sense here? only forms.end() is used. Why?
 import cmk.gui.forms as forms
 from cmk.gui.i18n import _
+from cmk.gui.globals import html
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.valuespec import (
     Dictionary,

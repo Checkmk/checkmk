@@ -34,6 +34,7 @@ import cmk.gui.sites as sites
 import cmk.gui.utils as utils
 import cmk.gui.inventory as inventory
 from cmk.gui.i18n import _
+from cmk.gui.globals import html
 from cmk.gui.valuespec import *
 
 import cmk.gui.plugins.visuals

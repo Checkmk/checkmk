@@ -32,6 +32,7 @@ import cmk.gui.config as config
 import cmk.gui.weblib as weblib
 import cmk.gui.table as table
 from cmk.gui.i18n import _
+from cmk.gui.globals import html
 from cmk.gui.exceptions import MKGeneralException
 
 from . import (

@@ -37,6 +37,7 @@ import cmk.gui.pages
 import cmk.gui.config as config
 import cmk.gui.sites as sites
 from cmk.gui.i18n import _
+from cmk.gui.globals import html
 from cmk.gui.exceptions import MKGeneralException
 
 

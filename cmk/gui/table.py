@@ -30,6 +30,7 @@ from contextlib import contextmanager
 import cmk.gui.utils as utils
 import cmk.gui.config as config
 from cmk.gui.i18n import _
+from cmk.gui.globals import html
 from cmk.gui.htmllib import HTML
 
 

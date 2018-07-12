@@ -35,6 +35,7 @@ import cmk.gui.watolib as watolib
 import cmk.gui.i18n
 import cmk.gui.pages
 from cmk.gui.i18n import _u, _
+from cmk.gui.globals import html
 
 g_acknowledgement_time = {}
 g_modified_time        = 0

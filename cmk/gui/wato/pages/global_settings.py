@@ -31,6 +31,7 @@ import cmk.gui.watolib as watolib
 import cmk.gui.forms as forms
 from cmk.gui.wato.base_modes import WatoMode
 from cmk.gui.i18n import _
+from cmk.gui.globals import html
 from cmk.gui.exceptions import MKGeneralException, MKAuthException
 from cmk.gui.log import logger
 from cmk.gui.htmllib import HTML

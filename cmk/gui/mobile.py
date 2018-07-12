@@ -33,6 +33,7 @@ import cmk.gui.metrics as metrics
 import cmk.gui.utils
 
 from cmk.gui.i18n import _
+from cmk.gui.globals import html
 from cmk.gui.exceptions import MKGeneralException, MKUserError
 
 from cmk.gui.plugins.views import painter_options

@@ -35,6 +35,7 @@ import cmk.gui.notify as notify
 import cmk.gui.table as table
 import cmk.gui.notifications as notifications
 from cmk.gui.i18n import _
+from cmk.gui.globals import html
 from cmk.gui.htmllib import HTML
 from cmk.gui.exceptions import MKUserError
 

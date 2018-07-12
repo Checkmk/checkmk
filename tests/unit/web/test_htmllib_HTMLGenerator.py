@@ -4,6 +4,7 @@
 import traceback
 
 from cmk.gui.htmllib import HTMLGenerator
+from cmk.gui.globals import html
 import tools
 
 

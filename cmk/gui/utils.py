@@ -36,6 +36,7 @@ import marshal
 import cmk.paths
 
 from cmk.gui.i18n import _
+from cmk.gui.globals import html
 
 
 def drop_dotzero(v, digits=2):

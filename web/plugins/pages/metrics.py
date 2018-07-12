@@ -24,7 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import metrics
+import cmk.gui.metrics as metrics
 
 register_handlers({
     "noauth:pnp_template" : metrics.page_pnp_template,

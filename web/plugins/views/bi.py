@@ -24,7 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import bi
+import cmk.gui.bi as bi
 from cmk.defines import short_service_state_name
 
 

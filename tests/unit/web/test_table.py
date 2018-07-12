@@ -8,9 +8,9 @@ import pytest
 from tools import compare_html, gentest, compare_and_empty, bcolors
 
 import htmllib
-import http
-import table
-from table import Table
+import cmk.gui.http as http
+import cmk.gui.table as table
+from cmk.gui.table import Table
 
 
 def read_out_simple_table(text):

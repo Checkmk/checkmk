@@ -159,6 +159,7 @@ def del_language_cookie():
 
 
 def set_language_cookie(lang):
+    # type: (str) -> None
     cookie_lang = html.request.cookie("language")
     if cookie_lang != lang:
         if lang != None:
@@ -179,17 +180,20 @@ def set_language_cookie(lang):
 #   | Users can localize custom strings using the global configuration     |
 #   '----------------------------------------------------------------------'
 
+_user_localizations = {}
 
 # Localization of user supplied texts
 def _u(text):
-    # type: (unicode) -> unicode
-    # TODO: Reimplement this once config is available in "cmk.gui"!
-    #import config
-    #ldict = config.user_localizations.get(text)
-    #if ldict:
-    #    return ldict.get(get_current_language(), text)
-    #else:
-    return text
+    ldict = _user_localizations.get(text)
+    if ldict:
+        return ldict.get(get_current_language(), text)
+    else:
+        return text
+
+
+def set_user_localizations(localizations):
+    _user_localizations.clear()
+    _user_localizations.update(localizations)
 
 
 initialize()

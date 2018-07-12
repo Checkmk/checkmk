@@ -24,14 +24,17 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+import time
 import crypt
+
+import cmk.store as store
 import cmk.paths
 
 def encrypt_password(password, salt=None, prefix="1"):
-    import md5crypt
+    import cmk.gui.md5crypt
     if not salt:
         salt = "%06d" % (1000000 * (time.time() % 1.0))
-    return md5crypt.md5crypt(password, salt, '$%s$' % prefix)
+    return cmk.gui.md5crypt.md5crypt(password, salt, '$%s$' % prefix)
 
 
 class HtpasswdUserConnector(UserConnector):

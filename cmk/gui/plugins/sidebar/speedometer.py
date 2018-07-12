@@ -27,7 +27,7 @@
 import json
 
 from cmk.gui.i18n import _
-import sites
+import cmk.gui.sites as sites
 
 from . import SidebarSnapin
 

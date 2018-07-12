@@ -4,7 +4,7 @@ import time
 import pytest
 
 import htmllib
-from gui_exceptions import RequestTimeout
+from cmk.gui.exceptions import RequestTimeout
 
 def test_htmllib_integration(register_builtin_html):
     assert html.request.request_timeout == 110

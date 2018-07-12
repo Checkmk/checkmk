@@ -24,8 +24,11 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import config, wato, views, dashboard
-import watolib
+import cmk.gui.config as config
+import cmk.gui.wato as wato
+import cmk.gui.views as views
+import cmk.gui.dashboard as dashboard
+import cmk.gui.watolib as watolib
 
 #   .--WATO----------------------------------------------------------------.
 #   |                     __        ___  _____ ___                         |

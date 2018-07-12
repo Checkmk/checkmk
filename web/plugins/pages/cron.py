@@ -24,8 +24,8 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import cron
+import cmk.gui.cron
 
 register_handlers({
-    "noauth:run_cron" :  cron.page_run_cron,
+    "noauth:run_cron" :  cmk.gui.cron.page_run_cron,
 })

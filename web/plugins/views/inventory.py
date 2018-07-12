@@ -24,11 +24,16 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import utils
-import inventory
 from cmk.regex import regex
 import cmk.defines as defines
 import cmk.render
+
+import cmk.gui.config as config
+import cmk.gui.sites as sites
+import cmk.gui.utils as utils
+import cmk.gui.inventory as inventory
+from cmk.gui.i18n import _
+from cmk.gui.valuespec import *
 
 def paint_host_inventory_tree(row, invpath=".", column="host_inventory"):
     struct_tree = row.get(column)

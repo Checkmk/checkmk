@@ -114,4 +114,4 @@ max-line-length=100
 
 [VARIABLES]
 # Needed by web code because of super globals. TODO Clean this up some day
-additional-builtins=html,HTML
+additional-builtins=html

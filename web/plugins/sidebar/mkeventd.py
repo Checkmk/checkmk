@@ -24,7 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import mkeventd
+import cmk.gui.mkeventd as mkeventd
 
 try:
     mkeventd_enabled = config.mkeventd_enabled

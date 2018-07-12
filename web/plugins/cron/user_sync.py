@@ -24,6 +24,6 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import userdb
+import cmk.gui.userdb as userdb
 
 register_job(userdb.execute_userdb_job)

@@ -3,7 +3,7 @@
 import pytest
 import time
 
-import http
+import cmk.gui.http as http
 import htmllib
 
 @pytest.fixture()

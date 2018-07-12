@@ -58,9 +58,9 @@ from ldap.controls import SimplePagedResultsControl
 
 import cmk.paths
 
-import config
-import watolib
-import log
+import cmk.gui.config as config
+import cmk.gui.watolib as watolib
+import cmk.gui.log as log
 import cmk.log
 
 # LDAP attributes are case insensitive, we only use lower case!
@@ -1942,7 +1942,7 @@ ldap_attribute_plugins['groups_to_roles'] = {
 # time. In this case the implementation does not scale well. We would need to
 # change this to some kind of profile bulk sync per site.
 def synchronize_profile_to_sites(connection, user_id, profile):
-    import sites
+    import cmk.gui.sites as sites
     import wato # FIXME: Cleanup!
 
     remote_sites = [(site_id, config.site(site_id))

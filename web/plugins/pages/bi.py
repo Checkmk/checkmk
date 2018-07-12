@@ -24,7 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import bi
+import cmk.gui.bi as bi
 
 register_handlers({
     "bi_debug"          : bi.page_debug,

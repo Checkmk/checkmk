@@ -24,8 +24,8 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import config
-import watolib
+import cmk.gui.config as config
+import cmk.gui.watolib as watolib
 
 
 multisite_painters["host_filename"] = {

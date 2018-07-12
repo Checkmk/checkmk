@@ -736,7 +736,7 @@ register_configvar(group,
 
 
 def get_builtin_icons():
-    import views
+    import cmk.gui.views as views
     return [ (id, id) for id in views.get_multisite_icons().keys() ]
 
 register_configvar(group,

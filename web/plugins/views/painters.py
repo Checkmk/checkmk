@@ -65,16 +65,15 @@
 import traceback
 import copy
 
-import bi # Needed for BI Icon. For arkane reasons (ask htdocs/module.py) this
-          # cannot be imported in views.py directly.
-import config
-import utils
-
 import cmk.paths
 import cmk.render
 import cmk.man_pages as man_pages
 from cmk.regex import regex
 from cmk.defines import short_service_state_name, short_host_state_name
+
+import cmk.gui.bi as bi
+import cmk.gui.config as config
+import cmk.gui.utils as utils
 
 #   .--Painter Options-----------------------------------------------------.
 #   |                   ____       _       _                               |
@@ -2624,47 +2623,3 @@ multisite_painters["host_tags_with_titles"] = {
     "paint"   : paint_host_tags_with_titles,
     "sorter"  : 'host',
 }
-
-
-def paint_host_tag(row, tgid):
-    tags_of_host = get_host_tags(row).split()
-
-    for t in get_tag_group(tgid)[1]:
-        if t[0] in tags_of_host:
-            return "", t[1]
-    return "", _("N/A")
-
-# Use title of the tag value for grouping, not the complete
-# dictionary of custom variables!
-def groupby_host_tag(row, tgid):
-    cssclass, title = paint_host_tag(row, tgid)
-    return title
-
-def load_host_tag_painters():
-    # first remove all old painters to reflect delted painters during runtime
-    for key in multisite_painters.keys():
-        if key.startswith('host_tag_'):
-            del multisite_painters[key]
-
-    for entry in config.host_tag_groups():
-        tgid = entry[0]
-        tit  = entry[1]
-        ch   = entry[2]
-
-        long_tit = tit
-        if '/' in tit:
-            topic, tit = tit.split('/', 1)
-            if topic:
-                long_tit = topic + ' / ' + tit
-            else:
-                long_tit = tit
-
-        multisite_painters["host_tag_" + tgid] = {
-            "title"   : _("Host tag:") + ' ' + long_tit,
-            "name"    : "host_tag_" + tgid,
-            "short"   : tit,
-            "columns" : [ "host_custom_variables" ],
-            "paint"   : paint_host_tag,
-            "groupby" : groupby_host_tag,
-            "args"    : [ tgid ],
-        }

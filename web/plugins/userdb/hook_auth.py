@@ -232,7 +232,7 @@ def create_auth_file(callee, users):
 # TODO: Dead code?
 def get_folder_permissions_of_users(users):
     users = load_users()
-    import watolib
+    import cmk.gui.watolib as watolib
 
     permissions = {}
     for username in users.iterkeys():

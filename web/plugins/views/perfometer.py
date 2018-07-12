@@ -25,10 +25,10 @@
 # Boston, MA 02110-1301 USA.
 
 # Painters for Perf-O-Meter
-import utils
+import cmk.gui.utils as utils
 import math
-import metrics
-from log import logger
+import cmk.gui.metrics as metrics
+from cmk.gui.log import logger
 
 perfometers = {}
 

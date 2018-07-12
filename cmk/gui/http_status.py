@@ -77,6 +77,7 @@ HTTP_NOT_EXTENDED                 = 510
 
 
 def status_with_reason(code):
+    # type: (int) -> str
     if code == HTTP_OK:
         return '200 OK'
     elif code == HTTP_MOVED_TEMPORARILY:

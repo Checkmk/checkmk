@@ -163,7 +163,6 @@ def _initialize_ip_lookup_cache():
         if cmk.debug.enabled():
             raise
         # TODO: Would be better to log it somewhere to make the failure transparent
-        pass
 
     return ip_lookup_cache
 

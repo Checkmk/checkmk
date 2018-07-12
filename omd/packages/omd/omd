@@ -806,7 +806,6 @@ def try_chown(filename, user):
             os.chown(filename, uid, gid)
         except Exception, e:
             sys.stderr.write("Cannot chown %s to %s: %s\n" % (filename, user, e))
-            pass
 
 
 def instantiate_skel(path):
@@ -3855,8 +3854,7 @@ def kill_site_user_processes(exclude_current_and_parents=False):
                 os.kill(pid, 9) # SIGKILL
             except OSError, e:
                 if e.errno == 3:
-                    pids.remove(pid)
-                    pass # No such process
+                    pids.remove(pid) # No such process
                 else:
                     raise
         time.sleep(1)

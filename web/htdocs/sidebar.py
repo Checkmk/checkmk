@@ -24,6 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+import abc
 import pprint
 import os
 import copy
@@ -1145,6 +1146,9 @@ def register_snapin(snapin_id, snapin):
 
 
 class SidebarSnapin(object):
+    metaclass = abc.ABCMeta
+
+    @abc.abstractmethod
     def title(self):
         raise NotImplementedError()
 
@@ -1153,6 +1157,7 @@ class SidebarSnapin(object):
         return ""
 
 
+    @abc.abstractmethod
     def show(self):
         raise NotImplementedError()
 

@@ -42,7 +42,6 @@ import random
 import string
 import json
 import traceback
-from collections import OrderedDict
 import livestatus
 
 import cmk.utils
@@ -62,6 +61,42 @@ from cmk.gui.valuespec import *
 from cmk.gui.exceptions import MKGeneralException, MKUserError, MKInternalError, \
                            MKUnauthenticatedException, MKAuthException
 
+from cmk.gui.plugins.metrics.utils import (
+    unit_info,
+    metric_info,
+    check_metrics,
+    perfometer_info,
+    graph_info,
+    scalar_colors,
+    KB,
+    MB,
+    GB,
+    TB,
+    PB,
+    m,
+    K,
+    M,
+    G,
+    T,
+    P,
+    evaluate,
+    get_graph_range,
+    replace_expressions,
+    generic_graph_template,
+    scale_symbols,
+    hsv_to_hexrgb,
+    render_color,
+    parse_color,
+    parse_color_into_hexrgb,
+    render_color_icon,
+    darken_color,
+    get_palette_color_by_index,
+    parse_perf_data,
+    perfvar_translation,
+    translate_metrics,
+    get_graph_templates,
+)
+
 #   .--Plugins-------------------------------------------------------------.
 #   |                   ____  _             _                              |
 #   |                  |  _ \| |_   _  __ _(_)_ __  ___                    |
@@ -76,42 +111,16 @@ from cmk.gui.exceptions import MKGeneralException, MKUserError, MKInternalError,
 loaded_with_language = False
 
 
-# Dictionary class with the ability of appending items like provided
-# by a list.
-class AutomaticDict(OrderedDict):
-
-    def __init__(self, list_identifier = None, start_index = None):
-        OrderedDict.__init__(self)
-        self._list_identifier = list_identifier or "item"
-        self._item_index = start_index or 0
-
-
-    def append(self, item):
-        self["%s_%i" %(self._list_identifier, self._item_index)] = item
-        self._item_index += 1
-
-
 def load_plugins(force):
     global loaded_with_language
     if loaded_with_language == cmk.gui.i18n.get_current_language() and not force:
         return
-
-    global unit_info       ; unit_info       = {}
-    global metric_info     ; metric_info     = {}
-    global check_metrics   ; check_metrics   = {}
-    global perfometer_info ; perfometer_info = []
-
-    # mk_collections.AutomaticDict is used here to provide some list methods.
-    # This is needed to maintain backwards-compatibility.
-    global graph_info      ; graph_info      = AutomaticDict("manual_graph_template")
 
     utils.load_web_plugins("metrics", globals())
 
     fixup_graph_info()
     fixup_unit_info()
     fixup_perfometer_info()
-    loaded_with_language = cmk.gui.i18n.get_current_language()
-
     loaded_with_language = cmk.gui.i18n.get_current_language()
 
 
@@ -237,69 +246,6 @@ def _required_trivial_metric_names(required_expressions):
 
     return required_metric_names
 
-
-#.
-#   .--Constants-----------------------------------------------------------.
-#   |              ____                _              _                    |
-#   |             / ___|___  _ __  ___| |_ __ _ _ __ | |_ ___              |
-#   |            | |   / _ \| '_ \/ __| __/ _` | '_ \| __/ __|             |
-#   |            | |__| (_) | | | \__ \ || (_| | | | | |_\__ \             |
-#   |             \____\___/|_| |_|___/\__\__,_|_| |_|\__|___/             |
-#   |                                                                      |
-#   +----------------------------------------------------------------------+
-#   |  Various constants to be used by the declarations of the plugins.    |
-#   '----------------------------------------------------------------------'
-
-KB = 1024
-MB = KB * 1024
-GB = MB * 1024
-TB = GB * 1024
-PB = TB * 1024
-
-m = 0.001
-K = 1000
-M = K * 1000
-G = M * 1000
-T = G * 1000
-P = T * 1000
-
-scale_symbols = {
-  m  : "m",
-  1  : "",
-  KB : "k",
-  MB : "M",
-  GB : "G",
-  TB : "T",
-  PB : "P",
-  K  : "k",
-  M  : "M",
-  G  : "G",
-  T  : "T",
-  P  : "P",
-}
-
-scalar_colors = {
-    "warn" : "#ffff00",
-    "crit" : "#ff0000",
-}
-
-
-class GraphDestinations(object):
-    dashlet      = "dashlet"
-    view         = "view"
-    report       = "report"
-    notification = "notification"
-
-    @classmethod
-    def choices(cls):
-        return [
-            (GraphDestinations.dashlet,      _("Dashlet")),
-            (GraphDestinations.view,         _("View")),
-            (GraphDestinations.report,       _("Report")),
-            (GraphDestinations.notification, _("Notification")),
-        ]
-
-
 #.
 #   .--Helpers-------------------------------------------------------------.
 #   |                  _   _      _                                        |
@@ -313,13 +259,6 @@ class GraphDestinations(object):
 #   '----------------------------------------------------------------------'
 # A few helper function to be used by the definitions
 
-# "45.0" -> 45.0, "45" -> 45
-def float_or_int(v):
-    try:
-        return int(v)
-    except:
-        return float(v)
-
 def metric_to_text(metric, value=None):
     if value == None:
         value = metric["value"]
@@ -328,201 +267,6 @@ def metric_to_text(metric, value=None):
 # aliases to be compatible to old plugins
 physical_precision = cmk.render.physical_precision
 age_human_readable = cmk.render.approx_age
-
-
-#.
-#   .--Colors--------------------------------------------------------------.
-#   |                      ____      _                                     |
-#   |                     / ___|___ | | ___  _ __ ___                      |
-#   |                    | |   / _ \| |/ _ \| '__/ __|                     |
-#   |                    | |__| (_) | | (_) | |  \__ \                     |
-#   |                     \____\___/|_|\___/|_|  |___/                     |
-#   |                                                                      |
-#   +----------------------------------------------------------------------+
-#   |  Functions and constants dealing with colors                         |
-#   '----------------------------------------------------------------------'
-
-cmk_color_palette = {
-# do not use:
-#   "0"     : (0.33, 1, 1),  # green
-#   "1"     : (0.167, 1, 1), # yellow
-#   "2"     : (0, 1, 1),     # red
-# red area
-    "11"    : (0.775, 1, 1),
-    "12"    : (0.8, 1, 1),
-    "13"    : (0.83, 1, 1),
-    "14"    : (0.05, 1, 1),
-    "15"    : (0.08, 1, 1),
-    "16"    : (0.105, 1, 1),
-# yellow area
-    "21"    : (0.13, 1, 1),
-    "22"    : (0.14, 1, 1),
-    "23"    : (0.155, 1, 1),
-    "24"    : (0.185, 1, 1),
-    "25"    : (0.21, 1, 1),
-    "26"    : (0.25, 1, 1),
-# green area
-    "31"    : (0.45, 1, 1),
-    "32"    : (0.5, 1, 1),
-    "33"    : (0.515, 1, 1),
-    "34"    : (0.53, 1, 1),
-    "35"    : (0.55, 1, 1),
-    "36"    : (0.57, 1, 1),
-# blue area
-    "41"    : (0.59, 1, 1),
-    "42"    : (0.62, 1, 1),
-    "43"    : (0.66, 1, 1),
-    "44"    : (0.71, 1, 1),
-    "45"    : (0.73, 1, 1),
-    "46"    : (0.75, 1, 1),
-# special colors
-    "51"    : (0, 0, 0.5),        # grey_50
-    "52"    : (0.067, 0.7, 0.5),  # brown 1
-    "53"    : (0.083, 0.8, 0.55), # brown 2
-}
-
-def get_palette_color_by_index(i, shading='a'):
-    color_key = sorted(cmk_color_palette.keys())[i % len(cmk_color_palette)]
-    return "%s/%s" % (color_key, shading)
-
-
-# Return a list of colors that are as different as possible (visually)
-# by distributing them on the HSV color wheel.
-def get_n_different_colors(n):
-    total_weight = sum([x[1] for x in hsv_color_distribution])
-
-    colors = []
-    while len(colors) < n:
-        weight_index = len(colors) * total_weight / n
-        hue = get_hue_by_weight_index(weight_index)
-        colors.append(hsv_to_hexrgb((hue, 1, 1)))
-    return colors
-
-
-def get_hue_by_weight_index(weight_index):
-    section_begin = 0.0
-    for section_end, section_weight in hsv_color_distribution:
-        if weight_index < section_weight:
-            section_size = section_end - section_begin
-            hue = section_begin + ((weight_index / section_weight) * section_size)
-            return hue
-        weight_index -= section_weight
-        section_begin = section_end
-
-
-
-# Try to distribute colors in a whay that the psychological
-# colors distance is distributed evenly.
-hsv_color_distribution = [
-  (0.1, 10.0), # orange ... red
-  (0.2, 10.0), # orange ... yellow(-greenish)
-  (0.3,  5.0), # green-yellow
-  (0.4,  2.0), # green
-  (0.5,  5.0), # green .... cyan
-  (0.6, 20.0), # cyan ... seablue
-  (0.7, 10.0), # seablue ... dark blue
-  (0.8, 20.0), # dark blue ... violet
-  (0.9, 20.0), # violet .. magenta
-  (1.0, 20.0), # magenta .. red
-]
-
-
-
-def get_next_random_palette_color():
-    keys = cmk_color_palette.keys()
-    if html.is_cached("random_color_index"):
-        last_index = html.get_cached("random_color_index")
-    else:
-        last_index = random.randint(0, len(keys))
-    index = (last_index + 1) % len(keys)
-    html.set_cache("random_color_index", index)
-    return parse_color_into_hexrgb("%s/a" % keys[index])
-
-
-# 23/c -> #ff8040
-# #ff8040 -> #ff8040
-def parse_color_into_hexrgb(color_string):
-    if color_string[0] == "#":
-        return color_string
-    elif "/" in color_string:
-        cmk_color_index, color_shading = color_string.split("/")
-        hsv = list(cmk_color_palette[cmk_color_index])
-
-        # Colors of the yellow ("2") and green ("3") area need to be darkened (in third place of the hsv tuple),
-        # colors of the red and blue area need to be brightened (in second place of the hsv tuple).
-        # For both shadings we need different factors.
-        cmk_color_nuance_index = 1
-        cmk_color_nuance_factor = 0.6
-
-        if cmk_color_index[0] in ["2", "3"]:
-            cmk_color_nuance_index = 2
-            cmk_color_nuance_factor = 0.8
-
-        if color_shading == 'b':
-            hsv[cmk_color_nuance_index] *= cmk_color_nuance_factor
-
-        color_hexrgb = hsv_to_hexrgb(hsv)
-        return color_hexrgb
-    else:
-        return "#808080"
-
-
-def hsv_to_hexrgb(hsv):
-    return render_color(colorsys.hsv_to_rgb(*hsv))
-
-
-# "#ff0080" -> (1.0, 0.0, 0.5)
-def parse_color(color):
-    try:
-        return tuple([ int(color[a:a+2], 16) / 255.0 for a in (1,3,5) ])
-    except Exception, e:
-        raise MKGeneralException(_("Invalid color specification '%s'") % color)
-
-
-def render_color(color_rgb):
-    return "#%02x%02x%02x" % (
-       int(color_rgb[0] * 255),
-       int(color_rgb[1] * 255),
-       int(color_rgb[2] * 255),)
-
-
-# Make a color darker. v ranges from 0 (not darker) to 1 (black)
-def darken_color(rgb, v):
-    def darken(x, v):
-        return x * (1.0 - v)
-    return tuple([ darken(x, v) for x in rgb ])
-
-
-# Make a color lighter. v ranges from 0 (not lighter) to 1 (white)
-def lighten_color(rgb, v):
-    def lighten(x, v):
-        return x + ((1.0 - x) * v)
-    return tuple([ lighten(x, v) for x in rgb ])
-
-
-def fade_color(rgb, v):
-    gray = rgb_to_gray(rgb)
-    if gray > 0.5:
-        return darken_color(rgb, v)
-    else:
-        return lighten_color(rgb, v)
-
-
-def rgb_to_gray(rgb):
-    r, g, b = rgb
-    return 0.21 * r + 0.72 * g + 0.07  * b
-
-
-def mix_colors(a, b):
-    return tuple([
-       (ca + cb) / 2.0
-       for (ca, cb)
-       in zip(a, b)
-    ])
-
-
-def render_color_icon(color):
-    return html.render_div('', class_="color", style="background-color: %s" % color)
 
 #.
 #   .--Evaluation----------------------------------------------------------.
@@ -536,364 +280,9 @@ def render_color_icon(color):
 #   |  Parsing of performance data into metrics, evaluation of expressions |
 #   '----------------------------------------------------------------------'
 
-
-def split_perf_data(perf_data_string):
-    # In python < 2.5 shlex.split can not deal with unicode strings. But we always
-    # have unicode strings. So encode and decode again.
-    return [s.decode('utf-8') for s in shlex.split(perf_data_string.encode('utf-8'))]
-
-
-# Convert perf_data_string into perf_data, extract check_command
-# This methods must not return None or anything else. It mustr strictly
-# return a tuple of perf_data list and the check_command. In case of
-# errors during parsing it returns an empty list for the perf_data.
-def parse_perf_data(perf_data_string, check_command=None):
-    # Strip away arguments like in "check_http!-H mathias-kettner.de"
-    # FIXME: check_command=None? Fails here!
-    check_command = check_command.split("!")[0]
-
-    if not perf_data_string:
-        return [], check_command
-
-    # Split the perf data string into parts. Preserve quoted strings!
-    try:
-        parts = split_perf_data(perf_data_string)
-    except ValueError, e:
-        logger.exception("Failed to parse perfdata string: %s", perf_data_string)
-        return [], check_command
-
-    if not parts:
-        return [], check_command
-
-    # Try if check command is appended to performance data
-    # in a PNP like style
-    if parts[-1].startswith("[") and parts[-1].endswith("]"):
-        check_command = parts[-1][1:-1]
-        del parts[-1]
-
-    # Python's isdigit() works only on str. We deal with unicode since
-    # we deal with data coming from Livestatus
-    def isdigit(x):
-        return x in [ '0', '1', '2', '3', '4', '5', '6', '7', '8', '9' ]
-
-    # Parse performance data, at least try
-    perf_data = []
-    for part in parts:
-        try:
-            varname, values = part.split("=", 1)
-            varname = cmk.utils.pnp_cleanup(varname.replace("\"", "").replace("\'", ""))
-
-            # Enforce varname to be a byte string for the moment. The plugins currently register
-            # the plugins with byte string varnames. In the long term this needs to be cleaned up
-            # to be unicode strings just like all internal strings. But for the moment the mixup
-            # would confuse e.g. dict lookups etc.
-            varname = varname.encode("utf-8")
-
-            value_parts = values.split(";")
-            while len(value_parts) < 5:
-                value_parts.append(None)
-            value_text, warn, crit, min, max = value_parts[0:5]
-            if value_text.strip() == "":
-                continue # ignore useless empty variable
-
-            # separate value from unit
-            i = 0
-            while i < len(value_text) and (isdigit(value_text[i])
-                                           or value_text[i] in ['.', ',', '-']):
-                i += 1
-
-            unit_name = value_text[i:]
-            if value_text[:i] == "":
-                continue
-            value = float_or_int(value_text[:i])
-
-            perf_data_tuple = (varname, value, unit_name)
-            for val in [ warn, crit, min, max ]:
-                if val is not None:
-                    try:
-                        val = float_or_int(val)
-                    except ValueError:
-                        val = None
-                perf_data_tuple += (val,)
-
-            perf_data.append(perf_data_tuple)
-        except:
-            logger.exception("Failed to parse perfdata '%s'", perf_data_string)
-            if config.debug:
-                raise
-
-    return perf_data, check_command
-
-
-# Get translation info for one performance var.
-def perfvar_translation(perfvar_nr, perfvar_name, check_command):
-    cm = check_metrics.get(check_command, {})
-    translation_entry = {} # Default: no translation neccessary
-
-    if perfvar_name in cm:
-        translation_entry = cm[perfvar_name]
-    else:
-        for orig_varname, te in cm.items():
-            if orig_varname[0] == "~" and regex(orig_varname[1:]).match(perfvar_name): # Regex entry
-                translation_entry = te
-                break
-
-    metric_name = translation_entry.get("name", perfvar_name)
-    scale = translation_entry.get("scale", 1.0)
-
-    return {
-        "name"       : metric_name,
-        "scale"      : scale,
-        "auto_graph" : translation_entry.get("auto_graph", True)
-    }
-
-
 def translate_perf_data(perf_data_string, check_command=None):
     perf_data, check_command = parse_perf_data(perf_data_string, check_command)
     return translate_metrics(perf_data, check_command)
-
-
-# Convert Ascii-based performance data as output from a check plugin
-# into floating point numbers, do scaling if neccessary.
-# Simple example for perf_data: [(u'temp', u'48.1', u'', u'70', u'80', u'', u'')]
-# Result for this example:
-# { "temp" : "value" : 48.1, "warn" : 70, "crit" : 80, "unit" : { ... } }
-def translate_metrics(perf_data, check_command):
-    translated_metrics = {}
-    color_index = 0
-    for nr, entry in enumerate(perf_data):
-        varname = entry[0]
-        value = entry[1]
-
-        translation_entry = perfvar_translation(nr, varname, check_command)
-        metric_name = translation_entry["name"]
-
-        if metric_name in translated_metrics:
-            continue # ignore duplicate value
-
-        if metric_name not in metric_info:
-            color_index += 1
-            palette_color = get_palette_color_by_index(color_index)
-            mi = {
-                "title" : metric_name.title(),
-                "unit" : "",
-                "color" : parse_color_into_hexrgb(palette_color),
-            }
-        else:
-            mi = metric_info[metric_name].copy()
-            mi["color"] = parse_color_into_hexrgb(mi["color"])
-
-        new_entry = {
-            "value"      : value * translation_entry["scale"],
-            "orig_name"  : varname,
-            "scale"      : translation_entry["scale"], # needed for graph recipes
-            "scalar"     : {},
-        }
-
-        # Do not create graphs for ungraphed metrics if listed here
-        new_entry["auto_graph"] = translation_entry["auto_graph"]
-
-        # Add warn, crit, min, max
-        for index, key in [ (3, "warn"), (4, "crit"), (5, "min"), (6, "max") ]:
-            if len(entry) < index + 1:
-                break
-            elif entry[index] is not None:
-                try:
-                    new_entry["scalar"][key] = entry[index] * translation_entry["scale"]
-                except:
-                    if config.debug:
-                        raise
-                    pass # empty or invalid number
-
-
-        new_entry.update(mi)
-        new_entry["unit"] = unit_info[new_entry["unit"]]
-
-        translated_metrics[metric_name] = new_entry
-        # TODO: warn, crit, min, max
-        # if entry[2]:
-        #     # TODO: lower and upper levels
-        #     translated_metrics[metric_name]["warn"] = float(entry[2])
-    return translated_metrics
-
-
-# Evaluates an expression, returns a triple of value, unit and color.
-# e.g. "fs_used:max"    -> 12.455, "b", "#00ffc6",
-# e.g. "fs_used(%)"     -> 17.5,   "%", "#00ffc6",
-# e.g. "fs_used:max(%)" -> 100.0,  "%", "#00ffc6",
-# e.g. 123.4            -> 123.4,  "",  None
-# e.g. "123.4#ff0000"   -> 123.4,  "",  "#ff0000",
-# Note:
-# "fs_growth.max" is the same as fs_growth. The .max is just
-# relevant when fetching RRD data and is used for selecting
-# the consolidation function MAX.
-def evaluate(expression, translated_metrics):
-    if type(expression) in (float, int):
-        return evaluate_literal(expression, translated_metrics)
-    else:
-        if "#" in expression:
-            expression, explicit_color = expression.rsplit("#", 1) # drop appended color information
-        else:
-            explicit_color = None
-
-        if "@" in expression:
-            expression, explicit_unit_name = expression.rsplit("@", 1) # appended unit name
-        else:
-            explicit_unit_name = None
-
-        value, unit, color = evaluate_rpn(expression, translated_metrics)
-
-        if explicit_color:
-            color = "#" + explicit_color
-
-        if explicit_unit_name:
-            unit = unit_info[explicit_unit_name]
-
-        return value, unit, color
-
-
-# TODO: real unit computation!
-def unit_mult(u1, u2):
-    if u1 == unit_info[""] or u1 == unit_info["count"]:
-        return u2
-    else:
-        return u1
-
-unit_div = unit_mult
-unit_add = unit_mult
-unit_sub = unit_mult
-
-def operator_minmax(a, b, func):
-    v = func(a[0], b[0])
-    # Use unit and color of the winner. If the winner
-    # has none (e.g. it is a scalar like 0), then take
-    # unit and color of the loser.
-    if v == a[0]:
-        winner = a
-        loser = b
-    else:
-        winner = b
-        loser = a
-
-    if winner[1] != unit_info[""]:
-        unit = winner[1]
-    else:
-        unit = loser[1]
-
-    return v, unit, winner[2] or loser[2]
-
-
-# TODO: Do real unit computation, detect non-matching units
-rpn_operators = {
-    "+"  : lambda a, b: ((a[0] +  b[0]),                unit_mult(a[1], b[1]), choose_operator_color(a[2], b[2])),
-    "-"  : lambda a, b: ((a[0] -  b[0]),                unit_sub(a[1], b[1]), choose_operator_color(a[2], b[2])),
-    "*"  : lambda a, b: ((a[0] *  b[0]),                unit_add(a[1], b[1]), choose_operator_color(a[2], b[2])),
-    "/"  : lambda a, b: ((a[0] /  b[0]),                unit_div(a[1], b[1]), choose_operator_color(a[2], b[2])),
-    ">"  : lambda a, b: ((a[0] >  b[0] and 1.0 or 0.0), unit_info[""],         "#000000"),
-    "<"  : lambda a, b: ((a[0] <  b[0] and 1.0 or 0.0), unit_info[""],         "#000000"),
-    ">=" : lambda a, b: ((a[0] >= b[0] and 1.0 or 0.0), unit_info[""],         "#000000"),
-    "<=" : lambda a, b: ((a[0] <= b[0] and 1.0 or 0.0), unit_info[""],         "#000000"),
-    "MIN" : lambda a, b: operator_minmax(a, b, min),
-    "MAX" : lambda a, b: operator_minmax(a, b, max),
-}
-
-def choose_operator_color(a, b):
-    if a == None:
-        return b
-    elif b == None:
-        return a
-    else:
-        return render_color(mix_colors(parse_color(a), parse_color(b)))
-
-
-def evaluate_rpn(expression, translated_metrics):
-    parts = expression.split(",")
-    stack = [] # stack tuples of (value, unit, color)
-    while parts:
-        operator_name = parts[0]
-        parts = parts[1:]
-        if operator_name in rpn_operators:
-            if len(stack) < 2:
-                raise MKGeneralException("Syntax error in expression '%s': too few operands" % expression)
-            op1 = stack[-2]
-            op2 = stack[-1]
-            result = rpn_operators[operator_name](op1, op2)
-            stack = stack[:-2] + [ result ]
-        else:
-            stack.append(evaluate_literal(operator_name, translated_metrics))
-
-    if len(stack) != 1:
-        raise MKGeneralException("Syntax error in expression '%s': too many operands left" % expression)
-
-    return stack[0]
-
-
-def evaluate_literal(expression, translated_metrics):
-    if type(expression) == int:
-        return float(expression), unit_info["count"], None
-
-    elif type(expression) == float:
-        return expression, unit_info[""], None
-
-    elif expression[0].isdigit() or expression[0] == '-':
-        return float(expression), unit_info[""], None
-
-    if expression.endswith(".max") or expression.endswith(".min") or expression.endswith(".average"):
-        expression = expression.rsplit(".", 1)[0]
-
-    color = None
-
-    # TODO: Error handling with useful exceptions
-    if expression.endswith("(%)"):
-        percent = True
-        expression = expression[:-3]
-    else:
-        percent = False
-
-    if ":" in expression:
-        varname, scalarname = expression.split(":")
-        value = translated_metrics[varname]["scalar"].get(scalarname)
-        color = scalar_colors.get(scalarname)
-    else:
-        varname = expression
-        value = translated_metrics[varname]["value"]
-
-    if percent:
-        maxvalue = translated_metrics[varname]["scalar"]["max"]
-        if maxvalue != 0:
-            value = 100.0 * float(value) / maxvalue
-        else:
-            value = 0.0
-        unit = unit_info["%"]
-
-    else:
-        unit = translated_metrics[varname]["unit"]
-
-    if color == None:
-        if varname in metric_info:
-            color = parse_color_into_hexrgb(metric_info[varname]["color"])
-        else:
-            color = "#808080"
-    return value, unit, color
-
-
-# Replace expressions in strings like CPU Load - %(load1:max@count) CPU Cores"
-def replace_expressions(text, translated_metrics):
-    def eval_to_string(match):
-        expression = match.group()[2:-1]
-        unit_name = None
-        if "@" in expression:
-            expression, unit_name = expression.split("@")
-        value, unit, color = evaluate(expression, translated_metrics)
-        if unit_name:
-            unit = unit_info[unit_name]
-        if value != None:
-            return unit["render"](value)
-        else:
-            return _("n/a")
-
-    r = regex(r"%\([^)]*\)")
-    return r.sub(eval_to_string, text)
 
 #.
 #   .--Perf-O-Meters-------------------------------------------------------.
@@ -1234,146 +623,6 @@ class MetricometerRendererDual(MetricometerRenderer):
 #   |  templates for PNP here.                                             |
 #   '----------------------------------------------------------------------'
 
-def get_graph_templates(translated_metrics):
-    if not translated_metrics:
-        return []
-
-    explicit_templates = get_explicit_graph_templates(translated_metrics)
-    already_graphed_metrics = get_graphed_metrics(explicit_templates)
-    implicit_templates = get_implicit_graph_templates(translated_metrics, already_graphed_metrics)
-    return explicit_templates + implicit_templates
-
-
-def get_explicit_graph_templates(translated_metrics):
-    templates = []
-    for graph_template in graph_info.values():
-        if graph_possible(graph_template, translated_metrics):
-            templates.append(graph_template)
-        elif graph_possible_without_optional_metrics(graph_template, translated_metrics):
-            templates.append(graph_without_missing_optional_metrics(graph_template, translated_metrics))
-    return templates
-
-
-def get_implicit_graph_templates(translated_metrics, already_graphed_metrics):
-    templates = []
-    for metric_name, metric_entry in sorted(translated_metrics.items()):
-        if metric_entry["auto_graph"] and metric_name not in already_graphed_metrics:
-            templates.append(generic_graph_template(metric_name))
-    return templates
-
-
-def get_graphed_metrics(graph_templates):
-    graphed_metrics = set([])
-    for graph_template in graph_templates:
-        graphed_metrics.update(metrics_used_by_graph(graph_template))
-    return graphed_metrics
-
-
-def metrics_used_by_graph(graph_template):
-    used_metrics = []
-    for metric_definition in graph_template["metrics"]:
-        used_metrics += list(metrics_used_in_definition(metric_definition[0]))
-    return used_metrics
-
-
-def metrics_used_in_definition(metric_definition):
-    without_unit = metric_definition.split("@")[0]
-    without_color = metric_definition.split("#")[0]
-    parts = without_color.split(",")
-    for part in parts:
-        metric_name = part.split(".")[0] # drop .min, .max, .average
-        if metric_name in metric_info:
-            yield metric_name
-
-
-def graph_possible(graph_template, translated_metrics):
-    for metric_definition in graph_template["metrics"]:
-        try:
-            evaluate(metric_definition[0], translated_metrics)
-        except Exception:
-            return False
-
-    # Allow graphs to be disabled if certain (better) metrics
-    # are available
-    if "conflicting_metrics" in graph_template:
-        for var in graph_template["conflicting_metrics"]:
-            if var in translated_metrics:
-                return False
-
-    return True
-
-
-def graph_possible_without_optional_metrics(graph_template, translated_metrics):
-    if "optional_metrics" in graph_template:
-        return graph_possible(graph_template,
-                      add_fake_metrics(translated_metrics, graph_template["optional_metrics"]))
-
-
-def graph_without_missing_optional_metrics(graph_template, translated_metrics):
-    working_metrics = []
-
-    for metric_definition in graph_template["metrics"]:
-        try:
-            evaluate(metric_definition[0], translated_metrics)
-            working_metrics.append(metric_definition)
-        except:
-            pass
-
-    reduced_graph_template = graph_template.copy()
-    reduced_graph_template["metrics"] = working_metrics
-    return reduced_graph_template
-
-
-def add_fake_metrics(translated_metrics, metric_names):
-    with_fake = translated_metrics.copy()
-    for metric_name in metric_names:
-        with_fake[metric_name] = {
-            "value" : 1.0,
-            "scale" : 1.0,
-            "unit" : unit_info[""],
-            "color" : "#888888",
-        }
-    return with_fake
-
-
-def generic_graph_template(metric_name):
-    return {
-        "id" : "METRIC_" + metric_name,
-        "metrics" : [
-            ( metric_name, "area" ),
-        ],
-        "scalars" : [
-            metric_name + ":warn",
-            metric_name + ":crit",
-        ]
-    }
-
-
-def get_graph_template_choices():
-    # TODO: v.get("title", k): Use same algorithm as used in
-    # GraphIdentificationTemplateBased._parse_template_metric()
-    return sorted([ (k, v.get("title", k)) for k, v in graph_info.items() ], key=lambda (k, v): v)
-
-
-def get_graph_template(template_id):
-    if template_id.startswith("METRIC_"):
-        return generic_graph_template(template_id[7:])
-    elif template_id in graph_info:
-        return graph_info[template_id]
-    else:
-        raise MKGeneralException(_("There is no graph template with the id '%d'") % template_id)
-
-
-def get_graph_range(graph_template, translated_metrics):
-    if "range" not in graph_template:
-        return None, None # Compute range of displayed data points
-
-    try:
-        return evaluate(graph_template["range"][0], translated_metrics)[0], \
-               evaluate(graph_template["range"][1], translated_metrics)[0]
-    except:
-        return None, None
-
 
 #.
 #   .--PNP Templates-------------------------------------------------------.
@@ -1618,7 +867,7 @@ def render_graph_pnp(graph_template, translated_metrics):
 
 def cmk_graphs_possible(site_id = None):
     try:
-        _dummy = render_graph_html # Will throw exception if missing
+        import cmk.gui.cee.plugins.metrics.graphs
         return not config.force_pnp_graphing \
            and browser_supports_canvas() \
            and site_is_running_cmc(site_id)
@@ -1660,48 +909,6 @@ def browser_supports_canvas():
         return True
 
 
-# CLEANUP: Make this function being used only by create_graph_recipe_from_template.
-# Then rename it and move it over there.
-def get_graph_data_from_livestatus(site, host_name, service):
-    if service == "_HOST_":
-        query = "GET hosts\n" \
-                "Filter: host_name = %s\n" \
-                "Columns: perf_data metrics check_command\n" % host_name
-
-    else:
-        query = "GET services\n" \
-                "Filter: host_name = %s\n" \
-                "Filter: service_description = %s\n" \
-                "Columns: perf_data metrics check_command\n" % (host_name, service)
-
-    if site:
-        sites.live().set_only_sites([site])
-    sites.live().set_prepend_site(True)
-    data = sites.live().query_row(query)
-    sites.live().set_prepend_site(False)
-
-    if site:
-        sites.live().set_only_sites(None)
-
-    if service == "_HOST_":
-        return {
-            'site'                  : data[0],
-            'host_name'             : host_name,
-            'host_perf_data'        : data[1],
-            'host_metrics'          : data[2],
-            'host_check_command'    : data[3],
-        }
-    else:
-        return {
-            'site'                  : data[0],
-            'host_name'             : host_name,
-            'service_description'   : service,
-            'service_perf_data'     : data[1],
-            'service_metrics'       : data[2],
-            'service_check_command' : data[3],
-        }
-
-
 def get_graph_template_by_source(graph_templates, source):
     graph_template = None
     for source_nr, template in enumerate(graph_templates):
@@ -1717,8 +924,10 @@ def page_host_service_graph_popup():
     host_name = html.var('host_name')
     service_description = html.var_utf8('service')
 
+    # TODO: Refactor this to some OO based approach
     if cmk_graphs_possible(site_id):
-        host_service_graph_popup_cmk(site_id, host_name, service_description)
+        import cmk.gui.cee.plugins.metrics.graphs as graphs
+        graphs.host_service_graph_popup_cmk(site_id, host_name, service_description)
     else:
         host_service_graph_popup_pnp(site_id, host_name, service_description)
 
@@ -1751,16 +960,6 @@ def host_service_graph_popup_pnp(site, host_name, service_description):
 #   |  This page handler is called by graphs embedded in a dashboard.      |
 #   '----------------------------------------------------------------------'
 
-default_dashlet_graph_render_options = {
-    "font_size"                : 8,
-    "show_legend"              : False,
-    "title_format"             : ("add_title_infos", [ "add_host_name",
-                                                       "add_service_description" ]),
-    "show_controls"            : False,
-    "resizable"                : False,
-    "show_time_range_previews" : False,
-}
-
 def page_graph_dashlet():
     spec = html.var("spec")
     if not spec:
@@ -1772,71 +971,14 @@ def page_graph_dashlet():
         raise MKUserError("render", _("Missing render parameter"))
     custom_graph_render_options = json.loads(html.var("render"))
 
+    # TODO: Refactor this to some OO based approach
     if cmk_graphs_possible():
-        host_service_graph_dashlet_cmk(graph_identification, custom_graph_render_options)
+        import cmk.gui.cee.plugins.metrics.graphs as graphs
+        graphs.host_service_graph_dashlet_cmk(graph_identification, custom_graph_render_options)
     elif graph_identification[0] == "template":
         host_service_graph_dashlet_pnp(graph_identification)
     else:
         html.write(_("This graph can not be rendered."))
-
-
-def host_service_graph_dashlet_cmk(graph_identification, custom_graph_render_options):
-    graph_render_options = default_dashlet_graph_render_options.copy()
-    graph_render_options = add_default_render_options(graph_render_options)
-    graph_render_options.update(custom_graph_render_options)
-
-    width, height = (int((float(html.var("width"))/html_size_per_ex)),
-                     int(float(html.var("height"))/html_size_per_ex))
-
-    height -= _graph_title_height_ex(graph_render_options)
-    height -= _graph_top_margin_ex(graph_render_options) + _graph_bottom_margin_ex(graph_render_options)
-    width -= _graph_left_margin_ex(graph_render_options) + _graph_right_margin_ex(graph_render_options)
-
-    graph_render_options["size"] = (width, height)
-
-    # The timerange is specified in PNP like manner.
-    range_secs = {
-        "0" : 4 * 3600,
-        "1" : 25 * 3600,
-        "2" : 7 * 86400,
-        "3" : 31 * 86400,
-        "4" : 366 * 86400,
-    }
-
-    secs = range_secs.get(html.var("timerange"), 4 * 3600)
-    end_time = time.time()
-    start_time = end_time - secs
-    graph_data_range = {
-        "time_range" : (start_time, end_time),
-    }
-
-    graph_data_range["step"] = estimate_graph_step_for_html(graph_data_range["time_range"],
-                                                            graph_render_options)
-
-    try:
-        graph_recipes = graph_identification_types.create_graph_recipes(graph_identification,
-                                                            destination=GraphDestinations.dashlet)
-        if graph_recipes:
-            graph_recipe = graph_recipes[0]
-        else:
-            raise MKGeneralException(_("Failed to calculate a graph recipe."))
-    except livestatus.MKLivestatusNotFoundError:
-        html.div(_("Cannot render graphs: cannot fetch data via Livestatus"), class_="error")
-        return
-
-    # When the legend is enabled, we need to reduce the height by the height of the legend to
-    # make the graph fit into the dashlet area.
-    if graph_render_options["show_legend"]:
-        # TODO FIXME: This graph artwork is calulated twice. Once here and once in render_graphs_from_specification_html()
-        graph_artwork = compute_graph_artwork(graph_recipe, graph_data_range, graph_render_options)
-        if graph_artwork["curves"]:
-            graph_render_options["size"] = (
-                graph_render_options["size"][0],
-                graph_render_options["size"][1] - graph_legend_height_ex(graph_render_options, graph_artwork)
-            )
-
-    html_code = render_graphs_from_definitions([graph_recipe], graph_data_range, graph_render_options, render_async=False)
-    html.write(html_code)
 
 
 def host_service_graph_dashlet_pnp(graph_identification):

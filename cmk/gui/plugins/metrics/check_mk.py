@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 # -*- encoding: utf-8; py-indent-offset: 4 -*-
 # +------------------------------------------------------------------+
 # |             ____ _               _        __  __ _  __           |
@@ -24,8 +24,30 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import cmk.gui.utils as utils
 import cmk.render
+
+import cmk.gui.utils as utils
+from cmk.gui.i18n import _
+
+from . import (
+    unit_info,
+    metric_info,
+    check_metrics,
+    graph_info,
+    perfometer_info,
+    KB,
+    MB,
+    GB,
+    TB,
+    PB,
+    m,
+    K,
+    M,
+    G,
+    T,
+    P,
+    parse_color_into_hexrgb,
+)
 
 # TODO Graphingsystem:
 # - Default-Template: Wenn im Graph kein "range" angegeben ist, aber

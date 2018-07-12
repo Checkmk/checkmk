@@ -436,10 +436,11 @@ def pnpgraph_parameters():
     ]
 
     import cmk.gui.metrics as metrics
+    import cmk.gui.cee.plugins.metrics.graphs as graphs
     if metrics.cmk_graphs_possible():
         elements += [
-            ("graph_render_options", metrics.vs_graph_render_options(
-                default_values=metrics.default_dashlet_graph_render_options,
+            ("graph_render_options", graphs.vs_graph_render_options(
+                default_values=graphs.default_dashlet_graph_render_options,
                 exclude=[
                     "show_time_range_previews",
                 ],

@@ -1300,8 +1300,7 @@ def execute_userdb_job():
 def user_sync_default_config(site_name):
     global_user_sync = transform_userdb_automatic_sync(config.userdb_automatic_sync)
     if global_user_sync == "master":
-        import cmk.gui.watolib as watolib
-        if config.site_is_local(site_name) and not watolib.is_wato_slave_site():
+        if config.site_is_local(site_name) and not config.is_wato_slave_site():
             user_sync_default = "all"
         else:
             user_sync_default = None
@@ -1324,8 +1323,7 @@ def userdb_sync_job_enabled():
     if cfg == None:
         return False # not enabled at all
 
-    import cmk.gui.watolib as watolib
-    if cfg == "master" and watolib.is_wato_slave_site():
+    if cfg == "master" and config.is_wato_slave_site():
         return False
 
     return True

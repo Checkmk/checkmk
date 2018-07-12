@@ -35,6 +35,23 @@ import cmk.gui.inventory as inventory
 from cmk.gui.i18n import _
 from cmk.gui.valuespec import *
 
+import cmk.gui.plugins.visuals
+import cmk.gui.plugins.visuals.inventory
+from cmk.gui.plugins.visuals.inventory import (
+    FilterInvText,
+    FilterInvBool,
+    FilterInvFloat,
+    FilterInvtableVersion,
+    FilterInvtableIDRange,
+    FilterInvtableOperStatus,
+    FilterInvtableAdminStatus,
+    FilterInvtableAvailable,
+    FilterInvtableInterfaceType,
+    FilterInvtableTimestampAsAge,
+    FilterInvtableText,
+    FilterInvtableIDRange,
+)
+
 def paint_host_inventory_tree(row, invpath=".", column="host_inventory"):
     struct_tree = row.get(column)
     if struct_tree is None:
@@ -129,12 +146,12 @@ def declare_inv_column(invpath, datatype, title, short = None):
 
         # Declare filter. Sync this with declare_invtable_columns()
         if datatype == "str":
-            visuals.declare_filter(800, visuals.FilterInvText(name, invpath, title))
+            visuals.cmk.gui.plugins.visuals.inventory.declare_filter(800, FilterInvText(name, invpath, title))
         elif datatype == "bool":
-            visuals.declare_filter(800, visuals.FilterInvBool(name, invpath, title))
+            visuals.cmk.gui.plugins.visuals.inventory.declare_filter(800, FilterInvBool(name, invpath, title))
         else:
             filter_info = inv_filter_info.get(datatype, {})
-            visuals.declare_filter(800, visuals.FilterInvFloat(name, invpath, title,
+            visuals.cmk.gui.plugins.visuals.inventory.declare_filter(800, FilterInvFloat(name, invpath, title,
                unit = filter_info.get("unit"),
                scale = filter_info.get("scale", 1.0)))
 
@@ -759,9 +776,9 @@ inventory_displayhints.update({
     ".software.packages:*.arch"                        : { "title" : _("Architecture"), },
     ".software.packages:*.package_type"                : { "title" : _("Type"), },
     ".software.packages:*.summary"                     : { "title" : _("Description"), },
-    ".software.packages:*.version"                     : { "title" : _("Version"), "sort" : utils.cmp_version, "filter" : visuals.FilterInvtableVersion  },
+    ".software.packages:*.version"                     : { "title" : _("Version"), "sort" : utils.cmp_version, "filter" : FilterInvtableVersion  },
     ".software.packages:*.vendor"                      : { "title" : _("Publisher"), },
-    ".software.packages:*.package_version"             : { "title" : _("Package Version"), "sort" : utils.cmp_version, "filter" : visuals.FilterInvtableVersion },
+    ".software.packages:*.package_version"             : { "title" : _("Package Version"), "sort" : utils.cmp_version, "filter" : FilterInvtableVersion },
     ".software.packages:*.install_date"                : { "title" : _("Install Date"), "paint" : "date"},
     ".software.packages:*.size"                        : { "title" : _("Size"), "paint" : "count" },
     ".software.packages:*.path"                        : { "title" : _("Path"), },
@@ -981,16 +998,16 @@ inventory_displayhints.update({
     ".networking.interfaces:"                          : { "title" : _("Interfaces"),
                                                            "keyorder" : [ "index", "description", "alias", "oper_status", "admin_status", "available", "speed" ],
                                                            "view" : "invinterface_of_host", },
-    ".networking.interfaces:*.index"                   : { "title" : _("Index"), "paint" : "number", "filter" : visuals.FilterInvtableIDRange },
+    ".networking.interfaces:*.index"                   : { "title" : _("Index"), "paint" : "number", "filter" : FilterInvtableIDRange },
     ".networking.interfaces:*.description"             : { "title" : _("Description") },
     ".networking.interfaces:*.alias"                   : { "title" : _("Alias") },
     ".networking.interfaces:*.phys_address"            : { "title" : _("Physical Address (MAC)")  },
-    ".networking.interfaces:*.oper_status"             : { "title" : _("Operational Status"), "short" : _("Status"), "paint" : "if_oper_status", "filter" : visuals.FilterInvtableOperStatus },
-    ".networking.interfaces:*.admin_status"            : { "title" : _("Administrative Status"), "short" : _("Admin"), "paint" : "if_admin_status", "filter" : visuals.FilterInvtableAdminStatus },
-    ".networking.interfaces:*.available"               : { "title" : _("Port Usage"), "short" : _("Used"), "paint" : "if_available", "filter" : visuals.FilterInvtableAvailable },
+    ".networking.interfaces:*.oper_status"             : { "title" : _("Operational Status"), "short" : _("Status"), "paint" : "if_oper_status", "filter" : FilterInvtableOperStatus },
+    ".networking.interfaces:*.admin_status"            : { "title" : _("Administrative Status"), "short" : _("Admin"), "paint" : "if_admin_status", "filter" : FilterInvtableAdminStatus },
+    ".networking.interfaces:*.available"               : { "title" : _("Port Usage"), "short" : _("Used"), "paint" : "if_available", "filter" : FilterInvtableAvailable },
     ".networking.interfaces:*.speed"                   : { "title" : _("Speed"), "paint" : "nic_speed", },
-    ".networking.interfaces:*.port_type"               : { "title" : _("Type"), "paint" : "if_port_type", "filter" : visuals.FilterInvtableInterfaceType },
-    ".networking.interfaces:*.last_change"             : { "title" : _("Last Change"), "paint" : "timestamp_as_age_days", "filter" : visuals.FilterInvtableTimestampAsAge },
+    ".networking.interfaces:*.port_type"               : { "title" : _("Type"), "paint" : "if_port_type", "filter" : FilterInvtableInterfaceType },
+    ".networking.interfaces:*.last_change"             : { "title" : _("Last Change"), "paint" : "timestamp_as_age_days", "filter" : FilterInvtableTimestampAsAge },
     ".networking.interfaces:*.vlans"                   : { "title" : _("VLANs") },
     ".networking.interfaces:*.vlantype"                : { "title" : _("VLAN type") },
 
@@ -1138,12 +1155,12 @@ def declare_invtable_columns(infoname, invpath, topic):
         filter_class = hint.get("filter")
         if not filter_class:
             if paint_name == "str":
-                filter_class = visuals.FilterInvtableText
+                filter_class = FilterInvtableText
             # TODO:
             #elif paint_name == "bool":
-            #    filter_class = visuals.FilterInvtableBool
+            #    filter_class = FilterInvtableBool
             else:
-                filter_class = visuals.FilterInvtableIDRange
+                filter_class = FilterInvtableIDRange
 
         title = inv_titleinfo(sub_invpath, None)[1]
 
@@ -1167,7 +1184,7 @@ def declare_invtable_column(infoname, name, topic, title, short_title,
         "cmp"      : lambda a, b: sortfunc(a.get(column), b.get(column))
     }
 
-    visuals.declare_filter(800, filter_class(infoname, name, topic + ": " + title))
+    visuals.cmk.gui.plugins.visuals.inventory.declare_filter(800, filter_class(infoname, name, topic + ": " + title))
 
 
 # One master function that does all
@@ -1177,7 +1194,7 @@ def declare_invtable_view(infoname, invpath, title_singular, title_plural):
         return inv_multisite_table(infoname, invpath, columns, add_headers, only_sites, limit, filters)
 
     # Declare the "info" (like a database table)
-    visuals.declare_info(infoname, {
+    cmk.gui.plugins.visuals.declare_info(infoname, {
         'title'       : title_singular,
         'title_plural': title_plural,
         'single_spec' : None,
@@ -1504,12 +1521,6 @@ def create_hist_rows(hostname, columns):
         }
         yield newrow
 
-
-visuals.declare_info('invhist', {
-    'title'       : _('Inventory History'),
-    'title_plural': _('Inventory Historys'),
-    'single_spec' : None,
-})
 
 multisite_datasources["invhist"] = {
     "title"        : _("Inventory: History"),

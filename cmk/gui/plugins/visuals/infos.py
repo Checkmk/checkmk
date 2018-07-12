@@ -24,7 +24,13 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-infos['host'] = {
+import cmk.gui.config as config
+from cmk.gui.i18n import _
+from cmk.gui.valuespec import (TextUnicode, Integer)
+
+from cmk.gui.plugins.visuals import declare_info
+
+declare_info('host', {
     'title'       : _('Host'),
     'title_plural': _('Hosts'),
     'single_spec' : [
@@ -32,9 +38,9 @@ infos['host'] = {
             title = _('Hostname'),
         )),
     ],
-}
+})
 
-infos['service'] = {
+declare_info('service', {
     'title'       : _('Service'),
     'title_plural': _('Services'),
     'single_spec' : [
@@ -42,9 +48,9 @@ infos['service'] = {
             title = _('Service Description'),
         )),
     ],
-}
+})
 
-infos['hostgroup'] = {
+declare_info('hostgroup', {
     'title'       : _('Host Group'),
     'title_plural': _('Host Groups'),
     'single_site' : False, # spread over multiple sites
@@ -53,9 +59,9 @@ infos['hostgroup'] = {
             title = _('Host Group Name'),
         )),
     ],
-}
+})
 
-infos['servicegroup'] = {
+declare_info('servicegroup', {
     'title'       : _('Service Group'),
     'title_plural': _('Service Groups'),
     'single_site' : False, # spread over multiple sites
@@ -64,15 +70,15 @@ infos['servicegroup'] = {
             title = _('Service Group Name'),
         )),
     ],
-}
+})
 
-infos['log'] = {
+declare_info('log', {
     'title'       : _('Log Entry'),
     'title_plural': _('Log Entries'),
     'single_spec' : None,
-}
+})
 
-infos['comment'] = {
+declare_info('comment', {
     'title'       : _('Comment'),
     'title_plural': _('Comments'),
     'single_spec' : [
@@ -80,9 +86,9 @@ infos['comment'] = {
             title = _('Comment ID'),
         )),
     ]
-}
+})
 
-infos['downtime'] = {
+declare_info('downtime', {
     'title'       : _('Downtime'),
     'title_plural': _('Downtimes'),
     'single_spec' : [
@@ -90,9 +96,9 @@ infos['downtime'] = {
             title = _('Downtime ID'),
         )),
     ]
-}
+})
 
-infos['contact'] = {
+declare_info('contact', {
     'title'       : _('Contact'),
     'title_plural': _('Contacts'),
     'single_spec' : [
@@ -100,9 +106,9 @@ infos['contact'] = {
             title = _('Contact Name'),
         )),
     ]
-}
+})
 
-infos['command'] = {
+declare_info('command', {
     'title'       : _('Command'),
     'title_plural': _('Commands'),
     'single_spec' : [
@@ -110,9 +116,9 @@ infos['command'] = {
             title = _('Command Name'),
         )),
     ]
-}
+})
 
-infos['aggr'] = {
+declare_info('aggr', {
     'title'       : _('BI Aggregation'),
     'title_plural': _('BI Aggregations'),
     'single_spec' : [
@@ -120,9 +126,9 @@ infos['aggr'] = {
             title = _('Aggregation Name'),
         )),
     ],
-}
+})
 
-infos['aggr_group'] = {
+declare_info('aggr_group', {
     'title'       : _('BI Aggregation Group'),
     'title_plural': _('BI Aggregation Groups'),
     'single_spec' : [
@@ -130,10 +136,34 @@ infos['aggr_group'] = {
             title = _('Aggregation group'),
         )),
     ],
-}
+})
 
-infos['discovery'] = {
+declare_info('discovery', {
     'title'       : _('Discovery Output'),
     'title_plural': _('Discovery Outputs'),
     'single_spec' : None,
-}
+})
+
+if config.mkeventd_enabled:
+    declare_info('event', {
+        'title'       : _('Event Console Event'),
+        'title_plural': _('Event Console Events'),
+        'single_spec' : [
+            ('event_id', Integer(
+                title = _('Event ID'),
+            )),
+        ]
+    })
+
+    declare_info('history', {
+        'title'       : _('Historic Event Console Event'),
+        'title_plural': _('Historic Event Console Events'),
+        'single_spec' : [
+            ('event_id', Integer(
+                title = _('Event ID'),
+            )),
+            ('history_line', Integer(
+                title = _('History Line Number'),
+            )),
+        ]
+    })

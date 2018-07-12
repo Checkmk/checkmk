@@ -29,6 +29,7 @@ import time
 import copy
 import json
 
+import cmk.gui.notify as notify
 import cmk.gui.config as config
 import cmk.gui.visuals as visuals
 import cmk.gui.watolib as watolib
@@ -1261,6 +1262,13 @@ def ajax_dashlet_pos():
     dashlet['size']     = int(html.var('w')), int(html.var('h'))
     visuals.save('dashboards', dashboards)
     html.write('OK %d' % board['mtime'])
+
+
+# TODO: Move to plugin once new API is in place
+def ajax_delete_user_notification():
+    msg_id = html.var("id")
+    notify.delete_gui_message(msg_id)
+
 
 #.
 #   .--Dashlet Popup-------------------------------------------------------.

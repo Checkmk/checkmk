@@ -24,25 +24,27 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+import re
+import time
+
 import cmk.gui.utils as utils
 import cmk.gui.inventory as inventory
 import cmk.defines as defines
+from cmk.gui.valuespec import (Age, DualListChoice)
+from cmk.gui.i18n import _
+from cmk.gui.exceptions import MKUserError
 
-# Try to magically compare two software versions.
-# Currently we only assume the format A.B.C.D....
-# When we suceed converting A to a number, then we
-# compare by integer, otherwise by text.
-def try_int(x):
-    try:
-        return int(x)
-    except:
-        return x
-
+from . import (
+    Filter,
+    FilterTristate,
+    declare_filter,
+    declare_info,
+)
 
 class FilterInvtableText(Filter):
     def __init__(self, infoname, name, title):
         varname = infoname + "_" + name
-        Filter.__init__(self, varname, title, infoname, [varname], [])
+        super(FilterInvtableText, self).__init__(varname, title, infoname, [varname], [])
 
     def display(self):
         htmlvar = self.htmlvars[0]
@@ -424,7 +426,7 @@ class FilterInvFloat(Filter):
 class FilterInvBool(FilterTristate):
     def __init__(self, name, invpath, title):
         self._invpath = invpath
-        FilterTristate.__init__(self, name, title, "host", name)
+        super(FilterInvBool, self).__init__(name, title, "host", name)
 
     def need_inventory(self):
         return True
@@ -448,7 +450,7 @@ class FilterInvBool(FilterTristate):
 
 class FilterHasInventory(FilterTristate):
     def __init__(self):
-        FilterTristate.__init__(self, "has_inv", _("Has Inventory Data"), "host", "host_inventory")
+        super(FilterHasInventory, self).__init__("has_inv", _("Has Inventory Data"), "host", "host_inventory")
 
     def filter(self, infoname):
         return "" # No Livestatus filtering right now
@@ -469,7 +471,7 @@ declare_filter(801, FilterHasInventory())
 class FilterInvHasSoftwarePackage(Filter):
     def __init__(self):
         self._varprefix = "invswpac_host_"
-        Filter.__init__(self, "invswpac", _("Host has software package"), "host",
+        super(FilterInvHasSoftwarePackage, self).__init__("invswpac", _("Host has software package"), "host",
                         [ self._varprefix + "name", self._varprefix + "version_from",
                           self._varprefix + "version_to", self._varprefix + "negate"], [])
 
@@ -552,3 +554,8 @@ class FilterInvHasSoftwarePackage(Filter):
 declare_filter(801, FilterInvHasSoftwarePackage())
 
 
+declare_info('invhist', {
+    'title'       : _('Inventory History'),
+    'title_plural': _('Inventory Historys'),
+    'single_spec' : None,
+})

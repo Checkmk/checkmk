@@ -43,6 +43,19 @@ import cmk.gui.metrics as metrics
 import cmk.gui.i18n
 from cmk.gui.i18n import _u, _
 
+from cmk.gui.plugins.visuals.utils import (
+    declare_info,
+    declare_filter,
+    multisite_filters,
+    visual_types,
+    Filter,
+    FilterTime,
+    FilterTristate,
+    FilterUnicodeFilter,
+    FilterSite,
+)
+from cmk.gui.plugins.visuals.utils import _infos as infos
+
 #   .--Plugins-------------------------------------------------------------.
 #   |                   ____  _             _                              |
 #   |                  |  _ \| |_   _  __ _(_)_ __  ___                    |
@@ -61,8 +74,7 @@ def load_plugins(force):
     if loaded_with_language == cmk.gui.i18n.get_current_language() and not force:
         return
 
-    global visual_types
-    visual_types = {
+    visual_types.update({
         'views': {
             'show_url'           : 'view.py',
             'ident_attr'         : 'view_name',
@@ -81,12 +93,9 @@ def load_plugins(force):
             'add_visual_handler' : 'popup_add_dashlet',
             'multicontext_links' : False,
         },
-    }
+    })
 
     global title_functions      ; title_functions    = []
-    global infos                ; infos              = {}
-    global multisite_filters    ; multisite_filters  = {}
-    global ubiquitary_filters   ; ubiquitary_filters = [] # Always show these filters
 
     utils.load_web_plugins('visuals', globals())
 
@@ -941,12 +950,6 @@ class PublishTo(CascadingDropdown):
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-def declare_filter(sort_index, f, comment = None):
-    multisite_filters[f.name] = f
-    f.comment = comment
-    f.sort_index = sort_index
-
-
 def show_filter(f):
     html.open_div(class_=["floatfilter", "double" if f.double_height() else "single"])
     html.div(f.title, class_="legend")
@@ -966,102 +969,6 @@ def show_filter(f):
         html.write_text(_("This filter cannot be displayed"))
     html.close_div()
     html.close_div()
-
-
-# Base class for all filters
-# name:          The unique id of that filter. This id is e.g. used in the
-#                persisted view configuration
-# title:         The title of the filter visible to the user. This text
-#                may be localized
-# info:          The datasource info this filter needs to work. If this
-#                is "service", the filter will also be available in tables
-#                showing service information. "host" is available in all
-#                service and host views. The log datasource provides both
-#                "host" and "service". Look into datasource.py for which
-#                datasource provides which information
-# htmlvars:      HTML variables this filter uses
-# link_columns:  If this filter is used for linking (state "hidden"), then
-#                these Livestatus columns are needed to fill the filter with
-#                the proper information. In most cases, this is just []. Only
-#                a few filters are useful for linking (such as the host_name and
-#                service_description filters with exact match)
-class Filter:
-    def __init__(self, name, title, info, htmlvars, link_columns):
-        self.name = name
-        self.info = info
-        self.title = title
-        self.htmlvars = htmlvars
-        self.link_columns = link_columns
-
-    # Some filters can be unavailable due to the configuration (e.g.
-    # the WATO Folder filter is only available if WATO is enabled.
-    def available(self):
-        return True
-
-    # Some filters can be invisible. This is useful to hide filters which have always
-    # the same value but can not be removed using available() because the value needs
-    # to be set during runtime.
-    # A good example is the "site" filter which does not need to be available to the
-    # user in single site setups.
-    def visible(self):
-        return True
-
-    # More complex filters need more height in the HTML layout
-    def double_height(self):
-        return False
-
-    def display(self):
-        raise MKInternalError(_("Incomplete implementation of filter %s '%s': missing display()") % \
-                (self.name, self.title))
-
-    def filter(self, infoname):
-        return ""
-
-    # Whether this filter needs to load host inventory data
-    def need_inventory(self):
-        return False
-
-    # post-Livestatus filtering (e.g. for BI aggregations)
-    def filter_table(self, rows):
-        return rows
-
-    def variable_settings(self, row):
-        return [] # return pairs of htmlvar and name according to dataset in row
-
-    def infoprefix(self, infoname):
-        if self.info == infoname:
-            return ""
-        else:
-            return self.info[:-1] + "_"
-
-    # Hidden filters may contribute to the pages headers of the views
-    def heading_info(self):
-        return None
-
-    # Returns the current representation of the filter settings from the HTML
-    # var context. This can be used to persist the filter settings.
-    def value(self):
-        val = {}
-        for varname in self.htmlvars:
-            val[varname] = html.var(varname, '')
-        return val
-
-    # Is used to populate a value, for example loaded from persistance, into
-    # the HTML context where it can be used by e.g. the display() method.
-    def set_value(self, value):
-        for varname in self.htmlvars:
-            html.set_var(varname, value.get(varname))
-
-
-
-# TODO: We should merge this with Filter() and make all vars unicode ...
-class FilterUnicodeFilter(Filter):
-    def value(self):
-        val = {}
-        for varname in self.htmlvars:
-            val[varname] = html.get_unicode_input(varname, '')
-        return val
-
 
 
 def get_filter(name):
@@ -1125,7 +1032,7 @@ def filters_of_visual(visual, info_keys, show_all=False, link_filters=None):
         filters += all_possible_filters
 
     # add ubiquitary_filters that are possible for these infos
-    for fn in ubiquitary_filters:
+    for fn in get_ubiquitary_filters():
         # Disable 'wato_folder' filter, if WATO is disabled or there is a single host view
         filter = get_filter(fn)
 
@@ -1135,6 +1042,12 @@ def filters_of_visual(visual, info_keys, show_all=False, link_filters=None):
             filters.append(filter)
 
     return list(set(filters)) # remove duplicates
+
+
+# TODO: Cleanup this special case
+def get_ubiquitary_filters():
+    return [ "wato_folder" ]
+
 
 # Reduces the list of the visuals used filters. The result are the ones
 # which are really presented to the user later.
@@ -1359,9 +1272,6 @@ def unpack_context_after_editing(packed_context):
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-def declare_info(infoname, info):
-    infos[infoname] = info
-
 def is_single_site_info(info_key):
     return infos[info_key].get('single_site', True)
 
@@ -1405,7 +1315,7 @@ def visual_title(what, visual):
     if extra_titles:
         title += " " + ", ".join(extra_titles)
 
-    for fn in ubiquitary_filters:
+    for fn in get_ubiquitary_filters():
         # Disable 'wato_folder' filter, if WATO is disabled or there is a single host view
         if fn == "wato_folder" and (not config.wato_enabled or 'host' in visual['single_infos']):
             continue

@@ -39,6 +39,7 @@ import config, views, userdb, pagetypes
 import notify, werks
 import sites
 import modules
+import cmk.gui.plugins.sidebar
 from cmk.gui.exceptions import MKGeneralException, MKUserError, MKException
 from log import logger
 
@@ -90,10 +91,7 @@ def load_plugins(force):
 # TODO: Deprecate this one day.
 def transform_old_dict_based_snapins():
     for snapin_id, snapin in sidebar_snapins.items():
-        if isinstance(snapin, SidebarSnapin):
-            continue # Already new style snapin :)
-
-        register_snapin(snapin_id, GenericSnapin(snapin))
+        snapin_registry.register_snapin(GenericSnapin(snapin_id, snapin))
 
 
 # Helper functions to be used by snapins
@@ -197,7 +195,7 @@ def load_user_config():
     # silently skip configured but not existant snapins
     user_config["snapins"] = [
           entry for entry in user_config["snapins"]
-                if entry[0] in sidebar_snapins
+                if entry[0] in snapin_registry
                    and entry[1] != "off"
                    and config.user.may("sidesnap." + entry[0])]
 
@@ -325,16 +323,16 @@ def page_side():
 
     html.open_div(class_="scroll" if config.sidebar_show_scrollbar else None, id_="side_content")
     for name, state in user_config["snapins"]:
-        if not name in sidebar_snapins or not config.user.may("sidesnap." + name):
+        if not name in snapin_registry or not config.user.may("sidesnap." + name):
             continue
         # Performs the initial rendering and might return an optional refresh url,
         # when the snapin contents are refreshed from an external source
         refresh_url = render_snapin(name, state)
 
-        if sidebar_snapins.get(name).refresh_regularly():
+        if snapin_registry.get(name).refresh_regularly():
             refresh_snapins.append([name, refresh_url])
 
-        elif sidebar_snapins.get(name).refresh_on_restart():
+        elif snapin_registry.get(name).refresh_on_restart():
             refresh_snapins.append([name, refresh_url])
             restart_snapins.append(name)
 
@@ -365,7 +363,7 @@ def render_snapin_styles(snapin):
         html.close_style()
 
 def render_snapin(name, state):
-    snapin = sidebar_snapins.get(name)
+    snapin = snapin_registry.get(name)
 
     html.open_div(id_="snapin_container_%s" % name, class_="snapin")
     render_snapin_styles(snapin)
@@ -472,7 +470,7 @@ def ajax_snapin():
     for snapname in snapnames:
         if not config.user.may("sidesnap." + snapname):
             continue
-        snapin = sidebar_snapins.get(snapname)
+        snapin = snapin_registry.get(snapname)
 
         # When restart snapins are about to be refreshed, only render
         # them, when the core has been restarted after their initial
@@ -543,23 +541,20 @@ def page_add_snapin():
     used_snapins = [name for (name, state) in load_user_config()["snapins"]]
 
     addname = html.var("name")
-    if addname in sidebar_snapins and addname not in used_snapins and html.check_transaction():
+    if addname in snapin_registry and addname not in used_snapins and html.check_transaction():
         user_config = load_user_config()
         user_config["snapins"].append((addname, "open"))
         save_user_config(user_config)
         used_snapins = [name for (name, state) in load_user_config()["snapins"]]
         html.reload_sidebar()
 
-    names = sidebar_snapins.keys()
-    names.sort()
     html.open_div(class_=["add_snapin"])
-    for name in names:
+    for name, snapin in sorted(snapin_registry.items()):
         if name in used_snapins:
             continue
         if not config.user.may("sidesnap." + name):
             continue # not allowed for this user
 
-        snapin = sidebar_snapins[name]
         title = snapin.title()
         description = snapin.description()
         transid = html.transaction_manager.get()
@@ -612,7 +607,7 @@ def ajax_switch_masterstate():
 
 def ajax_set_snapin_site():
     ident = html.var("ident")
-    if ident not in sidebar_snapins:
+    if ident not in snapin_registry:
         raise MKUserError(None, _("Invalid ident"))
 
     site  = html.var("site")
@@ -1133,61 +1128,58 @@ def generate_search_results(query):
 #   | use the register_snapin() function to register with the sidebar.     |
 #   '----------------------------------------------------------------------'
 
-def register_snapin(snapin_id, snapin):
-    sidebar_snapins[snapin_id] = snapin
+# Load all plugins. The snapins will then register on their own by subclassing SidebarSnapin
+import cmk.gui.plugins.sidebar
 
-    config.declare_permission("sidesnap.%s" % snapin_id,
-        snapin.title(),
-        snapin.description(),
-        snapin.allowed_roles())
-
-    modules.register_handlers(snapin.page_handlers())
+class SnapinRegistry(object):
+    def __init__(self):
+        super(SnapinRegistry, self).__init__()
+        self._snapins = {}
 
 
-
-class SidebarSnapin(object):
-    metaclass = abc.ABCMeta
-
-    @abc.abstractmethod
-    def title(self):
-        raise NotImplementedError()
+    def load_snapins(self):
+        for snapin_class in cmk.gui.plugins.sidebar.SidebarSnapin.__subclasses__(): # pylint: disable=no-member
+            self.register_snapin(snapin_class())
 
 
-    def description(self):
-        return ""
+    def register_snapin(self, snapin):
+        snapin_id = snapin.type_name()
+        self._snapins[snapin_id] = snapin
+
+        config.declare_permission("sidesnap.%s" % snapin_id,
+            snapin.title(),
+            snapin.description(),
+            snapin.allowed_roles())
+
+        modules.register_handlers(snapin.page_handlers())
 
 
-    @abc.abstractmethod
-    def show(self):
-        raise NotImplementedError()
+    def __contains__(self, text):
+        return text in self._snapins
 
 
-    def refresh_regularly(self):
-        return False
+    def items(self):
+        return self._snapins.items()
 
 
-    def refresh_on_restart(self):
-        return False
+    def get(self, key, deflt=None):
+        return self._snapins.get(key, deflt)
 
 
-    def allowed_roles(self):
-        return [ "admin", "user", "guest" ]
+snapin_registry = SnapinRegistry()
+snapin_registry.load_snapins()
 
 
-    def styles(self):
-        return None
-
-
-    def page_handlers(self):
-        return {}
-
-
-
-# Needed for compatiblity with old dict based snapins
-class GenericSnapin(SidebarSnapin):
-    def __init__(self, dict_spec):
+class GenericSnapin(cmk.gui.plugins.sidebar.SidebarSnapin):
+    """Generic wrapper class. Needed for compatiblity with old dict based snapins"""
+    def __init__(self, snapin_id, dict_spec):
         super(GenericSnapin, self).__init__()
+        self._type_name = snapin_id
         self._spec = dict_spec
+
+
+    def type_name(self):
+        return self._type_name
 
 
     def title(self):

@@ -30,8 +30,6 @@ import cmk.store as store
 
 import cmk.gui.utils as utils
 import cmk.gui.bi as bi
-import cmk.gui.views as views
-import cmk.gui.visuals as visuals
 import cmk.gui.sites as sites
 from cmk.gui.valuespec import *
 from cmk.gui.i18n import _
@@ -2000,9 +1998,11 @@ def get_av_groups(availability_table, avoptions):
 # Sort according to host and service. First after site, then
 # host (natural sort), then service
 def cmp_av_entry(a, b):
+    import cmk.gui.plugins.views
     return utils.cmp_num_split(a["site"], b["site"]) or \
            utils.cmp_num_split(a["host"], b["host"]) or \
-           cmp(views.cmp_service_name_equiv(a["service"]), views.cmp_service_name_equiv(b["service"])) or \
+           cmp(cmk.gui.plugins.views.cmp_service_name_equiv(a["service"]),
+               cmk.gui.plugins.views.cmp_service_name_equiv(b["service"])) or \
            utils.cmp_num_split(a["service"], b["service"])
 
 

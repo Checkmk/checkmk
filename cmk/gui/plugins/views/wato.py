@@ -26,6 +26,13 @@
 
 import cmk.gui.config as config
 import cmk.gui.watolib as watolib
+from cmk.gui.i18n import _
+from cmk.gui.exceptions import MKGeneralException
+
+from . import (
+    multisite_painters,
+    multisite_sorters,
+)
 
 
 multisite_painters["host_filename"] = {

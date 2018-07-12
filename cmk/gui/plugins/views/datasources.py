@@ -24,6 +24,12 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+from cmk.gui.i18n import _
+
+from . import (
+    multisite_datasources,
+    do_query_data,
+)
 
 ##################################################################################
 # Data sources

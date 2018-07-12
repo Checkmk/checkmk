@@ -24,12 +24,11 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+import cmk.gui.config as config
 import cmk.gui.mkeventd as mkeventd
+from cmk.gui.i18n import _
 
-try:
-    mkeventd_enabled = config.mkeventd_enabled
-except:
-    mkeventd_enabled = False
+from . import multisite_icons
 
 def paint_mkeventd(what, row, tags, custom_vars):
     # show for services based on the mkevents active check
@@ -95,7 +94,7 @@ def paint_mkeventd(what, row, tags, custom_vars):
 
     return 'mkeventd', title, url_prefix + url
 
-if mkeventd_enabled:
+if config.mkeventd_enabled:
     multisite_icons.append({
         'columns': [ 'check_command' ],
         'host_columns': [ 'address', 'name' ],

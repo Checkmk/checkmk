@@ -24,7 +24,26 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+import re
+import json
+
 import cmk.gui.utils as utils
+import cmk.gui.config as config
+import cmk.gui.weblib as weblib
+import cmk.gui.table as table
+from cmk.gui.i18n import _
+from cmk.gui.exceptions import MKGeneralException
+
+from . import (
+    painter_options,
+    is_stale,
+    row_id,
+    multisite_layouts,
+    group_value,
+    EmptyCell,
+    output_csv_headers,
+    group_value,
+)
 
 def init_rowselect(view):
     # Don't make rows selectable when no commands can be fired
@@ -72,9 +91,6 @@ def render_group_checkbox_th():
 #   |  more than on dataset however.
 #   '----------------------------------------------------------------------'
 def render_single_dataset(rows, view, group_cells, cells, num_columns, _ignore_show_checkboxes):
-    for row in rows:
-        save_state_for_playing_alarm_sounds(row)
-
     html.open_table(class_="data single")
     rownum = 0
     odd = "odd"
@@ -132,7 +148,6 @@ def render_grouped_boxes(rows, view, group_cells, cells, num_columns, show_check
     groups = []
     last_group = None
     for row in rows:
-        save_state_for_playing_alarm_sounds(row)
         this_group = group_value(row, group_cells)
         if this_group != last_group:
             last_group = this_group
@@ -212,8 +227,6 @@ def render_grouped_boxes(rows, view, group_cells, cells, num_columns, show_check
                 if visible_row_number > 0 and visible_row_number % repeat_heading_every == 0:
                     show_header_line()
             visible_row_number += 1
-
-            save_state_for_playing_alarm_sounds(row)
 
             odd = "even" if odd == "odd" else "odd"
 
@@ -578,7 +591,6 @@ def render_grouped_list(rows, view, group_cells, cells, num_columns, show_checkb
     visible_row_number = 0
     group_hidden, num_grouped_rows = None, 0
     for index, row in rows_with_ids:
-        save_state_for_playing_alarm_sounds(row)
         # Show group header, if a new group begins. But only if grouping
         # is activated
         if group_cells:
@@ -910,7 +922,6 @@ def create_matrices(rows, group_cells, cells, num_columns):
     col_num = 0
 
     for row in rows:
-        save_state_for_playing_alarm_sounds(row)
         group_id = group_value(row, group_cells)
         if group_id != last_group_id:
             col_num += 1

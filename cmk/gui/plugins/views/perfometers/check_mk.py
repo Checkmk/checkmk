@@ -27,6 +27,15 @@
 import cmk.render
 import cmk.gui.utils as utils
 
+from . import (
+    perfometers,
+    render_perfometer,
+    perfometer_linear,
+    perfometer_logarithmic,
+    perfometer_logarithmic_dual,
+    perfometer_logarithmic_dual_independent,
+)
+
 # Perf-O-Meters for Check_MK's checks
 #
 # They are called with:

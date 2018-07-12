@@ -13,13 +13,6 @@ def get_web_plugin_dirs():
     plugin_dirs = sorted(list(set(os.listdir(cmk_path() + "/web/plugins")
                                 + os.listdir(cmc_path() + "/web/plugins")
                                 + os.listdir(cme_path() + "/web/plugins"))))
-
-    # icons are included from a plugin of views module. Move to the end to
-    # make them be imported after the views plugins. Same for perfometers.
-    plugin_dirs.remove("icons")
-    plugin_dirs.append("icons")
-    plugin_dirs.remove("perfometer")
-    plugin_dirs.append("perfometer")
     return plugin_dirs
 
 

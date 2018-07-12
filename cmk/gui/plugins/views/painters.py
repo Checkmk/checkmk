@@ -62,6 +62,8 @@
 # styles are not modular and all defined in check_mk.css. This will
 # change in future.
 
+import os
+import time
 import traceback
 import copy
 
@@ -74,6 +76,40 @@ from cmk.defines import short_service_state_name, short_host_state_name
 import cmk.gui.bi as bi
 import cmk.gui.config as config
 import cmk.gui.utils as utils
+import cmk.gui.metrics as metrics
+from cmk.gui.htmllib import HTML
+from cmk.gui.i18n import _
+from cmk.gui.valuespec import (
+    Timerange,
+    DropdownChoice,
+    DateFormat,
+)
+
+from . import (
+    multisite_painter_options,
+    multisite_painters,
+    painter_options,
+    transform_action_url,
+    is_stale,
+    paint_stalified,
+    paint_host_list,
+    format_plugin_output,
+    display_options,
+    link_to_view,
+    get_host_tags,
+    get_perfdata_nth_value,
+    get_graph_timerange_from_painter_options,
+    get_tag_group,
+    paint_age,
+    paint_nagiosflag,
+    replace_action_url_macros,
+    render_cache_info,
+)
+
+from cmk.gui.plugins.views.icons import (
+    get_icons,
+    iconpainter_columns,
+)
 
 #   .--Painter Options-----------------------------------------------------.
 #   |                   ____       _       _                               |
@@ -178,49 +214,6 @@ def paint_nagios_link(row):
         html.render_icon('nagios', _('Show this %s in Nagios') % what), url)
 
 
-def paint_age(timestamp, has_been_checked, bold_if_younger_than, mode=None, what='past'):
-    if not has_been_checked:
-        return "age", "-"
-
-    if mode == None:
-        mode = painter_options.get("ts_format")
-
-    if mode == "epoch":
-        return "", str(int(timestamp))
-
-    if mode == "both":
-        css, h1 = paint_age(timestamp, has_been_checked, bold_if_younger_than, "abs", what=what)
-        css, h2 = paint_age(timestamp, has_been_checked, bold_if_younger_than, "rel", what=what)
-        return css, "%s - %s" % (h1, h2)
-
-    dateformat = painter_options.get("ts_date")
-    age = time.time() - timestamp
-    if mode == "abs" or \
-        (mode == "mixed" and abs(age) >= 48 * 3600):
-        return "age", time.strftime(dateformat + " %H:%M:%S", time.localtime(timestamp))
-
-    warn_txt = ''
-    output_format = "%s"
-    if what == 'future' and age > 0:
-        warn_txt = ' <b>%s</b>' % _('in the past!')
-    elif what == 'past' and age < 0:
-        warn_txt = ' <b>%s</b>' % _('in the future!')
-    elif what == 'both' and age > 0:
-        output_format = "%%s %s" % _("ago")
-
-
-    # Time delta less than two days => make relative time
-    if age < 0:
-        age = -age
-        prefix = "in "
-    else:
-        prefix = ""
-    if age < bold_if_younger_than:
-        age_class = "age recent"
-    else:
-        age_class = "age"
-
-    return age_class, prefix + (output_format % cmk.render.approx_age(age)) + warn_txt
 
 
 def paint_future_time(timestamp):
@@ -231,180 +224,6 @@ def paint_future_time(timestamp):
 
 def paint_day(timestamp):
     return "", time.strftime("%A, %Y-%m-%d", time.localtime(timestamp))
-
-#.
-#   .--Icons---------------------------------------------------------------.
-#   |                       ___                                            |
-#   |                      |_ _|___ ___  _ __  ___                         |
-#   |                       | |/ __/ _ \| '_ \/ __|                        |
-#   |                       | | (_| (_) | | | \__ \                        |
-#   |                      |___\___\___/|_| |_|___/                        |
-#   |                                                                      |
-#   '----------------------------------------------------------------------'
-
-# Deprecated in 1.2.7i1
-multisite_icons = []
-
-# Use this structure for new icons
-multisite_icons_and_actions = {}
-
-utils.load_web_plugins('icons', globals())
-
-def get_multisite_icons():
-    icons = {}
-
-    for icon_id, icon_config in multisite_icons_and_actions.items():
-        icon = {
-            "toplevel" : False,
-            "sort_index" : 30,
-        }
-        icon.update(icon_config)
-        icons[icon_id] = icon
-
-    # multisite_icons has been deprecated, but to be compatible to old icon
-    # plugins transform them to the new structure. We use part of the paint
-    # function name as icon id.
-    for icon_config in multisite_icons:
-        icon = {
-            "toplevel" : False,
-            "sort_index" : 30,
-        }
-        icon.update(icon_config)
-        icon_id = icon['paint'].__name__.replace('paint_', '')
-        icons[icon_id] = icon
-
-    # Now apply the user customized options
-    for icon_id, cfg in config.builtin_icon_visibility.items():
-        if icon_id in icons:
-            if 'toplevel' in cfg:
-                icons[icon_id]['toplevel'] = cfg['toplevel']
-            if 'sort_index' in cfg:
-                icons[icon_id]['sort_index'] = cfg['sort_index']
-
-    return icons
-
-def process_multisite_icons(what, row, tags, custom_vars, toplevel):
-    icons = []
-    for icon_id, icon in get_multisite_icons().items():
-        if icon.get('type', 'icon') == 'icon':
-            try:
-                title      = None
-                url        = None
-                if icon['toplevel'] != toplevel:
-                    continue
-
-                sort_index = icon['sort_index']
-
-                # In old versions, the icons produced html code directly. The new API
-                # is that the icon functions need to return:
-                # a) None          - nothing to be rendered
-                # b) single string - the icon name (without .png)
-                # c) tuple         - icon, title
-                # d) triple        - icon, title, url
-                try:
-                    result = icon['paint'](what, row, tags, custom_vars)
-                except Exception, e:
-                    if config.debug:
-                        raise
-                    result = ("alert", "Exception in icon '%s': %s" %
-                                (icon_id, traceback.format_exc()))
-
-                if result is None:
-                    continue
-
-                elif type(result) in [str, unicode, HTML]:
-
-                    # TODO: This is handling the deprecated API with 1.2.7. Remove this one day.
-                    if result[0] == '<':
-                        # seems like an old format icon (html code). In regular rendering
-                        # case (html), it can simply be appended to the output. Otherwise
-                        # extract the icon name from icon images
-                        if html.output_format == "html":
-                            icons.append((sort_index, result))
-                        else:
-                            # Strip icon names out of HTML code that is generated by htmllib.render_icon()
-                            for n in regex('<img src="([^"]*)"[^>]*>').findall("%s" % result):
-                                if n.startswith("images/"):
-                                    n = n[7:]
-                                if n.startswith("icon_"):
-                                    n = n[5:]
-                                if n.endswith(".png"):
-                                    n = n[:-4]
-                                icons.append((sort_index, n.encode('utf-8'), None, None))
-                        continue
-
-                    else:
-                        icon_name = result
-                else:
-                    if len(result) == 2:
-                        icon_name, title = result
-                    elif len(result) == 3:
-                        icon_name, title, url = result
-                icons.append((sort_index, icon_name, title, url))
-
-            except Exception, e:
-                icons.append((sort_index, 'Exception in icon plugin!<br />' + traceback.format_exc()))
-    return icons
-
-
-def process_custom_user_icons_and_actions(user_action_ids, toplevel):
-    icons = []
-    for id in user_action_ids:
-        try:
-            icon = config.user_icons_and_actions[id]
-        except KeyError:
-            continue # Silently skip not existing icons
-
-        if icon.get('toplevel', False) == toplevel:
-            sort_index = icon.get('sort_index', 15)
-            icons.append((sort_index, icon['icon'], icon.get('title'), icon.get('url')))
-
-    return icons
-
-
-def get_icons(what, row, toplevel):
-    host_custom_vars = dict(zip(row["host_custom_variable_names"],
-                                row["host_custom_variable_values"]))
-
-    if what != 'host':
-        custom_vars = dict(zip(row[what+"_custom_variable_names"],
-                               row[what+"_custom_variable_values"]))
-    else:
-        custom_vars = host_custom_vars
-
-    # Extract needed custom variables
-    tags = host_custom_vars.get('TAGS', '').split()
-    user_action_ids = custom_vars.get('ACTIONS', '').split(',')
-
-    # Icons is a list of triple or quintuplets with these elements:
-    # (toplevel, sort_index, html_code)
-    #  -> TODO: can be removed one day, handles deprecated icon API
-    #  -> this can only happen for toplevel_icons and when output
-    #     is written to HTML
-    #  -> or when an exception occured
-    # (toplevel, sort_index, icon_name, title, url)
-    icons = process_multisite_icons(what, row, tags, host_custom_vars, toplevel)
-    icons += process_custom_user_icons_and_actions(user_action_ids, toplevel)
-    return sorted(icons, key = lambda i: i[0])
-
-
-def replace_action_url_macros(url, what, row):
-    macros = {
-        "HOSTNAME"    : row['host_name'],
-        "HOSTADDRESS" : row['host_address'],
-        "USER_ID"     : config.user.id,
-    }
-    if what == 'service':
-        macros.update({
-            "SERVICEDESC": row['service_description'],
-        })
-
-    for key, val in macros.items():
-        url = url.replace("$%s$" % key, val)
-        url = url.replace("$%s_URL_ENCODED$" % key, html.urlencode(val))
-
-    return url
-
 
 # Paint column with various icons. The icons use
 # a plugin based mechanism so it is possible to
@@ -430,7 +249,7 @@ def paint_icons(what, row):
         if len(icon) == 4:
             icon_name, title, url_spec = icon[1:]
             if url_spec:
-                url, target_frame = sanitize_action_url(url_spec)
+                url, target_frame = transform_action_url(url_spec)
                 url = replace_action_url_macros(url, what, row)
 
                 onclick = ''
@@ -447,34 +266,6 @@ def paint_icons(what, row):
 
     return "icons", output
 
-
-# toplevel may be
-#  True to get only columns for top level icons
-#  False to get only columns for dropdown menu icons
-#  None to get columns for all active icons
-def iconpainter_columns(what, toplevel):
-    cols = set(['site',
-                'host_name',
-                'host_address',
-                'host_custom_variable_names',
-                'host_custom_variable_values' ])
-
-    if what == 'service':
-        cols.update([
-            'service_description',
-            'service_custom_variable_names',
-            'service_custom_variable_values',
-        ])
-
-    for icon_id, icon in get_multisite_icons().items():
-        if toplevel == None or toplevel == icon['toplevel']:
-            if 'columns' in icon:
-                cols.update([ what + '_' + c for c in icon['columns'] ])
-            cols.update([ "host_" + c for c in icon.get("host_columns", [])])
-            if what == "service":
-                cols.update([ "service_" + c for c in icon.get("service_columns", [])])
-
-    return cols
 
 multisite_painters["service_icons"] = {
     "title"     : _("Service icons"),
@@ -638,24 +429,6 @@ multisite_painters["svc_metrics"] = {
     "printable" : False,
 }
 
-def get_perfdata_nth_value(row, n, remove_unit = False):
-    perfdata = row.get("service_perf_data")
-    if not perfdata:
-        return ''
-    try:
-        parts = perfdata.split()
-        if len(parts) <= n:
-            return "" # too few values in perfdata
-        varname, rest = parts[n].split("=")
-        number = rest.split(';')[0]
-        # Remove unit. Why should we? In case of sorter (numeric)
-        if remove_unit:
-            while len(number) > 0 and not number[-1].isdigit():
-                number = number[:-1]
-        return number
-    except Exception, e:
-        return str(e)
-
 def paint_perfdata_nth_value(row, n):
     return paint_stalified(row, get_perfdata_nth_value(row, n))
 
@@ -810,20 +583,6 @@ multisite_painters["svc_check_age"] = {
     "paint"   : lambda row: paint_checked("service", row),
 }
 
-def render_cache_info(what, row):
-    cached_at = row["service_cached_at"]
-    cache_interval = row["service_cache_interval"]
-    cache_age = time.time() - cached_at
-
-    text = _("Cache generated %s ago, cache interval: %s") % \
-            (cmk.render.approx_age(cache_age), cmk.render.approx_age(cache_interval))
-
-    if cache_interval:
-        percentage = 100.0 * cache_age / cache_interval
-        text += _(", elapsed cache lifespan: %s") % cmk.render.percent(percentage)
-
-    return text
-
 def paint_cache_info(row):
     if not row["service_cached_at"]:
         return "", ""
@@ -964,14 +723,6 @@ multisite_painters["svc_check_type"] = {
     "paint"   : lambda row: (None, _("ACTIVE") if row["service_check_type"] == 0 else _("PASSIVE")),
 }
 
-def paint_nagiosflag(row, field, bold_if_nonzero):
-    value = row[field]
-    yesno = {True: _("yes"), False: _("no")}[value != 0]
-    if (value != 0) == bold_if_nonzero:
-        return "badflag", yesno
-    else:
-        return "goodflag", yesno
-
 multisite_painters["svc_in_downtime"] = {
     "title"   : _("Currently in downtime"),
     "short"   : _("Dt."),
@@ -1037,79 +788,10 @@ multisite_painters["svc_group_memberlist"] = {
 
 def paint_time_graph(row, cell):
     if metrics.cmk_graphs_possible(row["site"]):
-        return paint_time_graph_cmk(row, cell)
+        import cmk.gui.cee.plugins.views.graphs
+        return cmk.gui.cee.plugins.views.graphs.paint_time_graph_cmk(row, cell)
     else:
         return paint_time_graph_pnp(row)
-
-
-def paint_time_graph_cmk(row, cell, override_graph_render_options=None):
-    import cmk.gui.cee.plugins.metrics.graphs
-    graph_identification = (
-        "template", {
-            "site"                : row["site"],
-            "host_name"           : row["host_name"],
-            "service_description" : row.get("service_description", "_HOST_"),
-    })
-
-    # Load the graph render options from
-    # a) the painter parameters configured in the view
-    # b) the painter options set per user and view
-
-    painter_params = cell.painter_parameters()
-    painter_params = _transform_old_graph_render_options(painter_params)
-
-    graph_render_options = painter_params["graph_render_options"]
-
-    options = painter_options.get_without_default("graph_render_options")
-    if options != None:
-        graph_render_options.update(options)
-
-    if override_graph_render_options != None:
-        graph_render_options.update(override_graph_render_options)
-
-    graph_data_range = {}
-
-    now = time.time()
-    if "set_default_time_range" in painter_params:
-        duration = painter_params["set_default_time_range"]
-        graph_data_range["time_range"] = now - duration, now
-    else:
-        graph_data_range["time_range"] = now - 3600*4, now
-
-    # Load timerange from painter option (overrides the defaults, if set by the user)
-    painter_option_pnp_timerange = painter_options.get_without_default("pnp_timerange")
-    if painter_option_pnp_timerange is not None:
-        graph_data_range["time_range"] = get_graph_timerange_from_painter_options()
-
-    if html.is_mobile():
-        graph_render_options.update({
-            "interaction"   : False,
-            "show_controls" : False,
-            # Would be much better to autodetect the possible size (like on dashboard)
-            "size"          : (50, 20), # ex
-        })
-
-    if "host_metrics" in row:
-        available_metrics = row["host_metrics"]
-        perf_data = row["host_perf_data"]
-    else:
-        available_metrics = row["service_metrics"]
-        perf_data = row["service_perf_data"]
-
-    if not available_metrics and perf_data:
-        return "", _("No historic metrics recorded but performance data is available. "
-                     "Maybe performance data processing is disabled.")
-
-    return "", cmk.gui.cee.plugins.metrics.graphs.render_graphs_from_specification_html(
-            graph_identification,
-            graph_data_range,
-            graph_render_options)
-
-
-def get_graph_timerange_from_painter_options():
-    value = painter_options.get("pnp_timerange")
-    vs = painter_options.get_valuespec_of("pnp_timerange")
-    return map(int, vs.compute_range(value)[0])
 
 
 def paint_time_graph_pnp(row):
@@ -1145,7 +827,8 @@ def time_graph_params():
     if not metrics.cmk_graphs_possible():
         return # The method is only available in CEE
 
-    return cmk_time_graph_params()
+    import cmk.gui.cee.plugins.views.graphs
+    return cmk.gui.cee.plugins.views.graphs.cmk_time_graph_params()
 
 
 multisite_painters["svc_pnpgraph" ] = {

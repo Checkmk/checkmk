@@ -52,6 +52,21 @@ from cmk.gui.plugins.visuals.inventory import (
     FilterInvtableIDRange,
 )
 
+from . import (
+    painter_options,
+    display_options,
+    multisite_painters,
+    multisite_sorters,
+    multisite_painter_options,
+    inventory_displayhints,
+    multisite_datasources,
+    multisite_builtin_views,
+    view_is_enabled,
+    paint_age,
+    declare_1to1_sorter,
+    cmp_simple_number,
+)
+
 def paint_host_inventory_tree(row, invpath=".", column="host_inventory"):
     struct_tree = row.get(column)
     if struct_tree is None:
@@ -146,12 +161,12 @@ def declare_inv_column(invpath, datatype, title, short = None):
 
         # Declare filter. Sync this with declare_invtable_columns()
         if datatype == "str":
-            visuals.cmk.gui.plugins.visuals.inventory.declare_filter(800, FilterInvText(name, invpath, title))
+            cmk.gui.plugins.visuals.inventory.declare_filter(800, FilterInvText(name, invpath, title))
         elif datatype == "bool":
-            visuals.cmk.gui.plugins.visuals.inventory.declare_filter(800, FilterInvBool(name, invpath, title))
+            cmk.gui.plugins.visuals.inventory.declare_filter(800, FilterInvBool(name, invpath, title))
         else:
             filter_info = inv_filter_info.get(datatype, {})
-            visuals.cmk.gui.plugins.visuals.inventory.declare_filter(800, FilterInvFloat(name, invpath, title,
+            cmk.gui.plugins.visuals.inventory.declare_filter(800, FilterInvFloat(name, invpath, title,
                unit = filter_info.get("unit"),
                scale = filter_info.get("scale", 1.0)))
 
@@ -1184,7 +1199,7 @@ def declare_invtable_column(infoname, name, topic, title, short_title,
         "cmp"      : lambda a, b: sortfunc(a.get(column), b.get(column))
     }
 
-    visuals.cmk.gui.plugins.visuals.inventory.declare_filter(800, filter_class(infoname, name, topic + ": " + title))
+    cmk.gui.plugins.visuals.inventory.declare_filter(800, filter_class(infoname, name, topic + ": " + title))
 
 
 # One master function that does all
@@ -1574,7 +1589,7 @@ multisite_painters["invhist_changed"] = {
 }
 
 
-# sorteres
+# sorters
 declare_1to1_sorter("invhist_time",    cmp_simple_number, reverse=True)
 declare_1to1_sorter("invhist_removed", cmp_simple_number)
 declare_1to1_sorter("invhist_new",     cmp_simple_number)
@@ -1897,3 +1912,38 @@ class DeltaNodeRenderer(NodeRenderer):
             html.close_span()
         elif old == new:
             self._show_child_value(old, hint)
+
+
+# Ajax call for fetching parts of the tree
+def ajax_inv_render_tree():
+    hostname = html.var("host")
+    invpath = html.var("path")
+    tree_id = html.var("treeid", "")
+    if html.var("show_internal_tree_paths"):
+        show_internal_tree_paths = True
+    else:
+        show_internal_tree_paths = False
+    if tree_id:
+        struct_tree = inventory.load_delta_tree(hostname, int(tree_id[1:]))
+        tree_renderer = DeltaNodeRenderer(hostname, tree_id, invpath)
+    else:
+        struct_tree = inventory.load_tree(hostname)
+        tree_renderer = AttributeRenderer(hostname, "", invpath,
+                        show_internal_tree_paths=show_internal_tree_paths)
+
+    if struct_tree is None:
+        html.show_error(_("No such inventory tree."))
+
+    struct_tree = struct_tree.get_filtered_tree(inventory.get_permitted_inventory_paths())
+
+    parsed_path, attributes_key = inventory.parse_tree_path(invpath)
+    if parsed_path:
+        children = struct_tree.get_sub_children(parsed_path)
+    else:
+        children = [struct_tree.get_root_container()]
+
+    if children is None:
+        html.show_error(_("Invalid path in inventory tree: '%s' >> %s") % (invpath, repr(parsed_path)))
+    else:
+        for child in inventory.sort_children(children):
+            child.show(tree_renderer, path=invpath)

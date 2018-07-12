@@ -24,6 +24,10 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+from . import (
+    perfometers,
+    perfometer_logarithmic,
+)
 
 def perfometer_check_tcp(row, check_command, perfdata):
     time_ms = float(perfdata[0][1]) * 1000.0

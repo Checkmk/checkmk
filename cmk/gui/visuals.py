@@ -56,6 +56,12 @@ from cmk.gui.plugins.visuals.utils import (
 )
 from cmk.gui.plugins.visuals.utils import _infos as infos
 
+if not cmk.is_raw_edition():
+    import cmk.gui.cee.plugins.visuals
+
+if cmk.is_managed_edition():
+    import cmk.gui.cme.plugins.visuals
+
 #   .--Plugins-------------------------------------------------------------.
 #   |                   ____  _             _                              |
 #   |                  |  _ \| |_   _  __ _(_)_ __  ___                    |

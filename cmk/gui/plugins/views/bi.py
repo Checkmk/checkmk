@@ -24,9 +24,19 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import cmk.gui.bi as bi
 from cmk.defines import short_service_state_name
 
+import cmk.gui.bi as bi
+from cmk.gui.valuespec import (DropdownChoice)
+from cmk.gui.htmllib import HTML
+from cmk.gui.i18n import _
+
+from . import (
+    painter_options,
+    multisite_datasources,
+    multisite_painters,
+    multisite_painter_options,
+)
 
 #     ____        _
 #    |  _ \  __ _| |_ __ _ ___  ___  _   _ _ __ ___ ___  ___
@@ -80,7 +90,6 @@ multisite_datasources["bi_hostnamebygroup_aggregations"] = {
 #
 
 def paint_bi_icons(row):
-
     single_url = "view.py?" + html.urlencode_vars([
             ("view_name", "aggr_single"),
             ("aggr_name", row["aggr_name"])])

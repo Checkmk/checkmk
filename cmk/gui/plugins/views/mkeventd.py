@@ -24,15 +24,28 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+from cmk.defines import short_service_state_name
+
+import cmk.gui.config as config
 import cmk.gui.sites as sites
 import cmk.gui.mkeventd as mkeventd
 from cmk.gui.valuespec import *
-from cmk.defines import short_service_state_name
+from cmk.gui.i18n import _
 
-try:
-    mkeventd_enabled = config.mkeventd_enabled
-except:
-    mkeventd_enabled = False
+from . import (
+    multisite_datasources,
+    multisite_painters,
+    multisite_commands,
+    multisite_builtin_views,
+    paint_age,
+    paint_nagiosflag,
+    row_id,
+    declare_1to1_sorter,
+    cmp_simple_number,
+    cmp_simple_string,
+    cmp_num_split,
+    query_data,
+)
 
 #   .--Datasources---------------------------------------------------------.
 #   |       ____        _                                                  |
@@ -42,7 +55,6 @@ except:
 #   |      |____/ \__,_|\__\__,_|___/\___/ \__,_|_|  \___\___||___/        |
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
-
 
 def query_ec_table(datasource, columns, add_columns, query, only_sites, limit, tablename):
     for c in [ "event_contact_groups", "host_contact_groups", "event_host" ]:
@@ -121,7 +133,7 @@ def _ec_filter_host_information_of_not_permitted_hosts(rows):
 
 # Declare datasource only if the event console is activated. We do
 # not want to irritate users that do not know anything about the EC.
-if mkeventd_enabled:
+if config.mkeventd_enabled:
     config.declare_permission("mkeventd.seeall",
             _("See all events"),
             _("If a user lacks this permission then he/she can see only those events that "
@@ -386,6 +398,8 @@ if mkeventd_enabled:
                     urlvars += parse_qsl(url.query)
             else:
                 # Regular view
+                # TODO: Find a better place for permitted_views that is importable on module level
+                from cmk.gui.views import permitted_views
                 view = permitted_views()[(html.var("view_name"))]
                 target = None
                 filename = None

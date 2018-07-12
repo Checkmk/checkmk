@@ -57,8 +57,28 @@
 #    'paint':           paint_icon_image,
 #})
 
+import json
+
 import cmk.utils
 import cmk.render
+
+import cmk.gui.metrics as metrics
+import cmk.gui.config as config
+import cmk.gui.bi as bi
+from cmk.gui.i18n import _
+
+from cmk.gui.plugins.views import (
+    pnp_url,
+    url_to_view,
+    render_cache_info,
+    display_options,
+    paint_age,
+    is_stale,
+)
+
+from . import (
+    multisite_icons_and_actions,
+)
 
 #   .--Action Menu---------------------------------------------------------.
 #   |          _        _   _               __  __                         |
@@ -279,50 +299,8 @@ multisite_icons_and_actions['status_acknowledged'] = {
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-
-# Intelligent Links to PNP4Nagios 0.6.X
-def pnp_url(row, what, how = 'graph'):
-    sitename = row["site"]
-    host = cmk.utils.pnp_cleanup(row["host_name"])
-    if what == "host":
-        svc = "_HOST_"
-    else:
-        svc = cmk.utils.pnp_cleanup(row["service_description"])
-    url_prefix = config.site(sitename)["url_prefix"]
-    if html.mobile:
-        url = url_prefix + ("pnp4nagios/index.php?kohana_uri=/mobile/%s/%s/%s" % \
-            (how, html.urlencode(host), html.urlencode(svc)))
-    else:
-        url = url_prefix + ("pnp4nagios/index.php/%s?host=%s&srv=%s" % \
-            (how, html.urlencode(host), html.urlencode(svc)))
-
-    if how == 'graph':
-        url += "&theme=multisite&baseurl=%scheck_mk/" % \
-                        html.urlencode(url_prefix)
-    return url
-
-
 def pnp_popup_url(row, what):
     return pnp_url(row, what, 'popup')
-
-
-def new_graphing_url(row, what):
-    site_id = row["site"]
-
-    urivars = [
-        ("siteopt",   site_id),
-        ("host",      row["host_name"]),
-    ]
-
-    if what == "service":
-        urivars += [
-            ("service", row["service_description"]),
-            ("view_name", "service_graphs"),
-        ]
-    else:
-        urivars.append(("view_name", "host_graphs"))
-
-    return html.makeuri_contextless(urivars, filename="view.py")
 
 
 def pnp_graph_icon_link(row, what):
@@ -332,7 +310,8 @@ def pnp_graph_icon_link(row, what):
     if not metrics.cmk_graphs_possible(row["site"]):
         return pnp_url(row, what)
     else:
-        return new_graphing_url(row, what)
+        import cmk.gui.cee.plugins.views.graphs
+        return cmk.gui.cee.plugins.views.graphs.cmk_graph_url(row, what)
 
 
 def pnp_icon(row, what):
@@ -902,6 +881,3 @@ multisite_icons_and_actions['check_period'] = {
     'paint'    : paint_icon_check_period,
     'toplevel' : True,
 }
-
-
-#.

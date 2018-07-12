@@ -24,6 +24,14 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+import cmk.gui.config as config
+from cmk.gui.i18n import _
+
+from cmk.gui.plugins.views import (display_options)
+
+from . import multisite_icons_and_actions
+
+
 def wato_link(folder, site, hostname, where):
     if not config.wato_enabled:
         return

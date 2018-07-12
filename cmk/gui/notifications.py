@@ -31,7 +31,7 @@ import cmk.render
 import cmk.gui.config as config
 import cmk.gui.sites as sites
 import cmk.gui.table as table
-import cmk.gui.wato as wato
+import cmk.gui.watolib as watolib
 import cmk.gui.i18n
 from cmk.gui.i18n import _u, _
 
@@ -51,7 +51,7 @@ def load_plugins(force):
                                       _("Notification plugins"),
                                       do_sort = True)
 
-    for name, attrs in wato.load_notification_scripts().items():
+    for name, attrs in watolib.load_notification_scripts().items():
         config.declare_permission(
             "notification_plugin.%s" % name,
             _u(attrs["title"]), u"",
@@ -199,6 +199,7 @@ def page_clear():
         html.reload_sidebar()
 
         if config.user.authorized_login_sites():
+            import cmk.gui.wato as wato # TODO: Clean this up
             wato.user_profile_async_replication_page()
             return
 

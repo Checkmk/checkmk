@@ -408,48 +408,33 @@ def page_handler():
         show_body_start=display_options.enabled(display_options.H),
         show_top_heading=display_options.enabled(display_options.T))
 
-    try:
-        if display_options.enabled(display_options.B):
-            # Show contexts buttons
-            html.begin_context_buttons()
-            mode.buttons()
-            for inmode, buttontext, target in extra_buttons:
-                if inmode == current_mode:
-                    if hasattr(target, '__call__'):
-                        target = target()
-                        if not target:
-                            continue
-                    if '/' == target[0] or target.startswith('../') or '://' in target:
-                        html.context_button(buttontext, target)
-                    else:
-                        html.context_button(buttontext, watolib.folder_preserving_link([("mode", target)]))
-            html.end_context_buttons()
+    if display_options.enabled(display_options.B):
+        # Show contexts buttons
+        html.begin_context_buttons()
+        mode.buttons()
+        for inmode, buttontext, target in extra_buttons:
+            if inmode == current_mode:
+                if hasattr(target, '__call__'):
+                    target = target()
+                    if not target:
+                        continue
+                if '/' == target[0] or target.startswith('../') or '://' in target:
+                    html.context_button(buttontext, target)
+                else:
+                    html.context_button(buttontext, watolib.folder_preserving_link([("mode", target)]))
+        html.end_context_buttons()
 
-        if not html.is_transaction() or (watolib.is_read_only_mode_enabled() and watolib.may_override_read_only_mode()):
-            show_read_only_warning()
+    if not html.is_transaction() or (watolib.is_read_only_mode_enabled() and watolib.may_override_read_only_mode()):
+        show_read_only_warning()
 
-        # Show outcome of action
-        if html.has_user_errors():
-            html.show_error(action_message)
-        elif action_message:
-            html.message(action_message)
+    # Show outcome of action
+    if html.has_user_errors():
+        html.show_error(action_message)
+    elif action_message:
+        html.message(action_message)
 
-        # Show content
-        mode.handle_page()
-
-    except MKGeneralException:
-        raise
-
-    except MKInternalError:
-        html.unplug_all()
-        raise
-
-    except MKAuthException:
-        raise
-
-    except Exception, e:
-        html.unplug_all()
-        html.show_error(traceback.format_exc().replace('\n', '<br />'))
+    # Show content
+    mode.handle_page()
 
     if watolib.is_sidebar_reload_needed():
         html.reload_sidebar()

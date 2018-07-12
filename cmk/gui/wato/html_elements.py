@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 # -*- encoding: utf-8; py-indent-offset: 4 -*-
 # +------------------------------------------------------------------+
 # |             ____ _               _        __  __ _  __           |
@@ -24,7 +24,54 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-# The auth.php was shipped by default in previos versions. It has
-# been removed with 1.2.1i4. To prevent problems during update,
-# this dummy file is shipped which overwrites the existing file
-# and invalidates it. This can be removed in later versions.
+from cmk.gui.i18n import _
+
+wato_styles = [ "pages", "wato", "status" ]
+
+# TODO: Refactor to context handler or similar?
+_html_head_open = False
+
+# Show confirmation dialog, send HTML-header if dialog is shown.
+def wato_confirm(html_title, message):
+    if not html.has_var("_do_confirm") and not html.has_var("_do_actions"):
+        wato_html_head(html_title)
+    return html.confirm(message)
+
+
+def initialize_wato_html_head():
+    global _html_head_open
+    _html_head_open = False
+
+
+def wato_html_head(title, *args, **kwargs):
+    global _html_head_open
+
+    if _html_head_open:
+        return
+
+    _html_head_open = True
+    html.header(title, *args, javascripts=["wato"], stylesheets=wato_styles, **kwargs)
+    html.open_div(class_="wato")
+
+
+def wato_html_footer(*args, **kwargs):
+    if not _html_head_open:
+        return
+
+    html.close_div()
+    html.footer(*args, **kwargs)
+
+
+# TODO: Cleanup all calls using title and remove the argument
+def search_form(title=None, mode=None, default_value=""):
+    html.begin_form("search", add_transid=False)
+    if title:
+        html.write_text(title+' ')
+    html.text_input("search", size=32, default_value=default_value)
+    html.hidden_fields()
+    if mode:
+        html.hidden_field("mode", mode, add_var=True)
+    html.set_focus("search")
+    html.write_text(" ")
+    html.button("_do_seach", _("Search"))
+    html.end_form()

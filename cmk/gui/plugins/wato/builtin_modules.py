@@ -28,6 +28,15 @@
 # defined in a plugin because they contain cmk.gui.i18n strings.
 # fields: mode, title, icon, permission, help
 
+import cmk
+
+from cmk.gui.i18n import _
+
+from . import (
+    register_modules,
+    WatoModule,
+)
+
 register_modules(
       WatoModule( "folder",           _("Hosts"),     "folder", "hosts",
       _("Manage monitored hosts and services and the hosts' folder structure."), 10),
@@ -89,7 +98,7 @@ register_modules(
 
 # Register the builtin agent download page on the top level of WATO only when the agent bakery
 # does not exist (e.g. when using CRE)
-if "agents" not in modes:
+if cmk.is_raw_edition():
     register_modules(
         WatoModule("download_agents", _("Monitoring Agents"), "download_agents", "download_agents",
          _("Downloads the Check_MK monitoring agents"), 5)

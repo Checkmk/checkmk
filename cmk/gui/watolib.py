@@ -76,6 +76,7 @@ import cmk.gui.multitar as multitar
 import cmk.gui.sites as sites
 import cmk.gui.mkeventd as mkeventd
 import cmk.gui.backup as backup
+import cmk.gui.gui_background_job as gui_background_job
 from cmk.gui.i18n import _u, _
 from cmk.gui.htmllib import HTML
 from cmk.gui.log import logger
@@ -84,79 +85,6 @@ from cmk.gui.exceptions import MKGeneralException, MKAuthException, MKUserError
 
 if cmk.is_managed_edition():
     import cmk.gui.cme.managed as managed
-
-replication_paths = []
-backup_paths = []
-backup_domains = {}
-automation_commands = {}
-g_rulespecs = None
-g_rulegroups = {}
-builtin_host_tags = []
-builtin_aux_tags = []
-
-# Global datastructure holding all attributes (in a defined order)
-# as pairs of (attr, topic). Topic is the title under which the
-# attribute is being displayed. All builtin attributes use the
-# topic None. As long as only one topic is used, no topics will
-# be displayed. They are useful if you have a great number of
-# custom attributes.
-g_host_attributes = []
-
-# Dictionary for quick access
-g_host_attribute = {}
-
-def load_watolib_plugins():
-    if g_rulespecs:
-        g_rulespecs.clear()
-
-    if g_rulegroups:
-        g_rulegroups.clear()
-
-    # Directories and files to synchronize during replication
-    global replication_paths
-    del replication_paths[:]
-    replication_paths += [
-        ( "dir",  "check_mk",     wato_root_dir, ["sitespecific.mk"]),
-        ( "dir",  "multisite",    multisite_dir, ["sitespecific.mk"] ),
-        ( "file", "htpasswd",     cmk.paths.htpasswd_file ),
-        ( "file", "auth.secret",  '%s/auth.secret' % os.path.dirname(cmk.paths.htpasswd_file) ),
-        ( "file", "auth.serials", '%s/auth.serials' % os.path.dirname(cmk.paths.htpasswd_file) ),
-        # Also replicate the user-settings of Multisite? While the replication
-        # as such works pretty well, the count of pending changes will not
-        # know.
-        ( "dir", "usersettings",  cmk.paths.var_dir + "/web" ),
-        ( "dir", "mkps",          cmk.paths.var_dir + "/packages" ),
-        ( "dir", "local",         cmk.paths.omd_root + "/local" ),
-    ]
-
-    # Directories and files for backup & restore
-    global backup_paths
-    del backup_paths[:]
-    backup_paths = replication_paths + [
-        ( "file", "sites",      sites_mk)
-    ]
-
-    # Include rule configuration into backup/restore/replication. Current
-    # status is not backed up.
-    if config.mkeventd_enabled:
-        rule_pack_dir = str(cmk.ec.export.rule_pack_dir())
-        replication_paths.append(("dir", "mkeventd", rule_pack_dir, ["sitespecific.mk"]))
-        backup_paths.append(("dir", "mkeventd", rule_pack_dir))
-
-        mkp_rule_pack_dir = str(cmk.ec.export.mkp_rule_pack_dir())
-        replication_paths.append(("dir", "mkeventd_mkp", mkp_rule_pack_dir))
-        backup_paths.append(("dir", "mkeventd_mkp", mkp_rule_pack_dir))
-
-    backup_domains.clear()
-
-    utils.load_web_plugins("watolib", globals())
-    return globals()
-
-def init_watolib_datastructures():
-    if config.wato_use_git:
-        prepare_git_commit()
-
-    declare_host_tag_attributes() # create attributes out of tag definitions
 
 #.
 #   .--Constants-----------------------------------------------------------.
@@ -184,6 +112,65 @@ audit_log_path = var_dir + "log/audit.log"
 snapshot_dir   = var_dir + "snapshots/"
 php_api_dir    = var_dir + "php-api/"
 
+# Directories and files to synchronize during replication
+replication_paths = [
+    ( "dir",  "check_mk",     wato_root_dir, ["sitespecific.mk"]),
+    ( "dir",  "multisite",    multisite_dir, ["sitespecific.mk"] ),
+    ( "file", "htpasswd",     cmk.paths.htpasswd_file ),
+    ( "file", "auth.secret",  '%s/auth.secret' % os.path.dirname(cmk.paths.htpasswd_file) ),
+    ( "file", "auth.serials", '%s/auth.serials' % os.path.dirname(cmk.paths.htpasswd_file) ),
+    # Also replicate the user-settings of Multisite? While the replication
+    # as such works pretty well, the count of pending changes will not
+    # know.
+    ( "dir", "usersettings",  cmk.paths.var_dir + "/web" ),
+    ( "dir", "mkps",          cmk.paths.var_dir + "/packages" ),
+    ( "dir", "local",         cmk.paths.omd_root + "/local" ),
+]
+
+# Directories and files for backup & restore
+backup_paths = replication_paths[:] + [
+    ( "file", "sites",      sites_mk)
+]
+
+# Include rule configuration into backup/restore/replication. Current
+# status is not backed up.
+if config.mkeventd_enabled:
+    _rule_pack_dir = str(cmk.ec.export.rule_pack_dir())
+    replication_paths.append(("dir", "mkeventd", _rule_pack_dir, ["sitespecific.mk"]))
+    backup_paths.append(("dir", "mkeventd", _rule_pack_dir))
+
+    _mkp_rule_pack_dir = str(cmk.ec.export.mkp_rule_pack_dir())
+    replication_paths.append(("dir", "mkeventd_mkp", _mkp_rule_pack_dir))
+    backup_paths.append(("dir", "mkeventd_mkp", _mkp_rule_pack_dir))
+
+backup_domains = {}
+automation_commands = {}
+g_rulespecs = None
+g_rulegroups = {}
+builtin_host_tags = []
+builtin_aux_tags = []
+
+# Global datastructure holding all attributes (in a defined order)
+# as pairs of (attr, topic). Topic is the title under which the
+# attribute is being displayed. All builtin attributes use the
+# topic None. As long as only one topic is used, no topics will
+# be displayed. They are useful if you have a great number of
+# custom attributes.
+# TODO: Cleanup this duplicated data structure into a single one.
+g_host_attributes = []
+
+# Dictionary for quick access
+g_host_attribute = {}
+
+def load_watolib_plugins():
+    utils.load_web_plugins("watolib", globals())
+
+
+def init_watolib_datastructures():
+    if config.wato_use_git:
+        prepare_git_commit()
+
+    update_config_based_host_attributes()
 
 #.
 #   .--Changes-------------------------------------------------------------.
@@ -2499,6 +2486,28 @@ def validate_host_uniqueness(varname, host_name):
                'exists in the folder <a href="%s">%s</a>.') %
                  (host_name, host.folder().url(), host.folder().alias_path()))
 
+#.
+#   .--External API--------------------------------------------------------.
+#   |      _____      _                        _      _    ____ ___        |
+#   |     | ____|_  _| |_ ___ _ __ _ __   __ _| |    / \  |  _ \_ _|       |
+#   |     |  _| \ \/ / __/ _ \ '__| '_ \ / _` | |   / _ \ | |_) | |        |
+#   |     | |___ >  <| ||  __/ |  | | | | (_| | |  / ___ \|  __/| |        |
+#   |     |_____/_/\_\\__\___|_|  |_| |_|\__,_|_| /_/   \_\_|  |___|       |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   |  Functions called by others that import wato (such as views)         |
+#   '----------------------------------------------------------------------'
+
+# Create an URL to a certain WATO folder when we just know its path
+def link_to_folder_by_path(path):
+    return "wato.py?mode=folder&folder=" + html.urlencode(path)
+
+
+# Create an URL to the edit-properties of a host when we just know its name
+def link_to_host_by_name(host_name):
+    return "wato.py?" + html.urlencode_vars(
+    [("mode", "edit_host"), ("host", host_name)])
+
 
 # Return a list with all the titles of the paths'
 # components, e.g. "muc/north" -> [ "Main Directory", "Munich", "North" ]
@@ -2510,6 +2519,14 @@ def get_folder_title_path(path, with_links=False):
         cache[path] = Folder.folder(path).title_path(with_links)
     return cache[path]
 
+
+# Return the title of a folder - which is given as a string path
+def get_folder_title(path):
+    folder = Folder.folder(path)
+    if folder:
+        return folder.title()
+    else:
+        return path
 
 #.
 #   .--Search Folder-------------------------------------------------------.
@@ -3060,6 +3077,8 @@ Host   = CREHost
 #   | hosts. Examples are the IP address and the host tags.                |
 #   '----------------------------------------------------------------------'
 
+# TODO: Make new style class
+# TODO: Refactor declare_host_attribute() setting private attributes here
 class Attribute:
     # The constructor stores name and title. If those are
     # dynamic then leave them out and override name() and
@@ -3078,6 +3097,7 @@ class Attribute:
         self._depends_on_tags      = []
         self._depends_on_roles     = []
         self._editable             = True
+        self._from_config          = False
 
     # Return the name (= identifier) of the attribute
     def name(self):
@@ -3164,6 +3184,14 @@ class Attribute:
     # _depends_on_tags is set by declare_host_attribute().
     def depends_on_tags(self):
         return self._depends_on_tags
+
+
+    # Whether or not this attribute has been created from the
+    # config of the site.
+    # The method is usually not overridden, but the variable
+    # _from_config is set by declare_host_attribute().
+    def from_config(self):
+        return self._from_config
 
 
     # Render HTML input fields displaying the value and
@@ -3624,16 +3652,10 @@ class ContactGroupsAttribute(Attribute):
         return DualListChoice(choices=cg_choices, rows=20, size=100)
 
 
-def initialize_host_attribute_structures():
-    global g_host_attributes, g_host_attribute
-    g_host_attributes = []
-    g_host_attribute = {}
-
-
 # Declare attributes with this method
 def declare_host_attribute(a, show_in_table = True, show_in_folder = True, show_in_host_search = True,
        topic = None, show_in_form = True, depends_on_tags = None, depends_on_roles = None, editable = True,
-       show_inherited_value = True, may_edit = None):
+       show_inherited_value = True, may_edit = None, from_config = False):
     if depends_on_tags is None:
         depends_on_tags = []
 
@@ -3650,6 +3672,7 @@ def declare_host_attribute(a, show_in_table = True, show_in_folder = True, show_
     a._depends_on_tags       = depends_on_tags
     a._depends_on_roles      = depends_on_roles
     a._editable              = editable
+    a._from_config           = from_config
 
     if may_edit:
         a.may_edit = may_edit
@@ -3661,11 +3684,12 @@ def undeclare_host_attribute(attrname):
     if attrname in g_host_attribute:
         attr = g_host_attribute[attrname]
         del g_host_attribute[attrname]
-        g_host_attributes = [ ha for ha in g_host_attributes if ha[0] != attr ]
+        g_host_attributes = [ ha for ha in g_host_attributes if ha[0].name() != attr.name() ]
 
 
-def undeclare_all_host_attributes():
-    del g_host_attributes[:]
+def undeclare_host_tag_attribute(tag_id):
+    attrname = "tag_" + tag_id
+    undeclare_host_attribute(attrname)
 
 
 def all_host_attributes():
@@ -3680,59 +3704,65 @@ def host_attribute(name):
     return g_host_attribute[name]
 
 
-# Declare an attribute for each host tag configured in multisite.mk
-# Also make sure that the tags are reconfigured as soon as the
-# configuration of the tags has changed.
-currently_configured_host_tags = None
+def update_config_based_host_attributes():
+    _clear_config_based_host_attributes()
+    declare_host_tag_attributes()
+    declare_custom_host_attrs()
 
-def declare_host_tag_attributes(force=False):
-    global currently_configured_host_tags
-    global g_host_attributes
-
-    if force or currently_configured_host_tags != config.host_tag_groups():
-        # Remove host tag attributes from list, if existing
-        g_host_attributes = [ (attr, topic)
-               for (attr, topic)
-               in g_host_attributes
-               if not attr.name().startswith("tag_") ]
-
-        # Also remove those attributes from the speed-up dictionary host_attribute
-        for attr in g_host_attribute.values():
-            if attr.name().startswith("tag_"):
-                del g_host_attribute[attr.name()]
-
-        for topic, grouped_tags in group_hosttags_by_topic(config.host_tag_groups()):
-            for entry in grouped_tags:
-                # if the entry has o fourth component, then its
-                # the tag dependency defintion.
-                depends_on_tags = []
-                depends_on_roles = []
-                attr_editable = True
-                if len(entry) >= 6:
-                    attr_editable = entry[5]
-                if len(entry) >= 5:
-                    depends_on_roles = entry[4]
-                if len(entry) >= 4:
-                    depends_on_tags = entry[3]
-
-                if not topic:
-                    topic = _('Host tags')
-
-                declare_host_attribute(
-                    HostTagAttribute(entry[:3]),
-                        show_in_table = False,
-                        show_in_folder = True,
-                        editable = attr_editable,
-                        depends_on_tags = depends_on_tags,
-                        depends_on_roles = depends_on_roles,
-                        topic = topic)
-
-        currently_configured_host_tags = config.host_tag_groups()
+    Folder.invalidate_caches()
+    Folder.root_folder().rewrite_hosts_files()
 
 
-def undeclare_host_tag_attribute(tag_id):
-    attrname = "tag_" + tag_id
-    undeclare_host_attribute(attrname)
+def _clear_config_based_host_attributes():
+    for name, attr in g_host_attribute.items():
+        if attr.from_config():
+            undeclare_host_attribute(name)
+
+
+def declare_host_tag_attributes():
+    for topic, grouped_tags in group_hosttags_by_topic(config.host_tag_groups()):
+        for entry in grouped_tags:
+            # if the entry has o fourth component, then its
+            # the tag dependency defintion.
+            depends_on_tags = []
+            depends_on_roles = []
+            attr_editable = True
+            if len(entry) >= 6:
+                attr_editable = entry[5]
+            if len(entry) >= 5:
+                depends_on_roles = entry[4]
+            if len(entry) >= 4:
+                depends_on_tags = entry[3]
+
+            if not topic:
+                topic = _('Host tags')
+
+            declare_host_attribute(
+                HostTagAttribute(entry[:3]),
+                show_in_table = False,
+                show_in_folder = True,
+                editable = attr_editable,
+                depends_on_tags = depends_on_tags,
+                depends_on_roles = depends_on_roles,
+                topic = topic,
+                from_config = True,
+            )
+
+
+def declare_custom_host_attrs():
+    for attr in config.wato_host_attrs:
+        vs = globals()[attr['type']](title = attr['title'], help = attr['help'])
+
+        if attr['add_custom_macro']:
+            a = NagiosValueSpecAttribute(attr["name"], "_" + attr["name"], vs)
+        else:
+            a = ValueSpecAttribute(attr["name"], vs)
+
+        declare_host_attribute(a,
+            show_in_table = attr['show_in_table'],
+            topic = attr['topic'],
+            from_config = True,
+        )
 
 
 # Read attributes from HTML variables
@@ -3766,12 +3796,9 @@ def collect_attributes(for_what, do_validate = True, varprefix=""):
 #   |  globals).
 #   '----------------------------------------------------------------------'
 
-def initialize_global_configvars():
-    global g_configvars, g_configvar_groups, g_configvar_order
-    g_configvars = {}
-    g_configvar_groups = {}
-    g_configvar_order = {}
-
+g_configvars = {}
+g_configvar_groups = {}
+g_configvar_order = {}
 
 def configvars():
     return g_configvars
@@ -3877,6 +3904,7 @@ def save_site_global_settings(vars):
 #   |  Code for distributed WATO. Site configuration. Pushing snapshots.   |
 #   '----------------------------------------------------------------------'
 
+# TODO: Extract common code to SiteManagement base class
 class CRESiteManagement(object):
     @classmethod
     def connection_method_valuespec(cls):
@@ -4080,8 +4108,16 @@ class CRESiteManagement(object):
         return value
 
 
+class SiteManagementFactory(object):
+    @staticmethod
+    def factory():
+        try:
+            import cmk.gui.cee.plugins.watolib.liveproxyd
+            cls = cmk.gui.cee.plugins.watolib.liveproxyd.CEESiteManagement
+        except ImportError:
+            cls = CRESiteManagement
 
-SiteManagement = CRESiteManagement
+        return cls()
 
 
 def get_login_secret(create_on_demand = False):
@@ -4193,7 +4229,7 @@ def update_distributed_wato_file(sites):
 
 
 def do_site_login(site_id, name, password):
-    sites = SiteManagement.load_sites()
+    sites = SiteManagementFactory().factory().load_sites()
     site = sites[site_id]
     if not name:
         raise MKUserError("_name",
@@ -5102,9 +5138,9 @@ class ActivateChangesManager(ActivateChanges):
 
 
     def _generate_snapshots(self, work_dir):
-            with multitar.SnapshotCreator(work_dir, replication_paths) as snapshot_creator:
-                for site_id in self._sites:
-                    self._create_site_sync_snapshot(site_id, snapshot_creator)
+        with multitar.SnapshotCreator(work_dir, replication_paths) as snapshot_creator:
+            for site_id in self._sites:
+                self._create_site_sync_snapshot(site_id, snapshot_creator)
 
 
     def _create_site_sync_snapshot(self, site_id, snapshot_creator = None):
@@ -5173,7 +5209,7 @@ class ActivateChangesManager(ActivateChanges):
                 raise
 
         if not sites:
-            sites = SiteManagement.load_sites()
+            sites = SiteManagementFactory().factory().load_sites()
         site = sites[site_id]
         config = site.get("globals", {})
 
@@ -6352,34 +6388,6 @@ def format_php(data, lvl = 1):
     return s
 
 
-def remove_old_sample_config(host_tags, aux_tags):
-    legacy_tag_group_default = ('agent', u'Agent type',
-        [
-            ('cmk-agent', u'Check_MK Agent (Server)', ['tcp']),
-            ('snmp-only', u'SNMP (Networking device, Appliance)', ['snmp']),
-            ('snmp-v1',   u'Legacy SNMP device (using V1)', ['snmp']),
-            ('snmp-tcp',  u'Dual: Check_MK Agent + SNMP', ['snmp', 'tcp']),
-            ('ping',      u'No Agent', []),
-        ],
-    )
-
-    try:
-        host_tags.remove(legacy_tag_group_default)
-    except ValueError:
-        pass # Not there or modified
-
-    legacy_aux_tags = [
-        ('snmp', u'monitor via SNMP'),
-        ('tcp', u'monitor via Check_MK Agent'),
-    ]
-
-    for aux_tag in legacy_aux_tags:
-        try:
-            aux_tags.remove(aux_tag)
-        except ValueError:
-            pass # Not there or modified
-
-
 def validate_tag_id(tag_id, varname):
     if not re.match("^[-a-z0-9A-Z_]*$", tag_id):
         raise MKUserError(varname,
@@ -6805,12 +6813,12 @@ class HosttagsConfiguration(object):
             "wato_aux_tags"  : [],
         }
 
-        config = cmk.store.load_mk_file(multisite_dir + "hosttags.mk", default_config)
+        tag_config = cmk.store.load_mk_file(multisite_dir + "hosttags.mk", default_config)
 
-        self._convert_manual_host_tags(config["wato_host_tags"])
-        remove_old_sample_config(config["wato_host_tags"], config["wato_aux_tags"])
+        self._convert_manual_host_tags(tag_config["wato_host_tags"])
+        config.remove_old_sample_tags(tag_config["wato_host_tags"], tag_config["wato_aux_tags"])
 
-        return config["wato_host_tags"], config["wato_aux_tags"]
+        return tag_config["wato_host_tags"], tag_config["wato_aux_tags"]
 
 
     # Convert manually crafted host tags tags WATO-style. This
@@ -8510,6 +8518,31 @@ def match_one_of_search_expression(search_options, attr_name, search_in_list):
     return False
 
 
+class RuleComment(TextAreaUnicode):
+    def __init__(self, **kwargs):
+        kwargs.setdefault("title", _("Comment"))
+        kwargs.setdefault("help", _("An optional comment that explains the purpose of this rule."))
+        kwargs.setdefault("rows", 4)
+        kwargs.setdefault("cols", 80)
+        super(RuleComment, self).__init__(**kwargs)
+
+
+    def render_input(self, varprefix, value):
+        html.open_div(style="white-space: nowrap;")
+
+        super(RuleComment, self).render_input(varprefix, value)
+
+        date_and_user = "%s %s: " % (time.strftime("%F", time.localtime()), config.user.id)
+
+        html.nbsp()
+        html.icon_button(None,
+            help=_("Prefix date and your name to the comment"),
+            icon="insertdate",
+            onclick="vs_rule_comment_prefix_date_and_user(this, '%s');" % date_and_user
+        )
+        html.close_div()
+
+
 #.
 #   .--Read-Only-----------------------------------------------------------.
 #   |           ____                _        ___        _                  |
@@ -9508,6 +9541,31 @@ def _ping(address):
 
 
 #.
+#   .--Backups-------------------------------------------------------------.
+#   |                ____             _                                    |
+#   |               | __ )  __ _  ___| | ___   _ _ __  ___                 |
+#   |               |  _ \ / _` |/ __| |/ / | | | '_ \/ __|                |
+#   |               | |_) | (_| | (__|   <| |_| | |_) \__ \                |
+#   |               |____/ \__,_|\___|_|\_\\__,_| .__/|___/                |
+#   |                                           |_|                        |
+#   +----------------------------------------------------------------------+
+#   | Managing backup and restore of WATO                                  |
+#   '----------------------------------------------------------------------'
+
+class SiteBackupJobs(backup.Jobs):
+    def __init__(self):
+        super(SiteBackupJobs, self).__init__(backup.site_config_path())
+
+
+    def _apply_cron_config(self):
+        p = subprocess.Popen(["omd", "restart", "crontab"],
+                         close_fds=True, stdout=subprocess.PIPE,
+                         stderr=subprocess.STDOUT, stdin=open(os.devnull))
+        if p.wait() != 0:
+            raise MKGeneralException(_("Failed to apply the cronjob config: %s") % p.stdout.read())
+
+
+#.
 #   .--Best Practices------------------------------------------------------.
 #   |   ____            _     ____                 _   _                   |
 #   |  | __ )  ___  ___| |_  |  _ \ _ __ __ _  ___| |_(_) ___ ___  ___     |
@@ -9714,7 +9772,7 @@ automation_commands["check-analyze-config"] = check_analyze_config
 
 
 def site_is_using_livestatus_proxy(site_id):
-    sites = SiteManagement.load_sites()
+    sites = SiteManagementFactory().factory().load_sites()
     site = sites[site_id]
 
     socket = site.get("socket")
@@ -9734,6 +9792,177 @@ def site_is_using_livestatus_proxy(site_id):
 #   +----------------------------------------------------------------------+
 #   | CLEAN THIS UP LATER                                                  |
 #   '----------------------------------------------------------------------'
+
+class PasswordStore(object):
+    def _load(self, lock=False):
+        return store.load_from_mk_file(wato_root_dir + "/passwords.mk",
+                                       key="stored_passwords", default={}, lock=lock)
+
+
+    def _load_for_modification(self):
+        return self._load(lock=True)
+
+
+    def _owned_passwords(self):
+        if config.user.may("wato.edit_all_passwords"):
+            return self._load()
+
+        user_groups = userdb.contactgroups_of_user(config.user.id)
+        return dict([ (k, v) for k, v in self._load().items() if v["owned_by"] in user_groups ])
+
+
+    def usable_passwords(self):
+        if config.user.may("wato.edit_all_passwords"):
+            return self._load()
+
+        user_groups = userdb.contactgroups_of_user(config.user.id)
+
+        passwords = self._owned_passwords()
+        passwords.update(dict([ (k, v) for k, v in self._load().items()
+                                if v["shared_with"] in user_groups ]))
+        return passwords
+
+
+    def _save(self, value):
+        return store.save_to_mk_file(wato_root_dir + "/passwords.mk",
+                                     key="stored_passwords", value=value, pprint_value = config.wato_pprint_config)
+
+
+
+class UserSelection(DropdownChoice):
+    """Dropdown for choosing a multisite user"""
+    def __init__(self, **kwargs):
+        only_contacts = kwargs.get("only_contacts", False)
+        kwargs["choices"] = self._generate_wato_users_elements_function(kwargs.get("none"), only_contacts = only_contacts)
+        kwargs["invalid_choice"] = "complain" # handle vanished users correctly!
+        DropdownChoice.__init__(self, **kwargs)
+
+
+    def _generate_wato_users_elements_function(self, none_value, only_contacts = False):
+        def get_wato_users(nv):
+            users = userdb.load_users()
+            elements = [ (name, "%s - %s" % (name, us.get("alias", name)))
+                         for (name, us)
+                         in users.items()
+                         if (not only_contacts or us.get("contactgroups")) ]
+            elements.sort()
+            if nv != None:
+                elements = [ (None, none_value) ] + elements
+            return elements
+        return lambda: get_wato_users(none_value)
+
+
+    def value_to_text(self, value):
+        text = DropdownChoice.value_to_text(self, value)
+        return text.split(" - ")[-1]
+
+
+
+def multifolder_host_rule_match_conditions():
+    return [
+        _site_rule_match_condition(),
+        _multi_folder_rule_match_condition()
+    ] + _common_host_rule_match_conditions()
+
+
+def _site_rule_match_condition():
+    return (
+        "match_site",
+        DualListChoice(
+            title = _("Match site"),
+            help = _("This condition makes the rule match only hosts of "
+                     "the selected sites."),
+            choices = config.site_attribute_choices,
+        ),
+    )
+
+
+def _multi_folder_rule_match_condition():
+    return (
+        "match_folders",
+        ListOf(
+            FullPathFolderChoice(
+                title = _("Folder"),
+                help = _("This condition makes the rule match only hosts that are managed "
+                         "via WATO and that are contained in this folder - either directly "
+                         "or in one of its subfolders."),
+            ),
+            add_label = _("Add additional folder"),
+            title = _("Match folders"),
+            movable = False
+        ),
+    )
+
+
+def _common_host_rule_match_conditions():
+    return [
+        ( "match_hosttags",
+        HostTagCondition(
+            title = _("Match Host Tags"))
+        ),
+        ( "match_hostgroups",
+        userdb.GroupChoice("host",
+            title = _("Match Host Groups"),
+            help = _("The host must be in one of the selected host groups"),
+            allow_empty = False,
+        )
+        ),
+        ( "match_hosts",
+        ListOfStrings(
+            title = _("Match only the following hosts"),
+            size = 24,
+            orientation = "horizontal",
+            allow_empty = False,
+            empty_text = _("Please specify at least one host. Disable the option if you want to allow all hosts."),
+        )
+        ),
+        ( "match_exclude_hosts",
+        ListOfStrings(
+            title = _("Exclude the following hosts"),
+            size = 24,
+            orientation = "horizontal",
+        )
+        )
+    ]
+
+
+def simple_host_rule_match_conditions():
+    return [
+        _site_rule_match_condition(),
+        _single_folder_rule_match_condition()
+    ] + _common_host_rule_match_conditions()
+
+
+def _single_folder_rule_match_condition():
+    return (
+        "match_folder",
+        FolderChoice(
+            title = _("Match folder"),
+            help = _("This condition makes the rule match only hosts that are managed "
+                    "via WATO and that are contained in this folder - either directly "
+                    "or in one of its subfolders."),
+        ),
+    )
+
+
+def transform_simple_to_multi_host_rule_match_conditions(value):
+    if value and "match_folder" in value:
+        value["match_folders"] = [value.pop("match_folder")]
+    return value
+
+
+class WatoBackgroundProcess(gui_background_job.GUIBackgroundProcess):
+    def initialize_environment(self):
+        super(WatoBackgroundProcess, self).initialize_environment()
+
+        if self._jobstatus.get_status().get("lock_wato"):
+            cmk.store.release_all_locks()
+            lock_exclusive()
+
+
+class WatoBackgroundJob(gui_background_job.GUIBackgroundJob):
+    _background_process_class = WatoBackgroundProcess
+
 
 
 def add_replication_paths(paths):
@@ -9773,6 +10002,23 @@ def get_folder_cgconf_from_attributes(attributes):
     v = attributes.get("contactgroups", ( False, [] ))
     cgconf = convert_cgroups_from_tuple(v)
     return cgconf
+
+
+# Checks if a valuespec is a Checkbox
+def is_a_checkbox(vs):
+    if isinstance(vs, Checkbox):
+        return True
+    elif isinstance(vs, Transform):
+        return is_a_checkbox(vs._valuespec)
+    else:
+        return False
+
+
+def get_search_expression():
+    search = html.get_unicode_input("search")
+    if search != None:
+        search = search.strip().lower()
+    return search
 
 
 # This hook is called in order to determine the errors of the given
@@ -9816,6 +10062,10 @@ def is_sidebar_reload_needed():
 
 def folder_preserving_link(add_vars):
     return Folder.current().url(add_vars)
+
+
+def make_action_link(vars):
+    return folder_preserving_link(vars + [("_transid", html.transaction_manager.get())])
 
 
 def lock_exclusive():
@@ -9948,6 +10198,13 @@ def must_be_in_contactgroups(cgspec):
             raise MKAuthException(_("Sorry, you cannot assign the contact group '<b>%s</b>' "
               "because you are not member in that group. Your groups are: <b>%s</b>") %
                  ( c, ", ".join(user_cgs)))
+
+
+def may_edit_configvar(varname):
+    if varname in [ "actions" ]:
+        return config.user.may("wato.add_or_modify_executables")
+    else:
+        return True
 
 
 # TODO: Move to Folder()?

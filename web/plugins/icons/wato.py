@@ -24,8 +24,6 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import cmk.gui.wato as wato
-
 def wato_link(folder, site, hostname, where):
     if not config.wato_enabled:
         return
@@ -52,7 +50,11 @@ def wato_folder_from_filename(filename):
 
 
 def paint_wato(what, row, tags, custom_vars):
-    if not wato.may_see_hosts() or html.mobile:
+    def may_see_hosts():
+        return config.user.may("wato.use") and \
+           (config.user.may("wato.seeall") or config.user.may("wato.hosts"))
+
+    if not may_see_hosts() or html.mobile:
         return
 
     wato_folder = wato_folder_from_filename(row["host_filename"])

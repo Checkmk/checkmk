@@ -87,7 +87,10 @@ class ValueSpec(object):
         return self._title
 
     def help(self):
-        return self._help
+        if type(self._help) in [types.FunctionType, types.MethodType]:
+            return self._help()
+        else:
+            return self._help
 
     # Create HTML-form elements that represent a given
     # value and let the user edit that value. The varprefix
@@ -1553,7 +1556,7 @@ class Checkbox(ValueSpec):
 # can by dynamically computed
 class DropdownChoice(ValueSpec):
     def __init__(self, **kwargs):
-        ValueSpec.__init__(self, **kwargs)
+        super(DropdownChoice, self).__init__(**kwargs)
         self._choices            = kwargs["choices"]
         self._help_separator     = kwargs.get("help_separator")
         self._label              = kwargs.get("label")
@@ -1713,14 +1716,14 @@ class DropdownChoice(ValueSpec):
 
 class FolderChoice(DropdownChoice):
     def __init__(self, **kwargs):
-        import watolib
+        import cmk.gui.watolib as watolib
         kwargs["choices"] = watolib.Folder.folder_choices
         kwargs.setdefault("title", _("Folder"))
         DropdownChoice.__init__(self, **kwargs)
 
 class FullPathFolderChoice(DropdownChoice):
     def __init__(self, **kwargs):
-        import watolib
+        import cmk.gui.watolib as watolib
         kwargs["choices"] = watolib.Folder.folder_choices_fulltitle
         kwargs.setdefault("title", _("Folder"))
         DropdownChoice.__init__(self, **kwargs)
@@ -3119,7 +3122,7 @@ class OptionalEdit(Optional):
 # be distinguished with validate_datatype.
 class Alternative(ValueSpec):
     def __init__(self, **kwargs):
-        ValueSpec.__init__(self, **kwargs)
+        super(Alternative, self).__init__(**kwargs)
         self._elements = kwargs["elements"]
         self._match = kwargs.get("match") # custom match function, returns index in elements
         self._style = kwargs.get("style", "radio") # alternative: "dropdown"
@@ -3377,7 +3380,7 @@ class Tuple(ValueSpec):
 
 class Dictionary(ValueSpec):
     def __init__(self, **kwargs):
-        ValueSpec.__init__(self, **kwargs)
+        super(Dictionary, self).__init__(**kwargs)
         self._elements = kwargs["elements"]
         self._empty_text = kwargs.get("empty_text", _("(no parameters)"))
         # Optionally a text can be specified to be shown by value_to_text()
@@ -3966,9 +3969,9 @@ class PasswordFromStore(CascadingDropdown):
 
 
     def _password_choices(self):
-        import wato
+        import cmk.gui.watolib as watolib
         return [ (ident, pw["title"]) for ident, pw
-                 in wato.PasswordStore().usable_passwords().items() ]
+                 in watolib.PasswordStore().usable_passwords().items() ]
 
 
 
@@ -4639,7 +4642,7 @@ class SiteChoice(DropdownChoice):
 
 
     def _site_default_value(self):
-        import watolib
+        import cmk.gui.watolib as watolib
         if watolib.is_wato_slave_site():
             return False
 
@@ -4663,7 +4666,7 @@ class TimeperiodSelection(DropdownChoice):
         DropdownChoice.__init__(self, choices=self._get_choices, **kwargs)
 
     def _get_choices(self):
-        import watolib
+        import cmk.gui.watolib as watolib
         timeperiods = watolib.load_timeperiods()
         elements = [
             (name, "%s - %s" % (name, tp["alias"])) for (name, tp) in timeperiods.items()

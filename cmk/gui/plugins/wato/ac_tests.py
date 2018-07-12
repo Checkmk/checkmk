@@ -25,7 +25,23 @@
 # Boston, MA 02110-1301 USA.
 
 import requests
+import subprocess
 
+import cmk.gui.userdb as userdb
+import cmk.gui.sites as sites
+import cmk.gui.watolib as watolib
+import cmk.gui.config as config
+import cmk.gui.plugins.userdb.htpasswd
+from cmk.gui.i18n import _
+from cmk.gui.exceptions import MKGeneralException
+
+from . import \
+    ACTestCategories, \
+    ACTest, \
+    ACResultCRIT, \
+    ACResultWARN, \
+    ACResultOK, \
+    ConfigDomainOMD
 
 class ACTestPersistentConnections(ACTest):
     def category(self):
@@ -324,7 +340,7 @@ class ACTestOldDefaultCredentials(ACTest):
 
 
     def execute(self):
-        if userdb.HtpasswdUserConnector({}).check_credentials("omdadmin", "omd") == "omdadmin":
+        if cmk.gui.plugins.userdb.htpasswd.HtpasswdUserConnector({}).check_credentials("omdadmin", "omd") == "omdadmin":
             yield ACResultCRIT(_("Found <tt>omdadmin</tt> with default password. "
                                "It is highly recommended to change this password."))
         else:
@@ -361,7 +377,7 @@ class ACTestBackupConfigured(ACTest):
 
 
     def execute(self):
-        jobs = SiteBackupJobs()
+        jobs = watolib.SiteBackupJobs()
         if jobs.choices():
             yield ACResultOK(_("You have configured %d backup jobs") % len(jobs.choices()))
         else:
@@ -390,7 +406,7 @@ class ACTestBackupNotEncryptedConfigured(ACTest):
 
 
     def execute(self):
-        jobs = SiteBackupJobs()
+        jobs = watolib.SiteBackupJobs()
         for job_ident, job in jobs.objects.items():
             if job.is_encrypted():
                 yield ACResultOK(_("The job \"%s\" is encrypted") % job.title())
@@ -597,7 +613,7 @@ class ACTestCheckMKHelperUsage(ACTest):
             if watolib.is_wato_slave_site():
                 current_settings = watolib.load_configuration_settings(site_specific=True)
             else:
-                sites = watolib.SiteManagement.load_sites()
+                sites = watolib.SiteManagementFactory.factory().load_sites()
                 current_settings = sites[config.omd_site()].get("globals", {})
 
             if varname in current_settings:

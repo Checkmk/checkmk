@@ -24,8 +24,12 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-# WATO-Module for the rules and aggregations of Check_MK BI
+"""WATO-Module for the rules and aggregations of Check_MK BI"""
 
+import os
+import pprint
+
+import cmk
 import cmk.store as store
 
 if cmk.is_managed_edition():
@@ -33,8 +37,26 @@ if cmk.is_managed_edition():
 else:
     managed = None
 
-from cmk.gui.htmllib import HTML
+import cmk.gui.config as config
+import cmk.gui.userdb as userdb
 import cmk.gui.table as table
+import cmk.gui.watolib as watolib
+from cmk.gui.valuespec import *
+from cmk.gui.exceptions import MKUserError, MKGeneralException, MKAuthException
+from cmk.gui.i18n import _
+from cmk.gui.htmllib import HTML
+
+from . import (
+    WatoMode,
+    WatoModule,
+    GroupSelection,
+    MainMenu,
+    MenuItem,
+    register_modules,
+    global_buttons,
+    add_change,
+    wato_confirm,
+)
 
 #   .--Base class----------------------------------------------------------.
 #   |             ____                        _                            |
@@ -45,14 +67,8 @@ import cmk.gui.table as table
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-class ModeBI(WatoMode):
-
-    # .--------------------------------------------------------------------.
-    # | Initialization and default modes                                   |
-    # '--------------------------------------------------------------------'
+class BIManagement(object):
     def __init__(self):
-        WatoMode.__init__(self)
-
         # We need to replace the BI constants internally with something
         # that we can replace back after writing the BI-Rules out
         # with pprint.pformat
@@ -88,28 +104,12 @@ class ModeBI(WatoMode):
             self._pack_id = None
             self._pack = None
 
-        self._create_valuespecs()
-
-
-    def title(self):
-        title = _("Business Intelligence")
-        if self._pack:
-            title += " - " + html.attrencode(self._pack["title"])
-        return title
-
-
-    def buttons(self):
-        global_buttons()
-        if self._pack:
-            html.context_button(_("All Packs"), html.makeuri_contextless([("mode", "bi_packs")]), "back")
-
-
     # .--------------------------------------------------------------------.
     # | Loading and saving                                                 |
     # '--------------------------------------------------------------------'
 
     def _load_config(self):
-        filename = multisite_dir + "bi.mk"
+        filename = watolib.multisite_dir + "bi.mk"
         try:
             vars = { "aggregation_rules" : {},
                      "aggregations"      : [],
@@ -167,8 +167,8 @@ class ModeBI(WatoMode):
 
     def save_config(self):
         output = self.generate_bi_config_file_content(self._packs)
-        store.mkdir(multisite_dir)
-        store.save_file(multisite_dir + "bi.mk", output)
+        store.mkdir(watolib.multisite_dir)
+        store.save_file(watolib.multisite_dir + "bi.mk", output)
 
 
 
@@ -404,12 +404,113 @@ class ModeBI(WatoMode):
                 return ("foreach_host", (what, tags, hostspec, subnode))
 
 
+    def get_packs(self):
+        return self._packs
+
+
+    def find_aggregation_rule_usages(self):
+        aggregations_that_use_rule = {}
+        for pack_id, pack in self._packs.items():
+            for aggr_id, aggregation in enumerate(pack["aggregations"]):
+                rule_id, description = self.rule_called_by_node(aggregation["node"])
+                aggregations_that_use_rule.setdefault(rule_id, []).append((aggr_id, aggregation))
+                sub_rule_ids = self._aggregation_recursive_sub_rule_ids(rule_id)
+                for sub_rule_id in sub_rule_ids:
+                    aggregations_that_use_rule.setdefault(sub_rule_id, []).append((aggr_id, aggregation))
+        return aggregations_that_use_rule
+
+
+    def _aggregation_recursive_sub_rule_ids(self, ruleid):
+        rule = self.find_rule_by_id(ruleid)
+        if not rule:
+            return []
+
+        sub_rule_ids = self.aggregation_sub_rule_ids(rule)
+        if not sub_rule_ids:
+            return []
+
+        result = sub_rule_ids[:]
+        for sub_rule_id in sub_rule_ids:
+            result += self._aggregation_recursive_sub_rule_ids(sub_rule_id)
+        return result
+
+
+    def find_rule_by_id(self, ruleid):
+        pack = self.pack_containing_rule(ruleid)
+        if pack:
+            return pack["rules"][ruleid]
+
+
+    def pack_containing_rule(self, ruleid):
+        for pack in self._packs.values():
+            if ruleid in pack["rules"]:
+                return pack
+        return None
+
+
+    def aggregation_sub_rule_ids(self, rule):
+        sub_rule_ids = []
+        for node in rule["nodes"]:
+            r = self.rule_called_by_node(node)
+            if r:
+                sub_rule_ids.append(r[0])
+        return sub_rule_ids
+
+
+    def rule_called_by_node(self, node):
+        """Returns the rule called by a node - if any
+        Result is a pair of the rule and a descriptive title"""
+        if node[0] == "call":
+            if node[1][1]:
+                args = _("with arguments: %s") % ", ".join(node[1][1])
+            else:
+                args = _("without arguments")
+            return node[1][0], _("Explicit call ") + args
+        elif node[0] == "foreach_host":
+            subnode = node[1][-1]
+            if subnode[0] == 'call':
+                if node[1][0] == 'host':
+                    info = _("Called for each host...")
+                elif node[1][0] == 'child':
+                    info = _("Called for each child of...")
+                else:
+                    info = _("Called for each parent of...")
+                return subnode[1][0], info
+        elif node[0] == "foreach_service":
+            subnode = node[1][-1]
+            if subnode[0] == 'call':
+                return subnode[1][0], _("Called for each service...")
+
+
+
+
+# TODO: Rename to BIMode
+class ModeBI(WatoMode, BIManagement):
+
+    # .--------------------------------------------------------------------.
+    # | Initialization and default modes                                   |
+    # '--------------------------------------------------------------------'
+    def __init__(self):
+        super(ModeBI, self).__init__()
+        self._create_valuespecs()
+
+
+    def title(self):
+        title = _("Business Intelligence")
+        if self._pack:
+            title += " - " + html.attrencode(self._pack["title"])
+        return title
+
+
+    def buttons(self):
+        global_buttons()
+        if self._pack:
+            html.context_button(_("All Packs"), html.makeuri_contextless([("mode", "bi_packs")]), "back")
+
+
     def _add_change(self, action_name, text):
         add_change(action_name, text, domains=[watolib.ConfigDomainGUI], sites=config.get_login_sites())
 
-
-    def get_packs(self):
-        return self._packs
 
     # .--------------------------------------------------------------------.
     # | Valuespecs                                                         |
@@ -794,44 +895,6 @@ class ModeBI(WatoMode):
         return False
 
 
-    # Returns the rule called by a node - if any
-    # Result is a pair of the rule and a descriptive title
-    def rule_called_by_node(self, node):
-        if node[0] == "call":
-            if node[1][1]:
-                args = _("with arguments: %s") % ", ".join(node[1][1])
-            else:
-                args = _("without arguments")
-            return node[1][0], _("Explicit call ") + args
-        elif node[0] == "foreach_host":
-            subnode = node[1][-1]
-            if subnode[0] == 'call':
-                if node[1][0] == 'host':
-                    info = _("Called for each host...")
-                elif node[1][0] == 'child':
-                    info = _("Called for each child of...")
-                else:
-                    info = _("Called for each parent of...")
-                return subnode[1][0], info
-        elif node[0] == "foreach_service":
-            subnode = node[1][-1]
-            if subnode[0] == 'call':
-                return subnode[1][0], _("Called for each service...")
-
-
-    def pack_containing_rule(self, ruleid):
-        for pack in self._packs.values():
-            if ruleid in pack["rules"]:
-                return pack
-        return None
-
-
-    def find_rule_by_id(self, ruleid):
-        pack = self.pack_containing_rule(ruleid)
-        if pack:
-            return pack["rules"][ruleid]
-
-
     # Checks if the rule 'rule' uses either directly
     # or indirectly the rule with the id 'ruleid'. In
     # case of success, returns the nesting level
@@ -870,41 +933,6 @@ class ModeBI(WatoMode):
 
         return aggr_refs, rule_refs, level
 
-
-    def aggregation_sub_rule_ids(self, rule):
-        sub_rule_ids = []
-        for node in rule["nodes"]:
-            r = self.rule_called_by_node(node)
-            if r:
-                sub_rule_ids.append(r[0])
-        return sub_rule_ids
-
-
-    def find_aggregation_rule_usages(self):
-        aggregations_that_use_rule = {}
-        for pack_id, pack in self._packs.items():
-            for aggr_id, aggregation in enumerate(pack["aggregations"]):
-                rule_id, description = self.rule_called_by_node(aggregation["node"])
-                aggregations_that_use_rule.setdefault(rule_id, []).append((aggr_id, aggregation))
-                sub_rule_ids = self._aggregation_recursive_sub_rule_ids(rule_id)
-                for sub_rule_id in sub_rule_ids:
-                    aggregations_that_use_rule.setdefault(sub_rule_id, []).append((aggr_id, aggregation))
-        return aggregations_that_use_rule
-
-
-    def _aggregation_recursive_sub_rule_ids(self, ruleid):
-        rule = self.find_rule_by_id(ruleid)
-        if not rule:
-            return []
-
-        sub_rule_ids = self.aggregation_sub_rule_ids(rule)
-        if not sub_rule_ids:
-            return []
-
-        result = sub_rule_ids[:]
-        for sub_rule_id in sub_rule_ids:
-            result += self._aggregation_recursive_sub_rule_ids(sub_rule_id)
-        return result
 
     # .--------------------------------------------------------------------.
     # | Generic rendering                                                  |
@@ -959,6 +987,16 @@ class ModeBI(WatoMode):
 #   '----------------------------------------------------------------------'
 
 class ModeBIPacks(ModeBI):
+    @classmethod
+    def name(cls):
+        return "bi_packs"
+
+
+    @classmethod
+    def permissions(cls):
+        return ["bi_rules"]
+
+
     def __init__(self):
         ModeBI.__init__(self)
         self._contact_group_names = userdb.load_group_information().get("contact", {})
@@ -1031,8 +1069,14 @@ class ModeBIPacks(ModeBI):
 #   '----------------------------------------------------------------------'
 
 class ModeBIEditPack(ModeBI):
-    def __init__(self):
-        ModeBI.__init__(self)
+    @classmethod
+    def name(cls):
+        return "bi_edit_pack"
+
+
+    @classmethod
+    def permissions(cls):
+        return ["bi_rules", "bi_admin"]
 
 
     def title(self):
@@ -1135,6 +1179,15 @@ class ModeBIEditPack(ModeBI):
 
 
 class ModeBIAggregations(ModeBI):
+    @classmethod
+    def name(cls):
+        return "bi_aggregations"
+
+
+    @classmethod
+    def permissions(cls):
+        return ["bi_rules"]
+
     def title(self):
         return ModeBI.title(self) + " - " + _("Aggregations")
 
@@ -1311,6 +1364,16 @@ class ModeBIAggregations(ModeBI):
 #   '----------------------------------------------------------------------'
 
 class ModeBIRules(ModeBI):
+    @classmethod
+    def name(cls):
+        return "bi_rules"
+
+
+    @classmethod
+    def permissions(cls):
+        return ["bi_rules"]
+
+
     def __init__(self):
         ModeBI.__init__(self)
         self._view_type = html.var("view", "list")
@@ -1539,6 +1602,16 @@ class ModeBIRules(ModeBI):
 #   '----------------------------------------------------------------------'
 
 class ModeBIRuleTree(ModeBI):
+    @classmethod
+    def name(cls):
+        return "bi_rule_tree"
+
+
+    @classmethod
+    def permissions(cls):
+        return ["bi_rules"]
+
+
     def __init__(self):
         ModeBI.__init__(self)
         self._ruleid = html.var("id")
@@ -1582,6 +1655,16 @@ class ModeBIRuleTree(ModeBI):
 #   '----------------------------------------------------------------------'
 
 class ModeBIEditAggregation(ModeBI):
+    @classmethod
+    def name(cls):
+        return "bi_edit_aggregation"
+
+
+    @classmethod
+    def permissions(cls):
+        return ["bi_rules"]
+
+
     def __init__(self):
         ModeBI.__init__(self)
         self._edited_nr = html.get_integer_input("id", -1) # In case of Aggregations: index in list
@@ -1646,6 +1729,16 @@ class ModeBIEditAggregation(ModeBI):
 #   '----------------------------------------------------------------------'
 
 class ModeBIEditRule(ModeBI):
+    @classmethod
+    def name(cls):
+        return "bi_edit_rule"
+
+
+    @classmethod
+    def permissions(cls):
+        return ["bi_rules"]
+
+
     def __init__(self):
         ModeBI.__init__(self)
         self._ruleid = html.var("id") # In case of Aggregations: index in list
@@ -2234,17 +2327,6 @@ register_modules(WatoModule("bi_packs", _("Business Intelligence"), "aggr", "bi_
       _("Configuration of Check_MK's Business Intelligence component."), 70))
 
 
-modes.update({
-    "bi_packs"           : (["bi_rules"], ModeBIPacks),
-    "bi_edit_pack"       : (["bi_rules", "bi_admin"], ModeBIEditPack),
-    "bi_rules"           : (["bi_rules"], ModeBIRules),
-    "bi_aggregations"    : (["bi_rules"], ModeBIAggregations),
-    "bi_rule_tree"       : (["bi_rules"], ModeBIRuleTree),
-    "bi_edit_rule"       : (["bi_rules"], ModeBIEditRule),
-    "bi_edit_aggregation": (["bi_rules"], ModeBIEditAggregation),
-})
-
-
 #.
 #   .--Rename Hosts--------------------------------------------------------.
 #   |   ____                                   _   _           _           |
@@ -2257,10 +2339,7 @@ modes.update({
 #   |  Class just for renaming hosts in the BI configuration.              |
 #   '----------------------------------------------------------------------'
 
-class BIHostRenamer(ModeBI):
-    def __init__(self):
-        ModeBI.__init__(self)
-
+class BIHostRenamer(BIManagement):
     def rename_host(self, oldname, newname):
         renamed = 0
         for pack in self._packs.values():

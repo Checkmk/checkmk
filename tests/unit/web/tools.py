@@ -17,7 +17,7 @@ from bs4 import BeautifulSoup as bs
 from bs4 import NavigableString
 
 # internal imports
-from htmllib import HTML
+from cmk.gui.htmllib import HTML
 
 
 class bcolors:

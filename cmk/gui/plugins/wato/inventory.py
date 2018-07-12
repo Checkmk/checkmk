@@ -27,6 +27,14 @@
 import cmk.paths
 import cmk.defines as defines
 
+from cmk.gui.valuespec import *
+from cmk.gui.i18n import _
+
+from . import (
+    register_rulegroup,
+    register_rule
+)
+
 register_rulegroup("inventory",
     _("Hardware/Software-Inventory"),
     _("Configuration of the Check_MK Hardware and Software Inventory System"))

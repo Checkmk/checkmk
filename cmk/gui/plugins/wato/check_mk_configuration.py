@@ -29,6 +29,31 @@ import re
 import cmk
 import cmk.paths
 
+import cmk.gui.sites as sites
+import cmk.gui.config as config
+import cmk.gui.watolib as watolib
+import cmk.gui.userdb as userdb
+from cmk.gui.exceptions import MKUserError
+from cmk.gui.valuespec import *
+from cmk.gui.i18n import _
+
+from . import (
+    configvar_order,
+    site_neutral_path,
+    register_configvar,
+    register_rulegroup,
+    register_rule,
+    vs_bulk_discovery,
+    PluginCommandLine,
+    UserIconOrAction,
+    SNMPCredentials,
+    IPMIParameters,
+    HostnameTranslation,
+    ServiceDescriptionTranslation,
+    GroupSelection,
+    CheckTypeSelection,
+)
+
 #   .--Global Settings-----------------------------------------------------.
 #   |  ____ _       _           _   ____       _   _   _                   |
 #   | / ___| | ___ | |__   __ _| | / ___|  ___| |_| |_(_)_ __   __ _ ___   |
@@ -80,7 +105,7 @@ def web_log_level_elements():
 
 register_configvar(group,
     "bulk_discovery_default_settings",
-    ModeBulkDiscovery.vs_bulk_discovery(),
+    vs_bulk_discovery(),
     domain = "multisite"
 )
 
@@ -823,16 +848,10 @@ register_configvar(group,
     domain = "multisite",
 )
 
-# Helper that retrieves the list of hostgroups via Livestatus
-# use alias by default but fallback to name if no alias defined
-def list_hostgroups():
-    groups = dict(sites.live().query("GET hostgroups\nCache: reload\nColumns: name alias\n"))
-    return [ (name, groups[name] or name) for name in groups.keys() ]
-
 register_configvar(group,
     "topology_default_filter_group",
     Optional(DropdownChoice(
-            choices = list_hostgroups,
+            choices = lambda: sites.all_groups("host"),
             sorted = True,
         ),
         title = _("Network Topology: Default Filter Group"),
@@ -1190,6 +1209,7 @@ def default_user_profile_elements():
     elements = []
 
     if cmk.is_managed_edition():
+        import cmk.gui.cme.managed as managed
         elements += managed.customer_choice_element()
 
     return elements + [
@@ -1526,6 +1546,7 @@ register_configvar(group,
 #   | Rulesets for hosts and services except check parameter rules.        |
 #   '----------------------------------------------------------------------'
 
+
 register_rulegroup("grouping", _("Grouping"),
    _("Assignment of host & services to host, service and contacts groups. "))
 group = "grouping"
@@ -1587,9 +1608,9 @@ register_rule(group,
         help = _("Check_MK usually uses an interval of one minute for the active Check_MK "
                  "check and for legacy checks. Here you can specify a larger interval. Please "
                  "note, that this setting only applies to active checks (those with the "
-                 "%s reschedule button). If you want to change the check interval of "
+                 "reschedule button). If you want to change the check interval of "
                  "the Check_MK service only, specify <tt><b>Check_MK$</b></tt> in the list "
-                 "of services.") % html.render_icon("reload"),
+                 "of services."),
     ),
     itemtype = "service")
 
@@ -2026,6 +2047,7 @@ register_rule(group,
              "exist will continued to be monitored but be marked as obsolete in the service "
              "list of a host."),
     itemtype = "service")
+
 
 register_rule(group,
     "ignored_checks",

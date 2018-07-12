@@ -24,12 +24,21 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-# Configuration variables for the notification via cmk --notify
+"""Configuration variables for the notification via cmk --notify"""
 
 # TODO: Remove all configuration for legacy-Email to deprecated, or completely
 # remove from WATO.
 
 import cmk.paths
+
+from cmk.gui.valuespec import *
+from cmk.gui.i18n import _
+
+from . import (
+    configvar_order,
+    register_configvar,
+    site_neutral_path,
+)
 
 group = _("Notifications")
 configvar_order()[group] = 15

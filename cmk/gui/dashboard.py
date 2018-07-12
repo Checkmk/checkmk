@@ -31,7 +31,7 @@ import json
 
 import cmk.gui.config as config
 import cmk.gui.visuals as visuals
-import cmk.gui.wato as wato
+import cmk.gui.watolib as watolib
 import cmk.gui.utils as utils
 from cmk.gui.valuespec import *
 import cmk.gui.i18n
@@ -359,7 +359,7 @@ def draw_dashboard(name):
         header_height = 0
 
     elif wato_folder is not None:
-        title = wato.get_folder_title(wato_folder) + " - " + title
+        title = watolib.get_folder_title(wato_folder) + " - " + title
 
     html.header(title, javascripts=["dashboard"], stylesheets=["pages", "dashboard", "status", "views"])
 

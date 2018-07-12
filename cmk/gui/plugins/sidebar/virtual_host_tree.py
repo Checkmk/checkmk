@@ -26,13 +26,13 @@
 
 import cmk.gui.config as config
 import cmk.gui.sites as sites
-import cmk.gui.wato as wato
 import cmk.gui.watolib as watolib
 from cmk.gui.i18n import _
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib import HTML
 
 from . import SidebarSnapin
+from cmk.gui.plugins.wato.check_mk_configuration import transform_virtual_host_trees
 
 class VirtualHostTree(SidebarSnapin):
     @staticmethod
@@ -47,7 +47,7 @@ class VirtualHostTree(SidebarSnapin):
 
     def _load_trees(self):
         self._trees = dict([ (tree["id"], tree) for tree in
-                        wato.transform_virtual_host_trees(config.virtual_host_trees) ])
+                        transform_virtual_host_trees(config.virtual_host_trees) ])
 
 
     def _load_user_settings(self):

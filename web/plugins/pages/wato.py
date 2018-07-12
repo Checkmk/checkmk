@@ -28,11 +28,10 @@ import cmk.gui.wato as wato
 
 register_handlers({
     "wato"                      : wato.page_handler,
+    "user_profile"              : wato.page_user_profile,
 
     "ajax_start_activation"     : lambda: wato.ModeAjaxStartActivation().handle_page(),
     "ajax_activation_state"     : lambda: wato.ModeAjaxActivationState().handle_page(),
-
-    "user_profile"              : wato.page_user_profile,
     "user_change_pw"            : lambda: wato.page_user_profile(change_pw=True),
     "wato_ajax_profile_repl"    : lambda: wato.ModeAjaxProfileReplication().handle_page(),
 

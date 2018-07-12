@@ -24,15 +24,56 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import cmk.gui.sites as sites
-import cmk.gui.mkeventd as mkeventd
 import zipfile
 import cStringIO
+
 import cmk.paths
-import cmk.ec.export as ec
-import cmk.ec.defaults
 import cmk.store as store
 import cmk.render
+
+import cmk.ec.export as ec
+import cmk.ec.defaults
+
+if cmk.is_managed_edition():
+    import cmk.gui.cme.managed as managed
+else:
+    managed = None
+
+import cmk.gui.config as config
+import cmk.gui.sites as sites
+import cmk.gui.mkeventd as mkeventd
+import cmk.gui.watolib as watolib
+import cmk.gui.hooks as hooks
+import cmk.gui.table as table
+from cmk.gui.valuespec import *
+from cmk.gui.i18n import _
+from cmk.gui.htmllib import HTML
+from cmk.gui.wato.pages.global_settings import GlobalSettingsMode, EditGlobalSettingMode
+
+from . import (
+    ConfigDomainGUI,
+    WatoMode,
+    WatoModule,
+    SNMPCredentials,
+    HostnameTranslation,
+    GroupSelection,
+    ConfigDomainEventConsole,
+    rule_option_elements,
+    get_search_expression,
+    add_change,
+    changelog_button,
+    home_button,
+    make_action_link,
+    register_rulegroup,
+    register_rule,
+    register_configvar,
+    register_configvar_group,
+    register_modules,
+    wato_confirm,
+    search_form,
+    configvar_order,
+    site_neutral_path,
+)
 
 mkeventd_enabled = config.mkeventd_enabled
 
@@ -71,10 +112,16 @@ _help_list = [("$ID$",            _("Event ID")),
               ("$MATCH_GROUP_1$", _("Text of the first match group from expression match")),
               ("$MATCH_GROUP_2$", _("Text of the second match group from expression match")),
               ("$MATCH_GROUP_3$", _("Text of the third match group from expression match (and so on...)"))]
-_help_rows = [html.render_tr(html.render_td(key) + html.render_td(value)) for key, value in _help_list]
-substitute_help = _("The following macros will be substituted by value from the actual event:")\
-                  + html.render_br() + html.render_br()\
-                  + html.render_table(HTML().join(_help_rows), class_="help")
+
+def substitute_help():
+    # TODO: While loading this module there is no "html" object available for generating the HTML
+    # code below. The HTML generating code could be independent of a HTML request.
+    _help_rows = [html.render_tr(html.render_td(key) + html.render_td(value)) for key, value in _help_list]
+
+    return _("The following macros will be substituted by value from the actual event:")\
+         + html.render_br()\
+         + html.render_br()\
+         + html.render_table(HTML().join(_help_rows), class_="help")
 
 class ActionList(ListOf):
     def __init__(self, vs, **kwargs):
@@ -161,7 +208,7 @@ vs_mkeventd_actions = \
                                  (   "body",
                                      TextAreaUnicode(
                                          title = _("Body"),
-                                         help = _("Text-body of the email to send. ") + substitute_help,
+                                         help = lambda: _("Text-body of the email to send. ") + substitute_help(),
                                          cols = 64,
                                          rows = 10,
                                          attrencode = True,
@@ -178,8 +225,9 @@ vs_mkeventd_actions = \
                                ( "script",
                                  TextAreaUnicode(
                                    title = _("Script body"),
-                                   help = _("This script will be executed using the BASH shell. ") \
-                                        + substitute_help \
+                                   help = lambda: \
+                                        _("This script will be executed using the BASH shell. ") \
+                                        + substitute_help() \
                                         + "<br>" \
                                         + _("These information are also available as environment variables with the prefix "
                                             "<tt>CMK_</tt>. For example the text of the event is available as "
@@ -1139,6 +1187,16 @@ class EventConsoleMode(WatoMode):
 
 
 class ModeEventConsoleRulePacks(EventConsoleMode):
+    @classmethod
+    def name(cls):
+        return "mkeventd_rule_packs"
+
+
+    @classmethod
+    def permissions(cls):
+        return ["mkeventd.edit"]
+
+
     def title(self):
         return _("Event Console rule packages")
 
@@ -1436,6 +1494,16 @@ class ModeEventConsoleRulePacks(EventConsoleMode):
 
 
 class ModeEventConsoleRules(EventConsoleMode):
+    @classmethod
+    def name(cls):
+        return "mkeventd_rules"
+
+
+    @classmethod
+    def permissions(cls):
+        return ["mkeventd.edit"]
+
+
     def _from_vars(self):
         self._rule_pack_id = html.var("rule_pack")
         self._rule_pack_nr, self._rule_pack = self._rule_pack_with_id(self._rule_pack_id)
@@ -1694,6 +1762,16 @@ class ModeEventConsoleRules(EventConsoleMode):
 
 
 class ModeEventConsoleEditRulePack(EventConsoleMode):
+    @classmethod
+    def name(cls):
+        return "mkeventd_edit_rule_pack"
+
+
+    @classmethod
+    def permissions(cls):
+        return ["mkeventd.edit"]
+
+
     def _from_vars(self):
         self._edit_nr = int(html.var("edit", -1)) # missing -> new rule pack
         self._new = self._edit_nr < 0
@@ -1787,6 +1865,16 @@ class ModeEventConsoleEditRulePack(EventConsoleMode):
 
 
 class ModeEventConsoleEditRule(EventConsoleMode):
+    @classmethod
+    def name(cls):
+        return "mkeventd_edit_rule"
+
+
+    @classmethod
+    def permissions(cls):
+        return ["mkeventd.edit"]
+
+
     def _from_vars(self):
         if html.has_var("rule_pack"):
             self._rule_pack_nr, self._rule_pack = self._rule_pack_with_id(html.var("rule_pack"))
@@ -1943,6 +2031,16 @@ class ModeEventConsoleEditRule(EventConsoleMode):
 
 
 class ModeEventConsoleStatus(EventConsoleMode):
+    @classmethod
+    def name(cls):
+        return "mkeventd_status"
+
+
+    @classmethod
+    def permissions(cls):
+        return []
+
+
     def title(self):
         return _("Local server status")
 
@@ -2019,7 +2117,17 @@ class ModeEventConsoleStatus(EventConsoleMode):
             html.end_form()
 
 
-class ModeEventConsoleSettings(EventConsoleMode, ModeGlobalSettings):
+class ModeEventConsoleSettings(EventConsoleMode, GlobalSettingsMode):
+    @classmethod
+    def name(cls):
+        return "mkeventd_config"
+
+
+    @classmethod
+    def permissions(cls):
+        return ["mkeventd.config"]
+
+
     def __init__(self):
         super(ModeEventConsoleSettings, self).__init__()
 
@@ -2104,11 +2212,20 @@ def ec_config_variable_groups():
 
 
 
-class ModeEventConsoleEditGlobalSetting(ModeEditGlobalSetting):
+class ModeEventConsoleEditGlobalSetting(EditGlobalSettingMode):
+    @classmethod
+    def name(cls):
+        return "mkeventd_edit_configvar"
+
+
+    @classmethod
+    def permissions(cls):
+        return ["mkeventd.config"]
+
+
     def __init__(self):
         super(ModeEventConsoleEditGlobalSetting, self).__init__()
         self._need_restart = None
-        self._back_mode = "mkeventd_config"
 
 
     def title(self):
@@ -2119,12 +2236,26 @@ class ModeEventConsoleEditGlobalSetting(ModeEditGlobalSetting):
         html.context_button(_("Abort"), watolib.folder_preserving_link([("mode", "mkeventd_config")]), "abort")
 
 
+    def _back_mode(self):
+        return "mkeventd_config"
+
+
     def _affected_sites(self):
         return watolib.get_event_console_sync_sites()
 
 
 
 class ModeEventConsoleMIBs(EventConsoleMode):
+    @classmethod
+    def name(cls):
+        return "mkeventd_mibs"
+
+
+    @classmethod
+    def permissions(cls):
+        return ["mkeventd.config"]
+
+
     def title(self):
         return _('SNMP MIBs for Trap Translation')
 
@@ -2452,18 +2583,6 @@ class ModeEventConsoleMIBs(EventConsoleMode):
             mib['name'] = matches.group(1)
 
         return mib
-
-
-
-if mkeventd_enabled:
-    modes["mkeventd_rule_packs"]     = (["mkeventd.edit"], ModeEventConsoleRulePacks)
-    modes["mkeventd_rules"]          = (["mkeventd.edit"], ModeEventConsoleRules)
-    modes["mkeventd_edit_rule"]      = (["mkeventd.edit"], ModeEventConsoleEditRule)
-    modes["mkeventd_edit_rule_pack"] = (["mkeventd.edit"], ModeEventConsoleEditRulePack)
-    modes["mkeventd_status"]         = ([], ModeEventConsoleStatus)
-    modes["mkeventd_config"]         = (['mkeventd.config'], ModeEventConsoleSettings)
-    modes["mkeventd_edit_configvar"] = (['mkeventd.config'], ModeEventConsoleEditGlobalSetting)
-    modes["mkeventd_mibs"]           = (['mkeventd.config'], ModeEventConsoleMIBs)
 
 
 
@@ -3426,4 +3545,4 @@ define command {
 }
 """ % { "group" : contactgroup, "facility" : config.mkeventd_notify_facility, "remote" : remote_console })
 
-register_hook("pre-activate-changes", mkeventd_update_notifiation_configuration)
+hooks.register("pre-activate-changes", mkeventd_update_notifiation_configuration)

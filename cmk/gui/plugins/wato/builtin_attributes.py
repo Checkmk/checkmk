@@ -24,6 +24,27 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+import cmk.gui.config as config
+import cmk.gui.watolib as watolib
+import cmk.gui.hooks as hooks
+import cmk.gui.userdb as userdb
+from cmk.gui.i18n import _
+from cmk.gui.htmllib import HTML
+from cmk.gui.valuespec import HostAddress, ListOf, ListOfStrings, Dictionary, Age, \
+    TimeofdayRange, Checkbox, DropdownChoice, Integer, CascadingDropdown, Tuple, \
+    IPv4Address, RegExp, Alternative, FixedValue, AbsoluteDate, FixedValue, TextUnicode, \
+    SiteChoice
+from cmk.gui.exceptions import MKUserError
+
+from . import \
+    declare_host_attribute, \
+    SNMPCredentials, \
+    IPMIParameters, \
+    ContactGroupsAttribute, \
+    NagiosTextAttribute, \
+    ValueSpecAttribute, \
+    HostnameTranslation
+
 declare_host_attribute(ContactGroupsAttribute(),
                        show_in_table = False,
                        show_in_folder = True)
@@ -114,117 +135,6 @@ declare_host_attribute(ValueSpecAttribute("additional_ipv6addresses",
     topic = _("Address"),
 )
 
-_snmpv3_auth_elements = [
-    DropdownChoice(
-        choices = [
-            ( "md5", _("MD5") ),
-            ( "sha", _("SHA1") ),
-        ],
-        title = _("Authentication protocol")
-    ),
-    TextAscii(
-        title = _("Security name"),
-        attrencode = True
-    ),
-    Password(
-        title = _("Authentication password"),
-        minlen = 8,
-    )
-]
-
-class SNMPCredentials(Alternative):
-    def __init__(self, allow_none=False, **kwargs):
-        def alternative_match(x):
-            if kwargs.get("only_v3"):
-                return x and (len(x) == 6 and 2 or len(x) == 4 and 1) or 0
-            else:
-                return type(x) == tuple and ( \
-                            len(x) in [1, 2] and 1 or \
-                            len(x) == 4 and 2 or 3) or 0
-
-        if allow_none:
-            none_elements = [
-                FixedValue(None,
-                    title = _("No explicit credentials"),
-                    totext = "",
-                )
-            ]
-
-            # Wrap match() function defined above
-            match = lambda x: 0 if x is None else (alternative_match(x)+1)
-        else:
-            none_elements = []
-            match = alternative_match
-
-        kwargs.update({
-            "elements": none_elements + [
-                Password(
-                    title = _("SNMP community (SNMP Versions 1 and 2c)"),
-                    allow_empty = False,
-                ),
-                Transform(
-                    Tuple(
-                        title = _("Credentials for SNMPv3 without authentication and privacy (noAuthNoPriv)"),
-                        elements = [
-                            FixedValue("noAuthNoPriv",
-                                title = _("Security Level"),
-                                totext = _("No authentication, no privacy"),
-                            ),
-                            TextAscii(
-                                title = _("Security name"),
-                                attrencode  = True,
-                                allow_empty = False
-                            ),
-                        ]
-                    ),
-                    forth = lambda x: (x and len(x) == 2) and x or ("noAuthNoPriv", "")
-                ),
-                Tuple(
-                    title = _("Credentials for SNMPv3 with authentication but without privacy (authNoPriv)"),
-                    elements = [
-                        FixedValue("authNoPriv",
-                            title = _("Security Level"),
-                            totext = _("authentication but no privacy"),
-                        ),
-                    ] + _snmpv3_auth_elements
-                ),
-                Tuple(
-                    title = _("Credentials for SNMPv3 with authentication and privacy (authPriv)"),
-                    elements = [
-                        FixedValue("authPriv",
-                            title = _("Security Level"),
-                            totext = _("authentication and encryption"),
-                        ),
-                    ] + _snmpv3_auth_elements + [
-                        DropdownChoice(
-                            choices = [
-                                ( "DES", _("DES") ),
-                                ( "AES", _("AES") ),
-                            ],
-                            title = _("Privacy protocol")
-                        ),
-                        Password(
-                            title = _("Privacy pass phrase"),
-                            minlen = 8,
-                        ),
-                    ]
-                ),
-            ],
-            "match": match,
-            "style": "dropdown",
-        })
-        if "default_value" not in kwargs:
-            kwargs["default_value"] = "public"
-
-        if kwargs.get("only_v3"):
-            kwargs["elements"].pop(0)
-            kwargs.setdefault("title", _("SNMPv3 credentials"))
-        else:
-            kwargs.setdefault("title", _("SNMP credentials"))
-        kwargs["orientation"] = "vertical"
-        Alternative.__init__(self, **kwargs)
-
-
 declare_host_attribute(
     ValueSpecAttribute(
         "snmp_community",
@@ -233,8 +143,7 @@ declare_host_attribute(
                           "contacting this host via SNMP v1/v2 or v3. It is possible to configure the SNMP community by "
                           "using the <a href=\"%s\">SNMP Communities</a> ruleset, but when you configure "
                           "a community here, this will override the community defined by the rules.") % \
-                          html.makeuri_contextless([('mode', 'edit_ruleset'), ('varname', 'snmp_communities')],
-                                       filename="wato.py"),
+                            "wato.py?mode=edit_ruleset&varname=snmp_communities",
                 default_value = None,
             )
     ),
@@ -294,7 +203,7 @@ def validate_host_parents(host):
               "relation is used to describe the reachability of hosts by one monitoring daemon.") %
                 (parent_name, parent.site_id(), host.site_id()))
 
-register_hook('validate-host', validate_host_parents)
+hooks.register('validate-host', validate_host_parents)
 
 
 

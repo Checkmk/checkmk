@@ -1,4 +1,3 @@
-#!/usr/bin/python
 # -*- encoding: utf-8; py-indent-offset: 4 -*-
 # +------------------------------------------------------------------+
 # |             ____ _               _        __  __ _  __           |
@@ -53,12 +52,6 @@
 # Each directory contains a file ".wato" which keeps information needed
 # by WATO but not by Check_MK itself.
 
-# [2] Global variables
-# At the beginning of each page some global variables are set:
-#
-#
-# g_html_head_open -> True, if the HTML head has already been rendered.
-
 # [3] Convention for variable names:
 # site_id     --> The id of a site, None for the local site in non-distributed setup
 # site        --> The dictionary datastructure of a site
@@ -101,6 +94,7 @@ import time
 import traceback
 from hashlib import sha256
 
+import cmk
 import cmk.paths
 import cmk.translations
 import cmk.store as store
@@ -124,6 +118,8 @@ import cmk.gui.modules as multisite_modules
 import cmk.gui.watolib as watolib
 import cmk.gui.gui_background_job as gui_background_job
 import cmk.gui.i18n
+import cmk.gui.plugin_registry
+import cmk.gui.wato.base_modes
 from cmk.gui.i18n import _u, _
 from cmk.gui.htmllib import HTML
 from cmk.gui.exceptions import MKGeneralException, MKUserError, MKAuthException, \
@@ -131,16 +127,23 @@ from cmk.gui.exceptions import MKGeneralException, MKUserError, MKAuthException,
 from cmk.gui.log import logger
 from cmk.gui.valuespec import *
 from cmk.gui.plugins.userdb.htpasswd import encrypt_password
+from cmk.gui.wato.base_modes import WatoMode, WatoWebApiMode
+from cmk.gui.wato.pages.global_settings import GlobalSettingsMode, EditGlobalSettingMode
+
+import cmk.gui.plugins.wato
+import cmk.gui.plugins.wato.bi
+
+if not cmk.is_raw_edition():
+    import cmk.gui.cee.plugins.wato
 
 if cmk.is_managed_edition():
     import cmk.gui.cme.managed as managed
+    import cmk.gui.cme.plugins.wato
+    import cmk.gui.cme.plugins.wato.managed
 else:
     managed = None
 
-g_html_head_open = False
 display_options  = None
-
-wato_styles = [ "pages", "wato", "status" ]
 
 ALL_HOSTS         = watolib.ALL_HOSTS
 ALL_SERVICES      = watolib.ALL_SERVICES
@@ -150,6 +153,95 @@ ENTRY_NEGATE_CHAR = watolib.ENTRY_NEGATE_CHAR
 
 wato_root_dir = watolib.wato_root_dir
 multisite_dir = watolib.multisite_dir
+
+# TODO: Kept for old plugin compatibility. Remove this one day
+syslog_facilities = mkeventd.syslog_facilities
+from cmk.gui.plugins.wato import (
+    may_edit_ruleset,
+    monitoring_macro_help,
+    UserIconOrAction,
+    SNMPCredentials,
+    HostnameTranslation,
+    GroupSelection,
+    rule_option_elements,
+    register_check_parameters,
+    Levels,
+    PredictiveLevels,
+    EventsMode,
+)
+
+# Make some functions of watolib available to WATO plugins without using the
+# watolib module name. This is mainly done for compatibility reasons to keep
+# the current plugin API functions working
+from cmk.gui.watolib import (
+    PasswordStore,
+    register_rulegroup,
+    register_rule,
+    register_configvar,
+    register_configvar_group,
+    register_hook,
+    add_replication_paths,
+    UserSelection,
+    ConfigDomainGUI,
+    ConfigDomainCore,
+    ConfigDomainOMD,
+    ConfigDomainEventConsole,
+    configvar_order,
+    add_change,
+    add_service_change,
+    site_neutral_path,
+    register_notification_parameters,
+    declare_host_attribute,
+    Attribute,
+    ContactGroupsAttribute,
+    NagiosTextAttribute,
+    ValueSpecAttribute,
+    ACTestCategories,
+    ACTest,
+    ACResultCRIT,
+    ACResultWARN,
+    ACResultOK,
+    LivestatusViaTCP,
+    SiteBackupJobs,
+    make_action_link,
+    is_a_checkbox,
+    get_search_expression,
+    may_edit_configvar,
+    multifolder_host_rule_match_conditions,
+    simple_host_rule_match_conditions,
+    transform_simple_to_multi_host_rule_match_conditions,
+    WatoBackgroundJob,
+)
+
+
+
+modes = {}
+
+from .html_elements import (
+    wato_styles,
+    wato_confirm,
+    wato_html_head,
+    initialize_wato_html_head,
+    wato_html_footer,
+    search_form,
+)
+
+from .context_buttons import (
+    global_buttons,
+    changelog_button,
+    home_button,
+    host_status_button,
+    service_status_button,
+    folder_status_button,
+)
+
+from cmk.gui.wato.main_menu import (
+    MainMenu,
+    MenuItem,
+    WatoModule,
+    register_modules,
+    get_modules,
+)
 
 # TODO: Must only be unlocked when it was not locked before. We should find a more
 # robust way for doing something like this. If it is locked before, it can now happen
@@ -170,20 +262,6 @@ def init_wato_datastructures(with_wato_lock=False):
 
     if with_wato_lock:
         watolib.unlock_exclusive()
-
-
-class WatoBackgroundProcess(gui_background_job.GUIBackgroundProcess):
-    def initialize_environment(self):
-        super(WatoBackgroundProcess, self).initialize_environment()
-
-        if self._jobstatus.get_status().get("lock_wato"):
-            cmk.store.release_all_locks()
-            watolib.lock_exclusive()
-
-
-class WatoBackgroundJob(gui_background_job.GUIBackgroundJob):
-    _background_process_class = WatoBackgroundProcess
-
 
 
 class RenameHostsBackgroundJob(WatoBackgroundJob):
@@ -234,8 +312,7 @@ class RenameHostsBackgroundJob(WatoBackgroundJob):
 
 
 def page_handler():
-    global g_html_head_open
-    g_html_head_open = False
+    initialize_wato_html_head()
 
     if not config.wato_enabled:
         raise MKGeneralException(_("WATO is disabled. Please set <tt>wato_enabled = True</tt>"
@@ -305,9 +382,7 @@ def page_handler():
                 if newmode == "": # no further information: configuration dialog, etc.
                     if action_message:
                         html.message(action_message)
-                    if g_html_head_open:
-                        html.close_div()
-                        html.footer()
+                        wato_html_footer()
                     return
                 mode_permissions, mode_class = get_mode_permission_and_class(newmode)
                 current_mode = newmode
@@ -329,11 +404,9 @@ def page_handler():
             action_message = e.reason
             html.add_user_error(None, e.reason)
 
-    # Title
-    html.header(mode.title(), javascripts=["wato"], stylesheets=wato_styles,
-                show_body_start=display_options.enabled(display_options.H),
-                show_top_heading=display_options.enabled(display_options.T))
-    html.open_div(class_="wato")
+    wato_html_head(mode.title(),
+        show_body_start=display_options.enabled(display_options.H),
+        show_top_heading=display_options.enabled(display_options.T))
 
     try:
         if display_options.enabled(display_options.B):
@@ -378,19 +451,20 @@ def page_handler():
         html.unplug_all()
         html.show_error(traceback.format_exc().replace('\n', '<br />'))
 
-    html.close_div()
     if watolib.is_sidebar_reload_needed():
         html.reload_sidebar()
 
     if config.wato_use_git and html.is_transaction():
         watolib.do_git_commit()
 
-    html.footer(display_options.enabled(display_options.Z),
-                display_options.enabled(display_options.H))
+    wato_html_footer(display_options.enabled(display_options.Z),
+                     display_options.enabled(display_options.H))
 
 
 def get_mode_permission_and_class(mode_name):
-    mode_permissions, mode_class = modes.get(mode_name, ([], ModeNotImplemented))
+    mode_class = mode_registry.get(mode_name, ModeNotImplemented)
+    mode_permissions = mode_class.permissions()
+
     if mode_class is None:
         raise MKGeneralException(_("No such WATO module '<tt>%s</tt>'") % mode_name)
 
@@ -411,62 +485,18 @@ def ensure_mode_permissions(mode_permissions):
         config.user.need_permission(pname)
 
 
-class WatoMode(object):
-    def __init__(self):
-        super(WatoMode, self).__init__()
-        self._from_vars()
-
-
-    def _from_vars(self):
-        """Override this method to set mode specific attributes based on the
-        given HTTP variables."""
-        pass
-
-
-    def title(self):
-        return _("(Untitled module)")
-
-
-    def buttons(self):
-        global_buttons()
-
-
-    def action(self):
-        pass
-
-
-    def page(self):
-        html.message(_("(This module is not yet implemented)"))
-
-
-    def handle_page(self):
-        return self.page()
-
-
-
-class WatoWebApiMode(WatoMode):
-    def webapi_request(self):
-        return html.get_request()
-
-
-    def handle_page(self):
-        try:
-            action_response = self.page()
-            response = { "result_code": 0, "result": action_response }
-        except MKException, e:
-            response = { "result_code": 1, "result": "%s" % e }
-
-        except Exception, e:
-            if config.debug:
-                raise
-            logger.exception()
-            response = { "result_code": 1, "result": "%s" % e }
-
-        html.write(json.dumps(response))
-
-
 
 class ModeNotImplemented(WatoMode):
+    @classmethod
+    def name(cls):
+        return ""
+
+
+    @classmethod
+    def permissions(cls):
+        return []
+
+
     def title(self):
         return _("Sorry")
 
@@ -492,6 +522,16 @@ class ModeNotImplemented(WatoMode):
 #   '----------------------------------------------------------------------'
 
 class ModeFolder(WatoMode):
+    @classmethod
+    def name(cls):
+        return "folder"
+
+
+    @classmethod
+    def permissions(cls):
+        return ["hosts"]
+
+
     def __init__(self):
         super(ModeFolder, self).__init__()
         self._folder = watolib.Folder.current()
@@ -1329,6 +1369,16 @@ class FolderMode(WatoMode):
 
 
 class ModeEditFolder(FolderMode):
+    @classmethod
+    def name(cls):
+        return "editfolder"
+
+
+    @classmethod
+    def permissions(cls):
+        return ["hosts"]
+
+
     def _init_folder(self):
         return watolib.Folder.current()
 
@@ -1343,6 +1393,16 @@ class ModeEditFolder(FolderMode):
 
 
 class ModeCreateFolder(FolderMode):
+    @classmethod
+    def name(cls):
+        return "newfolder"
+
+
+    @classmethod
+    def permissions(cls):
+        return ["hosts", "manage_folders"]
+
+
     def _init_folder(self):
         return watolib.Folder(name=None)
 
@@ -1383,10 +1443,16 @@ class ModeAjaxSetFoldertree(WatoWebApiMode):
 class HostMode(WatoMode):
     __metaclass__ = abc.ABCMeta
 
+
+    @abc.abstractmethod
+    def _init_host(self):
+        raise NotImplementedError()
+
+
     def __init__(self):
-        super(HostMode, self).__init__()
-        self._host = None
+        self._host = self._init_host()
         self._mode = "edit"
+        super(HostMode, self).__init__()
 
 
     def buttons(self):
@@ -1508,14 +1574,23 @@ class HostMode(WatoMode):
 # simply wants to link to the "host edit page". We could try to use some factory to decide this when
 # the edit_host mode is called.
 class ModeEditHost(HostMode):
-    def _from_vars(self):
+    @classmethod
+    def name(cls):
+        return "edit_host"
+
+
+    @classmethod
+    def permissions(cls):
+        return ["hosts"]
+
+
+    def _init_host(self):
         hostname = html.var("host") # may be empty in new/clone mode
 
         if not watolib.Folder.current().has_host(hostname):
             raise MKGeneralException(_("You called this page with an invalid host name."))
 
-        self._mode = "edit"
-        self._host = watolib.Folder.current().host(hostname)
+        return watolib.Folder.current().host(hostname)
 
 
     def title(self):
@@ -1593,8 +1668,15 @@ class ModeEditHost(HostMode):
 
 
 
-class ModeCreateHost(HostMode):
+class CreateHostMode(HostMode):
     def _from_vars(self):
+        if html.var("clone") and self._init_host():
+            self._mode = "clone"
+        else:
+            self._mode = "new"
+
+
+    def _init_host(self):
         clonename = html.var("clone")
         if clonename:
             if not watolib.Folder.current().has_host(clonename):
@@ -1603,15 +1685,15 @@ class ModeCreateHost(HostMode):
             if not config.user.may("wato.clone_hosts"):
                 raise MKAuthException(_("Sorry, you are not allowed to clone hosts."))
 
-            self._mode = "clone"
-            self._host = watolib.Folder.current().host(clonename)
+            host = watolib.Folder.current().host(clonename)
 
-            if self._is_cluster() != self._host.is_cluster():
+            if isinstance(self, ModeCreateCluster) != host.is_cluster():
                 raise MKGeneralException(_("Can not clone a cluster host as regular host or vice versa"))
+
+            return host
         else:
-            self._mode = "new"
-            self._host = watolib.Host(folder=watolib.Folder.current(), host_name=html.var("host"), attributes={},
-                              cluster_nodes=[] if self._is_cluster() else None)
+            return watolib.Host(folder=watolib.Folder.current(), host_name=html.var("host"), attributes={},
+                              cluster_nodes=[] if isinstance(self, ModeCreateCluster) else None)
 
 
     def action(self):
@@ -1646,13 +1728,6 @@ class ModeCreateHost(HostMode):
             return "folder", create_msg
 
 
-    def title(self):
-        if self._mode == "clone":
-            return _("Create clone of %s") % self._host.name()
-        else:
-            return _("Create new host")
-
-
     def _show_host_name(self):
         forms.section(_("Hostname"))
         Hostname().render_input("host", "")
@@ -1660,7 +1735,36 @@ class ModeCreateHost(HostMode):
 
 
 
-class ModeCreateCluster(ModeCreateHost):
+class ModeCreateHost(CreateHostMode):
+    @classmethod
+    def name(cls):
+        return "newhost"
+
+
+    @classmethod
+    def permissions(cls):
+        return ["hosts", "manage_hosts"]
+
+
+    def title(self):
+        if self._mode == "clone":
+            return _("Create clone of %s") % self._host.name()
+        else:
+            return _("Create new host")
+
+
+
+class ModeCreateCluster(CreateHostMode):
+    @classmethod
+    def name(cls):
+        return "newcluster"
+
+
+    @classmethod
+    def permissions(cls):
+        return ["hosts", "manage_hosts"]
+
+
     def _is_cluster(self):
         return True
 
@@ -1685,6 +1789,16 @@ class ModeCreateCluster(ModeCreateHost):
 #   '----------------------------------------------------------------------'
 
 class ModeBulkRenameHost(WatoMode):
+    @classmethod
+    def name(cls):
+        return "bulk_rename_host"
+
+
+    @classmethod
+    def permissions(cls):
+        return ["hosts", "manage_hosts"]
+
+
     def __init__(self):
         super(ModeBulkRenameHost, self).__init__()
 
@@ -1944,6 +2058,16 @@ def rename_hosts_background_job(renamings, job_interface=None):
 
 
 class ModeRenameHost(WatoMode):
+    @classmethod
+    def name(cls):
+        return "rename_host"
+
+
+    @classmethod
+    def permissions(cls):
+        return ["hosts", "manage_hosts"]
+
+
     def _from_vars(self):
         host_name = html.var("host")
 
@@ -2141,15 +2265,17 @@ def rename_host_in_event_rules(oldname, newname):
         watolib.save_notification_rules(rules)
 
     try:
-        rules = load_alert_handler_rules() # only available in CEE
+        import cmk.gui.cee.plugins.wato.alert_handling as alert_handling
     except:
-        rules = None
+        alert_handling = None
 
-    if rules:
-        num_changed = rename_in_event_rules(rules)
-        if num_changed:
-            actions += [ "alert_rules" ] * num_changed
-            save_alert_handler_rules(rules)
+    if alert_handling:
+        rules = alert_handling.load_alert_handler_rules()
+        if rules:
+            num_changed = rename_in_event_rules(rules)
+            if num_changed:
+                actions += [ "alert_rules" ] * num_changed
+                alert_handling.save_alert_handler_rules(rules)
 
     # Notification channels of flexible notifications also can have host conditions
     for userid, user in users.items():
@@ -2209,7 +2335,7 @@ def rename_host_in_multisite(oldname, newname):
 
 
 def rename_host_in_bi(oldname, newname):
-    return BIHostRenamer().rename_host(oldname, newname)
+    return cmk.gui.plugins.wato.bi.BIHostRenamer().rename_host(oldname, newname)
 
 
 def rename_hosts_in_check_mk(renamings):
@@ -2359,6 +2485,15 @@ class ModeObjectParameters(WatoMode):
     _PARAMETERS_UNKNOWN = []
     _PARAMETERS_OMIT = []
 
+    @classmethod
+    def name(cls):
+        return "object_parameters"
+
+
+    @classmethod
+    def permissions(cls):
+        return ["hosts", "rulesets"]
+
 
     def _from_vars(self):
         self._hostname = html.var("host") # may be empty in new/clone mode
@@ -2382,7 +2517,7 @@ class ModeObjectParameters(WatoMode):
         if self._service:
             prefix = _("Host-")
         else:
-            prefix = ""
+            prefix = u""
         html.context_button(_("Folder"), watolib.folder_preserving_link([("mode", "folder")]), "back")
         if self._service:
             service_status_button(self._hostname, self._service)
@@ -2483,7 +2618,7 @@ class ModeObjectParameters(WatoMode):
         elif origin == "static":
             checkgroup = serviceinfo["checkgroup"]
             checktype = serviceinfo["checktype"]
-            if not group:
+            if not checkgroup:
                 html.write_text(_("This check is not configurable via WATO"))
             else:
                 rulespec = watolib.g_rulespecs.get("static_checks:" + checkgroup)
@@ -2686,6 +2821,16 @@ class ModeObjectParameters(WatoMode):
 
 class ModeDiagHost(WatoMode):
     @classmethod
+    def name(cls):
+        return "diag_host"
+
+
+    @classmethod
+    def permissions(cls):
+        return ["hosts", "diag_host"]
+
+
+    @classmethod
     def diag_host_tests(cls):
         return [
             ('ping',          _('Ping')),
@@ -2859,7 +3004,7 @@ class ModeDiagHost(WatoMode):
                     allow_empty = False
                 )),
                 ('snmp_v3_credentials',
-                    SNMPCredentials(default_value = None, only_v3 = True)
+                    cmk.gui.plugins.wato.SNMPCredentials(default_value = None, only_v3 = True)
                 ),
             ]
         )
@@ -3026,6 +3171,15 @@ class ModeDiscovery(WatoMode):
     SERVICE_ACTIVE_IGNORED = "active_ignored"
     SERVICE_CUSTOM_IGNORED = "custom_ignored"
     SERVICE_LEGACY_IGNORED = "legacy_ignored"
+
+    @classmethod
+    def name(cls):
+        return "inventory"
+
+
+    @classmethod
+    def permissions(cls):
+        return ["hosts"]
 
 
     def _from_vars(self):
@@ -3796,6 +3950,16 @@ class ModeAjaxExecuteCheck(WatoWebApiMode):
 #   '----------------------------------------------------------------------'
 
 class ModeSearch(WatoMode):
+    @classmethod
+    def name(cls):
+        return "search"
+
+
+    @classmethod
+    def permissions(cls):
+        return ["hosts"]
+
+
     def __init__(self):
         super(ModeSearch, self).__init__()
         self._folder = watolib.Folder.current()
@@ -3855,6 +4019,16 @@ class ModeSearch(WatoMode):
 
 class ModeBulkImport(WatoMode):
     _upload_tmp_path = cmk.paths.tmp_dir + "/host-import"
+
+    @classmethod
+    def name(cls):
+        return "bulk_import"
+
+
+    @classmethod
+    def permissions(cls):
+        return ["hosts", "manage_hosts"]
+
 
     def __init__(self):
         super(ModeBulkImport, self).__init__()
@@ -4241,10 +4415,20 @@ class ModeBulkImport(WatoMode):
 
 
 class ModeBulkDiscovery(WatoMode):
+    @classmethod
+    def name(cls):
+        return "bulkinventory"
+
+
+    @classmethod
+    def permissions(cls):
+        return ["hosts", "services"]
+
+
     def __init__(self):
         super(ModeBulkDiscovery, self).__init__()
         self._from_html_vars()
-        self._vs = ModeBulkDiscovery.vs_bulk_discovery
+        self._vs = cmk.gui.plugins.wato.vs_bulk_discovery
         self._get_bulk_discovery_params()
 
 
@@ -4496,61 +4680,6 @@ class ModeBulkDiscovery(WatoMode):
         return entries
 
 
-    @classmethod
-    def vs_bulk_discovery(cls, render_form=False):
-        if render_form:
-            render = "form"
-        else:
-            render = None
-
-        return Dictionary(
-            title    = _("Bulk discovery"),
-            render   = render,
-            elements = [
-                ("mode", RadioChoice(
-                    title       = _("Mode"),
-                    orientation = "vertical",
-                    default_value = "new",
-                    choices     = [
-                        ("new",     _("Add unmonitored services")),
-                        ("remove",  _("Remove vanished services")),
-                        ("fixall",  _("Add unmonitored & remove vanished services")),
-                        ("refresh", _("Refresh all services (tabula rasa)")),
-                    ],
-                )),
-                ("selection", Tuple(
-                    title    = _("Selection"),
-                    elements = [
-                        Checkbox(label = _("Include all subfolders"),
-                                 default_value = True),
-                        Checkbox(label = _("Only include hosts that failed on previous discovery"),
-                                 default_value = False),
-                        Checkbox(label = _("Only include hosts with a failed discovery check"),
-                                 default_value = False),
-                        Checkbox(label = _("Exclude hosts where the agent is unreachable"),
-                                 default_value = False),
-                    ]
-                )),
-                ("performance", Tuple(
-                    title    = _("Performance options"),
-                    elements = [
-                        Checkbox(label = _("Use cached data if present"),
-                                 default_value = True),
-                        Checkbox(label = _("Do full SNMP scan for SNMP devices"),
-                                 default_value = True),
-                        Integer(label = _("Number of hosts to handle at once"),
-                                default_value = 10),
-                    ]
-                )),
-                ("error_handling", Checkbox(
-                    title = _("Error handling"),
-                    label = _("Ignore errors in single check plugins"),
-                    default_value = True)),
-            ],
-            optional_keys = [],
-        )
-
-
 
 
 def find_hosts_with_failed_inventory_check():
@@ -4584,6 +4713,16 @@ def find_hosts_with_failed_agent():
 #   '----------------------------------------------------------------------'
 
 class ModeBulkEdit(WatoMode):
+    @classmethod
+    def name(cls):
+        return "bulkedit"
+
+
+    @classmethod
+    def permissions(cls):
+        return ["hosts", "edit_hosts"]
+
+
     def title(self):
         return _("Bulk edit hosts")
 
@@ -4657,6 +4796,16 @@ class ModeBulkEdit(WatoMode):
 
 
 class ModeBulkCleanup(WatoMode):
+    @classmethod
+    def name(cls):
+        return "bulkcleanup"
+
+
+    @classmethod
+    def permissions(cls):
+        return ["hosts", "edit_hosts"]
+
+
     def _from_vars(self):
         self._folder = watolib.Folder.current()
 
@@ -4773,6 +4922,16 @@ class ModeBulkCleanup(WatoMode):
 #   '----------------------------------------------------------------------'
 
 class ModeParentScan(WatoMode):
+    @classmethod
+    def name(cls):
+        return "parentscan"
+
+
+    @classmethod
+    def permissions(cls):
+        return ["hosts", "parentscan"]
+
+
     def title(self):
         return _("Parent scan")
 
@@ -5129,6 +5288,16 @@ class ModeParentScan(WatoMode):
 #   '----------------------------------------------------------------------'
 
 class ModeRandomHosts(WatoMode):
+    @classmethod
+    def name(cls):
+        return "random_hosts"
+
+
+    @classmethod
+    def permissions(cls):
+        return ["hosts", "random_hosts"]
+
+
     def title(self):
         return _("Random Hosts")
 
@@ -5207,6 +5376,16 @@ class ModeRandomHosts(WatoMode):
 
 class ModeAuditLog(WatoMode):
     log_path = watolib.audit_log_path
+
+    @classmethod
+    def name(cls):
+        return "auditlog"
+
+
+    @classmethod
+    def permissions(cls):
+        return ["auditlog"]
+
 
     def __init__(self):
         self._options  = self._vs_audit_log_options().default_value()
@@ -5597,6 +5776,16 @@ class ModeAuditLog(WatoMode):
 
 
 class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
+    @classmethod
+    def name(cls):
+        return "changelog"
+
+
+    @classmethod
+    def permissions(cls):
+        return []
+
+
     def __init__(self):
         self._value = {}
         super(ModeActivateChanges, self).__init__()
@@ -6123,20 +6312,6 @@ def interactive_progress(items, title, stats, finishvars, timewait,
 #   '----------------------------------------------------------------------'
 
 
-class SiteBackupJobs(backup.Jobs):
-    def __init__(self):
-        super(SiteBackupJobs, self).__init__(backup.site_config_path())
-
-
-    def _apply_cron_config(self):
-        p = subprocess.Popen(["omd", "restart", "crontab"],
-                         close_fds=True, stdout=subprocess.PIPE,
-                         stderr=subprocess.STDOUT, stdin=open(os.devnull))
-        if p.wait() != 0:
-            raise MKGeneralException(_("Failed to apply the cronjob config: %s") % p.stdout.read())
-
-
-
 class SiteBackupTargets(backup.Targets):
     def __init__(self):
         super(SiteBackupTargets, self).__init__(backup.site_config_path())
@@ -6144,12 +6319,22 @@ class SiteBackupTargets(backup.Targets):
 
 
 class ModeBackup(backup.PageBackup, WatoMode):
+    @classmethod
+    def name(cls):
+        return "backup"
+
+
+    @classmethod
+    def permissions(cls):
+        return ["backups"]
+
+
     def title(self):
         return _("Site backup")
 
 
     def jobs(self):
-        return SiteBackupJobs()
+        return watolib.SiteBackupJobs()
 
 
     def keys(self):
@@ -6162,6 +6347,16 @@ class ModeBackup(backup.PageBackup, WatoMode):
 
 
 class ModeBackupTargets(backup.PageBackupTargets, WatoMode):
+    @classmethod
+    def name(cls):
+        return "backup_targets"
+
+
+    @classmethod
+    def permissions(cls):
+        return ["backups"]
+
+
     def __init__(self):
         super(ModeBackupTargets, self).__init__()
 
@@ -6175,7 +6370,7 @@ class ModeBackupTargets(backup.PageBackupTargets, WatoMode):
 
 
     def jobs(self):
-        return SiteBackupJobs()
+        return watolib.SiteBackupJobs()
 
 
     def page(self):
@@ -6185,14 +6380,34 @@ class ModeBackupTargets(backup.PageBackupTargets, WatoMode):
 
 
 class ModeEditBackupTarget(backup.PageEditBackupTarget, WatoMode):
+    @classmethod
+    def name(cls):
+        return "edit_backup_target"
+
+
+    @classmethod
+    def permissions(cls):
+        return ["backups"]
+
+
     def targets(self):
         return SiteBackupTargets()
 
 
 
 class ModeEditBackupJob(backup.PageEditBackupJob, WatoMode):
+    @classmethod
+    def name(cls):
+        return "edit_backup_job"
+
+
+    @classmethod
+    def permissions(cls):
+        return ["backups"]
+
+
     def jobs(self):
-        return SiteBackupJobs()
+        return watolib.SiteBackupJobs()
 
 
     def targets(self):
@@ -6229,12 +6444,22 @@ class ModeEditBackupJob(backup.PageEditBackupJob, WatoMode):
 
 
 class ModeBackupJobState(backup.PageBackupJobState, WatoMode):
+    @classmethod
+    def name(cls):
+        return "backup_job_state"
+
+
+    @classmethod
+    def permissions(cls):
+        return ["backups"]
+
+
     def jobs(self):
-        return SiteBackupJobs()
+        return watolib.SiteBackupJobs()
 
 
 
-class ModeAjaxBackupJobState(WatoMode):
+class ModeAjaxBackupJobState(WatoWebApiMode):
     def page(self):
         config.user.need_permission("wato.backups")
         if html.var("job") == "restore":
@@ -6254,16 +6479,44 @@ class SiteBackupKeypairStore(backup.BackupKeypairStore):
 
 
 class ModeBackupKeyManagement(SiteBackupKeypairStore, backup.PageBackupKeyManagement, WatoMode):
+    @classmethod
+    def name(cls):
+        return "backup_keys"
+
+
+    @classmethod
+    def permissions(cls):
+        return ["backups"]
+
+
     def jobs(self):
-        return SiteBackupJobs()
+        return watolib.SiteBackupJobs()
 
 
 
 class ModeBackupEditKey(SiteBackupKeypairStore, backup.PageBackupEditKey, WatoMode):
-    pass
+    @classmethod
+    def name(cls):
+        return "backup_edit_key"
+
+
+    @classmethod
+    def permissions(cls):
+        return ["backups"]
+
 
 
 class ModeBackupUploadKey(SiteBackupKeypairStore, backup.PageBackupUploadKey, WatoMode):
+    @classmethod
+    def name(cls):
+        return "backup_upload_key"
+
+
+    @classmethod
+    def permissions(cls):
+        return ["backups"]
+
+
     def _upload_key(self, key_file, value):
         watolib.log_audit(None, "upload-backup-key",
                   _("Uploaded backup key '%s'") % value["alias"])
@@ -6271,11 +6524,31 @@ class ModeBackupUploadKey(SiteBackupKeypairStore, backup.PageBackupUploadKey, Wa
 
 
 class ModeBackupDownloadKey(SiteBackupKeypairStore, backup.PageBackupDownloadKey, WatoMode):
+    @classmethod
+    def name(cls):
+        return "backup_download_key"
+
+
+    @classmethod
+    def permissions(cls):
+        return ["backups"]
+
+
     def _file_name(self, key_id, key):
         return "Check_MK-%s-%s-backup_key-%s.pem" % (backup.hostname(), config.omd_site(), key_id)
 
 
 class ModeBackupRestore(backup.PageBackupRestore, WatoMode):
+    @classmethod
+    def name(cls):
+        return "backup_restore"
+
+
+    @classmethod
+    def permissions(cls):
+        return ["backups"]
+
+
     def title(self):
         if not self._target:
             return _("Site restore")
@@ -6323,17 +6596,6 @@ class ModeBackupRestore(backup.PageBackupRestore, WatoMode):
 #   '----------------------------------------------------------------------'
 
 
-class CheckTypeSelection(DualListChoice):
-    def __init__(self, **kwargs):
-        DualListChoice.__init__(self, rows=25, **kwargs)
-
-    def get_elements(self):
-        checks = watolib.check_mk_local_automation("get-check-information")
-        elements = [ (cn, (cn + " - " + c["title"])[:60]) for (cn, c) in checks.items()]
-        elements.sort()
-        return elements
-
-
 def edit_value(valuespec, value, title=""):
     if title:
         title = title + "<br>"
@@ -6370,6 +6632,16 @@ def get_edited_value(valuespec):
 #   '----------------------------------------------------------------------'
 
 class ModeMain(WatoMode):
+    @classmethod
+    def name(cls):
+        return "main"
+
+
+    @classmethod
+    def permissions(cls):
+        return []
+
+
     def title(self):
         return _("WATO - Check_MK's Web Administration Tool")
 
@@ -6382,66 +6654,6 @@ class ModeMain(WatoMode):
         MainMenu(get_modules()).show()
 
 
-
-class MainMenu(object):
-    def __init__(self, items=None, columns=2):
-        self._items   = items or []
-        self._columns = columns
-
-
-    def add_item(self, item):
-        self._items.append(item)
-
-
-    def show(self):
-        html.open_div(class_="mainmenu")
-        for nr, item in enumerate(self._items):
-            if not item.may_see():
-                continue
-
-            html.open_a(href=item.get_url(), onfocus="if (this.blur) this.blur();")
-            html.icon(item.title, item.icon)
-            html.div(item.title, class_="title")
-            html.div(item.description, class_="subtitle")
-            html.close_a()
-
-        html.close_div()
-
-
-class MenuItem(object):
-    def __init__(self, mode_or_url, title, icon, permission, description, sort_index=20):
-        self.mode_or_url = mode_or_url
-        self.title = title
-        self.icon = icon
-        self.permission = permission
-        self.description = description
-        self.sort_index = sort_index
-
-
-    def may_see(self):
-        """Whether or not the currently logged in user is allowed to see this module"""
-        if self.permission is None:
-            return True
-
-        if "." not in self.permission:
-            permission = "wato." + self.permission
-        else:
-            permission = self.permission
-
-        return config.user.may(permission) or config.user.may("wato.seeall")
-
-
-    def get_url(self):
-        mode_or_url = self.mode_or_url
-        if '?' in mode_or_url or '/' in mode_or_url or mode_or_url.endswith(".py"):
-            return mode_or_url
-        else:
-            return watolib.folder_preserving_link([("mode", mode_or_url)])
-
-
-    def __repr__(self):
-        return "%s(mode_or_url=%r, title=%r, icon=%r, permission=%r, description=%r, sort_index=%r)" % \
-            (self.__class__.__name__, self.mode_or_url, self.title, self.icon, self.permission, self.description, self.sort_index)
 
 
 #.
@@ -6464,8 +6676,19 @@ class LDAPMode(WatoMode):
 
 
 class ModeLDAPConfig(LDAPMode):
+    @classmethod
+    def name(cls):
+        return "ldap_config"
+
+
+    @classmethod
+    def permissions(cls):
+        return ["global"]
+
+
     def title(self):
         return _("LDAP connections")
+
 
     def buttons(self):
         global_buttons()
@@ -6546,6 +6769,16 @@ class ModeLDAPConfig(LDAPMode):
 
 
 class ModeEditLDAPConnection(LDAPMode):
+    @classmethod
+    def name(cls):
+        return "edit_ldap_connection"
+
+
+    @classmethod
+    def permissions(cls):
+        return ["global"]
+
+
     def _from_vars(self):
         self._connection_id = html.var("id")
         self._connection_cfg = {}
@@ -7190,161 +7423,17 @@ class ModeEditLDAPConnection(LDAPMode):
 #   | Editor for global settings in main.mk                                |
 #   '----------------------------------------------------------------------'
 
-class ModeGlobalSettings(WatoMode):
-    def __init__(self):
-        self._search = None
-        self._show_only_modified = False
-
-        super(ModeGlobalSettings, self).__init__()
-
-        self._default_values   = watolib.ConfigDomain.get_all_default_globals()
-        self._global_settings  = {}
-        self._current_settings = {}
+class ModeEditGlobals(GlobalSettingsMode):
+    @classmethod
+    def name(cls):
+        return "globalvars"
 
 
-    def _from_vars(self):
-        self._search = get_search_expression()
-        self._show_only_modified = html.has_var("show_only_modified")
+    @classmethod
+    def permissions(cls):
+        return ["global"]
 
 
-    def _group_names(self, show_all=False):
-        group_names = []
-
-        for group_name, group_vars in watolib.configvar_groups().items():
-            add = False
-            for domain, varname, valuespec in group_vars:
-                if not show_all and (not watolib.configvars()[varname][4]
-                                     or not domain.in_global_settings):
-                    continue # do not edit via global settings
-
-                add = True
-                break
-
-            if add:
-                group_names.append(group_name)
-
-        return sorted(group_names, key=lambda a: configvar_order().get(a, 999))
-
-
-    def _edit_mode(self):
-        return "edit_configvar"
-
-
-    def _show_configuration_variables(self, group_names):
-        search_form(_("Search for settings:"))
-        search = self._search
-
-        html.open_div(class_="filter_buttons")
-        if self._show_only_modified:
-            html.buttonlink(html.makeuri([], delvars=["show_only_modified"]),
-                _("Show all settings"))
-        else:
-            html.buttonlink(html.makeuri([("show_only_modified", "1")]),
-                _("Show only modified settings"))
-        html.close_div()
-
-        at_least_one_painted = False
-        html.open_div(class_="globalvars")
-        for group_name in group_names:
-            header_is_painted = False # needed for omitting empty groups
-
-            for domain, varname, valuespec in watolib.configvar_groups()[group_name]:
-                if domain == watolib.ConfigDomainCore and varname not in self._default_values:
-                    if config.debug:
-                        raise MKGeneralException("The configuration variable <tt>%s</tt> is unknown to "
-                                              "your local Check_MK installation" % varname)
-                    else:
-                        continue
-
-                if not watolib.configvar_show_in_global_settings(varname):
-                    continue
-
-                if self._show_only_modified and varname not in self._current_settings:
-                    continue
-
-                help_text  = valuespec.help() or ''
-                title_text = valuespec.title()
-
-                if search and search not in group_name.lower() \
-                        and search not in domain.ident.lower() \
-                          and search not in varname \
-                          and search not in help_text.lower() \
-                          and search not in title_text.lower():
-                    continue # skip variable when search is performed and nothing matches
-                at_least_one_painted = True
-
-                if not header_is_painted:
-                    # always open headers when searching
-                    forms.header(group_name, isopen=search or self._show_only_modified)
-                    header_is_painted = True
-
-                default_value = self._default_values[varname]
-
-                edit_url = watolib.folder_preserving_link([("mode", self._edit_mode()),
-                                                   ("varname", varname),
-                                                   ("site", html.var("site", ""))])
-                title = html.render_a(title_text,
-                    href=edit_url,
-                    class_="modified" if varname in self._current_settings else None,
-                    title=html.strip_tags(help_text)
-                )
-
-                if varname in self._current_settings:
-                    value = self._current_settings[varname]
-                elif varname in self._global_settings:
-                    value = self._global_settings[varname]
-                else:
-                    value = default_value
-
-                try:
-                    to_text = valuespec.value_to_text(value)
-                except Exception, e:
-                    logger.exception()
-                    to_text = html.render_error(_("Failed to render value: %r") % value)
-
-                # Is this a simple (single) value or not? change styling in these cases...
-                simple = True
-                if '\n' in to_text or '<td>' in to_text:
-                    simple = False
-                forms.section(title, simple=simple)
-
-                if varname in self._current_settings:
-                    modified_cls = "modified"
-                    title = _("This option has been modified.")
-                elif varname in self._global_settings:
-                    modified_cls = "modified globally"
-                    title = _("This option has been modified in global settings.")
-                else:
-                    modified_cls = None
-                    title = None
-
-                if is_a_checkbox(valuespec):
-                    html.open_div(class_=["toggle_switch_container", modified_cls])
-                    html.toggle_switch(
-                        enabled=value,
-                        help=_("Immediately toggle this setting"),
-                        href=html.makeactionuri([("_action", "toggle"), ("_varname", varname)]),
-                        class_=modified_cls,
-                        title=title,
-                    )
-                    html.close_div()
-
-                else:
-                    html.a(HTML(to_text),
-                        href=edit_url,
-                        class_=modified_cls,
-                        title=title
-                    )
-
-            if header_is_painted:
-                forms.end()
-        if not at_least_one_painted and search:
-            html.message(_('Did not find any global setting matching your search.'))
-        html.close_div()
-
-
-
-class ModeEditGlobals(ModeGlobalSettings):
     def __init__(self):
         super(ModeEditGlobals, self).__init__()
 
@@ -7365,7 +7454,7 @@ class ModeEditGlobals(ModeGlobalSettings):
             html.context_button(_("Read only mode"), watolib.folder_preserving_link([("mode", "read_only")]), "read_only")
 
         if cmk.is_managed_edition():
-            cme_global_settings_buttons()
+            cmk.gui.cme.plugins.wato.managed.cme_global_settings_buttons()
 
 
     def action(self):
@@ -7413,25 +7502,19 @@ class ModeEditGlobals(ModeGlobalSettings):
 
 
 
-class ModeEditGlobalSetting(WatoMode):
+class ModeEditGlobalSetting(EditGlobalSettingMode):
+    @classmethod
+    def name(cls):
+        return "edit_configvar"
+
+
+    @classmethod
+    def permissions(cls):
+        return ["global"]
+
+
     def __init__(self):
         super(ModeEditGlobalSetting, self).__init__()
-        self._back_mode = "globalvars"
-
-
-    def _from_vars(self):
-        self._varname = html.var("varname")
-        try:
-            self._domain, self._valuespec, self._need_restart, \
-            self._allow_reset, in_global_settings = watolib.configvars()[self._varname]
-        except KeyError:
-            raise MKGeneralException(_("The global setting \"%s\" does not exist.") % self._varname)
-
-        if not may_edit_configvar(self._varname):
-            raise MKAuthException(_("You are not permitted to edit this global setting."))
-
-        self._current_settings = watolib.load_configuration_settings()
-        self._global_settings  = {}
 
 
     def title(self):
@@ -7442,107 +7525,32 @@ class ModeEditGlobalSetting(WatoMode):
         html.context_button(_("Abort"), watolib.folder_preserving_link([("mode", "globalvars")]), "abort")
 
 
-    def action(self):
-        if html.var("_reset"):
-            if not is_a_checkbox(self._valuespec):
-                c = wato_confirm(
-                    _("Resetting configuration variable"),
-                    _("Do you really want to reset this configuration variable "
-                      "back to its default value?"))
-                if c == False:
-                    return ""
-                elif c == None:
-                    return None
-            elif not html.check_transaction():
-                return
-
-            try:
-                del self._current_settings[self._varname]
-            except KeyError:
-                pass
-
-            msg = _("Resetted configuration variable %s to its default.") % self._varname
-        else:
-            new_value = get_edited_value(self._valuespec)
-            self._current_settings[self._varname] = new_value
-            msg = _("Changed global configuration variable %s to %s.") \
-                  % (self._varname, self._valuespec.value_to_text(new_value))
-            # FIXME: THIS HTML(...) is needed because we do not know what we get from value_to_text!!
-            msg = HTML(msg)
-
-        self._save()
-        add_change("edit-configvar", msg, sites=self._affected_sites(), domains=[self._domain], need_restart=self._need_restart)
-
-        return self._back_mode
+    def _back_mode(self):
+        return"globalvars"
 
 
     def _affected_sites(self):
         return None # All sites
 
 
-    def _save(self):
-        watolib.save_global_settings(self._current_settings)
+
+class ModeEditSiteGlobalSetting(EditGlobalSettingMode):
+    @classmethod
+    def name(cls):
+        return "edit_site_configvar"
 
 
-    def page(self):
-        is_configured = self._varname in self._current_settings
-        is_configured_globally = self._varname in self._global_settings
-
-        default_values  = watolib.ConfigDomain.get_all_default_globals()
-
-        defvalue = default_values[self._varname]
-        value    = self._current_settings.get(self._varname, self._global_settings.get(self._varname, defvalue))
-
-        html.begin_form("value_editor", method="POST")
-        forms.header(self._valuespec.title())
-        if not config.wato_hide_varnames:
-            forms.section(_("Configuration variable:"))
-            html.tt(self._varname)
-
-        forms.section(_("Current setting"))
-        self._valuespec.render_input("ve", value)
-        self._valuespec.set_focus("ve")
-        html.help(self._valuespec.help())
-
-        if is_configured_globally:
-            self._show_global_setting()
-
-        forms.section(_("Factory setting"))
-        html.write_html(self._valuespec.value_to_text(defvalue))
-
-        forms.section(_("Current state"))
-        if is_configured_globally:
-            html.write_text(_("This variable is configured in <a href=\"%s\">global settings</a>.") %
-                                                ("wato.py?mode=edit_configvar&varname=%s" % self._varname))
-        elif not is_configured:
-            html.write_text(_("This variable is at factory settings."))
-        else:
-            curvalue = self._current_settings[self._varname]
-            if is_configured_globally and curvalue == self._global_settings[self._varname]:
-                html.write_text(_("Site setting and global setting are identical."))
-            elif curvalue == defvalue:
-                html.write_text(_("Your setting and factory settings are identical."))
-            else:
-                html.write(self._valuespec.value_to_text(curvalue))
-
-        forms.end()
-        html.button("save", _("Save"))
-        if self._allow_reset and is_configured:
-            curvalue = self._current_settings[self._varname]
-            html.button("_reset", _("Remove explicit setting") if curvalue == defvalue else _("Reset to default"))
-        html.hidden_fields()
-        html.end_form()
+    @classmethod
+    def permissions(cls):
+        return ["global"]
 
 
-    def _show_global_setting(self):
-        pass
-
-
-
-class ModeEditSiteGlobalSetting(ModeEditGlobalSetting):
     def __init__(self):
         super(ModeEditSiteGlobalSetting, self).__init__()
-        self._back_mode = "edit_site_globals"
+
+
+    def _back_mode(self):
+        return "edit_site_globals"
 
 
     def _from_vars(self):
@@ -7550,7 +7558,7 @@ class ModeEditSiteGlobalSetting(ModeEditGlobalSetting):
 
         self._site_id = html.var("site")
         if self._site_id:
-            self._configured_sites = watolib.SiteManagement.load_sites()
+            self._configured_sites = watolib.SiteManagementFactory().factory().load_sites()
             try:
                 site = self._configured_sites[self._site_id]
             except KeyError:
@@ -7574,7 +7582,7 @@ class ModeEditSiteGlobalSetting(ModeEditGlobalSetting):
 
 
     def _save(self):
-        watolib.SiteManagement.save_sites(self._configured_sites, activate=False)
+        watolib.SiteManagementFactory().factory().save_sites(self._configured_sites, activate=False)
         if self._site_id == config.omd_site():
             watolib.save_site_global_settings(self._current_settings)
 
@@ -7596,7 +7604,9 @@ class ModeEditSiteGlobalSetting(ModeEditGlobalSetting):
 #   | Mode for editing host-, service- and contact groups                  |
 #   '----------------------------------------------------------------------'
 
+# TODO: abc.ABCMeta
 class ModeGroups(WatoMode):
+    # TODO: Refactore to abc.abstractmethod
     type_name = None
 
     def __init__(self):
@@ -7677,11 +7687,13 @@ class ModeGroups(WatoMode):
         table.end()
 
 
+# TODO: abc.ABCMeta
 class ModeEditGroup(WatoMode):
+    # TODO: Reimplement as abc.abstactmethod
     type_name = None
 
     def __init__(self):
-        self.name    = None
+        self._name   = None
         self._new    = False
         self._groups = {}
         self.group   = {}
@@ -7697,26 +7709,26 @@ class ModeEditGroup(WatoMode):
 
 
     def _from_vars(self):
-        self.name = html.var("edit") # missing -> new group
-        self._new = self.name == None
+        self._name = html.var("edit") # missing -> new group
+        self._new = self._name == None
 
         if self._new:
             clone_group = html.var("clone")
             if clone_group:
-                self.name = clone_group
+                self._name = clone_group
 
-                self.group = self._get_group(self.name)
+                self.group = self._get_group(self._name)
             else:
                 self.group = {}
         else:
-            self.group = self._get_group(self.name)
+            self.group = self._get_group(self._name)
 
-        self.group.setdefault("alias", self.name)
+        self.group.setdefault("alias", self._name)
 
 
     def _get_group(self, group_name):
         try:
-            return self._groups[self.name]
+            return self._groups[self._name]
         except KeyError:
             raise MKUserError(None, _("This group does not exist."))
 
@@ -7745,10 +7757,10 @@ class ModeEditGroup(WatoMode):
         self._determine_additional_group_data()
 
         if self._new:
-            self.name = html.var("name").strip()
-            watolib.add_group(self.name, self.type_name, self.group)
+            self._name = html.var("name").strip()
+            watolib.add_group(self._name, self.type_name, self.group)
         else:
-            watolib.edit_group(self.name, self.type_name, self.group)
+            watolib.edit_group(self._name, self.type_name, self.group)
 
         return "%s_groups" % self.type_name
 
@@ -7764,10 +7776,10 @@ class ModeEditGroup(WatoMode):
         html.help(_("The name of the group is used as an internal key. It cannot be "
                      "changed later. It is also visible in the status GUI."))
         if self._new:
-            html.text_input("name", self.name)
+            html.text_input("name", self._name)
             html.set_focus("name")
         else:
-            html.write_text(self.name)
+            html.write_text(self._name)
             html.set_focus("alias")
 
         forms.section(_("Alias"))
@@ -7785,6 +7797,16 @@ class ModeEditGroup(WatoMode):
 
 class ModeHostgroups(ModeGroups):
     type_name = "host"
+
+    @classmethod
+    def name(cls):
+        return "host_groups"
+
+
+    @classmethod
+    def permissions(cls):
+        return ["groups"]
+
 
     def title(self):
         return _("Host Groups")
@@ -7813,6 +7835,16 @@ class ModeHostgroups(ModeGroups):
 class ModeServicegroups(ModeGroups):
     type_name = "service"
 
+    @classmethod
+    def name(cls):
+        return "service_groups"
+
+
+    @classmethod
+    def permissions(cls):
+        return ["groups"]
+
+
     def title(self):
         return _("Service Groups")
 
@@ -7839,6 +7871,15 @@ class ModeServicegroups(ModeGroups):
 
 class ModeContactgroups(ModeGroups):
     type_name = "contact"
+
+    @classmethod
+    def name(cls):
+        return "contact_groups"
+
+
+    @classmethod
+    def permissions(cls):
+        return ["users"]
 
 
     def title(self):
@@ -7886,6 +7927,16 @@ class ModeContactgroups(ModeGroups):
 class ModeEditServicegroup(ModeEditGroup):
     type_name = "service"
 
+    @classmethod
+    def name(cls):
+        return "edit_service_group"
+
+
+    @classmethod
+    def permissions(cls):
+        return ["groups"]
+
+
     def title(self):
         if self._new:
             return _("Create new service group")
@@ -7897,6 +7948,16 @@ class ModeEditServicegroup(ModeEditGroup):
 class ModeEditHostgroup(ModeEditGroup):
     type_name = "host"
 
+    @classmethod
+    def name(cls):
+        return "edit_host_group"
+
+
+    @classmethod
+    def permissions(cls):
+        return ["groups"]
+
+
     def title(self):
         if self._new:
             return _("Create new host group")
@@ -7907,6 +7968,16 @@ class ModeEditHostgroup(ModeEditGroup):
 
 class ModeEditContactgroup(ModeEditGroup):
     type_name = "contact"
+
+    @classmethod
+    def name(cls):
+        return "edit_contact_group"
+
+
+    @classmethod
+    def permissions(cls):
+        return ["users"]
+
 
     def title(self):
         if self._new:
@@ -7991,952 +8062,310 @@ class ModeEditContactgroup(ModeEditGroup):
 
 
 
-class GroupSelection(ElementSelection):
-    def __init__(self, what, **kwargs):
-        kwargs.setdefault('empty_text', _('You have not defined any %s group yet. Please '
-                                          '<a href="wato.py?mode=edit_%s_group">create</a> at least one first.') %
-                                                                                                    (what, what))
-        ElementSelection.__init__(self, **kwargs)
-        self._what = what
-        # Allow to have "none" entry with the following title
-        self._no_selection = kwargs.get("no_selection")
-
-    def get_elements(self):
-        all_groups = userdb.load_group_information()
-        this_group = all_groups.get(self._what, {})
-        # replace the title with the key if the title is empty
-        elements = [ (k, t['alias'] if t['alias'] else k) for (k, t) in this_group.items() ]
-        if self._no_selection:
-            # Beware: ElementSelection currently can only handle string
-            # keys, so we cannot take 'None' as a value.
-            elements.append(('', self._no_selection))
-        return dict(elements)
+class NotificationsMode(EventsMode):
+    # TODO: Clean this up. Use inheritance
+    @classmethod
+    def _rule_match_conditions(cls):
+        return cls._generic_rule_match_conditions() \
+            + cls._event_rule_match_conditions(flavour="notify") \
+            + cls._notification_rule_match_conditions()
 
 
+    @classmethod
+    def _notification_rule_match_conditions(cls):
+        def transform_ec_rule_id_match(val):
+            if isinstance(val, list):
+                return val
+            else:
+                return [val]
 
-class CheckTypeGroupSelection(ElementSelection):
-    def __init__(self, checkgroup, **kwargs):
-        ElementSelection.__init__(self, **kwargs)
-        self._checkgroup = checkgroup
-
-    def get_elements(self):
-        checks = watolib.check_mk_local_automation("get-check-information")
-        elements = dict([ (cn, "%s - %s" % (cn, c["title"])) for (cn, c) in checks.items()
-                     if c.get("group") == self._checkgroup ])
-        return elements
-
-    def value_to_text(self, value):
-        return "<tt>%s</tt>" % value
-
-
-def vs_notification_bulkby():
-    return ListChoice(
-      title = _("Create separate notification bulks based on"),
-      choices = [
-        ( "folder",     _("Folder") ),
-        ( "host",       _("Host") ),
-        ( "service",    _("Service description") ),
-        ( "sl",         _("Service level") ),
-        ( "check_type", _("Check type") ),
-        ( "state",      _("Host/Service state") ),
-        ( "ec_contact", _("Event Console contact") ),
-        ( "ec_comment", _("Event Console comment") ),
-      ],
-      default_value = [ "host" ],
-    )
-
-def vs_notification_scripts():
-    return DropdownChoice(
-       title = _("Notification Script"),
-       choices = watolib.notification_script_choices,
-       default_value = "mail"
-    )
-
-
-def vs_notification_rule(userid = None):
-    if userid:
-        contact_headers = []
-        section_contacts = []
-        section_override = []
-    else:
-        contact_headers = [
-            ( _("Contact Selection"), [ "contact_all", "contact_all_with_email", "contact_object",
-                                        "contact_users", "contact_groups", "contact_emails", "contact_match_macros",
-                                        "contact_match_groups", ] ),
-        ]
-        section_contacts = [
-            # Contact selection
-            ( "contact_object",
-              Checkbox(
-                  title = _("All contacts of the notified object"),
-                  label = _("Notify all contacts of the notified host or service."),
-                  default_value = True,
-              )
-            ),
-            ( "contact_all",
-              Checkbox(
-                  title = _("All users"),
-                  label = _("Notify all users"),
-              )
-            ),
-            ( "contact_all_with_email",
-              Checkbox(
-                  title = _("All users with an email address"),
-                  label = _("Notify all users that have configured an email address in their profile"),
-              )
-            ),
-            ( "contact_users",
-              ListOf(
-                  UserSelection(only_contacts = False),
-                  title = _("The following users"),
-                  help = _("Enter a list of user IDs to be notified here. These users need to be members "
-                           "of at least one contact group in order to be notified."),
-                  movable = False,
-                  add_label = _("Add user"),
-              )
-            ),
-            ( "contact_groups",
-              ListOf(
-                  GroupSelection("contact"),
-                  title = _("The members of certain contact groups"),
-                  movable = False,
-              )
-            ),
-            ( "contact_emails",
-              ListOfStrings(
-                  valuespec = EmailAddress(size = 44),
-                  title = _("The following explicit email addresses"),
-                  orientation = "vertical",
-              )
-            ),
-            ( "contact_match_macros",
-              ListOf(
-                  Tuple(
-                      elements = [
-                          TextAscii(
-                              title = _("Name of the macro"),
-                              help = _("As configured in the users settings. Do not add a leading underscore."),
-                              allow_empty = False,
-                          ),
-                          RegExp(
-                              title = _("Required match (regular expression)"),
-                              help = _("This expression must match the value of the variable"),
-                              allow_empty = False,
-                              mode = RegExp.complete,
-                         ),
-                      ]
-                  ),
-                  title = _("Restrict by custom macros"),
-                  help = _("Here you can <i>restrict</i> the list of contacts that has been "
-                           "built up by the previous options to those who have certain values "
-                           "in certain custom macros. If you add more than one macro here then "
-                           "<i>all</i> macros must match. The matches are regular expressions "
-                           "that must fully match the value of the macro."),
-                  add_label = _("Add condition"),
-              )
-            ),
-            ( "contact_match_groups",
-              ListOf(
-                  GroupSelection("contact"),
-                  title = _("Restrict by contact groups"),
-                  help = _("Here you can <i>restrict</i> the list of contacts that has been "
-                           "built up by the previous options to those that are members of "
-                           "selected contact groups. If you select more than one contact group here then "
-                           "the user must be member of <i>all</i> these groups."),
-                  add_label = _("Add Group"),
-                  movable = False,
-              )
-            ),
-        ]
-        section_override = [
-            ( "allow_disable",
-              Checkbox(
-                title = _("Overriding by users"),
-                help = _("If you uncheck this option then users are not allowed to deactive notifications "
-                         "that are created by this rule."),
-                label = _("allow users to deactivate this notification"),
-                default_value = True,
-              )
-            ),
-        ]
-
-    bulk_options = [
-                ("count", Integer(
-                    title = _("Maximum bulk size"),
-                    label = _("Bulk up to"),
-                    unit  = _("Notifications"),
-                    help = _("At most that many Notifications are kept back for bulking. A value of "
-                            "1 essentially turns off notification bulking."),
-                    default_value = 1000,
-                    minvalue = 1,
-                )),
-                ("groupby",
-                    vs_notification_bulkby(),
-                ),
-                ("groupby_custom", ListOfStrings(
-                    valuespec = ID(),
-                    orientation = "horizontal",
-                    title = _("Create separate notification bulks for different values of the following custom macros"),
-                    help = _("If you enter the names of host/service-custom macros here then for each different "
-                            "combination of values of those macros a separate bulk will be created. This can be used "
-                            "in combination with the grouping by folder, host etc. Omit any leading underscore. "
-                            "<b>Note</b>: If you are using "
-                            "Nagios as a core you need to make sure that the values of the required macros are "
-                            "present in the notification context. This is done in <tt>check_mk_templates.cfg</tt>. If you "
-                            "macro is <tt>_FOO</tt> then you need to add the variables <tt>NOTIFY_HOST_FOO</tt> and "
-                            "<tt>NOTIFY_SERVICE_FOO</tt>."),
-                )),
-                ("bulk_subject", TextAscii(
-                    title = _("Subject for bulk notifications"),
-                    help = _("Customize the subject for bulk notifications and overwrite "
-                                "default subject <tt>Check_MK: $COUNT_NOTIFICATIONS$ notifications for HOST</tt>"
-                                " resp. <tt>Check_MK: $COUNT_NOTIFICATIONS$ notifications for $COUNT_HOSTS$ hosts</tt>. "
-                                "Both macros <tt>$COUNT_NOTIFICATIONS$</tt> and <tt>$COUNT_HOSTS$</tt> can be used in "
-                                "any customized subject. If <tt>$COUNT_NOTIFICATIONS$</tt> is used, the amount of "
-                                "notifications will be inserted and if you use <tt>$COUNT_HOSTS$</tt> then the "
-                                "amount of hosts will be applied."),
-                    size = 80,
-                    default_value = "Check_MK: $COUNT_NOTIFICATIONS$ notifications for $COUNT_HOSTS$ hosts"
-                )),
-    ]
-
-    return Dictionary(
-        title = _("Rule Properties"),
-        elements = rule_option_elements()
-            + section_override
-            + rule_match_conditions()
-            + section_contacts
-            + [
-                # Notification
-                ( "notify_plugin",
-                watolib.get_vs_notification_methods(),
-                ),
-                ("bulk", Transform(
-                    CascadingDropdown(
-                        title = "Notification Bulking",
-                        orientation = "vertical",
-                        choices = [
-                            ("always", _("Always bulk"), Dictionary(
-                                help = _("Enabling the bulk notifications will collect several subsequent notifications "
-                                        "for the same contact into one single notification, which lists of all the "
-                                        "actual problems, e.g. in a single email. This cuts down the number of notifications "
-                                        "in cases where many (related) problems occur within a short time."),
-                                elements = [
-                                    ( "interval", Age(
-                                        title = _("Time horizon"),
-                                        label = _("Bulk up to"),
-                                        help = _("Notifications are kept back for bulking at most for this time."),
-                                        default_value = 60,
-                                    )),
-                                    ] + bulk_options,
-                                columns = 1,
-                                optional_keys = ["bulk_subject"],
-                            )),
-                            ("timeperiod", _("Bulk during timeperiod"), Dictionary(
-                                help = _("By enabling this option notifications will be bulked only if the "
-                                        "specified timeperiod is active. When the timeperiod ends a "
-                                        "bulk containing all notifications that appeared during that time "
-                                        "will be sent. "
-                                        "If bulking should be enabled outside of the timeperiod as well, "
-                                        "the option \"Also Bulk outside of timeperiod\" can be used."),
-                                elements = [
-                                    ("timeperiod",
-                                    TimeperiodSelection(
-                                        title = _("Only bulk notifications during the following timeperiod"),
-                                    )),
-                                ] + bulk_options + [
-                                    ("bulk_outside", Dictionary(
-                                        title = _("Also bulk outside of timeperiod"),
-                                        help = _("By enabling this option notifications will be bulked "
-                                                "outside of the defined timeperiod as well."),
-                                        elements = [
-                                            ( "interval", Age(
-                                                title = _("Time horizon"),
-                                                label = _("Bulk up to"),
-                                                help = _("Notifications are kept back for bulking at most for this time."),
-                                                default_value = 60,
-                                            )),
-                                            ] + bulk_options,
-                                        columns = 1,
-                                        optional_keys = ["bulk_subject"],
-                                    )),
-                                ],
-                                columns = 1,
-                                optional_keys = ["bulk_subject", "bulk_outside"],
-                            )),
-                        ],
+        return [
+           ( "match_escalation",
+             Tuple(
+                 title = _("Restrict to n<sup>th</sup> to m<sup>th</sup> notification"),
+                 orientation = "float",
+                 elements = [
+                     Integer(
+                         label = _("from"),
+                         help = _("Let through notifications counting from this number. "
+                                  "For normal alerts The first notification has the number 1. "
+                                  "For custom notifications the number is 0."),
+                         default_value = 0,
+                         minvalue = 0,
+                         maxvalue = 999999,
+                     ),
+                     Integer(
+                         label = _("to"),
+                         help = _("Let through notifications counting upto this number"),
+                         default_value = 999999,
+                         minvalue = 1,
+                         maxvalue = 999999,
+                     ),
+               ],
+             ),
+           ),
+           ( "match_escalation_throttle",
+             Tuple(
+                 title = _("Throttle periodic notifications"),
+                 help = _("This match option allows you to throttle periodic notifications after "
+                          "a certain number of notifications have been created by the monitoring "
+                          "core. If you for example select 10 as the beginning and 5 as the rate "
+                          "then you will receive the notification 1 through 10 and then 15, 20, "
+                          "25... and so on. Note that recovery notifications are not affected by throttling."),
+                 orientation = "float",
+                 elements = [
+                    Integer(
+                        label = _("beginning from notification number"),
+                        default_value = 10,
+                        minvalue = 1,
                     ),
-                    forth = lambda x: x if isinstance(x, tuple) else ("always", x)
-                )),
-        ],
-        optional_keys = [ "match_site", "match_folder", "match_hosttags", "match_hostgroups", "match_hosts", "match_exclude_hosts",
-                          "match_servicegroups", "match_exclude_servicegroups", "match_servicegroups_regex", "match_exclude_servicegroups_regex",
-                          "match_services", "match_exclude_services",
-                          "match_contacts", "match_contactgroups",
-                          "match_plugin_output",
-                          "match_timeperiod", "match_escalation", "match_escalation_throttle",
-                          "match_sl", "match_host_event", "match_service_event", "match_ec", "match_notification_comment",
-                          "match_checktype", "bulk", "contact_users", "contact_groups", "contact_emails",
-                          "contact_match_macros", "contact_match_groups" ],
-        headers = [
-            ( _("Rule Properties"), [ "description", "comment", "disabled", "docu_url", "allow_disable" ] ),
-            ( _("Notification Method"), [ "notify_plugin", "notify_method", "bulk" ] ),]
-            + contact_headers
-            + [
-            ( _("Conditions"),         [ "match_site", "match_folder", "match_hosttags", "match_hostgroups",
-                                         "match_hosts", "match_exclude_hosts", "match_servicegroups",
-                                         "match_exclude_servicegroups", "match_servicegroups_regex", "match_exclude_servicegroups_regex",
-                                         "match_services", "match_exclude_services",
-                                         "match_checktype",
-                                         "match_contacts", "match_contactgroups",
-                                         "match_plugin_output",
-                                         "match_timeperiod",
-                                         "match_escalation", "match_escalation_throttle",
-                                         "match_sl", "match_host_event", "match_service_event", "match_ec", "match_notification_comment" ] ),
-        ],
-        render = "form",
-        form_narrow = True,
-        validate = validate_notification_rule,
-    )
-
-
-def site_rule_match_condition():
-    return (
-        "match_site",
-        DualListChoice(
-            title = _("Match site"),
-            help = _("This condition makes the rule match only hosts of "
-                     "the selected sites."),
-            choices = config.site_attribute_choices,
-        ),
-    )
-
-
-def single_folder_rule_match_condition():
-    return (
-        "match_folder",
-        FolderChoice(
-            title = _("Match folder"),
-            help = _("This condition makes the rule match only hosts that are managed "
-                    "via WATO and that are contained in this folder - either directly "
-                    "or in one of its subfolders."),
-        ),
-    )
-
-
-def multi_folder_rule_match_condition():
-    return (
-        "match_folders",
-        ListOf(
-            FullPathFolderChoice(
-                title = _("Folder"),
-                help = _("This condition makes the rule match only hosts that are managed "
-                         "via WATO and that are contained in this folder - either directly "
-                         "or in one of its subfolders."),
-            ),
-            add_label = _("Add additional folder"),
-            title = _("Match folders"),
-            movable = False
-        ),
-    )
-
-
-def common_host_rule_match_conditions():
-    return [
-        ( "match_hosttags",
-        watolib.HostTagCondition(
-            title = _("Match Host Tags"))
-        ),
-        ( "match_hostgroups",
-        userdb.GroupChoice("host",
-            title = _("Match Host Groups"),
-            help = _("The host must be in one of the selected host groups"),
-            allow_empty = False,
-        )
-        ),
-        ( "match_hosts",
-        ListOfStrings(
-            title = _("Match only the following hosts"),
-            size = 24,
-            orientation = "horizontal",
-            allow_empty = False,
-            empty_text = _("Please specify at least one host. Disable the option if you want to allow all hosts."),
-        )
-        ),
-        ( "match_exclude_hosts",
-        ListOfStrings(
-            title = _("Exclude the following hosts"),
-            size = 24,
-            orientation = "horizontal",
-        )
-        )
-    ]
-
-
-def simple_host_rule_match_conditions():
-    return [
-        site_rule_match_condition(),
-        single_folder_rule_match_condition()
-    ] + common_host_rule_match_conditions()
-
-
-def multifolder_host_rule_match_conditions():
-    return [
-        site_rule_match_condition(),
-        multi_folder_rule_match_condition()
-    ] + common_host_rule_match_conditions()
-
-
-def transform_simple_to_multi_host_rule_match_conditions(value):
-    if value and "match_folder" in value:
-        value["match_folders"] = [value.pop("match_folder")]
-    return value
-
-
-def generic_rule_match_conditions():
-    return simple_host_rule_match_conditions() + [
-        ( "match_servicegroups",
-          userdb.GroupChoice("service",
-              title = _("Match Service Groups"),
-              help = _("The service must be in one of the selected service groups. For host events this condition "
-                       "never matches as soon as at least one group is selected."),
-              allow_empty = False,
-          )
-        ),
-        ( "match_exclude_servicegroups",
-          userdb.GroupChoice("service",
-              title = _("Exclude Service Groups"),
-              help = _("The service must not be in one of the selected service groups. For host events this condition "
-                       "is simply ignored."),
-              allow_empty = False,
-          )
-        ),
-        ( "match_servicegroups_regex",
-          Tuple(
-                title = _("Match Service Groups (regex)"),
-                elements = [
-                DropdownChoice(
-                    choices = [
-                        ( "match_id",    _("Match the internal identifier")),
-                        ( "match_alias", _("Match the alias"))
-                    ],
-                    default = "match_id"
-                  ),
-                  ListOfStrings(
-                      help = _("The service group alias must match one of the following regular expressions."
-                               " For host events this condition never matches as soon as at least one group is selected."),
-                      valuespec = RegExpUnicode(
-                          size = 32,
-                          mode = RegExpUnicode.infix,
-                      ),
-                      orientation = "horizontal",
-                  )
-                ]
-          )
-        ),
-        ( "match_exclude_servicegroups_regex",
-          Tuple(
-                title = _("Exclude Service Groups (regex)"),
-                elements = [
-                  DropdownChoice(
-                    choices = [
-                        ( "match_id",    _("Match the internal identifier")),
-                        ( "match_alias", _("Match the alias"))
-                    ],
-                    default = "match_id"
-                  ),
-                  ListOfStrings(
-                      help = _("The service group alias must not match one of the following regular expressions. "
-                               "For host events this condition is simply ignored."),
-                      valuespec = RegExpUnicode(
-                          size = 32,
-                          mode = RegExpUnicode.infix,
-                      ),
-                      orientation = "horizontal",
-                  )
-                ]
-          )
-        ),
-        ( "match_services",
-          ListOfStrings(
-              title = _("Match only the following services"),
-              help = _("Specify a list of regular expressions that must match the <b>beginning</b> of the "
-                       "service name in order for the rule to match. Note: Host notifications never match this "
-                       "rule if this option is being used."),
-              valuespec = RegExpUnicode(
-                  size = 32,
-                  mode = RegExpUnicode.prefix,
-              ),
-              orientation = "horizontal",
-              allow_empty = False,
-              empty_text = _("Please specify at least one service regex. Disable the option if you want to allow all services."),
-          )
-        ),
-        ( "match_exclude_services",
-          ListOfStrings(
-              title = _("Exclude the following services"),
-              valuespec = RegExpUnicode(
-                  size = 32,
-                  mode = RegExpUnicode.prefix,
-              ),
-              orientation = "horizontal",
-          )
-        ),
-        ( "match_checktype",
-          CheckTypeSelection(
-              title = _("Match the following check types"),
-              help = _("Only apply the rule if the notification originates from certain types of check plugins. "
-                       "Note: Host notifications never match this rule if this option is being used."),
-          )
-        ),
-        ( "match_plugin_output",
-          RegExp(
-             title = _("Match the output of the check plugin"),
-             help = _("This text is a regular expression that is being searched in the output "
-                      "of the check plugins that produced the alert. It is not a prefix but an infix match."),
-             mode = RegExpUnicode.prefix,
-          ),
-        ),
-        ( "match_contacts",
-          ListOf(
-              UserSelection(only_contacts = True),
-                  title = _("Match Contacts"),
-                  help = _("The host/service must have one of the selected contacts."),
-                  movable = False,
-                  allow_empty = False,
-                  add_label = _("Add contact"),
-          )
-        ),
-        ( "match_contactgroups",
-          userdb.GroupChoice("contact",
-              title = _("Match Contact Groups"),
-              help = _("The host/service must be in one of the selected contact groups. This only works with Check_MK Micro Core. " \
-                       "If you don't use the CMC that filter will not apply"),
-              allow_empty = False,
-          )
-        ),
-        ( "match_sl",
-          Tuple(
-            title = _("Match service level"),
-            help = _("Host or service must be in the following service level to get notification"),
-            orientation = "horizontal",
-            show_titles = False,
-            elements = [
-              DropdownChoice(label = _("from:"),  choices = watolib.service_levels, prefix_values = True),
-              DropdownChoice(label = _(" to:"),  choices = watolib.service_levels, prefix_values = True),
-            ],
-          ),
-        ),
-        ( "match_timeperiod",
-          TimeperiodSelection(
-              title = _("Match only during timeperiod"),
-              help = _("Match this rule only during times where the selected timeperiod from the monitoring "
-                       "system is active."),
-              no_preselect = True,
-              no_preselect_title = _("Select a timeperiod"),
-          ),
-        ),
-    ]
-
-
-# flavour = "notify" or "alert"
-def event_rule_match_conditions(flavour):
-    if flavour == "notify":
-        add_choices = [
-            ( 'f', _("Start or end of flapping state")),
-            ( 's', _("Start or end of a scheduled downtime")),
-            ( 'x', _("Acknowledgement of problem")),
-            ( 'as', _("Alert handler execution, successful")),
-            ( 'af', _("Alert handler execution, failed")),
-        ]
-        add_default = [ 'f', 's', 'x', 'as', 'af' ]
-    else:
-        add_choices = []
-        add_default = []
-
-    return [
-       ( "match_host_event",
-          ListChoice(
-               title = _("Match host event type"),
-               help = _("Select the host event types and transitions this rule should handle.<br>"
-                        "Note: If you activate this option and do <b>not</b> also specify service event "
-                        "types then this rule will never hold for service notifications!<br>"
-                        "Note: You can only match on event types <a href=\"%s\">created by the core</a>.") % \
-                            "wato.py?mode=edit_ruleset&varname=extra_host_conf%3Anotification_options",
-               choices = [
-                   ( 'rd', _("UP")          + u" ➤ " + _("DOWN")),
-                   ( 'ru', _("UP")          + u" ➤ " + _("UNREACHABLE")),
-
-                   ( 'dr', _("DOWN")        + u" ➤ " + _("UP")),
-                   ( 'du', _("DOWN")        + u" ➤ " + _("UNREACHABLE")),
-
-                   ( 'ud', _("UNREACHABLE") + u" ➤ " + _("DOWN")),
-                   ( 'ur', _("UNREACHABLE") + u" ➤ " + _("UP")),
-
-                   ( '?r', _("any")         + u" ➤ " + _("UP")),
-                   ( '?d', _("any")         + u" ➤ " + _("DOWN")),
-                   ( '?u', _("any")         + u" ➤ " + _("UNREACHABLE")),
-               ] + add_choices,
-               default_value = [ 'rd', 'dr', ] + add_default,
-         )
-       ),
-       ( "match_service_event",
-           ListChoice(
-               title = _("Match service event type"),
-                help  = _("Select the service event types and transitions this rule should handle.<br>"
-                          "Note: If you activate this option and do <b>not</b> also specify host event "
-                          "types then this rule will never hold for host notifications!<br>"
-                          "Note: You can only match on event types <a href=\"%s\">created by the core</a>.") % \
-                            "wato.py?mode=edit_ruleset&varname=extra_service_conf%3Anotification_options",
-               choices = [
-                   ( 'rw', _("OK")      + u" ➤ " + _("WARN")),
-                   ( 'rr', _("OK")      + u" ➤ " + _("OK")),
-
-                   ( 'rc', _("OK")      + u" ➤ " + _("CRIT")),
-                   ( 'ru', _("OK")      + u" ➤ " + _("UNKNOWN")),
-
-                   ( 'wr', _("WARN")    + u" ➤ " + _("OK")),
-                   ( 'wc', _("WARN")    + u" ➤ " + _("CRIT")),
-                   ( 'wu', _("WARN")    + u" ➤ " + _("UNKNOWN")),
-
-                   ( 'cr', _("CRIT")    + u" ➤ " + _("OK")),
-                   ( 'cw', _("CRIT")    + u" ➤ " + _("WARN")),
-                   ( 'cu', _("CRIT")    + u" ➤ " + _("UNKNOWN")),
-
-                   ( 'ur', _("UNKNOWN") + u" ➤ " + _("OK")),
-                   ( 'uw', _("UNKNOWN") + u" ➤ " + _("WARN")),
-                   ( 'uc', _("UNKNOWN") + u" ➤ " + _("CRIT")),
-
-                   ( '?r', _("any") + u" ➤ " + _("OK")),
-                   ( '?w', _("any") + u" ➤ " + _("WARN")),
-                   ( '?c', _("any") + u" ➤ " + _("CRIT")),
-                   ( '?u', _("any") + u" ➤ " + _("UNKNOWN")),
-
-               ] + add_choices,
-               default_value = [ 'rw', 'rc', 'ru', 'wc', 'wu', 'uc', ] + add_default,
-          )
-        ),
-    ]
-
-
-def rule_match_conditions():
-    return generic_rule_match_conditions() \
-        + event_rule_match_conditions(flavour="notify") \
-        + notification_rule_match_conditions()
-
-
-def notification_rule_match_conditions():
-    def transform_ec_rule_id_match(val):
-        if isinstance(val, list):
-            return val
-        else:
-            return [val]
-
-    return [
-       ( "match_escalation",
-         Tuple(
-             title = _("Restrict to n<sup>th</sup> to m<sup>th</sup> notification"),
-             orientation = "float",
-             elements = [
-                 Integer(
-                     label = _("from"),
-                     help = _("Let through notifications counting from this number. "
-                              "For normal alerts The first notification has the number 1. "
-                              "For custom notifications the number is 0."),
-                     default_value = 0,
-                     minvalue = 0,
-                     maxvalue = 999999,
-                 ),
-                 Integer(
-                     label = _("to"),
-                     help = _("Let through notifications counting upto this number"),
-                     default_value = 999999,
-                     minvalue = 1,
-                     maxvalue = 999999,
-                 ),
-           ],
-         ),
-       ),
-       ( "match_escalation_throttle",
-         Tuple(
-             title = _("Throttle periodic notifications"),
-             help = _("This match option allows you to throttle periodic notifications after "
-                      "a certain number of notifications have been created by the monitoring "
-                      "core. If you for example select 10 as the beginning and 5 as the rate "
-                      "then you will receive the notification 1 through 10 and then 15, 20, "
-                      "25... and so on. Note that recovery notifications are not affected by throttling."),
-             orientation = "float",
-             elements = [
-                Integer(
-                    label = _("beginning from notification number"),
-                    default_value = 10,
-                    minvalue = 1,
-                ),
-                Integer(
-                    label = _("send only every"),
-                    default_value = 5,
-                    unit = _("th notification"),
-                    minvalue = 1,
-               )
-             ],
-         )
-       ),
-        ( "match_notification_comment",
-          RegExpUnicode(
-             title = _("Match notification comment"),
-             help = _("This match only makes sense for custom notifications. When a user creates "
-                      "a custom notification then he/she can enter a comment. This comment is shipped "
-                      "in the notification context variable <tt>NOTIFICATIONCOMMENT</tt>. Here you can "
-                      "make a condition of that comment. It is a regular expression matching the beginning "
-                      "of the comment."),
-             size = 60,
-             mode = RegExpUnicode.prefix,
-        )),
-        ( "match_ec",
-          Alternative(
-              title = _("Event Console alerts"),
-              help = _("The Event Console can have events create notifications in Check_MK. "
-                       "These notifications will be processed by the rule based notification "
-                       "system of Check_MK. This matching option helps you distinguishing "
-                       "and also gives you access to special event fields."),
-              style = "dropdown",
-              elements = [
-                   FixedValue(False, title = _("Do not match Event Console alerts"), totext=""),
-                   Dictionary(
-                       title = _("Match only Event Console alerts"),
-                       elements = [
-                           ( "match_rule_id",
-                            Transform(
-                                ListOf(
-                                    ID(title = _("Match event rule"), label = _("Rule ID:"), size=12, allow_empty=False),
-                                    add_label = _("Add Rule ID"),
-                                    title = _("Rule IDs")
-                                ),
-                                forth = transform_ec_rule_id_match,
-                            )
-                           ),
-                           ( "match_priority",
-                             Tuple(
-                                 title = _("Match syslog priority"),
-                                 help = _("Define a range of syslog priorities this rule matches"),
-                                 orientation = "horizontal",
-                                 show_titles = False,
-                                 elements = [
-                                    DropdownChoice(label = _("from:"), choices = mkeventd.syslog_priorities, default_value = 4),
-                                    DropdownChoice(label = _(" to:"),   choices = mkeventd.syslog_priorities, default_value = 0),
-                                 ],
-                             ),
-                           ),
-                           ( "match_facility",
-                             DropdownChoice(
-                                 title = _("Match syslog facility"),
-                                 help = _("Make the rule match only if the event has a certain syslog facility. "
-                                          "Messages not having a facility are classified as <tt>user</tt>."),
-                                 choices = mkeventd.syslog_facilities,
-                             )
-                           ),
-                           ( "match_comment",
-                             RegExpUnicode(
-                                 title = _("Match event comment"),
-                                 help = _("This is a regular expression for matching the event's comment."),
-                                 mode = RegExpUnicode.prefix,
-                             )
-                           ),
-                       ]
+                    Integer(
+                        label = _("send only every"),
+                        default_value = 5,
+                        unit = _("th notification"),
+                        minvalue = 1,
                    )
-              ]
-          )
-        )
-    ]
+                 ],
+             )
+           ),
+            ( "match_notification_comment",
+              RegExpUnicode(
+                 title = _("Match notification comment"),
+                 help = _("This match only makes sense for custom notifications. When a user creates "
+                          "a custom notification then he/she can enter a comment. This comment is shipped "
+                          "in the notification context variable <tt>NOTIFICATIONCOMMENT</tt>. Here you can "
+                          "make a condition of that comment. It is a regular expression matching the beginning "
+                          "of the comment."),
+                 size = 60,
+                 mode = RegExpUnicode.prefix,
+            )),
+            ( "match_ec",
+              Alternative(
+                  title = _("Event Console alerts"),
+                  help = _("The Event Console can have events create notifications in Check_MK. "
+                           "These notifications will be processed by the rule based notification "
+                           "system of Check_MK. This matching option helps you distinguishing "
+                           "and also gives you access to special event fields."),
+                  style = "dropdown",
+                  elements = [
+                       FixedValue(False, title = _("Do not match Event Console alerts"), totext=""),
+                       Dictionary(
+                           title = _("Match only Event Console alerts"),
+                           elements = [
+                               ( "match_rule_id",
+                                Transform(
+                                    ListOf(
+                                        ID(title = _("Match event rule"), label = _("Rule ID:"), size=12, allow_empty=False),
+                                        add_label = _("Add Rule ID"),
+                                        title = _("Rule IDs")
+                                    ),
+                                    forth = transform_ec_rule_id_match,
+                                )
+                               ),
+                               ( "match_priority",
+                                 Tuple(
+                                     title = _("Match syslog priority"),
+                                     help = _("Define a range of syslog priorities this rule matches"),
+                                     orientation = "horizontal",
+                                     show_titles = False,
+                                     elements = [
+                                        DropdownChoice(label = _("from:"), choices = mkeventd.syslog_priorities, default_value = 4),
+                                        DropdownChoice(label = _(" to:"),   choices = mkeventd.syslog_priorities, default_value = 0),
+                                     ],
+                                 ),
+                               ),
+                               ( "match_facility",
+                                 DropdownChoice(
+                                     title = _("Match syslog facility"),
+                                     help = _("Make the rule match only if the event has a certain syslog facility. "
+                                              "Messages not having a facility are classified as <tt>user</tt>."),
+                                     choices = mkeventd.syslog_facilities,
+                                 )
+                               ),
+                               ( "match_comment",
+                                 RegExpUnicode(
+                                     title = _("Match event comment"),
+                                     help = _("This is a regular expression for matching the event's comment."),
+                                     mode = RegExpUnicode.prefix,
+                                 )
+                               ),
+                           ]
+                       )
+                  ]
+              )
+            )
+        ]
 
 
-def validate_notification_rule(rule, varprefix):
-    if "bulk" in rule and rule["notify_plugin"][1] == None:
-        raise MKUserError(varprefix + "_p_bulk_USE",
-             _("It does not make sense to add a bulk configuration for cancelling rules."))
-
-    if "bulk" in rule or "bulk_period" in rule:
-        if rule["notify_plugin"][0]:
-            info = load_notification_scripts()[rule["notify_plugin"][0]]
-            if not info["bulk"]:
-                raise MKUserError(varprefix + "_p_notify_plugin",
-                      _("The notification script %s does not allow bulking.") % info["title"])
-        else:
-            raise MKUserError(varprefix + "_p_notify_plugin",
-                  _("Legacy ASCII Emails do not support bulking. You can either disable notification "
-                    "bulking or choose another notification plugin which allows bulking."))
-
-
-def render_notification_rules(rules, userid="", show_title=False, show_buttons=True,
-                              analyse=False, start_nr=0, profilemode=False):
-    if not rules:
-        html.message(_("You have not created any rules yet."))
-        return
-
-    vs_match_conditions = Dictionary(
-        elements = rule_match_conditions()
-    )
-
-    if rules:
-        if not show_title:
-            title = ""
-        elif profilemode:
-            title = _("Notification rules")
-        elif userid:
-            url = html.makeuri([("mode", "user_notifications"), ("user", userid)])
-            code = html.render_icon_button(url, _("Edit this user's notifications"), "edit")
-            title = code + _("Notification rules of user %s") % userid
-        else:
-            title = _("Global notification rules")
-        table.begin(title = title, limit = None, sortable=False)
-
-        if analyse:
-            analyse_rules, analyse_plugins = analyse
-
-        # have_match = False
-        for nr, rule in enumerate(rules):
-            table.row()
-
-            # Analyse
-            if analyse:
-                table.cell(css="buttons")
-                what, anarule, reason = analyse_rules[nr + start_nr]
-                if what == "match":
-                    html.icon(_("This rule matches"), "rulematch")
-                elif what == "miss":
-                    html.icon(_("This rule does not match: %s") % reason, "rulenmatch")
-
-            if profilemode:
-                listmode = "user_notifications_p"
-            elif userid:
-                listmode = "user_notifications"
-            else:
-                listmode = "notifications"
-
-            if show_buttons:
-                anavar = html.var("analyse", "")
-                delete_url = make_action_link([("mode", listmode), ("user", userid), ("_delete", nr)])
-                drag_url   = make_action_link([("mode", listmode), ("analyse", anavar), ("user", userid), ("_move", nr)])
-                suffix     = "_p" if profilemode else ""
-                edit_url   = watolib.folder_preserving_link([("mode", "notification_rule" + suffix), ("edit", nr), ("user", userid)])
-                clone_url  = watolib.folder_preserving_link([("mode", "notification_rule" + suffix), ("clone", nr), ("user", userid)])
-
-                table.cell(_("Actions"), css="buttons")
-                html.icon_button(edit_url, _("Edit this notification rule"), "edit")
-                html.icon_button(clone_url, _("Create a copy of this notification rule"), "clone")
-                html.element_dragger_url("tr", base_url=drag_url)
-                html.icon_button(delete_url, _("Delete this notification rule"), "delete")
-            else:
-                table.cell("", css="buttons")
-                for x in range(4):
-                    html.empty_icon_button()
-
-            table.cell("", css="narrow")
-            if rule.get("disabled"):
-                html.icon(_("This rule is currently disabled and will not be applied"), "disabled")
-            else:
-                html.empty_icon_button()
-
-            notify_method = rule["notify_plugin"]
-            # Catch rules with empty notify_plugin key
-            # Maybe this should be avoided somewhere else (e.g. rule editor)
-            if not notify_method:
-                notify_method = ( None, [] )
-            notify_plugin = notify_method[0]
-
-            table.cell(_("Type"), css="narrow")
-            if notify_method[1] == None:
-                html.icon(_("Cancel notifications for this plugin type"), "notify_cancel")
-            else:
-                html.icon(_("Create a notification"), "notify_create")
-
-            table.cell(_("Plugin"), notify_plugin or _("Plain Email"), css="narrow nowrap")
-
-            table.cell(_("Bulk"), css="narrow")
-            if "bulk" in rule or "bulk_period" in rule:
-                html.icon(_("This rule configures bulk notifications."), "bulk")
-
-            table.cell(_("Description"))
-            url = rule.get("docu_url")
-            if url:
-                html.icon_button(url, _("Context information about this rule"), "url", target="_blank")
-                html.write("&nbsp;")
-            html.write_text(rule["description"])
-            table.cell(_("Contacts"))
-            infos = []
-            if rule.get("contact_object"):
-                infos.append(_("all contacts of the notified object"))
-            if rule.get("contact_all"):
-                infos.append(_("all users"))
-            if rule.get("contact_all_with_email"):
-                infos.append(_("all users with and email address"))
-            if rule.get("contact_users"):
-                infos.append(_("users: ") + (", ".join(rule["contact_users"])))
-            if rule.get("contact_groups"):
-                infos.append(_("contact groups: ") + (", ".join(rule["contact_groups"])))
-            if rule.get("contact_emails"):
-                infos.append(_("email addresses: ") + (", ".join(rule["contact_emails"])))
-            if not infos:
-                html.i(_("(no one)"))
-
-            else:
-                for line in infos:
-                    html.write("&bullet; %s" % line)
-                    html.br()
-
-            table.cell(_("Conditions"), css="rule_conditions")
-            num_conditions = len([key for key in rule if key.startswith("match_")])
-            if num_conditions:
-                title = _("%d conditions") % num_conditions
-                html.begin_foldable_container(treename="rule_%d" % nr,
-                    id="%s" % nr,
-                    isopen=False,
-                    title=title,
-                    indent=False,
-                    tree_img="tree_black",
-                )
-                html.write(vs_match_conditions.value_to_text(rule))
-                html.end_foldable_container()
-            else:
-                html.i(_("(no conditions)"))
-
-        table.end()
-
-
-def add_notify_change(action_name, text):
-    add_change(action_name, text, need_restart=False)
-
-
-def generic_rule_list_actions(rules, what, what_title, save_rules):
-    if html.has_var("_delete"):
-        nr = int(html.var("_delete"))
-        rule = rules[nr]
-        c = wato_confirm(_("Confirm deletion of %s") % what_title,
-                         _("Do you really want to delete the %s <b>%d</b> <i>%s</i>?") %
-                           (what_title, nr, rule.get("description","")))
-        if c:
-            add_notify_change(what + "-delete-rule", _("Deleted %s %d") % (what_title, nr))
-            del rules[nr]
-            save_rules(rules)
-        elif c == False:
-            return ""
-        else:
+    def _render_notification_rules(self, rules, userid="", show_title=False, show_buttons=True,
+                                    analyse=False, start_nr=0, profilemode=False):
+        if not rules:
+            html.message(_("You have not created any rules yet."))
             return
 
-    elif html.has_var("_move"):
-        if html.check_transaction():
-            from_pos = html.get_integer_input("_move")
-            to_pos = html.get_integer_input("_index")
-            rule = rules[from_pos]
-            del rules[from_pos] # make to_pos now match!
-            rules[to_pos:to_pos] = [rule]
-            save_rules(rules)
-            add_notify_change(what + "-move-rule",
-                _("Changed position of %s %d") % (what_title, from_pos))
+        vs_match_conditions = Dictionary(
+            elements = self._rule_match_conditions()
+        )
+
+        if rules:
+            if not show_title:
+                title = ""
+            elif profilemode:
+                title = _("Notification rules")
+            elif userid:
+                url = html.makeuri([("mode", "user_notifications"), ("user", userid)])
+                code = html.render_icon_button(url, _("Edit this user's notifications"), "edit")
+                title = code + _("Notification rules of user %s") % userid
+            else:
+                title = _("Global notification rules")
+            table.begin(title=title, limit=None, sortable=False)
+
+            if analyse:
+                analyse_rules, analyse_plugins = analyse
+
+            # have_match = False
+            for nr, rule in enumerate(rules):
+                table.row()
+
+                # Analyse
+                if analyse:
+                    table.cell(css="buttons")
+                    what, anarule, reason = analyse_rules[nr + start_nr]
+                    if what == "match":
+                        html.icon(_("This rule matches"), "rulematch")
+                    elif what == "miss":
+                        html.icon(_("This rule does not match: %s") % reason, "rulenmatch")
+
+                if profilemode:
+                    listmode = "user_notifications_p"
+                elif userid:
+                    listmode = "user_notifications"
+                else:
+                    listmode = "notifications"
+
+                if show_buttons:
+                    anavar = html.var("analyse", "")
+                    delete_url = make_action_link([("mode", listmode), ("user", userid), ("_delete", nr)])
+                    drag_url   = make_action_link([("mode", listmode), ("analyse", anavar), ("user", userid), ("_move", nr)])
+                    suffix     = "_p" if profilemode else ""
+                    edit_url   = watolib.folder_preserving_link([("mode", "notification_rule" + suffix), ("edit", nr), ("user", userid)])
+                    clone_url  = watolib.folder_preserving_link([("mode", "notification_rule" + suffix), ("clone", nr), ("user", userid)])
+
+                    table.cell(_("Actions"), css="buttons")
+                    html.icon_button(edit_url, _("Edit this notification rule"), "edit")
+                    html.icon_button(clone_url, _("Create a copy of this notification rule"), "clone")
+                    html.element_dragger_url("tr", base_url=drag_url)
+                    html.icon_button(delete_url, _("Delete this notification rule"), "delete")
+                else:
+                    table.cell("", css="buttons")
+                    for x in range(4):
+                        html.empty_icon_button()
+
+                table.cell("", css="narrow")
+                if rule.get("disabled"):
+                    html.icon(_("This rule is currently disabled and will not be applied"), "disabled")
+                else:
+                    html.empty_icon_button()
+
+                notify_method = rule["notify_plugin"]
+                # Catch rules with empty notify_plugin key
+                # Maybe this should be avoided somewhere else (e.g. rule editor)
+                if not notify_method:
+                    notify_method = ( None, [] )
+                notify_plugin = notify_method[0]
+
+                table.cell(_("Type"), css="narrow")
+                if notify_method[1] == None:
+                    html.icon(_("Cancel notifications for this plugin type"), "notify_cancel")
+                else:
+                    html.icon(_("Create a notification"), "notify_create")
+
+                table.cell(_("Plugin"), notify_plugin or _("Plain Email"), css="narrow nowrap")
+
+                table.cell(_("Bulk"), css="narrow")
+                if "bulk" in rule or "bulk_period" in rule:
+                    html.icon(_("This rule configures bulk notifications."), "bulk")
+
+                table.cell(_("Description"))
+                url = rule.get("docu_url")
+                if url:
+                    html.icon_button(url, _("Context information about this rule"), "url", target="_blank")
+                    html.write("&nbsp;")
+                html.write_text(rule["description"])
+                table.cell(_("Contacts"))
+                infos = []
+                if rule.get("contact_object"):
+                    infos.append(_("all contacts of the notified object"))
+                if rule.get("contact_all"):
+                    infos.append(_("all users"))
+                if rule.get("contact_all_with_email"):
+                    infos.append(_("all users with and email address"))
+                if rule.get("contact_users"):
+                    infos.append(_("users: ") + (", ".join(rule["contact_users"])))
+                if rule.get("contact_groups"):
+                    infos.append(_("contact groups: ") + (", ".join(rule["contact_groups"])))
+                if rule.get("contact_emails"):
+                    infos.append(_("email addresses: ") + (", ".join(rule["contact_emails"])))
+                if not infos:
+                    html.i(_("(no one)"))
+
+                else:
+                    for line in infos:
+                        html.write("&bullet; %s" % line)
+                        html.br()
+
+                table.cell(_("Conditions"), css="rule_conditions")
+                num_conditions = len([key for key in rule if key.startswith("match_")])
+                if num_conditions:
+                    title = _("%d conditions") % num_conditions
+                    html.begin_foldable_container(treename="rule_%d" % nr,
+                        id="%s" % nr,
+                        isopen=False,
+                        title=title,
+                        indent=False,
+                        tree_img="tree_black",
+                    )
+                    html.write(vs_match_conditions.value_to_text(rule))
+                    html.end_foldable_container()
+                else:
+                    html.i(_("(no conditions)"))
+
+            table.end()
+
+
+    def _add_change(self, log_what, log_text):
+        add_change(log_what, log_text, need_restart=False)
+
+
+    def _vs_notification_bulkby(self):
+        return ListChoice(
+          title = _("Create separate notification bulks based on"),
+          choices = [
+            ( "folder",     _("Folder") ),
+            ( "host",       _("Host") ),
+            ( "service",    _("Service description") ),
+            ( "sl",         _("Service level") ),
+            ( "check_type", _("Check type") ),
+            ( "state",      _("Host/Service state") ),
+            ( "ec_contact", _("Event Console contact") ),
+            ( "ec_comment", _("Event Console comment") ),
+          ],
+          default_value = [ "host" ],
+        )
 
 
 
-class ModeNotifications(WatoMode):
+class ModeNotifications(NotificationsMode):
+    @classmethod
+    def name(cls):
+        return "notifications"
+
+
+    @classmethod
+    def permissions(cls):
+        return ["notifications"]
+
+
     def __init__(self):
         super(ModeNotifications, self).__init__()
         options = config.user.load_file("notification_display_options", {})
@@ -8991,7 +8420,7 @@ class ModeNotifications(WatoMode):
                 return None, _("Replayed notifiation number %d") % (nr + 1)
 
         else:
-            return generic_rule_list_actions(self._get_notification_rules(), "notification", _("notification rule"),  watolib.save_notification_rules)
+            return self._generic_rule_list_actions(self._get_notification_rules(), "notification", _("notification rule"),  watolib.save_notification_rules)
 
 
     def _get_notification_rules(self):
@@ -9215,7 +8644,7 @@ class ModeNotifications(WatoMode):
 
         start_nr = 0
         rules= self._get_notification_rules()
-        render_notification_rules(rules, show_title = True, analyse=analyse, start_nr = start_nr)
+        self._render_notification_rules(rules, show_title = True, analyse=analyse, start_nr = start_nr)
         start_nr += len(rules)
 
         if self._show_user_rules:
@@ -9226,7 +8655,7 @@ class ModeNotifications(WatoMode):
                 user = users[userid]
                 user_rules = user.get("notification_rules", [])
                 if user_rules:
-                    render_notification_rules(user_rules, userid, show_title = True, show_buttons = False, analyse=analyse, start_nr = start_nr)
+                    self._render_notification_rules(user_rules, userid, show_title = True, show_buttons = False, analyse=analyse, start_nr = start_nr)
                     start_nr += len(user_rules)
 
         if analyse:
@@ -9236,26 +8665,34 @@ class ModeNotifications(WatoMode):
                 if contact.startswith('mailto:'):
                     contact = contact[7:] # strip of fake-contact mailto:-prefix
                 table.cell(_("Recipient"), contact)
-                table.cell(_("Plugin"), vs_notification_scripts().value_to_text(plugin))
+                table.cell(_("Plugin"), self._vs_notification_scripts().value_to_text(plugin))
                 table.cell(_("Plugin parameters"), ", ".join(parameters))
                 table.cell(_("Bulking"))
                 if bulk:
                     html.write(_("Time horizon") + ": " + Age().value_to_text(bulk["interval"]))
                     html.write_text(", %s: %d" % (_("Maximum count"), bulk["count"]))
-                    html.write(", %s %s" % (_("group by"), vs_notification_bulkby().value_to_text(bulk["groupby"])))
+                    html.write(", %s %s" % (_("group by"), self._vs_notification_bulkby().value_to_text(bulk["groupby"])))
 
             table.end()
 
 
+    def _vs_notification_scripts(self):
+        return DropdownChoice(
+           title = _("Notification Script"),
+           choices = watolib.notification_script_choices,
+           default_value = "mail"
+        )
 
-class ModeUserNotifications(WatoMode):
+
+
+
+class UserNotificationsMode(NotificationsMode):
     def __init__(self):
-        super(ModeUserNotifications, self).__init__()
+        super(UserNotificationsMode, self).__init__()
         self._start_async_repl = False
 
 
     def _from_vars(self):
-        self.__user_id = html.get_unicode_input("user")
         self._users = userdb.load_users(lock=html.is_transaction() or html.has_var("_move"))
 
         try:
@@ -9266,8 +8703,9 @@ class ModeUserNotifications(WatoMode):
         self._rules = user.setdefault("notification_rules", [])
 
 
+    @abc.abstractmethod
     def _user_id(self):
-        return self.__user_id
+        raise NotImplementedError()
 
 
     def title(self):
@@ -9313,21 +8751,43 @@ class ModeUserNotifications(WatoMode):
                     _("Changed position of notification rule %d of user %s") % (from_pos, self._user_id()))
 
 
-    def _add_change(self, log_what, log_text):
-        add_notify_change(log_what, log_text)
-
-
     def page(self):
         if self._start_async_repl:
             user_profile_async_replication_dialog(sites=watolib.get_notification_sync_sites())
             html.h3(_('Notification Rules'))
 
-        render_notification_rules(self._rules, self._user_id(),
+        self._render_notification_rules(self._rules, self._user_id(),
             profilemode=isinstance(self, ModePersonalUserNotifications))
 
 
 
-class ModePersonalUserNotifications(ModeUserNotifications):
+class ModeUserNotifications(UserNotificationsMode):
+    @classmethod
+    def name(cls):
+        return "user_notifications"
+
+
+    @classmethod
+    def permissions(cls):
+        return ["users"]
+
+
+    def _user_id(self):
+        return html.get_unicode_input("user")
+
+
+
+class ModePersonalUserNotifications(UserNotificationsMode):
+    @classmethod
+    def name(cls):
+        return "user_notifications_p"
+
+
+    @classmethod
+    def permissions(cls):
+        return None
+
+
     def __init__(self):
         super(ModePersonalUserNotifications, self).__init__()
         config.user.need_permission("general.edit_notifications")
@@ -9342,7 +8802,7 @@ class ModePersonalUserNotifications(ModeUserNotifications):
             self._start_async_repl = True
             watolib.log_audit(None, log_what, log_text)
         else:
-            add_notify_change(log_what, log_text)
+            super(ModePersonalUserNotifications, self)._add_change(log_what, log_text)
 
 
     def title(self):
@@ -9357,16 +8817,14 @@ class ModePersonalUserNotifications(ModeUserNotifications):
 
 # TODO: Split editing of user notification rule and global notification rule
 #       into separate classes
-class ModeEditNotificationRule(WatoMode):
+class EditNotificationRuleMode(NotificationsMode):
     def __init__(self):
-        super(ModeEditNotificationRule, self).__init__()
+        super(EditNotificationRuleMode, self).__init__()
         self._start_async_repl = False
 
 
     # TODO: Refactor this
     def _from_vars(self):
-        self.__user_id = html.get_unicode_input("user")
-
         self._edit_nr = html.get_integer_input("edit", -1)
         self._clone_nr = html.get_integer_input("clone", -1)
         self._new = self._edit_nr < 0
@@ -9398,22 +8856,282 @@ class ModeEditNotificationRule(WatoMode):
 
 
     def _valuespec(self):
-        return vs_notification_rule(self._user_id())
+        return self._vs_notification_rule(self._user_id())
 
 
-    def _user_id(self):
-        return self.__user_id
-
-
-    def _add_change(self, log_what, log_text):
-        add_notify_change(log_what, log_text)
-
-
-    def _back_mode(self):
-        if self._user_id():
-            return "user_notifications"
+    # TODO: Refactor this mess
+    def _vs_notification_rule(self, userid=None):
+        if userid:
+            contact_headers = []
+            section_contacts = []
+            section_override = []
         else:
-            return "notifications"
+            contact_headers = [
+                ( _("Contact Selection"), [ "contact_all", "contact_all_with_email", "contact_object",
+                                            "contact_users", "contact_groups", "contact_emails", "contact_match_macros",
+                                            "contact_match_groups", ] ),
+            ]
+            section_contacts = [
+                # Contact selection
+                ( "contact_object",
+                  Checkbox(
+                      title = _("All contacts of the notified object"),
+                      label = _("Notify all contacts of the notified host or service."),
+                      default_value = True,
+                  )
+                ),
+                ( "contact_all",
+                  Checkbox(
+                      title = _("All users"),
+                      label = _("Notify all users"),
+                  )
+                ),
+                ( "contact_all_with_email",
+                  Checkbox(
+                      title = _("All users with an email address"),
+                      label = _("Notify all users that have configured an email address in their profile"),
+                  )
+                ),
+                ( "contact_users",
+                  ListOf(
+                      UserSelection(only_contacts = False),
+                      title = _("The following users"),
+                      help = _("Enter a list of user IDs to be notified here. These users need to be members "
+                               "of at least one contact group in order to be notified."),
+                      movable = False,
+                      add_label = _("Add user"),
+                  )
+                ),
+                ( "contact_groups",
+                  ListOf(
+                      cmk.gui.plugins.wato.GroupSelection("contact"),
+                      title = _("The members of certain contact groups"),
+                      movable = False,
+                  )
+                ),
+                ( "contact_emails",
+                  ListOfStrings(
+                      valuespec = EmailAddress(size = 44),
+                      title = _("The following explicit email addresses"),
+                      orientation = "vertical",
+                  )
+                ),
+                ( "contact_match_macros",
+                  ListOf(
+                      Tuple(
+                          elements = [
+                              TextAscii(
+                                  title = _("Name of the macro"),
+                                  help = _("As configured in the users settings. Do not add a leading underscore."),
+                                  allow_empty = False,
+                              ),
+                              RegExp(
+                                  title = _("Required match (regular expression)"),
+                                  help = _("This expression must match the value of the variable"),
+                                  allow_empty = False,
+                                  mode = RegExp.complete,
+                             ),
+                          ]
+                      ),
+                      title = _("Restrict by custom macros"),
+                      help = _("Here you can <i>restrict</i> the list of contacts that has been "
+                               "built up by the previous options to those who have certain values "
+                               "in certain custom macros. If you add more than one macro here then "
+                               "<i>all</i> macros must match. The matches are regular expressions "
+                               "that must fully match the value of the macro."),
+                      add_label = _("Add condition"),
+                  )
+                ),
+                ( "contact_match_groups",
+                  ListOf(
+                      cmk.gui.plugins.wato.GroupSelection("contact"),
+                      title = _("Restrict by contact groups"),
+                      help = _("Here you can <i>restrict</i> the list of contacts that has been "
+                               "built up by the previous options to those that are members of "
+                               "selected contact groups. If you select more than one contact group here then "
+                               "the user must be member of <i>all</i> these groups."),
+                      add_label = _("Add Group"),
+                      movable = False,
+                  )
+                ),
+            ]
+            section_override = [
+                ( "allow_disable",
+                  Checkbox(
+                    title = _("Overriding by users"),
+                    help = _("If you uncheck this option then users are not allowed to deactive notifications "
+                             "that are created by this rule."),
+                    label = _("allow users to deactivate this notification"),
+                    default_value = True,
+                  )
+                ),
+            ]
+
+        bulk_options = [
+                    ("count", Integer(
+                        title = _("Maximum bulk size"),
+                        label = _("Bulk up to"),
+                        unit  = _("Notifications"),
+                        help = _("At most that many Notifications are kept back for bulking. A value of "
+                                "1 essentially turns off notification bulking."),
+                        default_value = 1000,
+                        minvalue = 1,
+                    )),
+                    ("groupby",
+                        self._vs_notification_bulkby(),
+                    ),
+                    ("groupby_custom", ListOfStrings(
+                        valuespec = ID(),
+                        orientation = "horizontal",
+                        title = _("Create separate notification bulks for different values of the following custom macros"),
+                        help = _("If you enter the names of host/service-custom macros here then for each different "
+                                "combination of values of those macros a separate bulk will be created. This can be used "
+                                "in combination with the grouping by folder, host etc. Omit any leading underscore. "
+                                "<b>Note</b>: If you are using "
+                                "Nagios as a core you need to make sure that the values of the required macros are "
+                                "present in the notification context. This is done in <tt>check_mk_templates.cfg</tt>. If you "
+                                "macro is <tt>_FOO</tt> then you need to add the variables <tt>NOTIFY_HOST_FOO</tt> and "
+                                "<tt>NOTIFY_SERVICE_FOO</tt>."),
+                    )),
+                    ("bulk_subject", TextAscii(
+                        title = _("Subject for bulk notifications"),
+                        help = _("Customize the subject for bulk notifications and overwrite "
+                                    "default subject <tt>Check_MK: $COUNT_NOTIFICATIONS$ notifications for HOST</tt>"
+                                    " resp. <tt>Check_MK: $COUNT_NOTIFICATIONS$ notifications for $COUNT_HOSTS$ hosts</tt>. "
+                                    "Both macros <tt>$COUNT_NOTIFICATIONS$</tt> and <tt>$COUNT_HOSTS$</tt> can be used in "
+                                    "any customized subject. If <tt>$COUNT_NOTIFICATIONS$</tt> is used, the amount of "
+                                    "notifications will be inserted and if you use <tt>$COUNT_HOSTS$</tt> then the "
+                                    "amount of hosts will be applied."),
+                        size = 80,
+                        default_value = "Check_MK: $COUNT_NOTIFICATIONS$ notifications for $COUNT_HOSTS$ hosts"
+                    )),
+        ]
+
+        return Dictionary(
+            title = _("Rule Properties"),
+            elements = rule_option_elements()
+                + section_override
+                + self._rule_match_conditions()
+                + section_contacts
+                + [
+                    # Notification
+                    ( "notify_plugin",
+                    watolib.get_vs_notification_methods(),
+                    ),
+                    ("bulk", Transform(
+                        CascadingDropdown(
+                            title = "Notification Bulking",
+                            orientation = "vertical",
+                            choices = [
+                                ("always", _("Always bulk"), Dictionary(
+                                    help = _("Enabling the bulk notifications will collect several subsequent notifications "
+                                            "for the same contact into one single notification, which lists of all the "
+                                            "actual problems, e.g. in a single email. This cuts down the number of notifications "
+                                            "in cases where many (related) problems occur within a short time."),
+                                    elements = [
+                                        ( "interval", Age(
+                                            title = _("Time horizon"),
+                                            label = _("Bulk up to"),
+                                            help = _("Notifications are kept back for bulking at most for this time."),
+                                            default_value = 60,
+                                        )),
+                                        ] + bulk_options,
+                                    columns = 1,
+                                    optional_keys = ["bulk_subject"],
+                                )),
+                                ("timeperiod", _("Bulk during timeperiod"), Dictionary(
+                                    help = _("By enabling this option notifications will be bulked only if the "
+                                            "specified timeperiod is active. When the timeperiod ends a "
+                                            "bulk containing all notifications that appeared during that time "
+                                            "will be sent. "
+                                            "If bulking should be enabled outside of the timeperiod as well, "
+                                            "the option \"Also Bulk outside of timeperiod\" can be used."),
+                                    elements = [
+                                        ("timeperiod",
+                                        TimeperiodSelection(
+                                            title = _("Only bulk notifications during the following timeperiod"),
+                                        )),
+                                    ] + bulk_options + [
+                                        ("bulk_outside", Dictionary(
+                                            title = _("Also bulk outside of timeperiod"),
+                                            help = _("By enabling this option notifications will be bulked "
+                                                    "outside of the defined timeperiod as well."),
+                                            elements = [
+                                                ( "interval", Age(
+                                                    title = _("Time horizon"),
+                                                    label = _("Bulk up to"),
+                                                    help = _("Notifications are kept back for bulking at most for this time."),
+                                                    default_value = 60,
+                                                )),
+                                                ] + bulk_options,
+                                            columns = 1,
+                                            optional_keys = ["bulk_subject"],
+                                        )),
+                                    ],
+                                    columns = 1,
+                                    optional_keys = ["bulk_subject", "bulk_outside"],
+                                )),
+                            ],
+                        ),
+                        forth = lambda x: x if isinstance(x, tuple) else ("always", x)
+                    )),
+            ],
+            optional_keys = [ "match_site", "match_folder", "match_hosttags", "match_hostgroups", "match_hosts", "match_exclude_hosts",
+                              "match_servicegroups", "match_exclude_servicegroups", "match_servicegroups_regex", "match_exclude_servicegroups_regex",
+                              "match_services", "match_exclude_services",
+                              "match_contacts", "match_contactgroups",
+                              "match_plugin_output",
+                              "match_timeperiod", "match_escalation", "match_escalation_throttle",
+                              "match_sl", "match_host_event", "match_service_event", "match_ec", "match_notification_comment",
+                              "match_checktype", "bulk", "contact_users", "contact_groups", "contact_emails",
+                              "contact_match_macros", "contact_match_groups" ],
+            headers = [
+                ( _("Rule Properties"), [ "description", "comment", "disabled", "docu_url", "allow_disable" ] ),
+                ( _("Notification Method"), [ "notify_plugin", "notify_method", "bulk" ] ),]
+                + contact_headers
+                + [
+                ( _("Conditions"),         [ "match_site", "match_folder", "match_hosttags", "match_hostgroups",
+                                             "match_hosts", "match_exclude_hosts", "match_servicegroups",
+                                             "match_exclude_servicegroups", "match_servicegroups_regex", "match_exclude_servicegroups_regex",
+                                             "match_services", "match_exclude_services",
+                                             "match_checktype",
+                                             "match_contacts", "match_contactgroups",
+                                             "match_plugin_output",
+                                             "match_timeperiod",
+                                             "match_escalation", "match_escalation_throttle",
+                                             "match_sl", "match_host_event", "match_service_event", "match_ec", "match_notification_comment" ] ),
+            ],
+            render = "form",
+            form_narrow = True,
+            validate = self._validate_notification_rule,
+        )
+
+
+    def _validate_notification_rule(self, rule, varprefix):
+        if "bulk" in rule and rule["notify_plugin"][1] == None:
+            raise MKUserError(varprefix + "_p_bulk_USE",
+                 _("It does not make sense to add a bulk configuration for cancelling rules."))
+
+        if "bulk" in rule or "bulk_period" in rule:
+            if rule["notify_plugin"][0]:
+                info = load_notification_scripts()[rule["notify_plugin"][0]]
+                if not info["bulk"]:
+                    raise MKUserError(varprefix + "_p_notify_plugin",
+                          _("The notification script %s does not allow bulking.") % info["title"])
+            else:
+                raise MKUserError(varprefix + "_p_notify_plugin",
+                      _("Legacy ASCII Emails do not support bulking. You can either disable notification "
+                        "bulking or choose another notification plugin which allows bulking."))
+
+
+    @abc.abstractmethod
+    def _user_id(self):
+        raise NotImplementedError()
+
+
+    @abc.abstractmethod
+    def _back_mode(self):
+        raise NotImplementedError()
 
 
     def title(self):
@@ -9496,7 +9214,42 @@ class ModeEditNotificationRule(WatoMode):
 
 
 
-class ModeEditPersonalNotificationRule(ModeEditNotificationRule):
+class ModeEditNotificationRule(EditNotificationRuleMode):
+    @classmethod
+    def name(cls):
+        return "notification_rule"
+
+
+    @classmethod
+    def permissions(cls):
+        return ["notifications"]
+
+
+    def _user_id(self):
+        return html.get_unicode_input("user")
+
+
+
+    def _back_mode(self):
+        if self._user_id():
+            return "user_notifications"
+        else:
+            return "notifications"
+
+
+
+
+class ModeEditPersonalNotificationRule(EditNotificationRuleMode):
+    @classmethod
+    def name(cls):
+        return "notification_rule_p"
+
+
+    @classmethod
+    def permissions(cls):
+        return None
+
+
     def __init__(self):
         super(ModeEditPersonalNotificationRule, self).__init__()
         config.user.need_permission("general.edit_notifications")
@@ -9511,7 +9264,7 @@ class ModeEditPersonalNotificationRule(ModeEditNotificationRule):
             self._start_async_repl = True
             watolib.log_audit(None, log_what, log_text)
         else:
-            add_notify_change(log_what, log_text)
+            super(ModeEditPersonalNotificationRule, self)._add_change(log_what, log_text)
 
 
     def _back_mode(self):
@@ -9550,6 +9303,16 @@ def load_notification_scripts():
 #   '----------------------------------------------------------------------'
 
 class ModeTimeperiods(WatoMode):
+    @classmethod
+    def name(cls):
+        return "timeperiods"
+
+
+    @classmethod
+    def permissions(cls):
+        return ["timeperiods"]
+
+
     def __init__(self):
         super(ModeTimeperiods, self).__init__()
         self._timeperiods = watolib.load_timeperiods()
@@ -9692,6 +9455,16 @@ class MultipleTimeRanges(ValueSpec):
 # open the edit_timeperiod page to create a new timeperiod using
 # these information
 class ModeTimeperiodImportICal(WatoMode):
+    @classmethod
+    def name(cls):
+        return "import_ical"
+
+
+    @classmethod
+    def permissions(cls):
+        return ["timeperiods"]
+
+
     def title(self):
         return _("Import iCalendar File to create a Timeperiod")
 
@@ -9943,6 +9716,16 @@ class ModeTimeperiodImportICal(WatoMode):
 
 
 class ModeEditTimeperiod(WatoMode):
+    @classmethod
+    def name(cls):
+        return "edit_timeperiod"
+
+
+    @classmethod
+    def permissions(cls):
+        return ["timeperiods"]
+
+
     def _from_vars(self):
         self._timeperiods = watolib.load_timeperiods()
         self._name = html.var("edit") # missing -> new group
@@ -10220,7 +10003,7 @@ class ModeEditTimeperiod(WatoMode):
 class ModeSites(WatoMode):
     def __init__(self):
         super(ModeSites, self).__init__()
-        self._site_mgmt = watolib.SiteManagement()
+        self._site_mgmt = watolib.SiteManagementFactory().factory()
 
 
     def buttons(self):
@@ -10229,6 +10012,16 @@ class ModeSites(WatoMode):
 
 
 class ModeDistributedMonitoring(ModeSites):
+    @classmethod
+    def name(cls):
+        return "sites"
+
+
+    @classmethod
+    def permissions(cls):
+        return ["sites"]
+
+
     def __init__(self):
         super(ModeDistributedMonitoring, self).__init__()
 
@@ -10493,7 +10286,17 @@ class ModeDistributedMonitoring(ModeSites):
 
 
 
-class ModeEditSiteGlobals(ModeSites, ModeGlobalSettings):
+class ModeEditSiteGlobals(ModeSites, GlobalSettingsMode):
+    @classmethod
+    def name(cls):
+        return "edit_site_globals"
+
+
+    @classmethod
+    def permissions(cls):
+        return ["sites"]
+
+
     def __init__(self):
         super(ModeEditSiteGlobals, self).__init__()
         self._site_id = html.var("site")
@@ -10606,6 +10409,16 @@ class ModeEditSiteGlobals(ModeSites, ModeGlobalSettings):
 
 
 class ModeEditSite(ModeSites):
+    @classmethod
+    def name(cls):
+        return "edit_site"
+
+
+    @classmethod
+    def permissions(cls):
+        return ["sites"]
+
+
     def __init__(self):
         super(ModeEditSite, self).__init__()
         self._from_html_vars()
@@ -10989,7 +10802,7 @@ def sort_sites(sitelist):
 #   | automation functions on slaves.                                      |
 #   '----------------------------------------------------------------------'
 
-class ModeAutomationLogin(WatoMode):
+class ModeAutomationLogin(WatoWebApiMode):
     """Is executed by the central Check_MK site during creation of the WATO master/slave sync to
 
     When the page method is execute a remote (master) site has successfully
@@ -11005,7 +10818,7 @@ class ModeAutomationLogin(WatoMode):
 
 
 
-class ModeAutomation(WatoMode):
+class ModeAutomation(WatoWebApiMode):
     """Executes the requested automation call
 
     This page is accessible without regular login. The request is authenticated using the given
@@ -11134,6 +10947,16 @@ class ModeAutomation(WatoMode):
 #   '----------------------------------------------------------------------'
 
 class ModeUsers(WatoMode):
+    @classmethod
+    def name(cls):
+        return "users"
+
+
+    @classmethod
+    def permissions(cls):
+        return ["users"]
+
+
     def __init__(self):
         super(ModeUsers, self).__init__()
         self._job_snapshot = userdb.UserSyncBackgroundJob().get_status_snapshot()
@@ -11450,6 +11273,16 @@ class ModeUsers(WatoMode):
 # TODO: Move CME specific stuff to CME related class
 # TODO: Refactor action / page to use less hand crafted logic (valuespecs instead?)
 class ModeEditUser(WatoMode):
+    @classmethod
+    def name(cls):
+        return "edit_user"
+
+
+    @classmethod
+    def permissions(cls):
+        return ["users"]
+
+
     def __init__(self):
         super(ModeEditUser, self).__init__()
 
@@ -11998,32 +11831,6 @@ class ModeEditUser(WatoMode):
 
 
 
-def generate_wato_users_elements_function(none_value, only_contacts = False):
-    def get_wato_users(nv):
-        users = userdb.load_users()
-        elements = [ (name, "%s - %s" % (name, us.get("alias", name)))
-                     for (name, us)
-                     in users.items()
-                     if (not only_contacts or us.get("contactgroups")) ]
-        elements.sort()
-        if nv != None:
-            elements = [ (None, none_value) ] + elements
-        return elements
-    return lambda: get_wato_users(none_value)
-
-
-# Dropdown for choosing a multisite user
-class UserSelection(DropdownChoice):
-    def __init__(self, **kwargs):
-        only_contacts = kwargs.get("only_contacts", False)
-        kwargs["choices"] = generate_wato_users_elements_function(kwargs.get("none"), only_contacts = only_contacts)
-        kwargs["invalid_choice"] = "complain" # handle vanished users correctly!
-        DropdownChoice.__init__(self, **kwargs)
-
-    def value_to_text(self, value):
-        text = DropdownChoice.value_to_text(self, value)
-        return text.split(" - ")[-1]
-
 
 #.
 #   .--Roles---------------------------------------------------------------.
@@ -12086,6 +11893,16 @@ class RoleManagement(object):
 
 
 class ModeRoles(RoleManagement, WatoMode):
+    @classmethod
+    def name(cls):
+        return "roles"
+
+
+    @classmethod
+    def permissions(cls):
+        return ["users"]
+
+
     def title(self):
         return _("Roles & Permissions")
 
@@ -12190,6 +12007,16 @@ class ModeRoles(RoleManagement, WatoMode):
 
 
 class ModeEditRole(RoleManagement, WatoMode):
+    @classmethod
+    def name(cls):
+        return "edit_role"
+
+
+    @classmethod
+    def permissions(cls):
+        return ["users"]
+
+
     def __init__(self):
         super(ModeEditRole, self).__init__()
 
@@ -12369,6 +12196,16 @@ class ModeEditRole(RoleManagement, WatoMode):
 
 
 class ModeRoleMatrix(WatoMode):
+    @classmethod
+    def name(cls):
+        return "role_matrix"
+
+
+    @classmethod
+    def permissions(cls):
+        return ["users"]
+
+
     def title(self):
         return _("Role & Permission Matrix")
 
@@ -12437,6 +12274,16 @@ class ModeRoleMatrix(WatoMode):
 #   '----------------------------------------------------------------------'
 
 class ModeHostTags(WatoMode, watolib.HosttagsConfiguration):
+    @classmethod
+    def name(cls):
+        return "hosttags"
+
+
+    @classmethod
+    def permissions(cls):
+        return ["hosttags"]
+
+
     def __init__(self):
         super(ModeHostTags, self).__init__()
         self._hosttags, self._auxtags = self._load_hosttags()
@@ -12682,6 +12529,16 @@ class ModeEditHosttagConfiguration(WatoMode):
 
 
 class ModeEditAuxtag(ModeEditHosttagConfiguration):
+    @classmethod
+    def name(cls):
+        return "edit_auxtag"
+
+
+    @classmethod
+    def permissions(cls):
+        return ["hosttags"]
+
+
     def title(self):
         if self._is_new_aux_tag():
             return _("Create new auxiliary tag")
@@ -12787,6 +12644,16 @@ class ModeEditAuxtag(ModeEditHosttagConfiguration):
 
 
 class ModeEditHosttagGroup(ModeEditHosttagConfiguration):
+    @classmethod
+    def name(cls):
+        return "edit_hosttag"
+
+
+    @classmethod
+    def permissions(cls):
+        return ["hosttags"]
+
+
     def __init__(self):
         super(ModeEditHosttagGroup, self).__init__()
         self._untainted_tag_group = self._untainted_hosttags_config.get_tag_group(self._get_taggroup_id())
@@ -12838,9 +12705,7 @@ class ModeEditHosttagGroup(ModeEditHosttagConfiguration):
 
             # Make sure, that all tags are active (also manual ones from main.mk)
             config.load_config()
-            watolib.declare_host_tag_attributes()
-            watolib.Folder.invalidate_caches()
-            watolib.Folder.root_folder().rewrite_hosts_files()
+            watolib.update_config_based_host_attributes()
             add_change("edit-hosttags", _("Created new host tag group '%s'") % changed_tag_group.id)
             return "hosttags", _("Created new host tag group '%s'") % changed_tag_group.title
         else:
@@ -12882,9 +12747,7 @@ class ModeEditHosttagGroup(ModeEditHosttagConfiguration):
             if message:
                 changed_hosttags_config.save()
                 config.load_config()
-                watolib.declare_host_tag_attributes()
-                watolib.Folder.invalidate_caches()
-                watolib.Folder.root_folder().rewrite_hosts_files()
+                watolib.update_config_based_host_attributes()
                 add_change("edit-hosttags", _("Edited host tag group %s (%s)") % (message, self._get_taggroup_id()))
                 return "hosttags", message != True and message or None
 
@@ -13250,6 +13113,16 @@ def change_host_tags_in_rules(folder, operations, mode):
 #   '----------------------------------------------------------------------'
 
 class ModeRuleEditor(WatoMode):
+    @classmethod
+    def name(cls):
+        return "ruleeditor"
+
+
+    @classmethod
+    def permissions(cls):
+        return ["rulesets"]
+
+
     def __init__(self):
         super(ModeRuleEditor, self).__init__()
         self._only_host = html.var("host")
@@ -13326,39 +13199,19 @@ class ModeRuleEditor(WatoMode):
         menu.show()
 
 
-# TODO: Cleanup all calls using title and remove the argument
-def search_form(title=None, mode=None, default_value=""):
-    html.begin_form("search", add_transid=False)
-    if title:
-        html.write_text(title+' ')
-    html.text_input("search", size=32, default_value=default_value)
-    html.hidden_fields()
-    if mode:
-        html.hidden_field("mode", mode, add_var=True)
-    html.set_focus("search")
-    html.write_text(" ")
-    html.button("_do_seach", _("Search"))
-    html.end_form()
-
-
-def get_search_expression():
-    search = html.get_unicode_input("search")
-    if search != None:
-        search = search.strip().lower()
-    return search
-
-
-
-class ModeRulesets(WatoMode):
-    _mode = "rulesets"
-
+class RulesetMode(WatoMode):
     def __init__(self):
-        super(ModeRulesets, self).__init__()
+        super(RulesetMode, self).__init__()
+
+        self._title = None
+        self._help = None
+
         self._set_title_and_help()
 
 
-    def _rulesets(self):
-        return watolib.NonStaticChecksRulesets()
+    @abc.abstractmethod
+    def _set_title_and_help(self):
+        raise NotImplementedError()
 
 
     def _from_vars(self):
@@ -13394,28 +13247,9 @@ class ModeRulesets(WatoMode):
         self._only_host = html.var("host")
 
 
-    def _set_title_and_help(self):
-        if self._search_options.keys() == ["ruleset_deprecated"]:
-            self._title = _("Deprecated Rulesets")
-            self._help = _("Here you can see a list of all deprecated rulesets (which are not used by Check_MK anymore). If "
-                     "you have defined some rules here, you might have to migrate the rules to their successors. Please "
-                     "refer to the release notes or context help of the rulesets for details.")
-
-        elif self._search_options.keys() == ["rule_ineffective"]:
-            self._title = _("Rulesets with ineffective rules")
-            self._help = _("The following rulesets contain rules that do not match to any of the existing hosts.")
-
-        elif self._search_options.keys() == ["ruleset_used"]:
-            self._title = _("Used rulesets")
-            self._help = _("Non-empty rulesets")
-
-        elif self._group_name == None:
-            self._title = _("Rulesets")
-            self._help = None
-
-        else:
-            rulegroup = watolib.get_rulegroup(self._group_name)
-            self._title, self._help = rulegroup.title, rulegroup.help
+    @abc.abstractmethod
+    def _rulesets(self):
+        raise NotImplementedError()
 
 
     def title(self):
@@ -13433,7 +13267,7 @@ class ModeRulesets(WatoMode):
         else:
             self._regular_buttons()
 
-        rule_search_button(self._search_options, mode=self._mode)
+        rule_search_button(self._search_options, mode=self.name())
 
 
     def _only_host_buttons(self):
@@ -13443,7 +13277,7 @@ class ModeRulesets(WatoMode):
 
 
     def _regular_buttons(self):
-        if self._mode != "static_checks":
+        if self.name() != "static_checks":
             html.context_button(_("All Rulesets"), watolib.folder_preserving_link([("mode", "ruleeditor")]), "back")
 
         if config.user.may("wato.hosts") or config.user.may("wato.seeall"):
@@ -13493,7 +13327,7 @@ class ModeRulesets(WatoMode):
                     url_vars = [
                         ("mode", "edit_ruleset"),
                         ("varname", ruleset.name),
-                        ("back_mode", self._mode),
+                        ("back_mode", self.name()),
                     ]
                     if self._only_host:
                         url_vars.append(("host", self._only_host))
@@ -13528,8 +13362,57 @@ class ModeRulesets(WatoMode):
 
 
 
-class ModeStaticChecksRulesets(ModeRulesets):
-    _mode = "static_checks"
+class ModeRulesets(RulesetMode):
+    @classmethod
+    def name(cls):
+        return "rulesets"
+
+
+    @classmethod
+    def permissions(cls):
+        return ["rulesets"]
+
+
+    def _rulesets(self):
+        return watolib.NonStaticChecksRulesets()
+
+
+    def _set_title_and_help(self):
+        if self._search_options.keys() == ["ruleset_deprecated"]:
+            self._title = _("Deprecated Rulesets")
+            self._help = _("Here you can see a list of all deprecated rulesets (which are not used by Check_MK anymore). If "
+                     "you have defined some rules here, you might have to migrate the rules to their successors. Please "
+                     "refer to the release notes or context help of the rulesets for details.")
+
+        elif self._search_options.keys() == ["rule_ineffective"]:
+            self._title = _("Rulesets with ineffective rules")
+            self._help = _("The following rulesets contain rules that do not match to any of the existing hosts.")
+
+        elif self._search_options.keys() == ["ruleset_used"]:
+            self._title = _("Used rulesets")
+            self._help = _("Non-empty rulesets")
+
+        elif self._group_name == None:
+            self._title = _("Rulesets")
+            self._help = None
+
+        else:
+            rulegroup = watolib.get_rulegroup(self._group_name)
+            self._title, self._help = rulegroup.title, rulegroup.help
+
+
+
+
+class ModeStaticChecksRulesets(RulesetMode):
+    @classmethod
+    def name(cls):
+        return "static_checks"
+
+
+    @classmethod
+    def permissions(cls):
+        return ["rulesets"]
+
 
     def _rulesets(self):
         return watolib.StaticChecksRulesets()
@@ -13568,6 +13451,16 @@ def rule_search_button(search_options=None, mode="rulesets"):
 
 
 class ModeEditRuleset(WatoMode):
+    @classmethod
+    def name(cls):
+        return "edit_ruleset"
+
+
+    @classmethod
+    def permissions(cls):
+        return []
+
+
     def _from_vars(self):
         self._name = html.var("varname")
         self._back_mode = html.var("back_mode", html.var("ruleset_back_mode", "rulesets"))
@@ -13674,7 +13567,8 @@ class ModeEditRuleset(WatoMode):
                                               ("service", self._item)]), "rulesets")
 
         if watolib.has_agent_bakery():
-            agent_bakery_context_button(self._name)
+            import cmk.gui.cee.plugins.wato.agent_bakery
+            cmk.gui.cee.plugins.wato.agent_bakery.agent_bakery_context_button(self._name)
 
 
     def action(self):
@@ -14174,6 +14068,16 @@ class ModeEditRuleset(WatoMode):
 
 
 class ModeRuleSearch(WatoMode):
+    @classmethod
+    def name(cls):
+        return "rule_search"
+
+
+    @classmethod
+    def permissions(cls):
+        return ["rulesets"]
+
+
     def __init__(self):
         self.back_mode = html.var("back_mode", "rulesets")
         super(ModeRuleSearch, self).__init__()
@@ -14354,10 +14258,7 @@ class ModeRuleSearch(WatoMode):
         )
 
 
-
-class ModeEditRule(WatoMode):
-    _new = False
-
+class EditRuleMode(WatoMode):
     def _from_vars(self):
         self._name = html.var("varname")
 
@@ -14432,7 +14333,7 @@ class ModeEditRule(WatoMode):
 
         # Check permissions on folders
         new_rule_folder = watolib.Folder.folder(html.var("new_rule_folder"))
-        if not self._new:
+        if not isinstance(self, ModeNewRule):
             self._folder.need_permission("write")
         new_rule_folder.need_permission("write")
 
@@ -14466,8 +14367,8 @@ class ModeEditRule(WatoMode):
 
     def _update_rule_from_html_vars(self):
         # Additional options
-        rule_options = vs_rule_options().from_html_vars("options")
-        vs_rule_options().validate_value(rule_options, "options")
+        rule_options = self._vs_rule_options().from_html_vars("options")
+        self._vs_rule_options().validate_value(rule_options, "options")
         self._rule.rule_options = rule_options
 
         # CONDITION
@@ -14484,10 +14385,9 @@ class ModeEditRule(WatoMode):
         self._rule.value = value
 
 
+    @abc.abstractmethod
     def _save_rule(self):
-        # Just editing without moving to other folder
-        self._ruleset.edit_rule(self._rule)
-        self._rulesets.save()
+        raise NotImplementedError()
 
 
     def _remove_from_orig_folder(self):
@@ -14570,7 +14470,7 @@ class ModeEditRule(WatoMode):
         html.begin_form("rule_editor", method="POST")
 
         # Additonal rule options
-        vs_rule_options().render_input("options", self._rule.rule_options)
+        self._vs_rule_options().render_input("options", self._rule.rule_options)
 
         # Value
         valuespec = self._ruleset.valuespec()
@@ -14699,7 +14599,7 @@ class ModeEditRule(WatoMode):
 
         html.button("save", _("Save"))
         html.hidden_fields()
-        vs_rule_options().set_focus("options")
+        self._vs_rule_options().set_focus("options")
         html.button("_export_rule", _("Export"))
 
         html.end_form()
@@ -14737,8 +14637,45 @@ class ModeEditRule(WatoMode):
         )
 
 
+    def _vs_rule_options(self, disabling=True):
+        return Dictionary(
+            title = _("Rule Properties"),
+            optional_keys = False,
+            render = "form",
+            elements = rule_option_elements(disabling),
+        )
 
-class ModeCloneRule(ModeEditRule):
+
+
+class ModeEditRule(EditRuleMode):
+    @classmethod
+    def name(cls):
+        return "edit_rule"
+
+
+    @classmethod
+    def permissions(cls):
+        return []
+
+
+    def _save_rule(self):
+        # Just editing without moving to other folder
+        self._ruleset.edit_rule(self._rule)
+        self._rulesets.save()
+
+
+
+class ModeCloneRule(EditRuleMode):
+    @classmethod
+    def name(cls):
+        return "clone_rule"
+
+
+    @classmethod
+    def permissions(cls):
+        return []
+
+
     def __init__(self):
         super(ModeCloneRule, self).__init__()
 
@@ -14764,8 +14701,16 @@ class ModeCloneRule(ModeEditRule):
 
 
 
-class ModeNewRule(ModeEditRule):
-    _new = True
+class ModeNewRule(EditRuleMode):
+    @classmethod
+    def name(cls):
+        return "new_rule"
+
+
+    @classmethod
+    def permissions(cls):
+        return []
+
 
     def title(self):
         return _("New rule: %s") % self._rulespec.title
@@ -14816,374 +14761,6 @@ class ModeNewRule(ModeEditRule):
                  (self._ruleset.title(),
                   self._folder.alias_path()) # pylint: disable=no-member
 
-
-
-# Special version of register_rule, dedicated to checks. This is not really
-# modular here, but we cannot put this function into the plugins file because
-# the order is not defined there.
-def register_check_parameters(subgroup, checkgroup, title, valuespec, itemspec,
-                               match_type, has_inventory=True, register_static_check=True,
-                               deprecated=False):
-
-    if valuespec and isinstance(valuespec, Dictionary) and match_type != "dict":
-        raise MKGeneralException("Check parameter definition for %s has type Dictionary, but match_type %s" %
-                                 (checkgroup, match_type))
-
-    # Enclose this valuespec with a TimeperiodValuespec
-    # The given valuespec will be transformed to a list of valuespecs,
-    # whereas each element can be set to a specific timeperiod
-    if valuespec:
-        valuespec = TimeperiodValuespec(valuespec)
-
-    # Register rule for discovered checks
-    if valuespec and has_inventory: # would be useless rule if check has no parameters
-        itemenum = None
-        if itemspec:
-            itemtype = "item"
-            itemname = itemspec.title()
-            itemhelp = itemspec.help()
-            if isinstance(itemspec, DropdownChoice) or isinstance(itemspec, OptionalDropdownChoice):
-                itemenum = itemspec._choices
-        else:
-            itemtype = None
-            itemname = None
-            itemhelp = None
-
-        register_rule(
-            "checkparams/" + subgroup,
-            varname = "checkgroup_parameters:%s" % checkgroup,
-            title = title,
-            valuespec = valuespec,
-            itemspec = itemspec,
-            itemtype = itemtype,
-            itemname = itemname,
-            itemhelp = itemhelp,
-            itemenum = itemenum,
-            match = match_type,
-            deprecated = deprecated)
-
-    if register_static_check:
-        # Register rule for static checks
-        elements = [
-            CheckTypeGroupSelection(
-                checkgroup,
-                title = _("Checktype"),
-                help = _("Please choose the check plugin")) ]
-        if itemspec:
-            elements.append(itemspec)
-        else:
-            # In case of static checks without check-item, add the fixed
-            # valuespec to add "None" as second element in the tuple
-            elements.append(FixedValue(
-                None,
-                totext = '',
-            ))
-        if not valuespec:
-            valuespec =\
-                FixedValue(None,
-                    help = _("This check has no parameters."),
-                    totext = "")
-
-        if not valuespec.title():
-            valuespec._title = _("Parameters")
-
-        elements.append(valuespec)
-
-        register_rule(
-            "static/" + subgroup,
-            "static_checks:%s" % checkgroup,
-            title = title,
-            valuespec = Tuple(
-                title = valuespec.title(),
-                elements = elements,
-            ),
-            itemspec = itemspec,
-            match = "all",
-            deprecated = deprecated)
-
-
-
-
-
-
-# The following function looks like a value spec and in fact
-# can be used like one (but take no parameters)
-def PredictiveLevels(**args):
-    dif = args.get("default_difference", (2.0, 4.0))
-    unitname = args.get("unit", "")
-    if unitname:
-        unitname += " "
-
-    return Dictionary(
-        title = _("Predictive Levels"),
-        optional_keys = [ "weight", "levels_upper", "levels_upper_min", "levels_lower", "levels_lower_max" ],
-        default_keys = [ "levels_upper" ],
-        columns = 1,
-        headers = "sup",
-        elements = [
-             ( "period",
-                DropdownChoice(
-                    title = _("Base prediction on"),
-                    choices = [
-                        ( "wday",   _("Day of the week (1-7, 1 is Monday)") ),
-                        ( "day",    _("Day of the month (1-31)") ),
-                        ( "hour",   _("Hour of the day (0-23)") ),
-                        ( "minute", _("Minute of the hour (0-59)") ),
-                    ]
-             )),
-             ( "horizon",
-               Integer(
-                   title = _("Time horizon"),
-                   unit = _("days"),
-                   minvalue = 1,
-                   default_value = 90,
-             )),
-             # ( "weight",
-             #   Percentage(
-             #       title = _("Raise weight of recent time"),
-             #       label = _("by"),
-             #       default_value = 0,
-             # )),
-             ( "levels_upper",
-               CascadingDropdown(
-                   title = _("Dynamic levels - upper bound"),
-                   choices = [
-                       ( "absolute",
-                         _("Absolute difference from prediction"),
-                         Tuple(
-                             elements = [
-                                 Float(title = _("Warning at"),
-                                       unit = unitname + _("above predicted value"), default_value = dif[0]),
-                                 Float(title = _("Critical at"),
-                                       unit = unitname + _("above predicted value"), default_value = dif[1]),
-                             ]
-                      )),
-                      ( "relative",
-                        _("Relative difference from prediction"),
-                         Tuple(
-                             elements = [
-                                 Percentage(title = _("Warning at"), unit = _("% above predicted value"), default_value = 10),
-                                 Percentage(title = _("Critical at"), unit = _("% above predicted value"), default_value = 20),
-                             ]
-                      )),
-                      ( "stdev",
-                        _("In relation to standard deviation"),
-                         Tuple(
-                             elements = [
-                                 Percentage(title = _("Warning at"), unit = _("times the standard deviation above the predicted value"), default_value = 2),
-                                 Percentage(title = _("Critical at"), unit = _("times the standard deviation above the predicted value"), default_value = 4),
-                             ]
-                      )),
-                   ]
-             )),
-             ( "levels_upper_min",
-                Tuple(
-                    title = _("Limit for upper bound dynamic levels"),
-                    help = _("Regardless of how the dynamic levels upper bound are computed according to the prediction: "
-                             "the will never be set below the following limits. This avoids false alarms "
-                             "during times where the predicted levels would be very low."),
-                    elements = [
-                        Float(title = _("Warning level is at least"), unit = unitname),
-                        Float(title = _("Critical level is at least"), unit = unitname),
-                    ]
-              )),
-             ( "levels_lower",
-               CascadingDropdown(
-                   title = _("Dynamic levels - lower bound"),
-                   choices = [
-                       ( "absolute",
-                         _("Absolute difference from prediction"),
-                         Tuple(
-                             elements = [
-                                 Float(title = _("Warning at"),
-                                       unit = unitname + _("below predicted value"), default_value = 2.0),
-                                 Float(title = _("Critical at"),
-                                       unit = unitname + _("below predicted value"), default_value = 4.0),
-                             ]
-                      )),
-                      ( "relative",
-                        _("Relative difference from prediction"),
-                         Tuple(
-                             elements = [
-                                 Percentage(title = _("Warning at"), unit = _("% below predicted value"), default_value = 10),
-                                 Percentage(title = _("Critical at"), unit = _("% below predicted value"), default_value = 20),
-                             ]
-                      )),
-                      ( "stdev",
-                        _("In relation to standard deviation"),
-                         Tuple(
-                             elements = [
-                                 Percentage(title = _("Warning at"), unit = _("times the standard deviation below the predicted value"), default_value = 2),
-                                 Percentage(title = _("Critical at"), unit = _("times the standard deviation below the predicted value"), default_value = 4),
-                             ]
-                      )),
-                   ]
-             )),
-        ]
-    )
-
-
-# To be used as ValueSpec for levels on numeric values, with
-# prediction
-def Levels(**kwargs):
-
-    def match_levels_alternative(v):
-        if type(v) == dict:
-            return 2
-        elif type(v) == tuple and v != (None, None):
-            return 1
-        else:
-            return 0
-
-    help = kwargs.get("help")
-    unit = kwargs.get("unit")
-    title = kwargs.get("title")
-    default_levels = kwargs.get("default_levels", (0.0, 0.0))
-    default_difference = kwargs.get("default_difference", (0,0))
-    if "default_value" in kwargs:
-        default_value = kwargs["default_value"]
-    else:
-        default_value = default_levels and default_levels or None
-
-    return Alternative(
-          title = title,
-          help = help,
-          show_titles = False,
-          style = "dropdown",
-          elements = [
-              FixedValue(
-                  None,
-                  title = _("No Levels"),
-                  totext = _("Do not impose levels, always be OK"),
-              ),
-              Tuple(
-                  title = _("Fixed Levels"),
-                  elements = [
-                      Float(unit = unit, title = _("Warning at"), default_value = default_levels[0], allow_int = True),
-                      Float(unit = unit, title = _("Critical at"), default_value = default_levels[1], allow_int = True),
-                  ],
-              ),
-              PredictiveLevels(
-                  default_difference = default_difference,
-              ),
-          ],
-          match = match_levels_alternative,
-          default_value = default_value,
-    )
-
-# NOTE: When changing this keep it in sync with cmk.translations.translate_hostname()
-def HostnameTranslation(**kwargs):
-    help = kwargs.get("help")
-    title = kwargs.get("title")
-    return Dictionary(
-        title = title,
-        help = help,
-        elements = [
-            ( "drop_domain",
-              FixedValue(
-                  True,
-                  title = _("Convert FQHN"),
-                  totext = _("Drop domain part (<tt>host123.foobar.de</tt> &#8594; <tt>host123</tt>)"),
-            )),
-        ] + translation_elements("host"))
-
-
-def ServiceDescriptionTranslation(**kwargs):
-    help = kwargs.get("help")
-    title = kwargs.get("title")
-    return Dictionary(
-        title = title,
-        help = help,
-        elements =translation_elements("service"))
-
-
-def translation_elements(what):
-    if what == "host":
-        singular = "hostname"
-        plural = "hostnames"
-
-    elif what == "service":
-        singular = "service description"
-        plural = "service descriptions"
-
-    else:
-        MKGeneralException("No translations found for %s." % what)
-
-    return [
-        ( "case",
-          DropdownChoice(
-              title = _("Case translation"),
-              choices = [
-                   (None,    _("Do not convert case")),
-                   ("upper", _("Convert %s to upper case") % plural),
-                   ("lower", _("Convert %s to lower case") % plural),
-              ]
-        )),
-        ( "regex",
-            Transform(
-                ListOf(
-                    Tuple(
-                        orientation = "horizontal",
-                        elements    =  [
-                            RegExpUnicode(
-                                title          = _("Regular expression"),
-                                help           = _("Must contain at least one subgroup <tt>(...)</tt>"),
-                                mingroups      = 0,
-                                maxgroups      = 9,
-                                size           = 30,
-                                allow_empty    = False,
-                                mode           = RegExp.prefix,
-                                case_sensitive = False,
-                            ),
-                            TextUnicode(
-                                title       = _("Replacement"),
-                                help        = _("Use <tt>\\1</tt>, <tt>\\2</tt> etc. to replace matched subgroups"),
-                                size        = 30,
-                                allow_empty = False,
-                            )
-                        ],
-                    ),
-                    title     = _("Multiple regular expressions"),
-                    help      = _("You can add any number of expressions here which are executed succesively until the first match. "
-                                  "Please specify a regular expression in the first field. This expression should at "
-                                  "least contain one subexpression exclosed in brackets - for example <tt>vm_(.*)_prod</tt>. "
-                                  "In the second field you specify the translated %s and can refer to the first matched "
-                                  "group with <tt>\\1</tt>, the second with <tt>\\2</tt> and so on, for example <tt>\\1.example.org</tt>. "
-                                  "") % singular,
-                    add_label = _("Add expression"),
-                    movable   = False,
-                ),
-                forth = lambda x: type(x) == tuple and [x] or x,
-            )
-        ),
-        ( "mapping",
-          ListOf(
-              Tuple(
-                  orientation = "horizontal",
-                  elements =  [
-                      TextUnicode(
-                           title = _("Original %s") % singular,
-                           size = 30,
-                           allow_empty = False,
-                           attrencode = True,
-                      ),
-                      TextUnicode(
-                           title = _("Translated %s") % singular,
-                           size = 30,
-                           allow_empty = False,
-                           attrencode = True,
-                      ),
-                  ],
-              ),
-              title = _("Explicit %s mapping") % singular,
-              help = _("If case conversion and regular expression do not work for all cases then you can "
-                       "specify explicity pairs of origin {0} and translated {0} here. This "
-                       "mapping is being applied <b>after</b> the case conversion and <b>after</b> a regular "
-                       "expression conversion (if that matches).").format(singular),
-              add_label = _("Add new mapping"),
-              movable = False,
-        )),
-    ]
 
 #.
 #   .--User Profile--------------------------------------------------------.
@@ -15714,6 +15291,7 @@ class PageDownloadAgentOutput(AgentOutputPage):
 # files that we will create already exists. That is e.g. the case
 # after an update from an older version where no sample config had
 # been created.
+# TODO: Create a hook here and move CEE and other specific things away
 def create_sample_config():
     if not need_to_create_sample_config():
         return
@@ -15874,8 +15452,11 @@ def create_sample_config():
     }]
     watolib.save_notification_rules(notification_rules)
 
-    if "create_cee_sample_config" in globals():
-        create_cee_sample_config()
+    try:
+        import cmk.gui.cee.plugins.wato.sample_config
+        cmk.gui.cee.plugins.wato.sample_config.create_cee_sample_config()
+    except ImportError:
+        pass
 
     # Make sure the host tag attributes are immediately declared!
     config.wato_host_tags = wato_host_tags
@@ -15883,10 +15464,11 @@ def create_sample_config():
 
     # Initial baking of agents (when bakery is available)
     if watolib.has_agent_bakery():
+        import cmk.gui.cee.plugins.wato.agent_bakery
         try:
-            bake_job = BakeAgentsBackgroundJob()
+            bake_job = cmk.gui.cee.plugins.wato.agent_bakery.BakeAgentsBackgroundJob()
             if not bake_job.is_running():
-                bake_job.set_function(bake_agents_background_job)
+                bake_job.set_function(cmk.gui.cee.plugins.wato.agent_bakery.bake_agents_background_job)
                 bake_job.start()
         except:
             pass # silently ignore building errors here
@@ -15896,7 +15478,8 @@ def create_sample_config():
     import cmk.gui.werks as werks
     werks.acknowledge_all_werks(check_permission=False)
 
-    save_mkeventd_sample_config()
+    import cmk.gui.plugins.wato.mkeventd
+    cmk.gui.plugins.wato.mkeventd.save_mkeventd_sample_config()
 
     userdb.create_cmk_automation_user()
 
@@ -15923,6 +15506,16 @@ def need_to_create_sample_config():
 #   '----------------------------------------------------------------------'
 
 class ModePatternEditor(WatoMode):
+    @classmethod
+    def name(cls):
+        return "pattern_editor"
+
+
+    @classmethod
+    def permissions(cls):
+        return ["pattern_editor"]
+
+
     def _from_vars(self):
         self._hostname   = html.var('host', '')
         # TODO: validate all fields
@@ -16119,35 +15712,13 @@ class ModePatternEditor(WatoMode):
 #   '----------------------------------------------------------------------'
 
 
-def declare_custom_host_attrs():
-    # First remove all previously registered custom host attributes
-    for attr_name in watolib.all_host_attribute_names():
-        if attr_name not in builtin_host_attribute_names and not\
-           attr_name.startswith("tag_"):
-            watolib.undeclare_host_attribute(attr_name)
-
-    # now declare the custom attributes
-    for attr in config.wato_host_attrs:
-        vs = globals()[attr['type']](title = attr['title'], help = attr['help'])
-
-        if attr['add_custom_macro']:
-            a = watolib.NagiosValueSpecAttribute(attr["name"], "_" + attr["name"], vs)
-        else:
-            a = ValueSpecAttribute(attr["name"], vs)
-
-        declare_host_attribute(a,
-            show_in_table = attr['show_in_table'],
-            topic = attr['topic'],
-        )
-
-
 def update_user_custom_attrs():
     userdb.update_config_based_user_attributes()
     userdb.rewrite_users()
 
 
 def update_host_custom_attrs():
-    declare_custom_host_attrs()
+    watolib.declare_custom_host_attrs()
     watolib.Folder.invalidate_caches()
     watolib.Folder.root_folder().rewrite_hosts_files()
 
@@ -16355,12 +15926,20 @@ class ModeEditCustomAttr(WatoMode):
 
 
 class ModeEditCustomUserAttr(ModeEditCustomAttr):
-    def __init__(self):
-        super(ModeEditCustomUserAttr, self).__init__()
+    @classmethod
+    def name(cls):
+        return "edit_user_attr"
+
+
+    @classmethod
+    def permissions(cls):
+        return ["users"]
+
 
     @property
     def _type(self):
         return 'user'
+
 
     @property
     def _topics(self):
@@ -16407,8 +15986,15 @@ class ModeEditCustomUserAttr(ModeEditCustomAttr):
 
 
 class ModeEditCustomHostAttr(ModeEditCustomAttr):
-    def __init__(self):
-        super(ModeEditCustomHostAttr, self).__init__()
+    @classmethod
+    def name(cls):
+        return "edit_host_attr"
+
+
+    @classmethod
+    def permissions(cls):
+        return ["hosts", "manage_hosts"]
+
 
     @property
     def _type(self):
@@ -16519,6 +16105,16 @@ class ModeCustomAttrs(WatoMode):
 
 
 class ModeCustomUserAttrs(ModeCustomAttrs):
+    @classmethod
+    def name(cls):
+        return "user_attrs"
+
+
+    @classmethod
+    def permissions(cls):
+        return ["users"]
+
+
     def __init__(self):
         super(ModeCustomUserAttrs, self).__init__()
 
@@ -16538,8 +16134,15 @@ class ModeCustomUserAttrs(ModeCustomAttrs):
 
 
 class ModeCustomHostAttrs(ModeCustomAttrs):
-    def __init__(self):
-        super(ModeCustomHostAttrs, self).__init__()
+    @classmethod
+    def name(cls):
+        return "host_attrs"
+
+
+    @classmethod
+    def permissions(cls):
+        return ["hosts", "manage_hosts"]
+
 
     @property
     def _type(self):
@@ -16572,6 +16175,16 @@ class ModeCustomHostAttrs(ModeCustomAttrs):
 #   '----------------------------------------------------------------------'
 
 class ModeCheckPlugins(WatoMode):
+    @classmethod
+    def name(cls):
+        return "check_plugins"
+
+
+    @classmethod
+    def permissions(cls):
+        return []
+
+
     def _from_vars(self):
         self._search = get_search_expression()
         self._topic  = html.var("topic")
@@ -16834,6 +16447,16 @@ class ModeCheckPlugins(WatoMode):
 
 
 class ModeCheckManPage(WatoMode):
+    @classmethod
+    def name(cls):
+        return "check_manpage"
+
+
+    @classmethod
+    def permissions(cls):
+        return []
+
+
     def _from_vars(self):
         self._check_type = html.var("check_type")
 
@@ -16958,6 +16581,16 @@ class ModeCheckManPage(WatoMode):
 #   '----------------------------------------------------------------------'
 
 class ModeIcons(WatoMode):
+    @classmethod
+    def name(cls):
+        return "icons"
+
+
+    @classmethod
+    def permissions(cls):
+        return ["icons"]
+
+
     def title(self):
         return _('Manage Icons')
 
@@ -17086,43 +16719,17 @@ class ModeIcons(WatoMode):
 #   '----------------------------------------------------------------------'
 
 
-class PasswordStore(object):
-    def _load(self, lock=False):
-        return store.load_from_mk_file(wato_root_dir + "/passwords.mk",
-                                       key="stored_passwords", default={}, lock=lock)
-
-
-    def _load_for_modification(self):
-        return self._load(lock=True)
-
-
-    def _owned_passwords(self):
-        if config.user.may("wato.edit_all_passwords"):
-            return self._load()
-
-        user_groups = userdb.contactgroups_of_user(config.user.id)
-        return dict([ (k, v) for k, v in self._load().items() if v["owned_by"] in user_groups ])
-
-
-    def usable_passwords(self):
-        if config.user.may("wato.edit_all_passwords"):
-            return self._load()
-
-        user_groups = userdb.contactgroups_of_user(config.user.id)
-
-        passwords = self._owned_passwords()
-        passwords.update(dict([ (k, v) for k, v in self._load().items()
-                                if v["shared_with"] in user_groups ]))
-        return passwords
-
-
-    def _save(self, value):
-        return store.save_to_mk_file(wato_root_dir + "/passwords.mk",
-                                     key="stored_passwords", value=value, pprint_value = config.wato_pprint_config)
-
-
-
 class ModePasswords(WatoMode, PasswordStore):
+    @classmethod
+    def name(cls):
+        return "passwords"
+
+
+    @classmethod
+    def permissions(cls):
+        return ["passwords"]
+
+
     def __init__(self):
         super(ModePasswords, self).__init__()
         self._contact_groups = userdb.load_group_information().get("contact", {})
@@ -17209,6 +16816,16 @@ class ModePasswords(WatoMode, PasswordStore):
 
 
 class ModeEditPassword(WatoMode, PasswordStore):
+    @classmethod
+    def name(cls):
+        return "edit_password"
+
+
+    @classmethod
+    def permissions(cls):
+        return ["passwords"]
+
+
     def __init__(self):
         super(ModeEditPassword, self).__init__()
         ident = html.var("ident")
@@ -17385,13 +17002,23 @@ class ModeEditPassword(WatoMode, PasswordStore):
 #   '----------------------------------------------------------------------'
 
 class ModeDownloadAgents(WatoMode):
+    @classmethod
+    def name(cls):
+        return "download_agents"
+
+
+    @classmethod
+    def permissions(cls):
+        return ["download_agents"]
+
+
     def title(self):
         return _("Agents and Plugins")
 
 
     def buttons(self):
         global_buttons()
-        if 'agents' in modes:
+        if watolib.has_agent_bakery():
             html.context_button(_("Baked agents"), watolib.folder_preserving_link([("mode", "agents")]), "download_agents")
         html.context_button(_("Release Notes"), "version.py", "mk")
 
@@ -17526,6 +17153,16 @@ class ModeDownloadAgents(WatoMode):
 
 class ModeAnalyzeConfig(WatoMode):
     _ack_path = cmk.paths.var_dir + "/acknowledged_bp_tests.mk"
+
+    @classmethod
+    def name(cls):
+        return "analyze_config"
+
+
+    @classmethod
+    def permissions(cls):
+        return []
+
 
     def __init__(self):
         super(ModeAnalyzeConfig, self).__init__()
@@ -18016,6 +17653,16 @@ def save_network_scan_result(folder, result):
 #   '----------------------------------------------------------------------'
 
 class ModeManageReadOnly(WatoMode):
+    @classmethod
+    def name(cls):
+        return "read_only"
+
+
+    @classmethod
+    def permissions(cls):
+        return ["set_read_only"]
+
+
     def __init__(self):
         super(ModeManageReadOnly, self).__init__()
         self._settings = config.wato_read_only
@@ -18125,282 +17772,6 @@ def show_read_only_warning():
 #   +----------------------------------------------------------------------+
 #   | Functions needed at various places                                   |
 #   '----------------------------------------------------------------------'
-
-# Make some functions of watolib available to WATO plugins without using the
-# watolib module name. This is mainly done for compatibility reasons to keep
-# the current plugin API functions working
-from watolib import \
-    register_rulegroup, \
-    register_rule, \
-    register_configvar, \
-    register_configvar_group, \
-    register_hook, \
-    add_replication_paths, \
-    ConfigDomainGUI, \
-    ConfigDomainCore, \
-    ConfigDomainOMD, \
-    ConfigDomainEventConsole, \
-    configvar_order, \
-    add_change, \
-    add_service_change, \
-    site_neutral_path, \
-    register_notification_parameters, \
-    declare_host_attribute, \
-    Attribute, \
-    ContactGroupsAttribute, \
-    NagiosTextAttribute, \
-    ValueSpecAttribute, \
-    ACTestCategories, \
-    ACTest, \
-    ACResultCRIT, \
-    ACResultWARN, \
-    ACResultOK, \
-    LivestatusViaTCP
-
-
-def make_action_link(vars):
-    return watolib.folder_preserving_link(vars + [("_transid", html.transaction_manager.get())])
-
-
-def may_edit_ruleset(varname):
-    if varname == "ignored_services":
-        return config.user.may("wato.services") or config.user.may("wato.rulesets")
-    elif varname in [ "custom_checks", "datasource_programs" ]:
-        return config.user.may("wato.rulesets") and config.user.may("wato.add_or_modify_executables")
-    else:
-        return config.user.may("wato.rulesets")
-
-
-def may_edit_configvar(varname):
-    if varname in [ "actions" ]:
-        return config.user.may("wato.add_or_modify_executables")
-    else:
-        return True
-
-
-def host_status_button(hostname, viewname):
-    html.context_button(_("Status"),
-       "view.py?" + html.urlencode_vars([
-           ("view_name", viewname),
-           ("filename", watolib.Folder.current().path() + "/hosts.mk"),
-           ("host",     hostname),
-           ("site",     "")]),
-           "status")
-
-
-def service_status_button(hostname, servicedesc):
-    html.context_button(_("Status"),
-       "view.py?" + html.urlencode_vars([
-           ("view_name", "service"),
-           ("host",     hostname),
-           ("service",  servicedesc),
-           ]),
-           "status")
-
-
-def folder_status_button(viewname = "allhosts"):
-    html.context_button(_("Status"),
-       "view.py?" + html.urlencode_vars([
-           ("view_name", viewname),
-           ("wato_folder", watolib.Folder.current().path())]),
-           "status")
-
-
-def global_buttons():
-    changelog_button()
-    home_button()
-
-
-def home_button():
-    html.context_button(_("Main Menu"), watolib.folder_preserving_link([("mode", "main")]), "home")
-
-
-def changelog_button():
-    num_pending = watolib.get_number_of_pending_changes()
-    if num_pending >= 1:
-        hot = True
-        icon = "wato_changes"
-
-        if num_pending == 1:
-            buttontext = _("1 change")
-        else:
-            buttontext = _("%d changes") % num_pending
-
-    else:
-        buttontext = _("No changes")
-        hot = False
-        icon = "wato_nochanges"
-    html.context_button(buttontext, watolib.folder_preserving_link([("mode", "changelog")]), icon, hot)
-
-
-# Show confirmation dialog, send HTML-header if dialog is shown.
-def wato_confirm(html_title, message):
-    if not html.has_var("_do_confirm") and not html.has_var("_do_actions"):
-        wato_html_head(html_title)
-    return html.confirm(message)
-
-
-def wato_html_head(title):
-    global g_html_head_open
-    if not g_html_head_open:
-        g_html_head_open = True
-        html.header(title, stylesheets = wato_styles)
-        html.open_div(class_="wato")
-
-
-def may_see_hosts():
-    return config.user.may("wato.use") and \
-       (config.user.may("wato.seeall") or config.user.may("wato.hosts"))
-
-
-
-# Checks if a valuespec is a Checkbox
-def is_a_checkbox(vs):
-    if isinstance(vs, Checkbox):
-        return True
-    elif isinstance(vs, Transform):
-        return is_a_checkbox(vs._valuespec)
-    else:
-        return False
-
-
-syslog_facilities = [
-    (0, "kern"),
-    (1, "user"),
-    (2, "mail"),
-    (3, "daemon"),
-    (4, "auth"),
-    (5, "syslog"),
-    (6, "lpr"),
-    (7, "news"),
-    (8, "uucp"),
-    (9, "cron"),
-    (10, "authpriv"),
-    (11, "ftp"),
-    (16, "local0"),
-    (17, "local1"),
-    (18, "local2"),
-    (19, "local3"),
-    (20, "local4"),
-    (21, "local5"),
-    (22, "local6"),
-    (23, "local7"),
-]
-
-
-def vs_rule_options(disabling=True):
-    return Dictionary(
-        title = _("Rule Properties"),
-        optional_keys = False,
-        render = "form",
-        elements = rule_option_elements(disabling),
-    )
-
-
-class RuleComment(TextAreaUnicode):
-    def __init__(self, **kwargs):
-        kwargs.setdefault("title", _("Comment"))
-        kwargs.setdefault("help", _("An optional comment that explains the purpose of this rule."))
-        kwargs.setdefault("rows", 4)
-        kwargs.setdefault("cols", 80)
-        super(RuleComment, self).__init__(**kwargs)
-
-
-    def render_input(self, varprefix, value):
-        html.open_div(style="white-space: nowrap;")
-
-        super(RuleComment, self).render_input(varprefix, value)
-
-        date_and_user = "%s %s: " % (time.strftime("%F", time.localtime()), config.user.id)
-
-        html.nbsp()
-        html.icon_button(None,
-            help=_("Prefix date and your name to the comment"),
-            icon="insertdate",
-            onclick="vs_rule_comment_prefix_date_and_user(this, '%s');" % date_and_user
-        )
-        html.close_div()
-
-
-
-def rule_option_elements(disabling=True):
-    elements = [
-        ( "description",
-          TextUnicode(
-            title = _("Description"),
-            help = _("A description or title of this rule"),
-            size = 80,
-          )
-        ),
-        ( "comment", RuleComment()),
-        ( "docu_url",
-          TextAscii(
-            title = _("Documentation URL"),
-            help = HTML(_("An optional URL pointing to documentation or any other page. This will be displayed "
-                     "as an icon <img class=icon src='images/button_url.png'> and open a new page when clicked. "
-                     "You can use either global URLs (beginning with <tt>http://</tt>), absolute local urls "
-                     "(beginning with <tt>/</tt>) or relative URLs (that are relative to <tt>check_mk/</tt>).")),
-            size = 80,
-          ),
-        ),
-    ]
-    if disabling:
-        elements += [
-            ( "disabled",
-              Checkbox(
-                  title = _("Rule activation"),
-                  help = _("Disabled rules are kept in the configuration but are not applied."),
-                  label = _("do not apply this rule"),
-              )
-            ),
-        ]
-    return elements
-
-
-class UserIconOrAction(DropdownChoice):
-    def __init__(self, **kwargs):
-        empty_text = _("In order to be able to choose actions here, you need to "
-                       "<a href=\"%s\">define your own actions</a>.") % \
-                          "wato.py?mode=edit_configvar&varname=user_icons_and_actions"
-
-        kwargs.update({
-            'choices'     : self.list_user_icons_and_actions,
-            'allow_empty' : False,
-            'empty_text'  : empty_text,
-            'help'        : kwargs.get('help', '') + ' '+empty_text,
-        })
-        DropdownChoice.__init__(self, **kwargs)
-
-    def list_user_icons_and_actions(self):
-        choices = []
-        for key, action in config.user_icons_and_actions.items():
-            label = key
-            if 'title' in action:
-                label += ' - '+action['title']
-            if 'url' in action:
-                label += ' ('+action['url'][0]+')'
-
-            choices.append((key, label))
-        return sorted(choices, key = lambda x: x[1])
-
-
-
-class IPMIParameters(Dictionary):
-    def __init__(self, **kwargs):
-        kwargs["title"] = _("IPMI credentials")
-        kwargs["elements"] = [
-            ("username", TextAscii(
-                  title = _("Username"),
-                  allow_empty = False,
-            )),
-            ("password", Password(
-                title = _("Password"),
-                allow_empty = False,
-            )),
-        ]
-        kwargs["optional_keys"] = []
-        super(IPMIParameters, self).__init__(**kwargs)
-
 
 # Show HTML form for editing attributes.
 #
@@ -18648,10 +18019,10 @@ def configure_attributes(new, hosts, for_what, parent, myself=None, without_attr
             #
 
             # in bulk mode we show inheritance only if *all* hosts inherit
-            explanation = ""
+            explanation = u""
             if for_what == "bulk":
                 if num_haveit == 0:
-                    explanation = " (" + inherited_from + ")"
+                    explanation = u" (%s)" % inherited_from
                     value = inherited_value
                 elif not unique:
                     explanation = _("This value differs between the selected hosts.")
@@ -18725,22 +18096,6 @@ def some_host_hasnt_set(folder, attrname):
     return False
 
 
-def monitoring_macro_help():
-    return " " + _("You can use monitoring macros here. The most important are: "
-                   "<ul>"
-                   "<li><tt>$HOSTADDRESS$</tt>: The IP address of the host</li>"
-                   "<li><tt>$HOSTNAME$</tt>: The name of the host</li>"
-                   "<li><tt>$_HOSTTAGS$</tt>: List of host tags</li>"
-                   "<li><tt>$_HOSTADDRESS_4$</tt>: The IPv4 address of the host</li>"
-                   "<li><tt>$_HOSTADDRESS_6$</tt>: The IPv6 address of the host</li>"
-                   "<li><tt>$_HOSTADDRESS_FAMILY$</tt>: The primary address family of the host</li>"
-                   "</ul>"
-                   "All custom attributes defined for the host are available as <tt>$_HOST[VARNAME]$</tt>. "
-                   "Replace <tt>[VARNAME]</tt> with the <i>upper case</i> name of your variable. "
-                   "For example, a host attribute named <tt>foo</tt> with the value <tt>bar</tt> would result in "
-                   "the macro <tt>$_HOSTFOO$</tt> being replaced with <tt>bar</tt> ")
-
-
 #.
 #   .--Plugins-------------------------------------------------------------.
 #   |                   ____  _             _                              |
@@ -18753,122 +18108,31 @@ def monitoring_macro_help():
 #   | Prepare plugin-datastructures and load WATO plugins                  |
 #   '----------------------------------------------------------------------'
 
-# permissions = None -> every user can use this mode, permissions
-# are checked by the mode itself. Otherwise the user needs at
-# least wato.use and - if he makes actions - wato.edit. Plus wato.*
-# for each permission in the list.
-modes = {
-   # ident,               permissions, handler function
-   "main"               : ([], ModeMain),
-   "folder"             : (["hosts"], ModeFolder),
-   "newfolder"          : (["hosts", "manage_folders"], ModeCreateFolder),
-   "editfolder"         : (["hosts" ], ModeEditFolder),
-   "newhost"            : (["hosts", "manage_hosts"], ModeCreateHost),
-   "newcluster"         : (["hosts", "manage_hosts"], ModeCreateCluster),
-   "rename_host"        : (["hosts", "manage_hosts"], ModeRenameHost),
-   "bulk_rename_host"   : (["hosts", "manage_hosts"], ModeBulkRenameHost),
-   "bulk_import"        : (["hosts", "manage_hosts"], ModeBulkImport),
-   "host_attrs"         : (["hosts", "manage_hosts"], ModeCustomHostAttrs),
-   "edit_host_attr"     : (["hosts", "manage_hosts"], ModeEditCustomHostAttr),
-   "edit_host"          : (["hosts"], ModeEditHost),
-   "parentscan"         : (["hosts", "parentscan"], ModeParentScan),
-   "inventory"          : (["hosts"], ModeDiscovery),
-   "diag_host"          : (["hosts", "diag_host"], ModeDiagHost),
-   "object_parameters"  : (["hosts", "rulesets"], ModeObjectParameters),
-   "search"             : (["hosts"], ModeSearch),
-   "bulkinventory"      : (["hosts", "services"], ModeBulkDiscovery),
-   "bulkedit"           : (["hosts", "edit_hosts"], ModeBulkEdit),
-   "bulkcleanup"        : (["hosts", "edit_hosts"], ModeBulkCleanup),
-   "random_hosts"       : (["hosts", "random_hosts"], ModeRandomHosts),
-   "changelog"          : ([], ModeActivateChanges),
-   "auditlog"           : (["auditlog"], ModeAuditLog),
-   "globalvars"         : (["global"], ModeEditGlobals),
-   "edit_configvar"     : (["global"], ModeEditGlobalSetting),
-   "edit_site_configvar": (["global"], ModeEditSiteGlobalSetting),
-   "ldap_config"        : (["global"], ModeLDAPConfig),
-   "edit_ldap_connection": (["global"], ModeEditLDAPConnection),
-   "static_checks"      : (["rulesets"], ModeStaticChecksRulesets),
-   "check_plugins"      : ([], ModeCheckPlugins),
-   "check_manpage"      : ([], ModeCheckManPage),
+class ModeRegistry(cmk.gui.plugin_registry.ClassRegistry):
+    def plugin_base_class(self):
+        return WatoMode
 
-   "ruleeditor"         : (["rulesets"], ModeRuleEditor),
-   "rule_search"        : (["rulesets"], ModeRuleSearch),
-   "rulesets"           : (["rulesets"], ModeRulesets),
-   "edit_ruleset"       : ([], ModeEditRuleset),
-   "new_rule"           : ([], ModeNewRule),
-   "edit_rule"          : ([], ModeEditRule),
-   "clone_rule"         : ([], ModeCloneRule),
 
-   "host_groups"        : (["groups"], ModeHostgroups),
-   "service_groups"     : (["groups"], ModeServicegroups),
-   "contact_groups"     : (["users"],  ModeContactgroups),
-   "edit_host_group"    : (["groups"], ModeEditHostgroup),
-   "edit_service_group" : (["groups"], ModeEditServicegroup),
-   "edit_contact_group" : (["users"], ModeEditContactgroup),
-   "notifications"      : (["notifications"], ModeNotifications),
-   "notification_rule"  : (["notifications"], ModeEditNotificationRule),
-   "user_notifications" : (["users"], ModeUserNotifications),
-   "notification_rule_p": (None, ModeEditPersonalNotificationRule), # for personal settings
-   "user_notifications_p":(None, ModePersonalUserNotifications), # for personal settings
-   "timeperiods"        : (["timeperiods"], ModeTimeperiods),
-   "edit_timeperiod"    : (["timeperiods"], ModeEditTimeperiod),
-   "import_ical"        : (["timeperiods"], ModeTimeperiodImportICal),
-   "sites"              : (["sites"], ModeDistributedMonitoring),
-   "edit_site"          : (["sites"], ModeEditSite),
-   "edit_site_globals"  : (["sites"], ModeEditSiteGlobals),
-   "users"              : (["users"], ModeUsers),
-   "edit_user"          : (["users"], ModeEditUser),
-   "user_attrs"         : (["users"], ModeCustomUserAttrs),
-   "edit_user_attr"     : (["users"], ModeEditCustomUserAttr),
-   "roles"              : (["users"], ModeRoles),
-   "role_matrix"        : (["users"], ModeRoleMatrix),
-   "edit_role"          : (["users"], ModeEditRole),
-   "hosttags"           : (["hosttags"], ModeHostTags),
-   "edit_hosttag"       : (["hosttags"], ModeEditHosttagGroup),
-   "edit_auxtag"        : (["hosttags"], ModeEditAuxtag),
-   "pattern_editor"     : (["pattern_editor"], ModePatternEditor),
-   "icons"              : (["icons"], ModeIcons),
-   "download_agents"    : (["download_agents"], ModeDownloadAgents),
-   "backup"             : (["backups"], ModeBackup),
-   "backup_targets"     : (["backups"], ModeBackupTargets),
-   "backup_job_state"   : (["backups"], ModeBackupJobState),
-   "edit_backup_target" : (["backups"], ModeEditBackupTarget),
-   "edit_backup_job"    : (["backups"], ModeEditBackupJob),
-   "backup_keys"        : (["backups"], ModeBackupKeyManagement),
-   "backup_edit_key"    : (["backups"], ModeBackupEditKey),
-   "backup_upload_key"  : (["backups"], ModeBackupUploadKey),
-   "backup_download_key": (["backups"], ModeBackupDownloadKey),
-   "backup_restore"     : (["backups"], ModeBackupRestore),
-   "passwords"          : (["passwords"], ModePasswords),
-   "edit_password"      : (["passwords"], ModeEditPassword),
-   "read_only"          : (["set_read_only"], ModeManageReadOnly),
-   "analyze_config"     : ([], ModeAnalyzeConfig),
-}
+    def register(self, cls):
+        self._entries[cls.name()] = cls
 
+
+
+mode_registry = ModeRegistry()
+mode_registry.load_plugins()
+
+modes = {}
+# TODO: Drop this and probably replace with a hook at button rendering?
 extra_buttons = []
-modules = []
-builtin_host_attribute_names = []
 
 loaded_with_language = False
 def load_plugins(force):
-    global builtin_host_attribute_names
-
     global loaded_with_language
     if loaded_with_language == cmk.gui.i18n.get_current_language() and not force:
-        # Do not cache the custom attributes. They can be created by the user
-        # during runtime, means they need to be loaded during each page request.
-        # But delete the old definitions before to also apply removals of attributes
-        if builtin_host_attribute_names:
-            declare_custom_host_attrs()
         return
 
     # Reset global vars
     del extra_buttons[:]
-    del modules[:]
-
-    watolib.initialize_host_attribute_structures()
-    watolib.undeclare_all_host_attributes()
-    watolib.initialize_global_configvars()
 
     # Initialize watolib things which are needed before loading the WATO plugins.
     # This also loads the watolib plugins.
@@ -19170,58 +18434,11 @@ def load_plugins(force):
 
     utils.load_web_plugins("wato", globals())
 
-    watolib.declare_host_tag_attributes(force = True)
-
-    builtin_host_attribute_names = watolib.all_host_attribute_names()
-    declare_custom_host_attrs()
+    if modes:
+        raise MKGeneralException(_("Deprecated WATO modes found: %r. "
+            "They need to be refactored to new API.") % modes.keys())
 
     # This must be set after plugin loading to make broken plugins raise
     # exceptions all the time and not only the first time (when the plugins
     # are loaded).
     loaded_with_language = cmk.gui.i18n.get_current_language()
-
-
-def get_modules():
-    return sorted(modules, key=lambda m: (m.sort_index, m.title))
-
-class WatoModule(MenuItem):
-    pass
-
-
-def register_modules(*args):
-    """Register one or more top level modules to Check_MK WATO.
-    The registered modules are displayed in the navigation of WATO."""
-    for arg in args:
-        assert isinstance(arg, WatoModule)
-    modules.extend(args)
-
-#.
-#   .--External API--------------------------------------------------------.
-#   |      _____      _                        _      _    ____ ___        |
-#   |     | ____|_  _| |_ ___ _ __ _ __   __ _| |    / \  |  _ \_ _|       |
-#   |     |  _| \ \/ / __/ _ \ '__| '_ \ / _` | |   / _ \ | |_) | |        |
-#   |     | |___ >  <| ||  __/ |  | | | | (_| | |  / ___ \|  __/| |        |
-#   |     |_____/_/\_\\__\___|_|  |_| |_|\__,_|_| /_/   \_\_|  |___|       |
-#   |                                                                      |
-#   +----------------------------------------------------------------------+
-#   |  Functions called by others that import wato (such as views)         |
-#   '----------------------------------------------------------------------'
-
-# Return the title of a folder - which is given as a string path
-def get_folder_title(path):
-    folder = watolib.Folder.folder(path)
-    if folder:
-        return folder.title()
-    else:
-        return path
-
-
-# Create an URL to a certain WATO folder when we just know its path
-def link_to_folder_by_path(path):
-    return "wato.py?mode=folder&folder=" + html.urlencode(path)
-
-
-# Create an URL to the edit-properties of a host when we just know its name
-def link_to_host_by_name(host_name):
-    return "wato.py?" + html.urlencode_vars(
-    [("mode", "edit_host"), ("host", host_name)])

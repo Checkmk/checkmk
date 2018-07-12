@@ -26,6 +26,20 @@
 
 import cmk.defines as defines
 
+from cmk.gui.plugins.wato.active_checks import check_icmp_params
+
+import cmk.gui.mkeventd as mkeventd
+from cmk.gui.i18n import _
+from cmk.gui.valuespec import *
+from . import (
+    register_rulegroup,
+    register_rule,
+    register_check_parameters,
+    UserIconOrAction,
+    Levels,
+    PredictiveLevels,
+)
+
 # Rules for configuring parameters of checks (services)
 
 register_rulegroup("checkparams", _("Parameters for discovered services"),
@@ -14548,7 +14562,7 @@ register_check_parameters(subgroup_applications,
                         title = _("Syslog facility for forwarded messages"),
                         help = _("When forwarding messages and no facility can be extracted from the "
                                  "message this facility is used."),
-                        choices = syslog_facilities,
+                        choices = mkeventd.syslog_facilities,
                         default_value = 17, # local1
                     )),
                     ('restrict_logfiles',

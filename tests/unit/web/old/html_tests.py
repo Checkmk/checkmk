@@ -13,7 +13,7 @@ from os.path import isfile, join
 
 # internal imports
 from testlib import cmk_path
-from htmllib import HTML
+from cmk.gui.htmllib import HTML
 from classes import HTMLTester
 import tools
 

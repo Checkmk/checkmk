@@ -44,6 +44,7 @@ def open(table_id=None, title=None, **kwargs):
 
 
 def begin(table_id=None, title=None, **kwargs):
+    # type: Optional[bytes], Optional[Text]
     tables.append(Table(table_id, title, **kwargs))
 
 

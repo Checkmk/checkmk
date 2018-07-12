@@ -24,6 +24,16 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+import cmk.gui.watolib as watolib
+from cmk.gui.i18n import _
+from cmk.gui.valuespec import *
+
+from . import (
+    register_rulegroup,
+    register_rule,
+    monitoring_macro_help,
+)
+
 register_rulegroup("datasource_programs",
     _("Datasource Programs"),
     _("Specialized agents, e.g. check via SSH, ESX vSphere, SAP R/3"))

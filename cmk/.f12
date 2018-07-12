@@ -11,6 +11,8 @@ echo "Copy CRE files..."
 sudo rsync \
     --exclude=cee \
     --exclude=cee.py \
+    --exclude=cme \
+    --exclude=cme.py \
     -a * $ROOT/lib/python/cmk/
 sudo pycompile -q $ROOT/lib/python/cmk/
 

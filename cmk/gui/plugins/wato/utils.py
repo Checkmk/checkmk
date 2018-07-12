@@ -1270,3 +1270,11 @@ class EventsMode(WatoMode):
 
 
 
+# Sort given sites argument by local, followed by slaves
+# TODO: Change to sorted() mechanism
+def sort_sites(sitelist):
+    def custom_sort(a,b):
+        return cmp(a[1].get("replication"), b[1].get("replication")) or \
+               cmp(a[1].get("alias"), b[1].get("alias"))
+    sitelist.sort(cmp = custom_sort)
+    return sitelist

@@ -26,6 +26,12 @@
 
 
 import cmk.gui.bi as bi
+from cmk.gui.i18n import _
+
+from . import (
+    sidebar_snapins,
+    bulletlink,
+)
 
 
 #   .--as list-------------------------------------------------------------.

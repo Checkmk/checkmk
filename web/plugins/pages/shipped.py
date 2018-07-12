@@ -80,11 +80,7 @@ register_handlers({
     "sidebar_ajax_set_snapin_site"  : sidebar.ajax_set_snapin_site,
     "sidebar_get_messages"          : sidebar.ajax_get_messages,
     "sidebar_message_read"          : sidebar.ajax_message_read,
-    "ajax_search"                   : sidebar.ajax_search,
-    "search_open"                   : sidebar.search_open,
-    "switch_master_state"           : sidebar.ajax_switch_masterstate,
     "switch_site"                   : sidebar.ajax_switch_site,
-    "add_bookmark"                  : lambda: sidebar.ajax_add_bookmark(),
     "tree_openclose"                : weblib.ajax_tree_openclose,
 
     "dashboard"                     : dashboard.page_dashboard,

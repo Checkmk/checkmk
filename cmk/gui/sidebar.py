@@ -49,6 +49,7 @@ import cmk.gui.notify as notify
 import cmk.gui.werks as werks
 import cmk.gui.sites as sites
 import cmk.gui.modules as modules
+import cmk.gui.plugin_registry
 import cmk.gui.plugins.sidebar
 import cmk.gui.plugins.sidebar.quicksearch
 from cmk.gui.exceptions import MKGeneralException, MKUserError, MKException
@@ -123,7 +124,7 @@ def load_plugins(force):
 # TODO: Deprecate this one day.
 def transform_old_dict_based_snapins():
     for snapin_id, snapin in sidebar_snapins.items():
-        snapin_registry.register_snapin(GenericSnapin(snapin_id, snapin))
+        snapin_registry.register(GenericSnapin(snapin_id, snapin))
 
 
 # TODO: Deprecate this one day.
@@ -565,37 +566,31 @@ def ajax_switch_site():
 
 
 #.
-#   .--Snapin API----------------------------------------------------------.
-#   |         ____                    _            _    ____ ___           |
-#   |        / ___| _ __   __ _ _ __ (_)_ __      / \  |  _ \_ _|          |
-#   |        \___ \| '_ \ / _` | '_ \| | '_ \    / _ \ | |_) | |           |
-#   |         ___) | | | | (_| | |_) | | | | |  / ___ \|  __/| |           |
-#   |        |____/|_| |_|\__,_| .__/|_|_| |_| /_/   \_\_|  |___|          |
-#   |                          |_|                                         |
-#   +----------------------------------------------------------------------+
-#   | The new snapin API allows encapsulating the whole functionality of a |
-#   | snapin in a single object. This includes page handlers and so on.    |
-#   | All new snapins need to be realized as child of SidebarSnapin() and  |
-#   | use the register_snapin() function to register with the sidebar.     |
+#   .--Plugins-------------------------------------------------------------.
+#   |                   ____  _             _                              |
+#   |                  |  _ \| |_   _  __ _(_)_ __  ___                    |
+#   |                  | |_) | | | | |/ _` | | '_ \/ __|                   |
+#   |                  |  __/| | |_| | (_| | | | | \__ \                   |
+#   |                  |_|   |_|\__,_|\__, |_|_| |_|___/                   |
+#   |                                 |___/                                |
 #   '----------------------------------------------------------------------'
 
-# Load all plugins. The snapins will then register on their own by subclassing SidebarSnapin
-import cmk.gui.plugins.sidebar
 
-class SnapinRegistry(object):
-    def __init__(self):
-        super(SnapinRegistry, self).__init__()
-        self._snapins = {}
+class SnapinRegistry(cmk.gui.plugin_registry.Registry):
+    """The management object for all available plugins.
+
+    The snapins are loaded by importing cmk.gui.plugins.sidebar. These plugins
+    contain subclasses of the cmk.gui.plugins.SidebarSnapin class.
+    SnapinRegistry.load_plugins() will register all snapins with this management
+    object and make them available for use.
+    """
+    def plugin_base_class(self):
+        return cmk.gui.plugins.sidebar.SidebarSnapin
 
 
-    def load_snapins(self):
-        for snapin_class in cmk.gui.plugins.sidebar.SidebarSnapin.__subclasses__(): # pylint: disable=no-member
-            self.register_snapin(snapin_class())
-
-
-    def register_snapin(self, snapin):
+    def register(self, snapin):
         snapin_id = snapin.type_name()
-        self._snapins[snapin_id] = snapin
+        self._entries[snapin_id] = snapin
 
         config.declare_permission("sidesnap.%s" % snapin_id,
             snapin.title(),
@@ -605,20 +600,8 @@ class SnapinRegistry(object):
         modules.register_handlers(snapin.page_handlers())
 
 
-    def __contains__(self, text):
-        return text in self._snapins
-
-
-    def items(self):
-        return self._snapins.items()
-
-
-    def get(self, key, deflt=None):
-        return self._snapins.get(key, deflt)
-
-
 snapin_registry = SnapinRegistry()
-snapin_registry.load_snapins()
+snapin_registry.load_plugins()
 
 
 class GenericSnapin(cmk.gui.plugins.sidebar.SidebarSnapin):

@@ -576,7 +576,7 @@ def ajax_switch_site():
 #   '----------------------------------------------------------------------'
 
 
-class SnapinRegistry(cmk.gui.plugin_registry.Registry):
+class SnapinRegistry(cmk.gui.plugin_registry.ObjectRegistry):
     """The management object for all available plugins.
 
     The snapins are loaded by importing cmk.gui.plugins.sidebar. These plugins

@@ -26,9 +26,14 @@
 
 import time
 import crypt
+import os
 
 import cmk.store as store
 import cmk.paths
+
+from cmk.gui.i18n import _
+from cmk.gui.exceptions import MKUserError
+from . import UserConnector
 
 def encrypt_password(password, salt=None, prefix="1"):
     import cmk.gui.md5crypt
@@ -38,10 +43,6 @@ def encrypt_password(password, salt=None, prefix="1"):
 
 
 class HtpasswdUserConnector(UserConnector):
-    def __init__(self, config):
-        super(HtpasswdUserConnector, self).__init__(config)
-
-
     @classmethod
     def type(cls):
         return 'htpasswd'
@@ -66,13 +67,17 @@ class HtpasswdUserConnector(UserConnector):
         if username not in users:
             return None # not existing user, skip over
 
-        if is_automation_user(username):
+        if self._is_automation_user(username):
             raise MKUserError(None, _("Automation user rejected"))
 
         if self.password_valid(users[username], password):
             return username
         else:
             return False
+
+
+    def _is_automation_user(self, user_id):
+        return os.path.isfile(cmk.paths.var_dir + "/web/" + user_id.encode("utf-8") + "/automation.secret")
 
 
     # Loads the contents of a valid htpasswd file into a dictionary
@@ -120,6 +125,3 @@ class HtpasswdUserConnector(UserConnector):
                 output += "%s:%s%s\n" % (id.encode("utf-8"), locksym, user["password"])
 
         store.save_file(cmk.paths.htpasswd_file, output)
-
-
-multisite_user_connectors['htpasswd'] = HtpasswdUserConnector

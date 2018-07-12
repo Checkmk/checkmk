@@ -55,8 +55,14 @@
 # may(<USER_NAME>, <PERMISSION>)
 # Returns true/false whether or not the user is permitted
 
+import os
+import copy
+
 import cmk.store as store
 import cmk.paths
+
+import cmk.gui.config as config
+import cmk.gui.hooks as hooks
 
 g_auth_base_dir = cmk.paths.var_dir + '/wato/auth'
 
@@ -217,10 +223,14 @@ function permitted_maps($username) {
     store.release_lock(lockfile)
 
 
-def create_auth_file(callee, users):
+def create_auth_file(callee, users=None):
+    import cmk.gui.userdb as userdb # TODO: Cleanup
+    if users is None:
+        userdb.load_users()
+
     store.mkdir(g_auth_base_dir)
 
-    contactgroups = load_group_information().get('contact', {})
+    contactgroups = userdb.load_group_information().get('contact', {})
     groups = {}
     for gid, group in contactgroups.items():
         if 'nagvis_maps' in group and group['nagvis_maps']:
@@ -229,32 +239,8 @@ def create_auth_file(callee, users):
     create_php_file(callee, users, config.get_role_permissions(), groups)
 
 
-# TODO: Dead code?
-def get_folder_permissions_of_users(users):
-    users = load_users()
-    import cmk.gui.watolib as watolib
-
-    permissions = {}
-    for username in users.iterkeys():
-        perms = {}
-        for folder_path, folder in watolib.Folder.all_folders().iteritems():
-            readable = folder.user_may(username, "read")
-            writable = folder.user_may(username, "write")
-
-            if readable or writable:
-                perms[folder_path] = {}
-                if readable:
-                    perms[folder_path]['read'] = True
-                if writable:
-                    perms[folder_path]['write'] = True
-
-        if perms:
-            permissions[username] = perms
-    return permissions
-
-
 # TODO: Should we not execute this hook also when folders are modified?
 hooks.register('users-saved',         lambda users: create_auth_file("users-saved", users))
-hooks.register('roles-saved',         lambda x: create_auth_file("roles-saved", load_users()))
-hooks.register('contactgroups-saved', lambda x: create_auth_file("contactgroups-saved", load_users()))
-hooks.register('activate-changes',    lambda x: create_auth_file("activate-changes", load_users()))
+hooks.register('roles-saved',         lambda x: create_auth_file("roles-saved"))
+hooks.register('contactgroups-saved', lambda x: create_auth_file("contactgroups-saved"))
+hooks.register('activate-changes',    lambda x: create_auth_file("activate-changes"))

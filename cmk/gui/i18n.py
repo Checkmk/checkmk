@@ -27,7 +27,7 @@
 import __builtin__
 import os
 import gettext as gettext_module
-from typing import NamedTuple, Optional, List
+from typing import NamedTuple, Optional, List, Tuple
 
 import cmk.paths
 
@@ -77,7 +77,7 @@ def get_language_alias(lang):
     alias = lang
     for lang_dir in _get_language_dirs():
         try:
-            alias = file('%s/%s/alias' % (lang_dir, lang), 'r').read().strip()
+            alias = open('%s/%s/alias' % (lang_dir, lang), 'r').read().strip()
         except (OSError, IOError):
             pass
     return alias
@@ -103,16 +103,19 @@ def get_languages():
 
 
 def unlocalize():
+    # type: () -> None
     global _translation
     _translation = None
 
 
 def localize(lang):
+    # type: (str) -> None
     set_language_cookie(lang)
     _do_localize(lang)
 
 
 def _do_localize(lang):
+    # type: (str) -> None
     global _translation
     if lang is None:
         unlocalize()
@@ -127,9 +130,10 @@ def _do_localize(lang):
 
 
 def _init_language(lang):
+    # type: (str) -> Optional[gettext_module.NullTranslations]
     try:
         translation = gettext_module.translation("multisite", _get_cmk_locale_path(lang),
-                                          languages = [ lang ], codeset = 'UTF-8')
+                languages = [ lang ], codeset = 'UTF-8') # type: Optional[gettext_module.NullTranslations]
     except IOError, e:
         translation = None
 
@@ -137,6 +141,7 @@ def _init_language(lang):
 
 
 def _get_cmk_locale_path(lang):
+    # type: (str) -> str
     po_path = '/%s/LC_MESSAGES/multisite.mo' % lang
     if os.path.exists(cmk.paths.local_locale_dir + po_path):
         return cmk.paths.local_locale_dir
@@ -145,6 +150,7 @@ def _get_cmk_locale_path(lang):
 
 
 def initialize():
+    # type: () -> None
     unlocalize()
 
 
@@ -176,6 +182,7 @@ def set_language_cookie(lang):
 
 # Localization of user supplied texts
 def _u(text):
+    # type: (unicode) -> unicode
     # TODO: Reimplement this once config is available in "cmk.gui"!
     #import config
     #ldict = config.user_localizations.get(text)

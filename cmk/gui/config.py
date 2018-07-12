@@ -32,7 +32,6 @@ import glob
 import copy
 
 import cmk.gui.utils as utils
-import cmk.gui.hooks as hooks
 import cmk.gui.i18n
 from cmk.gui.i18n import _
 import cmk.gui.log as log
@@ -739,6 +738,68 @@ def save_user_file(name, data, user, unlock=False):
 #   |  Helper functions for dealing with host tags                         |
 #   '----------------------------------------------------------------------'
 
+class BuiltinTags(object):
+    def host_tags(self):
+        return [
+            ("agent", "%s/%s" % (_("Data sources"), _("Check_MK Agent")), [
+                    ("cmk-agent",      _("Contact either Check_MK Agent or use datasource program"), ["tcp"]),
+                    ("all-agents",     _("Contact Check_MK agent and all enabled datasource programs"), ["tcp"]),
+                    ("special-agents", _("Use all enabled datasource programs"), ["tcp"]),
+                    ("no-agent",       _("No agent"), []),
+                ],
+                ["!ping"],
+            ),
+            ("snmp", "%s/%s" % (_("Data sources"), _("SNMP")), [
+                    ("no-snmp",        _("No SNMP"), []),
+                    ("snmp-v2",        _("SNMP v2 or v3"), ["snmp"]),
+                    ("snmp-v1",        _("SNMP v1"), ["snmp"]),
+                ],
+                ["!ping"],
+            ),
+            ("address_family", "%s/%s " % (_("Address"), _("IP Address Family")), [
+                    ("ip-v4-only", _("IPv4 only"), ["ip-v4"]),
+                    ("ip-v6-only", _("IPv6 only"), ["ip-v6"]),
+                    ("ip-v4v6",    _("IPv4/IPv6 dual-stack"), ["ip-v4", "ip-v6"]),
+                    ("no-ip",      _("No IP"),     []),
+                ]
+            ),
+        ]
+
+
+    def aux_tags(self):
+        return [
+            ("ip-v4", "%s/%s" % (_("Address"), _("IPv4"))),
+            ("ip-v6", "%s/%s" % (_("Address"), _("IPv6"))),
+            ("snmp",  "%s/%s" % (_("Data sources"), _("Monitor via SNMP"))),
+            ("tcp",   "%s/%s" % (_("Data sources"), _("Monitor via Check_MK Agent"))),
+            ("ping",  "%s/%s" % (_("Data sources"), _("Only ping this device"))),
+        ]
+
+
+    def get_effective_tag_groups(self, tag_groups):
+        """Extend the given tag group definitions with the builtin tag groups
+        and return the extended list"""
+        tag_groups = tag_groups[:]
+        tag_group_ids = set([ tg[0] for tg in tag_groups ])
+
+        for tag_group in self.host_tags():
+            if tag_group[0] not in tag_group_ids:
+                tag_groups.append(tag_group)
+
+        return tag_groups
+
+
+    def get_effective_aux_tags(self, aux_tag_list):
+        aux_tags = aux_tag_list[:]
+        aux_tag_ids = set([ at[0] for at in aux_tag_list ])
+
+        for aux_tag in self.aux_tags():
+            if aux_tag[0] not in aux_tag_ids:
+                aux_tags.append(aux_tag)
+
+        return aux_tags
+
+
 # Previously defined "agent" tag group, shipped with the default WATO config,
 # needs to be removed when it has not been modified by the user. It is a builtin
 # tag group now.
@@ -770,12 +831,18 @@ def remove_old_sample_tags(host_tags, aux_tags):
             pass # Not there or modified
 
 
-# Returns the effective set of tag groups defined by WATO. This includes
-# the implicitly declared builtin host tags. This function must be used by
-# the GUI code to get the tag group definitions.
 def host_tag_groups():
-    import cmk.gui.watolib as watolib
-    return watolib.get_effective_tag_groups(wato_host_tags)
+    """Returns the effective set of tag groups defined. This includes
+    the implicitly declared builtin host tags. This function must be used by
+    the GUI code to get the tag group definitions."""
+    return BuiltinTags().get_effective_tag_groups(wato_host_tags)
+
+
+def aux_tags():
+    """Returns the effective set of auxiliary tags defined. This includes
+    the implicitly declared builtin host tags. This function must be used by
+    the GUI code to get the auxiliay tag definitions."""
+    return BuiltinTags().get_effective_aux_tags(wato_aux_tags)
 
 
 #.

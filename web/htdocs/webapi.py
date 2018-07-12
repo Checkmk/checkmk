@@ -34,6 +34,8 @@ import utils
 import config
 import watolib
 import userdb
+import cmk.gui.i18n
+from cmk.gui.i18n import _
 from cmk.gui.exceptions import MKGeneralException, MKUserError, MKAuthException, \
                            MKException
 from valuespec import *
@@ -169,7 +171,7 @@ class APICallCollection(object):
 
 def load_plugins(force):
     global loaded_with_language
-    if loaded_with_language == current_language and not force:
+    if loaded_with_language == cmk.gui.i18n.get_current_language() and not force:
         return
 
     utils.load_web_plugins("webapi", globals())
@@ -177,7 +179,7 @@ def load_plugins(force):
     # This must be set after plugin loading to make broken plugins raise
     # exceptions all the time and not only the first time (when the plugins
     # are loaded).
-    loaded_with_language = current_language
+    loaded_with_language = cmk.gui.i18n.get_current_language()
 
     config.declare_permission("wato.api_allowed", _("Access to Web-API"),
                                                   _("This permissions specifies if the role "\

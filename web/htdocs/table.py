@@ -29,6 +29,7 @@ from contextlib import contextmanager
 
 import utils
 import config
+from cmk.gui.i18n import _
 
 
 tables = []

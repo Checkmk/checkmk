@@ -24,7 +24,11 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import __builtin__, os, gettext
+import __builtin__
+import os
+import gettext as gettext_module
+from typing import NamedTuple, Optional, List
+
 import cmk.paths
 
 #.
@@ -36,23 +40,42 @@ import cmk.paths
 #   |          \____|\___|\__|\__\___/_/\_\\__| |_|_|\___/|_| |_|          |
 #   |                                                                      |
 #   +----------------------------------------------------------------------+
-#   | Handling of the regular localizatoon of the GUI                      |
+#   | Handling of the regular localization of the GUI                      |
 #   '----------------------------------------------------------------------'
 
-# Language specific translation objects. One object for each translation,
-# indexed by the internal language id
-translations = {}
+Translation = NamedTuple("Translation", [
+    ("translation", gettext_module.NullTranslations),
+    ("name", str)
+])
+
+# Current active translation object
+_translation = None # type: Optional[Translation]
+
+def _(message):
+    # type: (str) -> unicode
+    if not _translation:
+        return unicode(message)
+    else:
+        return _translation.translation.ugettext(message)
+
 
 def get_current_language():
-    return current_language
+    # type: () -> Optional[str]
+    if _translation:
+        return _translation.name
+    else:
+        return None
 
-def get_language_dirs():
+
+def _get_language_dirs():
+    # type: () -> List[str]
     return [ cmk.paths.locale_dir, cmk.paths.local_locale_dir ]
 
 
 def get_language_alias(lang):
+    # type: (str) -> unicode
     alias = lang
-    for lang_dir in get_language_dirs():
+    for lang_dir in _get_language_dirs():
         try:
             alias = file('%s/%s/alias' % (lang_dir, lang), 'r').read().strip()
         except (OSError, IOError):
@@ -61,12 +84,13 @@ def get_language_alias(lang):
 
 
 def get_languages():
+    # type: () -> List[Tuple[str, unicode]]
     # Add the hard coded english language to the language list
     # It must be choosable even if the administrator changed the default
     # language to a custom value
     languages = set([ ('', _('English')) ])
 
-    for lang_dir in get_language_dirs():
+    for lang_dir in _get_language_dirs():
         try:
             languages.update([ (val, _("%s") % get_language_alias(val))
                 for val in os.listdir(lang_dir) if not '.' in val ])
@@ -78,7 +102,41 @@ def get_languages():
     return list(languages)
 
 
-def get_cmk_locale_path(lang):
+def unlocalize():
+    global _translation
+    _translation = None
+
+
+def localize(lang):
+    set_language_cookie(lang)
+    _do_localize(lang)
+
+
+def _do_localize(lang):
+    global _translation
+    if lang is None:
+        unlocalize()
+        return
+
+    gettext_translation = _init_language(lang)
+    if not gettext_translation:
+        unlocalize()
+        return
+
+    _translation = Translation(translation=gettext_translation, name=lang)
+
+
+def _init_language(lang):
+    try:
+        translation = gettext_module.translation("multisite", _get_cmk_locale_path(lang),
+                                          languages = [ lang ], codeset = 'UTF-8')
+    except IOError, e:
+        translation = None
+
+    return translation
+
+
+def _get_cmk_locale_path(lang):
     po_path = '/%s/LC_MESSAGES/multisite.mo' % lang
     if os.path.exists(cmk.paths.local_locale_dir + po_path):
         return cmk.paths.local_locale_dir
@@ -86,50 +144,7 @@ def get_cmk_locale_path(lang):
         return cmk.paths.locale_dir
 
 
-def init_language(lang, domain="multisite", locale_path=None):
-    if locale_path == None:
-        locale_path = get_cmk_locale_path(lang)
-
-    try:
-        translation = gettext.translation(domain, locale_path,
-                                          languages = [ lang ], codeset = 'UTF-8')
-    except IOError, e:
-        translation = None
-
-    translations[lang] = translation
-    return translation
-
-
-# Prepares the builtin-scope for localization, registers the _() function and
-# current_language variable. Is also used to disable localization
-def unlocalize():
-    # TODO: Make behaviour like gettext _(): Always return unicode strings
-    __builtin__._ = lambda x: x
-    __builtin__.current_language = None
-
-
-def localize(lang, **kwargs):
-    set_language_cookie(lang)
-    do_localize(lang, **kwargs)
-
-
-def do_localize(lang, **kwargs):
-    if lang:
-        # FIXME: Clean this up. Make the other code access the current language through a
-        # function of this module.
-        __builtin__.current_language = lang
-
-        translation = translations.get(lang, init_language(lang, **kwargs))
-        if translation:
-            translation.install(unicode = True)
-        else:
-            unlocalize() # Fallback to non localized multisite
-    else:
-        unlocalize()
-
-
 def initialize():
-    __builtin__._u = _u
     unlocalize()
 
 
@@ -161,12 +176,13 @@ def set_language_cookie(lang):
 
 # Localization of user supplied texts
 def _u(text):
-    import config
-    ldict = config.user_localizations.get(text)
-    if ldict:
-        return ldict.get(current_language, text)
-    else:
-        return text
+    # TODO: Reimplement this once config is available in "cmk.gui"!
+    #import config
+    #ldict = config.user_localizations.get(text)
+    #if ldict:
+    #    return ldict.get(get_current_language(), text)
+    #else:
+    return text
 
 
 initialize()

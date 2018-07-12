@@ -26,6 +26,7 @@
 
 import time, re, datetime, config, table, livestatus
 import views, sites
+from cmk.gui.i18n import _
 from cmk.gui.exceptions import MKGeneralException, MKUserError, MKAuthException
 
 

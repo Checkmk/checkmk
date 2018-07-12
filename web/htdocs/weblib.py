@@ -26,6 +26,7 @@
 
 import config
 import utils
+from cmk.gui.i18n import _
 import re
 
 from cmk.gui.exceptions import MKUserError

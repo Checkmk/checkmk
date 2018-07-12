@@ -32,6 +32,7 @@ import utils
 from log import logger
 import cmk.paths
 import cmk.store as store
+import cmk.gui.i18n
 
 from cmk.gui.exceptions import MKGeneralException
 
@@ -43,14 +44,14 @@ lock_file = cmk.paths.tmp_dir + "/cron.lastrun"
 # Load all view plugins
 def load_plugins(force):
     global loaded_with_language
-    if loaded_with_language == current_language and not force:
+    if loaded_with_language == cmk.gui.i18n.get_current_language() and not force:
         return
 
     global multisite_cronjobs
     multisite_cronjobs = []
     utils.load_web_plugins("cron", globals())
 
-    loaded_with_language = current_language
+    loaded_with_language = cmk.gui.i18n.get_current_language()
 
 
 def register_job(cron_job):

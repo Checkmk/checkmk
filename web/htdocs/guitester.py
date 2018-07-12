@@ -34,6 +34,7 @@ import cmk.store as store
 
 import config
 import sites
+from cmk.gui.i18n import _
 from cmk.gui.exceptions import MKException, MKGeneralException, MKException, MKAuthException
 
 

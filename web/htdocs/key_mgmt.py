@@ -38,6 +38,7 @@ import cmk.store as store
 
 import table
 import config
+from cmk.gui.i18n import _
 from valuespec import *
 from cmk.gui.exceptions import MKUserError
 

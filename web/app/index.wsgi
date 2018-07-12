@@ -27,7 +27,7 @@
 import sys, os, pprint, __builtin__
 import traceback
 
-import i18n
+import cmk.gui.i18n
 import sites
 import livestatus
 import modules
@@ -170,7 +170,7 @@ class Application(object):
         if not login.authenticate(self._request):
             self._handle_not_authenticated()
 
-        # Initialize the multiste i18n. This will be replaced by
+        # Initialize the multiste cmk.gui.i18n. This will be replaced by
         # language settings stored in the user profile after the user
         # has been initialized
         self._localize_request()
@@ -206,13 +206,13 @@ class Application(object):
 
 
     def _localize_request(self):
-        previous_language = i18n.get_current_language()
-        i18n.localize(html.var("lang", config.user.language()))
+        previous_language = cmk.gui.i18n.get_current_language()
+        cmk.gui.i18n.localize(html.var("lang", config.user.language()))
 
         # All plugins might have to be reloaded due to a language change. Only trigger
         # a second plugin loading when the user is really using a custom localized GUI.
         # Otherwise the load_all_plugins() at the beginning of the request is sufficient.
-        if i18n.get_current_language() != previous_language:
+        if cmk.gui.i18n.get_current_language() != previous_language:
             modules.load_all_plugins()
 
 

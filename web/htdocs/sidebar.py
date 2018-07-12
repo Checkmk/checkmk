@@ -34,6 +34,8 @@ import traceback
 import cmk.paths
 import cmk.store as store
 
+import cmk.gui.i18n
+from cmk.gui.i18n import _
 import utils
 import config, views, userdb, pagetypes
 import notify, werks
@@ -56,7 +58,7 @@ search_plugins  = []
 
 def load_plugins(force):
     global loaded_with_language
-    if loaded_with_language == current_language and not force:
+    if loaded_with_language == cmk.gui.i18n.get_current_language() and not force:
         return
 
     # Load all snapins
@@ -74,7 +76,7 @@ def load_plugins(force):
     # This must be set after plugin loading to make broken plugins raise
     # exceptions all the time and not only the first time (when the plugins
     # are loaded).
-    loaded_with_language = current_language
+    loaded_with_language = cmk.gui.i18n.get_current_language()
 
 
 # Pre Check_MK 1.5 the snapins were declared with dictionaries like this:

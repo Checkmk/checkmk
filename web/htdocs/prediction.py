@@ -32,6 +32,7 @@ import cmk.paths
 import config
 import sites
 import livestatus
+from cmk.gui.i18n import _
 from cmk.gui.exceptions import MKGeneralException
 import cmk.utils
 import cmk.store as store

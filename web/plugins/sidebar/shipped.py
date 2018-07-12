@@ -32,6 +32,7 @@ import views, time, dashboard
 import pagetypes, table
 import sites
 import watolib
+from cmk.gui.i18n import _u, _
 
 import livestatus
 import notifications

@@ -41,6 +41,8 @@ import cmk
 
 import config
 import sites
+import cmk.gui.i18n
+from cmk.gui.i18n import _
 from log import logger
 from cmk.gui.exceptions import MKConfigError, MKGeneralException
 
@@ -51,7 +53,7 @@ compile_logger = logger.getChild("bi.compilation")
 # Load all view plugins
 def load_plugins(force):
     global loaded_with_language
-    if loaded_with_language == current_language and not force:
+    if loaded_with_language == cmk.gui.i18n.get_current_language() and not force:
         return
 
     config.declare_permission_section("bi", _("BI - Check_MK Business Intelligence"))
@@ -66,7 +68,7 @@ def load_plugins(force):
     # This must be set after plugin loading to make broken plugins raise
     # exceptions all the time and not only the first time (when the plugins
     # are loaded).
-    loaded_with_language = current_language
+    loaded_with_language = cmk.gui.i18n.get_current_language()
 
 #      ____                _              _
 #     / ___|___  _ __  ___| |_ __ _ _ __ | |_ ___

@@ -25,6 +25,7 @@
 # Boston, MA 02110-1301 USA.
 
 import config
+from cmk.gui.i18n import _
 
 import urlparse
 import re

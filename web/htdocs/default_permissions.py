@@ -25,6 +25,9 @@
 # Boston, MA 02110-1301 USA.
 
 import config
+import cmk.gui.i18n
+from cmk.gui.i18n import _
+
 loaded_with_language = False
 
 #   .----------------------------------------------------------------------.
@@ -41,7 +44,7 @@ loaded_with_language = False
 
 def load_plugins(force):
     global loaded_with_language
-    if loaded_with_language == current_language and not force:
+    if loaded_with_language == cmk.gui.i18n.get_current_language() and not force:
         return
 
     config.declare_permission_section("general", _('General Permissions'), 10)
@@ -170,7 +173,7 @@ def load_plugins(force):
          _("Show the column for stale host and service checks in the tactical overview snapin."),
          [ "guest", "user", "admin" ])
 
-    loaded_with_language = current_language
+    loaded_with_language = cmk.gui.i18n.get_current_language()
 
 
 # TODO: This has been obsoleted by pagetypes.py

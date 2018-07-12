@@ -76,6 +76,7 @@ import multitar
 import sites
 import mkeventd
 import backup
+from cmk.gui.i18n import _u, _
 from log import logger
 from valuespec import *
 from cmk.gui.exceptions import MKGeneralException, MKAuthException, MKUserError

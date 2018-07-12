@@ -85,6 +85,7 @@ from cmk.gui.exceptions import MKUserError, RequestTimeout
 import utils
 import config
 import log
+from cmk.gui.i18n import _
 
 
 #.

@@ -31,6 +31,7 @@ import time
 import Cookie
 import cgi
 import log
+from cmk.gui.i18n import _
 import cmk.gui.http_status
 from cmk.gui.exceptions import HTTPRedirect
 

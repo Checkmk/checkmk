@@ -48,6 +48,7 @@ import table
 import forms
 import userdb
 from valuespec import *
+from cmk.gui.i18n import _u, _
 
 from cmk.gui.exceptions import MKUserError, MKGeneralException, MKAuthException
 

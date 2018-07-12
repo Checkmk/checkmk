@@ -35,13 +35,15 @@ import background_job
 import traceback
 from cmk.exceptions import MKGeneralException
 import cmk.store
+import cmk.gui.i18n
+from cmk.gui.i18n import _
 
 from background_job import JobStatus
 
 loaded_with_language = False
 def load_plugins(force):
     global loaded_with_language
-    if loaded_with_language == current_language and not force:
+    if loaded_with_language == cmk.gui.i18n.get_current_language() and not force:
         return
 
     config.declare_permission_section("background_jobs", _("Background jobs"), do_sort = False)
@@ -63,7 +65,7 @@ def load_plugins(force):
     # This must be set after plugin loading to make broken plugins raise
     # exceptions all the time and not only the first time (when the plugins
     # are loaded).
-    loaded_with_language = current_language
+    loaded_with_language = cmk.gui.i18n.get_current_language()
 
 
 class GUIBackgroundProcess(background_job.BackgroundProcess):

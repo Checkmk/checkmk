@@ -28,6 +28,7 @@ import utils
 import bi, views, visuals
 import sites
 from valuespec import *
+from cmk.gui.i18n import _
 import cmk.defines as defines
 import cmk.paths
 import cmk.store as store

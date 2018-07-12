@@ -32,6 +32,8 @@ import sites
 import bi
 import inspect
 import livestatus
+import cmk.gui.i18n
+from cmk.gui.i18n import _u, _
 from log import logger
 from cmk.gui.exceptions import MKGeneralException, MKUserError, MKInternalError
 
@@ -45,7 +47,7 @@ display_options      = None
 def load_plugins(force):
     global loaded_with_language
 
-    if loaded_with_language == current_language and not force:
+    if loaded_with_language == cmk.gui.i18n.get_current_language() and not force:
         # always reload the hosttag painters, because new hosttags might have been
         # added during runtime
         load_host_tag_painters()
@@ -72,7 +74,7 @@ def load_plugins(force):
     # This must be set after plugin loading to make broken plugins raise
     # exceptions all the time and not only the first time (when the plugins
     # are loaded).
-    loaded_with_language = current_language
+    loaded_with_language = cmk.gui.i18n.get_current_language()
 
     # Declare permissions for builtin views
     config.declare_permission_section("view", _("Multisite Views"), do_sort = True)

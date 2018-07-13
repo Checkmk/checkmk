@@ -169,18 +169,22 @@ def check_job(item, params, parsed):
             ('vol_context_switches',   'Vol. Context Switches'),
             ('invol_context_switches', 'Invol. Context Switches'),
           ]:
-            value = job.get(key)
-            if value is None:
+            value_str = job.get(key)
+            if value_str is None:
                 continue
 
             if key in [ 'max_res_bytes', 'avg_mem_bytes' ]:
+                value = int(value_str)
                 display_value = get_bytes_human_readable(value, 1000)
             elif key in [ 'real_time', 'user_time', 'system_time' ]:
+                value = float(value_str)
                 display_value = get_age_human_readable(value)
             elif key == 'start_time':
+                value = float(value_str)
                 state, display_value = process_start_time(value, state, warn, crit)
             else:
-                display_value = value
+                display_value = value_str
+                value = float(value_str)
 
             output.append('%s: %s' % (title, display_value))
             perfdata.append((key, value))

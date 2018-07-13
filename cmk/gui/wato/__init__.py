@@ -16564,7 +16564,8 @@ def configure_attributes(new, hosts, for_what, parent, myself=None, without_attr
                 active = False
 
             if not new and (not attr.editable() or not attr.may_edit()):
-                if active:
+                # Bug in pylint 1.9.2 https://github.com/PyCQA/pylint/issues/1984, already fixed in master.
+                if active:  # pylint: disable=simplifiable-if-statement
                     force_entry = True
                 else:
                     disabled = True

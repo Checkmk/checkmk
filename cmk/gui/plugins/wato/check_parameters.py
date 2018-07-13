@@ -12077,8 +12077,8 @@ vs_elements_if_groups_matches = [
             choices = defines.interface_port_types(),
             help = _("Only interfaces with the given port type are put into this group. "
                      "For example 53 (propVirtual)."),
-        ), forth = lambda x: str(x),
-           back  = lambda x: int(x),
+        ), forth = str,
+           back  = int,
     )),
     ("items", ListOfStrings(
         title = _("Restrict interface items"),

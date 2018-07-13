@@ -8626,7 +8626,9 @@ def render_notification_rules(rules, userid="", show_title=False, show_buttons=T
             else:
                 listmode = "notifications"
 
-            if show_buttons:
+            actions_allowed =  config.user.may("notification_plugin.%s" % rule['notify_plugin'][0])
+
+            if show_buttons and actions_allowed:
                 anavar = html.var("analyse", "")
                 delete_url = make_action_link([("mode", listmode), ("user", userid), ("_delete", nr)])
                 drag_url   = make_action_link([("mode", listmode), ("analyse", anavar), ("user", userid), ("_move", nr)])
@@ -8791,11 +8793,7 @@ def mode_notifications(phase):
 
         return
 
-    rules = []
-    for rule in watolib.load_notification_rules():
-        if config.user.may("notification_plugin.%s" % rule['notify_plugin'][0]) and \
-           rule not in rules:
-            rules.append(rule)
+    rules = watolib.load_notification_rules()
 
     if phase == "action":
         if html.has_var("_show_user"):

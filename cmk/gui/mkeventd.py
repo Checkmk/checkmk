@@ -315,13 +315,13 @@ def event_rule_matches(rule_pack, rule, event):
 
 
 def event_rule_matches_non_inverted(rule_pack, rule, event):
-    if False == match_ipv4_network(rule.get("match_ipaddress", "0.0.0.0/0"), event["ipaddress"]):
+    if match_ipv4_network(rule.get("match_ipaddress", "0.0.0.0/0"), event["ipaddress"]) == False:
         return _("The source IP address does not match.")
 
-    if False == match(rule.get("match_host"), event["host"], complete=True):
+    if match(rule.get("match_host"), event["host"], complete=True) == False:
         return _("The host name does not match.")
 
-    if False == match(rule.get("match_application"), event["application"], complete=False):
+    if match(rule.get("match_application"), event["application"], complete=False) == False:
         return _("The application (syslog tag) does not match")
 
     if "match_facility" in rule and event["facility"] != rule["match_facility"]:

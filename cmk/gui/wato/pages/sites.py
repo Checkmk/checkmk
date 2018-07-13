@@ -71,10 +71,6 @@ class ModeDistributedMonitoring(ModeSites):
         return ["sites"]
 
 
-    def __init__(self):
-        super(ModeDistributedMonitoring, self).__init__()
-
-
     def title(self):
         return _("Distributed Monitoring")
 

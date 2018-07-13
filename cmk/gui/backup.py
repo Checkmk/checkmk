@@ -539,10 +539,6 @@ class Jobs(BackupEntityCollection):
 
 
 class PageBackup(object):
-    def __init__(self):
-        super(PageBackup, self).__init__()
-
-
     def title(self):
         raise NotImplementedError()
 
@@ -1089,10 +1085,6 @@ class Targets(BackupEntityCollection):
 
 
 class PageBackupTargets(object):
-    def __init__(self):
-        super(PageBackupTargets, self).__init__()
-
-
     def title(self):
         raise NotImplementedError()
 

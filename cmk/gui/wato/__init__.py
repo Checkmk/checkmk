@@ -6345,10 +6345,6 @@ class ModeBackupTargets(backup.PageBackupTargets, WatoMode):
         return ["backups"]
 
 
-    def __init__(self):
-        super(ModeBackupTargets, self).__init__()
-
-
     def title(self):
         return _("Site backup targets")
 
@@ -7501,10 +7497,6 @@ class ModeEditGlobalSetting(EditGlobalSettingMode):
         return ["global"]
 
 
-    def __init__(self):
-        super(ModeEditGlobalSetting, self).__init__()
-
-
     def title(self):
         return _("Global configuration settings for Check_MK")
 
@@ -7531,10 +7523,6 @@ class ModeEditSiteGlobalSetting(EditGlobalSettingMode):
     @classmethod
     def permissions(cls):
         return ["global"]
-
-
-    def __init__(self):
-        super(ModeEditSiteGlobalSetting, self).__init__()
 
 
     def _back_mode(self):
@@ -13536,10 +13524,6 @@ class ModeCloneRule(EditRuleMode):
         return []
 
 
-    def __init__(self):
-        super(ModeCloneRule, self).__init__()
-
-
     def _set_rule(self):
         super(ModeCloneRule, self)._set_rule()
 
@@ -14620,10 +14604,6 @@ def custom_attr_types():
 class ModeEditCustomAttr(WatoMode):
     __metaclass__ = abc.ABCMeta
 
-    def __init__(self):
-        # Note: the base class calls _from_vars
-        super(ModeEditCustomAttr, self).__init__()
-
     @property
     def _attrs(self):
         return self._all_attrs[self._type]
@@ -14978,10 +14958,6 @@ class ModeCustomUserAttrs(ModeCustomAttrs):
     @classmethod
     def permissions(cls):
         return ["users"]
-
-
-    def __init__(self):
-        super(ModeCustomUserAttrs, self).__init__()
 
     @property
     def _type(self):

@@ -780,9 +780,6 @@ class ConfigDomainOMD(ConfigDomain):
 # add, remove      mean just modifications in the data structures
 
 class WithPermissions(object):
-    def __init__(self):
-        super(WithPermissions, self).__init__()
-
     def may(self, how): # how is "read" or "write"
         return self.user_may(config.user.id, how)
 

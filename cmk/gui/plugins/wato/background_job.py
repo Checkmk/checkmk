@@ -47,10 +47,6 @@ register_modules(WatoModule(
 ))
 
 class ModeBackgroundJobsOverview(WatoMode):
-    def __init__(self):
-        super(ModeBackgroundJobsOverview, self).__init__()
-
-
     @classmethod
     def name(cls):
         return "background_jobs_overview"
@@ -99,10 +95,6 @@ class ModeBackgroundJobDetails(WatoMode):
     @classmethod
     def permissions(cls):
         return []
-
-
-    def __init__(self):
-        super(ModeBackgroundJobDetails, self).__init__()
 
 
     def title(self):

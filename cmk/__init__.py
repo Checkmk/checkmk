@@ -36,6 +36,14 @@ import os
 import cmk.paths
 from cmk.exceptions import MKGeneralException
 
+# TODO: Clean this up one day by using the way recommended by gettext.
+# (See https://docs.python.org/2/library/gettext.html). For this we
+# need the path to the locale files here.
+try:
+    _
+except NameError:
+    _ = lambda x: x # Fake i18n when not available
+
 def omd_version():
     return os.path.basename(os.readlink(cmk.paths.omd_root + "/version"))
 

@@ -3080,9 +3080,8 @@ class CREHost(WithPermissionsAndAttributes):
 #   | hosts. Examples are the IP address and the host tags.                |
 #   '----------------------------------------------------------------------'
 
-# TODO: Make new style class
 # TODO: Refactor declare_host_attribute() setting private attributes here
-class Attribute:
+class Attribute(object):
     # The constructor stores name and title. If those are
     # dynamic then leave them out and override name() and
     # title()

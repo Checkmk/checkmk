@@ -169,6 +169,7 @@ select.icon option {
 }
 
 input.button,
+table.vs_duallist a.control,
 .wato div.mainmenu a {
     border-color: #86A9B8 #22404D #22414D #86A9B8;
     border-radius: 5px 5px 5px 5px;
@@ -183,11 +184,13 @@ input.button,
 }
 
 input.button:hover,
+table.vs_duallist a.control:hover,
 .wato div.mainmenu a:hover {
     background-color: #6da1b8;
     text-decoration: none;
 }
 input.button:active,
+table.vs_duallist a.control:active,
 .wato div.mainmenu a:active {
     border-color:  #22414d #86a9b8 #86a9b8 #22404d;
     background-color: #3b6678;
@@ -639,14 +642,6 @@ table.vs_duallist a.control {
     text-decoration: none;
     text-align: center;
     float: right;
-
-    background-color: #00F;
-    background-color: #497E95;
-    border-width: 1px;
-    border-style: solid;
-    border-color: #86A9B8 #22404D #22414D #86A9B8;
-    box-shadow: 0px 0px 1.5px #000;
-    border-radius: 3px;
 }
 
 table.vs_duallist a.control.add {

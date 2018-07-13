@@ -12,7 +12,6 @@ persistent=yes
 
 [MESSAGES CONTROL]
 disable=
-    abstract-method,
     arguments-differ,
     attribute-defined-outside-init,
     bad-continuation,
@@ -76,6 +75,10 @@ disable=
     wildcard-import,
     wrong-import-order,
     wrong-import-position,
+    #---------------------------------------------------------------------------
+    # We should really enable this, but some work is needed to sprinkle abc
+    # annotations through our code and fix a few obscure places.
+    abstract-method,
     #---------------------------------------------------------------------------
     # Enabling the two spelling-related checks increases pylints runtime from
     # 11 min to 40 min, so we better keep those disabled for normal runs.

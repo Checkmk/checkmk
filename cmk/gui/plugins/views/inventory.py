@@ -1921,10 +1921,7 @@ def ajax_inv_render_tree():
     hostname = html.var("host")
     invpath = html.var("path")
     tree_id = html.var("treeid", "")
-    if html.var("show_internal_tree_paths"):
-        show_internal_tree_paths = True
-    else:
-        show_internal_tree_paths = False
+    show_internal_tree_paths = bool(html.var("show_internal_tree_paths"))
     if tree_id:
         struct_tree = inventory.load_delta_tree(hostname, int(tree_id[1:]))
         tree_renderer = DeltaNodeRenderer(hostname, tree_id, invpath)

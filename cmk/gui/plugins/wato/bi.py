@@ -588,7 +588,7 @@ class ModeBI(WatoMode, BIManagement):
                     title = _("Arguments:"),
                 ),
             ],
-            validate = lambda v, vp: self._validate_rule_call(v, vp),
+            validate = self._validate_rule_call,
         )
 
 

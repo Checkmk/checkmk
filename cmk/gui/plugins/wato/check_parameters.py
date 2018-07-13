@@ -881,20 +881,13 @@ register_check_parameters(
 #   '----------------------------------------------------------------------'
 
 def transform_ipmi_inventory_rules(p):
-    if type(p) == dict:
-        if p.get("summarize", True):
-            summarize = True
-        else:
-            summarize = False
-
-        if summarize:
-            p = 'summarize'
-        else:
-            if p.get('ignored_sensors', []):
-                p = ('single', {'ignored_sensors' : p["ignored_sensors"]})
-            else:
-                p = ('single', {})
-    return p
+    if not isinstance(p, dict):
+        return p
+    if p.get("summarize", True):
+        return 'summarize'
+    if p.get('ignored_sensors', []):
+        return ('single', {'ignored_sensors' : p["ignored_sensors"]})
+    return ('single', {})
 
 register_rule(
     group + '/' + subgroup_inventory,

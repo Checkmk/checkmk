@@ -24,6 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+import os
 import sites
 import mkeventd
 import zipfile
@@ -2233,9 +2234,14 @@ def load_snmp_mibs(path):
             raise
 
     for fn in file_names:
+        mib_path = path + "/" + fn
+        if os.path.isdir(mib_path):
+            continue
+
         if fn[0] != '.':
-            mib = parse_snmp_mib_header(path + "/" + fn)
+            mib = parse_snmp_mib_header(mib_path)
             found[fn] = mib
+
     return found
 
 

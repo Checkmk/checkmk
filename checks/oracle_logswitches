@@ -28,13 +28,24 @@
 # pengt  15
 # hirni  22
 
-oracle_logswitches_default_levels = (-1, -1, 50, 100)
+factory_settings["oracle_logswitches_default_levels"] = {
+    'levels': (50, 100),
+    'levels_lower': (-1, -1),
+}
+
 
 def inventory_oracle_logswitches(info):
     oracle_handle_ora_errors_discovery(info)
-    return [ (line[0], "oracle_logswitches_default_levels") for line in info if len(line) >= 2 ]
+    return [(line[0], {}) for line in info if len(line) >= 2]
+
 
 def check_oracle_logswitches(item, params, info):
+
+    if isinstance(params, tuple):
+        params = {'levels': (params[2], params [3]),
+                  'levels_lower': (params[1], params[0]),
+                 }
+
     for line in info:
         if line[0] == item:
             err = oracle_handle_ora_errors(line)
@@ -43,11 +54,12 @@ def check_oracle_logswitches(item, params, info):
             elif isinstance(err, tuple):
                 return err
 
-            locrit, lowarn, warn, crit = params
+            lowarn, locrit = params['levels_lower']
+            warn, crit = params['levels']
             logswitches = int(line[1])
             infotext = "%d log switches in the last 60 minutes (warn/crit below %d/%d) (warn/crit at %d/%d)" \
                 % (logswitches, locrit, lowarn, warn, crit)
-            perfdata = [("logswitches", logswitches, warn, crit)]
+            perfdata = [("logswitches", logswitches, warn, crit, 0, None)]
             if logswitches >= crit or logswitches <= locrit:
                 return (2, infotext, perfdata)
             elif logswitches >= warn or logswitches <= lowarn:
@@ -67,5 +79,6 @@ check_info["oracle_logswitches"] = {
     'service_description':     'ORA %s Logswitches',
     'has_perfdata':            True,
     'group':                   'oracle_logswitches',
+    'default_levels_variable': 'oracle_logswitches_default_levels',
     'includes':                ['oracle.include'],
 }

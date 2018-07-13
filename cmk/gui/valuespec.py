@@ -1540,10 +1540,7 @@ class Checkbox(ValueSpec):
         return self._true_label if value else self._false_label
 
     def from_html_vars(self, varprefix):
-        if html.var(varprefix):
-            return True
-        else:
-            return False
+        return bool(html.var(varprefix))
 
     def validate_datatype(self, value, varprefix):
         if type(value) != bool:
@@ -3067,10 +3064,7 @@ class OptionalEdit(Optional):
         div_id = "option_" + varprefix
         checked = html.get_checkbox(varprefix + "_use")
         if checked == None:
-            if self._negate:
-                checked = True
-            else:
-                checked = False
+            checked = self._negate
 
         html.open_span()
 

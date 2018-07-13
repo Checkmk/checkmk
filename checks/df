@@ -129,11 +129,12 @@ def parse_df(info):
             else:
                 mountpoint = " ".join(line[6:]).replace('\\', '/') # Windows \ is replaced with /
 
-
-            if line[2] == '-' or int(line[2]) == 0:
-                continue # exclude filesystems without size
-
-
+            # exclude filesystems without size
+            try:
+                if int(line[2]) == 0:
+                    continue
+            except ValueError:
+                continue
 
             # Beware: the 6th column of df ("used perc") may includes 5% which are reserved
             # for the superuser, whereas the 4th colum ("used MB") does *not* include that.

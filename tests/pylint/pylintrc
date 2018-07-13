@@ -77,10 +77,6 @@ disable=
     wrong-import-order,
     wrong-import-position,
     #---------------------------------------------------------------------------
-    # The warning below has already been fixed for non-web/ code. When the
-    # upcoming reorganization of web/ has been landed, this should be fixed first.
-    useless-super-delegation,
-    #---------------------------------------------------------------------------
     # Enabling the two spelling-related checks increases pylints runtime from
     # 11 min to 40 min, so we better keep those disabled for normal runs.
     # wrong-spelling-in-comment,

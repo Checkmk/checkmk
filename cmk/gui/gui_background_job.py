@@ -149,22 +149,6 @@ class GUIBackgroundJobSnapshottedFunctions(background_job.BackgroundJob):
         return self.get_status().get("user") != config.user.id
 
 
-    def is_running(self):
-        return super(GUIBackgroundJobSnapshottedFunctions, self).is_running()
-
-
-    def exists(self):
-        return super(GUIBackgroundJobSnapshottedFunctions, self).exists()
-
-
-    def get_job_id(self):
-        return super(GUIBackgroundJobSnapshottedFunctions, self).get_job_id()
-
-
-    def get_title(self):
-        return super(GUIBackgroundJobSnapshottedFunctions, self).get_title()
-
-
 
 class GUIBackgroundJob(GUIBackgroundJobSnapshottedFunctions, background_job.BackgroundJob):
     _background_process_class = GUIBackgroundProcess

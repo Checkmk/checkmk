@@ -811,10 +811,6 @@ class BISitedataManager(object):
 
 
 class BIJobManager(object):
-    def __init__(self):
-        super(BIJobManager, self).__init__()
-
-
     def _get_only_hosts_and_only_groups(self, aggr_ids, only_hosts, only_groups, all_hosts):
         all_groups = set([])
         for (aggr_type, idx, aggr_groups) in aggr_ids:

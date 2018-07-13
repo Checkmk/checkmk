@@ -61,7 +61,7 @@ import cmk.gui.plugins.main_modules
 if not cmk.is_raw_edition():
     import cmk.gui.cee.plugins.main_modules
 
-if not cmk.is_managed_edition():
+if cmk.is_managed_edition():
     import cmk.gui.cme.plugins.main_modules
 
 # TODO: Both kept for compatibility with old plugins. Drop this one day

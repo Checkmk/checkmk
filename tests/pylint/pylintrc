@@ -77,9 +77,8 @@ disable=
     wrong-import-order,
     wrong-import-position,
     #---------------------------------------------------------------------------
-    # The 3 warnings below have already been fixed for non-web/ code. When the
+    # The 2 warnings below have already been fixed for non-web/ code. When the
     # upcoming reorganization of web/ has been landed, these should be fixed first.
-    unnecessary-lambda,
     unnecessary-pass,
     useless-super-delegation,
     #---------------------------------------------------------------------------

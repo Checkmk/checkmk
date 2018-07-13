@@ -432,7 +432,7 @@ def page_handler():
                     target = target()
                     if not target:
                         continue
-                if '/' == target[0] or target.startswith('../') or '://' in target:
+                if target[0] == '/' or target.startswith('../') or '://' in target:
                     html.context_button(buttontext, target)
                 else:
                     html.context_button(buttontext, watolib.folder_preserving_link([("mode", target)]))
@@ -10101,8 +10101,8 @@ class ModeUsers(WatoMode):
                     html.i(_("not a contact"))
                 elif not user.get("notifications_enabled", True):
                     html.write_text(_("disabled"))
-                elif "" == user.get("host_notification_options", "") \
-                    and "" == user.get("service_notification_options", ""):
+                elif user.get("host_notification_options", "") == "" and \
+                     user.get("service_notification_options", "") == "":
                     html.write_text(_("all events disabled"))
                 else:
                     tp = user.get("notification_period", "24X7")

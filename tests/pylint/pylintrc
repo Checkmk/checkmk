@@ -77,9 +77,8 @@ disable=
     wrong-import-order,
     wrong-import-position,
     #---------------------------------------------------------------------------
-    # The 6 warnings below have already been fixed for non-web/ code. When the
+    # The 5 warnings below have already been fixed for non-web/ code. When the
     # upcoming reorganization of web/ has been landed, these should be fixed first.
-    misplaced-comparison-constant,
     old-style-class,
     simplifiable-if-statement,
     unnecessary-lambda,

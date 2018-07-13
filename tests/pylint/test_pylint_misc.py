@@ -8,24 +8,31 @@ from testlib import cmk_path, cmc_path, cme_path
 import testlib.pylint_cmk as pylint_cmk
 
 def test_pylint_misc():
+    # Only specify the path to python packages or modules here
     modules_or_packages = [
+        # Check_MK base
         "cmk_base",
         "cmk_base/modes",
         "cmk_base/automations",
         "cmk_base/default_config",
         "cmk_base/data_sources",
-
-        "enterprise/cmk/cee",
-        "enterprise/cmk/cee/liveproxy",
         "enterprise/cmk_base/cee",
         "enterprise/cmk_base/modes/cee.py",
         "enterprise/cmk_base/automations/cee.py",
         "enterprise/cmk_base/default_config/cee.py",
-
         "managed/cmk_base/default_config/cme.py",
 
+        # cmk module level
         "cmk",
         "cmk/ec",
+        "enterprise/cmk/cee",
+        "enterprise/cmk/cee/liveproxy",
+
+        # GUI specific
+        "web/app/index.wsgi",
+        "cmk/gui",
+        "enterprise/cmk/gui/cee",
+        "managed/cmk/gui/cme",
     ]
 
     # We use our own search logic to find scripts without python extension

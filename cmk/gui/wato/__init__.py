@@ -4433,7 +4433,7 @@ class ModeBulkDiscovery(WatoMode):
 
     def _from_html_vars(self):
         self._start = bool(html.var("_start"))
-        self._all =  bool(html.var("all")):
+        self._all =  bool(html.var("all"))
         self._item = html.var("_item") if html.var("_item") else None
 
 

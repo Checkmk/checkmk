@@ -563,7 +563,7 @@ def check_skype_mobile(item, params, parsed):
         else:
             # add a perfcounter with 0 sessions for all missing devices so we can
             # still properly build a combined graph for active sessions
-            yield 0, None, [("active_sessions_%s" % name.lower(), 0, None, None, None, None)]
+            yield 0, "", [("active_sessions_%s" % name.lower(), 0, None, None, None, None)]
 
     yield wmi_yield_raw_counter(parsed["LS:WEB - Throttling and Authentication"], item,
                                 "WEB - Total Requests In Processing",

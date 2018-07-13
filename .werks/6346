@@ -1,0 +1,16 @@
+Title: Fixed failed host rename when host is configured as parent on folder level
+Level: 1
+Component: wato
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.4.0p35
+Date: 1531482119
+
+During host rename an error "TypeError: not all arguments converted during string formatting" could
+occur. This happened when the host was configured in at least one folder as parent.
+
+In such a situation the host was renamed partially. The best way to recover from this situation
+is to activate all pending changes and use the renaming feature again to change the host back
+to it's original name. Then update to at least 1.5.0b9 and try renaming the host again.

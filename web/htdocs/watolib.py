@@ -2035,8 +2035,8 @@ class CREFolder(BaseFolder):
         if not changed:
             return False
 
-        add_change("rename-parent", _("Renamed parent (set in folder) from %s to %s") %
-                (self.path(), oldname, newname),
+        add_change("rename-parent", _("Renamed parent from %s to %s in folder \"%s\"") %
+                (oldname, newname, self.alias_path()),
             obj=self, sites=self.all_site_ids())
         self.save_hosts()
         self.save()

@@ -235,7 +235,6 @@ $(DISTNAME).tar.gz: mk-livestatus-$(VERSION).tar.gz .werks/werks $(JAVASCRIPT_MI
 	tar czf $(DISTNAME)/notifications.tar.gz $(TAROPTS) -C notifications $$(cd notifications ; ls)
 	tar czf $(DISTNAME)/inventory.tar.gz $(TAROPTS) -C inventory $$(cd inventory ; ls)
 	tar czf $(DISTNAME)/checkman.tar.gz $(TAROPTS) -C checkman $$(cd checkman ; ls)
-	tar czf $(DISTNAME)/web.tar.gz $(TAROPTS) -C web htdocs plugins app
 	tar czf $(DISTNAME)/web.tar.gz $(TAROPTS) -C web htdocs app
 
 	tar xzf mk-livestatus-$(VERSION).tar.gz

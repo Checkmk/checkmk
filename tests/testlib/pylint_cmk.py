@@ -4,6 +4,7 @@
 import os
 import sys
 import glob
+import multiprocessing
 import shutil
 import subprocess
 import tempfile
@@ -54,6 +55,7 @@ def run_pylint(base_path, check_files=None): #, cleanup_test_dir=False):
     cmd = [
         "python", "-m", "pylint",
         "--rcfile", pylint_cfg,
+        "--jobs=%d" % num_jobs_to_use(),
     ] + pylint_args + check_files
 
     os.putenv("TEST_PATH", repo_path() + "/tests")
@@ -69,6 +71,13 @@ def run_pylint(base_path, check_files=None): #, cleanup_test_dir=False):
     #        shutil.rmtree(base_path)
 
     return exit_code
+
+def num_jobs_to_use():
+    # Naive heuristic, but looks OK for our use cases: Normal quad core CPUs
+    # with HT report 8 CPUs (=> 6 jobs), our server 24-core CPU reports 48 CPUs
+    # (=> 11 jobs). Just using 0 (meaning: use all reported CPUs) might just
+    # work, too, but it's probably a bit too much.
+    return multiprocessing.cpu_count() / 8 + 5
 
 
 def get_pylint_files(base_path, file_pattern):

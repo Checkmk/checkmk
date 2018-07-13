@@ -70,15 +70,19 @@ disable=
     unsupported-membership-test,
     unused-argument,
     unused-import,
-    unused-variable,
     unused-wildcard-import,
     wildcard-import,
     wrong-import-order,
     wrong-import-position,
     #---------------------------------------------------------------------------
-    # We should really enable this, but some work is needed to sprinkle abc
-    # annotations through our code and fix a few obscure places.
+    # We should really enable this, there could be some real exceptions waiting
+    # to be thrown. But some work is needed first to sprinkle abc annotations
+    # through our code and fix a few obscure places.
     abstract-method,
+    #---------------------------------------------------------------------------
+    # We should really enable this, there could be some typos hiding which are
+    # real bugs. Just some work to do...
+    unused-variable,
     #---------------------------------------------------------------------------
     # Enabling the two spelling-related checks increases pylints runtime from
     # 11 min to 40 min, so we better keep those disabled for normal runs.

@@ -1,4 +1,4 @@
-Title: Fix key errors in mkeventd.log due to missing default values
+Title: Fix issues with expected messages and downtime event cleanup
 Level: 1
 Component: ec
 Compatible: compat

@@ -774,10 +774,7 @@ class TimeperiodValuespec(ValueSpec):
 
     # Checks whether the value itself already uses the tp-mode
     def _is_active(self, value):
-        if isinstance(value, dict) and self.tp_default_value_key in value:
-            return True
-        else:
-            return False
+        return isinstance(value, dict) and self.tp_default_value_key in value
 
 
     # Returns simply the value or converts a plain value to a tp-value

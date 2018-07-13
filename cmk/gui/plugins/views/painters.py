@@ -593,7 +593,7 @@ multisite_painters["svc_check_cache_info"] = {
     "short"   : _("Cached"),
     "columns" : [ "service_last_check", "service_cached_at", "service_cache_interval" ],
     "options" : [ "ts_format", "ts_date" ],
-    "paint"   : lambda row: paint_cache_info(row),
+    "paint"   : paint_cache_info,
 }
 
 multisite_painters["svc_next_check"] = {

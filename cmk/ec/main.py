@@ -3213,6 +3213,8 @@ def run_eventd(terminate_main_event, settings, config, lock_configuration, histo
                 if is_replication_slave(config) and now > next_replication:
                     replication_pull(settings, config, lock_configuration, perfcounters, event_status, event_server, slave_status, logger)
                     next_replication = now + config["replication"]["interval"]
+            except MKSignalException as e:
+                raise e
             except Exception as e:
                 logger.exception("Exception in main thread:\n%s" % e)
                 if settings.options.debug:

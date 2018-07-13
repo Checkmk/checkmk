@@ -1,0 +1,10 @@
+Title: Fixed exception in MIB listing when directories are e.g. in /usr/share/snmp/mibs
+Level: 1
+Component: ec
+Compatible: compat
+Edition: cre
+Version: 1.5.0b9
+Date: 1531471230
+Class: fix
+
+

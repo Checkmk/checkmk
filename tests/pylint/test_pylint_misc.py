@@ -8,47 +8,42 @@ from testlib import cmk_path, cmc_path, cme_path
 import testlib.pylint_cmk as pylint_cmk
 
 def test_pylint_misc():
-    search_paths = [
-        cmk_path() + "/omd/packages/omd",
+    modules_or_packages = [
+        "cmk_base",
+        "cmk_base/modes",
+        "cmk_base/automations",
+        "cmk_base/default_config",
+        "cmk_base/data_sources",
 
-        cmk_path() + "/cmk_base",
-        cmk_path() + "/cmk_base/modes",
-        cmk_path() + "/cmk_base/automations",
-        cmk_path() + "/cmk_base/default_config",
-        cmk_path() + "/cmk_base/data_sources",
+        "enterprise/cmk/cee",
+        "enterprise/cmk/cee/liveproxy",
+        "enterprise/cmk_base/cee",
+        "enterprise/cmk_base/modes/cee.py",
+        "enterprise/cmk_base/automations/cee.py",
+        "enterprise/cmk_base/default_config/cee.py",
 
-        cmc_path() + "/cmk",
-        cmc_path() + "/cmk/gui",
-        cme_path() + "/cmk/gui/default_config",
-        cmc_path() + "/cmk/cee/liveproxy",
-        cmc_path() + "/cmk_base",
-        cmc_path() + "/cmk_base/cee",
-        cmc_path() + "/cmk_base/modes",
-        cmc_path() + "/cmk_base/automations",
-        cmc_path() + "/cmk_base/default_config",
+        "managed/cmk_base/default_config/cme.py",
 
-        cme_path() + "/cmk/gui",
-        cme_path() + "/cmk/gui/default_config",
-        cme_path() + "/cmk_base/default_config",
-
-        cmk_path() + "/cmk",
-        cmk_path() + "/cmk/ec",
-        cmk_path() + "/cmk/gui",
-        cmk_path() + "/cmk/gui/default_config",
-        cmk_path() + "/bin",
-        cmk_path() + "/notifications",
-        cmk_path() + "/agents/plugins",
-        cmk_path() + "/agents/special",
-        cmk_path() + "/active_checks",
-        cmc_path() + "/agents/plugins",
-        cmc_path() + "/bin",
-        cmc_path() + "/misc",
+        "cmk",
+        "cmk/ec",
     ]
 
-    checked, worst = 0, 0
-    for path in search_paths:
-        worst = max(worst, pylint_cmk.run_pylint(path))
-        checked += 1
+    # We use our own search logic to find scripts without python extension
+    search_paths = [
+        "omd/packages/omd",
+        "bin",
+        "notifications",
+        "agents/plugins",
+        "agents/special",
+        "active_checks",
+        "enterprise/agents/plugins",
+        "enterprise/bin",
+        "enterprise/misc",
+    ]
 
-    assert checked > 0, "Did not find a file to check!"
-    assert worst == 0, "At least one issue found"
+    for path in search_paths:
+        for fname in pylint_cmk.get_pylint_files(path, "*"):
+           modules_or_packages.append(path + "/" + fname)
+
+    exit_code = pylint_cmk.run_pylint(cmk_path(), modules_or_packages)
+    assert exit_code == 0, "PyLint found an error"

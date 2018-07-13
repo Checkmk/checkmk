@@ -57,7 +57,8 @@ def check_genua_fan(item, params, info):
     upperwarn, uppercrit = params["upper"]
     for line in info[0]:
         fanNo, fanName, fanRPM, fanState = line
-        if fanName != item: continue
+        if fanName != item:
+            continue
 
         rpm = saveint(fanRPM)
         state, state_readable = map_states[fanState]

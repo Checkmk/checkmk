@@ -37,7 +37,6 @@ disable=
     logging-not-lazy,
     missing-docstring,
     multiple-imports,
-    multiple-statements,
     no-else-return,
     no-self-use,
     protected-access,

@@ -482,16 +482,24 @@ stylesheets = [ 'pages', 'status', 'logwatch' ]
 nagios_illegal_chars  = '`;~!$%^&*|\'"<>?,()='
 
 def level_name(level):
-    if   level == 'W': return 'WARN'
-    elif level == 'C': return 'CRIT'
-    elif level == 'O': return 'OK'
-    else: return 'OK'
+    if level == 'W':
+        return 'WARN'
+    elif level == 'C':
+        return 'CRIT'
+    elif level == 'O':
+        return 'OK'
+    else:
+        return 'OK'
 
 def level_state(level):
-    if   level == 'W': return 1
-    elif level == 'C': return 2
-    elif level == 'O': return 0
-    else: return 0
+    if level == 'W':
+        return 1
+    elif level == 'C':
+        return 2
+    elif level == 'O':
+        return 0
+    else:
+        return 0
 
 
 #.

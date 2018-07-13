@@ -1582,7 +1582,8 @@ def sort_data(data, sorters):
                     c = neg * func(e1, e2, *args)
                 else:
                     c = neg * func(e1, e2)
-            if c != 0: return c
+            if c != 0:
+                return c
         return 0 # equal
 
     data.sort(multisort)

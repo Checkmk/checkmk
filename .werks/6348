@@ -1,0 +1,11 @@
+Title: Contact groups in notification rule conditions are now sorted
+Level: 1
+Component: notifications
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0i1
+Date: 1531486339
+
+

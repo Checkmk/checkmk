@@ -18,7 +18,6 @@ disable=
     bad-indentation,
     bad-whitespace,
     bare-except,
-    blacklisted-name,
     broad-except,
     c-extension-no-member,
     cell-var-from-loop,

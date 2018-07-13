@@ -3907,35 +3907,41 @@ def run_eventd(terminate_main_event, settings, config, perfcounters, event_statu
 
     while not terminate_main_event.is_set():
         try:
-            # Wait until either housekeeping or retention is due, but at
-            # maximum 60 seconds. That way changes of the interval from a very
-            # high to a low value will never require more than 60 seconds
+            try:
+                # Wait until either housekeeping or retention is due, but at
+                # maximum 60 seconds. That way changes of the interval from a very
+                # high to a low value will never require more than 60 seconds
 
-            event_list = [next_housekeeping, next_retention, next_statistics]
-            if is_replication_slave(config):
-                event_list.append(next_replication)
+                event_list = [next_housekeeping, next_retention, next_statistics]
+                if is_replication_slave(config):
+                    event_list.append(next_replication)
 
-            time_left = max(0, min(event_list) - time.time())
-            time.sleep(min(time_left, 60))
+                time_left = max(0, min(event_list) - time.time())
+                time.sleep(min(time_left, 60))
 
-            now = time.time()
-            if now > next_housekeeping:
-                event_server.do_housekeeping()
-                next_housekeeping = now + config["housekeeping_interval"]
+                now = time.time()
+                if now > next_housekeeping:
+                    event_server.do_housekeeping()
+                    next_housekeeping = now + config["housekeeping_interval"]
 
-            if now > next_retention:
-                with lock_eventstatus:
-                    event_status.save_status()
-                next_retention = now + config["retention_interval"]
+                if now > next_retention:
+                    with lock_eventstatus:
+                        event_status.save_status()
+                    next_retention = now + config["retention_interval"]
 
-            if now > next_statistics:
-                perfcounters.do_statistics()
-                next_statistics = now + config["statistics_interval"]
+                if now > next_statistics:
+                    perfcounters.do_statistics()
+                    next_statistics = now + config["statistics_interval"]
 
-            # Beware: replication might be turned on during this loop!
-            if is_replication_slave(config) and now > next_replication:
-                replication_pull(settings, config, perfcounters, event_status, event_server, slave_status)
-                next_replication = now + config["replication"]["interval"]
+                # Beware: replication might be turned on during this loop!
+                if is_replication_slave(config) and now > next_replication:
+                    replication_pull(settings, config, perfcounters, event_status, event_server, slave_status)
+                    next_replication = now + config["replication"]["interval"]
+            except Exception as e:
+                logger.exception("Exception in main thread:\n%s" % e)
+                if settings.options.debug:
+                    raise
+                time.sleep(1)
         except MKSignalException as e:
             if e._signum == 1:
                 logger.info("Received SIGHUP - going to reload configuration")
@@ -3943,11 +3949,6 @@ def run_eventd(terminate_main_event, settings, config, perfcounters, event_statu
             else:
                 logger.info("Signalled to death by signal %d" % e._signum)
                 terminate(terminate_main_event, event_server, status_server)
-        except Exception as e:
-            logger.exception("Exception in main thread:\n%s" % e)
-            if settings.options.debug:
-                raise
-            time.sleep(1)
 
     # Now wait for termination of the server threads
     event_server.join()

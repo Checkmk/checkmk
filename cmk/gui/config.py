@@ -162,7 +162,7 @@ def load_config():
 
     # Apply the default configuration to the module global level
     for k, v in default_config.items():
-        if isinstance(v, dict) or isinstance(v, list):
+        if isinstance(v, (dict, list)):
             v = copy.deepcopy(v)
         globals()[k] = v
 
@@ -214,7 +214,7 @@ def _load_default_config_from_module_plugins():
         if k[0] == "_":
             continue
 
-        if isinstance(v, dict) or isinstance(v, list):
+        if isinstance(v, (dict, list)):
             v = copy.deepcopy(v)
 
         default_config[k] = v

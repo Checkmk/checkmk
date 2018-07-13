@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 # -*- encoding: utf-8; py-indent-offset: 4 -*-
 # +------------------------------------------------------------------+
 # |             ____ _               _        __  __ _  __           |
@@ -7,7 +7,7 @@
 # |           | |___| | | |  __/ (__|   <    | |  | | . \            |
 # |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
 # |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
+# | Copyright Mathias Kettner 2016             mk@mathias-kettner.de |
 # +------------------------------------------------------------------+
 #
 # This file is part of Check_MK.
@@ -24,52 +24,14 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-"""Check_MK's library for code used by different components of Check_MK.
+"""Stub for future i18n code on cmk main module level"""
 
-This library is currently handled as internal module of Check_MK and
-does not offer stable APIs. The code may change at any time."""
+from typing import AnyStr, Text # pylint:disable=unused-import
 
-__version__ = "1.6.0i1"
-
-import os
-
-import cmk.paths
-from cmk.exceptions import MKGeneralException
-from cmk.i18n import _
-
-def omd_version():
-    return os.path.basename(os.readlink(cmk.paths.omd_root + "/version"))
-
-
-def omd_site():
-    try:
-        return os.environ["OMD_SITE"]
-    except KeyError:
-        raise MKGeneralException(_("OMD_SITE environment variable not set. You can "
-                                   "only execute this in an OMD site."))
-
-
-def edition_short():
-    """Can currently either return \"cre\" or \"cee\"."""
-    parts = omd_version().split(".")
-    if parts[-1] == "demo":
-        return parts[-2]
-
-    return parts[-1]
-
-
-def is_enterprise_edition():
-    return edition_short() == "cee"
-
-
-def is_raw_edition():
-    return edition_short() == "cre"
-
-
-def is_managed_edition():
-    return edition_short() == "cme"
-
-
-def is_demo():
-    parts = omd_version().split(".")
-    return parts[-1] == "demo"
+# TODO: Clean this up one day by using the way recommended by gettext.
+# (See https://docs.python.org/2/library/gettext.html). For this we
+# need the path to the locale files here.
+# Fake i18n when not available
+def _(string):
+    # type: (AnyStr) -> Text
+    return string

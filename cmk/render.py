@@ -33,13 +33,7 @@ are just for optical output purposes."""
 import time
 import math
 
-# TODO: Clean this up one day by using the way recommended by gettext.
-# (See https://docs.python.org/2/library/gettext.html). For this we
-# need the path to the locale files here.
-try:
-    _
-except NameError:
-    _ = lambda x: x  # Fake i18n when not available
+from cmk.i18n import _
 
 #.
 #   .--Date/Time-----------------------------------------------------------.

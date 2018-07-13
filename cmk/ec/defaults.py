@@ -28,16 +28,7 @@
 from typing import Any, AnyStr, Dict, List  # pylint: disable=unused-import
 import cmk.log
 
-# Clean this up one day by using the way recommended by gettext.
-# (See https://docs.python.org/2/library/gettext.html). For this we
-# need the path to the locale files here.
-try:
-    _
-except NameError:
-    # Fake i18n when not available
-    def _(string):
-        # type: (AnyStr) -> AnyStr
-        return string
+from cmk.i18n import _
 
 
 def default_rule_pack(rules):

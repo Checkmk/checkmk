@@ -68,7 +68,7 @@ g_auth_base_dir = cmk.paths.var_dir + '/wato/auth'
 
 def format_php(data, lvl = 1):
     s = ''
-    if isinstance(data, tuple) or isinstance(data, list):
+    if isinstance(data, (list, tuple)):
         s += 'array(\n'
         for item in data:
             s += '    ' * lvl + format_php(item, lvl + 1) + ',\n'

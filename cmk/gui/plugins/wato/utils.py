@@ -583,7 +583,7 @@ def register_check_parameters(subgroup, checkgroup, title, valuespec, itemspec,
             itemtype = "item"
             itemname = itemspec.title()
             itemhelp = itemspec.help()
-            if isinstance(itemspec, DropdownChoice) or isinstance(itemspec, OptionalDropdownChoice):
+            if  isinstance(itemspec, (DropdownChoice, OptionalDropdownChoice)):
                 itemenum = itemspec._choices
         else:
             itemtype = None

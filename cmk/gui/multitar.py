@@ -560,10 +560,10 @@ def extract_domains(tar, domains):
     logger.info("Restoring snapshot: %s" % tar.name)
     logger.info("Domains: %s" % ", ".join(tar_domains.keys()))
     for what, abort_on_error, handler in [
-                            ("Permissions",  True,  lambda domain, tar_member: check_domain(domain, tar_member)),
+                            ("Permissions",  True,  check_domain),
                             ("Pre-Restore",  True,  lambda domain, tar_member: execute_restore(domain, is_pre_restore = True)),
                             ("Cleanup",      False, lambda domain, tar_member: cleanup_domain(domain)),
-                            ("Extract",      False, lambda domain, tar_member: extract_domain(domain, tar_member)),
+                            ("Extract",      False, extract_domain),
                             ("Post-Restore", False, lambda domain, tar_member: execute_restore(domain, is_pre_restore = False))
                           ]:
         errors = []

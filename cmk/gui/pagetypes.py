@@ -356,7 +356,7 @@ class PageRenderer(Base):
     def page_handlers(cls):
         handlers = super(PageRenderer, cls).page_handlers()
         handlers.update({
-            cls.type_name(): lambda: cls.page_show(),
+            cls.type_name(): cls.page_show,
         })
         return handlers
 
@@ -448,8 +448,8 @@ class Overridable(Base):
     def page_handlers(cls):
         handlers = super(Overridable, cls).page_handlers()
         handlers.update({
-            "%ss" % cls.type_name()     : lambda: cls.page_list(),
-            "edit_%s" % cls.type_name() : lambda: cls.page_edit(),
+            "%ss" % cls.type_name()     : cls.page_list,
+            "edit_%s" % cls.type_name() : cls.page_edit,
         })
         return handlers
 
@@ -1237,7 +1237,7 @@ class OverridableContainer(Overridable, Container):
         handlers = super(OverridableContainer, cls).page_handlers()
         handlers.update({
             # Ajax handler for adding elements to a container
-            "ajax_pagetype_add_element": lambda: cls.ajax_add_element()
+            "ajax_pagetype_add_element": cls.ajax_add_element
         })
         return handlers
 

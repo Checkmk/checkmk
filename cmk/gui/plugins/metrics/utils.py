@@ -281,7 +281,6 @@ def translate_metrics(perf_data, check_command):
                 except:
                     if config.debug:
                         raise
-                    pass # empty or invalid number
 
 
         new_entry.update(mi)

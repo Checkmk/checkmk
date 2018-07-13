@@ -77,9 +77,8 @@ disable=
     wrong-import-order,
     wrong-import-position,
     #---------------------------------------------------------------------------
-    # The 2 warnings below have already been fixed for non-web/ code. When the
-    # upcoming reorganization of web/ has been landed, these should be fixed first.
-    unnecessary-pass,
+    # The warning below has already been fixed for non-web/ code. When the
+    # upcoming reorganization of web/ has been landed, this should be fixed first.
     useless-super-delegation,
     #---------------------------------------------------------------------------
     # Enabling the two spelling-related checks increases pylints runtime from

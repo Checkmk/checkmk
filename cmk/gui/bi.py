@@ -3714,7 +3714,7 @@ def _convert_legacy_aggregation_rule(rule):
     if isinstance(rule, dict):
         return rule
 
-    if isinstance(rule, tuple) or isinstance(rule, list):
+    if isinstance(rule, (list, tuple)):
         # Rule has at least four entries.
         # Since version 1.4.0b4
         # - werk 4460 introduced 'state_messages'.

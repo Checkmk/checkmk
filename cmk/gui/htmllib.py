@@ -977,10 +977,7 @@ class TransactionManager(object):
             return False
 
         # Now check, if this id is a valid one
-        if id in self._load_transids():
-            return True
-        else:
-            return False
+        return id in self._load_transids()
 
 
     def is_transaction(self):

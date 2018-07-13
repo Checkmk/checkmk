@@ -29,11 +29,6 @@ import time
 
 import cmk_base.console as console
 
-try:
-    _
-except NameError:
-    _ = lambda x: x # Fake i18n when not available
-
 # TODO: Move state out of module scope
 # TODO: This should be rewritten to a context manager object. See cmk.profile for
 #       an example how it could look like.

@@ -27,14 +27,7 @@
 """This module serves constants which are needed in several components
 of Check_MK."""
 
-# TODO: Clean this up one day by using the way recommended by gettext.
-# (See https://docs.python.org/2/library/gettext.html). For this we
-# need the path to the locale files here.
-try:
-    _
-except NameError:
-    _ = lambda x: x # Fake i18n when not available
-
+from cmk.i18n import _
 
 # TODO: Investigate Check_MK code for more defines and other places
 #       where similar strucures are defined and use the things from

@@ -36,19 +36,11 @@ import pprint
 import tempfile
 import time
 
-from .exceptions import MKGeneralException
+from cmk.exceptions import MKGeneralException
+from cmk.i18n import _
 
 # TODO: Make all methods handle paths the same way. e.g. mkdir() and makedirs()
 # care about encoding a path to UTF-8. The others don't to that.
-
-# TODO: Clean this up one day by using the way recommended by gettext.
-# (See https://docs.python.org/2/library/gettext.html). For this we
-# need the path to the locale files here.
-try:
-    _
-except NameError:
-    _ = lambda x: x # Fake i18n when not available
-
 
 #.
 #.

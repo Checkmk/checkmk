@@ -27,17 +27,12 @@
 """This module wraps some regex handling functions used by Check_MK"""
 
 import re
-from .exceptions import MKGeneralException
+from typing import Dict, Pattern # pylint:disable=unused-import
 
-# TODO: Clean this up one day by using the way recommended by gettext.
-# (See https://docs.python.org/2/library/gettext.html). For this we
-# need the path to the locale files here.
-try:
-    _
-except NameError:
-    _ = lambda x: x # Fake i18n when not available
+from cmk.exceptions import MKGeneralException
+from cmk.i18n import _
 
-g_compiled_regexes = {}
+g_compiled_regexes = {} # type: Dict[str, Pattern]
 
 def regex(pattern):
     """Compile regex or look it up in already compiled regexes.

@@ -29,15 +29,6 @@ to all components of Check_MK."""
 
 import os
 
-# TODO: Clean this up one day by using the way recommended by gettext.
-# (See https://docs.python.org/2/library/gettext.html). For this we
-# need the path to the locale files here.
-try:
-    _
-except NameError:
-    _ = lambda x: x # Fake i18n when not available
-
-
 #
 # First declare the possible paths for the linters. Then set it within _set_paths()
 #
@@ -155,10 +146,6 @@ def _set_paths():
 
 def _omd_root():
     return os.environ.get("OMD_ROOT", "")
-    #try:
-    #except KeyError:
-    #    raise MKGeneralException(_("OMD_ROOT environment variable not set. You can "
-    #                               "only execute this in an OMD site."))
 
 
 def _set_core_specific_paths():

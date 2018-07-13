@@ -24,15 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-
-# TODO: Clean this up one day by using the way recommended by gettext.
-# (See https://docs.python.org/2/library/gettext.html). For this we
-# need the path to the locale files here.
-try:
-    _
-except NameError:
-    _ = lambda x: x # Fake i18n when not available
-
+from cmk.i18n import _
 
 # never used directly in the code. Just some wrapper to make all of our
 # exceptions handleable with one call

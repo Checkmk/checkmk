@@ -32,7 +32,8 @@ def check_fsc_subsystems(item, params, info):
     warn, crit = params
     for line in info: # , value1, value2 in info:
         name = line[0]
-        if name != item: continue
+        if name != item:
+            continue
         if line[1] == u"":
             return 3, "Status not found in SNMP data"
         status = int(line[1])

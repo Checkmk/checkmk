@@ -73,7 +73,8 @@ def check_netctr_combined(nic, params, info):
 
     # Look for line describing this nic
     for nicline in info[1:]:
-        if nicline[0] != nic: continue
+        if nicline[0] != nic:
+            continue
         perfdata = []
         infotxt = ""
         problems_per_sec = 0.0

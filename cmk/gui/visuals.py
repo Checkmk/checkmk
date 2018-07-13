@@ -103,7 +103,8 @@ def load_plugins(force):
         },
     })
 
-    global title_functions      ; title_functions    = []
+    global title_functions
+    title_functions = []
 
     utils.load_web_plugins('visuals', globals())
 

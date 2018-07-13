@@ -34,7 +34,8 @@ def check_fsc_fans(item, params, info):
 
     for line in info: # , value1, value2 in info:
         name = line[0]
-        if name != item: continue
+        if name != item:
+            continue
         rpm = int(line[1])
         return check_fan(rpm, params)
 

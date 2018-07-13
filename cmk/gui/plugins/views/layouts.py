@@ -654,7 +654,8 @@ def render_grouped_list(rows, view, group_cells, cells, num_columns, show_checkb
                 # render state, if available through whole tr
                 if not row.get('service_description'):
                     state = row.get("host_state", 0)
-                    if state > 0: state +=1 # 1 is critical for hosts
+                    if state > 0:
+                        state +=1 # 1 is critical for hosts
                 else:
                     state = row.get("service_state", 0)
             else:

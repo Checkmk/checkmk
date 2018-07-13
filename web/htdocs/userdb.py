@@ -1040,8 +1040,9 @@ class GroupChoice(DualListChoice):
     def load_groups(self, with_foreign_groups):
         all_groups = load_group_information()
         this_group = all_groups.get(self.what, {})
-        return [ (k, t['alias'] and t['alias'] or k) for (k, t) in this_group.items()
-                 if with_foreign_groups or k in config.user.contact_groups() ]
+        return sorted([ (k, t['alias'] and t['alias'] or k) for (k, t) in this_group.items()
+                 if with_foreign_groups or k in config.user.contact_groups() ],
+                 key=lambda x: x[1].lower())
 
 
 #.

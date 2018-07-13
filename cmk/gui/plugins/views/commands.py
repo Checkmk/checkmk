@@ -893,7 +893,7 @@ def command_star(cmdtag, spec, row):
 
 
 def command_executor_star(command, site):
-    foo, star, spec = command.split(";", 2)
+    _unused, star, spec = command.split(";", 2)
     stars = config.user.load_stars()
     if star == "0" and spec in stars:
         stars.remove(spec)

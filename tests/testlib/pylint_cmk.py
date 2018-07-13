@@ -47,10 +47,11 @@ def run_pylint(base_path, check_files=None): #, cleanup_test_dir=False):
 
     pylint_cfg = repo_path() + "/pylintrc"
 
-    check_files = get_pylint_files(base_path, "*")
     if not check_files:
-        print "Nothing to do..."
-        return 0 # nothing to do
+        check_files = get_pylint_files(base_path, "*")
+        if not check_files:
+            print "Nothing to do..."
+            return 0 # nothing to do
 
     cmd = [
         "python", "-m", "pylint",

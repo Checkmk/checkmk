@@ -1,0 +1,15 @@
+Title: Add hover title to make long permission titles visible
+Level: 1
+Component: wato
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0i1
+Date: 1531484201
+
+Some permissions on the "Edit role" page have a title that is longer than the
+title area which leads to stripped titles. To make them readable the stripped
+titles now show the full text when hovering over it.
+
+The texts may be improved in the future to be shorter.

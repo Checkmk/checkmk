@@ -232,6 +232,11 @@ def all_checks_loaded():
     return _all_checks_loaded
 
 
+def any_check_loaded():
+    """Whether or not some checks have been loaded into the current process"""
+    return bool(_check_contexts)
+
+
 # Constructs a new check context dictionary. It contains the whole check API.
 def new_check_context():
     # Add the data structures where the checks register with Check_MK

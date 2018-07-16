@@ -168,7 +168,7 @@ def _perform_post_config_loading_actions():
     # In case the checks are not loaded yet it seems the current mode
     # is not working with the checks. In this case also don't load the
     # static checks into the configuration.
-    if cmk_base.checks.all_checks_loaded():
+    if cmk_base.checks.any_check_loaded():
         add_wato_static_checks_to_checks()
         initialize_check_caches()
         set_check_variables_for_checks()

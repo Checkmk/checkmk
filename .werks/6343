@@ -1,0 +1,14 @@
+Title: Analyze parameters: Shows parameters of clustered services now
+Level: 1
+Component: wato
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0i1
+Date: 1531469273
+
+When the diagnose page to analyze the parameters of a service was opened for
+a service that is assigned to a cluster host, it was not showing the
+"Check origin and parameters" section. The effective parameters were not
+shown.

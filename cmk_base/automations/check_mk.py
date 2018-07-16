@@ -570,10 +570,21 @@ class AutomationAnalyseServices(Automation):
                            "parameters"   : params,
                       }
 
+        # TODO: There is a lot of duplicated logic with discovery.py/check_table.py. Clean this
+        # whole function up.
+        if config.is_cluster(hostname):
+            autochecks = []
+            for node in config.nodes_of(hostname):
+                for check_plugin_name, item, paramstring in cmk_base.autochecks.read_autochecks_of(node):
+                    descr = config.service_description(node, check_plugin_name, item)
+                    if hostname == config.host_of_clustered_service(node, descr):
+                        autochecks.append((check_plugin_name, item, paramstring))
+        else:
+            autochecks = cmk_base.autochecks.read_autochecks_of(hostname)
 
         # 2. Load all autochecks of the host in question and try to find
         # our service there
-        for entry in cmk_base.autochecks.read_autochecks_of(hostname):
+        for entry in autochecks:
             ct, item, params = entry # new format without host name
 
             if (ct, item) not in table:

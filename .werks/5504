@@ -1,0 +1,11 @@
+Title: cmk-update-agent: Bug in Windows MSI logging
+Level: 1
+Component: agents
+Compatible: compat
+Edition: cee
+Version: 1.5.0b2
+Date: 1524049200
+Class: fix
+
+When running cmk-update-agent.exe, the update process would abort with message "'EnvironmentHandler' object has no attribute 'local_logdir'".
+This is a regression since 1.5.0b1 and will be fixed with this werk

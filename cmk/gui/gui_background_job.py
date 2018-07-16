@@ -150,6 +150,24 @@ class GUIBackgroundJobSnapshottedFunctions(background_job.BackgroundJob):
         return self.get_status().get("user") != config.user.id
 
 
+    # FIXME: There is some arcane metaprogramming Kung Fu going on in
+    # GUIBackgroundStatusSnapshot which needs the methods *in this class*,
+    # although they are actually totally useless here.
+    def is_running(self):  # pylint: disable=useless-super-delegation
+        return super(GUIBackgroundJobSnapshottedFunctions, self).is_running()
+
+
+    def exists(self):  # pylint: disable=useless-super-delegation
+        return super(GUIBackgroundJobSnapshottedFunctions, self).exists()
+
+
+    def get_job_id(self):  # pylint: disable=useless-super-delegation
+        return super(GUIBackgroundJobSnapshottedFunctions, self).get_job_id()
+
+
+    def get_title(self):  # pylint: disable=useless-super-delegation
+        return super(GUIBackgroundJobSnapshottedFunctions, self).get_title()
+
 
 # TODO: The superclasses are nonsense: GUIBackgroundJobSnapshottedFunctions
 # already derives from background_jobs.BackgroundJob. What is the right way to
@@ -205,8 +223,8 @@ class GUIBackgroundStatusSnapshot(object):
         self._job_status = background_job.get_status()
         self._logger = background_job._logger.getChild("snapshot")
 
-        for name in dir(GUIBackgroundJobSnapshottedFunctions):
-            if callable(getattr(GUIBackgroundJobSnapshottedFunctions, name)):
+        for name, value in GUIBackgroundJobSnapshottedFunctions.__dict__.iteritems():
+            if hasattr(value, "__call__"):
                 self._job_status[name] = getattr(background_job, name)()
 
 

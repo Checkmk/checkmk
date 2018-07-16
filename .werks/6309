@@ -7,4 +7,6 @@ Version: 1.6.0i1
 Date: 1531729918
 Class: fix
 
-
+Before these levels were set to 101, 101 percent.
+You have to perform a rediscovery in order to use
+the new ones.

@@ -1,0 +1,25 @@
+Title: Multiple formats for Agent Updater executable on Linux
+Level: 2
+Component: agents
+Class: feature
+Compatible: compat
+Edition: cee
+State: unknown
+Version: 1.6.0i1
+Date: 1531750420
+
+Since Check_MK 1.5.0i2, the Linux Agent Updater executable (cmk-update-agent)
+got deployed as a 64bit binary executable file, see Werk #5267 for details.
+
+After regarding some customer feedback, we decided to bring back the cmk-update-agent
+python script to Check_MK and additionally offer a 32bit binary executable format. 
+As a result, you can now choose between 3 executable formats for the cmk-update-agent
+executable to be deployed by configuring the entry "Executable format (Linux/UNIX)" within
+the Agent Updater ruleset: "64bit ELF executable", "32bit ELF executable" and "Python2 script",
+with 64bit executable being the default if no rule entry is configured. Additionally, the rule entry
+will be ignored on Windows hosts, so there is no need to manually exclude your Windows hosts 
+from a ruleset.
+
+Please note that the deployment of the Python2 script may bring back some old problems (for
+details, see again Werk #5267) and hence we can offer no support for troubleshooting while deploying
+the Agent Updater as a script. However, a mail to feedback@check-mk.org is much appreciated.

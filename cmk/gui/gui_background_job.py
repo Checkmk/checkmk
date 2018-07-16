@@ -150,6 +150,9 @@ class GUIBackgroundJobSnapshottedFunctions(background_job.BackgroundJob):
 
 
 
+# TODO: The superclasses are nonsense: GUIBackgroundJobSnapshottedFunctions
+# already derives from background_jobs.BackgroundJob. What is the right way to
+# fix this?
 class GUIBackgroundJob(GUIBackgroundJobSnapshottedFunctions, background_job.BackgroundJob):
     _background_process_class = GUIBackgroundProcess
 
@@ -193,14 +196,16 @@ class GUIBackgroundJob(GUIBackgroundJobSnapshottedFunctions, background_job.Back
 
 # Provides the frozen state of a background job
 # Quite helpful when generating GUI pages with several phases
+
+# TODO: What on earth is this class supposed to do?
 class GUIBackgroundStatusSnapshot(object):
     def __init__(self, background_job):
         super(GUIBackgroundStatusSnapshot, self).__init__()
         self._job_status = background_job.get_status()
         self._logger = background_job._logger.getChild("snapshot")
 
-        for name, value in GUIBackgroundJobSnapshottedFunctions.__dict__.iteritems():
-            if hasattr(value, "__call__"):
+        for name in dir(GUIBackgroundJobSnapshottedFunctions):
+            if callable(getattr(GUIBackgroundJobSnapshottedFunctions, name)):
                 self._job_status[name] = getattr(background_job, name)()
 
 

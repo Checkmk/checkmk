@@ -1,0 +1,11 @@
+Title: utils.py: Fix display of state markers after URLs
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1531725353
+Class: fix
+
+Properly display URLs in service description if they are
+followed by a state marker.

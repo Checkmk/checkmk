@@ -31,7 +31,7 @@ import abc
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
 
-modules = glob.glob(os.path.join(os.path.dirname(__file__), "*.py"))
+modules = sorted(glob.glob(os.path.join(os.path.dirname(__file__), "*.py")))
 __all__ = [ os.path.basename(f)[:-3] for f in modules if f not in [ "__init__.py", "utils.py" ] ]
 
 #.

@@ -45,7 +45,7 @@ def parse_hr_mem(info):
             size = int(hrsize) * int(hrunits) / 1048576.0
             used = int(hrused) * int(hrunits) / 1048576.0
             parsed.setdefault(map_types[hrtype], []).append((hrdescr.lower(), size, used))
-        except ValueError, KeyError:
+        except (ValueError, KeyError):
             pass
 
     return parsed

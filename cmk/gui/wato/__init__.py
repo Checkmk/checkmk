@@ -16694,7 +16694,6 @@ class ModeRegistry(cmk.gui.plugin_registry.ClassRegistry):
 
 
 mode_registry = ModeRegistry()
-mode_registry.load_plugins()
 
 modes = {}
 # TODO: Drop this and probably replace with a hook at button rendering?
@@ -17006,6 +17005,10 @@ def load_plugins(force):
          [ "admin", "user" ])
 
     utils.load_web_plugins("wato", globals())
+
+    # TODO: Needs to be done after plugin loading. Temporarily needed till we have
+    # changed the registry to explicit registration in the next days
+    mode_registry.load_plugins()
 
     if modes:
         raise MKGeneralException(_("Deprecated WATO modes found: %r. "

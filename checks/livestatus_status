@@ -120,16 +120,6 @@ def check_livestatus_status(item, params, parsed):
     yield 0, "Core version: %s"       % status["program_version"]
     yield 0, "Livestatus version: %s" % status["livestatus_version"]
 
-    if status["program_version"].startswith("Check_MK 1.2.6"):
-        # In CMC <= 1.2.6 event handlers cannot be enabled. So never warn.
-        params["enable_event_handlers"] = 0
-    elif status.get("has_event_handlers", '1') == '0':
-        # After update from < 1.2.7 the check would warn about disabled alert
-        # handlers since they are disabled in this case. But the user has no alert
-        # handlers defined, so this is nothing to warn about. Start warn when the
-        # user defines his first alert handlers.
-        params["enable_event_handlers"] = 0
-
     settings = [
         ("execute_host_checks",           "Active host checks are disabled"),
         ("execute_service_checks",        "Active service checks are disabled"),
@@ -137,7 +127,7 @@ def check_livestatus_status(item, params, parsed):
         ("accept_passive_service_checks", "Passive service checks are disabled"),
         ("check_host_freshness",          "Host freshness checking is disabled"),
         ("check_service_freshness",       "Service freshness checking is disabled"),
-        ("enable_event_handlers",         "Alert handlers are disabled"),
+    #   ("enable_event_handlers",         "Alert handlers are disabled"), # special case below
         ("enable_flap_detection",         "Flap detection is disabled"),
         ("enable_notifications",          "Notifications are disabled"),
         ("process_performance_data",      "Performance data is disabled"),
@@ -147,6 +137,20 @@ def check_livestatus_status(item, params, parsed):
     for settingname, title in settings:
         if status[settingname] != '1' and params[settingname] != 0:
             yield params[settingname], title
+
+    # special considerations for enable_event_handlers
+    if status["program_version"].startswith("Check_MK 1.2.6"):
+        # In CMC <= 1.2.6 event handlers cannot be enabled. So never warn.
+        return
+    if status.get("has_event_handlers", '1') == '0':
+        # After update from < 1.2.7 the check would warn about disabled alert
+        # handlers since they are disabled in this case. But the user has no alert
+        # handlers defined, so this is nothing to warn about. Start warn when the
+        # user defines his first alert handlers.
+        return
+    else:
+        if status["enable_event_handlers"] != '1' and params["enable_event_handlers"] != 0:
+            yield params["enable_event_handlers"], "Alert handlers are disabled"
 
 
 check_info['livestatus_status'] = {

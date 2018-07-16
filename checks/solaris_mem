@@ -42,7 +42,7 @@
 def parse_solaris_mem(info):
     # The 1.2.4 agent seems to create an empty section under some circumstances
     if not info:
-        return
+        return {}
 
     values = []
     mem_tokens = " ".join(info[0][1:]).split(",")

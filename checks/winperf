@@ -33,7 +33,7 @@ def inventory_win_cpuusage(info):
         except:
             pass
 
-winperf_cpu_default_levels = ( 101, 101 )
+winperf_cpu_default_levels = (90, 95)
 
 # params: levels for warn / crit in percentage
 def check_win_cpuusage(item, params, info):

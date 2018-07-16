@@ -47,6 +47,7 @@ from cmk.gui.valuespec import (
 
 from . import (
     SidebarSnapin,
+    snapin_registry,
     iconlink,
     link,
     begin_footnote_links,
@@ -236,6 +237,7 @@ pagetypes.declare(BookmarkList)
 
 
 
+@snapin_registry.register
 class Bookmarks(SidebarSnapin):
     @staticmethod
     def type_name():

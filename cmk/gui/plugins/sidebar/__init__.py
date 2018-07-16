@@ -42,6 +42,7 @@ __all__ = [ os.path.basename(f)[:-3] for f in modules if f not in [ "__init__.py
 
 from cmk.gui.plugins.sidebar.utils import (
     SidebarSnapin,
+    snapin_registry,
     sidebar_snapins,
     snapin_width,
     snapin_site_choice,

@@ -31,8 +31,9 @@ import cmk.gui.sites as sites
 from cmk.gui.log import logger
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
-from . import SidebarSnapin, write_snapin_exception
+from . import SidebarSnapin, snapin_registry, write_snapin_exception
 
+@snapin_registry.register
 class MasterControlSnapin(SidebarSnapin):
     @staticmethod
     def type_name():

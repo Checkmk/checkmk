@@ -27,8 +27,9 @@
 from cmk.gui.valuespec import *
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
-from . import UserAttribute
+from . import UserAttribute, user_attribute_registry
 
+@user_attribute_registry.register
 class ForceAuthUserUserAttribute(UserAttribute):
     def name(self):
         return "force_authuser"
@@ -50,6 +51,7 @@ class ForceAuthUserUserAttribute(UserAttribute):
 
 
 # TODO: Remove this with 1.5.0/1.6.0
+@user_attribute_registry.register
 class ForceAuthUserWebserviceUserAttribute(UserAttribute):
     def name(self):
         return "force_authuser_webservice"
@@ -71,6 +73,7 @@ class ForceAuthUserWebserviceUserAttribute(UserAttribute):
 
 
 
+@user_attribute_registry.register
 class DisableNotificationsUserAttribute(UserAttribute):
     def name(self):
         return "disable_notifications"
@@ -110,6 +113,7 @@ class DisableNotificationsUserAttribute(UserAttribute):
 
 
 
+@user_attribute_registry.register
 class StartURLUserAttribute(UserAttribute):
     def name(self):
         return "start_url"
@@ -146,6 +150,7 @@ class StartURLUserAttribute(UserAttribute):
 
 
 
+@user_attribute_registry.register
 class UIThemeUserAttribute(UserAttribute):
     def name(self):
         return "ui_theme"

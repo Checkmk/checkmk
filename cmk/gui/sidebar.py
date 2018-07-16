@@ -66,6 +66,7 @@ if cmk.is_managed_edition():
 # Kept for compatibility with legacy plugins
 # TODO: Drop once we don't support legacy snapins anymore
 from cmk.gui.plugins.sidebar.utils import (
+    snapin_registry,
     sidebar_snapins,
     snapin_width,
     snapin_site_choice,
@@ -590,35 +591,6 @@ def ajax_switch_site():
 #   |                  |_|   |_|\__,_|\__, |_|_| |_|___/                   |
 #   |                                 |___/                                |
 #   '----------------------------------------------------------------------'
-
-
-class SnapinRegistry(cmk.gui.plugin_registry.ObjectRegistry):
-    """The management object for all available plugins.
-
-    The snapins are loaded by importing cmk.gui.plugins.sidebar. These plugins
-    contain subclasses of the cmk.gui.plugins.SidebarSnapin class.
-    SnapinRegistry.load_plugins() will register all snapins with this management
-    object and make them available for use.
-    """
-    def plugin_base_class(self):
-        return cmk.gui.plugins.sidebar.SidebarSnapin
-
-
-    def register(self, snapin):
-        snapin_id = snapin.type_name()
-        self._entries[snapin_id] = snapin
-
-        config.declare_permission("sidesnap.%s" % snapin_id,
-            snapin.title(),
-            snapin.description(),
-            snapin.allowed_roles())
-
-        for path, page_func in snapin.page_handlers().items():
-            cmk.gui.pages.register_page_handler(path, page_func)
-
-
-snapin_registry = SnapinRegistry()
-snapin_registry.load_plugins()
 
 
 class GenericSnapin(cmk.gui.plugins.sidebar.SidebarSnapin):

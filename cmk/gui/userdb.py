@@ -1153,49 +1153,6 @@ def save_connection_config(connections, base_dir=None):
 
 
 #.
-#   .--Plugins-------------------------------------------------------------.
-#   |                   ____  _             _                              |
-#   |                  |  _ \| |_   _  __ _(_)_ __  ___                    |
-#   |                  | |_) | | | | |/ _` | | '_ \/ __|                   |
-#   |                  |  __/| | |_| | (_| | | | | \__ \                   |
-#   |                  |_|   |_|\__,_|\__, |_|_| |_|___/                   |
-#   |                                 |___/                                |
-#   '----------------------------------------------------------------------'
-
-
-class UserConnectorRegistry(cmk.gui.plugin_registry.ClassRegistry):
-    """The management object for all available user connector classes.
-
-    Have a look at the base class for details."""
-    def plugin_base_class(self):
-        return cmk.gui.plugins.userdb.UserConnector
-
-
-    def register(self, connector_class):
-        connector_class.migrate_config()
-        self._entries[connector_class.type()] = connector_class
-
-
-user_connector_registry = UserConnectorRegistry()
-user_connector_registry.load_plugins()
-
-
-class UserAttributeRegistry(cmk.gui.plugin_registry.ObjectRegistry):
-    """The management object for all available user attributes.
-    Have a look at the base class for details."""
-    def plugin_base_class(self):
-        return cmk.gui.plugins.userdb.UserAttribute
-
-
-    def register(self, attribute_class):
-        self._entries[attribute_class.name()] = attribute_class
-
-
-user_attribute_registry = UserAttributeRegistry()
-user_attribute_registry.load_plugins()
-
-
-#.
 #   .-Hooks----------------------------------------------------------------.
 #   |                     _   _             _                              |
 #   |                    | | | | ___   ___ | | _____                       |

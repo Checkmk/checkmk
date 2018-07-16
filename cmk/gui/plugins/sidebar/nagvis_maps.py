@@ -28,8 +28,9 @@ import cmk.gui.config as config
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
 
-from . import SidebarSnapin
+from . import SidebarSnapin, snapin_registry
 
+@snapin_registry.register
 class NagVisMaps(SidebarSnapin):
     @staticmethod
     def type_name():

@@ -1,0 +1,10 @@
+Title: mk_postgres: Fixed baking postgres plugin and related bakery rule
+Level: 1
+Component: agents
+Compatible: compat
+Edition: cee
+Version: 1.5.0b9
+Date: 1531742798
+Class: fix
+
+

@@ -29,6 +29,9 @@ import abc
 # TODO: We decided to change this plugin registry from automatically finding
 # it's childs to explicit registration.
 # TODO: In the moment we have this, we can drop the auto_register stuff.
+# TODO: Think about the different registry types. For which cases do we need the
+# object registry for which the class registry? Does it make sense to consolidate
+# both?
 
 class Registry(object):
     """The management object for all available plugins of a component.
@@ -52,44 +55,22 @@ class Registry(object):
         raise NotImplementedError()
 
 
-    def load_plugins(self):
-        self._entries.clear()
-
-        def _all_subclasses_of(base_class):
-            l = []
-            for plugin_class in base_class.__subclasses__(): # pylint: disable=no-member
-                l += _all_subclasses_of(plugin_class)
-                l.append(plugin_class)
-            return l
-
-        for plugin_class in _all_subclasses_of(self.plugin_base_class()):
-            if plugin_class.__subclasses__(): # pylint: disable=no-member
-                continue # Only use leaf classes
-
-            # TODO: Create one base class for all plugin classes to provide a default for this
-            if hasattr(plugin_class, "auto_register") and not plugin_class.auto_register():
-                return
-
-            self.register(self._instanciate(plugin_class))
-
-
     @abc.abstractmethod
     def _instanciate(self, cls):
         raise NotImplementedError()
 
 
-    @abc.abstractmethod
     def register(self, plugin_class):
         """Decorator to register a class with the registry"""
-        self._register(plugin_class)
+        self._register(self._instanciate(plugin_class))
+        return plugin_class
 
 
-    @abc.abstractmethod
     def register_plugin(self, plugin_class):
         """Method for registering a plugin with the registry.
 
         Result is equal to use the register() decorator"""
-        self._register(plugin_class)
+        self._register(self._instanciate(plugin_class))
 
 
     @abc.abstractmethod

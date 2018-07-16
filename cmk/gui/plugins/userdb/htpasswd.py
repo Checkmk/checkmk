@@ -34,7 +34,7 @@ import cmk.paths
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
 from cmk.gui.exceptions import MKUserError
-from . import UserConnector
+from . import UserConnector, user_connector_registry
 
 def encrypt_password(password, salt=None, prefix="1"):
     import cmk.gui.md5crypt
@@ -43,6 +43,7 @@ def encrypt_password(password, salt=None, prefix="1"):
     return cmk.gui.md5crypt.md5crypt(password, salt, '$%s$' % prefix)
 
 
+@user_connector_registry.register
 class HtpasswdUserConnector(UserConnector):
     @classmethod
     def type(cls):

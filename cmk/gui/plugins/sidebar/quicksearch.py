@@ -713,10 +713,14 @@ class MatchPluginRegistry(cmk.gui.plugin_registry.ObjectRegistry):
         return QuicksearchMatchPlugin
 
 
-    def register(self, obj):
+    def _register(self, obj):
         self._entries[obj.__class__.__name__] = obj
 
 
+match_plugin_registry = MatchPluginRegistry()
+
+
+@match_plugin_registry.register
 class GroupMatchPlugin(QuicksearchMatchPlugin):
     def __init__(self, group_type = None, filter_shortname = None):
         super(GroupMatchPlugin, self).__init__(["%sgroups" % group_type, "%ss" % group_type, "services"],
@@ -795,6 +799,7 @@ class GroupMatchPlugin(QuicksearchMatchPlugin):
 
 
 
+@match_plugin_registry.register
 class ServiceMatchPlugin(QuicksearchMatchPlugin):
     def __init__(self):
         super(ServiceMatchPlugin, self).__init__(["services"], "services", "s")
@@ -833,6 +838,7 @@ class ServiceMatchPlugin(QuicksearchMatchPlugin):
 
 
 
+@match_plugin_registry.register
 class HostMatchPlugin(QuicksearchMatchPlugin):
     def __init__(self, livestatus_field = None, filter_shortname = None):
         super(HostMatchPlugin, self).__init__(["hosts", "services"], "hosts", filter_shortname)
@@ -910,6 +916,7 @@ class HostMatchPlugin(QuicksearchMatchPlugin):
 
 
 
+@match_plugin_registry.register
 class HosttagMatchPlugin(QuicksearchMatchPlugin):
     def __init__(self):
         super(HosttagMatchPlugin, self).__init__(["hosts", "services"], "hosts", "tg")
@@ -971,30 +978,31 @@ class HosttagMatchPlugin(QuicksearchMatchPlugin):
             return "", url_infos
 
 
+@match_plugin_registry.register
 class ServiceGroupMatchPlugin(GroupMatchPlugin):
     def __init__(self):
         super(ServiceGroupMatchPlugin, self).__init__(group_type = "service", filter_shortname = "sg")
 
 
+@match_plugin_registry.register
 class HostGroupMatchPlugin(GroupMatchPlugin):
     def __init__(self):
         super(HostGroupMatchPlugin, self).__init__(group_type = "host", filter_shortname = "hg")
 
 
+@match_plugin_registry.register
 class HostNameMatchPlugin(HostMatchPlugin):
     def __init__(self):
         super(HostNameMatchPlugin, self).__init__(livestatus_field = "name", filter_shortname = "h")
 
 
+@match_plugin_registry.register
 class HostAliasMatchPlugin(HostMatchPlugin):
     def __init__(self):
         super(HostAliasMatchPlugin, self).__init__(livestatus_field = "alias", filter_shortname = "al")
 
 
+@match_plugin_registry.register
 class HostAddressMatchPlugin(HostMatchPlugin):
     def __init__(self):
         super(HostAddressMatchPlugin, self).__init__(livestatus_field = "address", filter_shortname = "ad")
-
-
-match_plugin_registry = MatchPluginRegistry()
-match_plugin_registry.load_plugins()

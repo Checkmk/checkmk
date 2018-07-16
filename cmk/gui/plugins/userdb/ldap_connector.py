@@ -65,7 +65,7 @@ from cmk.gui.valuespec import *
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
 from cmk.gui.exceptions import MKGeneralException, MKUserError
-from . import UserConnector
+from . import UserConnector, user_connector_registry
 
 # LDAP attributes are case insensitive, we only use lower case!
 # Please note: This are only default values. The user might override this
@@ -132,6 +132,7 @@ def ldap_test_module():
 #   | This class realizes the ldap connection and communication            |
 #   '----------------------------------------------------------------------'
 
+@user_connector_registry.register
 class LDAPUserConnector(UserConnector):
     # stores the ldap connection suffixes of all connections
     connection_suffixes = {}

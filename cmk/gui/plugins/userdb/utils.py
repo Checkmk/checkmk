@@ -216,7 +216,6 @@ class UserConnectorRegistry(cmk.gui.plugin_registry.ClassRegistry):
 
 
 user_connector_registry = UserConnectorRegistry()
-user_connector_registry.load_plugins()
 
 
 class UserAttributeRegistry(cmk.gui.plugin_registry.ObjectRegistry):

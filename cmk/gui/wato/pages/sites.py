@@ -37,7 +37,7 @@ from cmk.gui.globals import html
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.log import logger
 
-from cmk.gui.wato.html_elements import (
+from cmk.gui.plugins.wato.utils.html_elements import (
     wato_html_head,
     wato_confirm,
 )

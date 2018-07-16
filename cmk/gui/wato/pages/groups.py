@@ -47,7 +47,7 @@ from cmk.gui.valuespec import (
     TextAscii,
 )
 
-from cmk.gui.wato.main_menu import (
+from cmk.gui.plugins.wato.utils.main_menu import (
     MainMenu,
     MenuItem,
 )

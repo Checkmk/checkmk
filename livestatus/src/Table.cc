@@ -70,24 +70,24 @@ std::shared_ptr<Column> Table::column(std::string colname) const {
                              colname + "'");
 }
 
-std::unique_ptr<Column> Table::dynamicColumn(const std::string &name,
+std::unique_ptr<Column> Table::dynamicColumn(const std::string &colname,
                                              const std::string &rest) const {
-    auto it = _dynamic_columns.find(name);
+    auto it = _dynamic_columns.find(colname);
     if (it == _dynamic_columns.end()) {
-        throw std::runtime_error("table '" + name +
-                                 "' has no dynamic column '" + name + "'");
+        throw std::runtime_error("table '" + colname +
+                                 "' has no dynamic column '" + colname + "'");
     }
     auto sep_pos = rest.find(':');
     if (sep_pos == std::string::npos) {
         throw std::runtime_error("missing separator in dynamic column '" +
-                                 name + "'");
+                                 colname + "'");
     }
-    std::string name2 = rest.substr(0, sep_pos);
-    if (name2.empty()) {
+    std::string colname2 = rest.substr(0, sep_pos);
+    if (colname2.empty()) {
         throw std::runtime_error("empty column name for dynamic column '" +
-                                 name + "'");
+                                 colname + "'");
     }
-    return it->second->createColumn(name2, rest.substr(sep_pos + 1));
+    return it->second->createColumn(colname2, rest.substr(sep_pos + 1));
 }
 
 bool Table::isAuthorized(Row /*unused*/, const contact * /*unused*/) const {

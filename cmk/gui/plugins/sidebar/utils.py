@@ -30,6 +30,8 @@ import abc
 import traceback
 import json
 
+import cmk.gui.plugin_registry
+import cmk.gui.pages
 import cmk.gui.config as config
 from cmk.gui.i18n import _, _u
 from cmk.gui.globals import html
@@ -75,6 +77,28 @@ class SidebarSnapin(object):
 
     def page_handlers(self):
         return {}
+
+
+class SnapinRegistry(cmk.gui.plugin_registry.ObjectRegistry):
+    """The management object for all available plugins."""
+    def plugin_base_class(self):
+        return SidebarSnapin
+
+
+    def _register(self, snapin):
+        snapin_id = snapin.type_name()
+        self._entries[snapin_id] = snapin
+
+        config.declare_permission("sidesnap.%s" % snapin_id,
+            snapin.title(),
+            snapin.description(),
+            snapin.allowed_roles())
+
+        for path, page_func in snapin.page_handlers().items():
+            cmk.gui.pages.register_page_handler(path, page_func)
+
+
+snapin_registry = SnapinRegistry()
 
 #.
 #   .--Helpers-------------------------------------------------------------.

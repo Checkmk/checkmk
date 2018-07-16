@@ -30,8 +30,9 @@ from cmk.gui.i18n import _
 from cmk.gui.globals import html
 import cmk.gui.sites as sites
 
-from . import SidebarSnapin
+from . import SidebarSnapin, snapin_registry
 
+@snapin_registry.register
 class Speedometer(SidebarSnapin):
     @staticmethod
     def type_name():

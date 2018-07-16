@@ -36,8 +36,9 @@ from cmk.gui.log import logger
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
 from cmk.gui.exceptions import MKGeneralException, MKException
-from . import SidebarSnapin
+from . import SidebarSnapin, snapin_registry
 
+@snapin_registry.register
 class QuicksearchSnapin(SidebarSnapin):
     @staticmethod
     def type_name():

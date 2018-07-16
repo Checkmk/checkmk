@@ -28,8 +28,9 @@ import cmk
 
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
-from . import SidebarSnapin, bulletlink
+from . import SidebarSnapin, snapin_registry, bulletlink
 
+@snapin_registry.register
 class About(SidebarSnapin):
     @staticmethod
     def type_name():

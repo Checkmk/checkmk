@@ -676,7 +676,7 @@ class BISitedataManager(object):
                 if time.time() - os.stat(filepath).st_mtime > self._clear_orphaned_caches_after:
                     log("Cleanup orphaned file", filename)
                     os.unlink(filepath)
-            except IndexError, IOError:
+            except (IndexError, IOError):
                 try:
                     os.unlink(filepath)
                 except:

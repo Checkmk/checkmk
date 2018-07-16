@@ -1,0 +1,12 @@
+Title: Fixed not working "manual checks" in Check_MK Raw Edition
+Level: 1
+Component: core
+Compatible: compat
+Edition: cre
+Version: 1.5.0b9
+Date: 1531598131
+Class: fix
+
+Manual checks, often used for "process checks" were not executed
+when using the Check_MK Raw Edition. All configured manual checks
+became stale after some time and were never checked.

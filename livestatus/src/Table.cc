@@ -74,7 +74,7 @@ std::unique_ptr<Column> Table::dynamicColumn(const std::string &colname,
                                              const std::string &rest) const {
     auto it = _dynamic_columns.find(colname);
     if (it == _dynamic_columns.end()) {
-        throw std::runtime_error("table '" + colname +
+        throw std::runtime_error("table '" + name() +
                                  "' has no dynamic column '" + colname + "'");
     }
     auto sep_pos = rest.find(':');

@@ -1,0 +1,10 @@
+Title: winperf: Set default levels to 90, 95 percent
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1531729918
+Class: fix
+
+

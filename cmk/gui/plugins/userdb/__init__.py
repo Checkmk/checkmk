@@ -176,8 +176,8 @@ class UserAttribute(object):
 
 
     def topic(self):
-        # type: () -> Optional[bytes]
-        return None
+        # type: () -> bytes
+        return "personal"
 
 
     def add_custom_macro(self):

@@ -314,11 +314,19 @@ def add_wato_static_checks_to_checks():
             else:
                 hostlist = entry[1]
                 taglist = []
+
+            # Do not process manual checks that are related to not existing or have not
+            # loaded check files
+            try:
+                check_plugin_info = cmk_base.checks.check_info[checktype]
+            except KeyError:
+                continue
+
             # Make sure, that for dictionary based checks
             # at least those keys defined in the factory
             # settings are present in the parameters
             if type(params) == dict:
-                def_levels_varname = cmk_base.checks.check_info[checktype].get("default_levels_variable")
+                def_levels_varname = check_plugin_info.get("default_levels_variable")
                 if def_levels_varname:
                     for key, value in cmk_base.checks.factory_settings.get(def_levels_varname, {}).items():
                         if key not in params:

@@ -120,7 +120,7 @@ import cmk.gui.gui_background_job as gui_background_job
 import cmk.gui.i18n
 import cmk.gui.pages
 import cmk.gui.plugin_registry
-import cmk.gui.wato.base_modes
+import cmk.gui.plugins.wato.utils.base_modes
 from cmk.gui.i18n import _u, _
 from cmk.gui.globals import html
 from cmk.gui.htmllib import HTML
@@ -131,7 +131,7 @@ from cmk.gui.valuespec import *
 from cmk.gui.display_options import display_options
 from cmk.gui.plugins.userdb.htpasswd import encrypt_password
 
-from cmk.gui.wato.base_modes import WatoMode, WatoWebApiMode
+from cmk.gui.plugins.wato.utils.base_modes import WatoMode, WatoWebApiMode
 from cmk.gui.wato.pages.global_settings import GlobalSettingsMode, EditGlobalSettingMode
 from cmk.gui.wato.pages.sites import ModeSites, ModeEditSite
 from cmk.gui.wato.pages.password_store import ModePasswords, ModeEditPassword
@@ -232,7 +232,7 @@ from cmk.gui.watolib import (
 
 modes = {}
 
-from .html_elements import (
+from cmk.gui.plugins.wato.utils.html_elements import (
     wato_styles,
     wato_confirm,
     wato_html_head,
@@ -241,7 +241,7 @@ from .html_elements import (
     search_form,
 )
 
-from .context_buttons import (
+from cmk.gui.plugins.wato.utils.context_buttons import (
     global_buttons,
     changelog_button,
     home_button,
@@ -250,7 +250,7 @@ from .context_buttons import (
     folder_status_button,
 )
 
-from cmk.gui.wato.main_menu import (
+from cmk.gui.plugins.wato.utils.main_menu import (
     MainMenu,
     MenuItem,
     WatoModule,

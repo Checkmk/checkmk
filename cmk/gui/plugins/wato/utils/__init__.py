@@ -43,20 +43,20 @@ from cmk.gui.valuespec import (TextAscii, Dictionary, RadioChoice, Tuple,
     CascadingDropdown, ListChoice, ListOfStrings,
     DualListChoice, ValueSpec)
 
-from cmk.gui.wato.base_modes import WatoMode
-from cmk.gui.wato.context_buttons import (
+from cmk.gui.plugins.wato.utils.base_modes import WatoMode
+from cmk.gui.plugins.wato.utils.context_buttons import (
     global_buttons,
     changelog_button,
     home_button,
 )
 
-from cmk.gui.wato.html_elements import (
+from cmk.gui.plugins.wato.utils.html_elements import (
     wato_styles,
     wato_confirm,
     search_form,
 )
 
-from cmk.gui.wato.main_menu import (
+from cmk.gui.plugins.wato.utils.main_menu import (
     MainMenu,
     MenuItem,
     WatoModule,

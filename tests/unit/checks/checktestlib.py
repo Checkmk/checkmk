@@ -514,7 +514,7 @@ def assertEqual(first, second, descr=''):
 
     if isinstance(first, dict):
         remainder = set(second.keys())
-        for k, v in first:
+        for k in first:
             assert k in second, "%sadditional key %r in %r" \
                 % (descr, k, first)
             remainder.remove(k)

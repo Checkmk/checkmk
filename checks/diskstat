@@ -113,15 +113,15 @@ def parse_diskstat(info):
     real_partitions = {device_name for device_name in device_names
                        if diskstat_diskless_pattern.match(device_name)
                           and re.sub('[0-9]+$', '', device_name)}
-
     disks = {}
-    for node_name, major, minor, device, \
-        read_ios, read_merges, read_sectors, read_ticks, \
-        write_ios, write_merges, write_sectors, write_ticks, \
-        ios_in_prog, total_ticks, rq_ticks in proc_diskstat:
-
-        if device in real_partitions:
+    for line in proc_diskstat:
+        if line[3] in real_partitions:
             continue
+
+        node_name, major, minor, device, \
+            read_ios, read_merges, read_sectors, read_ticks, \
+            write_ios, write_merges, write_sectors, write_ticks, \
+            ios_in_prog, total_ticks, rq_ticks = line
 
         if (node_name, int(major), int(minor)) in name_info:
             device = name_info[(node_name, int(major), int(minor))]

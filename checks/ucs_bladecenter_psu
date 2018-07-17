@@ -129,13 +129,17 @@ def check_ucs_bladecenter_psu_switch_power(item, params, parsed):
         return 3, "Switch power info not available"
 
     # Convert fields
-    for old, new in [ ("Current", "current"),
-                      ("PowerAvg", "power"),
-                      ("Voltage", "voltage") ]:
-        psu[new] = (float(psu[old]), None)
-        del psu[old]
+    KEY_MAP = {"Current": "current",
+               "PowerAvg": "power",
+               "Voltage": "voltage"}
 
-    return check_elphase(item, params, {item: psu})
+    psu_new = {}
+    for k, v in psu.iteritems():
+        if k in KEY_MAP:
+            k, v = KEY_MAP[k], (float(v), None)
+        psu_new[k] = v
+
+    return check_elphase(item, params, {item: psu_new})
 
 check_info["ucs_bladecenter_psu.switch_power"] = {
     'inventory_function':      inventory_ucs_bladecenter_psu_switch_power,

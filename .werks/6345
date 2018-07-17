@@ -1,0 +1,30 @@
+Title: Fixed invisible/lost notification rules when editing notification rules
+Level: 2
+Component: notifications
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0i1
+Date: 1531472133
+
+Since werk #4167 it was possible to prevent users from configuring specific
+notification plugins by setting the notification plugin permissions to "no". As
+a result all notification rules that use the not permitted notification plugin
+were not visible anymore to this user.
+
+This hiding of rules could be confusing and lead to bugs. We decided to show all
+rules now but prevent modifications of these rules when the user is not permitted
+to perform the modifications.
+
+When cloning notification rules or creating notification rules with identical
+parameters only one of the rules was shown. The others could be hidden, but
+still be in existing.
+
+In other situations, when a user with limited permissions on notification plugins
+edits the notification rules, it could happen that all notification rules that
+use other plugins were deleted by accident.
+
+These problems were introduced with werk #4167.
+
+CMK-556

@@ -7763,7 +7763,9 @@ class NotificationsMode(EventsMode):
                 else:
                     listmode = "notifications"
 
-                if show_buttons:
+                actions_allowed =  config.user.may("notification_plugin.%s" % rule['notify_plugin'][0])
+
+                if show_buttons and actions_allowed:
                     anavar = html.var("analyse", "")
                     delete_url = make_action_link([("mode", listmode), ("user", userid), ("_delete", nr)])
                     drag_url   = make_action_link([("mode", listmode), ("analyse", anavar), ("user", userid), ("_move", nr)])
@@ -7944,12 +7946,7 @@ class ModeNotifications(NotificationsMode):
 
 
     def _get_notification_rules(self):
-        rules = []
-        for rule in watolib.load_notification_rules():
-            if config.user.may("notification_plugin.%s" % rule['notify_plugin'][0]) and \
-               rule not in rules:
-                rules.append(rule)
-        return rules
+        return watolib.load_notification_rules()
 
 
     def _save_notification_display_options(self):

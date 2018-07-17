@@ -31,9 +31,9 @@
 
 def inventory_oracle_crs_voting(info):
     inventory = []
-    return [ ('', None) for line in info ]
+    return [(None, {}) for line in info]
 
-def check_oracle_crs_voting(item, params, info):
+def check_oracle_crs_voting(_no_item, params, info):
     # state = -1 => no data for Service
     state = -1
     infotext = ''

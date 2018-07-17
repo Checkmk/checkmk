@@ -26,9 +26,9 @@
 
 
 def inventory_oracle_crs_version(info):
-    return [ ('', None) for line in info ]
+    return [(None, {}) for line in info]
 
-def check_oracle_crs_version(item, params, info):
+def check_oracle_crs_version(_no_item, params, info):
     for line in info:
         return (0, line[0])
 

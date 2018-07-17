@@ -1,0 +1,11 @@
+Title: filesystem: Fixed blemish in discovery dialog: Invalid check parameter: Undefined key 'patterns' in the dictionary
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.4.0p35
+Date: 1531823716
+
+

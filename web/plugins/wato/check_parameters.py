@@ -6536,6 +6536,7 @@ register_check_parameters(
     Dictionary(
         elements = filesystem_elements,
         hidden_keys = ["flex_levels"],
+        ignored_keys = ["patterns"],
     ),
     TextAscii(
         title = _("Mount point"),

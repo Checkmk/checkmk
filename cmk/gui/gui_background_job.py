@@ -169,10 +169,7 @@ class GUIBackgroundJobSnapshottedFunctions(background_job.BackgroundJob):
         return super(GUIBackgroundJobSnapshottedFunctions, self).get_title()
 
 
-# TODO: The superclasses are nonsense: GUIBackgroundJobSnapshottedFunctions
-# already derives from background_jobs.BackgroundJob. What is the right way to
-# fix this?
-class GUIBackgroundJob(GUIBackgroundJobSnapshottedFunctions, background_job.BackgroundJob):
+class GUIBackgroundJob(GUIBackgroundJobSnapshottedFunctions):
     _background_process_class = GUIBackgroundProcess
 
     def __init__(self, job_id, **kwargs):
@@ -213,10 +210,13 @@ class GUIBackgroundJob(GUIBackgroundJobSnapshottedFunctions, background_job.Back
 
 
 
-# Provides the frozen state of a background job
-# Quite helpful when generating GUI pages with several phases
-
-# TODO: What on earth is this class supposed to do?
+# GUI pages are built in several phases, and each face can take a non-trivial
+# amount of time. Nevertheless, it is crucial to render a consistent state of
+# the background job in question. The class below provides such a status
+# snapshot for the job given to the constructor.
+#
+# TODO: BackgroundJob should provide an explicit status object, which we can use
+# here without any metaprogramming Kung Fu and arcane inheritance hierarchies.
 class GUIBackgroundStatusSnapshot(object):
     def __init__(self, background_job):
         super(GUIBackgroundStatusSnapshot, self).__init__()

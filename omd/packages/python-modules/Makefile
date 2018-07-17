@@ -39,7 +39,7 @@ endif
 
 # Check_MK Edition specific
 MODULES += simplejson-3.15.0.tar.gz
-MODULES += MySQL-python-1.2.5.zip # needed by check_sql
+MODULES += mysqlclient-1.3.13.tar.gz  # needed by check_sql
 MODULES += psycopg2-2.6.2.tar.gz # needed by check_sql
 MODULES += dicttoxml-1.7.4.tar.gz # needed by inventory XML export
 MODULES += pycparser-2.18.tar.gz # needed for cffi

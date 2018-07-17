@@ -1,0 +1,11 @@
+Title: Fixed creating BI aggregations
+Level: 1
+Component: bi
+Compatible: compat
+Edition: cre
+Version: 1.5.0b9
+Date: 1531806596
+Class: fix
+
+In previous 1.5 releases it was not possible to create BI aggregations using
+the WATO configuration.

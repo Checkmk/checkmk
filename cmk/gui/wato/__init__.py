@@ -10842,7 +10842,7 @@ class ModeRoles(RoleManagement, WatoMode):
             # Users
             table.cell(_("Users"),
               HTML(", ").join([ html.render_a(user.get("alias", user_id), watolib.folder_preserving_link([("mode", "edit_user"), ("edit", user_id)]))
-                for (user_id, user) in users.items() if (id in user["roles"])]))
+                for (user_id, user) in users.items() if id in user["roles"]]))
 
 
         # Possibly we could also display the following information

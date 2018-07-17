@@ -49,7 +49,7 @@ class FilterWatoFile(Filter):
         # This filter is also available on slave sites with disabled WATO
         # To determine if this site is a slave we check the existance of the distributed_wato.mk
         # file and the absence of any site configuration
-        return (config.wato_enabled or watolib.is_wato_slave_site())
+        return config.wato_enabled or watolib.is_wato_slave_site()
 
 
     def load_wato_data(self):
@@ -83,7 +83,7 @@ class FilterWatoFile(Filter):
                 subfolder += part
                 allowed_folders.add(subfolder)
 
-        html.dropdown(self.name, [("", "")] + [ entry for entry in self.selection if (entry[0] in allowed_folders) ])
+        html.dropdown(self.name, [("", "")] + [ entry for entry in self.selection if entry[0] in allowed_folders ])
 
     def filter(self, infoname):
         self.check_wato_data_update()

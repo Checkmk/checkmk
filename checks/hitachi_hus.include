@@ -47,8 +47,8 @@
 
 
 def scan_hitachi_hus(oid):
-    return ("hm700" in oid(".1.3.6.1.2.1.1.1.0").lower() or \
-            "hm800" in oid(".1.3.6.1.2.1.1.1.0").lower() )
+    return "hm700" in oid(".1.3.6.1.2.1.1.1.0").lower() or \
+           "hm800" in oid(".1.3.6.1.2.1.1.1.0").lower()
 
 
 def inventory_hitachi_hus(info):

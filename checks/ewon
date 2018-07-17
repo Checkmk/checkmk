@@ -143,7 +143,7 @@ def check_oxyreduct(item, params, parsed):
             if "name" in tag_params:
                 if "condition_flag" in tag_params:
                     condition_tagid = tagid + tag_params["condition_flag"][0]
-                    if not (int(parsed[item][condition_tagid]) & tag_params["condition_flag"][1]):
+                    if not int(parsed[item][condition_tagid]) & tag_params["condition_flag"][1]:
                         continue
                 value = int(value)
                 unit = tag_params.get("unit", "")

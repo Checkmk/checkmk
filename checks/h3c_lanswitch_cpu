@@ -60,7 +60,7 @@ def h3c_lanswitch_cpu_genitem(item):
         switchid = 1
         cputype = "Unknown"
         cpunum = cpuid
-    return ("Switch %d %s %d" % (switchid, cputype, cpunum))
+    return "Switch %d %s %d" % (switchid, cputype, cpunum)
 
 
 def inventory_h3c_lanswitch_cpu(info):

@@ -147,11 +147,11 @@ def check_apache_status(item, params, info):
     if "Total Accesses" in data_dict:
         data_dict["ReqPerSec"] = get_rate("apache_status_%s_accesses" % item, this_time,
                                           data_dict["Total Accesses"])
-        del(data_dict["Total Accesses"])
+        del data_dict["Total Accesses"]
     if "Total kBytes" in data_dict:
         data_dict["BytesPerSec"] = get_rate("apache_status_%s_bytes" % item, this_time,
                                             data_dict["Total kBytes"] * 1024)
-        del(data_dict["Total kBytes"])
+        del data_dict["Total kBytes"]
 
     data = data_dict.items()
 

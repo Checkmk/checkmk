@@ -45,7 +45,6 @@ disable=
     reimported,
     relative-import,
     singleton-comparison,
-    superfluous-parens,
     too-few-public-methods,
     too-many-ancestors,
     too-many-arguments,

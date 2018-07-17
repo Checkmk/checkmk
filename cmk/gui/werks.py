@@ -72,7 +72,7 @@ def handle_acknowledgement():
             load_werks() # reload ack states after modification
 
     elif html.var("_ack_all"):
-        if (html.confirm(_("Do you really want to acknowledge <b>all</b> incompatible werks?"), method="GET")):
+        if html.confirm(_("Do you really want to acknowledge <b>all</b> incompatible werks?"), method="GET"):
             num = len(unacknowledged_incompatible_werks())
             acknowledge_all_werks()
             html.message(_("%d incompatible Werks have been acknowledged.") % num)

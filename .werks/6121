@@ -1,0 +1,11 @@
+Title: security_master, security_master.humidity, security_master.temp: new checks to monitor sensors of security master devices
+Level: 1
+Component: checks
+Class: feature
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0b9
+Date: 1531828400
+
+

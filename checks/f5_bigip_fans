@@ -43,7 +43,7 @@ def f5_bigip_fans_genitem(fanid):
         fantype = "Chassis"
     else:
         fantype = "Unknown"
-    return ("%s %d" % (fantype, fanid))
+    return "%s %d" % (fantype, fanid)
 
 
 def inventory_f5_bigip_fans(info):

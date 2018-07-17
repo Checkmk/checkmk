@@ -112,7 +112,7 @@ class StructuredDataTree(object):
     def _validate_tree_path(self, tree_path):
         if not tree_path:
             raise MKGeneralException("Empty tree path or zero.")
-        if not (isinstance(tree_path, (str, unicode))):
+        if not isinstance(tree_path, (str, unicode)):
             raise MKGeneralException("Wrong tree path format. Must be of type string.")
         if not (tree_path.endswith(":") or tree_path.endswith(".")):
             raise MKGeneralException("No valid tree path.")
@@ -718,8 +718,8 @@ Format of compared entries:
 """
         new_keys = set(new_entries.keys())
         old_keys = set(old_entries.keys())
-        new = {k: (None, new_entries[k]) for k in (new_keys - old_keys)}
-        removed = {k: (old_entries[k], None) for k in (old_keys - new_keys)}
+        new = {k: (None, new_entries[k]) for k in new_keys - old_keys}
+        removed = {k: (old_entries[k], None) for k in old_keys - new_keys}
         identical, changed = {}, {}
         for k in new_keys.intersection(old_keys):
             old_v = old_entries[k]

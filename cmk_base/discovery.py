@@ -250,7 +250,7 @@ def discover_on_host(mode, hostname, do_snmp_scan, use_caches, on_error="ignore"
                 # Note discovered checks that are shadowed by manual checks will vanish
                 # that way.
 
-            if check_source in ("new"):
+            if check_source == "new":
                 if mode in ("new", "fixall", "refresh") and service_filter(hostname, check_plugin_name, item):
                     counts["added"] += 1
                     new_items[(check_plugin_name, item)] = paramstring

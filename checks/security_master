@@ -87,7 +87,7 @@ def parse_security_master(info):
         parsed[value] = {}
 
     for oid, sensor in info[0]:
-        if not ".5.0" in str(oid):
+        if ".5.0" not in str(oid):
             continue
 
         sensor_num = saveint(oid.split(".")[0])

@@ -783,7 +783,7 @@ class ConfigDomainOMD(ConfigDomain):
 class WithPermissions(object):
     def may(self, how): # how is "read" or "write"
         try:
-            self._user_needs_permission(config.user.id, how)
+            self._user_needs_permission(how)
             return True
         except MKAuthException, e:
             return False
@@ -791,17 +791,17 @@ class WithPermissions(object):
 
     def reason_why_may_not(self, how):
         try:
-            self._user_needs_permission(config.user.id, how)
+            self._user_needs_permission(how)
             return False
         except MKAuthException, e:
             return HTML("%s" % e)
 
 
     def need_permission(self, how):
-        self._user_needs_permission(config.user.id, how)
+        self._user_needs_permission(how)
 
 
-    def _user_needs_permission(self, user_id, how):
+    def _user_needs_permission(self, how):
         raise NotImplementedError()
 
 
@@ -1984,14 +1984,14 @@ class CREFolder(BaseFolder):
                 return host
 
 
-    def _user_needs_permission(self, user_id, how):
-        if config.user_may(user_id, "wato.all_folders"):
+    def _user_needs_permission(self, how):
+        if config.user.may("wato.all_folders"):
             return
-        if how == "read" and config.user_may(user_id, "wato.see_all_folders"):
+        if how == "read" and config.user.may("wato.see_all_folders"):
             return
 
         permitted_groups, folder_contactgroups, use_for_services = self.groups()
-        user_contactgroups = userdb.contactgroups_of_user(user_id)
+        user_contactgroups = userdb.contactgroups_of_user(config.user.id)
 
         for c in user_contactgroups:
             if c in permitted_groups:
@@ -2586,7 +2586,7 @@ class SearchFolder(BaseFolder):
         return True
 
 
-    def _user_needs_permission(self, user_id, how):
+    def _user_needs_permission(self, how):
         pass
 
 
@@ -2893,7 +2893,7 @@ class CREHost(WithPermissionsAndAttributes):
         return self.folder().groups(self)
 
 
-    def _user_needs_permission(self, user_id, how):
+    def _user_needs_permission(self, how):
         if config.user.may("wato.all_folders"):
             return True
 
@@ -2901,7 +2901,7 @@ class CREHost(WithPermissionsAndAttributes):
             config.user.need_permission("wato.edit_hosts")
 
         permitted_groups, host_contact_groups, use_for_services = self.groups()
-        user_contactgroups = userdb.contactgroups_of_user(user_id)
+        user_contactgroups = userdb.contactgroups_of_user(config.user.id)
 
         for c in user_contactgroups:
             if c in permitted_groups:

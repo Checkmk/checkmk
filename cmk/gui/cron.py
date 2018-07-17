@@ -34,6 +34,7 @@ import cmk.store as store
 import cmk.gui.utils as utils
 import cmk.gui.i18n
 import cmk.gui.pages
+import cmk.gui.config as config
 from cmk.gui.globals import html
 from cmk.gui.log import logger
 from cmk.gui.exceptions import MKGeneralException
@@ -74,6 +75,13 @@ def page_run_cron():
             raise MKGeneralException("Cron called too early. Skipping.")
     file(lock_file, "w") # touches the file
     store.aquire_lock(lock_file)
+
+    # The cron page is accessed unauthenticated. After leaving the page_run_cron area
+    # into the job functions we always want to have a user context initialized to keep
+    # the code free from special cases (if no user logged in, then...).
+    # The jobs need to be run in privileged mode in general. Some jobs, like the network
+    # scan, switch the user context to a specific other user during execution.
+    config.set_super_user()
 
     logger.debug("Starting cron jobs")
 

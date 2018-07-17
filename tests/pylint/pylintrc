@@ -19,7 +19,6 @@ disable=
     bad-whitespace,
     bare-except,
     broad-except,
-    c-extension-no-member,
     cell-var-from-loop,
     consider-iterating-dictionary,
     consider-using-enumerate,

@@ -30,7 +30,6 @@ disable=
     global-statement,
     global-variable-undefined,
     inconsistent-return-statements,
-    invalid-name,
     len-as-condition,
     line-too-long,
     logging-not-lazy,
@@ -78,6 +77,11 @@ disable=
     # We should really enable this, there could be some typos hiding which are
     # real bugs. Just some work to do...
     unused-variable,
+    #---------------------------------------------------------------------------
+    # Enabling this would be nice, but not crucial. At the moment, we have quite
+    # a few violations, so we postpone fixing this. When we do it eventually, we
+    # probably want to use "include-naming-hint=yes" in the BASIC section.
+    invalid-name,
     #---------------------------------------------------------------------------
     # Enabling the two spelling-related checks increases pylints runtime from
     # 11 min to 40 min, so we better keep those disabled for normal runs.

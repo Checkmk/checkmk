@@ -120,9 +120,9 @@ multisite_layouts["json"] = {
 }
 
 def render_jsonp(rows, view, group_cells, cells, num_columns, show_checkboxes):
-    html.write("%s(\n" % html.var('jsonp', 'myfunction'));
+    html.write("%s(\n" % html.var('jsonp', 'myfunction'))
     render_json(rows, view, group_cells, cells, num_columns, show_checkboxes)
-    html.write_text(");\n");
+    html.write_text(");\n")
 
 multisite_layouts["jsonp"] = {
     "title"  : _("JSONP data output"),

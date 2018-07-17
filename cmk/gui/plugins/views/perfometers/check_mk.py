@@ -463,7 +463,7 @@ def perfometer_check_oracle_dataguard_stats(row, check_command, perf_data):
         days = 0
         hours = 0
         minutes = 0
-        color = "#008f48";
+        color = "#008f48"
 
     return "%02dd %02dh %02dm" % (days, hours, minutes), perfometer_logarithmic(perfdata1, 2592000, 2, color)
 
@@ -471,13 +471,13 @@ perfometers["check_mk-oracle_dataguard_stats"]      = perfometer_check_oracle_da
 
 def perfometer_oracle_sessions(row, check_command, perf_data):
     if check_command != "check_mk-oracle_sessions":
-        color = "#008f48";
-        unit = "";
+        color = "#008f48"
+        unit = ""
     else:
-        color = "#4800ff";
-        unit = "/h";
-    value = int(perf_data[0][1]);
-    return "%d%s" % (value, unit), perfometer_logarithmic(value, 50, 2, color);
+        color = "#4800ff"
+        unit = "/h"
+    value = int(perf_data[0][1])
+    return "%d%s" % (value, unit), perfometer_logarithmic(value, 50, 2, color)
 
 perfometers["check_mk-oracle_sessions"] = perfometer_oracle_sessions
 perfometers["check_mk-oracle_logswitches"] = perfometer_oracle_sessions

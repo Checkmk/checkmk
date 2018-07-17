@@ -6224,7 +6224,7 @@ def interactive_progress(items, title, stats, finishvars, timewait,
         fail_stats = []
 
     if not termvars:
-        termvars = finishvars;
+        termvars = finishvars
 
     html.open_center()
     html.open_table(class_="progress")

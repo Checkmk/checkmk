@@ -546,7 +546,7 @@ class HostConfig(object):
 
 def lerp(a, b, t):
     """Linear interpolation between a and b with weight t"""
-    return (1 - t) * a + t * b;
+    return (1 - t) * a + t * b
 
 
 class Perfcounters(object):

@@ -226,7 +226,7 @@ canvas#speedometer {
                             "GET services\n"
                             "Stats: suminv check_interval\n")[0] / 60.0
 
-            percentage = 100.0 * current_rate / scheduled_rate;
+            percentage = 100.0 * current_rate / scheduled_rate
             title = _("Scheduled service check rate: %.1f/s, current rate: %.1f/s, that is "
                       "%.0f%% of the scheduled rate") % \
                       (scheduled_rate, current_rate, percentage)

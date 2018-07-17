@@ -56,7 +56,7 @@ def check_win_cpuusage(item, params, info):
             for cpu in range(0, num_cpus):
                 ticks = int(line[2 + cpu])
                 ticks_per_sec = get_rate("cpuusage.%d" % cpu, this_time, ticks)
-                secs_per_sec = ticks_per_sec / 10000000.0;
+                secs_per_sec = ticks_per_sec / 10000000.0
                 used_perc = 100 * (1 - secs_per_sec)
                 overall_perc += used_perc
 

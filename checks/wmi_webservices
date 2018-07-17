@@ -36,6 +36,6 @@ check_info['wmi_webservices'] = {
     'check_function'      : check_wmi_webservices,
     'parse_function'      : parse_wmi_table,
     'has_perfdata'        : True,
-    'service_description' : "Web Service",
+    'service_description' : "Web Service %s",
     'includes'            : ["wmi.include"]
 }

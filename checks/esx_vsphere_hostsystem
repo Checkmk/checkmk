@@ -414,7 +414,9 @@ def esx_vsphere_multipath_convert(info):
             path_tokens = path.split('-')
             if "." not in path_tokens[-1]:
                 continue # invalid format / unknown type
-            path_type, lun_id = path_tokens[-1].split('.')
+            # We've seen path tokens which include more than one "."
+            # PATH_TYPE.A_NAME.AN_ID_WITH_UNDERSCORES_AND_NUMBERS
+            path_type, lun_id = path_tokens[-1].rsplit('.', 1)
 
             hw_type = path.split('.')[0]
 

@@ -1,0 +1,12 @@
+Title: esx_vsphere_hostsystem: Fixed discovery of multipaths
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.4.0p36
+Date: 1531832352
+
+Some path types include more than one "." which led to a discovery
+failure.

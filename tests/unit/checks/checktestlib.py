@@ -319,21 +319,18 @@ class MockItemState(object):
 
     There are three different types of arguments to pass to MockItemState:
 
-    1) Tuple or a BasicItemState:
-        The argument is assumed to be (time_diff, value). All calls to the
-        item_state API behave as if the last state had been `value`, recorded
-        `time_diff` seeconds ago.
-
-    2) Dictionary containing Tuples or BasicItemStates:
-        The dictionary will replace the item states.
-        Basically `get_item_state` gets replaced by the dictionarys GET method.
-
-    3) Callable object:
+    1) Callable object:
         The callable object will replace `get_item_state`. It must accept two
         arguments (key/default), in same way a dictionary does.
 
-    In all of these cases, the sanity of the returned values is checked
-    (i.e. they have to be BasicItemState).
+    2) Dictionary:
+        The dictionary will replace the item states.
+        Basically `get_item_state` gets replaced by the dictionarys GET method.
+
+    3) Anything else:
+        All calls to the item_state API behave as if the last state had
+        been `value`, recorded
+        `time_diff` seeconds ago.
 
     See for example 'test_statgrab_cpu_check.py'.
     """
@@ -347,34 +344,16 @@ class MockItemState(object):
             self.get_val_function = mock_state
             return
 
-        type_mock_state = type(mock_state)
-        allowed_types = (tuple, BasicItemState, dict)
-        assert type_mock_state in allowed_types, \
-               "MockItemState: state %r must be of type %r, or callable - not %r" % \
-               (mock_state, allowed_types, type_mock_state)
-
         # in dict case check values
-        if type_mock_state == dict:
-            msg = "MockItemState: dict value %r must be in of type %r - not %r"
-            allowed_types = (tuple, BasicItemState)
-            for v in mock_state.values():
-                tyv = type(v)
-                assert tyv in allowed_types, msg % (v, allowed_types, tyv)
+        if isinstance(mock_state, dict):
             self.get_val_function = mock_state.get
         else:
             self.get_val_function = lambda key, default: mock_state
 
 
     def __call__(self, user_key, default=None):
-        if default is not None:
-            # ensure the default value is sane
-            default = BasicItemState(default)
         val = self.get_val_function(user_key, default)
-        if val is None:
-            return val
-        if not isinstance(val, BasicItemState):
-            val = BasicItemState(val)
-        return val.time_diff, val.value
+        return val
 
     def __enter__(self):
         '''The default context: just mock get_item_state'''

@@ -15,6 +15,7 @@ MODULES += setuptools_scm-2.1.0.tar.gz
 # Modules really needed on all platforms
 MODULES += pysphere-0.1.7.zip
 MODULES += pyasn1-0.4.3.tar.gz
+MODULES += pyasn1-modules-0.2.2.tar.gz
 MODULES += pycryptodomex-3.4.7.tar.gz
 MODULES += ordereddict-1.1.tar.gz # needed by pysmi
 MODULES += ply-3.11.tar.gz # needed by pysmi
@@ -32,8 +33,8 @@ endif
 ifeq ($(LEGACY_LDAP), 1)
     MODULES += python-ldap-2.3.13.tar.gz
 else
-    MODULES += python-ldap-2.4.32.tar.gz
-    PATCHES += patches/0001-python-ldap-2.4.32-disable-sasl.patch
+    MODULES += python-ldap-3.1.0.tar.gz
+    PATCHES += patches/0001-python-ldap-3.1.0-disable-sasl.patch
 endif
 
 # Check_MK Edition specific

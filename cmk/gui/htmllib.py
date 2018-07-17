@@ -2081,7 +2081,7 @@ class html(HTMLGenerator):
     # Checkboxes that are not checked :-(
     def get_checkbox(self, varname, form_name = None):
         if self.has_var(varname):
-            return not not self.var(varname)
+            return bool(self.var(varname))
         elif not self.form_filled_in(form_name):
             return None
         else:

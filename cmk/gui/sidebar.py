@@ -403,7 +403,7 @@ def render_snapin(name, state):
 @cmk.gui.pages.register("sidebar_fold")
 def ajax_fold():
     config = load_user_config()
-    config["fold"] = not not html.var("fold")
+    config["fold"] = bool(html.var("fold"))
     save_user_config(config)
 
 

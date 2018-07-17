@@ -712,7 +712,7 @@ def command_downtime(cmdtag, spec, row):
                 commands.append((site, make_command(spec, cmdtag)))
         else:
             if html.var("_include_childs"): # only for hosts
-                specs = [ spec ] + get_child_hosts(row["site"], [spec], recurse = not not html.var("_include_childs_recurse"))
+                specs = [ spec ] + get_child_hosts(row["site"], [spec], recurse = bool(html.var("_include_childs_recurse")))
             elif html.var("_on_hosts"): # set on hosts instead of services
                 specs = [ spec.split(";")[0] ]
                 title += " the hosts of"

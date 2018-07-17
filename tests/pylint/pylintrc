@@ -62,7 +62,6 @@ disable=
     too-many-statements,
     ungrouped-imports,
     unidiomatic-typecheck,
-    unneeded-not,
     unsubscriptable-object,
     unsupported-membership-test,
     unused-argument,

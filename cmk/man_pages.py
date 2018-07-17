@@ -73,6 +73,7 @@ catalog_titles = {
             "ispro"        : "Interseptor Pro",
             "kentix"       : "Kentix",
             "knuerr"       : "Knuerr",
+            "maykg"        : "May KG Elektro-Bauelemente",
             "raritan"      : "Raritan",
             "rittal"       : "Rittal",
             "sensatronics" : "Sensatronics",

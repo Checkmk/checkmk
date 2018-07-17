@@ -1810,7 +1810,9 @@ class BaseCheck(object):
         if set_service:
             description = self.info["service_description"]
             if item is not None:
-                assert "%s" in description
+                assert "%s" in description, \
+                    "Missing '%%s' formatter in service description of %r" \
+                    % self.name
                 description = description % item
         self.set_service(self.name, description)
         self.set_hostname('non-existent-testhost')

@@ -115,7 +115,7 @@ public:
 private:
     MonitoringCore *_mc;
 
-    std::unique_ptr<Column> dynamicColumn(const std::string &name,
+    std::unique_ptr<Column> dynamicColumn(const std::string &colname,
                                           const std::string &rest) const;
 
     std::map<std::string, std::shared_ptr<Column>> _columns;

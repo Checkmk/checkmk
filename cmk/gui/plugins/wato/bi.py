@@ -599,7 +599,10 @@ class ModeBI(WatoMode, BIManagement):
 
     def _transform_forth_vs_call_rule(self, choice):
         pack = self.pack_containing_rule(choice)
-        return (pack['id'], choice)
+        if pack:
+            return (pack['id'], choice)
+        else:
+            return None
 
 
     def _get_vs_host_re(self):

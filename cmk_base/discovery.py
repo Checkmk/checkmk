@@ -792,13 +792,12 @@ def _execute_discovery(multi_host_sections, hostname, ipaddress, check_plugin_na
 
             if len(entry) == 2: # comment is now obsolete
                 item, paramstring = entry
-            else:
-                try:
-                    item, paramstring = entry[0], entry[2]
-                except ValueError:
-                    console.error("%s: Check %s returned invalid discovery data (not 2 or 3 elements): %r\n" %
-                                                                           (hostname, check_plugin_name, repr(entry)))
-                    continue
+            elif len(entry) == 3: # allow old school
+                item, __, paramstring = entry
+            else: # we really don't want longer tuples (or 1-tuples).
+                console.error("%s: Check %s returned invalid discovery data (not 2 or 3 elements): %r\n" %
+                                                                (hostname, check_plugin_name, repr(entry)))
+                continue
 
             # Check_MK 1.2.7i3 defines items to be unicode strings. Convert non unicode
             # strings here seamless. TODO remove this conversion one day and replace it

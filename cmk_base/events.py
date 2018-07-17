@@ -143,8 +143,7 @@ def config_timestamp():
 
 
 def event_data_available(loop_interval):
-    readable = select.select([0], [], [], loop_interval)[0]
-    return not not readable
+    return bool(select.select([0], [], [], loop_interval)[0])
 
 
 def raw_context_from_string(data):

@@ -2360,7 +2360,7 @@ def execute_leaf_node(node, status_info, aggregation_options):
                     "state"             : st,
                     "output"            : output,
                     "in_downtime"       : downtime_depth > 0 and 2 or host_in_downtime != 0 and 1 or 0,
-                    "acknowledged"      : not not acknowledged,
+                    "acknowledged"      : bool(acknowledged),
                     "in_service_period" : in_service_period,
                 }
                 if state_assumption != None:
@@ -2368,7 +2368,7 @@ def execute_leaf_node(node, status_info, aggregation_options):
                         "state"             : state_assumption,
                         "output"            : _("Assumed to be %s") % service_state_names[state_assumption],
                         "in_downtime"       : downtime_depth > 0 and 2 or host_in_downtime != 0 and 1 or 0,
-                        "acknowledged"      : not not acknowledged,
+                        "acknowledged"      : bool(acknowledged),
                         "in_service_period" : in_service_period,
                     }
 
@@ -2762,9 +2762,9 @@ def ajax_render_tree():
     aggr_group = html.get_unicode_input("group")
     reqhosts = [ tuple(sitehost.split('#')) for sitehost in html.var("reqhosts").split(',') ]
     aggr_title = html.get_unicode_input("title")
-    omit_root = not not html.var("omit_root")
-    boxes = not not html.var("boxes")
-    only_problems = not not html.var("only_problems")
+    omit_root = bool(html.var("omit_root"))
+    boxes = bool(html.var("boxes"))
+    only_problems = bool(html.var("only_problems"))
 
     # Make sure that BI aggregates are available
     if config.bi_precompile_on_demand:
@@ -3548,7 +3548,7 @@ def singlehost_table(columns, add_headers, only_sites, limit, filters, joinbynam
                              row["hard_state"],
                              row["plugin_output"],
                              hostrow["scheduled_downtime_depth"] > 0,
-                             not not hostrow["acknowledged"],
+                             bool(hostrow["acknowledged"]),
                              hostrow["host_in_service_period"],
                              row["services_with_fullstate"] ]
                 if status_info == None:
@@ -3560,7 +3560,7 @@ def singlehost_table(columns, add_headers, only_sites, limit, filters, joinbynam
                 hostrow["hard_state"],
                 hostrow["plugin_output"],
                 hostrow["scheduled_downtime_depth"] > 0,
-                not not hostrow["acknowledged"],
+                bool(hostrow["acknowledged"]),
                 hostrow["host_in_service_period"],
                 hostrow["services_with_fullstate"] ] }
 
@@ -3580,7 +3580,7 @@ def singlehost_table(columns, add_headers, only_sites, limit, filters, joinbynam
                             this_row['hard_state'],
                             this_row['plugin_output'],
                             this_row["scheduled_downtime_depth"] > 0,
-                            not not this_row["acknowledged"],
+                            bool(this_row["acknowledged"]),
                             this_row["host_in_service_period"],
                             this_row['services_with_fullstate'],
                         ]

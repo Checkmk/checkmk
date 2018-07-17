@@ -79,7 +79,7 @@ def inv_lnx_packages(info):
             version, package_version = parts
             entry["version"] = version
             entry["package_version"] = package_version
-        if not release == "-":
+        if release != "-":
             entry["package_version"] = release
         paclist.append(entry)
 

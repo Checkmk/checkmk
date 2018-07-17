@@ -41,7 +41,7 @@ def is_ucd(oid):
 #   ---general ucd/hr-------------------------------------------------------
 
 def is_hr(oid):
-    return not not oid('.1.3.6.1.2.1.25.1.1.0')
+    return bool(oid('.1.3.6.1.2.1.25.1.1.0'))
 
 
 def prefer_hr_else_ucd(oid):

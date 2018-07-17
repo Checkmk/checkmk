@@ -7922,17 +7922,17 @@ class ModeNotifications(NotificationsMode):
     def action(self):
         if html.has_var("_show_user"):
             if html.check_transaction():
-                self._show_user_rules = not not html.var("_show_user")
+                self._show_user_rules = bool(html.var("_show_user"))
                 self._save_notification_display_options()
 
         elif html.has_var("_show_backlog"):
             if html.check_transaction():
-                self._show_backlog = not not html.var("_show_backlog")
+                self._show_backlog = bool(html.var("_show_backlog"))
                 self._save_notification_display_options()
 
         elif html.has_var("_show_bulks"):
             if html.check_transaction():
-                self._show_bulks = not not html.var("_show_bulks")
+                self._show_bulks = bool(html.var("_show_bulks"))
                 self._save_notification_display_options()
 
         elif html.has_var("_replay"):

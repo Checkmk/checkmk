@@ -2475,7 +2475,7 @@ def convert_check_info():
             check_info[check_plugin_name] = {
                 "check_function"          : check_function,
                 "service_description"     : service_description,
-                "has_perfdata"            : not not has_perfdata,
+                "has_perfdata"            : bool(has_perfdata),
                 "inventory_function"      : inventory_function,
                 # Insert check name as group if no group is being defined
                 "group"                   : check_plugin_name,

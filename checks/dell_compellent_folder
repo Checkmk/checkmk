@@ -29,7 +29,7 @@
 
 def inventory_dell_compellent_folder(info):
     for line in info:
-        if not float(line[1]) == 0:
+        if float(line[1]) != 0:
             yield ( line[0], {})
 
 def check_dell_compellent_folder(item, params, info):

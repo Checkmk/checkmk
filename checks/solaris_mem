@@ -68,7 +68,8 @@ def solaris_mem_to_kbytes(s):
 
 
 def inventory_solaris_mem_used(parsed):
-    return [(None, {})]
+    if parsed:
+        return [(None, {})]
 
 
 def check_solaris_mem_used(_no_item, params, parsed):

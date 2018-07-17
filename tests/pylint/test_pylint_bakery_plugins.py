@@ -7,7 +7,7 @@ from testlib import repo_path, cmc_path
 import testlib.pylint_cmk as pylint_cmk
 
 def test_pylint_bakery_plugins(pylint_test_dir):
-    with open(pylint_test_dir + "/cmk-bakery-plugins.py", "w") as f:
+    with open(pylint_test_dir + "/cmk_bakery_plugins.py", "w") as f:
 
         pylint_cmk.add_file(f, os.path.realpath(os.path.join(cmc_path(), "cmk_base/cee/agent_bakery_plugins.py")))
 

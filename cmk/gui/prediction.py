@@ -137,7 +137,7 @@ def page_graph():
     vscala_high = vertical_range[1]
     vert_scala = compute_vertical_scala(vscala_low, vscala_high)
     time_scala = [ [timegroup["range"][0] + i*3600, "%02d:00" % i] for i in range(0, 25, 2) ]
-    render_coordinates(vert_scala, time_scala);
+    render_coordinates(vert_scala, time_scala)
 
     if "levels_lower" in timegroup:
         render_dual_area(swapped["average"], swapped["lower_warn"], "#ffffff", 0.5)

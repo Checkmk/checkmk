@@ -793,7 +793,7 @@ def _create_nagios_config_contacts(outfile, hostnames):
             "  host_notification_commands\tcheck-mk-notify\n"
             "  service_notification_commands\tcheck-mk-notify\n"
             "  contactgroups\t\t\tcheck-mk-notify\n"
-            "}\n\n");
+            "}\n\n")
 
 
 # Quote string for use in a nagios command execution.

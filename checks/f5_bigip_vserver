@@ -37,23 +37,29 @@ def parse_f5_bigip_vserver(info):
 
     vservers = {}
     for line in info:
-        name = line[0]
-        vservers.setdefault(name, {})
-        vservers[name].setdefault("status"                  , []).append(int(line[1]))
-        vservers[name].setdefault("enabled"                 , []).append(int(line[2]))
-        vservers[name].setdefault("detail"                  , []).append(line[3])
-        vservers[name].setdefault("ip"                      , []).append(ip_from_string(line[4]))
-        vservers[name].setdefault("connections_duration_min" , []).append(int(line[5]))
-        vservers[name].setdefault("connections_duration_max" , []).append(int(line[6]))
-        vservers[name].setdefault("connections_duration_mean", []).append(int(line[7]))
-        vservers[name].setdefault("if_in_pkts"              , []).append(int(line[8]))
-        vservers[name].setdefault("if_out_pkts"             , []).append(int(line[9]))
-        vservers[name].setdefault("if_in_octets"            , []).append(int(line[10]))
-        vservers[name].setdefault("if_out_octets"           , []).append(int(line[11]))
-        vservers[name].setdefault("connections_rate"        , []).append(int(line[12]))
-        vservers[name].setdefault("connections"             , []).append(int(line[13]))
-        vservers[name].setdefault("packet_velocity_asic"    , []).append(int(line[14]))
-
+        instance = vservers.setdefault(line[0], {
+            "ip"    : ip_from_string(line[4]),
+            "detail": line[3],
+        })
+        for key, index in [
+            ("status",                    1),
+            ("enabled",                   2),
+            ("connections_duration_min",  5),
+            ("connections_duration_max",  6),
+            ("connections_duration_mean", 7),
+            ("if_in_pkts",                8),
+            ("if_out_pkts",               9),
+            ("if_in_octets",              10),
+            ("if_out_octets",             11),
+            ("connections_rate",          12),
+            ("connections",               13),
+            ("packet_velocity_asic",      14),
+        ]:
+            try:
+                value = int(line[index])
+            except (IndexError, ValueError):
+                continue
+            instance.setdefault(key, []).append(value)
     return vservers
 
 

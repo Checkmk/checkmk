@@ -782,35 +782,27 @@ class ConfigDomainOMD(ConfigDomain):
 
 class WithPermissions(object):
     def may(self, how): # how is "read" or "write"
-        return self.user_may(config.user.id, how)
-
-
-    def reason_why_may_not(self, how):
-        return self.reason_why_user_may_not(config.user.id, how)
-
-
-    def user_needs_permission(self, user_id, how):
-        raise NotImplementedError()
-
-
-    def need_permission(self, how):
-        self.user_needs_permission(config.user.id, how)
-
-
-    def user_may(self, user_id, how):
         try:
-            self.user_needs_permission(user_id, how)
+            self._user_needs_permission(config.user.id, how)
             return True
         except MKAuthException, e:
             return False
 
 
-    def reason_why_user_may_not(self, user_id, how):
+    def reason_why_may_not(self, how):
         try:
-            self.user_needs_permission(user_id, how)
+            self._user_needs_permission(config.user.id, how)
             return False
         except MKAuthException, e:
             return HTML("%s" % e)
+
+
+    def need_permission(self, how):
+        self._user_needs_permission(config.user.id, how)
+
+
+    def _user_needs_permission(self, user_id, how):
+        raise NotImplementedError()
 
 
 
@@ -1992,7 +1984,7 @@ class CREFolder(BaseFolder):
                 return host
 
 
-    def user_needs_permission(self, user_id, how):
+    def _user_needs_permission(self, user_id, how):
         if config.user_may(user_id, "wato.all_folders"):
             return
         if how == "read" and config.user_may(user_id, "wato.see_all_folders"):
@@ -2594,7 +2586,7 @@ class SearchFolder(BaseFolder):
         return True
 
 
-    def user_needs_permission(self, user_id, how):
+    def _user_needs_permission(self, user_id, how):
         pass
 
 
@@ -2901,7 +2893,7 @@ class CREHost(WithPermissionsAndAttributes):
         return self.folder().groups(self)
 
 
-    def user_needs_permission(self, user_id, how):
+    def _user_needs_permission(self, user_id, how):
         if config.user.may("wato.all_folders"):
             return True
 

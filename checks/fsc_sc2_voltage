@@ -74,14 +74,20 @@
 def parse_fsc_sc2_voltage(info):
     parsed = {}
     for designation, value, min_value, max_value in info:
-        value, min_value, max_value = [float(v)/1000
-                                       for v in [value, min_value, max_value]]
-        dev_state = value
-        if value < min_value:
-            dev_state = (value, (2, 'too low, deceeds %.2f V' % min_value))
-        elif value >= max_value:
-            dev_state = (value, (2, 'too high, exceeds %.2f V' % max_value))
-        parsed.setdefault(designation, {"voltage": dev_state})
+        try:
+            value = float(value)/1000.0
+            min_value = float(min_value)/1000.0
+            max_value = float(max_value)/1000.0
+        except ValueError:
+            dev_state = 3, 'Could not get all values'
+            parsed.setdefault(designation, {"device_state": dev_state})
+        else:
+            dev_state = value
+            if value < min_value:
+                dev_state = value, (2, 'too low, deceeds %.2f V' % min_value)
+            elif value >= max_value:
+                dev_state = value, (2, 'too high, exceeds %.2f V' % max_value)
+            parsed.setdefault(designation, {"voltage": dev_state})
     return parsed
 
 

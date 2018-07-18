@@ -1,0 +1,27 @@
+Title: Fixed "Sync with LDAP connections" default for new sites
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.5.0b9
+Date: 1531893317
+Class: fix
+
+When a new monitoring site is create using WATO it was intended to
+set the option "Sync with LDAP connections" to make the site not
+perform an LDAP sync on it's own.
+
+We assume that new sites will be added as WATO slave site in most
+cases. In this scenario you normally don't want to let the slave
+sites synchronize on their own because the synchronization would
+produce pending changes on the slave site. These pending changes
+will prevent future synchronizations from the master site and need
+to be confirmed manually on the slave site to be able to sync again.
+
+In previous versions the new sites were configured to synchronize
+with LDAP on their own by default. It's recommended to change this
+option to the intended default.
+
+However, there are scenarios were it makes sense to set this option
+to also perform the synchronization on the slave site with either
+all configured LDAP connections or just some connections.

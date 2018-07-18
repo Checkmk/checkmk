@@ -2754,6 +2754,24 @@ def init_site(config_settings=None, options=False):
     admin_password = calculate_admin_password(options)
     set_admin_password(admin_password)
 
+    # Special hack for 1.5: Requirement is to activate the new facelift theme
+    # for new sites. Normally we use the "WATO sample configuration" for setting
+    # specific options for sites created with the new version. But this sample
+    # configuration is not set too late to affect the first login.
+    # It is set when a user accesses WATO for the first time, which happens
+    # after the first login.
+    # It is a open task to move this initial configuration step to an earlier
+    # stage for the 1.6. But this is nothing we can change now for the 1.5
+    # because it would involve some bigger changes.
+    # We decided to reach this goal using hard coded specific hack here for the
+    # 1.5 and solve the issue completely (also for the other sample config) in
+    # the future.
+    with open(os.path.join(g_sitedir, "etc/check_mk/multisite.d/wato/global.mk"), "w") as f:
+        f.write(
+            "# Created by 'omd create'\n"
+            "ui_theme = 'facelift'\n"
+        )
+
     # Change ownership of all files and dirs to site user
     chown_tree(g_sitedir, g_sitename)
 

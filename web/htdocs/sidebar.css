@@ -169,9 +169,18 @@ body.side.screenshotmode {
     position: relative;
     top: 4px;
     left: 9px;
-    margin-right: 3px;
-    width: 33px;
-    height: 31px;
+    margin-right: 5px;
+    width: 27px;
+    height: 27px;
+    padding: 0;
+
+    background-color: #498aa6;
+    border-width: 1px;
+    border-style: solid;
+    border-color: #22404d;
+    box-shadow: 0 0 1px rgba(255, 255, 255, 0.8), 1px 1px 0px 0px rgba(255, 255, 255, 0.5) inset;
+    font-size: 7pt;
+    border-radius: 5px;
 }
 
 #side_footer div.copyright {

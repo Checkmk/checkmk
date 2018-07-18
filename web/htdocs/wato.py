@@ -15376,6 +15376,7 @@ def create_sample_config():
                 "mssql_versions",
             ],
             "enable_rulebased_notifications": True,
+            "ui_theme": "facelift",
         }
     )
 

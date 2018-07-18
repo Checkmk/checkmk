@@ -1,0 +1,11 @@
+Title: zebra_model, zebra_printer_status: new checks for zebra printers
+Level: 1
+Component: checks
+Class: feature
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0b9
+Date: 1531904294
+
+

@@ -77,25 +77,32 @@ def inventory_fsc_sc2_temp(info):
 
 
 def check_fsc_sc2_temp(item, params, info):
-    def get_temp_status(status):
-        return {
-            '1' :   (3, 'unknown'),
-            '2' :   (0, 'not-available'),
-            '3' :   (0, 'ok'),
-            '4' :   (2, 'sensor-failed'),
-            '5' :   (2, 'failed'),
-            '6' :   (1, 'temperature-warning-toohot'),
-            '7' :   (2, 'temperature-critical-toohot'),
-            '8' :   (0, 'temperature-normal'),
-            '9' :   (1, 'temperature-warning')
-        }.get(status, (3, 'unknown'))
+    temp_status = {
+        '1' :   (3, 'unknown'),
+        '2' :   (0, 'not-available'),
+        '3' :   (0, 'ok'),
+        '4' :   (2, 'sensor-failed'),
+        '5' :   (2, 'failed'),
+        '6' :   (1, 'temperature-warning-toohot'),
+        '7' :   (2, 'temperature-critical-toohot'),
+        '8' :   (0, 'temperature-normal'),
+        '9' :   (1, 'temperature-warning')
+    }
 
     for designation, status, temp, dev_warn, dev_crit in info:
         if designation == item:
+            if not temp:
+                return 3, 'Did not receive temperature data'
+
+            dev_status, dev_status_name = temp_status.get(status, (3, 'unknown'))
+
+            if not dev_warn or not dev_crit:
+                return 3, 'Did not receive device levels'
+
             dev_levels = int(dev_warn), int(dev_crit)
-            dev_status, dev_status_name = get_temp_status(status)
-            return check_temperature(int(temp), params, 'temp_{}'.format(item.replace(' ', '_')), \
-                    'c', dev_levels, None, dev_status, dev_status_name)
+
+            return check_temperature(int(temp), params, 'temp_{}'.format(item.replace(' ', '_')),
+                                     'c', dev_levels, None, dev_status, dev_status_name)
 
 
 check_info['fsc_sc2_temp'] = {

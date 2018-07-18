@@ -1,0 +1,10 @@
+Title: fsc_sc2_fans, fsc_sc2_power_consumption, fsc_sc2_psu, fsc_sc2_temp, fsc_sc2_voltage: avoid crashes when values values are missing in the SNMP walk
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1531982632
+Class: fix
+
+

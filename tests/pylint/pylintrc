@@ -12,7 +12,6 @@ persistent=yes
 
 [MESSAGES CONTROL]
 disable=
-    bad-continuation,
     bad-indentation,
     bad-whitespace,
     bare-except,
@@ -90,6 +89,9 @@ disable=
     # a few violations, so we postpone fixing this. When we do it eventually, we
     # probably want to use "include-naming-hint=yes" in the BASIC section.
     invalid-name,
+    #---------------------------------------------------------------------------
+    # The warnigns below will probably fixed by YAPF.
+    bad-continuation,
     #---------------------------------------------------------------------------
     # Enabling the two spelling-related checks increases pylints runtime from
     # 11 min to 40 min, so we better keep those disabled for normal runs.

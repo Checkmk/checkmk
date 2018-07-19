@@ -12,7 +12,6 @@ persistent=yes
 
 [MESSAGES CONTROL]
 disable=
-    attribute-defined-outside-init,
     bad-continuation,
     bad-indentation,
     bad-whitespace,
@@ -80,6 +79,12 @@ disable=
     # We should really enable this, there could be some typos hiding which are
     # real bugs. Just some work to do...
     unused-variable,
+    #---------------------------------------------------------------------------
+    # Enabling this would be very desirable, it vastly improves readability and
+    # it might even be necessary for tools like mypy. Fixing this involves some
+    # amount of relatively easy work, especially if we want to avoid code
+    # duplication (introduce new classes, combine methods, etc.)
+    attribute-defined-outside-init,
     #---------------------------------------------------------------------------
     # Enabling this would be nice, but not crucial. At the moment, we have quite
     # a few violations, so we postpone fixing this. When we do it eventually, we

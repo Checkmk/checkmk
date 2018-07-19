@@ -521,16 +521,29 @@ class ConfigDomainCACertificates(ConfigDomain):
                 continue
 
             for entry in os.listdir(cert_path):
+                cert_file_path = os.path.join(cert_path, entry)
                 try:
                     ext = os.path.splitext(entry)[-1]
                     if ext not in [ ".pem", ".crt" ]:
                         continue
 
-                    trusted_cas.update(self._get_certificates_from_file(os.path.join(cert_path, entry)))
+                    trusted_cas.update(self._get_certificates_from_file(cert_file_path))
                 except IOError:
                     log_exception()
+
+                    # This error is shown to the user as warning message during "activate changes".
+                    # We keep this message for the moment because we think that it is a helpful
+                    # trigger for further checking web.log when a really needed certificate can
+                    # not be read.
+                    #
+                    # We know a permission problem with some files that are created by default on
+                    # some distros. We simply ignore these files because we assume that they are
+                    # not needed.
+                    if cert_file_path == "/etc/ssl/certs/localhost.crt":
+                        continue
+
                     errors.append("Failed to add certificate '%s' to trusted CA certificates. "
-                                  "See web.log for details." % os.path.join(cert_path, entry))
+                                  "See web.log for details." % cert_file_path)
 
             break
 

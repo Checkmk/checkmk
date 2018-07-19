@@ -1,0 +1,33 @@
+Title: Fix possible activation warning message about /etc/ssl/certs/localhost.crt certificate
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.5.0b9
+Date: 1532013352
+Class: fix
+
+During configuration activation the "trusted certificates file" var/ssl/ca-certificates.crt is
+computed based on the configured global settings. In case the system certificates are trusted
+all certificates in /etc/ssl/certs are read.
+
+We found several RH/CentOS distros to have a /etc/ssl/certs/localhost.crt which seems to be some
+kind of default certificate for local servers. The files may have a permission of 600 which makes
+it not readable for the site user.
+
+This results in an activation warning like this: ca-certificates: Failed to add certificate
+'/etc/ssl/certs/localhost.crt' to trusted CA certificates. See web.log for details and these
+entries in the var/log/web.log:
+
+ 2018-06-21 03:55:52,120 [40] [cmk.web 19066] /master/check_mk/wato.py Internal error: Traceback (most recent call last):
+  File "/omd/sites/master/share/check_mk/web/htdocs/watolib.py", line 501, in _get_system_wide_trusted_ca_certificates
+    trusted_cas.update(self._get_certificates_from_file(os.path.join(cert_path, entry)))
+  File "/omd/sites/master/share/check_mk/web/htdocs/watolib.py", line 514, in _get_certificates_from_file
+    return [ match.group(0) for match in self._PEM_RE.finditer(open(path).read()) ]
+IOError: [Errno 13] Permission denied: '/etc/ssl/certs/localhost.crt'
+
+Because this may be a standard configuration and affect a lot of users we decided to remove this
+warning for the /etc/ssl/certs/localhost.crt.
+
+In case you need this /etc/ssl/certs/localhost.crt to be added to the trusted CA certificates
+simply chown it to 644. It is a public certificate and not a secret.

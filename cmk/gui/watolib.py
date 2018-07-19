@@ -8809,7 +8809,7 @@ class TimeperiodSelection(DropdownChoice):
         if always not in elements:
             elements.insert(0, always)
 
-        return elements
+        return sorted(elements, key=lambda x: x[1].lower())
 
 
 

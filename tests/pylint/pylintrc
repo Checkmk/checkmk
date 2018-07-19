@@ -12,7 +12,6 @@ persistent=yes
 
 [MESSAGES CONTROL]
 disable=
-    arguments-differ,
     attribute-defined-outside-init,
     bad-continuation,
     bad-indentation,
@@ -72,6 +71,11 @@ disable=
     # to be thrown. But some work is needed first to sprinkle abc annotations
     # through our code and fix a few obscure places.
     abstract-method,
+    #---------------------------------------------------------------------------
+    # We should really enable this, there are real bugs lurking. Even if it
+    # turns out that this is not the case in a few places: Doing things this way
+    # is extremely bad OO practice.
+    arguments-differ,
     #---------------------------------------------------------------------------
     # We should really enable this, there could be some typos hiding which are
     # real bugs. Just some work to do...

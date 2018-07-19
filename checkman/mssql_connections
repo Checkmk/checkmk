@@ -1,0 +1,21 @@
+title: MSSQL Connections
+agents: windows
+catalog: app/mssql
+license: GPL
+distribution: check_mk
+description:
+ This check reports number of active connections for a database.
+
+ If the number of active connections exceeds the defined upper
+ levels the check result will be {WARN} or {CRIT}.
+
+ This check needs the Check_MK mssql.vbs plugin installed in
+ the agent. Please refer to the online documentation
+ for how to install that plugin.
+
+item:
+ The MSSQL database identifier.
+
+inventory:
+ One check is created for each database.
+

@@ -101,6 +101,7 @@ sections.add "datafiles", "<<<mssql_datafiles:sep(124)>>>"
 sections.add "clusters", "<<<mssql_cluster:sep(124)>>>"
 ' Has been deprecated with 1.4.0i1. Keep this for nicer transition for some versions.
 sections.add "versions", "<<<mssql_versions:sep(124)>>>"
+sections.add "connections", "<<<mssql_connections>>>"
 
 For Each section_id In sections.Keys
     addOutput(sections(section_id))
@@ -505,6 +506,21 @@ For Each instance_id In instances.Keys: Do ' Continue trick
 
         addOutput(instance_id & "|" & Replace(dbName, " ", "_") & "|" & active_node & "|" & nodes)
     Loop While False: Next
+
+    addOutput(sections("connections"))
+    Dim connection_count, database_name
+
+    RS.Open "SELECT name AS DBName, ISNULL((SELECT  COUNT(dbid) AS NumberOfConnections FROM " &_
+    "sys.sysprocesses WHERE dbid > 0 AND name = DB_NAME(dbid) GROUP BY dbid ),0) AS NumberOfConnections " &_
+    "FROM sys.databases", CONN
+
+    Do While Not RS.Eof
+        database_name = RS("DBName")
+        connection_count = RS("NumberOfConnections")
+
+        addOutput(instance_id & " " & Replace(database_name, " ", "_") & " " & connection_count)
+        RS.MoveNext
+    Loop
 
     CONN.Close
 

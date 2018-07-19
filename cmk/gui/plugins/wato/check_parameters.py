@@ -3042,6 +3042,31 @@ register_check_parameters(
     "dict",
 )
 
+
+register_check_parameters(
+    subgroup_applications,
+    "mssql_connections",
+    _("MSSQL Connections"),
+    Dictionary(
+        elements = [
+            ( "levels",
+                Tuple(
+                    title = _("Upper levels for the number of active database connections"),
+                    elements = [
+                        Integer(title = _("Warning if over"), default_value=20),
+                        Integer(title = _("Critical if over"), default_value=50),
+                    ]
+            ),)
+        ]
+    ),
+    TextAscii(
+        title = _("Database identifier"),
+        allow_empty = True
+    ),
+    'dict',
+)
+
+
 register_check_parameters(
     subgroup_applications,
     "varnish_cache",

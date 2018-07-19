@@ -1,0 +1,11 @@
+Title: mssql_connections: new check to monitor active connections of a MSSQL database
+Level: 1
+Component: checks
+Class: feature
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0b9
+Date: 1532013883
+
+

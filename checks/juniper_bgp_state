@@ -47,6 +47,8 @@ def check_juniper_bgp_state(item, _no_params, info):
     status = 0
     for oid_end, bgp_state, bgp_operational_state in info:
         peering_partner_ip = juniper_bgp_state_create_item(oid_end)
+        if not bgp_state or not bgp_operational_state:
+            return 3, "Missing SNMP data"
         bgp_state = int(bgp_state)
         bgp_operational_state = int(bgp_operational_state)
 

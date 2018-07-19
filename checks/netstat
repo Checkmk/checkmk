@@ -51,6 +51,7 @@
 # udp        0      0 10.1.2.160:137          0.0.0.0:*
 # udp        0      0 0.0.0.0:137             0.0.0.0:*
 
+
 def parse_netstat(info):
     connections = []
     for line in info:
@@ -75,15 +76,12 @@ def parse_netstat(info):
     return connections
 
 
-def check_netstat(item, params, info):
-    connections = parse_netstat(info)
-    return check_netstat_generic(item, params, connections)
-
 check_info["netstat"] = {
-    'check_function'        : check_netstat,
+    'parse_function'        : parse_netstat,
+    'check_function'        : check_netstat_generic,
     'service_description'   : "TCP Connection %s",
     'group'                 : "tcp_connections",
-    'includes'              : [ "netstat.include" ],
+    'includes'              : ["netstat.include"],
     'has_perfdata'          : True,
 }
 

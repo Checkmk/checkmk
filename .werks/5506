@@ -1,0 +1,13 @@
+Title: cmk-update-agent.exe now ignores windows proxies by default
+Level: 1
+Component: agents
+Class: fix
+Compatible: compat
+Edition: cee
+State: unknown
+Version: 1.4.0p35
+Date: 1531980360
+
+By default, the agent updater is supposed to ignore all configured proxies on a host. Before this werk, it missed to bypass the system-wide configured proxy on windows.
+
+Please note that you can configure the agent updater to other behavior within the agent updater plugin ruleset.

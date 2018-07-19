@@ -12,8 +12,6 @@ persistent=yes
 
 [MESSAGES CONTROL]
 disable=
-    bad-indentation,
-    bad-whitespace,
     bare-except,
     broad-except,
     cell-var-from-loop,
@@ -92,6 +90,8 @@ disable=
     #---------------------------------------------------------------------------
     # The warnigns below will probably fixed by YAPF.
     bad-continuation,
+    bad-indentation,
+    bad-whitespace,
     #---------------------------------------------------------------------------
     # Enabling the two spelling-related checks increases pylints runtime from
     # 11 min to 40 min, so we better keep those disabled for normal runs.

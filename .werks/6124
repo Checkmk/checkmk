@@ -1,0 +1,10 @@
+Title: juniper_bgp_state: avoid crash if peer state or peer status is missing in SNMP walk
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1531982891
+Class: fix
+
+

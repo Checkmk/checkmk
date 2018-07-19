@@ -12,8 +12,6 @@ persistent=yes
 
 [MESSAGES CONTROL]
 disable=
-    bare-except,
-    broad-except,
     cell-var-from-loop,
     consider-iterating-dictionary,
     consider-using-enumerate,
@@ -82,6 +80,11 @@ disable=
     # amount of relatively easy work, especially if we want to avoid code
     # duplication (introduce new classes, combine methods, etc.)
     attribute-defined-outside-init,
+    #---------------------------------------------------------------------------
+    # Enabling these warnings would be nice, they are mostly a sign of sloppy
+    # programming practice. In some cases, they can even hide bugs.
+    bare-except,
+    broad-except,
     #---------------------------------------------------------------------------
     # Enabling this would be nice, but not crucial. At the moment, we have quite
     # a few violations, so we postpone fixing this. When we do it eventually, we

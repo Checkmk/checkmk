@@ -177,7 +177,7 @@ def _perform_post_config_loading_actions():
     # In case the checks are not loaded yet it seems the current mode
     # is not working with the checks. In this case also don't load the
     # static checks into the configuration.
-    if all_checks_loaded():
+    if any_check_loaded():
         add_wato_static_checks_to_checks()
         initialize_check_caches()
         set_check_variables_for_checks()
@@ -2199,6 +2199,11 @@ def load_checks(get_check_api_context, filelist):
 def all_checks_loaded():
     """Whether or not all(!) checks have been loaded into the current process"""
     return _all_checks_loaded
+
+
+def any_check_loaded():
+    """Whether or not some checks have been loaded into the current process"""
+    return bool(_check_contexts)
 
 
 # Constructs a new check context dictionary. It contains the whole check API.

@@ -1,0 +1,18 @@
+Title: Fixed broken checking of unrelated hosts when using manual checks
+Level: 1
+Component: core
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0i1
+Date: 1531599198
+
+When using the Check_MK Raw Edition it could happen that configuring manual
+checks for a host broke the check execution of unrelated hosts.
+
+The configuration of the manual check of all hosts was loaded into the context
+of such an unrelated host. Because a host only loads the check definitions of
+the checks it needs during checking, those manual check configurations were
+trying to access unavailable data. This lead to a crash and a "(null)" output
+shown for the "Check_MK" service.

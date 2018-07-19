@@ -9,6 +9,7 @@ init-hook=
 load-plugins=testlib.pylint_cmk,testlib.pylint_checker_localization
 # TODO: Why do we need persistence?
 persistent=yes
+extension-pkg-whitelist=rrdtool,_ldap,netifaces,pymssql
 
 [MESSAGES CONTROL]
 disable=
@@ -106,12 +107,8 @@ disable=
 #   Can not check methods / attributes of the rrdtool C module. Skipping related errors
 #   like the following:
 #   [E1101(no-member), create_rrd] Module 'rrdtool' has no 'create' member
-# ldap
-#   The Python ldap module gets a lot of constants from the C API which can not be found by pylint.
-#   This results in a lot of these errors: "Module 'ldap' has no 'OPT_REFERRALS' member".
-# netifaces
-#   Can not check methods / attributes of the netifaces C module
-ignored-modules = rrdtool,ldap,netifaces
+# TODO: Add rrdtool to virtualenv and drop this
+ignored-modules = rrdtool
 
 [REPORTS]
 output-format=cmk_colorized

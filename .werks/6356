@@ -1,0 +1,16 @@
+Title: New standard theme for Check_MK GUI
+Level: 3
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 1.5.0b9
+Date: 1532100627
+Class: feature
+
+The Check_MK GUI is now shipped with a new standard theme. This theme is
+enabled by default for all sites created with 1.5.0b9 or newer. Updated sites
+keep the classic theme by default.
+
+You can use the Global Setting "User Interface > UI Theme" for changing the
+default theme for you whole installation. Each user can change the theme on
+his user profile page.

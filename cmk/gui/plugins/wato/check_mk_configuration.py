@@ -105,6 +105,21 @@ def web_log_level_elements():
     return elements
 
 
+register_configvar(
+    group,
+    "ui_theme",
+    DropdownChoice(
+        title = _("User interface theme"),
+        help = _("Change the default user interface theme of your Check_MK installation"),
+        choices = [
+            ("classic",  _("Classic user interface")),
+            ("facelift", _("Face lifted")),
+        ],
+    ),
+    domain = "multisite",
+)
+
+
 register_configvar(group,
     "bulk_discovery_default_settings",
     vs_bulk_discovery(),

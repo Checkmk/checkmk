@@ -65,7 +65,8 @@ builtin_dashboards_transformed = False
 # in order to allow the user to customize this.
 
 screen_margin    = 5              # Distance from the left border of the main-frame to the dashboard area
-dashlet_padding  = 23, 2, 2, 2, 2 # Margin (N, E, S, W, N w/o title) between outer border of dashlet and its content
+dashlet_padding  = 34, 4, -2, 4, 4 # Margin (N, E, S, W, N w/o title) between outer border of dashlet and its content
+#dashlet_padding  = 23, 2, 2, 2, 2 # Margin (N, E, S, W, N w/o title) between outer border of dashlet and its content
 corner_overlap   = 22
 raster           = 10            # Raster the dashlet coords are measured in (px)
 dashlet_min_size = 10, 10        # Minimum width and height of dashlets in raster units

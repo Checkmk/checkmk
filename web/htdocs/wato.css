@@ -815,6 +815,11 @@ div.rulesets table.nform tr.bottom td {
     clear: left;
 }
 
+input.toggle_timespecific_parameter {
+    position: absolute;
+    right: 18px;
+}
+
 /* Page edit_ruleset */
 div.varname {
     color: white;

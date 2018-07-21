@@ -822,7 +822,7 @@ class Cell(object):
                     txt = img_filename
 
             if isinstance(txt, HTML):
-                txt = "%s" % txt
+                txt = html.strip_tags("%s" % txt)
 
             elif not isinstance(txt, tuple):
                 txt = html.escaper.unescape_attributes(txt)

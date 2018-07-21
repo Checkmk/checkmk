@@ -2120,13 +2120,23 @@ class html(HTMLGenerator):
                                  value=title, title=help, style=style)
 
 
-    def buttonlink(self, href, text, add_transid=False, obj_id=None, style=None, title=None, disabled=None):
+    def buttonlink(self, href, text, add_transid=False, obj_id=None, style=None, title=None, disabled=None, class_=None):
         if add_transid:
             href += "&_transid=%s" % self.transaction_manager.get()
+
         if not obj_id:
             obj_id = utils.gen_id()
+
+        # Same API as other elements: class_ can be a list or string/None
+        css_classes = ["button", "buttonlink"]
+        if class_:
+            if type(class_) != list:
+                css_classes.append(class_)
+            else:
+                css_classes.extend(class_)
+
         self.input(name=obj_id, type_="button",
-                   id_=obj_id, class_=["button", "buttonlink"],
+                   id_=obj_id, class_=css_classes,
                    value=text, style=style,
                    title=title, disabled=disabled,
                    onclick="location.href=\'%s\'" % href)
@@ -2504,10 +2514,12 @@ class html(HTMLGenerator):
 
         # View
         id_="rb_%s_%s" % (varname, value) if label else None
+        self.open_span(class_="radiobutton_group")
         self.input(name=varname, type_="radio", value = value,
                    checked='' if checked else None, id_=id_)
         if label:
             self.label(label, for_=id_)
+        self.close_span()
 
 
     #

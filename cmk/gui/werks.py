@@ -260,7 +260,7 @@ def werk_table_option_entries():
             ),
             None,
          ),
-         ( "content",
+         ( "werk_content",
            "single",
            TextUnicode(
                title = _("Werk title or content"),
@@ -390,9 +390,9 @@ def werk_matches_options(werk, werk_table_options):
     if to_version and utils.cmp_version(werk["version"], to_version) > 0:
         return False
 
-    if werk_table_options["content"]:
+    if werk_table_options["werk_content"]:
         have_match = False
-        search_text = werk_table_options["content"].lower()
+        search_text = werk_table_options["werk_content"].lower()
         for line in [werk["title"]] + werk["body"]:
             if search_text in line.lower():
                 have_match = True

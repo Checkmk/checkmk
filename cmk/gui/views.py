@@ -1422,11 +1422,16 @@ def ajax_set_viewoption():
 def show_context_links(thisview, datasource, show_filters,
                        enable_commands, enable_checkboxes, show_checkboxes,
                        show_availability, show_combined_graphs):
-    # html.begin_context_buttons() called automatically by html.context_button()
+
+    html.begin_context_buttons()
+
     # That way if no button is painted we avoid the empty container
     if display_options.enabled(display_options.B):
         execute_hooks('buttons-begin')
 
+
+    ## Small buttons
+    html.open_span(class_="context_buttons_small")
     filter_isopen = html.var("filled_in") != "filter" and thisview.get("mustsearch")
     if display_options.enabled(display_options.F):
         if html.var("filled_in") == "filter":
@@ -1466,8 +1471,9 @@ def show_context_links(thisview, datasource, show_filters,
             view_optiondial(thisview, "refresh", choices, _("Change the refresh rate"))
         else:
             view_optiondial_off("refresh")
+    html.close_span()
 
-
+    ## Large buttons
     if display_options.enabled(display_options.B):
         import cmk.gui.watolib as watolib
         # WATO: If we have a host context, then show button to WATO, if permissions allow this

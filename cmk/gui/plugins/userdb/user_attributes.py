@@ -143,3 +143,34 @@ class StartURLUserAttribute(UserAttribute):
 
     def domain(self):
         return "multisite"
+
+
+
+class UIThemeUserAttribute(UserAttribute):
+    def name(self):
+        return "ui_theme"
+
+
+    def valuespec(self):
+        return Alternative(
+            title = _("User interface theme"),
+            style = "dropdown",
+            orientation = "horizontal",
+            elements = [
+                FixedValue(None,
+                    title = _("Use the default theme"),
+                    totext = "",
+                ),
+                DropdownChoice(
+                    title = _("Set custom theme"),
+                    choices = [
+                        ("classic",  _("Classic user interface")),
+                        ("facelift", _("Face lifted")),
+                    ],
+                ),
+            ],
+        )
+
+
+    def domain(self):
+        return "multisite"

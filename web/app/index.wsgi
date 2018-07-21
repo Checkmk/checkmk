@@ -190,6 +190,9 @@ class Application(object):
         # has been initialized
         self._localize_request()
 
+        # Update the UI theme with the attribute configured by the user
+        html.set_theme(config.user.get_attribute("ui_theme"))
+
         self._ensure_general_access()
         handler()
 

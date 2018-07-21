@@ -1,0 +1,11 @@
+Title: Fixed HTML fragments in customer column of views in PDF reports
+Level: 1
+Component: reporting
+Compatible: compat
+Edition: cme
+Version: 1.5.0b10
+Date: 1532196113
+Class: fix
+
+When a view that contains the customer column e.g. of a host, this column
+was containing HTML tags instead of just the customer name.

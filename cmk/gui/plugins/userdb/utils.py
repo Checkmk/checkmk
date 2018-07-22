@@ -139,12 +139,6 @@ class UserAttribute(object):
     __metaclass__ = abc.ABCMeta
 
 
-    @classmethod
-    def auto_register(cls):
-        # type: () -> bool
-        return True
-
-
     @abc.abstractmethod
     def name(self):
         # type: () -> bytes
@@ -218,7 +212,7 @@ class UserConnectorRegistry(cmk.gui.plugin_registry.ClassRegistry):
 user_connector_registry = UserConnectorRegistry()
 
 
-class UserAttributeRegistry(cmk.gui.plugin_registry.ObjectRegistry):
+class UserAttributeRegistry(cmk.gui.plugin_registry.ClassRegistry):
     """The management object for all available user attributes.
     Have a look at the base class for details."""
     def plugin_base_class(self):

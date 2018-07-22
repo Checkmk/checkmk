@@ -112,6 +112,37 @@ def load_plugins(force):
     loaded_with_language = cmk.gui.i18n.get_current_language()
 
 
+class GenericSnapin(cmk.gui.plugins.sidebar.SidebarSnapin):
+    """Generic wrapper class. Needed for compatiblity with old dict based snapins"""
+
+    @classmethod
+    def type_name(cls):
+        return cls._type_name
+
+
+    @classmethod
+    def title(cls):
+        return cls._spec["title"]
+
+
+    @classmethod
+    def description(cls):
+        return cls._spec.get("description", "")
+
+
+    def show(self):
+        return self._spec["render"]()
+
+
+    @classmethod
+    def refresh_regularly(cls):
+        return cls._spec.get("refresh", False)
+
+
+    def styles(self):
+        return self._spec.get("styles")
+
+
 # Pre Check_MK 1.5 the snapins were declared with dictionaries like this:
 #
 # sidebar_snapins["about"] = {
@@ -126,7 +157,10 @@ def load_plugins(force):
 # TODO: Deprecate this one day.
 def transform_old_dict_based_snapins():
     for snapin_id, snapin in sidebar_snapins.items():
-        snapin_registry.register(GenericSnapin(snapin_id, snapin))
+        @snapin_registry.register
+        class LegacySnapin(GenericSnapin):
+            _type_name = snapin_id
+            _spec = snapin
 
 
 # TODO: Deprecate this one day.
@@ -297,10 +331,11 @@ def page_side():
         # when the snapin contents are refreshed from an external source
         refresh_url = render_snapin(name, state)
 
-        if snapin_registry.get(name).refresh_regularly():
+        snapin_class = snapin_registry.get(name)
+        if snapin_class.refresh_regularly():
             refresh_snapins.append([name, refresh_url])
 
-        elif snapin_registry.get(name).refresh_on_restart():
+        elif snapin_class.refresh_on_restart():
             refresh_snapins.append([name, refresh_url])
             restart_snapins.append(name)
 
@@ -331,7 +366,8 @@ def render_snapin_styles(snapin):
         html.close_style()
 
 def render_snapin(name, state):
-    snapin = snapin_registry.get(name)
+    snapin_class = snapin_registry.get(name)
+    snapin = snapin_class()
 
     html.open_div(id_="snapin_container_%s" % name, class_="snapin")
     render_snapin_styles(snapin)
@@ -436,7 +472,8 @@ def ajax_snapin():
     for snapname in snapnames:
         if not config.user.may("sidesnap." + snapname):
             continue
-        snapin = snapin_registry.get(snapname)
+        snapin_class = snapin_registry.get(snapname)
+        snapin = snapin_class()
 
         # When restart snapins are about to be refreshed, only render
         # them, when the core has been restarted after their initial
@@ -518,7 +555,8 @@ def page_add_snapin():
         html.reload_sidebar()
 
     html.open_div(class_=["add_snapin"])
-    for name, snapin in sorted(snapin_registry.items()):
+    for name, snapin_class in sorted(snapin_registry.items()):
+        snapin = snapin_class()
         if name in used_snapins:
             continue
         if not config.user.may("sidesnap." + name):
@@ -580,46 +618,3 @@ def ajax_switch_site():
             d["disabled"] = onoff != "on"
             config.user.siteconf[sitename] = d
         config.user.save_site_config()
-
-
-#.
-#   .--Plugins-------------------------------------------------------------.
-#   |                   ____  _             _                              |
-#   |                  |  _ \| |_   _  __ _(_)_ __  ___                    |
-#   |                  | |_) | | | | |/ _` | | '_ \/ __|                   |
-#   |                  |  __/| | |_| | (_| | | | | \__ \                   |
-#   |                  |_|   |_|\__,_|\__, |_|_| |_|___/                   |
-#   |                                 |___/                                |
-#   '----------------------------------------------------------------------'
-
-
-class GenericSnapin(cmk.gui.plugins.sidebar.SidebarSnapin):
-    """Generic wrapper class. Needed for compatiblity with old dict based snapins"""
-    def __init__(self, snapin_id, dict_spec):
-        super(GenericSnapin, self).__init__()
-        self._type_name = snapin_id
-        self._spec = dict_spec
-
-
-    def type_name(self):
-        return self._type_name
-
-
-    def title(self):
-        return self._spec["title"]
-
-
-    def description(self):
-        return self._spec.get("description", "")
-
-
-    def show(self):
-        return self._spec["render"]()
-
-
-    def refresh_regularly(self):
-        return self._spec.get("refresh", False)
-
-
-    def styles(self):
-        return self._spec.get("styles")

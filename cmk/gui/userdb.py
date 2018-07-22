@@ -50,6 +50,11 @@ from cmk.gui.globals import html
 import cmk.gui.plugin_registry
 import cmk.gui.plugins.userdb
 
+from cmk.gui.plugins.userdb.utils import (
+    user_attribute_registry,
+    user_connector_registry,
+)
+
 # Datastructures and functions needed before plugins can be loaded
 loaded_with_language = False
 
@@ -484,28 +489,8 @@ def convert_session_info(value):
 #   |                                                                      |
 #   +----------------------------------------------------------------------+
 
-# TODO: Legacy plugin API. Converts to new internal structure. Drop this with 1.6 or later.
-def declare_user_attribute(name, vs, user_editable = True, permission = None,
-                           show_in_table = False, topic = None, add_custom_macro = False,
-                           domain = "multisite", from_config = False):
-
-    user_attribute_registry.register(GenericUserAttribute(
-        name,
-        valuespec=vs,
-        user_editable=user_editable,
-        show_in_table=show_in_table,
-        topic=topic and topic or 'personal',
-        add_custom_macro=add_custom_macro,
-        domain=domain,
-        permission=permission,
-        from_config=from_config,
-    ))
 
 class GenericUserAttribute(cmk.gui.plugins.userdb.UserAttribute):
-    @classmethod
-    def auto_register(cls):
-        return False
-
     def __init__(self, name, valuespec, user_editable, show_in_table, topic, add_custom_macro, domain, permission, from_config):
         super(GenericUserAttribute, self).__init__()
         self._name = name
@@ -555,9 +540,29 @@ class GenericUserAttribute(cmk.gui.plugins.userdb.UserAttribute):
         return self._domain
 
 
+# TODO: Legacy plugin API. Converts to new internal structure. Drop this with 1.6 or later.
+def declare_user_attribute(name, vs, user_editable = True, permission = None,
+                           show_in_table = False, topic = None, add_custom_macro = False,
+                           domain = "multisite", from_config = False):
+
+    @user_attribute_registry.register
+    class LegacyUserAttribute(GenericUserAttribute):
+        def __init__(self):
+            super(LegacyUserAttribute, self).__init__(
+                name,
+                valuespec=vs,
+                user_editable=user_editable,
+                show_in_table=show_in_table,
+                topic=topic and topic or 'personal',
+                add_custom_macro=add_custom_macro,
+                domain=domain,
+                permission=permission,
+                from_config=from_config,
+            )
+
 
 def get_user_attributes():
-    return user_attribute_registry.items()
+    return [ (k, v()) for k, v in user_attribute_registry.items() ]
 
 
 def load_users(lock = False):
@@ -1119,7 +1124,8 @@ def update_config_based_user_attributes():
 
 
 def _clear_config_based_user_attributes():
-    for attr in user_attribute_registry.values():
+    for attr_class in user_attribute_registry.values():
+        attr = attr_class()
         if attr.from_config():
             del user_attribute_registry[attr.name()]
 

@@ -45,11 +45,13 @@ class QuicksearchSnapin(SidebarSnapin):
         return "search"
 
 
-    def title(self):
+    @classmethod
+    def title(cls):
         return _("Quicksearch")
 
 
-    def description(self):
+    @classmethod
+    def description(cls):
         return _("Interactive search field for direct access to hosts, services, host- and "\
                  "servicegroups.<br>You can use the following filters:<br> <i>h:</i> Host, <i>s:</i> Service<br> "\
                  "<i>hg:</i> Hostgroup, <i>sg:</i> Servicegroup<br><i>ad:</i> Address, <i>al:</i> Alias, <i>tg:</i> Hosttag")
@@ -64,7 +66,8 @@ class QuicksearchSnapin(SidebarSnapin):
         html.javascript_file(html.javascript_filename_for_browser("search"))
 
 
-    def allowed_roles(self):
+    @classmethod
+    def allowed_roles(cls):
         return [ "user", "admin", "guest" ]
 
 
@@ -261,7 +264,8 @@ class LivestatusSearchConductor(LivestatusSearchBase):
 
 
     def _get_plugin_with_shortname(self, shortname):
-        for plugin in match_plugin_registry.values():
+        for plugin_class in match_plugin_registry.values():
+            plugin = plugin_class()
             if plugin.get_filter_shortname() == shortname:
                 return plugin
         raise NotImplementedError()
@@ -298,8 +302,8 @@ class LivestatusSearchConductor(LivestatusSearchBase):
         self._determine_livestatus_table()
         columns_to_query           = set(self._get_livestatus_default_columns())
         livestatus_filter_domains  = {} # Filters sorted by domain
-        self._used_search_plugins  = [x for x in match_plugin_registry.values() if
-                                        x.is_used_for_table(self._livestatus_table, self._used_filters)]
+
+        self._used_search_plugins = self._get_used_search_plugins()
 
         for plugin in self._used_search_plugins:
             columns_to_query.update(set(plugin.get_livestatus_columns(self._livestatus_table)))
@@ -326,6 +330,13 @@ class LivestatusSearchConductor(LivestatusSearchBase):
         # Limit number of results
         limit = config.quicksearch_dropdown_limit
         self._livestatus_command += "Cache: reload\nLimit: %d\nColumnHeaders: off" % (limit + 1)
+
+
+    def _get_used_search_plugins(self):
+        return [ plugin
+                 for plugin_class in match_plugin_registry.values()
+                 for plugin in [ plugin_class() ]
+                 if plugin.is_used_for_table(self._livestatus_table, self._used_filters) ]
 
 
     # Returns the livestatus table fitting the given filters
@@ -542,7 +553,7 @@ class LivestatusQuicksearch(LivestatusSearchBase):
 
 
     def _determine_search_objects(self):
-        filter_names = {"%s" % x.get_filter_shortname() for x in match_plugin_registry.values()}
+        filter_names = {"%s" % x().get_filter_shortname() for x in match_plugin_registry.values()}
         filter_regex = "|".join(filter_names)
 
         # Goal: "((^| )(hg|h|sg|s|al|tg|ad):)"
@@ -638,6 +649,8 @@ def generate_search_results(query):
 #   '----------------------------------------------------------------------'
 
 
+# TODO: Simplify code by making static things like _filter_shortname class members
+# and it's getters class methods
 class QuicksearchMatchPlugin(object):
     __metaclass__ = abc.ABCMeta
 
@@ -708,7 +721,7 @@ class QuicksearchMatchPlugin(object):
 
 
 
-class MatchPluginRegistry(cmk.gui.plugin_registry.ObjectRegistry):
+class MatchPluginRegistry(cmk.gui.plugin_registry.ClassRegistry):
     def plugin_base_class(self):
         return QuicksearchMatchPlugin
 

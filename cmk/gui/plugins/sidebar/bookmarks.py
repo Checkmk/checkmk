@@ -244,11 +244,13 @@ class Bookmarks(SidebarSnapin):
         return "bookmarks"
 
 
-    def title(self):
+    @classmethod
+    def title(cls):
         return _("Bookmarks")
 
 
-    def description(self):
+    @classmethod
+    def description(cls):
         return _("A simple and yet practical snapin allowing to create "
                       "bookmarks to views and other content in the main frame")
 
@@ -294,7 +296,8 @@ function add_bookmark() {
         return sorted(topics.items())
 
 
-    def allowed_roles(self):
+    @classmethod
+    def allowed_roles(cls):
         return [ "admin", "user", "guest" ]
 
 

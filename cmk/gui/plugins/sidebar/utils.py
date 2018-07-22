@@ -42,16 +42,20 @@ snapin_width = 230
 sidebar_snapins = {}
 search_plugins  = []
 
+# TODO: Transform methods to class methods
 class SidebarSnapin(object):
     __metaclass__ = abc.ABCMeta
 
+    @classmethod
     @abc.abstractmethod
-    def title(self):
+    def title(cls):
         raise NotImplementedError()
 
 
-    def description(self):
-        return ""
+    @classmethod
+    @abc.abstractmethod
+    def description(cls):
+        raise NotImplementedError()
 
 
     @abc.abstractmethod
@@ -59,15 +63,18 @@ class SidebarSnapin(object):
         raise NotImplementedError()
 
 
-    def refresh_regularly(self):
+    @classmethod
+    def refresh_regularly(cls):
         return False
 
 
-    def refresh_on_restart(self):
+    @classmethod
+    def refresh_on_restart(cls):
         return False
 
 
-    def allowed_roles(self):
+    @classmethod
+    def allowed_roles(cls):
         return [ "admin", "user", "guest" ]
 
 
@@ -79,22 +86,22 @@ class SidebarSnapin(object):
         return {}
 
 
-class SnapinRegistry(cmk.gui.plugin_registry.ObjectRegistry):
+class SnapinRegistry(cmk.gui.plugin_registry.ClassRegistry):
     """The management object for all available plugins."""
     def plugin_base_class(self):
         return SidebarSnapin
 
 
-    def _register(self, snapin):
-        snapin_id = snapin.type_name()
-        self._entries[snapin_id] = snapin
+    def _register(self, snapin_class):
+        snapin_id = snapin_class.type_name()
+        self._entries[snapin_id] = snapin_class
 
         config.declare_permission("sidesnap.%s" % snapin_id,
-            snapin.title(),
-            snapin.description(),
-            snapin.allowed_roles())
+            snapin_class.title(),
+            snapin_class.description(),
+            snapin_class.allowed_roles())
 
-        for path, page_func in snapin.page_handlers().items():
+        for path, page_func in snapin_class().page_handlers().items():
             cmk.gui.pages.register_page_handler(path, page_func)
 
 

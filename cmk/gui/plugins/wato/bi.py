@@ -50,6 +50,7 @@ from cmk.gui.htmllib import HTML
 from . import (
     WatoMode,
     WatoModule,
+    mode_registry,
     GroupSelection,
     MainMenu,
     MenuItem,
@@ -990,6 +991,7 @@ class ModeBI(WatoMode, BIManagement):
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
+@mode_registry.register
 class ModeBIPacks(ModeBI):
     @classmethod
     def name(cls):
@@ -1072,6 +1074,7 @@ class ModeBIPacks(ModeBI):
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
+@mode_registry.register
 class ModeBIEditPack(ModeBI):
     @classmethod
     def name(cls):
@@ -1182,6 +1185,7 @@ class ModeBIEditPack(ModeBI):
 #   '----------------------------------------------------------------------'
 
 
+@mode_registry.register
 class ModeBIAggregations(ModeBI):
     @classmethod
     def name(cls):
@@ -1367,6 +1371,7 @@ class ModeBIAggregations(ModeBI):
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
+@mode_registry.register
 class ModeBIRules(ModeBI):
     @classmethod
     def name(cls):
@@ -1605,6 +1610,7 @@ class ModeBIRules(ModeBI):
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
+@mode_registry.register
 class ModeBIRuleTree(ModeBI):
     @classmethod
     def name(cls):
@@ -1658,6 +1664,7 @@ class ModeBIRuleTree(ModeBI):
 #   |             |___/ |___/          |___/                               |
 #   '----------------------------------------------------------------------'
 
+@mode_registry.register
 class ModeBIEditAggregation(ModeBI):
     @classmethod
     def name(cls):
@@ -1732,6 +1739,7 @@ class ModeBIEditAggregation(ModeBI):
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
+@mode_registry.register
 class ModeBIEditRule(ModeBI):
     @classmethod
     def name(cls):

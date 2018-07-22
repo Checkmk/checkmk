@@ -56,6 +56,7 @@ from . import (
     ConfigDomainGUI,
     WatoMode,
     WatoModule,
+    mode_registry,
     SNMPCredentials,
     HostnameTranslation,
     TimeperiodSelection,
@@ -1189,6 +1190,7 @@ class EventConsoleMode(WatoMode):
 
 
 
+@mode_registry.register
 class ModeEventConsoleRulePacks(EventConsoleMode):
     @classmethod
     def name(cls):
@@ -1496,6 +1498,7 @@ class ModeEventConsoleRulePacks(EventConsoleMode):
 
 
 
+@mode_registry.register
 class ModeEventConsoleRules(EventConsoleMode):
     @classmethod
     def name(cls):
@@ -1764,6 +1767,7 @@ class ModeEventConsoleRules(EventConsoleMode):
 
 
 
+@mode_registry.register
 class ModeEventConsoleEditRulePack(EventConsoleMode):
     @classmethod
     def name(cls):
@@ -1867,6 +1871,7 @@ class ModeEventConsoleEditRulePack(EventConsoleMode):
 
 
 
+@mode_registry.register
 class ModeEventConsoleEditRule(EventConsoleMode):
     @classmethod
     def name(cls):
@@ -2033,6 +2038,7 @@ class ModeEventConsoleEditRule(EventConsoleMode):
 
 
 
+@mode_registry.register
 class ModeEventConsoleStatus(EventConsoleMode):
     @classmethod
     def name(cls):
@@ -2120,6 +2126,8 @@ class ModeEventConsoleStatus(EventConsoleMode):
             html.end_form()
 
 
+
+@mode_registry.register
 class ModeEventConsoleSettings(EventConsoleMode, GlobalSettingsMode):
     @classmethod
     def name(cls):
@@ -2215,6 +2223,7 @@ def ec_config_variable_groups():
 
 
 
+@mode_registry.register
 class ModeEventConsoleEditGlobalSetting(EditGlobalSettingMode):
     @classmethod
     def name(cls):
@@ -2248,6 +2257,7 @@ class ModeEventConsoleEditGlobalSetting(EditGlobalSettingMode):
 
 
 
+@mode_registry.register
 class ModeEventConsoleMIBs(EventConsoleMode):
     @classmethod
     def name(cls):

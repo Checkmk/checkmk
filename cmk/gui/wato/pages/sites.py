@@ -45,6 +45,7 @@ from cmk.gui.plugins.wato.utils.html_elements import (
 from cmk.gui.plugins.wato import (
     add_change,
     WatoMode,
+    mode_registry,
     global_buttons,
     make_action_link,
     sort_sites,
@@ -61,6 +62,7 @@ class ModeSites(WatoMode):
         global_buttons()
 
 
+@mode_registry.register
 class ModeDistributedMonitoring(ModeSites):
     @classmethod
     def name(cls):
@@ -332,6 +334,7 @@ class ModeDistributedMonitoring(ModeSites):
 
 
 
+@mode_registry.register
 class ModeEditSite(ModeSites):
     @classmethod
     def name(cls):

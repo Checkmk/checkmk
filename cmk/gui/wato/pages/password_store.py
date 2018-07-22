@@ -46,12 +46,14 @@ from cmk.gui.valuespec import (
 
 from cmk.gui.plugins.wato import (
     WatoMode,
+    mode_registry,
     global_buttons,
     wato_confirm,
     add_change,
     make_action_link,
 )
 
+@mode_registry.register
 class ModePasswords(WatoMode, watolib.PasswordStore):
     @classmethod
     def name(cls):
@@ -148,6 +150,7 @@ class ModePasswords(WatoMode, watolib.PasswordStore):
 
 
 
+@mode_registry.register
 class ModeEditPassword(WatoMode, watolib.PasswordStore):
     @classmethod
     def name(cls):

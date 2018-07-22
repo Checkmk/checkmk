@@ -36,6 +36,7 @@ from . import (
     register_modules,
     WatoModule,
     WatoMode,
+    mode_registry,
 )
 
 register_modules(WatoModule(
@@ -47,6 +48,7 @@ register_modules(WatoModule(
     sort_index=90,
 ))
 
+@mode_registry.register
 class ModeBackgroundJobsOverview(WatoMode):
     @classmethod
     def name(cls):
@@ -87,6 +89,7 @@ class ModeBackgroundJobsOverview(WatoMode):
 
 
 
+@mode_registry.register
 class ModeBackgroundJobDetails(WatoMode):
     @classmethod
     def name(cls):

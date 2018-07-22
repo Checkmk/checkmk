@@ -54,6 +54,7 @@ from cmk.gui.plugins.wato.utils.main_menu import (
 
 from cmk.gui.plugins.wato import (
     WatoMode,
+    mode_registry,
     wato_confirm,
     global_buttons,
 )
@@ -250,6 +251,7 @@ class ModeEditGroup(WatoMode):
 
 
 
+@mode_registry.register
 class ModeHostgroups(ModeGroups):
     type_name = "host"
 
@@ -287,6 +289,7 @@ class ModeHostgroups(ModeGroups):
 
 
 
+@mode_registry.register
 class ModeServicegroups(ModeGroups):
     type_name = "service"
 
@@ -324,6 +327,7 @@ class ModeServicegroups(ModeGroups):
 
 
 
+@mode_registry.register
 class ModeContactgroups(ModeGroups):
     type_name = "contact"
 
@@ -379,6 +383,7 @@ class ModeContactgroups(ModeGroups):
 
 
 
+@mode_registry.register
 class ModeEditServicegroup(ModeEditGroup):
     type_name = "service"
 
@@ -400,6 +405,7 @@ class ModeEditServicegroup(ModeEditGroup):
 
 
 
+@mode_registry.register
 class ModeEditHostgroup(ModeEditGroup):
     type_name = "host"
 
@@ -421,6 +427,7 @@ class ModeEditHostgroup(ModeEditGroup):
 
 
 
+@mode_registry.register
 class ModeEditContactgroup(ModeEditGroup):
     type_name = "contact"
 

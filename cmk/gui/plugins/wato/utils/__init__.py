@@ -32,6 +32,7 @@ import abc
 
 import cmk.gui.config as config
 import cmk.gui.userdb as userdb
+import cmk.gui.plugin_registry
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
 from cmk.gui.htmllib import HTML
@@ -1276,3 +1277,15 @@ def sort_sites(sitelist):
                cmp(a[1].get("alias"), b[1].get("alias"))
     sitelist.sort(cmp = custom_sort)
     return sitelist
+
+
+class ModeRegistry(cmk.gui.plugin_registry.ClassRegistry):
+    def plugin_base_class(self):
+        return WatoMode
+
+
+    def _register(self, cls):
+        self._entries[cls.name()] = cls
+
+
+mode_registry = ModeRegistry()

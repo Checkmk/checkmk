@@ -183,6 +183,7 @@ from cmk.gui.plugins.wato import (
     Levels,
     PredictiveLevels,
     EventsMode,
+    mode_registry,
 )
 
 # Make some functions of watolib available to WATO plugins without using the
@@ -486,6 +487,7 @@ def ensure_mode_permissions(mode_permissions):
 
 
 
+@mode_registry.register
 class ModeNotImplemented(WatoMode):
     @classmethod
     def name(cls):
@@ -521,6 +523,7 @@ class ModeNotImplemented(WatoMode):
 #   | Mode for showing a folder, bulk actions on hosts.                    |
 #   '----------------------------------------------------------------------'
 
+@mode_registry.register
 class ModeFolder(WatoMode):
     @classmethod
     def name(cls):
@@ -1368,6 +1371,7 @@ class FolderMode(WatoMode):
 
 
 
+@mode_registry.register
 class ModeEditFolder(FolderMode):
     @classmethod
     def name(cls):
@@ -1392,6 +1396,7 @@ class ModeEditFolder(FolderMode):
 
 
 
+@mode_registry.register
 class ModeCreateFolder(FolderMode):
     @classmethod
     def name(cls):
@@ -1573,6 +1578,7 @@ class HostMode(WatoMode):
 # we simply don't know whether or not a cluster or regular host is about to be edited. The GUI code
 # simply wants to link to the "host edit page". We could try to use some factory to decide this when
 # the edit_host mode is called.
+@mode_registry.register
 class ModeEditHost(HostMode):
     @classmethod
     def name(cls):
@@ -1735,6 +1741,7 @@ class CreateHostMode(HostMode):
 
 
 
+@mode_registry.register
 class ModeCreateHost(CreateHostMode):
     @classmethod
     def name(cls):
@@ -1754,6 +1761,7 @@ class ModeCreateHost(CreateHostMode):
 
 
 
+@mode_registry.register
 class ModeCreateCluster(CreateHostMode):
     @classmethod
     def name(cls):
@@ -1788,6 +1796,7 @@ class ModeCreateCluster(CreateHostMode):
 #   | Mode for renaming an existing host.                                  |
 #   '----------------------------------------------------------------------'
 
+@mode_registry.register
 class ModeBulkRenameHost(WatoMode):
     @classmethod
     def name(cls):
@@ -2057,6 +2066,7 @@ def rename_hosts_background_job(renamings, job_interface=None):
 
 
 
+@mode_registry.register
 class ModeRenameHost(WatoMode):
     @classmethod
     def name(cls):
@@ -2481,6 +2491,7 @@ def render_renaming_actions(action_counts):
 #   | that can be modified via rules.                                      |
 #   '----------------------------------------------------------------------'
 
+@mode_registry.register
 class ModeObjectParameters(WatoMode):
     _PARAMETERS_UNKNOWN = []
     _PARAMETERS_OMIT = []
@@ -2819,6 +2830,7 @@ class ModeObjectParameters(WatoMode):
 #   | Verify or find out a hosts agent related configuration.              |
 #   '----------------------------------------------------------------------'
 
+@mode_registry.register
 class ModeDiagHost(WatoMode):
     @classmethod
     def name(cls):
@@ -3151,6 +3163,7 @@ class ModeAjaxDiagHost(WatoWebApiMode):
 #   '----------------------------------------------------------------------'
 
 
+@mode_registry.register
 class ModeDiscovery(WatoMode):
     #TODO In the future cleanup check_source (passive/active/custom/legacy) and
     # check_state:
@@ -3949,6 +3962,7 @@ class ModeAjaxExecuteCheck(WatoWebApiMode):
 #   | Dialog for searching for hosts                                       |
 #   '----------------------------------------------------------------------'
 
+@mode_registry.register
 class ModeSearch(WatoMode):
     @classmethod
     def name(cls):
@@ -4017,6 +4031,7 @@ class ModeSearch(WatoMode):
 #   | a textbox.                                                           |
 #   '----------------------------------------------------------------------'
 
+@mode_registry.register
 class ModeBulkImport(WatoMode):
     _upload_tmp_path = cmk.paths.tmp_dir + "/host-import"
 
@@ -4414,6 +4429,7 @@ class ModeBulkImport(WatoMode):
 
 
 
+@mode_registry.register
 class ModeBulkDiscovery(WatoMode):
     @classmethod
     def name(cls):
@@ -4701,6 +4717,7 @@ def find_hosts_with_failed_agent():
 #   | values.                                                              |
 #   '----------------------------------------------------------------------'
 
+@mode_registry.register
 class ModeBulkEdit(WatoMode):
     @classmethod
     def name(cls):
@@ -4784,6 +4801,7 @@ class ModeBulkEdit(WatoMode):
 #   '----------------------------------------------------------------------'
 
 
+@mode_registry.register
 class ModeBulkCleanup(WatoMode):
     @classmethod
     def name(cls):
@@ -4910,6 +4928,7 @@ class ModeBulkCleanup(WatoMode):
 #   | Automatic scan for parents (similar to cmk --scan-parents)           |
 #   '----------------------------------------------------------------------'
 
+@mode_registry.register
 class ModeParentScan(WatoMode):
     @classmethod
     def name(cls):
@@ -5276,6 +5295,7 @@ class ModeParentScan(WatoMode):
 #   | for test and development.                                            |
 #   '----------------------------------------------------------------------'
 
+@mode_registry.register
 class ModeRandomHosts(WatoMode):
     @classmethod
     def name(cls):
@@ -5363,6 +5383,7 @@ class ModeRandomHosts(WatoMode):
 #   | Handling of the audit logfiles                                       |
 #   '----------------------------------------------------------------------'
 
+@mode_registry.register
 class ModeAuditLog(WatoMode):
     log_path = watolib.audit_log_path
 
@@ -5764,6 +5785,7 @@ class ModeAuditLog(WatoMode):
 #   '----------------------------------------------------------------------'
 
 
+@mode_registry.register
 class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
     @classmethod
     def name(cls):
@@ -6307,6 +6329,7 @@ class SiteBackupTargets(backup.Targets):
 
 
 
+@mode_registry.register
 class ModeBackup(backup.PageBackup, WatoMode):
     @classmethod
     def name(cls):
@@ -6335,6 +6358,7 @@ class ModeBackup(backup.PageBackup, WatoMode):
 
 
 
+@mode_registry.register
 class ModeBackupTargets(backup.PageBackupTargets, WatoMode):
     @classmethod
     def name(cls):
@@ -6364,6 +6388,7 @@ class ModeBackupTargets(backup.PageBackupTargets, WatoMode):
 
 
 
+@mode_registry.register
 class ModeEditBackupTarget(backup.PageEditBackupTarget, WatoMode):
     @classmethod
     def name(cls):
@@ -6380,6 +6405,7 @@ class ModeEditBackupTarget(backup.PageEditBackupTarget, WatoMode):
 
 
 
+@mode_registry.register
 class ModeEditBackupJob(backup.PageEditBackupJob, WatoMode):
     @classmethod
     def name(cls):
@@ -6428,6 +6454,7 @@ class ModeEditBackupJob(backup.PageEditBackupJob, WatoMode):
 
 
 
+@mode_registry.register
 class ModeBackupJobState(backup.PageBackupJobState, WatoMode):
     @classmethod
     def name(cls):
@@ -6463,6 +6490,7 @@ class SiteBackupKeypairStore(backup.BackupKeypairStore):
 
 
 
+@mode_registry.register
 class ModeBackupKeyManagement(SiteBackupKeypairStore, backup.PageBackupKeyManagement, WatoMode):
     @classmethod
     def name(cls):
@@ -6479,6 +6507,7 @@ class ModeBackupKeyManagement(SiteBackupKeypairStore, backup.PageBackupKeyManage
 
 
 
+@mode_registry.register
 class ModeBackupEditKey(SiteBackupKeypairStore, backup.PageBackupEditKey, WatoMode):
     @classmethod
     def name(cls):
@@ -6491,6 +6520,7 @@ class ModeBackupEditKey(SiteBackupKeypairStore, backup.PageBackupEditKey, WatoMo
 
 
 
+@mode_registry.register
 class ModeBackupUploadKey(SiteBackupKeypairStore, backup.PageBackupUploadKey, WatoMode):
     @classmethod
     def name(cls):
@@ -6508,6 +6538,8 @@ class ModeBackupUploadKey(SiteBackupKeypairStore, backup.PageBackupUploadKey, Wa
         super(ModeBackupUploadKey, self)._upload_key(key_file, value)
 
 
+
+@mode_registry.register
 class ModeBackupDownloadKey(SiteBackupKeypairStore, backup.PageBackupDownloadKey, WatoMode):
     @classmethod
     def name(cls):
@@ -6523,6 +6555,8 @@ class ModeBackupDownloadKey(SiteBackupKeypairStore, backup.PageBackupDownloadKey
         return "Check_MK-%s-%s-backup_key-%s.pem" % (backup.hostname(), config.omd_site(), key_id)
 
 
+
+@mode_registry.register
 class ModeBackupRestore(backup.PageBackupRestore, WatoMode):
     @classmethod
     def name(cls):
@@ -6616,6 +6650,7 @@ def get_edited_value(valuespec):
 #   | timeperiods, users, etc.                                             |
 #   '----------------------------------------------------------------------'
 
+@mode_registry.register
 class ModeMain(WatoMode):
     @classmethod
     def name(cls):
@@ -6660,6 +6695,7 @@ class LDAPMode(WatoMode):
 
 
 
+@mode_registry.register
 class ModeLDAPConfig(LDAPMode):
     @classmethod
     def name(cls):
@@ -6753,6 +6789,7 @@ class ModeLDAPConfig(LDAPMode):
 
 
 
+@mode_registry.register
 class ModeEditLDAPConnection(LDAPMode):
     @classmethod
     def name(cls):
@@ -7408,6 +7445,7 @@ class ModeEditLDAPConnection(LDAPMode):
 #   | Editor for global settings in main.mk                                |
 #   '----------------------------------------------------------------------'
 
+@mode_registry.register
 class ModeEditGlobals(GlobalSettingsMode):
     @classmethod
     def name(cls):
@@ -7487,6 +7525,7 @@ class ModeEditGlobals(GlobalSettingsMode):
 
 
 
+@mode_registry.register
 class ModeEditGlobalSetting(EditGlobalSettingMode):
     @classmethod
     def name(cls):
@@ -7515,6 +7554,7 @@ class ModeEditGlobalSetting(EditGlobalSettingMode):
 
 
 
+@mode_registry.register
 class ModeEditSiteGlobalSetting(EditGlobalSettingMode):
     @classmethod
     def name(cls):
@@ -7877,6 +7917,7 @@ class NotificationsMode(EventsMode):
 
 
 
+@mode_registry.register
 class ModeNotifications(NotificationsMode):
     @classmethod
     def name(cls):
@@ -8277,6 +8318,7 @@ class UserNotificationsMode(NotificationsMode):
 
 
 
+@mode_registry.register
 class ModeUserNotifications(UserNotificationsMode):
     @classmethod
     def name(cls):
@@ -8293,6 +8335,7 @@ class ModeUserNotifications(UserNotificationsMode):
 
 
 
+@mode_registry.register
 class ModePersonalUserNotifications(UserNotificationsMode):
     @classmethod
     def name(cls):
@@ -8730,6 +8773,7 @@ class EditNotificationRuleMode(NotificationsMode):
 
 
 
+@mode_registry.register
 class ModeEditNotificationRule(EditNotificationRuleMode):
     @classmethod
     def name(cls):
@@ -8754,7 +8798,7 @@ class ModeEditNotificationRule(EditNotificationRuleMode):
 
 
 
-
+@mode_registry.register
 class ModeEditPersonalNotificationRule(EditNotificationRuleMode):
     @classmethod
     def name(cls):
@@ -8814,6 +8858,7 @@ class ModeEditPersonalNotificationRule(EditNotificationRuleMode):
 #   | Modes for managing Nagios' timeperiod definitions.                   |
 #   '----------------------------------------------------------------------'
 
+@mode_registry.register
 class ModeTimeperiods(WatoMode):
     @classmethod
     def name(cls):
@@ -8966,6 +9011,7 @@ class MultipleTimeRanges(ValueSpec):
 # be used to generate timeperiod exceptions etc. and then finally
 # open the edit_timeperiod page to create a new timeperiod using
 # these information
+@mode_registry.register
 class ModeTimeperiodImportICal(WatoMode):
     @classmethod
     def name(cls):
@@ -9227,6 +9273,7 @@ class ModeTimeperiodImportICal(WatoMode):
 
 
 
+@mode_registry.register
 class ModeEditTimeperiod(WatoMode):
     @classmethod
     def name(cls):
@@ -9511,7 +9558,7 @@ class ModeEditTimeperiod(WatoMode):
 #   '----------------------------------------------------------------------'
 
 
-
+@mode_registry.register
 class ModeEditSiteGlobals(ModeSites, GlobalSettingsMode):
     @classmethod
     def name(cls):
@@ -9792,6 +9839,7 @@ class ModeAutomation(WatoWebApiMode):
 #   | Mode for managing users and contacts.                                |
 #   '----------------------------------------------------------------------'
 
+@mode_registry.register
 class ModeUsers(WatoMode):
     @classmethod
     def name(cls):
@@ -10118,6 +10166,7 @@ class ModeUsers(WatoMode):
 # TODO: Create separate ModeCreateUser()
 # TODO: Move CME specific stuff to CME related class
 # TODO: Refactor action / page to use less hand crafted logic (valuespecs instead?)
+@mode_registry.register
 class ModeEditUser(WatoMode):
     @classmethod
     def name(cls):
@@ -10738,6 +10787,7 @@ class RoleManagement(object):
 
 
 
+@mode_registry.register
 class ModeRoles(RoleManagement, WatoMode):
     @classmethod
     def name(cls):
@@ -10852,6 +10902,7 @@ class ModeRoles(RoleManagement, WatoMode):
 
 
 
+@mode_registry.register
 class ModeEditRole(RoleManagement, WatoMode):
     @classmethod
     def name(cls):
@@ -11041,6 +11092,7 @@ class ModeEditRole(RoleManagement, WatoMode):
 
 
 
+@mode_registry.register
 class ModeRoleMatrix(WatoMode):
     @classmethod
     def name(cls):
@@ -11119,6 +11171,7 @@ class ModeRoleMatrix(WatoMode):
 #   | assigned to hosts and that is the basis of the rules.                |
 #   '----------------------------------------------------------------------'
 
+@mode_registry.register
 class ModeHostTags(WatoMode, watolib.HosttagsConfiguration):
     @classmethod
     def name(cls):
@@ -11374,6 +11427,7 @@ class ModeEditHosttagConfiguration(WatoMode):
 
 
 
+@mode_registry.register
 class ModeEditAuxtag(ModeEditHosttagConfiguration):
     @classmethod
     def name(cls):
@@ -11489,6 +11543,7 @@ class ModeEditAuxtag(ModeEditHosttagConfiguration):
 
 
 
+@mode_registry.register
 class ModeEditHosttagGroup(ModeEditHosttagConfiguration):
     @classmethod
     def name(cls):
@@ -11958,6 +12013,7 @@ def change_host_tags_in_rules(folder, operations, mode):
 #   | from main.mk.                                                        |
 #   '----------------------------------------------------------------------'
 
+@mode_registry.register
 class ModeRuleEditor(WatoMode):
     @classmethod
     def name(cls):
@@ -12208,6 +12264,7 @@ class RulesetMode(WatoMode):
 
 
 
+@mode_registry.register
 class ModeRulesets(RulesetMode):
     @classmethod
     def name(cls):
@@ -12249,6 +12306,7 @@ class ModeRulesets(RulesetMode):
 
 
 
+@mode_registry.register
 class ModeStaticChecksRulesets(RulesetMode):
     @classmethod
     def name(cls):
@@ -12296,6 +12354,7 @@ def rule_search_button(search_options=None, mode="rulesets"):
     delvars=["filled_in"]), "search", hot=is_searching)
 
 
+@mode_registry.register
 class ModeEditRuleset(WatoMode):
     @classmethod
     def name(cls):
@@ -12913,6 +12972,7 @@ class ModeEditRuleset(WatoMode):
 
 
 
+@mode_registry.register
 class ModeRuleSearch(WatoMode):
     @classmethod
     def name(cls):
@@ -13493,6 +13553,7 @@ class EditRuleMode(WatoMode):
 
 
 
+@mode_registry.register
 class ModeEditRule(EditRuleMode):
     @classmethod
     def name(cls):
@@ -13511,6 +13572,7 @@ class ModeEditRule(EditRuleMode):
 
 
 
+@mode_registry.register
 class ModeCloneRule(EditRuleMode):
     @classmethod
     def name(cls):
@@ -13543,6 +13605,7 @@ class ModeCloneRule(EditRuleMode):
 
 
 
+@mode_registry.register
 class ModeNewRule(EditRuleMode):
     @classmethod
     def name(cls):
@@ -14353,6 +14416,7 @@ def need_to_create_sample_config():
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
+@mode_registry.register
 class ModePatternEditor(WatoMode):
     @classmethod
     def name(cls):
@@ -14769,6 +14833,8 @@ class ModeEditCustomAttr(WatoMode):
         html.end_form()
 
 
+
+@mode_registry.register
 class ModeEditCustomUserAttr(ModeEditCustomAttr):
     @classmethod
     def name(cls):
@@ -14829,6 +14895,7 @@ class ModeEditCustomUserAttr(ModeEditCustomAttr):
                                             ("mode", "user_attrs")]), "back")
 
 
+@mode_registry.register
 class ModeEditCustomHostAttr(ModeEditCustomAttr):
     @classmethod
     def name(cls):
@@ -14948,6 +15015,7 @@ class ModeCustomAttrs(WatoMode):
         table.end()
 
 
+@mode_registry.register
 class ModeCustomUserAttrs(ModeCustomAttrs):
     @classmethod
     def name(cls):
@@ -14973,6 +15041,7 @@ class ModeCustomUserAttrs(ModeCustomAttrs):
         html.context_button(_("New attribute"), watolib.folder_preserving_link([("mode", "edit_user_attr")]), "new")
 
 
+@mode_registry.register
 class ModeCustomHostAttrs(ModeCustomAttrs):
     @classmethod
     def name(cls):
@@ -15014,6 +15083,7 @@ class ModeCustomHostAttrs(ModeCustomAttrs):
 #   | Catalog of check plugins                                             |
 #   '----------------------------------------------------------------------'
 
+@mode_registry.register
 class ModeCheckPlugins(WatoMode):
     @classmethod
     def name(cls):
@@ -15286,6 +15356,7 @@ class ModeCheckPlugins(WatoMode):
 
 
 
+@mode_registry.register
 class ModeCheckManPage(WatoMode):
     @classmethod
     def name(cls):
@@ -15420,6 +15491,7 @@ class ModeCheckManPage(WatoMode):
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
+@mode_registry.register
 class ModeIcons(WatoMode):
     @classmethod
     def name(cls):
@@ -15573,6 +15645,7 @@ class ModeIcons(WatoMode):
 #   | Simple download page for the builtin agents and plugins              |
 #   '----------------------------------------------------------------------'
 
+@mode_registry.register
 class ModeDownloadAgents(WatoMode):
     @classmethod
     def name(cls):
@@ -15723,6 +15796,7 @@ class ModeDownloadAgents(WatoMode):
 #   | checks and tells the user what could be improved.                    |
 #   '----------------------------------------------------------------------'
 
+@mode_registry.register
 class ModeAnalyzeConfig(WatoMode):
     _ack_path = cmk.paths.var_dir + "/acknowledged_bp_tests.mk"
 
@@ -16224,6 +16298,7 @@ def save_network_scan_result(folder, result):
 #   | WATO can be set into read only mode manually.                        |
 #   '----------------------------------------------------------------------'
 
+@mode_registry.register
 class ModeManageReadOnly(WatoMode):
     @classmethod
     def name(cls):
@@ -16681,18 +16756,6 @@ def some_host_hasnt_set(folder, attrname):
 #   | Prepare plugin-datastructures and load WATO plugins                  |
 #   '----------------------------------------------------------------------'
 
-class ModeRegistry(cmk.gui.plugin_registry.ClassRegistry):
-    def plugin_base_class(self):
-        return WatoMode
-
-
-    def register(self, cls):
-        self._entries[cls.name()] = cls
-
-
-
-mode_registry = ModeRegistry()
-
 modes = {}
 # TODO: Drop this and probably replace with a hook at button rendering?
 extra_buttons = []
@@ -17003,10 +17066,6 @@ def load_plugins(force):
          [ "admin", "user" ])
 
     utils.load_web_plugins("wato", globals())
-
-    # TODO: Needs to be done after plugin loading. Temporarily needed till we have
-    # changed the registry to explicit registration in the next days
-    mode_registry.load_plugins()
 
     if modes:
         raise MKGeneralException(_("Deprecated WATO modes found: %r. "

@@ -40,11 +40,13 @@ class MasterControlSnapin(SidebarSnapin):
         return "master_control"
 
 
-    def title(self):
+    @classmethod
+    def title(cls):
         return _("Master Control")
 
 
-    def description(self):
+    @classmethod
+    def description(cls):
         return _("Buttons for switching globally states such as enabling "
                  "checks and notifications")
 
@@ -132,7 +134,9 @@ class MasterControlSnapin(SidebarSnapin):
                 if not config.is_single_local_site():
                     html.end_foldable_container()
 
-    def allowed_roles(self):
+
+    @classmethod
+    def allowed_roles(cls):
         return [ "admin" ]
 
 

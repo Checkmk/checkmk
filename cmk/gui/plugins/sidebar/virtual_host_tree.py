@@ -75,11 +75,13 @@ class VirtualHostTree(SidebarSnapin):
         })
 
 
-    def title(self):
+    @classmethod
+    def title(cls):
         return _("Virtual Host Tree")
 
 
-    def description(self):
+    @classmethod
+    def description(cls):
         return _("This snapin shows tree views of your hosts based on their tag "
                  "classifications. You can configure which tags to use in your "
                  "global settings of Multisite.")
@@ -503,11 +505,13 @@ function virtual_host_tree_enter(path)
         html.write("OK")
 
 
-    def refresh_regularly(self):
+    @classmethod
+    def refresh_regularly(cls):
         return True
 
 
-    def allowed_roles(self):
+    @classmethod
+    def allowed_roles(cls):
         return [ "admin", "user", "guest" ]
 
 

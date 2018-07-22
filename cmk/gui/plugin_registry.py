@@ -26,26 +26,26 @@
 
 import abc
 
-# TODO: We decided to change this plugin registry from automatically finding
-# it's childs to explicit registration.
-# TODO: In the moment we have this, we can drop the auto_register stuff.
-# TODO: Think about the different registry types. For which cases do we need the
-# object registry for which the class registry? Does it make sense to consolidate
-# both?
+# TODO: Refactor all plugins to one way of telling the registry it's name.
+#       for example let all use a static/class method .name().
+#       We could standardize this by making all plugin classes inherit
+#       from a plugin base class instead of "object".
+# TODO: _register should always validate that the given plugin class is
+# based on plugin_base_class
 
-class Registry(object):
+class ClassRegistry(object):
     """The management object for all available plugins of a component.
 
     The snapins are loaded by importing cmk.gui.plugins.[component]. These plugins
     contain subclasses of the cmk.gui.plugins.PluginBase (e.g. SidebarSnpain) class.
 
     Entries are registered with this registry using either the register_plugin()
-    method or the Registry.register() decorator.
+    method or the ClassRegistry.register() decorator.
     """
     __metaclass__ = abc.ABCMeta
 
     def __init__(self):
-        super(Registry, self).__init__()
+        super(ClassRegistry, self).__init__()
         self._entries = {}
 
 
@@ -55,14 +55,9 @@ class Registry(object):
         raise NotImplementedError()
 
 
-    @abc.abstractmethod
-    def _instanciate(self, cls):
-        raise NotImplementedError()
-
-
     def register(self, plugin_class):
         """Decorator to register a class with the registry"""
-        self._register(self._instanciate(plugin_class))
+        self._register(plugin_class)
         return plugin_class
 
 
@@ -70,7 +65,7 @@ class Registry(object):
         """Method for registering a plugin with the registry.
 
         Result is equal to use the register() decorator"""
-        self._register(self._instanciate(plugin_class))
+        self._register(plugin_class)
 
 
     @abc.abstractmethod
@@ -104,15 +99,3 @@ class Registry(object):
 
     def get(self, key, deflt=None):
         return self._entries.get(key, deflt)
-
-
-
-class ClassRegistry(Registry):
-    def _instanciate(self, cls):
-        return cls
-
-
-
-class ObjectRegistry(Registry):
-    def _instanciate(self, cls):
-        return cls()

@@ -31,7 +31,8 @@ from . import UserAttribute, user_attribute_registry
 
 @user_attribute_registry.register
 class ForceAuthUserUserAttribute(UserAttribute):
-    def name(self):
+    @classmethod
+    def name(cls):
         return "force_authuser"
 
 
@@ -53,7 +54,8 @@ class ForceAuthUserUserAttribute(UserAttribute):
 # TODO: Remove this with 1.5.0/1.6.0
 @user_attribute_registry.register
 class ForceAuthUserWebserviceUserAttribute(UserAttribute):
-    def name(self):
+    @classmethod
+    def name(cls):
         return "force_authuser_webservice"
 
 
@@ -75,7 +77,8 @@ class ForceAuthUserWebserviceUserAttribute(UserAttribute):
 
 @user_attribute_registry.register
 class DisableNotificationsUserAttribute(UserAttribute):
-    def name(self):
+    @classmethod
+    def name(cls):
         return "disable_notifications"
 
 
@@ -115,7 +118,8 @@ class DisableNotificationsUserAttribute(UserAttribute):
 
 @user_attribute_registry.register
 class StartURLUserAttribute(UserAttribute):
-    def name(self):
+    @classmethod
+    def name(cls):
         return "start_url"
 
 

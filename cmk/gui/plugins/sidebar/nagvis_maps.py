@@ -37,11 +37,13 @@ class NagVisMaps(SidebarSnapin):
         return "nagvis_maps"
 
 
-    def title(self):
+    @classmethod
+    def title(cls):
         return _("NagVis Maps")
 
 
-    def description(self):
+    @classmethod
+    def description(cls):
         return _("List of available NagVis maps. This only works with NagVis 1.5 and above. ")
 
 
@@ -49,7 +51,8 @@ class NagVisMaps(SidebarSnapin):
         return "%snagvis/server/core/ajax_handler.php?mod=Multisite&act=getMaps" % (config.url_prefix())
 
 
-    def allowed_roles(self):
+    @classmethod
+    def allowed_roles(cls):
         return [ "admin", "user", "guest" ]
 
 
@@ -75,5 +78,6 @@ div.stated {
 }
 """
 
-    def refresh_regularly(self):
+    @classmethod
+    def refresh_regularly(cls):
         return True

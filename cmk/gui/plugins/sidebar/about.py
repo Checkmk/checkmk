@@ -37,11 +37,13 @@ class About(SidebarSnapin):
         return "about"
 
 
-    def title(self):
+    @classmethod
+    def title(cls):
         return _("About Check_MK")
 
 
-    def description(self):
+    @classmethod
+    def description(cls):
         return _("Version information and Links to Documentation, "
                  "Homepage and Download of Check_MK")
 
@@ -55,5 +57,7 @@ class About(SidebarSnapin):
         bulletlink("Mathias Kettner",    "https://mathias-kettner.com")
         html.close_ul()
 
-    def allowed_roles(self):
+
+    @classmethod
+    def allowed_roles(cls):
         return [ "admin", "user", "guest" ]

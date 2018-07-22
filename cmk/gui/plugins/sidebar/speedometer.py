@@ -39,11 +39,13 @@ class Speedometer(SidebarSnapin):
         return "speedometer"
 
 
-    def title(self):
+    @classmethod
+    def title(cls):
         return _("Service Speed-O-Meter")
 
 
-    def description(self):
+    @classmethod
+    def description(cls):
         return _("A gadget that shows your current service check rate in relation to "
                  "the scheduled check rate. If the Speed-O-Meter shows a speed "
                  "of 100 percent, all service checks are being executed in exactly "
@@ -165,7 +167,8 @@ speedometer_show_speed(0, 0, 0);
 """)
 
 
-    def allowed_roles(self):
+    @classmethod
+    def allowed_roles(cls):
         return [ "admin" ]
 
 

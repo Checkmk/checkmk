@@ -85,7 +85,14 @@ def page_crashed(what):
         details = {}
 
     if what == "gui":
-        html.show_error("<b>%s:</b> %s" % (_("Internal error"), sys.exc_info()[1]))
+        # Unify different string types from exception messages to a unicode string
+        exc_value = sys.exc_info()[1]
+        try:
+            exc_txt = unicode(exc_value)
+        except UnicodeDecodeError:
+            exc_txt = str(exc_value).decode("utf-8")
+
+        html.show_error("<b>%s:</b> %s" % (_("Internal error"), exc_txt))
         html.p(_("An internal error occured while processing your request. "
                  "You can report this issue to the Check_MK team to help "
                  "fixing this issue. Please use the form below for reporting."))

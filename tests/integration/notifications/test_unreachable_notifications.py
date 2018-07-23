@@ -135,13 +135,13 @@ class HistoryLog(object):
         return fobj
 
 
-    def check_logged(self, match_for, timeout=5):
+    def check_logged(self, match_for, timeout=10):
         if not self._check_for_line(match_for, timeout):
             raise Exception("Did not find %r in %s after %d seconds" %
                                 (match_for, self._log_path(), timeout))
 
 
-    def check_not_logged(self, match_for, timeout=5):
+    def check_not_logged(self, match_for, timeout=10):
         if self._check_for_line(match_for, timeout):
             raise Exception("Found %r in %s after %d seconds" %
                                 (match_for, self._log_path(), timeout))

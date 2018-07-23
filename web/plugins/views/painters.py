@@ -1059,12 +1059,12 @@ def paint_time_graph_cmk(row, cell, override_graph_render_options=None):
 
     graph_render_options = painter_params["graph_render_options"]
 
+    if override_graph_render_options != None:
+        graph_render_options.update(override_graph_render_options)
+
     options = painter_options.get_without_default("graph_render_options")
     if options != None:
         graph_render_options.update(options)
-
-    if override_graph_render_options != None:
-        graph_render_options.update(override_graph_render_options)
 
     graph_data_range = {}
 

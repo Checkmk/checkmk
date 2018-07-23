@@ -1,0 +1,11 @@
+Title: Preview graphs of "Service Graphs with Timerange Previews" painter can now be overridden
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cee
+Version: 1.5.0b10
+Date: 1532334499
+Class: fix
+
+The option "show previews" of the painter "Service Graphs with Timerange Previews" could be
+disabled using the painter and display options of a view, but had no effect.

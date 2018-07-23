@@ -2812,6 +2812,25 @@ hy
         return "images/icons/%s.png" % icon_name
 
 
+    def _detect_themed_image_path(self, img_path):
+        """Detect whether or not the original file or a themed image should be loaded by the client
+
+        Priority:
+        1. In case a theme is active: themes/[img_path] in site local hierarchy
+        2. In case a theme is active: themes/[img_path] in standard hierarchy
+        3. [img_path] in site local hierarchy
+        4. [img_path] in standard hierarchy
+        """
+
+        if self._theme and self._theme != "classic":
+            rel_path = "share/check_mk/web/htdocs/themes/%s/%s" % (self._theme, img_path)
+            if os.path.exists(cmk.paths.omd_root+"/"+rel_path) or os.path.exists(cmk.paths.omd_root+"/local/"+rel_path):
+                return "themes/%s/%s" % (self._theme, img_path)
+
+        return img_path
+
+
+
     def render_icon_button(self, url, help, icon, id=None, onclick=None,
                            style=None, target=None, cssclass=None, ty="button"):
 
@@ -2821,7 +2840,7 @@ hy
 
         # TODO: Can we clean this up and move all button_*.png to internal_icons/*.png?
         if ty == "button":
-            icon = "images/button_" + icon + ".png"
+            icon = self._detect_themed_image_path("images/button_" + icon + ".png")
 
         icon = HTML(self.render_icon(icon, cssclass="iconbutton"))
 

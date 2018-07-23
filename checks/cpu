@@ -47,7 +47,7 @@ def inventory_cpu_load(info):
 
 def check_cpu_load(item, params, info):
     if not info:
-        return
+        return None
 
     if len(info[0]) >= 6:
         # There have been broken AIX agents for a long time which produced data like follows.
@@ -94,7 +94,7 @@ threads_default_levels = (2000, 4000)
 
 def inventory_cpu_threads(info):
     if len(info) == 1 and len(info[0]) >= 5:
-        return [(None, "", "threads_default_levels")]
+        return [(None, "threads_default_levels")]
 
 def check_cpu_threads(item, params, info):
     try:

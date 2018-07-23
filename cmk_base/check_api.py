@@ -96,7 +96,6 @@ from cmk.exceptions import MKGeneralException
 # with an underscore. These names will be skipped when loading into the
 # check context.
 import cmk_base.utils as _utils
-import cmk_base.console as _console
 import cmk_base.config as _config
 import cmk.defines as _defines
 import cmk_base.snmp_utils as _snmp_utils
@@ -130,7 +129,8 @@ import socket
 import sys
 import os
 import time
-import pprint
+# NOTE: We do not use pprint in this module, but it is part of the check API.
+import pprint # pylint: disable=unused-import
 
 from cmk.regex import regex
 import cmk.render as render

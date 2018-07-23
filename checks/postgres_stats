@@ -107,6 +107,7 @@ def check_postgres_stats(item, params, parsed):
             if last_ts is None:
                 set_item_state(key, now)
                 yield 0, infotext
+                return
 
             age = now - last_ts
             warn, crit = params["never_analyze_vacuum"]

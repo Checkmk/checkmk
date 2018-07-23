@@ -492,7 +492,7 @@ class FilterServiceState(Filter):
 
     def display(self):
         html.begin_checkbox_group()
-        html.hidden_field(self.prefix + "filled", "1", add_var=True)
+        html.hidden_field(self.prefix + "_filled", "1", add_var=True)
         for var, text in [(self.prefix + "st0", _("OK")), (self.prefix + "st1", _("WARN")), \
                           (self.prefix + "st2", _("CRIT")), (self.prefix + "st3", _("UNKNOWN")),
                           (self.prefix + "stp", _("PEND"))]:
@@ -500,7 +500,7 @@ class FilterServiceState(Filter):
         html.end_checkbox_group()
 
     def _filter_used(self):
-        return html.has_var(self.prefix + "_filled") or html.has_var_prefix(self.prefix + "st")
+        return any([ html.has_var(v) for v in self.htmlvars ])
 
     def filter(self, infoname):
         headers = []
@@ -548,7 +548,7 @@ class FilterHostState(Filter):
         html.end_checkbox_group()
 
     def _filter_used(self):
-        return html.has_var("hoststate_filled") or html.has_var_prefix("hst")
+        return any([ html.has_var(v) for v in self.htmlvars ])
 
     def filter(self, infoname):
         headers = []

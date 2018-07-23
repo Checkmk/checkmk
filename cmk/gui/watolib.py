@@ -524,15 +524,16 @@ class ConfigDomainCACertificates(ConfigDomain):
 
     def _get_system_wide_trusted_ca_certificates(self):
         trusted_cas, errors = set([]), []
-        for cert_path in self.system_wide_trusted_ca_search_paths:
-            if not os.path.isdir(cert_path):
+        for p in self.system_wide_trusted_ca_search_paths:
+            cert_path = Path(p)
+
+            if not cert_path.is_dir():
                 continue
 
-            for entry in os.listdir(cert_path):
-                cert_file_path = os.path.join(cert_path, entry)
+            for entry in cert_path.iterdir():
+                cert_file_path = entry.absolute()
                 try:
-                    ext = os.path.splitext(entry)[-1]
-                    if ext not in [ ".pem", ".crt" ]:
+                    if entry.suffix not in [ ".pem", ".crt" ]:
                         continue
 
                     trusted_cas.update(self._get_certificates_from_file(cert_file_path))
@@ -547,7 +548,7 @@ class ConfigDomainCACertificates(ConfigDomain):
                     # We know a permission problem with some files that are created by default on
                     # some distros. We simply ignore these files because we assume that they are
                     # not needed.
-                    if cert_file_path == "/etc/ssl/certs/localhost.crt":
+                    if cert_file_path == Path("/etc/ssl/certs/localhost.crt"):
                         continue
 
                     errors.append("Failed to add certificate '%s' to trusted CA certificates. "
@@ -560,7 +561,7 @@ class ConfigDomainCACertificates(ConfigDomain):
 
     def _get_certificates_from_file(self, path):
         try:
-            return [ match.group(0) for match in self._PEM_RE.finditer(open(path).read()) ]
+            return [ match.group(0) for match in self._PEM_RE.finditer(open("%s" % path).read()) ]
         except IOError, e:
             if e.errno == 2: # No such file or directory
                 # Silently ignore e.g. dangling symlinks

@@ -353,3 +353,21 @@ class html_mod_python(htmllib.html):
             return "images/icon_%s.png" % icon_name
 
         return "images/icons/%s.png" % icon_name
+
+
+    def detect_themed_image_path(self, img_path):
+        """Detect whether or not the original file or a themed image should be loaded by the client
+
+        Priority:
+        1. In case a theme is active: themes/[img_path] in site local hierarchy
+        2. In case a theme is active: themes/[img_path] in standard hierarchy
+        3. [img_path] in site local hierarchy
+        4. [img_path] in standard hierarchy
+        """
+
+        if self._theme and self._theme != "classic":
+            rel_path = "share/check_mk/web/htdocs/themes/%s/%s" % (self._theme, img_path)
+            if os.path.exists(cmk.paths.omd_root+"/"+rel_path) or os.path.exists(cmk.paths.omd_root+"/local/"+rel_path):
+                return "themes/%s/%s" % (self._theme, img_path)
+
+        return img_path

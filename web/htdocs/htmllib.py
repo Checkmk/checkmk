@@ -2800,6 +2800,10 @@ class html(HTMLGenerator, RequestHandler):
         raise NotImplementedError()
 
 
+    def detect_themed_image_path(self, img_path):
+        raise NotImplementedError()
+
+
     # FIXME: Change order of input arguments in one: icon and render_icon!!
     def icon(self, help, icon, **kwargs):
 
@@ -2841,7 +2845,7 @@ class html(HTMLGenerator, RequestHandler):
 
         # TODO: Can we clean this up and move all button_*.png to internal_icons/*.png?
         if ty == "button":
-            icon = "images/button_" + icon + ".png"
+            icon = self.detect_themed_image_path("images/button_" + icon + ".png")
 
         icon = HTML(self.render_icon(icon, cssclass="iconbutton"))
 

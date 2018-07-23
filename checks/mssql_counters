@@ -536,12 +536,15 @@ def check_mssql_file_sizes(item, params, parsed):
         if node_name:
             node_info = "[%s] " % node_name
 
-        for counters_key, key, title in [
-            ("data_file(s)_size_(kb)",     "data_files",     "Data Files"),
-            ("log_file(s)_size_(kb)",      "log_files",      "Log Files total"),
-            ("log_file(s)_used_size_(kb)", "log_files_used", "Log files Used"),
+        data_files = counters.get("data_file(s)_size_(kb)")
+        log_files_size = counters.get("log_file(s)_size_(kb)")
+        log_files_used = counters.get("log_file(s)_used_size_(kb)")
+
+        for val_bytes, key, title in [
+            (data_files,     "data_files",     "Data files"),
+            (log_files_size, "log_files",      "Log files total"),
+            (log_files_used, "log_files_used", "Log files used"),
         ]:
-            val_bytes = counters.get(counters_key)
             if val_bytes is None:
                 continue
 
@@ -561,6 +564,24 @@ def check_mssql_file_sizes(item, params, parsed):
                             get_bytes_human_readable(crit))
 
             yield state, infotext, [(key, val_bytes, warn, crit)]
+
+        try:
+            log_files_used_perc = 100.0 * log_files_used / log_files_size
+        except (TypeError, ZeroDivisionError):
+            continue
+
+        infotext = get_percent_human_readable(log_files_used_perc)
+        state = 0
+        warn, crit = params.get("log_files_used_perc", (None, None))
+        if crit is not None and log_files_used_perc >= crit:
+            state = 2
+        elif warn is not None and log_files_used_perc >= warn:
+            state = 1
+        if state:
+            infotext += " (warn/crit at %s/%s)" % (
+                        get_bytes_human_readable(warn),
+                        get_bytes_human_readable(crit))
+        yield state, infotext
 
 
 check_info['mssql_counters.file_sizes'] = {

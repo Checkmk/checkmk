@@ -1,0 +1,10 @@
+Title: mssql_counters.file_sizes, mssql_tablespaces: Added upper percentage thresholds
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1532328002
+Class: feature
+
+

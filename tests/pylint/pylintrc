@@ -18,14 +18,8 @@ disable=
     consider-using-enumerate,
     consider-using-ternary,
     duplicate-code,
-    eval-used,
-    exec-used,
-    fixme,
-    global-statement,
-    global-variable-undefined,
     inconsistent-return-statements,
     len-as-condition,
-    line-too-long,
     logging-not-lazy,
     missing-docstring,
     multiple-imports,
@@ -39,7 +33,6 @@ disable=
     reimported,
     relative-import,
     ungrouped-imports,
-    unidiomatic-typecheck,
     unsubscriptable-object,
     unsupported-membership-test,
     unused-argument,
@@ -69,6 +62,15 @@ disable=
     # duplication (introduce new classes, combine methods, etc.)
     attribute-defined-outside-init,
     #---------------------------------------------------------------------------
+    # Enabling this would be very desirable, using type() instead of
+    # isinstance() is a very bad idea most of the time, as it totally ignores
+    # class hierarchies, breaking things in subtle ways.
+    unidiomatic-typecheck,
+    #---------------------------------------------------------------------------
+    # This should really be fixed: Global variables are already a bad idea, but
+    # depending on an implicit protocol to create them is an even worse one.
+    global-variable-undefined,
+    #---------------------------------------------------------------------------
     # We should enable this, at the moment it just means splitting up two
     # gigantic functions.
     too-many-branches,
@@ -87,6 +89,13 @@ disable=
     # a few violations, so we postpone fixing this.
     singleton-comparison,
     #---------------------------------------------------------------------------
+    # Alas, these maintenance/security nightmares are still part of our base
+    # "technology"... :-/ Nevertheless, reducing their usage is a very worthy
+    # goal.
+    eval-used,
+    exec-used,
+    global-statement,
+    #---------------------------------------------------------------------------
     # Enabling these would be nice, but given the current state of affairs
     # (gigantic modules with deeply nested humungous functions/methods), this
     # will be a non-trivial amount of work.
@@ -101,10 +110,15 @@ disable=
     too-many-return-statements,
     too-many-statements,
     #---------------------------------------------------------------------------
+    # Our code is still full of FIXMEs/XXXs/TODOs, perhaps fixing or removing
+    # them might be a good idea some day...
+    fixme,
+    #---------------------------------------------------------------------------
     # The warnigns below will probably fixed by YAPF.
     bad-continuation,
     bad-indentation,
     bad-whitespace,
+    line-too-long,
     #---------------------------------------------------------------------------
     # Enabling the two spelling-related checks increases pylints runtime from
     # 11 min to 40 min, so we better keep those disabled for normal runs.

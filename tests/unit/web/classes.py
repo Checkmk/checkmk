@@ -68,6 +68,10 @@ class HTMLTester(RequestHandlerTester):
         self.written_text += "%s" % text
 
 
+    def detect_themed_image_path(self, img_path):
+        return img_path
+
+
     def context_button_test(obj, title, url, icon=None, hot=False, id_=None, bestof=None, hover_title=None, fkey=None, id_in_best=False):
         obj.begin_context_buttons()
         obj.context_button(title, url, icon=icon, hot=hot, id=id_, bestof=bestof, hover_title=hover_title, fkey=fkey)

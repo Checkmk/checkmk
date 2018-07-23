@@ -1,0 +1,11 @@
+Title: Facelift theme: Icon buttons were not using themed buttons
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 1.5.0b10
+Date: 1532169118
+Class: fix
+
+The facelift theme was using the classic icons for icon buttons instead of
+the icons it should use.

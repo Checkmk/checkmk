@@ -1,0 +1,14 @@
+Title: View "Export as PDF" results in empty PDFs
+Level: 1
+Component: reporting
+Class: fix
+Compatible: compat
+Edition: cee
+State: unknown
+Version: 1.4.0p35
+Date: 1532183686
+
+When showing a view that includes a graph and clicking on one of the
+small graph preview images (the ones for choosing another time range)
+and then using "Export as PDF" after that, this resulted in an empty
+PDF.

@@ -685,6 +685,7 @@ class Site(object):
             while not self.is_running():
                 i += 1
                 if i > 10:
+                    self.execute(["/usr/bin/omd", "status"]).wait()
                     raise Exception("Could not start site %s" % self.id)
                 print("The site %s is not running yet, sleeping... (round %d)" % (self.id, i))
                 sys.stdout.flush()

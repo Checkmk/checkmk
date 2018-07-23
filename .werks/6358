@@ -1,0 +1,28 @@
+Title: Fixed stale services on cluster nodes
+Level: 2
+Component: core
+Compatible: compat
+Edition: cre
+Version: 1.5.0b10
+Date: 1532171683
+Class: fix
+
+When using Check_MK clusters it could happen that some of the services
+on a node went stale and remained in this state. In this situation you
+can find multiple messages in the cmc.log when using the CEE:
+
+2018-07-21 12:47:52 [5] [Check_MK helper 4644] started, commandline: /omd/sites/beta/bin/cmk --keepalive
+2018-07-21 12:48:42 [2] [Check_MK helper 4644] ignoring check result for lxclu1 / Filesystem /boot: no such service
+2018-07-21 12:48:43 [4] [Check_MK helper 4644] restarting dead helper
+2018-07-21 12:48:43 [5] [Check_MK helper 4644] exited normally
+
+The issue was triggered because the cluster nodes reported service check
+results for services which are assigned to the cluster using the "Clustered
+services" rule set.
+
+The problem could only happen when services of one check type were assigned to
+the cluster and the cluster node. For example in case you have at least one
+Filesystem service assigned to the node and at least one Filesystem service
+assigned to the cluster.
+
+This regression was introduced with 1.5.0b7 (Werk #5814).

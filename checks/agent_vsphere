@@ -75,9 +75,9 @@ def agent_vsphere_arguments(params, hostname, ipaddress):
         args += ' --host_pwr_display %s' % params.get("host_pwr_display")
 
     if "ssl" in params:
-        if params["ssl"] == False:
+        if params["ssl"] is False:
             args += ' --no-cert-check ' + quote_shell_string(ipaddress)
-        elif params["ssl"] == True:
+        elif params["ssl"] is True:
             args += " " + quote_shell_string(hostname)
         else:
             args += " " + quote_shell_string(params["ssl"])

@@ -69,7 +69,7 @@ def inventory_esx_vsphere_objects(info):
 
 
 def check_esx_vsphere_objects(item, params, info):
-    if params == None:
+    if params is None:
         params = {}
 
     for line in info:

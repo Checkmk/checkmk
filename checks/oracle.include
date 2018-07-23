@@ -71,7 +71,7 @@ def oracle_handle_legacy_ora_errors(line):
 def oracle_handle_ora_errors_discovery(info):
     for line in info:
         err = oracle_handle_ora_errors(line)
-        if err == False:
+        if err is False:
             continue
         elif isinstance(err, tuple):
             raise MKGeneralException(err[1])

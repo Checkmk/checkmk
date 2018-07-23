@@ -49,7 +49,7 @@ def check_oracle_logswitches(item, params, info):
     for line in info:
         if line[0] == item:
             err = oracle_handle_ora_errors(line)
-            if err == False:
+            if err is False:
                 continue
             elif isinstance(err, tuple):
                 return err

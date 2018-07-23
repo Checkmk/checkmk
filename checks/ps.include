@@ -93,7 +93,7 @@ def inventory_ps_common(invdata, invrules, parsed):
             # First entry in line is the node name or None for non-clusters
             process_line = line[1:]
             matches, grabbed_user = process_matches_for_discovery(process_line, pattern, userspec)
-            if matches == False:
+            if matches is False:
                 continue # skip not matched lines
 
             if len(matches) < num_perc_s:
@@ -387,7 +387,7 @@ def check_ps_common(item, params, parsed, cpu_cores = 1, info_name = "processes"
 
                             elapsed = now - creation_time_unix
                             max_elapsed = max(max_elapsed, elapsed)
-                            if min_elapsed == None:
+                            if min_elapsed is None:
                                 min_elapsed = elapsed
                             else:
                                 min_elapsed = min(min_elapsed, elapsed)
@@ -425,7 +425,7 @@ def check_ps_common(item, params, parsed, cpu_cores = 1, info_name = "processes"
                                 pcpu_text, elapsed_text = process_info[3].split('/')
                                 elapsed = parse_ps_time(elapsed_text)
                                 max_elapsed = max(max_elapsed, elapsed)
-                                if min_elapsed == None:
+                                if min_elapsed is None:
                                     min_elapsed = elapsed
                                 else:
                                     min_elapsed = min(min_elapsed, elapsed)

@@ -46,7 +46,7 @@ def check_synology_disks(item, params, info):
 
     }
 
-    if params == None:
+    if params is None:
         params = {}
 
     for disk, model, status, temperature in info:

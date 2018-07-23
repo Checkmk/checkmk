@@ -163,7 +163,7 @@ def check_fc_port(item, params, info):
     # B A N D W I D T H
     # convert thresholds in percentage into MB/s
     bw_thresh = params.get("bw")
-    if bw_thresh == None: # no levels
+    if bw_thresh is None: # no levels
         warn_bytes, crit_bytes = None, None
     else:
         warn, crit = bw_thresh
@@ -298,7 +298,7 @@ check_info["fc_port"] = {
     'default_levels_variable': 'fc_port_default_levels',
     'snmp_scan_function'     : lambda oid:
             oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.1588.2.1.1") \
-                        and oid(".1.3.6.1.4.1.1588.2.1.1.1.6.2.1.*") == None,
+                        and oid(".1.3.6.1.4.1.1588.2.1.1.1.6.2.1.*") is None,
     'snmp_info'              :  ( ".1.3.6.1.3.94", [
             "1.10.1.2",         # connUnitPortIndex                             # 0
             "1.10.1.3",         # connUnitPortType                              # 1

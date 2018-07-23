@@ -180,7 +180,7 @@ def inventory_windows_services(info):
 
 def check_windows_services(item, params, info):
     # Hack for old manually defined checks:
-    if params == None:
+    if params is None:
         params = factory_settings["services_default_levels"]
 
     # A service may appear more than once (due to clusters).
@@ -210,14 +210,14 @@ def check_windows_services(item, params, info):
     best_desc, best_state, best_info, best_running_on = None, None, None, None
     for running_on, state, start_type, desc in found:
         for t_state, t_start_type, mon_state in params["states"]:
-            if (t_state == None or t_state == state) \
-             and (t_start_type == None or t_start_type == start_type):
+            if (t_state is None or t_state == state) \
+             and (t_start_type is None or t_start_type == start_type):
                 this_state = mon_state
                 break
         else:
             this_state = params["else"]
 
-        if best_state == None or this_state < best_state:
+        if best_state is None or this_state < best_state:
             best_state      = this_state
             best_info       = state, start_type
             best_running_on = running_on
@@ -275,7 +275,7 @@ def check_services_summary(item, params, info):
                 for srv in blacklist:
                     if  re.match(srv,srv_name):
                         match = True
-                if match == False:
+                if match is False:
                     stoplist.append(srv_name)
                 else:
                     num_blacklist += 1

@@ -263,7 +263,7 @@ def check_temperature(reading, params, unique_name, dev_unit="c",
 
 
     # Convert legacy tuple params into new dict
-    if params == None or params == (None, None):
+    if params is None or params == (None, None):
         params = {}
     elif type(params) == tuple:
         params = { "levels" : params }
@@ -401,7 +401,7 @@ def check_temperature_list(sensorlist, params, unique_name):
 
     if type(params) == tuple:
         params = { "levels" : params }
-    elif params == None:
+    elif params is None:
         params = {}
 
     output_unit = params.get("output_unit", "c")

@@ -70,7 +70,7 @@ def check_mkeventd_status(item, params, parsed):
 
     # Ignore down sites. This happens on a regular basis due to restarts
     # of the core. The availability of a site is monitored with 'omd_status'.
-    if status == None:
+    if status is None:
         yield 0, "Currently not running"
         return
 

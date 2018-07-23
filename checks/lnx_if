@@ -146,7 +146,7 @@ def parse_lnx_if(info):
 
             # Compute speed
             speed_text = attr.get("Speed")
-            if speed_text == None:
+            if speed_text is None:
                 ifSpeed = ''
             else:
                 if speed_text == '65535Mb/s': # unknown

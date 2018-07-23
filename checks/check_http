@@ -32,7 +32,7 @@ def _is_certificate_check(settings):
 def _get_family_and_address(settings):
     # Use the address family of the monitored host by default
     family = settings.get("address_family")
-    if family == None:
+    if family is None:
         family = is_ipv6_primary(host_name()) and "ipv6" or "ipv4"
 
     if family == "ipv6":

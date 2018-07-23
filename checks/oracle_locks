@@ -47,7 +47,7 @@ def check_oracle_locks(item, params, info):
         warn, crit = params["levels"]
         if line[0] == item and line[1] != '':
             err = oracle_handle_ora_errors(line)
-            if err == False:
+            if err is False:
                 continue
             elif isinstance(err, tuple):
                 return err

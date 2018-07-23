@@ -269,7 +269,7 @@ def check_brocade_fcport(item, params, parsed):
 
     # B A N D W I D T H
     # convert thresholds in percentage into MB/s
-    if bw_thresh == None: # no levels
+    if bw_thresh is None: # no levels
         warn_bytes, crit_bytes = None, None
     else:
         warn, crit = bw_thresh

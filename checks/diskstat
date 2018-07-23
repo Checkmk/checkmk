@@ -269,7 +269,7 @@ def diskstat_extract_name_info(info):
     phase = 'info'
     node = None
     for line in info:
-        if node == None:
+        if node is None:
             node = line[0]
 
         if line[1] == '[dmsetup_info]':

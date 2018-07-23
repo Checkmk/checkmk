@@ -69,7 +69,7 @@ def check_mail_arguments(params):
             args += [ '--body-limit=%d' % forward['body_limit'] ]
 
         if 'cleanup' in forward:
-            if forward['cleanup'] == True:
+            if forward['cleanup'] is True:
                 args += [ '--cleanup=delete' ]
             else:
                 args += [ '--cleanup=%s' % forward['cleanup'] ]

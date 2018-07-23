@@ -289,7 +289,7 @@ def check_heartbeat_crm_resources(item, target_node, info):
     for name, this_resources in heartbeat_crm_parse_resources(info).items():
         if name == item:
             resources = this_resources
-    if resources == None:
+    if resources is None:
         return
 
     for resource in resources:

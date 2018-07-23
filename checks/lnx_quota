@@ -137,7 +137,7 @@ def check_lnx_quota(item, params, parsed):
         ('user',  '',       'usr', 'users'),
         ('group', 'group_', 'grp', 'groups')
        ]:
-        if params.get(param_key) == True:
+        if params.get(param_key) is True:
             at_least_one_problematic = False
             for user, values in parsed[item][thing].items():
                 for what, (used, soft, hard, grace) in [
@@ -170,7 +170,7 @@ def check_lnx_quota(item, params, parsed):
             if not at_least_one_problematic:
                 yield 0, 'All %s within quota limits' % name
 
-    if params.get('user') == False and params.get('group') == False:
+    if params.get('user') is False and params.get('group') is False:
         yield 0, 'Disabled quota checking'
 
 

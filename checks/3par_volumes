@@ -27,7 +27,7 @@
 
 def inventory_3par_volumes(parsed):
     for entry in parsed.get('members', {}):
-        if not entry['policies']['system'] == True and \
+        if not entry['policies']['system'] is True and \
                 "name" in entry:
             yield ( entry['name'], {} )
 

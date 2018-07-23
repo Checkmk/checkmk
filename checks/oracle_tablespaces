@@ -94,7 +94,7 @@ def parse_oracle_tablespaces(info):
 
         # Check for query errors
         err = oracle_handle_ora_errors(line)
-        if err == False:
+        if err is False:
             continue # ignore ancient agent outputs
         elif isinstance(err, tuple):
             sid = line[0]
@@ -209,7 +209,7 @@ def check_oracle_tablespaces(item, params, parsed):
     # TODO Treatment as in db2 and mssql dbs
     # "ts_status == None" possible?
     tablespace = tablespaces.get((sid, ts_name))
-    if not tablespace or tablespace["status"] == None:
+    if not tablespace or tablespace["status"] is None:
         raise MKCounterWrapped("Login into database failed")
 
     ts_type        = tablespace["type"]

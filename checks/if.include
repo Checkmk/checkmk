@@ -158,7 +158,7 @@ def if_get_traffic_levels(params):
     new_traffic = []
     if 'traffic' in params and type(params['traffic']) != list:
         warn, crit = params['traffic']
-        if warn == None:
+        if warn is None:
             new_traffic.append(('both', ('upper', (None, (None, None)))))
         elif type(warn) == int:
             new_traffic.append(('both', ('upper', ('abs', (warn, crit)))))
@@ -296,7 +296,7 @@ def inventory_if_common(info, has_nodeinfo = False):
         settings_sets.append({})
 
     def port_match(name, what):
-        if what == None:
+        if what is None:
             return True
         for r in what:
             if regex(r).match(name):
@@ -476,7 +476,7 @@ def inventory_if_common(info, has_nodeinfo = False):
 
 
 def _convert_old_if_group_params(params):
-    if params["aggregate"] == True:
+    if params["aggregate"] is True:
         del params["aggregate"]
         params.setdefault("aggregate", {})
         params["aggregate"].setdefault("group_patterns", {})
@@ -900,7 +900,7 @@ def check_if_common_single(item, params, info, force_counter_wrap = False,
                 ( "outerr",    ifOutErrors, err_warn, err_crit, None, None) ]:
 
                 try:
-                    if node == None:
+                    if node is None:
                         rate = get_rate("if.%s.%s" % (name, item), this_time, saveint(counter), onwrap=RAISE)
                         if force_counter_wrap:
                             raise MKCounterWrapped("Forced counter wrap")

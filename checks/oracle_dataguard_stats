@@ -121,7 +121,7 @@ def check_oracle_dataguard_stats(item, params, info):
                 else:
                     perfdata.append((parameter.replace(' ', '_'), seconds))
 
-    if itemfound == True:
+    if itemfound is True:
         return state, infotext, perfdata
 
     # In case of missing information we assume that the login into

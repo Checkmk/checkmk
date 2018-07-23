@@ -95,7 +95,7 @@ def check_mkbackup(job_state):
               ("backup_avgspeed", job_state["bytes_per_second"]) ]
 
     elif job_state["state"] == "finished":
-        if job_state["success"] == False:
+        if job_state["success"] is False:
             yield 2, "Backup failed"
         else:
             yield 0, "Backup completed"

@@ -86,7 +86,7 @@ def inventory_printer_io(info):
                 # Skip sub units where it does not seem to make sense to monitor them
                 if state_val in ( 1,3,5 ):
                     ignore = True
-        if ignore == True:
+        if ignore is True:
             continue
 
         # When no name is set

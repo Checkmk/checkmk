@@ -271,7 +271,7 @@ def inv_dmidecode_parse_generic(node, lines, keyinfo):
                 if type(key) == tuple:
                     key, transform = key
                     value = transform(value)
-                    if value == None:
+                    if value is None:
                         continue
                 node[key] = value
 

@@ -93,7 +93,7 @@ def check_oracle_recovery_status(item, params, info):
             else:
                 offlinecount += 1
 
-    if itemfound == True:
+    if itemfound is True:
         infotext = "%s database" % (database_role.lower())
 
         if oldest_checkpoint_age is None:

@@ -309,7 +309,7 @@ def inventory_varnish(parsed, what, needed_keys):
         for needed_key in needed_keys:
             if needed_key not in parsed[what]:
                 needed_keys_avail = False
-        if needed_keys_avail == True:
+        if needed_keys_avail is True:
             return [ (None, {}) ]
 
 

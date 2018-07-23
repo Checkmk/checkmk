@@ -130,7 +130,7 @@ def inventory_apache_status(info):
     return inv
 
 def check_apache_status(item, params, info):
-    if params == None:
+    if params is None:
         params = {}
 
     if item.endswith(":None"):

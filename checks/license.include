@@ -26,10 +26,10 @@
 
 
 def license_check_levels(have, used, params):
-    if params == None:
+    if params is None:
         warn = have
         crit = have
-    elif params == False:
+    elif params is False:
         warn = None
         crit = None
     elif type(params[0]) == int:

@@ -47,7 +47,7 @@ def check_unitrends_backup(item, _no_params, info):
             # We are finish collection detail informatoinen
             break
 
-        if found == True:
+        if found is True:
             # Collection Backup deatils
             app_type, bid, backup_type, status = line
             details.append("Application Type: %s (%s), %s: %s" % \
@@ -60,7 +60,7 @@ def check_unitrends_backup(item, _no_params, info):
             message = "%s Errors in last 24/h for Application %s (%s) " % \
             ( failures, app_name, sched_desc )
 
-    if found == True:
+    if found is True:
         message += "\n" + "\n".join(details)
         if failures == '0':
             return 0, message

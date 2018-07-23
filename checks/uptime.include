@@ -54,7 +54,7 @@ def check_uptime_seconds(params, uptime_sec):
     infotext = "Up since %s (%dd %02d:%02d:%02d)" % \
                 (since, days, hours, minutes, seconds)
 
-    if params == None: # legacy: support older versions of parameters
+    if params is None: # legacy: support older versions of parameters
         params = {}
 
     if "min" in params:

@@ -336,7 +336,7 @@ def check_levels(value, dsname, params, unit="", factor=1.0, scale=1.0, statemar
     infotexts = []
 
     def scale_value(v):
-        if v == None:
+        if v is None:
             return None
         else:
             return v * factor * scale
@@ -345,7 +345,7 @@ def check_levels(value, dsname, params, unit="", factor=1.0, scale=1.0, statemar
         return ("warn/crit %s %.2f/%.2f %s" % (ty, warn, crit, unit)).strip()
 
     # None or (None, None) -> do not check any levels
-    if params == None or params == (None, None):
+    if params is None or params == (None, None):
         return 0, "", []
 
     # Pair of numbers -> static levels

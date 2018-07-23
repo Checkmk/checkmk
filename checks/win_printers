@@ -68,7 +68,7 @@ def check_win_printers(item, params, info):
 
     if type(params) != dict:
         # Legacy params:
-        if params == None:
+        if params is None:
             warn, crit = None, None
         else:
             warn, crit = params

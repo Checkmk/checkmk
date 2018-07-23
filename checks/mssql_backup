@@ -47,6 +47,18 @@
 # MSSQL_SQL0x msdb 2016-07-11 20:20:07 I
 
 
+factory_settings["mssql_backup_default_levels"] = {
+    "database":             (None, None),
+    "database_diff":        (None, None),
+    "log":                  (None, None),
+    "file_or_filegroup":    (None, None),
+    "file_diff":            (None, None),
+    "partial":              (None, None),
+    "partial_diff":         (None, None),
+    "unspecific":           (None, None),
+}
+
+
 def parse_mssql_backup(info):
 
     def get_backup_type_name(backup_type):
@@ -156,4 +168,5 @@ check_info['mssql_backup'] = {
     'service_description': 'MSSQL %s Backup',
     'has_perfdata':        True,
     'group':               'mssql_backup',
+    'default_levels_variable': 'mssql_backup_default_levels',
 }

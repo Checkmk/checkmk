@@ -1,0 +1,12 @@
+Title: Fixed "host_inventory" exception when using "Has inventory data" filter
+Level: 1
+Component: multisite
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.4.0p35
+Date: 1532351063
+
+When using the filter "Has inventory data" in a host view an exception like
+this could occur: "Internal error: 'host_inventory'"

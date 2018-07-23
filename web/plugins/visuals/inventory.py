@@ -444,6 +444,9 @@ class FilterHasInventory(FilterTristate):
     def __init__(self):
         FilterTristate.__init__(self, "has_inv", _("Has Inventory Data"), "host", "host_inventory")
 
+    def need_inventory(self):
+        return True
+
     def filter(self, infoname):
         return "" # No Livestatus filtering right now
 

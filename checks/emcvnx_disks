@@ -148,7 +148,7 @@ def inventory_emcvnx_disks(parsed):
 def check_emcvnx_disks(item, params, parsed):
     now = time.time()
     perfdata = []
-    if params == None: # convert legacy params
+    if params is None: # convert legacy params
         params = {}
 
     if item not in parsed:

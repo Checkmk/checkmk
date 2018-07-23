@@ -65,7 +65,7 @@ def check_vxvm_objstatus(item, params, info):
                 state = 2
                 text.append("%s: Kernel state is %s(!!)" % (volume, kernel_state))
                 error = True
-            if error == False:
+            if error is False:
                 text = ["%s: OK" % volume]
             messages.append(", ".join(text))
         return(state, ', '.join(messages))

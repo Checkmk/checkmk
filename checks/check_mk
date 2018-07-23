@@ -64,7 +64,7 @@ def check_mk_normalize_network(n):
 
 
 def check_only_from(item, param, info):
-    if param == None:
+    if param is None:
         return (1, "IP access restriction not monitored for this host")
     for line in info:
         if line[0] == "OnlyFrom:":

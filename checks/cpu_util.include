@@ -55,10 +55,10 @@ def cpu_util_core_name(orig, core_counter):
 
 def check_cpu_util(util, params, this_time=None, cores=None):
     # Convert legacy param style to new dict style
-    if this_time == None:
+    if this_time is None:
         this_time = time.time()
 
-    if params == None:
+    if params is None:
         params = {}
     elif type(params) == tuple:
         params = {"levels" : params,}

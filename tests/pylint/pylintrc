@@ -38,7 +38,6 @@ disable=
     redefined-outer-name,
     reimported,
     relative-import,
-    singleton-comparison,
     ungrouped-imports,
     unidiomatic-typecheck,
     unsubscriptable-object,
@@ -83,6 +82,10 @@ disable=
     # a few violations, so we postpone fixing this. When we do it eventually, we
     # probably want to use "include-naming-hint=yes" in the BASIC section.
     invalid-name,
+    #---------------------------------------------------------------------------
+    # Enabling this would be nice, but not crucial. At the moment, we have quite
+    # a few violations, so we postpone fixing this.
+    singleton-comparison,
     #---------------------------------------------------------------------------
     # Enabling these would be nice, but given the current state of affairs
     # (gigantic modules with deeply nested humungous functions/methods), this

@@ -64,7 +64,7 @@ def inventory_nginx_status(info):
     return inv
 
 def check_nginx_status(item, params, info):
-    if params == None:
+    if params is None:
         params = {}
 
     all_data = nginx_status_parse(info)

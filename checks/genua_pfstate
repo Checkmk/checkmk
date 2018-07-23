@@ -65,7 +65,7 @@ def check_genua_pfstate(item, params, info):
         return(3, "Invalid Output from Agent")
 
     warn,crit = params.get("used")
-    if crit == None:
+    if crit is None:
         crit = pfstateMax
 
     state = 0

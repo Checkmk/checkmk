@@ -58,7 +58,7 @@ def inventory_cmciii_lcp_fanunit(zone, direction, info):
     #    return [ ("%s LCP Fanunit %s Average" % (zone, direction), {}) ]
 
 def check_cmciii_lcp_fanunit(item, params, info):
-    if params == None:
+    if params is None:
         params = {}
     _unit_desc, unit_status, _desc, status = info[0][1:4]
     temps = extract_cmciii_lcp_temps(info[0][4:])

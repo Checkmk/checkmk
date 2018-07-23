@@ -56,7 +56,7 @@ def parse_livestatus_status(info):
             parsed[site] = None # Site is marked as down until overwritten later
 
         elif site:
-            if headers == None:
+            if headers is None:
                 headers = line
             else:
                 parsed[site] = dict(zip(headers, line))
@@ -76,7 +76,7 @@ def check_livestatus_status(item, params, parsed):
 
     # Ignore down sites. This happens on a regular basis due to restarts
     # of the core. The availability of a site is monitored with 'omd_status'.
-    if status == None:
+    if status is None:
         yield params["site_stopped"], "Site is currently not running"
         return
 

@@ -53,7 +53,7 @@ def inventory_mq_queues(info):
 def check_mq_queues(item, params, info):
     found = False
     for line in info:
-        if found == True:
+        if found is True:
             size, consumerCount, enqueueCount, dequeueCount = map(int, line)
             msg = ""
             state = 0

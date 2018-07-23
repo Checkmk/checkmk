@@ -272,9 +272,9 @@ def check_ibm_svc_systemstats_cache(item, _no_params, info):
         if stat_name == "write_cache_pc":
             write_cache_pc = int(stat_current)
 
-    if total_cache_pc == None:
+    if total_cache_pc is None:
         return 3, "value total_cache_pc not found in agent output"
-    if write_cache_pc == None:
+    if write_cache_pc is None:
         return 3, "value write_cache_pc not found in agent output"
 
     perfdata = [ ("write_cache_pc", write_cache_pc, None, None, 0, 100),

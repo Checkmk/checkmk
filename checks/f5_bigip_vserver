@@ -71,7 +71,7 @@ def inventory_f5_bigip_vserver(parsed):
 
 def check_f5_bigip_vserver(item, params, parsed):
     # Need compatibility to version with _no_params
-    if params == None:
+    if params is None:
         params = {}
 
     if item in parsed:

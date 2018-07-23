@@ -137,7 +137,7 @@ def check_zpool_status(_no_item, _no_params, info):
             start_pool = False
             continue
 
-        if start_pool == True:
+        if start_pool is True:
             if line[1] != "ONLINE":
                 error_pools[line[0]] = tuple(line[1:])
                 continue

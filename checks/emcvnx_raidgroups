@@ -85,10 +85,10 @@ def parse_emcvnx_raidgroups(info):
             disks.append(disk)
             rg["disks"] = disks
             append = True
-        elif append == True and len(line) > 5 and line[0] == "Bus" and line[2] == "Enclosure" and line[4] == "Disk":
+        elif append is True and len(line) > 5 and line[0] == "Bus" and line[2] == "Enclosure" and line[4] == "Disk":
             disk = line[1] + "/" + line[3] + " Disk " + line[5]
             disks.append(disk)
-        elif append == True:
+        elif append is True:
             append = False
         elif len(line) > 3 and line[0] == "Raw" and line[1] == "Capacity" and line[2] == "(Blocks):":
             rg["capacity_raw_blocks"] = line[3]

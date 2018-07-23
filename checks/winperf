@@ -39,7 +39,7 @@ winperf_cpu_default_levels = (90, 95)
 def check_win_cpuusage(item, params, info):
     # get parameters. Be nice to older installations that still use 'None'
     # as parameters
-    if params == None:
+    if params is None:
         params = winperf_cpu_default_levels # for legacy reasons
     elif type(params) == tuple:
         warn, crit = params

@@ -167,7 +167,7 @@ def inventory_mem_linux(info):
 
 
 def check_mem_levels(title, used, total, levels, of_what=None, of_value=None, show_percentage=False, show_free=False):
-    if of_value == None:
+    if of_value is None:
         of_value = total # Reference for percentage levels
     state = 0
     if of_what:

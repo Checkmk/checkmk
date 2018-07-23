@@ -309,8 +309,8 @@ def check_drbd_general(item, params, info):
         output += ', Diskstates: %s/%s' % tuple(parsed['ds'])
         # Do not evaluate diskstates. Either set by rule or through the
         # legacy configuration option None in the check parameters tuple
-        if "diskstates"           in params and params["diskstates"] == None or \
-           "diskstates_inventory" in params and params["diskstates_inventory"] == None:
+        if "diskstates"           in params and params["diskstates"] is None or \
+           "diskstates_inventory" in params and params["diskstates_inventory"] is None:
             return (state, output)
 
 

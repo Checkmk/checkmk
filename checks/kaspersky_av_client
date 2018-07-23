@@ -76,7 +76,7 @@ def check_kaspersky_av_client(_no_item, params, parsed):
         ( "fullscan_age",  "Last fullscan" ),
     ]:
         age = parsed.get(key)
-        if age == None:
+        if age is None:
             yield 3, what + ": unknown"
         else:
             warn, crit = params[key]

@@ -63,7 +63,7 @@ def parse_df_zos(info):
             # Ignore header line
             continue
         else:
-            if fs == None:
+            if fs is None:
                 # First line: filesystem with usage information
                 fs = line[5]
                 usage = line[1:5]

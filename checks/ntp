@@ -171,7 +171,7 @@ def check_ntp_summary(_no_item, params, info):
 
     # Currently no peer is suitable. But we want to tolerate that for a while.
     entry = get_item_state(None)
-    if entry == None:
+    if entry is None:
         set_item_state(None, ("init", time.time(), 0, infotext))
         yield 0, "just started monitoring"
         return

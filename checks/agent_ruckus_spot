@@ -27,7 +27,7 @@
 def agent_ruckus_spot_arguments(params, hostname, ipaddress):
     args = ''
 
-    if params["address"] == True:
+    if params["address"] is True:
         args += " --address " + quote_shell_string("%s:%s" % (ipaddress, params["port"]))
     else:
         args += " --address " + quote_shell_string("%s:%s" % (params["address"], params["port"]))

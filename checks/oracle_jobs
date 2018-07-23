@@ -77,7 +77,7 @@ def check_oracle_jobs(item, params, info):
         if line[0] == sid:
             data_found = True
 
-        if line[0] == sid and (line[1] == job_owner or job_owner == None) and line[2] == job_name:
+        if line[0] == sid and (line[1] == job_owner or job_owner is None) and line[2] == job_name:
 
             service_found = True
             param_disabled = params["disabled"]

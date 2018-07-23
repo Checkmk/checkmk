@@ -73,7 +73,7 @@ def check_fibrechannel_common(item, params, parsed):
         speed_info += get_nic_speed_human_readable(fcp_speed)
     for what in [ "speed", "inv_speed" ]:
         if what in params:
-            if params[what] == None:
+            if params[what] is None:
                 speed_state = 0
             elif not fcp_speed:
                 speed_state = 1

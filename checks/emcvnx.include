@@ -46,7 +46,7 @@ def preparse_emcvnx_info(info):
             key, value = line[0], ':'.join(line[1:])
 
         # fix naviseccli error that does not output a colon for some values
-        if value == None and (key.startswith('SP Read Cache State') or
+        if value is None and (key.startswith('SP Read Cache State') or
                 key.startswith('SP Write Cache State')):
             tmp = key.split()
             key, value = ' '.join(tmp[:-1]), tmp[-1]

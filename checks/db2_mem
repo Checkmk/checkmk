@@ -40,7 +40,7 @@ def check_db2_mem(item, params, info):
     for line in info:
         if line[1] == item:
             in_block = True
-        elif in_block == True:
+        elif in_block is True:
             if line[-1].lower() == "kb":
                 value = int(line[-2]) * 1024
             elif line[-1].lower() == "mb":
@@ -48,13 +48,13 @@ def check_db2_mem(item, params, info):
             else:
                 value = int(line[-2])
 
-            if limit == None:
+            if limit is None:
                 limit = value
             else:
                 usage = value
                 break
 
-    if limit == None or usage == None:
+    if limit is None or usage is None:
         return
 
     left = limit - usage

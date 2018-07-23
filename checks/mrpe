@@ -72,7 +72,7 @@ def check_mrpe(item, params, info):
             # First line:  OUTPUT|PERFDATA
             parts = lines[0].split("|", 1)
             output = [parts[0].strip()]
-            if state == None or state not in [0, 1, 2, 3]:
+            if state is None or state not in [0, 1, 2, 3]:
                 output[0] = "Invalid plugin status %s. Output is: %s" % (state, output[0])
                 state = 3
             if len(parts) > 1:
@@ -110,7 +110,7 @@ def check_mrpe(item, params, info):
                 best_state = state
 
 
-    if best_state == None:
+    if best_state is None:
         return (3, "Check output not found in output of MRPE")
     else:
         return best_result

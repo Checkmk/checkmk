@@ -79,6 +79,12 @@ def create_crash_info(crash_type, details=None, version=None):
     if exc_type.__name__ == "MKParseFunctionError":
         tb_list += traceback.extract_tb(exc_value.exc_info()[2])
 
+    # Unify different string types from exception messages to a unicode string
+    try:
+        exc_txt = unicode(exc_value)
+    except UnicodeDecodeError:
+        exc_txt = str(exc_value).decode("utf-8")
+
     return {
         "crash_type"    : crash_type,
         "time"          : time.time(),
@@ -89,7 +95,7 @@ def create_crash_info(crash_type, details=None, version=None):
         "python_version": sys.version,
         "python_paths"  : sys.path,
         "exc_type"      : exc_type.__name__,
-        "exc_value"     : "%s" % exc_value,
+        "exc_value"     : exc_txt,
         "exc_traceback" : tb_list,
         "local_vars"    : get_local_vars_of_last_exception(),
         "details"       : details,

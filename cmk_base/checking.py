@@ -197,6 +197,9 @@ def _do_all_checks_on_host(sources, hostname, ipaddress, only_check_plugin_names
         if only_check_plugin_names != None and check_plugin_name not in only_check_plugin_names:
             continue
 
+        if belongs_to_cluster and hostname != config.host_of_clustered_service(hostname, description):
+            continue
+
         success = execute_check(multi_host_sections, hostname, ipaddress, check_plugin_name, item, params, description)
         if success:
             num_success += 1

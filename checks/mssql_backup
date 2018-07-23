@@ -47,6 +47,18 @@
 # MSSQL_SQL0x msdb 2016-07-11 20:20:07 I
 
 
+factory_settings["mssql_backup_default_levels"] = {
+    "database":             (None, None),
+    "database_diff":        (None, None),
+    "log":                  (None, None),
+    "file_or_filegroup":    (None, None),
+    "file_diff":            (None, None),
+    "partial":              (None, None),
+    "partial_diff":         (None, None),
+    "unspecific":           (None, None),
+}
+
+
 def parse_mssql_backup(info):
     def _parse_date_and_time(backup_date, backup_time):
         try:
@@ -150,10 +162,10 @@ def check_mssql_backup(item, params, parsed):
 
 check_info['mssql_backup'] = {
     'parse_function'            : parse_mssql_backup,
-    'inventory_function'        : inventory_mssql_backup,
     'check_function'            : check_mssql_backup,
-    'default_levels_variable'   : 'mssql_backup_default_levels',
+    'inventory_function'        : inventory_mssql_backup,
     'service_description'       : 'MSSQL %s Backup',
     'has_perfdata'              : True,
     'group'                     : 'mssql_backup',
+    'default_levels_variable'   : 'mssql_backup_default_levels',
 }

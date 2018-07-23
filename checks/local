@@ -40,27 +40,54 @@
 def local_compute_state(perfdata):
     texts = []
 
-    def outof_levels_text(value, lower, upper):
-        if upper is not None and value >= upper:
-            return " %s >= %s" % (value, upper)
-        elif lower is not None and value <= lower:
-            return " %s <= %s" % (value, lower)
+    # 16MB -> 16.0
+    def float_ignore_uom(value):
+        while value:
+            if value[-1] not in "0123456789.-":
+                value = value[:-1]
+            else:
+                return float(value)
+        return 0.0
+
+
+    def outof_levels(value, levels):
+        if levels == None:
+            return
+
+        if ':' in levels:
+            lower, upper = map(float, levels.split(':'))
         else:
-            return ""
+            lower = None
+            upper = float(levels)
+        if value > upper:
+            return " %s > %s" % (value, upper)
+        elif lower != None and value < lower:
+            return " %s < %s" % (value, lower)
 
     worst = 0
-    for varname, value, lwarn, uwarn, lcrit, ucrit in perfdata:
+    for entry in perfdata:
+        if len(entry) < 3:
+            continue # No levels attached
+        varname = entry[0]
+        value = float_ignore_uom(entry[1])
+        warn = entry[2]
+        if len(entry) >= 4:
+            crit = entry[3]
+        else:
+            crit = None
 
-        text_crit = outof_levels_text(value, lcrit, ucrit)
-        if text_crit:
+        text = outof_levels(value, crit)
+        if text:
             worst = 2
-            texts.append("%s%s(!!)" % (varname, text_crit))
+            text = "%s%s(!!)" % (varname, text)
+            texts.append(text)
 
         else:
-            text_warn = outof_levels_text(value, lwarn, uwarn)
-            if text_warn:
+            text = outof_levels(value, warn)
+            if text:
                 worst = max(worst, 1)
-                texts.append("%s%s(!)" % (varname, text_warn))
+                text = "%s%s(!)" % (varname, text)
+                texts.append(text)
 
             else:
                 texts.append("%s is %s(.)" % (varname, value))
@@ -82,37 +109,6 @@ def inventory_local(info):
 
 
 # Some helper functions
-def float_ignore_uom(value):
-    # 16MB -> 16.0
-    while value:
-        if value[-1] not in "0123456789.-":
-            value = value[:-1]
-        else:
-            break
-    # allow ValueError to be raised for ''
-    return float(value)
-
-
-def _parse_perf_entry(entry):
-    """Parse to a list
-
-    return [name, value, lower warn, upper warn,
-            lower crit, upper crit, min, max]
-    Do all needed type conversion here, to benefit from the try block
-    """
-    varname, valuetxt = entry.split('=')
-    valuetxt = valuetxt.split(';')
-    p_entry = [varname, float_ignore_uom(valuetxt[0])]
-    for param in valuetxt[1:]:
-        if ':' in param:
-            p_entry += map(float, param.split(':'))
-        else:
-            p_entry += [None, float(param)]
-    p_entry += [None] * (8 - len(p_entry))
-
-    return p_entry
-
-
 def _parse_local_line(line):
     if not (len(line) >= 4 or (len(line) == 3 and line[0] == 'P')):
         return 3, "Incomplete line in local check output: %s" % " ".join(line), []
@@ -129,15 +125,17 @@ def _parse_local_line(line):
     if perftxt != "-":
         for entry in perftxt.split('|'):
             try:
-                p_entry = _parse_perf_entry(entry)
-            except ValueError:
-                return 3, "Invalid performance data entry %s in local check output %s" % \
-                       (entry, " ".join(line)), []
-            compute_data.append(p_entry[:6])
-            # perfdata must not contain lower levels
-            perfdata.append((p_entry[0], p_entry[1], p_entry[3],
-                             p_entry[5], p_entry[6], p_entry[7]))
+                varname, valuetxt = entry.split('=')
+                values = valuetxt.split(';')
+                compute_data.append( tuple([varname] + values) )
+                # perfdata must not contain values with colons. So we split
+                # these values and use the upper levels only.
+                upper_values = [v.split(':')[-1] for v in values]
+                perfdata.append( tuple([varname] + upper_values) )
 
+            except ValueError:
+                return 3, "Invalid performance data %s in local check output %s" % \
+                       (perftxt, " ".join(line)), []
 
     if statechar == 'P':
         state, texts = local_compute_state(compute_data)

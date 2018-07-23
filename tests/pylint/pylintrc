@@ -39,18 +39,6 @@ disable=
     reimported,
     relative-import,
     singleton-comparison,
-    too-few-public-methods,
-    too-many-ancestors,
-    too-many-arguments,
-    too-many-boolean-expressions,
-    too-many-branches,
-    too-many-instance-attributes,
-    too-many-lines,
-    too-many-locals,
-    too-many-nested-blocks,
-    too-many-public-methods,
-    too-many-return-statements,
-    too-many-statements,
     ungrouped-imports,
     unidiomatic-typecheck,
     unsubscriptable-object,
@@ -82,6 +70,10 @@ disable=
     # duplication (introduce new classes, combine methods, etc.)
     attribute-defined-outside-init,
     #---------------------------------------------------------------------------
+    # We should enable this, at the moment it just means splitting up two
+    # gigantic functions.
+    too-many-branches,
+    #---------------------------------------------------------------------------
     # Enabling these warnings would be nice, they are mostly a sign of sloppy
     # programming practice. In some cases, they can even hide bugs.
     bare-except,
@@ -91,6 +83,20 @@ disable=
     # a few violations, so we postpone fixing this. When we do it eventually, we
     # probably want to use "include-naming-hint=yes" in the BASIC section.
     invalid-name,
+    #---------------------------------------------------------------------------
+    # Enabling these would be nice, but given the current state of affairs
+    # (gigantic modules with deeply nested humungous functions/methods), this
+    # will be a non-trivial amount of work.
+    too-few-public-methods,
+    too-many-arguments,
+    too-many-boolean-expressions,
+    too-many-instance-attributes,
+    too-many-lines,
+    too-many-locals,
+    too-many-nested-blocks,
+    too-many-public-methods,
+    too-many-return-statements,
+    too-many-statements,
     #---------------------------------------------------------------------------
     # The warnigns below will probably fixed by YAPF.
     bad-continuation,

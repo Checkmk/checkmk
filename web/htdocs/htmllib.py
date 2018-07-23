@@ -2204,7 +2204,7 @@ class html(HTMLGenerator, RequestHandler):
             style='display:none' if hidden else None,
         )
         self.open_a("javascript:void(0)", onclick=onclick)
-        self.img(src="images/icon_%s.png" % icon)
+        self.icon(help=None, icon=icon)
         self.close_a()
         self.close_div()
 

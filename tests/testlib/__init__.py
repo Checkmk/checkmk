@@ -1181,14 +1181,15 @@ class CMKWebSession(WebSession):
             "filled_in" : "profile",
             "_set_lang" : "on",
             "ua_start_url_use": "0",
+            "ua_ui_theme_use": "0",
             "language"  : lang,
             "_save"     : "Save",
         }, add_transid=True)
 
         if lang == "":
-            assert "Successfully updated" in r.text
+            assert "Successfully updated" in r.text, "Body: %s" % r.text
         else:
-            assert "Benutzerprofil erfolgreich aktualisiert" in r.text
+            assert "Benutzerprofil erfolgreich aktualisiert" in r.text, "Body: %s" % r.text
 
 
     def logout(self):

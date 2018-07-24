@@ -44,25 +44,47 @@ def check_icmp_arguments(params):
     target = params.get("address", "address")
     if target == "address":
         args.append("'$HOSTADDRESS$'")
+
     elif target == "alias":
         args.append("'$HOSTALIAS$'")
+
     elif target == "all_ipv4addresses":
         args += ["$HOST_ADDRESSES_4$", "$HOST_ADDRESS_4$"]
+
     elif target == "all_ipv6addresses":
         args += ["-6", "$HOST_ADDRESSES_6$", "$HOST_ADDRESS_6$"]
+
     elif target == "additional_ipv4addresses":
         args.append("$HOST_ADDRESSES_4$")
+
     elif target == "additional_ipv6addresses":
         args += ["-6", "$HOST_ADDRESSES_6$"]
+
+    elif target[0] == "indexed_ipv4address":
+        args.append("$HOST_ADDRESS_4_%s$" % target[1])
+
+    elif target[0] == "indexed_ipv6address":
+        args.append("$HOST_ADDRESS_6_%s$" % target[1])
+
     else: # custom
         args.append(quote_shell_string(target[1]))
     return " ".join(args)
 
 
+def check_icmp_description(params):
+    description = "PING"
+    target = params.get("address", "address")
+    if target[0] == "indexed_ipv4address":
+        description += " IPv4/%s" % target[1]
+    elif target[0] == "indexed_ipv6address":
+        description += " IPv6/%s" % target[1]
+    return description
+
+
 active_check_info['icmp'] = {
     "command_line"        : '$USER1$/check_icmp $ARG1$',
     "argument_function"   : check_icmp_arguments,
-    "service_description" : lambda args: args.get("description", "PING"),
+    "service_description" : check_icmp_description,
     "has_perfdata"        : True,
 }
 

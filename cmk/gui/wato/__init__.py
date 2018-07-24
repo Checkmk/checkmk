@@ -14182,7 +14182,7 @@ class PageDownloadAgentOutput(AgentOutputPage):
         file_name = self.file_name(self._host.site_id(), self._host.name(), self._ty)
 
         html.set_output_format("text")
-        html.set_http_header("Content-Disposition", "Attachment; filename=%s" % file_name)
+        html.response.set_http_header("Content-Disposition", "Attachment; filename=%s" % file_name)
 
         preview_filepath = os.path.join(self._job.get_work_dir(), file_name)
         html.write(file(preview_filepath).read())

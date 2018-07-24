@@ -169,14 +169,16 @@ def check_fileinfo(item, params, info):
 
     outof_range_txt  = fileinfo_check_timeranges(params)
     in_timerange     = outof_range_txt == ""
-    reftime          = None
     check_definition = False
     state_missing    = params.get("state_missing", 3)
-    for line in info:
-        if len(line) == 1:
-            reftime = int(line[0])
-            continue
 
+    try:
+        reftime = int(info[0][0])
+    except (IndexError, ValueError):
+        return 3, "Missing reference timestamp"
+
+    # Start counting values on all files
+    for line in info[1:]:
         if item == line[0]:
             if line[1] == "missing":
                 continue
@@ -222,7 +224,6 @@ def check_fileinfo_groups(item, params, info):
         return
 
     outof_range_txt    = fileinfo_check_timeranges(params)
-    reftime            = None
     count_all          = 0
     age_oldest         = None
     age_newest         = 0
@@ -234,12 +235,13 @@ def check_fileinfo_groups(item, params, info):
     exclude_patterns   = set()
     files_not_readable = set()
 
-    # Start counting values on all files
-    for line in info:
-        if len(line) == 1:
-            reftime = int(line[0])
-            continue
+    try:
+        reftime = int(info[0][0])
+    except (IndexError, ValueError):
+        return 3, "Missing reference timestamp"
 
+    # Start counting values on all files
+    for line in info[1:]:
         # Old format does not support '%s' in group name
         group_patterns = set(params.get('precompiled_patterns', []))
         for entry in params.get('group_patterns', []):

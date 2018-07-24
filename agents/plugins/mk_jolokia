@@ -40,6 +40,9 @@ except ImportError:
 opt_verbose = '--verbose' in sys.argv
 opt_debug   = '--debug' in sys.argv
 
+class SkipInstance(Exception):
+    pass
+
 class PreemptiveBasicAuthHandler(urllib2.HTTPBasicAuthHandler):
     """
     sends basic authentication with the first request,
@@ -255,53 +258,18 @@ def fetch_metric(inst, path, title, itemspec, inst_add=None):
 
 
 def query_instance(inst):
-    # Prepare user/password authentication via HTTP Auth
-    password_mngr = urllib2.HTTPPasswordMgrWithDefaultRealm()
-    if inst.get("password"):
-        password_mngr.add_password(None, "%s://%s:%d/" %
-                (inst["protocol"], inst["server"], inst["port"]), inst["user"], inst["password"])
+    try:
+        prepare_http_opener(inst)
+    except Exception, e:
+        if opt_debug:
+            raise
+        sys.stdout.write('<<<jolokia_info>>>\n')
+        sys.stderr.write("ERROR: %s\n" % e)
+        raise SkipInstance()
 
-    handlers = []
-    if inst["protocol"] == "https":
-        if inst["mode"] == 'https' and (inst["client_key"] is None or
-                                        inst["client_cert"] is None):
-            sys.stdout.write('<<<jolokia_info>>>\n')
-            sys.stderr.write("ERROR: https set up as authentication method but certificate "
-                                "wasn't provided\n")
-            return
-        handlers.append(HTTPSAuthHandler(inst["cert_path"],
-                                         inst["client_key"], inst["client_cert"]))
-    if inst["mode"] == 'digest':
-        handlers.append(urllib2.HTTPDigestAuthHandler(password_mngr))
-    elif inst["mode"] == "basic_preemptive":
-        handlers.append(PreemptiveBasicAuthHandler(password_mngr))
-    elif inst["mode"] == "basic" and inst["protocol"] != "https":
-        handlers.append(urllib2.HTTPBasicAuthHandler(password_mngr))
+    output_jolokia_info(inst)
 
-    if handlers:
-        opener = urllib2.build_opener(*handlers)
-        urllib2.install_opener(opener)
-
-    # Determine type of server
-    server_info = fetch_var(inst["protocol"], inst["server"], inst["port"], "", inst["suburi"],
-                            "", None, None, None)
-
-    sys.stdout.write('<<<jolokia_info>>>\n')
-    if server_info:
-        d = dict(server_info)
-        version = d.get(('info', 'version'), "unknown")
-        product = d.get(('info', 'product'), "unknown")
-        if inst.get("product"):
-            product = inst["product"]
-        agentversion = d.get(('agent',), "unknown")
-        sys.stdout.write("%s %s %s %s\n" % (inst["instance"], product, version, agentversion))
-    else:
-        sys.stdout.write("%s ERROR\n" % (inst["instance"],))
-        sys.stdout.write('<<<jolokia_metrics>>>\n')
-        sys.stdout.write("%s ERROR\n" % (inst["instance"],))
-        return
-
-
+    # TODO: Untie mbean_search_results / query calculation and jolokia_metrics processing
     mbean_search_results = {}
 
     sys.stdout.write('<<<jolokia_metrics>>>\n')
@@ -336,17 +304,70 @@ def query_instance(inst):
                 for out_item, out_title, out_value in fetch_metric(inst, mbean_path, title, itemspec):
                     sys.stdout.write("%s %s %s\n" % (out_item, out_title, out_value) )
             except IOError:
-                return
+                raise SkipInstance()
             except socket.timeout:
-                return
+                raise SkipInstance()
             except:
                 if opt_debug:
                     raise
                 # Simply ignore exceptions. Need to be removed for debugging
                 continue
 
-    if custom_vars:
-        sys.stdout.write('<<<jolokia_generic>>>\n')
+    output_custom_vars(inst, mbean_search_results)
+
+
+def prepare_http_opener(inst):
+    # Prepare user/password authentication via HTTP Auth
+    password_mngr = urllib2.HTTPPasswordMgrWithDefaultRealm()
+    if inst.get("password"):
+        password_mngr.add_password(None, "%s://%s:%d/" %
+                (inst["protocol"], inst["server"], inst["port"]), inst["user"], inst["password"])
+
+    handlers = []
+    if inst["protocol"] == "https":
+        if inst["mode"] == 'https' and (inst["client_key"] is None or
+                                        inst["client_cert"] is None):
+            raise Exception("HTTPS set up as authentication method but certificate wasn't provided")
+        handlers.append(HTTPSAuthHandler(inst["cert_path"],
+                                         inst["client_key"], inst["client_cert"]))
+    if inst["mode"] == 'digest':
+        handlers.append(urllib2.HTTPDigestAuthHandler(password_mngr))
+    elif inst["mode"] == "basic_preemptive":
+        handlers.append(PreemptiveBasicAuthHandler(password_mngr))
+    elif inst["mode"] == "basic" and inst["protocol"] != "https":
+        handlers.append(urllib2.HTTPBasicAuthHandler(password_mngr))
+
+    if handlers:
+        opener = urllib2.build_opener(*handlers)
+        urllib2.install_opener(opener)
+
+
+def output_jolokia_info(inst):
+    # Determine type of server
+    server_info = fetch_var(inst["protocol"], inst["server"], inst["port"], "", inst["suburi"],
+                            "", None, None, None)
+
+    sys.stdout.write('<<<jolokia_info>>>\n')
+    if server_info:
+        d = dict(server_info)
+        version = d.get(('info', 'version'), "unknown")
+        product = d.get(('info', 'product'), "unknown")
+        if inst.get("product"):
+            product = inst["product"]
+        agentversion = d.get(('agent',), "unknown")
+        sys.stdout.write("%s %s %s %s\n" % (inst["instance"], product, version, agentversion))
+    else:
+        sys.stdout.write("%s ERROR\n" % (inst["instance"],))
+        sys.stdout.write('<<<jolokia_metrics>>>\n')
+        sys.stdout.write("%s ERROR\n" % (inst["instance"],))
+        raise SkipInstance()
+
+
+def output_custom_vars(inst, mbean_search_results):
+    if not custom_vars:
+        return
+
+    sys.stdout.write('<<<jolokia_generic>>>\n')
     for var in custom_vars:
             mbean, path, title, itemspec, do_search, value_type = var
             queries = []
@@ -369,14 +390,16 @@ def query_instance(inst):
                     for out_item, out_title, out_value in fetch_metric(inst, mbean_path, title, itemspec):
                         sys.stdout.write("%s %s %s %s\n" % (out_item, out_title, out_value, value_type) )
                 except IOError:
-                    return
+                    raise SkipInstance()
                 except socket.timeout:
-                    return
+                    raise SkipInstance()
                 except:
                     if opt_debug:
                         raise
                     # Simply ignore exceptions. Need to be removed for debugging
                     continue
+
+
 
 
 # Default configuration for all instances
@@ -520,4 +543,7 @@ for inst in instances:
     if inst.get("server") == "use fqdn":
         inst["server"] = socket.getfqdn()
 
-    query_instance(inst)
+    try:
+        query_instance(inst)
+    except SkipInstance:
+        pass

@@ -1001,61 +1001,11 @@ if '-d' in sys.argv:
 
 """)
 
-    needed_check_plugin_names = set([])
+    needed_check_plugin_names = _get_needed_check_plugin_names(hostname, host_check_table)
 
-    # In case the host is monitored as special agent, the check plugin for the special agent needs
-    # to be loaded
-    sources = data_sources.DataSources(hostname, ipaddress=None)
-    for source in sources.get_data_sources():
-        if isinstance(source, data_sources.programs.SpecialAgentDataSource):
-            needed_check_plugin_names.add(source.special_agent_plugin_file_name)
+    output.write("config.load_checks(check_api.get_check_api_context, %r)\n" %
+                                     _get_needed_check_file_names(needed_check_plugin_names))
 
-    # Collect the needed check plugin names using the host check table
-    for check_plugin_name, _unused_item, _unused_param, descr in host_check_table:
-        if check_plugin_name not in config.check_info:
-            sys.stderr.write('Warning: Ignoring missing check %s.\n' % check_plugin_name)
-            continue
-
-        if config.check_info[check_plugin_name].get("extra_sections"):
-            for section_name in config.check_info[check_plugin_name]["extra_sections"]:
-                if section_name in config.check_info:
-                    needed_check_plugin_names.add(section_name)
-
-        needed_check_plugin_names.add(check_plugin_name)
-
-    # Also include the check plugins of the cluster nodes to be able to load
-    # the autochecks of the nodes
-    if config.is_cluster(hostname):
-        for node in config.nodes_of(hostname):
-            needed_check_plugin_names.update([ e[0] for e in check_table.get_precompiled_check_table(node, skip_ignored=False) ])
-
-    # check info table
-    # We need to include all those plugins that are referenced in the host's
-    # check table.
-    filenames = []
-    for check_plugin_name in needed_check_plugin_names:
-        section_name = cmk_base.check_utils.section_name_of(check_plugin_name)
-        # Add library files needed by check (also look in local)
-        for lib in set(config.check_includes.get(section_name, [])):
-            if os.path.exists(cmk.paths.local_checks_dir + "/" + lib):
-                to_add = cmk.paths.local_checks_dir + "/" + lib
-            else:
-                to_add = cmk.paths.checks_dir + "/" + lib
-
-            if to_add not in filenames:
-                filenames.append(to_add)
-
-        # Now add check file(s) itself
-        paths = _find_check_plugins(check_plugin_name)
-        if not paths:
-            raise MKGeneralException("Cannot find check file %s needed for check type %s" % \
-                                     (section_name, check_plugin_name))
-
-        for path in paths:
-            if path not in filenames:
-                filenames.append(path)
-
-    output.write("config.load_checks(check_api.get_check_api_context, %r)\n" % filenames)
     for check_plugin_name in sorted(needed_check_plugin_names):
         console.verbose(" %s%s%s", tty.green, check_plugin_name, tty.normal, stream=sys.stderr)
 
@@ -1170,3 +1120,67 @@ if '-d' in sys.argv:
         os.symlink(hostname + ".py", compiled_filename)
 
     console.verbose(" ==> %s.\n", compiled_filename, stream=sys.stderr)
+
+
+def _get_needed_check_plugin_names(hostname, host_check_table):
+    import cmk_base.check_table as check_table
+
+    needed_check_plugin_names = set([])
+
+    # In case the host is monitored as special agent, the check plugin for the special agent needs
+    # to be loaded
+    sources = data_sources.DataSources(hostname, ipaddress=None)
+    for source in sources.get_data_sources():
+        if isinstance(source, data_sources.programs.SpecialAgentDataSource):
+            needed_check_plugin_names.add(source.special_agent_plugin_file_name)
+
+    # Collect the needed check plugin names using the host check table
+    for check_plugin_name, _unused_item, _unused_param, descr in host_check_table:
+        if check_plugin_name not in config.check_info:
+            sys.stderr.write('Warning: Ignoring missing check %s.\n' % check_plugin_name)
+            continue
+
+        if config.check_info[check_plugin_name].get("extra_sections"):
+            for section_name in config.check_info[check_plugin_name]["extra_sections"]:
+                if section_name in config.check_info:
+                    needed_check_plugin_names.add(section_name)
+
+        needed_check_plugin_names.add(check_plugin_name)
+
+    # Also include the check plugins of the cluster nodes to be able to load
+    # the autochecks of the nodes
+    if config.is_cluster(hostname):
+        for node in config.nodes_of(hostname):
+            needed_check_plugin_names.update([ e[0] for e in check_table.get_precompiled_check_table(node, skip_ignored=False) ])
+
+    return needed_check_plugin_names
+
+
+def _get_needed_check_file_names(needed_check_plugin_names):
+    # check info table
+    # We need to include all those plugins that are referenced in the host's
+    # check table.
+    filenames = []
+    for check_plugin_name in needed_check_plugin_names:
+        section_name = cmk_base.check_utils.section_name_of(check_plugin_name)
+        # Add library files needed by check (also look in local)
+        for lib in set(config.check_includes.get(section_name, [])):
+            if os.path.exists(cmk.paths.local_checks_dir + "/" + lib):
+                to_add = cmk.paths.local_checks_dir + "/" + lib
+            else:
+                to_add = cmk.paths.checks_dir + "/" + lib
+
+            if to_add not in filenames:
+                filenames.append(to_add)
+
+        # Now add check file(s) itself
+        paths = _find_check_plugins(check_plugin_name)
+        if not paths:
+            raise MKGeneralException("Cannot find check file %s needed for check type %s" % \
+                                     (section_name, check_plugin_name))
+
+        for path in paths:
+            if path not in filenames:
+                filenames.append(path)
+
+    return filenames

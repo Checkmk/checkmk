@@ -137,9 +137,12 @@ def load_all_plugins():
 
 def _cmk_gui_top_level_modules():
     return [ module for name, module in sys.modules.items()
-             if (name.startswith("cmk.gui.") and len(name.split(".")) == 3)
-                or (name.startswith("cmk.gui.cee.") and len(name.split(".")) == 4)
-                or (name.startswith("cmk.gui.cme.") and len(name.split(".")) == 4) ]
+             # None entries are only an import optimization of cPython and can be removed:
+             # https://www.python.org/dev/peps/pep-0328/#relative-imports-and-indirection-entries-in-sys-modules
+             if module is not None
+             and ((name.startswith("cmk.gui.") and len(name.split(".")) == 3)
+                  or (name.startswith("cmk.gui.cee.") and len(name.split(".")) == 4)
+                  or (name.startswith("cmk.gui.cme.") and len(name.split(".")) == 4)) ]
 
 
 

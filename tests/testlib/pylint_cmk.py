@@ -112,8 +112,15 @@ def is_python_file(path):
 # python modules. This custom reporter rewrites the found
 # messages to tell the users the original location in the
 # python sources
+# TODO: This can be dropped once we have refactored checks/inventory/bakery plugins
+# to real modules
 class CMKFixFileMixin(object):
     def handle_message(self, msg):
+        # This hack is not needed for already modularized paths
+        if msg.abspath.startswith(cmk_path()):
+            super(CMKFixFileMixin, self).handle_message(msg)
+            return
+
         new_path, new_line = self._orig_location_from_compiled_file(msg)
 
         if new_path == None:

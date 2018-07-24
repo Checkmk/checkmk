@@ -3141,7 +3141,8 @@ def run_report(test_id):
 #   | The GUI rendering code                                               |
 #   '----------------------------------------------------------------------'
 
-class Window(npyscreen.FormBaseNew):
+# The class hierarchy is out of our control. Use it as intended by npyscreen.
+class Window(npyscreen.FormBaseNew): # pylint: disable=too-many-ancestors
     pass
 
 

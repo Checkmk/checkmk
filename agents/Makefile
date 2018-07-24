@@ -76,7 +76,7 @@ build:
 
 packages: rpm deb
 
-rpm $(RPM_PACKAGE):
+rpm $(RPM_PACKAGE): waitmax
 	rm -rf $(RPM_TOPDIR)
 	mkdir -p $(RPM_TOPDIR)/RPMS
 	mkdir -p $(RPM_TOPDIR)/SRPMS
@@ -123,9 +123,9 @@ deb $(DEB_PACKAGE): $(RPM_PACKAGE)
 	tar czf control.tar.gz $(TAROPTS) -C ctrl . && \
 	xz --decompress data.tar.xz && \
 	gzip data.tar && \
-	ar d ../$(DEB_PACKAGE) data.tar.xz && \
+	ar d ../$(DEB_PACKAGE) data.tar.xz control.tar.xz && \
 	ar r ../$(DEB_PACKAGE) debian-binary control.tar.gz data.tar.gz
 	rm -rf deb-unpack
 
 clean:
-	rm -rf *~ waitmax
+	rm -rf *~ waitmax *.rpm *.deb

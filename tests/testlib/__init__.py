@@ -578,13 +578,6 @@ class Site(object):
         execute("sudo chrpath -r /omd/v/%s/lib %s/bin/python" %
             (self.version.version_directory(), self.version.version_path()))
 
-        self._add_version_path_to_index_py()
-
-
-    def _add_version_path_to_index_py(self):
-        os.system("sudo sed -i '0,/^$/s|^$|import sys ; sys.path.insert(0, \"%s/lib/python\")\\n|' " \
-              "%s/share/check_mk/web/htdocs/index.py" % (self.version.version_path(), self.version.version_path()))
-
 
     def _update_with_f12_files(self):
         paths = [
@@ -640,8 +633,6 @@ class Site(object):
                                       (path, self.id)) >> 8 == 0
                 print("Executing .f12 in \"%s\" DONE" % path)
                 sys.stdout.flush()
-
-        self._add_version_path_to_index_py()
 
 
     def _enabled_liveproxyd_debug_logging(self):

@@ -12,7 +12,7 @@ import pytest
 def site(request):
     pass
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="function")
 def pylint_test_dir():
     base_path = os.environ.get("WORKDIR")
     if base_path:

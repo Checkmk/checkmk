@@ -1,0 +1,18 @@
+Title: ucd.include: Astaro Firewall is Linux but should use hr_mem
+Level: 1
+Component: checks
+Compatible: incomp
+Edition: cre
+Version: 1.4.0p35
+Date: 1532444780
+Class: fix
+
+Astaro firewalls are Linux but should use hr_mem. Otherwise caches/buffers are
+included in used memory generating critical a state.
+
+To switch to hr_mem on Astaro firewalls the services on the affected hosts have
+to be rediscovered. After the rediscovery the ucd_mem service will become
+undecided and the hr_mem services will be monitored. The undecided services
+will only be shown for a short time and will automatically disappear when the
+caches in Check_MK are updated. I.e. after the rediscovery now further actions
+are necessary.

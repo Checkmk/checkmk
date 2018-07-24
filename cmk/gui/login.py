@@ -503,7 +503,7 @@ def page_logout():
     else:
         # Implement HTTP logout with cookie hack
         if not html.request.has_cookie('logout'):
-            html.set_http_header('WWW-Authenticate', 'Basic realm="OMD Monitoring Site %s"' % config.omd_site())
+            html.response.set_http_header('WWW-Authenticate', 'Basic realm="OMD Monitoring Site %s"' % config.omd_site())
             html.response.set_cookie('logout', '1')
             raise FinalizeRequest(401)
         else:

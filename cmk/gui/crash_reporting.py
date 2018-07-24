@@ -486,6 +486,6 @@ def page_download_crash_report():
         (html.urlencode(host), html.urlencode(service), time.strftime("%Y-%m-%d_%H-%M-%S"))
 
     tardata = get_crash_report_archive_as_string(site, host, service)
-    html.set_http_header('Content-Disposition', 'Attachment; filename=%s' % filename)
-    html.set_http_header('Content-Type', 'application/x-tar')
+    html.response.set_http_header('Content-Disposition', 'Attachment; filename=%s' % filename)
+    html.response.set_http_header('Content-Type', 'application/x-tar')
     html.write(tardata)

@@ -491,7 +491,7 @@ def user_has_group(user, group):
             return True
         g = group_by_id(group_id(group))
         if user in g.gr_mem:
-            return True;
+            return True
     except:
         return False
 

@@ -126,7 +126,7 @@ def read_status():
                 continue
             host = parts[0]
             lasttime = int(float(parts[1]))
-            status[host] = {'hops': {}, 'lasttime': lasttime};
+            status[host] = {'hops': {}, 'lasttime': lasttime}
             hops = int(parts[2])
             for i in range(0, hops):
                 status[host]["hops"][i+1] = {
@@ -240,13 +240,13 @@ def parse_report(host):
         hopline = re.compile(r'^\s*\d+\.') #  10.|-- 129.250.2.147   0.0%    10  325.6 315.5 310.3 325.6   5.0
         for line in lines:
             if not hopline.match(line):
-                continue; #     |  `|-- 129.250.2.159
+                continue #     |  `|-- 129.250.2.159
             hopcount += 1
             parts = line.split()
             if len(parts) < 8:
                 sys.stdout.write("**ERROR** Bug parsing host/hop, "
                                  "line has less than 8 parts: %s\n" % line)
-                continue;
+                continue
             status[host]['hops'][hopcount] = {
                 'hopname': parts[1],
                 'loss'   : parts[2],

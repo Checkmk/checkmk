@@ -86,7 +86,7 @@ def _execute_backup(site, job_id="testjob"):
         stdout, stderr = p.communicate()
         assert stderr == ""
         assert p.wait() == 0
-        assert "Backup completed " in stdout
+        assert "Backup completed" in stdout, "Invalid output: %r" % stdout
 
     # Check successful backup listing
     p = site.execute(["mkbackup", "list", "test-target"],
@@ -113,7 +113,7 @@ def _execute_restore(site, backup_id, env=None):
         p = site.execute(["mkbackup", "restore", "test-target", backup_id],
                 stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=env)
         stdout, stderr = p.communicate()
-        assert "Restore completed" in stdout
+        assert "Restore completed" in stdout, "Invalid output: %r" % stdout
         assert stderr == ""
         assert p.wait() == 0
 

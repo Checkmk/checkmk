@@ -1422,6 +1422,8 @@ def ajax_set_viewoption():
 def show_context_links(thisview, datasource, show_filters,
                        enable_commands, enable_checkboxes, show_checkboxes,
                        show_availability, show_combined_graphs):
+    if html.output_format != "html":
+        return
 
     html.begin_context_buttons()
 

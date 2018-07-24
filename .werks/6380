@@ -1,0 +1,17 @@
+Title: oracle_jobs: Bugfix for auto_drop=TRUE jobs
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1532503439
+Class: fix
+
+Oracle allows a definition of Scheduler-Jobs who are automatically
+removed after the execution. They are ignored with this change.
+
+Please update the mk_oracle plugin.
+
+Incompatible Change: This change has an impact on existing Databases
+because Oracle creates some jobs in SYS with auto_drop.
+They are ignored with this Commit.

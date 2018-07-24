@@ -768,7 +768,8 @@ sql_jobs () {
               left outer join dba_scheduler_job_run_details jd
                               on  jd.owner = jm.OWNER
                               AND jd.JOB_NAME = jm.JOB_NAME
-                              AND jd.LOG_ID = jm.LOG_ID;"
+                              AND jd.LOG_ID = jm.LOG_ID
+              WHERE j.auto_drop = 'FALSE';"
     fi
 }
 

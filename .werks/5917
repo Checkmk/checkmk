@@ -1,0 +1,11 @@
+Title: Facelift theme: Fixed Logo in Browser tab
+Level: 1
+Component: multisite
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0b10
+Date: 1532422502
+
+Previously the old logo still has been used.

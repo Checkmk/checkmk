@@ -1812,7 +1812,7 @@ class html(HTMLGenerator, RequestHandler):
     def default_html_headers(self):
         self.meta(httpequiv="Content-Type", content="text/html; charset=utf-8")
         self.meta(httpequiv="X-UA-Compatible", content="IE=edge")
-        self.write_html(self._render_opening_tag('link', rel="shortcut icon", href="images/favicon.ico", type_="image/ico", close_tag=True))
+        self.write_html(self._render_opening_tag('link', rel="shortcut icon", href=self.detect_themed_image_path("images/favicon.ico"), type_="image/ico", close_tag=True))
 
 
     def _head(self, title, javascripts=None, stylesheets=None):

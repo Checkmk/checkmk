@@ -1,0 +1,11 @@
+Title: fileinfo, fileinfo.groups: Prevent crash of all fileinfo services if one line fails
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0i1
+Date: 1532351797
+
+

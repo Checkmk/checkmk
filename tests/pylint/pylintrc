@@ -68,10 +68,6 @@ disable=
     # depending on an implicit protocol to create them is an even worse one.
     global-variable-undefined,
     #---------------------------------------------------------------------------
-    # We should enable this, at the moment it just means splitting up two
-    # gigantic functions.
-    too-many-branches,
-    #---------------------------------------------------------------------------
     # We have tons of unused imports, it is just a matter of removing them and
     # leave those which have a "magic" purpose.
     unused-import,

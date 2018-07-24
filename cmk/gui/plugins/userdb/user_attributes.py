@@ -156,7 +156,8 @@ class StartURLUserAttribute(UserAttribute):
 
 @user_attribute_registry.register
 class UIThemeUserAttribute(UserAttribute):
-    def name(self):
+    @classmethod
+    def name(cls):
         return "ui_theme"
 
 

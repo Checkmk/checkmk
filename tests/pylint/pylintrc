@@ -5,7 +5,6 @@ init-hook=
     test_path = os.environ.get("TEST_PATH", os.environ["HOME"] + "/git/check_mk/tests")
     sys.path.insert(0, test_path)
     import conftest
-# load-plugins=testlib.pylint_cmk,testlib.pylint_checker_wrong_i18n
 load-plugins=testlib.pylint_cmk,testlib.pylint_checker_localization
 # TODO: Why do we need persistence?
 persistent=yes

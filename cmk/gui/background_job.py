@@ -194,13 +194,16 @@ class BackgroundProcess(multiprocessing.Process):
         except:
             MAXFD = 256
 
-        # Close all filedescriptors, except stdin/stdout
-        os.closerange(3, MAXFD)
+        # Close all file descriptors
+        os.closerange(0, MAXFD)
 
 
     def initialize_environment(self):
         if not self._logger:
             self._logger = cmk.log.logger
+
+        sys.stderr = StreamLogger(self._logger, cmk.log.ERROR)
+        sys.stdout = StringIO()
 
         self._job_parameters["logger"] = self._logger
 
@@ -211,7 +214,6 @@ class BackgroundProcess(multiprocessing.Process):
     def _execute_function(self):
         # The specific function is called in a separate thread
         # The main thread collects the stdout from the function-thread and updates the status file accordingly
-        sys.stdout = StringIO()
         t = threading.Thread(target=self._call_function_with_exception_handling, args=[self._job_parameters])
         t.start()
 
@@ -257,6 +259,27 @@ class BackgroundProcess(multiprocessing.Process):
             logger = job_interface.get_logger()
             logger.error("Exception in background function:\n%s" % (traceback.format_exc()))
             job_interface.send_exception(_("Exception: %s") % (e))
+
+
+
+# TODO(ab): Wouldn't it be better to also write the stderr to the job results instead of just writing
+#           it to the web.log?
+class StreamLogger(object):
+    """File like stream object to redirects writes to the given logger"""
+    def __init__(self, logger, level):
+        super(StreamLogger, self).__init__()
+        self._logger = logger
+        self._level = level
+        self._linebuf = ''
+
+
+    def write(self, buf):
+        for line in buf.rstrip().splitlines():
+            self._logger.log(self._level, line.rstrip())
+
+
+    def flush(self):
+        pass
 
 
 

@@ -1,0 +1,10 @@
+Title: check_mk_active_bi: Fixed crashed checks (Regression in 1.5.0b9)
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0b10
+Date: 1532431051
+Class: fix
+
+The check crashed with an "Invalid json reponse" error since 1.5.0b9.

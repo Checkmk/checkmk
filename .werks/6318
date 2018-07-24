@@ -1,0 +1,10 @@
+Title: check_mk_agent.{linux,solaris,openwrt}: Quote command line in asynchronous MRPE call to prevent globbing and word splitting
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1532418648
+Class: fix
+
+

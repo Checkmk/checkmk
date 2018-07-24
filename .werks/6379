@@ -1,0 +1,14 @@
+Title: check_icmp: Ping additional IPv4/6 address which refers to its index in the host properties
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1532437758
+Class: feature
+
+Below the host properties you can set additional IPv4/6 addresses
+which are numbered. In the ruleset {{Check hosts with PING (ICMP Echo Request)}}
+you can choose {{Additional IPv4/6 address identified by its index in the host properties}}
+below {{Alternative address to ping}}. There you can give the index of the
+IPv4/6 address which you want to ping.

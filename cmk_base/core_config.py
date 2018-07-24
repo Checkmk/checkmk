@@ -391,8 +391,15 @@ def get_host_attributes(hostname, tags):
     add_ipv4addrs, add_ipv6addrs = config.get_additional_ipaddresses_of(hostname)
     if add_ipv4addrs:
         attrs["_ADDRESSES_4"] = " ".join(add_ipv4addrs)
+        for nr, ipv4_address in enumerate(add_ipv4addrs):
+            key = "_ADDRESS_4_%s" % (nr+1)
+            attrs[key] = ipv4_address
+
     if add_ipv6addrs:
         attrs["_ADDRESSES_6"] = " ".join(add_ipv6addrs)
+        for nr, ipv6_address in enumerate(add_ipv6addrs):
+            key = "_ADDRESS_6_%s" % (nr+1)
+            attrs[key] = ipv6_address
 
     # Add the optional WATO folder path
     path = config.host_paths.get(hostname)

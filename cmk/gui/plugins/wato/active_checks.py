@@ -259,6 +259,8 @@ register_rule(group,
                      ("all_ipv6addresses", _("Ping all IPv6 addresses")),
                      ("additional_ipv4addresses", _("Ping additional IPv4 addresses")),
                      ("additional_ipv6addresses", _("Ping additional IPv6 addresses")),
+                     ("indexed_ipv4address", _("Ping IPv4 address identified by its index"), Integer(default_value=1)),
+                     ("indexed_ipv6address", _("Ping IPv6 address identified by its index"), Integer(default_value=1)),
                  ]
            )),
         ] + check_icmp_params,

@@ -3,9 +3,35 @@
 
 import os
 import sys
+import pytest
+import tempfile
+import shutil
 
 from testlib import cmk_path, cmc_path, cme_path, repo_path
 import testlib.pylint_cmk as pylint_cmk
+
+@pytest.fixture(scope="function")
+def pylint_test_dir():
+    base_path = os.environ.get("WORKDIR")
+    if base_path:
+        base_path += "/" + os.path.basename(sys.argv[0])
+        if not os.path.exists(base_path):
+            os.makedirs(base_path)
+    else:
+        base_path = None
+
+    test_dir = tempfile.mkdtemp(prefix="cmk_pylint", dir=base_path)
+
+    print("Prepare check in %s ..." % test_dir)
+    yield test_dir
+
+    #
+    # Cleanup code
+    #
+
+    print("Cleanup pylint test dir %s ..." % test_dir)
+    shutil.rmtree(test_dir)
+
 
 def test_pylint_misc():
     # Only specify the path to python packages or modules here

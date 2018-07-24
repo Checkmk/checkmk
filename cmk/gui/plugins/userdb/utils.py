@@ -139,8 +139,9 @@ class UserAttribute(object):
     __metaclass__ = abc.ABCMeta
 
 
+    @classmethod
     @abc.abstractmethod
-    def name(self):
+    def name(cls):
         # type: () -> bytes
         raise NotImplementedError()
 

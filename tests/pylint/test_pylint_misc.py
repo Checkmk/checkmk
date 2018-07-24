@@ -12,25 +12,23 @@ def test_pylint_misc():
     modules_or_packages = [
         # Check_MK base
         "cmk_base",
-        "cmk_base/modes",
-        "cmk_base/automations",
-        "cmk_base/default_config",
-        "cmk_base/data_sources",
-        "enterprise/cmk_base/cee",
-        "enterprise/cmk_base/modes/cee.py",
+        # TODO: Check if this kind of "overlay" really works.
+        # TODO: Why do we have e.g. a symlink cmk_base/cee -> enterprise/cmk_base/cee?
         "enterprise/cmk_base/automations/cee.py",
+        "enterprise/cmk_base/cee",
         "enterprise/cmk_base/default_config/cee.py",
+        "enterprise/cmk_base/modes/cee.py",
         "managed/cmk_base/default_config/cme.py",
 
         # cmk module level
+        # TODO: This checks the whole cmk hierarchy, including things like
+        # cmk.gui.plugins.cron etc. Do we really want that here?
+        # TODO: Funny links there, see above.
         "cmk",
-        "cmk/ec",
         "enterprise/cmk/cee",
-        "enterprise/cmk/cee/liveproxy",
 
         # GUI specific
         "web/app/index.wsgi",
-        "cmk/gui",
         "enterprise/cmk/gui/cee",
         "managed/cmk/gui/cme",
     ]

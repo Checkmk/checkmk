@@ -249,7 +249,7 @@ def paint_perfometer(row):
         disabled = True
 
     return " ".join(classes), \
-        html.render_a(content=content, href=url, title=title,
+        html.render_a(content=content, href=url, title=html.strip_tags(title),
                       class_=["disabled" if disabled else None])
 
 

@@ -26,7 +26,6 @@ disable=
     protected-access,
     redefined-argument-from-local,
     redefined-builtin,
-    redefined-outer-name,
     reimported,
     relative-import,
     ungrouped-imports,
@@ -75,6 +74,11 @@ disable=
     # programming practice. In some cases, they can even hide bugs.
     bare-except,
     broad-except,
+    #---------------------------------------------------------------------------
+    # Enabling this would enhance readability quite a bit and it might even
+    # uncover bugs. Fixing this is not rocket science, just some work: Roughly
+    # 400 warnings in about 60 modules, but this can be fixed step by step.
+    redefined-outer-name,
     #---------------------------------------------------------------------------
     # Enabling this would be nice, but not crucial. At the moment, we have quite
     # a few violations, so we postpone fixing this. When we do it eventually, we

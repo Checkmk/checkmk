@@ -24,7 +24,6 @@ disable=
     no-else-return,
     no-self-use,
     protected-access,
-    redefine-in-handler,
     redefined-argument-from-local,
     redefined-builtin,
     redefined-outer-name,

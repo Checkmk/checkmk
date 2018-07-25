@@ -128,7 +128,7 @@ def host_check_command(hostname, ip, is_clust, hostcheck_commands_to_define=None
         return "check-mk-host-ok"
 
     elif value == "agent" or value[0] == "service":
-        service = value == "agent" and "Check_MK" or value[1]
+        service = "Check_MK" if value == "agent" else value[1]
 
         if config.monitoring_core == "cmc":
             return "check-mk-host-service!" + service
@@ -194,7 +194,7 @@ def check_icmp_arguments_of(hostname, add_defaults=True, family=None):
         return ""
 
     if family == None:
-        family = config.is_ipv6_primary(hostname) and 6 or 4
+        family = 6 if config.is_ipv6_primary(hostname) else 4
 
     args = []
 
@@ -479,7 +479,7 @@ def get_cluster_nodes_for_config(hostname):
 
 
 def _verify_cluster_address_family(hostname):
-    cluster_host_family = config.is_ipv6_primary(hostname) and "IPv6" or "IPv4"
+    cluster_host_family = "IPv6" if config.is_ipv6_primary(hostname) else "IPv4"
 
     address_families = [
         "%s: %s" % (hostname, cluster_host_family),
@@ -488,7 +488,7 @@ def _verify_cluster_address_family(hostname):
     address_family = cluster_host_family
     mixed = False
     for nodename in config.nodes_of(hostname):
-        family = config.is_ipv6_primary(nodename) and "IPv6" or "IPv4"
+        family = "IPv6" if config.is_ipv6_primary(nodename) else "IPv4"
         address_families.append("%s: %s" % (nodename, family))
         if address_family == None:
             address_family = family
@@ -525,7 +525,7 @@ def failed_ip_lookups():
 
 def fallback_ip_for(hostname, family=None):
     if family == None:
-        family = config.is_ipv6_primary(hostname) and 6 or 4
+        family = 6 if config.is_ipv6_primary(hostname) else 4
 
     if family == 4:
         return "0.0.0.0"

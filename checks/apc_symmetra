@@ -149,7 +149,7 @@ def check_apc_symmetra(_no_item, params, parsed):
     if params.get("post_calibration_levels") and \
        last_diag_date not in [ None, 'Unknown' ] and \
        len(last_diag_date) in [8, 10]:
-        year_format       = len(last_diag_date) == 8 and '%y' or '%Y'
+        year_format       = '%y' if len(last_diag_date) == 8 else '%Y'
         last_ts           = time.mktime(time.strptime(last_diag_date, '%m/%d/'+year_format))
         diff_sec          = time.time() - last_ts
         allowed_delay_sec = 86400 + params['post_calibration_levels']['additional_time_span']

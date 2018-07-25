@@ -42,7 +42,7 @@ def check_smtp_arguments(params):
     # Use the address family of the monitored host by default
     address_family = settings.get("address_family")
     if address_family is None:
-        address_family = is_ipv6_primary(host_name()) and "ipv6" or "ipv4"
+        address_family = "ipv6" if is_ipv6_primary(host_name()) else "ipv4"
 
     if address_family == "ipv6":
         args += " -6"

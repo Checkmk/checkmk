@@ -170,7 +170,7 @@ def check_etherbox_switch_contact(item, params, info):
 
     state = 0
     perfdata = [ ("switch_contact", value) ]
-    switch_state = value == "1000" and "open" or "closed"
+    switch_state = "open" if value == "1000" else "closed"
 
     state = 0
     extra_info = ""

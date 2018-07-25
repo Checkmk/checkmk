@@ -15,7 +15,6 @@ disable=
     cell-var-from-loop,
     consider-iterating-dictionary,
     consider-using-enumerate,
-    consider-using-ternary,
     inconsistent-return-statements,
     logging-not-lazy,
     missing-docstring,

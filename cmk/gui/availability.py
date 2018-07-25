@@ -990,7 +990,7 @@ def reclassify_service_by_annotation(history_entry, annotation, key_to_change):
                 new_entry["until"] = p_until
                 new_entry["duration"] = p_until - p_from
                 if is_in:
-                    new_entry[key_to_change] = annotation["downtime"] and 1 or 0
+                    new_entry[key_to_change] = 1 if annotation['downtime'] else 0
                     # If the annotation removes a downtime from the services, but
                     # the actual reason for the service being in downtime is a host
                     # downtime, then we must cancel the host downtime (also), or else
@@ -1801,7 +1801,7 @@ def compute_bi_timelines(timeline_containers, time_range, timewarp, phases_list)
                                            timeline_container.states)
 
         tree_time = time_range[0]
-        timeline_container.timewarp_state = timewarp == int(tree_time) and tree_state or None
+        timeline_container.timewarp_state = tree_state if timewarp == int(tree_time) else None
         timeline_container.tree_state = tree_state
         timeline_container.tree_time  = tree_time
 

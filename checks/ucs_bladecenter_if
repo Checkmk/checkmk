@@ -211,7 +211,7 @@ def parse_ucs_bladecenter_if(info):
                              values.get("OperState",  "down") == "up"
 
             entry[1] = item
-            entry[4] = operStatus and "1" or "2"
+            entry[4] = "1" if operStatus else "2"
             entry[18] = item # ifAlias
             entry[19] = ''   # MAC address not known here
             for table_index , ctr_keys in tableindex.get(what).items():

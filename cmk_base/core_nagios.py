@@ -159,7 +159,7 @@ def _create_nagios_hostdefs(outfile, hostname, attrs):
     # Add custom macros
     for key, value in attrs.items():
         if key[0] == '_':
-            tabs = len(key) > 13 and "\t\t" or "\t\t\t"
+            tabs = "\t\t" if len(key) > 13 else "\t\t\t"
             outfile.write("  %s%s%s\n" % (key, tabs, value))
 
     # Host check command might differ from default
@@ -302,7 +302,7 @@ define servicedependency {
 
         # Add custom user icons and actions
         actions = core_config.icons_and_actions_of('service', hostname, description, checkname, params)
-        action_cfg = actions and '  _ACTIONS\t\t\t%s\n' % ','.join(actions) or ''
+        action_cfg = ('  _ACTIONS\t\t\t%s\n' % ','.join(actions)) if actions else ''
 
         outfile.write("""define service {
   use\t\t\t\t%s
@@ -418,7 +418,7 @@ define service {
             else:
                 used_descriptions[description] = ( "active(" + acttype + ")", description )
 
-            template = has_perfdata and "check_mk_perf," or ""
+            template ="check_mk_perf," if has_perfdata else ""
             extraconf = _extra_service_conf_of(hostname, description)
 
             if host_attrs["address"] in [ "0.0.0.0", "::" ]:
@@ -490,7 +490,7 @@ define service {
             else:
                 used_descriptions[description] = ( "custom(%s)" % command_name, description )
 
-            template = has_perfdata and "check_mk_perf," or ""
+            template = "check_mk_perf," if has_perfdata else ""
             extraconf = _extra_service_conf_of(hostname, description)
             command = "%s!%s" % (command_name, command_line)
             outfile.write("""

@@ -70,7 +70,7 @@ def check_f5_bigip_cluster_status(_no_item, params, parsed, is_v11_2 = False):
         yield 2, "No active node found: "
 
     for node in sorted(parsed):
-        node_name  = node and "[%s] " % node or ""
+        node_name  = ("[%s] " % node) if node else ""
         node_state = parsed[node]
         state      = 0
         if is_v11_2:

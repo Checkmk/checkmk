@@ -345,7 +345,7 @@ def quote_tab(col):
     if ty in [float, int]:
         return str(col)
     elif ty is bool:
-        return col and "1" or "0"
+        return '1' if col else '0'
     elif ty in [tuple, list]:
         col = "\1" + "\1".join([quote_tab(e) for e in col])
     elif col is None:

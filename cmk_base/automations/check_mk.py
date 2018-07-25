@@ -1085,7 +1085,7 @@ class AutomationDiagHost(Automation):
 
         try:
             if test == 'ping':
-                base_cmd = ipv6_primary and "ping6" or "ping"
+                base_cmd = "ping6" if ipv6_primary else "ping"
                 p = subprocess.Popen([base_cmd, "-A", "-i", "0.2",
                                                 "-c", "2", "-W", "5", ipaddress ],
                         stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
@@ -1110,7 +1110,7 @@ class AutomationDiagHost(Automation):
                 return 0, output
 
             elif test == 'traceroute':
-                family_flag = ipv6_primary and "-6" or "-4"
+                family_flag ="-6" if ipv6_primary else "-4"
                 try:
                     p = subprocess.Popen(['traceroute', family_flag, '-n', ipaddress ],
                                      stdout=subprocess.PIPE, stderr=subprocess.STDOUT)

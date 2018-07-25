@@ -39,7 +39,7 @@ def check_mongodb_locks(_no_item, params, info):
     for line in info:
         what, name, count = line
         count = int(count)
-        param_name = what.startswith("active") and "clients" or "queue"
+        param_name = "clients" if what.startswith("active") else "queue"
         warn, crit = None, None
         state      = 0
         if "%s_%s_locks" % (param_name, name) in params:

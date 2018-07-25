@@ -53,7 +53,7 @@ def check_kentix_motion(item, params, info):
             else:
                 periods = [((0, 0), (24, 0))]
             if value >= valmax:
-                status = test_in_period((today.tm_hour, today.tm_min), periods) and 1 or 0
+                status = 1 if test_in_period((today.tm_hour, today.tm_min), periods) else 0
                 return status, 'Motion detected', [('motion', value, valmax, None, 0, 100)]
             else:
                 return 0, 'No motion detected', [('motion', value, valmax, None, 0, 100)]

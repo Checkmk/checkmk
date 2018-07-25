@@ -104,10 +104,10 @@ def check_siemens_plc_flag(item, params, info):
         if line[1] == "flag" and line[0]+" "+line[2] == item:
             flag_state = line[-1] == 'True'
             if flag_state:
-                state = not expected_state and 2 or 0
+                state = 0 if expected_state else 2
                 return state, 'On'
             else:
-                state = expected_state and 2 or 0
+                state = 2 if expected_state else 0
                 return state, 'Off'
 
 

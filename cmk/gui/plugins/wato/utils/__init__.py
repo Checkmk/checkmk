@@ -949,7 +949,7 @@ def Levels(**kwargs):
     if "default_value" in kwargs:
         default_value = kwargs["default_value"]
     else:
-        default_value = default_levels and default_levels or None
+        default_value = default_levels if default_levels else None
 
     return Alternative(
           title = title,

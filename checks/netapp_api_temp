@@ -34,7 +34,7 @@ def inventory_netapp_api_temp(parsed):
         yield "Ambient Shelf %s"  % shelf, {}
 
 def check_netapp_api_temp(item, params, parsed):
-    is_ambient = item.startswith("Ambient") and "true" or "false"
+    is_ambient = "true" if item.startswith("Ambient") else "false"
 
     sensors = []
     for name, values in parsed.items():

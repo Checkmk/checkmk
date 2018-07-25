@@ -284,7 +284,7 @@ def check_cisco_qos(item, params, info):
     perfdata = []
     perfdata_avg = []
 
-    min_value = ("0", "0.0")[unit == 'bit']
+    min_value = "0.0" if unit == "bit" else "0"
     for name, counter, warn, crit, min_val, max_val in [
         ( "post", post_b, post_warn, post_crit, min_value, bw),
         ( "drop", drop_b, drop_warn, drop_crit, min_value, bw),

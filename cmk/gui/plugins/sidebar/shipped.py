@@ -1047,7 +1047,7 @@ def render_custom_links():
                     render_list(idss, entry[2])
                     html.end_foldable_container()
                 elif type(entry[1]) == str:
-                    frame = len(entry) > 3 and entry[3] or "main"
+                    frame =entry[3] if len(entry) > 3 else "main"
 
                     if len(entry) > 2 and entry[2]:
                         icon_file = entry[2]

@@ -93,7 +93,7 @@ def inventory_printer_io(info):
         # a) try to use the description
         # b) try to use the type otherwise use the index
         if name == "unknown" or not name:
-            name = descr and descr or index.split('.')[-1]
+            name = descr if descr else index.split('.')[-1]
 
         yield (name, {})
 
@@ -133,7 +133,7 @@ def check_printer_io(item, params, info, what):
             else:
                 state = 0
                 levels_txt = ''
-                how = what == 'input' and 'remaining' or 'filled'
+                how = 'remaining' if what == 'input' else 'filled'
                 if level == -3:
                     level_txt = "at least one"
 

@@ -64,7 +64,7 @@ def check_hp_blade_blades(item, params, info):
             # Seems not to be implemented. The MIB file tells me that this value
             # should represent a state but is empty. So set it to "fake" OK and
             # display the other gathered information.
-            state = line[2] == '' and 2 or line[2]
+            state = 2 if line[2] == '' else line[2]
             state = saveint(state)
 
             snmp_state = hp_blade_status_map[state]

@@ -2483,7 +2483,7 @@ class html(HTMLGenerator):
             return False # False --> "Dialog shown, no answer yet"
         else:
             # Now check the transaction
-            return self.check_transaction() and True or None # True: "Yes", None --> Browser reload of "yes" page
+            return True if self.check_transaction() else None # True: "Yes", None --> Browser reload of "yes" page
 
 
     #
@@ -2949,7 +2949,7 @@ hy
 
         # TODO: This needs to be realized as plugin mechanism
         if self.myfile == "view":
-            mode_name = self.var('mode') == "availability" and "availability" or "view"
+            mode_name = "availability" if self.var("mode") == "availability" else "view"
 
             encoded_vars = {}
             for k, v in self.page_context.items():

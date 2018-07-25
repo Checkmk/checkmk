@@ -293,7 +293,7 @@ def strip_snmp_value(value, hex_plain = False):
     if v.startswith('"'):
         v = v[1:-1]
         if len(v) > 2 and _is_hex_string(v):
-            return not hex_plain and _convert_from_hex(v) or value
+            return value if hex_plain else _convert_from_hex(v)
         else:
             # Fix for non hex encoded string which have been somehow encoded by the
             # netsnmp command line tools. An example:

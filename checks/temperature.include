@@ -170,7 +170,7 @@ def check_temperature_trend(temp, params, output_unit, crit, crit_lower, unique_
 
         # rate_avg is growth in C/s, trend is in C per trend range minutes
         trend = float(rate_avg * trend_range_min * 60.0)
-        sign = trend > 0 and "+" or ""
+        sign = "+" if trend > 0 else ""
         combiner(0, "rate: %s%s/%g min" %\
                     (sign, render_temp(trend, output_unit, True), trend_range_min))
 
@@ -205,7 +205,7 @@ def check_temperature_trend(temp, params, output_unit, crit, crit_lower, unique_
             # The start value of minutes_left is negative. The pnp graph and the perfometer
             # will interpret this as inifinite -> not growing
             minutes_left = -1
-            limit = trend > 0 and crit or crit_lower
+            limit = crit if trend > 0 else crit_lower
 
             if limit:  # crit levels may not be set, especially lower level
                 diff_to_limit = limit - temp

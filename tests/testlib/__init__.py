@@ -531,6 +531,7 @@ class Site(object):
 
             self._enable_mod_python_debug()
             self._enabled_liveproxyd_debug_logging()
+            self._enable_mkeventd_debug_logging()
 
         self._install_test_python_modules()
 
@@ -636,10 +637,21 @@ class Site(object):
 
 
     def _enabled_liveproxyd_debug_logging(self):
-        self.makedirs("etc/check_mk/liveproxyd.d/wato")
-        self.write_file("etc/check_mk/liveproxyd.d/wato/global.mk",
+        self.makedirs("etc/check_mk/liveproxyd.d")
+        self.write_file("etc/check_mk/liveproxyd.d/logging.mk",
             "liveproxyd_log_levels = {'cmk.liveproxyd': 10}")
 
+
+    def _enable_mkeventd_debug_logging(self):
+        self.makedirs("etc/check_mk/mkeventd.d")
+        self.write_file("etc/check_mk/mkeventd.d/logging.mk",
+            "log_level = %r\n" % {
+                'cmk.mkeventd': 10,
+                'cmk.mkeventd.EventServer': 10,
+                'cmk.mkeventd.EventStatus': 10,
+                'cmk.mkeventd.StatusServer': 10,
+                'cmk.mkeventd.lock': 20
+        })
 
     def _enable_mod_python_debug(self):
         path = "etc/check_mk/apache.conf"

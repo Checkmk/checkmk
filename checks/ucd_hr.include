@@ -97,7 +97,7 @@ def _is_ucd_mem(oid):
         if name in sys_descr and not oid(".1.3.6.1.2.1.25.1.1.0"):
             return True
 
-    # Astaro Firewall is Linux but should use hr_mem
+    # Astaro and Synology are Linux but should use hr_mem
     # Otherwise Cache/Buffers are included in used memory
     # generating critical state
     if oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.8072."):

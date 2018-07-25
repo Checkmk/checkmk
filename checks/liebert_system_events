@@ -64,4 +64,5 @@ check_info['liebert_system_events'] = {
                                 ]),
     'snmp_scan_function'      : scan_liebert,
     'includes'                : [ 'liebert.include' ],
+    'handle_empty_info'       : True,
 }

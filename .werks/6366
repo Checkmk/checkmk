@@ -1,0 +1,13 @@
+Title: User and profile edit dialogs show wrong language when 'en' is configured
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.5.0b10
+Date: 1532503987
+Class: fix
+
+When a user has a legacy value 'en' configured as it's language the value was not
+transformed to the correct value making the form show up "German" as selected
+language instead of "English". After saving the user language was switched to
+German accidentally.

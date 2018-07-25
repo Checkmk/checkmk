@@ -437,7 +437,7 @@ def inventory_if_common(info, has_nodeinfo = False):
                 # operation status, default is down(2)
                 # if at least one is up(1) then up is considered as valid
                 one_up = "1" in [pair[1] for pair in attrs["interfaces"]]
-                group_operStatus = one_up and "1" or "2"
+                group_operStatus = "1" if one_up else "2"
                 append_to_pre_inventory = group_operStatus in portstates
 
             if append_to_pre_inventory:
@@ -718,8 +718,8 @@ def check_if_common_single(item, params, info, force_counter_wrap = False,
     targetstates       = params.get("state")
     map_operstates     = dict(params.get("map_operstates", []))
     average            = params.get("average")
-    unit               = params.get("unit") in ["Bit", "bit"] and "Bit" or "B"
-    unit_multiplier    = unit == "Bit" and 8.0 or 1.0
+    unit               = "Bit" if params.get("unit") in ["Bit", "bit"] else "B"
+    unit_multiplier    = 8.0 if unit == "Bit" else 1.0
     cluster_items      = {}
 
     # error checking might be turned off
@@ -777,9 +777,9 @@ def check_if_common_single(item, params, info, force_counter_wrap = False,
                     elif params["infotext_format"] == "alias_and_description":
                         bracket_info = ", ".join([i for i in [ifAlias, ifDescr] if i])
                     elif params["infotext_format"] == "alias_or_description":
-                        bracket_info = ifAlias and ifAlias or ifDescr
+                        bracket_info = ifAlias if ifAlias else ifDescr
                     elif params["infotext_format"] == "desription_or_alias":
-                        bracket_info = ifDescr and ifDescr or ifAlias
+                        bracket_info = ifDescr if ifDescr else ifAlias
 
                     if bracket_info:
                         infotext = "[%s]" % bracket_info
@@ -867,8 +867,8 @@ def check_if_common_single(item, params, info, force_counter_wrap = False,
             traffic_levels = get_specific_traffic_levels(general_traffic_levels, unit, ref_speed, assumed_speed_in, assumed_speed_out)
 
             # Speed in bytes
-            speed_b_in  = assumed_speed_in  and assumed_speed_in / 8  or ref_speed
-            speed_b_out = assumed_speed_out and assumed_speed_out / 8 or ref_speed
+            speed_b_in  = (assumed_speed_in  / 8) if assumed_speed_in else  ref_speed
+            speed_b_out = (assumed_speed_out / 8) if assumed_speed_out else ref_speed
 
             #
             # All internal values within ths check after this point are bytes, not bits!

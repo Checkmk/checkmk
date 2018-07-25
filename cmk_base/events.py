@@ -276,7 +276,7 @@ def complete_raw_context(raw_context, with_dump, event_log):
     raw_keys = list(raw_context.keys())
 
     try:
-        raw_context["WHAT"] = raw_context.get("SERVICEDESC") and "SERVICE" or "HOST"
+        raw_context["WHAT"] = "SERVICE" if raw_context.get("SERVICEDESC") else "HOST"
 
         raw_context.setdefault("MONITORING_HOST", socket.gethostname())
         raw_context.setdefault("OMD_ROOT", cmk.paths.omd_root)
@@ -509,7 +509,7 @@ def event_match_servicegroups(rule, context, is_regex = False):
             if is_regex:
                 r = regex(group)
                 for sg in servicegroups:
-                    match_value = match_type == "match_alias" and config.define_servicegroups[sg] or sg
+                    match_value = config.define_servicegroups[sg] if match_type == "match_alias" else sg
                     if r.search(match_value):
                         return
             elif group in servicegroups:
@@ -549,8 +549,8 @@ def event_match_exclude_servicegroups(rule, context, is_regex = False):
             if is_regex:
                 r = regex(group)
                 for sg in servicegroups:
-                    match_value         = match_type == "match_alias" and config.define_servicegroups[sg] or sg
-                    match_value_inverse = match_type == "match_alias" and sg or config.define_servicegroups[sg]
+                    match_value         = config.define_servicegroups[sg] if match_type == "match_alias" else sg
+                    match_value_inverse = sg if match_type == "match_alias" else config.define_servicegroups[sg]
 
                     if r.search(match_value):
                         return "The service group \"%s\" (%s) is excluded per regex pattern: %s" %\

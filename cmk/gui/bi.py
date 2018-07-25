@@ -485,8 +485,8 @@ class BILock(object):
         if not os.path.exists(self._filepath):
             file(self._filepath, "a+")
 
-        lock_options = self._shared   and fcntl.LOCK_SH or fcntl.LOCK_EX
-        lock_options = self._blocking and lock_options or (lock_options| fcntl.LOCK_NB)
+        lock_options = fcntl.LOCK_SH if self._shared else fcntl.LOCK_EX
+        lock_options = lock_options if self._blocking else (lock_options | fcntl.LOCK_NB)
 
         self._fd = os.open(self._filepath, os.O_RDONLY | os.O_CREAT, 0660)
         lock_info = []
@@ -1066,7 +1066,7 @@ class BICacheManager(object):
 
     def get_error_info(self):
         cacheinfo_content = self.get_bicacheinfo()
-        return (cacheinfo_content and cacheinfo_content.get("error_info", None)) or None
+        return cacheinfo_content.get('error_info', None) if cacheinfo_content else None
 
 
     def truncate_cachefiles(self):
@@ -1076,7 +1076,7 @@ class BICacheManager(object):
 
     def get_online_sites(self):
         cacheinfo_content = self.get_bicacheinfo()
-        return (cacheinfo_content and cacheinfo_content.get("compiled_sites", [])) or []
+        return cacheinfo_content.get('compiled_sites', []) if cacheinfo_content else []
 
 
     def get_bicacheinfo(self):
@@ -1218,7 +1218,7 @@ class BICacheManager(object):
 
     def get_compiled_all(self):
         info = self.get_compiled_trees()
-        return (info and info.get("compiled_all", False)) or False
+        return info.get('compiled_all', False) if info else False
 
 
     def _merge_compiled_data(self, job, new_data):

@@ -81,8 +81,9 @@ def check_hp_blade_psu(item, params, info):
             if status == 0:
                 detail_output = ', Output: %sW' % line[3]
             else:
-                detail_output = int(line[4]) >= 1 and ' (%s)' % hp_blade_psu_status[4] or ''
-                detail_output = int(line[5]) >= 1 and ', Inputline: %s' % hp_blade_psu_inputline_status[5] or ''
+                # FIXME: This should probably append strings, not overwrite them...
+                detail_output = (' (%s)' % hp_blade_psu_status[4]) if int(line[4]) >= 1 else ''
+                detail_output = (', Inputline: %s' % hp_blade_psu_inputline_status[5]) if int(line[5]) >= 1 else ''
 
             perfdata = [ ('output', line[3]) ]
 

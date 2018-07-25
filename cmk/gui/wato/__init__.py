@@ -4404,7 +4404,7 @@ class ModeBulkImport(WatoMode):
             if key != None:
                 key_match_score = similarity(key, header)
                 title_match_score = similarity(title, header)
-                score = key_match_score > title_match_score and key_match_score or title_match_score
+                score = key_match_score if key_match_score > title_match_score else title_match_score
 
                 if score > 0.6 and score > highscore:
                     best_key = key
@@ -12753,9 +12753,8 @@ class ModeEditRuleset(WatoMode):
                            + _("The value of this rule is not valid. ") \
                            + reason
         else:
-            img = value and "yes" or "no"
-            title = value and _("This rule results in a positive outcome.") \
-                          or  _("this rule results in a negative outcome.")
+            img ="yes" if value else "no"
+            title = _("This rule results in a positive outcome.") if value else _("this rule results in a negative outcome.")
             value_html = '<img align=absmiddle class=icon title="%s" src="images/rule_%s.png">' \
                             % (title, img)
         html.write(value_html)
@@ -16631,7 +16630,7 @@ def configure_attributes(new, hosts, for_what, parent, myself=None, without_attr
                 checkbox_code  = html.render_checkbox("ignored_" + checkbox_name, add_attr=["disabled"])
                 checkbox_code += html.render_hidden_field(checkbox_name, "on")
             else:
-                add_attr = disabled and ["disabled"] or []
+                add_attr = ["disabled"] if disabled else []
                 onclick = "wato_fix_visibility(); wato_toggle_attribute(this, '%s');" % attrname
                 checkbox_code = html.render_checkbox(checkbox_name, active,
                                                   onclick=onclick, add_attr=add_attr)

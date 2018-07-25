@@ -121,7 +121,7 @@ def check_omd_apache(item, _no_params, parsed):
             total += rate
             yield 0, '', [(ty + '_' + key, rate)]
 
-        total = ty == 'bytes' and get_bytes_human_readable(total) or '%.2f' % total
+        total = get_bytes_human_readable(total) if ty == "bytes" else ("%.2f" % total)
         yield 0, '%s %s' % (total, title)
 
 

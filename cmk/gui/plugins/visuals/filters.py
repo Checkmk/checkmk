@@ -666,7 +666,7 @@ class FilterNagiosExpression(FilterTristate):
         self.neg = neg
 
     def filter_code(self, infoname, positive):
-        return positive and self.pos or self.neg
+        return self.pos if positive else self.neg
 
 declare_filter(250, FilterNagiosFlag("service",       "service_process_performance_data", _("Processes performance data")))
 declare_filter(251, FilterNagiosExpression("service", "has_performance_data",             _("Has performance data"),
@@ -1195,7 +1195,7 @@ class FilterStarred(FilterTristate):
     def __init__(self, what):
         self.what = what
 
-        title = what == "host" and _("Favorite Hosts") or _("Favorite Services")
+        title = what == _("Favorite Hosts") if what == "host" else _("Favorite Services")
 
         FilterTristate.__init__(self,
             name   = what + "_favorites",

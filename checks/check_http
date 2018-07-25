@@ -33,7 +33,7 @@ def _get_family_and_address(settings):
     # Use the address family of the monitored host by default
     family = settings.get("address_family")
     if family is None:
-        family = is_ipv6_primary(host_name()) and "ipv6" or "ipv4"
+        family = "ipv6" if is_ipv6_primary(host_name()) else "ipv4"
 
     if family == "ipv6":
         address = "$_HOSTADDRESS_6$"

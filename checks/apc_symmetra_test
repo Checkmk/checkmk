@@ -64,7 +64,7 @@ def check_apc_test(item, params, info):
     if last_date == 'Unknown' or len(last_date) not in [8, 10]:
         return 3, "Date of last self test is unknown"
 
-    year_format = len(last_date) == 8 and '%y' or '%Y'
+    year_format = '%y' if len(last_date) == 8 else '%Y'
     last_ts = time.mktime(time.strptime(last_date, '%m/%d/'+year_format))
     days_diff = (time.time() - last_ts) / 86400
 

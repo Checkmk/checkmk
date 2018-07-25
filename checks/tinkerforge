@@ -150,7 +150,7 @@ def check_tinkerforge_motion(item, params, parsed):
             periods = [((0, 0), (24, 0))]
         reading = int(parsed['motion'][item][0])
         if reading == 1:
-            status = test_in_period((today.tm_hour, today.tm_min), periods) and 1 or 0
+            status = 1 if test_in_period((today.tm_hour, today.tm_min), periods) else 0
             return status, "Motion detected", [('motion', reading)]
         else:
             return 0, "No motion detected", [('motion', reading)]

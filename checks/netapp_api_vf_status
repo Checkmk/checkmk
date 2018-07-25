@@ -39,7 +39,7 @@ def check_netapp_api_vf_status(item, _no_params, info):
     if item not in filer_states:
         return
 
-    state = filer_states[item] not in ["running", "DR backup", "migrating"] and 2 or 0
+    state = 0 if filer_states[item] in ['running', 'DR backup', 'migrating'] else 2
     return state, "State is %s" % filer_states[item]
 
 check_info["netapp_api_vf_status"] = {

@@ -1453,7 +1453,7 @@ def show_context_links(thisview, datasource, show_filters,
                      hidden = not enable_commands)
         html.toggle_button("commands", False, "commands", "", hidden=enable_commands, disabled=True)
 
-        selection_enabled = (enable_commands and enable_checkboxes) or thisview.get("force_checkboxes")
+        selection_enabled = enable_checkboxes if enable_commands else thisview.get('force_checkboxes')
         if not thisview.get("force_checkboxes"):
             toggler("checkbox", "checkbox", _("Enable/Disable checkboxes for selecting rows for commands"),
                     "location.href='%s';" % html.makeuri([('show_checkboxes', show_checkboxes and '0' or '1')]),

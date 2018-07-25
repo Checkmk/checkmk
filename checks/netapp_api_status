@@ -34,7 +34,7 @@ def check_netapp_api_status(item, _no_params, info):
     data = dict([line for line in info if len(line) == 2])
 
     if data.get("status"):
-        state = data["status"].lower() not in ["ok", "ok-with-suppressed", "ok_with_suppressed"] and 2 or 0
+        state = 0 if data["status"].lower() in ["ok", "ok-with-suppressed", "ok_with_suppressed"] else 2
         yield state, "Status: %s" % data["status"]
         del data["status"]
 

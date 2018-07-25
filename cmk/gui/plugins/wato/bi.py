@@ -256,7 +256,7 @@ class BIManagement(object):
                 child_conditions = what[1]
                 what             = what[0]
                 child_tags       = child_conditions[0]
-                child_hostspec   = child_conditions[1] and child_conditions[1] or self._bi_constants['ALL_HOSTS']
+                child_hostspec   = child_conditions[1] if child_conditions[1] else self._bi_constants['ALL_HOSTS']
                 return (self._bi_constants["FOREACH_" + what.upper()], child_tags, child_hostspec, tags, hostspec) \
                        + self._convert_node_to_bi(node[1][3])
             else:

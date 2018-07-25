@@ -53,7 +53,7 @@ def netapp_convert_to_if64(info):
                 speed = 0
             values["speed"] = speed
 
-            values["state"] = tokens[-1].lower() == "up" and "1" or "2"
+            values["state"] = "1" if tokens[-1].lower() == "up" else "2"
         elif values.get("port-role") != "storage-acp":
             # If an interface has no media type and is not a storage-acp it is considered as virtual interface
             vif_list.append(name)

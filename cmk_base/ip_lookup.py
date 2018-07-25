@@ -64,7 +64,7 @@ def lookup_ipv6_address(hostname):
 # FIXME: This different handling is bad. Clean this up!
 def lookup_ip_address(hostname, family=None):
     if family == None: # choose primary family
-        family = config.is_ipv6_primary(hostname) and 6 or 4
+        family = 6 if config.is_ipv6_primary(hostname) else 4
 
     # Quick hack, where all IP addresses are faked (--fake-dns)
     if _fake_dns:

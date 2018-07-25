@@ -72,9 +72,9 @@ def inv_mssql_versions(info):
         else:
             instance_id = line[0]
         version      = line[1]
-        edition      = len(line) == 4 and line[2] or ""
+        edition      = line[2] if len(line) == 4 else ''
         clustered    = len(line) == 4 and line[3] != ""
-        cluster_name = len(line) == 4 and line[3] or ""
+        cluster_name = line[3] if len(line) == 4 else ''
 
         instance = get_list_item("name", instance_id)
         instance.update({

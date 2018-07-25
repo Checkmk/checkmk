@@ -59,7 +59,7 @@ def check_hp_blade_manager(item, params, info):
 
             # The SNMP answer is not fully compatible to the MIB file. The value of 0 will
             # be set to "fake OK" to display the other gathered information.
-            state = int(line[2]) == 0 and 2 or int(line[2])
+            state = 2 if int(line[2]) == 0 else int(line[2])
 
             snmp_state = hp_blade_status_map[state]
             status     = hp_blade_status2nagios_map[snmp_state]

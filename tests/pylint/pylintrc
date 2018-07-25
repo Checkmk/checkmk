@@ -139,14 +139,6 @@ disable=
     # wrong-spelling-in-comment,
     # wrong-spelling-in-docstring,
 
-[TYPECHECK]
-# rrdtool
-#   Can not check methods / attributes of the rrdtool C module. Skipping related errors
-#   like the following:
-#   [E1101(no-member), create_rrd] Module 'rrdtool' has no 'create' member
-# TODO: Add rrdtool to virtualenv and drop this
-ignored-modules = rrdtool
-
 [REPORTS]
 output-format=cmk_colorized
 msg-template={path}:{line}: [{msg_id}({symbol}), {obj}] {msg}

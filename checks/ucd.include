@@ -57,7 +57,7 @@ def hr_mem_scan_function(oid):
     # of devices, which are known to report incorrect information
     # about mem usage
 
-    # Astaro Firewall is Linux but should use hr_mem
+    # Astaro and Synology are Linux but should use hr_mem
     # Otherwise Cache/Buffers are included in used memory
     # generating critical state
     if oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.8072."):

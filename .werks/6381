@@ -1,0 +1,13 @@
+Title: apc_inrow_system_events, liebert_system_events: Fixed handling of empty section
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1532522903
+Class: fix
+
+If no events are reported for these two checks, the agent section
+is empty and Check_MK marked the related services as 'vanished'.
+An empty section is valid and these two checks can handle them
+correctly.

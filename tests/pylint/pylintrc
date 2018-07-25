@@ -27,8 +27,6 @@ disable=
     reimported,
     relative-import,
     ungrouped-imports,
-    unsubscriptable-object,
-    unsupported-membership-test,
     unused-argument,
     unused-wildcard-import,
     wildcard-import,
@@ -118,6 +116,13 @@ disable=
     too-many-public-methods,
     too-many-return-statements,
     too-many-statements,
+    #---------------------------------------------------------------------------
+    # Enabling these would be nice, but at the moment pylint is a bit too dumb,
+    # so it stumbles over e.g. initialization with None. It ignores control
+    # flow, so even adding e.g. isinstance() guards wouldn't help, see:
+    # https://github.com/PyCQA/pylint/issues/1498.
+    unsubscriptable-object,
+    unsupported-membership-test,
     #---------------------------------------------------------------------------
     # Our code is still full of FIXMEs/XXXs/TODOs, perhaps fixing or removing
     # them might be a good idea some day...

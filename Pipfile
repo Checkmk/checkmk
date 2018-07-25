@@ -66,6 +66,7 @@ scandir = "==1.7"
 pathlib2 = "==2.3.2"
 python-dateutil = "==2.7.3"
 python-snap7 = "==0.9"
+rrdtool = "==0.1.14"  # Actually we ship the binding which comes with rrdtool itself...
 
 [requires]
 python_version = "2.7"

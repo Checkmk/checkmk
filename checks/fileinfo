@@ -238,8 +238,7 @@ def check_fileinfo_groups(item, params, info):
     try:
         reftime = int(info[0][0])
     except (IndexError, ValueError):
-        yield 3, "Missing reference timestamp"
-        return
+        return 3, "Missing reference timestamp"
 
     # Start counting values on all files
     for line in info[1:]:

@@ -17,7 +17,6 @@ disable=
     consider-using-enumerate,
     consider-using-ternary,
     inconsistent-return-statements,
-    len-as-condition,
     logging-not-lazy,
     missing-docstring,
     multiple-imports,
@@ -83,6 +82,12 @@ disable=
     # a few violations (about 200 in roughly 50 modules), so we postpone fixing
     # this.
     redefined-builtin,
+    #---------------------------------------------------------------------------
+    # Enabling this would be nice, but not crucial. At the moment, we have quite
+    # a few violations (about 220 in roughly 40 modules), so we postpone fixing
+    # this. Note that due to our arcane use of types, we need to be very careful
+    # when fixing these warnings!
+    len-as-condition,
     #---------------------------------------------------------------------------
     # Enabling this would be nice, but not crucial. At the moment, we have quite
     # a few violations, so we postpone fixing this. When we do it eventually, we

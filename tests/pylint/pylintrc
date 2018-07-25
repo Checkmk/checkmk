@@ -25,7 +25,6 @@ disable=
     no-self-use,
     protected-access,
     redefined-argument-from-local,
-    redefined-builtin,
     reimported,
     relative-import,
     ungrouped-imports,
@@ -79,6 +78,11 @@ disable=
     # uncover bugs. Fixing this is not rocket science, just some work: Roughly
     # 400 warnings in about 60 modules, but this can be fixed step by step.
     redefined-outer-name,
+    #---------------------------------------------------------------------------
+    # Enabling this would be nice, but not crucial. At the moment, we have quite
+    # a few violations (about 200 in roughly 50 modules), so we postpone fixing
+    # this.
+    redefined-builtin,
     #---------------------------------------------------------------------------
     # Enabling this would be nice, but not crucial. At the moment, we have quite
     # a few violations, so we postpone fixing this. When we do it eventually, we

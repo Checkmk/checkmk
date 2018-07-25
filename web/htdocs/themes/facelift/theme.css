@@ -204,7 +204,7 @@ table.vs_duallist a.control, table.vs_duallist body.main .popup_menu span.contro
 body.main img.treeangle {
   filter: invert(100%); }
 
-body.main .popup_menu a, body.main .popup_menu span, body.main table.footer .popup_menu a, body.main table.footer .popup_menu span, body.main .popup_menu span {
+body.main .popup_menu a, body.main .popup_menu span, body.main table.footer, body.main table.footer .popup_menu a, body.main table.footer .popup_menu span, body.main .popup_menu span {
   color: #1A243D; }
 
 table {

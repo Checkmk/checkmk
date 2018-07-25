@@ -1065,8 +1065,6 @@ def _load_cmk_base_groups():
         "define_servicegroups": {},
         "define_contactgroups": {},
     }
-    for what in ["host", "service", "contact" ]:
-        group_specs["define_%sgroups" % what] = {}
 
     return store.load_mk_file(root_dir + "groups.mk", default=group_specs)
 

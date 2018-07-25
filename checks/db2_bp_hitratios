@@ -81,7 +81,7 @@ def check_db2_bp_hitratios(item, no_params, parsed):
             hr_info = dict(zip(headers[1:], line[1:])) # skip BP_NAME
             for key in headers[1:]:
                 value = hr_info[key]
-                value = value.replace("-","0")
+                value = value.replace("-","0").replace(",", ".")
                 key   = key.replace("_RATIO_PERCENT","")
                 map_key_to_text = {
                     "TOTAL_HIT": "Total",

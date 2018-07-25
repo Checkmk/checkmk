@@ -14839,6 +14839,11 @@ def select_language(user):
         html.open_div(id_="attr_entry_language", style="display: none" if not active else "")
 
         language = user.get('language') if user.get('language') != None else ''
+
+        # Transform 'en' configured language to empty string for compatibility reasons
+        if language == "en":
+            language = ""
+
         html.dropdown("language", languages, deflt=language)
         html.close_div()
         html.help(_('Configure the default language '

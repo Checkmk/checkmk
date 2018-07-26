@@ -211,8 +211,8 @@ body.main img.treeangle {
 body.main .popup_menu a, body.main .popup_menu span, body.main table.footer .popup_menu a, body.main table.footer .popup_menu span, body.main .popup_menu span {
   color: #1A243D; }
 
-select[id^=host_tag_0] {
-  width: 100px !important; }
+.op {
+  width: 60px !important; }
 
 .aggrtree img.treeangle, .bi_rule_tree img.treeangle, .invtree img.treeangle {
   filter: invert(0%) !important; }

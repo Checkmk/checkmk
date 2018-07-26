@@ -168,7 +168,7 @@ def compute_prediction(hostname, service_description, pred_file, timegroup, para
     consolidated = []
     for i in xrange(num_points):
         point_line = []
-        for from_time, scale, data in slices:
+        for _from_time, scale, data in slices:
             idx = int(i / float(scale))
             if idx < len(data):
                 d = data[idx]

@@ -578,8 +578,8 @@ def render_grouped_list(rows, view, group_cells, cells, num_columns, show_checkb
     def count_group_members(row, rows):
         this_group = group_value(row, group_cells)
         members = 1
-        for row in rows[1:]:
-            that_group = group_value(row, group_cells)
+        for r in rows[1:]:
+            that_group = group_value(r, group_cells)
             if that_group == this_group:
                 members += 1
             else:

@@ -258,6 +258,11 @@ def _do_all_checks_on_host(sources, hostname, ipaddress, only_check_plugin_names
         success = execute_check(multi_host_sections, hostname, ipaddress, check_plugin_name, item, params, description)
         if success:
             num_success += 1
+        elif success is None:
+            # If the service is in any timeperiod we do not want to
+            # - increase num_success or
+            # - add to missing sections
+            continue
         else:
             missing_sections.add(checks.section_name_of(check_plugin_name))
 
@@ -279,7 +284,7 @@ def execute_check(multi_host_sections, hostname, ipaddress, check_plugin_name, i
     period = config.check_period_of(hostname, description)
     if period and not core.check_timeperiod(period):
         console.verbose("Skipping service %s: currently not in timeperiod %s.\n" % (description, period))
-        return False
+        return None
 
     elif period:
         console.vverbose("Service %s: timeperiod %s is currently active.\n" % (description, period))

@@ -182,13 +182,14 @@ def get_history(hostname):
 
     comparable_trees = []
     previous = None
-    for this_timestamp, inventory_tree in sorted(history, key=lambda x: x[0], reverse=True):
+    for this_timestamp, inventory_tree in sorted(history, key=lambda x: x[0]):
         if previous is None:
             previous = inventory_tree
         else:
             comparable_trees.append((this_timestamp, inventory_tree, previous))
             previous = inventory_tree
-    return comparable_trees
+
+    return reversed(comparable_trees)
 
 
 def parent_path(invpath):

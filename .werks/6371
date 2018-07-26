@@ -1,0 +1,12 @@
+Title: Fixed broken Global Settings page when liveproxyd is disabled
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cee
+Version: 1.5.0b10
+Date: 1532607063
+Class: fix
+
+The global settings page could only be rendered partially and showed an error
+message like "KeyError: 'liveproxyd_log_levels'" when the livestatus proxy
+daemon was disabled for a site in all previous 1.5 releases.

@@ -1,0 +1,11 @@
+Title: Check_MK service: Fixed 'missing agent sections' warning if the time period of a service is active
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0i1
+Date: 1532596851
+
+

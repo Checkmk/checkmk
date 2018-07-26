@@ -1119,8 +1119,8 @@ class LDAPUserConnector(UserConnector):
         duration = time.time() - start_time
         self._logger.info('SYNC FINISHED - Duration: %0.3f sec', duration)
 
-        if changes:
-            import cmk.gui.watolib as watolib # TODO: Cleanup
+        import cmk.gui.watolib as watolib # TODO: Cleanup
+        if changes and not config.is_wato_slave_site():
             watolib.add_change("edit-users", "<br>\n".join(changes), add_user=False)
 
         userdb.save_users(users)

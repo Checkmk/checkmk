@@ -23,11 +23,6 @@ disable=
     reimported,
     relative-import,
     ungrouped-imports,
-    unused-argument,
-    unused-wildcard-import,
-    wildcard-import,
-    wrong-import-order,
-    wrong-import-position,
     #---------------------------------------------------------------------------
     # We should really enable this, there could be some real exceptions waiting
     # to be thrown. But some work is needed first to sprinkle abc annotations
@@ -83,14 +78,28 @@ disable=
     # when fixing these warnings!
     len-as-condition,
     #---------------------------------------------------------------------------
+    # We should really find out where wildcard imports are just laziness or
+    # where they are actually needed (and why).
+    unused-wildcard-import,
+    wildcard-import,
+    #---------------------------------------------------------------------------
     # Enabling this would be nice, but not crucial. At the moment, we have quite
     # a few violations, so we postpone fixing this. When we do it eventually, we
     # probably want to use "include-naming-hint=yes" in the BASIC section.
     invalid-name,
     #---------------------------------------------------------------------------
+    # Enable these would improve readability, but currently there are quite a
+    # few places to fix.
+    wrong-import-position,
+    wrong-import-order,
+    #---------------------------------------------------------------------------
     # Enabling this would be nice, but not crucial. At the moment, we have quite
     # a few violations, so we postpone fixing this.
     singleton-comparison,
+    #---------------------------------------------------------------------------
+    # Enabling this would be nice, but not crucial. At the moment, we have quite
+    # a few violations, so we postpone fixing this.
+    unused-argument,
     #---------------------------------------------------------------------------
     # Alas, these maintenance/security nightmares are still part of our base
     # "technology"... :-/ Nevertheless, reducing their usage is a very worthy

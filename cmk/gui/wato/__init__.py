@@ -11948,7 +11948,7 @@ def change_host_tags_in_rules(folder, operations, mode):
 
     for varname, ruleset in rulesets.get_rulesets().items():
         rules_to_delete = set([])
-        for folder, rulenr, rule in ruleset.get_rules():
+        for _folder, _rulenr, rule in ruleset.get_rules():
             # Handle deletion of complete tag group
             if type(operations) == list: # this list of tags to remove
                 for tag in operations:
@@ -15222,8 +15222,8 @@ class ModeCheckPlugins(WatoMode):
                                 handled_check_names.add(name)
 
             elif type(entries) == dict:
-                for key, subentries in entries.items():
-                    check_entries( key, subentries )
+                for k, subentries in entries.items():
+                    check_entries( k, subentries )
 
         for key, entries in self._manpages.items():
             check_entries( key, entries )

@@ -431,11 +431,11 @@ def page_list(what, title, visuals, custom_columns = None,
                 config.user.may("general.edit_foreign_%s" % what):
             foreign_visuals.append((owner, visual_name, visual))
 
-    for title, items in [(_('Customized'), my_visuals),
+    for title1, items in [(_('Customized'), my_visuals),
                          (_("Owned by other users"), foreign_visuals),
                          (_('Builtin'), builtin_visuals)]:
         html.open_h3()
-        html.write(title)
+        html.write(title1)
         html.close_h3()
 
         table.begin(css = 'data', limit = None)
@@ -477,16 +477,16 @@ def page_list(what, title, visuals, custom_columns = None,
 
             # Title
             table.cell(_('Title'))
-            title = _u(visual['title'])
+            title2 = _u(visual['title'])
             if _visual_can_be_linked(what, visual_name, visuals, visual, owner):
-                html.a(title, href="%s.py?%s=%s" % (what_s, visual_types[what]['ident_attr'], visual_name))
+                html.a(title2, href="%s.py?%s=%s" % (what_s, visual_types[what]['ident_attr'], visual_name))
             else:
-                html.write_text(title)
+                html.write_text(title2)
             html.help(_u(visual['description']))
 
             # Custom cols
-            for title, renderer in custom_columns:
-                table.cell(title, renderer(visual))
+            for title3, renderer in custom_columns:
+                table.cell(title3, renderer(visual))
 
             # Owner
             if owner == "":

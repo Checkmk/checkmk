@@ -2678,10 +2678,10 @@ class SearchFolder(BaseFolder):
 
     def move_hosts(self, host_names, target_folder):
         auth_errors = []
-        for folder, host_names in self._group_hostnames_by_folder(host_names):
+        for folder, host_names1 in self._group_hostnames_by_folder(host_names):
             try:
                 # FIXME: this is not transaction safe, might get partially finished...
-                folder.move_hosts(host_names, target_folder)
+                folder.move_hosts(host_names1, target_folder)
             except MKAuthException, e:
                 auth_errors.append(_("<li>Cannot move hosts from folder %s: %s</li>") % (folder.alias_path(), e))
         self._invalidate_search()

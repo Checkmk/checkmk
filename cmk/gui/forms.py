@@ -128,10 +128,10 @@ def edit_dictionaries(dictionaries, value, focus=None, hover_help=True,
 
 
     html.begin_form(formname, method=method)
-    for keyname, title, entries in sections:
+    for keyname, title1, entries in sections:
         subvalue = value.get(keyname, {})
         if type(entries) == list:
-            header(title)
+            header(title1)
             first = True
             for name, vs in entries:
                 section(vs.title())

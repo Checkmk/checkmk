@@ -236,18 +236,18 @@ class Age(ValueSpec):
 
         takeover = 0
         first = True
-        for uid, title, value, tkovr_fac in [ ("days",    _("days"),  days,    24),
-                                              ("hours",   _("hours"), hours,   60),
-                                              ("minutes", _("mins"),  minutes, 60),
-                                              ("seconds", _("secs"),  seconds, 60) ]:
+        for uid, title, val, tkovr_fac in [ ("days",    _("days"),  days,    24),
+                                            ("hours",   _("hours"), hours,   60),
+                                            ("minutes", _("mins"),  minutes, 60),
+                                            ("seconds", _("secs"),  seconds, 60) ]:
             if uid in self._display:
-                value += takeover
+                val += takeover
                 takeover = 0
-                html.number_input(varprefix + "_" + uid, value, 3 if first else 2)
+                html.number_input(varprefix + "_" + uid, val, 3 if first else 2)
                 html.write(" %s " % title)
                 first = False
             else:
-                takeover = (takeover + value) * tkovr_fac
+                takeover = (takeover + val) * tkovr_fac
         html.close_div()
 
     def from_html_vars(self, varprefix):
@@ -4549,8 +4549,8 @@ class CAorCAChain(UploadOrPasteTextFile):
             ( "subject", _("Subject") ),
         ]:
             text += "<tr><td>%s:</td><td>" % title
-            for title, value in sorted(cert_info[what].items()):
-                text += "%s: %s<br>" % (title, value)
+            for title1, val in sorted(cert_info[what].items()):
+                text += "%s: %s<br>" % (title1, val)
             text += "</tr>"
         text += "</table>"
         return text

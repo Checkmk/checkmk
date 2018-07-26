@@ -1877,8 +1877,8 @@ def render_tree(node, indent = ""):
         h += indent + "Needed Hosts: %s\n" % " ".join([("%s/%s" % h_s) for h_s in node["reqhosts"]])
         h += indent + "Aggregation:  %s\n" % node["func"]
         h += indent + "Nodes:\n"
-        for node in node["nodes"]:
-            h += render_tree(node, indent + "  ")
+        for n in node["nodes"]:
+            h += render_tree(n, indent + "  ")
         h += "\n"
     return h
 

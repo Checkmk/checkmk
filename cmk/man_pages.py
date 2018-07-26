@@ -401,8 +401,8 @@ def _dialog_menu(title, text, choices, defvalue, oktext, canceltext):
     if defvalue != None:
         args += [ "--default-item", defvalue ]
     args += [ "--title", title, "--menu", text, "0", "0", "0" ] # "20", "60", "17" ]
-    for text, value in choices:
-        args += [ text, value ]
+    for txt, value in choices:
+        args += [ txt, value ]
     return _run_dialog(args)
 
 

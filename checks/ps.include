@@ -549,12 +549,12 @@ def check_ps_common(item, params, parsed, cpu_cores = 1, info_name = "processes"
             for p in processes:
                 cpu_usage, name, pid = 0.0, None, None
 
-                for item, (value, _unit) in p:
-                    if item == "name":
+                for the_item, (value, _unit) in p:
+                    if the_item == "name":
                         name = value
-                    if item == "pid":
+                    if the_item == "pid":
                         pid = value
-                    elif item.startswith("cpu usage"):
+                    elif the_item.startswith("cpu usage"):
                         cpu_usage += value
 
                 if cpu_usage >= warn_cpu_single:

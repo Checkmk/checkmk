@@ -59,8 +59,9 @@ import cmk.log
 import cmk.paths
 import cmk.profile
 import cmk.render
-import livestatus
 import cmk.regex
+
+import livestatus
 
 
 class SyslogPriority(object):

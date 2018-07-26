@@ -30,12 +30,12 @@ import subprocess
 import cmk.debug
 import cmk.tty as tty
 from cmk.exceptions import MKGeneralException, MKBailOut
+import cmk.store as store
 
 import cmk_base.utils
 import cmk_base.config as config
 import cmk_base.console as console
 import cmk_base.classic_snmp as classic_snmp
-import cmk.store as store
 import cmk_base.ip_lookup as ip_lookup
 import cmk_base.agent_simulator
 from cmk_base.exceptions import MKSNMPError

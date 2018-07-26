@@ -89,15 +89,17 @@ Global variables:
 # concatenates lots of files, including this one.
 
 import cmk.debug as _debug
+import cmk.defines as _defines
 import cmk.paths as _paths
 from cmk.exceptions import MKGeneralException
+from cmk.regex import regex
+import cmk.render as render
 
 # These imports are not meant for use in the API. So we prefix the names
 # with an underscore. These names will be skipped when loading into the
 # check context.
 import cmk_base.utils as _utils
 import cmk_base.config as _config
-import cmk.defines as _defines
 import cmk_base.snmp_utils as _snmp_utils
 import cmk_base.item_state as _item_state
 import cmk_base.prediction as _prediction
@@ -131,9 +133,6 @@ import os
 import time
 # NOTE: We do not use pprint in this module, but it is part of the check API.
 import pprint # pylint: disable=unused-import
-
-from cmk.regex import regex
-import cmk.render as render
 
 # Names of texts usually output by checks
 core_state_names = _defines.short_service_state_names()

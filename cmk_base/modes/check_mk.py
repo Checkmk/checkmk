@@ -290,9 +290,9 @@ modes.register(Mode(
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-import cmk.man_pages as man_pages
 
 def mode_list_checks():
+    import cmk.man_pages as man_pages
     all_check_manuals = man_pages.all_man_pages()
 
     checks_sorted = config.check_info.items() + \

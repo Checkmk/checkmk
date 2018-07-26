@@ -34,7 +34,6 @@ import os
 import pprint
 import tempfile
 import time
-import pprint
 
 from .exceptions import MKGeneralException
 

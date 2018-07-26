@@ -22,7 +22,6 @@ disable=
     protected-access,
     reimported,
     relative-import,
-    ungrouped-imports,
     #---------------------------------------------------------------------------
     # We should really enable this, there could be some real exceptions waiting
     # to be thrown. But some work is needed first to sprinkle abc annotations

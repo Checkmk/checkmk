@@ -1,0 +1,13 @@
+Title: LDAP sync: Do not add a pending change when sync is executed on slave sites
+Level: 1
+Component: wato
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0i1
+Date: 1531895586
+
+To prevent synchronization problems from WATO master to slave sites when a remote
+LDAP sync is performed we don't create pending change entries on the slave
+sites anymore when user changes are made by the automatic synchronization.

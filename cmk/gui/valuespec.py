@@ -52,7 +52,6 @@ import json
 
 import cmk.paths
 import cmk.defines as defines
-import livestatus
 
 import cmk.gui.pages
 import cmk.gui.forms as forms
@@ -61,6 +60,8 @@ from cmk.gui.i18n import _
 from cmk.gui.globals import html
 from cmk.gui.htmllib import HTML
 from cmk.gui.exceptions import MKUserError, MKGeneralException
+
+import livestatus
 
 def type_name(v):
     try:

@@ -45,9 +45,9 @@ import time
 import cmk.paths
 import cmk.debug
 from cmk.exceptions import MKGeneralException
+import cmk.store as store
 
 import cmk_base
-import cmk.store as store
 import cmk_base.config as config
 import cmk_base.console as console
 import cmk_base.item_state as item_state

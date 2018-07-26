@@ -35,7 +35,6 @@ import sys
 import cmk.paths
 import cmk.debug
 import cmk.tty as tty
-import livestatus
 from cmk.exceptions import MKGeneralException
 
 import cmk_base.console as console
@@ -45,6 +44,8 @@ import cmk_base.nagios_utils
 from cmk_base.exceptions import MKTimeout
 from cmk_base import config_cache
 import cmk_base.cleanup
+
+import livestatus
 
 _restart_lock_fd = None
 

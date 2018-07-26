@@ -33,7 +33,6 @@ import fcntl
 import md5
 import copy
 import multiprocessing
-import pprint
 from contextlib import contextmanager
 import traceback
 

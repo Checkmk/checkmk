@@ -122,6 +122,8 @@ def inv_tree(path, default_value=None):
 
         # add the modules
         pylint_cmk.add_file(f, repo_path() + "/cmk_base/check_api.py")
+        # This pylint warning is incompatible with our "concatenation technology".
+        f.write("# pylint: disable=ungrouped-imports\n")
         pylint_cmk.add_file(f, repo_path() + "/cmk_base/inventory_plugins.py")
 
         # Now add the checks

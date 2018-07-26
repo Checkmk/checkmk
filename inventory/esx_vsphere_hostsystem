@@ -108,10 +108,11 @@ def inv_esx_vsphere_hostsystem(info):
         if node["vendor"] == "HP":
             node["serial"]	= data["hardware.systemInfo.otherIdentifyingInfo.ServiceTag"]["0"]
 
-    if "uuid" in data["hardware.systemInfo"]:
-        node["uuid"]  = data["hardware.systemInfo"]["uuid"]
-    if "0" in data["hardware.systemInfo"]:
-        node["serial"]  = data["hardware.systemInfo"]["0"]["ServiceTag"]
+    hardware_systeminfo = data.get("hardware.systemInfo", {})
+    if "uuid" in hardware_systeminfo:
+        node["uuid"]  = hardware_systeminfo["uuid"]
+    if "0" in hardware_systeminfo:
+        node["serial"]  = hardware_systeminfo["0"]["ServiceTag"]
     if "memorySize" in data["hardware"]:
         node = inv_tree("hardware.memory.")
         node["total_ram_usable"] = int(data["hardware"]["memorySize"])

@@ -102,11 +102,8 @@ def ibm_svc_systemstats_parse(info):
 #   '----------------------------------------------------------------------'
 
 def inventory_ibm_svc_systemstats_diskio(info):
-    inventory = []
-    parsed = ibm_svc_systemstats_parse(info)
-    for key in parsed.keys():
-        inventory.append( (key, None) )
-    return inventory
+    return [ (key, None)
+             for key in ibm_svc_systemstats_parse(info) ]
 
 def check_ibm_svc_systemstats_diskio(item, _no_params, info):
     parsed = ibm_svc_systemstats_parse(info)
@@ -140,11 +137,8 @@ check_info["ibm_svc_systemstats.diskio"] = {
 #   '----------------------------------------------------------------------'
 
 def inventory_ibm_svc_systemstats_iops(info):
-    inventory = []
-    parsed = ibm_svc_systemstats_parse(info)
-    for key in parsed.keys():
-        inventory.append( (key, None) )
-    return inventory
+    return [ (key, None)
+             for key in ibm_svc_systemstats_parse(info) ]
 
 def check_ibm_svc_systemstats_iops(item, _no_params, info):
     parsed = ibm_svc_systemstats_parse(info)
@@ -176,11 +170,8 @@ check_info["ibm_svc_systemstats.iops"] = {
 #   '----------------------------------------------------------------------'
 
 def inventory_ibm_svc_systemstats_disk_latency(info):
-    inventory = []
-    parsed = ibm_svc_systemstats_parse(info)
-    for key in parsed.keys():
-        inventory.append( (key, {}) )
-    return inventory
+    return [ (key, {})
+             for key in ibm_svc_systemstats_parse(info) ]
 
 def check_ibm_svc_systemstats_disk_latency(item, params, info):
     parsed = ibm_svc_systemstats_parse(info)

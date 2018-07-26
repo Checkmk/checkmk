@@ -115,7 +115,7 @@ class BackgroundProcessInterface(object):
         current_message_type = cls.progress_update_message
         message_block = ""
         for line in lines:
-            for message_type in response.keys():
+            for message_type in response:
                 if line.startswith(message_type):
                     finalize_last_block()
                     current_message_type = message_type

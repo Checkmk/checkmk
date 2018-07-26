@@ -447,11 +447,13 @@ def notify_rulebased(raw_context, analyse=False):
 
             key = contacts, plugin
             if plugin_parameters is None:  # cancelling
-                # notifications.keys() produces a copy of the keys. This copy
-                # is used to either delete a notification or to modify the
-                # notification contacts of an existing notification.
-                # For Python 3 list(notifications.keys()) would be necessary.
-                for notify_key in notifications.keys():
+                # FIXME: In Python 2, notifications.keys() already produces a
+                # copy of the keys, while in Python 3 it is only a view of the
+                # underlying dict (modifications would result in an exception).
+                # To be explicit and future-proof, we make this hack explicit.
+                # Anyway, this is extremely ugly and an anti-patter, and it
+                # should be rewritten to something more sane.
+                for notify_key in list(notifications.keys()):
                     notify_contacts, notify_plugin = notify_key
 
                     overlap = notify_contacts.intersection(contacts)

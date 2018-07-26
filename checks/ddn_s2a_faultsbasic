@@ -44,7 +44,7 @@ def parse_ddn_s2a_faultsbasic(info):
                       u"failed_disk_item",
                     ]
 
-    for key in parsed.keys():
+    for key in parsed:
         if key not in non_unique_keys:
             parsed[key] = parsed[key][0]
 

@@ -348,7 +348,8 @@ class ConfigDomain(object):
         try:
             execfile(filename, settings, settings)
 
-            for varname in settings.keys():
+            # FIXME: Do not modify the dict while iterating over it.
+            for varname in list(settings.keys()):
                 if varname not in g_configvars:
                     del settings[varname]
 
@@ -4691,12 +4692,8 @@ def site_changes_path(site_id):
 
 
 def load_replication_status(lock=False):
-    status = {}
-
-    for site_id in config.sites.keys():
-        status[site_id] = load_site_replication_status(site_id, lock=lock)
-
-    return status
+    return { site_id: load_site_replication_status(site_id, lock=lock)
+             for site_id in config.sites }
 
 
 def save_replication_status(status):
@@ -5225,7 +5222,7 @@ class ActivateChangesManager(ActivateChanges):
             raise MKUserError(None, _("You cannot activate changes while some hosts have "
               "an invalid configuration: ") + ", ".join(
                 [ '<a href="%s">%s</a>' % (folder_preserving_link([("mode", "edit_host"), ("host", hn)]), hn)
-                  for hn in defective_hosts.keys() ]))
+                  for hn in defective_hosts ]))
 
 
     def activate_until(self):
@@ -6232,7 +6229,7 @@ def get_snapshot_status(snapshot, validate_checksums = False):
 
         if status.get("type") == "legacy":
             allowed_files = ["%s.tar" % x[1] for x in backup_paths]
-            for tarname in status["files"].keys():
+            for tarname in status["files"]:
                 if tarname not in allowed_files:
                     raise MKGeneralException(_("Invalid snapshot (contains invalid tarfile %s)") % tarname)
         else: # new snapshots
@@ -7627,7 +7624,7 @@ class Rulespecs(object):
 
             choices.append((main_group_name, main_group_title))
 
-            for group_name in self._by_group.keys():
+            for group_name in self._by_group:
                 if group_name.startswith(main_group_name + "/"):
                     # TODO: Move this subgroup title calculation to some generic place
                     sub_group_title = group_name.split("/", 1)[1]
@@ -7783,7 +7780,7 @@ class RulesetCollection(object):
         # Prepare empty rulesets so that rules.mk has something to
         # append to. We need to initialize all variables here, even
         # when only loading with only_varname.
-        for varname in g_rulespecs.get_rulespecs().keys():
+        for varname in g_rulespecs.get_rulespecs():
             if ':' in varname:
                 dictname, subkey = varname.split(":")
                 config[dictname] = {}
@@ -7794,7 +7791,7 @@ class RulesetCollection(object):
 
 
     def from_config(self, folder, rulesets_config, only_varname=None):
-        for varname in g_rulespecs.get_rulespecs().keys():
+        for varname in g_rulespecs.get_rulespecs():
             if only_varname and varname != only_varname:
                 continue # skip unwanted options
 

@@ -58,7 +58,7 @@ from cmk_base.default_config import *
 
 def get_variable_names():
     """Provides the list of all known configuration variables."""
-    return [ k for k in default_config.__dict__.keys() if k[0] != "_" ]
+    return [ k for k in default_config.__dict__ if k[0] != "_" ]
 
 
 def get_default_config():
@@ -229,7 +229,7 @@ def _load_config(with_conf_d, exclude_parents_mk):
                 sys.exit(1)
 
     # Cleanup global helper vars
-    for helper_var in helper_vars.keys():
+    for helper_var in helper_vars:
         del global_dict[helper_var]
 
 

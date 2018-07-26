@@ -150,17 +150,17 @@ def check_zpool_status(_no_item, _no_params, info):
             pool_messages[last_pool].append(" ".join(line))
             continue
 
-    for pool in pool_messages.keys():
+    for pool, msg in pool_messages.iteritems():
         state = 1
-        message.append("%s: %s" % (pool, " ".join(pool_messages[pool])))
+        message.append("%s: %s" % (pool, " ".join(msg)))
 
-    for pool in warning_pools.keys():
+    for pool, msg in warning_pools.iteritems():
         state = 1
-        message.append("%s CKSUM: %d" % (pool, saveint(warning_pools[pool][3])))
+        message.append("%s CKSUM: %d" % (pool, saveint(msg[3])))
 
-    for pool in error_pools.keys():
+    for pool, msg in error_pools.iteritems():
         state = 2
-        message.append("%s state: %s" % (pool, error_pools[pool][0]))
+        message.append("%s state: %s" % (pool, msg[0]))
 
     if len(message) == 0:
         message = ['No critical errors']

@@ -50,14 +50,14 @@ def check_checkpoint_packets(_no_item, params, info):
         value["Logged"]   = int(info[0][3])
 
         this_time = time.time()
-        for name in value.keys():
+        for name, val in value.iteritems():
             key = name.lower()
             if params.get(key) is None:
                 warn, crit = (None, None)
             else:
                 warn, crit = params[key]
 
-            rate     = get_rate(key, this_time, value[name])
+            rate     = get_rate(key, this_time, val)
             infotext = "%s: %.1f pkts/s" % ( name, rate )
             state    = 0
             if crit is not None and rate >= crit:

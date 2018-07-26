@@ -149,7 +149,7 @@ class PainterOptions(object):
     def _clear_painter_options(self, view_name):
         # TODO: This never removes options that are not existant anymore
         modified = False
-        for name in multisite_painter_options.keys():
+        for name in multisite_painter_options:
             try:
                 del self._options[name]
                 modified = True

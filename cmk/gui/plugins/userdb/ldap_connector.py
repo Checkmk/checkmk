@@ -1330,7 +1330,8 @@ def register_user_attribute_sync_plugins():
         ldap_builtin_attribute_plugin_names = ldap_attribute_plugins.keys()
 
     # Remove old user attribute plugins
-    for attr_name in ldap_attribute_plugins.keys():
+    # FIXME: Do not modify the dict while iterating over it.
+    for attr_name in list(ldap_attribute_plugins.keys()):
         if attr_name not in ldap_builtin_attribute_plugin_names:
             del ldap_attribute_plugins[attr_name]
 

@@ -218,7 +218,7 @@ class Request(object):
 
 
     def all_varnames_with_prefix(self, prefix):
-        for varname in self.vars.keys():
+        for varname in self.vars:
             if varname.startswith(prefix):
                 yield varname
 

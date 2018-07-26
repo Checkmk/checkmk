@@ -35,17 +35,15 @@
 # 6:N4_164312:100025E315:500507680100D880:online:1:io_grp1:yes:2040000085543045:CG8:iqn.1986-03.com.ibm:2145.svc-cl.n4164312::164312:::::
 
 def inventory_ibm_svc_node(info):
-    io_groups = {}
-    inventory = []
+    io_groups = set()
     for line in info:
         node_id, node_name, ups_serial, wwnn, node_status, io_group_id,\
         io_group_name, config_node, ups_unique_id, hardware, iscsi_name,\
         iscsi_alias, panel_name, enclosure_id, canister_id,\
         enclosure_serial_number, additional = line[:17]
-        io_groups[io_group_name] = 1
-    for io_group_name in io_groups.keys():
-        inventory.append( (io_group_name, None) )
-    return inventory
+        io_groups.add(io_group_name)
+    return [ (io_group_name, None)
+             for io_group_name in io_groups ]
 
 def check_ibm_svc_node(item, _no_params, info):
     message = ""

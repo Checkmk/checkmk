@@ -13,7 +13,6 @@ extension-pkg-whitelist=rrdtool,_ldap,netifaces,pymssql
 [MESSAGES CONTROL]
 disable=
     cell-var-from-loop,
-    consider-iterating-dictionary,
     inconsistent-return-statements,
     logging-not-lazy,
     missing-docstring,

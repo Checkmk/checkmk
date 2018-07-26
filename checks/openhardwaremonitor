@@ -212,7 +212,7 @@ factory_settings['openhardwaremonitor_smart_default_levels'] = {
 def inventory_openhardwaremonitor_smart(parsed):
     devices = set()
     # find all devices for which at least one known smart reading is available
-    for sensor_type in openhardwaremonitor_smart_readings.keys():
+    for sensor_type in openhardwaremonitor_smart_readings:
         for key in parsed.get(sensor_type, {}):
             if "hdd" in key:
                 devices.add(key.split(" ")[0])

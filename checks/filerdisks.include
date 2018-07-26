@@ -46,7 +46,7 @@ def check_filer_disks(disks, params):
 
     for disk in disks:
         total_capacity += disk.get("capacity", 0)
-        for what in state.keys():
+        for what in state:
             if disk['state'] == what:
                 state[what].append(disk)
 

@@ -38,7 +38,7 @@ h1, h2, h3, h4 {
 body.main {
   background: #f0f2f4;
   padding: 80px 32px;
-  font-size: 14px;
+  font-size: 11px;
   font-weight: 400; }
 
 .link, .title {
@@ -66,7 +66,7 @@ div.content {
   width: 100%;
   top: 64px; }
 
-input, input[type=text], input[type=password], select, textarea, div.snapin select, div.snapin textarea {
+input, input[type=text], input[type=password], select, textarea, div.snapin select, div.snapin textarea, #mk_side_search_field {
   border-radius: 4px;
   background-image: none !important;
   background: #FFFFFF;
@@ -76,11 +76,11 @@ input, input[type=text], input[type=password], select, textarea, div.snapin sele
   box-shadow: none;
   border: 1px solid #cccfdb !important;
   max-width: 640px; }
-  input:focus, select:focus, textarea:focus, div.snapin select:focus, div.snapin textarea:focus {
+  input:focus, select:focus, textarea:focus, div.snapin select:focus, div.snapin textarea:focus, #mk_side_search_field:focus {
     border-color: #ffd703; }
-  input.number, select.number, textarea.number, div.snapin select.number, div.snapin textarea.number {
+  input.number, select.number, textarea.number, div.snapin select.number, div.snapin textarea.number, .number#mk_side_search_field {
     text-align: left; }
-  input.button, select.button, textarea.button, div.snapin select.button, div.snapin textarea.button {
+  input.button, select.button, textarea.button, div.snapin select.button, div.snapin textarea.button, .button#mk_side_search_field {
     display: inline-block;
     margin-top: 8px;
     margin-bottom: 8px;
@@ -94,12 +94,12 @@ input, input[type=text], input[type=password], select, textarea, div.snapin sele
     border: #e9c400;
     font-size: 11px;
     letter-spacing: 1px; }
-    input.button:hover, select.button:hover, textarea.button:hover {
+    input.button:hover, select.button:hover, textarea.button:hover, .button#mk_side_search_field:hover {
       background-color: #ffe350; }
-  input[type=radio], select[type=radio], textarea[type=radio], div.snapin select[type=radio], div.snapin textarea[type=radio] {
+  input[type=radio], select[type=radio], textarea[type=radio], div.snapin select[type=radio], div.snapin textarea[type=radio], [type=radio]#mk_side_search_field {
     width: auto;
     margin-bottom: 0px; }
-  input.toggle_timespecific_parameter, select.toggle_timespecific_parameter, textarea.toggle_timespecific_parameter, div.snapin select.toggle_timespecific_parameter, div.snapin textarea.toggle_timespecific_parameter {
+  input.toggle_timespecific_parameter, select.toggle_timespecific_parameter, textarea.toggle_timespecific_parameter, div.snapin select.toggle_timespecific_parameter, div.snapin textarea.toggle_timespecific_parameter, .toggle_timespecific_parameter#mk_side_search_field {
     margin: 0px;
     position: absolute;
     right: 110px; }
@@ -107,11 +107,15 @@ input, input[type=text], input[type=password], select, textarea, div.snapin sele
 select[multiple=multiple] {
   resize: none !important; }
 
-div.snapin select, #mk_side_search_field {
+div.snapin select {
   width: 100% !important;
   height: 100% !important; }
 div.snapin textarea {
   width: 100% !important; }
+
+#mk_side_search_field {
+  width: 100% !important;
+  height: 100% !important; }
 
 select:not([multiple]) {
   -webkit-appearance: none !important;
@@ -129,7 +133,7 @@ select:not([multiple]) {
 
 .cp-input {
   color: #1A243D; }
-  .cp-input input, .cp-input select, .cp-input textarea, .cp-input div.snapin select, div.snapin .cp-input select, .cp-input div.snapin textarea, div.snapin .cp-input textarea {
+  .cp-input input, .cp-input select, .cp-input textarea, .cp-input div.snapin select, div.snapin .cp-input select, .cp-input div.snapin textarea, div.snapin .cp-input textarea, .cp-input #mk_side_search_field {
     margin: 0;
     margin-bottom: 8px; }
 
@@ -173,7 +177,7 @@ div#login {
   div#login #input_user, div#login #input_pass {
     left: 140px;
     border-radius: 4px;
-    width: 188px; }
+    width: 171px; }
   div#login #label_user, div#login #label_pass {
     left: 40px;
     font-size: 12px;
@@ -204,8 +208,14 @@ table.vs_duallist a.control, table.vs_duallist body.main .popup_menu span.contro
 body.main img.treeangle {
   filter: invert(100%); }
 
-body.main .popup_menu a, body.main .popup_menu span, body.main table.footer, body.main table.footer .popup_menu a, body.main table.footer .popup_menu span, body.main .popup_menu span {
+body.main .popup_menu a, body.main .popup_menu span, body.main table.footer .popup_menu a, body.main table.footer .popup_menu span, body.main .popup_menu span {
   color: #1A243D; }
+
+select[id^=host_tag_0] {
+  width: 100px !important; }
+
+.aggrtree img.treeangle, .bi_rule_tree img.treeangle, .invtree img.treeangle {
+  filter: invert(0%) !important; }
 
 table {
   /* NFORM */ }
@@ -490,9 +500,9 @@ table {
     border-spacing: 8px; }
     table.nform td.reason {
       padding: 8px 4px; }
-    table.nform input, table.nform select, table.nform textarea {
+    table.nform input, table.nform select, table.nform textarea, table.nform #mk_side_search_field {
       margin: 4px !important; }
-    table.nform input.button, table.nform select.button, table.nform textarea.button {
+    table.nform input.button, table.nform select.button, table.nform textarea.button, table.nform .button#mk_side_search_field {
       margin: 4px !important; }
     table.nform hr {
       background-color: #cccfdb;
@@ -538,42 +548,43 @@ table {
       color: #1A243D; }
     table.nform #view_p_options_tbl {
       border-spacing: 4px; }
-    table.nform .valuespec_listof {
+    table.nform table.valuespec_listof {
+      border-spacing: 0px;
       vertical-align: center; }
-      table.nform .valuespec_listof > tbody > tr {
+      table.nform table.valuespec_listof > tbody > tr {
         vertical-align: middle; }
-      table.nform .valuespec_listof .vlof_content {
-        border-bottom: none;
-        padding-bottom: 8px;
+      table.nform table.valuespec_listof .vlof_content {
+        border-bottom: 1px solid #cccfdb;
+        padding: 8px 0px;
         vertical-align: top; }
-        table.nform .valuespec_listof .vlof_content .valuespec_tuple {
+        table.nform table.valuespec_listof .vlof_content .valuespec_tuple {
           border-spacing: 8px; }
-        table.nform .valuespec_listof .vlof_content .content nobr {
+        table.nform table.valuespec_listof .vlof_content .content nobr {
           display: inline-block;
           margin-top: 8px; }
-      table.nform .valuespec_listof .vlof_buttons {
+      table.nform table.valuespec_listof .vlof_buttons {
         vertical-align: middle;
-        border-bottom: none;
+        border-bottom: 1px solid #cccfdb;
         padding-bottom: 32px;
         padding-top: 8px; }
-      table.nform .valuespec_listof.filter .vlof_content.filter .floatfilter {
+      table.nform table.valuespec_listof.filter .vlof_content.filter .floatfilter {
         height: auto;
         box-shadow: none;
         border: 1px solid #cccfdb;
         background-color: #FFFFFF;
         width: 400px; }
-        table.nform .valuespec_listof.filter .vlof_content.filter .floatfilter .legend {
+        table.nform table.valuespec_listof.filter .vlof_content.filter .floatfilter .legend {
           font-size: 12px;
           text-transform: uppercase;
           letter-spacing: 1px;
           color: #2a2a2a;
           padding: 16px 0px 0px 16px; }
-        table.nform .valuespec_listof.filter .vlof_content.filter .floatfilter .content {
+        table.nform table.valuespec_listof.filter .vlof_content.filter .floatfilter .content {
           padding: 16px;
           width: 100%; }
-          table.nform .valuespec_listof.filter .vlof_content.filter .floatfilter .content table {
+          table.nform table.valuespec_listof.filter .vlof_content.filter .floatfilter .content table {
             border-spacing: 8px 4px; }
-      table.nform .valuespec_listof.filter .vlof_buttons.filter img {
+      table.nform table.valuespec_listof.filter .vlof_buttons.filter img {
         top: 8px;
         left: -40px; }
   table.report_contents td.preview img {
@@ -660,6 +671,12 @@ div.graph_with_timeranges {
 
 .wato {
   color: #1A243D; }
+  .wato table.progress {
+    border: 1px solid #cccfdb;
+    border-radius: 4px;
+    background: #FFFFFF; }
+    .wato table.progress td.stats td, .wato table.progress td.stats th {
+      border-color: #cccfdb; }
   .wato div.folderpath {
     height: auto; }
     .wato div.folderpath ul li {
@@ -742,7 +759,7 @@ div.graph_with_timeranges {
     font-size: 18px; }
   .wato td.bulksearch .togglebutton {
     margin-bottom: 0px; }
-  .wato td.bulksearch input.text, .wato td.bulksearch select.text, .wato td.bulksearch textarea.text {
+  .wato td.bulksearch input.text, .wato td.bulksearch select.text, .wato td.bulksearch textarea.text, .wato td.bulksearch .text#mk_side_search_field {
     width: auto; }
   .wato td.bulkactions select {
     width: auto; }
@@ -750,20 +767,24 @@ div.graph_with_timeranges {
     background-color: transparent !important; }
   .wato table.data th {
     background: transparent; }
-  .wato div.floatfolder div.title {
-    padding: 0;
-    text-align: left;
-    bottom: -4px; }
-    .wato div.floatfolder div.title a, .wato div.floatfolder div.title body.main .popup_menu span, body.main .popup_menu .wato div.floatfolder div.title span {
-      color: #1A243D;
-      font-size: 13px;
-      font-weight: 500; }
-  .wato div.floatfolder .infos {
-    bottom: 24px;
-    left: 24px;
-    right: 24px; }
-    .wato div.floatfolder .infos .infos_content {
-      font-size: 11px; }
+  .wato div.floatfolder {
+    background-image: url(images/folder_closed.png); }
+    .wato div.floatfolder.open {
+      background-image: url(images/folder_open.png); }
+    .wato div.floatfolder div.title {
+      padding: 0;
+      text-align: left;
+      bottom: -4px; }
+      .wato div.floatfolder div.title a, .wato div.floatfolder div.title body.main .popup_menu span, body.main .popup_menu .wato div.floatfolder div.title span {
+        color: #1A243D;
+        font-size: 13px;
+        font-weight: 500; }
+    .wato div.floatfolder .infos {
+      bottom: 24px;
+      left: 24px;
+      right: 24px; }
+      .wato div.floatfolder .infos .infos_content {
+        font-size: 11px; }
 
 td.agent_config table.rulesets td {
   vertical-align: top; }
@@ -798,8 +819,11 @@ td.agent_config table.rulesets td {
   background-color: #FFFFFF;
   color: #1A243D; }
 
-div.metricchoice select, div.metricchoice input, div.metricchoice select, div.metricchoice textarea {
+div.metricchoice select, div.metricchoice input, div.metricchoice select, div.metricchoice textarea, div.metricchoice #mk_side_search_field {
   margin: 4px 0px; }
+
+td.title {
+  display: table-cell; }
 
 /* Sidebar */
 body.side {
@@ -831,7 +855,8 @@ body.side {
     background-position: 16px center;
     background-repeat: no-repeat; }
   #side_header #side_version {
-    top: 20px; }
+    top: 20px;
+    right: 24px; }
     #side_header #side_version a, #side_header #side_version body.main .popup_menu span, body.main .popup_menu #side_header #side_version span {
       font-size: 8px;
       font-weight: 700;
@@ -1055,7 +1080,7 @@ div.add_snapin div.snapinadder, div.add_snapin div.snapinadder:hover {
 
 #mk_side_search, #wiki_search {
   width: 100%; }
-  #mk_side_search input, #mk_side_search select, #mk_side_search textarea, #wiki_search input, #wiki_search select, #wiki_search textarea {
+  #mk_side_search input, #mk_side_search select, #mk_side_search textarea, #mk_side_search #mk_side_search_field, #wiki_search input, #wiki_search select, #wiki_search textarea, #wiki_search #mk_side_search_field {
     box-sizing: border-box; }
 
 .checkbox label::before {
@@ -1063,7 +1088,7 @@ div.add_snapin div.snapinadder, div.add_snapin div.snapinadder:hover {
   border: 1px solid #0d0f0f;
   border-radius: 2px; }
 
-#form_search input, #form_search select, #form_search textarea {
+#form_search input, #form_search select, #form_search textarea, #form_search #mk_side_search_field {
   width: auto; }
 
 select.vlof_filter {
@@ -1133,7 +1158,7 @@ table.hostmatrix td {
   padding: 8px;
   letter-spacing: 2px; }
 
-body.main input, body.main select, body.main textarea, body.main select, body.main textarea {
+body.main input, body.main select, body.main textarea, body.main #mk_side_search_field, body.main select, body.main textarea {
   border: 1px solid #cccfdb; }
 body.main.dashlet {
   padding: 8px 0px;
@@ -1309,7 +1334,7 @@ div.error {
   div.error tt {
     color: inherit; }
 
-.inputerror input, .inputerror select, .inputerror textarea, .inputerror div.snapin select, div.snapin .inputerror select, .inputerror div.snapin textarea, div.snapin .inputerror textarea, .inputerror textarea, .inputerror span.checkbox, .inputerror > select {
+.inputerror input, .inputerror select, .inputerror textarea, .inputerror div.snapin select, div.snapin .inputerror select, .inputerror div.snapin textarea, div.snapin .inputerror textarea, .inputerror #mk_side_search_field, .inputerror textarea, .inputerror span.checkbox, .inputerror > select {
   background-color: #f7c5c5 !important; }
 
 div.warning {
@@ -1517,9 +1542,9 @@ div.info {
       margin-bottom: 8px; }
     .filterform > tbody > tr > td div.floatfilter .content table {
       border-spacing: 8px 4px; }
-    .filterform > tbody > tr > td div.floatfilter .content input, .filterform > tbody > tr > td div.floatfilter .content select, .filterform > tbody > tr > td div.floatfilter .content textarea, .filterform > tbody > tr > td div.floatfilter .content select {
+    .filterform > tbody > tr > td div.floatfilter .content input, .filterform > tbody > tr > td div.floatfilter .content select, .filterform > tbody > tr > td div.floatfilter .content textarea, .filterform > tbody > tr > td div.floatfilter .content #mk_side_search_field, .filterform > tbody > tr > td div.floatfilter .content select {
       margin-bottom: 8px; }
-      .filterform > tbody > tr > td div.floatfilter .content input[type^=radio], .filterform > tbody > tr > td div.floatfilter .content select[type^=radio], .filterform > tbody > tr > td div.floatfilter .content textarea[type^=radio], .filterform > tbody > tr > td div.floatfilter .content select[type^=radio] {
+      .filterform > tbody > tr > td div.floatfilter .content input[type^=radio], .filterform > tbody > tr > td div.floatfilter .content select[type^=radio], .filterform > tbody > tr > td div.floatfilter .content textarea[type^=radio], .filterform > tbody > tr > td div.floatfilter .content [type^=radio]#mk_side_search_field, .filterform > tbody > tr > td div.floatfilter .content select[type^=radio] {
         width: auto;
         margin-bottom: 0px; }
     .filterform > tbody > tr > td div.floatfilter .content select {
@@ -1527,10 +1552,10 @@ div.info {
     .filterform > tbody > tr > td div.floatfilter .content .valuespec_tuple {
       width: 100%; }
 
-.age input, .age select, .age textarea, .age div.snapin select, div.snapin .age select, .age div.snapin textarea, div.snapin .age textarea {
+.age input, .age select, .age textarea, .age div.snapin select, div.snapin .age select, .age div.snapin textarea, div.snapin .age textarea, .age #mk_side_search_field {
   box-sizing: content-box !important; }
 
-.filterform input, .filterform select, .filterform textarea, .filterform div.snapin select, div.snapin .filterform select, .filterform div.snapin textarea, div.snapin .filterform textarea {
+.filterform input, .filterform select, .filterform textarea, .filterform div.snapin select, div.snapin .filterform select, .filterform div.snapin textarea, div.snapin .filterform textarea, .filterform #mk_side_search_field {
   column-span: all !important; }
 
 div.contextlink, div.togglebutton {
@@ -1704,5 +1729,16 @@ div.log_output {
 
 div.contextlinks {
   margin-bottom: 0px; }
+
+table.nform tr.open td.content .checkbox {
+  margin-left: 4px; }
+
+img.glass {
+  display: none; }
+
+#hover_menu .graph_container div.title {
+  display: inline; }
+#hover_menu .graph_container div.time {
+  letter-spacing: 0px; }
 
 /*# sourceMappingURL=theme.css.map */

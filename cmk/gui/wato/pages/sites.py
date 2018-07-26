@@ -673,7 +673,7 @@ class ModeEditSite(ModeSites):
 
         forms.section(_("Sync with LDAP connections"), simple=True)
         self._site_mgmt.user_sync_valuespec().render_input("user_sync",
-                             self._site.get("user_sync", userdb.user_sync_default_config(self._site_id)))
+                             self._site.get("user_sync", None if self._new else userdb.user_sync_default_config(self._site_id)))
         html.br()
         html.help(_('By default the users are synchronized automatically in the interval configured '
                     'in the connection. For example the LDAP connector synchronizes the users every '

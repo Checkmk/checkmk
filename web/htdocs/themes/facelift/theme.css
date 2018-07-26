@@ -686,7 +686,8 @@ div.graph_with_timeranges {
         color: #1A243D; }
       .wato div.folderpath ul li select {
         background: #FFFFFF;
-        border: 1px solid #cccfdb; }
+        border: 1px solid #cccfdb;
+        height: auto; }
       .wato div.folderpath ul li .left, .wato div.folderpath ul li .right {
         display: none; }
       .wato div.folderpath ul li div.content {

@@ -180,14 +180,13 @@ def get_history(hostname):
             else:
                 history.append((timestamp, inventory_tree))
 
-    comparable_trees = []
-    previous = None
+    comparable_trees, previous_tree = [], None
     for this_timestamp, inventory_tree in sorted(history, key=lambda x: x[0]):
-        if previous is None:
-            previous = inventory_tree
+        if previous_tree is None:
+            previous_tree = inventory_tree
         else:
-            comparable_trees.append((this_timestamp, inventory_tree, previous))
-            previous = inventory_tree
+            comparable_trees.append((this_timestamp, inventory_tree, previous_tree))
+            previous_tree = inventory_tree
 
     return reversed(comparable_trees)
 

@@ -1,0 +1,10 @@
+Title: esx_vsphere_hostsystem: Fixed crash if no hardware system information is available
+Level: 1
+Component: inv
+Compatible: compat
+Edition: cre
+Version: 1.5.0b10
+Date: 1532597254
+Class: fix
+
+

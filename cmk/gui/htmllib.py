@@ -1786,14 +1786,13 @@ class html(HTMLGenerator):
         if config.custom_style_sheet:
             self.write('<link rel="stylesheet" type="text/css" href="%s">\n' % config.custom_style_sheet)
 
-        if cmk.is_managed_edition():
-            import cmk.gui.cme.gui_colors as gui_colors
-            gui_colors.GUIColors().render_html()
-
-
         if self._theme and self._theme != "classic":
             fname = self._css_filename_for_browser("themes/%s/theme" % self._theme)
             self.stylesheet(fname)
+
+        elif cmk.is_managed_edition():
+            import cmk.gui.cme.gui_colors as gui_colors
+            gui_colors.GUIColors().render_html()
 
 
     def _plugin_stylesheets(self):

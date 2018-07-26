@@ -118,11 +118,8 @@ def ibm_svc_nodestats_parse(info):
 #   '----------------------------------------------------------------------'
 
 def inventory_ibm_svc_nodestats_diskio(info):
-    inventory = []
-    parsed = ibm_svc_nodestats_parse(info)
-    for key in parsed.keys():
-        inventory.append( (key, None) )
-    return inventory
+    return [ (key, None)
+             for key in ibm_svc_nodestats_parse(info) ]
 
 def check_ibm_svc_nodestats_diskio(item, _no_params, info):
     parsed = ibm_svc_nodestats_parse(info)
@@ -156,11 +153,8 @@ check_info["ibm_svc_nodestats.diskio"] = {
 #   '----------------------------------------------------------------------'
 
 def inventory_ibm_svc_nodestats_iops(info):
-    inventory = []
-    parsed = ibm_svc_nodestats_parse(info)
-    for key in parsed.keys():
-        inventory.append( (key, None) )
-    return inventory
+    return [ (key, None)
+             for key in ibm_svc_nodestats_parse(info) ]
 
 def check_ibm_svc_nodestats_iops(item, _no_params, info):
     parsed = ibm_svc_nodestats_parse(info)
@@ -192,11 +186,8 @@ check_info["ibm_svc_nodestats.iops"] = {
 #   '----------------------------------------------------------------------'
 
 def inventory_ibm_svc_nodestats_disk_latency(info):
-    inventory = []
-    parsed = ibm_svc_nodestats_parse(info)
-    for key in parsed.keys():
-        inventory.append( (key, None) )
-    return inventory
+    return [ (key, None)
+             for key in ibm_svc_nodestats_parse(info) ]
 
 def check_ibm_svc_nodestats_disk_latency(item, _no_params, info):
     parsed = ibm_svc_nodestats_parse(info)
@@ -279,11 +270,8 @@ def ibm_svc_cache_parse(info):
     return parsed
 
 def inventory_ibm_svc_cache(info):
-    inventory = []
-    parsed = ibm_svc_cache_parse(info)
-    for key in parsed.keys():
-        inventory.append( (key, None) )
-    return inventory
+    return [ (key, None)
+             for key in ibm_svc_cache_parse(info) ]
 
 def check_ibm_svc_cache(item, _no_params, info):
     parsed = ibm_svc_cache_parse(info)

@@ -66,19 +66,15 @@ def parse_webio_io_inputs(info):
 
 
 def inventory_wut_webio_io_inputs(info):
-    inventory = []
-    wut_info = parse_webio_io_inputs(info)
     # inventorize the err, things as the parser returned them.
-    for index in wut_info.keys():
-        inventory.append((wut_info[index][0], wut_info[index][1]))
-    return inventory
+    return [ (val[0], val[1])
+             for val in parse_webio_io_inputs(info).values() ]
 
 
 def check_wut_webio_io_inputs(item, params, info):
-    wut_info = parse_webio_io_inputs(info)
-    for index in wut_info.keys():
-        if wut_info[index][0] == item:
-            state    = wut_info[index][1]
+    for val in parse_webio_io_inputs(info).values():
+        if val[0] == item:
+            state    = val[1]
 
             # Compare to the state of the IO port at inventory.
             if state != params:

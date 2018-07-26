@@ -45,8 +45,7 @@ def vxvm_objstatus_disks(info):
     return groups
 
 def inventory_vxvm_objstatus(info):
-    groups = vxvm_objstatus_disks(info)
-    return [(item, groups[item]) for item in groups.keys()]
+    return vxvm_objstatus_disks(info).items()
 
 def check_vxvm_objstatus(item, params, info):
     groups = vxvm_objstatus_disks(info)

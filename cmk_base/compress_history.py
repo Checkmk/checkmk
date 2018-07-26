@@ -91,7 +91,7 @@ def compress_history_file(input_path, output_path):
         elif line_type == "OPERATION":
             if machine_state != "START":
                 if machine_state == "INITIAL":
-                    for host in known_services.keys():
+                    for host in known_services:
                         if host not in services_after_reload:
                             for service in known_services[host]:
                                 log_vanished_object(output, timestamp, host, service)

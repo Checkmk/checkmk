@@ -1817,7 +1817,7 @@ class EventServer(ECServerThread):
         if not self.event_rule_determine_match_groups(rule, event, match_groups):
             # Abort on negative outcome, neither positive nor negative
             return False
-        for group_name in match_groups.keys():
+        for group_name in match_groups:
             if match_groups[group_name] is True:
                 match_groups[group_name] = ()
 

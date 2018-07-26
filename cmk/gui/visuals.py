@@ -853,7 +853,7 @@ def page_edit_visual(what, all_visuals, custom_field_handler = None,
                 visual[key] = general_properties[key]
 
             # ...and import the visibility flags directly into the visual
-            for key in dict(visibility_elements).keys():
+            for key, _value in visibility_elements:
                 visual[key] = general_properties['visibility'].get(key, False)
 
             if not config.user.may("general.publish_" + what):
@@ -1390,7 +1390,7 @@ def collect_context_links(this_visual, mobile = False, only_types = None):
             active_filter_vars.add(var)
 
     context_links = []
-    for what in visual_types.keys():
+    for what in visual_types:
         if not only_types or what in only_types:
             context_links += collect_context_links_of(what, this_visual, active_filter_vars, mobile)
     return context_links

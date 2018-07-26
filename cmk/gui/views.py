@@ -223,7 +223,8 @@ def groupby_host_tag(row, tgid):
 
 def load_host_tag_painters():
     # first remove all old painters to reflect delted painters during runtime
-    for key in multisite_painters.keys():
+    # FIXME: Do not modify the dict while iterating over it.
+    for key in list(multisite_painters.keys()):
         if key.startswith('host_tag_'):
             del multisite_painters[key]
 
@@ -638,7 +639,7 @@ def transform_valuespec_value_to_view(view):
         if ident == 'view':
             if "options" in attrs:
                 # First set all options to false
-                for option in dict(view_editor_options()).keys():
+                for option, _title in view_editor_options():
                     view[option] = False
 
                 # Then set the selected single options

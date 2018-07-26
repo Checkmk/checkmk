@@ -51,10 +51,10 @@ def parse_f5_bigip_pool(info):
 
         # Status information
         elif len(block[0]) == 6:
-            for key in parsed.keys():
+            for key, val in parsed.iteritems():
                 for line in block:
                     if key == line[0]:
-                         parsed[key]["down_info"].append(line)
+                         val["down_info"].append(line)
     return parsed
 
 def inventory_f5_bigip_pool(parsed):

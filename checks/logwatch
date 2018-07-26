@@ -803,7 +803,8 @@ def check_logwatch_ec(item, params, info):
 
     # 2. Maybe filter logfiles if some should be excluded
     if 'restrict_logfiles' in params:
-        for logfile in logs.keys():
+        # FIXME: Do not modify the dict while iterating over it.
+        for logfile in list(logs.keys()):
             if not logwatch_ec_forwarding_enabled(params, logfile):
                 del logs[logfile]
 

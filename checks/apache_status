@@ -123,11 +123,8 @@ def apache_status_parse(info):
     return data
 
 def inventory_apache_status(info):
-    data = apache_status_parse(info)
-    inv = []
-    for item in data.keys():
-        inv.append((item, {}))
-    return inv
+    return [ (item, {})
+             for item in apache_status_parse(info) ]
 
 def check_apache_status(item, params, info):
     if params is None:

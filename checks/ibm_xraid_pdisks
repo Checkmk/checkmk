@@ -42,10 +42,8 @@ def parse_ibm_xraid_pdisks(info):
 
 
 def inventory_ibm_xraid_pdisks(info):
-    inventory = []
-    for disk_id in parse_ibm_xraid_pdisks(info).keys():
-        inventory.append((disk_id, None))
-    return inventory
+    return [ (disk_id, None)
+             for disk_id in parse_ibm_xraid_pdisks(info) ]
 
 
 def check_ibm_xraid_pdisks(item, _no_params, info):

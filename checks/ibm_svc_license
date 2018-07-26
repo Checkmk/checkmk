@@ -59,11 +59,8 @@ def parse_ibm_svc_license(info):
     return licenses
 
 def inventory_ibm_svc_license(info):
-    inventory = []
-    licenses = parse_ibm_svc_license(info)
-    for license in licenses.keys():
-        inventory.append( (license, None) )
-    return inventory
+    return [ (license, None)
+             for license in parse_ibm_svc_license(info) ]
 
 def check_ibm_svc_license(item, params, info):
     licenses = parse_ibm_svc_license(info)

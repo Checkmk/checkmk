@@ -259,7 +259,7 @@ def create_core_config(core):
 def _verify_non_deprecated_checkgroups():
     groups = config.checks_by_checkgroup()
 
-    for checkgroup in config.checkgroup_parameters.keys():
+    for checkgroup in config.checkgroup_parameters:
         if checkgroup not in groups:
             warning(
                 "Found configured rules of deprecated check group \"%s\". These rules are not used "

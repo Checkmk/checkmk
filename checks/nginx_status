@@ -57,11 +57,8 @@ def nginx_status_parse(info):
     return data
 
 def inventory_nginx_status(info):
-    data = nginx_status_parse(info)
-    inv = []
-    for item in data.keys():
-        inv.append((item, {}))
-    return inv
+    return [ (item, {})
+             for item in nginx_status_parse(info) ]
 
 def check_nginx_status(item, params, info):
     if params is None:

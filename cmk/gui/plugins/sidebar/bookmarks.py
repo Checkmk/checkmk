@@ -190,7 +190,7 @@ class BookmarkList(pagetypes.Overridable):
             return
 
         # Also don't load them when the user has at least one bookmark list
-        for user_id, name in cls.instances_dict().keys():
+        for user_id, name in cls.instances_dict():
             if user_id == config.user.id:
                 return
 

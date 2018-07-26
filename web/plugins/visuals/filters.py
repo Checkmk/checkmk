@@ -1130,14 +1130,14 @@ class FilterHostTags(Filter):
             html.open_td()
             html.dropdown(prefix + '_grp', [("", "")] + groups,
                           onchange = 'host_tag_update_value(\'%s\', this.value)' % prefix,
-                          style='width:129px', sorted=True)
+                          style='width:129px', sorted=True, class_="grp")
             html.close_td()
             html.open_td()
-            html.dropdown(prefix + '_op', [("", "")] + operators, style="width:36px", sorted=True)
+            html.dropdown(prefix + '_op', [("", "")] + operators, style="width:36px", sorted=True, class_="op")
             html.close_td()
             html.open_td()
             choices = grouped[html.var(prefix + '_grp')] if html.var(prefix + '_grp') else [("", "")]
-            html.dropdown(prefix + '_val', choices, style="width:129px", sorted=True)
+            html.dropdown(prefix + '_val', choices, style="width:129px", sorted=True, class_="val")
             html.close_td()
             html.close_tr()
         html.close_table()

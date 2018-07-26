@@ -1,0 +1,12 @@
+Title: Fixed date shown for the first inventory history entry
+Level: 1
+Component: inv
+Compatible: compat
+Edition: cre
+Version: 1.5.0b10
+Date: 1532590520
+Class: fix
+
+Instead of showing 01.01.1970 for the first inventory history entry
+the view now shows the correct inventory time again. This regression
+affects all previous 1.5 releases

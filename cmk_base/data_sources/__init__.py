@@ -281,13 +281,13 @@ class DataSources(object):
         # Special agents can produce data for the same check_plugin_name on the same host, in this case
         # the section lines need to be extended
         multi_host_sections = MultiHostSections()
-        for this_hostname, this_ipaddress, these_sources, this_max_cachfile_age in hosts:
+        for this_hostname, this_ipaddress, these_sources, this_max_cachefile_age in hosts:
             # In case a max_cachefile_age is given with the function call, always use this one
             # instead of the host individual one. This is only used in discovery mode.
             if max_cachefile_age is not None:
                 these_sources.set_max_cachefile_age(max_cachefile_age)
             else:
-                these_sources.set_max_cachefile_age(this_max_cachfile_age)
+                these_sources.set_max_cachefile_age(this_max_cachefile_age)
 
             for source in these_sources.get_data_sources():
                 host_sections_from_source = source.run()

@@ -11,6 +11,8 @@ if len(sys.argv) > 3:
 else:
     edition_short = None
 
+if not os.path.exists(werk_dir):
+    raise Exception("Requested werk directory does not exist: %s" % werk_dir)
 
 werks = cmk.werks.load_raw_files(werk_dir)
 

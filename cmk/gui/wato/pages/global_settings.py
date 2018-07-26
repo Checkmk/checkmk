@@ -108,6 +108,9 @@ class GlobalSettingsMode(WatoMode):
             header_is_painted = False # needed for omitting empty groups
 
             for domain, varname, valuespec in watolib.configvar_groups()[group_name]:
+                if not domain.enabled():
+                    continue
+
                 if domain == watolib.ConfigDomainCore and varname not in self._default_values:
                     if config.debug:
                         raise MKGeneralException("The configuration variable <tt>%s</tt> is unknown to "

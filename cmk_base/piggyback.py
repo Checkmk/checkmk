@@ -38,19 +38,27 @@ import cmk_base.config as config
 
 
 def get_piggyback_raw_data(hostname):
-    output = ""
-    if not hostname:
-        return output
+    """Returns the usable piggyback data for the given host
 
+    A list of two element tuples where the first element is
+    the source host name and the second element is the raw
+    piggyback data (byte string)
+    """
+    if not hostname:
+        return []
+
+    piggyback_data = []
     for source_host, piggyback_file_path in _get_piggyback_files(hostname):
         try:
-            output += file(piggyback_file_path).read()
-            console.verbose("Using piggyback raw data from host %s.\n" % source_host)
+            raw_data = file(piggyback_file_path).read()
         except IOError, e:
             console.verbose("Cannot read piggyback raw data from host %s: %s\n" % (source_host, e))
             continue
 
-    return output
+        console.verbose("Using piggyback raw data from host %s.\n" % source_host)
+        piggyback_data.append((source_host, raw_data))
+
+    return piggyback_data
 
 
 def has_piggyback_raw_data(hostname):

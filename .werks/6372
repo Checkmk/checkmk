@@ -1,0 +1,12 @@
+Title: Check_MK service: Piggyback data source reports the source hosts now
+Level: 1
+Component: core
+Compatible: compat
+Edition: cre
+Version: 1.5.0p1
+Date: 1532636234
+Class: fix
+
+The Check_MK service now reports the source hosts that provided piggyback
+information for the processed host. This makes debugging a lot easier when
+working with piggyback information.

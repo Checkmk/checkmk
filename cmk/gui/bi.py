@@ -1924,8 +1924,8 @@ def remove_empty_nodes(node):
     else:
         subnodes = node["nodes"]
         # loop all subnodes recursing down to the lowest level
-        for i in range(0, len(subnodes)):
-            remove_empty_nodes(subnodes[i])
+        for subnode in subnodes:
+            remove_empty_nodes(subnode)
         # remove all subnode rules which have no subnodes
         for i in range(0, len(subnodes))[::-1]:
             if node_is_empty(subnodes[i]):

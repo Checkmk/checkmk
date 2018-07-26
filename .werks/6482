@@ -1,0 +1,11 @@
+Title: oracle_rman: redesign of check for physical standby environments
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1535353886
+Class: feature
+
+The check could be used in environments with physical standby databases.
+The newest backup is shown as a result from different hosts for a database.

@@ -38,150 +38,199 @@
 # Create DB_INCR_<Level> checks when parameter is True
 # Set this to False for old behavior. This is required for the service
 # discovery and can't be set as a inventory parameter.
+# This will be removed in a later version of Check_MK. Don't use it for new installations!
 inventory_oracle_rman_incremental_details = True
 
-def inventory_oracle_rman(info):
-    inventory = []
-    for line in info:
-        if len(line) == 1:
-            continue
-        if line[4] in ('ARCHIVELOG', 'DB_FULL', 'DB_INCR', 'CONTROLFILE'):
-            if len(line) == 8:
 
-                if inventory_oracle_rman_incremental_details and line[4] == 'DB_INCR':
-                    inventory.append(("%s.%s_%s" % (line[0], line[4], line[5]), {}))
-                    continue
 
-            # old format used 6 values
-            elif len(line) <> 6:
-                continue
-
-            inventory.append(("%s.%s" % (line[0], line[4]), {}))
-    return inventory
-
-def check_oracle_rman(item, params, info):
-    sid_level0 = ''
-    backupage_level0 = 0
-    item_found = False
+def parse_oracle_rman(info):
+    parsed = {}
+    error_sids  = {}
 
     for line in info:
+        node_name = line[0]
+        line      = line[1:]
+
+        # Check for query errors
+        err = oracle_handle_ora_errors(line)
+        if err == False:
+            continue # ignore ancient agent outputs
+        elif isinstance(err, tuple):
+            sid = line[0]
+            error_sids[sid] = err
+
         # we leave the llop with break when item is found except for DB_INCR_0
         # later we need to restore the values for DB_INCR_0 due to possivle
         #  overwrite with new line from info
 
         backupscn = -1
+        item = ''
 
         if len(line) == 6:
             sid, status, start, end, backuptype, backupage = line
+            item = "%s.%s" % (sid, backuptype)
+
+            backupscn = int(-1)
+            backuplevel = -1
 
         elif len(line) == 8:
             sid, status, not_used_1, end, backuptype, backuplevel, backupage, backupscn = line
             if backupscn == '':
-                backupscn = -1
+                backupscn = int(-1)
             else:
                 backupscn = int(backupscn)
 
-        if backuptype == 'DB_INCR' and item[:-1] == "%s.%s_" % (sid,  backuptype):
-            # we found a DB_INCR_ entry
-            item_found = True
+            if backuptype == 'DB_INCR':
 
-            if backuplevel == '0':
-                # save DB_INCR_0 for possible missing INCR_1..4 at later time
-                sid_level0, end_level0, backupage_level0 = sid, end, backupage
-                # we need to continue for possible missing DB_INCR_1..4
+                if inventory_oracle_rman_incremental_details:
+                    item = "%s.%s_%s" % (sid, backuptype, backuplevel)
+                else:
+                    # This is for really old plugins without an information for the backuplevel
+                    item = "%s.%s" % (sid, backuptype )
+            else:
+                item = "%s.%s" % (sid, backuptype)
+
+        else:
+            continue
+
+        try:
+            backupage = int(backupage)
+
+        except (ValueError, TypeError):
+            backupage = None
+
+        parsed.setdefault(item, {
+             "sid"         : sid,
+             "backuptype"  : backuptype,
+             "backuplevel" : backuplevel,
+             "backupage"   : backupage,
+             "status"      : status,
+             "backupscn"   : backupscn,
+             "used_incr_0" : False,          # True when last incr0 is newer then incr1
+        })
+
+        # take the most current backupage in clustered environments
+        if parsed[item]['backupage'] is None or parsed[item]['backupage'] > backupage:
+            parsed[item].update ({"backupage": backupage})
+
+    # some tweaks in aprsed for change in behavior of oracle
+    # correct backupage for INCR_1 when newer INCR_0 is existing
+    for line in parsed:
+
+        # search DB_INCR_1 in parsed
+        if line.rsplit('.',1)[1] == 'DB_INCR_1':
+
+            # check backupage
+            sid_level0 = "%s0" % (line[0:-1])
+
+            if sid_level0 in parsed and parsed[sid_level0]['backupage'] < parsed[line]['backupage']:
+
+                parsed[line].update({
+                     "backupage": backupage,
+                     "used_incr_0" : True,
+                })
+
+    return  parsed
+
+def inventory_oracle_rman(parsed):
+    inventory = []
+    for line in parsed:
+
+        sid = parsed[line]['sid']
+        backuptype = parsed[line]['backuptype']
+        backuplevel = parsed[line]['backuplevel']
+
+        if backuptype in ('ARCHIVELOG', 'DB_FULL', 'DB_INCR', 'CONTROLFILE'):
+
+            if inventory_oracle_rman_incremental_details and backuptype == 'DB_INCR':
+                inventory.append(("%s.%s_%s" % (sid, backuptype, backuplevel), {}))
                 continue
 
-            elif item[-1] == backuplevel:
-                # we found the item in agent output
-                break
-
-        elif item == "%s.%s" % (sid,  backuptype):
-            # we found the item in agent output
-            # This situation is also valid for old agent format with
-            # <sid>.DB_INCR as there was no level availible
-            item_found = True
-            break
-
-
-    if item_found:
-
-        used_incr_0 = False
-
-        if item[:-1] == "%s.DB_INCR_" % item[:item.find('.')]:
-            # we are on sid.DB_INCR_
-
-            if item[-1]  == '0' and sid_level0:
-                # we are on a DB_INCR_0
-                # we could have invalid data from for item loop due to 'continue' at backuplevel==0
-                sid, end, backupage = sid_level0, end_level0, backupage_level0
-
             else:
-                if item == "%s.%s_%s" % (sid,  backuptype, backuplevel):
-                    # we got a line from agent
-                    # is last level 0 younger then current?
+                inventory.append(("%s.%s" % (sid, backuptype), {}))
 
-                    # 12.1 has a change behavior in v$-views for RMAN...
-                    if int(backupage_level0) <= int(backupage):
+    return inventory
 
-                        # use the level instead of current
-                        used_incr_0 = True
-                        backupage = backupage_level0
+def check_oracle_rman(item, params, parsed):
 
-                    else:
+    rman_backup = parsed.get(item)
 
-                        # => use the data from agent
-                        used_incr_0 = False
-                else:
-                    # use the DB_INCR_0 from agent
-                    used_incr_0 = True
-                    if sid_level0 and end_level0 and backupage_level0:
-                        sid, end, backupage = sid_level0, end_level0, backupage_level0
+    sid_level0 = ''
 
-        perfdata = []
-        state = 2
-        infotext = "no COMPLETED backup found in last 14 days"
+    if not rman_backup:
 
-        if status in  ('COMPLETED', 'COMPLETED WITH WARNINGS'):
-            if not backupage:
-                # This should not be possible until last fix
-                return 3, "Unknown backupage in check found"
+        # some versions of Oracle removes the last Level 1 after a new Level 0
+        # => we have no Level 1 in agent output. level 1 is shown as level 0
 
-            # backupage is time in minutes from agent!
-            backupage = int(backupage)*60
-            infotext = "Last backup %s ago" % get_age_human_readable(backupage)
+        sid_level0 = "%s0" % (item[0:-1])
 
-            state = 0
-            if "levels" in params:
-                warn, crit = params.get("levels")
-                if backupage >= crit:
-                    state = 2
-                elif backupage >= warn:
-                    state = 1
-                infotext += " (warn/crit at %s/%s)" % (
-                    get_age_human_readable(warn),
-                    get_age_human_readable(crit))
+        if item[-1] == '1' and sid_level0 in parsed:
 
-                perfdata = [ ("age", backupage, warn, crit) ]
-            else:
-                perfdata = [ ("age", backupage, ) ]
+            # => INCR_1 in item and INCR_0 found
+            # => Switch to INCR_0 + used_incr_0
+            rman_backup = parsed.get(sid_level0)
+            rman_backup.update({"used_incr_0" : True})
 
-            if backupscn > 0:
-                infotext += ", incremental SCN %i" % backupscn
+        else:
 
-            if used_incr_0:
-                infotext += ', Last DB_INCR_0 used'
+            # In case of missing information we assume that the login into
+            # the database has failed and we simply skip this check. It won't
+            # switch to UNKNOWN, but will get stale.
+            raise MKCounterWrapped("Login into database failed. Working on %s" % item)
 
-        return state, infotext, perfdata
 
-    # In case of missing information we assume that the login into
-    # the database has failed and we simply skip this check. It won't
-    # switch to UNKNOWN, but will get stale.
-    raise MKCounterWrapped("Login into database failed. Working on %s" % item)
+    sid         = rman_backup['sid']
+    backuptype  = rman_backup['backuptype']
+    backuplevel = rman_backup['backuplevel']
+    status      = rman_backup['status']
+    backupage   = rman_backup['backupage']
+    backupscn   = rman_backup['backupscn']
+
+    perfdata = []
+    state = 2
+
+    if status in  ('COMPLETED', 'COMPLETED WITH WARNINGS'):
+
+        if backupage is None:
+            # backupage in agent was empty. That's only possible with really old agents.
+            return 3, "Unknown backupage in check found. Please update agent."
+
+        # backupage is time in minutes from agent!
+        backupage = backupage*60
+        infotext = "Last backup %s ago" % get_age_human_readable(backupage)
+
+        state = 0
+        if "levels" in params:
+            warn, crit = params.get("levels")
+            if backupage >= crit:
+                state = 2
+            elif backupage >= warn:
+                state = 1
+            infotext += " (warn/crit at %s/%s)" % (
+                get_age_human_readable(warn),
+                get_age_human_readable(crit))
+
+            perfdata = [ ("age", backupage, warn, crit) ]
+        else:
+            perfdata = [ ("age", backupage, ) ]
+
+        if backupscn > 0:
+            infotext += ", incremental SCN %i" % backupscn
+
+        if rman_backup['used_incr_0']:
+            infotext += ', Last DB_INCR_0 used'
+    else:
+        infotext = "no COMPLETED backup found in last 14 days (very old plugin in use?)"
+
+    return state, infotext, perfdata
 
 check_info['oracle_rman'] = {
     "check_function"          : check_oracle_rman,
+    "parse_function"          : parse_oracle_rman,
     "inventory_function"      : inventory_oracle_rman,
     "service_description"     : "ORA %s RMAN Backup",
     "has_perfdata"            : True,
+    "node_info"               : True,
     "group"                   : "oracle_rman",
+    "includes"                : [ "oracle.include", "db.include" ]
 }

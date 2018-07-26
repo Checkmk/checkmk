@@ -1,0 +1,13 @@
+Title: Custom color sets are only used by classic theme
+Level: 1
+Component: multisite
+Class: fix
+Compatible: compat
+Edition: cme
+State: unknown
+Version: 1.6.0i1
+Date: 1532585864
+
+The configurable color set which can be configured in the
+global settings of the CME are only used for the classic
+GUI theme and does not apply to the new facelift theme.

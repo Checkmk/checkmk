@@ -1,0 +1,13 @@
+Title: Fixed missing CEE/CME specific werks in release notes
+Level: 2
+Component: multisite
+Class: fix
+Compatible: compat
+Edition: cee
+State: unknown
+Version: 1.6.0i1
+Date: 1532593979
+
+The Check_MK release notes viewer (Click on version in sidebar header)
+was not correctly showing CEE/CME specific werks. All previous 1.5
+releases are affected by this regression.

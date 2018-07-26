@@ -159,14 +159,17 @@ def get_history(hostname):
     if '/' in hostname:
         return None # just for security reasons
 
+    history = []
     try:
         inventory_path = "%s/inventory/%s" % (cmk.paths.var_dir, hostname)
         timestamp = int(os.stat(inventory_path).st_mtime)
         inventory_tree = load_tree(hostname, merge_trees=False)
+        history.append((timestamp, inventory_tree))
     except:
+        # TODO: We should really change this error handling. There is currently
+        # no chance to react on issues that occur during processing of
+        # inventory data.
         return [] # No inventory for this host
-    else:
-        history = [(0, StructuredDataTree()), (timestamp, inventory_tree)]
 
     inventory_archive_dir = "%s/inventory_archive/%s" % (cmk.paths.var_dir, hostname)
     if os.path.exists(inventory_archive_dir):
@@ -176,17 +179,17 @@ def get_history(hostname):
                 inventory_archive_path = "%s/%d" % (inventory_archive_dir, timestamp)
                 inventory_tree = StructuredDataTree().load_from(inventory_archive_path)
             except:
+                # TODO: We should really change this error handling. There is currently
+                # no chance to react on issues that occur during processing of
+                # inventory data.
                 pass
             else:
                 history.append((timestamp, inventory_tree))
 
-    comparable_trees, previous_tree = [], None
+    comparable_trees, previous_tree = [], StructuredDataTree()
     for this_timestamp, inventory_tree in sorted(history, key=lambda x: x[0]):
-        if previous_tree is None:
-            previous_tree = inventory_tree
-        else:
-            comparable_trees.append((this_timestamp, inventory_tree, previous_tree))
-            previous_tree = inventory_tree
+        comparable_trees.append((this_timestamp, inventory_tree, previous_tree))
+        previous_tree = inventory_tree
 
     return reversed(comparable_trees)
 

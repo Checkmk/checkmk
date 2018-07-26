@@ -60,7 +60,7 @@ else
 fi
 
 echo '<<<check_mk>>>'
-echo Version: 1.5.0b10
+echo Version: 1.5.0b11
 echo AgentOS: netbsd
 
 osver="$(uname -r)"

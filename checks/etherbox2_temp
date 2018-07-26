@@ -56,11 +56,11 @@ def parse_etherbox2_temp(info):
     # because the temperature can drop below 0.
     parsed = {}
     sensor_indicators, sensors = info
-    for sensor_index in range(0, len(sensors)):
+    for sensor_index, sensor in enumerate(sensors):
         indicator_index = 2 * sensor_index
         if float((sensor_indicators[indicator_index][0].split("Volt")[0]).strip()) > 4 and \
            float((sensor_indicators[indicator_index + 1][0].split("Volt")[0]).strip()) > 1:
-            parsed["Sensor %s" % sensors[sensor_index][0]] = float(sensors[sensor_index][1]) / 10
+            parsed["Sensor %s" % sensor[0]] = float(sensor[1]) / 10
 
     return parsed
 

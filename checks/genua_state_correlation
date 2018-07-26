@@ -76,9 +76,9 @@ def check_genua_state(item, _no_params, info):
 
     # critical if the carp interfaces dont have the same state
     carp_states = [ 0, 0, 0 ]
-    for i in range (0, len(carp_info)):
-        carp_states[int(carp_info[i][4])] += 1
-        if carp_info[0][4] != carp_info[i][4]:
+    for i, elem in enumerate(carp_info):
+        carp_states[int(elem[4])] += 1
+        if carp_info[0][4] != elem[4]:
             state = 2
 
     output = "Number of carp IFs in states "

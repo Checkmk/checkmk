@@ -29,15 +29,12 @@ factory_settings['alcatel_temp'] = {
 }
 
 def inventory_alcatel_temp(info):
-    with_slot = True
-    if len(info) == 1:
-        with_slot = False
-    for index in range(len(info)):
-        slot = index + 1
+    with_slot = len(info) != 1
+    for index, row in enumerate(info):
         for oid, name in enumerate(["Board", "CPU"]):
-            if info[index][oid] != '0':
+            if row[oid] != '0':
                 if with_slot:
-                    yield "Slot %s %s" % (slot, name), {}
+                    yield "Slot %s %s" % (index + 1, name), {}
                 else:
                     yield name, {}
 

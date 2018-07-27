@@ -121,9 +121,9 @@ def inv_tree(path, default_value=None):
 """)
 
         # add the modules
+        # These pylint warnings are incompatible with our "concatenation technology".
+        f.write("# pylint: disable=reimported,ungrouped-imports\n")
         pylint_cmk.add_file(f, repo_path() + "/cmk_base/check_api.py")
-        # This pylint warning is incompatible with our "concatenation technology".
-        f.write("# pylint: disable=ungrouped-imports\n")
         pylint_cmk.add_file(f, repo_path() + "/cmk_base/inventory_plugins.py")
 
         # Now add the checks
@@ -139,6 +139,8 @@ def _compile_bakery_plugins(pylint_test_dir):
     with open(pylint_test_dir + "/cmk_bakery_plugins.py", "w") as f:
 
         pylint_cmk.add_file(f, os.path.realpath(os.path.join(cmc_path(), "cmk_base/cee/agent_bakery_plugins.py")))
+        # This pylint warning is incompatible with our "concatenation technology".
+        f.write("# pylint: disable=reimported\n")
 
         # Also add bakery plugins
         for path in pylint_cmk.check_files(os.path.join(cmc_path(), "agents/bakery")):

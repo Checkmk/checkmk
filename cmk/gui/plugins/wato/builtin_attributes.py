@@ -33,8 +33,7 @@ from cmk.gui.globals import html
 from cmk.gui.htmllib import HTML
 from cmk.gui.valuespec import HostAddress, ListOf, ListOfStrings, Dictionary, Age, \
     TimeofdayRange, Checkbox, DropdownChoice, Integer, CascadingDropdown, Tuple, \
-    IPv4Address, RegExp, Alternative, FixedValue, AbsoluteDate, FixedValue, TextUnicode, \
-    SiteChoice
+    IPv4Address, RegExp, Alternative, FixedValue, AbsoluteDate, TextUnicode, SiteChoice
 from cmk.gui.exceptions import MKUserError
 
 from . import \

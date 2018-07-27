@@ -1342,7 +1342,6 @@ modes.register(Mode(
 #   '----------------------------------------------------------------------'
 
 def mode_notify(options, *args):
-    import cmk_base.config as config
     import cmk_base.notify as notify
     config.load(with_conf_d=True, validate_hosts=False)
     # TODO: Fix the code and remove the pragma below!

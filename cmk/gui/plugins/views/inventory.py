@@ -51,7 +51,6 @@ from cmk.gui.plugins.visuals.inventory import (
     FilterInvtableInterfaceType,
     FilterInvtableTimestampAsAge,
     FilterInvtableText,
-    FilterInvtableIDRange,
 )
 
 from . import (

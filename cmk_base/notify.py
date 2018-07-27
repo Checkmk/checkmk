@@ -1869,7 +1869,6 @@ def substitute_context(template, context):
 def format_exception():
     import traceback
     import StringIO
-    import sys
 
     txt = StringIO.StringIO()
     t, v, tb = sys.exc_info()

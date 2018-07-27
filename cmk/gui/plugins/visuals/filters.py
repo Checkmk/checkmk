@@ -1195,7 +1195,7 @@ class FilterStarred(FilterTristate):
     def __init__(self, what):
         self.what = what
 
-        title = what == _("Favorite Hosts") if what == "host" else _("Favorite Services")
+        title = _("Favorite Hosts") if what == "host" else _("Favorite Services")
 
         FilterTristate.__init__(self,
             name   = what + "_favorites",

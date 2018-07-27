@@ -28,12 +28,14 @@
 # .1.3.6.1.4.1.9.9.305.1.1.1.0 1 --> CISCO-SYSTEM-EXT-MIB::cseSysCPUUtilization.0
 
 
-cisco_nexus_cpu_default_levels = (80.0, 90.0)
+factory_settings["cisco_nexus_cpu_default_levels"] = {
+    'levels': (80.0, 90.0),
+}
 
 
 def inventory_cisco_nexus_cpu(info):
     if info[0][0]:
-        return [ (None, "cisco_nexus_cpu_default_levels") ]
+        return [ (None, {}) ]
 
 
 def check_cisco_nexus_cpu(_no_item, params, info):
@@ -49,6 +51,7 @@ check_info['cisco_nexus_cpu'] = {
     'snmp_scan_function'        : lambda oid: "cisco" in oid(".1.3.6.1.2.1.1.1.0").lower() \
                                      and "nx-os" in oid(".1.3.6.1.2.1.1.1.0").lower() \
                                      and oid(".1.3.6.1.4.1.9.9.305.1.1.1.0"),
-    'group'                     : "cpu_utilization",
+    'group'                     : "cpu_utilization_os",
     'includes'                  : [ "cpu_util.include" ],
+    'default_levels_variable'   : "cisco_nexus_cpu_default_levels",
 }

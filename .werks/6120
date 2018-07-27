@@ -1,0 +1,22 @@
+Title: cisco_nexus_cpu: use the ruleset "CPU utilization for simple devices"
+Level: 1
+Component: checks
+Class: fix
+Compatible: incomp
+Edition: cre
+State: unknown
+Version: 1.4.0p35
+Date: 1530797354
+
+Since Werk 5748 cisco_nexus_cpu is preferred over cisco_cpu on all Nexus
+devices. As a result short peaks in CPU utilization might result in a WARN or
+CRIT on devices that used cisco_cpu before, since the cisco_nexus_cpu check
+does not deliver averaged values. To add the possibility of averaging to the
+cisco_nexus_cpu check the ruleset "CPU utilization for simple devices" is now
+used. With this ruleset it is possible to define arbitrary averaging periods.
+The old ruleset "CPU utilization for Appliances" is not supported anymore for
+the cisco_nexus_cpu check.
+
+To accommodate for this change affected hosts have to be rediscovered and all
+rules for devices that use the cisco_nexus_cpu checks have to be moved to the
+new ruleset.

@@ -1322,7 +1322,7 @@ metric_info["util"] = {
 metric_info["util_average"] = {
     "title" : _("CPU utilization (average)"),
     "unit"  : "%",
-    "color" : "26/b",
+    "color" : "44/a",
 }
 
 metric_info["util1s"] = {
@@ -4335,9 +4335,10 @@ check_metrics["check-mk-host-tcp"] = {
     "time" : { "name": "response_time" }
 }
 
-
-
-
+for check in ['winperf_processor', 'docker_container_cpu', 'hr_cpu', 'bintec_cpu', 'esx_vsphere_hostsystem']:
+    check_metrics["check_mk-%s" % check] = {
+        "avg": { "name": "util_average" }
+    }
 
 check_metrics["check_mk-citrix_serverload"] = {
     "perf" : { "name" : "citrix_load", "scale" : 0.01 }

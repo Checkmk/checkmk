@@ -501,13 +501,35 @@ class ACTestApacheNumberOfProcesses(ACTest, BPApacheTest):
 
         sizes = []
         for pid in subprocess.check_output(["ps", "--ppid", "%d" % ppid, "h", "o", "pid"]).splitlines():
-            summary_line = subprocess.check_output(["pmap", "-d", "%d" % int(pid)]).splitlines()[-1]
-            sizes.append(int(summary_line.split()[3][:-1])*1024.0)
+            sizes.append(self._get_process_size(pid))
 
         if not sizes:
             raise MKGeneralException(_("Failed to estimate the apache process size"))
 
         return sum(sizes) / float(len(sizes))
+
+
+    def _get_process_size(self, pid):
+        # Summary line seems to be different on the supported distros
+        # Ubuntu 17.10 (pmap from procps-ng 3.3.12):
+        # mapped: 25036K    writeable/private: 2704K    shared: 28K
+        # SLES12
+        # 4020K writable-private, 102960K readonly-private, 1856K shared, and 636K referenced
+        # SLES12SP3 (pmap using library of procps-ng 3.3.9)
+        # 2784K writable-private, 21052K readonly-private, and 28K shared
+        # CentOS 5.5 (pmap procps version 3.2.7)
+        # mapped: 66176K    writeable/private: 548K    shared: 28K
+        # CentOS 7 (pmap from procps-ng 3.3.10)
+        # mapped: 115524K    writeable/private: 684K    shared: 28K
+        summary_line = subprocess.check_output(["pmap", "-d", "%d" % int(pid)]).splitlines()[-1]
+
+        parts = summary_line.split()
+        if parts[1] == "writable-private,":
+            writable_private = parts[0]
+        else:
+            writable_private = parts[3]
+
+        return int(writable_private[:-1]) * 1024.0
 
 
 

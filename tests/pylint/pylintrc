@@ -19,7 +19,6 @@ disable=
     no-else-return,
     no-self-use,
     protected-access,
-    relative-import,
     #---------------------------------------------------------------------------
     # We should really enable this, there could be some real exceptions waiting
     # to be thrown. But some work is needed first to sprinkle abc annotations

@@ -10707,7 +10707,7 @@ class ModeEditUser(WatoMode):
         )
 
 
-    def _show_custom_user_attributes(self, topic=None):
+    def _show_custom_user_attributes(self, topic):
         for name, attr in userdb.get_user_attributes():
             if topic is not None and topic != attr.topic():
                 continue # skip attrs of other topics

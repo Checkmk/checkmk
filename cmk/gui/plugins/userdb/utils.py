@@ -147,6 +147,12 @@ class UserAttribute(object):
 
 
     @abc.abstractmethod
+    def topic(self):
+        # type: () -> bytes
+        raise NotImplementedError()
+
+
+    @abc.abstractmethod
     def valuespec(self):
         raise NotImplementedError()
 
@@ -169,11 +175,6 @@ class UserAttribute(object):
     def show_in_table(self):
         # type: () -> bool
         return False
-
-
-    def topic(self):
-        # type: () -> Optional[bytes]
-        return None
 
 
     def add_custom_macro(self):

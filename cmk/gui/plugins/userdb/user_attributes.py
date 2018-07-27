@@ -36,6 +36,10 @@ class ForceAuthUserUserAttribute(UserAttribute):
         return "force_authuser"
 
 
+    def topic(self):
+        return "personal"
+
+
     def valuespec(self):
         return Checkbox(
             title = _("Visibility of Hosts/Services"),
@@ -59,6 +63,10 @@ class ForceAuthUserWebserviceUserAttribute(UserAttribute):
         return "force_authuser_webservice"
 
 
+    def topic(self):
+        return "personal"
+
+
     def valuespec(self):
         return Checkbox(
             title = _("Hosts/Service visibility (Webservice, Deprecated)"),
@@ -80,6 +88,10 @@ class DisableNotificationsUserAttribute(UserAttribute):
     @classmethod
     def name(cls):
         return "disable_notifications"
+
+
+    def topic(self):
+        return "personal"
 
 
     def valuespec(self):
@@ -123,6 +135,10 @@ class StartURLUserAttribute(UserAttribute):
         return "start_url"
 
 
+    def topic(self):
+        return "personal"
+
+
     def valuespec(self):
         return Transform(
             Alternative(
@@ -159,6 +175,10 @@ class UIThemeUserAttribute(UserAttribute):
     @classmethod
     def name(cls):
         return "ui_theme"
+
+
+    def topic(self):
+        return "personal"
 
 
     def valuespec(self):

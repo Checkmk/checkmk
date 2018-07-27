@@ -109,7 +109,7 @@ def get_size():
 # TODO: Is this a good place?
 # TODO: Cleanup this function!
 def print_table(headers, colors, rows, indent = ""):
-    lengths = [ len(h) for h in headers ]
+    num_columns = len(headers)
 
     def make_utf8(x):
         if type(x) == unicode:
@@ -117,8 +117,10 @@ def print_table(headers, colors, rows, indent = ""):
         else:
             return "%s" % (x,)
 
+    lengths = [ len(h) for h in headers ]
     for row in rows:
-        lengths = [ max(len(make_utf8(c)), l) for c, l in zip(row, lengths) ]
+        for index, column in enumerate(row[:num_columns]):
+            lengths[index] = max(len(make_utf8(column)), lengths[index])
 
     fmt = indent
     sep = ""
@@ -129,7 +131,7 @@ def print_table(headers, colors, rows, indent = ""):
     first = True
     fmt += "\n"
     for row in [ headers ] + rows:
-        sys.stdout.write(fmt % tuple(make_utf8(c) for c in row[:len(headers)]))
+        sys.stdout.write(fmt % tuple(make_utf8(c) for c in row[:num_columns]))
         if first:
             first = False
             sys.stdout.write(fmt % tuple("-" * l for l in lengths))

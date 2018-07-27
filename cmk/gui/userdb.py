@@ -491,25 +491,29 @@ def convert_session_info(value):
 
 
 class GenericUserAttribute(cmk.gui.plugins.userdb.UserAttribute):
-    def __init__(self, name, valuespec, user_editable, show_in_table, topic, add_custom_macro, domain, permission, from_config):
+    def __init__(self, user_editable, show_in_table, add_custom_macro, domain, permission, from_config):
         super(GenericUserAttribute, self).__init__()
-        self._name = name
-        self._valuespec = valuespec
         self._user_editable = user_editable
         self._show_in_table = show_in_table
-        self._topic = topic
         self._add_custom_macro = add_custom_macro
         self._domain = domain
         self._permission = permission
         self._from_config = from_config
 
 
-    def name(self):
-        return self._name
+    @classmethod
+    def name(cls):
+        return cls._name
 
 
-    def valuespec(self):
-        return self._valuespec
+    @classmethod
+    def valuespec(cls):
+        return cls._valuespec
+
+
+    @classmethod
+    def topic(cls):
+        return cls._topic
 
 
     def from_config(self):
@@ -528,10 +532,6 @@ class GenericUserAttribute(cmk.gui.plugins.userdb.UserAttribute):
         return self._show_in_table
 
 
-    def topic(self):
-        return self._topic
-
-
     def add_custom_macro(self):
         return self._add_custom_macro
 
@@ -547,13 +547,14 @@ def declare_user_attribute(name, vs, user_editable = True, permission = None,
 
     @user_attribute_registry.register
     class LegacyUserAttribute(GenericUserAttribute):
+        _name = name
+        _valuespec = vs
+        _topic = topic if topic else 'personal'
+
         def __init__(self):
             super(LegacyUserAttribute, self).__init__(
-                name,
-                valuespec=vs,
                 user_editable=user_editable,
                 show_in_table=show_in_table,
-                topic=topic and topic or 'personal',
                 add_custom_macro=add_custom_macro,
                 domain=domain,
                 permission=permission,

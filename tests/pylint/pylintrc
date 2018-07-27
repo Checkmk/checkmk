@@ -150,8 +150,8 @@ disable=
     #---------------------------------------------------------------------------
     # Enabling the two spelling-related checks increases pylints runtime from
     # 11 min to 40 min, so we better keep those disabled for normal runs.
-    # wrong-spelling-in-comment,
-    # wrong-spelling-in-docstring,
+    wrong-spelling-in-comment,
+    wrong-spelling-in-docstring,
 
 [REPORTS]
 output-format=cmk_colorized

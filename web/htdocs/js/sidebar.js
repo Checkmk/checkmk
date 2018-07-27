@@ -514,7 +514,9 @@ function fold_sidebar()
     document.getElementById('check_mk_sidebar').style.position = "relative";
     document.getElementById('check_mk_sidebar').style.left = "-265px";
     document.getElementById('side_footer').style.display = "none";
-    document.getElementById('side_version').style.display = "none";
+    var version = document.getElementById('side_version');
+    if (version)
+        version.style.display = "none";
     parent.document.body.cols = sidebar_width() + ",*";
     get_url('sidebar_fold.py?fold=yes');
 }
@@ -526,7 +528,9 @@ function unfold_sidebar()
     document.getElementById('check_mk_sidebar').style.position = "";
     document.getElementById('check_mk_sidebar').style.left = "0";
     document.getElementById('side_footer').style.display = "";
-    document.getElementById('side_version').style.display = "";
+    var version = document.getElementById('side_version');
+    if (version)
+        version.style.display = "";
     parent.document.body.cols = sidebar_width() + ",*";
     get_url('sidebar_fold.py?fold=');
 }

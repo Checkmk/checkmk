@@ -33,6 +33,10 @@ try:
 except NameError:
     _ = lambda x: x # Fake i18n when not available
 
+# TODO: Move state out of module scope
+# TODO: This should be rewritten to a context manager object. See cmk.profile for
+#       an example how it could look like.
+
 current_phase = None
 
 def start(initial_phase):
@@ -42,42 +46,42 @@ def start(initial_phase):
     last_time_snapshot = _time_snapshot()
     current_phase = initial_phase
     phase_stack = []
-    set_phase(initial_phase)
+    _set_phase(initial_phase)
 
 
 def end():
     console.vverbose("[cpu_tracking] End\n")
-    set_phase(None)
-
-
-def set_phase(phase):
-    global current_phase
-    if current_phase != None:
-        console.vverbose("[cpu_tracking]   Set phase: %s (previous %s)\n" % (phase, current_phase))
-        _add_times_to_phase()
-        current_phase = phase
+    _set_phase(None)
 
 
 def push_phase(phase):
     if current_phase != None:
         console.vverbose("[cpu_tracking] Push phase (Stack: %r)\n" % phase_stack)
         phase_stack.append(current_phase)
-        set_phase(phase)
+        _set_phase(phase)
 
 
 def pop_phase():
     if current_phase != None:
         console.vverbose("[cpu_tracking] Pop current phase (Stack: %r)\n" % phase_stack)
         if len(phase_stack) == 1:
-            set_phase(None)
+            _set_phase(None)
         else:
-            set_phase(phase_stack[-1])
+            _set_phase(phase_stack[-1])
 
         del phase_stack[-1]
 
 
 def get_times():
     return times
+
+
+def _set_phase(phase):
+    global current_phase
+    if current_phase != None:
+        console.vverbose("[cpu_tracking]   Set phase: %s (previous %s)\n" % (phase, current_phase))
+        _add_times_to_phase()
+        current_phase = phase
 
 
 def _add_times_to_phase():

@@ -1675,6 +1675,24 @@ class ModeEditHost(HostMode):
 
 
 class CreateHostMode(HostMode):
+    @classmethod
+    @abc.abstractmethod
+    def _init_new_host_object(cls):
+        raise NotImplementedError()
+
+
+    @classmethod
+    @abc.abstractmethod
+    def _host_type_name(cls):
+        raise NotImplementedError()
+
+
+    @classmethod
+    @abc.abstractmethod
+    def _verify_host_type(cls, host):
+        raise NotImplementedError()
+
+
     def _from_vars(self):
         if html.var("clone") and self._init_host():
             self._mode = "clone"
@@ -1692,21 +1710,17 @@ class CreateHostMode(HostMode):
                 raise MKAuthException(_("Sorry, you are not allowed to clone hosts."))
 
             host = watolib.Folder.current().host(clonename)
-
-            if isinstance(self, ModeCreateCluster) != host.is_cluster():
-                raise MKGeneralException(_("Can not clone a cluster host as regular host or vice versa"))
-
+            self._verify_host_type(host)
             return host
         else:
-            return watolib.Host(folder=watolib.Folder.current(), host_name=html.var("host"), attributes={},
-                              cluster_nodes=[] if isinstance(self, ModeCreateCluster) else None)
+            return self._init_new_host_object()
 
 
     def action(self):
         if not html.transaction_valid():
             return "folder"
 
-        attributes = watolib.collect_attributes("host" if not self._is_cluster() else "cluster")
+        attributes = watolib.collect_attributes(self._host_type_name())
         cluster_nodes = self._get_cluster_nodes()
 
         hostname = html.var("host")
@@ -1760,6 +1774,24 @@ class ModeCreateHost(CreateHostMode):
             return _("Create new host")
 
 
+    @classmethod
+    def _init_new_host_object(cls):
+        return watolib.Host(folder=watolib.Folder.current(), host_name=html.var("host"),
+                            attributes={}, cluster_nodes=None)
+
+
+    @classmethod
+    def _host_type_name(cls):
+        return "host"
+
+
+    @classmethod
+    def _verify_host_type(cls, host):
+        if host.is_cluster():
+            raise MKGeneralException(_("Can not clone a cluster host as regular host"))
+
+
+
 
 @mode_registry.register
 class ModeCreateCluster(CreateHostMode):
@@ -1782,6 +1814,23 @@ class ModeCreateCluster(CreateHostMode):
             return _("Create clone of %s") % self._host.name()
         else:
             return _("Create new cluster")
+
+
+    @classmethod
+    def _init_new_host_object(cls):
+        return watolib.Host(folder=watolib.Folder.current(), host_name=html.var("host"),
+                            attributes={}, cluster_nodes=[])
+
+
+    @classmethod
+    def _host_type_name(cls):
+        return "cluster"
+
+
+    @classmethod
+    def _verify_host_type(cls, host):
+        if not host.is_cluster():
+            raise MKGeneralException(_("Can not clone a regular host as cluster host"))
 
 
 #.

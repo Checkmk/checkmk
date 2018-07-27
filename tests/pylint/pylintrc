@@ -12,11 +12,6 @@ extension-pkg-whitelist=rrdtool,_ldap,netifaces,pymssql
 
 [MESSAGES CONTROL]
 disable=
-    inconsistent-return-statements,
-    missing-docstring,
-    no-else-return,
-    no-self-use,
-    protected-access,
     #---------------------------------------------------------------------------
     # We should really enable this, there could be some real exceptions waiting
     # to be thrown. But some work is needed first to sprinkle abc annotations
@@ -57,6 +52,14 @@ disable=
     broad-except,
     #---------------------------------------------------------------------------
     # Enabling this would enhance readability quite a bit and it might even
+    # uncover bugs. Fixing this is not rocket science, just some work.
+    inconsistent-return-statements,
+    #---------------------------------------------------------------------------
+    # Enabling this warning would be nice, it is mostly a sign of sloppy
+    # programming practice. In some cases, they can even hide bugs.
+    no-else-return,
+    #---------------------------------------------------------------------------
+    # Enabling this would enhance readability quite a bit and it might even
     # uncover bugs. Fixing this is not rocket science, just some work: Roughly
     # 400 warnings in about 60 modules, but this can be fixed step by step.
     redefined-outer-name,
@@ -65,6 +68,15 @@ disable=
     # a few violations (about 200 in roughly 50 modules), so we postpone fixing
     # this.
     redefined-builtin,
+    #---------------------------------------------------------------------------
+    # Enabling this would be nice, but not crucial. Nevertheless, this would
+    # improve readability and involve some cleanups in our class hierarchy, so
+    # we should do this some day.
+    protected-access,
+    #---------------------------------------------------------------------------
+    # Enabling this would be nice, but not crucial. At the moment, we have quite
+    # a few violations, so we postpone fixing this.
+    no-self-use,
     #---------------------------------------------------------------------------
     # Enabling this would be nice, but not crucial. At the moment, we have quite
     # a few violations (about 220 in roughly 40 modules), so we postpone fixing
@@ -132,6 +144,9 @@ disable=
     bad-indentation,
     bad-whitespace,
     line-too-long,
+    #---------------------------------------------------------------------------
+    # We are light years away from enabling this...
+    missing-docstring,
     #---------------------------------------------------------------------------
     # Enabling the two spelling-related checks increases pylints runtime from
     # 11 min to 40 min, so we better keep those disabled for normal runs.

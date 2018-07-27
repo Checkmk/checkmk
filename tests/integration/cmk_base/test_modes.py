@@ -216,9 +216,9 @@ def test_dump_agent_dump_all_hosts(test_cfg, site):
     for opt in [ "--dump", "-D" ]:
         p = site.execute(["cmk", opt], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         stdout, stderr = p.communicate()
-        assert p.wait() == 0
         assert stderr == ""
-        assert stdout.count("Addresses: ") == 3
+        assert stdout.count("Addresses: ") == 3, "Invalid output: %s" % stdout
+        assert p.wait() == 0
 
 
 def test_dump_agent(test_cfg, site):

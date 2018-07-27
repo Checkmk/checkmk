@@ -1,0 +1,10 @@
+Title: use correct metric with a better visible colour for averaged CPU utilization
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.4.0p35
+Date: 1532360464
+

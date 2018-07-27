@@ -90,7 +90,7 @@ def check_cpu_util(util, params, this_time = None, cores = None):
 
     perfdata = [ ("util", util, warn, crit, 0, 100) ]
     if "average" in params:
-        perfdata.append( ("avg", util_avg, warn, crit, 0, 100) )
+        perfdata.append( ("util_average", util_avg, warn, crit, 0, 100) )
 
     perfdata += extraperf # reference curve for predictive levels
     yield state, infotext, perfdata

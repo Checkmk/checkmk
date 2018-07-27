@@ -24,8 +24,11 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import sys, getopt, os, datetime
+import datetime
+import getopt
+import os
 import subprocess
+import sys
 
 import cmk.tty as tty
 import cmk.paths

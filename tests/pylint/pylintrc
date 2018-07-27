@@ -16,7 +16,6 @@ disable=
     inconsistent-return-statements,
     logging-not-lazy,
     missing-docstring,
-    multiple-imports,
     no-else-return,
     no-self-use,
     protected-access,

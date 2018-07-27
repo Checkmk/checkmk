@@ -1,0 +1,21 @@
+Title: Analyze configuration: Fixed "Apache number of processes" on SLES
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 1.5.0b11
+Date: 1532725076
+Class: fix
+
+An exception could occur for the test "Apache number of processes" on at
+least SLES12:
+
+CRIT:
+Failed to execute the test ACTestApacheNumberOfProcesses: Traceback (most recent call last):
+File "/omd/sites/TESTSITE/share/check_mk/web/htdocs/watolib.py", line 9591, in run
+total_result = ACResult.merge(*list(self.execute()))
+File "/omd/sites/TESTSITE/share/check_mk/web/plugins/wato/ac_tests.py", line 388, in execute
+average_process_size = self._get_average_process_size()
+File "/omd/sites/TESTSITE/share/check_mk/web/plugins/wato/ac_tests.py", line 408, in _get_average_process_size
+sizes.append(int(summary_line.split()[3][:-1])*1024.0)
+ValueError: invalid literal for int() with base 10: 'readonly-private'

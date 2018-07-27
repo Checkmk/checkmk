@@ -133,8 +133,9 @@ def parse_emka_modules(info):
             m, a = map(float, equation)
         else:
             m, a = 1.0, 0.0
+        def scale_f(x, m=m, a=a):
+            return float(x)*m+a
 
-        scale_f  = lambda x: float(x)*m+a
         location = str(chr(oidend[0]))
         for sensor, attrs in parsed.get("sensor", {}).items():
             if attrs["_location_"].endswith(".%s" % location):

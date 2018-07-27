@@ -73,7 +73,8 @@ def call(name, *args):
             hk(*args)
         except Exception, e:
             if config.debug:
-                import traceback, StringIO
+                import StringIO
+                import traceback
                 txt = StringIO.StringIO()
                 t, v, tb = sys.exc_info()
                 traceback.print_exception(t, v, tb, None, txt)

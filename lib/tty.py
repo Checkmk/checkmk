@@ -115,10 +115,10 @@ def print_table(headers, colors, rows, indent = ""):
         if type(x) == unicode:
             return x.encode('utf-8')
         else:
-            return x
+            return "%s" % x
 
     for row in rows:
-        lengths = [ max(len(str(make_utf8(c))), l) for c, l in zip(row, lengths) ]
+        lengths = [ max(len(make_utf8(c)), l) for c, l in zip(row, lengths) ]
 
     fmt = indent
     sep = ""
@@ -129,7 +129,7 @@ def print_table(headers, colors, rows, indent = ""):
     first = True
     fmt += "\n"
     for row in [ headers ] + rows:
-        sys.stdout.write(fmt % tuple(row[:len(headers)]))
+        sys.stdout.write(fmt % tuple([ make_utf8(c) for c in row[:len(headers)] ]))
         if first:
             first = False
             sys.stdout.write(fmt % tuple([ "-" * l for l in lengths ]))

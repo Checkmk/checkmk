@@ -58,33 +58,43 @@ def end():
 
 
 def push_phase(phase):
-    if current_phase != None:
-        console.vverbose("[cpu_tracking] Push phase (Stack: %r)\n" % phase_stack)
-        phase_stack.append(current_phase)
-        _set_phase(phase)
+    if _is_not_tracking():
+        return
+
+    console.vverbose("[cpu_tracking] Push phase (Stack: %r)\n" % phase_stack)
+    phase_stack.append(current_phase)
+    _set_phase(phase)
 
 
 def pop_phase():
-    if current_phase != None:
-        console.vverbose("[cpu_tracking] Pop current phase (Stack: %r)\n" % phase_stack)
-        if len(phase_stack) == 1:
-            _set_phase(None)
-        else:
-            _set_phase(phase_stack[-1])
+    if _is_not_tracking():
+        return
 
-        del phase_stack[-1]
+    console.vverbose("[cpu_tracking] Pop current phase (Stack: %r)\n" % phase_stack)
+    if len(phase_stack) == 1:
+        _set_phase(None)
+    else:
+        _set_phase(phase_stack[-1])
+
+    del phase_stack[-1]
 
 
 def get_times():
     return times
 
 
+def _is_not_tracking():
+    return current_phase is None
+
+
 def _set_phase(phase):
     global current_phase
-    if current_phase != None:
-        console.vverbose("[cpu_tracking]   Set phase: %s (previous %s)\n" % (phase, current_phase))
-        _add_times_to_phase()
-        current_phase = phase
+    if _is_not_tracking():
+        return
+
+    console.vverbose("[cpu_tracking]   Set phase: %s (previous %s)\n" % (phase, current_phase))
+    _add_times_to_phase()
+    current_phase = phase
 
 
 def _add_times_to_phase():

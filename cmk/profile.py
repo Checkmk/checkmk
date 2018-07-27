@@ -61,7 +61,7 @@ class Profile(object):
             self._profile.print_stats()
         else:
             self._profile.dump_stats(self._profile_file)
-            cmk.log.logger.info("Created profile file: %s" % self._profile_file)
+            cmk.log.logger.info("Created profile file: %s", self._profile_file)
 
             file(self._profile_file + ".py", "w").write(
                 "#!/usr/bin/env python\n"
@@ -69,7 +69,7 @@ class Profile(object):
                 "stats = pstats.Stats(%r)\n"
                 "stats.sort_stats('time').print_stats()\n" % self._profile_file)
             os.chmod(self._profile_file + ".py", 0o755)
-            cmk.log.logger.info("Created profile dump script: %s.py" % self._profile_file)
+            cmk.log.logger.info("Created profile dump script: %s.py", self._profile_file)
 
 
 def profile_call(base_dir, enabled=True):

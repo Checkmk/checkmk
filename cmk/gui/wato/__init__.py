@@ -1546,7 +1546,7 @@ class HostMode(WatoMode):
 
         configure_attributes(
             new=self._mode != "edit",
-            hosts={self._host.name(): self._host} if self._mode == "edit" else {},
+            hosts={self._host.name(): self._host} if self._mode != "new" else {},
             for_what="host" if not self._is_cluster() else "cluster",
             parent = watolib.Folder.current()
         )

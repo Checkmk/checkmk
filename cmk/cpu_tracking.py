@@ -40,42 +40,38 @@ except NameError:
 times = {}
 last_time_snapshot = []
 phase_stack = []
-current_phase = None
 
 def start(initial_phase):
-    global times, last_time_snapshot, current_phase, phase_stack
-    times = {}
+    global times, last_time_snapshot
     console.vverbose("[cpu_tracking] Start with phase '%s'\n" % initial_phase)
+    times = {}
     last_time_snapshot = _time_snapshot()
-    current_phase = initial_phase
-    phase_stack = []
-    _set_phase(initial_phase)
+
+    del phase_stack[:]
+    phase_stack.append(initial_phase)
 
 
 def end():
     console.vverbose("[cpu_tracking] End\n")
-    _set_phase(None)
+    _add_times_to_phase()
+    del phase_stack[:]
 
 
 def push_phase(phase):
     if _is_not_tracking():
         return
 
-    console.vverbose("[cpu_tracking] Push phase (Stack: %r)\n" % phase_stack)
-    phase_stack.append(current_phase)
-    _set_phase(phase)
+    console.vverbose("[cpu_tracking] Push phase '%s' (Stack: %r)\n" % (phase, phase_stack))
+    _add_times_to_phase()
+    phase_stack.append(phase)
 
 
 def pop_phase():
     if _is_not_tracking():
         return
 
-    console.vverbose("[cpu_tracking] Pop current phase (Stack: %r)\n" % phase_stack)
-    if len(phase_stack) == 1:
-        _set_phase(None)
-    else:
-        _set_phase(phase_stack[-1])
-
+    console.vverbose("[cpu_tracking] Pop phase '%s' (Stack: %r)\n" % (phase_stack[-1], phase_stack))
+    _add_times_to_phase()
     del phase_stack[-1]
 
 
@@ -84,23 +80,13 @@ def get_times():
 
 
 def _is_not_tracking():
-    return current_phase is None
-
-
-def _set_phase(phase):
-    global current_phase
-    if _is_not_tracking():
-        return
-
-    console.vverbose("[cpu_tracking]   Set phase: %s (previous %s)\n" % (phase, current_phase))
-    _add_times_to_phase()
-    current_phase = phase
+    return not bool(phase_stack)
 
 
 def _add_times_to_phase():
     global last_time_snapshot
     new_time_snapshot = _time_snapshot()
-    for phase in current_phase, "TOTAL":
+    for phase in phase_stack[-1], "TOTAL":
         phase_times = times.get(phase, [ 0.0 ] * len(new_time_snapshot))
         times[phase] = [
             phase_times[i] + new_time_snapshot[i] - last_time_snapshot[i]
@@ -109,5 +95,6 @@ def _add_times_to_phase():
 
 
 def _time_snapshot():
+    # TODO: Create a better structure for this data
     return list(os.times()[:4]) + [ time.time() ]
 

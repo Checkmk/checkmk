@@ -26,6 +26,8 @@
 
 import os, time
 
+import cmk_base.console as console
+
 try:
     _
 except NameError:
@@ -36,6 +38,7 @@ current_phase = None
 def start(initial_phase):
     global times, last_time_snapshot, current_phase, phase_stack
     times = {}
+    console.vverbose("[cpu_tracking] Start with phase '%s'\n" % initial_phase)
     last_time_snapshot = _time_snapshot()
     current_phase = initial_phase
     phase_stack = []
@@ -43,24 +46,28 @@ def start(initial_phase):
 
 
 def end():
+    console.vverbose("[cpu_tracking] End\n")
     set_phase(None)
 
 
 def set_phase(phase):
     global current_phase
     if current_phase != None:
+        console.vverbose("[cpu_tracking]   Set phase: %s (previous %s)\n" % (phase, current_phase))
         _add_times_to_phase()
         current_phase = phase
 
 
 def push_phase(phase):
     if current_phase != None:
+        console.vverbose("[cpu_tracking] Push phase (Stack: %r)\n" % phase_stack)
         phase_stack.append(current_phase)
         set_phase(phase)
 
 
 def pop_phase():
     if current_phase != None:
+        console.vverbose("[cpu_tracking] Pop current phase (Stack: %r)\n" % phase_stack)
         if len(phase_stack) == 1:
             set_phase(None)
         else:

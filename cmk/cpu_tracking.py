@@ -38,6 +38,9 @@ except NameError:
 # TODO: This should be rewritten to a context manager object. See cmk.profile for
 #       an example how it could look like.
 
+times = {}
+last_time_snapshot = []
+phase_stack = []
 current_phase = None
 
 def start(initial_phase):

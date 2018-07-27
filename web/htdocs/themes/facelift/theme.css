@@ -979,7 +979,6 @@ table.tacticaloverview {
     table.tacticaloverview td a, table.tacticaloverview td body.main .popup_menu span, body.main .popup_menu table.tacticaloverview td span {
       color: #1A243D !important;
       font-size: 11px !important;
-      display: inline-block !important;
       padding: 4px !important;
       font-weight: 700 !important;
       letter-spacing: 0px !important; }

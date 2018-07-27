@@ -106,32 +106,36 @@ def get_size():
     return (24, 80)
 
 
-# TODO: Is this a good place?
-# TODO: Cleanup this function!
-def print_table(headers, colors, rows, indent = ""):
+def print_table(headers, colors, rows, indent=""):
     num_columns = len(headers)
+    lengths = _column_lengths(headers, rows, num_columns)
+    fmt = _row_template(lengths, colors, indent)
 
-    def make_utf8(x):
-        if type(x) == unicode:
-            return x.encode('utf-8')
-        else:
-            return "%s" % (x,)
+    for index, row in enumerate([ headers ] + rows):
+        sys.stdout.write(fmt % tuple(_make_utf8(c) for c in row[:num_columns]))
+        if index == 0:
+            sys.stdout.write(fmt % tuple("-" * l for l in lengths))
 
+
+def _column_lengths(headers, rows, num_columns):
     lengths = [ len(h) for h in headers ]
     for row in rows:
         for index, column in enumerate(row[:num_columns]):
-            lengths[index] = max(len(make_utf8(column)), lengths[index])
+            lengths[index] = max(len(_make_utf8(column)), lengths[index])
+    return lengths
 
+
+def _row_template(lengths, colors, indent):
     fmt = indent
     sep = ""
     for l,c in zip(lengths, colors):
         fmt += c + sep + "%-" + str(l) + "s" + normal
         sep = " "
-
-    first = True
     fmt += "\n"
-    for row in [ headers ] + rows:
-        sys.stdout.write(fmt % tuple(make_utf8(c) for c in row[:num_columns]))
-        if first:
-            first = False
-            sys.stdout.write(fmt % tuple("-" * l for l in lengths))
+    return fmt
+
+
+def _make_utf8(x):
+    if type(x) == unicode:
+        return x.encode('utf-8')
+    return str(x)

@@ -275,7 +275,7 @@ class DataSources(object):
             hosts.append((self._hostname, self._ipaddress, self, config.check_max_cachefile_age))
 
         if nodes:
-            import abstract
+            import cmk_base.data_sources.abstract as abstract
             abstract.DataSource.set_may_use_cache_file()
 
         # Special agents can produce data for the same check_plugin_name on the same host, in this case

@@ -115,12 +115,9 @@ def _snmp_scan(access_data, on_error="ignore", for_inv=False, do_snmp_scan=True,
 
         if scan_function:
             try:
-                def oid_function(oid, default_value=None):
-                    value = snmp.get_single_oid(access_data, oid, check_plugin_name, do_snmp_scan=do_snmp_scan)
-                    if value == None:
-                        return default_value
-                    else:
-                        return value
+                def oid_function(oid, default_value=None, cp_name=check_plugin_name):
+                    value = snmp.get_single_oid(access_data, oid, cp_name, do_snmp_scan=do_snmp_scan)
+                    return default_value if value is None else value
 
                 result = scan_function(oid_function)
                 if result is not None and type(result) not in [ str, bool ]:

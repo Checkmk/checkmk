@@ -381,8 +381,10 @@ def create(tar_filename, components):
 
             subtar_buffer = cStringIO.StringIO()
             with tarfile.TarFile(fileobj=subtar_buffer, mode="w") as subtar_obj:
+                def exclude_filter(x, excludes=excludes):
+                    return filter_subtar_files(x, excludes)
                 subtar_obj.add(os.path.join(basedir, filename), arcname=filename,
-                                filter=lambda x: filter_subtar_files(x, excludes))
+                                filter=exclude_filter)
 
             subtar_size = len(subtar_buffer.getvalue())
             subtar_buffer.seek(0)

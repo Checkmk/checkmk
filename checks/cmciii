@@ -158,12 +158,11 @@ def parse_cmciii(info):
             # pos. scale: "X"  => "* X"
             # else:            => "* 1"
             if int(scale) < 0:
-                scale_f = lambda a: -1.0 * float(a) / float(scale)
+                value = float(value_int) * (-1.0 / float(scale))
             elif int(scale) > 0:
-                scale_f = lambda a: float(a) * float(scale)
+                value = float(value_int) * float(scale)
             else:
-                scale_f = int
-            value = scale_f(value_int)
+                value = int(value_int)
 
         if "Power" in container or "Energy" in container:
             value = value * 1000 # kW, kWh

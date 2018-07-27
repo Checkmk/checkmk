@@ -6235,7 +6235,9 @@ def get_snapshot_status(snapshot, validate_checksums = False):
         else: # new snapshots
             for entry in ["comment", "created_by", "type"]:
                 if entry in status["files"]:
-                    status[entry] = access_snapshot(lambda x: multitar.get_file_content(x, entry))
+                    def handler(x, entry=entry):
+                        return multitar.get_file_content(x, entry)
+                    status[entry] = access_snapshot(handler)
                 else:
                     raise MKGeneralException(_("Invalid snapshot (missing file: %s)") % entry)
 
@@ -6296,7 +6298,9 @@ def get_snapshot_status(snapshot, validate_checksums = False):
             checksum, signed = checksums[filename]
 
             # Get hashes of file in question
-            subtar = access_snapshot(lambda x: multitar.get_file_content(x, filename))
+            def handler(x, filename=filename):
+                return multitar.get_file_content(x, filename)
+            subtar = access_snapshot(handler)
             subtar_hash   = sha256(subtar).hexdigest()
             subtar_signed = sha256(subtar_hash + snapshot_secret()).hexdigest()
 

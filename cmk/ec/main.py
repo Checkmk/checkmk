@@ -1055,7 +1055,9 @@ class EventServer(ECServerThread):
             line = scrub_and_decode(line.rstrip())
             if line:
                 try:
-                    self.process_raw_data(lambda: self.process_line(line, address))
+                    def handler(line=line):
+                        self.process_line(line, address)
+                    self.process_raw_data(handler)
                 except Exception as e:
                     self._logger.exception('Exception handling a log line (skipping this one): %s' % e)
 

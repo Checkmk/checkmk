@@ -132,7 +132,7 @@ def check_lgp_pdu_aux(item, params, info):
             else:
                 output.append('Label: ' + pdu['SystemLabel'])
 
-            def handle_type(ty, label, uom):
+            def handle_type(ty, label, uom, pdu=pdu):
                 state = 0
                 perfdata = (ty.lower(), pdu[ty],
                             '%0.2f:%0.2f' % (pdu[ty+'LowWarn'], pdu[ty+'HighWarn']),

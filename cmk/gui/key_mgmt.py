@@ -507,7 +507,6 @@ def create_self_signed_cert(pkey):
 
 
 def decrypt_private_key(encrypted_private_key, passphrase):
-    from OpenSSL import crypto
     try:
         return crypto.load_privatekey(crypto.FILETYPE_PEM, encrypted_private_key, passphrase)
     except crypto.Error, e:

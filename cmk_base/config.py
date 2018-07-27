@@ -564,7 +564,6 @@ class PackedConfig(object):
 
         store.save_file(self._path + ".orig", helper_config + "\n")
 
-        import marshal
         code = compile(helper_config, '<string>', 'exec')
         with open(self._path + ".compiled", "w") as compiled_file:
             marshal.dump(code, compiled_file)

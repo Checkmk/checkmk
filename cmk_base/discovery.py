@@ -625,7 +625,6 @@ def _discovery_filter_by_lists(hostname, check_plugin_name, item, whitelist, bla
 # TODO: Move to livestatus module!
 def schedule_discovery_check(hostname):
     try:
-        import socket
         s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
         s.connect(cmk.paths.livestatus_unix_socket)
         now = int(time.time())

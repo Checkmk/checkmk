@@ -43,7 +43,6 @@ from . import (
     group_value,
     EmptyCell,
     output_csv_headers,
-    group_value,
 )
 
 def init_rowselect(view):

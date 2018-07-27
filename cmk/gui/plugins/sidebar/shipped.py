@@ -922,7 +922,6 @@ table.performance td.right {
 #   '----------------------------------------------------------------------'
 
 def render_current_time():
-    import time
     html.div(time.strftime("%H:%M"), class_="time")
 
 sidebar_snapins["time"] = {

@@ -1909,7 +1909,7 @@ class html(HTMLGenerator):
         cssclass = "active" if self.help_visible else "passive"
 
         self.icon_button(None, _("Toggle context help texts"), "help", id="helpbutton",
-                         onclick="toggle_help()", style="display:none", ty="icon", cssclass=cssclass)
+                         onclick="toggle_help()", style="display:none", cssclass=cssclass)
         self.open_a(href="https://mathias-kettner.com", class_="head_logo")
         self.img(src=self._detect_themed_image_path("images/logo_cmk_small.png"))
         self.close_a()
@@ -2831,15 +2831,11 @@ hy
 
 
     def render_icon_button(self, url, help, icon, id=None, onclick=None,
-                           style=None, target=None, cssclass=None, ty="button"):
+                           style=None, target=None, cssclass=None):
 
         # TODO: Refactor
         title    = help
         id_      = id
-
-        # TODO: Can we clean this up and move all button_*.png to internal_icons/*.png?
-        if ty == "button":
-            icon = self._detect_themed_image_path("images/button_" + icon + ".png")
 
         icon = HTML(self.render_icon(icon, cssclass="iconbutton"))
 

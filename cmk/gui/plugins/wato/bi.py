@@ -1999,10 +1999,11 @@ class ModeBIEditRule(ModeBI):
               TextAscii(
                 title = _("Documentation URL"),
                 help = HTML(_("An optional URL pointing to documentation or any other page. This will be "
-                              "displayed as an icon <img class=icon src='images/button_url.png'> and open "
+                              "displayed as an icon %s and open "
                               "a new page when clicked. You can use either global URLs (beginning with "
                               "<tt>http://</tt>), absolute local urls (beginning with <tt>/</tt>) or relative "
-                              "URLs (that are relative to <tt>check_mk/</tt>).")),
+                              "URLs (that are relative to <tt>check_mk/</tt>).") %
+                                html.render_icon("url")),
                 size = 80,
               ),
             ),

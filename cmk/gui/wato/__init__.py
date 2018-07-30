@@ -14228,7 +14228,7 @@ class FetchAgentOutputBackgroundJob(WatoBackgroundJob):
             ("type", self._ty)
         ], filename="download_agent_output.py")
 
-        button = html.render_icon_button(download_url, _("Download"), "agent_output", ty="icon")
+        button = html.render_icon_button(download_url, _("Download"), "agent_output")
         job_interface.send_progress_update(_("Finished. Click on the icon to download the data."))
         job_interface.send_result_message(_("%s Finished.") % button)
 

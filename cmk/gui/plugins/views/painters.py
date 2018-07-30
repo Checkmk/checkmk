@@ -258,7 +258,7 @@ def paint_icons(what, row):
                     url = 'javascript:void(0)'
 
                 output += html.render_icon_button(url, title, icon_name,
-                                onclick=onclick, target=target_frame, ty="icon")
+                                onclick=onclick, target=target_frame)
             else:
                 output += html.render_icon(icon_name, title)
         else:

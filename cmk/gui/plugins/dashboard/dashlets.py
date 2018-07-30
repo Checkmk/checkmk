@@ -966,6 +966,7 @@ dashlet_types["notify_users"] = {
 #   | Dashlet notifying users in case of failure to send notifications     |
 #   '----------------------------------------------------------------------'
 
+# TODO: Cleanup the hand crafted HTML in this function
 def dashlet_failed_notifications(nr, dashlet):
     notdata = notifications.load_failed_notifications(after=notifications.acknowledged_time(),
                                                       stat_only=True)
@@ -983,7 +984,7 @@ def dashlet_failed_notifications(nr, dashlet):
 
         confirm_url = html.makeuri_contextless([], filename="clear_failed_notifications.py")
         content = ('<a target="main" href="%s">'
-                    '<img src="images/button_closetimewarp.png" style="width:32px;height:32px;">'
+                    '<img src="images/icon_closetimewarp.png" style="width:32px;height:32px;">'
                     '</a>&nbsp;' % confirm_url) + content
 
         html.open_div(class_="has_failed_notifications")

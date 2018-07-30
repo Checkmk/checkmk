@@ -4097,13 +4097,7 @@ class ModeBulkImport(WatoMode):
 
 
 class ModeBulkDiscovery(WatoMode):
-    def __init__(self):
-        super(ModeBulkDiscovery, self).__init__()
-        self._from_html_vars()
-        self._get_bulk_discovery_params()
-
-
-    def _from_html_vars(self):
+    def _from_vars(self):
         if html.var("_start"):
             self._start = True
         else:
@@ -4118,6 +4112,8 @@ class ModeBulkDiscovery(WatoMode):
             self._item = html.var("_item")
         else:
             self._item = None
+
+        self._get_bulk_discovery_params()
 
 
     def _get_bulk_discovery_params(self):

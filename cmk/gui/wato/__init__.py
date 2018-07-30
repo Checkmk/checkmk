@@ -93,6 +93,7 @@ import subprocess
 import sys
 import time
 import traceback
+import copy
 from hashlib import sha256
 
 import cmk
@@ -4499,7 +4500,7 @@ class ModeBulkDiscovery(WatoMode):
 
 
     def _get_bulk_discovery_params(self):
-        self._bulk_discovery_params = config.bulk_discovery_default_settings
+        self._bulk_discovery_params = copy.deepcopy(config.bulk_discovery_default_settings)
 
         if self._start:
             bulk_discover_params = cmk.gui.plugins.wato.vs_bulk_discovery.from_html_vars("bulkinventory")

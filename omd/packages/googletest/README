@@ -1,0 +1,1 @@
+( VERSION=0048647619; git archive --prefix=googletest-$VERSION/ -o ~/git/check_mk/omd/packages/googletest/googletest-$VERSION.tar.gz $VERSION )

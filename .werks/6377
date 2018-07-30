@@ -1,0 +1,12 @@
+Title: Bulk discovery was not taking selected options into account
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 1.5.0b11
+Date: 1532945549
+Class: fix
+
+The options selected to be performed during bulk discovery were not
+used correctly. For example the operation mode was always "Add unmonitored services",
+even when other options were selected.

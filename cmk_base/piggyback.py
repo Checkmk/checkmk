@@ -25,6 +25,7 @@
 # Boston, MA 02110-1301 USA.
 
 import os
+import tempfile
 
 import cmk.paths
 import cmk.translations
@@ -42,8 +43,12 @@ def get_piggyback_raw_data(hostname):
         return output
 
     for source_host, piggyback_file_path in _get_piggyback_files(hostname):
-        console.verbose("Using piggyback raw data from host %s.\n" % source_host)
-        output += file(piggyback_file_path).read()
+        try:
+            output += file(piggyback_file_path).read()
+            console.verbose("Using piggyback raw data from host %s.\n" % source_host)
+        except IOError, e:
+            console.verbose("Cannot read piggyback raw data from host %s: %s\n" % (source_host, e))
+            continue
 
     return output
 
@@ -89,18 +94,15 @@ def _get_piggyback_files(hostname):
         # Skip piggyback files that are outdated at all
         if file_age > config.piggyback_max_cachefile_age:
             console.verbose("Piggyback file %s is outdated (%d seconds too old). Skip processing.\n" %
-                (piggyback_file_path, file_age - config.piggyback_max_cachefile_age))
+                            (piggyback_file_path, file_age - config.piggyback_max_cachefile_age))
             continue
 
-        # Skip piggyback files that have not been updated in the last contact
-        # with the source host that is currently being handled.
-        try:
-            source_update_age = _piggyback_source_host_update_age(source_host)
-        except MKGeneralException, e:
+        status_file_path = _piggyback_source_status_path(source_host)
+        if not os.path.exists(status_file_path):
             console.verbose("Piggyback file %s is outdated (Source not sending piggyback). Skip processing.\n" % piggyback_file_path)
-            continue # No source_status_file exists -> ignore data from this source
+            continue
 
-        if file_age > source_update_age:
+        if _is_piggyback_file_outdated(status_file_path, piggyback_file_path):
             console.verbose("Piggyback file %s is outdated (Not updated by source). Skip processing.\n" % piggyback_file_path)
             continue
 
@@ -109,12 +111,21 @@ def _get_piggyback_files(hostname):
     return files
 
 
+def _is_piggyback_file_outdated(status_file_path, piggyback_file_path):
+    try:
+        # On POSIX platforms Python reads atime and mtime at nanosecond resolution
+        # but only writes them at microsecond resolution.
+        # (We're using os.utime() in _store_status_file_of())
+        return os.stat(status_file_path)[8] > os.stat(piggyback_file_path)[8]
+    except OSError, e:
+        if e.errno == 2: # No such file or directory
+            return True
+        else:
+            raise
+
+
 def _piggyback_source_status_path(source_host):
     return os.path.join(cmk.paths.tmp_dir, "piggyback_sources", source_host)
-
-
-def _piggyback_source_host_update_age(source_host):
-    return cmk_base.utils.cachefile_age(_piggyback_source_status_path(source_host))
 
 
 def _remove_piggyback_file(piggyback_file_path):
@@ -136,19 +147,44 @@ def remove_source_status_file(source_host):
 
 
 def store_piggyback_raw_data(source_host, piggybacked_raw_data):
-    for backedhost, lines in piggybacked_raw_data.items():
-        console.verbose("Storing piggyback data for: %s\n" % backedhost)
+    piggyback_file_paths = []
+    for piggybacked_host, lines in piggybacked_raw_data.items():
+        piggyback_file_path = os.path.join(cmk.paths.tmp_dir, "piggyback", piggybacked_host, source_host)
+        console.verbose("Storing piggyback data for: %s\n" % piggybacked_host)
         content = "\n".join(lines) + "\n"
-        store.save_file(os.path.join(cmk.paths.tmp_dir, "piggyback", backedhost, source_host), content)
+        store.save_file(piggyback_file_path, content)
+        piggyback_file_paths.append(piggyback_file_path)
 
     # Store the last contact with this piggyback source to be able to filter outdated data later
     # We use the mtime of this file later for comparision.
     # Only do this for hosts that sent piggyback data this turn, cleanup the status file when no
     # piggyback data was sent this turn.
     if piggybacked_raw_data:
-        store.save_file(_piggyback_source_status_path(source_host), "")
+        status_file_path = _piggyback_source_status_path(source_host)
+        _store_status_file_of(status_file_path, piggyback_file_paths)
     else:
         remove_source_status_file(source_host)
+
+
+def _store_status_file_of(status_file_path, piggyback_file_paths):
+    with tempfile.NamedTemporaryFile("w", dir=os.path.dirname(status_file_path),
+                                     prefix=".%s.new" % os.path.basename(status_file_path),
+                                     delete=False) as tmp:
+        tmp_path = tmp.name
+        os.chmod(tmp_path, 0660)
+        tmp.write("")
+
+        tmp_stats = os.stat(tmp_path)
+        status_file_times = (tmp_stats.st_atime, tmp_stats.st_mtime)
+        for piggyback_file_path in piggyback_file_paths:
+            try:
+                os.utime(piggyback_file_path, status_file_times)
+            except OSError, e:
+                if e.errno == 2: # No such file or directory
+                    continue
+                else:
+                    raise
+    os.rename(tmp_path, status_file_path)
 
 
 def translate_piggyback_host(source_host, backedhost):
@@ -255,14 +291,11 @@ def _shall_cleanup_piggyback_file(piggyback_file_path, source_host_name, keep_so
     if file_age > config.piggyback_max_cachefile_age:
         return "%d seconds too old" % (file_age - config.piggyback_max_cachefile_age)
 
-    # Skip piggyback files that have not been updated in the last contact
-    # with the source host that is currently being handled.
-    try:
-        source_update_age = _piggyback_source_host_update_age(source_host_name)
-    except MKGeneralException, e:
+    status_file_path = _piggyback_source_status_path(source_host_name)
+    if not os.path.exists(status_file_path):
         return "Source not sending piggyback"
 
-    if file_age > source_update_age:
+    if _is_piggyback_file_outdated(status_file_path, piggyback_file_path):
         return "Not updated by source"
 
     return None

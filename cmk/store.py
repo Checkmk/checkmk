@@ -204,8 +204,6 @@ def save_data_to_file(path, data, pretty=True):
 def save_file(path, content, mode=0660):
     tmp_path = None
     try:
-        tmp_path = None
-
         # Normally the file is already locked (when data has been loaded before with lock=True),
         # but lock it just to be sure we have the lock on the file.
         #

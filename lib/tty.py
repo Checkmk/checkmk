@@ -115,7 +115,7 @@ def print_table(headers, colors, rows, indent = ""):
         if type(x) == unicode:
             return x.encode('utf-8')
         else:
-            return "%s" % x
+            return "%s" % (x,)
 
     for row in rows:
         lengths = [ max(len(make_utf8(c)), l) for c, l in zip(row, lengths) ]

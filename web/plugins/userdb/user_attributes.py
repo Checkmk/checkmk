@@ -121,10 +121,7 @@ declare_user_attribute(
             ),
             DropdownChoice(
                 title = _("Set custom theme"),
-                choices = [
-                    ("classic",  _("Classic user interface")),
-                    ("facelift", _("Face lifted")),
-                ],
+                choices = config.theme_choices(),
             ),
         ],
     ),

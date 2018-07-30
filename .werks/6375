@@ -1,0 +1,14 @@
+Title: Fixed sidebar folding when "Show Check_MK edition & version in sidebar" is disabled
+Level: 1
+Component: multisite
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0i1
+Date: 1532723132
+
+When the global setting "Show Check_MK edition & version in sidebar" is disabled
+the folding of the sidebar was not possible in previous releases. Additionally,
+unacknowledged incompatible werks were shown while they should be hidden just
+like the version information.

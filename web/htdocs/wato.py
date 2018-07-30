@@ -4100,7 +4100,6 @@ class ModeBulkDiscovery(WatoMode):
     def __init__(self):
         super(ModeBulkDiscovery, self).__init__()
         self._from_html_vars()
-        self._vs = ModeBulkDiscovery.vs_bulk_discovery
         self._get_bulk_discovery_params()
 
 
@@ -4125,7 +4124,7 @@ class ModeBulkDiscovery(WatoMode):
         self._bulk_discovery_params = config.bulk_discovery_default_settings
 
         if self._start:
-            bulk_discover_params = self._vs().from_html_vars("bulkinventory")
+            bulk_discover_params = self.vs_bulk_discovery().from_html_vars("bulkinventory")
             self._bulk_discovery_params.update(bulk_discover_params)
 
         self._recurse, self._only_failed, self._only_failed_invcheck, \
@@ -4255,7 +4254,7 @@ class ModeBulkDiscovery(WatoMode):
             html.begin_form("bulkinventory", method="POST")
             html.hidden_fields()
 
-            vs = self._vs(render_form=True)
+            vs = self.vs_bulk_discovery(render_form=True)
 
             msgs = []
             if not self._all:

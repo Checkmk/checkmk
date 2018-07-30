@@ -2,21 +2,15 @@
 # Build MinGW libraries for Google Test and Google Mock.
 
 set -e
-version=1.8.0
+version=0048647619
 [[ -z $CHROOT_BUILD_DIR ]] && exit 1
 
 . $CHROOT_BUILD_DIR/agents/windows/build.sh
 parse-args "$@"
 
 cd $CHROOT_BUILD_DIR/agents/windows
-tar xzf /$CHROOT_BUILD_DIR/omd/packages/googletest/googletest-release-${version}.tar.gz
-cd googletest-release-${version}
-
-# Fix googletest compilation with MinGW, see
-# https://github.com/google/googletest/issues/606
-cd googletest/include/gtest/internal
-patch gtest-port.h < /$CHROOT_BUILD_DIR/omd/packages/googletest/patches/0001-Fix-googletest-compilation-MinGW-gtest-port.h.diff
-cd -
+tar xzf /$CHROOT_BUILD_DIR/omd/packages/googletest/googletest-${version}.tar.gz
+cd googletest-${version}
 
 for project in test mock ; do
     cd google${project}
@@ -44,4 +38,4 @@ for project in test mock ; do
 done
 
 cd ..
-rm -rf googletest-release-${version}
+rm -rf googletest-${version}

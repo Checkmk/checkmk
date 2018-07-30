@@ -24,6 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+from cmk.gui.config import theme_choices
 from cmk.gui.valuespec import *
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
@@ -193,10 +194,7 @@ class UIThemeUserAttribute(UserAttribute):
                 ),
                 DropdownChoice(
                     title = _("Set custom theme"),
-                    choices = [
-                        ("classic",  _("Classic user interface")),
-                        ("facelift", _("Face lifted")),
-                    ],
+                    choices = theme_choices(),
                 ),
             ],
         )

@@ -1,6 +1,7 @@
 #!/bin/bash
 # Build MinGW libraries for Google Test and Google Mock.
 
+set -x
 set -e
 version=0048647619
 [[ -z $CHROOT_BUILD_DIR ]] && exit 1

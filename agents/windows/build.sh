@@ -55,6 +55,7 @@ function build {
     #                            during install step
     # --build : architecture of build machine (for cross-compilation)
     # --host : target architecture of cross-compilation
+    # --without-pthreads : MinGW's pthread implementation is not compatible with googletest
     # CC : C compiler (redundant but quiets a cross-compilation warning)
     # CXX : C++ compiler
     # WINDRES : program for manipulating Windows resource files
@@ -63,6 +64,7 @@ function build {
                  --program-transform-name=${transforms[$1]} \
                  --build i686-pc-linux-gnu \
                  --host ${archs[$1]}${common} \
+                 --without-pthreads \
                  CC=${archs[$1]}${common}-gcc-posix \
                  CXX=${archs[$1]}${common}-g++-posix \
                  WINDRES=${archs[$1]}${common}-windres \

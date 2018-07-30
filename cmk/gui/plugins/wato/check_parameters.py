@@ -5137,7 +5137,7 @@ register_check_parameters(
             )),
         ],
     ),
-    None,
+    TextAscii(title = _("PSU (Chassis/Bay)")),
     match_type = "dict"
 )
 

@@ -816,8 +816,8 @@ div.rulesets table.nform tr.bottom td {
 }
 
 input.toggle_timespecific_parameter {
-    position: absolute;
-    right: 18px;
+    margin-top: 5px;
+    display: block;
 }
 
 /* Page edit_ruleset */

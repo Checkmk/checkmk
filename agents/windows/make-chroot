@@ -2,6 +2,7 @@
 # The script creates a chroot based on a current ubuntu version
 # and installs all dependencies needed to build the windows agent.
 
+set -x
 set -e
 
 DISTRO=bionic

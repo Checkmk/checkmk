@@ -4121,6 +4121,7 @@ class ModeBulkDiscovery(WatoMode):
 
         if self._start:
             bulk_discover_params = self.vs_bulk_discovery().from_html_vars("bulkinventory")
+            self.vs_bulk_discovery().validate_value(bulk_discover_params, "bulkinventory")
             self._bulk_discovery_params.update(bulk_discover_params)
 
         self._recurse, self._only_failed, self._only_failed_invcheck, \

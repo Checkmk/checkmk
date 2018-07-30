@@ -90,14 +90,14 @@ body.side.screenshotmode {
     left: 0px;
     top: 0px;
     width: 10px;
-    height: 55px;
+    height: 100%;
     z-index: 15;
     cursor: pointer;
 }
 
 #side_fold:hover {
     background-repeat: no-repeat;
-    background-position: -3px 7px;
+    background-position: 5% 65%;
     background-image: url("images/side_fold.png");
 }
 

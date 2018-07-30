@@ -111,10 +111,7 @@ register_configvar(
     DropdownChoice(
         title = _("User interface theme"),
         help = _("Change the default user interface theme of your Check_MK installation"),
-        choices = [
-            ("classic",  _("Classic user interface")),
-            ("facelift", _("Face lifted")),
-        ],
+        choices = config.theme_choices(),
     ),
     domain = "multisite",
 )

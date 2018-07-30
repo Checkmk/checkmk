@@ -1046,3 +1046,10 @@ def load_plugins(force):
     # Make sure, builtin roles are present, even if not modified and saved with WATO.
     for br in builtin_role_ids:
         roles.setdefault(br, {})
+
+
+def theme_choices():
+    return [
+        ("classic", _("Classic")),
+        ("facelift", _("Modern")),
+    ]

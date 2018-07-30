@@ -232,11 +232,12 @@ def sidebar_head():
         html.br()
         html.write(cmk.__version__)
 
-    if werks.may_acknowledge():
-        num_unacknowledged_werks = werks.num_unacknowledged_incompatible_werks()
-        if num_unacknowledged_werks:
-            html.span(num_unacknowledged_werks, class_="unack_werks",
-                      title=_("%d unacknowledged incompatible werks") % num_unacknowledged_werks)
+        if werks.may_acknowledge():
+            num_unacknowledged_werks = werks.num_unacknowledged_incompatible_werks()
+            if num_unacknowledged_werks:
+                html.span(num_unacknowledged_werks, class_="unack_werks",
+                          title=_("%d unacknowledged incompatible werks") % num_unacknowledged_werks)
+
     html.close_a()
     html.close_div()
     html.close_a()

@@ -1181,7 +1181,7 @@ class html(HTMLGenerator):
 
         # Redirect to mobile GUI if we are a mobile device and the index is requested
         if myfile == "index" and self.mobile:
-            self.myfile = "mobile"
+            myfile = "mobile"
 
         return myfile
 
@@ -1194,7 +1194,7 @@ class html(HTMLGenerator):
             self.response.set_cookie("mobile", str(int(self.mobile)))
 
         elif self.request.has_cookie("mobile"):
-            self.mobile = self.cookie("mobile", "0") == "1"
+            self.mobile = self.request.cookie("mobile", "0") == "1"
 
         else:
             self.mobile = self._is_mobile_client(self.request.user_agent)

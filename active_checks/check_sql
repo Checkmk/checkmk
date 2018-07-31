@@ -28,56 +28,136 @@
 #  http://www-01.ibm.com/support/docview.wss?uid=swg27016878
 # as well as the ibm_db2 Python DBI driver for DB2:
 #  https://pypi.python.org/pypi/ibm_db
-
-
+"""Check_MK SQL Test"""
 import sys
 import getopt
 import os
-
-import cmk.password_store
-cmk.password_store.replace_passwords()
-
-def usage():
-    sys.stderr.write("""Check_MK SQL Test
-
-USAGE: check_sql [OPTIONS] SQL-Statement|SQL-Procedure
-       check_sql -h
-
-ARGUMENTS:
-  SQL-Statement|Procedure       Valid SQL-Statement for the selected database
-                                The statement must return at least a number and a string,
-                                plus optional performance data.
-                                Alternatively: If the the "-o" option is given, treat the argument as
-                                a procedure name. The procedure must return one output variable,
-                                which content is evaluated the same way as the output of the
-                                SQL-Statement
-
-OPTIONS:
-  -h, --help                    Show this help message and exit
-  -u USER,  --user USER         Username for database access
-  -p PASS,  --password PASS     Password for database access
-  -d DBMS,  --dbms DBMS         Name of the database management system.
-                                Default is 'postgres', other valid values are
-                                'mysql', 'mssql', 'oracle' and 'db2'
-  -H HOST,  --hostname HOST     Hostname or IP-Address where the database lives. Default is '127.0.0.1'
-  -P PORT,  --port PORT         Port used to connect to the database
-  -n NAME,  --name NAME         Name of the database on the DBMS
-  -w RANGE, --warning RANGE     lower and upper level for the warning state, separated by a colon
-  -c RANGE, --critical RANGE    lower and upper level for the critical state, separated by a colon
-  -o, --procedure               treat the main argument as a procedure instead of an SQL-Statement
-  -i CSV,   --inputvars CSV     values of input variables if required by the procedure; csv-list
-  -m, --metrics                 Add performance data to the output
-  --debug                       Debug mode: let Python exceptions come through
-  -v, --verbose                 Verbose mode: print SQL statement and levels
-
-""")
+import logging
+import argparse
+# import cmk.password_store will be done later,
+# unless --no-cmk-password-store is specified!
 
 
-def saverfloat(f):
-    if f == "":
-        return None
-    else:
-        return float(f)
+log = logging.getLogger(__name__)
+
+
+DEFAULT_PORTS = {
+    "postgres": 5432,
+    "mysql"   : 3306,
+    "mssql"   : 1433,
+    "oracle"  : 1521,
+    "db2"     : 50000,
+}
+
+
+MP_INF = (float('-inf'), float('+inf'))
+
+#   . parse commandline argumens
+
+def levels(values):
+    lower, upper = values.split(':')
+    lower = float(lower) if lower else MP_INF[0]
+    upper = float(upper) if upper else MP_INF[1]
+    return (upper, lower)
+
+
+def sql_cmd(values):
+    """Parse SQL command (join args, replace \n and \;"""
+    log.debug("sql values passed: %r", values)
+    sql_tmp = ' '.join(values)
+    sql = sql_tmp.replace(r"\n", "\n").replace("\;", ";")
+    log.debug("sql command parsed: %r", sql)
+    return sql
+
+
+def parse_args(argv):
+    """Parse commandline arguments (incl password store and logging set up)"""
+    this = str(os.path.basename(argv[0]))
+    fmt = argparse.RawDescriptionHelpFormatter
+    parser = argparse.ArgumentParser(prog=this, description=__doc__,
+                                     formatter_class=fmt)
+    # flags
+    parser.add_argument("-v", "--verbose", action="count", default=0,
+                        help='''Verbose mode: print SQL statement and levels
+                             (for even more output use -vv''')
+    parser.add_argument("--debug", action="store_true",
+                        help='''Debug mode: let Python exceptions come through''')
+    parser.add_argument("-m", "--metrics", action="store_true",
+                        help='''Add performance data to the output''')
+    parser.add_argument("-o", "--procedure", action="store_true",
+                        help='''treat the main argument as a procedure instead
+                              of an SQL-Statement''')
+    parser.add_argument("-i", "--input", metavar="CSV", default=[],
+                        type=lambda s: s.split(','),
+                        help='''comma separated list if values of input variables
+                             if required by the procedure''')
+    parser.add_argument("--no-cmk-password-store", action="store_true",
+                        help='''do not use the cmk password store''')
+
+    # optional arguments
+    parser.add_argument("-d", "--dbms", default='postgres',
+                        choices=['postgres', 'mysql', 'mssql', 'oracle', 'db2'],
+                        help='''Name of the database management system.
+                             Default is "postgres"''')
+    parser.add_argument("-H", "--hostname", metavar='HOST',  default='127.0.0.1',
+                        help='''Hostname or IP-Address where the database lives.
+                             Default is "127.0.0.1"''')
+    parser.add_argument("-P", "--port", default=None, type=int,
+                        help='''Port used to connect to the database.
+                             Default depends on DBMS''')
+    parser.add_argument("-w", "--warning", metavar='RANGE', default=MP_INF,
+                        type=levels,
+                        help='''lower and upper level for the warning state,
+                             separated by a colon''')
+    parser.add_argument("-c", "--critical", metavar='RANGE', default=MP_INF,
+                        type=levels,
+                        help='''lower and upper level for the critical state,
+                             separated by a colon''')
+    parser.add_argument("-t", "--text", default='',
+                        help='''Additional text prefixed to the output''')
+
+    # required arguments
+    parser.add_argument("-n", "--name", required=True,
+                        help='''Name of the database on the DBMS''')
+    parser.add_argument("-u", "--user", required=True,
+                        help='''Username for database access''')
+    parser.add_argument("-p", "--password", required=True,
+                        help='''Password for database access''')
+    parser.add_argument("cmd", metavar="SQL-Statement|Procedure", type=sql_cmd,
+                        nargs='+',
+                        help='''Valid SQL-Statement for the selected database.
+                             The statement must return at least a number and a
+                             string, plus optional performance data.
+
+                             Alternatively: If the the "-o" option is given,
+                             treat the argument as a procedure name.
+
+                             The procedure must return one output variable,
+                             which content is evaluated the same way as the
+                             output of the SQL-Statement''')
+    args = parser.parse_args(argv[1:])
+
+    # PASSWORD STORE
+    if not args.no_cmk_password_store:
+        import cmk.password_store
+        cmk.password_store.replace_passwords()
+
+    # LOGGING
+    fmt = "%(message)s"
+    if args.verbose > 1:
+        fmt = "%(levelname)s: %(lineno)s: " + fmt
+        if args.dbms == "mssql":
+            os.environ["TDSDUMP"] = "stdout"
+    logging.basicConfig(level=max(30 - 10 * args.verbose, 0),
+                        format=fmt)
+
+    # V-VERBOSE INFO
+    for k, v in args.__dict__.items():
+        if k in ('user', 'password'):
+            v = '****'
+        log.debug('argparse: %s = %r' % (k, v))
+    return args
+#.
 
 
 def bail_out(exit_code, output):
@@ -86,229 +166,233 @@ def bail_out(exit_code, output):
     sys.exit(exit_code)
 
 
-short_options = 'hou:i:p:d:n:H:P:w:c:v:m'
-long_options  = [
-    'help', 'user=', 'password=', 'dbms=', 'name=', 'warning=', 'critical=', 'hostname=',
-    'port=', 'debug', 'verbose', 'procedure', 'inputvars=', 'metrics']
-
-
-try:
-    opts, args = getopt.getopt(sys.argv[1:], short_options, long_options)
-except getopt.GetoptError, e:
-    bail_out(3, "Error in command options: %s" % e)
-
-
-opt_debug         = False
-opt_verbose       = False
-opt_dbms          = "postgres"
-opt_name          = None
-opt_user          = opt_dbms
-opt_password      = None
-opt_hostname      = "127.0.0.1"
-opt_port          = None
-opt_sql           = None
-opt_input         = []
-opt_procedure     = False
-opt_metrics       = False
-warn              = [ None, None ]
-crit              = [ None, None ]
-
-
-
-try:
-    for o,a in opts:
-        if o in [ '--debug' ]:
-            opt_debug = True
-        elif o in [ '-v', '--verbose' ]:
-            opt_verbose = True
-        elif o in [ '-d', '--dbms' ]:
-            opt_dbms = a
-        elif o in [ '-n', '--name' ]:
-            opt_name = a
-        elif o in [ '-u', '--user' ]:
-            opt_user = a
-        elif o in [ '-p', '--password' ]:
-            opt_password = a
-        elif o in [ '-H', '--hostname' ]:
-            opt_hostname = a
-        elif o in [ '-P', '--port' ]:
-            opt_port = int(a)
-        elif o in [ '-w', '--warning' ]:
-            warn = map(saverfloat,a.split(":",2))
-        elif o in [ '-c', '--critical' ]:
-            crit = map(saverfloat,a.split(":",2))
-        elif o in [ '-o', '--procedure' ]:
-            opt_procedure = True
-        elif o in [ '-m', '--metrics' ]:
-            opt_metrics = True
-        elif o in [ '-i', '--inputvars' ]:
-            opt_input = a.split(",")
-        elif o in [ '-h', '--help' ]:
-            usage()
-            sys.exit(0)
-
-    if args:
-        opt_sql_tmp = ' '.join(map(str,args))
-        opt_sql = opt_sql_tmp.replace(r"\n", "\n").replace(r'\;', ";")
+#   . DBMS specific code here!
+#
+# For every DBMS specify a connect and execute function.
+# Add them in the dict in the 'main' connect and execute functions
+#
+def _default_execute(cursor, cmd, inpt, procedure):
+    if procedure:
+        log.info("SQL Procedure Name: %s", cmd)
+        log.info("Input Values: %s", inpt)
+        cursor.callproc(cmd, inpt)
+        log.debug("inpt after 'callproc' = %r", inpt)
     else:
-        bail_out(3, "No query or SQL statement/procedure name given")
+        log.info("SQL Statement: %s", cmd)
+        cursor.execute(cmd)
 
-except Exception, e:
-    if opt_debug:
-        raise
-    bail_out(3, "Error while processing input: %s" % e)
+    return cursor.fetchall()
 
 
-try:
-    if opt_dbms == "postgres":
-        import psycopg2 # postgres driver
-        db = psycopg2
-        if opt_port == None:
-            opt_port=5432
-        db_connection = db.connect(host=opt_hostname, port=opt_port, \
-            database=opt_name, user=opt_user, password=opt_password )
+def postgres_connect(host, port, db_name, user, pwd):
+    import psycopg2
+    return psycopg2.connect(host=host, port=port, \
+                            database=db_name, user=user, password=pwd)
 
-    elif opt_dbms == "mysql":
-        import MySQLdb  # mysql driver
-        db = MySQLdb
-        if opt_port == None:
-            opt_port=3306
-        db_connection = db.connect(host=opt_hostname, port=opt_port, \
-            db=opt_name, user=opt_user, passwd=opt_password )
 
-    elif opt_dbms == "mssql":
-        if opt_verbose:
-            os.environ["TDSDUMP"] = "stdout"
+def postgres_execute(cursor, cmd, inpt, procedure):
+    return _default_execute(cursor, cmd, inpt, procedure)
 
-        import pymssql  # mssql driver
-        db = pymssql
-        if opt_port == None:
-            opt_port=1433
-        # pylint: disable=no-member
-        db_connection = db.connect(host=opt_hostname+":"+str(opt_port), \
-            database=opt_name, user=opt_user, password=opt_password )
 
-    elif opt_dbms == "oracle":
-        sys.path.append('/usr/lib/python2.6/site-packages')
-        sys.path.append('/usr/lib/python2.7/site-packages')
-        try:
-            import cx_Oracle
-        except ImportError:
-            bail_out(3, "Requested python module 'cx_Oracle' not found. Please install it via 'pip install cx_Oracle'.")
-        db = cx_Oracle
-        if opt_port == None:
-            opt_port=1521
-        cstring = opt_user+"/"+opt_password+"@"+opt_hostname+":"+str(opt_port)+"/"+opt_name
-        db_connection = db.connect(cstring)
+def mysql_connect(host, port, db_name, user, pwd):
+    import MySQLdb
+    return MySQLdb.connect(host=host, port=port, db=db_name, \
+                           user=user, passwd=pwd)
 
-    elif opt_dbms == "db2":
-        # IBM data server driver
-        import ibm_db  # pylint: disable=import-error
+
+def mysql_execute(cursor, cmd, inpt, procedure):
+    return _default_execute(cursor, cmd, inpt, procedure)
+
+
+def mssql_connect(host, port, db_name, user, pwd):
+    import pymssql
+    return pymssql.connect(host=host, port=port, \
+                           database=db_name, user=user, password=pwd)
+
+
+def mssql_execute(cursor, cmd, inpt, procedure):
+    if procedure:
+        log.info("SQL Procedure Name: %s", cmd)
+        cmd = 'EXEC ' + cmd
+    else:
+        log.info("SQL Statement: %s", cmd)
+
+    cursor.execute(cmd)
+
+    return cursor.fetchall()
+
+
+def oracle_connect(host, port, db_name, user, pwd):
+    sys.path.append('/usr/lib/python%s.%s/site-packages'
+                    % (sys.version_info.major, sys.version_info.minor))
+    try:
+        import cx_Oracle  # pylint: disable=import-error
+    except ImportError as e:
+        bail_out(3, "%s. Please install it via 'pip install cx_Oracle'." % e)
+
+    cstring = "%s/%s@%s:%s/%s" % (user, pwd, host, port, db_name)
+    return cx_Oracle.connect(cstring)
+
+
+def oracle_execute(cursor, cmd, inpt, procedure):
+    import cx_Oracle
+    if procedure:
+        log.info("SQL Procedure Name: %s", cmd)
+        log.info("Input Values: %s", inpt)
+
+        # NOTE: In an earlier version, this code-branch
+        #       had been executed regardles of the dbms.
+        #       clearly this   vvv  is oracle specific.
+        outvar = cursor.var(cx_Oracle.STRING) # pylint:disable=undefined-variable
+        #       However, I have not been able to test it.
+        inpt.append(outvar)
+
+        cursor.callproc(cmd, inpt)
+
+        log.debug("inpt after 'callproc' = %r", inpt)
+        log.debug("outvar = %r", outvar)
+
+        # for empty input this is just
+        #  _res = outvar.getvalue()
+        _res = ','.join(i.getvalue() for i in inpt)
+        log.debug("outvar.getvalue() = %r", _res)
+        params_result = _res.split(",")
+        log.debug("params_result = %r", params_result)
+
+    else:
+        log.info("SQL Statement: %s", cmd)
+        cursor.execute(cmd)
+
+    return cursor.fetchall()
+
+
+def db2_connect(host, port, db_name, user, pwd):
+    # IBM data server driver
+    try:
+        import ibm_db      # pylint: disable=import-error
         import ibm_db_dbi  # pylint: disable=import-error
-        db = ibm_db
-        if opt_port == None:
-            opt_port=50000
-        cstring = 'DRIVER={IBM DB2 ODBC DRIVER};DATABASE='+opt_name+ \
-            ';HOSTNAME='+opt_hostname+';PORT='+str(opt_port)+';PROTOCOL=TCPIP;'+ \
-           'UID='+opt_user+';PWD='+opt_password+';'
-        ibm_db_conn = db.connect(cstring,'','')
-        db_connection = ibm_db_dbi.Connection(ibm_db_conn)
+    except ImportError as e:
+        bail_out(3, "%s. Please install it via pip." % e)
 
-    else:
-        bail_out(3, "DBMS '%s' not supported" % opt_dbms)
-
-    cursor = db_connection.cursor()
-
-except Exception, e:
-    if opt_debug:
-        raise
-
-    if len(e.args) > 1:
-        bail_out(3, "Error while connecting to database: [%d] %s" % (e.args[0], e.args[1]))
-    else:
-        bail_out(3, "Error while connecting to database: %s" % e)
+    cstring = 'DRIVER={IBM DB2 ODBC DRIVER};DATABASE=%s;' \
+              'HOSTNAME=%s;PORT=%s;PROTOCOL=TCPIP;UID=%s;PWD=%s;' \
+              % (db_name, host, port, user, pwd)
+    ibm_db_conn = ibm_db.connect(cstring, '', '')
+    return ibm_db_dbi.Connection(ibm_db_conn)
 
 
-try:
-    if opt_verbose:
-        if opt_procedure:
-            sys.stderr.write("SQL Procedure Name: %s\n" % opt_sql)
-            sys.stderr.write("Input Values: %s\n" % opt_input)
-        else:
-            sys.stderr.write("SQL Statement: %s\n" % opt_sql)
-
-    if opt_procedure:
-        outvar = cursor.var(cx_Oracle.STRING)
-        #opt_input.append("outvar")
-        cursor.callproc(opt_sql, (outvar,))
-        res =  outvar.getvalue()
-        if opt_dbms == "mssql":
-            result = res[0].split(",")
-        else:
-            result = res.split(",")
-    else:
-        cursor.execute(opt_sql)
-        result = cursor.fetchone()
-    cursor.close()
-    db_connection.close()
-
-except Exception, e:
-    if opt_debug:
-        raise
-
-    if len(e.args) > 1:
-        bail_out(3, "Error while executing SQL statement/procedure: [%d] %s" %
-                                                        (e.args[0], e.args[1]))
-    else:
-        bail_out(3, "Error while executing SQL statement/procedure: %s" % e)
+def db2_execute(cursor, cmd, inpt, procedure):
+    return _default_execute(cursor, cmd, inpt, procedure)
+#.
 
 
-if opt_verbose:
-    sys.stderr.write("SQL Result:\n %r\n" % (result,))
+def connect(dbms, host, port, db_name, user, pwd):
+    """Connect to the correct database
+
+    A python library is imported depending on the value of dbms.
+    Return the created connection object.
+    """
+    if port is None:
+        port = DEFAULT_PORTS[dbms]
+
+    return {'postgres': postgres_connect,
+            'mysql': mysql_connect,
+            'mssql': mssql_connect,
+            'oracle': oracle_connect,
+            'db2': db2_connect,
+           }[dbms](host, port, db_name, user, pwd)
 
 
-try:
-    if result == None or len(result) == 0:
+def execute(dbms, connection, cmd, inpt, procedure=False):
+    """Execute the sql statement, or call the procedure.
+
+    Some corrections are made for libraries that do not adhere to the
+    python SQL API: https://www.python.org/dev/peps/pep-0249/
+    """
+    cursor = connection.cursor()
+
+    try:
+        result = {'postgres': postgres_execute,
+                  'mysql': mysql_execute,
+                  'mssql': mssql_execute,
+                  'oracle': oracle_execute,
+                  'db2': db2_execute,
+                 }[dbms](cursor, cmd, inpt, procedure)
+    finally:
+        cursor.close()
+        connection.close()
+
+    log.info("SQL Result:\n%r", result)
+    return result
+
+
+def process_result(result, warn, crit, metrics=False, debug=False):
+    """Process the first row (!) of the result of the SQL command.
+
+    Only the first row of the result (result[0]) is considered.
+    It is assumed to be an sequence of length 3, consisting of of
+    [numerical_value, text, performance_data].
+    The full result is returned as muliline output.
+    """
+    if result is None or len(result) == 0:
         bail_out(3, "SQL statement/procedure returned no data")
 
-    number = float(result[0])
+    row0 = result[0]
+
+    number = float(row0[0])
 
     # handle case where sql query only results in one column
-    if len(result) == 1:
-        text = "%s" % result[0]
+    if len(row0) == 1:
+        text = "%s" % row0[0]
     else:
-        text = "%s" % result[1]
+        text = "%s" % row0[1]
 
-    if opt_metrics:
+    perf = ""
+    if metrics:
         try:
             perf = " | performance_data=%s" % str(result[2])
         except IndexError:
-            if opt_debug:
+            if debug:
                 raise
-            perf = ""
 
     state = 0
-    if warn != [ None, None ] or crit != [ None, None ]:
-        if (warn[0] != None and warn[0] > number) or \
-           (warn[1] != None and warn[1] < number):
+    if warn != MP_INF or crit != MP_INF:
+        if not (warn[0] < number < warn[1]):
             state = 1
-        if (crit[0] != None and crit[0] > number) or \
-           (crit[1] != None and crit[1] < number):
-            state = 2
+        if not (crit[0] < number < crit[1]):
+                state = 2
         text += ": %s" % number
-    else:
-        if number in [ 0, 1, 2, 3 ]:
+    else: # no levels were given
+        if number in (0, 1, 2, 3):
             state = int(number)
         else:
             bail_out(3, "<%d> is not a state, and no levels given" % number)
 
-except Exception, e:
-    if opt_debug:
-        raise
+    return state, text + perf
 
-    bail_out(3, "Error while processing result of SQL statement: %s" % e)
 
-if opt_metrics:
-    bail_out(state, "%s%s" % (text, perf))
-else:
-    bail_out(state, "%s" % text)
+def main(argv=None):
+
+    args = parse_args(argv or sys.argv)
+
+    try:
+        msg = "connecting to database"
+        conn = connect(args.dbms, args.hostname, args.port,
+                       args.name, args.user, args.password)
+
+        msg = "executing SQL command"
+        result = execute(args.dbms, conn, args.cmd, args.input,
+                         procedure=args.procedure)
+
+        msg = "processing result of SQL statement/procedure"
+        state, text = process_result(result, args.warning, args.critical,
+                                     metrics=args.metrics, debug=args.debug)
+    except () if args.debug else Exception as e:
+        errmsg = str(e).strip('()').replace(r'\n', ' ')
+        bail_out(3, "Error while %s: %s" % (msg, errmsg))
+
+    bail_out(state, args.text + text)
+
+
+if __name__ == '__main__':
+    main()

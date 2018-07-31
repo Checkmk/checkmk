@@ -294,9 +294,6 @@ For Each instance_id In instances.Keys: Do ' Continue trick
         objectName   = Replace(Replace(Trim(RS("object_name")), " ", "_"), "$", "_")
         counterName  = LCase(Replace(Trim(RS("counter_name")), " ", "_"))
         instanceName = Replace(Trim(RS("instance_name")), " ", "_")
-        If instanceName = "" Then
-            instanceName = "None"
-        End If
         value        = Trim(RS("cntr_value"))
         addOutput( objectName & "|" & counterName & "|" & instanceName & "|" & value )
         RS.MoveNext

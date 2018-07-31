@@ -41,8 +41,8 @@ factory_settings['mssql_blocked_sessions_default_levels'] = {
 
 
 def parse_mssql_blocked_sessions(info):
-    db_instance = collections. namedtuple("DBInstance", ["session_id", "wait_type",
-                                          "blocking_session_id", "wait_duration"])
+    db_instance = collections.namedtuple("DBInstance", ["session_id", "wait_type",
+                                         "blocking_session_id", "wait_duration"])
     parsed = {}
     for line in info:
         if len(line) == 5:
@@ -65,6 +65,9 @@ def inventory_mssql_blocked_sessions(parsed):
 
 
 def check_mssql_blocked_sessions(item, params, parsed):
+    if item is None:
+        item = ""
+
     if item not in parsed:
         # Assume general connection problem to the database, which is reported
         # by the "X Instance" service and skip this check.

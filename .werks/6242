@@ -1,0 +1,13 @@
+Title: Improved SLA WebAPI error handling
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cee
+Version: 1.5.0b11
+Date: 1533051586
+Class: fix
+
+The WebAPI call <tt>get_sla</tt> now returns a valid error message in case the requested
+sla id is invalid or not visible to the automation user.
+
+

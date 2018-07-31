@@ -7,12 +7,17 @@ Version: 1.6.0i1
 Date: 1529935714
 Class: feature
 
-In order to make this check work take the following steps:
+Previously the {{mssql.vbs}} agent plugin did not send information
+about the instance identifier. Thus all blocked session information
+was processed by one service and the mapping of this information to
+the right instance was missing.
+
+In order to make the new check plugin work take the following steps:
 <ul>
 <li>Install the newest agent plugin {{mssql.vbs}}.</li>
-
-<li>Transform all configured parameters from the old deprecared ruleset
-{{MSSQL Blocked Sessions}} into the new ruleset of the same name.</li>
-
+<li>Remove the old deprecared ruleset {{MSSQL Blocked Sessions}}.</li>
+<li>Enable new service description {{MSSQL Blocked Sessions}} in global settings, execution of checks</li>
 <li>Perform a rediscovery on the affected hosts.</li>
+<li>Apply the new ruleset {{MSSQL Blocked Sessions}}.</li>
+<li>Activate changes.</li>
 </ul>

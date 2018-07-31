@@ -11078,7 +11078,7 @@ register_check_parameters(
             )),
         ],
     ),
-    TextAscii(title=_("Instance name")),
+    TextAscii(title=_("Instance identifier")),
     "dict",
 )
 

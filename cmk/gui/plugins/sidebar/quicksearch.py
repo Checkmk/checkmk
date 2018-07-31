@@ -727,7 +727,7 @@ class MatchPluginRegistry(cmk.gui.plugin_registry.ClassRegistry):
 
 
     def _register(self, obj):
-        self._entries[obj.__class__.__name__] = obj
+        self._entries[obj.__name__] = obj
 
 
 match_plugin_registry = MatchPluginRegistry()

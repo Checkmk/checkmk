@@ -1,0 +1,775 @@
+#!/usr/bin/env python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+"""
+Special agent for monitoring azure cloud applications with Check_MK.
+"""
+#
+# Docs about authentication:
+#  https://docs.microsoft.com/en-us/python/azure/python-sdk-azure-authenticate?view=azure-python
+# About monitoring:
+#  https://github.com/Azure/azure-sdk-for-python/blob/master/doc/sample_azure-monitor.rst
+# About the python binding
+#   https://azure.microsoft.com/en-us/resources/samples/sql-database-python-manage/
+#
+
+import json
+import datetime
+import calendar
+import sys
+import re
+import argparse
+import time
+import logging
+import atexit
+
+from multiprocessing import Process, Lock
+
+from azure.mgmt.monitor import MonitorManagementClient
+from azure.mgmt.resource import ResourceManagementClient
+from azure.common.credentials import ServicePrincipalCredentials
+
+import cmk.password_store
+cmk.password_store.replace_passwords()
+
+log = logging.getLogger(__name__)
+
+
+def parse_arguments(argv):
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "--debug", action="store_true", help='''Debug mode: raise Python exceptions''')
+    parser.add_argument(
+        "-v",
+        "--verbose",
+        action="count",
+        default=0,
+        help='''Verbose mode (for even more output use -vv''')
+    parser.add_argument(
+        "--sequential", action="store_true", help='''Sequential mode: do not use multiprocessing''')
+    parser.add_argument(
+        "--pjoin-timeout",
+        default=10,
+        type=int,
+        help='''Timeout for process joining in seconds
+                        (default 10)''')
+    parser.add_argument(
+        "--cache-mode",
+        choices=['use', 'ignore', 'check'],
+        default='use',
+        help='''change behavior of cache:
+                        'use': use the cache (default), 'ignore': ask server,
+                        'check': ask server and compare to saved values''')
+    parser.add_argument(
+        "--minutes", default=5, type=int, help='''the timespan for metrics (default 5)''')
+    parser.add_argument(
+        "--interval",
+        choices=['PT1M', 'PT1H'],
+        default="PT1M",
+        help='''the interval as passed to the azure API
+                        (default 'PT1M')''')
+    # REQUIRED
+    parser.add_argument("--subscription-id", required=True, help="Azure subscription ID")
+    parser.add_argument("--client-id", required=True, help="Azure client ID")
+    parser.add_argument("--tenant-id", required=True, help="Azure tenant ID")
+    parser.add_argument("--secret", required=True, help="Azure authentication secret")
+    # OPT: CONSTRAIN DATA TO REQUEST
+    parser.add_argument(
+        "--match-name",
+        help='''only consider resources with names
+                        matching the given expression''')
+    parser.add_argument(
+        "--match-type",
+        help='''only consider resources with types
+                        matching the given expression''')
+    parser.add_argument(
+        "--match-group",
+        help='''only consider resources of the
+                        specified group''')
+    parser.add_argument(
+        "--match-metric",
+        help='''only consider metrics with names
+                        matching the given expression''')
+    args = parser.parse_args(argv)
+
+    # LOGGING
+    if args.verbose == 2:
+        fmt = "%(levelname)s: %(filename)s: %(lineno)s: %(message)s"
+    elif args.verbose == 1:
+        fmt = "%(levelname)s: %(funcName)s: %(message)s"
+    else:
+        fmt = "%(levelname)s: %(message)s"
+    logging.basicConfig(level=30 - 10 * args.verbose, format=fmt)
+
+    # V-VERBOSE INFO
+    for k, v in vars(args).items():
+        if k == "secret":
+            v = '****'
+        log.debug('argparse: %s = %r' % (k, v))
+
+    return args
+
+
+def _write_section(basename, lines, lock=Lock()):
+    if not lines:
+        return 0
+    lock.acquire()
+    sys.stdout.write('<<<azure_%s>>>\n' % basename)
+    sys.stdout.write('\n'.join(lines) + '\n')
+    lock.release()
+
+
+class CachedMetricsMMC(MonitorManagementClient):
+
+    # The following two dictionaries are hardcoded to
+    # enhance performance. If a key is missing, it is
+    # fetched from the server, and a message is provided
+    # in the azure_agent section.
+    KNOWN_AGGREGATION_TYPES = {
+        'ActionLatency': 'average',
+        'ActionSuccessLatency': 'average',
+        'ActionThrottledEvents': 'total',
+        'ActionsCompleted': 'total',
+        'ActionsFailed': 'total',
+        'ActionsSkipped': 'total',
+        'ActionsStarted': 'total',
+        'ActionsSucceeded': 'total',
+        'AppConnections': 'average',
+        'Availability': 'average',
+        'AverageMemoryWorkingSet': 'average',
+        'AverageResponseTime': 'average',
+        'Average_% Available Memory': 'average',
+        'Average_% Available Swap Space': 'average',
+        'Average_% Committed Bytes In Use': 'average',
+        'Average_% DPC Time': 'average',
+        'Average_% Free Inodes': 'average',
+        'Average_% Free Space': 'average',
+        'Average_% IO Wait Time': 'average',
+        'Average_% Idle Time': 'average',
+        'Average_% Interrupt Time': 'average',
+        'Average_% Nice Time': 'average',
+        'Average_% Privileged Time': 'average',
+        'Average_% Processor Time': 'average',
+        'Average_% Used Inodes': 'average',
+        'Average_% Used Memory': 'average',
+        'Average_% Used Space': 'average',
+        'Average_% Used Swap Space': 'average',
+        'Average_% User Time': 'average',
+        'Average_Available MBytes Memory': 'average',
+        'Average_Available MBytes Swap': 'average',
+        'Average_Available MBytes': 'average',
+        'Average_Avg. Disk sec/Read': 'average',
+        'Average_Avg. Disk sec/Transfer': 'average',
+        'Average_Avg. Disk sec/Write': 'average',
+        'Average_Bytes Received/sec': 'average',
+        'Average_Bytes Sent/sec': 'average',
+        'Average_Bytes Total/sec': 'average',
+        'Average_Current Disk Queue Length': 'average',
+        'Average_Disk Read Bytes/sec': 'average',
+        'Average_Disk Reads/sec': 'average',
+        'Average_Disk Transfers/sec': 'average',
+        'Average_Disk Write Bytes/sec': 'average',
+        'Average_Disk Writes/sec': 'average',
+        'Average_Free Megabytes': 'average',
+        'Average_Free Physical Memory': 'average',
+        'Average_Free Space in Paging Files': 'average',
+        'Average_Free Virtual Memory': 'average',
+        'Average_Logical Disk Bytes/sec': 'average',
+        'Average_Page Reads/sec': 'average',
+        'Average_Page Writes/sec': 'average',
+        'Average_Pages/sec': 'average',
+        'Average_Pct Privileged Time': 'average',
+        'Average_Pct User Time': 'average',
+        'Average_Physical Disk Bytes/sec': 'average',
+        'Average_Processes': 'average',
+        'Average_Processor Queue Length': 'average',
+        'Average_Size Stored In Paging Files': 'average',
+        'Average_Total Bytes Received': 'average',
+        'Average_Total Bytes Transmitted': 'average',
+        'Average_Total Bytes': 'average',
+        'Average_Total Collisions': 'average',
+        'Average_Total Packets Received': 'average',
+        'Average_Total Packets Transmitted': 'average',
+        'Average_Total Rx Errors': 'average',
+        'Average_Total Tx Errors': 'average',
+        'Average_Uptime': 'average',
+        'Average_Used MBytes Swap Space': 'average',
+        'Average_Used Memory MBytes': 'average',
+        'Average_Used Memory kBytes': 'average',
+        'Average_Users': 'average',
+        'Average_Virtual Shared Memory': 'average',
+        'BillableActionExecutions': 'total',
+        'BillableNativeActionExecutions': 'total',
+        'BillableNativeTriggerExecutions': 'total',
+        'BillableStandardActionExecutions': 'total',
+        'BillableStandardTriggerExecutions': 'total',
+        'BillableTriggerExecutions': 'total',
+        'BytesDroppedDDoS': 'maximum',
+        'BytesForwardedDDoS': 'maximum',
+        'BytesInDDoS': 'maximum',
+        'BytesReceived': 'total',
+        'BytesReceivedRate': 'total',
+        'BytesSent': 'total',
+        'BytesSentRate': 'total',
+        'CPU Credits Consumed': 'average',
+        'CPU Credits Remaining': 'average',
+        'CpuPercentage': 'average',
+        'CpuTime': 'total',
+        'CurrentAssemblies': 'average',
+        'DDoSTriggerSYNPackets': 'maximum',
+        'DDoSTriggerTCPPackets': 'maximum',
+        'DDoSTriggerUDPPackets': 'maximum',
+        'Disk Read Bytes': 'total',
+        'Disk Read Operations/Sec': 'average',
+        'Disk Write Bytes': 'total',
+        'Disk Write Operations/Sec': 'average',
+        'DiskQueueLength': 'average',
+        'Egress': 'total',
+        'Event': 'average',
+        'FunctionExecutionCount': 'total',
+        'FunctionExecutionUnits': 'total',
+        'Gen0Collections': 'total',
+        'Gen1Collections': 'total',
+        'Gen2Collections': 'total',
+        'Handles': 'average',
+        'Heartbeat': 'total',
+        'Http101': 'total',
+        'Http2xx': 'total',
+        'Http3xx': 'total',
+        'Http401': 'total',
+        'Http403': 'total',
+        'Http404': 'total',
+        'Http406': 'total',
+        'Http4xx': 'total',
+        'Http5xx': 'total',
+        'HttpQueueLength': 'average',
+        'IfUnderDDoSAttack': 'maximum',
+        'Ingress': 'total',
+        'IoOtherBytesPerSecond': 'total',
+        'IoOtherOperationsPerSecond': 'total',
+        'IoReadBytesPerSecond': 'total',
+        'IoReadOperationsPerSecond': 'total',
+        'IoWriteBytesPerSecond': 'total',
+        'IoWriteOperationsPerSecond': 'total',
+        'MemoryPercentage': 'average',
+        'MemoryWorkingSet': 'average',
+        'MetricThreshold': 'average',
+        'Network In': 'total',
+        'Network Out': 'total',
+        'OS Per Disk QD': 'average',
+        'OS Per Disk Read Bytes/sec': 'average',
+        'OS Per Disk Read Operations/Sec': 'average',
+        'OS Per Disk Write Bytes/sec': 'average',
+        'OS Per Disk Write Operations/Sec': 'average',
+        'ObservedCapacity': 'average',
+        'ObservedMetricValue': 'average',
+        'PacketsDroppedDDoS': 'maximum',
+        'PacketsForwardedDDoS': 'maximum',
+        'PacketsInDDoS': 'maximum',
+        'PacketsReceivedRate': 'total',
+        'PacketsSentRate': 'total',
+        'Per Disk QD': 'average',
+        'Per Disk Read Bytes/sec': 'average',
+        'Per Disk Read Operations/Sec': 'average',
+        'Per Disk Write Bytes/sec': 'average',
+        'Per Disk Write Operations/Sec': 'average',
+        'Percentage CPU': 'average',
+        'PrivateBytes': 'average',
+        'Requests': 'total',
+        'RequestsInApplicationQueue': 'average',
+        'RunFailurePercentage': 'total',
+        'RunLatency': 'average',
+        'RunSuccessLatency': 'average',
+        'RunThrottledEvents': 'total',
+        'RunsCancelled': 'total',
+        'RunsCompleted': 'total',
+        'RunsFailed': 'total',
+        'RunsStarted': 'total',
+        'RunsSucceeded': 'total',
+        'ScaleActionsInitiated': 'total',
+        'ServiceApiHit': 'count',
+        'ServiceApiLatency': 'average',
+        'ServiceApiResult': 'count',
+        'SuccessE2ELatency': 'average',
+        'SuccessServerLatency': 'average',
+        'TCPBytesDroppedDDoS': 'maximum',
+        'TCPBytesForwardedDDoS': 'maximum',
+        'TCPBytesInDDoS': 'maximum',
+        'TCPPacketsDroppedDDoS': 'maximum',
+        'TCPPacketsForwardedDDoS': 'maximum',
+        'TCPPacketsInDDoS': 'maximum',
+        'Threads': 'average',
+        'TotalAppDomains': 'average',
+        'TotalAppDomainsUnloaded': 'average',
+        'TotalBillableExecutions': 'total',
+        'TotalBillableNativeExecutions': 'total',
+        'TotalBillableStandardExecutions': 'total',
+        'TotalJob': 'total',
+        'Transactions': 'total',
+        'TriggerFireLatency': 'average',
+        'TriggerLatency': 'average',
+        'TriggerSuccessLatency': 'average',
+        'TriggerThrottledEvents': 'total',
+        'TriggersCompleted': 'total',
+        'TriggersFailed': 'total',
+        'TriggersFired': 'total',
+        'TriggersSkipped': 'total',
+        'TriggersStarted': 'total',
+        'TriggersSucceeded': 'total',
+        'UDPBytesDroppedDDoS': 'maximum',
+        'UDPBytesForwardedDDoS': 'maximum',
+        'UDPBytesInDDoS': 'maximum',
+        'UDPPacketsDroppedDDoS': 'maximum',
+        'UDPPacketsForwardedDDoS': 'maximum',
+        'UDPPacketsInDDoS': 'maximum',
+        'Update': 'average',
+        'UsedCapacity': 'total',
+        'availabilityResults/duration': 'average',
+        'billingMeters/telemetryCount': 'total',
+        'billingMeters/telemetrySize': 'total',
+        'blocked_by_firewall': 'total',
+        'browserTimings/networkDuration': 'average',
+        'browserTimings/processingDuration': 'average',
+        'browserTimings/receiveDuration': 'average',
+        'browserTimings/sendDuration': 'average',
+        'browserTimings/totalDuration': 'average',
+        'connection_failed': 'total',
+        'connection_successful': 'total',
+        'cpu_limit': 'average',
+        'cpu_percent': 'average',
+        'cpu_used': 'average',
+        'deadlock': 'total',
+        'dependencies/count': 'count',
+        'dependencies/duration': 'average',
+        'dependencies/failed': 'count',
+        'dtu_consumption_percent': 'average',
+        'dtu_limit': 'average',
+        'dtu_used': 'average',
+        'exceptions/browser': 'total',
+        'exceptions/count': 'total',
+        'exceptions/server': 'total',
+        'log_write_percent': 'average',
+        'pageViews/count': 'count',
+        'pageViews/duration': 'average',
+        'performanceCounters/exceptionsPerSecond': 'average',
+        'performanceCounters/memoryAvailableBytes': 'average',
+        'performanceCounters/processCpuPercentage': 'average',
+        'performanceCounters/processIOBytesPerSecond': 'average',
+        'performanceCounters/processPrivateBytes': 'average',
+        'performanceCounters/processorCpuPercentage': 'average',
+        'performanceCounters/requestExecutionTime': 'average',
+        'performanceCounters/requestsInQueue': 'average',
+        'performanceCounters/requestsPerSecond': 'average',
+        'physical_data_read_percent': 'average',
+        'requests/count': 'count',
+        'requests/duration': 'average',
+        'requests/failed': 'count',
+        'sessions_percent': 'average',
+        'storage': 'maximum',
+        'storage_percent': 'maximum',
+        'traces/count': 'total',
+        'workers_percent': 'average',
+        'xtp_storage_percent': 'average',
+    }
+
+    KNOWN_METRICS = {
+        'Microsoft.Automation/automationAccounts': [u'TotalJob'],
+        'Microsoft.Automation/automationAccounts/runbooks': [],
+        'Microsoft.Compute/availabilitySets': [],
+        'Microsoft.Compute/disks': [],
+        'Microsoft.Compute/images': [],
+        'Microsoft.Compute/restorePointCollections': [],
+        'Microsoft.Compute/virtualMachines': [
+            'Percentage CPU', 'Network In', 'Network Out', 'Disk Read Bytes', 'Disk Write Bytes',
+            'Disk Read Operations/Sec', 'Disk Write Operations/Sec', 'CPU Credits Remaining',
+            'CPU Credits Consumed', 'Per Disk Read Bytes/sec', 'Per Disk Write Bytes/sec',
+            'Per Disk Read Operations/Sec', 'Per Disk Write Operations/Sec', 'Per Disk QD',
+            'OS Per Disk Read Bytes/sec', 'OS Per Disk Write Bytes/sec',
+            'OS Per Disk Read Operations/Sec', 'OS Per Disk Write Operations/Sec', 'OS Per Disk QD'
+        ],
+        'Microsoft.Compute/virtualMachines/extensions': [],
+        'Microsoft.Insights/activityLogAlerts': [],
+        'Microsoft.Insights/alertrules': [],
+        'Microsoft.Insights/autoscalesettings': [
+            'ObservedMetricValue', 'MetricThreshold', 'ObservedCapacity', 'ScaleActionsInitiated'
+        ],
+        'Microsoft.Insights/components': [
+            'availabilityResults/duration', 'billingMeters/telemetryCount',
+            'billingMeters/telemetrySize', 'browserTimings/networkDuration',
+            'browserTimings/processingDuration', 'browserTimings/receiveDuration',
+            'browserTimings/sendDuration', 'browserTimings/totalDuration', 'dependencies/count',
+            'dependencies/duration', 'dependencies/failed', 'pageViews/count', 'pageViews/duration',
+            'performanceCounters/requestExecutionTime', 'performanceCounters/requestsInQueue',
+            'performanceCounters/requestsPerSecond', 'performanceCounters/exceptionsPerSecond',
+            'performanceCounters/processIOBytesPerSecond',
+            'performanceCounters/processCpuPercentage',
+            'performanceCounters/processorCpuPercentage',
+            'performanceCounters/memoryAvailableBytes', 'performanceCounters/processPrivateBytes',
+            'requests/duration', 'requests/count', 'requests/failed', 'exceptions/count',
+            'exceptions/browser', 'exceptions/server', 'traces/count'
+        ],
+        'Microsoft.Logic/workflows': [
+            'RunsStarted', 'RunsCompleted', 'RunsSucceeded', 'RunsFailed', 'RunsCancelled',
+            'RunLatency', 'RunSuccessLatency', 'RunThrottledEvents', 'RunFailurePercentage',
+            'ActionsStarted', 'ActionsCompleted', 'ActionsSucceeded', 'ActionsFailed',
+            'ActionsSkipped', 'ActionLatency', 'ActionSuccessLatency', 'ActionThrottledEvents',
+            'TriggersStarted', 'TriggersCompleted', 'TriggersSucceeded', 'TriggersFailed',
+            'TriggersSkipped', 'TriggersFired', 'TriggerLatency', 'TriggerFireLatency',
+            'TriggerSuccessLatency', 'TriggerThrottledEvents', 'BillableActionExecutions',
+            'BillableTriggerExecutions', 'TotalBillableExecutions',
+            'BillableNativeActionExecutions', 'BillableNativeTriggerExecutions',
+            'TotalBillableNativeExecutions', 'BillableStandardActionExecutions',
+            'BillableStandardTriggerExecutions', 'TotalBillableStandardExecutions'
+        ],
+        'Microsoft.KeyVault/vaults': ['ServiceApiHit', 'ServiceApiLatency', 'ServiceApiResult'],
+        'Microsoft.Network/networkInterfaces': [
+            'BytesSentRate', 'BytesReceivedRate', 'PacketsSentRate', 'PacketsReceivedRate'
+        ],
+        'Microsoft.Network/networkSecurityGroups': [],
+        'Microsoft.Network/publicIPAddresses': [
+            'PacketsInDDoS', 'PacketsDroppedDDoS', 'PacketsForwardedDDoS', 'TCPPacketsInDDoS',
+            'TCPPacketsDroppedDDoS', 'TCPPacketsForwardedDDoS', 'UDPPacketsInDDoS',
+            'UDPPacketsDroppedDDoS', 'UDPPacketsForwardedDDoS', 'BytesInDDoS', 'BytesDroppedDDoS',
+            'BytesForwardedDDoS', 'TCPBytesInDDoS', 'TCPBytesDroppedDDoS', 'TCPBytesForwardedDDoS',
+            'UDPBytesInDDoS', 'UDPBytesDroppedDDoS', 'UDPBytesForwardedDDoS', 'IfUnderDDoSAttack',
+            'DDoSTriggerTCPPackets', 'DDoSTriggerUDPPackets', 'DDoSTriggerSYNPackets'
+        ],
+        'Microsoft.Network/routeTables': [],
+        'Microsoft.Network/virtualNetworks': [],
+        'Microsoft.OperationalInsights/workspaces': [
+            'Average_% Free Inodes', 'Average_% Free Space', 'Average_% Used Inodes',
+            'Average_% Used Space', 'Average_Disk Read Bytes/sec', 'Average_Disk Reads/sec',
+            'Average_Disk Transfers/sec', 'Average_Disk Write Bytes/sec', 'Average_Disk Writes/sec',
+            'Average_Free Megabytes', 'Average_Logical Disk Bytes/sec',
+            'Average_% Available Memory', 'Average_% Available Swap Space', 'Average_% Used Memory',
+            'Average_% Used Swap Space', 'Average_Available MBytes Memory',
+            'Average_Available MBytes Swap', 'Average_Page Reads/sec', 'Average_Page Writes/sec',
+            'Average_Pages/sec', 'Average_Used MBytes Swap Space', 'Average_Used Memory MBytes',
+            'Average_Total Bytes Transmitted', 'Average_Total Bytes Received',
+            'Average_Total Bytes', 'Average_Total Packets Transmitted',
+            'Average_Total Packets Received', 'Average_Total Rx Errors', 'Average_Total Tx Errors',
+            'Average_Total Collisions', 'Average_Avg. Disk sec/Read',
+            'Average_Avg. Disk sec/Transfer', 'Average_Avg. Disk sec/Write',
+            'Average_Physical Disk Bytes/sec', 'Average_Pct Privileged Time',
+            'Average_Pct User Time', 'Average_Used Memory kBytes', 'Average_Virtual Shared Memory',
+            'Average_% DPC Time', 'Average_% Idle Time', 'Average_% Interrupt Time',
+            'Average_% IO Wait Time', 'Average_% Nice Time', 'Average_% Privileged Time',
+            'Average_% Processor Time', 'Average_% User Time', 'Average_Free Physical Memory',
+            'Average_Free Space in Paging Files', 'Average_Free Virtual Memory',
+            'Average_Processes', 'Average_Size Stored In Paging Files', 'Average_Uptime',
+            'Average_Users', 'Average_Current Disk Queue Length', 'Average_Available MBytes',
+            'Average_% Committed Bytes In Use', 'Average_Bytes Received/sec',
+            'Average_Bytes Sent/sec', 'Average_Bytes Total/sec', 'Average_Processor Queue Length',
+            'Heartbeat', 'Update', 'Event'
+        ],
+        'Microsoft.OperationsManagement/solutions': [],
+        'Microsoft.RecoveryServices/vaults': [],
+        'Microsoft.Sql/servers': [
+            # TODO: deal with this
+            # ErrorResponseException(u'Metric: $name does not accept zero dimension case',)
+            #'dtu_consumption_percent',
+            #'storage_used',
+            #'dtu_used'
+        ],
+        'Microsoft.Sql/servers/databases': [
+            'cpu_percent', 'physical_data_read_percent', 'log_write_percent',
+            'dtu_consumption_percent', 'storage', 'connection_successful', 'connection_failed',
+            'blocked_by_firewall', 'deadlock', 'storage_percent', 'xtp_storage_percent',
+            'workers_percent', 'sessions_percent', 'dtu_limit', 'dtu_used', 'cpu_limit', 'cpu_used'
+        ],
+        'Microsoft.Storage/storageAccounts': [
+            'UsedCapacity', 'Transactions', 'Ingress', 'Egress', 'SuccessServerLatency',
+            'SuccessE2ELatency', 'Availability'
+        ],
+        'Microsoft.Web/serverFarms': [],
+        'Microsoft.Web/sites':
+            None,  # this seems to depend on the resource!
+        'Sendgrid.Email/accounts': [],
+        'microsoft.insights/actiongroups': [],
+        'microsoft.insights/activityLogAlerts': [],
+        'microsoft.insights/alertrules': [],
+        'microsoft.insights/metricalerts': [],
+    }
+
+    def _get_metric_defs(self, rid, cache={}):
+        if not rid in cache:
+            m_defs = []
+            # azure-api-call
+            for m in self.metric_definitions.list(rid):
+                log.debug("metric definition: %r" % m.as_dict())
+                m_defs.append(m)
+            cache[rid] = m_defs
+        return cache[rid]
+
+    def _get_aggregation(self, metric_name, resource_id):
+        for m in self._get_metric_defs(resource_id):
+            if m.name.value == metric_name:
+                return m.primary_aggregation_type.name
+        raise RuntimeError("Could not determine primary aggregation: %s" % metric_name)
+
+    def _get_metricnames(self, resource_id):
+        m_defs = self._get_metric_defs(resource_id)
+        return [m.name.value for m in m_defs]
+
+    def cached_aggregation(self, metric, resource, cache_mode):
+        key = metric.name.value
+        CACHE = CachedMetricsMMC.KNOWN_AGGREGATION_TYPES
+        cached = CACHE.get(key)
+        if cache_mode == "use" and cached is not None:
+            return cached
+        value = self._get_aggregation(key, resource.id)
+        return self._handle_cache_mode(CACHE, key, value, cached, cache_mode)
+
+    def cached_metricnames(self, resource, cache_mode):
+        key = resource.type
+        CACHE = CachedMetricsMMC.KNOWN_METRICS
+        cached = CACHE.get(key)
+        if cache_mode == "use" and cached is not None:
+            return cached
+        value = self._get_metricnames(resource.id)
+        return self._handle_cache_mode(CACHE, key, value, cached, cache_mode)
+
+    def _handle_cache_mode(self, CACHE, key, value, cached, mode):
+        if mode == 'ignore':
+            return value
+        if key not in CACHE:
+            CACHE[key] = value
+            msg = "issue: cache missed: %r: %r," % (key, value)
+            _write_section('agent', [msg])
+            return value
+        if mode == 'check':
+            if cached not in (None, value):
+                msg = "issue: cache entry unexpected: %r (server said %r)" % (cached, value)
+                _write_section('agent', [msg])
+        return value
+
+
+class AzureClient(object):
+    def __init__(self, config):
+        super(AzureClient, self).__init__()
+        self._config = config
+        self._credentials = ServicePrincipalCredentials(
+            client_id=self._config.client_id,
+            secret=self._config.secret,
+            tenant=self._config.tenant_id)
+        # azure-api-call
+        self._monitor_client = CachedMetricsMMC(self._credentials, self._config.subscription_id)
+        # azure-api-call
+        self._resource_client = ResourceManagementClient(self._credentials,
+                                                         self._config.subscription_id)
+
+        match_options = ['match_name', 'match_type', 'match_group']
+        self.resource_filters = [
+            getattr(self, f) for f in match_options if getattr(self._config, f) is not None
+        ]
+        self.resource_cache = []
+
+        # compute timespan once, and keep it fixed
+        time_end = datetime.datetime.now()
+        time_interval = datetime.timedelta(minutes=self._config.minutes)
+        self.timespan = "%s/%s" % (time_end - time_interval, time_end)
+        log.info("timespan = %r" % self.timespan)
+
+    def match_name(self, r):
+        match = re.search(self._config.match_name, r.name)
+        return match is not None
+
+    def match_type(self, r):
+        match = re.search(self._config.match_type, r.type)
+        return match is not None
+
+    def match_group(self, r):
+        match = re.search("/resourceGroups/%s/" % self._config.match_group, r.id)
+        return match is not None
+
+    def match_metric(self, m_name):
+        if self._config.match_metric is None:
+            return True
+        match = re.search(self._config.match_metric, m_name)
+        return match is not None
+
+    def get_resources(self):
+        if not self.resource_cache:
+            # azure-api-call
+            tmp_resources = list(self._resource_client.resources.list())
+            for f in self.resource_filters:
+                tmp_resources = filter(f, tmp_resources)
+            self.resource_cache = tmp_resources
+        return self.resource_cache
+
+    def _fetch_metrics(self, res_id, metricnames):
+
+        metric_objects = []
+        # azure API won't have requests with more than 20 metrics.
+        if len(metricnames) > 20:
+            metricnames, r_metricnames = metricnames[:20], metricnames[20:]
+            metric_objects += self._fetch_metrics(res_id, r_metricnames)
+
+        if metricnames:
+            # azure-api-call
+            response = self._monitor_client.metrics.list(
+                res_id,
+                metric=','.join(metricnames),
+                timespan=self.timespan,
+                interval=self._config.interval,  #"PT24H",
+            )
+            metric_objects += list(response.value)
+
+        return metric_objects
+
+    def get_metrics_of_resource(self, resource):
+        """Returns the values of all metrics of the given resource"""
+        out = []
+        err = []
+        metric_objects = []
+
+        try:
+            metricnames = self._monitor_client.cached_metricnames(resource, self._config.cache_mode)
+            metricnames = filter(self.match_metric, metricnames)
+            if metricnames:
+                metric_objects = self._fetch_metrics(resource.id, metricnames)
+        except Exception as e:
+            err.append("exception: %s" % e)
+            if self._config.debug:
+                raise e
+
+        if metric_objects:
+            fmt = "%30s %13s %20s %20s %20s"
+            out += [
+                "metrics following: %d" % len(metric_objects), fmt % ("Name", "Aggregation",
+                                                                      "Value", "Unit", "Timestamp")
+            ]
+
+        for metric in metric_objects:
+            name = metric.name.value
+            log.debug("metric.name.value: %s" % name)
+            log.debug("metric.timeseries: %s" % metric.timeseries)
+
+            try:
+                aggregation = self._monitor_client.cached_aggregation(metric, resource,
+                                                                      self._config.cache_mode)
+
+                # Assuming this agent is executed to gather one value per metric
+                count = len(metric.timeseries)
+                if count != 1:
+                    log.warning("len(metric.timeseries) == %d" % count)
+                    log.warning("this agent is executed to gather one value per metric")
+
+                for measurement in reversed(metric.timeseries):
+                    log.debug("measurement: %s" % measurement)
+                    log.debug("measurement.data: %s" % measurement.data)
+                    if not measurement.data:
+                        continue
+
+                    data = measurement.data[-1]
+                    timestamp = calendar.timegm(data.time_stamp.utctimetuple())
+                    if not hasattr(data, aggregation):
+                        err.append('issue: missing aggregation %s of metric %s' \
+                                   % (aggregation, name))
+                        continue
+                    value = getattr(data, aggregation)
+                    out.append(fmt % (
+                        name,
+                        aggregation,
+                        value,
+                        metric.unit.name,
+                        timestamp,
+                    ))
+                    break
+
+            except Exception as e:
+                err.append("exception: %s" % e)
+                if self._config.debug:
+                    raise e
+
+        return out, err
+
+    def process_resource(self, resource):
+        basic_type = resource.type.split('/')[-1]
+        sec_base_name = basic_type.lower()
+        general_out = ["Resource", json.dumps(resource.as_dict())]
+        metrics_out, err_out = self.get_metrics_of_resource(resource)
+
+        _write_section(sec_base_name, general_out + metrics_out + err_out)
+        _write_section('agent', err_out)
+
+
+class Processes(object):
+    def __init__(self, config):
+        super(Processes, self).__init__()
+        self.timeout = config.pjoin_timeout
+        self.sequential = config.sequential
+        self.debug = config.debug
+        self.ps = []
+        if not self.sequential:
+            atexit.register(self.terminate)
+
+    def run(self, client):
+        resources = client.get_resources()
+
+        if self.sequential:
+            for r in resources:
+                client.process_resource(r)
+            return
+
+        # parallel case is a little more complicated:
+        # start:
+        for resource in resources:
+            p = Process(target=client.process_resource, args=(resource,))
+            p.start()
+            self.ps.append(p)
+        # join:
+        for p in self.ps:
+            log.info("joining: %s" % p)
+            p.join(timeout=self.timeout)
+            if p.is_alive():
+                log.info("still alive after %ss: %s" % (self.timeout, p))
+                self.timeout = 0.01
+            else:
+                self.ps.remove(p)
+
+    def terminate(self):
+        for p in self.ps:
+            if p.is_alive():
+                log.warning("terminating %s" % p)
+                p.terminate()
+
+
+def main(argv=None):
+    if argv is None:
+        argv = sys.argv[1:]
+    start_time = time.time()
+
+    config = parse_arguments(argv)
+    client = AzureClient(config)
+
+    Processes(config).run(client)
+
+    msg = 'execution_time %s' % (time.time() - start_time)
+    _write_section('agent', [msg])
+
+
+if __name__ == "__main__":
+    main()

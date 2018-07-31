@@ -1,0 +1,11 @@
+Title: mssql_transactionlogs: Fixed conversion of empty values like 'used size'
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0b11
+Date: 1533016163
+Class: fix
+
+Database snapshots may have an empty 'used size' value and the 
+related service caused a crash during conversion of this value.

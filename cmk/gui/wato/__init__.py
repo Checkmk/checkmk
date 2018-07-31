@@ -4505,8 +4505,8 @@ class ModeBulkDiscovery(WatoMode):
         # start       : Rendering of the progress dialog
         # transaction : Single step processing
         if self._start or html.is_transaction():
-            bulk_discover_params = cmk.gui.plugins.wato.vs_bulk_discovery.from_html_vars("bulkinventory")
-            cmk.gui.plugins.wato.vs_bulk_discovery.validate_value(bulk_discover_params, "bulkinventory")
+            bulk_discover_params = cmk.gui.plugins.wato.vs_bulk_discovery().from_html_vars("bulkinventory")
+            cmk.gui.plugins.wato.vs_bulk_discovery().validate_value(bulk_discover_params, "bulkinventory")
             self._bulk_discovery_params.update(bulk_discover_params)
 
         self._recurse, self._only_failed, self._only_failed_invcheck, \
@@ -4556,7 +4556,7 @@ class ModeBulkDiscovery(WatoMode):
             if not self._error_handling:
                 arguments = [ "@raiseerrors" ] + arguments
 
-            timeout = html.request_timeout() - 2
+            timeout = html.request.request_timeout - 2
 
             watolib.unlock_exclusive() # Avoid freezing WATO when hosts do not respond timely
             counts, failed_hosts = watolib.check_mk_automation(site_id, "inventory",

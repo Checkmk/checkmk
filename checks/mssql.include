@@ -119,6 +119,7 @@ def mssql_datafiles_process_sizes(params, used_size, allocated_size, max_size, u
 
 def check_mssql_datafiles(item, params, info):
     max_size_sum = allocated_size_sum = used_size_sum = 0
+    scale_f = lambda x: float(x) * 1024 * 1024
     unlimited_sum = False
 
     found = False
@@ -135,11 +136,12 @@ def check_mssql_datafiles(item, params, info):
                 format_item_mssql_datafiles(inst, database, None) == item:
             found = True
 
-            max_size, allocated_size, used_size = map(lambda x: float(x) * 1024 * 1024,
-                                                      (max_size, allocated_size, used_size))
-            max_size_sum       += max_size
-            allocated_size_sum += allocated_size
-            used_size_sum      += used_size
+            if max_size:
+                max_size_sum += scale_f(max_size)
+            if allocated_size:
+                allocated_size_sum += scale_f(allocated_size)
+            if used_size:
+                used_size_sum += scale_f(used_size)
             unlimited_sum = unlimited_sum or unlimited
 
     if not found:

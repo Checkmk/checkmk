@@ -1,0 +1,21 @@
+Title: Fixed staleness of services on piggybacked hosts
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0i1
+Date: 1532692225
+
+The VSphere special agent may provide piggyback data for other hosts.
+Sometimes all piggybacked services on these hosts became stale because
+the piggyback files were incorrectly detected as outdated.
+Other piggyback hosts may also be affected.
+
+Internal notes:
+A piggyback host writes piggyback files and an additional status file.
+The age of each piggyback file is compared to the age of the status file
+in order to detect the validity of the piggyback file.
+Wihtin the cachefile_age function the timestamp of 'now' is initialized
+every time for every file. This may result in disregarded time deltas.

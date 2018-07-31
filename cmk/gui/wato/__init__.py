@@ -4490,16 +4490,12 @@ class ModeBulkDiscovery(WatoMode):
         return ["hosts", "services"]
 
 
-    def __init__(self):
-        super(ModeBulkDiscovery, self).__init__()
-        self._from_html_vars()
-        self._get_bulk_discovery_params()
-
-
-    def _from_html_vars(self):
+    def _from_vars(self):
         self._start = bool(html.var("_start"))
         self._all =  bool(html.var("all"))
         self._item = html.var("_item") if html.var("_item") else None
+
+        self._get_bulk_discovery_params()
 
 
     def _get_bulk_discovery_params(self):

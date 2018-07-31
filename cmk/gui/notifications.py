@@ -174,14 +174,14 @@ def render_page_confirm(acktime, prev_url, failed_notifications):
     html.header(_("Confirm failed notifications"), javascripts=[], stylesheets=[ "pages", "check_mk" ])
 
     if failed_notifications:
-        html.write('<div class="really">\n')
-        html.write(_("Do you really want to acknowledge all failed notifications up to %s?") %\
+        html.open_div(class_="really")
+        html.write_text(_("Do you really want to acknowledge all failed notifications up to %s?") %\
                    cmk.render.date_and_time(acktime))
         html.begin_form("confirm", method="GET", action=prev_url)
         html.hidden_field('acktime', acktime)
         html.button('_confirm', _("Yes"))
         html.end_form()
-        html.write('</div>\n')
+        html.close_div()
 
     render_notification_table(failed_notifications)
 

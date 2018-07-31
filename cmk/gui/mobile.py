@@ -34,6 +34,7 @@ import cmk.gui.utils
 
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
+from cmk.gui.htmllib import HTML
 from cmk.gui.exceptions import MKGeneralException, MKUserError
 
 from cmk.gui.plugins.views import painter_options
@@ -190,10 +191,9 @@ def page_login():
     html.set_focus("_username")
     html.end_form()
     html.open_div(id_="loginfoot")
-    html.write('<img class="logomk" src="images/logo_cmk_small.png">')
-    html.write('<div class="copyright">%s</div>' %
-      _("&copy; <a target=\"_blank\" href=\"https://mathias-kettner.com\">Mathias Kettner</a>"))
-    html.write('</div>')
+    html.img("images/logo_cmk_small.png", class_="logomk")
+    html.div(HTML(_("&copy; <a target=\"_blank\" href=\"https://mathias-kettner.com\">Mathias Kettner</a>")),
+               class_="copyright")
     jqm_page_footer()
     mobile_html_foot()
 

@@ -97,3 +97,8 @@ check-python-modules:
 # perl #########################################################################
 
 PACKAGE_BOOST_DESTDIR := $(PACKAGE_BASE)/boost/destdir
+
+
+# googletest ###################################################################
+
+PACKAGE_GOOGLETEST_DESTDIR := $(PACKAGE_BASE)/googletest/destdir

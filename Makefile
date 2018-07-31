@@ -106,7 +106,8 @@ FILES_TO_FORMAT    := $(wildcard $(addprefix agents/,*.cc *.c *.h)) \
                       $(wildcard $(addprefix livestatus/src/,*.cc *.h)) \
                       $(wildcard $(addprefix bin/,*.cc *.c *.h)) \
                       $(wildcard $(addprefix enterprise/core/src/,*.cc *.h)) \
-                      $(wildcard $(addprefix enterprise/core/src/checkhelper/,*.cc *.h))
+                      $(wildcard $(addprefix enterprise/core/src/checkhelper/,*.cc *.h)) \
+                      $(wildcard $(addprefix enterprise/core/src/test/,*.cc *.h))
 
 WERKS              := $(wildcard .werks/[0-9]*)
 

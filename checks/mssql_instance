@@ -120,14 +120,7 @@ def check_mssql_instance(item, params, parsed):
     if instance["state"] == "0":
         yield state, "Failed to connect to database (%s)" % instance["error_msg"]
 
-    if "prod_version_info" in instance:
-        # Newer output of version info
-        version_info = instance["prod_version_info"]
-    else:
-        # Fallback, is always reported by agent plugin
-        version_info = instance["version_info"]
-    yield 0, "Version: %s" % version_info
-
+    yield 0, "Version: %s" % instance.get("prod_version_info", instance["version_info"])
     if instance["cluster_name"] != "":
         yield 0, "Clustered as %s" % instance["cluster_name"]
 

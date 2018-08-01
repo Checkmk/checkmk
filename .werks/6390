@@ -1,0 +1,27 @@
+Title: Check_MK service: The monitoring state for each missing section is configurable
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1533117549
+Class: feature
+
+Previously only the generic monitoring state was configurable
+if {{some}} agent section were missing. But there was no
+differentiation between these sections.
+
+Now beside of setting the generic "Missing sections" state in the
+ruleset {{State of the Check_MK services}} you can specify
+a regex pattern to match specific section names and give them
+an individual state in case they are missing.
+Note that the first match is used.
+
+The section name can be found in the {{Service check command}} row in
+the details view of a service:
+Without the prefix {{check_mk-}} and the suffix after the dot (incl.).
+
+For example the section name of the service check command
+{{check_mk-cpu.loads}} is {{cpu}}.
+
+This applies only for passive check types.

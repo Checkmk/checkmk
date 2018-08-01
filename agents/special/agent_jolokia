@@ -392,7 +392,7 @@ def main():
 # default socket timeout. We are local here so  set it to 1 second.
     socket.setdefaulttimeout(1.0)
 
-    print("<<<jolokia>>>")
+    print "<<<jolokia>>>"
 # Compute list of instances to monitor. If the user has defined
 # instances in his configuration, we will use this (a list
 # of dicts).

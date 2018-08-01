@@ -102,7 +102,7 @@ def read_config():
 
     config = ConfigParser.SafeConfigParser(default_options)
     # Let ConfigParser figure it out
-    for config_file in ( [ config_filename ] + glob.glob(config_dir)):
+    for config_file in [ config_filename ] + glob.glob(config_dir):
         try:
             if not config.read(config_file):
                 sys.stdout.write("**ERROR** Failed to parse configuration file %s!\n" % config_file)
@@ -355,7 +355,7 @@ def start_mtr(host):
     if debug:
         sys.stdout.write("Startin MTR: %s\n" % (" ".join(options)))
     reportfile = report_filepre + host_to_filename(host)
-    if (os.path.exists(reportfile)):
+    if os.path.exists(reportfile):
         os.unlink(reportfile)
     report=open(reportfile, 'a+')
     report.write(str(int(time.time())) + "\n")

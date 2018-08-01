@@ -171,7 +171,7 @@ def wakeup_handler(signum, frame):
         output = []
 
     # Check if configuration has changed -> restart
-    if (config_mtime != os.stat(config_filename).st_mtime):
+    if config_mtime != os.stat(config_filename).st_mtime:
         os.execv(__file__, sys.argv)
 
     # Exit on various instances

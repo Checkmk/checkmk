@@ -24,6 +24,10 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+"""This file is part of OMD - The Open Monitoring Distribution
+
+isort:skip_file"""
+
 import os
 import sys
 
@@ -246,8 +250,8 @@ def dialog_menu(title, text, choices, defvalue, oktext, canceltext):
     if defvalue != None:
         args += [ "--default-item", defvalue ]
     args += [ "--title", title, "--menu", text, "0", "0", "0" ] # "20", "60", "17" ]
-    for text, value in choices:
-        args += [ text, value ]
+    for choice_text, value in choices:
+        args += [ choice_text, value ]
     return run_dialog(args)
 
 
@@ -370,10 +374,10 @@ def ask_user_choices(title, message, choices):
     chars = []
     empty_line = " %s%-78s%s\n" % (tty_bgblue + tty_white, "", tty_normal)
     sys.stdout.write(empty_line)
-    for choice, title in choices:
+    for choice, choice_title in choices:
         sys.stdout.write(" %s %s%s%s%-10s %-65s%s\n" %
                 (tty_bgblue + tty_white, tty_bold, choice[0],
-                 tty_normal + tty_bgblue + tty_white, choice[1:], title, tty_normal))
+                 tty_normal + tty_bgblue + tty_white, choice[1:], choice_title, tty_normal))
         for c in choice:
             if c.lower() not in chars:
                 chars.append(c)
@@ -389,7 +393,7 @@ def ask_user_choices(title, message, choices):
     sys.stdout.write(tty_normal)
     while True:
         a = getch()
-        for char, (choice, title) in zip(chars, choices):
+        for char, (choice, choice_title) in zip(chars, choices):
             if a == char:
                 sys.stdout.write(tty_bold + tty_bgred + tty_white + a + tty_normal + "\n\n")
                 return choice
@@ -2521,7 +2525,7 @@ def main_help(args=None, options=None):
     else:
         sys.stdout.write("Usage (called as site user):\n\n")
 
-    for command, only_root, no_suid, needs_site, site_must_exist, confirm, synopsis, command_function, options, descr, confirm_text in commands:
+    for command, only_root, no_suid, needs_site, site_must_exist, confirm, synopsis, command_function, command_options, descr, confirm_text in commands:
         if only_root and not am_root:
             continue
         if am_root:

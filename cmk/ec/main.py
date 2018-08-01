@@ -31,6 +31,7 @@
 # creating objects. Or at least update the documentation. It is not clear
 # which fields are mandatory for the events.
 
+import abc
 import ast
 import errno
 import json
@@ -201,6 +202,10 @@ class ECLock(object):
 
 
 class ECServerThread(threading.Thread):
+    @abc.abstractmethod
+    def serve(self):
+        raise NotImplementedError()
+
     def __init__(self, name, logger, settings, config, slave_status, profiling_enabled, profile_file):
         super(ECServerThread, self).__init__(name=name)
         self.settings = settings
@@ -232,9 +237,6 @@ class ECServerThread(threading.Thread):
 
     def terminate(self):
         self._terminate_event.set()
-
-    def serve(self):
-        raise NotImplementedError()
 
 
 def terminate(terminate_main_event, event_server, status_server):
@@ -2645,6 +2647,12 @@ class StatusTable(object):
     prefix = None
     columns = []
 
+    # Must return a enumerable type containing fully populated lists (rows) matching the
+    # columns of the table
+    @abc.abstractmethod
+    def _enumerate(self, query):
+        raise NotImplementedError()
+
     def __init__(self, logger):
         super(StatusTable, self).__init__()
         self._logger = logger.getChild("status_table.%s" % self.prefix)
@@ -2683,11 +2691,6 @@ class StatusTable(object):
 
             yield self._build_result_row(row, requested_column_indexes)
             num_rows += 1
-
-    # Must return a enumerable type containing fully populated lists (rows) matching the
-    # columns of the table
-    def _enumerate(self, query):
-        raise NotImplementedError()
 
     def _build_result_row(self, row, requested_column_indexes):
         result_row = []

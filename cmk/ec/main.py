@@ -581,6 +581,8 @@ class Perfcounters(object):
         self._times = {}
         self._last_statistics = None
 
+        self.logger = logger.getChild("Perfcounters")
+
     def count(self, counter):
         with self._lock:
             self._counters[counter] += 1
@@ -2645,6 +2647,7 @@ class StatusTable(object):
 
     def __init__(self):
         super(StatusTable, self).__init__()
+        self.logger = logger.getChild("status_table.%s" % self.prefix)
         self._populate_column_views()
 
     def _populate_column_views(self):
@@ -2657,6 +2660,7 @@ class StatusTable(object):
 
         self.column_indices = dict([(name, index) for index, name
                                     in enumerate(self.column_names)])
+
 
     def query(self, query):
         requested_column_indexes = query.requested_column_indexes()

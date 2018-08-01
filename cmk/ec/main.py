@@ -581,7 +581,7 @@ class Perfcounters(object):
         self._times = {}
         self._last_statistics = None
 
-        self.logger = logger.getChild("Perfcounters")
+        self._logger = logger.getChild("Perfcounters")
 
     def count(self, counter):
         with self._lock:
@@ -2645,9 +2645,9 @@ class StatusTable(object):
     prefix = None
     columns = []
 
-    def __init__(self):
+    def __init__(self, logger):
         super(StatusTable, self).__init__()
-        self.logger = logger.getChild("status_table.%s" % self.prefix)
+        self._logger = logger.getChild("status_table.%s" % self.prefix)
         self._populate_column_views()
 
     def _populate_column_views(self):
@@ -2729,8 +2729,8 @@ class StatusTableEvents(StatusTable):
         ("event_match_groups_syslog_application", ""),  # introduced in 1.5.0i2
     ]
 
-    def __init__(self, event_status):
-        super(StatusTableEvents, self).__init__()
+    def __init__(self, logger, event_status):
+        super(StatusTableEvents, self).__init__(logger)
         self._event_status = event_status
 
     def _enumerate(self, query):
@@ -2761,8 +2761,8 @@ class StatusTableHistory(StatusTable):
         ("history_addinfo", ""),
     ] + StatusTableEvents.columns
 
-    def __init__(self, history):
-        super(StatusTableHistory, self).__init__()
+    def __init__(self, logger, history):
+        super(StatusTableHistory, self).__init__(logger)
         self._history = history
 
     def _enumerate(self, query):
@@ -2776,8 +2776,8 @@ class StatusTableRules(StatusTable):
         ("rule_hits", 0),
     ]
 
-    def __init__(self, event_status):
-        super(StatusTableRules, self).__init__()
+    def __init__(self, logger, event_status):
+        super(StatusTableRules, self).__init__(logger)
         self._event_status = event_status
 
     def _enumerate(self, query):
@@ -2788,8 +2788,8 @@ class StatusTableStatus(StatusTable):
     prefix = "status"
     columns = EventServer.status_columns()
 
-    def __init__(self, event_server):
-        super(StatusTableStatus, self).__init__()
+    def __init__(self, logger, event_server):
+        super(StatusTableStatus, self).__init__(logger)
         self._event_server = event_server
 
     def _enumerate(self, query):
@@ -2821,10 +2821,10 @@ class StatusServer(ECServerThread):
         self._tcp_socket = None
         self._reopen_sockets = False
 
-        self._table_events = StatusTableEvents(event_status)
-        self._table_history = StatusTableHistory(history)
-        self._table_rules = StatusTableRules(event_status)
-        self._table_status = StatusTableStatus(event_server)
+        self._table_events = StatusTableEvents(logger, event_status)
+        self._table_history = StatusTableHistory(logger, history)
+        self._table_rules = StatusTableRules(logger, event_status)
+        self._table_status = StatusTableStatus(logger, event_server)
         self._perfcounters = perfcounters
         self._lock_configuration = lock_configuration
         self._history = history

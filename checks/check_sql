@@ -69,8 +69,8 @@ def check_sql_arguments(params):
         args += [ "--metrics" ]
 
     if "levels" in params or "levels_low" in params:
-        args += [ "-w", "%s:%s" % (lower[0], upper[0]) ]
-        args += [ "-c", "%s:%s" % (lower[1], upper[1]) ]
+        args += [ "-w%s:%s" % (lower[0], upper[0]) ]
+        args += [ "-c%s:%s" % (lower[1], upper[1]) ]
 
     if type(params["sql"]) == tuple:
         sql_tmp = params["sql"][-1]

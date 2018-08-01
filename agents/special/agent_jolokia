@@ -24,20 +24,16 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import urllib2, sys, os, socket, pprint, base64, ssl
+import os
+import ssl
+import sys
+import json
+import base64
 import getopt
+import pprint
+import socket
+import urllib2
 from httplib import HTTPConnection, HTTPSConnection
-
-try:
-    from simplejson import json
-except ImportError:
-    try:
-        import json
-    except ImportError:
-        sys.stdout.write("<<<jolokia_info>>>\n")
-        sys.stdout.write("Error: Missing JSON library for Agent Plugin mk_jolokia\n")
-        exit()
-
 
 # assigned in parse_arguments
 opt_verbose = False

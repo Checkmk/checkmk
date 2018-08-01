@@ -25,10 +25,13 @@
 # Boston, MA 02110-1301 USA.
 
 import re
-import sys, getopt
-import requests
+import sys
+import getopt
 import xml.etree.ElementTree as ET
-from requests.packages.urllib3.exceptions import InsecureRequestWarning # pylint: disable=import-error
+
+import requests
+from requests.packages.urllib3.exceptions import InsecureRequestWarning  # pylint: disable=import-error
+
 
 def usage():
     sys.stderr.write("""Check_MK StoreOnce

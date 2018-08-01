@@ -27,7 +27,14 @@
 # This agent uses UPNP API calls to the Fritz!Box to gather information
 # about connection configuration and status.
 
-import getopt, sys, socket, urllib2, traceback, re, pprint
+import re
+import sys
+import getopt
+import pprint
+import socket
+import urllib2
+import traceback
+
 
 def usage():
     sys.stderr.write("""Check_MK ALLNET IP-Sensoric Agent

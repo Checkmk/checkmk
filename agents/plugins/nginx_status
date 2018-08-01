@@ -37,7 +37,10 @@
 # create an nginx_status.cfg file in MK_CONFDIR and populate the servers
 # list to prevent executing the detection mechanism.
 
-import os, sys, urllib2, re
+import os
+import re
+import sys
+import urllib2
 
 # tell urllib2 not to honour "http(s)_proxy" env variables
 urllib2.getproxies = lambda: {}

@@ -35,9 +35,15 @@
 #    MTR results are stored in $VARDIR/mtr_${host}.report
 # return previous host data
 
-import sys, os, re, time, glob, ConfigParser, StringIO
-from unicodedata import normalize
+import ConfigParser
+import glob
+import os
+import re
+import StringIO
 import subprocess
+import sys
+import time
+from unicodedata import normalize
 
 mk_confdir = os.getenv("MK_CONFDIR") or "/etc/check_mk"
 mk_vardir = os.getenv("MK_VARDIR") or "/var/lib/check_mk_agent"

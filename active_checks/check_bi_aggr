@@ -24,15 +24,21 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import sys, getopt, requests, traceback
-import urllib
+import getopt
 import os
+import sys
 import time
+import traceback
+import urllib
+
+import requests
+from requests.packages.urllib3.exceptions import \
+    SubjectAltNameWarning  # pylint: disable=import-error
 
 import cmk.password_store
+
 cmk.password_store.replace_passwords()
 
-from requests.packages.urllib3.exceptions import SubjectAltNameWarning # pylint: disable=import-error
 requests.packages.urllib3.disable_warnings(SubjectAltNameWarning) # pylint: disable=no-member
 
 # tell requests not to honour "http(s)_proxy" env variables

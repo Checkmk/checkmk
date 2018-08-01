@@ -39,9 +39,13 @@
 # <-mirrorview><-snapviews><-sancopy><-reserved> <-cloneview><-metalun>
 # <-migration><-ioportconfig> <-fastcache><-backendbus>
 
-import sys, os, getopt, re, subprocess
+import getopt
+import os
+import pprint
+import re
+import subprocess
+import sys
 
-import inspect, pprint # FOR DEBUGGING
 
 #############################################################################
 def usage():

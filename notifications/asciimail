@@ -30,7 +30,10 @@
 # This script creates an ASCII email. It replaces the builtin ASCII email feature and
 # is configurable via WATO with named parameters (only).
 
-import os, re, sys, subprocess
+import os
+import re
+import subprocess
+import sys
 from email.mime.text import MIMEText
 
 opt_debug = '-d' in sys.argv

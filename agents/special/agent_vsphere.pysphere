@@ -33,9 +33,13 @@
 # Maybe the MOB is helpful:
 #   http://<your-esx-host>/mob
 
-import sys, os, getopt,socket
+import getopt
+import inspect  # FOR DEBUGGING
+import os
+import pprint
+import socket
+import sys
 
-import inspect, pprint # FOR DEBUGGING
 
 def usage():
     sys.stderr.write("""Check_MK vSphere Agent

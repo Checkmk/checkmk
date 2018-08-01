@@ -74,8 +74,6 @@ import multiprocessing
 import psutil
 import npyscreen
 
-from collections import namedtuple
-
 import livestatus
 
 
@@ -94,7 +92,8 @@ import livestatus
 # Changes the process name and process command line on of the running process
 # This works at least with Python 2.x on Linux
 def set_cmdline(cmdline):
-    import ctypes, ctypes.util
+    import ctypes
+    import ctypes.util
     libc = ctypes.cdll.LoadLibrary(ctypes.util.find_library('c'))
 
     argv = ctypes.POINTER(ctypes.c_char_p)()
@@ -984,7 +983,7 @@ class SystemInfo(object):
 
 
 
-DiskIO = namedtuple("DiskIO", ["read_bytes", "write_bytes"])
+DiskIO = collections.namedtuple("DiskIO", ["read_bytes", "write_bytes"])
 
 
 

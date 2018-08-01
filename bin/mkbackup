@@ -1667,7 +1667,9 @@ def setup_standalone_environment(info):
 
 
 def enable_drbd_ip_addresses():
-    import cma, cma_net  # pylint: disable=import-error
+    # These modules are only available when mkbackup is executed on OS level on the appliance
+    import cma # pylint: disable=import-error
+    import cma_net  # pylint: disable=import-error
     cma.load_config()
     cma_net.load_config()
 
@@ -1687,6 +1689,7 @@ def enable_drbd_ip_addresses():
 
 
 def verify_cma_version_compatible(info):
+    # These modules are only available when mkbackup is executed on OS level on the appliance
     import cma  # pylint: disable=import-error
     if info["cma_version"] != cma.version():
         raise MKGeneralException("The backup can not be restored because the version of the "

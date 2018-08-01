@@ -46,7 +46,14 @@
 # http://fritz.box:49000/igddslSCPD.xml
 #get_upnp_info('WANDSLLinkC1', 'urn:schemas-upnp-org:service:WANDSLLinkConfig:1', 'GetDSLLinkInfo')
 
-import getopt, sys, socket, urllib2, traceback, re, pprint
+import re
+import sys
+import getopt
+import pprint
+import socket
+import urllib2
+import traceback
+
 
 def usage():
     sys.stderr.write("""Check_MK Fritz!Box Agent

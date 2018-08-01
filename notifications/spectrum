@@ -26,7 +26,9 @@
 # Boston, MA 02110-1301 USA.
 
 
-import os, subprocess, sys
+import os
+import subprocess
+import sys
 
 # Note: This script contains an example configuration
 # You will probably have to modify the sent information

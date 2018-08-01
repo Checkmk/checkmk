@@ -24,14 +24,13 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import sys, getopt, time, os, socket
+import os
+import sys
+import time
+import getopt
+import socket
 
-try:
-    import livestatus
-except ImportError:
-    sys.stderr.write('The python livestatus api module is missing. Please install from\n'
-                     'Check_MK livestatus sources to a python import path.\n')
-    sys.exit(1)
+import livestatus
 
 
 def usage():

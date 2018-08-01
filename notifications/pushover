@@ -25,7 +25,11 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import requests, json, os, re, sys
+import requests
+import json
+import os
+import re
+import sys
 
 api_url = "https://api.pushover.net/1/messages.json"
 

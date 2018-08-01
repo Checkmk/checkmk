@@ -24,13 +24,15 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+import os
+import sys
+
 # This hack here is needed to prevent "omd update" problems when updating
 # as site user from 1.4 versions older than 1.4.0p17.
 # Previous versios did not unset PYTHONPATH/LD_LIBRARY_PATH before execv()
 # to the newer version "omd" command which made the newer OMD load the old
 # python libraries. Newer versions unset these variables before, so this
 # additional execv() is only needed when updating from older versions.
-import os, sys
 if len(sys.argv) > 1 and sys.argv[1] == "update" \
    and (sys.version_info[0] == 2 and sys.version_info[1] == 7 and sys.version_info[2] < 14):
     # Prevent inheriting environment variables from this versions/site environment
@@ -50,15 +52,24 @@ if len(sys.argv) > 1 and sys.argv[1] == "update" \
     bail_out("Cannot run execv() %s" % sys.argv[0])
 
 
-import sys, os, shutil, pwd, grp, re, time, pprint, tty, termios, traceback
+import re
 import abc
+import grp
+import pwd
+import tty
+import time
 import fcntl
-import string
-import random
-import tarfile, fnmatch
-import socket
-import subprocess
 import shlex
+import pprint
+import random
+import shutil
+import socket
+import string
+import fnmatch
+import tarfile
+import termios
+import traceback
+import subprocess
 from subprocess import *
 
 OMD_VERSION = "1.6.0i1.cme"

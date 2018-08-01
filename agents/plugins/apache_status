@@ -41,7 +41,11 @@
 # It is also possible to override or extend the ssl_ports variable to make the
 # check contact other ports than 443 with HTTPS requests.
 
-import os, sys, urllib2, re, socket
+import os
+import re
+import socket
+import sys
+import urllib2
 
 config_dir = os.getenv("MK_CONFDIR", "/etc/check_mk")
 config_file = config_dir + "/apache_status.conf"

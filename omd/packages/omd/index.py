@@ -1,5 +1,6 @@
 from mod_python import apache,util # pylint: disable=import-error
-import os, re
+import os
+import re
 
 def site_name(req):
     return os.path.normpath(req.uri).split("/")[1]

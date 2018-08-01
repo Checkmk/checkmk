@@ -35,15 +35,18 @@
 # attached graphs and such neat stuff. Sweet!
 
 
-import os, re, sys, subprocess, socket
+import base64
+import os
+import re
+import socket
+import subprocess
+import sys
 import urllib
 import urllib2
-import base64
-
-from email.mime.multipart import MIMEMultipart
-from email.mime.text import MIMEText
 from email.mime.application import MIMEApplication
 from email.mime.image import MIMEImage
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
 
 try:
     from simplejson import json

@@ -24,8 +24,11 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import sys, time, urllib
+import sys
+import time
+import urllib
 from xml.dom import minidom
+
 now = int(time.time())
 start = now - 24 * 60 * 60
 end =  now

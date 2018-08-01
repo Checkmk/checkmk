@@ -24,11 +24,21 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import sys, getopt, os, time, random, poplib, imaplib, email
-import traceback, socket, re
+import os
+import re
+import sys
+import time
+import email
 import base64
+import getopt
+import poplib
+import random
+import socket
+import imaplib
+import traceback
 
 import cmk.password_store
+
 cmk.password_store.replace_passwords()
 
 def parse_exception(e):

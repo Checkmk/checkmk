@@ -25,9 +25,16 @@
 # Boston, MA 02110-1301 USA.
 
 
-import getopt, sys, socket, traceback, re, hashlib
+import re
+import sys
+import getopt
+import socket
+import hashlib
+import traceback
+from HTMLParser import HTMLParser
 
 import requests
+
 try:
     from requests.packages.urllib3.exceptions import InsecureRequestWarning # pylint: disable=import-error
     requests.packages.urllib3.disable_warnings(InsecureRequestWarning)      # pylint: disable=no-member
@@ -140,7 +147,6 @@ def store_property(prop):
     if prop[0] in property_to_section:
         sections.setdefault(property_to_section[prop[0]], []).append(" ".join(prop))
 
-from HTMLParser import HTMLParser
 class HTMLObjectParser(HTMLParser):
     def feed(self, body):
         self.current_object_key = None

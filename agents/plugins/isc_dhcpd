@@ -1,7 +1,11 @@
 #!/usr/bin/python
 # Monitor leases if ISC-DHCPD
 
-import os, sys, time, re, calendar
+import calendar
+import os
+import re
+import sys
+import time
 
 conf_file = None
 for path in [ '/etc/dhcpd.conf', '/etc/dhcp/dhcpd.conf', '/usr/local/etc/dhcpd.conf' ]:

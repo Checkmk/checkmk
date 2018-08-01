@@ -29,11 +29,11 @@
 # as well as the ibm_db2 Python DBI driver for DB2:
 #  https://pypi.python.org/pypi/ibm_db
 """Check_MK SQL Test"""
-import os
-import sys
+import argparse
 import getopt
 import logging
-import argparse
+import os
+import sys
 
 import cmk.password_store
 cmk.password_store.replace_passwords()
@@ -63,8 +63,8 @@ def levels(values):
 
 
 def sql_cmd_piece(values):
-    """Parse every piece of the SQL command (replace \n and \;)"""
-    return values.replace(r"\n", "\n").replace("\;", ";")
+    """Parse every piece of the SQL command (replace \\n and \\;)"""
+    return values.replace(r"\n", "\n").replace(r"\;", ";")
 
 
 def parse_args(argv):

@@ -29,9 +29,9 @@
 # as well as the ibm_db2 Python DBI driver for DB2:
 #  https://pypi.python.org/pypi/ibm_db
 """Check_MK SQL Test"""
+import os
 import sys
 import getopt
-import os
 import logging
 import argparse
 
@@ -225,7 +225,11 @@ def oracle_connect(host, port, db_name, user, pwd):
 
 
 def oracle_execute(cursor, cmd, inpt, procedure):
-    import cx_Oracle
+    try:
+        import cx_Oracle  # pylint: disable=import-error
+    except ImportError as e:
+        bail_out(3, "%s. Please install it via 'pip install cx_Oracle'." % e)
+
     if procedure:
         log.info("SQL Procedure Name: %s", cmd)
         log.info("Input Values: %s", inpt)

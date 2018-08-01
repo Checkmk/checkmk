@@ -151,6 +151,20 @@ inventory_multipath_rules = []
 # Nov 05 17:17:03 | You can run /sbin/mpathconf to create or modify /etc/multipath.conf
 # Nov 05 17:17:03 | DM multipath kernel driver not loaded
 
+# UUID which includes dots (seen on Oracle Exadata VM)
+# <<<multipath>>>
+# iqn.2015-05.com.oracle:QD_DG_VOTE101_EXAO2ADM1VM101 dm-7 IET,VIRTUAL-DISK
+# size=128M features='0' hwhandler='0' wp=rw
+# |-+- policy='round-robin 0' prio=0 status=active
+# | `- 8:0:0:1  sdg  8:96   active undef unknown
+# |-+- policy='round-robin 0' prio=0 status=enabled
+# | `- 9:0:0:1  sdh  8:112  active undef unknown
+# |-+- policy='round-robin 0' prio=0 status=enabled
+# | `- 10:0:0:1 sdi  8:128  active undef unknown
+# `-+- policy='round-robin 0' prio=0 status=enabled
+#   `- 11:0:0:1 sdj  8:144  active undef unknown
+
+
 def parse_multipath(info):
     # New reported header lines need to be placed here
     # the matches need to be put in a list of tupples
@@ -166,7 +180,7 @@ def parse_multipath(info):
         (regex(r"^[a-zA-Z0-9_]+$"),                               0, None, None), # 3.
         (regex(r"^([0-9a-z]{33}|[0-9a-z]{49})\s?(dm.[0-9]+).*$"), 1, None, 2), # 4.
         (regex(r"^[a-zA-Z0-9_]+(dm-[0-9]+).*$"),                  0, None, 1), # 5. Remove this line in 1.2.0
-        (regex(r"^([-a-zA-Z0-9_ :]+)\s?(dm-[0-9]+).*$"),          1, None, 2), # 6. and 7.
+        (regex(r"^([-.a-zA-Z0-9_ :]+)\s?(dm-[0-9]+).*$"),         1, None, 2), # 6. and 7.
     ]
 
     reg_prio = regex("[[ ]prio=")
@@ -205,7 +219,6 @@ def parse_multipath(info):
             matchobject = None
             for header_regex, uuid_pos, alias_pos, dm_pos in reg_headers:
                 matchobject = header_regex.search(l)
-
                 if matchobject:
                     uuid = matchobject.group(uuid_pos).strip()
 

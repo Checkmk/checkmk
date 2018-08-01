@@ -536,14 +536,10 @@ def check_mssql_file_sizes(item, params, parsed):
         if node_name:
             node_info = "[%s] " % node_name
 
-        data_files = counters.get("data_file(s)_size_(kb)")
         log_files_size = counters.get("log_file(s)_size_(kb)")
-        log_files_used = counters.get("log_file(s)_used_size_(kb)")
-
         for val_bytes, key, title in [
-            (data_files,     "data_files",     "Data files"),
-            (log_files_size, "log_files",      "Log files total"),
-            (log_files_used, "log_files_used", "Log files used"),
+            (counters.get("data_file(s)_size_(kb)"), "data_files", "Data files"),
+            (log_files_size,                         "log_files",  "Log files total"),
         ]:
             if val_bytes is None:
                 continue
@@ -565,22 +561,32 @@ def check_mssql_file_sizes(item, params, parsed):
 
             yield state, infotext, [(key, val_bytes, warn, crit)]
 
+        log_files_used = counters.get("log_file(s)_used_size_(kb)")
+        infotext = "Log files used: %s" % get_bytes_human_readable(log_files_used)
         try:
             log_files_used_perc = 100.0 * log_files_used / log_files_size
+            infotext += ", %s" % get_percent_human_readable(log_files_used_perc)
         except (TypeError, ZeroDivisionError):
+            log_files_used_perc = None
+
+        warn, crit = params.get("log_files_used", (None, None))
+        if isinstance(crit, float) and log_files_used_perc is not None:
+            log_files_used_value = log_files_used_perc
+            readable_f = get_percent_human_readable
+        elif isinstance(warn, int):
+            log_files_used_value = log_files_used
+            readable_f = get_bytes_human_readable
+        else:
+            yield 0, infotext
             continue
 
-        infotext = get_percent_human_readable(log_files_used_perc)
         state = 0
-        warn, crit = params.get("log_files_used_perc", (None, None))
-        if crit is not None and log_files_used_perc >= crit:
+        if crit is not None and log_files_used_value >= crit:
             state = 2
-        elif warn is not None and log_files_used_perc >= warn:
+        elif warn is not None and log_files_used_value >= warn:
             state = 1
         if state:
-            infotext += " (warn/crit at %s/%s)" % (
-                        get_bytes_human_readable(warn),
-                        get_bytes_human_readable(crit))
+            infotext += " (warn/crit at %s/%s)" % (readable_f(warn), readable_f(crit))
         yield state, infotext
 
 

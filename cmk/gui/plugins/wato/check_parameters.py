@@ -10531,18 +10531,21 @@ register_check_parameters(
                     Filesize(title = _("Critical at"))
                 ]
             )),
-            ("log_files_used", Tuple(
-                title=_("Log files used: Absolute upper thresholds"),
+            ("log_files_used", Alternative(
+                title=_("Levels for log files used"),
                 elements=[
-                    Filesize(title = _("Warning at")),
-                    Filesize(title = _("Critical at"))
-                ]
-            )),
-            ("log_files_used_perc", Tuple(
-                title=_("Log files used: Percentage upper thresholds"),
-                elements=[
-                    Percentage(title = _("Warning at")),
-                    Percentage(title = _("Critical at"))
+                    Tuple(
+                        title=_("Upper absolute levels"),
+                        elements=[
+                            Filesize(title = _("Warning at")),
+                            Filesize(title = _("Critical at"))
+                    ]),
+                    Tuple(
+                        title=_("Upper percentage levels"),
+                        elements=[
+                            Percentage(title = _("Warning at")),
+                            Percentage(title = _("Critical at"))
+                    ]),
                 ]
             )),
         ]
@@ -10562,80 +10565,95 @@ register_check_parameters(
         elements = [
             ("size",
             Tuple(
-                title = _("Size"),
+                title = _("Upper levels for size"),
                 elements = [
                   Filesize(title = _("Warning at")),
                   Filesize(title = _("Critical at"))
                 ]
             )),
-            ("reserved", Tuple(
-                title=_("Reserved space: Absolute upper thresholds"),
+            ("reserved", Alternative(
+                title=_("Upper levels for reserved space"),
                 elements=[
-                    Filesize(title = _("Warning at")),
-                    Filesize(title = _("Critical at"))
+                    Tuple(
+                        title=_("Absolute levels"),
+                        elements=[
+                            Filesize(title = _("Warning at")),
+                            Filesize(title = _("Critical at"))
+                    ]),
+                    Tuple(
+                        title=_("Percentage levels"),
+                        elements=[
+                            Percentage(title = _("Warning at")),
+                            Percentage(title = _("Critical at"))
+                    ]),
                 ]
             )),
-            ("reserved_perc", Tuple(
-                title=_("Reserved space: Percentage upper thresholds"),
+            ("data", Alternative(
+                title=_("Upper levels for data"),
                 elements=[
-                    Percentage(title = _("Warning at")),
-                    Percentage(title = _("Critical at"))
+                    Tuple(
+                        title=_("Absolute levels"),
+                        elements=[
+                            Filesize(title = _("Warning at")),
+                            Filesize(title = _("Critical at"))
+                    ]),
+                    Tuple(
+                        title=_("Percentage levels"),
+                        elements=[
+                            Percentage(title = _("Warning at")),
+                            Percentage(title = _("Critical at"))
+                    ]),
                 ]
             )),
-            ("data", Tuple(
-                title=_("Data: Absolute upper thresholds"),
+            ("indexes", Alternative(
+                title=_("Upper levels for indexes"),
                 elements=[
-                    Filesize(title = _("Warning at")),
-                    Filesize(title = _("Critical at"))
+                    Tuple(
+                        title=_("Absolute levels"),
+                        elements=[
+                            Filesize(title = _("Warning at")),
+                            Filesize(title = _("Critical at"))
+                    ]),
+                    Tuple(
+                        title=_("Percentage levels"),
+                        elements=[
+                            Percentage(title = _("Warning at")),
+                            Percentage(title = _("Critical at"))
+                    ]),
                 ]
             )),
-            ("data_perc", Tuple(
-                title=_("Data: Percentage upper thresholds"),
+            ("unused", Alternative(
+                title=_("Upper levels for unused space"),
                 elements=[
-                    Percentage(title = _("Warning at")),
-                    Percentage(title = _("Critical at"))
+                    Tuple(
+                        title=_("Absolute levels"),
+                        elements=[
+                            Filesize(title = _("Warning at")),
+                            Filesize(title = _("Critical at"))
+                    ]),
+                    Tuple(
+                        title=_("Percentage levels"),
+                        elements=[
+                            Percentage(title = _("Warning at")),
+                            Percentage(title = _("Critical at"))
+                    ]),
                 ]
             )),
-            ("indexes", Tuple(
-                title=_("Indexes: Absolute upper thresholds"),
+            ("unallocated", Alternative(
+                title=_("Lower levels for unallocated space"),
                 elements=[
-                    Filesize(title = _("Warning at")),
-                    Filesize(title = _("Critical at"))
-                ]
-            )),
-            ("indexes_perc", Tuple(
-                title=_("Indexes: Percentage upper thresholds"),
-                elements=[
-                    Percentage(title = _("Warning at")),
-                    Percentage(title = _("Critical at"))
-                ]
-            )),
-            ("unused", Tuple(
-                title=_("Unused space: Absolute upper thresholds"),
-                elements=[
-                    Filesize(title = _("Warning at")),
-                    Filesize(title = _("Critical at"))
-                ]
-            )),
-            ("unused_perc", Tuple(
-                title=_("Unused space: Percentage upper thresholds"),
-                elements=[
-                    Percentage(title = _("Warning at")),
-                    Percentage(title = _("Critical at"))
-                ]
-            )),
-            ("unallocated", Tuple(
-                title=_("Unallocated space: Absolute lower thresholds"),
-                elements=[
-                    Filesize(title = _("Warning below")),
-                    Filesize(title = _("Critical below"))
-                ]
-            )),
-            ("unallocated_perc", Tuple(
-                title=_("Unallocated space: Percentage lower thresholds"),
-                elements=[
-                    Percentage(title = _("Warning below")),
-                    Percentage(title = _("Critical below"))
+                    Tuple(
+                        title=_("Absolute levels"),
+                        elements=[
+                            Filesize(title = _("Warning below")),
+                            Filesize(title = _("Critical below"))
+                    ]),
+                    Tuple(
+                        title=_("Percentage levels"),
+                        elements=[
+                            Percentage(title = _("Warning below")),
+                            Percentage(title = _("Critical below"))
+                    ]),
                 ]
             )),
         ],

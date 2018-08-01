@@ -766,8 +766,8 @@ def conv_vm_datastoreUrl(value):
         datastore_info = "name %s" % (entry.Name)
         extra_info = []
         if g_datastores.get(entry.Name):
-            for key, value in g_datastores.get(entry.Name).items():
-                extra_info.append("%s %s" % (key, value))
+            for key, this_value in g_datastores.get(entry.Name).items():
+                extra_info.append("%s %s" % (key, this_value))
         if extra_info:
             datastore_info += "|" + "|".join(extra_info)
         result.append(datastore_info)

@@ -299,12 +299,12 @@ def query_instance(inst):
                 mbean_search_results[mbean] = paths
 
             for mbean_exp in paths:
-                queries.append( (inst, "%s/%s" % (urllib2.quote(mbean_exp), path), path,
+                queries.append( ("%s/%s" % (urllib2.quote(mbean_exp), path), path,
                                     itemspec, mbean_exp) )
         else:
-            queries.append( (inst, mbean + "/" + path, title, itemspec) )
+            queries.append( (mbean + "/" + path, title, itemspec) )
 
-        for inst, mbean_path, title, itemspec in queries:
+        for mbean_path, title, itemspec in queries:
             try:
                 for out_item, out_title, out_value in fetch_metric(inst, mbean_path, title, itemspec):
                     sys.stdout.write("%s %s %s\n" % (out_item, out_title, out_value) )
@@ -385,12 +385,12 @@ def output_custom_vars(inst, mbean_search_results):
                     mbean_search_results[mbean] = paths
 
                 for mbean_exp in paths:
-                    queries.append( (inst, "%s/%s" % (urllib2.quote(mbean_exp), path), path,
+                    queries.append( ("%s/%s" % (urllib2.quote(mbean_exp), path), path,
                                         itemspec, mbean_exp) )
             else:
-                queries.append( (inst, mbean + "/" + path, title, itemspec) )
+                queries.append( (mbean + "/" + path, title, itemspec) )
 
-            for inst, mbean_path, title, itemspec in queries:
+            for mbean_path, title, itemspec in queries:
                 try:
                     for out_item, out_title, out_value in fetch_metric(inst, mbean_path, title, itemspec):
                         sys.stdout.write("%s %s %s %s\n" % (out_item, out_title, out_value, value_type) )

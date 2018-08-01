@@ -121,43 +121,36 @@ def check_mssql_tablespaces(item, params, parsed):
         ('indexes',     'Indexes',           'at',    True),
         ('unused',      'Unused',            'at',    True),
     ]:
-        val_bytes = tablespace_data[key]
-        if val_bytes is None:
+        value_bytes = tablespace_data[key]
+        if value_bytes is None:
             continue
 
-        infotext = '%s: %s' % (title, get_bytes_human_readable(val_bytes))
-        warn, crit = params.get(key, (None, None))
-
-        state = 0
-        if warn is not None and crit is not None:
-            if upper_bounds and val_bytes >= crit or not upper_bounds and val_bytes <= crit:
-                state = 2
-            elif upper_bounds and val_bytes >= warn or not upper_bounds and val_bytes <= warn:
-                state = 1
-            if state:
-                infotext += " (warn/crit %s %s/%s)" % (levels_info,
-                            get_bytes_human_readable(warn),
-                            get_bytes_human_readable(crit))
-        yield state, infotext, [(key, val_bytes, warn, crit)]
-
+        infotext = '%s: %s' % (title, get_bytes_human_readable(value_bytes))
         try:
-            val_perc = 100.0 * val_bytes / size
+            value_perc = 100.0 * value_bytes / size
+            infotext += ", %s" % get_percent_human_readable(value_perc)
         except (TypeError, ZeroDivisionError):
+            value_perc = None
+
+        warn, crit = params.get(key, (None, None))
+        if isinstance(crit, float) and value_perc is not None:
+            value = value_perc
+            readable_f = get_percent_human_readable
+        elif isinstance(warn, int):
+            value = value_bytes
+            readable_f = get_bytes_human_readable
+        else:
+            yield 0, infotext
             continue
 
-        infotext = get_percent_human_readable(val_perc)
-        warn, crit = params.get("%s_perc" % key, (None, None))
-
         state = 0
-        if warn is not None and crit is not None:
-            if upper_bounds and val_perc >= crit or not upper_bounds and val_perc <= crit:
-                state = 2
-            elif upper_bounds and val_perc >= warn or not upper_bounds and val_perc <= warn:
-                state = 1
-            if state:
-                infotext += " (warn/crit %s %s/%s)" % (levels_info,
-                            get_percent_human_readable(warn),
-                            get_percent_human_readable(crit))
+        if upper_bounds and value >= crit or not upper_bounds and value <= crit:
+            state = 2
+        elif upper_bounds and value >= warn or not upper_bounds and value <= warn:
+            state = 1
+        if state:
+            infotext += " (warn/crit %s %s/%s)" % (
+                        levels_info, readable_f(warn), readable_f(crit))
         yield state, infotext
 
 

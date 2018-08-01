@@ -73,9 +73,10 @@ struct FormattedBitSet {
 template <size_t N>
 std::ostream &operator<<(std::ostream &os, const FormattedBitSet<N> &bs) {
     size_t elems = 0;
+    os << "{";
     for (size_t pos = 0; pos < N; ++pos) {
         if (bs.value[pos]) {
-            os << (elems++ == 0 ? "{" : ", ") << pos;
+            os << (elems++ == 0 ? "" : ", ") << pos;
         }
     }
     return os << "}";

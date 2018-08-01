@@ -40,10 +40,16 @@ __all__ = [ os.path.basename(f)[:-3] for f in modules if f not in [ "__init__.py
 #   |                         |___/                                        |
 #   '----------------------------------------------------------------------'
 
-# TODO: Would be better to replace this star import with an explicit list of
-# names needed for the plugins. Then we would have something like an official
-# plugin API. At least a list of names that are intended to be used by plugins.
-from cmk.gui.plugins.visuals.utils import *
+from cmk.gui.plugins.visuals.utils import (
+    declare_filter,
+    declare_info,
+    Filter,
+    FilterSite,
+    FilterTime,
+    FilterTristate,
+    FilterUnicodeFilter,
+    visual_types,
+)
 
 #.
 #   .--Plugins-------------------------------------------------------------.

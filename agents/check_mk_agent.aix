@@ -125,7 +125,7 @@ function run_cached {
 }
 
 echo '<<<check_mk>>>'
-echo Version: 1.5.0b11
+echo Version: 1.5.0
 echo AgentOS: aix
 echo Hostname: $(hostname)
 

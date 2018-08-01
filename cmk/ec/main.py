@@ -621,7 +621,7 @@ class Perfcounters(object):
     def status_columns(cls):
         columns = []
         for name in cls._counter_names:
-            columns.append(("status_" + name, 0.0))
+            columns.append(("status_" + name, 0))
             columns.append(("status_" + name.rstrip("s") + "_rate", 0.0))
             columns.append(("status_average_" + name.rstrip("s") + "_rate", 0.0))
 

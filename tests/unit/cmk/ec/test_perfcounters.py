@@ -1,10 +1,12 @@
 import pytest
 
+import cmk.log
 from cmk.ec.main import Perfcounters
 
+logger = cmk.log.get_logger("mkeventd")
 
 def test_perfcounters_count():
-    c = Perfcounters()
+    c = Perfcounters(logger)
     assert c._counters["messages"] == 0
     c.count("messages")
     assert c._counters["messages"] == 1
@@ -13,7 +15,7 @@ def test_perfcounters_count():
 
 
 def test_perfcounters_count_time():
-    c = Perfcounters()
+    c = Perfcounters(logger)
     assert "processing" not in c._times
     c.count_time("processing", 1.0)
     assert c._times["processing"] == 1.0
@@ -26,7 +28,7 @@ def test_perfcounters_count_time():
 def test_perfcounters_do_statistics(monkeypatch):
     monkeypatch.setattr("time.time", lambda: 1.0)
 
-    c = Perfcounters()
+    c = Perfcounters(logger)
     assert "messages" not in c._rates
     assert "messages" not in c._average_rates
 
@@ -61,12 +63,12 @@ def test_perfcounters_do_statistics(monkeypatch):
 
 
 def test_perfcounters_columns_match_status_length():
-    c = Perfcounters()
+    c = Perfcounters(logger)
     assert len(c.status_columns()) == len(c.get_status())
 
 
 def test_perfcounters_column_default_values():
-    c = Perfcounters()
+    c = Perfcounters(logger)
     for column_name, default_value in c.status_columns():
         if column_name.startswith("status_average_") and column_name.endswith("_time"):
             assert type(default_value) == float
@@ -86,7 +88,7 @@ def test_perfcounters_column_default_values():
 
 
 def test_perfcounters_correct_status_values():
-    c = Perfcounters()
+    c = Perfcounters(logger)
 
     for _x in range(5):
         c.count("messages")

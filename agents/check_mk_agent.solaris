@@ -297,7 +297,7 @@ fi
 # /proc/uptime
 # Simulated output of Linux /proc/uptime
 echo '<<<uptime>>>'
-btime=$(`kstat '-p' 'unix:::boot_time' 2>&1|grep 'boot_time'|awk '{print $2}'`;)
+btime=$(kstat '-p' 'unix:::boot_time' 2>&1|grep 'boot_time'|awk '{print $2}';)
 echo $btime
 
 

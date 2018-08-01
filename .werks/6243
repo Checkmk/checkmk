@@ -1,0 +1,10 @@
+Title: BI: fixed minor display bug, when BI had an additional message for the rule state
+Level: 1
+Component: bi
+Compatible: compat
+Edition: cre
+Version: 1.5.0b11
+Date: 1533124150
+Class: fix
+
+

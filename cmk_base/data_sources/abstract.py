@@ -84,7 +84,7 @@ class DataSource(object):
         # Runtime data (managed by self.run()) - Meant for self.get_summary_result()
         self._exception = None
         self._host_sections = None
-        self._exit_code_spec = self._get_exit_code_spec()
+        self._exit_code_spec = config.exit_code_spec(hostname, data_source_id=self.id())
 
 
     def _setup_logger(self):
@@ -92,26 +92,6 @@ class DataSource(object):
         self._logger.propagate = False
         self._logger.set_format(" %s[%s%s%s]%s %%(message)s" %
                     (tty.bold, tty.normal, self.id(), tty.bold, tty.normal))
-
-
-    def _get_exit_code_spec(self):
-        exit_code_spec = config.exit_code_spec(self._hostname)
-        try:
-            return self._get_individual_exit_code_spec(exit_code_spec)
-        except KeyError:
-            pass
-
-        try:
-            return exit_code_spec["overall"]
-        except KeyError:
-            pass
-
-        # Old configuration format
-        return exit_code_spec
-
-
-    def _get_individual_exit_code_spec(self, exit_code_spec):
-        return exit_code_spec["individual"][self.id()]
 
 
     def run(self, hostname=None, ipaddress=None, get_raw_data=False):

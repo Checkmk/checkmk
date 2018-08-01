@@ -1132,11 +1132,27 @@ def contactgroups_of(hostname):
 # Misc
 #
 
-def exit_code_spec(hostname):
+def exit_code_spec(hostname, data_source_id=None):
     spec = {}
     specs = host_extra_conf(hostname, check_mk_exit_status)
     for entry in specs[::-1]:
         spec.update(entry)
+    return _get_exit_code_spec(spec, data_source_id)
+
+
+def _get_exit_code_spec(spec, data_source_id):
+    if data_source_id is not None:
+        try:
+            return spec["individual"][data_source_id]
+        except KeyError:
+            pass
+
+    try:
+        return spec["overall"]
+    except KeyError:
+        pass
+
+    # Old configuration format
     return spec
 
 

@@ -30,7 +30,10 @@
 # Note: You have to add the side user to the sendsms group
 # and restart the site
 
-import os, sys
+import os
+import sys
+import shutil
+import tempfile
 
 send_path = None
 for binary in [ 'sendsms', 'smssend' ]:
@@ -99,7 +102,6 @@ if send_path:
 elif spool_dir:
     # On some distros, like debian, smstools does not ship with the sendsms/smssend helper
     # script. On this distro, simply drop the SMS in the outgoing spool directory.
-    import tempfile, shutil
     fd, path = tempfile.mkstemp(prefix = 'cmk_sms_')
     os.write(fd, 'To: %s\n\n%s' % (recipient, quote_message(message)))
     os.close(fd)

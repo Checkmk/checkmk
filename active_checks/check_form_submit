@@ -48,7 +48,14 @@
 #
 # ./check_form_submit -I localhost -u /event -q '_origtarget=wato.py&_username=omdadmin&_password=omd' -e 'WATO'
 
-import sys, getopt, urllib2, urllib, re, socket
+import getopt
+import re
+import socket
+import sys
+import urllib
+import urllib2
+from HTMLParser import HTMLParser
+
 
 def usage():
     sys.stderr.write("""
@@ -216,7 +223,6 @@ def open_url(url, method = 'GET', data = None):
     debug('\n'.join([ '    %02d %s' % (index + 1, line) for index, line in enumerate(content.split('\n')) ]))
     return code, real_url, content
 
-from HTMLParser import HTMLParser
 
 class FormParser(HTMLParser):
     def __init__(self):

@@ -58,7 +58,11 @@
 #  5  66.249.94.88 (66.249.94.88)  24.481 ms  24.498 ms  24.271 ms
 #  6  209.85.240.99 (209.85.240.99)  27.628 ms  21.605 ms  21.943 ms
 
-import os, sys, getopt, subprocess
+import getopt
+import os
+import subprocess
+import sys
+
 
 def option_to_state(c):
     return { "w" : 1, "c" : 2 }[c.lower()]

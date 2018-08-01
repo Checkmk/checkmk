@@ -24,9 +24,12 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import sys, getopt
+import sys
 import json
+import getopt
+
 import requests
+
 
 def usage():
     sys.stderr.write("""Check_MK Ruckus Spot Agent

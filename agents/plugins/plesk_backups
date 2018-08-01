@@ -30,8 +30,14 @@
 # <<<plesk_backups>>>
 # <domain> <age-of-newest-file> <size-of-newest-file> <total-size>
 
-import MySQLdb, sys, datetime, time, os
+import datetime
+import os
+import sys
+import time
 from ftplib import FTP
+
+import MySQLdb
+
 
 def connect():
     # Fix pylint issues in case MySQLdb is not present

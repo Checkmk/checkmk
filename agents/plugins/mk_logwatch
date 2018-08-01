@@ -26,8 +26,11 @@
 
 # Call with -d for debug mode: colored output, no saving of status
 
-import sys, os, re, time, glob
-
+import glob
+import os
+import re
+import sys
+import time
 
 #   .--MEI-Cleanup---------------------------------------------------------.
 #   |     __  __ _____ ___       ____ _                                    |

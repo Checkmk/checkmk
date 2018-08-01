@@ -24,12 +24,22 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import sys, getopt, os, time, random, poplib, imaplib, smtplib, email
-import traceback, socket, re
-
+import os
+import re
+import sys
+import time
+import email
+import getopt
+import poplib
+import random
+import socket
+import imaplib
+import smtplib
+import traceback
 from email.mime.text import MIMEText
 
 import cmk.password_store
+
 cmk.password_store.replace_passwords()
 
 

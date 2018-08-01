@@ -28,8 +28,14 @@
 # about connection configuration and status.
 
 
-import sys, getopt, pprint, re, ssl
+import re
+import ssl
+import sys
+import getopt
+import pprint
+
 import requests
+
 
 def usage():
     sys.stderr.write("""Check_MK UCS Bladecenter Agent

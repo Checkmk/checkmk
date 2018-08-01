@@ -30,7 +30,15 @@
 # Instead a simple string process approach is used which drastically
 # reduces the CPU load for this agent
 
-import httplib, pprint, sys, os, getopt, socket, time, datetime, re
+import os
+import re
+import sys
+import time
+import getopt
+import pprint
+import socket
+import httplib
+import datetime
 from xml.dom import minidom
 
 # Great article how to get additional information

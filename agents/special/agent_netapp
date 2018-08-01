@@ -24,10 +24,12 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import sys, getopt, time
+import sys
+import time
+import getopt
+import warnings
 
 # This suppress deprecated warning on older python versions
-import warnings
 warnings.filterwarnings("ignore")
 
 # Use this block if you want to use TLS instead of SSL authentification

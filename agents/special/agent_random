@@ -28,7 +28,10 @@
 # and creates a number of random services with random states.
 # Call it with the hostname as the first argument.
 
-import os, random, sys, time
+import os
+import sys
+import time
+import random
 
 try:
     hostname = sys.argv[1]

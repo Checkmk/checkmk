@@ -24,11 +24,17 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import getopt, sys, socket, traceback, re, pprint
+import re
+import sys
+import getopt
+import pprint
+import socket
+import traceback
+
 import snap7
 from snap7.util import *
-from snap7.snap7types import S7AreaPE, S7AreaPA, S7AreaMK, S7AreaDB, \
-                             S7AreaCT, S7AreaTM
+from snap7.snap7types import S7AreaCT, S7AreaDB, S7AreaMK, S7AreaPA, S7AreaPE, S7AreaTM
+
 
 def usage():
     sys.stderr.write("""Check_MK Siemens PLC Agent

@@ -38,8 +38,12 @@
 #
 # During development the "CCMS_Doku.pdf" was really helpful.
 
-import os, sys, fcntl
-import time, datetime
+import os
+import sys
+import time
+import fcntl
+import fnmatch
+import datetime
 
 # sapnwrfc needs to know where the libs are located. During
 # development the import failed, since the module did not
@@ -170,7 +174,6 @@ logfiles = []
 # HELPERS
 #
 
-import fnmatch
 
 def to_be_monitored(path, toplevel_match = False):
     for rule in monitor_paths:

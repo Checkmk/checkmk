@@ -62,16 +62,12 @@ def levels(values):
     lower, upper = values.split(':')
     lower = float(lower) if lower else MP_INF[0]
     upper = float(upper) if upper else MP_INF[1]
-    return (upper, lower)
+    return (lower, upper)
 
 
-def sql_cmd(values):
-    """Parse SQL command (join args, replace \n and \;"""
-    log.debug("sql values passed: %r", values)
-    sql_tmp = ' '.join(values)
-    sql = sql_tmp.replace(r"\n", "\n").replace("\;", ";")
-    log.debug("sql command parsed: %r", sql)
-    return sql
+def sql_cmd_piece(values):
+    """Parse every piece of the SQL command (replace \n and \;)"""
+    return values.replace(r"\n", "\n").replace("\;", ";")
 
 
 def parse_args(argv):
@@ -124,8 +120,8 @@ def parse_args(argv):
                         help='''Username for database access''')
     parser.add_argument("-p", "--password", required=True,
                         help='''Password for database access''')
-    parser.add_argument("cmd", metavar="SQL-Statement|Procedure", type=sql_cmd,
-                        nargs='+',
+    parser.add_argument("cmd", metavar="SQL-Statement|Procedure",
+                        type=sql_cmd_piece, nargs='+',
                         help='''Valid SQL-Statement for the selected database.
                              The statement must return at least a number and a
                              string, plus optional performance data.
@@ -137,6 +133,7 @@ def parse_args(argv):
                              which content is evaluated the same way as the
                              output of the SQL-Statement''')
     args = parser.parse_args(argv[1:])
+    args.cmd = ' '.join(args.cmd)
 
     # LOGGING
     fmt = "%(message)s"

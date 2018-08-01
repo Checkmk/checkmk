@@ -1,0 +1,10 @@
+Title: multipath: Fixed unrecognized paths which include a dot
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1533124059
+Class: fix
+
+

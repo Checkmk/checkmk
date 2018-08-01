@@ -145,7 +145,7 @@ def parse_args(argv):
     for k, v in args.__dict__.items():
         if k in ('user', 'password'):
             v = '****'
-        log.debug('argparse: %s = %r' % (k, v))
+        log.debug('argparse: %s = %r', k, v)
     return args
 #.
 

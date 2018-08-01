@@ -2607,7 +2607,7 @@ def main_versions(args, options=None):
         options = {}
 
     for v in omd_versions():
-        if v == default_version() and not "bare" in options:
+        if v == default_version() and "bare" not in options:
             sys.stdout.write("%s (default)\n" % v)
         else:
             sys.stdout.write("%s\n" % v)
@@ -2631,7 +2631,7 @@ def main_sites(args, options=None):
     if options is None:
         options = {}
 
-    if on_tty and not "bare" in options:
+    if on_tty and "bare" not in options:
         sys.stdout.write("SITE             VERSION          COMMENTS\n")
     for site in all_sites():
         tags = []
@@ -2694,7 +2694,7 @@ def main_create(args, options=None):
         config_settings["AUTOSTART"] = "off"
         sys.stdout.write("Going to set AUTOSTART to off.\n")
 
-    if not "no-init" in options:
+    if "no-init" not in options:
         admin_password = init_site(config_settings, options)
         welcome_message(admin_password)
 

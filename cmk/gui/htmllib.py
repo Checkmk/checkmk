@@ -1218,7 +1218,7 @@ class html(HTMLGenerator):
 
     # TODO: Refactor call sites to html.request.*
     def has_var(self, varname):
-        return self.request.var(varname)
+        return self.request.has_var(varname)
 
 
     # Checks if a variable with a given prefix is present

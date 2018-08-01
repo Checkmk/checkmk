@@ -36,7 +36,6 @@ import socket
 import imaplib
 import smtplib
 import traceback
-from email.mime.text import MIMEText
 
 import cmk.password_store
 
@@ -340,7 +339,7 @@ def send_mail():
     now = time.time()
     key = random.randint(1, 1000)
 
-    mail = MIMEText("")
+    mail = email.mime.text.MIMEText("")
     mail['From']    = mail_from
     mail['To']      = mail_to
     mail['Subject'] = '%s %d %d' % (subject, now, key)

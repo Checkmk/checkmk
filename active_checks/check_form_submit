@@ -48,6 +48,7 @@
 #
 # ./check_form_submit -I localhost -u /event -q '_origtarget=wato.py&_username=omdadmin&_password=omd' -e 'WATO'
 
+import cookielib
 import getopt
 import re
 import socket
@@ -179,8 +180,6 @@ def get_full_uri(host, uri):
 
 def init_http():
     global g_cookies, g_opener
-    import urllib2
-    import cookielib
     g_cookies = cookielib.CookieJar()
     g_opener = urllib2.build_opener(
         urllib2.HTTPRedirectHandler(),

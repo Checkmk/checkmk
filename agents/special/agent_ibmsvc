@@ -162,7 +162,7 @@ if user == None:
     sys.stderr.write("ERROR: No user name given.\n")
     sys.exit(1)
 
-for module in command_options.keys():
+for module in command_options:
     try:
         if mortypes.index("all") >= 0:
             command_options[module]["active"] = True
@@ -182,7 +182,7 @@ for module in command_options.keys():
 
 cmd = "ssh -o ConnectTimeout=%s %s %s@%s '" % (opt_timeout, opt_any_hostkey, user, host_address)
 
-for module in command_options.keys():
+for module in command_options:
     if command_options[module]["active"] == True:
         cmd += r"echo \<\<\<%s:sep\(58\)\>\>\>;" % command_options[module]["section_header"]
         cmd += "%s || true;" % command_options[module]["command"]

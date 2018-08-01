@@ -275,13 +275,13 @@ def parse_form(content):
 
     elif form_name is None:
         new_state(2, 'No form name provided but found multiple forms (Names: %s)' %
-            (', '.join([ f for f in forms.keys() ])))
+            (', '.join(forms.keys())))
 
     else:
         form = forms.get(form_name)
         if form is None:
             new_state(2, 'Found no form with name "%s" (Available: %s)' %
-                (form_name, ', '.join([ f for f in forms.keys() ])))
+                (form_name, ', '.join(forms.keys())))
 
     return form
 

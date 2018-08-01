@@ -51,31 +51,30 @@ __version__ = "1.6.0i1"
 #   |                            |_|                                       |
 #   '----------------------------------------------------------------------'
 
-import ast
-import collections
-import getopt
-import glob
 import os
-import pprint
 import re
+import ast
+import sys
+import glob
+import time
+import getopt
+import pprint
 import select
 import shutil
-import socket
-import sys
 import signal
-import subprocess
+import socket
+import logging
 import tempfile
-import time
 import threading
 import traceback
-import logging
+import subprocess
+import collections
 import multiprocessing
 
 import psutil
 import npyscreen
 
 import livestatus
-
 
 #.
 #   .--Helpers-------------------------------------------------------------.
@@ -1097,7 +1096,7 @@ class Measurement(object):
 
 
     def deserialize(self, raw):
-        for k in self.__dict__.keys():
+        for k in self.__dict__:
             if k[0] != "_":
                 self.set_value(k, raw[k])
 

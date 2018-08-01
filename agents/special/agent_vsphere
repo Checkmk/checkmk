@@ -1649,7 +1649,7 @@ if not error:
                             output(host_info)
 
             if "virtualmachine" in query_objects:
-                for key in vms.keys():
+                for key in vms:
                     data = vms[key]
                     running_on = hostsystems.get(data.get("runtime.host"), data.get("runtime.host"))
                     vm_info = "virtualmachine\t%s\t%s\t%s" % (convert_hostname(key), running_on, data.get("runtime.powerState"))
@@ -1667,7 +1667,7 @@ if not error:
                         if value.get("name")[0] == hostname:
                             return key
 
-                for key in vms.keys():
+                for key in vms:
                     data = vms[key]
                     running_on = hostsystems.get(data.get("runtime.host"), data.get("runtime.host"))
                     vm_host = find_host(running_on)

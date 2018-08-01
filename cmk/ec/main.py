@@ -42,7 +42,6 @@ import re
 import select
 import signal
 import socket
-import subprocess
 import sys
 import threading
 import time
@@ -71,11 +70,11 @@ class SyslogPriority(object):
         1: "alert",
         2: "crit",
         3: "err",
-        4:"warning",
+        4: "warning",
         5: "notice",
         6: "info",
         7: "debug",
-        }
+    }
 
     def __init__(self, value):
         super(SyslogPriority, self).__init__()
@@ -107,8 +106,8 @@ class SyslogFacility(object):
         11: 'ftp',
         12: "ntp",
         13: "logaudit",
-        14:	"logalert",
-        15:	"clock",
+        14: "logalert",
+        15: "clock",
         16: 'local0',
         17: 'local1',
         18: 'local2',
@@ -118,7 +117,7 @@ class SyslogFacility(object):
         22: 'local6',
         23: 'local7',
         31: 'snmptrap',  # HACK!
-        }
+    }
 
     def __init__(self, value):
         super(SyslogFacility, self).__init__()
@@ -899,8 +898,8 @@ class EventServer(ECServerThread):
             'facility': 31,  # not used by syslog -> we use this for all traps
             'application': application,
             'text': text,
-            'core_host' : '',
-            'host_in_downtime' : False,
+            'core_host': '',
+            'host_in_downtime': False,
         }
 
         return event
@@ -1721,7 +1720,7 @@ class EventServer(ECServerThread):
             if p < sl_from or p > sl_to:
                 if self._config["debug_rules"]:
                     self._logger.info("  did not match because of wrong service level %d (need %d..%d)" %
-                                     (p, sl_from, sl_to),)
+                                      (p, sl_from, sl_to),)
                 return False
         return True
 
@@ -1896,7 +1895,7 @@ class EventServer(ECServerThread):
         else:
             event["state"] = rule["state"]
 
-        if  ("sl" not in event) or (rule["sl"]["precedence"] == "rule"):
+        if ("sl" not in event) or (rule["sl"]["precedence"] == "rule"):
             event["sl"] = rule["sl"]["value"]
         event["first"] = event["time"]
         event["last"] = event["time"]
@@ -2499,7 +2498,7 @@ class QueryGET(Query):
         "=~": (lambda a, b: a.lower() == b.lower()),
         "~~": (lambda a, b: cmk.regex.regex(b.lower()).search(a.lower())),
         "in": (lambda a, b: a in b),
-        }
+    }
 
     def _from_raw_query(self, status_server):
         super(QueryGET, self)._from_raw_query(status_server)
@@ -2883,7 +2882,7 @@ class StatusServer(ECServerThread):
                 if self.settings.options.debug:
                     raise
                 self._logger.exception("Cannot listen on TCP socket port %d: %s" %
-                                      (self._tcp_port, e))
+                                       (self._tcp_port, e))
         else:
             self._tcp_socket = None
             self._tcp_port = 0
@@ -2948,7 +2947,7 @@ class StatusServer(ECServerThread):
                             client_socket.close()
                             client_socket = None
                             self._logger.info("Denying access to status socket from %s (allowed is only %s)" %
-                                             (addr_info[0], ", ".join(self._tcp_access_list)))
+                                              (addr_info[0], ", ".join(self._tcp_access_list)))
                             continue
                     else:
                         allow_commands = True
@@ -3806,7 +3805,7 @@ def save_master_config(settings, new_state):
         "rules": new_state["rules"],
         "rule_packs": new_state["rule_packs"],
         "actions": new_state["actions"],
-        }) + "\n")
+    }) + "\n")
     path_new.rename(path)
 
 
@@ -4029,7 +4028,7 @@ def main():
         # to write into the pipe.
         logger.verbose("Cleaning up event pipe")
         pipe = event_server.open_pipe()  # Open it
-        settings.paths.event_pipe.value.unlink() # Remove pipe
+        settings.paths.event_pipe.value.unlink()  # Remove pipe
         drain_pipe(pipe)                   # Drain any data
         os.close(pipe)                     # Close pipe
 

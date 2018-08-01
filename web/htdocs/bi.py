@@ -3148,7 +3148,7 @@ class FoldableTreeRendererTree(FoldableTreeRenderer):
 
         if mousecode:
             if str(effective_state["state"]) in tree[2].get("state_messages", {}):
-                html.b("&diams;", class_="bullet")
+                html.b(HTML("&diams;"), class_="bullet")
                 html.write_text(tree[2]["state_messages"][str(effective_state["state"])])
 
             html.close_span()

@@ -1185,6 +1185,7 @@ class Perfcounters(object):
         "request": 0.95,     # Client requests
     }
 
+    # TODO: Why aren't self._times / self._rates / ... not initialized with their defaults?
     def __init__(self):
         self._lock = ECLock("perfcounters")
 
@@ -1234,6 +1235,7 @@ class Perfcounters(object):
     @classmethod
     def status_columns(cls):
         columns = []
+        # Please note: status_columns() and get_status() need to produce lists with exact same column order
         for name in cls._counter_names:
             columns.append(("status_" + name, 0))
             columns.append(("status_" + name.rstrip("s") + "_rate", 0.0))
@@ -1247,12 +1249,13 @@ class Perfcounters(object):
     def get_status(self):
         with self._lock:
             row = []
-            for name, value in self._counters.iteritems():
-                row.append(value)
+            # Please note: status_columns() and get_status() need to produce lists with exact same column order
+            for name in self._counter_names:
+                row.append(self._counters[name])
                 row.append(self._rates.get(name, 0.0))
                 row.append(self._average_rates.get(name, 0.0))
 
-            for name in self._weights.iterkeys():
+            for name in self._weights:
                 row.append(self._times.get(name, 0.0))
 
             return row

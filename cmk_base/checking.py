@@ -36,6 +36,7 @@ import cmk.defines as defines
 import cmk.tty as tty
 import cmk.cpu_tracking as cpu_tracking
 from cmk.exceptions import MKGeneralException
+from cmk.regex import regex
 
 import cmk_base.utils
 import cmk_base.crash_reporting
@@ -114,8 +115,10 @@ def do_check(hostname, ipaddress, only_check_plugin_names=None):
                 perfdata.extend(source_perfdata)
 
         if missing_sections and num_success > 0:
-            infotexts.append("Missing agent sections: %s" % ", ".join(missing_sections))
-            status = max(status, exit_spec.get("missing_sections", 1))
+            missing_sections_status, missing_sections_infotext = \
+                _check_missing_sections(missing_sections, exit_spec)
+            status = max(status, missing_sections_status)
+            infotexts.append(missing_sections_infotext)
 
         elif missing_sections:
             infotexts.append("Got no information from host")
@@ -151,6 +154,32 @@ def do_check(hostname, ipaddress, only_check_plugin_names=None):
         if config.record_inline_snmp_stats and config.is_inline_snmp_host(hostname):
             import cmk_base.cee.inline_snmp
             cmk_base.cee.inline_snmp.save_snmp_stats()
+
+
+def _check_missing_sections(missing_sections, exit_spec):
+    specific_missing_sections_spec = exit_spec.get("specific_missing_sections", [])
+    specific_missing_sections, generic_missing_sections = set(), set()
+    for section in missing_sections:
+        match = False
+        for pattern, status in specific_missing_sections_spec:
+            reg = regex(pattern)
+            if reg.match(section):
+                match = True
+                specific_missing_sections.add((section, status))
+                break
+        if not match:
+            generic_missing_sections.add(section)
+
+    generic_missing_sections_status = exit_spec.get("missing_sections", 1)
+    infotexts = ["Missing agent sections: %s%s" % (
+                 ", ".join(sorted(generic_missing_sections)),
+                 check_api_utils.state_markers[generic_missing_sections_status])]
+
+    for section, status in sorted(specific_missing_sections):
+        infotexts.append("%s%s" % (section, check_api_utils.state_markers[status]))
+        generic_missing_sections_status = max(generic_missing_sections_status, status)
+
+    return generic_missing_sections_status, ", ".join(infotexts)
 
 
 # Loops over all checks for ANY host (cluster, real host), gets the data, calls the check

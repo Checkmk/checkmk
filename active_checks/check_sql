@@ -34,8 +34,12 @@ import getopt
 import os
 import logging
 import argparse
-# import cmk.password_store will be done later,
-# unless --no-cmk-password-store is specified!
+
+try:
+    import cmk.password_store
+    cmk.password_store.replace_passwords()
+except ImportError:
+    pass
 
 
 log = logging.getLogger(__name__)
@@ -91,9 +95,6 @@ def parse_args(argv):
                         type=lambda s: s.split(','),
                         help='''comma separated list if values of input variables
                              if required by the procedure''')
-    parser.add_argument("--no-cmk-password-store", action="store_true",
-                        help='''do not use the cmk password store''')
-
     # optional arguments
     parser.add_argument("-d", "--dbms", default='postgres',
                         choices=['postgres', 'mysql', 'mssql', 'oracle', 'db2'],
@@ -136,11 +137,6 @@ def parse_args(argv):
                              which content is evaluated the same way as the
                              output of the SQL-Statement''')
     args = parser.parse_args(argv[1:])
-
-    # PASSWORD STORE
-    if not args.no_cmk_password_store:
-        import cmk.password_store
-        cmk.password_store.replace_passwords()
 
     # LOGGING
     fmt = "%(message)s"

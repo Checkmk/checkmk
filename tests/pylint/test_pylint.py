@@ -81,7 +81,8 @@ def test_pylint(pylint_test_dir):
     ]
 
     for path in search_paths:
-        for fname in pylint_cmk.get_pylint_files(path, "*"):
+        abs_path = cmk_path() + "/" + path
+        for fname in pylint_cmk.get_pylint_files(abs_path, "*"):
            modules_or_packages.append(path + "/" + fname)
 
     exit_code = pylint_cmk.run_pylint(cmk_path(), modules_or_packages)

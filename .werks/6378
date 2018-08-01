@@ -1,0 +1,16 @@
+Title: Fix statistics reported by Event Console
+Level: 1
+Component: ec
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0i1
+Date: 1533115336
+
+The usage statistics that are visible to the user using the "Event console performance" sidebar
+and the "OMD [SITE] Event Console" services were reporting incorrect values. The single values
+were simply mixed up between the different performance values resulting in e.g. incoming messages
+being reported as dropped messages and so on.
+
+This issue affected all previous 1.5 releases.

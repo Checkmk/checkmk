@@ -5,7 +5,7 @@ Class: fix
 Compatible: incomp
 Edition: cre
 State: unknown
-Version: 1.5.0b11
+Version: 1.5.0
 Date: 1530797354
 
 Since Werk 5748 cisco_nexus_cpu is preferred over cisco_cpu on all Nexus

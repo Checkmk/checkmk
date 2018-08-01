@@ -35,11 +35,8 @@ import os
 import logging
 import argparse
 
-try:
-    import cmk.password_store
-    cmk.password_store.replace_passwords()
-except ImportError:
-    pass
+import cmk.password_store
+cmk.password_store.replace_passwords()
 
 
 log = logging.getLogger(__name__)

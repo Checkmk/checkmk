@@ -347,10 +347,10 @@ def process_result(result, warn, crit, metrics=False, debug=False):
 
     state = 0
     if warn != MP_INF or crit != MP_INF:
-        if not (warn[0] < number < warn[1]):
+        if not warn[0] < number < warn[1]:
             state = 1
-        if not (crit[0] < number < crit[1]):
-                state = 2
+        if not crit[0] < number < crit[1]:
+            state = 2
         text += ": %s" % number
     else: # no levels were given
         if number in (0, 1, 2, 3):

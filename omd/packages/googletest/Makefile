@@ -28,7 +28,27 @@ $(DIR)/Makefile.in: $(DIR).tar.gz
 	cd $(DIR) && autoreconf -i
 
 $(DIR)/Makefile: $(DIR)/Makefile.in
-	cd $(DIR) && ./configure --disable-shared
+# NOTE: We have to use a recent C++ compiler, otherwise we will get linker
+# errors later when we use the libraries we compile here. For some (sad)
+# background, see e.g.:
+#
+#    https://gcc.gnu.org/onlinedocs/libstdc++/manual/using_dual_abi.html
+#    https://developers.redhat.com/blog/2015/02/05/gcc5-and-the-c11-abi/
+#
+#basically what part of AC_PROC_CXX does
+	@CXX="" ; \
+	for PROG in g++-8 g++-7 clang++-6.0 clang++-5.0 g++-6 clang++-4.0 g++-5 clang++-3.9 clang++-3.8 clang++-3.7 clang++-3.6 clang++-3.5 g++-4.9 g++ clang++; do \
+	    echo -n "checking for $$PROG... "; SAVED_IFS=$$IFS; IFS=: ; \
+	    for DIR in $$PATH; do \
+	        IFS=$$SAVED_IFS ; \
+	        test -z "$$DIR" && DIR=. ; \
+	        ABS_PROG="$$DIR/$$PROG" ; \
+	        test -x "$$ABS_PROG" && { CXX="$$ABS_PROG"; echo "$$CXX"; break 2; } ; \
+	    done ; \
+	    echo "no"; IFS=$$SAVED_IFS ; \
+	done ; \
+	test -z "$$CXX" && { echo "error: no C++ compiler found" >&2 ; exit 1; } ; \
+	cd $(DIR) && ./configure --disable-shared CXX="$$CXX"
 
 install:
 

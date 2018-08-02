@@ -1,0 +1,13 @@
+Title: LDAP: Only set SSL/TLS specific options when SSL is enabled (Fix 1.4.0p34 regression)
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 1.4.0p35
+Date: 1533232961
+Class: fix
+
+In some environments, especially when using older linux distributions, a change
+in 1.4.0p34 (#6184) could break already working LDAP setups.
+
+An error like this could occur when trying to perform the LDAP sync: "ValueError: option error".

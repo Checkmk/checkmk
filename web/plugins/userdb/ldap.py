@@ -193,10 +193,11 @@ class LDAPUserConnector(UserConnector):
             if self.is_active_directory():
                 conn.set_option(ldap.OPT_REFERRALS, 0)
 
-            conn.set_option(ldap.OPT_X_TLS_CACERTFILE,
+            if 'use_ssl' in self._config:
+                conn.set_option(ldap.OPT_X_TLS_CACERTFILE,
                             "%s/var/ssl/ca-certificates.crt" % cmk.paths.omd_root)
 
-            conn.set_option(ldap.OPT_X_TLS_NEWCTX, 0)
+                conn.set_option(ldap.OPT_X_TLS_NEWCTX, 0)
 
             self.default_bind(conn)
             return conn, None

@@ -128,7 +128,7 @@ for domain, p in domains.iteritems():
 
         # Get total size of all files on FTP
         f = []
-        def get_size(base_dir, l = None):
+        def get_size(ftp, base_dir, l = None):
             if l and l.split()[-1] in ['.', '..']:
                 return 0
 
@@ -140,11 +140,11 @@ for domain, p in domains.iteritems():
                     callback = dir_files.append
                 )
                 for line in dir_files:
-                    size += get_size('%s%s' % (base_dir, subdir), line)
+                    size += get_size(ftp, '%s%s' % (base_dir, subdir), line)
             else:
                 size += int(l.split()[-5])
             return size
-        total_size = get_size('')
+        total_size = get_size(ftp, '')
 
         output.append('%s 0 %s %d %d' % (domain, last_backup[1].strftime('%s'), last_backup[2], total_size))
 

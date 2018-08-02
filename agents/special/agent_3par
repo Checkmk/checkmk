@@ -24,11 +24,14 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import sys, getopt, requests
-try:
-    import simplejson as json
-except:
-    import json
+import getopt
+import json
+import sys
+
+import requests
+from requests.packages.urllib3.exceptions import \
+    InsecureRequestWarning  # pylint: disable=import-error
+
 
 #   .--Arguments-----------------------------------------------------------.
 #   |           _                                         _                |
@@ -104,7 +107,9 @@ headers = {
         "Content-Type": "application/json",
         "Accept": "application/json",
 }
+
 verify = False
+requests.packages.urllib3.disable_warnings(InsecureRequestWarning)      # pylint: disable=no-member
 
 # Initiate connection and get session Key. The api expects the login data
 # in json format. The standard port for all requests is 8080 as it is hard

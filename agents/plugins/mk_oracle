@@ -1528,9 +1528,9 @@ for remote_instance in $(compgen -A variable | "${GREP}" -E "^REMOTE_INSTANCE_.*
 done
 
 
-logging "[$LINENO] [preliminaries]" "SIDs: ${SIDS}"\
-        "Remote instances:${REMOTE_INSTANCES}"\
-        "Piggyback hosts:${PIGGYBACK_HOSTS}"
+logging "[$LINENO] [preliminaries]" "SIDs: ${SIDS//\\n/ }"
+        "Remote instances: ${REMOTE_INSTANCES}"\
+        "Piggyback hosts: ${PIGGYBACK_HOSTS}"
 
 
 if [ "$PIGGYBACK_HOSTS" ]; then

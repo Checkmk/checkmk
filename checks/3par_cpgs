@@ -76,6 +76,6 @@ check_info['3par_cpgs.usage'] = {
     'check_function'            : check_3par_cpgs_usage,
     'service_description'       : "CPG %s",
     'has_perfdata'              : True,
-    'group'                     : "filesystem",
+    'group'                     : "threepar_cpgs",
     'default_levels_variable'   : "filesystem_default_levels",
 }

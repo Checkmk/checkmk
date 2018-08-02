@@ -122,6 +122,6 @@ for contact_name, num in c.query_table(query):
 
     perfdata.append('%s_num=%d' % (contact_name, num))
 
-detail_txt = details and ' (%s)' % ', '.join(details) or ''
+detail_txt = ' (%s)' % ', '.join(details) if details else ''
 sys.stdout.write('%d raw notifications, %d user notifications within last %d minutes%s | %s\n' %
                         (raw_notifications, total_num, timerange, detail_txt, ' '.join(perfdata)))

@@ -134,7 +134,7 @@ for domain, p in domains.iteritems():
 
             size = 0
             if not l or l[0] == 'd':
-                subdir = l and '/' + l.split()[-1] or ''
+                subdir = '/' + l.split()[-1] if l else ''
                 dir_files = []
                 ftp.retrlines('LIST %s%s' % (base_dir, subdir),
                     callback = dir_files.append

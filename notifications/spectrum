@@ -38,7 +38,7 @@ def send_trap(oids, target, community):
     for oid, value in oids.items():
         # Feel free to add more types. Currently only Integer and Strings are supported
         oid_type = type(value)
-        oid_id   = oid_type == int and "i" or "s"
+        oid_id   = 'i' if oid_type == int else 's'
         if oid_type in [str, unicode]:
             value = "\"%s\"" % value.replace("\"", " ")
         cmd += [oid, oid_id, "%s" % value]

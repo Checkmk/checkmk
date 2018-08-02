@@ -55,6 +55,8 @@ OPTIONS:
   -h, --help                                Show this help message and exit
   -u USER, --user USER                      Username for 3par login
   -p PASSWORD, --password PASSWORD          Password for 3par login
+  --verify-certs yes/no                     Enable/disable verification of the servers
+                                            ssl certificate. Disabled by default.
   -v VALUE,VALUE, --values VALUE,VALUE      Values to fetch from 3par system.
                                             Possible values:    system
                                                                 hosts
@@ -68,9 +70,10 @@ opt_host = None
 opt_user = None
 opt_pass = None
 opt_values = ["system", "cpgs", "volumes", "hosts", "capacity", "ports", "remotecopy"]
+opt_verify = False
 
 short_options = "hh:u:p:v:"
-long_options = [ "help", "user=", "password=", "values=" ]
+long_options = [ "help", "user=", "password=", "values=", "verify-certs=" ]
 
 try:
     opts, args = getopt.getopt( sys.argv[1:], short_options, long_options )
@@ -88,6 +91,8 @@ for opt, arg in opts:
             opt_password = arg
         elif opt in ["-v", "--values"]:
             opt_values = arg.split(",")
+        elif opt in [ '--verify-certs' ]:
+            opt_verify = arg == "yes"
         elif not opt:
             usage()
             sys.exit(0)
@@ -108,8 +113,8 @@ headers = {
         "Accept": "application/json",
 }
 
-verify = False
-requests.packages.urllib3.disable_warnings(InsecureRequestWarning)      # pylint: disable=no-member
+if not opt_verify:
+    requests.packages.urllib3.disable_warnings(InsecureRequestWarning)      # pylint: disable=no-member
 
 # Initiate connection and get session Key. The api expects the login data
 # in json format. The standard port for all requests is 8080 as it is hard
@@ -119,7 +124,7 @@ try:
                         json={'user':opt_user,'password':opt_password},
                         headers=headers,
                         timeout=10,
-                        verify=verify)
+                        verify=opt_verify)
 
 except requests.exceptions.RequestException as e:
     sys.stderr.write("Error: {}".format(e))
@@ -147,7 +152,7 @@ for value in opt_values:
     req = requests.get("%s/%s" % (url, value),
                        headers=headers,
                        timeout=10,
-                       verify=verify)
+                       verify=opt_verify)
     value_data = req.text.replace("\r\n", "").replace("\n", "").replace(" ","")
     print value_data
 
@@ -156,7 +161,7 @@ for value in opt_values:
 req = requests.delete("%s/credentials/%s" % (url, headers["X-HP3PAR-WSAPI-SessionKey"]),
                       headers=headers,
                       timeout=10,
-                      verify=verify)
+                      verify=opt_verify)
 
 if not req.status_code == requests.codes.OK: # pylint: disable=no-member
     sys.stderr.write("Wrong status code: %s. Expected: %s \n" % (req.status_code,

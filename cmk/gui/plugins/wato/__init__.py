@@ -24,11 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import os
-import glob
-
-modules = sorted(glob.glob(os.path.join(os.path.dirname(__file__), "*.py")))
-__all__ = [ os.path.basename(f)[:-3] for f in modules if f not in [ "__init__.py", "utils.py" ] ]
+from cmk.plugin_loader import load_plugins
 
 #.
 #   .--Plugin API----------------------------------------------------------.
@@ -123,4 +119,4 @@ from cmk.gui.plugins.wato.utils import (
 #   |                                 |___/                                |
 #   '----------------------------------------------------------------------'
 
-from . import *
+load_plugins(__file__, __package__)

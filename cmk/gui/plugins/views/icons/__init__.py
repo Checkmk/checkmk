@@ -24,8 +24,6 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import os
-import glob
 import traceback
 
 import cmk.regex
@@ -34,8 +32,7 @@ import cmk.gui.config as config
 from cmk.gui.globals import html
 from cmk.gui.htmllib import HTML
 
-modules = sorted(glob.glob(os.path.join(os.path.dirname(__file__), "*.py")))
-__all__ = [ os.path.basename(f)[:-3] for f in modules if f not in [ "__init__.py", "utils.py" ] ]
+from cmk.plugin_loader import load_plugins
 
 #.
 #   .--Plugin API----------------------------------------------------------.
@@ -221,7 +218,6 @@ def iconpainter_columns(what, toplevel):
     return cols
 
 
-
 #.
 #   .--Plugins-------------------------------------------------------------.
 #   |                   ____  _             _                              |
@@ -232,4 +228,4 @@ def iconpainter_columns(what, toplevel):
 #   |                                 |___/                                |
 #   '----------------------------------------------------------------------'
 
-from . import *
+load_plugins(__file__, __package__)

@@ -26,28 +26,26 @@
 
 def check_bi_aggr_arguments(params):
     base_url, aggr_name, username, secret, opt_params = params
-    args = []
-
-    args += [ '-b%s' % base_url ]
-    args += [ '-a%s' % aggr_name ]
-    args += [ '-u%s' % username ]
-    args += [ passwordstore_get_cmdline("-s%s", secret) ]
+    args = ' -b %s -a %s -u %s %s' % (
+            quote_shell_string(base_url),
+            quote_shell_string(aggr_name),
+            quote_shell_string(username),
+            passwordstore_get_cmdline(" -s %s", secret))
 
     if "auth_mode" in opt_params:
-        args += [ '-m%s' % opt_params['auth_mode'] ]
+        args += ' -m %s' % quote_shell_string(opt_params['auth_mode'])
 
     if "timeout" in opt_params:
-        args += [ '-t%d' % opt_params['timeout'] ]
+        args += ' -t %d' % opt_params['timeout']
 
     if opt_params.get("in_downtime"):
-        args += [ '--in-downtime=%s' % opt_params['in_downtime'] ]
+        args += ' --in-downtime %s' % opt_params['in_downtime']
 
     if opt_params.get("acknowledged"):
-        args += [ '--acknowledged=%s' % opt_params['acknowledged'] ]
+        args += ' --acknowledged %s' % opt_params['acknowledged']
 
     if opt_params.get("track_downtimes"):
-        args += [ '-r' ]
-        args += [ '-n $HOSTNAME$' ]
+        args += ' -r -n $HOSTNAME$'
 
     return args
 

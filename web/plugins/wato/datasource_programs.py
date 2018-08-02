@@ -1114,42 +1114,39 @@ def _transform_3par_add_verify_cert(v):
 
 
 register_rule("datasource_programs",
-              "special_agents:3par",
-              Transform(
-                    Dictionary(elements = [("user",
-                                       TextAscii(title = _("Username"),
-                                                 allow_empty = False,
-                                       )),
-                                       ("password",
-                                       Password(title = _("Password"),
-                                                 allow_empty = False,
-                                       )),
-                                       ("verify_cert", DropdownChoice(
-                                           title = _("SSL certificate verification"),
-                                           choices = [
-                                               (True, _("Activate")),
-                                               (False, _("Deactivate")),
-                                           ],
-                                       )),
-                                       ("values",
-                                        ListOfStrings(title = _("Values to fetch"),
-                                                      orientation = "horizontal",
-                                                      help = _("Possible values are the following: "
-                                                               "cpgs, volumes, hosts, capacity, "
-                                                               "system, ports, remotecopy, hostsets, volumesets, "
-                                                               "vluns, flashcache, users, roles, qos.\n"
-                                                               "If you do not specify any value the "
-                                                               "first seven are used as default.")
-                                       )),
-                           ],
-                           optional_keys = [ "values" ],
-                  ),
-                  # verify_cert was added with 1.5.0p1
-                  forth = _transform_3par_add_verify_cert,
-              ),
-              title = _("Agent 3PAR Configuration"),
-              match = 'first'
-
+    "special_agents:3par",
+    Transform(
+        Dictionary(
+            elements = [
+                ("user", TextAscii(title = _("Username"),
+                    allow_empty = False,
+                )),
+                ("password", Password(title = _("Password"),
+                    allow_empty = False,
+                )),
+                ("verify_cert", DropdownChoice(
+                    title = _("SSL certificate verification"),
+                    choices = [
+                        (True, _("Activate")),
+                        (False, _("Deactivate")),
+                    ],
+                )),
+                ("values", ListOfStrings(
+                    title = _("Values to fetch"),
+                    orientation = "horizontal",
+                    help = _("Possible values are the following: cpgs, volumes, hosts, capacity, "
+                             "system, ports, remotecopy, hostsets, volumesets, vluns, flashcache, "
+                             "users, roles, qos.\n"
+                             "If you do not specify any value the first seven are used as default."),
+                )),
+            ],
+            optional_keys = [ "values" ],
+        ),
+        # verify_cert was added with 1.5.0p1
+        forth = _transform_3par_add_verify_cert,
+    ),
+    title = _("Agent 3PAR Configuration"),
+    match = 'first',
 )
 
 register_rule(

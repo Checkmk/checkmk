@@ -194,20 +194,20 @@ if fetch_proto not in [ 'IMAP', 'POP3' ]:
 
 if fetch_port == None:
     if fetch_proto == 'POP3':
-        fetch_port = fetch_ssl and 995 or 110
+        fetch_port = 995 if fetch_ssl else 110
     else:
-        fetch_port = fetch_ssl and 993 or 143
+        fetch_port = 993 if fetch_ssl else 143
 
 def connect():
     global g_M
     try:
         if fetch_proto == 'POP3':
-            fetch_class = fetch_ssl and poplib.POP3_SSL or poplib.POP3
+            fetch_class = poplib.POP3_SSL if fetch_ssl else poplib.POP3
             g_M = fetch_class(fetch_server, fetch_port)
             g_M.user(fetch_user)
             g_M.pass_(fetch_pass)
         else:
-            fetch_class = fetch_ssl and imaplib.IMAP4_SSL or imaplib.IMAP4
+            fetch_class = imaplib.IMAP4_SSL if fetch_ssl else imaplib.IMAP4
             g_M = fetch_class(fetch_server, fetch_port)
             g_M.login(fetch_user, fetch_pass)
             g_M.select('INBOX', readonly=False) # select INBOX

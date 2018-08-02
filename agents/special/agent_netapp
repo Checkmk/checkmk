@@ -842,7 +842,7 @@ if not version_info:
 
 clustered_info = version_info.child_get_string("is-clustered")
 if clustered_info:
-    netapp_mode  = clustered_info.lower() == "false" and "7mode" or "clustermode"
+    netapp_mode  = '7mode' if clustered_info.lower() == 'false' else 'clustermode'
 else:
     # Looks like the is-clustered attribute is not set, e.g. NetApp 7-Mode Version 8.0
     version_string = version_info.child_get_string("version").lower()
@@ -852,7 +852,7 @@ else:
     if "NetApp Release 7.3.5.1".lower() in version_string:
         netapp_mode  = "7mode"
     else:
-        netapp_mode  = "7-mode" in version_string and "7mode" or "clustermode"
+        netapp_mode  = '7mode' if '7-mode' in version_string else 'clustermode'
 
 # DEBUG
 #version_info = query("system-api-list")

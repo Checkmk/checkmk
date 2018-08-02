@@ -169,7 +169,7 @@ def bail_out(rc, s):
     sys.stdout.write('%s - %s\n' % (stxt, s))
     sys.exit(rc)
 
-proto = ssl and 'https' or 'http'
+proto = 'https' if ssl else 'http'
 if (proto == 'http' and port == 80) or (proto == 'https' and port == 443):
     portspec = ''
 else:
@@ -191,7 +191,7 @@ def init_http():
 def open_url(url, method = 'GET', data = None):
     if method == 'GET' and data is not None:
         # Add the query string to the url in this case
-        start = '?' in url and '&' or '?'
+        start = '&' if '?' in url else '?'
         url += start + urllib.urlencode(data)
         data = None
 

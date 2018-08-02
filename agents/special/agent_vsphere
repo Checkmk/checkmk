@@ -1155,7 +1155,7 @@ def retrieve_systeminfo():
     for entry, function in systemfields:
          element = get_pattern("<%(entry)s.*>(.*)</%(entry)s>" % { "entry": entry }, reply_data)
          if element:
-             systeminfo[entry] = function and function(element[0]) or element[0]
+             systeminfo[entry] = function(element[0]) if function else element[0]
 
 def login():
     global server_cookie

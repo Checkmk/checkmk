@@ -133,7 +133,7 @@ for server in servers:
         port = server['port']
         page = server.get('page', 'server-status')
 
-    portspec = port and ":%d" % port or ""
+    portspec = ':%d' % port if port else ''
 
     try:
         url = '%s://%s%s/%s?auto' % (proto, address, portspec, page)

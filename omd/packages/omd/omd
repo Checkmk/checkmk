@@ -1091,7 +1091,7 @@ def merge_update_file(relpath, old_version, new_version):
         version_patch = os.popen("diff -u %s-%s %s-%s" % (user_path, old_version, user_path, new_version)).read()
 
         # First try to merge the changes in the version into the users' file
-        merge = patch_has_merge() and "--merge" or ""
+        merge = '--merge' if patch_has_merge() else ''
         f = os.popen("PATH=/omd/versions/default/bin:$PATH patch --force --backup --forward --silent %s %s >/dev/null" % (merge, user_path), "w")
         f.write(version_patch)
         status = f.close()
@@ -1108,7 +1108,7 @@ def merge_update_file(relpath, old_version, new_version):
 
     # No success. Should we try merging the users' changes onto the new file?
     # user_patch = os.popen(
-    merge_message = patch_has_merge() and ' (watch out for >>>>> and <<<<<)' or ''
+    merge_message = ' (watch out for >>>>> and <<<<<)' if patch_has_merge() else ''
     editor = get_editor()
     reject_file = user_path + ".rej"
 
@@ -2534,7 +2534,7 @@ def main_help(args=None, options=None):
             elif needs_site == 1:
                 synopsis = "SITE " + synopsis
 
-        synopsis_width = am_root and '23' or '16'
+        synopsis_width = '23' if am_root else '16'
         sys.stdout.write((" omd %-10s %-"+synopsis_width+"s %s\n") % (command, synopsis, descr))
     sys.stdout.write("\nGeneral Options:\n"
                      " -V <version>                    set specific version, useful in combination with update/create\n"
@@ -2975,7 +2975,7 @@ def main_mv_or_cp(what, args, options=None):
         options = {}
 
     set_conflict_option(options)
-    action = what == "mv" and "rename" or "copy"
+    action = 'rename' if what == 'mv' else 'copy'
 
     global g_sitename
     if len(args) != 1:
@@ -3721,7 +3721,7 @@ def main_restore(args, options=None):
     g_sitename = new_sitename
     g_sitedir  = site_dir(new_sitename)
 
-    source_txt = source == '-' and 'stdin' or source
+    source_txt = 'stdin' if source == '-' else source
     if is_root():
         sys.stdout.write("Restoring site %s from %s...\n" % (g_sitename, source_txt))
         sys.stdout.flush()

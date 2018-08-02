@@ -625,7 +625,7 @@ def fetch_pnp_data(context, params):
     return os.popen('%s php %s %s "%s"' % (env, php_save_path, path, params)).read()
 
 def fetch_num_sources(context):
-    svc_desc = context['WHAT'] == 'HOST' and '_HOST_' or context['SERVICEDESC']
+    svc_desc = '_HOST_' if context['WHAT'] == 'HOST' else context['SERVICEDESC']
     infos = fetch_pnp_data(context, '/json?host=%s&srv=%s&view=0' %
                                      (context['HOSTNAME'].encode('utf-8'), svc_desc.encode('utf-8')))
     if not infos.startswith('[{'):
@@ -634,7 +634,7 @@ def fetch_num_sources(context):
     return infos.count('source=')
 
 def fetch_graph(context, source, view = 1):
-    svc_desc = context['WHAT'] == 'HOST' and '_HOST_' or context['SERVICEDESC']
+    svc_desc = '_HOST_' if context['WHAT'] == 'HOST' else context['SERVICEDESC']
     graph = fetch_pnp_data(context, '/image?host=%s&srv=%s&view=%d&source=%d' %
                                     (context['HOSTNAME'], svc_desc.encode('utf-8'), view, source))
 
@@ -914,7 +914,7 @@ def render_elements(context, elements):
             tmpl_txt += "%-20s %s\n" % (title + ":", txt)
             tmpl_html += '<tr class="%s0"><td class=left>%s</td><td>%s</td></tr>' % (
                    even, title, html)
-            even = even == "even" and "odd" or "even"
+            even = 'odd' if even == 'even' else 'even'
 
     return substitute_context(tmpl_txt, context), \
            substitute_context(tmpl_html, context)

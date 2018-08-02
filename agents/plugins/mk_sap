@@ -414,7 +414,7 @@ def check(cfg_entry):
 
             if node['MTCLASS'] == MTE_PERFORMANCE:
                 perfvalue, this_uom = mon_perfdata(cfg_entry, node)
-                uom = this_uom and this_uom or uom
+                uom = this_uom if this_uom else uom
 
             elif node['MTCLASS'] == MTE_SINGLE_MSG:
                 status_details = "%s: %s" % mon_msg(cfg_entry, node)

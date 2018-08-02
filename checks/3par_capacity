@@ -52,6 +52,6 @@ check_info['3par_capacity'] = {
     'service_description'       : "Capacity %s",
     'has_perfdata'              : True,
     'includes'                  : [ "3par.include", "size_trend.include", "df.include" ],
-    'group'                     : "filesystem",
+    'group'                     : "threepar_capacity",
     'default_levels_variable'   : "filesystem_default_levels",
 }

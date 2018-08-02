@@ -1,0 +1,19 @@
+Title: Separate Checkgroups for 3par_capacity, 3par_volume und 3par_cpgs
+Level: 1
+Component: checks
+Compatible: incomp
+Edition: cre
+Version: 1.6.0i1
+Date: 1533200276
+Class: feature
+
+6210 Separate Checkgroups for 3par_capacity, 3par_volume und 3par_cpgs
+
+3par_capacity, 3par_cpgs and 3par_volumes: Different rules for these three
+checks can now be created.
+
+The older more general rules will no longer match the services of
+3par_capacity and 3par_cpgs. For these services new Rules under the names
+"3Par Capacity (used space and growth)" and "3Par CPG (used space and growth)"
+have to be created.
+

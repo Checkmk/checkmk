@@ -6155,6 +6155,217 @@ register_check_parameters(
     "dict"
 )
 
+
+# Note: This hack is only required on very old filesystem checks (prior August 2013)
+fs_levels_elements_hack = [
+    # Beware: this is a nasty hack that helps us to detect new-style parameters.
+    # Something hat has todo with float/int conversion and has not been documented
+    # by the one who implemented this.
+    ( "flex_levels",
+      FixedValue(
+          None,
+          totext = "",
+          title = "",
+          )),
+]
+
+fs_levels_elements = [
+    ("levels",
+        Alternative(
+            title = _("Levels for filesystem"),
+            show_alternative_title = True,
+            default_value = (80.0, 90.0),
+            match = match_dual_level_type,
+            elements = [
+                   get_free_used_dynamic_valuespec("used", "filesystem"),
+                   Transform(
+                            get_free_used_dynamic_valuespec("free", "filesystem", default_value = (20.0, 10.0)),
+                            title = _("Levels for filesystem free space"),
+                            allow_empty = False,
+                            forth = transform_filesystem_free,
+                            back  = transform_filesystem_free
+                    )
+                ]
+                )
+    ),
+    ( "show_levels",
+      DropdownChoice(
+          title = _("Display warn/crit levels in check output..."),
+          choices = [
+            ( "onproblem", _("Only if the status is non-OK")),
+            ( "onmagic",   _("If the status is non-OK or a magic factor is set")),
+            ( "always",    _("Always") ),
+          ],
+          default_value = "onmagic",
+    ))]
+
+fs_reserved_elements = [
+    ( "show_reserved",
+      DropdownChoice(
+          title = _("Show space reserved for the <tt>root</tt> user"),
+          help = _("Check_MK treats space that is reserved for the <tt>root</tt> user on Linux and Unix as "
+                   "used space. Usually, 5% are being reserved for root when a new filesystem is being created. "
+                   "With this option you can have Check_MK display the current amount of reserved but yet unused "
+                   "space."),
+          choices = [
+            ( True, _("Show reserved space") ),
+            ( False, _("Do now show reserved space") ),
+         ]
+    ))
+]
+
+
+fs_inodes_elements = [
+    ( "inodes_levels",
+        Alternative(
+            title = _("Levels for Inodes"),
+            help  = _("The number of remaining inodes on the filesystem. "
+                      "Please note that this setting has no effect on some filesystem checks."),
+            elements = [
+                    Tuple(title = _("Percentage free"),
+                          elements = [
+                               Percentage(title = _("Warning if less than")),
+                               Percentage(title = _("Critical if less than")),
+                          ]
+                    ),
+                    Tuple(title = _("Absolute free"),
+                          elements = [
+                               Integer(title = _("Warning if less than"),  size = 10, unit = _("inodes"), minvalue = 0, default_value = 10000),
+                               Integer(title = _("Critical if less than"), size = 10, unit = _("inodes"), minvalue = 0, default_value = 5000),
+                          ]
+                    )
+            ],
+            default_value = (10.0, 5.0),
+        )
+    ),
+    ( "show_inodes",
+      DropdownChoice(
+          title = _("Display inode usage in check output..."),
+          choices = [
+            ( "onproblem", _("Only in case of a problem")),
+            ( "onlow",     _("Only in case of a problem or if inodes are below 50%")),
+            ( "always",    _("Always")),
+          ],
+          default_value = "onlow",
+    ))
+]
+
+fs_magic_elements = [
+    (  "magic",
+       Float(
+          title = _("Magic factor (automatic level adaptation for large filesystems)"),
+          default_value = 0.8,
+          minvalue = 0.1,
+          maxvalue = 1.0)),
+    (  "magic_normsize",
+       Integer(
+           title = _("Reference size for magic factor"),
+           default_value = 20,
+           minvalue = 1,
+           unit = _("GB"))),
+    ( "levels_low",
+      Tuple(
+          title = _("Minimum levels if using magic factor"),
+          help = _("The filesystem levels will never fall below these values, when using "
+                   "the magic factor and the filesystem is very small."),
+          elements = [
+              Percentage(title = _("Warning at"),  unit = _("% usage"), allow_int = True, default_value=50),
+              Percentage(title = _("Critical at"), unit = _("% usage"), allow_int = True, default_value=60)]))
+]
+
+size_trend_elements = [
+    (  "trend_range",
+       Optional(
+           Integer(
+               title = _("Time Range for trend computation"),
+               default_value = 24,
+               minvalue = 1,
+               unit= _("hours")),
+           title = _("Trend computation"),
+           label = _("Enable trend computation"))),
+    (  "trend_mb",
+       Tuple(
+           title = _("Levels on trends in MB per time range"),
+           elements = [
+               Integer(title = _("Warning at"), unit = _("MB / range"), default_value = 100),
+               Integer(title = _("Critical at"), unit = _("MB / range"), default_value = 200)
+           ])),
+    (  "trend_perc",
+       Tuple(
+           title = _("Levels for the percentual growth per time range"),
+           elements = [
+               Percentage(title = _("Warning at"), unit = _("% / range"), default_value = 5,),
+               Percentage(title = _("Critical at"), unit = _("% / range"), default_value = 10,),
+           ])),
+    (  "trend_timeleft",
+       Tuple(
+           title = _("Levels on the time left until full"),
+           elements = [
+               Integer(title = _("Warning if below"), unit = _("hours"), default_value = 12,),
+               Integer(title = _("Critical if below"), unit = _("hours"), default_value = 6, ),
+            ])),
+    ( "trend_showtimeleft",
+            Checkbox( title = _("Display time left in check output"), label = _("Enable"),
+                       help = _("Normally, the time left until the disk is full is only displayed when "
+                                "the configured levels have been breached. If you set this option "
+                                "the check always reports this information"))
+    ),
+    ( "trend_perfdata",
+      Checkbox(
+          title = _("Trend performance data"),
+          label = _("Enable generation of performance data from trends"))),
+]
+
+
+filesystem_elements = fs_levels_elements + fs_levels_elements_hack + fs_reserved_elements +\
+                      fs_inodes_elements + fs_magic_elements + size_trend_elements
+
+def vs_filesystem():
+    return Dictionary(
+        elements = filesystem_elements,
+        hidden_keys = ["flex_levels"],
+        ignored_keys = ["patterns"],
+    )
+
+register_check_parameters(
+    subgroup_storage,
+    "filesystem",
+    _("Filesystems (used space and growth)"),
+    vs_filesystem(),
+    TextAscii(
+        title = _("Mount point"),
+        help = _("For Linux/UNIX systems, specify the mount point, for Windows systems "
+                 "the drive letter uppercase followed by a colon and a slash, e.g. <tt>C:/</tt>"),
+        allow_empty = False),
+    "dict"
+)
+
+
+register_check_parameters(
+    subgroup_storage,
+    "threepar_capacity",
+    _("3Par Capacity (used space and growth)"),
+    vs_filesystem(),
+    TextAscii(
+        title = _("Device type"),
+        allow_empty = False),
+    "dict"
+)
+
+
+register_check_parameters(
+    subgroup_storage,
+    "threepar_cpgs",
+    _("3Par CPG (used space and growth)"),
+    vs_filesystem(),
+    TextAscii(
+        title = _("CPG member name"),
+        allow_empty = False),
+    "dict"
+)
+
+
+
 #.
 #   .--Printing------------------------------------------------------------.
 #   |                ____       _       _   _                              |
@@ -7868,185 +8079,6 @@ def transform_filesystem_free(value):
         for item in value:
             result.append((item[0], tuple_convert(item[1])))
         return result
-
-fs_inodes_elements = [
-    ( "inodes_levels",
-        Alternative(
-            title = _("Levels for Inodes"),
-            help  = _("The number of remaining inodes on the filesystem. "
-                      "Please note that this setting has no effect on some filesystem checks."),
-            elements = [
-                    Tuple(title = _("Percentage free"),
-                          elements = [
-                               Percentage(title = _("Warning if less than")),
-                               Percentage(title = _("Critical if less than")),
-                          ]
-                    ),
-                    Tuple(title = _("Absolute free"),
-                          elements = [
-                               Integer(title = _("Warning if less than"),  size = 10, unit = _("inodes"), minvalue = 0, default_value = 10000),
-                               Integer(title = _("Critical if less than"), size = 10, unit = _("inodes"), minvalue = 0, default_value = 5000),
-                          ]
-                    )
-            ],
-            default_value = (10.0, 5.0),
-        )
-    ),
-    ( "show_inodes",
-      DropdownChoice(
-          title = _("Display inode usage in check output..."),
-          choices = [
-            ( "onproblem", _("Only in case of a problem")),
-            ( "onlow",     _("Only in case of a problem or if inodes are below 50%")),
-            ( "always",    _("Always")),
-          ],
-          default_value = "onlow",
-    ))
-]
-
-fs_magic_elements = [
-    (  "magic",
-       Float(
-          title = _("Magic factor (automatic level adaptation for large filesystems)"),
-          default_value = 0.8,
-          minvalue = 0.1,
-          maxvalue = 1.0)),
-    (  "magic_normsize",
-       Integer(
-           title = _("Reference size for magic factor"),
-           default_value = 20,
-           minvalue = 1,
-           unit = _("GB"))),
-    ( "levels_low",
-      Tuple(
-          title = _("Minimum levels if using magic factor"),
-          help = _("The filesystem levels will never fall below these values, when using "
-                   "the magic factor and the filesystem is very small."),
-          elements = [
-              Percentage(title = _("Warning at"),  unit = _("% usage"), allow_int = True, default_value=50),
-              Percentage(title = _("Critical at"), unit = _("% usage"), allow_int = True, default_value=60)]))
-]
-
-size_trend_elements = [
-    (  "trend_range",
-       Optional(
-           Integer(
-               title = _("Time Range for trend computation"),
-               default_value = 24,
-               minvalue = 1,
-               unit= _("hours")),
-           title = _("Trend computation"),
-           label = _("Enable trend computation"))),
-    (  "trend_mb",
-       Tuple(
-           title = _("Levels on trends in MB per time range"),
-           elements = [
-               Integer(title = _("Warning at"), unit = _("MB / range"), default_value = 100),
-               Integer(title = _("Critical at"), unit = _("MB / range"), default_value = 200)
-           ])),
-    (  "trend_perc",
-       Tuple(
-           title = _("Levels for the percentual growth per time range"),
-           elements = [
-               Percentage(title = _("Warning at"), unit = _("% / range"), default_value = 5,),
-               Percentage(title = _("Critical at"), unit = _("% / range"), default_value = 10,),
-           ])),
-    (  "trend_timeleft",
-       Tuple(
-           title = _("Levels on the time left until full"),
-           elements = [
-               Integer(title = _("Warning if below"), unit = _("hours"), default_value = 12,),
-               Integer(title = _("Critical if below"), unit = _("hours"), default_value = 6, ),
-            ])),
-    ( "trend_showtimeleft",
-            Checkbox( title = _("Display time left in check output"), label = _("Enable"),
-                       help = _("Normally, the time left until the disk is full is only displayed when "
-                                "the configured levels have been breached. If you set this option "
-                                "the check always reports this information"))
-    ),
-    ( "trend_perfdata",
-      Checkbox(
-          title = _("Trend performance data"),
-          label = _("Enable generation of performance data from trends"))),
-]
-
-# Note: This hack is only required on very old filesystem checks (prior August 2013)
-fs_levels_elements_hack = [
-    # Beware: this is a nasty hack that helps us to detect new-style parameters.
-    # Something hat has todo with float/int conversion and has not been documented
-    # by the one who implemented this.
-    ( "flex_levels",
-      FixedValue(
-          None,
-          totext = "",
-          title = "",
-          )),
-]
-
-fs_levels_elements = [
-    ("levels",
-        Alternative(
-            title = _("Levels for filesystem"),
-            show_alternative_title = True,
-            default_value = (80.0, 90.0),
-            match = match_dual_level_type,
-            elements = [
-                   get_free_used_dynamic_valuespec("used", "filesystem"),
-                   Transform(
-                            get_free_used_dynamic_valuespec("free", "filesystem", default_value = (20.0, 10.0)),
-                            title = _("Levels for filesystem free space"),
-                            allow_empty = False,
-                            forth = transform_filesystem_free,
-                            back  = transform_filesystem_free
-                    )
-                ]
-                )
-    ),
-    ( "show_levels",
-      DropdownChoice(
-          title = _("Display warn/crit levels in check output..."),
-          choices = [
-            ( "onproblem", _("Only if the status is non-OK")),
-            ( "onmagic",   _("If the status is non-OK or a magic factor is set")),
-            ( "always",    _("Always") ),
-          ],
-          default_value = "onmagic",
-    ))]
-
-fs_reserved_elements = [
-    ( "show_reserved",
-      DropdownChoice(
-          title = _("Show space reserved for the <tt>root</tt> user"),
-          help = _("Check_MK treats space that is reserved for the <tt>root</tt> user on Linux and Unix as "
-                   "used space. Usually, 5% are being reserved for root when a new filesystem is being created. "
-                   "With this option you can have Check_MK display the current amount of reserved but yet unused "
-                   "space."),
-          choices = [
-            ( True, _("Show reserved space") ),
-            ( False, _("Do now show reserved space") ),
-         ]
-    ))
-]
-
-filesystem_elements = fs_levels_elements + fs_levels_elements_hack + fs_reserved_elements +\
-                      fs_inodes_elements + fs_magic_elements + size_trend_elements
-
-register_check_parameters(
-    subgroup_storage,
-    "filesystem",
-    _("Filesystems (used space and growth)"),
-    Dictionary(
-        elements = filesystem_elements,
-        hidden_keys = ["flex_levels"],
-        ignored_keys = ["patterns"],
-    ),
-    TextAscii(
-        title = _("Mount point"),
-        help = _("For Linux/UNIX systems, specify the mount point, for Windows systems "
-                 "the drive letter uppercase followed by a colon and a slash, e.g. <tt>C:/</tt>"),
-        allow_empty = False),
-    "dict"
-)
 
 register_check_parameters(
     subgroup_storage,

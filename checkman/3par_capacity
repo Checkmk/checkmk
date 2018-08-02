@@ -12,4 +12,4 @@ description:
  many MiBs has been failed.
 
 inventory:
- One service is created by each type of disk and one summary service.
+ One service is created for each device type and one summary service.

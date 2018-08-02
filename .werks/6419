@@ -1,0 +1,19 @@
+Title: agent_3par: Prevent InsecureRequestWarning error when ignoring SSL cert issues
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0p1
+Date: 1533195825
+Class: fix
+
+In previous 1.5 releases the 3par special agent could report errors like
+this:
+
+CRIT - [special_3par] Agent exited with code 1:
+/omd/sites/debsg/lib/python/requests/packages/urllib3/connectionpool.py:852:
+InsecureRequestWarning: Unverified HTTPS request is being made. Adding
+certificate verification is strongly advised. See
+
+When a special agent is told to ignore SSL issues (like it's done always for
+this agent) such warnings should be suppressed.

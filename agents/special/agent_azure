@@ -45,6 +45,7 @@ import time
 import logging
 import atexit
 
+from collections import namedtuple
 from multiprocessing import Process, Lock
 
 from azure.mgmt.monitor import MonitorManagementClient
@@ -566,6 +567,9 @@ class CachedMetricsMMC(MonitorManagementClient):
         return value
 
 
+MetricRow = namedtuple('MetricRow', ("Name", "Aggregation", "Value", "Unit", "Timestamp"))
+
+
 class AzureClient(object):
     def __init__(self, config):
         super(AzureClient, self).__init__()
@@ -639,12 +643,9 @@ class AzureClient(object):
 
         return metric_objects
 
-    def get_metrics_of_resource(self, resource):
-        """Returns the values of all metrics of the given resource"""
-        out = []
-        err = []
-        metric_objects = []
+    def _get_metric_objects(self, resource, err):
 
+        metric_objects = []
         try:
             metricnames = self._monitor_client.cached_metricnames(resource, self._config.cache_mode)
             metricnames = filter(self.match_metric, metricnames)
@@ -654,56 +655,62 @@ class AzureClient(object):
             err.append("exception: %s" % e)
             if self._config.debug:
                 raise e
+        return metric_objects
 
-        if metric_objects:
-            fmt = "%30s %13s %20s %20s %20s"
-            out += [
-                "metrics following: %d" % len(metric_objects), fmt % ("Name", "Aggregation",
-                                                                      "Value", "Unit", "Timestamp")
-            ]
+    def extract_row_from_metric(self, metric, resource, err):
 
+        aggregation = self._monitor_client.cached_aggregation(metric, resource,
+                                                              self._config.cache_mode)
+
+        # Assuming this agent is executed to gather one value per metric
+        count = len(metric.timeseries)
+        if count > 1:
+            log.warning("len(metric.timeseries) == %d" % count)
+            log.warning("this agent is executed to gather one value per metric")
+
+        for measurement in reversed(metric.timeseries):
+            log.debug("measurement: %s" % measurement)
+            log.debug("measurement.data: %s" % measurement.data)
+            if not measurement.data:
+                continue
+
+            data = measurement.data[-1]
+            timestamp = calendar.timegm(data.time_stamp.utctimetuple())
+            if not hasattr(data, aggregation):
+                err.append('issue: missing aggregation %s of metric %s' \
+                           % (aggregation, metric.name.value))
+                continue
+            value = getattr(data, aggregation)
+            return MetricRow(metric.name.value, aggregation, value, metric.unit.name, timestamp)
+        return None
+
+    def get_metrics_of_resource(self, resource):
+        """Returns the values of all metrics of the given resource"""
+        err = []  # pass this to methods to collect issues
+
+        metric_objects = self._get_metric_objects(resource, err)
+
+        table = []
         for metric in metric_objects:
-            name = metric.name.value
-            log.debug("metric.name.value: %s" % name)
+            log.debug("metric.name.value: %s" % metric.name.value)
             log.debug("metric.timeseries: %s" % metric.timeseries)
 
             try:
-                aggregation = self._monitor_client.cached_aggregation(metric, resource,
-                                                                      self._config.cache_mode)
-
-                # Assuming this agent is executed to gather one value per metric
-                count = len(metric.timeseries)
-                if count != 1:
-                    log.warning("len(metric.timeseries) == %d" % count)
-                    log.warning("this agent is executed to gather one value per metric")
-
-                for measurement in reversed(metric.timeseries):
-                    log.debug("measurement: %s" % measurement)
-                    log.debug("measurement.data: %s" % measurement.data)
-                    if not measurement.data:
-                        continue
-
-                    data = measurement.data[-1]
-                    timestamp = calendar.timegm(data.time_stamp.utctimetuple())
-                    if not hasattr(data, aggregation):
-                        err.append('issue: missing aggregation %s of metric %s' \
-                                   % (aggregation, name))
-                        continue
-                    value = getattr(data, aggregation)
-                    out.append(fmt % (
-                        name,
-                        aggregation,
-                        value,
-                        metric.unit.name,
-                        timestamp,
-                    ))
-                    break
-
+                row = self.extract_row_from_metric(metric, resource, err)
             except Exception as e:
+                row = None
                 err.append("exception: %s" % e)
                 if self._config.debug:
                     raise e
+            if row:
+                table.append(row)
 
+        if not table:
+            return [], err
+
+        out = ["metrics following: %d" % len(table)]
+        table.insert(0, table[-1]._fields)
+        out += ["%30s %13s %20s %20s %20s" % row for row in table]
         return out, err
 
     def process_resource(self, resource):

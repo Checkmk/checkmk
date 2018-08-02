@@ -501,6 +501,8 @@ def render_werk_description(werk):
     if in_list:
         html_code += "</ul>"
 
+    html_code = html_code.replace("<script>", "&lt;script&gt;").replace("</script>", "&lt;/script&gt;")
+
     html_code += "</p>"
     return html_code
 

@@ -1,0 +1,13 @@
+Title: Windows realtime checking did not work without data encryption
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0i1
+Date: 1533199744
+
+Unencrypted realtime data from the windows agent was sent with an invalid data protocol header
+and got discarded on the monitoring side.
+

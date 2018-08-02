@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/python
 # -*- encoding: utf-8; py-indent-offset: 4 -*-
 # +------------------------------------------------------------------+
 # |             ____ _               _        __  __ _  __           |
@@ -24,26 +24,16 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-from cmk.plugin_loader import load_plugins
+import os
+import glob
+import importlib
 
-#.
-#   .--Plugin API----------------------------------------------------------.
-#   |           ____  _             _            _    ____ ___             |
-#   |          |  _ \| |_   _  __ _(_)_ __      / \  |  _ \_ _|            |
-#   |          | |_) | | | | |/ _` | | '_ \    / _ \ | |_) | |             |
-#   |          |  __/| | |_| | (_| | | | | |  / ___ \|  __/| |             |
-#   |          |_|   |_|\__,_|\__, |_|_| |_| /_/   \_\_|  |___|            |
-#   |                         |___/                                        |
-#   '----------------------------------------------------------------------'
 
-#.
-#   .--Plugins-------------------------------------------------------------.
-#   |                   ____  _             _                              |
-#   |                  |  _ \| |_   _  __ _(_)_ __  ___                    |
-#   |                  | |_) | | | | |/ _` | | '_ \/ __|                   |
-#   |                  |  __/| | |_| | (_| | | | | \__ \                   |
-#   |                  |_|   |_|\__,_|\__, |_|_| |_|___/                   |
-#   |                                 |___/                                |
-#   '----------------------------------------------------------------------'
+def load_plugins(init_file_path, package_name):
+    plugin_files = sorted(glob.glob(os.path.join(os.path.dirname(init_file_path), "*.py")))
+    plugins = [os.path.basename(f)[:-3]
+               for f in plugin_files
+               if not os.path.basename(f)[:-3] in ["__init__", "utils"]]
 
-load_plugins(__file__, __package__)
+    for plugin_name in plugins:
+        importlib.import_module(package_name + '.' + plugin_name)

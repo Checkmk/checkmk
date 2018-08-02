@@ -24,19 +24,15 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import glob
-import os
 import sys
 import textwrap
 import getopt
 
+from cmk.plugin_loader import load_plugins
 from cmk.exceptions import MKBailOut, MKGeneralException
 
 import cmk_base.config as config
 
-__all__ = [ os.path.basename(f)[:-3]
-            for f in glob.glob(os.path.dirname(__file__) + "/*.py")
-            if os.path.basename(f) != "__init__.py" ]
 
 class Modes(object):
     def __init__(self):
@@ -414,4 +410,4 @@ keepalive_option = Option(
 
 modes = Modes()
 
-from . import *
+load_plugins(__file__, __package__)

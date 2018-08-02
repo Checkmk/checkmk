@@ -24,13 +24,12 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import glob
-import os
 import signal
 import sys
 import pprint
 
 import cmk.debug
+from cmk.plugin_loader import load_plugins
 
 import cmk_base.utils
 import cmk_base.config as config
@@ -38,10 +37,6 @@ import cmk_base.console as console
 import cmk_base.profiling as profiling
 from cmk_base.exceptions import MKTimeout
 import cmk_base.check_api as check_api
-
-__all__ = [ os.path.basename(f)[:-3]
-            for f in glob.glob(os.path.dirname(__file__) + "/*.py")
-            if os.path.basename(f) != "__init__.py" ]
 
 
 # TODO: Inherit from MKGeneralException
@@ -138,4 +133,4 @@ class Automation(object):
 
 automations = Automations()
 
-from . import *
+load_plugins(__file__, __package__)

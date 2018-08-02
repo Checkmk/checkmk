@@ -32,8 +32,6 @@
 # Darin die vertikalen Balken.
 
 
-import os
-import glob
 import math
 
 import cmk.gui.utils as utils
@@ -43,8 +41,7 @@ from cmk.gui.globals import html
 from cmk.gui.htmllib import HTML
 from cmk.gui.exceptions import MKGeneralException
 
-modules = sorted(glob.glob(os.path.join(os.path.dirname(__file__), "*.py")))
-__all__ = [ os.path.basename(f)[:-3] for f in modules if f not in [ "__init__.py", "utils.py" ] ]
+from cmk.plugin_loader import load_plugins
 
 #.
 #   .--Plugin API----------------------------------------------------------.
@@ -166,4 +163,4 @@ utils.load_web_plugins("perfometer", globals())
 #   |                                 |___/                                |
 #   '----------------------------------------------------------------------'
 
-from . import *
+load_plugins(__file__, __package__)

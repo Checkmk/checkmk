@@ -572,7 +572,8 @@ class ModeFolder(WatoMode):
                             "inventory")
             if config.user.may("wato.rename_hosts"):
                 html.context_button(_("Bulk renaming"), self._folder.url([("mode", "bulk_rename_host")]), "rename_host")
-            html.context_button(_("Custom attributes"), watolib.folder_preserving_link([("mode", "host_attrs")]), "custom_attr")
+            if config.user.may("wato.custom_attributes"):
+                html.context_button(_("Custom attributes"), watolib.folder_preserving_link([("mode", "host_attrs")]), "custom_attr")
             if not self._folder.locked_hosts() and config.user.may("wato.parentscan") and self._folder.may("write"):
                 html.context_button(_("Parent scan"), self._folder.url([("mode", "parentscan"), ("all", "1")]),
                             "parentscan")
@@ -9919,7 +9920,8 @@ class ModeUsers(WatoMode):
     def buttons(self):
         global_buttons()
         html.context_button(_("New user"), watolib.folder_preserving_link([("mode", "edit_user")]), "new")
-        html.context_button(_("Custom attributes"), watolib.folder_preserving_link([("mode", "user_attrs")]), "custom_attr")
+        if config.user.may("wato.custom_attributes"):
+            html.context_button(_("Custom attributes"), watolib.folder_preserving_link([("mode", "user_attrs")]), "custom_attr")
         if userdb.sync_possible():
             if not self._job_snapshot.is_running():
                 html.context_button(_("Sync users"), html.makeactionuri([("_sync", 1)]), "replicate")
@@ -16608,6 +16610,11 @@ def load_plugins(force):
     config.declare_permission("wato.icons",
          _("Manage Custom Icons"),
          _("Upload or delete custom icons"),
+         [ "admin" ])
+
+    config.declare_permission("wato.custom_attributes",
+         _("Manage custom attributes"),
+         _("Manage custom host- and user attributes"),
          [ "admin" ])
 
     config.declare_permission("wato.download_agents",

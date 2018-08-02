@@ -261,7 +261,7 @@ class ModeEditCustomUserAttr(ModeEditCustomAttr):
 
     @classmethod
     def permissions(cls):
-        return ["users"]
+        return ["users", "custom_attributes"]
 
 
     @property
@@ -322,7 +322,7 @@ class ModeEditCustomHostAttr(ModeEditCustomAttr):
 
     @classmethod
     def permissions(cls):
-        return ["hosts", "manage_hosts"]
+        return ["hosts", "manage_hosts", "custom_attributes"]
 
 
     @property
@@ -442,7 +442,7 @@ class ModeCustomUserAttrs(ModeCustomAttrs):
 
     @classmethod
     def permissions(cls):
-        return ["users"]
+        return ["users", "custom_attributes"]
 
     @property
     def _type(self):
@@ -468,7 +468,7 @@ class ModeCustomHostAttrs(ModeCustomAttrs):
 
     @classmethod
     def permissions(cls):
-        return ["hosts", "manage_hosts"]
+        return ["hosts", "manage_hosts", "custom_attributes"]
 
 
     @property

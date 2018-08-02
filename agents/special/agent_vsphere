@@ -1405,7 +1405,7 @@ if not error:
 
                     current_propname = ""
 
-                    def eval_sensor_info(sensor_propset):
+                    def eval_sensor_info(hostname, current_propname, sensor_propset):
                         sensor_pattern = ""
                         for key in [ "name", "label", "summary", "key", "currentReading",
                                      "unitModifier", "baseUnits", "sensorType" ]:
@@ -1417,7 +1417,7 @@ if not error:
                                                                     "currentReading": currentReading, "unitModifier": unitModifier,
                                                                     "baseUnits": baseUnits, "sensorType": sensorType }
 
-                    def eval_hardwarestatus_info(sensor_propset):
+                    def eval_hardwarestatus_info(hostname, current_propname, sensor_propset):
                         sensor_pattern = ""
                         for key in [ "name", "label", "summary", "key" ]:
                             sensor_pattern += "<%(name)s>(.*?)</%(name)s>.*?" % { "name": key}
@@ -1426,12 +1426,12 @@ if not error:
                         for name, label, summary, key in sensor_data:
                             hostsystems_sensors[hostname][name] = { "name": name, "label": label, "summary": summary, "key": key }
 
-                    def eval_multipath_state(multipath_propset):
+                    def eval_multipath_state(hostname, current_propname, multipath_propset):
                         multipaths = get_pattern("<name>(.*?)</name><pathState>(.*?)</pathState>", value)
                         for mp_name, mp_state in multipaths:
                             hostsystems_properties[hostname].setdefault(current_propname, []).append("%s %s" % (mp_name, mp_state))
 
-                    def eval_propset_block(elements, id_key, propset):
+                    def eval_propset_block(hostname, current_propname, elements, id_key, propset):
                         pattern = ""
                         for key in elements:
                             pattern += "<%(name)s>(.*?)</%(name)s>.*?" % { "name": key}
@@ -1443,13 +1443,13 @@ if not error:
                                 hostsystems_properties[hostname].setdefault("%s.%s.%s" % \
                                     (current_propname, key, entries[id_key]), []).append(value)
 
-                    def eval_cpu_pkg(cpu_pkg_propset):
-                        eval_propset_block( [ "index", "vendor", "hz", "busHz", "description" ], "index", cpu_pkg_propset)
+                    def eval_cpu_pkg(hostname, current_propname, cpu_pkg_propset):
+                        eval_propset_block(hostname, current_propname, [ "index", "vendor", "hz", "busHz", "description" ], "index", cpu_pkg_propset)
 
-                    def eval_pci_device(pci_propset):
-                        eval_propset_block( [ "id", "vendorName", "deviceName" ], "id", pci_propset)
+                    def eval_pci_device(hostname, current_propname, pci_propset):
+                        eval_propset_block(hostname, current_propname, [ "id", "vendorName", "deviceName" ], "id", pci_propset)
 
-                    def eval_systeminfo_other(otherinfo_propset):
+                    def eval_systeminfo_other(hostname, current_propname, otherinfo_propset):
                         data       = get_pattern("<identifierValue>(.*?)</identifierValue>.*?<key>(.*?)</key>", otherinfo_propset)
                         keys_index = {}
 
@@ -1475,7 +1475,7 @@ if not error:
                     elements = get_pattern('<propSet><name>(.*?)</name><val.*?>(.*?)</val></propSet>', entry)
                     for current_propname, value in elements:
                         if eval_functions.get(current_propname):
-                            eval_functions[current_propname](value)
+                            eval_functions[current_propname](hostname, current_propname, value)
                         else:
                             hostsystems_properties[hostname].setdefault(current_propname, []).append(value)
 

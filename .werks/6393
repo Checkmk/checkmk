@@ -1,0 +1,10 @@
+Title: check_bi_aggr: Fixed link in 'Open this aggregation' in the dropdown menu of the aggregation service
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0p1
+Date: 1533201535
+Class: fix
+
+

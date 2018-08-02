@@ -501,21 +501,6 @@ class GenericUserAttribute(cmk.gui.plugins.userdb.UserAttribute):
         self._from_config = from_config
 
 
-    @classmethod
-    def name(cls):
-        return cls._name
-
-
-    @classmethod
-    def valuespec(cls):
-        return cls._valuespec
-
-
-    @classmethod
-    def topic(cls):
-        return cls._topic
-
-
     def from_config(self):
         return self._from_config
 
@@ -550,6 +535,18 @@ def declare_user_attribute(name, vs, user_editable = True, permission = None,
         _name = name
         _valuespec = vs
         _topic = topic if topic else 'personal'
+
+        @classmethod
+        def name(cls):
+            return cls._name
+
+        @classmethod
+        def valuespec(cls):
+            return cls._valuespec
+
+        @classmethod
+        def topic(cls):
+            return cls._topic
 
         def __init__(self):
             super(LegacyUserAttribute, self).__init__(

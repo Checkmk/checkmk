@@ -108,7 +108,7 @@ else
 endif
 
 # Added for NetApp special agent, but may be used in other components too in future
-MODULES+=requests-2.13.0.tar.gz
+MODULES +=requests-2.13.0.tar.gz
 # Has requests as dependency -> must be built after
 MODULES += pyOpenSSL-16.2.0.tar.gz
 # Added for check_bi_aggr with kerberos support
@@ -128,6 +128,26 @@ MODULES += pathlib2-2.3.2.tar.gz
 # Added for scheduling (cmk/schedule.py)
 MODULES += python-dateutil-2.7.3.tar.gz
 MODULES += python-snap7-0.9.tar.gz
+# Added for azure special agent
+MODULES += PyJWT-1.6.4.tar.gz
+MODULES += SecretStorage-2.3.1.tar.gz
+MODULES += adal-1.0.2.tar.gz
+MODULES += azure-common-1.1.14.zip
+MODULES += azure-mgmt-monitor-0.5.2.zip
+MODULES += azure-mgmt-resource-2.0.0.zip
+MODULES += certifi-2018.4.16.tar.gz
+MODULES += chardet-3.0.4.tar.gz
+MODULES += configparser-3.5.0.tar.gz
+MODULES += entrypoints-0.2.3.tar.gz
+MODULES += isodate-0.6.0.tar.gz
+MODULES += keyring-13.2.1.tar.gz
+MODULES += msrest-0.5.4.tar.gz
+MODULES += msrestazure-0.4.34.tar.gz
+MODULES += oauthlib-2.1.0.tar.gz
+MODULES += requests-oauthlib-1.0.0.tar.gz
+MODULES += urllib3-1.23.tar.gz
+
+
 
 .PHONY: build check-freetds install skel clean
 

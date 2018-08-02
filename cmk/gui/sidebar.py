@@ -112,37 +112,6 @@ def load_plugins(force):
     loaded_with_language = cmk.gui.i18n.get_current_language()
 
 
-class GenericSnapin(cmk.gui.plugins.sidebar.SidebarSnapin):
-    """Generic wrapper class. Needed for compatiblity with old dict based snapins"""
-
-    @classmethod
-    def type_name(cls):
-        return cls._type_name
-
-
-    @classmethod
-    def title(cls):
-        return cls._spec["title"]
-
-
-    @classmethod
-    def description(cls):
-        return cls._spec.get("description", "")
-
-
-    def show(self):
-        return self._spec["render"]()
-
-
-    @classmethod
-    def refresh_regularly(cls):
-        return cls._spec.get("refresh", False)
-
-
-    def styles(self):
-        return self._spec.get("styles")
-
-
 # Pre Check_MK 1.5 the snapins were declared with dictionaries like this:
 #
 # sidebar_snapins["about"] = {
@@ -157,10 +126,33 @@ class GenericSnapin(cmk.gui.plugins.sidebar.SidebarSnapin):
 # TODO: Deprecate this one day.
 def transform_old_dict_based_snapins():
     for snapin_id, snapin in sidebar_snapins.items():
+
         @snapin_registry.register
-        class LegacySnapin(GenericSnapin):
+        class LegacySnapin(cmk.gui.plugins.sidebar.SidebarSnapin):
             _type_name = snapin_id
             _spec = snapin
+
+            @classmethod
+            def type_name(cls):
+                return cls._type_name
+
+            @classmethod
+            def title(cls):
+                return cls._spec["title"]
+
+            @classmethod
+            def description(cls):
+                return cls._spec.get("description", "")
+
+            def show(self):
+                return self._spec["render"]()
+
+            @classmethod
+            def refresh_regularly(cls):
+                return cls._spec.get("refresh", False)
+
+            def styles(self):
+                return self._spec.get("styles")
 
 
 # TODO: Deprecate this one day.

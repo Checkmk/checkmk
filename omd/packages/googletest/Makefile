@@ -20,6 +20,11 @@ build: $(DIR)/Makefile
 
 $(DIR)/Makefile.in: $(DIR).tar.gz
 	tar xzf $(DIR).tar.gz
+# The structure of the autotools m4 macro directories within googletest is a bit
+# obscure. Furthermore, there seems to be some autotools versionitis in this
+# area. Simply creating an empty directory seems to work around warnings/errors
+# (depends on autottools version).
+	mkdir -p $(DIR)/m4
 	cd $(DIR) && autoreconf -i
 
 $(DIR)/Makefile: $(DIR)/Makefile.in

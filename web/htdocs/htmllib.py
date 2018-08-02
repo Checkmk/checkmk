@@ -1039,6 +1039,10 @@ class HTMLCheck_MK(HTMLGenerator):
         self.open_table(class_="header")
         self.open_tr()
         self.open_td(width="*", class_="heading")
+        # HTML() is needed here to prevent a double escape when we do  self._escape_attribute
+        # here and self.a() escapes the content (with permissive escaping) again. We don't want
+        # to handle "title" permissive.
+        title = HTML(self._escape_attribute(title))
         self.a(title, href="#", onfocus="if (this.blur) this.blur();",
                onclick="this.innerHTML=\'%s\'; document.location.reload();" % _("Reloading..."))
         self.close_td()

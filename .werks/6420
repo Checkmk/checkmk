@@ -1,0 +1,16 @@
+Title: agent_3par: Certificate verification can now be enabled/disabled
+Level: 1
+Component: checks
+Class: feature
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0i1
+Date: 1533198458
+
+The special agent is now verifying certificates by default. In case you
+have to disable the verification for some reason, you can do this in
+the special agent parameters.
+
+However, it is recommended to upload the CA certificate to Check_MK to
+enable the special agent to verify the certificate.

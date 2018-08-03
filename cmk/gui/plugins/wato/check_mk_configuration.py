@@ -632,6 +632,49 @@ register_configvar(group,
 )
 
 register_configvar(group,
+    "login_screen",
+    Dictionary(
+        title = _("Customize login screen"),
+        elements = [
+            ("hide_version", FixedValue(True,
+                title = _("Hide Check_MK version"),
+                totext = _("Hide the Check_MK version from the login box"),
+            )),
+            ("login_message", TextUnicode(
+                title = _("Show a login message"),
+                help = _("You may use this option to give your users an informational text before logging in."),
+                size = 80,
+            )),
+            ("footer_links", ListOf(
+                Tuple(
+                    elements = [
+                        TextUnicode(
+                            title = _("Title"),
+                        ),
+                        TextAscii(
+                            title = _('URL'),
+                            size = 80,
+                        ),
+                        DropdownChoice(
+                            title = _("Open in"),
+                            choices = [
+                                ("_blank",  _("Load in a new window / tab")),
+                                ("_top",    _("Load in current window / tab")),
+                            ],
+                        ),
+                    ],
+                    orientation = "horizontal",
+                ),
+                totext = _("%d links"),
+                title = _("Custom footer links"),
+            )),
+        ],
+        required_keys = [],
+    ),
+    domain = "multisite"
+)
+
+register_configvar(group,
     "user_localizations",
     Transform(
         ListOf(

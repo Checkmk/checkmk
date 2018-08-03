@@ -38,6 +38,7 @@ import cmk.gui.mobile
 import cmk.gui.pages
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
+from cmk.gui.htmllib import HTML
 
 import cmk.paths
 
@@ -451,8 +452,10 @@ def normal_login_page(called_directly = True):
         html.response.http_redirect(origtarget and origtarget or 'index.py')
 
     html.open_div(id_="login")
+
     html.open_div(id_="login_window")
-    html.div(cmk.__version__, id_="version")
+
+    html.div("" if "hide_version" in config.login_screen else cmk.__version__, id_="version")
 
     html.begin_form("login", method = 'POST', add_transid = False, action = 'login.py')
     html.hidden_field('_login', '1')
@@ -475,8 +478,22 @@ def normal_login_page(called_directly = True):
     html.close_div()
 
     html.open_div(id_="foot")
-    html.write("Version: %s - &copy; " % cmk.__version__)
-    html.a("Mathias Kettner", href="https://mathias-kettner.com")
+
+    if config.login_screen.get("login_message"):
+        html.open_div(id_="login_message")
+        html.show_info(config.login_screen["login_message"])
+        html.close_div()
+
+    footer = []
+    for title, url, target in config.login_screen.get("footer_links", []):
+        footer.append(html.render_a(title, href=url, target=target))
+
+    if "hide_version" not in config.login_screen:
+        footer.append("Version: %s" % cmk.__version__)
+
+    footer.append("&copy; %s" % html.render_a("Mathias Kettner", href="https://mathias-kettner.com"))
+
+    html.write(HTML(" - ").join(footer))
 
     if cmk.is_raw_edition():
         html.br()

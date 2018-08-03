@@ -71,7 +71,7 @@ azure-common = "==1.1.14"
 azure-mgmt-monitor = "==0.5.2"
 azure-mgmt-resource = "==2.0.0"
 PyJWT = "==1.6.4"   # needed by azure stuff
-SecretStorage = "==2.3.1"  # needed by azure stuff
+SecretStorage = {version = "==2.3.1", markers = "sys_platform == 'linux2' and python_version < '3.5'"}  # needed by azure stuff
 adal = "==1.0.2"  # needed by azure stuff
 certifi = "==2018.4.16"  # needed by azure stuff
 chardet = "==3.0.4"  # needed by azure stuff

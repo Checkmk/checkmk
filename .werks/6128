@@ -1,0 +1,10 @@
+Title: ibm_svc_disks, netapp_api_disk.summary: add option to define lower levels for the total number of spare disks
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1532966286
+Class: feature
+
+

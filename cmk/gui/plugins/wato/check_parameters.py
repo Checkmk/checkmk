@@ -12859,6 +12859,15 @@ register_check_parameters(
                         Percentage(title = _("Critical at or above"), default_value = 50.0),
                     ]
                 )),
+                ( "number_of_spare_disks",
+                Tuple(
+                    title = _("Number of spare disks"),
+                    help  = _("You can set a lower limit to the absolute number of spare disks."),
+                    elements = [
+                        Integer(title = _("Warning below"), default_value = 2, min_value = 0),
+                        Integer(title = _("Critical below"), default_value = 1, min_value = 0),
+                    ]
+                )),
             ],
         ),
         forth = lambda a: "broken_spare_ratio" in a and {"failed_spare_ratio": a["broken_spare_ratio"]} or a

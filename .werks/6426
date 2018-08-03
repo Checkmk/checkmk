@@ -1,0 +1,18 @@
+Title: Login page is now a bit more customizable
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1533299812
+Class: feature
+
+The login page can now be customized a bit more.
+
+<ul>
+<li>The page title (which is visible in the browser title and tab is now using the 
+title that is configured using the global setting "Page title".</li>
+<li>Using the new global setting "Customize login screen", you can now hide the
+version from the login screen, add custom links to the footer area and add
+an informational message that is shown to the users before logging in.</li>
+</ul>

@@ -315,13 +315,14 @@ register_configvar(group,
 
 register_configvar(group,
     "page_heading",
-    TextUnicode(title = _("HTML-Title of HTML Multisite GUI"),
-              help = _("This title will be displayed in your browser's title bar or tab. If you are "
-                       "using OMD then you can embed a <tt>%s</tt>. This will be replaced by the name "
-                       "of the OMD site."),
-              size = 80,
-              attrencode = True),
-    domain = "multisite")
+    TextUnicode(
+        title = _("Page title"),
+        help = _("This title will be displayed in your browser's title bar or tab. You can use "
+                 "a <tt>%s</tt> to insert the alias of your monitoring site to the title."),
+        size = 80,
+    ),
+    domain = "multisite"
+)
 
 register_configvar(group,
     "pagetitle_date_format",

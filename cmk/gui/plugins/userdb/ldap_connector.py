@@ -28,8 +28,11 @@
 # based approach is not very readable. Classes/objects make it a lot
 # easier to understand the mechanics.
 
+# TODO: Move low level LDAP actions to helper class
+
 # TODO: Think about some subclassing for the different directory types.
 # This would make some code a lot easier to understand.
+
 
 #   .--Declarations--------------------------------------------------------.
 #   |       ____            _                 _   _                        |
@@ -122,6 +125,7 @@ class MKLDAPException(MKGeneralException):
 
 @user_connector_registry.register
 class LDAPUserConnector(UserConnector):
+    # TODO: Move this to another place. We should have some managing object for this
     # stores the ldap connection suffixes of all connections
     connection_suffixes = {}
 
@@ -174,7 +178,7 @@ class LDAPUserConnector(UserConnector):
         # File for storing the time of the last success event
         self._sync_time_file = cmk.paths.var_dir + '/web/ldap_%s_sync_time.mk'% self.id()
 
-        self.save_suffix()
+        self._save_suffix()
 
 
     @classmethod
@@ -210,7 +214,7 @@ class LDAPUserConnector(UserConnector):
                 trace_args["trace_level"] = 2
                 trace_args["trace_file"] = sys.stderr
 
-            uri = self.format_ldap_uri(server)
+            uri = self._format_ldap_uri(server)
             conn = ldap.ldapobject.ReconnectLDAPObject(uri, **trace_args)
             conn.protocol_version = self._config.get('version', 3)
             conn.network_timeout  = self._config.get('connect_timeout', 2.0)
@@ -235,7 +239,7 @@ class LDAPUserConnector(UserConnector):
                 except ValueError:
                     pass
 
-            self.default_bind(conn)
+            self._default_bind(conn)
             return conn, None
 
         except (ldap.SERVER_DOWN, ldap.TIMEOUT, ldap.LOCAL_ERROR, ldap.LDAPError), e:
@@ -250,8 +254,8 @@ class LDAPUserConnector(UserConnector):
             return None, "%s" % e
 
 
-    def format_ldap_uri(self, server):
-        if self.use_ssl():
+    def _format_ldap_uri(self, server):
+        if self._use_ssl():
             uri = 'ldaps://'
         else:
             uri = 'ldap://'
@@ -331,20 +335,20 @@ class LDAPUserConnector(UserConnector):
 
 
     # Bind with the default credentials
-    def default_bind(self, conn):
+    def _default_bind(self, conn):
         try:
             if 'bind' in self._config:
-                self.bind(self.replace_macros(self._config['bind'][0]),
+                self._bind(self._replace_macros(self._config['bind'][0]),
                           self._config['bind'][1], catch = False, conn = conn)
             else:
-                self.bind('', '', catch = False, conn = conn) # anonymous bind
+                self._bind('', '', catch = False, conn = conn) # anonymous bind
         except (ldap.INVALID_CREDENTIALS, ldap.INAPPROPRIATE_AUTH):
             raise MKLDAPException(_('Unable to connect to LDAP server with the configured bind credentials. '
                                     'Please fix this in the '
                                     '<a href="wato.py?mode=ldap_config">LDAP connection settings</a>.'))
 
 
-    def bind(self, user_dn, password, catch = True, conn = None):
+    def _bind(self, user_dn, password, catch = True, conn = None):
         if conn is None:
             conn = self._ldap_obj
         self._logger.info('LDAP_BIND %s' % user_dn)
@@ -371,7 +375,7 @@ class LDAPUserConnector(UserConnector):
         return servers
 
 
-    def use_ssl(self):
+    def _use_ssl(self):
         return 'use_ssl' in self._config
 
 
@@ -379,27 +383,28 @@ class LDAPUserConnector(UserConnector):
         return self._config['active_plugins']
 
 
-    def directory_type(self):
+    def _directory_type(self):
         return self._config['directory_type'][0]
 
 
     def is_active_directory(self):
-        return self.directory_type() == 'ad'
+        return self._directory_type() == 'ad'
 
 
     def has_user_base_dn_configured(self):
         return self._config['user_dn'] != ''
 
 
-    def create_users_only_on_login(self):
+    def _create_users_only_on_login(self):
         return self._config.get('create_only_on_login', False)
 
 
-    def user_id_attr(self):
+    def _user_id_attr(self):
         return self._config.get('user_id', self.ldap_attr('user_id'))
 
 
-    def member_attr(self):
+    # TODO: Add .lower() here and remove at call sites
+    def _member_attr(self):
         return self._config.get('group_member', self.ldap_attr('member'))
 
 
@@ -412,23 +417,23 @@ class LDAPUserConnector(UserConnector):
 
 
     def get_group_dn(self):
-        return self.replace_macros(self._config['group_dn'])
+        return self._replace_macros(self._config['group_dn'])
 
 
-    def get_user_dn(self):
-        return self.replace_macros(self._config['user_dn'])
+    def _get_user_dn(self):
+        return self._replace_macros(self._config['user_dn'])
 
 
-    def get_suffix(self):
+    def _get_suffix(self):
         return self._config.get('suffix')
 
 
-    def has_suffix(self):
+    def _has_suffix(self):
         return self._config.get('suffix') != None
 
 
-    def save_suffix(self):
-        suffix = self.get_suffix()
+    def _save_suffix(self):
+        suffix = self._get_suffix()
         if suffix:
             if suffix in LDAPUserConnector.connection_suffixes \
                and LDAPUserConnector.connection_suffixes[suffix] != self.id():
@@ -453,20 +458,20 @@ class LDAPUserConnector(UserConnector):
 
     def object_exists(self, dn):
         try:
-            return bool(self.ldap_search(dn, columns = ['dn'], scope = 'base'))
+            return bool(self._ldap_search(dn, columns = ['dn'], scope = 'base'))
         except Exception:
             return False
 
 
     def user_base_dn_exists(self):
-        return self.object_exists(self.get_user_dn())
+        return self.object_exists(self._get_user_dn())
 
 
     def group_base_dn_exists(self):
         return self.object_exists(self.get_group_dn())
 
 
-    def ldap_paged_async_search(self, base, scope, filt, columns):
+    def _ldap_paged_async_search(self, base, scope, filt, columns):
         self._logger.info('  PAGED ASYNC SEARCH')
         page_size = self._config.get('page_size', 1000)
 
@@ -503,7 +508,7 @@ class LDAPUserConnector(UserConnector):
         return results
 
 
-    def ldap_search(self, base, filt='(objectclass=*)', columns=None, scope='sub', implicit_connect=True):
+    def _ldap_search(self, base, filt='(objectclass=*)', columns=None, scope='sub', implicit_connect=True):
         if columns == None:
             columns = []
 
@@ -524,8 +529,8 @@ class LDAPUserConnector(UserConnector):
 
                 result = []
                 try:
-                    for dn, obj in self.ldap_paged_async_search(base,
-                                        self.ldap_get_scope(scope), filt, columns):
+                    for dn, obj in self._ldap_paged_async_search(base,
+                                        self._ldap_get_scope(scope), filt, columns):
                         if dn is None:
                             continue # skip unwanted answers
                         new_obj = {}
@@ -572,7 +577,7 @@ class LDAPUserConnector(UserConnector):
         return result
 
 
-    def ldap_get_scope(self, scope):
+    def _ldap_get_scope(self, scope):
         # Had "subtree" in Check_MK for several weeks. Better be compatible to both definitions.
         if scope in [ 'sub', 'subtree' ]:
             return ldap.SCOPE_SUBTREE
@@ -586,24 +591,24 @@ class LDAPUserConnector(UserConnector):
 
     # Returns the ldap filter depending on the configured ldap directory type
     def ldap_filter(self, key, handle_config = True):
-        value = ldap_filter_map[self.directory_type()].get(key, '(objectclass=*)')
+        value = ldap_filter_map[self._directory_type()].get(key, '(objectclass=*)')
         if handle_config:
             if key == 'users':
                 value = self._config.get('user_filter', value)
             elif key == 'groups':
                 value = self._config.get('group_filter', value)
-        return self.replace_macros(value)
+        return self._replace_macros(value)
 
 
     # Returns the ldap attribute name depending on the configured ldap directory type
     # If a key is not present in the map, the assumption is, that the key matches 1:1
     # Always use lower case here, just to prevent confusions.
     def ldap_attr(self, key):
-        return ldap_attr_map[self.directory_type()].get(key, key).lower()
+        return ldap_attr_map[self._directory_type()].get(key, key).lower()
 
 
     # Returns the given distinguished name template with replaced vars
-    def replace_macros(self, tmpl):
+    def _replace_macros(self, tmpl):
         dn = tmpl
 
         for key, val in [ ('$OMD_SITE$', config.omd_site()) ]:
@@ -615,7 +620,7 @@ class LDAPUserConnector(UserConnector):
         return dn
 
 
-    def sanitize_user_id(self, user_id):
+    def _sanitize_user_id(self, user_id):
         if self._config.get('lower_user_ids', False):
             user_id = user_id.lower()
 
@@ -644,18 +649,18 @@ class LDAPUserConnector(UserConnector):
         return user_id
 
 
-    def get_user(self, username, no_escape = False):
+    def _get_user(self, username, no_escape = False):
         if username in self._user_cache:
             return self._user_cache[username]
 
-        user_id_attr = self.user_id_attr()
+        user_id_attr = self._user_id_attr()
 
         # Check whether or not the user exists in the directory matching the username AND
         # the user search filter configured in the "LDAP User Settings".
         # It's only ok when exactly one entry is found. Returns the DN and user_id
         # as tuple in this case.
-        result = self.ldap_search(
-            self.get_user_dn(),
+        result = self._ldap_search(
+            self._get_user_dn(),
             '(&(%s=%s)%s)' % (user_id_attr, ldap.filter.escape_filter_chars(username),
                               self._config.get('user_filter', '')),
             [user_id_attr],
@@ -671,9 +676,9 @@ class LDAPUserConnector(UserConnector):
         # Filter out users by the optional filter_group
         filter_group_dn = self._config.get('user_filter_group', None)
         if filter_group_dn:
-            member_attr = self.member_attr().lower()
+            member_attr = self._member_attr().lower()
             is_member = False
-            for member in self.get_filter_group_members(filter_group_dn):
+            for member in self._get_filter_group_members(filter_group_dn):
                 if member_attr == "memberuid" and raw_user_id == member:
                     is_member = True
                 elif dn == member:
@@ -682,7 +687,7 @@ class LDAPUserConnector(UserConnector):
             if not is_member:
                 return None
 
-        user_id = self.sanitize_user_id(raw_user_id)
+        user_id = self._sanitize_user_id(raw_user_id)
         if user_id is None:
             return None
         self._user_cache[username] = (dn, user_id)
@@ -694,8 +699,8 @@ class LDAPUserConnector(UserConnector):
 
 
 
-    def get_users(self, add_filter = ''):
-        user_id_attr = self.user_id_attr()
+    def _get_users(self, add_filter = ''):
+        user_id_attr = self._user_id_attr()
 
         columns = [
             user_id_attr, # needed in all cases as uniq id
@@ -706,14 +711,14 @@ class LDAPUserConnector(UserConnector):
         # Create filter by the optional filter_group
         filter_group_dn = self._config.get('user_filter_group', None)
         if filter_group_dn:
-            member_attr = self.member_attr().lower()
+            member_attr = self._member_attr().lower()
             # posixGroup objects use the memberUid attribute to specify the group memberships.
             # This is the username instead of the users DN. So the username needs to be used
             # for filtering here.
             user_cmp_attr = user_id_attr if member_attr == 'memberuid' else 'distinguishedname'
 
             member_filter_items = []
-            for member in self.get_filter_group_members(filter_group_dn):
+            for member in self._get_filter_group_members(filter_group_dn):
                 member_filter_items.append('(%s=%s)' % (user_cmp_attr, member))
             add_filter += '(|%s)' % ''.join(member_filter_items)
 
@@ -721,12 +726,12 @@ class LDAPUserConnector(UserConnector):
             filt = '(&%s%s)' % (filt, add_filter)
 
         result = {}
-        for dn, ldap_user in self.ldap_search(self.get_user_dn(),
+        for dn, ldap_user in self._ldap_search(self._get_user_dn(),
                                          filt, columns, self._config['user_scope']):
             if user_id_attr not in ldap_user:
                 raise MKLDAPException(_('The configured User-ID attribute "%s" does not '
                                         'exist for the user "%s"') % (user_id_attr, dn))
-            user_id = self.sanitize_user_id(ldap_user[user_id_attr][0])
+            user_id = self._sanitize_user_id(ldap_user[user_id_attr][0])
             if user_id:
                 ldap_user['dn'] = dn # also add the DN
                 result[user_id] = ldap_user
@@ -735,11 +740,11 @@ class LDAPUserConnector(UserConnector):
 
 
     # TODO: Use get_group_memberships()?
-    def get_filter_group_members(self, filter_group_dn):
-        member_attr = self.member_attr().lower()
+    def _get_filter_group_members(self, filter_group_dn):
+        member_attr = self._member_attr().lower()
 
         try:
-            group = self.ldap_search(self.replace_macros(filter_group_dn), columns=[member_attr], scope='base')
+            group = self._ldap_search(self._replace_macros(filter_group_dn), columns=[member_attr], scope='base')
         except MKLDAPException:
             group = None
 
@@ -751,30 +756,15 @@ class LDAPUserConnector(UserConnector):
         return [ m.lower() for m in group[0][1].values()[0] ]
 
 
-    def get_groups(self, specific_dn = None):
-        filt = self.ldap_filter('groups')
-        dn   = self.get_group_dn()
-
-        if specific_dn:
-            # When using AD, the groups can be filtered by the DN attribute. With
-            # e.g. OpenLDAP this is not possible. In that case, change the DN.
-            if self.is_active_directory():
-                filt = '(&%s(distinguishedName=%s))' % (filt, specific_dn)
-            else:
-                dn = specific_dn
-
-        return self.ldap_search(dn, filt, ['cn'], self._config['group_scope'])
-
-
     def get_group_memberships(self, filters, filt_attr = 'cn', nested = False):
         cache_key = (tuple(filters), nested, filt_attr)
         if cache_key in self._group_cache:
             return self._group_cache[cache_key]
 
         if not nested:
-            groups = self.get_direct_group_memberships(filters, filt_attr)
+            groups = self._get_direct_group_memberships(filters, filt_attr)
         else:
-            groups = self.get_nested_group_memberships(filters, filt_attr)
+            groups = self._get_nested_group_memberships(filters, filt_attr)
 
         self._group_cache[cache_key] = groups
         return groups
@@ -786,17 +776,17 @@ class LDAPUserConnector(UserConnector):
     # In OpenLDAP the distinguishedname is no user attribute, therefor it can not be used
     # as filter expression. We have to do one ldap query per group. Maybe, in the future,
     # we change the role sync plugin parameters to snapins to make this part a little easier.
-    def get_direct_group_memberships(self, filters, filt_attr):
+    def _get_direct_group_memberships(self, filters, filt_attr):
         groups = {}
         filt = self.ldap_filter('groups')
-        member_attr = self.member_attr().lower()
+        member_attr = self._member_attr().lower()
 
         if self.is_active_directory() or filt_attr != 'distinguishedname':
             if filters:
                 add_filt = '(|%s)' % ''.join([ '(%s=%s)' % (filt_attr, f) for f in filters ])
                 filt = '(&%s%s)' % (filt, add_filt)
 
-            for dn, obj in self.ldap_search(self.get_group_dn(), filt, ['cn', member_attr],
+            for dn, obj in self._ldap_search(self.get_group_dn(), filt, ['cn', member_attr],
                                             self._config['group_scope']):
                 groups[dn] = {
                     'cn'      : obj['cn'][0],
@@ -805,7 +795,7 @@ class LDAPUserConnector(UserConnector):
         else:
             # Special handling for OpenLDAP when searching for groups by DN
             for f_dn in filters:
-                for dn, obj in self.ldap_search(self.replace_macros(f_dn), filt,
+                for dn, obj in self._ldap_search(self._replace_macros(f_dn), filt,
                                                 ['cn', member_attr], 'base'):
                     groups[f_dn] = {
                         'cn'      : obj['cn'][0],
@@ -818,13 +808,13 @@ class LDAPUserConnector(UserConnector):
     # Nested querying is more complicated. We have no option to simply do a query for group objects
     # to make them resolve the memberships here. So we need to query all users with the nested
     # memberof filter to get all group memberships of that group. We need one query for each group.
-    def get_nested_group_memberships(self, filters, filt_attr):
+    def _get_nested_group_memberships(self, filters, filt_attr):
         groups = {}
         for filter_val in filters:
             matched_groups = {}
 
             if filt_attr == 'cn':
-                result = self.ldap_search(self.get_group_dn(),
+                result = self._ldap_search(self.get_group_dn(),
                                      '(&%s(cn=%s))' % (self.ldap_filter('groups'), filter_val),
                                      ['dn', 'cn'], self._config['group_scope'])
                 if not result:
@@ -844,8 +834,8 @@ class LDAPUserConnector(UserConnector):
                     'members' : [],
                     'cn'      : cn,
                 }
-                for user_dn, _obj in self.ldap_search(self.get_user_dn(),
-                                                      filt, ['dn'], self._config['user_scope']):
+                for user_dn, _obj in self._ldap_search(self._get_user_dn(),
+                                                     filt, ['dn'], self._config['user_scope']):
                     groups[dn]['members'].append(user_dn.lower())
 
         return groups
@@ -864,13 +854,13 @@ class LDAPUserConnector(UserConnector):
         if config.user_connections:
             return # Don't try to migrate anything when there is at least one connection configured
 
-        if cls.needs_config_migration():
-            cls.do_migrate_config()
+        if cls._needs_config_migration():
+            cls._do_migrate_config()
 
 
     # Don't migrate anything when no ldap connection has been configured
     @classmethod
-    def needs_config_migration(cls):
+    def _needs_config_migration(cls):
         ldap_connection = getattr(config, 'ldap_connection', {})
         default_ldap_connection_config = {
             'type'      : 'ad',
@@ -880,7 +870,7 @@ class LDAPUserConnector(UserConnector):
 
 
     @classmethod
-    def do_migrate_config(cls):
+    def _do_migrate_config(cls):
         # Create a default connection out of the old config format
         connection = {
             'id'             : 'default',
@@ -919,20 +909,20 @@ class LDAPUserConnector(UserConnector):
 
         # Did the user provide an suffix with his user_id? This might enforce
         # LDAP connections to be choosen or skipped.
-        # self.user_enforces_this_connection can return either:
+        # self._user_enforces_this_connection can return either:
         #   True:  This connection is enforced
         #   False: Another connection is enforced
         #   None:  No connection is enforced
-        enforce_this_connection = self.user_enforces_this_connection(user_id)
+        enforce_this_connection = self._user_enforces_this_connection(user_id)
         if enforce_this_connection == False:
             return None # Skip this connection, another one is enforced
         else:
-            user_id = self.strip_suffix(user_id)
+            user_id = self._strip_suffix(user_id)
 
         # Returns None when the user is not found or not uniq, else returns the
         # distinguished name and the user_id as tuple which are both needed for
         # the further login process.
-        result = self.get_user(user_id, True)
+        result = self._get_user(user_id, True)
         if not result:
             # The user does not exist
             if enforce_this_connection:
@@ -945,20 +935,20 @@ class LDAPUserConnector(UserConnector):
         # Try to bind with the user provided credentials. This unbinds the default
         # authentication which should be rebound again after trying this.
         try:
-            self.bind(user_dn, password)
+            self._bind(user_dn, password)
             result = user_id
         except:
             self._logger.exception("  Exception during authentication (User: %s)", user_id)
             result = False
 
-        self.default_bind(self._ldap_obj)
+        self._default_bind(self._ldap_obj)
         return result
 
 
-    def user_enforces_this_connection(self, username):
+    def _user_enforces_this_connection(self, username):
         matched_connection_ids = []
         for suffix, connection_id in LDAPUserConnector.get_connection_suffixes().items():
-            if self.username_matches_suffix(username, suffix):
+            if self._username_matches_suffix(username, suffix):
                 matched_connection_ids.append(connection_id)
 
         if not matched_connection_ids:
@@ -969,20 +959,20 @@ class LDAPUserConnector(UserConnector):
             return matched_connection_ids[0] == self.id()
 
 
-    def username_matches_suffix(self, username, suffix):
+    def _username_matches_suffix(self, username, suffix):
         return username.endswith('@' + suffix)
 
 
-    def strip_suffix(self, username):
-        suffix = self.get_suffix()
-        if suffix and self.username_matches_suffix(username, suffix):
+    def _strip_suffix(self, username):
+        suffix = self._get_suffix()
+        if suffix and self._username_matches_suffix(username, suffix):
             return username[:-(len(suffix)+1)]
         else:
             return username
 
 
-    def add_suffix(self, username):
-        suffix = self.get_suffix()
+    def _add_suffix(self, username):
+        suffix = self._get_suffix()
         return '%s@%s' % (username, suffix)
 
 
@@ -995,7 +985,7 @@ class LDAPUserConnector(UserConnector):
 
         # Flush ldap related before each sync to have a caching only for the
         # current sync process
-        self.flush_caches()
+        self._flush_caches()
 
         start_time = time.time()
         connection_id = self.id()
@@ -1003,7 +993,7 @@ class LDAPUserConnector(UserConnector):
         self._logger.info('SYNC STARTED')
         self._logger.info('  SYNC PLUGINS: %s' % ', '.join(self._config['active_plugins'].keys()))
 
-        ldap_users = self.get_users()
+        ldap_users = self._get_users()
 
         import cmk.gui.userdb as userdb # TODO: Cleanup
         users = userdb.load_users(lock = True)
@@ -1023,7 +1013,7 @@ class LDAPUserConnector(UserConnector):
         # LDAP anymore
         for user_id, user in users.items():
             user_connection_id = userdb.cleanup_connection_id(user.get('connector'))
-            if user_connection_id == connection_id and self.strip_suffix(user_id) not in ldap_users:
+            if user_connection_id == connection_id and self._strip_suffix(user_id) not in ldap_users:
                 del users[user_id] # remove the user
                 if config.wato_enabled:
                     changes.append(_("LDAP [%s]: Removed user %s") % (connection_id, user_id))
@@ -1032,7 +1022,7 @@ class LDAPUserConnector(UserConnector):
             mode_create, user = load_user(user_id)
             user_connection_id = userdb.cleanup_connection_id(user.get('connector'))
 
-            if self.create_users_only_on_login() and mode_create:
+            if self._create_users_only_on_login() and mode_create:
                 self._logger.info('  SKIP SYNC "%s" (Only create user of "%s" connector on login)' %
                                                                         (user_id, user_connection_id))
                 continue
@@ -1046,8 +1036,8 @@ class LDAPUserConnector(UserConnector):
             # use this for constructing a unique username. If not or if the name+suffix is
             # already taken too, skip this user silently.
             if user_connection_id != connection_id:
-                if self.has_suffix():
-                    user_id = self.add_suffix(user_id)
+                if self._has_suffix():
+                    user_id = self._add_suffix(user_id)
                     mode_create, user = load_user(user_id)
                     user_connection_id = userdb.cleanup_connection_id(user.get('connector'))
                     if user_connection_id != connection_id:
@@ -1058,7 +1048,7 @@ class LDAPUserConnector(UserConnector):
                     self._logger.info('  SKIP SYNC "%s" (name conflict with user from "%s" connector)' % (user_id, user_connection_id))
                     continue # name conflict, different connector
 
-            self.execute_active_sync_plugins(user_id, ldap_user, user)
+            self._execute_active_sync_plugins(user_id, ldap_user, user)
 
             if not mode_create and user == users[user_id]:
                 continue # no modification. Skip this user.
@@ -1070,7 +1060,7 @@ class LDAPUserConnector(UserConnector):
                 added = set_new - intersect
                 removed = set_old - intersect
 
-                changed = self.find_changed_user_keys(intersect, users[user_id], user) # returns a dict
+                changed = self._find_changed_user_keys(intersect, users[user_id], user) # returns a dict
 
             users[user_id] = user # Update the user record
             if mode_create and config.wato_enabled:
@@ -1113,10 +1103,10 @@ class LDAPUserConnector(UserConnector):
 
         userdb.save_users(users)
 
-        self.set_last_sync_time()
+        self._set_last_sync_time()
 
 
-    def find_changed_user_keys(self, keys, user, new_user):
+    def _find_changed_user_keys(self, keys, user, new_user):
         changed = {}
         for key in keys:
             value = user[key]
@@ -1130,17 +1120,17 @@ class LDAPUserConnector(UserConnector):
         return changed
 
 
-    def execute_active_sync_plugins(self, user_id, ldap_user, user):
+    def _execute_active_sync_plugins(self, user_id, ldap_user, user):
         for key, params in self._config['active_plugins'].items():
             user.update(ldap_attribute_plugins[key]['sync_func'](self, key, params or {}, user_id, ldap_user, user))
 
 
-    def flush_caches(self):
+    def _flush_caches(self):
         self._user_cache.clear()
         self._group_cache.clear()
 
 
-    def set_last_sync_time(self):
+    def _set_last_sync_time(self):
         file(self._sync_time_file, 'w').write('%s\n' % time.time())
 
 
@@ -1163,17 +1153,17 @@ class LDAPUserConnector(UserConnector):
 
 
     def sync_is_needed(self):
-        return self.get_last_sync_time() + self.get_cache_livetime() <= time.time()
+        return self._get_last_sync_time() + self._get_cache_livetime() <= time.time()
 
 
-    def get_last_sync_time(self):
+    def _get_last_sync_time(self):
         try:
             return float(file(self._sync_time_file).read().strip())
         except:
             return 0
 
 
-    def get_cache_livetime(self):
+    def _get_cache_livetime(self):
         return self._config['cache_livetime']
 
 
@@ -1225,13 +1215,6 @@ class LDAPUserConnector(UserConnector):
 
 ldap_attribute_plugins = {}
 ldap_builtin_attribute_plugin_names = []
-
-# Returns a list of pairs (key, title) of all available attribute plugins
-def ldap_list_attribute_plugins():
-    plugins = []
-    for key, plugin in ldap_attribute_plugins.items():
-        plugins.append((key, plugin['title']))
-    return plugins
 
 # Returns a list of pairs (key, parameters) of all available attribute plugins
 def ldap_attribute_plugins_elements(connection_id):
@@ -1357,7 +1340,7 @@ def get_connection_choices(add_this=True):
 # This is either the user id or the user distinguished name,
 # depending on the LDAP server to communicate with
 def get_group_member_cmp_val(connection, user_id, ldap_user):
-    return user_id if connection.member_attr().lower() == 'memberuid' else ldap_user['dn']
+    return user_id if connection._member_attr().lower() == 'memberuid' else ldap_user['dn']
 
 
 def get_groups_of_user(connection, user_id, ldap_user, cg_names, nested, other_connection_ids):

@@ -1,0 +1,13 @@
+Title: Fixed possible XSS in views with some filters
+Level: 1
+Component: multisite
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0i1
+Date: 1533231517
+
+It was possible to inject some specific HTML tags (like the a-tag)
+into the title of views which could be used to make users click on
+it to execute some arbitrary javascript code. 

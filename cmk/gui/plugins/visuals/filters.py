@@ -1310,7 +1310,7 @@ class BIGroupFilter(FilterUnicodeFilter):
     def display(self):
         htmlvar = self.htmlvars[0]
         html.dropdown(htmlvar, [("", "")] + [(group, group) for group in
-                      {sg for g in bi.aggregation_groups() for sg in g}])
+                      {sg for g in bi.get_aggregation_group_trees() for sg in g}])
 
 
     def selected_group(self):
@@ -1381,7 +1381,7 @@ class BIGroupTreeFilter(FilterUnicodeFilter):
             return ("/".join(path), title_prefix + path[index])
 
         tree = {}
-        for group in bi.aggregation_groups():
+        for group in bi.get_aggregation_group_trees():
             _build_tree(group, tree, tuple())
 
         selection = []

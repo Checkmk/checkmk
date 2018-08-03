@@ -434,7 +434,7 @@ def page_login(no_html_output = False):
 
 def normal_login_page(called_directly = True):
     html.set_render_headfoot(False)
-    html.header(_("Check_MK Multisite Login"), javascripts=[], stylesheets=["pages", "login"])
+    html.header(config.get_page_heading(), javascripts=[], stylesheets=["pages", "login"])
 
     origtarget = html.var('_origtarget', '')
     if not origtarget and not html.myfile in [ 'login', 'logout' ]:

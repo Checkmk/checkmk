@@ -255,14 +255,22 @@ def reused_compilation():
     return used_cache and not did_compilation
 
 
-def aggregation_groups():
+def get_aggregation_group_trees():
+    # Here we have to deal with weird legacy
+    # aggregation group definitions:
+    # - "GROUP"
+    # - ["GROUP_1", "GROUP2", ..]
+    # - [["GROUP1"], ["PATH", "TO", "GROUP2"]]
     migrate_bi_configuration() # convert bi_packs into legacy variables
-    # on demand: show all configured groups
     groups = []
     for aggr_def in config.aggregations + config.host_aggregations:
         if aggr_def[0].get("disabled"):
             continue
-        groups.extend(aggr_def[1])
+        legacy_group = aggr_def[1]
+        if isinstance(legacy_group, list):
+            groups.extend([g if isinstance(g, list) else [g] for g in legacy_group])
+        else:
+            groups.append([legacy_group])
     return groups
 
 

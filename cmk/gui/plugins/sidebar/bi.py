@@ -47,7 +47,9 @@ from . import (
 
 def render_bi_groups():
     html.open_ul()
-    for group in sorted({sg for g in bi.aggregation_groups() for sg in g}):
+    # Aggregation groups/group paths are of the form:
+    # [['GROUPNAME'], ['PATH', 'TO', 'GROUP'], ...]
+    for group in sorted({group_path[-1] for group_path in bi.get_aggregation_group_trees()}):
         bulletlink(group, "view.py?view_name=aggr_group&aggr_group=%s" %
                    html.urlencode(group))
     html.close_ul()
@@ -74,7 +76,7 @@ sidebar_snapins["biaggr_groups"] = {
 
 def render_bi_groups_tree():
     tree = {}
-    for group in bi.aggregation_groups():
+    for group in bi.get_aggregation_group_trees():
         _build_tree(group, tree, tuple())
     _render_tree(tree)
 
@@ -92,7 +94,8 @@ def _build_tree(group, parent, path):
 def _render_tree(tree):
     for group, attrs in tree.iteritems():
         if attrs.get('__children__'):
-            html.begin_foldable_container("bi_aggregation_groups", group, False, group)
+            html.begin_foldable_container("bi_aggregation_group_trees",
+                                          "".join(attrs["__path__"]), False, group)
             _render_tree(attrs['__children__'])
             html.end_foldable_container()
         else:

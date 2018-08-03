@@ -1,4 +1,4 @@
-Title: winperf_processor: Changed CPU util default levels from 101, 101 percent to 90, 95 percent
+Title: winperf_processor: Changed CPU utilization default levels to 90, 95 percent
 Level: 1
 Component: checks
 Compatible: incomp
@@ -7,4 +7,9 @@ Version: 1.6.0i1
 Date: 1533273978
 Class: feature
 
+Previously the default levels were set to 101, 101 percent
+which is in most cases equivalent to 'no levels'.
 
+These levels are configurable via the WATO rule
+{{CPU utilization for simple devices}} and can be
+disabled, too.

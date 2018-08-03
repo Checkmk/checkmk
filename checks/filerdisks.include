@@ -53,18 +53,28 @@ def check_filer_disks(disks, params):
     yield 0, "Total raw capacity: %s" % get_bytes_human_readable(total_capacity), [("total_disk_capacity", total_capacity)]
     # TODO: Is a prefailed disk unavailable?
     unavail_disks = len(state['prefailed']) + len(state['failed']) + len(state['offline'])
-    yield 0, "Total disks: %d (%d Spare)" % (len(disks) - unavail_disks, len(state['spare'])), [
-                                                                            ("total_disks", len(disks)),
-                                                                            ("spare_disks", len(state['spare'])),
-                                                                            ("failed_disks", unavail_disks) ]
+    yield 0, "Total disks: %d" % (len(disks) - unavail_disks), [("total_disks", len(disks))]
 
+    spare_disks = len(state['spare'])
+    spare_state, spare_infotext = 0, "Spare disks: %d" % spare_disks
+    spare_disk_levels = params.get('number_of_spare_disks')
+    if spare_disk_levels:
+        warn, crit = spare_disk_levels
+        if spare_disks < crit:
+            spare_state = 2
+        elif spare_disks < warn:
+            spare_state = 1
+
+        if spare_state:
+            spare_infotext += " (warn/crit below %s/%s)" % (warn, crit)
+    yield spare_state, spare_infotext, [("spare_disks", spare_disks)]
 
     parity_disks = [ disk for disk in disks if disk['type'] == 'parity' ]
     prefailed_parity = [ disk for disk in parity_disks if disk['state'] == 'prefailed' ]
     if len(parity_disks) > 0:
         yield 0, "Parity disks: %d (%d prefailed)" % (len(parity_disks), len(prefailed_parity))
 
-    yield 0, "Failed disks: %d" % unavail_disks
+    yield 0, "Failed disks: %d" % unavail_disks, [("failed_disks", unavail_disks)]
 
     for name, disk_type in [("Data",              "data"),
                             ("Parity",            "parity")]:
@@ -96,6 +106,4 @@ def check_filer_disks(disks, params):
                 return_state = 1
             if return_state:
                 yield return_state, "Too many %s disks (warn/crit at %.1f%%/%.1f%%)" % (disk_state, warn, crit)
-
-
 

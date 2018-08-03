@@ -29,22 +29,18 @@ def inventory_win_cpuusage(info):
     for line in info:
         try:
             if line[0] == '238:6':
-                return [(None, None, "winperf_cpu_default_levels")]
+                return [(None, {})]
         except:
             pass
 
-winperf_cpu_default_levels = (90, 95)
 
-# params: levels for warn / crit in percentage
 def check_win_cpuusage(item, params, info):
-    # get parameters. Be nice to older installations that still use 'None'
-    # as parameters
-    if params is None:
-        params = winperf_cpu_default_levels # for legacy reasons
-    elif type(params) == tuple:
+    if isinstance(params, tuple):
         warn, crit = params
-    else:
+    elif isinstance(params, dict):
         warn, crit = params['levels']
+    else: # legacy: old params may be None
+        warn, crit = None, None
 
     for line in info:
         if line[0] == '238:6':
@@ -61,27 +57,29 @@ def check_win_cpuusage(item, params, info):
                 overall_perc += used_perc
 
             used_perc = overall_perc / num_cpus
-
             if used_perc < 0:
                 used_perc = 0
             elif used_perc > 100:
                 used_perc = 100
-            perfdata = [ ("cpuusage", "%.2f" % used_perc, '', '', 0, 100) ]
+
             if num_cpus == 1:
                 num_txt = ""
             else:
                 num_txt = " / %d CPUs" % num_cpus
 
             infotext = "%d%% used%s" % (int(used_perc), num_txt)
-
-            if used_perc >= crit:
-                return (2, infotext, perfdata)
-            elif used_perc >= warn:
-                return (1, infotext, perfdata)
-            else:
-                return (0, infotext, perfdata)
-
+            state = 0
+            if crit is not None and used_perc >= crit:
+                state = 2
+            elif warn is not None and used_perc >= warn:
+                state = 1
+            if state:
+                infotext += " (warn/crit at %s/%s)" % (
+                            get_percent_human_readable(warn),
+                            get_percent_human_readable(crit))
+            return state, infotext, [("cpuusage", "%.2f" % used_perc, warn, crit, 0, 100)]
     return (3, "counter for cpu (238:6) not found")
+
 
 def inventory_win_diskstat(info):
     for line in info:
@@ -123,14 +121,15 @@ def check_win_diskstat(item, params, info):
             (read_per_sec / 1048576, write_per_sec / 1048576), perfdata)
 
 
-check_config_variables.append("winperf_cpu_default_levels")
-
 check_info["winperf.cpuusage"] = {
-    'check_function':          check_win_cpuusage,
-    'inventory_function':      inventory_win_cpuusage,
-    'service_description':     'CPU Usage',
-    'has_perfdata':            True,
+    'check_function'            : check_win_cpuusage,
+    'inventory_function'        : inventory_win_cpuusage,
+    'service_description'       : 'CPU Usage',
+    'has_perfdata'              : True,
+    'default_levels_variable'   : 'winperf_cpu_default_levels',
+    'includes'                  : ["winperf.include"],
 }
+
 
 check_info["winperf.diskstat"] = {
     'check_function':          check_win_diskstat,

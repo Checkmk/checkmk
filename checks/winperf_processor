@@ -25,8 +25,6 @@
 # Boston, MA 02110-1301 USA.
 
 
-winperf_cpu_default_levels = { "levels": ( 101.0, 101.0 ) }
-
 def inventory_winperf_util(info):
     if len(info) <= 1:
         return None
@@ -34,12 +32,11 @@ def inventory_winperf_util(info):
     for line in info[1:]:
         try:
             if line[0] == '-232':
-                return [(None, "winperf_cpu_default_levels")]
+                return [(None, {})]
         except IndexError:
             pass
 
 
-# params: levels for warn / crit in percentage
 def check_winperf_util(_no_item, params, info):
     if not info:
         return
@@ -133,11 +130,12 @@ def check_winperf_util(_no_item, params, info):
 
 
 check_info["winperf_processor.util"] = {
-    'check_function':          check_winperf_util,
-    'inventory_function':      inventory_winperf_util,
-    'service_description':     'CPU utilization',
-    'has_perfdata':            True,
-    'handle_real_time_checks': True,
-    'group':                   'cpu_utilization_os',
-    'includes':                [ "cpu_util.include" ],
+    'check_function'            : check_winperf_util,
+    'inventory_function'        : inventory_winperf_util,
+    'service_description'       : 'CPU utilization',
+    'has_perfdata'              : True,
+    'handle_real_time_checks'   : True,
+    'group'                     : 'cpu_utilization_os',
+    'default_levels_variable'   : 'winperf_cpu_default_levels',
+    'includes'                  : ["cpu_util.include", "winperf.include"],
 }

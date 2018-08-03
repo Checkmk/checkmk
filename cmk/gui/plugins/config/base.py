@@ -220,6 +220,8 @@ start_url = "dashboard.py"
 # Page heading for main frame set
 page_heading = "Check_MK %s"
 
+login_screen = {}
+
 # Timeout for rescheduling of host- and servicechecks
 reschedule_timeout = 10.0
 

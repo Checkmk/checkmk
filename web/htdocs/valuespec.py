@@ -4668,7 +4668,7 @@ class TimeperiodValuespec(ValueSpec):
         if html.has_var(self.tp_toggle_var):
             is_active = self._is_switched_on()
         else:
-            is_active = self._is_active(value)
+            is_active = self.is_active(value)
 
         # Set the actual used mode
         html.hidden_field(self.tp_current_mode, "%d" % is_active)
@@ -4690,7 +4690,7 @@ class TimeperiodValuespec(ValueSpec):
 
     def value_to_text(self, value):
         text = ""
-        if self._is_active(value):
+        if self.is_active(value):
             # TODO/Phantasm: highlight currently active timewindow
             text += self._get_timeperiod_valuespec().value_to_text(value)
         else:
@@ -4717,14 +4717,14 @@ class TimeperiodValuespec(ValueSpec):
 
 
     def validate_datatype(self, value, varprefix):
-        if self._is_active(value):
+        if self.is_active(value):
             self._get_timeperiod_valuespec().validate_datatype(value, varprefix)
         else:
             self._enclosed_valuespec.validate_datatype(value, varprefix)
 
 
     def validate_value(self, value, varprefix):
-        if self._is_active(value):
+        if self.is_active(value):
             self._get_timeperiod_valuespec().validate_value(value, varprefix)
         else:
             self._enclosed_valuespec.validate_value(value, varprefix)
@@ -4766,7 +4766,7 @@ class TimeperiodValuespec(ValueSpec):
 
 
     # Checks whether the value itself already uses the tp-mode
-    def _is_active(self, value):
+    def is_active(self, value):
         if isinstance(value, dict) and self.tp_default_value_key in value:
             return True
         else:

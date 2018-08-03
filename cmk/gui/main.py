@@ -54,11 +54,6 @@ def page_index():
     if not re.match(r"[/a-z0-9_\.-]*$", parsed.path):
         start_url = default_start_url
 
-    if "%s" in config.page_heading:
-        heading = config.page_heading % (config.site(config.omd_site()).get('alias', _("Multisite")))
-    else:
-        heading = config.page_heading
-
     html.write('<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Frameset//EN" "http://www.w3.org/TR/html4/frameset.dtd">\n'
                '<html><head>\n')
     html.default_html_headers()
@@ -69,4 +64,4 @@ def page_index():
     <frame src="%s" name="main" noresize>
 </frameset>
 </html>
-""" % (html.attrencode(heading), html.attrencode(start_url)))
+""" % (html.attrencode(config.get_page_heading()), html.attrencode(start_url)))

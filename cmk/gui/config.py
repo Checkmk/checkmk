@@ -1053,3 +1053,10 @@ def theme_choices():
         ("classic", _("Classic")),
         ("facelift", _("Modern")),
     ]
+
+
+def get_page_heading():
+    if "%s" in page_heading:
+        return page_heading % (site(omd_site()).get('alias', _("GUI")))
+    else:
+        return page_heading

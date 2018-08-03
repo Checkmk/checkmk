@@ -121,7 +121,9 @@ import cmk.gui.gui_background_job as gui_background_job
 import cmk.gui.i18n
 import cmk.gui.pages
 import cmk.gui.plugin_registry
+import cmk.gui.plugins.wato.utils
 import cmk.gui.plugins.wato.utils.base_modes
+import cmk.gui.plugins.wato.mkeventd
 from cmk.gui.i18n import _u, _
 from cmk.gui.globals import html
 from cmk.gui.htmllib import HTML
@@ -8967,15 +8969,30 @@ class ModeTimeperiods(WatoMode):
 
 
     # Check if a timeperiod is currently in use and cannot be deleted
-    # Returns a list of occurrances.
+    # Returns a list of two element tuples (title, url) that refer to the single occurrances.
+    #
     # Possible usages:
     # - 1. rules: service/host-notification/check-period
     # - 2. user accounts (notification period)
     # - 3. excluded by other timeperiods
+    # - 4. timeperiod condition in notification and alerting rules
+    # - 5. bulk operation in notification rules
+    # - 6. timeperiod condition in EC rules
+    # - 7. rules: time specific parameters
     def _find_usages_of_timeperiod(self, tpname):
-        # Part 1: Rules
         used_in = []
+        used_in += self._find_usages_in_host_and_service_rules(tpname)
+        used_in += self._find_usages_in_users(tpname)
+        used_in += self._find_usages_in_other_timeperiods(tpname)
+        used_in += self._find_usages_in_notification_rules(tpname)
+        used_in += self._find_usages_in_alert_handler_rules(tpname)
+        used_in += self._find_usages_in_ec_rules(tpname)
+        used_in += self._find_usages_in_time_specific_parameters(tpname)
+        return used_in
 
+
+    def _find_usages_in_host_and_service_rules(self, tpname):
+        used_in = []
         rulesets = watolib.AllRulesets()
         rulesets.load()
 
@@ -8989,19 +9006,119 @@ class ModeTimeperiods(WatoMode):
                                    watolib.folder_preserving_link([("mode", "edit_ruleset"), ("varname", varname)])))
                     break
 
-        # Part 2: Users
+        return used_in
+
+
+    def _find_usages_in_users(self, tpname):
+        used_in = []
         for userid, user in userdb.load_users().items():
             tp = user.get("notification_period")
             if tp == tpname:
                 used_in.append(("%s: %s" % (_("User"), userid),
                     watolib.folder_preserving_link([("mode", "edit_user"), ("edit", userid)])))
 
-        # Part 3: Other Timeperiods
+            for index, rule in enumerate(user.get("notification_rules", [])):
+                used_in += self._find_usages_in_notification_rule(tpname, index, rule, user_id=userid)
+        return used_in
+
+
+    def _find_usages_in_other_timeperiods(self, tpname):
+        used_in = []
         for tpn, tp in watolib.load_timeperiods().items():
             if tpname in tp.get("exclude", []):
                 used_in.append(("%s: %s (%s)" % (_("Timeperiod"), tp.get("alias", tpn),
                         _("excluded")),
                         watolib.folder_preserving_link([("mode", "edit_timeperiod"), ("edit", tpn)])))
+        return used_in
+
+
+    def _find_usages_in_notification_rules(self, tpname):
+        used_in = []
+        for index, rule in enumerate(watolib.load_notification_rules()):
+            used_in += self._find_usages_in_notification_rule(tpname, index, rule)
+        return used_in
+
+
+    def _find_usages_in_notification_rule(self, tpname, index, rule, user_id=None):
+        used_in = []
+
+        if self._used_in_tp_condition(rule, tpname) or self._used_in_bulking(rule, tpname):
+            url = watolib.folder_preserving_link([("mode", "notification_rule"), ("edit", index), ("user", user_id)])
+            if user_id:
+                title = _("Notification rule of user '%s'") % user_id
+            else:
+                title = _("Notification rule")
+
+            used_in.append((title, url))
+
+        return used_in
+
+
+    def _used_in_tp_condition(self, rule, tpname):
+        return rule.get("match_timeperiod") == tpname
+
+
+    def _used_in_bulking(self, rule, tpname):
+        bulk = rule.get("bulk")
+        if isinstance(bulk, tuple):
+            method, params = bulk
+            return method == "timeperiod" and params["timeperiod"] == tpname
+        return False
+
+
+    def _find_usages_in_alert_handler_rules(self, tpname):
+        used_in = []
+
+        if cmk.is_raw_edition():
+            return used_in
+
+        try:
+            import cmk.gui.cee.plugins.wato.alert_handling as alert_handling
+        except:
+            alert_handling = None
+
+        for index, rule in enumerate(alert_handling.load_alert_handler_rules()):
+            if rule.get("match_timeperiod") == tpname:
+                url = watolib.folder_preserving_link([("mode", "alert_handler_rule"), ("edit", index)])
+                used_in.append((_("Alert handler rule"), url))
+        return used_in
+
+
+    def _find_usages_in_ec_rules(self, tpname):
+        used_in = []
+        rule_packs = cmk.gui.plugins.wato.mkeventd.load_mkeventd_rules()
+        for rule_pack_index, rule_pack in enumerate(rule_packs):
+            for rule_index, rule in enumerate(rule_pack["rules"]):
+                if rule.get("match_timeperiod") == tpname:
+                    url = watolib.folder_preserving_link([("mode", "mkeventd_edit_rule"),
+                                                          ("edit", rule_index),
+                                                          ("rule_pack", rule_pack["id"])])
+                    used_in.append((_("Event console rule"), url))
+        return used_in
+
+
+    def _find_usages_in_time_specific_parameters(self, tpname):
+        used_in = []
+        rulesets = watolib.AllRulesets()
+        rulesets.load()
+        for ruleset in rulesets.get_rulesets().values():
+            vs = ruleset.valuespec()
+            if not isinstance(vs, cmk.gui.plugins.wato.utils.TimeperiodValuespec):
+                continue
+
+            for rule_folder, rule_index, rule in ruleset.get_rules():
+                if not vs.is_active(rule.value):
+                    continue
+
+                for rule_tp_name, _value in rule.value["tp_values"]:
+                    edit_url = watolib.folder_preserving_link([
+                        ("mode", "edit_rule"),
+                        ("back_mode", "timeperiods"),
+                        ("varname", ruleset.name),
+                        ("rulenr", rule_index),
+                        ("rule_folder", rule_folder.path()),
+                    ])
+                    used_in.append((_("Timespecific check parameter"), edit_url))
 
         return used_in
 
@@ -14451,7 +14568,6 @@ def create_sample_config():
     import cmk.gui.werks as werks
     werks.acknowledge_all_werks(check_permission=False)
 
-    import cmk.gui.plugins.wato.mkeventd
     cmk.gui.plugins.wato.mkeventd.save_mkeventd_sample_config()
 
     userdb.create_cmk_automation_user()

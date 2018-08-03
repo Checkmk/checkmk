@@ -1,0 +1,17 @@
+Title: Prevent non-admin users from managing custom host/user attributes
+Level: 1
+Component: wato
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0p1
+Date: 1533222667
+
+In previous versions it was possible for non-admin users that are allowed
+to configure hosts in WATO to also manage custom host attributes.
+
+This has been changed by introducing a new permission "Manage custom attributes"
+that is needed in addition to the host / user managing permission. By default
+this permission is only given to the "admin" role.
+

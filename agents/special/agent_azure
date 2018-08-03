@@ -128,7 +128,7 @@ def parse_arguments(argv):
     for k, v in vars(args).items():
         if k == "secret":
             v = '****'
-        log.debug('argparse: %s = %r' % (k, v))
+        log.debug('argparse: %s = %r', k, v)
 
     return args
 
@@ -143,7 +143,6 @@ def _write_section(basename, lines, lock=Lock()):
 
 
 class CachedMetricsMMC(MonitorManagementClient):
-
     # The following two dictionaries are hardcoded to
     # enhance performance. If a key is missing, it is
     # fetched from the server, and a message is provided
@@ -514,15 +513,20 @@ class CachedMetricsMMC(MonitorManagementClient):
         'microsoft.insights/metricalerts': [],
     }
 
-    def _get_metric_defs(self, rid, cache={}):
-        if not rid in cache:
+
+    def __init__(self, credentials, subscription_id, base_url=None):
+        super(CachedMetricsMMC, self).__init__(credentials, subscription_id, base_url)
+        self._metric_def_cache = {}
+
+    def _get_metric_defs(self, rid):
+        if not rid in self._metric_def_cache:
             m_defs = []
             # azure-api-call
             for m in self.metric_definitions.list(rid):
-                log.debug("metric definition: %r" % m.as_dict())
+                log.debug("metric definition: %r", m.as_dict())
                 m_defs.append(m)
-            cache[rid] = m_defs
-        return cache[rid]
+            self._metric_def_cache[rid] = m_defs
+        return self._metric_def_cache[rid]
 
     def _get_aggregation(self, metric_name, resource_id):
         for m in self._get_metric_defs(resource_id):
@@ -594,7 +598,7 @@ class AzureClient(object):
         time_end = datetime.datetime.now()
         time_interval = datetime.timedelta(minutes=self._config.minutes)
         self.timespan = "%s/%s" % (time_end - time_interval, time_end)
-        log.info("timespan = %r" % self.timespan)
+        log.info("timespan = %r", self.timespan)
 
     def match_name(self, r):
         match = re.search(self._config.match_name, r.name)
@@ -665,12 +669,12 @@ class AzureClient(object):
         # Assuming this agent is executed to gather one value per metric
         count = len(metric.timeseries)
         if count > 1:
-            log.warning("len(metric.timeseries) == %d" % count)
+            log.warning("len(metric.timeseries) == %d", count)
             log.warning("this agent is executed to gather one value per metric")
 
         for measurement in reversed(metric.timeseries):
-            log.debug("measurement: %s" % measurement)
-            log.debug("measurement.data: %s" % measurement.data)
+            log.debug("measurement: %s", measurement)
+            log.debug("measurement.data: %s", measurement.data)
             if not measurement.data:
                 continue
 
@@ -692,8 +696,8 @@ class AzureClient(object):
 
         table = []
         for metric in metric_objects:
-            log.debug("metric.name.value: %s" % metric.name.value)
-            log.debug("metric.timeseries: %s" % metric.timeseries)
+            log.debug("metric.name.value: %s", metric.name.value)
+            log.debug("metric.timeseries: %s", metric.timeseries)
 
             try:
                 row = self.extract_row_from_metric(metric, resource, err)
@@ -749,10 +753,10 @@ class Processes(object):
             self.ps.append(p)
         # join:
         for p in self.ps:
-            log.info("joining: %s" % p)
+            log.info("joining: %s", p)
             p.join(timeout=self.timeout)
             if p.is_alive():
-                log.info("still alive after %ss: %s" % (self.timeout, p))
+                log.info("still alive after %ss: %s", self.timeout, p)
                 self.timeout = 0.01
             else:
                 self.ps.remove(p)
@@ -760,7 +764,7 @@ class Processes(object):
     def terminate(self):
         for p in self.ps:
             if p.is_alive():
-                log.warning("terminating %s" % p)
+                log.warning("terminating %s", p)
                 p.terminate()
 
 

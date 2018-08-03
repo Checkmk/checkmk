@@ -108,14 +108,6 @@ class MKLDAPException(MKGeneralException):
     pass
 
 
-def ldap_test_module():
-    try:
-        ldap
-    except:
-        raise MKLDAPException(_("The python module python-ldap seems to be missing. You need to "
-                                "install this extension to make the LDAP user connector work."))
-
-
 #.
 #   .--UserConnector-------------------------------------------------------.
 #   | _   _                ____                            _               |
@@ -280,8 +272,6 @@ class LDAPUserConnector(UserConnector):
             return # Use existing connections (if connection settings have not changed)
         else:
             self._logger.info('LDAP CONNECT - Connecting...')
-
-        ldap_test_module()
 
         # Some major config var validations
 

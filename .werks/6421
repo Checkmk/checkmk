@@ -1,0 +1,14 @@
+Title: Fixed interpretation of script tags when displaying werk texts
+Level: 1
+Component: multisite
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0i1
+Date: 1533220249
+
+When werks are displayed in the GUI using the "Release notes" page and
+a werk contained example "script" HTML tags, these tags were interpreted
+by the browser and the containing scripts were executed in the context
+of the browser.

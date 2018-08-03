@@ -6467,8 +6467,6 @@ class ModeLDAPConfig(LDAPMode):
 
 
     def page(self):
-        cmk.gui.plugins.userdb.ldap_connector.ldap_test_module()
-
         table.begin()
         for index, connection in enumerate(userdb.load_connection_config()):
             table.row()

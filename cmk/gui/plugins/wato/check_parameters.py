@@ -6169,6 +6169,90 @@ fs_levels_elements_hack = [
           )),
 ]
 
+
+# Match and transform functions for level configurations like
+# -- used absolute,        positive int   (2, 4)
+# -- used percentage,      positive float (2.0, 4.0)
+# -- available absolute,   negative int   (-2, -4)
+# -- available percentage, negative float (-2.0, -4.0)
+# (4 alternatives)
+def match_dual_level_type(value):
+    if type(value) == list:
+        for entry in value:
+            if entry[1][0] < 0 or entry[1][1] < 0:
+                return 1
+        return 0
+    else:
+        if value[0] < 0 or value[1] < 0:
+            return 1
+        else:
+            return 0
+
+
+def get_free_used_dynamic_valuespec(what, name, default_value = (80.0, 90.0)):
+    if what == "used":
+        title  = _("used space")
+        course = _("above")
+    else:
+        title  = _("free space")
+        course = _("below")
+
+
+    vs_subgroup =  [
+        Tuple( title = _("Percentage %s") % title,
+            elements = [
+                Percentage(title = _("Warning if %s") % course, unit = "%", minvalue = 0.0),
+                Percentage(title = _("Critical if %s") % course, unit = "%", minvalue = 0.0),
+            ]
+        ),
+        Tuple( title = _("Absolute %s") % title,
+            elements = [
+                Integer(title = _("Warning if %s") % course, unit = _("MB"), minvalue = 0),
+                Integer(title = _("Critical if %s") % course, unit = _("MB"), minvalue = 0),
+            ]
+        )
+    ]
+
+    def validate_dynamic_levels(value, varprefix):
+        if [ v for v in value if v[0] < 0 ]:
+            raise MKUserError(varprefix, _("You need to specify levels "
+                                           "of at least 0 bytes."))
+
+    return Alternative(
+        title = _("Levels for %s %s") % (name, title),
+        style = "dropdown",
+        show_alternative_title = True,
+        default_value = default_value,
+        elements = vs_subgroup + [
+            ListOf(
+                Tuple(
+                    orientation = "horizontal",
+                    elements = [
+                        Filesize(title = _("%s larger than") % name.title()),
+                        Alternative(
+                            elements = vs_subgroup
+                        )
+                    ]
+                ),
+                title = _('Dynamic levels'),
+                allow_empty = False,
+                validate = validate_dynamic_levels,
+            )],
+        )
+
+
+def transform_filesystem_free(value):
+    tuple_convert = lambda val: tuple(-x for x in val)
+
+    if type(value) == tuple:
+        return tuple_convert(value)
+    else:
+        result = []
+        for item in value:
+            result.append((item[0], tuple_convert(item[1])))
+        return result
+
+
 fs_levels_elements = [
     ("levels",
         Alternative(
@@ -7999,86 +8083,6 @@ register_check_parameters(
     "first"
 )
 
-def get_free_used_dynamic_valuespec(what, name, default_value = (80.0, 90.0)):
-    if what == "used":
-        title  = _("used space")
-        course = _("above")
-    else:
-        title  = _("free space")
-        course = _("below")
-
-
-    vs_subgroup =  [
-        Tuple( title = _("Percentage %s") % title,
-            elements = [
-                Percentage(title = _("Warning if %s") % course, unit = "%", minvalue = 0.0),
-                Percentage(title = _("Critical if %s") % course, unit = "%", minvalue = 0.0),
-            ]
-        ),
-        Tuple( title = _("Absolute %s") % title,
-            elements = [
-                Integer(title = _("Warning if %s") % course, unit = _("MB"), minvalue = 0),
-                Integer(title = _("Critical if %s") % course, unit = _("MB"), minvalue = 0),
-            ]
-        )
-    ]
-
-    def validate_dynamic_levels(value, varprefix):
-        if [ v for v in value if v[0] < 0 ]:
-            raise MKUserError(varprefix, _("You need to specify levels "
-                                           "of at least 0 bytes."))
-
-    return Alternative(
-        title = _("Levels for %s %s") % (name, title),
-        style = "dropdown",
-        show_alternative_title = True,
-        default_value = default_value,
-        elements = vs_subgroup + [
-            ListOf(
-                Tuple(
-                    orientation = "horizontal",
-                    elements = [
-                        Filesize(title = _("%s larger than") % name.title()),
-                        Alternative(
-                            elements = vs_subgroup
-                        )
-                    ]
-                ),
-                title = _('Dynamic levels'),
-                allow_empty = False,
-                validate = validate_dynamic_levels,
-            )],
-        )
-
-
-# Match and transform functions for level configurations like
-# -- used absolute,        positive int   (2, 4)
-# -- used percentage,      positive float (2.0, 4.0)
-# -- available absolute,   negative int   (-2, -4)
-# -- available percentage, negative float (-2.0, -4.0)
-# (4 alternatives)
-def match_dual_level_type(value):
-    if type(value) == list:
-        for entry in value:
-            if entry[1][0] < 0 or entry[1][1] < 0:
-                return 1
-        return 0
-    else:
-        if value[0] < 0 or value[1] < 0:
-            return 1
-        else:
-            return 0
-
-def transform_filesystem_free(value):
-    tuple_convert = lambda val: tuple(-x for x in val)
-
-    if type(value) == tuple:
-        return tuple_convert(value)
-    else:
-        result = []
-        for item in value:
-            result.append((item[0], tuple_convert(item[1])))
-        return result
 
 register_check_parameters(
     subgroup_storage,

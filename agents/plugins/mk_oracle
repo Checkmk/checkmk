@@ -1256,10 +1256,6 @@ mk_ora_db_connect () {
     DBHOST=$(echo "${ORACFGLINE}" | cut -d":" -f$((4+offset)))
     DBPORT=$(echo "${ORACFGLINE}" | cut -d":" -f$((5+offset)))
 
-    logging "[$LINENO] [${sid}] [mk_ora_db_connect]" "ORADBUSER: $ORADBUSER"\
-            "DBSYSCONNECT: $DBSYSCONNECT" "DBHOST: $DBHOST" "DBPORT: $DBPORT"\
-            "TNSALIAS: $TNSALIAS"
-
     TNSPINGOK=no
     if [ -f "${TNS_ADMIN}/tnsnames.ora" ]; then
         if "${ORACLE_HOME}/bin/tnsping" "${TNSALIAS}" >/dev/null 2>&1; then
@@ -1270,6 +1266,10 @@ mk_ora_db_connect () {
     else
         unset TNSALIAS
     fi
+
+    logging "[$LINENO] [${sid}] [mk_ora_db_connect]" "ORA DB user: $ORADBUSER"\
+            "DB sys connect: $DBSYSCONNECT" "DB host: $DBHOST" "DB port: $DBPORT"\
+            "TNS alias: $TNSALIAS" "TNS PING: ${TNSPINGOK}"
 
     if [ ! "${ORACFGLINE}" ]; then
         # no configuration found

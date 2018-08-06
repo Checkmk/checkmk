@@ -1206,8 +1206,7 @@ def mode_mkeventd_rule_packs(phase):
         html.message(_("Found no rules packs."))
         return
 
-    package_info = watolib.check_mk_local_automation("get-package-info")
-    id_to_mkp  = ec.rule_pack_id_to_mkp(package_info)
+    id_to_mkp = get_rule_pack_to_mkp_map()
 
     have_match = False
     table.begin(css="ruleset", limit=None, sortable=False, title=title)
@@ -1331,6 +1330,13 @@ def mode_mkeventd_rule_packs(phase):
 
 
 
+def get_rule_pack_to_mkp_map():
+    if cmk.is_raw_edition():
+        return {}
+    package_info = watolib.check_mk_local_automation("get-package-info")
+    return ec.rule_pack_id_to_mkp(package_info)
+
+
 def show_event_simulator():
     event = config.user.load_file("simulated_event", {})
     html.begin_form("simulator")
@@ -1407,8 +1413,7 @@ def mode_mkeventd_rules(phase):
         return
 
     if phase == "action":
-        package_info = watolib.check_mk_local_automation("get-package-info")
-        id_to_mkp = ec.rule_pack_id_to_mkp(package_info)
+        id_to_mkp = get_rule_pack_to_mkp_map()
         type_ = ec.RulePackType.type_of(rule_pack, id_to_mkp)
 
         if html.var("_move_to"):
@@ -1847,8 +1852,8 @@ def mode_mkeventd_edit_rule(phase):
             except KeyError:
                 pass
 
-        package_info = watolib.check_mk_local_automation("get-package-info")
-        type_ = ec.RulePackType.type_of(rule_pack, ec.rule_pack_id_to_mkp(package_info))
+        id_to_mkp = get_rule_pack_to_mkp_map()
+        type_ = ec.RulePackType.type_of(rule_pack, id_to_mkp)
         if type_ == ec.RulePackType.unmodified_mkp:
             ec.override_rule_pack_proxy(rule_pack_nr, rule_packs)
             rules = rule_packs[rule_pack_nr]['rules']

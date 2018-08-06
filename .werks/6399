@@ -1,0 +1,15 @@
+Title: Avoid failed notifications in case of crash dumps
+Level: 1
+Component: notifications
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0p1
+Date: 1533638469
+
+Under certain circumstances crash dumps can lead to failed notifications with the corresponding
+error message "OSError: [Errno 7] Argument list too long" in the notify.log. The error appears
+if the environment passed to notification script is too large. To avoid this issue the
+long, base64 encoded strings in the LONGSERVICEOUTPUT and LONGSERVICEOUTPUT_HTML of crash dumps
+are now replaced by short error messages.

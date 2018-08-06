@@ -2280,7 +2280,7 @@ class RuleMatcher(object):
                 if "cancel_application" in rule and \
                    match_groups.get("match_groups_syslog_application_ok", False) is False:
                     self._logger.info("  did not cancel event, because of wrong syslog application")
-                if "cancel_priority" in rule and match_priority.get("has_canceling_match", False) is False:
+                if "cancel_priority" in rule and match_priority["has_canceling_match"] is False:
                     self._logger.info("  did not cancel event, because of wrong cancel priority")
 
         return False
@@ -2315,9 +2315,11 @@ class RuleMatcher(object):
         if "cancel_priority" in rule:
             up, lo = rule["cancel_priority"]
             match_priority["has_canceling_match"] = p < prio_from or p > prio_to
+        else:
+            match_priority["has_canceling_match"] = False
 
         if match_priority["has_match"] is False and\
-           match_priority.get("has_canceling_match", False) is False:
+           match_priority["has_canceling_match"] is False:
             return False
 
         return True

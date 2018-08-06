@@ -1,0 +1,10 @@
+Title: Fixed broken cancel event based on priority
+Level: 2
+Component: ec
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1533540233
+Class: fix
+
+

@@ -1,4 +1,4 @@
-Title: ucd.include: Astaro Firewall is Linux but should use hr_mem
+Title: ucd.include: Astaro and Synology are Linux but should use hr_mem
 Level: 1
 Component: checks
 Compatible: incomp

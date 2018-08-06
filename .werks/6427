@@ -1,0 +1,12 @@
+Title: Raw Edition: Fixed broken Event Console rule editing (1.5 regression)
+Level: 2
+Component: ec
+Compatible: compat
+Edition: cre
+Version: 1.5.0p1
+Date: 1533536581
+Class: fix
+
+It was not possible to edit Event Console rules anymore in previous 1.5 releases.
+The editing dialog in WATO only showed up an error like this: 
+"Automation command 'get-package-info' is not implemented.".

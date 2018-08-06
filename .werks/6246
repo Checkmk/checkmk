@@ -1,0 +1,11 @@
+Title: Windows Powershell: Scripts are now always called with the options -noprofile -executionpolicy bypass
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0p1
+Date: 1533559513
+Class: fix
+
+Werk 4019 also tried to introduce these changes, but failed..
+

@@ -1683,8 +1683,8 @@ def mode_mkeventd_edit_rule_pack(phase):
     else:
         rule_pack = rule_packs[edit_nr]
 
-    package_info = watolib.check_mk_local_automation("get-package-info")
-    type_ = ec.RulePackType.type_of(rule_pack, ec.rule_pack_id_to_mkp(package_info))
+    id_to_mkp = get_rule_pack_to_mkp_map()
+    type_ = ec.RulePackType.type_of(rule_pack, id_to_mkp)
 
     if type_ == ec.RulePackType.internal:
         vs = vs_mkeventd_rule_pack()

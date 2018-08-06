@@ -543,7 +543,7 @@ std::string SectionPluginGroup::withInterpreter(const fs::path &path) const {
                                       ? "powershell.exe"
                                       : fallback;
 
-        return interpreter + " -NoLogo -ExecutionPolicy RemoteSigned \"& \'" +
+        return interpreter + " -NoLogo -Noprofile -ExecutionPolicy Bypass \"& \'" +
                path.string() + "\'\"";
     } else {
         return std::string("\"") + path.string() + "\"";

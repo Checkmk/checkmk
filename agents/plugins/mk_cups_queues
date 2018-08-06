@@ -31,24 +31,24 @@ if type lpstat > /dev/null 2>&1 ; then
         LOCAL_PRINTERS=$(grep -E "<(Default)?Printer .*>" $CPRINTCONF | awk '{print $2}' | sed -e 's/>//')
         lpstat -p | while read LINE
         do
-            PRINTER=$(echo $LINE | awk '{print $2}')
+            PRINTER=$(echo "$LINE" | awk '{print $2}')
             if echo "$LOCAL_PRINTERS" | grep -q "$PRINTER"; then
-                echo $LINE
+                echo "$LINE"
             fi
         done
         echo '---'
         lpstat -o | while read LINE
         do
             PRINTER=${LINE%%-*}
-            if echo $LOCAL_PRINTERS | grep -q $PRINTER; then
-                echo $LINE
+            if echo "$LOCAL_PRINTERS" | grep -q "$PRINTER"; then
+                echo "$LINE"
             fi
         done
     else
         PRINTER=$(lpstat -p)
-        echo $PRINTER
+        echo "$PRINTER"
         echo '---'
         QUEUE=$(lpstat -o | sort)
-        echo $QUEUE
+        echo "$QUEUE"
     fi
 fi

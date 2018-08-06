@@ -1189,6 +1189,13 @@ class EventConsoleMode(WatoMode):
         html.context_button(_("SNMP MIBs"), html.makeuri_contextless([("mode", "mkeventd_mibs")]), "snmpmib")
 
 
+    def _get_rule_pack_to_mkp_map(self):
+        if cmk.is_raw_edition():
+            return {}
+        package_info = watolib.check_mk_local_automation("get-package-info")
+        return ec.rule_pack_id_to_mkp(package_info)
+
+
 
 @mode_registry.register
 class ModeEventConsoleRulePacks(EventConsoleMode):
@@ -1359,8 +1366,7 @@ class ModeEventConsoleRulePacks(EventConsoleMode):
             html.message(_("Found no rules packs."))
             return
 
-        package_info = watolib.check_mk_local_automation("get-package-info")
-        id_to_mkp  = ec.rule_pack_id_to_mkp(package_info)
+        id_to_mkp = self._get_rule_pack_to_mkp_map()
 
         have_match = False
         table.begin(css="ruleset", limit=None, sortable=False, title=title)
@@ -1529,8 +1535,7 @@ class ModeEventConsoleRules(EventConsoleMode):
 
 
     def action(self):
-        package_info = watolib.check_mk_local_automation("get-package-info")
-        id_to_mkp = ec.rule_pack_id_to_mkp(package_info)
+        id_to_mkp = self._get_rule_pack_to_mkp_map()
         type_ = ec.RulePackType.type_of(self._rule_pack, id_to_mkp)
 
         if html.var("_move_to"):
@@ -1792,8 +1797,8 @@ class ModeEventConsoleEditRulePack(EventConsoleMode):
                 raise MKUserError("edit", _("The rule pack you are trying to "
                                             "edit does not exist."))
 
-        package_info = watolib.check_mk_local_automation("get-package-info")
-        self._type = ec.RulePackType.type_of(self._rule_pack, ec.rule_pack_id_to_mkp(package_info))
+        id_to_mkp = self._get_rule_pack_to_mkp_map()
+        self._type = ec.RulePackType.type_of(self._rule_pack, id_to_mkp)
 
 
 
@@ -1997,8 +2002,8 @@ class ModeEventConsoleEditRule(EventConsoleMode):
             except KeyError:
                 pass
 
-        package_info = watolib.check_mk_local_automation("get-package-info")
-        type_ = ec.RulePackType.type_of(self._rule_pack, ec.rule_pack_id_to_mkp(package_info))
+        id_to_mkp = self._get_rule_pack_to_mkp_map()
+        type_ = ec.RulePackType.type_of(self._rule_pack, id_to_mkp)
         if type_ == ec.RulePackType.unmodified_mkp:
             ec.override_rule_pack_proxy(self._rule_pack_nr, self._rule_packs)
             self._rules = self._rule_packs[self._rule_pack_nr]['rules']

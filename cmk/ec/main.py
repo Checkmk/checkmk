@@ -2308,7 +2308,7 @@ class RuleMatcher(object):
             if prio_from > prio_to:
                 prio_to, prio_from = prio_from, prio_to
             p = event["priority"]
-            match_priority["has_match"] = p < prio_from or p > prio_to
+            match_priority["has_match"] = prio_from <= p <= prio_to
         else:
             match_priority["has_match"] = True
 

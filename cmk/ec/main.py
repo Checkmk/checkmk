@@ -3231,18 +3231,19 @@ class RuleMatcher(object):
 
 
     def event_rule_determine_match_priority(self, rule, event, match_priority):
+        p = event["priority"]
+
         if "match_priority" in rule:
             prio_from, prio_to = rule["match_priority"]
             if prio_from > prio_to:
                 prio_to, prio_from = prio_from, prio_to
-            p = event["priority"]
             match_priority["has_match"] = prio_from <= p <= prio_to
         else:
             match_priority["has_match"] = True
 
         if "cancel_priority" in rule:
-            up, lo = rule["cancel_priority"]
-            match_priority["has_canceling_match"] = p < prio_from or p > prio_to
+            cancel_from, cancel_to = rule["cancel_priority"]
+            match_priority["has_canceling_match"] = cancel_from <= p <= cancel_to
         else:
             match_priority["has_canceling_match"] = False
 

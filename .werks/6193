@@ -1,0 +1,11 @@
+Title: OpenHardwareMonitorCLI.exe was broken
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0p1
+Date: 1533563929
+Class: fix
+
+The binary executable was broken due to unknown reasons.
+

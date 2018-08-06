@@ -69,7 +69,7 @@ def render_wato(mini):
 
         url = module.get_url()
         if mini:
-            html.icon_button(url, module.title, module.icon, target="main", ty="icon")
+            html.icon_button(url, module.title, module.icon, target="main")
         else:
             iconlink(module.title, url, module.icon)
 

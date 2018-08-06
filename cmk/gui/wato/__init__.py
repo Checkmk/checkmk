@@ -3760,11 +3760,11 @@ class ModeDiscovery(WatoMode):
     def _show_actions(self, check):
         def icon_button(table_source, checkbox_name, table_target, descr_target):
             html.icon_button(html.makeactionuri([(checkbox_name, table_target), ]),
-                _("Move to %s services") % descr_target, "service_to_%s" % descr_target, ty="icon")
+                _("Move to %s services") % descr_target, "service_to_%s" % descr_target)
 
         def icon_button_removed(table_source, checkbox_name):
             html.icon_button(html.makeactionuri([(checkbox_name, self.SERVICE_REMOVED), ]),
-                _("Remove service"), "service_to_removed", ty="icon")
+                _("Remove service"), "service_to_removed")
 
         def rulesets_button():
             # Link to list of all rulesets affecting this service
@@ -6152,7 +6152,7 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
                     cssclass=["activate_site"],
                     help=_("This site is not update and needs a replication. Start it now."),
                     icon="need_replicate",
-                    onclick="activate_changes(\"site\", \"%s\")" % site_id, ty="icon")
+                    onclick="activate_changes(\"site\", \"%s\")" % site_id)
 
             if can_activate_all and need_restart:
                 html.icon_button(url="javascript:void(0)",
@@ -6160,7 +6160,7 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
                     cssclass=["activate_site"],
                     help=_("This site needs a restart for activating the changes. Start it now."),
                     icon="need_restart",
-                    onclick="activate_changes(\"site\", \"%s\")" % site_id, ty="icon")
+                    onclick="activate_changes(\"site\", \"%s\")" % site_id)
 
             if can_activate_all and not need_action:
                 html.icon(_("This site is up-to-date."), "siteuptodate")

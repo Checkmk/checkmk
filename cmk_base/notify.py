@@ -1302,6 +1302,16 @@ def path_to_notification_script(plugin):
 #
 # Note: this function is *not* being called for bulk notification.
 def call_notification_script(plugin, plugin_context):
+    # FIXME: This is a temporary workaround to avoid a possible crash of
+    # subprocess.Popen when a crash dump occurs. Since in this case the
+    # LONGSERVICEOUTPUT and LONGSERVICEOUTPUT_HTML contain very long base64
+    # encoded strings an 'OSError: [Errno 7] Argument list too long' may
+    # occur. To avoid this we replace the base64 encoded strings here.
+    if plugin_context.get('LONGSERVICEOUTPUT', '').startswith('Crash dump:\\n'):
+        plugin_context['LONGSERVICEOUTPUT'] = u'Check failed:\\nA crash report can be submitted via the user interface.'
+    if plugin_context.get('LONGSERVICEOUTPUT_HTML', '').startswith('Crash dump:\\n'):
+        plugin_context['LONGSERVICEOUTPUT_HTML'] = u'Check failed:\\nA crash report can be submitted via the user interface.'
+
     core_notification_log(plugin, plugin_context)
 
     def plugin_log(s):

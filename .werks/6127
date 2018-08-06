@@ -3,9 +3,10 @@ Level: 1
 Component: checks
 Compatible: incomp
 Edition: cre
-Version: 1.4.0p35
+Version: 1.5.0p1
 Date: 1532444780
 Class: fix
+State: unknown
 
 Astaro and Synology are Linux but should use hr_mem. Otherwise caches/buffers
 are included in used memory generating critical a state.

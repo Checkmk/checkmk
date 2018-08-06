@@ -2513,7 +2513,7 @@ class EventServer(ECServerThread):
             if prio_from > prio_to:
                 prio_to, prio_from = prio_from, prio_to
             p = event["priority"]
-            match_priority["has_match"] = p < prio_from or p > prio_to
+            match_priority["has_match"] = prio_from <= p <= prio_to
         else:
             match_priority["has_match"] = True
 
@@ -3034,6 +3034,252 @@ class EventServer(ECServerThread):
 
         # Perform one time actions
         overflow_event = self._create_overflow_event(ty, event, limit)
+<<<<<<< HEAD
+=======
+
+        if "overflow" in action:
+            self._logger.info("  Creating overflow event")
+            self._event_status.new_event(overflow_event)
+
+        if "notify" in action:
+            self._logger.info("  Creating overflow notification")
+            cmk.ec.actions.do_notify(self, self._logger, overflow_event)
+
+        return False
+
+    # protected by self._event_status.lock
+    def _get_event_limit(self, ty, event):
+        # Prefer the rule individual limit for by_rule limit (in case there is some)
+        if ty == "by_rule":
+            rule_limit = self._rule_by_id[event["rule_id"]].get("event_limit")
+            if rule_limit:
+                return rule_limit["limit"], rule_limit["action"]
+
+        # Prefer the host individual limit for by_host limit (in case there is some)
+        if ty == "by_host":
+            host_config = self.host_config.get(event["core_host"], {})
+            host_limit = host_config.get("custom_variables", {}).get("EC_EVENT_LIMIT")
+            if host_limit:
+                limit, action = host_limit.split(":", 1)
+                return int(limit), action
+
+        limit = self._config["event_limit"][ty]["limit"]
+        action = self._config["event_limit"][ty]["action"]
+
+        return limit, action
+
+    def _create_overflow_event(self, ty, event, limit):
+        now = time.time()
+        new_event = {
+            "rule_id": None,
+            "phase": "open",
+            "count": 1,
+            "time": now,
+            "first": now,
+            "last": now,
+            "comment": "",
+            "host": "",
+            "ipaddress": "",
+            "application": "Event Console",
+            "pid": 0,
+            "priority": 2,  # crit
+            "facility": 1,  # user
+            "match_groups": (),
+            "match_groups_syslog_application": (),
+            "state": 2,  # crit
+            "sl": event["sl"],
+            "core_host": "",
+            "host_in_downtime": False,
+        }
+        self._add_rule_contact_groups_to_event({}, new_event)
+
+        if ty == "overall":
+            new_event["text"] = (
+                "The overall event limit of %d open events has been reached. Not "
+                "opening any additional event until open events have been "
+                "archived." % limit
+            )
+
+        elif ty == "by_host":
+            new_event.update({
+                "host": event["host"],
+                "ipaddress": event["ipaddress"],
+                "text": (
+                    "The host event limit of %d open events has been reached for host \"%s\". "
+                    "Not opening any additional event for this host until open events have "
+                    "been archived." % (limit, event["host"])
+                )
+            })
+
+            # Lookup the monitoring core hosts and add the core host
+            # name to the event when one can be matched
+            self._add_core_host_to_new_event(new_event)
+
+        elif ty == "by_rule":
+            new_event.update({
+                "rule_id": event["rule_id"],
+                "contact_groups": event["contact_groups"],
+                "contact_groups_notify": event.get("contact_groups_notify", False),
+                "contact_groups_precedence": event.get("contact_groups_precedence", "host"),
+                "text": (
+                    "The rule event limit of %d open events has been reached for rule \"%s\". "
+                    "Not opening any additional event for this rule until open events have "
+                    "been archived." %
+                    (limit, event["rule_id"])
+                )
+            })
+
+        else:
+            raise NotImplementedError()
+
+        return new_event
+
+
+
+class RuleMatcher(object):
+    def __init__(self, logger, debug_rules):
+        super(RuleMatcher, self).__init__()
+        self._logger = logger
+        self._debug_rules = debug_rules
+        self._time_periods = TimePeriods(logger)
+
+
+    def event_rule_matches_non_inverted(self, rule, event):
+        if self._debug_rules:
+            self._logger.info("Trying rule %s/%s..." % (rule["pack"], rule["id"]))
+            self._logger.info("  Text:   %s" % event["text"])
+            self._logger.info("  Syslog: %d.%d" % (event["facility"], event["priority"]))
+            self._logger.info("  Host:   %s" % event["host"])
+
+        # Generic conditions without positive/canceling matches
+        if not self.event_rule_matches_generic(rule, event):
+            return False
+
+        # Determine syslog priority
+        match_priority = {}
+        if not self.event_rule_determine_match_priority(rule, event, match_priority):
+            # Abort on negative outcome, neither positive nor negative
+            return False
+
+        # Determine and cleanup match_groups
+        match_groups = {}
+        if not self.event_rule_determine_match_groups(rule, event, match_groups):
+            # Abort on negative outcome, neither positive nor negative
+            return False
+        for group_name in match_groups:
+            if match_groups[group_name] is True:
+                match_groups[group_name] = ()
+
+        # All data has been computed, determine outcome
+        ########################################################
+        # Check create-event
+        if match_groups["match_groups_message"] is not False and\
+            match_groups.get("match_groups_syslog_application", ()) is not False and\
+            match_priority["has_match"] is True:
+            if self._debug_rules:
+                self._logger.info("  found new event")
+            return False, match_groups
+
+        # Check canceling-event
+        has_canceling_condition = bool([x for x in ["match_ok", "cancel_application", "cancel_priority"] if x in rule])
+        if has_canceling_condition:
+            if ("match_ok" not in rule or match_groups.get("match_groups_message_ok", False) is not False) and\
+               ("cancel_application" not in rule or
+                match_groups.get("match_groups_syslog_application_ok", False) is not False) and\
+               ("cancel_priority" not in rule or match_priority["has_canceling_match"] is True):
+                if self._debug_rules:
+                    self._logger.info("  found canceling event")
+                return True, match_groups
+
+        # Looks like there was no match, output some additonal info
+        # Reasons preventing create-event
+        if self._debug_rules:
+            if match_groups["match_groups_message"] is False:
+                self._logger.info("  did not create event, because of wrong message")
+            if "match_application" in rule and match_groups["match_groups_syslog_application"] is False:
+                self._logger.info("  did not create event, because of wrong syslog application")
+            if "match_priority" in rule and match_priority["has_match"] is False:
+                self._logger.info("  did not create event, because of wrong syslog priority")
+
+            if has_canceling_condition:
+                # Reasons preventing cancel-event
+                if "match_ok" in rule and match_groups.get("match_groups_message_ok", False) is False:
+                    self._logger.info("  did not cancel event, because of wrong message")
+                if "cancel_application" in rule and \
+                   match_groups.get("match_groups_syslog_application_ok", False) is False:
+                    self._logger.info("  did not cancel event, because of wrong syslog application")
+                if "cancel_priority" in rule and match_priority["has_canceling_match"] is False:
+                    self._logger.info("  did not cancel event, because of wrong cancel priority")
+
+        return False
+
+
+    def event_rule_matches_generic(self, rule, event):
+        generic_match_functions = [
+            self.event_rule_matches_site,
+            self.event_rule_matches_host,
+            self.event_rule_matches_ip,
+            self.event_rule_matches_facility,
+            self.event_rule_matches_service_level,
+            self.event_rule_matches_timeperiod,
+        ]
+
+        for match_function in generic_match_functions:
+            if not match_function(rule, event):
+                return False
+        return True
+
+
+    def event_rule_determine_match_priority(self, rule, event, match_priority):
+        if "match_priority" in rule:
+            prio_from, prio_to = rule["match_priority"]
+            if prio_from > prio_to:
+                prio_to, prio_from = prio_from, prio_to
+            p = event["priority"]
+            match_priority["has_match"] = prio_from <= p <= prio_to
+        else:
+            match_priority["has_match"] = True
+
+        if "cancel_priority" in rule:
+            up, lo = rule["cancel_priority"]
+            match_priority["has_canceling_match"] = p < prio_from or p > prio_to
+        else:
+            match_priority["has_canceling_match"] = False
+
+        if match_priority["has_match"] is False and\
+           match_priority["has_canceling_match"] is False:
+            return False
+
+        return True
+
+
+
+    def event_rule_matches_site(self, rule, event):
+        return "match_site" not in rule or cmk.omd_site() in rule["match_site"]
+
+    def event_rule_matches_host(self, rule, event):
+        if match(rule.get("match_host"), event["host"], complete=True) is False:
+            if self._debug_rules:
+                self._logger.info("  did not match because of wrong host '%s' (need '%s')" %
+                                  (event["host"], pattern(rule.get("match_host"))))
+            return False
+        return True
+
+    def event_rule_matches_ip(self, rule, event):
+        if match_ipv4_network(rule.get("match_ipaddress", "0.0.0.0/0"), event["ipaddress"]) is False:
+            if self._debug_rules:
+                self._logger.info("  did not match because of wrong source IP address '%s' (need '%s')" %
+                                  (event["ipaddress"], rule.get("match_ipaddress")))
+            return False
+        return True
+
+    def event_rule_matches_facility(self, rule, event):
+        if "match_facility" in rule and event["facility"] != rule["match_facility"]:
+            if self._debug_rules:
+                self._logger.info("  did not match because of wrong syslog facility")
+            return False
+        return True
+>>>>>>> 69b4dfd30d... 6428 FIX Fixed broken positive matching on syslog priority
 
         if "overflow" in action:
             self._logger.info("  Creating overflow event")

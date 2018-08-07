@@ -34,12 +34,9 @@ import traceback
 from HTMLParser import HTMLParser
 
 import requests
+import urllib3
 
-try:
-    from requests.packages.urllib3.exceptions import InsecureRequestWarning # pylint: disable=import-error
-    requests.packages.urllib3.disable_warnings(InsecureRequestWarning)      # pylint: disable=no-member
-except:
-    pass
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 
 def usage():

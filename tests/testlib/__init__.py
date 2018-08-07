@@ -17,13 +17,13 @@ import shutil
 import lockfile
 import ast
 import abc
+import urllib3
 
 from urlparse import urlparse
 from bs4 import BeautifulSoup
 
 # Disable insecure requests warning message during SSL testing
-from requests.packages.urllib3.exceptions import InsecureRequestWarning
-requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 try:
     import simplejson as json

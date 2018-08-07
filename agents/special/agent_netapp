@@ -171,13 +171,10 @@ else:
     # The following code in the else: block completely replaces the used functionality of NaServer/NaElements
     import base64
     import requests
-    try:
-        from requests.packages.urllib3.exceptions import InsecureRequestWarning # pylint: disable=import-error
-        requests.packages.urllib3.disable_warnings(InsecureRequestWarning)      # pylint: disable=no-member
-    except:
-        pass
+    import urllib3
 
-    requests.packages.urllib3.util.ssl_.DEFAULT_CIPHERS += ":" + ":".join([ # pylint: disable=no-member
+    urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+    urllib3.util.ssl_.DEFAULT_CIPHERS += ":" + ":".join([
        "DH+3DES",
        "DH+HIGH",
        "ECDH+3DES",

@@ -66,7 +66,7 @@ div.content {
   width: 100%;
   top: 64px; }
 
-input, input[type=text], input[type=password], select, textarea, div.snapin select, div.snapin textarea, #mk_side_search_field {
+input, input[type=text], input[type=password], select, textarea, div.snapin select, div.snapin textarea, #mk_side_search_field, #snapin_tag_tree select {
   border-radius: 4px;
   background-image: none !important;
   background: #FFFFFF;
@@ -76,6 +76,12 @@ input, input[type=text], input[type=password], select, textarea, div.snapin sele
   box-shadow: none;
   border: 1px solid #cccfdb !important;
   max-width: 640px; }
+  #snapin_tag_tree select {
+    background: #FFFFFF !important;
+    color: #1A243D !important; }
+  .tag_tree {
+    font-size: 11px;
+  }
   input:focus, select:focus, textarea:focus, div.snapin select:focus, div.snapin textarea:focus, #mk_side_search_field:focus {
     border-color: #ffd703; }
   input.number, select.number, textarea.number, div.snapin select.number, div.snapin textarea.number, .number#mk_side_search_field {

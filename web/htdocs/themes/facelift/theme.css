@@ -1330,7 +1330,7 @@ div.color {
   color: #fff !important;
   border-color: #7b7b7b !important; }
 
-.stale {
+.stale .state {
   background-image: none !important;
   filter: saturate(50%) brightness(105%); }
 

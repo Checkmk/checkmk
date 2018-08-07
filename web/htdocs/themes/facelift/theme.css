@@ -681,7 +681,10 @@ div.graph_with_timeranges {
     border-radius: 4px;
     background: #FFFFFF; }
     .wato table.progress td.stats td, .wato table.progress td.stats th {
-      border-color: #cccfdb; }
+      border-color: #cccfdb;
+      padding: 6px 0 6px 0 }
+    .wato table.progress td.stats {
+      padding: 24px 12px 18px 12px; }
   .wato div.folderpath {
     height: auto; }
     .wato div.folderpath ul li {
@@ -1431,7 +1434,7 @@ table.data.werks tr:nth-child(odd) td.werkcompincomp_ack {
 table.data.werks tr:nth-child(even) td.werkcompincomp_ack {
   background-color: #F1AEA2; }
 
-table.data > tbody > tr > td.job_state.job_finished {
+table.data > tbody > tr > td.job_state.job_finished, .wato #progress_bar.finished td.left {
   background-color: #AAE199;
   box-shadow: none; }
 
@@ -1725,7 +1728,7 @@ body.main {
     body.main .popup_menu a, body.main .popup_menu span {
       color: #1A243D; }
 
-div.log_output {
+div.log_output, .wato table.progress td.log > div {
   background: #25292a;
   color: #f8f8f8;
   font-family: monospace;

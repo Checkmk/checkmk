@@ -1,0 +1,19 @@
+Title: Handle 802.1Q and 802.1ad packets in Smart Ping
+Level: 1
+Component: cmc
+Class: feature
+Compatible: compat
+Edition: cee
+State: unknown
+Version: 1.5.0p1
+Date: 1533645955
+
+The Check_MK Micro Core's Smart Ping feature understands 802.1Q VLAN
+extended header and 802.1ad service VLAN header now.
+
+Previously you just got
+
+   ignoring packet with unknown EtherType 33024
+   ignoring packet with unknown EtherType 34984
+
+messages in var/log/cmc.log, and the corresponding packet was ignored.

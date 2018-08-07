@@ -32,14 +32,13 @@ import traceback
 import urllib
 
 import requests
-from requests.packages.urllib3.exceptions import \
-    SubjectAltNameWarning  # pylint: disable=import-error
+import urllib3
 
 import cmk.password_store
 
 cmk.password_store.replace_passwords()
 
-requests.packages.urllib3.disable_warnings(SubjectAltNameWarning) # pylint: disable=no-member
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 # tell requests not to honour "http(s)_proxy" env variables
 proxies = {

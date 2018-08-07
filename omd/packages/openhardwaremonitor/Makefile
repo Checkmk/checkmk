@@ -34,7 +34,7 @@ $(DIR)/OpenHardwareMonitorCLI: OpenHardwareMonitorCLI
 $(DIR)/OpenHardwareMonitor.sln: OpenHardwareMonitor.sln
 	cp OpenHardwareMonitor.sln $(DIR)/
 
-dist: OpenHardwareMonitorCLI.exe OpenHardwareMonitorLib.dll
+dist: OpenHardwareMonitorCLI.exe OpenHardwareMonitorLib.dll clean
 
 install:
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/check_mk/agents/windows/ohm

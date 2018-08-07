@@ -350,6 +350,7 @@ install-minified-js: $(JAVASCRIPT_MINI)
 # GNU standards here (see "Standard Targets for Users",
 # https://www.gnu.org/prep/standards/html_node/Standard-Targets.html).
 clean:
+	make -C omd clean
 	rm -rf clang-analyzer dist.tmp rpm.topdir *.rpm *.deb *.exe \
 	       mk-livestatus-*.tar.gz \
 	       $(NAME)-*.tar.gz *~ counters autochecks \

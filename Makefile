@@ -90,7 +90,7 @@ export BEAR        := bear
 
 M4_DEPS            := $(wildcard m4/*) configure.ac
 CONFIGURE_DEPS     := $(M4_DEPS) aclocal.m4
-DIST_DEPS          := ar-lib compile config.guess config.sub install-sh missing depcomp configure
+DIST_DEPS          := ar-lib compile config.guess config.sub install-sh missing depcomp configure omd/packages/openhardwaremonitor/OpenHardwareMonitorCLI.exe omd/packages/openhardwaremonitor/OpenHardwareMonitorLib.dll
 
 
 LIVESTATUS_SOURCES := Makefile.am api/c++/{Makefile,*.{h,cc}} api/perl/* \

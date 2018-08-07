@@ -269,12 +269,31 @@ fs::path correctPathCase(const fs::path &filePath,
     return preserved;
 }
 
+// Terrible workaround for getting file size due to a bug in Mingw_w64
+// cross-compiler implementation of std::experimental::filesystem::file_size
+// with files exceeding 4 GB.
+unsigned long long getFileSize(const fs::path &filePath, Logger *logger,
+                               const WinApiInterface &winapi) {
+    WIN32_FIND_DATA findData;
+    SearchHandle findHandle{
+        winapi.FindFirstFile(to_utf8(filePath.wstring()).c_str(), &findData),
+        winapi};
+
+    if (findHandle) {
+        return static_cast<unsigned long long>(findData.nFileSizeLow) +
+               (static_cast<unsigned long long>(findData.nFileSizeHigh) << 32);
+    }
+
+    Error(logger) << "Could not find file '" << Utf8(filePath) << "'";
+    return 0;
+}
+
 void outputFileinfo(std::ostream &out, const fs::path &filePath, Logger *logger,
                     const WinApiInterface &winapi) {
     try {
         const auto finalPath = correctPathCase(filePath, winapi);
-        out << Utf8(finalPath.wstring()) << "|" << fs::file_size(finalPath)
-            << "|";
+        out << Utf8(finalPath.wstring()) << "|"
+            << getFileSize(finalPath, logger, winapi) << "|";
         const auto timeEntry = chrono::duration_cast<chrono::seconds>(
             fs::last_write_time(finalPath).time_since_epoch());
         out << timeEntry.count() << "\n";

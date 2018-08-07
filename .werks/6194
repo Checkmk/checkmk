@@ -1,0 +1,14 @@
+Title: Windows fileinfo: wrong size for files exceeding 4 GB
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1533653642
+Class: fix
+
+The sizes of files exceeding 4 GB were displayed wrong as
+FILE_SIZE % 4 GB instead of the correct size. The bug was due to a
+faulty implementation of C++ std::filesystem::file_size on Windows.
+The workaround uses 'old' WinAPI for obtaining the correct file size.
+

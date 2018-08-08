@@ -1026,7 +1026,7 @@ sql_asm_diskgroup () {
 #   '----------------------------------------------------------------------'
 
 do_dummy_sections () {
-    if [ "$MK_ORA_DEBUG_CONNECT" != "1" ]; then
+    if [ "$MK_ORA_LOGGING" != "1" ]; then
         for section in $SYNC_SECTIONS $ASYNC_SECTIONS $SYNC_ASM_SECTIONS $ASYNC_ASM_SECTIONS; do
             echo "<<<oracle_${section}>>>"
         done
@@ -1142,19 +1142,17 @@ run_cached () {
         return
     fi
 
-    local sid="$1"
-    local maxage="$2"
-    local name="oracle_$1"
-    shift 2
+    local maxage="$1"
+    local cmd_name="$2"
 
-    local cmdline="$*"
-    local cache_file="$MK_VARDIR/cache/${name}.cache"
+    local cache_file="$MK_VARDIR/cache/oracle_${MK_SID}.cache"
     local use_cache_file=
     local now=
     local cf_atime=
     local mtime=
 
-    logging "[${sid}] [run_cached]" "Cache file: $cache_file"
+    logging "[${MK_SID}] [run_cached]" "Cache file: $cache_file"\
+            "Cache max age: $maxage" "Command name: $cmd_name"
 
     if [ ! -d "$MK_VARDIR/cache" ]; then
         mkdir -p "$MK_VARDIR/cache"
@@ -1171,7 +1169,7 @@ run_cached () {
             # it is still running. This avoids overlapping processes!
             fuser -k -9 "${cache_file}.new" >/dev/null 2>&1
             rm -f "${cache_file}.new"
-            logging "[${sid}] [run_cached]" "Creation of the cache takes suspiciously long"
+            logging "[${MK_SID}] [run_cached]" "Creation of the cache takes suspiciously long"
             return
         fi
     fi
@@ -1184,18 +1182,18 @@ run_cached () {
         fi
         # Output the file in any case, even if it is
         # outdated. The new file will not yet be available
-        logging "[${sid}] [run_cached]" "Cache file exists and is recent enough"
+        logging "[${MK_SID}] [run_cached]" "Cache file exists and is recent enough"
         cat "$cache_file"
     fi
 
     # Cache file outdated and new job not yet running? Start it
     if [ -z "$use_cache_file" ] && [ ! -e "${cache_file}.new" ]; then
-        logging "[${sid}] [run_cached]" "Cache file outdated, start it."
+        logging "[${MK_SID}] [run_cached]" "Cache file outdated, start it."
         if [ "$MK_ORA_DEBUG" ]; then
-            echo "set -o noclobber ; exec > \"${cache_file}.new\" || exit 1 ; ${cmdline} && mv \"${cache_file}.new\" \"${cache_file}\" || rm -f \"${cache_file}\" \"${cache_file}.new\"" | /bin/bash
+            echo "set -o noclobber; exec > \"${cache_file}.new\" || exit 1; ${cmd_name} && mv \"${cache_file}.new\" \"${cache_file}\" || rm -f \"${cache_file}\" \"${cache_file}.new\"" | /bin/bash
         else
             # When the command fails, the output is throws away ignored
-            echo "set -o noclobber ; exec > \"${cache_file}.new\" || exit 1 ; ${cmdline} && mv \"${cache_file}.new\" \"${cache_file}\" || rm -f \"${cache_file}\" \"${cache_file}.new\"" | nohup /bin/bash >/dev/null 2>&1 &
+            echo "set -o noclobber; exec > \"${cache_file}.new\" || exit 1; ${cmd_name} && mv \"${cache_file}.new\" \"${cache_file}\" || rm -f \"${cache_file}\" \"${cache_file}.new\"" | nohup /bin/bash >/dev/null 2>&1 &
         fi
     fi
 }
@@ -1311,36 +1309,36 @@ mk_ora_db_connect () {
 #   '----------------------------------------------------------------------'
 
 mk_ora_sqlplus () {
-    local sid="$1"
-    local db_connect="$2"
-    local piggyback_host="$3"
+    local from_where="$1"
     local start_time=
     local elapsed_time=
     local loc_stdin=
     local output=
+
+    logging "[${MK_SID}] [${from_where}] [mk_ora_sqlplus]" "Piggyback host: $MK_PIGGYBACK_HOST"
 
     start_time="$(perl -MTime::HiRes=time -wle 'print time')"
     loc_stdin=$(cat)
 
     SQLPLUS=${ORACLE_HOME}/bin/sqlplus
     if [ ! -x "${SQLPLUS}" ]; then
-        logging -w "[${sid}] [mk_ora_sqlplus]" "SQLplus '${SQLPLUS}' not found or ORACLE_HOME '${ORACLE_HOME}' wrong."
+        logging -w "[${MK_SID}] [${from_where}] [mk_ora_sqlplus]" "SQLplus '${SQLPLUS}' not found or ORACLE_HOME '${ORACLE_HOME}' wrong."
         echo "sqlplus not found or ORACLE_HOME wrong!"
         echo "SQLPLUS=${SQLPLUS}"
         return 1
     fi
 
-    if [ -n "$piggyback_host" ]; then
-        echo "<<<<$piggyback_host>>>>"
+    if [ -n "$MK_PIGGYBACK_HOST" ]; then
+        echo "<<<<${MK_PIGGYBACK_HOST}>>>>"
     fi
 
-    if output=$(echo "$(ora_session_environment)${loc_stdin}" | "$SQLPLUS" -L -s "$db_connect"); then
+    if output=$(echo "$(ora_session_environment)${loc_stdin}" | "$SQLPLUS" -L -s "$MK_DB_CONNECT"); then
         echo -e "$output"
 
     else
-        logging -w "[${sid}] [mk_ora_sqlplus]" "OUTPUT '$output'"
+        logging -w "[${MK_SID}] [${from_where}] [mk_ora_sqlplus]" "OUTPUT '$output'"
         output=$(echo -e "$output" | "${GREP}" -v "^ERROR at line" | tr '\n' ' ' |\
-                                     sed "s/^/$(echo "$sid" | tr '[:lower:]' '[:upper:]')|FAILURE|/" ; echo)
+                                     sed "s/^/$(echo "$MK_SID" | tr '[:lower:]' '[:upper:]')|FAILURE|/" ; echo)
         if [ "$MK_ORA_DEBUG_CONNECT" ]; then
             echo "Logindetails: ${DBCONNECT}" >&2
             echo -e "$output"
@@ -1353,11 +1351,11 @@ mk_ora_sqlplus () {
 
     elapsed_time=$(bc <<<"$(perl -MTime::HiRes=time -wle 'print time')-$start_time")
 
-    if [ -n "$piggyback_host" ]; then
+    if [ -n "$MK_PIGGYBACK_HOST" ]; then
         echo "<<<<>>>>"
     fi
 
-    logging "[${sid}] [mk_ora_sqlplus]" "Elapsed time: $elapsed_time"
+    logging "[${MK_SID}] [${from_where}] [mk_ora_sqlplus]" "Elapsed time: $elapsed_time"
 }
 
 #.
@@ -1373,37 +1371,28 @@ mk_ora_sqlplus () {
 # Create one SQL statements for several sections and run
 # these with sqlplus. The exitcode is preserved.
 do_sync_checks () {
-    local sid="$1"
-    local db_connect="$2"
-    local piggyback_host="$3"
-    local sections="$4"
-    for section in $sections; do
-        eval "sql_$section"
-    done | mk_ora_sqlplus "${sid}" "$db_connect" "$piggyback_host"
+    logging "[${MK_SID}] [do_sync_checks]" "Sync sections query: $MK_SYNC_SECTIONS_QUERY"
+    echo "$MK_SYNC_SECTIONS_QUERY" | mk_ora_sqlplus "do_sync_checks"
 }
 
 
 do_async_checks () {
-    local sid=$1
-    local db_connect="$2"
-    local piggyback_host="$3"
-    echo "$ASYNC_SQL" | mk_ora_sqlplus "${sid}" "$db_connect" "$piggyback_host"
+    #logging "[${MK_SID}] [do_async_checks]" "ASync sections query: $MK_ASYNC_SECTIONS_QUERY"
+    echo "$MK_ASYNC_SECTIONS_QUERY" | mk_ora_sqlplus "do_async_checks"
 }
 
 
 do_testmode () {
-    local sid="$1"
-    local db_connect="$2"
-    local piggyback_host="$3"
-    local sections="$4"
-    local asections="$5"
+    local sections=$1
+    local asections=$2
+
     echo
     echo "---login----------------------------------------------------------------"
     echo "    Operating System:       ${OS_TYPE}"
-    echo "    Logincheck to Instance: ${sid}"
+    echo "    Logincheck to Instance: ${MK_SID}"
     echo "    Version:                ${ORACLE_VERSION}"
     echo "select '    Login ok User:          ' || user || ' on ' || host_name ||' Instance ' || instance_name
-          from v\$instance;" | mk_ora_sqlplus "${sid}" "$db_connect" "$piggyback_host" "no"
+          from v\$instance;" | mk_ora_sqlplus "do_testmode"
     echo "    SYNC_SECTIONS:          $sections"
     echo "    ASYNC_SECTIONS:         $asections"
     if [ "$IGNORE_DB_NAME" ]; then
@@ -1423,55 +1412,52 @@ do_testmode () {
 
 
 do_checks () {
-    local sid="$1"
-    local db_connect="$2"
-    local piggyback_host="$3"
-    local do_sync_sections=
-    local do_async_sections=
     local excluded=
     local sections=
     local asections=
 
     if [ "${ORACLE_SID:0:1}" = '+' ]; then
         # ASM sections
-        do_async_sections=${ASYNC_ASM_SECTIONS}
-        do_sync_sections=${SYNC_ASM_SECTIONS}
+        local do_async_sections=${ASYNC_ASM_SECTIONS}
+        local do_sync_sections=${SYNC_ASM_SECTIONS}
     else
-        do_sync_sections=${SYNC_SECTIONS}
-        do_async_sections=${ASYNC_SECTIONS}
+        local do_sync_sections=${SYNC_SECTIONS}
+        local do_async_sections=${ASYNC_SECTIONS}
     fi
 
     if [ -n "${MK_ORA_SECTIONS[*]}" ]; then
-        for section in $do_sync_sections $do_async_sections; do
-            if [ "$(do_section "$section")" = "yes" ]; then
-                sections=${sections:+"$sections "}"${section}"
-            fi
-        done
-        logging "[${sid}] [do_checks]" "Do single sections: $sections"
-        ASYNC_SQL=
+        MK_SYNC_SECTIONS_QUERY=$(
+            for section in $do_sync_sections $do_async_sections; do
+                if [ "$(do_section "$section")" = "yes" ]; then
+                    sections=${sections:+"$sections "}"${section}"
+                fi
+            done)
+        logging "[${MK_SID}] [do_checks]" "Do single sections: $sections"
+        MK_ASYNC_SECTIONS_QUERY=
 
     else
-        excluded=$(eval "echo \$EXCLUDE_$sid")
+        excluded=$(eval "echo \$EXCLUDE_$MK_SID")
         sections=$(remove_excluded_sections "$do_sync_sections" "$excluded")
         asections=$(remove_excluded_sections "$do_async_sections" "$excluded")
-        logging "[${sid}] [do_checks]" "Excluded: ${excluded}"\
-                "Sections: ${sections}" "Async sections: ${asections}"
+        logging "[${MK_SID}] [do_checks]" "Excluded: $excluded"\
+                "Sections: $sections" "Async sections: $asections"
 
-        ASYNC_SQL=$(for section in $asections; do eval "sql_$section" ; done)
+        MK_SYNC_SECTIONS_QUERY=$(for section in $sections; do eval "sql_$section" ; done)
+        MK_ASYNC_SECTIONS_QUERY=$(for section in $asections; do eval "sql_$section" ; done)
+
     fi
+    export MK_ASYNC_SECTIONS_QUERY
 
-    export ASYNC_SQL
     if [ "$MK_ORA_LOGGING" = "1" ]; then
-        logging "[${sid}] [do_checks]" "Testmode: $(echo \
-                "select user || ' on ' || host_name || ' instance ' || instance_name from v\$instance;"|\
-                mk_ora_sqlplus "${sid}" "$db_connect" "$piggyback_host" "no")"
+        logging "[${MK_SID}] [do_checks]" "Testmode: $(echo \
+                "select user || ' on ' || host_name || ' instance ' || instance_name from v\$instance;" | mk_ora_sqlplus "do_checks")"
     fi
 
     if [ "$MK_ORA_DEBUG_CONNECT" = "1" ]; then
-        do_testmode  "$sid" "$db_connect" "$piggyback_host" "$sections" "$asections" >&2
+        do_testmode "$sections" "$asections" 2>&1
     else
-        do_sync_checks "$sid" "$db_connect" "$piggyback_host" "$sections"
-        run_cached "$sid" "$CACHE_MAXAGE" do_async_checks "$sid" "\"$db_connect\"" "$piggyback_host"
+        do_sync_checks
+        run_cached "$CACHE_MAXAGE" do_async_checks
     fi
 }
 
@@ -1591,8 +1577,10 @@ for sid in $SIDS; do
 
 
     db_connect=$(mk_ora_db_connect "$sid")
+    export MK_SID=$sid
+    export MK_DB_CONNECT=$db_connect
 
-    do_checks "$sid" "$db_connect" ""
+    do_checks
 done
 
 #   ---remote---------------------------------------------------------------
@@ -1608,6 +1596,9 @@ for remote_instance in $REMOTE_INSTANCES; do
 
     db_connect=$(mk_ora_db_connect "$remote_instance")
     piggyback_host=$(echo "${remote_instance_line}" | cut -d":" -f6)
+    export MK_SID=$remote_instance
+    export MK_DB_CONNECT=$db_connect
+    export MK_PIGGYBACK_HOST=$piggyback_host
 
-    do_checks "$remote_instance" "$db_connect" "$piggyback_host"
+    do_checks
 done

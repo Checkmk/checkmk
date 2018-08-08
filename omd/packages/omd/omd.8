@@ -300,6 +300,15 @@ and block till the start operations for all sites have been completed.
 .B omd stop [-p, --parallel]      [SITE] [SERVICE]
 Stop a site. See \fBomd start\fP for details. This stops also sites where
 AUTOSTART=off.
+
+After a "omd stop" call for all processes of a site stopped the processes
+controlled by the init scripts, OMD searches for remaining (uncontrolled) site
+processes, e.g. still running background jobs or other processes and sends a
+SIGTERM to each of them.
+
+It waits up to 5 seconds for them to stop. In case the processes did not
+finish in time, it terminates the OMD call with an exit code of 1.
+
 .TP
 .B omd [-f, --force] restart    [SITE] [SERVICE]
 Restart site. See \fBcmd start\fP for details.

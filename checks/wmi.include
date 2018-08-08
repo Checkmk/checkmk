@@ -155,37 +155,36 @@ class WMITable(object):
 
 def parse_wmi_table(info, key="Name"):
     try:
-        info_iter = iter(info)
-        res = None
         # read input line by line. rows with [] start the table name.
         # Each table has to start with a header line
+        info_iter = iter(info)
         line = info_iter.next()
-        timestamp = frequency = None
+
+        # Did main section get WMI timeout?
+        check_wmi_timeout(line)
+
+        timestamp, frequency = None, None
         if line[0] == "sampletime":
-            timestamp = int(line[1])
-            frequency = int(line[2])
+            timestamp, frequency = int(line[1]), int(line[2])
             line = info_iter.next()
-        else:
-            # Did main section get WMI timeout?
-            check_wmi_timeout(line)
+
+        res = None
         while line is not None:
             check_wmi_timeout(line)
-            current = None
+
             if len(line) == 1 and line[0].startswith("["):
                 # multi-table input
                 if res is None:
                     res = {}
-                tablename = regex("\[(.*)\]").search(line[0]).group(1)
+
+                tablename = regex(r"\[(.*)\]").search(line[0]).group(1)
                 line = info_iter.next()
                 # Did subsection get WMI timeout?
                 check_wmi_timeout(line)
-                if tablename in res:
-                    # known table, append to it
-                    current = res[tablename]
-                else:
-                    # table is new, treat as header line
-                    current = WMITable(tablename, line, key, timestamp, frequency)
-                    res[tablename] = current
+
+                if tablename not in res:
+                    res[tablename] = WMITable(tablename, line, key, timestamp, frequency)
+                current = res[tablename]
             else:
                 # single-table input
                 current = res = WMITable("", line, key, timestamp, frequency)

@@ -31,7 +31,7 @@
 
 
 factory_settings["oracle_sessions_default_levels"] = {
-    "sessions_abs" : (50, 100),
+    "sessions_abs" : (150, 300),
 }
 
 
@@ -47,29 +47,6 @@ def parse_oracle_sessions(info):
                  "curmax"  : int(curmax),
             })
 
-        elif len(line) == 7:
-            # detailed session information for PDBs
-            sid, pdb_name, sstate, smode, stype, bmode, cnt = line
-
-            if pdb_name <> '' and pdb_name <> 'CDB$ROOT':
-                sid = '%s.%s' % (sid, pdb_name)
-
-            if sstate == '':
-                # found a line with only number of sessions
-                # typically found in PDB without any connected session
-                parsed.setdefault(sid, {
-                    "count" : cnt,
-                })
-
-            else:
-                parsed.setdefault(sid, {
-                    "count"     : cnt,
-                    "sessstate" : sstate,
-                    "sessmode"  : smode,
-                    "sesstype"  : stype,
-                    "blockmode" : bmode,
-                })
-
         elif len(line) == 2:
             # old agent format!
             sid, cursess = line
@@ -82,8 +59,7 @@ def parse_oracle_sessions(info):
 
 def inventory_oracle_sessions(parsed):
     for sid in parsed:
-        if sid.find(".") < 0:
-            yield sid, {}
+        yield sid, {}
 
 
 def check_oracle_sessions(item, params, parsed):

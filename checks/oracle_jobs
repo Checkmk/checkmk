@@ -51,52 +51,79 @@
 # QS1|ORACLE_OCM|MGMT_CONFIG_JOB|DISABLED|0|40|FALSE|08-APR-15 01.01.01.200000 AM +01:00|-|
 # QS1|DBADMIN|DATENEXPORT-FUR|COMPLETED|0|3|FALSE|22-AUG-14 01.11.00.000000 AM EUROPE/BERLIN|-|
 
-
-
 factory_settings["oracle_jobs_defaults"] = {
     "disabled": True,
+    "missinglog": 1,
+    "missingjob": 3,
 }
 
 def inventory_oracle_jobs(info):
     for line in info:
-        if len(line) >= 3:
+        # old format < RDBMS 12.1
+        if len(line) >= 3 and len(line) <= 10:
             yield "%s.%s.%s" % ( line[0], line[1], line[2] ), {}
+        else:
+            # new format: sid.pdb_name.job_owner.job_name
+            yield "%s.%s.%s.%s" % ( line[0], line[1], line[2], line[3] ), {}
 
 def check_oracle_jobs(item, params, info):
-    if item.count('.') == 2:
-        sid, job_owner, job_name = item.split('.')
-    else:
-        # old format without job owner. Simply ignore owner.
-        sid, job_name = item.split('.')
-        job_owner = None
+
+    # only extract the sid from item.
+    sid = item[0:item.index('.',0)]
 
     data_found = False
+    state = 0
+
     for line in info:
         service_found = False
 
         if line[0] == sid:
             data_found = True
 
-        if line[0] == sid and (line[1] == job_owner or job_owner is None) and line[2] == job_name:
+        # check for pdb_name in agent output
+        # => the agentoutput is responsible for the format of item from Check_MK!
+        # item could have the following formats. Keep in mind, that job_name could include a '.'!
+        if len(line) == 11:
+            # => sid.pdb_name.job_owner.job_name
+            itemsid, itempdb, itemowner, itemname = item.split('.', 4)
+            lineformat = 3
+
+            sid, job_pdb, job_owner, job_name, job_state, job_runtime, job_run_count, \
+            job_enabled, job_nextrun, job_schedule, job_last_state = line
+
+        elif len(line) == 10:
+            # sid.job_owner.job_name
+            itemsid, itemowner, itemname = item.split('.', 3)
+            itempdb = ''
+            lineformat = 2
+
+            sid, job_owner, job_name, job_state, job_runtime, job_run_count, \
+            job_enabled, job_nextrun, job_schedule, job_last_state = line
+
+        else:
+            # really old plugins without job_owner...
+            # this should be removed in a future release!
+
+            # sid.job_name
+            itemsid, itemname = item.split('.', 2)
+            itempdb = ''
+            itemowner = ''
+            lineformat = 1
+
+            job_name = line[2]
+            job_state = line[3]
+            job_runtime = line[4]
+            job_enabled = line[6]
+            job_nextrun = " ".join(line[7:-3])
+            job_schedule = line[-2]
+            job_last_state = line[-1]
+
+        if   (lineformat == 3 and itemname == job_name and itemowner == job_owner and itempdb == job_pdb and itemsid == sid) \
+           or(lineformat == 2 and itemname == job_name and itemowner == job_owner and itemsid == sid) \
+           or(lineformat == 1 and itemname == job_name and itemsid == sid):
 
             service_found = True
             param_disabled = params["disabled"]
-
-            if len(line) == 10:
-                # new agent output with '|' separator
-                sid, job_owner, job_name, job_state, job_runtime, job_run_count, \
-                job_enabled, job_nextrun, job_schedule, job_status = line
-
-            else:
-                # old agent format
-                # the extraction of data is complicated due to missing field separator
-                job_name = line[2]
-                job_state = line[3]
-                job_runtime = line[4]
-                job_enabled = line[6]
-                job_nextrun = " ".join(line[7:-3])
-                job_schedule = line[-2]
-                job_status = line[-1]
 
             break
 
@@ -107,12 +134,9 @@ def check_oracle_jobs(item, params, info):
         raise MKCounterWrapped("Login not possible for check %s" % item)
 
     if not service_found:
-        state = 2
-        infotext = "Job is missing"
-        if "status_missing_jobs" in params:
-            state = params["status_missing_jobs"]
-            infotext += " (configured through WATO)"
-        return state, infotext
+        missingjob = params.get('missingjob')
+        state = max(state, missingjob)
+        return (state, 'Job is missing')
 
     state = 0
     output = []
@@ -127,7 +151,7 @@ def check_oracle_jobs(item, params, info):
     txt = "Enabled: %s" % (job_enabled == "TRUE" and "Yes" or "No")
     if job_enabled != "TRUE" and job_state != 'RUNNING':
         if param_disabled:
-            txt += ' ignored'
+            txt += ' (ignored)'
         else:
             txt += "(!)"
             state = max(state, 1)
@@ -163,16 +187,41 @@ def check_oracle_jobs(item, params, info):
             job_nextrun = job_schedule
     output.append("Next Run: %s" % job_nextrun)
 
-    # A job who is running forever has no last run state and job_status is
+    if "missinglog" in params:
+        missinglog = params["missinglog"]
+    else:
+        missinglog = 1
+
+    # A job who is running forever has no last run state and job_last_state is
     # STOPPED
-    if job_state == "RUNNING" and job_runtime == '' and job_status == 'STOPPED':
+    if job_state == "RUNNING" and job_runtime == '' and job_last_state == 'STOPPED':
         txt = 'Job is running forever'
     else:
-        txt = "Last Run Status: %s" % (job_status)
-        if job_status != "SUCCEEDED" and job_status != "":
-            txt += "(!!)"
-            state = max(state, 2)
-    output.append(txt)
+
+        if job_last_state == '':
+            # no information from job log (outer join in SQL is empty)
+            txt = ' no log information found'
+
+            if missinglog == 0:
+                txt += ' (ignored)'
+            elif missinglog == 1:
+                txt += '(!)'
+            elif missinglog == 2:
+                txt += '(!!)'
+            elif missinglog == 3:
+                txt += '(?)'
+            output.append(txt)
+
+            state = max(state, missinglog)
+
+        else:
+            txt = "Last Run Status: %s" % (job_last_state)
+
+            if job_enabled == "TRUE" and job_last_state != "SUCCEEDED":
+                state = max(state, 2)
+            else:
+                txt += ' (ignored disabled Job)'
+            output.append(txt)
 
     if job_state == "DISABLED" and "status_disabled_jobs" in params:
         state = params["status_disabled_jobs"]

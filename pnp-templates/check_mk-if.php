@@ -54,9 +54,9 @@ else {
 }
 
 # Convert bytes to bits if neccessary
-$bandwidth = $MAX[1]  * $unit_multiplier;
-$warn      = $WARN[1] * $unit_multiplier;
-$crit      = $CRIT[1] * $unit_multiplier;
+$bandwidth = $MAX[1] != "" ? $MAX[1]  * $unit_multiplier : 0;
+$warn      = $WARN[1] != "" ? $WARN[1] * $unit_multiplier : 0;
+$crit      = $CRIT[1] != "" ? $CRIT[1] * $unit_multiplier : 0;
 
 # Now choose a convenient scale, based on the known bandwith of
 # the interface, and break down bandwidth, warn and crit by that

@@ -1,0 +1,10 @@
+Title: Raw edition: Fixed interface graphs when no warn/crit/bandwidth is reported
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 1.5.0p1
+Date: 1533734236
+Class: fix
+
+

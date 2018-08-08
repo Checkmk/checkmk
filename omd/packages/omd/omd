@@ -3862,17 +3862,21 @@ def verify_directory_write_access():
 
 
 def kill_site_user_processes(exclude_current_and_parents=False):
+    def get_current_and_parent_pids():
+        """Return list of PIDs of the current process and parent process tree till pid 0"""
+        pids = []
+        pid = os.getpid()
+        while pid != 0:
+            pids.append(pid)
+            pid = int(file("/proc/%d/stat" % pid).read().split(" ")[3])
+        return pids
+
     def site_user_processes():
+        """Return list of PIDs of all running site user processes (that are not excluded)"""
         exclude = []
         if exclude_current_and_parents:
-            # Build list of whole parent process tree to use them as excludes later
-            pid = os.getpid()
-            while pid != 0:
-                exclude.append(pid)
-                pid = int(file("/proc/%d/stat" % pid).read().split(" ")[3])
+            exclude = get_current_and_parent_pids()
 
-
-        # Find all site user processes (that are not excluded)
         pids = []
         for line in os.popen("ps -U %s -o pid -h" % g_sitename):
             pid = int(line.strip())

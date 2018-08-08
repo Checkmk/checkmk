@@ -3862,30 +3862,7 @@ def verify_directory_write_access():
 
 
 def kill_site_user_processes(exclude_current_and_parents=False):
-    def get_current_and_parent_pids():
-        """Return list of PIDs of the current process and parent process tree till pid 0"""
-        pids = []
-        pid = os.getpid()
-        while pid != 0:
-            pids.append(pid)
-            pid = int(file("/proc/%d/stat" % pid).read().split(" ")[3])
-        return pids
-
-    def site_user_processes():
-        """Return list of PIDs of all running site user processes (that are not excluded)"""
-        exclude = []
-        if exclude_current_and_parents:
-            exclude = get_current_and_parent_pids()
-
-        pids = []
-        for line in os.popen("ps -U %s -o pid -h" % g_sitename):
-            pid = int(line.strip())
-
-            if pid not in exclude:
-                pids.append(pid)
-        return pids
-
-    pids = site_user_processes()
+    pids = site_user_processes(exclude_current_and_parents)
     tries = 5
     while tries > 0 and pids:
         for pid in pids[:]:
@@ -3904,6 +3881,30 @@ def kill_site_user_processes(exclude_current_and_parents=False):
     if pids:
         bail_out("Failed to kill site processes: %s" % ", ".join(map(str, pids)))
 
+
+def get_current_and_parent_pids():
+    """Return list of PIDs of the current process and parent process tree till pid 0"""
+    pids = []
+    pid = os.getpid()
+    while pid != 0:
+        pids.append(pid)
+        pid = int(file("/proc/%d/stat" % pid).read().split(" ")[3])
+    return pids
+
+
+def site_user_processes(exclude_current_and_parents):
+    """Return list of PIDs of all running site user processes (that are not excluded)"""
+    exclude = []
+    if exclude_current_and_parents:
+        exclude = get_current_and_parent_pids()
+
+    pids = []
+    for line in os.popen("ps -U %s -o pid -h" % g_sitename):
+        pid = int(line.strip())
+
+        if pid not in exclude:
+            pids.append(pid)
+    return pids
 
 
 def postprocess_restore_as_root(options):

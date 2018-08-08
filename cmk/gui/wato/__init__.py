@@ -4517,7 +4517,7 @@ class ModeBulkDiscovery(WatoMode):
 
         # start       : Rendering of the progress dialog
         # transaction : Single step processing
-        if self._start or html.is_transaction():
+        if self._start or (html.is_transaction() and not html.has_var("_bulk_inventory")):
             bulk_discover_params = cmk.gui.plugins.wato.vs_bulk_discovery().from_html_vars("bulkinventory")
             cmk.gui.plugins.wato.vs_bulk_discovery().validate_value(bulk_discover_params, "bulkinventory")
             self._bulk_discovery_params.update(bulk_discover_params)

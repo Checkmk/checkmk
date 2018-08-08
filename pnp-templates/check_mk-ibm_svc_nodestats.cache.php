@@ -23,7 +23,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-$opt[1] = '--vertical-label "%" --title "' . $this->MACRO['DISP_HOSTNAME'] . ' / ' . $this->MACRO['DISP_SERVICEDESC'] . '" --lower=0 -u 100';
+$opt[1] = '--vertical-label "%" --title "' . $this->MACRO['DISP_HOSTNAME'] . ' / ' . $this->MACRO['DISP_SERVICEDESC'] . '" --lower-limit=0 -u 100';
 
 $def[1] = ""
           . "DEF:write_cache_pc=$RRDFILE[1]:$DS[1]:MAX "

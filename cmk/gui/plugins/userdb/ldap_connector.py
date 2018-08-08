@@ -1085,7 +1085,7 @@ class LDAPUserConnector(UserConnector):
 
                 # Synchronize new user profile to remote sites if needed
                 if pw_changed and not changed and config.has_wato_slave_sites():
-                    synchronize_profile_to_sites(self, user_id, user)
+                    synchronize_profile_to_sites(self._logger, user_id, user)
 
                 if changed:
                     for key, (old_value, new_value) in sorted(changed.items()):
@@ -1884,15 +1884,17 @@ ldap_attribute_plugins['groups_to_roles'] = {
 # Hopefully we have no large bulks of users changing their passwords at the same
 # time. In this case the implementation does not scale well. We would need to
 # change this to some kind of profile bulk sync per site.
-def synchronize_profile_to_sites(connection, user_id, profile):
+# TODO: Should we move this to watolib?
+def synchronize_profile_to_sites(logger, user_id, profile):
     import cmk.gui.sites as sites
     import cmk.gui.watolib as watolib # TODO: Cleanup
 
+    # TODO: We only need to do this for login sites!
     remote_sites = [(site_id, config.site(site_id))
                     for site_id in config.sitenames()
                     if not config.site_is_local(site_id) ]
 
-    connection._logger.info('Credentials changed: %s. Trying to sync to %d sites' %
+    logger.info('Credentials changed: %s. Trying to sync to %d sites' %
                                                     (user_id, len(remote_sites)))
 
     num_disabled  = 0
@@ -1920,11 +1922,11 @@ def synchronize_profile_to_sites(connection, user_id, profile):
             num_succeeded += 1
         else:
             num_failed += 1
-            connection._logger.info('  FAILED [%s]: %s' % (site_id, result))
+            logger.info('  FAILED [%s]: %s' % (site_id, result))
             # Add pending entry to make sync possible later for admins
             if config.wato_enabled:
                 watolib.add_change("edit-users", _('Password changed (sync failed: %s)') % result,
                     add_user=False, sites=[site_id], need_restart=False)
 
-    connection._logger.info('  Disabled: %d, Succeeded: %d, Failed: %d' %
+    logger.info('  Disabled: %d, Succeeded: %d, Failed: %d' %
                     (num_disabled, num_succeeded, num_failed))

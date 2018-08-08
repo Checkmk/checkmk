@@ -1889,10 +1889,8 @@ def synchronize_profile_to_sites(logger, user_id, profile):
     import cmk.gui.sites as sites
     import cmk.gui.watolib as watolib # TODO: Cleanup
 
-    # TODO: We only need to do this for login sites!
     remote_sites = [(site_id, config.site(site_id))
-                    for site_id in config.sitenames()
-                    if not config.site_is_local(site_id) ]
+                    for site_id in config.get_login_sites() ]
 
     logger.info('Credentials changed: %s. Trying to sync to %d sites' %
                                                     (user_id, len(remote_sites)))

@@ -1,0 +1,12 @@
+Title: LDAP: Sync detected password changes only to login sites
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1533711208
+Class: fix
+
+This is a minor performance improvement. The number of destination sites
+a user profile is synchronized to in case a password change is detected
+in LDAP is reduced to the sites where access to the GUI is allowed.

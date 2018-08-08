@@ -14792,9 +14792,9 @@ def add_scanned_hosts_to_folder(folder, found):
     for host_name, ipaddress in found:
         host_name = cmk.translations.translate_hostname(translation, host_name)
 
-        attrs = {
-            "tag_criticality" : network_scan_properties.get("tag_criticality", "offline"),
-        }
+        attrs = {}
+        if "tag_criticality" in network_scan_properties:
+            attrs["tag_criticality"] = network_scan_properties.get("tag_criticality", "offline")
 
         if network_scan_properties.get("set_ipaddress", True):
             attrs["ipaddress"] = ipaddress

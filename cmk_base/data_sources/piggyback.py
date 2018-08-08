@@ -77,7 +77,7 @@ class PiggyBackDataSource(CheckMKAgentDataSource):
 
         Return only summary information in case there is piggyback data"""
 
-        if self._host_sections.sections:
+        if self._host_sections and self._host_sections.sections:
             output = "Processed from: %s" % ", ".join(self._source_hostnames)
         else:
             output = ""

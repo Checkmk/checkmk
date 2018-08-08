@@ -1,0 +1,13 @@
+Title: Fixed bulk discovery (addition to #6377 in 1.5.0)
+Level: 1
+Component: wato
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0i1
+Date: 1533721932
+
+The bulk discovery should've been fixed in 1.5.0 by werk #6377 which did not
+completely repair that feature. The error message "The selected element is not
+longer availalable" was shown when trying to do a bulk discovery.

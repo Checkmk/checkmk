@@ -168,26 +168,24 @@ def parse_wmi_table(info, key="Name"):
             timestamp, frequency = int(line[1]), int(line[2])
             line = info_iter.next()
 
-        res = None
+        res = {}
         while line is not None:
             check_wmi_timeout(line)
 
             if len(line) == 1 and line[0].startswith("["):
                 # multi-table input
-                if res is None:
-                    res = {}
-
                 tablename = regex(r"\[(.*)\]").search(line[0]).group(1)
-                line = info_iter.next()
-                # Did subsection get WMI timeout?
-                check_wmi_timeout(line)
 
-                if tablename not in res:
-                    res[tablename] = WMITable(tablename, line, key, timestamp, frequency)
-                current = res[tablename]
+                # Did subsection get WMI timeout?
+                line = info_iter.next()
+                check_wmi_timeout(line)
             else:
                 # single-table input
-                current = res = WMITable("", line, key, timestamp, frequency)
+                tablename = ""
+
+            if tablename not in res:
+                res[tablename] = WMITable(tablename, line, key, timestamp, frequency)
+            current = res[tablename]
 
             # read table content
             line = info_iter.next()
@@ -217,8 +215,8 @@ def check_wmi_timeout(line):
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-def wmi_filter_global_only(table, row):
-    return table.get(row, "Name") == "_Global_"
+def wmi_filter_global_only(tables, row):
+    return all(table.get(row, "Name") == "_Global_" for table in tables.values())
 
 
 #.
@@ -232,54 +230,41 @@ def wmi_filter_global_only(table, row):
 #   '----------------------------------------------------------------------'
 
 def inventory_wmi_table(tables, **kwargs):
+    required_tables = kwargs.get('required_tables', tables.keys())
+    if not set(required_tables) <= set(tables.keys()):
+        # if table is missing, nothing gets inventorized. This can
+        # only happen if required_tables was set
+        return []
+
     potential_instances = None
-
-    if isinstance(tables, dict):
-        required_tables = kwargs.get('required_tables', tables.keys())
-        if not set(required_tables) <= set(tables.keys()):
-            # if table is missing, nothing gets inventorized. This can
-            # only happen if required_tables was set
-            return []
-
-        if kwargs.get("skip_intersection", False):
-            # Unfortunately there are tables which do NOT provide any
-            # names. In this case we fallback to old behaviour.
-            #
-            # Eg. wmi_cpuload check plugin:
-            # 'system_perf' section has only counters and comes together
-            # with 'computer_system' which has table names and intersection
-            # of these tables would be empty. Thus no service is discovered.
-            potential_instances = [None]
-
-        else:
-            # inventarize one item per instance that exists in all tables
-            for required_table in required_tables:
-                table_rows = tables[required_table].row_labels()
-                if potential_instances is None:
-                    potential_instances = set(table_rows)
-                else:
-                    potential_instances &= set(table_rows)
+    if kwargs.get("skip_intersection", False):
+        # Unfortunately there are tables which do NOT provide any
+        # names. In this case we fallback to old behaviour.
+        #
+        # Eg. wmi_cpuload check plugin:
+        # 'system_perf' section has only counters and comes together
+        # with 'computer_system' which has table names and intersection
+        # of these tables would be empty. Thus no service is discovered.
+        potential_instances = set([None])
     else:
-        potential_instances = tables.row_labels()
+        # inventarize one item per instance that exists in all tables
+        for required_table in required_tables:
+            table_rows = tables[required_table].row_labels()
+            if potential_instances is None:
+                potential_instances = set(table_rows)
+            else:
+                potential_instances &= set(table_rows)
 
     # if there are multiple instances, don't include the summary line as it is redundant
     if len(potential_instances) > 1:
-        try:
-            potential_instances.remove(None)
-        except KeyError:
-            pass
-        except ValueError:
-            pass
+        potential_instances.discard(None)
 
     # apply row-filter if the caller provided one
-    if 'filt' in kwargs:
-        filt = kwargs['filt']
-        return [(row, kwargs.get('levels', None))
-                for row in potential_instances
-                if filt(tables, row)]
-    else:
-        return [(row, kwargs.get('levels', None))
-                for row in potential_instances]
+    filt = kwargs.get('filt', lambda tables, row: True)
+
+    return [(row, kwargs.get('levels', None))
+            for row in potential_instances
+            if filt(tables, row)]
 
 
 #.
@@ -304,19 +289,16 @@ def wmi_make_perfvar(varname, value, perfscale, levels, min_value="", max_value=
     if levels is not None:
         upper_levels = levels.get('upper', ("", ""))
     else:
-        upper_levels = ("", "")
-    res = (varname, value, upper_levels[0], upper_levels[1], min_value, max_value)
-    return res
+        upper_levels = (None, None)
+    return (varname, value, upper_levels[0], upper_levels[1], min_value, max_value)
 
 
 def wmi_determine_status(value, levels):
     def worst_status(*args):
-        order = [0,1,3,2]
+        order = [0, 1, 3, 2]
         return sorted(args, key=lambda x: order[x], reverse=True)[0]
 
-    levels_text = ""
-
-    statuses = [0]
+    statuses, levels_text = [0], ""
     if levels:
         if 'upper' in levels:
             upper_status = 0
@@ -337,6 +319,7 @@ def wmi_determine_status(value, levels):
             if lower_status != 0:
                 statuses.append(lower_status)
                 levels_text = " (warn/crit below %s/%s)" % levels['lower']
+
     return worst_status(*statuses), levels_text
 
 

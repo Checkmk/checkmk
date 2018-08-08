@@ -26,7 +26,7 @@
 
 
 def check_wmi_webservices(item, params, parsed):
-    yield wmi_yield_raw_persec(parsed, item, "CurrentConnections",
+    yield wmi_yield_raw_persec(parsed[""], item, "CurrentConnections",
                                label=" connections",
                                perfvar="connections")
 

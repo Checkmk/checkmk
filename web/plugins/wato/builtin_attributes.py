@@ -300,75 +300,10 @@ register_hook('validate-host', validate_host_parents)
 
 class NetworkScanAttribute(ValueSpecAttribute):
     def __init__(self):
-        def get_all_user_ids():
-            return [ (user_id, "%s (%s)" % (user_id, user.get("alias", user_id)))
-                     for user_id, user in userdb.load_users(lock = False).items() ]
-
-        def tag_criticality_choices():
-            tags = watolib.HosttagsConfiguration()
-            tags.load()
-
-            criticality = tags.get_tag_group("criticality")
-            return criticality.get_tag_choices()
 
         ValueSpecAttribute.__init__(self, "network_scan",
             Dictionary(
-                elements = [
-                    ("ip_ranges", ListOf(self._vs_ip_range(),
-                        title = _("IP ranges to scan"),
-                        add_label = _("Add new IP range"),
-                        text_if_empty = _("No IP range configured"),
-                    )),
-                    ("exclude_ranges", ListOf(self._vs_ip_range(),
-                        title = _("IP ranges to exclude"),
-                        add_label = _("Add new IP range"),
-                        text_if_empty = _("No exclude range configured"),
-                    )),
-                    ("scan_interval", Age(
-                        title = _("Scan interval"),
-                        display = [ "days", "hours" ],
-                        default_value = 60*60*24,
-                        minvalue = 3600, # 1 hour
-                    )),
-                    ("time_allowed", TimeofdayRange(
-                        title = _("Time allowed"),
-                        help = _("Limit the execution of the scan to this time range."),
-                        allow_empty=False,
-                    )),
-                    ("set_ipaddress", Checkbox(
-                        title = _("Set IPv4 address"),
-                        help = _("Whether or not to configure the found IP address as the IPv4 "
-                                 "address of the found hosts."),
-                        default_value = True,
-                    )),
-                    ("tag_criticality", DropdownChoice(
-                        title = _("Set criticality host tag"),
-                        help = _("Added hosts will be created as \"offline\" host by default. You "
-                                 "can change this option to activate monitoring of new hosts after "
-                                 "next activation of the configuration after the scan."),
-                        choices = tag_criticality_choices,
-                        default_value = "offline",
-                    )),
-                    ("max_parallel_pings", Integer(
-                        title = _("Parallel pings to send"),
-                        help = _("Set the maximum number of concurrent pings sent to target IP "
-                                 "addresses."),
-                        minvalue = 1,
-                        maxvalue = 200,
-                        default_value = 100,
-                    )),
-                    ("run_as", DropdownChoice(
-                        title = _("Run as"),
-                        help = _("Execute the network scan in the Check_MK user context of the "
-                                 "choosen user. This user needs the permission to add new hosts "
-                                 "to this folder."),
-                        choices = get_all_user_ids,
-                        default_value = lambda: config.user.id,
-                    )),
-                    ("translate_names", HostnameTranslation(
-                        title = _("Translate Hostnames"),
-                    )),
-                ],
+                elements = self._network_scan_elements,
                 title = _("Network Scan"),
                 help = _("For each folder an automatic network scan can be configured. It will "
                          "try to detect new hosts in the configured IP ranges by sending pings "
@@ -379,6 +314,89 @@ class NetworkScanAttribute(ValueSpecAttribute):
                 default_text = _("Not configured."),
             )
         )
+
+    def _network_scan_elements(self):
+        return [
+            ("ip_ranges", ListOf(self._vs_ip_range(),
+                title = _("IP ranges to scan"),
+                add_label = _("Add new IP range"),
+                text_if_empty = _("No IP range configured"),
+            )),
+            ("exclude_ranges", ListOf(self._vs_ip_range(),
+                title = _("IP ranges to exclude"),
+                add_label = _("Add new IP range"),
+                text_if_empty = _("No exclude range configured"),
+            )),
+            ("scan_interval", Age(
+                title = _("Scan interval"),
+                display = [ "days", "hours" ],
+                default_value = 60*60*24,
+                minvalue = 3600, # 1 hour
+            )),
+            ("time_allowed", TimeofdayRange(
+                title = _("Time allowed"),
+                help = _("Limit the execution of the scan to this time range."),
+                allow_empty=False,
+            )),
+            ("set_ipaddress", Checkbox(
+                title = _("Set IPv4 address"),
+                help = _("Whether or not to configure the found IP address as the IPv4 "
+                         "address of the found hosts."),
+                default_value = True,
+            ))] + self._optional_tag_criticality_element() +\
+            [("max_parallel_pings", Integer(
+                title = _("Parallel pings to send"),
+                help = _("Set the maximum number of concurrent pings sent to target IP "
+                         "addresses."),
+                minvalue = 1,
+                maxvalue = 200,
+                default_value = 100,
+            )),
+            ("run_as", DropdownChoice(
+                title = _("Run as"),
+                help = _("Execute the network scan in the Check_MK user context of the "
+                         "choosen user. This user needs the permission to add new hosts "
+                         "to this folder."),
+                choices = self._get_all_user_ids,
+                default_value = lambda: config.user.id,
+            )),
+            ("translate_names", HostnameTranslation(
+                title = _("Translate Hostnames"),
+            ))
+        ]
+
+    def _get_all_user_ids(self):
+        return [ (user_id, "%s (%s)" % (user_id, user.get("alias", user_id)))
+                 for user_id, user in userdb.load_users(lock = False).items() ]
+
+    def _get_criticality_choices(self):
+        """Returns the current configuration of the tag_group criticality"""
+        tags = watolib.HosttagsConfiguration()
+        tags.load()
+        criticality_group = tags.get_tag_group("criticality")
+        if not criticality_group:
+            return []
+        return criticality_group.get_tag_choices()
+
+
+    def _optional_tag_criticality_element(self):
+        """This element is optional. The user may have deleted the tag group criticality"""
+        tags = watolib.HosttagsConfiguration()
+        tags.load()
+        criticality_group = tags.get_tag_group("criticality")
+        if not criticality_group:
+            return []
+
+        return [
+            ("tag_criticality", DropdownChoice(
+                title = _("Set criticality host tag"),
+                help = _("Added hosts will be created as \"offline\" host by default. You "
+                         "can change this option to activate monitoring of new hosts after "
+                         "next activation of the configuration after the scan."),
+                choices = self._get_criticality_choices,
+                default_value = "offline",
+            ))
+        ]
 
 
     def _vs_ip_range(self):

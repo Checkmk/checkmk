@@ -26,5 +26,6 @@ case "$1" in
             > $OMD_ROOT/etc/check_mk/multisite.d/mkeventd.mk
         echo -e "# Set by OMD hook MKEVENTD, do not change here!\nmkeventd_enabled = $enabled" \
             > $OMD_ROOT/etc/check_mk/conf.d/mkeventd.mk
+        cmk -U
     ;;
 esac

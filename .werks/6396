@@ -1,0 +1,21 @@
+Title: Fixed 'Unhandled exception 452' in master control snapin if EC Daemon was disabled via 'omd config'
+Level: 1
+Component: omd
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0p1
+Date: 1533709463
+
+Workaround:
+After setting MKEVENTD option in 'omd config' run 'cmk -U' in order
+to update the core config.
+
+Internal notes:
+After disabling MKEVENTD via 'omd config' and 'omd start'
+the tactical overview fails while contacting the mkeventd via
+the socket tmp/run/mkeventd/status in order to gather information
+about open and acknowledged events.
+
+This happened because the core config was not updated via 'cmk -U'.

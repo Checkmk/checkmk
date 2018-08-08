@@ -1,0 +1,13 @@
+Title: The WATO edit folder page is no longer broken, when the tag group criticality gets deleted
+Level: 1
+Component: wato
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0i1
+Date: 1533723451
+
+The web page crashed with a hidden exception when it couldn't find the tag group criticality.
+The <tt>Save & Finish</tt> button was not displayed due to this bug.
+

@@ -86,6 +86,20 @@ def check_oracle_performance(item, _no_params, parsed):
         now      = time.time()
         perfdata = []
 
+        infotexts = []
+        for what, val in data["sys_time_model"].items():
+            perfvar = map_db_time_vars[what]
+            rate = get_rate("oracle_perf.%s.sys_time_model.%s" % (item, perfvar), now, val)
+            infotexts.append("%s: %.1f/s" % (what, rate))
+            perfdata.append((perfvar, rate))
+
+        # PDB is <SID>.<PDB>
+        if '.' in item:
+
+            # PDB does not support more performance data at the moment...
+            yield 0, ", ".join(infotexts), perfdata
+            return
+
         buffer_pool_stats = data["buffer_pool_statistics"]
         if "DEFAULT" in buffer_pool_stats:
             db_block_gets, db_block_change, consistent_gets, physical_reads, \
@@ -125,13 +139,6 @@ def check_oracle_performance(item, _no_params, parsed):
             pin_ratio = float(pin_hits_sum) / pins_sum * 100
             yield 0, "Library cache hit ratio: %.1f%%" % pin_ratio, \
                   [('oracle_library_cache_hit_ratio', pin_ratio)]
-
-        infotexts = []
-        for what, val in data["sys_time_model"].items():
-            perfvar = map_db_time_vars[what]
-            rate = get_rate("oracle_perf.%s.sys_time_model.%s" % (item, perfvar), now, val)
-            infotexts.append("%s: %.1f/s" % (what, rate))
-            perfdata.append((perfvar, rate))
 
         yield 0, ", ".join(infotexts), perfdata
         return

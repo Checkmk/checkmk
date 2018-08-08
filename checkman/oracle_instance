@@ -18,8 +18,7 @@ description:
  is only working when the connection is established with 'sysdba'. Otherwise
  the rule for logins is always CRITICAL.
 
- This check requires the new agent plugin mk_oracle(.new) from our plugin
- directory.
+ This check requires the new agent plugin mk_oracle from our plugin directory.
 
  You can find a description for a basic configuration below. More details for
  special setups will be available on the homepage of the Check_MK project.
@@ -30,6 +29,12 @@ description:
  database. It is also used to disable trace. Otherwise the oracle client
  might create a lot of trace data in $HOME of the root user and may fill the
  '/' filesystem.
+
+ Notes about CDB support in mk_oracle:
+ All PDBs from CDB change to pending state when CDB is not OPEN, to minimize
+ state changes for all instance checks. A '$' is removed in the service name.
+ pdb$seed is translated to pdbseed to prevent problems due to '$' in service
+ names. The check ignores the fact that the pdb$seed is in read only mode.
 
  {mk_oracle.cfg} is the main configuration file for the plugin. Most
  importantly, it contains the {credentials} for the connection to the
@@ -51,11 +56,22 @@ description:
  The configuration of a normal Instance is very easy. An example for ASM
  follows afterwards below.
 
+ Example for nen CDB (old) databases:
+
  sqlplus / as sysdba
 
  create user check_mk identifiebd by checkmk;
 
  grant connect, select_catalog_role to check_mk;
+
+ Example for CDB databases:
+ The prefix C## is only allowed in CDB environments. Don't use it for old
+ databases!
+
+ create user c##check_mk identified by "secret";
+ alter  user c##check_mk set container_data=all container = current;
+ grant create session, select_catalog_role to c##check_mk container=all;
+
 
  An additional grant for a configuration to a Physical Standby Database is
  mandatory when the Standby is not running in OPEN mode.  In most setups,
@@ -64,7 +80,13 @@ description:
  well. Otherwise mk_oracle is not able to monitor the Instance after a role
  change on the old Primary.
 
+ non CDB:
+
  grant sysdba to check_mk;
+
+ CDB:
+
+ grant sysdba to c##check_mk;
 
  Example for ASM:
 

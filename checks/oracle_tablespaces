@@ -194,7 +194,12 @@ def inventory_oracle_tablespaces(parsed):
 
 def check_oracle_tablespaces(item, params, parsed):
     try:
-        sid, ts_name = item.split('.')
+        if item.count('.') == 2:
+            # Pluggable Database: item = <CDB>.<PDB>.<Tablespace>
+            cdb, pdb, ts_name = item.split('.')
+            sid = cdb + "." + pdb
+        else:
+            sid, ts_name = item.split('.',1)
     except ValueError:
         yield 3, 'Invalid check item (must be <SID>.<tablespace>)'
         return

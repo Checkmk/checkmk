@@ -74,6 +74,7 @@ import tarfile
 import termios
 import traceback
 import subprocess
+import signal
 from subprocess import *
 
 OMD_VERSION = "1.6.0i1.cme"
@@ -3887,7 +3888,7 @@ def kill_site_user_processes(exclude_current_and_parents=False):
             try:
                 if opt_verbose:
                     sys.stdout.write("Killing process %d...\n" % pid)
-                os.kill(pid, 9) # SIGKILL
+                os.kill(pid, signal.SIGKILL)
             except OSError, e:
                 if e.errno == 3:
                     pids.remove(pid) # No such process

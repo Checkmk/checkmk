@@ -62,6 +62,7 @@ import grp
 import pwd
 import tty
 import time
+import errno
 import fcntl
 import shlex
 import pprint
@@ -3340,6 +3341,12 @@ def main_init_action(command, args, options=None):
 
     if g_sitename:
         exit_status = init_action(command, args, options)
+
+        # When the whole site is about to be stopped check for remaining
+        # processes and terminate them
+        if command == "stop" and not args and exit_status == 0:
+            terminate_site_user_processes()
+
         sys.exit(exit_status)
 
     # if no site is selected, all sites are affected
@@ -3861,6 +3868,45 @@ def verify_directory_write_access():
 
 
 
+def terminate_site_user_processes():
+    """Sends a SIGTERM to all running site processes and waits up to 5 seconds for termination
+
+    In case one or more processes are still running after the timeout, the method will make
+    the current OMD call terminate.
+    """
+
+    pids = site_user_processes(exclude_current_and_parents=True)
+    if not pids:
+        return
+
+    sys.stdout.write("Stopping %d remaining site processes..." % len(pids))
+
+    timeout_at = time.time() + 5
+    sent_terminate = False
+    while pids and time.time() < timeout_at:
+        for pid in pids[:]:
+            try:
+                if not sent_terminate:
+                    if opt_verbose:
+                        sys.stdout.write("%d..." % pid)
+                    os.kill(pid, signal.SIGTERM)
+                else:
+                    os.kill(pid, signal.SIG_DFL)
+            except OSError as e:
+                if e.errno == errno.ESRCH: # No such process
+                    pids.remove(pid)
+                else:
+                    raise
+
+        sent_terminate = True
+        time.sleep(0.1)
+
+    if pids:
+        bail_out("\nFailed to stop remaining site processes: %s" % ", ".join(map(str, pids)))
+    else:
+        ok()
+
+
 def kill_site_user_processes(exclude_current_and_parents=False):
     pids = site_user_processes(exclude_current_and_parents)
     tries = 5
@@ -3898,12 +3944,22 @@ def site_user_processes(exclude_current_and_parents):
     if exclude_current_and_parents:
         exclude = get_current_and_parent_pids()
 
-    pids = []
-    for line in os.popen("ps -U %s -o pid -h" % g_sitename):
-        pid = int(line.strip())
+    p = subprocess.Popen(["ps", "-U", g_sitename, "-o", "pid", "-h"], close_fds=True,
+                         stdin=open(os.devnull), stdout=subprocess.PIPE)
+    exclude.append(p.pid)
 
-        if pid not in exclude:
-            pids.append(pid)
+    pids = []
+    for l in p.communicate()[0].split("\n"):
+        line = l.strip()
+        if not line:
+            continue
+
+        pid = int(line)
+
+        if pid in exclude:
+            continue
+
+        pids.append(pid)
     return pids
 
 

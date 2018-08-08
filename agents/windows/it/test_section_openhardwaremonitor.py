@@ -59,33 +59,19 @@ def expected_output():
     ], repeat(re_str))
 
 
-def get_ohm_version(ohmdir):
-    version = None
-    with open(os.path.join(ohmdir, 'Makefile')) as makefile:
-        pattern = re.compile(r'VERSION\s*=\s*(?P<version>\S*)')
-        for line in makefile:
-            m = pattern.match(line)
-            if m is not None:
-                version = m.group('version')
-                break
-    return version
-
-
 @pytest.fixture(autouse=True)
 def manage_ohm_binaries():
     if platform.system() != 'Windows':
         binaries = ['OpenHardwareMonitorCLI.exe', 'OpenHardwareMonitorLib.dll']
-        ohmdir = os.path.normpath(
+
+        sourcedir = os.path.normpath(
             os.path.join(
                 os.path.dirname(os.path.abspath(__file__)), '..', '..', '..',
                 'omd', 'packages', 'openhardwaremonitor'))
-        version = get_ohm_version(ohmdir)
-        assert version is not None
-        sourcedir = os.path.normpath(
-            os.path.join(ohmdir, '-'.join(['openhardwaremonitor', version]),
-                         'Bin', 'Release'))
+
         targetdir = os.path.join(remotedir, 'bin')
         targetdir_win = targetdir.replace('/', '\\')
+
         cmds = [[
             'ssh', sshopts,
             '%s@%s' % (remoteuser, remote_ip),

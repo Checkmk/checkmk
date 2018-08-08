@@ -38,8 +38,8 @@ dist: OpenHardwareMonitorCLI.exe OpenHardwareMonitorLib.dll clean
 
 install:
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/check_mk/agents/windows/ohm
-	install -m 755 $(DIR)/OpenHardwareMonitorCLI.exe $(DESTDIR)$(OMD_ROOT)/share/check_mk/agents/windows/ohm
-	install -m 755 $(DIR)/OpenHardwareMonitorLib.dll $(DESTDIR)$(OMD_ROOT)/share/check_mk/agents/windows/ohm
+	install -m 755 OpenHardwareMonitorCLI.exe $(DESTDIR)$(OMD_ROOT)/share/check_mk/agents/windows/ohm
+	install -m 755 OpenHardwareMonitorLib.dll $(DESTDIR)$(OMD_ROOT)/share/check_mk/agents/windows/ohm
 
 skel:
 

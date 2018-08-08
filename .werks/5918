@@ -1,0 +1,17 @@
+Title: New Theme: Fixed several bugs
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1533741541
+Class: fix
+
+This patch includes fixes for:
+- Dropdown of Virtual Host Tree Snapin
+- Server Time Snapin
+- White triangle on white ground on grouped services
+- White text on white background (e.g. new reports)
+- Flat design of Bulk discovery (is now more align to similar progress sites)
+- A layer mismatch of popup menu of a service and the service if a service is stale
+- New logo for reports

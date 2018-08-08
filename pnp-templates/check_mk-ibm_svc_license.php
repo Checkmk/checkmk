@@ -23,7 +23,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-$opt[1] = '--vertical-label "Licenses" --title "' . $this->MACRO['DISP_HOSTNAME'] . ' / ' . $this->MACRO['DISP_SERVICEDESC'] . ' per State" --lower=0';
+$opt[1] = '--vertical-label "Licenses" --title "' . $this->MACRO['DISP_HOSTNAME'] . ' / ' . $this->MACRO['DISP_SERVICEDESC'] . ' per State" --lower-limit=0';
 
 $def[1] = ""
           . "DEF:licensed=$RRDFILE[1]:$DS[1]:MAX "

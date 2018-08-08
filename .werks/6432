@@ -1,0 +1,13 @@
+Title: Raw Edition: Fixed possible broken graphs related to lower/upper parameters
+Level: 1
+Component: multisite
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0i1
+Date: 1533732877
+
+Some graphs could not be shown because the graphing tool used invalid parameters
+(lower instead of lower-limit) for rendering the graphs. An error message like
+"ERROR: invalid option – ‘lower=0’" was displayed.

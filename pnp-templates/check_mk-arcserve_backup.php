@@ -44,8 +44,8 @@ foreach ($this->DS as $KEY=>$VAL) {
 
 	if ($VAL['UNIT'] == "%%") {
 		$vlabel = "%";
-		$upper = " --upper=101 ";
-		$lower = " --lower=0 ";
+		$upper = " --upper-limit=101 ";
+		$lower = " --lower-limit=0 ";
 	}
 	else {
 		$vlabel = $VAL['UNIT'];

@@ -164,7 +164,7 @@ else
                     $crit_min = $VAL['CRIT_MIN'];
             }
             if ( $VAL['MIN'] != "" && is_numeric($VAL['MIN']) ) {
-                    $lower = " --lower=" . $VAL['MIN'];
+                    $lower = " --lower-limit=" . $VAL['MIN'];
                     $minimum = $VAL['MIN'];
             }
             if ( $VAL['MAX'] != "" && is_numeric($VAL['MAX']) ) {
@@ -172,8 +172,8 @@ else
             }
             if ($VAL['UNIT'] == "%%") {
                     $vlabel = "%";
-                    $upper = " --upper=101 ";
-                    $lower = " --lower=0 ";
+                    $upper = " --upper-limit=101 ";
+                    $lower = " --lower-limit=0 ";
             }
             else {
                     $vlabel = $VAL['UNIT'];

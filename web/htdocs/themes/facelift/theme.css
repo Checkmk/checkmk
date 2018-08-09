@@ -1000,7 +1000,7 @@ table.tacticaloverview {
       table.tacticaloverview td.prob a, table.tacticaloverview td.prob body.main .popup_menu span, body.main .popup_menu table.tacticaloverview td.prob span {
         color: #1A243D !important; }
 
-div.time {
+#snapin_time div.time {
   color: #fff !important;
   border: 1px solid #0d0f0f !important;
   border-spacing: 4px;

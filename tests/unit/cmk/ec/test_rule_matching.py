@@ -1,12 +1,54 @@
 import pytest
 
 import cmk.log
-from cmk.ec.main import RuleMatcher, SyslogPriority
+from cmk.ec.main import RuleMatcher, SyslogPriority, EventServer
 
 @pytest.fixture()
 def m():
     logger = cmk.log.get_logger("mkeventd")
     return RuleMatcher(logger, debug_rules=True)
+
+@pytest.mark.parametrize("message,result,match_message,cancel_message,match_groups,cancel_groups", [
+    # No pattern, match
+    ("bla CRIT", True, "", None, (), None),
+    # Non regex, no match
+    ("bla CRIT", False, "blub", None, False, None),
+    # Regex, no match
+    ("bla CRIT", False, "blub$", None, False, None),
+    # None regex, no match, cancel match
+    ("bla CRIT", True, "blub", "bla CRIT", False, ()),
+    # regex, no match, cancel match
+    ("bla CRIT", True, "blub$", "bla CRIT$", False, ()),
+    # Non regex -> no match group
+    ("bla CRIT", True, "bla CRIT", "bla OK", (), False),
+    ("bla OK",   True, "bla CRIT", "bla OK", False, ()),
+    # Regex without match group
+    ("bla CRIT", True, "bla CRIT$", "bla OK$", (), False),
+    ("bla OK",   True, "bla CRIT$", "bla OK$", False, ()),
+    # Regex With match group
+    ("bla CRIT", True, "(bla) CRIT$", "(bla) OK$", ("bla",), False),
+    ("bla OK",   True, "(bla) CRIT$", "(bla) OK$", False, ("bla",)),
+    # regex, both match
+    ("bla OK",   True, "bla .*", "bla OK", (), ()),
+])
+def test_match_message(m, message, result, match_message, cancel_message, match_groups, cancel_groups):
+    rule = {
+        "match": EventServer._compile_matching_value("match", match_message),
+    }
+
+    if cancel_message is not None:
+        rule["match_ok"] = EventServer._compile_matching_value("match_ok", cancel_message)
+
+    event = {"text": message}
+
+    matched_groups = {}
+    assert m.event_rule_matches_message(rule, event, matched_groups) == result
+    assert matched_groups["match_groups_message"] == match_groups
+
+    if cancel_message is not None:
+        assert matched_groups["match_groups_message_ok"] == cancel_groups
+    else:
+        assert "match_groups_message_ok" not in matched_groups
 
 
 @pytest.mark.parametrize("priority,match_priority,cancel_priority,has_match,has_canceling_match,result", [

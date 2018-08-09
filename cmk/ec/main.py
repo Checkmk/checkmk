@@ -1338,22 +1338,6 @@ class EventServer(ECServerThread):
         count_rules = 0
         count_unspecific = 0
 
-        def compile_matching_value(key, val):
-            value = val.strip()
-            # Remove leading .* from regex. This is redundant and
-            # dramatically destroys performance when doing an infix search.
-            if key in ["match", "match_ok"]:
-                while value.startswith(".*") and not value.startswith(".*?"):
-                    value = value[2:]
-
-            if not value:
-                return None
-
-            if cmk.regex.is_regex(value):
-                return re.compile(value, re.IGNORECASE)
-            else:
-                return val.lower()
-
         # Loop through all rule packages and with through their rules
         for rule_pack in rule_packs:
             if rule_pack["disabled"]:
@@ -1376,7 +1360,7 @@ class EventServer(ECServerThread):
                         for key in ["match", "match_ok", "match_host", "match_application",
                                     "cancel_application"]:
                             if key in rule:
-                                value = compile_matching_value(key, rule[key])
+                                value = self._compile_matching_value(key, rule[key])
                                 if value is None:
                                     del rule[key]
                                     continue
@@ -1387,7 +1371,7 @@ class EventServer(ECServerThread):
                            and rule['state'][0] == 'text_pattern':
                             for key in ['2', '1', '0']:
                                 if key in rule['state'][1]:
-                                    value = compile_matching_value('state', rule['state'][1][key])
+                                    value = self._compile_matching_value('state', rule['state'][1][key])
                                     if value is None:
                                         del rule['state'][1][key]
                                     else:
@@ -1419,6 +1403,25 @@ class EventServer(ECServerThread):
                     for prio, entries in self._rule_hash[facility].iteritems():
                         stats.append("%s(%d)" % (SyslogPriority(prio), len(entries)))
                     self._logger.info(" %-12s: %s" % (SyslogFacility(facility), " ".join(stats)))
+
+
+    @staticmethod
+    def _compile_matching_value(key, val):
+        value = val.strip()
+        # Remove leading .* from regex. This is redundant and
+        # dramatically destroys performance when doing an infix search.
+        if key in ["match", "match_ok"]:
+            while value.startswith(".*") and not value.startswith(".*?"):
+                value = value[2:]
+
+        if not value:
+            return None
+
+        if cmk.regex.is_regex(value):
+            return re.compile(value, re.IGNORECASE)
+        else:
+            return val.lower()
+
 
     def hash_rule(self, rule):
         # Construct rule hash for faster execution.

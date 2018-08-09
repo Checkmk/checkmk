@@ -1,0 +1,15 @@
+Title: Prevent metrics with "," in their names from breaking graphs
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 1.5.0p1
+Date: 1533818172
+Class: fix
+
+When a metric name contains a ",", possibly due to another error,
+this could break all graphs of a service. The metric system now
+totally skips these metric names to prevent this.
+
+The graphs that can be rendered successfully are now displayed
+again in such a situation.

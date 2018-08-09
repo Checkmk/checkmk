@@ -1338,6 +1338,7 @@ div.color {
 
 .stale .state {
   background-image: none !important;
+  text-shadow: none !important;
   filter: saturate(50%) brightness(105%); }
 
 th.header_state {

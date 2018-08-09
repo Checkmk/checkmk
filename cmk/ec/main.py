@@ -690,7 +690,7 @@ class EventServer(ECServerThread):
         self._event_status = event_status
         self._event_columns = event_columns
         self._message_period = cmk.ec.history.ActiveHistoryPeriod()
-        self._rule_matcher = RuleMatcher(self._logger, debug_rules=config["debug_rules"])
+        self._rule_matcher = RuleMatcher(self._logger, config)
 
         self.create_pipe()
         self.open_eventsocket()
@@ -2216,11 +2216,16 @@ class EventServer(ECServerThread):
 
 
 class RuleMatcher(object):
-    def __init__(self, logger, debug_rules):
+    def __init__(self, logger, config):
         super(RuleMatcher, self).__init__()
         self._logger = logger
-        self._debug_rules = debug_rules
+        self._config = config
         self._time_periods = TimePeriods(logger)
+
+
+    @property
+    def _debug_rules(self):
+        return self._config["debug_rules"]
 
 
     def event_rule_matches_non_inverted(self, rule, event):

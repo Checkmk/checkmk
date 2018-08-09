@@ -6,7 +6,7 @@ from cmk.ec.main import RuleMatcher, SyslogPriority, EventServer
 @pytest.fixture()
 def m():
     logger = cmk.log.get_logger("mkeventd")
-    return RuleMatcher(logger, debug_rules=True)
+    return RuleMatcher(logger, {"debug_rules": True})
 
 @pytest.mark.parametrize("message,result,match_message,cancel_message,match_groups,cancel_groups", [
     # No pattern, match

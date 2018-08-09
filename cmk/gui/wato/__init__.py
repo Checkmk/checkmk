@@ -6762,6 +6762,53 @@ class ModeEditLDAPConnection(LDAPMode):
 
 
     def _valuespec(self):
+        return LDAPConnectionValuespec(self._new, self._connection_id)
+
+
+
+class LDAPConnectionValuespec(Transform):
+    def __init__(self, new, connection_id):
+        self._new = new
+        self._connection_id = connection_id
+        self._connection = userdb.get_connection(self._connection_id)
+
+        general_elements = self._general_elements()
+        connection_elements = self._connection_elements()
+        user_elements = self._user_elements()
+        group_elements = self._group_elements()
+        other_elements = self._other_elements()
+
+        valuespec = Dictionary(
+            title = _('LDAP Connection'),
+            elements = general_elements
+                + connection_elements
+                + user_elements
+                + group_elements
+                + other_elements
+            ,
+            headers = [
+                (_("General Properties"), [ key for key, _vs in general_elements ]),
+                (_("LDAP Connection"),    [ key for key, _vs in connection_elements ]),
+                (_("Users"),              [ key for key, _vs in user_elements ]),
+                (_("Groups"),             [ key for key, _vs in group_elements ]),
+                (_("Attribute Sync Plugins"), [ "active_plugins" ]),
+                (_("Other"),              [ "cache_livetime" ]),
+            ],
+            render = "form",
+            form_narrow = True,
+            optional_keys = [
+                'port', 'use_ssl', 'bind', 'page_size', 'response_timeout', 'failover_servers',
+                'user_filter', 'user_filter_group', 'user_id', 'lower_user_ids', 'connect_timeout', 'version',
+                'group_filter', 'group_member', 'suffix', 'create_only_on_login',
+            ],
+            validate = self._validate_ldap_connection,
+        )
+
+        super(LDAPConnectionValuespec, self).__init__(valuespec,
+            forth=cmk.gui.plugins.userdb.ldap_connector.LDAPUserConnector.transform_config)
+
+
+    def _general_elements(self):
         general_elements = []
 
         if self._new:
@@ -6785,57 +6832,10 @@ class ModeEditLDAPConnection(LDAPMode):
 
         general_elements += rule_option_elements()
 
-        def vs_directory_options(ty):
-            connect_to_choices = [
-                ("fixed_list", _("Manually specify list of LDAP servers"), Dictionary(
-                    elements = [
-                        ("server", TextAscii(
-                            title = _("LDAP Server"),
-                            help = _("Set the host address of the LDAP server. Might be an IP address or "
-                                     "resolvable hostname."),
-                            allow_empty = False,
-                        )),
-                        ("failover_servers", ListOfStrings(
-                            title = _('Failover Servers'),
-                            help = _('When the connection to the first server fails with connect specific errors '
-                                     'like timeouts or some other network related problems, the connect mechanism '
-                                     'will try to use this server instead of the server configured above. If you '
-                                     'use persistent connections (default), the connection is being used until the '
-                                     'LDAP is not reachable or the local webserver is restarted.'),
-                            allow_empty = False,
-                        )),
-                    ],
-                    optional_keys = ["failover_servers"],
-                )),
-            ]
-
-            if ty == "ad":
-                connect_to_choices.append(
-                    ("discover", _("Automatically discover LDAP server"), Dictionary(
-                        elements = [
-                            ("domain", TextAscii(
-                                title = _("DNS domain name to discover LDAP servers of"),
-                                help = _("Configure the DNS domain name of your Active directory domain here, Check_MK "
-                                         "will then query this domain for it's closest domain controller to communicate "
-                                         "with."),
-                                allow_empty = False,
-                            )),
-                        ],
-                        optional_keys = [],
-                    )),
-                )
-
-            return Dictionary(
-                elements = [
-                    ("connect_to", CascadingDropdown(
-                        title = _("Connect to"),
-                        choices = connect_to_choices,
-                    )),
-                ],
-                optional_keys = [],
-            )
+        return general_elements
 
 
+    def _connection_elements(self):
         connection_elements = [
             ("directory_type", CascadingDropdown(
                 title = _("Directory Type"),
@@ -6843,9 +6843,9 @@ class ModeEditLDAPConnection(LDAPMode):
                           "the selection e.g. the attribute names used in LDAP queries will "
                           "be altered."),
                 choices = [
-                    ("ad",                 _("Active Directory"),     vs_directory_options("ad")),
-                    ("openldap",           _("OpenLDAP"),             vs_directory_options("openldap")),
-                    ("389directoryserver", _("389 Directory Server"), vs_directory_options("389directoryserver")),
+                    ("ad",                 _("Active Directory"),     self._vs_directory_options("ad")),
+                    ("openldap",           _("OpenLDAP"),             self._vs_directory_options("openldap")),
+                    ("389directoryserver", _("389 Directory Server"), self._vs_directory_options("389directoryserver")),
                 ],
             )),
             ("bind", Tuple(
@@ -6938,6 +6938,62 @@ class ModeEditLDAPConnection(LDAPMode):
             )),
         ]
 
+        return connection_elements
+
+
+    def _vs_directory_options(self, ty):
+        connect_to_choices = [
+            ("fixed_list", _("Manually specify list of LDAP servers"), Dictionary(
+                elements = [
+                    ("server", TextAscii(
+                        title = _("LDAP Server"),
+                        help = _("Set the host address of the LDAP server. Might be an IP address or "
+                                 "resolvable hostname."),
+                        allow_empty = False,
+                    )),
+                    ("failover_servers", ListOfStrings(
+                        title = _('Failover Servers'),
+                        help = _('When the connection to the first server fails with connect specific errors '
+                                 'like timeouts or some other network related problems, the connect mechanism '
+                                 'will try to use this server instead of the server configured above. If you '
+                                 'use persistent connections (default), the connection is being used until the '
+                                 'LDAP is not reachable or the local webserver is restarted.'),
+                        allow_empty = False,
+                    )),
+                ],
+                optional_keys = ["failover_servers"],
+            )),
+        ]
+
+        if ty == "ad":
+            connect_to_choices.append(
+                ("discover", _("Automatically discover LDAP server"), Dictionary(
+                    elements = [
+                        ("domain", TextAscii(
+                            title = _("DNS domain name to discover LDAP servers of"),
+                            help = _("Configure the DNS domain name of your Active directory domain here, Check_MK "
+                                     "will then query this domain for it's closest domain controller to communicate "
+                                     "with."),
+                            allow_empty = False,
+                        )),
+                    ],
+                    optional_keys = [],
+                )),
+            )
+
+        return Dictionary(
+            elements = [
+                ("connect_to", CascadingDropdown(
+                    title = _("Connect to"),
+                    choices = connect_to_choices,
+                )),
+            ],
+            optional_keys = [],
+        )
+
+
+
+    def _user_elements(self):
         user_elements = [
             ("user_dn", LDAPDistinguishedName(
                 title = _("User Base DN"),
@@ -7026,6 +7082,10 @@ class ModeEditLDAPConnection(LDAPMode):
             )),
         ]
 
+        return user_elements
+
+
+    def _group_elements(self):
         group_elements = [
             ("group_dn", LDAPDistinguishedName(
                 title = _("Group Base DN"),
@@ -7064,6 +7124,10 @@ class ModeEditLDAPConnection(LDAPMode):
             )),
         ]
 
+        return group_elements
+
+
+    def _other_elements(self):
         other_elements = [
             ("active_plugins", Dictionary(
                 title = _('Attribute Sync Plugins'),
@@ -7088,33 +7152,7 @@ class ModeEditLDAPConnection(LDAPMode):
             )),
         ]
 
-        return Transform(Dictionary(
-                title = _('LDAP Connection'),
-                elements = general_elements
-                    + connection_elements
-                    + user_elements
-                    + group_elements
-                    + other_elements
-                ,
-                headers = [
-                    (_("General Properties"), [ key for key, _vs in general_elements ]),
-                    (_("LDAP Connection"),    [ key for key, _vs in connection_elements ]),
-                    (_("Users"),              [ key for key, _vs in user_elements ]),
-                    (_("Groups"),             [ key for key, _vs in group_elements ]),
-                    (_("Attribute Sync Plugins"), [ "active_plugins" ]),
-                    (_("Other"),              [ "cache_livetime" ]),
-                ],
-                render = "form",
-                form_narrow = True,
-                optional_keys = [
-                    'port', 'use_ssl', 'bind', 'page_size', 'response_timeout', 'failover_servers',
-                    'user_filter', 'user_filter_group', 'user_id', 'lower_user_ids', 'connect_timeout', 'version',
-                    'group_filter', 'group_member', 'suffix', 'create_only_on_login',
-                ],
-                validate = self._validate_ldap_connection,
-            ),
-            forth = cmk.gui.plugins.userdb.ldap_connector.LDAPUserConnector.transform_config,
-        )
+        return other_elements
 
 
     def _validate_ldap_connection_id(self, value, varprefix):

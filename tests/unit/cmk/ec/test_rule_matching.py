@@ -1,5 +1,6 @@
 import pytest
 
+import cmk
 import cmk.log
 from cmk.ec.main import RuleMatcher, SyslogPriority, EventServer
 
@@ -105,3 +106,55 @@ def test_match_priority(m, priority, match_priority, cancel_priority, has_match,
 ])
 def test_match_outcome(m, rule, match_groups, match_priority, result):
     assert m._check_match_outcome(rule, match_groups, match_priority) == result
+
+
+@pytest.mark.parametrize("result,rule", [
+    (True,  {}),
+    (False, {"match_site": []}),
+    (True,  {"match_site": ["ding"]}),
+    (False, {"match_site": ["dong"]}),
+])
+def test_match_site(m, rule, result, monkeypatch):
+    monkeypatch.setattr(cmk, "omd_site", lambda: "ding")
+    assert m.event_rule_matches_site(rule, {}) == result
+
+
+@pytest.mark.parametrize("result,rule,event", [
+    (True,  {},                        {"host": "abc"}),
+    (True,  {"match_host": ""},        {"host": "abc"}),
+    (True,  {"match_host": ""},        {"host": ""}),
+    (False, {"match_host": "abc"},     {"host": "aaaabc"}),
+    (True,  {"match_host": ".bc"},     {"host": "xbc"}),
+    (False, {"match_host": "abc"},     {"host": "abcc"}),
+    (True,  {"match_host": "abc.*"},   {"host": "abcc"}),
+    (True,  {"match_host": ".*abc.*"}, {"host": "ccabcc"}),
+    (True,  {"match_host": "^abc$"},   {"host": "abc"}),
+    (False, {"match_host": "^abc$"},   {"host": "abx"}),
+])
+def test_match_host(m, result, rule, event):
+    if "match_host" in rule:
+        rule["match_host"] = EventServer._compile_matching_value("match_host", rule["match_host"])
+    assert m.event_rule_matches_host(rule, event) == result
+
+
+@pytest.mark.parametrize("result,rule,event", [
+    (True,  {},                                 {"ipaddress": "10.3.3.4"}),
+    (True,  {"match_ipaddress": "10.3.3.4"},    {"ipaddress": "10.3.3.4"}),
+    (True,  {"match_ipaddress": "10.3.3.0/24"}, {"ipaddress": "10.3.3.4"}),
+    (True,  {"match_ipaddress": "10.0.0.0/8"},  {"ipaddress": "10.3.3.4"}),
+    (False, {"match_ipaddress": "11.0.0.0/8"},  {"ipaddress": "10.3.3.4"}),
+    (False, {"match_ipaddress": "10.3.3.5"},    {"ipaddress": "10.3.3.4"}),
+    (False, {"match_ipaddress": "10.3.3.0"},    {"ipaddress": "10.3.3.4"}),
+])
+def test_match_ipaddress(m, result, rule, event):
+    assert m.event_rule_matches_ip(rule, event) == result
+
+
+@pytest.mark.parametrize("result,rule,event", [
+    (True,  {},                    {"facility": 1}),
+    (True,  {"match_facility": 1}, {"facility": 1}),
+    (False, {"match_facility": 2}, {"facility": 1}),
+    (False, {"match_facility": 0}, {"facility": 1}),
+])
+def test_match_facility(m, result, rule, event):
+    assert m.event_rule_matches_facility(rule, event) == result

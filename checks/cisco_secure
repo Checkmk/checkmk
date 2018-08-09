@@ -26,22 +26,24 @@
 
 
 def parse_cisco_secure(info):
+
     parsed = []
     # l[1] = Name, l[2] = Portstate
-    names = dict([ (l[0], ( l[1], l[2] )) for l in info[0]] )
-    for num, enabled, status, violationCount, lastmac in info[1]:
+    names = {l[0]: (l[1], l[2]) for l in info[0]}
+    for num, is_enabled, status, violationCount, lastmac in info[1]:
         mac = ":".join(["%02s" % hex(ord(m))[2:] for m in lastmac]).replace(' ', '0')
         # violationCount is initialized with 0 when security is enabled. When not, the
         # value is reported as empty string. saveint() makes life easier here.
-        parsed.append((names[num][0], int(names[num][1]), int(enabled), int(status), saveint(violationCount), mac))
+        parsed.append((names[num][0], int(names[num][1]), {'0': 'no', '1':'yes'}.get(is_enabled),
+                       int(status), saveint(violationCount), mac))
     return parsed
 
 
 def inventory_cisco_secure(parsed):
     # search for at least one port with security
-    for name, op_state, enabled, status, violationCount, lastmac in parsed:
+    for name, op_state, is_enabled, status, violationCount, lastmac in parsed:
         # if portsecurity enabled and port up OR currently there is sercurity issue`
-        if ( enabled == 1 and op_state == 1) or status == 3:
+        if status == 3 or (is_enabled != 'no' and op_state == 1):
             return [ (None, None) ]
 
 
@@ -54,17 +56,21 @@ def check_cisco_secure(item, params, parsed):
 
     failed = []
     at_least_one_problem = False
-    for name, op_state, enabled, status, violationCount, lastmac in parsed:
+    for name, op_state, is_enabled, status, violationCount, lastmac in parsed:
         message = "Port %s: %s (Violation Count: %s, Last Mac: %s)" % \
         ( name, secure_states[status], violationCount, lastmac )
 
-        # If port cant be enabled and is up and has violations -> WARN
-        if status == 2 and op_state == 1 and int(violationCount) > 0:
-            yield 1, message
-            at_least_one_problem = True
-        # Security issue -> CEIT
-        elif status == 3:
-            yield 2, message
+        if is_enabled is not None:
+            # If port cant be enabled and is up and has violations -> WARN
+            if status == 2 and op_state == 1 and int(violationCount) > 0:
+                yield 1, message
+                at_least_one_problem = True
+            # Security issue -> CEIT
+            elif status == 3:
+                yield 2, message
+                at_least_one_problem = True
+        else:
+            yield 3, message + " unknown enabled state"
             at_least_one_problem = True
 
     if not at_least_one_problem:

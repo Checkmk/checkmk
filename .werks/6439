@@ -1,0 +1,12 @@
+Title: Fixed upload of some icon files
+Level: 1
+Component: wato
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0i1
+Date: 1533838890
+
+The icon upload failed with some PNG images with specific
+meta data set.

@@ -14486,7 +14486,7 @@ class ModeIcons(WatoMode):
         im.info['Comment'] = icon_info['category']
         meta = PngImagePlugin.PngInfo()
         for k,v in im.info.iteritems():
-            if k not in ('interlace', 'gamma', 'dpi', 'transparency', 'aspect'):
+            if isinstance(v, (str, unicode)):
                 meta.add_text(k, v, 0)
 
         # and finally save the image

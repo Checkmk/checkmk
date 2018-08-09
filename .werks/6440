@@ -1,0 +1,20 @@
+Title: Backup: Deleting a backup job now deletes the state file
+Level: 1
+Component: wato
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0i1
+Date: 1533849154
+
+When a backup job that has previously been executed is deleted, it left it's
+last state file in place. This resulted in Check_MK services monitoring this
+never changing state.
+
+To remove state files of already deleted jobs, you can safely delete the file
+at /omd/sites/[SITE]/var/check_mk/backup/[JOB].state for site backup jobs and
+/var/lib/mkbackup/[JOB].state for appliance system backup jobs.
+
+After deleting this file, you can execute a service discovery on your
+monitoring server to remove the vanished backup check.

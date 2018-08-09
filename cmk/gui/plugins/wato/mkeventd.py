@@ -772,7 +772,7 @@ def vs_mkeventd_rule(customer=None):
             help = _("The rules does only apply when the given regular expression matches "
                      "the host name the message originates from. Note: in some cases the "
                      "event might use the IP address instead of the host name."),
-            mode = RegExp.infix,
+            mode = RegExp.complete,
             case_sensitive = False,
           )
         ),

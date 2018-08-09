@@ -2250,16 +2250,8 @@ class RuleMatcher(object):
 
 
     def _check_match_outcome(self, rule, match_groups, match_priority):
-        # type: (dict, dict, dict) -> (bool, tuple)
+        # type: (dict, dict, dict) -> (bool, dict)
         """Decide or not a event is created, canceled or nothing is done"""
-
-        # Check create-event
-        if match_groups["match_groups_message"] is not False and\
-            match_groups.get("match_groups_syslog_application", ()) is not False and\
-            match_priority["has_match"] is True:
-            if self._debug_rules:
-                self._logger.info("  found new event")
-            return False, match_groups
 
         # Check canceling-event
         has_canceling_condition = bool([x for x in ["match_ok", "cancel_application", "cancel_priority"] if x in rule])
@@ -2271,6 +2263,14 @@ class RuleMatcher(object):
                 if self._debug_rules:
                     self._logger.info("  found canceling event")
                 return True, match_groups
+
+        # Check create-event
+        if match_groups["match_groups_message"] is not False and\
+            match_groups.get("match_groups_syslog_application", ()) is not False and\
+            match_priority["has_match"] is True:
+            if self._debug_rules:
+                self._logger.info("  found new event")
+            return False, match_groups
 
         # Looks like there was no match, output some additonal info
         # Reasons preventing create-event

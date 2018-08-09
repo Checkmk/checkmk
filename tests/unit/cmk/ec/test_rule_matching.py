@@ -82,3 +82,26 @@ def test_match_priority(m, priority, match_priority, cancel_priority, has_match,
     assert m.event_rule_determine_match_priority(rule, event, matched_match_priority) == result
     assert matched_match_priority["has_match"] == has_match
     assert matched_match_priority["has_canceling_match"] == has_canceling_match
+
+
+@pytest.mark.parametrize("rule,match_groups,match_priority,result", [
+    # No canceling
+    ({"match": ""}, {"match_groups_message": ()}, {"has_match": True}, (False, {"match_groups_message": ()})),
+    # Both configured but positive matches
+    ({"match": "abc A abc", "match_ok": "abc X abc"},
+     {"match_groups_message": ()},
+     {"has_match": True},
+     (False, {"match_groups_message": ()})),
+    # Both configured but  negative matches
+    ({"match": "abc A abc", "match_ok": "abc X abc"},
+     {"match_groups_message": False, "match_groups_message_ok": ()},
+     {"has_match": True},
+     (True, {"match_groups_message": False, "match_groups_message_ok": ()})),
+    # Both match
+    ({"match": "abc . abc", "match_ok": "abc X abc"},
+     {"match_groups_message": (), "match_groups_message_ok": ()},
+     {"has_match": True},
+     (True, {"match_groups_message": (), "match_groups_message_ok": ()})),
+])
+def test_match_outcome(m, rule, match_groups, match_priority, result):
+    assert m._check_match_outcome(rule, match_groups, match_priority) == result

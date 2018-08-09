@@ -78,7 +78,7 @@ while test -n "$1"; do
             shift
             ;;
 
-        --log)
+        -l|--log)
             if type flock > /dev/null 2>&1; then
                 MK_ORA_LOGGING=1
                 export MK_ORA_LOGGING
@@ -86,7 +86,7 @@ while test -n "$1"; do
             shift
             ;;
 
-        --sections)
+        -s|--sections)
             shift
             MK_ORA_SECTIONS=($(echo "$1" | tr ',' '\n'))
             shift

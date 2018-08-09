@@ -2555,14 +2555,6 @@ class EventServer(ECServerThread):
 
         # All data has been computed, determine outcome
         ########################################################
-        # Check create-event
-        if match_groups["match_groups_message"] is not False and\
-           match_groups.get("match_groups_syslog_application", ()) is not False and\
-           match_priority["has_match"] is True:
-            if self._config["debug_rules"]:
-                self._logger.info("  found new event")
-            return False, match_groups
-
         # Check canceling-event
         has_canceling_condition = bool([x for x in ["match_ok", "cancel_application", "cancel_priority"] if x in rule])
         if has_canceling_condition:
@@ -2573,6 +2565,14 @@ class EventServer(ECServerThread):
                 if self._config["debug_rules"]:
                     self._logger.info("  found canceling event")
                 return True, match_groups
+
+        # Check create-event
+        if match_groups["match_groups_message"] is not False and\
+           match_groups.get("match_groups_syslog_application", ()) is not False and\
+           match_priority["has_match"] is True:
+            if self._config["debug_rules"]:
+                self._logger.info("  found new event")
+            return False, match_groups
 
         # Looks like there was no match, output some additonal info
         # Reasons preventing create-event

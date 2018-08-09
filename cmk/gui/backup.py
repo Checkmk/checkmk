@@ -222,6 +222,16 @@ class MKBackupJob(object):
         raise NotImplementedError()
 
 
+    def cleanup(self):
+        try:
+            os.unlink(self.state_file_path())
+        except OSError, e:
+            if e.errno == 2:
+                pass
+            else:
+                raise
+
+
     def state(self):
         try:
             state = json.load(file(self.state_file_path()))
@@ -606,6 +616,7 @@ class PageBackup(object):
         if html.confirm(_("Do you really want to delete this job?"),
                         add_header=self.title()):
             html.check_transaction() # invalidate transid
+            job.cleanup()
             jobs = self.jobs()
             jobs.remove(job)
             jobs.save()
@@ -1590,8 +1601,7 @@ class RestoreJob(MKBackupJob):
 
 
     def complete(self):
-        if os.path.exists(self.state_file_path()):
-            os.unlink(self.state_file_path())
+        self.cleanup()
 
 
     def _start_command(self):

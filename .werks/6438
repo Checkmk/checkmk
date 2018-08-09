@@ -1,0 +1,16 @@
+Title: Fixed canceling of events when positive and cancel messages both match
+Level: 2
+Component: ec
+Compatible: compat
+Edition: cre
+Version: 1.5.0p1
+Date: 1533821210
+Class: fix
+
+When event canceling is used in a rule where it is possible that both, the
+positive and canceling conditions match for a message, this resulted in a new
+event in all previous 1.5 versions. However, the versions up to 1.4 always
+treated this situation as a cancel event situation. The original behavior has
+now been restored in this case.
+
+This regression affects all previous 1.5 releases.

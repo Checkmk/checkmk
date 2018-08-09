@@ -279,26 +279,30 @@ def drain_pipe(pipe):
 
 
 def match(pattern, text, complete=True):
+    """Performs an EC style matching test of pattern on text
+
+    Returns False in case of no match or a tuple with the match groups.
+    In case no match group is produced, it returns an empty tuple."""
     if pattern is None:
-        return True
+        return ()
+
     elif type(pattern) in [str, unicode]:
         if complete:
-            return pattern == text.lower()
+            return () if pattern == text.lower() else False
         else:
-            return pattern in text.lower()
-    else:
-        # Assume compiled regex
-        m = pattern.search(text)
-        if m:
-            groups = m.groups()
-            if None in groups:
-                # Remove None from result tuples and replace it with empty strings
-                return tuple([g if g is not None else ''
-                              for g in groups])
-            else:
-                return groups
-        else:
-            return False
+            return () if pattern in text.lower() else False
+
+    # Assume compiled regex
+    m = pattern.search(text)
+    if m:
+        groups = m.groups()
+        if None in groups:
+            # Remove None from result tuples and replace it with empty strings
+            return tuple([g if g is not None else ''
+                          for g in groups])
+        return groups
+
+    return False
 
 
 def pattern(pat):
@@ -2241,9 +2245,6 @@ class RuleMatcher(object):
         if not self.event_rule_determine_match_groups(rule, event, match_groups):
             # Abort on negative outcome, neither positive nor negative
             return False
-        for group_name in match_groups:
-            if match_groups[group_name] is True:
-                match_groups[group_name] = ()
 
         # All data has been computed, determine outcome
         ########################################################

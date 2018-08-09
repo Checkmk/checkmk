@@ -149,10 +149,15 @@ class BackgroundProcess(multiprocessing.Process):
         self._job_parameters = job_parameters
         self._jobstatus      = self._job_parameters["jobstatus"]
         self._logger         = None # the logger is initialized in the run function
-        signal.signal(signal.SIGTERM, self._exit)
+
+        self._register_signal_handlers()
 
 
-    def _exit(self, signum, frame):
+    def _register_signal_handlers(self):
+        signal.signal(signal.SIGTERM, self._handle_sigterm)
+
+
+    def _handle_sigterm(self, signum, frame):
         self._jobstatus.update_status({"state": JobStatus.state_stopped})
         os._exit(0)
 

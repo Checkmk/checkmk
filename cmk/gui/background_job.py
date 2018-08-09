@@ -160,6 +160,12 @@ class BackgroundProcess(multiprocessing.Process):
 
 
     def _handle_sigterm(self, signum, frame):
+        status = self._jobstatus.get_status()
+        if not status.get("stoppable", True):
+            self._logger.warning("Skip termination of background job (Job ID: %s, PID: %d)",
+                                 self._job_parameters["job_id"], status["pid"])
+            return
+
         self._jobstatus.update_status({"state": JobStatus.state_stopped})
         os._exit(0)
 

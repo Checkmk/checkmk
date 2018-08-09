@@ -1,0 +1,12 @@
+Title: Background jobs: Not stoppable jobs ignore SIGTERM now
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 1.5.0p1
+Date: 1533813676
+Class: fix
+
+The background jobs that are set to be not stoppable (e.g. agent baking and host renaming)
+are now ignoring SIGTERMs, like sent by "omd stop" since werk 6435. It's up to the background
+processes to handle the signals correctly and bring their work to a good end.

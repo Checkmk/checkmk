@@ -1,0 +1,20 @@
+Title: omd stop on all processes of a site terminates remaining site processes
+Level: 2
+Component: omd
+Compatible: compat
+Edition: cre
+Version: 1.5.0p1
+Date: 1533813997
+Class: fix
+
+When OMD stop is being performed not all processes of the site user were
+stopped. The call only tried to stop the processes controlled by the init
+scripts.
+
+After a "omd stop" call for all processes of a site stopped the processes
+controlled by the init scripts, OMD is now searching for remaining
+(uncontrolled) site processes, e.g. still running background jobs or other
+processes and sends a SIGTERM to each of them.
+
+It waits up to 5 seconds for them to stop. In case the processes did not
+finish in time, it terminates the OMD call with an exit code of 1.

@@ -883,6 +883,10 @@ body.side {
 #side_content {
   top: 64px; }
 
+#hover_menu div.message {
+  color: #fff;
+  background-color: #000; }
+
 #side_footer {
   box-sizing: border-box;
   margin: 0px;

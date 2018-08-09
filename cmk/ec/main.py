@@ -2246,8 +2246,13 @@ class RuleMatcher(object):
             # Abort on negative outcome, neither positive nor negative
             return False
 
-        # All data has been computed, determine outcome
-        ########################################################
+        return self._check_match_outcome(rule, match_groups, match_priority)
+
+
+    def _check_match_outcome(self, rule, match_groups, match_priority):
+        # type: (dict, dict, dict) -> (bool, tuple)
+        """Decide or not a event is created, canceled or nothing is done"""
+
         # Check create-event
         if match_groups["match_groups_message"] is not False and\
             match_groups.get("match_groups_syslog_application", ()) is not False and\

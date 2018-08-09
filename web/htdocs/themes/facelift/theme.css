@@ -229,6 +229,8 @@ table {
     color: #1A243D;
     /* HEADERLEFT */
     /* SINGLE */ }
+    table.data .popup_menu {
+      color: #1A243D !important }
     table.data .checkbox_hover {
       background-image: url(images/checkbox_hover_bg.png);
       background-attachment: fixed; }

@@ -7,5 +7,6 @@ Version: 1.5.0p1
 Date: 1533563929
 Class: fix
 
-The binary executable was broken due to unknown reasons.
+The binary executable was broken due to unknown reasons. The fix makes
+sure that a fresh, working executable is built for every release.
 

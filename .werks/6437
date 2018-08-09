@@ -1,0 +1,15 @@
+Title: Fixed event cancelling when no match groups are used
+Level: 2
+Component: ec
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1533819087
+Class: fix
+
+Canceling of Event Console events using the message text was not working
+correctly when using simple string matching instead of regex or mixed
+types of matches (e.g. regex for the match text and string match for the
+cancel text) matching.
+
+This regression affects all previous 1.5 releases.

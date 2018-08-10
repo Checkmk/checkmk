@@ -1,0 +1,13 @@
+Title: Fixed broken openhardwaremonitor executable
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0i1
+Date: 1533901939
+
+The OpenHardwareMonitorCLI.exe that is shipped with Check_MK for monitoring via
+OHM on Windows was corrupted in previous releases and could not be executed
+correctly.

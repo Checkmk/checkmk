@@ -26,7 +26,7 @@
 #include <cstring>
 #include <ctime>
 #include <memory>
-#include <ostream>
+#include <sstream>
 #include <stdexcept>
 #include <utility>
 #include <vector>
@@ -188,9 +188,10 @@ bool Store::answerRequest(InputBuffer &input, OutputBuffer &output) {
     InputBuffer::Result res = input.readRequest();
     if (res != InputBuffer::Result::request_read) {
         if (res != InputBuffer::Result::eof) {
-            output.setError(
-                OutputBuffer::ResponseCode::incomplete_request,
-                "Client connection terminated while request still incomplete");
+            std::ostringstream os;
+            os << "client connection terminated: " << res;
+            output.setError(OutputBuffer::ResponseCode::incomplete_request,
+                            os.str());
         }
         return false;
     }

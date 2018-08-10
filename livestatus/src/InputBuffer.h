@@ -28,6 +28,7 @@
 #include "config.h"  // IWYU pragma: keep
 #include <chrono>
 #include <cstddef>
+#include <iosfwd>
 #include <list>
 #include <string>
 #include <vector>
@@ -45,6 +46,8 @@ public:
         empty_request,
         timeout
     };
+
+    friend std::ostream &operator<<(std::ostream &os, const Result &r);
 
     InputBuffer(int fd, const bool &termination_flag, Logger *logger,
                 std::chrono::milliseconds query_timeout,

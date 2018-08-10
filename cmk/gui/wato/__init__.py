@@ -4248,6 +4248,7 @@ class ModeBulkImport(WatoMode):
             # Create a new selection for performing the bulk discovery
             weblib.set_rowselection('wato-folder-/' + watolib.Folder.current().path(), selected, 'set')
             html.set_var('mode', 'bulkinventory')
+            html.set_var('_bulk_inventory', '1')
             html.set_var('show_checkboxes', '1')
             return "bulkinventory"
         else:

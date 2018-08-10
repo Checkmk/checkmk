@@ -358,7 +358,7 @@ logging () {
                 done
             fi
 
-        ) 200>/tmp/mk_oracle.lock
+        ) 200>|/tmp/mk_oracle.lock
     fi
 }
 

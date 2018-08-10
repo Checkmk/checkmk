@@ -1,0 +1,13 @@
+Title: cisco_secure: Handle unknown 'enabled' state
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1533909506
+Class: fix
+
+Previously when the check got an invalid enabled state from the device,
+it either crashed or silently ignored it. This has been fixed, the check
+now reports "UNKNOWN".
+

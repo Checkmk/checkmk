@@ -557,7 +557,7 @@ class CheckMKAgentDataSource(DataSource):
         self._is_main_agent_data_source = True
 
 
-    def _gather_check_plugin_names(self, *args, **kwargs):
+    def _gather_check_plugin_names(self):
         return config.discoverable_tcp_checks()
 
 

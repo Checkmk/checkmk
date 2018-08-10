@@ -145,10 +145,10 @@ def store_property(prop):
         sections.setdefault(property_to_section[prop[0]], []).append(" ".join(prop))
 
 class HTMLObjectParser(HTMLParser):
-    def feed(self, body):
+    def feed(self, data):
         self.current_object_key = None
         self.current_property   = None
-        HTMLParser.feed(self, body)
+        HTMLParser.feed(self, data)
 
     def handle_starttag(self, tag, attrs):
         if tag == "object":

@@ -3153,7 +3153,7 @@ class GeneralInformation(npyscreen.BoxTitle):
         self._runner  = kwargs["runner"]
 
 
-    def update(self, *args, **kwargs):
+    def update(self, clear=True):
         self.values = [
             "State      : %s" % self._runner.test.state_text(),
         ]
@@ -3173,7 +3173,7 @@ class GeneralInformation(npyscreen.BoxTitle):
                 (fmt_bytes(values.disk_io.read_bytes),
                  fmt_bytes(values.disk_io.write_bytes)),
             ]
-        super(GeneralInformation, self).update(*args, **kwargs)
+        super(GeneralInformation, self).update(clear)
 
 
 
@@ -3185,9 +3185,9 @@ class SiteInformation(npyscreen.BoxTitle):
         self._runner  = kwargs["runner"]
 
 
-    def update(self, *args, **kwargs):
+    def update(self, clear=True):
         self._update_info()
-        super(SiteInformation, self).update(*args, **kwargs)
+        super(SiteInformation, self).update(clear)
 
 
     def _update_info(self):
@@ -3242,7 +3242,7 @@ class Log(npyscreen.BoxTitle):
         self._runner  = kwargs["runner"]
 
 
-    def update(self, *args, **kwargs):
+    def update(self, clear=True):
         entries = []
         for timestamp, level, entry in self._runner.test.get_log():
             if "\n" not in entry:
@@ -3257,7 +3257,7 @@ class Log(npyscreen.BoxTitle):
 
         self.entry_widget.clearBuffer()
         self.entry_widget.buffer(entries, scroll_end=True)
-        super(Log, self).update(*args, **kwargs)
+        super(Log, self).update(clear)
 
 
 

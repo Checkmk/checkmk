@@ -457,7 +457,7 @@ class PageDownloadKey(object):
         html.write(key["certificate"])
 
 
-    def _file_name(self, key_id, keys):
+    def _file_name(self, key_id, key):
         raise NotImplementedError()
 
 

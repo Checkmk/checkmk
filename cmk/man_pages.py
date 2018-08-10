@@ -640,7 +640,7 @@ class ManPageRenderer(object):
         raise NotImplementedError()
 
 
-    def _print_textbody(self, text, attr=tty.colorset(7, 4)):
+    def _print_textbody(self, text):
         raise NotImplementedError()
 
 
@@ -787,8 +787,9 @@ class ConsoleManPageRenderer(ManPageRenderer):
         return line
 
 
-    def _print_textbody(self, text, attr=tty.colorset(7, 4)):
+    def _print_textbody(self, text):
         wrapped = self._wrap_text(text, self.width - 2)
+        attr = tty.colorset(7, 4)
         for line in wrapped:
             self._print_line(line, attr)
 

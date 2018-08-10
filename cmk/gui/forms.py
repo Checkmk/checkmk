@@ -149,7 +149,7 @@ def edit_dictionaries(dictionaries, value, focus=None, hover_help=True,
                     vs.set_focus(vp + name)
                     first = False
         else:
-            entries.render_input(keyname, subvalue, form=True)
+            entries.render_input_as_form(keyname, subvalue)
 
 
     end()

@@ -313,7 +313,7 @@ class Integer(ValueSpec):
         else:
             return 0
 
-    def render_input(self, varprefix, value, convfunc = utils.saveint):
+    def render_input(self, varprefix, value):
         self.classtype_info()
         if self._label:
             html.write(self._label)
@@ -325,10 +325,15 @@ class Integer(ValueSpec):
         if value == "": # This is needed for ListOfIntegers
             html.text_input(varprefix, "", "number", size = self._size, style = style)
         else:
-            html.number_input(varprefix, self._display_format % convfunc(value), size = self._size, style = style)
+            html.number_input(varprefix, self._render_value(value), size = self._size, style = style)
         if self._unit:
             html.nbsp()
             html.write(self._unit)
+
+
+    def _render_value(self, value):
+        return self._display_format % utils.saveint(value)
+
 
     def from_html_vars(self, varprefix):
         try:
@@ -422,11 +427,12 @@ class TextAscii(ValueSpec):
             self._regex = re.compile(self._regex)
         self._onkeyup        = kwargs.get("onkeyup")
         self._autocomplete   = kwargs.get("autocomplete", True)
+        self._hidden         = kwargs.get("hidden", False)
 
     def canonical_value(self):
         return ""
 
-    def render_input(self, varprefix, value, hidden=False):
+    def render_input(self, varprefix, value):
         self.classtype_info()
         if value == None:
             value = ""
@@ -437,7 +443,7 @@ class TextAscii(ValueSpec):
             html.write(self._label)
             html.nbsp()
 
-        if hidden:
+        if self._hidden:
             type_ = "password"
         else:
             type_ = "text"
@@ -942,21 +948,21 @@ class HTTPUrl(TextAscii):
                 value = "http://" + value
         return value
 
-    def value_to_text(self, url):
-        if not url.startswith("http://") and not url.startswith("https://"):
-            url = "http://" + url
+    def value_to_text(self, value):
+        if not value.startswith("http://") and not value.startswith("https://"):
+            value = "http://" + value
         try:
-            parts = urlparse.urlparse(url)
+            parts = urlparse.urlparse(value)
             if parts.path in [ '', '/' ]:
                 text = parts.netloc
             else:
                 text = parts.netloc + parts.path
         except:
-            text = url[7:]
+            text = value[7:]
 
         # Remove trailing / if the url does not contain
         # any path component
-        return html.render_a(text, href=url, target=self._target if self._target else None)
+        return html.render_a(text, href=value, target=self._target if self._target else None)
 
 def CheckMKVersion(**args):
     args = args.copy()
@@ -1087,16 +1093,16 @@ class ListOfStrings(ValueSpec):
             return help_text
 
 
-    def render_input(self, vp, value):
+    def render_input(self, varprefix, value):
         self.classtype_info()
         # Form already submitted?
-        if html.has_var(vp + "_0"):
-            value = self.from_html_vars(vp)
+        if html.has_var(varprefix + "_0"):
+            value = self.from_html_vars(varprefix)
             # Remove variables from URL, so that they do not appear
             # in hidden_fields()
             nr = 0
-            while html.has_var(vp + "_%d" % nr):
-                html.del_var(vp + "_%d" % nr)
+            while html.has_var(varprefix + "_%d" % nr):
+                html.del_var(varprefix + "_%d" % nr)
                 nr += 1
 
         class_ = ["listofstrings"]
@@ -1104,11 +1110,11 @@ class ListOfStrings(ValueSpec):
             class_.append("vertical")
         else:
             class_.append("horizontal")
-        html.open_div(id_=vp, class_=class_)
+        html.open_div(id_=varprefix, class_=class_)
 
         for nr, s in enumerate(value + [""]):
             html.open_div()
-            self._valuespec.render_input(vp + "_%d" % nr, s)
+            self._valuespec.render_input(varprefix + "_%d" % nr, s)
             if self._vertical != "vertical" and self._separator:
                 html.nbsp()
                 html.write(self._separator)
@@ -1117,7 +1123,7 @@ class ListOfStrings(ValueSpec):
         html.close_div()
         html.div('', style="clear:left;")
         html.help(self.help())
-        html.javascript("list_of_strings_init('%s');" % vp)
+        html.javascript("list_of_strings_init('%s');" % varprefix)
 
     def canonical_value(self):
         return []
@@ -1133,11 +1139,11 @@ class ListOfStrings(ValueSpec):
         else:
             return ", ".join([ self._valuespec.value_to_text(v) for v in value ])
 
-    def from_html_vars(self, vp):
+    def from_html_vars(self, varprefix):
         value = []
         nr = 0
         while True:
-            varname = vp + "_%d" % nr
+            varname = varprefix + "_%d" % nr
             if not html.has_var(varname):
                 break
             if html.var(varname, "").strip():
@@ -1145,29 +1151,29 @@ class ListOfStrings(ValueSpec):
             nr += 1
         return value
 
-    def validate_datatype(self, value, vp):
+    def validate_datatype(self, value, varprefix):
         if type(value) != list:
-            raise MKUserError(vp, _("Expected data type is list, but your type is %s.") %
+            raise MKUserError(varprefix, _("Expected data type is list, but your type is %s.") %
                                                                         type_name(value))
         for nr, s in enumerate(value):
-            self._valuespec.validate_datatype(s, vp + "_%d" % nr)
+            self._valuespec.validate_datatype(s, varprefix + "_%d" % nr)
 
-    def validate_value(self, value, vp):
+    def validate_value(self, value, varprefix):
         if len(value) == 0 and not self._allow_empty:
             if self._empty_text:
                 msg = self._empty_text
             else:
                 msg = _("Please specify at least one value")
-            raise MKUserError(vp + "_0", msg)
+            raise MKUserError(varprefix + "_0", msg)
 
         if self._max_entries != None and len(value) > self._max_entries:
-            raise MKUserError(vp + "_%d" % self._max_entries,
+            raise MKUserError(varprefix + "_%d" % self._max_entries,
                   _("You can specify at most %d entries") % self._max_entries)
 
         if self._valuespec:
             for nr, s in enumerate(value):
-                self._valuespec.validate_value(s, vp + "_%d" % nr)
-        ValueSpec.custom_validate(self, value, vp)
+                self._valuespec.validate_value(s, varprefix + "_%d" % nr)
+        ValueSpec.custom_validate(self, value, varprefix)
 
 
 
@@ -1471,7 +1477,10 @@ class Float(Integer):
 
     def render_input(self, varprefix, value):
         self.classtype_info()
-        Integer.render_input(self, varprefix, value, convfunc = utils.savefloat)
+        Integer.render_input(self, varprefix, value)
+
+    def _render_value(self, value):
+        return self._display_format % utils.savefloat(value)
 
     def canonical_value(self):
         return float(Integer.canonical_value(self))
@@ -3416,23 +3425,28 @@ class Dictionary(ValueSpec):
         else:
             return []
 
-    # Additional variale form allows to specify the rendering
-    # style right now
-    def render_input(self, varprefix, value, form=None):
+    def render_input_as_form(self, varprefix, value):
         self.classtype_info()
         value = self.migrate(value)
         if not isinstance(value, (dict, DictMixin)):
             value = {}  # makes code simpler in complain phase
-        if form is True:
-            self.render_input_form(varprefix, value)
-        elif self._render == "form" and form is None:
-            self.render_input_form(varprefix, value)
-        elif self._render == "form_part" and form is None:
-            self.render_input_form(varprefix, value, as_part=True)
-        else:
-            self.render_input_normal(varprefix, value, self._render == "oneline")
 
-    def render_input_normal(self, varprefix, value, oneline = False):
+        self._render_input_form(varprefix, value)
+
+    def render_input(self, varprefix, value):
+        self.classtype_info()
+        value = self.migrate(value)
+        if not isinstance(value, (dict, DictMixin)):
+            value = {}  # makes code simpler in complain phase
+
+        if self._render == "form":
+            self._render_input_form(varprefix, value)
+        elif self._render == "form_part":
+            self._render_input_form(varprefix, value, as_part=True)
+        else:
+            self._render_input_normal(varprefix, value, self._render == "oneline")
+
+    def _render_input_normal(self, varprefix, value, oneline = False):
         headers_sup = oneline and self._headers == "sup"
         if headers_sup or not oneline:
             html.open_table(class_=["dictionary"])
@@ -3511,7 +3525,7 @@ class Dictionary(ValueSpec):
             html.close_tr()
             html.close_table()
 
-    def render_input_form(self, varprefix, value, as_part=False):
+    def _render_input_form(self, varprefix, value, as_part=False):
         if self._headers:
             for header, sections in self._headers:
                 self.render_input_form_header(varprefix, value, header, sections, as_part)
@@ -3550,15 +3564,10 @@ class Dictionary(ValueSpec):
             vs.render_input(vp, value.get(param, vs.default_value()))
             html.close_div()
 
-    def set_focus(self, varprefix, key=None):
+    def set_focus(self, varprefix):
         elements = self._get_elements()
         if elements:
-            if key == None:
-                elements[0][1].set_focus(varprefix + "_p_" + elements[0][0])
-            else:
-                for element_key, element_vs in elements:
-                    if element_key == key:
-                        element_vs.set_focus(varprefix + "_p_" + key)
+            elements[0][1].set_focus(varprefix + "_p_" + elements[0][0])
 
     def canonical_value(self):
         return dict([
@@ -3818,12 +3827,12 @@ class Transform(ValueSpec):
         else:
             return self._valuespec.help()
 
-    def render_input(self, varprefix, value, **kwargs):
+    def render_input(self, varprefix, value):
         self.classtype_info()
-        self._valuespec.render_input(varprefix, self.forth(value), **kwargs)
+        self._valuespec.render_input(varprefix, self.forth(value))
 
-    def set_focus(self, *args):
-        self._valuespec.set_focus(*args)
+    def set_focus(self, varprefix):
+        self._valuespec.set_focus(varprefix)
 
     def canonical_value(self):
         return self.back(self._valuespec.canonical_value())
@@ -3912,16 +3921,13 @@ class Password(TextAscii):
 
 
 class PasswordSpec(Password):
-    def __init__(self, **kwargs):
-        self._hidden = kwargs.get('hidden', False)
-        if self._hidden:
-            kwargs["type"] = "password"
-        Password.__init__(self, **kwargs)
+    def __init__(self, hidden=True, **kwargs):
+        super(PasswordSpec, self).__init__(hidden=hidden, **kwargs)
 
 
     def render_input(self, varprefix, value):
         self.classtype_info()
-        TextAscii.render_input(self, varprefix, value, hidden=self._hidden)
+        TextAscii.render_input(self, varprefix, value)
         if not value:
             html.icon_button("#", _(u"Randomize password"), "random",
                 onclick="vs_passwordspec_randomize(this);")

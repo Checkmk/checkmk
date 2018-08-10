@@ -237,7 +237,6 @@ class ModeEditPassword(WatoMode, watolib.PasswordStore):
             ("password", PasswordSpec(
                 title = _("Password"),
                 allow_empty = False,
-                hidden = True,
             )),
             ("owned_by", Alternative(
                 title = _("Editable by"),

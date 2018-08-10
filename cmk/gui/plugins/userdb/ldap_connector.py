@@ -925,25 +925,25 @@ class LDAPUserConnector(UserConnector):
 
 
     # This function only validates credentials, no locked checking or similar
-    def check_credentials(self, username, password):
+    def check_credentials(self, user_id, password):
         self.connect()
 
-        # Did the user provide an suffix with his username? This might enforce
+        # Did the user provide an suffix with his user_id? This might enforce
         # LDAP connections to be choosen or skipped.
         # self.user_enforces_this_connection can return either:
         #   True:  This connection is enforced
         #   False: Another connection is enforced
         #   None:  No connection is enforced
-        enforce_this_connection = self.user_enforces_this_connection(username)
+        enforce_this_connection = self.user_enforces_this_connection(user_id)
         if enforce_this_connection == False:
             return None # Skip this connection, another one is enforced
         else:
-            username = self.strip_suffix(username)
+            user_id = self.strip_suffix(user_id)
 
         # Returns None when the user is not found or not uniq, else returns the
-        # distinguished name and the username as tuple which are both needed for
+        # distinguished name and the user_id as tuple which are both needed for
         # the further login process.
-        result = self.get_user(username, True)
+        result = self.get_user(user_id, True)
         if not result:
             # The user does not exist
             if enforce_this_connection:
@@ -951,15 +951,15 @@ class LDAPUserConnector(UserConnector):
             else:
                 return None # Try next connection (if available)
 
-        user_dn, username = result
+        user_dn, user_id = result
 
         # Try to bind with the user provided credentials. This unbinds the default
         # authentication which should be rebound again after trying this.
         try:
             self.bind(user_dn, password)
-            result = username.encode('utf-8')
+            result = user_id.encode('utf-8')
         except:
-            self._logger.exception("  Exception during authentication (User: %s)", username)
+            self._logger.exception("  Exception during authentication (User: %s)", user_id)
             result = False
 
         self.default_bind(self._ldap_obj)

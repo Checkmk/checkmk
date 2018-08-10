@@ -135,7 +135,7 @@ def page_notify():
             html.user_error(e)
 
     html.begin_form("notify", method="POST")
-    vs_notify.render_input("_notify", {}, form=True)
+    vs_notify.render_input_as_form("_notify", {})
 
     html.button("save", _("Send notification"))
 

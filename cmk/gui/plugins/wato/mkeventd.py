@@ -2151,7 +2151,7 @@ class ModeEventConsoleSettings(EventConsoleMode, GlobalSettingsMode):
         self._current_settings = watolib.load_configuration_settings()
 
 
-    def _group_names(self):
+    def _group_names(self, show_all=False):
         group_names = [ e[1] for e in ec_config_variable_groups() ]
         return sorted(group_names, key=lambda a: configvar_order().get(a, 999))
 

@@ -814,7 +814,7 @@ def edit_annotation():
     html.end_context_buttons()
 
     html.begin_form("editanno", method="GET")
-    _vs_annotation().render_input("_editanno", value, form=True)
+    _vs_annotation().render_input_as_form("_editanno", value)
 
     html.button("save", _("Save"))
 

@@ -120,8 +120,8 @@ class SNMPDataSource(DataSource):
         return ast.literal_eval(raw_data)
 
 
-    def _to_cache_file(self, info):
-        return repr(info) + "\n"
+    def _to_cache_file(self, raw_data):
+        return repr(raw_data) + "\n"
 
 
     def set_ignore_check_interval(self, ignore_check_interval):

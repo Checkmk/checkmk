@@ -1,0 +1,12 @@
+Title: Fixed broken bulk host import with discovery (Regression in 1.5.0)
+Level: 1
+Component: multisite
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0i1
+Date: 1533882178
+
+The werk #6377 broke the function to launch a bulk discovery right after a bulk
+host import has been executed.

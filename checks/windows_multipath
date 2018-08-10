@@ -31,10 +31,13 @@
 # (yes, thats all)
 
 def inventory_windows_multipath(info):
-    if len(info) > 0:
+    try:
         num_active = int(info[0][0])
-        if num_active> 0:
-            return [ (None, num_active ) ]
+    except (ValueError, IndexError):
+        return []
+
+    if num_active > 0:
+        return [ (None, num_active ) ]
     return []
 
 

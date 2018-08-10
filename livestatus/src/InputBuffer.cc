@@ -43,6 +43,28 @@ bool timeout_reached(const std::chrono::system_clock::time_point &start,
 }
 }  // namespace
 
+std::ostream &operator<<(std::ostream &os, const InputBuffer::Result &r) {
+    switch (r) {
+        case InputBuffer::Result::request_read:
+            return os << "request read";
+        case InputBuffer::Result::data_read:
+            return os << "data read";
+        case InputBuffer::Result::unexpected_eof:
+            return os << "unexpected EOF";
+        case InputBuffer::Result::should_terminate:
+            return os << "should terminate";
+        case InputBuffer::Result::line_too_long:
+            return os << "line too long";
+        case InputBuffer::Result::eof:
+            return os << "EOF";
+        case InputBuffer::Result::empty_request:
+            return os << "empty request";
+        case InputBuffer::Result::timeout:
+            return os << "timeout";
+    }
+    return os;  // never reached
+}
+
 InputBuffer::InputBuffer(int fd, const bool &termination_flag, Logger *logger,
                          std::chrono::milliseconds query_timeout,
                          std::chrono::milliseconds idle_timeout)

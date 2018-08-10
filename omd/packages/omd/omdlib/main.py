@@ -572,9 +572,6 @@ def site_name():
 def is_root():
     return os.getuid() == 0
 
-def site_exists(sitename):
-    return os.path.exists(site_dir(sitename))
-
 def all_sites():
     l = [ s for s in os.listdir("/omd/sites") if os.path.isdir(os.path.join("/omd/sites/", s)) ]
     l.sort()
@@ -600,16 +597,6 @@ def site_is_empty(sitename):
 def site_autostart(sitename):
     config = parse_site_conf(sitename)
     return config.get('AUTOSTART', 'on') == 'on'
-
-# The version of a site is solely determined by the
-# link ~SITE/version
-def site_version(sitename):
-    version_link = site_dir(sitename) + "/version"
-    try:
-        version = os.readlink(version_link).split("/")[-1]
-        return version
-    except:
-        return None
 
 def start_site(sitename):
     prepare_and_populate_tmpfs(sitename)
@@ -2431,10 +2418,16 @@ def call_scripts(phase):
                     sys.stdout.write('Errors: %s\n' % stderr)
 
 
-def check_site_user(site_must_exist):
-    if g_site.name != None and site_must_exist and not site_exists(g_site.name):
+def check_site_user(site, site_must_exist):
+    if isinstance(site, RootContext):
+        return
+
+    if not site_must_exist:
+        return
+
+    if not site.exists():
         bail_out("omd: The site '%s' does not exist. You need to execute "
-                 "omd as root or site user." % g_site.name)
+                 "omd as root or site user." % site.name)
 
 
 #.
@@ -2526,10 +2519,10 @@ def main_version(args, options=None):
         options = {}
 
     if len(args) > 0:
-        site = args[0]
-        if not site_exists(site):
-            bail_out("No such site: %s" % site)
-        version = site_version(site)
+        site = SiteContext(args[0])
+        if not site.exists():
+            bail_out("No such site: %s" % site.name)
+        version = site.version
     else:
         version = g_info["OMD_VERSION"]
     if "bare" in options:
@@ -2569,13 +2562,14 @@ def main_sites(args, options=None):
 
     if sys.stdout.isatty() and "bare" not in options:
         sys.stdout.write("SITE             VERSION          COMMENTS\n")
-    for site in all_sites():
+    for sitename in all_sites():
+        site = SiteContext(sitename)
         tags = []
         if "bare" in options:
-            sys.stdout.write("%s\n" % site)
+            sys.stdout.write("%s\n" % site.name)
         else:
-            disabled = site_is_disabled(site)
-            v = site_version(site)
+            disabled = site_is_disabled(site.name)
+            v = site.version
             if v == None:
                 v = "(none)"
                 tags.append("empty site dir")
@@ -2583,19 +2577,19 @@ def main_sites(args, options=None):
                 tags.append("default version")
             if disabled:
                 tags.append(tty_bold + tty_red + "disabled" + tty_normal)
-            sys.stdout.write("%-16s %-16s %s " % (site, v, ", ".join(tags)))
+            sys.stdout.write("%-16s %-16s %s " % (site.name, v, ", ".join(tags)))
             sys.stdout.write("\n")
 
 # Bail out if name for new site is not valid (needed by create/mv/cp)
-def sitename_must_be_valid(name, reuse = False):
+def sitename_must_be_valid(site, reuse = False):
     # Make sanity checks before starting any action
-    if not reuse and site_exists(name):
-        bail_out("Site '%s' already existing." % name)
-    if not reuse and group_exists(name):
-        bail_out("Group '%s' already existing." % name)
-    if not reuse and user_exists(name):
-        bail_out("User '%s' already existing." % name)
-    if not re.match("^[a-zA-Z_][a-zA-Z_0-9]{0,15}$", name):
+    if not reuse and site.exists():
+        bail_out("Site '%s' already existing." % site.name)
+    if not reuse and group_exists(site.name):
+        bail_out("Group '%s' already existing." % site.name)
+    if not reuse and user_exists(site.name):
+        bail_out("User '%s' already existing." % site.name)
+    if not re.match("^[a-zA-Z_][a-zA-Z_0-9]{0,15}$", site.name):
         bail_out("Invalid site name. Must begin with a character, may contain characters, digits and _ and have length 1 up to 16")
 
 
@@ -2609,7 +2603,7 @@ def main_create(args, options=None):
         if not user_verify(g_site.name):
             bail_out("Error verifying site user.")
 
-    sitename_must_be_valid(g_site.name, reuse)
+    sitename_must_be_valid(g_site, reuse)
 
     # Create operating system user for site
     uid = options.get("uid")
@@ -2929,7 +2923,7 @@ def main_mv_or_cp(what, args, options=None):
             bail_out("Error verifying site user.")
         fstab_verify(new_site.name)
 
-    sitename_must_be_valid(new_site.name, reuse)
+    sitename_must_be_valid(new_site, reuse)
 
     old_site = g_site
     if not site_is_stopped(old_site.name):
@@ -3017,7 +3011,7 @@ def main_diff(args, options=None):
     if options is None:
         options = {}
 
-    from_version  = site_version(g_site.name)
+    from_version  = g_site.version
     from_skelroot = "/omd/versions/%s/skel" % from_version
 
     # If arguments are added and those arguments are directories,
@@ -3156,7 +3150,7 @@ def main_update(args, options=None):
     unmount_tmpfs(g_site.name)
 
     # Source version: the version of the site we deal with
-    from_version = site_version(g_site.name)
+    from_version = g_site.version
 
     # Target version: the version of the OMD binary
     to_version = omdlib.__version__
@@ -3271,7 +3265,7 @@ def main_umount(args, options=None):
             # Set global vars for the current site
             g_site = SiteContext(site_id)
 
-            if only_version and site_version(g_site.name) != only_version:
+            if only_version and g_site.version != only_version:
                 continue
 
             # Skip the site even when it is partly running
@@ -3318,36 +3312,37 @@ def main_init_action(command, args, options=None):
         sys.stdout.write(("%-"+str(max_site_len)+"s - %s") % (site_id, line))
 
     exit_states, processes = [], []
-    for site in all_sites():
-        v = site_version(site)
-        if v == None: # skip partially created sites
+    for sitename in all_sites():
+        site = SiteContext(sitename)
+
+        if site.version == None: # skip partially created sites
             continue
 
-        if only_version and v != only_version:
+        if only_version and site.version != only_version:
             continue
 
         # Skip disabled sites completely
-        if site_is_disabled(site):
+        if site_is_disabled(site.name):
             continue
 
         # Handle non autostart sites
         if command in [ "start", "restart", "reload" ] or \
             ( "auto" in options and command == "status" ):
-            if not opt_force and not site_autostart(site):
+            if not opt_force and not site_autostart(site.name):
                 if bare:
                     continue
                 elif not parallel:
-                    sys.stdout.write("Ignoring site '%s': AUTOSTART != on\n" % site)
+                    sys.stdout.write("Ignoring site '%s': AUTOSTART != on\n" % site.name)
                 else:
-                    parallel_output(site, "Ignoring since autostart is disabled\n")
+                    parallel_output(site.name, "Ignoring since autostart is disabled\n")
                 continue
 
         if command == "status" and bare:
-            sys.stdout.write('[%s]\n' % site)
+            sys.stdout.write('[%s]\n' % site.name)
         elif not parallel:
-            sys.stdout.write("%sDoing '%s' on site %s:%s\n" % (tty_bold, command, site, tty_normal))
+            sys.stdout.write("%sDoing '%s' on site %s:%s\n" % (tty_bold, command, site.name, tty_normal))
         else:
-            parallel_output(site, "Invoking '%s'\n" % (command))
+            parallel_output(site.name, "Invoking '%s'\n" % (command))
         sys.stdout.flush()
 
         # We need to open a subprocess, because each site must be started with the account of the
@@ -3355,7 +3350,7 @@ def main_init_action(command, args, options=None):
         stdout = sys.stdout if not parallel else subprocess.PIPE
         stderr = sys.stderr if not parallel else subprocess.STDOUT
         bare_arg = [ "--bare" ] if bare else []
-        p = subprocess.Popen([sys.argv[0], command ] + bare_arg + [ site ] + args,
+        p = subprocess.Popen([sys.argv[0], command ] + bare_arg + [ site.name ] + args,
                               stdin=open(os.devnull, "r"), stdout=stdout, stderr=stderr)
 
         if parallel:
@@ -3364,7 +3359,7 @@ def main_init_action(command, args, options=None):
             fl = fcntl.fcntl(fd, fcntl.F_GETFL)
             fcntl.fcntl(fd, fcntl.F_SETFL, fl | os.O_NONBLOCK)
 
-            processes.append((site, p))
+            processes.append((site.name, p))
         else:
             exit_states.append(p.wait())
             if not bare:
@@ -3762,7 +3757,7 @@ def prepare_restore_as_root(options):
             bail_out("Error verifying site user.")
         fstab_verify(g_site.name)
 
-    sitename_must_be_valid(g_site.name, reuse)
+    sitename_must_be_valid(g_site, reuse)
 
     if reuse:
         if not site_is_stopped(g_site.name) and not "kill" in options:
@@ -3949,7 +3944,7 @@ def main_cleanup(args, options=None):
         bail_out("Command is not supported on this platform")
 
     for version in omd_versions():
-        site_ids = [ s for s in all_sites() if site_version(s) == version ]
+        site_ids = [ s for s in all_sites() if SiteContext(s).version == version ]
         if site_ids:
             sys.stdout.write("%s%-20s%s In use (by %s). Keeping this version.\n" %
                     (tty_bold, version, tty_normal, ", ".join(site_ids)))
@@ -4114,11 +4109,27 @@ class AbstractSiteContext(object):
         raise NotImplementedError()
 
 
+    @abc.abstractmethod
+    def exists(self):
+        raise NotImplementedError()
+
+
 
 class SiteContext(AbstractSiteContext):
     @property
     def dir(self):
         return site_dir(self._sitename)
+
+
+    # TODO: Clean up the None case!
+    @property
+    def version(self):
+        """The version of a site is solely determined by the link ~SITE/version"""
+        version_link = self.dir + "/version"
+        try:
+            return os.readlink(version_link).split("/")[-1]
+        except:
+            return None
 
 
     def load_config(self):
@@ -4143,6 +4154,10 @@ class SiteContext(AbstractSiteContext):
         self._config_loaded = True
 
 
+    def exists(self):
+        return os.path.exists(self.dir)
+
+
 
 class RootContext(AbstractSiteContext):
     def __init__(self):
@@ -4154,8 +4169,16 @@ class RootContext(AbstractSiteContext):
         return "/"
 
 
+    def version(self):
+        return omdlib.__version__
+
+
     def load_config(self):
         pass
+
+
+    def exists(self):
+        return False
 
 
 
@@ -4576,14 +4599,14 @@ def main():
         else:
             g_site = SiteContext(site_name())
 
-    check_site_user(site_must_exist)
+    check_site_user(g_site, site_must_exist)
 
     # Commands operating on an existing site *must* run omd in
     # the same version as the site has! Sole exception: update.
     # That command must be run in the target version
     if g_site.name and site_must_exist and command != "update":
-        v = site_version(g_site.name)
-        if v == None: # Site has no homedirectory
+        v = g_site.version
+        if v == None: # Site has no home directory or version link
             if command == "rm":
                 sys.stdout.write("WARNING: This site has an empty home directory and is not\n"
                                  "assigned to any OMD version. You are running version %s.\n" % omdlib.__version__)

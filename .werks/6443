@@ -1,0 +1,18 @@
+Title: Fixed possible "omd backup" error when files vanish during backup
+Level: 1
+Component: omd
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0i1
+Date: 1533887242
+
+When Check_MK creates temporary files while writing configuration files or
+similar, a parallel running "omd backup" job may try to backup those temporary
+files. When these backup files are finished and moved to the destination path,
+the backup may terminate with an error like this:
+
+OSError: [Errno 2] No such file or directory: '/omd/sites/[SITE]/var/check_mk/web/[USER]/.last_pw_change.mk.newPm8BK8'
+
+This issue is now prevented by skipping those temporary files during backup.

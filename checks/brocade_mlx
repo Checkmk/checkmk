@@ -125,7 +125,7 @@ def inventory_brocade_mlx_module_mem(info):
         # do not inventorize modules reported as empty or "Blocked for full height card"
         # and: monitor cpu only on NI-MLX and BR-MLX modules
         descr = v["descr"]
-        if v['state'] not in ["Slot is empty", "Blocked for full height card"] \
+        if v['state_readable'] not in ["Slot is empty", "Blocked for full height card"] \
            and (descr.startswith("NI-MLX") or descr.startswith("BR-MLX")):
             inventory.append((k, "brocade_mlx_mem_default_levels"))
     return inventory

@@ -46,6 +46,7 @@ def check_3par_volumes(item, params, parsed):
         4 : "PEER",
         5 : "UNKNOWN",
         6 : "TDVV",
+        7 : "DDS",
     }
 
     for entry in parsed['members']:

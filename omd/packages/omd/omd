@@ -3449,6 +3449,9 @@ def backup_site_files_to_tarfile(tar, options):
     exclude = get_exclude_patterns(options)
     exclude.append("tmp/*") # Exclude all tmpfs files
 
+    # exclude all temporary files that are created during cmk.store writes
+    exclude.append("*.mk.new*")
+
     def filter_files(filename):
         for glob_pattern in exclude:
             # patterns are relative to site dir, filename is full path.

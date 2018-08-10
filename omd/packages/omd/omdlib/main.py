@@ -1,6 +1,5 @@
-#!/omd/versions/###OMD_VERSION###/bin/python
+#!/usr/bin/env python
 # -*- encoding: utf-8; py-indent-offset: 4 -*-
-# vim: tabstop=8 expandtab shiftwidth=4 softtabstop=4
 #
 #       U  ___ u  __  __   ____
 #        \/"_ \/U|' \/ '|u|  _"\
@@ -24,44 +23,11 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-"""This file is part of OMD - The Open Monitoring Distribution
-
-isort:skip_file"""
-
-# Disable YAPF for the moment. There is a larger commit pending that
-# needs to be merged before YAPFing this file.
-
-# yapf: disable
+"""The command line tool specific implementations of the omd command and main entry point"""
 
 import os
-import sys
-
-# This hack here is needed to prevent "omd update" problems when updating
-# as site user from 1.4 versions older than 1.4.0p17.
-# Previous versios did not unset PYTHONPATH/LD_LIBRARY_PATH before execv()
-# to the newer version "omd" command which made the newer OMD load the old
-# python libraries. Newer versions unset these variables before, so this
-# additional execv() is only needed when updating from older versions.
-if len(sys.argv) > 1 and sys.argv[1] == "update" \
-   and (sys.version_info[0] == 2 and sys.version_info[1] == 7 and sys.version_info[2] < 14):
-    # Prevent inheriting environment variables from this versions/site environment
-    # into the execed omd call. The OMD call must import the python version related
-    # modules and libaries. This only works when PYTHONPATH and LD_LIBRARY_PATH are
-    # not already set when calling "omd update"
-    try:
-        del os.environ["PYTHONPATH"]
-    except KeyError:
-        pass
-
-    try:
-        del os.environ["LD_LIBRARY_PATH"]
-    except KeyError:
-        pass
-    os.execv(sys.argv[0], sys.argv)
-    bail_out("Cannot run execv() %s" % sys.argv[0])
-
-
 import re
+import sys
 import abc
 import grp
 import pwd
@@ -83,7 +49,7 @@ import subprocess
 import signal
 from passlib.hash import sha256_crypt
 
-OMD_VERSION = "1.6.0i1.cme"
+import omdlib
 
 # Some global variables
 opt_verbose     = False
@@ -391,8 +357,7 @@ def ask_user_choices(title, message, choices):
                 break
     sys.stdout.write(empty_line)
 
-    choicetxt = (tty_bold + tty_magenta + "/").join(tty_bold + tty_white + char + tty_normal + tty_bgmagenta
-                                                    for char, _c in zip(chars, choices))
+    choicetxt = (tty_bold + tty_magenta + "/").join([(tty_bold + tty_white + char + tty_normal + tty_bgmagenta) for (char, _c) in zip(chars, choices)])
     l = len(choices) * 2 - 1
     sys.stdout.write(" %s %s" % (tty_bgmagenta, choicetxt))
     sys.stdout.write(" ==> %s   %s" % (tty_bgred, tty_bgmagenta))
@@ -691,9 +656,9 @@ def stop_site(sitename):
 
 def read_skel_permissions():
     global g_skel_permissions
-    g_skel_permissions = load_skel_permissions(OMD_VERSION)
+    g_skel_permissions = load_skel_permissions(omdlib.__version__)
     if not g_skel_permissions:
-        bail_out("%s is missing or currupted." % skel_permissions_file_path(OMD_VERSION))
+        bail_out("%s is missing or currupted." % skel_permissions_file_path(omdlib.__version__))
 
 def load_skel_permissions(version):
     perms = {}
@@ -734,7 +699,7 @@ def create_version_symlink(sitename, version):
     linkname = site_dir(sitename) + "/version"
     if os.path.exists(linkname):
         os.remove(linkname)
-    os.symlink("../../versions/%s" % OMD_VERSION, linkname)
+    os.symlink("../../versions/%s" % omdlib.__version__, linkname)
 
 
 def calculate_admin_password(options):
@@ -761,9 +726,9 @@ def create_skeleton_files(sitename, directory):
         "###SITE###" : sitename,
         "###ROOT###" : sitedir,
     }
-    # Hack: exclude tmp if directory is '.'
+    # Hack: exclude tmp if dir is '.'
     exclude_tmp = directory == "."
-    skelroot = "/omd/versions/%s/skel" % OMD_VERSION
+    skelroot = "/omd/versions/%s/skel" % omdlib.__version__
     os.chdir(skelroot)  # make relative paths
     for dirpath, dirnames, filenames in os.walk(directory):
         if dirpath.startswith("./"):
@@ -931,7 +896,7 @@ def walk_skel(root, handler, args, depth_first, exclude_if_in = None, relbase = 
 # Change site specific information in files originally create from
 # skeleton files. Skip files below tmp/
 def patch_skeleton_files(old, new):
-    skelroot = "/omd/versions/%s/skel" % OMD_VERSION
+    skelroot = "/omd/versions/%s/skel" % omdlib.__version__
     os.chdir(skelroot)  # make relative paths
     for dirpath, _dirnames, filenames in os.walk("."):
         if dirpath.startswith("./"):
@@ -1661,7 +1626,7 @@ def unmount_tmpfs(sitename, output = True, kill = False):
         if output:
             sys.stdout.write("Unmounting temporary filesystem...")
 
-        for _t in xrange(10):
+        for _t in range(0, 10):
             if os.system("umount '%s'" % tmp_dir(sitename)) == 0:
                 if output:
                     ok()
@@ -1788,7 +1753,7 @@ def call_init_scripts(sitename, command, daemon=None, exclude_daemons=None):
                 ok = False
 
     if ok:
-        return 0
+         return 0
     return 2
 
 def check_status(sitename, display=True, daemon=None, bare=False):
@@ -2095,7 +2060,7 @@ def validate_config_change_commands(settings):
         # Check if value is valid. Choices are either a list of allowed
         # keys or a regular expression
         if type(hook["choices"]) == list:
-            choices = [ var for var, _descr in hook["choices"] ]
+            choices = [ var for (var, _descr) in hook["choices"] ]
             if value not in choices:
                 bail_out("Invalid value %r for %r. Allowed are: %s\n" % \
                         (value, key, ", ".join(choices)))
@@ -2125,7 +2090,7 @@ def config_set(args):
     # Check if value is valid. Choices are either a list of allowed
     # keys or a regular expression
     if type(hook["choices"]) == list:
-        choices = [ var for var, _descr in hook["choices"] ]
+        choices = [ var for (var, _descr) in hook["choices"] ]
         if value not in choices:
             sys.stderr.write("Invalid value for '%s'. Allowed are: %s\n" % \
                     (value, ", ".join(choices)))
@@ -2318,7 +2283,7 @@ def init_action(command, args, options):
 #   '----------------------------------------------------------------------'
 
 def omd_root():
-    return "/omd/versions/" + OMD_VERSION
+    return "/omd/versions/" + omdlib.__version__
 
 # Read distro- and version specific values
 def read_info():
@@ -2720,7 +2685,7 @@ def main_create(args, options=None):
         sys.stdout.write("Afterwards you can initialize the site with 'omd init'.\n")
 
 def welcome_message(admin_password):
-    sys.stdout.write("Created new site %s with version %s.\n\n" % (g_sitename, OMD_VERSION))
+    sys.stdout.write("Created new site %s with version %s.\n\n" % (g_sitename, omdlib.__version__))
     sys.stdout.write("  The site can be started with %somd start %s%s.\n" %
             (tty_bold, g_sitename, tty_normal))
     sys.stdout.write("  The default web UI is available at %shttp://%s/%s/%s\n" %
@@ -2771,7 +2736,7 @@ def init_site(config_settings=None, options=False):
     apache_reload = "apache-reload" in options
 
     # Create symbolic link to version
-    create_version_symlink(g_sitename, OMD_VERSION)
+    create_version_symlink(g_sitename, omdlib.__version__)
 
     # Build up directory structure with symbolic links relative to
     # the version link we just create
@@ -3235,7 +3200,7 @@ def main_update(args, options=None):
     from_version = site_version(g_sitename)
 
     # Target version: the version of the OMD binary
-    to_version = OMD_VERSION
+    to_version = omdlib.__version__
 
     # source and target are identical if 'omd update' is called
     # from within a site. In that case we make the user choose
@@ -3619,10 +3584,13 @@ class BackupTarFile(tarfile.TarFile):
             try:
                 self._sock.connect(self._rrdcached_socket_path)
             except socket.error, e:
-                if e.errno == 2: # No such file or directory
+                # ECONNRESET: Broken pipe
+                # EPIPE:      Connection reset by peer
+                #             Happens, for example, when the rrdcached is reloaded/restarted during backup
+                if e.errno in (errno.ECONNRESET, errno.EPIPE):
                     self._sock = None
                     if opt_verbose:
-                        sys.stdout.write("skipping rrdcached command (socket missing)\n")
+                        sys.stdout.write("skipping rrdcached command (%s)\n" % e)
                     return
                 else:
                     raise
@@ -3636,13 +3604,10 @@ class BackupTarFile(tarfile.TarFile):
             while not answer.endswith("\n"):
                 answer += self._sock.recv(1024)
         except socket.error, e:
-            # ECONNRESET: Broken pipe
-            # EPIPE:      Connection reset by peer
-            #             Happens, for example, when the rrdcached is reloaded/restarted during backup
-            if e.errno in (errno.ECONNRESET, errno.EPIPE):
+            if e.errno == 32: # Broken pipe
                 self._sock = None
                 if opt_verbose:
-                    sys.stdout.write("skipping rrdcached command (%s)\n" % e)
+                    sys.stdout.write("skipping rrdcached command (broken pipe)\n")
                 return
             else:
                 raise
@@ -4372,24 +4337,23 @@ commands = [
 
 ]
 
-def handle_global_option(opt, orig):
+def handle_global_option(main_args, opt, orig):
     global opt_verbose
     global opt_force
     global opt_interactive
 
-    def opt_arg():
-        global main_args
+    def opt_arg(main_args):
         # TODO: Fix the code and remove the pragma below!
         if len(main_args) < 1:  # pylint: disable=used-before-assignment
             bail_out("Option %s needs an argument." % opt)
         arg = main_args[0]
         main_args = main_args[1:]
-        return arg
+        return arg, main_args
 
     if opt in [ 'V', 'version' ]:
         # Switch to other version of bin/omd
-        version = opt_arg()
-        if version != OMD_VERSION:
+        version, main_args = opt_arg(main_args)
+        if version != omdlib.__version__:
             omd_path = "/omd/versions/%s/bin/omd" % version
             if not os.path.exists(omd_path):
                 bail_out("OMD version '%s' is not installed." % version)
@@ -4406,6 +4370,8 @@ def handle_global_option(opt, orig):
     else:
         bail_out("Invalid global option %s.\n"
                  "Call omd help for available options." % orig)
+
+    return main_args
 
 def parse_command_options(args, options_spec):
     # Give a short overview over the command specific options
@@ -4501,119 +4467,128 @@ def hash_password(password):
 #   |  Main entry point                                                    |
 #   '----------------------------------------------------------------------'
 
+command = ""
+g_orig_wd = "/"
+
 # Handle global options. We might convert this to getopt
 # later. But a problem here is that we have options appearing
 # *before* the command and command specific ones. We handle
 # the options before the command here only
+# TODO: Refactor these global variables
+# TODO: Refactor to argparse. Be aware of the pitfalls of the OMD command line scheme
+def main():
+    global command
+    global g_sitename
+    global g_orig_wd
 
-main_args = sys.argv[1:]
+    main_args = sys.argv[1:]
 
-while len(main_args) >= 1 and main_args[0].startswith("-"):
-    opt = main_args[0]
-    main_args = main_args[1:]
-    if opt.startswith("--"):
-        handle_global_option(opt[2:], opt)
-    else:
-        for c in opt[1:]:
-            handle_global_option(c, opt)
+    while len(main_args) >= 1 and main_args[0].startswith("-"):
+        opt = main_args[0]
+        main_args = main_args[1:]
+        if opt.startswith("--"):
+            main_args = handle_global_option(main_args, opt[2:], opt)
+        else:
+            for c in opt[1:]:
+                main_args = handle_global_option(main_args, c, opt)
 
-if len(main_args) < 1:
-    main_help()
-    sys.exit(1)
+    if len(main_args) < 1:
+        main_help()
+        sys.exit(1)
 
-command = main_args[0]
-args = main_args[1:]
+    command = main_args[0]
+    args = main_args[1:]
 
-found = False
+    found = False
 
-only_root, no_suid, needs_site, site_must_exist, \
-  confirm, argumentlist, command_function, option_spec, \
-  description, confirm_text = 10 * [None]
+    only_root, no_suid, needs_site, site_must_exist, \
+      confirm, _argumentlist, command_function, option_spec, \
+      _description, confirm_text = 10 * [None]
 
-for c, only_root, no_suid, needs_site, site_must_exist, confirm, argumentlist, \
-    command_function, option_spec, description, confirm_text in commands:
-    if c == command:
-        found = True
-        break
+    for c, only_root, no_suid, needs_site, site_must_exist, confirm, _argumentlist, \
+        command_function, option_spec, _description, confirm_text in commands:
+        if c == command:
+            found = True
+            break
 
-if not found:
-    sys.stderr.write("omd: no such command: %s\n" % command)
-    main_help()
-    sys.exit(1)
+    if not found:
+        sys.stderr.write("omd: no such command: %s\n" % command)
+        main_help()
+        sys.exit(1)
 
-if os.getuid() != 0 and only_root:
-    bail_out("omd: root permissions are needed for this command.")
+    if os.getuid() != 0 and only_root:
+        bail_out("omd: root permissions are needed for this command.")
 
-# Parse command options. We need to do this now in order to know,
-# if a site name has been specified or not
-args, command_options = parse_command_options(args, option_spec)
+    # Parse command options. We need to do this now in order to know,
+    # if a site name has been specified or not
+    args, command_options = parse_command_options(args, option_spec)
 
-# Some commands need a site to be specified. If we are
-# called as root, this must be done explicitely. If we
-# are site user, the site name is our user name
-g_sitename = None
-if needs_site > 0:
-    if os.getuid() == 0:
-        if len(args) >= 1:
-            g_sitename = args[0]
-            args = args[1:]
-        elif needs_site == 1:
-            bail_out("omd: please specify site.")
-    else:
-        g_sitename = site_name()
+    # Some commands need a site to be specified. If we are
+    # called as root, this must be done explicitely. If we
+    # are site user, the site name is our user name
+    g_sitename = None
+    if needs_site > 0:
+        if os.getuid() == 0:
+            if len(args) >= 1:
+                g_sitename = args[0]
+                args = args[1:]
+            elif needs_site == 1:
+                bail_out("omd: please specify site.")
+        else:
+            g_sitename = site_name()
 
-check_site_user(site_must_exist)
+    check_site_user(site_must_exist)
 
-# Commands operating on an existing site *must* run omd in
-# the same version as the site has! Sole exception: update.
-# That command must be run in the target version
-if g_sitename and site_must_exist and command != "update":
-    v = site_version(g_sitename)
-    if v == None: # Site has no homedirectory
-        if command == "rm":
-            sys.stdout.write("WARNING: This site has an empty home directory and is not\n"
-                             "assigned to any OMD version. You are running version %s.\n" % OMD_VERSION)
-        elif command != "init":
-            bail_out("This site has an empty home directory /omd/sites/%s.\n"
-                     "If you have created that site with 'omd create --no-init %s'\n"
-                     "then please first do an 'omd init %s'." % (3*(g_sitename,)))
-    elif OMD_VERSION != v:
-        exec_other_omd(v)
+    # Commands operating on an existing site *must* run omd in
+    # the same version as the site has! Sole exception: update.
+    # That command must be run in the target version
+    if g_sitename and site_must_exist and command != "update":
+        v = site_version(g_sitename)
+        if v == None: # Site has no homedirectory
+            if command == "rm":
+                sys.stdout.write("WARNING: This site has an empty home directory and is not\n"
+                                 "assigned to any OMD version. You are running version %s.\n" % omdlib.__version__)
+            elif command != "init":
+                bail_out("This site has an empty home directory /omd/sites/%s.\n"
+                         "If you have created that site with 'omd create --no-init %s'\n"
+                         "then please first do an 'omd init %s'." % (3*(g_sitename,)))
+        elif omdlib.__version__ != v:
+            exec_other_omd(v)
 
 
-read_info()
+    read_info()
 
-if g_sitename:
-    set_site_globals()
+    if g_sitename:
+        set_site_globals()
 
-# Commands which affect a site and can be called as root *or* as
-# site user should always run with site user priviledges. That way
-# we are sure that new files and processes are created under the
-# site user and never as root.
-try:
-    g_orig_wd = os.getcwd()
-except OSError, e:
-    if e.errno == 2:
-        g_orig_wd = "/"
-    else:
-        raise
+    # Commands which affect a site and can be called as root *or* as
+    # site user should always run with site user priviledges. That way
+    # we are sure that new files and processes are created under the
+    # site user and never as root.
+    try:
+        g_orig_wd = os.getcwd()
+    except OSError, e:
+        if e.errno == 2:
+            g_orig_wd = "/"
+        else:
+            raise
 
-if not no_suid and g_sitename and os.getuid() == 0 and not only_root:
-    switch_to_site_user()
+    if not no_suid and g_sitename and os.getuid() == 0 and not only_root:
+        switch_to_site_user()
 
-# Make sure environment is in a defined state
-if g_sitename:
-    clear_environment()
-    set_environment()
+    # Make sure environment is in a defined state
+    if g_sitename:
+        clear_environment()
+        set_environment()
 
-if (opt_interactive or confirm) and not opt_force:
-    sys.stdout.write("%s (yes/NO): " % confirm_text)
-    sys.stdout.flush()
-    a = sys.stdin.readline().strip()
-    if a.lower() != "yes":
-        sys.exit(0)
+    if (opt_interactive or confirm) and not opt_force:
+        sys.stdout.write("%s (yes/NO): " % confirm_text)
+        sys.stdout.flush()
+        a = sys.stdin.readline().strip()
+        if a.lower() != "yes":
+            sys.exit(0)
 
-try:
-    command_function(args, command_options)
-except KeyboardInterrupt:
-    bail_out(tty_normal + "Aborted.")
+    try:
+        command_function(args, command_options)
+    except KeyboardInterrupt:
+        bail_out(tty_normal + "Aborted.")

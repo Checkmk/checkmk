@@ -155,6 +155,7 @@ def add_python_paths():
     # if not running as site user, make the livestatus module available
     if not is_running_as_site_user():
         sys.path.insert(0, os.path.join(cmk_path(), "livestatus/api/python"))
+        sys.path.insert(0, os.path.join(cmk_path(), "omd/packages/omd"))
 
 
 def pytest_cmdline_main(config):

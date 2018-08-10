@@ -18,13 +18,13 @@ for hook in *.hook; do
 done
 sudo mkdir -p $ROOT/lib/omd/scripts/post-create
 sudo cp -v omd.service $ROOT/share/omd
+sudo cp -v omd.bin $ROOT/bin/omd
+sudo cp -rv omdlib $ROOT/lib/python
 
-OLD_VERSION=$(sed -rn < $ROOT/bin/omd 's/^OMD_VERSION = "(.*)"$/\1/p')
+OLD_VERSION=$(readlink $ROOT/version)
+OLD_VERSION=${OLD_VERSION##*/}
 echo $OLD_VERSION
 
-
 echo "Keeping version number in 'omd' at $OLD_VERSION"
-sudo cp -v omd $ROOT/bin/omd
-sudo sed -i "s|###OMD_VERSION###|$OLD_VERSION|g" $ROOT/bin/omd
+sudo sed -i "s|###OMD_VERSION###|$OLD_VERSION|g" $ROOT/lib/python/omdlib/__init__.py
 sudo sed -i "s|#!/omd/versions/.*/bin/python|#!/omd/versions/$OLD_VERSION/bin/python|g" $ROOT/bin/omd
-sudo sed -i "s/OMD_VERSION =.*/OMD_VERSION = "'"'"$OLD_VERSION"'"/' $ROOT/bin/omd

@@ -206,9 +206,9 @@ class UserConnectorRegistry(cmk.gui.plugin_registry.ClassRegistry):
         return cmk.gui.plugins.userdb.UserConnector
 
 
-    def _register(self, connector_class):
-        connector_class.migrate_config()
-        self._entries[connector_class.type()] = connector_class
+    def _register(self, plugin_class):
+        plugin_class.migrate_config()
+        self._entries[plugin_class.type()] = plugin_class
 
 
 user_connector_registry = UserConnectorRegistry()
@@ -221,8 +221,8 @@ class UserAttributeRegistry(cmk.gui.plugin_registry.ClassRegistry):
         return cmk.gui.plugins.userdb.UserAttribute
 
 
-    def _register(self, attribute_class):
-        self._entries[attribute_class.name()] = attribute_class
+    def _register(self, plugin_class):
+        self._entries[plugin_class.name()] = plugin_class
 
 
 user_attribute_registry = UserAttributeRegistry()

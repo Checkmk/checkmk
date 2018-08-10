@@ -1286,8 +1286,8 @@ class ModeRegistry(cmk.gui.plugin_registry.ClassRegistry):
         return WatoMode
 
 
-    def _register(self, cls):
-        self._entries[cls.name()] = cls
+    def _register(self, plugin_class):
+        self._entries[plugin_class.name()] = plugin_class
 
 
 mode_registry = ModeRegistry()

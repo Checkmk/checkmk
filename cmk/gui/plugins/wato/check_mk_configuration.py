@@ -2631,7 +2631,7 @@ register_rule(group,
     "agent_encryption",
     Dictionary(
         elements = [
-            ( "passphrase", PasswordSpec(title = _("Encryption secret"), allow_empty = False, hidden = True) ),
+            ( "passphrase", PasswordSpec(title = _("Encryption secret"), allow_empty = False) ),
             ( "use_regular", DropdownChoice(title = _("Encryption for Agent"),
                     help = _("Choose if the agent agents encrypt packages. This controls whether "
                              "baked agents encrypt their output and whether check_mk expects "

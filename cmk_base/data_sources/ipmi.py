@@ -59,7 +59,7 @@ class IPMIManagementBoardDataSource(ManagementBoardDataSource, CheckMKAgentDataS
         return self.id()
 
 
-    def _gather_check_plugin_names(self, *args, **kwargs):
+    def _gather_check_plugin_names(self):
         return ["mgmt_ipmi_sensors"]
 
 

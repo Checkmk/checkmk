@@ -64,16 +64,16 @@ class HtpasswdUserConnector(UserConnector):
     # USERDB API METHODS
     #
 
-    def check_credentials(self, username, password):
+    def check_credentials(self, user_id, password):
         users = self.load_htpasswd()
-        if username not in users:
+        if user_id not in users:
             return None # not existing user, skip over
 
-        if self._is_automation_user(username):
+        if self._is_automation_user(user_id):
             raise MKUserError(None, _("Automation user rejected"))
 
-        if self.password_valid(users[username], password):
-            return username
+        if self.password_valid(users[user_id], password):
+            return user_id
         else:
             return False
 
@@ -89,8 +89,8 @@ class HtpasswdUserConnector(UserConnector):
 
         for line in open(cmk.paths.htpasswd_file, 'r'):
             if ':' in line:
-                username, pwhash = line.split(':', 1)
-                creds[username.decode("utf-8")] = pwhash.rstrip('\n')
+                user_id, pwhash = line.split(':', 1)
+                creds[user_id.decode("utf-8")] = pwhash.rstrip('\n')
 
         return creds
 

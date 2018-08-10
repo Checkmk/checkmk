@@ -61,7 +61,7 @@ class BookmarkList(pagetypes.Overridable):
 
 
     @classmethod
-    def phrase(cls, what):
+    def phrase(cls, phrase):
         return {
             "title"          : _("Bookmark list"),
             "title_plural"   : _("Bookmark lists"),
@@ -70,7 +70,7 @@ class BookmarkList(pagetypes.Overridable):
             "create"         : _("Create bookmark list"),
             "edit"           : _("Edit bookmark list"),
             "new"            : _("New list"),
-        }.get(what, pagetypes.Base.phrase(what))
+        }.get(phrase, pagetypes.Base.phrase(phrase))
 
 
     @classmethod

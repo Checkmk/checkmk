@@ -337,7 +337,7 @@ class NodeAttribute(object):
         raise NotImplementedError()
 
 
-    def compare_with(self, old):
+    def compare_with(self, old, keep_identical=False):
         """Compares new tree with old one: new_tree.compare_with(old_tree)."""
         raise NotImplementedError()
 
@@ -354,7 +354,7 @@ class NodeAttribute(object):
         raise NotImplementedError()
 
 
-    def merge_with(self, node):
+    def merge_with(self, foreign):
         raise NotImplementedError()
 
 
@@ -760,7 +760,7 @@ class Numeration(Leaf):
         return self._numeration == []
 
 
-    def is_equal(self, foreign):
+    def is_equal(self, foreign, edges=None):
         return self._numeration == foreign._numeration
 
 
@@ -982,7 +982,7 @@ class Attributes(Leaf):
         return self._attributes == {}
 
 
-    def is_equal(self, foreign):
+    def is_equal(self, foreign, edges=None):
         return self._attributes == foreign._attributes
 
 

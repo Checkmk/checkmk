@@ -1278,9 +1278,9 @@ class SystemBackupTargetsReadOnly(Targets):
 
 
     # Only show the list on CMA devices
-    def show_list(self, *args, **kwargs):
+    def show_list(self, title=None, editable=True):
         if is_cma():
-            super(SystemBackupTargetsReadOnly, self).show_list(*args, **kwargs)
+            super(SystemBackupTargetsReadOnly, self).show_list(title, editable)
 
 
 #.
@@ -1584,9 +1584,11 @@ def show_key_download_warning(keys):
 
 
 class RestoreJob(MKBackupJob):
-    def __init__(self, target_ident, backup_ident):
+    def __init__(self, target_ident, backup_ident, passphrase=None):
+        super(RestoreJob, self).__init__()
         self._target_ident = target_ident
         self._backup_ident = backup_ident
+        self._passphrase   = passphrase
 
 
     def title(self):
@@ -1608,14 +1610,14 @@ class RestoreJob(MKBackupJob):
         return [mkbackup_path(), "restore", "--background", self._target_ident, self._backup_ident]
 
 
-    def start(self, passphrase=None):
-        if passphrase != None:
-            env = os.environ.copy()
-            env["MKBACKUP_PASSPHRASE"] = passphrase
-        else:
-            env = None
-
+    def start(self, env=None):
+        if self._passphrase != None:
+            if env is None:
+                env = {}
+            env.update(os.environ.copy())
+            env["MKBACKUP_PASSPHRASE"] = self._passphrase
         super(RestoreJob, self).start(env)
+
 
 
 class PageBackupRestore(object):
@@ -1752,7 +1754,7 @@ class PageBackupRestore(object):
                     key_mgmt.decrypt_private_key(key["private_key"], passphrase)
 
                     html.check_transaction() # invalidate transid
-                    RestoreJob(self._target_ident, backup_ident).start(passphrase)
+                    RestoreJob(self._target_ident, backup_ident, passphrase).start()
                     return None, _("The restore has been started.")
             except MKUserError, e:
                 html.add_user_error(e.varname, e)

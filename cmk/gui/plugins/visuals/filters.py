@@ -728,7 +728,7 @@ class FilterNumberRange(Filter): # type is int
         html.write_text(" &nbsp; " + _("To:") + "&nbsp;")
         html.text_input(self.htmlvars[1], style="width: 80px;")
 
-    def filter(self, tablename):
+    def filter(self, infoname):
         lql = ""
         for i, op in [ (0, ">="), (1, "<=") ]:
             try:
@@ -1530,7 +1530,7 @@ class BIStatusFilter(Filter):
         Filter.__init__(self, self.column, title, "aggr", vars, [])
 
 
-    def filter(self, tablename):
+    def filter(self, infoname):
         return ""
 
 

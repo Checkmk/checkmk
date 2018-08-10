@@ -1430,7 +1430,7 @@ class EmptyCell(Cell):
         return "", ""
 
 
-    def paint(self, row):
+    def paint(self, row, tdattrs="", is_last_cell=False):
         return False
 
 

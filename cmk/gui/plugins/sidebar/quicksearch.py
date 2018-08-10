@@ -700,7 +700,7 @@ class QuicksearchMatchPlugin(object):
 
 
     @abc.abstractmethod
-    def get_matches(self, for_view, row, livestatus_table, used_filter, rows = None):
+    def get_matches(self, for_view, row, livestatus_table, used_filters, rows = None):
         raise NotImplementedError()
 
 
@@ -726,8 +726,8 @@ class MatchPluginRegistry(cmk.gui.plugin_registry.ClassRegistry):
         return QuicksearchMatchPlugin
 
 
-    def _register(self, obj):
-        self._entries[obj.__name__] = obj
+    def _register(self, plugin_class):
+        self._entries[plugin_class.__name__] = plugin_class
 
 
 match_plugin_registry = MatchPluginRegistry()

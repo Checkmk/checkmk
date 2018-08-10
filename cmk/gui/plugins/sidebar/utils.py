@@ -92,16 +92,16 @@ class SnapinRegistry(cmk.gui.plugin_registry.ClassRegistry):
         return SidebarSnapin
 
 
-    def _register(self, snapin_class):
-        snapin_id = snapin_class.type_name()
-        self._entries[snapin_id] = snapin_class
+    def _register(self, plugin_class):
+        snapin_id = plugin_class.type_name()
+        self._entries[snapin_id] = plugin_class
 
         config.declare_permission("sidesnap.%s" % snapin_id,
-            snapin_class.title(),
-            snapin_class.description(),
-            snapin_class.allowed_roles())
+            plugin_class.title(),
+            plugin_class.description(),
+            plugin_class.allowed_roles())
 
-        for path, page_func in snapin_class().page_handlers().items():
+        for path, page_func in plugin_class().page_handlers().items():
             cmk.gui.pages.register_page_handler(path, page_func)
 
 

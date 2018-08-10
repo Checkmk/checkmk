@@ -11970,7 +11970,7 @@ class ModeRuleSearch(WatoMode):
         html.hidden_field("mode", self.back_mode, add_var=True)
 
         valuespec = self._valuespec()
-        valuespec.render_input("search", self.search_options, form=True)
+        valuespec.render_input_as_form("search", self.search_options)
 
         html.button("_do_search",    _("Search"))
         html.button("_reset_search", _("Reset"))

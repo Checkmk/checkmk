@@ -4140,8 +4140,8 @@ class ConfigDomainLiveproxy(ConfigDomain):
         return liveproxyd_config_dir
 
 
-    def save(self, cfg, site_specific=False):
-        super(ConfigDomainLiveproxy, self).save(cfg, site_specific=site_specific)
+    def save(self, settings, site_specific=False):
+        super(ConfigDomainLiveproxy, self).save(settings, site_specific=site_specific)
         self.activate()
 
 
@@ -10559,14 +10559,14 @@ class LivestatusViaTCP(Dictionary):
 # specific watolib plugin
 
 class CMEFolder(CREFolder):
-    def edit(self, title, attributes):
-        if "site" in attributes:
-            site_id = attributes["site"]
+    def edit(self, new_title, new_attributes):
+        if "site" in new_attributes:
+            site_id = new_attributes["site"]
             if not self.is_root():
                 self.parent()._check_parent_customer_conflicts(site_id)
             self._check_childs_customer_conflicts(site_id)
 
-        super(CMEFolder, self).edit(title, attributes)
+        super(CMEFolder, self).edit(new_title, new_attributes)
 
 
     def _check_parent_customer_conflicts(self, site_id):

@@ -4058,7 +4058,11 @@ class PackageManager(object):
 
 
     @abc.abstractmethod
-    def uninstall(self, cmd):
+    def uninstall(self, package_name):
+        raise NotImplementedError()
+
+
+    def _execute_uninstall(self, cmd):
         p = self._execute(cmd)
         output = p.communicate()[0]
         if p.wait() != 0:
@@ -4076,8 +4080,7 @@ class PackageManager(object):
 
 class PackageManagerDEB(PackageManager):
     def uninstall(self, package_name):
-        return super(PackageManagerDEB, self).uninstall(
-            ["apt-get", "-y", "purge", package_name])
+        self._execute_uninstall(["apt-get", "-y", "purge", package_name])
 
 
     def find_packages_of_path(self, path):
@@ -4098,7 +4101,7 @@ class PackageManagerDEB(PackageManager):
 
 class PackageManagerRPM(PackageManager):
     def uninstall(self, package_name):
-        return super(PackageManagerRPM, self).uninstall(
+        self._execute_uninstall(
             ["rpm", "-e", package_name])
 
 

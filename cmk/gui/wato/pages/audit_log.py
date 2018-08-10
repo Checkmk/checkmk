@@ -277,7 +277,7 @@ class ModeAuditLog(WatoMode):
         valuespec = self._vs_audit_log_options()
 
         html.begin_form("options", method="GET")
-        valuespec.render_input("options", {}, form=True)
+        valuespec.render_input_as_form("options", {})
 
         html.button("options", _("Apply"))
         html.hidden_fields()

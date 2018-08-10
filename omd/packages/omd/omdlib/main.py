@@ -3222,7 +3222,7 @@ def main_update(args, options=None):
                     "Cancel")
             if not ok:
                 bail_out("Aborted.")
-        exec_other_omd(to_version)
+        exec_other_omd(to_version, "update")
 
     # This line is reached, if the version of the OMD binary (the target)
     # is different from the current version of the site.
@@ -4421,7 +4421,7 @@ def parse_command_options(args, options_spec):
     return (args, options)
 
 
-def exec_other_omd(version):
+def exec_other_omd(version, command):
     # Rerun with omd of other version
     omd_path = "/omd/versions/%s/bin/omd" % version
     if os.path.exists(omd_path):
@@ -4467,7 +4467,6 @@ def hash_password(password):
 #   |  Main entry point                                                    |
 #   '----------------------------------------------------------------------'
 
-command = ""
 g_orig_wd = "/"
 
 # Handle global options. We might convert this to getopt
@@ -4477,7 +4476,6 @@ g_orig_wd = "/"
 # TODO: Refactor these global variables
 # TODO: Refactor to argparse. Be aware of the pitfalls of the OMD command line scheme
 def main():
-    global command
     global g_sitename
     global g_orig_wd
 
@@ -4553,7 +4551,7 @@ def main():
                          "If you have created that site with 'omd create --no-init %s'\n"
                          "then please first do an 'omd init %s'." % (3*(g_sitename,)))
         elif omdlib.__version__ != v:
-            exec_other_omd(v)
+            exec_other_omd(v, command)
 
 
     read_info()

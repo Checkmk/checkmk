@@ -1,0 +1,66 @@
+#!/omd/versions/###OMD_VERSION###/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# vim: tabstop=8 expandtab shiftwidth=4 softtabstop=4
+#
+#       U  ___ u  __  __   ____
+#        \/"_ \/U|' \/ '|u|  _"\
+#        | | | |\| |\/| |/| | | |
+#    .-,_| |_| | | |  | |U| |_| |\
+#     \_)-\___/  |_|  |_| |____/ u
+#          \\   <<,-,,-.   |||_
+#         (__)   (./  \.) (__)_)
+#
+# This file is part of OMD - The Open Monitoring Distribution.
+# The official homepage is at <http://omdistro.org>.
+#
+# OMD  is  free software;  you  can  redistribute it  and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the  Free Software  Foundation  in  version 2.  OMD  is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+"""This file is part of OMD - The Open Monitoring Distribution
+
+isort:skip_file"""
+
+# Disable YAPF for the moment. There is a larger commit pending that
+# needs to be merged before YAPFing this file.
+
+# yapf: disable
+
+import os
+import sys
+
+# This hack here is needed to prevent "omd update" problems when updating
+# as site user from 1.4 versions older than 1.4.0p17.
+# Previous versios did not unset PYTHONPATH/LD_LIBRARY_PATH before execv()
+# to the newer version "omd" command which made the newer OMD load the old
+# python libraries. Newer versions unset these variables before, so this
+# additional execv() is only needed when updating from older versions.
+if len(sys.argv) > 1 and sys.argv[1] == "update" \
+   and (sys.version_info[0] == 2 and sys.version_info[1] == 7 and sys.version_info[2] < 14):
+    # Prevent inheriting environment variables from this versions/site environment
+    # into the execed omd call. The OMD call must import the python version related
+    # modules and libaries. This only works when PYTHONPATH and LD_LIBRARY_PATH are
+    # not already set when calling "omd update"
+    try:
+        del os.environ["PYTHONPATH"]
+    except KeyError:
+        pass
+
+    try:
+        del os.environ["LD_LIBRARY_PATH"]
+    except KeyError:
+        pass
+    os.execv(sys.argv[0], sys.argv)
+    sys.exit("Cannot run execv() %s" % sys.argv[0])
+
+import omdlib.main
+
+if __name__ == "__main__":
+    omdlib.main.main()

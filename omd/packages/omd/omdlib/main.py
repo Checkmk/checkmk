@@ -579,12 +579,6 @@ def site_is_stopped(sitename):
 def site_is_running(sitename):
     return check_status(sitename, False) == 0
 
-def site_is_empty(site):
-    for entry in os.listdir(site.dir):
-        if entry not in [ '.', '..' ]:
-            return False
-    return True
-
 # Determines wether a specific site is set to autostart. Note that
 # this needs to be called from a non-site-specific context and
 # can there not use the g_site... variables.
@@ -2648,7 +2642,7 @@ def main_init(args, options):
         bail_out("Cannot initialize site that is not disabled.\n"
                  "Please call 'omd disable %s' first." % g_site.name)
 
-    if not site_is_empty(g_site):
+    if not g_site.is_empty():
         if not opt_force:
             bail_out("The site's home directory is not empty. Please add use\n"
                      "'omd --force init %s' if you want to erase all data." % g_site.name)
@@ -4110,6 +4104,11 @@ class AbstractSiteContext(object):
         raise NotImplementedError()
 
 
+    @abc.abstractmethod
+    def is_empty(self):
+        raise NotImplementedError()
+
+
 
 class SiteContext(AbstractSiteContext):
     @property
@@ -4159,6 +4158,14 @@ class SiteContext(AbstractSiteContext):
         return os.path.exists(self.dir)
 
 
+    def is_empty(self):
+        for entry in os.listdir(self.dir):
+            if entry not in [ '.', '..' ]:
+                return False
+        return True
+
+
+
 
 class RootContext(AbstractSiteContext):
     def __init__(self):
@@ -4184,6 +4191,10 @@ class RootContext(AbstractSiteContext):
 
 
     def exists(self):
+        return False
+
+
+    def is_empty(self):
         return False
 
 

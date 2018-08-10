@@ -1,0 +1,11 @@
+Title: huawei_osn_if: Fixed broken check (check_if_common is not defined)
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0i1
+Date: 1533884849
+
+The check was missing an include of the generic if functions.

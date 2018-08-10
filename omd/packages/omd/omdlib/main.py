@@ -51,17 +51,6 @@ from passlib.hash import sha256_crypt
 
 import omdlib
 
-# Some global variables
-opt_verbose     = False
-opt_interactive = False
-opt_force       = False
-
-# Global variables, that are *always* present as soon as we deal with
-# one specific site. They are set by set_site_globals()
-g_sitename      = None # "mysite"
-g_sitedir       = None # "/omd/sites/mysite"
-g_site_conf     = None # { "CORE" : "nagios", ... } (contents of etc/omd/site.conf plus defaults from hooks)
-
 #   .--Logging-------------------------------------------------------------.
 #   |                _                      _                              |
 #   |               | |    ___   __ _  __ _(_)_ __   __ _                  |
@@ -260,7 +249,7 @@ def user_confirms(title, message, relpath, yes_choice, yes_text, no_choice, no_t
     elif opt_conflict == "keepold":
         return True
 
-    user_path = g_sitedir + "/" + relpath
+    user_path = g_site.dir + "/" + relpath
     options = [ (yes_choice, yes_text),
                 (no_choice,  no_text),
                 ("shell",    "Open a shell for looking around"),
@@ -540,7 +529,7 @@ def user_verify(name, allow_populated=False):
     return True
 
 def switch_to_site_user():
-    p = pwd.getpwnam(g_sitename)
+    p = pwd.getpwnam(g_site.name)
     uid = p.pw_uid
     gid = p.pw_gid
     os.chdir(p.pw_dir)
@@ -552,7 +541,7 @@ def switch_to_site_user():
     # If you know something better, that does not rely on an external
     # command (and that does not try to parse around /etc/group, of
     # course), then please tell mk -> mk@mathias-kettner.de.
-    os.setgroups(groups_of(g_sitename))
+    os.setgroups(groups_of(g_site.name))
     os.setuid(uid)
 
 def groups_of(username):
@@ -571,12 +560,6 @@ def groups_of(username):
 #   +----------------------------------------------------------------------+
 #   |  Helper functions for dealing with sites                             |
 #   '----------------------------------------------------------------------'
-
-# Sets all site global variables except g_sitename - which must already be set.
-def set_site_globals():
-    global g_sitedir
-    g_sitedir = site_dir(g_sitename)
-    load_site_conf()
 
 def site_dir(sitename):
     return "/omd/sites/" + sitename
@@ -707,7 +690,7 @@ def calculate_admin_password(options):
 
 
 def set_admin_password(pw):
-    file("%s/etc/htpasswd" % g_sitedir, "w").write("cmkadmin:%s\n" % hash_password(pw))
+    file("%s/etc/htpasswd" % g_site.dir, "w").write("cmkadmin:%s\n" % hash_password(pw))
 
 
 def file_owner_verify(path, user_id, group_id):
@@ -800,8 +783,8 @@ def instantiate_skel(path):
     try:
         t = file(path).read()
         replacements = {
-            "###SITE###" : g_sitename,
-            "###ROOT###" : g_sitedir,
+            "###SITE###" : g_site.name,
+            "###ROOT###" : g_site.dir,
         }
         return replace_tags(t, replacements)
     except:
@@ -1028,10 +1011,10 @@ def merge_update_file(relpath, old_version, new_version):
     fn = tty_bold + relpath + tty_normal
 
     replacements = {
-        "###SITE###" : g_sitename,
-        "###ROOT###" : g_sitedir,
+        "###SITE###" : g_site.name,
+        "###ROOT###" : g_site.dir,
     }
-    user_path = g_sitedir + "/" + relpath
+    user_path = g_site.dir + "/" + relpath
     permissions = os.stat(user_path).st_mode
 
     def try_merge():
@@ -1200,8 +1183,8 @@ def update_file(relpath, old_version, new_version, userdir, old_perms):
     new_skel = "/omd/versions/%s/skel" % new_version
 
     replacements = {
-        "###SITE###" : g_sitename,
-        "###ROOT###" : g_sitedir,
+        "###SITE###" : g_site.name,
+        "###ROOT###" : g_site.dir,
     }
 
     old_path = old_skel + "/" + relpath
@@ -1563,7 +1546,7 @@ def prepare_tmpfs(sitename, tmp):
     if tmpfs_mounted(sitename):
         return # Fine: Mounted
 
-    if g_site_conf["TMPFS"] != "on":
+    if g_site.conf["TMPFS"] != "on":
         sys.stdout.write("Preparing tmp directory %s..." % tmp)
         sys.stdout.flush()
 
@@ -1735,7 +1718,7 @@ def call_init_scripts(sitename, command, daemon=None, exclude_daemons=None):
     os.chdir(site_dir(sitename))
 
     if daemon:
-        ok = call_init_script("%s/etc/init.d/%s" % (g_sitedir, daemon), command)
+        ok = call_init_script("%s/etc/init.d/%s" % (g_site.dir, daemon), command)
 
     else:
         # Call stop scripts in reverse order. If daemon is set,
@@ -1864,43 +1847,23 @@ def parse_site_conf(sitename):
     return config
 
 
-
-# Load all variables from omd/sites.conf. These variables always begin with
-# CONFIG_. The reason is that this file can be sources with the shell. Puts
-# these variables into the global dict g_site_conf without the CONFIG_. Also
-# puts the variables into the environment.
-def load_site_conf():
-    global g_site_conf
-    g_site_conf = parse_site_conf(g_sitename)
-
-    # Get the default values of all config hooks that are not contained
-    # in the site configuration. This can happen if there are new hooks
-    # after an update or when a site is being created.
-    hook_dir = g_sitedir + "/lib/omd/hooks"
-    if os.path.exists(hook_dir):
-        for hook_name in sort_hooks(os.listdir(hook_dir)):
-            if hook_name[0] != '.' and hook_name not in g_site_conf:
-                content = call_hook(hook_name, ["default"])[1]
-                g_site_conf[hook_name] = content
-
-
 # Put all site configuration (explicit and defaults) into environment
 # variables beginning with CONFIG_
 def create_config_environment():
-    for varname, value in g_site_conf.items():
+    for varname, value in g_site.conf.items():
         putenv("CONFIG_" + varname, value)
 
 
 # TODO: RENAME
 def save_site_conf():
-    confdir = g_sitedir + "/etc/omd"
+    confdir = g_site.dir + "/etc/omd"
 
     if not os.path.exists(confdir):
         os.mkdir(confdir)
 
-    f = file(g_sitedir + "/etc/omd/site.conf", "w")
+    f = file(g_site.dir + "/etc/omd/site.conf", "w")
 
-    for hook_name, value in sorted(g_site_conf.items(), key=lambda x: x[0]):
+    for hook_name, value in sorted(g_site.conf.items(), key=lambda x: x[0]):
         f.write("CONFIG_%s='%s'\n" % (hook_name, value))
 
 
@@ -1910,7 +1873,7 @@ def load_config_hooks():
     global g_config_hooks
     g_config_hooks = {}
 
-    hook_dir = g_sitedir + "/lib/omd/hooks"
+    hook_dir = g_site.dir + "/lib/omd/hooks"
     for hook_name in os.listdir(hook_dir):
         try:
             if hook_name[0] != '.':
@@ -1930,7 +1893,7 @@ def config_load_hook(hook_name):
 
     description = ""
     description_active = False
-    for line in file(g_sitedir + "/lib/omd/hooks/" + hook_name):
+    for line in file(g_site.dir + "/lib/omd/hooks/" + hook_name):
         if line.startswith("# Alias:"):
             hook["alias"] = line[8:].strip()
         elif line.startswith("# Menu:"):
@@ -1991,18 +1954,18 @@ def sort_hooks(hook_names):
 
 
 def hook_exists(hook_name):
-    hook_file = g_sitedir + "/lib/omd/hooks/" + hook_name
+    hook_file = g_site.dir + "/lib/omd/hooks/" + hook_name
     return os.path.exists(hook_file)
 
 
 def call_hook(hook_name, args):
-    hook_file = g_sitedir + "/lib/omd/hooks/" + hook_name
+    hook_file = g_site.dir + "/lib/omd/hooks/" + hook_name
     argsstring = " ".join([ "'%s'" % arg for arg in args ])
     command = hook_file + " " + argsstring
     if opt_verbose:
         sys.stdout.write("Calling hook: %s\n" % command)
-    putenv("OMD_ROOT", g_sitedir)
-    putenv("OMD_SITE", g_sitename)
+    putenv("OMD_ROOT", g_site.dir)
+    putenv("OMD_SITE", g_site.name)
     pipe = os.popen(command)
     content = pipe.read().strip()
     exitcode = pipe.close()
@@ -2014,9 +1977,9 @@ def call_hook(hook_name, args):
 def config_change():
     # Check whether or not site needs to be stopped. Stop and remember to start again later
     site_was_stopped = False
-    if not site_is_stopped(g_sitename):
+    if not site_is_stopped(g_site.name):
         site_was_stopped = True
-        stop_site(g_sitename)
+        stop_site(g_site.name)
 
     try:
         settings = read_config_change_commands()
@@ -2032,7 +1995,7 @@ def config_change():
         save_site_conf()
     finally:
         if site_was_stopped:
-            start_site(g_sitename)
+            start_site(g_site.name)
 
 
 def read_config_change_commands():
@@ -2076,7 +2039,7 @@ def config_set(args):
         config_usage()
         return
 
-    if not site_is_stopped(g_sitename):
+    if not site_is_stopped(g_site.name):
         sys.stderr.write("Cannot change config variables while site is running.\n")
         return
 
@@ -2104,14 +2067,14 @@ def config_set(args):
 
 
 def config_set_all():
-    for hook_name in sort_hooks(g_site_conf.keys()):
-        value = g_site_conf[hook_name]
+    for hook_name in sort_hooks(g_site.conf.keys()):
+        value = g_site.conf[hook_name]
         # Hooks might vanish after and up- or downdate
         if hook_exists(hook_name):
             exitcode, output = call_hook(hook_name, [ "set", value ])
             if not exitcode:
                 if output and output != value:
-                    g_site_conf[hook_name] = output
+                    g_site.conf[hook_name] = output
                     putenv("CONFIG_" + hook_name, output)
 
 
@@ -2121,17 +2084,17 @@ def config_set_value(hook_name, value, save = True):
 
     # Call hook with 'set'. If it outputs something, that will
     # be our new value (i.e. hook disagrees with the new setting!)
-    commandline = "%s/lib/omd/hooks/%s set '%s'" % (g_sitedir, hook_name, value)
+    commandline = "%s/lib/omd/hooks/%s set '%s'" % (g_site.dir, hook_name, value)
     if os.getuid() == 0:
         sys.stderr.write("I am root. This should never happen!\n")
         sys.exit(1)
 
-        # commandline = 'su -p -l %s -c "%s"' % (g_sitename, commandline)
+        # commandline = 'su -p -l %s -c "%s"' % (g_site.name, commandline)
     answer = os.popen(commandline).read()
     if len(answer) > 0:
         value = answer.strip()
 
-    g_site_conf[hook_name] = value
+    g_site.conf[hook_name] = value
     putenv("CONFIG_" + hook_name, value)
 
     if save:
@@ -2156,7 +2119,7 @@ def config_show(args):
         for hook_name in hook_names:
             hook = g_config_hooks[hook_name]
             if hook["active"] and not hook["deprecated"]:
-                sys.stdout.write("%s: %s\n" % (hook_name, g_site_conf[hook_name]))
+                sys.stdout.write("%s: %s\n" % (hook_name, g_site.conf[hook_name]))
     else:
         output = []
         for hook_name in args:
@@ -2164,7 +2127,7 @@ def config_show(args):
             if not hook:
                 sys.stderr.write("No such variable %s\n" % hook_name)
             else:
-                output.append(g_site_conf[hook_name])
+                output.append(g_site.conf[hook_name])
 
         sys.stdout.write(" ".join(output))
         sys.stdout.write("\n")
@@ -2187,7 +2150,7 @@ def config_configure():
             if hook["active"] and not hook["deprecated"]:
                 mp = hook.get("menu", "Other")
                 entries = menu.get(mp, [])
-                entries.append((hook_name, g_site_conf[hook_name]))
+                entries.append((hook_name, g_site.conf[hook_name]))
                 menu[mp] = entries
                 if mp not in menu_choices:
                     menu_choices.append(mp)
@@ -2195,7 +2158,7 @@ def config_configure():
         # Handle main menu
         if not menu_open:
             change, current_menu = \
-                dialog_menu("Configuration of site %s" % g_sitename,
+                dialog_menu("Configuration of site %s" % g_site.name,
                         "Interactive setting of site configuration variables. You "
                         "can change values only while the site is stopped.",
                         [ (e, "") for e in menu_choices ],
@@ -2226,17 +2189,17 @@ def config_configure():
 
 
 def config_configure_hook(hook_name):
-    if not site_is_stopped(g_sitename):
+    if not site_is_stopped(g_site.name):
         if not dialog_yesno("You cannot change configuration value while the "
                 "site is running. Do you want me to stop the site now?"):
             return
-        stop_site(g_sitename)
+        stop_site(g_site.name)
         dialog_message("The site has been stopped.")
 
     hook = g_config_hooks[hook_name]
     title = hook["alias"]
     descr = hook["description"].replace("\n\n", "\001").replace("\n", " ").replace("\001", "\n\n")
-    value = g_site_conf[hook_name]
+    value = g_site.conf[hook_name]
     choices = hook["choices"]
     if type(choices) == list:
         dialog_function = dialog_menu
@@ -2246,16 +2209,16 @@ def config_configure_hook(hook_name):
         dialog_function(title, descr, choices, value, "Change", "Cancel")
     if change:
         config_set_value(hook["name"], new_value)
-        g_site_conf[hook_name] = new_value
+        g_site.conf[hook_name] = new_value
         save_site_conf()
         load_hook_dependencies()
 
 def init_action(command, args, options):
-    if site_is_disabled(g_sitename):
+    if site_is_disabled(g_site.name):
         bail_out("This site is disabled.")
 
     if command in [ "start", "restart" ]:
-        prepare_and_populate_tmpfs(g_sitename)
+        prepare_and_populate_tmpfs(g_site.name)
 
     if len(args) > 0:
         daemon = args[0] # restrict to this daemon
@@ -2263,11 +2226,11 @@ def init_action(command, args, options):
         daemon = None
 
     # OMD guarantees that we are in OMD_ROOT
-    os.chdir(g_sitedir)
+    os.chdir(g_site.dir)
 
     if command == "status":
-        return check_status(g_sitename, True, daemon, "bare" in options)
-    return call_init_scripts(g_sitename, command, daemon)
+        return check_status(g_site.name, True, daemon, "bare" in options)
+    return call_init_scripts(g_site.name, command, daemon)
 
 
 #.
@@ -2354,17 +2317,17 @@ def clear_environment():
             del os.environ[key]
 
 def set_environment():
-    putenv("OMD_SITE", g_sitename)
-    putenv("OMD_ROOT", g_sitedir)
+    putenv("OMD_SITE", g_site.name)
+    putenv("OMD_ROOT", g_site.dir)
     putenv("PATH", "%s/local/bin:%s/bin:/usr/local/bin:/bin:/usr/bin:/sbin:/usr/sbin" %
-                                                                  (g_sitedir, g_sitedir))
-    putenv("USER", g_sitename)
+                                                                  (g_site.dir, g_site.dir))
+    putenv("USER", g_site.name)
 
-    putenv("LD_LIBRARY_PATH", "%s/local/lib:%s/lib" % (g_sitedir, g_sitedir))
-    putenv("HOME", g_sitedir)
+    putenv("LD_LIBRARY_PATH", "%s/local/lib:%s/lib" % (g_site.dir, g_site.dir))
+    putenv("HOME", g_site.dir)
 
     # allow user to define further environment variable in ~/etc/environment
-    envfile = g_sitedir + "/etc/environment"
+    envfile = g_site.dir + "/etc/environment"
     if os.path.exists(envfile):
         lineno = 0
         for line in file(envfile):
@@ -2449,10 +2412,10 @@ def pipe_pager():
     return ""
 
 def call_scripts(phase):
-    path = g_sitedir + "/lib/omd/scripts/" + phase
+    path = g_site.dir + "/lib/omd/scripts/" + phase
     if os.path.exists(path):
-        putenv("OMD_ROOT", g_sitedir)
-        putenv("OMD_SITE", g_sitename)
+        putenv("OMD_ROOT", g_site.dir)
+        putenv("OMD_SITE", g_site.name)
         for f in os.listdir(path):
             if f[0] == '.':
                 continue
@@ -2473,9 +2436,9 @@ def call_scripts(phase):
 
 
 def check_site_user(site_must_exist):
-    if g_sitename != None and site_must_exist and not site_exists(g_sitename):
+    if g_site.name != None and site_must_exist and not site_exists(g_site.name):
         bail_out("omd: The site '%s' does not exist. You need to execute "
-                 "omd as root or site user." % g_sitename)
+                 "omd as root or site user." % g_site.name)
 
 
 #.
@@ -2647,24 +2610,24 @@ def main_create(args, options=None):
     reuse = False
     if "reuse" in options:
         reuse = True
-        if not user_verify(g_sitename):
+        if not user_verify(g_site.name):
             bail_out("Error verifying site user.")
 
-    sitename_must_be_valid(g_sitename, reuse)
+    sitename_must_be_valid(g_site.name, reuse)
 
     # Create operating system user for site
     uid = options.get("uid")
     gid = options.get("gid")
     if not reuse:
-        useradd(g_sitename, uid, gid)
+        useradd(g_site.name, uid, gid)
 
-    sitedir = site_dir(g_sitename)
+    sitedir = site_dir(g_site.name)
 
     if reuse:
-        fstab_verify(g_sitename)
+        fstab_verify(g_site.name)
     else:
-        create_site_dir(g_sitename)
-        add_to_fstab(g_sitename, tmpfs_size = options.get('tmpfs-size'))
+        create_site_dir(g_site.name)
+        add_to_fstab(g_site.name, tmpfs_size = options.get('tmpfs-size'))
 
     config_settings = {}
     if "no-autostart" in options:
@@ -2680,36 +2643,36 @@ def main_create(args, options=None):
         welcome_message(admin_password)
 
     else:
-        sys.stdout.write("Create new site %s in disabled state and with empty %s.\n" % (g_sitename, sitedir))
+        sys.stdout.write("Create new site %s in disabled state and with empty %s.\n" % (g_site.name, sitedir))
         sys.stdout.write("You can now mount a filesystem to %s.\n" % (sitedir))
         sys.stdout.write("Afterwards you can initialize the site with 'omd init'.\n")
 
 def welcome_message(admin_password):
-    sys.stdout.write("Created new site %s with version %s.\n\n" % (g_sitename, omdlib.__version__))
+    sys.stdout.write("Created new site %s with version %s.\n\n" % (g_site.name, omdlib.__version__))
     sys.stdout.write("  The site can be started with %somd start %s%s.\n" %
-            (tty_bold, g_sitename, tty_normal))
+            (tty_bold, g_site.name, tty_normal))
     sys.stdout.write("  The default web UI is available at %shttp://%s/%s/%s\n" %
-            (tty_bold, hostname(), g_sitename, tty_normal))
+            (tty_bold, hostname(), g_site.name, tty_normal))
     sys.stdout.write("\n")
     sys.stdout.write("  The admin user for the web applications is %scmkadmin%s with password: %s%s%s\n" %
             (tty_bold, tty_normal, tty_bold, admin_password, tty_normal))
     sys.stdout.write("  (It can be changed with 'htpasswd -m ~/etc/htpasswd cmkadmin' as site user.\n)")
     sys.stdout.write("\n")
     sys.stdout.write("  Please do a %ssu - %s%s for administration of this site.\n" %
-            (tty_bold, g_sitename, tty_normal))
+            (tty_bold, g_site.name, tty_normal))
     sys.stdout.write("\n")
 
 def main_init(args, options):
-    if not site_is_disabled(g_sitename):
+    if not site_is_disabled(g_site.name):
         bail_out("Cannot initialize site that is not disabled.\n"
-                 "Please call 'omd disable %s' first." % g_sitename)
+                 "Please call 'omd disable %s' first." % g_site.name)
 
-    if not site_is_empty(g_sitename):
+    if not site_is_empty(g_site.name):
         if not opt_force:
             bail_out("The site's home directory is not empty. Please add use\n"
-                     "'omd --force init %s' if you want to erase all data." % g_sitename)
+                     "'omd --force init %s' if you want to erase all data." % g_site.name)
 
-        sitedir = site_dir(g_sitename)
+        sitedir = site_dir(g_site.name)
         # We must not delete the directory itself, just its contents.
         # The directory might be a separate filesystem. This is not quite
         # unlikely, since people using 'omd init' are doing this most times
@@ -2736,15 +2699,15 @@ def init_site(config_settings=None, options=False):
     apache_reload = "apache-reload" in options
 
     # Create symbolic link to version
-    create_version_symlink(g_sitename, omdlib.__version__)
+    create_version_symlink(g_site.name, omdlib.__version__)
 
     # Build up directory structure with symbolic links relative to
     # the version link we just create
     for d in [ 'bin', 'include', 'lib', 'share' ]:
-        os.symlink("version/" + d, g_sitedir + "/" + d)
+        os.symlink("version/" + d, g_site.dir + "/" + d)
 
     # Create skeleton files of non-tmp directories
-    create_skeleton_files(g_sitename, '.')
+    create_skeleton_files(g_site.name, '.')
 
     # Set the initial password of the default admin user
     admin_password = calculate_admin_password(options)
@@ -2762,23 +2725,23 @@ def init_site(config_settings=None, options=False):
     # We decided to reach this goal using hard coded specific hack here for the
     # 1.5 and solve the issue completely (also for the other sample config) in
     # the future.
-    with open(os.path.join(g_sitedir, "etc/check_mk/multisite.d/wato/global.mk"), "w") as f:
+    with open(os.path.join(g_site.dir, "etc/check_mk/multisite.d/wato/global.mk"), "w") as f:
         f.write(
             "# Created by 'omd create'\n"
             "ui_theme = 'facelift'\n"
         )
 
     # Change ownership of all files and dirs to site user
-    chown_tree(g_sitedir, g_sitename)
+    chown_tree(g_site.dir, g_site.name)
 
-    load_site_conf() # load default values from all hooks
+    g_site.load_config() # load default values from all hooks
     if config_settings: # add specific settings
         for hook_name, value in config_settings.items():
-            g_site_conf[hook_name] = value
+            g_site.conf[hook_name] = value
     create_config_environment()
 
     # Change the few files that config save as created as root
-    chown_tree(g_sitedir, g_sitename)
+    chown_tree(g_site.dir, g_site.name)
 
     finalize_site("create", apache_reload)
 
@@ -2814,7 +2777,7 @@ def finalize_site(what, apache_reload):
 
     # Finally reload global apache - with root permissions - and
     # create include-hook for Apache and reload apache
-    create_apache_hook(g_sitename)
+    create_apache_hook(g_site.name)
     if apache_reload:
         reload_apache()
     else:
@@ -2826,7 +2789,7 @@ def finalize_size_as_user(what):
     # user. We also could do this at 'omd start', but this might confuse
     # users. They could create files below tmp which would be shadowed
     # by the mount.
-    prepare_and_populate_tmpfs(g_sitename)
+    prepare_and_populate_tmpfs(g_site.name)
 
     # Run all hooks in order to setup things according to the
     # configuration settings
@@ -2844,39 +2807,39 @@ def main_rm(args, options=None):
     # site user but later steps need root privilegies. So a simple user
     # switch to the site user would not work. Better create a subprocess
     # for this dedicated action and switch to the user in that subprocess
-    os.system('omd stop %s' % g_sitename)
+    os.system('omd stop %s' % g_site.name)
 
     reuse = "reuse" in options
     kill = "kill" in options
 
-    if user_logged_in(g_sitename):
+    if user_logged_in(g_site.name):
         if not kill:
-            bail_out("User '%s' still logged in or running processes." % g_sitename)
+            bail_out("User '%s' still logged in or running processes." % g_site.name)
         else:
             kill_site_user_processes(exclude_current_and_parents=True)
 
-    if tmpfs_mounted(g_sitename):
-        unmount_tmpfs(g_sitename, kill=kill)
+    if tmpfs_mounted(g_site.name):
+        unmount_tmpfs(g_site.name, kill=kill)
 
     if not reuse:
-        remove_from_fstab(g_sitename)
-        sys.stdout.write("Deleting user and group %s..." % g_sitename)
+        remove_from_fstab(g_site.name)
+        sys.stdout.write("Deleting user and group %s..." % g_site.name)
         os.chdir("/") # Site directory not longer existant after userdel
-        userdel(g_sitename)
+        userdel(g_site.name)
         ok()
 
-    if os.path.exists(g_sitedir): # should be done by userdel
-        sys.stdout.write("Deleting all data (%s)..." % g_sitedir)
-        shutil.rmtree(site_dir(g_sitename))
+    if os.path.exists(g_site.dir): # should be done by userdel
+        sys.stdout.write("Deleting all data (%s)..." % g_site.dir)
+        shutil.rmtree(site_dir(g_site.name))
         ok()
 
     if reuse:
-        create_site_dir(g_sitename)
-        os.mkdir(tmp_dir(g_sitename))
-        os.chown(tmp_dir(g_sitename), user_id(g_sitename), group_id(g_sitename))
+        create_site_dir(g_site.name)
+        os.mkdir(tmp_dir(g_site.name))
+        os.chown(tmp_dir(g_site.name), user_id(g_site.name), group_id(g_site.name))
 
     # remove include-hook for Apache and tell apache
-    delete_apache_hook(g_sitename)
+    delete_apache_hook(g_site.name)
     if "apache-reload" in options:
         reload_apache()
     else:
@@ -2886,28 +2849,28 @@ def create_site_dir(sitename):
     os.makedirs(site_dir(sitename))
     os.chown(site_dir(sitename), user_id(sitename), group_id(sitename))
 
-def site_is_disabled(g_sitename):
-    apache_conf = "/omd/apache/%s.conf" % g_sitename
+def site_is_disabled(sitename):
+    apache_conf = "/omd/apache/%s.conf" % sitename
     return not os.path.exists(apache_conf)
 
 def main_disable(args, options):
-    if site_is_disabled(g_sitename):
+    if site_is_disabled(g_site.name):
         sys.stderr.write("This site is already disabled.\n")
         sys.exit(0)
 
-    stop_if_not_stopped(g_sitename)
-    unmount_tmpfs(g_sitename, kill = "kill" in options)
+    stop_if_not_stopped(g_site.name)
+    unmount_tmpfs(g_site.name, kill = "kill" in options)
     sys.stdout.write("Disabling Apache configuration for this site...")
-    delete_apache_hook(g_sitename)
+    delete_apache_hook(g_site.name)
     ok()
     restart_apache()
 
 def main_enable(args, options):
-    if not site_is_disabled(g_sitename):
+    if not site_is_disabled(g_site.name):
         sys.stderr.write("This site is already enabled.\n")
         sys.exit(0)
     sys.stdout.write("Re-enabling Apache configuration for this site...")
-    create_apache_hook(g_sitename)
+    create_apache_hook(g_site.name)
     ok()
     restart_apache()
 
@@ -2952,41 +2915,41 @@ def get_exclude_patterns(options):
 
 
 def main_mv_or_cp(what, args, options=None):
+    global g_site
     if options is None:
         options = {}
 
     set_conflict_option(options)
     action = 'rename' if what == 'mv' else 'copy'
 
-    global g_sitename
     if len(args) != 1:
         bail_out("omd: Usage: omd %s oldname newname" % what)
-    new = args[0]
+    new_site = SiteContext(args[0])
 
     reuse = False
     if "reuse" in options:
         reuse = True
-        if not user_verify(new):
+        if not user_verify(new_site.name):
             bail_out("Error verifying site user.")
-        fstab_verify(new)
+        fstab_verify(new_site.name)
 
-    sitename_must_be_valid(new, reuse)
+    sitename_must_be_valid(new_site.name, reuse)
 
-    old = g_sitename
-    if not site_is_stopped(old):
-        bail_out("Cannot %s site '%s' while it is running." % (action, old))
+    old_site = g_site
+    if not site_is_stopped(old_site.name):
+        bail_out("Cannot %s site '%s' while it is running." % (action, old_site.name))
 
-    pids = find_processes_of_user(old)
+    pids = find_processes_of_user(old_site.name)
     if pids:
         bail_out("Cannot %s site '%s' while there are processes owned by %s.\n"
-                 "PIDs: %s" % (action, old, old, " ".join(pids)))
+                 "PIDs: %s" % (action, old_site.name, old_site.name, " ".join(pids)))
 
     if what == "mv":
-        unmount_tmpfs(old, kill = "kill" in options)
+        unmount_tmpfs(old_site.name, kill = "kill" in options)
         if not reuse:
-            remove_from_fstab(old)
+            remove_from_fstab(old_site.name)
 
-    sys.stdout.write("%sing site %s to %s..." % (what == "mv" and "Mov" or "Copy", old, new))
+    sys.stdout.write("%sing site %s to %s..." % (what == "mv" and "Mov" or "Copy", old_site.name, new_site.name))
     sys.stdout.flush()
 
     # Create new user. Note: even on mv we need to create a new user.
@@ -2994,16 +2957,16 @@ def main_mv_or_cp(what, args, options=None):
     uid = options.get("uid")
     gid = options.get("gid")
     if not reuse:
-        useradd(new, uid, gid) # None for uid/gid means: let Linux decide
+        useradd(new_site.name, uid, gid) # None for uid/gid means: let Linux decide
 
     if what == "mv" and not reuse:
         # Rename base directory and apache config
-        os.rename(site_dir(old), site_dir(new))
-        delete_apache_hook(old)
+        os.rename(site_dir(old_site.name), site_dir(new_site.name))
+        delete_apache_hook(old_site.name)
     else:
         # Make exact file-per-file copy with same user but already new name
         if not reuse:
-            os.mkdir(site_dir(new))
+            os.mkdir(site_dir(new_site.name))
 
         addopts = ""
         for p in get_exclude_patterns(options):
@@ -3013,42 +2976,42 @@ def main_mv_or_cp(what, args, options=None):
             addopts += " -v"
 
         os.system("rsync -arx %s '%s/' '%s/'" %
-                (addopts, site_dir(g_sitename), site_dir(new)))
+                (addopts, site_dir(old_site.name), site_dir(new_site.name)))
 
-        httpdlogdir = site_dir(new) + "/var/log/apache"
+        httpdlogdir = site_dir(new_site.name) + "/var/log/apache"
         if not os.path.exists(httpdlogdir):
             os.mkdir(httpdlogdir)
 
-        rrdcacheddir = site_dir(new) + "/var/rrdcached"
+        rrdcacheddir = site_dir(new_site.name) + "/var/rrdcached"
         if not os.path.exists(rrdcacheddir):
             os.mkdir(rrdcacheddir)
 
 
     # give new user all files
-    chown_tree(site_dir(new), new)
+    chown_tree(site_dir(new_site.name), new_site.name)
 
     # Change config files from old to new site (see rename_site())
-    patch_skeleton_files(g_sitename, new)
+    patch_skeleton_files(old_site.name, new_site.name)
 
     # In case of mv now delete old user
     if what == "mv" and not reuse:
-        userdel(old)
+        userdel(old_site.name)
 
     # clean up old site
     if what == "mv" and reuse:
-        g_sitename = old
+        g_site = old_site
         main_rm([], { 'reuse': None })
 
     sys.stdout.write("OK\n")
 
     # Now switch over to the new site as currently active site
-    g_sitename = new
-    set_site_globals()
+    g_site = new_site
+    g_site.load_config()
     set_environment()
 
     # Entry for tmps in /etc/fstab
     if not reuse:
-        add_to_fstab(new, tmpfs_size = options.get('tmpfs-size'))
+        add_to_fstab(new_site.name, tmpfs_size = options.get('tmpfs-size'))
 
     finalize_site(what, "apache-reload" in options)
 
@@ -3058,7 +3021,7 @@ def main_diff(args, options=None):
     if options is None:
         options = {}
 
-    from_version  = site_version(g_sitename)
+    from_version  = site_version(g_site.name)
     from_skelroot = "/omd/versions/%s/skel" % from_version
 
     # If arguments are added and those arguments are directories,
@@ -3076,11 +3039,11 @@ def main_diff(args, options=None):
     bare = "bare" in options # sorry for the global variable here
 
     for arg in args:
-        diff_list(from_skelroot, g_sitedir, from_version, arg)
+        diff_list(from_skelroot, g_site.dir, from_version, arg)
 
 
 
-def diff_list(from_skelroot, g_sitedir, from_version, orig_path):
+def diff_list(from_skelroot, sitedir, from_version, orig_path):
     # Compare a list of files/directories with the original state
     # and output differences. If opt_verbose then we output the complete
     # diff, otherwise just the state. Only files present in skel/ are
@@ -3097,7 +3060,7 @@ def diff_list(from_skelroot, g_sitedir, from_version, orig_path):
     # Get absolute path to site dir. This can be (/opt/omd/sites/XXX)
     # due to the symbolic link /omd
     old_dir = os.getcwd()
-    os.chdir(g_sitedir)
+    os.chdir(sitedir)
     abs_sitedir = os.getcwd()
     os.chdir(old_dir)
 
@@ -3112,19 +3075,19 @@ def diff_list(from_skelroot, g_sitedir, from_version, orig_path):
     abs_path = abs_path.rstrip("/")
 
     # Make sure that path does not lie outside the OMD site
-    if abs_path.startswith(g_sitedir):
-        rel_path = abs_path[len(g_sitedir) + 1:]
+    if abs_path.startswith(sitedir):
+        rel_path = abs_path[len(sitedir) + 1:]
     elif abs_path.startswith(abs_sitedir):
         rel_path = abs_path[len(abs_sitedir) + 1:]
     else:
         bail_out("Sorry, 'omd diff' only works for files in the site's directory.")
 
     if not os.path.isdir(abs_path):
-        print_diff(rel_path, from_skelroot, g_sitedir, from_version, old_perms)
+        print_diff(rel_path, from_skelroot, sitedir, from_version, old_perms)
     else:
         if not rel_path:
             rel_path = "."
-        walk_skel(from_skelroot, print_diff, (from_skelroot, g_sitedir,
+        walk_skel(from_skelroot, print_diff, (from_skelroot, sitedir,
                   from_version, old_perms), depth_first=False, relbase = rel_path)
 
 
@@ -3189,15 +3152,15 @@ def main_update(args, options=None):
 
     set_conflict_option(options)
 
-    if not site_is_stopped(g_sitename):
-        bail_out("Please completely stop '%s' before updating it." % g_sitename)
+    if not site_is_stopped(g_site.name):
+        bail_out("Please completely stop '%s' before updating it." % g_site.name)
 
     # Unmount tmp. We need to recreate the files and directories
     # from the new version after updating.
-    unmount_tmpfs(g_sitename)
+    unmount_tmpfs(g_site.name)
 
     # Source version: the version of the site we deal with
-    from_version = site_version(g_sitename)
+    from_version = site_version(g_site.name)
 
     # Target version: the version of the OMD binary
     to_version = omdlib.__version__
@@ -3230,7 +3193,7 @@ def main_update(args, options=None):
             "You are going to update the site %s from version %s to version %s. "
             "This will include updating all of you configuration files and merging "
             "changes in the default files with changes made by you. In case of conflicts "
-            "your help will be needed." % (g_sitename, from_version, to_version),
+            "your help will be needed." % (g_site.name, from_version, to_version),
             "Update!", "Abort"):
         bail_out("Aborted.")
 
@@ -3242,10 +3205,10 @@ def main_update(args, options=None):
         (from_edition.title(), to_edition.title())):
         bail_out("Aborted.")
 
-    start_logging(g_sitedir + '/var/log/update.log')
+    start_logging(g_site.dir + '/var/log/update.log')
 
     sys.stdout.write("%s - Updating site '%s' from version %s to %s...\n\n" %
-            (time.strftime('%Y-%m-%d %H:%M:%S'), g_sitename, from_version, to_version))
+            (time.strftime('%Y-%m-%d %H:%M:%S'), g_site.name, from_version, to_version))
 
     # Now apply changes of skeleton files. This can be done
     # in two ways:
@@ -3263,13 +3226,13 @@ def main_update(args, options=None):
     to_skelroot = "/omd/versions/%s/skel" % to_version
 
     # First walk through skeleton files of new version
-    walk_skel(to_skelroot, update_file, (from_version, to_version, g_sitedir, old_perms), depth_first=False)
+    walk_skel(to_skelroot, update_file, (from_version, to_version, g_site.dir, old_perms), depth_first=False)
 
     # Now handle files present in old but not in new skel files
-    walk_skel(from_skelroot, update_file, (from_version, to_version, g_sitedir, old_perms), depth_first=True, exclude_if_in = to_skelroot)
+    walk_skel(from_skelroot, update_file, (from_version, to_version, g_site.dir, old_perms), depth_first=True, exclude_if_in = to_skelroot)
 
     # Change symbolic link pointing to new version
-    create_version_symlink(g_sitename, to_version)
+    create_version_symlink(g_site.name, to_version)
 
     # Let hooks do their work and update configuration.
     config_set_all()
@@ -3298,40 +3261,38 @@ def _get_edition(omd_version):
 
 
 def main_umount(args, options=None):
+    global g_site
+
     if options is None:
         options = {}
-
-    global g_sitename
-    global g_sitedir
 
     only_version = options.get("version")
 
     # if no site is selected, all sites are affected
     exit_status = 0
-    if not g_sitename:
-        for site in all_sites():
+    if not g_site.name:
+        for site_id in all_sites():
             # Set global vars for the current site
-            g_sitename = site
-            g_sitedir = site_dir(g_sitename)
+            g_site = SiteContext(site_id)
 
-            if only_version and site_version(site) != only_version:
+            if only_version and site_version(g_site.name) != only_version:
                 continue
 
             # Skip the site even when it is partly running
-            if not site_is_stopped(site):
-                sys.stderr.write("Cannot unmount tmpfs of site '%s' while it is running.\n" % site)
+            if not site_is_stopped(g_site.name):
+                sys.stderr.write("Cannot unmount tmpfs of site '%s' while it is running.\n" % g_site.name)
                 continue
 
-            sys.stdout.write("%sUnmounting tmpfs of site %s%s..." % (tty_bold, site, tty_normal))
+            sys.stdout.write("%sUnmounting tmpfs of site %s%s..." % (tty_bold, g_site.name, tty_normal))
             sys.stdout.flush()
 
-            if not show_success(unmount_tmpfs(site, False, kill="kill" in options)):
+            if not show_success(unmount_tmpfs(g_site.name, False, kill="kill" in options)):
                 exit_status = 1
     else:
         # Skip the site even when it is partly running
-        if not site_is_stopped(g_sitename):
-            bail_out("Cannot unmount tmpfs of site '%s' while it is running." % g_sitename)
-        unmount_tmpfs(g_sitename, kill="kill" in options)
+        if not site_is_stopped(g_site.name):
+            bail_out("Cannot unmount tmpfs of site '%s' while it is running." % g_site.name)
+        unmount_tmpfs(g_site.name, kill="kill" in options)
     sys.exit(exit_status)
 
 
@@ -3339,7 +3300,7 @@ def main_init_action(command, args, options=None):
     if options is None:
         options = {}
 
-    if g_sitename:
+    if g_site.name:
         exit_status = init_action(command, args, options)
 
         # When the whole site is about to be stopped check for remaining
@@ -3468,9 +3429,9 @@ def main_config(args, options=None):
         options = {}
 
     if (len(args) == 0 or args[0] != "show") and \
-        not site_is_stopped(g_sitename) and opt_force:
+        not site_is_stopped(g_site.name) and opt_force:
         need_start = True
-        stop_site(g_sitename)
+        stop_site(g_site.name)
     else:
         need_start = False
 
@@ -3490,16 +3451,16 @@ def main_config(args, options=None):
             config_usage()
 
     if need_start:
-        start_site(g_sitename)
+        start_site(g_site.name)
 
 def main_su(args, options=None):
     if options is None:
         options = {}
 
     try:
-        os.execl("/bin/su", "su", "-", "%s" % g_sitename)
+        os.execl("/bin/su", "su", "-", "%s" % g_site.name)
     except OSError:
-        bail_out("Cannot open a shell for user %s" % g_sitename)
+        bail_out("Cannot open a shell for user %s" % g_site.name)
 
 
 def backup_site_files_to_tarfile(tar, options):
@@ -3513,12 +3474,12 @@ def backup_site_files_to_tarfile(tar, options):
     def filter_files(filename):
         for glob_pattern in exclude:
             # patterns are relative to site directory, filename is full path.
-            # strip of the g_sitedir prefix from full path
-            if fnmatch.fnmatch(filename[len(g_sitedir)+1:], glob_pattern):
+            # strip of the g_site.dir prefix from full path
+            if fnmatch.fnmatch(filename[len(g_site.dir)+1:], glob_pattern):
                 return True # exclude this file
         return False
 
-    tar.add(g_sitedir, g_sitename, exclude=filter_files)
+    tar.add(g_site.dir, g_site.name, exclude=filter_files)
 
 
 
@@ -3526,8 +3487,8 @@ def backup_site_files_to_tarfile(tar, options):
 # to prevent writing to individual RRDs during backups.
 class BackupTarFile(tarfile.TarFile):
     def __init__(self, *args, **kwargs):
-        self._site_stopped          = site_is_stopped(g_sitename)
-        self._rrdcached_socket_path = g_sitedir + "/tmp/run/rrdcached.sock"
+        self._site_stopped          = site_is_stopped(g_site.name)
+        self._rrdcached_socket_path = g_site.dir + "/tmp/run/rrdcached.sock"
         self._sock                  = None
         self._sites_path            = os.path.realpath("/omd/sites")
 
@@ -3541,7 +3502,7 @@ class BackupTarFile(tarfile.TarFile):
             super(BackupTarFile, self).addfile(tarinfo, fileobj)
             return
 
-        site_rel_path = tarinfo.name[len(g_sitename)+1:]
+        site_rel_path = tarinfo.name[len(g_site.name)+1:]
 
         is_rrd = (site_rel_path.startswith("var/pnp4nagios/perfdata") \
                   or site_rel_path.startswith("var/check_mk/rrd")) \
@@ -3647,7 +3608,7 @@ def backup_site_to_tarfile(fh, mode, options):
         # the whole tar archive. Important for streaming.
         # The file is added twice to get the first for validation
         # and the second for excration during restore.
-        tar.add(g_sitedir + "/version", g_sitename + "/version")
+        tar.add(g_site.dir + "/version", g_site.name + "/version")
         backup_site_files_to_tarfile(tar, options)
         tar.close()
     except IOError, e:
@@ -3680,11 +3641,10 @@ def main_backup(args, options=None):
 
 
 def main_restore(args, options=None):
+    global g_site
+
     if options is None:
         options = {}
-
-    global g_sitename
-    global g_sitedir
 
     set_conflict_option(options)
 
@@ -3733,12 +3693,11 @@ def main_restore(args, options=None):
     else:
         new_sitename = site_name()
 
-    g_sitename = new_sitename
-    g_sitedir  = site_dir(new_sitename)
+    g_site = SiteContext(new_sitename)
 
     source_txt = 'stdin' if source == '-' else source
     if is_root():
-        sys.stdout.write("Restoring site %s from %s...\n" % (g_sitename, source_txt))
+        sys.stdout.write("Restoring site %s from %s...\n" % (g_site.name, source_txt))
         sys.stdout.flush()
 
         prepare_restore_as_root(options)
@@ -3747,8 +3706,8 @@ def main_restore(args, options=None):
         sys.stdout.write("Restoring site from %s...\n" % source_txt)
         sys.stdout.flush()
 
-        load_site_conf()
-        orig_apache_port = g_site_conf["APACHE_TCP_PORT"]
+        g_site.load_config()
+        orig_apache_port = g_site.conf["APACHE_TCP_PORT"]
 
         prepare_restore_as_site_user(options)
 
@@ -3777,20 +3736,20 @@ def main_restore(args, options=None):
                                                     (tarinfo.linkname, new_linkname))
                 tarinfo.linkname = new_linkname
 
-        tar.extract(tarinfo, path=g_sitedir)
+        tar.extract(tarinfo, path=g_site.dir)
     tar.close()
 
-    load_site_conf()
+    g_site.load_config()
 
     # give new user all files
-    chown_tree(g_sitedir, g_sitename)
+    chown_tree(g_site.dir, g_site.name)
 
     # Change config files from old to new site (see rename_site())
-    if sitename != g_sitename:
-        patch_skeleton_files(sitename, g_sitename)
+    if sitename != g_site.name:
+        patch_skeleton_files(sitename, g_site.name)
 
     # Now switch over to the new site as currently active site
-    os.chdir(g_sitedir)
+    os.chdir(g_site.dir)
     set_environment()
 
     if is_root():
@@ -3803,47 +3762,47 @@ def prepare_restore_as_root(options):
     reuse = False
     if "reuse" in options:
         reuse = True
-        if not user_verify(g_sitename, allow_populated=True):
+        if not user_verify(g_site.name, allow_populated=True):
             bail_out("Error verifying site user.")
-        fstab_verify(g_sitename)
+        fstab_verify(g_site.name)
 
-    sitename_must_be_valid(g_sitename, reuse)
+    sitename_must_be_valid(g_site.name, reuse)
 
     if reuse:
-        if not site_is_stopped(g_sitename) and not "kill" in options:
-            bail_out("Cannot restore '%s' while it is running." % (g_sitename))
+        if not site_is_stopped(g_site.name) and not "kill" in options:
+            bail_out("Cannot restore '%s' while it is running." % (g_site.name))
         else:
-            os.system('omd stop %s' % g_sitename)
-        unmount_tmpfs(g_sitename, kill = "kill" in options)
+            os.system('omd stop %s' % g_site.name)
+        unmount_tmpfs(g_site.name, kill = "kill" in options)
 
     if not reuse:
         uid = options.get("uid")
         gid = options.get("gid")
-        useradd(g_sitename, uid, gid) # None for uid/gid means: let Linux decide
+        useradd(g_site.name, uid, gid) # None for uid/gid means: let Linux decide
     else:
         sys.stdout.write("Deleting existing site data...\n")
-        shutil.rmtree(g_sitedir)
+        shutil.rmtree(g_site.dir)
         ok()
 
-    os.mkdir(g_sitedir)
+    os.mkdir(g_site.dir)
 
 
 def prepare_restore_as_site_user(options):
-    if not site_is_stopped(g_sitename) and not "kill" in options:
+    if not site_is_stopped(g_site.name) and not "kill" in options:
         bail_out("Cannot restore site while it is running.")
 
     verify_directory_write_access()
 
     sys.stdout.write("Stopping site processes...\n")
-    stop_site(g_sitename)
+    stop_site(g_site.name)
     kill_site_user_processes(exclude_current_and_parents=True)
     ok()
 
-    unmount_tmpfs(g_sitename)
+    unmount_tmpfs(g_site.name)
 
     sys.stdout.write("Deleting existing site data...")
-    for f in os.listdir(g_sitedir):
-        path = g_sitedir + "/" + f
+    for f in os.listdir(g_site.dir):
+        path = g_site.dir + "/" + f
         if os.path.islink(path) or os.path.isfile(path):
             os.unlink(path)
         else:
@@ -3855,7 +3814,7 @@ def prepare_restore_as_site_user(options):
 # This is needed to prevent eventual permission issues during the rmtree process.
 def verify_directory_write_access():
     wrong = []
-    for dirpath, dirnames, _filenames in os.walk(g_sitedir):
+    for dirpath, dirnames, _filenames in os.walk(g_site.dir):
         for dirname in dirnames:
             path = dirpath + "/" + dirname
             if os.path.islink(path):
@@ -3948,7 +3907,7 @@ def site_user_processes(exclude_current_and_parents):
     if exclude_current_and_parents:
         exclude = get_current_and_parent_pids()
 
-    p = subprocess.Popen(["ps", "-U", g_sitename, "-o", "pid", "--no-headers"], close_fds=True,
+    p = subprocess.Popen(["ps", "-U", g_site.name, "-o", "pid", "--no-headers"], close_fds=True,
                          stdin=open(os.devnull), stdout=subprocess.PIPE)
     exclude.append(p.pid)
 
@@ -3970,7 +3929,7 @@ def site_user_processes(exclude_current_and_parents):
 def postprocess_restore_as_root(options):
     # Entry for tmps in /etc/fstab
     if "reuse" not in options:
-        add_to_fstab(g_sitename, tmpfs_size = options.get('tmpfs-size'))
+        add_to_fstab(g_site.name, tmpfs_size = options.get('tmpfs-size'))
 
     finalize_site("restore", "apache-reload" in options)
 
@@ -3978,7 +3937,7 @@ def postprocess_restore_as_root(options):
 def postprocess_restore_as_site_user(options, orig_apache_port):
     # Keep the apache port the site currently being replaced had before
     # (we can not restart the system apache as site user)
-    g_site_conf["APACHE_TCP_PORT"] = orig_apache_port
+    g_site.conf["APACHE_TCP_PORT"] = orig_apache_port
     save_site_conf()
 
     finalize_size_as_user("restore")
@@ -4122,6 +4081,86 @@ class PackageManagerRPM(PackageManager):
             bail_out("Failed to find packages:\n%s" % output)
 
         return output.strip().split("\n")
+
+
+
+class AbstractSiteContext(object):
+    """Object wrapping site specific information"""
+    __metaclass__ = abc.ABCMeta
+
+    def __init__(self, sitename):
+        super(AbstractSiteContext, self).__init__()
+        self._sitename = sitename
+        self._config_loaded = False
+        self._config = {}
+
+
+    @property
+    def name(self):
+        return self._sitename
+
+
+    @abc.abstractproperty
+    def dir(self):
+        raise NotImplementedError()
+
+
+    @property
+    def conf(self):
+        """{ "CORE" : "nagios", ... } (contents of etc/omd/site.conf plus defaults from hooks)"""
+        if not self._config_loaded:
+            raise Exception("Config not loaded yet")
+        return self._config
+
+
+    @abc.abstractmethod
+    def load_config(self):
+        raise NotImplementedError()
+
+
+
+class SiteContext(AbstractSiteContext):
+    @property
+    def dir(self):
+        return site_dir(self._sitename)
+
+
+    def load_config(self):
+        """Load all variables from omd/sites.conf. These variables always begin with
+        CONFIG_. The reason is that this file can be sources with the shell.
+
+        Puts these variables into the config dict without the CONFIG_. Also
+        puts the variables into the process environment."""
+        # TODO: Move helpers to better place
+        self._config = parse_site_conf(g_site.name)
+
+        # Get the default values of all config hooks that are not contained
+        # in the site configuration. This can happen if there are new hooks
+        # after an update or when a site is being created.
+        hook_dir = g_site.dir + "/lib/omd/hooks"
+        if os.path.exists(hook_dir):
+            for hook_name in sort_hooks(os.listdir(hook_dir)):
+                if hook_name[0] != '.' and hook_name not in self._config:
+                    content = call_hook(hook_name, ["default"])[1]
+                    self._config[hook_name] = content
+
+        self._config_loaded = True
+
+
+
+class RootContext(AbstractSiteContext):
+    def __init__(self):
+        super(RootContext, self).__init__(sitename=None)
+
+
+    @property
+    def dir(self):
+        return "/"
+
+
+    def load_config(self):
+        pass
+
 
 
 exclude_options = [
@@ -4445,7 +4484,7 @@ def exec_other_omd(version, command):
     else:
         bail_out("Site %s uses version %s which is not installed.\n"
                 "Please reinstall that version and retry this command." %
-                (g_sitename, version))
+                (g_site.name, version))
 
 
 def random_password():
@@ -4467,6 +4506,12 @@ def hash_password(password):
 #   |  Main entry point                                                    |
 #   '----------------------------------------------------------------------'
 
+# Some global variables
+opt_verbose     = False
+opt_interactive = False
+opt_force       = False
+
+g_site          = RootContext()
 g_orig_wd = "/"
 
 # Handle global options. We might convert this to getopt
@@ -4476,7 +4521,7 @@ g_orig_wd = "/"
 # TODO: Refactor these global variables
 # TODO: Refactor to argparse. Be aware of the pitfalls of the OMD command line scheme
 def main():
-    global g_sitename
+    global g_site
     global g_orig_wd
 
     main_args = sys.argv[1:]
@@ -4524,24 +4569,24 @@ def main():
     # Some commands need a site to be specified. If we are
     # called as root, this must be done explicitely. If we
     # are site user, the site name is our user name
-    g_sitename = None
+    g_site = RootContext()
     if needs_site > 0:
         if os.getuid() == 0:
             if len(args) >= 1:
-                g_sitename = args[0]
+                g_site = SiteContext(args[0])
                 args = args[1:]
             elif needs_site == 1:
                 bail_out("omd: please specify site.")
         else:
-            g_sitename = site_name()
+            g_site = SiteContext(site_name())
 
     check_site_user(site_must_exist)
 
     # Commands operating on an existing site *must* run omd in
     # the same version as the site has! Sole exception: update.
     # That command must be run in the target version
-    if g_sitename and site_must_exist and command != "update":
-        v = site_version(g_sitename)
+    if g_site.name and site_must_exist and command != "update":
+        v = site_version(g_site.name)
         if v == None: # Site has no homedirectory
             if command == "rm":
                 sys.stdout.write("WARNING: This site has an empty home directory and is not\n"
@@ -4549,15 +4594,14 @@ def main():
             elif command != "init":
                 bail_out("This site has an empty home directory /omd/sites/%s.\n"
                          "If you have created that site with 'omd create --no-init %s'\n"
-                         "then please first do an 'omd init %s'." % (3*(g_sitename,)))
+                         "then please first do an 'omd init %s'." % (3*(g_site.name,)))
         elif omdlib.__version__ != v:
             exec_other_omd(v, command)
 
 
     read_info()
 
-    if g_sitename:
-        set_site_globals()
+    g_site.load_config()
 
     # Commands which affect a site and can be called as root *or* as
     # site user should always run with site user priviledges. That way
@@ -4571,11 +4615,11 @@ def main():
         else:
             raise
 
-    if not no_suid and g_sitename and os.getuid() == 0 and not only_root:
+    if not no_suid and g_site.name and os.getuid() == 0 and not only_root:
         switch_to_site_user()
 
     # Make sure environment is in a defined state
-    if g_sitename:
+    if g_site.name:
         clear_environment()
         set_environment()
 

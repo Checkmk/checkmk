@@ -1,0 +1,13 @@
+Title: 3par_volumes: Fix crash due to unknown provisioning type
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0p1
+Date: 1533906735
+
+Previously, the check did not implement all provisioning types
+specified by 3par, causing crashes when unknown types were reported.
+This has been fixed.

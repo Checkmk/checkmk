@@ -2244,14 +2244,11 @@ def init_action(command, args, options):
 #   |  Various helper functions                                            |
 #   '----------------------------------------------------------------------'
 
-def omd_root():
-    return "/omd/versions/" + omdlib.__version__
-
 # Read distro- and version specific values
 def read_info():
     global g_info
     g_info = {}
-    info_dir = omd_root() + "/share/omd"
+    info_dir = "/omd/versions/" + omdlib.__version__ + "/share/omd"
     for f in os.listdir(info_dir):
         if f.endswith(".info"):
             for line in file(info_dir + "/" + f):

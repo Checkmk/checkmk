@@ -399,25 +399,25 @@ def groupadd(groupname, gid = None):
     if os.system(cmd) != 0:
         bail_out("Cannot create group for site user.")
 
-def useradd(sitename, uid = None, gid = None):
+def useradd(site, uid = None, gid = None):
     # Create user for running site 'name'
-    groupadd(sitename, gid)
+    groupadd(site.name, gid)
     useradd_options = g_info["USERADD_OPTIONS"]
     if uid != None:
         useradd_options += " -u %d" % int(uid)
     if os.system("useradd %s -r -d '%s' -c 'OMD site %s' -g %s -G omd %s -s /bin/bash" % \
-                 (useradd_options, site_dir(sitename), sitename, sitename, sitename)) != 0:
-        groupdel(sitename)
+                 (useradd_options, site.dir, site.name, site.name, site.name)) != 0:
+        groupdel(site.name)
         bail_out("Error creating site user.")
 
     # On SLES11+ there is a standard group "trusted" that the OMD site users should be members
     # of to be able to access CRON.
     if group_exists("trusted"):
-        add_user_to_group(sitename, "trusted")
+        add_user_to_group(site.name, "trusted")
 
     # Add Apache to new group. It needs to be able to write in to the
     # command pipe and possible other stuff
-    add_user_to_group(g_info["APACHE_USER"], sitename)
+    add_user_to_group(g_info["APACHE_USER"], site.name)
 
 def add_user_to_group(user, group):
     cmd = g_info["ADD_USER_TO_GROUP"] % {"user": user, "group" : group}
@@ -497,23 +497,24 @@ def user_logged_in(name):
     # Check, if processes of named user are existing
     return os.system("ps --no-headers --user '%s' >/dev/null 2>&1" % name) == 0
 
-def user_verify(name, allow_populated=False):
+def user_verify(site, allow_populated=False):
+    name = site.name
 
     if not user_exists(name):
         bail_out(tty_error + ": user %s does not exist" % name )
 
     user = user_by_id(user_id(name))
-    if user.pw_dir != site_dir(name):
-        bail_out(tty_error + ": Wrong home directory for user %s, must be %s" % ( name, site_dir(name) ) )
+    if user.pw_dir != site.dir:
+        bail_out(tty_error + ": Wrong home directory for user %s, must be %s" % ( name, site.dir ) )
 
-    if not os.path.exists(site_dir(name)):
-        bail_out(tty_error + ": home directory for user %s (%s) does not exist" % ( name, site_dir(name) ) )
+    if not os.path.exists(site.dir):
+        bail_out(tty_error + ": home directory for user %s (%s) does not exist" % ( name, site.dir ) )
 
-    if not allow_populated and os.path.exists(site_dir(name) + "/version"):
-        bail_out(tty_error + ": home directory for user %s (%s) must be empty" % ( name, site_dir(name) ) )
+    if not allow_populated and os.path.exists(site.dir + "/version"):
+        bail_out(tty_error + ": home directory for user %s (%s) must be empty" % ( name, site.dir ) )
 
-    if not file_owner_verify(site_dir(name), user.pw_uid, user.pw_gid):
-        bail_out(tty_error + ": home directory (%s) is not owned by user %s and group %s" % ( site_dir(name), name, name ) )
+    if not file_owner_verify(site.dir, user.pw_uid, user.pw_gid):
+        bail_out(tty_error + ": home directory (%s) is not owned by user %s and group %s" % ( site.dir, name, name ) )
 
     group = group_by_id(user.pw_gid)
     if group == None or group.gr_name != name:
@@ -560,12 +561,6 @@ def groups_of(username):
 #   |  Helper functions for dealing with sites                             |
 #   '----------------------------------------------------------------------'
 
-def site_dir(sitename):
-    return "/omd/sites/" + sitename
-
-def tmp_dir(sitename):
-    return "/omd/sites/%s/tmp" % sitename
-
 def site_name():
     return pwd.getpwuid(os.getuid()).pw_name
 
@@ -584,9 +579,8 @@ def site_is_stopped(sitename):
 def site_is_running(sitename):
     return check_status(sitename, False) == 0
 
-def site_is_empty(sitename):
-    sitedir = site_dir(sitename)
-    for entry in os.listdir(sitedir):
+def site_is_empty(site):
+    for entry in os.listdir(site.dir):
         if entry not in [ '.', '..' ]:
             return False
     return True
@@ -599,15 +593,16 @@ def site_autostart(sitename):
     return config.get('AUTOSTART', 'on') == 'on'
 
 def start_site(sitename):
-    prepare_and_populate_tmpfs(sitename)
-    call_init_scripts(sitename, "start")
+    site = SiteContext(sitename)
+    prepare_and_populate_tmpfs(site)
+    call_init_scripts(site, "start")
 
 def stop_if_not_stopped(sitename):
     if not site_is_stopped(sitename):
         stop_site(sitename)
 
 def stop_site(sitename):
-    call_init_scripts(sitename, "stop")
+    call_init_scripts(SiteContext(sitename), "stop")
 
 
 
@@ -664,8 +659,8 @@ def get_file_owner(path):
     except:
         return None
 
-def create_version_symlink(sitename, version):
-    linkname = site_dir(sitename) + "/version"
+def create_version_symlink(site, version):
+    linkname = site.dir + "/version"
     if os.path.exists(linkname):
         os.remove(linkname)
     os.symlink("../../versions/%s" % omdlib.__version__, linkname)
@@ -688,12 +683,11 @@ def file_owner_verify(path, user_id, group_id):
         return False
     return True
 
-def create_skeleton_files(sitename, directory):
+def create_skeleton_files(site, directory):
     read_skel_permissions()
-    sitedir = site_dir(sitename)
     replacements = {
-        "###SITE###" : sitename,
-        "###ROOT###" : sitedir,
+        "###SITE###" : site.name,
+        "###ROOT###" : site.dir,
     }
     # Hack: exclude tmp if dir is '.'
     exclude_tmp = directory == "."
@@ -708,7 +702,7 @@ def create_skeleton_files(sitename, directory):
                     continue
                 if dirpath == "tmp" or dirpath.startswith("tmp/"):
                     continue
-            create_skeleton_file(skelroot, sitedir, dirpath + "/" + entry, replacements)
+            create_skeleton_file(skelroot, site.dir, dirpath + "/" + entry, replacements)
 
 def delete_user_file(user_path):
     if not os.path.islink(user_path) and os.path.isdir(user_path):
@@ -864,14 +858,14 @@ def walk_skel(root, handler, args, depth_first, exclude_if_in = None, relbase = 
 
 # Change site specific information in files originally create from
 # skeleton files. Skip files below tmp/
-def patch_skeleton_files(old, new):
+def patch_skeleton_files(old_site, new_site):
     skelroot = "/omd/versions/%s/skel" % omdlib.__version__
     os.chdir(skelroot)  # make relative paths
     for dirpath, _dirnames, filenames in os.walk("."):
         if dirpath.startswith("./"):
             dirpath = dirpath[2:]
-        targetdir = site_dir(new) + "/" + dirpath
-        if targetdir.startswith(tmp_dir(new)):
+        targetdir = new_site.dir + "/" + dirpath
+        if targetdir.startswith(new_site.tmp_dir):
             continue # Skip files below tmp
         for fn in filenames:
             src = dirpath + "/" + fn
@@ -879,26 +873,26 @@ def patch_skeleton_files(old, new):
             if os.path.isfile(src) and not os.path.islink(src) \
                 and os.path.exists(dst): # not deleted by user
                 try:
-                    patch_template_file(src, dst, old, new)
+                    patch_template_file(src, dst, old_site, new_site)
                 except Exception, e:
                     sys.stderr.write("Error patching template file '%s': %s\n" %
                             (dst, e))
 
-def patch_template_file(src, dst, old, new):
+def patch_template_file(src, dst, old_site, new_site):
     # Create patch from old instantiated skeleton file to new one
     content = file(src).read()
-    for site in [ old, new ]:
+    for site in [ old_site, new_site ]:
         replacements = {
-            "###SITE###" : site,
-            "###ROOT###" : site_dir(site),
+            "###SITE###" : site.name,
+            "###ROOT###" : site.dir,
         }
-        filename = "%s.skel.%s" % (dst, site)
+        filename = "%s.skel.%s" % (dst, site.name)
         file(filename, "w").write(replace_tags(content, replacements))
-        try_chown(filename, new)
+        try_chown(filename, new_site.name)
 
     # If old and new skeleton file are identical, then do nothing
-    old_orig_path = "%s.skel.%s" % (dst, old)
-    new_orig_path = "%s.skel.%s" % (dst, new)
+    old_orig_path = "%s.skel.%s" % (dst, old_site.name)
+    new_orig_path = "%s.skel.%s" % (dst, new_site.name)
     if file(old_orig_path).read() == file(new_orig_path).read():
         os.remove(old_orig_path)
         os.remove(new_orig_path)
@@ -908,10 +902,10 @@ def patch_template_file(src, dst, old, new):
     # existing - possibly user modified - file.
 
     result = os.system("diff -u %s %s | %s/bin/patch --force --backup --forward --silent %s" %
-            (old_orig_path, new_orig_path, site_dir(new), dst))
-    try_chown(dst, new)
-    try_chown(dst + ".rej", new)
-    try_chown(dst + ".orig", new)
+            (old_orig_path, new_orig_path, new_site.dir, dst))
+    try_chown(dst, new_site.name)
+    try_chown(dst + ".rej", new_site.name)
+    try_chown(dst + ".orig", new_site.name)
     if result == 0:
         sys.stdout.write(StateMarkers.good + " Converted      %s\n" % src)
     else:
@@ -924,7 +918,7 @@ def patch_template_file(src, dst, old, new):
             ( "keep",      "Keep half-converted version of the file" ),
             ( "restore",   "Restore your original version of the file" ),
             ( "install",   "Install the default version of the file" ),
-            ( "brute",     "Simply replace /%s/ with /%s/ in that file" % (old, new)),
+            ( "brute",     "Simply replace /%s/ with /%s/ in that file" % (old_site.name, new_site.name)),
             ( "shell",     "Open a shell for looking around" ),
             ( "abort",     "Stop here and abort!" ),
         ]
@@ -939,7 +933,7 @@ def patch_template_file(src, dst, old, new):
                    "I've tried to merge your changes with the renaming of %s into %s.\n"
                    "Unfortunately there are conflicts with your changes. \n"
                    "You have the following options: " %
-                    ( old, new ), options)
+                    ( old_site.name, new_site.name ), options)
 
             if choice == "abort":
                 bail_out("Renaming aborted.")
@@ -950,7 +944,7 @@ def patch_template_file(src, dst, old, new):
             elif choice == "diff":
                 os.system("diff -u %s %s%s" % (old_orig_path, new_orig_path, pipe_pager()))
             elif choice == "brute":
-                os.system("sed 's@/%s/@/%s/@g' %s.orig > %s" % (old, new, dst, dst))
+                os.system("sed 's@/%s/@/%s/@g' %s.orig > %s" % (old_site.name, new_site.name, dst, dst))
                 changed = len([ l for l in os.popen("diff %s.orig %s" % (dst, dst)).readlines()
                   if l.startswith(">") ])
                 if changed == 0:
@@ -968,24 +962,24 @@ def patch_template_file(src, dst, old, new):
                 break
             elif choice == "install":
                 os.rename(new_orig_path, dst)
-                sys.stdout.write("Installed default file (with site name %s).\n" % new)
+                sys.stdout.write("Installed default file (with site name %s).\n" % new_site.name)
                 break
             elif choice == "shell":
                 relname = src.split("/")[-1]
                 sys.stdout.write(" %-35s the half-converted file\n" % (relname,))
                 sys.stdout.write(" %-35s your original version\n" % (relname + ".orig"))
                 sys.stdout.write(" %-35s the failed parts of the patch\n" % (relname + ".rej"))
-                sys.stdout.write(" %-35s default version with the old site name\n" % (relname + ".skel.%s" % old))
-                sys.stdout.write(" %-35s default version with the new site name\n" % (relname + ".skel.%s" % new))
+                sys.stdout.write(" %-35s default version with the old site name\n" % (relname + ".skel.%s" % old_site.name))
+                sys.stdout.write(" %-35s default version with the new site name\n" % (relname + ".skel.%s" % new_site.name))
 
                 sys.stdout.write("\n Starting BASH. Type CTRL-D to continue.\n\n")
                 thedir = "/".join(dst.split("/")[:-1])
-                os.system("su - %s -c 'cd %s ; bash -i'" % (new, thedir))
+                os.system("su - %s -c 'cd %s ; bash -i'" % (new_site.name, thedir))
 
     # remove unnecessary files
     try:
-        os.remove(dst + ".skel." + old)
-        os.remove(dst + ".skel." + new)
+        os.remove(dst + ".skel." + old_site.name)
+        os.remove(dst + ".skel." + new_site.name)
         os.remove(dst + ".orig")
         os.remove(dst + ".rej")
     except:
@@ -1517,13 +1511,12 @@ def tmpfs_mounted(sitename):
     return False
 
 
-def prepare_and_populate_tmpfs(sitename):
-    tmp = tmp_dir(sitename)
-    prepare_tmpfs(sitename, tmp)
+def prepare_and_populate_tmpfs(site):
+    prepare_tmpfs(site.name, site.tmp_dir)
 
-    if not os.listdir(tmp):
-        create_skeleton_files(sitename, "tmp")
-        chown_tree(tmp, sitename)
+    if not os.listdir(site.tmp_dir):
+        create_skeleton_files(site, "tmp")
+        chown_tree(site.tmp_dir, site.name)
 
     ok()
 
@@ -1574,14 +1567,14 @@ def is_dockerized():
     return os.path.exists("/.dockerenv")
 
 
-def unmount_tmpfs(sitename, output = True, kill = False):
+def unmount_tmpfs(site, output = True, kill = False):
     # Clear directory hierarchy when not using a tmpfs
     # During omd update TMPFS hook might not be set so assume
     # that the hook is enabled by default.
     # If kill is True, then we do an fuser -k on the tmp
     # directory first.
-    if not tmpfs_mounted(sitename):
-        tmp = tmp_dir(sitename)
+    if not tmpfs_mounted(site.name):
+        tmp = site.tmp_dir
         if os.path.exists(tmp):
             if output:
                 sys.stdout.write("Cleaning up temp filesystem...")
@@ -1596,15 +1589,15 @@ def unmount_tmpfs(sitename, output = True, kill = False):
             sys.stdout.write("Unmounting temporary filesystem...")
 
         for _t in range(0, 10):
-            if os.system("umount '%s'" % tmp_dir(sitename)) == 0:
+            if os.system("umount '%s'" % site.tmp_dir) == 0:
                 if output:
                     ok()
                 return True
 
             if kill:
                 if output:
-                    sys.stdout.write("Killing processes still using '%s'\n" % tmp_dir(sitename))
-                os.system("fuser --silent -k '%s'" % tmp_dir(sitename))
+                    sys.stdout.write("Killing processes still using '%s'\n" % site.tmp_dir)
+                os.system("fuser --silent -k '%s'" % site.tmp_dir)
 
             if output:
                 sys.stdout.write(kill and "K" or ".")
@@ -1618,12 +1611,12 @@ def unmount_tmpfs(sitename, output = True, kill = False):
 
     return True
 
-def add_to_fstab(sitename, tmpfs_size = None):
+def add_to_fstab(site, tmpfs_size = None):
     if not os.path.exists("/etc/fstab"):
         return # Don't do anything in case there is no fstab
 
     # tmpfs                   /opt/omd/sites/b01/tmp  tmpfs   user,uid=b01,gid=b01 0 0
-    mountpoint = "/opt" + tmp_dir(sitename)
+    mountpoint = "/opt" + site.tmp_dir
     sys.stdout.write("Adding %s to /etc/fstab.\n" % mountpoint)
 
     # No size option: using up to 50% of the RAM
@@ -1639,17 +1632,17 @@ def add_to_fstab(sitename, tmpfs_size = None):
             fstab.write("\n")
 
         fstab.write("tmpfs  %s tmpfs noauto,user,mode=755,uid=%s,gid=%s%s 0 0\n" % \
-        (mountpoint, sitename, sitename, sizespec))
+        (mountpoint, site.name, site.name, sizespec))
 
-def remove_from_fstab(sitename):
+def remove_from_fstab(site):
     if not os.path.exists("/etc/fstab"):
         return # Don't do anything in case there is no fstab
 
-    mountpoint = tmp_dir(sitename)
+    mountpoint = site.tmp_dir
     sys.stdout.write("Removing %s from /etc/fstab..." % mountpoint)
     newtab = file("/etc/fstab.new", "w")
     for line in file("/etc/fstab"):
-        if "uid=%s," % sitename in line and mountpoint in line:
+        if "uid=%s," % site.name in line and mountpoint in line:
             continue
         newtab.write(line)
     os.rename("/etc/fstab.new", "/etc/fstab")
@@ -1691,17 +1684,17 @@ def call_init_script(scriptpath, command):
 
 
 
-def call_init_scripts(sitename, command, daemon=None, exclude_daemons=None):
+def call_init_scripts(site, command, daemon=None, exclude_daemons=None):
     # Restart: Do not restart each service after another,
     # but first do stop all, then start all again! This
     # preserves the order.
     if command == "restart":
-        call_init_scripts(sitename, "stop", daemon)
-        call_init_scripts(sitename, "start", daemon)
+        call_init_scripts(site.name, "stop", daemon)
+        call_init_scripts(site.name, "start", daemon)
         return
 
     # OMD guarantees OMD_ROOT to be the current directory
-    os.chdir(site_dir(sitename))
+    os.chdir(site.dir)
 
     if daemon:
         ok = call_init_script("%s/etc/init.d/%s" % (g_site.dir, daemon), command)
@@ -1709,7 +1702,7 @@ def call_init_scripts(sitename, command, daemon=None, exclude_daemons=None):
     else:
         # Call stop scripts in reverse order. If daemon is set,
         # then only that start script will be affected
-        rc_dir, scripts = init_scripts(sitename)
+        rc_dir, scripts = init_scripts(site.name)
         if command == "stop":
             scripts.reverse()
         ok = True
@@ -2204,7 +2197,7 @@ def init_action(command, args, options):
         bail_out("This site is disabled.")
 
     if command in [ "start", "restart" ]:
-        prepare_and_populate_tmpfs(g_site.name)
+        prepare_and_populate_tmpfs(g_site)
 
     if len(args) > 0:
         daemon = args[0] # restrict to this daemon
@@ -2216,7 +2209,7 @@ def init_action(command, args, options):
 
     if command == "status":
         return check_status(g_site.name, True, daemon, "bare" in options)
-    return call_init_scripts(g_site.name, command, daemon)
+    return call_init_scripts(g_site, command, daemon)
 
 
 #.
@@ -2257,7 +2250,7 @@ def read_info():
                 except Exception:
                     bail_out('Unable to parse line "%s" in file "%s"' % (line, info_dir + "/" + f))
 
-def fstab_verify(name):
+def fstab_verify(site):
     """Ensure that there is an fstab entry for the tmpfs of the site.
     In case there is no fstab (seen in some containers) assume everything
     is OK without fstab entry."""
@@ -2265,9 +2258,9 @@ def fstab_verify(name):
     if not os.path.exists("/etc/fstab"):
         return True
 
-    mountpoint = tmp_dir(name)
+    mountpoint = site.tmp_dir
     for line in file("/etc/fstab"):
-        if "uid=%s," % name in line and mountpoint in line:
+        if "uid=%s," % site.name in line and mountpoint in line:
             return True
     bail_out(tty_error + ": fstab entry for %s does not exist" % mountpoint )
 
@@ -2344,9 +2337,9 @@ def hostname():
     except:
         return "localhost"
 
-def create_apache_hook(sitename):
-    file("/omd/apache/%s.conf" % sitename, "w")\
-        .write("Include %s/etc/apache/mode.conf\n" % site_dir(sitename))
+def create_apache_hook(site):
+    file("/omd/apache/%s.conf" % site.name, "w")\
+        .write("Include %s/etc/apache/mode.conf\n" % site.dir)
 
 def delete_apache_hook(sitename):
     hook_path = "/omd/apache/%s.conf" % sitename
@@ -2600,7 +2593,7 @@ def main_create(args, options=None):
     reuse = False
     if "reuse" in options:
         reuse = True
-        if not user_verify(g_site.name):
+        if not user_verify(g_site):
             bail_out("Error verifying site user.")
 
     sitename_must_be_valid(g_site, reuse)
@@ -2609,15 +2602,13 @@ def main_create(args, options=None):
     uid = options.get("uid")
     gid = options.get("gid")
     if not reuse:
-        useradd(g_site.name, uid, gid)
-
-    sitedir = site_dir(g_site.name)
+        useradd(g_site, uid, gid)
 
     if reuse:
-        fstab_verify(g_site.name)
+        fstab_verify(g_site)
     else:
-        create_site_dir(g_site.name)
-        add_to_fstab(g_site.name, tmpfs_size = options.get('tmpfs-size'))
+        create_site_dir(g_site)
+        add_to_fstab(g_site, tmpfs_size = options.get('tmpfs-size'))
 
     config_settings = {}
     if "no-autostart" in options:
@@ -2633,8 +2624,8 @@ def main_create(args, options=None):
         welcome_message(admin_password)
 
     else:
-        sys.stdout.write("Create new site %s in disabled state and with empty %s.\n" % (g_site.name, sitedir))
-        sys.stdout.write("You can now mount a filesystem to %s.\n" % (sitedir))
+        sys.stdout.write("Create new site %s in disabled state and with empty %s.\n" % (g_site.name, g_site.dir))
+        sys.stdout.write("You can now mount a filesystem to %s.\n" % (g_site.dir))
         sys.stdout.write("Afterwards you can initialize the site with 'omd init'.\n")
 
 def welcome_message(admin_password):
@@ -2657,27 +2648,26 @@ def main_init(args, options):
         bail_out("Cannot initialize site that is not disabled.\n"
                  "Please call 'omd disable %s' first." % g_site.name)
 
-    if not site_is_empty(g_site.name):
+    if not site_is_empty(g_site):
         if not opt_force:
             bail_out("The site's home directory is not empty. Please add use\n"
                      "'omd --force init %s' if you want to erase all data." % g_site.name)
 
-        sitedir = site_dir(g_site.name)
         # We must not delete the directory itself, just its contents.
         # The directory might be a separate filesystem. This is not quite
         # unlikely, since people using 'omd init' are doing this most times
         # because they are working with clusters and separate filesystems for
         # each site.
-        sys.stdout.write("Wiping the contents of %s..." % sitedir)
-        for entry in os.listdir(sitedir):
+        sys.stdout.write("Wiping the contents of %s..." % g_site.dir)
+        for entry in os.listdir(g_site.dir):
             if entry not in [ '.', '..' ]:
-                path = sitedir + "/" + entry
+                path = g_site.dir + "/" + entry
                 if opt_verbose:
                     sys.stdout.write("\n   deleting %s..." % path)
                 if os.path.islink(path) or not os.path.isdir(path):
                     os.remove(path)
                 else:
-                    shutil.rmtree(sitedir + "/" + entry)
+                    shutil.rmtree(g_site.dir + "/" + entry)
         ok()
 
 
@@ -2689,7 +2679,7 @@ def init_site(config_settings=None, options=False):
     apache_reload = "apache-reload" in options
 
     # Create symbolic link to version
-    create_version_symlink(g_site.name, omdlib.__version__)
+    create_version_symlink(g_site, omdlib.__version__)
 
     # Build up directory structure with symbolic links relative to
     # the version link we just create
@@ -2697,7 +2687,7 @@ def init_site(config_settings=None, options=False):
         os.symlink("version/" + d, g_site.dir + "/" + d)
 
     # Create skeleton files of non-tmp directories
-    create_skeleton_files(g_site.name, '.')
+    create_skeleton_files(g_site, '.')
 
     # Set the initial password of the default admin user
     admin_password = calculate_admin_password(options)
@@ -2767,7 +2757,7 @@ def finalize_site(what, apache_reload):
 
     # Finally reload global apache - with root permissions - and
     # create include-hook for Apache and reload apache
-    create_apache_hook(g_site.name)
+    create_apache_hook(g_site)
     if apache_reload:
         reload_apache()
     else:
@@ -2779,7 +2769,7 @@ def finalize_size_as_user(what):
     # user. We also could do this at 'omd start', but this might confuse
     # users. They could create files below tmp which would be shadowed
     # by the mount.
-    prepare_and_populate_tmpfs(g_site.name)
+    prepare_and_populate_tmpfs(g_site)
 
     # Run all hooks in order to setup things according to the
     # configuration settings
@@ -2812,7 +2802,7 @@ def main_rm(args, options=None):
         unmount_tmpfs(g_site.name, kill=kill)
 
     if not reuse:
-        remove_from_fstab(g_site.name)
+        remove_from_fstab(g_site)
         sys.stdout.write("Deleting user and group %s..." % g_site.name)
         os.chdir("/") # Site directory not longer existant after userdel
         userdel(g_site.name)
@@ -2820,13 +2810,13 @@ def main_rm(args, options=None):
 
     if os.path.exists(g_site.dir): # should be done by userdel
         sys.stdout.write("Deleting all data (%s)..." % g_site.dir)
-        shutil.rmtree(site_dir(g_site.name))
+        shutil.rmtree(g_site.dir)
         ok()
 
     if reuse:
-        create_site_dir(g_site.name)
-        os.mkdir(tmp_dir(g_site.name))
-        os.chown(tmp_dir(g_site.name), user_id(g_site.name), group_id(g_site.name))
+        create_site_dir(g_site)
+        os.mkdir(g_site.tmp_dir)
+        os.chown(g_site.tmp_dir, user_id(g_site.name), group_id(g_site.name))
 
     # remove include-hook for Apache and tell apache
     delete_apache_hook(g_site.name)
@@ -2835,9 +2825,9 @@ def main_rm(args, options=None):
     else:
         restart_apache()
 
-def create_site_dir(sitename):
-    os.makedirs(site_dir(sitename))
-    os.chown(site_dir(sitename), user_id(sitename), group_id(sitename))
+def create_site_dir(site):
+    os.makedirs(site.dir)
+    os.chown(site.dir, user_id(site.name), group_id(site.name))
 
 def site_is_disabled(sitename):
     apache_conf = "/omd/apache/%s.conf" % sitename
@@ -2860,7 +2850,7 @@ def main_enable(args, options):
         sys.stderr.write("This site is already enabled.\n")
         sys.exit(0)
     sys.stdout.write("Re-enabling Apache configuration for this site...")
-    create_apache_hook(g_site.name)
+    create_apache_hook(g_site)
     ok()
     restart_apache()
 
@@ -2919,9 +2909,9 @@ def main_mv_or_cp(what, args, options=None):
     reuse = False
     if "reuse" in options:
         reuse = True
-        if not user_verify(new_site.name):
+        if not user_verify(new_site):
             bail_out("Error verifying site user.")
-        fstab_verify(new_site.name)
+        fstab_verify(new_site)
 
     sitename_must_be_valid(new_site, reuse)
 
@@ -2937,7 +2927,7 @@ def main_mv_or_cp(what, args, options=None):
     if what == "mv":
         unmount_tmpfs(old_site.name, kill = "kill" in options)
         if not reuse:
-            remove_from_fstab(old_site.name)
+            remove_from_fstab(old_site)
 
     sys.stdout.write("%sing site %s to %s..." % (what == "mv" and "Mov" or "Copy", old_site.name, new_site.name))
     sys.stdout.flush()
@@ -2947,16 +2937,16 @@ def main_mv_or_cp(what, args, options=None):
     uid = options.get("uid")
     gid = options.get("gid")
     if not reuse:
-        useradd(new_site.name, uid, gid) # None for uid/gid means: let Linux decide
+        useradd(new_site, uid, gid) # None for uid/gid means: let Linux decide
 
     if what == "mv" and not reuse:
         # Rename base directory and apache config
-        os.rename(site_dir(old_site.name), site_dir(new_site.name))
+        os.rename(old_site.dir, new_site.dir)
         delete_apache_hook(old_site.name)
     else:
         # Make exact file-per-file copy with same user but already new name
         if not reuse:
-            os.mkdir(site_dir(new_site.name))
+            os.mkdir(new_site.dir)
 
         addopts = ""
         for p in get_exclude_patterns(options):
@@ -2966,22 +2956,22 @@ def main_mv_or_cp(what, args, options=None):
             addopts += " -v"
 
         os.system("rsync -arx %s '%s/' '%s/'" %
-                (addopts, site_dir(old_site.name), site_dir(new_site.name)))
+                (addopts, old_site.dir, new_site.dir))
 
-        httpdlogdir = site_dir(new_site.name) + "/var/log/apache"
+        httpdlogdir = new_site.dir + "/var/log/apache"
         if not os.path.exists(httpdlogdir):
             os.mkdir(httpdlogdir)
 
-        rrdcacheddir = site_dir(new_site.name) + "/var/rrdcached"
+        rrdcacheddir = new_site.dir + "/var/rrdcached"
         if not os.path.exists(rrdcacheddir):
             os.mkdir(rrdcacheddir)
 
 
     # give new user all files
-    chown_tree(site_dir(new_site.name), new_site.name)
+    chown_tree(new_site.dir, new_site.name)
 
     # Change config files from old to new site (see rename_site())
-    patch_skeleton_files(old_site.name, new_site.name)
+    patch_skeleton_files(old_site, new_site)
 
     # In case of mv now delete old user
     if what == "mv" and not reuse:
@@ -3001,7 +2991,7 @@ def main_mv_or_cp(what, args, options=None):
 
     # Entry for tmps in /etc/fstab
     if not reuse:
-        add_to_fstab(new_site.name, tmpfs_size = options.get('tmpfs-size'))
+        add_to_fstab(new_site, tmpfs_size = options.get('tmpfs-size'))
 
     finalize_site(what, "apache-reload" in options)
 
@@ -3222,7 +3212,7 @@ def main_update(args, options=None):
     walk_skel(from_skelroot, update_file, (from_version, to_version, g_site.dir, old_perms), depth_first=True, exclude_if_in = to_skelroot)
 
     # Change symbolic link pointing to new version
-    create_version_symlink(g_site.name, to_version)
+    create_version_symlink(g_site, to_version)
 
     # Let hooks do their work and update configuration.
     config_set_all()
@@ -3276,13 +3266,13 @@ def main_umount(args, options=None):
             sys.stdout.write("%sUnmounting tmpfs of site %s%s..." % (tty_bold, g_site.name, tty_normal))
             sys.stdout.flush()
 
-            if not show_success(unmount_tmpfs(g_site.name, False, kill="kill" in options)):
+            if not show_success(unmount_tmpfs(g_site, False, kill="kill" in options)):
                 exit_status = 1
     else:
         # Skip the site even when it is partly running
         if not site_is_stopped(g_site.name):
             bail_out("Cannot unmount tmpfs of site '%s' while it is running." % g_site.name)
-        unmount_tmpfs(g_site.name, kill="kill" in options)
+        unmount_tmpfs(g_site, kill="kill" in options)
     sys.exit(exit_status)
 
 
@@ -3737,7 +3727,8 @@ def main_restore(args, options=None):
 
     # Change config files from old to new site (see rename_site())
     if sitename != g_site.name:
-        patch_skeleton_files(sitename, g_site.name)
+        old_site = SiteContext(sitename)
+        patch_skeleton_files(old_site, g_site)
 
     # Now switch over to the new site as currently active site
     os.chdir(g_site.dir)
@@ -3753,9 +3744,9 @@ def prepare_restore_as_root(options):
     reuse = False
     if "reuse" in options:
         reuse = True
-        if not user_verify(g_site.name, allow_populated=True):
+        if not user_verify(g_site, allow_populated=True):
             bail_out("Error verifying site user.")
-        fstab_verify(g_site.name)
+        fstab_verify(g_site)
 
     sitename_must_be_valid(g_site, reuse)
 
@@ -3764,12 +3755,12 @@ def prepare_restore_as_root(options):
             bail_out("Cannot restore '%s' while it is running." % (g_site.name))
         else:
             os.system('omd stop %s' % g_site.name)
-        unmount_tmpfs(g_site.name, kill = "kill" in options)
+        unmount_tmpfs(g_site, kill = "kill" in options)
 
     if not reuse:
         uid = options.get("uid")
         gid = options.get("gid")
-        useradd(g_site.name, uid, gid) # None for uid/gid means: let Linux decide
+        useradd(g_site, uid, gid) # None for uid/gid means: let Linux decide
     else:
         sys.stdout.write("Deleting existing site data...\n")
         shutil.rmtree(g_site.dir)
@@ -3789,7 +3780,7 @@ def prepare_restore_as_site_user(options):
     kill_site_user_processes(exclude_current_and_parents=True)
     ok()
 
-    unmount_tmpfs(g_site.name)
+    unmount_tmpfs(g_site)
 
     sys.stdout.write("Deleting existing site data...")
     for f in os.listdir(g_site.dir):
@@ -3920,7 +3911,7 @@ def site_user_processes(exclude_current_and_parents):
 def postprocess_restore_as_root(options):
     # Entry for tmps in /etc/fstab
     if "reuse" not in options:
-        add_to_fstab(g_site.name, tmpfs_size = options.get('tmpfs-size'))
+        add_to_fstab(g_site, tmpfs_size = options.get('tmpfs-size'))
 
     finalize_site("restore", "apache-reload" in options)
 
@@ -4096,6 +4087,11 @@ class AbstractSiteContext(object):
         raise NotImplementedError()
 
 
+    @abc.abstractproperty
+    def tmp_dir(self):
+        raise NotImplementedError()
+
+
     @property
     def conf(self):
         """{ "CORE" : "nagios", ... } (contents of etc/omd/site.conf plus defaults from hooks)"""
@@ -4118,7 +4114,12 @@ class AbstractSiteContext(object):
 class SiteContext(AbstractSiteContext):
     @property
     def dir(self):
-        return site_dir(self._sitename)
+        return "/omd/sites/" + self._sitename
+
+
+    @property
+    def tmp_dir(self):
+        return "/omd/sites/%s/tmp" % self._sitename
 
 
     # TODO: Clean up the None case!
@@ -4167,6 +4168,11 @@ class RootContext(AbstractSiteContext):
     @property
     def dir(self):
         return "/"
+
+
+    @property
+    def tmp_dir(self):
+        return "/tmp"
 
 
     def version(self):

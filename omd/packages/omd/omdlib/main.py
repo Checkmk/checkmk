@@ -63,9 +63,7 @@ import omdlib
 #   '----------------------------------------------------------------------'
 
 # colored output, if stdout is a tty
-on_tty = sys.stdout.isatty()
-
-if on_tty:
+if sys.stdout.isatty():
     tty_black     = '\033[30m'
     tty_red       = '\033[31m'
     tty_green     = '\033[32m'
@@ -110,16 +108,17 @@ else:
     tty_error     = 'ERROR'
     tty_warn      = 'WARNING'
 
+
+class StateMarkers(object):
+    good  = " " + tty_green +  tty_bold + "*" + tty_normal
+    warn  = " " + tty_bgyellow + tty_black + tty_bold + "!" + tty_normal
+    error = " " + tty_bgred +  tty_white +   tty_bold + "!" + tty_normal
+
 def ok():
     sys.stdout.write(tty_ok + "\n")
 
 def bail_out(message):
     sys.exit(message)
-
-# Symbols for update
-good  = " " + tty_green +  tty_bold + "*" + tty_normal
-warn  = " " + tty_bgyellow + tty_black + tty_bold + "!" + tty_normal
-error = " " + tty_bgred +  tty_white +   tty_bold + "!" + tty_normal
 
 # Is used to duplicate output from stdout/stderr to a logfiles. This
 # is e.g. used during "omd update" to have a chance to analyze errors
@@ -839,10 +838,10 @@ def walk_skel(root, handler, args, depth_first, exclude_if_in = None, relbase = 
                     todo = False
                 except Exception:
                     todo = False
-                    sys.stderr.write(error * 40 + "\n")
-                    sys.stderr.write(error + " Exception      %s\n" % (path))
-                    sys.stderr.write(error + " " + traceback.format_exc().replace('\n', "\n" + error + " ") + "\n")
-                    sys.stderr.write(error * 40 + "\n")
+                    sys.stderr.write(StateMarkers.error * 40 + "\n")
+                    sys.stderr.write(StateMarkers.error + " Exception      %s\n" % (path))
+                    sys.stderr.write(StateMarkers.error + " " + traceback.format_exc().replace('\n', "\n" + StateMarkers.error + " ") + "\n")
+                    sys.stderr.write(StateMarkers.error * 40 + "\n")
 
                     # If running in interactive mode ask the user to terminate or retry
                     # In case of non interactive mode just throw the exception
@@ -927,7 +926,7 @@ def patch_template_file(src, dst, old, new):
     try_chown(dst + ".rej", new)
     try_chown(dst + ".orig", new)
     if result == 0:
-        sys.stdout.write(good + " Converted      %s\n" % src)
+        sys.stdout.write(StateMarkers.good + " Converted      %s\n" % src)
     else:
         # Make conflict resolution interactive - similar to omd update
         options = [
@@ -1057,7 +1056,7 @@ def merge_update_file(relpath, old_version, new_version):
     if try_merge() == 0:
         # ACHTUNG: Hier müssen die Dateien $DATEI-alt, $DATEI-neu und $DATEI.orig
         # gelöscht werden
-        sys.stdout.write(good + " Merged         %s\n" % fn)
+        sys.stdout.write(StateMarkers.good + " Merged         %s\n" % fn)
         return
 
     # No success. Should we try merging the users' changes onto the new file?
@@ -1222,13 +1221,13 @@ def update_file(relpath, old_version, new_version, userdir, old_perms):
     # 1) New version ships new skeleton file -> simply install
     if not old_type and not user_type:
         create_skeleton_file(new_skel, userdir, relpath, replacements)
-        sys.stdout.write(good + " Installed %-4s %s\n" % (new_type, fn))
+        sys.stdout.write(StateMarkers.good + " Installed %-4s %s\n" % (new_type, fn))
 
     # 2) new version ships new skeleton file, but user's own file/directory/link
     #    is in the way.
     # 2a) the users file is identical with our new version
     elif not old_type and not differs:
-            sys.stdout.write(good + " Identical new  %s\n" % fn)
+            sys.stdout.write(StateMarkers.good + " Identical new  %s\n" % fn)
 
     # 2b) user's file has a different content or type
     elif not old_type:
@@ -1240,15 +1239,15 @@ def update_file(relpath, old_version, new_version, userdir, old_perms):
                     relpath,
                     "keep", "Keep your %s" % user_type,
                     "replace", "Replace your %s with the new default %s" % (user_type, new_type)):
-            sys.stdout.write(warn + " Keeping your   %s\n" % fn)
+            sys.stdout.write(StateMarkers.warn + " Keeping your   %s\n" % fn)
         else:
             create_skeleton_file(new_skel, userdir, relpath, replacements)
-            sys.stdout.write(good + " Installed %-4s %s\n" % (new_type, fn))
+            sys.stdout.write(StateMarkers.good + " Installed %-4s %s\n" % (new_type, fn))
 
     # 3) old version had a file which has vanished in new (got obsolete). If the user
     #    has deleted it himself, we are just happy
     elif not new_type and not user_type:
-        sys.stdout.write(good + " Obsolete       %s\n" % fn)
+        sys.stdout.write(StateMarkers.good + " Obsolete       %s\n" % fn)
 
     # 3b) same, but user has not deleted and changed type
     elif not new_type and user_changed_type:
@@ -1260,10 +1259,10 @@ def update_file(relpath, old_version, new_version, userdir, old_perms):
                     relpath,
                     "keep", "Keep your %s" % user_type,
                     "delete", "Delete it"):
-            sys.stdout.write(warn + " Keeping your   %s\n" % fn)
+            sys.stdout.write(StateMarkers.warn + " Keeping your   %s\n" % fn)
         else:
             delete_user_file(user_path)
-            sys.stdout.write(warn + " Deleted        %s\n" % fn)
+            sys.stdout.write(StateMarkers.warn + " Deleted        %s\n" % fn)
 
     # 3c) same, but user has changed it contents
     elif not new_type and user_changed_content:
@@ -1275,10 +1274,10 @@ def update_file(relpath, old_version, new_version, userdir, old_perms):
                 relpath,
                 "keep", "keep your %s, though it is obsolete" % user_type,
                 "delete", "delete your %s" % user_type):
-            sys.stdout.write(warn + " Keeping your   %s\n" % fn)
+            sys.stdout.write(StateMarkers.warn + " Keeping your   %s\n" % fn)
         else:
             delete_user_file(user_path)
-            sys.stdout.write(warn + " Deleted        %s\n" % fn)
+            sys.stdout.write(StateMarkers.warn + " Deleted        %s\n" % fn)
 
     # 3d) same, but it is a directory which is not empty
     elif not new_type and non_empty_directory:
@@ -1290,25 +1289,25 @@ def update_file(relpath, old_version, new_version, userdir, old_perms):
                 relpath,
                 "keep", "keep your directory, though it is obsolete",
                 "delete", "delete your directory"):
-            sys.stdout.write(warn + " Keeping your   %s\n" % fn)
+            sys.stdout.write(StateMarkers.warn + " Keeping your   %s\n" % fn)
         else:
             delete_user_file(user_path)
-            sys.stdout.write(warn + " Deleted        %s\n" % fn)
+            sys.stdout.write(StateMarkers.warn + " Deleted        %s\n" % fn)
 
     # 3e) same, but user hasn't changed anything -> silently delete
     elif not new_type:
         delete_user_file(user_path)
-        sys.stdout.write(good + " Vanished       %s\n" % fn)
+        sys.stdout.write(StateMarkers.good + " Vanished       %s\n" % fn)
 
     # 4) old and new exist, but user file not. User has deleted that
     #    file. We simply do nothing in that case. The user surely has
     #    a good reason why he deleted the file.
     elif not user_type and not we_changed:
-        sys.stdout.write(good + " Unwanted       %s (unchanged, deleted by you)\n" % fn)
+        sys.stdout.write(StateMarkers.good + " Unwanted       %s (unchanged, deleted by you)\n" % fn)
 
     # 4b) File changed in new version. Simply warn if user has deleted it.
     elif not user_type:
-        sys.stdout.write(warn + " Missing        %s\n" % fn)
+        sys.stdout.write(StateMarkers.warn + " Missing        %s\n" % fn)
 
     # B ---> UNCHANGED, EASY CASES
 
@@ -1319,11 +1318,11 @@ def update_file(relpath, old_version, new_version, userdir, old_perms):
     # 6) User didn't change anything -> take over new version
     elif not user_changed:
         create_skeleton_file(new_skel, userdir, relpath, replacements)
-        sys.stdout.write(good + " Updated        %s\n" % fn)
+        sys.stdout.write(StateMarkers.good + " Updated        %s\n" % fn)
 
     # 7) User changed, but accidentally exactly as we did -> no action neccessary
     elif not differs:
-        sys.stdout.write(good + " Identical      %s\n" % fn)
+        sys.stdout.write(StateMarkers.good + " Identical      %s\n" % fn)
 
     # TEST UNTIL HERE
 
@@ -1335,7 +1334,7 @@ def update_file(relpath, old_version, new_version, userdir, old_perms):
         except KeyboardInterrupt:
             raise
         except Exception, e:
-            sys.stdout.write(error + " Cannot merge: %s\n" % e)
+            sys.stdout.write(StateMarkers.error + " Cannot merge: %s\n" % e)
 
     # D ---> SYMLINKS
     # 8) all are symlinks, all changed
@@ -1351,11 +1350,11 @@ def update_file(relpath, old_version, new_version, userdir, old_perms):
                 relpath,
                 "keep", "Keep your symbolic link pointing to %s" % os.readlink(user_path),
                 "replace", "Change link target to %s" % os.readlink(new_path)):
-            sys.stdout.write(warn + " Keeping your   %s\n" % fn)
+            sys.stdout.write(StateMarkers.warn + " Keeping your   %s\n" % fn)
         else:
             os.remove(user_path)
             os.symlink(os.readlink(new_path), user_path)
-            sys.stdout.write(warn + " Set link       %s to new target %s\n" % (fn, os.readlink(new_path)))
+            sys.stdout.write(StateMarkers.warn + " Set link       %s to new target %s\n" % (fn, os.readlink(new_path)))
 
     # E ---> FILE TYPE HAS CHANGED (NASTY)
 
@@ -1377,10 +1376,10 @@ def update_file(relpath, old_version, new_version, userdir, old_perms):
                 relpath,
                 "keep", "Keep your %s" % user_type,
                 "replace", "Replace it with the new %s" % new_type):
-            sys.stdout.write(warn + " Keeping your version of %s\n" % fn)
+            sys.stdout.write(StateMarkers.warn + " Keeping your version of %s\n" % fn)
         else:
             create_skeleton_file(new_skel, userdir, relpath, replacements)
-            sys.stdout.write(warn + " Replaced your %s %s by new default %s.\n" % (user_type, relpath, new_type))
+            sys.stdout.write(StateMarkers.warn + " Replaced your %s %s by new default %s.\n" % (user_type, relpath, new_type))
 
     # 10) The user has changed the file type, we just the content
     elif old_type != user_type:
@@ -1394,10 +1393,10 @@ def update_file(relpath, old_version, new_version, userdir, old_perms):
                 relpath,
                 "keep", "Keep your %s" % user_type,
                 "replace", "Replace it with the new %s" % new_type):
-            sys.stdout.write(warn + " Keeping your %s %s.\n" % (user_type, fn))
+            sys.stdout.write(StateMarkers.warn + " Keeping your %s %s.\n" % (user_type, fn))
         else:
             create_skeleton_file(new_skel, userdir, relpath, replacements)
-            sys.stdout.write(warn + " Delete your %s and created new default %s %s.\n" %
+            sys.stdout.write(StateMarkers.warn + " Delete your %s and created new default %s %s.\n" %
                     (user_type, new_type, fn))
 
     # 11) This case should never happen, if I've not lost something
@@ -1412,10 +1411,10 @@ def update_file(relpath, old_version, new_version, userdir, old_perms):
                relpath,
                "keep", "Keep your %s" % user_type,
                "replace", "Replace it with the new %s" % new_type):
-            sys.stdout.write(warn + " Keeping your %s %s.\n" % (user_type, fn))
+            sys.stdout.write(StateMarkers.warn + " Keeping your %s %s.\n" % (user_type, fn))
         else:
             create_skeleton_file(new_skel, userdir, relpath, replacements)
-            sys.stdout.write(warn + " Delete your %s and created new default %s %s.\n" % (user_type, new_type, fn))
+            sys.stdout.write(StateMarkers.warn + " Delete your %s and created new default %s %s.\n" % (user_type, new_type, fn))
 
 
     # Now the new file/link/directory is in place, deleted or whatever. The
@@ -1472,13 +1471,13 @@ def update_file(relpath, old_version, new_version, userdir, old_perms):
                 what = "default"
 
         if what == "keep":
-            sys.stdout.write(warn + " Permissions    %04o %s (unchanged)\n" % (user_perm, fn))
+            sys.stdout.write(StateMarkers.warn + " Permissions    %04o %s (unchanged)\n" % (user_perm, fn))
         elif what == "default":
             try:
                 os.chmod(user_path, new_perm)
-                sys.stdout.write(good + " Permissions    %04o -> %04o %s\n" % (user_perm, new_perm, fn))
+                sys.stdout.write(StateMarkers.good + " Permissions    %04o -> %04o %s\n" % (user_perm, new_perm, fn))
             except Exception, e:
-                sys.stdout.write(error + " Permission:    cannot change %04o -> %04o %s: %s\n" % (user_perm, new_perm, fn, e))
+                sys.stdout.write(StateMarkers.error + " Permission:    cannot change %04o -> %04o %s: %s\n" % (user_perm, new_perm, fn, e))
 
 
 def filetype(p):
@@ -2571,7 +2570,7 @@ def main_sites(args, options=None):
     if options is None:
         options = {}
 
-    if on_tty and "bare" not in options:
+    if sys.stdout.isatty() and "bare" not in options:
         sys.stdout.write("SITE             VERSION          COMMENTS\n")
     for site in all_sites():
         tags = []
@@ -3129,20 +3128,20 @@ def print_diff(rel_path, source_path, target_path, source_version, source_perms)
                 sys.stdout.write("    %s %s %s\n" % (source_type, arrow, target_type))
 
     if not target_type:
-        print_status(good, fn, 'd', 'Deleted')
+        print_status(StateMarkers.good, fn, 'd', 'Deleted')
         return
 
     elif changed_type and changed_content:
-        print_status(good, fn, 'tc', 'Changed type and content')
+        print_status(StateMarkers.good, fn, 'tc', 'Changed type and content')
 
     elif changed_type and not changed_content:
-        print_status(good, fn, 't', 'Changed type')
+        print_status(StateMarkers.good, fn, 't', 'Changed type')
 
     elif changed_content and not changed_type:
-        print_status(good, fn, 'c', 'Changed content')
+        print_status(StateMarkers.good, fn, 'c', 'Changed content')
 
     if source_perm != target_perm:
-        print_status(warn, fn, 'p', 'Changed permissions')
+        print_status(StateMarkers.warn, fn, 'p', 'Changed permissions')
 
 
 

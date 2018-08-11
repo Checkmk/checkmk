@@ -1792,27 +1792,6 @@ def check_status(sitename, display=True, daemon=None, bare=False):
 # choices - available choices for enumeration hooks
 # depends - exists with 1, if this hook misses its dependent hook settings
 
-# Parse the file site.conf of a site into a dictionary. Does
-# not use any global variables. Has no side effects.
-def parse_site_conf(sitename):
-    config = {}
-    confpath = "/omd/sites/%s/etc/omd/site.conf" % sitename
-    if not os.path.exists(confpath):
-        return {}
-
-    for line in file(confpath):
-        line = line.strip()
-        if line == "" or line[0] == "#":
-            continue
-        var, value = line.split("=", 1)
-        if not var.startswith("CONFIG_"):
-            sys.stderr.write("Ignoring invalid variable %s.\n" % var)
-        else:
-            config[var[7:].strip()] = value.strip().strip("'")
-
-    return config
-
-
 # Put all site configuration (explicit and defaults) into environment
 # variables beginning with CONFIG_
 def create_config_environment():
@@ -2180,7 +2159,7 @@ def config_configure_hook(hook_name):
         load_hook_dependencies()
 
 def init_action(command, args, options):
-    if site_is_disabled(g_site.name):
+    if g_site.is_disabled():
         bail_out("This site is disabled.")
 
     if command in [ "start", "restart" ]:
@@ -2548,7 +2527,7 @@ def main_sites(args, options=None):
         if "bare" in options:
             sys.stdout.write("%s\n" % site.name)
         else:
-            disabled = site_is_disabled(site.name)
+            disabled = site.is_disabled()
             v = site.version
             if v == None:
                 v = "(none)"
@@ -2631,7 +2610,7 @@ def welcome_message(admin_password):
     sys.stdout.write("\n")
 
 def main_init(args, options):
-    if not site_is_disabled(g_site.name):
+    if not g_site.is_disabled():
         bail_out("Cannot initialize site that is not disabled.\n"
                  "Please call 'omd disable %s' first." % g_site.name)
 
@@ -2816,12 +2795,8 @@ def create_site_dir(site):
     os.makedirs(site.dir)
     os.chown(site.dir, user_id(site.name), group_id(site.name))
 
-def site_is_disabled(sitename):
-    apache_conf = "/omd/apache/%s.conf" % sitename
-    return not os.path.exists(apache_conf)
-
 def main_disable(args, options):
-    if site_is_disabled(g_site.name):
+    if g_site.is_disabled():
         sys.stderr.write("This site is already disabled.\n")
         sys.exit(0)
 
@@ -2833,7 +2808,7 @@ def main_disable(args, options):
     restart_apache()
 
 def main_enable(args, options):
-    if not site_is_disabled(g_site.name):
+    if not g_site.is_disabled():
         sys.stderr.write("This site is already enabled.\n")
         sys.exit(0)
     sys.stdout.write("Re-enabling Apache configuration for this site...")
@@ -3299,7 +3274,7 @@ def main_init_action(command, args, options=None):
             continue
 
         # Skip disabled sites completely
-        if site_is_disabled(site.name):
+        if site.is_disabled():
             continue
 
         # Handle non autostart sites
@@ -4131,8 +4106,7 @@ class SiteContext(AbstractSiteContext):
 
         Puts these variables into the config dict without the CONFIG_. Also
         puts the variables into the process environment."""
-        # TODO: Move helpers to better place
-        self._config = parse_site_conf(g_site.name)
+        self._config = self._read_site_config()
 
         # Get the default values of all config hooks that are not contained
         # in the site configuration. This can happen if there are new hooks
@@ -4147,6 +4121,26 @@ class SiteContext(AbstractSiteContext):
         self._config_loaded = True
 
 
+    def _read_site_config(self):
+        """Read and parse the file site.conf of a site into a dictionary and returns it"""
+        config = {}
+        confpath = "%s/etc/omd/site.conf" % (self.dir)
+        if not os.path.exists(confpath):
+            return {}
+
+        for line in file(confpath):
+            line = line.strip()
+            if line == "" or line[0] == "#":
+                continue
+            var, value = line.split("=", 1)
+            if not var.startswith("CONFIG_"):
+                sys.stderr.write("Ignoring invalid variable %s.\n" % var)
+            else:
+                config[var[7:].strip()] = value.strip().strip("'")
+
+        return config
+
+
     def exists(self):
         return os.path.exists(self.dir)
 
@@ -4159,9 +4153,14 @@ class SiteContext(AbstractSiteContext):
 
 
     def is_autostart(self):
-        """Determines wether a specific site is set to autostart."""
+        """Determines whether a specific site is set to autostart."""
         return self.conf.get('AUTOSTART', 'on') == 'on'
 
+
+    def is_disabled(self):
+        """Whether or not this site has been disabled with 'omd disable'"""
+        apache_conf = "/omd/apache/%s.conf" % self.name
+        return not os.path.exists(apache_conf)
 
 
 

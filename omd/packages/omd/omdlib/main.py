@@ -579,13 +579,6 @@ def site_is_stopped(sitename):
 def site_is_running(sitename):
     return check_status(sitename, False) == 0
 
-# Determines wether a specific site is set to autostart. Note that
-# this needs to be called from a non-site-specific context and
-# can there not use the g_site... variables.
-def site_autostart(sitename):
-    config = parse_site_conf(sitename)
-    return config.get('AUTOSTART', 'on') == 'on'
-
 def start_site(sitename):
     site = SiteContext(sitename)
     prepare_and_populate_tmpfs(site)
@@ -3312,7 +3305,7 @@ def main_init_action(command, args, options=None):
         # Handle non autostart sites
         if command in [ "start", "restart", "reload" ] or \
             ( "auto" in options and command == "status" ):
-            if not opt_force and not site_autostart(site.name):
+            if not opt_force and not site.is_autostart():
                 if bare:
                     continue
                 elif not parallel:
@@ -4163,6 +4156,11 @@ class SiteContext(AbstractSiteContext):
             if entry not in [ '.', '..' ]:
                 return False
         return True
+
+
+    def is_autostart(self):
+        """Determines wether a specific site is set to autostart."""
+        return self.conf.get('AUTOSTART', 'on') == 'on'
 
 
 

@@ -1,4 +1,5 @@
 import os
+import pytest
 
 import omdlib.main
 
@@ -40,3 +41,21 @@ def test_site_context_is_empty(monkeypatch):
 
     site = omdlib.main.SiteContext("dingelang")
     assert not site.is_empty()
+
+
+def test_site_context_is_autostart(monkeypatch):
+    site = omdlib.main.SiteContext("dingeling")
+
+    with pytest.raises(Exception) as e:
+        site.is_autostart()
+    assert "not loaded yet" in str(e)
+
+    site._config = {}
+    site._config_loaded = True
+    assert site.is_autostart()
+
+    site._config = {"AUTOSTART": "on"}
+    assert site.is_autostart()
+
+    site._config = {"AUTOSTART": "off"}
+    assert not site.is_autostart()

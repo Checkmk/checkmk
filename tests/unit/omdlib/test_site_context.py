@@ -22,6 +22,13 @@ def test_site_context_version(monkeypatch):
     assert site.version == "2018.08.11.cee"
 
 
+def test_site_context_replacements(monkeypatch):
+    site = omdlib.main.SiteContext("dingeling")
+    assert site.replacements["###SITE###"] == "dingeling"
+    assert site.replacements["###ROOT###"] == "/omd/sites/dingeling"
+    assert len(site.replacements) == 2
+
+
 def test_site_context_exists(monkeypatch):
     monkeypatch.setattr(os.path, "exists", lambda p: p == "/omd/sites/dingeling")
 

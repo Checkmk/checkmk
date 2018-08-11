@@ -672,10 +672,7 @@ def file_owner_verify(path, user_id, group_id):
 
 def create_skeleton_files(site, directory):
     read_skel_permissions()
-    replacements = {
-        "###SITE###" : site.name,
-        "###ROOT###" : site.dir,
-    }
+    replacements = site.replacements
     # Hack: exclude tmp if dir is '.'
     exclude_tmp = directory == "."
     skelroot = "/omd/versions/%s/skel" % omdlib.__version__
@@ -749,11 +746,7 @@ def try_chown(filename, user):
 def instantiate_skel(path):
     try:
         t = file(path).read()
-        replacements = {
-            "###SITE###" : g_site.name,
-            "###ROOT###" : g_site.dir,
-        }
-        return replace_tags(t, replacements)
+        return replace_tags(t, g_site.replacements)
     except:
         return "" # e.g. due to permission error
 
@@ -869,12 +862,8 @@ def patch_template_file(src, dst, old_site, new_site):
     # Create patch from old instantiated skeleton file to new one
     content = file(src).read()
     for site in [ old_site, new_site ]:
-        replacements = {
-            "###SITE###" : site.name,
-            "###ROOT###" : site.dir,
-        }
         filename = "%s.skel.%s" % (dst, site.name)
-        file(filename, "w").write(replace_tags(content, replacements))
+        file(filename, "w").write(replace_tags(content, site.replacements))
         try_chown(filename, new_site.name)
 
     # If old and new skeleton file are identical, then do nothing
@@ -977,10 +966,7 @@ def patch_template_file(src, dst, old_site, new_site):
 def merge_update_file(relpath, old_version, new_version):
     fn = tty_bold + relpath + tty_normal
 
-    replacements = {
-        "###SITE###" : g_site.name,
-        "###ROOT###" : g_site.dir,
-    }
+    replacements = g_site.replacements
     user_path = g_site.dir + "/" + relpath
     permissions = os.stat(user_path).st_mode
 
@@ -1149,10 +1135,7 @@ def update_file(relpath, old_version, new_version, userdir, old_perms):
     old_skel = "/omd/versions/%s/skel" % old_version
     new_skel = "/omd/versions/%s/skel" % new_version
 
-    replacements = {
-        "###SITE###" : g_site.name,
-        "###ROOT###" : g_site.dir,
-    }
+    replacements = g_site.replacements
 
     old_path = old_skel + "/" + relpath
     new_path = new_skel + "/" + relpath
@@ -4098,6 +4081,15 @@ class SiteContext(AbstractSiteContext):
             return os.readlink(version_link).split("/")[-1]
         except:
             return None
+
+
+    @property
+    def replacements(self):
+        """Dictionary of key/value for replacing macros in skel files"""
+        return {
+            "###SITE###": self.name,
+            "###ROOT###": self.dir,
+        }
 
 
     def load_config(self):

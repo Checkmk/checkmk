@@ -1,0 +1,16 @@
+Title: oracle_asm_diskgroup: Support for Failgroups
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1536129477
+Class: fix
+
+The monitoring of ASM Diskgroups with NORMAL/HIGH redundancy
+has been redesigned due to limitations of old plugin SQL.
+
+Please update the plugin for correct calculation of sizes in
+Diskgrups with NORMAL/HIGH redundancy. Otherwise the following
+info is shown:
+old plugin data, possible wrong used and free space

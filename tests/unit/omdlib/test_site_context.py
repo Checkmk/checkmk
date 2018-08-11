@@ -59,3 +59,12 @@ def test_site_context_is_autostart(monkeypatch):
 
     site._config = {"AUTOSTART": "off"}
     assert not site.is_autostart()
+
+
+def test_site_context_is_disabled(monkeypatch):
+    monkeypatch.setattr(os.path, "exists", lambda p: p == "/omd/apache/dingeling.conf")
+    site = omdlib.main.SiteContext("dingeling")
+    assert not site.is_disabled()
+
+    site = omdlib.main.SiteContext("dingelang")
+    assert site.is_disabled()

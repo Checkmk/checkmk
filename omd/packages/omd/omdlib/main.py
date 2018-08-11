@@ -2058,7 +2058,7 @@ def config_set_value(hook_name, value, save = True):
     # Call hook with 'set'. If it outputs something, that will
     # be our new value (i.e. hook disagrees with the new setting!)
     commandline = "%s/lib/omd/hooks/%s set '%s'" % (g_site.dir, hook_name, value)
-    if os.getuid() == 0:
+    if is_root():
         sys.stderr.write("I am root. This should never happen!\n")
         sys.exit(1)
 
@@ -2435,22 +2435,22 @@ def main_help(args=None, options=None):
     if options is None:
         options = {}
 
-    am_root = os.getuid() == 0
-    if am_root:
+    if is_root():
         sys.stdout.write("Usage (called as root):\n\n")
     else:
         sys.stdout.write("Usage (called as site user):\n\n")
 
     for command, only_root, _no_suid, needs_site, _site_must_exist, _confirm, synopsis, _command_function, _command_options, descr, _confirm_text in commands:
-        if only_root and not am_root:
+        if only_root and not is_root():
             continue
-        if am_root:
+
+        if is_root():
             if needs_site == 2:
                 synopsis = "[SITE] " + synopsis
             elif needs_site == 1:
                 synopsis = "SITE " + synopsis
 
-        synopsis_width = '23' if am_root else '16'
+        synopsis_width = '23' if is_root() else '16'
         sys.stdout.write((" omd %-10s %-"+synopsis_width+"s %s\n") % (command, synopsis, descr))
     sys.stdout.write("\nGeneral Options:\n"
                      " -V <version>                    set specific version, useful in combination with update/create\n"
@@ -4595,7 +4595,7 @@ def main():
         main_help()
         sys.exit(1)
 
-    if os.getuid() != 0 and only_root:
+    if not is_root() and only_root:
         bail_out("omd: root permissions are needed for this command.")
 
     # Parse command options. We need to do this now in order to know,
@@ -4607,7 +4607,7 @@ def main():
     # are site user, the site name is our user name
     g_site = RootContext()
     if needs_site > 0:
-        if os.getuid() == 0:
+        if is_root():
             if len(args) >= 1:
                 g_site = SiteContext(args[0])
                 args = args[1:]
@@ -4651,7 +4651,7 @@ def main():
         else:
             raise
 
-    if not no_suid and g_site.name and os.getuid() == 0 and not only_root:
+    if not no_suid and g_site.name and is_root() and not only_root:
         switch_to_site_user()
 
     # Make sure environment is in a defined state

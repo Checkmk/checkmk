@@ -402,7 +402,7 @@ def groupadd(groupname, gid = None):
 def useradd(site, uid = None, gid = None):
     # Create user for running site 'name'
     groupadd(site.name, gid)
-    useradd_options = g_info["USERADD_OPTIONS"]
+    useradd_options = g_info.USERADD_OPTIONS
     if uid != None:
         useradd_options += " -u %d" % int(uid)
     if os.system("useradd %s -r -d '%s' -c 'OMD site %s' -g %s -G omd %s -s /bin/bash" % \
@@ -417,10 +417,10 @@ def useradd(site, uid = None, gid = None):
 
     # Add Apache to new group. It needs to be able to write in to the
     # command pipe and possible other stuff
-    add_user_to_group(g_info["APACHE_USER"], site.name)
+    add_user_to_group(g_info.APACHE_USER, site.name)
 
 def add_user_to_group(user, group):
-    cmd = g_info["ADD_USER_TO_GROUP"] % {"user": user, "group" : group}
+    cmd = g_info.ADD_USER_TO_GROUP % {"user": user, "group" : group}
     return os.system(cmd + " >/dev/null") == 0
 
 def userdel(name):
@@ -520,8 +520,8 @@ def user_verify(site, allow_populated=False):
     if group == None or group.gr_name != name:
         bail_out(tty_error + ": primary group for siteuser must be %s" % name )
 
-    if not user_has_group(g_info["APACHE_USER"], name):
-        bail_out(tty_error + ": apache user %s must be member of group %s" % ( g_info["APACHE_USER"], name ) )
+    if not user_has_group(g_info.APACHE_USER, name):
+        bail_out(tty_error + ": apache user %s must be member of group %s" % ( g_info.APACHE_USER, name ) )
 
     if not user_has_group(name, "omd"):
         bail_out(tty_error + ": siteuser must be member of group omd" )
@@ -1514,7 +1514,7 @@ def prepare_tmpfs(sitename, tmp):
     if not os.path.exists(tmp):
         os.mkdir(tmp)
 
-    mount_options = shlex.split(g_info["MOUNT_OPTIONS"])
+    mount_options = shlex.split(g_info.MOUNT_OPTIONS)
     p = subprocess.Popen(["mount"] + mount_options + [tmp], shell=False,
             stdin=open(os.devnull), stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
     exit_code = p.wait()
@@ -2173,32 +2173,6 @@ def init_action(command, args, options):
 #   |  Various helper functions                                            |
 #   '----------------------------------------------------------------------'
 
-# Read distro- and version specific values
-def read_info():
-    global g_info
-    g_info = {}
-    info_dir = "/omd/versions/" + omdlib.__version__ + "/share/omd"
-    for f in os.listdir(info_dir):
-        if f.endswith(".info"):
-            for line in file(info_dir + "/" + f):
-                try:
-                    line = line.strip()
-                    # Skip comment and empty lines
-                    if line.startswith('#') or line == '':
-                        continue
-                    # Remove everything after the first comment sign
-                    if '#' in line:
-                        line = line[:line.index('#')].strip()
-                    var, value = line.split('=')
-                    value = value.strip()
-                    if var.endswith("+"):
-                        var = var[:-1] # remove +
-                        g_info[var.strip()] += " " + value
-                    else:
-                        g_info[var.strip()] = value
-                except Exception:
-                    bail_out('Unable to parse line "%s" in file "%s"' % (line, info_dir + "/" + f))
-
 def fstab_verify(site):
     """Ensure that there is an fstab entry for the tmpfs of the site.
     In case there is no fstab (seen in some containers) assume everything
@@ -2300,7 +2274,7 @@ def delete_apache_hook(sitename):
         sys.stderr.write("Cannot remove apache hook %s: %s\n" % (hook_path, e))
 
 def init_cmd(name, action):
-    return g_info['INIT_CMD'] % {
+    return g_info.INIT_CMD % {
         'name'   : name,
         'action' : action,
     }
@@ -2308,13 +2282,13 @@ def init_cmd(name, action):
 def reload_apache():
     sys.stdout.write("Reloading Apache...")
     sys.stdout.flush()
-    show_success(os.system("%s graceful" % g_info["APACHE_CTL"]) >> 8)
+    show_success(os.system("%s graceful" % g_info.APACHE_CTL) >> 8)
 
 def restart_apache():
-    if os.system(init_cmd(g_info['APACHE_INIT_NAME'], 'status') + ' >/dev/null 2>&1') >> 8 == 0:
+    if os.system(init_cmd(g_info.APACHE_INIT_NAME, 'status') + ' >/dev/null 2>&1') >> 8 == 0:
         sys.stdout.write("Restarting Apache...")
         sys.stdout.flush()
-        show_success(os.system(init_cmd(g_info['APACHE_INIT_NAME'], 'restart') + ' >/dev/null') >> 8)
+        show_success(os.system(init_cmd(g_info.APACHE_INIT_NAME, 'restart') + ' >/dev/null') >> 8)
 
 def replace_tags(content, replacements):
     for var, value in replacements.items():
@@ -2466,7 +2440,8 @@ def main_version(args, options=None):
             bail_out("No such site: %s" % site.name)
         version = site.version
     else:
-        version = g_info["OMD_VERSION"]
+        version = omdlib.__version__
+
     if "bare" in options:
         sys.stdout.write(version + "\n")
     else:
@@ -3911,11 +3886,11 @@ def main_cleanup(args, options=None):
 
 def _cleanup_global_files():
     sys.stdout.write("No version left. Cleaning up global files.\n")
-    shutil.rmtree(g_info["OMD_PHYSICAL_BASE"], ignore_errors=True)
+    shutil.rmtree(g_info.OMD_PHYSICAL_BASE, ignore_errors=True)
 
     for path in [
             "/omd",
-            g_info["APACHE_CONF_DIR"] + "/zzz_omd.conf",
+            g_info.APACHE_CONF_DIR + "/zzz_omd.conf",
             "/etc/init.d/omd",
             "/usr/bin/omd",
         ]:
@@ -3940,7 +3915,7 @@ class PackageManager(object):
         if os.path.exists("/etc/cma"):
             return None
 
-        distro_code = g_info["DISTRO_CODE"]
+        distro_code = g_info.DISTRO_CODE
         if distro_code.startswith("el") \
            or distro_code.startswith("sles"):
             return PackageManagerRPM()
@@ -4185,6 +4160,56 @@ class RootContext(AbstractSiteContext):
 
     def is_empty(self):
         return False
+
+
+class VersionInfo(object):
+    """Provides OMD version/platform specific infos"""
+    def __init__(self, version):
+        self._version = version
+
+        # Register all relevant vars
+        self.USERADD_OPTIONS = ""
+        self.APACHE_USER = ""
+        self.ADD_USER_TO_GROUP = ""
+        self.MOUNT_OPTIONS = ""
+        self.INIT_CMD = ""
+        self.APACHE_CTL = ""
+        self.APACHE_INIT_NAME = ""
+        self.OMD_PHYSICAL_BASE = ""
+        self.APACHE_CONF_DIR = ""
+        self.DISTRO_CODE = ""
+
+
+    def load(self):
+        """Update vars with real values from info file"""
+        for k, v in self._read_info().items():
+            setattr(self, k, v)
+
+
+    def _read_info(self):
+        info = {}
+        info_dir = "/omd/versions/" + omdlib.__version__ + "/share/omd"
+        for f in os.listdir(info_dir):
+            if f.endswith(".info"):
+                for line in file(info_dir + "/" + f):
+                    try:
+                        line = line.strip()
+                        # Skip comment and empty lines
+                        if line.startswith('#') or line == '':
+                            continue
+                        # Remove everything after the first comment sign
+                        if '#' in line:
+                            line = line[:line.index('#')].strip()
+                        var, value = line.split('=')
+                        value = value.strip()
+                        if var.endswith("+"):
+                            var = var[:-1] # remove +
+                            info[var.strip()] += " " + value
+                        else:
+                            info[var.strip()] = value
+                    except Exception:
+                        bail_out('Unable to parse line "%s" in file "%s"' % (line, info_dir + "/" + f))
+        return info
 
 
 
@@ -4532,12 +4557,14 @@ def hash_password(password):
 #   '----------------------------------------------------------------------'
 
 # Some global variables
+# TODO: Clean em all up
 opt_verbose     = False
 opt_interactive = False
 opt_force       = False
 
 g_site          = RootContext()
-g_orig_wd = "/"
+g_info          = VersionInfo(omdlib.__version__)
+g_orig_wd       = "/"
 
 # Handle global options. We might convert this to getopt
 # later. But a problem here is that we have options appearing
@@ -4623,9 +4650,7 @@ def main():
         elif omdlib.__version__ != v:
             exec_other_omd(v, command)
 
-
-    read_info()
-
+    g_info.load()
     g_site.load_config()
 
     # Commands which affect a site and can be called as root *or* as

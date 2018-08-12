@@ -1794,8 +1794,7 @@ def save_site_conf(site):
 # Get information about all hooks. Just needed for
 # the "omd config" command.
 def load_config_hooks(site):
-    global g_config_hooks
-    g_config_hooks = {}
+    config_hooks = {}
 
     hook_dir = site.dir + "/lib/omd/hooks"
     for hook_name in os.listdir(hook_dir):
@@ -1804,10 +1803,11 @@ def load_config_hooks(site):
                 hook = config_load_hook(site, hook_name)
                 # only load configuration hooks
                 if hook.get("choices", None) != None:
-                    g_config_hooks[hook_name] = hook
+                    config_hooks[hook_name] = hook
         except:
             pass
-    load_hook_dependencies(site)
+    config_hooks = load_hook_dependencies(site, config_hooks)
+    return config_hooks
 
 def config_load_hook(site, hook_name):
     hook = {
@@ -1861,14 +1861,15 @@ def config_load_hook(site, hook_name):
     hook["choices"] = choices
     return hook
 
-def load_hook_dependencies(site):
-    for hook_name in sort_hooks(g_config_hooks.keys()):
-        hook = g_config_hooks[hook_name]
+def load_hook_dependencies(site, config_hooks):
+    for hook_name in sort_hooks(config_hooks.keys()):
+        hook = config_hooks[hook_name]
         exitcode, _content = call_hook(site, hook_name, ["depends"])
         if exitcode:
             hook["active"] = False
         else:
             hook["active"] = True
+    return config_hooks
 
 
 # Always sort CORE hook to the end because it runs "cmk -U" which
@@ -1898,7 +1899,7 @@ def call_hook(site, hook_name, args):
     return exitcode, content
 
 
-def config_change(site):
+def config_change(site, config_hooks):
     # Check whether or not site needs to be stopped. Stop and remember to start again later
     site_was_stopped = False
     if not site_is_stopped(site):
@@ -1911,10 +1912,10 @@ def config_change(site):
         if not settings:
             bail_out("You need to provide config change commands via stdin: KEY=value\n")
 
-        validate_config_change_commands(settings)
+        validate_config_change_commands(config_hooks, settings)
 
         for key, value in settings:
-            config_set_value(site, key, value, save=False)
+            config_set_value(site, config_hooks, key, value, save=False)
 
         save_site_conf(site)
     finally:
@@ -1937,10 +1938,10 @@ def read_config_change_commands():
     return settings
 
 
-def validate_config_change_commands(settings):
+def validate_config_change_commands(config_hooks, settings):
     # Validate the provided commands
     for key, value in settings:
-        hook = g_config_hooks.get(key)
+        hook = config_hooks.get(key)
         if not hook:
             bail_out("Invalid config option: %r" % key)
 
@@ -1957,7 +1958,7 @@ def validate_config_change_commands(settings):
                            (value, key))
 
 
-def config_set(site, args):
+def config_set(site, config_hooks, args):
     if len(args) != 2:
         sys.stderr.write("Please specify variable name and value\n")
         config_usage()
@@ -1969,7 +1970,7 @@ def config_set(site, args):
 
     hook_name = args[0]
     value = args[1]
-    hook = g_config_hooks.get(hook_name)
+    hook = config_hooks.get(hook_name)
     if not hook:
         sys.stderr.write("No such variable '%s'\n" % hook_name)
         return
@@ -1987,7 +1988,7 @@ def config_set(site, args):
             sys.stderr.write("Invalid value for '%s'. Does not match allowed pattern.\n" % value)
             return
 
-    config_set_value(site, hook_name, value)
+    config_set_value(site, config_hooks, hook_name, value)
 
 
 def config_set_all(site):
@@ -2003,7 +2004,7 @@ def config_set_all(site):
 
 
 
-def config_set_value(site, hook_name, value, save = True):
+def config_set_value(site, config_hooks, hook_name, value, save = True):
     # TODO: Warum wird hier nicht call_hook() aufgerufen!!
 
     # Call hook with 'set'. If it outputs something, that will
@@ -2036,18 +2037,18 @@ omd config change        - change multiple at once. Provide newline separated
                            automatically once in case it's currently runnig.
 """)
 
-def config_show(site, args):
+def config_show(site, config_hooks, args):
     if len(args) == 0:
-        hook_names = g_config_hooks.keys()
+        hook_names = config_hooks.keys()
         hook_names.sort()
         for hook_name in hook_names:
-            hook = g_config_hooks[hook_name]
+            hook = config_hooks[hook_name]
             if hook["active"] and not hook["deprecated"]:
                 sys.stdout.write("%s: %s\n" % (hook_name, site.conf[hook_name]))
     else:
         output = []
         for hook_name in args:
-            hook = g_config_hooks.get(hook_name)
+            hook = config_hooks.get(hook_name)
             if not hook:
                 sys.stderr.write("No such variable %s\n" % hook_name)
             else:
@@ -2056,8 +2057,8 @@ def config_show(site, args):
         sys.stdout.write(" ".join(output))
         sys.stdout.write("\n")
 
-def config_configure(site):
-    hook_names = g_config_hooks.keys()
+def config_configure(site, config_hooks):
+    hook_names = config_hooks.keys()
     hook_names.sort()
     current_hook_name = ""
     menu_open = False
@@ -2070,7 +2071,7 @@ def config_configure(site):
         # Rebuild hook information (values possible changed)
         menu = {}
         for hook_name in hook_names:
-            hook = g_config_hooks[hook_name]
+            hook = config_hooks[hook_name]
             if hook["active"] and not hook["deprecated"]:
                 mp = hook.get("menu", "Other")
                 entries = menu.get(mp, [])
@@ -2105,14 +2106,14 @@ def config_configure(site):
                     "Main menu")
             if change:
                 try:
-                    config_configure_hook(site, current_hook_name)
+                    config_configure_hook(site, config_hooks, current_hook_name)
                 except Exception, e:
                     bail_out("Error in hook %s: %s" % (current_hook_name, e))
             else:
                 menu_open = False
 
 
-def config_configure_hook(site, hook_name):
+def config_configure_hook(site, config_hooks, hook_name):
     if not site_is_stopped(site):
         if not dialog_yesno("You cannot change configuration value while the "
                 "site is running. Do you want me to stop the site now?"):
@@ -2120,7 +2121,7 @@ def config_configure_hook(site, hook_name):
         stop_site(site)
         dialog_message("The site has been stopped.")
 
-    hook = g_config_hooks[hook_name]
+    hook = config_hooks[hook_name]
     title = hook["alias"]
     descr = hook["description"].replace("\n\n", "\001").replace("\n", " ").replace("\001", "\n\n")
     value = site.conf[hook_name]
@@ -2132,10 +2133,10 @@ def config_configure_hook(site, hook_name):
     change, new_value = \
         dialog_function(title, descr, choices, value, "Change", "Cancel")
     if change:
-        config_set_value(site, hook["name"], new_value)
+        config_set_value(site, config_hooks, hook["name"], new_value)
         site.conf[hook_name] = new_value
         save_site_conf(site)
-        load_hook_dependencies(site)
+        config_hooks = load_hook_dependencies(site, config_hooks)
 
 def init_action(site, command, args, options):
     if site.is_disabled():
@@ -3326,18 +3327,18 @@ def main_config(site, args, options=None):
     else:
         need_start = False
 
-    load_config_hooks(site) # needed for all config commands
+    config_hooks = load_config_hooks(site)
     if len(args) == 0:
-        config_configure(site)
+        config_configure(site, config_hooks)
     else:
         command = args[0]
         args = args[1:]
         if command == "show":
-            config_show(site, args)
+            config_show(site, config_hooks, args)
         elif command == "set":
-            config_set(site, args)
+            config_set(site, config_hooks, args)
         elif command == "change":
-            config_change(site)
+            config_change(site, config_hooks)
         else:
             config_usage()
 

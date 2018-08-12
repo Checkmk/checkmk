@@ -2335,7 +2335,7 @@ def call_scripts(phase):
 
 
 def check_site_user(site, site_must_exist):
-    if isinstance(site, RootContext):
+    if not site.is_site_context():
         return
 
     if not site_must_exist:
@@ -3170,7 +3170,7 @@ def main_umount(args, options=None):
 
     # if no site is selected, all sites are affected
     exit_status = 0
-    if not g_site.name:
+    if not g_site.is_site_context():
         for site_id in all_sites():
             # Set global vars for the current site
             g_site = SiteContext(site_id)
@@ -3200,7 +3200,7 @@ def main_init_action(command, args, options=None):
     if options is None:
         options = {}
 
-    if g_site.name:
+    if g_site.is_site_context():
         exit_status = init_action(command, args, options)
 
         # When the whole site is about to be stopped check for remaining
@@ -4035,6 +4035,12 @@ class AbstractSiteContext(object):
         raise NotImplementedError()
 
 
+    @staticmethod
+    @abc.abstractmethod
+    def is_site_context():
+        raise NotImplementedError()
+
+
 
 class SiteContext(AbstractSiteContext):
     @property
@@ -4130,6 +4136,12 @@ class SiteContext(AbstractSiteContext):
         return not os.path.exists(apache_conf)
 
 
+    @staticmethod
+    def is_site_context():
+        return True
+
+
+
 
 class RootContext(AbstractSiteContext):
     def __init__(self):
@@ -4160,6 +4172,12 @@ class RootContext(AbstractSiteContext):
 
     def is_empty(self):
         return False
+
+
+    @staticmethod
+    def is_site_context():
+        return False
+
 
 
 class VersionInfo(object):
@@ -4637,7 +4655,7 @@ def main():
     # Commands operating on an existing site *must* run omd in
     # the same version as the site has! Sole exception: update.
     # That command must be run in the target version
-    if g_site.name and site_must_exist and command != "update":
+    if g_site.is_site_context() and site_must_exist and command != "update":
         v = g_site.version
         if v == None: # Site has no home directory or version link
             if command == "rm":
@@ -4665,11 +4683,11 @@ def main():
         else:
             raise
 
-    if not no_suid and g_site.name and is_root() and not only_root:
+    if not no_suid and g_site.is_site_context() and is_root() and not only_root:
         switch_to_site_user()
 
     # Make sure environment is in a defined state
-    if g_site.name:
+    if g_site.is_site_context():
         clear_environment()
         set_environment()
 

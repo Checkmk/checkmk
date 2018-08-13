@@ -339,6 +339,8 @@ table {
         border-bottom: 1px solid #f0f2f4;
         border-left: 1px solid #f0f2f4;
         border-right: 1px solid #cccfdb; }
+      table.data.analyze_config td.buttons {
+        min-width: 25px }
     table.data div.objectlist div {
       border: 0px solid;
       border-radius: 4px;

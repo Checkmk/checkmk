@@ -68,3 +68,27 @@ def test_management_address_of(monkeypatch, attrs, result):
     monkeypatch.setitem(config.host_attributes, "hostname", attrs)
 
     assert config.management_address_of("hostname") == result
+
+
+@pytest.mark.parametrize("hostname,tags,result", [
+    ("testhost", [], False),
+    ("testhost", ["all-agents"], True),
+    ("testhost", ["special-agents"], False),
+    ("testhost", ["no-agent"], False),
+    ("testhost", ["cmk-agent"], False),
+])
+def test_is_all_agents_host(monkeypatch, hostname, tags, result):
+    monkeypatch.setattr(config, "tags_of_host", lambda h: {hostname: tags}[h])
+    assert config.is_all_agents_host(hostname) == result
+
+
+@pytest.mark.parametrize("hostname,tags,result", [
+    ("testhost", [], False),
+    ("testhost", ["all-agents"], False),
+    ("testhost", ["special-agents"], True),
+    ("testhost", ["no-agent"], False),
+    ("testhost", ["cmk-agent"], False),
+])
+def test_is_all_special_agents_host(monkeypatch, hostname, tags, result):
+    monkeypatch.setattr(config, "tags_of_host", lambda h: {hostname: tags}[h])
+    assert config.is_all_special_agents_host(hostname) == result

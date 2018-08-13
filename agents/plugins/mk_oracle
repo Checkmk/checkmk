@@ -1426,13 +1426,15 @@ do_checks () {
     fi
 
     if [ -n "${MK_ORA_SECTIONS[*]}" ]; then
-        MK_SYNC_SECTIONS_QUERY=$(
+        sections=$(
             for section in $do_sync_sections $do_async_sections; do
                 if [ "$(do_section "$section")" = "yes" ]; then
                     sections=${sections:+"$sections "}"${section}"
                 fi
-            done)
+            done; echo "$sections")
         logging "[${MK_SID}] [do_checks]" "Do single sections: $sections"
+
+        MK_SYNC_SECTIONS_QUERY=$(for section in $sections; do eval "sql_$section" ; done)
         MK_ASYNC_SECTIONS_QUERY=
 
     else

@@ -393,8 +393,12 @@ class Site(object):
 
         cmd += args
 
+        os.system("ps aux")
         sys.stdout.write("Executing: %s\n" % subprocess.list2cmdline(cmd))
-        return subprocess.call(cmd)
+        p = subprocess.Popen(cmd, close_fds=True, stdin=open(os.devnull))
+        sys.stdout.write("  PID: %r\n" % p.pid)
+        os.system("ps aux")
+        return p.wait()
 
 
     def path(self, rel_path):

@@ -219,7 +219,7 @@ body.main .popup_menu a, body.main .popup_menu span, body.main table.footer .pop
 .op {
   width: 60px !important; }
 
-.aggrtree img.treeangle, .bi_rule_tree img.treeangle, .invtree img.treeangle, body.main img.treeangle {
+.aggrtree img.treeangle, .bi_rule_tree img.treeangle, .invtree img.treeangle, body.main img.treeangle, body.main img.treeangle:not(#treeimg.werks.options) {
   filter: invert(0%) !important; }
 
 table {

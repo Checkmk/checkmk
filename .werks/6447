@@ -1,0 +1,17 @@
+Title: Agent type: Fixed not working "use all enabled datasource programs" option
+Level: 1
+Component: core
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0i1
+Date: 1534179606
+
+Werk #6556 introduced a new option "use all enabled datasource programs" that can
+be used to disable the TCP Check_MK agent and use all special agents / data source
+programs to fetch the monitoring data for a host.
+
+This new option was not applied correctly. The hosts using this option were monitored
+like they had the option "Contact either Check_MK agent or use data source program"
+configured.

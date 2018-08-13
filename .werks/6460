@@ -1,0 +1,12 @@
+Title: jolokia_generic: Do not crash when non-numeric data is supplied for number or rate type values
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0i1
+Date: 1534162146
+
+Previously, a single MBean sending a non-numeric value would crash all jolokia_generic checks on
+the affected host. This has been fixed.

@@ -1371,13 +1371,13 @@ mk_ora_sqlplus () {
 # Create one SQL statements for several sections and run
 # these with sqlplus. The exitcode is preserved.
 do_sync_checks () {
-    logging "[${MK_SID}] [do_sync_checks]" "Sync sections query: $MK_SYNC_SECTIONS_QUERY"
+    logging "[${MK_SID}] [do_sync_checks]" "Query: $MK_SYNC_SECTIONS_QUERY"
     echo "$MK_SYNC_SECTIONS_QUERY" | mk_ora_sqlplus "do_sync_checks"
 }
 
 
 do_async_checks () {
-    #logging "[${MK_SID}] [do_async_checks]" "ASync sections query: $MK_ASYNC_SECTIONS_QUERY"
+    logging "[${MK_SID}] [do_async_checks]" "Query: $MK_ASYNC_SECTIONS_QUERY"
     echo "$MK_ASYNC_SECTIONS_QUERY" | mk_ora_sqlplus "do_async_checks"
 }
 

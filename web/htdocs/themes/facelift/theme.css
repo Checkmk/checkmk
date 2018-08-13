@@ -272,7 +272,7 @@ table {
           border-radius: 0px 4px 4px 0px; }
         table.data tr.data > td.perfometer {
           padding: 4px;
-          width: auto; }
+          width: 150px; }
           table.data tr.data > td.perfometer table {
             border: none; }
           table.data tr.data > td.perfometer .title {

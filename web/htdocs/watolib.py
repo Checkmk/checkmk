@@ -6379,7 +6379,20 @@ def format_php(data, lvl = 1):
     return s
 
 
-def remove_old_sample_config(host_tags, aux_tags):
+# Previous to 1.5 the "Agent type" tag group was created as sample config and was not
+# a builtin tag group (which can not be modified by the user). With werk #5535 we changed
+# the tag scheme and need to deal with the user config (which might extend the original tag group).
+# Use two strategies:
+#
+# a) Check whether or not the tag group has been modified. If not, simply remove it from the user
+#    config and use the builtin tag group in the future.
+# b) Extend the tag group in the user configuration with the tag configuration we need for 1.5.
+def migrate_old_sample_config_tag_groups(host_tags, aux_tags):
+    remove_old_sample_config_tag_groups(host_tags, aux_tags)
+    extend_user_modified_tag_groups(host_tags)
+
+
+def remove_old_sample_config_tag_groups(host_tags, aux_tags):
     legacy_tag_group_default = ('agent', u'Agent type',
         [
             ('cmk-agent', u'Check_MK Agent (Server)', ['tcp']),
@@ -6405,6 +6418,68 @@ def remove_old_sample_config(host_tags, aux_tags):
             aux_tags.remove(aux_tag)
         except ValueError:
             pass # Not there or modified
+
+
+def extend_user_modified_tag_groups(host_tags):
+    """This method supports migration from <1.5 to 1.5 in case the user has a customized "Agent type" tag group
+    See help of migrate_old_sample_config_tag_groups() and werk #5535 and #6446 for further information.
+
+    Disclaimer: The host_tags data structure is a mess which will hopefully be cleaned up during 1.6 development.
+    Basically host_tags is a list of configured tag groups. Each tag group is represented by a tuple like this:
+
+    # tag_group_id, tag_group_title, tag_choices
+    ('agent', u'Agent type',
+        [
+            # tag_id, tag_title, aux_tag_ids
+            ('cmk-agent', u'Check_MK Agent (Server)', ['tcp']),
+            ('snmp-only', u'SNMP (Networking device, Appliance)', ['snmp']),
+            ('snmp-v1',   u'Legacy SNMP device (using V1)', ['snmp']),
+            ('snmp-tcp',  u'Dual: Check_MK Agent + SNMP', ['snmp', 'tcp']),
+            ('ping',      u'No Agent', []),
+        ],
+    )
+    """
+    tag_group = None
+    for this_tag_group in host_tags:
+        if this_tag_group[0] == "agent":
+            tag_group = this_tag_group
+
+    if tag_group is None:
+        return # Tag group does not exist
+
+    # Mark all existing tag choices as legacy to help the user that this should be cleaned up
+    for index, tag_choice in enumerate(tag_group[2][:]):
+        if tag_choice[0] in [ "no-agent", "special-agents", "all-agents", "cmk-agent" ]:
+            continue # Don't prefix the standard choices
+
+        if tag_choice[1].startswith("Legacy: "):
+            continue # Don't prefix already prefixed choices
+
+        tag_choice_list = list(tag_choice)
+        tag_choice_list[1] = "Legacy: %s" % tag_choice_list[1]
+        tag_group[2][index] = tuple(tag_choice_list)
+
+    tag_choices = [ c[0] for c in tag_group[2] ]
+
+    if "no-agent" not in tag_choices:
+        tag_group[2].insert(0, ("no-agent",       _("No agent"), []))
+
+    if "special-agents" not in tag_choices:
+        tag_group[2].insert(0, ("special-agents", _("Use all enabled datasource programs"), ["tcp"]))
+
+    if "all-agents" not in tag_choices:
+        tag_group[2].insert(0, ("all-agents",     _("Contact Check_MK agent and all enabled datasource programs"), ["tcp"]))
+
+    if "cmk-agent" not in tag_choices:
+        tag_group[2].insert(0, ("cmk-agent",      _("Contact either Check_MK Agent or use datasource program"), ["tcp"]))
+    else:
+        # Change title of cmk-agent tag choice and move to top
+        for index, tag_choice in enumerate(tag_group[2]):
+            if tag_choice[0] == "cmk-agent":
+                tag_choice_list = list(tag_group[2].pop(index))
+                tag_choice_list[1] = _("Contact either Check_MK Agent or use datasource program")
+                tag_group[2].insert(0, tuple(tag_choice_list))
+                break
 
 
 def validate_tag_id(tag_id, varname):
@@ -6836,7 +6911,7 @@ class HosttagsConfiguration(object):
         config = cmk.store.load_mk_file(multisite_dir + "hosttags.mk", default_config)
 
         self._convert_manual_host_tags(config["wato_host_tags"])
-        remove_old_sample_config(config["wato_host_tags"], config["wato_aux_tags"])
+        migrate_old_sample_config_tag_groups(config["wato_host_tags"], config["wato_aux_tags"])
 
         return config["wato_host_tags"], config["wato_aux_tags"]
 

@@ -1,0 +1,52 @@
+Title: Fixed changing agent type from "No agent" to agent in some cases
+Level: 2
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.5.0p2
+Date: 1534146010
+Class: fix
+
+With werk #5535 we changed the tag group "Agent type" to be a builtin tag
+group. When a pre-1.5 site modified this tag group before updating to 1.5, this
+tag group was left untouched.
+
+In this situation hosts that were marked as "No agent" (ping only hosts) were
+suddenly set to "Check_MK Agent (Server)" which resulted in error messages
+in the monitoring after activating the configuration, because these hosts got
+a Check_MK service and tried to contact the agent while there is none on the
+affected hosts.
+
+We have now changed the migration logic to extend the locally modified "Agent
+type" tag group with the options Check_MK 1.5 needs. This change should make
+your "No agent" hosts now stick with the intended configuration.
+
+In case you are affected by this issue,  you may notice that the choices of the
+"Agent type" are now extended with some new options which may be confusing in
+the first moment. You can now navigate to the "Host tags" page in WATO and edit
+the tag group "agent" to sort the new options according to your needs.
+
+The tag choices in the tag group "Agent type" that are available in your site
+after the update (that are not part of the 1.5 standard) are displayed with the
+"Legacy: " prefix. This can be useful in the moment you want to clean them up.
+
+To migrate the legacy choices you need to clean up all objects referring these
+choices before they can safely be removed. Examples:
+
+<ul>
+<li>The legacy "No Agent" choice was using the Tag ID "ping". The new one uses
+   the "no-agent" tag ID. You can now delete the legacy choice from the tag
+   group and hit save. The GUI will then inform you about all hosts, folders
+   or rulesets using this tag choice. Navigate to all objects and change the
+   old setting to the new one. After that you can safely remove the legacy
+   choice.</li>
+<li>For the snmp-only, snmp-v1 and snmp-tcp options it's a bit more complicated
+   because it involves now two tag groups (SNMP + Agent type). To use the new
+   scheme you need to set the configuration like this:
+   <ul>
+   <li>snmp-only: Agent type = "No agent" and SNMP = SNMP v2 or v3</li>
+   <li>snmp-v1: Agent type = "No agent" and SNMP = SNMP v1</li>
+   <li>snmp-tcp: Agent type = "Contact either Check_MK Agent or use datasource program" and SNMP = SNMP v2 or v3</li>
+   </ul>
+</li>
+</ul>

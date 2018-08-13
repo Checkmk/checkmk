@@ -668,7 +668,7 @@ def save_user_file(name, data, user, unlock=False):
 # tag group now.
 def _update_wato_host_tags():
     import watolib
-    watolib.remove_old_sample_config(wato_host_tags, wato_aux_tags)
+    watolib.migrate_old_sample_config_tag_groups(wato_host_tags, wato_aux_tags)
 
 
 # Returns the effective set of tag groups defined by WATO. This includes

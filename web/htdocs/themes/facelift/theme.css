@@ -947,7 +947,8 @@ div.snapin {
     box-sizing: border-box;
     padding: 8px;
     width: 100%;
-    top: 64px; }
+    top: 64px;
+    background-color: #25292a !important; }
     div.snapin div.content div.foldable a.iconlink, div.snapin div.content div.foldable body.main .popup_menu span.iconlink, body.main .popup_menu div.snapin div.content div.foldable span.iconlink {
       padding: 4px 0px; }
       div.snapin div.content div.foldable a.iconlink:last-of-type, div.snapin div.content div.foldable body.main .popup_menu span.iconlink:last-of-type, body.main .popup_menu div.snapin div.content div.foldable span.iconlink:last-of-type {

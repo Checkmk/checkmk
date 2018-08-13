@@ -766,7 +766,6 @@ div.graph_with_timeranges {
     color: #1A243D;
     font-weight: 400;
     letter-spacing: 1px;
-    display: inline-block;
     font-size: 18px; }
   .wato td.bulksearch .togglebutton {
     margin-bottom: 0px; }

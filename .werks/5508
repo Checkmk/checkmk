@@ -1,0 +1,19 @@
+Title: cmk-update-agent.exe: Prevent Agent Updater from running twice
+Level: 1
+Component: agents
+Class: fix
+Compatible: compat
+Edition: cee
+State: unknown
+Version: 1.5.0p2
+Date: 1534174581
+
+On Windows, when cmk-update-agent.exe is invoked, a lockfile is created to prevent it
+from running twice at the same time.
+
+This mechanism did not work properly when cmk-update-agent.exe got invoked
+multiple times from different user accounts, because the lockfiles were
+created within different directories.
+
+This is now mitigated by creating the lockfile regardless of the current user
+within the "temp" directory of the Check_MK Agent installation.

@@ -1575,7 +1575,8 @@ div.info {
     .filterform > tbody > tr > td div.floatfilter .content select {
       box-sizing: border-box; }
     .filterform > tbody > tr > td div.floatfilter .content .valuespec_tuple {
-      width: 100%; }
+      width: 100%;
+      border-spacing: 2px 2px; }
 
 .age input, .age select, .age textarea, .age div.snapin select, div.snapin .age select, .age div.snapin textarea, div.snapin .age textarea, .age #mk_side_search_field {
   box-sizing: content-box !important; }

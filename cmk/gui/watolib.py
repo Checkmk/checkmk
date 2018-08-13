@@ -7005,7 +7005,7 @@ class HosttagsConfiguration(object):
         tag_config = cmk.store.load_mk_file(multisite_dir + "hosttags.mk", default_config)
 
         self._convert_manual_host_tags(tag_config["wato_host_tags"])
-        config.remove_old_sample_tags(tag_config["wato_host_tags"], tag_config["wato_aux_tags"])
+        config.migrate_old_sample_config_tag_groups(tag_config["wato_host_tags"], tag_config["wato_aux_tags"])
 
         return tag_config["wato_host_tags"], tag_config["wato_aux_tags"]
 

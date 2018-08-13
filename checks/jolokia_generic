@@ -30,9 +30,6 @@ def parse_jolokia_generic(info):
     for line in info:
         instance, mbean, value, value_type = line
 
-        if value_type in ["number", "rate"]:
-            value = float(value)
-
         item = instance + " " + mbean
 
         parsed[item] = {
@@ -101,7 +98,14 @@ def check_jolokia_generic_rate(item, params, parsed):
         yield 3, "Item not found in agent output"
         return
     now = time.time()
-    rate = get_rate(item, now, parsed[item]["value"])
+
+    try:
+        value = float(parsed[item]["value"])
+    except ValueError:
+        yield 3, "Non-numeric MBean value"
+        return
+
+    rate = get_rate(item, now, value)
     infotext = "%.1f" % rate
     perfdata = None
 
@@ -168,7 +172,13 @@ def check_jolokia_generic(item, params, parsed):
     if item not in parsed:
         yield 3, "Item not found in agent output"
         return
-    value = parsed[item]["value"]
+
+    try:
+        value = float(parsed[item]["value"])
+    except ValueError:
+        yield 3, "Non-numeric MBean value"
+        return
+
     infotext = "%.1f" % value
     perfdata = None
 

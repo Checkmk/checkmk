@@ -384,7 +384,7 @@ class Site(object):
         else:
             cmd = []
 
-        cmd += [ "/usr/bin/omd", mode ]
+        cmd += [ "/usr/bin/omd", "-v", mode ]
 
         if not self._is_running_as_site_user():
             cmd += [ self.id ]

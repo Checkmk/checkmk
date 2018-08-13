@@ -869,7 +869,7 @@ def is_all_agents_host(hostname):
 
 
 def is_all_special_agents_host(hostname):
-    return "all-agents" in tags_of_host(hostname)
+    return "special-agents" in tags_of_host(hostname)
 
 
 #

@@ -1,0 +1,13 @@
+Title: Fixed creation of rule-based downtimes
+Level: 2
+Component: cmc
+Compatible: compat
+Edition: cee
+Version: 1.5.0p2
+Date: 1534164275
+Class: fix
+
+Due to a bug introduced in 1.5.0i3, it was impossible to create new working
+rule-based downtimes: Although the corresponding rules seemed to work fine,
+no actual downtimes were created from them, as could be seen from the
+"Downtimes" view.

@@ -192,7 +192,7 @@ class SNMPDataSource(DataSource):
         check_plugin_names = self.get_check_plugin_names()
 
         info = {}
-        for check_plugin_name in check_plugin_names:
+        for check_plugin_name in self._sort_check_plugin_names(check_plugin_names):
             # Is this an SNMP table check? Then snmp_info specifies the OID to fetch
             # Please note, that if the check_plugin_name is foo.bar then we lookup the
             # snmp info for "foo", not for "foo.bar".
@@ -245,6 +245,21 @@ class SNMPDataSource(DataSource):
             info[section_name] = check_info
 
         return info
+
+
+    def _sort_check_plugin_names(self, check_plugin_names):
+        # In former Check_MK versions (<=1.4.0) CPU check plugins were
+        # checked before other check plugins like interface checks.
+        # In Check_MK versions >= 1.5.0 the order is random and
+        # interface check plugins are executed before CPU check plugins.
+        # This leads to high CPU utilization sent by device. Thus we have
+        # to re-order the check plugin names.
+        # There are some nested check plugin names which have to be considered, too.
+        #   for f in $(grep "service_description.*CPU [^lL]" -m1 * | cut -d":" -f1); do
+        #   if grep -q "snmp_info" $f; then echo $f; fi done
+        cpu_checks_without_cpu_in_check_name = set(["brocade_sys", "bvip_util"])
+        return sorted(check_plugin_names, key=lambda x:
+                      (not ('cpu' in x or x in cpu_checks_without_cpu_in_check_name), x))
 
 
     def _convert_to_sections(self, raw_data):

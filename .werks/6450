@@ -1,0 +1,50 @@
+Title: Fixed handling of "SNMP" and "Dual Check_MK Agent + SNMP" tags when migrating from <1.5
+Level: 2
+Component: wato
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0i1
+Date: 1534246898
+
+In addition to the problem that has been fixed with #6446, the werk #5535 introduced a problem when
+one has not modified the tag group "Agent type".
+
+In this situation the "Agent type" tag group is automatically changed to the
+new format (as described in #5535).
+
+During this process two tags were not migrated correctly:
+
+<ul>
+<li>Agent type: SNMP (Networking device, Appliance) (Tag-ID: snmp-only)</li>
+<li>Agent type: Dual (Dual: Check_MK Agent + SNMP) (Tag-ID: snmp-tcp)</li>
+</ul>
+
+When editing the host, the new Agent type and SNMP attributes are selected correctly and also saved
+correctly. No host lost his attributes in this case. But when saving the tag list of hosts to the
+config files, the tags "snmp-only" and "snmp-tcp" were not set anymore.
+
+This is a problem because existing rules may refer to these tags.
+
+The second part of this problem are these probably existing rules. When you open them in the GUI and
+saving them to the disk again, these rules will loose their conditions, because these tags did not
+exist anymore.
+
+We have now changed the migration procedure to work like this:
+
+<ul>
+<li>In the moment you update and the old "Agent type" tag group is migrated to the new one two new
+auxiliary tags are added to your configuration (snmp-only: "Legacy: SNMP ..." and snmp-tcp: "Legacy: Dual:...")</li>
+<li>Now editing of existing rules will work again</li>
+<li>Hosts that have "Agent type" configured to "No agent" and "SNMP" to "SNMP v2 or v3" get
+have the aux tag snmp-only set</li>
+<li>Hosts that have "Agent type" configured to "Contact either Check_MK Agent or use datasource program"
+and "SNMP" to "SNMP v2 or v3" will have the aux tag snmp-tcp set</li>
+<li>Now the rules mentioned above will match again on these hosts</li>
+<li>In case you want to clean up the legacy aux tags, you can now try to delete them. The GUI will warn
+you about all rules referring to them. You'll now have to clean them up.</li>
+<li>"Legacy: SNMP ..." needs to be converted to "SNMP -> SNMP v2 or v3" and "Agent: No Agent"</li>
+<li>"Legacy: Dual: ..." needs to be converted to "SNMP -> SNMP v2 or v3" and "Agent: Contact either Check_MK Agent or use datasource program"</li>
+<li>After cleaning up all refereces, you can delete the legacy tags.</li>
+<ul>

@@ -837,6 +837,11 @@ def remove_old_sample_config_tag_groups(host_tags, aux_tags):
 
     try:
         host_tags.remove(legacy_tag_group_default)
+
+        # Former tag choices (see above) are added as aux tags to allow the user to migrate
+        # these tags and the objects that use them
+        aux_tags.insert(0, ("snmp-only", "Data sources/Legacy: SNMP (Networking device, Appliance)"))
+        aux_tags.insert(0, ("snmp-tcp", "Data sources/Legacy: Dual: Check_MK Agent + SNMP"))
     except ValueError:
         pass # Not there or modified
 

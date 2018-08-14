@@ -1,0 +1,12 @@
+Title: Fixed stored XSS using custom host / user attributes
+Level: 1
+Component: multisite
+Class: security
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0i1
+Date: 1534240456
+
+A user with admin privileges could inject arbitrary JS code into custom
+attributes which could then be executed in the context of other users.

@@ -52,17 +52,17 @@ wato_icon_categories                       = [
 ]
 
 def tag_alias(tag):
-    for entry in wato_host_tags:
+    for entry in host_tag_groups():
         id, title, tags = entry[:3]
         for t in tags:
             if t[0] == tag:
                 return t[1]
-    for id, alias in wato_aux_tags:
+    for id, alias in host_aux_tags():
         if id == tag:
             return alias
 
 def tag_group_title(tag):
-    for entry in wato_host_tags:
+    for entry in host_tag_groups():
         id, title, tags = entry[:3]
         for t in tags:
             if t[0] == tag:

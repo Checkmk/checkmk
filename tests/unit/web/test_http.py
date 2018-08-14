@@ -1,30 +1,10 @@
 #!/usr/bin/env python
+# encoding: utf-8
+
+import time
 
 import cmk.gui.http as http
 from cmk.gui.globals import html
-
-# TODO: Write valid test
-def test_request_processing(register_builtin_html):
-    varname = "Variable"
-    value = "value"
-    prefix = "prefix"
-    used_ids = ["1", "2"]
-    deflt = "deflt"
-    default = "default"
-
-    html.var(varname, deflt = None)
-    html.has_var(varname)
-    html.has_var_prefix(prefix)
-    html.var_utf8(varname, deflt = None)
-    html.all_vars()
-    html.all_varnames_with_prefix(prefix)
-    html.list_var(varname)
-    html.add_var(varname, value)
-    html.set_var(varname, value)
-
-    html.stash_vars()
-    html.unstash_vars()
-    html.uploaded_file(varname, default = None)
 
 
 def test_cookie_handling(register_builtin_html, monkeypatch):
@@ -66,7 +46,6 @@ def test_response_set_cookie_secure(register_builtin_html, monkeypatch):
 
 
 def test_response_set_cookie_expires(register_builtin_html, monkeypatch):
-    import time
     monkeypatch.setattr(time, "time", lambda: 0)
 
     html.response.set_cookie("auth_SITE", "user:123456:abcdefg", expires=60)
@@ -76,7 +55,6 @@ def test_response_set_cookie_expires(register_builtin_html, monkeypatch):
 
 
 def test_response_del_cookie(register_builtin_html, monkeypatch):
-    import time
     monkeypatch.setattr(time, "time", lambda: 0)
 
     html.response.del_cookie("auth_SITE")

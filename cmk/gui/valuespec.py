@@ -3831,6 +3831,12 @@ class Transform(ValueSpec):
         self.classtype_info()
         self._valuespec.render_input(varprefix, self.forth(value))
 
+    def render_input_as_form(self, varprefix, value):
+        if not isinstance(self._valuespec, Dictionary):
+            raise NotImplementedError()
+        self.classtype_info()
+        self._valuespec.render_input_as_form(varprefix, self.forth(value))
+
     def set_focus(self, varprefix):
         self._valuespec.set_focus(varprefix)
 

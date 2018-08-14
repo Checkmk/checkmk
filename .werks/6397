@@ -1,0 +1,15 @@
+Title: Fixed too high CPU utilization on SNMP devices like HP procurve switches
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0i1
+Date: 1534252429
+
+After upgrading Check_MK from former than 1.5.0 some SNMP
+devices like HP procurve core switches were reporting a
+highly increased CPU utilization. This was caused by
+SNMP check plugins like the network interface check plugin
+being executed before the CPU utilization check.

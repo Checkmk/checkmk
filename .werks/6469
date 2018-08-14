@@ -1,0 +1,19 @@
+Title: New Theme: Fixed again several bugs
+Level: 1
+Component: multisite
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0p3
+Date: 1534261709
+
+This werk includes Fixes for:
+- Hover with "loading..." message of Graph Preview
+- Text shadow of PEND in services of hosts view
+- Size of Perf-O-Meter in views where no headers are configured
+- Missing line break in EC SNMP MIBs
+- Size of column of acknowledge in analyze configuration if no icon is shown
+- default template in reports is now in new colors, too
+- Snapins in dashboards are now in new theme, too
+- Date filter in Release notes

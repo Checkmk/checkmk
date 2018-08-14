@@ -9106,7 +9106,7 @@ class ModeUsers(WatoMode):
             # the visible custom attributes
             for name, attr in visible_custom_attrs:
                 vs = attr.valuespec()
-                table.cell(_u(vs.title()))
+                table.cell(html.attrencode(_u(vs.title())))
                 html.write(vs.value_to_text(user.get(name, vs.default_value())))
 
         table.end()

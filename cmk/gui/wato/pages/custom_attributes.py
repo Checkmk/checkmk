@@ -426,8 +426,8 @@ class ModeCustomAttrs(WatoMode):
             html.icon_button(edit_url, _("Properties"), "edit")
             html.icon_button(delete_url, _("Delete"), "delete")
 
-            table.cell(_("Name"),  custom_attr['name'])
-            table.cell(_("Title"), custom_attr['title'])
+            table.text_cell(_("Name"),  custom_attr['name'])
+            table.text_cell(_("Title"), custom_attr['title'])
             table.cell(_("Type"),  dict(custom_attr_types())[custom_attr['type']])
 
         table.end()

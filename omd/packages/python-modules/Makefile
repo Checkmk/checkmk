@@ -146,7 +146,8 @@ MODULES += msrestazure-0.4.34.tar.gz
 MODULES += oauthlib-2.1.0.tar.gz
 MODULES += requests-oauthlib-1.0.0.tar.gz
 MODULES += urllib3-1.23.tar.gz
-
+# Added for the GUI
+MODULES += Werkzeug-0.14.1.tar.gz
 
 
 .PHONY: build check-freetds install skel clean

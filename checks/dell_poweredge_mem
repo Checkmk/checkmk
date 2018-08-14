@@ -24,6 +24,37 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+def inventory_dell_poweredge_mem(info):
+    inventory = []
+    for line in info:
+        location = line[1]
+        if location != "":
+            inventory.append( ( location, None ) )
+    return inventory
+
+def check_dell_poweredge_mem(item, _no_params, info):
+    di = dict()
+    for status, location, size, di['Speed'], di['MFR'], di['P/N'], di['S/N'] in info:
+
+        di['Size'] = str(saveint(size)/1024/1024)+"GB"
+        if item == location:
+            state_table = {
+                "1" : ( "other", 1 ),
+                "2" : ( "unknown", 1 ),
+                "3" : ( "", 0 ),
+                "4" : ( "nonCritical", 1 ),
+                "5" : ( "Critical", 2 ),
+                "6" : ( "NonRecoverable", 2 ),
+            }
+            infotext, state = state_table.get(status, ( "unknown state", 2 ))
+            for  parameter, value in di.items():
+                infotext += ", %s: %s" % ( parameter, value )
+
+            infotext = re.sub("^, ","", infotext)
+
+            return state, infotext
+
+    return 3, "Memory Device not found"
 
 check_info["dell_poweredge_mem"] = {
     "check_function"        : check_dell_poweredge_mem,
@@ -47,5 +78,5 @@ check_info["dell_poweredge_mem"] = {
                                       #"26", # memoryDeviceFQDD
                               ]),
     "snmp_scan_function"    : lambda oid: oid('.1.3.6.1.2.1.1.2.0') == ".1.3.6.1.4.1.674.10892.5",
-    "includes"              : ["dell_poweredge.include"],
 }
+

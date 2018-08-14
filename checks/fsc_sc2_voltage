@@ -70,6 +70,27 @@
 #.1.3.6.1.4.1.231.2.10.2.2.10.6.3.1.8.1.8 12900
 #.1.3.6.1.4.1.231.2.10.2.2.10.6.3.1.8.1.9 5420
 
+
+def parse_fsc_sc2_voltage(info):
+    parsed = {}
+    for designation, value, min_value, max_value in info:
+        try:
+            value = float(value)/1000.0
+            min_value = float(min_value)/1000.0
+            max_value = float(max_value)/1000.0
+        except ValueError:
+            dev_state = 3, 'Could not get all values'
+            parsed.setdefault(designation, {"device_state": dev_state})
+        else:
+            dev_state = value
+            if value < min_value:
+                dev_state = value, (2, 'too low, deceeds %.2f V' % min_value)
+            elif value >= max_value:
+                dev_state = value, (2, 'too high, exceeds %.2f V' % max_value)
+            parsed.setdefault(designation, {"voltage": dev_state})
+    return parsed
+
+
 check_info['fsc_sc2_voltage'] = {
     'parse_function'            : parse_fsc_sc2_voltage,
     'inventory_function'        : inventory_elphase,
@@ -83,5 +104,5 @@ check_info['fsc_sc2_voltage'] = {
                                   ]),
     'snmp_scan_function'        : lambda oid: oid('.1.3.6.1.4.1.231.2.10.2.2.10.1.1.0'),
     'group'                     : 'el_inphase',
-    'includes'                  : ['elphase.include', "fsc_sc2.include"],
+    'includes'                  : ['elphase.include'],
 }

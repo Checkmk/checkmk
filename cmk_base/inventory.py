@@ -144,7 +144,7 @@ def do_inv_check(hostname, options):
             infotexts.append("Found %s status entries" % status_data_tree.count_entries())
 
     for source in sources.get_data_sources():
-        source_state, source_output, source_perfdata = source.get_summary_result()
+        source_state, source_output, _source_perfdata = source.get_summary_result()
         # Do not output informational (state = 0) things. These information are shown by the "Check_MK" service
         if source_state != 0:
             status = max(source_state, status)

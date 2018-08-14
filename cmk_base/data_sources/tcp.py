@@ -143,7 +143,7 @@ class TCPDataSource(CheckMKAgentDataSource):
         if not output_is_plaintext and encryption_settings["use_regular"] in ["enforce", "allow"]:
             try:
                 # simply check if the protocol is an actual number
-                protocol_version = int(output[0:2])
+                int(output[0:2])
 
                 output = self._decrypt_package(output[2:], encryption_settings["passphrase"])
             except ValueError:

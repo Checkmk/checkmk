@@ -277,11 +277,6 @@ def get_sorted_check_table(hostname, remove_duplicates=False, world="config", fi
                  in get_check_table(hostname, remove_duplicates=remove_duplicates, world=world,
 				    filter_mode=filter_mode, skip_ignored=skip_ignored).items() ]
 
-    def cmp(a, b):
-        if a[3] < b[3]:
-            return -1
-        else:
-            return 1
     unsorted.sort(key=lambda x: x[3])
 
     sorted = []

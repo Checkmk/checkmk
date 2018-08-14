@@ -211,7 +211,6 @@ def _snmp_walk_command(access_data, context_name):
 # (6) privacy protocol pass phrase (-X)
 def _snmp_base_command(what, access_data, context_name):
     hostname = access_data["hostname"]
-    ipaddress = access_data["ipaddress"]
     credentials = access_data["credentials"]
     options = []
 

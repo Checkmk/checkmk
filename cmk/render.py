@@ -261,7 +261,7 @@ def calculate_physical_precision(v, precision):
 
     # Splitup in mantissa (digits) an exponent to the power of 10
     # -> a: (2.23399998, -2)  b: (4.5, 6)    c: (1.3756, 2)
-    mantissa, exponent = _frexp10(float(v))
+    _mantissa, exponent = _frexp10(float(v))
 
     if type(v) == int:
         precision = min(precision, exponent + 1)

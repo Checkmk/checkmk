@@ -288,7 +288,7 @@ def release_package(pacname):
 
     package = read_package_info(pacname)
     logger.verbose("Releasing files of package %s into freedom...", pacname)
-    for part, title, _unused_perm, dir_ in get_package_parts() + config_parts:
+    for part, title, _unused_perm, _dir in get_package_parts() + config_parts:
         filenames = package["files"].get(part, [])
         if len(filenames) > 0:
             logger.verbose("  %s%s%s:", tty.bold, title, tty.normal)

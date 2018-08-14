@@ -11763,16 +11763,16 @@ class ModeEditRuleset(WatoMode):
                         html.b(_("not") + " ")
                 else:
                     if negate:
-                        html.write_text(_("Host does not have tag"))
+                        html.write_text(_("Host does not have tag") + " ")
                     else:
-                        html.write_text(_("Host has tag"))
+                        html.write_text(_("Host has tag") + " ")
                 html.b(alias)
             else:
                 if negate:
-                    html.write_text(_("Host has <b>not</b> the tag "))
+                    html.write_text(_("Host has <b>not</b> the tag") + " ")
                     html.tt(tag)
                 else:
-                    html.write_text(_("Host has the tag "))
+                    html.write_text(_("Host has the tag") + " ")
                     html.tt(tag)
             html.close_li()
 

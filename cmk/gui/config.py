@@ -277,19 +277,20 @@ def get_language(default=None):
 
 
 def tag_alias(tag):
-    for entry in wato_host_tags:
-        id, title, tags = entry[:3]
+    for entry in host_tag_groups():
+        tag_id, title, tags = entry[:3]
         for t in tags:
             if t[0] == tag:
                 return t[1]
-    for id, alias in wato_aux_tags:
-        if id == tag:
+
+    for tag_id, alias in aux_tags():
+        if tag_id == tag:
             return alias
 
 
 def tag_group_title(tag):
-    for entry in wato_host_tags:
-        id, title, tags = entry[:3]
+    for entry in host_tag_groups():
+        tag_id, title, tags = entry[:3]
         for t in tags:
             if t[0] == tag:
                 return title
@@ -925,6 +926,14 @@ def aux_tags():
     the implicitly declared builtin host tags. This function must be used by
     the GUI code to get the auxiliay tag definitions."""
     return BuiltinTags().get_effective_aux_tags(wato_aux_tags)
+
+
+# Returns the effective set of tag groups defined by WATO. This includes
+# the implicitly declared builtin host tags. This function must be used by
+# the GUI code to get the tag group definitions.
+def host_aux_tags():
+    import watolib
+    return watolib.get_effective_aux_tags(wato_aux_tags)
 
 
 #.

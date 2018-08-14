@@ -1,0 +1,11 @@
+Title: Fixed displaying tag aliases in rule lists for builtin tags
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 1.5.0p2
+Date: 1534222962
+Class: fix
+
+Configured builtin tags and aux tags in conditions were displayed with their
+tag ID instead of the alias.

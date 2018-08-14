@@ -322,7 +322,7 @@ class ModeAnalyzeConfig(WatoMode):
         try:
             # Would be better to clean all open fds that are not needed, but we don't
             # know the FDs of the result_queue pipe. Can we find it out somehow?
-            # Cleanup ressources of the apache
+            # Cleanup resources of the apache
             #for x in range(3, 256):
             #    try:
             #        os.close(x)

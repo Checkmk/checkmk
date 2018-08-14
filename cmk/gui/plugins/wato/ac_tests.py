@@ -105,7 +105,7 @@ class ACTestLiveproxyd(ACTest):
         return _("The Livestatus Proxy Daemon is available with the Check_MK Enterprise Edition "
                  "and improves the management of the inter site connections using livestatus. Using "
                  "the Livestatus Proxy Daemon improves the responsiveness and performance of your "
-                 "GUI and will decrease ressource usage.")
+                 "GUI and will decrease resource usage.")
 
 
     def is_relevant(self):

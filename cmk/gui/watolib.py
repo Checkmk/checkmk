@@ -5671,7 +5671,7 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
         # Cleanup existing livestatus connections (may be opened later when needed)
         sites.disconnect()
 
-        # Cleanup ressources of the apache
+        # Cleanup resources of the apache
         for x in range(3, 256):
             try:
                 os.close(x)

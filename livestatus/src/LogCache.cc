@@ -126,8 +126,8 @@ void LogCache::handleNewMessage(Logfile *logfile, time_t /*unused*/,
         return;  // current message count still allowed, everything ok
     }
 
-    /* Memory checking an freeing consumes CPU ressources. We save
-       ressources, by avoiding to make the memory check each time
+    /* Memory checking an freeing consumes CPU resources. We save
+       resources, by avoiding to make the memory check each time
        a new message is loaded when being in a sitation where no
        memory can be freed. We do this by suppressing the check when
        the number of messages loaded into memory has not grown

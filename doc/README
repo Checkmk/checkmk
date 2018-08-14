@@ -35,7 +35,7 @@ checks. Nagios just processes these passive service checks just like
 active ones.
 
 One of the main advantages of this approach as shown so far is a
-massive cut down of needed CPU ressources - both on the monitoring
+massive cut down of needed CPU resources - both on the monitoring
 host and on the target host. Consider an average number of 100
 different services per host. In the classic approach with NRPE each
 check period 100 seperate processes have to be started on the Nagios
@@ -47,7 +47,7 @@ The estimated speed up is at least a factor of 5 to 10.
 
 This allows us to implement a much larger number of checks per time
 period on the monitoring server and at the same time save CPU
-ressources on the target machines.
+resources on the target machines.
 
 
 2. Implemention of the plugin and the agent
@@ -90,7 +90,7 @@ check_mk supports graphical statistics over all checks that produce
 values that can be measured. It does this by using PNP4Nagios and
 round robin databases. For sake of performance check_mk does *not*
 hand over the data for the RRDs to Nagios but directly enters the values
-into the RRDs itself. This saves a significant amount of CPU ressources.
+into the RRDs itself. This saves a significant amount of CPU resources.
 
 
 6. Service aggregations

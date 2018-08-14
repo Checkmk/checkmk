@@ -4053,7 +4053,7 @@ def main():
         # We reach this point, if the server has been killed by
         # a signal or hitting Ctrl-C (in foreground mode)
 
-        # TODO: Move this cleanup stuff to the classes that are responsible for these ressources
+        # TODO: Move this cleanup stuff to the classes that are responsible for these resources
 
         # Remove event pipe and drain it, so that we make sure
         # that processes (syslog, etc) will not hang when trying

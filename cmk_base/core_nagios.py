@@ -863,7 +863,7 @@ def _extra_conf_of(confdict, hostname, service, exclude=None):
 #   | contains that code and information that is needed for executing all  |
 #   | checks of that host. Also static data that cannot change during the  |
 #   | normal monitoring process is being precomputed and hard coded. This  |
-#   | all saves substantial CPU ressources as opposed to running Check_MK  |
+#   | all saves substantial CPU resources as opposed to running Check_MK   |
 #   | in adhoc mode (about 75%).                                           |
 #   '----------------------------------------------------------------------'
 

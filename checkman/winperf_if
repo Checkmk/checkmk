@@ -14,7 +14,7 @@ description:
  interface you probably won't need the information about the link status,
  since the agent will be unreachable anyway if the status is not {up}.
  We propose to not installing the plugin in that case and save a few
- CPU ressources.
+ CPU resources.
 
  The plugin "mk_dhcp_enabled.bat" can be used to get a WARN if the ip
  address of the interface was assigned by dhcp.

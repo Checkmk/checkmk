@@ -1,4 +1,4 @@
-title: Ressource consumption of windows processes
+title: Resource consumption of windows processes
 agents: windows
 catalog: os/ps
 license: GPL
@@ -8,7 +8,7 @@ description:
  {psperf.bat} in combination with the normal {ps.perf} check. The rest of
  this man page is unchanged for legacy reasons:
 
- This check uses the output of {wmic process} in order to monitor the ressource
+ This check uses the output of {wmic process} in order to monitor the resource
  consumption of processes on Windows servers. On the target host this check
  needs the command line utility {wmic} and the agent plugin {wmicchecks.bat}
  (in the subdirectory {plugins} below the directory where {check_mk_agent.exe}
@@ -16,11 +16,11 @@ description:
 
  The monitored parameters are CPU usage ({KernelModeTime} + {UserModeTime}),
  RAM usage ({WorkingSetSize}) and page file usage ({PageFileUsage}).
- If more than one process matches the name, then all matching processes ressources
+ If more than one process matches the name, then all matching processes resources
  are added.
 
  If no matching process is found running, then the check is always OK (since
- no ressources are consumed).
+ no resources are consumed).
 
 item:
  A user definable string that is used as part of the service description.

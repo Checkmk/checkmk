@@ -24,13 +24,67 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+# Author: Lars Michelsen <lm@mathias-kettner.de>
+
+hp_proliant_fans_status_map = { 1: 'other', 2: 'ok', 3: 'degraded', 4: 'failed' }
+hp_proliant_status2nagios_map = { 'other': 3, 'ok': 0, 'degraded': 2, 'failed': 2 }
+hp_proliant_present_map = { 1: 'other', 2: 'absent', 3: 'present' }
+hp_proliant_speed_map = { 1: 'other', 2: 'normal', 3: 'high' }
+hp_proliant_fans_locale = {
+    1:   "other",
+    2:   "unknown",
+    3:   "system",
+    4:   "systemBoard",
+    5:   "ioBoard",
+    6:   "cpu",
+    7:   "memory",
+    8:   "storage",
+    9:   "removableMedia",
+    10:  "powerSupply",
+    11:  "ambient",
+    12:  "chassis",
+    13:  "bridgeCard",
+}
+
+def inventory_hp_proliant_fans(info):
+    if len(info) > 0:
+        items = []
+        for line in [ line for line in info if line[3] == '3' ]:
+            label = 'other'
+            if int(line[2]) in hp_proliant_fans_locale:
+                label = hp_proliant_fans_locale[int(line[2])]
+            items.append(("%s (%s)" % (line[1], label), None))
+        return items
+
+def check_hp_proliant_fans(item, params, info):
+    for line in info:
+        label = 'other'
+        if len(line) > 2 and int(line[2]) in hp_proliant_fans_locale:
+            label = hp_proliant_fans_locale[int(line[2])]
+
+        if "%s (%s)" % (line[1], label) == item:
+            chassis, index, name, present, speed, status, currentSpeed = line
+            snmp_status = hp_proliant_fans_status_map[int(status)]
+            status      = hp_proliant_status2nagios_map[snmp_status]
+
+            detailOutput = ''
+            perfdata = []
+            if currentSpeed != '':
+                detailOutput = ', RPM: %s' % currentSpeed
+                perfdata = [('temp', int(currentSpeed))]
+
+            return (status, 'FAN Sensor %s "%s", Speed is %s, State is %s%s' %
+                         (index, label, hp_proliant_speed_map[int(speed)],
+                          snmp_status, detailOutput),
+                    perfdata)
+    return (3, "item not found in snmp data")
 
 check_info["hp_proliant_fans"] = {
-    'check_function'        : check_hp_proliant_fans,
-    'inventory_function'    : inventory_hp_proliant_fans,
-    'service_description'   : 'HW FAN%s',
-    'has_perfdata'          : True,
-    'snmp_info'             : (
+    'check_function':          check_hp_proliant_fans,
+    'inventory_function':      inventory_hp_proliant_fans,
+    'service_description':     'HW FAN%s',
+    'has_perfdata':            True,
+    'snmp_info':               (
         ".1.3.6.1.4.1.232.6.2.6.7.1", [
             "1", # cpqHeFltTolFanChassis
             "2", # cpqHeFltTolFanIndex
@@ -41,6 +95,6 @@ check_info["hp_proliant_fans"] = {
            "12", # cpqHeFltTolFanCurrentSpeed
         ]
     ),
-    'snmp_scan_function'    : lambda oid: "proliant" in oid(".1.3.6.1.4.1.232.2.2.4.2.0", "").lower(),
-    "includes"              : ["hp_proliant.include"]
+    'snmp_scan_function': \
+         lambda oid: "proliant" in oid(".1.3.6.1.4.1.232.2.2.4.2.0", "").lower(),
 }

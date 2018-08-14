@@ -24,12 +24,66 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+# Author: Lars Michelsen <lm@mathias-kettner.de>
+
+hp_proliant_da_cntlr_cond_map = {
+    '1': (3, 'other'),
+    '2': (0, 'ok'),
+    '3': (1, 'degraded'),
+    '4': (2, 'failed'),
+}
+
+hp_proliant_da_cntlr_role_map = {
+    '1': 'other',
+    '2': 'notDuplexed',
+    '3': 'active',
+    '4': 'backup',
+}
+
+hp_proliant_da_cntlr_state_map = {
+    '1': (3, 'other'),
+    '2': (0, 'ok'),
+    '3': (2, 'generalFailure'),
+    '4': (2, 'cableProblem'),
+    '5': (2, 'poweredOff'),
+}
+
+def inventory_hp_proliant_da_cntlr(info):
+    if info:
+        return [ (line[0], None) for line in info ]
+
+def check_hp_proliant_da_cntlr(item, params, info):
+    for line in info:
+        if line[0] == item:
+            index, model, slot, cond, partner_slot, \
+            role, b_status, b_cond, serial = line
+
+            sum_state = 0
+            output = []
+
+            for val, label, map in [ (cond, 'Condition', hp_proliant_da_cntlr_cond_map),
+                                     (b_cond, 'Board-Condition', hp_proliant_da_cntlr_cond_map),
+                                     (b_status, 'Board-Status', hp_proliant_da_cntlr_state_map) ]:
+                this_state = map[val][0]
+                state_txt = ''
+                if this_state == 1:
+                    state_txt = ' (!)'
+                elif this_state == 2:
+                    state_txt = ' (!!)'
+                sum_state = max(sum_state, this_state)
+                output.append('%s: %s%s' % (label, map[val][1], state_txt))
+
+            output.append('(Role: %s, Model: %s, Slot: %s, Serial: %s)' %
+                       (hp_proliant_da_cntlr_role_map.get(role, 'unknown'), model, slot, serial))
+
+            return (sum_state, ', '.join(output))
+    return (3, "Controller not found in snmp data")
 
 check_info["hp_proliant_da_cntlr"] = {
-    'check_function'        : check_hp_proliant_da_cntlr,
-    'inventory_function'    : inventory_hp_proliant_da_cntlr,
-    'service_description'   : 'HW Controller %s',
-    'snmp_info'             : (
+    'check_function':          check_hp_proliant_da_cntlr,
+    'inventory_function':      inventory_hp_proliant_da_cntlr,
+    'service_description':     'HW Controller %s',
+    'snmp_info':               (
         ".1.3.6.1.4.1.232.3.2.2.1.1", [
              "1", # cpqDaCntlrIndex
              "2", # cpqDaCntlrModel
@@ -42,6 +96,6 @@ check_info["hp_proliant_da_cntlr"] = {
             "15", # cpqDaCntlrSerialNumber
         ]
     ),
-    'snmp_scan_function'    : lambda oid: "proliant" in oid(".1.3.6.1.4.1.232.2.2.4.2.0", "").lower(),
-    "includes"              : ["hp_proliant.include"]
+    'snmp_scan_function':      \
+         lambda oid: "proliant" in oid(".1.3.6.1.4.1.232.2.2.4.2.0", "").lower(),
 }

@@ -32,7 +32,7 @@ def test_response_set_cookie(register_builtin_html):
     html.response.set_cookie("auth_SITE", "user:123456:abcdefg")
 
     assert html.response.headers[-1] == \
-            ("Set-Cookie", "auth_SITE=user:123456:abcdefg; httponly; Path=/")
+            ("Set-Cookie", "auth_SITE=user:123456:abcdefg; HttpOnly; Path=/")
 
 
 def test_response_set_cookie_secure(register_builtin_html, monkeypatch):
@@ -42,7 +42,7 @@ def test_response_set_cookie_secure(register_builtin_html, monkeypatch):
     html.response.set_cookie("auth_SITE", "user:123456:abcdefg")
 
     assert html.response.headers[-1] == \
-            ("Set-Cookie", "auth_SITE=user:123456:abcdefg; httponly; Path=/; secure")
+            ("Set-Cookie", "auth_SITE=user:123456:abcdefg; Secure; HttpOnly; Path=/")
 
 
 def test_response_set_cookie_expires(register_builtin_html, monkeypatch):
@@ -51,7 +51,7 @@ def test_response_set_cookie_expires(register_builtin_html, monkeypatch):
     html.response.set_cookie("auth_SITE", "user:123456:abcdefg", expires=60)
 
     assert html.response.headers[-1] == \
-            ("Set-Cookie", "auth_SITE=user:123456:abcdefg; expires=Thu, 01 Jan 1970 00:01:00 GMT; httponly; Path=/")
+            ("Set-Cookie", "auth_SITE=user:123456:abcdefg; Expires=Thu, 01-Jan-1970 00:01:00 GMT; HttpOnly; Path=/")
 
 
 def test_response_del_cookie(register_builtin_html, monkeypatch):
@@ -60,4 +60,29 @@ def test_response_del_cookie(register_builtin_html, monkeypatch):
     html.response.del_cookie("auth_SITE")
 
     assert html.response.headers[-1] == \
-            ("Set-Cookie", "auth_SITE=; expires=Wed, 31 Dec 1969 23:59:00 GMT; httponly; Path=/")
+            ("Set-Cookie", "auth_SITE=; Expires=Wed, 31-Dec-1969 23:59:00 GMT; HttpOnly; Path=/")
+
+
+# User IDs in Check_MK may contain non ascii characters. When they need to be encoded,
+# they are encoded in UTF-8. Since this is possible the user names in the cookies directly
+# contain those UTF-8 encoded user names.
+# Until we decide that distributed setups between the current version and the previous
+# versions are not possible anymore we need to be able to deal with the old cookie format.
+#
+# We dropped the old format during 1.6 development. It would be a good time to drop the
+# compatibility with the old format earliest with 1.7.
+def test_pre_16_format_cookie_handling(monkeypatch):
+    wsgi_environ = {
+        # This is no complete WSGI environment. But we currently don't need more.
+        "wsgi.input"  : "",
+        "SCRIPT_NAME" : "",
+        "HTTP_COOKIE" : "xyz=123; auth_stable=lärs:1534272374.61:1f59cac3fcd5bcc389e4f8397bed315b; abc=123"
+    }
+
+    request = http.Request(wsgi_environ)
+
+    assert isinstance(request.cookie("auth_stable"), bytes)
+    assert request.cookie("auth_stable") == "lärs:1534272374.61:1f59cac3fcd5bcc389e4f8397bed315b"
+
+    assert request.has_cookie("xyz")
+    assert request.has_cookie("abc")

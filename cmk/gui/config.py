@@ -928,14 +928,6 @@ def aux_tags():
     return BuiltinTags().get_effective_aux_tags(wato_aux_tags)
 
 
-# Returns the effective set of tag groups defined by WATO. This includes
-# the implicitly declared builtin host tags. This function must be used by
-# the GUI code to get the tag group definitions.
-def host_aux_tags():
-    import watolib
-    return watolib.get_effective_aux_tags(wato_aux_tags)
-
-
 #.
 #   .--Sites---------------------------------------------------------------.
 #   |                        ____  _ _                                     |

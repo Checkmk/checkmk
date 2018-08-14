@@ -1,0 +1,11 @@
+Title: Service discovery: "Analyze parameters..." link of manual checks is now correct
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.5.0p3
+Date: 1534260703
+Class: fix
+
+In previous releases the link of manual checks pointed to the ruleset of the discovery
+based checks instead of the manual checks related ruleset.

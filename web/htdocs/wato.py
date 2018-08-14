@@ -3416,12 +3416,20 @@ class ModeDiscovery(WatoMode):
                 _("View and edit the parameters for this service"), "rulesets")
 
         def check_parameters_button():
-            ruleset_name = self._get_ruleset_name(table_source, check_type, checkgroup)
-            if ruleset_name is None:
-                return
-            html.icon_button(watolib.folder_preserving_link(
+            if table_source == self.SERVICE_MANUAL:
+                url = watolib.folder_preserving_link(
+                             [('mode', 'edit_ruleset'), ('varname', "static_checks:" + checkgroup),
+                              ('host', self._host_name)])
+            else:
+                ruleset_name = self._get_ruleset_name(table_source, check_type, checkgroup)
+                if ruleset_name is None:
+                    return
+
+                url = watolib.folder_preserving_link(
                              [("mode", "edit_ruleset"), ("varname", ruleset_name),
                               ("host", self._host_name), ("item", watolib.mk_repr(item)), ]),
+
+            html.icon_button(url,
                 _("Edit and analyze the check parameters of this service"), "check_parameters")
 
         def disabled_services_button():

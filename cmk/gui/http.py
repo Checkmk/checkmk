@@ -28,7 +28,7 @@
 
 import re
 import time
-import Cookie
+import werkzeug.http
 import cgi
 
 import cmk.gui.log as log
@@ -55,10 +55,13 @@ class Request(object):
         self.vars     = {}
         self.listvars = {} # for variables with more than one occurrence
         self.uploads  = {}
-        self.cookies  = Cookie.BaseCookie()
+        # TODO: To be compatible with Check_MK <1.5 handling / code base we
+        # prevent parse_cookie() from decoding the stuff to unicode. One bright
+        # day we'll switch all input stuff to be parsed to unicode, then we'll
+        # clean this up!
+        self.cookies  = werkzeug.http.parse_cookie(wsgi_environ, charset=None)
 
         self._init_vars(wsgi_environ)
-        self.cookies.load(wsgi_environ.get("HTTP_COOKIE", {}))
 
 
     def _init_vars(self, wsgi_environ):
@@ -184,7 +187,7 @@ class Request(object):
     def cookie(self, varname, deflt=None):
         """Return either the value of the cookie provided by the client, the given deflt value or None"""
         try:
-            return self.cookies[varname].value
+            return self.cookies[varname]
         except:
             return deflt
 
@@ -322,25 +325,22 @@ class Response(object):
 
     def set_cookie(self, varname, value, expires=None):
         """Send the given cookie to the client with the response"""
-        c = Cookie.BaseCookie()
-        c[varname] = value.encode("utf-8") if type(value) == unicode else "%s" % value
-
-        # Use cookie for all URLs of the host (to make cross site use possible)
-        c[varname]["path"] = "/"
-
-        # Tell client not to use the cookie within javascript
-        c[varname]["httponly"] = True
-
-        # Tell client to only use the cookie for SSL connections
-        if self._request.is_ssl_request:
-            c[varname]["secure"] = True
-
         if expires is not None:
             assert type(expires) == int
-            c[varname]["expires"] = expires
 
-        self.set_http_header("Set-Cookie", c.output(header="").lstrip(),
-                             prevent_duplicate=False)
+        cookie_header = werkzeug.http.dump_cookie(
+            varname,
+            value,
+            # Use cookie for all URLs of the host (to make cross site use possible)
+            path="/",
+            # Tell client not to use the cookie within javascript
+            httponly=True,
+            # Tell client to only use the cookie for SSL connections
+            secure=self._request.is_ssl_request,
+            expires=expires,
+        )
+
+        self.set_http_header("Set-Cookie", cookie_header, prevent_duplicate=False)
 
 
     def del_cookie(self, varname):

@@ -85,6 +85,7 @@ msrestazure = "==0.4.34"  # needed by azure stuff
 oauthlib = "==2.1.0"  # needed by azure stuff
 requests-oauthlib = "==1.0.0"  # needed by azure stuff
 urllib3 = "==1.23"  # needed by azure stuff
+Werkzeug = "==0.14.1" # Added for the GUI
 
 
 [requires]

@@ -363,7 +363,7 @@ def mode_dump_agent(hostname):
         # Show errors of problematic data sources
         has_errors = False
         for source in sources.get_data_sources():
-            source_state, source_output, source_perfdata = source.get_summary_result()
+            source_state, source_output, _source_perfdata = source.get_summary_result()
             if source_state != 0:
                 console.error("ERROR [%s]: %s" % (source.id(), source_output))
                 has_errors = True
@@ -1498,9 +1498,7 @@ modes.register(Mode(
 #   '----------------------------------------------------------------------'
 
 def mode_check(options, args):
-    import cmk_base.ip_lookup as ip_lookup
     import cmk_base.checking as checking
-    import cmk_base.data_sources as data_sources
     import cmk_base.item_state as item_state
     try:
         import cmk_base.cee.keepalive as keepalive

@@ -2280,7 +2280,7 @@ def cached_includes_of_plugin(check_file_path):
     cache_file_path = _include_cache_file_path(check_file_path)
     try:
         return _get_cached_check_includes(check_file_path, cache_file_path)
-    except OSError, e:
+    except OSError:
         pass # No usable cache. Terminate
 
     includes = includes_of_plugin(check_file_path)
@@ -2412,7 +2412,7 @@ def _is_plugin_precompiled(path, precompiled_path):
 
     try:
         origin_file_mtime = struct.unpack("I", f.read(4))[0]
-    except struct.error, e:
+    except struct.error:
         return False
 
     if long(os.stat(path).st_mtime) > origin_file_mtime:

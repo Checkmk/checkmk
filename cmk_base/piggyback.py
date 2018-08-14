@@ -225,7 +225,7 @@ def _cleanup_old_source_status_files(piggyback_max_cachefile_age):
 
         try:
             file_age = cmk_base.utils.cachefile_age(piggyback_file_path)
-        except MKGeneralException, e:
+        except MKGeneralException:
             continue # File might've been deleted. That's ok.
 
         if file_age > piggyback_max_cachefile_age:
@@ -279,7 +279,7 @@ def _shall_cleanup_piggyback_file(piggyback_max_cachefile_age, piggyback_file_pa
 
     try:
         file_age = cmk_base.utils.cachefile_age(piggyback_file_path)
-    except MKGeneralException, e:
+    except MKGeneralException:
         return None # File might've been deleted. That's ok.
 
     # Skip piggyback files that are outdated at all

@@ -1135,7 +1135,7 @@ def _get_needed_check_plugin_names(hostname, host_check_table):
             needed_check_plugin_names.add(source.special_agent_plugin_file_name)
 
     # Collect the needed check plugin names using the host check table
-    for check_plugin_name, _unused_item, _unused_param, descr in host_check_table:
+    for check_plugin_name, _unused_item, _unused_param, _descr in host_check_table:
         if check_plugin_name not in config.check_info:
             sys.stderr.write('Warning: Ignoring missing check %s.\n' % check_plugin_name)
             continue

@@ -1329,7 +1329,7 @@ class AutomationGetAgentOutput(Automation):
 
                 # Optionally show errors of problematic data sources
                 for source in sources.get_data_sources():
-                    source_state, source_output, source_perfdata = source.get_summary_result()
+                    source_state, source_output, _source_perfdata = source.get_summary_result()
                     if source_state != 0:
                         success = False
                         output += "[%s] %s\n" % (source.id(), source_output)

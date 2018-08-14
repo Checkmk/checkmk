@@ -62,14 +62,12 @@ def do_backup(tarname):
         absdir = os.path.abspath(path)
         if os.path.exists(path):
             if is_dir:
-                basedir = absdir
                 subtarname = name + ".tar"
                 subfile = StringIO.StringIO()
                 subtar = tarfile.open(mode="w", fileobj=subfile, dereference=True)
                 subtar.add(path, arcname=".")
                 subdata = subfile.getvalue()
             else:
-                basedir = os.path.dirname(absdir)
                 subtarname = canonical_name
                 subdata = file(absdir).read()
 

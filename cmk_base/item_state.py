@@ -131,7 +131,7 @@ class CachedItemStates(object):
                 self._item_states.update(self._updated_item_states)
 
             cmk.store.save_data_to_file(filename, self._item_states, pretty=False)
-        except Exception, e:
+        except Exception:
             raise MKGeneralException("Cannot write to %s: %s" % (filename, traceback.format_exc()))
         finally:
             cmk.store.release_lock(filename)

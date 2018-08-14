@@ -2827,6 +2827,18 @@ class CREHost(WithPermissionsAndAttributes):
         if "no-snmp" in tags and "no-agent" in tags:
             tags.add("ping")
 
+        # The following code is needed to migrate host/rule matching from <1.5
+        # to 1.5 when a user did not modify the "agent type" tag group.  (See
+        # migrate_old_sample_config_tag_groups() for more information)
+        aux_tag_ids = [ t[0] for t in config.host_aux_tags() ]
+
+        # Be compatible to: Agent type -> SNMP v2 or v3
+        if "no-agent" in tags and "snmp-v2" in tags and "snmp-only" in aux_tag_ids:
+            tags.add("snmp-only")
+        # Be compatible to: Agent type -> Dual: SNMP + TCP
+        if "cmk-agent" in tags and "snmp-v2" in tags and "snmp-tcp" in aux_tag_ids:
+            tags.add("snmp-tcp")
+
         self._cached_host_tags = tags
         return tags
 
@@ -6405,6 +6417,11 @@ def remove_old_sample_config_tag_groups(host_tags, aux_tags):
 
     try:
         host_tags.remove(legacy_tag_group_default)
+
+        # Former tag choices (see above) are added as aux tags to allow the user to migrate
+        # these tags and the objects that use them
+        aux_tags.insert(0, ("snmp-only", "Data sources/Legacy: SNMP (Networking device, Appliance)"))
+        aux_tags.insert(0, ("snmp-tcp", "Data sources/Legacy: Dual: Check_MK Agent + SNMP"))
     except ValueError:
         pass # Not there or modified
 

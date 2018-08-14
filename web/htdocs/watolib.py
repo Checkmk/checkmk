@@ -2827,6 +2827,11 @@ class CREHost(WithPermissionsAndAttributes):
         if "no-snmp" in tags and "no-agent" in tags:
             tags.add("ping")
 
+        # This is needed to migrate host/rule matching from <1.5 to 1.5 when
+        # a user did not modify the "agent type" tag group.
+        # (See  migrate_old_sample_config_tag_groups() for more information)
+        if ""
+
         self._cached_host_tags = tags
         return tags
 

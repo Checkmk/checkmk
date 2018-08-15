@@ -1,0 +1,19 @@
+Title: Fixed wrong sidebar snapin permission checking
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 1.5.0p3
+Date: 1534337786
+Class: security
+
+The permission checking of sidebar snapins was not working correctly in all
+previous 1.5 versions.
+
+The specific issue was that the default permission of the sidebar snapins were
+not set correctly. Especially the master control snapin (which can be used to
+globally disable e.g. checking or notifications) was usable even for guest
+users by default which is normally only available for administrative users.
+
+As workaround, you could override the default  permissions of the snapins to
+make them only available to the intended roles.

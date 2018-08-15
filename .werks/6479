@@ -1,0 +1,19 @@
+Title: oracle_tablespaces: Check for empty filenames
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.4.0p36
+Date: 1534918561
+
+The check goes CRIT when a filename for a file is missing.
+This is often the case for Databases after cloning or recreation
+of the controlfiles without recreation of the temporary files
+for temporary Tablespaces.
+The state is always CRIT, because empty temporary Tablespaces
+are really bad and a space calculation is not possible.
+
+The plugin from 'Support for Container Database (Multitenant)'
+is requirred for the most current SQLs.

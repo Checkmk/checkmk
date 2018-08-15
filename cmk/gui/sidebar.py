@@ -151,6 +151,17 @@ def transform_old_dict_based_snapins():
             def refresh_regularly(cls):
                 return cls._spec.get("refresh", False)
 
+
+            @classmethod
+            def refresh_on_restart(cls):
+                return cls._spec.get("restart", False)
+
+
+            @classmethod
+            def allowed_roles(cls):
+                return cls._spec["allowed"]
+
+
             def styles(self):
                 return self._spec.get("styles")
 

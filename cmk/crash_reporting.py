@@ -36,11 +36,7 @@ import sys
 import time
 import traceback
 import subprocess
-
-try:
-    import simplejson as json
-except ImportError:
-    import json
+import json
 
 import cmk
 

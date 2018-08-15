@@ -53,10 +53,7 @@
 
 # TODO: Refactor this.
 def parse_mkbackup(info):
-    try:
-        import simplejson as json
-    except ImportError:
-        import json
+    import json
 
     parsed = {}
 

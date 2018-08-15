@@ -18,17 +18,13 @@ import lockfile
 import ast
 import abc
 import urllib3
+import json
 
 from urlparse import urlparse
 from bs4 import BeautifulSoup
 
 # Disable insecure requests warning message during SSL testing
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-
-try:
-    import simplejson as json
-except ImportError:
-    import json
 
 def repo_path():
     return os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))

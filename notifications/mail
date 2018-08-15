@@ -43,15 +43,11 @@ import subprocess
 import sys
 import urllib
 import urllib2
+import json
 from email.mime.application import MIMEApplication
 from email.mime.image import MIMEImage
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
-
-try:
-    from simplejson import json
-except ImportError:
-    import json
 
 def tmpl_head_html(html_section):
     return '''

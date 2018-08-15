@@ -41,6 +41,7 @@ import cmk.store as store
 import cmk.gui.watolib as watolib
 import cmk.gui.config as config
 import cmk.gui.table as table
+import cmk.gui.log as log
 from cmk.gui.exceptions import MKUserError, MKGeneralException
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
@@ -333,7 +334,6 @@ class ModeAnalyzeConfig(WatoMode):
             #            raise
 
             # Reinitialize logging targets
-            import cmk.gui.log as log
             log.init_logging()
 
             if config.site_is_local(site_id):

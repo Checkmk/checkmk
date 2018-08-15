@@ -87,6 +87,7 @@ import pprint
 import Queue
 import random
 import re
+import tarfile
 import shutil
 import socket
 import subprocess
@@ -5545,7 +5546,6 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
 
     # TODO: Remove once new changes mechanism has been implemented
     def _extract_from_file(self, filename, elements):
-        import tarfile
         if type(elements) == list:
             multitar.extract(tarfile.open(filename, "r"), elements)
 

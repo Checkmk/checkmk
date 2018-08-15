@@ -34,6 +34,7 @@ import traceback
 import json
 import time
 
+import cmk
 import cmk.paths
 import cmk.store as store
 
@@ -207,7 +208,6 @@ def save_user_config(user_config):
 
 
 def get_check_mk_edition_title():
-    import cmk
     if cmk.is_enterprise_edition():
         if cmk.is_demo():
             return "Enterprise (Demo)"

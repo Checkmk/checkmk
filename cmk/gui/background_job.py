@@ -41,6 +41,7 @@ from cmk.gui.i18n import _
 from cmk.gui.globals import html
 import cmk
 import cmk.log
+import cmk.daemon as daemon
 import cmk.store as store
 from cmk.exceptions import MKGeneralException
 
@@ -174,7 +175,6 @@ class BackgroundProcess(multiprocessing.Process):
         # Detach from parent (apache) -> Remain running when apache is restarted
         os.setsid()
 
-        import cmk.daemon as daemon
         daemon.set_procname(BackgroundJobDefines.process_name)
 
         # Close file descpriptors. This also closes logfile handles!

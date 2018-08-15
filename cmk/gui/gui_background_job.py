@@ -37,6 +37,7 @@ import cmk.gui.i18n
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
 from cmk.gui.htmllib import HTML
+import cmk.gui.sites as sites
 import cmk.gui.config as config
 import cmk.gui.log as log
 import cmk.gui.table as table
@@ -82,7 +83,6 @@ class GUIBackgroundProcess(background_job.BackgroundProcess):
         html.disable_request_timeout()
 
         # Close livestatus connections inherited from the parent process
-        import cmk.gui.sites as sites
         sites.disconnect()
 
         super(GUIBackgroundProcess, self).initialize_environment()

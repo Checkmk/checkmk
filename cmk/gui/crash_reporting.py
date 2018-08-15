@@ -40,6 +40,7 @@ import cmk.gui.i18n
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
 from cmk.gui.htmllib import HTML
+import cmk.gui.userdb as userdb
 import cmk.gui.sites as sites
 from cmk.gui.exceptions import MKGeneralException, MKUserError
 from cmk.gui.valuespec import *
@@ -311,7 +312,6 @@ def show_report_form(what, details):
 
 
 def add_gui_user_infos_to_details(details):
-    import cmk.gui.userdb as userdb
     users = userdb.load_users()
     user = users.get(config.user.id, {})
     details.setdefault("name", user.get("alias"))

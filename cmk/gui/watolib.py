@@ -56,9 +56,12 @@ import multiprocessing
 import tarfile
 import cStringIO
 import requests
+import copy
+import threading
 from hashlib import sha256
 from pathlib2 import Path
 
+import cmk.daemon as daemon
 import cmk.paths
 import cmk.defines
 import cmk.utils
@@ -76,6 +79,7 @@ import cmk.gui.multitar as multitar
 import cmk.gui.sites as sites
 import cmk.gui.mkeventd as mkeventd
 import cmk.gui.backup as backup
+import cmk.gui.log as log
 import cmk.gui.gui_background_job as gui_background_job
 from cmk.gui.i18n import _u, _
 from cmk.gui.globals import html
@@ -5666,7 +5670,6 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
 
     def run(self):
         # Ensure this process is not detected as apache process by the apache init script
-        import cmk.daemon as daemon
         daemon.set_procname("cmk-activate-changes")
 
         # Detach from parent (apache) -> Remain running when apache is restarted
@@ -5686,7 +5689,6 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
                     raise
 
         # Reinitialize logging targets
-        import cmk.gui.log as log
         log.init_logging()
 
         try:
@@ -8936,7 +8938,6 @@ def edit_group(name, group_type, extra_info):
     if name not in groups:
         raise MKUserError("name", _("Unknown group: %s") % name)
 
-    import copy
     old_group_backup = copy.deepcopy(groups[name])
 
     _set_group(all_groups, group_type, name, extra_info)
@@ -9732,7 +9733,6 @@ def _scan_ip_addresses(folder, ip_addresses):
     # Initalize all workers
     threads = []
     found_hosts = []
-    import threading
     for t_num in range(parallel_pings):
         t = threading.Thread(target = _ping_worker, args = [ip_addresses, found_hosts])
         t.daemon = True

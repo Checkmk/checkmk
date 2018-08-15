@@ -31,6 +31,7 @@ Please try to find a better place for the things you want to put here."""
 
 import os
 import re
+import uuid
 import marshal
 
 import cmk.paths
@@ -126,8 +127,7 @@ def gen_id():
     except IOError:
         # On platforms where the above file does not exist we try to
         # use the python uuid module which seems to be a good fallback
-        # for those systems. Well, if got python < 2.5 you are lost for now.
-        import uuid
+        # for those systems.
         return str(uuid.uuid4())
 
 

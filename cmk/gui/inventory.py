@@ -30,6 +30,8 @@ import os
 import json
 import ast
 import livestatus
+import dicttoxml
+import xml.dom.minidom
 
 import cmk.paths
 import cmk.store as store
@@ -331,17 +333,8 @@ def _may_see(host_name, site=None):
 
 
 def _write_xml(response):
-    try:
-        import dicttoxml
-    except ImportError:
-        raise MKGeneralException(_("You need to have the \"dicttoxml\" python module installed "
-                                   "to be able to use the XML format."))
-
     unformated_xml = dicttoxml.dicttoxml(response)
-
-    from xml.dom.minidom import parseString
-    dom = parseString(unformated_xml)
-
+    dom = xml.dom.minidom.parseString(unformated_xml)
     html.write(dom.toprettyxml())
 
 

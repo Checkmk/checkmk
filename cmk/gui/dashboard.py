@@ -28,6 +28,7 @@ import pprint
 import time
 import copy
 import json
+import traceback
 
 import cmk.gui.pages
 import cmk.gui.notify as notify
@@ -401,7 +402,6 @@ def draw_dashboard(name):
             dashlet_error(nr, dashlet, e)
         except Exception, e:
             if config.debug:
-                import traceback
                 detail = traceback.format_exc()
             else:
                 detail = e

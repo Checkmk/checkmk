@@ -31,6 +31,7 @@ import os
 import pprint
 import shutil
 import traceback
+import copy
 
 import cmk.utils
 import cmk.paths
@@ -759,7 +760,6 @@ def save_users(profiles):
 # TODO: Isn't this needed only while generating the contacts.mk?
 #       Check this and move it to the right place
 def _add_custom_macro_attributes(profiles):
-    import copy
     updated_profiles = copy.deepcopy(profiles)
 
     # Add custom macros

@@ -31,13 +31,13 @@ import os
 import cmk.store as store
 import cmk.paths
 
+import cmk.gui.md5crypt
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
 from cmk.gui.exceptions import MKUserError
 from . import UserConnector, user_connector_registry
 
 def encrypt_password(password, salt=None, prefix="1"):
-    import cmk.gui.md5crypt
     if not salt:
         salt = "%06d" % (1000000 * (time.time() % 1.0))
     return cmk.gui.md5crypt.md5crypt(password, salt, '$%s$' % prefix)

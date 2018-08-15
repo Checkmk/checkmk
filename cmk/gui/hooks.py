@@ -25,6 +25,8 @@
 # Boston, MA 02110-1301 USA.
 
 import sys
+import StringIO
+import traceback
 
 import cmk.gui.config as config
 import cmk.gui.i18n
@@ -73,8 +75,6 @@ def call(name, *args):
             hk(*args)
         except Exception, e:
             if config.debug:
-                import StringIO
-                import traceback
                 txt = StringIO.StringIO()
                 t, v, tb = sys.exc_info()
                 traceback.print_exception(t, v, tb, None, txt)

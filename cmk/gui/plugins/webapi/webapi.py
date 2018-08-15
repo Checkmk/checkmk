@@ -27,6 +27,7 @@
 # TODO CLEANUP: Replace MKUserError by MKAPIError or something like that
 
 import os
+import copy
 
 import cmk
 
@@ -531,7 +532,6 @@ def action_edit_users(request):
     user_settings = request.get("users")
     all_users = userdb.load_users()
 
-    import copy
     edit_user_objects = {}
     for user_id, settings in user_settings.items():
         if user_id not in all_users:

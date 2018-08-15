@@ -25,6 +25,7 @@
 # Boston, MA 02110-1301 USA.
 
 import re
+import logging
 
 import cmk
 import cmk.paths
@@ -71,8 +72,6 @@ group = _("User Interface")
 configvar_order()[group] = 20
 
 def web_log_level_elements():
-    import logging
-
     elements = []
     for level_id, title, help_text in [
         ("cmk.web",          _("Web"),

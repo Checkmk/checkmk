@@ -27,6 +27,7 @@
 # This module contains some helper functions dealing with the creation
 # of multi-tier tar files (tar files containing tar files)
 
+import hashlib
 import os
 import tarfile
 import time
@@ -269,7 +270,6 @@ class SnapshotCreationBase(object):
             return True
 
 
-        import hashlib
         for component in parsed_custom_components.components:
             if not is_supported(component):
                 raise MKGeneralException(_("Identical snapshot detection not supported. Cannot create md5sum. "

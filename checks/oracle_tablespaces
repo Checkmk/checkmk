@@ -169,6 +169,7 @@ def parse_oracle_tablespaces(info):
                 "type"           : datafiles[0]["ts_type"],
                 "status"         : datafiles[0]["ts_status"],
                 "autoextensible" : False,
+                "amount_missing_filenames": len([f for f in datafiles if f['name'] == ''])
             }
 
             for df in datafiles:
@@ -232,6 +233,15 @@ def check_oracle_tablespaces(item, params, parsed):
 
     autoext = params.get("autoextend")
     uses_default_increment = False
+
+    # check for missing filenames in Tablespaces. This is possible after recreation
+    # of controlfiles in temporary Tablespaces
+    # => CRIT, because we are not able to calculate used/free space in Tablespace
+    #          in most cases the temporary Tablespace is empty
+    if tablespace['amount_missing_filenames'] > 0:
+        yield 2, "%d files with missing filename in %s Tablespace (!!), space calculation not possible" % \
+                   (tablespace['amount_missing_filenames'], ts_type)
+        return
 
     for datafile in tablespace["datafiles"]:
 

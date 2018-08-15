@@ -1198,5 +1198,13 @@ class GenericSnapin(SidebarSnapin):
         return self._spec.get("refresh", False)
 
 
+    def refresh_on_restart(self):
+        return self._spec.get("restart", False)
+
+
+    def allowed_roles(self):
+        return self._spec["allowed"]
+
+
     def styles(self):
         return self._spec.get("styles")

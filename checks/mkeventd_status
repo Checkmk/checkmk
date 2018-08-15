@@ -31,10 +31,7 @@
 
 
 def parse_mkeventd_status(info):
-    try:
-        import simplejson as json
-    except ImportError:
-        import json
+    import json
 
     parsed, site = {}, None
     for line in info:

@@ -26,10 +26,7 @@
 
 
 def parse_ceph_status(info):
-    try:
-        import json
-    except:
-        import simplejson as json
+    import json
 
     parsed = ""
     for line in info:

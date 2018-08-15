@@ -26,10 +26,7 @@
 
 
 def parse_salesforce(info):
-    try:
-        import simplejson as json
-    except ImportError:
-        import json
+    import json
 
     pre_parsed = []
     for line in info:

@@ -318,7 +318,7 @@ def render_werks_table():
 
     werk_table_options = render_werk_table_options()
 
-    if html.var("show_unack") and not html.var("wo_set"):
+    if html.var("show_unack") and not html.has_var("wo_set"):
         werk_table_options = default_werk_table_options()
         werk_table_options["compatibility"] = [ "incomp_unack" ]
 
@@ -417,19 +417,32 @@ def default_werk_table_options():
 
 
 def render_werk_table_options():
-    werk_table_options = {}
-
     html.begin_foldable_container("werks", "options", isopen=True, title=_("Searching and Filtering"), indent=False)
     html.begin_form("werks")
     html.hidden_field("wo_set", "set")
     html.begin_floating_options("werks", is_open=True)
+
+    # First populate the table option data structure and run validation on
+    # input values
+    werk_table_options = {}
     for name, height, vs, default_value in werk_table_option_entries():
-        if html.var("wo_set"):
-            value = vs.from_html_vars("wo_" + name)
-        else:
-            value = default_value
+        value = default_value
+        try:
+            if html.has_var("wo_set"):
+                value = vs.from_html_vars("wo_" + name)
+                vs.validate_value(value, "wo_" + name)
+        except MKUserError, e:
+            action_message = "%s" % e
+            html.add_user_error(e.varname, action_message)
+
         werk_table_options.setdefault(name, value)
+
+    if html.has_user_errors():
+        html.show_user_errors()
+
+    for name, height, vs, default_value in werk_table_option_entries():
         html.render_floating_option(name, height, "wo_", vs, werk_table_options[name])
+
     html.end_floating_options(reset_url = html.makeuri([], remove_prefix = ""))
     html.hidden_fields()
     html.end_form()

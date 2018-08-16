@@ -72,6 +72,13 @@ def end():
     return table.end()
 
 
+def update_headinfo(num_rows):
+    headinfo = _("1 row") if num_rows == 1 else _("%d rows") % num_rows
+    html.javascript("update_headinfo('%s');" % headinfo)
+
+
+
+
 #.
 #   .--Table---------------------------------------------------------------.
 #   |                       _____     _     _                              |
@@ -129,6 +136,7 @@ class Table(object):
             "searchable"      : kwargs.get("searchable", True),
             "sortable"        : kwargs.get("sortable", True),
             "foldable"        : kwargs.get("foldable", False),
+            "update_page_head": kwargs.get("update_page_head", True),
             "output_format"   : kwargs.get("output_format", "html"), # possible: html, csv, fetch
         }
 
@@ -324,7 +332,8 @@ class Table(object):
 
 
     def _write_table(self, rows, actions_enabled, actions_visible, search_term):
-        self._update_headinfo(len(rows))
+        if self.options["update_page_head"]:
+            update_headinfo(len(rows))
 
         table_id = self.id
         num_cols = len(self.headers)
@@ -398,11 +407,6 @@ class Table(object):
             html.close_tr()
 
         html.close_table()
-
-
-    def _update_headinfo(self, num_rows):
-        headinfo = _("1 row") if num_rows == 1 else _("%d rows") % num_rows
-        html.javascript("update_headinfo('%s');" % headinfo)
 
 
     def _write_csv(self, csv_separator):

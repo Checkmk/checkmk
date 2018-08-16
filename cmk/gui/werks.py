@@ -293,6 +293,15 @@ def werk_table_option_entries():
            ),
            "version",
          ),
+         ( "group_limit",
+           "single",
+           Integer(
+               title = _("Show number of groups"),
+               unit = _("groups"),
+               minvalue = 1,
+           ),
+           20,
+         ),
     ]
 
 
@@ -321,7 +330,7 @@ def render_werks_table():
         werk_table_options = default_werk_table_options()
         werk_table_options["compatibility"] = [ "incomp_unack" ]
 
-    current_group = False
+    current_group, number_of_groups = False, 0
 
     def begin_group(title):
         table.begin(title=title, limit=None, searchable = False, sortable = False, css="werks")
@@ -337,6 +346,10 @@ def render_werks_table():
         if werk_matches_options(werk, werk_table_options):
             group = werk_group_value(werk, werk_table_options["grouping"])
             if group != current_group:
+                if number_of_groups >= werk_table_options["group_limit"]:
+                    break
+                number_of_groups += 1
+
                 if current_group != False:
                     table.end()
                 begin_group(group)

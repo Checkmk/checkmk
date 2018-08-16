@@ -46,107 +46,114 @@
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
+
+class WMITable(object):
+    """
+    Represents a 2-dimensional table of performance metrics.
+    Each table represents a class of objects about which metrics are gathered,
+    like "processor" or "physical disk" or "network interface"
+    columns represent the individiual metrics and are fixed after initialization
+    rows represent the actual values, one row per actual instance (i.e. a
+    specific processor, disk or interface)
+    the table can also contain the sample time where the metrics were read,
+    otherwise the caller will have to assume the sampletime is one of the
+    metrics.
+    """
+
+    TOTAL_NAMES = ["_Total", "", "__Total__", "_Global"]
+
+    def __init__(self, name, headers, key_field, timestamp, frequency):
+        self.__name = name
+        self.__headers = {}
+        self.__timestamp = timestamp
+        self.__frequency = frequency
+        index = 0
+
+        prev_header = None
+        for header in headers:
+            if not header.strip() and prev_header:
+                # MS apparently doesn't bother to provide a name
+                # for base columns with performance counters
+                header = prev_header + "_Base"
+            header = self._normalize_key(header)
+            self.__headers[header] = index
+            prev_header = header
+            index += 1
+        self.__key_index = None
+        if key_field is not None:
+            try:
+                self.__key_index = self.__headers[self._normalize_key(key_field)]
+            except KeyError, e:
+                raise KeyError(e.message + " missing, valid keys: " +
+                               ", ".join(self.__headers.keys()))
+
+        self.__row_lookup = {}
+        self.__rows = []
+
+    def __repr__(self):
+        return repr((self.__headers, self.__rows))
+
+    def __eq__(self, other):
+        if isinstance(other, self.__class__):
+            return self.__dict__ == other.__dict__
+        return False
+
+    def __ne__(self, other):
+        return not self == other
+
+    def add_row(self, row):
+        row = row[:]
+        if self.__key_index is not None:
+            key = row[self.__key_index].strip("\"")
+            # there are multiple names to denote the "total" line, normalize that
+            if key in WMITable.TOTAL_NAMES:
+                key = row[self.__key_index] = None
+            self.__row_lookup[key] = len(self.__rows)
+        self.__rows.append(row)
+
+    def get(self, row, column):
+        if isinstance(row, int):
+            row_index = row
+        else:
+            row_index = self.__row_lookup[row]
+
+        if isinstance(column, int):
+            col_index = column
+        else:
+            try:
+                col_index = self.__headers[self._normalize_key(column)]
+            except KeyError, e:
+                raise MKGeneralException(e.message + " missing, valid keys: " +
+                                         ", ".join(self.__headers.keys()))
+
+        return self.__rows[row_index][col_index]
+
+    def row_labels(self):
+        return self.__row_lookup.keys()
+
+    def row_count(self):
+        return len(self.__rows)
+
+    def name(self):
+        return self.__name
+
+    def timestamp(self):
+        return self.__timestamp
+
+    def frequency(self):
+        return self.__frequency
+
+    def _normalize_key(self, key):
+        # Different API versions may return different headers/keys
+        # for equal objects, eg. "skype.sip_stack":
+        # - "SIP - Incoming Responses Dropped /Sec"
+        # - "SIP - Incoming Responses Dropped/sec"
+        # For these cases we normalize these keys to be independent of
+        # upper/lower case and spaces.
+        return key.replace(" ", "").lower()
+
+
 def parse_wmi_table(info, key="Name"):
-
-    # represents a 2-dimensional table of performance metrics.
-    # each table represents a class of objects about which metrics are gathered,
-    #  like "processor" or "physical disk" or "network interface"
-    # columns represent the individiual metrics and are fixed after initialization
-    # rows represent the actual values, one row per actual instance (i.e. a
-    #  specific processor, disk or interface)
-    # the table can also contain the sample time where the metrics were read,
-    #  otherwise the caller will have to assume the sampletime is one of the
-    #  metrics
-    class Table:
-
-        TOTAL_NAMES = ["_Total", "", "__Total__", "_Global"]
-
-        def __init__(self, name, headers, key_field, timestamp, frequency):
-            self.__name = name
-            self.__headers = {}
-            self.__timestamp = timestamp
-            self.__frequency = frequency
-            index = 0
-
-            prev_header = None
-            for header in headers:
-                if not header.strip() and prev_header:
-                    # MS apparently doesn't bother to provide a name
-                    # for base columns with performance counters
-                    header = prev_header + "_Base"
-                header = self._normalize_key(header)
-                self.__headers[header] = index
-                prev_header = header
-                index += 1
-            self.__key_index = None
-            if key_field is not None:
-                try:
-                    self.__key_index = self.__headers[self._normalize_key(key_field)]
-                except KeyError, e:
-                    raise KeyError(e.message + " missing, valid keys: "
-                                   + ", ".join(self.__headers.keys()))
-
-            self.__row_lookup = {}
-            self.__rows = []
-
-
-        def __repr__(self):
-            return repr((self.__headers, self.__rows))
-
-
-        def add_row(self, row):
-            row = row[:]
-            if self.__key_index is not None:
-                key = row[self.__key_index].strip("\"")
-                # there are multiple names to denote the "total" line, normalize that
-                if key in Table.TOTAL_NAMES:
-                    key = row[self.__key_index] = None
-                self.__row_lookup[key] = len(self.__rows)
-            self.__rows.append(row)
-
-
-        def get(self, row, column):
-            if isinstance(row, int):
-                row_index = row
-            else:
-                row_index = self.__row_lookup[row]
-
-            if isinstance(column, int):
-                col_index = column
-            else:
-                try:
-                    col_index = self.__headers[self._normalize_key(column)]
-                except KeyError, e:
-                    raise MKGeneralException(e.message + " missing, valid keys: "
-                                   + ", ".join(self.__headers.keys()))
-
-            return self.__rows[row_index][col_index]
-
-        def row_labels(self):
-            return self.__row_lookup.keys()
-
-        def row_count(self):
-            return len(self.__rows)
-
-        def name(self):
-            return self.__name
-
-        def timestamp(self):
-            return self.__timestamp
-
-        def frequency(self):
-            return self.__frequency
-
-        def _normalize_key(self, key):
-            # Different API versions may return different headers/keys
-            # for equal objects, eg. "skype.sip_stack":
-            # - "SIP - Incoming Responses Dropped /Sec"
-            # - "SIP - Incoming Responses Dropped/sec"
-            # For these cases we normalize these keys to be independent of
-            # upper/lower case and spaces.
-            return key.replace(" ", "").lower()
-
-
     try:
         info_iter = iter(info)
         res = None
@@ -177,11 +184,11 @@ def parse_wmi_table(info, key="Name"):
                     current = res[tablename]
                 else:
                     # table is new, treat as header line
-                    current = Table(tablename, line, key, timestamp, frequency)
+                    current = WMITable(tablename, line, key, timestamp, frequency)
                     res[tablename] = current
             else:
                 # single-table input
-                current = res = Table("", line, key, timestamp, frequency)
+                current = res = WMITable("", line, key, timestamp, frequency)
 
             # read table content
             line = info_iter.next()

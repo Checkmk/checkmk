@@ -498,8 +498,8 @@ def assertEqual(first, second, descr=''):
     if first == second:
         return
 
-    assert type(first) == type(second), "%sdiffering type: %r != %r" \
-        % (descr, first, second)
+    assert type(first) == type(second), "%sdiffering type: %r != %r for values %r and %r" \
+        % (descr, type(first), type(second), first, second)
 
     if isinstance(first, dict):
         remainder = set(second.keys())

@@ -62,7 +62,7 @@ class WMITable(object):
 
     TOTAL_NAMES = ["_Total", "", "__Total__", "_Global"]
 
-    def __init__(self, name, headers, key_field, timestamp, frequency):
+    def __init__(self, name, headers, key_field, timestamp, frequency, rows=None):
         self.__name = name
         self.__headers = {}
         self.__timestamp = timestamp
@@ -89,9 +89,22 @@ class WMITable(object):
 
         self.__row_lookup = {}
         self.__rows = []
+        if rows:
+            for row in rows:
+                self.add_row(row)
 
     def __repr__(self):
-        return repr((self.__headers, self.__rows))
+        key_field = None
+        if self.__key_index is not None:
+            for header, index in self.__headers.items():
+                if index == self.__key_index:
+                    key_field = header
+
+        headers = [name for name, index
+                   in sorted(self.__headers.iteritems(), lambda x, y: x[1] - y[1])]
+
+        return "%s(%r, %r, %r, %r, %r, %r)" % (self.__class__.__name__, self.__name, headers, key_field,
+                                               self.__timestamp, self.__frequency, self.__rows)
 
     def __eq__(self, other):
         if isinstance(other, self.__class__):

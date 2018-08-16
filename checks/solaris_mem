@@ -65,6 +65,10 @@ def solaris_mem_to_kbytes(s):
         return int(s[:-1]) * 1024 * 1024
     elif s[-1] == 'M':
         return int(s[:-1]) * 1024
+    elif s[-1] == 'K':
+        return int(s[:-1])
+    else:
+        raise Exception("Could not parse value %s" % s)
 
 
 def inventory_solaris_mem_used(parsed):

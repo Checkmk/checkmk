@@ -1,0 +1,11 @@
+Title: solaris_mem: Fix crashing check when values in agent output are given in Kilobytes
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0i1
+Date: 1534423429
+
+

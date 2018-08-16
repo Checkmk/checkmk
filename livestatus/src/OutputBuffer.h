@@ -47,6 +47,8 @@ public:
     OutputBuffer(int fd, const bool &termination_flag, Logger *logger);
     ~OutputBuffer();
 
+    bool shouldTerminate() const { return _termination_flag; }
+
     std::ostream &os() { return _os; }
 
     void setResponseHeader(ResponseHeader r) { _response_header = r; }

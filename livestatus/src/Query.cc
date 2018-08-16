@@ -648,6 +648,13 @@ bool Query::timelimitReached() const {
 }
 
 bool Query::processDataset(Row row) {
+    if (_output.shouldTerminate()) {
+        // Not the perfect response code, but good enough...
+        _output.setError(OutputBuffer::ResponseCode::limit_exceeded,
+                         "core is shutting down");
+        return false;
+    }
+
     if (static_cast<size_t>(_output.os().tellp()) > _max_response_size) {
         Informational(_logger) << "Maximum response size of "
                                << _max_response_size << " bytes exceeded!";

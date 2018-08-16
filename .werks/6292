@@ -1,0 +1,11 @@
+Title: Werk list: Fixed wrong number of werks shown at top of the page
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 1.5.0p3
+Date: 1534420128
+Class: fix
+
+The "number of rows" header was showing the number of rows in the last group
+table of the page. It's now correctly showing the number of werks listed.

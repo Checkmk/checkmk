@@ -322,10 +322,11 @@ def render_werks_table():
         werk_table_options = default_werk_table_options()
         werk_table_options["compatibility"] = [ "incomp_unack" ]
 
-    current_group, number_of_groups = False, 0
+    current_group, number_of_groups, number_of_werks = False, 0, 0
 
     def begin_group(title):
-        table.begin(title=title, limit=None, searchable = False, sortable = False, css="werks")
+        table.begin(title=title, limit=None, searchable = False, sortable = False, css="werks",
+                    update_page_head=False)
 
     werklist = []
 
@@ -347,6 +348,8 @@ def render_werks_table():
                 begin_group(group)
                 current_group = group
 
+            number_of_werks += 1
+
             table.row()
             table.cell(_("ID"), render_werk_id(werk, with_link=True), css="number narrow")
             table.cell(_("Version"), werk["version"], css="number narrow")
@@ -359,6 +362,7 @@ def render_werks_table():
 
     if current_group != False:
         table.end()
+        table.update_headinfo(number_of_werks)
     else:
         html.h3(_("No matching Werks found."))
 

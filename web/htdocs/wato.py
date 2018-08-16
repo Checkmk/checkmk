@@ -15188,6 +15188,8 @@ def page_user_profile(change_pw=False):
             html.http_redirect(html.var('_origtarget', 'index.py'))
         else:
             html.message(_("Successfully updated user profile."))
+            # Ensure theme changes are applied without additional user interaction
+            html.immediate_browser_redirect(0.5, html.makeuri([]))
 
     if html.has_user_errors():
         html.show_user_errors()

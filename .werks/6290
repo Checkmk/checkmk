@@ -1,0 +1,15 @@
+Title: Limit the output of the werk list to the number of groups
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 1.5.0p3
+Date: 1534418929
+Class: fix
+
+To circumvent a long loading time the number of werks on the werk list (release
+notes) page is now limited to the number of groups to be shown. By default the
+grouping is done by version and limited to 20 versions.
+
+You can change the grouping and limit options using the "Searching & Filtering"
+form when viewing the page.

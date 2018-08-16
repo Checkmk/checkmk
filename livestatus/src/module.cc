@@ -238,7 +238,7 @@ void *client_thread(void *data) {
                                      fl_idle_timeout);
             bool keepalive = true;
             unsigned requestnr = 0;
-            while (keepalive) {
+            while (keepalive && !fl_should_terminate) {
                 if (++requestnr > 1) {
                     Debug(fl_logger_livestatus)
                         << "handling request " << requestnr

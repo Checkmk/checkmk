@@ -67,7 +67,7 @@ void OutputBuffer::writeData(std::ostringstream &os) {
     };
     const char *buffer = static_cast<Hack *>(os.rdbuf())->base();
     size_t bytes_to_write = os.tellp();
-    while (!_termination_flag && bytes_to_write > 0) {
+    while (!shouldTerminate() && bytes_to_write > 0) {
         Poller poller;
         poller.addFileDescriptor(_fd, PollEvents::out);
         int retval = poller.poll(std::chrono::milliseconds(100));

@@ -138,6 +138,11 @@ def do_discovery(hostnames, check_plugin_names, only_new):
 
 
 def _do_discovery_for(hostname, ipaddress, sources, multi_host_sections, check_plugin_names, only_new, on_error):
+    if not check_plugin_names and not only_new:
+        old_items = [] # do not even read old file
+    else:
+        old_items = parse_autochecks_file(hostname)
+
     if not check_plugin_names:
         # In 'multi_host_sections = _get_host_sections_for_discovery(..)'
         # we've already discovered the right check plugin names.
@@ -149,11 +154,6 @@ def _do_discovery_for(hostname, ipaddress, sources, multi_host_sections, check_p
 
     console.step("Executing inventory plugins")
     new_items = _discover_services(hostname, ipaddress, sources, multi_host_sections, on_error=on_error)
-
-    if not check_plugin_names and not only_new:
-        old_items = [] # do not even read old file
-    else:
-        old_items = parse_autochecks_file(hostname)
 
     # There are three ways of how to merge existing and new discovered checks:
     # 1. -II without --checks=

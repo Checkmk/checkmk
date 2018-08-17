@@ -1,0 +1,11 @@
+Title: cmk -IIv tabula rasa discovery did not remove vanished services
+Level: 2
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0i1
+Date: 1534511954
+
+

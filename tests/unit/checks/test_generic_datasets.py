@@ -15,17 +15,25 @@ If you also want to test for specific results you can either provide the
 required variables manually (as in ''veritas_vcs_*.py''), or create a
 regression test dataset as described in ''checks/generictests/regression.py''
 """
+import os
 import pytest
 import generictests
-import generictests.datasets
+from importlib import import_module
 
 
 pytestmark = pytest.mark.checks
 
 
-@pytest.mark.parametrize("datasetname", generictests.datasets.DATASET_NAMES)
+EXCLUDES = ('', '__init__', 'conftest')
+
+DATASET_DIR = os.path.join(os.path.dirname(__file__), 'generictests', 'datasets')
+
+DATASET_NAMES = {os.path.splitext(_f)[0] for _f
+                 in os.listdir(DATASET_DIR)
+                 if _f.split('.')[0] not in EXCLUDES}
+
+
+@pytest.mark.parametrize("datasetname", DATASET_NAMES)
 def test_dataset(check_manager, datasetname):
-    dataset = getattr(generictests.datasets, datasetname)
+    dataset = import_module("generictests.datasets.%s" % datasetname)
     generictests.run(check_manager, dataset)
-
-

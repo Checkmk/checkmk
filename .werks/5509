@@ -1,0 +1,12 @@
+Title: cmk-update-agent: Prevent agent update from crashing while setting up syslog
+Level: 1
+Component: agents
+Compatible: compat
+Edition: cee
+Version: 1.5.0p3
+Date: 1534508552
+Class: fix
+
+If syslog setup failed (on Linux), namely if /dev/log is not available, the agent updater would crash.
+This is now mitigated by catching errors while setting up logging to syslog.
+A failure will now result in a warning instead of a crash.

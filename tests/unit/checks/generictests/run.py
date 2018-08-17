@@ -185,8 +185,6 @@ def run(check_manager, dataset, write=False):
     # test the parse function
     parsed = parse(check_manager, dataset)
     immu.register(parsed, 'parsed')
-    if write:
-        dataset.parsed = parsed
 
     # get the expected check results, if present
     checks_expected = getattr(dataset, 'checks', {})

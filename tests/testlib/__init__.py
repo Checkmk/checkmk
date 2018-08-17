@@ -1785,6 +1785,8 @@ class CheckManager(object):
             config.load_checks(check_api.get_check_api_context,
                                map(lambda f: os.path.join(cmk.paths.checks_dir, f), file_names))
 
+        return self
+
     def get_check(self, name):
         main_check = name.split(".", 1)[0]
         self.load([main_check])

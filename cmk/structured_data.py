@@ -210,7 +210,7 @@ class StructuredDataTree(object):
             # Skipping invalid entries such as
             # {u'KEY': [LIST OF STRINGS], ...}
             try:
-                for k, v in entry.iteritems():
+                for v in entry.itervalues():
                     if isinstance(v, list):
                         return False
             except AttributeError:
@@ -500,8 +500,8 @@ numerated nodes ('arrays') containing real numerations ('devices').
 
 
     def _has_nested_numeration_node(self, node_data):
-        for nr, entry in enumerate(node_data):
-            for k, v in entry.iteritems():
+        for entry in node_data:
+            for v in entry.itervalues():
                 if isinstance(v, list):
                     return True
         return False
@@ -857,7 +857,7 @@ class Numeration(Leaf):
                 new += len(new_entries)
                 removed += len(removed_entries)
                 if keep_identical:
-                    for intersect_entry in my_entries.intersection(old_entries):
+                    for _intersect_entry in my_entries.intersection(old_entries):
                         data.append({k: (v,v) for k,v in zip(intersect_key, old_entry)})
         return new, changed, removed, data
 

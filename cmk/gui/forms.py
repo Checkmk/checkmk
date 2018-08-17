@@ -81,7 +81,7 @@ def edit_dictionaries(dictionaries, value, focus=None, hover_help=True,
 
         messages = []
         new_value = {}
-        for keyname, section_title, entries in sections:
+        for keyname, _section_title, entries in sections:
             if type(entries) == list:
                 new_value[keyname] = value.get(keyname, {}).copy()
                 for name, vs in entries:
@@ -154,7 +154,7 @@ def edit_dictionaries(dictionaries, value, focus=None, hover_help=True,
 
     end()
     if buttons:
-        for name, button_title, icon in buttons:
+        for name, button_title, _icon in buttons:
             html.button(name, button_title)
     else:
         if buttontext == None:

@@ -84,11 +84,7 @@ def sites_using_foreign_cores():
 
 
 def all_sites_use_foreign_cores():
-    for site_id, core in cores_by_site().items():
-        if core == "cmc":
-            return False
-
-    return True
+    return "cmc" not in cores_by_site().itervalues()
 
 
 def cores_by_site():

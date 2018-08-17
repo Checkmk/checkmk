@@ -95,7 +95,7 @@ def render_mkeventd_performance():
         return
 
     html.open_table(class_=["mkeventd_performance"])
-    for index, left, right in entries:
+    for _index, left, right in entries:
         html.tr(
             html.render_td("%s:" % left) +
             html.render_td(right))

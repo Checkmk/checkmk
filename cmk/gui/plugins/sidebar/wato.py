@@ -152,7 +152,7 @@ def compute_foldertree():
     # Now get number of hosts by folder
     # Count all childs for each folder
     user_folders = {}
-    for site, filename, num in hosts:
+    for _site, filename, num in hosts:
         # Remove leading /wato/
         wato_folder_path = filename[6:]
 
@@ -254,7 +254,7 @@ def render_wato_foldertree():
     views.load_views()
     dashboard.load_dashboards()
     topic_views  = visuals_by_topic(views.permitted_views().items() + dashboard.permitted_dashboards().items())
-    topics = [ (t, t) for t, s in topic_views ]
+    topics = [ (t, t) for t, _s in topic_views ]
 
     html.open_table()
     html.open_tr()

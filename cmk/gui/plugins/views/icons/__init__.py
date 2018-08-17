@@ -130,7 +130,7 @@ def _process_multisite_icons(what, row, tags, custom_vars, toplevel):
                 # d) triple        - icon, title, url
                 try:
                     result = icon['paint'](what, row, tags, custom_vars)
-                except Exception, e:
+                except Exception:
                     if config.debug:
                         raise
                     result = ("alert", "Exception in icon '%s': %s" %
@@ -207,7 +207,7 @@ def iconpainter_columns(what, toplevel):
             'service_custom_variable_values',
         ])
 
-    for icon_id, icon in get_multisite_icons().items():
+    for icon in get_multisite_icons().itervalues():
         if toplevel == None or toplevel == icon['toplevel']:
             if 'columns' in icon:
                 cols.update([ what + '_' + c for c in icon['columns'] ])

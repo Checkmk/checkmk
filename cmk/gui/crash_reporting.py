@@ -103,7 +103,7 @@ def page_crashed(what):
         show_crash_report(info)
         show_crash_report_details(info)
     else:
-        report_url = mailto_url = html.makeuri([
+        report_url = html.makeuri([
             ("subject", "Check_MK Crash Report - " + get_version(what)),
         ], filename="mailto:" + get_crash_report_target(what))
         html.message(_("This crash report is in a legacy format and can not be submitted "
@@ -247,7 +247,7 @@ def handle_report_form(tardata, what):
             "checkmk_support_contract.html\" target=_blank>our website</a>."))
         html.close_div()
         html.open_div(id_="fail_msg", style="display:none")
-        report_url = mailto_url = html.makeuri([
+        report_url = html.makeuri([
             ("subject", "Check_MK Crash Report - " + get_version(what)),
         ], filename="mailto:" + get_crash_report_target(what))
         html.show_error(_("Failed to send the crash report. Please download it manually and send it "
@@ -282,7 +282,7 @@ def get_version(what):
 def warn_about_local_files(info):
     if info["crash_type"] == "check":
         files = []
-        for filepath, lineno, func, line in info["exc_traceback"]:
+        for filepath, _lineno, _func, _line in info["exc_traceback"]:
             if "/local/" in filepath:
                 files.append(filepath)
 

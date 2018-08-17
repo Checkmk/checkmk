@@ -339,7 +339,7 @@ def show_filter_form(show_filters):
 
     html.begin_form("filter")
     html.open_ul(**{"data-role":"listview", "data-inset":"false"})
-    for sort_index, title, f in s:
+    for _sort_index, title, f in s:
         html.open_li(**{"data-role":"fieldcontain"})
         html.write("<legend>%s</legend>" % title)
         f.display()
@@ -412,6 +412,6 @@ def do_commands(view, what, rows):
 
 def show_context_links(context_links):
     items = []
-    for title, uri, icon, buttonid in context_links:
+    for title, uri, _icon, _buttonid in context_links:
         items.append(('Context', uri, title))
     jqm_page_index(_("Related Views"), items)

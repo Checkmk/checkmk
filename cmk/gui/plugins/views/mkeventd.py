@@ -402,7 +402,6 @@ if config.mkeventd_enabled:
                 # TODO: Find a better place for permitted_views that is importable on module level
                 from cmk.gui.views import permitted_views
                 view = permitted_views()[(html.var("view_name"))]
-                target = None
                 filename = None
 
             urlvars += [

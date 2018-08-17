@@ -68,7 +68,7 @@ class KeypairStore(object):
 
     def choices(self):
         choices = []
-        for ident, key in self.load().items():
+        for key in self.load().itervalues():
             cert = crypto.load_certificate(crypto.FILETYPE_PEM, key["certificate"])
             digest = cert.digest("md5")
             choices.append((digest, key["alias"]))
@@ -346,7 +346,7 @@ class PageUploadKey(object):
         created = time.mktime(parse_asn1_generalized_time(certificate.get_notBefore()))
 
         # Check for valid passphrase
-        private_key = decrypt_private_key(key_file, value["passphrase"])
+        decrypt_private_key(key_file, value["passphrase"])
 
         # Split PEM for storing separated
         parts = key_file.split("-----END ENCRYPTED PRIVATE KEY-----\n", 1)
@@ -442,7 +442,7 @@ class PageDownloadKey(object):
 
             value = self._vs_key().from_html_vars("key")
             self._vs_key().validate_value(value, "key")
-            decrypted = decrypt_private_key(private_key, value["passphrase"])
+            decrypt_private_key(private_key, value["passphrase"])
 
             self._send_download(keys, key_id)
             return False
@@ -509,5 +509,5 @@ def create_self_signed_cert(pkey):
 def decrypt_private_key(encrypted_private_key, passphrase):
     try:
         return crypto.load_privatekey(crypto.FILETYPE_PEM, encrypted_private_key, passphrase)
-    except crypto.Error, e:
+    except crypto.Error:
         raise MKUserError("key_p_passphrase", _("Invalid pass phrase"))

@@ -165,7 +165,7 @@ def list_logs(site, host_name, logfile_names):
             table.cell(_("Last Entry"), form_datetime(last_log['datetime']))
             table.cell(_("Entries"), len(log_chunks), css="number")
 
-        except Exception, e:
+        except Exception:
             if config.debug:
                 raise
             table.cell(_("Level"), "")
@@ -177,8 +177,6 @@ def list_logs(site, host_name, logfile_names):
 
 
 def show_file(site, host_name, file_name):
-    master_url = html.var('master_url', '')
-
     int_filename = form_file_to_int(file_name)
 
     html.header(_("Logfiles of Host %s: %s") % (host_name, file_name), stylesheets = stylesheets)

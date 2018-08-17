@@ -344,7 +344,7 @@ def check_auth_by_cookie():
                 # Suppress cookie validation errors from other sites cookies
                 auth_logger.debug('Exception while checking cookie %s: %s' %
                                         (cookie_name, traceback.format_exc()))
-            except Exception, e:
+            except Exception:
                 auth_logger.error('Exception while checking cookie %s: %s' %
                                     (cookie_name, traceback.format_exc()))
 

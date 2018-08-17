@@ -537,14 +537,14 @@ def page_add_snapin():
         raise MKGeneralException(_("You are not allowed to change the sidebar."))
 
     html.header(_("Available snapins"), stylesheets=["pages", "sidebar", "status"])
-    used_snapins = [name for (name, state) in load_user_config()["snapins"]]
+    used_snapins = [name for (name, _state) in load_user_config()["snapins"]]
 
     addname = html.var("name")
     if addname in snapin_registry and addname not in used_snapins and html.check_transaction():
         user_config = load_user_config()
         user_config["snapins"].append((addname, "open"))
         save_user_config(user_config)
-        used_snapins = [name for (name, state) in load_user_config()["snapins"]]
+        used_snapins = [name for (name, _state) in load_user_config()["snapins"]]
         html.reload_sidebar()
 
     html.open_div(class_=["add_snapin"])
@@ -555,7 +555,6 @@ def page_add_snapin():
         if not config.user.may("sidesnap." + name):
             continue # not allowed for this user
 
-        title = snapin.title()
         description = snapin.description()
         transid = html.transaction_manager.get()
         url = 'sidebar_add_snapin.py?name=%s&_transid=%s&pos=top' % (name, transid)

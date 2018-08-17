@@ -404,9 +404,8 @@ def werk_matches_options(werk, werk_table_options):
 
 
 def default_werk_table_options():
-    werk_table_options = {}
-    for name, height, vs, default_value in werk_table_option_entries():
-        werk_table_options[name] = default_value
+    werk_table_options = { name: default_value
+                           for name, _height, _vs, default_value in werk_table_option_entries() }
     werk_table_options["date_range"] = (1, time.time())
     return werk_table_options
 

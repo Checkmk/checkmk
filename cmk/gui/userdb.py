@@ -132,10 +132,8 @@ def connection_choices():
 
 # When at least one LDAP connection is defined and active a sync is possible
 def sync_possible():
-    for connection_id, connection in active_connections():
-        if connection.type() == "ldap":
-            return True
-    return False
+    return any(connection.type() == "ldap"
+               for _connection_id, connection in active_connections())
 
 
 def cleanup_connection_id(connection_id):

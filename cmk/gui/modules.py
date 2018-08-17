@@ -79,7 +79,7 @@ def register_handlers(handlers):
 
 # Returns a list of names of all currently imported python modules
 def _imports():
-    for name, val in globals().items():
+    for val in globals().itervalues():
         if isinstance(val, ModuleType):
             yield val.__name__
 

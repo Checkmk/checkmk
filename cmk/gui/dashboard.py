@@ -121,7 +121,7 @@ def load_dashboards(lock=False):
 # migrated/created with daily snapshots from 2014-08 till beginning 2014-10.
 # FIXME: Can be removed one day. Mark as incompatible change or similar.
 def transform_dashboards(dashboards):
-    for (u, n), dashboard in dashboards.items():
+    for dashboard in dashboards.itervalues():
         visuals.transform_old_visual(dashboard)
 
         # Also transform dashlets
@@ -239,7 +239,7 @@ def load_view_into_dashlet(dashlet, nr, view_name, add_context=None, load_from_a
         # but we do this for the rare edge case during legacy dashboard conversion, so
         # this should be sufficient
         view = None
-        for (u, n), this_view in views.all_views().items():
+        for (_u, n), this_view in views.all_views().iteritems():
             # take the first view with a matching name
             if view_name == n:
                 view = this_view
@@ -615,7 +615,7 @@ def register_for_refresh(name, nr, dashlet, wato_folder):
             if 'on_refresh' in dashlet_type:
                 try:
                     action = 'function() {%s}' % dashlet_type['on_refresh'](nr, dashlet)
-                except Exception, e:
+                except Exception:
                     # Ignore the exceptions in non debug mode, assuming the exception also occures
                     # while dashlet rendering, which is then shown in the dashlet itselfs.
                     if config.debug:
@@ -1210,7 +1210,7 @@ def page_delete_dashlet():
     dashboard = available_dashboards[board]
 
     try:
-        dashlet = dashboard['dashlets'][ident]
+        _dashlet = dashboard['dashlets'][ident]
     except IndexError:
         raise MKGeneralException(_('The dashlet does not exist.'))
 

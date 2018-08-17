@@ -304,7 +304,6 @@ class FilterInvtableVersion(Filter):
         Filter.__init__(self, varname, title, infoname, [varname + "_from", varname + "_to"], [])
 
     def display(self):
-        htmlvar = self.htmlvars[0]
         html.write_text(_("Min.&nbsp;Version:"))
         html.text_input(self.htmlvars[0], size=9)
         html.write_text(" &nbsp; ")

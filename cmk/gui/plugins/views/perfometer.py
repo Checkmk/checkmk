@@ -274,7 +274,7 @@ def cmp_perfometer(r1, r2):
         p1 = Perfometer(r1)
         p2 = Perfometer(r2)
         return cmp(p1.sort_value(), p2.sort_value())
-    except Exception, e:
+    except Exception:
         logger.exception()
         if config.debug:
             raise

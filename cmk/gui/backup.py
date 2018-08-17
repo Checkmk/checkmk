@@ -365,22 +365,12 @@ class Job(MKBackupJob, BackupEntity):
 
 
     def cron_config(self):
-        if not self._config["schedule"]:
+        if not self._config["schedule"] or self._config["schedule"]["disabled"]:
             return
-
-        period = self._config["schedule"]["period"]
-        if self._config["schedule"]["disabled"]:
-            return
-
-        timespecs = self._cron_timespecs()
         userspec = self._cron_userspec()
         cmdline  = self._cron_cmdline()
-
-        lines = []
-        for timespec in timespecs:
-            lines.append("%s %s%s" % (timespec, userspec, cmdline))
-
-        return lines
+        return [ "%s %s%s" % (timespec, userspec, cmdline)
+                 for timespec in self._cron_timespecs() ]
 
 
     def _cron_timespecs(self):
@@ -1385,7 +1375,7 @@ class BackupTargetLocal(BackupTargetType):
             test_file_path = os.path.join(value, "write_test_%d" % time.time())
             file(test_file_path, "w")
             os.unlink(test_file_path)
-        except IOError, e:
+        except IOError:
             if is_cma():
                 raise MKUserError(varprefix,
                     _("Failed to write to the configured directory. The target directory needs "
@@ -1482,7 +1472,7 @@ class PageBackupKeyManagement(key_mgmt.PageKeyManagement):
 
 
     def _key_in_use(self, key_id, key):
-        for ident, job in self.jobs().objects.items():
+        for job in self.jobs().objects.itervalues():
             job_key_id = job.key_ident()
             if job_key_id != None and key_id == job_key_id:
                 return True
@@ -1737,7 +1727,7 @@ class PageBackupRestore(object):
         key_digest = backup_info["config"]["encrypt"]
 
         try:
-            key_id, key = self.keys().get_key_by_digest(key_digest)
+            _key_id, key = self.keys().get_key_by_digest(key_digest)
         except KeyError:
             raise MKUserError(None, _("The key with the fingerprint %s which is needed to decrypt "
                                       "the backup is misssing.") % key_digest)

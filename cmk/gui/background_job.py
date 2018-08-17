@@ -190,7 +190,7 @@ class BackgroundProcess(multiprocessing.Process):
 
             # The actual function call
             self._execute_function()
-        except Exception, e:
+        except Exception:
             exception_message = "%s:Exception while preparing background function environment: %s" %\
                                 (BackgroundProcessInterface.exception_message, traceback.format_exc())
             progress_info     = BackgroundProcessInterface.parse_progress_info(exception_message)
@@ -388,7 +388,7 @@ class BackgroundJob(object):
 
                 if self._is_correct_process(job_status, p):
                     return True
-            except (psutil.NoSuchProcess, psutil.AccessDenied) as e:
+            except (psutil.NoSuchProcess, psutil.AccessDenied):
                 return False
 
         return False
@@ -625,5 +625,5 @@ class BackgroundJobManager(object):
                     if len(all_jobs) > max_count or (time.time() - job_status["started"] > max_age):
                         job_instances[job_id].delete()
                         all_jobs.remove(entry)
-        except Exception, e:
+        except Exception:
             self._logger.error(traceback.format_exc())

@@ -131,7 +131,7 @@ def validate_host_attributes(attributes):
 # Check if the given attribute name exists, no type check
 def _validate_general_host_attributes(host_attributes):
     # inventory_failed and site are no "real" host_attributes (TODO: Clean this up!)
-    all_host_attribute_names = [x.name() for x, y in watolib.all_host_attributes()] + ["inventory_failed", "site"]
+    all_host_attribute_names = [x.name() for x, _y in watolib.all_host_attributes()] + ["inventory_failed", "site"]
     for name, value in host_attributes.items():
         if name not in all_host_attribute_names:
             raise MKUserError(None, _("Unknown attribute: %s") % html.attrencode(name))

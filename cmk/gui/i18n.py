@@ -136,7 +136,7 @@ def _init_language(lang):
     try:
         translation = gettext_module.translation("multisite", _get_cmk_locale_path(lang),
                 languages = [ lang ], codeset = 'UTF-8') # type: Optional[gettext_module.NullTranslations]
-    except IOError, e:
+    except IOError:
         translation = None
 
     return translation

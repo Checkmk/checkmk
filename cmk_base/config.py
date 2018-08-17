@@ -2599,7 +2599,7 @@ def initialize_check_type_caches():
     snmp_cache.update(snmp_info.keys())
 
     tcp_cache = cmk_base.runtime_cache.get_set("check_type_tcp")
-    for check_plugin_name, check in check_info.items():
+    for check_plugin_name in check_info:
         section_name = cmk_base.check_utils.section_name_of(check_plugin_name)
         if section_name not in snmp_cache:
             tcp_cache.add(section_name)

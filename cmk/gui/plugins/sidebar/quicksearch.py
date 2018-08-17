@@ -392,7 +392,7 @@ class LivestatusSearchConductor(LivestatusSearchBase):
                                             rows = self._rows)
             if not match_info:
                 continue
-            text, url_filters = match_info
+            _text, url_filters = match_info
             url_params.extend(url_filters)
 
         return url_params
@@ -938,7 +938,7 @@ class HosttagMatchPlugin(QuicksearchMatchPlugin):
     def _get_hosttag_dict(self):
         lookup_dict = {}
         for entry in config.host_tag_groups():
-            group, text, values = entry[:3]
+            group, _text, values = entry[:3]
 
             for value in values:
                 lookup_dict[value[0]] = group

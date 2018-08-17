@@ -855,7 +855,8 @@ class Overridable(Base):
 
         def has_reporting():
             try:
-                import cmk.gui.cee.reporting
+                # The suppression below is OK, we just want to check if the module is there.
+                import cmk.gui.cee.reporting # pylint: disable=unused-variable
                 return True
             except ImportError:
                 return False

@@ -213,7 +213,8 @@ def get_snmp_table(access_data, check_plugin_name, oid_info, use_snmpwalk_cache)
                 else:
                     raise MKGeneralException("Invalid index format %s" % index_format)
 
-            columns[index_column] = fetchoid, index_rows, value_encoding
+            index_encoding = columns[index_column][-1]
+            columns[index_column] = fetchoid, index_rows, index_encoding
 
 
         # prepend suboid to first column

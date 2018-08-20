@@ -208,8 +208,10 @@ def get_snmp_table(access_data, check_plugin_name, oid_info, use_snmpwalk_cache)
                     index_rows.append((o, _oid_to_bin(o)))
                 elif index_format == cmk_base.snmp_utils.OID_END_BIN:
                     index_rows.append((o, _oid_to_bin(_extract_end_oid(fetchoid, o))))
-                else: # cmk_base.snmp_utils.OID_END_OCTET_STRING:
+                elif index_format == cmk_base.snmp_utils.OID_END_OCTET_STRING:
                     index_rows.append((o, _oid_to_bin(_extract_end_oid(fetchoid, o))[1:]))
+                else:
+                    raise MKGeneralException("Invalid index format %s" % index_format)
 
             columns[index_column] = fetchoid, index_rows, value_encoding
 

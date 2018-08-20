@@ -811,9 +811,6 @@ OPTIONS:
                                 hostsystem, virtualmachine and storage. Default is to
                                 query all modules.
 
-  -c, --dump-counters           Simply dumping out all available counters and their values.
-                                This mode is meant for debugging and diagnostic purposes.
-
   -S, --spaces HOW              How to handle spaces in hostnames. "cut": cut everyting
                                 after the first space, "underscore": replace with
                                 underscores. Default is "underscore".

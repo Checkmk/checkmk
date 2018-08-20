@@ -410,7 +410,8 @@ def load_precompiled_plugin(path, check_context):
 
     if not _is_plugin_precompiled(path, precompiled_path):
         console.vverbose("Precompile %s to %s\n" % (path, precompiled_path))
-        _precompile_plugin(path, precompiled_path)
+        store.makedirs(os.path.dirname(precompiled_path))
+        py_compile.compile(path, precompiled_path, doraise=True)
 
     exec(marshal.loads(open(precompiled_path, "rb").read()[8:]), check_context)
 
@@ -435,14 +436,6 @@ def _is_plugin_precompiled(path, precompiled_path):
         return False
 
     return True
-
-
-def _precompile_plugin(path, precompiled_path):
-    code = compile(open(path).read(), path, "exec")
-    plugin_mtime = os.stat(path).st_mtime
-
-    store.makedirs(os.path.dirname(precompiled_path))
-    py_compile.compile(path, precompiled_path, doraise=True)
 
 
 def _precompiled_plugin_path(path):

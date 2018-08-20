@@ -1,0 +1,13 @@
+Title: The CMC logs external commands into the monitoring history now.
+Level: 1
+Component: cmc
+Class: feature
+Compatible: compat
+Edition: cee
+State: unknown
+Version: 1.4.0p36
+Date: 1534491175
+
+To be more in line with Nagios, the CMC writes "EXTERNAL COMMAND:" lines to
+the monitoring history now when an external command is received either via
+Livestatus or the command pipe.

@@ -168,7 +168,7 @@ def parse_wmi_table(info, key="Name"):
             timestamp, frequency = int(line[1]), int(line[2])
             line = info_iter.next()
 
-        res = {}
+        parsed = {}
         while line is not None:
             check_wmi_timeout(line)
 
@@ -183,9 +183,9 @@ def parse_wmi_table(info, key="Name"):
                 # single-table input
                 tablename = ""
 
-            if tablename not in res:
-                res[tablename] = WMITable(tablename, line, key, timestamp, frequency)
-            current = res[tablename]
+            if tablename not in parsed:
+                parsed[tablename] = WMITable(tablename, line, key, timestamp, frequency)
+            current = parsed[tablename]
 
             # read table content
             line = info_iter.next()
@@ -197,7 +197,7 @@ def parse_wmi_table(info, key="Name"):
         # regular end of block
         pass
 
-    return res
+    return parsed
 
 
 def check_wmi_timeout(line):

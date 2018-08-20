@@ -53,6 +53,7 @@ class PackageException(Exception):
     def __str__(self):
         return self.reason
 
+
 pac_dir = cmk.paths.omd_root + "/var/check_mk/packages/"
 
 # TODO: OMD: Pack this path and remote this makedirs call
@@ -61,27 +62,65 @@ try:
 except:
     pass
 
+
+# order matters! See function _get_permissions
+PERM_MAP = (
+    (cmk.paths.checks_dir,               0644),
+    (cmk.paths.local_checks_dir,         0644),
+    (cmk.paths.notifications_dir,        0755),
+    (cmk.paths.local_notifications_dir,  0755),
+    (cmk.paths.inventory_dir,            0644),
+    (cmk.paths.local_inventory_dir,      0644),
+    (cmk.paths.check_manpages_dir,       0644),
+    (cmk.paths.local_check_manpages_dir, 0644),
+    (cmk.paths.agents_dir,               0755),
+    (cmk.paths.local_agents_dir,         0755),
+    (cmk.paths.web_dir,                  0644),
+    (cmk.paths.local_web_dir,            0644),
+    (cmk.paths.pnp_templates_dir,        0644),
+    (cmk.paths.local_pnp_templates_dir,  0644),
+    (cmk.paths.doc_dir,                  0644),
+    (cmk.paths.local_doc_dir,            0644),
+    (cmk.paths.locale_dir,               0644),
+    (cmk.paths.local_locale_dir,         0644),
+    (cmk.paths.local_bin_dir,            0755),
+    (cmk.paths.local_lib_dir,            0644),
+    (cmk.paths.local_mib_dir,            0644),
+    (os.path.join(cmk.paths.share_dir,       "alert_handlers"), 0755),
+    (os.path.join(cmk.paths.local_share_dir, "alert_handlers"), 0755),
+    (str(cmk.ec.export.mkp_rule_pack_dir()), 0644),
+)
+
+
+def _get_permissions(path):
+    """Determine permissions by the first matching beginning of 'path'"""
+    for path_begin, perm in PERM_MAP:
+        if path.startswith(path_begin):
+            return perm
+    raise PackageException("could not determine permissions for %r" % path)
+
+
 # in case of local directories (OMD) use those instead
 # TODO: Since we only care about OMD environments: Simplify that -> remove ldir
-package_parts = [ (part, title, perm, ldir and ldir or dir) for part, title, perm, dir, ldir in [
-  ( "checks",        "Checks",                    0644, cmk.paths.checks_dir,          cmk.paths.local_checks_dir ),
-  ( "notifications", "Notification scripts",      0755, cmk.paths.notifications_dir,   cmk.paths.local_notifications_dir ),
-  ( "inventory",     "Inventory plugins",         0644, cmk.paths.inventory_dir,       cmk.paths.local_inventory_dir ),
-  ( "checkman",      "Checks' man pages",         0644, cmk.paths.check_manpages_dir,  cmk.paths.local_check_manpages_dir ),
-  ( "agents",        "Agents",                    0755, cmk.paths.agents_dir,          cmk.paths.local_agents_dir ),
-  ( "web",           "Multisite extensions",      0644, cmk.paths.web_dir,             cmk.paths.local_web_dir ),
-  ( "pnp-templates", "PNP4Nagios templates",      0644, cmk.paths.pnp_templates_dir,   cmk.paths.local_pnp_templates_dir ),
-  ( "doc",           "Documentation files",       0644, cmk.paths.doc_dir,             cmk.paths.local_doc_dir ),
-  ( "locales",       "Localizations",             0644, cmk.paths.locale_dir,          cmk.paths.local_locale_dir ),
-  ( "bin",           "Binaries",                  0755, None,                          cmk.paths.local_bin_dir ),
-  ( "lib",           "Libraries",                 0644, None,                          cmk.paths.local_lib_dir),
-  ( "mibs",          "SNMP MIBs",                 0644, None,                          cmk.paths.local_mib_dir),
-  ( "alert_handlers", "Alert handlers",           0755, cmk.paths.share_dir + "/alert_handlers",
-                                                        cmk.paths.local_share_dir + "/alert_handlers" ),
+package_parts = [ (part, title, ldir if ldir else dir) for part, title, dir, ldir in [
+  ( "checks",        "Checks",               cmk.paths.checks_dir,          cmk.paths.local_checks_dir ),
+  ( "notifications", "Notification scripts", cmk.paths.notifications_dir,   cmk.paths.local_notifications_dir ),
+  ( "inventory",     "Inventory plugins",    cmk.paths.inventory_dir,       cmk.paths.local_inventory_dir ),
+  ( "checkman",      "Checks' man pages",    cmk.paths.check_manpages_dir,  cmk.paths.local_check_manpages_dir ),
+  ( "agents",        "Agents",               cmk.paths.agents_dir,          cmk.paths.local_agents_dir ),
+  ( "web",           "Multisite extensions", cmk.paths.web_dir,             cmk.paths.local_web_dir ),
+  ( "pnp-templates", "PNP4Nagios templates", cmk.paths.pnp_templates_dir,   cmk.paths.local_pnp_templates_dir ),
+  ( "doc",           "Documentation files",  cmk.paths.doc_dir,             cmk.paths.local_doc_dir ),
+  ( "locales",       "Localizations",        cmk.paths.locale_dir,          cmk.paths.local_locale_dir ),
+  ( "bin",           "Binaries",             None,                          cmk.paths.local_bin_dir ),
+  ( "lib",           "Libraries",            None,                          cmk.paths.local_lib_dir),
+  ( "mibs",          "SNMP MIBs",            None,                          cmk.paths.local_mib_dir),
+  ( "alert_handlers", "Alert handlers",      cmk.paths.share_dir + "/alert_handlers",
+                                             cmk.paths.local_share_dir + "/alert_handlers" ),
 ]]
 
 config_parts = [
-    ("ec_rule_packs", "Event Console rule packs", 0644, str(cmk.ec.export.mkp_rule_pack_dir())),
+    ("ec_rule_packs", "Event Console rule packs", str(cmk.ec.export.mkp_rule_pack_dir())),
 ]
 
 package_ignored_files = {
@@ -94,7 +133,7 @@ package_ignored_files = {
 }
 
 def get_package_parts():
-    return [ p for p in package_parts if p[3] != None ]
+    return [ p for p in package_parts if p[2] != None ]
 
 def packaging_usage():
     sys.stdout.write("""Usage: check_mk [-v] -P|--package COMMAND [ARGS]
@@ -213,14 +252,14 @@ def show_package(name, show_info = False):
     else:
         if logger.is_verbose():
             sys.stdout.write("Files in package %s:\n" % name)
-            for part, title, _unused_perm, dir in get_package_parts():
+            for part, title, dir in get_package_parts():
                 files = package["files"].get(part, [])
                 if len(files) > 0:
                     sys.stdout.write("  %s%s%s:\n" % (tty.bold, title, tty.normal))
                     for f in files:
                         sys.stdout.write("    %s\n" % f)
         else:
-            for part, title, _unused_perm, dir in get_package_parts():
+            for part, title, dir in get_package_parts():
                 for fn in package["files"].get(part, []):
                     sys.stdout.write(dir + "/" + fn + "\n")
 
@@ -247,7 +286,7 @@ def package_create(args):
         "files"                : filelists
     }
     num_files = 0
-    for part, title, _unused_perm, dir in get_package_parts():
+    for part, title, dir in get_package_parts():
         files = unpackaged_files_in_dir(part, dir)
         filelists[part] = files
         num_files += len(files)
@@ -264,7 +303,7 @@ def package_create(args):
 
 def package_find(_no_args):
     first = True
-    for part, title, _unused_perm, dir in get_package_parts() + config_parts:
+    for part, title, dir in get_package_parts() + config_parts:
         files = unpackaged_files_in_dir(part, dir)
         if len(files) > 0:
             if first:
@@ -288,7 +327,7 @@ def release_package(pacname):
 
     package = read_package_info(pacname)
     logger.verbose("Releasing files of package %s into freedom...", pacname)
-    for part, title, _unused_perm, _dir in get_package_parts() + config_parts:
+    for part, title, _dir in get_package_parts() + config_parts:
         filenames = package["files"].get(part, [])
         if len(filenames) > 0:
             logger.verbose("  %s%s%s:", tty.bold, title, tty.normal)
@@ -360,7 +399,7 @@ def create_mkp_file(package, file_name=None, file_object=None):
     tar.addfile(info, info_file)
 
     # Now pack the actual files into sub tars
-    for part, title, _unused_perm, dir in get_package_parts() + config_parts:
+    for part, title, dir in get_package_parts() + config_parts:
         filenames = package["files"].get(part, [])
         if len(filenames) > 0:
             logger.verbose("  %s%s%s:", tty.bold, title, tty.normal)
@@ -388,7 +427,7 @@ def package_remove(args):
 
 
 def remove_package(package):
-    for part, title, _unused_perm, dir in get_package_parts() + config_parts:
+    for part, title, dir in get_package_parts() + config_parts:
         filenames = package["files"].get(part, [])
         if len(filenames) > 0:
             logger.verbose("  %s%s%s", tty.bold, title, tty.normal)
@@ -439,13 +478,13 @@ def validate_package_files(pacname, files):
     for package_name in all_package_names():
         packages[package_name] = read_package_info(package_name)
 
-    for part, _unused_title, _unused_perm, dir in get_package_parts():
+    for part, _unused_title, dir in get_package_parts():
         validate_package_files_part(packages, pacname, part, dir, files.get(part, []))
 
 
 def validate_package_files_part(packages, pacname, part, dir, rel_paths):
     for rel_path in rel_paths:
-        path = dir + "/" + rel_path
+        path = os.path.join(dir, rel_path)
         if not os.path.exists(path):
             raise PackageException("File %s does not exist." % path)
 
@@ -482,7 +521,7 @@ def install_package(file_name=None, file_object=None):
 
     # Before installing check for conflicts
     keep_files = {}
-    for part, _unused_title, _unused_perm, dir in get_package_parts() + config_parts:
+    for part, _unused_title, dir in get_package_parts() + config_parts:
         packaged = packaged_files_in_dir(part)
         keep = []
         keep_files[part] = keep
@@ -491,7 +530,7 @@ def install_package(file_name=None, file_object=None):
             old_files = old_package["files"].get(part, [])
 
         for fn in package["files"].get(part, []):
-            path = dir + "/" + fn
+            path = os.path.join(dir, fn)
             if update and fn in old_files:
                 keep.append(fn)
             elif fn in packaged:
@@ -501,7 +540,7 @@ def install_package(file_name=None, file_object=None):
 
 
     # Now install files, but only unpack files explicitely listed
-    for part, title, perm, dir in get_package_parts() + config_parts:
+    for part, title, dir in get_package_parts() + config_parts:
         filenames = package["files"].get(part, [])
         if len(filenames) > 0:
             logger.verbose("  %s%s%s:", tty.bold, title, tty.normal)
@@ -528,11 +567,12 @@ def install_package(file_name=None, file_object=None):
 
             # Fix permissions of extracted files
             for filename in filenames:
-                path = dir + "/" + filename
+                path = os.path.join(dir, filename)
+                desired_perm = _get_permissions(path)
                 has_perm = os.stat(path).st_mode & 07777
-                if has_perm != perm:
-                    logger.verbose("    Fixing permissions of %s: %04o -> %04o", path, has_perm, perm)
-                    os.chmod(path, perm)
+                if has_perm != desired_perm:
+                    logger.verbose("    Fixing permissions of %s: %04o -> %04o", path, has_perm, desired_perm)
+                    os.chmod(path, desired_perm)
 
             if part == 'ec_rule_packs':
                 cmk.ec.export.add_rule_pack_proxies(filenames)
@@ -540,12 +580,12 @@ def install_package(file_name=None, file_object=None):
 
     # In case of an update remove files from old_package not present in new one
     if update:
-        for part, title, perm, dir in get_package_parts() + config_parts:
+        for part, title, dir in get_package_parts() + config_parts:
             filenames = old_package["files"].get(part, [])
             keep = keep_files.get(part, [])
             for fn in filenames:
                 if fn not in keep:
-                    path = dir + "/" + fn
+                    path = os.path.join(dir, fn)
                     logger.verbose("Removing outdated file %s.", path)
                     try:
                         os.remove(path)
@@ -604,7 +644,7 @@ def files_in_dir(part, dir, prefix = ""):
         return []
 
     # Handle case where one part-dir lies below another
-    taboo_dirs = [ d for p, _unused_t, _unused_perm, d in get_package_parts() + config_parts if p != part ]
+    taboo_dirs = [ d for p, _unused_t, d in get_package_parts() + config_parts if p != part ]
     if dir in taboo_dirs:
         return []
 
@@ -629,24 +669,24 @@ def files_in_dir(part, dir, prefix = ""):
 
 def unpackaged_files():
     unpackaged = {}
-    for part, _unused_title, _unused_perm, dir in get_package_parts() + config_parts:
+    for part, _unused_title, dir in get_package_parts() + config_parts:
         unpackaged[part] = unpackaged_files_in_dir(part, dir)
     return unpackaged
 
 
 def package_part_info():
     part_info = {}
-    for part, title, perm, dir in get_package_parts() + config_parts:
+    for part, title, dir in get_package_parts() + config_parts:
         try:
             files = os.listdir(dir)
         except OSError:
             files = []
 
         part_info[part] = {
-            "title"      : title,
-            "permission" : perm,
-            "path"       : dir,
-            "files"      : files,
+            "title"       : title,
+            "permissions" : map(_get_permissions, [os.path.join(dir, f) for f in files]),
+            "path"        : dir,
+            "files"       : files,
         }
 
     return part_info

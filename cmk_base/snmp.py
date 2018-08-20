@@ -163,17 +163,15 @@ def get_snmp_table(access_data, check_plugin_name, oid_info, use_snmpwalk_cache)
     index_format = None
     info = []
     for suboid in suboids:
-        colno = -1
         columns = []
         # Detect missing (empty columns)
         max_len = 0
         max_len_col = -1
 
-        for column in targetcolumns:
+        for colno, column in enumerate(targetcolumns):
             fetchoid, value_encoding = _compute_fetch_oid(oid, suboid, column)
 
             # column may be integer or string like "1.5.4.2.3"
-            colno += 1
             # if column is 0, we do not fetch any data from snmp, but use
             # a running counter as index. If the index column is the first one,
             # we do not know the number of entries right now. We need to fill

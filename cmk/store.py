@@ -31,6 +31,7 @@ manager."""
 import ast
 import fcntl
 import os
+import pathlib2 as pathlib
 import pprint
 import tempfile
 import time
@@ -62,38 +63,12 @@ except NameError:
 #   '----------------------------------------------------------------------'
 
 def mkdir(path, mode=0770):
-    """Create a directory. Different from os.mkdir() in the following ways:
-
-    a) default mode is 0770
-    b) Encodes unicode paths to UTF-8
-    c) Returns without error when the directory exists
-    """
-
-    if type(path) is unicode:
-        return path.encode("utf-8")
-
-    if os.path.exists(path):
-        return
-
-    os.mkdir(path, mode)
+    pathlib.Path(path).mkdir(mode=mode, exist_ok=True)
 
 
 def makedirs(path, mode=0770):
-    """Create a leaf directory and all intermediate ones.
-    Different from os.makedirs() in the following ways:
+    pathlib.Path(path).mkdir(mode=mode, exist_ok=True, parents=True)
 
-    a) default mode is 0770
-    b) Encodes unicode paths to UTF-8
-    c) Returns without error when the directory exists
-    """
-
-    if type(path) is unicode:
-        return path.encode("utf-8")
-
-    try:
-        os.makedirs(path, mode)
-    except OSError:
-        pass
 
 #.
 #   .--.mk Configs---------------------------------------------------------.

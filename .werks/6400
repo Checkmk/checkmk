@@ -1,0 +1,18 @@
+Title: brocade_fcport: fix for the calculation of received and transmitted bytes per second
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.4.0p36
+Date: 1534834086
+
+Beginning from firmware version 8 the tx/rxwords are no longer available. Therefore,
+the values from FCMGMT-MIB are used for the calculation of the received and transmitted
+bytes per second in this case. However, the conversion of the octet string delivered
+by SNMP was not performed properly and a conversion factor for the transition between
+octets and words was missing. This lead to unrealistic values in the order of TB/s on
+some devices. This werk corrects the conversion of the octet string and introduces the
+missing conversion factor so that the correct port speeds are reported for new firmware
+versions as well.

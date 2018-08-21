@@ -177,40 +177,6 @@ def transform_old_quicksearch_match_plugins():
         cmk.gui.plugins.sidebar.quicksearch.match_plugin_registry.register(match_plugin)
 
 
-# Load current state of user's sidebar. Convert from
-# old format (just a snapin list) to the new format
-# (dictionary) on the fly
-def load_user_config():
-    path = config.user.confdir + "/sidebar.mk"
-    user_config = store.load_data_from_file(path)
-    if user_config == None:
-        user_config = {
-            "snapins": config.sidebar,
-            "fold":    False,
-        }
-
-    if type(user_config) == list:
-        user_config = {
-            "snapins" : user_config,
-            "fold":     False,
-        }
-
-    # Remove entries the user is not allowed for or which have state "off" (from legacy version)
-    # silently skip configured but not existant snapins
-    user_config["snapins"] = [
-          entry for entry in user_config["snapins"]
-                if entry[0] in snapin_registry
-                   and entry[1] != "off"
-                   and config.user.may("sidesnap." + entry[0])]
-
-    return user_config
-
-
-def save_user_config(user_config):
-    if config.user.may("general.configure_sidebar"):
-        config.user.save_file("sidebar", user_config)
-
-
 def get_check_mk_edition_title():
     if cmk.is_enterprise_edition():
         if cmk.is_demo():
@@ -304,8 +270,122 @@ def sidebar_foot():
     html.close_div()
     html.close_div()
 
-    if load_user_config()["fold"]:
+    if UserSidebarConfig(config.user, config.sidebar).folded:
         html.final_javascript("fold_sidebar();")
+
+
+class UserSidebarConfig(object):
+    """Manages the configuration of the users sidebar"""
+    def __init__(self, user, default_config):
+        super(UserSidebarConfig, self).__init__()
+        self._user = user
+        self._default_config = copy.deepcopy(default_config)
+        self._config = self._load()
+
+
+    @property
+    def folded(self):
+        return self._config["fold"]
+
+
+    @folded.setter
+    def folded(self, value):
+        # type: (bool) -> None
+        self._config["fold"] = value
+
+
+    def add_snapin(self, snapin_id):
+        self.snapins.append((snapin_id, "open"))
+
+
+    def move_snapin_before(self, snapin_id, other_id):
+        """Move the snapin with the given ID before the other given snapin
+        The other_id may be None. In this case the snapin is moved to the end.
+        """
+        # Get current state of snaping being moved (open, closed)
+        snap_to_move = None
+        for name, state in self.snapins:
+            if name == snapin_id:
+                snap_to_move = name, state
+
+        if not snap_to_move:
+            raise MKUserError(None, "Snapin being moved is not configured")
+
+        # Build new config by removing snaping at current position
+        # and add before "other_id" or as last if other_id is not set
+        new_snapins = []
+        for name, state in self.snapins:
+            if name == snapin_id:
+                continue # remove at this position
+            elif name == other_id:
+                new_snapins.append(snap_to_move)
+            new_snapins.append( (name, state) )
+        if not other_id: # insert as last
+            new_snapins.append(snap_to_move)
+
+        del self.snapins[:]
+        self.snapins.extend(new_snapins)
+
+
+    def set_snapin_visibility(self, snapin_id, state):
+        """This toggles a snapin between it's visibility states
+
+        Possible states are: open, open, closed, off
+        """
+        new_snapins = []
+        for name, usage in self.snapins:
+            if snapin_id == name:
+                usage = state
+            if usage != "off":
+                new_snapins.append((name, usage))
+        del self.snapins[:]
+        self.snapins.extend(new_snapins)
+
+
+    @property
+    def snapins(self):
+        return self._config["snapins"]
+
+
+    def _initial_config(self):
+        return {
+            "snapins": self._default_config,
+            "fold":    False,
+        }
+
+
+    def _user_config(self):
+        return self._user.load_file("sidebar", deflt=self._initial_config())
+
+
+    def _load(self):
+        """Load current state of user's sidebar
+
+        Convert from old format (just a snapin list) to the new format
+        (dictionary) on the fly"""
+        user_config = self._user_config()
+
+        if type(user_config) == list:
+            user_config = {
+                "snapins" : user_config,
+                "fold":     False,
+            }
+
+        # Remove entries the user is not allowed for or which have state "off" (from legacy version)
+        # silently skip configured but not existant snapins
+        user_config["snapins"] = [
+              entry for entry in user_config["snapins"]
+                    if entry[0] in snapin_registry
+                       and entry[1] != "off"
+                       and self._user.may("sidesnap." + entry[0])]
+
+        return user_config
+
+
+    def save(self):
+        if self._user.may("general.configure_sidebar"):
+            self._user.save_file("sidebar", self._config)
+
 
 
 @cmk.gui.pages.register("side")
@@ -327,12 +407,12 @@ def page_side():
     # FIXME: Move this to the code where views are needed (snapins?)
     views.load_views()
     sidebar_head()
-    user_config = load_user_config()
+    user_config = UserSidebarConfig(config.user, config.sidebar)
     refresh_snapins = []
     restart_snapins = []
 
     html.open_div(class_="scroll" if config.sidebar_show_scrollbar else None, id_="side_content")
-    for name, state in user_config["snapins"]:
+    for name, state in user_config.snapins:
         if not name in snapin_registry or not config.user.may("sidesnap." + name):
             continue
         # Performs the initial rendering and might return an optional refresh url,
@@ -447,22 +527,21 @@ def render_snapin(name, state):
 
 @cmk.gui.pages.register("sidebar_fold")
 def ajax_fold():
-    config = load_user_config()
-    config["fold"] = bool(html.var("fold"))
-    save_user_config(config)
+    user_config = UserSidebarConfig(config.user, config.sidebar)
+    user_config.folded = html.var("fold") == "yes"
+    user_config.save()
 
 
 @cmk.gui.pages.register("sidebar_openclose")
 def ajax_openclose():
-    config = load_user_config()
-    new_snapins = []
-    for name, usage in config["snapins"]:
-        if html.var("name") == name:
-            usage = html.var("state")
-        if usage != "off":
-            new_snapins.append((name, usage))
-    config["snapins"] = new_snapins
-    save_user_config(config)
+    snapin_id = html.var("name")
+    state = html.var("state")
+    if state not in [ "open", "closed", "off" ]:
+        raise MKUserError("state", "Invalid state: %s" % state)
+
+    user_config = UserSidebarConfig(config.user, config.sidebar)
+    user_config.set_snapin_visibility(snapin_id, state)
+    user_config.save()
 
 
 @cmk.gui.pages.register("sidebar_snapin")
@@ -516,33 +595,15 @@ def move_snapin():
     if not config.user.may("general.configure_sidebar"):
         return
 
-    snapname_to_move = html.var("name")
-    beforename = html.var("before")
+    snapin_name = html.var("name")
+    before_name = html.var("before")
 
-    user_config = load_user_config()
-
-    # Get current state of snaping being moved (open, closed)
-    snap_to_move = None
-    for name, state in user_config["snapins"]:
-        if name == snapname_to_move:
-            snap_to_move = name, state
-    if not snap_to_move:
-        return # snaping being moved not visible. Cannot be.
-
-    # Build new config by removing snaping at current position
-    # and add before "beforename" or as last if beforename is not set
-    new_snapins = []
-    for name, state in user_config["snapins"]:
-        if name == snapname_to_move:
-            continue # remove at this position
-        elif name == beforename:
-            new_snapins.append(snap_to_move)
-        new_snapins.append( (name, state) )
-    if not beforename: # insert as last
-        new_snapins.append(snap_to_move)
-
-    user_config["snapins"] = new_snapins
-    save_user_config(user_config)
+    user_config = UserSidebarConfig(config.user, config.sidebar)
+    try:
+        user_config.move_snapin_before(snapin_name, before_name)
+    except MKUserError:
+        return
+    user_config.save()
 
 
 @cmk.gui.pages.register("sidebar_add_snapin")
@@ -550,15 +611,16 @@ def page_add_snapin():
     if not config.user.may("general.configure_sidebar"):
         raise MKGeneralException(_("You are not allowed to change the sidebar."))
 
+    user_config = UserSidebarConfig(config.user, config.sidebar)
+
     html.header(_("Available snapins"), stylesheets=["pages", "sidebar", "status"])
-    used_snapins = [name for (name, _state) in load_user_config()["snapins"]]
+    used_snapins = [name for (name, _state) in user_config.snapins]
 
     addname = html.var("name")
     if addname in snapin_registry and addname not in used_snapins and html.check_transaction():
-        user_config = load_user_config()
-        user_config["snapins"].append((addname, "open"))
-        save_user_config(user_config)
-        used_snapins = [name for (name, _state) in load_user_config()["snapins"]]
+        user_config.add_snapin(addname)
+        user_config.save()
+        used_snapins = [name for (name, _state) in user_config.snapins]
         html.reload_sidebar()
 
     html.open_div(class_=["add_snapin"])

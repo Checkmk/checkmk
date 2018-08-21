@@ -1,0 +1,18 @@
+title: enviromux_sems.voltage
+agents: snmp
+catalog: hardware/environment/nti
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the input voltage of sensors attached to
+ NTI Enviromux SEMS devices.
+
+item:
+ The item is composed from the sensor description and the sensor index.
+
+perfdata:
+ One graph for the input voltage.
+
+inventory:
+ All available voltage sensors are automatically discovered.
+

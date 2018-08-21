@@ -1,0 +1,11 @@
+Title: netapp_api_environment: Fixed discovery of environmental sensors like PSU
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.4.0p36
+Date: 1534843670
+
+

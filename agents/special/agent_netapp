@@ -1172,10 +1172,10 @@ try:
 
 
         # Controller Status
-        enviroment = query("environment-sensors-get-iter")
-        if enviroment:
-            print "<<<netapp_api_enviroment>>>"
-            print format_config(enviroment, "sensor-name", "sensor-name")
+        environment = query("environment-sensors-get-iter")
+        if environment:
+            print "<<<netapp_api_environment:sep(9)>>>"
+            print format_config(environment, "sensor-name", "sensor-name")
 
 
         # Qtree quota usage

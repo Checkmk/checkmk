@@ -1,0 +1,15 @@
+Title: Fixed exeption when trying to delete hosts of disabled slave sites
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.5.0p3
+Date: 1534859927
+Class: fix
+
+When trying to delete a host that is associated with a slave site where
+the replication is currently disabled, this resulted in a GUI exception
+like this: 'KeyError: "slavesite"'
+
+Instead of this exception an error message about the failed connection
+because of the disabled sync is displayed.

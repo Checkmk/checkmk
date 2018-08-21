@@ -51,7 +51,7 @@ class IPMIManagementBoardDataSource(ManagementBoardDataSource, CheckMKAgentDataS
         return "%s (Address: %s, User: %s)" % (
             self.title(),
             self._ipaddress,
-            self._credentials()["username"],
+            self._credentials["username"],
         )
 
 
@@ -86,7 +86,7 @@ class IPMIManagementBoardDataSource(ManagementBoardDataSource, CheckMKAgentDataS
     def _create_ipmi_connection(self):
         # Do not use the (custom) ipaddress for the host. Use the management board
         # address instead
-        credentials = self._credentials()
+        credentials = self._credentials
 
         return ipmi_cmd.Command(bmc=self._ipaddress,
                                userid=credentials["username"],

@@ -178,6 +178,14 @@ function section_df()
     echo '[df_inodes_end]'
 }
 
+function section_lnx_services()
+{
+    if type systemctl >/dev/null 2>&1 ; then
+        echo '<<<lnx_services>>>'
+        systemctl --all
+    fi
+}
+
 function run_mrpe() {
     local descr=$1
     shift
@@ -362,6 +370,8 @@ then
 fi
 
 section_df
+
+section_lnx_services
 
 # Filesystem usage for ZFS
 if type zfs > /dev/null 2>&1 ; then

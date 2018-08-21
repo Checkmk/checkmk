@@ -1059,9 +1059,33 @@ register_rule(group + '/' + subgroup_inventory,
                 ],
             )),
         ],
-        help = _('This rule can be used to configure the inventory of the windows services check. '
-                 'You can configure specific windows services to be monitored by the windows check by '
-                 'selecting them by name, current state during the inventory, or start mode.'),
+        help = _('This rule can be used to configure the discovery of the Solaris services check. '
+                 'You can configure specific Solaris services to be monitored by the Solaris check by '
+                 'selecting them by description, category, name, or current state during the discovery.'),
+    ),
+    match = 'all',
+)
+
+register_rule(group + '/' + subgroup_inventory,
+    varname="discovery_lnx_services_rules",
+    title=_("Linux Service Discovery"),
+    valuespec=Dictionary(
+        elements=[
+            ('descriptions', ListOfStrings(title=_("Descriptions"))),
+            ('names', ListOfStrings(title=_("Service unit names"))),
+            ('states', ListOf(DropdownChoice(
+                choices=[
+                    ("active", "active"),
+                    ("inactive", "inactive"),
+                    ("failed", "failed"),
+                ],
+                ),
+                title=_("States"),
+            )),
+        ],
+        help = _('This rule can be used to configure the discovery of the Linux services check. '
+                 'You can configure specific Linux services to be monitored by the Linux check by '
+                 'selecting them by description, unit name, or current state during the discovery.'),
     ),
     match = 'all',
 )
@@ -4711,6 +4735,35 @@ register_check_parameters(
         size = 12,
         allow_empty = False),
     "first",
+)
+
+
+register_check_parameters(
+    subgroup_applications,
+    "lnx_services",
+    _("Linux Services"),
+    Dictionary(
+        elements = [
+            ("states", Dictionary(
+                elements = [
+                    ("active", MonitoringState(
+                        title = _("Monitoring state if service is active"),
+                        default_value = 0,
+                    )),
+                ],
+            )),
+            ("states_default", MonitoringState(
+                title = _("Monitoring state for any other service state"),
+                default_value = 2,
+            )),
+            ("else", MonitoringState(
+                title = _("Monitoring state if a monitored service is not found at all."),
+                default_value = 2,
+            )),
+        ],
+    ),
+    TextAscii(title = _("Name of the service")),
+    match_type = "dict",
 )
 
 #.

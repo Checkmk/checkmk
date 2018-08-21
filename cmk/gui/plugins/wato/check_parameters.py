@@ -4778,6 +4778,37 @@ register_check_parameters(
 
 register_check_parameters(
     subgroup_environment,
+    "voltage",
+    _("Voltage Sensor"),
+    Dictionary(
+       title=_("Voltage Sensor"),
+       optional_keys=True,
+       elements=[
+        ("levels",
+            Tuple(
+             title=_("Upper Levels for Voltage"),
+             elements=[
+               Float(title=_("Warning at"), default_value=15.00, unit="V"),
+               Float(title=_("Critical at"), default_value=16.00, unit="V"),
+            ])),
+        ("levels_lower",
+            Tuple(
+             title=_("Lower Levels for Voltage"),
+             elements=[
+               Float(title=_("Warning below"), default_value=10.00, unit="V"),
+               Float(title=_("Critical below"), default_value=9.00, unit="V"),
+            ])),
+       ]
+   ),
+
+    TextAscii(
+        title=_("Sensor Description and Index"),
+    ),
+    match_type="dict",
+)
+
+register_check_parameters(
+    subgroup_environment,
     "fan_failures",
     _("Number of fan failures"),
     Tuple(

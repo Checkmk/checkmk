@@ -1,0 +1,18 @@
+title: enviromux_external_sems.humidity
+agents: snmp
+catalog: hardware/environment/nti
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the humidity of external sensors attached to
+ NTI Enviromux SEMS devices.
+
+item:
+ The item is composed from the sensor description and the sensor index.
+
+perfdata:
+ One graph for the relivative humidity.
+
+inventory:
+ All available external humidity sensors are automatically discovered.
+

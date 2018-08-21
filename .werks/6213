@@ -1,0 +1,17 @@
+Title: lnx_services: Linux Services
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1534827881
+Class: feature
+
+A new check is introduced that checks linux services using 'systemctl --failed'.
+The check reports the 'active' attribute of the discovered services and their
+description. The state is configurable.
+
+Also a summary of the linux services is given. That check reports the number
+of all services and for each service type, i.e. 'active', 'inactive', 'failed'
+and other ones.
+

@@ -1,0 +1,17 @@
+title: Linux Services
+agents: linux
+catalog: os/ps
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the state of linux services provided by
+ the systemctl command 'systemctl --all'.
+ The check reports the 'active' attribute of the discovered services
+ and their description. The state mapping is configurable, by default
+ active and inactive states are OK, failed and all others are CRIT.
+
+item:
+ The service unit name.
+
+Inventory:
+ One service per service name is created.

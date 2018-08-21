@@ -8,8 +8,9 @@ description:
  for each type of disk. It's behaviour is like a regular filesystem.
  You can define thresholds as known by other filesystem checks.
 
- If there is failed space the check will go {CRIT} and show how
- many MiBs has been failed.
+ If there is failed space above a configurable threshold (0 by default)
+ the check will go to a {WARN} or {CRIT} state and show how many MiBs
+ have failed.
 
 inventory:
  One service is created for each device type and one summary service.

@@ -41,8 +41,17 @@ def check_3par_capacity(item, params, parsed):
 
             yield df_check_filesystem_list(item, params, [ (item, total, free, failed) ])
 
-            if failed > 0:
-                yield 2, "(%s MB failed)" % failed
+            if failed == 0:
+                return
+
+            failed_percent = float(failed) / float(total) * 100.0
+            warn, crit = params.get("failed_capacity_levels", (0.0, 0.0))
+            msg = "%s MB / %.1f%% failed (warn/crit at %.1f%%/%.1f%%)" \
+                  % (failed, failed_percent, warn, crit)
+            if failed_percent >= crit:
+                yield 2, msg
+            elif failed_percent >= warn:
+                yield 1, msg
 
 
 check_info['3par_capacity'] = {

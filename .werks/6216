@@ -1,0 +1,14 @@
+Title: 3par_capacity: Allow threshold for failed capacity
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1534843159
+Class: feature
+
+Previously the check went to CRIT whenever the failed capacity was non-zero.
+This remains the default behaviour, but an allowed failed capacity can now be
+configured via a threshold.
+
+

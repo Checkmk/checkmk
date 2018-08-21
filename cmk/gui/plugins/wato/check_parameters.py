@@ -6404,9 +6404,11 @@ size_trend_elements = [
 filesystem_elements = fs_levels_elements + fs_levels_elements_hack + fs_reserved_elements +\
                       fs_inodes_elements + fs_magic_elements + size_trend_elements
 
-def vs_filesystem():
+def vs_filesystem(extra_elements=None):
+    if extra_elements is None:
+        extra_elements = []
     return Dictionary(
-        elements = filesystem_elements,
+        elements = filesystem_elements + extra_elements,
         hidden_keys = ["flex_levels"],
         ignored_keys = ["patterns"],
     )
@@ -6429,7 +6431,16 @@ register_check_parameters(
     subgroup_storage,
     "threepar_capacity",
     _("3Par Capacity (used space and growth)"),
-    vs_filesystem(),
+    vs_filesystem([
+        ("failed_capacity_levels",
+         Tuple(title = _("Levels for failed capacity in percent"),
+               elements = [
+                   Percentage(title = _("Warning at"), default=0.0),
+                   Percentage(title = _("Critical at"), default=0.0),
+               ],
+         ),
+        ),
+    ]),
     TextAscii(
         title = _("Device type"),
         allow_empty = False),

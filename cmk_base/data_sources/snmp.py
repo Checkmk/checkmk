@@ -62,6 +62,7 @@ class SNMPDataSource(DataSource):
         self._use_snmpwalk_cache = True
         self._ignore_check_interval = False
         self._fetched_check_plugin_names = []
+        self._credentials = config.snmp_credentials_of(self._hostname)
 
 
     def id(self):
@@ -80,12 +81,8 @@ class SNMPDataSource(DataSource):
         return {
             "hostname": self._hostname,
             "ipaddress": self._ipaddress,
-            "credentials": self._credentials()
+            "credentials": self._credentials,
         }
-
-
-    def _credentials(self):
-        return config.snmp_credentials_of(self._hostname)
 
 
     def describe(self):
@@ -97,11 +94,10 @@ class SNMPDataSource(DataSource):
         else:
             inline = "no"
 
-        credentials = self._credentials()
-        if type(credentials) in [ str, unicode ]:
-            cred = "Community: %r" % credentials
+        if type(self._credentials) in [ str, unicode ]:
+            credentials_text = "Community: %r" % self._credentials
         else:
-            cred = "Credentials: '%s'" % ", ".join(credentials)
+            credentials_text = "Credentials: '%s'" % ", ".join(self._credentials)
 
         if config.is_snmpv3_host(self._hostname) or config.is_bulkwalk_host(self._hostname):
             bulk = "yes"
@@ -113,7 +109,7 @@ class SNMPDataSource(DataSource):
             portinfo = 'default'
 
         return "%s (%s, Bulk walk: %s, Port: %s, Inline: %s)" % \
-                           (self.title(), cred, bulk, portinfo, inline)
+               (self.title(), credentials_text, bulk, portinfo, inline)
 
 
     def _from_cache_file(self, raw_data):

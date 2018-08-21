@@ -10169,7 +10169,7 @@ class ModeDistributedMonitoring(ModeSites):
                 html.add_user_error("_name", error)
                 error = (_("Internal error: %s\n%s") % (e, traceback.format_exc())).replace("\n", "\n<br>")
 
-        wato_html_head(_("Login into site %s") % html.render_tt(site["alias"]))
+        wato_html_head(_("Login into site \"%s\"") % site["alias"])
         if error:
             html.show_error(error)
 

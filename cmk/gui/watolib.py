@@ -4562,7 +4562,11 @@ def get_url(url, insecure, auth=None, data=None, files=None):
 def check_mk_remote_automation(site_id, command, args, indata, stdin_data=None, timeout=None, sync=True):
     site = config.site(site_id)
     if "secret" not in site:
-        raise MKGeneralException(_("Cannot access site %s - you are not logged in.")
+        raise MKGeneralException(_("Cannot connect to site \"%s\": The site is not logged in")
+           % site.get("alias", site_id))
+
+    if not site.get("replication"):
+        raise MKGeneralException(_("Cannot connect to site \"%s\": The replication is disabled")
            % site.get("alias", site_id))
 
     if sync:

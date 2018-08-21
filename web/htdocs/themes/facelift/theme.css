@@ -1765,7 +1765,7 @@ img.glass {
   display: none; }
 
 #hover_menu .graph_container div.title {
-  display: inline; }
+  display: block; }
 #hover_menu .graph_container div.time {
   letter-spacing: 0px; }
 

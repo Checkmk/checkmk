@@ -213,13 +213,13 @@ table.vs_duallist a.control, table.vs_duallist body.main .popup_menu span.contro
 body.main img.treeangle {
   filter: invert(100%); }
 
-body.main .popup_menu a, body.main .popup_menu span, body.main table.footer .popup_menu a, body.main table.footer .popup_menu span, body.main .popup_menu span {
+body.main .popup_menu a, body.main .popup_menu span, body.main table.footer, body.main table.footer .popup_menu a, body.main table.footer .popup_menu span, body.main .popup_menu span {
   color: #1A243D; }
 
 .op {
   width: 60px !important; }
 
-.aggrtree img.treeangle, .bi_rule_tree img.treeangle, .invtree img.treeangle, body.main img.treeangle, body.main img.treeangle:not(#treeimg.werks.options) {
+.aggrtree img.treeangle, .bi_rule_tree img.treeangle, .invtree img.treeanglei, .grouped_row_header img.treeangle.nform {
   filter: invert(0%) !important; }
 
 table {

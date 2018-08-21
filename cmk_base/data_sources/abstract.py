@@ -722,10 +722,7 @@ class ManagementBoardDataSource(DataSource):
         # address instead
         ipaddress = self._management_board_ipaddress(hostname)
         super(ManagementBoardDataSource, self).__init__(hostname, ipaddress)
-
-
-    def _credentials(self):
-        return config.management_credentials_of(self._hostname)
+        self._credentials = config.management_credentials_of(self._hostname)
 
 
     def _management_board_ipaddress(self, hostname):

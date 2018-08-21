@@ -1729,6 +1729,8 @@ body.main {
         color: #1A243D; }
       body.main table.header td.right {
         color: #1A243D; }
+        body.main table.header td.right img {
+          vertical-align: middle; }
         body.main table.header td.right * {
           color: #1A243D; }
   body.main .popup_menu {

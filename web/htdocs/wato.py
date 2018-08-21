@@ -704,8 +704,7 @@ class ModeFolder(WatoMode):
             self._show_subfolder_buttons(subfolder)
             html.close_div() # hoverarea
         else:
-            html.img("images/icon_autherr.png", class_=["icon", "autherr"],
-                     title=html.strip_tags(subfolder.reason_why_may_not("read")))
+            html.icon(html.strip_tags(subfolder.reason_why_may_not("read")), "autherr", class_=["autherr"])
             html.div('', class_="hoverarea")
 
 
@@ -2708,6 +2707,7 @@ class ModeDiagHost(WatoMode):
         else:
             # TODO: Insert any vs_host valuespec validation
             #       These tests can be called with invalid valuespec settings...
+            # TODO: Replace hard coded icon paths with dynamic ones to old or new theme
             for ident, title in ModeDiagHost.diag_host_tests():
                 html.h3(title)
                 html.open_table(class_=["data", "test"])
@@ -13613,7 +13613,7 @@ class ModeEditRuleset(WatoMode):
                 else:
                     title = _("This rule does not match: %s") % " ".join(reasons)
                     img = 'nmatch'
-                html.img("images/icon_rule%s.png" % img, align="absmiddle", title=title, class_="icon")
+                html.icon(title, "rule%s" % img, middle=True)
 
             # Disabling
             table.cell("", css="buttons")

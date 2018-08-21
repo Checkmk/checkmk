@@ -1598,7 +1598,7 @@ def ajax_popup_add():
                 html.open_li()
                 html.open_a(href="javascript:void(0)",
                             onclick="add_to_visual(\'%s\', \'%s\')" % (visual_type_name, name))
-                html.img(src="images/icon_%s.png" % visual_type_name.rstrip('s'))
+                html.icon(None, visual_type_name.rstrip('s'))
                 html.write(title)
                 html.close_a()
                 html.close_li()
@@ -1613,11 +1613,11 @@ def ajax_popup_add():
 
         html.open_li()
         html.open_a(href="javascript:graph_export(\"graph_export\")")
-        html.img(src="images/icon_download.png")
+        html.icon(None, "download")
         html.write(_("Export as JSON"))
         html.close_a()
         html.open_a(href="javascript:graph_export(\"graph_image\")")
-        html.img(src="images/icon_download.png")
+        html.icon(None, "download")
         html.write(_("Export as PNG"))
         html.close_a()
         html.close_li()

@@ -45,7 +45,7 @@ import cmk.gui.plugins.config
 
 # This import is added for static analysis tools like pylint to make them
 # know about all shipped config options. The default config options are
-# later handled with the default_config dict and load_default_config()
+# later handled with the default_config dict and _load_default_config()
 from cmk.gui.plugins.config.base import *
 
 if not cmk.is_raw_edition():
@@ -165,16 +165,7 @@ def load_config():
     modification_timestamps = []
 
     # Set default values for all user-changable configuration settings
-    vars_before_plugins = all_nonfunction_vars(globals())
-    load_plugins(True)
-    vars_after_plugins = all_nonfunction_vars(globals())
-    load_default_config(vars_before_plugins, vars_after_plugins)
-
-    # Apply the default configuration to the module global level
-    for k, v in default_config.items():
-        if isinstance(v, (dict, list)):
-            v = copy.deepcopy(v)
-        globals()[k] = v
+    _initialize_with_default_config()
 
     # Initialze sites with default site configuration. Need to do it here to
     # override possibly deleted sites
@@ -205,7 +196,23 @@ def load_config():
     migrate_old_sample_config_tag_groups(wato_host_tags, wato_aux_tags)
 
 
-def load_default_config(vars_before_plugins, vars_after_plugins):
+def _initialize_with_default_config():
+    vars_before_plugins = all_nonfunction_vars(globals())
+    load_plugins(True)
+    vars_after_plugins = all_nonfunction_vars(globals())
+    _load_default_config(vars_before_plugins, vars_after_plugins)
+
+    _apply_default_config()
+
+
+def _apply_default_config():
+    for k, v in default_config.items():
+        if isinstance(v, (dict, list)):
+            v = copy.deepcopy(v)
+        globals()[k] = v
+
+
+def _load_default_config(vars_before_plugins, vars_after_plugins):
     default_config.clear()
     _load_default_config_from_module_plugins()
     _load_default_config_from_legacy_plugins(vars_before_plugins, vars_after_plugins)

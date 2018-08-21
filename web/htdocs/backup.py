@@ -922,8 +922,10 @@ class PageAbstractBackupJobState(object):
 
         html.open_tr(class_=["data", "even0"])
         html.td(_("Output"), class_=["left", "legend"])
-        html.open_td(class_="log")
+        html.open_td()
+        html.open_div(class_="log_output", style="height: 400px;", id_="progress_log")
         html.pre(state["output"])
+        html.close_div()
         html.close_td()
         html.close_tr()
 

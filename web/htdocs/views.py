@@ -2126,6 +2126,7 @@ def view_optiondial_off(option):
     html.div('', class_=["optiondial", "off", option])
 
 # FIXME: Consolidate with html.toggle_button() rendering functions
+# TODO: Replace hard coded icon path with dynamic path to old or new theme
 def toggler(id, icon, help, onclick, value, hidden = False):
     html.begin_context_buttons() # just to be sure
     hide = ' style="display:none"' if hidden else ''

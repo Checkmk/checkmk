@@ -75,7 +75,10 @@ def check_memory_simple(used, total, params):
 
 
 def check_memory_multiitem(params, data, base=1024):
+    if 'mem_total' not in data:
+        return 3, 'Invalid data: missing mem_total'
     mem_total = data['mem_total']
+
     if 'mem_used' in data:
         mem_used = data["mem_used"]
         mem_avail = mem_total - mem_used

@@ -1,0 +1,10 @@
+Title: memory.include: return UNKNOWN if the total memory is not present
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0p3
+Date: 1534945351
+

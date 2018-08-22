@@ -191,6 +191,7 @@ class SNMPDataSource(DataSource):
 
         check_plugin_names = self.get_check_plugin_names()
 
+        access_data = self._get_access_data()
         info = {}
         for check_plugin_name in self._sort_check_plugin_names(check_plugin_names):
             # Is this an SNMP table check? Then snmp_info specifies the OID to fetch
@@ -231,7 +232,7 @@ class SNMPDataSource(DataSource):
             if type(oid_info) == list:
                 check_info = []
                 for entry in oid_info:
-                    check_info_part = snmp.get_snmp_table(self._get_access_data(), check_plugin_name, entry, self._use_snmpwalk_cache)
+                    check_info_part = snmp.get_snmp_table(access_data, check_plugin_name, entry, self._use_snmpwalk_cache)
 
                     # If at least one query fails, we discard the whole info table
                     if check_info_part is None:
@@ -240,7 +241,7 @@ class SNMPDataSource(DataSource):
                     else:
                         check_info.append(check_info_part)
             else:
-                check_info = snmp.get_snmp_table(self._get_access_data(), check_plugin_name, oid_info, self._use_snmpwalk_cache)
+                check_info = snmp.get_snmp_table(access_data, check_plugin_name, oid_info, self._use_snmpwalk_cache)
 
             info[section_name] = check_info
 

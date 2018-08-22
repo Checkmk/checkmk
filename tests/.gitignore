@@ -1,4 +1,5 @@
 .cache
 __pycache__
 test.log
-var
+tmp/
+var/

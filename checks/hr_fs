@@ -42,4 +42,5 @@ check_info["hr_fs"] = {
     'default_levels_variable'   : 'filesystem_default_levels',
     'includes'                  : ['ucd_hr.include', "size_trend.include",
                                    "df.include", "hr_fs.include"],
+    "management_board"          : HOST_ONLY,
 }

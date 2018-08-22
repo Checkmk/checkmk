@@ -34,4 +34,5 @@ check_info["snmp_uptime"] = {
     'snmp_scan_function'    : snmp_scan_uptime,
     'group'                 : 'uptime',
     'includes'              : [ 'uptime.include' ],
+    "management_board"      : HOST_ONLY,
 }

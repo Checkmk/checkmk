@@ -71,8 +71,6 @@ Global variables:
     OID_END_OCTET_STRING TODO
     OID_STRING           TODO
 
-    MGMT_PRECEDENCE      Use management board address/credentials eg. when it's a SNMP host.
-                         Otherwise host's address/credentials are used.
     MGMT_ONLY            Check is only executed for management boards.
     HOST_PRECEDENCE      Use host address/credentials eg. when it's a SNMP HOST.
     HOST_ONLY            Check is only executed for real SNMP hosts.
@@ -151,7 +149,6 @@ OID_END_OCTET_STRING = _snmp_utils.OID_END_OCTET_STRING
 binstring_to_int     = _snmp_utils.binstring_to_int
 
 # Management board checks
-MGMT_PRECEDENCE = _check_api_utils.MGMT_PRECEDENCE # Use management board address/credentials when it's a SNMP host
 MGMT_ONLY       = _check_api_utils.MGMT_ONLY       # Use host address/credentials when it's a SNMP HOST
 HOST_PRECEDENCE = _check_api_utils.HOST_PRECEDENCE # Check is only executed for mgmt board (e.g. Managegment Uptime)
 HOST_ONLY       = _check_api_utils.HOST_ONLY       # Check is only executed for real SNMP host (e.g. interfaces)

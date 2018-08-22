@@ -107,14 +107,27 @@ brocade_mlx_mem_default_levels = { "levels": (80.0, 90.0) }
 def parse_brocade_mlx_module_mem(info):
     parsed = {}
     for module_id, module_descr, module_state, mem_total, mem_avail in info[0]:
-        module_state = int(module_state)
-        _, state_readable = brocade_mlx_get_state(module_state)
-        parsed.setdefault(brocade_mlx_combine_item(module_id, module_descr), {
-            "mem_total": int(mem_total),
-            "mem_avail": int(mem_avail),
+        item = brocade_mlx_combine_item(module_id, module_descr)
+        try:
+            _, state_readable = brocade_mlx_get_state(int(module_state))
+        except ValueError:
+            state_readable = 'Device did not return any state'
+
+        parsed.setdefault(item, {
             "state_readable": state_readable,
             "descr": module_descr,
         })
+
+        try:
+            parsed[item]["mem_total"] = int(mem_total)
+        except ValueError:
+            pass
+
+        try:
+            parsed[item]["mem_avail"] = int(mem_avail)
+        except ValueError:
+            pass
+
     return parsed
 
 

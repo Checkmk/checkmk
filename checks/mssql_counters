@@ -485,16 +485,14 @@ def check_mssql_counters_locks_per_batch(item, params, parsed):
         infotext = "%s%.1f" % (node_info, lock_per_batch)
         state = 0
 
-        if params:
-            warn, crit = params
-            if lock_per_batch >= crit:
-                state = 2
-            elif lock_per_batch >= warn:
-                state = 1
-            if state:
-                infotext += " (warn/crit at %.1f/%.1f per second)" % (warn, crit)
-        else:
-            warn, crit = None, None
+        warn, crit = params.get('locks_per_batch', (None, None))
+        if crit is not None and lock_per_batch >= crit:
+            state = 2
+        elif warn is not None and lock_per_batch >= warn:
+            state = 1
+
+        if state:
+            infotext += " (warn/crit at %.1f/%.1f per second)" % (warn, crit)
 
         yield state, infotext, [("locks_per_batch", lock_per_batch, warn, crit)]
 

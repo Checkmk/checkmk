@@ -1,6 +1,8 @@
 #!/usr/bin/python
 # Library for pylint checks of Check_MK
 
+from __future__ import print_function
+
 import os
 import sys
 import glob
@@ -45,12 +47,12 @@ def run_pylint(base_path, check_files=None): #, cleanup_test_dir=False):
     else:
         pylint_args = []
 
-    pylint_cfg = repo_path() + "/pylintrc"
+    pylint_cfg = repo_path() + "/.pylintrc"
 
     if not check_files:
         check_files = get_pylint_files(base_path, "*")
         if not check_files:
-            print "Nothing to do..."
+            print("Nothing to do...")
             return 0 # nothing to do
 
     cmd = [

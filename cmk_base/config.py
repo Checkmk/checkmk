@@ -2757,75 +2757,103 @@ def do_status_data_inventory_for(hostname):
 
 def filter_by_management_board(hostname, found_check_plugin_names,
                                for_mgmt_board, for_discovery=False):
-    # #1 SNMP host with MGMT board
-    #    MGMT board:
-    #        SNMP management board precedence: mgmt_prec_check
-    #        SNMP management board only:       mgmt_only_check
-    #        SNMP host precedence:             host_prec_check
-    #        SNMP host only:                   host_only_check
-    #        SNMP Finally found check plugins: mgmt_only_check mgmt_prec_check
-    #    HOST:
-    #        SNMP management board precedence: mgmt_prec_check
-    #        SNMP management board only:       mgmt_only_check
-    #        SNMP host precedence:             host_prec_check
-    #        SNMP host only:                   host_only_check
-    #        SNMP Finally found check plugins: host_prec_check
-    #    => Discovery:
-    #        1 host_prec_snmp_uptime
-    #        1 mgmt_only_snmp_uptime
-    #        1 mgmt_prec_snmp_uptime
-    #
-    # #2 SNMP host without MGMT board
-    #    HOST:
-    #        SNMP management board precedence: mgmt_prec_check
-    #        SNMP management board only:       mgmt_only_check
-    #        SNMP host precedence:             host_prec_check
-    #        SNMP host only:                   host_only_check
-    #        SNMP Finally found check plugins: host_only_check host_prec_check mgmt_prec_check
-    #    => Discovery:
-    #        1 host_only_snmp_uptime
-    #        1 host_prec_snmp_uptime
-    #        1 mgmt_prec_snmp_uptime
+    """
+    In order to decide which check is used for which data source
+    we have to filter the found check plugins. This is done via
+    the check_info key "management_board". There are three values
+    with the following meanings:
+    - MGMT_ONLY
+        These check plugins
+        - are only used for management board data sources,
+        - have the prefix 'mgmt_' in their name,
+        - have the prefix 'Management Interface:' in their service description.
+        - If there is an equivalent host check plugin then it must be 'HOST_ONLY'.
+
+    - HOST_PRECEDENCE
+        - Default value for all check plugins.
+        - It does not have to be declared in the check_info.
+        - Special situation for SNMP management boards:
+            - If a host is not a SNMP host these checks are used for
+              the SNMP management boards.
+            - If a host is a SNMP host these checks are used for
+              the host itself.
+
+    - HOST_ONLY
+        These check plugins
+        - are used for 'real' host data sources, not for host management board data sources
+        - there is an equivalent 'MGMT_ONLY'-management board check plugin.
+    """
+
+    mgmt_only, host_precedence_snmp, host_only_snmp,\
+        host_precedence_tcp, host_only_tcp = _get_categorized_check_plugins(found_check_plugin_names)
 
     final_collection = set()
-    mgmt_precedence = set()
-    host_precedence = set()
-    mgmt_only = set()
-    host_only = set()
-    for check_plugin_name in found_check_plugin_names:
-        mgmt_board = get_management_board_precedence(check_plugin_name)
-        if mgmt_board == check_api_utils.MGMT_PRECEDENCE:
-            mgmt_precedence.add(check_plugin_name)
+    is_snmp_host_ = is_snmp_host(hostname)
+    is_tcp_host_ = is_tcp_host(hostname)
+    if not has_management_board(hostname):
+        if is_snmp_host_:
+            final_collection.update(host_precedence_snmp)
+            final_collection.update(host_only_snmp)
+        if is_tcp_host_:
+            final_collection.update(host_precedence_tcp)
+            final_collection.update(host_only_tcp)
+        return final_collection
 
-        elif mgmt_board == check_api_utils.HOST_PRECEDENCE:
-            host_precedence.add(check_plugin_name)
+    if for_mgmt_board:
+        final_collection.update(mgmt_only)
+        if not is_snmp_host_:
+            final_collection.update(host_precedence_snmp)
+            if not for_discovery:
+                # Migration from 1.4 to 1.5:
+                # in 1.4 TCP hosts with SNMP management boards discovered TCP and
+                # SNMP checks, eg. uptime and snmp_uptime.  During checking phase
+                # these checks should be executed
+                # further on.
+                # In versions >= 1.5 there are management board specific check
+                # plugins, eg. mgmt_snmp_uptime.
+                # After a re-discovery Check_MK finds the uptime check plugin for
+                # the TCP host and the mgmt_snmp_uptime check for the SNMP
+                # management board. Moreover Check_MK eliminates 'HOST_ONLT'
+                # checks like snmp_uptime.
+                final_collection.update(host_only_snmp)
+
+    else:
+        if is_snmp_host_:
+            final_collection.update(host_precedence_snmp)
+            final_collection.update(host_only_snmp)
+        if is_tcp_host_:
+            final_collection.update(host_precedence_tcp)
+            final_collection.update(host_only_tcp)
+
+    return final_collection
+
+
+def _get_categorized_check_plugins(check_plugin_names):
+    mgmt_only = set()
+    host_precedence_snmp = set()
+    host_precedence_tcp = set()
+    host_only_snmp = set()
+    host_only_tcp = set()
+
+    for check_plugin_name in check_plugin_names:
+        is_snmp_check_ = cmk_base.check_utils.is_snmp_check(check_plugin_name)
+        mgmt_board = get_management_board_precedence(check_plugin_name)
+        if mgmt_board == check_api_utils.HOST_PRECEDENCE:
+            if is_snmp_check_:
+                host_precedence_snmp.add(check_plugin_name)
+            else:
+                host_precedence_tcp.add(check_plugin_name)
 
         elif mgmt_board == check_api_utils.MGMT_ONLY:
             mgmt_only.add(check_plugin_name)
 
         elif mgmt_board == check_api_utils.HOST_ONLY:
-            host_only.add(check_plugin_name)
+            if is_snmp_check_:
+                host_only_snmp.add(check_plugin_name)
+            else:
+                host_only_tcp.add(check_plugin_name)
 
-    has_mgmt_board = has_management_board(hostname)
-    if for_mgmt_board:
-        final_collection.update(mgmt_precedence)
-        final_collection.update(mgmt_only)
-        if not for_discovery and not is_snmp_host(hostname):
-            # Compatibility: in CMK version 1.4.0 if a TCP host has configured
-            # a SNMP management board then SNMP checks (non-"SNMP management board"-checks)
-            # were discovered. During checking we do not change that behaviour.
-            # Then an upgrade to >=1.5.0 is done.
-            # After a rediscovery the non-"SNMP management board"-checks are vanished and
-            # "SNMP management board"-checks are discovered.
-            final_collection.update(host_precedence)
-    else:
-        final_collection.update(host_precedence)
-        if not has_mgmt_board:
-            final_collection.update(mgmt_precedence)
-
-    if not (has_mgmt_board or for_mgmt_board):
-        final_collection.update(host_only)
-
-    return final_collection
+    return mgmt_only, host_precedence_snmp, host_only_snmp,\
+           host_precedence_tcp, host_only_tcp
 
 cmk_base.cleanup.register_cleanup(check_api_utils.reset_hostname)

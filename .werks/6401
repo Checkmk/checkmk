@@ -1,0 +1,11 @@
+Title: brocade_mlx.module_mem: avoid a crash of all services if SNMP data for one service is missing
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0p3
+Date: 1534927344
+
+

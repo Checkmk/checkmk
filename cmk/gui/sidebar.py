@@ -365,20 +365,32 @@ class UserSidebarConfig(object):
         (dictionary) on the fly"""
         user_config = self._user_config()
 
-        if type(user_config) == list:
-            user_config = {
-                "snapins" : user_config,
-                "fold":     False,
-            }
+        user_config = self._transform_legacy_list_config(user_config)
+        user_config = self._transform_legacy_off_state(user_config)
 
-        # Remove entries the user is not allowed for or which have state "off" (from legacy version)
-        # silently skip configured but not existant snapins
+        # Remove entries the user is not allowed for and silently skip
+        # configured but not existing snapins
         user_config["snapins"] = [
               entry for entry in user_config["snapins"]
                     if entry[0] in snapin_registry
-                       and entry[1] != "off"
                        and self._user.may("sidesnap." + entry[0])]
 
+        return user_config
+
+
+    def _transform_legacy_list_config(self, user_config):
+        if not isinstance(user_config, list):
+            return user_config
+
+        return {
+            "snapins" : user_config,
+            "fold":     False,
+        }
+
+
+    def _transform_legacy_off_state(self, user_config):
+        user_config = user_config.copy()
+        user_config["snapins"] = [ e for e in user_config["snapins"] if e[1] != "off" ]
         return user_config
 
 

@@ -85,8 +85,9 @@ from cmk.gui.plugins.sidebar.utils import (
     write_snapin_exception,
 )
 
+from cmk.gui.plugins.sidebar.quicksearch import QuicksearchMatchPlugin
+
 quicksearch_match_plugins = []
-QuicksearchMatchPlugin = cmk.gui.plugins.sidebar.quicksearch.QuicksearchMatchPlugin
 
 # Datastructures and functions needed before plugins can be loaded
 loaded_with_language = False

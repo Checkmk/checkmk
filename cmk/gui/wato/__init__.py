@@ -114,7 +114,7 @@ import cmk.gui.multitar as multitar
 import cmk.gui.userdb as userdb
 import cmk.gui.weblib as weblib
 import cmk.gui.login as login
-import cmk.gui.mkeventd as mkeventd
+import cmk.gui.mkeventd
 import cmk.gui.forms as forms
 import cmk.gui.backup as backup
 import cmk.gui.watolib as watolib
@@ -124,7 +124,7 @@ import cmk.gui.pages
 import cmk.gui.plugin_registry
 import cmk.gui.plugins.wato.utils
 import cmk.gui.plugins.wato.utils.base_modes
-import cmk.gui.plugins.wato.mkeventd
+import cmk.gui.wato.mkeventd
 from cmk.gui.i18n import _u, _
 from cmk.gui.globals import html
 from cmk.gui.htmllib import HTML
@@ -184,7 +184,7 @@ wato_root_dir = watolib.wato_root_dir
 multisite_dir = watolib.multisite_dir
 
 # TODO: Kept for old plugin compatibility. Remove this one day
-syslog_facilities = mkeventd.syslog_facilities
+syslog_facilities = cmk.gui.mkeventd.syslog_facilities
 from cmk.gui.plugins.wato import (
     may_edit_ruleset,
     monitoring_macro_help,
@@ -7400,8 +7400,8 @@ class NotificationsMode(EventsMode):
                                      orientation = "horizontal",
                                      show_titles = False,
                                      elements = [
-                                        DropdownChoice(label = _("from:"), choices = mkeventd.syslog_priorities, default_value = 4),
-                                        DropdownChoice(label = _(" to:"),   choices = mkeventd.syslog_priorities, default_value = 0),
+                                        DropdownChoice(label = _("from:"), choices = cmk.gui.mkeventd.syslog_priorities, default_value = 4),
+                                        DropdownChoice(label = _(" to:"),   choices = cmk.gui.mkeventd.syslog_priorities, default_value = 0),
                                      ],
                                  ),
                                ),
@@ -7410,7 +7410,7 @@ class NotificationsMode(EventsMode):
                                      title = _("Match syslog facility"),
                                      help = _("Make the rule match only if the event has a certain syslog facility. "
                                               "Messages not having a facility are classified as <tt>user</tt>."),
-                                     choices = mkeventd.syslog_facilities,
+                                     choices = cmk.gui.mkeventd.syslog_facilities,
                                  )
                                ),
                                ( "match_comment",
@@ -13368,7 +13368,7 @@ def create_sample_config():
     import cmk.gui.werks as werks
     werks.acknowledge_all_werks(check_permission=False)
 
-    cmk.gui.plugins.wato.mkeventd.save_mkeventd_sample_config()
+    cmk.gui.wato.mkeventd.save_mkeventd_sample_config()
 
     userdb.create_cmk_automation_user()
 

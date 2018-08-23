@@ -42,7 +42,7 @@ else:
 
 import cmk.gui.config as config
 import cmk.gui.sites as sites
-import cmk.gui.mkeventd as mkeventd
+import cmk.gui.mkeventd
 import cmk.gui.watolib as watolib
 import cmk.gui.hooks as hooks
 import cmk.gui.table as table
@@ -52,7 +52,7 @@ from cmk.gui.globals import html
 from cmk.gui.htmllib import HTML
 from cmk.gui.wato.pages.global_settings import GlobalSettingsMode, EditGlobalSettingMode
 
-from . import (
+from cmk.gui.plugins.wato.utils import (
     ConfigDomainGUI,
     WatoMode,
     WatoModule,
@@ -411,7 +411,7 @@ def vs_mkeventd_rule(customer=None):
             elements = [
                 ( "value", DropdownChoice(
                     title = _("Value"),
-                    choices = mkeventd.service_levels,
+                    choices = cmk.gui.mkeventd.service_levels,
                     prefix_values = True,
                     help = _("The default/fixed service level to use for this rule."),
                 )),
@@ -471,7 +471,7 @@ def vs_mkeventd_rule(customer=None):
           ListChoice(
             title = _("Actions"),
             help = _("Actions to automatically perform when this event occurs"),
-            choices = mkeventd.action_choices,
+            choices = cmk.gui.mkeventd.action_choices,
           )
         ),
         ( "actions_in_downtime",
@@ -491,7 +491,7 @@ def vs_mkeventd_rule(customer=None):
           ListChoice(
             title = _("Actions when cancelling"),
             help = _("Actions to automatically perform when an event is being cancelled."),
-            choices = mkeventd.action_choices,
+            choices = cmk.gui.mkeventd.action_choices,
           )
         ),
         ( "cancel_action_phases",
@@ -799,8 +799,8 @@ def vs_mkeventd_rule(customer=None):
               orientation = "horizontal",
               show_titles = False,
               elements = [
-                 DropdownChoice(label = _("from:"), choices = mkeventd.syslog_priorities, default_value = 4),
-                 DropdownChoice(label = _(" to:"),   choices = mkeventd.syslog_priorities, default_value = 0),
+                 DropdownChoice(label = _("from:"), choices = cmk.gui.mkeventd.syslog_priorities, default_value = 4),
+                 DropdownChoice(label = _(" to:"),   choices = cmk.gui.mkeventd.syslog_priorities, default_value = 0),
               ],
           ),
         ),
@@ -809,7 +809,7 @@ def vs_mkeventd_rule(customer=None):
               title = _("Match syslog facility"),
               help = _("Make the rule match only if the message has a certain syslog facility. "
                        "Messages not having a facility are classified as <tt>user</tt>."),
-              choices = mkeventd.syslog_facilities,
+              choices = cmk.gui.mkeventd.syslog_facilities,
           )
         ),
         ( "match_sl",
@@ -822,8 +822,8 @@ def vs_mkeventd_rule(customer=None):
             orientation = "horizontal",
             show_titles = False,
             elements = [
-              DropdownChoice(label = _("from:"),  choices = mkeventd.service_levels, prefix_values = True),
-              DropdownChoice(label = _(" to:"),  choices = mkeventd.service_levels, prefix_values = True),
+              DropdownChoice(label = _("from:"),  choices = cmk.gui.mkeventd.service_levels, prefix_values = True),
+              DropdownChoice(label = _(" to:"),  choices = cmk.gui.mkeventd.service_levels, prefix_values = True),
             ],
           ),
         ),
@@ -858,8 +858,8 @@ def vs_mkeventd_rule(customer=None):
               orientation = "horizontal",
               show_titles = False,
               elements = [
-                 DropdownChoice(label = _("from:"), choices = mkeventd.syslog_priorities, default_value = 7),
-                 DropdownChoice(label = _(" to:"),   choices = mkeventd.syslog_priorities, default_value = 5),
+                 DropdownChoice(label = _("from:"), choices = cmk.gui.mkeventd.syslog_priorities, default_value = 7),
+                 DropdownChoice(label = _(" to:"),   choices = cmk.gui.mkeventd.syslog_priorities, default_value = 5),
               ],
           ),
         ),
@@ -1028,20 +1028,20 @@ vs_mkeventd_event = Dictionary(
         ( "priority",
           DropdownChoice(
             title = _("Syslog Priority"),
-            choices = mkeventd.syslog_priorities,
+            choices = cmk.gui.mkeventd.syslog_priorities,
             default_value = 5,
           )
         ),
         ( "facility",
           DropdownChoice(
               title = _("Syslog Facility"),
-              choices = mkeventd.syslog_facilities,
+              choices = cmk.gui.mkeventd.syslog_facilities,
               default_value = 1,
           )
         ),
         ("sl", DropdownChoice(
             title = _("Service Level"),
-            choices = mkeventd.service_levels,
+            choices = cmk.gui.mkeventd.service_levels,
             prefix_values = True,
         )),
         ("site", DropdownChoice(
@@ -1156,7 +1156,7 @@ class EventConsoleMode(WatoMode):
                 raise MKUserError("event_p_application", _("Please specify an application name"))
             if not event.get("host"):
                 raise MKUserError("event_p_host", _("Please specify a host name"))
-            rfc = mkeventd.send_event(event)
+            rfc = cmk.gui.mkeventd.send_event(event)
             return None, _("Test event generated and sent to Event Console.") \
                           + html.render_br() \
                           + html.render_pre(rfc) \
@@ -1249,7 +1249,7 @@ class ModeEventConsoleRulePacks(EventConsoleMode):
             c = wato_confirm(_("Confirm counter reset"),
                              _("Do you really want to reset all rule hit counters in <b>all rule packs</b> to zero?"))
             if c:
-                mkeventd.execute_command("RESETCOUNTERS", site=config.omd_site())
+                cmk.gui.mkeventd.execute_command("RESETCOUNTERS", site=config.omd_site())
                 self._add_change("counter-reset", _("Resetted all rule hit counters to zero"))
             elif c == False:
                 return ""
@@ -1327,7 +1327,7 @@ class ModeEventConsoleRulePacks(EventConsoleMode):
 
 
     def _copy_rules_from_master(self):
-        answer = mkeventd.query_ec_directly("REPLICATE 0")
+        answer = cmk.gui.mkeventd.query_ec_directly("REPLICATE 0")
         if "rules" not in answer:
             raise MKGeneralException(_("Cannot get rules from local event daemon."))
         rule_packs = answer["rules"]
@@ -1335,7 +1335,7 @@ class ModeEventConsoleRulePacks(EventConsoleMode):
 
 
     def page(self):
-        rep_mode = mkeventd.replication_mode()
+        rep_mode = cmk.gui.mkeventd.replication_mode()
         if rep_mode in [ "sync", "takeover" ]:
             copy_url = make_action_link([("mode", "mkeventd_rule_packs"), ("_copy_rules", "1")])
             html.show_warning(_("WARNING: This Event Console is currently running as a replication "
@@ -1434,7 +1434,7 @@ class ModeEventConsoleRulePacks(EventConsoleMode):
                 skips = 0
 
                 for rule in rule_pack["rules"]:
-                    result = mkeventd.event_rule_matches(rule_pack, rule, event)
+                    result = cmk.gui.mkeventd.event_rule_matches(rule_pack, rule, event)
                     if type(result) == tuple:
                         cancelling, groups = result
 
@@ -1655,7 +1655,7 @@ class ModeEventConsoleRules(EventConsoleMode):
             if rule.get("disabled"):
                 html.icon(_("This rule is currently disabled and will not be applied"), "disabled")
             elif event:
-                result = mkeventd.event_rule_matches(self._rule_pack, rule, event)
+                result = cmk.gui.mkeventd.event_rule_matches(self._rule_pack, rule, event)
                 if type(result) != tuple:
                     html.icon(_("Rule does not match: %s") % result, "rulenmatch")
                 else:
@@ -1714,10 +1714,10 @@ class ModeEventConsoleRules(EventConsoleMode):
             if "match_priority" in rule:
                 prio_from, prio_to = rule["match_priority"]
                 if prio_from == prio_to:
-                    prio_text = mkeventd.syslog_priorities[prio_from][1]
+                    prio_text = cmk.gui.mkeventd.syslog_priorities[prio_from][1]
                 else:
-                    prio_text = mkeventd.syslog_priorities[prio_from][1][:2] + ".." + \
-                                mkeventd.syslog_priorities[prio_to][1][:2]
+                    prio_text = cmk.gui.mkeventd.syslog_priorities[prio_from][1][:2] + ".." + \
+                                cmk.gui.mkeventd.syslog_priorities[prio_to][1][:2]
             else:
                 prio_text = ""
             table.cell(_("Priority"), prio_text)
@@ -1726,10 +1726,10 @@ class ModeEventConsoleRules(EventConsoleMode):
             table.cell(_("Facility"))
             if "match_facility" in rule:
                 facnr = rule["match_facility"]
-                html.write("%s" % dict(mkeventd.syslog_facilities)[facnr])
+                html.write("%s" % dict(cmk.gui.mkeventd.syslog_facilities)[facnr])
 
             table.cell(_("Service Level"),
-                      dict(mkeventd.service_levels()).get(rule["sl"]["value"], rule["sl"]["value"]))
+                      dict(cmk.gui.mkeventd.service_levels()).get(rule["sl"]["value"], rule["sl"]["value"]))
             hits = rule.get('hits')
             table.cell(_("Hits"), hits != None and hits or '', css="number")
 
@@ -2024,7 +2024,7 @@ class ModeEventConsoleEditRule(EventConsoleMode):
         else:
             self._add_change("edit-rule", _("Modified event correlation rule %s") % self._rule["id"])
             # Reset hit counters of this rule
-            mkeventd.execute_command("RESETCOUNTERS", [self._rule["id"]], config.omd_site())
+            cmk.gui.mkeventd.execute_command("RESETCOUNTERS", [self._rule["id"]], config.omd_site())
         return "mkeventd_rules"
 
 
@@ -2078,7 +2078,7 @@ class ModeEventConsoleStatus(EventConsoleMode):
                 _("Do you really want to switch the event daemon to %s mode?") %
                     new_mode)
         if c:
-            mkeventd.execute_command("SWITCHMODE", [new_mode], config.omd_site())
+            cmk.gui.mkeventd.execute_command("SWITCHMODE", [new_mode], config.omd_site())
             watolib.log_audit(None, "mkeventd-switchmode", _("Switched replication slave mode to %s") % new_mode)
             return None, _("Switched to %s mode") % new_mode
         elif c == False:
@@ -2088,14 +2088,14 @@ class ModeEventConsoleStatus(EventConsoleMode):
 
 
     def page(self):
-        if not mkeventd.daemon_running():
+        if not cmk.gui.mkeventd.daemon_running():
             warning = _("The Event Console Daemon is currently not running. ")
             warning += _("Please make sure that you have activated it with <tt>omd config set MKEVENTD on</tt> "
                          "before starting this site.")
             html.show_warning(warning)
             return
 
-        status = mkeventd.get_local_ec_status()
+        status = cmk.gui.mkeventd.get_local_ec_status()
         repl_mode = status["status_replication_slavemode"]
         html.h3(_("Current status of local Event Console"))
         html.open_ul()
@@ -2289,7 +2289,7 @@ class ModeEventConsoleMIBs(EventConsoleMode):
     def action(self):
         if html.has_var("_delete"):
             filename = html.var("_delete")
-            mibs = self._load_snmp_mibs(mkeventd.mib_upload_dir)
+            mibs = self._load_snmp_mibs(cmk.gui.mkeventd.mib_upload_dir)
             if filename in mibs:
                 c = wato_confirm(_("Confirm MIB deletion"),
                                  _("Do you really want to delete the MIB file <b>%s</b>?") % filename)
@@ -2371,7 +2371,7 @@ class ModeEventConsoleMIBs(EventConsoleMode):
             mibname = filename
 
         msg = self._validate_and_compile_mib(mibname.upper(), content)
-        file(mkeventd.mib_upload_dir + "/" + filename, "w").write(content)
+        file(cmk.gui.mkeventd.mib_upload_dir + "/" + filename, "w").write(content)
         self._add_change("uploaded-mib", _("MIB %s: %s") % (filename, msg))
         return msg
 
@@ -2400,13 +2400,13 @@ class ModeEventConsoleMIBs(EventConsoleMode):
         except ImportError, e:
             raise Exception(_('You are missing the needed pysmi python module (%s).') % e)
 
-        store.mkdir(mkeventd.compiled_mibs_dir)
+        store.mkdir(cmk.gui.mkeventd.compiled_mibs_dir)
 
         # This object manages the compilation of the uploaded SNMP mib
         # but also resolving dependencies and compiling dependents
         compiler = MibCompiler(SmiV1CompatParser(),
                                PySnmpCodeGen(),
-                               PyFileWriter(mkeventd.compiled_mibs_dir))
+                               PyFileWriter(cmk.gui.mkeventd.compiled_mibs_dir))
 
         # FIXME: This is a temporary local fix that should be removed once
         # handling of file contents uses a uniformly encoded representation
@@ -2422,10 +2422,10 @@ class ModeEventConsoleMIBs(EventConsoleMode):
 
         # Directories containing ASN1 MIB files which may be used for
         # dependency resolution
-        compiler.addSources(*[ FileReader(path) for path, title in mkeventd.mib_dirs ])
+        compiler.addSources(*[ FileReader(path) for path, title in cmk.gui.mkeventd.mib_dirs ])
 
         # check for already compiled MIBs
-        compiler.addSearchers(PyFileSearcher(mkeventd.compiled_mibs_dir))
+        compiler.addSearchers(PyFileSearcher(cmk.gui.mkeventd.compiled_mibs_dir))
 
         # and also check PySNMP shipped compiled MIBs
         compiler.addSearchers(*[ PyPackageSearcher(x) for x in defaultMibPackages ])
@@ -2462,7 +2462,7 @@ class ModeEventConsoleMIBs(EventConsoleMode):
 
 
     def _bulk_delete_custom_mibs_after_confirm(self):
-        custom_mibs = self._load_snmp_mibs(mkeventd.mib_upload_dir)
+        custom_mibs = self._load_snmp_mibs(cmk.gui.mkeventd.mib_upload_dir)
         selected_custom_mibs = []
         for varname in html.all_varnames_with_prefix("_c_mib_"):
             if html.get_checkbox(varname):
@@ -2488,13 +2488,13 @@ class ModeEventConsoleMIBs(EventConsoleMode):
         self._add_change("delete-mib", _("Deleted MIB %s") % filename)
 
         # Delete the uploaded mib file
-        os.remove(mkeventd.mib_upload_dir + "/" + filename)
+        os.remove(cmk.gui.mkeventd.mib_upload_dir + "/" + filename)
 
         # Also delete the compiled files
-        for f in [ mkeventd.compiled_mibs_dir + "/" + mib_name + ".py",
-                   mkeventd.compiled_mibs_dir + "/" + mib_name + ".pyc",
-                   mkeventd.compiled_mibs_dir + "/" + filename.rsplit('.', 1)[0].upper() + ".py",
-                   mkeventd.compiled_mibs_dir + "/" + filename.rsplit('.', 1)[0].upper() + ".pyc"
+        for f in [ cmk.gui.mkeventd.compiled_mibs_dir + "/" + mib_name + ".py",
+                   cmk.gui.mkeventd.compiled_mibs_dir + "/" + mib_name + ".pyc",
+                   cmk.gui.mkeventd.compiled_mibs_dir + "/" + filename.rsplit('.', 1)[0].upper() + ".py",
+                   cmk.gui.mkeventd.compiled_mibs_dir + "/" + filename.rsplit('.', 1)[0].upper() + ".pyc"
                 ]:
             if os.path.exists(f):
                 os.remove(f)
@@ -2520,15 +2520,15 @@ class ModeEventConsoleMIBs(EventConsoleMode):
         html.hidden_fields()
         html.end_form()
 
-        if not os.path.exists(mkeventd.mib_upload_dir):
-            os.makedirs(mkeventd.mib_upload_dir) # Let exception happen if this fails. Never happens on OMD
+        if not os.path.exists(cmk.gui.mkeventd.mib_upload_dir):
+            os.makedirs(cmk.gui.mkeventd.mib_upload_dir) # Let exception happen if this fails. Never happens on OMD
 
-        for path, title in mkeventd.mib_dirs:
+        for path, title in cmk.gui.mkeventd.mib_dirs:
             self._show_mib_table(path, title)
 
 
     def _show_mib_table(self, path, title):
-        is_custom_dir = path == mkeventd.mib_upload_dir
+        is_custom_dir = path == cmk.gui.mkeventd.mib_upload_dir
 
         if is_custom_dir:
             html.begin_form("bulk_delete_form", method="POST")
@@ -3296,7 +3296,7 @@ register_configvar(group,
         help = _("When sending notifications from the monitoring system to the event console "
                  "the following syslog facility will be set for these messages. Choosing "
                  "a unique facility makes creation of rules easier."),
-        choices = mkeventd.syslog_facilities,
+        choices = cmk.gui.mkeventd.syslog_facilities,
     ),
     domain = ConfigDomainGUI,
     need_restart = True)
@@ -3455,7 +3455,7 @@ register_rule(
     DropdownChoice(
        title = _("Service Level of hosts"),
        help = sl_help,
-       choices = mkeventd.service_levels,
+       choices = cmk.gui.mkeventd.service_levels,
     ),
     match = 'first',
 )
@@ -3467,7 +3467,7 @@ register_rule(
        title = _("Service Level of services"),
        help = sl_help + _(" Note: if no service level is configured for a service "
         "then that of the host will be used instead (if configured)."),
-       choices = mkeventd.service_levels,
+       choices = cmk.gui.mkeventd.service_levels,
     ),
     itemtype = 'service',
     match = 'first',

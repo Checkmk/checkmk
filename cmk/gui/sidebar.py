@@ -247,7 +247,7 @@ def ajax_message_read():
         html.write("ERROR")
 
 
-def sidebar_foot():
+def sidebar_foot(user_config):
     html.open_div(id_="side_footer")
     if config.user.may("general.configure_sidebar"):
         html.icon_button("sidebar_add_snapin.py", _("Add snapin to the sidebar"), "sidebar_addsnapin",
@@ -272,7 +272,7 @@ def sidebar_foot():
     html.close_div()
     html.close_div()
 
-    if UserSidebarConfig(config.user, config.sidebar).folded:
+    if user_config.folded:
         html.final_javascript("fold_sidebar();")
 
 
@@ -485,18 +485,17 @@ def page_side():
 
         # Performs the initial rendering and might return an optional refresh url,
         # when the snapin contents are refreshed from an external source
-        refresh_url = render_snapin(name, snapin.visible)
+        refresh_url = render_snapin(snapin)
 
-        snapin_class = snapin_registry.get(name)
-        if snapin_class.refresh_regularly():
+        if snapin.snapin_type.refresh_regularly():
             refresh_snapins.append([name, refresh_url])
 
-        elif snapin_class.refresh_on_restart():
+        elif snapin.snapin_type.refresh_on_restart():
             refresh_snapins.append([name, refresh_url])
             restart_snapins.append(name)
 
     html.close_div()
-    sidebar_foot()
+    sidebar_foot(user_config)
     html.close_div()
 
     html.write("<script language=\"javascript\">\n")
@@ -514,21 +513,24 @@ def page_side():
 
     html.body_end()
 
-def render_snapin_styles(snapin):
-    styles = snapin.styles()
+def render_snapin_styles(snapin_instance):
+    # type: (cmk.gui.plugins.sidebar.SidebarSnapin) -> None
+    styles = snapin_instance.styles()
     if styles:
         html.open_style()
         html.write(styles)
         html.close_style()
 
-def render_snapin(name, visibility):
-    snapin_class = snapin_registry.get(name)
-    snapin = snapin_class()
+def render_snapin(snapin):
+    # type: (UserSidebarSnapin) -> bytes
+    snapin_class = snapin.snapin_type
+    name = snapin_class.type_name()
+    snapin_instance = snapin_class()
 
     html.open_div(id_="snapin_container_%s" % name, class_="snapin")
-    render_snapin_styles(snapin)
+    render_snapin_styles(snapin_instance)
     # When not permitted to open/close snapins, the snapins are always opened
-    if visibility == SnapinVisibility.OPEN or not config.user.may("general.configure_sidebar"):
+    if snapin.visibility == SnapinVisibility.OPEN or not config.user.may("general.configure_sidebar"):
         style = None
         minimaxi = "mini"
     else:
@@ -545,7 +547,7 @@ def render_snapin(name, visibility):
                          "onmousedown" : "snapinStartDrag(event)",
                          "onmouseup"   : "snapinStopDrag(event)"}
 
-    html.open_div(class_=["head", visibility.value], **head_actions)
+    html.open_div(class_=["head", snapin.visibility.value], **head_actions)
 
     if config.user.may("general.configure_sidebar"):
         # Icon for mini/maximizing
@@ -567,7 +569,7 @@ def render_snapin(name, visibility):
         toggle_actions = {"onclick"    : "toggle_sidebar_snapin(this,'%s')" % toggle_url,
                           "onmouseover": "this.style.cursor='pointer'",
                           "onmouseout" : "this.style.cursor='auto'"}
-    html.b(HTML(snapin.title()), class_=["heading"], **toggle_actions)
+    html.b(HTML(snapin_class.title()), class_=["heading"], **toggle_actions)
 
     # End of header
     html.close_div()
@@ -578,7 +580,7 @@ def render_snapin(name, visibility):
     try:
         # TODO: Refactor this confusing special case. Add deddicated method or something
         # to let the snapins make the sidebar know that there is a URL to fetch.
-        url = snapin.show()
+        url = snapin_instance.show()
         if not url is None:
             # Fetch the contents from an external URL. Don't render it on our own.
             refresh_url = url
@@ -597,23 +599,21 @@ def ajax_snapin():
     # Update online state of the user (if enabled)
     userdb.update_user_access_time(config.user.id)
 
-    snapname = html.var("name")
-    if snapname:
-        snapnames = [ snapname ]
-    else:
-        snapnames = html.var('names', '').split(',')
+    user_config = UserSidebarConfig(config.user, config.sidebar)
+
+    snapin_id = html.var("name")
+    snapin_ids = [ snapin_id ] if snapin_id else html.var("names", "").split(",")
 
     snapin_code = []
-    for snapname in snapnames:
-        snapin_class = snapin_registry.get(snapname)
-        if not config.user.may(snapin_class.permission_name()):
+    for snapin_id in snapin_ids:
+        snapin_instance = user_config.get_snapin(snapin_id).snapin_type()
+        if not config.user.may(snapin_instance.permission_name()):
             continue
-        snapin = snapin_class()
 
         # When restart snapins are about to be refreshed, only render
         # them, when the core has been restarted after their initial
         # rendering
-        if not snapin.refresh_regularly() and snapin.refresh_on_restart():
+        if not snapin_instance.refresh_regularly() and snapin_instance.refresh_on_restart():
             since = float(html.var('since', 0))
             newest = since
             for site in sites.states().values():
@@ -627,10 +627,10 @@ def ajax_snapin():
 
         with html.plugged():
             try:
-                snapin.show()
+                snapin_instance.show()
             except Exception, e:
                 write_snapin_exception(e)
-                e_message = _("Exception during snapin refresh (snapin \'%s\')") % snapname
+                e_message = _("Exception during snapin refresh (snapin \'%s\')") % snapin_instance.type_name()
                 logger.error("%s %s: %s" % (html.request.requested_url, e_message, traceback.format_exc()))
             finally:
                 snapin_code.append(html.drain())
@@ -710,13 +710,11 @@ def page_add_snapin():
 
     html.open_div(class_=["add_snapin"])
     for name, snapin_class in sorted(snapin_registry.items()):
-        snapin = snapin_class()
         if name in used_snapins:
             continue
         if not config.user.may(snapin_class.permission_name()):
             continue # not allowed for this user
 
-        description = snapin.description()
         transid = html.transaction_manager.get()
         url = 'sidebar_add_snapin.py?name=%s&_transid=%s&pos=top' % (name, transid)
         html.open_div(class_="snapinadder",
@@ -725,9 +723,9 @@ def page_add_snapin():
 
         html.open_div(class_=["snapin_preview"])
         html.div('', class_=["clickshield"])
-        render_snapin(name, SnapinVisibility.OPEN)
+        render_snapin(UserSidebarSnapin.from_snapin_type_id(name))
         html.close_div()
-        html.div(description, class_=["description"])
+        html.div(snapin_class.description(), class_=["description"])
         html.close_div()
 
     html.close_div()

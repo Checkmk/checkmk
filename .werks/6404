@@ -1,0 +1,16 @@
+Title: oracle_undostat: prevent the discovery of invalid services
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1535017502
+Class: fix
+
+In previous versions of oracle_undostat services for error messages could be
+discovered. If e.g. the error message 'the account will expire soon; change
+your password' was returned by mk_oracle two additional services were
+discovered. Because mk_oracle did not deliver valid data for these services
+the oracle_undostat check crashed for these additional services. With this
+werk a check for the data delivered by mk_oracle is introduced which
+will prevent the discovery of the invalid services.

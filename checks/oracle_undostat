@@ -36,7 +36,7 @@ factory_settings["oracle_undostat_defaults"] = {
 
 
 def inventory_oracle_undostat(info):
-    return [ (line[0], {}) for line in info ]
+    return [ (line[0], {}) for line in info if len(line) == 6 ]
 
 
 def check_oracle_undostat(item, params, info):
@@ -59,7 +59,6 @@ def check_oracle_undostat(item, params, info):
             if nospaceerrcnt == 0:
                 nospaceerrcntpic = ""
             else:
-
                 if params.get('nospaceerrcnt_state'):
                     state_errcnt = params.get('nospaceerrcnt_state')
                     state = max(state, state_errcnt)

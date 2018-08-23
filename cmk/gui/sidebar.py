@@ -33,6 +33,8 @@ import urlparse
 import traceback
 import json
 import time
+from enum import Enum
+from typing import Type, Union, List
 
 import cmk
 import cmk.paths
@@ -294,8 +296,9 @@ class UserSidebarConfig(object):
         self._config["fold"] = value
 
 
-    def add_snapin(self, snapin_id):
-        self.snapins.append((snapin_id, "open"))
+    def add_snapin(self, snapin):
+        # type: (UserSidebarSnapin) -> None
+        self.snapins.append(snapin)
 
 
     def move_snapin_before(self, snapin_id, other_id):
@@ -304,9 +307,10 @@ class UserSidebarConfig(object):
         """
         # Get current state of snaping being moved (open, closed)
         snap_to_move = None
-        for name, state in self.snapins:
-            if name == snapin_id:
-                snap_to_move = name, state
+        for snapin in self.snapins:
+            if snapin.snapin_type.type_name() == snapin_id:
+                snap_to_move = snapin
+                break
 
         if not snap_to_move:
             raise MKUserError(None, "Snapin being moved is not configured")
@@ -314,12 +318,15 @@ class UserSidebarConfig(object):
         # Build new config by removing snaping at current position
         # and add before "other_id" or as last if other_id is not set
         new_snapins = []
-        for name, state in self.snapins:
-            if name == snapin_id:
+        for snapin in self.snapins:
+            if snapin.snapin_type.type_name() == snapin_id:
                 continue # remove at this position
-            elif name == other_id:
+
+            elif snapin.snapin_type.type_name() == other_id:
                 new_snapins.append(snap_to_move)
-            new_snapins.append( (name, state) )
+
+            new_snapins.append(snapin)
+
         if not other_id: # insert as last
             new_snapins.append(snap_to_move)
 
@@ -327,19 +334,27 @@ class UserSidebarConfig(object):
         self.snapins.extend(new_snapins)
 
 
+    def remove_snapin(self, snapin_id):
+        """Remove the given snapin from the users sidebar"""
+        new_snapins = []
+        for snapin in self.snapins:
+            if snapin.snapin_type.type_name() == snapin_id:
+                continue
+
+            new_snapins.append(snapin)
+        del self.snapins[:]
+        self.snapins.extend(new_snapins)
+
+
     def set_snapin_visibility(self, snapin_id, state):
         """This toggles a snapin between it's visibility states
 
-        Possible states are: open, open, closed, off
+        Possible states are: open, closed
         """
-        new_snapins = []
-        for name, usage in self.snapins:
-            if snapin_id == name:
-                usage = state
-            if usage != "off":
-                new_snapins.append((name, usage))
-        del self.snapins[:]
-        self.snapins.extend(new_snapins)
+        for snapin in self.snapins:
+            if snapin.snapin_type.type_name() == snapin_id:
+                snapin.visible = state
+                break
 
 
     @property
@@ -349,7 +364,7 @@ class UserSidebarConfig(object):
 
     def _initial_config(self):
         return {
-            "snapins": self._default_config,
+            "snapins": self._transform_legacy_tuples(self._default_config),
             "fold":    False,
         }
 
@@ -366,16 +381,16 @@ class UserSidebarConfig(object):
         user_config = self._user_config()
 
         user_config = self._transform_legacy_list_config(user_config)
-        user_config = self._transform_legacy_off_state(user_config)
+        user_config["snapins"] = self._transform_legacy_tuples(user_config["snapins"])
+        user_config["snapins"] = self._transform_legacy_off_state(user_config["snapins"])
 
         # Remove entries the user is not allowed for and silently skip
         # configured but not existing snapins
-        user_config["snapins"] = [
-              entry for entry in user_config["snapins"]
-                    if entry[0] in snapin_registry
-                       and self._user.may("sidesnap." + entry[0])]
+        user_config["snapins"] = [ e for e in user_config["snapins"]
+                                   if e["snapin_type_id"] in snapin_registry
+                                      and self._user.may("sidesnap." + e["snapin_type_id"])]
 
-        return user_config
+        return self._from_config(user_config)
 
 
     def _transform_legacy_list_config(self, user_config):
@@ -388,15 +403,77 @@ class UserSidebarConfig(object):
         }
 
 
-    def _transform_legacy_off_state(self, user_config):
-        user_config = user_config.copy()
-        user_config["snapins"] = [ e for e in user_config["snapins"] if e[1] != "off" ]
-        return user_config
+    def _transform_legacy_off_state(self, snapins):
+        return [ e for e in snapins if e["visibility"] != "off" ]
+
+
+    def _transform_legacy_tuples(self, snapins):
+        return [ {"snapin_type_id": e[0], "visibility": e[1]} if isinstance(e, tuple) else e
+                 for e in snapins ]
 
 
     def save(self):
         if self._user.may("general.configure_sidebar"):
-            self._user.save_file("sidebar", self._config)
+            self._user.save_file("sidebar", self._to_config())
+
+
+    def _from_config(self, config):
+        return {
+            "fold": config["fold"],
+            "snapins": [ UserSidebarSnapin.from_config(e) for e in config["snapins"] ]
+        }
+
+
+    def _to_config(self):
+        return {
+            "fold": self._config["fold"],
+            "snapins": [ e.to_config() for e in self._config["snapins"] ]
+        }
+
+
+
+class SnapinVisibility(Enum):
+    OPEN = "open"
+    CLOSED = "closed"
+
+
+
+class UserSidebarSnapin(object):
+    """An instance of a snapin that is configured in the users sidebar"""
+
+    @staticmethod
+    def from_config(config):
+        # type: (dict) -> UserSidebarSnapin
+        """ Construct a UserSidebarSnapin object from the persisted data structure"""
+        snapin_class = snapin_registry[config["snapin_type_id"]]
+        return UserSidebarSnapin(snapin_class, SnapinVisibility(config["visibility"]))
+
+
+    @staticmethod
+    def from_snapin_type_id(snapin_type_id):
+        # type: (bytes) -> UserSidebarSnapin
+        return UserSidebarSnapin(snapin_registry[snapin_type_id])
+
+
+    def __init__(self, snapin_type, visibility=SnapinVisibility.OPEN):
+        # type: (Type[cmk.gui.plugins.sidebar.SidebarSnapin], SnapinVisibility) -> None
+        super(UserSidebarSnapin, self).__init__()
+        self.snapin_type = snapin_type
+        self.visible = visibility
+
+
+    def to_config(self):
+        return {
+            "snapin_type_id" : self.snapin_type.type_name(),
+            "visibility"     : self.visible.value,
+        }
+
+
+    def __eq__(self, other):
+        return (
+            self.snapin_type == other.snapin_type
+            and self.visible == other.visible
+        )
 
 
 
@@ -424,12 +501,13 @@ def page_side():
     restart_snapins = []
 
     html.open_div(class_="scroll" if config.sidebar_show_scrollbar else None, id_="side_content")
-    for name, state in user_config.snapins:
+    for snapin in user_config.snapins:
+        name = snapin.snapin_type.type_name()
         if not name in snapin_registry or not config.user.may("sidesnap." + name):
             continue
         # Performs the initial rendering and might return an optional refresh url,
         # when the snapin contents are refreshed from an external source
-        refresh_url = render_snapin(name, state)
+        refresh_url = render_snapin(name, snapin.visible)
 
         snapin_class = snapin_registry.get(name)
         if snapin_class.refresh_regularly():
@@ -465,20 +543,18 @@ def render_snapin_styles(snapin):
         html.write(styles)
         html.close_style()
 
-def render_snapin(name, state):
+def render_snapin(name, visibility):
     snapin_class = snapin_registry.get(name)
     snapin = snapin_class()
 
     html.open_div(id_="snapin_container_%s" % name, class_="snapin")
     render_snapin_styles(snapin)
     # When not permitted to open/close snapins, the snapins are always opened
-    if state == "open" or not config.user.may("general.configure_sidebar"):
+    if visibility == SnapinVisibility.OPEN or not config.user.may("general.configure_sidebar"):
         style = None
-        headclass = "open"
         minimaxi = "mini"
     else:
         style = "display:none"
-        headclass = "closed"
         minimaxi = "maxi"
 
     toggle_url = "sidebar_openclose.py?name=%s&state=" % name
@@ -491,7 +567,7 @@ def render_snapin(name, state):
                          "onmousedown" : "snapinStartDrag(event)",
                          "onmouseup"   : "snapinStopDrag(event)"}
 
-    html.open_div(class_=["head", headclass], **head_actions)
+    html.open_div(class_=["head", visibility.value], **head_actions)
 
     if config.user.may("general.configure_sidebar"):
         # Icon for mini/maximizing
@@ -548,11 +624,14 @@ def ajax_fold():
 def ajax_openclose():
     snapin_id = html.var("name")
     state = html.var("state")
-    if state not in [ "open", "closed", "off" ]:
+    if state not in [ SnapinVisibility.OPEN.value, SnapinVisibility.CLOSED.value, "off" ]:
         raise MKUserError("state", "Invalid state: %s" % state)
 
     user_config = UserSidebarConfig(config.user, config.sidebar)
-    user_config.set_snapin_visibility(snapin_id, state)
+    if state == "off":
+        user_config.remove_snapin(snapin_id)
+    else:
+        user_config.set_snapin_visibility(snapin_id, SnapinVisibility(state))
     user_config.save()
 
 
@@ -626,13 +705,13 @@ def page_add_snapin():
     user_config = UserSidebarConfig(config.user, config.sidebar)
 
     html.header(_("Available snapins"), stylesheets=["pages", "sidebar", "status"])
-    used_snapins = [name for (name, _state) in user_config.snapins]
+    used_snapins = [ snapin.snapin_type.type_name() for snapin in user_config.snapins ]
 
     addname = html.var("name")
     if addname in snapin_registry and addname not in used_snapins and html.check_transaction():
-        user_config.add_snapin(addname)
+        user_config.add_snapin(UserSidebarSnapin.from_snapin_type_id(addname))
         user_config.save()
-        used_snapins = [name for (name, _state) in user_config.snapins]
+        used_snapins = [ snapin.snapin_type.type_name() for snapin in user_config.snapins ]
         html.reload_sidebar()
 
     html.open_div(class_=["add_snapin"])
@@ -652,7 +731,7 @@ def page_add_snapin():
 
         html.open_div(class_=["snapin_preview"])
         html.div('', class_=["clickshield"])
-        render_snapin(name, "open")
+        render_snapin(name, SnapinVisibility.OPEN)
         html.close_div()
         html.div(description, class_=["description"])
         html.close_div()

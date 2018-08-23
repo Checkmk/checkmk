@@ -301,64 +301,36 @@ class UserSidebarConfig(object):
         self.snapins.append(snapin)
 
 
-    def move_snapin_before(self, snapin_id, other_id):
-        """Move the snapin with the given ID before the other given snapin
-        The other_id may be None. In this case the snapin is moved to the end.
+    def move_snapin_before(self, snapin, other):
+        # type: (UserSidebarSnapin, Union[UserSidebarSnapin,None]) -> None
+        """Move the given snapin before the other given snapin.
+        The other may be None. In this case the snapin is moved to the end.
         """
-        # Get current state of snaping being moved (open, closed)
-        snap_to_move = None
-        for snapin in self.snapins:
-            if snapin.snapin_type.type_name() == snapin_id:
-                snap_to_move = snapin
-                break
+        self.snapins.remove(snapin)
 
-        if not snap_to_move:
-            raise MKUserError(None, "Snapin being moved is not configured")
-
-        # Build new config by removing snaping at current position
-        # and add before "other_id" or as last if other_id is not set
-        new_snapins = []
-        for snapin in self.snapins:
-            if snapin.snapin_type.type_name() == snapin_id:
-                continue # remove at this position
-
-            elif snapin.snapin_type.type_name() == other_id:
-                new_snapins.append(snap_to_move)
-
-            new_snapins.append(snapin)
-
-        if not other_id: # insert as last
-            new_snapins.append(snap_to_move)
-
-        del self.snapins[:]
-        self.snapins.extend(new_snapins)
+        try:
+            other_index = self.snapins.index(other)
+            self.snapins.insert(other_index, snapin)
+        except ValueError:
+            self.snapins.append(snapin)
 
 
-    def remove_snapin(self, snapin_id):
+    def remove_snapin(self, snapin):
+        # type: (UserSidebarSnapin) -> None
         """Remove the given snapin from the users sidebar"""
-        new_snapins = []
+        self.snapins.remove(snapin)
+
+
+    def get_snapin(self, snapin_id):
         for snapin in self.snapins:
             if snapin.snapin_type.type_name() == snapin_id:
-                continue
-
-            new_snapins.append(snapin)
-        del self.snapins[:]
-        self.snapins.extend(new_snapins)
-
-
-    def set_snapin_visibility(self, snapin_id, state):
-        """This toggles a snapin between it's visibility states
-
-        Possible states are: open, closed
-        """
-        for snapin in self.snapins:
-            if snapin.snapin_type.type_name() == snapin_id:
-                snapin.visible = state
-                break
+                return snapin
+        raise KeyError("Snapin %r does not exist" % snapin_id)
 
 
     @property
     def snapins(self):
+        # type: () -> List[UserSidebarSnapin]
         return self._config["snapins"]
 
 
@@ -470,6 +442,9 @@ class UserSidebarSnapin(object):
 
 
     def __eq__(self, other):
+        if not isinstance(other, UserSidebarSnapin):
+            return NotImplemented
+
         return (
             self.snapin_type == other.snapin_type
             and self.visible == other.visible
@@ -675,10 +650,17 @@ def ajax_openclose():
         raise MKUserError("state", "Invalid state: %s" % state)
 
     user_config = UserSidebarConfig(config.user, config.sidebar)
+
+    try:
+        snapin = user_config.get_snapin(snapin_id)
+    except KeyError:
+        return
+
     if state == "off":
-        user_config.remove_snapin(snapin_id)
+        user_config.remove_snapin(snapin)
     else:
-        user_config.set_snapin_visibility(snapin_id, SnapinVisibility(state))
+        snapin.visible = SnapinVisibility(state)
+
     user_config.save()
 
 
@@ -687,14 +669,22 @@ def move_snapin():
     if not config.user.may("general.configure_sidebar"):
         return
 
-    snapin_name = html.var("name")
-    before_name = html.var("before")
+    snapin_id = html.var("name")
+    before_id = html.var("before")
 
     user_config = UserSidebarConfig(config.user, config.sidebar)
+
     try:
-        user_config.move_snapin_before(snapin_name, before_name)
-    except MKUserError:
+        snapin = user_config.get_snapin(snapin_id)
+    except KeyError:
         return
+
+    try:
+        before_snapin = user_config.get_snapin(before_id)
+    except KeyError:
+        before_snapin = None
+
+    user_config.move_snapin_before(snapin, before_snapin)
     user_config.save()
 
 

@@ -42,7 +42,26 @@ def test_user_config_add_snapin():
     assert user_config.snapins == [snapin]
 
 
-@pytest.mark.parametrize("move,before,result", [
+def test_user_config_get_snapin():
+    user_config = sidebar.UserSidebarConfig(config.user, config.sidebar)
+    del user_config.snapins[:]
+    snapin = UserSidebarSnapin.from_snapin_type_id("tactical_overview")
+    user_config.add_snapin(snapin)
+
+    assert user_config.get_snapin("tactical_overview") == snapin
+
+
+def test_user_config_get_not_existing_snapin():
+    user_config = sidebar.UserSidebarConfig(config.user, config.sidebar)
+    del user_config.snapins[:]
+
+    with pytest.raises(KeyError) as e:
+        user_config.get_snapin("tactical_overview")
+    msg = "%s" % e
+    assert "does not exist" in msg
+
+
+@pytest.mark.parametrize("move_id,before_id,result", [
     ("tactical_overview",  "views", [
         UserSidebarSnapin.from_snapin_type_id("admin"),
         UserSidebarSnapin.from_snapin_type_id("tactical_overview"),
@@ -66,7 +85,7 @@ def test_user_config_add_snapin():
         UserSidebarSnapin.from_snapin_type_id("admin"),
     ]),
 ])
-def test_user_config_move_snapin_before(mocker, move, before, result):
+def test_user_config_move_snapin_before(mocker, move_id, before_id, result):
     user_config = sidebar.UserSidebarConfig(config.user, config.sidebar)
     del user_config.snapins[:]
     user_config.snapins.extend([
@@ -75,13 +94,22 @@ def test_user_config_move_snapin_before(mocker, move, before, result):
         UserSidebarSnapin.from_snapin_type_id("tactical_overview"),
     ])
 
-    if result is None:
-        with pytest.raises(MKUserError) as e:
-            user_config.move_snapin_before(move, before)
-        assert "Snapin being moved is not configured" in "%s" % e
-    else:
-        user_config.move_snapin_before(move, before)
-        assert user_config.snapins == result
+    try:
+        move = user_config.get_snapin(move_id)
+    except KeyError, e:
+        if result is None:
+            assert "does not exist" in "%s" % e
+            return
+        else:
+            raise
+
+    try:
+        before = user_config.get_snapin(before_id)
+    except KeyError:
+        before = None
+
+    user_config.move_snapin_before(move, before)
+    assert user_config.snapins == result
 
 
 def test_load_default_config(monkeypatch):

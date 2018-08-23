@@ -505,8 +505,7 @@ def ajax_snapin():
             finally:
                 snapin_code.append(html.drain())
 
-    # write all snapins
-    html.write('[%s]' % ','.join([ '"%s"' % s.replace('"', '\\"').replace('\n', '') for s in snapin_code]))
+    html.write(json.dumps(snapin_code))
 
 
 @cmk.gui.pages.register("sidebar_move_snapin")

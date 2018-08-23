@@ -1,9 +1,18 @@
 [MASTER]
-# Setup the python paths needed for our tests
+# Setup the Python paths needed for our tests. This is a bit tricky due to the
+# fact that we want to be able to run pylint with and without the --rcfile
+# option. Pylint offers pylint.config.PYLINTRC to get the path to the
+# automatically found config file, but this doesn't take --rcfile into account.
+# So we have to fall back to a slightly hacky method discussed in the post
+# https://mail.python.org/pipermail/code-quality/2016-June/000781.html,
+# accessing pylint's innards. Not nice, but there is not much we can do about
+# this until pylint offers the API requested in the post above. Furthermore,
+# note that layout/indentation doesn't work too well in the hook below.
 init-hook=
-    import sys, os
-    test_path = os.environ.get("TEST_PATH", os.environ["HOME"] + "/git/check_mk/tests")
-    sys.path.insert(0, test_path)
+    import inspect, os, sys
+    config_file = inspect.stack()[2][0].f_locals["linter"].config_file
+    tests_dir = os.path.join(os.path.dirname(config_file), "tests")
+    sys.path.insert(0, os.environ.get("TEST_PATH", tests_dir))
     import conftest
 load-plugins=testlib.pylint_cmk,testlib.pylint_checker_localization
 # TODO: Why do we need persistence?

@@ -48,6 +48,12 @@ class SidebarSnapin(object):
 
     @classmethod
     @abc.abstractmethod
+    def type_name(cls):
+        raise NotImplementedError()
+
+
+    @classmethod
+    @abc.abstractmethod
     def title(cls):
         raise NotImplementedError()
 
@@ -71,6 +77,11 @@ class SidebarSnapin(object):
     @classmethod
     def refresh_on_restart(cls):
         return False
+
+
+    @classmethod
+    def permission_name(cls):
+        return "sidesnap.%s" % cls.type_name()
 
 
     @classmethod

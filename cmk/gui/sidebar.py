@@ -356,13 +356,17 @@ class UserSidebarConfig(object):
         user_config["snapins"] = self._transform_legacy_tuples(user_config["snapins"])
         user_config["snapins"] = self._transform_legacy_off_state(user_config["snapins"])
 
-        # Remove entries the user is not allowed for and silently skip
-        # configured but not existing snapins
+        # Remove not existing (e.g. legacy) snapins
         user_config["snapins"] = [ e for e in user_config["snapins"]
-                                   if e["snapin_type_id"] in snapin_registry
-                                      and self._user.may("sidesnap." + e["snapin_type_id"])]
+                                   if e["snapin_type_id"] in snapin_registry ]
 
-        return self._from_config(user_config)
+        user_config = self._from_config(user_config)
+
+        # Remove entries the user is not allowed for
+        user_config["snapins"] = [ e for e in user_config["snapins"]
+                                   if config.user.may(e.snapin_type.permission_name()) ]
+
+        return user_config
 
 
     def _transform_legacy_list_config(self, user_config):
@@ -478,8 +482,7 @@ def page_side():
     html.open_div(class_="scroll" if config.sidebar_show_scrollbar else None, id_="side_content")
     for snapin in user_config.snapins:
         name = snapin.snapin_type.type_name()
-        if not name in snapin_registry or not config.user.may("sidesnap." + name):
-            continue
+
         # Performs the initial rendering and might return an optional refresh url,
         # when the snapin contents are refreshed from an external source
         refresh_url = render_snapin(name, snapin.visible)
@@ -602,9 +605,9 @@ def ajax_snapin():
 
     snapin_code = []
     for snapname in snapnames:
-        if not config.user.may("sidesnap." + snapname):
-            continue
         snapin_class = snapin_registry.get(snapname)
+        if not config.user.may(snapin_class.permission_name()):
+            continue
         snapin = snapin_class()
 
         # When restart snapins are about to be refreshed, only render
@@ -710,7 +713,7 @@ def page_add_snapin():
         snapin = snapin_class()
         if name in used_snapins:
             continue
-        if not config.user.may("sidesnap." + name):
+        if not config.user.may(snapin_class.permission_name()):
             continue # not allowed for this user
 
         description = snapin.description()

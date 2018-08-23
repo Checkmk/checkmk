@@ -185,7 +185,7 @@ def format_plugin_output(output, row=None, shall_escape=True):
         e = output.index("]", a)
         hosts = output[a+12:e].replace(" ","").split(",")
         h = get_host_list_links(row["site"], hosts)
-        output = output[:a] + "running on " + h + output[e+1:]
+        output = output[:a] + "running on " + ", ".join(h) + output[e+1:]
 
     if shall_escape:
         http_url = r"(http[s]?://[A-Za-z0-9\-._~:/?#\[\]@!$&'()*+,;=%]+)"
@@ -214,7 +214,8 @@ def get_host_list_links(site, hosts):
             args.append(("display_options", html.var("display_options")))
 
         url = html.makeuri_contextless(args, filename="view.py")
-        entries.append(html.render_a(host, href=url))
+        link = unicode(html.render_a(host, href=url))
+        entries.append(link)
     return entries
 
 

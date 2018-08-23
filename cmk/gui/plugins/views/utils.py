@@ -341,7 +341,7 @@ def paint_stalified(row, text):
 
 
 def paint_host_list(site, hosts):
-    return "", HTML(", ").join(cmk.gui.utils.get_host_list_links(site, hosts))
+    return "", ", ".join(cmk.gui.utils.get_host_list_links(site, hosts))
 
 
 def format_plugin_output(output, row):

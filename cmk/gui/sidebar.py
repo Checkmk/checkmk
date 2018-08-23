@@ -613,31 +613,10 @@ def render_snapin(name, visibility):
     return refresh_url
 
 
-@cmk.gui.pages.register("sidebar_fold")
-def ajax_fold():
-    user_config = UserSidebarConfig(config.user, config.sidebar)
-    user_config.folded = html.var("fold") == "yes"
-    user_config.save()
-
-
-@cmk.gui.pages.register("sidebar_openclose")
-def ajax_openclose():
-    snapin_id = html.var("name")
-    state = html.var("state")
-    if state not in [ SnapinVisibility.OPEN.value, SnapinVisibility.CLOSED.value, "off" ]:
-        raise MKUserError("state", "Invalid state: %s" % state)
-
-    user_config = UserSidebarConfig(config.user, config.sidebar)
-    if state == "off":
-        user_config.remove_snapin(snapin_id)
-    else:
-        user_config.set_snapin_visibility(snapin_id, SnapinVisibility(state))
-    user_config.save()
-
-
 @cmk.gui.pages.register("sidebar_snapin")
 def ajax_snapin():
-    """Update online state of the user (if enabled)"""
+    """Renders and returns the contents of the requested sidebar snapin(s) in JSON format"""
+    # Update online state of the user (if enabled)
     userdb.update_user_access_time(config.user.id)
 
     snapname = html.var("name")
@@ -679,6 +658,28 @@ def ajax_snapin():
                 snapin_code.append(html.drain())
 
     html.write(json.dumps(snapin_code))
+
+
+@cmk.gui.pages.register("sidebar_fold")
+def ajax_fold():
+    user_config = UserSidebarConfig(config.user, config.sidebar)
+    user_config.folded = html.var("fold") == "yes"
+    user_config.save()
+
+
+@cmk.gui.pages.register("sidebar_openclose")
+def ajax_openclose():
+    snapin_id = html.var("name")
+    state = html.var("state")
+    if state not in [ SnapinVisibility.OPEN.value, SnapinVisibility.CLOSED.value, "off" ]:
+        raise MKUserError("state", "Invalid state: %s" % state)
+
+    user_config = UserSidebarConfig(config.user, config.sidebar)
+    if state == "off":
+        user_config.remove_snapin(snapin_id)
+    else:
+        user_config.set_snapin_visibility(snapin_id, SnapinVisibility(state))
+    user_config.save()
 
 
 @cmk.gui.pages.register("sidebar_move_snapin")

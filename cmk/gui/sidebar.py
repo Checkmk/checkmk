@@ -602,23 +602,3 @@ def ajax_set_snapin_site():
     sites = config.user.load_file("sidebar_sites", {}, lock=True)
     sites[ident] = site
     config.user.save_file("sidebar_sites", sites, unlock=True)
-
-
-# TODO: This is snapin specific. Move this handler to the snapin file
-@cmk.gui.pages.register("switch_site")
-def ajax_switch_site():
-    # _site_switch=sitename1:on,sitename2:off,...
-    if not config.user.may("sidesnap.sitestatus"):
-        return
-
-    switch_var = html.var("_site_switch")
-    if switch_var:
-        for info in switch_var.split(","):
-            sitename, onoff = info.split(":")
-            if sitename not in config.sitenames():
-                continue
-
-            d = config.user.siteconf.get(sitename, {})
-            d["disabled"] = onoff != "on"
-            config.user.siteconf[sitename] = d
-        config.user.save_site_config()

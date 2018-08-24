@@ -45,9 +45,10 @@ CACHE_DIR="###ROOT###/tmp/rrdcached"
 JOURNAL_DIR="###ROOT###/var/rrdcached"
 SOCKET="###ROOT###/tmp/run/rrdcached.sock"
 PIDFILE="###ROOT###/tmp/rrdcached.pid"
+LOGFILE="###ROOT###/var/log/rrdcached.log"
 USER="###SITE###"
 GROUP="###SITE###"
-OPTS="-t $WRITE_THREADS -w $TIMEOUT -z $RANDOM_DELAY -f $FLUSH_TIMEOUT -s $GROUP -m 660 -l unix:$SOCKET -p $PIDFILE -j $JOURNAL_DIR"
+OPTS="-t $WRITE_THREADS -w $TIMEOUT -z $RANDOM_DELAY -f $FLUSH_TIMEOUT -s $GROUP -m 660 -l unix:$SOCKET -p $PIDFILE -j $JOURNAL_DIR -o $LOGFILE"
 DAEMON="###ROOT###/bin/rrdcached"
 
 case "$1" in

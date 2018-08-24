@@ -4792,6 +4792,32 @@ register_check_parameters(
     match_type = "dict",
 )
 
+register_check_parameters(
+    subgroup_applications,
+    "hacmp_resources",
+    _("AIX HACMP Resource Groups"),
+    Transform(
+        Dictionary(
+            elements=[
+                (
+                    "expect_online_on",
+                    DropdownChoice(
+                        title=_(u"Expect resource to be online on"),
+                        choices=[
+                            ("first", _(u"the first node")),
+                            ("any", _(u"any node")),
+                        ],
+                    )
+                ),
+            ],
+            optional_keys=[],
+        ),
+        forth=lambda x: {"expect_online_on":"first"},
+    ),
+    TextAscii(title=_(u"Resource Group")),
+    match_type="first",
+)
+
 #.
 #   .--Environment---------------------------------------------------------.
 #   |     _____            _                                      _        |

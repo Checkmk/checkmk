@@ -188,7 +188,8 @@ def get_snmp_table(hostname, ip, check_type, oid_info, use_snmpwalk_cache):
                 else: # OID_END_OCTET_STRING:
                     index_rows.append((o, oid_to_bin(extract_end_oid(fetchoid, o))[1:]))
 
-            columns[index_column] = fetchoid, index_rows, value_encoding
+            index_encoding = columns[index_column][-1]
+            columns[index_column] = fetchoid, index_rows, index_encoding
 
 
         # prepend suboid to first column

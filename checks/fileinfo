@@ -344,6 +344,7 @@ def check_fileinfo_groups(item, params, info):
         yield 1, "Files not readable: %s" % ", ".join(files_not_readable)
 
     yield fileinfo_check_function(check_definition, params, outof_range_txt)
+
     if include_patterns:
         yield 0, "\nInclude patterns: %s" % ", ".join(include_patterns)
     if exclude_patterns:
@@ -351,33 +352,43 @@ def check_fileinfo_groups(item, params, info):
 
 
 def fileinfo_check_function(check_definition, params, outof_range_txt):
-    state = 0
-    infos = []
+    infotexts = []
+    states = [0]
     perfdata = []
-    for what_title, what, val, verbfunc in check_definition:
-        infos.append("%s: %s" % (what_title, verbfunc(val)))
-        if type(val) in [long, int]:  # because strings go into infos but not into perfdata
-            warn, crit = None, None
-            for how, comp, cfunc in [
-                ("min", "<", lambda a, b: a < b),
-                ("max", ">", lambda a, b: a > b),
-            ]:
-                p = params.get(how + what)
-                if p:
-                    warn, crit = p
-                    if cfunc(val, crit):
-                        state = 2
-                        infos[-1] += " (%s %s)(!!)" % (comp, verbfunc(crit))
-                    elif cfunc(val, warn):
-                        state = max(state, 1)
-                        infos[-1] += " (%s %s)(!)" % (comp, verbfunc(warn))
-            perfdata.append((what, val, warn, crit))
+    for title, key, value, verbfunc in check_definition:
+        infotext = "%s: %s" % (title, verbfunc(value))
+        warn, crit = None, None
+        for state, warn, crit, comp_text in _fileinfo_check_file(value, params, key):
+            if not state:
+                continue
+            infotext += " (warn/crit %s %s/%s)" % (comp_text,
+                           verbfunc(warn), verbfunc(crit))
+            states.append(state)
+        infotexts.append(infotext)
+        perfdata.append((key, value, warn, crit))
 
-    infotext = ", ".join(infos)
     if outof_range_txt:
+        states = [0]
+        infotexts = [outof_range_txt] + infotexts
+    return max(states), ", ".join(infotexts), perfdata
+
+
+def _fileinfo_check_file(value, params, key):
+    if type(value) not in [long, int]:  # because strings go into infos but not into perfdata
+        return []
+    results = []
+    for how, comp_text, cfunc in [
+        ("min", "below", lambda a, b: a < b),
+        ("max", "at",    lambda a, b: a > b),
+    ]:
         state = 0
-        infotext = outof_range_txt + ', ' + infotext.replace('(!)', '').replace('(!!)', '')
-    return (state, infotext, perfdata)
+        warn, crit = params.get(how + key, (None, None))
+        if crit is not None and cfunc(value, crit):
+            state = 2
+        elif warn is not None and cfunc(value, warn):
+            state = 1
+        results.append((state, warn, crit, comp_text))
+    return results
 
 
 def inventory_fileinfo(info):

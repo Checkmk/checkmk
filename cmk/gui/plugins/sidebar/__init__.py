@@ -38,6 +38,7 @@ from cmk.plugin_loader import load_plugins
 
 from cmk.gui.plugins.sidebar.utils import (
     SidebarSnapin,
+    CustomizableSidebarSnapin,
     snapin_registry,
     sidebar_snapins,
     snapin_width,

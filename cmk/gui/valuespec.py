@@ -1767,6 +1767,7 @@ class CascadingDropdown(ValueSpec):
         else:
             self._choices = kwargs["choices"] # function, store for later
 
+        self._label = kwargs.get("label")
         self._separator = kwargs.get("separator", ", ")
         self._sorted = kwargs.get("sorted", True)
         self._orientation = kwargs.get("orientation", "vertical") # or horizontal
@@ -1851,7 +1852,7 @@ class CascadingDropdown(ValueSpec):
 
         vp = varprefix + "_sel"
         onchange="valuespec_cascading_change(this, '%s', %d);" % (varprefix, len(choices))
-        html.dropdown(vp, options, deflt=def_val, onchange=onchange, sorted=self._sorted)
+        html.dropdown(vp, options, deflt=def_val, onchange=onchange, sorted=self._sorted, label=self._label)
 
         # make sure, that the visibility is done correctly, in both
         # cases:

@@ -87,16 +87,16 @@ def do_event_action(history, settings, config, logger, event_columns, action, ev
         return
 
     try:
-        action_type, settings = action["action"]
+        action_type, action_settings = action["action"]
         if action_type == 'email':
-            to = _escape_null_bytes(_substitute_event_tags(event_columns, settings["to"], event))
-            subject = _escape_null_bytes(_substitute_event_tags(event_columns, settings["subject"], event))
-            body = _escape_null_bytes(_substitute_event_tags(event_columns, settings["body"], event))
+            to = _escape_null_bytes(_substitute_event_tags(event_columns, action_settings["to"], event))
+            subject = _escape_null_bytes(_substitute_event_tags(event_columns, action_settings["subject"], event))
+            body = _escape_null_bytes(_substitute_event_tags(event_columns, action_settings["body"], event))
 
             _send_email(config, to, subject, body, logger)
             history.add(event, "EMAIL", user, "%s|%s" % (to, subject))
         elif action_type == 'script':
-            _execute_script(event_columns, _escape_null_bytes(_substitute_event_tags(event_columns, settings["script"], _get_quoted_event(event, logger))), event, logger)
+            _execute_script(event_columns, _escape_null_bytes(_substitute_event_tags(event_columns, action_settings["script"], _get_quoted_event(event, logger))), event, logger)
             history.add(event, "SCRIPT", user, action['id'])
         else:
             logger.error("Cannot execute action %s: invalid action type %s" % (action["id"], action_type))

@@ -99,6 +99,8 @@ package_names=(
     locales
     make
     mingw-w64
+    mono-devel
+    mono-xbuild
     openssh-client
     openssl
     patch
@@ -109,6 +111,7 @@ package_names=(
     python-pytest
     python2.7
     ssh-askpass
+    unzip
     uuid-dev
 # TODO: Need to install wine separately in order to use --force-overwrite, see
 # https://bugs.launchpad.net/ubuntu/+source/sane-backends/+bug/1725928/

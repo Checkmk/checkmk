@@ -50,7 +50,7 @@ unittest: WindowsAgentTest$(EXEEXT)
 	TERM=linux DISPLAY="$$DISPLAY xterm" wine WindowsAgentTest$(EXEEXT)
 #	DISPLAY="$$DISPLAY xterm" wine WindowsAgentTest$(EXEEXT) 2>/dev/null
 
-integrationtest: install-strip
+integrationtest: install-strip openhardwaremonitor
 	cd $(bindir)/it ; \
         rm -f remote.pyc ; \
         rm -rf __pycache__ ; \
@@ -60,6 +60,10 @@ integrationtest: install-strip
           $(pytest) $(pytest_options) ; \
         fi ; \
         cd -
+
+# openhardwaremonitor cannot be built in parallel, ensure non-parallel with -j1:
+openhardwaremonitor:
+	$(MAKE) -j1 -C $(bindir)/../../omd/packages/openhardwaremonitor dist
 
 libcheck_mk_agent_a_SOURCES = \
         Configuration.cc \

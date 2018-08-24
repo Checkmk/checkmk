@@ -7,7 +7,7 @@ Version: 1.6.0i1
 Date: 1534827881
 Class: feature
 
-A new check is introduced that checks linux services using 'systemctl --failed'.
+A new check is introduced that checks linux services using 'systemctl --all'.
 The check reports the 'active' attribute of the discovered services and their
 description. The state is configurable.
 

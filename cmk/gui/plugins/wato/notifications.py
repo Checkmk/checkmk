@@ -26,6 +26,7 @@
 
 import socket
 
+import cmk
 import cmk.gui.mkeventd as mkeventd
 import cmk.gui.config as config
 from cmk.gui.valuespec import *
@@ -182,10 +183,10 @@ def html_email_parameter_elements():
         ),
         ]
 
-    try:
-        return elements + cee_html_mail_smtp_sync_option
-    except NameError:
-        return elements
+    if not cmk.is_raw_edition():
+        elements += cmk.gui.cee.plugins.wato.syncsmtp.cee_html_mail_smtp_sync_option
+
+    return elements
 
 
 register_notification_parameters(

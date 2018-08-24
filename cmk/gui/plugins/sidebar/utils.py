@@ -44,6 +44,7 @@ search_plugins  = []
 
 # TODO: Transform methods to class methods
 class SidebarSnapin(object):
+    """Abstract base class for all sidebar snapins"""
     __metaclass__ = abc.ABCMeta
 
     @classmethod
@@ -80,6 +81,18 @@ class SidebarSnapin(object):
 
 
     @classmethod
+    def is_customizable(cls):
+        """Whether or not a snapin type can be used for custom snapins"""
+        return False
+
+
+    @classmethod
+    def is_custom_snapin(cls):
+        """Whether or not a snapin type is a customized snapin"""
+        return False
+
+
+    @classmethod
     def permission_name(cls):
         return "sidesnap.%s" % cls.type_name()
 
@@ -95,6 +108,34 @@ class SidebarSnapin(object):
 
     def page_handlers(self):
         return {}
+
+
+
+class CustomizableSidebarSnapin(SidebarSnapin):
+    """Parent for all user configurable sidebar snapins
+
+    Subclass this class in case you want to implement a sidebar snapin type that can
+    be customized by the user"""
+    __metaclass__ = abc.ABCMeta
+
+    @classmethod
+    def is_customizable(cls):
+        """Whether or not a snapin type can be used for custom snapins"""
+        return True
+
+    @classmethod
+    @abc.abstractmethod
+    def vs_parameters(cls):
+        """The Dictionary() elements to be used for configuring the parameters"""
+        raise NotImplementedError()
+
+
+    @classmethod
+    @abc.abstractmethod
+    def parameters(cls):
+        """Default set of parameters to be used for the uncustomized snapin"""
+        raise NotImplementedError()
+
 
 
 class SnapinRegistry(cmk.gui.plugin_registry.ClassRegistry):
@@ -114,6 +155,63 @@ class SnapinRegistry(cmk.gui.plugin_registry.ClassRegistry):
 
         for path, page_func in plugin_class().page_handlers().items():
             cmk.gui.pages.register_page_handler(path, page_func)
+
+
+    def get_customizable_snapin_types(self):
+        return [ (snapin_type_id, snapin_type) for snapin_type_id, snapin_type in self.items()
+                 if snapin_type.is_customizable() and not snapin_type.is_custom_snapin() ]
+
+
+    def register_custom_snapins(self, custom_snapins):
+        """Extends the snapin registry with the ones configured in the site (for the current user)"""
+        self._clear_custom_snapins()
+        self._add_custom_snapins(custom_snapins)
+
+
+    def _clear_custom_snapins(self):
+        for snapin_type_id, snapin_type in self.items():
+            if snapin_type.is_custom_snapin():
+                del self[snapin_type_id]
+
+
+    def _add_custom_snapins(self, custom_snapins):
+        for custom_snapin in custom_snapins:
+            base_snapin_type_id = custom_snapin._["custom_snapin"][0]
+
+            try:
+                base_snapin_type = self[base_snapin_type_id]
+            except KeyError:
+                continue
+
+            if not base_snapin_type.is_customizable():
+                continue
+
+            @self.register
+            class CustomSnapin(base_snapin_type):
+                _custom_snapin = custom_snapin
+
+                @classmethod
+                def is_custom_snapin(cls):
+                    return True
+
+                @classmethod
+                def type_name(cls):
+                    return cls._custom_snapin.name()
+
+                @classmethod
+                def title(cls):
+                    return cls._custom_snapin.title()
+
+                @classmethod
+                def description(cls):
+                    return cls._custom_snapin.description()
+
+                @classmethod
+                def parameters(cls):
+                    return cls._custom_snapin._["custom_snapin"][1]
+
+            _it_is_really_used = CustomSnapin # help pylint (unused-variable)
+
 
 
 snapin_registry = SnapinRegistry()

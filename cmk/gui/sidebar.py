@@ -56,6 +56,7 @@ import cmk.gui.pages
 import cmk.gui.plugin_registry
 import cmk.gui.plugins.sidebar
 import cmk.gui.plugins.sidebar.quicksearch
+from cmk.gui.valuespec import CascadingDropdown, Dictionary
 from cmk.gui.exceptions import MKGeneralException, MKUserError, MKException
 from cmk.gui.log import logger
 
@@ -95,6 +96,8 @@ quicksearch_match_plugins = []
 loaded_with_language = False
 
 def load_plugins(force):
+    _register_custom_snapins()
+
     global loaded_with_language
     if loaded_with_language == cmk.gui.i18n.get_current_language() and not force:
         return
@@ -691,45 +694,142 @@ def move_snapin():
     user_config.save()
 
 
+#.
+#   .--Custom-Snapins------------------------------------------------------.
+#   |       ____          _     ____                    _                  |
+#   |      / ___|   _ ___| |_  / ___| _ __   __ _ _ __ (_)_ __  ___        |
+#   |     | |  | | | / __| __| \___ \| '_ \ / _` | '_ \| | '_ \/ __|       |
+#   |     | |__| |_| \__ \ |_ _ ___) | | | | (_| | |_) | | | | \__ \       |
+#   |      \____\__,_|___/\__(_)____/|_| |_|\__,_| .__/|_|_| |_|___/       |
+#   |                                            |_|                       |
+#   '----------------------------------------------------------------------'
+
+class CustomSnapins(pagetypes.Overridable):
+    @classmethod
+    def type_name(cls):
+        return "custom_snapin"
+
+
+    @classmethod
+    def phrase(cls, phrase):
+        return {
+            "title"          : _("Custom snapin"),
+            "title_plural"   : _("Custom snapins"),
+            #"add_to"         : _("Add to custom snapin list"),
+            "clone"          : _("Clone snapin"),
+            "create"         : _("Create snapin"),
+            "edit"           : _("Edit snapin"),
+            "new"            : _("New snapin"),
+        }.get(phrase, pagetypes.Base.phrase(phrase))
+
+
+    @classmethod
+    def parameters(cls, mode):
+        parameters = super(CustomSnapins, cls).parameters(mode)
+
+        parameters += [(cls.phrase("title"), [
+            # sort-index, key, valuespec
+            (2.5, "custom_snapin", CascadingDropdown(
+                title = _("Snapin type"),
+                choices = cls._customizable_snapin_type_choices,
+            )),
+        ])]
+
+        return parameters
+
+
+    @classmethod
+    def _customizable_snapin_type_choices(cls):
+        choices = []
+        for snapin_type_id, snapin_type in sorted(snapin_registry.get_customizable_snapin_types()):
+            choices.append((snapin_type_id, snapin_type.title(), Dictionary(
+                title = _("Parameters"),
+                elements = snapin_type.vs_parameters(),
+                optional_keys = [],
+            )))
+        return choices
+
+
+pagetypes.declare(CustomSnapins)
+
+
+def _register_custom_snapins():
+    """First remove all previously registered custom snapins, then register
+    the currently configured ones"""
+    CustomSnapins.load()
+    snapin_registry.register_custom_snapins(CustomSnapins.instances_sorted())
+
+
+#.
+#   .--Add Snapin----------------------------------------------------------.
+#   |           _       _     _   ____                    _                |
+#   |          / \   __| | __| | / ___| _ __   __ _ _ __ (_)_ __           |
+#   |         / _ \ / _` |/ _` | \___ \| '_ \ / _` | '_ \| | '_ \          |
+#   |        / ___ \ (_| | (_| |  ___) | | | | (_| | |_) | | | | |         |
+#   |       /_/   \_\__,_|\__,_| |____/|_| |_|\__,_| .__/|_|_| |_|         |
+#   |                                              |_|                     |
+#   '----------------------------------------------------------------------'
+
 @cmk.gui.pages.register("sidebar_add_snapin")
 def page_add_snapin():
-    if not config.user.may("general.configure_sidebar"):
-        raise MKGeneralException(_("You are not allowed to change the sidebar."))
+    PageAddSnapin(config.user, config.sidebar).show()
 
-    user_config = UserSidebarConfig(config.user, config.sidebar)
 
-    html.header(_("Available snapins"), stylesheets=["pages", "sidebar", "status"])
-    used_snapins = [ snapin.snapin_type.type_name() for snapin in user_config.snapins ]
+class PageAddSnapin(object):
+    def __init__(self, user, default_config):
+        super(PageAddSnapin, self).__init__()
+        self._user_config = UserSidebarConfig(user, default_config)
 
-    addname = html.var("name")
-    if addname in snapin_registry and addname not in used_snapins and html.check_transaction():
-        user_config.add_snapin(UserSidebarSnapin.from_snapin_type_id(addname))
-        user_config.save()
-        used_snapins = [ snapin.snapin_type.type_name() for snapin in user_config.snapins ]
-        html.reload_sidebar()
 
-    html.open_div(class_=["add_snapin"])
-    for name, snapin_class in sorted(snapin_registry.items()):
-        if name in used_snapins:
-            continue
-        if not config.user.may(snapin_class.permission_name()):
-            continue # not allowed for this user
+    def show(self):
+        if not config.user.may("general.configure_sidebar"):
+            raise MKGeneralException(_("You are not allowed to change the sidebar."))
 
-        transid = html.transaction_manager.get()
-        url = 'sidebar_add_snapin.py?name=%s&_transid=%s&pos=top' % (name, transid)
-        html.open_div(class_="snapinadder",
-                      onmouseover="this.style.cursor=\'pointer\';",
-                      onmousedown="window.location.href=\'%s\'; return false;" % url)
+        html.header(_("Available snapins"), stylesheets=["pages", "sidebar", "status"])
 
-        html.open_div(class_=["snapin_preview"])
-        html.div('', class_=["clickshield"])
-        render_snapin(UserSidebarSnapin.from_snapin_type_id(name))
+        html.begin_context_buttons()
+        CustomSnapins.context_button_list()
+        html.end_context_buttons()
+
+        addname = html.var("name")
+        if addname in snapin_registry and addname not in self._used_snapins() and html.check_transaction():
+            self._user_config.add_snapin(UserSidebarSnapin.from_snapin_type_id(addname))
+            self._user_config.save()
+            html.reload_sidebar()
+
+        self._show_builtin_snapins()
+
+
+    def _show_builtin_snapins(self):
+        used_snapins = self._used_snapins()
+
+        html.open_div(class_=["add_snapin"])
+        for name, snapin_class in sorted(snapin_registry.items()):
+            if name in used_snapins:
+                continue
+            if not config.user.may(snapin_class.permission_name()):
+                continue # not allowed for this user
+
+            transid = html.transaction_manager.get()
+            url = 'sidebar_add_snapin.py?name=%s&_transid=%s&pos=top' % (name, transid)
+            html.open_div(class_="snapinadder",
+                          onmouseover="this.style.cursor=\'pointer\';",
+                          onmousedown="window.location.href=\'%s\'; return false;" % url)
+
+            html.open_div(class_=["snapin_preview"])
+            html.div('', class_=["clickshield"])
+            render_snapin(UserSidebarSnapin.from_snapin_type_id(name))
+            html.close_div()
+            html.div(snapin_class.description(), class_=["description"])
+            html.close_div()
+
         html.close_div()
-        html.div(snapin_class.description(), class_=["description"])
-        html.close_div()
+        html.footer()
 
-    html.close_div()
-    html.footer()
+
+    def _used_snapins(self):
+        return [ snapin.snapin_type.type_name() for snapin in self._user_config.snapins ]
+
 
 
 # TODO: This is snapin specific. Move this handler to the snapin file

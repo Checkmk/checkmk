@@ -35,6 +35,10 @@
 # {u'pdb213rg': [(u'pasv0450', u'online'), (u'pasv0449', u'offline')],
 #  u'pmon01rg': [(u'pasv0449', u'online'), (u'pasv0450', u'offline')]}
 
+factory_settings["aix_hacmp_resources"] = {
+    "expect_online_on"  : "first",
+}
+
 
 def parse_aix_hacmp_resources(info):
     parsed = {}
@@ -54,23 +58,37 @@ def inventory_aix_hacmp_resources(parsed):
 
 
 def check_aix_hacmp_resources(item, params, parsed):
-    if item in parsed:
-        resource_stats = []
-        infotext = ""
-        for node_name, resource_status in parsed[item]:
-            resource_stats.append(resource_status)
-            infotext += "%s on node %s, " % (resource_status, node_name)
+    data = parsed.get(item)
+    if data is None:
+        return
 
-        state = 0
-        if resource_stats[0] != "online":
+    if params is None:
+        expected_behaviour = "first"
+    else:
+        expected_behaviour = params.get("expect_online_on", "first")
+
+    resource_states = []
+    infotext = ""
+    for node_name, resource_state in parsed[item]:
+        resource_states.append(resource_state)
+        infotext += "%s on node %s, " % (resource_state, node_name)
+
+    state = 0
+    if expected_behaviour == "first":
+        if resource_states[0] != "online":
+            state = 2
+    elif expected_behaviour == "any":
+        if not any((resource_state == u"online" for resource_state in resource_states)):
             state = 2
 
-        return state, infotext[:-2]
+    return state, infotext[:-2]
 
 
 check_info['aix_hacmp_resources'] = {
+    'default_levels_variable'   : "aix_hacmp_resources",
     'parse_function'            : parse_aix_hacmp_resources,
     'inventory_function'        : inventory_aix_hacmp_resources,
     'check_function'            : check_aix_hacmp_resources,
     'service_description'       : 'HACMP RG %s',
+    'group'                     : 'hacmp_resources',
 }

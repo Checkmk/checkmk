@@ -139,7 +139,7 @@ CLEANFILES = \
         $(patsubst %$(EXEEXT),%-64$(EXEEXT),$(addprefix $(bindir)/,$(bin_PROGRAMS))) \
         $(patsubst %$(EXEEXT),%.msi,$(addprefix $(bindir)/,$(bin_PROGRAMS)))
 
-.PHONY: unittest integrationtest coverage-reset unittest-coverage-html
+.PHONY: unittest integrationtest coverage-reset openhardwaremonitor unittest-coverage-html
 
 # Prevent race condition between parallel 32 and 64 bit builds by protecting
 # access to build_version through a lock file.
@@ -170,7 +170,7 @@ check_mk_agent.res: check_mk_agent.rc $(VPATH)/check_mk_agent.ico
 unittest: WindowsAgentTest$(EXEEXT)
 	TERM=linux DISPLAY="$$DISPLAY xterm" GTEST_OUTPUT=xml:result.xml wine $<
 
-integrationtest: install-strip
+integrationtest: install-strip openhardwaremonitor
 	cd $(bindir)/it ; \
         rm -f remote.pyc ; \
         rm -rf __pycache__ ; \
@@ -180,6 +180,10 @@ integrationtest: install-strip
           $(PYTEST) $(PYTEST_OPTIONS) ; \
         fi ; \
         cd -
+
+# openhardwaremonitor cannot be built in parallel, ensure non-parallel with -j1:
+openhardwaremonitor:
+	$(MAKE) -j1 -C $(bindir)/../../omd/packages/openhardwaremonitor dist
 
 # Force regeneration of coverage data during test run.
 coverage-reset:

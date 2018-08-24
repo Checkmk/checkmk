@@ -856,7 +856,9 @@ def dashlet_snapin(nr, dashlet):
     html.open_div(id_="side_content")
     html.open_div(id_="snapin_container_%s" % dashlet['snapin'], class_="snapin")
     html.open_div(id_="snapin_%s" % dashlet['snapin'], class_="content")
-    sidebar.render_snapin_styles(snapin_instance)
+    styles = snapin_instance.styles()
+    if styles:
+        html.style(styles)
     snapin_instance.show()
     html.close_div()
     html.close_div()

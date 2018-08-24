@@ -1,0 +1,10 @@
+Title: fileinfo: Abort calculating the size and age of a file if it's not readable
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1535094461
+Class: fix
+
+

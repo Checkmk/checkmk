@@ -35,6 +35,10 @@
 # M:\crash.cc|1672|12964010975
 # M:\crash.exe|20024|12968154426
 
+# <<<fileinfo:sep(124)>>>
+# 12968175080
+# FILENAME|not readable|12968154426
+
 # Parameters
 # "minsize" : ( 5000,  4000 ),  in bytes
 # "maxsize" : ( 8000,  9000 ),  in bytes
@@ -289,6 +293,7 @@ def check_fileinfo_groups(item, params, info):
                     continue
                 elif str(line[1]) == "not readable":
                     files_not_readable.add(str(line[1]))
+                    continue
 
                 size = int(line[1])
                 size_all += size

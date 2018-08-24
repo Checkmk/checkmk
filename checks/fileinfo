@@ -247,6 +247,7 @@ def check_fileinfo_groups(item, params, info):
 
     # Start counting values on all files
     for line in info[1:]:
+        filename = line[0]
         # Old format does not support '%s' in group name
         group_patterns = set(params.get('precompiled_patterns', []))
         for entry in params.get('group_patterns', []):
@@ -255,7 +256,7 @@ def check_fileinfo_groups(item, params, info):
         for pattern in group_patterns:
             # endswith("No such file...") is needed to
             # support the solaris perl based version of fileinfo
-            if line[0].endswith("No such file or directory"):
+            if filename.endswith("No such file or directory"):
                 continue
 
             if type(pattern) == str:  # support old format
@@ -279,14 +280,14 @@ def check_fileinfo_groups(item, params, info):
                 inclusion = inclusion_tmp
 
             if inclusion_is_regex:
-                incl_match = regex(inclusion).match(line[0])
+                incl_match = regex(inclusion).match(filename)
             else:
-                incl_match = fnmatch.fnmatch(line[0], inclusion)
+                incl_match = fnmatch.fnmatch(filename, inclusion)
 
             if exclusion_is_regex:
-                excl_match = regex(exclusion).match(line[0])
+                excl_match = regex(exclusion).match(filename)
             else:
-                excl_match = fnmatch.fnmatch(line[0], exclusion)
+                excl_match = fnmatch.fnmatch(filename, exclusion)
 
             if incl_match and not excl_match:
                 if str(line[1]) in ['missing', '']:

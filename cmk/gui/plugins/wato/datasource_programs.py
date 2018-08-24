@@ -265,62 +265,80 @@ register_rule(group,
     match = 'first')
 
 
-register_rule(group,
-    "special_agents:ipmi_sensors",
-    Dictionary(
-        elements = [
-            ("username", TextAscii(
-                  title = _("Username"),
-                  allow_empty = False,
-            )),
-            ("password", Password(
-                title = _("Password"),
-                allow_empty = False,
-            )),
-            ("privilege_lvl", DropdownChoice(
-                title = _("Privilege Level"),
-                choices = [ (s, s) for s in ['user', 'operator', 'admin'] ],
-                allow_empty = False,
-            )),
-            ("ipmi_driver", TextAscii(
-                title = _("IPMI driver")
-            )),
-            ("driver_type", TextAscii(
-                title = _("IPMI driver type")
-            )),
-            ("BMC_key", TextAscii(
-                title = _("BMC key")
-            )),
+vs_ipmi_common_elements = [
+    ("username",
+      TextAscii(
+          title = _("Username"),
+          allow_empty = False,
+      )
+    ),
+    ("password",
+      Password(
+          title = _("Password"),
+          allow_empty = False,
+      )
+    ),
+    ("privilege_lvl",
+      TextAscii(
+          title = _("Privilege Level"),
+          help = _("Possible are 'user', 'operator', 'admin'"),
+          allow_empty = False,
+      )
+    )]
+
+
+vs_freeipmi = Dictionary(
+        elements = vs_ipmi_common_elements + [
+            ("ipmi_driver", TextAscii(title = _("IPMI driver"))),
+            ("driver_type", TextAscii(title = _("IPMI driver type"))),
+            ("BMC_key", TextAscii(title = _("BMC key"))),
             ("quiet_cache", Checkbox(
-                title = _("Quiet cache"),
-                label = _("Enable")
-            )),
+               title = _("Quiet cache"),
+               label = _("Enable"))),
             ("sdr_cache_recreate", Checkbox(
-                title = _("SDR cache recreate"),
-                label = _("Enable")
-            )),
+               title = _("SDR cache recreate"),
+               label = _("Enable"))),
             ("interpret_oem_data", Checkbox(
-                title = _("OEM data interpretation"),
-                label = _("Enable")
-            )),
+               title = _("OEM data interpretation"),
+               label = _("Enable"))),
             ("output_sensor_state", Checkbox(
-                title = _("Sensor state"),
-                label = _("Enable")
-            )),
+               title = _("Sensor state"),
+               label = _("Enable"))),
             ("output_sensor_thresholds", Checkbox(
-                title = _("Sensor threshold"),
-                label = _("Enable")
-            )),
+               title = _("Sensor threshold"),
+               label = _("Enable"))),
             ("ignore_not_available_sensors", Checkbox(
                 title = _("Suppress not available sensors"),
-                label = _("Enable")
-            )),
+                label = _("Enable"))),
+        ],
+        optional_keys = ["ipmi_driver", "driver_type", "quiet_cache", "sdr_cache_recreate",
+                         "interpret_oem_data", "output_sensor_state", "output_sensor_thresholds",
+                         "ignore_not_available_sensors", "BMC_key"])
+
+vs_ipmitool = Dictionary(
+        elements = vs_ipmi_common_elements,
+        optional_keys = [])
+
+
+def transform_ipmi_sensors(params):
+    if type(params) == dict:
+        return ("freeipmi", params)
+    return params
+
+
+register_rule(group,
+    "special_agents:ipmi_sensors",
+    Transform(CascadingDropdown(
+        title = _("IPMI"),
+        choices = [
+            ("freeipmi", _("Use FreeIPMI"), vs_freeipmi),
+            ("ipmitool", _("Use IPMItool"), vs_ipmitool),
         ],
         required_keys = [ "username", "password", "privilege_lvl" ],
-    ),
-    title = _("Check IPMI Sensors via Freeipmi"),
+    ), forth=transform_ipmi_sensors),
+    title = _("Check IPMI Sensors via Freeipmi or IPMItool"),
     help = _("This rule selects the Agent IPMI Sensors instead of the normal Check_MK Agent "
-             "which collects the data through the Freeipmi command"),
+             "which collects the data through the FreeIPMI resp. IPMItool command"),
     match = 'first')
 
 

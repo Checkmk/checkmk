@@ -43,23 +43,43 @@ ARGUMENTS:
 
 OPTIONS:
   --help                            Show this help message and exit.
-  -u USER                           Username
-  -p PASSWD                         Password
-  -l LVL                            Privilege level
-                                    Possible are 'user', 'operator', 'admin'
   --debug                           Debug output
+  --ipmi-command IPMI-CMD           Possible values are 'freeipmi' or 'ipmitool'.
+                                    If no command is specified 'freeipmi' is used.
+  -u USER                           Username
+  -p PASSWORD                       Password
+  -l LEVEL                          Privilege level
+                                    Possible are 'user', 'operator', 'admin'
 
+FreeIPMI OPTIONS:
   -D DRIVER                         Specify IPMI driver.
   --quiet-cache                     Do not output information about cache creation/deletion.
   --sdr-cache-recreate              Automatically recreate the sensor data repository (SDR) cache.
   --interpret-oem-data              Attempt to interpret OEM data.
   --output-sensor-state             Output sensor state in output.
   --ignore-not-available-sensors    Ignore not-available (i.e. N/A) sensors in output.
-  --driver-type TYPE                Specify the driver type to use instead of doing an auto selection.
+  --driver-type DRIVER-TYPE         Specify the driver type to use instead of doing an auto selection.
   --output-sensor-thresholds        Output sensor thresholds in output.
   -k KEY                            Specify the K_g BMC key to use when authenticating
                                     with the remote host for IPMI 2.0.
 """ )
+
+
+def parse_data(data, excludes):
+    for line in data:
+        if line.startswith("ID"):
+            continue
+        elif excludes:
+            has_excludes = False
+            for exclude in excludes:
+                if exclude in line:
+                    has_excludes = True
+                    break
+            if not has_excludes:
+                sys.stdout.write("%s\n" % line)
+        else:
+            sys.stdout.write("%s\n" % line)
+
 
 def agent_ipmi_sensors_main(cmdline_args):
     short_options = 'u:p:l:D:k:'
@@ -73,6 +93,7 @@ def agent_ipmi_sensors_main(cmdline_args):
     username      = None
     password      = None
     privilege_lvl = None
+    ipmi_cmd_type = None
 
     try:
         opts, args = getopt.getopt( cmdline_args, short_options, long_options )
@@ -87,12 +108,18 @@ def agent_ipmi_sensors_main(cmdline_args):
             sys.exit(0)
         elif o in [ '--debug' ]:
             opt_debug = True
+
+        # Common options
+        elif o in [ '--ipmi-command' ]:
+            ipmi_cmd_type = a
         elif o in [ '-u' ]:
             username = a
         elif o in [ '-p' ]:
             password = a
         elif o in [ '-l' ]:
             privilege_lvl = a
+
+        # FreeIPMI options
         elif o in [ '-D' ]:
             additional_opts += [ "%s %s" % (o, a) ]
         elif o in [ '--driver-type' ]:
@@ -124,47 +151,54 @@ def agent_ipmi_sensors_main(cmdline_args):
 
     os.environ["PATH"] = "/usr/local/sbin:/usr/sbin:/sbin:" + os.environ["PATH"]
 
-    ipmi_cmd = [ "ipmi-sensors",
-                 "-h", hostname, "-u", username,
-                 "-p", password, "-l", privilege_lvl ] + \
-                 additional_opts
+    if ipmi_cmd_type in [None, 'freeipmi']:
+        ipmi_cmd = [ "ipmi-sensors",
+                     "-h", hostname, "-u", username,
+                     "-p", password, "-l", privilege_lvl ] + \
+                     additional_opts
+        queries = {"_sensors" : ([], [])}
+    elif ipmi_cmd_type == 'ipmitool':
+        ipmi_cmd = [ "ipmitool",
+                     "-H", hostname, "-U", username,
+                     "-P", password, "-L", privilege_lvl ]
+        # As in check_mk_agent
+        queries = {"": (["sensor", "list"], ['command failed', 'discrete']),
+                   "_discrete": (["sdr", "elist", "compact"], [])}
+
+    else:
+        sys.stderr.write("ERROR: Unknown IPMI command '%s'.\n" % ipmi_cmd_type)
+        sys.exit(1)
+
     ipmi_cmd_str = subprocess.list2cmdline(ipmi_cmd)
 
     if opt_debug:
         sys.stderr.write("Executing: '%s'\n" % ipmi_cmd_str)
 
-    try:
+    errors = []
+    for section, (types, excludes) in queries:
+        sys.stdout.write( "<<<ipmi%s:sep(124)>>>\n" % section )
         try:
-            p = subprocess.Popen(ipmi_cmd, shell=False, close_fds=True,
-                                 stdin=open(os.devnull),
-                                 stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        except OSError, e:
-            if e.errno == errno.ENOENT: # No such file or directory
-                raise Exception("Could not find 'ipmi-sensors' command (PATH: %s)" %
-                                                            os.environ.get("PATH"))
-            else:
-                raise
+            try:
+                p = subprocess.Popen(ipmi_cmd + types, shell=False, close_fds=True,
+                                     stdin=open(os.devnull),
+                                     stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            except OSError, e:
+                if e.errno == errno.ENOENT: # No such file or directory
+                    raise Exception("Could not find '%s' command (PATH: %s)"\
+                                    % (ipmi_cmd_type, os.environ.get("PATH")))
+                else:
+                    raise
 
-        stdout, stderr = p.communicate()
-    except Exception, e:
-        sys.stderr.write("ERROR: %s\n" % (e))
+            stdout, stderr = p.communicate()
+            if stderr:
+                errors.append(stderr)
+            parse_data(stdout.splitlines(), excludes)
+        except Exception, e:
+            errors.append(e)
+
+    if errors:
+        sys.stderr.write("ERROR: '%s'.\n" % ", ".join(errors))
         sys.exit(1)
-
-    if stderr:
-        sys.stderr.write("ERROR: '%s'.\n" % stderr)
-        sys.exit(1)
-
-    # output
-    # ID   | Name            | Type              | Reading    | Units | Event
-    # 4    | CPU Temp        | Temperature       | 28.00      | C     | 'OK'
-    # 71   | System Temp     | Temperature       | 28.00      | C     | 'OK'
-    # 607  | P1-DIMMC2 TEMP  | Temperature       | N/A        | C     | N/A
-    sys.stdout.write( "<<<ipmi_sensors:sep(124)>>>\n" )
-    for line in stdout.splitlines():
-        if line.startswith("ID"):
-            continue
-
-        sys.stdout.write( "%s\n" % line )
 
     sys.exit(0)
 

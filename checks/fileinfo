@@ -345,10 +345,15 @@ def check_fileinfo_groups(item, params, info):
 
     yield fileinfo_check_function(check_definition, params, outof_range_txt)
 
-    if include_patterns:
-        yield 0, "\nInclude patterns: %s" % ", ".join(include_patterns)
-    if exclude_patterns:
-        yield 0, "\nExclude patterns: %s" % ", ".join(exclude_patterns)
+    long_output = []
+    if any(include_patterns):
+        long_output.append("Include patterns: %s" % ", ".join(include_patterns))
+
+    if any(exclude_patterns):
+        long_output.append("Exclude patterns: %s" % ", ".join(exclude_patterns))
+
+    if long_output:
+        yield 0, "\n%s" % "\n".join(long_output)
 
 
 def fileinfo_check_function(check_definition, params, outof_range_txt):

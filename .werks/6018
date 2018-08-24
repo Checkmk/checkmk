@@ -1,0 +1,11 @@
+Title: The rrdcached logs to var/log/rrdcached.log again.
+Level: 1
+Component: packages
+Compatible: compat
+Edition: cee
+Version: 1.5.0p3
+Date: 1535095656
+Class: fix
+
+Instead of logging into syslog, the rrdcached logs to its traditional log
+file again.  Logging into syslog was a regression introduced in 1.5.0.

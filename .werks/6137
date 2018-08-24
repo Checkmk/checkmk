@@ -1,0 +1,10 @@
+Title: fileinfo.groups: Add file name, size and age to the long output if file passes the defined threshold
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1529597577
+Class: feature
+
+

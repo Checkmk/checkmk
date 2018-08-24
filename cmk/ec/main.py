@@ -4483,16 +4483,16 @@ def do_event_action(settings, config, table_events, action, event, user=""):
         return
 
     try:
-        action_type, settings = action["action"]
+        action_type, action_settings = action["action"]
         if action_type == 'email':
-            to = escape_null_bytes(substitute_event_tags(table_events, settings["to"], event))
-            subject = escape_null_bytes(substitute_event_tags(table_events, settings["subject"], event))
-            body = escape_null_bytes(substitute_event_tags(table_events, settings["body"], event))
+            to = escape_null_bytes(substitute_event_tags(table_events, action_settings["to"], event))
+            subject = escape_null_bytes(substitute_event_tags(table_events, action_settings["subject"], event))
+            body = escape_null_bytes(substitute_event_tags(table_events, action_settings["body"], event))
 
             send_email(config, to, subject, body)
             log_event_history(settings, config, table_events, event, "EMAIL", user, "%s|%s" % (to, subject))
         elif action_type == 'script':
-            execute_script(table_events, escape_null_bytes(substitute_event_tags(table_events, settings["script"], get_quoted_event(event))), event)
+            execute_script(table_events, escape_null_bytes(substitute_event_tags(table_events, action_settings["script"], get_quoted_event(event))), event)
             log_event_history(settings, config, table_events, event, "SCRIPT", user, action['id'])
         else:
             logger.error("Cannot execute action %s: invalid action type %s" % (action["id"], action_type))

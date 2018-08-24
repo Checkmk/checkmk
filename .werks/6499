@@ -1,0 +1,13 @@
+Title: Fixed execution of event console actions
+Level: 2
+Component: ec
+Compatible: compat
+Edition: cre
+Version: 1.5.0p3
+Date: 1535116737
+Class: fix
+
+The execution of actions defined in event console rules was broken since
+1.5.0b1: Under various circumstances, the action was not executed at all,
+and a Python exception was logged to var/log/mkeventd.log.  This has been
+fixed now.

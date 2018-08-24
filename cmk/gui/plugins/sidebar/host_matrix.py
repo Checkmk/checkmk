@@ -35,13 +35,13 @@ from cmk.gui.i18n import _
 from cmk.gui.globals import html
 from cmk.gui.valuespec import Checkbox, ListOf, CascadingDropdown, Dictionary, TextUnicode
 from . import (
-    SidebarSnapin,
+    CustomizableSidebarSnapin,
     snapin_registry,
     snapin_width,
 )
 
 @snapin_registry.register
-class HostMatrixSnapin(SidebarSnapin):
+class HostMatrixSnapin(CustomizableSidebarSnapin):
     @staticmethod
     def type_name():
         return "hostmatrix"
@@ -62,21 +62,33 @@ class HostMatrixSnapin(SidebarSnapin):
         return True
 
 
+    @classmethod
+    def vs_parameters(cls):
+        return [
+            ("context", visuals.VisualFilterList(
+                title = _("Filters"),
+                infos = ["host"],
+            )),
+        ]
+
+
+    @classmethod
+    def parameters(cls):
+        return {
+            "context": {},
+        }
+
+
     def show(self):
-        sites.live().set_prepend_site(True)
-        query = "GET hosts\n" \
-                "Columns: name state has_been_checked worst_service_state scheduled_downtime_depth\n" \
-                "Limit: 901\n"
-        hosts = sites.live().query(query)
-        sites.live().set_prepend_site(False)
-        hosts.sort()
-        if len(hosts) > 900:
+        hosts = self._get_hosts()
+        num_hosts = len(hosts)
+
+        if num_hosts > 900:
             html.write_text(_("Sorry, I will not display more than 900 hosts."))
             return
 
         # Choose smallest square number large enough
         # to show all hosts
-        num_hosts = len(hosts)
         n = 1
         while n*n < num_hosts:
             n += 1
@@ -101,7 +113,7 @@ class HostMatrixSnapin(SidebarSnapin):
         html.open_table(class_=["content_center", "hostmatrix"], cellspacing=0, style=["border-collapse:collapse;", style])
         col = 1
         row = 1
-        for site, host, state, has_been_checked, worstsvc, downtimedepth in hosts:
+        for site, host, state, has_been_checked, worstsvc, downtimedepth in sorted(hosts):
             if col == 1:
                 html.open_tr()
             if downtimedepth > 0:
@@ -128,6 +140,37 @@ class HostMatrixSnapin(SidebarSnapin):
             else:
                 col += 1
         html.close_table()
+
+
+    def _get_hosts(self):
+        context_filters, only_sites = visuals.get_filter_headers({
+            "table": "hosts",
+            "infos": ["host"],
+        }, self.parameters()["context"])
+
+        return self._execute_host_query(self._get_host_query(context_filters), only_sites)
+
+
+    def _get_host_query(self, context_filters):
+        query = (
+            "GET hosts\n"
+            "Columns: name state has_been_checked worst_service_state scheduled_downtime_depth\n"
+            "Limit: 901\n"
+        ) + context_filters
+
+        return query
+
+
+    def _execute_host_query(self, query, only_sites):
+        try:
+            sites.live().set_prepend_site(True)
+            if only_sites:
+                sites.live().set_only_sites(only_sites)
+
+            return sites.live().query(query)
+        finally:
+            sites.live().set_only_sites(None)
+            sites.live().set_prepend_site(False)
 
 
     @classmethod

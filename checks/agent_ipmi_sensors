@@ -26,11 +26,16 @@
 
 
 def agent_ipmi_sensors_arguments(params, hostname, ipaddress):
-    args = []
+    if isinstance(params, dict):
+        params = 'freeipmi', params
 
-    args += [ "-u", quote_shell_string(params["username"]) ]
-    args += [ "-p", quote_shell_string(params["password"]) ]
-    args += [ "-l", quote_shell_string(params["privilege_lvl"]) ]
+    ipmi_command, options = params
+    args = [
+        "-u", quote_shell_string(params["username"]),
+        "-p", quote_shell_string(params["password"]),
+        "-l", quote_shell_string(params["privilege_lvl"]),
+        "--ipmi-command", ipmi_command,
+    ]
 
     for opt, what in [
         ("-D",                             "ipmi_driver"),

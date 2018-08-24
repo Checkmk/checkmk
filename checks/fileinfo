@@ -292,13 +292,14 @@ def check_fileinfo_groups(item, params, info):
             if not incl_match or excl_match:
                 continue
 
-            if str(line[1]) in ['missing', '']:
+            size_str = line[1]
+            if size_str in ['missing', '']:
                 continue
-            elif str(line[1]) == "not readable":
-                files_not_readable.add(str(line[1]))
+            elif size_str == "not readable":
+                files_not_readable.add(size_str)
                 continue
 
-            size = int(line[1])
+            size = int(size_str)
             size_all += size
             if size_smallest is None:
                 size_smallest = size

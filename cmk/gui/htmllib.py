@@ -2417,6 +2417,9 @@ class html(HTMLGenerator):
             attrs["disabled"] = "disabled"
             self.hidden_field(varname, current, add_var=False)
 
+        if attrs.get("label"):
+            self.label(attrs["label"], for_=varname)
+
         self.open_select(name=varname, id_=varname, **attrs)
         for value, text in chs:
             # if both the default in choices and current was '' then selected depended on the order in choices

@@ -44,7 +44,7 @@ def check_fortigate_ipsecvpn(item, params, info):
     tunnels_down    = []
     tunnels_ignored = []
     for p2name, ent_status in info:
-        if ent_status == "1":
+        if ent_status == "1": # down(1), up(2)
             tunnels_down.append(p2name)
             if p2name in tunnels_ignore_levels:
                 tunnels_ignored.append(p2name)
@@ -89,4 +89,3 @@ check_info["fortigate_ipsecvpn"] = {
     "default_levels_variable"   : "fortigate_ipsecvpn_default_levels",
     "group"                     : "ipsecvpn",
 }
-

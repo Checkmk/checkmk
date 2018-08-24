@@ -289,29 +289,31 @@ def check_fileinfo_groups(item, params, info):
             else:
                 excl_match = fnmatch.fnmatch(filename, exclusion)
 
-            if incl_match and not excl_match:
-                if str(line[1]) in ['missing', '']:
-                    continue
-                elif str(line[1]) == "not readable":
-                    files_not_readable.add(str(line[1]))
-                    continue
+            if not incl_match or excl_match:
+                continue
 
-                size = int(line[1])
-                size_all += size
-                if size_smallest is None:
-                    size_smallest = size
-                else:
-                    size_smallest = min(size_smallest, size)
-                size_largest = max(size_largest, size)
+            if str(line[1]) in ['missing', '']:
+                continue
+            elif str(line[1]) == "not readable":
+                files_not_readable.add(str(line[1]))
+                continue
 
-                age = reftime - int(line[2])
-                if age_oldest is None:  # very first match
-                    age_oldest = age
-                    age_newest = age
-                else:
-                    age_oldest = max(age_oldest, age)
-                    age_newest = min(age_newest, age)
-                count_all += 1
+            size = int(line[1])
+            size_all += size
+            if size_smallest is None:
+                size_smallest = size
+            else:
+                size_smallest = min(size_smallest, size)
+            size_largest = max(size_largest, size)
+
+            age = reftime - int(line[2])
+            if age_oldest is None:  # very first match
+                age_oldest = age
+                age_newest = age
+            else:
+                age_oldest = max(age_oldest, age)
+                age_newest = min(age_newest, age)
+            count_all += 1
 
     if age_oldest is None:
         age_oldest = 0

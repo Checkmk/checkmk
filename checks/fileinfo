@@ -222,6 +222,33 @@ def fileinfo_groups_precompile(hostname, item, params):
     return precomped
 
 
+def _filename_matches(filename, reftime, inclusion, exclusion):
+    inclusion_is_regex = False
+    exclusion_is_regex = False
+
+    if inclusion.startswith("~"):
+        inclusion_is_regex = True
+        inclusion = inclusion[1:]
+    if exclusion.startswith("~"):
+        exclusion_is_regex = True
+        exclusion = exclusion[1:]
+
+    inclusion_tmp = fileinfo_process_date(inclusion, reftime)
+    if inclusion != inclusion_tmp:
+        inclusion = inclusion_tmp
+
+    if inclusion_is_regex:
+        incl_match = regex(inclusion).match(filename)
+    else:
+        incl_match = fnmatch.fnmatch(filename, inclusion)
+
+    if exclusion_is_regex:
+        excl_match = regex(exclusion).match(filename)
+    else:
+        excl_match = fnmatch.fnmatch(filename, exclusion)
+    return incl_match and not excl_match
+
+
 def check_fileinfo_groups(item, params, info):
     if not info:
         yield 3, "No information sent by agent"
@@ -265,31 +292,8 @@ def check_fileinfo_groups(item, params, info):
             inclusion, exclusion = pattern
             include_patterns.add(inclusion)
             exclude_patterns.add(exclusion)
-            inclusion_is_regex   = False
-            exclusion_is_regex   = False
 
-            if inclusion.startswith("~"):
-                inclusion_is_regex = True
-                inclusion = inclusion[1:]
-            if exclusion.startswith("~"):
-                exclusion_is_regex = True
-                exclusion = exclusion[1:]
-
-            inclusion_tmp = fileinfo_process_date(inclusion, reftime)
-            if inclusion != inclusion_tmp:
-                inclusion = inclusion_tmp
-
-            if inclusion_is_regex:
-                incl_match = regex(inclusion).match(filename)
-            else:
-                incl_match = fnmatch.fnmatch(filename, inclusion)
-
-            if exclusion_is_regex:
-                excl_match = regex(exclusion).match(filename)
-            else:
-                excl_match = fnmatch.fnmatch(filename, exclusion)
-
-            if not incl_match or excl_match:
+            if not _filename_matches(filename, reftime, inclusion, exclusion):
                 continue
 
             size_str = line[1]

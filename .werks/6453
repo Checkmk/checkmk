@@ -1,0 +1,14 @@
+Title: LDAP: Users with non-ASCII characters in uid could be created incorrectly
+Level: 1
+Component: multisite
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0p3
+Date: 1535275947
+
+When LDAP users with non-ASCII characters in their user ID are not created by the
+LDAP sync but during first login, the user data set was stored in a wrong way
+(wrong encoded user ID). This could lead to exceptions when the user tried to
+login or when an admin tried to work with the user database.

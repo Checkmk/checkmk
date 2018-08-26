@@ -43,8 +43,12 @@ class HTMLProxy(object):
         self._current_html = None
 
 
+    def in_html_context(self):
+        return self._current_html is not None
+
+
     def __getattribute__(self, name):
-        if name == "set_current" or name == "unset_current" or name == "_current_html":
+        if name in [ "set_current", "unset_current", "in_html_context", "_current_html" ]:
             return object.__getattribute__(self, name)
 
         h = self._current_html

@@ -22,6 +22,7 @@ pylint = "*"
 pyenchant = "*"
 yapf = "*"
 docker = "*"
+mockldap = "*"
 
 [packages]
 setuptools_scm = "==2.1.0"

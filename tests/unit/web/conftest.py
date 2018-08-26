@@ -23,6 +23,7 @@ def register_builtin_html():
         # TODO: This is no complete WSGI environment. Produce some
         "wsgi.input"  : "",
         "SCRIPT_NAME" : "",
+        "REQUEST_URI" : "",
     }
     _request = http.Request(wsgi_environ)
     _response = http.Response(_request)

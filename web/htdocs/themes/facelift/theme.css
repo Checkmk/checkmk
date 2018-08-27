@@ -791,9 +791,9 @@ div.graph_with_timeranges {
       padding: 0;
       text-align: left;
       bottom: -4px; }
-      .wato div.floatfolder div.title a, .wato div.floatfolder div.title body.main .popup_menu span, body.main .popup_menu .wato div.floatfolder div.title span {
-        color: #1A243D;
+      .wato div.floatfolder div.title a, .wato div.floatfolder div.title body.main .popup_menu span, body.main .popup_menu .wato div.floatfolder div.title span, .wato div.floatfolder.locked div.title {
         font-size: 13px;
+        color: #1A243D;
         font-weight: 500; }
     .wato div.floatfolder .infos {
       bottom: 24px;

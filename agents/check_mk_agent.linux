@@ -178,10 +178,10 @@ function section_df()
     echo '[df_inodes_end]'
 }
 
-function section_lnx_services()
+function sections_systemd()
 {
     if type systemctl >/dev/null 2>&1 ; then
-        echo '<<<lnx_services>>>'
+        echo '<<<systemd_units>>>'
         systemctl --all
     fi
 }
@@ -371,7 +371,7 @@ fi
 
 section_df
 
-section_lnx_services
+sections_systemd
 
 # Filesystem usage for ZFS
 if type zfs > /dev/null 2>&1 ; then

@@ -1,4 +1,4 @@
-Title: lnx_services: Linux Services
+Title: systemd_units.services: Introduce Monitoring of Systemd Services
 Level: 1
 Component: checks
 Compatible: compat

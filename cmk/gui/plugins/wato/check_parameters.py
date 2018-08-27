@@ -1067,8 +1067,8 @@ register_rule(group + '/' + subgroup_inventory,
 )
 
 register_rule(group + '/' + subgroup_inventory,
-    varname="discovery_lnx_services_rules",
-    title=_("Linux Service Discovery"),
+    varname="discovery_systemd_units_services_rules",
+    title=_("Systemd Service Discovery"),
     valuespec=Dictionary(
         elements=[
             ('descriptions', ListOfStrings(title=_("Descriptions"))),
@@ -4740,8 +4740,8 @@ register_check_parameters(
 
 register_check_parameters(
     subgroup_applications,
-    "lnx_services",
-    _("Linux Services"),
+    "systemd_services",
+    _("Systemd Services"),
     Dictionary(
         elements = [
             ("states", Dictionary(

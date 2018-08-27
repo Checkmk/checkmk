@@ -1,4 +1,4 @@
-title: Linux Services
+title: Systemd Services
 agents: linux
 catalog: os/ps
 license: GPL

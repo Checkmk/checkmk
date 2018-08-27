@@ -1,6 +1,6 @@
 
 
-checkname = 'lnx_services'
+checkname = 'systemd_units'
 
 
 info = [['UNIT', 'LOAD', 'ACTIVE', 'SUB', 'DESCRIPTION'],
@@ -428,22 +428,23 @@ info = [['UNIT', 'LOAD', 'ACTIVE', 'SUB', 'DESCRIPTION'],
          "list-unit-files'."]]
 
 
-discovery = {'': [], 'summary': [('Summary', {})]}
+discovery = {'services': [], 'services_summary': [('Summary', {})]}
 
 
-checks = {'': [('virtualbox', 'default',
-                [(0, "Status: active", []),
-                 (0, "LSB: VirtualBox Linux kernel module", []),
-                ]
-               ),
-               ('jamesthebutler', 'default',
-                [(2, "Service not found", []),
-                ]
-               ),],
-          'summary': [('Summary', 'default',
-                       [(0, '32 services in total', []),
-                        (2, '1 services failed', []),
-                       ]
-                      ),
-                     ]
+checks = {'services': [('virtualbox', 'default',
+                        [(0, "Status: active", []),
+                         (0, "LSB: VirtualBox Linux kernel module", []),
+                        ]
+                       ),
+                       ('jamesthebutler', 'default',
+                        [(2, "Service not found", []),
+                        ]
+                       ),
+                      ],
+          'services_summary': [('Summary', 'default',
+                                [(0, '32 services in total', []),
+                                 (2, '1 services failed', []),
+                                ]
+                               ),
+                              ]
 }

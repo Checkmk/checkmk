@@ -1247,7 +1247,8 @@ def execute_userdb_job():
 
     job = UserSyncBackgroundJob()
     if job.is_running():
-        logger.debug("Another synchronization job is already running")
+        logger.debug("Another synchronization job is already running: Skipping this sync")
+        return
 
     job.set_function(job.do_sync, add_to_changelog=False, enforce_sync=False)
     job.start()

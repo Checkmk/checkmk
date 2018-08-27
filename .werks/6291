@@ -1,0 +1,16 @@
+Title: Werk list: Fixed input validation and error handling
+Level: 1
+Component: multisite
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0i1
+Date: 1534419561
+
+Input errors on the werk list page were not validated correctly. This could
+lead to empty werk lists when using invalid values in the "Searching &
+Filtering" form without displaying a helpful message.
+
+The error handling of input issues has been improved by displaying error messages
+above the form and highlighting the fields in question when an error occured.

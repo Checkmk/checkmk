@@ -119,7 +119,7 @@ def discovery(check, subcheck, dataset, info_arg, immu):#   .
         assert disco_func, "%r has no discovery function!" \
                            % check.name
     if not disco_func:
-        return None
+        return []
 
     d_result_raw = check.run_discovery(info_arg)
     immu.test(' after discovery (%s): ' % disco_func.__name__)

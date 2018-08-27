@@ -714,7 +714,9 @@ div.graph_with_timeranges {
         content: "»";
         position: absolute;
         left: 0px;
-        top: 10px;
+        top: 0px;
+        font-size: 29px;
+        font-weight: 800;
         color: #ffd703; }
       .wato div.folderpath ul li:first-child:before {
         content: " "; }

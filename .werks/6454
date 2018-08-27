@@ -1,0 +1,13 @@
+Title: Fixed "tree_spec" exception in virtual host tree snapin with older configs
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.5.0p3
+Date: 1535378725
+Class: fix
+
+Old definitions (pre 1.5) of virtual host tree configs could lead to an error "tree_spec"
+in the virtual host tree snapin. These configs are now migrated correctly.
+
+A workaround could be to update the virtual host tree global setting by hand.

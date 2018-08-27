@@ -352,6 +352,8 @@ table {
       background-color: transparent; }
     table.data.oddeven > tbody > tr.groupheader {
       background-color: transparent; }
+    table.data.oddeven > tbody > .matches_search > td, table.data.oddeven > tbody > .matches_search > td {
+      background-color: #afb !important; }
     table.data.headerleft {
       border-spacing: 0px; }
       table.data.headerleft tbody tr td, table.data.headerleft tbody tr th, table.data.headerleft tbody tr td:nth-child(odd), table.data.headerleft tbody tr th:nth-child(odd), table.data.headerleft tbody tr td:nth-child(even), table.data.headerleft tbody tr th:nth-child(even) {

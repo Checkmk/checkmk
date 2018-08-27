@@ -41,37 +41,38 @@ def check_fortigate_ipsecvpn(item, params, info):
 
     tunnels_ignore_levels = params.get("tunnels_ignore_levels", [])
 
-    tunnels_down    = []
-    tunnels_ignored = []
+    tunnels_down = set()
+    tunnels_ignored = set()
     for p2name, ent_status in info:
         if ent_status == "1": # down(1), up(2)
-            tunnels_down.append(p2name)
+            tunnels_down.add(p2name)
             if p2name in tunnels_ignore_levels:
-                tunnels_ignored.append(p2name)
+                tunnels_ignored.add(p2name)
 
-    num_total        = len(info)
-    num_down         = len(tunnels_down)
-    num_ignored      = len(tunnels_ignored)
-    num_down_ignored = num_down - num_ignored
-    num_up           = num_total - num_down
+    num_total = len(info)
+    num_down = len(tunnels_down)
+    num_up = num_total - num_down
+
+    num_ignored = len(tunnels_ignored)
+    num_down_and_not_ignored = num_down - num_ignored
 
     infotext = "Total: %d, Up: %d, Down: %d" % \
                (num_total, num_up, num_down)
 
+    if tunnels_down:
+        infotext += " (%s)" % ", ".join(tunnels_down)
+
+    if num_ignored:
+        infotext += ", Ignored: %d (%s)" % (num_ignored, ", ".join(tunnels_ignored))
+
     warn, crit = params.get("levels", (None, None))
     status = 0
-    if crit is not None and num_down_ignored >= crit:
+    if crit is not None and num_down_and_not_ignored >= crit:
         status = 2
-    elif warn is not None and num_down_ignored >= warn:
+    elif warn is not None and num_down_and_not_ignored >= warn:
         status = 1
     if status:
         infotext += " (warn/crit at %s/%s)" % (warn, crit)
-
-    if num_ignored:
-        infotext += " (ignored: %d)" % num_ignored
-
-    if tunnels_down:
-        infotext += ", Tunnels: %s" % (", ".join(tunnels_down))
 
     return status, infotext, [('active_vpn_tunnels', num_up, '', '', 0, num_total)]
 

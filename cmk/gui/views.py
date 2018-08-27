@@ -1390,15 +1390,6 @@ def view_optiondial(view, option, choices, help):
 def view_optiondial_off(option):
     html.div('', class_=["optiondial", "off", option])
 
-# FIXME: Consolidate with html.toggle_button() rendering functions
-# TODO: Replace hard coded icon path with dynamic path to old or new theme
-def toggler(id, icon, help, onclick, value, hidden = False):
-    html.begin_context_buttons() # just to be sure
-    hide = ' style="display:none"' if hidden else ''
-    html.write('<div id="%s_on" title="%s" class="togglebutton %s %s" %s>'
-               '<a href="javascript:void(0)" onclick="%s"><img src="images/icon_%s.png"></a></div>' % (
-        id, help, icon, value and "down" or "up", hide, onclick, icon))
-
 
 # Will be called when the user presses the upper button, in order
 # to persist the new setting - and to make it active before the
@@ -1457,9 +1448,14 @@ def show_context_links(thisview, datasource, show_filters,
 
         selection_enabled = enable_checkboxes if enable_commands else thisview.get('force_checkboxes')
         if not thisview.get("force_checkboxes"):
-            toggler("checkbox", "checkbox", _("Enable/Disable checkboxes for selecting rows for commands"),
-                    "location.href='%s';" % html.makeuri([('show_checkboxes', show_checkboxes and '0' or '1')]),
-                    show_checkboxes, hidden = True) # not selection_enabled)
+            html.toggle_button(
+                id="checkbox",
+                icon="checkbox",
+                help=_("Enable/Disable checkboxes for selecting rows for commands"),
+                onclick="location.href='%s';" % html.makeuri([('show_checkboxes', show_checkboxes and '0' or '1')]),
+                isopen=show_checkboxes,
+                hidden=True,
+            )
         html.toggle_button("checkbox", False, "checkbox", "", hidden=not thisview.get("force_checkboxes"), disabled=True)
         html.javascript('g_selection_enabled = %s;' % ('true' if selection_enabled else 'false'))
 

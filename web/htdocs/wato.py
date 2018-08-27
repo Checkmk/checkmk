@@ -10948,10 +10948,8 @@ class ModeUsers(WatoMode):
             elif c == False:
                 return ""
 
-        elif html.var('_sync'):
+        elif html.var('_sync') and html.check_transaction():
             try:
-                html.check_transaction()
-
                 job = userdb.UserSyncBackgroundJob()
                 if job.is_running():
                     raise MKUserError(None, _("Another synchronization job is already running"))

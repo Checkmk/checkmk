@@ -96,6 +96,7 @@ def expected_output():
             r'\[[0-9a-f]{,4}(:[0-9a-f]{,4})+(%\d+)?\]):\d+'
             r'\s+(ABH.REN|HERGESTELLT|WARTEND|SCHLIESSEN_WARTEN|SYN_GESENDET'
             r'|LISTENING|ESTABLISHED|TIME_WAIT|CLOSE_WAIT)'
+            r'|\s+UDP\s+\d+\.\d+\.\d+\.\d+:\d+\s+\*:\*'
             r'|\-?\d+( \d+)+ [\w\(\)]+')
         if Globals.plugintype == 'plugins':
             repeating_pattern += r'|%s' % re.escape(r'<<<>>>')

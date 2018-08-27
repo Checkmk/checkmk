@@ -29,10 +29,8 @@
 
 def parse_apc_inrow_system_events(info):
     parsed = {}
-    events = []
     for line in info:
-        events.append(line[0])
-    parsed.update({"events":events})
+        parsed.setdefault("events", []).append(line[0])
     return parsed
 
 
@@ -41,9 +39,9 @@ def inventory_apc_inrow_system_events(parsed):
 
 
 def check_apc_inrow_system_events(_no_item, params, parsed):
-    if parsed["events"]:
-        state = params.get("state", 2)
-        return state, ", ".join(parsed["events"])
+    events = parsed.get("events")
+    if events:
+        return params.get("state", 2), ", ".join(events)
     else:
         return 0, "No service events"
 

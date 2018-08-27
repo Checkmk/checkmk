@@ -1,0 +1,17 @@
+Title: New Theme: New fixes for modern theme
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1535360200
+Class: fix
+
+This time the following things has been fixed:
+- The logo position in the upper right corner has been align to the bottom of the text and is now in the middle
+- The title in hover preview of graphs is center aligned again
+- The output of backup jobs is like other console outputs
+- The color of the footer has been accidentally reverted to white and is now black again
+- Triangles to open limb of trees have been white again which is now fixed
+- Some new icons have not been used even if available
+- Many icons which have still been in old style are now modern

@@ -1,0 +1,14 @@
+Title: User profile: Theme changes are applied to result page automatically
+Level: 1
+Component: multisite
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0i1
+Date: 1534417459
+
+The user profile page did not apply changed themes to
+the result page right after changing the theme. The user
+always had to reload the page to make the content frame
+use the new theme. 

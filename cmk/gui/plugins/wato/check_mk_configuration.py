@@ -1918,7 +1918,7 @@ register_rule(group,
                  "if those problems occur within the notification period. Also you can "
                  "filter out problems in the problems views for objects not being in "
                  "their notification period (you can think of the notification period "
-                 "as the 'service time'.")),
+                 "as the 'service time').")),
     )
 
 register_rule(group,
@@ -1930,7 +1930,7 @@ register_rule(group,
                  "if those problems occur within the notification period. Also you can "
                  "filter out problems in the problems views for objects not being in "
                  "their notification period (you can think of the notification period "
-                 "as the 'service time'.")),
+                 "as the 'service time').")),
     itemtype = "service")
 
 

@@ -26,21 +26,7 @@
 
 
 
-# <<<lnx_services>>>
-#   UNIT                                   LOAD   ACTIVE SUB    DESCRIPTION
-# ● check-mk-enterprise-2018.07.24.service loaded failed failed LSB: OMD sites
-# ● systemd-cryptsetup@cryptswap1.service  loaded failed failed Cryptography Setup for cryptswap1
-# ● swapfile.swap                          loaded failed failed /swapfile
-#
-# LOAD   = Reflects whether the unit definition was properly loaded.
-# ACTIVE = The high-level unit activation state, i.e. generalization of SUB.
-# SUB    = The low-level unit activation state, values depend on unit type.
-#
-# 3 loaded units listed. Pass --all to see loaded but inactive units, too.
-# To show all installed unit files use 'systemctl list-unit-files'.
-
-
-factory_settings["lnx_services_default_levels"] = {
+factory_settings["systemd_services_default_levels"] = {
     "states" : {"active": 0,
                 "inactive": 0,
                 "failed": 2,
@@ -48,29 +34,6 @@ factory_settings["lnx_services_default_levels"] = {
     "states_default" : 2,
     "else" : 2,  # missleading name, used if service vanishes
 }
-
-
-def parse_lnx_services(info):
-    parsed = {}
-    # second to last line (see above): "X loaded units listed."
-    count = int(info[-2][0])
-    if count == 0:
-        return parsed
-
-    ServiceEntry = collections.namedtuple("ServiceEntry",
-                                          ['unit', 'load', 'active', 'sub', 'description'])
-    for row in info[1:count + 1]:
-        if row[0] == '*': # remove the '● ' (seems to get converted to '*')
-            row.pop(0)
-        line = ' '.join(row)
-        if '.service' not in line:
-            continue
-        unit, remains = line.split('.service ', 1)
-        load, active, sub, descr = remains.split(' ', 3)
-        service = ServiceEntry(unit, load, active, sub, descr)
-        parsed[service.unit] = service
-
-    return parsed
 
 
 #   .--single--------------------------------------------------------------.
@@ -83,10 +46,13 @@ def parse_lnx_services(info):
 #   '----------------------------------------------------------------------'
 
 
-discovery_lnx_services_rules = []
+discovery_systemd_units_services_rules = []
 
 
-def discovery_lnx_services(parsed):
+def discovery_systemd_units_services(parsed):
+
+    services = parsed.get('service', {})
+
     def regex_match(what, name):
         if not what:
             return True
@@ -100,24 +66,25 @@ def discovery_lnx_services(parsed):
                 return True
         return False
 
-    def state_match(rule_state, state):
-        return rule_state in (None, state)
+    def state_match(rule_states, state):
+        return any(s in (None, state) for s in rule_states)
 
-    for rule in discovery_lnx_services_rules:
+    for rule in discovery_systemd_units_services_rules:
         settings = rule[0]
         descriptions = settings.get("descriptions", [])
         names = settings.get("names", [])
-        state = settings.get("state")
-        for service in parsed.values():
+        states = settings.get("states")
+        for service in services.values():
             if (regex_match(descriptions, service.description) and
-                regex_match(names, service.unit) and
-                state_match(state, service.active)):
-                yield service.unit, {}
+                regex_match(names, service.name) and
+                state_match(states, service.active)):
+                yield service.name, {}
 
 
-def check_lnx_services(item, params, parsed):
+def check_systemd_units_services(item, params, parsed):
 
-    service = parsed.get(item, None)
+    services = parsed.get('service', {})
+    service = services.get(item, None)
     if service is None:
         yield params["else"], "Service not found"
         return
@@ -127,13 +94,12 @@ def check_lnx_services(item, params, parsed):
     yield 0, service.description
 
 
-check_info['lnx_services'] = {
-    'parse_function'         : parse_lnx_services,
-    'inventory_function'     : discovery_lnx_services,
-    'check_function'         : check_lnx_services,
-    'service_description'    : 'Linux Service %s',
-    'group'                  : 'lnx_services',
-    'default_levels_variable': 'lnx_services_default_levels',
+check_info['systemd_units.services'] = {
+    'inventory_function'     : discovery_systemd_units_services,
+    'check_function'         : check_systemd_units_services,
+    'service_description'    : 'Systemd Service %s',
+    'group'                  : 'systemd_services',
+    'default_levels_variable': 'systemd_services_default_levels',
 }
 
 
@@ -148,14 +114,14 @@ check_info['lnx_services'] = {
 #   '----------------------------------------------------------------------'
 
 
-def discovery_lnx_services_summary(_no_parsed):
+def discovery_systemd_units_services_summary(_no_parsed):
     yield 'Summary', {}
 
 
-def check_lnx_services_summary(_no_item, params, parsed):
-    yield 0, "%d services in total" % len(parsed)
+def check_systemd_units_services_summary(_no_item, params, parsed):
+    services = parsed.get('service', {}).values()
 
-    services = parsed.values()
+    yield 0, "%d services in total" % len(services)
 
     all_states = sorted(set(s.active for s in services))
 
@@ -167,12 +133,12 @@ def check_lnx_services_summary(_no_item, params, parsed):
         yield state, "%d services %s" % (count,  active_state)
 
 
-check_info['lnx_services.summary'] = {
-    'inventory_function'     : discovery_lnx_services_summary,
-    'check_function'         : check_lnx_services_summary,
-    'service_description'    : 'Linux Service %s',
-    'group'                  : 'lnx_services',
-    'default_levels_variable': 'lnx_services_default_levels',
+check_info['systemd_units.services_summary'] = {
+    'inventory_function'     : discovery_systemd_units_services_summary,
+    'check_function'         : check_systemd_units_services_summary,
+    'service_description'    : 'Systemd Service %s',
+    'group'                  : 'systemd_services',
+    'default_levels_variable': 'systemd_services_default_levels',
 }
 
 

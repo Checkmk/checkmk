@@ -1,4 +1,4 @@
-title: Linux Service Summary
+title: Systemd Service Summary
 agents: linux
 catalog: os/ps
 license: GPL

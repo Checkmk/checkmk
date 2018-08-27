@@ -326,7 +326,7 @@ def render_werks_table():
 
     werk_table_options = render_werk_table_options()
 
-    if html.var("show_unack") and not html.var("wo_set"):
+    if html.var("show_unack") and not html.has_var("wo_set"):
         werk_table_options = default_werk_table_options()
         werk_table_options["compatibility"] = [ "incomp_unack" ]
 
@@ -427,15 +427,13 @@ def render_werk_table_options():
     werk_table_options = {}
 
     for name, height, vs, default_value in werk_table_option_entries():
+        value = default_value
         try:
-            if html.var("wo_set"):
+            if html.has_var("wo_set"):
                 value = vs.from_html_vars("wo_" + name)
                 vs.validate_value(value, "wo_" + name)
-            else:
-                value = default_value
         except MKUserError, e:
             html.user_error(e)
-            value = default_value
 
         werk_table_options.setdefault(name, value)
 

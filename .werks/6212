@@ -1,4 +1,4 @@
-Title: Set Active Check Permissions
+Title: MKPs: Set correct executable permission for active checks
 Level: 1
 Component: packages
 Compatible: compat
@@ -7,6 +7,8 @@ Version: 1.6.0i1
 Date: 1534756411
 Class: fix
 
-Previously packaged Nagios plugins / active checks have not been made executable after beeing installed.
+Previously packaged Nagios plugins / active checks have not been made executable after being
+ installed, which effectively prevented the automatic installation of active checks via the
+ packaging mechanism.
 This has been fixed.
 

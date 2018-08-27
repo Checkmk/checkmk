@@ -215,9 +215,10 @@ def werk_table_option_entries():
          ),
         ( "id",
           "single",
-          Integer(
+          TextAscii(
               title = _("Werk ID"),
               label = "#",
+              regex = "[0-9]{4}",
               allow_empty = True,
               size = 4,
           ),

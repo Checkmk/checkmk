@@ -398,7 +398,7 @@ def transform_virtual_host_trees(trees):
             trees[index] = {
                 "id"         : id_from_title(tree[0]),
                 "title"      : tree[0],
-                "tag_groups" : tree[1],
+                "tree_spec"  : tree[1],
             }
         else:
             # Transform existing dicts with old key "tag_groups"

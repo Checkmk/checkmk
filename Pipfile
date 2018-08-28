@@ -50,7 +50,8 @@ dnspython = "==1.15.0"
 # python-ad = "==0.9"  This seems to be dead and is not on PyPi!
 idna = "==2.6"
 asn1crypto = "==0.24.0"
-cryptography = "==1.9"
+# For 1.5 we ship cryptography 1.9 with Check_MK and ignore the requirement of pyghmi of 2.1 in regular packages
+cryptography = "==2.1"
 requests = { version = "==2.13.0", extras = ["security", "socks"] }
 pyOpenSSL = "==16.2.0"
 pykerberos = "==1.2.1"
@@ -58,7 +59,7 @@ requests-kerberos = "==0.11.0"
 tinkerforge = "==2.1.15"
 paramiko = "==2.1.2"
 pbr = "==4.0.0"
-pyghmi = "==1.1.0"
+pyghmi = "==1.2.14"
 typing = "==3.6.4"
 scandir = "==1.7"
 pathlib2 = "==2.3.2"

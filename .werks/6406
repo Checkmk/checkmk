@@ -1,0 +1,11 @@
+Title: df: fix a crash of the check if the inode count is '-'
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0p3
+Date: 1535697589
+
+

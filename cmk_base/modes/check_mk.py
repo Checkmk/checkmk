@@ -365,7 +365,7 @@ def mode_dump_agent(hostname):
         for source in sources.get_data_sources():
             source_state, source_output, _source_perfdata = source.get_summary_result()
             if source_state != 0:
-                console.error("ERROR [%s]: %s" % (source.id(), source_output))
+                console.error("ERROR [%s]: %s\n" % (source.id(), source_output))
                 has_errors = True
 
         console.output(output)

@@ -1,0 +1,19 @@
+Title: IPMI Management board: Use USER privilege level for monitoring
+Level: 1
+Component: core
+Compatible: compat
+Edition: cre
+Version: 1.5.0p3
+Date: 1535465356
+Class: fix
+
+Previous versions used the ADMIN privilege level for monitoring via IPMI which
+is way too much for this read-only access which is needed by Check_MK for
+monitoring.
+
+When you tried to use a non ADMIN privileged user before, an error like this occured:
+
+ERROR: Requested privilege level is not allowed over this channel while
+requesting privelege level 3 for [user]
+
+You can now use less privileged users for monitoring.

@@ -78,7 +78,7 @@ class IPMIManagementBoardDataSource(ManagementBoardDataSource, CheckMKAgentDataS
 
             # Improve bad exceptions thrown by pyghmi e.g. in case of connection issues
             if type(e) == IpmiException and "%s" % e == "None":
-                raise MKAgentError("IPMI communication failed")
+                raise MKAgentError("IPMI communication failed: %r" % e)
             else:
                 raise
 
@@ -88,6 +88,8 @@ class IPMIManagementBoardDataSource(ManagementBoardDataSource, CheckMKAgentDataS
         # address instead
         credentials = self._credentials
 
+        self._logger.debug("Connecting to %s:623 (User: %s, Privlevel: 2)" %
+                           (self._ipaddress, credentials["username"]))
         return ipmi_cmd.Command(bmc=self._ipaddress,
                                userid=credentials["username"],
                                password=credentials["password"])
@@ -95,7 +97,14 @@ class IPMIManagementBoardDataSource(ManagementBoardDataSource, CheckMKAgentDataS
 
     def _fetch_ipmi_sensors_section(self, connection):
         self._logger.debug("Fetching sensor data via UDP from %s:623" % (self._ipaddress))
-        sdr = ipmi_sdr.SDR(connection)
+
+        try:
+            sdr = ipmi_sdr.SDR(connection)
+        except NotImplementedError, e:
+            self._logger.verbose("Failed to fetch sensor data: %r" % e)
+            self._logger.debug("Exception", exc_info=e)
+            return ""
+
         sensors = []
         for number in sdr.get_sensor_numbers():
             rsp = connection.raw_command(command=0x2d, netfn=4, data=(number,))

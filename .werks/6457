@@ -1,0 +1,14 @@
+Title: IPMI Management board: Improved error handling when sensors can not be read
+Level: 1
+Component: core
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0i1
+Date: 1535464665
+
+When the IPMI sensors can not be read because of an incompatible device, the
+error is now handled more gracefully. The other IPMI data, like firmware information,
+is fetched even when the sensors can not be read and the exceptions are visible on
+the command line when executing e.g. cmk -vd [hostname] or cmk -vvd [hostname].

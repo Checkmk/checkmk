@@ -92,7 +92,8 @@ class IPMIManagementBoardDataSource(ManagementBoardDataSource, CheckMKAgentDataS
                            (self._ipaddress, credentials["username"]))
         return ipmi_cmd.Command(bmc=self._ipaddress,
                                userid=credentials["username"],
-                               password=credentials["password"])
+                               password=credentials["password"],
+                               privlevel=2)
 
 
     def _fetch_ipmi_sensors_section(self, connection):

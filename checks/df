@@ -164,8 +164,13 @@ def parse_df(info):
                 pass
             else:
                 line = [ line[0], None ] + line[1:]
-            inodes_total = int(line[2])
-            inodes_avail = int(line[4])
+
+            try:
+                inodes_total = int(line[2])
+                inodes_avail = int(line[4])
+            except ValueError:
+                continue
+
             mountpoint = line[-1]
             df_inodes.append((mountpoint, inodes_total, inodes_avail))
         return df_inodes

@@ -117,17 +117,18 @@ class DataSource(object):
             self._ipaddress = ipaddress
 
         self._exception = None
-        self._cmk_section = None
+        self._host_sections = None
 
         try:
             cpu_tracking.push_phase(self._cpu_tracking_id())
 
             raw_data, is_cached_data = self._get_raw_data()
+
+            self._host_sections = host_sections = self._convert_to_sections(raw_data)
+            assert isinstance(host_sections, HostSections)
+
             if get_raw_data:
                 return raw_data
-
-            host_sections = self._convert_to_sections(raw_data)
-            assert isinstance(host_sections, HostSections)
 
             if host_sections.persisted_sections and not is_cached_data:
                 self._store_persisted_sections(host_sections.persisted_sections)
@@ -135,7 +136,6 @@ class DataSource(object):
             # Add information from previous persisted infos
             host_sections = self._update_info_with_persisted_sections(host_sections)
 
-            self._host_sections = host_sections
             return host_sections
 
         except MKTerminate:

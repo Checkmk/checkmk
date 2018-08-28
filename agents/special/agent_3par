@@ -126,7 +126,7 @@ try:
                         verify=opt_verify)
 
 except requests.exceptions.RequestException as e:
-    sys.stderr.write("Error: {}".format(e))
+    sys.stderr.write("Error: %s\n" % e)
     sys.exit(1)
 
 # Status code should be 201.

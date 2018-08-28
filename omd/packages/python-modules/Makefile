@@ -120,7 +120,7 @@ MODULES += tinkerforge-2.1.15.tar.gz
 MODULES += paramiko-2.1.2.tar.gz
 # Added for IPMI monitoring of management interface
 MODULES += pbr-4.0.3.tar.gz
-MODULES += pyghmi-1.1.0.tar.gz
+MODULES += pyghmi-1.2.14.tar.gz
 
 MODULES += typing-3.6.4.tar.gz
 MODULES += scandir-1.7.tar.gz

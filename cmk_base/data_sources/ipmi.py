@@ -152,6 +152,9 @@ class IPMIManagementBoardDataSource(ManagementBoardDataSource, CheckMKAgentDataS
 
 
     def _get_ipmi_version(self):
+        if self._host_sections is None:
+            return "unknown"
+
         section = self._host_sections.sections.get("mgmt_ipmi_firmware")
         if not section:
             return "unknown"

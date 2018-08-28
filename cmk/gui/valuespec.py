@@ -1675,6 +1675,8 @@ class DropdownChoice(ValueSpec):
 
         if self._invalid_choice == "replace":
             return self.default_value() # garbled URL or len(choices) == 0
+        elif not choices:
+            raise MKUserError(varprefix, self._empty_text)
         else:
             raise MKUserError(varprefix, self._invalid_choice_error)
 
@@ -1704,7 +1706,7 @@ class DropdownChoice(ValueSpec):
             if value != None:
                 raise MKUserError(varprefix, self._invalid_choice_error)
             else:
-                raise MKUserError(varprefix, _("There is no element available to choose from."))
+                raise MKUserError(varprefix, self._empty_text)
 
         ValueSpec.custom_validate(self, value, varprefix)
 

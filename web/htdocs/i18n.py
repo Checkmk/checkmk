@@ -25,6 +25,7 @@
 # Boston, MA 02110-1301 USA.
 
 import __builtin__, os, gettext
+from typing import Text
 import cmk.paths
 
 #.
@@ -51,13 +52,14 @@ def get_language_dirs():
 
 
 def get_language_alias(lang):
+    # type: (str) -> Text
     alias = lang
     for lang_dir in get_language_dirs():
         try:
             alias = file('%s/%s/alias' % (lang_dir, lang), 'r').read().strip()
         except (OSError, IOError):
             pass
-    return alias
+    return alias.decode("utf-8")
 
 
 def get_languages():

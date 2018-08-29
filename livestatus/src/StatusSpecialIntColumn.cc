@@ -35,6 +35,10 @@ int32_t StatusSpecialIntColumn::getValue(Row /* row */,
             // Check_MK Inventory touches the file ".last" after each inventory
             return static_cast<int32_t>(
                 mk_inventory_last(_mc->mkInventoryPath() + "/.last"));
+        case Type::num_queued_notifications:
+            return static_cast<int32_t>(_mc->numQueuedNotifications());
+        case Type::num_queued_alerts:
+            return static_cast<int32_t>(_mc->numQueuedAlerts());
     }
     // never reached, make -Wall happy
     return 0;

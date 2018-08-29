@@ -2004,63 +2004,105 @@ function valuespec_toggle_dropdownn(oDropdown, divid) {
    has been rendered. It attaches the onFocus-function to the last
    of the input elements. That function will append another
    input field as soon as the user focusses the last field. */
-function list_of_strings_init(divid) {
-    var oContainer = document.getElementById(divid);
-    var oDivChildren = oContainer.getElementsByTagName("div");
-    var oLastChild = oDivChildren[oDivChildren.length-1];
-    list_of_strings_add_focus(oLastChild);
+function list_of_strings_init(divid, split_on_paste, split_separators) {
+    var container = document.getElementById(divid);
+    var children = container.getElementsByTagName("div");
+    var last_input = children[children.length-1].getElementsByTagName("input")[0];
+    list_of_strings_add_event_handlers(last_input, split_on_paste, split_separators);
 }
 
-function list_of_strings_add_focus(oLastChild) {
-    /* look for <input> in last child node and attach focus handler to it. */
-    var input = oLastChild.getElementsByTagName("input");
-    if (input.length == 1) {
-        var handler_func = function(e) {
-            if (this.value != "") {
-                return list_of_strings_extend(this);
-            }
-        };
+function list_of_strings_add_event_handlers(input, split_on_paste, split_separators) {
+    var handler_func = function(e) {
+        if (this.value != "") {
+            return list_of_strings_extend(this, split_on_paste, split_separators);
+        }
+    };
 
-        input[0].onfocus = handler_func;
-        input[0].oninput = handler_func;
+    input.onfocus = handler_func;
+    input.oninput = handler_func;
+
+    if (split_on_paste) {
+        input.onpaste = function(e) {
+            // Get pasted data via clipboard API
+            var clipboard_data = e.clipboardData || window.clipboardData;
+            var pasted = clipboard_data.getData('Text');
+
+            if (this.value != "")
+                return true; // The field had a value before: Don't do custom stuff
+
+            // When pasting a string, trim separators and then split by the given separators
+            var stripped = pasted.replace(new RegExp("^["+split_separators+"]+|["+split_separators+"]+$", "g"), "");
+            if (stripped == "")
+                return true; // Only separators in clipboard: Don't do custom stuff
+            var splitted = stripped.split(new RegExp("["+split_separators+"]+"));
+
+            // Add splitted parts to the input fields
+            var last_input = this;
+            for (var i = 0; i < splitted.length; i++) {
+                // Put the first item to the current field
+                if (i != 0)
+                    last_input = list_of_strings_add_new_field(last_input);
+
+                last_input.value = splitted[i];
+            }
+
+            // Focus the last populated field
+            last_input.focus();
+
+            // And finally add a new empty field to the end (with attached handlers)
+            list_of_strings_extend(last_input, split_on_paste, split_separators);
+
+            // Stop original data actually being pasted
+            return prevent_default_events(e);
+        };
     }
+}
+
+function list_of_strings_remove_event_handlers(input) {
+    input.oninput = null;
+    input.onfocus = null;
+    input.onpaste = null;
 }
 
 /* Is called when the last input field in a ListOfString gets focus.
    In that case a new input field is being appended. */
-function list_of_strings_extend(oInput, j) {
+function list_of_strings_extend(input, split_on_paste, split_separators) {
+    var new_input = list_of_strings_add_new_field(input);
 
+    /* Move focus function from old last to new last input field */
+    list_of_strings_add_event_handlers(new_input, split_on_paste, split_separators);
+    list_of_strings_remove_event_handlers(input);
+}
+
+
+function list_of_strings_add_new_field(input) {
     /* The input field has a unique name like "extra_emails_2" for the field with
        the index 2. We need to convert this into "extra_emails_3". */
 
-    var oldName = oInput.name;
-    var splitted = oldName.split("_");
+    var old_name = input.name;
+    var splitted = old_name.split("_");
     var num = 1 + parseInt(splitted[splitted.length-1]);
     splitted[splitted.length-1] = "" + num;
-    var newName = splitted.join("_");
+    var new_name = splitted.join("_");
 
     /* Now create a new <div> element as a copy from the current one and
        replace this name. We do this by simply copying the HTML code. The
        last field is always empty. Remember: ListOfStrings() always renders
        one exceeding empty element. */
 
-    var oDiv = oInput.parentNode;
-    while (oDiv.parentNode.classList && !oDiv.parentNode.classList.contains("listofstrings"))
-        oDiv = oDiv.parentNode;
-    var oContainer = oDiv.parentNode;
+    var div = input.parentNode;
+    while (div.parentNode.classList && !div.parentNode.classList.contains("listofstrings"))
+        div = div.parentNode;
+    var container = div.parentNode;
 
-    var oNewDiv = document.createElement("DIV");
-    oNewDiv.innerHTML = oDiv.innerHTML.replace('"' + oldName + '"', '"' + newName + '"');
+    var new_div = document.createElement("DIV");
+    new_div.innerHTML = div.innerHTML.replace('"' + old_name + '"', '"' + new_name + '"');
     // IE7 does not have quotes in innerHTML, trying to workaround this here.
-    oNewDiv.innerHTML = oNewDiv.innerHTML.replace('=' + oldName + ' ', '=' + newName + ' ');
-    oNewDiv.innerHTML = oNewDiv.innerHTML.replace('=' + oldName + '>', '=' + newName + '>');
-    oContainer.appendChild(oNewDiv);
+    new_div.innerHTML = new_div.innerHTML.replace('=' + old_name + ' ', '=' + new_name + ' ');
+    new_div.innerHTML = new_div.innerHTML.replace('=' + old_name + '>', '=' + new_name + '>');
+    container.appendChild(new_div);
 
-    /* Move focus function from old last to new last input field */
-    list_of_strings_add_focus(oNewDiv);
-
-    oInput.oninput = null;
-    oInput.onfocus = null;
+    return new_div.getElementsByTagName("input")[0];
 }
 
 function valuespec_cascading_change(oSelect, varprefix, count) {

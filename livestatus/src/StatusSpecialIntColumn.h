@@ -35,7 +35,11 @@ class Row;
 
 class StatusSpecialIntColumn : public IntColumn {
 public:
-    enum class Type { mk_inventory_last };
+    enum class Type {
+        mk_inventory_last,
+        num_queued_notifications,
+        num_queued_alerts
+    };
 
     StatusSpecialIntColumn(const std::string& name,
                            const std::string& description, int indirect_offset,

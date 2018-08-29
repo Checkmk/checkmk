@@ -682,7 +682,7 @@ register_configvar(group,
                    TextUnicode(title = _("Original Text"), size = 40),
                     Dictionary(
                         title = _("Translations"),
-                        elements = [
+                        elements = lambda: [
                             ( l or "en", TextUnicode(title = a, size = 32) )
                               for (l,a) in cmk.gui.i18n.get_languages()
                         ],

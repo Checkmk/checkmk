@@ -4411,6 +4411,12 @@ check_metrics["check_mk-diskstat"] = {
     "disk_utilization" : { "scale" : 100.0 },
 }
 
+check_metrics["check_mk-aix_diskiod"] = {
+    "read" : { "name" : "disk_read_throughput" },
+    "write": { "name" : "disk_write_throughput" },
+    "disk_utilization" : { "scale" : 100.0 },
+}
+
 check_metrics["check_mk-ibm_svc_systemstats.iops"] = {
     "read"  : { "name" : "disk_read_ios" },
     "write" : { "name" : "disk_write_ios" }

@@ -957,7 +957,7 @@ class LDAPUserConnector(UserConnector):
         # authentication which should be rebound again after trying this.
         try:
             self.bind(user_dn, password)
-            result = user_id.encode('utf-8')
+            result = user_id
         except:
             self._logger.exception("  Exception during authentication (User: %s)", user_id)
             result = False

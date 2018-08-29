@@ -673,6 +673,9 @@ public:
 
     Triggers &triggers() override { return fl_triggers; }
 
+    size_t numQueuedNotifications() override { return 0; }
+    size_t numQueuedAlerts() override { return 0; }
+
 private:
     void *implInternal() const override { return fl_store; }
 

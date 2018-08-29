@@ -104,6 +104,9 @@ public:
 
     virtual Triggers &triggers() = 0;
 
+    virtual size_t numQueuedNotifications() = 0;
+    virtual size_t numQueuedAlerts() = 0;
+
     // Our escape hatch, this should die in the long run...
     template <typename T>
     T *impl() const {

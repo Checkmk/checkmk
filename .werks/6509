@@ -1,0 +1,16 @@
+Title: Pasting with automatic text splitting in list of input elements
+Level: 2
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1535521285
+Class: feature
+
+When a dialog is using a self extending list of input elements, like e.g. the
+host- and service input fields at the bottom of the "hosts & service parameters"
+rule editor, a text can be pasted into the last input field which is then split
+by ";" separators. Each of the resulting parts is then added to a dedicated input
+field. This is only active for the last (empty) input field.
+
+This makes it a lot easier to populate such dialogs with a longer list of items.

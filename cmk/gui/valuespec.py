@@ -1080,17 +1080,23 @@ class ListOfStrings(ValueSpec):
         self._max_entries = kwargs.get("max_entries")
         self._separator   = kwargs.get("separator", "") # in case of float
 
+        self._split_on_paste   = kwargs.get("split_on_paste", True)
+        self._split_separators = kwargs.get("split_separators", ";")
+
 
     def help(self):
-        help_text = ValueSpec.help(self)
+        help_texts = [
+            ValueSpec.help(self),
+            self._valuespec.help(),
+        ]
 
-        field_help = self._valuespec.help()
-        if help_text and field_help:
-            return help_text + " " + field_help
-        elif field_help:
-            return field_help
-        else:
-            return help_text
+        if self._split_on_paste:
+            help_texts.append(_("You may paste a text from your clipboard which contains several "
+                "parts separated by \"%s\" characters into the last input field. The text will "
+                "then be split by these separators and the single parts are added into dedicated "
+                "input fields.") % self._split_separators)
+
+        return " ".join([ t for t in help_texts if t ])
 
 
     def render_input(self, varprefix, value):
@@ -1123,7 +1129,9 @@ class ListOfStrings(ValueSpec):
         html.close_div()
         html.div('', style="clear:left;")
         html.help(self.help())
-        html.javascript("list_of_strings_init('%s');" % varprefix)
+        html.javascript("list_of_strings_init(%s, %s, %s);" %
+            (json.dumps(varprefix), json.dumps(self._split_on_paste),
+             json.dumps(self._split_separators)))
 
     def canonical_value(self):
         return []

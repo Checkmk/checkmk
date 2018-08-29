@@ -54,7 +54,7 @@ Translation = NamedTuple("Translation", [
 _translation = None # type: Optional[Translation]
 
 def _(message):
-    # type: (str) -> unicode
+    # type: (str) -> Text
     if not _translation:
         return unicode(message)
     else:
@@ -75,18 +75,18 @@ def _get_language_dirs():
 
 
 def get_language_alias(lang):
-    # type: (str) -> unicode
+    # type: (str) -> Text
     alias = lang
     for lang_dir in _get_language_dirs():
         try:
             alias = open('%s/%s/alias' % (lang_dir, lang), 'r').read().strip()
         except (OSError, IOError):
             pass
-    return alias
+    return alias.decode("utf-8")
 
 
 def get_languages():
-    # type: () -> List[Tuple[str, unicode]]
+    # type: () -> List[Tuple[str, Text]]
     # Add the hard coded english language to the language list
     # It must be choosable even if the administrator changed the default
     # language to a custom value

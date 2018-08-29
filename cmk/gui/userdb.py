@@ -586,6 +586,10 @@ def load_users(lock = False):
     # will be added later as normal users.
     result = {}
     for id, user in users.items():
+        # Transform user IDs which were stored with a wrong type
+        if isinstance(id, str):
+            id = id.decode("utf-8")
+
         profile = contacts.get(id, {})
         profile.update(user)
         result[id] = profile
@@ -598,6 +602,10 @@ def load_users(lock = False):
     # contacts.mk manually. But we want to support that as
     # far as possible.
     for id, contact in contacts.items():
+        # Transform user IDs which were stored with a wrong type
+        if isinstance(id, str):
+            id = id.decode("utf-8")
+
         if id not in result:
             result[id] = contact
             result[id]["roles"] = [ "user" ]

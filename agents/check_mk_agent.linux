@@ -839,8 +839,10 @@ fi
 # We do not endorse running ZFS on linux if your vendor doesnt support it ;)
 # check zpool status
 if type zpool >/dev/null; then
-   echo "<<<zpool_status>>>"
-   zpool status -x
+    echo "<<<zpool_status>>>"
+    zpool status -x
+    echo "<<<zpool>>>"
+    zpool list
 fi
 
 

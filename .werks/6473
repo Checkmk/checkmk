@@ -1,0 +1,10 @@
+Title: zpool: Now also available for linux
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1535541128
+Class: feature
+
+The zpool will now be checked also on linux systems.

@@ -1,0 +1,21 @@
+Title: Dropped libmcrypt / php-mcrypt dependency
+Level: 1
+Component: omd
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1535568405
+Class: feature
+
+The libmcrypt library and the mcrypt php module is not necessary for Check_MK
+and it's major components. We drop it because it is the last dependency on
+RedHat distros that is fetched from the EPEL repositories. This means that we
+can now skip this step during initial installation and thus simplify the
+installation process on these systems a bit more.
+
+The only component left that uses libmcrypt is the fairly old NSCA receiver
+which is still shipped with Check_MK. We keep this component for the moment
+since it's used by several installations and we currently have no 1:1
+replacement for it. In case you need to use NSCAs encryption, which is highly
+recommended when you use NSCA, you may have to install libmcrypt by hand to
+make it work.

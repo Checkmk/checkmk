@@ -65,7 +65,6 @@ OS_PACKAGES    += php5-fastcgi
 OS_PACKAGES    += php5-gd
 OS_PACKAGES    += php5-iconv
 OS_PACKAGES    += php5-mbstring
-OS_PACKAGES    += php5-mcrypt
 OS_PACKAGES    += php5-pear
 OS_PACKAGES    += php5-sockets
 OS_PACKAGES    += php5-sqlite

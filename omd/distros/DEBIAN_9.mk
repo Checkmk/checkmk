@@ -68,7 +68,6 @@ OS_PACKAGES      += php
 OS_PACKAGES      += php-cgi
 OS_PACKAGES      += php-cli
 OS_PACKAGES      += php-gd
-OS_PACKAGES      += php-mcrypt
 OS_PACKAGES      += php-sqlite3
 OS_PACKAGES      += php-pear
 OS_PACKAGES      += rsync

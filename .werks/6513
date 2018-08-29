@@ -1,0 +1,10 @@
+Title: hp_msa: Hide password from GUI in configuration dialogs
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.5.0p3
+Date: 1535535649
+Class: fix
+
+

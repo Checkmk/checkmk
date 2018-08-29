@@ -240,7 +240,7 @@ register_rule(group,
               )
             ),
             ( "password",
-              TextAscii(
+              Password(
                   title = _("Password"),
                   allow_empty = False,
               )

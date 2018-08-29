@@ -1,0 +1,14 @@
+Title: New Theme: Updated fixes
+Level: 1
+Component: multisite
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0p3
+Date: 1535530091
+
+This werk includes some minor fixes for:
+- Missing highlighting of ineffective rules
+- Too small arrow WATO > Hosts for folder order
+- White title of folder if the folder is locked

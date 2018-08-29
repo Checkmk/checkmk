@@ -1,0 +1,11 @@
+Title: Global Settings: Custom localizations fixed possible exception when language alias contains non-ascii characters
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.5.0p3
+Date: 1535531405
+Class: fix
+
+An exception could occur when using a localized GUI and a language which uses non-ascii characters
+in it's alias file (local/share/check_mk/locale/[lang]/alias).

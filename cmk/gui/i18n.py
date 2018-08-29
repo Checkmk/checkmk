@@ -75,7 +75,10 @@ def _get_language_dirs():
 
 
 def get_language_alias(lang):
-    # type: (str) -> Text
+    # type: (Optional[str]) -> Text
+    if lang is None:
+        return _("English")
+
     alias = lang
     for lang_dir in _get_language_dirs():
         try:

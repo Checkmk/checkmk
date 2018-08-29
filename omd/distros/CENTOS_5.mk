@@ -47,7 +47,6 @@ OS_PACKAGES      += graphviz
 OS_PACKAGES      += graphviz-gd
 OS_PACKAGES      += httpd
 OS_PACKAGES      += libevent
-OS_PACKAGES      += libmcrypt
 OS_PACKAGES      += libtool-ltdl
 OS_PACKAGES      += pango
 OS_PACKAGES      += patch

@@ -64,7 +64,6 @@ OS_PACKAGES    += binutils
 OS_PACKAGES    += php5-cli
 OS_PACKAGES    += php5-cgi
 OS_PACKAGES    += php5-gd
-OS_PACKAGES    += php5-mcrypt
 OS_PACKAGES    += php5-sqlite
 OS_PACKAGES    += php-pear
 OS_PACKAGES    += pyro

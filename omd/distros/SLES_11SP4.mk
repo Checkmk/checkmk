@@ -65,7 +65,6 @@ OS_PACKAGES    += php53-fastcgi
 OS_PACKAGES    += php53-gd
 OS_PACKAGES    += php53-iconv
 OS_PACKAGES    += php53-mbstring
-OS_PACKAGES    += php53-mcrypt
 OS_PACKAGES    += php53-pear
 OS_PACKAGES    += php53-sockets
 OS_PACKAGES    += php53-sqlite

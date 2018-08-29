@@ -12656,7 +12656,7 @@ def select_language(user):
     if languages:
         active = 'language' in user
         forms.section(_("Language"), checkbox = ('_set_lang', active, 'language'))
-        default_label = _('Default: %s') % (cmk.gui.i18n.get_language_alias(config.default_language) or _('English'))
+        default_label = _('Default: %s') % cmk.gui.i18n.get_language_alias(config.default_language)
         html.div(default_label, class_="inherited", id_="attr_default_language", style= "display: none" if active else "")
         html.open_div(id_="attr_entry_language", style="display: none" if not active else "")
 

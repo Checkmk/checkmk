@@ -29,7 +29,7 @@ def agent_3par_arguments(params, hostname, ipaddress):
 
     args += " -u " + quote_shell_string(params["user"])
     args += " -p " + quote_shell_string(params["password"])
-    args += quote_shell_string(" --verify-certs=%s" % ("yes" if params.get("verify_cert", False) else "no"))
+    args += " --verify-certs=%s" % ("yes" if params.get("verify_cert", False) else "no")
 
     if "values" in params:
         args += " -v " + quote_shell_string(",".join(params["values"]))

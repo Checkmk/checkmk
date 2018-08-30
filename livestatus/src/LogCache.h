@@ -31,7 +31,6 @@
 #include <map>
 #include <memory>
 #include <mutex>
-#include "FileSystem.h"
 class Logfile;
 class Logger;
 class MonitoringCore;
@@ -59,7 +58,7 @@ private:
     logfiles_t _logfiles;
     std::chrono::system_clock::time_point _last_index_update;
 
-    void scanLogfile(const fs::path &path, bool watch);
+    void addToIndex(std::unique_ptr<Logfile> logfile);
     Logger *logger() const;
 };
 

@@ -1,0 +1,11 @@
+Title: zpool: Fixed title and units of graphs
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.4.0p36
+Date: 1535540812
+
+The check plugin has never used the unified definition for filesystem graphs.

@@ -4266,6 +4266,7 @@ check_metrics["check_mk-mongodb_collections"]                   = df_translation
 check_metrics["check_mk-3par_cpgs.usage"]                       = df_translation
 check_metrics["check_mk-3par_capacity"]                         = df_translation
 check_metrics["check_mk-3par_volumes"]                          = df_translation
+check_metrics["check_mk-zpool"]                                 = df_translation
 
 df_netapp_perfvarnames = list(df_basic_perfvarnames)
 for protocol in [ "nfs", "cifs", "san", "fcp", "iscsi", "nfsv4", "nfsv4_1"]:

@@ -1,0 +1,12 @@
+Title: mgmt_ipmi_sensors: Fix wrong state for IPMI Sensor warnings
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1535636520
+Class: fix
+
+Previously IPMI Sensors have been mapped to CRIT when they where
+above the "non-critical" but below the "critical" threshold.
+This as been fixed to WARN.

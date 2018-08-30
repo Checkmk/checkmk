@@ -46,8 +46,7 @@ public:
 #ifdef CMC
     void setMaxCachedMessages(unsigned long m);
 #endif
-    void handleNewMessage(Logfile *logfile, time_t since, time_t until,
-                          unsigned logclasses);
+    void handleNewMessage(Logfile *logfile, unsigned logclasses);
     logfiles_t *logfiles() { return &_logfiles; };
     void forgetLogfiles();
     void updateLogfileIndex();

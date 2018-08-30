@@ -119,8 +119,7 @@ void LogCache::scanLogfile(const fs::path &path, bool watch) {
    The parameters to this method reflect the current query,
    not the messages that just has been loaded.
  */
-void LogCache::handleNewMessage(Logfile *logfile, time_t /*unused*/,
-                                time_t /*unused*/, unsigned logclasses) {
+void LogCache::handleNewMessage(Logfile *logfile, unsigned logclasses) {
     if (static_cast<unsigned long>(++num_cached_log_messages) <=
         _max_cached_messages) {
         return;  // current message count still allowed, everything ok

@@ -97,6 +97,7 @@ int g_max_fd_ever = 0;
 static char fl_socket_path[4096];
 static char fl_pnp_path[4096];
 static char fl_mk_inventory_path[4096];
+static char fl_structured_status_path[4096];
 static char fl_mk_logwatch_path[4096];
 static char fl_logfile_path[4096];
 static char fl_mkeventd_socket_path[4096];
@@ -647,6 +648,9 @@ public:
     }
     std::string mkLogwatchPath() override { return fl_mk_logwatch_path; }
     std::string mkInventoryPath() override { return fl_mk_inventory_path; }
+    std::string structuredStatusPath() override {
+        return fl_structured_status_path;
+    }
     std::string pnpPath() override { return fl_pnp_path; }
     std::string logArchivePath() override {
         extern char *log_archive_path;
@@ -1042,6 +1046,17 @@ void livestatus_parse_arguments(const char *args_orig) {
                 }
                 check_path("Check_MK Inventory directory",
                            fl_mk_inventory_path);
+            } else if (strcmp(left, "structured_status_path") == 0) {
+                strncpy(fl_structured_status_path, right,
+                        sizeof(fl_structured_status_path) - 1);
+                if (right[strlen(right) - 1] != '/') {
+                    strncat(fl_structured_status_path, "/",
+                            sizeof(fl_structured_status_path) -
+                                strlen(fl_structured_status_path) -
+                                1);  // make sure, that trailing slash is there
+                }
+                check_path("Check_MK structured status directory",
+                           fl_structured_status_path);
             } else if (strcmp(left, "mk_logwatch_path") == 0) {
                 strncpy(fl_mk_logwatch_path, right,
                         sizeof(fl_mk_logwatch_path) - 1);

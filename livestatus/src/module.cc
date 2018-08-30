@@ -652,6 +652,7 @@ public:
         return fl_structured_status_path;
     }
     std::string pnpPath() override { return fl_pnp_path; }
+    std::string historyFilePath() override { return log_file; }
     std::string logArchivePath() override {
         extern char *log_archive_path;
         return log_archive_path;

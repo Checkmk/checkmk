@@ -32,7 +32,6 @@
 #include <memory>
 #include <mutex>
 #include "FileSystem.h"
-class Column;
 class Logfile;
 class Logger;
 class MonitoringCore;
@@ -40,11 +39,6 @@ class MonitoringCore;
 using logfiles_t = std::map<time_t, std::unique_ptr<Logfile>>;
 
 class LogCache {
-    MonitoringCore *_mc;
-    unsigned long _max_cached_messages;
-    unsigned long _num_at_last_check;
-    logfiles_t _logfiles;
-
 public:
     std::mutex _lock;
 
@@ -52,23 +46,21 @@ public:
 #ifdef CMC
     void setMaxCachedMessages(unsigned long m);
 #endif
-    std::chrono::system_clock::time_point _last_index_update;
-
-    const char *name() { return "log"; }
-    const char *namePrefix() { return "logs"; }
     void handleNewMessage(Logfile *logfile, time_t since, time_t until,
                           unsigned logclasses);
-    Column *column(
-        const char *colname);  // override in order to handle current_
     logfiles_t *logfiles() { return &_logfiles; };
     void forgetLogfiles();
     void updateLogfileIndex();
-
     bool logCachePreChecks();
 
 private:
+    MonitoringCore *const _mc;
+    unsigned long _max_cached_messages;
+    unsigned long _num_at_last_check;
+    logfiles_t _logfiles;
+    std::chrono::system_clock::time_point _last_index_update;
+
     void scanLogfile(const fs::path &path, bool watch);
-    logfiles_t::iterator findLogfileStartingBefore(time_t);
     Logger *logger() const;
 };
 

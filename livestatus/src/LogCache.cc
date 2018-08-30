@@ -26,6 +26,7 @@
 #include <sstream>
 #include <string>
 #include <utility>
+#include "FileSystem.h"
 #include "LogEntry.h"  // IWYU pragma: keep
 #include "Logfile.h"
 #include "Logger.h"
@@ -80,20 +81,19 @@ void LogCache::updateLogfileIndex() {
     _last_index_update = std::chrono::system_clock::now();
     // We need to find all relevant logfiles. This includes directory, the
     // current nagios.log and all files in the archive.
-    scanLogfile(_mc->historyFilePath(), true);
+    addToIndex(std::make_unique<Logfile>(_mc, _mc->historyFilePath(), true));
 
     fs::path dirpath = _mc->logArchivePath();
     try {
         for (const auto &entry : fs::directory_iterator(dirpath)) {
-            scanLogfile(entry.path(), false);
+            addToIndex(std::make_unique<Logfile>(_mc, entry.path(), false));
         }
     } catch (const fs::filesystem_error &e) {
         Warning(logger()) << "updating log file index: " << e.what();
     }
 }
 
-void LogCache::scanLogfile(const fs::path &path, bool watch) {
-    auto logfile = std::make_unique<Logfile>(_mc, path, watch);
+void LogCache::addToIndex(std::unique_ptr<Logfile> logfile) {
     time_t since = logfile->since();
     if (since == 0) {
         return;
@@ -102,7 +102,7 @@ void LogCache::scanLogfile(const fs::path &path, bool watch) {
     // circumstances this never happens, but the user might have copied files
     // around.
     if (_logfiles.find(since) != _logfiles.end()) {
-        Warning(logger()) << "ignoring duplicate log file " << path;
+        Warning(logger()) << "ignoring duplicate log file " << logfile->path();
         return;
     }
 

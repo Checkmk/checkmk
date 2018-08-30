@@ -1,0 +1,14 @@
+Title: Fixed stored XSS using alert handler config
+Level: 1
+Component: alerts
+Class: security
+Compatible: compat
+Edition: cee
+State: unknown
+Version: 1.6.0i1
+Date: 1535639159
+
+A user with permission to the alert handler administration could use an alert rule to
+store arbitrary javascript code which would then be executed in the context of the browser
+of another user with permission to the alert handler administration when viewing the list
+of alert handlers.

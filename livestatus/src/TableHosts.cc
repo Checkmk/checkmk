@@ -584,14 +584,18 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
         HostSpecialIntColumn::Type::mk_inventory_last));
     table->addColumn(std::make_unique<HostFileColumn>(
         prefix + "mk_inventory",
-        "The file content content of the Check_MK HW/SW-Inventory",
-        indirect_offset, extra_offset, -1, 0, table->core()->mkInventoryPath(),
-        ""));
+        "The file content of the Check_MK HW/SW-Inventory", indirect_offset,
+        extra_offset, -1, 0, table->core()->mkInventoryPath(), ""));
     table->addColumn(std::make_unique<HostFileColumn>(
         prefix + "mk_inventory_gz",
-        "The gzipped file content content of the Check_MK HW/SW-Inventory",
+        "The gzipped file content of the Check_MK HW/SW-Inventory",
         indirect_offset, extra_offset, -1, 0, table->core()->mkInventoryPath(),
         ".gz"));
+    table->addColumn(std::make_unique<HostFileColumn>(
+        prefix + "structured_status",
+        "The file content of the structured status of the Check_MK HW/SW-Inventory",
+        indirect_offset, extra_offset, -1, 0,
+        table->core()->structuredStatusPath(), ""));
 
     table->addColumn(std::make_unique<LogwatchListColumn>(
         prefix + "mk_logwatch_files",

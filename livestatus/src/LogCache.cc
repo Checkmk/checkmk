@@ -36,9 +36,6 @@ namespace {
 constexpr unsigned long check_mem_cycle = 1000;
 }  // namespace
 
-// watch nagios' logfile rotation
-extern char *log_file;
-
 int num_cached_log_messages = 0;
 
 LogCache::LogCache(MonitoringCore *mc, unsigned long max_cached_messages)
@@ -66,7 +63,8 @@ bool LogCache::logCachePreChecks() {
         updateLogfileIndex();
     }
     if (_logfiles.empty()) {
-        Notice(logger()) << "no log file found, not even " << log_file;
+        Notice(logger()) << "no log file found, not even "
+                         << _mc->historyFilePath();
     }
     return !_logfiles.empty();
 }
@@ -82,7 +80,7 @@ void LogCache::updateLogfileIndex() {
     _last_index_update = std::chrono::system_clock::now();
     // We need to find all relevant logfiles. This includes directory, the
     // current nagios.log and all files in the archive.
-    scanLogfile(log_file, true);
+    scanLogfile(_mc->historyFilePath(), true);
 
     fs::path dirpath = _mc->logArchivePath();
     try {

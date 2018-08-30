@@ -70,15 +70,14 @@ public:
     // character at both ends.
     std::unique_ptr<std::vector<char>> readIntoBuffer();
 #endif
-    void load(LogCache *logcache, time_t since, time_t until,
-              unsigned logclasses);
+    void load(LogCache *logcache, unsigned logclasses);
     void flush();
     time_t since() { return _since; }
     unsigned classesRead() { return _logclasses_read; }
     size_t size() { return _entries.size(); }
     logfile_entries_t *getEntriesFromQuery(const Query *query,
-                                           LogCache *logcache, time_t since,
-                                           time_t until, unsigned logclasses);
+                                           LogCache *logcache,
+                                           unsigned logclasses);
     bool answerQuery(Query *query, LogCache *logcache, time_t since,
                      time_t until, unsigned logclasses);
     bool answerQueryReverse(Query *query, LogCache *logcache, time_t since,
@@ -91,7 +90,7 @@ public:
 
 private:
     void loadRange(FILE *file, unsigned missing_types, LogCache *logcache,
-                   time_t since, time_t until, unsigned logclasses);
+                   unsigned logclasses);
     bool processLogLine(size_t lineno, std::string line, unsigned logclasses);
     uint64_t makeKey(time_t t, size_t lineno);
     Logger *logger() const;

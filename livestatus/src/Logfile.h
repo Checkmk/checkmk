@@ -48,6 +48,32 @@ class World;
 using logfile_entries_t = std::map<uint64_t, std::unique_ptr<LogEntry>>;
 
 class Logfile {
+public:
+    Logfile(MonitoringCore *mc, fs::path path, bool watch);
+
+    std::string path() { return _path; }
+#ifdef CMC
+    // Note: The buffer is 2 bytes larger then the file, containing a zero
+    // character at both ends. For StateHistoryThread::processLogfile.
+    std::unique_ptr<std::vector<char>> readIntoBuffer();
+#endif
+
+    // for tricky protocol between LogCache::logLineHasBeenAdded and this class
+    void flush();
+    time_t since() { return _since; }
+    unsigned classesRead() { return _logclasses_read; }
+    size_t size() { return _entries.size(); }
+    long freeMessages(unsigned logclasses);
+
+    // for TableStateHistory
+    logfile_entries_t *getEntriesFromQuery(const Query *query,
+                                           LogCache *logcache,
+                                           unsigned logclasses);
+
+    // for TableLog::answerQuery
+    bool answerQueryReverse(Query *query, LogCache *logcache, time_t since,
+                            time_t until, unsigned logclasses);
+
 private:
     MonitoringCore *_mc;
     fs::path _path;
@@ -55,44 +81,18 @@ private:
     bool _watch;       // true only for current logfile
     fpos_t _read_pos;  // read until this position
     size_t _lineno;    // read until this line
-
     logfile_entries_t _entries;
 #ifdef CMC
     World *_world;  // CMC: world our references point into
 #endif
-
-public:
-    Logfile(MonitoringCore *mc, fs::path path, bool watch);
-
-    std::string path() { return _path; }
-#ifdef CMC
-    // Note: The buffer is 2 bytes larger then the file, containing a zero
-    // character at both ends.
-    std::unique_ptr<std::vector<char>> readIntoBuffer();
-#endif
-    void load(LogCache *logcache, unsigned logclasses);
-    void flush();
-    time_t since() { return _since; }
-    unsigned classesRead() { return _logclasses_read; }
-    size_t size() { return _entries.size(); }
-    logfile_entries_t *getEntriesFromQuery(const Query *query,
-                                           LogCache *logcache,
-                                           unsigned logclasses);
-    bool answerQuery(Query *query, LogCache *logcache, time_t since,
-                     time_t until, unsigned logclasses);
-    bool answerQueryReverse(Query *query, LogCache *logcache, time_t since,
-                            time_t until, unsigned logclasses);
-
-    long freeMessages(unsigned logclasses);
-    void updateReferences();
-
     unsigned _logclasses_read;  // only these types have been read
 
-private:
+    void load(LogCache *logcache, unsigned logclasses);
     void loadRange(FILE *file, unsigned missing_types, LogCache *logcache,
                    unsigned logclasses);
     bool processLogLine(size_t lineno, std::string line, unsigned logclasses);
     uint64_t makeKey(time_t t, size_t lineno);
+    void updateReferences();
     Logger *logger() const;
 };
 

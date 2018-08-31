@@ -816,7 +816,7 @@ function fallback_graphs(data) {
 }
 
 function create_pnp_graph(data, params) {
-    var urlvars = params + '&theme=multisite&baseurl='+data['base_url'];
+    var urlvars = params + '&theme='+data['theme']+'&baseurl='+data['base_url'];
 
     if (typeof(data['start']) !== 'undefined' && typeof(data['end']) !== 'undefined')
         urlvars += '&start='+data['start']+'&end='+data['end'];
@@ -871,7 +871,7 @@ function create_pnp_graph(data, params) {
     urlvars = null;
 }
 
-function render_pnp_graphs(container, site, host, service, pnpview, base_url, pnp_url, with_link, add_txt, from_ts, to_ts)
+function render_pnp_graphs(container, site, host, service, pnpview, base_url, pnp_url, with_link, add_txt, from_ts, to_ts, pnp_theme)
 {
     from_ts = (typeof from_ts === 'undefined') ? null : from_ts;
     to_ts   = (typeof to_ts === 'undefined') ? null : to_ts;
@@ -880,7 +880,7 @@ function render_pnp_graphs(container, site, host, service, pnpview, base_url, pn
                  'pnp_url':   pnp_url,   'site':     site,
                  'host':      host,      'service':  service,
                  'with_link': with_link, 'view':     pnpview,
-                 'add_txt':   add_txt};
+                 'add_txt':   add_txt,   'theme':    pnp_theme };
 
     if (from_ts !== null && to_ts !== null) {
         data['start'] = from_ts;

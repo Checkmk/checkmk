@@ -817,10 +817,14 @@ def paint_time_graph_pnp(row):
         else:
             pnpview = pnp_timerange[1]
 
+    pnp_theme = html.get_theme()
+    if pnp_theme == "classic":
+        pnp_theme = "multisite"
+
     return "pnpgraph", "<div id=\"%s\"></div>" \
-                       "<script>render_pnp_graphs('%s', '%s', '%s', '%s', '%s', '%s', '%s', %s, '%s', %s, %s)</script>" % \
+                       "<script>render_pnp_graphs('%s', '%s', '%s', '%s', '%s', '%s', '%s', %s, '%s', %s, %s, '%s')</script>" % \
                           (container_id, container_id, sitename, host, service, pnpview,
-                           config.url_prefix() + "check_mk/", pnp_url, with_link, _('Add this graph to...'), from_ts, to_ts)
+                           config.url_prefix() + "check_mk/", pnp_url, with_link, _('Add this graph to...'), from_ts, to_ts, pnp_theme)
 
 
 def time_graph_params():

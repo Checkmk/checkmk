@@ -1,0 +1,13 @@
+Title: Raw Edition: Graphing pages are now themed correctly
+Level: 2
+Component: multisite
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0i1
+Date: 1535723749
+
+The graphing pages of the Raw Edition were always rendered in the classic theme
+style. The pages are now rendered in either the classic or the modern style
+depending on the choose theme.

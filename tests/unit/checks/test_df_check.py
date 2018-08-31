@@ -207,6 +207,12 @@ info_df_btrfs = \
 
 
 
+info_empty_inodes = [
+    [u'[df_inodes_start]'],
+    [u'/dev/mapper/vgdns-lvbindauthlog', u'-', u'-', u'-', u'-', u'-', u'/dns/bindauth/log'],
+    [u'[df_inodes_end]'],
+]
+
 #.
 #   .--Test functions------------------------------------------------------.
 #   |   _____         _      __                  _   _                     |
@@ -239,6 +245,7 @@ info_df_btrfs = \
     (info_df_btrfs, [(u'btrfs /dev/sda1', {})], {}),                                                     # btrfs
     (info_df_btrfs, [(u'/dev/sda1 btrfs /dev/sda1', {})],
                                                          { "include_volume_name" : True }),              # btrfs w/ volume name option
+    (info_empty_inodes, [], {})
 ])
 def test_df_discovery_with_parse(check_manager, monkeypatch, info, expected_result, inventory_df_rules):
 #   NOTE: This commented-out code is the result of trying to mock the the ruleset variable itself instead of the

@@ -1,0 +1,11 @@
+Title: LDAP: Fixed another "ValueError: option error" exception when using LDAP over SSL on some distros
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 1.5.0p3
+Date: 1535725756
+Class: fix
+
+This addition to werk #6424 fixes another case where ValueErrors could occur while setting up LDAP connections
+over SSL.

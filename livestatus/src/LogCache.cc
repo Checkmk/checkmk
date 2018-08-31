@@ -74,12 +74,14 @@ void LogCache::updateLogfileIndex() {
     _last_index_update = std::chrono::system_clock::now();
     // We need to find all relevant logfiles. This includes directory, the
     // current nagios.log and all files in the archive.
-    addToIndex(std::make_unique<Logfile>(_mc, _mc->historyFilePath(), true));
+    addToIndex(
+        std::make_unique<Logfile>(_mc, this, _mc->historyFilePath(), true));
 
     fs::path dirpath = _mc->logArchivePath();
     try {
         for (const auto &entry : fs::directory_iterator(dirpath)) {
-            addToIndex(std::make_unique<Logfile>(_mc, entry.path(), false));
+            addToIndex(
+                std::make_unique<Logfile>(_mc, this, entry.path(), false));
         }
     } catch (const fs::filesystem_error &e) {
         Warning(logger()) << "updating log file index: " << e.what();

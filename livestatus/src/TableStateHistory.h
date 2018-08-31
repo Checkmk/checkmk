@@ -64,7 +64,6 @@ private:
     LogCache *_log_cache;
 
     int _query_timeframe;
-    const Query *_query;
     int _since;
     int _until;
 
@@ -72,9 +71,9 @@ private:
     std::map<std::string, int> _notification_periods;
 
     // Helper functions to traverse through logfiles
-    logfiles_t::iterator _it_logs;
-    logfile_entries_t *_entries;
-    logfile_entries_t::iterator _it_entries;
+    logfiles_t::const_iterator _it_logs;
+    const logfile_entries_t *_entries;
+    logfile_entries_t::const_iterator _it_entries;
 
     void getPreviousLogentry();
     LogEntry *getNextLogentry();

@@ -87,6 +87,7 @@ def dashlet_overview(nr, dashlet):
 dashlet_types["overview"] = {
     "title"       : _("Overview / Introduction"),
     "description" : _("Displays an introduction and Check_MK logo."),
+    "sort_index"  : 0,
     "render"      : dashlet_overview,
     "allowed"     : config.builtin_role_ids,
     "selectable"  : False, # can not be selected using the dashboard editor
@@ -112,6 +113,7 @@ def dashlet_mk_logo(nr, dashlet):
 dashlet_types["mk_logo"] = {
     "title"       : _("Check_MK Logo"),
     "description" : _("Shows the Check_MK logo."),
+    "sort_index"  : 0,
     "render"      : dashlet_mk_logo,
     "allowed"     : config.builtin_role_ids,
     "selectable"  : False, # can not be selected using the dashboard editor
@@ -819,7 +821,7 @@ def dashlet_snapin(nr, dashlet):
     dashlet_type = dashlet_types[dashlet['type']]
 
     overflow = ''
-    scroll_x, scroll_y = dashlet_type.get("iframe_scroll", (False, False))
+    scroll_x, scroll_y = False, True
     if not scroll_x:
         overflow += 'overflow-x: hidden;\n'
     else:
@@ -885,7 +887,6 @@ dashlet_types["snapin"] = {
     "description"    : _("Displays a sidebar snapin."),
     "size"           : (27, 20),
     "iframe_render"  : dashlet_snapin,
-    "iframe_scroll"  : (False, True),
     "allowed"        : config.builtin_role_ids,
     "refresh"        : 30,
     "parameters"     : [

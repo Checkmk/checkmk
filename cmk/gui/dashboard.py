@@ -39,6 +39,7 @@ import cmk.gui.utils as utils
 from cmk.gui.valuespec import *
 import cmk.gui.i18n
 from cmk.gui.i18n import _u, _
+from cmk.gui.log import logger
 from cmk.gui.globals import html
 
 from cmk.gui.exceptions import MKGeneralException, MKAuthException, MKUserError
@@ -57,6 +58,8 @@ from cmk.gui.plugins.dashboard.utils import (
     GROW,
     MAX,
     dashlet_types,
+    dashlet_registry,
+    dashlet_min_size,
 )
 
 loaded_with_language = False
@@ -70,7 +73,6 @@ dashlet_padding  = 34, 4, -2, 4, 4 # Margin (N, E, S, W, N w/o title) between ou
 #dashlet_padding  = 23, 2, 2, 2, 2 # Margin (N, E, S, W, N w/o title) between outer border of dashlet and its content
 corner_overlap   = 22
 raster           = 10            # Raster the dashlet coords are measured in (px)
-dashlet_min_size = 10, 10        # Minimum width and height of dashlets in raster units
 
 # Load plugins in web/plugins/dashboard and declare permissions,
 # note: these operations produce language-specific results and
@@ -85,6 +87,8 @@ def load_plugins(force):
     # just may add custom dashboards by adding to builtin_dashboards.
     builtin_dashboards_transformed = False
     utils.load_web_plugins("dashboard", globals())
+
+    _transform_old_dict_based_dashlets()
 
     # This must be set after plugin loading to make broken plugins raise
     # exceptions all the time and not only the first time (when the plugins
@@ -105,6 +109,182 @@ def load_plugins(force):
 
     # Make sure that custom views also have permissions
     config.declare_dynamic_permissions(lambda: visuals.declare_custom_permissions('dashboards'))
+
+
+class LegacyDashlet(cmk.gui.plugins.dashboard.Dashlet):
+    """Helper to be able to handle pre 1.6 dashlet_type declared dashlets"""
+    _type_name = ""
+    _spec = {}
+
+    @classmethod
+    def type_name(cls):
+        return cls._type_name
+
+
+    @classmethod
+    def title(cls):
+        return cls._spec["title"]
+
+
+    @classmethod
+    def description(cls):
+        return cls._spec["description"]
+
+
+    @classmethod
+    def sort_index(cls):
+        return cls._spec["sort_index"]
+
+
+    @classmethod
+    def infos(cls):
+        return cls._spec.get("infos", [])
+
+
+    @classmethod
+    def single_infos(cls):
+        return cls._spec.get("single_infos", [])
+
+
+    @classmethod
+    def is_selectable(cls):
+        return cls._spec.get("selectable", True)
+
+
+    @classmethod
+    def is_resizable(cls):
+        return cls._spec.get("resizable", True)
+
+
+    @classmethod
+    def is_iframe_dashlet(cls):
+        return "iframe_render" in cls._spec or "iframe_urlfunc" in cls._spec
+
+
+    @classmethod
+    def size(cls):
+        return cls._spec.get("size", dashlet_min_size)
+
+
+    @classmethod
+    def vs_parameters(cls):
+        return cls._spec.get("parameters", None)
+
+
+    @classmethod
+    def opt_parameters(cls):
+        """List of optional parameters in case vs_parameters() returns a list"""
+        return cls._spec.get("opt_params")
+
+
+    @classmethod
+    def validate_parameters_func(cls):
+        """Optional validation function in case vs_parameters() returns a list"""
+        return cls._spec.get("validate_params")
+
+
+    @classmethod
+    def refresh_interval(cls):
+        return cls._spec.get("refresh", False)
+
+
+    @classmethod
+    def allowed_roles(cls):
+        return cls._spec.get("allowed", config.builtin_role_ids)
+
+
+    @classmethod
+    def styles(cls):
+        return cls._spec.get("styles")
+
+
+    @classmethod
+    def script(cls):
+        return cls._spec.get("script")
+
+
+    @classmethod
+    def add_url(cls):
+        if "add_urlfunc" in cls._spec:
+            return cls._spec["add_urlfunc"]()
+        return super(LegacyDashlet, cls).add_url()
+
+
+    def display_title(self):
+        title_func = self._spec.get("title_func")
+        if title_func:
+            return title_func(self._dashlet)
+        else:
+            return self.title()
+
+
+    def on_resize(self):
+        on_resize_func = self._spec.get("on_resize")
+        if on_resize_func:
+            return on_resize_func(self._dashlet_id, self._dashlet)
+        return None
+
+
+    def on_refresh(self):
+        on_refresh_func = self._spec.get("on_refresh")
+        if on_refresh_func:
+            return on_refresh_func(self._dashlet_id, self._dashlet)
+        return None
+
+
+    def update(self):
+        if self.is_iframe_dashlet():
+            self._spec['iframe_render'](self._dashlet_id, self._dashlet)
+        else:
+            self._spec['render'](self._dashlet_id, self._dashlet)
+
+
+    def show(self):
+        if "render" in self._spec:
+            self._spec['render'](self._dashlet_id, self._dashlet)
+
+        elif self.is_iframe_dashlet():
+            self._show_initial_iframe_container()
+
+
+    def _get_iframe_url(self):
+        # type: (str, dict, int, dict) -> Union[None, str]
+        if not self.is_iframe_dashlet():
+            return
+
+        if "iframe_urlfunc" in self._spec:
+            # Optional way to render a dynamic iframe URL
+            url = self._spec["iframe_urlfunc"](self._dashlet)
+            return url
+
+        return super(LegacyDashlet, self)._get_iframe_url()
+
+
+
+# Pre Check_MK 1.6 the dashlets were declared with dictionaries like this:
+#
+# dashlet_types["hoststats"] = {
+#     "title"       : _("Host Statistics"),
+#     "sort_index"  : 45,
+#     "description" : _("Displays statistics about host states as globe and a table."),
+#     "render"      : dashlet_hoststats,
+#     "refresh"     : 60,
+#     "allowed"     : config.builtin_role_ids,
+#     "size"        : (30, 18),
+#     "resizable"   : False,
+# }
+#
+# Convert it to objects to be compatible
+# TODO: Deprecate this one day.
+def _transform_old_dict_based_dashlets():
+    for dashlet_type_id, dashlet_spec in dashlet_types.items():
+        @dashlet_registry.register
+        class LegacyDashletType(LegacyDashlet):
+            _type_name = dashlet_type_id
+            _spec = dashlet_spec
+
+    _it_is_really_used = LegacyDashletType # help pylint
+
 
 def load_dashboards(lock=False):
     global dashboards, available_dashboards
@@ -290,42 +470,6 @@ def page_dashboard():
 
     draw_dashboard(name)
 
-def add_wato_folder_to_url(url, wato_folder):
-    if not wato_folder:
-        return url
-    elif '/' in url:
-        return url # do not append wato_folder to non-Check_MK-urls
-    elif '?' in url:
-        return url + "&wato_folder=" + html.urlencode(wato_folder)
-    else:
-        return url + "?wato_folder=" + html.urlencode(wato_folder)
-
-# Updates the current dashlet with the current context vars maybe loaded from
-# the dashboards global configuration or HTTP vars, but also returns a list
-# of all HTTP vars which have been used
-def apply_global_context(board, dashlet):
-    dashlet_type = dashlet_types[dashlet['type']]
-
-    # Either load the single object info from the dashlet or the dashlet type
-    single_infos = []
-    if 'single_infos' in dashlet:
-        single_infos = dashlet['single_infos']
-    elif 'single_infos' in dashlet_type:
-        single_infos = dashlet_type['single_infos']
-
-    global_context = board.get('context', {})
-
-    url_vars = []
-    for info_key in single_infos:
-        for param in visuals.info_params(info_key):
-            if param not in dashlet['context']:
-                # Get the vars from the global context or http vars
-                if param in global_context:
-                    dashlet['context'][param] = global_context[param]
-                else:
-                    dashlet['context'][param] = html.var(param)
-                    url_vars.append((param, html.var(param)))
-    return url_vars
 
 def load_dashboard_with_cloning(name, edit = True):
     board = available_dashboards[name]
@@ -392,10 +536,12 @@ def draw_dashboard(name):
         dashlet_container_begin(nr, dashlet)
 
         try:
+            # TODO: Fix this
             gather_dashlet_url(dashlet)
 
-            register_for_refresh(name, nr, dashlet, wato_folder)
-            register_for_on_resize(nr, dashlet)
+            # TODO: Make use of dashlet_instance here
+            register_for_refresh(name, board, nr, dashlet, wato_folder)
+            register_for_on_resize(name, board, nr, dashlet, wato_folder)
 
             draw_dashlet(name, board, nr, dashlet, wato_folder)
         except MKUserError, e:
@@ -410,12 +556,13 @@ def draw_dashboard(name):
         dashlet_container_end()
         set_dashlet_dimensions(dashlet)
 
-    dashboard_edit_controls(name, board, dashlet_types)
+    dashboard_edit_controls(name, board)
 
     # Put list of all autorefresh-dashlets into Javascript and also make sure,
     # that the dashbaord is painted initially. The resize handler will make sure
     # that every time the user resizes the browser window the layout will be re-computed
     # and all dashlets resized to their new positions and sizes.
+    # TODO: Use json.dumps() instead of these weird statements
     html.javascript("""
 var MAX = %d;
 var GROW = %d;
@@ -449,6 +596,7 @@ def dashlet_error(nr, dashlet, msg):
     html.open_div()
     html.write(_('Problem while rendering dashlet %d of type %s: ') % (nr, dashlet["type"]))
     html.write(html.attrencode(msg).replace("\n", "<br>"))
+    logger.exception(_('Problem while rendering dashlet %d of type %s: ') % (nr, dashlet["type"]))
     html.close_div()
     html.close_div()
 
@@ -457,7 +605,7 @@ def dashlet_container_begin(nr, dashlet):
     dashlet_type = get_dashlet_type(dashlet)
 
     classes = ['dashlet', dashlet['type']]
-    if dashlet_type.get('resizable', True):
+    if dashlet_type.is_resizable():
         classes.append('resizable')
 
     html.open_div(id_="dashlet_%d" % nr, class_=classes)
@@ -467,7 +615,7 @@ def dashlet_container_end():
     html.close_div()
 
 
-def draw_dashlet_content(name, nr, the_dashlet, wato_folder, stash_html_vars=True):
+def draw_dashlet_content(name, board, nr, the_dashlet, wato_folder, is_update, stash_html_vars=True):
     if stash_html_vars:
         html.stash_vars()
         html.del_all_vars()
@@ -478,17 +626,17 @@ def draw_dashlet_content(name, nr, the_dashlet, wato_folder, stash_html_vars=Tru
         if wato_folder != None:
             html.set_var("wato_folder", wato_folder)
 
-        dashlet_type = dashlet_types[the_dashlet['type']]
-        if 'iframe_render' in dashlet_type:
-            dashlet_type['iframe_render'](nr, the_dashlet)
+        dashlet_type = dashlet_registry[the_dashlet['type']]
+        if not is_update:
+            dashlet_type(name, board, nr, the_dashlet, wato_folder).show()
         else:
-            dashlet_type['render'](nr, the_dashlet)
+            dashlet_type(name, board, nr, the_dashlet, wato_folder).update()
     finally:
         if stash_html_vars:
             html.unstash_vars()
 
 
-def dashboard_edit_controls(name, board, dashlet_types):
+def dashboard_edit_controls(name, board):
     # Show the edit menu to all users which are allowed to edit dashboards
     if not config.user.may("general.edit_dashboards"):
         return
@@ -517,23 +665,26 @@ def dashboard_edit_controls(name, board, dashlet_types):
         # The dashlet types which can be added to the view
         html.open_ul(style="display:none", class_=["menu", "sub"], id_="control_add_sub")
 
-        add_existing_view_type = dashlet_types['view'].copy()
-        add_existing_view_type['title'] = _('Existing View')
-        add_existing_view_type['add_urlfunc'] = lambda: 'create_view_dashlet.py?name=%s&create=0&back=%s' % \
-                                                        (html.urlencode(name), html.urlencode(html.makeuri([('edit', '1')])))
+        class ExistingView(dashlet_registry['view']):
+            @classmethod
+            def title(cls):
+                return _('Existing View')
 
-        choices = [ ('view', add_existing_view_type) ]
-        choices += sorted(dashlet_types.items(), key = lambda x: x[1].get('sort_index', 0))
 
-        for ty, dashlet_type in choices:
-            if dashlet_type.get('selectable', True):
-                url = html.makeuri([('type', ty), ('back', html.makeuri([('edit', '1')]))], filename = 'edit_dashlet.py')
-                if 'add_urlfunc' in dashlet_type:
-                    url = dashlet_type['add_urlfunc']()
+            @classmethod
+            def add_url(cls):
+                return 'create_view_dashlet.py?name=%s&create=0&back=%s' % \
+                            (html.urlencode(name), html.urlencode(html.makeuri([('edit', '1')])))
+
+        dashlet_registry.register_plugin(ExistingView)
+
+        for ty, dashlet_type in sorted(dashlet_registry.items(), key=lambda x: x[1].sort_index()):
+            if dashlet_type.is_selectable():
+                url = dashlet_type.add_url()
                 html.open_li()
                 html.open_a(href=url)
                 html.img("images/dashlet_%s.png" % ty)
-                html.write(dashlet_type["title"])
+                html.write(dashlet_type.title())
                 html.close_a()
                 html.close_li()
         html.close_ul()
@@ -585,53 +736,44 @@ def dashboard_edit_controls(name, board, dashlet_types):
 
 # Render dashlet custom scripts
 def dashlet_javascripts(board):
-    scripts = '\n'.join([ ty['script'] for ty in used_dashlet_types(board) if ty.get('script') ])
+    scripts = '\n'.join([ ty.script() for ty in used_dashlet_types(board) if ty.script() ])
     if scripts:
         html.javascript(scripts)
 
 
 # Render dashlet custom styles
 def dashlet_styles(board):
-    styles = '\n'.join([ ty['styles'] for ty in used_dashlet_types(board) if ty.get('styles') ])
+    styles = '\n'.join([ ty.styles() for ty in used_dashlet_types(board) if ty.styles() ])
     if styles:
         html.style(styles)
 
 
 def used_dashlet_types(board):
     type_names = list(set([ d['type'] for d in board['dashlets'] ]))
-    return [ dashlet_types[ty] for ty in type_names ]
+    return [ dashlet_registry[ty] for ty in type_names ]
 
 
 # dashlets using the 'url' method will be refreshed by us. Those
 # dashlets using static content (such as an iframe) will not be
 # refreshed by us but need to do that themselves.
-def register_for_refresh(name, nr, dashlet, wato_folder):
+def register_for_refresh(name, board, nr, dashlet, wato_folder):
     dashlet_type = get_dashlet_type(dashlet)
-    if "url" in dashlet or ('render' in dashlet_type and dashlet_type.get('refresh')):
-        url = dashlet.get("url", "dashboard_dashlet.py?name="+name+"&id="+ str(nr))
-        refresh = dashlet.get("refresh", dashlet_type.get("refresh"))
-        if refresh:
-            action = None
-            if 'on_refresh' in dashlet_type:
-                try:
-                    action = 'function() {%s}' % dashlet_type['on_refresh'](nr, dashlet)
-                except Exception:
-                    # Ignore the exceptions in non debug mode, assuming the exception also occures
-                    # while dashlet rendering, which is then shown in the dashlet itselfs.
-                    if config.debug:
-                        raise
-            else:
-                # FIXME: remove add_wato_folder_to_url
-                action = '"%s"' % add_wato_folder_to_url(url, wato_folder) # url to dashboard_dashlet.py
+    if "url" in dashlet or (not dashlet_type.is_iframe_dashlet() and dashlet_type.refresh_interval()):
+        refresh = dashlet.get("refresh", dashlet_type.refresh_interval())
+        if not refresh:
+            return
 
-            if action:
-                g_refresh_dashlets.append('[%d, %d, %s]' % (nr, refresh, action))
+        dashlet_instance = dashlet_type(name, board, nr, dashlet, wato_folder)
+        action = dashlet_instance.get_refresh_action()
+        if action:
+            g_refresh_dashlets.append('[%d, %d, %s]' % (nr, refresh, action))
 
 
-def register_for_on_resize(nr, dashlet):
+def register_for_on_resize(name, board, nr, dashlet, wato_folder):
     dashlet_type = get_dashlet_type(dashlet)
-    if 'on_resize' in dashlet_type:
-        g_on_resize.append('%d: function() {%s}' % (nr, dashlet_type['on_resize'](nr, dashlet)))
+    on_resize = dashlet_type(name, board, nr, dashlet, wato_folder).on_resize()
+    if on_resize:
+        g_on_resize.append('%d: function() {%s}' % (nr, on_resize))
 
 
 def set_dashlet_dimensions(dashlet):
@@ -641,18 +783,17 @@ def set_dashlet_dimensions(dashlet):
         'y' : dashlet['position'][1]
     }
 
-    if dashlet_type.get('resizable', True):
+    if dashlet_type.is_resizable():
         dimensions['w'] = dashlet['size'][0]
         dimensions['h'] = dashlet['size'][1]
     else:
-        dimensions['w'] = dashlet_type['size'][0]
-        dimensions['h'] = dashlet_type['size'][1]
+        dimensions['w'], dimensions['h'] = dashlet_type.size()
 
     g_dashlets_js.append(dimensions)
 
 
 def get_dashlet_type(dashlet):
-    return dashlet_types[dashlet["type"]]
+    return dashlet_registry[dashlet["type"]]
 
 
 def get_dashlet(board, ident):
@@ -704,10 +845,7 @@ def draw_dashlet(name, board, nr, dashlet, wato_folder):
     dashlet_type = get_dashlet_type(dashlet)
 
     # Get the title of the dashlet type (might be dynamically defined)
-    title = dashlet_type.get('title')
-    if dashlet_type.get('title_func'):
-        title = dashlet_type.get('title_func')(dashlet)
-    title = dashlet.get('title', title)
+    title = dashlet.get('title', dashlet_type(name, board, nr, dashlet, wato_folder).display_title())
     if title != None and dashlet.get('show_title'):
         url = dashlet.get("title_url", None)
         if url:
@@ -721,45 +859,7 @@ def draw_dashlet(name, board, nr, dashlet, wato_folder):
         bg = ""
     html.open_div(id_="dashlet_inner_%d" % nr, class_="dashlet_inner%s" % bg)
 
-    # Optional way to render a dynamic iframe URL
-    if "iframe_urlfunc" in dashlet_type:
-        url = dashlet_type["iframe_urlfunc"](dashlet)
-        if url != None:
-            dashlet["iframe"] = url
-
-    elif "iframe_render" in dashlet_type:
-        dashlet["iframe"] = html.makeuri_contextless([
-            ('name', name),
-            ('id', nr),
-            ('mtime', board['mtime'])] + apply_global_context(board, dashlet),
-            filename = "dashboard_dashlet.py")
-
-    # The content is rendered only if it is fixed. In the
-    # other cases the initial (re)-size will paint the content.
-    if "render" in dashlet_type:
-        draw_dashlet_content(name, nr, dashlet, wato_folder)
-
-    elif "content" in dashlet: # fixed content
-        html.write(dashlet["content"])
-
-    elif "iframe" in dashlet: # fixed content containing iframe
-        if not dashlet.get("reload_on_resize"):
-            url = add_wato_folder_to_url(dashlet["iframe"], wato_folder)
-        else:
-            url = 'about:blank'
-
-        # Fix of iPad >:-P
-        html.open_div(style="width: 100%; height: 100%; -webkit-overflow-scrolling:touch;")
-        html.iframe('', src=url,
-                    id_="dashlet_iframe_%d" % nr,
-                    allowTransparency="true",
-                    frameborder="0",
-                    width="100%",
-                    height="100%")
-        html.close_div()
-        if dashlet.get("reload_on_resize"):
-            html.javascript('reload_on_resize["%d"] = "%s"' %
-                            (nr, add_wato_folder_to_url(dashlet["iframe"], wato_folder)))
+    draw_dashlet_content(name, board, nr, dashlet, wato_folder, is_update=False)
 
     html.close_div()
 
@@ -810,11 +910,11 @@ def ajax_dashlet():
     if not the_dashlet:
         raise MKGeneralException(_('The dashlet can not be found on the dashboard.'))
 
-    if the_dashlet['type'] not in dashlet_types:
+    if the_dashlet['type'] not in dashlet_registry:
         raise MKGeneralException(_('The requested dashlet type does not exist.'))
 
     wato_folder = html.var("wato_folder")
-    draw_dashlet_content(board, ident, the_dashlet, wato_folder, stash_html_vars=False)
+    draw_dashlet_content(board, dashboard, ident, the_dashlet, wato_folder, stash_html_vars=False, is_update=True)
 
 #.
 #   .--Dashboard List------------------------------------------------------.
@@ -1024,12 +1124,12 @@ def page_edit_dashlet():
     if ident == None:
         mode         = 'add'
         title        = _('Add Dashlet')
-        dashlet_type = dashlet_types[ty]
+        dashlet_type = dashlet_registry[ty]
         # Initial configuration
         dashlet = {
             'position'     : (1, 1),
-            'size'         : dashlet_type.get('size', dashlet_min_size),
-            'single_infos' : dashlet_type.get('single_infos', []),
+            'size'         : dashlet_type.size(),
+            'single_infos' : dashlet_type.single_infos(),
             'type'         : ty,
         }
         ident   =  len(dashboard['dashlets'])
@@ -1044,7 +1144,7 @@ def page_edit_dashlet():
                     raise MKUserError('single_infos', _('The info %s does not exist.') % key)
 
         if not single_infos:
-            single_infos = dashlet_types[ty].get('single_infos', [])
+            single_infos = dashlet_type.single_infos()
 
         dashlet['single_infos'] = single_infos
     else:
@@ -1057,7 +1157,7 @@ def page_edit_dashlet():
             raise MKGeneralException(_('The dashlet does not exist.'))
 
         ty           = dashlet['type']
-        dashlet_type = dashlet_types[ty]
+        dashlet_type = dashlet_registry[ty]
         single_infos = dashlet['single_infos']
 
     html.header(title, stylesheets=["pages","views"])
@@ -1075,7 +1175,7 @@ def page_edit_dashlet():
         optional_keys = ['title', 'title_url'],
         elements = [
             ('type', FixedValue(ty,
-                totext = dashlet_type['title'],
+                totext = dashlet_type.title(),
                 title = _('Dashlet Type'),
             )),
             visuals.single_infos_spec(single_infos),
@@ -1111,20 +1211,21 @@ def page_edit_dashlet():
             import cmk.gui.views as views
             return views.get_view_infos(dashlet)
         else:
-            return dashlet_types[dashlet['type']].get('infos')
+            return dashlet_registry[dashlet['type']].infos()
 
     context_specs = visuals.get_context_specs(dashlet, info_handler=dashlet_info_handler)
 
     vs_type = None
-    params = dashlet_type.get('parameters')
+    params = dashlet_type.vs_parameters()
     render_input_func = None
     handle_input_func = None
     if type(params) == list:
+        # TODO: Refactor all params to be a Dictionary() and remove this special case
         vs_type = Dictionary(
             title = _('Properties'),
             render = 'form',
-            optional_keys = dashlet_type.get('opt_params'),
-            validate = dashlet_type.get('validate_params'),
+            optional_keys = dashlet_type.opt_parameters(),
+            validate = dashlet_type.validate_parameters_func(),
             elements = params,
         )
 
@@ -1321,7 +1422,7 @@ def default_dashlet_definition(ty):
     return {
         'type'       : ty,
         'position'   : (1, 1),
-        'size'       : dashlet_types[ty].get('size', dashlet_min_size),
+        'size'       : dashlet_registry[ty].size(),
         'show_title' : True,
     }
 

@@ -39,6 +39,8 @@ from cmk.plugin_loader import load_plugins
 from cmk.gui.plugins.dashboard.utils import (
     builtin_dashboards,
     dashlet_types,
+    dashlet_registry,
+    Dashlet,
     GROW,
     MAX,
 )

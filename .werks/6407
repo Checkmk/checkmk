@@ -1,0 +1,14 @@
+Title: mk_postgres, postgres_instances: output missing instance data
+Level: 1
+Component: checks
+Compatible: incomp
+Edition: cre
+Version: 1.5.0p3
+Date: 1535708395
+Class: fix
+
+In the agent plugin mk_postgres a command line option for the output
+of the postgres_instances check was missing. This resulted in missing
+data for the postgres_instances checks.
+To apply this fix the mk_postgres plugin on the affected hosts has to
+be updated.

@@ -1,0 +1,19 @@
+Title: Nagios: Improved init script when tmpfs is not prepared
+Level: 1
+Component: packages
+Compatible: compat
+Edition: cre
+Version: 1.5.0p3
+Date: 1535694318
+Class: fix
+
+When using Nagios as core and executing "cmk -R" or "cmk -O"
+on a totally stopped site ("omd stop" + "omd umount") without 
+previously executing "omd start" errors like this occured:
+
+etc/init.d/nagios: line 72: /omd/sites/heute/tmp/nagios/nagios.cfg: No such file or directory
+Nagios configuration file /omd/sites/heute/tmp/nagios/nagios.cfg not found. Terminating...
+
+This has been replaced by a more helpful error message:
+
+ERROR: tmp directory is not ready. Use "omd start" to prepare it

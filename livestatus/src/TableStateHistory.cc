@@ -212,8 +212,7 @@ void TableStateHistory::getPreviousLogentry() {
             return;
         }
         --_it_logs;
-        _entries =
-            _it_logs->second->getEntriesFromQuery(_query, classmask_statehist);
+        _entries = _it_logs->second->getEntriesFor(classmask_statehist);
         _it_entries = _entries->end();
     }
     --_it_entries;
@@ -230,8 +229,7 @@ LogEntry *TableStateHistory::getNextLogentry() {
             return nullptr;
         }
         ++_it_logs;
-        _entries =
-            _it_logs->second->getEntriesFromQuery(_query, classmask_statehist);
+        _entries = _it_logs->second->getEntriesFor(classmask_statehist);
         _it_entries = _entries->begin();
     }
     return _it_entries->second.get();
@@ -291,20 +289,18 @@ void TableStateHistory::answerQuery(Query *query) {
     // Store hosts/services that we have filtered out here
     std::set<HostServiceKey> object_blacklist;
 
-    _query = query;
-
     // Optimize time interval for the query. In log querys there should always
     // be a time range in form of one or two filter expressions over time. We
     // use that to limit the number of logfiles we need to scan and to find the
     // optimal entry point into the logfile
-    if (auto glb = _query->greatestLowerBoundFor("time")) {
+    if (auto glb = query->greatestLowerBoundFor("time")) {
         _since = *glb;
     } else {
         query->invalidRequest(
             "Start of timeframe required. e.g. Filter: time > 1234567890");
         return;
     }
-    _until = _query->leastUpperBoundFor("time").value_or(time(nullptr)) + 1;
+    _until = query->leastUpperBoundFor("time").value_or(time(nullptr)) + 1;
 
     _query_timeframe = _until - _since - 1;
     if (_query_timeframe == 0) {
@@ -330,8 +326,7 @@ void TableStateHistory::answerQuery(Query *query) {
     }
 
     // Determine initial logentry
-    _entries =
-        _it_logs->second->getEntriesFromQuery(query, classmask_statehist);
+    _entries = _it_logs->second->getEntriesFor(classmask_statehist);
     if (!_entries->empty() && _it_logs != newest_log) {
         _it_entries = _entries->end();
         // Check last entry. If it's younger than _since -> use this logfile too

@@ -156,7 +156,7 @@ void Logfile::loadRange(FILE *file, unsigned missing_types, LogCache *logcache,
             }
         }
         if (processLogLine(_lineno, &linebuffer[0], missing_types)) {
-            logcache->handleNewMessage(this, logclasses);
+            logcache->logLineHasBeenAdded(this, logclasses);
         }
     }
 }

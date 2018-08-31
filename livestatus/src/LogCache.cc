@@ -57,27 +57,20 @@ void LogCache::setMaxCachedMessages(unsigned long m) {
 }
 #endif
 
-bool LogCache::logCachePreChecks() {
+bool LogCache::update() {
     if (_logfiles.empty() ||
         _mc->last_logfile_rotation() > _last_index_update) {
-        forgetLogfiles();
         updateLogfileIndex();
-    }
-    if (_logfiles.empty()) {
-        Notice(logger()) << "no log file found, not even "
-                         << _mc->historyFilePath();
     }
     return !_logfiles.empty();
 }
 
-void LogCache::forgetLogfiles() {
-    Notice(logger()) << "flushing log file index";
-    _logfiles.clear();
-    num_cached_log_messages = 0;
-}
-
 void LogCache::updateLogfileIndex() {
     Informational(logger()) << "updating log file index";
+
+    _logfiles.clear();
+    num_cached_log_messages = 0;
+
     _last_index_update = std::chrono::system_clock::now();
     // We need to find all relevant logfiles. This includes directory, the
     // current nagios.log and all files in the archive.
@@ -90,6 +83,11 @@ void LogCache::updateLogfileIndex() {
         }
     } catch (const fs::filesystem_error &e) {
         Warning(logger()) << "updating log file index: " << e.what();
+    }
+
+    if (_logfiles.empty()) {
+        Notice(logger()) << "no log file found, not even "
+                         << _mc->historyFilePath();
     }
 }
 
@@ -117,7 +115,7 @@ void LogCache::addToIndex(std::unique_ptr<Logfile> logfile) {
    The parameters to this method reflect the current query,
    not the messages that just has been loaded.
  */
-void LogCache::handleNewMessage(Logfile *logfile, unsigned logclasses) {
+void LogCache::logLineHasBeenAdded(Logfile *logfile, unsigned logclasses) {
     if (static_cast<unsigned long>(++num_cached_log_messages) <=
         _max_cached_messages) {
         return;  // current message count still allowed, everything ok

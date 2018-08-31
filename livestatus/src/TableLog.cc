@@ -126,7 +126,7 @@ std::string TableLog::namePrefix() const { return "log_"; }
 
 void TableLog::answerQuery(Query *query) {
     std::lock_guard<std::mutex> lg(_log_cache->_lock);
-    if (!_log_cache->logCachePreChecks()) {
+    if (!_log_cache->update()) {
         return;
     }
 
@@ -151,16 +151,15 @@ void TableLog::answerQuery(Query *query) {
        the Limit: header produces more reasonable results. */
 
     /* NEW CODE - NEWEST FIRST */
-    logfiles_t::iterator it;
-    it = _log_cache->logfiles()->end();  // it now points beyond last log file
+    auto it = _log_cache->end();  // it now points beyond last log file
     --it;  // switch to last logfile (we have at least one)
 
     // Now find newest log where 'until' is contained. The problem
     // here: For each logfile we only know the time of the *first* entry,
     // not that of the last.
-    while (it != _log_cache->logfiles()->begin() &&
-           it->first > until) {  // while logfiles are too new...
-        --it;                    // go back in history
+    while (it != _log_cache->begin() && it->first > until) {
+        // while logfiles are too new go back in history
+        --it;
     }
     if (it->first > until) {
         return;  // all logfiles are too new
@@ -171,7 +170,7 @@ void TableLog::answerQuery(Query *query) {
                                             classmask)) {
             break;  // end of time range found
         }
-        if (it == _log_cache->logfiles()->begin()) {
+        if (it == _log_cache->begin()) {
             break;  // this was the oldest one
         }
         --it;

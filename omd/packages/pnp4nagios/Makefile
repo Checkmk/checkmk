@@ -60,6 +60,11 @@ install:
 	mkdir -p skel/var/pnp4nagios/log
 	mkdir -p skel/var/pnp4nagios/spool
 	mkdir -p skel/tmp/pnp4nagios/run
+	
+	# Install the facelift theme for pnp4nagios
+	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/pnp4nagios/htdocs/media/css/ui-facelift/images
+	install -m 644 ui-facelift/jquery-ui.css $(DESTDIR)$(OMD_ROOT)/share/pnp4nagios/htdocs/media/css/ui-facelift
+	install -m 644 ui-facelift/images/* $(DESTDIR)$(OMD_ROOT)/share/pnp4nagios/htdocs/media/css/ui-facelift/images
 
 clean:
 	rm -rf $(DIR)

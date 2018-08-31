@@ -994,8 +994,12 @@ def host_service_graph_dashlet_pnp(graph_identification):
     pnp_svc    = cmk.utils.pnp_cleanup(graph_identification[1]["service_description"])
     url_prefix = config.site(site)["url_prefix"]
 
-    html.write(url_prefix + "pnp4nagios/index.php/image?host=%s&srv=%s&source=%d&view=%s&theme=multisite" % \
-        (html.urlencode(pnp_host), html.urlencode(pnp_svc), source, html.var("timerange")))
+    pnp_theme = html.get_theme()
+    if pnp_theme == "classic":
+        pnp_theme = "multisite"
+
+    html.write(url_prefix + "pnp4nagios/index.php/image?host=%s&srv=%s&source=%d&view=%s&theme=%s" % \
+        (html.urlencode(pnp_host), html.urlencode(pnp_svc), source, html.var("timerange"), pnp_theme))
 
 
 #.

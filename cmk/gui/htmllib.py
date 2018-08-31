@@ -1138,7 +1138,13 @@ class html(HTMLGenerator):
 
 
     def set_theme(self, theme_id):
+        # type: (str) -> None
         self._theme = theme_id or config.ui_theme
+
+
+    def get_theme(self):
+        # type: () -> str
+        return self._theme
 
 
     def _verify_not_using_threaded_mpm(self):

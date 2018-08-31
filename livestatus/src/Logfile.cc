@@ -44,12 +44,38 @@
 #include <vector>
 #endif
 
+namespace {
+time_t firstTimestampOf(const fs::path &path, Logger *logger) {
+    std::ifstream is(path, std::ios::binary);
+    if (!is) {
+        generic_error ge("cannot open logfile " + path.string());
+        Informational(logger) << ge;
+        return 0;
+    }
+
+    char line[12];
+    is.read(line, sizeof(line));
+    if (!is) {
+        return 0;  // ignoring. might be empty
+    }
+
+    if (line[0] != '[' || line[11] != ']') {
+        Informational(logger) << "ignoring logfile '" << path
+                              << "': does not begin with '[123456789] '";
+        return 0;
+    }
+
+    line[11] = 0;
+    return atoi(line + 1);
+}
+}  // namespace
+
 Logfile::Logfile(MonitoringCore *mc, LogCache *logcache, fs::path path,
                  bool watch)
     : _mc(mc)
     , _logcache(logcache)
     , _path(std::move(path))
-    , _since(0)
+    , _since(firstTimestampOf(_path, logger()))
     , _watch(watch)
     , _read_pos{}
     , _lineno(0)
@@ -57,27 +83,6 @@ Logfile::Logfile(MonitoringCore *mc, LogCache *logcache, fs::path path,
     , _world(nullptr)
 #endif
     , _logclasses_read(0) {
-    std::ifstream is(_path, std::ios::binary);
-    if (!is) {
-        generic_error ge("cannot open logfile " + _path.string());
-        Informational(logger()) << ge;
-        return;
-    }
-
-    char line[12];
-    is.read(line, sizeof(line));
-    if (!is) {
-        return;  // ignoring. might be empty
-    }
-
-    if (line[0] != '[' || line[11] != ']') {
-        Informational(logger()) << "ignoring logfile '" << _path
-                                << "': does not begin with '[123456789] '";
-        return;
-    }
-
-    line[11] = 0;
-    _since = atoi(line + 1);
 }
 
 void Logfile::flush() {
@@ -87,15 +92,15 @@ void Logfile::flush() {
 
 void Logfile::load(unsigned logclasses) {
     unsigned missing_types = logclasses & ~_logclasses_read;
-    FILE *file = nullptr;
     // The current logfile has the _watch flag set to true.
     // In that case, if the logfile has grown, we need to
     // load the rest of the file, even if no logclasses
     // are missing.
     if (_watch) {
-        file = fopen(_path.c_str(), "r");
+        FILE *file = fopen(_path.c_str(), "r");
         if (file == nullptr) {
-            Informational(logger()) << "cannot open logfile '" << _path << "'";
+            generic_error ge("cannot open logfile " + _path.string());
+            Informational(logger()) << ge;
             return;
         }
         // If we read this file for the first time, we initialize
@@ -124,7 +129,7 @@ void Logfile::load(unsigned logclasses) {
             return;
         }
 
-        file = fopen(_path.c_str(), "r");
+        FILE *file = fopen(_path.c_str(), "r");
         if (file == nullptr) {
             generic_error ge("cannot open logfile " + _path.string());
             Informational(logger()) << ge;
@@ -133,8 +138,8 @@ void Logfile::load(unsigned logclasses) {
 
         _lineno = 0;
         loadRange(file, missing_types, logclasses);
-        fclose(file);
         _logclasses_read |= missing_types;
+        fclose(file);
     }
 }
 

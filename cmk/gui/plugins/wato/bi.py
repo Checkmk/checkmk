@@ -947,7 +947,7 @@ class ModeBI(WatoMode, BIManagement):
         return html.makeuri_contextless(addvars + [("pack", self._pack_id)])
 
 
-    def render_rule_tree(self, ruleid, tree_path):
+    def render_rule_tree(self, ruleid, tree_path, tree_prefix=""):
         pack = self.pack_containing_rule(ruleid)
         rule = pack["rules"][ruleid]
         edit_url = html.makeuri_contextless([("mode", "bi_edit_rule"), ("id", ruleid), ("pack", pack["id"])])
@@ -961,10 +961,10 @@ class ModeBI(WatoMode, BIManagement):
             html.close_a()
             html.close_li()
         else:
-            html.begin_foldable_container("bi_rule_trees", tree_path, False, title,
+            html.begin_foldable_container("bi_rule_trees", "%s%s" % (tree_prefix, tree_path), False, title,
                                           title_url=edit_url, tree_img="tree_black")
             for sub_rule_id in sub_rule_ids:
-                self.render_rule_tree(sub_rule_id, tree_path + "/" + sub_rule_id)
+                self.render_rule_tree(sub_rule_id, tree_path + "/" + sub_rule_id, tree_prefix)
             html.end_foldable_container()
 
     # .--------------------------------------------------------------------.
@@ -1346,18 +1346,17 @@ class ModeBIAggregations(ModeBI):
             ruleid, description = self.rule_called_by_node(aggregation["node"])
             edit_url = html.makeuri([("mode", "bi_edit_rule"), ("pack", self._pack_id), ("id", ruleid)])
             table.cell(_("Rule Tree"), css="bi_rule_tree")
-
-            self.render_aggregation_rule_tree(aggregation)
+            self.render_aggregation_rule_tree(aggregation_id, aggregation)
             table.text_cell(_("Note"), description)
         table.end()
 
 
-    def render_aggregation_rule_tree(self, aggregation):
+    def render_aggregation_rule_tree(self, aggregation_id, aggregation):
         toplevel_rule = self.aggregation_toplevel_rule(aggregation)
         if not toplevel_rule:
             html.show_error(_("The top level rule does not exist."))
             return
-        self.render_rule_tree(toplevel_rule["id"], toplevel_rule["id"])
+        self.render_rule_tree(toplevel_rule["id"], toplevel_rule["id"], tree_prefix="%s_" % aggregation_id)
 
 
 

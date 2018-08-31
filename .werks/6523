@@ -1,0 +1,12 @@
+Title: nginx_status: Fixed discovery of running instances on Ubuntu
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0i1
+Date: 1535704132
+
+Nginx instances on Ubuntu based on the official packages were not detected correctly.
+To apply this fix you need to update the nginx_status agent plugin.

@@ -211,23 +211,6 @@ logfile_entries_t *Logfile::getEntriesFromQuery(const Query * /*unused*/,
     return &_entries;
 }
 
-bool Logfile::answerQuery(Query *query, LogCache *logcache, time_t since,
-                          time_t until, unsigned logclasses) {
-    // Make sure existing references to objects point to correct world
-    updateReferences();
-    // make sure all messages are present
-    load(logcache, logclasses);
-    uint64_t sincekey = makeKey(since, 0);
-    for (auto it = _entries.lower_bound(sincekey); it != _entries.end(); ++it) {
-        // end found or limit exceeded?
-        if (it->second->_time >= until ||
-            !query->processDataset(Row(it->second.get()))) {
-            return false;
-        }
-    }
-    return true;
-}
-
 bool Logfile::answerQueryReverse(Query *query, LogCache *logcache, time_t since,
                                  time_t until, unsigned logclasses) {
     // Make sure existing references to objects point to correct world

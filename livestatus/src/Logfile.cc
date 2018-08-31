@@ -256,43 +256,4 @@ void Logfile::updateReferences() {
 #endif
 }
 
-#ifdef CMC
-std::unique_ptr<std::vector<char>> Logfile::readIntoBuffer() {
-    std::unique_ptr<std::vector<char>> result;
-    std::ifstream is(_path, std::ios::binary | std::ios::ate);
-    if (!is) {
-        generic_error ge("cannot open logfile " + _path.string());
-        Warning(logger()) << ge;
-        return result;
-    }
-
-    auto end = is.tellg();
-    is.seekg(0, std::ios::beg);
-    if (!is) {
-        generic_error ge("cannot determine size of " + _path.string());
-        Warning(logger()) << ge;
-        return result;
-    }
-    auto size = end - is.tellg();
-
-    try {
-        // Remember: Zeroes at both ends, so we need a bit more space.
-        result = std::make_unique<std::vector<char>>(size + 2);
-    } catch (std::bad_alloc &) {
-        Warning(logger()) << "cannot allocate " << size << " byte buffer for "
-                          << _path;
-        return result;
-    }
-
-    is.read(&result->front() + 1, size);
-    if (!is) {
-        generic_error ge("cannot open read " + std::to_string(size) +
-                         " byted from " + _path.string());
-        Warning(logger()) << ge;
-    }
-
-    return result;
-}
-#endif
-
 Logger *Logfile::logger() const { return _mc->loggerLivestatus(); }

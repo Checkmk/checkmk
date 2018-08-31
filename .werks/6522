@@ -1,0 +1,10 @@
+Title: if_fortigate: Add perfometer
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 1.5.0p3
+Date: 1535703663
+Class: fix
+
+FEED-957

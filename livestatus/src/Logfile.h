@@ -74,13 +74,13 @@ public:
                             unsigned logclasses);
 
 private:
-    MonitoringCore *_mc;
+    MonitoringCore *const _mc;
     LogCache *const _logcache;
-    fs::path _path;
-    time_t _since;     // time of first entry
-    bool _watch;       // true only for current logfile
-    fpos_t _read_pos;  // read until this position
-    size_t _lineno;    // read until this line
+    const fs::path _path;
+    const time_t _since;  // time of first entry
+    const bool _watch;    // true only for current logfile
+    fpos_t _read_pos;     // read until this position
+    size_t _lineno;       // read until this line
     logfile_entries_t _entries;
 #ifdef CMC
     World *_world;  // CMC: world our references point into

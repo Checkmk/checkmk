@@ -235,6 +235,28 @@ function mouse_offset_to_middle(obj, event){
     };
 }
 
+function sort_select(select, cmp_func) {
+    var choices = [];
+    for (var i = 0; i < select.options.length;i++) {
+        choices[i] = [];
+        choices[i][0] = select.options[i].text;
+        choices[i][1] = select.options[i].value;
+    }
+
+    choices.sort(cmp_func);
+    while (select.options.length > 0) {
+        select.options[0] = null;
+    }
+
+    for (var i = 0; i < choices.length;i++) {
+        var op = new Option(choices[i][0], choices[i][1]);
+        select.options[i] = op;
+    }
+
+    return;
+}
+
+
 //#.
 //#   .-Events-------------------------------------------------------------.
 //#   |                    _____                 _                         |
@@ -2366,28 +2388,18 @@ function vs_duallist_switch(field_suffix, varprefix, keeporder) {
     for (var i = 0; i < selected.length; i++) {
         // remove option from origin
         field.removeChild(selected[i]);
-
-        // Determine the correct child to insert. If keeporder is being set,
-        // then new elements will aways be appended. That way the user can
-        // create an order of his choice. This is being used if DualListChoice
-        // has the option custom_order = True
-        var sibling = false;
-
-        if (!keeporder) {
-            sibling = other_field.children[0];
-            while (sibling != null) {
-                if (sibling.nodeType == 1 && sibling.label.toLowerCase() > selected[i].label.toLowerCase())
-                    break;
-                sibling = sibling.nextSibling;
-            }
-        }
-
-        if (sibling)
-            other_field.insertBefore(selected[i], sibling);
-        else
-            other_field.appendChild(selected[i]);
+        other_field.appendChild(selected[i]);
 
         selected[i].selected = false;
+    }
+
+    // Determine the correct child to insert. If keeporder is being set,
+    // then new elements will aways be appended. That way the user can
+    // create an order of his choice. This is being used if DualListChoice
+    // has the option custom_order = True
+    if (!keeporder) {
+        var collator = new Intl.Collator(undefined, {numeric: true, sensitivity: 'base'});
+        sort_select(other_field, collator.compare);
     }
 
     // Update internal helper field which contains a list of all selected keys

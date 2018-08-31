@@ -66,7 +66,7 @@ def try_detect_servers():
         to_replace = re.compile('^.*/')
         proc = to_replace.sub('', proc)
 
-        procs = [ 'nginx', 'nginx:' ]
+        procs = [ 'nginx', 'nginx:', 'nginx.conf' ]
         # the pid/proc field length is limited to 19 chars. Thus in case of
         # long PIDs, the process names are stripped of by that length.
         # Workaround this problem here

@@ -34,6 +34,7 @@ check_info["akcp_sensor_temp"] = {
     "inventory_function"  : inventory_akcp_sensor_temp,
     "service_description" : "Temperature %s",
     "has_perfdata"        : True,
+    "default_levels_variable" : "akcp_temp_default_levels",
     "snmp_scan_function"  : snmp_scan_akcp_sensor,
     "snmp_info"           : ( ".1.3.6.1.4.1.3854.1.2.2.1.16.1", [
                                         1, # SPAGENT-MIB::sensorProbeTempDescription

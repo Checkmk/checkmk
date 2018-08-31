@@ -1,0 +1,10 @@
+Title: akcp_sensor_temp: Add missing reference to check default levels
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0p3
+Date: 1535703236
+Class: fix
+
+

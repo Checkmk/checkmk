@@ -50,19 +50,13 @@ using logfile_entries_t = std::map<uint64_t, std::unique_ptr<LogEntry>>;
 class Logfile {
 public:
     Logfile(MonitoringCore *mc, LogCache *logcache, fs::path path, bool watch);
-
-    std::string path() { return _path; }
-#ifdef CMC
-    // Note: The buffer is 2 bytes larger then the file, containing a zero
-    // character at both ends. For StateHistoryThread::processLogfile.
-    std::unique_ptr<std::vector<char>> readIntoBuffer();
-#endif
+    fs::path path() const { return _path; }
 
     // for tricky protocol between LogCache::logLineHasBeenAdded and this class
     void flush();
-    time_t since() { return _since; }
-    unsigned classesRead() { return _logclasses_read; }
-    size_t size() { return _entries.size(); }
+    time_t since() const { return _since; }
+    unsigned classesRead() const { return _logclasses_read; }
+    size_t size() const { return _entries.size(); }
     long freeMessages(unsigned logclasses);
 
     // for TableStateHistory

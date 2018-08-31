@@ -1,0 +1,12 @@
+Title: BI: Fixed folding of BI aggregations of the same type
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.5.0p3
+Date: 1535720375
+Class: fix
+
+When having multiple BI aggregations configured that use the same top level rule,
+this resulted in strange effects when folding / unfolding the aggregations in the
+"Rule tree" column. In some situations the wrong tree was toggled.

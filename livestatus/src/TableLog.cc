@@ -166,8 +166,7 @@ void TableLog::answerQuery(Query *query) {
     }
 
     while (true) {
-        if (!it->second->answerQueryReverse(query, _log_cache, since, until,
-                                            classmask)) {
+        if (!it->second->answerQueryReverse(query, since, until, classmask)) {
             break;  // end of time range found
         }
         if (it == _log_cache->begin()) {

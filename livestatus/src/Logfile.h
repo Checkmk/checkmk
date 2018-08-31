@@ -60,8 +60,7 @@ public:
     long freeMessages(unsigned logclasses);
 
     // for TableStateHistory
-    logfile_entries_t *getEntriesFromQuery(const Query *query,
-                                           unsigned logclasses);
+    const logfile_entries_t *getEntriesFor(unsigned logclasses);
 
     // for TableLog::answerQuery
     bool answerQueryReverse(Query *query, time_t since, time_t until,

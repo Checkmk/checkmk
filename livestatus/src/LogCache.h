@@ -46,7 +46,7 @@ public:
     void setMaxCachedMessages(unsigned long m);
 #endif
     void logLineHasBeenAdded(Logfile *logfile, unsigned logclasses);
-    bool update();  // returns true if at least one log file has been found
+    void update();
     auto begin() { return _logfiles.begin(); }
     auto end() { return _logfiles.end(); }
 
@@ -57,7 +57,6 @@ private:
     logfiles_t _logfiles;
     std::chrono::system_clock::time_point _last_index_update;
 
-    void updateLogfileIndex();
     void addToIndex(std::unique_ptr<Logfile> logfile);
     Logger *logger() const;
 };

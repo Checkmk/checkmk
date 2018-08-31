@@ -276,7 +276,8 @@ std::unique_ptr<Filter> TableStateHistory::createPartialFilter(
 void TableStateHistory::answerQuery(Query *query) {
     auto object_filter = createPartialFilter(*query);
     std::lock_guard<std::mutex> lg(_log_cache->_lock);
-    if (!_log_cache->update()) {
+    _log_cache->update();
+    if (_log_cache->begin() == _log_cache->end()) {
         return;
     }
 

@@ -43,7 +43,7 @@ LogCache::LogCache(MonitoringCore *mc, unsigned long max_cached_messages)
     : _mc(mc)
     , _max_cached_messages(max_cached_messages)
     , _num_at_last_check(0) {
-    updateLogfileIndex();
+    update();
 }
 
 #ifdef CMC
@@ -57,15 +57,12 @@ void LogCache::setMaxCachedMessages(unsigned long m) {
 }
 #endif
 
-bool LogCache::update() {
-    if (_logfiles.empty() ||
-        _mc->last_logfile_rotation() > _last_index_update) {
-        updateLogfileIndex();
+void LogCache::update() {
+    if (!_logfiles.empty() &&
+        _mc->last_logfile_rotation() <= _last_index_update) {
+        return;
     }
-    return !_logfiles.empty();
-}
 
-void LogCache::updateLogfileIndex() {
     Informational(logger()) << "updating log file index";
 
     _logfiles.clear();

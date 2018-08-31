@@ -38,6 +38,38 @@ from cmk_base.exceptions import MKAgentError
 from .abstract import CheckMKAgentDataSource, ManagementBoardDataSource
 
 
+def _handle_false_positive_warnings(reading):
+    """This is a workaround for a pyghmi bug
+    (bug report: https://bugs.launchpad.net/pyghmi/+bug/1790120)
+
+    For some sensors undefined states are looked up, which results in readings of the form
+    {'states': ['Present',
+                'Unknown state 8 for reading type 111/sensor type 8',
+                'Unknown state 9 for reading type 111/sensor type 8',
+                'Unknown state 10 for reading type 111/sensor type 8',
+                'Unknown state 11 for reading type 111/sensor type 8',
+                'Unknown state 12 for reading type 111/sensor type 8', ...],
+     'health': 1, 'name': 'PS Status', 'imprecision': None, 'units': '',
+     'state_ids': [552704, 552712, 552713, 552714, 552715, 552716, 552717, 552718],
+     'type': 'Power Supply', 'value': None, 'unavailable': 0}
+
+    The health warning is set, but only due to the lookup errors. We remove the lookup
+    errors, and see whether the remaining states are meaningful.
+    """
+    states = [s for s in reading.states if not s.startswith("Unknown state ")]
+
+    if not states:
+        return "no state reported"
+
+    if any("non-critical" in s for s in states):
+        return "WARNING"
+
+    # just keep all the available info. It should be dealt with in
+    # ipmi_sensors.include (freeipmi_status_txt_mapping),
+    # where it will default to 2(CRIT)
+    return ', '.join(states)
+
+
 class IPMIManagementBoardDataSource(ManagementBoardDataSource, CheckMKAgentDataSource):
 
     def id(self):
@@ -127,6 +159,8 @@ class IPMIManagementBoardDataSource(ManagementBoardDataSource, CheckMKAgentDataS
                 health_txt = "CRITICAL"
             elif reading.health >= ipmi_const.Health.Warning:
                 health_txt = "WARNING"
+                # workaround for pyghmi bug: https://bugs.launchpad.net/pyghmi/+bug/1790120
+                health_txt = _handle_false_positive_warnings(reading)
             elif reading.health == ipmi_const.Health.Ok:
                 health_txt = "OK"
 

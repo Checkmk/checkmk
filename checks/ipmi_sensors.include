@@ -198,10 +198,10 @@ def freeipmi_status_txt_mapping(status_txt):
     if state is not None:
         return state
 
-    if status_txt in [
-        "Entity Present", "battery presence detected",
-        "Drive Presence", "transition to Running", "Device Enabled",
-        "System full operational, working", "System Restart",
+    if status_txt.lower() in [
+        "entity present", "battery presence detected",
+        "drive presence", "transition to running", "device enabled",
+        "system full operational, working", "system restart", "present",
         ] or \
        status_txt.startswith("Fully Redundant") or \
        status_txt.endswith("is connected") or \

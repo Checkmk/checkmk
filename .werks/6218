@@ -1,0 +1,13 @@
+Title: mgmt_ipmi_sensors: Wrong battery / power supply WARN state
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0p3
+Date: 1535715823
+
+Due to a bug in pyghmi (https://bugs.launchpad.net/pyghmi/+bug/1790120)
+a WARN state was reported for sensors of type "battery" and "power supply".
+A workaroud has been added to mitigate this problem.

@@ -208,8 +208,7 @@ bool Logfile::processLogLine(size_t lineno, std::string line,
     return true;
 }
 
-logfile_entries_t *Logfile::getEntriesFromQuery(const Query * /*unused*/,
-                                                unsigned logclasses) {
+const logfile_entries_t *Logfile::getEntriesFor(unsigned logclasses) {
     // Make sure existing references to objects point to correct world
     updateReferences();
     // make sure all messages are present
@@ -219,13 +218,10 @@ logfile_entries_t *Logfile::getEntriesFromQuery(const Query * /*unused*/,
 
 bool Logfile::answerQueryReverse(Query *query, time_t since, time_t until,
                                  unsigned logclasses) {
-    // Make sure existing references to objects point to correct world
-    updateReferences();
-    // make sure all messages are present
-    load(logclasses);
-    uint64_t untilkey = makeKey(until, 999999999);
-    auto it = _entries.upper_bound(untilkey);
-    while (it != _entries.begin()) {
+    auto entries = getEntriesFor(logclasses);
+    // TODO(sp) Move the stuff below out of this class. Tricky part: makeKey
+    auto it = entries->upper_bound(makeKey(until, 999999999));
+    while (it != entries->begin()) {
         --it;
         // end found or limit exceeded?
         if (it->second->_time < since ||

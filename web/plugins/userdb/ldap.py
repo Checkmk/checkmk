@@ -197,7 +197,11 @@ class LDAPUserConnector(UserConnector):
                 conn.set_option(ldap.OPT_X_TLS_CACERTFILE,
                             "%s/var/ssl/ca-certificates.crt" % cmk.paths.omd_root)
 
-                conn.set_option(ldap.OPT_X_TLS_NEWCTX, 0)
+                # Caused trouble on older systems or systems with some special configuration or set of
+                # libraries. For example we saw a Ubuntu 17.10 system with libldap  2.4.45+dfsg-1ubuntu1 and
+                # libgnutls30 3.5.8-6ubuntu3 raising "ValueError: option error" while another system with
+                # the exact same liraries did not. To reduce the risk of regressions we drop this again.
+                #conn.set_option(ldap.OPT_X_TLS_NEWCTX, 0)
 
             self.default_bind(conn)
             return conn, None

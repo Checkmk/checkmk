@@ -45,11 +45,10 @@ public:
 #ifdef CMC
     void setMaxCachedMessages(unsigned long m);
 #endif
-    void handleNewMessage(Logfile *logfile, unsigned logclasses);
-    logfiles_t *logfiles() { return &_logfiles; };
-    void forgetLogfiles();
-    void updateLogfileIndex();
-    bool logCachePreChecks();
+    void logLineHasBeenAdded(Logfile *logfile, unsigned logclasses);
+    bool update();  // returns true if at least one log file has been found
+    auto begin() { return _logfiles.begin(); }
+    auto end() { return _logfiles.end(); }
 
 private:
     MonitoringCore *const _mc;
@@ -58,6 +57,7 @@ private:
     logfiles_t _logfiles;
     std::chrono::system_clock::time_point _last_index_update;
 
+    void updateLogfileIndex();
     void addToIndex(std::unique_ptr<Logfile> logfile);
     Logger *logger() const;
 };

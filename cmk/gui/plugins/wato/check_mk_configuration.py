@@ -2705,9 +2705,9 @@ register_rule(group,
                     ("specific_missing_sections", ListOf(
                         Tuple(elements=[
                             RegExpUnicode(
-                                help = _('Beside of setting the generic "Missing sections" state above'
-                                         'you can specify a regex pattern to match specific section names and'
-                                         'give them an individual state in case they are missing.'
+                                help = _('Beside of setting the generic "Missing sections" state above '
+                                         'you can specify a regex pattern to match specific section names and '
+                                         'give them an individual state in case they are missing. '
                                          'Note that the first match is used.'),
                                 mode = RegExpUnicode.prefix),
                             MonitoringState(),

@@ -44,8 +44,10 @@
 #include <vector>
 #endif
 
-Logfile::Logfile(MonitoringCore *mc, fs::path path, bool watch)
+Logfile::Logfile(MonitoringCore *mc, LogCache *logcache, fs::path path,
+                 bool watch)
     : _mc(mc)
+    , _logcache(logcache)
     , _path(std::move(path))
     , _since(0)
     , _watch(watch)
@@ -83,7 +85,7 @@ void Logfile::flush() {
     _logclasses_read = 0;
 }
 
-void Logfile::load(LogCache *logcache, unsigned logclasses) {
+void Logfile::load(unsigned logclasses) {
     unsigned missing_types = logclasses & ~_logclasses_read;
     FILE *file = nullptr;
     // The current logfile has the _watch flag set to true.
@@ -106,13 +108,13 @@ void Logfile::load(LogCache *logcache, unsigned logclasses) {
         // have read to the end of the file
         if (_logclasses_read != 0u) {
             fsetpos(file, &_read_pos);  // continue at previous end
-            loadRange(file, _logclasses_read, logcache, logclasses);
+            loadRange(file, _logclasses_read, logclasses);
             fgetpos(file, &_read_pos);
         }
         if (missing_types != 0u) {
             fseek(file, 0, SEEK_SET);
             _lineno = 0;
-            loadRange(file, missing_types, logcache, logclasses);
+            loadRange(file, missing_types, logclasses);
             _logclasses_read |= missing_types;
             fgetpos(file, &_read_pos);  // remember current end of file
         }
@@ -130,13 +132,13 @@ void Logfile::load(LogCache *logcache, unsigned logclasses) {
         }
 
         _lineno = 0;
-        loadRange(file, missing_types, logcache, logclasses);
+        loadRange(file, missing_types, logclasses);
         fclose(file);
         _logclasses_read |= missing_types;
     }
 }
 
-void Logfile::loadRange(FILE *file, unsigned missing_types, LogCache *logcache,
+void Logfile::loadRange(FILE *file, unsigned missing_types,
                         unsigned logclasses) {
     std::vector<char> linebuffer(65536);
     // TODO(sp) We should really use C++ I/O here...
@@ -156,7 +158,7 @@ void Logfile::loadRange(FILE *file, unsigned missing_types, LogCache *logcache,
             }
         }
         if (processLogLine(_lineno, &linebuffer[0], missing_types)) {
-            logcache->logLineHasBeenAdded(this, logclasses);
+            _logcache->logLineHasBeenAdded(this, logclasses);
         }
     }
 }
@@ -202,21 +204,20 @@ bool Logfile::processLogLine(size_t lineno, std::string line,
 }
 
 logfile_entries_t *Logfile::getEntriesFromQuery(const Query * /*unused*/,
-                                                LogCache *logcache,
                                                 unsigned logclasses) {
     // Make sure existing references to objects point to correct world
     updateReferences();
     // make sure all messages are present
-    load(logcache, logclasses);
+    load(logclasses);
     return &_entries;
 }
 
-bool Logfile::answerQueryReverse(Query *query, LogCache *logcache, time_t since,
-                                 time_t until, unsigned logclasses) {
+bool Logfile::answerQueryReverse(Query *query, time_t since, time_t until,
+                                 unsigned logclasses) {
     // Make sure existing references to objects point to correct world
     updateReferences();
     // make sure all messages are present
-    load(logcache, logclasses);
+    load(logclasses);
     uint64_t untilkey = makeKey(until, 999999999);
     auto it = _entries.upper_bound(untilkey);
     while (it != _entries.begin()) {

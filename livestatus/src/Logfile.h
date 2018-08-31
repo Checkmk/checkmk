@@ -49,7 +49,7 @@ using logfile_entries_t = std::map<uint64_t, std::unique_ptr<LogEntry>>;
 
 class Logfile {
 public:
-    Logfile(MonitoringCore *mc, fs::path path, bool watch);
+    Logfile(MonitoringCore *mc, LogCache *logcache, fs::path path, bool watch);
 
     std::string path() { return _path; }
 #ifdef CMC
@@ -67,15 +67,15 @@ public:
 
     // for TableStateHistory
     logfile_entries_t *getEntriesFromQuery(const Query *query,
-                                           LogCache *logcache,
                                            unsigned logclasses);
 
     // for TableLog::answerQuery
-    bool answerQueryReverse(Query *query, LogCache *logcache, time_t since,
-                            time_t until, unsigned logclasses);
+    bool answerQueryReverse(Query *query, time_t since, time_t until,
+                            unsigned logclasses);
 
 private:
     MonitoringCore *_mc;
+    LogCache *const _logcache;
     fs::path _path;
     time_t _since;     // time of first entry
     bool _watch;       // true only for current logfile
@@ -87,9 +87,8 @@ private:
 #endif
     unsigned _logclasses_read;  // only these types have been read
 
-    void load(LogCache *logcache, unsigned logclasses);
-    void loadRange(FILE *file, unsigned missing_types, LogCache *logcache,
-                   unsigned logclasses);
+    void load(unsigned logclasses);
+    void loadRange(FILE *file, unsigned missing_types, unsigned logclasses);
     bool processLogLine(size_t lineno, std::string line, unsigned logclasses);
     uint64_t makeKey(time_t t, size_t lineno);
     void updateReferences();

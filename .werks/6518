@@ -1,0 +1,13 @@
+Title: Fixed sorting of dual list choices (like network interface types)
+Level: 1
+Component: wato
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0i1
+Date: 1535701338
+
+When e.g. editing the network interface port types to discovery in the "Network Interface and Switch Port Discovery" ruleset,
+the list of port types was initially not sorted correctly. Even when the list was sorted correctly, the sorting was not kept
+when moving options between both fields. Both issues have now been fixed.

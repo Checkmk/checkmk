@@ -126,7 +126,13 @@ class html_mod_python(htmllib.html):
 
 
     def set_theme(self, theme_id):
+        # type: (str) -> None
         self._theme = theme_id or config.ui_theme
+
+
+    def get_theme(self):
+        # type: () -> str
+        return self._theme
 
 
     def init_debug_mode(self):

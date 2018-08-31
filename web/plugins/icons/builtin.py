@@ -293,9 +293,12 @@ def pnp_url(row, what, how = 'graph'):
         url = url_prefix + ("pnp4nagios/index.php/%s?host=%s&srv=%s" % \
             (how, html.urlencode(host), html.urlencode(svc)))
 
+    pnp_theme = html.get_theme()
+    if pnp_theme == "classic":
+        pnp_theme = "multisite"
+
     if how == 'graph':
-        url += "&theme=multisite&baseurl=%scheck_mk/" % \
-                        html.urlencode(url_prefix)
+        url += "&theme=%s&baseurl=%scheck_mk/" % (pnp_theme, html.urlencode(url_prefix))
     return url
 
 

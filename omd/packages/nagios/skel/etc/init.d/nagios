@@ -41,11 +41,10 @@ cd ###ROOT###
 [ "$CONFIG_CORE" = "nagios" ] || exit 5
 
 BIN=###ROOT###/bin/nagios
+TMP_DIR=###ROOT###/tmp/nagios
 CFG_FILE=###ROOT###/tmp/nagios/nagios.cfg
-STATUS_FILE=###ROOT###/tmp/nagios/status.dat
 CMD_FILE=###ROOT###/tmp/run/nagios.cmd
 PID_FILE=###ROOT###/tmp/lock/nagios.lock
-STATUS_DAT=###ROOT###/tmp/nagios/status.dat
 CHECKRESULTS_DIR=###ROOT###/tmp/nagios/checkresults
 USR=###SITE###
 GRP=###SITE###
@@ -68,6 +67,11 @@ export CONFIG_MKEVENTD
 
 # OMD: create configuration file out of fragments
 case "$1" in start|restart|reload|checkconfig|check)
+    if [ ! -d "$TMP_DIR" ]; then
+        echo "ERROR: tmp directory is not ready. Use \"omd start\" to prepare it"
+        exit 1
+    fi
+
     merge-nagios-config \
        ###ROOT###/etc/nagios/nagios.d/*.cfg \
        ###ROOT###/etc/nagios/nagios.cfg \

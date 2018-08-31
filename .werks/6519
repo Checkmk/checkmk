@@ -1,0 +1,11 @@
+Title: Fixed unselecting items from dual list choice via double click
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.5.0p3
+Date: 1535702157
+Class: fix
+
+It was possible to select items in dual list choices elements (like like network interface types),
+but not possible to unselect them in the same way.

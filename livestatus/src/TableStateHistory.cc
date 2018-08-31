@@ -208,7 +208,7 @@ std::string TableStateHistory::namePrefix() const { return "statehist_"; }
 void TableStateHistory::getPreviousLogentry() {
     while (_it_entries == _entries->begin()) {
         // open previous logfile
-        if (_it_logs == _log_cache->logfiles()->begin()) {
+        if (_it_logs == _log_cache->begin()) {
             return;
         }
         --_it_logs;
@@ -226,7 +226,7 @@ LogEntry *TableStateHistory::getNextLogentry() {
 
     while (_it_entries == _entries->end()) {
         auto it_logs_cpy = _it_logs;
-        if (++it_logs_cpy == _log_cache->logfiles()->end()) {
+        if (++it_logs_cpy == _log_cache->end()) {
             return nullptr;
         }
         ++_it_logs;
@@ -278,7 +278,7 @@ std::unique_ptr<Filter> TableStateHistory::createPartialFilter(
 void TableStateHistory::answerQuery(Query *query) {
     auto object_filter = createPartialFilter(*query);
     std::lock_guard<std::mutex> lg(_log_cache->_lock);
-    if (!_log_cache->logCachePreChecks()) {
+    if (!_log_cache->update()) {
         return;
     }
 
@@ -313,13 +313,12 @@ void TableStateHistory::answerQuery(Query *query) {
     }
 
     // Switch to last logfile (we have at least one)
-    _it_logs = _log_cache->logfiles()->end();
+    _it_logs = _log_cache->end();
     --_it_logs;
     auto newest_log = _it_logs;
 
     // Now find the log where 'since' starts.
-    while (_it_logs != _log_cache->logfiles()->begin() &&
-           _it_logs->first >= _since) {
+    while (_it_logs != _log_cache->begin() && _it_logs->first >= _since) {
         --_it_logs;  // go back in history
     }
 

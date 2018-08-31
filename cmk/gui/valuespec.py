@@ -2235,7 +2235,7 @@ class DualListChoice(ListChoice):
                     unselected.append(e)
 
         select_func   = 'vs_duallist_switch(\'unselected\', \'%s\', %d);' % (varprefix, 1 if self._custom_order else 0)
-        unselect_func = 'vs_duallist_switch(\'selected\', \'%s\', 1);' % varprefix
+        unselect_func = 'vs_duallist_switch(\'selected\', \'%s\', %d);' % (varprefix, 1 if self._custom_order else 0)
 
         html.open_table(class_=["vs_duallist"], style = "width: %dpx;" % (self._size * 6.4) if self._size else None)
 
@@ -2253,28 +2253,25 @@ class DualListChoice(ListChoice):
         html.close_td()
         html.close_tr()
 
-        onchange_unselected = select_func if self._instant_add else ''
-        onchange_selected   = unselect_func if self._instant_add else ''
-        if self._enlarge_active:
-            onchange_selected   = 'vs_duallist_enlarge(\'selected\', \'%s\');' % varprefix
-            onchange_unselected = 'vs_duallist_enlarge(\'unselected\', \'%s\');' % varprefix
-
-        attrs = {
-            'multiple'   : 'multiple',
-            'style'      : 'height:auto' if self._autoheight else "height: %dpx" % (self._rows * 16),
-            'ondblclick' : select_func if not self._instant_add else '',
-        }
-
         html.open_tr()
-        html.open_td()
-        attrs["onchange"] = onchange_unselected
-        html.multi_select(varprefix + '_unselected', unselected, deflt='', sorted=self._custom_order, **attrs)
-        html.close_td()
+        for suffix, choices, select_func in [
+                ("unselected", unselected, select_func),
+                ("selected", selected, unselect_func), ]:
 
-        html.open_td()
-        attrs["onchange"] = onchange_selected
-        html.multi_select(varprefix + '_selected', selected, deflt='', sorted=self._custom_order, **attrs)
-        html.close_td()
+            onchange_func   = select_func if self._instant_add else ''
+            if self._enlarge_active:
+                onchange_func = 'vs_duallist_enlarge(\'%s\', \'%s\');' % (suffix, varprefix)
+
+            attrs = {
+                'multiple'   : 'multiple',
+                'style'      : 'height:auto' if self._autoheight else "height: %dpx" % (self._rows * 16),
+                'ondblclick' : select_func if not self._instant_add else '',
+            }
+
+            html.open_td()
+            attrs["onchange"] = onchange_func
+            html.multi_select("%s_%s" % (varprefix, suffix), choices, deflt='', sorted=self._custom_order, **attrs)
+            html.close_td()
         html.close_tr()
 
         html.close_table()

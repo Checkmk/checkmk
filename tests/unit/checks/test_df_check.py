@@ -212,6 +212,12 @@ info_solaris_zfs = [
  [u'zfs', u'is', u'hashed', u'(/usr/sbin/zfs)'],
 ]
 
+info_empty_inodes = [
+    [u'[df_inodes_start]'],
+    [u'/dev/mapper/vgdns-lvbindauthlog', u'-', u'-', u'-', u'-', u'-', u'/dns/bindauth/log'],
+    [u'[df_inodes_end]'],
+]
+
 #.
 #   .--Test functions------------------------------------------------------.
 #   |   _____         _      __                  _   _                     |
@@ -245,6 +251,7 @@ info_solaris_zfs = [
     (info_df_btrfs, [(u'/dev/sda1 btrfs /dev/sda1', {})],
                                                          { "include_volume_name" : True }),              # btrfs w/ volume name option
     (info_solaris_zfs, [], {}),                                                                          # ignore filensystems without size
+    (info_empty_inodes, [], {})
 ])
 def test_df_discovery_with_parse(check_manager, info, expected_result, inventory_df_rules):
 

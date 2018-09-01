@@ -21,6 +21,7 @@ lxml = "*"
 pylint = "*"
 pyenchant = "*"
 yapf = "*"
+docker = "*"
 
 [packages]
 setuptools_scm = "==2.1.0"

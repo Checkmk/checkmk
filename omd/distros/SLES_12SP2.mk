@@ -51,6 +51,7 @@ BUILD_PACKAGES += krb5-devel # needed for pykerberos / requests-kerberos python 
 BUILD_PACKAGES += flex # needed for heirloom-pkgtools
 BUILD_PACKAGES   += openssh # needed for check_by_ssh
 OS_PACKAGES     =
+OS_PACKAGES    += cronie # needed for sites cron jobs
 OS_PACKAGES      += net-tools # traceroute is needed for Check_MK parent scan
 OS_PACKAGES    += apache2
 OS_PACKAGES    += bind-utils # check_dns

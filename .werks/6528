@@ -1,0 +1,19 @@
+Title: TMPFS config hook is now available again
+Level: 1
+Component: omd
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0i1
+Date: 1535823785
+
+The hook as removed during 1.5 development (#5170). Since it is
+useful to disable TMPFS especially when Check_MK sites are used
+in container environments.
+
+E.g. when using Docker tmpfs mounts in containers are only possible with
+privileged containers or SYS_ADMIN capability. In this situation it is
+better to turn off the TMPFS in the site and tell docker to mount a
+tmpfs in the sites tmp directory during container creation
+(e.g. using docker run --tmpfs /omd/sites/[site]/tmp).

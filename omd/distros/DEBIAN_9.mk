@@ -47,6 +47,7 @@ BUILD_PACKAGES   += libssl1.0-dev # Needed for net-snmp (https://bugs.debian.org
 BUILD_PACKAGES   += flex # needed for heirloom-pkgtools
 BUILD_PACKAGES   += openssh-client # needed for check_by_ssh
 OS_PACKAGES       =
+OS_PACKAGES      += cron # needed for sites cron jobs
 OS_PACKAGES      += time # needed for mk-job
 OS_PACKAGES      += traceroute # needed for Check_MK parent scan
 OS_PACKAGES      += curl

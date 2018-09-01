@@ -295,6 +295,7 @@ setversion:
 	sed -i 's/^VERSION=.*/VERSION='"$(NEW_VERSION)"'/' scripts/setup.sh ; \
 	$(MAKE) -C agents NEW_VERSION=$(NEW_VERSION) setversion
 	$(MAKE) -C omd NEW_VERSION=$(NEW_VERSION) setversion
+	$(MAKE) -C docker NEW_VERSION=$(NEW_VERSION) setversion
 ifeq ($(ENTERPRISE),yes)
 	$(MAKE) -C enterprise NEW_VERSION=$(NEW_VERSION) setversion
 endif
@@ -370,6 +371,7 @@ setup:
 	sudo pip install -U pipenv
 	$(MAKE) -C omd setup
 	$(MAKE) -C omd/packages/openhardwaremonitor setup
+	$(MAKE) -C docker setup
 ifeq ($(ENTERPRISE),yes)
 	$(MAKE) -C enterprise/locale setup
 endif

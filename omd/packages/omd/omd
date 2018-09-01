@@ -1578,6 +1578,19 @@ def prepare_tmpfs(sitename, tmp):
     if tmpfs_mounted(sitename):
         return # Fine: Mounted
 
+    if g_site_conf["TMPFS"] != "on":
+        if os.path.exists(tmp):
+            return
+
+        sys.stdout.write("Preparing tmp directory %s..." % tmp)
+        sys.stdout.flush()
+        try:
+            os.mkdir(tmp)
+        except OSError, e:
+            if e.errno != errno.EEXIST: # File exists
+                raise
+        return
+
     sys.stdout.write("Creating temporary filesystem %s..." % tmp)
     sys.stdout.flush()
     if not os.path.exists(tmp):

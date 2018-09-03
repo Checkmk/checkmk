@@ -40,7 +40,6 @@ class MonitoringCore;
 class Query;
 
 #ifdef CMC
-#include <vector>
 class World;
 #endif
 

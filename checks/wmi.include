@@ -154,6 +154,8 @@ class WMITable(object):
 
 
 def parse_wmi_table(info, key="Name"):
+    parsed = {}
+
     try:
         # read input line by line. rows with [] start the table name.
         # Each table has to start with a header line
@@ -168,7 +170,6 @@ def parse_wmi_table(info, key="Name"):
             timestamp, frequency = int(line[1]), int(line[2])
             line = info_iter.next()
 
-        parsed = {}
         while line is not None:
             check_wmi_timeout(line)
 
@@ -236,7 +237,7 @@ def inventory_wmi_table(tables, **kwargs):
         # only happen if required_tables was set
         return []
 
-    potential_instances = None
+    potential_instances = set()
     if kwargs.get("skip_intersection", False):
         # Unfortunately there are tables which do NOT provide any
         # names. In this case we fallback to old behaviour.
@@ -250,10 +251,10 @@ def inventory_wmi_table(tables, **kwargs):
         # inventarize one item per instance that exists in all tables
         for required_table in required_tables:
             table_rows = tables[required_table].row_labels()
-            if potential_instances is None:
-                potential_instances = set(table_rows)
-            else:
+            if potential_instances:
                 potential_instances &= set(table_rows)
+            else:
+                potential_instances = set(table_rows)
 
     # if there are multiple instances, don't include the summary line as it is redundant
     if len(potential_instances) > 1:
@@ -466,4 +467,3 @@ def wmi_yield_raw_fraction(table, row, column, label, perfvar, levels=None):
     )
 
 #.
-

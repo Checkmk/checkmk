@@ -7,24 +7,12 @@ else
     REPO_PATH      := $(abspath ..)
 endif
 
+include $(REPO_PATH)/defines.make
+
 PACKAGE_BASE       := $(REPO_PATH)/omd/packages
 
-EDITION            := raw
-EDITION_SHORT      := cre
-ifneq (,$(wildcard $(REPO_PATH)/enterprise))
-    EDITION        := enterprise
-    EDITION_SHORT  := cee
-endif
-ifneq (,$(wildcard $(REPO_PATH)/managed))
-    EDITION        := managed
-    EDITION_SHORT  := cme
-endif
-
-CMK_VERSION        := 1.6.0i1
+CMK_VERSION        := $(VERSION)
 OMD_SERIAL         := 38
-# Will be set to ".demo" by cmk build system when building a demo package
-DEMO_SUFFIX        :=
-OMD_VERSION        := $(CMK_VERSION).$(EDITION_SHORT)$(DEMO_SUFFIX)
 
 OMD_BASE           := /omd
 OMD_PHYSICAL_BASE  := /opt/omd

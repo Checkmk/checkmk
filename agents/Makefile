@@ -22,8 +22,8 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-SHELL           = /bin/bash
-VERSION         = 1.6.0i1
+include ../defines.make
+
 RPM_VERSION     = $(subst -,_,$(VERSION))
 NAME            = check-mk-agent
 DISTNAME       	= $(NAME)-$(VERSION)
@@ -54,7 +54,6 @@ waitmax: waitmax.c
 	@echo "Fine. Typing 'make install' as root now will install into /usr/bin"
 
 setversion:
-	sed -ri 's/^(VERSION[[:space:]]*:?= *).*/\1'"$(NEW_VERSION)/" Makefile ; \
 	sed -i 's/say "Version: .*"/say "Version: $(NEW_VERSION)"/' check_mk_agent.openvms ; \
 	for agent in check_mk_agent.*; do \
 	    if [ "$$agent" != windows -a "$$agent" != plugins -a "$$agent" != hpux ] ; then \

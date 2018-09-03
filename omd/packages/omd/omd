@@ -1595,11 +1595,12 @@ def prepare_tmpfs(sitename, tmp):
         return # Fine: Mounted
 
     if g_site_conf["TMPFS"] != "on":
+        sys.stdout.write("Preparing tmp directory %s..." % tmp)
+        sys.stdout.flush()
+
         if os.path.exists(tmp):
             return
 
-        sys.stdout.write("Preparing tmp directory %s..." % tmp)
-        sys.stdout.flush()
         try:
             os.mkdir(tmp)
         except OSError, e:

@@ -19,7 +19,7 @@ case "$1" in
     set)
         # Unmount the tmpfs when it was mounted before
         if [ "$2" == "off" ]; then
-            omd umount
+            omd umount >/dev/null
         fi
     ;;
 esac

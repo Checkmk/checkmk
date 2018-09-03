@@ -29,6 +29,7 @@
 #include <cstdlib>
 #include <sstream>
 #include <utility>
+#include <vector>
 #include "LogCache.h"
 #include "LogEntry.h"
 #include "Logger.h"
@@ -37,11 +38,7 @@
 #include "Row.h"
 
 #ifdef CMC
-#include <new>
 #include "cmc.h"
-#else
-#include <memory>
-#include <vector>
 #endif
 
 namespace {

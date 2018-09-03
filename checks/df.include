@@ -301,8 +301,8 @@ def df_check_filesystem_list(item, params, fslist_blocks, fslist_inodes = None):
             return df_check_filesystem_single(mp, blocks_info[mp]["size_mb"],
                                                   blocks_info[mp]["avail_mb"],
                                                   blocks_info[mp]["reserved_mb"],
-                                                  blocks_info[mp].get("inodes_total", None),
-                                                  blocks_info[mp].get("inodes_avail", None),
+                                                  inodes_info.get(mp, {}).get("inodes_total", None),
+                                                  inodes_info.get(mp, {}).get("inodes_avail", None),
                                                   params)
         else:
             return 3, "filesystem not found"

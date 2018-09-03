@@ -1,0 +1,11 @@
+Title: mk_oracle: Plugin is compatible against 18c
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0p6
+Date: 1538490263
+
+

@@ -64,7 +64,7 @@ double HostSpecialDoubleColumn::getValue(Row row) const {
 double HostSpecialDoubleColumn::staleness(const Object *object) {
     auto state = object->state();
     std::chrono::system_clock::duration check_result_age;
-    Timeperiod *check_period = object->_check_period;
+    const Timeperiod *check_period = object->_check_period;
     std::chrono::system_clock::time_point last_period_change =
         check_period->lastStateChange();
     std::chrono::system_clock::time_point last_check = state->_last_check;

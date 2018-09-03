@@ -1,0 +1,10 @@
+Title: enviromux, enviromux.humidity, enviromux.voltage, enviromux_aux, enviromux_aux.humidity, enviromux_aux.voltage, enviromux_digital, enviromux_external, enviromux_external.humidity, enviromux_external.voltage, enviromux_sems, enviromux_sems.humidity, enviromux_sems.voltage, enviromux_sems_digital, enviromux_sems_external, enviromux_sems_external.humidity, enviromux_sems_external.voltage: Suite of checks for Enviromux devices
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1535961257
+Class: feature
+
+

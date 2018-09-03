@@ -1,0 +1,11 @@
+Title: oracle_tablespaces: Check for empty filenames
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.4.0p37
+Date: 1539143699
+
+

@@ -194,19 +194,66 @@ sql_tablespaces()
                     and f.file_id = fs.file_id(+)
                     group by f.file_name, f.tablespace_name, f.status, f.autoextensible,
                     f.blocks, f.maxblocks, f.user_blocks, f.increment_by, f.online_status,
-                    t.block_size, t.status, t.contents
-                    UNION
-                    select f.file_name, f.tablespace_name, f.status, f.AUTOEXTENSIBLE,
-                    f.blocks, f.maxblocks, f.USER_BLOCKS, f.INCREMENT_BY, 'TEMP',
-                    t.BLOCK_SIZE, t.status, sum(sh.blocks_free) free_blocks, 'TEMPORARY',
-                    (select version from v\$instance) version
-                    from v\$thread th, dba_temp_files f, dba_tablespaces t, v\$temp_space_header sh
-                    WHERE f.tablespace_name = t.tablespace_name and f.file_id = sh.file_id
-                    GROUP BY th.instance, f.file_name, f.tablespace_name, f.status,
-                    f.autoextensible, f.blocks, f.maxblocks, f.user_blocks, f.increment_by,
-                    'TEMP', t.block_size, t.status)
+                    t.block_size, t.status, t.contents)
            where d.database_role = 'PRIMARY';
-              "
+
+           select upper(decode(${IGNORE_DB_NAME:-0}
+                                 , 0, dbf.name
+                                 , i.instance_name))
+                  || '|' || dbf.file_name
+                  || '|' || dbf.tablespace_name
+                  || '|' || dbf.fstatus
+                  || '|' || dbf.AUTOEXTENSIBLE
+                  || '|' || dbf.blocks
+                  || '|' || dbf.maxblocks
+                  || '|' || dbf.USER_BLOCKS
+                  || '|' || dbf.INCREMENT_BY
+                  || '|' || dbf.ONLINE_STATUS
+                  || '|' || dbf.BLOCK_SIZE
+                  || '|' || decode(tstatus,'READ ONLY', 'READONLY', tstatus)
+                  || '|' || dbf.free_blocks
+                  || '|' || 'TEMPORARY'
+                  || '|' || i.version
+           FROM v\$database d
+           JOIN v\$instance i ON 1 = 1
+           JOIN (
+                 SELECT vp.name,
+                        f.file_name,
+                        t.tablespace_name,
+                        f.status fstatus,
+                        f.autoextensible,
+                        f.blocks,
+                        f.maxblocks,
+                        f.user_blocks,
+                        f.increment_by,
+                        'ONLINE' online_status,
+                        t.block_size,
+                        t.status tstatus,
+                        f.blocks - nvl(SUM(tu.blocks),0) free_blocks,
+                        t.contents
+                 FROM dba_tablespaces t
+                 JOIN ( SELECT 0
+                             ,name
+                       FROM v\$database
+                      ) vp ON 1=1
+                 LEFT OUTER JOIN dba_temp_files f ON t.tablespace_name = f.tablespace_name
+                 LEFT OUTER JOIN gv\$tempseg_usage tu ON f.tablespace_name = tu.tablespace
+                                                      AND f.RELATIVE_FNO = tu.SEGRFNO#
+                 WHERE t.contents = 'TEMPORARY'
+                 GROUP BY vp.name,
+                          f.file_name,
+                          t.tablespace_name,
+                          f.status,
+                          f.autoextensible,
+                          f.blocks,
+                          f.maxblocks,
+                          f.user_blocks,
+                          f.increment_by,
+                          t.block_size,
+                          t.status,
+                          t.contents
+                ) dbf ON 1 = 1;"
+
     elif [ "$AT_LEAST_ORACLE_92" = 'yes' ] ; then
 
         echo "select upper(decode(${IGNORE_DB_NAME:-0}, 0, d.NAME, i.instance_name))

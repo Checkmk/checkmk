@@ -1,5 +1,12 @@
 # MS Exchange Database counters
 
-Write-Host "<<<msexch_database:sep(59)>>>"
+# localize counter name
+$locale = ([System.Globalization.Cultureinfo]::CurrentCulture.name)
+switch -wildcard($locale){
+    "en-*" {$counter_name = "\MSExchange Database ==> Instances(*)\*"}
+    "de-*" {$counter_name = "\MSExchange-Datenbank  ==> Instanzen(*)\*"}
+}
 
-Get-Counter -Counter "\MSExchange Database ==> Instances(*)\*" | % {$_.CounterSamples} | Select path,cookedvalue | ConvertTo-CSV -NoTypeInformation -Delimiter ";"
+Write-Host "<<<msexch_database:sep(59)>>>"
+Write-Host "locale;"$locale
+Get-Counter -Counter $counter_name | % {$_.CounterSamples} | Select path,cookedvalue | ConvertTo-CSV -NoTypeInformation -Delimiter ";"

@@ -1,0 +1,13 @@
+Title: msexch_database: plugin now runs on german client systems
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1539347214
+Class: feature
+
+Previously the msexch_database plugin could not be used on
+german windows systems.
+
+

@@ -1,0 +1,23 @@
+Title: Fixed possible error "You can not override a builtin auxiliary tag" after update
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 1.5.0p3
+Date: 1535963347
+Class: fix
+
+During the tag migration from 1.5 or newer a problem could happen that the auxiliary
+tags "snmp" and "tcp" were not removed correctly. This happened when the titles of these
+auxiliary tags have been changed in the site.
+
+This is a regression since 1.5.0p1 (caused by #6247).
+
+Workaround with 1.5.0p2 or older: Have a look at the
+/omd/sites/[SITE]/etc/check_mk/multisite.d/wato/hosttags.mk file.  First create
+a backup of this file, then look for entries like this:
+
+wato_aux_tags += \
+[('snmp', u'monitor via SNMP'), ('tcp', u'monitor via Check_MK Agent')]
+
+Try to remove the line and reload the GUI. The issue should be gone now.

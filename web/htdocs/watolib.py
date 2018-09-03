@@ -6429,16 +6429,14 @@ def remove_old_sample_config_tag_groups(host_tags, aux_tags):
     except ValueError:
         pass # Not there or modified
 
-    legacy_aux_tags = [
-        ('snmp', u'monitor via SNMP'),
-        ('tcp', u'monitor via Check_MK Agent'),
+    legacy_aux_tag_ids = [
+        'snmp',
+        'tcp',
     ]
 
-    for aux_tag in legacy_aux_tags:
-        try:
+    for aux_tag in aux_tags[:]:
+        if aux_tag[0] in legacy_aux_tag_ids:
             aux_tags.remove(aux_tag)
-        except ValueError:
-            pass # Not there or modified
 
 
 def extend_user_modified_tag_groups(host_tags):

@@ -887,6 +887,8 @@ body.side {
 
 #side_content {
   top: 64px; }
+  div#check_mk_sidebar > div#side_content {
+    padding-left: 0px !important; }
 
 #hover_menu div.message {
   color: #fff;
@@ -922,7 +924,7 @@ body.side {
       text-decoration: none;
       color: #e6e6e6; }
 
-div.snapin {
+body.side div.snapin, div.add_snapin div.snapin  {
   box-sizing: border-box;
   width: 100%;
   padding: 0px 0px;

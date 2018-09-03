@@ -1,0 +1,13 @@
+Title: Warn during config generation when an unknown timeperiod from a shadow host is encountered.
+Level: 1
+Component: config
+Class: fix
+Compatible: compat
+Edition: cee
+State: unknown
+Version: 1.6.0i1
+Date: 1535982946
+
+When a shadow host uses a timeperiod which is unknown on the master site, we
+issue a warning during config generation time ("cmk -U" etc.) now.  We
+substitute the timeperiod "24X7" (i.e.  "Always") in these cases.

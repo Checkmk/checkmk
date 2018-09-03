@@ -138,7 +138,6 @@ check_info['openhardwaremonitor'] = {
     'parse_function'      : parse_openhardwaremonitor,
     'has_perfdata'        : True,
     'service_description' : "Clock %s",
-    'includes'            : ['wmi.include']
 }
 
 

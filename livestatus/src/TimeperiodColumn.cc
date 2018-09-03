@@ -51,6 +51,5 @@ int32_t TimeperiodColumn::getValue(Row row,
         return g_timeperiods_cache->inTimeperiod(tp) ? 1 : 0;
     }
 #endif
-    // no timeperiod set -> assume 24X7
-    return 0;
+    return 1;  // unknown timeperiod is assumed to be 24X7
 }

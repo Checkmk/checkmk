@@ -8,6 +8,13 @@ description:
  management board monitoring reports states about all available fans,
  temperature sensors and power supplies.
 
+ Note that IPMI provides four states: 'ok', 'non-critical', 'critical' and
+ 'non-recoverable'. The default Check-MK behaviour is to map 'ok' to {OK},
+ 'non-critical' to {WARN} and 'critical' and 'non-recoverable' to {CRIT}.
+ However, some manufacturers choose to display both 'ok' and 'non-critical'
+ as normal on their provided tools. If you want Check-MK to behave similarly,
+ you can set up a corresponding "Service State Translation" rule.
+
 item:
  The name of the sensor as provided via IPMI.
 

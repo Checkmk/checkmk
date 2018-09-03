@@ -308,11 +308,7 @@ def wmi_make_perfvar(varname, value, perfscale, levels, min_value=None, max_valu
 
 
 def wmi_determine_status(value, levels):
-    def worst_status(*args):
-        order = [0, 1, 3, 2]
-        return sorted(args, key=lambda x: order[x], reverse=True)[0]
-
-    statuses, levels_text = [0], ""
+    status, levels_text = 0, ""
     if levels:
         if 'upper' in levels:
             upper_status = 0
@@ -321,20 +317,22 @@ def wmi_determine_status(value, levels):
             elif value >= levels['upper'][0]:
                 upper_status = 1
 
-            if upper_status != 0:
-                statuses.append(upper_status)
-                levels_text = " (warn/crit at %s/%s)" % levels['upper']
+            if upper_status:
+                status = max(status, upper_status)
+                levels_text += " (warn/crit at %s/%s)" % levels['upper']
+
         if 'lower' in levels:
             lower_status = 0
-            if value <= levels['lower'][1]:
+            if value < levels['lower'][1]:
                 lower_status = 2
-            elif value <= levels['lower'][0]:
+            elif value < levels['lower'][0]:
                 lower_status = 1
-            if lower_status != 0:
-                statuses.append(lower_status)
-                levels_text = " (warn/crit below %s/%s)" % levels['lower']
 
-    return worst_status(*statuses), levels_text
+            if lower_status:
+                status = max(status, lower_status)
+                levels_text += " (warn/crit below %s/%s)" % levels['lower']
+
+    return status, levels_text
 
 
 # to make wato rules simpler, levels are allowed to be passed as tuples if the level

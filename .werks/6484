@@ -1,0 +1,47 @@
+Title: Fixed filtering check plugins for the management board and the host itself
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0i1
+Date: 1535988064
+
+In order to decide which check is used for which data source
+we have to filter the found check plugins. This is done via
+the check_info key "management_board". There are three values
+with the following meanings:
+- MGMT_ONLY
+    These check plugins
+    - are only used for management board data sources,
+    - have the prefix 'mgmt_' in their name,
+    - have the prefix 'Management Interface:' in their service description.
+    - If there is an equivalent host check plugin then it must be 'HOST_ONLY'.
+
+- HOST_PRECEDENCE
+    - Default value for all check plugins.
+    - It does not have to be declared in the check_info.
+    - Special situation for SNMP management boards:
+        - If a host is not a SNMP host these checks are used for
+          the SNMP management boards.
+        - If a host is a SNMP host these checks are used for
+          the host itself.
+
+- HOST_ONLY
+    These check plugins
+    - are used for 'real' host data sources, not for host management board data sources
+    - there is an equivalent 'MGMT_ONLY'-management board check plugin.
+
+
+Migration from 1.4 to 1.5:
+in 1.4 TCP hosts with SNMP management boards discovered TCP and
+SNMP checks, eg. uptime and snmp_uptime.  During checking phase
+these checks should be executed
+further on.
+In versions >= 1.5 there are management board specific check
+plugins, eg. mgmt_snmp_uptime.
+After a re-discovery Check_MK finds the uptime check plugin for
+the TCP host and the mgmt_snmp_uptime check for the SNMP
+management board. Moreover Check_MK eliminates 'HOST_ONLT'
+checks like snmp_uptime.

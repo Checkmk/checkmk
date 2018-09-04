@@ -790,7 +790,7 @@ class FilterLogClass(Filter):
             (8, _("Alert Handlers")) ]
 
         Filter.__init__(self, "log_class", _("Logentry class"),
-                "log", [ "logclass_filled" ] + [ "logclass%d" % l for l, c in self.log_classes ], [])
+                "log", [ "logclass_filled" ] + [ "logclass%d" % l for l, _c in self.log_classes ], [])
 
     def double_height(self):
         return True
@@ -823,7 +823,7 @@ class FilterLogClass(Filter):
 
     def filter(self, infoname):
         headers = []
-        for l, c in self.log_classes:
+        for l, _c in self.log_classes:
             if html.get_checkbox("logclass%d" % l) != False:
                 headers.append("Filter: class = %d\n" % l)
 
@@ -879,7 +879,7 @@ class FilterLogState(Filter):
 
     def filter(self, infoname):
         headers = []
-        for varsuffix, what, state, text in self._items:
+        for varsuffix, what, state, _text in self._items:
             if html.get_checkbox("logst_" + varsuffix) != False: # None = form not filled in = allow
                 headers.append("Filter: log_type ~ %s .*\nFilter: log_state = %d\nAnd: 2\n" %
                             (what.upper(), state))
@@ -1077,7 +1077,6 @@ class FilterHostAuxTags(Filter):
 
 
     def display(self):
-        selection = []
         for num in range(self.count):
             html.dropdown('%s_%d' % (self.prefix, num), [("", "")] + self.auxtags, sorted=True, class_='neg')
             html.open_nobr()
@@ -1160,7 +1159,7 @@ class FilterECServiceLevelRange(Filter):
             filterline = "Filter: %s_custom_variable_names >= EC_SL\n" % self.info
 
             filterline_values = []
-            for value, readable in config.mkeventd_service_levels:
+            for value, _readable in config.mkeventd_service_levels:
                 if match_func(value):
                     filterline_values.append( "Filter: %s_custom_variable_values >= %s" % \
                                               (self.info, livestatus.lqencode(str(value))) )
@@ -1460,7 +1459,7 @@ class BIHostFilter(Filter):
 
 
     def find_host(self, host, hostlist):
-        for s, h in hostlist:
+        for _s, h in hostlist:
             if h == host:
                 return True
         return False
@@ -1554,7 +1553,6 @@ class BIStatusFilter(Filter):
 
 
     def filter_table(self, rows):
-        jeaders = []
         if html.var("filled_in"):
             defval = ""
         else:
@@ -1646,7 +1644,7 @@ if config.mkeventd_enabled:
 
         def filter(self, infoname):
             selected = []
-            for name, title in self._choices:
+            for name, _title in self._choices:
                 if html.get_checkbox(self._name + "_" + str(name)):
                     selected.append(str(name))
 

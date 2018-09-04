@@ -412,9 +412,9 @@ class BIManagement(object):
 
     def find_aggregation_rule_usages(self):
         aggregations_that_use_rule = {}
-        for pack_id, pack in self._packs.items():
+        for pack in self._packs.itervalues():
             for aggr_id, aggregation in enumerate(pack["aggregations"]):
-                rule_id, description = self.rule_called_by_node(aggregation["node"])
+                rule_id, _description = self.rule_called_by_node(aggregation["node"])
                 aggregations_that_use_rule.setdefault(rule_id, []).append((aggr_id, aggregation))
                 sub_rule_ids = self._aggregation_recursive_sub_rule_ids(rule_id)
                 for sub_rule_id in sub_rule_ids:
@@ -889,7 +889,7 @@ class ModeBI(WatoMode, BIManagement):
 
 
     def aggregation_toplevel_rule(self, aggregation):
-        rule_id, description = self.rule_called_by_node(aggregation["node"])
+        rule_id, _description = self.rule_called_by_node(aggregation["node"])
         return self.find_rule_by_id(rule_id)
 
 
@@ -907,7 +907,7 @@ class ModeBI(WatoMode, BIManagement):
         for node in rule["nodes"]:
             r = self.rule_called_by_node(node)
             if r:
-                ru_id, info = r
+                ru_id, _info = r
                 if ru_id == ruleid: # Rule is directly being used
                     return level + 1
                 # Check if lower rules use it
@@ -923,14 +923,14 @@ class ModeBI(WatoMode, BIManagement):
         aggr_refs = 0
         for pack in self._packs.values():
             for aggregation in pack["aggregations"]:
-                called_rule_id, info = self.rule_called_by_node(aggregation["node"])
+                called_rule_id, _info = self.rule_called_by_node(aggregation["node"])
                 if called_rule_id == ruleid:
                     aggr_refs += 1
 
         level = 0
         rule_refs = 0
         for pack in self._packs.values():
-            for rid, rule in pack["rules"].items():
+            for rule in pack["rules"].itervalues():
                 l = self.rule_uses_rule(rule, ruleid)
                 level = max(l, level)
                 if l == 1:
@@ -1454,7 +1454,7 @@ class ModeBIRules(ModeBI):
 
 
     def _check_delete_rule_id_permission(self, rule_id):
-        aggr_refs, rule_refs, level = self.count_rule_references(rule_id)
+        aggr_refs, rule_refs, _level = self.count_rule_references(rule_id)
         if aggr_refs:
             raise MKUserError(None, _("You cannot delete this rule: it is still used by aggregations."))
         if rule_refs:
@@ -1636,7 +1636,7 @@ class ModeBIRuleTree(ModeBI):
 
 
     def page(self):
-        aggr_refs, rule_refs, level = self.count_rule_references(self._ruleid)
+        _aggr_refs, rule_refs, _level = self.count_rule_references(self._ruleid)
         if rule_refs == 0:
             table.begin(sortable=False, searchable=False)
             table.row()
@@ -1959,7 +1959,7 @@ class ModeBIEditRule(ModeBI):
         if rules_without_permissions:
             message = ", ".join([_("BI rules %s from BI pack '%s'") % \
                                  (", ".join([ "'%s'" % ruleid for ruleid in ruleids]), title)
-                                 for (nodeid, title), ruleids in rules_without_permissions.items()])
+                                 for (_nodeid, title), ruleids in rules_without_permissions.items()])
             raise MKAuthException(_("You have no permission for changes in this rule using %s.") % message)
 
 

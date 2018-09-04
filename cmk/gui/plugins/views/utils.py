@@ -586,7 +586,7 @@ def get_perfdata_nth_value(row, n, remove_unit = False):
         parts = perfdata.split()
         if len(parts) <= n:
             return "" # too few values in perfdata
-        varname, rest = parts[n].split("=")
+        _varname, rest = parts[n].split("=")
         number = rest.split(';')[0]
         # Remove unit. Why should we? In case of sorter (numeric)
         if remove_unit:
@@ -723,7 +723,7 @@ def _merge_data(data, columns):
             return max(a, b)
 
     for c in columns:
-        tablename, col = c.split("_", 1)
+        _tablename, col = c.split("_", 1)
         if col.startswith("num_") or col.startswith("members"):
             mergefunc = lambda a,b: a+b
         elif col.startswith("worst_service"):
@@ -1065,11 +1065,6 @@ class Cell(object):
         columns = set(get_painter_columns(self.painter()))
 
         if self._link_view_name:
-            # Make sure that the information about the available views is present. If
-            # called via the reporting, then this might not be the case
-            # TODO: Move this to some better place.
-            views = get_permitted_views(load_all_views())
-
             if self._has_link():
                 link_view = self._link_view()
                 if link_view:
@@ -1285,7 +1280,7 @@ class Cell(object):
         # Add the optional mouseover tooltip
         if content and self.has_tooltip():
             tooltip_cell = Cell(self._view, (self.tooltip_painter_name(), None))
-            tooltip_tdclass, tooltip_content = tooltip_cell.render_content(row)
+            _tooltip_tdclass, tooltip_content = tooltip_cell.render_content(row)
             tooltip_text = html.strip_tags(tooltip_content)
             content = '<span title="%s">%s</span>' % (tooltip_text, content)
 
@@ -1497,7 +1492,7 @@ def get_primary_sorter_order(view, painter_name):
     sorter_name = get_sorter_name_of_painter(painter_name)
     this_asc_sorter  = (sorter_name, False)
     this_desc_sorter = (sorter_name, True)
-    group_sort, user_sort, view_sort = get_separated_sorters(view)
+    _group_sort, user_sort, _view_sort = get_separated_sorters(view)
     if user_sort and this_asc_sorter == user_sort[0]:
         return 'asc'
     elif user_sort and this_desc_sorter == user_sort[0]:

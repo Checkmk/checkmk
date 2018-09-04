@@ -211,7 +211,7 @@ def get_current_sitestats():
     conf_dir = cmk.paths.default_config_dir + "/multisite.d"
     filelist = []
     if os.path.isdir(conf_dir):
-        for root, dirs, files in os.walk(conf_dir):
+        for root, _dirs, files in os.walk(conf_dir):
             for filename in files:
                 if filename.endswith(".mk"):
                     filelist.append(root + "/" + filename)
@@ -284,7 +284,7 @@ def get_cache_dir():
     bi_cache_dir = cmk.paths.tmp_dir + "/bi_cache"
     try:
         os.makedirs(bi_cache_dir)
-    except OSError, e:
+    except OSError:
         pass
     return bi_cache_dir
 
@@ -325,9 +325,8 @@ class JobWorker(multiprocessing.Process):
                 start_time = time.time()
                 log("[%s] ###################################### Compiling %r" % (self._parent_pid, job["id"]))
                 new_data = self.compile_job(job["id"], job["info"])
-                aggr_type, aggr_idx, groups = job["id"]
                 log("[%s] Compilation finished %r - took %.3f sec" % (self._parent_pid, job["id"], time.time() - start_time))
-            except Exception, e:
+            except Exception:
                 log("[%s] MP-Worker Exception %s" % (self._parent_pid, traceback.format_exc()))
                 self._compilation_errors.append("Aggregation error: %s" % traceback.format_exc())
             finally:
@@ -674,7 +673,7 @@ class BISitedataManager(object):
                 continue
 
             try:
-                rest, site, timestamp = filename.split(".", 2)
+                _rest, site, timestamp = filename.split(".", 2)
                 timestamp = int(timestamp)
 
                 if known_sites.get(site) == timestamp:
@@ -748,7 +747,6 @@ class BISitedataManager(object):
             # An other lock might have taken care of
             missing_sites = self._get_missing_sites(online_sites)
             if missing_sites:
-                cleanup_orphaned_files = True
                 only_sites = [x[0] for x in missing_sites]
                 new_data   = self._query_data(only_sites)
 
@@ -821,7 +819,7 @@ class BISitedataManager(object):
 class BIJobManager(object):
     def _get_only_hosts_and_only_groups(self, aggr_ids, only_hosts, only_groups, all_hosts):
         all_groups = set([])
-        for (aggr_type, idx, aggr_groups) in aggr_ids:
+        for _aggr_type, _idx, aggr_groups in aggr_ids:
             all_groups.update(aggr_groups)
 
         if not only_hosts and not only_groups:
@@ -855,7 +853,7 @@ class BIJobManager(object):
         # Get involved aggregations and filter out already compiled aggregations
         compiled_trees = g_bi_cache_manager.get_compiled_trees()
         for aggr_id in aggr_ids:
-            aggr_type, idx, aggr_groups = aggr_id
+            aggr_type, _idx, aggr_groups = aggr_id
 
             # Filter out aggregations
             for group in required_groups:
@@ -1000,7 +998,7 @@ class BIJobManager(object):
         all_hosts = g_bi_sitedata_manager.get_all_hosts()
 
         for aggr_id in aggr_ids:
-            aggr_type, idx, aggr_groups = aggr_id
+            aggr_type, _idx, _aggr_groups = aggr_id
 
             if aggr_type == AGGR_HOST:
                 new_job = {"id": aggr_id, "info": {"queued_hosts": all_hosts}}
@@ -1258,7 +1256,7 @@ class BICacheManager(object):
 
         # Cache related parameters
         job_id = job["id"]
-        aggr_type, idx, aggr_groups = job_id
+        aggr_type, _idx, _aggr_groups = job_id
 
         if aggr_type == AGGR_HOST:
             self._compiled_trees["compiled_host_aggr"].setdefault(job_id, {"compiled_hosts": set([])})
@@ -1388,7 +1386,7 @@ def compile_forest_improved(only_hosts=None, only_groups=None):
             log("Wait for jobs to finish: %r" % jobs.keys())
             time.sleep(1)
 
-    except Exception, e:
+    except Exception:
         log("Exception in BI compilation main loop:")
         logger.exception()
     finally:
@@ -1627,15 +1625,15 @@ def compile_forest(user, only_hosts = None, only_groups = None):
     check_title_uniqueness(cache["forest"])
 
     num_total_aggr = 0
-    for grp, aggrs in cache['forest'].iteritems():
+    for aggrs in cache['forest'].itervalues():
         num_total_aggr += len(aggrs)
 
     num_host_aggr = 0
-    for grp, aggrs in cache['host_aggregations'].iteritems():
+    for aggrs in cache['host_aggregations'].itervalues():
         num_host_aggr += len(aggrs)
 
     num_services = 0
-    for key, val in g_services.iteritems():
+    for val in g_services.itervalues():
         num_services += len(val[1])
 
     after = time.time()
@@ -1672,7 +1670,7 @@ def check_title_uniqueness(forest):
     # Legacy, will be removed any decade from now
     # One aggregation cannot be in mutliple groups.
     known_titles = set()
-    for group, aggrs in forest.iteritems():
+    for aggrs in forest.itervalues():
         for aggr in aggrs:
             title = aggr["title"]
             if title in known_titles:
@@ -2039,8 +2037,6 @@ def compile_aggregation_rule(aggr_type, rule, args, lvl):
                         new_elements += compile_leaf_node(substitute_matches(node[-2], hostname, hostalias, matchgroups),
                                                           substitute_matches(node[-1], hostname, hostalias, matchgroups))
                         handled_args.add(tuple(args) + matchgroups)
-
-                host_name, service_description = node[-2:]
             else:
                 # This is a plain leaf node with just host/service
                 new_elements = compile_leaf_node(subst_vars(node[0], arginfo), subst_vars(node[1], arginfo))
@@ -2095,7 +2091,7 @@ def compile_aggregation_rule(aggr_type, rule, args, lvl):
 
 
 def find_remaining_services(hostspec, aggregation):
-    tags, all_services, childs, parents, alias = g_services[hostspec]
+    _tags, all_services, _childs, _parents, _alias = g_services[hostspec]
     all_services = set(all_services)
 
     remaining = all_services - g_compiled_services_leafes.get(hostspec, set([]))
@@ -2216,7 +2212,7 @@ def compile_leaf_node(host_re, service_re = config.HOST_STATE):
             entries = g_services.items()
 
     # TODO: If we already know the host we deal with, we could avoid this loop
-    for (site, hostname), (tags, services, childs, parents, alias) in entries:
+    for (site, hostname), (_tags, services, _childs, _parents, _alias) in entries:
         # For regex to have '$' anchor for end. Users might be surprised
         # to get a prefix match on host names. This is almost never what
         # they want. For services this is useful, however.
@@ -2355,7 +2351,7 @@ def execute_leaf_node(node, status_info, aggregation_options):
             if entry[0] == service:
                 if len(entry) < 10:
                     entry = entry + [ True ] # old versions of Livestatus do not send in_service_period
-                state, has_been_checked, output, hard_state, attempt, max_attempts, downtime_depth, acknowledged, in_service_period = entry[1:10]
+                state, has_been_checked, output, hard_state, _attempt, _max_attempts, downtime_depth, acknowledged, in_service_period = entry[1:10]
                 if has_been_checked == 0:
                     output = _("This service has not been checked yet")
                     state = PENDING
@@ -2647,7 +2643,6 @@ def aggr_countok(nodes, needed_for_ok=2, needed_for_warn=1):
     states = [ i[0]["state"] for i in nodes ]
     num_ok      = len([s for s in states if s == 0 ])
     num_nonok   = len([s for s in states if s > 0 ])
-    num_pending = len(states) - num_ok - num_nonok
     num_nodes   = num_ok + num_nonok
 
     # We need to handle the special case "PENDING" separately.
@@ -2690,7 +2685,7 @@ def aggr_running_on(nodes, regex):
 
     running_on = mo.groups()[0]
     for state, node in nodes[1:]:
-        for site, host in node["reqhosts"]:
+        for _site, host in node["reqhosts"]:
             if host == running_on:
                 state["output"] += _(", running on %s") % running_on
                 return state
@@ -2726,7 +2721,7 @@ def page_all():
     load_assumptions()
     for group, trees in g_tree_cache["forest"].iteritems():
         html.write("<h2>%s</h2>" % group)
-        for inst_args, tree in trees:
+        for _inst_args, tree in trees:
             state = execute_tree(tree)
             debug(state)
     html.footer()
@@ -3332,7 +3327,7 @@ def create_aggregation_row(tree, status_info = None):
     #       To fix this properly we need a list of all hosts/services
     #       available to this user
 
-    state, assumed_state, node, subtrees = tree_state
+    state, assumed_state, node, _subtrees = tree_state
     eff_state = state
     if assumed_state != None:
         eff_state = assumed_state

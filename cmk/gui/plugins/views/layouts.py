@@ -157,11 +157,11 @@ def render_grouped_boxes(rows, view, group_cells, cells, num_columns, show_check
 
     def height_of(groups):
         # compute total space needed. I count the group header like two rows.
-        return sum([ len(rows) for header, rows in groups ]) + 2 * len(groups)
+        return sum([ len(rows) for _header, rows in groups ]) + 2 * len(groups)
 
     # Create empty columns
     columns = [ ]
-    for x in range(0, num_columns):
+    for _x in xrange(num_columns):
         columns.append([])
 
     # First put everything into the first column
@@ -572,19 +572,6 @@ def render_grouped_list(rows, view, group_cells, cells, num_columns, show_checkb
     if not group_cells and view.get("column_headers") != "off":
         show_header_line()
 
-    # Helper function that counts the number of entries in
-    # the current group
-    def count_group_members(row, rows):
-        this_group = group_value(row, group_cells)
-        members = 1
-        for r in rows[1:]:
-            that_group = group_value(r, group_cells)
-            if that_group == this_group:
-                members += 1
-            else:
-                break
-        return members
-
     rows_with_ids = [ (row_id(view, row), row) for row in rows ]
     groups, rows_with_ids = calculate_grouping_of_services(rows_with_ids)
 
@@ -597,7 +584,7 @@ def render_grouped_list(rows, view, group_cells, cells, num_columns, show_checkb
             this_group = group_value(row, group_cells)
             if this_group != last_group:
                 if column != 1: # not a the beginning of a new line
-                    for i in range(column-1, num_columns):
+                    for _i in xrange(column-1, num_columns):
                         html.td('', class_="gap")
                         html.td('', class_="fillup", colspan=num_cells)
                     html.close_tr()
@@ -609,7 +596,7 @@ def render_grouped_list(rows, view, group_cells, cells, num_columns, show_checkb
                 # paint group header, but only if it is non-empty
                 header_is_empty = True
                 for cell in group_cells:
-                    tdclass, content = cell.render(row)
+                    _tdclass, content = cell.render(row)
                     if content:
                         header_is_empty = False
                         break
@@ -633,7 +620,6 @@ def render_grouped_list(rows, view, group_cells, cells, num_columns, show_checkb
                 # Table headers
                 if view.get("column_headers") != "off":
                     show_header_line()
-                trclass = "even"
                 last_group = this_group
 
         # Should we wrap over to a new line?
@@ -703,7 +689,7 @@ def render_grouped_list(rows, view, group_cells, cells, num_columns, show_checkb
         column += 1
 
     if group_open:
-        for i in range(column-1, num_columns):
+        for _i in xrange(column-1, num_columns):
             html.td('', class_="gap")
             html.td('', class_="fillup", colspan=num_cells)
         html.close_tr()
@@ -753,7 +739,7 @@ def render_matrix(rows, view, group_cells, cells, num_columns, _ignore_show_chec
             html.open_td(class_="matrixhead")
             html.write(cell.title(use_short=False))
             html.close_td()
-            for group, group_row in groups:
+            for _group, group_row in groups:
                 tdclass, content = cell.render(group_row)
                 if cell_nr > 0:
                     gv = group_value(group_row, [cell])
@@ -823,14 +809,14 @@ def csv_export_matrix(rows, view, group_cells, cells):
     output_csv_headers(view)
 
     groups, unique_row_ids, matrix_cells = list(create_matrices(rows, group_cells, cells, num_columns=None))[0]
-    value_counts, row_majorities = matrix_find_majorities(rows, cells)
+    value_counts, _row_majorities = matrix_find_majorities(rows, cells)
 
     table.begin(output_format="csv")
     for cell_nr, cell in enumerate(group_cells):
         table.row()
         table.cell("", cell.title(use_short=False))
-        for group, group_row in groups:
-            tdclass, content = cell.render(group_row)
+        for _group, group_row in groups:
+            _tdclass, content = cell.render(group_row)
             table.cell("", content)
 
     for row_id in unique_row_ids:
@@ -845,7 +831,7 @@ def csv_export_matrix(rows, view, group_cells, cells):
                 continue
 
         table.row()
-        tdclass, content = cells[0].render(matrix_cells[row_id].values()[0])
+        _tdclass, content = cells[0].render(matrix_cells[row_id].values()[0])
         table.cell("", content)
 
         for group_id, group_row in groups:
@@ -853,7 +839,7 @@ def csv_export_matrix(rows, view, group_cells, cells):
             cell_row = matrix_cells[row_id].get(group_id)
             if cell_row != None:
                 for cell_nr, cell in enumerate(cells[1:]):
-                    tdclass, content = cell.render(cell_row)
+                    _tdclass, content = cell.render(cell_row)
                     if cell_nr:
                         html.write_text(",")
                     html.write(content)
@@ -862,7 +848,7 @@ def csv_export_matrix(rows, view, group_cells, cells):
 
 
 def matrix_find_majorities_for_header(rows, group_cells):
-    counts, majorities = matrix_find_majorities(rows, group_cells, for_header=True)
+    _counts, majorities = matrix_find_majorities(rows, group_cells, for_header=True)
     return majorities.get(None, {})
 
 
@@ -889,16 +875,13 @@ def matrix_find_majorities(rows, cells, for_header=False):
         maj_entry = majorities.setdefault(row_id, {})
         for cell_nr, cell_entry in row_entry.items():
             maj_value = None
-            max_count = 0  # Absolute maximum count
             max_non_unique = 0 # maximum count, but maybe non unique
             for value, count in cell_entry.items():
                 if count > max_non_unique and count >= 2:
                     maj_value = value
                     max_non_unique = count
-                    max_count = count
                 elif count == max_non_unique:
                     maj_value = None
-                    max_count = None
             maj_entry[cell_nr] = maj_value
 
     return counts, majorities

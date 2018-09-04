@@ -41,7 +41,7 @@ class MainMenu(object):
 
     def show(self):
         html.open_div(class_="mainmenu")
-        for nr, item in enumerate(self._items):
+        for item in self._items:
             if not item.may_see():
                 continue
 

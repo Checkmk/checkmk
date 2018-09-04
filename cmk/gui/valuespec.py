@@ -379,11 +379,12 @@ class Filesize(Integer):
 
 
     def get_exponent(self, value):
-        for exp, unit_name in list(enumerate(self._names))[::-1]:
+        for exp, count in ((exp, 1024 ** exp)
+                           for exp in reversed(xrange(len(self._names)))):
             if value == 0:
                 return 0,0
-            if value % (1024 ** exp) == 0:
-                return exp, value / (1024 ** exp)
+            if value % count == 0:
+                return exp, value / count
 
     def render_input(self, varprefix, value):
         self.classtype_info()
@@ -1246,11 +1247,9 @@ class ListOf(ValueSpec):
         # form but the validation failed, we must not display the
         # original 'value' but take the value from the HTML variables.
         if html.has_var("%s_count" % varprefix):
-            filled_in = True
             count = len(self.get_indexes(varprefix))
             value = [None] * count # dummy for the loop
         else:
-            filled_in = False
             count = len(value)
 
         html.hidden_field('%s_count' % varprefix,
@@ -1676,8 +1675,8 @@ class DropdownChoice(ValueSpec):
     def from_html_vars(self, varprefix):
         choices = self.choices()
 
-        for n, entry in enumerate(choices):
-            val, title = entry[:2]
+        for entry in choices:
+            val, _title = entry[:2]
             if self._is_selected_option_from_html(varprefix, val):
                 return val
 
@@ -1717,18 +1716,6 @@ class DropdownChoice(ValueSpec):
                 raise MKUserError(varprefix, self._empty_text)
 
         ValueSpec.custom_validate(self, value, varprefix)
-
-    def validate_datatype(self, value, varprefix):
-        choices = self.choices()
-        if not choices and value == None:
-            return
-
-        for val, title in choices:
-            if val == value:
-                return
-
-        #raise MKUserError(varprefix, _("Invalid value %s, must be in %s") %
-        #    (value, ", ".join([v for (v,t) in choices])))
 
     def _value_is_invalid(self, value):
         for entry in self.choices():
@@ -1930,14 +1917,14 @@ class CascadingDropdown(ValueSpec):
             sel = int(html.var(varprefix + "_sel"))
         except:
             sel = 0
-        val, title, vs = choices[sel]
+        val, _title, vs = choices[sel]
         if vs:
             val = self._encoding_type((val, vs.from_html_vars(varprefix + "_%d" % sel)))
         return val
 
     def validate_datatype(self, value, varprefix):
         choices = self.choices()
-        for nr, (val, title, vs) in enumerate(choices):
+        for nr, (val, _title, vs) in enumerate(choices):
             if value == val or (
                 type(value) == self._encoding_type and value[0] == val):
                 if vs:
@@ -1953,7 +1940,7 @@ class CascadingDropdown(ValueSpec):
             raise MKUserError(varprefix, self._no_preselect_error)
 
         choices = self.choices()
-        for nr, (val, title, vs) in enumerate(choices):
+        for nr, (val, _title, vs) in enumerate(choices):
             if value == val or (
                 type(value) == self._encoding_type and value[0] == val):
                 if vs:
@@ -2017,7 +2004,7 @@ class RadioChoice(DropdownChoice):
         if self._columns != None:
             mod = len(self._choices) % self._columns
             if mod:
-                for td_counter in range(self._columns - mod - 1):
+                for _td_counter in range(self._columns - mod - 1):
                     html.td('')
             html.close_tr()
             html.close_table()
@@ -2120,7 +2107,7 @@ class ListChoice(ValueSpec):
         self.load_elements()
         value = []
 
-        for nr, (key, title) in enumerate(self._elements):
+        for nr, (key, _title) in enumerate(self._elements):
             if html.get_checkbox("%s_%d" % (varprefix, nr)):
                 value.append(key)
         return value
@@ -2172,7 +2159,7 @@ class MultiSelect(ListChoice):
         self.load_elements()
         value = []
         hv = html.list_var(varprefix)
-        for key, title in self._elements:
+        for key, _title in self._elements:
             if key in hv:
                 value.append(key)
         return value
@@ -2224,7 +2211,7 @@ class DualListChoice(ListChoice):
                 if v in allowed_keys:
                     selected.append((v, edict[v]))
 
-            for v, name in self._elements:
+            for v, _name in self._elements:
                 if v not in value:
                     unselected.append((v, edict[v]))
         else:
@@ -2296,7 +2283,7 @@ class DualListChoice(ListChoice):
                 if v in allowed_keys:
                     value.append(v)
         else:
-            for key, title in self._elements:
+            for key, _title in self._elements:
                 if key in selected:
                     value.append(key)
         return value
@@ -2358,7 +2345,7 @@ class OptionalDropdownChoice(DropdownChoice):
         if sel == "other":
             return self._explicit.from_html_vars(varprefix + "_ex")
 
-        for n, (val, title) in enumerate(choices):
+        for n, (val, _title) in enumerate(choices):
             if sel == str(n):
                 return val
         return choices[0][0] # can only happen if user garbled URL
@@ -2370,7 +2357,7 @@ class OptionalDropdownChoice(DropdownChoice):
         ValueSpec.custom_validate(self, value, varprefix)
 
     def validate_datatype(self, value, varprefix):
-        for val, title in self.choices():
+        for val, _title in self.choices():
             if val == value:
                 return
         self._explicit.validate_datatype(value, varprefix + "_ex")
@@ -3643,7 +3630,7 @@ class Dictionary(ValueSpec):
                 raise MKUserError(varprefix, _("The entry %s is missing") % vs.title())
 
         # Check for exceeding keys
-        allowed_keys = [ p for (p,v) in self._get_elements() ]
+        allowed_keys = [ p for p, _v in self._get_elements() ]
         if self._ignored_keys:
             allowed_keys += self._ignored_keys
         for param in value.keys():
@@ -3967,7 +3954,7 @@ class FileUpload(ValueSpec):
 
 
     def validate_value(self, value, varprefix):
-        file_name, mime_type, content = value
+        file_name, _mime_type, content = value
 
         if not self._allow_empty and (content == '' or file_name == ''):
             raise MKUserError(varprefix, _('Please select a file.'))
@@ -4347,7 +4334,7 @@ class TimeofdayRanges(Transform):
         Transform.__init__(
             self,
             Tuple(
-                elements = [ TimeofdayRange(allow_empty=True, allow_24_00=True) for x in range(self._count) ],
+                elements = [ TimeofdayRange(allow_empty=True, allow_24_00=True) for _x in range(self._count) ],
                 orientation = "float",
                 separator = " &nbsp; ",
             ),
@@ -4486,7 +4473,7 @@ class SSHKeyPair(ValueSpec):
 
     @classmethod
     def _get_key_fingerprint(cls, value):
-        private_key, public_key = value
+        _private_key, public_key = value
         key = base64.b64decode(public_key.strip().split()[1].encode('ascii'))
         fp_plain = hashlib.md5(key).hexdigest()
         return ':'.join(a+b for a,b in zip(fp_plain[::2], fp_plain[1::2]))
@@ -4534,7 +4521,7 @@ class CAorCAChain(UploadOrPasteTextFile):
     def validate_value(self, value, varprefix):
         try:
             self.analyse_cert(value)
-        except Exception, e:
+        except Exception:
             # FIXME TODO: Cleanup this general exception catcher
             raise MKUserError(varprefix, _("Invalid certificate file"))
 
@@ -4550,9 +4537,9 @@ class CAorCAChain(UploadOrPasteTextFile):
             "CN" : _("Common Name"),
         }
         cert_info = {}
-        for what, x509, title in [
-            ( "issuer", cert.get_issuer(), _("Issuer") ),
-            ( "subject", cert.get_subject(), _("Subject") ),
+        for what, x509 in [
+            ( "issuer", cert.get_issuer() ),
+            ( "subject", cert.get_subject() ),
         ]:
             cert_info[what] = {}
             for key, val in x509.get_components():

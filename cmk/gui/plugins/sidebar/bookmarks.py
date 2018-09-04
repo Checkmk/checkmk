@@ -75,12 +75,6 @@ class BookmarkList(pagetypes.Overridable):
 
     @classmethod
     def parameters(cls, mode):
-        vs_topic = TextUnicode(
-            title = _("Topic") + "<sup>*</sup>",
-            size = 50,
-            allow_empty = False,
-        )
-
         def bookmark_config_to_vs(v):
             if v:
                 return (v["title"], v["url"], v["icon"], v["topic"])
@@ -190,7 +184,7 @@ class BookmarkList(pagetypes.Overridable):
             return
 
         # Also don't load them when the user has at least one bookmark list
-        for user_id, name in cls.instances_dict():
+        for user_id, _name in cls.instances_dict():
             if user_id == config.user.id:
                 return
 

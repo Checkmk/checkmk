@@ -418,7 +418,7 @@ class OutputFunnel(object):
         self.plug()
         try:
             yield
-        except Exception, e:
+        except Exception:
             self.drain()
             raise
         finally:

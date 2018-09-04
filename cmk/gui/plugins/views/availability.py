@@ -82,7 +82,7 @@ def render_availability_options(what):
     html.hidden_field("avoptions", "set")
     avoption_entries = availability.get_avoption_entries(what)
     if html.var("avoptions") == "set":
-        for name, height, show_in_reporting, vs in avoption_entries:
+        for name, height, _show_in_reporting, vs in avoption_entries:
             try:
                 avoptions[name] = vs.from_html_vars("avo_" + name)
                 vs.validate_value(avoptions[name], "avo_" + name)
@@ -94,7 +94,7 @@ def render_availability_options(what):
         avoptions["logrow_limit"] = 0
 
     range_vs = None
-    for name, height, show_in_reporting, vs in avoption_entries:
+    for name, height, _show_in_reporting, vs in avoption_entries:
         if name == 'rangespec':
             range_vs = vs
 
@@ -326,7 +326,6 @@ def render_availability_timeline(what, av_entry, avoptions):
 
     timeline_layout = availability.layout_timeline(what, timeline_rows, av_entry["considered_duration"], avoptions, "standalone")
     render_timeline_bar(timeline_layout, "standalone")
-    render_date = timeline_layout["render_date"]
 
     # TODO: Hier fehlt bei BI der Timewarpcode (also der Baum im Zauberzustand)
     # if what == "bi":
@@ -438,7 +437,7 @@ def render_availability_table(group_title, availability_table, what, avoptions):
         if show_urls:
             table.cell("", "") # Empty cell in URLs column
         table.cell("", _("Summary"), css="heading")
-        for x in range(1, len(av_table["object_titles"])):
+        for _x in xrange(1, len(av_table["object_titles"])):
             table.cell("", "") # empty cells, of more object titles than one
         if show_timeline:
             table.cell("", "")
@@ -510,10 +509,7 @@ def render_timeline_bar(timeline_layout, style):
 # filters, contexts etc we can unify the code!
 def render_bi_availability(title, aggr_rows):
     av_mode = html.var("av_mode", "availability")
-
     avoptions = get_availability_options_from_url("bi")
-    time_range, range_title = avoptions["range"]
-
     if av_mode == "timeline":
         title = _("Timeline of") + " " + title
     else:
@@ -577,7 +573,7 @@ def render_bi_availability(title, aggr_rows):
 
             # render selected time warp for the corresponding aggregation row (should be matched by only one)
             if timewarp and timewarp_tree_state:
-                state, assumed_state, node, subtrees = timewarp_tree_state
+                state, assumed_state, node, _subtrees = timewarp_tree_state
                 eff_state = state
                 if assumed_state != None:
                     eff_state = assumed_state
@@ -680,7 +676,7 @@ def render_bi_availability(title, aggr_rows):
 #   '----------------------------------------------------------------------'
 
 def get_relevant_annotations(annotations, by_host, what, avoptions):
-    (from_time, until_time), range_title = avoptions["range"]
+    (from_time, until_time), _range_title = avoptions["range"]
     annos_to_render = []
     annos_rendered = set()
 
@@ -901,10 +897,10 @@ def output_availability_csv(what, av_data, avoptions):
         for column_title, group_title in zip(group_titles, group_cells):
             table.cell(column_title, group_title)
 
-        for title, (name, url) in zip(object_titles, row_object):
+        for title, (name, _url) in zip(object_titles, row_object):
             table.cell(title, name)
 
-        for (title, help), (text, css) in zip(cell_titles, row_cells):
+        for (title, _help), (text, _css) in zip(cell_titles, row_cells):
             table.cell(title, text)
 
     av_output_set_content_disposition(_("Check_MK-Availability"))

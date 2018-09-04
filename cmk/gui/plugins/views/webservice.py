@@ -54,7 +54,7 @@ def render_python(rows, view, group_cells, cells, num_columns, show_checkboxes):
         html.write_text("[")
         for cell in cells:
             joined_row = join_row(row, cell)
-            tdclass, content = cell.render_content(joined_row)
+            _tdclass, content = cell.render_content(joined_row)
             html.write(repr(html.strip_tags(content)))
             html.write_text(",")
         html.write_text("],")
@@ -160,7 +160,7 @@ def render_csv(rows, view, group_cells, cells, num_columns, show_checkboxes, exp
             else:
                 html.write(csv_separator)
             joined_row = join_row(row, cell)
-            tdclass, content = cell.render_content(joined_row)
+            _tdclass, content = cell.render_content(joined_row)
             html.write('"%s"' % format_for_csv(content))
 
 multisite_layouts["csv_export"] = {

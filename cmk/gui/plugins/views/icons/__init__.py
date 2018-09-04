@@ -169,7 +169,7 @@ def _process_multisite_icons(what, row, tags, custom_vars, toplevel):
                         icon_name, title, url = result
                 icons.append((sort_index, icon_name, title, url))
 
-            except Exception, e:
+            except Exception:
                 icons.append((sort_index, 'Exception in icon plugin!<br />' + traceback.format_exc()))
     return icons
 

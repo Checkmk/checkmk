@@ -872,7 +872,7 @@ multisite_painters["check_manpage"] = {
 
 def paint_comments(prefix, row):
     comments = row[ prefix + "comments_with_info"]
-    text = ", ".join(["<i>%s</i>: %s" % (a, html.attrencode(c)) for (id, a, c) in comments ])
+    text = ", ".join(["<i>%s</i>: %s" % (a, html.attrencode(c)) for _id, a, c in comments ])
     return "", text
 
 multisite_painters["svc_comments"] = {

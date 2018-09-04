@@ -89,7 +89,6 @@ def perfometer_esx_vsphere_datastores(row, check_command, perf_data):
         # and drawing the capacity as red line in the perfometer
         total = perc_used + perc_uncommitted
         perc_used_bar = perc_used * 100 / total
-        perc_uncommitted_bar = perc_uncommitted * 100 / total
         perc_free = (100 - perc_used) * 100 / total
         data = [(perc_used_bar, "#00ffc6"),
                 (perc_free, "#eeccff"),
@@ -172,7 +171,6 @@ perfometers["check_mk-kernel"] = perfometer_check_mk_kernel
 def perfometer_check_mk_ntp(row, check_command, perf_data, unit = "ms"):
     offset = float(perf_data[0][1])
     absoffset = abs(offset)
-    warn = float(perf_data[0][3])
     crit = float(perf_data[0][4])
     max = crit * 2
     if absoffset > max:
@@ -272,7 +270,7 @@ def perfometer_temperature_multi(row, check_command, perf_data):
     display_value = -1
     display_color = "#60f020"
 
-    for sensor, value, uom, warn, crit, min, max in perf_data:
+    for _sensor, value, _uom, warn, crit, _min, _max in perf_data:
         value = int(value)
         if value > display_value:
             display_value = value
@@ -317,17 +315,14 @@ perfometers["check_mk-ibm_svc_enclosurestats.power"] = perfometer_power_simple
 perfometers["check_mk-sentry_pdu"] = perfometer_power_simple
 
 def perfometer_users(row, check_command, perf_data):
-    state = row["service_state"]
     color = "#39f"
     value = float(perf_data[0][1])
-    crit = utils.savefloat(perf_data[0][4])
     return u"%d users" % int(value), perfometer_logarithmic(value, 50, 2, color)
 
 perfometers["check_mk-hitachi_hnas_cifs"] = perfometer_users
 
 def perfometer_blower(row, check_command, perf_data):
     rpm = int(perf_data[0][1])
-    perc = rpm / 10000.0 * 100.0
     return "%d RPM" % rpm, perfometer_logarithmic(rpm, 2000, 1.5, "#88c")
 
 perfometers["check_mk-cmctc_lcp.blower"] = perfometer_blower
@@ -457,7 +452,7 @@ def perfometer_check_oracle_dataguard_stats(row, check_command, perf_data):
             perfdata_found = True
             days,    rest    = divmod(int(data[1]), 60*60*24)
             hours,   rest    = divmod(rest,   60*60)
-            minutes, seconds = divmod(rest,      60)
+            minutes, _seconds = divmod(rest,      60)
             perfdata1 = data[1]
 
 
@@ -621,9 +616,6 @@ perfometers["check_mk-emc_isilon_iops"] = perfometer_check_mk_iops
 
 def perfometer_check_mk_printer_supply(row, check_command, perf_data):
     left = utils.savefloat(perf_data[0][1])
-    warn = utils.savefloat(perf_data[0][3])
-    crit = utils.savefloat(perf_data[0][4])
-    mini = utils.savefloat(perf_data[0][5])
     maxi = utils.savefloat(perf_data[0][6])
     if maxi < 0:
         return "", "" # Printer does not supply a max value
@@ -634,11 +626,8 @@ def perfometer_check_mk_printer_supply(row, check_command, perf_data):
 
     s = row['service_description'].lower()
 
-    fg_color = '#000000'
     if 'black' in s or ("ink" not in s and s[-1] == 'k'):
         colors   = [ '#000000', '#6E6F00', '#6F0000' ]
-        if left >= 60:
-            fg_color = '#FFFFFF'
     elif 'magenta' in s or s[-1] == 'm':
         colors = [ '#FC00FF', '#FC7FFF', '#FEDFFF' ]
     elif 'yellow' in s or s[-1] == 'y':
@@ -704,8 +693,6 @@ perfometers["check_mk-fileinfo"] = perfometer_fileinfo
 perfometers["check_mk-fileinfo.groups"] = perfometer_fileinfo_groups
 
 def perfometer_mssql_tablespaces(row, check_command, perf_data):
-    size        = float(perf_data[0][1])
-    unallocated = float(perf_data[1][1])
     reserved    = float(perf_data[2][1])
     data        = float(perf_data[3][1])
     indexes     = float(perf_data[4][1])
@@ -732,8 +719,7 @@ perfometers["check_mk-mssql_counters.cache_hits"] = perfometer_mssql_counters_ca
 
 
 def perfometer_hpux_tunables(row, check_command, perf_data):
-
-    varname, value, unit, warn, crit, minival, threshold = perf_data[0]
+    _varname, value, _unit, warn, crit, _minival, threshold = perf_data[0]
     value       = float(value)
     threshold   = float(threshold)
 

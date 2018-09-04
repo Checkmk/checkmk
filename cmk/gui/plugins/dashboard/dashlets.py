@@ -814,6 +814,7 @@ def dashlet_snapin(nr, dashlet):
     snapin = sidebar.snapin_registry.get(dashlet['snapin'])
     if not snapin:
         raise MKUserError(None, _('The configured snapin does not exist.'))
+    snapin_instance = snapin()
 
     dashlet_type = dashlet_types[dashlet['type']]
 
@@ -855,8 +856,8 @@ def dashlet_snapin(nr, dashlet):
     html.open_div(id_="side_content")
     html.open_div(id_="snapin_container_%s" % dashlet['snapin'], class_="snapin")
     html.open_div(id_="snapin_%s" % dashlet['snapin'], class_="content")
-    sidebar.render_snapin_styles(snapin)
-    snapin.show()
+    sidebar.render_snapin_styles(snapin_instance)
+    snapin_instance.show()
     html.close_div()
     html.close_div()
     html.close_div()

@@ -778,7 +778,6 @@ def render_mobile_list(rows, view, group_cells, cells, num_columns, show_checkbo
     # Force relative timestamp always. This saves space.
     painter_options.set("ts_format", "rel")
 
-    odd = "odd"
     html.open_ul(class_="mobilelist", **{"data-role":"listview"})
 
     # Paint data rows
@@ -828,7 +827,7 @@ def render_mobile_dataset(rows, view, group_cells, cells, num_columns, show_chec
     for row in rows:
         html.open_table(class_="dataset")
         for cell in cells:
-            tdclass, content = cell.render(row)
+            _tdclass, content = cell.render(row)
             if not content:
                 continue # Omit empty cells
 

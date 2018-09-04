@@ -376,7 +376,7 @@ def paint_prediction_icon(what, row, tags, host_custom_vars):
         parts = row[what + "_perf_data"].split()
         for p in parts:
             if p.startswith("predict_"):
-                varname, value = p.split("=")
+                varname, _value = p.split("=")
                 dsname = varname[8:]
                 sitename = row["site"]
                 url_prefix = config.site(sitename)["url_prefix"]
@@ -461,7 +461,6 @@ multisite_icons_and_actions['logwatch'] = {
 def paint_notes(what, row, tags, host_custom_vars):
     if display_options.enabled(display_options.X):
         notes_url = row[what + "_notes_url_expanded"]
-        check_command = row[what + "_check_command"]
         if notes_url:
             return 'notes', _('Custom Notes'), notes_url
 
@@ -489,7 +488,7 @@ def paint_downtimes(what, row, tags, host_custom_vars):
 
         lines = []
         for downtime_entry in downtimes_with_extra_info:
-            downtime_id, author, comment, origin, entry_time, start_time, end_time, fixed, duration, recurring, is_pending = downtime_entry[:11]
+            _downtime_id, author, comment, _origin, _entry_time, start_time, end_time, fixed, duration, _recurring, _is_pending = downtime_entry[:11]
 
             if fixed:
                 time_info = "Start: %s, End: %s" % (cmk.render.date_and_time(start_time), cmk.render.date_and_time(end_time))
@@ -544,7 +543,7 @@ def paint_comment_icon(what, row, tags, host_custom_vars):
     if len(comments) > 0:
         text = ""
         for c in sorted(comments, key=lambda x: x[4]):
-            id, author, comment, ty, timestamp = c
+            _id, author, comment, _ty, timestamp = c
             comment = comment.replace("\n", "<br>")
             text += "%s %s: \"%s\" \n" % (paint_age(timestamp, True, 0, 'abs')[1], author, comment)
         return 'comment', text, url_to_view(row, 'comments_of_' + what)

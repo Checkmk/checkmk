@@ -148,7 +148,7 @@ class VirtualHostTree(SidebarSnapin):
                 html.begin_foldable_container("tag-tree", ".".join(map(str, path)),
                                               False, HTML(bullet + title))
 
-        for nr, ((node_title, node_value), subtree) in enumerate(sorted(tree.get("_children", {}).items())):
+        for (node_title, node_value), subtree in sorted(tree.get("_children", {}).items()):
             subpath = path + [node_value or ""]
             url = self._tag_tree_url(tree_spec, subpath, "allhosts")
 
@@ -309,7 +309,7 @@ function virtual_host_tree_enter(path)
 
 
     def _add_host_to_tree(self, tree_spec, tree, host_row, tag_groups, topics):
-        site, host_name, wato_folder, state, num_ok, num_warn, \
+        _site, _host_name, wato_folder, state, _num_ok, num_warn, \
             num_crit, num_unknown, custom_variables = host_row
 
         if wato_folder.startswith("/wato/"):
@@ -344,7 +344,6 @@ function virtual_host_tree_enter(path)
 
                     # Iterate over all host tag groups with that topic
                     for entry in topics[topic]:
-                        grouptitle  = entry[1].split("/", 1)[1]
                         group       = entry[2]
                         for tagentry in group:
                             tag_value, tag_title = tagentry[:2]

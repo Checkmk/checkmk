@@ -624,7 +624,7 @@ def command_downtime(cmdtag, spec, row):
         rangebtn = None
 
     if rangebtn:
-        btnname, end = rangebtn.split("__", 1)
+        _btnname, end = rangebtn.split("__", 1)
         down_to, title = resolve_end(end)
     elif html.var("_down_from_now"):
         try:
@@ -801,7 +801,8 @@ def paint_downtime_buttons(what):
 
 def has_recurring_downtimes():
     try:
-        import cmk.gui.cee.plugins.wato.cmc
+        # The suppression below is OK, we just want to check if the module is there.
+        import cmk.gui.cee.plugins.wato.cmc # pylint: disable=unused-variable
         return True
     except ImportError:
         return False

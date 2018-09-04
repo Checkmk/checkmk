@@ -555,10 +555,10 @@ def inv_titleinfo(invpath, node):
 
 # The titles of the last two path components of the node, e.g. "BIOS / Vendor"
 def inv_titleinfo_long(invpath, node):
-    icon, last_title = inv_titleinfo(invpath, node)
+    _icon, last_title = inv_titleinfo(invpath, node)
     parent = inventory.parent_path(invpath)
     if parent:
-        icon, parent_title = inv_titleinfo(parent, None)
+        _icon, parent_title = inv_titleinfo(parent, None)
         return parent_title + u" ➤ " + last_title
     else:
         return last_title
@@ -1112,9 +1112,7 @@ def inv_multisite_table(infoname, invpath, columns, add_headers, only_sites, lim
 
     # Now create big table of all inventory entries of these hosts
     rows = []
-    hostnames = [ row[1] for row in data ]
     for row in data:
-        site     = row[0]
         hostname = row[1]
         hostrow = dict(zip(headers, row))
         if infoname == "invhist":
@@ -1141,7 +1139,7 @@ def inv_find_subtable_columns(invpath):
     order = dict(swapped)
 
     columns = []
-    for path, hint in inventory_displayhints.items():
+    for path in inventory_displayhints.iterkeys():
         if path.startswith(invpath + "*."):
             # ".networking.interfaces:*.port_type" -> "port_type"
             columns.append(path.split(".")[-1])
@@ -1730,7 +1728,7 @@ class NodeRenderer(object):
         titles = []
         for key in keyorder:
             sub_invpath = "%s0.%s" % (invpath, key)
-            icon, title = inv_titleinfo(sub_invpath, None)
+            _icon, title = inv_titleinfo(sub_invpath, None)
             sub_hint = _inv_display_hint(sub_invpath)
             short_title = sub_hint.get("short", title)
             titles.append((short_title, key))
@@ -1742,7 +1740,7 @@ class NodeRenderer(object):
         extratitles = []
         for key in keys:
             if key not in keyorder:
-                icon, title = inv_titleinfo("%s0.%s" % (invpath, key), None)
+                _icon, title = inv_titleinfo("%s0.%s" % (invpath, key), None)
                 extratitles.append((title, key))
         extratitles.sort()
         titles += extratitles
@@ -1821,7 +1819,7 @@ class NodeRenderer(object):
         html.open_table()
         for key, value in sorted(attributes.get_child_data().iteritems(), key=_sort_attributes):
             sub_invpath = "%s.%s" % (invpath, key)
-            icon, title = inv_titleinfo(sub_invpath, key)
+            _icon, title = inv_titleinfo(sub_invpath, key)
             hint = _inv_display_hint(sub_invpath)
 
             html.open_tr()
@@ -1857,7 +1855,7 @@ class NodeRenderer(object):
 
     def _show_child_value(self, value, hint):
         if "paint_function" in hint:
-            tdclass, code = hint["paint_function"](value)
+            _tdclass, code = hint["paint_function"](value)
             html.write(code)
         elif type(value) == str:
             try:
@@ -1935,7 +1933,7 @@ def ajax_inv_render_tree():
 
     struct_tree = struct_tree.get_filtered_tree(inventory.get_permitted_inventory_paths())
 
-    parsed_path, attributes_key = inventory.parse_tree_path(invpath)
+    parsed_path, _attributes_key = inventory.parse_tree_path(invpath)
     if parsed_path:
         children = struct_tree.get_sub_children(parsed_path)
     else:

@@ -390,7 +390,7 @@ def wato_host_tag_group_choices():
     # Now search for checkbox-only-topics
     for topic, entries in by_topic.items():
         for entry in entries:
-            tgid, title, tags = entry[:3]
+            tgid, _title, tags = entry[:3]
             if len(tags) != 1:
                 break
         else:

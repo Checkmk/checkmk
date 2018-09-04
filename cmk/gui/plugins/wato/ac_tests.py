@@ -214,7 +214,7 @@ class ACTestTmpfs(ACTest):
         path_suffix = "sites/%s/tmp" % site_id
         for line in file("/proc/mounts"):
             try:
-                device, mp, fstype, options, dump, fsck = line.split()
+                _device, mp, fstype, _options, _dump, _fsck = line.split()
                 if mp.endswith(path_suffix) and fstype == 'tmpfs':
                     return True
             except:
@@ -241,7 +241,7 @@ class ACTestLDAPSecured(ACTest):
 
     # TODO: Only test master site?
     def is_relevant(self):
-        return bool([ c for cid, c in userdb.active_connections() if c.type() == "ldap" ])
+        return bool([ c for _cid, c in userdb.active_connections() if c.type() == "ldap" ])
 
 
     def execute(self):
@@ -409,7 +409,7 @@ class ACTestBackupNotEncryptedConfigured(ACTest):
 
     def execute(self):
         jobs = watolib.SiteBackupJobs()
-        for job_ident, job in jobs.objects.items():
+        for job in jobs.objects.itervalues():
             if job.is_encrypted():
                 yield ACResultOK(_("The job \"%s\" is encrypted") % job.title())
             else:
@@ -777,7 +777,7 @@ class ACTestSizeOfExtensions(ACTest):
 
     def _replicates_mkps(self):
         replicates_mkps = False
-        for site_id, site in config.wato_slave_sites():
+        for _site_id, site in config.wato_slave_sites():
             if site.get("replicate_mkps"):
                 replicates_mkps = True
                 break

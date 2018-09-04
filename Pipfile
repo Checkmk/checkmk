@@ -20,6 +20,7 @@ lockfile = "*"
 lxml = "*"
 pylint = "*"
 pyenchant = "*"
+yapf = "*"
 
 [packages]
 pysphere = "==0.1.7"

@@ -1,0 +1,13 @@
+Title: fsc_sc2_voltage: Do not discover not-available voltage units
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0p4
+Date: 1536065883
+
+Units which are not-available have voltage values 0 V.
+This may lead to WARN or CRIT because lower or upper device 
+levels are checked.

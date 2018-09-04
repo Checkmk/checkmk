@@ -125,7 +125,7 @@ class ModeBackgroundJobDetails(WatoMode):
         try:
             # Race condition, the job might get deleted during snapshot generation
             job_snapshot = job.get_status_snapshot()
-        except Exception, e:
+        except Exception:
             html.message(_("Background job info is not available"))
             logger.error(traceback.format_exc())
             return

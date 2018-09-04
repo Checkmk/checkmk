@@ -217,7 +217,7 @@ def paint_host_tag(row, tgid):
 # Use title of the tag value for grouping, not the complete
 # dictionary of custom variables!
 def groupby_host_tag(row, tgid):
-    cssclass, title = paint_host_tag(row, tgid)
+    _cssclass, title = paint_host_tag(row, tgid)
     return title
 
 
@@ -231,7 +231,6 @@ def load_host_tag_painters():
     for entry in config.host_tag_groups():
         tgid = entry[0]
         tit  = entry[1]
-        ch   = entry[2]
 
         long_tit = tit
         if '/' in tit:
@@ -599,7 +598,7 @@ def transform_view_to_valuespec_value(view):
             view["view"][key] = view[key]
 
     view["view"]['options'] = []
-    for key, title in view_editor_options():
+    for key, _title in view_editor_options():
         if view.get(key):
             view['view']['options'].append(key)
 
@@ -735,12 +734,12 @@ def show_filter_form(is_open, filters):
 
     # First show filters with double height (due to better floating
     # layout)
-    for sort_index, title, f in s:
+    for _sort_index, _title, f in s:
         if f.double_height():
             show_filter(f)
 
     # Now single height filters
-    for sort_index, title, f in s:
+    for _sort_index, _title, f in s:
         if not f.double_height():
             show_filter(f)
 
@@ -920,7 +919,6 @@ def show_view(view, show_heading = False, show_buttons = True,
     # Join cells:    Are displaying information of a joined source (e.g.service data on host views)
     group_cells   = get_group_cells(view)
     cells         = get_cells(view)
-    regular_cells = get_regular_cells(cells)
     join_cells    = get_join_cells(cells)
 
     # Now compute the list of all columns we need to query via Livestatus.
@@ -988,8 +986,8 @@ def show_view(view, show_heading = False, show_buttons = True,
 
     # TODO: Use livestatus Stats: instead of fetching rows!
     if only_count:
-        for fname, filter_vars in view["context"].items():
-            for varname, value in filter_vars.items():
+        for filter_vars in view["context"].itervalues():
+            for varname in filter_vars.iterkeys():
                 html.del_var(varname)
         return len(rows)
 
@@ -1255,7 +1253,7 @@ def render_view(view, rows, datasource, group_painters, painters,
     if config.show_livestatus_errors \
        and display_options.enabled(display_options.W) \
        and html.output_format == "html":
-        for sitename, info in sites.live().dead_sites().items():
+        for info in sites.live().dead_sites().itervalues():
             html.show_error("<b>%s - %s</b><br>%s" %
                 (info["site"]["alias"], _('Livestatus error'), info["exception"]))
 
@@ -1916,7 +1914,7 @@ def get_context_link(user, viewname):
 @cmk.gui.pages.register("export_views")
 def ajax_export():
     load_views()
-    for name, view in available_views.items():
+    for view in available_views.itervalues():
         view["owner"] = ''
         view["public"] = True
     html.write(pprint.pformat(available_views))

@@ -736,7 +736,7 @@ register_rule(group,
 
 def validate_siemens_plc_values(value, varprefix):
     valuetypes = {}
-    for index, (db_number, address, datatype, valuetype, ident) in enumerate(value):
+    for index, (_db_number, _address, _datatype, valuetype, ident) in enumerate(value):
         valuetypes.setdefault(valuetype, [])
         if ident in valuetypes[valuetype]:
             raise MKUserError("%s_%d_%d" % (varprefix, index+1, 4),

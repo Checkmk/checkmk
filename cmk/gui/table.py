@@ -374,7 +374,7 @@ class Table(object):
             html.end_form()
             html.close_tr()
 
-        for nr, (row, css, state, fixed, attrs) in enumerate(rows):
+        for nr, (row, css, state, _fixed, attrs) in enumerate(rows):
 
             if not css and "class_" in attrs:
                 css = attrs.pop("class_")
@@ -420,19 +420,16 @@ class Table(object):
         limit = self.limit
         omit_headers = self.options["omit_headers"]
 
-        num_rows_unlimited = len(rows)
-        num_cols = len(headers)
-
         # Apply limit after search / sorting etc.
         if limit is not None:
             rows = rows[:limit]
 
         # If we have no group headers then paint the headers now
         if not omit_headers and self.rows and self.rows[0][2] != "header":
-            html.write(csv_separator.join([html.strip_tags(header) or "" for (header, css, help, sortable) in headers]) + "\n")
+            html.write(csv_separator.join([html.strip_tags(header) or "" for (header, _css, _help, _sortable) in headers]) + "\n")
 
-        for nr, (row, css, state, fixed, attrs) in enumerate(rows):
-            html.write(csv_separator.join([html.strip_tags(cell_content) for cell_content, css_classes, colspan in row ]))
+        for row, _css, _state, _fixed, _attrs in rows:
+            html.write(csv_separator.join([html.strip_tags(cell_content) for cell_content, _css_classes, _colspan in row ]))
             html.write("\n")
 
 
@@ -506,7 +503,7 @@ def _filter_rows(rows, search_term):
             filtered_rows.append((row, css, state, fixed, attrs))
             continue # skip filtering of headers or fixed rows
 
-        for cell_content, css_classes, colspan in row:
+        for cell_content, _css_classes, _colspan in row:
             if match_regex.search(cell_content):
                 filtered_rows.append((row, css, state, fixed, attrs))
                 break # skip other cells when matched

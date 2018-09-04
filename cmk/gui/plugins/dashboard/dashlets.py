@@ -300,7 +300,6 @@ def render_statistics(pie_id, what, table, filter, dashlet):
 
     html.close_table()
 
-    r = 0.0
     pie_parts = []
     if total > 0:
         # Count number of non-empty classes
@@ -320,7 +319,7 @@ def render_statistics(pie_id, what, table, filter, dashlet):
         # Loop over classes, begin with most outer sphere. Inner spheres show
         # worse states and appear larger to the user (which is the reason we
         # are doing all this stuff in the first place)
-        for (name, color, viewurl, q), value in pies[::1]:
+        for (name, color, viewurl, _q), value in pies[::1]:
             if value > 0 and remaining_part > 0: # skip empty classes
 
                 # compute radius of this sphere *including all inner spheres!* The first

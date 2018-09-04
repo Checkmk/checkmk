@@ -346,7 +346,7 @@ class ConfigDomainApache(ConfigDomain):
                 raise Exception(stdout)
 
             return []
-        except Exception, e:
+        except Exception:
             logger.exception()
             return ["Failed to activate apache configuration: %s" % (traceback.format_exc())]
 
@@ -450,7 +450,7 @@ class ConfigDomainRRDCached(ConfigDomain):
                 raise Exception(stdout)
 
             return []
-        except Exception, e:
+        except Exception:
             logger.exception()
             return ["Failed to activate rrdcached configuration: %s" % (traceback.format_exc())]
 

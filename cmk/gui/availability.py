@@ -642,7 +642,7 @@ def get_availability_rawdata(what, context, filterheaders, only_sites, av_object
     if what == "bi":
         return get_bi_availability_rawdata(filterheaders, only_sites, av_object, include_output, avoptions)
 
-    time_range, range_title = avoptions["range"]
+    time_range, _range_title = avoptions["range"]
 
     av_filter = "Filter: time >= %d\nFilter: time < %d\n" % time_range
     if av_object:
@@ -1222,7 +1222,7 @@ def delete_annotation(annotations, site_host_svc, fromtime, untiltime):
 #    "object" : ( "Host123", "Foobar" ),
 # }
 def layout_availability_table(what, group_title, availability_table, avoptions):
-    time_range, range_title = avoptions["range"]
+    time_range, _range_title = avoptions["range"]
     from_time, until_time   = time_range
     total_duration          = until_time - from_time
     timeformats             = prepare_avo_timeformats(avoptions["timeformat"])
@@ -1429,7 +1429,7 @@ def layout_availability_table(what, group_title, availability_table, avoptions):
 def layout_timeline(what, timeline_rows, considered_duration, avoptions, style):
 
     timeformats             = prepare_avo_timeformats(avoptions["timeformat"])
-    time_range, range_title = avoptions["range"]
+    time_range, _range_title = avoptions["range"]
     from_time, until_time   = time_range
     total_duration          = until_time - from_time
 
@@ -1474,7 +1474,7 @@ def layout_timeline(what, timeline_rows, considered_duration, avoptions, style):
 
     def apply_render_number_functions(n, d):
         texts = []
-        for timeformat, render_number in timeformats:
+        for _timeformat, render_number in timeformats:
             texts.append(render_number(n, d))
         return ", ".join(texts)
 
@@ -1669,7 +1669,7 @@ def get_bi_availability_rawdata(filterheaders, only_sites, av_object, include_ou
 
 
 def get_timeline_containers(aggr_rows, avoptions, timewarp, livestatus_limit):
-    time_range, range_title = avoptions["range"]
+    time_range, _range_title = avoptions["range"]
     phases_list, timeline_containers, fetched_rows = get_bi_leaf_history(aggr_rows, time_range, livestatus_limit)
     return compute_bi_timelines(timeline_containers, time_range, timewarp, phases_list), fetched_rows
 
@@ -1987,7 +1987,6 @@ def check_av_levels(ok_seconds, av_levels, considered_duration):
 
 
 def get_av_groups(availability_table, avoptions):
-    grouping = avoptions["grouping"]
     all_group_ids = set([])
     for entry in availability_table:
         all_group_ids.update(entry["groups"])

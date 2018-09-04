@@ -288,7 +288,7 @@ class SnapshotWorkerSubprocess(SnapshotCreationBase, multiprocessing.Process):
     def run(self):
         try:
             self._generate_snapshot(*self._args, **self._kwargs)
-        except Exception, e:
+        except Exception:
             self._logger.error("Error in subprocess")
             self._logger.error(traceback.format_exc())
 
@@ -432,7 +432,7 @@ def list_tar_content(the_tarfile):
             tar = tarfile.open(the_tarfile, "r")
         for x in tar.getmembers():
             files.update({x.name: {"size": x.size}})
-    except Exception, e:
+    except Exception:
         return {}
     return files
 
@@ -451,7 +451,7 @@ def extract_domains(tar, domains):
         try:
             if member.name.endswith(".tar.gz"):
                 tar_domains[member.name[:-7]] = member
-        except Exception, e:
+        except Exception:
             pass
 
     # We are using the var_dir, because tmp_dir might not have enough space
@@ -460,8 +460,6 @@ def extract_domains(tar, domains):
         os.makedirs(restore_dir)
 
     def check_domain(domain, tar_member):
-        def can_write(path):
-            return os.access(path, os.W_OK)
         errors = []
 
         prefix = domain["prefix"]
@@ -540,7 +538,7 @@ def extract_domains(tar, domains):
             command = [ "tar", "xzf", "%s/%s" % (restore_dir, tar_member.name),
                                "-C", target_dir ]
             p = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-            stdout, stderr = p.communicate()
+            _stdout, stderr = p.communicate()
             exit_code = p.wait()
             if exit_code:
                 return [ "%s - %s" % (domain["title"], stderr) ]
@@ -575,7 +573,7 @@ def extract_domains(tar, domains):
                 try:
                     dom_errors = handler(domains[name], tar_member)
                     errors.extend(dom_errors or [])
-                except Exception, e:
+                except Exception:
                     # This should NEVER happen
                     err_info = "Restore-Phase: %s, Domain: %s\nError: %s" % (what, name, traceback.format_exc())
                     errors.append(err_info)
@@ -607,10 +605,9 @@ def extract_domains(tar, domains):
 def extract(tar, components):
     for component in components:
         if len(component) == 4:
-            what, name, path, excludes = component
+            what, name, path, _excludes = component
         else:
             what, name, path = component
-            excludes = []
 
         try:
             try:
@@ -636,7 +633,7 @@ def extract(tar, components):
             # Extract without use of temporary files
             subtar = tarfile.open(fileobj = subtarstream)
             subtar.extractall(target_dir)
-        except Exception, e:
+        except Exception:
             raise MKGeneralException('Failed to extract subtar %s: %s' % (name, traceback.format_exc()))
 
 # Try to cleanup everything starting from the root_path

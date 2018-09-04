@@ -1,0 +1,12 @@
+Title: New Theme: Fixed snapins in dashboards
+Level: 1
+Component: multisite
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0p4
+Date: 1536051584
+
+The layout of snapins is slightly different if embedded into dashboards for
+a more proper look.

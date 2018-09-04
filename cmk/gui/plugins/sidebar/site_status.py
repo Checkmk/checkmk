@@ -69,37 +69,32 @@ class SiteStatus(SidebarSnapin):
         for sitename, sitealias in config.sorted_sites():
             site = config.site(sitename)
 
-            state = sites.state(sitename, {})
+            state = sites.state(sitename, {}).get("state")
 
-            if state.get("state") == None:
+            if state is None:
                 state = "missing"
-                text = _("Missing site")
-                title = _("Site %s does not exist") % sitename
+                switch = "missing"
+                text = sitename
 
             else:
-                if state["state"] == "disabled":
+                if state == "disabled":
                     switch = "on"
                     text = site["alias"]
-                    title = _("Site %s is switched off") % site["alias"]
                 else:
                     switch = "off"
                     text = render_link(site["alias"], "view.py?view_name=sitehosts&site=%s" % sitename)
-                    ex = state.get("exception")
-                    shs = state.get("status_host_state")
-
-                    if ex:
-                        title = ex
-                    else:
-                        title = "Site %s is online" % site["alias"]
 
             html.open_tr()
             html.open_td(class_="left")
             html.write(text)
             html.close_td()
             html.open_td(class_="state")
-            html.status_label_button(content=state["state"], status=state["state"],
-                help=_("%s this site") % (state["state"] == "disabled" and _("enable") or _("disable")),
-                onclick="switch_site('_site_switch=%s:%s')" % (sitename, switch))
+            if switch == "missing":
+                html.status_label(content=state, status=state, help=_("Site is missing"))
+            else:
+                html.status_label_button(content=state, status=state,
+                    help=_("enable this site") if state == "disabled" else _("disable this site"),
+                    onclick="switch_site('_site_switch=%s:%s')" % (sitename, switch))
             html.close_tr()
         html.close_table()
 

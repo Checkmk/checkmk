@@ -1,0 +1,20 @@
+Title: wmi.include: don't throw exepctions in the parse function
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1536044950
+Class: fix
+
+In previous versions the parse function provided in wmi.include
+(used in different WMI checks like e.g. wmi_cpuload) raised
+a MKCounterWrapped exception if a WMI timeout occured. This
+leads to a crash during the service discovery when a timeout
+occurs.
+
+Now the parse function always returns valid data. If a timeout
+occurs an empty table is added to the parsed data. The inventory
+function can then easily check for empty tables. If on the other
+hand the check function tries to access an empty table a
+MKCounterWrapped exception is raised.

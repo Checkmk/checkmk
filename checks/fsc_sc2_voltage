@@ -72,22 +72,40 @@
 
 
 def parse_fsc_sc2_voltage(info):
+    # dev_state:
+    # sc2VoltageStatus OBJECT-TYPE
+    # SYNTAX       INTEGER
+    # {
+    #     unknown(1),
+    #     not-available(2),
+    #     ok(3),
+    #     too-low(4),
+    #     too-high(5),
+    #     sensor-failed(6)
+    # }
+    # ACCESS       read-only
+    # STATUS       mandatory
+    # DESCRIPTION  "Voltage status"
+    # ::= { sc2Voltages 4 }
+
     parsed = {}
-    for designation, value, min_value, max_value in info:
+    for designation, dev_state, value, min_value, max_value in info:
+        if dev_state == "2":
+            continue
         try:
             value = float(value)/1000.0
             min_value = float(min_value)/1000.0
             max_value = float(max_value)/1000.0
         except ValueError:
-            dev_state = 3, 'Could not get all values'
-            parsed.setdefault(designation, {"device_state": dev_state})
+            state_info = 3, 'Could not get all values'
+            parsed.setdefault(designation, {"device_state": state_info})
         else:
-            dev_state = value
+            state_info = value
             if value < min_value:
-                dev_state = value, (2, 'too low, deceeds %.2f V' % min_value)
+                state_info = value, (2, 'too low, deceeds %.2f V' % min_value)
             elif value >= max_value:
-                dev_state = value, (2, 'too high, exceeds %.2f V' % max_value)
-            parsed.setdefault(designation, {"voltage": dev_state})
+                state_info = value, (2, 'too high, exceeds %.2f V' % max_value)
+            parsed.setdefault(designation, {"voltage": state_info})
     return parsed
 
 
@@ -98,6 +116,7 @@ check_info['fsc_sc2_voltage'] = {
     'service_description'       : 'Voltage %s',
     'snmp_info'                 : ('.1.3.6.1.4.1.231.2.10.2.2.10.6.3.1', [
                                       '3',    #sc2VoltageDesignation
+                                      '4',    #sc2VoltageStatus
                                       '5',    #sc2VoltageCurrentValue
                                       '7',    #sc2VoltageMinimumLevel
                                       '8',    #sc2VoltageMaximumLevel

@@ -187,7 +187,7 @@ def load_config():
     conf_dir = cmk.paths.default_config_dir + "/multisite.d"
     filelist = []
     if os.path.isdir(conf_dir):
-        for root, dirs, files in os.walk(conf_dir):
+        for root, _directories, files in os.walk(conf_dir):
             for filename in files:
                 if filename.endswith(".mk"):
                     filelist.append(root + "/" + filename)
@@ -215,9 +215,7 @@ def _load_default_config_from_module_plugins():
     # TODO: Find a better solution for this. Probably refactor declaration of default
     # config option.
     config_plugin_vars = {}
-    for name, module in _config_plugin_modules():
-        if module is None:
-            continue
+    for module in _config_plugin_modules():
         config_plugin_vars.update(module.__dict__)
 
     for k, v in config_plugin_vars.items():
@@ -236,10 +234,12 @@ def _load_default_config_from_legacy_plugins(vars_before_plugins, vars_after_plu
 
 
 def _config_plugin_modules():
-    return [ (name, module) for name, module in sys.modules.items()
-        if name.startswith("cmk.gui.plugins.config.")
-           or name.startswith("cmk.gui.cee.plugins.config.")
-           or name.startswith("cmk.gui.cme.plugins.config.") ]
+    return [module
+            for name, module in sys.modules.items()
+            if (name.startswith("cmk.gui.plugins.config.") or
+                name.startswith("cmk.gui.cee.plugins.config.") or
+                name.startswith("cmk.gui.cme.plugins.config.")) and
+               module is not None]
 
 
 def reporting_available():
@@ -278,7 +278,7 @@ def get_language(default=None):
 
 def tag_alias(tag):
     for entry in host_tag_groups():
-        tag_id, title, tags = entry[:3]
+        tag_id, _title, tags = entry[:3]
         for t in tags:
             if t[0] == tag:
                 return t[1]
@@ -290,7 +290,7 @@ def tag_alias(tag):
 
 def tag_group_title(tag):
     for entry in host_tag_groups():
-        tag_id, title, tags = entry[:3]
+        _tag_id, title, tags = entry[:3]
         for t in tags:
             if t[0] == tag:
                 return title
@@ -1056,7 +1056,7 @@ def site_is_local(site_name):
 
 
 def default_site():
-    for site_name, site in sites.items():
+    for site_name, _site in sites.items():
         if site_is_local(site_name):
             return site_name
     return None

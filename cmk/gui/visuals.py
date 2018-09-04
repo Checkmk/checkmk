@@ -134,19 +134,11 @@ class UserVisualsCache(object):
 
     def get(self, path):
         try:
-            cached_modification_timestamp, cached_user_visuals = self._cache[path]
-
-            try:
-                current_modification_timestamp = os.stat(path).st_mtime
-            except IOError:
-                return None # Invalidate cache (file to readable)
-
-            if os.stat(path).st_mtime <= cached_modification_timestamp:
-                return cached_user_visuals # Use cache
-            else:
-                return None # Cache is outdated
-        except KeyError:
-            return None # Not cached yet
+            cached_mtime, cached_user_visuals = self._cache[path]
+            current_mtime = os.stat(path).st_mtime
+            return cached_user_visuals if current_mtime <= cached_mtime else None
+        except (KeyError, IOError):
+            return None
 
 
     def add(self, path, modification_timestamp, user_visuals):
@@ -603,8 +595,6 @@ def page_create_visual(what, info_keys, next_url = None):
 #   '----------------------------------------------------------------------'
 
 def get_context_specs(visual, info_handler):
-    context_specs = []
-
     info_keys = []
     if info_handler:
         info_keys = info_handler(visual)
@@ -632,23 +622,15 @@ def get_context_specs(visual, info_handler):
         info = infos[info_key]
         filter_list  = VisualFilterList([info_key], title=info['title'], ignore=set(single_info_keys))
         filter_names = filter_list.filter_names()
-
-        if not filter_names:
-            return # Skip infos which have no filters available
-
-        params = [
-            ('filters', filter_list),
-        ]
-        optional = None
-        # Make it open by default when at least one filter is used
-        isopen = bool([ fn for fn in visual.get('context', {}).keys()
-                                                if fn in filter_names ])
-        return filter_list
+        # Skip infos which have no filters available
+        return filter_list if filter_names else None
 
     # single infos first, the rest afterwards
-    return [(info_key, visual_spec_single(info_key)) for info_key in single_info_keys] +\
-        [(info_key, visual_spec_multi(info_key)) for info_key in multi_info_keys
-                            if visual_spec_multi(info_key) ]
+    return [(info_key, visual_spec_single(info_key))
+            for info_key in single_info_keys] + \
+           [(info_key, visual_spec_multi(info_key))
+            for info_key in multi_info_keys
+            if visual_spec_multi(info_key)]
 
 
 def process_context_specs(context_specs):
@@ -684,8 +666,6 @@ def page_edit_visual(what, all_visuals, custom_field_handler = None,
     visual_type = visual_types[what]
     if not config.user.may("general.edit_" + what):
         raise MKAuthException(_("You are not allowed to edit %s.") % visual_type["plural_title"])
-    what_s = what[:-1]
-
     visual = {}
 
     # Load existing visual from disk - and create a copy if 'load_user' is set
@@ -905,7 +885,7 @@ def page_edit_visual(what, all_visuals, custom_field_handler = None,
     # FIXME: Hier werden die Flags aus visibility nicht korrekt geladen. Wäre es nicht besser,
     # diese in einem Unter-Dict zu lassen, anstatt diese extra umzukopieren?
     visib = {}
-    for key, vs in visibility_elements:
+    for key, _vs in visibility_elements:
         if visual.get(key):
             visib[key] = visual[key]
     visual["visibility"] = visib
@@ -1017,7 +997,7 @@ def filters_of_visual(visual, info_keys, show_all=False, link_filters=None):
 
     # Collect all available filters for these infos
     all_possible_filters = []
-    for filter_name, filter in multisite_filters.items():
+    for _filter_name, filter in multisite_filters.items():
         if filter.info in info_keys:
             all_possible_filters.append(filter)
 
@@ -1088,7 +1068,7 @@ def add_context_to_uri_vars(visual, only_infos=None, only_count=False):
 
     # Now apply the multiple context filters
     for info_key in only_infos:
-        for filter_name, filter_vars in visual['context'].items():
+        for filter_vars in visual['context'].itervalues():
             if type(filter_vars) == dict: # this is a multi-context filter
                 # We add the filter only if *none* of its HTML variables are present on the URL
                 # This important because checkbox variables are not present if the box is not checked.
@@ -1264,7 +1244,7 @@ def pack_context_for_editing(visual, info_handler):
 
 def unpack_context_after_editing(packed_context):
     context = {}
-    for info_type, its_context in packed_context.items():
+    for _info_type, its_context in packed_context.items():
         context.update(its_context)
     return context
 
@@ -1300,12 +1280,12 @@ def verify_single_contexts(what, visual, link_filters):
                                                     (visual_types[what]['title'], k))
 
 def visual_title(what, visual):
-    extra_titles = []
-
     # Beware: if a single context visual is being visited *without* a context, then
     # the value of the context variable(s) is None. In order to avoid exceptions,
     # we simply drop these here.
-    extra_titles = [ v for k, v in get_singlecontext_html_vars(visual).items() if v != None ]
+    extra_titles = [v
+                    for v in get_singlecontext_html_vars(visual).itervalues()
+                    if v is not None]
 
     # FIXME: Is this really only needed for visuals without single infos?
     if not visual['single_infos']:
@@ -1385,7 +1365,7 @@ def collect_context_links(this_visual, mobile = False, only_types = None):
 
     # compute list of html variables needed for this visual
     active_filter_vars = set([])
-    for var, val in get_singlecontext_html_vars(this_visual).items():
+    for var in get_singlecontext_html_vars(this_visual).iterkeys():
         if html.has_var(var):
             active_filter_vars.add(var)
 

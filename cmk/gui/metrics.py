@@ -319,7 +319,7 @@ class Perfometers(object):
 
         if "condition" in perfometer:
             try:
-                value, color, unit = evaluate(perfometer["condition"], translated_metrics)
+                value, _color, _unit = evaluate(perfometer["condition"], translated_metrics)
                 if value == 0.0:
                     return False
             except:
@@ -391,7 +391,7 @@ class MetricometerRenderer(object):
                 return ""
 
             expr, unit_name = self._perfometer["label"]
-            value, unit, color = evaluate(expr, self._translated_metrics)
+            value, unit, _color = evaluate(expr, self._translated_metrics)
             if unit_name:
                 unit = unit_info[unit_name]
             return unit["render"](value)
@@ -425,19 +425,19 @@ class MetricometerRendererLogarithmic(MetricometerRenderer):
 
 
     def get_stack(self):
-        value, unit, color = evaluate(self._perfometer["metric"], self._translated_metrics)
+        value, _unit, color = evaluate(self._perfometer["metric"], self._translated_metrics)
         return [ self.get_stack_from_values(value, self._perfometer["half_value"], self._perfometer["exponent"], color) ]
 
 
     def _get_type_label(self):
-        value, unit, color = evaluate(self._perfometer["metric"], self._translated_metrics)
+        value, unit, _color = evaluate(self._perfometer["metric"], self._translated_metrics)
         return unit["render"](value)
 
 
     def get_sort_number(self):
         """Returns the number to sort this perfometer with compared to the other
         performeters in the current performeter sort group"""
-        value, unit, color = evaluate(self._perfometer["metric"], self._translated_metrics)
+        value, _unit, _color = evaluate(self._perfometer["metric"], self._translated_metrics)
         return value
 
 
@@ -470,7 +470,7 @@ class MetricometerRendererLinear(MetricometerRenderer):
         summed = self._get_summed_values()
 
         if "total" in self._perfometer:
-            total, unit, color = evaluate(self._perfometer["total"], self._translated_metrics)
+            total, _unit, _color = evaluate(self._perfometer["total"], self._translated_metrics)
         else:
             total = summed
 
@@ -479,7 +479,7 @@ class MetricometerRendererLinear(MetricometerRenderer):
 
         else:
             for ex in self._perfometer["segments"]:
-                value, unit, color = evaluate(ex, self._translated_metrics)
+                value, _unit, color = evaluate(ex, self._translated_metrics)
                 entry.append((100.0 * value / total, color))
 
             # Paint rest only, if it is positive and larger than one promille
@@ -492,20 +492,20 @@ class MetricometerRendererLinear(MetricometerRenderer):
     def _get_type_label(self):
         # Use unit of first metrics for output of sum. We assume that all
         # stackes metrics have the same unit anyway
-        value, unit, color = evaluate(self._perfometer["segments"][0], self._translated_metrics)
+        _value, unit, _color = evaluate(self._perfometer["segments"][0], self._translated_metrics)
         return unit["render"](self._get_summed_values())
 
 
     def get_sort_number(self):
         """Use the first segment value for sorting"""
-        value, unit, color = evaluate(self._perfometer["segments"][0], self._translated_metrics)
+        value, _unit, _color = evaluate(self._perfometer["segments"][0], self._translated_metrics)
         return value
 
 
     def _get_summed_values(self):
         summed = 0.0
         for ex in self._perfometer["segments"]:
-            value, unit, color = evaluate(ex, self._translated_metrics)
+            value, _unit, _color = evaluate(ex, self._translated_metrics)
             summed += value
         return summed
 
@@ -664,7 +664,7 @@ def page_pnp_template():
 
         html.write(output)
 
-    except Exception, e:
+    except Exception:
         html.write("An error occured:\n%s\n" % traceback.format_exc())
 
 
@@ -699,13 +699,6 @@ def render_graph_pnp(graph_template, translated_metrics):
         # Prepare negative variants for upside-down graph
         rrdgraph_commands += "CDEF:%s_NEG=%s,-1,* " % (var_name, var_name)
         rrdgraph_commands += "CDEF:%s_LEGSCALED_NEG=%s_LEGSCALED,-1,* " % (var_name, var_name)
-
-
-    # Compute width of columns in case of mirrored legend
-
-    total_width = 89 # characters
-    left_width = max([len(_("Average")), len(_("Maximum")), len(_("Last"))]) + 2
-    column_width = (total_width - left_width) / len(graph_template["metrics"]) - 2
 
     # Now add areas and lines to the graph
     graph_metrics = []
@@ -770,10 +763,10 @@ def render_graph_pnp(graph_template, translated_metrics):
         if "," in metric_name:
             # We evaluate just in order to get color and unit.
             # TODO: beware of division by zero. All metrics are set to 1 here.
-            value, unit, color = evaluate(metric_name, translated_metrics)
+            _value, unit, color = evaluate(metric_name, translated_metrics)
 
             if "@" in metric_name:
-                expression, explicit_unit_name = metric_name.rsplit("@", 1) # isolate expression
+                expression, _explicit_unit_name = metric_name.rsplit("@", 1) # isolate expression
             else:
                 expression = metric_name
 
@@ -870,7 +863,6 @@ def render_graph_pnp(graph_template, translated_metrics):
 
 def cmk_graphs_possible(site_id = None):
     try:
-        import cmk.gui.cee.plugins.metrics.graphs
         return not config.force_pnp_graphing \
            and browser_supports_canvas() \
            and site_is_running_cmc(site_id)

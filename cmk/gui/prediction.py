@@ -73,7 +73,6 @@ def page_graph():
     timegroups = []
     now = time.time()
     for f in os.listdir(dir):
-        file_path = dir + "/" + f
         if not f.endswith(".info"):
             continue
 
@@ -159,7 +158,7 @@ def page_graph():
             tz_offset = time.altzone
         else:
             tz_offset = time.timezone
-        rrd_step, rrd_data = get_rrd_data(host, service, dsname, "MAX", from_time, until_time)
+        _rrd_step, rrd_data = get_rrd_data(host, service, dsname, "MAX", from_time, until_time)
         render_curve(rrd_data, "#0000ff", 2)
         if current_value != None:
             rel_time = (now - tz_offset) % timegroup["slice"]
@@ -255,7 +254,7 @@ def get_rrd_data(hostname, service_description, varname, cf, fromtime, untiltime
     if not response:
         raise MKGeneralException("Got no historic metrics")
 
-    real_fromtime, real_untiltime, step = response[:3]
+    _real_fromtime, _real_untiltime, step = response[:3]
     values = response[3:]
     return step, values
 
@@ -324,7 +323,7 @@ def compute_level(params, ref_value, stdev, param, sig):
 
 def compute_vertical_range(swapped):
     mmin, mmax = 0.0, 0.0
-    for name, points in swapped.items():
+    for points in swapped.itervalues():
         mmax = max(mmax, max(points)) or 0.0 # convert None into 0.0
         mmin = min(mmin, min(points)) or 0.0
     return mmin, mmax

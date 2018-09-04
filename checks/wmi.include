@@ -47,6 +47,12 @@
 #   '----------------------------------------------------------------------'
 
 
+class NullTable(object):
+    """Represents an empty table caused by a WMI timeout."""
+    def __getattr__(self, name):
+        raise MKCounterWrapped('WMI query timed out')
+
+
 class WMITable(object):
     """
     Represents a 2-dimensional table of performance metrics.
@@ -155,34 +161,33 @@ class WMITable(object):
 
 def parse_wmi_table(info, key="Name"):
     parsed = {}
+    info_iter = iter(info)
 
     try:
         # read input line by line. rows with [] start the table name.
         # Each table has to start with a header line
-        info_iter = iter(info)
         line = info_iter.next()
-
-        # Did main section get WMI timeout?
-        check_wmi_timeout(line)
 
         timestamp, frequency = None, None
         if line[0] == "sampletime":
             timestamp, frequency = int(line[1]), int(line[2])
             line = info_iter.next()
 
-        while line is not None:
-            check_wmi_timeout(line)
-
+        while True:
             if len(line) == 1 and line[0].startswith("["):
                 # multi-table input
                 tablename = regex(r"\[(.*)\]").search(line[0]).group(1)
 
                 # Did subsection get WMI timeout?
                 line = info_iter.next()
-                check_wmi_timeout(line)
             else:
                 # single-table input
                 tablename = ""
+
+            if is_wmi_timeout(line):
+                parsed[tablename] = NullTable()
+                line = info_iter.next()
+                continue
 
             if tablename not in parsed:
                 parsed[tablename] = WMITable(tablename, line, key, timestamp, frequency)
@@ -190,20 +195,22 @@ def parse_wmi_table(info, key="Name"):
 
             # read table content
             line = info_iter.next()
-            while line is not None and not line[0].startswith("["):
-                check_wmi_timeout(line)
+            while not line[0].startswith("["):
+                if is_wmi_timeout(line):
+                    parsed[tablename] = NullTable()
+                    line = info_iter.next()
+                    continue
                 current.add_row(line)
                 line = info_iter.next()
-    except StopIteration:
+    except (StopIteration, ValueError):
         # regular end of block
         pass
 
     return parsed
 
 
-def check_wmi_timeout(line):
-    if line[0] == "WMItimeout":
-        raise MKCounterWrapped("WMI query timed out")
+def is_wmi_timeout(line):
+    return line[0] == "WMItimeout"
 
 
 #.
@@ -215,6 +222,7 @@ def check_wmi_timeout(line):
 #   |                    |_|   |_|_|\__\___|_|  |___/                      |
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
+
 
 def wmi_filter_global_only(tables, row):
     return all(table.get(row, "Name") == "_Global_" for table in tables.values())
@@ -230,9 +238,11 @@ def wmi_filter_global_only(tables, row):
 #   |                                                   |___/              |
 #   '----------------------------------------------------------------------'
 
+
 def inventory_wmi_table(tables, **kwargs):
     required_tables = kwargs.get('required_tables', tables.keys())
-    if not set(required_tables) <= set(tables.keys()):
+    if (not set(required_tables) <= set(tables.keys()) or
+            any(isinstance(table, NullTable) for table in tables.itervalues())):
         # if table is missing, nothing gets inventorized. This can
         # only happen if required_tables was set
         return []
@@ -277,6 +287,7 @@ def inventory_wmi_table(tables, **kwargs):
 #   |                     \____|_| |_|\___|\___|_|\_\                      |
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
+
 
 # determine time at which a sample was taken
 def get_wmi_time(table, row):

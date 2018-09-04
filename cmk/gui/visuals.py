@@ -1055,10 +1055,7 @@ def visible_filters_of_visual(visual, use_filters):
 
     return show_filters
 
-def add_context_to_uri_vars(visual, only_infos=None, only_count=False):
-    if only_infos == None:
-        only_infos = infos.keys() # all datasources!
-
+def add_context_to_uri_vars(visual, only_count=False):
     # Populate the HTML vars with missing context vars. The context vars set
     # in single context are enforced (can not be overwritten by URL). The normal
     # filter vars in "multiple" context are not enforced.
@@ -1067,19 +1064,14 @@ def add_context_to_uri_vars(visual, only_infos=None, only_count=False):
             html.set_var(key, "%s" % visual['context'][key])
 
     # Now apply the multiple context filters
-    for info_key in only_infos:
-        for filter_vars in visual['context'].itervalues():
-            if type(filter_vars) == dict: # this is a multi-context filter
-                # We add the filter only if *none* of its HTML variables are present on the URL
-                # This important because checkbox variables are not present if the box is not checked.
-                skip = False
+    for filter_vars in visual['context'].itervalues():
+        if type(filter_vars) == dict: # this is a multi-context filter
+            # We add the filter only if *none* of its HTML variables are present on the URL
+            # This important because checkbox variables are not present if the box is not checked.
+            skip = any(html.has_var(uri_varname) for uri_varname in filter_vars.iterkeys())
+            if not skip or only_count:
                 for uri_varname, value in filter_vars.items():
-                    if html.has_var(uri_varname):
-                        skip = True
-                        break
-                if not skip or only_count:
-                    for uri_varname, value in filter_vars.items():
-                        html.set_var(uri_varname, "%s" % value)
+                    html.set_var(uri_varname, "%s" % value)
 
 # Vice versa: find all filters that belong to the current URI variables
 # and create a context dictionary from that.

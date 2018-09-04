@@ -857,7 +857,7 @@ def show_view(view, show_heading = False, show_buttons = True,
     #
     # a) single context vars of the view are enforced
     # b) multi context vars can be overwritten by existing HTML vars
-    visuals.add_context_to_uri_vars(view, datasource["infos"], only_count)
+    visuals.add_context_to_uri_vars(view, only_count)
 
     # Check that all needed information for configured single contexts are available
     visuals.verify_single_contexts('views', view, datasource.get('link_filters', {}))

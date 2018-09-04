@@ -20,6 +20,7 @@ lockfile = "*"
 lxml = "*"
 pylint = "*"
 pyenchant = "*"
+yapf = "*"
 
 [packages]
 setuptools_scm = "==2.1.0"

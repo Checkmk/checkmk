@@ -3957,7 +3957,7 @@ def site_user_processes(exclude_current_and_parents):
     if exclude_current_and_parents:
         exclude = get_current_and_parent_pids()
 
-    p = subprocess.Popen(["ps", "-U", g_sitename, "-o", "pid", "-h"], close_fds=True,
+    p = subprocess.Popen(["ps", "-U", g_sitename, "-o", "pid", "--no-headers"], close_fds=True,
                          stdin=open(os.devnull), stdout=subprocess.PIPE)
     exclude.append(p.pid)
 

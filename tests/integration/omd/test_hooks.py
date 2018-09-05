@@ -26,6 +26,7 @@ def test_hooks(site):
         "NSCA",
         "NSCA_TCP_PORT",
         "PNP4NAGIOS",
+        "TMPFS",
     ]
 
     if site.version.edition() == "enterprise":

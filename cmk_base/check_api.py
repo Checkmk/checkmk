@@ -29,13 +29,16 @@ The things in this module specify the official Check_MK check API. Meaning all
 variables, functions etc. and default modules that are available to checks.
 
 Modules available by default (pre imported by Check_MK):
+    collections
+    enum
     fnmatch
     math
     re
     socket
     sys
+    os
     time
-
+    pprint
 
 Global variables:
     from cmk.regex import regex
@@ -122,6 +125,7 @@ def get_check_api_context():
 
 # TODO: Move imports directly to checks?
 import collections
+import enum
 import fnmatch
 import math
 import re

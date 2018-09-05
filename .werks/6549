@@ -1,0 +1,13 @@
+Title: Crash reports: Filter out password/_password from HTTP vars of GUI crashes
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 1.5.0p4
+Date: 1536130136
+Class: fix
+
+When a crash occurs during the login procedure where a user entered his password during
+verification of this password, the crash could contain this password in plain text in
+the HTTP variable data structure. The vars named password/_password are now explicitly
+filtered to prevent this.

@@ -198,7 +198,7 @@ def get_agent_info_tcp(hostname):
                 break
         s.close()
         return output
-    except Exception, e:
+    except Exception:
         if opt_debug:
             raise
     return output
@@ -310,7 +310,7 @@ def dump(x, indent=""):
                 sys.exit(0)
 
 def dump_dict(d, indent):
-    for key, value in d.items():
+    for key in d.iterkeys():
         print indent + key
         # dump(value, "    " + indent)
 

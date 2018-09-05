@@ -150,7 +150,7 @@ class Server(object):
 
     def logout(self):
         payload = '<?xml version="1.0" ?><aaaLogout inCookie="%(cookie)s"/>'
-        response = self.communicate(payload)
+        self.communicate(payload)
 
     def get_class(self, classname):
         payload = '<?xml version="1.0" ?><configResolveClass classId="%(classname)s"' \

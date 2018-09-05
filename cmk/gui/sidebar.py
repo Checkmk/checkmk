@@ -167,6 +167,9 @@ def transform_old_dict_based_snapins():
             def styles(self):
                 return self._spec.get("styles")
 
+        # Help pylint a little bit, it doesn't know that the registry remembers the class above.
+        _it_is_really_used = LegacySnapin
+
 
 # TODO: Deprecate this one day.
 def transform_old_quicksearch_match_plugins():

@@ -300,8 +300,6 @@ else:
 
 
         def invoke(self, *args):
-            what = args[0]
-            invoke_what = ET.Element(what)
             invoke_list = [args[0], map(list, zip(args[1::2], args[2::2]))]
             response = self.get_response(invoke_list)
             if response:

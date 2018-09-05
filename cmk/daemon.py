@@ -105,7 +105,8 @@ def set_cmdline(cmdline):
     argc = ctypes.c_int()
     ctypes.pythonapi.Py_GetArgcArgv(ctypes.byref(argc), ctypes.byref(argv))
     cmdlen = sum([len(argv[i]) for i in range(argc.value)]) + argc.value
-    new_cmdline = ctypes.c_char_p(cmdline.ljust(cmdlen, '\0'))
+    # TODO: This can probably be simplified...
+    _new_cmdline = ctypes.c_char_p(cmdline.ljust(cmdlen, '\0'))
 
     set_procname(cmdline)
 

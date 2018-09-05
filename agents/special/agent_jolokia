@@ -340,7 +340,7 @@ def parse_arguments():
     ]
 
     try:
-        opts, args = getopt.getopt(sys.argv[1:], short_options, long_options)
+        opts, _args = getopt.getopt(sys.argv[1:], short_options, long_options)
     except getopt.GetoptError, err:
         sys.stderr.write("%s\n" % err)
         sys.exit(1)

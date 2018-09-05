@@ -661,7 +661,7 @@ class TestRunner(threading.Thread):
     def _increase_hosts(self):
         try:
             self._num_hosts = TestRunner.host_steps[TestRunner.host_steps.index(self._num_hosts)+1]
-        except (ValueError, IndexError), e:
+        except (ValueError, IndexError):
             # Reached end!
             self.stop()
 
@@ -831,7 +831,7 @@ class Analyzer(threading.Thread):
             while not self._stop.isSet() and not self._runner.test.is_stopped():
                 self._measure()
                 time.sleep(1)
-        except Exception, e:
+        except Exception:
             if opt_debug:
                 raise
             self._runner.test.error("Analyzer failed: %s" % traceback.format_exc())
@@ -1240,7 +1240,7 @@ class AgentListener(multiprocessing.Process):
 
                 for s in readable:
                     time.sleep(0.5)
-                    client_socket, addr_info = s.accept()
+                    client_socket, _addr_info = s.accept()
                     host_id = self._socket_map[s.getsockname()]
                     client_socket.sendall(self._get_answer(host_id))
                     client_socket.close()
@@ -1292,7 +1292,7 @@ class AgentListener(multiprocessing.Process):
             self._update_counter(host_id, "kernel_cpu%s_iowait" % i,  per_sec=0.05)
 
 
-        counters = dict([ (k, v) for k, (t, v) in self._counters[host_id].items() ])
+        counters = {k: v for k, (_t, v) in self._counters[host_id].iteritems()}
         counters["now"] = time.time()
 
         cpu_output = ""
@@ -2917,7 +2917,7 @@ class TestAgentBasedStandardHosts(TestCase):
     # To create the RRDs, simply perform one check and wait for the RRDs to be created
     def _create_rrds_of_host(self, host_name):
         # Do 2 iterations to initialize the rrds that base on counter values
-        for i in [ 0, 1]:
+        for _i in xrange(2):
             p = subprocess.Popen(["cmk", "-v", host_name], stdin=open(os.devnull),
                     close_fds=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
 
@@ -2983,7 +2983,7 @@ class TestAgentBasedStandardHosts(TestCase):
     # to tell us the state of the helpers, we need to detect this somehow.
     # -> Find all helper processes and check the open file descriptors.
     def _wait_for_cmk_helpers_ready(self):
-        num_not_ready, loadavg_5_before = None, os.getloadavg()[1]
+        num_not_ready, _loadavg_5_before = None, os.getloadavg()[1]
         while num_not_ready == None or num_not_ready > 0:
             if self._runner.shall_stop():
                 break
@@ -3244,7 +3244,7 @@ class Log(npyscreen.BoxTitle):
 
     def update(self, clear=True):
         entries = []
-        for timestamp, level, entry in self._runner.test.get_log():
+        for timestamp, _level, entry in self._runner.test.get_log():
             if "\n" not in entry:
                 lines = [entry]
             else:

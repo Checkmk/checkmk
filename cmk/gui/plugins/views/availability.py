@@ -108,7 +108,7 @@ def render_availability_options(what):
         html.show_user_errors()
 
     html.begin_floating_options("avoptions", is_open)
-    for name, height, show_in_reporting, vs in avoption_entries:
+    for name, height, _show_in_reporting, vs in avoption_entries:
         html.render_floating_option(name, height, "avo_", vs, avoptions.get(name))
     html.end_floating_options(reset_url = html.makeuri([("_reset", "1")], remove_prefix="avo_", delvars=["apply", "filled_in"]))
 

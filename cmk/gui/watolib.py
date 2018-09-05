@@ -508,7 +508,7 @@ class ConfigDomainCACertificates(ConfigDomain):
     def activate(self):
         try:
             return self._update_trusted_cas(config.trusted_certificate_authorities)
-        except Exception, e:
+        except Exception:
             logger.exception()
             return ["Failed to create trusted CA file '%s': %s" %
                         (self.trusted_cas_file, traceback.format_exc())]
@@ -804,7 +804,7 @@ class WithPermissions(object):
         try:
             self._user_needs_permission(how)
             return True
-        except MKAuthException, e:
+        except MKAuthException:
             return False
 
 
@@ -1539,7 +1539,7 @@ class CREFolder(BaseFolder):
                         out.write(']\n\n')
 
 
-            for attr, topic in all_host_attributes():
+            for attr, _topic in all_host_attributes():
                 attrname = attr.name()
                 if attrname in effective:
                     custom_varname = attr.nagios_name()
@@ -1582,7 +1582,7 @@ class CREFolder(BaseFolder):
         # If the contact groups of the host are set to be used for the monitoring,
         # we create an according rule for the folder and an according rule for
         # each host that has an explicit setting for that attribute.
-        permitted_groups, contact_groups, use_for_services = self.groups()
+        _permitted_groups, contact_groups, use_for_services = self.groups()
         if contact_groups:
             out.write("\nhost_contactgroups.append(\n"
                       "  ( %r, [ '/' + FOLDER_PATH + '/' ], ALL_HOSTS ))\n" % list(contact_groups))
@@ -1613,7 +1613,7 @@ class CREFolder(BaseFolder):
         # reading in hosts.mk files where host_attributes is missing. Can
         # we drop this one day?
         attributes = {}
-        for attr, topic in all_host_attributes():
+        for attr, _topic in all_host_attributes():
             if isinstance(attr, HostTagAttribute):
                 tagvalue = attr.get_tag_value(host_tags)
                 attributes[attr.name()] = tagvalue
@@ -1945,7 +1945,7 @@ class CREFolder(BaseFolder):
         effective.update(self.attributes())
 
         # now add default values of attributes for all missing values
-        for host_attribute, topic in all_host_attributes():
+        for host_attribute, _topic in all_host_attributes():
             attrname = host_attribute.name()
             if attrname not in effective:
                 effective.setdefault(attrname, host_attribute.default_value())
@@ -1979,7 +1979,7 @@ class CREFolder(BaseFolder):
         while parent:
             effective_folder_attributes = parent.effective_attributes()
             parconf = get_folder_cgconf_from_attributes(effective_folder_attributes)
-            parent_permitted_groups, parent_host_contact_groups, parent_use_for_services = parent.groups()
+            parent_permitted_groups, parent_host_contact_groups, _parent_use_for_services = parent.groups()
 
             if parconf["recurse_perms"]: # Parent gives us its permissions
                 permitted_groups.update(parent_permitted_groups)
@@ -2009,7 +2009,7 @@ class CREFolder(BaseFolder):
         if how == "read" and config.user.may("wato.see_all_folders"):
             return
 
-        permitted_groups, folder_contactgroups, use_for_services = self.groups()
+        permitted_groups, _folder_contactgroups, _use_for_services = self.groups()
         user_contactgroups = userdb.contactgroups_of_user(config.user.id)
 
         for c in user_contactgroups:
@@ -2061,7 +2061,7 @@ class CREFolder(BaseFolder):
 
         url_vars = [ ("folder", self.path()) ]
         have_mode = False
-        for varname, value in add_vars:
+        for varname, _value in add_vars:
             if varname == "mode":
                 have_mode = True
                 break
@@ -2728,7 +2728,7 @@ class SearchFolder(BaseFolder):
 
             # Check attributes
             dont_match = False
-            for attr, topic in all_host_attributes():
+            for attr, _topic in all_host_attributes():
                 attrname = attr.name()
                 if attrname in self._criteria and  \
                     not attr.filter_matches(self._criteria[attrname], effective.get(attrname), host_name):
@@ -2858,7 +2858,7 @@ class CREHost(WithPermissionsAndAttributes):
 
         tags = set([])
         effective = self.effective_attributes()
-        for attr, topic in all_host_attributes():
+        for attr, _topic in all_host_attributes():
             value = effective.get(attr.name())
             tags.update(attr.get_tag_list(value))
 
@@ -2931,7 +2931,7 @@ class CREHost(WithPermissionsAndAttributes):
         if how == "write":
             config.user.need_permission("wato.edit_hosts")
 
-        permitted_groups, host_contact_groups, use_for_services = self.groups()
+        permitted_groups, _host_contact_groups, _use_for_services = self.groups()
         user_contactgroups = userdb.contactgroups_of_user(config.user.id)
 
         for c in user_contactgroups:
@@ -3791,7 +3791,7 @@ def declare_custom_host_attrs():
 # Read attributes from HTML variables
 def collect_attributes(for_what, do_validate = True, varprefix=""):
     host = {}
-    for attr, topic in all_host_attributes():
+    for attr, _topic in all_host_attributes():
         attrname = attr.name()
         if not html.var(for_what + "_change_%s" % attrname, False):
             continue
@@ -3892,7 +3892,7 @@ def load_configuration_settings(site_specific=False):
 
 def save_global_settings(vars, site_specific=False):
     per_domain = {}
-    for varname, (domain, valuespec, need_restart, allow_reset, in_global_settings) in g_configvars.items():
+    for varname, (domain, _valuespec, _need_restart, _allow_reset, _in_global_settings) in g_configvars.items():
         if varname not in vars:
             continue
         per_domain.setdefault(domain.ident, {})[varname] = vars[varname]
@@ -4051,7 +4051,7 @@ class SiteManagement(object):
 
         # Be compatible to old "disabled" value in socket attribute.
         # Can be removed one day.
-        for site_id, site in vars['sites'].items():
+        for site in vars['sites'].itervalues():
             socket = site.get("socket")
             if socket == 'disabled':
                 site['disabled'] = True
@@ -4488,12 +4488,10 @@ def update_distributed_wato_file(sites):
     # are currently in the process of saving the new
     # site configuration.
     distributed = False
-    found_local = False
     for siteid, site in sites.items():
         if site.get("replication"):
             distributed = True
         if config.site_is_local(siteid):
-            found_local = True
             create_distributed_wato_file(siteid, is_slave=False)
 
     # Remove the distributed wato file
@@ -4599,7 +4597,7 @@ def sync_changes_before_remote_automation(site_id):
 
     logger.info("Syncing %s" % site_id)
 
-    activation_id = manager.start([site_id], activate_foreign=True, prevent_activate=True)
+    manager.start([site_id], activate_foreign=True, prevent_activate=True)
 
     # Wait maximum 30 seconds for sync to finish
     timeout = 30
@@ -4661,8 +4659,9 @@ def get_event_console_sync_sites():
 
 
 def get_notification_sync_sites():
-    return sorted([ site_id for site_id, site in config.wato_slave_sites()
-                        if not config.site_is_local(site_id) ])
+    return sorted(site_id
+                  for site_id, _site in config.wato_slave_sites()
+                  if not config.site_is_local(site_id))
 
 
 # TODO: cleanup all call sites to this name
@@ -4756,7 +4755,7 @@ def automation_push_snapshot():
 
         # Create rule making this site only monitor our hosts
         create_distributed_wato_file(site_id, is_slave=True)
-    except Exception, e:
+    except Exception:
         raise MKGeneralException(_("Failed to deploy configuration: \"%s\". "
                                    "Please note that the site configuration has been synchronized "
                                    "partially.") % traceback.format_exc())
@@ -4804,7 +4803,7 @@ def verify_slave_site_config(site_id):
     pending = list(reversed(changes.grouped_changes()))
     if pending:
         message = _("There are %d pending changes that would get lost. The most recent are: ") % len(pending)
-        message += ", ".join([ change["text"] for change_id, change in pending[:10] ])
+        message += ", ".join(change["text"] for _change_id, change in pending[:10])
 
         raise MKGeneralException(message)
 
@@ -5077,13 +5076,13 @@ class ActivateChanges(object):
 
 
     def has_foreign_changes(self):
-        return any([ change for change_id, change in self._changes
-                     if self._is_foreign(change) ])
+        return any(change for _change_id, change in self._changes
+                   if self._is_foreign(change))
 
 
     def _has_foreign_changes_on_all_sites(self):
-        return any([ change for change_id, change in self._changes
-                     if self._is_foreign(change) and self._affects_all_sites(change) ])
+        return any(change for _change_id, change in self._changes
+                   if self._is_foreign(change) and self._affects_all_sites(change))
 
 
     def _is_foreign(self, change):
@@ -5740,18 +5739,12 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
 
 
     def _set_done_result(self, configuration_warnings):
-        has_warnings = False
-        for domain, warnings in configuration_warnings.items():
-            if warnings:
-                has_warnings = True
-                break
-
-        if not has_warnings:
-            self._set_result(PHASE_DONE, _("Success"), state=STATE_SUCCESS)
-        else:
+        if any(configuration_warnings.itervalues()):
             self._warnings = configuration_warnings
             details = self._render_warnings(configuration_warnings)
             self._set_result(PHASE_DONE, _("Activated"), details, state=STATE_WARNING)
+        else:
+            self._set_result(PHASE_DONE, _("Success"), state=STATE_SUCCESS)
 
 
     def _render_warnings(self, configuration_warnings):
@@ -6138,14 +6131,13 @@ def do_create_snapshot(data):
 
             proc = subprocess.Popen(command, stdin=None, close_fds=True,
                                     stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=prefix)
-            stdout, stderr = proc.communicate()
+            _stdout, stderr = proc.communicate()
             exit_code      = proc.wait()
             # Allow exit codes 0 and 1 (files changed during backup)
             if exit_code not in [0, 1]:
                 raise MKGeneralException("Error while creating backup of %s (Exit Code %d) - %s.\n%s" %
                                                         (name, exit_code, stderr, command))
 
-            subtar_size   = os.stat(path_subtar).st_size
             subtar_hash   = sha256(file(path_subtar).read()).hexdigest()
             subtar_signed = sha256(subtar_hash + snapshot_secret()).hexdigest()
             subtar_info[filename_subtar] = (subtar_hash, subtar_signed)
@@ -6419,7 +6411,7 @@ def parse_hosttag_title(title):
 def hosttag_topics(hosttags, auxtags):
     names = set([])
     for entry in hosttags + auxtags:
-        topic, title = parse_hosttag_title(entry[1])
+        topic, _title = parse_hosttag_title(entry[1])
         if topic:
             names.add((topic, topic))
     return list(names)
@@ -6983,7 +6975,6 @@ class HosttagsConfiguration(object):
             if tag.id:
                 # Make sure this ID is not used elsewhere
                 for tmp_group in self.tag_groups:
-                    ch = tmp_group.tags
                     # Do not compare the taggroup with itself
                     if tmp_group != tag_group:
                         for tmp_tag in tmp_group.tags:
@@ -7372,7 +7363,7 @@ def render_condition_editor(tag_specs, varprefix=""):
     auxtags = group_hosttags_by_topic(config.aux_tags())
     hosttags = group_hosttags_by_topic(config.host_tag_groups())
     all_topics = set([])
-    for topic, taggroups in auxtags + hosttags:
+    for topic, _taggroups in auxtags + hosttags:
         all_topics.add(topic)
     all_topics = list(all_topics)
     all_topics.sort()
@@ -7431,7 +7422,7 @@ def get_tag_conditions(varprefix=""):
     # Main tags
     tag_list = []
     for entry in config.host_tag_groups():
-        id, title, tags = entry[:3]
+        id, _title, tags = entry[:3]
         mode = html.var(varprefix + "tag_" + id)
         if len(tags) == 1:
             tagvalue = tags[0][0]
@@ -7444,7 +7435,7 @@ def get_tag_conditions(varprefix=""):
             tag_list.append("!" + tagvalue)
 
     # Auxiliary tags
-    for id, title in config.aux_tags():
+    for id, _title in config.aux_tags():
         mode = html.var(varprefix + "auxtag_" + id)
         if mode == "is":
             tag_list.append(id)
@@ -7804,7 +7795,7 @@ class RulesetCollection(object):
         # when only loading with only_varname.
         for varname in g_rulespecs.get_rulespecs():
             if ':' in varname:
-                dictname, subkey = varname.split(":")
+                dictname, _subkey = varname.split(":")
                 config[dictname] = {}
             else:
                 config[varname] = []
@@ -7875,7 +7866,7 @@ class RulesetCollection(object):
     # Groups the rulesets in 3 layers (main group, sub group, rulesets)
     def get_grouped(self):
         grouped_dict = {}
-        for name, ruleset in self._rulesets.items():
+        for ruleset in self._rulesets.itervalues():
             main_group = grouped_dict.setdefault(ruleset.rulespec.main_group_name, {})
             group_rulesets = main_group.setdefault(ruleset.rulespec.sub_group_name, [])
             group_rulesets.append(ruleset)
@@ -8110,7 +8101,7 @@ class Ruleset(object):
 
         # Store the matching rules for later result rendering
         self.search_matching_rules = []
-        for folder, rule_index, rule in self.get_rules():
+        for _folder, _rule_index, rule in self.get_rules():
             if rule.matches_search(search_options):
                 self.search_matching_rules.append(rule)
 
@@ -8362,7 +8353,7 @@ class Rule(object):
         try:
             self._initialize()
             self._parse_rule(rule_config)
-        except Exception, e:
+        except Exception:
             raise MKGeneralException(_("Invalid rule <tt>%s</tt>") % (rule_config,))
 
 
@@ -8552,9 +8543,7 @@ class Rule(object):
 
     def matches_host_and_item(self, host_folder, hostname, item):
         """Whether or not the given folder/host/item matches this rule"""
-        for reason in self.get_mismatch_reasons(host_folder, hostname, item):
-            return False
-        return True
+        return not any(True for _r in self.get_mismatch_reasons(host_folder, hostname, item))
 
 
     def get_mismatch_reasons(self, host_folder, hostname, item):
@@ -8687,7 +8676,7 @@ class Rule(object):
         current_folder = Folder.folder(current_folder)
         search_in_folders = [current_folder.name()]
         if do_recursion:
-            search_in_folders = [x.split("/")[-1] for x,y in current_folder.recursive_subfolder_choices()]
+            search_in_folders = [x.split("/")[-1] for x, _y in current_folder.recursive_subfolder_choices()]
         return search_in_folders
 
 
@@ -9051,7 +9040,7 @@ def find_usages_of_group_in_rules(name, varnames):
     rulesets.load()
     for varname in varnames:
         ruleset = rulesets.get(varname)
-        for folder, rulenr, rule in ruleset.get_rules():
+        for _folder, _rulenr, rule in ruleset.get_rules():
             if rule.value == name:
                 used_in.append(("%s: %s" % (_("Ruleset"), ruleset.title()),
                                folder_preserving_link([("mode", "edit_ruleset"), ("varname", varname)])))
@@ -9078,7 +9067,7 @@ def find_usages_of_contact_group(name):
     global_config = load_configuration_settings()
 
     # Used in default_user_profile?
-    domain, valuespec, need_restart, allow_reset, in_global_settings = configvars()['default_user_profile']
+    domain, valuespec, _need_restart, _allow_reset, _in_global_settings = configvars()['default_user_profile']
     configured = global_config.get('default_user_profile', {})
     default_value = domain().default_globals()["default_user_profile"]
     if (configured and name in configured['contactgroups']) \
@@ -9088,7 +9077,7 @@ def find_usages_of_contact_group(name):
 
     # Is the contactgroup used in mkeventd notify (if available)?
     if 'mkeventd_notify_contactgroup' in configvars():
-        domain, valuespec, need_restart, allow_reset, in_global_settings = configvars()['mkeventd_notify_contactgroup']
+        domain, valuespec, _need_restart, _allow_reset, _in_global_settings = configvars()['mkeventd_notify_contactgroup']
         configured = global_config.get('mkeventd_notify_contactgroup')
         default_value = domain().default_globals()["mkeventd_notify_contactgroup"]
         if (configured and name == configured) \
@@ -9182,7 +9171,6 @@ def register_notification_parameters(scriptname, valuespec):
         valuespec)
 
 def verify_password_policy(password):
-    policy = config.password_policy
     min_len = config.password_policy.get('min_length')
     if min_len and len(password) < min_len:
         raise MKUserError('password', _('The given password is too short. It must have at least %d characters.') % min_len)
@@ -9208,7 +9196,7 @@ def verify_password_policy(password):
 def notification_script_choices():
     choices = []
     for choice in user_script_choices("notifications") + [(None, _("ASCII Email (legacy)")) ]:
-        notificaton_plugin_name, notification_plugin_title = choice
+        notificaton_plugin_name, _notification_plugin_title = choice
         if config.user.may("notification_plugin.%s" % notificaton_plugin_name):
             choices.append( choice )
     return choices
@@ -9465,15 +9453,12 @@ def validate_user_attributes(all_users, user_id, user_attrs, is_new_user = True)
         raise MKUserError("locked", _("You cannot lock your own account!"))
 
     # Authentication: Password or Secret
-    auth_method = user_attrs.get("authmethod")
     if "automation_secret" in user_attrs:
         secret = user_attrs["automation_secret"]
         if len(secret) < 10:
             raise MKUserError('secret', _("Please specify a secret of at least 10 characters length."))
     else:
         password =  user_attrs.get("password")
-        password2 = user_attrs.get("password2")
-
         if password:
             verify_password_policy(password)
 
@@ -9694,12 +9679,8 @@ def _mask_bits_to_int(n):
 
 # This will not scale well. Do you have a better idea?
 def _known_ip_addresses():
-    addresses = []
-    for hostname, host in Host.all().items():
-        address = host.attribute("ipaddress")
-        if address:
-            addresses.append(address)
-    return addresses
+    addresses = (host.attribute("ipaddress") for host in Host.all().itervalues())
+    return [address for address in addresses if address]
 
 
 def _excludes_by_regexes(addresses, exclude_specs):
@@ -9733,7 +9714,7 @@ def _scan_ip_addresses(folder, ip_addresses):
     # Initalize all workers
     threads = []
     found_hosts = []
-    for t_num in range(parallel_pings):
+    for _t_num in range(parallel_pings):
         t = threading.Thread(target = _ping_worker, args = [ip_addresses, found_hosts])
         t.daemon = True
         threads.append(t)
@@ -9958,7 +9939,7 @@ class ACTest(object):
             total_result = ACResult.merge(*list(self.execute()))
             total_result.from_test(self)
             yield total_result
-        except Exception, e:
+        except Exception:
             logger.exception()
             result = ACResultCRIT("<pre>%s</pre>" %
                 _("Failed to execute the test %s: %s") % (html.attrencode(self.__class__.__name__),
@@ -10236,7 +10217,8 @@ def site_neutral_path(path):
 
 def has_agent_bakery():
     try:
-        import cmk.gui.cee.agent_bakery
+        # The suppression below is OK, we just want to check if the module is there.
+        import cmk.gui.cee.agent_bakery # pylint: disable=unused-variable
         return True
     except ImportError:
         return False
@@ -10668,7 +10650,7 @@ class CMEFolder(CREFolder):
     def create_hosts(self, entries):
         customer_id = self._get_customer_id()
         if customer_id != managed.default_customer_id():
-            for hostname, attributes, cluster_nodes in entries:
+            for hostname, attributes, _cluster_nodes in entries:
                 self.check_modify_host(hostname, attributes)
 
         super(CMEFolder, self).create_hosts(entries)

@@ -805,7 +805,7 @@ class ModeFolder(WatoMode):
         html.open_div(class_="infos")
         html.open_div(class_="infos_content")
         groups = userdb.load_group_information().get("contact", {})
-        permitted_groups, folder_contact_groups, use_for_services = subfolder.groups()
+        permitted_groups, _folder_contact_groups, _use_for_services = subfolder.groups()
         for num, pg in enumerate(permitted_groups):
             cgalias = groups.get(pg, {'alias': pg})['alias']
             html.icon(_("Contactgroups that have permission on this folder"), "contactgroups")
@@ -930,7 +930,7 @@ class ModeFolder(WatoMode):
 
         # Compute colspan for bulk actions
         colspan = 6
-        for attr, topic in watolib.all_host_attributes():
+        for attr, _topic in watolib.all_host_attributes():
             if attr.show_in_table():
                 colspan += 1
         if not self._folder.locked_hosts() and config.user.may("wato.edit_hosts") and config.user.may("wato.move_hosts"):
@@ -1001,7 +1001,7 @@ class ModeFolder(WatoMode):
             html.a(hostname, href=host.edit_url())
 
             # Show attributes
-            for attr, topic in watolib.all_host_attributes():
+            for attr, _topic in watolib.all_host_attributes():
                 if attr.show_in_table():
                     attrname = attr.name()
                     if attrname in host.attributes():
@@ -1023,7 +1023,7 @@ class ModeFolder(WatoMode):
             table.cell(_('Auth'), html.render_icon(icon, title), sortable=False)
 
             # Permissions and Contact groups - through complete recursion and inhertance
-            permitted_groups, host_contact_groups, use_for_services = host.groups()
+            permitted_groups, host_contact_groups, _use_for_services = host.groups()
             table.cell(_("Permissions"), HTML(", ").join(map(render_contact_group, permitted_groups)))
             table.cell(_("Contact Groups"), HTML(", ").join(map(render_contact_group, host_contact_groups)))
 
@@ -1368,11 +1368,9 @@ class FolderMode(WatoMode):
 
         # Attributes inherited to hosts
         if new:
-            attributes = {}
             parent = watolib.Folder.current()
             myself = None
         else:
-            attributes = watolib.Folder.current().attributes()
             parent = watolib.Folder.current().parent()
             myself = watolib.Folder.current()
 
@@ -1908,7 +1906,7 @@ class ModeBulkRenameHost(WatoMode):
 
         message = _("<b>Do you really want to rename to following hosts? This involves a restart of the monitoring core!</b>")
         message += "<table>"
-        for folder, host_name, target_name in renamings:
+        for _folder, host_name, target_name in renamings:
             message += u"<tr><td>%s</td><td> → %s</td></tr>" % (host_name, target_name)
         message += "</table>"
 
@@ -1934,7 +1932,7 @@ class ModeBulkRenameHost(WatoMode):
 
     def _renaming_collision_error(self, renamings):
         name_collisions = set()
-        new_names = [ new_name for (folder, old_name, new_name) in renamings ]
+        new_names = [ new_name for _folder, _old_name, new_name in renamings ]
         all_host_names = watolib.Host.all().keys()
         for name in new_names:
             if name in all_host_names:
@@ -2238,7 +2236,6 @@ def rename_host_as_cluster_node(all_hosts, oldname, newname):
     clusters = []
     for somehost in all_hosts.values():
         if somehost.is_cluster():
-            nodes = somehost.cluster_nodes()
             if somehost.rename_cluster_node(oldname, newname):
                 clusters.append(somehost.name())
     if clusters:
@@ -2282,7 +2279,7 @@ def rename_host_in_rulesets(folder, oldname, newname):
 
         changed = False
         for varname, ruleset in rulesets.get_rulesets().items():
-            for rule_folder, rulenr, rule in ruleset.get_rules():
+            for _rule_folder, _rulenr, rule in ruleset.get_rules():
                 # TODO: Move to rule?
                 if watolib.rename_host_in_list(rule.host_list, oldname, newname):
                     changed_rulesets.append(varname)
@@ -2324,7 +2321,7 @@ def rename_host_in_event_rules(oldname, newname):
 
     users = userdb.load_users(lock = True)
     some_user_changed = False
-    for userid, user in users.items():
+    for user in users.itervalues():
         if user.get("notification_rules"):
             rules = user["notification_rules"]
             num_changed = rename_in_event_rules(rules)
@@ -2352,7 +2349,7 @@ def rename_host_in_event_rules(oldname, newname):
                 alert_handling.save_alert_handler_rules(rules)
 
     # Notification channels of flexible notifications also can have host conditions
-    for userid, user in users.items():
+    for user in users.itervalues():
         method = user.get("notification_method")
         if method and type(method) == tuple and method[0] == "flexible":
             channels_changed = 0
@@ -2415,7 +2412,6 @@ def rename_host_in_bi(oldname, newname):
 def rename_hosts_in_check_mk(renamings):
     action_counts = {}
     for site_id, name_pairs in group_renamings_by_site(renamings).items():
-        site = config.site(site_id)
         message = _("Renamed host %s") % ", ".join(
             [_("%s into %s") % (oldname, newname) for (oldname, newname) in name_pairs])
 
@@ -2721,7 +2717,7 @@ class ModeObjectParameters(WatoMode):
         elif origin == "classic":
             rule_nr  = serviceinfo["rule_nr"]
             rules    = all_rulesets.get("custom_checks").get_rules()
-            rule_folder, rule_index, rule = rules[rule_nr]
+            rule_folder, rule_index, _rule = rules[rule_nr]
 
             url = watolib.folder_preserving_link([('mode', 'edit_ruleset'), ('varname', "custom_checks"), ('host', self._hostname)])
             forms.section(html.render_a(_("Command Line"), href=url))
@@ -3346,9 +3342,9 @@ class ModeDiscovery(WatoMode):
         config.user.need_permission("wato.service_discovery_to_ignored")
         config.user.need_permission("wato.service_discovery_to_removed")
 
-        counts, failed_hosts = watolib.check_mk_automation(self._host.site_id(), "inventory",
+        counts, _failed_hosts = watolib.check_mk_automation(self._host.site_id(), "inventory",
                                                    ["@scan", "refresh", hostname])
-        count_added, count_removed, count_kept, count_new = counts[hostname]
+        count_added, _count_removed, _count_kept, _count_new = counts[hostname]
         message = _("Refreshed check configuration of host '%s' with %d services") % \
                     (hostname, count_added)
         add_service_change(self._host, "refresh-autochecks", message)
@@ -3359,8 +3355,8 @@ class ModeDiscovery(WatoMode):
         check_table = self._get_check_table()
         services_to_save, remove_disabled_rule, add_disabled_rule = {}, [], []
         apply_changes = False
-        for table_source, check_type, checkgroup, item, paramstring, params, \
-            descr, state, output, perfdata in check_table:
+        for table_source, check_type, _checkgroup, item, paramstring, _params, \
+            descr, _state, _output, _perfdata in check_table:
 
             table_target = self._get_table_target(table_source, check_type, item)
 
@@ -3576,7 +3572,7 @@ class ModeDiscovery(WatoMode):
 
 
     def _get_rule_of_host(self, ruleset, value):
-        for folder, index, rule in ruleset.get_rules():
+        for _folder, _index, rule in ruleset.get_rules():
             if rule.is_discovery_rule_of(self._host) and rule.value == value:
                 return rule
         return None
@@ -3691,8 +3687,8 @@ class ModeDiscovery(WatoMode):
 
 
     def _check_row(self, check, show_bulk_actions):
-        table_source, check_type, checkgroup, item, paramstring, params, \
-            descr, state, output, perfdata = check
+        table_source, check_type, checkgroup, item, _paramstring, params, \
+            descr, state, output, _perfdata = check
 
         statename = short_service_state_name(state, "")
         if statename == "":
@@ -3808,8 +3804,8 @@ class ModeDiscovery(WatoMode):
             html.empty_icon()
             return
 
-        table_source, check_type, checkgroup, item, paramstring, params, \
-            descr, state, output, perfdata = check
+        table_source, check_type, checkgroup, item, _paramstring, _params, \
+            descr, _state, _output, _perfdata = check
         checkbox_name = self._checkbox_name(check_type, item)
 
         num_buttons = 0
@@ -4160,7 +4156,7 @@ class ModeBulkImport(WatoMode):
 
         upload_info = self._vs_upload().from_html_vars("_upload")
         self._vs_upload().validate_value(upload_info, "_upload")
-        file_name, mime_type, content = upload_info["file"]
+        _file_name, _mime_type, content = upload_info["file"]
 
         file_id = "%s-%d" % (config.user.id, int(time.time()))
 
@@ -4714,9 +4710,6 @@ class ModeBulkDiscovery(WatoMode):
         else:
             entries                    = self._recurse_hosts(watolib.Folder.current())
             items                      = []
-            hostnames                  = []
-            current_folder             = None
-            num_hosts_in_current_chunk = 0
             for host_name, folder in entries:
                 if restrict_to_hosts != None and host_name not in restrict_to_hosts:
                     continue
@@ -4920,7 +4913,7 @@ class ModeBulkCleanup(WatoMode):
 
     def _bulk_collect_cleaned_attributes(self):
         to_clean = []
-        for attr, topic in watolib.all_host_attributes():
+        for attr, _topic in watolib.all_host_attributes():
             attrname = attr.name()
             if html.get_checkbox("_clean_" + attrname) == True:
                 to_clean.append(attrname)
@@ -4949,7 +4942,7 @@ class ModeBulkCleanup(WatoMode):
 
     def _select_attributes_for_bulk_cleanup(self, hosts):
         num_shown = 0
-        for attr, topic in watolib.all_host_attributes():
+        for attr, _topic in watolib.all_host_attributes():
             attrname = attr.name()
 
             # only show attributes that at least on host have set
@@ -4968,7 +4961,6 @@ class ModeBulkCleanup(WatoMode):
             while container:
                 if container.has_explicit_attribute(attrname):
                     is_inherited = True
-                    inherited_value = container.attribute(attrname)
                     break
                 container = container.parent()
 
@@ -5671,7 +5663,7 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
 
     def _change_table(self):
         table.begin("changes", sortable=False, searchable=False, css="changes", limit=None)
-        for change_id, change in reversed(self._changes):
+        for _change_id, change in reversed(self._changes):
             css = []
             if self._is_foreign(change):
                 css.append("foreign")
@@ -7053,10 +7045,10 @@ class ModeEditLDAPConnection(LDAPMode):
                     + other_elements
                 ,
                 headers = [
-                    (_("General Properties"), [ key for key, vs in general_elements ]),
-                    (_("LDAP Connection"),    [ key for key, vs in connection_elements ]),
-                    (_("Users"),              [ key for key, vs in user_elements ]),
-                    (_("Groups"),             [ key for key, vs in group_elements ]),
+                    (_("General Properties"), [ key for key, _vs in general_elements ]),
+                    (_("LDAP Connection"),    [ key for key, _vs in connection_elements ]),
+                    (_("Users"),              [ key for key, _vs in user_elements ]),
+                    (_("Groups"),             [ key for key, _vs in group_elements ]),
                     (_("Attribute Sync Plugins"), [ "active_plugins" ]),
                     (_("Other"),              [ "cache_livetime" ]),
                 ],
@@ -7158,7 +7150,7 @@ class ModeEditGlobals(GlobalSettingsMode):
 
         action = html.var("_action")
 
-        domain, valuespec, need_restart, allow_reset, in_global_settings = watolib.configvars()[varname]
+        domain, valuespec, need_restart, _allow_reset, _in_global_settings = watolib.configvars()[varname]
         def_value = self._default_values[varname]
 
         if action == "reset" and not is_a_checkbox(valuespec):
@@ -7452,7 +7444,7 @@ class NotificationsMode(EventsMode):
             table.begin(title=title, limit=None, sortable=False)
 
             if analyse:
-                analyse_rules, analyse_plugins = analyse
+                analyse_rules, _analyse_plugins = analyse
 
             # have_match = False
             for nr, rule in enumerate(rules):
@@ -7461,7 +7453,7 @@ class NotificationsMode(EventsMode):
                 # Analyse
                 if analyse:
                     table.cell(css="buttons")
-                    what, anarule, reason = analyse_rules[nr + start_nr]
+                    what, _anarule, reason = analyse_rules[nr + start_nr]
                     if what == "match":
                         html.icon(_("This rule matches"), "rulematch")
                     elif what == "miss":
@@ -7491,7 +7483,7 @@ class NotificationsMode(EventsMode):
                     html.icon_button(delete_url, _("Delete this notification rule"), "delete")
                 else:
                     table.cell("", css="buttons")
-                    for x in range(4):
+                    for _x in xrange(4):
                         html.empty_icon_button()
 
                 table.cell("", css="narrow")
@@ -7650,7 +7642,7 @@ class ModeNotifications(NotificationsMode):
         elif html.has_var("_replay"):
             if html.check_transaction():
                 nr = int(html.var("_replay"))
-                result = watolib.check_mk_local_automation("notification-replay", [str(nr)], None)
+                watolib.check_mk_local_automation("notification-replay", [str(nr)], None)
                 return None, _("Replayed notifiation number %d") % (nr + 1)
 
         else:
@@ -7710,7 +7702,7 @@ class ModeNotifications(NotificationsMode):
         if current_settings.get("notification_fallback_email"):
             return True
 
-        for user_id, user in userdb.load_users(lock=False).items():
+        for user in userdb.load_users(lock=False).itervalues():
             if user.get("fallback_contact", False):
                 return True
 
@@ -8584,7 +8576,7 @@ class ModeEditSiteGlobals(ModeSites, GlobalSettingsMode):
         if not varname:
             return
 
-        domain, valuespec, need_restart, allow_reset, in_global_settings = watolib.configvars()[varname]
+        _domain, valuespec, need_restart, _allow_reset, _in_global_settings = watolib.configvars()[varname]
         def_value = self._global_settings.get(varname, self._default_values[varname])
 
         if action == "reset" and not is_a_checkbox(valuespec):
@@ -8632,7 +8624,6 @@ class ModeEditSiteGlobals(ModeSites, GlobalSettingsMode):
 
 
     def page(self):
-        search = get_search_expression()
         html.help(_("Here you can configure global settings, that should just be applied "
                     "on that site. <b>Note</b>: this only makes sense if the site "
                     "is part of a distributed setup."))
@@ -8868,7 +8859,7 @@ class ModeUsers(WatoMode):
                 job.start()
 
                 self._job_snapshot = job.get_status_snapshot()
-            except Exception, e:
+            except Exception:
                 logger.exception()
                 raise MKUserError(None, traceback.format_exc().replace('\n', '<br>\n'))
 
@@ -9050,7 +9041,6 @@ class ModeUsers(WatoMode):
             table.cell(_("Authentication"), auth_method)
 
             table.cell(_("State"))
-            locked = user.get("locked", False)
             if user.get("locked", False):
                 html.icon(_('The login is currently locked'), 'user_locked')
 
@@ -10017,8 +10007,8 @@ class ModeEditRole(RoleManagement, WatoMode):
              "permissions that are on default will reflect the new base role."))
 
         # Loop all permission sections, but sorted plz
-        for section, (prio, section_title, do_sort) in sorted(config.permission_sections.iteritems(),
-                                                     key = lambda x: x[1][0], reverse = True):
+        for section, (_prio, section_title, do_sort) in sorted(config.permission_sections.iteritems(),
+                                                               key = lambda x: x[1][0], reverse = True):
             # Loop all permissions
             permlist = config.permissions_by_order[:]
             if do_sort:
@@ -10089,8 +10079,8 @@ class ModeRoleMatrix(WatoMode):
         role_list = sorted(userdb.load_roles().items(), key = lambda a: (a[1]["alias"],a[0]))
 
         # Loop all permission sections, but sorted plz
-        for section, (prio, section_title, do_sort) in sorted(config.permission_sections.iteritems(),
-                                                     key = lambda x: x[1][0], reverse = True):
+        for section, (_prio, section_title, do_sort) in sorted(config.permission_sections.iteritems(),
+                                                               key = lambda x: x[1][0], reverse = True):
 
             html.begin_foldable_container("perm_matrix", section, section == "general", section_title, indent = True)
 
@@ -10859,7 +10849,7 @@ def change_host_tags_in_folders(tag_id, operations, mode, folder):
         if need_save:
             try:
                 folder.save()
-            except MKAuthException, e:
+            except MKAuthException:
                 # Ignore MKAuthExceptions of locked host.mk files
                 pass
 
@@ -10878,7 +10868,7 @@ def change_host_tags_in_folders(tag_id, operations, mode, folder):
 def change_host_tags_in_hosts(folder, tag_id, operations, mode, hostlist):
     need_save = False
     affected_hosts = []
-    for hostname, host in hostlist.items():
+    for host in hostlist.itervalues():
         attributes = host.attributes()
         attrname = "tag_" + tag_id
         if attrname in attributes:
@@ -10900,7 +10890,7 @@ def change_host_tags_in_hosts(folder, tag_id, operations, mode, hostlist):
     if need_save:
         try:
             folder.save_hosts()
-        except MKAuthException, e:
+        except MKAuthException:
             # Ignore MKAuthExceptions of locked host.mk files
             pass
     return affected_hosts
@@ -10918,8 +10908,7 @@ def change_host_tags_in_rules(folder, operations, mode):
     rulesets = watolib.FolderRulesets(folder)
     rulesets.load()
 
-    for varname, ruleset in rulesets.get_rulesets().items():
-        rules_to_delete = set([])
+    for ruleset in rulesets.get_rulesets().itervalues():
         for _folder, _rulenr, rule in ruleset.get_rules():
             # Handle deletion of complete tag group
             if type(operations) == list: # this list of tags to remove
@@ -11557,7 +11546,6 @@ class ModeEditRuleset(WatoMode):
                 if last_folder != None:
                     table.end()
 
-                first_in_group = True
                 last_folder = folder
 
                 alias_path = folder.alias_path(show_main = False)
@@ -11568,10 +11556,6 @@ class ModeEditRuleset(WatoMode):
             else:
                 if skip_this_folder:
                     continue
-
-                first_in_group = False
-
-            last_in_group = rulenr == ruleset.num_rules_in_folder(folder) - 1
 
             css = []
             if rule.is_disabled():
@@ -11697,12 +11681,7 @@ class ModeEditRuleset(WatoMode):
     # TODO: Refactor this whole method
     def _rule_cells(self, rule):
         rulespec  = rule.ruleset.rulespec
-        varname   = rule.ruleset.name
-        tag_specs = rule.tag_specs
-        host_list = rule.host_list
-        item_list = rule.item_list
         value     = rule.value
-        folder    = rule.folder
         rule_options = rule.rule_options
 
         # Conditions
@@ -12285,7 +12264,6 @@ class EditRuleMode(WatoMode):
             host_list = ALL_HOSTS
         else:
             negate = html.get_checkbox("negate_hosts")
-            nr = 0
             vs = ListOfStrings()
             host_list = vs.from_html_vars("hostlist")
             vs.validate_value(host_list, "hostlist")
@@ -12685,15 +12663,13 @@ def user_profile_async_replication_page():
     html.context_button(_('User Profile'), 'user_profile.py', 'back')
     html.end_context_buttons()
 
-    sites = [site_id for site_id, site in config.user.authorized_login_sites()]
+    sites = [site_id for site_id, _site in config.user.authorized_login_sites()]
     user_profile_async_replication_dialog(sites=sites)
 
     html.footer()
 
 
 def user_profile_async_replication_dialog(sites):
-    repstatus = watolib.load_replication_status()
-
     html.p(_('In order to activate your changes available on all remote sites, your user profile needs '
              'to be replicated to the remote sites. This is done on this page now. Each site '
              'is being represented by a single image which is first shown gray and then fills '
@@ -12704,8 +12680,6 @@ def user_profile_async_replication_dialog(sites):
     num_replsites = 0
     for site_id in sites:
         site = config.sites[site_id]
-        srs  = repstatus.get(site_id, {})
-
         if not "secret" in site:
             status_txt = _('Not logged in.')
             start_sync = False
@@ -13074,7 +13048,6 @@ class PageFetchAgentOutput(AgentOutputPage):
 
         self._action()
 
-        job_snapshot = self._job.get_status_snapshot()
         if html.has_var("_start") and not self._job.is_running():
             self._job.start()
 
@@ -13495,11 +13468,8 @@ class ModePatternEditor(WatoMode):
 
         # Loop all rules for this ruleset
         already_matched = False
-        last_folder = None
         abs_rulenr = 0
         for folder, rulenr, rule in ruleset.get_rules():
-            last_in_group = rulenr == ruleset.num_rules_in_folder(folder) - 1
-
             # Check if this rule applies to the given host/service
             if self._hostname:
                 # If hostname (and maybe filename) try match it
@@ -13522,7 +13492,6 @@ class ModePatternEditor(WatoMode):
                 pattern_list = pattern_list["reclassify_patterns"]
 
             # Each rule can hold no, one or several patterns. Loop them all here
-            odd = "odd"
             for state, pattern, comment in pattern_list:
                 match_class = ''
                 disp_match_txt = ''
@@ -13634,7 +13603,7 @@ class ModeCheckPlugins(WatoMode):
 
         self._has_second_level = None
         if self._topic and not self._search:
-            for t, has_second_level, title, helptext in self._man_page_catalog_topics():
+            for t, has_second_level, title, _helptext in self._man_page_catalog_topics():
                 if t == self._path[0]:
                     self._has_second_level = has_second_level
                     self._topic_title = title
@@ -13686,7 +13655,7 @@ class ModeCheckPlugins(WatoMode):
 
         else:
             menu = MainMenu()
-            for topic, has_second_level, title, helptext in self._man_page_catalog_topics():
+            for topic, _has_second_level, title, helptext in self._man_page_catalog_topics():
                 menu.add_item(MenuItem(
                     mode_or_url=html.makeuri([("topic", topic)]),
                     title=title,
@@ -13910,8 +13879,6 @@ class ModeCheckManPage(WatoMode):
 
     def buttons(self):
         global_buttons()
-        path = self._manpage["header"]["catalog"]
-
         if html.var("back"):
             back_url = html.var("back")
             html.context_button(_("Back"), back_url, "back")
@@ -14220,7 +14187,7 @@ class ModeDownloadAgents(WatoMode):
 
         file_titles = {}
         other_sections = []
-        for root, dirs, files in os.walk(cmk.paths.agents_dir):
+        for root, _dirs, files in os.walk(cmk.paths.agents_dir):
             file_paths = []
             relpath = root.split('agents')[1]
             if relpath not in banned_paths:
@@ -14385,7 +14352,7 @@ def execute_network_scan_job():
 # folder object.
 def find_folder_to_scan():
     folder_to_scan = None
-    for folder_path, folder in watolib.Folder.all_folders().items():
+    for folder in watolib.Folder.all_folders().itervalues():
         scheduled_time = folder.next_network_scan_at()
         if scheduled_time != None and scheduled_time < time.time():
             if folder_to_scan == None:
@@ -14668,7 +14635,7 @@ def configure_attributes(new, hosts, for_what, parent, myself=None, without_attr
             # "bulk": determine, if this attribute has the same setting for all hosts.
             values = []
             num_haveit = 0
-            for host_name, host in hosts.items():
+            for host in hosts.itervalues():
                 if host and host.has_explicit_attribute(attrname):
                     num_haveit += 1
                     if host.attribute(attrname) not in values:
@@ -14710,7 +14677,6 @@ def configure_attributes(new, hosts, for_what, parent, myself=None, without_attr
                         break
 
                     container = container.parent()
-                    what = "folder"
 
             if not container: # We are the root folder - we inherit the default values
                 inherited_from = _("Default value")
@@ -14833,7 +14799,7 @@ def configure_attributes(new, hosts, for_what, parent, myself=None, without_attr
                     value = inherited_value
 
             if for_what != "host_search" and not (for_what == "bulk" and not unique):
-                tdclass, content = attr.paint(value, "")
+                _tdclass, content = attr.paint(value, "")
                 if not content:
                     content = _("empty")
 

@@ -103,7 +103,7 @@ class MEIFolderCleaner(object):
                     continue
 
                 shutil.rmtree(path)
-            except Exception, e:
+            except Exception:
                 # TODO: introduce verbose mode for mk_logwatch
                 pass
 #.
@@ -193,7 +193,7 @@ def read_config():
     config_lines = []
     try:
         config_lines += [ line.rstrip() for line in filter(is_not_comment, file(config_filename).readlines()) ]
-    except IOError, e:
+    except IOError:
         if debug:
             raise
 
@@ -370,7 +370,6 @@ def process_logfile(logfile, patterns, opt, status):
     os.lseek(file_desc, offset, 0) # os.SEEK_SET not available in Python 2.4
     if os_type == "windows":
         import io # Available with python 2.6
-        import codecs
         # Some windows files are encoded in utf_16
         # Peak the first two bytes to determine the encoding...
         peak_handle = os.fdopen(file_desc, "rb")

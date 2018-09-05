@@ -154,7 +154,6 @@ def display_on_segment(conn, settings, text):
     #      |______|
     #        0x08
 
-    DIGITS = []
     CHARACTERS = {
         "0" : 0x3f, "1" : 0x06, "2" : 0x5b, "3" : 0x4f, "4" : 0x66,
         "5" : 0x6d, "6" : 0x7d, "7" : 0x07, "8" : 0x7f, "9" : 0x6f,
@@ -245,7 +244,7 @@ def main():
                         dest="brightness", default=settings['segment_display_brightness'],
                         help="brightness of the 7-segment display (0-7)")
 
-    (options, args) = parser.parse_args()
+    options, _args = parser.parse_args()
 
     settings = {
         'host': options.host,

@@ -106,7 +106,7 @@ def get_allnet_ip_sensoric_info():
     try:
         req = urllib2.Request(url, None, headers)
         handle = urllib2.urlopen(req)
-    except Exception, e:
+    except Exception:
         if opt_debug:
             sys.stdout.write('----------------------------\n')
             sys.stdout.write(traceback.format_exc())

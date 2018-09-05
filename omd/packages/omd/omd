@@ -271,7 +271,7 @@ def dialog_regex(title, text, regex, value, oktext, canceltext):
 
 
 def dialog_yesno(text, yeslabel = "yes", nolabel = "no"):
-    state, response = run_dialog(["--yes-label", yeslabel, "--no-label", nolabel, "--yesno", text, "0", "0"])
+    state, _response = run_dialog(["--yes-label", yeslabel, "--no-label", nolabel, "--yesno", text, "0", "0"])
     return state
 
 
@@ -385,7 +385,8 @@ def ask_user_choices(title, message, choices):
                 break
     sys.stdout.write(empty_line)
 
-    choicetxt = (tty_bold + tty_magenta + "/").join([(tty_bold + tty_white + char + tty_normal + tty_bgmagenta) for (char, (c,t)) in zip(chars, choices)])
+    choicetxt = (tty_bold + tty_magenta + "/").join(tty_bold + tty_white + char + tty_normal + tty_bgmagenta
+                                                    for char, _c in zip(chars, choices))
     l = len(choices) * 2 - 1
     sys.stdout.write(" %s %s" % (tty_bgmagenta, choicetxt))
     sys.stdout.write(" ==> %s   %s" % (tty_bgred, tty_bgmagenta))
@@ -882,7 +883,7 @@ def walk_skel(root, handler, args, depth_first, exclude_if_in = None, relbase = 
                 try:
                     handler(path, *args)
                     todo = False
-                except Exception, e:
+                except Exception:
                     todo = False
                     sys.stderr.write(error * 40 + "\n")
                     sys.stderr.write(error + " Exception      %s\n" % (path))
@@ -926,7 +927,7 @@ def walk_skel(root, handler, args, depth_first, exclude_if_in = None, relbase = 
 def patch_skeleton_files(old, new):
     skelroot = "/omd/versions/%s/skel" % OMD_VERSION
     os.chdir(skelroot)  # make relative paths
-    for dirpath, dirnames, filenames in os.walk("."):
+    for dirpath, _dirnames, filenames in os.walk("."):
         if dirpath.startswith("./"):
             dirpath = dirpath[2:]
         targetdir = site_dir(new) + "/" + dirpath
@@ -1060,7 +1061,6 @@ def merge_update_file(relpath, old_version, new_version):
         "###ROOT###" : g_sitedir,
     }
     user_path = g_sitedir + "/" + relpath
-    content = file(user_path).read()
     permissions = os.stat(user_path).st_mode
 
     def try_merge():
@@ -1243,13 +1243,13 @@ def update_file(relpath, old_version, new_version, userdir, old_perms):
     user_type = filetype(user_path)
 
     # compare our new version with the user's version
-    type_differs, content_differs, differs = file_status(user_path, new_path)
+    _type_differs, _content_differs, differs = file_status(user_path, new_path)
 
     # compare our old version with the user's version
     user_changed_type, user_changed_content, user_changed = file_status(old_path, user_path)
 
     # compare our old with our new version
-    we_changed_type, we_changed_content, we_changed = file_status(old_path, new_path)
+    _we_changed_type, _we_changed_content, we_changed = file_status(old_path, new_path)
 
     non_empty_directory = not os.path.islink(user_path) and os.path.isdir(user_path) and bool(os.listdir(user_path))
 
@@ -1571,7 +1571,7 @@ def tmpfs_mounted(sitename):
     path_suffix = "sites/%s/tmp" % sitename
     for line in file("/proc/mounts"):
         try:
-            device, mp, fstype, options, dump, fsck = line.split()
+            _device, mp, fstype, _options, _dump, _fsck = line.split()
             if mp.endswith(path_suffix) and fstype == 'tmpfs':
                 return True
         except:
@@ -1657,7 +1657,7 @@ def unmount_tmpfs(sitename, output = True, kill = False):
         if output:
             sys.stdout.write("Unmounting temporary filesystem...")
 
-        for t in range(0, 10):
+        for _t in xrange(10):
             if os.system("umount '%s'" % tmp_dir(sitename)) == 0:
                 if output:
                     ok()
@@ -2009,7 +2009,7 @@ def config_load_hook(hook_name):
 def load_hook_dependencies():
     for hook_name in sort_hooks(g_config_hooks.keys()):
         hook = g_config_hooks[hook_name]
-        exitcode, content = call_hook(hook_name, ["depends"])
+        exitcode, _content = call_hook(hook_name, ["depends"])
         if exitcode:
             hook["active"] = False
         else:
@@ -2077,7 +2077,7 @@ def read_config_change_commands():
         try:
             key, value = line.split("=", 1)
             settings.append((key, value))
-        except ValueError, e:
+        except ValueError:
             bail_out("Invalid config change command: %r" % line)
     return settings
 
@@ -2092,7 +2092,7 @@ def validate_config_change_commands(settings):
         # Check if value is valid. Choices are either a list of allowed
         # keys or a regular expression
         if type(hook["choices"]) == list:
-            choices = [ var for (var, descr) in hook["choices"] ]
+            choices = [ var for var, _descr in hook["choices"] ]
             if value not in choices:
                 bail_out("Invalid value %r for %r. Allowed are: %s\n" % \
                         (value, key, ", ".join(choices)))
@@ -2122,7 +2122,7 @@ def config_set(args):
     # Check if value is valid. Choices are either a list of allowed
     # keys or a regular expression
     if type(hook["choices"]) == list:
-        choices = [ var for (var, descr) in hook["choices"] ]
+        choices = [ var for var, _descr in hook["choices"] ]
         if value not in choices:
             sys.stderr.write("Invalid value for '%s'. Allowed are: %s\n" % \
                     (value, ", ".join(choices)))
@@ -2149,8 +2149,6 @@ def config_set_all():
 
 
 def config_set_value(hook_name, value, save = True):
-    hook = g_config_hooks.get(hook_name)
-
     # TODO: Warum wird hier nicht call_hook() aufgerufen!!
 
     # Call hook with 'set'. If it outputs something, that will
@@ -2214,8 +2212,6 @@ def config_configure():
     menu_choices = [ "Basic", "Web GUI", "Addons", "Distributed Monitoring" ]
 
     while True:
-        choices = []
-
         # Rebuild hook information (values possible changed)
         menu = {}
         for hook_name in hook_names:
@@ -2345,7 +2341,7 @@ def read_info():
                         g_info[var.strip()] += " " + value
                     else:
                         g_info[var.strip()] = value
-                except Exception, e:
+                except Exception:
                     bail_out('Unable to parse line "%s" in file "%s"' % (line, info_dir + "/" + f))
 
 def fstab_verify(name):
@@ -2540,7 +2536,7 @@ def main_help(args=None, options=None):
     else:
         sys.stdout.write("Usage (called as site user):\n\n")
 
-    for command, only_root, no_suid, needs_site, site_must_exist, confirm, synopsis, command_function, command_options, descr, confirm_text in commands:
+    for command, only_root, _no_suid, needs_site, _site_must_exist, _confirm, synopsis, _command_function, _command_options, descr, _confirm_text in commands:
         if only_root and not am_root:
             continue
         if am_root:
@@ -2842,7 +2838,7 @@ def finalize_site(what, apache_reload):
         except Exception, e:
             bail_out(e)
     else:
-        wpid, status = os.waitpid(pid, 0)
+        _wpid, status = os.waitpid(pid, 0)
         if status:
             bail_out("Error in non-priviledged sub-process.")
 
@@ -3287,7 +3283,6 @@ def main_update(args, options=None):
 
     from_skelroot = "/omd/versions/%s/skel" % from_version
     to_skelroot = "/omd/versions/%s/skel" % to_version
-    tmp = tmp_dir(g_sitename)
 
     # First walk through skeleton files of new version
     walk_skel(to_skelroot, update_file, (from_version, to_version, g_sitedir, old_perms), depth_first=False)
@@ -3864,7 +3859,7 @@ def prepare_restore_as_site_user(options):
 # This is needed to prevent eventual permission issues during the rmtree process.
 def verify_directory_write_access():
     wrong = []
-    for dirpath, dirnames, filenames in os.walk(g_sitedir):
+    for dirpath, dirnames, _filenames in os.walk(g_sitedir):
         for dirname in dirnames:
             path = dirpath + "/" + dirname
             if os.path.islink(path):

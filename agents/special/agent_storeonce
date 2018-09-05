@@ -162,10 +162,6 @@ def query_stores_info(serviceset_id):
 
 def main():
     try:
-        # All shares
-        url_path = "/storeonceservices/version"
-        servicesets = "/storeonceservices/cluster/servicesets"
-
         # Get cluster info
         process_cluster_info()
 

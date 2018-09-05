@@ -190,7 +190,7 @@ def main():
         parser.add_option("--port", default=9440, type="int", help="tcp port")
         parser.add_option("--username", help="user account on prism")
         parser.add_option("--password", help="password for that account")
-        options, args = parser.parse_args()
+        options, _args = parser.parse_args()
         settings = vars(options)
 
     req_headers = gen_headers(settings['username'], settings['password'])

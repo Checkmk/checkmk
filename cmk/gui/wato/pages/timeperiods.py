@@ -144,7 +144,7 @@ class ModeTimeperiods(WatoMode):
             if not isinstance(ruleset.valuespec(), watolib.TimeperiodSelection):
                 continue
 
-            for folder, rulenr, rule in ruleset.get_rules():
+            for _folder, _rulenr, rule in ruleset.get_rules():
                 if rule.value == tpname:
                     used_in.append(("%s: %s" % (_("Ruleset"), ruleset.title()),
                                    watolib.folder_preserving_link([("mode", "edit_ruleset"), ("varname", varname)])))
@@ -231,7 +231,7 @@ class ModeTimeperiods(WatoMode):
     def _find_usages_in_ec_rules(self, tpname):
         used_in = []
         rule_packs = cmk.gui.wato.mkeventd.load_mkeventd_rules()
-        for rule_pack_index, rule_pack in enumerate(rule_packs):
+        for rule_pack in rule_packs:
             for rule_index, rule in enumerate(rule_pack["rules"]):
                 if rule.get("match_timeperiod") == tpname:
                     url = watolib.folder_preserving_link([("mode", "mkeventd_edit_rule"),
@@ -254,7 +254,8 @@ class ModeTimeperiods(WatoMode):
                 if not vs.is_active(rule.value):
                     continue
 
-                for rule_tp_name, _value in rule.value["tp_values"]:
+                # TODO: This method looks wrong: The tpname parameter is unused and this loop is obscure...
+                for _rule_tp_name, _value in rule.value["tp_values"]:
                     edit_url = watolib.folder_preserving_link([
                         ("mode", "edit_rule"),
                         ("back_mode", "timeperiods"),
@@ -387,7 +388,7 @@ class ModeTimeperiodImportICal(WatoMode):
 
 
     def _validate_ical_file(self, value, varprefix):
-        filename, ty, content = value
+        filename, _ty, content = value
         if not filename.endswith('.ics'):
             raise MKUserError(varprefix, _('The given file does not seem to be a valid iCalendar file. '
                                            'It needs to have the file extension <tt>.ics</tt>.'))
@@ -407,7 +408,7 @@ class ModeTimeperiodImportICal(WatoMode):
         ical = vs_ical.from_html_vars("ical")
         vs_ical.validate_value(ical, "ical")
 
-        filename, ty, content = ical['file']
+        filename, _ty, content = ical['file']
 
         try:
             data = self._parse_ical(content, ical['horizon'])
@@ -563,7 +564,6 @@ class ModeTimeperiodImportICal(WatoMode):
             if 'recurrence' in event and event['start'] < now:
                 rule     = event['recurrence']
                 freq     = rule['FREQ']
-                interval = int(rule.get('INTERVAL', 1))
                 cur      = now
                 while cur < last:
                     cur = next_occurrence(event['start'], cur, freq)
@@ -724,7 +724,7 @@ class ModeEditTimeperiod(WatoMode):
         self._timeperiod.clear()
 
         # extract time ranges of weekdays
-        for weekday, weekday_name in self._weekdays_by_name():
+        for weekday, _weekday_name in self._weekdays_by_name():
             ranges = self._get_ranges(weekday)
             if ranges:
                 self._timeperiod[weekday] = ranges
@@ -803,7 +803,6 @@ class ModeEditTimeperiod(WatoMode):
         html.open_table(class_="timeperiod")
 
         for weekday, weekday_alias in self._weekdays_by_name():
-            ranges = self._timeperiod.get(weekday)
             html.open_tr()
             html.td(weekday_alias, class_="name")
             self._timeperiod_ranges(weekday, weekday)

@@ -506,8 +506,6 @@ def _parse_history_file(history, path, query, greptexts, limit, logger):
         cmd += " | egrep -i -e %s" % cmk.ec.actions.quote_shell_string(".*".join(greptexts))
     grep = subprocess.Popen(cmd, shell=True, close_fds=True, stdout=subprocess.PIPE)  # nosec
 
-    headers = [c[0] for c in history._history_columns]
-
     for line in grep.stdout:
         line_no += 1
         if limit is not None and len(entries) > limit:

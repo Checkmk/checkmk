@@ -155,7 +155,7 @@ def render_dashboards():
 
     def render_topic(topic, s, foldable = True):
         first = True
-        for t, title, name, is_view in s:
+        for t, title, name, _is_view in s:
             if t == topic:
                 if first:
                     if foldable:
@@ -172,7 +172,7 @@ def render_dashboards():
                 html.open_ul()
 
     by_topic = visuals_by_topic(dashboard.permitted_dashboards().items(), default_order = [ _('Overview') ])
-    topics = [ topic for topic, entry in by_topic ]
+    topics = [ topic for topic, _entry in by_topic ]
 
     if len(topics) < 2:
         render_topic(by_topic[0][0], by_topic[0][1], foldable = False)
@@ -534,14 +534,12 @@ def render_custom_links():
         return
 
     def render_list(ids, links):
-        states = html.get_tree_states('customlinks')
         n = 0
         for entry in links:
             n += 1
             try:
                 if type(entry[1]) == type(True):
                     idss = ids + [str(n)]
-                    is_open = entry[1]
                     id = '/'.join(idss)
                     html.begin_foldable_container("customlinks", id, isopen=entry[1], title=entry[0])
                     render_list(idss, entry[2])

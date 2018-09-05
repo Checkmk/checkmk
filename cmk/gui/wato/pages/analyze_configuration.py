@@ -350,7 +350,7 @@ class ModeAnalyzeConfig(WatoMode):
                 "response" : results_data,
             }
 
-        except Exception, e:
+        except Exception:
             self._logger.exception("[%s] Failed" % site_id)
             result = {
                 "state"    : 1,

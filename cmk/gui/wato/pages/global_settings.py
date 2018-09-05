@@ -71,7 +71,7 @@ class GlobalSettingsMode(WatoMode):
 
         for group_name, group_vars in watolib.configvar_groups().items():
             add = False
-            for domain, varname, valuespec in group_vars:
+            for domain, varname, _valuespec in group_vars:
                 if not show_all and (not watolib.configvars()[varname][4]
                                      or not domain.in_global_settings):
                     continue # do not edit via global settings
@@ -160,7 +160,7 @@ class GlobalSettingsMode(WatoMode):
 
                 try:
                     to_text = valuespec.value_to_text(value)
-                except Exception, e:
+                except Exception:
                     logger.exception()
                     to_text = html.render_error(_("Failed to render value: %r") % value)
 
@@ -216,7 +216,7 @@ class EditGlobalSettingMode(WatoMode):
         self._varname = html.var("varname")
         try:
             self._domain, self._valuespec, self._need_restart, \
-            self._allow_reset, in_global_settings = watolib.configvars()[self._varname]
+            self._allow_reset, _in_global_settings = watolib.configvars()[self._varname]
         except KeyError:
             raise MKGeneralException(_("The global setting \"%s\" does not exist.") % self._varname)
 

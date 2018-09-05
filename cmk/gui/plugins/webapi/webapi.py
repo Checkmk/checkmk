@@ -498,10 +498,7 @@ api_actions["delete_users"] = {
 
 def action_add_users(request):
     validate_request_keys(request, required_keys=["users"])
-
     users_from_request = request.get("users")
-    all_users = userdb.load_users()
-
     new_user_objects = {}
     for user_id, values in users_from_request.items():
         user_template = userdb.new_user_template("htpasswd")
@@ -603,7 +600,7 @@ class APICallRules(APICallCollection):
         ruleset = collection.get(ruleset_name)
 
         ruleset_dict = {}
-        for folder, rule_index, rule in ruleset.get_rules():
+        for folder, _rule_index, rule in ruleset.get_rules():
             ruleset_dict.setdefault(folder.path(), [])
              # The path is already set in the folder hierarchy
             rule_config = rule.to_dict_config()
@@ -617,10 +614,7 @@ class APICallRules(APICallCollection):
     def _get(self, request):
         validate_request_keys(request, required_keys=["ruleset_name"])
         ruleset_name = request["ruleset_name"].encode("utf-8")
-
         ruleset_dict = self._get_ruleset_configuration(ruleset_name)
-        ruleset_hash = compute_config_hash(ruleset_dict)
-
         response = {"ruleset": ruleset_dict}
         add_configuration_hash(response, ruleset_dict)
         return response
@@ -788,11 +782,11 @@ class APICallHosttags(APICallCollection):
         for builtin_tag_group in config.BuiltinTags().host_tags():
             tag_group_id = builtin_tag_group[0]
             tags         = builtin_tag_group[2]
-            for tag_id, tag_title, aux_tags in tags:
+            for tag_id, _tag_title, _aux_tags in tags:
                 used_tags.discard("%s/%s" % (tag_group_id, tag_id))
                 used_tags.discard(tag_id)
 
-        for tag_id, tag_title in config.BuiltinTags().aux_tags():
+        for tag_id, _tag_title in config.BuiltinTags().aux_tags():
             used_tags.discard(tag_id)
 
         missing_tags = used_tags - new_tags
@@ -825,8 +819,8 @@ class APICallHosttags(APICallCollection):
         all_rulesets = watolib.AllRulesets()
         all_rulesets.load()
         used_tags = set()
-        for ruleset_name, ruleset in all_rulesets.get_rulesets().items():
-            for folder, rulenr, rule in ruleset.get_rules():
+        for ruleset in all_rulesets.get_rulesets().itervalues():
+            for _folder, _rulenr, rule in ruleset.get_rules():
                 for tag_spec in rule.tag_specs:
                     used_tags.add(tag_spec.lstrip("!"))
 

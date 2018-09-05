@@ -198,7 +198,6 @@ def physical_precision_list(values, precision, unit_symbol):
 
     scale_symbol, places_after_comma, scale_factor = cmk.render.calculate_physical_precision(reference, precision)
 
-    units = []
     scaled_values = []
     for value in values:
         scaled_value = float(value) / scale_factor
@@ -235,7 +234,6 @@ def bytes_human_readable_list(values, *args, **kwargs):
 
     scale_symbol, places_after_comma, scale_factor = calculate_scaled_bytes(reference, *args, **kwargs)
 
-    units = []
     scaled_values = []
     for value in values:
         scaled_value = float(value) / scale_factor

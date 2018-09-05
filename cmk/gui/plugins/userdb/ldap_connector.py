@@ -277,8 +277,6 @@ class LDAPUserConnector(UserConnector):
 
 
     def connect(self, enforce_new = False, enforce_server = None):
-        connection_id = self.id()
-
         if not enforce_new \
            and self._ldap_obj \
            and self._config == self._ldap_obj_config:
@@ -473,7 +471,7 @@ class LDAPUserConnector(UserConnector):
     def object_exists(self, dn):
         try:
             return bool(self.ldap_search(dn, columns = ['dn'], scope = 'base'))
-        except Exception, e:
+        except Exception:
             return False
 
 
@@ -863,8 +861,8 @@ class LDAPUserConnector(UserConnector):
                     'members' : [],
                     'cn'      : cn,
                 }
-                for user_dn, obj in self.ldap_search(self.get_user_dn(),
-                                                     filt, ['dn'], self._config['user_scope']):
+                for user_dn, _obj in self.ldap_search(self.get_user_dn(),
+                                                      filt, ['dn'], self._config['user_scope']):
                     groups[dn]['members'].append(user_dn.lower())
 
         return groups
@@ -975,8 +973,6 @@ class LDAPUserConnector(UserConnector):
 
 
     def user_enforces_this_connection(self, username):
-        suffixes = LDAPUserConnector.get_connection_suffixes()
-
         matched_connection_ids = []
         for suffix, connection_id in LDAPUserConnector.get_connection_suffixes().items():
             if self.username_matches_suffix(username, suffix):
@@ -1311,7 +1307,6 @@ def ldap_attribute_plugins_elements(connection_id):
     items = sorted(ldap_attribute_plugins.items(), key = lambda x: x[1]['title'])
     for key, plugin in items:
         if 'parameters' not in plugin:
-            param = []
             elements.append((key, FixedValue(
                 title    = plugin['title'],
                 help     = plugin['help'],
@@ -1449,7 +1444,7 @@ def get_groups_of_user(connection, user_id, ldap_user, cg_names, nested, other_c
 
     # Now add the groups the user is a member off
     group_cns = []
-    for dn, group in ldap_groups.items():
+    for group in ldap_groups.itervalues():
         if user_cmp_val in group['members']:
             group_cns.append(group['cn'])
 
@@ -1755,7 +1750,7 @@ def ldap_sync_groups_to_attributes(connection, plugin, params, user_id, ldap_use
 def ldap_locked_attributes_groups_to_attributes(params):
     attrs = []
     for group_spec in params["groups"]:
-        attr_name, value = group_spec["attribute"]
+        attr_name, _value = group_spec["attribute"]
         attrs.append(attr_name)
     return attrs
 
@@ -1817,8 +1812,6 @@ def ldap_sync_groups_to_roles(connection, plugin, params, user_id, ldap_user, us
     import cmk.gui.userdb as userdb # TODO: Cleanup
 
     # Load the needed LDAP groups, which match the DNs mentioned in the role sync plugin config
-    groups_to_fetch = get_groups_to_fetch(connection, params)
-
     ldap_groups = {}
     for connection_id, group_dns in get_groups_to_fetch(connection, params).items():
         conn = userdb.get_connection(connection_id)
@@ -1861,7 +1854,7 @@ def ldap_sync_groups_to_roles(connection, plugin, params, user_id, ldap_user, us
 
 def get_groups_to_fetch(connection, params):
     groups_to_fetch = {}
-    for role_id, group_specs in params.items():
+    for group_specs in params.itervalues():
         if type(group_specs) == list:
             for group_spec in group_specs:
                 if type(group_spec) == tuple:

@@ -126,7 +126,7 @@ def parse_perf_data(perf_data_string, check_command=None):
     # Split the perf data string into parts. Preserve quoted strings!
     try:
         parts = _split_perf_data(perf_data_string)
-    except ValueError, e:
+    except ValueError:
         logger.exception("Failed to parse perfdata string: %s", perf_data_string)
         return [], check_command
 
@@ -502,7 +502,7 @@ def replace_expressions(text, translated_metrics):
         unit_name = None
         if "@" in expression:
             expression, unit_name = expression.split("@")
-        value, unit, color = evaluate(expression, translated_metrics)
+        value, unit, _color = evaluate(expression, translated_metrics)
         if unit_name:
             unit = unit_info[unit_name]
         if value != None:
@@ -585,7 +585,6 @@ def _metrics_used_by_graph(graph_template):
 
 
 def _metrics_used_in_definition(metric_definition):
-    without_unit = metric_definition.split("@")[0]
     without_color = metric_definition.split("#")[0]
     parts = without_color.split(",")
     for part in parts:
@@ -793,7 +792,7 @@ def render_color(color_rgb):
 def parse_color(color):
     try:
         return tuple([ int(color[a:a+2], 16) / 255.0 for a in (1,3,5) ])
-    except Exception, e:
+    except Exception:
         raise MKGeneralException(_("Invalid color specification '%s'") % color)
 
 

@@ -420,7 +420,8 @@ def show_agent_output(tardata):
 def create_crash_dump_info_file(tar, what):
     crash_info = cmk.crash_reporting.create_crash_info(what, details={
         "page"           : html.myfile+".py",
-        "vars"           : html.vars,
+        "vars"           : {key: "***" if value in ["password", "_password"] else value
+                            for key, value in html.vars.iteritems()},
         "username"       : config.user.id,
         "user_agent"     : html.get_user_agent(),
         "referer"        : html.get_referer(),

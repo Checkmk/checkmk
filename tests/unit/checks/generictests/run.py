@@ -78,7 +78,6 @@ def parse(check_manager, dataset):#   .
     If the .parsed attribute is present, it is compared to the result.
     """
     print("parse: %r" % dataset.checkname)
-
     info = getattr(dataset, 'info', None)
     parsed_expected = getattr(dataset, 'parsed', None)
 
@@ -180,8 +179,10 @@ def check_listed_result(check, list_entry, info_arg, immu):#   .
 def run(check_manager, dataset, write=False):
     """Run all possible tests on 'dataset'"""
     print("START: %r" % dataset)
-    immu = Immutables()
+    checklist = checkhandler.get_applicables(dataset.checkname)
+    assert checklist
 
+    immu = Immutables()
     # test the parse function
     parsed = parse(check_manager, dataset)
     immu.register(parsed, 'parsed')
@@ -189,8 +190,9 @@ def run(check_manager, dataset, write=False):
     # get the expected check results, if present
     checks_expected = getattr(dataset, 'checks', {})
 
+
     # LOOP OVER ALL (SUB)CHECKS
-    for sname in checkhandler.get_applicables(dataset.checkname):
+    for sname in checklist:
         subcheck = (sname + '.').split('.')[1]
         check = check_manager.get_check(sname)
 

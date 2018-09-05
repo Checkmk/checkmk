@@ -94,8 +94,8 @@ def parse_mssql_backup(info):
             timestamp = _parse_date_and_time(backup_date, backup_time)
 
         elif len(line) == 4:
-            inst, tablespace, backup_date, backup_time = line
-            timestamp = _parse_date_and_time(backup_date, backup_time)
+            inst, tablespace, backup_date_time, backup_type = line
+            timestamp = _parse_date_and_time(*backup_date_time.split(" "))
 
         elif len(line) == 3:
             inst, tablespace, backup_timestamp = line

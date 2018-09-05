@@ -1,0 +1,14 @@
+Title: Fixed warning "bad ps syntax" when stopping a site on e.g. SLES11
+Level: 1
+Component: omd
+Compatible: compat
+Edition: cre
+Version: 1.5.0p4
+Date: 1536139894
+Class: fix
+
+When using older ps versions like procps 3.2.7, which is used e.g. on SLES11, a warning message
+like this was displayed when executing "omd stop" on a site:
+
+Warning: bad ps syntax, perhaps a bogus '-'? See http://procps.sf.net/faq.html
+Stopping 1 remaining site processes...OK

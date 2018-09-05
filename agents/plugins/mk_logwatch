@@ -201,14 +201,14 @@ def read_config():
     for config_file in glob.glob(config_dir):
         config_lines += [ line.rstrip() for line in filter(is_not_comment, file(config_file).readlines()) ]
 
-    have_filenames = False
+    patterns = None
     config = []
     cont_list = []
     rewrite_list = []
 
     for line in config_lines:
         if line[0].isspace(): # pattern line
-            if not have_filenames:
+            if patterns is None:
                 raise Exception("Missing logfile names")
 
             level, pattern = line.split(None, 1)
@@ -222,15 +222,14 @@ def read_config():
                 # New pattern for line matching => clear continuation and rewrite patterns
                 cont_list = []
                 rewrite_list = []
-                # TODO: Fix the code and remove the pragma below!
-                patterns.append((level, compiled, cont_list, rewrite_list))  # pylint: disable=used-before-assignment
+                patterns.append((level, compiled, cont_list, rewrite_list))
 
         else: # filename line
             patterns = []
             cont_list = [] # Clear list of continuation patterns from last file
             rewrite_list = [] # Same for rewrite patterns
             config.append((parse_filenames(line), patterns))
-            have_filenames = True
+
     return config
 
 def parse_cont_pattern(pattern):
@@ -281,7 +280,7 @@ def save_status(status):
 pushed_back_line = None
 def next_line(file_handle):
     global pushed_back_line
-    if pushed_back_line != None:
+    if pushed_back_line is not None:
         line = pushed_back_line
         pushed_back_line = None
         return line
@@ -313,7 +312,7 @@ def is_inode_cabable(path):
         return False
 
 
-def process_logfile(logfile, patterns):
+def process_logfile(logfile, patterns, opt, status):
     global pushed_back_line
 
     # Look at which file offset we have finished scanning
@@ -393,30 +392,30 @@ def process_logfile(logfile, patterns):
 
     while True:
         line = next_line(file_handle)
-        if line == None:
+        if line is None:
             break # End of file
 
         # Handle option maxlinesize
-        if opt_maxlinesize != None and len(line) > opt_maxlinesize:
-            line = line[:opt_maxlinesize] + "[TRUNCATED]\n"
+        if opt.maxlinesize is not None and len(line) > opt.maxlinesize:
+            line = line[:opt.maxlinesize] + "[TRUNCATED]\n"
 
         lines_parsed += 1
         # Check if maximum number of new log messages is exceeded
-        if opt_maxlines != None and lines_parsed > opt_maxlines:
+        if opt.maxlines is not None and lines_parsed > opt.maxlines:
             outputtxt += "%s Maximum number (%d) of new log messages exceeded.\n" % (
-               opt_overflow, opt_maxlines)
-            worst = max(worst, opt_overflow_level)
-            os.lseek(file_desc, 0, 2) # Seek to end of file, skip all other messages
+               opt.overflow, opt.maxlines)
+            worst = max(worst, opt.overflow_level)
+            os.lseek(file_desc, 0, os.SEEK_END) # skip all other messages
             break
 
         # Check if maximum processing time (per file) is exceeded. Check only
         # every 100'th line in order to save system calls
-        if opt_maxtime != None and lines_parsed % 100 == 10 \
-            and time.time() - start_time > opt_maxtime:
+        if opt.maxtime is not None and lines_parsed % 100 == 10 \
+            and time.time() - start_time > opt.maxtime:
             outputtxt += "%s Maximum parsing time (%.1f sec) of this log file exceeded.\n" % (
-               opt_overflow, opt_maxtime)
-            worst = max(worst, opt_overflow_level)
-            os.lseek(file_desc, 0, 2) # Seek to end of file, skip all other messages
+               opt.overflow, opt.maxtime)
+            worst = max(worst, opt.overflow_level)
+            os.lseek(file_desc, 0, os.SEEK_END) # skip all other messages
             break
 
         level = "."
@@ -432,14 +431,14 @@ def process_logfile(logfile, patterns):
                     if type(cont_pattern) == int: # add that many lines
                         for _unused_x in range(cont_pattern):
                             cont_line = next_line(file_handle)
-                            if cont_line == None: # end of file
+                            if cont_line is None: # end of file
                                 break
                             line = line[:-1] + "\1" + cont_line
 
                     else: # pattern is regex
                         while True:
                             cont_line = next_line(file_handle)
-                            if cont_line == None: # end of file
+                            if cont_line is None: # end of file
                                 break
                             elif cont_pattern.search(cont_line[:-1]):
                                 line = line[:-1] + "\1" + cont_line
@@ -460,7 +459,7 @@ def process_logfile(logfile, patterns):
             line = line.replace("\1", "\nCONT:")
         if level == "I":
             level = "."
-        if opt_nocontext and level == '.':
+        if opt.nocontext and level == '.':
             continue
         outputtxt += "%s%s %s%s\n" % (color, level, line[:-1], tty_normal)
 
@@ -473,92 +472,128 @@ def process_logfile(logfile, patterns):
         sys.stdout.flush()
 
     # Handle option maxfilesize, regardless of warning or errors that have happened
-    if opt_maxfilesize != None and (offset / opt_maxfilesize) < (new_offset / opt_maxfilesize):
+    if opt.maxfilesize is not None and (offset / opt.maxfilesize) < (new_offset / opt.maxfilesize):
         sys.stdout.write("%sW Maximum allowed logfile size (%d bytes) exceeded for the %dth time.%s\n" %
-                  (tty_yellow, opt_maxfilesize, new_offset / opt_maxfilesize, tty_normal))
-
-try:
-    # This removes leftover folders which may be generated by crashing frozen binaries
-    folder_cleaner = MEIFolderCleaner()
-    folder_cleaner.find_and_remove_leftover_folders(hint_filenames = ["mk_logwatch.exe.manifest"])
-except Exception, e:
-    sys.stdout.write("ERROR WHILE DOING FOLDER: %s\n" % e)
-    sys.exit(1)
-
-try:
-    config = read_config()
-except Exception, e:
-    if debug:
-        raise
-    sys.stdout.write("CANNOT READ CONFIG FILE: %s\n" % e)
-    sys.exit(1)
-
-# Simply ignore errors in the status file.  In case of a corrupted status file we simply begin
-# with an empty status. That keeps the monitoring up and running - even if we might lose a
-# message in the extreme case of a corrupted status file.
-try:
-    status = read_status()
-except Exception, e:
-    status = {}
+                  (tty_yellow, opt.maxfilesize, new_offset / opt.maxfilesize, tty_normal))
 
 
-logfile_patterns = {}
-# The filename line may contain options like 'maxlines=100' or 'maxtime=10'
-for filenames, patterns in config:
-    # Initialize options with default values
-    opt_maxlines = None
-    opt_maxtime = None
-    opt_maxlinesize = None
-    opt_maxfilesize = None
-    opt_regex = None
-    opt_overflow = 'C'
-    opt_overflow_level = 2
-    opt_nocontext = False
-    try:
-        options = [ o.split('=', 1) for o in filenames if '=' in o ]
-        for key, value in options:
-            if key == 'maxlines':
-                opt_maxlines = int(value)
-            elif key == 'maxtime':
-                opt_maxtime = float(value)
-            elif key == 'maxlinesize':
-                opt_maxlinesize = int(value)
-            elif key == 'maxfilesize':
-                opt_maxfilesize = int(value)
+class Options(object):
+
+    MAP_OVERFLOW = {'C': 2, 'W': 1, 'I': 0, 'O': 0}
+    MAP_BOOL = {'true': True, 'false': False}
+
+    def __init__(self):
+        self.maxfilesize = None
+        self.maxlines = None
+        self.maxtime = None
+        self.maxlinesize = None
+        self.regex = None
+        self._overflow = None
+        self.nocontext = None
+
+    @property
+    def overflow(self):
+        return 'C' if self._overflow is None else self._overflow
+
+    @property
+    def overflow_level(self):
+        return self.MAP_OVERFLOW[self.overflow]
+
+    def update(self, other):
+        for attr in ('maxfilesize' , 'maxlines', 'maxtime', 'maxlinesize',
+                     'regex', '_overflow', 'nocontext'):
+            new = getattr(other, attr)
+            if new is not None:
+                setattr(self, attr, new)
+
+    def set_opt(self, opt_str):
+        try:
+            key, value  = opt_str.split('=', 1)
+            if key in ('maxlines', 'maxlinesize', 'maxfilesize'):
+                setattr(self, key, int(value))
+            elif key in ('maxtime',):
+                setattr(self, key, float(value))
             elif key == 'overflow':
-                if value not in [ 'C', 'I', 'W', 'O' ]:
-                    raise Exception("Invalid value %s for overflow. Allowed are C, I, O and W" % value)
-                opt_overflow = value
-                opt_overflow_level = {'C':2, 'W':1, 'O':0, 'I':0}[value]
-            elif key == 'regex':
-                opt_regex = re.compile(value)
-            elif key == 'iregex':
-                opt_regex = re.compile(value, re.I)
-            elif key == 'nocontext':
-                opt_nocontext = True
+                if value not in self.MAP_OVERFLOW.keys():
+                    raise ValueError("Invalid overflow: %r (choose from %r)" % (value, self.MAP_OVERFLOW.keys()))
+                self._overflow = value
+            elif key in ('regex', 'iregex'):
+                self.regex = re.compile(value, re.I if key.startswith('i') else 0)
+            elif key in ('nocontext',):
+                try:
+                    setattr(self, key, self.MAP_BOOL[value.lower()])
+                except KeyError:
+                    raise ValueError("Invalid %s: %r (choose from %r)" % (key, value, self.MAP_BOOL.keys()))
             else:
-                raise Exception("Invalid option %s" % key)
+                raise ValueError("Invalid option: %r" % opt_str)
+        except ValueError, e:
+            if debug:
+                raise
+            sys.stdout.write("INVALID CONFIGURATION: %s\n" % e)
+            sys.exit(1)
+
+
+def parse_sections(config):
+
+    logfile_patterns = {}
+
+    for filenames, patterns in config:
+
+        # First read all the options like 'maxlines=100' or 'maxtime=10'
+        opt = Options()
+        for item in filenames:
+            if '=' in item:
+                opt.set_opt(item)
+
+        # Then handle the file patterns
+        for glob_pattern in (f for f in filenames if '=' not in f):
+
+            logfiles = glob.glob(glob_pattern)
+            if opt.regex is not None:
+                logfiles = [f for f in logfiles if opt.regex.search(f)]
+            if not logfiles:
+                sys.stdout.write('[[[%s:missing]]]\n' % glob_pattern)
+
+            for logfile in logfiles:
+                present_patterns, present_options = logfile_patterns.get(logfile, ([], Options()))
+                present_patterns.extend(patterns)
+                present_options.update(opt)
+                logfile_patterns[logfile] = (present_patterns, present_options)
+
+    return logfile_patterns.iteritems()
+
+
+def main():
+    try:
+        # This removes leftover folders which may be generated by crashing frozen binaries
+        folder_cleaner = MEIFolderCleaner()
+        folder_cleaner.find_and_remove_leftover_folders(hint_filenames = ["mk_logwatch.exe.manifest"])
+    except Exception, e:
+        sys.stdout.write("ERROR WHILE DOING FOLDER: %s\n" % e)
+        sys.exit(1)
+
+    try:
+        config = read_config()
     except Exception, e:
         if debug:
             raise
-        sys.stdout.write("INVALID CONFIGURATION: %s\n" % e)
+        sys.stdout.write("CANNOT READ CONFIG FILE: %s\n" % e)
         sys.exit(1)
 
+    # Simply ignore errors in the status file.  In case of a corrupted status file we simply begin
+    # with an empty status. That keeps the monitoring up and running - even if we might lose a
+    # message in the extreme case of a corrupted status file.
+    try:
+        status = read_status()
+    except Exception, e:
+        status = {}
 
-    for glob_pattern in filenames:
-        if '=' in glob_pattern:
-            continue
-        logfiles = glob.glob(glob_pattern)
-        if opt_regex:
-            logfiles = [ f for f in logfiles if opt_regex.search(f) ]
-        if len(logfiles) == 0:
-            sys.stdout.write('[[[%s:missing]]]\n' % glob_pattern)
-        else:
-            for logfile in logfiles:
-                logfile_patterns[logfile] = logfile_patterns.get(logfile, []) + patterns
+    for logfile, (patterns, options) in parse_sections(config):
+        process_logfile(logfile, patterns, options, status)
 
-for logfile, patterns in logfile_patterns.items():
-    process_logfile(logfile, patterns)
+    if not debug:
+        save_status(status)
 
-if not debug:
-    save_status(status)
+
+if __name__ == "__main__":
+    main()

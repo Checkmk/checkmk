@@ -1,0 +1,14 @@
+Title: mk_logwatch: options are no longer applied globally
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1536133262
+Class: fix
+
+Until this fix, a specified option had overwritten any previously defined values
+ for said option, and was applied globally.
+This has now been fixed: The scope of an option is limited to the files on the same line.
+In case the same file is referenced in different lines, the options for this specific
+ file are updated with the new ones, keeping the allready defined ones.

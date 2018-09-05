@@ -151,8 +151,7 @@ class ModeAuditLog(WatoMode):
     def _display_log(self, log):
         table.begin(css="data wato auditlog audit", limit=None,
                     sortable=False, searchable=False)
-        even = "even"
-        for t, linkinfo, user, action, text in log:
+        for t, linkinfo, user, _action, text in log:
             table.row()
             table.cell(_("Object"), self._render_logfile_linkinfo(linkinfo))
             table.cell(_("Time"), html.render_nobr(render.date_and_time(float(t))))
@@ -202,7 +201,7 @@ class ModeAuditLog(WatoMode):
         next_log_time     = None
         first_log_index   = None
         last_log_index    = None
-        for index, (t, linkinfo, user, action, text) in enumerate(log):
+        for index, (t, _linkinfo, _user, _action, _text) in enumerate(log):
             if t >= end_time:
                 # This log is too new
                 continue

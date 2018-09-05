@@ -1429,7 +1429,6 @@ class ModeEventConsoleRulePacks(EventConsoleMode):
             # Simulation of all rules in this pack
             elif event:
                 matches = 0
-                match_groups = None
                 cancelling_matches = 0
                 skips = 0
 
@@ -1442,9 +1441,6 @@ class ModeEventConsoleRulePacks(EventConsoleMode):
                             matches += 1
                             skips = 1
                             break
-
-                        if matches == 0:
-                            match_groups = groups # show groups of first (= decisive) match
 
                         if cancelling and matches == 0:
                             cancelling_matches += 1
@@ -2176,7 +2172,7 @@ class ModeEventConsoleSettings(EventConsoleMode, GlobalSettingsMode):
         action = html.var("_action")
         if not varname:
             return
-        domain, valuespec, need_restart, allow_reset, in_global_settings = watolib.configvars()[varname]
+        _domain, valuespec, _need_restart, _allow_reset, _in_global_settings = watolib.configvars()[varname]
         def_value = valuespec.default_value()
 
         if action == "reset" and not isinstance(valuespec, Checkbox):
@@ -2390,7 +2386,6 @@ class ModeEventConsoleMIBs(EventConsoleMode):
             from pysmi.writer.pyfile import PyFileWriter
             from pysmi.reader.localfile import FileReader
             from pysmi.codegen.pysnmp import PySnmpCodeGen
-            from pysmi.writer.callback import CallbackWriter
             from pysmi.reader.callback import CallbackReader
             from pysmi.searcher.stub import StubSearcher
             from pysmi.error import PySmiError
@@ -2422,7 +2417,7 @@ class ModeEventConsoleMIBs(EventConsoleMode):
 
         # Directories containing ASN1 MIB files which may be used for
         # dependency resolution
-        compiler.addSources(*[ FileReader(path) for path, title in cmk.gui.mkeventd.mib_dirs ])
+        compiler.addSources(*[ FileReader(path) for path, _title in cmk.gui.mkeventd.mib_dirs ])
 
         # check for already compiled MIBs
         compiler.addSearchers(PyFileSearcher(cmk.gui.mkeventd.compiled_mibs_dir))

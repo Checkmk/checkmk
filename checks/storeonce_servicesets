@@ -55,22 +55,6 @@
 # Primary Node    hpcz25132ltd
 # Secondary Node  None
 # Active Node     hpcz25132ltd
-#
-# In newer agent outputs 'capacity' has changed:
-# cloudCapacityBytes  0
-# cloudDiskBytes  0
-# cloudReadWriteLicensedDiskBytes 0
-# cloudFreeBytes  0
-# cloudUserBytes  0
-# localCapacityBytes  136721392009216
-# localDiskBytes  47759419043899
-# localFreeBytes  85220347674624
-# localUserBytes  265622218292968
-# combinedCapacityBytes   136721392009216
-# combinedDiskBytes   47759419043899
-# combinedFreeBytes   85220347674624
-# combinedUserBytes   265622218292968
-
 
 
 def inventory_storeonce_servicesets(parsed):
@@ -118,7 +102,13 @@ def check_storeonce_servicesets_capacity(item, params, parsed):
     for key, values in parsed.iteritems():
         if not item == values["ServiceSet ID"]:
             continue
-        yield check_storeonce_space(item, params, values)
+        total_mb = float(values['Capacity in bytes'])/1024/1024
+        free_mb  = float(values['Free Space in bytes'])/1024/1024
+        yield df_check_filesystem_list(item, params, [ (item, total_mb, free_mb, 0) ])
+
+        dedup = float(values['Deduplication Ratio'])
+
+        yield 0, "Dedup ratio: %.2f" % dedup
 
 
 check_info['storeonce_servicesets.capacity'] = {
@@ -127,5 +117,5 @@ check_info['storeonce_servicesets.capacity'] = {
     'service_description'   : "ServiceSet %s Capacity",
     'has_perfdata'          : True,
     'group'                 : "filesystem",
-    'includes'              : ["size_trend.include", "df.include", "storeonce.include"],
+    'includes'              : [ "size_trend.include", "df.include" ],
 }

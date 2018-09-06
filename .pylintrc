@@ -27,10 +27,6 @@ disable=
     # through our code and fix a few obscure places.
     abstract-method,
     #---------------------------------------------------------------------------
-    # We should really enable this, there could be some typos hiding which are
-    # real bugs. Just some work to do...
-    unused-variable,
-    #---------------------------------------------------------------------------
     # Enabling this would be very desirable, it vastly improves readability and
     # it might even be necessary for tools like mypy. Fixing this involves some
     # amount of relatively easy work, especially if we want to avoid code

@@ -1,0 +1,12 @@
+Title: Fixed host renaming in notification rules
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1536219419
+Class: fix
+
+Under certain circumstances, it was possible that hosts in notification
+rules of a user were not rewritten during host renaming.  This has been
+fixed.

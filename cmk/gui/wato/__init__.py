@@ -2327,7 +2327,7 @@ def rename_host_in_event_rules(oldname, newname):
             num_changed = rename_in_event_rules(rules)
             if num_changed:
                 actions += [ "notify_user" ] * num_changed
-                some_changed = True
+                some_user_changed = True
 
     rules = watolib.load_notification_rules()
     num_changed = rename_in_event_rules(rules)

@@ -24,28 +24,32 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-# Old agent
 # <<<mssql_backup>>>
-# MSSQL_SQLEXPRESS test123 1331207325
+# MSSQL_SQLEXPRESS1 test123 1331207325
 
-# Newer agent
 # <<<mssql_backup>>>
-# MSSQL_SQL0x master 2016-07-08 20:20:27
-# MSSQL_SQL0x model 2016-07-08 20:20:28
-# MSSQL_SQL0x model 2016-07-12 09:09:42
-# MSSQL_SQL0x model 2016-07-11 20:20:07
-# MSSQL_SQL0x msdb 2016-07-08 20:20:43
-# MSSQL_SQL0x msdb 2016-07-11 20:20:07
+# MSSQL_SQL0x2 master 2016-07-08 20:20:27
+# MSSQL_SQL0x2 model 2016-07-08 20:20:28
+# MSSQL_SQL0x2 model 2016-07-12 09:09:42
+# MSSQL_SQL0x2 model 2016-07-11 20:20:07
+# MSSQL_SQL0x2 msdb 2016-07-08 20:20:43
+# MSSQL_SQL0x2 msdb 2016-07-11 20:20:07
 
-# New agent (added backup type)
 # <<<mssql_backup>>>
-# MSSQL_SQL0x master 2016-07-08 20:20:27 D
-# MSSQL_SQL0x model 2016-07-08 20:20:28 D
-# MSSQL_SQL0x model 2016-07-12 09:09:42 L
-# MSSQL_SQL0x model 2016-07-11 20:20:07 I
-# MSSQL_SQL0x msdb 2016-07-08 20:20:43 D
-# MSSQL_SQL0x msdb 2016-07-11 20:20:07 I
+# MSSQL_SQL0x3 master 2016-07-08 20:20:27 D
+# MSSQL_SQL0x3 model 2016-07-08 20:20:28 D
+# MSSQL_SQL0x3 model 2016-07-12 09:09:42 L
+# MSSQL_SQL0x3 model 2016-07-11 20:20:07 I
+# MSSQL_SQL0x3 msdb 2016-07-08 20:20:43 D
+# MSSQL_SQL0x3 msdb 2016-07-11 20:20:07 I
 
+# <<<mssql_backup:sep(124)>>>
+# MSSQL_SQL0x4|master|2016-07-08 20:20:27|D
+# MSSQL_SQL0x4|model|2016-07-08 20:20:28|D
+# MSSQL_SQL0x4|model|2016-07-12 09:09:42|L
+# MSSQL_SQL0x4|model|2016-07-11 20:20:07|I
+# MSSQL_SQL0x4|msdb|2016-07-08 20:20:43|D
+# MSSQL_SQL0x4|msdb|2016-07-11 20:20:07|I
 
 factory_settings["mssql_backup_default_levels"] = {
     "database":             (None, None),
@@ -82,9 +86,16 @@ def parse_mssql_backup(info):
         backup_date = None
         if len(line) == 5:
             inst, tablespace, backup_date, backup_time, backup_type = line
+
         elif len(line) == 4:
-            inst, tablespace, backup_date, backup_time = line
-            backup_type = None
+            inst, tablespace = line[:2]
+            try:
+                backup_date, backup_time = line[2].split(" ")
+                backup_type = line[3]
+            except ValueError:
+                backup_date, backup_time = line[2:4]
+                backup_type = None
+
         elif len(line) == 3:
             inst, tablespace, backup_timestamp = line
             backup_type = None

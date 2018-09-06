@@ -14138,7 +14138,7 @@ def user_profile_async_replication_page():
     html.context_button(_('User Profile'), 'user_profile.py', 'back')
     html.end_context_buttons()
 
-    user_profile_async_replication_dialog(sites=get_login_sites())
+    user_profile_async_replication_dialog(sites=get_login_slave_sites())
 
     html.footer()
 
@@ -14285,7 +14285,7 @@ def page_user_profile(change_pw=False):
             # Now, if in distributed environment where users can login to remote sites,
             # set the trigger for pushing the new auth information to the slave sites
             # asynchronous
-            if get_login_sites():
+            if get_login_slave_sites():
                 start_async_replication = True
 
             userdb.save_users(users)

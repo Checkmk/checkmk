@@ -1,0 +1,16 @@
+Title: Role changes now create change entries on central site
+Level: 1
+Component: wato
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.4.0p36
+Date: 1536239687
+
+Changes to the roles in WATO triggered change entries for remote sites where the user login
+is allowed but were missing to add change entries for the central site.
+
+This is relevant for the "discard changes" feature. In case such a role change is made by one user
+and a another, less privileged user, tries to discards his changes it would be possible to discard
+the changes of the first user in case no change entry is created.

@@ -3812,8 +3812,13 @@ def wato_slave_sites():
                                                   if site.get("replication") ]
 
 
-# Returns a list of site ids which are WATO slave sites and users can login
+# Returns the WATO slave sites a user may login and the local site
 def get_login_sites():
+    return get_login_slave_sites() + [ config.omd_site() ]
+
+
+# Returns a list of site ids which are WATO slave sites and users can login
+def get_login_slave_sites():
     sites = []
     for site_id, site in wato_slave_sites():
         if site.get('user_login', True) and not config.site_is_local(site_id):

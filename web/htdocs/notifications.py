@@ -189,7 +189,7 @@ def page_clear():
         acknowledge_failed_notifications(acktime)
         html.reload_sidebar()
 
-        if wato.get_login_sites():
+        if wato.get_login_slave_sites():
             wato.user_profile_async_replication_page()
             return
 

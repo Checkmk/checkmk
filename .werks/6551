@@ -1,0 +1,31 @@
+Title: Fixed missing permission checking during "Discard changes"
+Level: 2
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.4.0p36
+Date: 1536237858
+Class: fix
+
+Users with reduced privileges that have access to WATO e.g. for managing their
+own hosts in specific folders have access to the "Activate changes" page for
+activating their config changes. On that page there is a button "discard
+changes" which can be used to undo the configuration changes that have been
+made since the last activation.
+
+A limitation of this feature is that it can only revert the whole configuration
+at all, not only the configuration made by this user. A permitted user would
+discard all changes, even the ones made by others in the moment he clicks on
+discard changes.
+
+The activation mechanism is aware of the situation where others have made
+changes. Users that are not permitted to activate foreign changes are not
+able to activate their changes in this situation and get a warning message
+about this.
+
+However, the discard changes action was missing such a check which allowed
+those users to discard the changes of others while they should not be allowed
+to do so.
+
+The discard changes action is now using the same logic as the activate changes
+action for checking whether or not a user is allowed to do this.

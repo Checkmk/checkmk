@@ -4289,7 +4289,7 @@ class ActivateChanges(object):
                      if self._is_foreign(change) ])
 
 
-    def _has_foreign_changes_on_all_sites(self):
+    def _has_foreign_changes_on_any_site(self):
         return any([ change for change_id, change in self._changes
                      if self._is_foreign(change) and self._affects_all_sites(change) ])
 

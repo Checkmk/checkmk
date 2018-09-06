@@ -3312,8 +3312,8 @@ def main_umount(args, options=None):
     only_version = options.get("version")
 
     # if no site is selected, all sites are affected
+    exit_status = 0
     if not g_sitename:
-        exit_status = 0
         for site in all_sites():
             # Set global vars for the current site
             g_sitename = site
@@ -3330,17 +3330,14 @@ def main_umount(args, options=None):
             sys.stdout.write("%sUnmounting tmpfs of site %s%s..." % (tty_bold, site, tty_normal))
             sys.stdout.flush()
 
-            if not unmount_tmpfs(site, False, kill="kill" in options):
-                sys.stdout.write(tty_error + "\n")
+            if not show_success(unmount_tmpfs(site, False, kill="kill" in options)):
                 exit_status = 1
-            else:
-                sys.stdout.write(tty_ok + "\n")
     else:
         # Skip the site even when it is partly running
         if not site_is_stopped(g_sitename):
             bail_out("Cannot unmount tmpfs of site '%s' while it is running." % g_sitename)
         unmount_tmpfs(g_sitename, kill="kill" in options)
-    sys.exit(0)
+    sys.exit(exit_status)
 
 
 def main_init_action(command, args, options=None):

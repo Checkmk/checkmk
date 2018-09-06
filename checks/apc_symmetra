@@ -114,7 +114,7 @@ def parse_apc_symmetra(info):
 # crit_capacity, crit_sys_temp, crit_batt_curr, crit_voltage = levels
 # Temperature default now 60C: regadring to a apc technician a temperature up tp 70C is possible
 factory_settings["apc_default_levels"] = {
-    "capacity": ( 80, 95 )
+    "capacity"          : ( 95, 80 ),
 }
 
 

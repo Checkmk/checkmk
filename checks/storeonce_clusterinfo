@@ -132,25 +132,17 @@ check_info['storeonce_clusterinfo.cluster'] = {
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
+
 def inventory_storeonce_clusterinfo_space(parsed):
     return [ ('Total Capacity', {}) ]
 
-def check_storeonce_clusterinfo_space(item, params, parsed):
-    total_mb = float(parsed['Total Capacity (bytes)'])/1024/1024
-    free_mb = float(parsed['Free Space (bytes)'])/1024/1024
-
-    yield df_check_filesystem_list(item, params, [ (item, total_mb, free_mb, 0) ])
-
-    dedup = float(parsed['Dedupe Ratio'])
-
-    yield 0, "Dedup: %.2f" % dedup
 
 check_info['storeonce_clusterinfo.space'] = {
     'inventory_function'      : inventory_storeonce_clusterinfo_space,
-    'check_function'          : check_storeonce_clusterinfo_space,
+    'check_function'          : check_storeonce_space,
     'service_description'     : "%s",
     'has_perfdata'            : True,
-    'includes'                : [ "size_trend.include", "df.include"],
+    'includes'                : [ "size_trend.include", "df.include", "storeonce.include"],
     'group'                   : "filesystem",
     'default_levels_variable' : "filesystem_Default_levels",
 }

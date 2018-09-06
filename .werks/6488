@@ -1,0 +1,11 @@
+Title: storeonce_servicesets, storeonce_clusterinfo: Consider new API keys of capacity and free space values
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0p4
+Date: 1536219593
+
+

@@ -1,0 +1,10 @@
+Title: apc_symmetra: Fixed transposed default levels for battery capacity
+Level: 1
+Component: checks
+Compatible: incomp
+Edition: cre
+Version: 1.6.0i1
+Date: 1536231288
+Class: fix
+
+You'll need to restart the core for this change to take effect.

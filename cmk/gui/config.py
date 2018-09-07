@@ -1008,9 +1008,14 @@ def _has_distributed_wato_file():
         and os.stat(cmk.paths.check_mk_config_dir + "/distributed_wato.mk").st_size != 0
 
 
+def get_login_sites():
+    """Returns the WATO slave sites a user may login and the local site"""
+    return get_login_slave_sites() + [ omd_site() ]
+
+
 # TODO: All site listing functions should return the same data structure, e.g. a list of
 #       pairs (site_id, site)
-def get_login_sites():
+def get_login_slave_sites():
     """Returns a list of site ids which are WATO slave sites and users can login"""
     sites = []
     for site_id, site in wato_slave_sites():

@@ -5475,7 +5475,7 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
         home_button()
 
         # TODO: Remove once new changes mechanism has been implemented
-        if config.user.may("wato.activate") and self.has_changes() and self._get_last_wato_snapshot_file():
+        if self._may_discard_changes():
             html.context_button(_("Discard Changes!"),
                 html.makeactionuri([("_action", "discard")]),
                 "discard", id="discard_changes_button")
@@ -5487,11 +5487,31 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
             html.context_button(_("Audit Log"), watolib.folder_preserving_link([("mode", "auditlog")]), "auditlog")
 
 
+
+    def _may_discard_changes(self):
+        if not config.user.may("wato.activate"):
+            return False
+
+        if not self.has_changes():
+            return False
+
+        if not config.user.may("wato.activateforeign") and self._has_foreign_changes_on_any_site():
+            return False
+
+        if not self._get_last_wato_snapshot_file():
+            return False
+
+        return True
+
+
     def action(self):
         if html.var("_action") != "discard":
             return
 
         if not html.check_transaction():
+            return
+
+        if not self._may_discard_changes():
             return
 
         # TODO: Remove once new changes mechanism has been implemented
@@ -5593,7 +5613,7 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
             return
 
         if not config.user.may("wato.activateforeign") \
-           and self._has_foreign_changes_on_all_sites():
+           and self._has_foreign_changes_on_any_site():
             html.show_warning(_("Sorry, you are not allowed to activate changes of other users."))
             return
 

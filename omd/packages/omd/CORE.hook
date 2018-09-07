@@ -67,7 +67,7 @@ case "$1" in
             make_link nagios $OMD_ROOT/etc/init.d/core
             # Refresh Check_MK Configuration after changing back from CMC
             if [ -e $OMD_ROOT/var/check_mk/core/config ] ; then
-                cmk -U >/dev/null 2>&1
+                cmk -U >/dev/null
             fi
         elif [ "$2" == "icinga" ]
         then

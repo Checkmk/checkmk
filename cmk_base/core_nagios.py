@@ -30,6 +30,8 @@ import os
 import subprocess
 import sys
 import py_compile
+import tempfile
+import errno
 
 import cmk.paths
 import cmk.tty as tty
@@ -77,10 +79,41 @@ def do_check_nagiosconfig():
 def do_output_nagios_conf(args):
     if len(args) == 0:
         args = None
-    create_config(sys.stdout, args)
+    _create_config(sys.stdout, args)
 
 
-def create_config(outfile = sys.stdout, hostnames = None):
+def create_config(nagios_object_file_path):
+    """Tries to create a new Check_MK object configuration file for the Nagios core
+
+    During _create_config() exceptions may be raised which are caused by configuration issues.
+    Don't produce a half written object file. Simply throw away everything and keep the old file.
+
+    The user can then start the site with the old configuration and fix the configuration issue
+    while the monitoring is running.
+    """
+    tmp_path = None
+    try:
+        with tempfile.NamedTemporaryFile("w", dir=os.path.dirname(nagios_object_file_path),
+                                         prefix=".%s.new" % os.path.basename(nagios_object_file_path),
+                                         delete=False) as tmp:
+            tmp_path = tmp.name
+            os.chmod(tmp.name, 0660)
+            _create_config(tmp)
+            os.rename(tmp.name, cmk.paths.nagios_objects_file)
+
+    except Exception, e:
+        # In case an exception happens cleanup the tempfile created for writing
+        try:
+            if tmp_path:
+                os.unlink(tmp_path)
+        except IOError, e:
+            if e.errno == errno.ENOENT: # No such file or directory
+                pass
+
+        raise
+
+
+def _create_config(outfile, hostnames=None):
     global hostgroups_to_define
     hostgroups_to_define = set([])
     global servicegroups_to_define

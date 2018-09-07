@@ -1,0 +1,18 @@
+Title: Raw Edition: Improved handling of configuration errors
+Level: 2
+Component: core
+Compatible: compat
+Edition: cre
+Version: 1.5.0p4
+Date: 1536324895
+Class: fix
+
+
+While creating a configuration for the Nagios core (e.g. using "cmk -U" or during "omd update")
+exceptions may be raised which are caused by configuration issues.
+
+When using the Nagios core Check_MK does not produce a half written object file anymore. In case
+of such an error Check_MK throws away everything and keeps the old file.
+
+You can then start the site with the old configuration and fix the configuration issue while the
+monitoring is running with the old config.

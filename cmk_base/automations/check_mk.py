@@ -40,6 +40,7 @@ import cmk_base.core
 import cmk_base.core_config as core_config
 import cmk_base.snmp as snmp
 import cmk_base.discovery as discovery
+import cmk_base.check_table as check_table
 from cmk_base.automations import automations, Automation, MKAutomationError
 import cmk_base.check_utils
 import cmk_base.autochecks
@@ -1404,3 +1405,42 @@ class AutomationGetBulks(Automation):
 
 
 automations.register(AutomationGetBulks())
+
+
+class AutomationGetServiceConfigurations(Automation):
+    cmd          = "get-service-configurations"
+    needs_config = True
+    needs_checks = True
+
+    def execute(self, args):
+        result = {"hosts": {}}
+        for hostname in config.all_active_hosts():
+            result["hosts"][hostname] = self._get_config_for_host(hostname)
+
+        result["checkgroup_of_checks"] = self._get_checkgroup_of_checks()
+        return result
+
+
+    def _get_config_for_host(self, hostname):
+        return {"checks": check_table.get_check_table(hostname, remove_duplicates = True),
+                "active_checks": self._get_active_checks(hostname)}
+
+
+    def _get_active_checks(self, hostname):
+        # legacy checks via active_checks
+        actchecks = []
+        for acttype, rules in config.active_checks.iteritems():
+            entries = rulesets.host_extra_conf(hostname, rules)
+            for params in entries:
+                description = config.active_check_service_description(hostname, acttype, params)
+                actchecks.append((acttype, description, params))
+        return actchecks
+
+    def _get_checkgroup_of_checks(self):
+        checkgroup_of_checks = {}
+        for check_plugin_name, check in checks.check_info.items():
+            checkgroup_of_checks[check_plugin_name] = check.get("group")
+        return checkgroup_of_checks
+
+automations.register(AutomationGetServiceConfigurations())
+

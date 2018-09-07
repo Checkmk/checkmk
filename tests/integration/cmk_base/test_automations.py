@@ -478,6 +478,15 @@ def test_automation_get_configuration(test_cfg, site):
         site.write_file("etc/check_mk/main.mk", "")
 
 
+def test_automation_get_service_configurations(test_cfg, site):
+    data = _execute_automation(site, "get-service-configurations")
+    assert type(data) == dict
+    assert data["checkgroup_of_checks"]
+    assert data["hosts"]["modes-test-host"]
+    print data["hosts"]["modes-test-host"]
+    assert data["hosts"]["modes-test-host"]["checks"][("cpu.loads", None)][1] == "CPU load"
+
+
 # TODO: rename-hosts
 # TODO: delete-hosts
 # TODO: scan-parents

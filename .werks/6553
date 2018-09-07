@@ -1,0 +1,12 @@
+Title: Fix "Error running .../MKEVENTD 'set' 'on'" error in case of config errors during update
+Level: 1
+Component: core
+Compatible: compat
+Edition: cre
+Version: 1.5.0p4
+Date: 1536321907
+Class: fix
+
+This error message could occur during the "omd update" procedure when the configuration is
+detected to have some issues. This message is now being suppressed while the configuration
+error is still be printed to the user.

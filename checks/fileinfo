@@ -267,7 +267,7 @@ def check_fileinfo_groups(item, params, info):
     include_patterns   = set()
     exclude_patterns   = set()
     files_not_readable = set()
-    files_passes_thresholds = set()
+    files_passes_thresholds = {}
 
     try:
         reftime = int(info[0][0])
@@ -333,9 +333,9 @@ def check_fileinfo_groups(item, params, info):
                 ("size",          size),
             ]:
                 for state, _, __, ___ in _fileinfo_check_file(value, params, key):
-                    if not state:
-                        continue
-                    files_passes_thresholds.add((filename, size, age))
+                    files_passes_thresholds.setdefault(filename, {
+                        "size": size, "age": age, "states": []
+                    })["states"].append(state)
 
     if age_oldest is None:
         age_oldest = 0
@@ -363,10 +363,11 @@ def check_fileinfo_groups(item, params, info):
     if any(exclude_patterns):
         long_output.append("Exclude patterns: %s" % ", ".join(exclude_patterns))
 
-    for filename, size, age in files_passes_thresholds:
-        long_output.append("[%s] Age: %s, Size: %s" % \
-                          (filename, get_age_human_readable(age),
-                           get_filesize_human_readable(size)))
+    for filename, attrs in files_passes_thresholds.iteritems():
+        long_output.append("[%s] Age: %s, Size: %s%s" % \
+                          (filename, get_age_human_readable(attrs["age"]),
+                           get_filesize_human_readable(attrs["size"]),
+                           state_markers[max(attrs["states"])]))
 
     if long_output:
         yield 0, "\n%s" % "\n".join(long_output)

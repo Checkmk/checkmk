@@ -6,8 +6,21 @@ distribution: check_mk
 description:
  This checks displays the amount of connected access points on the controller.
  Per default the check only displays the information for each Access Point.
- Levels are fixed and the service goes CRIT if an inventorized Access Point is down
- or not availible.
+ The operational state is evaluated as following:
+ 'unknown': Unknown,
+ 'enabled': OK,
+ 'disabled': Warning,
+ 'no license': Warning,
+ 'enabled WN license': OK,
+ 'power down': Warning,
+
+ The availability state is evaluated as following:
+ 'power off': Warning,
+ 'offline': Warning,
+ 'online': OK,
+ 'failed': Critical,
+ 'in test': Warning,
+ 'not installed': Warning,
 
 item:
  The name of the access point.

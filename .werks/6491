@@ -1,0 +1,10 @@
+Title: fortinet_controller_aps: Services disappear because no clients are connected
+Level: 1
+Component: checks
+Compatible: incomp
+Edition: cre
+Version: 1.6.0i1
+Date: 1536318775
+Class: fix
+
+

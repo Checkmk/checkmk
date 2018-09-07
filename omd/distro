@@ -110,4 +110,10 @@ then
     fi
 fi
 
+# SLES15+
+if [ -e /etc/os-release ]; then
+    . /etc/os-release
+    echo "${NAME}${SEP}${VERSION}"
+fi
+
 exit 1

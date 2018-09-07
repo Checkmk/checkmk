@@ -1,0 +1,98 @@
+From d6bd787123aa9ccd96edec8286ec22dd0442c620 Mon Sep 17 00:00:00 2001
+From: Michael Orlitzky <michael@orlitzky.com>
+Date: Fri, 27 Oct 2017 07:58:43 -0400
+Subject: [PATCH] plugins/check_mysql*.c: define our own default MySQL port.
+
+The MYSQL_PORT constant used to be defined in mysql.h, and was used as
+the default port in the two plugins check_mysql and check_mysql_query.
+Now that mysql.h no longer defines that constant, our plugins fail to
+build against newer versions of MySQL and MariaDB.
+
+Since MYSQL_PORT used the "default port" on the local system, it
+actually was not the best choice as the default for the check plugins:
+when monitoring remote MySQL servers, the usual default of 3306 is
+more likely to be correct than whatever the local server happens to be
+listening on.
+
+As a result, we fix the issue by defining our own constant, called
+CHECK_PORT_DEFAULT, as "3306" at the top of both check_mysql.c and
+check_mysql_query.c. The existing uses of MYSQL_PORT have been changed
+to use the new CHECK_PORT_DEFAULT.
+
+This change is backwards-incompatible: any users who compiled in a
+MYSQL_PORT other than 3306 and who were running their checks on the
+same server as the database will now need to specify that port
+explicitly.
+
+Closes: https://github.com/monitoring-plugins/monitoring-plugins/issues/1508
+---
+ plugins/check_mysql.c       | 8 ++++++--
+ plugins/check_mysql_query.c | 8 ++++++--
+ 2 files changed, 12 insertions(+), 4 deletions(-)
+
+diff --git a/plugins/check_mysql.c b/plugins/check_mysql.c
+index 5773afd9..c44919d0 100644
+--- a/plugins/check_mysql.c
++++ b/plugins/check_mysql.c
+@@ -36,6 +36,10 @@ const char *email = "devel@monitoring-plugins.org";
+ 
+ #define SLAVERESULTSIZE 70
+ 
++/* The default port that MySQL servers listen on. */
++#define CHECK_PORT_DEFAULT 3306
++
++
+ #include "common.h"
+ #include "utils.h"
+ #include "utils_base.h"
+@@ -58,7 +62,7 @@ char *ciphers = NULL;
+ bool ssl = false;
+ char *opt_file = NULL;
+ char *opt_group = NULL;
+-unsigned int db_port = MYSQL_PORT;
++unsigned int db_port = CHECK_PORT_DEFAULT;
+ int check_slave = 0, warn_sec = 0, crit_sec = 0;
+ int ignore_auth = 0;
+ int verbose = 0;
+@@ -505,7 +509,7 @@ void
+ print_help (void)
+ {
+ 	char *myport;
+-	xasprintf (&myport, "%d", MYSQL_PORT);
++	xasprintf (&myport, "%d", CHECK_PORT_DEFAULT);
+ 
+ 	print_revision (progname, NP_VERSION);
+ 
+diff --git a/plugins/check_mysql_query.c b/plugins/check_mysql_query.c
+index 49a14dd3..6f492442 100644
+--- a/plugins/check_mysql_query.c
++++ b/plugins/check_mysql_query.c
+@@ -33,6 +33,10 @@ const char *progname = "check_mysql_query";
+ const char *copyright = "1999-2007";
+ const char *email = "devel@monitoring-plugins.org";
+ 
++/* The default port that MySQL servers listen on. */
++#define CHECK_PORT_DEFAULT 3306
++
++
+ #include "common.h"
+ #include "utils.h"
+ #include "utils_base.h"
+@@ -48,7 +52,7 @@ char *db_pass = NULL;
+ char *db = NULL;
+ char *opt_file = NULL;
+ char *opt_group = NULL;
+-unsigned int db_port = MYSQL_PORT;
++unsigned int db_port = CHECK_PORT_DEFAULT;
+ 
+ int process_arguments (int, char **);
+ int validate_arguments (void);
+@@ -299,7 +303,7 @@ void
+ print_help (void)
+ {
+ 	char *myport;
+-	xasprintf (&myport, "%d", MYSQL_PORT);
++	xasprintf (&myport, "%d", CHECK_PORT_DEFAULT);
+ 
+ 	print_revision (progname, NP_VERSION);
+ 

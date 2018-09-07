@@ -563,7 +563,7 @@ class LoggedInUser(object):
 
 
     def authorized_login_sites(self):
-        login_site_ids = get_login_sites()
+        login_site_ids = get_login_slave_sites()
         login_sites = [ (site_id, site) for site_id, site in allsites().items()
                              if site_id in login_site_ids ]
         return self.authorized_sites(login_sites)

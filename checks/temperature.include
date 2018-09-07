@@ -436,9 +436,9 @@ def check_temperature_list(sensorlist, params, unique_name):
         tempsum += temp
         tempmax = max(tempmax, temp)
         tempmin = min(tempmin, temp)
-        sub_status, sub_infotext, sub_perfdata = check_temperature(temp, params,
-                                                                   None,
-                                                                   **kwargs)
+        sub_status, sub_infotext, _sub_perfdata = check_temperature(temp, params,
+                                                                    None,
+                                                                    **kwargs)
         status = worststate(status, sub_status)
         if status != 0:
             detailtext += (sub_item + ": " + sub_infotext + state_markers[sub_status] + ", ")
@@ -461,7 +461,7 @@ def check_temperature_list(sensorlist, params, unique_name):
 
         # no support for dev_unit or dev_levels in check_temperature_list so
         # this ignores the device level handling set in params
-        warn, crit, warn_lower, crit_lower =\
+        _warn, crit, _warn_lower, crit_lower =\
             check_temperature_determine_levels("usr", usr_warn, usr_crit,
                                                usr_warn_lower, usr_crit_lower,
                                                None, None,

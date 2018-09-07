@@ -155,12 +155,12 @@ def parse_freeipmi(info):
                 ("crit_low", lower, float), ( "crit_high", upper, float) ] )
 
         elif len(stripped_line) == 6:
-            sid, name, sensortype, reading_str, unit = stripped_line[:-1]
+            _sid, _name, _sensortype, reading_str, unit = stripped_line[:-1]
             add_valid_values( [ ("value", reading_str, float), ("unit", unit, str) ] )
 
         elif len(stripped_line) == 13:
-            sid, name, stype, sstate, reading_str, unit, lower_nr, lower_c, \
-                lower_nc, upper_nc, upper_c, upper_nr = stripped_line[:-1]
+            _sid, _name, _stype, _sstate, reading_str, unit, _lower_nr, lower_c, \
+                lower_nc, upper_nc, upper_c, _upper_nr = stripped_line[:-1]
             add_valid_values( [ ("value", reading_str, float), ("unit", unit, str),
                 ("crit_low", lower_c, float), ("warn_low", lower_nc, float),
                 ("warn_high", upper_nc, float), ("crit_high", upper_c, float) ] )
@@ -214,5 +214,3 @@ def freeipmi_status_txt_mapping(status_txt):
 
 def check_freeipmi(item, params, parsed):
     return check_ipmi_common(item, params, parsed, "freeipmi", freeipmi_status_txt_mapping)
-
-

@@ -51,9 +51,9 @@ def perle_check_alarms(alarms_str):
 
 def inventory_perle_cm_modules(info):
     inventory = []
-    for name, led, index, \
-        fiber_lprf, fiber_link, fiber_conn, fiber_speed, \
-        cooper_lprf, copper_link, copper_conn, copper_speed in info:
+    for _name, _led, index, \
+        _fiber_lprf, _fiber_link, _fiber_conn, _fiber_speed, \
+        _cooper_lprf, _copper_link, _copper_conn, _copper_speed in info:
         inventory.append( (index, None) )
     return inventory
 
@@ -85,7 +85,7 @@ def check_perle_cm_modules(item, _no_params, info):
                                    "1" : (0, "ok"), },
                  "copper_connector" : { "0" : "rj45", }, }
 
-    for name, power_led, index, \
+    for _name, power_led, index, \
         fiber_lprf, fiber_link, fiber_connector, fiber_speed, \
         cooper_lprf, copper_link, copper_connector, copper_speed in info:
         if item == index:

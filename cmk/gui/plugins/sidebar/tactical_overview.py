@@ -155,14 +155,14 @@ class TacticalOverviewSnapin(CustomizableSidebarSnapin):
     def _show_rows(self):
         rows = self._get_rows()
 
-        if bool(r for r in rows if r.stats is None):
+        if bool([r for r in rows if r.stats is None]):
             html.center(_("No data from any site"))
             return
 
         html.open_table(class_=["content_center", "tacticaloverview"], cellspacing=2, cellpadding=0, border=0)
 
         show_stales = self.parameters()["show_stale"] and config.user.may("general.see_stales_in_tactical_overview")
-        has_stale_objects = bool(r for r in rows if r.what != "events" and r.stats[-1])
+        has_stale_objects = bool([r for r in rows if r.what != "events" and r.stats[-1]])
 
         for row in rows:
             if row.what == "events":
@@ -423,7 +423,7 @@ class TacticalOverviewSnapin(CustomizableSidebarSnapin):
         if not self.parameters()["show_failed_notifications"]:
             return
 
-        failed_notifications = self._get_failed_notification_stats()[0]
+        failed_notifications = self._get_failed_notification_stats()
         if not failed_notifications:
             return
 
@@ -445,7 +445,7 @@ class TacticalOverviewSnapin(CustomizableSidebarSnapin):
             return notifications.load_failed_notifications(
                 after=notifications.acknowledged_time(),
                 stat_only=True,
-            )
+            )[0]
         except livestatus.MKLivestatusNotFoundError:
             return None
 

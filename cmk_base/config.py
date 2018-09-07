@@ -1010,6 +1010,15 @@ def agent_target_version(hostname):
 
 
 #
+# Explicit custom variables
+#
+def get_explicit_service_custom_variables(hostname, service_description):
+    try:
+        return explicit_service_custom_variables[(hostname, service_description)]
+    except KeyError:
+        return {}
+
+#
 # SNMP
 #
 

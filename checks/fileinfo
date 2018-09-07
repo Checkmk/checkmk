@@ -44,7 +44,86 @@
 # "maxsize" : ( 8000,  9000 ),  in bytes
 # "minage"  : ( 600,  1200 ),  in seconds
 # "maxage"  : ( 6000, 12000 ), in seconds
+import collections
+
+
 fileinfo_groups = []
+
+
+def _get_field(row, index):
+    try:
+        return row[index]
+    except IndexError:
+        return ''
+
+
+def _parse_backwards_compatible(info):
+    for row in info[1:]:
+        name = _get_field(row, 0)
+        # endswith("No such file...") is needed to
+        # support the very old solaris perl based version of fileinfo
+        if not name or name.endswith("No such file or directory"):
+            continue
+        ambiguous = _get_field(row, 1)
+        missing = ambiguous == 'missing'
+        failed = ambiguous in ('not readable', '')
+        try:
+            size = int(ambiguous)
+        except ValueError:
+            size = None
+        try:
+            time = int(_get_field(row, 2))
+        except ValueError:
+            time = None
+        yield name, missing, failed, size, time
+
+
+def parse_fileinfo(info):
+    if not info:
+        return {}
+    parsed = {'files': {}}
+    try:
+        parsed['reftime'] = int(info[0][0])
+    except (IndexError, ValueError):
+        pass
+
+    FileinfoItem = collections.namedtuple(
+        "FileinfoItem", "name missing failed size time")
+
+    # deal with old agents' output:
+    if _get_field(_get_field(info, 1), 0) != '[[[header]]]':
+        for args in _parse_backwards_compatible(info):
+            fi = FileinfoItem(*args)
+            parsed['files'][fi.name] = fi
+        return parsed
+
+    header = _get_field(info, 2)
+    name_i = header.index('name') if 'name' in header else None
+    size_i = header.index('size') if 'size' in header else None
+    time_i = header.index('time') if 'time' in header else None
+    status_i = header.index('status') if 'status' in header else None
+
+    for row in info[4:]:
+        name = _get_field(row, name_i)
+        if not name:
+            continue
+        status = _get_field(row, status_i)
+        if not status:
+            continue
+
+        try:
+            size = int(row[size_i])
+        except (IndexError, ValueError):
+            size = None
+        try:
+            time = int(row[time_i])
+        except (IndexError, ValueError):
+            time = None
+        fi = FileinfoItem(name, ('missing' in status),
+                          ('stat failed' in status), size, time)
+        parsed['files'][fi.name] = fi
+
+    return parsed
 
 
 def fileinfo_groups_get_group_name(group_patterns, filename, reftime):
@@ -111,26 +190,27 @@ def fileinfo_groups_get_group_name(group_patterns, filename, reftime):
     return dict([ (k, list(v)) for k, v in found_these_groups.items() ])
 
 
-def inventory_fileinfo_common(info, case):
+def inventory_fileinfo_common(parsed, case):
     inventory = []
-    if info:
-        reftime = int(info[0][0])
+
+    reftime = parsed.get('reftime')
+    if reftime is None:
+        return inventory
 
     inventory_groups = host_extra_conf(host_name(), fileinfo_groups)
 
-    for line in info:
-        if len(line) >= 3:
-            found_groups = {}
-            for group_patterns in inventory_groups:
-                found_groups.update(fileinfo_groups_get_group_name(group_patterns,
-                                    line[0], reftime))
+    for item in parsed['files'].itervalues():
+        found_groups = {}
+        for group_patterns in inventory_groups:
+            found_groups.update(fileinfo_groups_get_group_name(group_patterns,
+                                item.name, reftime))
 
-            if not found_groups and case == 'single' and line[1] != 'missing':
-                inventory.append((line[0], {}))
+        if not found_groups and case == 'single' and not item.missing:
+            inventory.append((item.name, {}))
 
-            elif found_groups and case == 'group':
-                for group_name, patterns in found_groups.items():
-                    inventory.append((group_name, {"group_patterns": patterns}))
+        elif found_groups and case == 'group':
+            for group_name, patterns in found_groups.items():
+                inventory.append((group_name, {"group_patterns": patterns}))
 
     return inventory
 
@@ -167,42 +247,29 @@ def fileinfo_in_timerange(now, range_from, range_to):
     return minutes_now >= minutes_from and minutes_now < minutes_to
 
 
-def check_fileinfo(item, params, info):
-    if len(info) == 0:
-        return (3, "no information sent by agent")
+def check_fileinfo(item, params, parsed):
 
-    outof_range_txt  = fileinfo_check_timeranges(params)
-    in_timerange     = outof_range_txt == ""
-    check_definition = False
-    state_missing    = params.get("state_missing", 3)
-
-    try:
-        reftime = int(info[0][0])
-    except (IndexError, ValueError):
+    reftime = parsed.get('reftime')
+    if reftime is None:
         return 3, "Missing reference timestamp"
 
-    # Start counting values on all files
-    for line in info[1:]:
-        if item == line[0]:
-            if line[1] == "missing":
-                continue
-            elif line[1] == "not readable":
-                return 1, "File not readable"
-            state = 0
-            size = int(line[1])
-            age = reftime - int(line[2])
+    outof_range_txt  = fileinfo_check_timeranges(params)
 
-            check_definition = [
-                ("Size", "size", size, get_filesize_human_readable),
-                ("Age",  "age",  age,  get_age_human_readable)
-            ]
-
-    if check_definition is False:
-        state = state_missing if in_timerange else 0
-        infotext = ("File not found" if not outof_range_txt else
-                    "File not found - %s" % outof_range_txt)
-        return state, infotext
-
+    file_stat = parsed['files'].get(item)
+    if file_stat is not None and not file_stat.missing:
+        if file_stat.failed:
+            return 1, "File stat failed"
+        age = reftime - file_stat.time
+        check_definition = [
+            ("Size", "size", file_stat.size, get_filesize_human_readable),
+            ("Age",  "age",  age,  get_age_human_readable)
+        ]
+        return fileinfo_check_function(check_definition, params, outof_range_txt)
+    else:
+        if outof_range_txt:
+            return 0, "File not found - %s" % outof_range_txt
+        else:
+            return params.get("state_missing", 3), "File not found"
     return fileinfo_check_function(check_definition, params, outof_range_txt)
 
 
@@ -251,10 +318,7 @@ def _filename_matches(filename, reftime, inclusion, exclusion):
     return incl_match and not excl_match, date_inclusion
 
 
-def check_fileinfo_groups(item, params, info):
-    if not info:
-        yield 3, "No information sent by agent"
-        return
+def check_fileinfo_groups(_item, params, parsed):
 
     outof_range_txt    = fileinfo_check_timeranges(params)
     count_all          = 0
@@ -266,14 +330,12 @@ def check_fileinfo_groups(item, params, info):
     date_inclusion     = ""
     include_patterns   = set()
     exclude_patterns   = set()
-    files_not_readable = set()
-    files_passes_thresholds = {}
+    files_stat_failed  = set()
+    files_matching     = {}
 
-    try:
-        reftime = int(info[0][0])
-    except (IndexError, ValueError):
-        yield 3, "Missing reference timestamp"
-        return
+    reftime = parsed.get('reftime')
+    if reftime is None:
+        return 3, "Missing reference timestamp"
 
     # Old format does not support '%s' in group name
     group_patterns = set(params.get('precompiled_patterns', []))
@@ -281,41 +343,32 @@ def check_fileinfo_groups(item, params, info):
         group_patterns.add(entry)
 
     # Start counting values on all files
-    for line in info[1:]:
-        filename = line[0]
-        size_str = line[1]
-
-        # endswith("No such file...") is needed to
-        # support the solaris perl based version of fileinfo
-        if filename.endswith("No such file or directory")\
-           or size_str in ['missing', '']:
-            continue
+    for file_stat in parsed['files'].itervalues():
 
         for pattern in group_patterns:
             if type(pattern) == str:  # support old format
                 pattern = (pattern, '')
-
             inclusion, exclusion = pattern
             include_patterns.add(inclusion)
             exclude_patterns.add(exclusion)
 
-            filename_matches, date_inclusion = _filename_matches(filename, reftime, inclusion, exclusion)
+            filename_matches, date_inclusion = _filename_matches(file_stat.name, reftime, inclusion, exclusion)
             if not filename_matches:
                 continue
-
-            if size_str == "not readable":
-                files_not_readable.add(size_str)
+            if file_stat.missing:
+                continue
+            if file_stat.failed:
+                files_stat_failed.add(file_stat.name)
                 continue
 
-            size = int(size_str)
-            size_all += size
+            size_all += file_stat.size
             if size_smallest is None:
-                size_smallest = size
+                size_smallest = file_stat.size
             else:
-                size_smallest = min(size_smallest, size)
-            size_largest = max(size_largest, size)
+                size_smallest = min(size_smallest, file_stat.size)
+            size_largest = max(size_largest, file_stat.size)
 
-            age = reftime - int(line[2])
+            age = reftime - file_stat.time
             if age_oldest is None:  # very first match
                 age_oldest = age
                 age_newest = age
@@ -328,13 +381,16 @@ def check_fileinfo_groups(item, params, info):
             for key, value in [
                 ("age_oldest",    age),
                 ("age_newest",    age),
-                ("size_smallest", size),
-                ("size_largest",  size),
-                ("size",          size),
+                ("size_smallest", file_stat.size),
+                ("size_largest",  file_stat.size),
+                ("size",          file_stat.size),
             ]:
+                skip_ok_files = params.get('shorten_multiline_output', False)
                 for state, _, __, ___ in _fileinfo_check_file(value, params, key):
-                    files_passes_thresholds.setdefault(filename, {
-                        "size": size, "age": age, "states": []
+                    if skip_ok_files and not state:
+                        continue
+                    files_matching.setdefault(file_stat.name, {
+                        "size": file_stat.size, "age": age, "states": [],
                     })["states"].append(state)
 
     if age_oldest is None:
@@ -351,8 +407,8 @@ def check_fileinfo_groups(item, params, info):
         ("Date pattern",  "date pattern",  date_inclusion, str),
     ]
 
-    if files_not_readable:
-        yield 1, "Files not readable: %s" % ", ".join(files_not_readable)
+    if files_stat_failed:
+        yield 1, "Files with unknown stat: %s" % ", ".join(files_stat_failed)
 
     yield fileinfo_check_function(check_definition, params, outof_range_txt)
 
@@ -363,7 +419,7 @@ def check_fileinfo_groups(item, params, info):
     if any(exclude_patterns):
         long_output.append("Exclude patterns: %s" % ", ".join(exclude_patterns))
 
-    for filename, attrs in files_passes_thresholds.iteritems():
+    for filename, attrs in files_matching.iteritems():
         long_output.append("[%s] Age: %s, Size: %s%s" % \
                           (filename, get_age_human_readable(attrs["age"]),
                            get_filesize_human_readable(attrs["size"]),
@@ -380,7 +436,6 @@ def fileinfo_check_function(check_definition, params, outof_range_txt):
     for title, key, value, verbfunc in check_definition:
         if value in [None, ""]:
             continue
-
         infotext = "%s: %s" % (title, verbfunc(value))
         warn, crit = None, None
         for state, warn, crit, comp_text in _fileinfo_check_file(value, params, key):
@@ -416,11 +471,12 @@ def _fileinfo_check_file(value, params, key):
     return results
 
 
-def inventory_fileinfo(info):
-    return inventory_fileinfo_common(info, "single")
+def inventory_fileinfo(parsed):
+    return inventory_fileinfo_common(parsed, "single")
 
 
 check_info["fileinfo"] = {
+    "parse_function"          : parse_fileinfo,
     "check_function"          : check_fileinfo,
     "inventory_function"      : inventory_fileinfo,
     "service_description"     : "File %s",
@@ -429,8 +485,8 @@ check_info["fileinfo"] = {
 }
 
 
-def inventory_fileinfo_groups(info):
-    return inventory_fileinfo_common(info, "group")
+def inventory_fileinfo_groups(parsed):
+    return inventory_fileinfo_common(parsed, "group")
 
 
 check_info['fileinfo.groups'] = {

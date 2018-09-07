@@ -34,63 +34,96 @@
 # .1.3.6.1.4.1.15983.1.1.3.1.7.1.5.1 1
 # .1.3.6.1.4.1.15983.1.1.3.1.7.1.9.1 1
 
-ap_state = {
-    '1' :   ( 0, 'AP is up' ),
-    '2' :   ( 1, 'AP is down' ),
-    }
-
-ap_avail = {
-    '1' :   ( 3, 'availibility status unknown' ),
-    '2' :   ( 2, 'availibility status is disabled' ),
-    '3' :   ( 0, 'availibility status is enabled' ),
-    }
 
 def parse_fortinet_controller_aps(info):
-    new_info = []
-    for ap_table in info[0]:
-        new_element = []
-        for client_table in info[1]:
-            if ap_table[1] == client_table[2]:
-                if new_element == []:
-                    new_element = [ ap_table, client_table ]
-                else:
-                    new_element.append(client_table)
-        if new_element != []:
-            new_info.append(new_element)
-    return new_info
+    map_oper_state = {
+        '0': 'unknown',
+        '1': 'enabled',
+        '2': 'disabled',
+        '3': 'no license',
+        '4': 'enabled WN license',
+        '5': 'power down',
+    }
+
+    map_availability = {
+        '1': 'power off',
+        '2': 'offline',
+        '3': 'online',
+        '4': 'failed',
+        '5': 'in test',
+        '6': 'not installed',
+    }
+
+    parsed = {}
+    ap_table, client_table = info
+    for descr, id_, location, uptime_str, oper_state, availability in ap_table:
+        try:
+            uptime = int(uptime_str)
+        except ValueError:
+            uptime = None
+        parsed.setdefault(id_, {
+            "descr"            : descr,
+            "location"         : location,
+            "uptime"           : uptime,
+            "operational"      : map_oper_state[oper_state],
+            "availability"     : map_availability[availability],
+            "clients_count_24" : 0,
+            "clients_count_5"  : 0,
+        })
+
+    for client, id_ in client_table:
+        inst = parsed.get(id_)
+        if inst is None:
+            continue
+        if client == '1':
+            inst["clients_count_24"] += 1
+        elif client == '2':
+            inst["clients_count_5"] += 1
+    return parsed
 
 
-def inventory_fortinet_controller_aps(info):
-    for element in info:
-        yield element[0][1], {}
+def inventory_fortinet_controller_aps(parsed):
+    for key, values in parsed.iteritems():
+        if values["availability"] != "not installed":
+            yield key, {}
 
 
-def check_fortinet_controller_aps(item, params, info):
-    for element in info:
-        if item == element[0][1]:
-            client_count_24 = 0
-            client_count_5 = 0
-            for client in element[1:]:
-                if client[1] == '1':
-                    client_count_24 += 1
-                elif client[1] == '2':
-                    client_count_5 += 1
-                else:
-                    continue
-            perfdata = [
-                    ( 'uptime', element[0][3] ),
-                    ( '5ghz_clients', client_count_5 ),
-                    ( '24ghz_clients', client_count_24 ),
-                    ]
-            yield 0, 'AP %s' % element[0][1], perfdata
-            if element[0][4] == '1' and element[0][5] == '3':
-                yield 0, 'Status: online'
-            else:
-                yield ap_state[element[0][4]]
-                yield ap_avail[element[0][5]]
-            yield 0, 'connected Clients (2,4 ghz / 5 Ghz): %s/%s' % ( client_count_24, client_count_5 )
-            if element[0][2] != '':
-                yield 0, 'located at %s' % element[0][2]
+def check_fortinet_controller_aps(item, params, parsed):
+    data = parsed.get(item)
+    if data is None:
+        return
+
+    oper_state = data["operational"]
+    state = 0
+    if oper_state == 'unknown':
+        state = 3
+    elif oper_state in ['disabled', 'no license', 'power down']:
+        state = 1
+    yield state, "[%s] Operational: %s" % (data["descr"], oper_state)
+
+    avail_state = data["availability"]
+    state = 0
+    if avail_state == 'failed':
+        state = 2
+    elif avail_state in ['power off', 'offline', 'in test', 'not installed']:
+        state = 1
+    yield state, "Availability: %s" % avail_state
+
+    client_count_24 = data["clients_count_24"]
+    client_count_5 = data["clients_count_5"]
+    yield 0, "Connected clients (2,4 ghz/5 ghz): %s/%s"\
+             % (client_count_24, client_count_5),\
+          [('5ghz_clients', client_count_5),
+           ('24ghz_clients', client_count_24)]
+
+    uptime = data['uptime']
+    if uptime:
+        yield 0, "Up since %s" % get_timestamp_human_readable(uptime),\
+              [('uptime', uptime)]
+
+    location = data.get('location')
+    if location:
+        yield 0, "Located at %s" % location
 
 
 check_info['fortinet_controller_aps'] = {
@@ -100,18 +133,16 @@ check_info['fortinet_controller_aps'] = {
     'service_description'       : 'AP %s',
     'has_perfdata'              : True,
     'snmp_info'                 : [('.1.3.6.1.4.1.15983.1.1.4.2.1.1', [
-                                  '2',    # mwApDescr
-                                  '4',    # mwApID
-                                  '8',    # mwApLocation
-                                  '17',   # mwApUpTime
-                                  '26',   # mwApOperationalState
-                                  '27'    # mwApAvailabilityStatus
-                                  ] ),
-                                  ( '.1.3.6.1.4.1.15983.1.1.3.1.7.1', [
-                                  '3',    # Client Mac
-                                  '5',    # Iface Name
-                                  '9'     # AP_ID
-                                  ]
-                                  )],
+                                    '2',    # MERU-CONFIG-AP-MIB::mwApDescr
+                                    '4',    # MERU-CONFIG-AP-MIB::mwApID
+                                    '8',    # MERU-CONFIG-AP-MIB::mwApLocation
+                                    '17',   # MERU-CONFIG-AP-MIB::mwApUpTime
+                                    '26',   # MERU-CONFIG-AP-MIB::mwApOperationalState
+                                    '27'    # MERU-CONFIG-AP-MIB::mwApAvailabilityStatus
+                                  ]),
+                                  ('.1.3.6.1.4.1.15983.1.1.3.1.7.1', [
+                                    '5',    # MERU-GLOBAL-STATISTICS-MIB::mwApStationStatsIfIndex
+                                    '9',    # MERU-GLOBAL-STATISTICS-MIB::mwApStationStatsNmsApNodeId
+                                  ])],
     'snmp_scan_function'        : lambda oid : '.1.3.6.1.4.1.15983' in oid('.1.3.6.1.2.1.1.2.0').lower(),
 }

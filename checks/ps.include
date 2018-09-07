@@ -398,12 +398,12 @@ def check_ps_common(item, params, parsed, cpu_cores = 1, info_name = "processes"
                         counter_wrapped = False
                         try:
                             user_per_sec   = get_rate("ps_wmic.user.%d" % pid, now, user_c, onwrap=RAISE)
-                        except MKCounterWrapped, e:
+                        except MKCounterWrapped:
                             counter_wrapped = True
 
                         try:
                             kernel_per_sec = get_rate("ps_wmic.kernel.%d" % pid, now, kernel_c, onwrap=RAISE)
-                        except MKCounterWrapped, e:
+                        except MKCounterWrapped:
                             counter_wrapped = True
 
                         if counter_wrapped:
@@ -436,7 +436,7 @@ def check_ps_common(item, params, parsed, cpu_cores = 1, info_name = "processes"
                             pid = process_info[4]
                             try:
                                 cputime = get_rate("ps_stat.pcpu.%s" % pid, now, total_seconds, onwrap=RAISE)
-                            except MKCounterWrapped, e:
+                            except MKCounterWrapped:
                                 cputime = 0
 
                             pcpu = cputime * 100
@@ -470,7 +470,6 @@ def check_ps_common(item, params, parsed, cpu_cores = 1, info_name = "processes"
         extended_perfdata = ps_has_extended_perfdata(parsed[0][1])
 
     if extended_perfdata:
-        warn_vsz, crit_vsz = params.get("virtual_levels", (None, None))
         warn_rss, crit_rss = params.get("resident_levels", (None, None))
         perfdata += [ ("vsz", virtual_size, warn_rss, crit_rss),
                       ("rss", resident_size, warn_rss, crit_rss)]

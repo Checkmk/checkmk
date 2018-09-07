@@ -150,10 +150,6 @@ def check_ipmi_common_summarized(params, parsed, status_txt_mapping):
         val        = data["value"]
         unit       = data["unit"]
         status_txt = data["status_txt"]
-        crit_low   = data["crit_low"]
-        warn_low   = data["warn_low"]
-        warn_high  = data["warn_high"]
-        crit_high  = data["crit_high"]
 
         # Skip datasets which have no valid data (zero value, no unit and state nc)
         if ipmi_ignore_entry(sensorname, status_txt, params) or \

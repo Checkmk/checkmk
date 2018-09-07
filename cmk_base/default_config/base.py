@@ -78,6 +78,9 @@ explicit_snmp_communities          = {} # override the rule based configuration
 snmp_timing                        = []
 snmp_character_encodings           = []
 
+# Custom variables
+explicit_service_custom_variables  = {}
+
 # Management board settings
 management_board_config            = [] # Ruleset to specify management board settings
 management_protocol                = {} # Mapping from hostname to management board protocol

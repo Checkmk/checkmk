@@ -881,39 +881,40 @@ function replace_datevariable()
 
 if [ -r "$MK_CONFDIR/fileinfo.cfg" ]; then
     echo '<<<fileinfo:sep(124)>>>'
-    date +%s
 
-    OLD_IFS=$IFS
-    IFS='
-'
     old_state=$(set +o)
     set +f
+
+    # let the shell do all the expansion, and pipe all files to perl
     (cat "$MK_CONFDIR/fileinfo.cfg" "$MK_CONFDIR/fileinfo.d/*" 2>/dev/null) | while read -r pattern; do
         case $pattern in
             /*) pattern=$(replace_datevariable "$pattern")
-                for file in $pattern; do
-                    if [ -d "$file" ]; then
-                          continue
-                    fi
-
-                    if [ ! -f "$file" ]; then
-                        echo "$file|missing|$(date +%s)"
-                        continue
-                    fi
-
-                    if [ ! -r "$file" ]; then
-                        echo "${file}|not readable|$(date +%s)"
-                        continue
-                    fi
-
-                    stat -c "%n|%s|%Y" "$file"
-                done
+                for f in $pattern; do echo $f; done
                 ;;
         esac
-    done
+    done | perl -e  '
+           print time."\n";
+           print "[[[header]]]\n";
+           print "name|status|size|date\n";
+           print "[[[content]]]\n";
+           while (<>) {
+               chomp $_;
+               if (-d $_) { next; }
+               if (not -f $_) {
+                   print "$_|missing\n";
+                   next;
+               }
+               ($device, $inode, $mode, $nlink, $uid, $gid, $rdev, $size,
+                $atime, $mtime, $ctime, $blksize, $blocks) = stat($_);
+               if ($!) {
+                   print "$_|stat failed\n";
+               } else {
+                   print "$_|ok|$size|$mtime\n";
+               }
+           }'
     set +vx; eval "$old_state"
-    IFS=$OLD_IFS
 fi
+
 
 # Get stats about OMD monitoring cores running on this machine.
 # Since cd is a shell builtin the check does not affect the performance

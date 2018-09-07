@@ -1,0 +1,10 @@
+Title: Fixed links in the snaping "About Check_MK"
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1536317465
+Class: fix
+
+The links now lead to the correct pages of the new website again.

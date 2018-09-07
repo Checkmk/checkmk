@@ -51,10 +51,9 @@ class About(SidebarSnapin):
     def show(self):
         html.write(_("Version: ") + cmk.__version__)
         html.open_ul()
-        bulletlink(_("Homepage"),        "https://mathias-kettner.com/check_mk.html")
-        bulletlink(_("Documentation"),   "https://mathias-kettner.com/checkmk.html")
-        bulletlink(_("Download"),        "https://mathias-kettner.com/check_mk_download.html")
-        bulletlink("Mathias Kettner",    "https://mathias-kettner.com")
+        bulletlink(_("Homepage"),        "https://mathias-kettner.com/index.html")
+        bulletlink(_("Documentation"),   "https://mathias-kettner.com/cms.html")
+        bulletlink(_("Download"),        "https://mathias-kettner.com/download.php")
         html.close_ul()
 
 

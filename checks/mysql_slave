@@ -85,6 +85,11 @@ def check_mysql_slave(item, params, parsed):
 
         if data['Slave_IO_Running']:
             output.append('Slave-IO: running')
+
+            if data['Relay_Log_Space']:
+                output.append('Relay Log: %s' % get_bytes_human_readable(data['Relay_Log_Space']))
+                perfdata.append(('relay_log_space', data['Relay_Log_Space']))
+
         else:
             output.append('Slave-IO: not running(!!)')
             state = 2

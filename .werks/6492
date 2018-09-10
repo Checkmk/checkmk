@@ -1,0 +1,30 @@
+Title: mk_oracle: Add pre- or postfix to TNS alias
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1536577925
+Class: feature
+
+The SIDs are extracted from the process list via "ps -ef".
+Some of the extracted SIDs may have a pre- or postfix in
+tnsnames.ora, eg.
+<br>
+<code>
+PRE_SID.POST =
+  (DESCRIPTION =
+    (ADDRESS = (PROTOCOL = TCP)(Host = HOSTNAME)(Port = PORT))
+    (CONNECT_DATA = (SID = SID)(GLOBAL_NAME = SID.POSTFIX))
+  )
+</code>
+<br>
+
+The pre- or postfix can be configured in mk_oracle.cfg, eg.
+<br>
+<code>
+PREFIX='GLOBAL_PRE_'        # for all SIDs
+PREFIX_SID='SPECIFIC_PRE_'  # for the specific SID 'SID'
+</code>
+<br>
+The same works for 'POSTFIX'.

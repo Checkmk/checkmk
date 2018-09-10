@@ -63,6 +63,11 @@ def virtualenv_path():
         return None
 
 
+def current_branch_name():
+    branch_name = subprocess.check_output(["git", "rev-parse", "--abbrev-ref", "HEAD"]).split("\n", 1)[0]
+    return branch_name.decode("utf-8")
+
+
 class APIError(Exception):
     pass
 

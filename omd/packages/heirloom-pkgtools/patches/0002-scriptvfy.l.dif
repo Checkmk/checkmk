@@ -1,7 +1,7 @@
 diff -ru heirloom-pkgtools-070227/libinst/scriptvfy.l heirloom-pkgtools-070227-patched/libinst/scriptvfy.l
 --- heirloom-pkgtools-070227/libinst/scriptvfy.l	2007-02-25 19:39:47.000000000 +0100
 +++ heirloom-pkgtools-070227-patched/libinst/scriptvfy.l	2008-12-12 19:27:26.000000000 +0100
-@@ -43,9 +43,16 @@
+@@ -43,9 +43,17 @@
  %p 3500
  %s WHROOT
  %{
@@ -15,6 +15,7 @@ diff -ru heirloom-pkgtools-070227/libinst/scriptvfy.l heirloom-pkgtools-070227-p
 +char *yysptr = yysbuf;
 +int yylineno;
 +#define U(x) x
++int yywrap(void) { return 1; }
  #define	input()		(((yytchar=yysptr>yysbuf?U(*--yysptr):getc(scr_fp))==10?(yylineno++,yytchar):yytchar)==EOF?0:yytchar)
  #define	unput(p)	ungetc(p, scr_fp)
  

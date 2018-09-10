@@ -37,7 +37,16 @@ endif
 
 # Check_MK Edition specific
 MODULES += simplejson-3.15.0.tar.gz
-MODULES += MySQL-python-1.2.5.zip # needed by check_sql
+
+ifeq ($(DISTRO_CODE),sles15)
+    # Partial backport of 716eebb7de600a32300cc391ac9ecb67dd1aabf6 (specific for sles15)
+    # Since 1.6 all distros use mysqlclient. Better keep the old module for the other
+    # distros to reduce risk of breaking things
+    MODULES += mysqlclient-1.3.13.tar.gz # needed by check_sql
+else
+    MODULES += MySQL-python-1.2.5.zip # needed by check_sql
+    PATCHES += patches/0002_MySQL-python-use-distutils.patch
+endif
 MODULES += psycopg2-2.6.2.tar.gz # needed by check_sql
 MODULES += dicttoxml-1.7.4.tar.gz # needed by inventory XML export
 MODULES += pycparser-2.18.tar.gz # needed for cffi

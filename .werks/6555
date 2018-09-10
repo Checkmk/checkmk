@@ -1,0 +1,22 @@
+Title: Snapins can now be customized
+Level: 2
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1536558291
+Class: feature
+
+It is now possible to create customized copies of the default sidebar snapins.
+
+To make this possible the snapin developer needs to prepare the snapin for this
+feature. The developer needs to specify which parameters can be customized by
+the users and make the snapin use the user configuration.
+
+The user can then navigate to "Add snapin page > Custom snapins" to manage his
+custom snapins. When editing such a custom snapin the attributes of the snapin
+can be edited. The snapins can be shared with other users of the installation.
+The sharing logic is equal to the bookmarks, reports and so on.
+
+Once a custom snapin has been created, the user can choose the new dashlet from
+the "add snapin page" for adding it to his dashboard.

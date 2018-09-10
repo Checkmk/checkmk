@@ -61,7 +61,6 @@ def check_appdynamics_memory(item, params, info):
                 max_available = -1 # Java 8 has no maximum for Non-Heap
 
             if max_available > 0:
-                free = max_available - used
                 used_percent = 100.0 * used / max_available
 
                 warn, crit = params.get(mem_type, (None, None))

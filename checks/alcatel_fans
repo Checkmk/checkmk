@@ -25,9 +25,8 @@
 # Boston, MA 02110-1301 USA.
 
 def inventory_alcatel_fans(info):
-    # parameter start in enumerate only works since python 2.6
-    for nr, value in enumerate(info):
-        yield nr+1, None
+    for nr, _value in enumerate(info, 1):
+        yield nr, None
 
 def check_alcatel_fans(item, _no_params, info):
     fan_states = {

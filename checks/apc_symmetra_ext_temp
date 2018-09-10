@@ -29,12 +29,12 @@ factory_settings["apc_symmetra_ext_temp_default_levels"] = {
 }
 
 def inventory_apc_symmetra_ext_temp(info):
-    for index, status, temp, temp_unit in info:
+    for index, status, _temp, _temp_unit in info:
         if status == "2":
             yield index, {}
 
 def check_apc_symmetra_ext_temp(item, params, info):
-    for index, status, temp, temp_unit in info:
+    for index, _status, temp, temp_unit in info:
         if item == index:
             unit = "f" if temp_unit == "2" else "c"
             return check_temperature(int(temp), params, "apc_symmetra_ext_temp_%s" % item,

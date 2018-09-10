@@ -38,7 +38,7 @@ def inventory_adva_fsp_temp(info):
 def check_adva_fsp_temp(item, params, info):
     for line in info:
         if len(line) == 5 and line[4] == item:
-            temp, high, low, descr = line[0:4]
+            temp, high, low, _descr = line[0:4]
             temp = float(temp) / 10
             high = float(high) / 10
             low = float(low) / 10

@@ -40,7 +40,7 @@
 # MIB: The sensor reading shown as a string (or empty string
 # if it is not plugged into a port).
 def inventory_apc_netbotz_other_sensors(info):
-    for sensor_label, error_state, state_readable in info:
+    for _sensor_label, _error_state, state_readable in info:
         if state_readable != "":
             return [ (None, None) ]
 

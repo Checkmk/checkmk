@@ -47,7 +47,6 @@
 
 def parse_aix_if(info):
     nic_info = {}
-    current_nic = None
     index = 0
     for line in info:
         # Be careful! On clustered hosts we have more than one perf-counters section

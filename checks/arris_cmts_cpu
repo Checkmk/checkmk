@@ -27,7 +27,7 @@
 arris_cmts_cpu_default_levels = ( 90, 95 )
 
 def inventory_arris_cmts_cpu(info):
-    for oid_id, cpu_id, cpu_idle_util in info:
+    for oid_id, cpu_id, _cpu_idle_util in info:
         # Sadly the cpu_id seams empty. Referring to
         # the MIB, its slot id
         if cpu_id:
@@ -79,4 +79,3 @@ check_info["arris_cmts_cpu"] = {
     "group"                 : "cpu_utilization_multiitem",
     "includes"              : [ "arris_cmts.include" ]
 }
-

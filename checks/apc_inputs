@@ -45,7 +45,7 @@ def check_apc_inputs(item, params, info):
         '3' : "critical",
         '4' : "not applicable",
     }
-    for name, location, state, alarm_status in info:
+    for name, _location, state, alarm_status in info:
         if name == item:
             if alarm_status in [ "2", "4"]:
                 check_state = 1

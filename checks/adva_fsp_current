@@ -33,15 +33,15 @@
 
 
 def inventory_adva_fsp_current(info):
-    for current_str, upper_threshold_str, power_str, \
-        unit_name, index_aid in info:
+    for _current_str, _upper_threshold_str, power_str, \
+        _unit_name, index_aid in info:
         # Ignore non-connected sensors
         if index_aid != "" and power_str != "":
             yield index_aid, None
 
 
 def check_adva_fsp_current(item, _no_params, info):
-    for current_str, upper_threshold_str, power_str, \
+    for current_str, upper_threshold_str, _power_str, \
         unit_name, index_aid in info:
         if index_aid == item:
             current = float(current_str) / 1000.0

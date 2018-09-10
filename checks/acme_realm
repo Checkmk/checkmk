@@ -26,8 +26,8 @@
 
 
 def inventory_acme_realm(info):
-    return [ (name, {}) for name, inbound, outbound,
-             total_inbound, total_outbound, state in info ]
+    return [ (name, {})
+             for name, _inbound, _outbound, _total_inbound, _total_outbound, _state in info ]
 
 
 def check_acme_realm(item, params, info):

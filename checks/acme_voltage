@@ -70,7 +70,7 @@
 
 
 def inventory_acme_voltage(info):
-    return [ (descr, {}) for descr, value_str, state in info
+    return [ (descr, {}) for descr, _value_str, state in info
              if state != "7" ]
 
 

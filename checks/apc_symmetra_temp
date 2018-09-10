@@ -51,7 +51,7 @@ factory_settings["apc_temp_default_levels"] = {
 }
 
 def inventory_apc_temp(info):
-    for name, temp in info:
+    for name, _temp in info:
         yield name, {}
 
 def check_apc_temp(item, params, info):

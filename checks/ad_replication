@@ -77,12 +77,12 @@ def check_ad_replication(item, params, info):
 
     for l in parse_ad_replication_info(info):
         if len(l) == 11:
-            (lineType, destSite, destDC, naming_context, source_site, source_dc,
-             transport, num_failures, time_last_failure, time_last_success,
+            (lineType, _destSite, _destDC, naming_context, source_site, source_dc,
+             _transport, num_failures, time_last_failure, time_last_success,
              statusLastFailure ) = l
         elif len(l) == 10:
-            (lineType, destSite, naming_context, source_site, source_dc,
-             transport, num_failures, time_last_failure, time_last_success,
+            (lineType, _destSite, naming_context, source_site, source_dc,
+             _transport, num_failures, time_last_failure, time_last_success,
              statusLastFailure ) = l
         else:
             break # unhandled data

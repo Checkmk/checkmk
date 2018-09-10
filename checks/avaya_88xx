@@ -33,7 +33,7 @@ def parse_avaya_88xx(info):
     return parsed
 
 def inventory_avaya_88xx_fan(parsed):
-    for idx, state in enumerate(parsed["fanstate"]):
+    for idx, _state in enumerate(parsed["fanstate"]):
         yield str(idx), None
 
 def check_avaya_88xx_fan(item, _no_params, parsed):

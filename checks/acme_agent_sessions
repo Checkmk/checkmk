@@ -26,7 +26,7 @@
 
 
 def inventory_acme_agent_sessions(info):
-    return [ (hostname, None) for hostname, agent_ty, state in info ]
+    return [ (hostname, None) for hostname, _agent_ty, _state in info ]
 
 
 def check_acme_agent_sessions(item, _no_params, info):
@@ -39,7 +39,7 @@ def check_acme_agent_sessions(item, _no_params, info):
         "5" : (1, "in service timed out"),
         "6" : (1, "oos provisioned response"),
     }
-    for hostname, agent_ty, state in info:
+    for hostname, _agent_ty, state in info:
         if item == hostname:
             dev_state, dev_state_readable = map_states[state]
             return dev_state, "Status: %s" % dev_state_readable

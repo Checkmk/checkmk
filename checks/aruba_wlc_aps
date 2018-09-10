@@ -46,8 +46,8 @@ def check_aruba_wlc_aps(item, params, info):
         "1" : (0, "up"),
         "2" : (2, "down"),
     }
-    for ap_name, ap_status, ap_unprovisioned, ap_ip, ap_group, \
-        ap_model, ap_serial, ap_sysloc in info:
+    for ap_name, ap_status, ap_unprovisioned, _ap_ip, ap_group, \
+        _ap_model, _ap_serial, ap_sysloc in info:
         if item == ap_name:
             state, state_readable = map_state[ap_status]
             infotext = "Status: %s" % state_readable

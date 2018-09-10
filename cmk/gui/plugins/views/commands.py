@@ -440,7 +440,7 @@ def command_acknowledgement(cmdtag, spec, row):
         sendnot = 1 if html.var("_ack_notify") else 0
         perscomm = 1 if html.var("_ack_persistent") else 0
 
-        expire_secs = Age().from_html_vars("_ack_expire")
+        expire_secs = _vs_expire().from_html_vars("_ack_expire")
         if expire_secs:
             expire = int(time.time()) + expire_secs
             expire_text = ";%d" % expire
@@ -484,11 +484,19 @@ def render_acknowledgement():
     html.checkbox("_ack_persistent", config.view_action_defaults["ack_persistent"],
                   label=_('persistent comment'))
     html.hr()
-    Age(display=["days", "hours", "minutes"], label=_("Expire acknowledgement after")).render_input("_ack_expire", 0)
+
+    _vs_expire().render_input("_ack_expire", 0)
     html.help(_("Note: Expiration of acknowledgements only works when using the Check_MK Micro Core."))
     html.hr()
     html.write_text(_("Comment") + ": ")
     html.text_input("_ack_comment", size=48, submit="_acknowledge")
+
+
+def _vs_expire():
+    return Age(
+        display=["days", "hours", "minutes"],
+        label=_("Expire acknowledgement after")
+    )
 
 
 register_command_group(

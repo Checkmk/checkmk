@@ -217,7 +217,7 @@ def _get_site_object():
         return os.environ.get("EDITION", testlib.CMKVersion.CEE)
 
     def site_branch():
-        return os.environ.get("BRANCH", "master")
+        return os.environ.get("BRANCH", testlib.current_branch_name())
 
     def reuse_site():
         return os.environ.get("REUSE", "1") == "1"

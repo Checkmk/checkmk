@@ -1,0 +1,17 @@
+Title: Tactical overview and host matrix snapins can be customized
+Level: 2
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1536558591
+Class: feature
+
+Based on the changes of werk #6555 the Tactical overview snapin can now be
+configured to show statistics about custom sets of hosts / services / events.
+It can also be configured to show or not show stale objects and failed
+notifications.
+
+It is now also possible to create custom copies of the host matrix snapin to
+set arbitrary host filters for them which make them able to visualize different
+collections of hosts.

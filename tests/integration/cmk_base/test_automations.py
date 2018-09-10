@@ -85,6 +85,7 @@ def test_registered_automations(site):
         'get-check-manpage',
         'get-configuration',
         'get-real-time-checks',
+        'get-service-configurations',
         'inventory',
         'notification-analyse',
         'notification-get-bulks',

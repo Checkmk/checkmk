@@ -473,6 +473,24 @@ def command_acknowledgement(cmdtag, spec, row):
         return commands, title
 
 
+def render_acknowledgement():
+    html.button("_acknowledge", _("Acknowledge"))
+    html.button("_remove_ack", _("Remove Acknowledgement"))
+    html.hr()
+    html.checkbox("_ack_sticky", config.view_action_defaults["ack_sticky"],
+                  label=_("sticky"))
+    html.checkbox("_ack_notify", config.view_action_defaults["ack_notify"],
+                  label=_("send notification"))
+    html.checkbox("_ack_persistent", config.view_action_defaults["ack_persistent"],
+                  label=_('persistent comment'))
+    html.hr()
+    Age(display=["days", "hours", "minutes"], label=_("Expire acknowledgement after")).render_input("_ack_expire", 0)
+    html.help(_("Note: Expiration of acknowledgements only works when using the Check_MK Micro Core."))
+    html.hr()
+    html.write_text(_("Comment") + ": ")
+    html.text_input("_ack_comment", size=48, submit="_acknowledge")
+
+
 register_command_group(
     ident = "acknowledge",
     title = _("Acknowledge"),
@@ -484,22 +502,7 @@ multisite_commands.append({
     "tables"      : [ "host", "service", "aggr" ],
     "permission"  : "action.acknowledge",
     "title"       : _("Acknowledge Problems"),
-    "render"      : lambda: \
-        html.button("_acknowledge", _("Acknowledge")) == \
-        html.button("_remove_ack", _("Remove Acknowledgement")) == \
-        html.hr() == \
-        html.checkbox("_ack_sticky", config.view_action_defaults["ack_sticky"],
-                      label=_("sticky")) == \
-        html.checkbox("_ack_notify", config.view_action_defaults["ack_notify"],
-                      label=_("send notification")) == \
-        html.checkbox("_ack_persistent", config.view_action_defaults["ack_persistent"],
-                      label=_('persistent comment')) == \
-        html.hr() == \
-        Age(display=["days", "hours", "minutes"], label=_("Expire acknowledgement after")).render_input("_ack_expire", 0) == \
-        html.help(_("Note: Expiration of acknowledgements only works when using the Check_MK Micro Core.")) == \
-        html.hr() == \
-        html.write_text(_("Comment") + ": ") == \
-        html.text_input("_ack_comment", size=48, submit="_acknowledge"),
+    "render"      : render_acknowledgement,
     "action"      : command_acknowledgement,
     "group"       : "acknowledge",
 })

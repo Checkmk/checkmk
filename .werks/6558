@@ -1,0 +1,15 @@
+Title: View actions: Default expiration time of acknowledgements can now be configured
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1536594441
+Class: feature
+
+The global setting "View action defaults" can now be used to configure a default
+expiration time for acknowledgements.
+
+Please note that once you set a global default value other than 0, all acknowledgements
+created in the future will have an expiration time unless the user overrides the
+expiration time with 0 manually when setting an acknowledgement.

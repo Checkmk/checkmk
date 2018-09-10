@@ -1,0 +1,11 @@
+Title: Fixed config generation for check/service/notification period.
+Level: 2
+Component: config
+Compatible: compat
+Edition: cee
+Version: 1.5.0p4
+Date: 1536585960
+Class: fix
+
+1.5.0p3 introduced a regression which caused all check/service/notification
+periods to be 24X7. This has been fixed.

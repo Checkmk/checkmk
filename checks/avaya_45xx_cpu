@@ -30,7 +30,7 @@ factory_settings["avaya_45xx_cpu_default_levels"] = {
 }
 
 def inventory_avaya_45xx_cpu(info):
-    for idx, line in enumerate(info):
+    for idx, _line in enumerate(info):
         yield str(idx), {}
 
 def check_avaya_45xx_cpu(item, params, info):

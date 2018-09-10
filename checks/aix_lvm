@@ -107,7 +107,7 @@ def check_aix_lvm(item, _no_params, info):
         msgtxt = []
         state  = 0
 
-        lvtype, num_lp, num_pp, num_pv, activation, mirror, mountpoint = lvmconf[target_vg][target_lv]
+        lvtype, num_lp, num_pp, num_pv, activation, mirror, _mountpoint = lvmconf[target_vg][target_lv]
 
         # Test if the volume is mirrored.
         # Yes? Test for an even distribution of PP's over volumes.
@@ -150,4 +150,3 @@ check_info['aix_lvm'] = {
    # "default_levels_variable" : "services_default_levels",
     # first check we have a vendor mib from W&T, then check for the model in their MIB.
 }
-

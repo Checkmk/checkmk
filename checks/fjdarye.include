@@ -144,7 +144,7 @@ def check_fjdarye_disks(item, params, parsed):
 
 def fjdarye_disks_summary(parsed):
     states = {}
-    for idx, attrs in parsed.items():
+    for attrs in parsed.itervalues():
         if attrs["state_disk"] != "3":
             states.setdefault(attrs["state_readable"], 0)
             states[attrs["state_readable"]] += 1
@@ -268,4 +268,3 @@ def check_fjdarye_sum(index, _no_param, info):
                 return (2, "%s" % text)
 
     return (3, "No status summary present" )
-

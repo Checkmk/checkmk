@@ -37,13 +37,13 @@ factory_settings["acme_certificates_default_levels"] = {
 
 
 def inventory_acme_certificates(info):
-    return [ (name, {}) for name, start, expire, issuer in info ]
+    return [ (name, {}) for name, _start, _expire, _issuer in info ]
 
 
 def check_acme_certificates(item, params, info):
     for name, start, expire, issuer in info:
         if item == name:
-            expire_date, expire_tz = expire.rsplit(" ", 1)
+            expire_date, _expire_tz = expire.rsplit(" ", 1)
             expire_time = time.mktime(time.strptime(expire_date, "%b %d %H:%M:%S %Y"))
 
             now        = time.time()

@@ -65,7 +65,7 @@ def parse_aix_diskiod(info):
     #       'write_ql'                   : 0.0,
     # }}
     converted = []
-    for node_info, device, tm_act, kbps, tps, kb_read, kb_written in info:
+    for node_info, device, _tm_act, _kbps, _tps, kb_read, kb_written in info:
         converted.append((node_info, device, int(kb_read) * 1024, int(kb_written) * 1024))
     return converted
 

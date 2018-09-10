@@ -26,7 +26,7 @@
 
 
 def inventory_avaya_45xx_fan(info):
-    for idx, line in enumerate(info):
+    for idx, _line in enumerate(info):
         yield str(idx), {}
 
 def check_avaya_45xx_fan(item, params, info):

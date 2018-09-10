@@ -31,7 +31,6 @@
 def parse_ddn_s2a_api_response(info):
     response_string = " ".join(info[0])
     raw_fields = response_string.split("@")
-    return_status, item_count = raw_fields[:2]
     items = zip(raw_fields[2:-2:2], raw_fields[3:-1:2])
 
     parsed = {}

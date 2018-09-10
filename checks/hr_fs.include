@@ -52,7 +52,7 @@ def fix_hr_fs_mountpoint(mp):
 
 def inventory_hr_fs(info):
     mplist = []
-    for hrtype, hrdescr, hrunits, hrsize, hrused in info:
+    for hrtype, hrdescr, _hrunits, hrsize, _hrused in info:
         hrdescr = fix_hr_fs_mountpoint(hrdescr)
         if hrtype in [ ".1.3.6.1.2.1.25.2.1.4" ] and \
                 hrdescr not in inventory_df_exclude_mountpoints and \
@@ -67,7 +67,7 @@ def check_hr_fs(item, params, info):
     if "Label:" in item or "\\" in item:
         return 3, "check had an incompatible change, please re-discover services on this host"
 
-    for hrtype, hrdescr, hrunits, hrsize, hrused in info:
+    for _hrtype, hrdescr, hrunits, hrsize, hrused in info:
         hrdescr = fix_hr_fs_mountpoint(hrdescr)
         if "patterns" in params or item == hrdescr:
             unit_size = saveint(hrunits)

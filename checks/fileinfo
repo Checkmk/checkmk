@@ -223,6 +223,7 @@ def fileinfo_groups_precompile(hostname, item, params):
 
 
 def _filename_matches(filename, reftime, inclusion, exclusion):
+    date_inclusion = ""
     inclusion_is_regex = False
     exclusion_is_regex = False
 
@@ -236,6 +237,7 @@ def _filename_matches(filename, reftime, inclusion, exclusion):
     inclusion_tmp = fileinfo_process_date(inclusion, reftime)
     if inclusion != inclusion_tmp:
         inclusion = inclusion_tmp
+        date_inclusion = inclusion_tmp
 
     if inclusion_is_regex:
         incl_match = regex(inclusion).match(filename)
@@ -246,7 +248,7 @@ def _filename_matches(filename, reftime, inclusion, exclusion):
         excl_match = regex(exclusion).match(filename)
     else:
         excl_match = fnmatch.fnmatch(filename, exclusion)
-    return incl_match and not excl_match
+    return incl_match and not excl_match, date_inclusion
 
 
 def check_fileinfo_groups(item, params, info):
@@ -273,20 +275,23 @@ def check_fileinfo_groups(item, params, info):
         yield 3, "Missing reference timestamp"
         return
 
+    # Old format does not support '%s' in group name
+    group_patterns = set(params.get('precompiled_patterns', []))
+    for entry in params.get('group_patterns', []):
+        group_patterns.add(entry)
+
     # Start counting values on all files
     for line in info[1:]:
         filename = line[0]
-        # Old format does not support '%s' in group name
-        group_patterns = set(params.get('precompiled_patterns', []))
-        for entry in params.get('group_patterns', []):
-            group_patterns.add(entry)
+        size_str = line[1]
+
+        # endswith("No such file...") is needed to
+        # support the solaris perl based version of fileinfo
+        if filename.endswith("No such file or directory")\
+           or size_str in ['missing', '']:
+            continue
 
         for pattern in group_patterns:
-            # endswith("No such file...") is needed to
-            # support the solaris perl based version of fileinfo
-            if filename.endswith("No such file or directory"):
-                continue
-
             if type(pattern) == str:  # support old format
                 pattern = (pattern, '')
 
@@ -294,13 +299,11 @@ def check_fileinfo_groups(item, params, info):
             include_patterns.add(inclusion)
             exclude_patterns.add(exclusion)
 
-            if not _filename_matches(filename, reftime, inclusion, exclusion):
+            filename_matches, date_inclusion = _filename_matches(filename, reftime, inclusion, exclusion)
+            if not filename_matches:
                 continue
 
-            size_str = line[1]
-            if size_str in ['missing', '']:
-                continue
-            elif size_str == "not readable":
+            if size_str == "not readable":
                 files_not_readable.add(size_str)
                 continue
 
@@ -339,20 +342,14 @@ def check_fileinfo_groups(item, params, info):
 
     # Start Checking
     check_definition = [
-        ("Oldest age", "age_oldest", age_oldest, get_age_human_readable),
-        ("Newest age", "age_newest", age_newest, get_age_human_readable),
-        ("Count",      "count",      count_all,  saveint),
-        ("Size",       "size",       size_all,   get_filesize_human_readable),
+        ("Count",         "count",         count_all,      saveint),
+        ("Size",          "size",          size_all,       get_filesize_human_readable),
+        ("Largest size",  "size_largest",  size_largest,   get_filesize_human_readable),
+        ("Smallest size", "size_smallest", size_smallest,  get_filesize_human_readable),
+        ("Oldest age",    "age_oldest",    age_oldest,     get_age_human_readable),
+        ("Newest age",    "age_newest",    age_newest,     get_age_human_readable),
+        ("Date pattern",  "date pattern",  date_inclusion, str),
     ]
-
-    if size_smallest is not None:
-        check_definition.append(("Smallest size", "size_smallest",
-                                 size_smallest, get_filesize_human_readable))
-    if size_largest != 0:
-        check_definition.append(("Largest size", "size_largest",
-                                 size_largest, get_filesize_human_readable))
-    if date_inclusion:
-        check_definition.append(("Date pattern", "date pattern", date_inclusion, str))
 
     if files_not_readable:
         yield 1, "Files not readable: %s" % ", ".join(files_not_readable)
@@ -380,6 +377,9 @@ def fileinfo_check_function(check_definition, params, outof_range_txt):
     states = [0]
     perfdata = []
     for title, key, value, verbfunc in check_definition:
+        if value in [None, ""]:
+            continue
+
         infotext = "%s: %s" % (title, verbfunc(value))
         warn, crit = None, None
         for state, warn, crit, comp_text in _fileinfo_check_file(value, params, key):

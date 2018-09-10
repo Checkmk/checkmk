@@ -523,8 +523,6 @@ class AutomationAnalyseServices(Automation):
     # TODO: Was ist mit Clustern???
     # TODO: Klappt das mit automatischen verschatten von SNMP-Checks (bei dual Monitoring)
     def execute(self, args):
-        import cmk_base.check_table as check_table
-
         hostname = args[0]
         servicedesc = args[1].decode("utf-8")
         check_api_utils.set_hostname(hostname)
@@ -1430,7 +1428,7 @@ class AutomationGetServiceConfigurations(Automation):
         # legacy checks via active_checks
         actchecks = []
         for acttype, rules in config.active_checks.iteritems():
-            entries = rulesets.host_extra_conf(hostname, rules)
+            entries = config.host_extra_conf(hostname, rules)
             for params in entries:
                 description = config.active_check_service_description(hostname, acttype, params)
                 actchecks.append((acttype, description, params))
@@ -1438,9 +1436,8 @@ class AutomationGetServiceConfigurations(Automation):
 
     def _get_checkgroup_of_checks(self):
         checkgroup_of_checks = {}
-        for check_plugin_name, check in checks.check_info.items():
+        for check_plugin_name, check in config.check_info.items():
             checkgroup_of_checks[check_plugin_name] = check.get("group")
         return checkgroup_of_checks
 
 automations.register(AutomationGetServiceConfigurations())
-

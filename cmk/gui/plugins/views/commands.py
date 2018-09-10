@@ -485,7 +485,7 @@ def render_acknowledgement():
                   label=_('persistent comment'))
     html.hr()
 
-    _vs_expire().render_input("_ack_expire", 0)
+    _vs_expire().render_input("_ack_expire", config.view_action_defaults.get("ack_expire", 0))
     html.help(_("Note: Expiration of acknowledgements only works when using the Check_MK Micro Core."))
     html.hr()
     html.write_text(_("Comment") + ": ")

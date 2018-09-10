@@ -935,6 +935,11 @@ register_configvar(group,
             ("ack_persistent", Checkbox(
                 title = _("Persistent comment"), label = _("Enable"), default_value = False,
             )),
+            ("ack_expire", Age(
+                title = _("Expire acknowledgement after"),
+                display = ["days", "hours", "minutes"],
+                default_value = 0,
+            )),
         ],
         optional_keys = [],
     ),

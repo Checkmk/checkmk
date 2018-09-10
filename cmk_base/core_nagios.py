@@ -30,6 +30,8 @@ import os
 import subprocess
 import sys
 import py_compile
+import tempfile
+import errno
 
 import cmk.paths
 import cmk.tty as tty
@@ -47,13 +49,40 @@ import cmk_base.check_api_utils as check_api_utils
 
 class NagiosCore(core_config.MonitoringCore):
     def create_config(self):
-        with file(cmk.paths.nagios_objects_file, "w") as out:
-            create_config(out, None)
+        """Tries to create a new Check_MK object configuration file for the Nagios core
+
+        During create_config() exceptions may be raised which are caused by configuration issues.
+        Don't produce a half written object file. Simply throw away everything and keep the old file.
+
+        The user can then start the site with the old configuration and fix the configuration issue
+        while the monitoring is running.
+        """
+        tmp_path = None
+        try:
+            with tempfile.NamedTemporaryFile("w", dir=os.path.dirname(cmk.paths.nagios_objects_file),
+                                             prefix=".%s.new" % os.path.basename(cmk.paths.nagios_objects_file),
+                                             delete=False) as tmp:
+                tmp_path = tmp.name
+                os.chmod(tmp.name, 0660)
+                create_config(tmp, hostnames=None)
+                os.rename(tmp.name, cmk.paths.nagios_objects_file)
+
+        except Exception, e:
+            # In case an exception happens cleanup the tempfile created for writing
+            try:
+                if tmp_path:
+                    os.unlink(tmp_path)
+            except IOError, e:
+                if e.errno == errno.ENOENT: # No such file or directory
+                    pass
+
+            raise
 
     def precompile(self):
         console.output("Precompiling host checks...")
         precompile_hostchecks()
         console.output(tty.ok + "\n")
+
 
 
 #   .--Create config-------------------------------------------------------.

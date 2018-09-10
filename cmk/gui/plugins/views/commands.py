@@ -92,15 +92,18 @@ config.declare_permission("action.reschedule",
         [ "user", "admin" ])
 
 
+def render_reschedule():
+    html.button("_resched_checks", _("Reschedule"))
+    html.write_text(" " + _("and spread over") + " ")
+    html.number_input("_resched_spread", 0, size=3)
+    html.write_text(" " + _("minutes") + " ")
+
+
 multisite_commands.append({
     "tables"      : [ "host", "service" ],
     "permission"  : "action.reschedule",
     "title"       : _("Reschedule active checks"),
-    "render"      : lambda: \
-        html.button("_resched_checks", _("Reschedule")) == \
-        html.write_text(" " + _("and spread over") + " ") == \
-        html.number_input("_resched_spread", 0, size=3) == \
-        html.write_text(" " + _("minutes") + " "),
+    "render"      : render_reschedule,
     "action"      : command_reschedule,
     "row_stats"   : True, # Get information about number of rows and current row nr.
 })
@@ -135,13 +138,17 @@ def command_notifications(cmdtag, spec, row):
         return ("DISABLE_" + cmdtag + "_NOTIFICATIONS;%s" % spec,
                 _("<b>disable notifications</b> for"))
 
+
+def render_notifications():
+    html.button("_enable_notifications", _("Enable"))
+    html.button("_disable_notifications", _("Disable"))
+
+
 multisite_commands.append({
     "tables"      : [ "host", "service" ],
     "permission"  : "action.notifications",
     "title"       : _("Notifications"),
-    "render"      : lambda: \
-       html.button("_enable_notifications", _("Enable")) == \
-       html.button("_disable_notifications", _("Disable")),
+    "render"      : render_notifications,
     "action"      : command_notifications,
 })
 
@@ -175,13 +182,17 @@ def command_enable_active(cmdtag, spec, row):
         return ("DISABLE_" + cmdtag + "_CHECK;%s" % spec,
                 _("<b>disable active checks</b> for"))
 
+
+def render_enable_active():
+    html.button("_enable_checks", _("Enable"))
+    html.button("_disable_checks", _("Disable"))
+
+
 multisite_commands.append({
     "tables"      : [ "host", "service" ],
     "permission"  : "action.enablechecks",
     "title"       : _("Active checks"),
-    "render"      : lambda: \
-       html.button("_enable_checks", _("Enable")) == \
-       html.button("_disable_checks", _("Disable")),
+    "render"      : render_enable_active,
     "action"      : command_enable_active,
 })
 
@@ -210,13 +221,17 @@ def command_enable_passive(cmdtag, spec, row):
         return ("DISABLE_PASSIVE_" + cmdtag + "_CHECKS;%s" % spec,
                 _("<b>disable passive checks</b> for"))
 
+
+def render_enable_passive():
+    html.button("_enable_passive_checks", _("Enable"))
+    html.button("_disable_passive_checks", _("Disable"))
+
+
 multisite_commands.append({
     "tables"      : [ "host", "service" ],
     "permission"  : "action.enablechecks",
     "title"       : _("Passive checks"),
-    "render"      : lambda: \
-       html.button("_enable_passive_checks", _("Enable")) == \
-       html.button("_disable_passive_checks", _("Disable")),
+    "render"      : render_enable_passive,
     "action"      : command_enable_passive,
 })
 
@@ -243,16 +258,22 @@ config.declare_permission("action.clearmodattr",
         _("Reset all manually modified attributes of a host or service (like disabled notifications)"),
         [ "admin" ])
 
+
+def render_clear_modified():
+    html.button("_clear_modattr", _('Clear modified attributes'))
+
+
+def action_clear_modified(cmdtag, spec, row):
+    if html.var("_clear_modattr"):
+        return "CHANGE_" + cmdtag + "_MODATTR;%s;0" % spec, _("<b>clear the modified attributes</b> of")
+
+
 multisite_commands.append({
     "tables"      : [ "host", "service" ],
     "permission"  : "action.clearmodattr",
     "title"       : _("Modified attributes"),
-    "render"      : lambda: \
-       html.button("_clear_modattr", _('Clear modified attributes')),
-    "action"      : lambda cmdtag, spec, row: (
-        html.var("_clear_modattr") and (
-        "CHANGE_" + cmdtag + "_MODATTR;%s;0" % spec,
-         _("<b>clear the modified attributes</b> of"))),
+    "render"      : render_clear_modified,
+    "action"      : action_clear_modified,
 })
 
 
@@ -386,18 +407,21 @@ def command_custom_notification(cmdtag, spec, row):
         return command, title
 
 
+def render_custom_notification():
+    html.write_text(_('Comment') + ": ")
+    html.text_input("_cusnot_comment", "TEST", size=20, submit="_customnotification")
+    html.write_text(" &nbsp; ")
+    html.checkbox("_cusnot_forced", False, label=_("forced"))
+    html.checkbox("_cusnot_broadcast", False, label=_("broadcast"))
+    html.write_text(" &nbsp; ")
+    html.button("_customnotification", _('Send'))
+
+
 multisite_commands.append({
     "tables"      : [ "host", "service" ],
     "permission"  : "action.customnotification",
     "title"       : _("Custom notification"),
-    "render"      : lambda: \
-        html.write_text(_('Comment') + ": ") == \
-        html.text_input("_cusnot_comment", "TEST", size=20, submit="_customnotification") == \
-        html.write_text(" &nbsp; ") == \
-        html.checkbox("_cusnot_forced", False, label=_("forced")) == \
-        html.checkbox("_cusnot_broadcast", False, label=_("broadcast")) == \
-        html.write_text(" &nbsp; ") == \
-        html.button("_customnotification", _('Send')),
+    "render"      : render_custom_notification,
     "action"      : command_custom_notification,
 })
 
@@ -541,15 +565,19 @@ def command_comment(cmdtag, spec, row):
         title = _("<b>add a comment to</b>")
         return command, title
 
+
+def render_comment():
+    html.write_text(_('Comment')+": ")
+    html.text_input("_comment", size=33, submit="_add_comment")
+    html.write_text(" &nbsp; ")
+    html.button("_add_comment", _("Add comment"))
+
+
 multisite_commands.append({
     "tables"      : [ "host", "service" ],
     "permission"  : "action.addcomment",
     "title"       : _("Add comment"),
-    "render"      : lambda: \
-        html.write_text(_('Comment')+": ") == \
-        html.text_input("_comment", size=33, submit="_add_comment") == \
-        html.write_text(" &nbsp; ") == \
-        html.button("_add_comment", _("Add comment")),
+    "render"      : render_comment,
     "action"      : command_comment,
 })
 
@@ -852,14 +880,22 @@ multisite_commands.append({
     "group"       : "downtimes",
 })
 
+def remove_downtimes(cmdtag, spec, row):
+    if html.has_var("_remove_downtimes"):
+        return ("DEL_%s_DOWNTIME;%d" % (cmdtag, spec), _("remove"))
+
+
+def render_downtimes():
+    html.button("_remove_downtimes", _("Remove"))
+
+
 # REMOVE DOWNTIMES (table downtimes)
 multisite_commands.append({
     "tables"      : [ "downtime" ],
     "permission"  : "action.downtimes",
     "title"       : _("Remove downtimes"),
-    "render"      : lambda: html.button("_remove_downtimes", _("Remove")),
-    "action"      : lambda cmdtag, spec, row: html.has_var("_remove_downtimes") and \
-                           ( "DEL_%s_DOWNTIME;%d" % (cmdtag, spec), _("remove"))
+    "render"      : render_downtimes,
+    "action"      : remove_downtimes,
 })
 
 # REMOVE COMMENTS (table comments)
@@ -877,12 +913,17 @@ def remove_comments(cmdtag, spec, row):
 
         return commands, _("remove")
 
+
+def render_remove_comments():
+    html.button("_remove_comments", _("Remove"))
+
+
 multisite_commands.append({
     "tables"      : [ "comment" ],
     "permission"  : "action.addcomment",
     "title"       : _("Remove comments"),
-    "render"      : lambda: html.button("_remove_comments", _("Remove")),
-    "action"      : remove_comments
+    "render"      : render_remove_comments,
+    "action"      : remove_comments,
 })
 
 #.
@@ -914,6 +955,12 @@ def command_executor_star(command, site):
         stars.add(spec)
     config.user.save_stars(stars)
 
+
+def render_star():
+    html.button("_star",   _("Add to Favorites"))
+    html.button("_unstar", _("Remove from Favorites"))
+
+
 config.declare_permission("action.star",
     _("Use favorites"),
     _("This permission allows a user to make certain host and services "
@@ -925,9 +972,7 @@ multisite_commands.append({
     "tables"         : [ "host", "service" ],
     "permission"     : "action.star",
     "title"          : _("Favorites"),
-    "render"         : lambda: \
-       html.button("_star",   _("Add to Favorites")) == \
-       html.button("_unstar", _("Remove from Favorites")),
+    "render"         : render_star,
     "action"         : command_star,
     "executor"       : command_executor_star,
 })
@@ -957,11 +1002,16 @@ def executor_acknowledge_failed_notification(command, site):
     acktime = int(command)
     notifications.acknowledge_failed_notifications(acktime)
 
+
+def render_acknowledge_failed_notification():
+    html.button("_acknowledge_failed_notification", _("Acknowledge"))
+
+
 multisite_commands.append({
     "tables"     : [ "log" ],
     "permission" : "general.acknowledge_failed_notifications",
     "title"      : _("Acknowledge"),
-    "render"     : lambda: html.button("_acknowledge_failed_notification", _("Acknowledge")),
+    "render"     : render_acknowledge_failed_notification,
     "action"     : command_acknowledge_failed_notification,
-    "executor"   : executor_acknowledge_failed_notification
+    "executor"   : executor_acknowledge_failed_notification,
 })

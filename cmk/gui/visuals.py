@@ -780,7 +780,9 @@ def page_edit_visual(what, all_visuals, custom_field_handler = None,
                          "view will override that (shadowing it)."),
                 regex = '^[a-zA-Z0-9_]+$',
                 regex_error = _('The name of the view may only contain letters, digits and underscores.'),
-                size = 24, allow_empty = False)),
+                size = 50,
+                allow_empty = False)
+            ),
             ('title', TextUnicode(
                 title = _('Title') + '<sup>*</sup>',
                 size = 50, allow_empty = False)),

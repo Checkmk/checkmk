@@ -1,0 +1,13 @@
+title: CISCO Stack Switches: Stack Switch States
+agents: snmp
+catalog: hw/network/cisco
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the stack states of switches.
+
+item:
+ The stack switch number.
+
+inventory:
+ One service per switch is created.

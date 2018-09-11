@@ -103,7 +103,7 @@ check_info["arbor_peakflow_tms.host_fault"] = {
 
 
 def inventory_peakflow_tms_updates(parsed):
-    for name, _value in parsed['update'].iteritems():
+    for name in parsed['update']:
         yield name, None
 
 

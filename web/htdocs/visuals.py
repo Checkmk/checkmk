@@ -1517,9 +1517,10 @@ def collect_context_links_of(visual_type_name, this_visual, active_filter_vars, 
                 break
             vars_values.append((var, val))
 
-        # When all infos of the target visual are showing single site data, add
-        # the site hint when available
-        if html.var('site') and all([ is_single_site_info(info_key)for info_key in visual['single_infos']]):
+        add_site_hint = may_add_site_hint(name, info_keys=infos.keys(), single_info_keys=visual["single_infos"],
+                                          filter_names=dict(vars_values).keys())
+
+        if add_site_hint and html.var('site'):
             vars_values.append(('site', html.var('site')))
 
         # Optional feature of visuals: Make them dynamically available as links or not.
@@ -1546,6 +1547,28 @@ def collect_context_links_of(visual_type_name, this_visual, active_filter_vars, 
             context_links.append((_u(linktitle), uri, icon, buttonid))
 
     return context_links
+
+
+def may_add_site_hint(visual_name, info_keys, single_info_keys, filter_names):
+    """Whether or not the site hint may be set when linking to a visual with the given details"""
+    # When there is one non single site info used don't add the site hint
+    if [ info_key for info_key in single_info_keys if not is_single_site_info(info_key) ]:
+        return False
+
+    # Alternatively when the infos allow a site hint it is also needed to skip the site hint based
+    # on the filters used by the target visual
+    for info_key in info_keys:
+        for filter_key in infos[info_key].get('multiple_site_filters', []):
+            if filter_key in filter_names:
+                return False
+
+    # Hack for servicedesc view which is meant to show all services with the given
+    # description: Don't add the site filter for this view.
+    if visual_name in [ "servicedesc", "servicedescpnp" ]:
+        return False
+
+    return True
+
 
 def transform_old_visual(visual):
     if 'context_type' in visual:

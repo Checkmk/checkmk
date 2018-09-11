@@ -31,9 +31,9 @@ def agent_ipmi_sensors_arguments(params, hostname, ipaddress):
 
     ipmi_command, options = params
     args = [
-        "-u", quote_shell_string(params["username"]),
-        "-p", quote_shell_string(params["password"]),
-        "-l", quote_shell_string(params["privilege_lvl"]),
+        "-u", quote_shell_string(options["username"]),
+        "-p", quote_shell_string(options["password"]),
+        "-l", quote_shell_string(options["privilege_lvl"]),
         "--ipmi-command", ipmi_command,
     ]
 
@@ -47,11 +47,12 @@ def agent_ipmi_sensors_arguments(params, hostname, ipaddress):
         ('--output-sensor-state',          "output_sensor_state"),
         ('--ignore-not-available-sensors', "output_sensor_thresholds"),
         ('--output-sensor-thresholds',     "ignore_not_available_sensors"), ]:
-        this_param = params.get(what)
-        if this_param:
-            args.append( opt )
-            if not isinstance(this_param, bool):
-                args.append( quote_shell_string(this_param) )
+        this_opt = options.get(what)
+        if this_opt is None:
+            continue
+        args.append(opt)
+        if not isinstance(this_opt, bool):
+            args.append(quote_shell_string(this_opt))
 
     args.append( quote_shell_string(ipaddress) )
     return " ".join( args )

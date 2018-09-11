@@ -1,0 +1,10 @@
+Title: win_video: Fixed crash if driver date is missing
+Level: 1
+Component: inv
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1536669999
+Class: fix
+
+

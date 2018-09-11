@@ -60,7 +60,10 @@ def inv_win_video(info):
         elif varname == "DriverVersion":
             array["driver_version"] = value
         elif varname == "DriverDate":
-            array["driver_date"] = int(time.mktime(time.strptime(value.split(".")[0], "%Y%m%d%H%M%S")))
+            try:
+                array["driver_date"] = int(time.mktime(time.strptime(value.split(".")[0], "%Y%m%d%H%M%S")))
+            except ValueError:
+                pass
         elif varname == "AdapterRAM":
             array["graphic_memory"] = saveint(value)
 

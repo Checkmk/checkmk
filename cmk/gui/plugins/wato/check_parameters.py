@@ -891,6 +891,32 @@ register_check_parameters(
     "dict",
 )
 
+register_check_parameters(
+    subgroup_networking,
+    "cisco_stack",
+    _("Cisco Stack Switch Status"),
+    Dictionary(
+        elements=[
+            ("waiting", MonitoringState(title=_(u"waiting"), default_value=0, help=_(u"Waiting for other switches to come online"))),
+            ("progressing", MonitoringState(title=_(u"progressing"), default_value=0, help=_(u"Master election or mismatch checks in progress"))),
+            ("added", MonitoringState(title=_(u"added"), default_value=0, help=_(u"Added to stack"))),
+            ("ready", MonitoringState(title=_(u"ready"), default_value=0, help=_(u"Ready"))),
+            ("sdmMismatch", MonitoringState(title=_(u"sdmMismatch"), default_value=1, help=_(u"SDM template mismatch"))),
+            ("verMismatch", MonitoringState(title=_(u"verMismatch"), default_value=1, help=_(u"OS version mismatch"))),
+            ("featureMismatch", MonitoringState(title=_(u"featureMismatch"), default_value=1, help=_(u"Configured feature mismatch"))),
+            ("newMasterInit", MonitoringState(title=_(u"newMasterInit"), default_value=0, help=_(u"Waiting for new master initialization"))),
+            ("provisioned", MonitoringState(title=_(u"provisioned"), default_value=0, help=_(u"Not an active member of the stack"))),
+            ("invalid", MonitoringState(title=_(u"invalid"), default_value=2, help=_(u"State machine in invalid state"))),
+            ("removed", MonitoringState(title=_(u"removed"), default_value=2, help=_(u"Removed from stack"))),
+        ],
+        optional_keys=[],
+    ),
+    TextAscii(
+        title=_("Switch number"),
+    ),
+    "dict",
+)
+
 #.
 #   .--Inventory-----------------------------------------------------------.
 #   |            ___                      _                                |

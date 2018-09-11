@@ -178,11 +178,22 @@ def monitoring_macro_help():
                    "the macro <tt>$_HOSTFOO$</tt> being replaced with <tt>bar</tt> ")
 
 
-def vs_bulk_discovery(render_form=False):
+def vs_bulk_discovery(render_form=False, include_subfolders=True):
     if render_form:
         render = "form"
     else:
         render = None
+
+    if include_subfolders:
+        selection_elements = [Checkbox(label = _("Include all subfolders"), default_value = True)]
+    else:
+        selection_elements = []
+
+    selection_elements += [
+        Checkbox(label = _("Only include hosts that failed on previous discovery"), default_value = False),
+        Checkbox(label = _("Only include hosts with a failed discovery check"), default_value = False),
+        Checkbox(label = _("Exclude hosts where the agent is unreachable"), default_value = False),
+    ]
 
     return Dictionary(
         title    = _("Bulk discovery"),
@@ -201,16 +212,7 @@ def vs_bulk_discovery(render_form=False):
             )),
             ("selection", Tuple(
                 title    = _("Selection"),
-                elements = [
-                    Checkbox(label = _("Include all subfolders"),
-                             default_value = True),
-                    Checkbox(label = _("Only include hosts that failed on previous discovery"),
-                             default_value = False),
-                    Checkbox(label = _("Only include hosts with a failed discovery check"),
-                             default_value = False),
-                    Checkbox(label = _("Exclude hosts where the agent is unreachable"),
-                             default_value = False),
-                ]
+                elements = selection_elements
             )),
             ("performance", Tuple(
                 title    = _("Performance options"),

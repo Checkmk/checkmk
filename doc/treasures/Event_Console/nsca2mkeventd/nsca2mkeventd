@@ -45,6 +45,7 @@ def verbose(txt):
     if opt_verbose:
         log(txt)
 
+
 def usage():
     sys.stdout.write('''Usage: nsca2mkeventd [OPTIONS]
 
@@ -60,7 +61,11 @@ Default paths:
     Event Pipe:       %(g_pipe_path)s
     Log file:         %(g_logfile_path)s
 
-''' % globals())
+''' % {
+    "g_eventsocket_path": g_eventsocket_path,
+    "g_pipe_path": g_pipe_path,
+    "g_logfile_path": g_logfile_path,
+})
 
 #.
 #   .--Daemonize-----------------------------------------------------------.

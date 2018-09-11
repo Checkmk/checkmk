@@ -592,7 +592,7 @@ class HTMLGenerator(OutputFunnel):
                 if sep.startswith(';'):
                     v = re.sub(';+', ';', v)
 
-            yield ' %s=\"%s\"' %(k, v)
+            yield ' %s=\"%s\"' % (k, v)
 
         for k in options:
             yield " %s=\'\'" % k

@@ -51,7 +51,7 @@ class AutomaticDict(OrderedDict):
 
 
     def append(self, item):
-        self["%s_%i" %(self._list_identifier, self._item_index)] = item
+        self["%s_%i" % (self._list_identifier, self._item_index)] = item
         self._item_index += 1
 
 # TODO: Refactor to plugin_registry structures

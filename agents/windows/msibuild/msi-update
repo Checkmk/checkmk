@@ -227,8 +227,8 @@ try:
 
     lcab_files = ""
     for index, lcab_file in sorted(cabinet_files):
-        lcab_files += "%(source_dir)s/%(lcab_file)s " % globals()
-    if os.system("lcab -n %(lcab_files)s %(work_dir)s/product.cab" % globals()) != 0:
+        lcab_files += "%(source_dir)s/%(lcab_file)s " % {"source_dir": source_dir, "lcab_file": lcab_file}
+    if os.system("lcab -n %(lcab_files)s %(work_dir)s/product.cab" % {"lcab_files": lcab_files, "work_dir": work_dir}) != 0:
         bail_out('Fehler!')
 
     # Add modified product.cab
@@ -243,4 +243,3 @@ except Exception, e:
     if work_dir and os.path.exists(work_dir):
         shutil.rmtree(work_dir)
     bail_out("Error on creating msi file: %s" % str(e))
-

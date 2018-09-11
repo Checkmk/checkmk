@@ -91,7 +91,7 @@ def inv_solaris_prtdiag(info):
         if line[0].startswith('OBP'):
             node = inv_tree("hardware.bios.")
             bios_info = line[0].split()
-            node["version"] = "%s %s" %(bios_info[0], bios_info[1])
+            node["version"] = "%s %s" % (bios_info[0], bios_info[1])
             formated_date = bios_info[2] + bios_info[3]
             node["date"] = int(time.mktime(time.strptime(formated_date, "%Y/%m/%d%H:%M")))
             node["vendor"] = "Oracle"

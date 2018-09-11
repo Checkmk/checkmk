@@ -152,7 +152,7 @@ def parse_netapp_api_fcp(info):
 
         for what in ["avg_latency", "avg_read_latency", "avg_write_latency"]:
             if what in values:
-                fcp_data[what] = get_rate("%s.%s" %(key, what), now, int(values[what]) / 1000.0)
+                fcp_data[what] = get_rate("%s.%s" % (key, what), now, int(values[what]) / 1000.0)
         fcp_interfaces[key] = fcp_data
 
     return fcp_interfaces

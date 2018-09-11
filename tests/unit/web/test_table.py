@@ -215,5 +215,5 @@ def test_table_cubical(register_builtin_html, monkeypatch, sortable, searchable,
         limit = len(rows)
 
     # Assert data correctness
-    assert len(data) <= limit, 'Wrong number of rows: Got %s, should be <= %s' %(len(data), limit)
+    assert len(data) <= limit, 'Wrong number of rows: Got %s, should be <= %s' % (len(data), limit)
     assert data == rows[:limit], "Incorrect data: %s\n\nVS\n%s" % (data, rows[:limit])

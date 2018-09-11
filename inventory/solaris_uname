@@ -32,7 +32,7 @@ def inv_solaris_uname(info):
     node["vendor"]   = "Oracle"
     node["type"]    = solaris_uname["System"]
     node["version"] = solaris_uname["Release"]
-    node["name"]    = "%s %s" %(solaris_uname["System"],solaris_uname["Release"])
+    node["name"]    = "%s %s" % (solaris_uname["System"],solaris_uname["Release"])
     node["kernel_version"] = solaris_uname["KernelID"]
     node["hostname"] = solaris_uname["Node"]
 

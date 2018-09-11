@@ -2853,6 +2853,7 @@ def join_row(row, cell):
     else:
         return row
 
+# TODO: There is duplicated logic with visuals.collect_context_links_of()
 def url_to_view(row, view_name):
     if display_options.disabled(display_options.I):
         return None
@@ -2887,18 +2888,8 @@ def url_to_view(row, view_name):
             except KeyError:
                 pass
 
-        # Some special handling for the site filter which is meant as optional hint
-        # Always add the site filter var when some useful information is available
-        add_site_hint = True
-        for filter_key in datasource.get('multiple_site_filters', []):
-            if filter_key in dict(url_vars):
-                add_site_hint = False
-
-        # Hack for servicedesc view which is meant to show all services with the given
-        # description: Don't add the site filter for this view.
-        if view_name == "servicedesc":
-            add_site_hint = False
-
+        add_site_hint = visuals.may_add_site_hint(view_name, info_keys=datasource["infos"],
+                                                  single_info_keys=view["single_infos"], filter_names=dict(url_vars).keys())
         if add_site_hint and row.get('site'):
             url_vars.append(('site', row['site']))
 

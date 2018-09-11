@@ -31,7 +31,7 @@
 
 
 def inv_fireeye_sys_status(info):
-    status, model, serial = info[0]
+    _status, model, serial = info[0]
     node = inv_tree("hardware.system.")
     node["serial"] = serial
     node["model"]  = model

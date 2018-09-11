@@ -42,8 +42,8 @@ def inv_oracle_instance(info, inventory_tree, status_data_tree):
             up_seconds       = None
 
         elif len(line) >= 11:
-            sid, version, openmode, logins, archiver, up_seconds_str, dbid, \
-                logmode, database_role, force_logging, name = line[:11]
+            sid, version, openmode, logins, _archiver, up_seconds_str, _dbid, \
+                logmode, _database_role, _force_logging, _name = line[:11]
             up_seconds = int(up_seconds_str)
             if len(line) > 11:
                 db_creation_time = time.mktime(time.strptime(line[-1], "%d%m%Y%H%M%S"))

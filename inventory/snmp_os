@@ -25,7 +25,7 @@
 # Boston, MA 02110-1301 USA.
 
 def inv_snmp_os(info):
-    sys_descr, sys_obj, sys_uptime, sys_name = info[0]
+    sys_descr, sys_obj, _sys_uptime, _sys_name = info[0]
     descr_short = sys_descr.split()
     descr_long = sys_descr.split(",")
     node = inv_tree("software.os.")

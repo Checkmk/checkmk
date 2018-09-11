@@ -63,7 +63,7 @@ def inv_perle_chassis_slots(info):
 
     node = inv_tree_list("hardware.components.modules:")
     for index, name, modelname, serial, bootloader, fw, \
-        alarms, diagstate, ty, descr in info:
+        _alarms, _diagstate, ty, descr in info:
 
         if ty != "0":
             node.append({

@@ -83,8 +83,6 @@ def inv_dmidecode(info):
     if section_name:
         inv_dmidecode_parse_section(section_name, section_lines)
 
-    node = inv_tree("hardware.")
-
 
 def inv_dmidecode_parse_section(name, lines):
     lines = [ [ w.strip() for w in words ] for words in lines ]
@@ -105,13 +103,13 @@ def inv_dmidecode_parse_section(name, lines):
     elif name == "Memory Device":
         inv_dmidecode_parse_mem_device(lines)
 
-    # TODO: Summe über alle Arrays ausrechnen
+    # TODO: Summe ueber alle Arrays ausrechnen
 
 def inv_dmidecode_parse_date(value):
     try:
         # 10/17/2008
         return time.mktime(time.strptime(value, "%m/%d/%Y"))
-    except Exception, e:
+    except Exception:
         return
 
 def inv_dmidecode_parse_bios(lines):

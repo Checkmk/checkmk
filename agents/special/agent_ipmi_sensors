@@ -83,7 +83,8 @@ def parse_data(data, excludes):
 
 def agent_ipmi_sensors_main(cmdline_args):
     short_options = 'u:p:l:D:k:'
-    long_options  = [ 'help', 'debug'
+    long_options  = [ 'help', 'debug',
+                      'ipmi-command=',
                       'quiet-cache', 'sdr-cache-recreate', 'interpret-oem-data',
                       'output-sensor-state', 'ignore-not-available-sensors',
                       'driver-type=', 'output-sensor-thresholds' ]
@@ -175,7 +176,7 @@ def agent_ipmi_sensors_main(cmdline_args):
         sys.stderr.write("Executing: '%s'\n" % ipmi_cmd_str)
 
     errors = []
-    for section, (types, excludes) in queries:
+    for section, (types, excludes) in queries.iteritems():
         sys.stdout.write( "<<<ipmi%s:sep(124)>>>\n" % section )
         try:
             try:

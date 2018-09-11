@@ -55,8 +55,7 @@ def inv_oracle_tablespaces(parsed, inventory_tree, status_data_tree):
     inv_node = inventory_tree.get_list(path)
     status_node = status_data_tree.get_list(path)
 
-    tablespaces_sizes_by_type = {}
-    tablespaces, error_sids = parsed
+    tablespaces, _error_sids = parsed
     for tablespace, attrs in tablespaces.items():
         sid, name      = tablespace
         db_version     = attrs["db_version"]
@@ -71,19 +70,9 @@ def inv_oracle_tablespaces(parsed, inventory_tree, status_data_tree):
         free_space     = 0
 
         for datafile in attrs.get("datafiles", []):
-            datafile_name      = datafile["name"]
-            datafile_status    = datafile["status"]
-            autoextensible     = datafile["autoextensible"]
-            ts_type            = datafile["ts_type"]
-            ts_status          = datafile["ts_status"]
-            file_online_status = datafile["file_online_status"]
-
             # The following values may be None
             try:
                 bs                  = datafile["block_size"]
-                filesize_blocks     = bs * int(datafile["size"])
-                max_filesize_blocks = bs * int(datafile["max_size"])
-                used_blocks         = bs * int(datafile["used_size"])
                 free_space          = bs * int(datafile["free_space"])
                 increment_size      = bs * int(datafile["increment_size"])
             except:
@@ -112,15 +101,12 @@ def inv_oracle_tablespaces(parsed, inventory_tree, status_data_tree):
                         max_size       += df_max_size
                         free_extension  = df_max_size - df_size # free extension space
 
-                    if incsize == datafile["block_size"]:
-                        uses_default_increment = True
-
                     #incs, rest = divmod(free_extension, incsize)
                     #if rest:
                     #    # ??? Was ist, wenn es nicht genau aufgeht und ein weiteres
-                    #    # increment max_size überschreiten würde? Das geht ja wohl
+                    #    # increment max_size ueberschreiten würde? Das geht ja wohl
                     #    # nicht oder??
-                    #    # incs += 1 ### Dann würde max_size überschritten!
+                    #    # incs += 1 ### Dann wuerde max_size überschritten!
                     incs = free_extension / incsize
                     num_increments += incs
                     increment_size += incsize * incs

@@ -50,8 +50,8 @@ def inv_hp_proliant_mem(info):
     node = inv_tree_list("hardware.memory.arrays:")
 
     infos = {}
-    for board_index, module_index, module_size_str, module_type, \
-        module_status, module_condition, module_serial, cpu_num in info:
+    for _board_index, module_index, module_size_str, module_type, \
+        _module_status, _module_condition, module_serial, cpu_num in info:
         infos.setdefault((int(cpu_num)-1, module_index), {
             "serial" : module_serial,
             "type"   : map_mem_types.get(module_type, "unknown(%s)" % module_type),
@@ -66,8 +66,8 @@ def inv_hp_proliant_mem(info):
                     entry.update(module_info)
     except:
         array = { "devices" : [] }
-        for board_index, module_index, module_size_str, module_type, \
-            module_status, module_condition, module_serial, cpu_num in info:
+        for _board_index, module_index, module_size_str, module_type, \
+            _module_status, _module_condition, module_serial, cpu_num in info:
 
             array["devices"].append({
                 "size"    : float(module_size_str) * 1024,

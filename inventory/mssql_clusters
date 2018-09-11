@@ -40,7 +40,6 @@ def inv_mssql_clusters(info):
 
     for line in info:
         instance_id  = line[0]
-        database     = line[1]
         active_node  = line[2]
         nodes        = line[3].split(",")
 

@@ -62,7 +62,6 @@ def win_cpuinfo_parse_voltage(v):
 
 def inv_win_cpuinfo(info):
     node = inv_tree("hardware.cpu.")
-    num_threads_total = 0
     num_procs = 0
     for varname, value in info:
         varname = re.sub(" *","", varname)
@@ -125,4 +124,3 @@ def inv_win_cpuinfo(info):
 inv_info['win_cpuinfo'] = {
    "inv_function"           : inv_win_cpuinfo,
 }
-

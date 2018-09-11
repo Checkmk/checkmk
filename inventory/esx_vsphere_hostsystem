@@ -97,7 +97,7 @@ def inv_esx_vsphere_hostsystem(info):
     try:
         node["date"] = float(time.strftime("%s", \
                        time.strptime(data["hardware.biosInfo"]["releaseDate"],"%Y-%m-%dT%H:%M:%SZ")))
-    except Exception, e:
+    except Exception:
         pass
 
     if "hardware.systemInfo" in data:
@@ -121,4 +121,3 @@ def inv_esx_vsphere_hostsystem(info):
 inv_info['esx_vsphere_hostsystem'] = {
    "inv_function"           : inv_esx_vsphere_hostsystem,
 }
-

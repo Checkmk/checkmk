@@ -134,6 +134,9 @@ def inv_tree(path, default_value=None):
         for path in pylint_cmk.check_files(repo_path() + "/checks"):
             pylint_cmk.add_file(f, path)
 
+        # TODO: Remove this when all our checks are fixed.
+        f.write("# pylint: enable=unused-variable\n")
+
         # Now add the inventory plugins
         for path in pylint_cmk.check_files(repo_path() + "/inventory"):
             pylint_cmk.add_file(f, path)

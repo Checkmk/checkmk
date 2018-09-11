@@ -36,7 +36,7 @@
 
 def inv_perle_chassis(info):
     node = inv_tree("hardware.chassis.")
-    model, serial, bootloader, fw, alarms, diagstate, temp_str = info[0]
+    model, serial, bootloader, fw, _alarms, _diagstate, _temp_str = info[0]
 
     node["serial"]     = serial
     node["model"]      = model

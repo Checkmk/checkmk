@@ -79,7 +79,7 @@ def inv_solaris_pkginfo(info):
             try:
                 install_date_epoch = int(time.mktime(time.strptime(value.strip(), "%b %d %Y %H %M")))
                 entry.update({'install_date' : install_date_epoch})
-            except Exception,e:
+            except Exception:
                 pass
         else:
             # iterate over translation dict and update entries

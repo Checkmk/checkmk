@@ -57,7 +57,7 @@
 def inv_solaris_psrinfo(info):
     node = inv_tree("hardware.cpu.")
     node["Model"] = info[-1][0]
-    node["Maximum Speed"] = "%s %s" %(info[-1][-2], info[-1][-1].strip(')') )
+    node["Maximum Speed"] = "%s %s" % (info[-1][-2], info[-1][-1].strip(')') )
 
 
 inv_info['solaris_psrinfo'] = {

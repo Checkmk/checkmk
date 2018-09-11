@@ -4380,7 +4380,7 @@ def parse_command_options(args, options_spec):
         sys.stdout.write("Possible options for this command:\n")
         for llong, sshort, needarg, help in options_spec:
             args_text = "%s--%s" % (sshort and "-%s," % sshort or "", llong)
-            sys.stdout.write(" %-15s %3s  %s\n" %(args_text, needarg and "ARG" or "", help))
+            sys.stdout.write(" %-15s %3s  %s\n" % (args_text, needarg and "ARG" or "", help))
         sys.exit(0)
 
     options = {}

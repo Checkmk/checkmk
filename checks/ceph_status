@@ -39,12 +39,12 @@ def ceph_check_epoch(_id, epoch, params):
     epoch_rate = get_rate("%s.epoch.rate" % _id, time.time(), epoch, avg_interval_min)
     epoch_avg  = get_average("%s.epoch.avg" % _id, time.time(), epoch_rate, avg_interval_min)
     state      = 0
-    infotext   = 'Epoch: %s/%s' % (epoch_rate, get_age_human_readable(avg_interval_min*60))
+    infotext   = 'Epoch: %s/%s' % (epoch_avg, get_age_human_readable(avg_interval_min*60))
 
     if warn is not None and crit is not None:
-        if epoch_rate >= crit:
+        if epoch_avg >= crit:
             state = 2
-        elif epoch_rate >= warn:
+        elif epoch_avg >= warn:
             state = 1
         if state > 0:
             infotext += " (warn/crit at %.1f/%.1f)" % (warn, crit)

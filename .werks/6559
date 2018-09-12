@@ -1,0 +1,18 @@
+Title: OMD update is now warning when changing editions
+Level: 1
+Component: omd
+Class: feature
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0i1
+Date: 1536646773
+
+During an "omd update" it is possible to switch between Check_MK Editions.  For
+example to upgrade from Check_MK Raw Edition to Check_MK Enterprise Editions.
+It happened that users were accidentally updating Check_MK Enterprise Edition
+based sites with Check_MK Raw Editions which e.g. results in reduced
+functionality and performance.
+
+During updates OMD is now comparing the old and new Check_MK Editions and asks
+the user for confirmation once a change of the edition is detected.

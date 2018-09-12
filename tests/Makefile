@@ -16,6 +16,7 @@ help:
 	@echo "test-packaging            - Run packaging tests"
 	@echo "test-bandit               - Run bandit (security) tests"
 	@echo "test-shellcheck           - Run shellcheck tests"
+	@echo "test-docker               - Run docker tests"
 
 # This target needs to be phony so it is run every time because only the other
 # makefile can determine that there's nothing to be done.

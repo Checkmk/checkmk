@@ -25,7 +25,7 @@
 # Boston, MA 02110-1301 USA.
 
 def inventory_datapower_pdrive(info):
-    for controller, device, ldrive, position, status, progress, vendor, product, fail in info:
+    for controller, device, _ldrive, _position, status, _progress, _vendor, _product, _fail in info:
         if status != "12":
             item = "%s-%s" % (controller, device)
             yield item, None

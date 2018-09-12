@@ -31,7 +31,7 @@ def inventory_cmciii_lcp_fans(info):
     # be non-fan information in the resulting data like infos about
     # water cooling. Filter them out.
     parts = [ info[0][x+1:x+4] for x in range(0, len(info[0]), 4) ]
-    for i, (name, value, status) in enumerate(parts):
+    for i, (name, _value, status) in enumerate(parts):
         if status != "off" and 'FAN' in name:
             # FIXME: Why not use the unique name? Maybe recode
             inventory.append((i+1 , None))

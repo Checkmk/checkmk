@@ -62,7 +62,7 @@ map_memtype = {
 }
 
 def inventory_cisco_ucs_mem(info):
-    for name, serial, memtype, capacity, status, presence in info:
+    for name, _serial, _memtype, _capacity, _status, presence in info:
         if presence != '11': # do not discover missing units
             yield name, None
 

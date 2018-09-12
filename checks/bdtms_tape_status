@@ -30,7 +30,7 @@ def inventory_bdtms_tape_info(info):
 
 
 def check_bdtms_tape_info(_no_item, _no_params, info):
-    activity_id, health_id = info[0]
+    _activity_id, health_id = info[0]
 
     health = {
         '1': 'unknown',

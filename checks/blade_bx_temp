@@ -33,7 +33,7 @@ def check_blade_bx_temp(item, params, info):
                         5 : "warning-temp",
                         6 : "critical-temp",
                         7 : "not-available" }
-    for index, status, descr, level_warn, level_crit, temp, crit_react in info:
+    for _index, status, descr, level_warn, level_crit, temp, crit_react in info:
         status = saveint(status)
         level_crit = saveint(level_crit)
         level_warn = saveint(level_warn)
@@ -81,4 +81,3 @@ check_info['blade_bx_temp'] = {
         'group'              : 'temperature',
         'includes'           : ['temperature.include']
         }
-

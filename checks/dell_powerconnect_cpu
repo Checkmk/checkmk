@@ -40,7 +40,7 @@ dell_powerconnect_cpu_default_levels = (80, 90)
 # Inventory of dell power connect CPU details.
 def inventory_dell_powerconnect_cpu(checkname, info):
     if info:
-        enabled, onesecondperc, oneminuteperc, fiveminutesperc = info[0]
+        enabled, onesecondperc, _oneminuteperc, _fiveminutesperc = info[0]
         if enabled == '1' and onesecondperc != '' and int(onesecondperc) >= 0:
             return [ (None, 'dell_powerconnect_cpu_default_levels') ]
 

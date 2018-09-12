@@ -31,7 +31,7 @@ def parse_docker_container_diskstat(info):
     for node_name, node_info in node_sections.items():
         timestamp = node_info["time"]
 
-        for device_id, device in node_info["devices"].items():
+        for _device_id, device in node_info["devices"].items():
             # Filter out unwanted things
             if device["name"].startswith("loop"):
                 continue
@@ -107,10 +107,8 @@ def check_docker_container_diskstat(item, params, parsed):
 
         read_ios_rate      = get_rate(counter_base + "read_ios",    timestamp, device["ios"]["Read"], onwrap=0.0)
         write_ios_rate     = get_rate(counter_base + "write_ios",   timestamp, device["ios"]["Write"], onwrap=0.0)
-        total_ios_rate     = read_ios_rate + write_ios_rate
         read_bytes_rate    = get_rate(counter_base + "read_bytes",  timestamp, device["bytes"]["Read"], onwrap=0.0)
         write_bytes_rate   = get_rate(counter_base + "write_bytes", timestamp, device["bytes"]["Write"], onwrap=0.0)
-        total_bytes_rate   = read_bytes_rate + write_bytes_rate
 
         disks[device_name] = {
             "node"                       : node_name,
@@ -133,4 +131,3 @@ check_info["docker_container_diskstat"] = {
     "node_info"           : True, # add first column with actual host name
     "includes"            : [ "diskstat.include" ],
 }
-

@@ -26,7 +26,7 @@
 
 
 def inventory_checkpoint_powersupply(info):
-    for index, dev_status in info:
+    for index, _dev_status in info:
         yield index, {}
 
 

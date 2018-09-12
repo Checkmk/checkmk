@@ -50,13 +50,13 @@ factory_settings["bintec_sensors_fan_default_levels"] = {
 
 def inventory_bintec_sensors_fan(info):
     inventory = []
-    for sensor_id, sensor_descr, sensor_type, sensor_value, sensor_unit in info:
+    for _sensor_id, sensor_descr, sensor_type, _sensor_value, _sensor_unit in info:
         if sensor_type == "2":
             inventory.append( (sensor_descr, {}) )
     return inventory
 
 def check_bintec_sensors_fan(item, params, info):
-    for sensor_id, sensor_descr, sensor_type, sensor_value, sensor_unit in info:
+    for _sensor_id, sensor_descr, _sensor_type, sensor_value, _sensor_unit in info:
         if sensor_descr == item:
             return check_fan(int(sensor_value), params)
 
@@ -88,13 +88,13 @@ factory_settings["bintec_sensors_temp_default_levels"] = {
 
 
 def inventory_bintec_sensors_temp(info):
-    for sensor_id, sensor_descr, sensor_type, sensor_value, sensor_unit in info:
+    for _sensor_id, sensor_descr, sensor_type, _sensor_value, _sensor_unit in info:
         if sensor_type == "1":
             yield sensor_descr, {}
 
 
 def check_bintec_sensors_temp(item, params, info):
-    for sensor_id, sensor_descr, sensor_type, sensor_value, sensor_unit in info:
+    for _sensor_id, sensor_descr, _sensor_type, sensor_value, _sensor_unit in info:
         if sensor_descr == item:
             return check_temperature(int(sensor_value), params, "bintec_sensors_%s" % item)
 
@@ -125,13 +125,13 @@ check_info["bintec_sensors.temp"] = {
 
 def inventory_bintec_sensors_voltage(info):
     inventory = []
-    for sensor_id, sensor_descr, sensor_type, sensor_value, sensor_unit in info:
+    for _sensor_id, sensor_descr, sensor_type, _sensor_value, _sensor_unit in info:
         if sensor_type == "3":
             inventory.append( (sensor_descr, None ) )
     return inventory
 
 def check_bintec_sensors_voltage(item, _no_params, info):
-    for sensor_id, sensor_descr, sensor_type, sensor_value, sensor_unit in info:
+    for _sensor_id, sensor_descr, _sensor_type, sensor_value, _sensor_unit in info:
         if sensor_descr == item:
             sensor_value = int(sensor_value) / 1000.0
 

@@ -70,14 +70,14 @@ def brocade_mlx_combine_item(id, descr):
 
 def inventory_brocade_mlx_module(info):
     inventory = []
-    for module_id, module_descr, module_state, mem_total, mem_avail in info[0]:
+    for module_id, module_descr, module_state, _mem_total, _mem_avail in info[0]:
         # do not inventorize modules reported as empty
         if module_state != "0":
             inventory.append( (brocade_mlx_combine_item(module_id, module_descr), None) )
     return inventory
 
 def check_brocade_mlx_module(item, _no_params, info):
-    for module_id, module_descr, module_state, mem_total, mem_avail in info[0]:
+    for module_id, module_descr, module_state, _mem_total, _mem_avail in info[0]:
         if brocade_mlx_combine_item(module_id, module_descr) == item:
             return brocade_mlx_get_state(int(module_state))
     return 3, "Module not found"
@@ -184,7 +184,7 @@ brocade_mlx_cpu_default_levels = { "levels" : (80.0, 90.0) }
 
 def inventory_brocade_mlx_module_cpu(info):
     inventory = []
-    for module_id, module_descr, module_state, mem_total, mem_avail in info[0]:
+    for module_id, module_descr, module_state, _mem_total, _mem_avail in info[0]:
         # do not inventorize modules reported as empty or "Blocked for full height card"
         # and: monitor cpu only on NI-MLX and BR-MLX modules
         if module_state != "0" and module_state != "11" and ( module_descr.startswith("NI-MLX") or module_descr.startswith("BR-MLX") ):
@@ -193,7 +193,7 @@ def inventory_brocade_mlx_module_cpu(info):
 
 def check_brocade_mlx_module_cpu(item, params, info):
     warn, crit = params["levels"]
-    for module_id, module_descr, module_state, mem_total, mem_avail in info[0]:
+    for module_id, module_descr, module_state, _mem_total, _mem_avail in info[0]:
         if brocade_mlx_combine_item(module_id, module_descr) == item:
             if module_state != "10":
                 return 3, "Module is not in state running"
@@ -244,4 +244,3 @@ check_info["brocade_mlx.module_cpu"] = {
     "has_perfdata"          : True,
     "group"                 : "cpu_utilization_multiitem",
 }
-

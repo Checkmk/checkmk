@@ -53,7 +53,7 @@ datapower_fan_ids = {
 }
 
 def inventory_datapower_fan(info):
-    for fan_id, speed, status in info:
+    for fan_id, _speed, _status in info:
         yield datapower_fan_ids[fan_id], None
 
 def check_datapower_fan(item, _no_params, info):

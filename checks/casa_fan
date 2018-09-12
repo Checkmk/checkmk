@@ -27,7 +27,7 @@
 
 def inventory_casa_fan(info):
     inventory = []
-    for nr, speed in info[0]:
+    for nr, _speed in info[0]:
         inventory.append( (nr, None) )
     return inventory
 

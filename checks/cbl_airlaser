@@ -129,7 +129,7 @@ def check_cbl_airlaser_hw(item, params, info):
     msgtxt = ""
     perfdata = []
 
-    for hwclass, sensors in airlaser_info.iteritems():
+    for sensors in airlaser_info.itervalues():
         for sensor, s in sensors.iteritems():
             val = s[0]
             if sensor.lower().endswith("value"):
@@ -180,7 +180,7 @@ def check_cbl_airlaser_status(item, _no_params, info):
     if len(info) == 0:
         return (3, "no information sent by agent")
 
-    selftest, chassis, power, module, optrx, opttx = info
+    selftest, _chassis, _power, _module, _optrx, _opttx = info
     status = selftest[0][0]
 
     if status == "1":

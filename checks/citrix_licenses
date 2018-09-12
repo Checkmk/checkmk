@@ -37,7 +37,7 @@
 
 def inventory_citrix_licenses(info):
     license_types = set([])
-    for license_type, have, used in info:
+    for license_type, _have, _used in info:
         license_types.add(license_type)
     return [ (lt, None) for lt in license_types ]
 

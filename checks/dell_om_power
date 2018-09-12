@@ -40,7 +40,7 @@
 
 
 def inventory_dell_om_power(info):
-    for index, status, count in info[0]:
+    for index, _status, _count in info[0]:
         yield ( index, None )
 
 
@@ -55,7 +55,7 @@ def check_dell_om_power(item, params, info):
         "7" : (1, "redundancy offline"),
     }
 
-    for index, status, count in info[0]:
+    for index, status, _count in info[0]:
         if index == item:
             state, state_readable = translate_status[status]
             yield state, "Redundancy status: %s" % state_readable

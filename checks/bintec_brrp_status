@@ -29,7 +29,7 @@ def bintec_brrp_status_compose_item(brrp_id):
 
 def inventory_bintec_brrp_status(info):
     inventory = []
-    for brrp_id, brrp_status in info:
+    for brrp_id, _brrp_status in info:
         inventory.append( (bintec_brrp_status_compose_item(brrp_id), None ) )
     return inventory
 

@@ -33,8 +33,7 @@ factory_settings["db2_sort_overflow_default_levels"] = {
     "levels_perc": (2.0, 4.0)
 }
 def inventory_db2_sort_overflow(parsed):
-    inventory = []
-    for key in parsed[1].keys():
+    for key in parsed[1].iterkeys():
         yield key, {}
 
 def check_db2_sort_overflow(item, params, parsed):

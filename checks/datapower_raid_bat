@@ -25,7 +25,7 @@
 # Boston, MA 02110-1301 USA.
 
 def inventory_datapower_raid_bat(info):
-    for controller_id, bat_type, serial, name, status in info:
+    for controller_id, _bat_type, _serial, _name, _status in info:
         yield controller_id, None
 
 def check_datapower_raid_bat(item, _no_params, info):

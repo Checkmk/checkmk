@@ -41,7 +41,7 @@ factory_settings["bluenet_sensor_temp_default_levels"] = {
 }
 
 def inventory_bluenet_sensor_temp(info):
-    for sensor_id, sensor_type, temp, hum in info:
+    for sensor_id, sensor_type, _temp, _hum in info:
         # temperature and combined temperature/humidity sensor
         if sensor_type in ('1', '2'):
             if sensor_id == "0":
@@ -52,7 +52,7 @@ def inventory_bluenet_sensor_temp(info):
 
 
 def check_bluenet_sensor_temp(item, params, info):
-    for sensor_id, sensor_type, temp, hum in info:
+    for sensor_id, _sensor_type, temp, _hum in info:
         if sensor_id == "0":
             descr = "internal"
         else:
@@ -93,7 +93,7 @@ check_info["bluenet_sensor"] = {
 bluenet_sensor_humidity_default_levels = ( 35, 40, 60, 65 )
 
 def inventory_bluenet_sensor_hum(info):
-    for sensor_id, sensor_type, temp, hum in info:
+    for sensor_id, sensor_type, _temp, _hum in info:
         # humidity for combined temperature/humidity sensor
         if sensor_type == '2':
             if sensor_id == "0":
@@ -104,7 +104,7 @@ def inventory_bluenet_sensor_hum(info):
 
 
 def check_bluenet_sensor_hum(item, params, info):
-    for sensor_id, sensor_type, temp, hum in info:
+    for sensor_id, _sensor_type, _temp, hum in info:
         if sensor_id == "0":
             descr = "internal"
         else:

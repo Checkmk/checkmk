@@ -30,7 +30,7 @@ def format_item_checkpoint_fan(name):
 
 
 def inventory_checkpoint_fan(info):
-    for name, value, unit, dev_status in info:
+    for name, _value, _unit, _dev_status in info:
         yield format_item_checkpoint_fan(name), {}
 
 
@@ -53,4 +53,3 @@ check_info['checkpoint_fan'] = {
                                                                    ]),
     'includes'               : [ 'checkpoint.include' ],
 }
-

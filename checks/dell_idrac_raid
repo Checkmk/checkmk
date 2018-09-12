@@ -29,7 +29,7 @@
 
 
 def inventory_dell_idrac_raid(info):
-    for index, name, status in info[0]:
+    for index, _name, _status in info[0]:
         yield index, None
 
 
@@ -68,7 +68,7 @@ check_info['dell_idrac_raid'] = {
 }
 
 def inventory_dell_idrac_raid_bbu(info):
-    for index, status, comp_status, name in info[1]:
+    for index, _status, _comp_status, _name in info[1]:
         yield index, None
 
 
@@ -83,7 +83,7 @@ def check_dell_idrac_raid_bbu(item, params, info):
         "7" : (2, "BELOW THRESHOLD"),
     }
 
-    for index, status, comp_status, name in info[1]:
+    for index, status, _comp_status, _name in info[1]:
         if index == item:
             state, state_readable = translate_bbu_status[status]
             yield state, "Battery status: %s" % state_readable

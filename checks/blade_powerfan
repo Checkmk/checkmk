@@ -30,7 +30,7 @@ def inventory_blade_powerfan(info):
 
 def check_blade_powerfan(item, params, info):
     warn_perc, crit_perc = params
-    for index, present, status, fancount, speedperc, rpm, ctrlstate in info:
+    for index, present, status, _fancount, speedperc, rpm, ctrlstate in info:
         if index != item:
             continue
         perfdata=[ ('perc', speedperc, warn_perc, crit_perc, "0", "100" ),

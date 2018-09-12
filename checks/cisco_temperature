@@ -82,7 +82,7 @@ def parse_cisco_temperature(info):
 
     for endoid, level in levels_info:
         # endoid is e.g. 21549.9 or 21459.10
-        sensor_id, subid = endoid.split('.')
+        sensor_id, _subid = endoid.split('.')
         thresholds.setdefault(sensor_id, []).append(level)
 
     # Parse OIDs described by CISCO-ENTITY-SENSOR-MIB

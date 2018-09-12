@@ -181,7 +181,7 @@ def parse_bluenet2_powerrail(info):
         return "%s %d" % (descr, int(index_str) + 1)
 
     pre_parsed = {}
-    for oidend, name in info[0]:
+    for oidend, _name in info[0]:
         pre_parsed.setdefault(oidend, {"phases" : [], "rcm_phases" : []})
 
     for index, what in [ (1, "phases"), (2, "rcm_phases") ]:
@@ -191,7 +191,7 @@ def parse_bluenet2_powerrail(info):
                 pre_parsed[inlet_id][what].append([str(ord(x)) for x in identifier][:-1])
 
     parsed = {"phases" : {}, "rcm_phases" : {}, "sensors" : {}}
-    for oidend, ty, status, exponent_str, unit, reading_str in info[3]:
+    for oidend, ty, status, exponent_str, _unit, reading_str in info[3]:
         status_info = map_status[status]
         reading     = float(reading_str) * 10**int(exponent_str)
         oid_info    = oidend.split(".")

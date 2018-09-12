@@ -36,8 +36,8 @@ factory_settings["dell_powerconnect_temp_default_values"] = {
 }
 
 def inventory_dell_powerconnect_temp(checkname, info):
-    for temp, state in info:
-        yield ( "Ambient", {} )
+    for _temp, _state in info:
+        return [("Ambient", {})]
 
 def check_dell_powerconnect_temp(_no_item, params, info):
     translate_status = {

@@ -23,7 +23,7 @@ def parse_cisco_ucs_temp_env(info):
 
 
 def inventory_cisco_ucs_temp_env(info):
-    for name, temp in info.iteritems():
+    for name, _temp in info.iteritems():
         yield name, {}
 
 

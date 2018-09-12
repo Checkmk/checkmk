@@ -34,7 +34,7 @@
 # .1.3.6.1.4.1.9.9.719.1.45.4.1.12 cucsStorageLocalDiskSerial
 
 def inventory_cisco_ucs_hdd(info):
-    for status, ident, model, vendor, size, serial in info:
+    for status, ident, _model, _vendor, _size, _serial in info:
         if status != '6': # do not discover removed HDDs
             yield ident, None
 
@@ -63,4 +63,3 @@ check_info["cisco_ucs_hdd"]  = {
                             ]),
     "includes"           : [ "cisco_ucs.include" ]
 }
-

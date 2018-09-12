@@ -39,7 +39,7 @@ def inventory_dell_poweredge_amperage_current(info):
     return inventory
 
 def check_dell_poweredge_amperage(item, _no_params, info):
-    for chassisIndex, Index, StateSettings, Status, Reading, ProbeType, LocationName, \
+    for _chassisIndex, _Index, _StateSettings, Status, Reading, ProbeType, LocationName, \
         UpperCritical, UpperNonCritical in info:
 
         if item == LocationName:

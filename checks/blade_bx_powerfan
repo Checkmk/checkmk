@@ -48,7 +48,7 @@ blade_bx_status = {
 
 
 def inventory_blade_bx_powerfan(info):
-    for status, descr, rpm, max_speed, speed, ctrlstate in info:
+    for status, descr, _rpm, _max_speed, _speed, _ctrlstate in info:
         if status != "8":
             yield descr, {}
 
@@ -61,7 +61,7 @@ def check_blade_bx_powerfan(item, params, info):
         warn_perc_lower, crit_perc_lower = params
         warn_perc, crit_perc             = None, None
 
-    for status, descr, rpm, max_speed, speed, ctrlstate in info:
+    for status, descr, rpm, max_speed, _speed, ctrlstate in info:
         if descr == item:
             speed_perc = float(rpm) * 100 / float(max_speed)
             perfdata   = [
@@ -119,4 +119,3 @@ check_info['blade_bx_powerfan'] = {
    "snmp_scan_function" : lambda oid: "BX600" in oid(".1.3.6.1.2.1.1.1.0") \
                             or oid(".1.3.6.1.2.1.1.2.0") == ".1.3.6.1.4.1.7244.1.1.1",
 }
-

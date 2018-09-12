@@ -63,7 +63,7 @@
 
 def inventory_cisco_stackpower(info):
     return [("%s %s" % (oid.split(".")[0], port_name), None)
-            for oid, port_oper_status, port_link_status, port_name in info
+            for oid, port_oper_status, _port_link_status, port_name in info
             if port_oper_status == '1']
 
 

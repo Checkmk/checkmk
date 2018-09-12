@@ -50,8 +50,6 @@ def inventory_casa_cpu_temp(parsed):
             yield key, None
 
 def check_casa_cpu_temp(item, params, parsed):
-    state = 0
-    perfdata = []
     if item in parsed:
         if parsed[item]["temp_status"] == "1":
             value  = float(parsed[item]["temp_value"]) / 10

@@ -32,7 +32,7 @@
 # .1.3.6.1.4.1.9.9.719.1.15.56.1.6  cucsEquipmentPsuModel
 
 def inventory_cisco_ucs_psu(info):
-    for name, status, serial, model in info:
+    for name, _status, _serial, _model in info:
         name = name.split("/")[2]
         yield name, None
 

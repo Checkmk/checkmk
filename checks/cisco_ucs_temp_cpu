@@ -11,7 +11,7 @@ factory_settings["cisco_ucs_temp_cpu_default_levels"] = {
 }
 
 def inventory_cisco_ucs_temp_cpu(info):
-    for name, value in info:
+    for name, _value in info:
         name = name.split("/")[3]
         yield name, {}
 

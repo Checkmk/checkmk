@@ -181,7 +181,7 @@ factory_settings["ddn_s2a_stats_default_levels"] = {
 def inventory_ddn_s2a_stats(parsed):
     if u"All_ports_Read_MBs" in parsed:
         yield "Total", {}
-    for nr, value in enumerate(parsed.get(u"Read_MBs",[])):
+    for nr, _value in enumerate(parsed.get(u"Read_MBs",[])):
         yield "%d" % (nr + 1), {}
 
 

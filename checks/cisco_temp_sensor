@@ -121,7 +121,7 @@ def parse_cisco_temp_sensor(info):
 
     for endoid, level in levels_info:
         # endoid is e.g. 21549.9 or 21459.10
-        id, subid = endoid.split('.')
+        id, _subid = endoid.split('.')
         thresholds.setdefault(id, []).append(float(level))
 
     # Create main dictionary (only of temperature sensors)
@@ -146,7 +146,7 @@ def inventory_cisco_temp_sensor(info):
 
 def check_cisco_temp_sensor(item, params, info):
     sensors = parse_cisco_temp_sensor(info)
-    for id, descr, sensortype, scale, temp, sensorstate, levels in sensors:
+    for _id, descr, _sensortype, _scale, _temp, _sensorstate, _levels in sensors:
         if item == descr:
 #            # Use built in levels if no levels are configured
 #            if params:
@@ -202,4 +202,3 @@ check_info['cisco_temp_sensor'] = {
                             ],
     "includes"          : [ "temperature.include" ]
 }
-

@@ -35,7 +35,7 @@
 
 def inventory_df_netscaler(info):
     mplist = []
-    for mp, size_mb, avail_mb in info:
+    for mp, size_mb, _avail_mb in info:
         if int(size_mb) > 0 and mp not in inventory_df_exclude_mountpoints:
             mplist.append(mp)
     return df_inventory(mplist)

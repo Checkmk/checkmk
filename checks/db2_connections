@@ -35,7 +35,6 @@ factory_settings["db2_connections_default_levels"] = {
 }
 
 def inventory_db2_connections(parsed):
-    inventory = []
     for item in parsed[1]:
         yield item, None
 

@@ -28,6 +28,7 @@ import pytest
 import docker
 import os
 import time
+import subprocess
 
 import testlib
 
@@ -50,7 +51,14 @@ def _image_name(edition, version):
     return "docker-tests/check-mk-%s-%s-%s" % (edition, branch_name, version.version)
 
 
+def _prepare_build():
+    assert subprocess.Popen(["make", "needed-packages"],
+                            stdout=open(os.devnull, "w"), cwd=build_path).wait() == 0
+
+
 def _build(request, client, edition, version, add_args=None):
+    _prepare_build()
+
     image, build_logs = client.images.build(path=build_path, tag=_image_name(edition, version), buildargs={
         "CMK_VERSION": version.version,
         "CMK_EDITION": edition,

@@ -46,7 +46,7 @@ def inventory_decru_perf(info):
     return inventory
 
 def check_decru_perf(item, _no_params, info):
-    index, name = item.split(":", 1)
+    index, _name = item.split(":", 1)
     for perf in info:
         if perf[0] == index:
             rate = int(perf[1])

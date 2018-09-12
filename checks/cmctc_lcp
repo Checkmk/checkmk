@@ -76,7 +76,7 @@ cmctc_lcp_sensors = {
 
 def inventory_cmctc_lcp(info, sensortype):
     inventory = []
-    for index, typeid, status, value, high, low, warn, description in info:
+    for index, typeid, _status, _value, _high, _low, _warn, _description in info:
         typeid = saveint(typeid)
         if typeid in cmctc_lcp_sensors:
             item, st = cmctc_lcp_sensors[typeid]
@@ -117,7 +117,7 @@ def check_cmctc_lcp(item, params, info, sensortype):
     }
 
     itemindex = item.split(" - ")[-1]
-    for index, typeid, statuscode, value, high, low, warn, description in info:
+    for index, _typeid, statuscode, value, high, low, warn, description in info:
         if itemindex == index:
             unit = map_unit[sensortype]
             value = int(value)
@@ -152,7 +152,7 @@ def check_cmctc_lcp(item, params, info, sensortype):
 
 def inventory_cmctc_lcp_temp(info):
     inventory = []
-    for index, typeid, status, value, high, low, warn, description in info:
+    for index, typeid, _status, _value, _high, _low, _warn, _description in info:
         typeid = saveint(typeid)
         if typeid in cmctc_lcp_sensors:
             item, st = cmctc_lcp_sensors[typeid]
@@ -166,7 +166,7 @@ def inventory_cmctc_lcp_temp(info):
 
 def check_cmctc_lcp_temp(item, params, info):
     itemindex = item.split(" - ")[-1]
-    for index, typeid, statuscode, value, high, low, warn, description in info:
+    for index, _typeid, statuscode, value, high, low, warn, _description in info:
         if itemindex == index:
             status = int(statuscode)
             levels = None if high == low == warn == "0" else \

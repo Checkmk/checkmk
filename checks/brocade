@@ -67,7 +67,7 @@ def check_brocade_fan(item, params, info):
     if type(params) is tuple:  # old format
         params = { "lower" : params }
 
-    for snmp_item, name, value in converted:
+    for snmp_item, _name, value in converted:
         if item == snmp_item:
             return check_fan(int(value), params)
 
@@ -115,7 +115,7 @@ def inventory_brocade_temp(info):
 
 def check_brocade_temp(item, params, info):
     converted = brocade_sensor_convert(info, "SLOT")
-    for snmp_item, name, value in converted:
+    for snmp_item, _name, value in converted:
         if item == snmp_item:
             return check_temperature(int(value), params, "brocade_temp_%s" % item)
 

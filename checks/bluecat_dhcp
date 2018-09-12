@@ -33,7 +33,7 @@ factory_settings["bluecat_dhcp"] = {
 
 def inventory_bluecat_dhcp(info):
     # Check if DHCP is not stopped on at least one host
-    for node, oper_state, leases in info:
+    for _node, oper_state, _leases in info:
         if oper_state != '2':
             return [(None, None)]
 
@@ -100,4 +100,3 @@ check_info["bluecat_dhcp"] =     {
                                                                 3, # dhcpLeaseStatsSuccess
                                                                ])
 }
-

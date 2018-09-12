@@ -119,9 +119,9 @@ def parse_diskstat(info):
             continue
 
         node_name, major, minor, device, \
-            read_ios, read_merges, read_sectors, read_ticks, \
-            write_ios, write_merges, write_sectors, write_ticks, \
-            ios_in_prog, total_ticks, rq_ticks = line
+            read_ios, _read_merges, read_sectors, read_ticks, \
+            write_ios, _write_merges, write_sectors, write_ticks, \
+            ios_in_prog, total_ticks, _rq_ticks = line
 
         if (node_name, int(major), int(minor)) in name_info:
             device = name_info[(node_name, int(major), int(minor))]
@@ -261,7 +261,6 @@ def parse_diskstat(info):
 #     (None, 253, 6): 'LVM vgappl-applvol',
 # }
 def diskstat_extract_name_info(info):
-    disks = {}
     name_info = {} # dict from (node, major, minor) to itemname
     timestamp = None
 
@@ -368,4 +367,3 @@ check_info["diskstat"] = {
     'includes'            : [ "diskstat.include" ],
     'extra_sections'      : [ "multipath" ],
 }
-

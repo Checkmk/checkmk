@@ -30,7 +30,7 @@ factory_settings["datapower_temp_default_levels"] = {
 }
 
 def inventory_datapower_temp(info):
-    for name, temp, upper_warn, status, upper_crit in info:
+    for name, _temp, _upper_warn, _status, _upper_crit in info:
         yield name.strip("Temperature "), {}
 
 def check_datapower_temp(item, params, info):

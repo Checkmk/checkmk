@@ -41,13 +41,6 @@ def inventory_dell_om_sensors(info):
 
 
 def check_dell_om_sensors(item, params, info):
-    #Probetypes found in check_openmanage3.pl
-    probe_types = {
-         1  : 'Other',      # type is other than following values
-         2  : 'Unknown',    # type is unknown
-         3  : 'AmbientESM', # type is Ambient Embedded Systems Management temperature probe
-         16 : 'Discrete',   # type is temperature probe with discrete reading
-    }
     sensor_states = {
         1  : "other",
         2  : "unknown",
@@ -92,4 +85,3 @@ check_info["dell_om_sensors"] = {
     "includes"                : [ "dell_om.include", "temperature.include" ],
     "default_levels_variable" : "dell_om_sensors_default_levels"
 }
-

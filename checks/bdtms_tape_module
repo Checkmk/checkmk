@@ -36,7 +36,7 @@ def check_bdtms_tape_module(item, _no_params, info):
         return 0 if status.lower() == 'ok' else 2
 
     for device in info:
-        device_id, module_status, board_status, power_status = device
+        device_id, module_status, _board_status, _power_status = device
         if device_id != item:
             continue
 

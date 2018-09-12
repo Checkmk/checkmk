@@ -55,14 +55,14 @@ dell_powerconnect_fans_state_performance_map = { '1': 1, '2': 0, '3': 0, '4': 0,
 # Inventory of all fan related elements
 def inventory_dell_powerconnect_fans(checkname, info):
     inventory = []
-    for device_id, name, state in info:
+    for _device_id, name, state in info:
         if dell_powerconnect_fans_status_map[state] != 'notPresent':
             inventory.append((name, None))
     return inventory
 
 # The check for the states and details of each fan
 def check_dell_powerconnect_fans(item, _not_used, info):
-    for device_id, name, state in info:
+    for _device_id, name, state in info:
         if name == item:
             dell_powerconnect_status = dell_powerconnect_fans_status_map[state]
             status = dell_powerconnect_fans_status2nagios_map[dell_powerconnect_status]

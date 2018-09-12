@@ -41,7 +41,7 @@ def parse_cisco_secure(info):
 
 def inventory_cisco_secure(parsed):
     # search for at least one port with security
-    for name, op_state, is_enabled, status, violationCount, lastmac in parsed:
+    for _name, op_state, is_enabled, status, _violationCount, _lastmac in parsed:
         # if portsecurity enabled and port up OR currently there is sercurity issue`
         if status == 3 or (is_enabled != 'no' and op_state == 1):
             return [ (None, None) ]
@@ -54,7 +54,6 @@ def check_cisco_secure(item, params, parsed):
         3 : "shutdown due to security violation"
     }
 
-    failed = []
     at_least_one_problem = False
     for name, op_state, is_enabled, status, violationCount, lastmac in parsed:
         message = "Port %s: %s (Violation Count: %s, Last Mac: %s)" % \
@@ -95,4 +94,3 @@ check_info["cisco_secure"] = {
                                                 ] ),
                               ]
 }
-

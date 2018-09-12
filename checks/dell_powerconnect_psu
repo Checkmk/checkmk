@@ -82,7 +82,7 @@ def inventory_dell_powerconnect_psu(checkname, info):
     if not info or not info[0]:
         return
     hw_ident = info[0][0][0]
-    for device_id, name, state, supply in info[1]:
+    for _device_id, name, state, _supply in info[1]:
         # M6220 are blade switches which report valid values only for the "Main"
         # sensor. The other one is reported as notFunctioning, but this is wrong.
         # Simply ignore the "System" sensor for those devices.
@@ -92,8 +92,7 @@ def inventory_dell_powerconnect_psu(checkname, info):
     return inventory
 
 def check_dell_powerconnect_psu(item, _not_used, info):
-    hw_ident = info[0][0][0]
-    for device_id, name, state, supply in info[1]:
+    for _device_id, name, state, supply in info[1]:
         if name == item:
             dell_powerconnect_status = dell_powerconnect_psu_status_map[state]
             status = dell_powerconnect_psu_status2nagios_map[dell_powerconnect_status]

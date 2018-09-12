@@ -80,7 +80,7 @@ cisco_vss_operstatus_names = {
 }
 
 def inventory_cisco_vss(info):
-    for switch_id, chassis_role in info[0]:
+    for _switch_id, chassis_role in info[0]:
         if chassis_role in [ '2', '3' ]: # active, standby
             return [ (None, None) ]
 

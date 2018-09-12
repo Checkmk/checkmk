@@ -105,7 +105,7 @@ def parse_cisco_fru_module_status(info):
         "27" : (2, "firmware download failure"),
     }
     collected_entities = {}
-    for oid, hardware_descr, hardware_type, hardware_name in info[0]:
+    for oid, _hardware_descr, hardware_type, hardware_name in info[0]:
         if hardware_type == "9":
             collected_entities.setdefault(oid, hardware_name)
 

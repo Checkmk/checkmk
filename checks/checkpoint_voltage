@@ -26,7 +26,7 @@
 
 
 def inventory_checkpoint_voltage(info):
-    for name, value, unit, dev_status in info:
+    for name, _value, _unit, _dev_status in info:
         yield name, {}
 
 
@@ -49,4 +49,3 @@ check_info['checkpoint_voltage'] = {
                                                                    ]),
     'includes'               : [ 'checkpoint.include' ],
 }
-

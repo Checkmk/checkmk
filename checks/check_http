@@ -197,7 +197,7 @@ def _url_args(address_family, address, settings):
 
 
 def check_http_arguments(params):
-    description, settings = params
+    _description, settings = params
     args = []
 
     address_family, address = _get_family_and_address(settings)
@@ -231,4 +231,3 @@ active_check_info['http'] = {
     "service_description" : check_http_description,
     "has_perfdata"        : True,
 }
-

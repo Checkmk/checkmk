@@ -98,7 +98,7 @@ def parse_cmciii(info):
             "_location_" : endoid, })
 
     for oidend, variable, var_type, scale, value_str, value_int in var_table:
-        location, index   = oidend.split(".")
+        location, _index   = oidend.split(".")
         variable_splitted = variable.split(".")
         device            = devices.get(location)
         container         = [location] + variable_splitted[:-1]
@@ -465,7 +465,7 @@ check_info['cmciii.access'] = {
 
 
 def inventory_cmciii_temp(parsed):
-    for entry, attrs in parsed.get("temp", {}).items():
+    for entry in parsed.get("temp", {}).iterkeys():
         yield entry, {}
 
 

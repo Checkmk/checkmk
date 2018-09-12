@@ -35,7 +35,7 @@ def format_item_checkpoint_temp(name):
 
 
 def inventory_checkpoint_temp(info):
-    for name, value, unit, dev_status in info:
+    for name, _value, _unit, _dev_status in info:
         yield format_item_checkpoint_temp(name), {}
 
 
@@ -70,4 +70,3 @@ check_info['checkpoint_temp'] = {
     'includes'                : [ 'checkpoint.include', 'temperature.include' ],
     'default_levels_variable' : 'checkpoint_temp_default_levels'
 }
-

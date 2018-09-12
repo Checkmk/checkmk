@@ -36,7 +36,7 @@
 
 
 def inventory_checkpoint_ha_status(info):
-    installed, major, minor, started, state, block_state, stat_code, stat_long = info[0]
+    installed, _major, _minor, _started, _state, _block_state, _stat_code, _stat_long = info[0]
     if installed != "0":
         return [(None, None)]
 
@@ -86,4 +86,3 @@ check_info['checkpoint_ha_status'] = {
                                                            ]),
     'includes'               : [ 'checkpoint.include' ],
 }
-

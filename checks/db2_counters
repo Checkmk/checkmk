@@ -111,7 +111,6 @@ def check_db2_counters(item, params, parsed):
             yield 2, "Invalid value: " + db[counter]
             continue
 
-        countername = "db2_counters.%s.%s" % (item, counter)
         try:
             rate = get_rate("db2_counters.%s.%s" % (item, counter), timestamp, value, onwrap = RAISE)
         except MKCounterWrapped:

@@ -30,7 +30,7 @@
 # .1.3.6.1.4.1.9.9.719.1.15.12.1.10 cucsEquipmentFanOperability
 
 def inventory_cisco_ucs_fan(info):
-    for name, status in info:
+    for name, _status in info:
         name = " ".join(name.split("/")[2:])
         yield name, None
 

@@ -25,7 +25,7 @@
 # Boston, MA 02110-1301 USA.
 
 def inventory_datapower_ldrive(info):
-    for controller, ldrive, raid_level, num_drives, status in info:
+    for controller, ldrive, _raid_level, _num_drives, _status in info:
         item = "%s-%s" % (controller, ldrive)
         yield item, None
 

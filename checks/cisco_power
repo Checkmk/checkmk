@@ -55,7 +55,7 @@ def inventory_cisco_power(info):
     # a Cisco with four entries in the MIB. So we force uniqueness
     # by appending a "/4" for ID 4 if the name is not unique
     discovered = {}
-    for sid, textinfo, state, source in info:
+    for sid, textinfo, state, _source in info:
         if state != '5':
             name = cisco_sensor_item(textinfo, sid)
             discovered.setdefault(name, []).append(sid)

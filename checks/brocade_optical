@@ -98,7 +98,7 @@ def parse_brocade_optical(info):
             return None, None
 
         try:
-            val, unit, status = value_string.split()
+            val, _unit, status = value_string.split()
             return float(val), status
         except ValueError:
             return None, None

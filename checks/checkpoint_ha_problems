@@ -26,7 +26,7 @@
 
 
 def inventory_checkpoint_ha_problems(info):
-    for name, dev_status, description in info:
+    for name, _dev_status, _description in info:
         yield name, None
 
 

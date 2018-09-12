@@ -135,7 +135,7 @@ def inventory_cisco_qos(info):
         items = []
         for class_id, class_name in info[2]:
             # Get interface ids which use this qos class
-            for policy_id, objects_id in cisco_qos_get_config_entries_by_class_id(config, class_id):
+            for policy_id, _objects_id in cisco_qos_get_config_entries_by_class_id(config, class_id):
                 if ifs.get(policy_id) in if_names:
                     if_name = if_names[ifs[policy_id]]
                     items += [ ('%s: %s' % (if_name, class_name), {}) ]
@@ -184,7 +184,7 @@ def check_cisco_qos(item, params, info):
 
     # Gather the interface id by class_name
     if_id = None
-    for iid, iid2 in ifs.iteritems():
+    for iid2 in ifs.itervalues():
         if if_name == if_names.get(iid2):
             if_id = iid2
             break

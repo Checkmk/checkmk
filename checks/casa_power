@@ -27,7 +27,7 @@
 
 def inventory_casa_power(info):
     inventory = []
-    for idx, unit in enumerate(info):
+    for idx, _unit in enumerate(info):
         inventory.append( (idx, None) )
     return inventory
 

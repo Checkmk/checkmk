@@ -33,7 +33,7 @@
 # rpm(6)
 
 def inventory_bluecoat_sensors(info, temp):
-    for name, reading, status, scale, unit in info:
+    for name, _reading, _status, _scale, unit in info:
         # temperature sensor is unit 5.
         if temp == (unit == '5'):
             yield name.replace(" temperature", ""), {}
@@ -53,7 +53,6 @@ def check_bluecoat_sensors(item, params, info, temp):
                 return check_temperature(value, params,
                                          "bluecoat_sensors_%s" % item, status != '1' and 2 or 0)
             elif unit == '4':
-                varname = "voltage"
                 unitname = " V"
                 perfdata = [ ("voltage", value) ]
             else:
@@ -86,4 +85,3 @@ check_info["bluecoat_sensors.temp"] = {
     'includes'            : [ "temperature.include" ],
     'group'               : "temperature",
 }
-

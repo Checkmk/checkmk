@@ -3264,6 +3264,14 @@ def main_update(args, options=None):
             "Update!", "Abort"):
         bail_out("Aborted.")
 
+    # In case the user changes the installed Check_MK Edition during update let the
+    # user confirm this step.
+    from_edition, to_edition = _get_edition(from_version), _get_edition(to_version)
+    if from_edition != to_edition and not opt_force and not dialog_yesno(
+        "You are updating from %s Edition to %s Edition. Is this intended?" %
+        (from_edition.title(), to_edition.title())):
+        bail_out("Aborted.")
+
     start_logging(g_sitedir + '/var/log/update.log')
 
     sys.stdout.write("%s - Updating site '%s' from version %s to %s...\n\n" %
@@ -3300,6 +3308,24 @@ def main_update(args, options=None):
 
     sys.stdout.write('Finished update.\n\n')
     stop_logging()
+
+
+def _get_edition(omd_version):
+    """Returns the long Check_MK Edition name or "unknown" of the given OMD version"""
+    parts = omd_version.split(".")
+    if parts[-1] == "demo":
+        edition_short = parts[-2]
+    else:
+        edition_short = parts[-1]
+
+    if edition_short == "cre":
+        return "raw"
+    elif edition_short == "cee":
+        return "enterprise"
+    elif edition_short == "cme":
+        return "managed"
+    else:
+        return "unknown"
 
 
 def main_umount(args, options=None):

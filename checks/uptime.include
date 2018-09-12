@@ -99,7 +99,7 @@ snmp_uptime_info = ('.1.3.6.1.2.1', [
 
 
 def snmp_scan_uptime(oid):
-    return oid(".1.3.6.1.2.1.1.1.0") not in [ None, "" ]
+    return oid(".1.3.6.1.2.1.1.1.0") != None
 
 
 def inventory_snmp_uptime(info):

@@ -99,8 +99,11 @@ def netgear_map_state_txt_to_int(state_nr, version):
 
 def parse_netgear_fans(info):
     versioninfo, sensorinfo = info
-    parsed = { "__version__" : versioninfo[0][0],
-               "__fans__"    : {}, }
+    if versioninfo == []:
+        parsed = { "__fans__" : {} }
+    else:
+        parsed = { "__version__" : versioninfo[0][0],
+                   "__fans__"    : {}, }
     for oid_end, sstate, reading_str in sensorinfo:
         parsed["__fans__"].setdefault("%s" % oid_end.replace(".", "/"), {
             "state"       : sstate,
@@ -118,13 +121,15 @@ def inventory_netgear_fans(parsed):
 
 
 def check_netgear_fans(item, params, parsed):
-    if item in parsed["__fans__"]:
-        data = parsed["__fans__"][item]
-        reading_str = data["reading_str"]
-        if reading_str != "Not Supported":
-            yield check_fan(int(data["reading_str"]), params)
-        state, state_readable = netgear_map_state_txt_to_int(data["state"], parsed["__version__"])
-        yield state, "Status: %s" % state_readable
+    data = parsed["__fans__"].get(item)
+    if data is None:
+        return
+
+    reading_str = data["reading_str"]
+    if reading_str != "Not Supported":
+        yield check_fan(int(data["reading_str"]), params)
+    state, state_readable = netgear_map_state_txt_to_int(data["state"], parsed.get("__version__", ""))
+    yield state, "Status: %s" % state_readable
 
 
 check_info['netgear_fans'] = {

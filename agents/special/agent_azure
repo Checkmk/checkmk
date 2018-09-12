@@ -48,9 +48,16 @@ import atexit
 from collections import namedtuple
 from multiprocessing import Process, Lock
 
+# We have to set a null handler for logging before importing the azure stuff.
+#   Otherwise a warning will be sent to stderr - and if for some other reason
+#   the agent returns a non-zero exit code this (irrelevant) warning would be
+#   all the user sees.
+logging.getLogger().addHandler(logging.NullHandler())
 from azure.mgmt.monitor import MonitorManagementClient
 from azure.mgmt.resource import ResourceManagementClient
 from azure.common.credentials import ServicePrincipalCredentials
+from azure.mgmt.monitor.models.error_response import ErrorResponseException
+logging.getLogger().handlers.pop()
 
 import cmk.password_store
 cmk.password_store.replace_passwords()
@@ -67,30 +74,18 @@ def parse_arguments(argv):
         "--verbose",
         action="count",
         default=0,
-        help='''Verbose mode (for even more output use -vv''')
+        help='''Verbose mode (for even more output use -vvv)''')
     parser.add_argument(
         "--sequential", action="store_true", help='''Sequential mode: do not use multiprocessing''')
+    parser.add_argument(
+        "--dump-config", action="store_true", help='''Dump parsed configuration and exit''')
     parser.add_argument(
         "--pjoin-timeout",
         default=10,
         type=int,
         help='''Timeout for process joining in seconds
                         (default 10)''')
-    parser.add_argument(
-        "--cache-mode",
-        choices=['use', 'ignore', 'check'],
-        default='use',
-        help='''change behavior of cache:
-                        'use': use the cache (default), 'ignore': ask server,
-                        'check': ask server and compare to saved values''')
-    parser.add_argument(
-        "--minutes", default=5, type=int, help='''the timespan for metrics (default 5)''')
-    parser.add_argument(
-        "--interval",
-        choices=['PT1M', 'PT1H'],
-        default="PT1M",
-        help='''the interval as passed to the azure API
-                        (default 'PT1M')''')
+
     # REQUIRED
     parser.add_argument("--subscription-id", required=True, help="Azure subscription ID")
     parser.add_argument("--client-id", required=True, help="Azure client ID")
@@ -98,657 +93,418 @@ def parse_arguments(argv):
     parser.add_argument("--secret", required=True, help="Azure authentication secret")
     # OPT: CONSTRAIN DATA TO REQUEST
     parser.add_argument(
-        "--match-name",
-        help='''only consider resources with names
-                        matching the given expression''')
-    parser.add_argument(
-        "--match-type",
-        help='''only consider resources with types
-                        matching the given expression''')
-    parser.add_argument(
-        "--match-group",
-        help='''only consider resources of the
-                        specified group''')
-    parser.add_argument(
-        "--match-metric",
-        help='''only consider metrics with names
-                        matching the given expression''')
+        "config",
+        default=[],
+        nargs='*',
+        help='''list of arguments providing the configuration in <key>=<value> format.
+             If omitted, all groups and resources are fetched.
+             If specified, every 'group=<name>' argument starts a new group configuration,
+             and every 'resource=<name>' arguments starts a new resource configuration.
+             Other keys are time_grain, aggregations and filters.
+             Use --dump-config to see the parsed configuration.''')
     args = parser.parse_args(argv)
 
     # LOGGING
-    if args.verbose == 2:
+    if args.verbose >= 3:
+        fmt = "%(levelname)s: %(name)s: %(filename)s: %(lineno)s: %(message)s"
+        lvl = logging.DEBUG
+    elif args.verbose == 2:
         fmt = "%(levelname)s: %(filename)s: %(lineno)s: %(message)s"
+        lvl = logging.DEBUG
+        logging.getLogger('msrest').setLevel(logging.WARNING)
+        logging.getLogger('urllib3').setLevel(logging.WARNING)
+        logging.getLogger('requests_oauthlib').setLevel(logging.WARNING)
     elif args.verbose == 1:
         fmt = "%(levelname)s: %(funcName)s: %(message)s"
+        lvl = logging.INFO
     else:
         fmt = "%(levelname)s: %(message)s"
-    logging.basicConfig(level=30 - 10 * args.verbose, format=fmt)
+        lvl = logging.WARNING
+    logging.basicConfig(level=lvl, format=fmt)
 
     # V-VERBOSE INFO
-    for k, v in vars(args).items():
-        if k == "secret":
-            v = '****'
-        log.debug('argparse: %s = %r', k, v)
+    for key, value in vars(args).items():
+        if key == "secret":
+            value = '****'
+        log.debug('argparse: %s = %r', key, value)
 
     return args
 
 
-def _write_section(basename, lines, lock=Lock()):
-    if not lines:
-        return 0
-    lock.acquire()
-    sys.stdout.write('<<<azure_%s>>>\n' % basename)
-    sys.stdout.write('\n'.join(lines) + '\n')
-    lock.release()
+def _add_hint(msg):
+    if "does not have authorization to perform action" in msg:
+        hint = "Make sure you have a proper role asigned to your client!"
+    else:
+        return msg
+    return "%s\nHINT: %s\n" % (msg, hint)
 
 
-class CachedMetricsMMC(MonitorManagementClient):
-    # The following two dictionaries are hardcoded to
-    # enhance performance. If a key is missing, it is
-    # fetched from the server, and a message is provided
-    # in the azure_agent section.
-    KNOWN_AGGREGATION_TYPES = {
-        'ActionLatency': 'average',
-        'ActionSuccessLatency': 'average',
-        'ActionThrottledEvents': 'total',
-        'ActionsCompleted': 'total',
-        'ActionsFailed': 'total',
-        'ActionsSkipped': 'total',
-        'ActionsStarted': 'total',
-        'ActionsSucceeded': 'total',
-        'AppConnections': 'average',
-        'Availability': 'average',
-        'AverageMemoryWorkingSet': 'average',
-        'AverageResponseTime': 'average',
-        'Average_% Available Memory': 'average',
-        'Average_% Available Swap Space': 'average',
-        'Average_% Committed Bytes In Use': 'average',
-        'Average_% DPC Time': 'average',
-        'Average_% Free Inodes': 'average',
-        'Average_% Free Space': 'average',
-        'Average_% IO Wait Time': 'average',
-        'Average_% Idle Time': 'average',
-        'Average_% Interrupt Time': 'average',
-        'Average_% Nice Time': 'average',
-        'Average_% Privileged Time': 'average',
-        'Average_% Processor Time': 'average',
-        'Average_% Used Inodes': 'average',
-        'Average_% Used Memory': 'average',
-        'Average_% Used Space': 'average',
-        'Average_% Used Swap Space': 'average',
-        'Average_% User Time': 'average',
-        'Average_Available MBytes Memory': 'average',
-        'Average_Available MBytes Swap': 'average',
-        'Average_Available MBytes': 'average',
-        'Average_Avg. Disk sec/Read': 'average',
-        'Average_Avg. Disk sec/Transfer': 'average',
-        'Average_Avg. Disk sec/Write': 'average',
-        'Average_Bytes Received/sec': 'average',
-        'Average_Bytes Sent/sec': 'average',
-        'Average_Bytes Total/sec': 'average',
-        'Average_Current Disk Queue Length': 'average',
-        'Average_Disk Read Bytes/sec': 'average',
-        'Average_Disk Reads/sec': 'average',
-        'Average_Disk Transfers/sec': 'average',
-        'Average_Disk Write Bytes/sec': 'average',
-        'Average_Disk Writes/sec': 'average',
-        'Average_Free Megabytes': 'average',
-        'Average_Free Physical Memory': 'average',
-        'Average_Free Space in Paging Files': 'average',
-        'Average_Free Virtual Memory': 'average',
-        'Average_Logical Disk Bytes/sec': 'average',
-        'Average_Page Reads/sec': 'average',
-        'Average_Page Writes/sec': 'average',
-        'Average_Pages/sec': 'average',
-        'Average_Pct Privileged Time': 'average',
-        'Average_Pct User Time': 'average',
-        'Average_Physical Disk Bytes/sec': 'average',
-        'Average_Processes': 'average',
-        'Average_Processor Queue Length': 'average',
-        'Average_Size Stored In Paging Files': 'average',
-        'Average_Total Bytes Received': 'average',
-        'Average_Total Bytes Transmitted': 'average',
-        'Average_Total Bytes': 'average',
-        'Average_Total Collisions': 'average',
-        'Average_Total Packets Received': 'average',
-        'Average_Total Packets Transmitted': 'average',
-        'Average_Total Rx Errors': 'average',
-        'Average_Total Tx Errors': 'average',
-        'Average_Uptime': 'average',
-        'Average_Used MBytes Swap Space': 'average',
-        'Average_Used Memory MBytes': 'average',
-        'Average_Used Memory kBytes': 'average',
-        'Average_Users': 'average',
-        'Average_Virtual Shared Memory': 'average',
-        'BillableActionExecutions': 'total',
-        'BillableNativeActionExecutions': 'total',
-        'BillableNativeTriggerExecutions': 'total',
-        'BillableStandardActionExecutions': 'total',
-        'BillableStandardTriggerExecutions': 'total',
-        'BillableTriggerExecutions': 'total',
-        'BytesDroppedDDoS': 'maximum',
-        'BytesForwardedDDoS': 'maximum',
-        'BytesInDDoS': 'maximum',
-        'BytesReceived': 'total',
-        'BytesReceivedRate': 'total',
-        'BytesSent': 'total',
-        'BytesSentRate': 'total',
-        'CPU Credits Consumed': 'average',
-        'CPU Credits Remaining': 'average',
-        'CpuPercentage': 'average',
-        'CpuTime': 'total',
-        'CurrentAssemblies': 'average',
-        'DDoSTriggerSYNPackets': 'maximum',
-        'DDoSTriggerTCPPackets': 'maximum',
-        'DDoSTriggerUDPPackets': 'maximum',
-        'Disk Read Bytes': 'total',
-        'Disk Read Operations/Sec': 'average',
-        'Disk Write Bytes': 'total',
-        'Disk Write Operations/Sec': 'average',
-        'DiskQueueLength': 'average',
-        'Egress': 'total',
-        'Event': 'average',
-        'FunctionExecutionCount': 'total',
-        'FunctionExecutionUnits': 'total',
-        'Gen0Collections': 'total',
-        'Gen1Collections': 'total',
-        'Gen2Collections': 'total',
-        'Handles': 'average',
-        'Heartbeat': 'total',
-        'Http101': 'total',
-        'Http2xx': 'total',
-        'Http3xx': 'total',
-        'Http401': 'total',
-        'Http403': 'total',
-        'Http404': 'total',
-        'Http406': 'total',
-        'Http4xx': 'total',
-        'Http5xx': 'total',
-        'HttpQueueLength': 'average',
-        'IfUnderDDoSAttack': 'maximum',
-        'Ingress': 'total',
-        'IoOtherBytesPerSecond': 'total',
-        'IoOtherOperationsPerSecond': 'total',
-        'IoReadBytesPerSecond': 'total',
-        'IoReadOperationsPerSecond': 'total',
-        'IoWriteBytesPerSecond': 'total',
-        'IoWriteOperationsPerSecond': 'total',
-        'MemoryPercentage': 'average',
-        'MemoryWorkingSet': 'average',
-        'MetricThreshold': 'average',
-        'Network In': 'total',
-        'Network Out': 'total',
-        'OS Per Disk QD': 'average',
-        'OS Per Disk Read Bytes/sec': 'average',
-        'OS Per Disk Read Operations/Sec': 'average',
-        'OS Per Disk Write Bytes/sec': 'average',
-        'OS Per Disk Write Operations/Sec': 'average',
-        'ObservedCapacity': 'average',
-        'ObservedMetricValue': 'average',
-        'PacketsDroppedDDoS': 'maximum',
-        'PacketsForwardedDDoS': 'maximum',
-        'PacketsInDDoS': 'maximum',
-        'PacketsReceivedRate': 'total',
-        'PacketsSentRate': 'total',
-        'Per Disk QD': 'average',
-        'Per Disk Read Bytes/sec': 'average',
-        'Per Disk Read Operations/Sec': 'average',
-        'Per Disk Write Bytes/sec': 'average',
-        'Per Disk Write Operations/Sec': 'average',
-        'Percentage CPU': 'average',
-        'PrivateBytes': 'average',
-        'Requests': 'total',
-        'RequestsInApplicationQueue': 'average',
-        'RunFailurePercentage': 'total',
-        'RunLatency': 'average',
-        'RunSuccessLatency': 'average',
-        'RunThrottledEvents': 'total',
-        'RunsCancelled': 'total',
-        'RunsCompleted': 'total',
-        'RunsFailed': 'total',
-        'RunsStarted': 'total',
-        'RunsSucceeded': 'total',
-        'ScaleActionsInitiated': 'total',
-        'ServiceApiHit': 'count',
-        'ServiceApiLatency': 'average',
-        'ServiceApiResult': 'count',
-        'SuccessE2ELatency': 'average',
-        'SuccessServerLatency': 'average',
-        'TCPBytesDroppedDDoS': 'maximum',
-        'TCPBytesForwardedDDoS': 'maximum',
-        'TCPBytesInDDoS': 'maximum',
-        'TCPPacketsDroppedDDoS': 'maximum',
-        'TCPPacketsForwardedDDoS': 'maximum',
-        'TCPPacketsInDDoS': 'maximum',
-        'Threads': 'average',
-        'TotalAppDomains': 'average',
-        'TotalAppDomainsUnloaded': 'average',
-        'TotalBillableExecutions': 'total',
-        'TotalBillableNativeExecutions': 'total',
-        'TotalBillableStandardExecutions': 'total',
-        'TotalJob': 'total',
-        'Transactions': 'total',
-        'TriggerFireLatency': 'average',
-        'TriggerLatency': 'average',
-        'TriggerSuccessLatency': 'average',
-        'TriggerThrottledEvents': 'total',
-        'TriggersCompleted': 'total',
-        'TriggersFailed': 'total',
-        'TriggersFired': 'total',
-        'TriggersSkipped': 'total',
-        'TriggersStarted': 'total',
-        'TriggersSucceeded': 'total',
-        'UDPBytesDroppedDDoS': 'maximum',
-        'UDPBytesForwardedDDoS': 'maximum',
-        'UDPBytesInDDoS': 'maximum',
-        'UDPPacketsDroppedDDoS': 'maximum',
-        'UDPPacketsForwardedDDoS': 'maximum',
-        'UDPPacketsInDDoS': 'maximum',
-        'Update': 'average',
-        'UsedCapacity': 'total',
-        'availabilityResults/duration': 'average',
-        'billingMeters/telemetryCount': 'total',
-        'billingMeters/telemetrySize': 'total',
-        'blocked_by_firewall': 'total',
-        'browserTimings/networkDuration': 'average',
-        'browserTimings/processingDuration': 'average',
-        'browserTimings/receiveDuration': 'average',
-        'browserTimings/sendDuration': 'average',
-        'browserTimings/totalDuration': 'average',
-        'connection_failed': 'total',
-        'connection_successful': 'total',
-        'cpu_limit': 'average',
-        'cpu_percent': 'average',
-        'cpu_used': 'average',
-        'deadlock': 'total',
-        'dependencies/count': 'count',
-        'dependencies/duration': 'average',
-        'dependencies/failed': 'count',
-        'dtu_consumption_percent': 'average',
-        'dtu_limit': 'average',
-        'dtu_used': 'average',
-        'exceptions/browser': 'total',
-        'exceptions/count': 'total',
-        'exceptions/server': 'total',
-        'log_write_percent': 'average',
-        'pageViews/count': 'count',
-        'pageViews/duration': 'average',
-        'performanceCounters/exceptionsPerSecond': 'average',
-        'performanceCounters/memoryAvailableBytes': 'average',
-        'performanceCounters/processCpuPercentage': 'average',
-        'performanceCounters/processIOBytesPerSecond': 'average',
-        'performanceCounters/processPrivateBytes': 'average',
-        'performanceCounters/processorCpuPercentage': 'average',
-        'performanceCounters/requestExecutionTime': 'average',
-        'performanceCounters/requestsInQueue': 'average',
-        'performanceCounters/requestsPerSecond': 'average',
-        'physical_data_read_percent': 'average',
-        'requests/count': 'count',
-        'requests/duration': 'average',
-        'requests/failed': 'count',
-        'sessions_percent': 'average',
-        'storage': 'maximum',
-        'storage_percent': 'maximum',
-        'traces/count': 'total',
-        'workers_percent': 'average',
-        'xtp_storage_percent': 'average',
-    }
-
-    KNOWN_METRICS = {
-        'Microsoft.Automation/automationAccounts': [u'TotalJob'],
-        'Microsoft.Automation/automationAccounts/runbooks': [],
-        'Microsoft.Compute/availabilitySets': [],
-        'Microsoft.Compute/disks': [],
-        'Microsoft.Compute/images': [],
-        'Microsoft.Compute/restorePointCollections': [],
-        'Microsoft.Compute/virtualMachines': [
-            'Percentage CPU', 'Network In', 'Network Out', 'Disk Read Bytes', 'Disk Write Bytes',
-            'Disk Read Operations/Sec', 'Disk Write Operations/Sec', 'CPU Credits Remaining',
-            'CPU Credits Consumed', 'Per Disk Read Bytes/sec', 'Per Disk Write Bytes/sec',
-            'Per Disk Read Operations/Sec', 'Per Disk Write Operations/Sec', 'Per Disk QD',
-            'OS Per Disk Read Bytes/sec', 'OS Per Disk Write Bytes/sec',
-            'OS Per Disk Read Operations/Sec', 'OS Per Disk Write Operations/Sec', 'OS Per Disk QD'
-        ],
-        'Microsoft.Compute/virtualMachines/extensions': [],
-        'Microsoft.Insights/activityLogAlerts': [],
-        'Microsoft.Insights/alertrules': [],
-        'Microsoft.Insights/autoscalesettings': [
-            'ObservedMetricValue', 'MetricThreshold', 'ObservedCapacity', 'ScaleActionsInitiated'
-        ],
-        'Microsoft.Insights/components': [
-            'availabilityResults/duration', 'billingMeters/telemetryCount',
-            'billingMeters/telemetrySize', 'browserTimings/networkDuration',
-            'browserTimings/processingDuration', 'browserTimings/receiveDuration',
-            'browserTimings/sendDuration', 'browserTimings/totalDuration', 'dependencies/count',
-            'dependencies/duration', 'dependencies/failed', 'pageViews/count', 'pageViews/duration',
-            'performanceCounters/requestExecutionTime', 'performanceCounters/requestsInQueue',
-            'performanceCounters/requestsPerSecond', 'performanceCounters/exceptionsPerSecond',
-            'performanceCounters/processIOBytesPerSecond',
-            'performanceCounters/processCpuPercentage',
-            'performanceCounters/processorCpuPercentage',
-            'performanceCounters/memoryAvailableBytes', 'performanceCounters/processPrivateBytes',
-            'requests/duration', 'requests/count', 'requests/failed', 'exceptions/count',
-            'exceptions/browser', 'exceptions/server', 'traces/count'
-        ],
-        'Microsoft.Logic/workflows': [
-            'RunsStarted', 'RunsCompleted', 'RunsSucceeded', 'RunsFailed', 'RunsCancelled',
-            'RunLatency', 'RunSuccessLatency', 'RunThrottledEvents', 'RunFailurePercentage',
-            'ActionsStarted', 'ActionsCompleted', 'ActionsSucceeded', 'ActionsFailed',
-            'ActionsSkipped', 'ActionLatency', 'ActionSuccessLatency', 'ActionThrottledEvents',
-            'TriggersStarted', 'TriggersCompleted', 'TriggersSucceeded', 'TriggersFailed',
-            'TriggersSkipped', 'TriggersFired', 'TriggerLatency', 'TriggerFireLatency',
-            'TriggerSuccessLatency', 'TriggerThrottledEvents', 'BillableActionExecutions',
-            'BillableTriggerExecutions', 'TotalBillableExecutions',
-            'BillableNativeActionExecutions', 'BillableNativeTriggerExecutions',
-            'TotalBillableNativeExecutions', 'BillableStandardActionExecutions',
-            'BillableStandardTriggerExecutions', 'TotalBillableStandardExecutions'
-        ],
-        'Microsoft.KeyVault/vaults': ['ServiceApiHit', 'ServiceApiLatency', 'ServiceApiResult'],
-        'Microsoft.Network/networkInterfaces': [
-            'BytesSentRate', 'BytesReceivedRate', 'PacketsSentRate', 'PacketsReceivedRate'
-        ],
-        'Microsoft.Network/networkSecurityGroups': [],
-        'Microsoft.Network/publicIPAddresses': [
-            'PacketsInDDoS', 'PacketsDroppedDDoS', 'PacketsForwardedDDoS', 'TCPPacketsInDDoS',
-            'TCPPacketsDroppedDDoS', 'TCPPacketsForwardedDDoS', 'UDPPacketsInDDoS',
-            'UDPPacketsDroppedDDoS', 'UDPPacketsForwardedDDoS', 'BytesInDDoS', 'BytesDroppedDDoS',
-            'BytesForwardedDDoS', 'TCPBytesInDDoS', 'TCPBytesDroppedDDoS', 'TCPBytesForwardedDDoS',
-            'UDPBytesInDDoS', 'UDPBytesDroppedDDoS', 'UDPBytesForwardedDDoS', 'IfUnderDDoSAttack',
-            'DDoSTriggerTCPPackets', 'DDoSTriggerUDPPackets', 'DDoSTriggerSYNPackets'
-        ],
-        'Microsoft.Network/routeTables': [],
-        'Microsoft.Network/virtualNetworks': [],
-        'Microsoft.OperationalInsights/workspaces': [
-            'Average_% Free Inodes', 'Average_% Free Space', 'Average_% Used Inodes',
-            'Average_% Used Space', 'Average_Disk Read Bytes/sec', 'Average_Disk Reads/sec',
-            'Average_Disk Transfers/sec', 'Average_Disk Write Bytes/sec', 'Average_Disk Writes/sec',
-            'Average_Free Megabytes', 'Average_Logical Disk Bytes/sec',
-            'Average_% Available Memory', 'Average_% Available Swap Space', 'Average_% Used Memory',
-            'Average_% Used Swap Space', 'Average_Available MBytes Memory',
-            'Average_Available MBytes Swap', 'Average_Page Reads/sec', 'Average_Page Writes/sec',
-            'Average_Pages/sec', 'Average_Used MBytes Swap Space', 'Average_Used Memory MBytes',
-            'Average_Total Bytes Transmitted', 'Average_Total Bytes Received',
-            'Average_Total Bytes', 'Average_Total Packets Transmitted',
-            'Average_Total Packets Received', 'Average_Total Rx Errors', 'Average_Total Tx Errors',
-            'Average_Total Collisions', 'Average_Avg. Disk sec/Read',
-            'Average_Avg. Disk sec/Transfer', 'Average_Avg. Disk sec/Write',
-            'Average_Physical Disk Bytes/sec', 'Average_Pct Privileged Time',
-            'Average_Pct User Time', 'Average_Used Memory kBytes', 'Average_Virtual Shared Memory',
-            'Average_% DPC Time', 'Average_% Idle Time', 'Average_% Interrupt Time',
-            'Average_% IO Wait Time', 'Average_% Nice Time', 'Average_% Privileged Time',
-            'Average_% Processor Time', 'Average_% User Time', 'Average_Free Physical Memory',
-            'Average_Free Space in Paging Files', 'Average_Free Virtual Memory',
-            'Average_Processes', 'Average_Size Stored In Paging Files', 'Average_Uptime',
-            'Average_Users', 'Average_Current Disk Queue Length', 'Average_Available MBytes',
-            'Average_% Committed Bytes In Use', 'Average_Bytes Received/sec',
-            'Average_Bytes Sent/sec', 'Average_Bytes Total/sec', 'Average_Processor Queue Length',
-            'Heartbeat', 'Update', 'Event'
-        ],
-        'Microsoft.OperationsManagement/solutions': [],
-        'Microsoft.RecoveryServices/vaults': [],
-        'Microsoft.Sql/servers': [
-            # TODO: deal with this
-            # ErrorResponseException(u'Metric: $name does not accept zero dimension case',)
-            #'dtu_consumption_percent',
-            #'storage_used',
-            #'dtu_used'
-        ],
-        'Microsoft.Sql/servers/databases': [
-            'cpu_percent', 'physical_data_read_percent', 'log_write_percent',
-            'dtu_consumption_percent', 'storage', 'connection_successful', 'connection_failed',
-            'blocked_by_firewall', 'deadlock', 'storage_percent', 'xtp_storage_percent',
-            'workers_percent', 'sessions_percent', 'dtu_limit', 'dtu_used', 'cpu_limit', 'cpu_used'
-        ],
-        'Microsoft.Storage/storageAccounts': [
-            'UsedCapacity', 'Transactions', 'Ingress', 'Egress', 'SuccessServerLatency',
-            'SuccessE2ELatency', 'Availability'
-        ],
-        'Microsoft.Web/serverFarms': [],
-        'Microsoft.Web/sites':
-            None,  # this seems to depend on the resource!
-        'Sendgrid.Email/accounts': [],
-        'microsoft.insights/actiongroups': [],
-        'microsoft.insights/activityLogAlerts': [],
-        'microsoft.insights/alertrules': [],
-        'microsoft.insights/metricalerts': [],
-    }
+# The following *Config objects provide a Configuration instance as described in
+# CMK-513 (comment-12620).
+# For now the passed commandline arguments are used to create it.
 
 
-    def __init__(self, credentials, subscription_id, base_url=None):
-        super(CachedMetricsMMC, self).__init__(credentials, subscription_id, base_url)
-        self._metric_def_cache = {}
+class ResourceConfig(object):
+    def __init__(self, name):
+        super(ResourceConfig, self).__init__()
+        self.name = name
+        self.metrics = {}
+        self.current_metric = None
 
-    def _get_metric_defs(self, rid):
-        if not rid in self._metric_def_cache:
-            m_defs = []
-            # azure-api-call
-            for m in self.metric_definitions.list(rid):
-                log.debug("metric definition: %r", m.as_dict())
-                m_defs.append(m)
-            self._metric_def_cache[rid] = m_defs
-        return self._metric_def_cache[rid]
+    @property
+    def fetchall(self):
+        return not self.metrics
 
-    def _get_aggregation(self, metric_name, resource_id):
-        for m in self._get_metric_defs(resource_id):
-            if m.name.value == metric_name:
-                return m.primary_aggregation_type.name
-        raise RuntimeError("Could not determine primary aggregation: %s" % metric_name)
+    def add_key(self, key, value):
+        if key not in ('metric', 'time_grain', 'aggregation', 'filters'):
+            raise ValueError("unknown key: %r" % key)
+        if key == 'metric':
+            self.current_metric = self.metrics.setdefault(value, {})
+            return
+        if self.current_metric is None:
+            raise RuntimeError("missing arg: metric=<name>")
+        self.current_metric[key] = value
 
-    def _get_metricnames(self, resource_id):
-        m_defs = self._get_metric_defs(resource_id)
-        return [m.name.value for m in m_defs]
-
-    def cached_aggregation(self, metric, resource, cache_mode):
-        key = metric.name.value
-        CACHE = CachedMetricsMMC.KNOWN_AGGREGATION_TYPES
-        cached = CACHE.get(key)
-        if cache_mode == "use" and cached is not None:
-            return cached
-        value = self._get_aggregation(key, resource.id)
-        return self._handle_cache_mode(CACHE, key, value, cached, cache_mode)
-
-    def cached_metricnames(self, resource, cache_mode):
-        key = resource.type
-        CACHE = CachedMetricsMMC.KNOWN_METRICS
-        cached = CACHE.get(key)
-        if cache_mode == "use" and cached is not None:
-            return cached
-        value = self._get_metricnames(resource.id)
-        return self._handle_cache_mode(CACHE, key, value, cached, cache_mode)
-
-    def _handle_cache_mode(self, CACHE, key, value, cached, mode):
-        if mode == 'ignore':
-            return value
-        if key not in CACHE:
-            CACHE[key] = value
-            msg = "issue: cache missed: %r: %r," % (key, value)
-            _write_section('agent', [msg])
-            return value
-        if mode == 'check':
-            if cached not in (None, value):
-                msg = "issue: cache entry unexpected: %r (server said %r)" % (cached, value)
-                _write_section('agent', [msg])
-        return value
+    def __str__(self):
+        if self.fetchall:
+            return "  %s <fetchall>" % self.name
+        lines = ['  %s %s %r' % (self.name, k, v) for k, v in self.metrics.iteritems()]
+        return "\n".join(lines)
 
 
-MetricRow = namedtuple('MetricRow', ("Name", "Aggregation", "Value", "Unit", "Timestamp"))
+class GroupConfig(object):
+    def __init__(self, name):
+        super(GroupConfig, self).__init__()
+        if not name:
+            raise ValueError("falsey group name: %r" % name)
+        self.name = name
+        self.resources = {}
+        self.current_resource = None
+
+    @property
+    def fetchall(self):
+        return not self.resources
+
+    def add_key(self, key, value):
+        if key == "resource":
+            self.current_resource = self.resources.setdefault(value, ResourceConfig(value))
+            return
+        if self.current_resource is None:
+            raise RuntimeError("missing arg: resource=<name>")
+        self.current_resource.add_key(key, value)
+
+    def __str__(self):
+        if self.fetchall:
+            return "[%s]\n  <fetchall>" % self.name
+        return "[%s]\n" % self.name + "\n".join(str(r_cfg) for r_cfg in self.resources.values())
 
 
-class AzureClient(object):
-    def __init__(self, config):
-        super(AzureClient, self).__init__()
-        self._config = config
-        self._credentials = ServicePrincipalCredentials(
-            client_id=self._config.client_id,
-            secret=self._config.secret,
-            tenant=self._config.tenant_id)
-        # azure-api-call
-        self._monitor_client = CachedMetricsMMC(self._credentials, self._config.subscription_id)
-        # azure-api-call
-        self._resource_client = ResourceManagementClient(self._credentials,
-                                                         self._config.subscription_id)
+class Config(object):
+    def __init__(self, raw_list=()):
+        super(Config, self).__init__()
+        self.groups = {}
+        self.current_group = None
+        for item in raw_list:
+            if '=' not in item:
+                raise ValueError("must be in <key>=<value> format: %r" % item)
+            key, value = item.split('=', 1)
+            self.add_key(key, value)
 
-        match_options = ['match_name', 'match_type', 'match_group']
-        self.resource_filters = [
-            getattr(self, f) for f in match_options if getattr(self._config, f) is not None
-        ]
-        self.resource_cache = []
+    @property
+    def fetchall(self):
+        return not self.groups
 
-        # compute timespan once, and keep it fixed
-        time_end = datetime.datetime.now()
-        time_interval = datetime.timedelta(minutes=self._config.minutes)
-        self.timespan = "%s/%s" % (time_end - time_interval, time_end)
-        log.info("timespan = %r", self.timespan)
+    def add_key(self, key, value):
+        if key == "group":
+            self.current_group = self.groups.setdefault(value, GroupConfig(value))
+            return
+        if self.current_group is None:
+            raise RuntimeError("missing arg: group=<name>")
+        self.current_group.add_key(key, value)
 
-    def match_name(self, r):
-        match = re.search(self._config.match_name, r.name)
-        return match is not None
-
-    def match_type(self, r):
-        match = re.search(self._config.match_type, r.type)
-        return match is not None
-
-    def match_group(self, r):
-        match = re.search("/resourceGroups/%s/" % self._config.match_group, r.id)
-        return match is not None
-
-    def match_metric(self, m_name):
-        if self._config.match_metric is None:
+    def is_configured(self, resource):
+        if self.fetchall:
             return True
-        match = re.search(self._config.match_metric, m_name)
-        return match is not None
+        group_config = self.groups.get(resource.info['group'])
+        if group_config is None:
+            return False
+        if group_config.fetchall:
+            return True
+        return resource.info['name'] in group_config.resources
 
-    def get_resources(self):
-        if not self.resource_cache:
-            # azure-api-call
-            tmp_resources = list(self._resource_client.resources.list())
-            for f in self.resource_filters:
-                tmp_resources = filter(f, tmp_resources)
-            self.resource_cache = tmp_resources
-        return self.resource_cache
+    def get_resource_config(self, resource):
+        r_name = resource.info['name']
+        group = self.groups.get(resource.info['group'])
+        if self.fetchall or group.fetchall:
+            return ResourceConfig(r_name)
+        return group.resources[r_name]
 
-    def _fetch_metrics(self, res_id, metricnames):
+    def __str__(self):
+        if self.fetchall:
+            return "[<fetchall>]"
+        return "\n".join(str(group) for group in self.groups.values())
 
-        metric_objects = []
-        # azure API won't have requests with more than 20 metrics.
-        if len(metricnames) > 20:
-            metricnames, r_metricnames = metricnames[:20], metricnames[20:]
-            metric_objects += self._fetch_metrics(res_id, r_metricnames)
 
-        if metricnames:
-            # azure-api-call
-            response = self._monitor_client.metrics.list(
-                res_id,
-                metric=','.join(metricnames),
-                timespan=self.timespan,
-                interval=self._config.interval,  #"PT24H",
-            )
-            metric_objects += list(response.value)
+class AzureMetric(object):
 
-        return metric_objects
+    HEADER = ' '.join(("name", "aggregation", "value", "unit", "timestamp", "timegrain", "filters"))
+    AGGREGATIONS = ("total", "average", "maximum", "minimum", "last", "count")
 
-    def _get_metric_objects(self, resource, err):
+    def __init__(self, metric, rid, time_grain, filters, err):
+        super(AzureMetric, self).__init__()
 
-        metric_objects = []
-        try:
-            metricnames = self._monitor_client.cached_metricnames(resource, self._config.cache_mode)
-            metricnames = filter(self.match_metric, metricnames)
-            if metricnames:
-                metric_objects = self._fetch_metrics(resource.id, metricnames)
-        except Exception as e:
-            err.append("exception: %s" % e)
-            if self._config.debug:
-                raise e
-        return metric_objects
-
-    def extract_row_from_metric(self, metric, resource, err):
-
-        aggregation = self._monitor_client.cached_aggregation(metric, resource,
-                                                              self._config.cache_mode)
+        self.rows = []
+        self.name = metric.name.value
 
         # Assuming this agent is executed to gather one value per metric
         count = len(metric.timeseries)
-        if count > 1:
-            log.warning("len(metric.timeseries) == %d", count)
-            log.warning("this agent is executed to gather one value per metric")
+        if count <> 1:
+            msg = "timeseries has %d elements for metric %s" % (count, self.name)
+            err.append("info", rid, msg)
+            log.warning(msg + " for resource %s" % rid)
 
         for measurement in reversed(metric.timeseries):
             log.debug("measurement: %s", measurement)
-            log.debug("measurement.data: %s", measurement.data)
             if not measurement.data:
                 continue
 
             data = measurement.data[-1]
             timestamp = calendar.timegm(data.time_stamp.utctimetuple())
-            if not hasattr(data, aggregation):
-                err.append('issue: missing aggregation %s of metric %s' \
-                           % (aggregation, metric.name.value))
-                continue
-            value = getattr(data, aggregation)
-            return MetricRow(metric.name.value, aggregation, value, metric.unit.name, timestamp)
-        return None
+            for aggr in AzureMetric.AGGREGATIONS:
+                if hasattr(data, aggr):
+                    value = getattr(data, aggr)
+                    # the field *may* be present, even if we did not ask for it.
+                    m_tuple = (self.name, aggr, value, metric.unit.name, timestamp, time_grain,
+                               filters)
+                    if value is not None:
+                        self.rows.append(m_tuple)
+                    else:
+                        logging.debug("OMITTED: %s %s %s %s %s %s %s", *m_tuple)
+        if not self.rows:
+            log.info("Found no aggregation for metric %r", self.name)
 
-    def get_metrics_of_resource(self, resource):
-        """Returns the values of all metrics of the given resource"""
-        err = []  # pass this to methods to collect issues
+        return
 
-        metric_objects = self._get_metric_objects(resource, err)
-
-        table = []
-        for metric in metric_objects:
-            log.debug("metric.name.value: %s", metric.name.value)
-            log.debug("metric.timeseries: %s", metric.timeseries)
-
-            try:
-                row = self.extract_row_from_metric(metric, resource, err)
-            except Exception as e:
-                row = None
-                err.append("exception: %s" % e)
-                if self._config.debug:
-                    raise e
-            if row:
-                table.append(row)
-
-        if not table:
-            return [], err
-
-        out = ["metrics following: %d" % len(table)]
-        table.insert(0, table[-1]._fields)
-        out += ["%30s %13s %20s %20s %20s" % row for row in table]
-        return out, err
-
-    def process_resource(self, resource):
-        basic_type = resource.type.split('/')[-1]
-        sec_base_name = basic_type.lower()
-        general_out = ["Resource", json.dumps(resource.as_dict())]
-        metrics_out, err_out = self.get_metrics_of_resource(resource)
-
-        _write_section(sec_base_name, general_out + metrics_out + err_out)
-        _write_section('agent', err_out)
+    def get_lines(self):
+        return [' '.join(map(str, r)) for r in self.rows]
 
 
-class Processes(object):
-    def __init__(self, config):
-        super(Processes, self).__init__()
-        self.timeout = config.pjoin_timeout
-        self.sequential = config.sequential
-        self.debug = config.debug
+class AzureResource(object):
+
+    ID_PATTERN = re.compile("/subscriptions/([^/]*)" "/resourceGroups/([^/]*)" "/providers/([^/]*)")
+
+    def __init__(self, resource):
+        super(AzureResource, self).__init__()
+        self.info = resource.as_dict()
+        m = AzureResource.ID_PATTERN.match(resource.id)
+        self.info["subscription"] = m.group(1)
+        self.info["group"] = m.group(2)
+        self.info["provider"] = m.group(3)
+
+        self.section = resource.type.split('/')[-1].lower()
+        self.metrics = []
+
+    def __str__(self):
+        tmp = ["Resource", json.dumps(self.info)]
+        m_lines = []
+        for m in self.metrics:
+            m_lines += m.get_lines()
+        if m_lines:
+            tmp += ["metrics following: %d" % len(m_lines), self.metrics[0].HEADER] + m_lines
+        return '\n'.join(tmp)
+
+
+class IssueCollecter(list):
+    # basically a list of strings, just fancy appending.
+    def append(self, issue_type, issued_by, issue_msg):
+        issue = {'type': issue_type, 'issued_by': issued_by, 'msg': issue_msg}
+        text = 'issue %s' % json.dumps(issue)
+        super(IssueCollecter, self).append(text)
+
+
+class AzureClient(object):
+    def __init__(self, args):
+        super(AzureClient, self).__init__()
+        self.debug = args.debug
+        self.remaining_reads = "unknown (no metrics fetched)"
+
+        self._creds = ServicePrincipalCredentials(
+            client_id=args.client_id, secret=args.secret, tenant=args.tenant_id)
+        # azure-api-call
+        self._monitor_client = MonitorManagementClient(self._creds, args.subscription_id)
+        # azure-api-call
+        self._resource_client = ResourceManagementClient(self._creds, args.subscription_id)
+
+        # compute timespan once, and keep it fixed
+        time_end = datetime.datetime.now()
+        time_min = datetime.timedelta(minutes=5)
+        time_hrs = datetime.timedelta(hours=2)
+        self.timespan_min = "%s/%s" % (time_end - time_min, time_end)
+        self.timespan_hrs = "%s/%s" % (time_end - time_hrs, time_end)
+        self.resources_cache = None
+        self.metrics_cache = {}
+
+    def discover_resources(self):
+        if self.resources_cache is None:
+            # azure-api-call
+            raw_resources = self._resource_client.resources.list()
+            self.resources_cache = map(AzureResource, raw_resources)
+        return self.resources_cache
+
+    def discover_metrics(self, rid):
+        if rid not in self.metrics_cache:
+            # azure-api-call
+            md_list = list(self._monitor_client.metric_definitions.list(rid))
+            self.metrics_cache[rid] = md_list
+            log.debug("%d discovered metrics: %r", len(md_list), [str(md) for md in md_list])
+        return self.metrics_cache[rid]
+
+    def discover_groups(self, resources=None):
+        if resources is None:
+            resources = self.discover_resources()
+        return sorted(set(r.info['group'] for r in resources))
+
+    @staticmethod
+    def _categorize_metric(definition):
+
+        has_minute_grain = 60 in [i.time_grain.seconds for i in definition.metric_availabilities]
+        grain = 'PT1M' if has_minute_grain else 'PT1H'
+        if definition.dimensions is None:
+            dim = 'no_dim'
+        else:
+            dim = 'req_dim' if definition.is_dimension_required else 'opt_dim'
+        return '%s_%s' % (grain, dim)
+
+    def _fetch_all_metrics(self, rid, err):
+        metrics = []
+        categorized_metrics = {}
+
+        for m_def in self.discover_metrics(rid):  # sort into categories
+            cat = self._categorize_metric(m_def)
+            categorized_metrics.setdefault(cat, []).append(m_def)
+
+        for time_grain in ('PT1M', 'PT1H'):
+            metrics_no_dim = categorized_metrics.get('%s_no_dim' % time_grain)
+            if metrics_no_dim:
+                _names = ','.join(m.name.value for m in metrics_no_dim)
+                metrics += self._fetch_specific_metrics(rid, _names, time_grain, None, None, err)
+
+            metrics_opt_dim = categorized_metrics.get('%s_opt_dim' % time_grain)
+            if metrics_opt_dim:
+                _names = ','.join(m.name.value for m in metrics_opt_dim)
+                log.info("These metrics have dimensions: %s", _names)
+                metrics += self._fetch_specific_metrics(rid, _names, time_grain, None, None, err)
+
+            # TODO: dimension required. How does this work?
+            metrics_req_dim = categorized_metrics.get('%s_req_dim' % time_grain)
+            if metrics_req_dim:
+                for m in metrics_req_dim:
+                    dim_names = ','.join(d.value for d in m.dimensions)
+                    err.append("warning", rid, "metric %r requires dimension (%s)" % (m.name.value,
+                                                                                      dim_names))
+
+        return metrics
+
+    def _fetch_specific_metrics(self, rid, metricnames, time_grain, aggregations, filters, err):
+
+        metrics = []
+
+        # azure API won't have requests with more than 20 metrics.
+        lim = 20
+        if metricnames.count(',') >= lim:
+            tmp = metricnames.split(',')
+            metricnames, r_metricnames = ','.join(tmp[:lim]), ','.join(tmp[lim:])
+            r_args = (rid, r_metricnames, time_grain, aggregations, filters, err)
+            metrics += self._fetch_specific_metrics(*r_args)
+
+        try:
+            timespan = {"PT1M": self.timespan_min, "PT1H": self.timespan_hrs}[time_grain]
+            log.debug("metrics.list(%r, timespan=%r, interval=%r, metric=%r, "
+                      "aggregation=%r, filter=%r, raw=True)", rid, timespan, time_grain,
+                      metricnames, aggregations, filters)
+            # azure-api-call
+            raw = self._monitor_client.metrics.list(
+                rid,
+                timespan=timespan,
+                interval=time_grain,
+                metric=metricnames,
+                aggregation=aggregations,
+                filter=filters,
+                raw=True,
+            )
+            log.debug("raw = %r", raw)
+            self.remaining_reads = raw.response.headers[
+                'x-ms-ratelimit-remaining-subscription-reads']
+            # raw.output is what we'd gotten had we set raw=False
+            metrics += [
+                AzureMetric(metric, rid, time_grain, filters, err) for metric in raw.output.value
+            ]
+            log.debug("fetched metrics: %s", metricnames)
+        except ErrorResponseException as exc:
+            if self.debug:
+                raise exc
+            err.append("exception", rid, exc.message)
+            log.exception(exc)
+
+        return metrics
+
+    def get_metrics(self, resource, r_config, err):
+        rid = resource.info['id']
+        metrics = []
+
+        if r_config.fetchall:
+            metrics += self._fetch_all_metrics(rid, err)
+        else:
+            for metricnames, additional_config in r_config.metrics.iteritems():
+                time_grain = additional_config.get('time_grain', 'PT1M')
+                aggregations = additional_config.get('aggregations')
+                filters = additional_config.get('filters')
+                metrics += self._fetch_specific_metrics(
+                    rid, metricnames, time_grain, aggregations, filters, err=err)
+
+        return metrics
+
+
+def _write(data, lock=Lock()):
+    lock.acquire()
+    sys.stdout.write(data)
+    sys.stdout.flush()
+    lock.release()
+
+
+def _write_agent_info(key, value):
+    data = ('<<<azure_agent_info>>>\n' '%s %s\n' % (key, json.dumps(value)))
+    _write(data)
+
+
+class Threads(object):
+    def __init__(self, args):
+        super(Threads, self).__init__()
+        self.timeout = args.pjoin_timeout
+        self.sequential = args.sequential
+        self.debug = args.debug
         self.ps = []
         if not self.sequential:
             atexit.register(self.terminate)
 
-    def run(self, client):
-        resources = client.get_resources()
+    def run(self, client, config):
+        resources = filter(config.is_configured, client.discover_resources())
 
         if self.sequential:
-            for r in resources:
-                client.process_resource(r)
-            return
+            self._run_sequential(resources, client, config)
+        else:
+            self._run_parallel(resources, client, config)
 
-        # parallel case is a little more complicated:
-        # start:
+        _write_agent_info('monitored-groups', client.discover_groups(resources))
+
+    def _run_sequential(self, resources, client, config):
+        for r in resources:
+            process_resource(r, client, config)
+
+    def _run_parallel(self, resources, client, config):
+        # start
         for resource in resources:
-            p = Process(target=client.process_resource, args=(resource,))
+            p = Process(target=process_resource, args=(resource, client, config))
             p.start()
             self.ps.append(p)
         # join:
@@ -768,19 +524,49 @@ class Processes(object):
                 p.terminate()
 
 
+def process_resource(resource, client, config):
+
+    r_config = config.get_resource_config(resource)
+    err = IssueCollecter()  # pass this to methods to collect issues
+
+    for metric in client.get_metrics(resource, r_config, err):
+        resource.metrics.append(metric)
+
+    output = [
+        '<<<<%s>>>>' % resource.info['group'],
+        '<<<azure_%s>>>' % resource.section,
+        '%s' % resource,
+    ]
+    if err:
+        output.append('<<<azure_agent_info>>>')
+        output.extend(err)
+    output.extend(['<<<<>>>>', ''])
+
+    _write('\n'.join(output))
+    _write_agent_info('remaining-reads', client.remaining_reads)
+
+
 def main(argv=None):
-    if argv is None:
-        argv = sys.argv[1:]
-    start_time = time.time()
 
-    config = parse_arguments(argv)
-    client = AzureClient(config)
+    args = parse_arguments(argv or sys.argv[1:])
+    config = Config(raw_list=args.config)
+    str_config = "Configuration:\n%s\n" % config
+    if args.dump_config:
+        sys.stdout.write(str_config)
+        return 0
+    else:
+        log.debug(str_config)
 
-    Processes(config).run(client)
-
-    msg = 'execution_time %s' % (time.time() - start_time)
-    _write_section('agent', [msg])
+    try:
+        client = AzureClient(args)
+        Threads(args).run(client, config)
+    except Exception, exc:
+        if args.debug:
+            raise exc
+        _write(_add_hint(str(exc)))
+        return 1
+    return 0
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

@@ -28,7 +28,7 @@ REPO_PATH          := $(realpath $(dir $(lastword $(MAKEFILE_LIST))))
 EDITION            := raw
 EDITION_SHORT      := cre
 
-ifneq (,$(wildcard enterprise))
+ifneq (,$(wildcard $(REPO_PATH)/enterprise))
 ENTERPRISE         := yes
 EDITION            := enterprise
 EDITION_SHORT      := cee
@@ -36,7 +36,7 @@ else
 ENTERPRISE         := no
 endif
 
-ifneq (,$(wildcard managed))
+ifneq (,$(wildcard $(REPO_PATH)/managed))
 MANAGED            := yes
 EDITION            := managed
 EDITION_SHORT      := cme

@@ -31,29 +31,61 @@
 # Temperature is in Celcius by default.
 # Tested with Dell PowerConnect 5448 and 5424 models.
 
+
 factory_settings["dell_powerconnect_temp_default_values"] = {
     "levels"    : (35, 40),
 }
+
 
 def inventory_dell_powerconnect_temp(checkname, info):
     for _temp, _state in info:
         return [("Ambient", {})]
 
-def check_dell_powerconnect_temp(_no_item, params, info):
-    translate_status = {
-        '1' : (0, 'ok'),
-        '2' : (1, 'unavailable'),
-        '3' : (2, 'nonoperational'),
-    }
-    for temp, state in info:
-        return check_temperature(float(temp), params, "dell_powerconnect",
-                                 dev_status=translate_status[state][0],
-                                 dev_status_name=translate_status[state][1])
+
+def parse_dell_powerconnect_temp(info):
+    try:
+        temp_str, dev_status = info[0]
+    except (IndexError, ValueError):
+        return None
+    try:
+        temp = float(temp_str)
+    except ValueError:
+        temp = None
+    return temp, {'1': 'OK',
+                  '2': 'unavailable',
+                  '3': 'non operational',
+                 }.get(dev_status, "unknown[%s]" % dev_status)
+
+
+def inventory_dell_powerconnect_temp(checkname, parsed):
+    if parsed:
+        return [("Ambient", {})]
+
+
+def check_dell_powerconnect_temp(_no_item, params, parsed):
+    if parsed is None:
+        return
+
+    temp, dev_state_readable = parsed
+    if dev_state_readable == "OK":
+        state = 0
+    elif dev_state_readable == "unavailable":
+        state = 1
+    elif dev_state_readable == "non operational":
+        state = 2
+    else:
+        state = 3
+
+    if temp is None:
+        return state, "Status: %s" % dev_state_readable
+    return check_temperature(temp, params, "dell_powerconnect",
+                             dev_status=state, dev_status_name=dev_state_readable)
 
 
 check_info["dell_powerconnect_temp"] = {
-    "inventory_function"      : inventory_dell_powerconnect_temp,
+    "parse_function"          : parse_dell_powerconnect_temp,
     "check_function"          : check_dell_powerconnect_temp,
+    "inventory_function"      : inventory_dell_powerconnect_temp,
     "service_description"     : "Temperature %s",
     "default_levels_variable" : "dell_powerconnect_temp_default_values",
     "has_perfdata"            : True,

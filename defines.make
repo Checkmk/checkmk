@@ -23,6 +23,8 @@
 # Boston, MA 02110-1301 USA.
 #
 
+REPO_PATH          := $(realpath $(dir $(lastword $(MAKEFILE_LIST))))
+
 EDITION            := raw
 EDITION_SHORT      := cre
 

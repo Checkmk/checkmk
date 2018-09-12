@@ -1,0 +1,20 @@
+Title: netscaler_vserver: Discovers readable names
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.4.0p36
+Date: 1536583837
+
+The OID .1.3.6.1.4.1.5951.4.1.3.1.1.1 (vsvrName) is used
+for the server names. At a certain length the names are
+cryptic and therefore unreadable.
+
+In order to get readable names we preferable use the OID
+.1.3.6.1.4.1.5951.4.1.3.1.1.59 (vsvrFullName).
+
+After a rediscovery the full server names will be used.
+In general the server names and full server names are
+equal below a certain length.

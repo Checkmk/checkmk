@@ -1,0 +1,11 @@
+Title: ceph_status, ceph_status.osds, ceph_status.mgrs: Used wrong value epoch rate instead of epoch average
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0p5
+Date: 1536744730
+
+

@@ -1,0 +1,10 @@
+Title: snmp_info: Generate snmp_info service even if the sysDescription is not set
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1536827737
+Class: fix
+
+

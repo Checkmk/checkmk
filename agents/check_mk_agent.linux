@@ -997,8 +997,6 @@ fi
 
 # Iterate all running containers and report piggyback data for them
 if type docker > /dev/null 2>&1 && [ -z "$MK_IS_PIGGYBACKED" ]; then
-    NODE_NAME=$(docker info --format "{{json .Name}}")
-
     echo "<<<docker_node_info>>>"
     docker info --format "{{json .}}" 2>&1
 
@@ -1019,34 +1017,6 @@ if type docker > /dev/null 2>&1 && [ -z "$MK_IS_PIGGYBACKED" ]; then
     echo "<<<docker_node_network:sep(0)>>>"
     NETWORK_IDS=$(docker network ls -f 'driver=bridge' --format='{{.ID}}')
     docker network inspect "$NETWORK_IDS"
-
-    # For the container status, we want information about *all* containers
-    for CONTAINER_ID in $(docker container ls -q --all); do
-        echo "<<<<${CONTAINER_ID}>>>>"
-        docker inspect "$CONTAINER_ID" \
-            --format='{{println "<<<docker_container_status>>>"}}{{json .State}}{{println}}{{println "<<<docker_container_node_name>>>"}}{{println '"$NODE_NAME"'}}{{println "<<<docker_container_labels>>>"}}{{json .Config.Labels}}{{println}}{{println "<<<docker_container_network>>>"}}{{json .NetworkSettings}}{{println}}'
-        echo "<<<<>>>>"
-    done
-
-    for CONTAINER_ID in $(docker container ls -q); do
-        echo "<<<<$CONTAINER_ID>>>>"
-
-        # Is there a regular agent available in the container? Use it!
-        #
-        # Otherwise execute the agent of the node in the context of the container.
-        # Using this approach we should always get at least basic information from
-        # the container.
-        # Once it comes to plugins and custom configuration the user needs to use
-        # a little more complex setup. Have a look at the documentation.
-        AGENT_PATH=$(docker container exec "$CONTAINER_ID" bash -c "type check_mk_agent" 2>/dev/null)
-        if [ -n "$AGENT_PATH" ]; then
-            docker container exec --env MK_IS_PIGGYBACKED=1 --env "REMOTE=$REMOTE" "$CONTAINER_ID" check_mk_agent
-        elif docker container exec "$CONTAINER_ID" which bash >/dev/null 2>&1; then
-            docker container exec --env MK_IS_PIGGYBACKED=1 --env MK_FROM_NODE=1 --env "REMOTE=$REMOTE" -i "$CONTAINER_ID" bash < "$0"
-        fi
-
-        echo "<<<<>>>>"
-    done
 fi
 
 # Start new liveupdate process in background on each agent execution. Starting

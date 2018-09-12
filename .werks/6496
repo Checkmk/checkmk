@@ -1,0 +1,27 @@
+Title: check_mk_agent.linux: Moved piggybacked docker container sections to plugin 'mk_docker_container_piggybacked'
+Level: 1
+Component: checks
+Compatible: incomp
+Edition: cre
+Version: 1.5.0p5
+Date: 1536741679
+Class: fix
+
+In order to monitor docker containers the {{check_mk_agent}}
+collects the following information of each docker container
+as piggyback data:
+<ul>
+<li>The state, node name, labels and network information</li>
+<li>Execution of the {{check_mk_agent}} within running containers</li>
+</ul>
+
+Moreover you have to create piggybacked hosts in Check_MK for each docker
+container. The piggybacked host name is the docker container ID.
+
+Due to a long running time of these sections they are transferred to the
+plugin {{mk_docker_container_piggybacked}} which also can be executed
+asynchronously.
+
+That means that these sections were removed from the {{check_mk_agent}}
+and you have to install the plugin to the plugins folder on the client.
+

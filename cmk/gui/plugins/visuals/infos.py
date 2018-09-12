@@ -39,6 +39,12 @@ declare_info('host', {
             title = _('Hostname'),
         )),
     ],
+    # When these filters are set, the site hint will not be added to urls
+    # which link to views using this datasource, because the resuling view
+    # should show the objects spread accross the sites
+    "multiple_site_filters" : [
+        "hostgroup",
+    ],
 })
 
 declare_info('service', {
@@ -48,6 +54,12 @@ declare_info('service', {
         ('service', TextUnicode(
             title = _('Service Description'),
         )),
+    ],
+    # When these filters are set, the site hint will not be added to urls
+    # which link to views using this datasource, because the resuling view
+    # should show the objects spread accross the sites
+    "multiple_site_filters" : [
+        "servicegroup",
     ],
 })
 

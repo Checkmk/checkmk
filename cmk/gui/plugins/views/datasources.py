@@ -97,13 +97,6 @@ multisite_datasources["hosts"] = {
     # to handle the data provided by the single_spec value of the "hostgroup"
     # info, which is in fact the name of the wanted hostgroup
     "link_filters" : { "hostgroup": "opthostgroup" },
-    # When these filters are set, the site hint will not be added to urls
-    # which link to views using this datasource, because the resuling view
-    # should show the objects spread accross the sites
-    "multiple_site_filters" : [
-        "hostgroup",
-        "servicegroup",
-    ],
 }
 
 multisite_datasources["hostsbygroup"] = {
@@ -130,13 +123,6 @@ multisite_datasources["services"] = {
         "hostgroup"    : "opthostgroup",
         "servicegroup" : "optservicegroup",
     },
-    # When these filters are set, the site hint will not be added to urls
-    # which link to views using this datasource, because the resuling view
-    # should show the objects spread accross the sites
-    "multiple_site_filters" : [
-        "hostgroup",
-        "servicegroup",
-    ],
 }
 
 multisite_datasources["servicesbygroup"] = {

@@ -1,11 +1,6 @@
 # General settings included by all packages
 
-# Makefile is loaded either from omd/packages/*/Makefile or omd/Makefile
-ifneq (,$(wildcard ../../../omd/distro))
-    REPO_PATH      := $(abspath ../../..)
-else
-    REPO_PATH      := $(abspath ..)
-endif
+REPO_PATH          := $(realpath $(dir $(realpath $(dir $(lastword $(MAKEFILE_LIST))))))
 
 include $(REPO_PATH)/defines.make
 

@@ -1,0 +1,16 @@
+Title: Bulk discovery: "Include subfolders" does not make sense for a selection of hosts
+Level: 1
+Component: wato
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0p5
+Date: 1536673221
+
+A selection of hosts is already given in the following situations:
+<ul>
+<li>in the current folder below <i>Selected hosts: Discovery</i>,</li>
+<li>Below <i>Bulk import</i> a automatic service discovery for
+imported/selected hosts can be executed</li>
+</ul>

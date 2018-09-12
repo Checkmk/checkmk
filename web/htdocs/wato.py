@@ -846,8 +846,10 @@ class ModeFolder(WatoMode):
                 if config.user.may("wato.edit_hosts"):
                     html.button("_bulk_edit", _("Edit"))
                     html.button("_bulk_cleanup", _("Cleanup"))
+
             if config.user.may("wato.services"):
                 html.button("_bulk_inventory", _("Discovery"))
+
             if not self._folder.locked_hosts():
                 if config.user.may("wato.parentscan"):
                     html.button("_parentscan", _("Parentscan"))
@@ -4264,10 +4266,16 @@ class ModeBulkDiscovery(WatoMode):
             html.begin_form("bulkinventory", method="POST")
             html.hidden_fields()
 
-            vs = self.vs_bulk_discovery(render_form=True)
-
             msgs = []
-            if not self._all:
+            if self._all:
+                vs = self.vs_bulk_discovery(render_form=True)
+            else:
+                # "Include subfolders" does not make sense for a selection of hosts
+                # which is already given in the following situations:
+                # - in the current folder below 'Selected hosts: Discovery'
+                # - Below 'Bulk import' a automatic service discovery for
+                #   imported/selected hosts can be executed
+                vs = self.vs_bulk_discovery(render_form=True, include_subfolders=False)
                 msgs.append(_("You have selected <b>%d</b> hosts for bulk discovery.") % len(hosts_to_discover))
                 selection = self._bulk_discovery_params["selection"]
                 self._bulk_discovery_params["selection"] = [False] + list(selection[1:])
@@ -4362,11 +4370,22 @@ class ModeBulkDiscovery(WatoMode):
 
 
     @classmethod
-    def vs_bulk_discovery(cls, render_form=False):
+    def vs_bulk_discovery(cls, render_form=False, include_subfolders=True):
         if render_form:
             render = "form"
         else:
             render = None
+
+        if include_subfolders:
+            selection_elements = [Checkbox(label = _("Include all subfolders"), default_value = True)]
+        else:
+            selection_elements = []
+
+        selection_elements += [
+            Checkbox(label = _("Only include hosts that failed on previous discovery"), default_value = False),
+            Checkbox(label = _("Only include hosts with a failed discovery check"), default_value = False),
+            Checkbox(label = _("Exclude hosts where the agent is unreachable"), default_value = False),
+        ]
 
         return Dictionary(
             title    = _("Bulk discovery"),
@@ -4385,16 +4404,7 @@ class ModeBulkDiscovery(WatoMode):
                 )),
                 ("selection", Tuple(
                     title    = _("Selection"),
-                    elements = [
-                        Checkbox(label = _("Include all subfolders"),
-                                 default_value = True),
-                        Checkbox(label = _("Only include hosts that failed on previous discovery"),
-                                 default_value = False),
-                        Checkbox(label = _("Only include hosts with a failed discovery check"),
-                                 default_value = False),
-                        Checkbox(label = _("Exclude hosts where the agent is unreachable"),
-                                 default_value = False),
-                    ]
+                    elements = selection_elements
                 )),
                 ("performance", Tuple(
                     title    = _("Performance options"),

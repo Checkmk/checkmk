@@ -28,7 +28,7 @@ hitachi_hnas_fpga_default_levels = { "levels" : (80.0, 90.0) }
 
 def inventory_hitachi_hnas_fpga(info):
     inventory = []
-    for clusternode, id, name, util in info:
+    for clusternode, id, name, _util in info:
         inventory.append( (clusternode + "." + id + " " + name, hitachi_hnas_fpga_default_levels) )
     return inventory
 

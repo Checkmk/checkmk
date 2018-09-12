@@ -44,7 +44,7 @@ def inventory_genua_state(info):
     info = filter(None, info)
     if info[0]:
         numifs = 0
-        for ifIndex, ifName, ifType, ifLinkState, ifCarpState in info[0]:
+        for _ifIndex, _ifName, _ifType, _ifLinkState, ifCarpState in info[0]:
             if ifCarpState in [ "0", "1", "2" ]:
                 numifs += 1
         # inventorize only if we find at least two carp interfaces

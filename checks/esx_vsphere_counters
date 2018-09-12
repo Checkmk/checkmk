@@ -90,7 +90,7 @@ def check_esx_vsphere_counters_diskio(item, params, parsed):
         if "disk.%s" % what in parsed and "" in parsed["disk.%s" % what]:
             values['%s_throughput' % what] = int(esx_vsphere_get_average(parsed["disk.%s" % what][""][0][0]) * 1024)
 
-        for instance, info in parsed["disk.number%s" % what.title()].items():
+        for info in parsed["disk.number%s" % what.title()].itervalues():
             values["%s_ios" % what] += int(esx_vsphere_get_average(info[0][0]))
 
     if "disk.deviceLatency" in parsed:
@@ -424,7 +424,7 @@ def check_esx_vsphere_counters_ramdisk(item, params, parsed):
         raise MKCounterWrapped("Counter data is missing")
 
     ramdisks = []
-    for instance, values in parsed.get("sys.resourceMemConsumed").items():
+    for instance in parsed.get("sys.resourceMemConsumed").iterkeys():
         if instance.startswith('host/system/kernel/kmanaged/visorfs/'):
             name = instance.split('/')[-1]
             try:

@@ -27,7 +27,7 @@
 emc_vplex_cpu_default_levels = (90.0, 95.0)
 
 def inventory_emc_vplex_cpu(info):
-    for director, util in info:
+    for director, _util in info:
         yield director, "emc_vplex_cpu_default_levels"
 
 def check_emc_vplex_cpu(item, params, info):

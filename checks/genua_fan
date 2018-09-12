@@ -36,7 +36,7 @@ def inventory_genua_fan(info):
     info = filter(None, info)
 
     inventory = []
-    for fanNo, fanName, fanRPM, fanState in info[0]:
+    for _fanNo, fanName, _fanRPM, _fanState in info[0]:
         inventory.append( (fanName, {}) )
     return inventory
 
@@ -53,10 +53,8 @@ def check_genua_fan(item, params, info):
         "5" : (2, "unknown"),
         "6" : (2, "unknown"), }
 
-    lowerwarn, lowercrit = params["lower"]
-    upperwarn, uppercrit = params["upper"]
     for line in info[0]:
-        fanNo, fanName, fanRPM, fanState = line
+        _fanNo, fanName, fanRPM, fanState = line
         if fanName != item:
             continue
 

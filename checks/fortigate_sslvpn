@@ -30,7 +30,7 @@ def parse_fortigate_sslvpn(info):
 
 
 def inventory_fortigate_sslvpn(info):
-    for name, idx, state, users, web_sessions, tunnels, tunnels_max in info:
+    for name, _state, _users, _web_sessions, _tunnels, _tunnels_max in info:
         yield name, None
 
 
@@ -39,7 +39,7 @@ def check_fortigate_sslvpn(item, _no_params, info):
         "1": "disabled",
         "2": "enabled"
     }
-    for name, idx, state, users, web_sessions, tunnels, tunnels_max in info:
+    for name, state, users, web_sessions, tunnels, tunnels_max in info:
         if name == item:
             infotext = "%s - users %s, web sessions %s, tunnels %s" %\
                 (fn_bool_state[state], users, web_sessions, tunnels)
@@ -59,8 +59,7 @@ check_info["fortigate_sslvpn"] = {
     "snmp_scan_function"  : lambda oid: ".1.3.6.1.4.1.12356.101.1" in oid(".1.3.6.1.2.1.1.2.0"),
     "snmp_info"           : [
         (".1.3.6.1.4.1.12356.101.3.2.1.1", [2]),
-        (".1.3.6.1.4.1.12356.101.12.2.3.1", [OID_END,
-                                             1,  # fgVpnSslState
+        (".1.3.6.1.4.1.12356.101.12.2.3.1", [1,  # fgVpnSslState
                                              2,  # fgVpnSslStatsLoginUsers
                                              4,  # fgVpnSslStatsActiveWebSessions
                                              6,  # fgVpnSslStatsActiveTunnels
@@ -68,4 +67,3 @@ check_info["fortigate_sslvpn"] = {
                                              ]),
     ]
 }
-

@@ -36,7 +36,7 @@ def inventory_hp_proliant_temp(info):
 def check_hp_proliant_temp(item, params, info):
     for line in info:
         if format_hp_proliant_name(line) == item:
-            chassis, index, name, value, threshold, status = line
+            _chassis, _index, _name, value, threshold, status = line
 
             # This case means no threshold available and
             # the devices' web interface displays "N/A"

@@ -42,7 +42,6 @@ def check_emc_datadomain_mtree(item, _no_params, info):
     }
     for line in info:
         if item == line[0]:
-            dev_name = line[0]
             dev_precomp = line[1]
             dev_state = line[2]
             dev_state_str, dev_state_rc = state_table.get(dev_state, ("invalid code %s" % dev_state, 3))

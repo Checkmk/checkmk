@@ -28,7 +28,7 @@ check_includes["hitachi_hnas_span"] = [ "size_trend.include", "df.include" ]
 
 def inventory_hitachi_hnas_span(info):
     mplist = []
-    for id, label, total_upper, total_lower, used_upper, used_lower in info:
+    for id, label, _total_upper, _total_lower, _used_upper, _used_lower in info:
         mplist.append(id + " " + label)
     return df_inventory(mplist)
 

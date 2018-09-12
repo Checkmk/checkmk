@@ -28,7 +28,7 @@
 hitachi_hnas_bossock_default_levels = (250, 350)
 
 def inventory_hitachi_hnas_bossock(info):
-    for clusternode, fibers in info:
+    for clusternode, _fibers in info:
         yield clusternode, 'hitachi_hnas_bossock_default_levels'
 
 def check_hitachi_hnas_bossock(item, params, info):

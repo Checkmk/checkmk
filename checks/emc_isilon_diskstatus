@@ -26,7 +26,7 @@
 
 
 def inventory_emc_isilon_diskstatus(info):
-    for disk_id, name, disk_status, serial in info:
+    for disk_id, _name, _disk_status, _serial in info:
         yield disk_id, None
 
 
@@ -53,4 +53,3 @@ check_info["emc_isilon_diskstatus"] = {
                               ]),
     "snmp_scan_function"    : lambda oid: "isilon" in oid(".1.3.6.1.2.1.1.1.0").lower(),
 }
-

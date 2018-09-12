@@ -46,24 +46,10 @@ def inventory_genua_carp(info):
     info = filter(None, info)
 
     if info[0]:
-        for ifIndex, ifName, ifType, ifLinkState, ifCarpState in info[0]:
+        for _ifIndex, ifName, _ifType, _ifLinkState, ifCarpState in info[0]:
             if ifCarpState in [ "0", "1", "2" ]:
                inventory.append( (ifName, None) )
     return inventory
-
-
-def genua_iftype(st):
-    names = {
-        '0' : 'unknown',
-        '1' : 'physical',
-        '2' : 'gif',
-        '3' : 'pppoe',
-        '4' : 'vlan',
-        '5' : 'lo',
-        '6' : 'carp',
-        '7' : 'unknown',
-    }
-    return names.get(st, st)
 
 
 def genua_linkstate(st):
@@ -104,8 +90,7 @@ def check_genua_carp(item, _no_params, info):
     # Loop over all nodes, just one line if not a cluster
     for line in info:
         # Loop over interfaces on node
-        for ifIndex, ifName, ifType, ifLinkState, ifCarpState in line:
-            ifTypeStr = genua_iftype(str(ifType))
+        for _ifIndex, ifName, _ifType, ifLinkState, ifCarpState in line:
             ifLinkStateStr = genua_linkstate(str(ifLinkState))
             ifCarpStateStr = genua_carpstate(str(ifCarpState))
             # is inventorized interface in state carp master ?

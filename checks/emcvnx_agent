@@ -30,7 +30,7 @@ def parse_emcvnx_agent(info):
 
 
 def inventory_emcvnx_agent(parsed):
-    output, errors = parsed
+    output, _errors = parsed
     if output:
         return [(None, None)]
 

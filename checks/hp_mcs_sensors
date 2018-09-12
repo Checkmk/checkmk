@@ -62,7 +62,7 @@ def parse_hp_mcs_sensors(info):
 
 
 def inventory_hp_mcs_sensors(parsed):
-    for key, entry in parsed.iteritems():
+    for entry in parsed.itervalues():
         if int(entry["type"]) in [ 4, 5, 13, 14, 15, \
                              16, 17, 18, 19, 20]:
             yield ( entry["name"], {} )
@@ -99,12 +99,12 @@ factory_settings["hp_mcs_sensors_fan_default_levels"] = {
 }
 
 def inventory_hp_mcs_sensors_fan(parsed):
-    for key, entry in parsed.iteritems():
+    for entry in parsed.itervalues():
         if entry["type"] in [ 9, 10, 11, 26, 27, 28 ]:
             yield ( entry["name"], {} )
 
 def check_hp_mcs_sensors_fan(item, params, parsed):
-    for key, entry in parsed.iteritems():
+    for entry in parsed.itervalues():
         if entry["name"] == item:
             return check_fan(entry["value"], params)
 

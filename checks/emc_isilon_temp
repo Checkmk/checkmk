@@ -25,7 +25,7 @@
 # Boston, MA 02110-1301 USA.
 
 def inventory_isilon_temp(info, is_cpu):
-    for sensor_name, value in info:
+    for sensor_name, _value in info:
         item_name = isilon_temp_item_name(sensor_name)
         if is_cpu == item_name.startswith("CPU"):
             yield item_name, {}

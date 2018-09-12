@@ -26,7 +26,7 @@
 
 def inventory_hitachi_hnas_psu(info):
     inventory = []
-    for clusternode, id, status in info:
+    for clusternode, id, _status in info:
         inventory.append( (clusternode + "." + id, None) )
     return inventory
 

@@ -44,7 +44,7 @@ def check_esx_vsphere_sensors(_no_item, params, info):
     infos = []
     sensor_state_modified = False
 
-    for name, base_units, current_reading, sensor_type, unit_modifier, rate_units, health_key, health_label, health_summary in info:
+    for name, _base_units, _current_reading, _sensor_type, _unit_modifier, _rate_units, health_key, health_label, health_summary in info:
         health_key = health_key.lower()
         if health_key == "green":
             continue # usually not output by agent anyway

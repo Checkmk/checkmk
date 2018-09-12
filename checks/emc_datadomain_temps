@@ -32,7 +32,7 @@ def format_emc_datadomain_temp(descr, encid, index, new_format):
         return encid + "-" + index
 
 def inventory_emc_datadomain_temps(info):
-    for encid, index, descr, reading, status in info:
+    for encid, index, descr, _reading, _status in info:
         yield format_emc_datadomain_temp(descr, encid, index, True), {}
 
 def check_emc_datadomain_temps(item, params, info):

@@ -63,7 +63,7 @@ def check_hp_proliant_fans(item, params, info):
             label = hp_proliant_fans_locale[int(line[2])]
 
         if "%s (%s)" % (line[1], label) == item:
-            chassis, index, name, present, speed, status, currentSpeed = line
+            _chassis, index, _name, _present, speed, status, currentSpeed = line
             snmp_status = hp_proliant_fans_status_map[int(status)]
             status      = hp_proliant_status2nagios_map[snmp_status]
 

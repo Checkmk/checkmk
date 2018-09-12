@@ -49,7 +49,7 @@ def etherbox_convert(info):
 
 def inventory_etherbox(info, req_sensor_type):
     sensor_data = etherbox_convert(info)
-    for index, name, sensor_type, value in sensor_data:
+    for index, _name, sensor_type, value in sensor_data:
         # Ignore not connected Temperature Sensors
         if sensor_type == '1' and value == '0':
             continue

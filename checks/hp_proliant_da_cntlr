@@ -54,10 +54,8 @@ def inventory_hp_proliant_da_cntlr(info):
 
 def check_hp_proliant_da_cntlr(item, params, info):
     for line in info:
-        if line[0] == item:
-            index, model, slot, cond, partner_slot, \
-            role, b_status, b_cond, serial = line
-
+        index, model, slot, cond, role, b_status, b_cond, serial = line
+        if index == item:
             sum_state = 0
             output = []
 
@@ -89,7 +87,6 @@ check_info["hp_proliant_da_cntlr"] = {
              "2", # cpqDaCntlrModel
              "5", # cpqDaCntlrSlot
              "6", # cpqDaCntlrCondition
-             "8", # cpqDaCntlrPartnerSlot
              "9", # cpqDaCntlrCurrentRole
             "10", # cpqDaCntlrBoardStatus
             "12", # cpqDaCntlrBoardCondition

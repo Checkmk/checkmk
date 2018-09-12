@@ -38,8 +38,8 @@
 def inventory_emc_isilon_quota(info):
     mount_points = []
 
-    for path, hard_threshold, soft_threshold_defined, soft_threshold, \
-        advisory_threshold_defined, advisory_threshold, usage in info:
+    for path, _hard_threshold, _soft_threshold_defined, _soft_threshold, \
+        _advisory_threshold_defined, _advisory_threshold, _usage in info:
         mount_points.append(path)
 
     return df_inventory(mount_points)
@@ -108,4 +108,3 @@ check_info["emc_isilon_quota"] = {
     "group"                   : "filesystem",
     "default_levels_variable" : "emc_isilon_quota",
 }
-

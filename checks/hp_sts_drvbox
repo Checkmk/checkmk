@@ -84,7 +84,7 @@ def inventory_hp_sts_drvbox(info):
 def check_hp_sts_drvbox(item, _no_params, info):
     for line in info:
         if line[0] + '/' + line[1] == item:
-            c_index, b_index, ty, model, fan_status, cond, \
+            _c_index, _b_index, ty, model, fan_status, cond, \
               temp_status, sp_status, pwr_status, serial, loc = line
 
             sum_state = 0

@@ -29,7 +29,6 @@ def inventory_fsc_subsystems(info):
     return [ (line[0], line[1], (int(line[1]) * 0.9, int(line[1]) * 0.8)) for line in info if int(line[1]) > 0 ]
 
 def check_fsc_subsystems(item, params, info):
-    warn, crit = params
     for line in info: # , value1, value2 in info:
         name = line[0]
         if name != item:

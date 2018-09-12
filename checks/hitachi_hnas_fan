@@ -26,7 +26,7 @@
 
 def inventory_hitachi_hnas_fan(info):
     inventory = []
-    for clusternode, fan_id, fitted_status, speed_status, speed in info:
+    for clusternode, fan_id, _fitted_status, _speed_status, _speed in info:
         inventory.append( (clusternode + "." + fan_id, None) )
     return inventory
 

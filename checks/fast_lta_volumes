@@ -26,7 +26,7 @@
 
 def inventory_fast_lta_volumes(info):
     inventory = []
-    for volname, volquota, volused in info:
+    for volname, _volquota, _volused in info:
         inventory.append((volname, {}))
     return inventory
 
@@ -57,4 +57,3 @@ check_info["fast_lta_volumes"] = {
                               ),
     "snmp_scan_function"    : lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.8072.3.2.10"),
 }
-

@@ -28,7 +28,7 @@ hitachi_hnas_cpu_default_levels = { "levels" : (80.0, 90.0) }
 
 def inventory_hitachi_hnas_cpu(info):
     inventory = []
-    for id, util in info:
+    for id, _util in info:
         inventory.append( (id, hitachi_hnas_cpu_default_levels) )
     return inventory
 

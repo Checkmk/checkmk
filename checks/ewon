@@ -104,9 +104,6 @@ oxyreduct_tag_map = {
 
 
 def inventory_oxyreduct(parsed):
-    discovered_names = set()
-    current_safe_area = []
-
     for name, area_info in parsed.iteritems():
         tagids = area_info.keys()
         if min(tagids) < 10:
@@ -247,4 +244,3 @@ check_info["ewon"] = {
                                ),
     "group"               : "ewon"
 }
-

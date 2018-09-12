@@ -122,7 +122,7 @@
 
 def parse_hp_msa_if(info):
     parsed = []
-    for idx, (key, values) in enumerate(sorted(parse_hp_msa(info).items())):
+    for idx, (_key, values) in enumerate(sorted(parse_hp_msa(info).iteritems())):
         if values['actual-speed'] == '':
             speed = values['actual-speed'] = 0
         else:

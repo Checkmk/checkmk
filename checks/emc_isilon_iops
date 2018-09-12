@@ -26,7 +26,7 @@
 
 def inventory_emc_isilon_iops(info):
     inventory = []
-    for name, iops in info:
+    for name, _iops in info:
         inventory.append( (name, None) )
     return inventory
 

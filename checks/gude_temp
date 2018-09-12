@@ -37,14 +37,14 @@ factory_settings["gude_temp_default_levels"] = {
 
 def inventory_gude_temp(info):
     for oid_index, reading_str in info:
-        oid, index = oid_index.split(".")
+        _oid, index = oid_index.split(".")
         if reading_str != "-9999":
             yield "Sensor %s" % index, {}
 
 
 def check_gude_temp(item, params, info):
     for oid_index, reading_str in info:
-        oid, index = oid_index.split(".")
+        _oid, index = oid_index.split(".")
         if "Sensor %s" % index == item:
             return check_temperature(float(reading_str)/10, params, "gude_temp.%s" % item)
 

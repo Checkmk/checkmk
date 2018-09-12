@@ -44,7 +44,7 @@ def check_hwg_humidity(item, params, info):
 #    }
 
     # Nomenclature in this check: sensorstatus is what the device sends, status is what the check returns.
-    for index, descr, sensorstatus, current, unit in info:
+    for index, descr, _sensorstatus, current, unit in info:
         if index == item:
             if unit != "4":
                 return
@@ -77,4 +77,3 @@ check_info['hwg_humidity'] = {
    "group"                    : "humidity",
    "includes"                 : [ "humidity.include" ],
 }
-

@@ -92,12 +92,10 @@ def check_esx_vsphere_hostsystem_cpu(item, params, info):
     total_mhz = mhz_per_core * num_cores
 
     usage = used_mhz / total_mhz * 100
-    per_core = num_cores / 100.0
 
     infotext = "%.1f%%" % usage
 
     # Convert legacy parameters
-    this_time = time.time()
     state, infotext, perfdata = check_cpu_util(usage, params).next()
 
     infotext += ", %.2fGHz/%.2fGHz" % (used_mhz / 1000.0, total_mhz / 1000.0)
@@ -188,7 +186,6 @@ def check_esx_vsphere_hostsystem_cpu_util_cluster(item, params, info):
     info, _ = info
     current_node = {}
     def get_node_usage(node):
-        num_sockets    = int(node['hardware.cpuInfo.numCpuPackages'])
         num_cores      = int(node['hardware.cpuInfo.numCpuCores'])
         num_threads    = int(node['hardware.cpuInfo.numCpuThreads'])
         used_mhz     = float(node['summary.quickStats.overallCpuUsage'])
@@ -221,9 +218,6 @@ def check_esx_vsphere_hostsystem_cpu_util_cluster(item, params, info):
     node_count  = len(overall_used)
 
     # Convert legacy parameters
-    this_time = time.time()
-
-
     sorted_params = sorted(params, reverse = True)
     for count, levels in sorted_params:
         if node_count >= count:
@@ -457,8 +451,7 @@ def esx_vsphere_multipath_convert(info):
 
 def inventory_esx_vsphere_hostsystem_multipath(info):
     info, _ = info
-    data = esx_vsphere_multipath_convert(info).items()
-    return [ (x, None) for x, y  in data]
+    return [ (x, None) for x in esx_vsphere_multipath_convert(info).iterkeys()]
 
 def check_esx_vsphere_hostsystem_multipath(item, params, info):
     info, _ = info
@@ -490,7 +483,6 @@ def check_esx_vsphere_hostsystem_multipath(item, params, info):
             if not params or type(params) == list:
                 if state_infos["standby"][1] > 0 and \
                    state_infos["standby"][1] != state_infos["active"][1]:
-                    standby_label = "(!)"
                     state = max(state_infos["standby"][0], state)
             else:
                 state = 0
@@ -539,4 +531,3 @@ check_info['esx_vsphere_hostsystem.multipath'] = {
   "service_description" : "Multipath %s",
   "group"               : "multipath_count"
 }
-

@@ -94,7 +94,7 @@ def inventory_emc_isilon_nodes(info):
     return [(None, None)]
 
 def check_emc_isilon_nodes(item, _no_params, info):
-    cluster_name, cluster_health, configured_nodes, online_nodes = info[0][0]
+    _cluster_name, _cluster_health, configured_nodes, online_nodes = info[0][0]
     if configured_nodes == online_nodes:
         rc = 0
     else:

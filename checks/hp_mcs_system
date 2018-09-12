@@ -41,7 +41,7 @@ def check_hp_mcs_system(item, _no_params, info):
         4 : (2, "Failed"        ),
     }
     serial = info[0][2]
-    idx1, status, idx2, dev_type = info[0][1]
+    _idx1, status, _idx2, _dev_type = info[0][1]
     state, state_readable = translate_status[status]
     if state:
         yield state, "Status: %s" % state_readable

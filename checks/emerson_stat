@@ -62,7 +62,6 @@ def inventory_emerson_stat(info):
 
 def check_emerson_stat(item, params, info):
     if info:
-        warn, crit = params # unused
         status_text = { 1:"unknown", 2:"normal", 3:"observation", 4: "warning - A3",
                     5: "minor - MA", 6: "major - CA", 7: "unmanaged", 8: "restricted",
                     9: "testing", 10: "disabled" }

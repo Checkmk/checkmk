@@ -122,10 +122,10 @@ def inventory_heartbeat_crm(info):
     # - Check the age of "last updated"
     settings = host_extra_conf_merged(host_name(), inventory_heartbeat_crm_rules)
     try:
-        last_updated, dc, num_nodes, num_resources = heartbeat_crm_parse_general(info)
+        _last_updated, dc, num_nodes, num_resources = heartbeat_crm_parse_general(info)
     except:
         # In the case that CRM is not working, add it as a service and show the error later
-        last_updated, dc, num_nodes, num_resources = 0,0,0,0
+        dc, num_nodes, num_resources = 0,0,0
     params = {
         'num_nodes'     : num_nodes,
         'num_resources' : num_resources,

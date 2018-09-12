@@ -102,7 +102,6 @@ def inventory_hp_msa_psu(parsed):
 
 
 def check_hp_msa_psu(item, params, parsed):
-    infotexts = []
     state = 0
     if item in parsed:
         for psu_type, psu_type_readable, levels_type in [

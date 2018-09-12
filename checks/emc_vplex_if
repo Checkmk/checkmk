@@ -32,7 +32,7 @@ def parse_emc_vplex_if(info):
 
     nics = []
     for idx, frontend_info in enumerate(info[1] + info[2]):
-        index, description, readbytes, writebytes, if_ip = frontend_info
+        _index, description, readbytes, writebytes, if_ip = frontend_info
         if_ip = if_ip.rsplit(".", 1)[0]
 
         nic = [0] * 20

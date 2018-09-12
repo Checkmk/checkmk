@@ -28,7 +28,7 @@ fjdarye60_sum_status = { 1: 'unknown', 2: 'unused', 3: 'ok',
                          4: 'warning', 5: 'failed' }
 
 def inventory_fjdarye60_sum(info):
-    return [ (int(index), '', None) for index, status in info if index != '' ]
+    return [ (int(index), '', None) for index, _status in info if index != '' ]
 
 
 def check_fjdarye60_sum(index, _no_param, info):

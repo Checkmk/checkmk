@@ -32,7 +32,7 @@ def hitachi_hnas_vnode_combine_item(id, name):
 
 def inventory_hitachi_hnas_vnode(info):
     inventory = []
-    for id, name, status, is_admin, hosted_by in info:
+    for id, name, _status, _is_admin, _hosted_by in info:
         inventory.append( (hitachi_hnas_vnode_combine_item(id, name), None) )
     return inventory
 

@@ -107,7 +107,6 @@ def parse_emka_modules(info):
     # 0.02  => 2/100 [multiplicator]/[divisor]
     # -30.0          [offset]
     # Notice, may also "=#\xb0C0.0230.0"
-    sensors = parsed.get("sensor", {})
     for oidend, equation_bin in info[3]:
         equation = []
         part     = []
@@ -316,7 +315,6 @@ def inventory_emka_modules_sensor_volt(parsed):
 
 
 def check_emka_modules_sensor_volt(item, params, parsed):
-    scale_f = lambda x: float(x) / 1000
     if item in parsed.get("sensor_volt", {}):
         attrs = parsed["sensor_volt"][item]
         value = attrs["value"]/1000

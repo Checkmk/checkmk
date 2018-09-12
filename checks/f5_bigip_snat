@@ -38,7 +38,7 @@ def parse_f5_bigip_snat(info):
     return snats
 
 def inventory_f5_bigip_snat(parsed):
-    for name, snat in parsed.items():
+    for name in parsed.iterkeys():
         yield name, {}
 
 def check_f5_bigip_snat(item, params, parsed):
@@ -87,7 +87,7 @@ def check_f5_bigip_snat(item, params, parsed):
             if param_var.endswith("_lower") and type(levels) == tuple:
                 levels = (None, None) + levels
             value = summed_values[param_var.rstrip("_lower")]
-            state, extra_text, extra_perfdata = check_levels(value, param_var, levels)
+            state, extra_text, _extra_perfdata = check_levels(value, param_var, levels)
             if state:
                 if "octets" in param_var:
                     value = get_bytes_human_readable(value, base = 1000.0)

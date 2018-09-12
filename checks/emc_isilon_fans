@@ -40,7 +40,7 @@ def isilon_fan_item_name(sensor_name):
 
 
 def inventory_emc_isilon_fans(info):
-    for fan_name, value in info:
+    for fan_name, _value in info:
         yield isilon_fan_item_name(fan_name), {}
 
 

@@ -26,7 +26,7 @@
 
 def inventory_hitachi_hnas_cifs(info):
     inventory = []
-    for evs_id, share_name, users in info:
+    for evs_id, share_name, _users in info:
         inventory.append( (evs_id + " " + share_name, None) )
     return inventory
 

@@ -79,7 +79,7 @@ def parse_hpux_multipath(info):
 def inventory_hpux_multipath(info):
     inventory = []
     disks = parse_hpux_multipath(info)
-    for wwid, (disk, (active, standby, failed, unopen)) in disks.items():
+    for wwid, (_disk, (active, standby, failed, unopen)) in disks.items():
         if active + standby + failed >= 2:
             inventory.append((wwid, (active, standby, failed, unopen)))
     return inventory

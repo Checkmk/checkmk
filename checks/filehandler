@@ -45,7 +45,7 @@ def inventory_filehandler(info):
     return [ ( None, {} ) ]
 
 def check_filehandler(_no_item, params, info):
-    allocated, used_or_unused, maximum = info[0]
+    allocated, _used_or_unused, maximum = info[0]
     state = 0
     perc = float(allocated) / float(maximum) * 100.0
     infotext = '%.1f%% used (%s of %s file handles)' % (perc, allocated, maximum)

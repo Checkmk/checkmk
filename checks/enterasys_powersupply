@@ -39,7 +39,7 @@ factory_settings['enterasys_powersupply_default'] = {
 
 def inventory_enterasys_powersupply(info):
     inventory = []
-    for num, state, typ, redun in info:
+    for num, state, _typ, _redun in info:
         if state == '3':
             inventory.append(( num, {} ))
     return inventory

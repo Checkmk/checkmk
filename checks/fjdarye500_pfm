@@ -39,7 +39,7 @@ factory_settings["fjdarye500_pfm_default_levels"] = {
 
 
 def inventory_fjdarye500_pfm(info):
-    return [ (pfm_id, {}) for pfm_id, status, health_lifetime_str in info
+    return [ (pfm_id, {}) for pfm_id, status, _health_lifetime_str in info
              if status != "4" ]
 
 

@@ -228,7 +228,7 @@ factory_settings['entity_sensors_fan_default_variables'] = {
 
 def check_entity_sensors_fan(item, params, parsed):
     if item in parsed.get("fan", {}):
-        operstate, reading, unit = parsed["fan"][item]
+        operstate, reading, _unit = parsed["fan"][item]
         state, state_readable = operstate
         yield state, "Operational status: %s" % state_readable
         yield check_fan(reading, params)

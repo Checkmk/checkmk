@@ -398,6 +398,7 @@ class WatoWebApiMode(WatoMode):
 
 
     def handle_page(self):
+        html.set_output_format("json")
         try:
             action_response = self.page()
             response = { "result_code": 0, "result": action_response }

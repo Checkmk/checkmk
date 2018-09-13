@@ -1,0 +1,11 @@
+Title: Fixed multiple reflected XSS attacks using AJAX calls
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.4.0p36
+Date: 1536863730
+Class: security
+
+Several AJAX calls with invalid content type setting could be used
+to trigger XSS attacks.

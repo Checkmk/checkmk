@@ -4366,6 +4366,12 @@ class ActivateChangesWriter(ActivateChanges):
             else:
                 return obj.__class__.__name__, obj.ident()
 
+        # Using attrencode here is against our regular rule to do the escaping
+        # at the last possible time: When rendering. But this here is the last
+        # place where we can distinguish between HTML() encapsulated (already)
+        # escaped / allowed HTML and strings to be escaped.
+        text = html.attrencode(text)
+
         self._save_change(site_id, {
             "id"           : change_id,
             "action_name"  : action_name,

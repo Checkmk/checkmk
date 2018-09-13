@@ -125,7 +125,7 @@ def check_oracle_performance(item, _no_params, parsed):
         pins_sum     = 0
         pin_hits_sum = 0
         for what, vals in data["librarycache"].items():
-            gets, gethits, pins, pin_hits, reloads, invalidations = vals
+            _gets, _gethits, pins, pin_hits, _reloads, _invalidations = vals
             pins_sum     += pins
             pin_hits_sum += pin_hits
 

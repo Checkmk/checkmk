@@ -93,7 +93,7 @@ def inventory_printer_supply(info):
     # Ignore devices which show -2 for current value and -2 for max value -> useless
     # Also fix trailing zero bytes (seen on HP Jetdirect 143)
     return [(description.rstrip('\0'), {})
-            for description, max_capacity, level, class_, color in printer_supply_fix_infos(info)
+            for description, max_capacity, level, _class, _color in printer_supply_fix_infos(info)
             # ignore useless devices
             if not (max_capacity == '-2' and level == '-2') and level and len(max_capacity) > 0 ]
 

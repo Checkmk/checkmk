@@ -84,7 +84,6 @@ def check_netapp_api_vs_traffic(item, _no_params, parsed):
                ("nfs41_read_throughput",    "nfsv4_1_read_throughput",  "read throughput",  1,  lambda x: get_bytes_human_readable(x) + "/s"),
                ("nfs41_write_throughput",   "nfsv4_1_write_throughput", "write throughput", 1,  lambda x: get_bytes_human_readable(x) + "/s")])
     }
-    vserver = item.split(" ", 3)
 
     now = time.time()
     for protocol, (protoname, values) in protocol_map.items():
@@ -108,4 +107,3 @@ check_info["netapp_api_vs_traffic"] = {
     'has_perfdata'        : True,
     'includes'            : [ "netapp_api.include" ]
 }
-

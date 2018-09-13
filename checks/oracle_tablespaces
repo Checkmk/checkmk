@@ -180,7 +180,7 @@ def parse_oracle_tablespaces(info):
 
 
 def inventory_oracle_tablespaces(parsed):
-    tablespaces, error_sids = parsed
+    tablespaces, _error_sids = parsed
     for (sid, ts_name), tablespace in tablespaces.items():
         if tablespace["status"] in ( "ONLINE", "READONLY", "OFFLINE" ):
             if oracle_tablespaces_check_autoext:
@@ -325,7 +325,7 @@ def check_oracle_tablespaces(item, params, parsed):
         infotexts.append("%d increments (%s)" % \
                         (num_increments, get_bytes_human_readable(increment_size)))
 
-    warn, crit, levels_text, output_as_percentage = \
+    warn, crit, levels_text, _output_as_percentage = \
         db_get_tablespace_levels_in_bytes(max_size, params)
 
     yield 0, ", ".join(infotexts), \

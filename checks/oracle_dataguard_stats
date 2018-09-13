@@ -63,7 +63,7 @@ def check_oracle_dataguard_stats(item, params, info):
     for line in info:
 
         if line[0] + '.' + line[1] == item:
-            db_name, db_unique_name, database_role, parameter, value = line[:5]
+            _db_name, _db_unique_name, database_role, parameter, value = line[:5]
 
             itemfound = True
             if infotext == '':

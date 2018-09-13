@@ -95,7 +95,6 @@ def check_mrpe(item, params, info):
 
             if best_state in [ None, 2 ] \
                or (state < best_state and state != 2):
-                infotext = "\\n".join(output)
                 perf_parsed = []
                 for perfvalue in perfdata:
                     try:

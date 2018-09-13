@@ -89,15 +89,14 @@ def check_omd_apache(item, _no_params, parsed):
         if len(line) < 3:
             continue
         elif len(line) == 4:
-            url, status, size_bytes, microsec = line
+            url, _status, size_bytes, microsec = line
         else:
             url = " ".join(line[:-3])
-            status, size_bytes, microsec = line[-3:]
+            _status, size_bytes, microsec = line[-3:]
 
         for key, pattern in omd_apache_patterns:
             # make url relative to site directory
             if regex(pattern).search(url[len('/'+item+'/'):]):
-                found = True
                 stats['requests'].setdefault(key, 0)
                 stats['requests'][key] += 1
 

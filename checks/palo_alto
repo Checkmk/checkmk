@@ -31,7 +31,6 @@ def inventory_palo_alto(info):
 
 def check_palo_alto(_no_item, _no_params, info):
     firmware_version, local_state, peer_state, ha_mode = info[0]
-    ha_modes = {}
     yield 0, "Firmware Version: %s" % firmware_version
     yield 0, "HA mode: %s" % ha_mode
     yield 0, "Local HA state: %s" % local_state

@@ -34,7 +34,7 @@
 def inventory_mounts(info):
     inventory = []
     devices = []
-    for dev, mp, fstype, options, dump, fsck in info:
+    for dev, mp, fstype, options, _dump, _fsck in info:
         if fstype == "tmpfs":
             continue
 
@@ -57,7 +57,7 @@ def check_mounts(item, targetopts, info):
                 return True
         return False
 
-    for dev, mp, fstype, options, dump, fsck in info:
+    for _dev, mp, _fstype, options, _dump, _fsck in info:
         if item == mp.replace("\\040(deleted)", ""):
             if mp.endswith("\\040(deleted)"):
                 return 1, "Mount point detected as stale"

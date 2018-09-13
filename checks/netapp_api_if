@@ -152,7 +152,7 @@ def netapp_convert_to_if64(info):
     return nics, extra_info
 
 def inventory_netapp_api_if(parsed):
-    nics, extra_info = parsed
+    nics, _extra_info = parsed
     return inventory_if_common(nics)
 
 def check_netapp_api_if(item, params, parsed):
@@ -164,7 +164,7 @@ def check_netapp_api_if(item, params, parsed):
         ifDescr = line[1]
         ifAlias = line[18]
         if type(ifIndex) == tuple:
-            ifGroup, ifIndex = ifIndex
+            _ifGroup, ifIndex = ifIndex
 
         ifDescr_cln = cleanup_if_strings(ifDescr)
         ifAlias_cln = cleanup_if_strings(ifAlias)
@@ -172,7 +172,6 @@ def check_netapp_api_if(item, params, parsed):
         if if_item_matches(item, ifIndex, ifAlias_cln, ifDescr_cln):
             if ifDescr in extra_info:
                 vif_group = extra_info[ifDescr]
-                member_info = []
                 for member_name, member_state in vif_group["grouped_if"]:
                     if member_state is None or member_name == ifDescr:
                         continue # Not a real member or the grouped interface itself

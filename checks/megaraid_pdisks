@@ -99,7 +99,7 @@ def megaraid_pdisks_parse(info):
 def inventory_megaraid_pdisks(info):
     info = megaraid_pdisks_parse(info)
     inventory = []
-    for adapter, enclosure, enc_dev_id, slot, state, name  in info:
+    for adapter, enclosure, _enc_dev_id, slot, _state, _name  in info:
         inventory.append(("%s%s/%s" % (adapter, enclosure, slot), None))
     return inventory
 
@@ -116,7 +116,7 @@ megaraid_pdisks_states = {
 
 def check_megaraid_pdisks(item, _no_params, info):
     info = megaraid_pdisks_parse(info)
-    for adapter, enclosure, enc_dev_id, slot, state, name in info:
+    for adapter, enclosure, _enc_dev_id, slot, state, name in info:
         if "%s%s/%s" % (adapter, enclosure, slot) == item:
             return megaraid_pdisks_states.get(state, 3), "%s (%s)" % (state, name)
     return 3, "No disk in encl/slot %s found" % item

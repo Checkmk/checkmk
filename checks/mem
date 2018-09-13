@@ -597,7 +597,6 @@ def check_mem_vmalloc(item, params, info):
     meminfo = parse_proc_meminfo(info)
     total_mb = meminfo["VmallocTotal"] / 1024.0
     used_mb  = meminfo["VmallocUsed"] / 1024.0
-    free_mb  = total_mb - used_mb
     chunk_mb = meminfo["VmallocChunk"] / 1024.0
     warn, crit, warn_chunk, crit_chunk = params
 

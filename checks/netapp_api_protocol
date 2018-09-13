@@ -33,7 +33,7 @@
 
 
 def inventory_netapp_api_protocol(parsed):
-    for key, values in parsed.items():
+    for values in parsed.itervalues():
         if len(values) > 2: # only create checks for protocols with infos
             yield values["protocol"], None
 
@@ -58,4 +58,3 @@ check_info["netapp_api_protocol"] = {
     'has_perfdata'        : True,
     'includes'            : [ "netapp_api.include" ]
 }
-

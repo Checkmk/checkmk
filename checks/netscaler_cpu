@@ -35,7 +35,7 @@ factory_settings["netscaler_cpu_default_levels"] = {
 }
 
 def inventory_netscaler_cpu(info):
-    for cpu_name, cpu_usage in info:
+    for cpu_name, _cpu_usage in info:
         yield cpu_name, {}
 
 def check_netscaler_cpu(item, params, info):

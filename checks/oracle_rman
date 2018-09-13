@@ -48,7 +48,6 @@ def parse_oracle_rman(info):
     error_sids  = {}
 
     for line in info:
-        node_name = line[0]
         line      = line[1:]
 
         # Check for query errors
@@ -67,14 +66,14 @@ def parse_oracle_rman(info):
         item = ''
 
         if len(line) == 6:
-            sid, status, start, end, backuptype, backupage = line
+            sid, status, _start, _end, backuptype, backupage = line
             item = "%s.%s" % (sid, backuptype)
 
             backupscn = int(-1)
             backuplevel = -1
 
         elif len(line) == 8:
-            sid, status, not_used_1, end, backuptype, backuplevel, backupage, backupscn = line
+            sid, status, _not_used_1, _end, backuptype, backuplevel, backupage, backupscn = line
             if backupscn == '':
                 backupscn = int(-1)
             else:
@@ -178,10 +177,6 @@ def check_oracle_rman(item, params, parsed):
             # switch to UNKNOWN, but will get stale.
             raise MKCounterWrapped("Login into database failed. Working on %s" % item)
 
-
-    sid         = rman_backup['sid']
-    backuptype  = rman_backup['backuptype']
-    backuplevel = rman_backup['backuplevel']
     status      = rman_backup['status']
     backupage   = rman_backup['backupage']
     backupscn   = rman_backup['backupscn']

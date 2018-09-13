@@ -95,7 +95,7 @@ def ps_cleanup_counters(parsed):
 # New magic keys:        ('ps', None, 'ps_wmic.kernel.692'): (1448633487.573496, 1092007),
 def ps_get_counters_to_delete(pids):
     counters_to_delete = []
-    for ident, state in get_all_item_states().items():
+    for ident in get_all_item_states().iterkeys():
         ident_type = type(ident)
         if ident_type == tuple and ident[0] == "ps":
             check_ident = ident[2]
@@ -236,7 +236,7 @@ def parse_ps(info):
 
 
 def inventory_ps(info):
-    (cpu_cores, parsed), mem_info, solaris_mem_info, statgrab_mem_info, aix_memory_info = info
+    (_cpu_cores, parsed), _mem_info, _solaris_mem_info, _statgrab_mem_info, _aix_memory_info = info
     return inventory_ps_common(inventory_processes, inventory_processes_rules, parsed)
 
 

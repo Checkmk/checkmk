@@ -84,7 +84,6 @@ def get_oracle_crs_runninginfo(item, data):
     for line in data:
         resname = line[0]['NAME']
         resstate = line[0]['STATE'].split(' ', 1)[0]
-        resstatelong = line[0]['STATE']
         nodename = line[1]
 
         if item == resname  and nodename not in ('nodename', 'csslocal', 'crslocal') \
@@ -100,7 +99,7 @@ def get_oracle_crs_runninginfo(item, data):
 
 
 def check_oracle_crs_res(item, _no_params, parsed):
-    crs_nodename, ressources = parsed
+    _crs_nodename, ressources = parsed
 
     # In case of missing information we assume that the clusterware
     # is not running and we simple skip the result
@@ -114,7 +113,6 @@ def check_oracle_crs_res(item, _no_params, parsed):
         return
 
     for nodename, entry in ressources[item].items():
-        restype   = entry["type"]
         resstate  = entry["state"].split(' ', 1)[0]
         restarget = entry["target"]
 

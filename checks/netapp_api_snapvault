@@ -40,7 +40,6 @@ def check_netapp_api_snapvault(item, params, parsed):
     if not snapvault:
         return
 
-    info = []
     for what in [ "source-system", "destination-system", "policy", "status", "state" ]:
         if what in snapvault:
             yield 0, "%s: %s" % (what.title(), snapvault[what])

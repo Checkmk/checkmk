@@ -144,7 +144,7 @@ check_info['openhardwaremonitor'] = {
 def check_openhardwaremonitor_temperature(item, params, parsed):
     if not 'levels' in params:
         found = False
-        for key, value in params.iteritems():
+        for key in params.iterkeys():
             if key in item:
                 params = params[key]
                 found = True
@@ -251,5 +251,3 @@ check_info['openhardwaremonitor.smart'] = {
     'default_levels_variable' : "openhardwaremonitor_smart_default_levels",
     'group'                   : "openhardwaremonitor_smart"
 }
-
-

@@ -65,7 +65,7 @@ def item_name_oracle_diva_csm(name, element_id):
 def inventory_oracle_diva_csm_status(name, idx, info):
     for line in info[idx]:
         if len(line) == 2:
-            element_id, reading = line
+            element_id, _reading = line
         else:
             element_id = ''
 
@@ -215,5 +215,3 @@ check_info['oracle_diva_csm.tapes'] = {
     "has_perfdata"            : True,
     "service_description"     : "DIVA Blank Tapes",
 }
-
-

@@ -61,16 +61,15 @@ def check_oracle_recovery_status(item, params, info):
             itemfound = True
 
             if len(line) == 11:
-                db_name, db_unique_name, database_role, open_mode, filenr, \
-                checkpoint_time, checkpoint_age, datafilestatus, recovery, fuzzy, checkpoint_change = line
+                db_name, db_unique_name, database_role, _open_mode, _filenr, \
+                _checkpoint_time, checkpoint_age, datafilestatus, _recovery, _fuzzy, _checkpoint_change = line
 
-                backupmode = 'not checked'
                 backup_state = 'unknown'
 
             elif len(line) == 13:
-                db_name, db_unique_name, database_role, open_mode, filenr, \
-                checkpoint_time, checkpoint_age, datafilestatus, recovery, \
-                fuzzy, checkpoint_change, backup_state, backup_age = line
+                db_name, db_unique_name, database_role, _open_mode, _filenr, \
+                _checkpoint_time, checkpoint_age, datafilestatus, _recovery, \
+                _fuzzy, _checkpoint_change, backup_state, backup_age = line
 
             if params.get("levels"):
                 warn, crit = params["levels"]

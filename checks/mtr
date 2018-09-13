@@ -114,7 +114,6 @@ def check_mtr(item, params, parsed):
         perfdata.append( ('hop_%d_pl'            % idx, pl, pl_warn, pl_crit) )
 
         if apply_levels: # the params only apply to the last host
-            hop_state = 0
             hop_text_entries  = []
             for what, unit, value, warn, crit in [ ("Packet loss", "%", pl, pl_warn, pl_crit),
                                                    ("Round trip average", "ms", rta, rta_warn, rta_crit),
@@ -163,4 +162,3 @@ check_info['mtr'] = {
     "group"                   : "mtr",
     "default_levels_variable" : "mtr_default_levels",
 }
-

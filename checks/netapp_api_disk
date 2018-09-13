@@ -52,7 +52,7 @@ def check_netapp_api_disk_summary(_no_item, params, info):
     my_disks = dict([disk for disk in disks.items() if not disk[1].get("raid-state") in [ "remote", "partner"] ])
 
     disks_converted = []
-    for did, disk in my_disks.items():
+    for disk in my_disks.itervalues():
         # Collection the disk identity
         disk_info = "Serial: %s" % disk.get("serial-number")
         if "physical-space" in disk:
@@ -90,4 +90,3 @@ check_info["netapp_api_disk.summary"] = {
     'default_levels_variable' : 'filer_disks_default_levels',
     'includes'                : ['filerdisks.include'],
 }
-

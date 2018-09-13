@@ -91,7 +91,7 @@ def inventory_netapp_volumes(info):
 def check_netapp_volumes(item, _not_used, info):
     for line in info:
         if line[0] == item:
-            name, fsid, owner, state, status = line
+            _name, fsid, owner, state, status = line
 
             output = 'FSID: %s, Owner: %s, ' % (fsid, netapp_volumes_owner.get(owner, 'UNKNOWN'))
 

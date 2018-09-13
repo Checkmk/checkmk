@@ -30,8 +30,8 @@
 # 1. ONLINE   0a6884c063904f50bf7ef4516b728a2d (/dev/oracleasm/disks/DATA1) [DATA1]
 
 def inventory_oracle_crs_voting(info):
-    inventory = []
-    return [(None, {}) for line in info]
+    for _line in info:
+        return [(None, {})]
 
 def check_oracle_crs_voting(_no_item, params, info):
     # state = -1 => no data for Service

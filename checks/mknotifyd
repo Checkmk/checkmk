@@ -98,7 +98,7 @@ def parse_mknotifyd(info):
     # port is irrelevant. It changes randomly. But there might anyway be
     # more than one connection from the same remote host, so we are forced
     # to create artificial numbers if that is the case
-    for site_name, stats in parsed.items():
+    for stats in parsed.itervalues():
         remote_addresses = {}
         for connection_name, connection in stats["connections"].items():
             if connection["Type"] == "incoming":
@@ -239,4 +239,3 @@ check_info["mknotifyd.connection"] = {
     "check_function"      : check_mknotifyd_connection,
     "service_description" : "OMD %s Notify Connection",
 }
-

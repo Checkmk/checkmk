@@ -29,7 +29,7 @@ def parse_raritan_pdu_inlet_summary(info):
     for sensor_type, decimal_digits, availability, sensor_state, value in info:
         if availability == '1':
             if sensor_type in raritan_map_type:                 # handled sensor types
-                key, key_info = raritan_map_type[sensor_type]   # get key for elphase.include
+                key, _key_info = raritan_map_type[sensor_type]   # get key for elphase.include
                 value = float(value) / 10 ** int(decimal_digits)
                 state, state_info = raritan_map_state[sensor_state]
 

@@ -80,13 +80,13 @@ def winperf_phydisk_convert(info):
     def finalize_block(nodename):
         # Missing columns are donted by negative values (Linux sends here latency information)
         return zip(
-            [nodename for x in current_disks],
+            [nodename for _x in current_disks],
             current_disks                        or [],
             current_disk_read_bytes              or [],
             current_disk_write_bytes             or [],
             current_disk_reads                   or [],
             current_disk_writes                  or [],
-            [-1 for x in current_disks],
+            [-1 for _x in current_disks],
             current_disk_readq_ctrs              or [],
             current_disk_writeq_ctrs             or [],
             current_disk_seconds_per_read        or [],

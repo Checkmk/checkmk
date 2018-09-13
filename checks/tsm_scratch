@@ -31,7 +31,7 @@
 tsm_scratch_default_levels = ( 5, 7 )
 def inventory_tsm_scratch(info):
     inventory = []
-    for inst, tapes, library in info:
+    for inst, _tapes, library in info:
         if inst != 'default':
             item = "%s / %s" % ( inst, library )
         else:
@@ -67,4 +67,3 @@ check_info["tsm_scratch"] = {
     "service_description"   : "Scratch Pool %s",
     "has_perfdata"          : True,
 }
-

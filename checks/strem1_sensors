@@ -46,7 +46,7 @@ def strem1_sensors_parse_info(info):
 
 def inventory_strem1_sensors(info):
     inventory = []
-    for index, typ, val, intval in strem1_sensors_parse_info(info[1]):
+    for index, typ, val, _intval in strem1_sensors_parse_info(info[1]):
         lvls = 'strem1_temp_defaultlevels'
         if typ == 'Humidity':
             lvls = 'strem1_humidity_defaultlevels'
@@ -57,7 +57,7 @@ def inventory_strem1_sensors(info):
     return inventory
 
 def check_strem1_sensors(item, params, info):
-    for index, typ, val, intval in strem1_sensors_parse_info(info[1]):
+    for index, typ, val, _intval in strem1_sensors_parse_info(info[1]):
         if index == item:
             uom = info[0][0][0] if typ == 'Temperature' else '%'
             val = float(val)

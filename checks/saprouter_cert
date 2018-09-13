@@ -89,7 +89,7 @@ def inventory_saprouter_cert(parsed):
 
 def check_saprouter_cert(_no_item, params, parsed):
     if "valid" in parsed:
-        not_before, not_before_readable = parsed["valid"]["not_before"]
+        _not_before, not_before_readable = parsed["valid"]["not_before"]
         not_after,  not_after_readable  = parsed["valid"]["not_after"]
         validity_age = not_after - time.time()
 

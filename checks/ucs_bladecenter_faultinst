@@ -44,7 +44,7 @@ def check_ucs_bladecenter_faultinst(item, _no_params, parsed):
         "cleared"   : 0,
     }
     severities = {}
-    for key, values in parsed.get("faultInst", {}).items():
+    for values in parsed.get("faultInst", {}).itervalues():
         entry_sev = values.get("Severity").lower()
         severities.setdefault(entry_sev, [])
         severities[entry_sev].append(values)
@@ -75,4 +75,3 @@ check_info["ucs_bladecenter_faultinst"] = {
     'service_description':     'Fault Instances',
     'includes':                [ 'ucs_bladecenter.include' ],
 }
-

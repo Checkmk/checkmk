@@ -26,7 +26,7 @@
 
 def inventory_qlogic_sanbox_fabric_element(info):
     inventory = []
-    for fe_status, fe_id in info:
+    for _fe_status, fe_id in info:
             inventory.append( (fe_id, None) )
     return inventory
 

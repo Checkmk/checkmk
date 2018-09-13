@@ -42,7 +42,7 @@ qlogic_sanbox_status_map = [ "undefined", # 0
 
 def inventory_qlogic_sanbox_temp(info):
     inventory = []
-    for sensor_name, sensor_status, sensor_message, sensor_type, \
+    for sensor_name, _sensor_status, _sensor_message, sensor_type, \
         sensor_characteristic, sensor_id in info:
         sensor_id = sensor_id.replace("16.0.0.192.221.48.", "").replace(".0.0.0.0.0.0.0.0", "")
         if sensor_type == "8" and sensor_characteristic == "3" and \
@@ -51,8 +51,8 @@ def inventory_qlogic_sanbox_temp(info):
     return inventory
 
 def check_qlogic_sanbox_temp(item, _no_params, info):
-    for sensor_name, sensor_status, sensor_message, sensor_type, \
-        sensor_characteristic, sensor_id in info:
+    for _sensor_name, sensor_status, sensor_message, _sensor_type, \
+        _sensor_characteristic, sensor_id in info:
         sensor_id = sensor_id.replace("16.0.0.192.221.48.", "").replace(".0.0.0.0.0.0.0.0", "")
         if sensor_id == item:
             sensor_status = int(sensor_status)
@@ -111,16 +111,16 @@ check_info["qlogic_sanbox.temp"] = {
 
 def inventory_qlogic_sanbox_psu(info):
     inventory = []
-    for sensor_name, sensor_status, sensor_message, sensor_type, \
-        sensor_characteristic, sensor_id in info:
+    for _sensor_name, _sensor_status, _sensor_message, sensor_type, \
+        _sensor_characteristic, sensor_id in info:
         sensor_id = sensor_id.replace("16.0.0.192.221.48.", "").replace(".0.0.0.0.0.0.0.0", "")
         if sensor_type == "5":
             inventory.append( (sensor_id, None) )
     return inventory
 
 def check_qlogic_sanbox_psu(item, _no_params, info):
-    for sensor_name, sensor_status, sensor_message, sensor_type, \
-        sensor_characteristic, sensor_id in info:
+    for _sensor_name, sensor_status, _sensor_message, _sensor_type, \
+        _sensor_characteristic, sensor_id in info:
         sensor_id = sensor_id.replace("16.0.0.192.221.48.", "").replace(".0.0.0.0.0.0.0.0", "")
         if sensor_id == item:
             sensor_status = int(sensor_status)

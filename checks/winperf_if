@@ -332,7 +332,7 @@ def check_if_dhcp(item, _no_params, info, nic_names, nic_index):
 
 
 def inventory_winperf_if(parsed):
-    agent_timestamp, perf, dhcp, nic_names, nic_index = parsed
+    _agent_timestamp, perf, _dhcp, _nic_names, _nic_index = parsed
 
     # dhcp info irrelevant to inventory
     return inventory_if_common(perf)

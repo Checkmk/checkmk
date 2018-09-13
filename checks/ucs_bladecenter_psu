@@ -118,7 +118,7 @@ check_info["ucs_bladecenter_psu"] = {
 #   '----------------------------------------------------------------------'
 
 def inventory_ucs_bladecenter_psu_switch_power(parsed):
-    for key, values in parsed.items():
+    for key in parsed.iterkeys():
         if key.startswith("Switch"):
             yield key, {}
 
@@ -193,4 +193,3 @@ check_info["ucs_bladecenter_psu.chassis_temp"] = {
     'default_levels_variable' : "ucs_bladecenter_psu_chassis_temp_default_levels",
     'includes'                : [ 'ucs_bladecenter.include', 'temperature.include' ],
 }
-

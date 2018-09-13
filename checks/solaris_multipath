@@ -35,7 +35,7 @@
 # and we check agains that later.
 
 def inventory_solaris_multipath(info):
-    for device, total, operational in info:
+    for device, _total, operational in info:
         item = device.split('/')[-1]
         yield item, int(operational)
 

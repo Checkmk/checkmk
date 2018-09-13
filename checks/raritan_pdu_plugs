@@ -29,7 +29,7 @@ raritan_pdu_plugs_default = '"on"' # only to be downwards compatible and can be 
 
 def inventory_raritan_pdu_plugs(info):
     inventory = []
-    for outlet_label, outlet_name, outlet_state in info:
+    for outlet_label, _outlet_name, outlet_state in info:
         inventory.append((outlet_label, int(outlet_state)) )
     return inventory
 

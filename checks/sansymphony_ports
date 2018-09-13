@@ -33,7 +33,7 @@
 # Microsoft_iSCSI-Initiator iSCSI True
 
 def inventory_sansymphony_ports(info):
-    for portname, porttype, portstatus in info:
+    for portname, _porttype, portstatus in info:
         if portstatus == "True":
             yield portname, None
 

@@ -44,14 +44,14 @@ forced_mapping = {
     }
 
 def inventory_stormshield_cluster_node(info):
-    for index, serial, online, model, version, license, quality, priority, \
-        statusforced, active, uptime in info:
+    for index, _serial, _online, _model, _version, _license, _quality, _priority, \
+        _statusforced, _active, _uptime in info:
         yield index, {}
 
 
 def check_stormshield_cluster_node(item, params, info):
     for index, serial, online, model, version, license, quality, priority, \
-        statusforced, active, uptime in info:
+        statusforced, active, _uptime in info:
         if item == index:
             warn, crit = params['quality']
             if online == '0':

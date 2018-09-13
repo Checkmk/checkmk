@@ -134,11 +134,6 @@ def inventory_websphere_mq_instance(parsed):
 
 
 def check_websphere_mq_instance(item, params, parsed):
-    get_other_state = {
-        "Active"  : "Standby",
-        "Standby" : "Active",
-    }
-
     if item in parsed["instances"]:
         data    = parsed["instances"][item]
         mode    = data["MODE"]
@@ -176,14 +171,13 @@ def check_websphere_mq_manager(item, params, parsed):
     if item in parsed["manager"]:
         data    = parsed["manager"][item]
         status  = data["STATUS"]
-        default = data["DEFAULT"]
         standby = data.get("STANDBY", "")
         installation_name    = data.get("INSTNAME")
         installation_path    = data.get("INSTPATH")
         installation_version = data.get("INSTVER")
 
         instances_modes = []
-        for instance, instance_info in parsed["instances"].items():
+        for _instance, instance_info in parsed["instances"].items():
             if instance_info["QMNAME"] == item:
                 instances_modes.append( instance_info["MODE"] )
 

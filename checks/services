@@ -81,7 +81,6 @@ def inventory_windows_services(info):
             statespec = "running"
 
         # First match name or description (optional since rule based config option available)
-        use_as_item = None
         if svc:
             if svc.startswith("~"):
                 r = regex(svc[1:])
@@ -282,7 +281,6 @@ def check_services_summary(item, params, info):
 
     num_stoplist = len(stoplist)
     num_srv = len(info)
-    length_runlist = len(info) - len(stoplist) - num_blacklist
 
     if len(stoplist) > 0:
         stopped_srvs = " ("+", ".join(stoplist)+")"

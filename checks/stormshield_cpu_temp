@@ -25,7 +25,7 @@
 # Boston, MA 02110-1301 USA.
 
 def inventory_stormshield_cpu_temp(info):
-    for index, temp in info:
+    for index, _temp in info:
         yield index, {}
 
 

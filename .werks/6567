@@ -1,0 +1,11 @@
+Title: Fixed possible XSS on activate changes page
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.4.0p36
+Date: 1536862088
+Class: security
+
+It was possible to trigger an XSS issue using the change messages
+in some situations.

@@ -1811,8 +1811,8 @@ def mode_mkeventd_edit_rule(phase):
             for pack in rule_packs:
                 for r in pack["rules"]:
                     if r["id"] == rule["id"]:
-                        error_text = _("A rule with this ID already exists in rule pack <b>%s</b>.") % pack["title"]
-                        raise MKUserError("rule_p_id", html.render_text(error_text))
+                        raise MKUserError("rule_p_id",
+                                          _("A rule with this ID already exists in rule pack <b>%s</b>.") % pack["title"])
 
         try:
             num_groups = re.compile(rule["match"]).groups

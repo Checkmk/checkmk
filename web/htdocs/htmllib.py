@@ -2748,11 +2748,13 @@ class html(DeprecationWrapper, RequestHandler):
         if self._user_id:
             isopen = self.foldable_container_is_open(treename, id, isopen)
 
-        onclick = ' onclick="toggle_foldable_container(\'%s\', \'%s\', \'%s\')"' % (
-               treename, id, fetch_url and fetch_url or '')
+        js_code = 'toggle_foldable_container(%s, %s, %s)' % (
+               json.dumps(treename), json.dumps(id), json.dumps(fetch_url and fetch_url or ''))
+        onclick = ' onclick="%s"' % self.attrencode(js_code)
 
         if indent == "nform":
-            self.write('<tr class=heading><td id="nform.%s.%s" %s colspan=2>' % (treename, id, onclick))
+            self.write('<tr class=heading><td id="nform.%s.%s" %s colspan=2>' %
+                    (self.attrencode(treename), self.attrencode(id), onclick))
             if icon:
                 self.write('<img class="treeangle title" src="images/icon_%s.png">' % self.attrencode(icon))
             else:
@@ -2763,7 +2765,8 @@ class html(DeprecationWrapper, RequestHandler):
             if not icon:
                 self.write('<img align=absbottom class="treeangle %s" id="treeimg.%s.%s" '
                            'src="images/%s_closed.png" %s>' %
-                        ("open" if isopen else "closed", treename, id, tree_img, onclick))
+                        ("open" if isopen else "closed", self.attrencode(treename), self.attrencode(id),
+                         self.attrencode(tree_img), onclick))
             if isinstance(title, HTML): # custom HTML code
                 self.write(self.attrencode(title))
                 if indent != "form":
@@ -2783,7 +2786,7 @@ class html(DeprecationWrapper, RequestHandler):
                 self.write("</td></tr></table>")
                 indent_style += "margin: 0; "
             self.write('<ul class="treeangle %s" style="%s" id="tree.%s.%s">' %
-                 (isopen and "open" or "closed", indent_style,  treename, id))
+                 (isopen and "open" or "closed", self.attrencode(indent_style), self.attrencode(treename), self.attrencode(id)))
 
         # give caller information about current toggling state (needed for nform)
         return isopen

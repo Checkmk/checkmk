@@ -108,7 +108,7 @@ def bulletlink(text, url, target="main", onclick = None):
 def iconlink(text, url, icon):
     html.open_a(class_=["iconlink", "link"], target="main", href=url)
     html.icon(icon=icon, help=None, cssclass="inline")
-    html.write(text)
+    html.write_text(text)
     html.close_a()
     html.br()
 

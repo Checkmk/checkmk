@@ -45,11 +45,7 @@
 import os
 import time
 import copy
-
-from contextlib import contextmanager
-import io
 import sys
-import tempfile
 
 # docs: http://www.python-ldap.org/doc/html/index.html
 import ldap
@@ -277,10 +273,10 @@ class LDAPUserConnector(UserConnector):
         if not enforce_new \
            and self._ldap_obj \
            and self._config == self._ldap_obj_config:
-            self._logger.debug('LDAP CONNECT - Using existing connecting')
+            self._logger.info('LDAP CONNECT - Using existing connecting')
             return # Use existing connections (if connection settings have not changed)
         else:
-            self._logger.debug('LDAP CONNECT - Connecting...')
+            self._logger.info('LDAP CONNECT - Connecting...')
 
         ldap_test_module()
 
@@ -300,14 +296,11 @@ class LDAPUserConnector(UserConnector):
                 servers = self.servers()
 
             for server in servers:
-                debug_buffer = io.BytesIO()
-                with stderr_redirector(debug_buffer):
-                    ldap_obj, error_msg = self.connect_server(server)
+                ldap_obj, error_msg = self.connect_server(server)
 
                 if ldap_obj:
                     self._ldap_obj = ldap_obj
                 else:
-                    self._logger.debug("libldap debug output: %s" % debug_buffer.getvalue())
                     errors.append(error_msg)
                     continue # In case of an error, try the (optional) fallback servers
 
@@ -335,12 +328,12 @@ class LDAPUserConnector(UserConnector):
         locator.m_logger = self._logger
         try:
             server = locator.locate(domain)
-            self._logger.debug('  DISCOVERY: Discovered server %r from %r' % (server, domain))
+            self._logger.info('  DISCOVERY: Discovered server %r from %r' % (server, domain))
             return server
-        except Exception, e:
-            self._logger.debug('  DISCOVERY: Failed to discover a server from domain %r' % domain)
-            log_exception()
-            self._logger.debug('  DISCOVERY: Try to use domain DNS name %r as server' % domain)
+        except Exception:
+            self._logger.info('  DISCOVERY: Failed to discover a server from domain %r' % domain)
+            self._logger.exception()
+            self._logger.info('  DISCOVERY: Try to use domain DNS name %r as server' % domain)
             return domain
 
 
@@ -361,12 +354,12 @@ class LDAPUserConnector(UserConnector):
     def bind(self, user_dn, password, catch = True, conn = None):
         if conn is None:
             conn = self._ldap_obj
-        self._logger.debug('LDAP_BIND %s' % user_dn)
+        self._logger.info('LDAP_BIND %s' % user_dn)
         try:
             conn.simple_bind_s(user_dn.encode("utf-8"), password)
-            self._logger.debug('  SUCCESS')
+            self._logger.info('  SUCCESS')
         except ldap.LDAPError, e:
-            self._logger.debug('  FAILED (%s: %s)' % (e.__class__.__name__, e))
+            self._logger.info('  FAILED (%s: %s)' % (e.__class__.__name__, e))
             if catch:
                 raise MKLDAPException(_('Unable to authenticate with LDAP (%s)') % e)
             else:
@@ -481,7 +474,7 @@ class LDAPUserConnector(UserConnector):
 
 
     def ldap_paged_async_search(self, base, scope, filt, columns):
-        self._logger.debug('  PAGED ASYNC SEARCH')
+        self._logger.info('  PAGED ASYNC SEARCH')
         page_size = self._config.get('page_size', 1000)
 
         lc = SimplePagedResultsControl(size = page_size, cookie = '')
@@ -515,7 +508,7 @@ class LDAPUserConnector(UserConnector):
         if columns == None:
             columns = []
 
-        self._logger.debug('LDAP_SEARCH "%s" "%s" "%s" "%r"' % (base, scope, filt, columns))
+        self._logger.info('LDAP_SEARCH "%s" "%s" "%s" "%r"' % (base, scope, filt, columns))
         start_time = time.time()
 
         # In some environments, the connection to the LDAP server does not seem to
@@ -556,17 +549,17 @@ class LDAPUserConnector(UserConnector):
             except (ldap.SERVER_DOWN, ldap.TIMEOUT, MKLDAPException), e:
                 last_exc = e
                 if implicit_connect and tries_left:
-                    self._logger.debug('  Received %r. Retrying with clean connection...' % e)
+                    self._logger.info('  Received %r. Retrying with clean connection...' % e)
                     self.disconnect()
                     time.sleep(0.5)
                 else:
-                    self._logger.debug('  Giving up.')
+                    self._logger.info('  Giving up.')
                     break
 
         duration = time.time() - start_time
 
         if not success:
-            self._logger.debug('  FAILED')
+            self._logger.info('  FAILED')
             if config.debug:
                 raise MKLDAPException(_('Unable to successfully perform the LDAP search '
                                         '(Base: %s, Scope: %s, Filter: %s, Columns: %s): %s') %
@@ -576,7 +569,7 @@ class LDAPUserConnector(UserConnector):
             else:
                 raise MKLDAPException(_('Unable to successfully perform the LDAP search (%s)') % last_exc)
 
-        self._logger.debug('  RESULT length: %d, duration: %0.3f' % (len(result), duration))
+        self._logger.info('  RESULT length: %d, duration: %0.3f' % (len(result), duration))
         return result
 
 
@@ -997,7 +990,7 @@ class LDAPUserConnector(UserConnector):
 
     def do_sync(self, add_to_changelog, only_username):
         if not self.has_user_base_dn_configured():
-            self._logger.debug("Not trying sync (no \"user base DN\" configured)")
+            self._logger.info("Not trying sync (no \"user base DN\" configured)")
             return # silently skip sync without configuration
 
         register_user_attribute_sync_plugins()
@@ -1010,7 +1003,7 @@ class LDAPUserConnector(UserConnector):
         connection_id = self.id()
 
         self._logger.info('SYNC STARTED')
-        self._logger.debug('  SYNC PLUGINS: %s' % ', '.join(self._config['active_plugins'].keys()))
+        self._logger.info('  SYNC PLUGINS: %s' % ', '.join(self._config['active_plugins'].keys()))
 
         ldap_users = self.get_users()
 
@@ -1041,7 +1034,7 @@ class LDAPUserConnector(UserConnector):
             user_connection_id = cleanup_connection_id(user.get('connector'))
 
             if self.create_users_only_on_login() and mode_create:
-                self._logger.debug('  SKIP SYNC "%s" (Only create user of "%s" connector on login)' %
+                self._logger.info('  SKIP SYNC "%s" (Only create user of "%s" connector on login)' %
                                                                         (user_id, user_connection_id))
                 continue
 
@@ -1059,11 +1052,11 @@ class LDAPUserConnector(UserConnector):
                     mode_create, user = load_user(user_id)
                     user_connection_id = cleanup_connection_id(user.get('connector'))
                     if user_connection_id != connection_id:
-                        self._logger.debug('  SKIP SYNC "%s" (name conflict after adding suffix '
+                        self._logger.info('  SKIP SYNC "%s" (name conflict after adding suffix '
                                  'with user from "%s" connector)' % (user_id, user_connection_id))
                         continue # added suffix, still name conflict
                 else:
-                    self._logger.debug('  SKIP SYNC "%s" (name conflict with user from "%s" connector)' % (user_id, user_connection_id))
+                    self._logger.info('  SKIP SYNC "%s" (name conflict with user from "%s" connector)' % (user_id, user_connection_id))
                     continue # name conflict, different connector
 
             self.execute_active_sync_plugins(user_id, ldap_user, user)
@@ -1214,52 +1207,6 @@ class LDAPUserConnector(UserConnector):
 
 
 multisite_user_connectors['ldap'] = LDAPUserConnector
-
-#.
-#   .--Debugging-----------------------------------------------------------.
-#   |          ____       _                       _                        |
-#   |         |  _ \  ___| |__  _   _  __ _  __ _(_)_ __   __ _            |
-#   |         | | | |/ _ \ '_ \| | | |/ _` |/ _` | | '_ \ / _` |           |
-#   |         | |_| |  __/ |_) | |_| | (_| | (_| | | | | | (_| |           |
-#   |         |____/ \___|_.__/ \__,_|\__, |\__, |_|_| |_|\__, |           |
-#   |                                 |___/ |___/         |___/            |
-#   +----------------------------------------------------------------------+
-#   | A context manuer to catch the debug output for libldap that is sent  |
-#   | to stderr. We need all information in the web.log. This is done with |
-#   | the help of this wrapper in case the LDAP logging debug level is on  |
-#   '----------------------------------------------------------------------'
-
-@contextmanager
-def stderr_redirector(stream):
-    # The original fd stderr points to. Usually 1 on POSIX systems.
-    original_stderr_fd = sys.stderr.fileno()
-
-    def _redirect_stderr(to_fd):
-        """Redirect stderr to the given file descriptor."""
-        # Flush and close sys.stderr - also closes the file descriptor (fd)
-        sys.stderr.close()
-        # Make original_stderr_fd point to the same file as to_fd
-        os.dup2(to_fd, original_stderr_fd)
-        # Create a new sys.stderr that points to the redirected fd
-        sys.stderr = os.fdopen(original_stderr_fd, 'wb')
-
-    # Save a copy of the original stderr fd in saved_stderr_fd
-    saved_stderr_fd = os.dup(original_stderr_fd)
-    try:
-        # Create a temporary file and redirect stderr to it
-        tfile = tempfile.TemporaryFile(mode='w+b')
-        _redirect_stderr(tfile.fileno())
-        # Yield to caller, then redirect stderr back to the saved fd
-        yield
-        _redirect_stderr(saved_stderr_fd)
-        # Copy contents of temporary file to the given stream
-        tfile.flush()
-        tfile.seek(0, io.SEEK_SET)
-        stream.write(tfile.read())
-    finally:
-        tfile.close()
-        os.close(saved_stderr_fd)
-
 
 #.
 #   .--Attributes----------------------------------------------------------.
@@ -1952,7 +1899,7 @@ def synchronize_profile_to_sites(connection, user_id, profile):
                     for site_id in config.sitenames()
                     if not config.site_is_local(site_id) ]
 
-    connection._logger.debug('Credentials changed: %s. Trying to sync to %d sites' %
+    connection._logger.info('Credentials changed: %s. Trying to sync to %d sites' %
                                                     (user_id, len(remote_sites)))
 
     num_disabled  = 0
@@ -1980,12 +1927,12 @@ def synchronize_profile_to_sites(connection, user_id, profile):
             num_succeeded += 1
         else:
             num_failed += 1
-            connection._logger.debug('  FAILED [%s]: %s' % (site_id, result))
+            connection._logger.info('  FAILED [%s]: %s' % (site_id, result))
             # Add pending entry to make sync possible later for admins
             if config.wato_enabled:
                 watolib.add_change("edit-users", _('Password changed (sync failed: %s)') % result,
                     add_user=False, sites=[site_id], need_restart=False)
 
-    connection._logger.debug('  Disabled: %d, Succeeded: %d, Failed: %d' %
+    connection._logger.info('  Disabled: %d, Succeeded: %d, Failed: %d' %
                     (num_disabled, num_succeeded, num_failed))
 

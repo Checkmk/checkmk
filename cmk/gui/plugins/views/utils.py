@@ -364,7 +364,7 @@ def url_to_view(row, view_name):
     if display_options.disabled(display_options.I):
         return None
 
-    view = get_permitted_views(load_all_views())
+    view = get_permitted_views(load_all_views()).get(view_name)
     if view:
         # Get the context type of the view to link to, then get the parameters of this
         # context type and try to construct the context from the data of the row

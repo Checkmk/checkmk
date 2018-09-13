@@ -1,0 +1,11 @@
+Title: azure_sites: New Check to monitor azure web servers
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1536822726
+Class: feature
+
+This werk adds a check to monitor IIS web servers in the Azure cloud.
+

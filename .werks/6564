@@ -1,0 +1,16 @@
+Title: Fixed incorrect rate computation affecting various checks in some cases
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0p5
+Date: 1536829823
+Class: fix
+
+All previous 1.5 releases used a partially broken counter / rate computation in
+various checks in specific situations, e.g. inotify checks. Not all check
+results were computed wrong, only the ones based on counter / rate
+computations.
+
+When a single check monitors several services on a host, only the first of
+these services was affected by this issue.

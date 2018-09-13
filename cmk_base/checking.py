@@ -291,12 +291,6 @@ def execute_check(multi_host_sections, hostname, ipaddress, check_plugin_name, i
 
     section_name = checks.section_name_of(check_plugin_name)
 
-    # We need to set this again, because get_section_content has the side effect of setting this with
-    # item None if there is a parse function. This would break the entire set_item/get_rate logic
-    # for checks with items that rely on this being handled by the API.
-    # TODO: Write a regression test for this.
-    item_state.set_item_state_prefix(check_plugin_name, item)
-
     dont_submit = False
     section_content = None
     try:

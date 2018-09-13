@@ -154,23 +154,27 @@ class CachedItemStates(object):
             pass
 
 
+    def get_item_state(self, user_key, default=None):
+        key = self.get_unique_item_state_key(user_key)
+        return self._item_states.get(key, default)
+
+
     def set_item_state(self, user_key, state):
         key = self.get_unique_item_state_key(user_key)
         self._item_states[key] = state
         self._updated_item_states[key] = state
 
 
-    def set_item_state_prefix(self, args):
-        self._item_state_prefix = args
-
-
-    def get_item_state(self, user_key, default=None):
-        key = self.get_unique_item_state_key(user_key)
-        return self._item_states.get(key, default)
-
-
     def get_all_item_states(self):
         return self._item_states
+
+
+    def get_item_state_prefix(self):
+        return self._item_state_prefix
+
+
+    def set_item_state_prefix(self, args):
+        self._item_state_prefix = args
 
 
     def get_unique_item_state_key(self, user_key):
@@ -234,6 +238,10 @@ def cleanup_item_states():
 
 def set_item_state_prefix(*args):
     _cached_item_states.set_item_state_prefix(args)
+
+
+def get_item_state_prefix():
+    return _cached_item_states.get_item_state_prefix()
 
 
 def _unique_item_state_key(user_key):

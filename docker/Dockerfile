@@ -41,6 +41,8 @@ RUN set -e \
         postfix \
         inetutils-syslogd \
         bsd-mailx \
+        gnupg2 \
+        dpkg-sig \
         $(cat needed-packages) \
     && apt-get clean \
     && rm /usr/sbin/policy-rc.d \
@@ -48,9 +50,9 @@ RUN set -e \
     && rm needed-packages
 
 # Now install the Check_MK version specific things
-# TODO: Verify gpg signature
 # hadolint ignore=DL3003,DL3008,DL4006
 RUN set -e \
+    && mkdir -p /usr/share/man/man8 \
     && echo "exit 101" > /usr/sbin/policy-rc.d \
     && chmod +x /usr/sbin/policy-rc.d \
     && export DEBIAN_FRONTEND=noninteractive \
@@ -58,7 +60,9 @@ RUN set -e \
     && PKG_FILE="${PKG_NAME}_0.stretch_$(dpkg --print-architecture).deb" \
     && echo "--user \"${CMK_DL_CREDENTIALS}\"" \
         | curl -o "${PKG_FILE}" -K - "${CMK_DL_URL}/${CMK_VERSION}/${PKG_FILE}" \
-    && mkdir -p /usr/share/man/man8 \
+    && curl -sS "${CMK_DL_URL}/Check_MK-pubkey.gpg" \
+        | gpg -q --import \
+    && dpkg-sig --verify "${PKG_FILE}" \
     && dpkg -i "${PKG_FILE}" \
     && rm -f "${PKG_FILE}" \
     && apt-get clean \

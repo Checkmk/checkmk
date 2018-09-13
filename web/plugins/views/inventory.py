@@ -36,11 +36,13 @@ def paint_host_inventory_tree(row, invpath=".", column="host_inventory"):
         return "", ""
 
     if column == "host_inventory":
-        tree_renderer = AttributeRenderer(row["host_name"], "", invpath,
-                        show_internal_tree_paths=painter_options.get('show_internal_tree_paths'))
+        tree_renderer = AttributeRenderer(row["site"],
+                            row["host_name"], "", invpath,
+                            show_internal_tree_paths=painter_options.get('show_internal_tree_paths'))
     else:
         tree_id = "/" + str(row["invhist_time"])
-        tree_renderer = DeltaNodeRenderer(row["host_name"], tree_id, invpath)
+        tree_renderer = DeltaNodeRenderer(row["site"],
+                            row["host_name"], tree_id, invpath)
 
     parsed_path, attributes_key = inventory.parse_tree_path(invpath)
     if attributes_key is None:
@@ -103,7 +105,7 @@ def declare_inv_column(invpath, datatype, title, short = None):
     # Declare column painter
     multisite_painters[name] = {
         "title"    : invpath == "." and _("Inventory Tree") or (_("Inventory") + ": " + title),
-        "columns"  : ["host_inventory"],
+        "columns"  : ["host_inventory", "host_structured_status"],
         "options"  : ["show_internal_tree_paths"],
         "load_inv" : True,
         "paint"    : lambda row: paint_host_inventory_tree(row, invpath),
@@ -117,7 +119,7 @@ def declare_inv_column(invpath, datatype, title, short = None):
         # Declare sorter. It will detect numbers automatically
         multisite_sorters[name] = {
             "title"    : _("Inventory") + ": " + title,
-            "columns"  : ["host_inventory"],
+            "columns"  : ["host_inventory", "host_structured_status"],
             "load_inv" : True,
             "cmp"      : lambda a, b: cmp_inventory_node(a, b, invpath),
         }
@@ -150,7 +152,7 @@ multisite_painter_options["show_internal_tree_paths"] = {
 
 multisite_painters["inventory_tree"] = {
     "title"    : _("Hardware & Software Tree"),
-    "columns"  : ["host_inventory"],
+    "columns"  : ["host_inventory", "host_structured_status"],
     "options"  : ["show_internal_tree_paths"],
     "load_inv" : True,
     "paint"    : paint_host_inventory_tree,
@@ -1013,9 +1015,11 @@ def declare_inventory_columns():
 #   |  painters that are available in the hosts info.                      |
 #   '----------------------------------------------------------------------'
 
-def create_inv_rows(hostname, invpath, infoname):
-    struct_tree = inventory.load_tree(hostname)
-    invdata = inventory.get_inventory_data(struct_tree, invpath)
+def _create_inv_rows(hostrow, invpath, infoname):
+    merged_tree = inventory.load_filtered_and_merged_tree(hostrow)
+    if merged_tree is None:
+        return []
+    invdata = inventory.get_inventory_data(merged_tree, invpath)
     if invdata is None:
         return []
     entries = []
@@ -1034,8 +1038,11 @@ def inv_multisite_table(infoname, invpath, columns, add_headers, only_sites, lim
         header = filt.filter(infoname)
         if not header.startswith("Sites:"):
             filter_code += header
-    host_columns = [ "host_name" ] + list(set(filter(lambda c: c.startswith("host_")
-                                                     and c != "host_name", columns)))
+    host_columns = ["host_name"] + list(set(filter(lambda c: c.startswith("host_")
+                                                   and c != "host_name", columns)))
+    if infoname != "invhist":
+        host_columns.append("host_structured_status")
+
     query = "GET hosts\n"
     query += "Columns: " + (" ".join(host_columns)) + "\n"
     query += filter_code
@@ -1055,7 +1062,6 @@ def inv_multisite_table(infoname, invpath, columns, add_headers, only_sites, lim
     sites.live().set_only_sites(None)
 
     headers = [ "site" ] + host_columns
-
     # Now create big table of all inventory entries of these hosts
     rows = []
     hostnames = [ row[1] for row in data ]
@@ -1064,9 +1070,9 @@ def inv_multisite_table(infoname, invpath, columns, add_headers, only_sites, lim
         hostname = row[1]
         hostrow = dict(zip(headers, row))
         if infoname == "invhist":
-            subrows = create_hist_rows(hostname, columns)
+            subrows = _create_hist_rows(hostname, columns)
         else:
-            subrows = create_inv_rows(hostname, invpath, infoname)
+            subrows = _create_inv_rows(hostrow, invpath, infoname)
 
         for subrow in subrows:
             subrow.update(hostrow)
@@ -1253,18 +1259,28 @@ def declare_invtable_view(infoname, invpath, title_singular, title_plural):
     view_is_enabled[infoname + "_of_host"] = _create_view_enabled_check_func(invpath)
 
 
-def _create_view_enabled_check_func(invpath):
+def _create_view_enabled_check_func(invpath, is_history=False):
     def _check_view_enabled(linking_view, view, context_vars):
         context = dict(context_vars)
         if "host" not in context:
             return True # No host data? Keep old behaviour
         if context["host"] == "":
             return False
-        struct_tree = inventory.load_tree(context["host"])
+
+        # FIXME In order to decide whether this view is enabled
+        # do we really need to load the whole tree?
+        if is_history:
+            struct_tree = inventory.load_filtered_inventory_tree(context["host"])
+        else:
+            row = inventory.get_status_data_via_livestatus(context["site"], context["host"])
+            struct_tree = inventory.load_filtered_and_merged_tree(row)
+
         if not struct_tree:
             return False
+
         if struct_tree.is_empty():
             return False
+
         parsed_path, unused_key = inventory.parse_tree_path(invpath)
         if parsed_path:
             children = struct_tree.get_sub_children(parsed_path)
@@ -1471,7 +1487,7 @@ def inv_history_table(columns, add_headers, only_sites, limit, filters):
     return inv_multisite_table("invhist", None, columns, add_headers, only_sites, limit, filters)
 
 
-def create_hist_rows(hostname, columns):
+def _create_hist_rows(hostname, columns):
     for old_timestamp, old_tree, new_tree in inventory.get_history(hostname):
         new, changed, removed, delta_tree = new_tree.compare_with(old_tree)
         newrow = {
@@ -1591,7 +1607,7 @@ multisite_builtin_views["inv_host_history"] = {
     'sorters'                      : [('invhist_time', False)],
 }
 
-view_is_enabled["inv_host_history"] = _create_view_enabled_check_func(".")
+view_is_enabled["inv_host_history"] = _create_view_enabled_check_func(".", is_history=True)
 
 #.
 #   .--Node Renderer-------------------------------------------------------.
@@ -1611,7 +1627,9 @@ def render_inv_dicttable(*args):
 
 
 class NodeRenderer(object):
-    def __init__(self, hostname, tree_id, invpath, show_internal_tree_paths=False):
+    def __init__(self, site_id, hostname, tree_id, invpath,
+                 show_internal_tree_paths=False):
+        self._site_id = site_id
         self._hostname = hostname
         self._tree_id = tree_id
         self._invpath = invpath
@@ -1636,7 +1654,8 @@ class NodeRenderer(object):
                 title = self._replace_placeholders(title, invpath)
 
             header = self._get_header(title, ".".join(map(str, node_abs_path)), "#666")
-            fetch_url = html.makeuri_contextless([("host", self._hostname),
+            fetch_url = html.makeuri_contextless([("site", self._site_id),
+                                                  ("host", self._hostname),
                                                   ("path", invpath),
                                                   ("show_internal_tree_paths", self._show_internal_tree_paths),
                                                   ("treeid", self._tree_id)],

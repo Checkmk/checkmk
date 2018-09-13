@@ -101,43 +101,37 @@ def sort_children(children):
     return sorted(children, key=lambda x: ordering[type(x)])
 
 
-def load_tree(hostname, merge_trees=True):
-    # Load data of a host, cache it in the current HTTP request
-    if not hostname:
-        return None
-
-    inventory_tree_cache = html.get_cached("inventory")
-    if not inventory_tree_cache:
-        inventory_tree_cache = {}
-        html.set_cache("inventory", inventory_tree_cache)
-
-    if hostname in inventory_tree_cache:
-        inventory_tree = inventory_tree_cache[hostname]
-    else:
-        if '/' in hostname:
-            return None # just for security reasons
-        cache_path = "%s/inventory/%s" % (cmk.paths.var_dir, hostname)
-        inventory_tree = StructuredDataTree().load_from(cache_path)
-        inventory_tree_cache[hostname] = inventory_tree
-
-    if merge_trees:
-        inventory_tree = _merge_with_status_data_tree(hostname, inventory_tree)
-
-    inventory_tree = inventory_tree.get_filtered_tree(get_permitted_inventory_paths())
-    return inventory_tree
+def load_filtered_inventory_tree(hostname):
+    """Loads the host inventory tree from the current file and returns the filtered tree"""
+    return _filter_tree(_load_inventory_tree(hostname))
 
 
-def _merge_with_status_data_tree(hostname, inventory_tree):
-    filepath = "%s/status_data/%s" % (cmk.paths.tmp_dir, hostname)
-    if os.path.exists(filepath):
-        status_data_tree = StructuredDataTree().load_from(filepath)
-        inventory_tree.merge_with(status_data_tree)
-        return inventory_tree
-    else:
-        return inventory_tree
+def load_filtered_and_merged_tree(row):
+    """Load inventory tree from file, status data tree from row,
+    merge these trees and returns the filtered tree"""
+    inventory_tree = _load_inventory_tree(row.get("host_name"))
+    status_data_tree = _create_tree_from_raw_tree(row.get("host_structured_status"))
+
+    merged_tree = _merge_inventory_and_status_data_tree(inventory_tree, status_data_tree)
+    return _filter_tree(merged_tree)
+
+
+def get_status_data_via_livestatus(site, hostname):
+    query = "GET hosts\nColumns: host_structured_status\nFilter: host_name = %s\n" % lqencode(hostname)
+    try:
+        sites.live().set_only_sites([site] if site else None)
+        result = sites.live().query(query)
+    finally:
+        sites.live().set_only_sites()
+
+    row = {"host_name": hostname}
+    if result and result[0]:
+        row["host_structured_status"] = result[0][0]
+    return row
 
 
 def load_delta_tree(hostname, timestamp):
+    """Load inventory history and compute delta tree of a specific timestamp"""
     # Timestamp is timestamp of the younger of both trees. For the oldest
     # tree we will just return the complete tree - without any delta
     # computation.
@@ -155,10 +149,11 @@ def get_history(hostname):
 
     history = []
     try:
-        inventory_path = "%s/inventory/%s" % (cmk.paths.var_dir, hostname)
-        timestamp = int(os.stat(inventory_path).st_mtime)
-        inventory_tree = load_tree(hostname, merge_trees=False)
-        history.append((timestamp, inventory_tree))
+        inventory_tree = load_filtered_inventory_tree(hostname)
+        if inventory_tree is not None:
+            inventory_path = "%s/inventory/%s" % (cmk.paths.var_dir, hostname)
+            timestamp = int(os.stat(inventory_path).st_mtime)
+            history.append((timestamp, inventory_tree))
     except:
         # TODO: We should really change this error handling. There is currently
         # no chance to react on issues that occur during processing of
@@ -171,7 +166,7 @@ def get_history(hostname):
             try:
                 timestamp = int(timestamp_str)
                 inventory_archive_path = "%s/%d" % (inventory_archive_dir, timestamp)
-                inventory_tree = StructuredDataTree().load_from(inventory_archive_path)
+                inventory_tree = _filter_tree(StructuredDataTree().load_from(inventory_archive_path))
             except:
                 # TODO: We should really change this error handling. There is currently
                 # no chance to react on issues that occur during processing of
@@ -182,7 +177,7 @@ def get_history(hostname):
 
     comparable_trees, previous_tree = [], StructuredDataTree()
     for this_timestamp, inventory_tree in sorted(history, key=lambda x: x[0]):
-        comparable_trees.append((this_timestamp, inventory_tree, previous_tree))
+        comparable_trees.append((this_timestamp, previous_tree, inventory_tree))
         previous_tree = inventory_tree
 
     return reversed(comparable_trees)
@@ -199,8 +194,63 @@ def parent_path(invpath):
     last_sep = max(invpath.rfind(":"), invpath.rfind("."))
     return invpath[:last_sep+1]
 
+#.
+#   .--helpers-------------------------------------------------------------.
+#   |                  _          _                                        |
+#   |                 | |__   ___| |_ __   ___ _ __ ___                    |
+#   |                 | '_ \ / _ \ | '_ \ / _ \ '__/ __|                   |
+#   |                 | | | |  __/ | |_) |  __/ |  \__ \                   |
+#   |                 |_| |_|\___|_| .__/ \___|_|  |___/                   |
+#   |                              |_|                                     |
+#   '----------------------------------------------------------------------'
 
-def get_permitted_inventory_paths():
+def _load_inventory_tree(hostname):
+    # Load data of a host, cache it in the current HTTP request
+    if not hostname:
+        return
+
+    inventory_tree_cache = html.get_cached("inventory")
+    if not inventory_tree_cache:
+        inventory_tree_cache = {}
+        html.set_cache("inventory", inventory_tree_cache)
+
+    if hostname in inventory_tree_cache:
+        inventory_tree = inventory_tree_cache[hostname]
+    else:
+        if '/' in hostname:
+            # just for security reasons
+            return
+        cache_path = "%s/inventory/%s" % (cmk.paths.var_dir, hostname)
+        inventory_tree = StructuredDataTree().load_from(cache_path)
+        inventory_tree_cache[hostname] = inventory_tree
+    return inventory_tree
+
+
+def _create_tree_from_raw_tree(raw_tree):
+    if raw_tree:
+        return StructuredDataTree().create_tree_from_raw_tree(ast.literal_eval(raw_tree))
+    return
+
+
+def _merge_inventory_and_status_data_tree(inventory_tree, status_data_tree):
+    if inventory_tree is None and status_data_tree is None:
+        return
+
+    if inventory_tree is None:
+        inventory_tree = StructuredDataTree()
+
+    if status_data_tree is not None:
+        inventory_tree.merge_with(status_data_tree)
+    return inventory_tree
+
+
+def _filter_tree(struct_tree):
+    if struct_tree is None:
+        return
+    return struct_tree.get_filtered_tree(_get_permitted_inventory_paths())
+
+
+def _get_permitted_inventory_paths():
     """
 Returns either a list of permitted paths or
 None in case the user is allowed to see the whole tree.
@@ -238,6 +288,15 @@ None in case the user is allowed to see the whole tree.
         return []
     return permitted_paths
 
+#.
+#   .--Inventory API-------------------------------------------------------.
+#   |   ___                      _                        _    ____ ___    |
+#   |  |_ _|_ ____   _____ _ __ | |_ ___  _ __ _   _     / \  |  _ \_ _|   |
+#   |   | || '_ \ \ / / _ \ '_ \| __/ _ \| '__| | | |   / _ \ | |_) | |    |
+#   |   | || | | \ V /  __/ | | | || (_) | |  | |_| |  / ___ \|  __/| |    |
+#   |  |___|_| |_|\_/ \___|_| |_|\__\___/|_|   \__, | /_/   \_\_|  |___|   |
+#   |                                          |___/                       |
+#   '----------------------------------------------------------------------'
 
 def page_host_inv_api():
     # The response is always a top level dict with two elements:
@@ -290,22 +349,26 @@ def has_inventory(hostname):
 
 
 def _inventory_of_host(host_name, request):
-    if not _may_see(host_name, site=request.get("site")):
+    site = request.get("site")
+    if not _may_see(host_name, site):
         raise MKAuthException(_("Sorry, you are not allowed to access the host %s.") % host_name)
 
-    inventory_tree = load_tree(host_name)
-    if not inventory_tree:
+    row = get_status_data_via_livestatus(site, host_name)
+    merged_tree = load_filtered_and_merged_tree(row)
+    if not merged_tree:
         return {}
+
     if "paths" in request:
         parsed_paths = []
         for path in request["paths"]:
             parsed_path, _key = parse_tree_path(path)
             parsed_paths.append(parsed_path)
-        inventory_tree = inventory_tree.get_filtered_tree(parsed_paths)
-    return inventory_tree.get_raw_tree()
+        merged_tree = merged_tree.get_filtered_tree(parsed_paths)
+
+    return merged_tree.get_raw_tree()
 
 
-def _may_see(host_name, site=None):
+def _may_see(host_name, site):
     if config.user.may("general.see_all"):
         return True
 

@@ -1,0 +1,14 @@
+Title: Status data is transferred in distributed setups
+Level: 1
+Component: inv
+Compatible: compat
+Edition: cee
+Version: 1.5.0p5
+Date: 1536849408
+Class: fix
+
+Werk 5605 introduced the integration of status data
+into the HW/SW Inventory tree.
+
+This worked only in single sites but not in distributed
+setups.

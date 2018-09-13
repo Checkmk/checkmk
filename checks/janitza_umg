@@ -69,8 +69,6 @@ def parse_janitza_umg_inphase(info):
         num_phases = 3
         num_currents = 6
 
-    num_deltas = 3
-
     # the number of elements in each "block" within the snmp. This differs between
     # devices
     counts = [
@@ -202,4 +200,3 @@ check_info['janitza_umg.temp'] = {
     'includes'                : [ "temperature.include", ],
     'group'                   : 'temperature',
 }
-

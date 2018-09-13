@@ -30,7 +30,7 @@ def inventory_knuerr_rms_humidity(info):
     return [ ( None, 'knuerr_rms_humidity_default_levels') ]
 
 def check_knuerr_rms_humidity(_no_item, params, info):
-    name, reading = info[0]
+    _name, reading = info[0]
     return check_humidity(float(reading) / 10, params)
 
 check_info["knuerr_rms_humidity"] = {
@@ -43,4 +43,3 @@ check_info["knuerr_rms_humidity"] = {
     "group"                 : "single_humidity",
     "includes"              : ["humidity.include"],
 }
-

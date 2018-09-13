@@ -113,7 +113,7 @@ def lgp_pdu_aux_fmt(info):
 def inventory_lgp_pdu_aux(info):
     info = lgp_pdu_aux_fmt(info)
     inv = []
-    for id, pdu in info.iteritems():
+    for pdu in info.itervalues():
         # Using SystemLabel as index. But it is not uniq in all cases.
         # Adding the Type-Index to prevent problems
         inv.append((pdu['Type'] + '-' + pdu['SystemLabel'] + '-' + pdu['TypeIndex'], None))
@@ -121,7 +121,7 @@ def inventory_lgp_pdu_aux(info):
 
 def check_lgp_pdu_aux(item, params, info):
     info = lgp_pdu_aux_fmt(info)
-    for id, pdu in info.iteritems():
+    for pdu in info.itervalues():
         if item == pdu['Type'] + '-' + pdu['SystemLabel'] + '-' + pdu['TypeIndex']:
             state    = 0
             output   = []

@@ -83,9 +83,6 @@ def check_ibm_svc_mdiskgrp(item, params, info):
             # 3. Provisioned space - can be more than physical size
             virtual_capacity = ibm_svc_mdiskgrp_to_mb(line[8]) # provisioniert
 
-            # free_capacity = line[7] # brauchen wir nicht?
-            used_capacity = ibm_svc_mdiskgrp_to_mb(line[9])
-
             # Compute available (do not use free_capacity, it's something different)
             avail_mb = capacity - real_capacity
 
@@ -134,4 +131,3 @@ check_info["ibm_svc_mdiskgrp"] = {
     "includes"                : [ "size_trend.include", "df.include" ],
     "default_levels_variable" : "filesystem_default_levels",
 }
-

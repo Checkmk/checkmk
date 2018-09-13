@@ -108,7 +108,7 @@ def check_lparstat_aix_cpu(_no_item, params, info):
         line = info[0] # old (single line) agent output
     else:
         line = info[-1]
-    user, system, wait, idle = map(float, line[:4])
+    user, system, wait, _idle = map(float, line[:4])
     perfdata = [
           ("user",   user),
           ("system", system),

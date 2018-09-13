@@ -54,12 +54,12 @@ factory_settings["ibm_svc_enclosurestats_temperature_default_levels"] = {
 }
 
 def inventory_ibm_svc_enclosurestats_temp(info):
-    for enclosure_id, stat_name, stat_current, stat_peak, stat_peak_time in info:
+    for enclosure_id, stat_name, _stat_current, _stat_peak, _stat_peak_time in info:
         if stat_name == "temp_c":
             yield enclosure_id, {}
 
 def check_ibm_svc_enclosurestats_temp(item, params, info):
-    for enclosure_id, stat_name, stat_current, stat_peak, stat_peak_time in info:
+    for enclosure_id, stat_name, stat_current, _stat_peak, _stat_peak_time in info:
         if enclosure_id == item and stat_name == "temp_c":
             return check_temperature(int(stat_current), params, "ibm_svc_enclosurestats_%s" % item)
 
@@ -86,7 +86,7 @@ check_info["ibm_svc_enclosurestats.temp"] = {
 
 def inventory_ibm_svc_enclosurestats_power(info):
     inventory = []
-    for enclosure_id, stat_name, stat_current, stat_peak, stat_peak_time in info:
+    for enclosure_id, stat_name, _stat_current, _stat_peak, _stat_peak_time in info:
         if stat_name == "power_w":
             inventory.append( (enclosure_id, None) )
     return inventory
@@ -94,7 +94,7 @@ def inventory_ibm_svc_enclosurestats_power(info):
 def check_ibm_svc_enclosurestats_power(item, _no_params, info):
     perfdata = []
 
-    for enclosure_id, stat_name, stat_current, stat_peak, stat_peak_time in info:
+    for enclosure_id, stat_name, stat_current, _stat_peak, _stat_peak_time in info:
         if enclosure_id == item and stat_name == "power_w":
             stat_current = int(stat_current)
             perfdata = [ ('power', str(stat_current)+"Watt") ]
@@ -108,5 +108,3 @@ check_info["ibm_svc_enclosurestats.power"] = {
     "service_description"   : "Power Enclosure %s",
     "has_perfdata"          : True,
 }
-
-#.

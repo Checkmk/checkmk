@@ -58,9 +58,9 @@ def inventory_ibm_svc_disks(info):
 def check_ibm_svc_disks(_no_item, params, info):
     disks = []
     for line in info:
-        did, status, error_sequence_number, use, tech_type,\
-        capacity, mdisk_id, mdisk_name, member_id, enclosure_id,\
-        slot_id, node_id, node_name = line[:13]
+        _did, status, _error_sequence_number, use, tech_type,\
+        capacity, _mdisk_id, _mdisk_name, _member_id, enclosure_id,\
+        slot_id, _node_id, _node_name = line[:13]
 
         disk = {}
         disk['identifier'] = "Enclosure: %s, Slot: %s, Type: %s" % ( enclosure_id, slot_id, tech_type )
@@ -92,4 +92,3 @@ check_info["ibm_svc_disks"] = {
     'has_perfdata'            : True,
     'includes'                : ['filerdisks.include']
 }
-

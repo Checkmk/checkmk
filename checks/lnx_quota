@@ -133,9 +133,9 @@ def check_lnx_quota(item, params, parsed):
         # params were empty dictionary and enabled by standard user checking
         params = { 'user': True }
 
-    for param_key, perf_prefix, thing, name in [
-        ('user',  '',       'usr', 'users'),
-        ('group', 'group_', 'grp', 'groups')
+    for param_key, thing, name in [
+        ('user',  'usr', 'users'),
+        ('group', 'grp', 'groups')
        ]:
         if params.get(param_key) is True:
             at_least_one_problematic = False

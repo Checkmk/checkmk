@@ -29,7 +29,7 @@ def juniper_bgp_state_create_item(oid_end):
 
 def inventory_juniper_bgp_state(info):
     inventory = []
-    for oid_end, bgp_state, bgp_operational_state in info:
+    for oid_end, _bgp_state, _bgp_operational_state in info:
         inventory.append( (juniper_bgp_state_create_item(oid_end), None) )
     return inventory
 

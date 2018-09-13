@@ -109,7 +109,7 @@ def check_inotify(item, params, parsed):
         else:
             yield 0, "Last %s: %s ago" % (mode.title(), get_age_human_readable(now - attr["timestamp"]))
 
-    for mode, warn, crit in params.get("age_last_operation", []):
+    for mode, _warn, _crit in params.get("age_last_operation", []):
         if mode not in last_status:
             yield 3, "Last %s unknown" % mode.title()
 

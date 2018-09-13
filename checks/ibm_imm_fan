@@ -49,8 +49,6 @@ def check_ibm_imm_fan(item, params, info):
             rpm_perc = int(speed_text.strip().replace("[\"%]", " ").replace("%", " ").split(" ")[0])
             yield 0, "%d%% of max RPM" % rpm_perc
 
-            levels_info = ""
-
             warn_lower, crit_lower = params['levels_lower']
             warn, crit = params.get('levels', (None, None))
 

@@ -90,7 +90,7 @@
 
 def ibm_svc_nodestats_parse(info):
     parsed = {}
-    for node_id, node_name, stat_name, stat_current, stat_peak, stat_peak_time in info:
+    for _node_id, node_name, stat_name, stat_current, _stat_peak, _stat_peak_time in info:
         if stat_name in ("vdisk_r_mb", "vdisk_w_mb", "vdisk_r_io", "vdisk_w_io", "vdisk_r_ms", "vdisk_w_ms"):
             if "VDisks %s" % node_name not in parsed.keys():
                 parsed["VDisks %s" % node_name] = {}
@@ -224,13 +224,13 @@ ibm_svc_cpu_default_levels = ( 90.0, 95.0 )
 
 def inventory_ibm_svc_cpu(info):
     inventory = []
-    for node_id, node_name, stat_name, stat_current, stat_peak, stat_peak_time in info:
+    for _node_id, node_name, stat_name, _stat_current, _stat_peak, _stat_peak_time in info:
         if stat_name == "cpu_pc":
             inventory.append( (node_name, "ibm_svc_cpu_default_levels") )
     return inventory
 
 def check_ibm_svc_cpu(item, params, info):
-    for node_id, node_name, stat_name, stat_current, stat_peak, stat_peak_time in info:
+    for _node_id, node_name, stat_name, stat_current, _stat_peak, _stat_peak_time in info:
         if node_name == item and stat_name == "cpu_pc":
             return check_cpu_util(int(stat_current), params)
 
@@ -262,7 +262,7 @@ check_info["ibm_svc_nodestats.cpu_util"] = {
 
 def ibm_svc_cache_parse(info):
     parsed = {}
-    for node_id, node_name, stat_name, stat_current, stat_peak, stat_peak_time in info:
+    for _node_id, node_name, stat_name, stat_current, _stat_peak, _stat_peak_time in info:
         if stat_name in ("write_cache_pc", "total_cache_pc"):
             if node_name not in parsed.keys():
                 parsed[node_name] = {}
@@ -293,5 +293,3 @@ check_info["ibm_svc_nodestats.cache"] = {
     "service_description"   : "Cache %s",
     "has_perfdata"          : True,
 }
-
-#.

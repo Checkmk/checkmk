@@ -42,7 +42,7 @@ def ifoperstatus_statename(st):
     return names.get(st, st)
 
 def check_ifoperstatus(item, targetstate, info):
-    for name, hwtype, operstatus in info:
+    for name, _hwtype, operstatus in info:
         if item == name:
             operstatus = ifoperstatus_statename(operstatus)
             if not isinstance(targetstate, list):

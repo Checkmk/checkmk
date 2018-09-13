@@ -107,7 +107,7 @@ check_info['ibm_storage_ts.status'] = {
 
 
 def inventory_ibm_storage_ts_library(info):
-    for entry, status, serial, count, fault, severity, descr in info[2]:
+    for entry, _status, _serial, _count, _fault, _severity, _descr in info[2]:
          yield entry, None
 
 
@@ -137,7 +137,7 @@ check_info['ibm_storage_ts.library'] = {
 
 
 def inventory_ibm_storage_ts_drive(info):
-    for entry, serial, write_warn, write_err, read_warn, read_err in info[3]:
+    for entry, _serial, _write_warn, _write_err, _read_warn, _read_err in info[3]:
          yield entry, None
 
 
@@ -162,4 +162,3 @@ check_info['ibm_storage_ts.drive'] = {
     'inventory_function'  : inventory_ibm_storage_ts_drive,
     'service_description' : 'Drive %s',
 }
-

@@ -31,7 +31,7 @@
 
 
 def inventory_ispro_sensors_humid(info):
-    return [ (name, None) for name, reading_str, status in info
+    return [ (name, None) for name, _reading_str, status in info
              if status not in [ "1", "2" ] ]
 
 

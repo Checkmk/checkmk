@@ -35,7 +35,7 @@
 
 def inventory_ibm_tl_changer_devices(info):
     return [ (name.replace("Logical_Library:", "").strip(), None)
-             for name, avail, status in info ]
+             for name, _avail, _status in info ]
 
 
 def check_ibm_tl_changer_devices(item, params, info):

@@ -74,7 +74,7 @@
 
 def ibm_svc_systemstats_parse(info):
     parsed = {}
-    for stat_name, stat_current, stat_peak, stat_peak_time in info:
+    for stat_name, stat_current, _stat_peak, _stat_peak_time in info:
         if stat_name in ("vdisk_r_mb", "vdisk_w_mb", "vdisk_r_io", "vdisk_w_io", "vdisk_r_ms", "vdisk_w_ms"):
             if "VDisks" not in parsed.keys():
                 parsed["VDisks"] = {}
@@ -216,13 +216,13 @@ ibm_svc_cpu_default_levels = ( 90.0, 95.0 )
 
 def inventory_ibm_svc_systemstats_cpu(info):
     inventory = []
-    for stat_name, stat_current, stat_peak, stat_peak_time in info:
+    for stat_name, _stat_current, _stat_peak, _stat_peak_time in info:
         if stat_name == "cpu_pc":
             inventory.append( (None, "ibm_svc_cpu_default_levels") )
     return inventory
 
 def check_ibm_svc_systemstats_cpu(item, params, info):
-    for stat_name, stat_current, stat_peak, stat_peak_time in info:
+    for stat_name, stat_current, _stat_peak, _stat_peak_time in info:
         if stat_name == "cpu_pc":
             return check_cpu_util(int(stat_current), params)
 
@@ -248,7 +248,7 @@ check_info["ibm_svc_systemstats.cpu_util"] = {
 
 def inventory_ibm_svc_systemstats_cache(info):
     inventory = []
-    for stat_name, stat_current, stat_peak, stat_peak_time in info:
+    for stat_name, _stat_current, _stat_peak, _stat_peak_time in info:
         if stat_name == "total_cache_pc":
             inventory.append( (None, None) )
     return inventory
@@ -257,7 +257,7 @@ def check_ibm_svc_systemstats_cache(item, _no_params, info):
     write_cache_pc = None
     total_cache_pc = None
 
-    for stat_name, stat_current, stat_peak, stat_peak_time in info:
+    for stat_name, stat_current, _stat_peak, _stat_peak_time in info:
         if stat_name == "total_cache_pc":
             total_cache_pc = int(stat_current)
         if stat_name == "write_cache_pc":
@@ -280,5 +280,3 @@ check_info["ibm_svc_systemstats.cache"] = {
     "service_description"   : "Cache Total",
     "has_perfdata"          : True,
 }
-
-#.

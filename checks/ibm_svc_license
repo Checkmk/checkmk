@@ -65,8 +65,6 @@ def inventory_ibm_svc_license(info):
 def check_ibm_svc_license(item, params, info):
     licenses = parse_ibm_svc_license(info)
     licensed, used = licenses[item]
-    perfdata = [ ("licensed", licensed), ("used", used) ]
-
     return license_check_levels(licensed, used, params)
 
 check_info["ibm_svc_license"] = {
@@ -77,4 +75,3 @@ check_info["ibm_svc_license"] = {
     "has_perfdata"          : True,
     "includes"              : [ "license.include" ]
 }
-

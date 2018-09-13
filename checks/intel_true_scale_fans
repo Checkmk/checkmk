@@ -61,7 +61,7 @@
 
 def inventory_intel_true_scale_fans(info):
     return [ (fan_name.replace("Fan", "").strip(), None)
-              for fan_name, operstate, speed_state in info
+              for fan_name, operstate, _speed_state in info
               if operstate != "4"]
 
 

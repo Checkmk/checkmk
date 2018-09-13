@@ -98,15 +98,20 @@ def check_ibm_svc_mdiskgrp(item, params, info):
             # Compute provisioning
             if not capacity:
                 return # provisioning does not make sense when capacity is 0
+
             provisioning = 100.0 * virtual_capacity / capacity
+            infotext = "Provisioning: %s" % get_percent_human_readable(provisioning)
+            state = 0
             if "provisioning_levels" in params:
                 warn, crit = params["provisioning_levels"]
                 if provisioning >= crit:
                     state = 2
                 elif provisioning >= warn:
                     state = 1
-                else:
-                    state = 0
+                if state:
+                    infotext += " (warn/crit at %s/%s)" % (
+                                get_percent_human_readable(warn),
+                                get_percent_human_readable(crit))
                 warn_mb = capacity * mb * warn / 100
                 crit_mb = capacity * mb * crit / 100
             else:
@@ -115,8 +120,8 @@ def check_ibm_svc_mdiskgrp(item, params, info):
 
             # Note: Performance data is now (with new metric system) normed to
             # canonical units - i.e. 1 byte in this case.
-            yield 0, "Provisioning: %s" % get_percent_human_readable(provisioning), \
-              [ ( "fs_provisioning", virtual_capacity*mb, warn_mb, crit_mb, 0, capacity * mb) ]
+            yield state, infotext, [("fs_provisioning", virtual_capacity*mb,
+                                     warn_mb, crit_mb, 0, capacity * mb)]
 
 
 

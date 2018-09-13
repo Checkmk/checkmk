@@ -205,11 +205,14 @@ def parse_lnx_if(info):
             else:
                 ifPhysAddress = ''
 
-            if_table.append(map(str, [
-              node_info, ifIndex, ifDescr, ifType, ifSpeed, ifOperStatus,
+
+            row = [ node_info ] + map(str, [
+              ifIndex, ifDescr, ifType, ifSpeed, ifOperStatus,
               ifInOctets, inucast, inmcast, inbcast, ifInDiscards,
               ifInErrors, ifOutOctets, outucast, outmcast, outbcast,
-              ifOutDiscards, ifOutErrors, ifOutQLen, ifAlias, ifPhysAddress ]))
+              ifOutDiscards, ifOutErrors, ifOutQLen, ifAlias, ifPhysAddress ])
+
+            if_table.append(row)
 
     return if_table
 

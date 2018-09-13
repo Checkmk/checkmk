@@ -28,18 +28,20 @@
 import os
 import sys
 import time
+import tempfile
 import pprint
 import threading
 import multiprocessing
-from cStringIO import StringIO
-
-import cmk
-import cmk.log
-import cmk.store as store
+import io
 import psutil
 import shutil
 import signal
 import traceback
+import logging
+
+import cmk
+import cmk.log
+import cmk.store as store
 from cmk.exceptions import MKGeneralException
 
 #.
@@ -211,8 +213,8 @@ class BackgroundProcess(multiprocessing.Process):
         if not self._logger:
             self._logger = cmk.log.logger
 
-        sys.stderr = StreamLogger(self._logger, cmk.log.ERROR)
-        sys.stdout = StringIO()
+        self._open_stdout_and_stderr()
+        self._enable_logging_to_stdout()
 
         self._job_parameters["logger"] = self._logger
 
@@ -221,15 +223,16 @@ class BackgroundProcess(multiprocessing.Process):
 
 
     def _execute_function(self):
-        # The specific function is called in a separate thread
-        # The main thread collects the stdout from the function-thread and updates the status file accordingly
+        # The specific function is called in a separate thread The main thread
+        # collects the output produced by the function-thread and updates the
+        # status file accordingly
         t = threading.Thread(target=self._call_function_with_exception_handling, args=[self._job_parameters])
         t.start()
 
         last_progress_info = ""
         while t.isAlive():
             time.sleep(0.2)
-            progress_info = sys.stdout.getvalue() # pylint: disable=no-member
+            progress_info = self._read_output()
             if progress_info != last_progress_info:
                 self._jobstatus.update_status({"progress_info": BackgroundProcessInterface.parse_progress_info(progress_info)})
                 last_progress_info = progress_info
@@ -237,8 +240,7 @@ class BackgroundProcess(multiprocessing.Process):
 
         # Final progress info update
         job_status_update = {}
-        progress_info = sys.stdout.getvalue() # pylint: disable=no-member
-
+        progress_info = self._read_output()
         if progress_info != last_progress_info:
              job_status_update.update({"progress_info": BackgroundProcessInterface.parse_progress_info(progress_info)})
 
@@ -270,25 +272,27 @@ class BackgroundProcess(multiprocessing.Process):
             job_interface.send_exception(_("Exception: %s") % (e))
 
 
-
-# TODO(ab): Wouldn't it be better to also write the stderr to the job results instead of just writing
-#           it to the web.log?
-class StreamLogger(object):
-    """File like stream object to redirects writes to the given logger"""
-    def __init__(self, logger, level):
-        super(StreamLogger, self).__init__()
-        self._logger = logger
-        self._level = level
-        self._linebuf = ''
+    def _open_stdout_and_stderr(self):
+        """Create a temporary file and use it as stdout / stderr buffer"""
+        # We can not use io.BytesIO() or similar because we need real file descriptors
+        # to be able to catch the (debug) output of libraries like libldap or subproccesses
+        sys.stdout = sys.stderr = tempfile.TemporaryFile(mode='w+b')
+        os.dup2(sys.stdout.fileno(), 1)
+        os.dup2(sys.stderr.fileno(), 2)
 
 
-    def write(self, buf):
-        for line in buf.rstrip().splitlines():
-            self._logger.log(self._level, line.rstrip())
+    def _read_output(self):
+        sys.stderr.flush()
+        sys.stderr.seek(0, io.SEEK_SET)
+        return sys.stderr.read()
 
 
-    def flush(self):
-        pass
+    def _enable_logging_to_stdout(self):
+        """In addition to the web.log we also want to see the job specific logs
+        in stdout (which results in job progress info)"""
+        handler = logging.StreamHandler(stream=sys.stdout)
+        handler.setFormatter(cmk.log.get_formatter())
+        cmk.log.logger.addHandler(handler)
 
 
 
@@ -519,6 +523,9 @@ class BackgroundJob(object):
         p = multiprocessing.Process(target=self._start_background_subprocess, args=[job_parameters])
         p.start()
         p.join()
+
+        job_status = self.get_status()
+        self._logger.debug("Started job \"%s\" (PID: %d)" % (self._job_id, job_status["pid"]))
 
 
     def _start_background_subprocess(self, job_parameters):

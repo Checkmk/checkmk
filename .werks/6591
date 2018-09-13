@@ -1,0 +1,11 @@
+Title: if: Network appliances with only one network interface were not discovered
+Level: 2
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.4.0p36
+Date: 1536827625
+
+

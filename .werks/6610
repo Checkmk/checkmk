@@ -1,0 +1,13 @@
+Title: Fixed possible XSS using the dokuwiki snapin
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 1.4.0p36
+Date: 1536863484
+Class: security
+
+The content of the DokuWiki page named "sidebar" was inserted into the DokuWiki
+view of Check_MK, but was is not correctly sanitized. This can only be done by
+an administrator of the page, but every user who can access the DokuWiki view
+was affected by the vulnerability.

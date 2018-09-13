@@ -1,0 +1,10 @@
+Title: Fixed possible XSS on agent update status views
+Level: 1
+Component: agents
+Compatible: compat
+Edition: cee
+Version: 1.4.0p36
+Date: 1536861157
+Class: security
+
+Parts of the agent deployment status could be used to trigger XSS injections.

@@ -185,7 +185,7 @@ def parse_ucs_bladecenter_if(info):
           ("interconnect", "Interconnect-Group", icnt_interfaces, "Slot %s IC-Switch %s Port %s"),
     ]:
         index = 0
-        for index, (name, values) in enumerate(interfaces.items()):
+        for index, (_name, values) in enumerate(interfaces.iteritems()):
             item = item_template % ( values.get("SlotId"),
                                      values.get("SwitchId"),
                                      values.get("PortId") )

@@ -40,12 +40,12 @@ def qlogic_fcport_generate_port_id(port_id):
 def inventory_qlogic_fcport(info):
     inventory = []
 
-    for port_id, oper_mode, admin_status, oper_status, link_failures, \
-        sync_losses, prim_seq_proto_errors, invalid_tx_words, invalid_crcs, \
-        address_id_errors, link_reset_ins, link_reset_outs, ols_ins, \
-        ols_outs, c2_in_frames, c2_out_frames, c2_in_octets, c2_out_octets, \
-        c2_discards, c2_fbsy_frames, c2_frjt_frames, c3_in_frames, \
-        c3_out_frames, c3_in_octets, c3_out_octets, c3_discards in info:
+    for port_id, _oper_mode, admin_status, oper_status, _link_failures, \
+        _sync_losses, _prim_seq_proto_errors, _invalid_tx_words, _invalid_crcs, \
+        _address_id_errors, _link_reset_ins, _link_reset_outs, _ols_ins, \
+        _ols_outs, _c2_in_frames, _c2_out_frames, _c2_in_octets, _c2_out_octets, \
+        _c2_discards, _c2_fbsy_frames, _c2_frjt_frames, _c3_in_frames, \
+        _c3_out_frames, _c3_in_octets, _c3_out_octets, _c3_discards in info:
 
         # There are devices out there which are totally missing the status related
         # SNMP tables. In this case we add all interfaces.

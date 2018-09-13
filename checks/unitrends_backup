@@ -56,7 +56,7 @@ def check_unitrends_backup(item, _no_params, info):
 
         if line[0] == "HEADER" and line[1] == item:
             found = True
-            head, sched_name, app_name, sched_desc, failures = line
+            _head, _sched_name, app_name, sched_desc, failures = line
             message = "%s Errors in last 24/h for Application %s (%s) " % \
             ( failures, app_name, sched_desc )
 
@@ -73,4 +73,3 @@ check_info["unitrends_backup"] = {
     "inventory_function"    : inventory_unitrends_backup,
     "service_description"   : "Schedule %s",
 }
-

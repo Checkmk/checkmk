@@ -27,7 +27,7 @@
 
 def inventory_unitrends_replication(info):
     inventory = []
-    for application, result, complete, target, instance in info:
+    for _application, _result, _complete, target, _instance in info:
         if target not in [ x[0] for x in inventory ]:
             inventory.append( (target, None) )
     return inventory
@@ -41,7 +41,7 @@ def check_unitrends_replication(item, _no_params, info):
     if len(not_successfull) == 0:
         return 0, "All Replications in the last 24 hours Successfull"
     messages = []
-    for application, result, complete, target, instance in not_successfull:
+    for _application, result, _complete, target, instance in not_successfull:
         messages.append( "Target: %s, Result: %s, Instance: %s  " % ( target, result, instance ))
     # TODO: Maybe a good place to use multiline output here
     return 2, "Errors from the last 24 hours: " + "/ ".join(messages)
@@ -51,4 +51,3 @@ check_info["unitrends_replication"] = {
     "inventory_function"    : inventory_unitrends_replication,
     "service_description"   : "Replicaion %s",
 }
-

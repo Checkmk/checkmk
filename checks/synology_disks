@@ -25,7 +25,7 @@
 # Boston, MA 02110-1301 USA.
 
 def inventory_synology_disks(info):
-    for disk, model, status, temperature in info:
+    for disk, model, status, _temperature in info:
         # SSD used as cache are "not initialized". We remember that
         # here.
         if "SSD" in model and status == '3':
@@ -76,4 +76,3 @@ check_info["synology_disks"] = {
                               ]),
     "includes"              : [ "synology.include" ]
 }
-

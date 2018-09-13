@@ -25,7 +25,7 @@
 # Boston, MA 02110-1301 USA.
 
 def inventory_stormshield_services(info):
-    for id_, name, state, uptime in info:
+    for name, state, _uptime in info:
         if state == '1':
             yield name, {}
 
@@ -35,7 +35,7 @@ def check_stormshield_services(item, params, info):
         '0' :   'down',
         '1' :   'up'
         }
-    for id_, name, state, uptime in info:
+    for name, state, uptime in info:
         if name == item:
             m, s = divmod(int(uptime), 60)
             h, m = divmod(m, 60)
@@ -58,7 +58,6 @@ check_info['stormshield_services'] = {
     'service_description'       : 'Service %s',
     'has_perfdata'              : True,
     'snmp_info'                 : ('.1.3.6.1.4.1.11256.1.7.1.1', [
-                                  '1',    # snsServicesIndex
                                   '2',    # snsServicesName
                                   '3',    # snsServicesState
                                   '4'     # snsServicesUptime

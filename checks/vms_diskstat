@@ -42,7 +42,7 @@ def inventory_vms_diskstat_fs(info):
 def check_vms_diskstat_fs(item, params, info):
     for line in info:
         if line[1] == item:
-            device, label, size, used, ios = line
+            _device, _label, size, used, _ios = line
             size_mb = int(size) * 512 / (1024.0 * 1024.0)
             avail_mb = int(used) * 512 / (1024.0 * 1024.0)
             return df_check_filesystem_single(item, size_mb, avail_mb, 0, None, None, params)

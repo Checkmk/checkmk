@@ -121,11 +121,6 @@ def check_tinkerforge_ambient(item, params, parsed):
 
 
 def check_tinkerforge_humidity(item, params, parsed):
-    def expect_order(*args):
-        arglist = [x for x in args if x is not None]
-        sorted_by_val = sorted(enumerate(arglist), key=lambda x: x[1])
-        return max([abs(x[0] - x[1][0]) for x in enumerate(sorted_by_val)])
-
     if 'humidity' in parsed and item in parsed['humidity']:
         return check_humidity(float(parsed['humidity'][item][0]) / 10.0, params)
 
@@ -200,4 +195,3 @@ check_info['tinkerforge.motion'] = {
     'group'                   : 'motion',
     'service_description'     : "Motion Detector %s",
 }
-

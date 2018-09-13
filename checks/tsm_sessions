@@ -38,15 +38,11 @@ def check_tsm_sessions(item, params, info):
     count = 0
     for entry in info:
         if len(entry) == 4:
-            sid, client_name, proc_state, wait = entry
-
+            _sid, _client_name, proc_state, wait = entry
         elif len(entry) > 4:
-            sid = entry[0]
             proc_state, wait = entry[-2:]
-            client_name = " ".join(entry[1:-2])
-
         else:
-            sid, proc_state, wait = entry
+            _sid, proc_state, wait = entry
 
         if proc_state in ['RecvW', 'MediaW']:
             wait = saveint(wait)
@@ -64,4 +60,3 @@ check_info["tsm_sessions"] = {
     "inventory_function"    : inventory_tsm_sessions,
     "service_description"   : "tsm_sessions",
 }
-

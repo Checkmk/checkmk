@@ -114,7 +114,7 @@ check_info['supermicro']  = {
 #   '----------------------------------------------------------------------'
 
 def inventory_supermicro_sensors(info):
-    for name, sensor_type, reading, high, low, unit, status in info[0]:
+    for name, _sensor_type, _reading, _high, _low, _unit, _status in info[0]:
         yield name, None
 
 def check_supermicro_sensors(item, _no_params, info):
@@ -199,7 +199,7 @@ def format_item_supermicro_smart(name):
 
 
 def inventory_supermicro_smart(info):
-    for serial, name, status in info[2]:
+    for _serial, name, _status in info[2]:
         yield format_item_supermicro_smart(name), None
 
 
@@ -225,6 +225,3 @@ check_info['supermicro.smart']  = {
     'service_description' : "SMART Health %s",
     'has_perfdata'        : True,
 }
-
-#.
-

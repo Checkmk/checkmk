@@ -36,7 +36,7 @@ def check_vms_queuejobs(_no_item, params, info):
     names = []
     max_cpu_secs = 0
     max_cpu_job = None
-    for id, name, state, cpu_days, cpu_time, ios, pgfaults in info:
+    for _id, name, _state, cpu_days, cpu_time, _ios, _pgfaults in info:
         names.append(name)
         hours, minutes, seconds = map(float, cpu_time.split(":"))
         cpu_secs = int(cpu_days) * 86400 + hours * 3600 + minutes * 60 + seconds

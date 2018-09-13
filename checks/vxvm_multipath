@@ -34,7 +34,7 @@
 
 def check_vxvm_multipath(item, params, info):
     state = 0
-    for disk, status_txt, enc_type, paths, paths_act, paths_inact, enclosure in info:
+    for disk, status_txt, _enc_type, paths, paths_act, paths_inact, enclosure in info:
         if disk == item:
             if paths_act != paths and float(paths_act) >= float(paths) / 2:
                 state = 1

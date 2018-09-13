@@ -78,13 +78,13 @@
 
 
 def inventory_storeonce_stores(parsed):
-    for key, values in parsed.iteritems():
+    for values in parsed.itervalues():
         yield ("ServiceSet %s Store %s" % \
                 (values["ServiceSet ID"], values["Name"]), \
                 {})
 
 def check_storeonce_stores(item, params, parsed):
-    for key, values in parsed.iteritems():
+    for values in parsed.itervalues():
         item_name = "ServiceSet %s Store %s" % \
                 (values["ServiceSet ID"], values["Name"])
         if not item == item_name:

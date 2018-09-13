@@ -100,7 +100,6 @@ def inventory_solaris_services(parsed):
     def get_svc_name(svc_attrs):
         return "%s/%s:%s" % (svc_attrs["category"], svc_attrs["name"], svc_attrs["instance"])
 
-    services = {}
     for rule in inventory_solaris_services_rules:
         settings = rule[0]
         descriptions = settings.get("descriptions", [])

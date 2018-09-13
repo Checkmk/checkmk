@@ -52,7 +52,7 @@ def parse_storcli_pdisks(info):
         if line[0].startswith("-----"):
             separator_count += 1
         elif separator_count == 2:
-            eid_and_slot, device, state, drivegroup, size, size_unit = line[:6]
+            eid_and_slot, device, state, _drivegroup, size, size_unit = line[:6]
             parsed[eid_and_slot + "-" + device] = {
                 "state"     : statenames.get(state, state),
                 "size"      : (float(size), size_unit)

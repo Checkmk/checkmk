@@ -25,6 +25,7 @@
 # Boston, MA 02110-1301 USA.
 
 
+
 factory_settings['ups_modulys_battery_default_levels'] = {
     "capacity": (95, 90),
     "battime": (0, 0)
@@ -38,7 +39,7 @@ def inventory_ups_modulys_battery(info):
 def check_ups_modulys_battery(item, params, info):
     warn_left, crit_left = params["battime"]
     warn_perc, crit_perc = params["capacity"]
-    for condition, elapsed_sec, remaining_min, capacity, temperature in info:
+    for condition, elapsed_sec, remaining_min, capacity, _temperature in info:
         condition, elapsed_sec, capacity = [int(x) for x in (condition, elapsed_sec, capacity)]
         if elapsed_sec == 0:
             # not on battery so the it will not run out
@@ -108,13 +109,13 @@ check_info["ups_modulys_battery"] = {
 
 
 def inventory_ups_modulys_battery_temp(info):
-    for condition, elapsed_sec, remaining_min, capacity, temperature in info:
+    for _condition, _elapsed_sec, _remaining_min, _capacity, temperature in info:
         if temperature:
             yield "Battery", {}
 
 
 def check_ups_modulys_battery_temp(item, params, info):
-    for condition, elapsed_sec, remaining_min, capacity, temperature in info:
+    for _condition, _elapsed_sec, _remaining_min, _capacity, temperature in info:
         return check_temperature(int(temperature), params, "ups_modulys_battery_temp_%s" % item)
 
 

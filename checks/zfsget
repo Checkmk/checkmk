@@ -63,7 +63,7 @@ def parse_zfs_entry(info):
     def mb(x):
         return saveint(x) / (1024.0 * 1024)
     entry = {}
-    for name, what, value in info:
+    for _name, what, value in info:
         if what in ["used", "available"]:
             entry[what] = mb(value)
         elif what == "quota":
@@ -105,9 +105,9 @@ def parse_zfsget(info):
 
         if run_df:
             if len(line) == 6:
-                device, kbytes, used, avail, percent, mountpoint = line
+                device, kbytes, used, avail, _percent, mountpoint = line
             else:
-                device, fs_type, kbytes, used, avail, percent, mountpoint = line
+                device, _fs_type, kbytes, used, avail, _percent, mountpoint = line
             if mountpoint.startswith("/"):
                 entry = {}
                 entry["name"] = device
@@ -175,7 +175,7 @@ def parse_zfsget(info):
 def inventory_zfsget(info):
     mplist = []
     parsed = parse_zfsget(info)
-    for mountpoint, properties in parsed.items():
+    for mountpoint in parsed.iterkeys():
         if mountpoint not in inventory_df_exclude_mountpoints:
             mplist.append(mountpoint)
     return df_inventory(mplist)

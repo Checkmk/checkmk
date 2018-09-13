@@ -1,0 +1,62 @@
+Title: Timespecific check parameters: Changed computation algorithm to allow more flexible configurations
+Level: 2
+Component: wato
+Compatible: incomp
+Edition: cre
+Version: 1.5.0p5
+Date: 1537779080
+Class: feature
+
+Werk #4840 introduced timespecific parameters, which allowed timedependant check parameter
+configuration through timeperiods. Customer feedback has shown that these configuration were
+not flexible enough. Thats why we've changed the computation algorithm.
+The new algorithm only affects dictionary based check parameters, tuple based check parameters remain unchanged.
+
+H3:Ruleset example old configuration (deprecated with this werk)
+<ul>
+<li>Use parameters {"warn": 90} on saturday, default {"warn": 75, "crit": 80}</li>
+<li>Use parameters {"warn": 85, "crit": 92"} on weekend, default {"warn": 70, "crit": 75, "bandwidth": 1000}</li>
+<li>Use parameters {"check_mode": "auto"} (no timespecific rule)</li>
+</ul>
+The old mechanism created the following parameters
+<ul>
+<li>Monday till Friday: {"warn": 75, "crit": 80"}</li>
+<li>Saturday: {"warn": 90}</li>
+<li>Sunday: {"warn": 75, "crit": 80}</li>
+</ul>
+As you can see, only the parameters from the first rule were taken into account.
+
+
+H3:Ruleset example new configuration
+<ul>
+<li>Use parameters {"warn": 90} on saturday, default {"warn": 75, "crit": 80}</li>
+<li>Use parameters {"warn": 85, "crit": 92"} on weekend, default {"warn": 70, "crit": 75, "bandwidth": 1000}</li>
+<li>Use parameters {"check_mode": "auto"} (no timespecific rule)</li>
+</ul>
+
+The new mechanism now creates the following parameters
+<ul>
+<li>Monday till Friday: {"warn": 75, "crit": 80", "check_mode": "auto"}</li>
+<li>Saturday: {"warn": 90, "crit": 80, "bandwith": 1000, "check_mode": "auto"}</li>
+<li>Sunday: {"warn": 85, "crit": 92, "bandwith": 1000, "check_mode": "auto"}</li>
+</ul>
+As you can see, only the parameters from the first rule were taken into account.
+
+The rule evaluation now starts at the bottom rule and then progresses to the top rule.
+For each rule, first of all the default parameters are applied. Afterwards the timespecific
+component(s) are applied. If a single rule have more than one timespecific parameter,
+these parameters are merged, too.
+
+For example:
+<ul>
+<li>Use parameters {"warn": 75, "crit": 80, "check_mode": "auto"} on Saturday 10-14h, Use parameters {"special_parameter": True} on Saturday 12-14h</li>
+<li>Use parameters {"warn": 85, "crit": 92"} on weekend, default {"warn": 70, "crit": 75, "bandwidth": 1000}</li>
+<li>Use parameters {"check_mode": "auto"} (no timespecific rule)</li>
+</ul>
+Result
+<ul>
+<li>Saturday 11:00: {"warn": 75, "crit": 80, "bandwidth": 1000, "check_mode": "auto"}</li>
+<li>Saturday 13:00: {"warn": 75, "crit": 80, "bandwidth": 1000, "check_mode": "auto", "special_parameter": True}</li>
+</ul>
+
+

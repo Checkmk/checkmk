@@ -30,6 +30,7 @@ import os
 import signal
 import tempfile
 import time
+import copy
 
 import cmk
 import cmk.defines as defines
@@ -322,7 +323,7 @@ def execute_check(multi_host_sections, hostname, ipaddress, check_plugin_name, i
         # Call the actual check function
         item_state.reset_wrapped_counters()
 
-        raw_result = check_function(item, _determine_check_params(params), section_content)
+        raw_result = check_function(item, determine_check_params(params), section_content)
         result = sanitize_check_result(raw_result, checks.is_snmp_check(check_plugin_name))
 
         item_state.raise_counter_wrap()
@@ -370,27 +371,57 @@ def execute_check(multi_host_sections, hostname, ipaddress, check_plugin_name, i
     return True
 
 
-def _determine_check_params(params):
-    if isinstance(params, dict) and "tp_default_value" in params:
-        for timeperiod, tp_params in params["tp_values"]:
-            try:
-                tp_result = core.timeperiod_active(timeperiod)
-            except:
-                if cmk.debug.enabled():
-                    raise
-                tp_result = None
+def determine_check_params(entries):
+    if not isinstance(entries, cmk_base.checks.TimespecificParamList):
+        return entries
 
-            if tp_result == True:
-                return tp_params
-            elif tp_result == False:
-                continue
-            elif tp_result == None:
-                # Connection error
-                return params["tp_default_value"]
+
+    # Check if first entry is not dict based or if its dict based
+    # check if the tp_default_value is not a dict
+    if not isinstance(entries[0], dict) or \
+       not isinstance(entries[0].get("tp_default_value", {}), dict):
+        # This rule is tuple based, means no dict-key merging
+        if not isinstance(entries[0], dict):
+            return entries[0] # A tuple rule, simply return first match
+        return _evaluate_timespecific_entry(entries[0]) # A timespecific rule, determine the correct tuple
+
+    # This rule is dictionary based, evaluate all entries and merge matching keys
+    timespecific_entries = {}
+    for entry in entries[::-1]:
+        timespecific_entries.update(_evaluate_timespecific_entry(entry))
+
+    return timespecific_entries
+
+
+def _evaluate_timespecific_entry(entry):
+    # Dictionary entries without timespecific settings
+    if "tp_default_value" not in entry:
+        return entry
+
+    # Timespecific entry, start with default value and update with timespecific entry
+    # Note: This combined_entry may be a dict or tuple, so the update mechanism must handle this correctly
+    # A shallow copy is sufficient
+    combined_entry = copy.copy(entry["tp_default_value"])
+    for timeperiod_name, tp_entry in entry["tp_values"][::-1]:
+        try:
+            tp_active = core.timeperiod_active(timeperiod_name)
+        except:
+            # Connection error
+            if cmk.debug.enabled():
+                raise
+            break
+
+        if not tp_active:
+            continue
+
+        # If multiple timeperiods are active, their settings are also merged
+        # This follows the same logic than merging different rules
+        if isinstance(combined_entry, dict):
+            combined_entry.update(tp_entry)
         else:
-            return params["tp_default_value"]
-    else:
-        return params
+            combined_entry = tp_entry
+
+    return combined_entry
 
 
 def is_manual_check(hostname, check_plugin_name, item):

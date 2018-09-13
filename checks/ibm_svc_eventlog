@@ -42,7 +42,7 @@ def check_ibm_svc_eventlog(item, _no_params, info):
     messagecount = 0
     last_err = ""
 
-    for sequence_number, last_timestamp, object_type, object_id, object_name, copy_id, status, fixed, event_id, error_code, description in info:
+    for _sequence_number, _last_timestamp, _object_type, _object_id, _object_name, _copy_id, _status, _fixed, _event_id, _error_code, description in info:
         messagecount += 1
         last_err = description
 
@@ -57,4 +57,3 @@ check_info["ibm_svc_eventlog"] = {
     "inventory_function"    : inventory_ibm_svc_eventlog,
     "service_description"   : "Eventlog",
 }
-

@@ -62,9 +62,9 @@ def check_ibm_svc_enclosure(item, _no_params, info):
             if len(line) < 17: # old format
                 line = line + ["0", "0"] # do not modify line!
 
-            enclosure_id, enclosure_status, enclosure_type, managed, IO_group_id, \
-                IO_group_name, product_MTM, serial_number, total_canisters, online_canisters, \
-                total_PSUs, online_PSUs, drive_slots, total_fan_modules, online_fan_modules, \
+            enclosure_id, enclosure_status, _enclosure_type, _managed, _IO_group_id, \
+                _IO_group_name, _product_MTM, _serial_number, total_canisters, online_canisters, \
+                total_PSUs, online_PSUs, _drive_slots, total_fan_modules, online_fan_modules, \
                 total_secondary_expander_modules, online_secondary_expander_modules = line
 
             # Check status
@@ -114,4 +114,3 @@ check_info["ibm_svc_enclosure"] = {
     "inventory_function"    : inventory_ibm_svc_enclosure,
     "service_description"   : "Enclosure %s",
 }
-

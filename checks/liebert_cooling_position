@@ -40,7 +40,7 @@ def inventory_liebert_cooling_position(parsed):
             yield (key, {})
 
 def check_liebert_cooling_position(item, params, parsed):
-    for key, values in parsed.iteritems():
+    for values in parsed.itervalues():
         if not "Unavailable" in values[0]:
             value = float(values[0])
             unit = values[1]

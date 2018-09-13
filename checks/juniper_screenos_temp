@@ -29,7 +29,7 @@ factory_settings["juniper_screenos_temp_default_levels"] = {
 }
 
 def inventory_juniper_screenos_temp(info):
-    for name, temp in info:
+    for name, _temp in info:
         if name.endswith("Temperature"):
             name = name.rsplit(None, 1)[0]
         yield name, {}

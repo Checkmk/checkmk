@@ -49,8 +49,6 @@ def check_lnx_thermal(item, params, info):
         if line[0].replace('thermal_zone', 'Zone ') == item or\
                 line[0].replace('thermal_zone', '') == item:
             # ['thermal_zone0', 'enabled', 'acpitz', '51000', '90000', 'critical', '79000', 'passive']
-            state = 0
-            tp_reached = []
 
             # Some devices report an empty value for the 3rd field (type). Trying to fix those lines.
             # -> thermal_zone1 pkg-temp-0  44000 0 passive 0 passive
@@ -69,7 +67,7 @@ def check_lnx_thermal(item, params, info):
             dev_crit = None
             if len(line) > 4:
                 trip_points = dict(zip(line[5::2], [int(x) / 1000.0 for x in line[4::2]]))
-                for tp_num, (tp_name, level) in enumerate(trip_points.items()):
+                for tp_name, level in trip_points.iteritems():
                     # ignore active cooling device trip points (means enabling a fan or similar)
                     if tp_name == 'active':
                         continue

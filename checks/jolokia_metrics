@@ -76,7 +76,6 @@ def jolokia_metrics_parse(info):
             continue
 
         inst, var, value = line
-        module  = None
         attributes = {}
         positional = []
 
@@ -87,7 +86,7 @@ def jolokia_metrics_parse(info):
 
             for part in parts[1:]:
                 if ":" in part:
-                    module, part = part.split(":", 1)
+                    _module, part = part.split(":", 1)
                 if "=" in part:
                     key, val = part.split("=")
                     attributes[key] = val
@@ -379,7 +378,7 @@ def inventory_jolokia_metrics_gc(info):
     for inst, vals in parsed.iteritems():
         if vals is None:
             continue # no data from agent
-        for gc, val in vals.get('gc', {}).iteritems():
+        for gc in vals.get('gc', {}).iterkeys():
             inv.append(("%s GC %s" % (inst ,gc) , {}))
     return inv
 
@@ -461,7 +460,7 @@ def inventory_jolokia_metrics_tp(info):
     for inst, vals in parsed.iteritems():
         if vals is None:
             continue # no data from agent
-        for tp, val in vals.get('tp', {}).iteritems():
+        for tp in vals.get('tp', {}).iterkeys():
             inv.append(("%s ThreadPool %s" % (inst ,tp) , {}))
     return inv
 
@@ -983,11 +982,9 @@ def check_jolokia_metrics_cache(metrics, totals, item, params, info):
 
         # we display the "metrics" first, totals after, but to "fix" metrics based on zero-totals
         # we need to go over the totals once
-        totals_zero = len(totals) > 0
         for total in totals:
             val = int(parsed[inst]["CacheStatistics"][cache][total])
             if val != 0:
-                totals_zero = False
                 break
 
         for metric in metrics:
@@ -1005,7 +1002,7 @@ def check_jolokia_metrics_cache(metrics, totals, item, params, info):
             type_, scale, format = type_map.get(total, (int, 1,"%d"))
             val = type_(parsed[inst]["CacheStatistics"][cache][total]) * scale
             yield 0, ("%s: " + format) % (total, val), []
-    except KeyError, e:
+    except KeyError:
         # some element of the item was missing
         pass
 
@@ -1044,4 +1041,3 @@ check_info["jolokia_metrics.writer"] = {
     "inventory_function"  : lambda info: inventory_jolokia_metrics_cache("cache_hits", ["WriterQueueLength", "WriterMaxQueueSize"], info),
     "has_perfdata"        : True,
 }
-

@@ -254,7 +254,7 @@ def logwatch_parse_line(line):
 
 
 def inventory_logwatch_common(info, case):
-    forwarded_logs, not_forwarded_logs = logwatch_select_forwarded(info)
+    _forwarded_logs, not_forwarded_logs = logwatch_select_forwarded(info)
     inventory_groups = host_extra_conf(host_name(), logwatch_groups)
     inventory        = []
 
@@ -749,7 +749,7 @@ def logwatch_to_prio(level):
 
 
 def inventory_logwatch_ec(info, one_svc_per_log):
-    forwarded_logs, not_forwarded_logs = logwatch_select_forwarded(info)
+    forwarded_logs, _not_forwarded_logs = logwatch_select_forwarded(info)
 
     if forwarded_logs:
         forward_settings = host_extra_conf(host_name(), get_checkgroup_parameters('logwatch_ec', []))
@@ -885,7 +885,7 @@ def check_logwatch_ec(item, params, info):
             rclfd_level = None
             if logfile_reclassify_settings:
                 counts = {} # unused...
-                old_level, text = line.split(" ", 1)
+                old_level, _text = line.split(" ", 1)
                 level = logwatch_reclassify(counts, logfile_reclassify_settings, line[2:], old_level) or old_level
                 if level != old_level:
                     rclfd_total += 1

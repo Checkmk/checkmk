@@ -30,7 +30,7 @@ def inventory_kentix_humidity(info):
 
 def check_kentix_humidity(_no_item, _no_params, info):
     info[0][0] = info[0][0].split('.', 3)[-1]
-    value, lower_warn, upper_warn, alarm, text = info[0]
+    value, lower_warn, upper_warn, _alarm, text = info[0]
     temp = float(value)/10
     perfdata = [ ("humidity", temp, lower_warn+":"+upper_warn ) ]
     upper_warn = float(upper_warn)

@@ -51,7 +51,7 @@ def check_ibm_xraid_pdisks(item, _no_params, info):
     data = parse_ibm_xraid_pdisks(info)
     for disk_path, disk_entry in data.items():
         if disk_path == item:
-            slot_label, disk_id, disk_type, disk_state, slot_desc = disk_entry
+            _slot_label, _disk_id, _disk_type, disk_state, slot_desc = disk_entry
             if   disk_state == "3":
                 return (0, "Disk is active" + " [%s]" % slot_desc)
             elif disk_state == "4":

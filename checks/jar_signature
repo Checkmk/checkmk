@@ -74,7 +74,7 @@ def check_jar_signature(item, _no_params, info):
     if not details:
         return (2, "No certificate found")
 
-    cert_dn, cert_valid = details[0]
+    _cert_dn, cert_valid = details[0]
 
     # [certificate is valid from 3/26/12 11:26 AM to 3/26/17 11:36 AM]
     # [certificate will expire on 7/4/13 4:13 PM]

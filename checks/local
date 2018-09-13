@@ -99,7 +99,6 @@ def inventory_local(info):
     inventory = []
     # Lines with P do not need to supply a text
     for line in info:
-        nodename      = line[0]
         stripped_line = line[1:]
         if len(stripped_line) >= 4 or len(stripped_line) == 3 and stripped_line[0] == 'P':
             inventory.append( (stripped_line[1], {}) )
@@ -162,7 +161,7 @@ def _calculate_local_best_state(collected_stats):
     infotexts = []
     perfdatas = []
     for nodename, attrs in collected_stats.items():
-        for itemname, (state, output, perfdata) in attrs.items():
+        for state, output, perfdata in attrs.itervalues():
             if nodename is not None:
                 output = "On node %s: %s" % (nodename, output)
             states.append(state)
@@ -173,7 +172,7 @@ def _calculate_local_best_state(collected_stats):
 
 def _calculate_local_worst_state(collected_stats):
     for nodename, attrs in collected_stats.items():
-        for itemname, (state, output, perfdata) in attrs.items():
+        for state, output, perfdata in attrs.itervalues():
             if nodename is not None:
                 output = "On node %s: %s" % (nodename, output)
             yield state, output, perfdata

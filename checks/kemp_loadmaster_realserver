@@ -48,7 +48,7 @@ def check_kemp_loadmaster_realserver(item, _no_params, info):
         '4' : (2, 'disabled'        ),
     }
 
-    for ipaddress, server_id, state_id in info:
+    for ipaddress, _server_id, state_id in info:
         if item == ipaddress:
             state, state_name = states[state_id]
             return state, "State: %s" % state_name

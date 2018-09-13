@@ -27,7 +27,7 @@
 
 def check_infoblox_dns_stats(_no_item, _no_params, info):
     successes, referrals, nxrrset, nxdomain, \
-        recursion, failures = map(int, info[0])
+        _recursion, failures = map(int, info[0])
 
     return check_infoblox_statistics("dns", [
         ("successes", successes, "Since DNS process started", "successful responses"),

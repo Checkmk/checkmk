@@ -15618,8 +15618,8 @@ def mode_icons(phase):
         html.icon_button(delete_url, _("Delete this Icon"), "delete")
 
         table.cell(_("Icon"), html.render_icon(icon_name), css="buttons")
-        table.cell(_("Name"), icon_name)
-        table.cell(_("Category"), IconSelector.category_alias(category_name))
+        table.text_cell(_("Name"), icon_name)
+        table.text_cell(_("Category"), IconSelector.category_alias(category_name))
     table.end()
 
 #.

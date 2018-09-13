@@ -1,0 +1,11 @@
+Title: Fixed possible XSS on custom icon management page
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.4.0p36
+Date: 1536862847
+Class: security
+
+Using icons with specific names it was possible to trigger an XSS
+on the icon administration page which only affected admin users.

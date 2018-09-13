@@ -2017,6 +2017,12 @@ metric_info["user_time"] = {
     "color" : "#60f020",
 }
 
+metric_info["cpu_time_percent"] = {
+    "title" : _("CPU time"),
+    "unit"  : "%",
+    "color" : "#94b65a",
+}
+
 metric_info["system_time"] = {
     "title" : _("CPU time in system space"),
     "unit"  : "s",
@@ -4398,6 +4404,12 @@ metric_info["queue"] = {
     "title" : _("Queue length"),
     "unit"  : "count",
     "color" : "42/a",
+}
+
+metric_info["avg_response_time"] = {
+    "title" : _("Average response time"),
+    "unit"  : "s",
+    "color" : "#4040ff"
 }
 
 #.

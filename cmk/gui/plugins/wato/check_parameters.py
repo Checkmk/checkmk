@@ -4792,6 +4792,7 @@ register_check_parameters(
     match_type = "dict",
 )
 
+
 register_check_parameters(
     subgroup_applications,
     "hacmp_resources",
@@ -4817,6 +4818,38 @@ register_check_parameters(
     TextAscii(title=_(u"Resource Group")),
     match_type="first",
 )
+
+
+register_check_parameters(
+    subgroup_applications,
+    "webserver",
+    _("Webserver"),
+    Dictionary(
+        elements = [
+            ("avg_response_time_levels", Tuple(
+                title = _("Upper levels for average response time"),
+                elements = [Float(title=_("Warning at"), default_value=1.00, unit="s"),
+                            Float(title=_("Critical at"), default_value=10.0, unit="s"),
+                ]),
+            ),
+            ("error_rate_levels", Tuple(
+                title = _("Upper levels for rate of server errors"),
+                elements = [Float(title=_("Warning at"), default_value=0.01, unit="1/s"),
+                            Float(title=_("Critical at"), default_value=0.04, unit="1/s"),
+                ]),
+            ),
+            ("cpu_time_percent_levels", Tuple(
+                title = _("Upper levels for CPU time"),
+                elements = [Float(title=_("Warning at"), default_value=85., unit="%"),
+                            Float(title=_("Critical at"), default_value=95., unit="%"),
+                ]),
+            ),
+        ],
+    ),
+    TextAscii(title = _("Name of the service")),
+    match_type = "dict",
+)
+
 
 #.
 #   .--Environment---------------------------------------------------------.

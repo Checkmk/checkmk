@@ -1,0 +1,25 @@
+Title: fileinfo.groups: Conjunctions of different levels are configurable
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1536821894
+Class: feature
+
+File group statistics such as
+<ul>
+<li>count</li>
+<li>size</li>
+<li>largest size</li>
+<li>smallest size</li>
+<li>oldest age</li>
+<li>newest age</li>
+</ul>
+can be checked by upper and lower thresholds which consists of two values: warn
+and crit. These levels are independent of each other.
+
+In order to check dependent file group statistics you can configure
+conjunctions of single levels now. A conjunction consists of a monitoring state
+and any number of upper or lower levels. If all of the configured levels within
+a conjunction are reached then the related state is reported.

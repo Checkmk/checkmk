@@ -251,9 +251,9 @@ def check_fileinfo(item, params, parsed):
         age = reftime - file_stat.time
         check_definition = [
             ("Size", "size", file_stat.size, get_filesize_human_readable),
-            ("Age",  "age",  age,  get_age_human_readable)
+            ("Age",  "age",  age,  get_age_human_readable),
         ]
-        return fileinfo_check_function(check_definition, params, outof_range_txt)
+        return _fileinfo_check_function(check_definition, params, outof_range_txt)
     else:
         if outof_range_txt:
             return 0, "File not found - %s" % outof_range_txt
@@ -398,7 +398,10 @@ def check_fileinfo_groups(_item, params, parsed):
     if files_stat_failed:
         yield 1, "Files with unknown stat: %s" % ", ".join(files_stat_failed)
 
-    yield fileinfo_check_function(check_definition, params, outof_range_txt)
+    yield _fileinfo_check_function(check_definition, params, outof_range_txt)
+
+    for res in _fileinfo_check_conjunctions(check_definition, params):
+        yield res
 
     long_output = []
     if any(include_patterns):
@@ -417,7 +420,7 @@ def check_fileinfo_groups(_item, params, parsed):
         yield 0, "\n%s" % "\n".join(long_output)
 
 
-def fileinfo_check_function(check_definition, params, outof_range_txt):
+def _fileinfo_check_function(check_definition, params, outof_range_txt):
     infotexts = []
     states = [0]
     perfdata = []
@@ -462,6 +465,27 @@ def _fileinfo_check_file(value, params, key):
 
 def inventory_fileinfo(parsed):
     return inventory_fileinfo_common(parsed, "single")
+
+
+def _fileinfo_check_conjunctions(check_definition, params):
+    conjunctions = params.get("conjunctions", [])
+    for conjunction_state, levels in conjunctions:
+        levels = dict(levels)
+        match_texts = []
+        matches = 0
+        for title, key, value, readable_f in check_definition:
+            level = levels.get(key)
+            if level is not None and value >= level:
+                match_texts.append("%s at %s" % (title.lower(), readable_f(level)))
+                matches += 1
+
+            level_lower = levels.get("%s_lower" % key)
+            if level_lower is not None and value < level_lower:
+                match_texts.append("%s below %s" % (title.lower(), readable_f(level_lower)))
+                matches += 1
+
+        if matches == len(levels):
+            yield conjunction_state, "Conjunction: %s" % " AND ".join(match_texts)
 
 
 check_info["fileinfo"] = {

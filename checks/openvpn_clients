@@ -48,7 +48,7 @@ def check_openvpn_clients(item, _no_params, info):
         if line[0] == item:
             infos = [ "Channel is up" ]
             perfdata = []
-            name, address, inbytes, outbytes, date = line
+            _name, _address, inbytes, outbytes, _date = line
             this_time = time.time()
             for what, val in [
                 ( "in", int(inbytes) ),
@@ -67,4 +67,3 @@ check_info["openvpn_clients"] = {
     "service_description"   : "OpenVPN Client %s",
     "has_perfdata"          : True,
 }
-

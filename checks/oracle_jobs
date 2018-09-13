@@ -88,7 +88,7 @@ def check_oracle_jobs(item, params, info):
             itemsid, itempdb, itemowner, itemname = item.split('.', 4)
             lineformat = 3
 
-            sid, job_pdb, job_owner, job_name, job_state, job_runtime, job_run_count, \
+            sid, job_pdb, job_owner, job_name, job_state, job_runtime, _job_run_count, \
             job_enabled, job_nextrun, job_schedule, job_last_state = line
 
         elif len(line) == 10:
@@ -97,7 +97,7 @@ def check_oracle_jobs(item, params, info):
             itempdb = ''
             lineformat = 2
 
-            sid, job_owner, job_name, job_state, job_runtime, job_run_count, \
+            sid, job_owner, job_name, job_state, job_runtime, _job_run_count, \
             job_enabled, job_nextrun, job_schedule, job_last_state = line
 
         else:

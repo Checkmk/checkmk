@@ -92,22 +92,18 @@ def parse_oracle_asm_diskgroup(info):
         stripped_line = line[index:]
 
         if len(stripped_line) == 10:
-            rebal, sector, block, au, total_mb, free_mb, req_mir_free_mb, \
-                usable_file_mb, offline_disks, dgname = stripped_line
+            _rebal, _sector, _block, _au, total_mb, free_mb, req_mir_free_mb, \
+                _usable_file_mb, offline_disks, dgname = stripped_line
             voting_files = "N"
 
         elif len(stripped_line) == 11:
-            rebal, sector, block, au, total_mb, free_mb, req_mir_free_mb, \
-                usable_file_mb, offline_disks, voting_files, dgname = stripped_line
+            _rebal, _sector, _block, _au, total_mb, free_mb, req_mir_free_mb, \
+                _usable_file_mb, offline_disks, voting_files, dgname = stripped_line
 
 
         elif len(stripped_line) == 12:
             # new format with Failuregroup details
-
-            rebal = ''
-            usable_file_mb = 0
-
-            dgname, block, au, req_mir_free_mb, total_mb, free_mb, \
+            dgname, _block, _au, req_mir_free_mb, total_mb, free_mb, \
                 fg_name, voting_files, fg_type, offline_disks, fg_min_repair_tima, fg_disks = stripped_line
 
         else:

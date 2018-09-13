@@ -63,7 +63,7 @@ def inventory_ntp(info):
     if ntp_inventory_mode not in [ "detailed", "both" ]:
         return []
     inventory = []
-    for statecode, peer, refid, stratum, t, when, poll, reach, delay, offset, jitter in info:
+    for _statecode, peer, refid, _stratum, _t, _when, _poll, reach, _delay, _offset, _jitter in info:
         if reach != "0" and refid != '.LOCL.':
             inventory.append((peer, "ntp_default_levels"))
     return inventory
@@ -93,7 +93,7 @@ def ntp_fmt_time(t):
 # 2. The offset (only if state != 3)
 # 3. The jitter (only if state != 3)
 def check_ntp_server_state(line, params):
-    statecode, peer, refid, stratum, t, when, poll, reach, delay, offset, jitter = line
+    statecode, _peer, _refid, stratum, _t, when, poll, reach, _delay, offset, jitter = line
     if reach == "0":
         return (3, "peer is unreachable")
 
@@ -135,7 +135,7 @@ def check_ntp(item, params, info):
             state = check_ntp_server_state(line, params)
             if len(state) == 4:
                 state, text, offset, jitter = state
-                crit_stratum, warn, crit = params
+                _crit_stratum, warn, crit = params
                 perfdata = [ ( "offset",  offset, warn, crit, 0, None ),
                              ( "jitter",  jitter, warn, crit, 0, None ) ]
             else:
@@ -176,7 +176,7 @@ def check_ntp_summary(_no_item, params, info):
         yield 0, "just started monitoring"
         return
 
-    how, last_successful_sync, last_state, last_infotext = entry
+    _how, last_successful_sync, last_state, last_infotext = entry
     time_since_sync = time.time() - last_successful_sync
     infotext = "this is %s since " % get_age_human_readable(time_since_sync)
     infotext += last_infotext

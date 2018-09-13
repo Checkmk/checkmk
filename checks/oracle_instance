@@ -111,14 +111,14 @@ def check_oracle_instance(item, params, info):
                 return state, infotext
 
             elif len(line) == 11:
-                sid, version, openmode, logins, archiver, up_seconds, dbid, \
+                sid, version, openmode, logins, archiver, up_seconds, _dbid, \
                     log_mode, database_role, force_logging, name = line
 
             elif len(line) == 22:
-                sid, version, openmode, logins, archiver, up_seconds, dbid, \
-                    log_mode, database_role, force_logging, name, dbcreated, pluggable, \
-                    con_id, pname, pdbid, popenmode, prestricted, ptotal_size, precovery_status, \
-                    pup_seconds, pblock_size = line
+                sid, version, openmode, logins, archiver, up_seconds, _dbid, \
+                    log_mode, database_role, force_logging, name, _dbcreated, pluggable, \
+                    _con_id, pname, _pdbid, popenmode, prestricted, ptotal_size, _precovery_status, \
+                    pup_seconds, _pblock_size = line
 
             else:
                 return 2, "Database not running, login failed or unvalid data from agent"

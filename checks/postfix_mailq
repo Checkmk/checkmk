@@ -104,7 +104,6 @@ def parse_postfix_mailq(info):
         queueinfo = None
         # single and old output formats
         if line[0].startswith("QUEUE_"):
-            queue = line[0].split("_")[1]
             # Deal with old agent (pre 1.2.8) which did not send size
             # infos in case of different error cases
             if len(line) == 2:

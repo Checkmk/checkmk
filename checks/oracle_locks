@@ -55,14 +55,14 @@ def check_oracle_locks(item, params, info):
             if len(line) == 10:
 
                 # old format from locks_old in current plugin
-                sid, sidnr, serial, machine, program, process, osuser, ctime, \
+                _sid, sidnr, serial, machine, _program, process, osuser, ctime, \
                 object_owner, object_name = line
 
             elif len(line) == 18:
 
-                sid, sidnr, serial, machine, program, process, osuser, dbusername, ctime, \
-                block_status, blk_inst_id, blk_sid, blk_serial, blk_machine, blk_program, \
-                blk_process, blk_osuser, blk_dbusername = line
+                _sid, sidnr, serial, machine, _program, process, osuser, _dbusername, ctime, \
+                _block_status, _blk_inst_id, _blk_sid, _blk_serial, _blk_machine, _blk_program, \
+                _blk_process, _blk_osuser, _blk_dbusername = line
 
                 object_owner = ''
                 object_name = ''

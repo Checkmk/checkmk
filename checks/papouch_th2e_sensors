@@ -161,7 +161,7 @@ def inventory_papouch_th2e_sensors_humidity(parsed):
 
 def check_papouch_th2e_sensors_humidity(item, params, parsed):
     if item in parsed["humidity"]:
-        (state, state_readable), reading, unit = parsed["humidity"][item]
+        (state, state_readable), reading, _unit = parsed["humidity"][item]
         yield state, "Status: %s" % state_readable
         yield check_humidity(reading, params)
 

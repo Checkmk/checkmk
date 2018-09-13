@@ -41,7 +41,7 @@ factory_settings["netscaler_sslcerts_default_levels"] = {
 
 
 def inventory_netscaler_sslcerts(info):
-    for node, certname, daysleft in info:
+    for _node, certname, _daysleft in info:
         if certname:
             yield certname, {}
 

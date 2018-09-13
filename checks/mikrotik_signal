@@ -28,7 +28,7 @@ mikrotik_signal_default_levels = ( 80, 70 )
 
 def inventory_mikrotik_signal(info):
     inventory = []
-    for network, strength, mode in info:
+    for network, _strength, _mode in info:
         inventory.append((network, "mikrotik_signal_default_levels"))
     return inventory
 

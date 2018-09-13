@@ -50,7 +50,7 @@ def inventory_mbg_lantime_refclock(info):
 
 def check_mbg_lantime_refclock(item, params, info):
     if len(info) > 0 and len(info[0]) == 6:
-        ref_mode, gps_state, gps_pos, gps_sat_good, gps_sat_total, gps_mode = info[0]
+        ref_mode, gps_state, gps_pos, gps_sat_good, gps_sat_total, _gps_mode = info[0]
 
         state     = 0
         state_txt = []

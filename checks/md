@@ -114,10 +114,8 @@ def inventory_md(info):
             continue
         if line[0].startswith("md") and line[1] == ':':
             device = line[0]
-            raid_state = line[2]
         elif line[1] == 'blocks':
             if line[-1] != "chunks": # ignore RAID 0 devices
-                disk_state = line[-1][1:-1]
                 inventory.append( (device, None) )
     return inventory
 

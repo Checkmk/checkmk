@@ -43,7 +43,7 @@ def check_perle_chassis(_no_item, _no_params, info):
                         "1" : (1, "firmware download required"),
                         "2" : (2, "temperature sensor not functional"), }
 
-    model, serial, bootloader, fw, alarms_str, diagstate, temp_str = info[0]
+    _model, _serial, _bootloader, _fw, alarms_str, diagstate, _temp_str = info[0]
     state, state_readable = map_diag_states[diagstate]
     yield state, "Diagnostic result: %s" % state_readable
     yield perle_check_alarms(alarms_str)

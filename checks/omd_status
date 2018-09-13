@@ -59,7 +59,6 @@ def parse_omd_status(info):
             parsed[item][node] = {}
             parsed[item][node]["stopped"] = []
             active = True
-            stopped = []
         elif active and line[1] == 'OVERALL':
             if line[2] == '0':
                 parsed[item][node]["overall"] = "running"

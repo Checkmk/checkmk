@@ -131,9 +131,6 @@ def check_mysql_sessions(item, params, parsed):
         running_sessions = values["Threads_running"]
         connects = get_rate("mysql.sessions", time.time(), values["Connections"])
 
-        infotext = " - %d sessions (%d running), %.2f connects/s" % \
-                   (total_sessions, running_sessions, connects)
-
         infos = []
         perfdata = []
         status = 0
@@ -257,4 +254,3 @@ check_info['mysql.connections'] = {
     "service_description"     : "MySQL Connections %s",
     "group"                   : "mysql_connections",
 }
-

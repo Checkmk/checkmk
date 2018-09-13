@@ -47,8 +47,8 @@
 
 def inventory_perle_chassis_slots(info):
     return [ (index, None)
-             for index, name, modelname, serial, bootloader, fw, \
-             alarms_str, diagstate, ty, descr in info if ty != "0" ]
+             for index, _name, _modelname, _serial, _bootloader, _fw, \
+             _alarms_str, _diagstate, ty, _descr in info if ty != "0" ]
 
 
 def check_perle_chassis_slots(item, _no_params, info):
@@ -56,8 +56,8 @@ def check_perle_chassis_slots(item, _no_params, info):
                        "1" : (2, "media converter module's PHY is not functional"),
                        "2" : (1, "firmware download required"), }
 
-    for index, name, modelname, serial, bootloader, fw, \
-        alarms_str, diagstate, ty, descr in info:
+    for index, name, _modelname, _serial, _bootloader, _fw, \
+        alarms_str, diagstate, _ty, _descr in info:
         if item == index:
             state, state_readable = map_diagstates[diagstate]
             yield state, "[%s] Diagnostic result: %s" % (name, state_readable)

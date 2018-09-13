@@ -86,7 +86,7 @@ def check_mysql_size(item, params, parsed):
     dbs = parsed[instance]
 
     # size and avail are given as bytes
-    for db, size, avail in dbs:
+    for db, size, _avail in dbs:
         if db == dbname:
             if size == 'NULL':
                 return 3, "Missing information - Size is reported as 'NULL'"

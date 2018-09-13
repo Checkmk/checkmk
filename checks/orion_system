@@ -38,7 +38,7 @@ def parse_orion_system(info):
     }
 
     system_voltage, load_current, battery_current, battery_temp,\
-        charge_state, battery_current_limit, rectifier_current,\
+        charge_state, _battery_current_limit, rectifier_current,\
         system_power = info[0]
 
     parsed = {

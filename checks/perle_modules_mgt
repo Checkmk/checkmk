@@ -32,7 +32,7 @@
 
 def inventory_perle_modules_mgt(info):
     return [ (index, None)
-             for index, name, descr, alarm_led, status in info ]
+             for index, _name, _descr, _alarm_led, _status in info ]
 
 
 def check_perle_modules_mgt(item, _no_params, info):
@@ -41,7 +41,7 @@ def check_perle_modules_mgt(item, _no_params, info):
                  "power_led" : { "0" : (2, "off"),
                                  "1" : (0, "on"), }, }
 
-    for index, name, descr, power_led, alarm_led in info:
+    for index, _name, _descr, power_led, alarm_led in info:
         if item == index:
             for title, value, key in [ ("Alarm LED", alarm_led, "alarm_led"),
                                        ("Power LED", power_led, "power_led") ]:

@@ -192,8 +192,7 @@ def check_msexch_dag_contentindex(item, _no_params, info):
                     state = 0
                 else:
                     state = 1
-                infotxt = "Status is %s" % val
-                return state, val
+                return state, "Status: %s" % val
 
 check_info['msexch_dag.contentindex'] = {
     "inventory_function"    : inventory_msexch_dag_contentindex,

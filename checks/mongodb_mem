@@ -40,7 +40,6 @@ def inventory_mongodb_mem(info):
 
 def check_mongodb_mem(_no_item, params, info):
     info_dict = {x[0] : " ".join(x[1:]) for x in info}
-    resident_bytes = int(info_dict["resident"]) * 1024 **2
 
     for what in [ "resident", "virtual", "mapped" ]:
         value_bytes = int(info_dict[what]) * 1024 **2
@@ -70,4 +69,3 @@ check_info['mongodb_mem'] = {
     "group"                   : "mongodb_mem",
     "has_perfdata"            : True
 }
-

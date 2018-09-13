@@ -50,7 +50,7 @@ def check_plesk_backups(item, params, info):
             else:
                 return (3, 'Unexpected line %r' % line)
 
-        domain, rc, timestamp, size, total_size = line
+        _domain, _rc, timestamp, size, total_size = line
         size       = saveint(size)
         total_size = saveint(total_size)
         timestamp  = saveint(timestamp)

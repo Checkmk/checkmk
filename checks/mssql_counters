@@ -441,7 +441,7 @@ check_info['mssql_counters.pageactivity'] = {
 
 def inventory_mssql_counters_locks_per_batch(parsed):
     db_names = [(obj.split(":")[0], node_name)
-                for (obj, instance), node_data in parsed.iteritems()
+                for (obj, _instance), node_data in parsed.iteritems()
                 if ":" in obj for node_name in node_data]
 
     for db_name, node_name in db_names:

@@ -46,7 +46,6 @@ def parse_mysql_slave(info):
 
     parsed = {}
     instance = False
-    data = {}
     for line in info:
         if line[0].startswith("[["):
             instance = line[0][2:-2]
@@ -121,4 +120,3 @@ check_info['mysql_slave'] = {
     "has_perfdata"            : True,
     "group"                   : "mysql_slave",
 }
-

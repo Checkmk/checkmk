@@ -2593,8 +2593,8 @@ class html(HTMLGenerator):
         if self._user_id:
             isopen = self.foldable_container_is_open(treename, id, isopen)
 
-        onclick = "toggle_foldable_container(\'%s\', \'%s\', \'%s\')"\
-                    % (treename, id, fetch_url if fetch_url else '')
+        onclick = "toggle_foldable_container(%s, %s, %s)"\
+                    % (json.dumps(treename), json.dumps(id), json.dumps(fetch_url if fetch_url else ''))
 
         img_id = "treeimg.%s.%s" % (treename, id)
 

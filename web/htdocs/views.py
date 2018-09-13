@@ -1655,9 +1655,8 @@ def show_view(view, show_heading = False, show_buttons = True,
         # inventory, then we load it and attach it as column "host_inventory"
         if is_inventory_data_needed(group_cells, cells, sorters, all_active_filters):
             for row in rows:
-                 if "host_name" in row:
-                     row["host_inventory"] = inventory.load_tree(row["host_name"])
-
+                if "host_name" in row:
+                    row["host_inventory"] = inventory.load_filtered_and_merged_tree(row)
 
         if not cmk.is_raw_edition():
             import sla
@@ -3114,6 +3113,7 @@ def declare_1to1_sorter(painter_name, func, col_num = 0, reverse = False):
 
 # Ajax call for fetching parts of the tree
 def ajax_inv_render_tree():
+    site_id = html.var("site")
     hostname = html.var("host")
     invpath = html.var("path")
     tree_id = html.var("treeid", "")
@@ -3121,18 +3121,18 @@ def ajax_inv_render_tree():
         show_internal_tree_paths = True
     else:
         show_internal_tree_paths = False
+
     if tree_id:
         struct_tree = inventory.load_delta_tree(hostname, int(tree_id[1:]))
-        tree_renderer = DeltaNodeRenderer(hostname, tree_id, invpath)
+        tree_renderer = DeltaNodeRenderer(site_id, hostname, tree_id, invpath)
     else:
-        struct_tree = inventory.load_tree(hostname)
-        tree_renderer = AttributeRenderer(hostname, "", invpath,
+        row = inventory.get_status_data_via_livestatus(site_id, hostname)
+        struct_tree = inventory.load_filtered_and_merged_tree(row)
+        tree_renderer = AttributeRenderer(site_id, hostname, "", invpath,
                         show_internal_tree_paths=show_internal_tree_paths)
 
     if struct_tree is None:
         html.show_error(_("No such inventory tree."))
-
-    struct_tree = struct_tree.get_filtered_tree(inventory.get_permitted_inventory_paths())
 
     parsed_path, attributes_key = inventory.parse_tree_path(invpath)
     if parsed_path:

@@ -152,6 +152,10 @@ class StructuredDataTree(object):
 
     def load_from(self, filepath):
         raw_tree = store.load_data_from_file(filepath)
+        return self.create_tree_from_raw_tree(raw_tree)
+
+
+    def create_tree_from_raw_tree(self, raw_tree):
         if raw_tree:
             self._create_hierarchy_from_data(raw_tree, self._root, tuple())
         return self

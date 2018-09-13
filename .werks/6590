@@ -1,0 +1,11 @@
+Title: uptime.include: Even if an SNMP-Device does not have a sysDesc it still can have an uptime
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.4.0p36
+Date: 1536827133
+
+

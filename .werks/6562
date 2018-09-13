@@ -1,0 +1,15 @@
+Title: Fixed random "I/O operation on closed file" errors in different situations
+Level: 2
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.5.0p5
+Date: 1536821295
+Class: fix
+
+When using the LDAP synchronization "I/O operation on closed file" errors could occur in
+different places of the GUI with all previous 1.5.0 releases.
+
+These exceptions could happen e.g. during the WATO activate changes or during the user
+synchronization. Often it helped to retry the action another time to solve the issue.
+Another workaround would be to restart the site apache and retry the action.

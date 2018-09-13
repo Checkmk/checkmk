@@ -1,0 +1,10 @@
+Title: ibm_svc_mdiskgrp: Fixed disregarded provisioning state
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1536822012
+Class: fix
+
+

@@ -252,6 +252,9 @@ class MultiHostSections(object):
         if not parse_function:
             return section_content
 
+        # TODO: Item state needs to be handled in local objects instead of the
+        # item_state._cached_item_states object
+        orig_item_state_prefix = item_state.get_item_state_prefix()
         try:
             item_state.set_item_state_prefix(section_name, None)
             return parse_function(section_content)
@@ -259,6 +262,8 @@ class MultiHostSections(object):
             if cmk.debug.enabled():
                 raise
             raise MKParseFunctionError(*sys.exc_info())
+        finally:
+            item_state.set_item_state_prefix(*orig_item_state_prefix)
 
         return section_content
 

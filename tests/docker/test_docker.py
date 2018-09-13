@@ -98,7 +98,7 @@ def _build(request, client, edition, version, add_args=None):
         u'6557/tcp': {},
     }
 
-    assert attrs["Size"] < 830000000
+    assert attrs["Size"] < 840000000
 
     assert len(attrs["RootFS"]["Layers"]) == 5
 
@@ -243,10 +243,12 @@ def test_start_enable_mail(request, client):
 def test_update(request, client):
     container_name="%s-monitoring" % branch_name
 
+    # Pick a random old version that we can use to the setup the initial site with
+    # Later this site is being updated to the current daily build
     old_version = testlib.CMKVersion(
         version="1.5.0p3",
         edition=testlib.CMKVersion.CEE,
-        branch=branch_name
+        branch="1.5.0",
     )
 
     # 1. create container with old version and add a file to mark the pre-update state
@@ -258,14 +260,16 @@ def test_update(request, client):
     # 2. stop the container
     c_orig.stop()
 
-    # 3. start intermediate container
+    # 3. start intermediate container in the background and keep it running.
+    # Don't use the regular startup procedure (which would start the site). Use
+    # read to wait for termination of the container
     edition = "enterprise"
     _build(request, client, edition, build_version)
     c_tmp = client.containers.run(
         name="%s-update" % container_name,
         image=_image_name(edition, build_version),
         detach=True,
-        command=["bash", "-c", "echo HI ; sleep 30"],
+        command=["bash", "-c", "echo HI ; read"],
         stdin_open=True,
         volumes_from=c_orig.id,
     )

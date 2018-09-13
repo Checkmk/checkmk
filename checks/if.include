@@ -906,7 +906,7 @@ def check_if_common_single(item, params, info, force_counter_wrap = False,
                 ( "outerr",    ifOutErrors, err_warn, err_crit, None, None) ]:
 
                 try:
-                    if node == None:
+                    if node is None:
                         rate = get_rate("if.%s.%s" % (name, item), this_time, saveint(counter), onwrap=RAISE)
                         if force_counter_wrap:
                             raise MKCounterWrapped("Forced counter wrap")

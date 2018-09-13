@@ -1,0 +1,12 @@
+Title: Fixed possible XSS issues in Bookmarks snapin
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 1.4.0p36
+Date: 1536855459
+Class: security
+
+We've discovered and fixed several possible XSS issues affecting
+the Bookmarks snapin. These could be used to execute arbitrary
+javascript code in the context of an authenticated user.

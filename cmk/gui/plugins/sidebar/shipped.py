@@ -675,7 +675,7 @@ def render_wiki():
                     bulletlink(name, "/%s/wiki/doku.php?id=%s" % (config.omd_site(), link))
 
             else:
-                html.write(line)
+                html.write_text(line)
 
         if ul_started == True:
             html.close_ul()

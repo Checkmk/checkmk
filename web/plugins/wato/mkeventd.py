@@ -1944,10 +1944,10 @@ def show_mib_table(path, title):
             delete_url = make_action_link([("mode", "mkeventd_mibs"), ("_delete", filename)])
             html.icon_button(delete_url, _("Delete this MIB"), "delete")
 
-        table.cell(_("Filename"), filename)
-        table.cell(_("MIB"), mib.get("name", ""))
-        table.cell(_("Organization"), mib.get("organization", ""))
-        table.cell(_("Size"), bytes_human_readable(mib.get("size", 0)), css="number")
+        table.text_cell(_("Filename"), filename)
+        table.text_cell(_("MIB"), mib.get("name", ""))
+        table.text_cell(_("Organization"), mib.get("organization", ""))
+        table.text_cell(_("Size"), bytes_human_readable(mib.get("size", 0)), css="number")
 
     table.end()
 

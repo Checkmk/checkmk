@@ -1,0 +1,11 @@
+Title: Fixed possible XSS on SNMP MIB upload page
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.4.0p36
+Date: 1536863066
+Class: security
+
+Using MIB files with specific names it was possible to trigger an XSS
+on the MIB file administration page which only affected admin users.

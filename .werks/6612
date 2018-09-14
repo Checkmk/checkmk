@@ -1,0 +1,13 @@
+Title: Fixed possible reflected XSS using back URLs in view editor
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 1.4.0p36
+Date: 1536906650
+Class: security
+
+The parameter back of the following requests is vulnerable to reflected XSS.
+This vulnerability affects the create/modify view page and requires at least
+guest privileges. The victim has to click on the back button to trigger the
+injected code.

@@ -50,7 +50,7 @@ needed-packages: ../omd/distros/DEBIAN_9.mk
 	    make -f - -f ../omd/distros/DEBIAN_9.mk --no-print-directory needed-packages
 
 check-mk-$(EDITION)-docker-$(VERSION).tar.gz: image
-	docker save $(DOCKER_REPO_NAME)/check-mk-$(EDITION):$(VERSION) > check-mk-$(EDITION)-docker-$(VERSION).tar.gz
+	docker save $(DOCKER_REPO_NAME)/check-mk-$(EDITION):$(VERSION) | gzip > check-mk-$(EDITION)-docker-$(VERSION).tar.gz
 
 image: needed-packages
 	docker build \

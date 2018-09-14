@@ -33,6 +33,7 @@ import os
 import re
 import uuid
 import marshal
+import urlparse
 
 import cmk.paths
 
@@ -84,6 +85,26 @@ def cmp_version(a, b):
     aa = map(num_split, a.split("."))
     bb = map(num_split, b.split("."))
     return cmp(aa, bb)
+
+
+def is_allowed_url(url):
+    """Checks whether or not the given URL is a URL it is allowed to redirect the user to"""
+    # Also prevent using of "javascript:" URLs which could used to inject code
+    parsed = urlparse.urlparse(url)
+
+    # Don't allow the user to set a URL scheme
+    if parsed.scheme != "":
+        return False
+
+    # Don't allow the user to set a network location
+    if parsed.netloc != "":
+        return False
+
+    # Don't allow bad characters in path
+    if not re.match(r"[/a-z0-9_\.-]*$", parsed.path):
+        return False
+
+    return True
 
 
 # TODO: Remove this helper function. Replace with explicit checks and covnersion

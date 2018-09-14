@@ -24,36 +24,14 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import urlparse
-import re
-
 import cmk.gui.pages
 import cmk.gui.config as config
+import cmk.gui.utils as utils
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
 
 @cmk.gui.pages.register("index")
 def page_index():
-    default_start_url = config.user.get_attribute("start_url") or config.start_url
-    start_url = html.var_utf8("start_url", default_start_url).strip()
-
-    # Prevent redirecting to absolute URL which could be used to redirect
-    # users to compromised pages.
-    # Also prevent using of "javascript:" URLs which could used to inject code
-    parsed = urlparse.urlparse(start_url)
-
-    # Don't allow the user to set a URL scheme
-    if parsed.scheme != "":
-        start_url = default_start_url
-
-    # Don't allow the user to set a network location
-    if parsed.netloc != "":
-        start_url = default_start_url
-
-    # Don't allow bad characters in path
-    if not re.match(r"[/a-z0-9_\.-]*$", parsed.path):
-        start_url = default_start_url
-
     html.write('<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Frameset//EN" "http://www.w3.org/TR/html4/frameset.dtd">\n'
                '<html><head>\n')
     html.default_html_headers()
@@ -64,4 +42,14 @@ def page_index():
     <frame src="%s" name="main" noresize>
 </frameset>
 </html>
-""" % (html.attrencode(config.get_page_heading()), html.attrencode(start_url)))
+""" % (html.attrencode(config.get_page_heading()), html.attrencode(_get_start_url())))
+
+
+def _get_start_url():
+    start_url = html.var_utf8("start_url", config.user.get_attribute("start_url") or config.start_url).strip()
+    # Prevent redirecting to absolute URL which could be used to redirect
+    # users to compromised pages.
+    if utils.is_allowed_url(start_url):
+        return start_url
+    else:
+        return "dashboard.py"

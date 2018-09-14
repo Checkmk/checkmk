@@ -260,6 +260,7 @@ def ajax_get_messages():
     render_messages()
 
 def ajax_message_read():
+    html.set_output_format("json")
     try:
         notify.delete_gui_message(html.var('id'))
         html.write("OK")
@@ -436,12 +437,14 @@ def write_snapin_exception(e):
     html.close_div()
 
 def ajax_fold():
+    html.set_output_format("json")
     config = load_user_config()
     config["fold"] = not not html.var("fold")
     save_user_config(config)
 
 
 def ajax_openclose():
+    html.set_output_format("json")
     config = load_user_config()
     new_snapins = []
     for name, usage in config["snapins"]:
@@ -454,6 +457,7 @@ def ajax_openclose():
 
 
 def ajax_snapin():
+    html.set_output_format("json")
 
     # Update online state of the user (if enabled)
     userdb.update_user_access_time(config.user.id)
@@ -495,8 +499,7 @@ def ajax_snapin():
             finally:
                 snapin_code.append(html.drain())
 
-    # write all snapins
-    html.write('[%s]' % ','.join([ '"%s"' % s.replace('"', '\\"').replace('\n', '') for s in snapin_code]))
+    html.write(json.dumps(snapin_code))
 
 
 def move_snapin():
@@ -576,6 +579,7 @@ def page_add_snapin():
 
 
 def ajax_switch_masterstate():
+    html.set_output_format("json")
     site = html.var("site")
     column = html.var("switch")
     state = int(html.var("state"))
@@ -607,6 +611,7 @@ def ajax_switch_masterstate():
 
 
 def ajax_set_snapin_site():
+    html.set_output_format("json")
     ident = html.var("ident")
     if ident not in sidebar_snapins:
         raise MKUserError(None, _("Invalid ident"))
@@ -624,6 +629,7 @@ def ajax_set_snapin_site():
 
 
 def ajax_switch_site():
+    html.set_output_format("json")
     # _site_switch=sitename1:on,sitename2:off,...
     if not config.user.may("sidesnap.sitestatus"):
         return

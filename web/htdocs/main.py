@@ -25,31 +25,9 @@
 # Boston, MA 02110-1301 USA.
 
 import config
-
-import urlparse
-import re
+import lib
 
 def page_index():
-    default_start_url = config.user.get_attribute("start_url") or config.start_url
-    start_url = html.var_utf8("start_url", default_start_url).strip()
-
-    # Prevent redirecting to absolute URL which could be used to redirect
-    # users to compromised pages.
-    # Also prevent using of "javascript:" URLs which could used to inject code
-    parsed = urlparse.urlparse(start_url)
-
-    # Don't allow the user to set a URL scheme
-    if parsed.scheme != "":
-        start_url = default_start_url
-
-    # Don't allow the user to set a network location
-    if parsed.netloc != "":
-        start_url = default_start_url
-
-    # Don't allow bad characters in path
-    if not re.match("[/a-z0-9_\.-]*$", parsed.path):
-        start_url = default_start_url
-
     if "%s" in config.page_heading:
         heading = config.page_heading % (config.site(config.omd_site()).get('alias', _("Multisite")))
     else:
@@ -65,4 +43,14 @@ def page_index():
     <frame src="%s" name="main" noresize>
 </frameset>
 </html>
-""" % (html.attrencode(heading), html.attrencode(start_url)))
+""" % (html.attrencode(heading), html.attrencode(_get_start_url())))
+
+
+def _get_start_url():
+    start_url = html.var_utf8("start_url", config.user.get_attribute("start_url") or config.start_url).strip()
+    # Prevent redirecting to absolute URL which could be used to redirect
+    # users to compromised pages.
+    if lib.is_allowed_url(start_url):
+        return start_url
+    else:
+        return "dashboard.py"

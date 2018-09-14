@@ -484,6 +484,7 @@ function virtual_host_tree_enter(path)
 
 
     def _ajax_tag_tree(self):
+        html.set_output_format("json")
         self._load()
         new_tree = html.var("tree_id")
 
@@ -497,6 +498,7 @@ function virtual_host_tree_enter(path)
 
     # TODO: Validate path in current tree
     def _ajax_tag_tree_enter(self):
+        html.set_output_format("json")
         self._load()
         path = html.var("path").split("|") if html.var("path") else []
         self._cwds[self._current_tree_id] = path

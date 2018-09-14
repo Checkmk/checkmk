@@ -143,6 +143,7 @@ table.sitestate td.state {
 
 
     def _ajax_switch_site(self):
+        html.set_output_format("json")
         # _site_switch=sitename1:on,sitename2:off,...
         if not config.user.may("sidesnap.sitestatus"):
             return

@@ -199,6 +199,7 @@ canvas#speedometer {
 
 
     def _ajax_speedometer(self):
+        html.set_output_format("json")
         try:
             # Try to get values from last call in order to compute
             # driftig speedometer-needle and to reuse the scheduled

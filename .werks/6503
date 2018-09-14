@@ -1,0 +1,12 @@
+Title: Fixed error handling for duplicate EC rule IDs.
+Level: 1
+Component: wato
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0i1
+Date: 1536843614
+
+Trying to insert an EC rule with an already existing ID resulted in a GUI
+crash, this has been fixed.

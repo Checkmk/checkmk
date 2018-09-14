@@ -30,10 +30,9 @@ fi
 # Create the site in case it does not exist
 if [ ! -d "/opt/omd/sites/$CMK_SITE_ID" ] ; then
     echo "### CREATING SITE '$CMK_SITE_ID'"
-    omd create -u 1000 -g 1000 "$CMK_SITE_ID"
+    omd create --no-tmpfs -u 1000 -g 1000 "$CMK_SITE_ID"
     omd config "$CMK_SITE_ID" set APACHE_TCP_ADDR 0.0.0.0
     omd config "$CMK_SITE_ID" set APACHE_TCP_PORT 5000
-    omd config "$CMK_SITE_ID" set TMPFS off
 
     if [ "$CMK_LIVESTATUS_TCP" = "on" ]; then
         omd config "$CMK_SITE_ID" set LIVESTATUS_TCP on

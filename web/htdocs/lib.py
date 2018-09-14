@@ -25,6 +25,7 @@
 # Boston, MA 02110-1301 USA.
 
 import math, grp, pprint, os, errno, marshal, re, fcntl, time
+import urlparse
 import traceback
 from cmk.exceptions import MKException, MKGeneralException
 from cmk.regex import regex
@@ -363,6 +364,26 @@ def cmp_version(a, b):
     aa = map(tryint, a.split("."))
     bb = map(tryint, b.split("."))
     return cmp(aa, bb)
+
+
+def is_allowed_url(url):
+    """Checks whether or not the given URL is a URL it is allowed to redirect the user to"""
+    # Also prevent using of "javascript:" URLs which could used to inject code
+    parsed = urlparse.urlparse(url)
+
+    # Don't allow the user to set a URL scheme
+    if parsed.scheme != "":
+        return False
+
+    # Don't allow the user to set a network location
+    if parsed.netloc != "":
+        return False
+
+    # Don't allow bad characters in path
+    if not re.match("[/A-Za-z0-9_\.-]*$", parsed.path):
+        return False
+
+    return True
 
 
 def frexpb(x, base):

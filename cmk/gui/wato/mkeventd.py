@@ -1957,8 +1957,8 @@ class ModeEventConsoleEditRule(EventConsoleMode):
             for pack in self._rule_packs:
                 for r in pack["rules"]:
                     if r["id"] == self._rule["id"]:
-                        error_text = _("A rule with this ID already exists in rule pack <b>%s</b>.") % pack["title"]
-                        raise MKUserError("rule_p_id", error_text)
+                        raise MKUserError("rule_p_id",
+                                          _("A rule with this ID already exists in rule pack <b>%s</b>.") % pack["title"])
 
         try:
             num_groups = re.compile(self._rule["match"]).groups

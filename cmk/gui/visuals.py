@@ -540,6 +540,8 @@ def page_create_visual(what, info_keys, next_url = None):
     html.header(_('Create %s') % title, stylesheets=["pages"])
     html.begin_context_buttons()
     back_url = html.var("back", "")
+    if not utils.is_allowed_url(back_url):
+        back_url = "edit_%s.py" % what
     html.context_button(_("Back"), back_url or "edit_%s.py" % what, "back")
     html.end_context_buttons()
 
@@ -735,6 +737,8 @@ def page_edit_visual(what, all_visuals, custom_field_handler = None,
     html.header(title, stylesheets=["pages", "views", "status", "bi"])
     html.begin_context_buttons()
     back_url = html.var("back", "")
+    if not utils.is_allowed_url(back_url):
+        back_url = "edit_%s.py" % what
     html.context_button(_("Back"), back_url or "edit_%s.py" % what, "back")
 
     # Extra buttons to sub modules. These are used for things to edit about
@@ -855,6 +859,8 @@ def page_edit_visual(what, all_visuals, custom_field_handler = None,
                 else:
                     back = html.var('back')
                     if not back:
+                        back = 'edit_%s.py' % what
+                    if not utils.is_allowed_url(back):
                         back = 'edit_%s.py' % what
 
                 if html.check_transaction():

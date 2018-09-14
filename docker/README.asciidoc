@@ -55,6 +55,23 @@ e.g. during update.
 |`--restart always` | Always restart the container if it stops.
 |=======================================================================
 
+[[use-packages-from-our-website]]
+Use packages from our Website
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+You may want to use the officially released images from your website,
+which you can find on the download page of each version as of version
+1.5.0p5.
+
+Download the file to your docker node and execute the load command:
+
+....
+docker load -i ~/Downloads/check-mk-enterprise-docker-1.5.0p5.tar.gz
+....
+
+After a successful import you can start creating containers using the
+image `checkmk/check-mk-enterprise:1.5.0p5`.
+
 [[listen-on-http-https-standard-ports]]
 Listen on HTTP / HTTPS standard ports
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

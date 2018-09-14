@@ -177,8 +177,12 @@ class CMKVersion(object):
 
 
     def package_name(self):
+        return self.package_name_of_distro(self._needed_distro())
+
+
+    def package_name_of_distro(self, distro):
         return "check-mk-%s-%s_0.%s_%s.deb" % \
-                (self.edition(), self.version, self._needed_distro(), self._needed_architecture())
+                (self.edition(), self.version, distro, self._needed_architecture())
 
 
     def package_url(self):

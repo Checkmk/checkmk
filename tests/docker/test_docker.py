@@ -100,7 +100,7 @@ def _build(request, client, edition, version, add_args=None):
 
     assert attrs["Size"] < 840000000
 
-    assert len(attrs["RootFS"]["Layers"]) == 5
+    assert len(attrs["RootFS"]["Layers"]) == 6
 
     return image, build_logs
 
@@ -222,6 +222,32 @@ def test_start_with_custom_command(request, client):
 
     assert "Created new site" in output
     assert output.endswith("1\n")
+
+
+# Test that the local deb package is used by making the build fail because of an empty file
+def test_build_using_local_deb(request, client):
+    pkg_path = os.path.join(build_path, build_version.package_name_of_distro("stretch"))
+    try:
+        with open(pkg_path, "w") as f:
+            f.write("")
+
+        with pytest.raises(docker.errors.BuildError):
+            _build(request, client, "enterprise", build_version)
+    finally:
+        os.unlink(pkg_path)
+
+
+# Test that the local GPG file is used by making the build fail because of an empty file
+def test_build_using_local_gpg_pubkey(request, client):
+    pkg_path = os.path.join(build_path, "Check_MK-pubkey.gpg")
+    try:
+        with open(pkg_path, "w") as f:
+            f.write("")
+
+        with pytest.raises(docker.errors.BuildError):
+            _build(request, client, "enterprise", build_version)
+    finally:
+        os.unlink(pkg_path)
 
 
 def test_start_enable_mail(request, client):

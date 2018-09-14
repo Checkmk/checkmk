@@ -49,6 +49,11 @@ RUN set -e \
     && rm -rf /var/lib/apt/lists/* \
     && rm needed-packages
 
+#
+# Optionally copy an existing Check_MK debian package to the container. In case the file is
+# available that is later used by the build procedure the file will not be downloaded.
+COPY check-mk-${CMK_EDITION}-${CMK_VERSION}_0.stretch_*.deb Check_MK-pubkey*gpg needed-packages /
+
 # Now install the Check_MK version specific things
 # hadolint ignore=DL3003,DL3008,DL4006
 RUN set -e \
@@ -58,13 +63,21 @@ RUN set -e \
     && export DEBIAN_FRONTEND=noninteractive \
     && PKG_NAME="check-mk-${CMK_EDITION}-${CMK_VERSION}" \
     && PKG_FILE="${PKG_NAME}_0.stretch_$(dpkg --print-architecture).deb" \
-    && echo "--user \"${CMK_DL_CREDENTIALS}\"" \
-        | curl -o "${PKG_FILE}" -K - "${CMK_DL_URL}/${CMK_VERSION}/${PKG_FILE}" \
-    && curl -sS "${CMK_DL_URL}/Check_MK-pubkey.gpg" \
-        | gpg -q --import \
+    && if [ ! -e "/${PKG_FILE}" ]; then \
+        echo "Downloading ${PKG_FILE}..." && \
+        echo "--user \"${CMK_DL_CREDENTIALS}\"" \
+            | curl -o "${PKG_FILE}" -K - "${CMK_DL_URL}/${CMK_VERSION}/${PKG_FILE}" ; \
+       fi \
+    && if [ ! -e "/Check_MK-pubkey.gpg" ]; then \
+        echo "Downloading Check_MK-pubkey.gpg..." && \
+        curl -sS "${CMK_DL_URL}/Check_MK-pubkey.gpg" \
+            | gpg -q --import ; \
+       else \
+            gpg -q --import "/Check_MK-pubkey.gpg" ; \
+       fi \
     && dpkg-sig --verify "${PKG_FILE}" \
     && dpkg -i "${PKG_FILE}" \
-    && rm -f "${PKG_FILE}" \
+    && rm -f *.deb *.gpg needed-packages \
     && apt-get clean \
     && rm /usr/sbin/policy-rc.d \
     && rm -rf /var/lib/apt/lists/*

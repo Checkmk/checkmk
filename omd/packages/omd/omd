@@ -2705,6 +2705,10 @@ def main_create(args, options=None):
         config_settings["AUTOSTART"] = "off"
         sys.stdout.write("Going to set AUTOSTART to off.\n")
 
+    if "no-tmpfs" in options:
+        config_settings["TMPFS"] = "off"
+        sys.stdout.write("Going to set TMPFS to off.\n")
+
     if "no-init" not in options:
         admin_password = init_site(config_settings, options)
         welcome_message(admin_password)
@@ -4208,6 +4212,7 @@ commands = [
       ( "no-init",  "n",  False, "leave new site directory empty (a later omd init does this"),
       ( "no-autostart", "A", False, "set AUTOSTART to off (useful for test sites)"),
       ( "apache-reload",  False,  False, "Issue a reload of the system apache instead of a restart"),
+      ( "no-tmpfs",  None,  False, "set TMPFS to off"),
       ( "tmpfs-size",  "t",  True, "specify the maximum size of the tmpfs (defaults to 50% of RAM), examples: 500M, 20G, 60%"),
     ],
     "Create a new site (-u UID, -g GID)",

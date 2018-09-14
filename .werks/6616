@@ -1,0 +1,11 @@
+Title: Add --no-tmpfs option to "omd create"
+Level: 1
+Component: omd
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1536929140
+Class: feature
+
+It's now possible to disable the temporary filesystem usage during
+site creation.

@@ -590,6 +590,7 @@ def page_side():
 @cmk.gui.pages.register("sidebar_snapin")
 def ajax_snapin():
     """Renders and returns the contents of the requested sidebar snapin(s) in JSON format"""
+    html.set_output_format("json")
     # Update online state of the user (if enabled)
     userdb.update_user_access_time(config.user.id)
 
@@ -634,6 +635,7 @@ def ajax_snapin():
 
 @cmk.gui.pages.register("sidebar_fold")
 def ajax_fold():
+    html.set_output_format("json")
     user_config = UserSidebarConfig(config.user, config.sidebar)
     user_config.folded = html.var("fold") == "yes"
     user_config.save()
@@ -641,6 +643,7 @@ def ajax_fold():
 
 @cmk.gui.pages.register("sidebar_openclose")
 def ajax_openclose():
+    html.set_output_format("json")
     if not config.user.may("general.configure_sidebar"):
         return
 
@@ -666,6 +669,7 @@ def ajax_openclose():
 
 @cmk.gui.pages.register("sidebar_move_snapin")
 def move_snapin():
+    html.set_output_format("json")
     if not config.user.may("general.configure_sidebar"):
         return
 
@@ -695,6 +699,7 @@ def ajax_get_messages():
 
 @cmk.gui.pages.register("sidebar_message_read")
 def ajax_message_read():
+    html.set_output_format("json")
     try:
         notify.delete_gui_message(html.var('id'))
         html.write("OK")
@@ -845,6 +850,7 @@ class PageAddSnapin(object):
 # TODO: This is snapin specific. Move this handler to the snapin file
 @cmk.gui.pages.register("sidebar_ajax_set_snapin_site")
 def ajax_set_snapin_site():
+    html.set_output_format("json")
     ident = html.var("ident")
     if ident not in snapin_registry:
         raise MKUserError(None, _("Invalid ident"))

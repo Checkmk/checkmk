@@ -293,6 +293,13 @@ docker build \
     -t mycompany/check-mk-enterprise:1.5.0p3
 ....
 
+Doing it like this the build process will download 2 files from our download
+server: The Debian stretch package and the GPG public key for verifying the
+package signature. To prevent this you may put the files that are needed during
+the build into the `docker` directory. For the above call you would have to put
+the `check-mk-enterprise-1.5.0p3.stretch_amd64.deb` and `Check_MK-pubkey.gpg`
+into this directory.
+
 We'll offer prebuilt images for the Enterprise and Managed Services
 Edition in the future. For the moment you'll have to build them on your
 own (e.g. using the command above).

@@ -1,0 +1,13 @@
+Title: Fixed unauthorized access to master control actions
+Level: 2
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 1.4.0p36
+Date: 1536908316
+Class: security
+
+As an authenticated guest user it was possible to gain unauthorized access to
+the master control snapin actions event if it is not possible to open the
+master control snapin. The vulnerability could be used to disable the complete
+monitoring or trigger other actions like disabling notifications.

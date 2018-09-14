@@ -175,6 +175,11 @@ div.snapin table.master_control td img.iconbutton {
 
 
     def _ajax_switch_masterstate(self):
+        html.set_output_format("json")
+
+        if not config.user.may("sidesnap.master_control"):
+            return
+
         site = html.var("site")
         column = html.var("switch")
         state = int(html.var("state"))

@@ -1,0 +1,13 @@
+Title: Fixed reflected XSS affecting agent updater AJAX calls
+Level: 1
+Component: agents
+Compatible: compat
+Edition: cee
+Version: 1.4.0p36
+Date: 1536907287
+Class: security
+
+When the hostname of a monitored agent is known, this could be used to exploit
+a reflected XSS vulnerability. Every unauthenticated or authenticated user can
+issue a request like this. The victim does not have to be authorized on the
+Check_MK application

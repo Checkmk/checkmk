@@ -67,7 +67,6 @@ image-daily: needed-packages
 	else \
 	    BRANCH_PREFIX="$${BRANCH_PREFIX}-" ; \
 	fi ; \
-	BRANCH_PREFIX="1.5.0-" ; \
 	VERSION="$$(date +%F)" ; \
 	VERSION="$${BRANCH_PREFIX}$${VERSION//-/.}" ; \
 	CREDENTIALS="$$(cat "$(CREDENTIALS_FILE)")" ; \

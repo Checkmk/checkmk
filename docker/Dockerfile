@@ -77,7 +77,7 @@ RUN set -e \
        fi \
     && dpkg-sig --verify "${PKG_FILE}" \
     && dpkg -i "${PKG_FILE}" \
-    && rm -f *.deb *.gpg needed-packages \
+    && rm -f -- *.deb *.gpg needed-packages \
     && apt-get clean \
     && rm /usr/sbin/policy-rc.d \
     && rm -rf /var/lib/apt/lists/*

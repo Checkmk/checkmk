@@ -50,14 +50,14 @@ needed-packages: ../omd/distros/DEBIAN_9.mk
 	    make -f - -f ../omd/distros/DEBIAN_9.mk --no-print-directory needed-packages
 
 check-mk-$(EDITION)-docker-$(VERSION).tar.gz: image
-	docker save $(DOCKER_REPO_NAME)/check-mk-raw:$(VERSION) > check-mk-$(EDITION)-docker-$(VERSION).tar.gz
+	docker save $(DOCKER_REPO_NAME)/check-mk-$(EDITION):$(VERSION) > check-mk-$(EDITION)-docker-$(VERSION).tar.gz
 
 image: needed-packages
 	docker build \
 	    --build-arg CMK_VERSION="$(VERSION)" \
 	    --build-arg CMK_EDITION="$(EDITION)" \
 	    --build-arg CMK_DL_CREDENTIALS="$$(cat "$(CREDENTIALS_FILE)")" \
-	    -t $(DOCKER_REPO_NAME)/check-mk-raw:$(VERSION) \
+	    -t $(DOCKER_REPO_NAME)/check-mk-$(EDITION):$(VERSION) \
 	    .
 
 image-daily: needed-packages
@@ -72,10 +72,10 @@ image-daily: needed-packages
 	CREDENTIALS="$$(cat "$(CREDENTIALS_FILE)")" ; \
 	docker build \
 	    --build-arg CMK_VERSION="$${VERSION}" \
-	    --build-arg CMK_EDITION=enterprise \
+	    --build-arg CMK_EDITION=$(EDITION) \
 	    --build-arg CMK_DL_CREDENTIALS="$$CREDENTIALS" \
-	    -t $(DOCKER_REPO_NAME)/check-mk-enterprise:$${VERSION} \
-	    -t $(DOCKER_REPO_NAME)/check-mk-enterprise:$${BRANCH_PREFIX}daily \
+	    -t $(DOCKER_REPO_NAME)/check-mk-$(EDITION):$${VERSION} \
+	    -t $(DOCKER_REPO_NAME)/check-mk-$(EDITION):$${BRANCH_PREFIX}daily \
 	    .
 
 test-lint-dockerfile:
@@ -85,7 +85,7 @@ test-lint-entrypoint:
 	shellcheck $(SHELLCHECK_OUTPUT_ARGS) docker-entrypoint.sh
 
 clean:
-	-docker rmi $(DOCKER_REPO_NAME)/check-mk-enterprise:latest || true
-	-docker rmi $(DOCKER_REPO_NAME)/check-mk-enterprise:1.5.0p2 || true
+	-docker rmi $(DOCKER_REPO_NAME)/check-mk-$(EDITION):latest || true
+	-docker rmi $(DOCKER_REPO_NAME)/check-mk-$(EDITION):$(VERSION) || true
 	[ -e needed-packages ] && rm needed-packages || true
 	ls check-mk-*-docker-*.tar.gz >/dev/null 2>&1 && rm check-mk-*-docker-*.tar.gz || true

@@ -580,6 +580,10 @@ def page_add_snapin():
 
 def ajax_switch_masterstate():
     html.set_output_format("json")
+
+    if not config.user.may("sidesnap.master_control"):
+        return
+
     site = html.var("site")
     column = html.var("switch")
     state = int(html.var("state"))

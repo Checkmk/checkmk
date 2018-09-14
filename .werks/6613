@@ -1,0 +1,12 @@
+Title: Fixed multiple reflected XSS in affecting sidebar snapin AJAX calls
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 1.4.0p36
+Date: 1536907071
+Class: security
+
+Multiple parameters of several snapin AJAX calls were vulnerable to reflected
+XSS. The speedometer is accessible to all users with at least monitoring
+privileges.

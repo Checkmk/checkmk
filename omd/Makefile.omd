@@ -1,30 +1,13 @@
 # General settings included by all packages
 
-# Makefile is loaded either from omd/packages/*/Makefile or omd/Makefile
-ifneq (,$(wildcard ../../../omd/distro))
-    REPO_PATH      := $(abspath ../../..)
-else
-    REPO_PATH      := $(abspath ..)
-endif
+REPO_PATH          := $(realpath $(dir $(realpath $(dir $(lastword $(MAKEFILE_LIST))))))
+
+include $(REPO_PATH)/defines.make
 
 PACKAGE_BASE       := $(REPO_PATH)/omd/packages
 
-EDITION            := raw
-EDITION_SHORT      := cre
-ifneq (,$(wildcard $(REPO_PATH)/enterprise))
-    EDITION        := enterprise
-    EDITION_SHORT  := cee
-endif
-ifneq (,$(wildcard $(REPO_PATH)/managed))
-    EDITION        := managed
-    EDITION_SHORT  := cme
-endif
-
-CMK_VERSION        := 1.5.0p5
+CMK_VERSION        := $(VERSION)
 OMD_SERIAL         := 38
-# Will be set to ".demo" by cmk build system when building a demo package
-DEMO_SUFFIX        :=
-OMD_VERSION        := $(CMK_VERSION).$(EDITION_SHORT)$(DEMO_SUFFIX)
 
 OMD_BASE           := /omd
 OMD_PHYSICAL_BASE  := /opt/omd

@@ -51,23 +51,24 @@ def inventory_msexch_database(parsed):
 
 
 def check_msexch_database(item, params, parsed):
-    var_table = [
-        ("I/O Database Reads (Attached) Average Latency",  "read_attached_latency", "DB read (attached) latency",  "db_read_latency"),
-        ("I/O Database Reads (Recovery) Average Latency",  "read_recovery_latency", "DB read (recovery) latency",  "db_read_recovery_latency"),
-        ("I/O Database Writes (Attached) Average Latency", "write_latency",         "DB write (attached) latency", "db_write_latency"),
-        ("I/O Log Writes Average Latency",                 "log_latency",           "Log latency",                 "db_log_latency")
-    ]
+    data = parsed.get(item)
+    if data is None:
+        return
 
-    if item in parsed:
-        for counter, setting, name, perfvar in var_table:
-            value = parsed[item][counter.lower()]
-            warn, crit = params[setting]
-            status = 0
-            if value >= crit:
-                status = 2
-            elif value >= warn:
-                status = 1
-            yield status, "%.1fms %s" % (value, name), [(perfvar, value, warn, crit)]
+    for counter, setting, name, perfvar in [
+        ("i/o database reads (attached) average latency",  "read_attached_latency", "db read (attached) latency",  "db_read_latency"),
+        ("i/o database reads (recovery) average latency",  "read_recovery_latency", "db read (recovery) latency",  "db_read_recovery_latency"),
+        ("i/o database writes (attached) average latency", "write_latency",         "db write (attached) latency", "db_write_latency"),
+        ("i/o log writes average latency",                 "log_latency",           "Log latency",                 "db_log_latency")
+    ]:
+        value = data[counter]
+        warn, crit = params[setting]
+        status = 0
+        if value >= crit:
+            status = 2
+        elif value >= warn:
+            status = 1
+        yield status, "%.1fms %s" % (value, name), [(perfvar, value, warn, crit)]
 
 
 check_info['msexch_database'] = {

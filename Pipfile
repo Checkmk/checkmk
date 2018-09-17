@@ -21,6 +21,7 @@ lxml = "*"
 pylint = "*"
 pyenchant = "*"
 yapf = "*"
+docker = "*"
 
 [packages]
 pysphere = "==0.1.7"

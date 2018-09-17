@@ -1,0 +1,13 @@
+Title: Fixed possible open redirect on login page
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 1.4.0p36
+Date: 1537209561
+Class: security
+
+It was possible to redirect an user to external websites through manipulating
+GET parameters. To exploit this vulnerability, an attacker needs to trick a
+user into following a crafted URL. The attack only works if the user does not
+notice that he is redirected to a different URL.

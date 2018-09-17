@@ -1,0 +1,12 @@
+Title: Fixed missing CSRF protection for host diagnostic AJAX calls
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.4.0p36
+Date: 1537178166
+Class: security
+
+The AJAX calls used by the host diagnostic page were not correctly using
+CSRF tokens to protect logged in users against malicious links that could
+trigger actions.

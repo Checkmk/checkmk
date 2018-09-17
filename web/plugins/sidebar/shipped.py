@@ -515,9 +515,12 @@ def render_sitestatus():
             html.write(text)
             html.close_td()
             html.open_td(class_="state")
+            url = html.makeactionuri_contextless([
+                ("_site_switch", "%s:%s" % (sitename, switch)),
+            ], filename="switch_site.py")
             html.status_label_button(content=state["state"], status=state["state"],
                 help=_("%s this site") % (state["state"] == "disabled" and _("enable") or _("disable")),
-                onclick="switch_site('_site_switch=%s:%s')" % (sitename, switch))
+                onclick="switch_site(%s)" % json.dumps(url))
             html.close_tr()
         html.close_table()
 

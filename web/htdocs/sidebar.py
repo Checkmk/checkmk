@@ -694,6 +694,9 @@ def ajax_switch_site():
     if not config.user.may("sidesnap.sitestatus"):
         return
 
+    if not html.check_transaction():
+        return
+
     switch_var = html.var("_site_switch")
     if switch_var:
         for info in switch_var.split(","):

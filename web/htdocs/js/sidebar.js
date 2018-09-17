@@ -676,8 +676,8 @@ function switch_customer(customer_id, switch_state) {
             reload_main_plus_sidebar, null);
 }
 
-function switch_site(switchvar) {
-    get_url("switch_site.py?" + switchvar, reload_main_plus_sidebar, null);
+function switch_site(url) {
+    get_url(url, reload_main_plus_sidebar, null);
 }
 
 var g_seconds_to_update = null;

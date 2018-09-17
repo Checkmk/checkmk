@@ -1,0 +1,60 @@
+Title: Optionally send parts of the service state to Graphite/InfluxDB
+Level: 1
+Component: cmc
+Compatible: compat
+Edition: cee
+Version: 1.6.0i1
+Date: 1537171102
+Class: feature
+
+In addition to the existing options
+
+LI:Value
+LI:Unity of measurement
+LI:Warning threshold
+LI:Critical threshold
+LI:Minimum
+LI:Maximum
+
+three new options have been added to the rule "Send metrics to Graphite/InfluxDB":
+
+LI:State
+LI:Scheduled downtime depth
+LI:Acknowledged
+
+When these options are activated, the corresponding parts of the service state
+are sent via the Graphite/InfluxDB interface, too. Note that these value are
+sent once per service, while the already existing options are per metric. To
+avoid a clash with existing metric names, the three new metric names all start
+with an equals sign, because due to the Nagios metric syntax, no metric can
+start with that character. In detail:
+
+LI:=state: the current state of the service, 0/1/2/3 for OK/WARN/CRIT/UNKNOWN
+LI:=scheduled_downtime_depth: the number of downtimes the service is currently in
+LI:=acknowledged: whether the current problem, if any, has been acknowledged (0/1)
+
+As an example, here the data sent to Graphite/InfluxDB for the "CPU load"
+service on host "myhost" when all options are enabled:
+
+C+:
+myhost.CPU_load.=state 0 1537170248
+myhost.CPU_load.=scheduled_downtime_depth 0 1537170248
+myhost.CPU_load.=acknowledged 0 1537170248
+myhost.CPU_load.load1 1.05 1537170248
+myhost.CPU_load.load1.warn 40 1537170248
+myhost.CPU_load.load1.crit 80 1537170248
+myhost.CPU_load.load1.min 0 1537170248
+myhost.CPU_load.load1.max 8 1537170248
+myhost.CPU_load.load5 0.75 1537170248
+myhost.CPU_load.load5.warn 40 1537170248
+myhost.CPU_load.load5.crit 80 1537170248
+myhost.CPU_load.load5.min 0 1537170248
+myhost.CPU_load.load5.max 8 1537170248
+myhost.CPU_load.load15 0.71 1537170248
+myhost.CPU_load.load15.warn 40 1537170248
+myhost.CPU_load.load15.crit 80 1537170248
+myhost.CPU_load.load15.min 0 1537170248
+myhost.CPU_load.load15.max 8 1537170248
+C-:
+
+CMK-898

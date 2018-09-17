@@ -125,6 +125,11 @@ the system Apache (/omd/apache/SITE.conf will be empty).
 
 \fB--apache-reload\fP Issue a reaload of the apache process instead of the default restart
 
+\fB--no-tmpfs\fP Use this to set the omd config option TMPFS to off during site creation.
+This may be useful when sites are set-up where the use of temporary filesystems is not
+possible. However, it is still highly recommended to use a tmpfs for the sites \fBtmp\fP
+directory for best performance.
+
 \fB-t SIZE\fP By default the tmpfs of the site is created to allocate 50% of
 the available RAM at max. When providing the \fB-t\fP option together with the SIZE
 given as absolute value of e.g. \fB500M\fP or percentage value like \fB10%\fP the

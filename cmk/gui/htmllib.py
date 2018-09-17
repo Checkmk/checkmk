@@ -909,11 +909,11 @@ class TransactionManager(object):
     def get(self):
         """Returns a transaction ID that can be used during a subsequent action"""
         if not self._current_transid:
-            self._current_transid = self._fresh_transid()
+            self._current_transid = self.fresh_transid()
         return self._current_transid
 
 
-    def _fresh_transid(self):
+    def fresh_transid(self):
         """Compute a (hopefully) unique transaction id.
 
         This is generated during rendering of a form or an action link, stored

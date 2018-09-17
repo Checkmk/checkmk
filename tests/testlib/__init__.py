@@ -68,6 +68,22 @@ def current_branch_name():
     return branch_name.decode("utf-8")
 
 
+def get_cmk_download_credentials():
+    try:
+        return tuple(file("%s/.cmk-credentials" % os.environ["HOME"]).read().strip().split(":"))
+    except IOError:
+        raise Exception("Missing ~/.cmk-credentials file (Create with content: USER:PASSWORD)")
+
+
+def wait_until(condition, timeout=1, interval=0.1):
+    start = time.time()
+    while not condition() and time.time() - start < timeout:
+        time.sleep(interval)
+    if not condition():
+        raise Exception("Timeout out waiting for %r to finish (Timeout: %d sec)" %
+                    (condition, timeout))
+
+
 class APIError(Exception):
     pass
 
@@ -93,13 +109,6 @@ class CMKVersion(object):
         self.edition_short = edition
 
         self.set_version(version, branch)
-
-
-    def _get_cmk_download_credentials(self):
-        try:
-            return tuple(file("%s/.cmk-credentials" % os.environ["HOME"]).read().strip().split(":"))
-        except IOError:
-            raise Exception("Missing ~/.cmk-credentials file (Create with content: USER:PASSWORD)")
 
 
     def get_default_version(self):
@@ -196,7 +205,11 @@ class CMKVersion(object):
         if self.is_installed():
             return True
 
-        response = requests.head(self.package_url(), auth=self._get_cmk_download_credentials(), verify=False)
+        # Use directly from build server in case the tests are executed there
+        if os.path.exists(self._build_system_package_path()):
+            return True
+
+        response = requests.head(self.package_url(), auth=get_cmk_download_credentials(), verify=False)
         return response.status_code == 200
 
 
@@ -204,7 +217,7 @@ class CMKVersion(object):
         temp_package_path = "/tmp/%s" % self.package_name()
 
         print(self.package_url())
-        response = requests.get(self.package_url(), auth=self._get_cmk_download_credentials(), verify=False)
+        response = requests.get(self.package_url(), auth=get_cmk_download_credentials(), verify=False)
         if response.status_code != 200:
             raise Exception("Failed to load package: %s" % self.package_url())
         file(temp_package_path, "w").write(response.content)

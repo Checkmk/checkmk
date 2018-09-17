@@ -41,6 +41,9 @@ test-pylint: ../.venv
 test-packaging: ../.venv
 	$(PYTEST) -T packaging
 
+test-docker: ../.venv
+	$(MAKE) -C ../docker test-lint-dockerfile test-lint-entrypoint
+	$(PYTEST) -T docker
 
 test-bandit: ../.venv
 # Currently only care about high severity reported issues. Once this is reached,

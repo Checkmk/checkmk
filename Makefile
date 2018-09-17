@@ -403,6 +403,7 @@ setup:
 	sudo pip install pipenv
 	$(MAKE) -C omd setup
 	$(MAKE) -C omd/packages/openhardwaremonitor setup
+	$(MAKE) -C docker setup
 ifeq ($(ENTERPRISE),yes)
 	$(MAKE) -C enterprise/locale setup
 endif

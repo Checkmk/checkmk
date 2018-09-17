@@ -27,6 +27,7 @@ EXECUTE_IN_SITE, EXECUTE_IN_VENV = True, False
 test_types = OrderedDict([
     ("unit",        EXECUTE_IN_VENV),
     ("pylint",      EXECUTE_IN_VENV),
+    ("docker",      EXECUTE_IN_VENV),
     ("integration", EXECUTE_IN_SITE),
     ("gui_crawl",   EXECUTE_IN_SITE),
     ("packaging",   EXECUTE_IN_VENV),
@@ -61,6 +62,8 @@ def pytest_collection_modifyitems(items):
             ty = "packaging"
         elif "tests/pylint" in file_path:
             ty = "pylint"
+        elif "tests/docker" in file_path:
+            ty = "docker"
         elif "tests/integration" in file_path:
             ty = "integration"
         else:

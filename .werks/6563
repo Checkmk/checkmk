@@ -1,0 +1,12 @@
+Title: Fixed displaying of joined perf-o-meter columns
+Level: 1
+Component: reporting
+Class: fix
+Compatible: compat
+Edition: cee
+State: unknown
+Version: 1.4.0p36
+Date: 1536824719
+
+When adding views containing Perf-O-Meter painters of joined services the
+Perf-o-meters were not displayed. Instead an empty cell was rendered.

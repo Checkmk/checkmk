@@ -105,7 +105,11 @@ class MasterControlSnapin(SidebarSnapin):
                         continue
 
                     colvalue = site_info[i]
-                    url = config.url_prefix() + ("check_mk/switch_master_state.py?site=%s&switch=%s&state=%d" % (site_id, colname, 1 - colvalue))
+                    url = html.makeactionuri_contextless([
+                        ("site", site_id),
+                        ("switch", colname),
+                        ("state", "%d" % (1 - colvalue)),
+                    ], filename="switch_master_state.py")
                     onclick = "get_url('%s', updateContents, 'snapin_master_control')" % url
 
                     html.open_tr()
@@ -175,9 +179,12 @@ div.snapin table.master_control td img.iconbutton {
 
 
     def _ajax_switch_masterstate(self):
-        html.set_output_format("json")
+        html.set_output_format("text")
 
         if not config.user.may("sidesnap.master_control"):
+            return
+
+        if not html.check_transaction():
             return
 
         site = html.var("site")

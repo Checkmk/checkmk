@@ -23,32 +23,8 @@
 # Boston, MA 02110-1301 USA.
 #
 
-EDITION            := raw
-EDITION_SHORT      := cre
+include defines.make
 
-ifneq (,$(wildcard enterprise))
-ENTERPRISE         := yes
-EDITION            := enterprise
-EDITION_SHORT      := cee
-else
-ENTERPRISE         := no
-endif
-
-ifneq (,$(wildcard managed))
-MANAGED            := yes
-EDITION            := managed
-EDITION_SHORT      := cme
-else
-MANAGED            := no
-endif
-
-VERSION            := 1.5.0p5
-DEMO_SUFFIX        :=
-OMD_VERSION        := $(VERSION).$(EDITION_SHORT)$(DEMO_SUFFIX)
-
-SHELL              := /bin/bash
-# TODO: Be more strict - Add this:
-#SHELL              := /bin/bash -e -o pipefail
 NAME               := check_mk
 PREFIX             := /usr
 BINDIR             := $(PREFIX)/bin
@@ -342,7 +318,7 @@ version:
 	if [ -n "$$newversion" ] ; then $(MAKE) NEW_VERSION=$$newversion setversion ; fi
 
 setversion:
-	sed -ri 's/^(VERSION[[:space:]]*:?= *).*/\1'"$(NEW_VERSION)/" Makefile ; \
+	sed -ri 's/^(VERSION[[:space:]]*:?= *).*/\1'"$(NEW_VERSION)/" defines.make ; \
 	sed -i 's/^AC_INIT.*/AC_INIT([MK Livestatus], ['"$(NEW_VERSION)"'], [mk@mathias-kettner.de])/' configure.ac ; \
 	sed -i 's/^VERSION=".*/VERSION="$(NEW_VERSION)"/' bin/mkbackup ; \
 	sed -i 's/^__version__ = ".*"$$/__version__ = "$(NEW_VERSION)"/' cmk/__init__.py bin/mkbench bin/livedump; \

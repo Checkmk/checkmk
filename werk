@@ -106,12 +106,12 @@ def save_last_werkid(id):
 
 
 def load_current_version():
-    for line in file("../Makefile"):
+    for line in file("../defines.make"):
         if line.startswith("VERSION"):
             version = line.split("=", 1)[1].strip()
             return version
 
-    bail_out("Failed to read VERSION  from Makefile")
+    bail_out("Failed to read VERSION from defines.make")
 
 
 def check_modified():

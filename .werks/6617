@@ -1,0 +1,24 @@
+Title: Check_MK is now available as Docker container
+Level: 2
+Component: omd
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1537167383
+Class: feature
+
+Besides the traditional operating system packages we are now providing Check_MK
+as Docker container image to improve the support of using Check_MK in containerized
+environments.
+
+For the moment the Docker images are published together with the other Check_MK
+packages on the versions download pages for manual download.
+
+Future releases of the Check_MK Raw Edition will be published on Docker Hub
+(https://hub.docker.com/r/checkmk/check-mk-raw/). On this page you can already
+find some information on how to use the images. These instructions apply to all
+Check_MK Editions.
+
+The Enterprise and Managed Services Edition containers will also be available through
+a docker image repository in the future. For the moment you will have to download and
+import the images manually using <tt>docker load</tt>.

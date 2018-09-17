@@ -6,13 +6,14 @@ PYTEST=pipenv run py.test -s -vv
         test-pylint-simple test-unit test-packaging
 
 help:
-	@echo "setup              - Install dependencies"
-	@echo "test-unit          - Run unit tests"
-	@echo "test-pylint        - Run pylint based tests"
-	@echo "test-integration   - Run integration tests"
-	@echo "test-gui-crawl     - Run GUI crawl test"
-	@echo "test-bandit        - Run bandit (security) tests"
-	@echo "test-shellcheck    - Run shellcheck tests"
+	@echo "setup                     - Install dependencies"
+	@echo "test-unit                 - Run unit tests"
+	@echo "test-pylint               - Run pylint based tests"
+	@echo "test-integration          - Run integration tests"
+	@echo "test-gui-crawl            - Run GUI crawl test"
+	@echo "test-bandit               - Run bandit (security) tests"
+	@echo "test-shellcheck           - Run shellcheck tests"
+	@echo "test-docker               - Run docker tests"
 
 # This target needs to be phony so it is run every time because only the other
 # makefile can determine that there's nothing to be done.

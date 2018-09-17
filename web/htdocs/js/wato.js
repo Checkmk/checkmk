@@ -972,13 +972,15 @@ function wato_toggle_folder(event, oDiv, on) {
 // |                                                  |___/               |
 // +----------------------------------------------------------------------+
 
-function handle_host_diag_result(ident, response_text) {
-    var img   = document.getElementById(ident + '_img');
-    var log   = document.getElementById(ident + '_log');
-    var retry = document.getElementById(ident + '_retry');
+function handle_host_diag_result(data, response_json) {
+    var img   = document.getElementById(data.ident + '_img');
+    var log   = document.getElementById(data.ident + '_log');
+    var retry = document.getElementById(data.ident + '_retry');
     remove_class(img, "reloading");
 
-    if (response_text[0] == "0") {
+    var response = JSON.parse(response_json);
+
+    if (response.result_code == 0) {
         img.src = "images/icon_success.png";
         log.className = "log diag_success";
     }
@@ -987,13 +989,14 @@ function handle_host_diag_result(ident, response_text) {
         log.className = "log diag_failed";
     }
 
-    log.innerHTML = response_text.substr(1).replace(/\n/g, "<br>\n");
+    log.innerHTML = response.result.output.replace(/\n/g, "<br>\n");
 
     retry.src = "images/icon_reload.png";
     retry.style.display = 'inline';
+    retry.parentNode.href = "javascript:start_host_diag_test('"+data.ident+"', '"+data.hostname+"', '"+response.result.next_transid+"');";
 }
 
-function start_host_diag_test(ident, hostname) {
+function start_host_diag_test(ident, hostname, transid) {
     var log   = document.getElementById(ident + '_log');
     var img   = document.getElementById(ident + '_img');
     var retry = document.getElementById(ident + '_retry');
@@ -1001,7 +1004,8 @@ function start_host_diag_test(ident, hostname) {
     retry.style.display = 'none';
 
     var vars = '';
-    vars = '&ipaddress=' + encodeURIComponent(document.getElementsByName('vs_host_p_ipaddress')[0].value);
+    vars = '&_transid=' + encodeURIComponent(transid);
+    vars += '&ipaddress=' + encodeURIComponent(document.getElementsByName('vs_host_p_ipaddress')[0].value);
 
 
     if (document.getElementsByName("vs_host_p_snmp_community_USE")[0].checked)
@@ -1040,7 +1044,7 @@ function start_host_diag_test(ident, hostname) {
     log.innerHTML = "...";
     get_url("wato_ajax_diag_host.py?host=" + encodeURIComponent(hostname)
             + "&_test=" + encodeURIComponent(ident) + vars,
-              handle_host_diag_result, ident);
+              handle_host_diag_result, { "hostname": hostname, "ident": ident });
 }
 
 // .-Active Checks---------------------------------------------------------.

@@ -2645,7 +2645,8 @@ def mode_diag_host(phase):
 
             html.close_tr()
             html.close_table()
-            html.javascript('start_host_diag_test("%s", "%s")' % (ident, hostname))
+            html.javascript('start_host_diag_test(%s, %s, %s)' %
+                (json.dumps(ident), json.dumps(hostname), json.dumps(html.fresh_transid())))
 
     html.close_td()
     html.close_tr()
@@ -2654,11 +2655,15 @@ def mode_diag_host(phase):
 
 
 def ajax_diag_host():
+    html.set_output_format("json")
     try:
         init_wato_datastructures(with_wato_lock=True)
 
         if not config.user.may('wato.diag_host'):
             raise MKAuthException(_('You are not permitted to perform this action.'))
+
+        if not html.check_transaction():
+            raise MKAuthException(_("Invalid transaction"))
 
         hostname = html.var("host")
         if not hostname:
@@ -2711,12 +2716,27 @@ def ajax_diag_host():
                 args[8] = html.var("snmpv3_security_name")
 
         result = check_mk_automation(host.site_id(), "diag-host", [hostname, _test] + args)
-        # API is defined as follows: Two data fields, separated by space.
-        # First is the state: 0 or 1, 0 means success, 1 means failed.
-        # Second is treated as text output
-        html.write_text("%s %s" % (result[0], result[1]))
+
+        # Uses the WatoWebApiMode format to make future migrations easier
+        response = {
+            "result_code": result[0],
+            "result": {
+                "next_transid": html.fresh_transid(),
+                "output": result[1],
+            },
+        }
     except Exception, e:
-        html.write_text("1 %s" % _("Exception: %s") % traceback.format_exc())
+        response = {
+            "result_code": 1,
+            "result": {
+                "next_transid": html.fresh_transid(),
+                "output": _("Exception: %s") % traceback.format_exc(),
+            }
+        }
+
+    html.write(json.dumps(response))
+    # TODO: This will be made in a central place in future releases
+    html.store_new_transids()
 
 
 

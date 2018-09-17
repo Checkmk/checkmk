@@ -16533,6 +16533,8 @@ def may_edit_ruleset(varname):
         return config.user.may("wato.services") or config.user.may("wato.rulesets")
     elif varname in [ "custom_checks", "datasource_programs" ]:
         return config.user.may("wato.rulesets") and config.user.may("wato.add_or_modify_executables")
+    elif varname == "agent_config:custom_files":
+        return config.user.may("wato.rulesets") and config.user.may("wato.agent_deploy_custom_files")
     else:
         return config.user.may("wato.rulesets")
 

@@ -3186,8 +3186,11 @@ class ModeAjaxDiagHost(WatoWebApiMode):
                                       'snmp_timeout',
                                       'snmp_retries',
                                       'tcp_connect_timeout',
-                                      'datasource_program' ]):
+                                      ]):
             args[idx] = request.get(what, "")
+
+        if config.user.may('wato.add_or_modify_executables'):
+            args[6] = request.get("datasource_program", "")
 
         if request.get("snmpv3_use"):
             snmpv3_use = { "0": "noAuthNoPriv",

@@ -1,0 +1,14 @@
+Title: Fixed missing CSRF protection for master control AJAX calls
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 1.4.0p36
+Date: 1537185238
+Class: security
+
+The AJAX calls used by the master control snapin were not correctly using
+CSRF tokens to protect logged in users against malicious links that could
+trigger actions.
+
+CMK-963

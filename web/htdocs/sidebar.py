@@ -604,9 +604,12 @@ def ajax_speedometer():
 
 
 def ajax_switch_masterstate():
-    html.set_output_format("json")
+    html.set_output_format("text")
 
     if not config.user.may("sidesnap.master_control"):
+        return
+
+    if not html.check_transaction():
         return
 
     site = html.var("site")
@@ -635,6 +638,8 @@ def ajax_switch_masterstate():
                (column, state, column))
         sites.live().set_only_sites()
         render_master_control()
+        # TODO: This will be done in a central place in the future
+        html.store_new_transids()
     else:
         html.write(_("Command %s/%d not found") % (html.attrencode(column), state))
 

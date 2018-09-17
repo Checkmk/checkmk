@@ -1267,7 +1267,11 @@ def render_master_control():
                     continue
 
                 colvalue = site_info[i]
-                url = config.url_prefix() + ("check_mk/switch_master_state.py?site=%s&switch=%s&state=%d" % (site_id, colname, 1 - colvalue))
+                url = html.makeactionuri_contextless([
+                    ("site", site_id),
+                    ("switch", colname),
+                    ("state", "%d" % (1 - colvalue)),
+                ], filename="switch_master_state.py")
                 onclick = "get_url('%s', updateContents, 'snapin_master_control')" % url
 
                 html.open_tr()

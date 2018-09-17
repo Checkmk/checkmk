@@ -92,9 +92,12 @@ class SiteStatus(SidebarSnapin):
             if switch == "missing":
                 html.status_label(content=state, status=state, help=_("Site is missing"))
             else:
+                url = html.makeactionuri_contextless([
+                    ("_site_switch", "%s:%s" % (sitename, switch)),
+                ], filename="switch_site.py")
                 html.status_label_button(content=state, status=state,
                     help=_("enable this site") if state == "disabled" else _("disable this site"),
-                    onclick="switch_site('_site_switch=%s:%s')" % (sitename, switch))
+                    onclick="switch_site(%s)" % (json.dumps(url)))
             html.close_tr()
         html.close_table()
 
@@ -146,6 +149,9 @@ table.sitestate td.state {
         html.set_output_format("json")
         # _site_switch=sitename1:on,sitename2:off,...
         if not config.user.may("sidesnap.sitestatus"):
+            return
+
+        if not html.check_transaction():
             return
 
         switch_var = html.var("_site_switch")

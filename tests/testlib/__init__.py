@@ -153,6 +153,10 @@ class CMKVersion(object):
         return "https://mathias-kettner.de/support/%s/%s" % (self.version, self.package_name())
 
 
+    def _build_system_package_path(self):
+        return os.path.join("/bauwelt/download", self.version, self.package_name())
+
+
     def version_directory(self):
         return "%s.%s" % (self.version, self.edition_short)
 
@@ -166,6 +170,19 @@ class CMKVersion(object):
 
 
     def install(self):
+        if os.path.exists(self._build_system_package_path()):
+            print "Install from build system package (%s)" % self._build_system_package_path()
+            package_path = self._build_system_package_path()
+            self._install_package(package_path)
+
+        else:
+            print "Install from download portal"
+            package_path = self._download_package()
+            self._install_package(package_path)
+            os.unlink(package_path)
+
+
+    def _download_package(self):
         temp_package_path = "/tmp/%s" % self.package_name()
 
         print(self.package_url())
@@ -173,7 +190,10 @@ class CMKVersion(object):
         if response.status_code != 200:
             raise Exception("Failed to load package: %s" % self.package_url())
         file(temp_package_path, "w").write(response.content)
+        return temp_package_path
 
+
+    def _install_package(self, package_path):
         # The following gdebi call will fail in case there is another package
         # manager task being active. Try to wait for other task to finish. Sure
         # this is not race free, but hope it's sufficient.
@@ -181,13 +201,15 @@ class CMKVersion(object):
             print("Waiting for other dpkg process to complete...\n")
             time.sleep(1)
 
-        cmd = "sudo /usr/bin/gdebi --non-interactive %s" % temp_package_path
-        print(cmd)
-        sys.stdout.flush()
-        if os.system(cmd) >> 8 != 0:
-            raise Exception("Failed to install package: %s" % temp_package_path)
-
-        os.unlink(temp_package_path)
+        # Improve the protection against other test runs installing packages
+        print("Getting install file lock (/tmp/cmk-test-install-version.lock)...")
+        with lockfile.FileLock("/tmp/cmk-test-install-version"):
+            print("Have install file lock")
+            cmd = "sudo /usr/bin/gdebi --non-interactive %s" % package_path
+            print(cmd)
+            sys.stdout.flush()
+            if os.system(cmd) >> 8 != 0:
+                raise Exception("Failed to install package: %s" % package_path)
 
         assert self.is_installed()
 

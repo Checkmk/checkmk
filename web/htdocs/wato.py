@@ -487,6 +487,8 @@ class WatoWebApiMode(WatoMode):
             response = { "result_code": 1, "result": "%s" % e }
 
         html.write(json.dumps(response))
+        html.store_new_transids()
+
 
 
 #.
@@ -2719,7 +2721,7 @@ class ModeDiagHost(WatoMode):
                 html.open_td(class_="icons")
                 html.open_div()
                 html.img("images/icon_reload.png", class_="icon", id="%s_img" % ident)
-                html.open_a(href="javascript:start_host_diag_test(\'%s\', \'%s\');" % (ident, self._hostname))
+                html.open_a(href="")
                 html.img("images/icon_reload.png", class_=["icon", "retry"], id_="%s_retry" % ident, title=_('Retry this test'))
                 html.close_a()
                 html.close_div()
@@ -2731,7 +2733,8 @@ class ModeDiagHost(WatoMode):
 
                 html.close_tr()
                 html.close_table()
-                html.javascript('start_host_diag_test("%s", "%s")' % (ident, self._hostname))
+                html.javascript('start_host_diag_test(%s, %s, %s)' %
+                    (json.dumps(ident), json.dumps(self._hostname), json.dumps(html.fresh_transid())))
 
         html.close_td()
         html.close_tr()
@@ -2833,6 +2836,10 @@ class ModeAjaxDiagHost(WatoWebApiMode):
         if not config.user.may('wato.diag_host'):
             raise MKAuthException(_('You are not permitted to perform this action.'))
 
+        if not html.check_transaction():
+            raise MKAuthException(_("Invalid transaction"))
+
+
         request = self.webapi_request()
 
         hostname = request.get("host")
@@ -2890,7 +2897,12 @@ class ModeAjaxDiagHost(WatoWebApiMode):
             else:
                 args[9] = request.get("snmpv3_security_name")
 
-        return watolib.check_mk_automation(host.site_id(), "diag-host", [hostname, _test] + args)
+        result = watolib.check_mk_automation(host.site_id(), "diag-host", [hostname, _test] + args)
+        return {
+            "next_transid" : html.fresh_transid(),
+            "status_code"  : result[0],
+            "output"       : result[1],
+        }
 
 
 #.

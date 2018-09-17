@@ -32,12 +32,12 @@ SHELL              := /bin/bash -e -o pipefail
 .PHONY: help setup setversion image image-daily clean test-lint-dockerfile test-lint-entrypoint
 
 help:
-	@echo "make setup       - Prepare local (Ubuntu) system for building"
-	@echo "make image       - Build container image for current edition, branch, version"
-	@echo "make image-daily - Build container image for current edition, branch, daily"
-	@echo "make clean       - Cleanup docker images on current docker node"
-	@echo "make test-lint   - Execute linter tests on docker specific files"
-	@echo "make test        - Execute docker containerizing tests"
+	@echo "make setup                - Prepare local (Ubuntu) system for building"
+	@echo "make image                - Build container image for current edition, branch, version"
+	@echo "make image-daily          - Build container image for current edition, branch, daily"
+	@echo "make clean                - Cleanup docker images on current docker node"
+	@echo "make test-lint-dockerfile - Execute linter tests on docker specific files"
+	@echo "make test-lint-entrypoint - Execute linter tests on docker entrypoint script"
 
 setup:
 	sudo apt-get install docker-ce
@@ -86,5 +86,7 @@ test-lint-entrypoint:
 	shellcheck $(SHELLCHECK_OUTPUT_ARGS) docker-entrypoint.sh
 
 clean:
-	-docker rmi $(DOCKER_REPO_NAME)/check-mk-enterprise:latest
-	-docker rmi $(DOCKER_REPO_NAME)/check-mk-enterprise:1.5.0p2
+	-docker rmi $(DOCKER_REPO_NAME)/check-mk-enterprise:latest || true
+	-docker rmi $(DOCKER_REPO_NAME)/check-mk-enterprise:1.5.0p2 || true
+	[ -e needed-packages ] && rm needed-packages || true
+	ls check-mk-*-docker-*.tar.gz >/dev/null 2>&1 && rm check-mk-*-docker-*.tar.gz || true

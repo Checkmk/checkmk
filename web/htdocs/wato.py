@@ -2686,9 +2686,11 @@ def ajax_diag_host():
                                       'snmp_community',
                                       'agent_port',
                                       'snmp_timeout',
-                                      'snmp_retries',
-                                      'datasource_program' ]):
+                                      'snmp_retries' ]):
             args[idx] = html.var(what, "")
+
+        if config.user.may('wato.add_or_modify_executables'):
+            args[5] = html.var("datasource_program", "")
 
         if html.var("snmpv3_use"):
             snmpv3_use = { "0": "noAuthNoPriv",

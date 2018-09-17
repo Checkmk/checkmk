@@ -371,7 +371,7 @@ def do_login():
             #  - logout.py: Happens after login
             #  - side.py: Happens when invalid login is detected during sidebar refresh
             #  - Full qualified URLs (http://...) to prevent redirection attacks
-            if not origtarget or "logout.py" in origtarget or 'side.py' in origtarget or '://' in origtarget:
+            if not origtarget or "logout.py" in origtarget or 'side.py' in origtarget or not utils.is_allowed_url(origtarget):
                 origtarget = config.url_prefix() + 'check_mk/'
 
             # None        -> User unknown, means continue with other connectors
@@ -438,6 +438,9 @@ def normal_login_page(called_directly = True):
     html.header(config.get_page_heading(), javascripts=[], stylesheets=["pages", "login"])
 
     origtarget = html.var('_origtarget', '')
+    if not utils.is_allowed_url(origtarget):
+        origtarget = html.makeuri([])
+
     if not origtarget and not html.myfile in [ 'login', 'logout' ]:
         origtarget = html.makeuri([])
 

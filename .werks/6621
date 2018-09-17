@@ -1,0 +1,17 @@
+Title: Add permission to prevent users from editing "Deploy custom files with agent" rule set
+Level: 1
+Component: agents
+Compatible: compat
+Edition: cee
+Version: 1.4.0p36
+Date: 1537207681
+Class: security
+
+Using the rule set "Deploy custom files with agent" it is possible to select custom files
+to be distributed with the agents built using the Agent Bakery. As this is rule set may
+add custom executable code to the agents it makes sense to be able to control the permission
+for this more explicitly.
+
+If you want to make sure that administrative users can not add those custom files to the
+agents, you can now use the rule set "Configure custom agent file deployments" to revoke
+this permission.

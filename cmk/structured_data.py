@@ -412,7 +412,7 @@ class Container(NodeAttribute):
 
 
     def count_entries(self):
-        return 1 + sum([child.count_entries() for _, __, child in self.get_children()])
+        return sum([child.count_entries() for _, __, child in self.get_children()])
 
 
     def compare_with(self, old, keep_identical=False):
@@ -769,7 +769,7 @@ class Numeration(Leaf):
 
 
     def count_entries(self):
-        return 1 + sum(map(len, self._numeration))
+        return sum(map(len, self._numeration))
 
 
     def compare_with(self, old, keep_identical=False):
@@ -991,7 +991,7 @@ class Attributes(Leaf):
 
 
     def count_entries(self):
-        return 1 + len(self._attributes)
+        return len(self._attributes)
 
 
     def compare_with(self, old, keep_identical=False):

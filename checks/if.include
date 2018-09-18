@@ -290,6 +290,8 @@ def inventory_if_common(info, has_nodeinfo = False):
     settings_sets = host_extra_conf(host_name(), inventory_if_rules)
     seen_indicies = set()
     pre_inventory = []
+    global_seen_items = set()
+    duplicates = set()
 
     if not settings_sets:
         # if there are no settings, use defaults
@@ -314,6 +316,7 @@ def inventory_if_common(info, has_nodeinfo = False):
         match_alias      = settings.get('match_alias')
         match_desc       = settings.get('match_desc')
         pad_portnumbers  = settings.get('pad_portnumbers', if_inventory_pad_portnumbers)
+
 
         # Allow main check to set no port type (e.g. hitachi_hnas_fc_if)
         porttypes.append("")
@@ -355,6 +358,11 @@ def inventory_if_common(info, has_nodeinfo = False):
                 item = ifAlias
             else:
                 item = if_pad_with_zeroes(info, ifIndex, has_nodeinfo, pad_portnumbers)
+
+            if item not in global_seen_items:
+                global_seen_items.add(item)
+            else:
+                duplicates.add(item)
 
             current_host_name = host_name()
 
@@ -420,7 +428,12 @@ def inventory_if_common(info, has_nodeinfo = False):
                 if ifSpeed != "" and if_inventory_monitor_speed:
                     params["speed"] = int(ifSpeed)
                 seen_indicies.add(ifIndex)
-                pre_inventory.append((item, "%r" % params, int(ifIndex)))
+
+                try:
+                    index_as_item = int(item) == int(ifIndex)
+                except (TypeError, ValueError):
+                    index_as_item = False
+                pre_inventory.append((item, "%r" % params, int(ifIndex), index_as_item))
 
         # Create pseudo interfaces out of groups
         # On cluster groups we have no 'interfaces' key
@@ -458,14 +471,12 @@ def inventory_if_common(info, has_nodeinfo = False):
                     params["speed"] = total_speed
 
                 # Note: the group interface index is always set to 1
-                pre_inventory.append((group_name, "%r" % params, 1))
+                pre_inventory.append((group_name, "%r" % params, 1, False))
 
     inventory = []
-    s = set()
-    duplicates = set(x[0] for x in pre_inventory if x[0] in s or s.add(x[0]))
     # Check for duplicate items (e.g. when using Alias as item and the alias is not unique)
-    for item, params, index in pre_inventory:
-        if item in duplicates:
+    for item, params, index, index_as_item in pre_inventory:
+        if not index_as_item and item in duplicates:
             new_item = "%s %d" % (item, index)
         else:
             new_item = item

@@ -30,20 +30,31 @@ pytestmark = pytest.mark.checks
 # ifPhysAddress
 
 
-@pytest.mark.parametrize("info,inventory_if_rules,result", [
-    ([], [], 0),
-    ([20*[""]], [], 0),
-    ([20*["0"]], [], 0),
-    ([21*[""]], [], 0),
-    ([21*["0"]], [], 0),
-    ([["1", "EINS", "6", "10", "1"] + 13*["0"] + ["EINS-ALIAS", "00:00:00:00:00:00"]], [], 1),
-    ([["1", "EINS", "6", "10", "2"] + 13*["0"] + ["EINS-ALIAS", "00:00:00:00:00:00"]], [], 0),
-    ([["1", "EINS", "00000", "10", "1"] + 13*["0"] + ["EINS-ALIAS", "00:00:00:00:00:00"]], [], 0),
-    ([["1", "EINS", "6", "10", "1"] + 13*["0"] + ["EINS-ALIAS", "00:00:00:00:00:00"],
-      ["1", "EINS-DUPLICATE", "6", "10", "1"] + 13*["0",] + ["EINS-ALIAS-DUPLICATE", "00:00:00:00:00:00"]], [], 1),
+@pytest.mark.parametrize("info,settings,items", [
+    ([], [], []),
+    ([20*[""]], [], []),
+    ([20*["0"]], [], []),
+    ([21*[""]], [], []),
+    ([21*["0"]], [], []),
+    ([["1", "FOO", "6", "10", "1"] + 13*["0"] + ["FOO-ALIAS", "00:00:00:00:00:00"],
+      ["1", "FOO-DUPLICATE", "6", "10", "1"] + 13*["0"] + ["FOO-ALIAS-DUPLICATE", "00:00:00:00:00:00"]],
+     [], ["1"]),
+    ([["1", "FOO", "6", "10", "1"] + 13*["0"] + ["FOO-ALIAS", "00:00:00:00:00:00"],
+      ["2", "BAR", "6", "10", "1"] + 13*["0"] + ["BAR-ALIAS", "00:00:00:00:00:00"]],
+     [], ["1", "2"]),
+    ([["1", "FOO", "6", "10", "1"] + 13*["0"] + ["FOO-ALIAS", "00:00:00:00:00:00"],
+      ["2", "BAR", "6", "10", "1"] + 13*["0"] + ["BAR-ALIAS", "00:00:00:00:00:00"]],
+     [{"use_desc": True}], ["FOO", "BAR"]),
+    ([["1", "FOO", "6", "10", "1"] + 13*["0"] + ["FOO-ALIAS", "00:00:00:00:00:00"],
+      ["2", "FOO", "6", "10", "1"] + 13*["0"] + ["FOO-ALIAS", "00:00:00:00:00:00"]],
+     [{"use_desc": True}], ["FOO 1", "FOO 2"]),
+    ([["1", "FOO", "6", "10", "2"] + 13*["0"] + ["FOO-ALIAS", "00:00:00:00:00:00"],
+      ["2", "FOO", "6", "10", "1"] + 13*["0"] + ["FOO-ALIAS", "00:00:00:00:00:00"]],
+     [{"use_desc": True}], ["FOO 2"]),
 ])
-def test_if_inventory_if_common_count_interfaces(check_manager, monkeypatch, info, inventory_if_rules, result):
+def test_if_inventory_if_common_discovered_items(check_manager, monkeypatch, info, settings, items):
     check = check_manager.get_check("if")
-    #TODO How to handle several "host_extra_conf"s?
-    #monkeypatch.setitem(check.context, "host_extra_conf", lambda _, __: inventory_if_rules)
-    assert len(check.run_discovery(info)) == result
+    monkeypatch.setitem(check.context, "host_extra_conf", lambda _, __: settings)
+    monkeypatch.setitem(check.context, "_prepare_if_group_patterns_from_conf", lambda: {})
+    discovered_items = [e[0] for e in check.run_discovery(info)]
+    assert discovered_items == items

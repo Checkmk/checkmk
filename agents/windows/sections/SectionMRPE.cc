@@ -44,7 +44,7 @@ SectionMRPE::SectionMRPE(Configuration &config, Logger *logger,
 void SectionMRPE::updateIncludes() {
     _included_entries.clear();
 
-    for (const auto & [ user, path ] : *_includes) {
+    for (const auto &[user, path] : *_includes) {
         std::ifstream ifs(path);
         if (!ifs) {
             Warning(_logger) << "Include file not found " << path;

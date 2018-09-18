@@ -49,7 +49,7 @@ bool SectionMem::produceOutputInner(std::ostream &out,
     // SwapTotal:     1048568 kB
     // SwapFree:      1043732 kB
 
-    for (const auto & [ label, value ] : {
+    for (const auto &[label, value] : {
              KVPair("MemTotal:", stat.ullTotalPhys),
              KVPair("MemFree:", stat.ullAvailPhys),
              KVPair("SwapTotal:", stat.ullTotalPageFile - stat.ullTotalPhys),

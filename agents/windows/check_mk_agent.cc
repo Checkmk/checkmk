@@ -85,7 +85,6 @@
 #include "types.h"
 #include "wmiHelper.h"
 
-using std::chrono::milliseconds;
 using std::lock_guard;
 using std::make_unique;
 using std::map;
@@ -96,6 +95,7 @@ using std::setw;
 using std::string;
 using std::unordered_map;
 using std::vector;
+using std::chrono::milliseconds;
 
 //  .----------------------------------------------------------------------.
 //  |       ____            _                 _   _                        |
@@ -108,7 +108,7 @@ using std::vector;
 //  | Declarations of macros, structs and function prototypes             |
 //  '----------------------------------------------------------------------'
 
-static const char RT_PROTOCOL_VERSION_ENCRYPTED[2]   = {'0', '0'};
+static const char RT_PROTOCOL_VERSION_ENCRYPTED[2] = {'0', '0'};
 static const char RT_PROTOCOL_VERSION_UNENCRYPTED[2] = {'9', '9'};
 
 #define SERVICE_NAME "Check_MK_Agent"
@@ -681,8 +681,8 @@ DWORD WINAPI realtime_check_func(void *data_in) {
                     // The realtime mode uses the following "protocol"
                     // - encrypted output is indicated by "00"
                     // - unencrypted output is indicated by "99"
-                    // After the encryption indicator, a 10 bytes timestamp is written,
-                    // followed by the actual un/encrypted content
+                    // After the encryption indicator, a 10 bytes timestamp is
+                    // written, followed by the actual un/encrypted content
                     if (*s_config->encrypted) {
                         out->writeBinary(RT_PROTOCOL_VERSION_ENCRYPTED, 2);
                     } else {

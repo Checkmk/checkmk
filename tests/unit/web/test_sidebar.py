@@ -229,6 +229,9 @@ def test_ajax_fold(mocker, origin_state, fold_var, set_state):
             if varname == "fold":
                 return fold_var
 
+        def set_output_format(self, f):
+            pass
+
     m_config = mocker.patch.object(config.user, "load_file", return_value={
         "fold": origin_state,
         "snapins": [("tactical_overview", "open")],
@@ -267,6 +270,9 @@ def test_ajax_openclose_close(mocker, origin_state, set_state):
                 return "tactical_overview"
             elif varname == "state":
                 return set_state
+
+        def set_output_format(self, f):
+            pass
 
     m_config = mocker.patch.object(config.user, "load_file", return_value={
         "fold": False,
@@ -319,6 +325,10 @@ def test_move_snapin(mocker, move, before, do_save):
                 return move
             elif varname == "before":
                 return before
+
+        def set_output_format(self, f):
+            pass
+
     html.set_current(MockHtml())
 
     m_save = mocker.patch.object(sidebar.UserSidebarConfig, "save")

@@ -204,7 +204,7 @@ inline PathsT sorted(PathsT &files) {
  */
 PathsT findFiles(const fs::path &path, Logger *logger) {
     PathsT files;
-    const auto & [ searchPath, diff ] = buildPathBeginning(path);
+    const auto &[searchPath, diff] = buildPathBeginning(path);
     PathsT dirs = {searchPath};
 
     // Iterate through the path element per element.
@@ -216,7 +216,7 @@ PathsT findFiles(const fs::path &path, Logger *logger) {
             globType != GlobType::None) {
             const auto traversalFunction = switchDirTraversalFunction(
                 globType == GlobType::Recursive, path);
-            const auto & [ nextLevelFiles, nextLevelDirs ] =
+            const auto &[nextLevelFiles, nextLevelDirs] =
                 findFilesAndDirsInSubdir(*it, dirs, logger, traversalFunction);
             files.reserve(files.size() + nextLevelFiles.size());
             std::copy(std::move_iterator(nextLevelFiles.begin()),
@@ -258,7 +258,7 @@ inline fs::path fixBasenameCase(const fs::path &filePath,
 // The case-preservation fun for the entire path.
 fs::path correctPathCase(const fs::path &filePath,
                          const WinApiInterface &winapi) {
-    auto[preserved, diff] = buildPathBeginning(filePath);
+    auto [preserved, diff] = buildPathBeginning(filePath);
 
     // Append the rest of the part with fixed cases.
     for (auto it = std::next(filePath.begin(), diff), end = filePath.end();

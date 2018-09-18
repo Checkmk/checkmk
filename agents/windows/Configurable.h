@@ -183,7 +183,7 @@ public:
 
     virtual void output(const std::string &key,
                         std::ostream &out) const override {
-        for (const auto & [ var, value ] : this->values()) {
+        for (const auto &[var, value] : this->values()) {
             out << key << " " << var << " = " << value << "\n";
         }
     }

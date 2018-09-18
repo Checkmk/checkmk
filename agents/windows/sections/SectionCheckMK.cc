@@ -80,7 +80,7 @@ bool SectionCheckMK::produceOutputInner(std::ostream &out,
                                         const std::optional<std::string> &) {
     Debug(_logger) << "SectionCheckMK::produceOutputInner";
     // output static fields
-    for (const auto & [ label, value ] : _info_fields) {
+    for (const auto &[label, value] : _info_fields) {
         out << label << ": " << value << "\n";
     }
 

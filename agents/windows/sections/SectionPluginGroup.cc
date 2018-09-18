@@ -457,7 +457,7 @@ bool SectionPluginGroup::produceOutputInner(
 }
 
 int SectionPluginGroup::getTimeout(const std::string &name) const {
-    for (const auto & [ plugin, timeout ] : *_timeout) {
+    for (const auto &[plugin, timeout] : *_timeout) {
         if (globmatch(plugin, name)) {
             return timeout;
         }
@@ -467,7 +467,7 @@ int SectionPluginGroup::getTimeout(const std::string &name) const {
 }
 
 int SectionPluginGroup::getCacheAge(const std::string &name) const {
-    for (const auto & [ plugin, age ] : *_cache_age) {
+    for (const auto &[plugin, age] : *_cache_age) {
         if (globmatch(plugin, name)) {
             return age;
         }
@@ -476,7 +476,7 @@ int SectionPluginGroup::getCacheAge(const std::string &name) const {
 }
 
 int SectionPluginGroup::getMaxRetries(const std::string &name) const {
-    for (const auto & [ plugin, count ] : *_retry_count) {
+    for (const auto &[plugin, count] : *_retry_count) {
         if (globmatch(plugin, name)) {
             return count;
         }
@@ -486,7 +486,7 @@ int SectionPluginGroup::getMaxRetries(const std::string &name) const {
 
 script_execution_mode SectionPluginGroup::getExecutionMode(
     const std::string &name) const {
-    for (const auto & [ plugin, mode ] : *_execution_mode) {
+    for (const auto &[plugin, mode] : *_execution_mode) {
         if (globmatch(plugin, name)) {
             return mode;
         }
@@ -543,7 +543,8 @@ std::string SectionPluginGroup::withInterpreter(const fs::path &path) const {
                                       ? "powershell.exe"
                                       : fallback;
 
-        return interpreter + " -NoLogo -Noprofile -ExecutionPolicy Bypass \"& \'" +
+        return interpreter +
+               " -NoLogo -Noprofile -ExecutionPolicy Bypass \"& \'" +
                path.string() + "\'\"";
     } else {
         return std::string("\"") + path.string() + "\"";

@@ -249,6 +249,12 @@ def _do_inv_for_realhost(sources, multi_host_sections, hostname, ipaddress,
             # Note: this also excludes existing sections without info..
             continue
 
+        if all([x in [[], {}, None] for x in section_content]):
+            # Inventory plugins which get parsed info from related
+            # check plugin may have more than one return value, eg
+            # parse function of oracle_tablespaces returns ({}, {})
+            continue
+
         console.verbose(" %s%s%s%s" % (tty.green, tty.bold, section_name, tty.normal))
 
         # Inventory functions can optionally have a second argument: parameters.

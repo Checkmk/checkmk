@@ -83,7 +83,8 @@ def do_inv(hostnames):
                 ipaddress = ip_lookup.lookup_ip_address(hostname)
 
             sources = data_sources.DataSources(hostname, ipaddress)
-            do_inv_for(sources, multi_host_sections=None, hostname=hostname, ipaddress=ipaddress)
+            _do_inv_for(sources, multi_host_sections=None, hostname=hostname, ipaddress=ipaddress,
+                        do_status_data_inv=checks.do_status_data_inventory_for(hostname))
         except Exception, e:
             if cmk.debug.enabled():
                 raise
@@ -108,8 +109,10 @@ def do_inv_check(hostname, options):
     status, infotexts, long_infotexts, perfdata = 0, [], [], []
 
     sources = data_sources.DataSources(hostname, ipaddress)
-    old_timestamp, inventory_tree, status_data_tree = do_inv_for(sources, multi_host_sections=None,
-                                                                 hostname=hostname, ipaddress=ipaddress)
+    old_timestamp, inventory_tree, status_data_tree =\
+        _do_inv_for(sources, multi_host_sections=None,
+                    hostname=hostname, ipaddress=ipaddress,
+                    do_status_data_inv=checks.do_status_data_inventory_for(hostname))
 
     if inventory_tree.is_empty() and status_data_tree.is_empty():
         infotexts.append("Found no data")
@@ -156,18 +159,19 @@ def do_inv_check(hostname, options):
 def do_status_data_inventory(sources, multi_host_sections, hostname, ipaddress):
     # cmk_base/modes/check_mk.py loads check plugins but not inventory plugins
     import cmk_base.inventory_plugins as inventory_plugins
-    inventory_plugins.load()
     do_inv = False
-    for plugin in inventory_plugins.inv_info.values():
-        if plugin.get("has_status_data"):
+    section_names = multi_host_sections.get_host_sections().get((hostname, ipaddress)).sections.keys()
+    inventory_plugins.load()
+    for plugin_name, plugin in inventory_plugins.inv_info.iteritems():
+        if plugin_name in section_names and plugin.get("has_status_data"):
             do_inv = True
             break
     if do_inv:
-        do_inv_for(sources, multi_host_sections=multi_host_sections, hostname=hostname,
-                   ipaddress=ipaddress, do_status_data_inventory=True)
+        _do_inv_for(sources, multi_host_sections=multi_host_sections, hostname=hostname,
+                    ipaddress=ipaddress, do_status_data_inv=True)
 
 
-def do_inv_for(sources, multi_host_sections, hostname, ipaddress, do_status_data_inventory=False):
+def _do_inv_for(sources, multi_host_sections, hostname, ipaddress, do_status_data_inv):
     _initialize_inventory_tree()
     inventory_tree = g_inv_tree
     status_data_tree = StructuredDataTree()
@@ -189,7 +193,7 @@ def do_inv_for(sources, multi_host_sections, hostname, ipaddress, do_status_data
     console.section_success("Found %s%s%d%s inventory entries" %
             (tty.bold, tty.yellow, inventory_tree.count_entries(), tty.normal))
 
-    if do_status_data_inventory:
+    if do_status_data_inv:
         status_data_tree.normalize_nodes()
         _save_status_data_tree(hostname, status_data_tree)
 
@@ -219,7 +223,7 @@ def _do_inv_for_realhost(sources, multi_host_sections, hostname, ipaddress,
             source.set_check_plugin_name_filter(_gather_snmp_check_plugin_names_inventory)
             if multi_host_sections is not None:
                 # Status data inventory already provides filled multi_host_sections object.
-                # SNMP data source: If do_status_data_inventory is enabled there may be
+                # SNMP data source: If 'do_status_data_inv' is enabled there may be
                 # sections for inventory plugins which were not fetched yet.
                 source.enforce_check_plugin_names(None)
                 host_sections = multi_host_sections.add_or_get_host_sections(hostname, ipaddress)
@@ -236,7 +240,6 @@ def _do_inv_for_realhost(sources, multi_host_sections, hostname, ipaddress,
     for section_name, plugin in inventory_plugins.inv_info.items():
         section_content = multi_host_sections.get_section_content(hostname, ipaddress,
                                                                   section_name, for_discovery=False)
-
         if section_content is None: # No data for this check type
             continue
 

@@ -1,0 +1,16 @@
+Title: Do status data inventory: Check "HW/SW Inventory" and shell commands behave the same way
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1537270279
+Class: fix
+
+If <tt>Status data inventory</tt> is enabled in the ruleset
+<tt>Do hardware/software Inventory</tt> the active check
+<tt>Check_MK HW/SW Inventory</tt> and the shell commands
+<tt>cmk -vii</tt> and <tt>cmk -vi</tt> behave the same way.
+
+The same result should also be displayed if <tt>cmk -v</tt>
+is executed if <tt>Status data inventory</tt> is enabled.

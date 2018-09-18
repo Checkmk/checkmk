@@ -958,8 +958,7 @@ def show_view(view, show_heading = False, show_buttons = True,
         if is_inventory_data_needed(group_cells, cells, sorters, all_active_filters):
             for row in rows:
                  if "host_name" in row:
-                     row["host_inventory"] = inventory.load_tree(row["host_name"])
-
+                     row["host_inventory"] = inventory.load_filtered_and_merged_tree(row["host_name"])
 
         if not cmk.is_raw_edition():
             import cmk.gui.cee.sla as sla

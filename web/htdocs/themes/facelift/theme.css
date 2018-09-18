@@ -601,8 +601,10 @@ table {
   table.report_contents td.preview img {
     box-shadow: 0px 0px 20px rgba(0, 0, 0, 0.1);
     border: 1px solid #8288a6; }
-  table td {
-    vertical-align: middle; }
+    table td {
+      vertical-align: middle; }
+      div.diag_host > table > tbody > tr > td {
+        vertical-align: unset; }
 
 tr.groupheader td {
   padding: 0px;

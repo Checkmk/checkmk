@@ -142,7 +142,7 @@ def test_structured_data_NodeAttribute_is_equal(na_x, na_y):
 
 @pytest.mark.parametrize("node_attribute,result", zip(
     node_attributes,
-    [12, 24]
+    [0, 12]
 ))
 def test_structured_data_NodeAttribute_count_entries(node_attribute, result):
     assert node_attribute.count_entries() == result
@@ -353,8 +353,8 @@ def test_structured_data_StructuredDataTree_is_equal_save_and_load(tree, tmpdir)
 
 @pytest.mark.parametrize("tree,result", zip(
     trees,
-    [33, 12, 19, 6304, 5, 16676,
-     35, 11, 19, 6205, 5, 16675,]
+    [21, 9, 10, 6284, 2, 16654,
+     23, 8, 10, 6185, 2, 16653,]
 ))
 def test_structured_data_StructuredDataTree_count_entries(tree, result):
     assert tree.count_entries() == result

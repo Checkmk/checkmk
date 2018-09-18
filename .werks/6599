@@ -1,0 +1,19 @@
+Title: HW/SW Inventory: Only count the real entries
+Level: 1
+Component: inv
+Compatible: compat
+Edition: cre
+Version: 1.5.0p5
+Date: 1537278111
+Class: fix
+
+The active check {{Check_MK HW/SW Inventory}}, the
+inventory history and the shell commands <tt>cmk -vi</tt>
+and <tt>cmk -vii</tt> show the number of found entries.
+This number also includes the amount of nodes. Example:
+<tt>Hardware > System > Family: Thinkpad</tt>
+gives 3 entries. This may be confusing.
+
+Now only the real entries are counted. Example:
+<tt>Hardware > System > Family: Thinkpad</tt>
+gives 1 entry.

@@ -1,0 +1,16 @@
+Title: Sign all agents: Prevent focussing search field when opening the dialog
+Level: 1
+Component: agents
+Compatible: compat
+Edition: cee
+Version: 1.5.0p5
+Date: 1537269441
+Class: fix
+
+When opening the dialog "Sign all agents" there was previously a search field shown which had
+the initial focus. A user would expect to have the initial focus on the key pass phrase field
+to sign the agent. When the user starts typing the pass phrase without previously changing the
+focus, the pass phrase becomes visible on the screen.
+
+To fix this we have now removed the search field from the "Sign all agents" dialog. The pass
+phrase field in now initially focused as intended.

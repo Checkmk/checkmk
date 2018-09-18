@@ -40,9 +40,7 @@ std::ostream &operator<<(std::ostream &os, const Level &l);
 // Configuration entries from [logwatch] for individual logfiles
 struct config {
     config(const std::string &name, Level level, bool hide_context)
-        : name(name)
-        , level(level)
-        , hide_context(hide_context) {}
+        : name(name), level(level), hide_context(hide_context) {}
 
     std::string name;
     Level level;

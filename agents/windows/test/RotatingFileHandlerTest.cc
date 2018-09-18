@@ -14,8 +14,6 @@
 #include "gtest/gtest.h"
 
 using hrc = std::chrono::high_resolution_clock;
-using std::chrono::duration_cast;
-using std::chrono::milliseconds;
 using std::function;
 using std::ifstream;
 using std::istreambuf_iterator;
@@ -25,6 +23,8 @@ using std::string;
 using std::unique_ptr;
 using std::unordered_map;
 using std::vector;
+using std::chrono::duration_cast;
+using std::chrono::milliseconds;
 
 using ::testing::MatchesRegex;
 using ::testing::Return;

@@ -171,7 +171,7 @@ void Configuration::outputConfigurables(std::ostream &out) {
     std::map<std::string, ConfigMap> config_map;
 
     for (const auto &kv : _configurables) {
-        const auto & [ section, key ] = kv.first;
+        const auto &[section, key] = kv.first;
         if (config_map.find(section) == config_map.end()) {
             config_map[section] = {};
         }
@@ -182,9 +182,9 @@ void Configuration::outputConfigurables(std::ostream &out) {
         config_map[section].emplace(key, *kv.second[0]);
     }
 
-    for (const auto & [ section, keymap ] : config_map) {
+    for (const auto &[section, keymap] : config_map) {
         out << "[" << section << "]\n";
-        for (const auto & [ key, config ] : keymap) {
+        for (const auto &[key, config] : keymap) {
             config.get().output(key, out);
         }
     }

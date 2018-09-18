@@ -64,12 +64,10 @@ public:
     virtual WINBOOL CloseServiceHandle(SC_HANDLE hSCObject) const = 0;
     virtual WINBOOL ControlService(SC_HANDLE hService, DWORD dwControl,
                                    LPSERVICE_STATUS lpServiceStatus) const = 0;
-    virtual SC_HANDLE CreateService(
-        SC_HANDLE hSCManager, LPCSTR lpServiceName, LPCSTR lpDisplayName,
-        DWORD dwDesiredAccess, DWORD dwServiceType, DWORD dwStartType,
-        DWORD dwErrorControl,
-        LPCSTR
-            lpBinaryPathName /* ,LPCSTR lpLoadOrderGroup,LPDWORD lpdwTagId,LPCSTR lpDependencies,LPCSTR lpServiceStartName,LPCSTR lpPassword */)
+    virtual SC_HANDLE CreateService(SC_HANDLE hSCManager, LPCSTR lpServiceName,
+                                    LPCSTR lpDisplayName, DWORD dwDesiredAccess,
+                                    DWORD dwServiceType, DWORD dwStartType,
+                                    DWORD dwErrorControl, LPCSTR lpBinaryPathName /* ,LPCSTR lpLoadOrderGroup,LPDWORD lpdwTagId,LPCSTR lpDependencies,LPCSTR lpServiceStartName,LPCSTR lpPassword */)
         const = 0;  // last 5 params are always 0!
     virtual WINBOOL DeleteService(SC_HANDLE hService) const = 0;
     virtual WINBOOL EnumServicesStatusExW(

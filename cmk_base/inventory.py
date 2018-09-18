@@ -193,8 +193,8 @@ def _do_inv_for(sources, multi_host_sections, hostname, ipaddress, do_status_dat
     console.section_success("Found %s%s%d%s inventory entries" %
             (tty.bold, tty.yellow, inventory_tree.count_entries(), tty.normal))
 
+    status_data_tree.normalize_nodes()
     if do_status_data_inv:
-        status_data_tree.normalize_nodes()
         _save_status_data_tree(hostname, status_data_tree)
 
         console.section_success("Found %s%s%d%s status entries" %

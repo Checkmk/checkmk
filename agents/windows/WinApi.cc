@@ -14,12 +14,10 @@ WINBOOL WinApi::ControlService(SC_HANDLE hService, DWORD dwControl,
     return ::ControlService(hService, dwControl, lpServiceStatus);
 }
 
-SC_HANDLE WinApi::CreateService(
-    SC_HANDLE hSCManager, LPCSTR lpServiceName, LPCSTR lpDisplayName,
-    DWORD dwDesiredAccess, DWORD dwServiceType, DWORD dwStartType,
-    DWORD dwErrorControl,
-    LPCSTR
-        lpBinaryPathName /*,LPCSTR lpLoadOrderGroup,LPDWORD lpdwTagId,LPCSTR lpDependencies,LPCSTR lpServiceStartName,LPCSTR lpPassword*/)
+SC_HANDLE WinApi::CreateService(SC_HANDLE hSCManager, LPCSTR lpServiceName,
+                                LPCSTR lpDisplayName, DWORD dwDesiredAccess,
+                                DWORD dwServiceType, DWORD dwStartType,
+                                DWORD dwErrorControl, LPCSTR lpBinaryPathName /*,LPCSTR lpLoadOrderGroup,LPDWORD lpdwTagId,LPCSTR lpDependencies,LPCSTR lpServiceStartName,LPCSTR lpPassword*/)
     const {
     return ::CreateServiceA(
         hSCManager, lpServiceName, lpDisplayName, dwDesiredAccess,

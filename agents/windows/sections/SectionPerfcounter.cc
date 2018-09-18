@@ -94,7 +94,7 @@ bool SectionPerfcounter::produceOutputInner(
 
         out << "instance," << Utf8(join(counter_object.counterNames(), L","))
             << "\n";
-        for (const auto & [ index, values ] : value_map) {
+        for (const auto &[index, values] : value_map) {
             std::wstring instance_name = L"\"\"";
             if (static_cast<size_t>(index) < instance_names.size()) {
                 instance_name = instance_names[index];

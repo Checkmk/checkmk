@@ -134,7 +134,7 @@ void registerEventlog(const std::string &logname, bool sendall,
 
 bool handleFindResult(const FindResult &result, bool sendall,
                       eventlog::States &states, std::ostream &out) {
-    if (const auto & [ r, logname ] = result; r == ERROR_SUCCESS) {
+    if (const auto &[r, logname] = result; r == ERROR_SUCCESS) {
         registerEventlog(logname, sendall, states);
     } else if (r != ERROR_MORE_DATA) {
         if (r != ERROR_NO_MORE_ITEMS) {

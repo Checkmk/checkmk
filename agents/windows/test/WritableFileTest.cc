@@ -157,8 +157,8 @@ TEST_F(wa_WritableFileTest, stream_operator_bytes_failure) {
     EXPECT_CALL(_mockwinapi,
                 CreateFile(StrEq(testPath), _, shareMode, _, disposition, _, _))
         .WillOnce(Return(rawHandle));
-    EXPECT_CALL(_mockwinapi, WriteFile(rawHandle, testBytes.data(),
-                                       testBytes.size(), _, _))
+    EXPECT_CALL(_mockwinapi,
+                WriteFile(rawHandle, testBytes.data(), testBytes.size(), _, _))
         .WillOnce(Return(0));
     EXPECT_CALL(_mockwinapi, CloseHandle(rawHandle));
     EXPECT_CALL(_mockwinapi, GetLastError()).WillOnce(Return(errorCode));
@@ -190,7 +190,8 @@ TEST_F(wa_WritableFileTest, getDefaultWhitelist_success) {
     const std::string testPath{"bazqux.exe"};
     EXPECT_CALL(mockenv, agentDirectory()).WillOnce(Return(testDir));
     EXPECT_CALL(mockwinapi, GetModuleFileName(nullptr, _, _MAX_PATH))
-        .WillOnce(DoAll(SetArrayArgument<1>(testPath.cbegin(), testPath.cend()), Return(10)));
+        .WillOnce(DoAll(SetArrayArgument<1>(testPath.cbegin(), testPath.cend()),
+                        Return(10)));
     const std::unordered_set<std::string> expected{
         "foo\\bar\\bin\\OpenHardwareMonitorLib.sys", "bazqux.exe"};
     const auto actual = getDefaultWhitelist(mockenv, mockwinapi);

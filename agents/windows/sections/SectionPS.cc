@@ -158,11 +158,14 @@ bool SectionPS::produceOutputInner(std::ostream &out,
     }
 }
 
-void SectionPS::outputProcess(
-    std::ostream &out, ULONGLONG virtual_size, ULONGLONG working_set_size,
-    long long pagefile_usage, ULONGLONG uptime, long long usermode_time,
-    long long kernelmode_time, long long process_id, long long process_handle_count,
-    long long thread_count, const std::string &user, const std::string &exe_file) {
+void SectionPS::outputProcess(std::ostream &out, ULONGLONG virtual_size,
+                              ULONGLONG working_set_size,
+                              long long pagefile_usage, ULONGLONG uptime,
+                              long long usermode_time,
+                              long long kernelmode_time, long long process_id,
+                              long long process_handle_count,
+                              long long thread_count, const std::string &user,
+                              const std::string &exe_file) {
     // Note: CPU utilization is determined out of usermodetime and
     // kernelmodetime
     out << "(" << user << "," << virtual_size / 1024 << ","
@@ -237,7 +240,8 @@ bool SectionPS::outputWMI(std::ostream &out) {
                 std::stoull(result.get<std::wstring>(L"UserModeTime")),
                 std::stoull(result.get<std::wstring>(L"KernelModeTime")),
                 processId, result.get<long long>(L"HandleCount"),
-                result.get<long long>(L"ThreadCount"), user, to_utf8(process_name));
+                result.get<long long>(L"ThreadCount"), user,
+                to_utf8(process_name));
 
             more = result.next();
         }
@@ -348,7 +352,8 @@ bool SectionPS::outputNative(std::ostream &out) {
                                << " lies ahead of current time " << currTime;
             }
 
-            auto uptime = static_cast<unsigned long long>(std::max(timeDiff, 1LL));
+            auto uptime =
+                static_cast<unsigned long long>(std::max(timeDiff, 1LL));
 
             // Note: CPU utilization is determined out of usermodetime and
             // kernelmodetime

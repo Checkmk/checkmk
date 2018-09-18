@@ -18,10 +18,8 @@ public:
         CreateService,
         SC_HANDLE(
             SC_HANDLE hSCManager, LPCSTR lpServiceName, LPCSTR lpDisplayName,
-            DWORD dwDesiredAccess, DWORD dwServiceType, DWORD dwStartType,
-            DWORD dwErrorControl,
-            LPCSTR
-                lpBinaryPathName /* ,LPCSTR lpLoadOrderGroup,LPDWORD lpdwTagId,LPCSTR lpDependencies,LPCSTR lpServiceStartName,LPCSTR lpPassword */));  // last 5 params are always 0!
+            DWORD dwDesiredAccess, DWORD dwServiceType,
+            DWORD dwStartType, DWORD dwErrorControl, LPCSTR lpBinaryPathName /* ,LPCSTR lpLoadOrderGroup,LPDWORD lpdwTagId,LPCSTR lpDependencies,LPCSTR lpServiceStartName,LPCSTR lpPassword */));  // last 5 params are always 0!
     MOCK_CONST_METHOD1(DeleteService, WINBOOL(SC_HANDLE hService));
     MOCK_CONST_METHOD10(EnumServicesStatusExW,
                         WINBOOL(SC_HANDLE hSCManager, SC_ENUM_TYPE InfoLevel,

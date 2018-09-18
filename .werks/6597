@@ -1,0 +1,14 @@
+Title: netapp_api_vs_traffic: Fixed pending services
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.4.0p36
+Date: 1537271935
+
+The netapp_api_vs_traffic service always shows
+<tt>Traffic vServer NAME PEND - Cannot compute check result: No time difference</tt>
+This is caused because the counter key which is used in get_rate
+function is not unique if multiple protocols are found.

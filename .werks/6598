@@ -1,0 +1,11 @@
+Title: HW/SW Inventory: Do not list plugins on commandline for which the related section is empty
+Level: 1
+Component: inv
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0p5
+Date: 1537273423
+
+

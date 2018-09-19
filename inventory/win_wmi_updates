@@ -24,7 +24,6 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-
 # Example output
 #<<<win_wmi_updates:sep(44):cached(1494868004,3600)>>>
 #Node,Description,HotFixID,InstalledOn^M
@@ -35,6 +34,31 @@
 #S050MWSIZ001,Update,KB2841134,5/10/2017^M
 # Microsoft Office Professional Plus 2010|Microsoft Corporation|14.0.7015.1000
 
+# InstalledOn may have different formats, see
+# https://docs.microsoft.com/de-de/windows/desktop/CIMWin32Prov/win32-quickfixengineering
+# Examples:
+# - 20170523
+# - 23-10-2013
+# - 5/23/2017
+# - 01ce83596afd20a7
+
+
+def _parse_install_date(install_date_str):
+    for format_ in ["%Y%m%d", "%m/%d/%Y", "%d-%m-%Y"]:
+        try:
+            return time.mktime(time.strptime(install_date_str, format_))
+        except ValueError:
+            pass
+    # However, some systems may return a 64-bit hexidecimal value in the Win32
+    # FILETIME format:
+    # Contains a 64-bit value representing the number of 100-nanosecond intervals
+    # since January 1, 1601 (UTC).
+    try:
+        return float(install_date_str, 16) / 10**7
+    except ValueError:
+        pass
+    return
+
 
 def inv_win_wmi_updates(info):
     paclist = inv_tree_list("software.packages:")
@@ -42,15 +66,12 @@ def inv_win_wmi_updates(info):
         if len(line) <> 4:
             continue
 
-        _, description, knowledge_base, install_date = line
-        date_number = None
-        if re.match(".*20.", install_date):
-            date_number = int(time.mktime(time.strptime(install_date, "%m/%d/%Y")))
+        _, description, knowledge_base, install_date_str = line
         paclist.append({
             "name"          : "Windows Update " + knowledge_base,
             "version"       : knowledge_base,
             "vendor"        : "Micorosoft " + description,
-            "install_date"  : date_number,
+            "install_date"  : _parse_install_date(install_date_str),
             "package_type"  : "wmi",
         })
 

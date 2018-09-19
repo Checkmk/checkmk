@@ -1,0 +1,14 @@
+Title: Fixed possible failed mkbackup because of changed mknotifyd state file
+Level: 1
+Component: core
+Compatible: compat
+Edition: cre
+Version: 1.5.0p5
+Date: 1537343031
+Class: fix
+
+The mknotifyd used specific names for a temporary file which was not excluded by
+the mkbackup mechanism. When a backup was performed while the mknotifyd wrote it's
+state file, the backup could fail with an exception like this:
+
+OSError: [Errno 2] No such file or directory: \'/omd/sites/int_ma_5351/var/log/mknotifyd.state.new\'

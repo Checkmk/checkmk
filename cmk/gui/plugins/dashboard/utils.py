@@ -42,12 +42,13 @@ dashlet_types = {}
 GROW = 0
 MAX = -1
 
-dashlet_min_size = 10, 10        # Minimum width and height of dashlets in raster units
-
 
 class Dashlet(object):
     """Base class for all dashboard dashlet implementations"""
     __metaclass__ = abc.ABCMeta
+
+    # Minimum width and height of dashlets in raster units
+    minimum_size = (10, 10)
 
     @classmethod
     @abc.abstractmethod
@@ -104,9 +105,20 @@ class Dashlet(object):
 
 
     @classmethod
-    def size(cls):
+    def initial_size(cls):
         """The initial size of dashlets when being added to the dashboard"""
-        return dashlet_min_size
+        return cls.minimum_size
+
+
+    @classmethod
+    def initial_position(cls):
+        """The initial position of dashlets when being added to the dashboard"""
+        return (1, 1)
+
+
+    @classmethod
+    def initial_refresh_interval(cls):
+        return False
 
 
     @classmethod
@@ -126,11 +138,6 @@ class Dashlet(object):
     def validate_parameters_func(cls):
         """Optional validation function in case vs_parameters() returns a list"""
         return None
-
-
-    @classmethod
-    def refresh_interval(cls):
-        return False
 
 
     @classmethod
@@ -161,7 +168,7 @@ class Dashlet(object):
         self._dashboard_name = dashboard_name
         self._dashboard = dashboard
         self._dashlet_id = dashlet_id
-        self._dashlet = dashlet
+        self._dashlet_spec = dashlet
         self._wato_folder = wato_folder
 
 
@@ -170,8 +177,35 @@ class Dashlet(object):
         return self._dashlet_id
 
 
+    @property
+    def dashlet_spec(self):
+        return self._dashlet_spec
+
+
+    @property
+    def wato_folder(self):
+        return self._wato_folder
+
+
+    @property
+    def dashboard_name(self):
+        return self._dashboard_name
+
+
     def display_title(self):
-        return self.title()
+        return self._dashlet_spec.get("title", self.title())
+
+
+    def show_title(self):
+        return self._dashlet_spec.get("show_title", True)
+
+
+    def title_url(self):
+        return self._dashlet_spec.get("title_url")
+
+
+    def show_background(self):
+        return self._dashlet_spec.get("background", True)
 
 
     def on_resize(self):
@@ -207,7 +241,7 @@ class Dashlet(object):
 
         # Fix of iPad >:-P
         html.open_div(style="width: 100%; height: 100%; -webkit-overflow-scrolling:touch;")
-        html.iframe('', src="about:blank" if self._dashlet.get("reload_on_resize") else iframe_url,
+        html.iframe('', src="about:blank" if self._dashlet_spec.get("reload_on_resize") else iframe_url,
                     id_="dashlet_iframe_%d" % self._dashlet_id,
                     allowTransparency="true",
                     frameborder="0",
@@ -215,7 +249,7 @@ class Dashlet(object):
                     height="100%")
         html.close_div()
 
-        if self._dashlet.get("reload_on_resize"):
+        if self._dashlet_spec.get("reload_on_resize"):
             html.javascript('reload_on_resize["%d"] = "%s"' % (self._dashlet_id, iframe_url))
 
 
@@ -239,8 +273,8 @@ class Dashlet(object):
     def _get_global_context_url_vars(self):
         # Either load the single object info from the dashlet or the dashlet type
         single_infos = []
-        if 'single_infos' in self._dashlet:
-            single_infos = self._dashlet['single_infos']
+        if 'single_infos' in self._dashlet_spec:
+            single_infos = self._dashlet_spec['single_infos']
         elif self.single_infos():
             single_infos = self.single_infos()
 
@@ -249,12 +283,12 @@ class Dashlet(object):
         url_vars = []
         for info_key in single_infos:
             for param in visuals.info_params(info_key):
-                if param not in self._dashlet['context']:
+                if param not in self._dashlet_spec['context']:
                     # Get the vars from the global context or http vars
                     if param in global_context:
-                        self._dashlet['context'][param] = global_context[param]
+                        self._dashlet_spec['context'][param] = global_context[param]
                     else:
-                        self._dashlet['context'][param] = html.var(param)
+                        self._dashlet_spec['context'][param] = html.var(param)
                         url_vars.append((param, html.var(param)))
         return url_vars
 
@@ -270,11 +304,26 @@ class Dashlet(object):
             return url + "?wato_folder=" + html.urlencode(self._wato_folder)
 
 
+    def size(self):
+        if self.is_resizable():
+            return self._dashlet_spec.get("size", self.initial_size())
+        else:
+            return self.initial_size()
+
+
+    def position(self):
+        return self._dashlet_spec.get("position", self.initial_position())
+
+
+    def refresh_interval(self):
+        return self._dashlet_spec.get("refresh", Dashlet.initial_refresh_interval())
+
+
     def get_refresh_action(self):
         if not self.refresh_interval():
             return
 
-        url = self._dashlet.get("url", "dashboard_dashlet.py?name=%s&id=%s" % (self._dashboard_name, self._dashlet_id))
+        url = self._dashlet_spec.get("url", "dashboard_dashlet.py?name=%s&id=%s" % (self._dashboard_name, self._dashlet_id))
         try:
             on_refresh = self.on_refresh()
             if on_refresh:
@@ -296,8 +345,8 @@ class Dashlet(object):
         if dashlet_url is not None:
             return dashlet_url
 
-        if self._dashlet.get("url"):
-            return self._dashlet["url"]
+        if self._dashlet_spec.get("url"):
+            return self._dashlet_spec["url"]
 
         return html.makeuri_contextless([
             ("name", self._dashboard_name),
@@ -323,10 +372,10 @@ class Dashlet(object):
 
         urlfunc: "my_module.render_my_url"
         """
-        if "urlfunc" not in self._dashlet:
+        if "urlfunc" not in self._dashlet_spec:
             return None
 
-        urlfunc = self._dashlet['urlfunc']
+        urlfunc = self._dashlet_spec['urlfunc']
         if type(urlfunc) == type(lambda x: x):
             return urlfunc()
 

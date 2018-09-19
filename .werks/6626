@@ -1,0 +1,13 @@
+Title: Timeperiod deletion was not possible when using time specific parameters
+Level: 1
+Component: wato
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0i1
+Date: 1537347738
+
+When trying to delete a timeperiod while a check parameter ruleset uses time specific
+parameters, it was not possible to delete this timeperiod. Regardless of which timeperiod
+was used in the time specific parameters.

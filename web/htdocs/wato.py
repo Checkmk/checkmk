@@ -9478,7 +9478,10 @@ class ModeTimeperiods(WatoMode):
                 if not vs.is_active(rule.value):
                     continue
 
-                for rule_tp_name, _value in rule.value["tp_values"]:
+                for index, (rule_tp_name, _value) in enumerate(rule.value["tp_values"]):
+                    if rule_tp_name != tpname:
+                        continue
+
                     edit_url = watolib.folder_preserving_link([
                         ("mode", "edit_rule"),
                         ("back_mode", "timeperiods"),
@@ -9486,7 +9489,7 @@ class ModeTimeperiods(WatoMode):
                         ("rulenr", rule_index),
                         ("rule_folder", rule_folder.path()),
                     ])
-                    used_in.append((_("Timespecific check parameter"), edit_url))
+                    used_in.append((_("Time specific check parameter #%d") % (index+1), edit_url))
 
         return used_in
 

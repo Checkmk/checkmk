@@ -1,0 +1,10 @@
+Title: inv_win_wmi_updates: Fixed parsing install date; regard all possible formats
+Level: 1
+Component: inv
+Compatible: compat
+Edition: cre
+Version: 1.5.0p5
+Date: 1537356416
+Class: fix
+
+

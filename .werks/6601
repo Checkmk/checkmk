@@ -1,0 +1,11 @@
+Title: fsc_sc2_fans, fsc_sc2_psu: Discover fans and PSUs only if present
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0i1
+Date: 1537357667
+
+

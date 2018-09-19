@@ -59,7 +59,7 @@ from cmk.gui.plugins.dashboard.utils import (
     MAX,
     dashlet_types,
     dashlet_registry,
-    dashlet_min_size,
+    Dashlet,
 )
 
 loaded_with_language = False
@@ -162,8 +162,8 @@ class LegacyDashlet(cmk.gui.plugins.dashboard.Dashlet):
 
 
     @classmethod
-    def size(cls):
-        return cls._spec.get("size", dashlet_min_size)
+    def initial_size(cls):
+        return cls._spec.get("size", Dashlet.minimum_size)
 
 
     @classmethod
@@ -184,7 +184,7 @@ class LegacyDashlet(cmk.gui.plugins.dashboard.Dashlet):
 
 
     @classmethod
-    def refresh_interval(cls):
+    def initial_refresh_interval(cls):
         return cls._spec.get("refresh", False)
 
 
@@ -213,7 +213,7 @@ class LegacyDashlet(cmk.gui.plugins.dashboard.Dashlet):
     def display_title(self):
         title_func = self._spec.get("title_func")
         if title_func:
-            return title_func(self._dashlet)
+            return title_func(self._dashlet_spec)
         else:
             return self.title()
 
@@ -221,27 +221,27 @@ class LegacyDashlet(cmk.gui.plugins.dashboard.Dashlet):
     def on_resize(self):
         on_resize_func = self._spec.get("on_resize")
         if on_resize_func:
-            return on_resize_func(self._dashlet_id, self._dashlet)
+            return on_resize_func(self._dashlet_id, self._dashlet_spec)
         return None
 
 
     def on_refresh(self):
         on_refresh_func = self._spec.get("on_refresh")
         if on_refresh_func:
-            return on_refresh_func(self._dashlet_id, self._dashlet)
+            return on_refresh_func(self._dashlet_id, self._dashlet_spec)
         return None
 
 
     def update(self):
         if self.is_iframe_dashlet():
-            self._spec['iframe_render'](self._dashlet_id, self._dashlet)
+            self._spec['iframe_render'](self._dashlet_id, self._dashlet_spec)
         else:
-            self._spec['render'](self._dashlet_id, self._dashlet)
+            self._spec['render'](self._dashlet_id, self._dashlet_spec)
 
 
     def show(self):
         if "render" in self._spec:
-            self._spec['render'](self._dashlet_id, self._dashlet)
+            self._spec['render'](self._dashlet_id, self._dashlet_spec)
 
         elif self.is_iframe_dashlet():
             self._show_initial_iframe_container()
@@ -254,7 +254,7 @@ class LegacyDashlet(cmk.gui.plugins.dashboard.Dashlet):
 
         if "iframe_urlfunc" in self._spec:
             # Optional way to render a dynamic iframe URL
-            url = self._spec["iframe_urlfunc"](self._dashlet)
+            url = self._spec["iframe_urlfunc"](self._dashlet_spec)
             return url
 
         return super(LegacyDashlet, self)._get_iframe_url()
@@ -527,19 +527,21 @@ def draw_dashboard(name):
     dashlet_javascripts(board)
     dashlet_styles(board)
 
-    global g_refresh_dashlets, g_dashlets_js, g_on_resize
+    # TODO: Cleanup these globals
+    global g_refresh_dashlets, g_on_resize
     g_refresh_dashlets = [] # Dashlets with automatic refresh, for Javascript
-    g_dashlets_js      = []
+    dashlets_js        = []
     g_on_resize        = [] # javascript function to execute after ressizing the dashlet
     for nr, dashlet in enumerate(board["dashlets"]):
         dashlet_container_begin(nr, dashlet)
+        dashlet_type = get_dashlet_type(dashlet)
+        dashlet_instance = dashlet_type(name, board, nr, dashlet, wato_folder)
 
         try:
-            # TODO: Make use of dashlet_instance here
-            register_for_refresh(name, board, nr, dashlet, wato_folder)
-            register_for_on_resize(name, board, nr, dashlet, wato_folder)
+            register_for_refresh(dashlet_instance)
+            register_for_on_resize(dashlet_instance)
 
-            draw_dashlet(name, board, nr, dashlet, wato_folder)
+            draw_dashlet(dashlet_instance)
         except MKUserError, e:
             dashlet_error(nr, dashlet, e)
         except Exception, e:
@@ -550,7 +552,7 @@ def draw_dashboard(name):
             dashlet_error(nr, dashlet, detail)
 
         dashlet_container_end()
-        set_dashlet_dimensions(dashlet)
+        dashlets_js.append(get_dashlet_dimensions(dashlet_instance))
 
     dashboard_edit_controls(name, board)
 
@@ -577,9 +579,9 @@ var dashlets = %s;
 calculate_dashboard();
 window.onresize = function () { calculate_dashboard(); }
 dashboard_scheduler(1);
-    """ % (MAX, GROW, raster, header_height, screen_margin, dashlet_padding, dashlet_min_size,
+    """ % (MAX, GROW, raster, header_height, screen_margin, dashlet_padding, Dashlet.minimum_size,
            corner_overlap, ','.join(g_refresh_dashlets), ','.join(g_on_resize),
-           name, board['mtime'], json.dumps(g_dashlets_js)))
+           name, board['mtime'], json.dumps(dashlets_js)))
 
     if mode == 'edit':
         html.javascript('toggle_dashboard_edit(true)')
@@ -611,22 +613,21 @@ def dashlet_container_end():
     html.close_div()
 
 
-def draw_dashlet_content(name, board, nr, the_dashlet, wato_folder, is_update, stash_html_vars=True):
+def draw_dashlet_content(dashlet_instance, is_update, stash_html_vars=True):
     if stash_html_vars:
         html.stash_vars()
         html.del_all_vars()
-        html.set_var("name", name)
+        html.set_var("name", dashlet_instance.dashboard_name)
 
     try:
-        visuals.add_context_to_uri_vars(the_dashlet)
-        if wato_folder != None:
-            html.set_var("wato_folder", wato_folder)
+        visuals.add_context_to_uri_vars(dashlet_instance.dashlet_spec)
+        if dashlet_instance.wato_folder is not None:
+            html.set_var("wato_folder", dashlet_instance.wato_folder)
 
-        dashlet_type = dashlet_registry[the_dashlet['type']]
         if not is_update:
-            dashlet_type(name, board, nr, the_dashlet, wato_folder).show()
+            dashlet_instance.show()
         else:
-            dashlet_type(name, board, nr, the_dashlet, wato_folder).update()
+            dashlet_instance.update()
     finally:
         if stash_html_vars:
             html.unstash_vars()
@@ -752,40 +753,29 @@ def used_dashlet_types(board):
 # dashlets using the 'url' method will be refreshed by us. Those
 # dashlets using static content (such as an iframe) will not be
 # refreshed by us but need to do that themselves.
-def register_for_refresh(name, board, nr, dashlet, wato_folder):
-    dashlet_type = get_dashlet_type(dashlet)
-    if dashlet_type.type_name() == "url" or (not dashlet_type.is_iframe_dashlet() and dashlet_type.refresh_interval()):
-        refresh = dashlet.get("refresh", dashlet_type.refresh_interval())
+def register_for_refresh(dashlet_instance):
+    if dashlet_instance.type_name() == "url" or (not dashlet_instance.is_iframe_dashlet() and dashlet_instance.refresh_interval()):
+        refresh = dashlet_instance.refresh_interval()
         if not refresh:
             return
 
-        dashlet_instance = dashlet_type(name, board, nr, dashlet, wato_folder)
         action = dashlet_instance.get_refresh_action()
         if action:
-            g_refresh_dashlets.append('[%d, %d, %s]' % (nr, refresh, action))
+            g_refresh_dashlets.append('[%d, %d, %s]' %
+                (dashlet_instance.dashlet_id, refresh, action))
 
 
-def register_for_on_resize(name, board, nr, dashlet, wato_folder):
-    dashlet_type = get_dashlet_type(dashlet)
-    on_resize = dashlet_type(name, board, nr, dashlet, wato_folder).on_resize()
+def register_for_on_resize(dashlet_instance):
+    on_resize = dashlet_instance.on_resize()
     if on_resize:
-        g_on_resize.append('%d: function() {%s}' % (nr, on_resize))
+        g_on_resize.append('%d: function() {%s}' % (dashlet_instance.dashlet_id, on_resize))
 
 
-def set_dashlet_dimensions(dashlet):
-    dashlet_type = get_dashlet_type(dashlet)
-    dimensions = {
-        'x' : dashlet['position'][0],
-        'y' : dashlet['position'][1]
-    }
-
-    if dashlet_type.is_resizable():
-        dimensions['w'] = dashlet['size'][0]
-        dimensions['h'] = dashlet['size'][1]
-    else:
-        dimensions['w'], dimensions['h'] = dashlet_type.size()
-
-    g_dashlets_js.append(dimensions)
+def get_dashlet_dimensions(dashlet_instance):
+    dimensions = {}
+    dimensions['x'], dimensions['y'] = dashlet_instance.position()
+    dimensions['w'], dimensions['h'] = dashlet_instance.size()
+    return dimensions
 
 
 def get_dashlet_type(dashlet):
@@ -807,25 +797,26 @@ def get_dashlet(board, ident):
 # where %d is its index (in board["dashlets"]). Javascript uses that id
 # for the resizing. Within that div there is an inner div containing the
 # actual dashlet content.
-def draw_dashlet(name, board, nr, dashlet, wato_folder):
-    dashlet_type = get_dashlet_type(dashlet)
-
-    # Get the title of the dashlet type (might be dynamically defined)
-    title = dashlet.get('title', dashlet_type(name, board, nr, dashlet, wato_folder).display_title())
-    if title != None and dashlet.get('show_title'):
-        url = dashlet.get("title_url", None)
+def draw_dashlet(dashlet_instance):
+    title = dashlet_instance.display_title()
+    if title is not None and dashlet_instance.show_title():
+        url = dashlet_instance.title_url()
         if url:
-            title = '<a href="%s">%s</a>' % (url, _u(title))
+            title = html.render_a(_u(title), url)
         else:
             title = _u(title)
-        html.div(html.render_span(title), id_="dashlet_title_%d" % nr, class_=["title"])
-    if dashlet.get("background", True):
-        bg = " background"
-    else:
-        bg = ""
-    html.open_div(id_="dashlet_inner_%d" % nr, class_="dashlet_inner%s" % bg)
+        html.div(html.render_span(title),
+            id_="dashlet_title_%d" % dashlet_instance.dashlet_id,
+            class_=["title"]
+        )
 
-    draw_dashlet_content(name, board, nr, dashlet, wato_folder, is_update=False)
+    css = [ "dashlet_inner" ]
+    if dashlet_instance.show_background():
+        css.append("background")
+
+    html.open_div(id_="dashlet_inner_%d" % dashlet_instance.dashlet_id, class_=css)
+
+    draw_dashlet_content(dashlet_instance, is_update=False)
 
     html.close_div()
 
@@ -843,8 +834,8 @@ def draw_dashlet(name, board, nr, dashlet, wato_folder):
 
 @cmk.gui.pages.register("dashboard_dashlet")
 def ajax_dashlet():
-    board = html.var('name')
-    if not board:
+    name = html.var('name')
+    if not name:
         raise MKGeneralException(_('The name of the dashboard is missing.'))
 
     try:
@@ -854,21 +845,21 @@ def ajax_dashlet():
 
     load_dashboards()
 
-    if board not in available_dashboards:
+    if name not in available_dashboards:
         raise MKGeneralException(_('The requested dashboard does not exist.'))
-    dashboard = available_dashboards[board]
+    board = available_dashboards[name]
 
     mtime = int(html.var('mtime', 0))
-    if mtime < dashboard['mtime']:
+    if mtime < board['mtime']:
         # prevent reloading on the dashboard which already has the current mtime,
         # this is normally the user editing this dashboard. All others: reload
         # the whole dashboard once.
         html.javascript('if (parent.dashboard_mtime < %d) {\n'
                         '    parent.location.reload();\n'
-                        '}' % dashboard['mtime'])
+                        '}' % board['mtime'])
 
     the_dashlet = None
-    for nr, dashlet in enumerate(dashboard['dashlets']):
+    for nr, dashlet in enumerate(board['dashlets']):
         if nr == ident:
             the_dashlet = dashlet
             break
@@ -880,7 +871,11 @@ def ajax_dashlet():
         raise MKGeneralException(_('The requested dashlet type does not exist.'))
 
     wato_folder = html.var("wato_folder")
-    draw_dashlet_content(board, dashboard, ident, the_dashlet, wato_folder, stash_html_vars=False, is_update=True)
+
+    dashlet_type = get_dashlet_type(the_dashlet)
+    dashlet_instance = dashlet_type(name, board, ident, the_dashlet, wato_folder)
+
+    draw_dashlet_content(dashlet_instance, stash_html_vars=False, is_update=True)
 
 #.
 #   .--Dashboard List------------------------------------------------------.
@@ -1093,8 +1088,8 @@ def page_edit_dashlet():
         dashlet_type = dashlet_registry[ty]
         # Initial configuration
         dashlet = {
-            'position'     : (1, 1),
-            'size'         : dashlet_type.size(),
+            'position'     : dashlet_type.initial_position(),
+            'size'         : dashlet_type.initial_size(),
             'single_infos' : dashlet_type.single_infos(),
             'type'         : ty,
         }
@@ -1384,11 +1379,12 @@ def popup_list_dashboards(add_type):
              for (name, board)
              in available_dashboards.items() ]
 
+# TODO: Move this to the Dashlet class
 def default_dashlet_definition(ty):
     return {
         'type'       : ty,
-        'position'   : (1, 1),
-        'size'       : dashlet_registry[ty].size(),
+        'position'   : dashlet_registry[ty].initial_position(),
+        'size'       : dashlet_registry[ty].initial_size(),
         'show_title' : True,
     }
 

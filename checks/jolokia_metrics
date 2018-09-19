@@ -272,17 +272,6 @@ def jolokia_metrics_gc(info, (inst, typ, gc)):
         return None
     return parsed[inst]['gc'][gc]
 
-def jolokia_metrics_tp(info, (inst, typ, tp)):
-    parsed = jolokia_metrics_parse(info)
-    if parsed.get(inst, "") is None:
-        raise MKCounterWrapped("No information from Jolokia agent")
-
-    if not inst in parsed \
-       or not tp in parsed[inst].get('tp', {}):
-        return None
-    return parsed[inst]['tp'][tp]
-
-
 #.
 #   .--Number of Requests--------------------------------------------------.
 #   |               ____                            _                      |

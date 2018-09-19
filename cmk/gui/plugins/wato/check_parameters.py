@@ -5118,18 +5118,8 @@ register_check_parameters(
                  help = _("Specifiy time ranges during which no motion is expected. "
                           "Outside these times, the motion detector will always be in "
                           "state OK"),
-                 elements = [
-                     (day_id, TimeofdayRanges(count = 3, title = day_str))
-                     for day_id,       day_str in [
-                         ("monday",    _("Monday")),
-                         ("tuesday",   _("Tuesday")),
-                         ("wednesday", _("Wednesday")),
-                         ("thursday",  _("Thursday")),
-                         ("friday",    _("Friday")),
-                         ("saturday",  _("Saturday")),
-                         ("sunday",    _("Sunday"))
-                     ]
-                 ],
+                 elements = [ (day_id, TimeofdayRanges(count = 3, title = day_str))
+                                for day_id, day_str in defines.weekdays_by_name() ],
                  optional_keys = []
              )
              ),

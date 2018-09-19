@@ -335,7 +335,8 @@ def check_fileinfo_groups(_item, params, parsed):
 
     reftime = parsed.get('reftime')
     if reftime is None:
-        return 3, "Missing reference timestamp"
+        yield 3, "Missing reference timestamp"
+        return
 
     # Old format does not support '%s' in group name
     group_patterns = set(params.get('precompiled_patterns', []))

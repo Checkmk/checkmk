@@ -165,6 +165,11 @@ class Dashlet(object):
         self._wato_folder = wato_folder
 
 
+    @property
+    def dashlet_id(self):
+        return self._dashlet_id
+
+
     def display_title(self):
         return self.title()
 
@@ -283,6 +288,54 @@ class Dashlet(object):
                 raise
 
         return None
+
+
+    def _get_refresh_url(self):
+        """Returns the URL to be used for loading the dashlet contents"""
+        dashlet_url = self._get_dashlet_url_from_urlfunc()
+        if dashlet_url is not None:
+            return dashlet_url
+
+        if self._dashlet.get("url"):
+            return self._dashlet["url"]
+
+        return html.makeuri_contextless([
+            ("name", self._dashboard_name),
+            ("id", self._dashlet_id),
+        ], filename="dashboard_dashlet.py")
+
+
+    # TODO: This is specific for the 'url' dashlet type. Move it to that
+    # dashlets class once it has been refactored to a class
+    def _get_dashlet_url_from_urlfunc(self):
+        """Use the URL returned by urlfunc as dashlet URL
+
+        Dashlets using the 'urlfunc' method will dynamically compute
+        an url (using HTML context variables at their wish).
+
+        We need to support function pointers to be compatible to old dashboard plugin
+        based definitions. The new dashboards use strings to reference functions within
+        the global context or functions of a module. An example would be:
+
+        urlfunc: "my_custom_url_rendering_function"
+
+        or within a module:
+
+        urlfunc: "my_module.render_my_url"
+        """
+        if "urlfunc" not in self._dashlet:
+            return None
+
+        urlfunc = self._dashlet['urlfunc']
+        if type(urlfunc) == type(lambda x: x):
+            return urlfunc()
+
+        if '.' in urlfunc:
+            module_name, func_name = urlfunc.split('.', 1)
+            module = __import__(module_name)
+            return module.__dict__[func_name]()
+
+        return globals()[urlfunc]()
 
 
 

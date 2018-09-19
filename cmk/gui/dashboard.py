@@ -260,7 +260,6 @@ class LegacyDashlet(cmk.gui.plugins.dashboard.Dashlet):
         return super(LegacyDashlet, self)._get_iframe_url()
 
 
-
 # Pre Check_MK 1.6 the dashlets were declared with dictionaries like this:
 #
 # dashlet_types["hoststats"] = {
@@ -536,9 +535,6 @@ def draw_dashboard(name):
         dashlet_container_begin(nr, dashlet)
 
         try:
-            # TODO: Fix this
-            gather_dashlet_url(dashlet)
-
             # TODO: Make use of dashlet_instance here
             register_for_refresh(name, board, nr, dashlet, wato_folder)
             register_for_on_resize(name, board, nr, dashlet, wato_folder)
@@ -758,7 +754,7 @@ def used_dashlet_types(board):
 # refreshed by us but need to do that themselves.
 def register_for_refresh(name, board, nr, dashlet, wato_folder):
     dashlet_type = get_dashlet_type(dashlet)
-    if "url" in dashlet or (not dashlet_type.is_iframe_dashlet() and dashlet_type.refresh_interval()):
+    if dashlet_type.type_name() == "url" or (not dashlet_type.is_iframe_dashlet() and dashlet_type.refresh_interval()):
         refresh = dashlet.get("refresh", dashlet_type.refresh_interval())
         if not refresh:
             return
@@ -805,36 +801,6 @@ def get_dashlet(board, ident):
         return dashboard['dashlets'][ident]
     except IndexError:
         raise MKGeneralException(_('The dashlet does not exist.'))
-
-
-# Use the URL returned by urlfunc as dashlet URL
-#
-# We need to support function pointers to be compatible to old dashboard plugin
-# based definitions. The new dashboards use strings to reference functions within
-# the global context or functions of a module. An example would be:
-#
-# urlfunc: "my_custom_url_rendering_function"
-#
-# or within a module:
-#
-# urlfunc: "my_module.render_my_url"
-def gather_dashlet_url(dashlet):
-    # dashlets using the 'urlfunc' method will dynamically compute
-    # an url (using HTML context variables at their wish).
-    if "urlfunc" not in dashlet:
-        return
-
-    urlfunc = dashlet['urlfunc']
-    if type(urlfunc) == type(lambda x: x):
-        dashlet["url"] = urlfunc()
-    else:
-        if '.' in urlfunc:
-            module_name, func_name = urlfunc.split('.', 1)
-            module = __import__(module_name)
-            fp = module.__dict__[func_name]
-        else:
-            fp = globals()[urlfunc]
-        dashlet["url"] = fp()
 
 
 # Create the HTML code for one dashlet. Each dashlet has an id "dashlet_%d",

@@ -88,10 +88,17 @@ def short_host_state_name(state_num, deflt=""):
 
 
 def weekday_name(day_num):
+    """Returns the human readable day name of a given weekday number (starting with 0 at Monday)"""
     return weekdays()[day_num]
 
 
+def weekday_ids():
+    """Returns a list of the internal week day names"""
+    return [ d[0] for d in weekdays_by_name() ]
+
+
 def weekdays():
+    """Returns a map of weekday number (starting with 0 at Monday) to the human readable day name"""
     return {
        0: _("Monday"),
        1: _("Tuesday"),
@@ -101,6 +108,19 @@ def weekdays():
        5: _("Saturday"),
        6: _("Sunday"),
     }
+
+
+def weekdays_by_name():
+    """Returns a list of two element tuples containing the weekday ID and the human readable day name"""
+    return [
+       ( "monday",    _("Monday") ),
+       ( "tuesday",   _("Tuesday") ),
+       ( "wednesday", _("Wednesday") ),
+       ( "thursday",  _("Thursday") ),
+       ( "friday",    _("Friday") ),
+       ( "saturday",  _("Saturday") ),
+       ( "sunday",    _("Sunday") ),
+    ]
 
 
 def interface_oper_state_name(state_num, deflt=""):

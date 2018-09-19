@@ -29,6 +29,8 @@
 import re
 import time
 
+import cmk.defines as defines
+
 import cmk.gui.config as config
 import cmk.gui.watolib as watolib
 import cmk.gui.userdb as userdb
@@ -421,8 +423,7 @@ class ModeTimeperiodImportICal(WatoMode):
 
         html.set_var('alias', data.get('descr', data.get('name', filename)))
 
-        for day in [ "monday", "tuesday", "wednesday", "thursday",
-                     "friday", "saturday", "sunday" ]:
+        for day in defines.weekday_ids():
             html.set_var('%s_0_from' % day, '')
             html.set_var('%s_0_until' % day, '')
 
@@ -672,8 +673,7 @@ class ModeEditTimeperiod(WatoMode):
 
 
     def _validate_timeperiod_exception(self, value, varprefix):
-        if value in [ "monday", "tuesday", "wednesday", "thursday",
-                       "friday", "saturday", "sunday" ]:
+        if value in defines.weekday_ids():
             raise MKUserError(varprefix, _("You cannot use weekday names (%s) in exceptions") % value)
 
         if value in [ "name", "alias", "timeperiod_name", "register", "use", "exclude" ]:
@@ -726,7 +726,7 @@ class ModeEditTimeperiod(WatoMode):
         self._timeperiod.clear()
 
         # extract time ranges of weekdays
-        for weekday, _weekday_name in self._weekdays_by_name():
+        for weekday, _weekday_name in defines.weekdays_by_name():
             ranges = self._get_ranges(weekday)
             if ranges:
                 self._timeperiod[weekday] = ranges
@@ -804,7 +804,7 @@ class ModeEditTimeperiod(WatoMode):
                    "should be active.")
         html.open_table(class_="timeperiod")
 
-        for weekday, weekday_alias in self._weekdays_by_name():
+        for weekday, weekday_alias in defines.weekdays_by_name():
             html.open_tr()
             html.td(weekday_alias, class_="name")
             self._timeperiod_ranges(weekday, weekday)
@@ -820,7 +820,7 @@ class ModeEditTimeperiod(WatoMode):
 
         exceptions = []
         for k in self._timeperiod:
-            if k not in [ w[0] for w in self._weekdays_by_name() ] and k not in [ "alias", "exclude" ]:
+            if k not in [ w[0] for w in defines.weekdays_by_name() ] and k not in [ "alias", "exclude" ]:
                 exceptions.append((k, map(self._convert_from_range, self._timeperiod[k])))
         exceptions.sort()
         self._vs_exceptions().render_input("except", exceptions)
@@ -851,15 +851,3 @@ class ModeEditTimeperiod(WatoMode):
         html.open_td()
         MultipleTimeRanges().render_input(vp, value)
         html.close_td()
-
-
-    def _weekdays_by_name(self):
-        return [
-           ( "monday",    _("Monday") ),
-           ( "tuesday",   _("Tuesday") ),
-           ( "wednesday", _("Wednesday") ),
-           ( "thursday",  _("Thursday") ),
-           ( "friday",    _("Friday") ),
-           ( "saturday",  _("Saturday") ),
-           ( "sunday",    _("Sunday") ),
-        ]

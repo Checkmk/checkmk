@@ -36,10 +36,10 @@ import livestatus
 import cmk.paths
 import cmk.debug
 import cmk.utils
-
+import cmk.log
+import cmk.defines as defines
 from cmk.exceptions import MKGeneralException
 
-import cmk.log
 logger = cmk.log.get_logger(__name__)
 
 # Fetch RRD historic metrics data of a specific service. returns a tuple
@@ -71,10 +71,6 @@ def get_rrd_data(hostname, service_description, varname, cf, fromtime, untiltime
     step, values = response[2], response[3:]
     return step, values
 
-
-daynames = [ "monday", "tuesday", "wednesday", "thursday",
-             "friday", "saturday", "sunday"]
-
 # Check wether a certain time stamp lies with in daylight safing time (DST)
 def is_dst(timestamp):
     return time.localtime(timestamp).tm_isdst
@@ -89,7 +85,7 @@ def timezone_at(timestamp):
 def group_by_wday(t):
     wday = time.localtime(t).tm_wday
     rel_time = divmod(t - timezone_at(t), 86400)[1]
-    return daynames[wday], rel_time
+    return defines.weekday_ids()[wday], rel_time
 
 def group_by_day(t):
     return "everyday", (t - timezone_at(t)) % 86400

@@ -42,11 +42,14 @@ from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
 from cmk.gui.valuespec import (
+    ID,
+    FixedValue,
     Dictionary,
     Optional,
     Integer,
     FileUpload,
     TextAscii,
+    TextUnicode,
     ListOf,
     Tuple,
     ValueSpec,
@@ -293,6 +296,7 @@ class ModeTimeperiods(WatoMode):
 
 
 
+# TODO: Deprecated and Replace with ListOf(TimeofdayRange(), ...)
 class MultipleTimeRanges(ValueSpec):
     def __init__(self, **kwargs):
         ValueSpec.__init__(self, **kwargs)
@@ -620,7 +624,10 @@ class ModeEditTimeperiod(WatoMode):
 
                 self._timeperiod = self._get_timeperiod(self._name)
             else:
-                self._timeperiod = {}
+                # initialize with 24x7 config
+                self._timeperiod = {
+                    day: [("00:00", "24:00")] for day in defines.weekday_ids()
+                }
         else:
             self._timeperiod = self._get_timeperiod(self._name)
 
@@ -632,25 +639,6 @@ class ModeEditTimeperiod(WatoMode):
             raise MKUserError(None, _("This timeperiod does not exist."))
 
 
-    def _convert_from_range(self, rng):
-        # ("00:30", "10:17") -> ((0,30),(10,17))
-        return tuple(map(self._convert_from_tod, rng))
-
-
-    # convert Check_MK representation of range to ValueSpec-representation
-    def _convert_from_tod(self, tod):
-        # "00:30" -> (0, 30)
-        return tuple(map(int, tod.split(":")))
-
-
-    def _convert_to_range(self, value):
-        return tuple(map(self._convert_to_tod, value))
-
-
-    def _convert_to_tod(self, value):
-        return "%02d:%02d" % value
-
-
     def title(self):
         if self._new:
             return _("Create new time period")
@@ -660,6 +648,81 @@ class ModeEditTimeperiod(WatoMode):
 
     def buttons(self):
         html.context_button(_("All Timeperiods"), watolib.folder_preserving_link([("mode", "timeperiods")]), "back")
+
+
+    def _valuespec(self):
+        if self._new:
+            # Cannot use ID() here because old versions of the GUI allowed time periods to start
+            # with numbers and so on. The ID() valuespec does not allow it.
+            name_element = TextAscii(
+                title = _("Internal ID"),
+                regex = r"^[-a-z0-9A-Z_]*$",
+                regex_error = _("Invalid timeperiod name. Only the characters a-z, A-Z, 0-9, "
+                                "_ and - are allowed."),
+                allow_empty = False,
+                size = 80,
+                validate = self._validate_id,
+            )
+        else:
+            name_element = FixedValue(
+                self._name,
+            )
+
+        return Dictionary(
+            title = _("Timeperiod"),
+            elements = [
+                ("name", name_element),
+                ("alias", TextUnicode(
+                    title = _("Alias"),
+                    help = _("An alias or description of the timeperiod"),
+                    allow_empty = False,
+                    size = 80,
+                    validate = self._validate_alias,
+                )),
+                ("weekdays", Dictionary(
+                    title = _("Weekdays"),
+                    help = _("For each weekday you can setup no, one or several "
+                             "time ranges in the format <tt>23:39</tt>, in which the time period "
+                             "should be active."),
+                    elements = self._weekday_elements(),
+                    optional_keys = None,
+                    indent = False,
+                )),
+                ("exceptions", self._vs_exceptions()),
+                ("exclude", self._vs_exclude()),
+            ],
+            render = "form",
+            optional_keys = None,
+        )
+
+
+    def _validate_id(self, value, varprefix):
+        if value in self._timeperiods:
+            raise MKUserError(varprefix, _("This name is already being used by another timeperiod."))
+        if value == "24X7":
+            raise MKUserError(varprefix, _("The time period name 24X7 cannot be used. It is always autmatically defined."))
+
+
+    def _validate_alias(self, value, varprefix):
+        unique, message = watolib.is_alias_used("timeperiods", self._name, value)
+        if not unique:
+            raise MKUserError("alias", message)
+
+
+    def _weekday_elements(self):
+        elements = []
+        for tp_id, tp_title in cmk.defines.weekdays_by_name():
+            # TODO: Find way to render without line breaks between day and ranges
+            elements.append((tp_id, MultipleTimeRanges(
+                title=tp_title
+            )))
+            #elements.append((tp_id, ListOf(TimeofdayRange(),
+            #    title = tp_title,
+            #    movable = False,
+            #    add_label = _("Add time range"),
+            #    del_label = _("Delete time range"),
+            #)))
+        return elements
 
 
     def _vs_exceptions(self):
@@ -677,8 +740,13 @@ class ModeEditTimeperiod(WatoMode):
                     MultipleTimeRanges()
                 ],
             ),
+            title = _("Exceptions (from weekdays)"),
+            help = _("Here you can specify exceptional time ranges for certain "
+                     "dates in the form YYYY-MM-DD which are used to define more "
+                     "specific definitions to override the times configured for the matching "
+                     "weekday."),
             movable = False,
-            add_label = _("Add Exception")
+            add_label = _("Add Exception"),
         )
 
 
@@ -690,23 +758,29 @@ class ModeEditTimeperiod(WatoMode):
             raise MKUserError(varprefix, _("<tt>%s</tt> is a reserved keyword."))
 
 
-    def _vs_excludes(self):
-        return ListChoice(choices=self._other_timeperiods())
+    def _vs_exclude(self):
+        return ListChoice(
+            choices=self._other_timeperiod_choices(),
+            title = _("Exclude"),
+            help = _('You can use other timeperiod definitions to exclude the times '
+                     'defined in the other timeperiods from this current timeperiod.'),
+        )
 
 
-    def _other_timeperiods(self):
-        # ValueSpec for excluded Timeperiods. We offer the list of
-        # all other timeperiods - but only those that do not
-        # exclude the current timeperiod (in order to avoid cycles)
+    def _other_timeperiod_choices(self):
+        """List of timeperiods that can be used for exclusions
+
+        We offer the list of all other timeperiods - but only those that do not exclude the current
+        timeperiod (in order to avoid cycles)"""
         other_tps = []
         for tpname, tp in self._timeperiods.items():
             if not self._timeperiod_excludes(tpname):
-                other_tps.append((tpname, tp.get("alias") or self._name))
+                other_tps.append((tpname, tp.get("alias") or tpname))
         return other_tps
 
 
-    # Check, if timeperiod tpa excludes or is tpb
     def _timeperiod_excludes(self, tpa_name):
+        """Check, if timeperiod tpa excludes or is tpb"""
         if tpa_name == self._name:
             return True
 
@@ -725,134 +799,99 @@ class ModeEditTimeperiod(WatoMode):
         if not html.check_transaction():
             return
 
-        alias = html.get_unicode_input("alias").strip()
-        if not alias:
-            raise MKUserError("alias", _("Please specify an alias name for your timeperiod."))
-
-        unique, info = watolib.is_alias_used("timeperiods", self._name, alias)
-        if not unique:
-            raise MKUserError("alias", info)
-
-        self._timeperiod.clear()
-
-        # extract time ranges of weekdays
-        for weekday, _weekday_name in defines.weekdays_by_name():
-            ranges = self._get_ranges(weekday)
-            if ranges:
-                self._timeperiod[weekday] = ranges
-            elif weekday in self._timeperiod:
-                del self._timeperiod[weekday]
-
-        # extract ranges for custom days
-        vs_ex = self._vs_exceptions()
-        exceptions = vs_ex.from_html_vars("except")
-        vs_ex.validate_value(exceptions, "except")
-        for exname, ranges in exceptions:
-            self._timeperiod[exname] = map(self._convert_to_range, ranges)
-
-        # extract excludes
-        vs_excl = self._vs_excludes()
-        excludes = vs_excl.from_html_vars("exclude")
-        vs_excl.validate_value(excludes, "exclude")
-        if excludes:
-            self._timeperiod["exclude"] = excludes
+        vs = self._valuespec()
+        vs_spec = vs.from_html_vars("timeperiod")
+        vs.validate_value(vs_spec, "timeperiod")
+        self._timeperiod = self._from_valuespec(vs_spec)
 
         if self._new:
-            name = html.var("name")
-            if len(name) == 0:
-                raise MKUserError("name", _("Please specify a name of the new timeperiod."))
-            if not re.match("^[-a-z0-9A-Z_]*$", name):
-                raise MKUserError("name", _("Invalid timeperiod name. Only the characters a-z, A-Z, 0-9, _ and - are allowed."))
-            if name in self._timeperiods:
-                raise MKUserError("name", _("This name is already being used by another timeperiod."))
-            if name == "24X7":
-                raise MKUserError("name", _("The time period name 24X7 cannot be used. It is always autmatically defined."))
-            self._timeperiods[name] = self._timeperiod
-            watolib.add_change("edit-timeperiods", _("Created new time period %s") % name)
+            self._name = vs_spec["name"]
+            watolib.add_change("edit-timeperiods", _("Created new time period %s") % self._name)
         else:
             watolib.add_change("edit-timeperiods", _("Modified time period %s") % self._name)
 
-        self._timeperiod["alias"] = alias
+        self._timeperiods[self._name] = self._timeperiod
         watolib.save_timeperiods(self._timeperiods)
         return "timeperiods"
 
 
-    def _get_ranges(self, varprefix):
-        value = MultipleTimeRanges().from_html_vars(varprefix)
-        MultipleTimeRanges().validate_value(value, varprefix)
-        return map(self._convert_to_range, value)
-
-
     def page(self):
         html.begin_form("timeperiod", method="POST")
-        forms.header(_("Timeperiod"))
-
-        # Name
-        forms.section(_("Internal name"), simple = not self._new)
-        if self._new:
-            html.text_input("name", default_value=self._name)
-            html.set_focus("name")
-        else:
-            html.write_text(self._name)
-
-        # Alias
-        forms.section(_("Alias"))
-        html.help(_("An alias or description of the timeperiod"))
-        html.text_input("alias", default_value=self._timeperiod.get("alias", ""), size = 81)
-        if not self._new:
-            html.set_focus("alias")
-
-        # Week days
-        forms.section(_("Weekdays"))
-        html.help("For each weekday you can setup no, one or several "
-                   "time ranges in the format <tt>23:39</tt>, in which the time period "
-                   "should be active.")
-        html.open_table(class_="timeperiod")
-
-        for weekday, weekday_alias in defines.weekdays_by_name():
-            html.open_tr()
-            html.td(weekday_alias, class_="name")
-            self._timeperiod_ranges(weekday, weekday)
-            html.close_tr()
-        html.close_table()
-
-        # Exceptions
-        forms.section(_("Exceptions (from weekdays)"))
-        html.help(_("Here you can specify exceptional time ranges for certain "
-                    "dates in the form YYYY-MM-DD which are used to define more "
-                    "specific definitions to override the times configured for the matching "
-                    "weekday."))
-
-        exceptions = []
-        for k in self._timeperiod:
-            if k not in [ w[0] for w in defines.weekdays_by_name() ] and k not in [ "alias", "exclude" ]:
-                exceptions.append((k, map(self._convert_from_range, self._timeperiod[k])))
-        exceptions.sort()
-        self._vs_exceptions().render_input("except", exceptions)
-
-        # Excludes
-        if self._other_timeperiods():
-            forms.section(_("Exclude"))
-            html.help(_('You can use other timeperiod definitions to exclude the times '
-                        'defined in the other timeperiods from this current timeperiod.'))
-            self._vs_excludes().render_input("exclude", self._timeperiod.get("exclude", []))
-
-
+        self._valuespec().render_input("timeperiod", self._to_valuespec(self._timeperiod))
         forms.end()
         html.button("save", _("Save"))
         html.hidden_fields()
         html.end_form()
 
 
-    def _timeperiod_ranges(self, vp, keyname):
-        ranges = self._timeperiod.get(keyname, [])
-        value = []
-        for rng in ranges:
-            value.append(self._convert_from_range(rng))
+    # The timeperiod data structure for the Check_MK config looks like follows.
+    # { 'alias': u'eeee',
+    #   'monday': [('00:00', '22:00')],
+    #   'tuesday': [('00:00', '24:00')],
+    #   'wednesday': [('00:00', '24:00')],
+    #   'thursday': [('00:00', '24:00')],
+    #   'friday': [('00:00', '24:00')],
+    #   'saturday': [('00:00', '24:00')],
+    #   'sunday': [('00:00', '24:00')],
+    #   'exclude': ['asde'],
+    #   # These are the exceptions:
+    #   '2018-01-28': [
+    #       ('00:00', '10:00')
+    #   ],
+    # ]}}
+    def _to_valuespec(self, tp_spec):
+        if not tp_spec:
+            return {}
 
-        if len(value) == 0 and self._new:
-            value.append(((0,0), (24,0)))
+        exceptions = []
+        for exception_name, time_ranges in tp_spec.items():
+            if exception_name not in defines.weekday_ids() + [ "alias", "exclude" ]:
+                exceptions.append((exception_name, map(self._time_range_to_valuespec, time_ranges)))
 
-        html.open_td()
-        MultipleTimeRanges().render_input(vp, value)
-        html.close_td()
+        vs_spec = {
+            "name": self._name,
+            "alias": tp_spec.get("alias", ""),
+            "weekdays": { day: map(self._time_range_to_valuespec, tp_spec.get(day, []))
+                          for day in defines.weekday_ids() },
+            "exclude": tp_spec.get("exclude", []),
+            "exceptions": sorted(exceptions),
+        }
+
+        return vs_spec
+
+
+    def _time_range_to_valuespec(self, time_range):
+        """Convert a time range specification to valuespec format
+        e.g. ("00:30", "10:17") -> ((0,30),(10,17))"""
+        return tuple(map(self._time_to_valuespec, time_range))
+
+
+    def _time_to_valuespec(self, time_str):
+        """Convert a time specification to valuespec format
+        e.g. "00:30" -> (0, 30)"""
+        return tuple(map(int, time_str.split(":")))
+
+
+    def _from_valuespec(self, vs_spec):
+        tp_spec = {
+            "alias": vs_spec["alias"],
+        }
+
+        if vs_spec["exclude"]:
+            tp_spec["exclude"] = vs_spec["exclude"]
+
+        for day, time_ranges in vs_spec["weekdays"].items() + vs_spec["exceptions"]:
+            if time_ranges:
+                tp_spec[day] = map(self._time_range_from_valuespec, time_ranges)
+
+        return tp_spec
+
+
+    def _time_range_from_valuespec(self, value):
+        """Convert a time range specification from valuespec format"""
+        return tuple(map(self._time_from_valuespec, value))
+
+
+    def _time_from_valuespec(self, value):
+        """Convert a time specification from valuespec format"""
+        return "%02d:%02d" % value

@@ -4333,6 +4333,7 @@ class IconSelector(ValueSpec):
 
 
 
+# TODO: Replace with ListOf(TimeofdayRange(...))
 class TimeofdayRanges(Transform):
     def __init__(self, **args):
         self._count = args.get("count", 3)

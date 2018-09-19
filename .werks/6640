@@ -1,0 +1,13 @@
+Title: Faster link lookup to Check_MK host or service pages
+Level: 1
+Component: notifications
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1537365437
+Class: fix
+
+Context variables HOSTURL and SERVICEURL now include the site key, this
+enables a faster lookup and visualization of pages since Check_MK does not
+need to resolve to which site the host belongs. This becomes especialy
+relevant in distributed environments with multiple monitoring sites.

@@ -472,11 +472,13 @@ def check_esx_vsphere_hostsystem_multipath(item, params, info):
             # Collect states
             path_type = None
             for path_state, path_type, path_name in states:
-                path_names.append(path_name)
                 state_item = state_infos.get(path_state)
+                path_info = path_name
                 if state_item:
                     state_item[1] += 1
                     state = max(state_item[0], state)
+                    path_info += state_markers[state_item[0]]
+                path_names.append(path_info)
 
             # Check warn, critical
             if not params or type(params) == list:

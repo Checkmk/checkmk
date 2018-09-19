@@ -279,10 +279,12 @@ class ModeTimeperiods(WatoMode):
 
             timeperiod = self._timeperiods[name]
             edit_url     = watolib.folder_preserving_link([("mode", "edit_timeperiod"), ("edit", name)])
+            clone_url    = watolib.folder_preserving_link([("mode", "edit_timeperiod"), ("clone", name)])
             delete_url   = make_action_link([("mode", "timeperiods"), ("_delete", name)])
 
             table.cell(_("Actions"), css="buttons")
             html.icon_button(edit_url, _("Properties"), "edit")
+            html.icon_button(clone_url, _("Create a copy"), "clone")
             html.icon_button(delete_url, _("Delete"), "delete")
 
             table.text_cell(_("Name"), name)
@@ -609,17 +611,25 @@ class ModeEditTimeperiod(WatoMode):
     def _from_vars(self):
         self._timeperiods = watolib.load_timeperiods()
         self._name = html.var("edit") # missing -> new group
+        self._new  = self._name == None
 
-        if self._name == None:
-            self._new  = True
-            self._timeperiod = {}
+        if self._new:
+            clone_name = html.var("clone")
+            if clone_name:
+                self._name = clone_name
+
+                self._timeperiod = self._get_timeperiod(self._name)
+            else:
+                self._timeperiod = {}
         else:
-            self._new  = False
+            self._timeperiod = self._get_timeperiod(self._name)
 
-            try:
-                self._timeperiod = self._timeperiods[self._name]
-            except KeyError:
-                raise MKUserError(None, _("This timeperiod does not exist."))
+
+    def _get_timeperiod(self, name):
+        try:
+            return self._timeperiods[name]
+        except KeyError:
+            raise MKUserError(None, _("This timeperiod does not exist."))
 
 
     def _convert_from_range(self, rng):
@@ -780,20 +790,15 @@ class ModeEditTimeperiod(WatoMode):
         # Name
         forms.section(_("Internal name"), simple = not self._new)
         if self._new:
-            html.text_input("name")
+            html.text_input("name", default_value=self._name)
             html.set_focus("name")
         else:
             html.write_text(self._name)
 
         # Alias
-        if not self._new:
-            alias = self._timeperiod.get("alias", "")
-        else:
-            alias = ""
-
         forms.section(_("Alias"))
         html.help(_("An alias or description of the timeperiod"))
-        html.text_input("alias", alias, size = 81)
+        html.text_input("alias", default_value=self._timeperiod.get("alias", ""), size = 81)
         if not self._new:
             html.set_focus("alias")
 

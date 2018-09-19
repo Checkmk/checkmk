@@ -52,7 +52,8 @@ factory_settings['fan_fsc_sc2_levels'] = {
 
 def inventory_fsc_sc2_fans(info):
     for line in info:
-        yield line [0], {}
+        if line[1] not in ["8"]:
+            yield line[0], {}
 
 
 def check_fsc_sc2_fans(item, params, info):
@@ -68,17 +69,15 @@ def check_fsc_sc2_fans(item, params, info):
     }
 
     if type(params) == tuple:
-        params = { 'lower' : params }
+        params = {'lower': params}
 
     for designation, status, rpm in info:
         if designation == item:
-            # in this case booth values are important
+            yield status_map.get(status, (3, 'Status is unknown'))
             if rpm:
                 yield check_fan(int(rpm), params)
             else:
-                yield 3, "Device did not deliver rpm values"
-
-            yield status_map.get(status, (3, 'Status is unknown'))
+                yield 0, "Device did not deliver RPM values"
 
 
 check_info["fsc_sc2_fans"] = {

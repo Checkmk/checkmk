@@ -2147,55 +2147,60 @@ function valuespec_textarea_resize(oArea)
     oArea.style.height = (oArea.scrollHeight - 6) + "px"  ;
 }
 
-function valuespec_listof_add(varprefix, magic)
+function valuespec_listof_add(varprefix, magic, style)
 {
-    var oCountInput = document.getElementById(varprefix + "_count");
-    var count = parseInt(oCountInput.value);
-    var strcount = "" + (count + 1);
-    oCountInput.value = strcount;
-    var oPrototype = document.getElementById(varprefix + "_prototype").children[0].children[0]; // TR
-    var htmlcode = oPrototype.innerHTML;
-    // replace the magic
-    var re = new RegExp(magic, "g");
-    htmlcode = htmlcode.replace(re, strcount);
+    var count_field = document.getElementById(varprefix + "_count");
+    var count = parseInt(count_field.value);
+    var str_count = "" + (count + 1);
+    count_field.value = str_count;
 
-    // in some cases the magic might be URL encoded. Also replace these occurences.
-    re       = new RegExp(encodeURIComponent(magic).replace('!', '%21'), "g");
-    htmlcode = htmlcode.replace(re, strcount);
+    var html_code = valuespec_listof_get_new_entry_html_code(varprefix, magic, str_count);
+    var container = document.getElementById(varprefix + "_container");
 
-    var oTable = document.getElementById(varprefix + "_table");
-
-    var oTbody = oTable.children[0];
-    if(oTbody == undefined) { // no row -> no <tbody> present!
-        oTbody = document.createElement('tbody');
-        oTable.appendChild(oTbody);
+    var tmp_container = document.createElement('div');
+    if (style == "floating") {
+        tmp_container.innerHTML = html_code;
+        var new_child = tmp_container.children[0];
+    } else {
+        // Hack for IE. innerHTML does not work correctly directly on tbody/tr
+        tmp_container.innerHTML = '<table><tbody>' + html_code + '</tbody></tr>';
+        var new_child = tmp_container.children[0].children[0].children[0]; // TR
     }
 
-    // Hack for IE. innerHTML does not work on tbody/tr correctly.
-    var container = document.createElement('div');
-    container.innerHTML = '<table><tbody><tr>' + htmlcode + '</tr></tbody></tr>';
-    var oTr = container.children[0].children[0].children[0]; // TR
-    oTbody.appendChild(oTr);
+    container.appendChild(new_child);
+    executeJSbyObject(new_child);
 
-    executeJSbyObject(oTable.lastElementChild);
+    valuespec_listof_update_indices(varprefix);
+}
 
-    valuespec_listof_fixarrows(oTbody);
+function valuespec_listof_get_new_entry_html_code(varprefix, magic, str_count)
+{
+    var oPrototype = document.getElementById(varprefix + "_prototype");
+    var html_code = oPrototype.innerHTML;
+    // replace the magic
+    var re = new RegExp(magic, "g");
+    html_code = html_code.replace(re, str_count);
+
+    // in some cases the magic might be URL encoded. Also replace these occurences.
+    re = new RegExp(encodeURIComponent(magic).replace('!', '%21'), "g");
+
+    return html_code.replace(re, str_count);
 }
 
 // When deleting we do not fix up indices but simply
-// remove the according table row and add an invisible
+// remove the according list entry and add an invisible
 // input element with the name varprefix + "_deleted_%nr"
-function valuespec_listof_delete(oA, varprefix, nr) {
-    var oTr = oA.parentNode.parentNode; // TR
-    var oTbody = oTr.parentNode;
-    var oInput = document.createElement("input");
-    oInput.type = "hidden";
-    oInput.name = "_" + varprefix + '_deleted_' + nr;
-    oInput.value = "1";
-    var oTable = oTbody.parentNode;
-    oTable.parentNode.insertBefore(oInput, oTable);
-    oTbody.removeChild(oTr);
-    valuespec_listof_fixarrows(oTbody);
+function valuespec_listof_delete(varprefix, nr) {
+    var entry = document.getElementById(varprefix + "_entry_" + nr);
+
+    var input = document.createElement("input");
+    input.type = "hidden";
+    input.name = "_" + varprefix + '_deleted_' + nr;
+    input.value = "1";
+
+    entry.parentNode.replaceChild(input, entry);
+
+    valuespec_listof_update_indices(varprefix);
 }
 
 function vs_listof_drop_handler(handler_args, new_index)
@@ -2216,12 +2221,11 @@ function vs_listof_drop_handler(handler_args, new_index)
     if (!tbody)
         throw "Failed to find the tbody element of " + indexof;
 
-    valuespec_listof_fixarrows(tbody);
+    valuespec_listof_update_indices(varprefix);
 }
 
 function valuespec_listof_sort(varprefix, magic, sort_by) {
-    var table = document.getElementById(varprefix + "_table");
-    var tbody = table.firstChild;
+    var tbody = document.getElementById(varprefix + "_container");
     var rows = tbody.rows;
 
     var entries = [];
@@ -2268,55 +2272,21 @@ function valuespec_listof_sort(varprefix, magic, sort_by) {
         tbody.appendChild(entries[i].row_node);
     }
 
-    valuespec_listof_fixarrows(tbody);
+    valuespec_listof_update_indices(varprefix);
 }
 
+function valuespec_listof_update_indices(varprefix) {
+    var container = document.getElementById(varprefix + "_container");
 
-function valuespec_listof_fixarrows(oTbody) {
-    if(!oTbody || typeof(oTbody.rows) == undefined) {
-        return;
-    }
-
-    for(var i = 0, row; row = oTbody.rows[i]; i++) {
-        if(row.cells.length == 0)
-            continue;
-
-        var oTd = row.cells[0]; /* TD with buttons */
-        if(oTd.children.length == 0)
-            continue;
-
-        var oIndex = oTd.getElementsByClassName("index")[0];
-        if (oIndex.value === "") {
+    for (var i = 0; i < container.children.length; i++) {
+        var child_node = container.children[i];
+        var index = child_node.getElementsByClassName("index")[0];
+        if (index.value === "") {
             // initialization of recently added row
-            var orig_index = oTd.getElementsByClassName("orig_index")[0];
+            var orig_index = child_node.getElementsByClassName("orig_index")[0];
             orig_index.value = "" + (i+1);
         }
-        oIndex.value = "" + (i+1);
-
-        if (oTd.childNodes.length > 4) { /* movable */
-            var buttons = oTd.getElementsByClassName("iconbutton");
-
-            var oUpTrans = buttons[1];
-            var oUp      = buttons[2];
-            if (i == 0) {
-                oUpTrans.style.display = "";
-                oUp.style.display = "none";
-            }
-            else {
-                oUpTrans.style.display = "none";
-                oUp.style.display = "";
-            }
-            var oDownTrans = buttons[3];
-            var oDown      = buttons[4];
-            if (i >= oTbody.rows.length - 1) {
-                oDownTrans.style.display = "";
-                oDown.style.display = "none";
-            }
-            else {
-                oDownTrans.style.display = "none";
-                oDown.style.display = "";
-            }
-        }
+        index.value = "" + (i+1);
     }
 }
 

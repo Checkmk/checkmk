@@ -5118,7 +5118,7 @@ register_check_parameters(
                  help = _("Specifiy time ranges during which no motion is expected. "
                           "Outside these times, the motion detector will always be in "
                           "state OK"),
-                 elements = [ (day_id, TimeofdayRanges(count = 3, title = day_str))
+                 elements = [ (day_id, ListOfTimeRanges(title = day_str))
                                 for day_id, day_str in defines.weekdays_by_name() ],
                  optional_keys = []
              )
@@ -6977,10 +6977,9 @@ register_check_parameters(
                 )
             ),
             ("timeofday",
-                TimeofdayRanges(
+                ListOfTimeRanges(
                     title = _("Only check during the following times of the day"),
                     help = _("Outside these ranges the check will always be OK"),
-                    count = 3,
             )),
             ("state_missing",
                 MonitoringState(
@@ -7198,10 +7197,9 @@ register_check_parameters(
                 )
             ),
             ("timeofday",
-                TimeofdayRanges(
+                ListOfTimeRanges(
                     title = _("Only check during the following times of the day"),
                     help = _("Outside these ranges the check will always be OK"),
-                    count = 3,
             )),
         ],
         ignored_keys = ["precompiled_patterns"]

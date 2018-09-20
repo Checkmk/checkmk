@@ -597,25 +597,33 @@ table.valuespec_listof {
     width: 100%;
 }
 
-table.valuespec_listof > tbody > tr > td:first-child {
+div.valuespec_listof.floating > table > tbody > tr > td:first-child {
+    vertical-align: top;
+}
+
+div.valuespec_listof_floating_container > table {
+    float: left;
+}
+
+table.valuespec_listof.regular > tbody > tr > td:first-child {
     padding-bottom: 5px;
 }
-table.valuespec_listof > tbody > tr > td {
+table.valuespec_listof.regular > tbody > tr > td {
     padding: 3px 0px 5px 0px;
     border-bottom: 1px solid #9bc;
 }
-table.valuespec_listof > tbody > tr:last-child > td {
+table.valuespec_listof.regular > tbody > tr:last-child > td {
     padding-top: 3px;
     border-bottom-style: none;
 }
 
-table.valuespec_listof td.vlof_buttons {
+table.valuespec_listof.regular td.vlof_buttons {
     margin-right: 5px;
     white-space: nowrap;
     vertical-align: middle;
     width: 1px;
 }
-table.valuespec_listof td.vlof_content {
+table.valuespec_listof.regular td.vlof_content {
 }
 table.valuespec_listof option[selected] {
     font-weight: bold;

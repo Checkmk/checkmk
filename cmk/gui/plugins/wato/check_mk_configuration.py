@@ -2228,12 +2228,11 @@ register_rule(group,
                                     display = [ "hours", "minutes" ]
                              )),
                              ( "excluded_time",
-                               TimeofdayRanges(
+                               ListOfTimeRanges(
                                    title = _("Never do discovery or activate changes in the following time ranges"),
                                    help = _("This avoids automatic changes during these times so "
                                             "that the automatic system doesn't interfere with "
                                             "user activity."),
-                                   count = 3,
                              )),
                              ("activation",
                               DropdownChoice(

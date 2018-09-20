@@ -24,6 +24,8 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+import cmk.paths
+
 def inv_export_software_csv(hostname, params, tree):
     separator = params.get("separator", ";")
     quotes    = params.get("quotes", None) # Also: "single", "double"

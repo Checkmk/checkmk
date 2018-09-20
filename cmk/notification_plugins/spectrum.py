@@ -22,9 +22,9 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import os
 import subprocess
 import sys
+from cmk.notification_plugins import utils
 
 # Note: This script contains an example configuration
 # You will probably have to modify the sent information
@@ -50,13 +50,13 @@ def send_trap(oids, target, community):
 
 def main():
     # gather all options from env
-    context = dict([(var[7:], value.decode("utf-8")) for (var, value) in os.environ.items()])
+    context = utils.collect_context()
 
     # check if configured via flexible notifications
     if "PARAMETER_1" in context:
-        context["PARAMETER_COMMUNITY"]   = context["PARAMETER_1"]
+        context["PARAMETER_COMMUNITY"] = context["PARAMETER_1"]
         context["PARAMETER_DESTINATION"] = context["PARAMETER_2"]
-        context["PARAMETER_BASEOID"]     = context["PARAMETER_3"]
+        context["PARAMETER_BASEOID"] = context["PARAMETER_3"]
 
     base_oid = context.get("PARAMETER_BASEOID", "1.3.6.1.4.1.1234")
 

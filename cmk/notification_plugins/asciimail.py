@@ -22,15 +22,14 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-
 # This script creates an ASCII email. It replaces the builtin ASCII email feature and
 # is configurable via WATO with named parameters (only).
 
-import os
 import re
 import subprocess
 import sys
 from email.mime.text import MIMEText
+from cmk.notification_plugins import utils
 
 opt_debug = '-d' in sys.argv
 bulk_mode = '--bulk' in sys.argv
@@ -276,9 +275,7 @@ def main():
 
     else:
         # gather all options from env
-        context = dict([(var[7:], value.decode("utf-8"))
-                        for (var, value) in os.environ.items()
-                        if var.startswith("NOTIFY_")])
+        context = utils.collect_context()
         content_txt = construct_content(context)
         mailto = context['CONTACTEMAIL']
         subject = context['SUBJECT']

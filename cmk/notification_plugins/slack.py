@@ -30,11 +30,10 @@ Use a slack webhook to send notification messages
 """
 
 from typing import Dict  # pylint: disable=unused-import
-import os
 import sys
 import requests
 
-from cmk.notification_plugins.utils import extend_context_with_link_urls
+from cmk.notification_plugins import utils
 
 COLORS = {
     "CRITICAL": "#EE0000",
@@ -51,7 +50,7 @@ def construct_message(context):
     # type: (Dict) -> Dict
     """Build the message for slack"""
 
-    extend_context_with_link_urls(context, '<%s|%s>')
+    utils.extend_context_with_link_urls(context, '<%s|%s>')
 
     if context.get('SERVICESTATE', None):
         color = COLORS.get(context["SERVICESTATE"])
@@ -88,11 +87,7 @@ def construct_message(context):
 
 
 def main():
-    context = {
-        var[7:]: value.decode("utf-8")
-        for (var, value) in os.environ.items()
-        if var.startswith("NOTIFY_")
-    }
+    context = utils.collect_context()
 
     url = context.get("PARAMETER_WEBHOOK_URL")
 

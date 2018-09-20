@@ -32,7 +32,6 @@
 
 import base64
 import os
-import re
 import socket
 import subprocess
 import sys
@@ -485,42 +484,6 @@ class GraphException(Exception):
     pass
 
 
-def substitute_context(template, context):
-    # First replace all known variables
-    for varname, value in context.items():
-        template = template.replace('$' + varname + '$', value)
-
-    if re.search(r"\$[A-Z_][A-Z_0-9]*\$", template):
-        # Second pass to replace nested variables inside e.g. SERVICENOTESURL
-        for varname, value in context.items():
-            template = template.replace('$' + varname + '$', value)
-
-    # Debugging of variables. Create content only on demand
-    if "$CONTEXT_ASCII$" in template or "$CONTEXT_HTML$" in template:
-        template = replace_variable_context(template, context)
-
-    # Remove the rest of the variables and make them empty
-    template = re.sub(r"\$[A-Z_][A-Z_0-9]*\$", "", template)
-    return template
-
-
-def replace_variable_context(template, context):
-    ascii_output = ""
-    html_output = "<table class=context>\n"
-    elements = context.items()
-    elements.sort()
-    for varname, value in elements:
-        ascii_output += "%s=%s\n" % (varname, value)
-        html_output += "<tr><td class=varname>%s</td><td class=value>%s</td></tr>\n" % (
-            varname, encode_entities(value))
-    html_output += "</table>\n"
-    return template.replace("$CONTEXT_ASCII$", ascii_output).replace("$CONTEXT_HTML$", html_output)
-
-
-def encode_entities(text):
-    return text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
-
-
 def multipart_mail(target, subject, from_address, reply_to, content_txt, content_html, attach=None):
     if attach is None:
         attach = []
@@ -925,8 +888,8 @@ def construct_content(context):
     if not html_info:
         html_info = txt_info
 
-    txt_info = substitute_context(txt_info.replace("@", context["WHAT"]), context)
-    html_info = substitute_context(html_info.replace("@", context["WHAT"]), context)
+    txt_info = utils.substitute_context(txt_info.replace("@", context["WHAT"]), context)
+    html_info = utils.substitute_context(html_info.replace("@", context["WHAT"]), context)
 
     context["EVENT_TXT"] = txt_info
     context["EVENT_HTML"] = html_info
@@ -936,10 +899,10 @@ def construct_content(context):
     # Compute the subject of the mail
     if context['WHAT'] == 'HOST':
         tmpl = context.get('PARAMETER_HOST_SUBJECT') or tmpl_host_subject
-        context['SUBJECT'] = substitute_context(tmpl, context)
+        context['SUBJECT'] = utils.substitute_context(tmpl, context)
     else:
         tmpl = context.get('PARAMETER_SERVICE_SUBJECT') or tmpl_service_subject
-        context['SUBJECT'] = substitute_context(tmpl, context)
+        context['SUBJECT'] = utils.substitute_context(tmpl, context)
 
     # Prepare the mail contents
     content_txt, content_html = render_elements(context, elements)
@@ -956,9 +919,9 @@ def construct_content(context):
     if "PARAMETER_INSERT_HTML_SECTION" in context:
         extra_html_section = context['PARAMETER_INSERT_HTML_SECTION']
 
-    content_html = substitute_context(tmpl_head_html(extra_html_section), context) + \
+    content_html = utils.substitute_context(tmpl_head_html(extra_html_section), context) + \
                    content_html + \
-                   substitute_context(tmpl_foot_html, context)
+                   utils.substitute_context(tmpl_foot_html, context)
 
     return content_txt, content_html, attachments
 
@@ -983,8 +946,8 @@ def render_elements(context, elements):
                                                                                      html)
             even = 'odd' if even == 'even' else 'even'
 
-    return substitute_context(tmpl_txt, context), \
-           substitute_context(tmpl_html, context)
+    return utils.substitute_context(tmpl_txt, context), \
+           utils.substitute_context(tmpl_html, context)
 
 
 def read_bulk_contexts():
@@ -1044,7 +1007,7 @@ def get_bulk_notification_subject(contexts, hosts):
     if "$COUNT_HOSTS$" in subject:
         subject = subject.replace("$COUNT_HOSTS$", str(len(hosts)))
 
-    subject = substitute_context(subject, bulk_context)
+    subject = utils.substitute_context(subject, bulk_context)
     return subject
 
 

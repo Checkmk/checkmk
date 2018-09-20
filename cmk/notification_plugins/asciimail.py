@@ -25,7 +25,6 @@
 # This script creates an ASCII email. It replaces the builtin ASCII email feature and
 # is configurable via WATO with named parameters (only).
 
-import re
 import subprocess
 import sys
 from email.mime.text import MIMEText
@@ -58,21 +57,6 @@ tmpl_alerthandler_host_body = """Alert handler: $ALERTHANDLERNAME$
 Handler output: $ALERTHANDLEROUTPUT$
 """
 tmpl_alerthandler_service_body = "Service:  $SERVICEDESC$\n" + tmpl_alerthandler_host_body
-
-
-def substitute_context(template, context):
-    # First replace all known variables
-    for varname, value in context.items():
-        template = template.replace('$' + varname + '$', value)
-
-    if re.search(r"\$[A-Z_][A-Z_0-9]*\$", template):
-        # Second pass to replace nested variables inside e.g. SERVICENOTESURL
-        for varname, value in context.items():
-            template = template.replace('$' + varname + '$', value)
-
-    # Remove the rest of the variables and make them empty
-    template = re.sub(r"\$[A-Z_][A-Z_0-9]*\$", "", template)
-    return template
 
 
 def build_mail(target, subject, from_address, reply_to, content_txt):
@@ -157,7 +141,7 @@ def construct_content(context):
     else:
         txt_info = notification_type  # Should neven happen
 
-    txt_info = substitute_context(txt_info.replace("@", context["WHAT"]), context)
+    txt_info = utils.substitute_context(txt_info.replace("@", context["WHAT"]), context)
 
     context["EVENT_TXT"] = txt_info
 
@@ -188,8 +172,8 @@ def construct_content(context):
         else:
             tmpl_body += my_tmpl_service_body
 
-    context['SUBJECT'] = substitute_context(tmpl, context)
-    body = substitute_context(tmpl_body, context)
+    context['SUBJECT'] = utils.substitute_context(tmpl, context)
+    body = utils.substitute_context(tmpl_body, context)
 
     return body
 
@@ -256,7 +240,7 @@ def get_bulk_notification_subject(contexts, hosts):
     if "$COUNT_HOSTS$" in subject:
         subject = subject.replace("$COUNT_HOSTS$", str(len(hosts)))
 
-    subject = substitute_context(subject, bulk_context)
+    subject = utils.substitute_context(subject, bulk_context)
     return subject
 
 

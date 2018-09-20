@@ -1,5 +1,5 @@
 import pytest
-from cmk.notification_plugins.utils import extend_context_with_link_urls
+from cmk.notification_plugins import utils
 
 
 @pytest.mark.parametrize("context, link_template, testkey, result", [
@@ -27,5 +27,30 @@ from cmk.notification_plugins.utils import extend_context_with_link_urls
     }, '<a href="%s">%s</a>', "LINKEDSERVICEDESC", ''),
 ])
 def test_extend_with_link_urls(context, link_template, testkey, result):
-    extend_context_with_link_urls(context, link_template)
+    utils.extend_context_with_link_urls(context, link_template)
     assert context[testkey] == result
+
+
+@pytest.mark.parametrize("context, template, result", [
+    ({
+        "HOSTNAME": "localhost",
+        "SERVICENOTESURL": "$HOSTNAME$ is on fire"
+    }, """
+$HOSTNAME$
+$SERVICENOTESURL$
+$UNKNOWN$
+""", "\nlocalhost\nlocalhost is on fire\n\n"),
+    ({
+        "HOSTNAME": "localhost",
+        "SERVICENOTESURL": "$HOSTNAME$"
+    }, "\n$CONTEXT_ASCII$\n$CONTEXT_HTML$", """
+HOSTNAME=localhost
+SERVICENOTESURL=localhost
+
+<table class=context>
+<tr><td class=varname>HOSTNAME</td><td class=value>localhost</td></tr>
+<tr><td class=varname>SERVICENOTESURL</td><td class=value>localhost</td></tr>
+</table>\n"""),
+])
+def test_substitute_context(context, template, result):
+    assert result == utils.substitute_context(template, context)

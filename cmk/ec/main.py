@@ -46,6 +46,7 @@ import sys
 import threading
 import time
 import traceback
+from typing import Any, Dict, List, Optional, Tuple  # pylint: disable=unused-import
 
 import cmk
 import cmk.daemon
@@ -2255,7 +2256,7 @@ class RuleMatcher(object):
 
 
     def _check_match_outcome(self, rule, match_groups, match_priority):
-        # type: (dict, dict, dict) -> (bool, dict)
+        # type: (Dict[str, Any], Dict[str, Any], Dict[str, Any]) -> Tuple[bool, Dict[str, Any]]
         """Decide or not a event is created, canceled or nothing is done"""
 
         # Check canceling-event
@@ -2678,8 +2679,8 @@ class QueryCOMMAND(Query):
 
 
 class StatusTable(object):
-    prefix = None
-    columns = []
+    prefix = None  # type: Optional[str]
+    columns = []  # type: List[Tuple[str, Any]]
 
     # Must return a enumerable type containing fully populated lists (rows) matching the
     # columns of the table

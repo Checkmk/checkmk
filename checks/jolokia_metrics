@@ -460,8 +460,9 @@ def inventory_jolokia_metrics_tp(info):
     for inst, vals in parsed.iteritems():
         if vals is None:
             continue # no data from agent
-        for threadpool_name, _threadpool_info in vals.get('tp', {}).iteritems():
-            inv.append(("%s ThreadPool %s" % (inst, threadpool_name) , {}))
+        for threadpool_name, threadpool_info in vals.get('tp', {}).iteritems():
+            if "maxThreads" in threadpool_info:
+                inv.append(("%s ThreadPool %s" % (inst, threadpool_name) , {}))
     return inv
 
 

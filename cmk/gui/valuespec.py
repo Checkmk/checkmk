@@ -3323,6 +3323,10 @@ class Tuple(ValueSpec):
                     html.write_text(" ")
                     html.help(element.help())
 
+            else:
+                if self._orientation == "horizontal":
+                    html.open_td(class_="tuple_td")
+
             if self._orientation == "vertical":
                 html.open_td(class_="tuple_right")
 

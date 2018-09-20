@@ -78,14 +78,19 @@ def get_check_table(hostname, remove_duplicates=False, use_cache=True,
             return is_checkname_valid_cache[the_id]
 
         passed = True
+        if checkname not in config.check_info:
+            passed = False
+
         # Skip SNMP checks for non SNMP hosts (might have been discovered before with other
         # agent setting. Remove them without rediscovery). Same for agent based checks.
-        if not config.is_snmp_host(hostname) and cmk_base.check_utils.is_snmp_check(checkname) and \
+        elif not config.is_snmp_host(hostname) and cmk_base.check_utils.is_snmp_check(checkname) and \
            (not config.has_management_board(hostname) or config.management_protocol_of(hostname) != "snmp"):
-                passed = False
-        if not config.is_tcp_host(hostname) and not piggyback.has_piggyback_raw_data(config.piggyback_max_cachefile_age, hostname) \
+            passed = False
+
+        elif not config.is_tcp_host(hostname) and not piggyback.has_piggyback_raw_data(config.piggyback_max_cachefile_age, hostname) \
            and cmk_base.check_utils.is_tcp_check(checkname):
             passed = False
+
         is_checkname_valid_cache[the_id] = passed
         return passed
 

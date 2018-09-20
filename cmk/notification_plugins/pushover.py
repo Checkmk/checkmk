@@ -23,18 +23,14 @@
 # Boston, MA 02110-1301 USA.
 
 import requests
-import os
 import re
 import sys
-
+from cmk.notification_plugins import utils
 api_url = "https://api.pushover.net/1/messages.json"
 
 
 def main():
-    context = dict([(var[7:], value.decode("utf-8"))
-                    for (var, value) in os.environ.items()
-                    if var.startswith("NOTIFY_")])
-
+    context = utils.collect_context()
     subject = get_subject(context)
     text = get_text(context)
 
@@ -42,19 +38,6 @@ def main():
     recipient_key = context["PARAMETER_RECIPIENT_KEY"]
 
     send_push_notification(api_key, recipient_key, subject, text, context)
-
-
-def get_url(what, context):
-    url_prefix = context.get("PARAMETER_URL_PREFIX")
-    if url_prefix:
-        base_url = url_prefix.rstrip('/')
-        if base_url.endswith("/check_mk"):
-            base_url = base_url[:-9]
-
-        if what == "HOST":
-            return base_url + context['HOSTURL']
-        else:
-            return base_url + context['SERVICEURL']
 
 
 def get_subject(context):
@@ -93,15 +76,14 @@ def get_subject(context):
 def get_text(context):
     s = ""
 
-    #s += "<font color=\"%s\">" % color
-    #s += "</font>"
     s += "$@OUTPUT$"
 
     if "PARAMETER_URL_PREFIX" in context:
+        utils.extend_context_with_link_urls(context, '<a href="%s">%s</a>')
         s += " <i>Link: </i>"
-        s += "<a href=\"%s\">Host</a>" % get_url("HOST", context)
+        s += context["LINKEDHOSTNAME"]
         if context["WHAT"] != "HOST":
-            s += ", <a href=\"%s\">Service</a>" % get_url("SERVICE", context)
+            s += context["LINKEDSERVICEDESC"]
 
     return substitute_context(s.replace("@", context["WHAT"]), context)
 
@@ -117,12 +99,12 @@ def substitute_context(template, context):
 
 def send_push_notification(api_key, recipient_key, subject, text, context):
     params = [
-        ("token",     api_key),
-        ("user",      recipient_key),
-        ("title",     subject.encode("utf-8")),
-        ("message",   text.encode("utf-8")),
-        ("timestamp", int(context["MICROTIME"])/1000000),
-        ("html",      1),
+        ("token", api_key),
+        ("user", recipient_key),
+        ("title", subject.encode("utf-8")),
+        ("message", text.encode("utf-8")),
+        ("timestamp", int(context["MICROTIME"]) / 1000000),
+        ("html", 1),
     ]
 
     if context.get("PARAMETER_PRIORITY") in ["-2", "-1", "0", "1"]:
@@ -131,8 +113,8 @@ def send_push_notification(api_key, recipient_key, subject, text, context):
     elif context.get("PARAMETER_PRIORITY_PRIORITY") == "2":
         params += [
             ("priority", context["PARAMETER_PRIORITY_PRIORITY"]),
-            ("expire",   context.get("PARAMETER_PRIORITY_EXPIRE", 0)),
-            ("retry",    context.get("PARAMETER_PRIORITY_RETRY", 0)),
+            ("expire", context.get("PARAMETER_PRIORITY_EXPIRE", 0)),
+            ("retry", context.get("PARAMETER_PRIORITY_RETRY", 0)),
         ]
         if context.get("PARAMETER_PRIORITY_RECEIPTS"):
             params.append(("receipts", context["PARAMETER_PRIORITY_RECEIPTS"]))

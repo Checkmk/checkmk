@@ -44,7 +44,7 @@ from email.mime.image import MIMEImage
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 
-from cmk.notification_plugins.utils import extend_context_with_link_urls
+from cmk.notification_plugins import utils
 
 
 def tmpl_head_html(html_section):
@@ -868,7 +868,7 @@ def construct_content(context):
     if context.get('PARAMETER_2'):
         context["PARAMETER_URL_PREFIX"] = context["PARAMETER_2"]
 
-    extend_context_with_link_urls(context, '<a href="%s">%s</a>')
+    utils.extend_context_with_link_urls(context, '<a href="%s">%s</a>')
 
     # Create a notification summary in a new context variable
     # Note: This code could maybe move to cmk --notify in order to
@@ -1068,9 +1068,7 @@ def main():
 
     else:
         # gather all options from env
-        context = dict([(var[7:], value.decode("utf-8"))
-                        for (var, value) in os.environ.items()
-                        if var.startswith("NOTIFY_")])
+        context = utils.collect_context()
         content_txt, content_html, attachments = construct_content(context)
         mailto = context['CONTACTEMAIL']
         subject = context['SUBJECT']

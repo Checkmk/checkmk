@@ -24,7 +24,17 @@
 # Boston, MA 02110-1301 USA.
 
 from typing import Dict  # pylint: disable=unused-import
+import os
 import re
+
+
+def collect_context():
+    # type: () -> Dict
+    return {
+        var[7:]: value.decode("utf-8")
+        for (var, value) in os.environ.items()
+        if var.startswith("NOTIFY_")
+    }
 
 
 def extend_context_with_link_urls(context, link_template):

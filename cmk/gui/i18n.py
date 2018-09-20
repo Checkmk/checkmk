@@ -27,7 +27,7 @@
 import __builtin__
 import os
 import gettext as gettext_module
-from typing import NamedTuple, Optional, List, Tuple
+from typing import NamedTuple, Optional, List, Tuple  # pylint: disable=unused-import
 
 import cmk.paths
 

@@ -34,7 +34,7 @@ import traceback
 import json
 import time
 from enum import Enum
-from typing import Type, Union, List
+from typing import Type, Union, List  # pylint: disable=unused-import
 
 import cmk
 import cmk.paths

@@ -55,6 +55,7 @@ from cmk.gui.valuespec import (
     ValueSpec,
     TimeofdayRange,
     ListChoice,
+    CascadingDropdown,
 )
 
 from cmk.gui.plugins.wato import (
@@ -679,15 +680,7 @@ class ModeEditTimeperiod(WatoMode):
                     size = 80,
                     validate = self._validate_alias,
                 )),
-                ("weekdays", Dictionary(
-                    title = _("Weekdays"),
-                    help = _("For each weekday you can setup no, one or several "
-                             "time ranges in the format <tt>23:39</tt>, in which the time period "
-                             "should be active."),
-                    elements = self._weekday_elements(),
-                    optional_keys = None,
-                    indent = False,
-                )),
+                ("weekdays", self._vs_weekdays()),
                 ("exceptions", self._vs_exceptions()),
                 ("exclude", self._vs_exclude()),
             ],
@@ -707,6 +700,24 @@ class ModeEditTimeperiod(WatoMode):
         unique, message = watolib.is_alias_used("timeperiods", self._name, value)
         if not unique:
             raise MKUserError("alias", message)
+
+
+    def _vs_weekdays(self):
+        return CascadingDropdown(
+            title = _("Active time range"),
+            help = _("For each weekday you can setup no, one or several "
+                     "time ranges in the format <tt>23:39</tt>, in which the time period "
+                     "should be active."),
+            choices = [
+                ("whole_week", _("Same times for all weekdays"), MultipleTimeRanges(
+                )),
+                ("day_specific", _("Weekday specific times"), Dictionary(
+                    elements = self._weekday_elements(),
+                    optional_keys = None,
+                    indent = False,
+                )),
+            ],
+        )
 
 
     def _weekday_elements(self):
@@ -851,13 +862,28 @@ class ModeEditTimeperiod(WatoMode):
         vs_spec = {
             "name": self._name,
             "alias": tp_spec.get("alias", ""),
-            "weekdays": { day: map(self._time_range_to_valuespec, tp_spec.get(day, []))
-                          for day in defines.weekday_ids() },
+            "weekdays": self._weekdays_to_valuespec(tp_spec),
             "exclude": tp_spec.get("exclude", []),
             "exceptions": sorted(exceptions),
         }
 
         return vs_spec
+
+
+    def _weekdays_to_valuespec(self, tp_spec):
+        if self._has_same_time_specs_during_whole_week(tp_spec):
+            return ("whole_week", map(self._time_range_to_valuespec, tp_spec.get("monday", [])))
+
+        return ("day_specific", { day: map(self._time_range_to_valuespec, tp_spec.get(day, []))
+                                  for day in defines.weekday_ids() })
+
+
+    def _has_same_time_specs_during_whole_week(self, tp_spec):
+        """Put the time ranges of all weekdays into a set to reduce the duplicates to see whether
+        or not all days have the same time spec and return True if they have the same."""
+        unified_time_ranges = set([ tuple(tp_spec.get(day, []))
+                                    for day in defines.weekday_ids() ])
+        return len(unified_time_ranges) == 1
 
 
     def _time_range_to_valuespec(self, time_range):
@@ -880,10 +906,35 @@ class ModeEditTimeperiod(WatoMode):
         if vs_spec["exclude"]:
             tp_spec["exclude"] = vs_spec["exclude"]
 
-        for day, time_ranges in vs_spec["weekdays"].items() + vs_spec["exceptions"]:
-            if time_ranges:
-                tp_spec[day] = map(self._time_range_from_valuespec, time_ranges)
+        tp_spec.update(self._exceptions_from_valuespec(vs_spec))
+        tp_spec.update(self._weekdays_from_valuespec(vs_spec))
 
+        return tp_spec
+
+
+    def _exceptions_from_valuespec(self, vs_spec):
+        tp_spec = {}
+        for exception_name, time_ranges in vs_spec["exceptions"]:
+            if time_ranges:
+                tp_spec[exception_name] = map(self._time_range_from_valuespec, time_ranges)
+        return tp_spec
+
+
+    def _weekdays_from_valuespec(self, vs_spec):
+        weekday_ty, weekday_values = vs_spec["weekdays"]
+
+        if weekday_ty == "whole_week":
+            # produce a data structure equal to the "day_specific" structure
+            weekday_values = { day: weekday_values for day in defines.weekday_ids() }
+
+        elif weekday_ty != "day_specific":
+            raise NotImplementedError()
+
+        tp_spec = {}
+        for day in defines.weekday_ids():
+            time_specs = map(self._time_range_from_valuespec, weekday_values[day])
+            if time_specs:
+                tp_spec[day] = time_specs
         return tp_spec
 
 

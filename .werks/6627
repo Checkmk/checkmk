@@ -1,0 +1,12 @@
+Title: Fixed exception in export hook software_csv
+Level: 1
+Component: inv
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0i1
+Date: 1537436791
+
+The exception "global name 'cmk' is not defined" occurred when trying to
+use the software export hook in 1.5.

@@ -784,10 +784,12 @@ class ModeEditTimeperiod(WatoMode):
         We offer the list of all other timeperiods - but only those that do not exclude the current
         timeperiod (in order to avoid cycles)"""
         other_tps = []
+
         for tpname, tp in self._timeperiods.items():
             if not self._timeperiod_excludes(tpname):
                 other_tps.append((tpname, tp.get("alias") or tpname))
-        return other_tps
+
+        return sorted(other_tps, key=lambda a: a[1].lower())
 
 
     def _timeperiod_excludes(self, tpa_name):

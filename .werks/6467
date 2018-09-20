@@ -1,0 +1,12 @@
+Title: jolokia_metrics.tp: Only discover services which can be checked
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0p5
+Date: 1537442631
+Class: fix
+
+In some circumstances, Check_MK would discover services for which the maxThreads
+value of the thread pool was missing, leading to permanently unknown services.
+This has been fixed.

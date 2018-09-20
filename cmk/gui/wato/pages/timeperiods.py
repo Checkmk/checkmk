@@ -56,6 +56,7 @@ from cmk.gui.valuespec import (
     TimeofdayRange,
     ListChoice,
     CascadingDropdown,
+    ListOfTimeRanges,
 )
 
 from cmk.gui.plugins.wato import (
@@ -297,46 +298,6 @@ class ModeTimeperiods(WatoMode):
 
 
 
-# TODO: Deprecated and Replace with ListOf(TimeofdayRange(), ...)
-class MultipleTimeRanges(ValueSpec):
-    def __init__(self, **kwargs):
-        ValueSpec.__init__(self, **kwargs)
-        self._num_columns = kwargs.get("num_columns", 3)
-        self._rangevs = TimeofdayRange()
-
-    def canonical_value(self):
-        return [ ((0,0), (24,0)), None, None ]
-
-    def render_input(self, varprefix, value):
-        for c in range(0, self._num_columns):
-            if c:
-                html.write(" &nbsp; ")
-            if c < len(value):
-                v = value[c]
-            else:
-                v = self._rangevs.canonical_value()
-            self._rangevs.render_input(varprefix + "_%d" % c, v)
-
-    def value_to_text(self, value):
-        parts = []
-        for v in value:
-            parts.append(self._rangevs.value_to_text(v))
-        return ", ".join(parts)
-
-    def from_html_vars(self, varprefix):
-        value = []
-        for c in range(0, self._num_columns):
-            v = self._rangevs.from_html_vars(varprefix + "_%d" % c)
-            if v != None:
-                value.append(v)
-        return value
-
-    def validate_value(self, value, varprefix):
-        for c, v in enumerate(value):
-            self._rangevs.validate_value(v, varprefix + "_%d" % c)
-        ValueSpec.custom_validate(self, value, varprefix)
-
-
 # Displays a dialog for uploading an ical file which will then
 # be used to generate timeperiod exceptions etc. and then finally
 # open the edit_timeperiod page to create a new timeperiod using
@@ -385,8 +346,8 @@ class ModeTimeperiodImportICal(WatoMode):
                     allow_empty = False,
                 )),
                 ('times', Optional(
-                    MultipleTimeRanges(
-                        default_value = [None, None, None],
+                    ListOfTimeRanges(
+                        default_value = [None],
                     ),
                     title = _('Use specific times'),
                     label = _('Use specific times instead of whole day'),
@@ -709,8 +670,7 @@ class ModeEditTimeperiod(WatoMode):
                      "time ranges in the format <tt>23:39</tt>, in which the time period "
                      "should be active."),
             choices = [
-                ("whole_week", _("Same times for all weekdays"), MultipleTimeRanges(
-                )),
+                ("whole_week", _("Same times for all weekdays"), ListOfTimeRanges()),
                 ("day_specific", _("Weekday specific times"), Dictionary(
                     elements = self._weekday_elements(),
                     optional_keys = None,
@@ -723,16 +683,9 @@ class ModeEditTimeperiod(WatoMode):
     def _weekday_elements(self):
         elements = []
         for tp_id, tp_title in cmk.defines.weekdays_by_name():
-            # TODO: Find way to render without line breaks between day and ranges
-            elements.append((tp_id, MultipleTimeRanges(
+            elements.append((tp_id, ListOfTimeRanges(
                 title=tp_title
             )))
-            #elements.append((tp_id, ListOf(TimeofdayRange(),
-            #    title = tp_title,
-            #    movable = False,
-            #    add_label = _("Add time range"),
-            #    del_label = _("Delete time range"),
-            #)))
         return elements
 
 
@@ -748,7 +701,7 @@ class ModeEditTimeperiod(WatoMode):
                         allow_empty = False,
                         validate = self._validate_timeperiod_exception,
                     ),
-                    MultipleTimeRanges()
+                    ListOfTimeRanges()
                 ],
             ),
             title = _("Exceptions (from weekdays)"),
@@ -859,7 +812,7 @@ class ModeEditTimeperiod(WatoMode):
         exceptions = []
         for exception_name, time_ranges in tp_spec.items():
             if exception_name not in defines.weekday_ids() + [ "alias", "exclude" ]:
-                exceptions.append((exception_name, map(self._time_range_to_valuespec, time_ranges)))
+                exceptions.append((exception_name, self._time_ranges_to_valuespec(time_ranges)))
 
         vs_spec = {
             "name": self._name,
@@ -874,9 +827,9 @@ class ModeEditTimeperiod(WatoMode):
 
     def _weekdays_to_valuespec(self, tp_spec):
         if self._has_same_time_specs_during_whole_week(tp_spec):
-            return ("whole_week", map(self._time_range_to_valuespec, tp_spec.get("monday", [])))
+            return ("whole_week", self._time_ranges_to_valuespec(tp_spec.get("monday", [])))
 
-        return ("day_specific", { day: map(self._time_range_to_valuespec, tp_spec.get(day, []))
+        return ("day_specific", { day: self._time_ranges_to_valuespec(tp_spec.get(day, []))
                                   for day in defines.weekday_ids() })
 
 
@@ -886,6 +839,10 @@ class ModeEditTimeperiod(WatoMode):
         unified_time_ranges = set([ tuple(tp_spec.get(day, []))
                                     for day in defines.weekday_ids() ])
         return len(unified_time_ranges) == 1
+
+
+    def _time_ranges_to_valuespec(self, time_ranges):
+        return [ self._time_range_to_valuespec(r) for r in time_ranges ]
 
 
     def _time_range_to_valuespec(self, time_range):
@@ -918,26 +875,26 @@ class ModeEditTimeperiod(WatoMode):
         tp_spec = {}
         for exception_name, time_ranges in vs_spec["exceptions"]:
             if time_ranges:
-                tp_spec[exception_name] = map(self._time_range_from_valuespec, time_ranges)
+                tp_spec[exception_name] = self._time_ranges_from_valuespec(time_ranges)
         return tp_spec
 
 
     def _weekdays_from_valuespec(self, vs_spec):
         weekday_ty, weekday_values = vs_spec["weekdays"]
 
-        if weekday_ty == "whole_week":
-            # produce a data structure equal to the "day_specific" structure
-            weekday_values = { day: weekday_values for day in defines.weekday_ids() }
-
-        elif weekday_ty != "day_specific":
+        if weekday_ty not in [ "whole_week", "day_specific" ]:
             raise NotImplementedError()
 
-        tp_spec = {}
-        for day in defines.weekday_ids():
-            time_specs = map(self._time_range_from_valuespec, weekday_values[day])
-            if time_specs:
-                tp_spec[day] = time_specs
-        return tp_spec
+        # produce a data structure equal to the "day_specific" structure
+        if weekday_ty == "whole_week":
+            weekday_values = { day: weekday_values for day in defines.weekday_ids() }
+
+        return { day: self._time_ranges_from_valuespec(weekday_values[day])
+                 for day, time_ranges in weekday_values.items() if time_ranges }
+
+
+    def _time_ranges_from_valuespec(self, time_ranges):
+        return [ self._time_range_from_valuespec(r) for r in time_ranges if r is not None ]
 
 
     def _time_range_from_valuespec(self, value):

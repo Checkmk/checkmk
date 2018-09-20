@@ -48,6 +48,7 @@ import socket
 import ipaddress
 from Cryptodome.PublicKey import RSA
 from UserDict import DictMixin
+from enum import Enum
 import json
 
 import cmk.paths
@@ -1203,6 +1204,10 @@ class ListOfIntegers(ListOfStrings):
 # Generic list-of-valuespec ValueSpec with Javascript-based
 # add/delete/move
 class ListOf(ValueSpec):
+    class Style(Enum):
+        REGULAR = "regular"
+        FLOATING = "floating"
+
     def __init__(self, valuespec, **kwargs):
         ValueSpec.__init__(self, **kwargs)
         self._valuespec     = valuespec
@@ -1211,6 +1216,7 @@ class ListOf(ValueSpec):
         self._add_label     = kwargs.get("add_label", _("Add new element"))
         self._del_label     = kwargs.get("del_label", _("Delete this entry"))
         self._movable       = kwargs.get("movable", True)
+        self._style         = kwargs.get("style", ListOf.Style.REGULAR)
         self._totext        = kwargs.get("totext") # pattern with option %d
         self._text_if_empty = kwargs.get("text_if_empty", _("No entries"))
         self._allow_empty   = kwargs.get("allow_empty", True)
@@ -1232,6 +1238,8 @@ class ListOf(ValueSpec):
     # of entries is stored in the hidden variable 'varprefix'
     def render_input(self, varprefix, value):
         self.classtype_info()
+
+        html.open_div(class_=["valuespec_listof", self._style.value])
 
         # Beware: the 'value' is only the default value in case the form
         # has not yet been filled in. In the complain phase we must
@@ -1257,40 +1265,114 @@ class ListOf(ValueSpec):
             id = '%s_count' % varprefix,
             add_var = True)
 
-        # Actual table of currently existing entries
-        self._show_current_entries(varprefix, value)
+        self._show_entries(varprefix, value)
 
-        html.br()
-        html.jsbutton(varprefix + "_add", self._add_label,
-            "valuespec_listof_add('%s', '%s')" % (varprefix, self._magic))
+        html.close_div()
+
+        if count:
+            html.javascript("valuespec_listof_update_indices(%s)" % json.dumps(varprefix))
+
+
+    def _show_entries(self, varprefix, value):
+        if self._style == ListOf.Style.REGULAR:
+            html.br()
+            self._list_buttons(varprefix)
+            self._show_current_entries(varprefix, value)
+
+        elif self._style == ListOf.Style.FLOATING:
+            html.open_table()
+            html.open_tbody()
+            html.open_tr()
+            html.open_td()
+            self._list_buttons(varprefix)
+            html.close_td()
+            html.open_td()
+            self._show_current_entries(varprefix, value)
+            html.close_td()
+            html.close_tr()
+            html.close_tbody()
+            html.close_table()
+
+        else:
+            raise NotImplementedError()
+
+
+    def _list_buttons(self, varprefix):
+        html.jsbutton(varprefix + "_add", self._add_label, "valuespec_listof_add(%s, %s, %s)" %
+                (json.dumps(varprefix), json.dumps(self._magic), json.dumps(self._style.value)))
+
         if self._sort_by is not None:
             html.jsbutton(varprefix + "_sort", _("Sort"),
                 "valuespec_listof_sort(%s, %s, %s)" %
                 (json.dumps(varprefix), json.dumps(self._magic), json.dumps(self._sort_by)))
 
-        html.javascript("valuespec_listof_fixarrows(document.getElementById('%s_table').childNodes[0]);" % varprefix)
-
-
-    def del_button(self, vp, nr):
-        js = "valuespec_listof_delete(this, '%s', '%s')" % (vp, nr)
-        html.icon_button("#", self._del_label, "delete", onclick=js)
-
 
     def _show_reference_entry(self, varprefix, index, value):
-        html.open_table(id_="%s_prototype" % varprefix, style="display:none;")
-        self._show_entry(varprefix, index, value)
-        html.close_table()
+        if self._style == ListOf.Style.REGULAR:
+            html.open_table(style="display:none;")
+            html.open_tbody(id_="%s_prototype" % varprefix)
+
+            self._show_entry(varprefix, index, value)
+
+            html.close_tbody()
+            html.close_table()
+
+        elif self._style == ListOf.Style.FLOATING:
+            html.open_div(id_="%s_prototype" % varprefix, style="display:none;")
+
+            self._show_entry(varprefix, index, value)
+
+            html.close_div()
+
+        else:
+            raise NotImplementedError()
 
 
     def _show_current_entries(self, varprefix, value):
-        html.open_table(id_="%s_table" % varprefix, class_=["valuespec_listof"])
-        for nr, v in enumerate(value):
-            self._show_entry(varprefix, "%d" % (nr + 1), v)
-        html.close_table()
+        if self._style == ListOf.Style.REGULAR:
+            html.open_table(class_=["valuespec_listof"])
+            html.open_tbody(id_="%s_container" % varprefix)
+
+            for nr, v in enumerate(value):
+                self._show_entry(varprefix, "%d" % (nr + 1), v)
+
+            html.close_tbody()
+            html.close_table()
+
+        elif self._style == ListOf.Style.FLOATING:
+            html.open_div(id_="%s_container" % varprefix, class_=["valuespec_listof_floating_container"])
+
+            for nr, v in enumerate(value):
+                self._show_entry(varprefix, "%d" % (nr + 1), v)
+
+            html.close_div()
+
+        else:
+            raise NotImplementedError()
 
 
     def _show_entry(self, varprefix, index, value):
-        html.open_tr()
+        entry_id = "%s_entry_%s" % (varprefix, index)
+
+        if self._style == ListOf.Style.REGULAR:
+            html.open_tr(id_=entry_id)
+            self._show_entry_cell(varprefix, index, value)
+            html.close_tr()
+
+        elif self._style == ListOf.Style.FLOATING:
+            html.open_table(id_=entry_id)
+            html.open_tbody()
+            html.open_tr()
+            self._show_entry_cell(varprefix, index, value)
+            html.close_tr()
+            html.close_tbody()
+            html.close_table()
+
+        else:
+            raise NotImplementedError()
+
+
+    def _show_entry_cell(self, varprefix, index, value):
         html.open_td(class_="vlof_buttons")
 
         html.hidden_field(varprefix + "_indexof_" + index, "",
@@ -1300,12 +1382,16 @@ class ListOf(ValueSpec):
         if self._movable:
             html.element_dragger_js("tr", drop_handler="vs_listof_drop_handler",
                            handler_args={"cur_index": index, "varprefix": varprefix})
-        self.del_button(varprefix, index)
+        self._del_button(varprefix, index)
         html.close_td()
         html.open_td(class_="vlof_content")
         self._valuespec.render_input(varprefix + "_" + index, value)
         html.close_td()
-        html.close_tr()
+
+
+    def _del_button(self, vp, nr):
+        js = "valuespec_listof_delete(%s, %s)" % (json.dumps(vp), json.dumps(nr))
+        html.icon_button("#", self._del_label, "delete", onclick=js)
 
 
     def canonical_value(self):
@@ -3281,7 +3367,7 @@ class Tuple(ValueSpec):
     def render_input(self, varprefix, value):
         self.classtype_info()
         if self._orientation != "float":
-            html.open_table(class_=["valuespec_tuple"])
+            html.open_table(class_=["valuespec_tuple", self._orientation])
             if self._orientation == "horizontal":
                 html.open_tr()
 
@@ -4333,22 +4419,23 @@ class IconSelector(ValueSpec):
 
 
 
-# TODO: Replace with ListOf(TimeofdayRange(...))
-class TimeofdayRanges(Transform):
-    def __init__(self, **args):
-        self._count = args.get("count", 3)
-        Transform.__init__(
-            self,
-            Tuple(
-                elements = [ TimeofdayRange(allow_empty=True, allow_24_00=True) for _x in range(self._count) ],
-                orientation = "float",
-                separator = " &nbsp; ",
+class ListOfTimeRanges(ListOf):
+    def __init__(self, **kwargs):
+        super(ListOfTimeRanges, self).__init__(
+            TimeofdayRange(
+                allow_empty=True,
+                allow_24_00=True,
             ),
-            forth = lambda outter: tuple((outter + [None]*self._count)[0:self._count]),
-            back = lambda inner: [ x for x in inner if x != None ],
-            **args
+            movable=False,
+            add_label = _("Add time range"),
+            del_label = _("Delete time range"),
+            style = ListOf.Style.FLOATING,
+            magic = "#!#",
+            **kwargs
         )
 
+# Kept for compatibility reasons (removed in 1.6)
+TimeofdayRanges = ListOfTimeRanges
 
 
 class Fontsize(Float):

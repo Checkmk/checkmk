@@ -1314,17 +1314,18 @@ def declare_invtable_view(infoname, invpath, title_singular, title_plural):
 def _create_view_enabled_check_func(invpath, is_history=False):
     def _check_view_enabled(linking_view, view, context_vars):
         context = dict(context_vars)
-        if "host" not in context:
+        hostname = context.get("host")
+        if hostname is None:
             return True # No host data? Keep old behaviour
-        if context["host"] == "":
+        elif hostname == "":
             return False
 
         # FIXME In order to decide whether this view is enabled
         # do we really need to load the whole tree?
         if is_history:
-            struct_tree = inventory.load_filtered_inventory_tree(context["host"])
+            struct_tree = inventory.load_filtered_inventory_tree(hostname)
         else:
-            row = inventory.get_status_data_via_livestatus(context["site"], context["host"])
+            row = inventory.get_status_data_via_livestatus(context.get("site"), hostname)
             struct_tree = inventory.load_filtered_and_merged_tree(row)
 
         if not struct_tree:

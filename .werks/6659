@@ -1,0 +1,11 @@
+Title: Agent Baking: Fixed bug where hosts used bakery settings from other hosts
+Level: 2
+Component: wato
+Compatible: compat
+Edition: cee
+Version: 1.5.0p5
+Date: 1537430154
+Class: fix
+
+The rule evaluation for bakery rules was broken for certain dictionary based rule types.
+As a result HostA may have received plugin configurations for HostB.

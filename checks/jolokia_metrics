@@ -443,15 +443,15 @@ check_info["jolokia_metrics.gc"] = {
 #   |                        |_|                                           |
 #   '----------------------------------------------------------------------'
 
-def jolokia_metrics_tp(info, (inst, typ, tp)):
+def jolokia_metrics_tp(info, (inst, typ, threadpool_name)):
     parsed = jolokia_metrics_parse(info)
     if parsed.get(inst, "") == None:
         raise MKCounterWrapped("No information from Jolokia agent")
 
     if not inst in parsed \
-       or not tp in parsed[inst].get('tp', {}):
+       or not threadpool_name in parsed[inst].get('tp', {}):
         return None
-    return parsed[inst]['tp'][tp]
+    return parsed[inst]['tp'][threadpool_name]
 
 
 def inventory_jolokia_metrics_tp(info):
@@ -460,8 +460,8 @@ def inventory_jolokia_metrics_tp(info):
     for inst, vals in parsed.iteritems():
         if vals is None:
             continue # no data from agent
-        for tp in vals.get('tp', {}).iterkeys():
-            inv.append(("%s ThreadPool %s" % (inst ,tp) , {}))
+        for threadpool_name, _threadpool_info in vals.get('tp', {}).iteritems():
+            inv.append(("%s ThreadPool %s" % (inst, threadpool_name) , {}))
     return inv
 
 
@@ -470,15 +470,15 @@ def check_jolokia_metrics_tp(item, params, info):
     if params is None:
         params = {}
 
-    tp = jolokia_metrics_tp(info, item.split())
+    threadpool_info = jolokia_metrics_tp(info, item.split())
 
-    if tp is None or "maxThreads" not in tp:
+    if threadpool_info is None or "maxThreads" not in threadpool_info:
         return
 
-    max_threads = float(tp["maxThreads"])
+    max_threads = float(threadpool_info["maxThreads"])
 
     def check_thread_levels(what):
-        threads_abs = int(tp[what])
+        threads_abs = int(threadpool_info[what])
         threads_rel = threads_abs / max_threads
         infotext = "%s: %d (%.1f%%)" % (what, threads_abs, threads_rel)
         status = 0
@@ -498,9 +498,9 @@ def check_jolokia_metrics_tp(item, params, info):
         perfdata = [ (what, threads_abs, warn, crit, 0, max_threads) ]
         return status, infotext, perfdata
 
-    if 'currentThreadsBusy' in tp:
+    if 'currentThreadsBusy' in threadpool_info:
         yield check_thread_levels('currentThreadsBusy')
-    if 'currentThreadCount' in tp:
+    if 'currentThreadCount' in threadpool_info:
         yield check_thread_levels('currentThreadCount')
     yield 0, "Maximum threads: %d" % max_threads
 

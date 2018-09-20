@@ -27,6 +27,7 @@
 # TODO: Rework connection management and multiplexing
 
 import config, hooks
+import background_job
 import gui_background_job
 from lib import *
 from log import logger
@@ -1336,10 +1337,11 @@ def userdb_sync_job_enabled():
 def ajax_sync():
     try:
         job = UserSyncBackgroundJob()
-        if job.is_running():
-            raise MKUserError(None, _("Another synchronization job is already running"))
         job.set_function(job.do_sync, add_to_changelog=False, enforce_sync=True)
-        job.start()
+        try:
+            job.start()
+        except background_job.BackgroundJobAlreadyRunning, e:
+            raise MKUserError(None, _("Another user synchronization is already running: %s") % e)
         html.write('OK Started synchronization\n')
     except Exception, e:
         log_exception()

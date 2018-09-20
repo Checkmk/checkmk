@@ -70,7 +70,7 @@ def get_subject(context):
     else:
         s += notification_type
 
-    return substitute_context(s.replace("@", context["WHAT"]), context)
+    return utils.substitute_context(s.replace("@", context["WHAT"]), context)
 
 
 def get_text(context):
@@ -85,16 +85,7 @@ def get_text(context):
         if context["WHAT"] != "HOST":
             s += context["LINKEDSERVICEDESC"]
 
-    return substitute_context(s.replace("@", context["WHAT"]), context)
-
-
-def substitute_context(template, context):
-    for varname, value in context.items():
-        template = template.replace("$" + varname + "$", value)
-
-    # Remove the rest of the variables and make them empty
-    template = re.sub(r"\$[A-Z_][A-Z_0-9]*\$", "", template)
-    return template
+    return utils.substitute_context(s.replace("@", context["WHAT"]), context)
 
 
 def send_push_notification(api_key, recipient_key, subject, text, context):

@@ -27,6 +27,13 @@ from typing import Dict  # pylint: disable=unused-import
 import os
 import re
 
+try:
+    # First try python3
+    from html import escape as html_escape
+except ImportError:
+    # Default to python2
+    from cgi import escape as html_escape
+
 
 def collect_context():
     # type: () -> Dict
@@ -63,3 +70,35 @@ def extend_context_with_link_urls(context, link_template):
     else:
         context['LINKEDHOSTNAME'] = context['HOSTNAME']
         context['LINKEDSERVICEDESC'] = context.get('SERVICEDESC', '')
+
+
+def replace_variable_context(template, context):
+    ascii_output = ""
+    html_output = "<table class=context>\n"
+    elements = context.items()
+    elements.sort()
+    for varname, value in elements:
+        ascii_output += "%s=%s\n" % (varname, value)
+        html_output += "<tr><td class=varname>%s</td><td class=value>%s</td></tr>\n" % (
+            varname, html_escape(value))
+    html_output += "</table>\n"
+    return template.replace("$CONTEXT_ASCII$", ascii_output).replace("$CONTEXT_HTML$", html_output)
+
+
+def substitute_context(template, context):
+    # First replace all known variables
+    for varname, value in context.items():
+        template = template.replace('$' + varname + '$', value)
+
+    # Debugging of variables. Create content only on demand
+    if "$CONTEXT_ASCII$" in template or "$CONTEXT_HTML$" in template:
+        template = replace_variable_context(template, context)
+
+    if re.search(r"\$[A-Z_][A-Z_0-9]*\$", template):
+        # Second pass to replace nested variables inside e.g. SERVICENOTESURL
+        for varname, value in context.items():
+            template = template.replace('$' + varname + '$', value)
+
+    # Remove the rest of the variables and make them empty
+    template = re.sub(r"\$[A-Z_][A-Z_0-9]*\$", "", template)
+    return template

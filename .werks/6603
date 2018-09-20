@@ -1,0 +1,18 @@
+Title: CRE: Fixed Check_MK service crash if a check plugin is unknown to the check context
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0p5
+Date: 1537441766
+Class: fix
+
+A host has discovered a set of check plugin names which are triggered by the
+Check_MK service. If the agent type of this host changes without performing a
+rediscovery afterwards and the configuration changes are activated then there
+may be new or vanished check plugins which are unknown to the current check
+context. This leads to a KeyError of the Check_MK service.
+
+Now if a check plugin is unknown to the current check context Check_MK ignores
+this check plugin. Aside from that the Check_MK Discovery service reports about
+vanished or unmonitored serices.

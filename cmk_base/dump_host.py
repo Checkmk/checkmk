@@ -66,7 +66,7 @@ def dump_host(hostname):
         else:
             addresses += " (Primary: IPv4)"
 
-    console.output(tty.yellow + "Addresses:              " + tty.normal + addresses + "\n")
+    console.output(tty.yellow + "Addresses:              " + tty.normal + (addresses if addresses is not None else "No IP") + "\n")
 
     tags = config.tags_of_host(hostname)
     console.output(tty.yellow + "Tags:                   " + tty.normal + ", ".join(tags) + "\n")

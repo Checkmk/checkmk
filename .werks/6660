@@ -1,0 +1,12 @@
+Title: Background Jobs: fixed issue with monitoring sites running on nfs mount
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.5.0p5
+Date: 1537433482
+Class: fix
+
+If the site is running on a nfs mount, the background job could crash during a directory cleanup.
+This was caused by an open file handle within the designated directory.
+

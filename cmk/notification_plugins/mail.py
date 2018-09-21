@@ -917,29 +917,6 @@ def render_elements(context, elements):
            utils.substitute_context(tmpl_html, context)
 
 
-def read_bulk_contexts():
-    parameters = {}
-    contexts = []
-    in_params = True
-
-    # First comes a section with global variables
-    for line in sys.stdin:
-        line = line.strip()
-        if not line:
-            in_params = False
-            context = {}
-            contexts.append(context)
-        else:
-            key, value = line.split("=", 1)
-            value = value.replace("\1", "\n")
-            if in_params:
-                parameters[key] = value
-            else:
-                context[key] = value
-
-    return parameters, contexts
-
-
 def find_wato_folder(context):
     # Same as in notify.py
     for tag in context.get("HOSTTAGS", "").split():
@@ -983,7 +960,7 @@ def main():
         attachments = []
         content_txt = ""
         content_html = ""
-        parameters, contexts = read_bulk_contexts()
+        parameters, contexts = utils.read_bulk_contexts()
         hosts = set([])
         for context in contexts:
             context.update(parameters)

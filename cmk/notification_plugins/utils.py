@@ -142,3 +142,30 @@ def send_mail_sendmail(m, target, from_address):
 
     sys.stdout.write("Spooled mail to local mail transmission agent\n")
     return 0
+
+def read_bulk_contexts():
+    parameters = {}
+    contexts = []
+    in_params = True
+
+    # First comes a section with global variables
+    for line in sys.stdin:
+        line = line.strip()
+        if not line:
+            in_params = False
+            context = {}
+            contexts.append(context)
+        else:
+            try:
+                key, value = line.split("=", 1)
+                value = value.replace("\1", "\n")
+            except:
+                sys.stderr.write("Invalid line '%s' in bulked notification context\n" % line)
+                continue
+
+            if in_params:
+                parameters[key] = value
+            else:
+                context[key] = value
+
+    return parameters, contexts

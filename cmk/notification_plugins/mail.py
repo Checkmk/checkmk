@@ -514,19 +514,7 @@ def multipart_mail(target, subject, from_address, reply_to, content_txt, content
         part.add_header('Content-Disposition', how, filename=name)
         m.attach(part)
 
-    m['Subject'] = subject
-    m['To'] = target
-
-    # Set a few configurable headers
-    if from_address:
-        m['From'] = from_address
-
-    if reply_to:
-        m['Reply-To'] = reply_to
-    elif len(target.split(",")) > 1:
-        m['Reply-To'] = target
-
-    return m
+    return utils.set_mail_headers(target, subject, from_address, reply_to, m)
 
 
 def send_mail_sendmail(m, target, from_address):

@@ -102,3 +102,23 @@ def substitute_context(template, context):
     # Remove the rest of the variables and make them empty
     template = re.sub(r"\$[A-Z_][A-Z_0-9]*\$", "", template)
     return template
+
+
+###############################################################################
+# Mail
+
+
+def set_mail_headers(target, subject, from_address, reply_to, mail):
+    mail['Subject'] = subject
+    mail['To'] = target
+
+    # Set a few configurable headers
+    if from_address:
+        mail['From'] = from_address
+
+    if reply_to:
+        mail['Reply-To'] = reply_to
+    elif len(target.split(",")) > 1:
+        mail['Reply-To'] = target
+
+    return mail

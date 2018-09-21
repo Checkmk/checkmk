@@ -59,25 +59,6 @@ Handler output: $ALERTHANDLEROUTPUT$
 tmpl_alerthandler_service_body = "Service:  $SERVICEDESC$\n" + tmpl_alerthandler_host_body
 
 
-def build_mail(target, subject, from_address, reply_to, content_txt):
-    # The plain text part
-    m = MIMEText(content_txt, 'plain', _charset='utf-8')
-
-    m['Subject'] = subject
-    m['To'] = target
-
-    # Set a few configurable headers
-    if from_address:
-        m['From'] = from_address
-
-    if reply_to:
-        m['Reply-To'] = reply_to
-    elif len(target.split(",")) > 1:
-        m['Reply-To'] = target
-
-    return m
-
-
 def send_mail(m, target, from_address):
     cmd = ["/usr/sbin/sendmail"]
     if from_address:
@@ -271,8 +252,8 @@ def main():
     # Create the mail and send it
     from_address = context.get("PARAMETER_FROM")
     reply_to = context.get("PARAMETER_REPLY_TO")
-    m = build_mail(mailto, subject, from_address, reply_to, content_txt)
-
+    m = utils.set_mail_headers(mailto, subject, from_address, reply_to,
+                               MIMEText(content_txt, 'plain', _charset='utf-8'))
     try:
         sys.exit(send_mail(m, mailto, from_address))
     except Exception, e:

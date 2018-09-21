@@ -1,0 +1,22 @@
+Title: Improved timeperiod management
+Level: 2
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1537513718
+Class: feature
+
+The timeperiod management pages have been improved ins several ways:
+
+<ul>
+<li>Timeperiods can now be cloned.</li>
+<li>Configuring equal times for all weekdays is now easier. Instead of setting
+the same time ranges for each weekday it is now possible to select "Same times for all week days".</li>
+<li>Timeperiods listed in the excludes list are now sorted.</li>
+<li>The number of time ranges per day is now flexible. The dialog starts with
+a single time range. You may click on "add time range" to add more.</li>
+<li>Improved validations of input values.</li>
+<li>The builtin timeperiod 24X7 is now always visible. The implicit existance
+of this timeperiod confused users.</li>
+</ul>

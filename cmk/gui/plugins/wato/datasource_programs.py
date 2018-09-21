@@ -1213,3 +1213,127 @@ register_rule(
     help=_("This rule selects the special agent for Salesforce."),
     match="first",
 )
+
+
+def _azure_resource_config():
+    return Dictionary(
+               orientation = "horizontal",
+               elements = [
+                   ('resource', ListOfStrings(
+                        title = _('Resource names'),
+                        allow_empty = False,
+                   )),
+                   ('metric', ListOfStrings(
+                        title = _('Metric names'),
+                        help = _("Specify a comma separated list of metric "
+                                 "names. If ommited, all metrics are fetched."),
+                        allow_empty = True,
+                   )),
+    #               TextAscii(
+    #                    title = _('Metric aggregations'),
+    #                    help = _("Specify a comma separated list of metric "
+    #                             "aggregations. If ommited, all available "
+    #                             "aggregations are fetched."),
+    #                    allow_empty = True,
+    #               ),
+                   ('filters', TextAscii(
+                        title = _('Metric filters'),
+                        help = _("Specify a filter that is applied to metric. "
+                                 "Required for some metrics with dimensions."
+                                 "If ommited, no filter is applied."),
+                        allow_empty = True,
+                   )),
+                   ('time_grain', DropdownChoice(
+                        title = _('Metric time grain'),
+                        choices = [('PT1M', _('one minute')),
+                                   ('PT1H', _('one hour'))],
+                   )),
+               ],
+               optional_keys = False,
+           )
+
+
+def _azure_group_config():
+    return Dictionary(
+               elements = [
+                   ('group_name', TextAscii(
+                       title = _('Name of the resource group'),
+                       allow_empty = False,
+                   )),
+                   ('group_config', Alternative(
+                       title = _("Resources to monitor"),
+                       style = "dropdown",
+                       elements = [
+                           ListOf(
+                               _azure_resource_config(),
+                               title = _("Explicitly specify resources"),
+                               allow_empty = False,
+                               magic = "@-resources-@",
+                           ),
+                           FixedValue(
+                               'fetchall',
+                               title=_("Monitor all available resources"),
+                               totext = "",
+                           ),
+                       ],
+                   )),
+               ],
+               optional_keys = False,
+           )
+
+
+register_rule('datasource_programs',
+    "special_agents:azure",
+     Dictionary(
+         title = _("Agent Azure Configuration"),
+         help = _("To monitor Azure resources add this datasource to <b>one</b> host. "
+                  "The data will be transported using the piggyback mechanism, so make "
+                  "sure to create one host for every monitored resource group. You can "
+                  "learn about the discovered groups in the <i>Agent Azure Info</i> "
+                  "service of the host owning the datasource program."),
+         # element names starting with "--" will be passed do cmd line w/o parsing!
+         elements = [
+             ("--subscription-id", TextAscii(
+                 title = _("Subscription ID"),
+                 allow_empty = False,
+             )),
+             ("--tenant-id", TextAscii(
+                 title = _("Tenant ID / Directory ID"),
+                 allow_empty = False,
+             )),
+             ("--client-id", TextAscii(
+                 title = _("Client ID / Application ID"),
+                 allow_empty = False,
+             )),
+             ("--secret", Password(
+                 title = _("Secret"),
+                 allow_empty = False,
+             )),
+             ("config", Dictionary(
+                  title = _("Monitoring Settings"),
+                  help = _("You can choose to to monitor all resources known to "
+                           "the Azure API. However, be aware that Microsoft limits"
+                           " API calls to 15,000 per hour (250 per minute)."),
+                  elements = [('explicit-config', ListOf(
+                                  _azure_group_config(),
+                                  title = _("Explicitly specify groups"),
+                                  allow_empty = False,
+                                  magic = "@-groups-@",
+                              )),
+                              ('fetchall', FixedValue(
+                                  "fetchall",
+                                  title=_("Monitor all available resource groups (overrides previous settings)"),
+                                  totext = "",
+                              )),
+                  ],
+             )),
+             ("--sequential", Checkbox(
+                  title = _("Run in single thread"),
+                  help = _("Check this to avoid multiprocessing. "
+                           "Recommended for debugging purposes only."),
+             )),
+        ],
+        optional_keys = False,
+    ),
+    match = 'first',
+)

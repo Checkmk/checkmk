@@ -91,17 +91,16 @@ def parse_arguments(argv):
     parser.add_argument("--client-id", required=True, help="Azure client ID")
     parser.add_argument("--tenant-id", required=True, help="Azure tenant ID")
     parser.add_argument("--secret", required=True, help="Azure authentication secret")
-    # OPT: CONSTRAIN DATA TO REQUEST
+    # CONSTRAIN DATA TO REQUEST
     parser.add_argument(
-        "config",
+        "--explicit-config",
         default=[],
         nargs='*',
         help='''list of arguments providing the configuration in <key>=<value> format.
              If omitted, all groups and resources are fetched.
              If specified, every 'group=<name>' argument starts a new group configuration,
              and every 'resource=<name>' arguments starts a new resource configuration.
-             Other keys are time_grain, aggregations and filters.
-             Use --dump-config to see the parsed configuration.''')
+             Other keys are time_grain, aggregations and filters''')
     args = parser.parse_args(argv)
 
     # LOGGING
@@ -199,9 +198,9 @@ class GroupConfig(object):
         return "[%s]\n" % self.name + "\n".join(str(r_cfg) for r_cfg in self.resources.values())
 
 
-class Config(object):
+class ExplicitConfig(object):
     def __init__(self, raw_list=()):
-        super(Config, self).__init__()
+        super(ExplicitConfig, self).__init__()
         self.groups = {}
         self.current_group = None
         for item in raw_list:
@@ -268,18 +267,19 @@ class AzureMetric(object):
             if not measurement.data:
                 continue
 
-            data = measurement.data[-1]
-            timestamp = calendar.timegm(data.time_stamp.utctimetuple())
             for aggr in AzureMetric.AGGREGATIONS:
-                if hasattr(data, aggr):
-                    value = getattr(data, aggr)
-                    # the field *may* be present, even if we did not ask for it.
-                    m_tuple = (self.name, aggr, value, metric.unit.name, timestamp, time_grain,
-                               filters)
-                    if value is not None:
-                        self.rows.append(m_tuple)
-                    else:
-                        logging.debug("OMITTED: %s %s %s %s %s %s %s", *m_tuple)
+                for data in reversed(measurement.data):
+                    if hasattr(data, aggr):
+                        value = getattr(data, aggr)
+                        # the field *may* be present, even if we did not ask for it.
+                        if value is not None:
+                            timestamp = calendar.timegm(data.time_stamp.utctimetuple())
+                            self.rows.append((self.name, aggr, value, metric.unit.name, timestamp,
+                                              time_grain, filters))
+                            break
+                else:  # no break ocurred, we did not find anything
+                    logging.debug("not found: %s %s %s %s %s", self.name, aggr, metric.unit.name,
+                                  time_grain, filters)
         if not self.rows:
             log.info("Found no aggregation for metric %r", self.name)
 
@@ -291,7 +291,7 @@ class AzureMetric(object):
 
 class AzureResource(object):
 
-    ID_PATTERN = re.compile("/subscriptions/([^/]*)" "/resourceGroups/([^/]*)" "/providers/([^/]*)")
+    ID_PATTERN = re.compile("/subscriptions/([^/]*)/resourceGroups/([^/]*)/providers/([^/]*)")
 
     def __init__(self, resource):
         super(AzureResource, self).__init__()
@@ -336,7 +336,7 @@ class AzureClient(object):
         self._resource_client = ResourceManagementClient(self._creds, args.subscription_id)
 
         # compute timespan once, and keep it fixed
-        time_end = datetime.datetime.now()
+        time_end = datetime.datetime.utcnow()
         time_min = datetime.timedelta(minutes=5)
         time_hrs = datetime.timedelta(hours=2)
         self.timespan_min = "%s/%s" % (time_end - time_min, time_end)
@@ -356,7 +356,7 @@ class AzureClient(object):
             # azure-api-call
             md_list = list(self._monitor_client.metric_definitions.list(rid))
             self.metrics_cache[rid] = md_list
-            log.debug("%d discovered metrics: %r", len(md_list), [str(md) for md in md_list])
+            log.debug("%d discovered metrics: %r", len(md_list), [md.name.value for md in md_list])
         return self.metrics_cache[rid]
 
     def discover_groups(self, resources=None):
@@ -549,7 +549,7 @@ def process_resource(resource, client, config):
 def main(argv=None):
 
     args = parse_arguments(argv or sys.argv[1:])
-    config = Config(raw_list=args.config)
+    config = ExplicitConfig(raw_list=args.explicit_config)
     str_config = "Configuration:\n%s\n" % config
     if args.dump_config:
         sys.stdout.write(str_config)

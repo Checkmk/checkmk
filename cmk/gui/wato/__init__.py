@@ -9147,13 +9147,13 @@ class ModeUsers(WatoMode):
                     html.write_text(_("all events disabled"))
                 else:
                     tp = user.get("notification_period", "24X7")
-                    if tp != "24X7" and tp not in timeperiods:
+                    if tp not in timeperiods:
                         tp = tp + _(" (invalid)")
-                    elif tp != "24X7":
+                    elif tp not in watolib.builtin_timeperiods():
                         url = watolib.folder_preserving_link([("mode", "edit_timeperiod"), ("edit", tp)])
                         tp = html.render_a(timeperiods[tp].get("alias", tp), href=url)
                     else:
-                        tp = _("Always")
+                        tp = timeperiods[tp].get("alias", tp)
                     html.write(tp)
 
             # the visible custom attributes
@@ -9608,8 +9608,7 @@ class ModeEditUser(WatoMode):
 
             # Notification period
             forms.section(_("Notification time period"))
-            choices = [ ( "24X7", _("Always")) ] + \
-                      [ ( id, "%s" % (tp["alias"])) for (id, tp) in self._timeperiods.items() ]
+            choices = [ ( id, "%s" % (tp["alias"])) for (id, tp) in self._timeperiods.items() ]
             html.dropdown("notification_period", choices, deflt=self._user.get("notification_period"), sorted=True)
             html.help(_("Only during this time period the "
                          "user will get notifications about host or service alerts."))

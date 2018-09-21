@@ -8812,13 +8812,36 @@ def may_override_read_only_mode():
 #   |                            |_|                                       |
 #   +----------------------------------------------------------------------+
 
+def builtin_timeperiods():
+    return {
+        "24X7": {
+            "alias"     : _("Always"),
+            "monday"    : ("00:00", "24:00"),
+            "tuesday"   : ("00:00", "24:00"),
+            "wednesday" : ("00:00", "24:00"),
+            "thursday"  : ("00:00", "24:00"),
+            "friday"    : ("00:00", "24:00"),
+            "saturday"  : ("00:00", "24:00"),
+            "sunday"    : ("00:00", "24:00"),
+        }
+    }
+
+
 def load_timeperiods():
-    return store.load_from_mk_file(wato_root_dir + "timeperiods.mk", "timeperiods", {})
+    timeperiods = store.load_from_mk_file(wato_root_dir + "timeperiods.mk", "timeperiods", {})
+    timeperiods.update(builtin_timeperiods())
+    return timeperiods
 
 
 def save_timeperiods(timeperiods):
     store.mkdir(wato_root_dir)
-    store.save_to_mk_file(wato_root_dir + "timeperiods.mk", "timeperiods", timeperiods, pprint_value = config.wato_pprint_config)
+    store.save_to_mk_file(wato_root_dir + "timeperiods.mk", "timeperiods",
+        filter_builtin_timeperiods(timeperiods), pprint_value = config.wato_pprint_config)
+
+
+def filter_builtin_timeperiods(timeperiods):
+    builtin_keys = builtin_timeperiods().keys()
+    return { k: v for k, v in timeperiods.items() if k not in builtin_keys}
 
 
 class TimeperiodSelection(DropdownChoice):

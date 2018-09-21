@@ -98,6 +98,9 @@ class ModeTimeperiods(WatoMode):
     def action(self):
         delname = html.var("_delete")
         if delname and html.transaction_valid():
+            if delname in watolib.builtin_timeperiods():
+                raise MKUserError("_delete", _("Builtin timeperiods can not be modified"))
+
             usages = self._find_usages_of_timeperiod(delname)
             if usages:
                 message = "<b>%s</b><br>%s:<ul>" % \
@@ -279,22 +282,28 @@ class ModeTimeperiods(WatoMode):
 
     def page(self):
         table.begin("timeperiods", empty_text = _("There are no timeperiods defined yet."))
-        for name in sorted(self._timeperiods.keys()):
+        for name, timeperiod in sorted(self._timeperiods.items()):
             table.row()
 
-            timeperiod = self._timeperiods[name]
-            edit_url     = watolib.folder_preserving_link([("mode", "edit_timeperiod"), ("edit", name)])
-            clone_url    = watolib.folder_preserving_link([("mode", "edit_timeperiod"), ("clone", name)])
-            delete_url   = make_action_link([("mode", "timeperiods"), ("_delete", name)])
-
             table.cell(_("Actions"), css="buttons")
-            html.icon_button(edit_url, _("Properties"), "edit")
-            html.icon_button(clone_url, _("Create a copy"), "clone")
-            html.icon_button(delete_url, _("Delete"), "delete")
+            if name in watolib.builtin_timeperiods():
+                html.write_text(html.i(_("(builtin)")))
+            else:
+                self._action_buttons(name)
 
             table.text_cell(_("Name"), name)
             table.text_cell(_("Alias"), timeperiod.get("alias", ""))
         table.end()
+
+
+    def _action_buttons(self, name):
+        edit_url     = watolib.folder_preserving_link([("mode", "edit_timeperiod"), ("edit", name)])
+        clone_url    = watolib.folder_preserving_link([("mode", "edit_timeperiod"), ("clone", name)])
+        delete_url   = make_action_link([("mode", "timeperiods"), ("_delete", name)])
+
+        html.icon_button(edit_url, _("Properties"), "edit")
+        html.icon_button(clone_url, _("Create a copy"), "clone")
+        html.icon_button(delete_url, _("Delete"), "delete")
 
 
 
@@ -579,6 +588,9 @@ class ModeEditTimeperiod(WatoMode):
         self._name = html.var("edit") # missing -> new group
         self._new  = self._name == None
 
+        if self._name in watolib.builtin_timeperiods():
+            raise MKUserError("edit", _("Builtin timeperiods can not be modified"))
+
         if self._new:
             clone_name = html.var("clone")
             if clone_name:
@@ -653,8 +665,6 @@ class ModeEditTimeperiod(WatoMode):
     def _validate_id(self, value, varprefix):
         if value in self._timeperiods:
             raise MKUserError(varprefix, _("This name is already being used by another timeperiod."))
-        if value == "24X7":
-            raise MKUserError(varprefix, _("The time period name 24X7 cannot be used. It is always autmatically defined."))
 
 
     def _validate_alias(self, value, varprefix):

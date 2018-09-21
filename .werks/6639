@@ -11,11 +11,10 @@ It is now possible to for Check_MK to send notifications about state
 changes of hosts and services into a Slack channel.
 
 Slack needs to be first configured to recieve messages from Check_MK. This
-can be done by setting up a Webhook <a
-href=\"https://my.slack.com/services/new/incoming-webhook/\"
-target=\"_blank\"> here </a>, where you specify which channel wil recieve
-the notifications. In Check_MK, under WATO->Notifications, create a new
-notification rule. And select under Notification Method Slack. Copy the URL
-that Slack gives you after completing the configuration into the Slack
-Webhook-URL field. Optionally if you want sent messages to include
-hyperlinks to Check_MK, enable the field URL prefix for links to Check_MK.
+can be done by setting up a Webhook <a href="https://my.slack.com/services/new/incoming-webhook/" target="_blank">here</a>,
+where you specify which channel will recieve the notifications. In Check_MK,
+under "WATO - Notifications", create a new notification rule. And select under
+Notification Method Slack. Copy the URL that Slack gives you after completing
+the configuration into the Slack Webhook-URL field. Optionally if you want sent
+messages to include hyperlinks to Check_MK, enable the field URL prefix for
+links to Check_MK.

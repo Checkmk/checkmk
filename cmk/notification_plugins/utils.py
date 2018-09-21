@@ -26,6 +26,8 @@
 from typing import Dict  # pylint: disable=unused-import
 import os
 import re
+import sys
+import subprocess
 
 try:
     # First try python3
@@ -122,3 +124,21 @@ def set_mail_headers(target, subject, from_address, reply_to, mail):
         mail['Reply-To'] = target
 
     return mail
+
+def send_mail_sendmail(m, target, from_address):
+    cmd = ["/usr/sbin/sendmail"]
+    if from_address:
+        cmd += ['-F', from_address, "-f", from_address]
+    cmd += ["-i", target.encode("utf-8")]
+
+    try:
+        p = subprocess.Popen(cmd, stdin=subprocess.PIPE)
+    except OSError:
+        raise Exception("Failed to send the mail: /usr/sbin/sendmail is missing")
+
+    p.communicate(m.as_string())
+    if p.returncode != 0:
+        raise Exception("sendmail returned with exit code: %d" % p.returncode)
+
+    sys.stdout.write("Spooled mail to local mail transmission agent\n")
+    return 0

@@ -33,7 +33,6 @@
 import base64
 import os
 import socket
-import subprocess
 import sys
 import urllib
 import urllib2
@@ -44,7 +43,6 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 
 from cmk.notification_plugins import utils
-
 
 def tmpl_head_html(html_section):
     return '''
@@ -517,25 +515,6 @@ def multipart_mail(target, subject, from_address, reply_to, content_txt, content
     return utils.set_mail_headers(target, subject, from_address, reply_to, m)
 
 
-def send_mail_sendmail(m, target, from_address):
-    cmd = ["/usr/sbin/sendmail"]
-    if from_address:
-        cmd += ['-F', from_address, "-f", from_address]
-    cmd += ["-i", target.encode("utf-8")]
-
-    try:
-        p = subprocess.Popen(cmd, stdin=subprocess.PIPE)
-    except OSError:
-        raise Exception("Failed to send the mail: /usr/sbin/sendmail is missing")
-
-    p.communicate(m.as_string())
-    if p.returncode != 0:
-        raise Exception("sendmail returned with exit code: %d" % p.returncode)
-
-    sys.stdout.write("Spooled mail to local mail transmission agent\n")
-    return 0
-
-
 def send_mail_smtp(message, target, from_address, context):
     import smtplib  # for the error messages
     host_index = 1
@@ -643,7 +622,7 @@ def send_mail(message, target, from_address, context):
     if "PARAMETER_SMTP_PORT" in context:
         return send_mail_smtp(message, target, from_address, context)
     else:
-        return send_mail_sendmail(message, target, from_address)
+        return utils.send_mail_sendmail(message, target, from_address)
 
 
 def fetch_pnp_data(context, params):

@@ -59,24 +59,6 @@ Handler output: $ALERTHANDLEROUTPUT$
 tmpl_alerthandler_service_body = "Service:  $SERVICEDESC$\n" + tmpl_alerthandler_host_body
 
 
-def send_mail(m, target, from_address):
-    cmd = ["/usr/sbin/sendmail"]
-    if from_address:
-        cmd += ['-F', from_address, "-f", from_address]
-    cmd += ["-i", target.encode("utf-8")]
-
-    try:
-        p = subprocess.Popen(cmd, stdin=subprocess.PIPE)
-    except OSError:
-        raise Exception("Failed to send the mail: /usr/sbin/sendmail is missing")
-
-    p.communicate(m.as_string())
-    if p.returncode != 0:
-        raise Exception("sendmail returned with exit code: %d" % p.returncode)
-
-    return 0
-
-
 def construct_content(context):
 
     # Create a notification summary in a new context variable
@@ -255,7 +237,7 @@ def main():
     m = utils.set_mail_headers(mailto, subject, from_address, reply_to,
                                MIMEText(content_txt, 'plain', _charset='utf-8'))
     try:
-        sys.exit(send_mail(m, mailto, from_address))
+        sys.exit(utils.send_mail_sendmail(m, mailto, from_address))
     except Exception, e:
         sys.stderr.write("Unhandled exception: %s\n" % e)
         # unhandled exception, don't retry this...

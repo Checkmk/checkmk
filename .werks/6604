@@ -1,0 +1,18 @@
+Title: mssql_backup.per_type: Discover MSSQL backup services per type
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1537526143
+Class: feature
+
+With the ruleset {{Discovery of MSSQL backup}} two choices
+for monitring MSSQL backups are available.
+Either a summary service per instance can be
+discovered. This service monitors all or a subset of
+"database", "database diff", "log", "file or filegroup",
+"file diff", "partial", "partial diff" or "unspecific"
+backup types.
+Or MSSQL backup services per backup type and instance are
+created.

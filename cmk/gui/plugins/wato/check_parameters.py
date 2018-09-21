@@ -1852,6 +1852,24 @@ register_rule(
     match="dict",
 )
 
+register_rule(
+    "%s/%s" % (group, subgroup_inventory),
+    varname="discovery_mssql_backup",
+    title=_("Discovery of MSSQL backup"),
+    valuespec=Dictionary(
+        elements=[
+            ("mode", DropdownChoice(
+                title=_("Backup modes"),
+                choices=[
+                    ("summary", _("Create a service for each instance")),
+                    ("per_type", _("Create a service for each instance and backup type")),
+                ]
+            )),
+        ],
+    ),
+    match="dict",
+)
+
 #.
 #   .--Applications--------------------------------------------------------.
 #   |          _                _ _           _   _                        |
@@ -10720,7 +10738,7 @@ register_check_parameters(
 register_check_parameters(
     subgroup_applications,
     "mssql_backup",
-    _("MSSQL Time since last Backup"),
+    _("MSSQL Backup summary"),
     Transform(
         Dictionary(
             help = _("This rule allows you to set limits on the age of backups for "
@@ -10789,6 +10807,25 @@ register_check_parameters(
     "first",
 )
 
+register_check_parameters(
+    subgroup_applications,
+    "mssql_backup_per_type",
+    _("MSSQL Backup"),
+    Dictionary(
+        elements=[
+            ("levels", Tuple(
+                title=_("Upper levels for the backup age"),
+                elements = [
+                    Age(title = _("Warning if older than")),
+                    Age(title = _("Critical if older than")),
+            ])),
+        ]
+    ),
+    TextAscii(
+        title = _("Backup name"),
+        allow_empty = False),
+    "dict",
+)
 
 register_check_parameters(
     subgroup_applications,

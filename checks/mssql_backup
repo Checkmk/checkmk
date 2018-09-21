@@ -51,6 +51,8 @@
 # MSSQL_SQL0x4|msdb|2016-07-08 20:20:43|D
 # MSSQL_SQL0x4|msdb|2016-07-11 20:20:07|I
 
+discovery_mssql_backup = []
+
 factory_settings["mssql_backup_default_levels"] = {
     "database":             (None, None),
     "database_diff":        (None, None),
@@ -123,12 +125,24 @@ def parse_mssql_backup(info):
 
 
 def inventory_mssql_backup(parsed):
+    discovery_mode = _mssql_backup_discovery_mode()
+    if discovery_mode != "summary":
+        return
     for db_name in parsed.iterkeys():
         yield db_name, {}
 
 
+def _mssql_backup_discovery_mode():
+    rules = host_extra_conf(host_name(), discovery_mssql_backup)
+    try:
+        return rules[0]['mode']
+    except (IndexError, KeyError):
+        return "summary" # default, comp. to older versions
+
+
 def check_mssql_backup(item, params, parsed):
-    if item not in parsed:
+    data = parsed.get(item)
+    if data is None:
         # Assume general connection problem to the database, which is reported
         # by the "X Instance" service and skip this check.
         raise MKCounterWrapped("Failed to connect to database")
@@ -136,37 +150,41 @@ def check_mssql_backup(item, params, parsed):
     if not isinstance(params, dict):
         params = {"database": params}
 
-    for backup in parsed[item]:
+    for backup in data:
         if backup.state == "no backup found":
             yield params.get("not_found", 1), "State: %s" % backup.state
             continue
-
         if backup.type is None:
             backup_type_var = "database"
             perfkey = "seconds"
-            infotext = "[database] "
+            backup_type_info = "[database]"
         else:
             backup_type_var = backup.type.strip().replace(" ", "_")
             perfkey = "backup_age_%s" % backup_type_var
-            infotext = "[%s] " % backup.type
+            backup_type_info = "[%s]" % backup.type
+        state, infotext, perfdata =\
+            _check_mssql_backup(backup, params.get(backup_type_var, (None, None)), perfkey)
+        yield state, "%s %s" % (backup_type_info, infotext), perfdata
 
-        state = 0
-        age_warn, age_crit = params.get(backup_type_var, (None, None))
-        sec_ago = time.time() - backup.timestamp
-        if age_crit is not None and sec_ago >= age_crit:
-            state = 2
-        elif age_warn is not None and sec_ago >= age_warn:
-            state = 1
 
-        infotext += 'Last backup was at %s (%s ago)' % (
-            time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(backup.timestamp)),
-            get_age_human_readable(sec_ago))
+def _check_mssql_backup(backup, levels, perfkey):
+    state = 0
+    age_warn, age_crit = levels
+    sec_ago = time.time() - backup.timestamp
+    if age_crit is not None and sec_ago >= age_crit:
+        state = 2
+    elif age_warn is not None and sec_ago >= age_warn:
+        state = 1
 
-        if state:
-            infotext += " (warn/crit at %s/%s)" % (
-                get_age_human_readable(age_warn), get_age_human_readable(age_crit))
+    infotext = 'Last backup was at %s (%s ago)' % (
+        time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(backup.timestamp)),
+        get_age_human_readable(sec_ago))
 
-        yield state, infotext, [(perfkey, sec_ago, age_warn, age_crit)]
+    if state:
+        infotext += " (warn/crit at %s/%s)" % (
+            get_age_human_readable(age_warn), get_age_human_readable(age_crit))
+
+    return state, infotext, [(perfkey, sec_ago, age_warn, age_crit)]
 
 
 check_info['mssql_backup'] = {
@@ -177,4 +195,52 @@ check_info['mssql_backup'] = {
     'has_perfdata'              : True,
     'group'                     : 'mssql_backup',
     'default_levels_variable'   : 'mssql_backup_default_levels',
+}
+
+#.
+#   .--single--------------------------------------------------------------.
+#   |                          _             _                             |
+#   |                      ___(_)_ __   __ _| | ___                        |
+#   |                     / __| | '_ \ / _` | |/ _ \                       |
+#   |                     \__ \ | | | | (_| | |  __/                       |
+#   |                     |___/_|_| |_|\__, |_|\___|                       |
+#   |                                  |___/                               |
+#   '----------------------------------------------------------------------'
+
+def _mssql_backup_per_type_item(db_name, backup):
+    if backup.type is None:
+        return "%s UNKNOWN" % db_name
+    else:
+        return "%s %s" % (db_name, backup.type.title())
+
+
+def inventory_mssql_backup_per_type(parsed):
+    discovery_mode = _mssql_backup_discovery_mode()
+    if discovery_mode != "per_type":
+        return
+    for db_name, attrs in parsed.iteritems():
+        for backup in attrs:
+            yield _mssql_backup_per_type_item(db_name, backup), {}
+
+
+def check_mssql_backup_per_type(item, params, parsed):
+    data = None
+    for db_name, attrs in parsed.iteritems():
+        for backup in attrs:
+            if item == _mssql_backup_per_type_item(db_name, backup):
+                data = backup
+                break
+    if data is None:
+        # Assume general connection problem to the database, which is reported
+        # by the "X Instance" service and skip this check.
+        raise MKCounterWrapped("Failed to connect to database")
+    return _check_mssql_backup(data, params.get("levels", (None, None)), "backup_age")
+
+
+check_info['mssql_backup.per_type'] = {
+    'check_function'            : check_mssql_backup_per_type,
+    'inventory_function'        : inventory_mssql_backup_per_type,
+    'service_description'       : 'MSSQL %s Backup',
+    'has_perfdata'              : True,
+    'group'                     : 'mssql_backup_per_type',
 }

@@ -4409,7 +4409,13 @@ metric_info["queue"] = {
 metric_info["avg_response_time"] = {
     "title" : _("Average response time"),
     "unit"  : "s",
-    "color" : "#4040ff"
+    "color" : "#4040ff",
+}
+
+metric_info["remaining_reads"] = {
+    "title" : _("Remaining Reads"),
+    "unit"  : "count",
+    "color" : "42/a",
 }
 
 #.

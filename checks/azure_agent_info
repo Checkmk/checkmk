@@ -1,0 +1,115 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2018             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+import json
+
+
+factory_settings['azure_agent_info_levels'] = {
+    'warning_levels': (1, 10),
+    'exception_levels': (1, 1),
+    'remaining_reads_levels_lower': (1000, 100),
+    'remaining_reads_unknown_state': 1,
+}
+
+
+def parse_azure_agent_info(info):
+
+    parsed = {}
+    for row in info:
+        k, v = row[0], json.loads(' '.join(row[1:]))
+
+        if k == 'remaining-reads':
+            try:
+                v = int(v)
+                v = min(int(parsed.get(k, 'fail')), v)
+            except ValueError:
+                pass
+            parsed[k] = v
+            continue
+
+        elif k == 'issue':
+            issues = parsed.setdefault('issues', {})
+            issues.setdefault(v['type'], []).append(v)
+            continue
+
+        parsed.setdefault(k, []).append(v)
+
+    return parsed
+
+
+def discovery_azure_agent_info(parsed):
+    yield "Azure Agent Info", {}
+
+
+def check_azure_agent_info(item, params, parsed):
+
+    reads = parsed.get('remaining-reads')
+    # this is only reported for the Datasource Host, so None
+    # is ignored.
+    if reads is not None:
+        state, txt = 0, "Remaining API reads: %s" % reads
+        if not isinstance(reads, int):
+            yield params['remaining_reads_unknown_state'], txt
+        else:
+            warn, crit = params.get('remaining_reads_levels_lower', (None, None))
+            if crit is not None and reads <= crit:
+                state = 2
+            elif warn is not None and reads <= warn:
+                state = 1
+            yield state, txt, [('remaining_reads', reads, warn, crit, 0, 15000)]
+
+    groups = parsed.get('monitored-groups')
+    if groups is not None:
+        yield 0, "Monitored groups: %s" % ', '.join(groups[0])
+
+    issues = parsed.get('issues', {})
+    for t in ('warning', 'exception'):
+        count = len(issues.get(t, ()))
+        state, txt = 0, "%d %ss" % (count, t)
+        warn, crit = params.get('%s_levels' % t, (None, None))
+        if crit is not None and count >= crit:
+            state = 2
+        elif warn is not None and count >= warn:
+            state = 1
+        yield state, txt
+
+    for i in sorted(issues.get('exception', []), key=lambda x: x["msg"]):
+        yield 0, "\nIssue in %s: Exception: %s (!!)" % (i["issued_by"], i["msg"])
+    for i in sorted(issues.get('warning', []), key=lambda x: x["msg"]):
+        yield 0, "\nIssue in %s: Warning: %s (!)" % (i["issued_by"], i["msg"])
+    for i in sorted(issues.get('info', []), key=lambda x: x["msg"]):
+        yield 0, "\nIssue in %s: Info: %s" % (i["issued_by"], i["msg"])
+
+
+check_info['azure_agent_info'] = {
+    'parse_function'         : parse_azure_agent_info,
+    'inventory_function'     : discovery_azure_agent_info,
+    'check_function'         : check_azure_agent_info,
+    'service_description'    : "%s",
+    'default_levels_variable': "azure_agent_info_levels",
+    'has_perfdata'           : True,
+    'group'                  : "azure_agent_info",
+}
+

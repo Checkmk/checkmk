@@ -4851,6 +4851,44 @@ register_check_parameters(
 )
 
 
+register_check_parameters(
+    subgroup_applications,
+    "azure_agent_info",
+    ("Azure Agent Info"),
+    Dictionary(
+        elements = [
+            ("warning_levels", Tuple(
+                title = _("Upper levels for encountered warnings"),
+                elements = [
+                    Integer(title = _("Warning at"), default_value=1),
+                    Integer(title = _("Critical at"), default_value=10),
+                ],
+            )),
+            ("exception_levels", Tuple(
+                title = _("Upper levels for encountered exceptions"),
+                elements = [
+                    Integer(title = _("Warning at"), default_value=1),
+                    Integer(title = _("Critical at"), default_value=1),
+                ],
+            )),
+            ("remaining_reads_levels_lower", Tuple(
+                title = _("Lower levels for remaining API reads"),
+                elements = [
+                    Integer(title = _("Warning below"), default_value=1000),
+                    Integer(title = _("Critical below"), default_value=100),
+                ],
+            )),
+            ("remaining_reads_unknown_state", MonitoringState(
+                title = _("State if remaining API reads are unknown"),
+                default_value = 1
+            )),
+        ]
+    ),
+    TextAscii(title = _("Azure Agent Info")),
+    match_type = "dict",
+)
+
+
 #.
 #   .--Environment---------------------------------------------------------.
 #   |     _____            _                                      _        |
@@ -16376,6 +16414,7 @@ register_check_parameters(
     TextAscii( title = _("Node ID")),
     "first"
 )
+
 register_check_parameters(
     subgroup_environment,
     "carbon_monoxide",

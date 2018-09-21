@@ -533,11 +533,11 @@ def send_mail_smtp(message, target, from_address, context):
         try:
             send_mail_smtp_impl(message, target, smarthost, from_address, context)
             success = True
-        except socket.timeout, e:
+        except socket.timeout as e:
             sys.stderr.write("timeout connecting to \"%s\": %s\n" % (smarthost, str(e)))
-        except socket.gaierror, e:
+        except socket.gaierror as e:
             sys.stderr.write("socket error connecting to \"%s\": %s\n" % (smarthost, str(e)))
-        except smtplib.SMTPRecipientsRefused, e:
+        except smtplib.SMTPRecipientsRefused as e:
             # the exception contains a dict of failed recipients to the respective error. since we
             # only have one recipient there has to be exactly one element
             errorcode, message = e.recipients.values()[0]
@@ -550,18 +550,18 @@ def send_mail_smtp(message, target, from_address, context):
                 retry_possible = True
 
             sys.stderr.write("mail to \"%s\" refused: %d, %s\n" % (target, errorcode, message))
-        except smtplib.SMTPHeloError, e:
+        except smtplib.SMTPHeloError as e:
             retry_possible = True  # server is acting up, this may be fixed quickly
             sys.stderr.write("protocol error from \"%s\": %s\n" % (smarthost, str(e)))
-        except smtplib.SMTPSenderRefused, e:
+        except smtplib.SMTPSenderRefused as e:
             sys.stderr.write("server didn't accept from-address \"%s\" refused: %s\n" %\
                              (from_address, str(e)))
-        except smtplib.SMTPAuthenticationError, e:
+        except smtplib.SMTPAuthenticationError as e:
             sys.stderr.write("authentication failed on \"%s\": %s\n" % (smarthost, str(e)))
-        except smtplib.SMTPDataError, e:
+        except smtplib.SMTPDataError as e:
             retry_possible = True  # unexpected error - give retry a chance
             sys.stderr.write("unexpected error code from \"%s\": %s\n" % (smarthost, str(e)))
-        except smtplib.SMTPException, e:
+        except smtplib.SMTPException as e:
             retry_possible = True  # who knows what went wrong, a retry might just work
             sys.stderr.write("undocumented error code from \"%s\": %s\n" % (smarthost, str(e)))
 
@@ -682,7 +682,7 @@ def extract_graph_error(output):
 def render_pnp_graphs(context):
     try:
         num_sources = fetch_num_sources(context)
-    except GraphException, e:
+    except GraphException as e:
         graph_error = extract_graph_error(str(e))
         if '.xml" not found.' not in graph_error:
             sys.stderr.write('Unable to fetch number of graphs: %s\n' % graph_error)
@@ -692,7 +692,7 @@ def render_pnp_graphs(context):
     for source in range(0, num_sources):
         try:
             content = fetch_graph(context, source)
-        except GraphException, e:
+        except GraphException as e:
             sys.stderr.write('Unable to fetch graph: %s\n' % e)
             continue
 
@@ -713,7 +713,7 @@ def render_cmk_graphs(context):
 
     try:
         json_data = urllib2.urlopen(url).read()
-    except Exception, e:
+    except Exception as e:
         if opt_debug:
             raise
         sys.stderr.write("ERROR: Failed to fetch graphs: %s\nURL: %s\n" % (e, url))
@@ -721,7 +721,7 @@ def render_cmk_graphs(context):
 
     try:
         base64_strings = json.loads(json_data)
-    except Exception, e:
+    except Exception as e:
         if opt_debug:
             raise
         sys.stderr.write(
@@ -879,7 +879,7 @@ def construct_content(context):
         try:
             attachments, graph_code = render_performance_graphs(context)
             content_html += graph_code
-        except Exception, e:
+        except Exception as e:
             sys.stderr.write("Failed to add graphs to mail. Continue without them. (%s)\n" % e)
 
     extra_html_section = ""
@@ -954,7 +954,7 @@ def main():
 
     try:
         sys.exit(send_mail(m, mailto, from_address, context))
-    except Exception, e:
+    except Exception as e:
         sys.stderr.write("Unhandled exception: %s\n" % e)
         # unhandled exception, don't retry this...
         sys.exit(2)

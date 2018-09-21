@@ -172,7 +172,7 @@ def main():
                                MIMEText(content_txt, 'plain', _charset='utf-8'))
     try:
         sys.exit(utils.send_mail_sendmail(m, mailto, from_address))
-    except Exception, e:
+    except Exception as e:
         sys.stderr.write("Unhandled exception: %s\n" % e)
         # unhandled exception, don't retry this...
         sys.exit(2)

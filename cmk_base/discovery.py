@@ -484,7 +484,7 @@ def discover_marked_hosts():
                 activation_required = True
 
             if time.time() > end_time_ts:
-                console.warning("  Timeout of %d seconds reached. Lets do the remaining hosts next time." % _marked_host_discovery_timeout)
+                console.verbose("  Timeout of %d seconds reached. Lets do the remaining hosts next time." % _marked_host_discovery_timeout)
                 break
     except DiscoveryTimeout:
         pass

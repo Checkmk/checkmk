@@ -1,0 +1,12 @@
+Title: fsc checks: prevent fsc_fans and fsc_temp if corresponding fsc_sc2-* data is available, made snmp_scan_functions more readable
+Level: 1
+Component: checks
+Class: fix
+Compatible: incomp
+Edition: cre
+State: unknown
+Version: 1.5.0p5
+Date: 1537527263
+
+* fsc_fans and fsc_temp do not discover services anymore, if corresponding fsc_sc2_* data is available.
+* snmp_scan_functions were made more readable using functions in fsc.include

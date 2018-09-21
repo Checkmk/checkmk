@@ -36,6 +36,7 @@ except ImportError:
     # Default to python2
     from cgi import escape as html_escape
 
+from cmk_base.notify import find_wato_folder
 
 def collect_context():
     # type: () -> Dict
@@ -125,6 +126,7 @@ def set_mail_headers(target, subject, from_address, reply_to, mail):
 
     return mail
 
+
 def send_mail_sendmail(m, target, from_address):
     cmd = ["/usr/sbin/sendmail"]
     if from_address:
@@ -169,3 +171,32 @@ def read_bulk_contexts():
                 context[key] = value
 
     return parameters, contexts
+
+def get_bulk_notification_subject(contexts, hosts):
+    hosts = list(hosts)
+    bulk_subject = None
+    folder = None
+    bulk_context = {}
+    for context in contexts:
+        if context.get("PARAMETER_BULK_SUBJECT"):
+            bulk_context = context
+            bulk_subject = context["PARAMETER_BULK_SUBJECT"]
+            folder = find_wato_folder(context)
+            break
+
+    if bulk_subject:
+        subject = bulk_subject
+    elif len(hosts) == 1:
+        subject = "Check_MK: $COUNT_NOTIFICATIONS$ notifications for %s" % hosts[0]
+    else:
+        subject = "Check_MK: $COUNT_NOTIFICATIONS$ notifications for $COUNT_HOSTS$ hosts"
+
+    if "$FOLDER$" in subject and folder is not None:
+        subject = subject.replace("$FOLDER$", folder)
+    if "$COUNT_NOTIFICATIONS$" in subject:
+        subject = subject.replace("$COUNT_NOTIFICATIONS$", str(len(contexts)))
+    if "$COUNT_HOSTS$" in subject:
+        subject = subject.replace("$COUNT_HOSTS$", str(len(hosts)))
+
+    subject = substitute_context(subject, bulk_context)
+    return subject

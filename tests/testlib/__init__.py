@@ -657,11 +657,15 @@ class Site(object):
             start_again = True
             self.stop()
 
-        self.set_config("LIVESTATUS_TCP", "on")
-        self.set_config("LIVESTATUS_TCP_PORT", str(self._livestatus_port))
+        sys.stdout.write("Getting livestatus port lock (/tmp/cmk-test-open-livestatus-port)...\n")
+        with lockfile.FileLock("/tmp/cmk-test-livestatus-port"):
+            sys.stdout.write("Have livestatus port lock\n")
+            self.set_config("LIVESTATUS_TCP", "on")
+            self._gather_livestatus_port()
+            self.set_config("LIVESTATUS_TCP_PORT", str(self._livestatus_port))
 
-        if start_again:
-            self.start()
+            if start_again:
+                self.start()
 
 
     def _gather_livestatus_port(self):

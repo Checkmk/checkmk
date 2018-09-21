@@ -4823,7 +4823,7 @@ register_check_parameters(
 register_check_parameters(
     subgroup_applications,
     "webserver",
-    _("Webserver"),
+    _("Azure web servers (IIS)"),
     Dictionary(
         elements = [
             ("avg_response_time_levels", Tuple(

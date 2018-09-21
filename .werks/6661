@@ -1,0 +1,11 @@
+Title: Periodic service discovery/cronjob: Changed loglevel of informational message
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.5.0p5
+Date: 1537522601
+Class: fix
+
+The discover-marked-hosts cronjob no longer receives a <tt>Timeout of 120 seconds reached ...</tt> message,
+in case the discovery takes longer than expected. This logmessage is now only shown in higher log level.

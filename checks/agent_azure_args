@@ -1,0 +1,69 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2018             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+
+_FETCHALL = '*'
+
+
+def agent_azure_arguments(params, _no_hostname, _no_ipaddress):
+    args = []
+
+    opts = (i for i in params.iteritems() if i[0].startswith("--"))
+    for k, v in opts:
+        if isinstance(v, bool):
+            if v:
+                args.append(k)
+        else:
+            args += [k, quote_shell_string(v)]
+
+    config = params['config']
+    if "fetchall" in config:
+        return ' '.join(args)
+
+    explicit = config.get('explicit-config', [])
+    if explicit:
+        args.append("--explicit-config")
+    for d in explicit:
+        g_name = d['group_name']
+        args.append(quote_shell_string("group=%s" % g_name))
+
+        g_conf = d['group_config']
+        if g_conf == 'fetchall':
+            continue
+
+        for r_cfg in g_conf:
+            for key in ('resource', 'metric', 'filters', 'time_grain'):
+                value = r_cfg.get(key)
+                if not value:
+                    break
+                if isinstance(value, list):
+                    value = ','.join(value)
+                args.append(quote_shell_string("%s=%s" % (key, value)))
+
+    return ' '.join(args)
+
+
+special_agent_info['azure'] = agent_azure_arguments

@@ -265,11 +265,23 @@ class SNMPCredentials(Alternative):
     def __init__(self, allow_none=False, **kwargs):
         def alternative_match(x):
             if kwargs.get("only_v3"):
-                return x and (len(x) == 6 and 2 or len(x) == 4 and 1) or 0
+                # NOTE: Indices are shifted by 1 due to a only_v3 hack below!!
+                if x is None or len(x) == 2:
+                    return 0  # noAuthNoPriv
+                if len(x) == 4:
+                    return 1  # authNoPriv
+                if len(x) == 6:
+                    return 2  # authPriv
             else:
-                return type(x) == tuple and ( \
-                            len(x) in [1, 2] and 1 or \
-                            len(x) == 4 and 2 or 3) or 0
+                if x is None or isinstance(x, basestring):
+                    return 0  # community only
+                if len(x) == 1 or len(x) == 2:
+                    return 1  # noAuthNoPriv
+                if len(x) == 4:
+                    return 2  # authNoPriv
+                if len(x) == 6:
+                    return 3  # authPriv
+            raise MKGeneralException("invalid SNMP credential format %s" % x)
 
         if allow_none:
             none_elements = [
@@ -306,7 +318,7 @@ class SNMPCredentials(Alternative):
                             ),
                         ]
                     ),
-                    forth = lambda x: (x and len(x) == 2) and x or ("noAuthNoPriv", "")
+                    forth = lambda x: x if (x and len(x) == 2) else ("noAuthNoPriv", "")
                 ),
                 Tuple(
                     title = _("Credentials for SNMPv3 with authentication but without privacy (authNoPriv)"),
@@ -346,6 +358,8 @@ class SNMPCredentials(Alternative):
             kwargs["default_value"] = "public"
 
         if kwargs.get("only_v3"):
+            # HACK: This shifts the indices in alternative_match above!!
+            # Furthermore, it doesn't work in conjunction with allow_none.
             kwargs["elements"].pop(0)
             kwargs.setdefault("title", _("SNMPv3 credentials"))
         else:

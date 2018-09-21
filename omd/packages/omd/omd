@@ -3543,6 +3543,7 @@ def backup_site_files_to_tarfile(tar, options):
 
     # exclude all temporary files that are created during cmk.store writes
     exclude.append("*.mk.new*")
+    exclude.append("var/log/.liveproxyd.state.new*")
 
     def filter_files(filename):
         for glob_pattern in exclude:

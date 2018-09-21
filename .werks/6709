@@ -1,0 +1,14 @@
+Title: Fixed possible information disclosure to apache log when editing users
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.4.0p37
+Date: 1537538044
+Class: security
+
+An administrator has the ability to create new users. The credentials of a
+newly created user were visible within the HTML of the resulting web page as
+GET parameter of various hyperlinks. If one of these links was clicked, the
+credentials were stored in the administrator’s browser history and in the access
+logs of the server.

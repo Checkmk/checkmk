@@ -527,19 +527,22 @@ def draw_dashboard(name):
     dashlet_javascripts(board)
     dashlet_styles(board)
 
-    # TODO: Cleanup these globals
-    global g_refresh_dashlets, g_on_resize
-    g_refresh_dashlets = [] # Dashlets with automatic refresh, for Javascript
-    dashlets_js        = []
-    g_on_resize        = [] # javascript function to execute after ressizing the dashlet
+    refresh_dashlets   = [] # Dashlets with automatic refresh, for Javascript
+    dashlet_coords     = [] # Dimensions and positions of dashlet
+    on_resize_dashlets = [] # javascript function to execute after ressizing the dashlet
     for nr, dashlet in enumerate(board["dashlets"]):
         dashlet_container_begin(nr, dashlet)
         dashlet_type = get_dashlet_type(dashlet)
         dashlet_instance = dashlet_type(name, board, nr, dashlet, wato_folder)
 
         try:
-            register_for_refresh(dashlet_instance)
-            register_for_on_resize(dashlet_instance)
+            refresh = get_dashlet_refresh(dashlet_instance)
+            if refresh:
+                refresh_dashlets.append(refresh)
+
+            on_resize = get_dashlet_on_resize(dashlet_instance)
+            if on_resize:
+                on_resize_dashlets.append(on_resize)
 
             draw_dashlet(dashlet_instance)
         except MKUserError, e:
@@ -552,7 +555,7 @@ def draw_dashboard(name):
             dashlet_error(nr, dashlet, detail)
 
         dashlet_container_end()
-        dashlets_js.append(get_dashlet_dimensions(dashlet_instance))
+        dashlet_coords.append(get_dashlet_dimensions(dashlet_instance))
 
     dashboard_edit_controls(name, board)
 
@@ -567,10 +570,10 @@ var GROW = %d;
 var grid_size = %d;
 var header_height = %d;
 var screen_margin = %d;
-var dashlet_padding = Array%s;
-var dashlet_min_size = Array%s;
+var dashlet_padding = %s;
+var dashlet_min_size = %s;
 var corner_overlap = %d;
-var refresh_dashlets = [%s];
+var refresh_dashlets = %s;
 var on_resize_dashlets = {%s};
 var dashboard_name = '%s';
 var dashboard_mtime = %d;
@@ -579,9 +582,9 @@ var dashlets = %s;
 calculate_dashboard();
 window.onresize = function () { calculate_dashboard(); }
 dashboard_scheduler(1);
-    """ % (MAX, GROW, raster, header_height, screen_margin, dashlet_padding, Dashlet.minimum_size,
-           corner_overlap, ','.join(g_refresh_dashlets), ','.join(g_on_resize),
-           name, board['mtime'], json.dumps(dashlets_js)))
+    """ % (MAX, GROW, raster, header_height, screen_margin, json.dumps(dashlet_padding), json.dumps(Dashlet.minimum_size),
+           corner_overlap, json.dumps(refresh_dashlets), ','.join(on_resize_dashlets),
+           name, board['mtime'], json.dumps(dashlet_coords)))
 
     if mode == 'edit':
         html.javascript('toggle_dashboard_edit(true)')
@@ -753,7 +756,8 @@ def used_dashlet_types(board):
 # dashlets using the 'url' method will be refreshed by us. Those
 # dashlets using static content (such as an iframe) will not be
 # refreshed by us but need to do that themselves.
-def register_for_refresh(dashlet_instance):
+# TODO: Refactor this to Dashlet or later Dashboard class
+def get_dashlet_refresh(dashlet_instance):
     if dashlet_instance.type_name() == "url" or (not dashlet_instance.is_iframe_dashlet() and dashlet_instance.refresh_interval()):
         refresh = dashlet_instance.refresh_interval()
         if not refresh:
@@ -761,16 +765,19 @@ def register_for_refresh(dashlet_instance):
 
         action = dashlet_instance.get_refresh_action()
         if action:
-            g_refresh_dashlets.append('[%d, %d, %s]' %
-                (dashlet_instance.dashlet_id, refresh, action))
+            return [ dashlet_instance.dashlet_id, refresh, action ]
+    return None
 
 
-def register_for_on_resize(dashlet_instance):
+# TODO: Refactor this to Dashlet or later Dashboard class
+def get_dashlet_on_resize(dashlet_instance):
     on_resize = dashlet_instance.on_resize()
     if on_resize:
-        g_on_resize.append('%d: function() {%s}' % (dashlet_instance.dashlet_id, on_resize))
+        return '%d: function() {%s}' % (dashlet_instance.dashlet_id, on_resize)
+    return None
 
 
+# TODO: Refactor this to Dashlet or later Dashboard class
 def get_dashlet_dimensions(dashlet_instance):
     dimensions = {}
     dimensions['x'], dimensions['y'] = dashlet_instance.position()

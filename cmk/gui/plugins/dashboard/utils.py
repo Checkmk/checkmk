@@ -253,7 +253,6 @@ class Dashlet(object):
             html.javascript('reload_on_resize["%d"] = "%s"' % (self._dashlet_id, iframe_url))
 
 
-    # TODO: Move this to Dashlet()
     def _get_iframe_url(self):
         if not self.is_iframe_dashlet():
             return

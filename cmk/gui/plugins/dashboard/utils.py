@@ -232,38 +232,6 @@ class Dashlet(object):
         raise NotImplementedError()
 
 
-    def _show_initial_iframe_container(self):
-        iframe_url = self._get_iframe_url()
-        if not iframe_url:
-            return
-
-        iframe_url = self._add_wato_folder_to_url(iframe_url)
-
-        # Fix of iPad >:-P
-        html.open_div(style="width: 100%; height: 100%; -webkit-overflow-scrolling:touch;")
-        html.iframe('', src="about:blank" if self._dashlet_spec.get("reload_on_resize") else iframe_url,
-                    id_="dashlet_iframe_%d" % self._dashlet_id,
-                    allowTransparency="true",
-                    frameborder="0",
-                    width="100%",
-                    height="100%")
-        html.close_div()
-
-        if self._dashlet_spec.get("reload_on_resize"):
-            html.javascript('reload_on_resize["%d"] = "%s"' % (self._dashlet_id, iframe_url))
-
-
-    def _get_iframe_url(self):
-        if not self.is_iframe_dashlet():
-            return
-
-        return html.makeuri_contextless([
-            ('name', self._dashboard_name),
-            ('id', self._dashlet_id),
-            ('mtime', self._dashboard['mtime'])] + self._get_global_context_url_vars(),
-            filename = "dashboard_dashlet.py")
-
-
     # Updates the current dashlet with the current context vars maybe loaded from
     # the dashboards global configuration or HTTP vars, but also returns a list
     # of all HTTP vars which have been used
@@ -385,6 +353,58 @@ class Dashlet(object):
 
         return globals()[urlfunc]()
 
+
+
+class IFrameDashlet(Dashlet):
+    """Base class for all dashlet using an iframe"""
+    __metaclass__ = abc.ABCMeta
+
+
+    @classmethod
+    def is_iframe_dashlet(cls):
+        """Whether or not the dashlet is rendered in an iframe"""
+        return True
+
+
+    def show(self):
+        self._show_initial_iframe_container()
+
+
+    def _show_initial_iframe_container(self):
+        iframe_url = self._get_iframe_url()
+        if not iframe_url:
+            return
+
+        iframe_url = self._add_wato_folder_to_url(iframe_url)
+
+        # Fix of iPad >:-P
+        html.open_div(style="width: 100%; height: 100%; -webkit-overflow-scrolling:touch;")
+        html.iframe('', src="about:blank" if self._dashlet_spec.get("reload_on_resize") else iframe_url,
+                    id_="dashlet_iframe_%d" % self._dashlet_id,
+                    allowTransparency="true",
+                    frameborder="0",
+                    width="100%",
+                    height="100%")
+        html.close_div()
+
+        if self._dashlet_spec.get("reload_on_resize"):
+            html.javascript('reload_on_resize["%d"] = "%s"' % (self._dashlet_id, iframe_url))
+
+
+    def _get_iframe_url(self):
+        if not self.is_iframe_dashlet():
+            return
+
+        return html.makeuri_contextless([
+            ('name', self._dashboard_name),
+            ('id', self._dashlet_id),
+            ('mtime', self._dashboard['mtime'])] + self._get_global_context_url_vars(),
+            filename = "dashboard_dashlet.py")
+
+
+    @abc.abstractmethod
+    def update(self):
+        raise NotImplementedError()
 
 
 

@@ -24,36 +24,70 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-from cmk.plugin_loader import load_plugins
+from cmk.gui.i18n import _
+from cmk.gui.globals import html
+from cmk.gui.valuespec import TextUnicode
 
-#.
-#   .--Plugin API----------------------------------------------------------.
-#   |           ____  _             _            _    ____ ___             |
-#   |          |  _ \| |_   _  __ _(_)_ __      / \  |  _ \_ _|            |
-#   |          | |_) | | | | |/ _` | | '_ \    / _ \ | |_) | |             |
-#   |          |  __/| | |_| | (_| | | | | |  / ___ \|  __/| |             |
-#   |          |_|   |_|\__,_|\__, |_|_| |_| /_/   \_\_|  |___|            |
-#   |                         |___/                                        |
-#   '----------------------------------------------------------------------'
-
-from cmk.gui.plugins.dashboard.utils import (
-    builtin_dashboards,
-    dashlet_types,
-    dashlet_registry,
-    IFrameDashlet,
+from cmk.gui.plugins.dashboard import (
     Dashlet,
-    GROW,
-    MAX,
+    dashlet_registry,
 )
 
-#.
-#   .--Plugins-------------------------------------------------------------.
-#   |                   ____  _             _                              |
-#   |                  |  _ \| |_   _  __ _(_)_ __  ___                    |
-#   |                  | |_) | | | | |/ _` | | '_ \/ __|                   |
-#   |                  |  __/| | |_| | (_| | | | | \__ \                   |
-#   |                  |_|   |_|\__,_|\__, |_|_| |_|___/                   |
-#   |                                 |___/                                |
-#   '----------------------------------------------------------------------'
+@dashlet_registry.register
+class StaticTextDashlet(Dashlet):
+    """Dashlet that displays a static text"""
+    @classmethod
+    def type_name(cls):
+        return "nodata"
 
-load_plugins(__file__, __package__)
+
+    @classmethod
+    def title(cls):
+        return _("Static text")
+
+
+    @classmethod
+    def description(cls):
+        return _("Displays a static text to the user.")
+
+
+    @classmethod
+    def sort_index(cls):
+        return 100
+
+
+    @classmethod
+    def vs_parameters(cls):
+        return [
+            ("text", TextUnicode(
+                title = _('Text'),
+                size = 50,
+            )),
+        ]
+
+
+    def show(self):
+        html.open_div(class_="nodata")
+        html.open_div(class_="msg")
+        html.write(self._dashlet_spec.get("text", ""))
+        html.close_div()
+        html.close_div()
+
+
+    @classmethod
+    def styles(cls):
+        return """
+div.dashlet_inner div.nodata {
+    width: 100%;
+    height: 100%;
+}
+
+div.dashlet_inner.background div.nodata div.msg {
+    color: #000;
+}
+
+div.dashlet_inner div.nodata div.msg {
+    padding: 10px;
+}
+
+}"""

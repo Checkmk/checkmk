@@ -24,36 +24,43 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-from cmk.plugin_loader import load_plugins
+from cmk.gui.i18n import _
+from cmk.gui.globals import html
 
-#.
-#   .--Plugin API----------------------------------------------------------.
-#   |           ____  _             _            _    ____ ___             |
-#   |          |  _ \| |_   _  __ _(_)_ __      / \  |  _ \_ _|            |
-#   |          | |_) | | | | |/ _` | | '_ \    / _ \ | |_) | |             |
-#   |          |  __/| | |_| | (_| | | | | |  / ___ \|  __/| |             |
-#   |          |_|   |_|\__,_|\__, |_|_| |_| /_/   \_\_|  |___|            |
-#   |                         |___/                                        |
-#   '----------------------------------------------------------------------'
-
-from cmk.gui.plugins.dashboard.utils import (
-    builtin_dashboards,
-    dashlet_types,
-    dashlet_registry,
-    IFrameDashlet,
+from cmk.gui.plugins.dashboard import (
     Dashlet,
-    GROW,
-    MAX,
+    dashlet_registry,
 )
 
-#.
-#   .--Plugins-------------------------------------------------------------.
-#   |                   ____  _             _                              |
-#   |                  |  _ \| |_   _  __ _(_)_ __  ___                    |
-#   |                  | |_) | | | | |/ _` | | '_ \/ __|                   |
-#   |                  |  __/| | |_| | (_| | | | | \__ \                   |
-#   |                  |_|   |_|\__,_|\__, |_|_| |_|___/                   |
-#   |                                 |___/                                |
-#   '----------------------------------------------------------------------'
+@dashlet_registry.register
+class MKLogoDashlet(Dashlet):
+    """Dashlet that displays the Check_MK logo"""
+    @classmethod
+    def type_name(cls):
+        return "mk_logo"
 
-load_plugins(__file__, __package__)
+
+    @classmethod
+    def title(cls):
+        return _("Check_MK Logo")
+
+
+    @classmethod
+    def description(cls):
+        return _("Shows the Check_MK logo.")
+
+
+    @classmethod
+    def sort_index(cls):
+        return 0
+
+
+    @classmethod
+    def is_selectable(cls):
+        return False # can not be selected using the dashboard editor
+
+
+    def show(self):
+        html.open_a(href="https://mathias-kettner.com/check_mk.html")
+        html.img("images/check_mk.trans.120.png", style="margin-right: 30px;")
+        html.close_a()

@@ -111,7 +111,7 @@ def load_plugins(force):
     config.declare_dynamic_permissions(lambda: visuals.declare_custom_permissions('dashboards'))
 
 
-class LegacyDashlet(cmk.gui.plugins.dashboard.Dashlet):
+class LegacyDashlet(cmk.gui.plugins.dashboard.IFrameDashlet):
     """Helper to be able to handle pre 1.6 dashlet_type declared dashlets"""
     _type_name = ""
     _spec = {}
@@ -282,7 +282,7 @@ def _transform_old_dict_based_dashlets():
             _type_name = dashlet_type_id
             _spec = dashlet_spec
 
-    _it_is_really_used = LegacyDashletType # help pylint
+        _it_is_really_used = LegacyDashletType # help pylint
 
 
 def load_dashboards(lock=False):

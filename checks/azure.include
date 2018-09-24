@@ -36,13 +36,14 @@ def get_resource(check_function):
 
 
 def azure_iter_informative_attrs(resource):
-    loc = resource.get('location', None)
-    if loc:
+
+    loc = resource.get('location')
+    if loc is not None:
         yield 'Location', loc
-    tags = resource.get('tags', {})
-    for k, v in tags.iteritems():
+
+    for k, v in resource.get('tags', {}).iteritems():
         if not k.startswith("hidden-"):
-            yield k, v
+            yield k[0].upper() + k[1:], v
 
 
 def check_azure_metric(resource, metric_key, cmk_key, display_name, levels=None,

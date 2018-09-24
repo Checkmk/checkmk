@@ -336,11 +336,14 @@ class AzureClient(object):
         self._resource_client = ResourceManagementClient(self._creds, args.subscription_id)
 
         # compute timespan once, and keep it fixed
-        time_end = datetime.datetime.utcnow()
-        time_min = datetime.timedelta(minutes=5)
-        time_hrs = datetime.timedelta(hours=2)
-        self.timespan_min = "%s/%s" % (time_end - time_min, time_end)
-        self.timespan_hrs = "%s/%s" % (time_end - time_hrs, time_end)
+        t_end = datetime.datetime.utcnow()
+        t_min = t_end - datetime.timedelta(minutes=5)
+        t_hrs = t_end - datetime.timedelta(hours=2)
+        self.timespan_min = "/".join((t_min.strftime("%Y-%m-%dT%H:%M:%SZ"),
+                                      t_end.strftime("%Y-%m-%dT%H:%M:%SZ")))
+        self.timespan_hrs = "/".join((t_hrs.strftime("%Y-%m-%dT%H:%M:%SZ"),
+                                      t_end.strftime("%Y-%m-%dT%H:%M:%SZ")))
+
         self.resources_cache = None
         self.metrics_cache = {}
 
@@ -353,8 +356,14 @@ class AzureClient(object):
 
     def discover_metrics(self, rid):
         if rid not in self.metrics_cache:
-            # azure-api-call
-            md_list = list(self._monitor_client.metric_definitions.list(rid))
+            try:
+                # azure-api-call
+                md_list = list(self._monitor_client.metric_definitions.list(rid))
+            except ErrorResponseException, exc:
+                if "is not a supported platform metric namespace" in exc.message:
+                    md_list = []
+                else:
+                    raise exc
             self.metrics_cache[rid] = md_list
             log.debug("%d discovered metrics: %r", len(md_list), [md.name.value for md in md_list])
         return self.metrics_cache[rid]
@@ -382,6 +391,7 @@ class AzureClient(object):
         for m_def in self.discover_metrics(rid):  # sort into categories
             cat = self._categorize_metric(m_def)
             categorized_metrics.setdefault(cat, []).append(m_def)
+        log.debug("categorized_metrics = %r", categorized_metrics)
 
         for time_grain in ('PT1M', 'PT1H'):
             metrics_no_dim = categorized_metrics.get('%s_no_dim' % time_grain)
@@ -427,7 +437,7 @@ class AzureClient(object):
                 rid,
                 timespan=timespan,
                 interval=time_grain,
-                metric=metricnames,
+                metricnames=metricnames,
                 aggregation=aggregations,
                 filter=filters,
                 raw=True,

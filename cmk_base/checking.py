@@ -47,7 +47,6 @@ import cmk_base.snmp as snmp
 import cmk_base.ip_lookup as ip_lookup
 import cmk_base.data_sources as data_sources
 import cmk_base.item_state as item_state
-import cmk_base.core
 import cmk_base.check_table as check_table
 from cmk_base.exceptions import MKTimeout, MKParseFunctionError
 import cmk_base.check_utils

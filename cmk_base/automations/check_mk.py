@@ -518,8 +518,8 @@ s/(HOST|SERVICE) NOTIFICATION: ([^;]+);%(old)s;/\1 NOTIFICATION: \2;%(new)s;/
             subprocess.call(["sed", "-i"] + extended + ["s@%s@%s@" % (old, new)] + paths,
                             stderr=open(os.devnull, "w"))
             return True
-        else:
-            return False
+
+        return False
 
 
     def _escape_name_for_regex_matching(self, name):
@@ -747,8 +747,7 @@ class AutomationRestart(Automation):
     def _mode(self):
         if config.monitoring_core == "cmc" and not self._check_plugins_have_changed():
             return "reload" # force reload for cmc
-        else:
-            return "restart"
+        return "restart"
 
     # TODO: Cleanup duplicate code with cmk_base.core.do_restart()
     def execute(self, args):
@@ -860,8 +859,8 @@ class AutomationRestart(Automation):
 
         if os.path.exists(pidfile_path):
             return os.stat(pidfile_path).st_mtime
-        else:
-            return 0
+
+        return 0
 
 
 automations.register(AutomationRestart())
@@ -873,8 +872,7 @@ class AutomationReload(AutomationRestart):
     def _mode(self):
         if self._check_plugins_have_changed():
             return "restart"
-        else:
-            return "reload"
+        return "reload"
 
 
 automations.register(AutomationReload())
@@ -1201,8 +1199,8 @@ class AutomationDiagHost(Automation):
 
                 if data:
                     return 0, 'sysDescr:\t%s\nsysContact:\t%s\nsysName:\t%s\nsysLocation:\t%s\n' % tuple(data[0])
-                else:
-                    return 1, 'Got empty SNMP response'
+
+                return 1, 'Got empty SNMP response'
 
             else:
                 return 1, "Command not implemented"
@@ -1233,8 +1231,8 @@ class AutomationActiveCheck(Automation):
                     if command_line:
                         command_line = core_config.autodetect_plugin(command_line)
                         return self._execute_check_plugin(command_line)
-                    else:
-                        return -1, "Passive check - cannot be executed"
+
+                    return -1, "Passive check - cannot be executed"
         else:
             rules = config.active_checks.get(plugin)
             if rules:

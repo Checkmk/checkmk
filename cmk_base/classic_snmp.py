@@ -182,15 +182,15 @@ def _snmp_port_spec(hostname):
     port = config.snmp_port_of(hostname)
     if port == None:
         return ""
-    else:
-        return ":%d" % port
+
+    return ":%d" % port
 
 
 def _snmp_proto_spec(hostname):
     if config.is_ipv6_primary(hostname):
         return "udp6:"
-    else:
-        return ""
+
+    return ""
 
 
 # Returns command lines for snmpwalk and snmpget including
@@ -293,14 +293,12 @@ def strip_snmp_value(value, hex_plain = False):
         v = v[1:-1]
         if len(v) > 2 and _is_hex_string(v):
             return value if hex_plain else _convert_from_hex(v)
-        else:
-            # Fix for non hex encoded string which have been somehow encoded by the
-            # netsnmp command line tools. An example:
-            # Checking windows systems via SNMP with hr_fs: disk names like c:\
-            # are reported as c:\\, fix this to single \
-            return v.strip().replace('\\\\', '\\')
-    else:
-        return v
+        # Fix for non hex encoded string which have been somehow encoded by the
+        # netsnmp command line tools. An example:
+        # Checking windows systems via SNMP with hr_fs: disk names like c:\
+        # are reported as c:\\, fix this to single \
+        return v.strip().replace('\\\\', '\\')
+    return v
 
 def _is_hex_string(value):
     # as far as I remember, snmpwalk puts a trailing space within

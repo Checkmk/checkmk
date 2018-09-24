@@ -79,8 +79,7 @@ def is_dst(timestamp):
 def timezone_at(timestamp):
     if is_dst(timestamp):
         return time.altzone
-    else:
-        return time.timezone
+    return time.timezone
 
 def group_by_wday(t):
     wday = time.localtime(t).tm_wday

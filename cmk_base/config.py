@@ -738,8 +738,8 @@ def filter_active_hosts(hostlist, keep_offline_hosts=False, keep_duplicates=Fals
 
     if keep_duplicates:
         return active_hosts
-    else:
-        return set(active_hosts)
+
+    return set(active_hosts)
 
 
 def duplicate_hosts():
@@ -802,10 +802,10 @@ def alias_of(hostname, fallback):
     if len(aliases) == 0:
         if fallback:
             return fallback
-        else:
-            return hostname
-    else:
-        return aliases[0]
+
+        return hostname
+
+    return aliases[0]
 
 
 def get_additional_ipaddresses_of(hostname):
@@ -932,8 +932,8 @@ def management_address_of(hostname):
     attributes_of_host = host_attributes.get(hostname, {})
     if attributes_of_host.get("management_address"):
         return attributes_of_host["management_address"]
-    else:
-        return ipaddresses.get(hostname)
+
+    return ipaddresses.get(hostname)
 
 
 def management_protocol_of(hostname):
@@ -975,25 +975,25 @@ def agent_port_of(hostname):
     ports = host_extra_conf(hostname, agent_ports)
     if len(ports) == 0:
         return agent_port
-    else:
-        return ports[0]
+
+    return ports[0]
 
 
 def tcp_connect_timeout_of(hostname):
     timeouts = host_extra_conf(hostname, tcp_connect_timeouts)
     if len(timeouts) == 0:
         return tcp_connect_timeout
-    else:
-        return timeouts[0]
+
+    return timeouts[0]
 
 
 def agent_encryption_of(hostname):
     settings = host_extra_conf(hostname, agent_encryption)
     if settings:
         return settings[0]
-    else:
-        return {'use_regular': 'disable',
-                'use_realtime': 'enforce'}
+
+    return {'use_regular': 'disable',
+            'use_realtime': 'enforce'}
 
 
 def agent_target_version(hostname):
@@ -1009,8 +1009,8 @@ def agent_target_version(hostname):
             return spec
         elif spec[0] == 'specific':
             return spec[1]
-        else:
-            return spec # return the whole spec in case of an "at least version" config
+
+        return spec # return the whole spec in case of an "at least version" config
 
 
 #
@@ -1054,8 +1054,7 @@ def snmp_timing_of(hostname):
     timing = host_extra_conf(hostname, snmp_timing)
     if len(timing) > 0:
         return timing[0]
-    else:
-        return {}
+    return {}
 
 
 def snmpv3_contexts_of(hostname):
@@ -1070,8 +1069,7 @@ def snmp_port_of(hostname):
     ports = host_extra_conf(hostname, snmp_ports)
     if len(ports) == 0:
         return None # do not specify a port, use default
-    else:
-        return ports[0]
+    return ports[0]
 
 
 def is_snmpv3_host(hostname):
@@ -1081,16 +1079,16 @@ def is_snmpv3_host(hostname):
 def is_bulkwalk_host(hostname):
     if bulkwalk_hosts:
         return in_binary_hostlist(hostname, bulkwalk_hosts)
-    else:
-        return False
+
+    return False
 
 
 def bulk_walk_size_of(hostname):
     bulk_sizes = host_extra_conf(hostname, snmp_bulk_size)
     if not bulk_sizes:
         return 10
-    else:
-        return bulk_sizes[0]
+
+    return bulk_sizes[0]
 
 
 def is_snmpv2c_host(hostname):
@@ -1175,10 +1173,10 @@ def check_period_of(hostname, service):
         period = periods[0]
         if period == "24X7":
             return None
-        else:
-            return period
-    else:
-        return None
+
+        return period
+
+    return None
 
 
 def check_interval_of(hostname, section_name):
@@ -1359,8 +1357,7 @@ def service_description(hostname, check_plugin_name, item):
     if check_plugin_name not in check_info:
         if item:
             return "Unimplemented check %s / %s" % (check_plugin_name, item)
-        else:
-            return "Unimplemented check %s" % check_plugin_name
+        return "Unimplemented check %s" % check_plugin_name
 
     # use user-supplied service description, if available
     add_item = True
@@ -1923,8 +1920,8 @@ def get_rule_options(entry):
     and "comments" are being honored."""
     if type(entry[-1]) == dict:
         return entry[:-1], entry[-1]
-    else:
-        return entry, {}
+
+    return entry, {}
 
 
 def hosttags_match_taglist(hosttags, required_tags):
@@ -2004,9 +2001,8 @@ def _convert_pattern(pattern):
         # Non specific regex. Use real prefix regex matching
         return negate, lambda txt: regex(pattern).match(txt) != None
 
-    else:
-        # prefix match without any regex chars
-        return negate, lambda txt: txt[:len(pattern)] == pattern
+    # prefix match without any regex chars
+    return negate, lambda txt: txt[:len(pattern)] == pattern
 
 
 def _convert_pattern_list(patterns):
@@ -2390,8 +2386,7 @@ def _plugin_pathnames_in_directory(path):
             for f in os.listdir(path)
             if not f.startswith(".") and not f.endswith(".include")
         ])
-    else:
-        return []
+    return []
 
 
 def load_precompiled_plugin(path, check_context):
@@ -2748,8 +2743,9 @@ def _get_checkgroup_parameters(host, checktype, item):
         # checks without an item
         if item == None and checkgroup not in service_rule_groups:
             return host_extra_conf(host, rules)
-        else: # checks with an item need service-specific rules
-            return service_extra_conf(host, item, rules)
+
+        # checks with an item need service-specific rules
+        return service_extra_conf(host, item, rules)
     except MKGeneralException, e:
         raise MKGeneralException(str(e) + " (on host %s, checktype %s)" % (host, checktype))
 
@@ -2758,8 +2754,8 @@ def get_management_board_precedence(check_plugin_name):
     mgmt_board = check_info[check_plugin_name]["management_board"]
     if mgmt_board is None:
         return check_api_utils.HOST_PRECEDENCE
-    else:
-        return mgmt_board
+
+    return mgmt_board
 
 
 # TODO: Better move this function to py

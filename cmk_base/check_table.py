@@ -60,8 +60,7 @@ def get_check_table(hostname, remove_duplicates=False, use_cache=True,
         #       sources.
         if remove_duplicates and config.is_dual_host(hostname):
             return _remove_duplicate_checks(check_table_cache[table_cache_id])
-        else:
-            return check_table_cache[table_cache_id]
+        return check_table_cache[table_cache_id]
 
     check_table = {}
 
@@ -192,8 +191,7 @@ def get_check_table(hostname, remove_duplicates=False, use_cache=True,
 
     if remove_duplicates:
         return _remove_duplicate_checks(check_table)
-    else:
-        return check_table
+    return check_table
 
 
 def get_precompiled_check_table(hostname, remove_duplicates=True, world="config", filter_mode=None, skip_ignored=True):
@@ -213,8 +211,7 @@ def get_precompiled_check_parameters(hostname, item, params, check_plugin_name):
     precomp_func = config.precompile_params.get(check_plugin_name)
     if precomp_func:
         return precomp_func(hostname, item, params)
-    else:
-        return params
+    return params
 
 
 # Return a list of services this services depends upon

@@ -54,10 +54,10 @@ def process(output):
 def agentsim_uptime(rate = 1.0, period = None): # period = sinus wave
     if period == None:
         return int(our_uptime() * rate)
-    else:
-        a = (rate * period) / (2.0 * math.pi)
-        u = our_uptime()
-        return int(u * rate + int(a * math.sin(u * 2.0 * math.pi / period)))
+
+    a = (rate * period) / (2.0 * math.pi)
+    u = our_uptime()
+    return int(u * rate + int(a * math.sin(u * 2.0 * math.pi / period)))
 
 
 def agentsim_enum(values, period = 1): # period is in seconds

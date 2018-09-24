@@ -141,13 +141,13 @@ def load_data_from_file(path, default=None, lock=False):
             if not content:
                 # May be created empty during locking
                 return default
-            else:
-                return ast.literal_eval(content)
+
+            return ast.literal_eval(content)
         except IOError, e:
             if e.errno == 2: # IOError: [Errno 2] No such file or directory
                 return default
-            else:
-                raise
+
+            raise
 
     except Exception, e:
         if lock:

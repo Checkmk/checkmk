@@ -44,7 +44,7 @@ def do_check_nagiosconfig():
     if not exit_status:
         cmk_base.console.output(cmk.tty.ok + "\n")
         return True
-    else:
-        cmk_base.console.output("ERROR:\n")
-        cmk_base.console.output(p.stdout.read(), stream=sys.stderr)
-        return False
+
+    cmk_base.console.output("ERROR:\n")
+    cmk_base.console.output(p.stdout.read(), stream=sys.stderr)
+    return False

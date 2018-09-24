@@ -48,8 +48,7 @@ import itertools
 def worst_service_state(*states):
     if 2 in states:
         return 2
-    else:
-        return max(states)
+    return max(states)
 
 
 # Works with Check_MK version (without tailing .cee and/or .demo)
@@ -61,8 +60,7 @@ def is_daily_build_version(v):
 def branch_of_daily_build(v):
     if len(v) == 10:
         return "master"
-    else:
-        return v.split('-')[0]
+    return v.split('-')[0]
 
 
 # Parses versions of Check_MK and converts them into comparable integers.

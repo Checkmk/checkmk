@@ -410,8 +410,7 @@ def sanitize_check_result(result, is_snmp):
     elif result == None:
         return _item_not_found(is_snmp)
 
-    else:
-        return _sanitize_yield_check_result(result, is_snmp)
+    return _sanitize_yield_check_result(result, is_snmp)
 
 
 # The check function may return an iterator (using yield) since 1.2.5i5.
@@ -429,8 +428,8 @@ def _sanitize_yield_check_result(result, is_snmp):
         # just to be safe - infotext should allways be a string
         if infotext == None:
             return state, u"", perfdata
-        else:
-            return state, infotext, perfdata
+
+        return state, infotext, perfdata
 
     # Several sub results issued with multiple yields. Make that worst sub check
     # decide the total state, join the texts and performance data. Subresults with
@@ -455,8 +454,8 @@ def _sanitize_yield_check_result(result, is_snmp):
 def _item_not_found(is_snmp):
     if is_snmp:
         return 3, "Item not found in SNMP data", []
-    else:
-        return 3, "Item not found in agent output", []
+
+    return 3, "Item not found in agent output", []
 
 
 def _sanitize_tuple_check_result(result, allow_missing_infotext=False):
@@ -487,8 +486,8 @@ def _sanitize_check_result_infotext(infotext, allow_missing_infotext):
 
     if type(infotext) == str:
         return infotext.decode('utf-8')
-    else:
-        return infotext
+
+    return infotext
 
 
 def _convert_perf_data(p):
@@ -504,8 +503,8 @@ def _convert_perf_value(x):
         return x
     elif type(x) == float:
         return ("%.6f" % x).rstrip("0").rstrip(".")
-    else:
-        return str(x)
+
+    return str(x)
 
 
 #.
@@ -707,5 +706,4 @@ def disable_submit():
 def _in_keepalive_mode():
     if keepalive:
         return keepalive.enabled()
-    else:
-        return False
+    return False

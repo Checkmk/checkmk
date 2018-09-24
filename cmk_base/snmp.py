@@ -310,8 +310,8 @@ def walk_for_export(access_data, oid):
         rows = inline_snmp.walk(hostname, None, oid, ipaddress=access_data["ipaddress"],
                                 credentials=access_data["credentials"])
         return inline_snmp.convert_rows_for_stored_walk(rows)
-    else:
-        return classic_snmp.walk(access_data, oid, hex_plain=True)
+
+    return classic_snmp.walk(access_data, oid, hex_plain=True)
 
 
 def enforce_use_stored_walks():
@@ -342,8 +342,8 @@ def _extract_end_oid(prefix, complete):
 def _oid_to_intlist(oid):
     if oid:
         return map(int, oid.split('.'))
-    else:
-        return []
+
+    return []
 
 def _cmp_oids(o1, o2):
     return cmp(_oid_to_intlist(o1), _oid_to_intlist(o2))
@@ -656,8 +656,8 @@ def _get_stored_snmpwalk(hostname, oid):
 
     if dot_star:
         return [ rowinfo[0] ]
-    else:
-        return rowinfo
+
+    return rowinfo
 
 #.
 #   .--Main modes----------------------------------------------------------.

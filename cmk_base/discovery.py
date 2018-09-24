@@ -400,11 +400,12 @@ def discovery_check_parameters(hostname):
     entries = config.host_extra_conf(hostname, config.periodic_discovery)
     if entries:
         return entries[0]
-    # Support legacy global configurations
+
     elif config.inventory_check_interval:
+        # Support legacy global configurations
         return default_discovery_check_parameters()
-    else:
-        return None
+
+    return None
 
 
 def default_discovery_check_parameters():
@@ -841,8 +842,8 @@ def _execute_discovery(multi_host_sections, hostname, ipaddress, check_plugin_na
 def _get_host_services(hostname, ipaddress, sources, multi_host_sections, on_error):
     if config.is_cluster(hostname):
         return _get_cluster_services(hostname, ipaddress, sources, multi_host_sections, on_error)
-    else:
-        return _get_node_services(hostname, ipaddress, sources, multi_host_sections, on_error)
+
+    return _get_node_services(hostname, ipaddress, sources, multi_host_sections, on_error)
 
 
 # Do the actual work for a non-cluster host or node

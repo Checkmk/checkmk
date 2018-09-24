@@ -112,8 +112,8 @@ class Age(object):
             years = days / 365
             if years < 10:
                 return "%.1f %s" % (years, _("y"))
-            else:
-                return "%.0f %s" % (years, _("y"))
+
+            return "%.0f %s" % (years, _("y"))
 
     # OLD LOGIC:
     #
@@ -175,8 +175,9 @@ def bytes(b, base=1024.0, bytefrac=True, unit="B"):
         return '%s%.2f k%s' % (prefix, b / base, unit)
     elif bytefrac:
         return '%s%.2f %s' % (prefix, b, unit)
-    else: # Omit byte fractions
-        return '%s%.0f %s' % (prefix, b, unit)
+
+    # Omit byte fractions
+    return '%s%.0f %s' % (prefix, b, unit)
 
 
 # Precise size of a file - separated decimal separator
@@ -190,8 +191,8 @@ def filesize(size):
         return str(size)[:-3] + dec_sep + str(size)[-3:]
     elif size < 1000000000:
         return str(size)[:-6] + dec_sep + str(size)[-6:-3] + dec_sep + str(size)[-3:]
-    else:
-        return str(size)[:-9] + dec_sep + str(size)[-9:-6] + dec_sep + str(size)[-6:-3] + dec_sep + str(size)[-3:]
+
+    return str(size)[:-9] + dec_sep + str(size)[-9:-6] + dec_sep + str(size)[-6:-3] + dec_sep + str(size)[-3:]
 
 
 #.

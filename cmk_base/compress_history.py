@@ -127,23 +127,20 @@ def parse_history_line(line):
     elif "LOG ROTATION" in command \
         or "LOG VERSION" in command:
         return "RESTART", None, None
-    else:
-        return "OPERATION", None, None
+    return "OPERATION", None, None
 
 
 def get_host_service_from_history_line(command, line):
     arguments = line.split(":")[1].strip().split(";")
     if "HOST" in command:
         return arguments[0], None
-    else:
-        return arguments[0], arguments[1]
+    return arguments[0], arguments[1]
 
 
 def get_line_command(line):
     if ":" in line:
         return line.split(":")[0].split("]")[1].strip()
-    else:
-        return line.split("]")[1].strip()
+    return line.split("]")[1].strip()
 
 
 def log_vanished_object(output, timestamp, host, service):

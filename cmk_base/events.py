@@ -207,8 +207,7 @@ def find_host_service_in_context(context):
     service = context.get("SERVICEDESC")
     if service:
         return host + ";" + service
-    else:
-        return host
+    return host
 
 
 
@@ -231,9 +230,9 @@ def livestatus_fetch_contacts(host, service):
     except livestatus.MKLivestatusNotFoundError:
         if not service:
             return None
-        else:
-            # Service not found: try again with contacts of host!
-            return livestatus_fetch_contacts(host, None)
+
+        # Service not found: try again with contacts of host!
+        return livestatus_fetch_contacts(host, None)
 
     except Exception:
         if cmk.debug.enabled():
@@ -491,8 +490,7 @@ def event_match_servicegroups(rule, context, is_regex = False):
     if context["WHAT"] != "SERVICE":
         if required_groups:
             return "This rule requires membership in a service group, but this is a host notification"
-        else:
-            return
+        return
 
     if required_groups != None:
         sgn = context.get("SERVICEGROUPNAMES")
@@ -520,11 +518,11 @@ def event_match_servicegroups(rule, context, is_regex = False):
                 return "The service is only in the groups %s. None of these patterns match: %s" % (
                       '"' + '", "'.join(config.define_servicegroups[x] for x in servicegroups) + '"',
                       '"' + '" or "'.join(required_groups)) + '"'
-            else:
-                return "The service is only in the groups %s. None of these patterns match: %s" % (
+
+            return "The service is only in the groups %s. None of these patterns match: %s" % (
                       '"' + '", "'.join(servicegroups) + '"', '"' + '" or "'.join(required_groups)) + '"'
-        else:
-            return "The service is only in the groups %s, but %s is required" % (
+
+        return "The service is only in the groups %s, but %s is required" % (
                   sgn, " or ".join(required_groups))
 
 def event_match_exclude_servicegroups(rule, context, is_regex = False):
@@ -743,8 +741,8 @@ def plugin_param_to_string(value):
         return ""
     elif type(value) in ( tuple, list ):
         return "\t".join(value)
-    else:
-        return repr(value) # Should never happen
+
+    return repr(value) # Should never happen
 
 
 # int() function that return 0 for strings the

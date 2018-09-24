@@ -105,22 +105,22 @@ def get_os_info():
         return file("/etc/redhat-release").readline().strip()
     elif os.path.exists("/etc/SuSE-release"):
         return file("/etc/SuSE-release").readline().strip()
-    else:
-        info = {}
-        for f in [ "/etc/os-release", "/etc/lsb-release" ]:
-            if os.path.exists(f):
-                for line in file(f).readlines():
-                    if "=" in line:
-                        k, v = line.split("=", 1)
-                        info[k.strip()] = v.strip().strip("\"")
-                break
 
-        if "PRETTY_NAME" in info:
-            return info["PRETTY_NAME"]
-        elif info:
-            return info
-        else:
-            return "UNKNOWN"
+    info = {}
+    for f in [ "/etc/os-release", "/etc/lsb-release" ]:
+        if os.path.exists(f):
+            for line in file(f).readlines():
+                if "=" in line:
+                    k, v = line.split("=", 1)
+                    info[k.strip()] = v.strip().strip("\"")
+            break
+
+    if "PRETTY_NAME" in info:
+        return info["PRETTY_NAME"]
+    elif info:
+        return info
+
+    return "UNKNOWN"
 
 
 def _current_monitoring_core():

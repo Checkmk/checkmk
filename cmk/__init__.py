@@ -61,8 +61,8 @@ def edition_short():
     parts = omd_version().split(".")
     if parts[-1] == "demo":
         return parts[-2]
-    else:
-        return parts[-1]
+
+    return parts[-1]
 
 
 def is_enterprise_edition():

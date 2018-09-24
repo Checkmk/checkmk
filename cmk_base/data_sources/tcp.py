@@ -72,8 +72,8 @@ class TCPDataSource(CheckMKAgentDataSource):
     def _get_port(self):
         if self._port is not None:
             return self._port
-        else:
-            return config.agent_port_of(self._hostname)
+
+        return config.agent_port_of(self._hostname)
 
 
     def set_timeout(self, timeout):
@@ -83,8 +83,9 @@ class TCPDataSource(CheckMKAgentDataSource):
     def _get_timeout(self):
         if self._timeout:
             return self._timeout
-        else:
-            return config.tcp_connect_timeout_of(self._hostname)
+
+        return config.tcp_connect_timeout_of(self._hostname)
+
 
     def _execute(self):
         if self._use_only_cache:

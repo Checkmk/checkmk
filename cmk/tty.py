@@ -80,8 +80,8 @@ def colorset(fg=-1, bg=-1, attr=-1):
         return "\033[3%d;4%dm" % (fg, bg)
     elif fg >= 0:
         return "\033[3%dm" % fg
-    else:
-        return normal
+
+    return normal
 
 
 def get_size():

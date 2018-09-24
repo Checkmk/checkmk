@@ -127,7 +127,7 @@ def send_push_notification(api_key, recipient_key, subject, text, context):
     r_status = r.status_code
     if r_status == '200':
         return True
-    else:
-        sys.stdout.write(
-            "Failed to send notification. Status: %s, Response: %s\n" % (r_status, r.text))
-        return False
+
+    sys.stdout.write(
+        "Failed to send notification. Status: %s, Response: %s\n" % (r_status, r.text))
+    return False

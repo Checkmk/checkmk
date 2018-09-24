@@ -611,8 +611,7 @@ def _simulate_command(command):
     if config.simulation_mode:
         custom_commands_to_define.add("check-mk-simulation")
         return "check-mk-simulation!echo 'Simulation mode - cannot execute real check'"
-    else:
-        return command
+    return command
 
 
 def _create_nagios_config_hostgroups(outfile):

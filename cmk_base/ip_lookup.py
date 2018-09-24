@@ -77,8 +77,8 @@ def lookup_ip_address(hostname, family=None):
          (config.is_usewalk_host(hostname) and config.is_snmp_host(hostname)):
         if family == 4:
             return "127.0.0.1"
-        else:
-            return "::1"
+
+        return "::1"
 
     # Now check, if IP address is hard coded by the user
     if family == 4:

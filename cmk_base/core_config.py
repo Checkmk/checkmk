@@ -121,8 +121,8 @@ def host_check_command(hostname, ip, is_clust, hostcheck_commands_to_define=None
             return "check-mk-host-ping-cluster!%s" % ping_args
         elif ping_args: # use special arguments
             return "check-mk-host-ping!%s" % ping_args
-        else:
-            return None
+
+        return None
 
     elif value == "ok":
         return "check-mk-host-ok"
@@ -132,13 +132,13 @@ def host_check_command(hostname, ip, is_clust, hostcheck_commands_to_define=None
 
         if config.monitoring_core == "cmc":
             return "check-mk-host-service!" + service
-        else:
-            command = "check-mk-host-custom-%d" % (len(hostcheck_commands_to_define) + 1)
-            hostcheck_commands_to_define.append((command,
-               'echo "$SERVICEOUTPUT:%s:%s$" && exit $SERVICESTATEID:%s:%s$' %
-                    (hostname, service.replace('$HOSTNAME$', hostname),
-                     hostname, service.replace('$HOSTNAME$', hostname))))
-            return command
+
+        command = "check-mk-host-custom-%d" % (len(hostcheck_commands_to_define) + 1)
+        hostcheck_commands_to_define.append((command,
+           'echo "$SERVICEOUTPUT:%s:%s$" && exit $SERVICESTATEID:%s:%s$' %
+                (hostname, service.replace('$HOSTNAME$', hostname),
+                 hostname, service.replace('$HOSTNAME$', hostname))))
+        return command
 
     elif value[0] == "tcp":
         return "check-mk-host-tcp!" + str(value[1])
@@ -529,8 +529,8 @@ def fallback_ip_for(hostname, family=None):
 
     if family == 4:
         return "0.0.0.0"
-    else:
-        return "::"
+
+    return "::"
 
 
 def get_host_macros_from_attributes(hostname, attrs):

@@ -71,8 +71,7 @@ except Exception:
 def _in_keepalive_mode():
     if keepalive:
         return keepalive.enabled()
-    else:
-        return False
+    return False
 
 # TODO: Cluster with different data sources, eg. TCP node and SNMP node:
 # - Discovery works.
@@ -172,8 +171,7 @@ class DataSources(object):
         elif config.is_tcp_host(self._hostname):
             return "Contact either Check_MK Agent or use a single special agent"
 
-        else:
-            return "No agent"
+        return "No agent"
 
 
     def _get_agent_data_source(self, ignore_special_agents=False):

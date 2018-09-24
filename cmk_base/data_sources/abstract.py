@@ -150,8 +150,7 @@ class DataSource(object):
 
         if get_raw_data:
             return ""
-        else:
-            return HostSections()
+        return HostSections()
 
 
     def _get_raw_data(self):
@@ -569,16 +568,16 @@ class CheckMKAgentDataSource(DataSource):
         # The main agent has another cache directory to be compatible with older Check_MK
         if self._is_main_agent_data_source:
             return cmk.paths.tcp_cache_dir
-        else:
-            return super(CheckMKAgentDataSource, self)._cache_dir()
+
+        return super(CheckMKAgentDataSource, self)._cache_dir()
 
 
     def _persisted_sections_dir(self):
         # The main agent has another cache directory to be compatible with older Check_MK
         if self._is_main_agent_data_source:
             return os.path.join(cmk.paths.var_dir, "persisted")
-        else:
-            return super(CheckMKAgentDataSource, self)._persisted_sections_dir()
+
+        return super(CheckMKAgentDataSource, self)._persisted_sections_dir()
 
 
     def _convert_to_sections(self, raw_data):

@@ -124,8 +124,8 @@ $LONGSERVICEOUTPUT$
 def _transform_user_disable_notifications_opts(contact):
     if "disable_notifications" in contact and type(contact["disable_notifications"]) == bool:
         return {"disable": contact["disable_notifications"]}
-    else:
-        return contact.get("disable_notifications", {})
+
+    return contact.get("disable_notifications", {})
 
 
 #.
@@ -580,8 +580,8 @@ def rbn_finalize_plugin_parameters(hostname, plugin, rule_parameters):
         parameters = config.host_extra_conf_merged(hostname, config.notification_parameters.get(plugin, []))
         parameters.update(rule_parameters)
         return parameters
-    else:
-        return rule_parameters
+
+    return rule_parameters
 
 
 # Create a table of all user specific notification rules. Important:
@@ -687,6 +687,7 @@ def rbn_get_bulk_params(rule):
 
     if method == "always":
         return params
+
     elif method == "timeperiod":
         try:
             active = cmk_base.core.timeperiod_active(params["timeperiod"])
@@ -701,11 +702,10 @@ def rbn_get_bulk_params(rule):
 
         if active:
             return params
-        else:
-            return params.get("bulk_outside")
-    else:
-        notify_log("   - Unknown bulking method: assuming bulking is disabled")
-        return None
+        return params.get("bulk_outside")
+
+    notify_log("   - Unknown bulking method: assuming bulking is disabled")
+    return None
 
 
 def rbn_match_rule(rule, context):
@@ -757,8 +757,7 @@ def rbn_match_host_event(rule, context):
         if context["WHAT"] != "HOST":
             if "match_service_event" not in rule:
                 return "This is a service notification, but the rule just matches host events"
-            else:
-                return  # Let this be handled by match_service_event
+            return  # Let this be handled by match_service_event
 
         allowed_events = rule["match_host_event"]
         state = context["HOSTSTATE"]
@@ -772,8 +771,8 @@ def rbn_match_service_event(rule, context):
         if context["WHAT"] != "SERVICE":
             if "match_host_event" not in rule:
                 return "This is a host notification, but the rule just matches service events"
-            else:
-                return  # Let this be handled by match_host_event
+            return  # Let this be handled by match_host_event
+
         allowed_events = rule["match_service_event"]
         state = context["SERVICESTATE"]
         last_state = context["PREVIOUSSERVICEHARDSTATE"]
@@ -951,20 +950,20 @@ def rbn_object_contact_names(context):
         return [contact["name"] for contact in rbn_fallback_contacts()]
     elif commasepped:
         return commasepped.split(",")
-    else:
-        return []
+
+    return []
 
 
 def rbn_all_contacts(with_email=None):
     if not with_email:
         return config.contacts.keys()  # We have that via our main.mk contact definitions!
-    else:
-        return [
-            contact_id
-            for (contact_id, contact)
-            in config.contacts.items()
-            if contact.get("email")
-        ]
+
+    return [
+        contact_id
+        for (contact_id, contact)
+        in config.contacts.items()
+        if contact.get("email")
+    ]
 
 
 def rbn_groups_contacts(groups):
@@ -1290,8 +1289,7 @@ def path_to_notification_script(plugin):
         notify_log("  and not in %s" % cmk.paths.local_notifications_dir)
         return None
 
-    else:
-        return path
+    return path
 
 
 # This is the function that finally sends the actual notification.
@@ -1427,17 +1425,16 @@ def handle_spoolfile(spoolfile):
                 (plugin or "plain mail")))
             return call_notification_script(plugin, plugin_context)
 
-        else:
-            # We received a forwarded raw notification. We need to process
-            # this with our local notification rules in order to call one,
-            # several or no actual plugins.
-            raw_context = data["context"]
-            notify_log("Got spool file %s (%s) from remote host for local delivery." % (
-                       notif_uuid[:8], events.find_host_service_in_context(raw_context)))
+        # We received a forwarded raw notification. We need to process
+        # this with our local notification rules in order to call one,
+        # several or no actual plugins.
+        raw_context = data["context"]
+        notify_log("Got spool file %s (%s) from remote host for local delivery." % (
+                   notif_uuid[:8], events.find_host_service_in_context(raw_context)))
 
-            store_notification_backlog(data["context"])
-            locally_deliver_raw_context(data["context"])
-            return 0  # No error handling for async delivery
+        store_notification_backlog(data["context"])
+        locally_deliver_raw_context(data["context"])
+        return 0  # No error handling for async delivery
 
     except Exception, e:
         notify_log("ERROR %s\n%s" % (e, format_exception()))

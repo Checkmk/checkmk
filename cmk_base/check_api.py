@@ -233,8 +233,7 @@ def get_filesize_human_readable(size):
         return "%d B" % int(size)
     elif size < 4 * 1024 * 1024 * 1024:
         return "%.2f MB" % (float(size) / (1024 * 1024))
-    else:
-        return "%.2f GB" % (float(size) / (1024 * 1024 * 1024))
+    return "%.2f GB" % (float(size) / (1024 * 1024 * 1024))
 
 
 # TODO: Replace by some render.* function / move to render module?
@@ -267,8 +266,7 @@ def get_timestamp_human_readable(timestamp):
     In case None is given or timestamp is 0, it returns "never"."""
     if timestamp:
         return time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(float(timestamp)))
-    else:
-        return "never"
+    return "never"
 
 
 # TODO: Replace by some render.* function / move to render module?
@@ -278,8 +276,7 @@ def get_relative_date_human_readable(timestamp):
     now = time.time()
     if timestamp > now:
         return "in " + get_age_human_readable(timestamp - now)
-    else:
-        return get_age_human_readable(now - timestamp) + " ago"
+    return get_age_human_readable(now - timestamp) + " ago"
 
 
 # TODO: Replace by some render.* function / move to render module?
@@ -338,8 +335,8 @@ def check_levels(value, dsname, params, unit="", factor=1.0, scale=1.0, statemar
     def scale_value(v):
         if v is None:
             return None
-        else:
-            return v * factor * scale
+
+        return v * factor * scale
 
     def levelsinfo_ty(ty, warn, crit, unit):
         return ("warn/crit %s %.2f/%.2f %s" % (ty, warn, crit, unit)).strip()
@@ -449,8 +446,8 @@ def passwordstore_get_cmdline(fmt, pw):
 
     if pw[0] == "password":
         return fmt % pw[1]
-    else:
-        return ("store", pw[1], fmt)
+
+    return ("store", pw[1], fmt)
 
 
 def get_agent_data_time():
@@ -475,8 +472,8 @@ def _agent_cache_file_age(hostname, check_plugin_name):
 
     if cachefile is not None and os.path.exists(cachefile):
         return _utils.cachefile_age(cachefile)
-    else:
-        return None
+
+    return None
 
 
 # NOTE: Currently this is not really needed, it is just here to keep any start

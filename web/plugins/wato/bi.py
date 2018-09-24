@@ -1827,7 +1827,7 @@ class ModeBIEditRule(ModeBI):
                            "when rules refer to each other. The rule IDs will not be visible in the status "
                            "GUI. They are just used within the configuration."),
                   allow_empty = False,
-                  size = 24,
+                  size = 80,
               ),
             ),
             ( "title",

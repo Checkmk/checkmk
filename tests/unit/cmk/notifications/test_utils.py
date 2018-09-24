@@ -60,3 +60,21 @@ def test_read_bulk_contents(monkeypatch, capsys):
     monkeypatch.setattr('sys.stdin', ('key=val', '\n', 'key2=val2', 'a comment'))
     assert utils.read_bulk_contexts() == ({'key': 'val'}, [{'key2': 'val2'}])
     assert capsys.readouterr().err == "Invalid line 'a comment' in bulked notification context\n"
+
+
+@pytest.mark.parametrize("context, hosts, result", [
+    ([{
+        "k": "y"
+    }], ["local", "host"], "Check_MK: 1 notifications for 2 hosts"),
+    ([{
+        "k": "y"
+    }, {
+        "l": "p"
+    }], ["first"], "Check_MK: 2 notifications for first"),
+    ([{
+        "PARAMETER_BULK_SUBJECT": "Check_MK: $FOLDER$ gone $COUNT_HOSTS$ host",
+        "HOSTTAGS": "/wato/lan cmk-agent ip-v4 prod site:heute tcp wato"
+    }], ["first"], "Check_MK: lan gone 1 host"),
+])
+def test_get_bulk_notification_subject(context, hosts, result):
+    assert utils.get_bulk_notification_subject(context, hosts) == result

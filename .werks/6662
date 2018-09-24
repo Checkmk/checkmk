@@ -56,7 +56,7 @@ Result
 <ul>
 <li>Saturday 11:00: {"warn": 75, "crit": 80, "bandwidth": 1000, "check_mode": "auto"}</li>
 <li>Saturday 13:00: {"warn": 75, "crit": 80, "bandwidth": 1000, "check_mode": "auto", "special_parameter": True}</li>
-<li>Saturday 15:00: {"warn": 70, "crit": 75, "bandwidth": 1000, "check_mode": "auto"}</li>
+<li>Saturday 15:00: {"warn": 85, "crit": 92, "bandwidth": 1000, "check_mode": "auto"}</li>
 </ul>
 
 

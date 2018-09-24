@@ -56,6 +56,10 @@ import cmk_base.cleanup
 # are loaded later with load_default_config() again.
 from cmk_base.default_config import *
 
+class TimespecificParamList(list):
+    pass
+
+
 def get_variable_names():
     """Provides the list of all known configuration variables."""
     return [ k for k in default_config.__dict__ if k[0] != "_" ]
@@ -2705,6 +2709,11 @@ def _update_with_configured_check_parameters(host, checktype, item, params):
     entries += service_extra_conf(host, descr, check_parameters)
 
     if entries:
+        if _has_timespecific_params(entries):
+            # some parameters include timespecific settings
+            # these will be executed just before the check execution
+            return TimespecificParamList(entries)
+
         # loop from last to first (first must have precedence)
         for entry in entries[::-1]:
             if type(params) == dict and type(entry) == dict:
@@ -2717,6 +2726,14 @@ def _update_with_configured_check_parameters(host, checktype, item, params):
                     entry = copy.deepcopy(entry)
                 params = entry
     return params
+
+
+def _has_timespecific_params(entries):
+    for entry in entries:
+        if isinstance(entry, dict) and "tp_default_value" in entry:
+            return True
+    return False
+
 
 
 def _get_checkgroup_parameters(host, checktype, item):

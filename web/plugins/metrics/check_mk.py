@@ -565,6 +565,18 @@ metric_info["mem_total"] = {
     "unit" : "bytes",
 }
 
+metric_info["memory_avg"] = {
+    "title" : _("Memory Average"),
+    "color": "#80ff40",
+    "unit" : "bytes",
+}
+
+metric_info["pagefile_avg"] = {
+    "title" : _("Commit Charge Average"),
+    "color": "#408f20",
+    "unit" : "bytes",
+}
+
 metric_info["mem_free"] = {
     "title" : _("Free RAM"),
     "color" : "#ffffff",
@@ -4129,6 +4141,8 @@ check_metrics["check_mk-aix_memory"] = {
 check_metrics["check_mk-mem.win"] = {
     "memory"         : { "name" : "mem_used", "scale" : MB },
     "pagefile"       : { "name" : "pagefile_used", "scale" : MB },
+    "memory_avg"     : { "scale" : MB },
+    "pagefile_avg"   : { "scale" : MB },
     "mem_total"      : { "auto_graph" : False, "scale" : MB },
     "pagefile_total" : { "auto_graph" : False, "scale" : MB},
 }

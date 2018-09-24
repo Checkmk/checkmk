@@ -394,7 +394,8 @@ class ModeBI(WatoMode):
 
 
     def _add_change(self, action_name, text):
-        add_change(action_name, text, domains=[watolib.ConfigDomainGUI], sites=config.get_login_sites())
+        site_ids = [site[0] for site in config.wato_slave_sites()] + [config.omd_site()]
+        add_change(action_name, text, domains=[watolib.ConfigDomainGUI], sites=site_ids)
 
 
     def get_packs(self):

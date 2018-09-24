@@ -859,12 +859,12 @@ def filter_by_management_board(hostname, found_check_plugin_names,
 
     final_collection = set()
     is_snmp_host = config.is_snmp_host(hostname)
-    is_tcp_host = config.is_tcp_host(hostname)
+    is_agent_host = config.is_agent_host(hostname)
     if not config.has_management_board(hostname):
         if is_snmp_host:
             final_collection.update(host_precedence_snmp)
             final_collection.update(host_only_snmp)
-        if is_tcp_host:
+        if is_agent_host:
             final_collection.update(host_precedence_tcp)
             final_collection.update(host_only_tcp)
         return final_collection
@@ -891,7 +891,7 @@ def filter_by_management_board(hostname, found_check_plugin_names,
         if is_snmp_host:
             final_collection.update(host_precedence_snmp)
             final_collection.update(host_only_snmp)
-        if is_tcp_host:
+        if is_agent_host:
             final_collection.update(host_precedence_tcp)
             final_collection.update(host_only_tcp)
 

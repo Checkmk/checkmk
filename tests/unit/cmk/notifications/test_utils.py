@@ -54,3 +54,9 @@ SERVICENOTESURL=localhost
 ])
 def test_substitute_context(context, template, result):
     assert result == utils.substitute_context(template, context)
+
+
+def test_read_bulk_contents(monkeypatch, capsys):
+    monkeypatch.setattr('sys.stdin', ('key=val', '\n', 'key2=val2', 'a comment'))
+    assert utils.read_bulk_contexts() == ({'key': 'val'}, [{'key2': 'val2'}])
+    assert capsys.readouterr().err == "Invalid line 'a comment' in bulked notification context\n"

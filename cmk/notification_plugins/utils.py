@@ -38,6 +38,7 @@ except ImportError:
 
 from cmk_base.notify import find_wato_folder
 
+
 def collect_context():
     # type: () -> Dict
     return {
@@ -145,6 +146,7 @@ def send_mail_sendmail(m, target, from_address):
     sys.stdout.write("Spooled mail to local mail transmission agent\n")
     return 0
 
+
 def read_bulk_contexts():
     parameters = {}
     contexts = []
@@ -161,7 +163,7 @@ def read_bulk_contexts():
             try:
                 key, value = line.split("=", 1)
                 value = value.replace("\1", "\n")
-            except:
+            except ValueError:
                 sys.stderr.write("Invalid line '%s' in bulked notification context\n" % line)
                 continue
 
@@ -171,6 +173,7 @@ def read_bulk_contexts():
                 context[key] = value
 
     return parameters, contexts
+
 
 def get_bulk_notification_subject(contexts, hosts):
     hosts = list(hosts)

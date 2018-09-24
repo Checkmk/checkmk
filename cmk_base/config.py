@@ -853,11 +853,14 @@ def is_snmp_host(hostname):
 
 
 def is_ping_host(hostname):
-    import cmk_base.piggyback as piggyback
     return not is_snmp_host(hostname) \
-       and not is_tcp_host(hostname) \
-       and not piggyback.has_piggyback_raw_data(hostname) \
+       and not is_agent_host(hostname) \
        and not has_management_board(hostname)
+
+
+def is_agent_host(hostname):
+    import cmk_base.piggyback as piggyback
+    return is_tcp_host(hostname) or piggyback.has_piggyback_raw_data(hostname)
 
 
 def is_dual_host(hostname):

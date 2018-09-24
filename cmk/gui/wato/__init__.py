@@ -3893,6 +3893,10 @@ class ModeDiscovery(WatoMode):
         if varname and watolib.g_rulespecs.exists(varname):
             rulespec = watolib.g_rulespecs.get(varname)
             try:
+                if isinstance(params, dict) and "tp_computed_params" in params:
+                    html.write_text(_("Timespecific parameters computed at %s") % cmk.render.date_and_time(params["tp_computed_params"]["computed_at"]))
+                    html.br()
+                    params = params["tp_computed_params"]["params"]
                 rulespec.valuespec.validate_datatype(params, "")
                 rulespec.valuespec.validate_value(params, "")
                 paramtext = rulespec.valuespec.value_to_text(params)

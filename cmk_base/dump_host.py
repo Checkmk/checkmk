@@ -24,7 +24,10 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+import time
+
 import cmk.tty as tty
+import cmk.render
 
 import cmk_base.utils
 import cmk_base.config as config
@@ -33,6 +36,7 @@ import cmk_base.console as console
 import cmk_base.data_sources as data_sources
 import cmk_base.ip_lookup as ip_lookup
 import cmk_base.check_table as check_table
+import cmk_base.checking as checking
 
 def dump_host(hostname):
     console.output("\n")
@@ -110,12 +114,19 @@ def dump_host(hostname):
     tty.print_table(headers, colors, [ [
         checktype,
         cmk_base.utils.make_utf8(item),
-        params,
+        _evaluate_params(params),
         cmk_base.utils.make_utf8(description),
         cmk_base.utils.make_utf8(",".join(config.service_extra_conf(hostname, description, config.service_groups))),
         ",".join(deps)
         ]
                   for checktype, item, params, description, deps in check_items ], "  ")
+
+def _evaluate_params(params):
+    if not isinstance(params, cmk_base.config.TimespecificParamList):
+        return params
+
+    current_params = checking.determine_check_params(params)
+    return "Timespecific parameters at %s: %r" % (cmk.render.date_and_time(time.time()), current_params)
 
 
 def _ip_address_for_dump_host(hostname, family=None):

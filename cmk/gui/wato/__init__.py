@@ -13386,8 +13386,8 @@ def create_sample_config():
 
     # Initial baking of agents (when bakery is available)
     if watolib.has_agent_bakery():
-        bake_job = BakeAgentsBackgroundJob()
         import cmk.gui.cee.plugins.wato.agent_bakery
+        bake_job = cmk.gui.cee.plugins.wato.agent_bakery.BakeAgentsBackgroundJob()
         bake_job.set_function(cmk.gui.cee.plugins.wato.agent_bakery.bake_agents_background_job)
         try:
             bake_job.start()

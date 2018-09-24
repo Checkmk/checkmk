@@ -4889,6 +4889,50 @@ register_check_parameters(
 )
 
 
+register_check_parameters(
+    subgroup_applications,
+    'azure_databases',
+    _("Azure Databases"),
+    Dictionary(
+        title = _("Set Levels"),
+        elements = [
+            ('storage_percent_levels',
+             Tuple(
+                 title = _("Used storage in percent"),
+                 elements = [
+                     Float(title = _("Warning at"),  unit = _('%'), default_value = 85.0),
+                     Float(title = _("Critical at"), unit = _('%'), default_value = 95.0)
+                 ]
+             )
+             ),
+            ('cpu_percent_levels',
+             Tuple(
+                 title = _("CPU in percent"),
+                 elements = [
+                     Float(title = _("Warning at"),  unit = _('%'), default_value = 85.0),
+                     Float(title = _("Critical at"), unit = _('%'), default_value = 95.0)
+                 ]
+             )
+             ),
+            ('dtu_percent_levels',
+             Tuple(
+                 title = _("Database throughput units in percent"),
+                 elements = [
+                     Float(title = _("Warning at"),  unit = _('%'), default_value = 40.0),
+                     Float(title = _("Critical at"), unit = _('%'), default_value = 50.0)
+                 ]
+             )
+             ),
+        ],
+    ),
+    TextAscii(
+        title = _("Database Name"),
+        help = _("Specify database names that the rule should apply to"),
+    ),
+    match_type = 'dict',
+)
+
+
 #.
 #   .--Environment---------------------------------------------------------.
 #   |     _____            _                                      _        |

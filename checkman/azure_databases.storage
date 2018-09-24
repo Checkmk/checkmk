@@ -1,0 +1,15 @@
+title: Azure Monitoring: Database storage
+agents: linux
+catalog: app/databases
+license: GPL
+distribution: check_mk
+description:
+ This check reports the amount of storage used by an azure database.
+ You can configure levels for the percentage using the rule "Azure Databases".
+
+item:
+ The name of the resource.
+
+inventory:
+ One service per database is created.
+

@@ -1525,6 +1525,12 @@ metric_info["connections_blocked_rate"] = {
     "color" : "14/a",
 }
 
+metric_info["connections_failed_rate"] = {
+    "title" : _("Failed connections"),
+    "unit"  : "1/s",
+    "color" : "14/a",
+}
+
 metric_info["open_network_sockets"] = {
     "title" : _("Open network sockets"),
     "unit"  : "count",
@@ -3487,6 +3493,12 @@ metric_info["storage_used"] = {
     "color" : "36/a",
 }
 
+metric_info["storage_percent"] = {
+    "title" : _("Storage space used"),
+    "unit"  : "%",
+    "color" : "36/b",
+}
+
 metric_info["managed_object_count"] = {
     "title" : _("Managed Objects"),
     "unit"  : "count",
@@ -4416,6 +4428,12 @@ metric_info["remaining_reads"] = {
     "title" : _("Remaining Reads"),
     "unit"  : "count",
     "color" : "42/a",
+}
+
+metric_info["dtu_percent"] = {
+    "title" : _("Database throughput unit"),
+    "unit"  : "%",
+    "color" : "#4040ff"
 }
 
 #.

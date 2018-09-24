@@ -1,0 +1,10 @@
+Title: jolokia_generic: Make service descriptions consistent with jolokia_metrics
+Level: 1
+Component: checks
+Compatible: incomp
+Edition: cre
+Version: 1.6.0i1
+Date: 1537789397
+Class: fix
+
+Rediscovery is required on the affected hosts.

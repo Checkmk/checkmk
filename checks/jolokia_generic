@@ -30,7 +30,7 @@ def parse_jolokia_generic(info):
     for line in info:
         instance, mbean, value, value_type = line
 
-        item = instance + " " + mbean
+        item = instance + " MBean " + mbean
 
         parsed[item] = {
             "type"  : value_type,
@@ -72,7 +72,7 @@ def check_jolokia_generic_string(item, params, parsed):
 check_info["jolokia_generic.string"] = {
     "inventory_function"    : inventory_jolokia_generic_string,
     "check_function"        : check_jolokia_generic_string,
-    "service_description"   : "MBean %s",
+    "service_description"   : "JVM %s",
     "group"                 : "generic_string",
 }
 
@@ -146,7 +146,7 @@ def check_jolokia_generic_rate(item, params, parsed):
 check_info["jolokia_generic.rate"] = {
     "inventory_function"    : inventory_jolokia_generic_rate,
     "check_function"        : check_jolokia_generic_rate,
-    "service_description"   : "MBean %s",
+    "service_description"   : "JVM %s",
     "has_perfdata"          : True,
     "group"                 : "generic_rate",
 }
@@ -220,7 +220,7 @@ check_info["jolokia_generic"] = {
     "parse_function"        : parse_jolokia_generic,
     "inventory_function"    : inventory_jolokia_generic,
     "check_function"        : check_jolokia_generic,
-    "service_description"   : "MBean %s",
+    "service_description"   : "JVM %s",
     "has_perfdata"          : True,
     "group"                 : "generic_number",
 }

@@ -1,0 +1,11 @@
+Title: azure_virtualmachines: Monitor Azure VMs
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1537788518
+Class: feature
+
+This werk adds a check reporting on the state of the VMs running
+in an Azure cloud environment.

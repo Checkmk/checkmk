@@ -55,7 +55,7 @@ checks = {
                     ),
                    ],
     'dtu'        : [(u'hugo-server/Testdatabase', 'default',
-                       [(0, 'Database throughput units: 0.0', [('dtu_percent', 0.0, 85., 95., 0, None)]),
+                       [(0, 'Database throughput units: 0.0%', [('dtu_percent', 0.0, 85., 95., 0, None)]),
                        ],
                     )
                    ],

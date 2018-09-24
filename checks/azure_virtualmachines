@@ -1,0 +1,187 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2018             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+# The following two are needed both in the factory settings for
+# the single check, as well as in the summary check.
+_AZURE_VM_STATES_PROV = {
+    "succeeded": 0,
+    "failed": 2,
+}
+
+_AZURE_VM_STATES_POWER = {
+    # Power states listed here:
+    # https://docs.microsoft.com/en-us/azure/virtual-machines/windows/tutorial-manage-vm
+    "starting": 0,
+    "running": 0,
+    "stopping": 1,
+    "stopped": 1,  # VMs in the stopped state still incur compute charges.
+    "deallocating": 0,
+    "deallocated": 0,  # VMs in the Deallocated state do not incur compute charges.
+    "unknown": 3,
+}
+
+factory_settings['levels_azure_virtualmachines'] = {
+    "map_provisioning_states": _AZURE_VM_STATES_PROV,
+    "map_power_states": _AZURE_VM_STATES_POWER,
+}
+
+
+def _azure_vms_get_status(resource, desired_type):
+    for state in resource.get("specific_info", {}).get("statuses", []):
+        stat_type, stat_raw = state.get("code", "/").split('/')[:2]
+        if stat_type.startswith(desired_type):
+            status = stat_raw.lower() if stat_raw != "-" else "unknown"
+            raw_msg = state.get("message")
+            return status, " (%s)" % raw_msg if raw_msg else ""
+    return "unknown", ""
+
+
+@get_parsed_item_data
+def check_azure_virtualmachines(_item, params, resource):
+
+    map_provisioning_states = params.get("map_provisioning_states", {})
+    map_power_states = params.get("map_power_states", {})
+
+    prov_state, msg = _azure_vms_get_status(resource, 'ProvisioningState')
+    yield map_provisioning_states.get(prov_state, 1), "Provisioning %s%s" % (prov_state, msg)
+
+    power_state, msg = _azure_vms_get_status(resource, 'PowerState')
+    yield map_power_states.get(power_state, 1), "VM %s%s" % (power_state, msg)
+
+    # This service may be present on the agent host, the VM itself,
+    # or the resource group host. No need to show the group in the latter case.
+    group = resource.get("group")
+    if host_name() != group:
+        yield 0, "Resource group: %s" % group
+
+    for kv_pair in azure_iter_informative_attrs(resource):
+        yield 0, "%s: %s" % kv_pair
+
+
+check_info['azure_virtualmachines'] = {
+    'parse_function': parse_azure,
+    'inventory_function': discover(),
+    'check_function': check_azure_virtualmachines,
+    'service_description': "VM %s",
+    'includes': ['azure.include'],
+    'default_levels_variable': 'levels_azure_virtualmachines',
+    'group': 'azure_vms',
+}
+
+
+factory_settings['levels_azure_virtualmachines_summary'] = {
+    "levels_provisioning": {
+        "failed": {
+            "levels": (1, 1)
+        },
+    },
+    "levels_power": {
+        "unknown": {
+            "levels": (1, 2)
+        },
+    }
+}
+
+
+def _azure_vms_check_levels(count, state, levels):
+
+    msg = "%d %s" % (count, state)
+    warn_lower, crit_lower = levels.get("levels_lower", (None, None))
+    warn_upper, crit_upper = levels.get("levels", (None, None))
+    state = 0
+
+    if crit_lower is not None and count <= crit_lower:
+        state = 2
+        msg += " (warn/crit below %d/%d)" % (warn_lower, crit_lower)
+    elif warn_lower is not None and count <= warn_lower:
+        state = 1
+        msg += " (warn/crit below %d/%d)" % (warn_lower, crit_lower)
+
+    if crit_upper is not None and count >= crit_upper:
+        state = max(state, 2)
+        msg += " (warn/crit at %d/%d)" % (warn_upper, crit_upper)
+    elif warn_upper is not None and count >= warn_upper:
+        state = max(state, 1)
+        msg += " (warn/crit at %d/%d)" % (warn_upper, crit_upper)
+
+    return state, msg
+
+
+def discover_azure_virtualmachines_summary(parsed):
+    if len(parsed) > 1:
+        yield None, {}
+
+
+def check_azure_virtualmachines_summary(_summary, params, parsed):
+
+    fixed_resources_list = list(parsed.values())
+    provisionings = [_azure_vms_get_status(r, 'ProvisioningState')[0] for r in fixed_resources_list]
+    powers = [_azure_vms_get_status(r, 'PowerState')[0] for r in fixed_resources_list]
+    groups = [r.get("group") for r in fixed_resources_list]
+
+    levels_provisioning = params.get("levels_provisioning", {})
+    state, txt = 0, []
+    for prov_state in sorted(set(provisionings + _AZURE_VM_STATES_PROV.keys())):
+        count = provisionings.count(prov_state)
+        prov_state_levels = levels_provisioning.get(prov_state, {})
+        state_p, msg_p = _azure_vms_check_levels(count, prov_state, prov_state_levels)
+        state = max(state, state_p)
+        if state_p != 0 or count:
+            txt.append(msg_p)
+    yield state, "Provisioning: %s" % ' / '.join(txt)
+
+    levels_power = params.get("levels_power", {})
+    state, txt = 0, []
+    for pow_state in sorted(set(powers + _AZURE_VM_STATES_POWER.keys())):
+        count = powers.count(pow_state)
+        pow_state_levels = levels_power.get(pow_state, {})
+        state_p, msg_p = _azure_vms_check_levels(count, pow_state, pow_state_levels)
+        state = max(state, state_p)
+        if state_p != 0 or count:
+            txt.append(msg_p)
+    yield state, "Power states: %s" % ' / '.join(txt)
+
+    unique_groups = sorted(set(groups))
+    if unique_groups != [host_name()]:
+        group_count = ("%s: %d" % (g, groups.count(g)) for g in unique_groups)
+        yield 0, "VMs per group: %s\n" % ' / '.join(group_count)
+
+    # long output
+    templ = "%s: Provisioning %s, VM %s, Resource group: %s\n"
+    names = (r.get("name") for r in fixed_resources_list)
+    vms = zip(names, provisionings, powers, groups)
+    for vmach in vms:
+        yield 0, templ % vmach
+
+
+check_info['azure_virtualmachines.summary'] = {
+    'inventory_function': discover_azure_virtualmachines_summary,
+    'check_function': check_azure_virtualmachines_summary,
+    'service_description': "VM Summary",
+    'includes': ['azure.include'],
+    'default_levels_variable': 'levels_azure_virtualmachines_summary',
+    'group': 'azure_vms_summary',
+}

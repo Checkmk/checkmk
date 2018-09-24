@@ -1,0 +1,18 @@
+title: Virtual Machine under Azure
+agents: azure
+catalog: os/misc
+license: GPL
+distribution: check_mk
+description:
+ This check provides information about VMs configured in the Microsoft Azure cloud.
+
+ The check displays the provisioning and power states of the VM, as well as its
+ tags and location.
+
+ The service state resulting from the different provisioning and power states can be
+ configured using the rule "Azure Virtual Machines".
+
+inventory:
+ One service per VM is created, on every Check_MK host that receives information
+ about the VMs via the piggyback mechanism.
+ To configure which those are, see the configuration of the Azure agent.

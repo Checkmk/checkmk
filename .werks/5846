@@ -1,0 +1,10 @@
+Title: win_dhcp_pools: French systems are supported now
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1537768367
+Class: fix
+
+The check supports French systems now.

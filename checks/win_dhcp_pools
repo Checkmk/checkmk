@@ -71,6 +71,11 @@ win_dhcp_pools_default_levels = (10, 5)
 win_dhcp_pools_inventorize_empty = False
 discovery_win_dhcp_pools = []
 
+# Attention:
+#
+# Tried to get the win-agent plugin to report always in utf-8, unfortunately without luck.
+# ...that's the reason why french translations with special characters must get provided like here.
+
 win_dhcp_pools_stats_translate = {
     'Entdeckungen': 'Discovers',
     'Angebote': 'Offers',
@@ -84,6 +89,18 @@ win_dhcp_pools_stats_translate = {
     'Anzahl der verwendeten Adressen': 'No. of Addresses in use',
     'Anzahl der freien Adressen': 'No. of free Addresses',
     'Anzahl der anstehenden Angebote': 'No. of pending offers',
+    u'D\x82couvertes': 'Discovers',
+    'Offres': 'Offers',
+    u'Requ\x88tes': 'Requests',
+    'AR': 'Acks',
+    u'AR n\x82g.': 'Nacks',
+    'Refus': 'Declines',
+    u'Lib\x82rations': 'Releases',
+    u'Sous-r\x82seau': 'Subnet',
+    u'\x90tendues': 'Scopes',
+    u"Nb d'adresses utilis\x82es": 'No. of Addresses in use',
+    "Nb d'adresses libres": 'No. of free Addresses',
+    "Nb d'offres en attente": 'No. of pending offers',
 }
 
 def parse_win_dhcp_pools(info):

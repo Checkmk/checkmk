@@ -1,0 +1,13 @@
+Title: BI configuration: WATO slave sites without user login now also receive BI configuration changes
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 1.5.0p5
+Date: 1537792351
+Class: fix
+
+If a WATO slave site had no direct login access configured, it also did not receive any changes
+within the BI configuration. As a result, BI checks running on the slave site never received
+configuration updates in time. This has been fixed.
+

@@ -1,0 +1,33 @@
+Title: Limit crash reporting functionality to permitted users
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 1.4.0p37
+Date: 1537727939
+Class: security
+
+The crash reporting functionality of the GUI, which shows a lot of detailed
+information about the internal state of the GUI, has been limited to be shown
+only to permitted users.
+
+The crash report could be used by attackers to get internal information about
+the application state and secrets processed by the GUI.
+
+All not permitted users will now only see a short message about the occurred
+crash. Some more information is written to <tt>var/log/web.log</tt>.
+
+Only authenticated administrative users are allowed to see and submit crash
+reports by default.
+
+If you like to give all your users the right to see and send crash reports give
+them the permission "See crash reports"
+
+A problem with this change may be that some crashes occur only in very specific
+situations, for example for specific users. In such a case it may be hard to
+get detailed information about the situation when the crash reporting is not
+available. We plan to add an improved crash reporting in future versions to
+make all occurred crashes available to the Check_MK administrator for later
+debugging.
+
+CMK-1037

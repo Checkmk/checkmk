@@ -164,6 +164,13 @@ def load_plugins(force):
            "and the configured <a href=\"wato.py?mode=edit_configvar&varname=failed_notification_horizon\">Failed notification horizon</a>."),
          [ "admin" ])
 
+    config.declare_permission("general.see_crash_reports",
+         _("See crash reports"),
+         _("In case an exception happens while Check_MK is running it may produce crash reports that you can "
+           "use to track down the issues in the code or send it as report to the Check_MK team to fix this issue "
+           "Only users with this permission are able to see the reports in the GUI."),
+         [ "admin" ])
+
     loaded_with_language = current_language
 
 # TODO: This has been obsoleted by pagetypes.py

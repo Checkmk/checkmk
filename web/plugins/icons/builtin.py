@@ -845,6 +845,11 @@ def paint_icon_crashed_check(what, row, tags, host_custom_vars):
     if what == "service" \
         and row["service_state"] == 3 \
         and "check failed - please submit a crash report!" in row["service_plugin_output"] :
+
+        if not config.user.may("general.see_crash_reports"):
+            return 'crash', _("This check crashed. Please inform a Check_MK user that is allowed "
+                              "to view and submit crash reports to the development team.")
+
         crashurl = html.makeuri([("site", row["site"]),
                                 ("host", row["host_name"]),
                                 ("service", row["service_description"])], filename="crashed_check.py")

@@ -38,6 +38,17 @@ except ImportError:
     import json
 
 def page_crashed(what):
+    # Do not reveal crash context information to unauthenticated users or not permitted
+    # users to prevent disclosure of internal information
+    if not config.user.may("general.see_crash_reports"):
+        html.header(_("Internal error"), stylesheets=["status", "pages"])
+        html.show_error("<b>%s:</b> %s" % (_("Internal error"), sys.exc_info()[1]))
+        html.p(_("An internal error occurred while processing your request. "
+                 "You can report this issue to your Check_MK administrator. "
+                 "Detailed information can be found in <tt>var/log/web.log</tt>."))
+        html.footer()
+        return
+
     if what == "check":
         site    = html.var("site")
         host    = html.var("host")

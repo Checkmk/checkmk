@@ -29,17 +29,18 @@ As you can see, only the parameters from the first rule were taken into account.
 
 H3:Ruleset example new configuration
 <ul>
-<li>Use parameters {"warn": 90} on saturday, default {"warn": 75, "crit": 80}</li>
+<li>Use parameters {"warn": 90} on saturday, default {"warn": 89}</li>
 <li>Use parameters {"warn": 85, "crit": 92"} on weekend, default {"warn": 70, "crit": 75, "bandwidth": 1000}</li>
 <li>Use parameters {"check_mode": "auto"} (no timespecific rule)</li>
 </ul>
 
 The new mechanism now creates the following parameters
 <ul>
-<li>Monday till Friday: {"warn": 75, "crit": 80", "check_mode": "auto"}</li>
-<li>Saturday: {"warn": 90, "crit": 80, "bandwith": 1000, "check_mode": "auto"}</li>
-<li>Sunday: {"warn": 85, "crit": 92, "bandwith": 1000, "check_mode": "auto"}</li>
+<li>Monday till Friday: {"warn": 89, "crit": 75, "bandwidth": 1000, "check_mode": "auto"} </li>
+<li>Saturday: {"warn": 90, "crit": 92, "bandwith": 1000, "check_mode": "auto"}</li>
+<li>Sunday: {"warn": 89, "crit": 92, "bandwith": 1000, "check_mode": "auto"}</li>
 </ul>
+
 As you can see, only the parameters from the first rule were taken into account.
 
 The rule evaluation now starts at the bottom rule and then progresses to the top rule.
@@ -49,7 +50,7 @@ these parameters are merged, too.
 
 For example:
 <ul>
-<li>Use parameters {"warn": 75, "crit": 80, "check_mode": "auto"} on Saturday 10-14h, Use parameters {"special_parameter": True} on Saturday 12-14h</li>
+<li>Use parameters {"warn": 75, "crit": 80, "check_mode": "auto"} on Saturday 10-14h, Use parameters {"special_parameter": True} on Saturday 12-14h, default {}</li>
 <li>Use parameters {"warn": 85, "crit": 92"} on weekend, default {"warn": 70, "crit": 75, "bandwidth": 1000}</li>
 <li>Use parameters {"check_mode": "auto"} (no timespecific rule)</li>
 </ul>
@@ -57,6 +58,7 @@ Result
 <ul>
 <li>Saturday 11:00: {"warn": 75, "crit": 80, "bandwidth": 1000, "check_mode": "auto"}</li>
 <li>Saturday 13:00: {"warn": 75, "crit": 80, "bandwidth": 1000, "check_mode": "auto", "special_parameter": True}</li>
+<li>Saturday 15:00: {"warn": 70, "crit": 75, "bandwidth": 1000, "check_mode": "auto"}</li>
 </ul>
 
 

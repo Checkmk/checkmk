@@ -36,11 +36,18 @@ build_path = os.path.join(testlib.repo_path(), "docker")
 image_prefix = "docker-tests"
 branch_name = os.environ.get("BRANCH", "master")
 
-build_version = testlib.CMKVersion(
-    version=testlib.CMKVersion.DAILY,
-    edition=testlib.CMKVersion.CEE,
-    branch=branch_name
-)
+def build_version():
+    return testlib.CMKVersion(
+        version=testlib.CMKVersion.DAILY,
+        edition=testlib.CMKVersion.CEE,
+        branch=branch_name
+    )
+
+
+@pytest.fixture(scope="session")
+def version():
+    return build_version()
+
 
 @pytest.fixture()
 def client():
@@ -105,7 +112,10 @@ def _build(request, client, edition, version, add_args=None):
     return image, build_logs
 
 
-def _start(request, client, edition="enterprise", version=build_version, is_update=False, **kwargs):
+def _start(request, client, edition="enterprise", version=None, is_update=False, **kwargs):
+    if version is None:
+        version = build_version()
+
     _image, _build_logs = _build(request, client, edition, version)
 
     c = client.containers.run(
@@ -211,11 +221,11 @@ def test_start_execute_custom_command(request, client):
     assert output == "1\n"
 
 
-def test_start_with_custom_command(request, client):
+def test_start_with_custom_command(request, client, version):
     edition = "enterprise"
-    _build(request, client, edition, build_version)
+    _build(request, client, edition, version)
     output = client.containers.run(
-        image=_image_name(edition, build_version),
+        image=_image_name(edition, version),
         detach=False,
         command=["bash", "-c", "echo 1"]
     )
@@ -225,27 +235,27 @@ def test_start_with_custom_command(request, client):
 
 
 # Test that the local deb package is used by making the build fail because of an empty file
-def test_build_using_local_deb(request, client):
-    pkg_path = os.path.join(build_path, build_version.package_name_of_distro("stretch"))
+def test_build_using_local_deb(request, client, version):
+    pkg_path = os.path.join(build_path, version.package_name_of_distro("stretch"))
     try:
         with open(pkg_path, "w") as f:
             f.write("")
 
         with pytest.raises(docker.errors.BuildError):
-            _build(request, client, "enterprise", build_version)
+            _build(request, client, "enterprise", version)
     finally:
         os.unlink(pkg_path)
 
 
 # Test that the local GPG file is used by making the build fail because of an empty file
-def test_build_using_local_gpg_pubkey(request, client):
+def test_build_using_local_gpg_pubkey(request, client, version):
     pkg_path = os.path.join(build_path, "Check_MK-pubkey.gpg")
     try:
         with open(pkg_path, "w") as f:
             f.write("")
 
         with pytest.raises(docker.errors.BuildError):
-            _build(request, client, "enterprise", build_version)
+            _build(request, client, "enterprise", version)
     finally:
         os.unlink(pkg_path)
 
@@ -266,7 +276,7 @@ def test_start_enable_mail(request, client):
     assert c.exec_run(["postconf", "relayhost"])[1].rstrip() == "relayhost = mailrelay.mydomain.com"
 
 
-def test_update(request, client):
+def test_update(request, client, version):
     container_name="%s-monitoring" % branch_name
 
     # Pick a random old version that we can use to the setup the initial site with
@@ -290,10 +300,10 @@ def test_update(request, client):
     # Don't use the regular startup procedure (which would start the site). Use
     # read to wait for termination of the container
     edition = "enterprise"
-    _build(request, client, edition, build_version)
+    _build(request, client, edition, version)
     c_tmp = client.containers.run(
         name="%s-update" % container_name,
-        image=_image_name(edition, build_version),
+        image=_image_name(edition, version),
         detach=True,
         command=["bash", "-c", "echo HI ; read"],
         stdin_open=True,
@@ -312,17 +322,17 @@ def test_update(request, client):
     assert exit_code == 0
 
     # Verify result and stop the temporary container
-    c_tmp.exec_run(["omd", "version"], user="cmk")[1].endswith("%s\n" % build_version.omd_version())
+    c_tmp.exec_run(["omd", "version"], user="cmk")[1].endswith("%s\n" % version.omd_version())
     c_tmp.stop()
 
     # 6. rename old container
     c_orig.rename("%s-old" % container_name)
 
     # 7. create new container
-    c_new = _start(request, client, version=build_version, is_update=True,
+    c_new = _start(request, client, version=version, is_update=True,
                    name=container_name, volumes_from=c_orig.id)
 
     # 8. verify result
-    c_new.exec_run(["omd", "version"], user="cmk")[1].endswith("%s\n" % build_version.omd_version())
+    c_new.exec_run(["omd", "version"], user="cmk")[1].endswith("%s\n" % version.omd_version())
     assert c_new.exec_run(["test", "-f", "pre-update-marker"],
                           user="cmk", workdir="/omd/sites/cmk")[0] == 0

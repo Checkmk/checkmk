@@ -302,6 +302,7 @@ class AzureResource(object):
         self.info["provider"] = m.group(3)
 
         self.section = resource.type.split('/')[-1].lower()
+        self.piggytargets = [self.info["group"]]
         self.metrics = []
 
     def __str__(self):
@@ -314,6 +315,21 @@ class AzureResource(object):
         return '\n'.join(tmp)
 
 
+class AzureComputeClient(object):
+
+    def __init__(self, creds, subs):
+        from azure.mgmt.compute import ComputeManagementClient
+        super(AzureComputeClient, self).__init__()
+        self._client = ComputeManagementClient(creds, subs)
+
+    def process(self, vm):
+        use_keys = ('statuses',)
+        iv = self._client.virtual_machines.get(vm.info["group"], vm.info["name"],
+                 expand='instanceView').instance_view.as_dict()
+        items = ((k, iv.get(k)) for k in use_keys)
+        vm.info["specific_info"] = {k: v for k, v in items if v is not None}
+
+
 class IssueCollecter(list):
     # basically a list of strings, just fancy appending.
     def append(self, issue_type, issued_by, issue_msg):
@@ -323,17 +339,25 @@ class IssueCollecter(list):
 
 
 class AzureClient(object):
+
+    SPECIFIC_CLIENTS = {
+        'Microsoft.Compute/virtualMachines': AzureComputeClient,
+    }
+
     def __init__(self, args):
         super(AzureClient, self).__init__()
         self.debug = args.debug
         self.remaining_reads = "unknown (no metrics fetched)"
+        self.subscription = args.subscription_id
 
         self._creds = ServicePrincipalCredentials(
             client_id=args.client_id, secret=args.secret, tenant=args.tenant_id)
         # azure-api-call
-        self._monitor_client = MonitorManagementClient(self._creds, args.subscription_id)
+        self._monitor_client = MonitorManagementClient(self._creds, self.subscription)
         # azure-api-call
-        self._resource_client = ResourceManagementClient(self._creds, args.subscription_id)
+        self._resource_client = ResourceManagementClient(self._creds, self.subscription)
+
+        self.specific_clients = {}
 
         # compute timespan once, and keep it fixed
         t_end = datetime.datetime.utcnow()
@@ -346,6 +370,19 @@ class AzureClient(object):
 
         self.resources_cache = None
         self.metrics_cache = {}
+
+    def init_specific(self, resources):
+        r_types = set(r.info["type"] for r in resources)
+        for tp in r_types:
+            ClientClass = AzureClient.SPECIFIC_CLIENTS.get(tp)
+            if ClientClass is not None:
+                self.specific_clients[tp] = ClientClass(self._creds, self.subscription)
+
+    def process_specific(self, resource):
+        client = self.specific_clients.get(resource.info["type"])
+        if client is None:
+            return None
+        client.process(resource)
 
     def discover_resources(self):
         if self.resources_cache is None:
@@ -497,8 +534,7 @@ class Threads(object):
         if not self.sequential:
             atexit.register(self.terminate)
 
-    def run(self, client, config):
-        resources = filter(config.is_configured, client.discover_resources())
+    def run(self, resources, client, config):
 
         if self.sequential:
             self._run_sequential(resources, client, config)
@@ -537,22 +573,25 @@ class Threads(object):
 def process_resource(resource, client, config):
 
     r_config = config.get_resource_config(resource)
-    err = IssueCollecter()  # pass this to methods to collect issues
 
+    client.process_specific(resource)
+
+    err = IssueCollecter()  # pass this to methods to collect issues
     for metric in client.get_metrics(resource, r_config, err):
         resource.metrics.append(metric)
 
-    output = [
-        '<<<<%s>>>>' % resource.info['group'],
-        '<<<azure_%s>>>' % resource.section,
-        '%s' % resource,
-    ]
-    if err:
-        output.append('<<<azure_agent_info>>>')
-        output.extend(err)
-    output.extend(['<<<<>>>>', ''])
+    for piggytarget in resource.piggytargets:
+        output = [
+            '<<<<%s>>>>' % piggytarget,
+            '<<<azure_%s>>>' % resource.section,
+            '%s' % resource,
+        ]
+        if err:
+            output.append('<<<azure_agent_info>>>')
+            output.extend(err)
+        output.extend(['<<<<>>>>', ''])
+        _write('\n'.join(output))
 
-    _write('\n'.join(output))
     _write_agent_info('remaining-reads', client.remaining_reads)
 
 
@@ -569,10 +608,10 @@ def main(argv=None):
 
     try:
         client = AzureClient(args)
-        Threads(args).run(client, config)
-    except Exception, exc:
-        if args.debug:
-            raise exc
+        resources = [r for r in client.discover_resources() if config.is_configured(r)]
+        client.init_specific(resources)
+        Threads(args).run(resources, client, config)
+    except () if args.debug else Exception, exc:
         _write(_add_hint(str(exc)))
         return 1
     return 0

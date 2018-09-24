@@ -42,7 +42,7 @@ MODULES += simplejson-3.15.0.tar.gz
 MODULES += mysqlclient-1.3.13.tar.gz  # needed by check_sql
 MODULES += psycopg2-2.6.2.tar.gz # needed by check_sql
 MODULES += dicttoxml-1.7.4.tar.gz # needed by inventory XML export
-MODULES += pycparser-2.18.tar.gz # needed for cffi
+MODULES += pycparser-2.19.tar.gz # needed for cffi and azure
 MODULES += enum34-1.1.6.tar.gz # needed for cffi
 MODULES += cffi-1.11.5.tar.gz # needed by e.g. Pillow
 MODULES += Pillow-5.1.0.tar.gz # needed by reportlab (pillow>=2.4.0)
@@ -128,7 +128,7 @@ MODULES += paramiko-2.1.2.tar.gz
 MODULES += pbr-4.0.3.tar.gz
 MODULES += pyghmi-1.2.14.tar.gz
 
-MODULES += typing-3.6.4.tar.gz
+MODULES += typing-3.6.6.tar.gz
 MODULES += scandir-1.7.tar.gz
 MODULES += pathlib2-2.3.2.tar.gz
 # Added for scheduling (cmk/schedule.py)
@@ -137,18 +137,19 @@ MODULES += python-snap7-0.9.tar.gz
 # Added for azure special agent
 MODULES += PyJWT-1.6.4.tar.gz
 MODULES += SecretStorage-2.3.1.tar.gz
-MODULES += adal-1.0.2.tar.gz
-MODULES += azure-common-1.1.14.zip
+MODULES += adal-1.1.0.tar.gz
+MODULES += azure-common-1.1.15.zip
 MODULES += azure-mgmt-monitor-0.5.2.zip
 MODULES += azure-mgmt-resource-2.0.0.zip
-MODULES += certifi-2018.4.16.tar.gz
+MODULES += azure-mgmt-compute-4.1.0.zip
+MODULES += certifi-2018.8.24.tar.gz
 MODULES += chardet-3.0.4.tar.gz
 MODULES += configparser-3.5.0.tar.gz
 MODULES += entrypoints-0.2.3.tar.gz
 MODULES += isodate-0.6.0.tar.gz
 MODULES += keyring-13.2.1.tar.gz
-MODULES += msrest-0.5.4.tar.gz
-MODULES += msrestazure-0.4.34.tar.gz
+MODULES += msrest-0.5.5.tar.gz
+MODULES += msrestazure-0.5.0.tar.gz
 MODULES += oauthlib-2.1.0.tar.gz
 MODULES += requests-oauthlib-1.0.0.tar.gz
 MODULES += urllib3-1.23.tar.gz

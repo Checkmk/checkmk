@@ -1,0 +1,11 @@
+Title: Add missing metrics for Windows Memory and Pagefile check
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.4.0p37
+Date: 1537791027
+
+Memory and Pagefile average graphs are now displayed using the correct scaling and unit.

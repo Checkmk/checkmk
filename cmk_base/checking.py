@@ -39,7 +39,6 @@ import cmk.cpu_tracking as cpu_tracking
 from cmk.exceptions import MKGeneralException
 from cmk.regex import regex
 
-import cmk_base.core as core
 import cmk_base.utils
 import cmk_base.crash_reporting
 import cmk_base.console as console
@@ -299,7 +298,7 @@ def execute_check(multi_host_sections, hostname, ipaddress, check_plugin_name, i
         item_state.reset_wrapped_counters()
 
         raw_result = check_function(item, determine_check_params(params), section_content)
-        result = sanitize_check_result(raw_result, checks.is_snmp_check(check_plugin_name))
+        result = sanitize_check_result(raw_result, cmk_base.check_utils.is_snmp_check(check_plugin_name))
         item_state.raise_counter_wrap()
 
     except item_state.MKCounterWrapped, e:
@@ -378,7 +377,7 @@ def _evaluate_timespecific_entry(entry):
     combined_entry = copy.copy(entry["tp_default_value"])
     for timeperiod_name, tp_entry in entry["tp_values"][::-1]:
         try:
-            tp_active = core.timeperiod_active(timeperiod_name)
+            tp_active = cmk_base.core.timeperiod_active(timeperiod_name)
         except:
             # Connection error
             if cmk.debug.enabled():

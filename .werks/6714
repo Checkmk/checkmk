@@ -1,0 +1,10 @@
+Title: docker_container_status: Fixed possible "ValueError" exception
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0p5
+Date: 1537782461
+Class: fix
+
+

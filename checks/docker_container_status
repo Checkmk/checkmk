@@ -35,7 +35,7 @@ def parse_docker_container_status(info):
     # line. We assume that this a full JSON object. The rest of the section is skipped.
     # When a container got piggyback data from multiple hosts (e.g. a cluster) this results
     # in multiple JSON objects handed over to this check.
-    json_raw_data = info[0][0]
+    json_raw_data = " ".join(info[0])
 
     import json
     return json.loads(json_raw_data)

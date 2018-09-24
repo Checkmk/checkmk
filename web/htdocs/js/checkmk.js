@@ -2142,9 +2142,14 @@ function valuespec_cascading_change(oSelect, varprefix, count) {
     }
 }
 
-function valuespec_textarea_resize(oArea)
+function valuespec_textarea_resize(oArea, theme)
 {
-    oArea.style.height = (oArea.scrollHeight - 6) + "px"  ;
+    if (theme == "facelift") {
+        delimiter = 16;
+    } else {
+        delimiter = 6;
+    }
+    oArea.style.height = (oArea.scrollHeight - delimiter) + "px";
 }
 
 function valuespec_listof_add(varprefix, magic, style)

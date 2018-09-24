@@ -41,7 +41,6 @@ def check_azure_databases_storage(_item, params, resource):
         resource, 'average_storage_percent', cmk_key, 'Storage', levels=levels, minv=0)
     if mcheck:
         state, text, perf = mcheck
-        text += "%"
         abs_storage_metric = resource.get('metrics', {}).get('average_storage')
         if abs_storage_metric is not None:
             text += " (%s)" % get_bytes_human_readable(abs_storage_metric.value)

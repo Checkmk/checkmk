@@ -32,9 +32,9 @@ def azure_iter_informative_attrs(resource):
     if loc is not None:
         yield 'Location', loc
 
-    for k, v in resource.get('tags', {}).iteritems():
-        if not k.startswith("hidden-"):
-            yield k[0].upper() + k[1:], v
+    for key, value in resource.get('tags', {}).iteritems():
+        if not key.startswith("hidden-"):
+            yield key[0].upper() + key[1:], value
 
 
 def check_azure_metric(resource,
@@ -55,11 +55,16 @@ def check_azure_metric(resource,
         value = get_rate(countername, time.time(), metric.value)
     else:
         value = metric.value
-
-    l_state, u_state, text = 0, 0, "%s: %s" % (display_name, value)
     if value is None:
-        return 3, text
+        return 3, "Metric %s is 'None'" % display_name, []
 
+    formatter = {
+        "percent": get_percent_human_readable,
+        "bytes": get_bytes_human_readable,
+    }.get(metric.unit, str)
+    text = "%s: %s" % (display_name, formatter(value))
+
+    l_state, u_state = 0, 0
     warn_lower, crit_lower = levels_lower or (None, None)
     if crit_lower is not None and value <= crit_lower:
         l_state = 2
@@ -119,7 +124,7 @@ def _parse_resource(info):
     '''
     try:
         resource = json.loads(_AZURE_AGENT_SEPARATOR.join(info[0]))
-    except:
+    except (ValueError, IndexError):
         return None
 
     if len(info) < 4:
@@ -138,8 +143,8 @@ def _parse_resource(info):
             value = int(value)
 
         key = "%s_%s" % (aggregation, name.replace(" ", "_"))
-        m = Metric(name, aggregation, value, unit, timestamp, timegrain, filters)
-        resource.setdefault('metrics', {})[key] = m
+        metr = Metric(name, aggregation, value, unit, timestamp, timegrain, filters)
+        resource.setdefault('metrics', {})[key] = metr
 
     return resource
 
@@ -155,8 +160,8 @@ def parse_azure(info):
         if raw_resources:
             raw_resources[-1].append(row)
 
-    parsed_resources = (_parse_resource(r) for r in raw_resources if r)
-    return {r['name']: r for r in parsed_resources}
+    parsed_resources = (_parse_resource(r) for r in raw_resources)
+    return {r['name']: r for r in parsed_resources if r}
 
 
 #.

@@ -1,0 +1,10 @@
+Title: Fixed TypeError exception when running "cmk -D" on hosts without IP address
+Level: 1
+Component: core
+Compatible: compat
+Edition: cre
+Version: 1.5.0p5
+Date: 1537779396
+Class: fix
+
+

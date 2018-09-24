@@ -1,0 +1,10 @@
+Title: docker_node_network: Fix crashing HW/SW inventory when labels are not set
+Level: 1
+Component: inv
+Compatible: compat
+Edition: cre
+Version: 1.5.0p5
+Date: 1537774944
+Class: fix
+
+

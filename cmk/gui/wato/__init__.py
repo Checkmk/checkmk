@@ -118,6 +118,7 @@ import cmk.gui.mkeventd
 import cmk.gui.forms as forms
 import cmk.gui.backup as backup
 import cmk.gui.watolib as watolib
+import cmk.gui.background_job as background_job
 import cmk.gui.gui_background_job as gui_background_job
 import cmk.gui.i18n
 import cmk.gui.pages
@@ -1917,7 +1918,11 @@ class ModeBulkRenameHost(WatoMode):
             title = _("Renaming of %s") % ", ".join(u"%s → %s" % x[1:] for x in renamings)
             host_renaming_job = RenameHostsBackgroundJob(title=title)
             host_renaming_job.set_function(rename_hosts_background_job, renamings)
-            host_renaming_job.start()
+
+            try:
+                host_renaming_job.start()
+            except background_job.BackgroundJobAlreadyRunning, e:
+                raise MKGeneralException(_("Another host renaming job is already running: %s") % e)
 
             job_id = host_renaming_job.get_job_id()
             job_details_url = html.makeuri_contextless([
@@ -2188,7 +2193,12 @@ class ModeRenameHost(WatoMode):
             host_renaming_job = RenameHostsBackgroundJob(title=_("Renaming of %s -> %s") % (self._host.name(), newname))
             renamings = [(watolib.Folder.current(), self._host.name(), newname)]
             host_renaming_job.set_function(rename_hosts_background_job, renamings)
-            host_renaming_job.start()
+
+            try:
+                host_renaming_job.start()
+            except background_job.BackgroundJobAlreadyRunning, e:
+                raise MKGeneralException(_("Another host renaming job is already running: %s") % e)
+
             job_id = host_renaming_job.get_job_id()
 
             job_details_url = html.makeuri_contextless([
@@ -8897,10 +8907,12 @@ class ModeUsers(WatoMode):
             try:
 
                 job = userdb.UserSyncBackgroundJob()
-                if job.is_running():
-                    raise MKUserError(None, _("Another synchronization job is already running"))
                 job.set_function(job.do_sync, add_to_changelog=True, enforce_sync=True)
-                job.start()
+
+                try:
+                    job.start()
+                except background_job.BackgroundJobAlreadyRunning, e:
+                    raise MKUserError(None, _("Another synchronization job is already running: %s") % e)
 
                 self._job_snapshot = job.get_status_snapshot()
             except Exception:
@@ -13092,8 +13104,11 @@ class PageFetchAgentOutput(AgentOutputPage):
 
         self._action()
 
-        if html.has_var("_start") and not self._job.is_running():
-            self._job.start()
+        if html.has_var("_start"):
+            try:
+                self._job.start()
+            except background_job.BackgroundJobAlreadyRunning:
+                pass
 
         self._show_status(self._job)
 
@@ -13371,14 +13386,14 @@ def create_sample_config():
 
     # Initial baking of agents (when bakery is available)
     if watolib.has_agent_bakery():
+        bake_job = BakeAgentsBackgroundJob()
         import cmk.gui.cee.plugins.wato.agent_bakery
+        bake_job.set_function(cmk.gui.cee.plugins.wato.agent_bakery.bake_agents_background_job)
         try:
-            bake_job = cmk.gui.cee.plugins.wato.agent_bakery.BakeAgentsBackgroundJob()
-            if not bake_job.is_running():
-                bake_job.set_function(cmk.gui.cee.plugins.wato.agent_bakery.bake_agents_background_job)
-                bake_job.start()
-        except:
-            pass # silently ignore building errors here
+            bake_job.start()
+        except background_job.BackgroundJobAlreadyRunning:
+            pass
+
 
     # This is not really the correct place for such kind of action, but the best place we could
     # find to execute it only for new created sites.

@@ -41,6 +41,7 @@ import cmk.gui.pages
 import cmk.gui.utils as utils
 import cmk.gui.config as config
 import cmk.gui.hooks as hooks
+import cmk.gui.background_job as background_job
 import cmk.gui.gui_background_job as gui_background_job
 from cmk.gui.exceptions import MKGeneralException, MKUserError, MKInternalError
 from cmk.gui.log import logger
@@ -1302,10 +1303,11 @@ def userdb_sync_job_enabled():
 def ajax_sync():
     try:
         job = UserSyncBackgroundJob()
-        if job.is_running():
-            raise MKUserError(None, _("Another synchronization job is already running"))
         job.set_function(job.do_sync, add_to_changelog=False, enforce_sync=True)
-        job.start()
+        try:
+            job.start()
+        except background_job.BackgroundJobAlreadyRunning, e:
+            raise MKUserError(None, _("Another user synchronization is already running: %s") % e)
         html.write('OK Started synchronization\n')
     except Exception, e:
         logger.exception()

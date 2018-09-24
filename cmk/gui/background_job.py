@@ -47,6 +47,11 @@ import cmk.daemon as daemon
 import cmk.store as store
 from cmk.exceptions import MKGeneralException
 
+
+class BackgroundJobAlreadyRunning(MKGeneralException):
+    pass
+
+
 #.
 #   .--Function Interface--------------------------------------------------.
 #   |               _____                 _   _                            |
@@ -220,9 +225,6 @@ class BackgroundProcess(multiprocessing.Process):
 
         self._job_parameters["logger"] = self._logger
 
-        # Solely used for process identification
-        self._jobstatus.open_statusfile_handle()
-
 
     def _execute_function(self):
         # The specific function is called in a separate thread The main thread
@@ -329,8 +331,9 @@ class BackgroundJob(object):
 
     def __init__(self, job_id, logger=None, **kwargs):
         super(BackgroundJob, self).__init__()
-        self._job_id             = job_id
-        self._job_base_dir       = BackgroundJobDefines.base_dir
+        self._job_id = job_id
+        self._job_base_dir = BackgroundJobDefines.base_dir
+        self._job_initializiation_lock = os.path.join(self._job_base_dir, "job_initialization.lock")
 
         if not logger:
             raise MKGeneralException(_("The background job is missing a logger instance"))
@@ -422,9 +425,17 @@ class BackgroundJob(object):
             raise MKGeneralException(_("Cannot delete job. Job cannot be stopped."))
 
         self._terminate_processes()
+        self._delete_work_dir()
 
-        if os.path.exists(self._work_dir):
+
+    def _delete_work_dir(self):
+        try:
             shutil.rmtree(self._work_dir)
+        except OSError, e:
+            if e.errno == 2: # No such file or directory
+                pass
+            else:
+                raise
 
 
     def _terminate_processes(self):
@@ -475,11 +486,7 @@ class BackgroundJob(object):
         if psutil_process.name() != BackgroundJobDefines.process_name:
             return False
 
-        for openfile in psutil_process.open_files():
-            if openfile.path.endswith(job_status["statusfile"]):
-                return True
-
-        return False
+        return True
 
 
     def get_status(self):
@@ -504,9 +511,18 @@ class BackgroundJob(object):
 
 
     def start(self):
-        if os.path.exists(self._work_dir):
-            shutil.rmtree(self._work_dir)
-        os.makedirs(self._work_dir)
+        try:
+            cmk.store.aquire_lock(self._job_initializiation_lock)
+            self._start()
+        finally:
+            cmk.store.release_lock(self._job_initializiation_lock)
+
+
+    def _start(self):
+        if self.is_running():
+            raise BackgroundJobAlreadyRunning(_("Background Job %s already running") % self._job_id)
+
+        self._prepare_work_dir()
 
         # Start processes
         initial_status = {"state": JobStatus.state_initialized,
@@ -514,7 +530,6 @@ class BackgroundJob(object):
                           "started": time.time()}
         initial_status.update(self._kwargs)
         self._jobstatus.update_status(initial_status)
-
 
         job_parameters = {}
         job_parameters["work_dir"]            = self._work_dir
@@ -527,6 +542,11 @@ class BackgroundJob(object):
 
         job_status = self.get_status()
         self._logger.debug("Started job \"%s\" (PID: %d)" % (self._job_id, job_status["pid"]))
+
+
+    def _prepare_work_dir(self):
+        self._delete_work_dir()
+        os.makedirs(self._work_dir)
 
 
     def _start_background_subprocess(self, job_parameters):
@@ -550,11 +570,10 @@ class JobStatus(object):
     def __init__(self, job_statusfilepath):
         super(JobStatus, self).__init__()
         self._job_statusfilepath     = job_statusfilepath
-        self._job_statusfile_handle  = None
 
 
     def get_status(self):
-        return store.load_data_from_file(self._job_statusfilepath, {})
+        return store.load_data_from_file(self._job_statusfilepath, default={})
 
 
     def statusfile_exists(self):
@@ -570,14 +589,6 @@ class JobStatus(object):
         status.update(params)
         store.save_mk_file(self._job_statusfilepath, self._format_value(status))
         store.release_lock(self._job_statusfilepath)
-
-
-    def open_statusfile_handle(self):
-        """
-        This function creates a file handle which helps to uniquely identfiy the background process
-        """
-        self._job_statusfile_handle = open(self._job_statusfilepath, "r")
-
 
     def _format_value(self, value):
         return pprint.pformat(value)

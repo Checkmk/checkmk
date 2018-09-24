@@ -41,8 +41,6 @@ The new mechanism now creates the following parameters
 <li>Sunday: {"warn": 89, "crit": 92, "bandwith": 1000, "check_mode": "auto"}</li>
 </ul>
 
-As you can see, only the parameters from the first rule were taken into account.
-
 The rule evaluation now starts at the bottom rule and then progresses to the top rule.
 For each rule, first of all the default parameters are applied. Afterwards the timespecific
 component(s) are applied. If a single rule have more than one timespecific parameter,

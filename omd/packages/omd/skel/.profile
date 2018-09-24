@@ -5,6 +5,9 @@ export OMD_ROOT=###ROOT###
 PATH=$OMD_ROOT/local/bin:$OMD_ROOT/bin:$OMD_ROOT/local/lib/perl5/bin:$PATH
 export LD_LIBRARY_PATH=$OMD_ROOT/local/lib:$OMD_ROOT/lib
 
+# Create files and directories not accessible for "world" by default
+umask 0007
+
 # enable local perl env
 export PERL5LIB="$OMD_ROOT/local/lib/perl5/lib/perl5:$OMD_ROOT/lib/perl5/lib/perl5:$PERL5LIB"
 export PATH="$OMD_ROOT/lib/perl5/bin:$PATH"

@@ -1,0 +1,19 @@
+Title: Change Check_MK site umask to prevent "world" access
+Level: 1
+Component: omd
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1537775010
+Class: security
+
+To prevent Check_MK site files from being read by any local system user the Check_MK
+sites now have a umask of 0007 set.
+
+The effect of this change is that new files and directories that are created in
+the context of the site user are not accessible by "world" users. These are
+local system users that are neither the site user nor members of the site
+group.
+
+If you don't like this, you can change the umask back to e.g. 0002 in the file
+<tt>~/.profile</tt>.

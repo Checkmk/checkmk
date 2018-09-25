@@ -1,0 +1,17 @@
+Title: win_license: New check to monitor information about Windows licenses state
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1537963969
+Class: feature
+
+This check parses the information provided by the slmgr.vbs command on a
+windows host. Information about the License status as well as the time to
+expiration are shown.
+
+As a preparation you need to install the agent plugin {win_license.bat}
+into your agent's plugins directory.
+
+The check can be configure via the corresponding WATO rule {Windows License}

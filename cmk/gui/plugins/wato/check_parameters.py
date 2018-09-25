@@ -2935,6 +2935,34 @@ register_check_parameters(
 
 register_check_parameters(
     subgroup_applications,
+    "win_license",
+    _("Windows License"),
+    Dictionary(
+        elements=[
+            ("status",
+                ListOfStrings(
+                    title = _("Allowed license states"),
+                    help = _("Here you can specify the allowed license states for windows."),
+                    default_value=['Licensed', 'Initial grace period'],
+                )
+            ),
+            ("expiration_time",
+                Tuple(
+                    title= _("Time until license expiration"),
+                    help = _("Remaining days until the Windows license expires"),
+                    elements = [
+                            Age(title = _("Warning at"), default_value=14*24*60*60),
+                            Age(title = _("Critical at"), default_value=7*24*60*60)
+                    ])
+            ),
+        ]
+    ),
+    None,
+    match_type="dict",
+)
+
+register_check_parameters(
+    subgroup_applications,
     "citrix_sessions",
     _("Citrix Terminal Server Sessions"),
     Dictionary(

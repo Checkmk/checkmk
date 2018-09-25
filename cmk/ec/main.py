@@ -50,6 +50,7 @@ import time
 import traceback
 
 # Needed for receiving traps
+from pysnmp import debug as snmp_debug
 from pysnmp.entity import engine as snmp_engine
 from pysnmp.entity import config as snmp_config
 from pysnmp.entity.rfc3413 import ntfrcv as snmp_ntfrcv
@@ -480,6 +481,9 @@ def initialize_snmptrap_handling(settings, config, event_server, table_events):
 
 def initialize_snmptrap_engine(config, event_server, table_events):
     the_snmp_engine = snmp_engine.SnmpEngine()
+
+    # Hand over our logger to PySNMP
+    snmp_debug.setLogger(snmp_debug.Debug("all", printer=logger.getChild("snmp").debug))
 
     # Disable receiving of SNMPv3 INFORM messages. We do not support them (yet)
     class ECNotificationReceiver(snmp_ntfrcv.NotificationReceiver):
@@ -5026,6 +5030,7 @@ def load_configuration(settings, slave_status):
         logger.getChild("EventServer").setLevel(levels["cmk.mkeventd.EventServer"])
         logger.getChild("EventStatus").setLevel(levels["cmk.mkeventd.EventStatus"])
         logger.getChild("StatusServer").setLevel(levels["cmk.mkeventd.StatusServer"])
+        logger.getChild("snmp").setLevel(levels["cmk.mkeventd.snmp"])
         logger.getChild("lock").setLevel(levels["cmk.mkeventd.lock"])
 
     # Configure the auto deleting indexes in the DB when mongodb is enabled

@@ -42,12 +42,20 @@ import cmk.paths
 
 # Main entry point for all HTTP-requests (called directly by mod_apache)
 def handler(mod_python_req, fields = None, is_profiling = False):
+    response_code = apache.OK
+
     # Create an object that contains all data about the request and
     # helper functions for creating valid HTML. Parse URI and
     # store results in the request object for later usage.
-    __builtin__.html = html_mod_python(mod_python_req, fields)
+    try:
+        __builtin__.html = html_mod_python(mod_python_req, fields)
+    except:
+        log.logger.exception("Failed to process request")
+        mod_python_req.content_type = "text/plain; charset=UTF-8"
+        mod_python_req.write("Failed to process request. Have a look at 'var/log/web.log' "
+                             "for more information.\n")
+        return response_code
 
-    response_code = apache.OK
     try:
         config.initialize()
         init_profiling(is_profiling)

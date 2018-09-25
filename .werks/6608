@@ -1,0 +1,10 @@
+Title: win_wmi_updates: Fixed parsing install date if reported in HEX format
+Level: 1
+Component: inv
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1537882850
+Class: fix
+
+

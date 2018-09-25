@@ -86,8 +86,7 @@ def get_check_table(hostname, remove_duplicates=False, use_cache=True,
            (not config.has_management_board(hostname) or config.management_protocol_of(hostname) != "snmp"):
             passed = False
 
-        elif not config.is_tcp_host(hostname) and not piggyback.has_piggyback_raw_data(config.piggyback_max_cachefile_age, hostname) \
-           and cmk_base.check_utils.is_tcp_check(checkname):
+        elif not config.is_agent_host(hostname) and cmk_base.check_utils.is_tcp_check(checkname):
             passed = False
 
         is_checkname_valid_cache[the_id] = passed

@@ -152,7 +152,8 @@ def _do_discovery_for(hostname, ipaddress, sources, multi_host_sections, check_p
         check_plugin_names = multi_host_sections.get_check_plugin_names()
         sources.enforce_check_plugin_names(check_plugin_names)
 
-    console.step("Executing inventory plugins")
+    console.step("Executing discovery plugins (%d)" % len(check_plugin_names))
+    console.vverbose("  Trying discovery with: %s\n" % ", ".join(check_plugin_names))
     new_items = _discover_services(hostname, ipaddress, sources, multi_host_sections, on_error=on_error)
 
     # There are three ways of how to merge existing and new discovered checks:

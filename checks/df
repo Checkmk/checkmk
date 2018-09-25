@@ -251,7 +251,7 @@ def check_df(item, params, parsed):
 # And also exclude docker mounts in containers which are reported
 # by the agent when the agent is executed in the container context
 def _filter_docker_filesystems(df_blocks):
-    return [ e for e in df_blocks if not e[0].startswith("/var/lib/docker")
+    return [ e for e in df_blocks if not e[0].startswith("/var/lib/docker/")
              and e[0] not in [ "/etc/resolv.conf", "/etc/hostname", "/etc/hosts" ] ]
 
 

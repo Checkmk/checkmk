@@ -42,6 +42,16 @@ info_df_win = [[u'C:\\', u'NTFS', u'8192620', u'7724268', u'468352', u'95%', u'C
      u'41%',
      u'F:\\']]
 
+info_df_lnx_docker = [
+     [u'/dev/sda2', u'ext4', u'143786696', u'101645524', u'34814148', u'75%', u'/var/lib/docker'],
+     [u'/dev/sda3', u'ext4', u'143786696', u'101645524', u'34814148', u'75%', u'/var/lib/docker-latest'],
+     [u'/dev/sda4', u'ext4', u'143786696', u'101645524', u'34814148', u'75%', u'/var/lib/docker/some-fs/mnt/grtzlhash'],
+     [u'[df_inodes_start]'],
+     [u'/dev/sda2', u'ext4', u'9142272', u'1654272', u'7488000', u'19%', u'/var/lib/docker'],
+     [u'/dev/sda3', u'ext4', u'9142272', u'1654272', u'7488000', u'19%', u'/var/lib/docker-latest'],
+     [u'/dev/sda4', u'ext4', u'9142272', u'1654272', u'7488000', u'19%', u'/var/lib/docker/some-fs/mnt/grtzlhash'],
+     [u'[df_inodes_end]']]
+
 info_df_lnx_tmpfs = [[u'tmpfs',
      u'tmpfs',
      u'8152820',
@@ -251,7 +261,10 @@ info_empty_inodes = [
     (info_df_btrfs, [(u'/dev/sda1 btrfs /dev/sda1', {})],
                                                          { "include_volume_name" : True }),              # btrfs w/ volume name option
     (info_solaris_zfs, [], {}),                                                                          # ignore filensystems without size
-    (info_empty_inodes, [], {})
+    (info_empty_inodes, [], {}),
+    (info_df_lnx_docker, [(u'/var/lib/docker', {}),                                                      # Omit docker container filesystems,
+                          (u'/var/lib/docker-latest', {}),                                               # but not /var/lib/docker{,-latest}
+                         ], {}),
 ])
 def test_df_discovery_with_parse(check_manager, info, expected_result, inventory_df_rules):
 

@@ -1,0 +1,12 @@
+Title: df: Do not ignore filesystems mounted at /var/lib/docker and /var/lib/docker-latest
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0i1
+Date: 1537884926
+
+We do not want to discover the container filesystems, but previously, the filtering had
+been too aggressive. This has been fixed.

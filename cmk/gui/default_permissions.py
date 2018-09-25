@@ -174,6 +174,13 @@ def load_plugins(force):
          _("Show the column for stale host and service checks in the tactical overview snapin."),
          [ "guest", "user", "admin" ])
 
+    config.declare_permission("general.see_crash_reports",
+         _("See crash reports"),
+         _("In case an exception happens while Check_MK is running it may produce crash reports that you can "
+           "use to track down the issues in the code or send it as report to the Check_MK team to fix this issue "
+           "Only users with this permission are able to see the reports in the GUI."),
+         [ "admin" ])
+
     loaded_with_language = cmk.gui.i18n.get_current_language()
 
 

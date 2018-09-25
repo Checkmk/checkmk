@@ -71,8 +71,15 @@ class Application(object):
         # Create an object that contains all data about the request and
         # helper functions for creating valid HTML. Parse URI and
         # store results in the request object for later usage.
-        h = cmk.gui.htmllib.html(self._request, self._response)
-        cmk.gui.globals.html.set_current(h)
+        try:
+            h = cmk.gui.htmllib.html(self._request, self._response)
+            cmk.gui.globals.html.set_current(h)
+        except Exception:
+            logger.exception("Failed to process request")
+            self._response.set_content_type("text/plain; charset=UTF-8")
+            self._response.write("Failed to process request. Have a look at 'var/log/web.log' "
+                                 "for more information.\n")
+            return
 
         self._process_request()
 

@@ -183,6 +183,7 @@ install-global:
 	# Install ChangeLog created from all werks
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/doc
 	ln -s check_mk/ChangeLog $(DESTDIR)$(OMD_ROOT)/share/doc/ChangeLog
+	install -m 644 Licenses.csv $(DESTDIR)$(OMD_ROOT)/share/doc/Licenses.csv
 
 	if [ -f COMMIT ]; then \
 	    install -m 644 COMMIT $(DESTDIR)$(OMD_ROOT)/share/doc ; \

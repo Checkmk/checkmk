@@ -2992,6 +2992,9 @@ if mkeventd_enabled:
                 ("cmk.mkeventd.lock", _("Locking"),
                  _("Log level for the locking mechanics. Setting this to debug will enable "
                    "log entries for each lock/unlock action.")),
+                ("cmk.mkeventd.snmp", _("SNMP trap processing"),
+                 _("Log level for the SNMP trap processing mechanics. Setting this to debug will enable "
+                   "detailed log entries for each received SNMP trap.")),
                 ]:
             elements.append(
                 (component, DropdownChoice(

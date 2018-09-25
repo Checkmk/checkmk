@@ -51,6 +51,7 @@ import traceback
 
 # Needed for receiving traps
 from pysnmp import debug as snmp_debug
+from pysnmp.proto import errind as snmp_errind
 from pysnmp.entity import engine as snmp_engine
 from pysnmp.entity import config as snmp_config
 from pysnmp.entity.rfc3413 import ntfrcv as snmp_ntfrcv
@@ -493,6 +494,9 @@ def initialize_snmptrap_engine(config, event_server, table_events):
     global g_snmp_receiver, g_snmp_engine
     g_snmp_receiver = ECNotificationReceiver(the_snmp_engine, event_server.handle_snmptrap)
     g_snmp_engine = the_snmp_engine
+
+    g_snmp_engine.observer.registerObserver(event_server.handle_unauthenticated_snmptrap,
+        "rfc2576.prepareDataElements:sm-failure", "rfc3412.prepareDataElements:sm-failure")
 
 
 def auth_proto_for(proto_name):
@@ -1293,6 +1297,7 @@ class EventServer(ECServerThread):
         self._syslog_tcp = None
         self._snmptrap = None
         self._mib_resolver = None
+        self._snmp_logger = logger.getChild("snmp")
 
         self._rules = []
         self._hash_stats = []
@@ -1481,16 +1486,16 @@ class EventServer(ECServerThread):
             builder.loadModules()
 
             loaded_mib_module_names = builder.mibSymbols.keys()
-            self._logger.info('Loaded %d SNMP MIB modules' % len(loaded_mib_module_names))
-            self._logger.verbose('Found modules: %s' % (', '.join(loaded_mib_module_names)))
+            self._snmp_logger.info('Loaded %d SNMP MIB modules' % len(loaded_mib_module_names))
+            self._snmp_logger.verbose('Found modules: %s' % (', '.join(loaded_mib_module_names)))
 
             # This object maintains various indices built from MIBs data
             self._mib_resolver = MibViewController(builder)
         except SmiError as e:
             if self.settings.options.debug:
                 raise
-            self._logger.info("Exception while loading MIB modules. Proceeding without modules!")
-            self._logger.exception("Exception: %s" % e)
+            self._snmp_logger.info("Exception while loading MIB modules. Proceeding without modules!")
+            self._snmp_logger.exception("Exception: %s" % e)
 
     # Format time difference seconds into approximated
     # human readable value
@@ -1534,7 +1539,7 @@ class EventServer(ECServerThread):
     def snmptrap_translate_varbinds(self, ipaddress, var_bind_list):
         var_binds = []
         if self._mib_resolver is None:
-            self._logger.warning('Failed to translate OIDs, no modules loaded (see above)')
+            self._snmp_logger.warning('Failed to translate OIDs, no modules loaded (see above)')
             return [(str(oid), str(value)) for oid, value in var_bind_list]
 
         def translate(oid, value):
@@ -1563,11 +1568,11 @@ class EventServer(ECServerThread):
                 var_binds.append((translated_oid, translated_value))
 
             except (SmiError, ValueConstraintError) as e:
-                self._logger.warning('Failed to translate OID %s (in trap from %s): %s '
+                self._snmp_logger.warning('Failed to translate OID %s (in trap from %s): %s '
                                     '(enable debug logging for details)' %
                                     (oid.prettyPrint(), ipaddress, e))
-                self._logger.debug('Failed trap var binds:\n%s' % "\n".join(["%s: %r" % i for i in var_bind_list]))
-                self._logger.debug(traceback.format_exc())
+                self._snmp_logger.debug('Failed trap var binds:\n%s' % "\n".join(["%s: %r" % i for i in var_bind_list]))
+                self._snmp_logger.debug(traceback.format_exc())
 
                 var_binds.append((str(oid), str(value)))  # add untranslated
 
@@ -1577,9 +1582,14 @@ class EventServer(ECServerThread):
     # and processing. PySNMP is calling self.handle_snmptrap back.
     def process_snmptrap(self, data):
         whole_msg, sender_address = data
-        self._logger.verbose("Trap received from %s:%d. Checking for acceptance now." % sender_address)
+        self._snmp_logger.verbose("Trap received from %s:%d. Checking for acceptance now." % sender_address)
         g_snmp_engine.setUserContext(sender_address=sender_address)
-        g_snmp_engine.msgAndPduDsp.receiveMessage(g_snmp_engine, (), (), whole_msg)
+        g_snmp_engine.msgAndPduDsp.receiveMessage(
+            snmpEngine=g_snmp_engine,
+            transportDomain=(),
+            transportAddress=sender_address,
+            wholeMsg=whole_msg
+        )
 
     def handle_snmptrap(self, snmp_engine, state_reference, context_engine_id, context_name,
                         var_binds, cb_ctx):
@@ -1595,13 +1605,24 @@ class EventServer(ECServerThread):
         event = self.create_event_from_trap(trap, ipaddress)
         self.process_event(event)
 
+    def handle_unauthenticated_snmptrap(self, snmp_engine, execpoint, variables, cb_ctx):
+        if variables["securityLevel"] in [ 1, 2 ] and variables["statusInformation"]["errorIndication"] == snmp_errind.unknownCommunityName:
+            msg = "Unknown community (%s)" % variables["statusInformation"].get("communityName", "")
+        elif variables["securityLevel"] == 3 and variables["statusInformation"]["errorIndication"] == snmp_errind.unknownSecurityName:
+            msg = "Unknown credentials (msgUserName: %s)" % variables["statusInformation"].get("msgUserName", "")
+        else:
+            msg = "%s" % variables["statusInformation"]
+
+        self._snmp_logger.verbose("Trap (v%d) dropped from %s: %s",
+            variables["securityLevel"], variables["transportAddress"][0], msg)
+
     def log_snmptrap_details(self, context_engine_id, context_name, var_binds, ipaddress):
-        if self._logger.is_verbose():
-            self._logger.verbose('Trap accepted from %s (ContextEngineId "%s", ContextName "%s")' %
+        if self._snmp_logger.is_verbose():
+            self._snmp_logger.verbose('Trap accepted from %s (ContextEngineId "%s", ContextName "%s")' %
                                 (ipaddress, context_engine_id.prettyPrint(), context_name.prettyPrint()))
 
             for name, val in var_binds:
-                self._logger.verbose('%-40s = %s' % (name.prettyPrint(), val.prettyPrint()))
+                self._snmp_logger.verbose('%-40s = %s' % (name.prettyPrint(), val.prettyPrint()))
 
     def create_event_from_trap(self, trap, ipaddress):
         # use the trap-oid as application

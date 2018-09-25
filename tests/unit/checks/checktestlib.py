@@ -117,12 +117,7 @@ class BasicCheckResult(Tuploid):
         return (self.status, self.infotext, self.perfdata, self.multiline)
 
     def __repr__(self):
-        if self.multiline is not None:
-            return 'BasicCheckResult(%r, %r, %r)' % \
-                   (self.status, self.infotext, self.perfdata)
-        else:
-            return 'BasicCheckResult(%r, %r, %r, multiline=%r)' % \
-                   self.tuple
+        return 'BasicCheckResult(%r, %r, %r, multiline=%r)' % self.tuple
 
 
 class CheckResult(object):

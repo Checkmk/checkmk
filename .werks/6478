@@ -1,0 +1,12 @@
+Title: synology_raid: Fixed crash on devices with more possibles raid states
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.2.8p28
+Date: 1537859684
+
+Newer devices can have more states than older one. This check does not crash
+anymore if such a state occurs.

@@ -1,4 +1,7 @@
 1.2.8p28:
+    Checks & Agents:
+    * 6478 FIX: synology_raid: Fixed crash on devices with more possibles raid states...
+
     Multisite:
     * 5854 FIX: Fixed broken werk list (regression in 1.2.8p27)
 

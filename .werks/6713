@@ -1,0 +1,12 @@
+Title: Fixed monitoring of piggyback based services when "No agent" is configured
+Level: 1
+Component: core
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0i1
+Date: 1537780802
+
+Check_MK was not correctly discovering services using piggyback data when a
+host (e.g. a docker container) has "No agent" configured.

@@ -9266,21 +9266,21 @@ class ModeEditUser(WatoMode):
         # Authentication: Password or Secret
         auth_method = html.var("authmethod")
         if auth_method == "secret":
-            secret = html.var("secret", "").strip()
+            secret = html.var("_auth_secret", "").strip()
             user_attrs["automation_secret"] = secret
             user_attrs["password"] = encrypt_password(secret)
             increase_serial = True # password changed, reflect in auth serial
 
         else:
-            password  = html.var("password_" + self._pw_suffix(), '').strip()
-            password2 = html.var("password2_" + self._pw_suffix(), '').strip()
+            password  = html.var("_password_" + self._pw_suffix(), '').strip()
+            password2 = html.var("_password2_" + self._pw_suffix(), '').strip()
 
             # We compare both passwords only, if the user has supplied
             # the repeation! We are so nice to our power users...
             # Note: this validation is done before the main-validiation later on
             # It doesn't make any sense to put this block into the main validation function
             if password2 and password != password2:
-                raise MKUserError("password2", _("The both passwords do not match."))
+                raise MKUserError("_password2", _("The both passwords do not match."))
 
             # Detect switch back from automation to password
             if "automation_secret" in user_attrs:
@@ -9463,14 +9463,14 @@ class ModeEditUser(WatoMode):
         html.open_td()
 
         if not self._is_locked('password'):
-            html.password_input("password_" + self._pw_suffix(), autocomplete="new-password")
+            html.password_input("_password_" + self._pw_suffix(), autocomplete="new-password")
             html.close_td()
             html.close_tr()
 
             html.open_tr()
             html.td(_("repeat:"))
             html.open_td()
-            html.password_input("password2_" + self._pw_suffix(), autocomplete="new-password")
+            html.password_input("_password2_" + self._pw_suffix(), autocomplete="new-password")
             html.write_text(" (%s)" % _("optional"))
             html.close_td()
             html.close_tr()
@@ -9486,8 +9486,8 @@ class ModeEditUser(WatoMode):
                 html.write_text(_("Not permitted to change the password. Change can not be enforced."))
         else:
             html.i(_('The password can not be changed (It is locked by the user connector).'))
-            html.hidden_field('password', '')
-            html.hidden_field('password2', '')
+            html.hidden_field('_password', '')
+            html.hidden_field('_password2', '')
 
         html.close_td()
         html.close_tr()
@@ -9498,7 +9498,7 @@ class ModeEditUser(WatoMode):
                          _("Automation secret for machine accounts"))
 
         html.open_ul()
-        html.text_input("secret", self._user.get("automation_secret", ""), size=30,
+        html.text_input("_auth_secret", self._user.get("automation_secret", ""), size=30,
                         id_="automation_secret")
         html.write_text(" ")
         html.open_b(style=["position: relative", "top: 4px;"])

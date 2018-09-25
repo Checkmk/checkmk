@@ -1,0 +1,10 @@
+Title: mssql_backup: Fixed conversion of backup date and time
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.4.0p37
+Date: 1537879599
+class: fix
+
+

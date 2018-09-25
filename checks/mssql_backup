@@ -81,14 +81,17 @@ def check_mssql_backup(item, params, info):
         elif len(line) == 4:
             inst, tablespace = line[:2]
             try:
-                backup_date, backup_time = line[2].split(" ")
+                last_backup_date, last_backup_time = line[2].split(" ")
                 backup_type = line[3]
             except ValueError:
-                backup_date, backup_time = line[2:4]
+                last_backup_date, last_backup_time = line[2:4]
                 backup_type = None
 
         elif len(line) == 5:
             inst, tablespace, last_backup_date, last_backup_time, backup_type = line
+
+        else:
+            continue
 
         if item == inst + ' ' + tablespace:
             found_instance = True

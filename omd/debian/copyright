@@ -20,8 +20,7 @@ License:
     Boston, MA 02111-1307, USA.
 
 On Debian systems, the complete text of the GNU General
-Public License version 3 can be found in `/usr/share/common-licenses/GPL-2'.
+Public License version 2 can be found in `/usr/share/common-licenses/GPL-2'.
 
-OMD contains a lot of open source software. The licensing and copyright 
-of each package can be found in package specific directories at
-/omd/versions/default/usr/share/doc/<package-name>.
+Check_MK contains a lot of open source software. The licensing and copyright of each
+package can be found in the file /omd/versions/default/share/doc/Licenses.csv.

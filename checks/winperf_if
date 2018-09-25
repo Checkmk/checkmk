@@ -90,15 +90,20 @@ def winperf_if_normalize_nic_name(name, nic_names):
 
 
 def parse_winperf_if(info):
-    nic_names = map(winperf_if_canonize_nic_name, info[1][2:])
-    nic_index = winperf_if_get_nic_index_map(nic_names)
+    try:
+        timestamp_info, names_info, data = info[0], info[1], info[2:]
+    except ValueError:
+        return []
 
     try:
-        agent_timestamp = float(info[0][0])
+        agent_timestamp = float(timestamp_info[0])
     except (IndexError, ValueError):
         agent_timestamp = None
 
-    lines = iter(info)
+    nic_names = map(winperf_if_canonize_nic_name, names_info[2:])
+    nic_index = winperf_if_get_nic_index_map(nic_names)
+
+    lines = iter(data)
     lines.next() # skip line with timestamp and counter number
     lines.next() # skip interface line (already evaluated)
     nics = dict([(n, {}) for n in nic_names])

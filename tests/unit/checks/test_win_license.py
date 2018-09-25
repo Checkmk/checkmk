@@ -1,0 +1,150 @@
+from collections import namedtuple
+
+import pytest
+
+from checktestlib import CheckResult, assertCheckResultsEqual
+# Mark all tests in this file as check related tests
+pytestmark = pytest.mark.checks
+
+agent_out = [
+    # Win7 - WM
+    """
+Name: Windows(R) 7, Enterprise edition
+Description: Windows Operating System - Windows(R) 7, TIMEBASED_EVAL channel
+Partial Product Key: JCDDG
+License Status: Initial grace period
+Time remaining: 12960 minute(s) (9 day(s))
+""",
+    # Win-Server 2012
+    """
+
+Name: Windows(R), ServerStandard edition
+Description: Windows(R) Operating System, VOLUME_KMSCLIENT channel
+Partial Product Key: MDVJX
+License Status: Licensed
+Volume activation expiration: 253564 minute(s) (177 day(s))
+Configured Activation Type: All
+
+Most recent activation information:
+Key Management Service client information
+Client Machine ID (CMID): f9d4e20a-cb8f-4050-9c0c-56420455ada1
+KMS machine name from DNS: bisv229.corp.giag.net:1688
+KMS machine IP address: 10.5.213.229
+KMS machine extended PID: 06401-00206-491-411285-03-1031-9600.0000-0802017
+Activation interval: 120 minutes
+Renewal interval: 10080 minutes
+KMS host caching is enabled
+
+""",
+    # Win-Server 2008
+    """
+
+Name: Windows Server(R), ServerStandard edition
+Description: Windows Operating System - Windows Server(R), VOLUME_KMSCLIENT chan
+nel
+Partial Product Key: R7VHC
+License Status: Licensed
+Volume activation expiration: 251100 minute(s) (174 day(s))
+
+Key Management Service client information
+Client Machine ID (CMID): a885c11e-4253-4e4b-825d-24c888769334
+KMS machine name from DNS: bisv229.corp.giag.net:1688
+KMS machine extended PID: 06401-00206-491-411285-03-1031-9600.0000-0802017
+Activation interval: 120 minutes
+Renewal interval: 10080 minutes
+KMS host caching is enabled""",
+    # Win10Pro-VM
+    """
+Name: Windows(R), Professional edition
+Description: Windows(R) Operating System, OEM_DM channel
+Partial Product Key: D692P
+License Status: Licensed""",
+]
+
+
+def splitter(text):
+    return [line.split() for line in text.split("\n")]
+
+
+@pytest.mark.parametrize("capture, result",
+                         zip(agent_out, [
+                             {
+                                 "License": "Initial grace period",
+                                 "expiration": "12960 minute(s) (9 day(s))",
+                                 "expiration_time": 12960 * 60,
+                             },
+                             {
+                                 "License": "Licensed",
+                                 "expiration": "253564 minute(s) (177 day(s))",
+                                 "expiration_time": 253564 * 60,
+                             },
+                             {
+                                 "License": "Licensed",
+                                 "expiration": "251100 minute(s) (174 day(s))",
+                                 "expiration_time": 251100 * 60,
+                             },
+                             {
+                                 "License": "Licensed",
+                             },
+                         ]))
+def test_parse_win_license(check_manager, capture, result):
+    check = check_manager.get_check("win_license")
+    assert result == check.run_parse(splitter(capture))
+
+
+check_ref = namedtuple('result', ['parameters', 'check_output'])
+
+
+@pytest.mark.parametrize(
+    "capture, result",
+    zip(agent_out, [
+        check_ref({
+            'status': ['Licensed', 'Initial grace period'],
+            'expiration_time': (8*24*60*60, 5*24*60*60),
+        },
+                  CheckResult([
+                      (0, "Software is Initial grace period"),
+                      (0, "License will expire in 9 d"),
+                  ])),
+        check_ref(
+            {
+                'status': ['Licensed', 'Initial grace period'],
+                'expiration_time': (180*24*60*60, 90*24*60*60),
+            },
+            CheckResult([
+                (0, "Software is Licensed"),
+                (1,
+                 "License will expire in 176 d (warn/crit at 180 d/90 d)"),
+            ])),
+        check_ref(
+            {
+                'status': ['Licensed', 'Initial grace period'],
+                'expiration_time': (360*24*60*60, 180*24*60*60),
+            },
+            CheckResult([
+                (0, "Software is Licensed"),
+                (2,
+                 "License will expire in 174 d (warn/crit at 360 d/180 d)"
+                ),
+            ])),
+        check_ref({
+            'status': ['Licensed', 'Initial grace period'],
+            'expiration_time': (14*24*60*60, 7*24*60*60),
+        }, CheckResult([(0, "Software is Licensed")])),
+    ]) + zip(agent_out, [
+        check_ref({
+            'status': ["Registered"],
+            'expiration_time': (8*24*60*60, 5*24*60*60),
+        },
+                  CheckResult([(2, "Software is Initial grace period Required: Registered"),
+                               (0, 'License will expire in 9 d')])),
+        check_ref(
+            None,
+            CheckResult([(0, "Software is Licensed"),
+                         (0, 'License will expire in 176 d')])),
+    ]))
+def test_check_win_license(check_manager, capture, result):
+    check = check_manager.get_check("win_license")
+    output = check.run_check(None, result.parameters or check.default_parameters(), check.run_parse(splitter(capture)))
+
+    assertCheckResultsEqual(CheckResult(output), result.check_output)

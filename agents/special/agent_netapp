@@ -289,6 +289,8 @@ else:
                 print "######## GOT RESPONSE #######"
                 if netapp_response.results_status() != "passed":
                     print "Error: Unable to parse content of response:\n%s" % netapp_response.results_reason()
+                    if netapp_response.results_status() == "parse-exception":
+                        print "Raw response text:\n%s" % netapp_response.raw_response_text
                 else:
                     print prettify(netapp_response.get_results().get_node())
 
@@ -387,7 +389,12 @@ else:
                 return
 
             # We except an XML answer (not HTML)
-            self.content = NetAppNode(ET.fromstring(self.raw_response_text))
+            try:
+                self.content = NetAppNode(ET.fromstring(self.raw_response_text))
+            except ET.ParseError, exc:
+                self.status  = "parse-exception"
+                self.reason  = str(exc)
+                return
 
             self.status = self.content.child_get("results").node.attrib["status"]
             if self.status != "passed":

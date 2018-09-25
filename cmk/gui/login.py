@@ -297,8 +297,8 @@ def check_auth(request):
 
 
 def check_auth_automation():
-    secret = html.var("_secret").strip()
-    user_id = html.get_unicode_input("_username").strip()
+    secret = html.var("_secret", "").strip()
+    user_id = html.get_unicode_input("_username", "").strip()
     html.del_var('_username')
     html.del_var('_secret')
     if secret and user_id and "/" not in user_id:

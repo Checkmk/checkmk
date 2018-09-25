@@ -10,3 +10,5 @@ Date: 1537527263
 
 * fsc_fans and fsc_temp do not discover services anymore, if corresponding fsc_sc2_* data is available.
 * snmp_scan_functions were made more readable using functions in fsc.include
+
+Incompatible, because you may have to rediscover hosts formerly discovering both, either fsc_fans or fsc_temp AND their corresponding fsc_sc2_* checks.

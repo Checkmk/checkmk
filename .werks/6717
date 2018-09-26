@@ -1,11 +1,12 @@
 Title: 3rd party components and licenses are now listed in central file
 Level: 1
 Component: omd
+Class: feature
 Compatible: compat
 Edition: cre
+State: unknown
 Version: 1.5.0p5
 Date: 1537889632
-Class: feature
 
 Check_MK contains a lot of open source software. The licensing and copyright of
 each package can now be found in a central CSV file. This file is located in
@@ -14,4 +15,4 @@ of your local default version e.g. at <tt>/omd/versions/default/share/doc/Licens
 
 The latest file is always available in the git at <tt>omd/Licenses.csv</tt> which
 is also available via the git browser
-<a href="https://git.mathias-kettner.de/git/?p=check_mk.git;a=blob;f=omd/Makefile/Licenses.csv">here</a>.
+<a href="https://git.mathias-kettner.de/git/?p=check_mk.git;a=blob;f=omd/Licenses.csv">here</a>.

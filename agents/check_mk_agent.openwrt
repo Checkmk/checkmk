@@ -684,7 +684,7 @@ if [ -r "$MK_CONFDIR/fileinfo.cfg" ] ; then
     IFS='
 '
     echo "[[[header]]]"
-    echo " name | status | size | date "
+    echo " name | status | size | time "
     echo "[[[content]]]"
     # name | status (missing/stat failed/ok)) | size | date
     # filename|missing||

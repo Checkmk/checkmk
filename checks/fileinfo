@@ -50,31 +50,26 @@ import collections
 fileinfo_groups = []
 
 
-def _get_field(row, index):
+def _get_field(row, index, data_type):
     try:
-        return row[index]
-    except IndexError:
-        return ''
+        return data_type(row[index])
+    except (IndexError, ValueError, TypeError):
+        return None
 
 
 def _parse_backwards_compatible(info):
     for row in info[1:]:
-        name = _get_field(row, 0)
+        name = _get_field(row, 0, str)
         # endswith("No such file...") is needed to
         # support the very old solaris perl based version of fileinfo
         if not name or name.endswith("No such file or directory"):
             continue
-        ambiguous = _get_field(row, 1)
+        ambiguous = _get_field(row, 1, str)
         missing = ambiguous == 'missing'
         failed = ambiguous in ('not readable', '')
-        try:
-            size = int(ambiguous)
-        except ValueError:
-            size = None
-        try:
-            time = int(_get_field(row, 2))
-        except ValueError:
-            time = None
+        size = _get_field(row, 1, int)
+        time = _get_field(row, 2, int)
+
         yield name, missing, failed, size, time
 
 
@@ -82,45 +77,39 @@ def parse_fileinfo(info):
     if not info:
         return {}
     parsed = {'files': {}}
-    try:
-        parsed['reftime'] = int(info[0][0])
-    except (IndexError, ValueError):
-        pass
+
+    parsed['reftime'] = _get_field(info[0], 0, int)
 
     FileinfoItem = collections.namedtuple(
         "FileinfoItem", "name missing failed size time")
 
     # deal with old agents' output:
-    if _get_field(_get_field(info, 1), 0) != '[[[header]]]':
+    if len(info) > 1 and _get_field(info[1], 0, str) != '[[[header]]]':
         for args in _parse_backwards_compatible(info):
             fi = FileinfoItem(*args)
             parsed['files'][fi.name] = fi
         return parsed
 
-    header = _get_field(info, 2)
+    if len(info) < 3:
+        return parsed
+
+    header = info[2]
     name_i = header.index('name') if 'name' in header else None
     size_i = header.index('size') if 'size' in header else None
     time_i = header.index('time') if 'time' in header else None
-    status_i = header.index('status') if 'status' in header else None
+    stat_i = header.index('status') if 'status' in header else None
 
     for row in info[4:]:
-        name = _get_field(row, name_i)
-        if not name:
-            continue
-        status = _get_field(row, status_i)
-        if not status:
+        name = _get_field(row, name_i, str)
+        stat = _get_field(row, stat_i, str)
+        size = _get_field(row, size_i, int)
+        time = _get_field(row, time_i, int)
+
+        if name is None or stat is None:
             continue
 
-        try:
-            size = int(row[size_i])
-        except (IndexError, ValueError):
-            size = None
-        try:
-            time = int(row[time_i])
-        except (IndexError, ValueError):
-            time = None
-        fi = FileinfoItem(name, ('missing' in status),
-                          ('stat failed' in status), size, time)
+        fi = FileinfoItem(name, ('missing' in stat),
+                          ('stat failed' in stat), size, time)
         parsed['files'][fi.name] = fi
 
     return parsed

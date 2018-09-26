@@ -1,0 +1,13 @@
+Title: New Theme: Fixed some minor bugs
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1537958041
+Class: fix
+
+This time the following bugs have been fixed:
+- The input field in bulk host import does not grow constantly on every interaction anymore
+- A typo lead to inverted icons in the HW-/SW-Inventory
+- The elements in host diagnostic are aligned correctly again

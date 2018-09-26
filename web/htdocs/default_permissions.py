@@ -99,6 +99,11 @@ def load_plugins(force):
         [ 'admin', 'user' ]
     )
 
+    config.declare_permission("general.see_availability",
+         _("See the availability"),
+         _("See the availability views of hosts and services"),
+         [ "admin", "user", "guest" ])
+
     config.declare_permission('general.edit_notifications',
         _('Edit personal notification settings'),
         _('This allows a user to edit his personal notification settings. You also need the permission '

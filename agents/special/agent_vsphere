@@ -834,14 +834,17 @@ OPTIONS:
                                 Default (no option) is on the queried vCenter or ESX-Host
                                 Possible WHERE options: * esxhost : show on ESX host
                                                         * vm      : show on virtual machine
-
+  --snapshot_display WHERE      Specifies where the virtual machines snapshots should be shown
+                                Default (no option) is on the VM
+                                Possible WHERE options: * esxhost : show on ESX host
+                                                        * vCenter : show on vCenter
 """)
 
 short_options = "hi:u:s:Dat:H:Pp:S:"
 long_options  = [
     "help", "user=", "secret=", "direct", "agent", "debug", "modules=", "timeout=", "no-cert-check",
     "hostname=", "tracefile=", "pysphere", "port=", "spaces=", "host_pwr_display=", "vm_pwr_display=",
-    "vm_piggyname="
+    "snapshot_display=", "vm_piggyname="
 ]
 
 opt_debug               = False
@@ -855,6 +858,7 @@ opt_pysphere            = False
 opt_tracefile           = None
 opt_host_pwr_display    = None
 opt_vm_pwr_display      = None
+opt_snapshot_display    = None
 opt_vm_piggyname        = "alias"
 opt_spaces              = "underscore"
 opt_no_cert             = False
@@ -908,6 +912,8 @@ for o,a in opts:
         opt_vm_pwr_display = a
     elif o in [ '--host_pwr_display' ]:
         opt_host_pwr_display = a
+    elif o in [ '--snapshot_display' ]:
+        opt_snapshot_display = a
     elif o in [ '-S', '--spaces']:
         if a not in [ "cut", "underscore" ]:
             usage()
@@ -1174,6 +1180,24 @@ def login():
                 os.chmod(host_cookie_path, 0600)
                 cookie_file.write(server_cookie)
 
+
+def output_aggregated_snapshots(vms, hostsystems=None):
+
+    aggregated = {}
+    for data in vms.itervalues():
+        if hostsystems is not None:
+            running_on = hostsystems.get(data.get("runtime.host"), data.get("runtime.host"))
+        else:
+            running_on = ''
+        snapshots = data.get("snapshot.rootSnapshotList")
+        if snapshots is not None:
+            aggregated.setdefault(running_on, []).append(snapshots)
+
+    for piggytarget, sn_list in aggregated.iteritems():
+        output('<<<<%s>>>>' % piggytarget)
+        output('<<<esx_vsphere_vm>>>')
+        output('snapshot.rootSnapshotList %s' % '|'.join(sn_list))
+        output('<<<<>>>>')
 
 
 #   .--Main----------------------------------------------------------------.
@@ -1600,6 +1624,10 @@ if not error:
                         for entry in sorted(data.items()):
                             output("%s %s" % entry)
 
+                if opt_snapshot_display == 'esxhost':
+                    output_aggregated_snapshots(vms, hostsystems)
+                elif opt_snapshot_display == 'vCenter':
+                    output_aggregated_snapshots(vms)
 
 
             output("<<<<>>>>")

@@ -404,7 +404,7 @@ def check_esx_vsphere_vm_snapshots(_no_item, params, info):
         return
 
     powerd_on_list = [s for s in snapshots if s.state == "poweredOn"]
-    yield 0, "Powered On: %s" % powerd_on_list[0].name if powerd_on_list else "None"
+    yield 0, "Powered On: %s" % (', '.join(s.name for s in powerd_on_list) or "None")
 
     latest_snapshot = max(snapshots, key=lambda s: s.time)
     latest_snapshot_age = time.time() - latest_snapshot.time

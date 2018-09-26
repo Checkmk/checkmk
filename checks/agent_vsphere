@@ -74,6 +74,9 @@ def agent_vsphere_arguments(params, hostname, ipaddress):
     if params.get("host_pwr_display"):
         args += ' --host_pwr_display %s' % params.get("host_pwr_display")
 
+    if params.get("snapshot_display", False):
+        args += ' --snapshot_display %s' % params.get("snapshot_display")
+
     if "ssl" in params:
         if params["ssl"] is False:
             args += ' --no-cert-check ' + quote_shell_string(ipaddress)

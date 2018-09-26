@@ -5049,7 +5049,8 @@ def load_configuration(settings, slave_status):
         levels = config["log_level"]
         logger.setLevel(levels["cmk.mkeventd"])
         logger.getChild("EventServer").setLevel(levels["cmk.mkeventd.EventServer"])
-        logger.getChild("EventServer.snmp").setLevel(levels["cmk.mkeventd.EventServer.snmp"])
+        if "cmk.mkeventd.EventServer.snmp" in levels:
+            logger.getChild("EventServer.snmp").setLevel(levels["cmk.mkeventd.EventServer.snmp"])
         logger.getChild("EventStatus").setLevel(levels["cmk.mkeventd.EventStatus"])
         logger.getChild("StatusServer").setLevel(levels["cmk.mkeventd.StatusServer"])
         logger.getChild("lock").setLevel(levels["cmk.mkeventd.lock"])

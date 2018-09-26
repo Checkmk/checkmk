@@ -1,0 +1,27 @@
+Title: Add SNMP trap processing log target for deep SNMP trap debugging
+Level: 1
+Component: ec
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0i1
+Date: 1537879295
+
+A new option "SNMP trap processing" has been added to the Event Console log setting.
+
+This setting is currently used in the following ways:
+
+<ul>
+<li>It controls the log level of all SNMP related log messages. Previously some
+of the SNMP messages were controlled through the "Processing of incoming
+events" setting.</li>
+<li>Nothing is logged in <i>Informational</i> log level</li>
+<li>When set to <i>Verbose</i> it shows details about which traps are received
+by the Event Console and how they are handled on protocol level (whether they
+are accepted or dropped).</li>
+<li>When set to <i>Debug</i> it tells the underlying SNMP library (PySNMP) to
+write it's debug output to the <tt>var/log/mkeventd.log</tt>. Please be careful
+with this level. It may result in a lot of log output when you set it to debug
+for instances which receive a lot of SNMP traps.</li>
+</ul>

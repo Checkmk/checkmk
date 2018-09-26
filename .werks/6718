@@ -1,0 +1,14 @@
+Title: Fixed invalid exception handling when unable to initialize the Event Console
+Level: 1
+Component: ec
+Compatible: compat
+Edition: cre
+Version: 1.5.0p5
+Date: 1537947519
+Class: fix
+
+When an exception occurs before the configuration was read during initialization
+of the Event Console a subsequent exception could occur during shutdown of the
+Event Console process. The exception message looked like this:
+
+local variable 'pid_path' referenced before assignment

@@ -1,0 +1,11 @@
+Title: Add missing permission for viewing host/service availability
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 1.5.0p5
+Date: 1537976434
+Class: fix
+
+A new permission named "See the availability" has been added. It can
+be used to hide the availability context buttons and views from users.

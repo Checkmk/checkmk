@@ -112,7 +112,7 @@ if [ -r "$MK_CONFDIR/fileinfo.cfg" ]; then
     done | perl -e  '
            print time."\n";
            print "[[[header]]]\n";
-           print "name|status|size|date\n";
+           print "name|status|size|time\n";
            print "[[[content]]]\n";
            while (<>) {
                chomp $_;

@@ -662,6 +662,7 @@ class Site(object):
             "log_level = %r\n" % {
                 'cmk.mkeventd': 10,
                 'cmk.mkeventd.EventServer': 10,
+                'cmk.mkeventd.EventServer.snmp': 10,
                 'cmk.mkeventd.EventStatus': 10,
                 'cmk.mkeventd.StatusServer': 10,
                 'cmk.mkeventd.lock': 20

@@ -282,9 +282,13 @@ def test_update(request, client, version):
     # Pick a random old version that we can use to the setup the initial site with
     # Later this site is being updated to the current daily build
     old_version = testlib.CMKVersion(
-        version="1.5.0p3",
-        edition=testlib.CMKVersion.CEE,
+        # TODO: temporary fix because 1.5.0p3 image does not have the --no-tmpfs option. Remove this
+        # once 1.5.0p5 is released
+        version="2018.09.25",
         branch="1.5.0",
+        #version="1.5.0p5",
+        #branch="1.5.0",
+        edition=testlib.CMKVersion.CEE,
     )
 
     # 1. create container with old version and add a file to mark the pre-update state

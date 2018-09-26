@@ -1,0 +1,11 @@
+Title: docker_container_node_name: Fix broken inventory plugin
+Level: 1
+Component: inv
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0i1
+Date: 1537975699
+
+

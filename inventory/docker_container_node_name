@@ -26,10 +26,9 @@
 
 
 def inv_docker_container_node_name(info, inventory_tree):
-    import json
-    data = json.loads(info[0][0])
+    node_name = info[0][0]
     container = inventory_tree.get_dict("software.applications.docker.container.")
-    container["node_name"] = data
+    container["node_name"] = node_name
 
 
 inv_info['docker_container_node_name'] = {

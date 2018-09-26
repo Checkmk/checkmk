@@ -865,7 +865,12 @@ class EventServer(ECServerThread):
         self._logger.verbose("Trap received from %s:%d. Checking for acceptance now." % sender_address)
         engine = self._snmp_trap_engine.snmp_engine
         engine.setUserContext(sender_address=sender_address)
-        engine.msgAndPduDsp.receiveMessage(engine, (), (), message)
+        engine.msgAndPduDsp.receiveMessage(
+            snmpEngine=engine,
+            transportDomain=(),
+            transportAddress=sender_address,
+            wholeMsg=message
+        )
 
     def handle_snmptrap(self, snmp_engine, state_reference, context_engine_id, context_name,
                         var_binds, cb_ctx):

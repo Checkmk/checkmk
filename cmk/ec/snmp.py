@@ -30,6 +30,7 @@ import pysnmp.entity.config
 import pysnmp.entity.engine
 import pysnmp.entity.rfc3413.ntfrcv
 import pysnmp.proto.api
+import pysnmp.proto.errind
 
 # Needed for trap translation
 import pysnmp.smi.builder
@@ -60,6 +61,10 @@ class SNMPTrapEngine(object):
 
         # Hand over our logger to PySNMP
         pysnmp.debug.setLogger(pysnmp.debug.Debug("all", printer=self._logger.debug))
+
+        self.snmp_engine.observer.registerObserver(self._handle_unauthenticated_snmptrap,
+                    "rfc2576.prepareDataElements:sm-failure", "rfc3412.prepareDataElements:sm-failure")
+
 
 
     @staticmethod
@@ -127,6 +132,18 @@ class SNMPTrapEngine(object):
                     auth_proto, auth_key,
                     priv_proto, priv_key,
                     securityEngineId=pysnmp.proto.api.v2c.OctetString(hexValue=engine_id))
+
+
+    def _handle_unauthenticated_snmptrap(self, snmp_engine, execpoint, variables, cb_ctx):
+        if variables["securityLevel"] in [ 1, 2 ] and variables["statusInformation"]["errorIndication"] == pysnmp.proto.errind.unknownCommunityName:
+            msg = "Unknown community (%s)" % variables["statusInformation"].get("communityName", "")
+        elif variables["securityLevel"] == 3 and variables["statusInformation"]["errorIndication"] == pysnmp.proto.errind.unknownSecurityName:
+            msg = "Unknown credentials (msgUserName: %s)" % variables["statusInformation"].get("msgUserName", "")
+        else:
+            msg = "%s" % variables["statusInformation"]
+
+        self._logger.verbose("Trap (v%d) dropped from %s: %s",
+            variables["securityLevel"], variables["transportAddress"][0], msg)
 
 
 class SNMPTrapTranslator(object):

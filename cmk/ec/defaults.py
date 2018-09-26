@@ -68,6 +68,7 @@ def default_config():
         "log_level": {
             "cmk.mkeventd": cmk.log.INFO,
             "cmk.mkeventd.EventServer": cmk.log.INFO,
+            "cmk.mkeventd.EventServer.snmp": cmk.log.INFO,
             "cmk.mkeventd.EventStatus": cmk.log.INFO,
             "cmk.mkeventd.StatusServer": cmk.log.INFO,
             "cmk.mkeventd.lock": cmk.log.INFO,

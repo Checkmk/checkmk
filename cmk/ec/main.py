@@ -698,7 +698,7 @@ class EventServer(ECServerThread):
         self.open_syslog()
         self.open_syslog_tcp()
         self.open_snmptrap()
-        self._snmp_trap_engine = cmk.ec.snmp.SNMPTrapEngine(self.settings, self._config, self._logger, self.handle_snmptrap)
+        self._snmp_trap_engine = cmk.ec.snmp.SNMPTrapEngine(self.settings, self._config, self._logger.getChild("snmp"), self.handle_snmptrap)
         self._snmp_trap_translator = cmk.ec.snmp.SNMPTrapTranslator(self.settings, self._config, self._logger)
 
     @classmethod
@@ -1328,7 +1328,7 @@ class EventServer(ECServerThread):
 
     def reload_configuration(self, config):
         self._config = config
-        self._snmp_trap_engine = cmk.ec.snmp.SNMPTrapEngine(self.settings, self._config, self._logger, self.handle_snmptrap)
+        self._snmp_trap_engine = cmk.ec.snmp.SNMPTrapEngine(self.settings, self._config, self._logger.getChild("snmp"), self.handle_snmptrap)
         self._snmp_trap_translator = cmk.ec.snmp.SNMPTrapTranslator(self.settings, self._config, self._logger)
         self.compile_rules(self._config["rules"], self._config["rule_packs"])
         self.host_config.initialize()
@@ -3942,6 +3942,7 @@ def load_configuration(settings, logger, slave_status):
         logger.getChild("EventServer").setLevel(levels["cmk.mkeventd.EventServer"])
         logger.getChild("EventStatus").setLevel(levels["cmk.mkeventd.EventStatus"])
         logger.getChild("StatusServer").setLevel(levels["cmk.mkeventd.StatusServer"])
+        logger.getChild("EventServer.snmp").setLevel(levels["cmk.mkeventd.EventServer.snmp"])
         logger.getChild("lock").setLevel(levels["cmk.mkeventd.lock"])
 
     # Are we a replication slave? Parts of the configuration

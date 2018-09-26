@@ -25,6 +25,7 @@
 # Boston, MA 02110-1301 USA.
 
 # Needed for receiving traps
+import pysnmp.debug
 import pysnmp.entity.config
 import pysnmp.entity.engine
 import pysnmp.entity.rfc3413.ntfrcv
@@ -56,6 +57,9 @@ class SNMPTrapEngine(object):
         self.snmp_engine = pysnmp.entity.engine.SnmpEngine()
         self._initialize_snmp_credentials(config)
         self._snmp_receiver = SNMPTrapEngine.ECNotificationReceiver(self.snmp_engine, callback)
+
+        # Hand over our logger to PySNMP
+        pysnmp.debug.setLogger(pysnmp.debug.Debug("all", printer=self._logger.debug))
 
 
     @staticmethod

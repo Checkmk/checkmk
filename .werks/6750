@@ -1,0 +1,11 @@
+Title: Classic Theme: Added new logo to classic theme
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1537958650
+Class: fix
+
+The new company logo has been added to the classic theme. Also the login
+page has been slightly redesigned.

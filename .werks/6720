@@ -1,0 +1,14 @@
+Title: Bulk mail notifications: Single notifications in bulks use non-bulk subject
+Level: 1
+Component: notifications
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0i1
+Date: 1537967537
+
+All 1.5 releases were always using the bulk notification subjects for mails.
+Previous versions were using the single notification subject in case a bulk
+notification only contained a single notification. This has been changed back
+to the original behaviour.

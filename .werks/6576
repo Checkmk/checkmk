@@ -1,0 +1,12 @@
+Title: agent_vsphere: Display snapshots on ESX host
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1537963438
+Class: feature
+
+An aggregation of the created VM snapshots can now be shown for
+every ESX host (configurable via WATO rule 
+"Check state of VMWare ESX via vSphere").

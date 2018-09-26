@@ -208,6 +208,23 @@ register_rule(group,
                        default = None,
                    )
                  ),
+                 ( "snapshot_display",
+                   DropdownChoice(
+                       title = _("<i>Additionally</i> display snapshots on"),
+                       help = _("The created snapshots can be displayed additionally either "
+                                "on the ESX host or the vCenter. This will result in services "
+                                "for <i>both</i> the queried system and the ESX host / vCenter. "
+                                "By disabling the unwanted services it is then possible "
+                                "to configure where the services are displayed."
+                       ),
+                       choices = [
+                           ( None,      _("The Virtual Machine") ),
+                           ( "esxhost", _("The ESX Host") ),
+                           ( "vCenter", _("The queried ESX system (vCenter / Host)") ),
+                       ],
+                       default = None,
+                   )
+                 ),
                  ( "vm_piggyname",
                    DropdownChoice(
                        title = _("Piggyback name of virtual machines"),

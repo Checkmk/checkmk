@@ -148,6 +148,7 @@ def render_availability_options(what):
 # is (currently) called by views.py, when showing a view but
 # availability mode is activated.
 def render_availability_page(view, datasource, context, filterheaders, only_sites, limit):
+    config.user.need_permission("general.see_availability")
 
     if handle_edit_annotations():
         return
@@ -508,6 +509,8 @@ def render_timeline_bar(timeline_layout, style):
 # logic for getting the aggregates. As soon as we have cleaned of the visuals,
 # filters, contexts etc we can unify the code!
 def render_bi_availability(title, aggr_rows):
+    config.user.need_permission("general.see_availability")
+
     av_mode = html.var("av_mode", "availability")
     avoptions = get_availability_options_from_url("bi")
     if av_mode == "timeline":

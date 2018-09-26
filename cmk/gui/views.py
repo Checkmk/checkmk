@@ -1512,7 +1512,7 @@ def show_context_links(thisview, datasource, show_filters,
         html.context_button(_("Edit View"), url, "edit", id="edit", bestof=config.context_buttons_to_show)
 
     if display_options.enabled(display_options.E):
-        if show_availability:
+        if show_availability and config.user.may("general.see_availability"):
             html.context_button(_("Availability"), html.makeuri([("mode", "availability")]), "availability")
         if show_combined_graphs and config.combined_graphs_available():
             html.context_button(_("Combined graphs"),

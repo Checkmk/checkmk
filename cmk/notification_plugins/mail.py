@@ -933,7 +933,10 @@ def main():
             mailto = context['CONTACTEMAIL']  # Assume the same in each context
             subject = context['SUBJECT']
             hosts.add(context["HOSTNAME"])
-        subject = utils.get_bulk_notification_subject(contexts, hosts)
+
+        # Use the single context subject in case there is only one context in the bulk
+        if len(contexts) > 1:
+            subject = utils.get_bulk_notification_subject(contexts, hosts)
 
     else:
         # gather all options from env

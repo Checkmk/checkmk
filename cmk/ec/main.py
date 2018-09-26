@@ -699,7 +699,6 @@ class EventServer(ECServerThread):
         self.open_syslog_tcp()
         self.open_snmptrap()
         self._snmp_trap_engine = cmk.ec.snmp.SNMPTrapEngine(self.settings, self._config, self._logger.getChild("snmp"), self.handle_snmptrap)
-        self._snmp_trap_translator = cmk.ec.snmp.SNMPTrapTranslator(self.settings, self._config, self._logger)
 
     @classmethod
     def status_columns(cls):
@@ -859,36 +858,10 @@ class EventServer(ECServerThread):
         # http://www.outflux.net/blog/archives/2008/03/09/using-select-on-a-fifo/
         return os.open(str(self.settings.paths.event_pipe.value), os.O_RDWR | os.O_NONBLOCK)
 
-    # Receives an incoming SNMP trap from the socket and hands it over to PySNMP for parsing
-    # and processing. PySNMP is calling self.handle_snmptrap back.
-    def process_snmptrap(self, message, sender_address):
-        self._logger.verbose("Trap received from %s:%d. Checking for acceptance now." % sender_address)
-        engine = self._snmp_trap_engine.snmp_engine
-        engine.setUserContext(sender_address=sender_address)
-        engine.msgAndPduDsp.receiveMessage(
-            snmpEngine=engine,
-            transportDomain=(),
-            transportAddress=sender_address,
-            wholeMsg=message
-        )
+    def handle_snmptrap(self, trap, ipaddress):
+        self.process_event(self._create_event_from_trap(trap, ipaddress))
 
-    def handle_snmptrap(self, snmp_engine, state_reference, context_engine_id, context_name,
-                        var_binds, cb_ctx):
-        ipaddress = snmp_engine.getUserContext("sender_address")[0]
-        self.log_snmptrap_details(context_engine_id, context_name, var_binds, ipaddress)
-        trap = self._snmp_trap_translator.translate(ipaddress, var_binds)
-        event = self.create_event_from_trap(trap, ipaddress)
-        self.process_event(event)
-
-    def log_snmptrap_details(self, context_engine_id, context_name, var_binds, ipaddress):
-        if self._logger.is_verbose():
-            self._logger.verbose('Trap accepted from %s (ContextEngineId "%s", ContextName "%s")' %
-                                 (ipaddress, context_engine_id.prettyPrint(), context_name.prettyPrint()))
-
-            for name, val in var_binds:
-                self._logger.verbose('%-40s = %s' % (name.prettyPrint(), val.prettyPrint()))
-
-    def create_event_from_trap(self, trap, ipaddress):
+    def _create_event_from_trap(self, trap, ipaddress):
         # use the trap-oid as application
         application = u''
         for index, (oid, _unused_val) in enumerate(trap):
@@ -1037,7 +1010,7 @@ class EventServer(ECServerThread):
             if self._snmptrap is not None and self._snmptrap.fileno() in readable:
                 try:
                     message, sender_address = self._snmptrap.recvfrom(65535)
-                    self.process_raw_data(lambda: self.process_snmptrap(message, sender_address))
+                    self.process_raw_data(lambda: self._snmp_trap_engine.process_snmptrap(message, sender_address))
                 except Exception:
                     self._logger.exception('Exception handling a SNMP trap from "%s". Skipping this one' %
                                            sender_address[0])
@@ -1334,7 +1307,6 @@ class EventServer(ECServerThread):
     def reload_configuration(self, config):
         self._config = config
         self._snmp_trap_engine = cmk.ec.snmp.SNMPTrapEngine(self.settings, self._config, self._logger.getChild("snmp"), self.handle_snmptrap)
-        self._snmp_trap_translator = cmk.ec.snmp.SNMPTrapTranslator(self.settings, self._config, self._logger)
         self.compile_rules(self._config["rules"], self._config["rule_packs"])
         self.host_config.initialize()
 
@@ -2665,7 +2637,7 @@ class QueryCOMMAND(Query):
 # - deal with convert_history_line() (if not a str column)
 # - make sure that the new column is filled at *every* place where
 #   an event is being created:
-#   * create_event_from_trap()
+#   * _create_event_from_trap()
 #   * create_event_from_line()
 #   * _handle_absent_event()
 #   * _create_overflow_event()

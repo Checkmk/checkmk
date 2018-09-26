@@ -57,10 +57,12 @@ class SNMPTrapEngine(object):
             return
         self.snmp_engine = pysnmp.entity.engine.SnmpEngine()
         self._initialize_snmp_credentials(config)
-        self._snmp_receiver = SNMPTrapEngine.ECNotificationReceiver(self.snmp_engine, callback)
+        self._snmp_receiver = SNMPTrapEngine.ECNotificationReceiver(self.snmp_engine, self._handle_snmptrap)
+        self._snmp_trap_translator = SNMPTrapTranslator(settings, config, logger)
+        self._callback = callback
 
         # Hand over our logger to PySNMP
-        pysnmp.debug.setLogger(pysnmp.debug.Debug("all", printer=self._logger.debug))
+        pysnmp.debug.setLogger(pysnmp.debug.Debug("all", printer=logger.debug))
 
         self.snmp_engine.observer.registerObserver(self._handle_unauthenticated_snmptrap,
                     "rfc2576.prepareDataElements:sm-failure", "rfc3412.prepareDataElements:sm-failure")
@@ -132,6 +134,36 @@ class SNMPTrapEngine(object):
                     auth_proto, auth_key,
                     priv_proto, priv_key,
                     securityEngineId=pysnmp.proto.api.v2c.OctetString(hexValue=engine_id))
+
+
+    def process_snmptrap(self, message, sender_address):
+        """Receives an incoming SNMP trap from the socket and hands it over to PySNMP for parsing
+        and processing. PySNMP is calling the registered call back (self._handle_snmptrap) back."""
+        self._logger.verbose("Trap received from %s:%d. Checking for acceptance now." % sender_address)
+        self.snmp_engine.setUserContext(sender_address=sender_address)
+        self.snmp_engine.msgAndPduDsp.receiveMessage(
+            snmpEngine=self.snmp_engine,
+            transportDomain=(),
+            transportAddress=sender_address,
+            wholeMsg=message
+        )
+
+
+    def _handle_snmptrap(self, snmp_engine, state_reference, context_engine_id, context_name,
+                        var_binds, cb_ctx):
+        ipaddress = self.snmp_engine.getUserContext("sender_address")[0]
+        self._log_snmptrap_details(context_engine_id, context_name, var_binds, ipaddress)
+        trap = self._snmp_trap_translator.translate(ipaddress, var_binds)
+        self._callback(trap, ipaddress)
+
+
+    def _log_snmptrap_details(self, context_engine_id, context_name, var_binds, ipaddress):
+        if self._logger.is_verbose():
+            self._logger.verbose('Trap accepted from %s (ContextEngineId "%s", ContextName "%s")' %
+                                 (ipaddress, context_engine_id.prettyPrint(), context_name.prettyPrint()))
+
+            for name, val in var_binds:
+                self._logger.verbose('%-40s = %s' % (name.prettyPrint(), val.prettyPrint()))
 
 
     def _handle_unauthenticated_snmptrap(self, snmp_engine, execpoint, variables, cb_ctx):

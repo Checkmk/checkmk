@@ -40,7 +40,11 @@ help:
 	@echo "make test-lint-entrypoint - Execute linter tests on docker entrypoint script"
 
 setup:
-	sudo apt-get install docker-ce
+	curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+	sudo add-apt-repository \
+	    "deb [arch=amd64] https://download.docker.com/linux/ubuntu $$(lsb_release -cs) stable"
+	sudo apt-get update
+	    sudo apt-get install docker-ce
 
 setversion:
 	sed -i 's/^ARG CMK_VERSION=.*$$/ARG CMK_VERSION="$(NEW_VERSION)"/g' Dockerfile

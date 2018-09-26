@@ -15,4 +15,4 @@ of your local default version e.g. at <tt>/omd/versions/default/share/doc/Licens
 
 The latest file is always available in the git at <tt>omd/Licenses.csv</tt> which
 is also available via the git browser
-<a href="https://git.mathias-kettner.de/git/?p=check_mk.git;a=blob;f=omd/Makefile/Licenses.csv">here</a>.
+<a href="https://git.mathias-kettner.de/git/?p=check_mk.git;a=blob;f=omd/Licenses.csv">here</a>.

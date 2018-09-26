@@ -3971,6 +3971,7 @@ def main():
                                         pathlib.Path(cmk.paths.default_config_dir),
                                         sys.argv)
 
+    pid_path = None
     try:
         cmk.log.open_log(sys.stderr)
         cmk.log.set_verbosity(settings.options.verbosity)
@@ -4072,7 +4073,7 @@ def main():
         bail_out(logger, traceback.format_exc())
 
     finally:
-        if cmk.store.have_lock(str(pid_path)):
+        if pid_path and cmk.store.have_lock(str(pid_path)):
             try:
                 pid_path.unlink()
             except OSError:

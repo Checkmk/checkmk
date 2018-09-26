@@ -104,7 +104,10 @@ class DisableNotificationsUserAttribute(UserAttribute):
                      "sure that you know what you do. Moreover you can customize a timerange "
                      "within no notifications are generated."),
             elements = [
-                ("disable", Checkbox(title=_("Temporarily disable <b>all</b> notifications!"), label=_("Disable"))),
+                ("disable", FixedValue(True,
+                    title=_("Temporarily disable <b>all</b> notifications!"),
+                    totext="",
+                )),
                 ("timerange", Tuple(title=_("Customize timerange"), elements = [
                     AbsoluteDate(title=_("From:"), include_time=True),
                     AbsoluteDate(title=_("To:"), include_time=True),

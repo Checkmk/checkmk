@@ -1,0 +1,13 @@
+Title: Simplified user setting: Temporarily disable notifications
+Level: 1
+Component: wato
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0i1
+Date: 1537964762
+
+The user profile setting for temporarily disabling all notifications was a set
+of two nested checkboxes which both had to be checked for disabling the
+notifications. This has now been fixed to be only a single checkbox again.

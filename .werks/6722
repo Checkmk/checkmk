@@ -1,0 +1,10 @@
+Title: Do not offer the custom GUI design for the provider
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cme
+Version: 1.5.0p5
+Date: 1537968350
+Class: fix
+
+The provider design can be set through the global settings.

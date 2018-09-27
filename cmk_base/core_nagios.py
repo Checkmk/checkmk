@@ -873,8 +873,8 @@ def _extra_conf_of(confdict, hostname, service, exclude=None):
             continue
 
         if values:
-            format = "  %-29s %s\n"
-            result += format % (key, values[0])
+            result += "  %-29s %s\n" % (key, values[0])
+
     return result
 
 

@@ -135,11 +135,11 @@ def check_mysql_sessions(item, params, parsed):
         perfdata = []
         status = 0
 
-        for value, perfvar, what, format, unit in [
+        for value, perfvar, what, format_str, unit in [
             ( total_sessions,   "total_sessions",   "total",       "%d",   "" ),
             ( running_sessions, "running_sessions", "running",     "%d",   "" ),
             ( connects,         "connect_rate",     "connections", "%.2f", "/s")]:
-            infos.append((format + " %s%s") % (value, what, unit))
+            infos.append((format_str + " %s%s") % (value, what, unit))
             if what in params:
                 warn, crit = params[what]
                 if value >= crit:

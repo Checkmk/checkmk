@@ -119,11 +119,11 @@ def get_logger(name):
     return logger.getChild(name)
 
 
-def get_formatter(format="%(asctime)s [%(levelno)s] [%(name)s %(process)d] %(message)s"):
+def get_formatter(format_str="%(asctime)s [%(levelno)s] [%(name)s %(process)d] %(message)s"):
     """Returns a new message formater instance that uses the standard
     Check_MK log format by default. You can also set another format
     if you like."""
-    return _logging.Formatter(format)
+    return _logging.Formatter(format_str)
 
 
 def setup_console_logging():

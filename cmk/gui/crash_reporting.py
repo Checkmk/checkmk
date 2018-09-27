@@ -416,7 +416,7 @@ def show_gui_crash_details(info):
     html.open_tr(class_="data even0")
     html.td(_("HTTP Parameters"), class_="left")
     html.open_td()
-    html.debug_vars(vars=details["vars"], hide_with_mouse=False)
+    html.debug_vars(vars_=details["vars"], hide_with_mouse=False)
     html.close_td()
     html.close_tr()
     _crash_row(_("Referer"), details.get("referer", _("Unknown")))

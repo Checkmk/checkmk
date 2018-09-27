@@ -10124,7 +10124,7 @@ class ModeEditAuxtag(ModeEditHosttagConfiguration):
         forms.section(_("Topic") + "<sup>*</sup>")
         html.help(_("Different taggroups can be grouped in topics to make the visualization and "
                     "selections in the GUI more comfortable."))
-        forms.input(self._get_topic_valuespec(), "topic", changed_aux_tag.topic)
+        forms.textinput(self._get_topic_valuespec(), "topic", changed_aux_tag.topic)
 
         # Button and end
         forms.end()
@@ -10269,7 +10269,7 @@ class ModeEditHosttagGroup(ModeEditHosttagConfiguration):
         forms.section(_("Topic") + "<sup>*</sup>")
         html.help(_("Different taggroups can be grouped in topics to make the visualization and "
                     "selections in the GUI more comfortable."))
-        forms.input(self._get_topic_valuespec(), "topic", self._untainted_tag_group.topic)
+        forms.textinput(self._get_topic_valuespec(), "topic", self._untainted_tag_group.topic)
 
         # Choices
         forms.section(_("Choices"))
@@ -10284,7 +10284,7 @@ class ModeEditHosttagGroup(ModeEditHosttagConfiguration):
                      "change its title at the same time! Otherwise WATO will not "
                      "be able to detect the renaming and cannot exchange the tags "
                      "in all folders, hosts and rules accordingly."))
-        forms.input(self._get_taggroups_valuespec(), "choices", self._untainted_tag_group.get_tags_legacy_format())
+        forms.textinput(self._get_taggroups_valuespec(), "choices", self._untainted_tag_group.get_tags_legacy_format())
 
         # Button and end
         forms.end()

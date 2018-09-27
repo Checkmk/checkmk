@@ -129,8 +129,8 @@ def check_cpu_util(util, params, this_time = None, cores = None):
 # - 5 - irq: servicing interrupts
 # - 6 - softirq: servicing softirqs
 # - 7 - steal: involuntary wait
-# - 8 - guest: time spent in guest OK
-# - 9 - guest_nice: time spent in niced guest OK
+# - 8 - guest: time spent in guest OK, also counted in 0 (user)
+# - 9 - guest_nice: time spent in niced guest OK, also counted in 1 (nice)
 def check_cpu_util_unix(values, params, cores = None):
     this_time = time.time()
     # Compute jiffi-differences of all relevant counters
@@ -147,7 +147,17 @@ def check_cpu_util_unix(values, params, cores = None):
     if sum_jiffies == 0:
         raise MKCounterWrapped("Too short time difference since last check")
 
-    user        = diff_values[0] + diff_values[1] # add user + nice
+    user = diff_values[0] + diff_values[1] # add user + nice
+    if len(values) >= 10: # and (values[8] or values[9]):
+        # https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/tree/kernel/sched/cputime.c
+        # see 'account_guest_time'
+        # if task_nice(p) <= 0:
+        #     cpustat[CPUTIME_USER] += cputime;
+        #     cpustat[CPUTIME_GUEST] += cputime;
+        subtrahend = diff_values[8] + diff_values[9]
+        user -= subtrahend
+        sum_jiffies -= subtrahend
+
     system      = diff_values[2] + diff_values[5] + diff_values[6]
     wait        = diff_values[4]
     user_perc   = 100.0 * float(user)   / float(sum_jiffies)

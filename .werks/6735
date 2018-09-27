@@ -1,0 +1,39 @@
+Title: cpu_util_unix: Fixed calculation of CPU usage on UNIX
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.4.0p37
+Date: 1538059527
+Class: fix
+
+The result of the cpu_usage is wrong.  The cpu_time_guest is included in
+cpu_time_user: See
+https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/tree/kernel/sched/cputime.c
+for more information:
+
+<code>
+/*
+ * Account guest CPU time to a process.
+ * @p: the process that the CPU time gets accounted to
+ * @cputime: the CPU time spent in virtual machine since the last update
+ */
+void account_guest_time(struct task_struct *p, u64 cputime)
+{
+	u64 *cpustat = kcpustat_this_cpu->cpustat;
+
+	/* Add guest time to process. */
+	p->utime += cputime;
+	account_group_user_time(p, cputime);
+	p->gtime += cputime;
+
+	/* Add guest time to cpustat. */
+	if (task_nice(p) > 0) {
+		cpustat[CPUTIME_NICE] += cputime;
+		cpustat[CPUTIME_GUEST_NICE] += cputime;
+	} else {
+		cpustat[CPUTIME_USER] += cputime;
+		cpustat[CPUTIME_GUEST] += cputime;
+	}
+}
+</code>

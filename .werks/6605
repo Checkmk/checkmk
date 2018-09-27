@@ -1,0 +1,22 @@
+Title: winperf_if: Fixed discovery of network interface alias
+Level: 1
+Component: checks
+Class: fix
+Compatible: incomp
+Edition: cre
+State: unknown
+Version: 1.5.0p5
+Date: 1537876236
+
+While parsing the winperf interface section only trailing spaces were stripped
+off. There may also be leading spaces. Without cutting them off additional
+information like NetConnectionID, GUID or MAC address of the interfaces were
+not found. In this case the instance name of the interace was used as alias
+(fallback) instead of the NetConnectionID.
+
+Now if one has configured <tt>Use alias</tt> in the
+<tt>Network Interface and Switch Port Discovery</tt> ruleset new services
+may be discovered and old ones will be vanished.
+In order to obtained the already used iterface names please use
+<tt>Use description</tt> in the <tt>Network Interface and Switch Port Discovery</tt>
+ruleset.

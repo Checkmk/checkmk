@@ -587,7 +587,7 @@ class ModeBI(WatoMode, BIManagement):
                 ),
                 ListOfStrings(
                     orientation = "horizontal",
-                    size = 24,
+                    size = 80,
                     title = _("Arguments:"),
                 ),
             ],
@@ -2018,9 +2018,9 @@ class ModeBIEditRule(ModeBI):
                            "title of the rule as well as the host and service names, you can insert the "
                            "actual value of the parameters by <tt>$HOST$</tt> and <tt>$INST$</tt> "
                            "(enclosed in dollar signs)."),
-                  orientation = "horizontal",
+                  orientation="horizontal",
                   valuespec = TextAscii(
-                    size = 24,
+                    size = 80,
                     regex = '[A-Za-z_][A-Za-z0-9_]*',
                     regex_error = _("Parameters must contain only A-Z, a-z, 0-9 and _ "
                                     "and must not begin with a digit."),

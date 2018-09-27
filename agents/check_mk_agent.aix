@@ -388,8 +388,9 @@ then
     while read descr cmdline
     do
         PLUGIN=${cmdline%% *}
-        OUTPUT=$($cmdline)
-        echo "(${PLUGIN##*/}) $descr $? $OUTPUT"
+        OUTPUT=$(eval "$cmdline")
+        echo "(${PLUGIN##*/}) $descr $? $OUTPUT" | tr \\n \\1
+        echo
     done
 fi
 

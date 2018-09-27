@@ -405,8 +405,7 @@ class PageRenderer(Base):
     def render_title(self):
         if self._can_be_linked():
             return html.render_a(self.title(), href=self.page_url())
-        else:
-            return self.title()
+        return self.title()
 
 
 
@@ -552,8 +551,7 @@ class Overridable(Base):
             return False
         elif self.is_mine() and config.user.may(self._delete_permission()):
             return True
-        else:
-            return config.user.may('general.delete_foreign_%s' % self.type_name())
+        return config.user.may('general.delete_foreign_%s' % self.type_name())
 
 
     def may_edit(self):
@@ -561,8 +559,7 @@ class Overridable(Base):
             return False
         elif self.is_mine() and config.user.may("general.edit_%s" % self.type_name()):
             return True
-        else:
-            return config.user.may('general.edit_foreign_%s' % self.type_name())
+        return config.user.may('general.edit_foreign_%s' % self.type_name())
 
 
     def edit_url(self):
@@ -718,8 +715,7 @@ class Overridable(Base):
             return builtin
         elif foreign:
             return foreign
-        else:
-            return None
+        return None
 
 
     @classmethod

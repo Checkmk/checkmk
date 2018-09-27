@@ -530,14 +530,12 @@ class SidebarRenderer(object):
         if cmk.is_enterprise_edition():
             if cmk.is_demo():
                 return "Enterprise (Demo)"
-            else:
-                return "Enterprise"
+            return "Enterprise"
 
         elif cmk.is_managed_edition():
             return "Managed"
 
-        else:
-            return "Raw"
+        return "Raw"
 
 
     def _sidebar_foot(self, user_config):

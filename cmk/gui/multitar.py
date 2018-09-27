@@ -470,11 +470,11 @@ def extract_domains(tar, domains):
             if os.path.exists("/".join(path_tokens)):
                 if os.access("/".join(path_tokens), os.W_OK):
                     return True  # exists and writable
-                else:
-                    errors.append(_("Permission problem: Path not writable %s") % "/".join(path_tokens))
-                    return False # not writable
-            else:
-                return check_exists_or_writable(path_tokens[:-1])
+
+                errors.append(_("Permission problem: Path not writable %s") % "/".join(path_tokens))
+                return False # not writable
+
+            return check_exists_or_writable(path_tokens[:-1])
 
         # The complete tar file never fits in stringIO buffer..
         tar.extract(tar_member, restore_dir)

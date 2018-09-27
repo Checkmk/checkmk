@@ -487,8 +487,7 @@ def level_name(level):
         return 'CRIT'
     elif level == 'O':
         return 'OK'
-    else:
-        return 'OK'
+    return 'OK'
 
 def level_state(level):
     if level == 'W':
@@ -497,8 +496,7 @@ def level_state(level):
         return 2
     elif level == 'O':
         return 0
-    else:
-        return 0
+    return 0
 
 
 #.
@@ -572,8 +570,7 @@ def get_logfile_lines(site, host_name, file_name):
         sites.live().set_only_sites(None)
     if file_content == None:
         return None
-    else:
-        return file_content.splitlines()
+    return file_content.splitlines()
 
 
 def all_logs():

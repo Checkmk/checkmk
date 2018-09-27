@@ -57,16 +57,14 @@ def _(message):
     # type: (str) -> Text
     if not _translation:
         return unicode(message)
-    else:
-        return _translation.translation.ugettext(message)
+    return _translation.translation.ugettext(message)
 
 
 def get_current_language():
     # type: () -> Optional[str]
     if _translation:
         return _translation.name
-    else:
-        return None
+    return None
 
 
 def _get_language_dirs():
@@ -150,8 +148,7 @@ def _get_cmk_locale_path(lang):
     po_path = '/%s/LC_MESSAGES/multisite.mo' % lang
     if os.path.exists(cmk.paths.local_locale_dir + po_path):
         return cmk.paths.local_locale_dir
-    else:
-        return cmk.paths.locale_dir
+    return cmk.paths.locale_dir
 
 
 def initialize():
@@ -192,8 +189,7 @@ def _u(text):
     ldict = _user_localizations.get(text)
     if ldict:
         return ldict.get(get_current_language(), text)
-    else:
-        return text
+    return text
 
 
 def set_user_localizations(localizations):

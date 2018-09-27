@@ -46,12 +46,12 @@ def inventory_esx_vsphere_licenses(parsed):
     return [(key, None) for key in parsed.keys()]
 
 def check_esx_vsphere_licenses(item, params, parsed):
-    license = parsed.get(item)
-    if not license:
+    license_ = parsed.get(item)
+    if not license_:
         return 3, "License not found in agent output"
 
-    status, infotext, perfdata = license_check_levels(license["total"], license["used"], params)
-    infotext = "%s Key(s), " % license["keys"] + infotext
+    status, infotext, perfdata = license_check_levels(license_["total"], license_["used"], params)
+    infotext = "%s Key(s), " % license_["keys"] + infotext
     return status, infotext, perfdata
 
 
@@ -64,4 +64,3 @@ check_info['esx_vsphere_licenses'] = {
   "group"               : "esx_licenses",
   "includes"            : [ "license.include" ]
 }
-

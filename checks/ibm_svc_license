@@ -44,23 +44,23 @@ def parse_ibm_svc_license(info):
     licenses = {}
     for line in info:
         if line[0].startswith("license_"):
-            license = line[0].replace("license_", "")
-            if not license in licenses.keys():
-                licenses[license] = [0.0, 0.0]
+            license_ = line[0].replace("license_", "")
+            if not license_ in licenses.keys():
+                licenses[license_] = [0.0, 0.0]
             if line[1] == "off":
-                licenses[license][0] = 0.0
+                licenses[license_][0] = 0.0
             else:
-                licenses[license][0] = float(line[1])
+                licenses[license_][0] = float(line[1])
         if line[0].startswith("used_"):
-            license = line[0].replace("used_", "")
-            if not license in licenses.keys():
-                licenses[license] = [0.0, 0.0]
-            licenses[license][1] = float(line[1])
+            license_ = line[0].replace("used_", "")
+            if not license_ in licenses.keys():
+                licenses[license_] = [0.0, 0.0]
+            licenses[license_][1] = float(line[1])
     return licenses
 
 def inventory_ibm_svc_license(info):
-    return [ (license, None)
-             for license in parse_ibm_svc_license(info) ]
+    return [ (license_, None)
+             for license_ in parse_ibm_svc_license(info) ]
 
 def check_ibm_svc_license(item, params, info):
     licenses = parse_ibm_svc_license(info)

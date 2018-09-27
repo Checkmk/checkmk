@@ -55,14 +55,14 @@ def update_host_custom_attrs():
 
 def load_custom_attrs_from_mk_file(lock):
     filename = os.path.join(watolib.multisite_dir, "custom_attrs.mk")
-    vars = store.load_mk_file(filename, {
+    vars_ = store.load_mk_file(filename, {
         'wato_user_attrs': [],
         'wato_host_attrs': [],
     }, lock=lock)
 
     attrs = {}
     for what in [ "user", "host" ]:
-        attrs[what] = vars.get("wato_%s_attrs" % what, [])
+        attrs[what] = vars_.get("wato_%s_attrs" % what, [])
     return attrs
 
 

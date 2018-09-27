@@ -27,7 +27,7 @@
 # Author: Lars Michelsen <lm@mathias-kettner.de>
 
 def format_hp_proliant_name(line):
-    return "%s (%s)" % (line[1], hp_proliant_locale[int(line[2])])
+    return "%s (%s)" % (line[0], hp_proliant_locale[int(line[1])])
 
 def inventory_hp_proliant_temp(info):
     for line in info:
@@ -36,7 +36,7 @@ def inventory_hp_proliant_temp(info):
 def check_hp_proliant_temp(item, params, info):
     for line in info:
         if format_hp_proliant_name(line) == item:
-            _chassis, _index, _name, value, threshold, status = line
+            value, threshold, status = line[2:]
 
             # This case means no threshold available and
             # the devices' web interface displays "N/A"
@@ -60,7 +60,6 @@ check_info["hp_proliant_temp"] = {
     'service_description': 'Temperature %s',
     'has_perfdata'       : True,
     'snmp_info'          : ( ".1.3.6.1.4.1.232.6.2.6.8.1", [
-                                "1", # cpqHeTemperatureChassis
                                 "2", # cpqHeTemperatureIndex
                                 "3", # cpqHeTemperatureLocale
                                 "4", # cpqHeTemperatureCelsius

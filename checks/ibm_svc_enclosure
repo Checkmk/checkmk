@@ -46,6 +46,10 @@
 # The names of the columns are:
 # id:status:type:managed:IO_group_id:IO_group_name:product_MTM:serial_number:total_canisters:online_canisters:total_PSUs:online_PSUs:drive_slots:total_fan_modules:online_fan_modules:total_sems:online_sems
 
+# IBM-FLASH900
+# <<<ibm_svc_enclosure:sep(58)>>>
+# 1:online:control:9843-AE2:6860407:2:2:2:12
+
 
 def inventory_ibm_svc_enclosure(info):
     inventory = []
@@ -54,13 +58,20 @@ def inventory_ibm_svc_enclosure(info):
         inventory.append( (enclosure_id, None) )
     return inventory
 
+
 def check_ibm_svc_enclosure(item, _no_params, info):
     for line in info:
         if line[0] == item:
-            if len(line) < 15: # old(est) format
-                line = line + ["0", "0", "0", "0"] # do not modify line!
-            if len(line) < 17: # old format
-                line = line + ["0", "0"] # do not modify line!
+            if len(line) == 9:
+                line = line[:2] + [None, None, None] + line[2:6] + ["0"] + line[6:] + ["0", "0", "0", "0"]
+            elif len(line) == 13:
+                line = line + ["0", "0", "0", "0"]
+            elif len(line) == 15:
+                line = line + ["0", "0"]
+            elif len(line) == 17:
+                pass
+            else:
+                return 3, "Unknown format"
 
             enclosure_id, enclosure_status, enclosure_type, managed, IO_group_id, \
                 IO_group_name, product_MTM, serial_number, total_canisters, online_canisters, \

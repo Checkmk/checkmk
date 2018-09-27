@@ -3294,9 +3294,9 @@ class EventStatus(object):
     def events(self):
         return self._events
 
-    def event(self, id):
+    def event(self, eid):
         for event in self._events:
-            if event["id"] == id:
+            if event["id"] == eid:
                 return event
 
     # Return beginning of current expectation interval. For new rules

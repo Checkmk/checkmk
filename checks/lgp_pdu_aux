@@ -107,7 +107,7 @@ def lgp_pdu_aux_fmt(info):
                 else:
                     value = ty(value)
 
-            new_info[id][key] = value
+            new_info[id_][key] = value
     return new_info
 
 def inventory_lgp_pdu_aux(info):

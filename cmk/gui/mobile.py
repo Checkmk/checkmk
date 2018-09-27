@@ -89,8 +89,8 @@ def mobile_html_foot():
 def jqm_header_button(pos, url, title, icon=""):
     html.a('', href=url, class_="ui-btn-%s" % pos, title=title, **{"data-direction":"reverse", "data-icon":icon, "data-iconpos":"notext"})
 
-def jqm_page_header(title, id=None, left_button=None, right_button=None):
-    html.open_div(id_= id if id else None, **{"data-role":"page"})
+def jqm_page_header(title, id_=None, left_button=None, right_button=None):
+    html.open_div(id_= id_ if id_ else None, **{"data-role":"page"})
     html.open_div(**{"data-role":"header", "data-position":"fixed"})
     if left_button:
         jqm_header_button("left", *left_button)
@@ -166,15 +166,15 @@ def jqm_page_index_topic_renderer(topic, items):
             return
 
 
-def jqm_page(title, content, foot, id=None):
-    jqm_page_header(title, id)
+def jqm_page(title, content, foot, id_=None):
+    jqm_page_header(title, id_)
     html.write(content)
     jqm_page_footer(foot)
 
 def page_login():
     title = _("Check_MK Mobile")
     mobile_html_head(title)
-    jqm_page_header(title, id="login")
+    jqm_page_header(title, id_="login")
     html.div(_("Welcome to Check_MK Mobile."), id_="loginhead")
 
     html.begin_form("login", method = 'POST', add_transid = False)
@@ -202,7 +202,7 @@ def page_login():
 def page_index():
     title = _("Check_MK Mobile")
     mobile_html_head(title)
-    jqm_page_header(title, right_button=("javascript:document.location.reload();", _("Reload"), "refresh"),id="data")
+    jqm_page_header(title, right_button=("javascript:document.location.reload();", _("Reload"), "refresh"),id_="data")
     views.load_views()
     items = []
     for view_name, view in views.permitted_views().items():
@@ -288,14 +288,14 @@ def render_view(view, rows, datasource, group_painters, painters,
 
 
     if page == "filter":
-        jqm_page_header(_("Filter / Search"), left_button=home, id="filter")
+        jqm_page_header(_("Filter / Search"), left_button=home, id_="filter")
         show_filter_form(show_filters)
         jqm_page_navfooter(navbar, 'filter', page_id)
 
     elif page == "commands":
             # Page: Commands
             if config.user.may("general.act"):
-                jqm_page_header(_("Commands"), left_button=home, id="commands")
+                jqm_page_header(_("Commands"), left_button=home, id_="commands")
                 show_commands = True
                 if html.has_var("_do_actions"):
                     try:
@@ -310,7 +310,7 @@ def render_view(view, rows, datasource, group_painters, painters,
 
     elif page == "data":
           # Page: data rows of view
-          jqm_page_header(title, left_button=home, right_button=("javascript:document.location.reload();", _("Reload"), "refresh"), id="data")
+          jqm_page_header(title, left_button=home, right_button=("javascript:document.location.reload();", _("Reload"), "refresh"), id_="data")
           html.open_div(id_="view_results")
           if len(rows) == 0:
               html.write(_("No hosts/services found."))
@@ -327,7 +327,7 @@ def render_view(view, rows, datasource, group_painters, painters,
     # Page: Context buttons
     #if context_links:
     elif page == "context":
-        jqm_page_header(_("Context"), left_button=home, id="context")
+        jqm_page_header(_("Context"), left_button=home, id_="context")
         show_context_links(context_links)
         jqm_page_navfooter(navbar, 'context', page_id)
 

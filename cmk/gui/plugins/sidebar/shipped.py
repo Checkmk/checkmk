@@ -540,8 +540,8 @@ def render_custom_links():
             try:
                 if type(entry[1]) == type(True):
                     idss = ids + [str(n)]
-                    id = '/'.join(idss)
-                    html.begin_foldable_container("customlinks", id, isopen=entry[1], title=entry[0])
+                    id_ = '/'.join(idss)
+                    html.begin_foldable_container("customlinks", id_, isopen=entry[1], title=entry[0])
                     render_list(idss, entry[2])
                     html.end_foldable_container()
                 elif type(entry[1]) == str:

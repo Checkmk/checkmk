@@ -440,7 +440,7 @@ def remove_package(package):
                         cmk.ec.export.remove_packaged_rule_packs(filenames)
                     else:
                         os.remove(path)
-                except Exception, e:
+                except Exception as e:
                     if cmk.debug.enabled():
                         raise
                     raise Exception("Cannot remove %s: %s\n" % (path, e))

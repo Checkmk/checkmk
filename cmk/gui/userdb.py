@@ -584,14 +584,14 @@ def load_users(lock = False):
     # Merge them together. Monitoring users not known to Multisite
     # will be added later as normal users.
     result = {}
-    for id, user in users.items():
+    for uid, user in users.items():
         # Transform user IDs which were stored with a wrong type
-        if isinstance(id, str):
-            id = id.decode("utf-8")
+        if isinstance(uid, str):
+            uid = uid.decode("utf-8")
 
-        profile = contacts.get(id, {})
+        profile = contacts.get(uid, {})
         profile.update(user)
-        result[id] = profile
+        result[uid] = profile
 
         # Convert non unicode mail addresses
         if type(profile.get("email")) == str:
@@ -600,16 +600,16 @@ def load_users(lock = False):
     # This loop is only neccessary if someone has edited
     # contacts.mk manually. But we want to support that as
     # far as possible.
-    for id, contact in contacts.items():
+    for uid, contact in contacts.items():
         # Transform user IDs which were stored with a wrong type
-        if isinstance(id, str):
-            id = id.decode("utf-8")
+        if isinstance(uid, str):
+            uid = uid.decode("utf-8")
 
-        if id not in result:
-            result[id] = contact
-            result[id]["roles"] = [ "user" ]
-            result[id]["locked"] = True
-            result[id]["password"] = ""
+        if uid not in result:
+            result[uid] = contact
+            result[uid]["roles"] = [ "user" ]
+            result[uid]["locked"] = True
+            result[uid]["password"] = ""
 
     # Passwords are read directly from the apache htpasswd-file.
     # That way heroes of the command line will still be able to
@@ -629,26 +629,26 @@ def load_users(lock = False):
     for line in readlines(filename):
         line = line.strip()
         if ':' in line:
-            id, password = line.strip().split(":")[:2]
-            id = id.decode("utf-8")
+            uid, password = line.strip().split(":")[:2]
+            uid = uid.decode("utf-8")
             if password.startswith("!"):
                 locked = True
                 password = password[1:]
             else:
                 locked = False
-            if id in result:
-                result[id]["password"] = password
-                result[id]["locked"] = locked
+            if uid in result:
+                result[uid]["password"] = password
+                result[uid]["locked"] = locked
             else:
                 # Create entry if this is an admin user
                 new_user = {
-                    "roles"    : config.roles_of_user(id),
+                    "roles"    : config.roles_of_user(uid),
                     "password" : password,
                     "locked"   : False,
                 }
-                result[id] = new_user
+                result[uid] = new_user
             # Make sure that the user has an alias
-            result[id].setdefault("alias", id)
+            result[uid].setdefault("alias", uid)
         # Other unknown entries will silently be dropped. Sorry...
 
     # Now read the serials, only process for existing users
@@ -665,10 +665,10 @@ def load_users(lock = False):
     directory = cmk.paths.var_dir + "/web/"
     for d in os.listdir(directory):
         if d[0] != '.':
-            id = d.decode("utf-8")
+            uid = d.decode("utf-8")
 
             # read special values from own files
-            if id in result:
+            if uid in result:
                 for attr, conv_func in [
                         ('num_failed_logins', utils.saveint),
                         ('last_pw_change',    utils.saveint),
@@ -677,9 +677,9 @@ def load_users(lock = False):
                         ('idle_timeout',      convert_idle_timeout),
                         ('session_id',        convert_session_info),
                     ]:
-                    val = load_custom_attr(id, attr, conv_func)
+                    val = load_custom_attr(uid, attr, conv_func)
                     if val != None:
-                        result[id][attr] = val
+                        result[uid][attr] = val
 
             # read automation secrets and add them to existing
             # users or create new users automatically
@@ -688,10 +688,10 @@ def load_users(lock = False):
             except IOError:
                 secret = None
             if secret:
-                if id in result:
-                    result[id]["automation_secret"] = secret
+                if uid in result:
+                    result[uid]["automation_secret"] = secret
                 else:
-                    result[id] = {
+                    result[uid] = {
                         "roles" : ["guest"],
                         "automation_secret" : secret,
                     }
@@ -1029,11 +1029,11 @@ def _get_builtin_roles():
         "user"  : _("Normal monitoring user"),
         "guest" : _("Guest user"),
     }
-    return dict([(id, {
-         "alias" : builtin_role_names.get(id, id),
+    return dict([(rid, {
+         "alias" : builtin_role_names.get(rid, rid),
          "permissions" : {}, # use default everywhere
          "builtin": True})
-                  for id in config.builtin_role_ids ])
+                  for rid in config.builtin_role_ids ])
 
 #.
 #   .-Groups---------------------------------------------------------------.
@@ -1054,13 +1054,13 @@ def load_group_information():
     groups = {}
     for what in ["host", "service", "contact" ]:
         groups[what] = {}
-        for id, alias in cmk_base_groups['define_%sgroups' % what].items():
-            groups[what][id] = {
+        for gid, alias in cmk_base_groups['define_%sgroups' % what].items():
+            groups[what][gid] = {
                 'alias': alias
             }
 
-            if id in gui_groups['multisite_%sgroups' % what]:
-                groups[what][id].update(gui_groups['multisite_%sgroups' % what][id])
+            if gid in gui_groups['multisite_%sgroups' % what]:
+                groups[what][gid].update(gui_groups['multisite_%sgroups' % what][gid])
 
     return groups
 

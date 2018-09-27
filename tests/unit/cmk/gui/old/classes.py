@@ -25,7 +25,7 @@ class HTMLTester(htmllib.html):
 
     def context_button_test(obj, title, url, icon=None, hot=False, id_=None, bestof=None, hover_title=None, id_in_best=False):
         obj.begin_context_buttons()
-        obj.context_button(title, url, icon=icon, hot=hot, id=id_, bestof=bestof, hover_title=hover_title)
+        obj.context_button(title, url, icon=icon, hot=hot, id_=id_, bestof=bestof, hover_title=hover_title)
         if id_in_best:
             obj.context_button_hidden = True
         obj.end_context_buttons()
@@ -91,4 +91,4 @@ class HTMLTester(htmllib.html):
 
     def javascript_filename_for_browser(self, jsname):
         #raise NotImplementedError()
-        return "js/file/name/js_%s.js" % jsname 
+        return "js/file/name/js_%s.js" % jsname

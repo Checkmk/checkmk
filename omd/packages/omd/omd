@@ -482,9 +482,9 @@ def userdel(name):
     if group_exists(name):
         groupdel(name)
 
-def user_by_id(id):
+def user_by_id(id_):
     try:
-        return pwd.getpwuid(id)
+        return pwd.getpwuid(id_)
     except:
         return None
 
@@ -522,9 +522,9 @@ def group_exists(name):
         return False
 
 
-def group_by_id(id):
+def group_by_id(id_):
     try:
-        return grp.getgrgid(id)
+        return grp.getgrgid(id_)
     except:
         return None
 

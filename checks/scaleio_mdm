@@ -45,44 +45,44 @@
 
 def parse_scaleio_mdm(info):
     # parsing this section is horrible. But I will guide you...
-    parsed, id, node = {}, "", ""
+    parsed, id_, node = {}, "", ""
     for line in info:
         # A subsection starts with one of the following:
         if line[0].lower() in [ "cluster:", "master mdm:", "slave mdms:", \
                                 "tie-breakers:", "standby mdms:"]:
-            id = line[0].strip(":")
-            parsed[id] = {}
+            id_ = line[0].strip(":")
+            parsed[id_] = {}
         # The first subsection is different and entries can be parsed
         # directly. Hooray!
-        elif id == "Cluster" and id in parsed:
+        elif id_ == "Cluster" and id_ in parsed:
             nl = [entry.split(': ') for entry in line]
             for l in nl:
-                parsed[id][l[0].strip()] = l[1].strip()
+                parsed[id_][l[0].strip()] = l[1].strip()
         # The other subsections can have several nodes. Each node
         # starts with his name and has already some more information.
         # Sometimes there is information about a role inside of the
         # cluster. This is handled by the entry "Role"!
-        elif id in parsed and "name" in line[0].lower():
+        elif id_ in parsed and "name" in line[0].lower():
             node = line[0].split(": ")[1]
             node_id = line[1].split(": ")
 
-            parsed[id][node] = {node_id[0].strip(): node_id[1].strip()}
+            parsed[id_][node] = {node_id[0].strip(): node_id[1].strip()}
             if len(line) == 3:
-                parsed[id][node][u'Role'] = line[2].strip()
+                parsed[id_][node][u'Role'] = line[2].strip()
         # Finally we can add the rest of information to a node in a
         # subsection. When splitting the lines we sometimes get lines
         # belonging to the last entry. These information is then added
         # to the last known entry.
-        elif id in parsed and node in parsed[id] and id != "Cluster":
+        elif id_ in parsed and node in parsed[id_] and id_ != "Cluster":
             nl = [entry.split(': ') for entry in line]
             for l in nl:
                 if len(l) > 1:
                     name = l[0].strip()
-                    parsed[id][node][name] = l[1].strip()
+                    parsed[id_][node][name] = l[1].strip()
                 else:
-                    if type(parsed[id][node][name]) != list:
-                        parsed[id][node][name] = [parsed[id][node][name]]
-                    parsed[id][node][name].append(l[0].replace(" ", ""))
+                    if type(parsed[id_][node][name]) != list:
+                        parsed[id_][node][name] = [parsed[id_][node][name]]
+                    parsed[id_][node][name].append(l[0].replace(" ", ""))
 
     return parsed
 

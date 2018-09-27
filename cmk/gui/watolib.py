@@ -6481,12 +6481,12 @@ def export_hosttags_to_php(hosttags, auxtags):
     # Transform WATO internal data structures into easier usable ones
     hosttags_dict =  {}
     for entry in hosttags:
-        id, title, choices = entry[:3]
+        id_, title, choices = entry[:3]
         tags = {}
         for tag_id, tag_title, tag_auxtags in choices:
             tags[tag_id] = tag_title, tag_auxtags
         topic, title = parse_hosttag_title(title)
-        hosttags_dict[id] = topic, title, tags
+        hosttags_dict[id_] = topic, title, tags
     auxtags_dict = dict(auxtags)
 
     # First write a temp file and then do a move to prevent syntax errors
@@ -7322,10 +7322,10 @@ def render_condition_editor(tag_specs, varprefix=""):
 
     # Show dropdown with "is/isnot/ignore" and beginning
     # of div that is switched visible by is/isnot
-    def tag_condition_dropdown(tagtype, deflt, id):
+    def tag_condition_dropdown(tagtype, deflt, id_):
         html.open_td()
-        dropdown_id = varprefix + tagtype + "_" + id
-        onchange="valuespec_toggle_dropdownn(this, '%stag_sel_%s');" % (varprefix, id)
+        dropdown_id = varprefix + tagtype + "_" + id_
+        onchange="valuespec_toggle_dropdownn(this, '%stag_sel_%s');" % (varprefix, id_)
         choices = [("ignore", _("ignore")),
                    ("is",     _("is")),
                    ("isnot",  _("isnot"))]
@@ -7337,7 +7337,7 @@ def render_condition_editor(tag_specs, varprefix=""):
             div_is_open = html.var(dropdown_id, "ignore") != "ignore"
         else:
             div_is_open = deflt != "ignore"
-        html.open_div(id_="%stag_sel_%s" % (varprefix, id), style="display: none;" if not div_is_open else None)
+        html.open_div(id_="%stag_sel_%s" % (varprefix, id_), style="display: none;" if not div_is_open else None)
 
 
     auxtags = group_hosttags_by_topic(config.aux_tags())
@@ -7358,17 +7358,17 @@ def render_condition_editor(tag_specs, varprefix=""):
         for t, grouped_tags in hosttags:
             if t == topic:
                 for entry in grouped_tags:
-                    id, title, choices = entry[:3]
+                    id_, title, choices = entry[:3]
                     html.open_tr()
                     html.open_td(class_="title")
                     html.write("%s: &nbsp;" % _u(title))
                     html.close_td()
                     default_tag, deflt = current_tag_setting(choices)
-                    tag_condition_dropdown("tag", deflt, id)
+                    tag_condition_dropdown("tag", deflt, id_)
                     if len(choices) == 1:
                         html.write_text(" " + _("set"))
                     else:
-                        html.dropdown(varprefix + "tagvalue_" + id,
+                        html.dropdown(varprefix + "tagvalue_" + id_,
                                       [(t[0], _u(t[1])) for t in choices if t[0] != None],
                                       deflt=default_tag)
                     html.close_div()
@@ -7378,13 +7378,13 @@ def render_condition_editor(tag_specs, varprefix=""):
         # And auxiliary tags
         for t, grouped_tags in auxtags:
             if t == topic:
-                for id, title in grouped_tags:
+                for id_, title in grouped_tags:
                     html.open_tr()
                     html.open_td(class_="title")
                     html.write("%s: &nbsp;" % _u(title))
                     html.close_td()
-                    default_tag, deflt = current_tag_setting([(id, _u(title))])
-                    tag_condition_dropdown("auxtag", deflt, id)
+                    default_tag, deflt = current_tag_setting([(id_, _u(title))])
+                    tag_condition_dropdown("auxtag", deflt, id_)
                     html.write_text(" " + _("set"))
                     html.close_div()
                     html.close_td()
@@ -7402,12 +7402,12 @@ def get_tag_conditions(varprefix=""):
     # Main tags
     tag_list = []
     for entry in config.host_tag_groups():
-        id, _title, tags = entry[:3]
-        mode = html.var(varprefix + "tag_" + id)
+        id_, _title, tags = entry[:3]
+        mode = html.var(varprefix + "tag_" + id_)
         if len(tags) == 1:
             tagvalue = tags[0][0]
         else:
-            tagvalue = html.var(varprefix + "tagvalue_" + id)
+            tagvalue = html.var(varprefix + "tagvalue_" + id_)
 
         if mode == "is":
             tag_list.append(tagvalue)
@@ -7415,12 +7415,12 @@ def get_tag_conditions(varprefix=""):
             tag_list.append("!" + tagvalue)
 
     # Auxiliary tags
-    for id, _title in config.aux_tags():
-        mode = html.var(varprefix + "auxtag_" + id)
+    for id_, _title in config.aux_tags():
+        mode = html.var(varprefix + "auxtag_" + id_)
         if mode == "is":
-            tag_list.append(id)
+            tag_list.append(id_)
         elif mode == "isnot":
-            tag_list.append("!" + id)
+            tag_list.append("!" + id_)
 
     return tag_list
 

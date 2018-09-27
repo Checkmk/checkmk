@@ -39,6 +39,7 @@ import pprint
 import socket
 import httplib
 import datetime
+from dateutil import tz
 from xml.dom import minidom
 
 # Great article how to get additional information
@@ -52,6 +53,10 @@ telegram_list = {
        "login":
          '<ns1:Login xsi:type="ns1:LoginRequestType"><ns1:_this type="SessionManager">%(sessionManager)s</ns1:_this>'\
          '<ns1:userName>%(username)s</ns1:userName><ns1:password>%(password)s</ns1:password></ns1:Login>',
+
+       "systemtime":
+         '<ns1:CurrentTime xsi:type="ns1:CurrentTimeRequestType">'\
+         '<ns1:_this type="ServiceInstance">ServiceInstance</ns1:_this></ns1:CurrentTime>',
 
        "hostsystems":
          '<ns1:RetrievePropertiesEx xsi:type="ns1:RetrievePropertiesExRequestType">'\
@@ -952,6 +957,16 @@ def output(line):
     vsphere_output.append(line)
 
 
+def write_output(vsphere_output, opt_agent, host):
+    if opt_agent:
+        win_agent_output = get_agent_info_tcp(host)
+        sys.stdout.write(win_agent_output)
+
+    for line in vsphere_output:
+        sys.stdout.write((line.encode("utf-8") if type(line) == unicode else line) + "\n")
+    sys.stdout.flush()
+
+
 socket.setdefaulttimeout(opt_timeout)
 def get_agent_info_tcp(hostname):
     response = ""
@@ -1050,9 +1065,11 @@ if "OMD_SITE" in os.environ:
 
     host_cookie_path = "%s/cookie.%s" % (cookie_path, host_address)
 
+
 def delete_server_cookie():
     if host_cookie_path and os.path.exists(host_cookie_path):
         os.unlink(host_cookie_path)
+
 
 def query_server(payload, payload_params=None):
     if payload_params is None:
@@ -1114,6 +1131,7 @@ def query_server(payload, payload_params=None):
 
     return response.status, response.reason, response.msg, "".join(response_data)
 
+
 def encode_url(text):
     for char, replacement in [ ( "&",  "&amp;"),
                                ( ">",  "&gt;" ),
@@ -1151,6 +1169,7 @@ def connect_to_server():
         error = "Cannot connect to vSphere Server. Please check the IP and SSL certificate (if applicable) "\
                 "and try again. This error is not related to the login credentials. Error message: %r" % e
 
+
 def retrieve_systeminfo():
     # Retrieve basic data, which requires no login
     payload = telegram_list["systeminfo"]
@@ -1159,6 +1178,7 @@ def retrieve_systeminfo():
          element = get_pattern("<%(entry)s.*>(.*)</%(entry)s>" % { "entry": entry }, reply_data)
          if element:
              systeminfo[entry] = function(element[0]) if function else element[0]
+
 
 def login():
     global server_cookie
@@ -1200,6 +1220,21 @@ def output_aggregated_snapshots(vms, hostsystems=None):
         output('<<<<>>>>')
 
 
+def section_systemtime():
+    try:
+        __, __, __, response = query_server(telegram_list["systemtime"])
+        elements = get_pattern('<returnval>(.*)</returnval>', response)
+        if elements:
+            naive = datetime.datetime.strptime(elements[0], "%Y-%m-%dT%H:%M:%S.%fZ")
+            utc = naive.replace(tzinfo=tz.tzutc())
+            localtime = utc.astimezone(tz.tzlocal())
+            output("<<<systemtime>>>")
+            output(localtime.strftime("%s"))
+    except:
+        if opt_debug:
+            raise
+
+
 #   .--Main----------------------------------------------------------------.
 #   |                        __  __       _                                |
 #   |                       |  \/  | __ _(_)_ __                           |
@@ -1236,7 +1271,6 @@ if not error:
             output("<<<esx_systeminfo>>>")
             for entry in systeminfo.items():
                 output("%s %s" % entry)
-
 
             #############################
             # Determine available host systems
@@ -1629,10 +1663,7 @@ if not error:
                 elif opt_snapshot_display == 'vCenter':
                     output_aggregated_snapshots(vms)
 
-
             output("<<<<>>>>")
-
-
 
             if not opt_direct:
                 reply_code, reply_msg, reply_headers, response = query_server(telegram_list["datacenters"])
@@ -1709,6 +1740,8 @@ if not error:
                     output("\n".join(values))
             output("<<<<>>>>")
 
+            section_systemtime()
+
             # We only logout in non OMD-setups
             if not host_cookie_path:
                 query_server(telegram_list["logout"])
@@ -1728,19 +1761,10 @@ if not error:
             error = "Error while processing received data"
 
 
-def make_utf8(line):
-    if type(line) == unicode:
-        return line.encode("utf-8")
-    else:
-        return line
+write_output(vsphere_output, opt_agent, host_address)
 
 if opt_agent:
-    win_agent_output = get_agent_info_tcp(host_address)
-    sys.stdout.write(win_agent_output)
-    sys.stdout.flush()
     error_exit = 0
-
-print "\n".join(map(make_utf8, vsphere_output))
 
 if tracefile:
     tracefile.close()

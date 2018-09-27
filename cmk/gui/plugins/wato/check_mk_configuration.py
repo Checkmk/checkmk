@@ -2808,6 +2808,23 @@ register_rule(group,
     )
 )
 
+register_rule("agents/" + _("Generic Options"),
+    "agent_config:only_from",
+    ListOfStrings(
+        valuespec = IPNetwork(),
+        title = _("Allowed agent access via IP address"),
+        help = _("This rule allows you to restrict the access to the "
+                 "Check_MK agent to certain IP addresses and networks. "
+                 "Usually you configure just the IP addresses of your "
+                 "Check_MK servers here. You can enter either IP addresses "
+                 "in the form <tt>1.2.3.4</tt> or networks in the style "
+                 "<tt>1.2.0.0/16</tt>. If you leave this configuration empty "
+                 "or create no rule then <b>all</b> addresses are allowed to "
+                 "access the agent. IPv6 addresses and networks are also allowed."),
+    ),
+    match = "first"
+)
+
 register_rule(group,
     "piggyback_translation",
     HostnameTranslation(

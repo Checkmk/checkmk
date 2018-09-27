@@ -38,71 +38,25 @@
 # is not None, the inventory will create services
 check_mk_only_from_default = None
 
-def inventory_only_from(info):
-    if check_mk_only_from_default != None:
-        for line in info:
-            if line[0] == "OnlyFrom:":
-                return [(None, 'check_mk_only_from_default')]
 
-def check_mk_factorize_curly(n):
-    # factorize 10.0.0.{1,2,3}
-    if '{' in n:
-        result = []
-        iprange = n[n.find('{') + 1:n.find('}')].split(',')
-        prefix = n[:n.find('{')]
-        for suffix in iprange:
-            result.append(prefix + suffix)
-        return result
-    return [n]
-
-def check_mk_normalize_network(n):
-    if '/' in n:
-        return n
-    return n + "/32"
-
-
-def check_only_from(item, param, info):
-    if param is None:
-        return (1, "IP access restriction not monitored for this host")
-    for line in info:
-        if line[0] == "OnlyFrom:":
-            an = []
-            for n in line[1:]:
-                an += check_mk_factorize_curly(n)
-
-            allowed_nets = map(check_mk_normalize_network, an)
-            should_nets = map(check_mk_normalize_network, param)
-
-            too_much = []
-            too_few = []
-
-            for net in allowed_nets:
-                if net not in should_nets:
-                    too_much.append(net)
-            for net in should_nets:
-                if net not in allowed_nets:
-                    too_few.append(net)
-            status = 0
-            infotexts = []
-            if len(too_much) > 0:
-                status = 1
-                infotexts.append("agent allows extra: %s" % (" ".join(too_much)))
-            if len(too_few) > 0:
-                status = 1
-                infotexts.append("agent blocks: %s" % (" ".join(too_few)))
-            if status == 1:
-                return (1, "invalid access configuration: %s" % (", ".join(infotexts)))
-            return (0, "allowed IP ranges: %s" % (" ".join(allowed_nets)))
-    return (3, "Agent does not send OnlyFrom: header")
-
+def check_only_from(_no_item, _no_params, _no_info):
+    return 3, '''This has been included in the service "Check_MK" (see long output for details).
+The functionality of this service has been incorporated in the "Check_MK" service.
+ The corresponding global config option "check_mk_only_from_default"
+ will no longer work; please remove it from your main.mk file if
+ you have been using this service.
+ From now on this feature can be configured via WATO using the
+ ruleset "Allowed IP addresses for agent access" - the same rule that
+ will be used for the agent bakery (if available).
+ The check state will be displayed as part of the "Check_MK" sercice.
+'''
 
 
 check_info["check_mk.only_from"] = {
     'check_function':          check_only_from,
-    'inventory_function':      inventory_only_from,
+    'inventory_function':      lambda info: [],
     'service_description':     'Check_MK Agent Access',
 }
-
 
 #.
 #   .--agent_update--------------------------------------------------------.

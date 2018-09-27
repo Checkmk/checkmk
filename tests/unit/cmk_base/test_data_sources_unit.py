@@ -2,6 +2,7 @@ import pytest
 
 import cmk_base.data_sources.abstract
 import cmk_base.data_sources.snmp
+import cmk_base.data_sources.tcp
 import cmk_base.ip_lookup as ip_lookup
 import cmk_base.config as config
 import cmk_base.exceptions
@@ -68,3 +69,31 @@ def test_mgmt_board_data_source_management_board_ipaddress(monkeypatch, result, 
 
     monkeypatch.setattr(config, "management_address_of", lambda h: address)
     assert source._management_board_ipaddress("hostname") == result
+
+
+@pytest.mark.parametrize("ip_in,ips_out", [
+    ("1.2.{3,4,5}.6", ["1.2.3.6", "1.2.4.6", "1.2.5.6"]),
+    (["0.0.0.0", "1.1.1.1/32"], ["0.0.0.0", "1.1.1.1/32"]),
+    ("0.0.0.0 1.1.1.1/32", ["0.0.0.0", "1.1.1.1/32"]),
+])
+def test_normalize_ip(ip_in, ips_out):
+    assert cmk_base.data_sources.tcp._normalize_ip_addresses(ip_in) == ips_out
+
+
+@pytest.mark.parametrize("result,reported,rule", [
+    ((0, ''), "127.0.0.1", None),
+    ((0, ''), None, "127.0.0.1"),
+    ((0, ', allowed IP ranges: 1.2.3.4'), "1.2.3.4", "1.2.3.4"),
+    ((1, ', invalid access configuration:'
+         ' agent allows extra: 1.2.4.6 1.2.5.6(!)'), "1.2.{3,4,5}.6", "1.2.3.6"),
+    ((1, ', invalid access configuration:'
+         ' agent blocks: 1.2.3.5 1.2.3.4(!)'), "1.2.3.6", "1.2.3.{4,5,6}"),
+])
+def test_tcpdatasource_only_from(monkeypatch, result, reported, rule):
+    source = cmk_base.data_sources.tcp.TCPDataSource("hostname", "ipaddress")
+
+    monkeypatch.setattr(config, "agent_config", {"only_from": [rule]} if rule else {})
+    monkeypatch.setattr(config, "host_extra_conf", lambda host, ruleset: ruleset)
+
+    assert source._sub_result_only_from({"onlyfrom": reported}) == result
+

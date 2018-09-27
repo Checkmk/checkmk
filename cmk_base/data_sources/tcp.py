@@ -32,8 +32,27 @@ from cmk.exceptions import MKTerminate, MKGeneralException
 import cmk_base.utils as utils
 import cmk_base.config as config
 from cmk_base.exceptions import MKAgentError, MKEmptyAgentData
+from cmk_base.check_api_utils import state_markers
 
 from .abstract import CheckMKAgentDataSource
+
+
+def _normalize_ip_addresses(ip_addresses):
+    '''factorize 10.0.0.{1,2,3}'''
+    if not isinstance(ip_addresses, list):
+        ip_addresses = ip_addresses.split()
+
+    expanded = [word for word in ip_addresses if '{' not in word]
+    for word in ip_addresses:
+        if word in expanded:
+            continue
+        try:
+            prefix, tmp = word.split('{')
+            curly, suffix = tmp.split('}')
+            expanded.extend(prefix + i + suffix for i in curly.split(','))
+        except:
+            raise MKGeneralException("could not expand %r" % word)
+    return expanded
 
 
 #.
@@ -157,14 +176,10 @@ class TCPDataSource(CheckMKAgentDataSource):
         return output
 
 
-    # TODO: refactor
-    def _summary_result(self):
-        agent_info = self._get_agent_info()
+    def _sub_result_version(self, agent_info):
         agent_version = agent_info["version"]
-
-        status, output, perfdata = super(TCPDataSource, self)._summary_result()
-
         expected_version = config.agent_target_version(self._hostname)
+
         if expected_version and agent_version \
              and not self._is_expected_agent_version(agent_version, expected_version):
             # expected version can either be:
@@ -181,12 +196,57 @@ class TCPDataSource(CheckMKAgentDataSource):
                     expected += ' release %s' % expected_version[1]['release']
             else:
                 expected = expected_version
-            output += ", unexpected agent version %s (should be %s)" % (agent_version, expected)
             status = self._exit_code_spec.get("wrong_version", 1)
+            output = ", unexpected agent version %s (should be %s)%s" \
+                     % (agent_version, expected, state_markers[status])
 
         elif config.agent_min_version and agent_version < config.agent_min_version:
-            output += ", old plugin version %s (should be at least %s)" % (agent_version, config.agent_min_version)
             status = self._exit_code_spec.get("wrong_version", 1)
+            output = ", old plugin version %s (should be at least %s)%s" \
+                     % (agent_version, config.agent_min_version, state_markers[status])
+
+        else:
+            status, output = 0, ''
+
+        return status, output
+
+
+    def _sub_result_only_from(self, agent_info):
+        agent_only_from = agent_info.get("onlyfrom")
+        ruleset = config.agent_config.get("only_from")
+        entries = config.host_extra_conf(self._hostname, ruleset)
+        config_only_from = entries[0] if entries else None
+        if None in (agent_only_from, config_only_from):
+            return 0, ''
+
+        allowed_nets = set(_normalize_ip_addresses(agent_only_from))
+        expected_nets = set(_normalize_ip_addresses(config_only_from))
+        if allowed_nets == expected_nets:
+            return 0, ", allowed IP ranges: %s%s" \
+                      % (" ".join(allowed_nets), state_markers[0])
+
+        infotexts = []
+        exceeding = allowed_nets - expected_nets
+        if exceeding:
+            infotexts.append("agent allows extra: %s" % " ".join(exceeding))
+        missing = expected_nets - allowed_nets
+        if missing:
+            infotexts.append("agent blocks: %s" % " ".join(missing))
+
+        return 1, ", invalid access configuration: %s%s" \
+                  % (", ".join(infotexts), state_markers[1])
+
+
+    def _summary_result(self):
+        agent_info = self._get_agent_info()
+        status, output, perfdata = super(TCPDataSource, self)._summary_result()
+
+        for sub_status, sub_output in [
+            self._sub_result_version(agent_info),
+            self._sub_result_only_from(agent_info),
+        ]:
+            status = max(status, sub_status)
+            output += ", %s" % sub_output
 
         return status, output, perfdata
 

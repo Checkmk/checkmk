@@ -35,6 +35,9 @@ def inventory_genua_fan(info):
     # remove empty elements due to alternative enterprise id in snmp_info
     info = filter(None, info)
 
+    if not info:
+        return
+
     inventory = []
     for _fanNo, fanName, _fanRPM, _fanState in info[0]:
         inventory.append( (fanName, {}) )

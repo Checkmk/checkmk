@@ -256,7 +256,7 @@ def inv_paint_bytes(b):
 
 @decorate_inv_paint
 def inv_paint_size(b):
-    return "number", cmk.render.bytes(b)
+    return "number", cmk.render.fmt_bytes(b)
 
 
 @decorate_inv_paint

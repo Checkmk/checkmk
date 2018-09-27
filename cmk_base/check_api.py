@@ -212,7 +212,7 @@ is_ipv6_primary          = _config.is_ipv6_primary
 is_cmc                   = _config.is_cmc
 
 get_age_human_readable   = lambda secs: str(render.Age(secs))
-get_bytes_human_readable = render.bytes
+get_bytes_human_readable = render.fmt_bytes
 quote_shell_string       = _utils.quote_shell_string
 
 

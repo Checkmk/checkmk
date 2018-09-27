@@ -129,4 +129,3 @@ check_info['postgres_stat_database.size'] = {
     "service_description"     : "PostgreSQL DB %s Size",
     "has_perfdata"            : True,
 }
-

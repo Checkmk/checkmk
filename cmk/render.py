@@ -23,7 +23,6 @@
 # License along with GNU Make; see the file  COPYING.  If  not,  write
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
-
 """This module contains functions that transform Python values into
 text representations optimized for human beings - with optional localization.
 The resulting strings are not ment to be parsed into values again later. They
@@ -40,7 +39,7 @@ import math
 try:
     _
 except NameError:
-    _ = lambda x: x # Fake i18n when not available
+    _ = lambda x: x  # Fake i18n when not available
 
 #.
 #   .--Date/Time-----------------------------------------------------------.
@@ -51,6 +50,7 @@ except NameError:
 #   |          |____/ \__,_|\__\___/_/    |_| |_|_| |_| |_|\___|           |
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
+
 
 def date(timestamp):
     return time.strftime(_("%Y-%m-%d"), time.localtime(timestamp))
@@ -76,6 +76,7 @@ def time_since(timestamp):
 
 class Age(object):
     """Format time difference seconds into approximated human readable text"""
+
     def __init__(self, secs):
         super(Age, self).__init__()
         self.__secs = secs
@@ -85,7 +86,7 @@ class Age(object):
 
         if secs < 0:
             return "- " + approx_age(-secs)
-        elif secs > 0 and secs < 1: # ms
+        elif secs > 0 and secs < 1:  # ms
             return physical_precision(secs, 3, _("s"))
         elif secs < 10:
             return "%.2f %s" % (secs, _("s"))
@@ -151,33 +152,31 @@ def approx_age(secs):
 #   |                                       |___/                          |
 #   '----------------------------------------------------------------------'
 
-def bytes(b, base=1024.0, bytefrac=True, unit="B"):
+
+def scale_factor_prefix(value, base, prefixes=('', 'k', 'M', 'G', 'T', 'P')):
+    # type: (int, float, Tuple[str]) -> (float, str)
+    base = float(base)
+
+    prefix = prefixes[-1]
+    factor = base
+    for unit_prefix in prefixes[:-1]:
+        if abs(value) < factor:
+            prefix = unit_prefix
+            break
+        factor *= base
+    return factor / base, prefix
+
+
+def fmt_bytes(b, base=1024.0, precision=2, unit="B"):
+    # type: (int, float, bool, str) -> str
     """Formats byte values to be used in texts for humans.
 
     Takes bytes as integer and returns a string which represents the bytes in a
     more human readable form scaled to TB/GB/MB/KB. The unit parameter simply
-    changes the returned string, but does not interfere with any calcluations."""
-    base = float(base)
+    changes the returned string, but does not interfere with any calculations."""
+    factor, prefix = scale_factor_prefix(b, base)
 
-    # Handle negative bytes correctly
-    prefix = ''
-    if b < 0:
-        prefix = '-'
-        b *= -1
-
-    if b >= base * base * base * base:
-        return '%s%.2f T%s' % (prefix, b / base / base / base / base, unit)
-    elif b >= base * base * base:
-        return '%s%.2f G%s' % (prefix, b / base / base / base, unit)
-    elif b >= base * base:
-        return '%s%.2f M%s' % (prefix, b / base / base, unit)
-    elif b >= base:
-        return '%s%.2f k%s' % (prefix, b / base, unit)
-    elif bytefrac:
-        return '%s%.2f %s' % (prefix, b, unit)
-
-    # Omit byte fractions
-    return '%s%.0f %s' % (prefix, b, unit)
+    return '%.*f %s' % (precision, b / factor, prefix + unit)
 
 
 # Precise size of a file - separated decimal separator
@@ -192,7 +191,8 @@ def filesize(size):
     elif size < 1000000000:
         return str(size)[:-6] + dec_sep + str(size)[-6:-3] + dec_sep + str(size)[-3:]
 
-    return str(size)[:-9] + dec_sep + str(size)[-9:-6] + dec_sep + str(size)[-6:-3] + dec_sep + str(size)[-3:]
+    return str(size)[:-9] + dec_sep + str(size)[-9:-6] + dec_sep + str(size)[-6:-3] + dec_sep + str(
+        size)[-3:]
 
 
 #.
@@ -204,6 +204,7 @@ def filesize(size):
 #   |   |_|  |_|_|___/\___(_)_| \_|\__,_|_| |_| |_|_.__/ \___|_|  |___/    |
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
+
 
 def percent(perc, precision=2, drop_zeroes=True):
     """Renders a given number as percentage string"""
@@ -225,7 +226,7 @@ def scientific(v, precision=3):
     if v == 0:
         return "0"
     elif v < 0:
-        return "-" + scientific(v*-1, precision)
+        return "-" + scientific(v * -1, precision)
 
     mantissa, exponent = _frexp10(float(v))
     # Render small numbers without exponent
@@ -270,17 +271,17 @@ def calculate_physical_precision(v, precision):
     # Choose a power where no artifical zero (due to rounding) needs to be
     # placed left of the decimal point.
     scale_symbols = {
-        -5 : "f",
-        -4 : "p",
-        -3 : "n",
-        -2 : u"µ",
-        -1 : "m",
-         0 : "",
-         1 : "K",
-         2 : "M",
-         3 : "G",
-         4 : "T",
-         5 : "P",
+        -5: "f",
+        -4: "p",
+        -3: "n",
+        -2: u"µ",
+        -1: "m",
+        0: "",
+        1: "K",
+        2: "M",
+        3: "G",
+        4: "T",
+        5: "P",
     }
     scale = 0
 
@@ -297,7 +298,7 @@ def calculate_physical_precision(v, precision):
         places_before_comma = exponent + 1
         places_after_comma = precision - places_before_comma
 
-    return scale_symbols[scale], places_after_comma, 1000 ** scale
+    return scale_symbols[scale], places_after_comma, 1000**scale
 
 
 def _frexp10(x):

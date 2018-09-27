@@ -175,4 +175,3 @@ def check_mssql_datafiles(item, params, parsed):
 
     return _mssql_datafiles_process_sizes(params, used_size_sum, allocated_size_sum,
                                           max_size_sum, unlimited_sum)
-

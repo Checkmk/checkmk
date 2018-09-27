@@ -79,4 +79,3 @@ check_info["dell_om_mem"] = {
                               ]),
     "includes"              : [ "dell_om.include" ],
 }
-

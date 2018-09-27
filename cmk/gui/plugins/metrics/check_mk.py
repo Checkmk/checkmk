@@ -30,6 +30,8 @@ import cmk.gui.utils as utils
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
 
+from cmk.render import scale_factor_prefix
+
 from . import (
     unit_info,
     metric_info,
@@ -95,47 +97,13 @@ unit_info[""] = {
 }
 
 
-# TODO: Check whether or not we can use functions from cmk.render or move it there
-def calculate_scaled_number(v, base=1024.0, precision=1):
-    base = float(base)
-
-    if v >= base ** 4:
-        symbol = "T"
-        scale = base ** 4
-
-    elif v >= base ** 3:
-        symbol = "G"
-        scale = base ** 3
-
-    elif v >= base ** 2:
-        symbol = "M"
-        scale = base ** 2
-
-    elif v >= base:
-        symbol = "k"
-        scale = base
-
-    else:
-        symbol = ""
-        scale = 1
-
-    return symbol, precision, scale
-
-
 def metric_number_with_precision(v, *args, **kwargs):
-    if v < 0:
-        return "-" + metric_number_with_precision(-v, *args, **kwargs)
 
-    subargs = {
-        "base": 1000.0,
-        "precision": kwargs.get("precision", 2),
-    }
-    scale_symbol, places_after_comma, scale_factor = calculate_scaled_number(v, *args, **subargs)
-    scaled_value = float(v) / scale_factor
-    text = ((u"%%.%df %%s" % places_after_comma) % (scaled_value, scale_symbol)).rstrip()
-    if kwargs.get("drop_zeroes"):
-        text = text.rstrip("0").rstrip(".")
-    return text
+    precision = kwargs.get("drop_zeroes", None) or kwargs.get("precision", 2)
+
+    factor, prefix = scale_factor_prefix(v, base=1000.0)
+
+    return '%.*f %s' % (precision, float(v) / factor, prefix)
 
 
 unit_info["count"] = {
@@ -179,14 +147,14 @@ unit_info["hz"] = {
 unit_info["bytes"] = {
     "title"    : _("Bytes"),
     "symbol"   : _("B"),
-    "render"   : cmk.render.bytes,
+    "render"   : cmk.render.fmt_bytes,
     "stepping" : "binary", # for vertical graph labels
 }
 
 unit_info["bytes/s"] = {
     "title"    : _("Bytes per second"),
     "symbol"   : _("B/s"),
-    "render"   : lambda v: cmk.render.bytes(v) + _("/s"),
+    "render"   : lambda v: cmk.render.fmt_bytes(v) + _("/s"),
     "stepping" : "binary", # for vertical graph labels
 }
 
@@ -212,41 +180,27 @@ unit_info["bits/s"] = {
     "graph_unit" : lambda v: physical_precision_list(v, 3, _("bit/s")),
 }
 
-# TODO: Check whether or not we can use functions from cmk.render or move it there
-def calculate_scaled_bytes(v, base=1024.0, bytefrac=True):
-    digits = 2
-    if not bytefrac:
-        digits = 0
-
-    return calculate_scaled_number(v, base, precision=digits)
-
-
 def bytes_human_readable_list(values, *args, **kwargs):
     if not values:
         reference = 0
     else:
         reference = min([ abs(v) for v in values ])
 
-    if "unit" in kwargs:
-        unit = kwargs.pop("unit")
-    else:
-        unit = "B"
+    scale_factor, scale_prefix = scale_factor_prefix(reference, 1024.0)
+    precision = kwargs.get("precision", 2)
 
-    scale_symbol, places_after_comma, scale_factor = calculate_scaled_bytes(reference, *args, **kwargs)
+    scaled_values = ["%.*f" % (precision, float(value) / scale_factor) for value in values]
 
-    scaled_values = []
-    for value in values:
-        scaled_value = float(value) / scale_factor
-        scaled_values.append(("%%.%df" % places_after_comma) % scaled_value)
+    unit = kwargs.get("unit", "B")
 
-    return "%s%s" % (scale_symbol, unit), scaled_values
+    return scale_prefix + unit, scaled_values
 
 
 # Output in bytes/days, value is in bytes/s
 unit_info["bytes/d"] = {
     "title"      : _("Bytes per day"),
     "symbol"     : _("B/d"),
-    "render"     : lambda v: cmk.render.bytes(v * 86400.0) + "/d",
+    "render"     : lambda v: cmk.render.fmt_bytes(v * 86400.0) + "/d",
     "graph_unit" : lambda values: bytes_human_readable_list(
                             [ v * 86400.0 for v in values ], unit=_("B/d")),
     "stepping"   : "binary", # for vertical graph labels

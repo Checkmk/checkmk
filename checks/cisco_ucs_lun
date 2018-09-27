@@ -70,4 +70,3 @@ check_info["cisco_ucs_lun"]  = {
                             ]),
     "includes"           : [ "cisco_ucs.include" ]
 }
-

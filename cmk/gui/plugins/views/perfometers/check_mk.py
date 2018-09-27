@@ -344,9 +344,9 @@ def perfometer_bandwidth(in_traffic, out_traffic, in_bw, out_bw, unit = "B"):
         return text, perfometer_logarithmic_dual(in_traffic, "#0e6", out_traffic, "#2af", MB, 5)
     # if we have bandwidth
     txt, data = [], []
-    for name, bytes, bw, color in [("in",  in_traffic,  in_bw,  "#0e6"),
+    for name, bytes_, bw, color in [("in",  in_traffic,  in_bw,  "#0e6"),
                                    ("out", out_traffic, out_bw, "#2af")]:
-        rrate = bytes / bw
+        rrate = bytes_ / bw
         drate = max(0.02, rrate ** 0.5 ** 0.5)
         rperc = 100 * rrate
         dperc = 100 * drate
@@ -887,10 +887,10 @@ perfometers["check_mk-hitachi_hnas_fan"]  = perfometer_fanspeed_logarithmic
 perfometers["check_mk-bintec_sensors.fan"]  = perfometer_fanspeed_logarithmic
 
 def perfometer_check_mk_arcserve_backup(row, check_command, perf_data):
-    bytes = int(perf_data[2][1])
-    text = number_human_readable(bytes)
+    bytes_ = int(perf_data[2][1])
+    text = number_human_readable(bytes_)
 
-    return text, perfometer_logarithmic(bytes, 1000 * 1024 * 1024 * 1024, 2, "#BDC6DE")
+    return text, perfometer_logarithmic(bytes_, 1000 * 1024 * 1024 * 1024, 2, "#BDC6DE")
 
 perfometers["check_mk-arcserve_backup"] = perfometer_check_mk_arcserve_backup
 
@@ -1072,7 +1072,7 @@ def perfometer_veeam_client(row, check_command, perf_data):
             duration_secs = int(graph[1])
     h = perfometer_logarithmic_dual_independent(avgspeed_bytes, '#54b948', 10000000, 2, duration_secs, '#2098cb', 500, 2)
 
-    avgspeed = cmk.render.bytes(avgspeed_bytes)
+    avgspeed = cmk.render.fmt_bytes(avgspeed_bytes)
     duration = cmk.render.approx_age(duration_secs)
 
     return "%s/s&nbsp;&nbsp;&nbsp;%s" % (avgspeed, duration), h

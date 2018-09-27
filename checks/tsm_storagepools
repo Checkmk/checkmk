@@ -81,4 +81,3 @@ check_info['tsm_storagepools'] = {
     "service_description" : "TSM Storagepool %s",
     "has_perfdata"        : True,
 }
-

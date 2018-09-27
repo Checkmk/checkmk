@@ -79,7 +79,7 @@ def do_backup(tarname):
             info.mode = 0644
             info.type = tarfile.REGTYPE
             info.name = subtarname
-            console.verbose("  Added %s (%s) with a size of %s\n", descr, absdir, render.bytes(info.size))
+            console.verbose("  Added %s (%s) with a size of %s\n", descr, absdir, render.fmt_bytes(info.size))
             tar.addfile(info, StringIO.StringIO(subdata))
 
     tar.close()

@@ -76,6 +76,8 @@ import npyscreen
 
 import livestatus
 
+from cmk.render import fmt_bytes
+
 #.
 #   .--Helpers-------------------------------------------------------------.
 #   |                  _   _      _                                        |
@@ -126,29 +128,6 @@ def fmt_timespan(seconds):
 
 def fmt_datetime(seconds):
     return time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(seconds))
-
-
-def fmt_bytes(b, base=1024.0, bytefrac=True, unit="B"):
-    base = float(base)
-
-    # Handle negative bytes correctly
-    prefix = ''
-    if b < 0:
-        prefix = '-'
-        b *= -1
-
-    if b >= base * base * base * base:
-        return '%s%.2f T%s' % (prefix, b / base / base / base / base, unit)
-    elif b >= base * base * base:
-        return '%s%.2f G%s' % (prefix, b / base / base / base, unit)
-    elif b >= base * base:
-        return '%s%.2f M%s' % (prefix, b / base / base, unit)
-    elif b >= base:
-        return '%s%.2f k%s' % (prefix, b / base, unit)
-    elif bytefrac:
-        return '%s%.2f %s' % (prefix, b, unit)
-    else: # Omit byte fractions
-        return '%s%.0f %s' % (prefix, b, unit)
 
 
 class MKGeneralException(Exception):

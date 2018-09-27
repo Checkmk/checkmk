@@ -85,4 +85,3 @@ check_info['db2_mem'] = {
     "has_perfdata"            : True,
     "group"                   : "db2_mem"
 }
-

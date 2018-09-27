@@ -47,4 +47,3 @@ def check_juniper_mem_generic(_no_item, params, info):
     elif usage_perc >= warn:
         return 1, message + levels, perf
     return 0, message, perf
-

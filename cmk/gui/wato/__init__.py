@@ -13907,7 +13907,7 @@ class ModeDownloadAgents(WatoMode):
             html.a(title, href="agents/%s" % relpath)
             html.span("." * 100, class_="dots")
             html.close_div()
-            html.div(render.bytes(file_size), style="width:60px;", class_="rulecount")
+            html.div(render.fmt_bytes(file_size), style="width:60px;", class_="rulecount")
             html.close_div()
             html.close_div()
         forms.end()

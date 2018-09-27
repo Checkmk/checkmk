@@ -201,7 +201,7 @@ def render_grouped_boxes(rows, view, group_cells, cells, num_columns, show_check
         if column_headers != "off":
             show_header_line()
 
-        groups, rows_with_ids = calculate_view_grouping_of_services(rows_with_ids)
+        groups, rows_with_ids = calculate_view_grouping_of_services(rows_with_ids, row_group_cells=None)
 
         visible_row_number = 0
         group_hidden, num_grouped_rows = None, 0
@@ -297,7 +297,7 @@ def grouped_row_title(index, group_spec, num_rows, trclass, num_cells):
 # b) Row grouping (Displaying header painters for each row)
 #
 # This is confusing and needs to be cleaned up!
-def calculate_view_grouping_of_services(rows):
+def calculate_view_grouping_of_services(rows, row_group_cells):
     if not config.service_view_grouping:
         return {}, rows
 
@@ -306,11 +306,20 @@ def calculate_view_grouping_of_services(rows):
     groups = {}
     current_group = None
     group_id = None
+    last_row_group = None
     for index, (row_id, row) in enumerate(rows[:]):
         group_spec = try_to_match_group(row)
         if not group_spec:
             current_group = None
             continue
+
+        # New row groups need to separate the view groups. There is no folding allowed
+        # between row groups (e.g. services of different hosts when the host is a group cell)
+        if row_group_cells:
+            this_row_group = group_value(row, row_group_cells)
+            if this_row_group != last_row_group:
+                group_id = row_id
+                last_row_group = this_row_group
 
         if current_group == None:
             group_id = row_id
@@ -579,7 +588,7 @@ def render_grouped_list(rows, view, group_cells, cells, num_columns, show_checkb
         return members
 
     rows_with_ids = [ (row_id(view, row), row) for row in rows ]
-    groups, rows_with_ids = calculate_view_grouping_of_services(rows_with_ids)
+    groups, rows_with_ids = calculate_view_grouping_of_services(rows_with_ids, row_group_cells=group_cells)
 
     visible_row_number = 0
     group_hidden, num_grouped_rows = None, 0

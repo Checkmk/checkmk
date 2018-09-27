@@ -99,9 +99,9 @@ def render_availability_options(what):
             range_vs = vs
 
     try:
-        range, range_title = range_vs.compute_range(avoptions["rangespec"])
-        avoptions["range"] = range, range_title
-    except MKUserError, e:
+        range_, range_title = range_vs.compute_range(avoptions["rangespec"])
+        avoptions["range"] = range_, range_title
+    except MKUserError as e:
         html.add_user_error(e.varname, e)
 
     if html.has_user_errors():

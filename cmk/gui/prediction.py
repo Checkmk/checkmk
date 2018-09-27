@@ -327,7 +327,7 @@ def compute_vertical_range(swapped):
         mmin = min(mmin, min(points)) or 0.0
     return mmin, mmax
 
-def create_graph(name, size, range, v_range, legend):
+def create_graph(name, size, bounds, v_range, legend):
     html.write('<table class=prediction><tr><td>')
     html.write('<canvas class=prediction id="content_%s" style="width: %dpx; height: %dpx;" width=%d height=%d></canvas>' % (
        name, size[0]/2, size[1]/2, size[0], size[1]))
@@ -337,7 +337,7 @@ def create_graph(name, size, range, v_range, legend):
                     color, title))
     html.write('</div></td></tr></table>')
     html.javascript('create_graph("content_%s", %.4f, %.4f, %.4f, %.4f);' % (
-                 name, range[0], range[1], v_range[0], v_range[1]))
+                 name, bounds[0], bounds[1], v_range[0], v_range[1]))
 
 def render_coordinates(v_scala, t_scala):
     html.javascript('render_coordinates(%s, %s);' % (json.dumps(v_scala), json.dumps(t_scala)))

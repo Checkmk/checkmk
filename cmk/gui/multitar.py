@@ -327,7 +327,7 @@ class SnapshotCreator(SnapshotCreationBase):
         return self
 
 
-    def __exit__(self, type, value, traceback):
+    def __exit__(self, exception_type, exception_value, traceback):
         for worker in self._worker_subprocesses:
             worker.join()
         self.output_statistics()

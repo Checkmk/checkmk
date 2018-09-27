@@ -92,12 +92,12 @@ _lgp_pdu_aux_fields = {
 def lgp_pdu_aux_fmt(info):
     new_info = {}
     for oid, value in info:
-        type, id = oid.split('.', 1)
-        if not id in new_info:
-            new_info[id] = {'TypeIndex': id.split('.')[-1]}
+        type_, id_ = oid.split('.', 1)
+        if not id_ in new_info:
+            new_info[id_] = {'TypeIndex': id_.split('.')[-1]}
         # Skip not handled rows
-        if type in _lgp_pdu_aux_fields:
-            ty, factor, key = _lgp_pdu_aux_fields[type]
+        if type_ in _lgp_pdu_aux_fields:
+            ty, factor, key = _lgp_pdu_aux_fields[type_]
 
             if key == 'Type':
                 value = lgp_pdu_aux_types.get(value, 'UNHANDLED')

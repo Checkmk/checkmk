@@ -111,9 +111,9 @@ def check_hp_proliant_mem(item, params, info):
 
             module_size_mb = int(module_size) / 1024
 
-            type = 'n/a'
+            type_ = 'n/a'
             if int(module_type) in hp_proliant_mem_type_map:
-                type = hp_proliant_mem_type_map[int(module_type)]
+                type_ = hp_proliant_mem_type_map[int(module_type)]
 
             snmp_status = 'n/a'
             if int(module_status) in hp_proliant_mem_status_map:
@@ -149,7 +149,7 @@ def check_hp_proliant_mem(item, params, info):
 
             return (status, 'Board: %s, Num: %s, Type: %s, Size: %s MB%s' %
                             (board_index, module_index,
-                             type, module_size_mb, detail_output))
+                             type_, module_size_mb, detail_output))
     return (3, "item not found in snmp data")
 
 

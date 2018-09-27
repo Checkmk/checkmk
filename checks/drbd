@@ -347,8 +347,8 @@ def drbd_get_rates(list):
     now = time.time()
     output = ''
     perfdata = []
-    for type, name, item, value, uom in list:
-        rate  = get_rate("%s.%s.%s"  % (type, name, item), now, value)
+    for type_, name, item, value, uom in list:
+        rate  = get_rate("%s.%s.%s"  % (type_, name, item), now, value)
         perfdata.append((name, rate))
         output += ' %s/sec: %s%s' % (name, rate, uom)
     return (output, perfdata)

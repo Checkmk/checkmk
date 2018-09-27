@@ -50,23 +50,23 @@ def parse_ra32e_sensors(info):
 
     internal, sensors = info
 
-    for type, item, value in zip(['temperature', 'humidity', 'temperature'],
+    for type_, item, value in zip(['temperature', 'humidity', 'temperature'],
                                         ['Internal', 'Internal', 'Heat Index'],
                                         internal[0]):
         if value:
-            parsed[type][item] = float(value) / 100.0
+            parsed[type_][item] = float(value) / 100.0
 
     for sensor in sensors:
         oid_end, sensor_data = sensor[0], sensor[1:]
 
         name = 'Sensor %d' % int(oid_end.split('.')[0])
-        type = type_of(sensor_data)
+        type_ = type_of(sensor_data)
 
         # uses the format of elphase.include for power and voltage
-        if type == 'temp':
+        if type_ == 'temp':
             temperature, _, _, _, _ = sensor_data
             parsed['temperature'][name] = float(temperature) / 100.0
-        elif type == 'temp/active':
+        elif type_ == 'temp/active':
             temperature, _, power_state, _, _ = sensor_data
             parsed['temperature'][name] = float(temperature) / 100.0
 
@@ -75,11 +75,11 @@ def parse_ra32e_sensors(info):
                 '0': (2, 'no power detected')
             }
             parsed['power'][name] = {'device_state': power_status_map.get(power_state)}
-        elif type == 'temp/analog':
+        elif type_ == 'temp/analog':
             temperature, _, voltage, _, _ = sensor_data
             parsed['temperature'][name] = float(temperature) / 100.0
             parsed['voltage'][name] = {'voltage': (int(voltage), None)}
-        elif type == 'temp/humidity':
+        elif type_ == 'temp/humidity':
             temperature, _, humidity, _, heatindex = sensor_data
             parsed['temperature'][name] = float(temperature) / 100.0
             parsed['humidity'][name] = float(humidity) / 100.0

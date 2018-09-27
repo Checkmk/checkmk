@@ -69,16 +69,16 @@ hp_procurve_status_map = { '1': 'unknown', '2': 'bad', '3': 'warning', '4': 'goo
 hp_procurve_status2nagios_map = { 'unknown': 3, 'bad': 2, 'warning': 1, 'good': 0, 'notPresent': 1 }
 
 def get_hp_procurve_sensor_type(type_input):
-    type = ''
+    type_ = ''
     if type_input.endswith('11.2.3.7.8.3.1'):
-        type = 'PSU'
+        type_ = 'PSU'
     elif type_input.endswith('11.2.3.7.8.3.2'):
-        type = 'FAN'
+        type_ = 'FAN'
     elif type_input.endswith('11.2.3.7.8.3.3'):
-        type = 'Temp'
+        type_ = 'Temp'
     elif type_input.endswith('11.2.3.7.8.3.4'):
-        type = 'FutureSlot'
-    return type
+        type_ = 'FutureSlot'
+    return type_
 
 def inventory_hp_procurve_sensors(info):
     inventory = []

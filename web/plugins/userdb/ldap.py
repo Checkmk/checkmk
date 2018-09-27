@@ -1026,8 +1026,7 @@ class LDAPUserConnector(UserConnector):
             user_connection_id = cleanup_connection_id(user.get('connector'))
             if user_connection_id == connection_id and self.strip_suffix(user_id) not in ldap_users:
                 del users[user_id] # remove the user
-                if config.wato_enabled:
-                    changes.append(_("LDAP [%s]: Removed user %s") % (connection_id, user_id))
+                changes.append(_("LDAP [%s]: Removed user %s") % (connection_id, user_id))
 
         for user_id, ldap_user in ldap_users.items():
             mode_create, user = load_user(user_id)
@@ -1074,7 +1073,7 @@ class LDAPUserConnector(UserConnector):
                 changed = self.find_changed_user_keys(intersect, users[user_id], user) # returns a dict
 
             users[user_id] = user # Update the user record
-            if mode_create and config.wato_enabled:
+            if mode_create:
                 changes.append(_("LDAP [%s]: Created user %s") % (connection_id, user_id))
             else:
                 details = []
@@ -1102,13 +1101,13 @@ class LDAPUserConnector(UserConnector):
                     for key, (old_value, new_value) in sorted(changed.items()):
                         details.append(('Changed %s from %s to %s' % (key, old_value, new_value)))
 
-                if details and config.wato_enabled:
+                if details:
                     changes.append(_("LDAP [%s]: Modified user %s (%s)") % (connection_id, user_id, ', '.join(details)))
 
         duration = time.time() - start_time
         self._logger.info('SYNC FINISHED - Duration: %0.3f sec', duration)
 
-        if changes and not watolib.is_wato_slave_site():
+        if changes and config.wato_enabled and not watolib.is_wato_slave_site():
             watolib.add_change("edit-users", "<br>\n".join(changes), add_user=False)
 
         save_users(users)

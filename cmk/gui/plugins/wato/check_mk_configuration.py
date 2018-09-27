@@ -819,7 +819,7 @@ register_configvar(group,
 
 def get_builtin_icons():
     import cmk.gui.views as views
-    return [ (id, id) for id in views.get_multisite_icons() ]
+    return [ (id_, id_) for id_ in views.get_multisite_icons() ]
 
 register_configvar(group,
     "builtin_icon_visibility",

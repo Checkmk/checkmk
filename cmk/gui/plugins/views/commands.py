@@ -705,9 +705,9 @@ def command_downtime(cmdtag, spec, row):
             prefix = "host_"
         else:
             prefix = "service_"
-        for id in row[prefix + "downtimes"]:
-            if id != "":
-                downtime_ids.append(int(id))
+        for id_ in row[prefix + "downtimes"]:
+            if id_ != "":
+                downtime_ids.append(int(id_))
 
         commands = []
         for dtid in downtime_ids:

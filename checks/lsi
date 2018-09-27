@@ -32,12 +32,12 @@ def inventory_lsi(check_type, info):
     arrays  = []
     disks   = []
     for entry in entries:
-        id    = int(entry[0][1])
+        id_    = int(entry[0][1])
         state = entry[1][1].split('(')[-1][:-1]
         if entry[0][0] == 'VolumeID':
-            arrays.append((id, state))
+            arrays.append((id_, state))
         else:
-            disks.append((id, state))
+            disks.append((id_, state))
 
     if check_type == 'lsi.array':
         return [(item, "None") for (item, state) in arrays]

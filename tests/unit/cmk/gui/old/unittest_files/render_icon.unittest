@@ -2,7 +2,7 @@
   'input': {'arguments': {'cssclass': 'test',
                           'help': 'Icon Title',
                           'icon_name': 'TestIcon',
-                          'id': 'TestID',
+                          'id_': 'TestID',
                           'middle': True}},
   'output': {'html_code': '',
              'return_value': '<img src="images/icons/TestIcon.png" class="icon test" align=absmiddle title="Icon Title" id="TestID" />'}}]

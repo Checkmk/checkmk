@@ -52,12 +52,12 @@ def brocade_mlx_get_state(state):
 def brocade_mlx_scan(oid):
     return oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.1991.1.")
 
-def brocade_mlx_combine_item(id, descr):
+def brocade_mlx_combine_item(id_, descr):
     if descr == "":
-        return id
+        return id_
     else:
         descr = re.sub(" *Module", "", descr)
-        return "%s %s" % (id, descr)
+        return "%s %s" % (id_, descr)
 
 #   .--Overall Status------------------------------------------------------.
 #   |     ___                      _ _   ____  _        _                  |

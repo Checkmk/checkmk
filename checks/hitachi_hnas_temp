@@ -33,8 +33,8 @@ def format_hitachi_hnas_name(nodeid, sensorid, new_format):
 
 
 def inventory_hitachi_hnas_temp(info):
-    for clusternode, id, _status, _temp in info:
-        yield format_hitachi_hnas_name(clusternode, id, True), None
+    for clusternode, id_, _status, _temp in info:
+        yield format_hitachi_hnas_name(clusternode, id_, True), None
 
 def check_hitachi_hnas_temp(item, params, info):
     temp_status_map = ( ("", 3),                  # 0
@@ -46,9 +46,9 @@ def check_hitachi_hnas_temp(item, params, info):
                         ("unknown", 3),           # 6
                       )
 
-    for clusternode, id, status, temp in info:
+    for clusternode, id_, status, temp in info:
         new_format = item.startswith("Node")
-        if format_hitachi_hnas_name(clusternode, id, new_format) == item:
+        if format_hitachi_hnas_name(clusternode, id_, new_format) == item:
             status=int(status)
             temp=int(temp)
 

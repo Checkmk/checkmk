@@ -37,12 +37,12 @@
 def check_vmstat_aix(item, params, info):
     try:
         if item == 'cpuperc':
-            us, sy, id, wa = [ int(x) for x in info[0][13:17] ]
+            us, sy, id_, wa = [ int(x) for x in info[0][13:17] ]
             perfdata = [ ( 'us', "%d%%" % us, '', '', '0', '100' ),
                          ( 'sy', "%d%%" % sy, '', '', '0', '100' ),
-                         ( 'id', "%d%%" % id, '', '', '0', '100' ),
+                         ( 'id', "%d%%" % id_, '', '', '0', '100' ),
                          ( 'wa', "%d%%" % wa, '', '', '0', '100' ) ]
-            return (0, "%d%%(us) %d%%(sy) %d%%(id) %d%%(wa)" % (us, sy, id, wa), perfdata)
+            return (0, "%d%%(us) %d%%(sy) %d%%(id) %d%%(wa)" % (us, sy, id_, wa), perfdata)
         else:
             return (3, "item %s not defined" % item)
     except:

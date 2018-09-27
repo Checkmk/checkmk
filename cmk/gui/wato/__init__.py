@@ -8597,7 +8597,7 @@ class ModeUsers(WatoMode):
 
         table.begin("users", None, empty_text = _("No users are defined yet."))
         online_threshold = time.time() - config.user_online_maxage
-        for id, user in entries:
+        for uid, user in entries:
             table.row()
 
             # Checkboxes
@@ -8605,8 +8605,8 @@ class ModeUsers(WatoMode):
                         class_="checkgroup", onclick="toggle_all_rows();",
                         value='X'), sortable=False, css="checkbox")
 
-            if id != config.user.id:
-                html.checkbox("_c_user_%s" % base64.b64encode(id.encode("utf-8")))
+            if uid != config.user.id:
+                html.checkbox("_c_user_%s" % base64.b64encode(uid.encode("utf-8")))
 
             user_connection_id = userdb.cleanup_connection_id(user.get('connector'))
             connection = userdb.get_connection(user_connection_id)
@@ -8614,21 +8614,21 @@ class ModeUsers(WatoMode):
             # Buttons
             table.cell(_("Actions"), css="buttons")
             if connection: # only show edit buttons when the connector is available and enabled
-                edit_url = watolib.folder_preserving_link([("mode", "edit_user"), ("edit", id)])
+                edit_url = watolib.folder_preserving_link([("mode", "edit_user"), ("edit", uid)])
                 html.icon_button(edit_url, _("Properties"), "edit")
 
-                clone_url = watolib.folder_preserving_link([("mode", "edit_user"), ("clone", id)])
+                clone_url = watolib.folder_preserving_link([("mode", "edit_user"), ("clone", uid)])
                 html.icon_button(clone_url, _("Create a copy of this user"), "clone")
 
-            delete_url = make_action_link([("mode", "users"), ("_delete", id)])
+            delete_url = make_action_link([("mode", "users"), ("_delete", uid)])
             html.icon_button(delete_url, _("Delete"), "delete")
 
-            notifications_url = watolib.folder_preserving_link([("mode", "user_notifications"), ("user", id)])
+            notifications_url = watolib.folder_preserving_link([("mode", "user_notifications"), ("user", uid)])
             if watolib.load_configuration_settings().get("enable_rulebased_notifications"):
                 html.icon_button(notifications_url, _("Custom notification table of this user"), "notifications")
 
             # ID
-            table.cell(_("ID"), id)
+            table.cell(_("ID"), uid)
 
             # Online/Offline
             if config.save_user_access_times:
@@ -9185,7 +9185,7 @@ class ModeEditUser(WatoMode):
 
             # Notification period
             forms.section(_("Notification time period"))
-            choices = [ ( id, "%s" % (tp["alias"])) for (id, tp) in self._timeperiods.items() ]
+            choices = [ ( id_, "%s" % (tp["alias"])) for (id_, tp) in self._timeperiods.items() ]
             html.dropdown("notification_period", choices, deflt=self._user.get("notification_period"), sorted=True)
             html.help(_("Only during this time period the "
                          "user will get notifications about host or service alerts."))
@@ -9369,11 +9369,11 @@ class RoleManagement(object):
     # Adapt references in users. Builtin rules cannot
     # be renamed and are not handled here. If new_id is None,
     # the role is being deleted
-    def _rename_user_role(self, id, new_id):
+    def _rename_user_role(self, uid, new_id):
         users = userdb.load_users(lock = True)
         for user in users.values():
             if id in user["roles"]:
-                user["roles"].remove(id)
+                user["roles"].remove(uid)
                 if new_id:
                     user["roles"].append(new_id)
         userdb.save_users(users)
@@ -9456,21 +9456,21 @@ class ModeRoles(RoleManagement, WatoMode):
         table.begin("roles")
 
         users = userdb.load_users()
-        for id, role in sorted(self._roles.items(), key = lambda a: (a[1]["alias"],a[0])):
+        for rid, role in sorted(self._roles.items(), key = lambda a: (a[1]["alias"],a[0])):
             table.row()
 
             # Actions
             table.cell(_("Actions"), css="buttons")
-            edit_url = watolib.folder_preserving_link([("mode", "edit_role"), ("edit", id)])
-            clone_url = make_action_link([("mode", "roles"), ("_clone", id)])
-            delete_url = make_action_link([("mode", "roles"), ("_delete", id)])
+            edit_url = watolib.folder_preserving_link([("mode", "edit_role"), ("edit", rid)])
+            clone_url = make_action_link([("mode", "roles"), ("_clone", rid)])
+            delete_url = make_action_link([("mode", "roles"), ("_delete", rid)])
             html.icon_button(edit_url, _("Properties"), "edit")
             html.icon_button(clone_url, _("Clone"), "clone")
             if not role.get("builtin"):
                 html.icon_button(delete_url, _("Delete this role"), "delete")
 
             # ID
-            table.text_cell(_("Name"), id)
+            table.text_cell(_("Name"), rid)
 
             # Alias
             table.text_cell(_("Alias"), role["alias"])
@@ -9485,7 +9485,7 @@ class ModeRoles(RoleManagement, WatoMode):
             # Users
             table.cell(_("Users"),
               HTML(", ").join([ html.render_a(user.get("alias", user_id), watolib.folder_preserving_link([("mode", "edit_user"), ("edit", user_id)]))
-                for (user_id, user) in users.items() if id in user["roles"]]))
+                for (user_id, user) in users.items() if rid in user["roles"]]))
 
 
         # Possibly we could also display the following information
@@ -14370,7 +14370,7 @@ def configure_attributes(new, hosts, for_what, parent, myself=None, without_attr
                 checkbox_code = html.render_checkbox(checkbox_name, active,
                                                   onclick=onclick, add_attr=add_attr)
 
-            forms.section(_u(attr.title()), checkbox=checkbox_code, id="attr_" + attrname)
+            forms.section(_u(attr.title()), checkbox=checkbox_code, section_id="attr_" + attrname)
             html.help(attr.help())
 
             if len(values) == 1:

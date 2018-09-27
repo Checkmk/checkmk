@@ -24,16 +24,16 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-def hitachi_hnas_pnode_combine_item(id, name):
-    combined = str(id)
+def hitachi_hnas_pnode_combine_item(id_, name):
+    combined = str(id_)
     if name != "":
         combined += " " + name
     return combined
 
 def inventory_hitachi_hnas_pnode(info):
     inventory = []
-    for id, name, _status in info:
-        inventory.append( (hitachi_hnas_pnode_combine_item(id, name), None) )
+    for id_, name, _status in info:
+        inventory.append( (hitachi_hnas_pnode_combine_item(id_, name), None) )
     return inventory
 
 def check_hitachi_hnas_pnode(item, _no_params, info):
@@ -46,8 +46,8 @@ def check_hitachi_hnas_pnode(item, _no_params, info):
                  ("dormant", 2),
                 )
 
-    for id, name, status in info:
-        if hitachi_hnas_pnode_combine_item(id, name) == item:
+    for id_, name, status in info:
+        if hitachi_hnas_pnode_combine_item(id_, name) == item:
             status = int(status)
             if status == 0 or status >= len(statusmap):
                 return 3, "PNode reports unidentified status %s" % status

@@ -2,7 +2,7 @@
   'input': {'arguments': {'cssclass': 'test',
                           'help': 'Icon Title',
                           'icon': 'TestIcon',
-                          'id': 'TestID',
+                          'id_': 'TestID',
                           'onclick': 'do_something(void);',
                           'style': 'size=98%',
                           'target': 'test target',

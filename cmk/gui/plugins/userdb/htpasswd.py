@@ -112,7 +112,7 @@ class HtpasswdUserConnector(UserConnector):
         # Locked accounts get a '!' before their password. This disable it.
         output = ""
 
-        for id, user in users.items():
+        for uid, user in users.items():
             # only process users which are handled by htpasswd connector
             if user.get('connector', 'htpasswd') != 'htpasswd':
                 continue
@@ -122,6 +122,6 @@ class HtpasswdUserConnector(UserConnector):
                     locksym = '!'
                 else:
                     locksym = ""
-                output += "%s:%s%s\n" % (id.encode("utf-8"), locksym, user["password"])
+                output += "%s:%s%s\n" % (uid.encode("utf-8"), locksym, user["password"])
 
         store.save_file(cmk.paths.htpasswd_file, output)

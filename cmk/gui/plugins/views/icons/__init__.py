@@ -176,9 +176,9 @@ def _process_multisite_icons(what, row, tags, custom_vars, toplevel):
 
 def _process_custom_user_icons_and_actions(user_action_ids, toplevel):
     icons = []
-    for id in user_action_ids:
+    for uid in user_action_ids:
         try:
-            icon = config.user_icons_and_actions[id]
+            icon = config.user_icons_and_actions[uid]
         except KeyError:
             continue # Silently skip not existing icons
 

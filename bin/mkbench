@@ -289,16 +289,16 @@ class Test(object):
 
 
     @classmethod
-    def test_dir(cls, id):
-        return os.path.join(cls.data_dir(), id)
+    def test_dir(cls, id_):
+        return os.path.join(cls.data_dir(), id_)
 
 
     @classmethod
-    def exists(cls, id):
-        return os.path.exists(cls.test_dir(id))
+    def exists(cls, id_):
+        return os.path.exists(cls.test_dir(id_))
 
 
-    def __init__(self, id=None):
+    def __init__(self, id_=None):
         self._log           = []
         self._log_to_stdout = False
         self.version        = __version__
@@ -308,12 +308,12 @@ class Test(object):
         self.result_msg     = None
         self.system_info    = SystemInfo()
 
-        if id is None:
+        if id_ is None:
             self.system_info.collect()
-            self.id         = self._get_test_id()
+            self.id_         = self._get_test_id()
             self.test_cases = []
         else:
-            self.id = id
+            self.id_ = id_
             self.load()
 
 
@@ -460,7 +460,7 @@ class Test(object):
 
 
     def dir(self):
-        return Test.test_dir(self.id)
+        return Test.test_dir(self.id_)
 
 
     def duration(self):
@@ -761,7 +761,7 @@ class TestRunner(threading.Thread):
             os.unlink(path)
         except OSError:
             pass
-        os.symlink(self.test.id, path)
+        os.symlink(self.test.id_, path)
 
 
     def stop(self):

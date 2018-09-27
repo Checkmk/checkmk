@@ -1339,15 +1339,15 @@ multisite_painters["host_address_families"] = {
     "paint"   : paint_host_address_families,
 }
 
-def paint_svc_count(id, count):
+def paint_svc_count(id_, count):
     if count > 0:
-        return "count svcstate state%s" % id, str(count)
+        return "count svcstate state%s" % id_, str(count)
     return "count svcstate statex", "0"
 
-def paint_host_count(id, count):
+def paint_host_count(id_, count):
     if count > 0:
-        if id != None:
-            return "count hstate hstate%s" % id, str(count)
+        if id_ != None:
+            return "count hstate hstate%s" % id_, str(count)
         # pending
         return "count hstate hstatep", str(count)
 

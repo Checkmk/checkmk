@@ -4262,11 +4262,11 @@ class IconSelector(ValueSpec):
         return icon_categories
 
 
-    def render_icon(self, icon_name, onclick = '', title = '', id = ''):
+    def render_icon(self, icon_name, onclick = '', title = '', id_ = ''):
         if not icon_name:
             icon_name = self._empty_img
 
-        icon = html.render_icon(icon_name, help=title, middle=True, id=id)
+        icon = html.render_icon(icon_name, help=title, middle=True, id_=id_)
         if onclick:
             icon = html.render_a(icon, href="javascript:void(0)", onclick=onclick)
 
@@ -4286,7 +4286,7 @@ class IconSelector(ValueSpec):
         html.hidden_field(varprefix + "_value", value or '', varprefix + "_value", add_var = True)
 
         if value:
-            content = self.render_icon(value, '', _('Choose another Icon'), id = varprefix + '_img')
+            content = self.render_icon(value, '', _('Choose another Icon'), id_ = varprefix + '_img')
         else:
             content = _('Select an Icon')
 
@@ -4334,7 +4334,7 @@ class IconSelector(ValueSpec):
                     title=icon,
                 )
 
-                html.write_html(self.render_icon(icon, id=varprefix + '_i_' + icon, title=icon))
+                html.write_html(self.render_icon(icon, id_=varprefix + '_i_' + icon, title=icon))
 
                 html.span(icon)
 

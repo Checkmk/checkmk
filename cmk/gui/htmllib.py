@@ -960,15 +960,15 @@ class TransactionManager(object):
         if not self._request.has_var("_transid"):
             return False
 
-        id = self._request.var("_transid")
-        if self._ignore_transids and (not id or id == '-1'):
+        transid = self._request.var("_transid")
+        if self._ignore_transids and (not transid or transid == '-1'):
             return True # automation
 
-        if '/' not in id:
+        if '/' not in transid:
             return False
 
         # Normal user/password auth user handling
-        timestamp = id.split("/", 1)[0]
+        timestamp = transid.split("/", 1)[0]
 
         # If age is too old (one week), it is always
         # invalid:
@@ -976,8 +976,8 @@ class TransactionManager(object):
         if now - int(timestamp) >= 604800: # 7 * 24 hours
             return False
 
-        # Now check, if this id is a valid one
-        return id in self._load_transids()
+        # Now check, if this transid is a valid one
+        return transid in self._load_transids()
 
 
     def is_transaction(self):
@@ -998,9 +998,9 @@ class TransactionManager(object):
         None:  -> a browser reload or a negative confirmation
         """
         if self.transaction_valid():
-            id = self._request.var("_transid")
-            if id and id != "-1":
-                self._invalidate(id)
+            transid = self._request.var("_transid")
+            if transid and transid != "-1":
+                self._invalidate(transid)
             return True
         else:
             return False
@@ -1914,7 +1914,7 @@ class html(HTMLGenerator):
     def top_heading_right(self):
         cssclass = "active" if self.help_visible else "passive"
 
-        self.icon_button(None, _("Toggle context help texts"), "help", id="helpbutton",
+        self.icon_button(None, _("Toggle context help texts"), "help", id_="helpbutton",
                          onclick="toggle_help()", style="display:none", cssclass=cssclass)
         self.open_a(href="https://mathias-kettner.com", class_="head_logo")
         self.img(src=self._detect_themed_image_path("images/logo_cmk_small.png"))
@@ -2054,13 +2054,11 @@ class html(HTMLGenerator):
                     self.hidden_field(var, self.get_unicode_input(var))
 
 
-    def hidden_field(self, var, value, id=None, add_var=False, class_=None):
-        self.write_html(self.render_hidden_field(var=var, value=value, id=id, add_var=add_var, class_=class_))
+    def hidden_field(self, var, value, id_=None, add_var=False, class_=None):
+        self.write_html(self.render_hidden_field(var=var, value=value, id_=id_, add_var=add_var, class_=class_))
 
 
-    def render_hidden_field(self, var, value, id=None, add_var=False, class_=None):
-        # TODO: Refactor
-        id_ = id
+    def render_hidden_field(self, var, value, id_=None, add_var=False, class_=None):
         if value == None:
             return ""
         if add_var:
@@ -2147,12 +2145,12 @@ class html(HTMLGenerator):
 
 
     # TODO: Refactor the arguments. It is only used in views/wato
-    def toggle_button(self, id, isopen, icon, help, hidden=False, disabled=False, onclick=None, is_context_button=True):
+    def toggle_button(self, id_, isopen, icon, help, hidden=False, disabled=False, onclick=None, is_context_button=True):
         if is_context_button:
             self.begin_context_buttons() # TODO: Check all calls. If done before, remove this!
 
         if not onclick and not disabled:
-            onclick = "view_toggle_form(this.parentNode, '%s');" % id
+            onclick = "view_toggle_form(this.parentNode, '%s');" % id_
 
         if disabled:
             state    = "off" if disabled else "on"
@@ -2166,7 +2164,7 @@ class html(HTMLGenerator):
                 cssclass = "up"
 
         self.open_div(
-            id_="%s_%s" % (id, state),
+            id_="%s_%s" % (id_, state),
             class_=["togglebutton", state, icon, cssclass],
             title=help,
             style='display:none' if hidden else None,
@@ -2546,7 +2544,7 @@ class html(HTMLGenerator):
         self.write(self.render_checkbox(*args, **kwargs))
 
 
-    def render_checkbox(self, varname, deflt = False, label = '', id = None, **add_attr):
+    def render_checkbox(self, varname, deflt = False, label = '', id_ = None, **add_attr):
 
         # Problem with checkboxes: The browser will add the variable
         # only to the URL if the box is checked. So in order to detect
@@ -2558,14 +2556,14 @@ class html(HTMLGenerator):
             value = deflt
 
         error = self.user_errors.get(varname)
-        if id is None:
-            id = "cb_%s" % varname
+        if id_ is None:
+            id_ = "cb_%s" % varname
 
-        add_attr["id"] = id
+        add_attr["id"] = id_
         add_attr["CHECKED"] = '' if value else None
 
         code = self.render_input(name=varname, type_="checkbox", **add_attr)\
-             + self.render_label(label, for_=id)
+             + self.render_label(label, for_=id_)
         code = self.render_span(code, class_="checkbox")
 
         if error:
@@ -2580,22 +2578,22 @@ class html(HTMLGenerator):
     #
 
 
-    def begin_foldable_container(self, treename, id, isopen, title, indent=True,
+    def begin_foldable_container(self, treename, id_, isopen, title, indent=True,
                                  first=False, icon=None, fetch_url=None, title_url=None,
                                  tree_img="tree"):
         self.folding_indent = indent
 
         if self._user_id:
-            isopen = self.foldable_container_is_open(treename, id, isopen)
+            isopen = self.foldable_container_is_open(treename, id_, isopen)
 
         onclick = "toggle_foldable_container(%s, %s, %s)"\
-                    % (json.dumps(treename), json.dumps(id), json.dumps(fetch_url if fetch_url else ''))
+                    % (json.dumps(treename), json.dumps(id_), json.dumps(fetch_url if fetch_url else ''))
 
-        img_id = "treeimg.%s.%s" % (treename, id)
+        img_id = "treeimg.%s.%s" % (treename, id_)
 
         if indent == "nform":
             self.open_tr(class_="heading")
-            self.open_td(id_="nform.%s.%s" % (treename, id), onclick=onclick, colspan="2")
+            self.open_td(id_="nform.%s.%s" % (treename, id_), onclick=onclick, colspan="2")
             if icon:
                 self.img(class_=["treeangle", "title"], src="images/icon_%s.png" % icon)
             else:
@@ -2608,7 +2606,7 @@ class html(HTMLGenerator):
             self.open_div(class_="foldable")
 
             if not icon:
-                self.img(id_="treeimg.%s.%s" % (treename, id),
+                self.img(id_="treeimg.%s.%s" % (treename, id_),
                          class_=["treeangle", "open" if isopen else "closed"],
                          src="images/%s_closed.png" % tree_img, align="absbottom", onclick=onclick)
             if isinstance(title, HTML): # custom HTML code
@@ -2634,7 +2632,7 @@ class html(HTMLGenerator):
                 self.close_tr()
                 self.close_table()
                 indent_style += "margin: 0; "
-            self.open_ul(id_="tree.%s.%s" % (treename, id),
+            self.open_ul(id_="tree.%s.%s" % (treename, id_),
                          class_=["treeangle", "open" if isopen else "closed"], style=indent_style)
 
         # give caller information about current toggling state (needed for nform)
@@ -2647,12 +2645,12 @@ class html(HTMLGenerator):
             self.close_div()
 
 
-    def foldable_container_is_open(self, treename, id, isopen):
+    def foldable_container_is_open(self, treename, id_, isopen):
         # try to get persisted state of tree
         tree_state = self.get_tree_states(treename)
 
-        if id in tree_state:
-            isopen = tree_state[id] == "on"
+        if id_ in tree_state:
+            isopen = tree_state[id_] == "on"
         return isopen
 
 
@@ -2679,9 +2677,7 @@ class html(HTMLGenerator):
         self._context_buttons_open = False
 
 
-    def context_button(self, title, url, icon=None, hot=False, id=None, bestof=None, hover_title=None, class_=None):
-        # TODO: REFACTOR
-        id_ = id
+    def context_button(self, title, url, icon=None, hot=False, id_=None, bestof=None, hover_title=None, class_=None):
         self._context_button(title, url, icon=icon, hot=hot, id_=id_, bestof=bestof, hover_title=hover_title, class_=class_)
 
 
@@ -2775,11 +2771,10 @@ class html(HTMLGenerator):
         self.write_html(self.render_icon("images/trans.png"))
 
 
-    def render_icon(self, icon_name, help=None, middle=True, id=None, cssclass=None, class_=None):
+    def render_icon(self, icon_name, help=None, middle=True, id_=None, cssclass=None, class_=None):
 
         # TODO: Refactor
         title    = help
-        id_      = id
 
         attributes = {'title'   : title,
                       'id'      : id_,
@@ -2838,17 +2833,16 @@ hy
 
 
 
-    def render_icon_button(self, url, help, icon, id=None, onclick=None,
+    def render_icon_button(self, url, help, icon, id_=None, onclick=None,
                            style=None, target=None, cssclass=None):
 
         # TODO: Refactor
         title    = help
-        id_      = id
 
         icon = HTML(self.render_icon(icon, cssclass="iconbutton"))
 
         return self.render_a(icon, **{'title'   : title,
-                                      'id'      : id_,
+                                      'id_'      : id_,
                                       'class'   : cssclass,
                                       'style'   : style,
                                       'target'  : target if target else '',

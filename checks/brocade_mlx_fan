@@ -24,11 +24,11 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-def brocade_mlx_fan_combine_item(id, descr):
+def brocade_mlx_fan_combine_item(id_, descr):
     if descr == "" or "(RPM " in descr:
-        return id
+        return id_
     else:
-        return "%s %s" % (id, descr)
+        return "%s %s" % (id_, descr)
 
 def inventory_brocade_mlx_fan(info):
     inventory = []

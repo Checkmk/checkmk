@@ -259,10 +259,7 @@ def space():
     html.tr(html.render_td('', colspan=2, style="height:15px;"))
 
 
-def section(title = None, checkbox = None, id = None, simple=False, hide = False, legend = True):
-
-    # TODO: Refactor
-    section_id = id
+def section(title = None, checkbox = None, section_id = None, simple=False, hide = False, legend = True):
 
     #html.guitest_record_output("forms", ("section", title))
     global g_section_open

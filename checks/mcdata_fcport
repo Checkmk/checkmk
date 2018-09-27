@@ -27,8 +27,8 @@
 mcdata_fcport_speedbits = { "2": '1000000000', "3": '2000000000' }
 mcdata_fcport_opstatus = { "1" : "1", "2": "2", "3": "testing", "4": "faulty" }
 
-def mcdata_bin_to_64(bin):
-    return str(binstring_to_int(bin))
+def mcdata_bin_to_64(bin_):
+    return str(binstring_to_int(bin_))
 
 def mcdata_fcport_convert_to_if64(info):
     return map(mcdata_fcport_convert_line_to_if64, info)

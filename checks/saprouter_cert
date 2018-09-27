@@ -52,8 +52,8 @@ factory_settings["saprouter_cert_default_levels"] = {
 
 
 def parse_saprouter_cert(info):
-    def parse_date(list):
-        time_struct = time.strptime(" ".join(list), "%b %d %H:%M:%S %Y")
+    def parse_date(list_):
+        time_struct = time.strptime(" ".join(list_), "%b %d %H:%M:%S %Y")
         return time.mktime(time_struct), "%s-%s-%s" % time_struct[:3]
 
     parsed   = {}

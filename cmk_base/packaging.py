@@ -726,13 +726,11 @@ def write_package_info(package):
 
 
 def remove_package_info(pacname):
-     os.remove(pac_dir + pacname)
+    os.remove(pac_dir + pacname)
 
 
 def all_package_names():
-    all = [ p for p in os.listdir(pac_dir) if p not in [ '.', '..' ] ]
-    all.sort()
-    return all
+    return sorted([p for p in os.listdir(pac_dir) if p not in ['.', '..']])
 
 
 def parse_package_info(python_string):

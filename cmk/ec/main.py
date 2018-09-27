@@ -3311,9 +3311,9 @@ class EventStatus(object):
             # Make sure that if the user switches from day to hour and we
             # are still waiting for the first interval to begin, that we
             # do not wait for the next day.
-            next = self.next_interval_start(interval, time.time())
-            if start > next:
-                start = next
+            next_interval = self.next_interval_start(interval, time.time())
+            if start > next_interval:
+                start = next_interval
                 self._interval_starts[rule_id] = start
             return start
 

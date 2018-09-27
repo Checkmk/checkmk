@@ -356,7 +356,7 @@ def render_performance():
     finally:
         sites.live().set_only_sites(None)
 
-    for what, col, format in \
+    for what, col, format_str in \
         [("Service checks",         0, "%.2f/s"),
          ("Host checks",            1, "%.2f/s"),
          ("External commands",      2, "%.2f/s"),
@@ -364,7 +364,7 @@ def render_performance():
          ("Process creations",      4, "%.2f/s"),
          ("New log messages",       5, "%.2f/s"),
          ("Cached log messages",    6, "%d")]:
-        write_line(what + ":", format % sum(row[col] for row in data))
+        write_line(what + ":", format_str % sum(row[col] for row in data))
 
     if only_sites is None and len(config.allsites()) == 1:
         try:

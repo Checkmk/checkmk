@@ -989,7 +989,7 @@ def check_jolokia_metrics_cache(metrics, totals, item, params, info):
                 break
 
         for metric in metrics:
-            type_, scale, format = type_map.get(metric, (int, 1,"%d"))
+            type_, scale, format_str = type_map.get(metric, (int, 1,"%d"))
 
             val = type_(parsed[inst]["CacheStatistics"][cache][metric]) * scale
             if isinstance(val, float) and val == 0.0:
@@ -997,12 +997,12 @@ def check_jolokia_metrics_cache(metrics, totals, item, params, info):
                 # were all 0, so this float is 0/0, we want to display it as 1 as to not cause
                 # an alert
                 val = 1.0 * scale
-            yield 0, ("%s: " + format) % (metric, val), [(metric, val)]
+            yield 0, ("%s: " + format_str) % (metric, val), [(metric, val)]
 
         for total in totals:
-            type_, scale, format = type_map.get(total, (int, 1,"%d"))
+            type_, scale, format_str = type_map.get(total, (int, 1,"%d"))
             val = type_(parsed[inst]["CacheStatistics"][cache][total]) * scale
-            yield 0, ("%s: " + format) % (total, val), []
+            yield 0, ("%s: " + format_str) % (total, val), []
     except KeyError:
         # some element of the item was missing
         pass

@@ -1,0 +1,14 @@
+Title: Fixed grouping of service descriptions when view rows are already grouped
+Level: 1
+Component: multisite
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0i1
+Date: 1538046148
+
+When a view is grouped by the host name and it shows only services starting with "Log" of
+each host and there is a view grouping for all services starting with "Log" configured,
+this resulted in rendering issues. The foldable groups should only fold/unfold services of a
+single host (row group) but there were groups spanning over multiple hosts.

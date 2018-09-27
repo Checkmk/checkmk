@@ -2133,8 +2133,8 @@ def _initialize_data_structures():
 
 def get_plugin_paths(*dirs):
     filelist = []
-    for dir in dirs:
-        filelist += _plugin_pathnames_in_directory(dir)
+    for directory in dirs:
+        filelist += _plugin_pathnames_in_directory(directory)
     return filelist
 
 

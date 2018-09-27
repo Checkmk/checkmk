@@ -442,27 +442,27 @@ def mode_paths():
     data = 3
     pipe = 4
     local = 5
-    dir = 1
+    directory = 1
     fil = 2
 
     paths = [
-        ( cmk.paths.modules_dir,                 dir, inst, "Main components of check_mk"),
-        ( cmk.paths.checks_dir,                  dir, inst, "Checks"),
-        ( cmk.paths.notifications_dir,           dir, inst, "Notification scripts"),
-        ( cmk.paths.inventory_dir,               dir, inst, "Inventory plugins"),
-        ( cmk.paths.agents_dir,                  dir, inst, "Agents for operating systems"),
-        ( cmk.paths.doc_dir,                     dir, inst, "Documentation files"),
-        ( cmk.paths.web_dir,                     dir, inst, "Check_MK's web pages"),
-        ( cmk.paths.check_manpages_dir,          dir, inst, "Check manpages (for check_mk -M)"),
-        ( cmk.paths.lib_dir,                     dir, inst, "Binary plugins (architecture specific)"),
-        ( cmk.paths.pnp_templates_dir,           dir, inst, "Templates for PNP4Nagios"),
+        ( cmk.paths.modules_dir,                 directory, inst, "Main components of check_mk"),
+        ( cmk.paths.checks_dir,                  directory, inst, "Checks"),
+        ( cmk.paths.notifications_dir,           directory, inst, "Notification scripts"),
+        ( cmk.paths.inventory_dir,               directory, inst, "Inventory plugins"),
+        ( cmk.paths.agents_dir,                  directory, inst, "Agents for operating systems"),
+        ( cmk.paths.doc_dir,                     directory, inst, "Documentation files"),
+        ( cmk.paths.web_dir,                     directory, inst, "Check_MK's web pages"),
+        ( cmk.paths.check_manpages_dir,          directory, inst, "Check manpages (for check_mk -M)"),
+        ( cmk.paths.lib_dir,                     directory, inst, "Binary plugins (architecture specific)"),
+        ( cmk.paths.pnp_templates_dir,           directory, inst, "Templates for PNP4Nagios"),
     ]
     if config.monitoring_core == "nagios":
         paths += [
             ( cmk.paths.nagios_startscript,          fil, inst, "Startscript for Nagios daemon"),
             ( cmk.paths.nagios_binary,               fil, inst, "Path to Nagios executable"),
             ( cmk.paths.nagios_config_file,          fil, conf, "Main configuration file of Nagios"),
-            ( cmk.paths.nagios_conf_dir,             dir, conf, "Directory where Nagios reads all *.cfg files"),
+            ( cmk.paths.nagios_conf_dir,             directory, conf, "Directory where Nagios reads all *.cfg files"),
             ( cmk.paths.nagios_objects_file,         fil, data, "File into which Nagios configuration is written"),
             ( cmk.paths.nagios_status_file,          fil, data, "Path to Nagios status.dat"),
             ( cmk.paths.nagios_command_pipe_path,    fil, pipe, "Nagios' command pipe"),
@@ -470,29 +470,29 @@ def mode_paths():
         ]
 
     paths += [
-        ( cmk.paths.default_config_dir,          dir, conf, "Directory that contains main.mk"),
-        ( cmk.paths.check_mk_config_dir,         dir, conf, "Directory containing further *.mk files"),
-        ( cmk.paths.apache_config_dir,           dir, conf, "Directory where Apache reads all config files"),
+        ( cmk.paths.default_config_dir,          directory, conf, "Directory that contains main.mk"),
+        ( cmk.paths.check_mk_config_dir,         directory, conf, "Directory containing further *.mk files"),
+        ( cmk.paths.apache_config_dir,           directory, conf, "Directory where Apache reads all config files"),
         ( cmk.paths.htpasswd_file,               fil, conf, "Users/Passwords for HTTP basic authentication"),
 
-        ( cmk.paths.var_dir,                     dir, data, "Base working directory for variable data"),
-        ( cmk.paths.autochecks_dir,              dir, data, "Checks found by inventory"),
-        ( cmk.paths.precompiled_hostchecks_dir,  dir, data, "Precompiled host checks"),
-        ( cmk.paths.snmpwalks_dir,               dir, data, "Stored snmpwalks (output of --snmpwalk)"),
-        ( cmk.paths.counters_dir,                dir, data, "Current state of performance counters"),
-        ( cmk.paths.tcp_cache_dir,               dir, data, "Cached output from agents"),
-        ( cmk.paths.logwatch_dir,                dir, data, "Unacknowledged logfiles of logwatch extension"),
+        ( cmk.paths.var_dir,                     directory, data, "Base working directory for variable data"),
+        ( cmk.paths.autochecks_dir,              directory, data, "Checks found by inventory"),
+        ( cmk.paths.precompiled_hostchecks_dir,  directory, data, "Precompiled host checks"),
+        ( cmk.paths.snmpwalks_dir,               directory, data, "Stored snmpwalks (output of --snmpwalk)"),
+        ( cmk.paths.counters_dir,                directory, data, "Current state of performance counters"),
+        ( cmk.paths.tcp_cache_dir,               directory, data, "Cached output from agents"),
+        ( cmk.paths.logwatch_dir,                directory, data, "Unacknowledged logfiles of logwatch extension"),
         ( cmk.paths.livestatus_unix_socket,     fil, pipe, "Socket of Check_MK's livestatus module"),
 
-        ( cmk.paths.local_checks_dir,           dir, local, "Locally installed checks"),
-        ( cmk.paths.local_notifications_dir,    dir, local, "Locally installed notification scripts"),
-        ( cmk.paths.local_inventory_dir,        dir, local, "Locally installed inventory plugins"),
-        ( cmk.paths.local_check_manpages_dir,   dir, local, "Locally installed check man pages"),
-        ( cmk.paths.local_agents_dir,           dir, local, "Locally installed agents and plugins"),
-        ( cmk.paths.local_web_dir,              dir, local, "Locally installed Multisite addons"),
-        ( cmk.paths.local_pnp_templates_dir,    dir, local, "Locally installed PNP templates"),
-        ( cmk.paths.local_doc_dir,              dir, local, "Locally installed documentation"),
-        ( cmk.paths.local_locale_dir,           dir, local, "Locally installed localizations"),
+        ( cmk.paths.local_checks_dir,           directory, local, "Locally installed checks"),
+        ( cmk.paths.local_notifications_dir,    directory, local, "Locally installed notification scripts"),
+        ( cmk.paths.local_inventory_dir,        directory, local, "Locally installed inventory plugins"),
+        ( cmk.paths.local_check_manpages_dir,   directory, local, "Locally installed check man pages"),
+        ( cmk.paths.local_agents_dir,           directory, local, "Locally installed agents and plugins"),
+        ( cmk.paths.local_web_dir,              directory, local, "Locally installed Multisite addons"),
+        ( cmk.paths.local_pnp_templates_dir,    directory, local, "Locally installed PNP templates"),
+        ( cmk.paths.local_doc_dir,              directory, local, "Locally installed documentation"),
+        ( cmk.paths.local_locale_dir,           directory, local, "Locally installed localizations"),
     ]
 
     def show_paths(title, t):
@@ -501,7 +501,7 @@ def mode_paths():
         console.output(tty.bold + title + tty.normal + "\n")
         for path, filedir, typp, descr in paths:
             if typp == t:
-                if filedir == dir:
+                if filedir == directory:
                     path += "/"
                 console.output("  %-47s: %s%s%s\n" %
                     (descr, tty.bold + tty.blue, path, tty.normal))
@@ -908,12 +908,12 @@ def mode_flush(hosts):
 
         # cache files
         d = 0
-        dir = cmk.paths.tcp_cache_dir
-        if os.path.exists(dir):
-            for f in os.listdir(dir):
+        cache_dir = cmk.paths.tcp_cache_dir
+        if os.path.exists(cache_dir):
+            for f in os.listdir(cache_dir):
                 if f == host or f.startswith(host + "."):
                     try:
-                        os.remove(dir + "/" + f)
+                        os.remove(cache_dir + "/" + f)
                         d += 1
                         flushed = True
                     except:
@@ -929,13 +929,13 @@ def mode_flush(hosts):
             console.output(tty.bold + tty.magenta  + " piggyback(1)")
 
         # logfiles
-        dir = cmk.paths.logwatch_dir + "/" + host
-        if os.path.exists(dir):
+        log_dir = cmk.paths.logwatch_dir + "/" + host
+        if os.path.exists(log_dir):
             d = 0
-            for f in os.listdir(dir):
+            for f in os.listdir(log_dir):
                 if f not in [".", ".."]:
                     try:
-                        os.remove(dir + "/" + f)
+                        os.remove(log_dir + "/" + f)
                         d += 1
                         flushed = True
                     except:

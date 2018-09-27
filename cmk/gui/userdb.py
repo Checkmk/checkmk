@@ -662,8 +662,8 @@ def load_users(lock = False):
                 result[user_id]['serial'] = utils.saveint(serial)
 
     # Now read the user specific files
-    dir = cmk.paths.var_dir + "/web/"
-    for d in os.listdir(dir):
+    directory = cmk.paths.var_dir + "/web/"
+    for d in os.listdir(directory):
         if d[0] != '.':
             id = d.decode("utf-8")
 
@@ -684,7 +684,7 @@ def load_users(lock = False):
             # read automation secrets and add them to existing
             # users or create new users automatically
             try:
-                secret = file(dir + d + "/automation.secret").read().strip()
+                secret = file(directory + d + "/automation.secret").read().strip()
             except IOError:
                 secret = None
             if secret:
@@ -831,10 +831,10 @@ def _cleanup_old_user_profiles(updated_profiles):
         "transids.mk",
         "serial.mk",
     ]
-    dir = cmk.paths.var_dir + "/web"
+    directory = cmk.paths.var_dir + "/web"
     for user_dir in os.listdir(cmk.paths.var_dir + "/web"):
         if user_dir not in ['.', '..'] and user_dir.decode("utf-8") not in updated_profiles:
-            entry = dir + "/" + user_dir
+            entry = directory + "/" + user_dir
             if not os.path.isdir(entry):
                 continue
 

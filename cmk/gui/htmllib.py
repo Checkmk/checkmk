@@ -1800,9 +1800,9 @@ class html(HTMLGenerator):
 
     def _plugin_stylesheets(self):
         plugin_stylesheets = set([])
-        for dir in [ cmk.paths.web_dir + "/htdocs/css", cmk.paths.local_web_dir + "/htdocs/css" ]:
-            if os.path.exists(dir):
-                for fn in os.listdir(dir):
+        for directory in [ cmk.paths.web_dir + "/htdocs/css", cmk.paths.local_web_dir + "/htdocs/css" ]:
+            if os.path.exists(directory):
+                for fn in os.listdir(directory):
                     if fn.endswith(".css"):
                         plugin_stylesheets.add(fn)
         return plugin_stylesheets

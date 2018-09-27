@@ -413,9 +413,9 @@ def filter_subtar_files(tarinfo, excludes):
     return tarinfo
 
 
-def extract_from_buffer(buffer, elements):
+def extract_from_buffer(buffer_, elements):
     stream = cStringIO.StringIO()
-    stream.write(buffer)
+    stream.write(buffer_)
     stream.seek(0)
     if type(elements) == list:
         extract(tarfile.open(None, "r", stream), elements)

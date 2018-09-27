@@ -59,17 +59,17 @@ def check_hp_proliant_da_cntlr(item, params, info):
             sum_state = 0
             output = []
 
-            for val, label, map in [ (cond, 'Condition', hp_proliant_da_cntlr_cond_map),
+            for val, label, map_ in [(cond, 'Condition', hp_proliant_da_cntlr_cond_map),
                                      (b_cond, 'Board-Condition', hp_proliant_da_cntlr_cond_map),
                                      (b_status, 'Board-Status', hp_proliant_da_cntlr_state_map) ]:
-                this_state = map[val][0]
+                this_state = map_[val][0]
                 state_txt = ''
                 if this_state == 1:
                     state_txt = ' (!)'
                 elif this_state == 2:
                     state_txt = ' (!!)'
                 sum_state = max(sum_state, this_state)
-                output.append('%s: %s%s' % (label, map[val][1], state_txt))
+                output.append('%s: %s%s' % (label, map_[val][1], state_txt))
 
             output.append('(Role: %s, Model: %s, Slot: %s, Serial: %s)' %
                        (hp_proliant_da_cntlr_role_map.get(role, 'unknown'), model, slot, serial))

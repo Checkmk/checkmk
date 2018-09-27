@@ -343,11 +343,11 @@ check_info["drbd"] = {
     'service_description' : 'DRBD %s status',
 }
 
-def drbd_get_rates(list):
+def drbd_get_rates(list_):
     now = time.time()
     output = ''
     perfdata = []
-    for type_, name, item, value, uom in list:
+    for type_, name, item, value, uom in list_:
         rate  = get_rate("%s.%s.%s"  % (type_, name, item), now, value)
         perfdata.append((name, rate))
         output += ' %s/sec: %s%s' % (name, rate, uom)

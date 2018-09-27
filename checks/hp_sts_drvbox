@@ -90,12 +90,12 @@ def check_hp_sts_drvbox(item, _no_params, info):
             sum_state = 0
             output = []
 
-            for val, label, map in [ (fan_status,  'Fan-Status',       hp_sts_drvbox_fan_map),
+            for val, label, map_ in [(fan_status,  'Fan-Status',       hp_sts_drvbox_fan_map),
                                      (cond,        'Condition',        hp_sts_drvbox_cond_map),
                                      (temp_status, 'Temp-Status',      hp_sts_drvbox_temp_map),
                                      (sp_status,   'Sidepanel-Status', hp_sts_drvbox_sp_map),
                                      (pwr_status,  'Power-Status',     hp_sts_drvbox_power_map), ]:
-                this_state = map[val][0]
+                this_state = map_[val][0]
                 if this_state is None:
                     continue # skip unsupported checks
                 state_txt = ''
@@ -104,7 +104,7 @@ def check_hp_sts_drvbox(item, _no_params, info):
                 elif this_state == 2:
                     state_txt = ' (!!)'
                 sum_state = max(sum_state, this_state)
-                output.append('%s: %s%s' % (label, map[val][1], state_txt))
+                output.append('%s: %s%s' % (label, map_[val][1], state_txt))
 
             output.append('(Type: %s, Model: %s, Serial: %s, Location: %s)' %
                        (hp_sts_drvbox_type_map.get(ty, 'unknown'), model, serial, loc))

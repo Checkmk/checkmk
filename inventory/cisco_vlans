@@ -64,8 +64,8 @@ def parse_multi_vlan(vlan_multi):
         return "-".join(map(str, subinfo))
 
     vlans = []
-    for k, hex in enumerate(vlan_multi):
-        for l, bit in enumerate(bin(ord(hex))[2:]):
+    for k, hex_ in enumerate(vlan_multi):
+        for l, bit in enumerate(bin(ord(hex_))[2:]):
             if bit == '1':
                 vlans.append(k*8 + l+1)
 

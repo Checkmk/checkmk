@@ -63,9 +63,9 @@ factory_settings['openhardwaremonitor_temperature_default_levels'] = {
 
 
 def parse_openhardwaremonitor(info):
-    def dict_replace(input, replacements):
+    def dict_replace(input_, replacements):
         pattern = regex(r'\b(' + '|'.join(replacements.keys()) + r')\b')
-        return pattern.sub(lambda x: replacements[x.group()], input)
+        return pattern.sub(lambda x: replacements[x.group()], input_)
 
     result = {}
 

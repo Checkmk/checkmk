@@ -1,6 +1,6 @@
 [{'function_name': 'icon_button',
   'input': {'arguments': {'cssclass': 'test',
-                          'help': 'Icon Title',
+                          'title': 'Icon Title',
                           'icon': 'TestIcon',
                           'id_': 'TestID',
                           'onclick': 'do_something(void);',

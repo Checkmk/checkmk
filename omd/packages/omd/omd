@@ -4403,9 +4403,9 @@ def parse_command_options(args, options_spec):
     # when the user specifies --help:
     if len(args) and args[0] in [ '-h', '--help' ]:
         sys.stdout.write("Possible options for this command:\n")
-        for llong, sshort, needarg, help in options_spec:
+        for llong, sshort, needarg, help_txt in options_spec:
             args_text = "%s--%s" % (sshort and "-%s," % sshort or "", llong)
-            sys.stdout.write(" %-15s %3s  %s\n" % (args_text, needarg and "ARG" or "", help))
+            sys.stdout.write(" %-15s %3s  %s\n" % (args_text, needarg and "ARG" or "", help_txt))
         sys.exit(0)
 
     options = {}
@@ -4435,7 +4435,7 @@ def parse_command_options(args, options_spec):
         if len(entries) == 0:
             bail_out("Invalid option '%s'" % opt)
 
-        for llong, sshort, needs_arg, help in entries:
+        for llong, sshort, needs_arg, help_txt in entries:
             arg = None
             if needs_arg:
                 if len(args) == 0:

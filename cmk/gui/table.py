@@ -189,7 +189,7 @@ class Table(object):
             self.options["collect_headers"] = False
 
 
-    def add_cell(self, title="", text="", css=None, help=None, colspan=None, sortable=True, escape_text=False):
+    def add_cell(self, title="", text="", css=None, help_=None, colspan=None, sortable=True, escape_text=False):
         if escape_text:
             text = html.permissive_attrencode(text)
         else:
@@ -205,7 +205,7 @@ class Table(object):
             # buttons are never sortable
             if css and 'buttons' in css and sortable:
                 sortable = False
-            self.headers.append((title, css, help, sortable))
+            self.headers.append((title, css, help_, sortable))
 
         self.rows[-1][0].append((htmlcode, css, colspan))
 
@@ -441,11 +441,11 @@ class Table(object):
 
         html.open_tr()
         first_col = True
-        for nr, (header, css, help, sortable) in enumerate(self.headers):
+        for nr, (header, css, help_txt, sortable) in enumerate(self.headers):
             text = header
 
-            if help:
-                header = '<span title="%s">%s</span>' % (html.attrencode(help), header)
+            if help_txt:
+                header = '<span title="%s">%s</span>' % (html.attrencode(help_txt), header)
 
             css_class = "header_%s" % css if css else None
 
@@ -472,15 +472,15 @@ class Table(object):
                         header = "&nbsp;" # Fixes layout problem with white triangle
                     if actions_visible:
                         state = '0'
-                        help  = _('Hide table actions')
+                        help_txt  = _('Hide table actions')
                         img   = 'table_actions_on'
                     else:
                         state = '1'
-                        help  = _('Display table actions')
+                        help_txt  = _('Display table actions')
                         img   = 'table_actions_off'
                     html.open_div(class_=["toggle_actions"])
                     html.icon_button(html.makeuri([('_%s_actions' % table_id, state)]),
-                        help, img, cssclass = 'toggle_actions')
+                        help_txt, img, cssclass = 'toggle_actions')
                     html.open_span()
                     html.write(header)
                     html.close_span()

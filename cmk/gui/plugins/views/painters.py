@@ -1819,10 +1819,10 @@ def paint_comment_entry_type(row):
     linkview = None
     if t == 1:
         icon = "comment"
-        help = _("Comment")
+        help_txt = _("Comment")
     elif t == 2:
         icon = "downtime"
-        help = _("Downtime")
+        help_txt = _("Downtime")
         if row["service_description"]:
             linkview = "downtimes_of_service"
         else:
@@ -1830,13 +1830,13 @@ def paint_comment_entry_type(row):
 
     elif t == 3:
         icon = "flapping"
-        help = _("Flapping")
+        help_txt = _("Flapping")
     elif t == 4:
         icon = "ack"
-        help = _("Acknowledgement")
+        help_txt = _("Acknowledgement")
     else:
         return "", ""
-    code = html.render_icon(icon, help)
+    code = html.render_icon(icon, help_txt)
     if linkview:
         code = link_to_view(code, row, linkview)
     return "icons", code

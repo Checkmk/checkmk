@@ -155,7 +155,7 @@ class ModeEditCustomAttr(WatoMode):
                 raise MKUserError("alias", _("This alias is already used by the attribute %s.") % this_attr['name'])
 
         topic = html.var('topic', '').strip()
-        help  = html.get_unicode_input('help').strip()
+        help_txt = html.get_unicode_input('help').strip()
         show_in_table = html.get_checkbox('show_in_table')
         add_custom_macro = html.get_checkbox('add_custom_macro')
 
@@ -186,7 +186,7 @@ class ModeEditCustomAttr(WatoMode):
         self._attr.update({
             'title'            : title,
             'topic'            : topic,
-            'help'             : help,
+            'help'             : help_txt,
             'show_in_table'    : show_in_table,
             'add_custom_macro' : add_custom_macro,
         })

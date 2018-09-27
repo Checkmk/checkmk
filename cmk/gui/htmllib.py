@@ -2110,15 +2110,15 @@ class html(HTMLGenerator):
     #
 
 
-    def button(self, varname, title, cssclass = None, style=None, help=None):
+    def button(self, varname, title, cssclass = None, style=None, help_=None):
         self.write_html(self.render_button(varname, title, cssclass, style))
 
 
-    def render_button(self, varname, title, cssclass = None, style=None, help=None):
+    def render_button(self, varname, title, cssclass = None, style=None, help_=None):
         self.add_form_var(varname)
         return self.render_input(name=varname, type_="submit",
                                  id_=varname, class_=["button", cssclass if cssclass else None],
-                                 value=title, title=help, style=style)
+                                 value=title, title=help_, style=style)
 
 
     def buttonlink(self, href, text, add_transid=False, obj_id=None, style=None, title=None, disabled=None, class_=None):
@@ -2144,7 +2144,7 @@ class html(HTMLGenerator):
 
 
     # TODO: Refactor the arguments. It is only used in views/wato
-    def toggle_button(self, id_, isopen, icon, help, hidden=False, disabled=False, onclick=None, is_context_button=True):
+    def toggle_button(self, id_, isopen, icon, help_txt, hidden=False, disabled=False, onclick=None, is_context_button=True):
         if is_context_button:
             self.begin_context_buttons() # TODO: Check all calls. If done before, remove this!
 
@@ -2154,7 +2154,7 @@ class html(HTMLGenerator):
         if disabled:
             state    = "off" if disabled else "on"
             cssclass = ""
-            help     = ""
+            help_txt     = ""
         else:
             state = "on"
             if isopen:
@@ -2165,11 +2165,11 @@ class html(HTMLGenerator):
         self.open_div(
             id_="%s_%s" % (id_, state),
             class_=["togglebutton", state, icon, cssclass],
-            title=help,
+            title=help_txt,
             style='display:none' if hidden else None,
         )
         self.open_a("javascript:void(0)", onclick=onclick)
-        self.icon(help=None, icon=icon)
+        self.icon(title=None, icon=icon)
         self.close_a()
         self.close_div()
 
@@ -2299,18 +2299,18 @@ class html(HTMLGenerator):
 
 
     # Shows a colored badge with text (used on WATO activation page for the site status)
-    def status_label(self, content, status, help, **attrs):
-        self.status_label_button(content, status, help, onclick=None, **attrs)
+    def status_label(self, content, status, help_txt, **attrs):
+        self.status_label_button(content, status, help_txt, onclick=None, **attrs)
 
 
     # Shows a colored button with text (used in site and customer status snapins)
-    def status_label_button(self, content, status, help, onclick, **attrs):
+    def status_label_button(self, content, status, help_txt, onclick, **attrs):
         button_cls = "button" if onclick else None
-        self.div(content, title=help, class_=[ "status_label", button_cls, status ],
+        self.div(content, title=help_txt, class_=[ "status_label", button_cls, status ],
                  onclick=onclick, **attrs)
 
 
-    def toggle_switch(self, enabled, help, **attrs):
+    def toggle_switch(self, enabled, help_txt, **attrs):
         # Same API as other elements: class_ can be a list or string/None
         if "class_" in attrs:
             if type(attrs["class_"]) != list:
@@ -2326,7 +2326,7 @@ class html(HTMLGenerator):
         }
 
         self.open_div(**attrs)
-        self.a(_("on") if enabled else _("off"), title=help, **link_attrs)
+        self.a(_("on") if enabled else _("off"), title=help_txt, **link_attrs)
         self.close_div()
 
 
@@ -2757,23 +2757,18 @@ class html(HTMLGenerator):
 
 
     # FIXME: Change order of input arguments in one: icon and render_icon!!
-    def icon(self, help, icon, **kwargs):
+    def icon(self, title, icon, **kwargs):
 
-        #TODO: Refactor
-        title = help
         icon_name = icon
 
-        self.write_html(self.render_icon(icon_name=icon_name, help=title, **kwargs))
+        self.write_html(self.render_icon(icon_name=icon_name, title=title, **kwargs))
 
 
     def empty_icon(self):
         self.write_html(self.render_icon("images/trans.png"))
 
 
-    def render_icon(self, icon_name, help=None, middle=True, id_=None, cssclass=None, class_=None):
-
-        # TODO: Refactor
-        title    = help
+    def render_icon(self, icon_name, title=None, middle=True, id_=None, cssclass=None, class_=None):
 
         attributes = {'title'   : title,
                       'id'      : id_,
@@ -2832,11 +2827,8 @@ hy
 
 
 
-    def render_icon_button(self, url, help, icon, id_=None, onclick=None,
+    def render_icon_button(self, url, title, icon, id_=None, onclick=None,
                            style=None, target=None, cssclass=None):
-
-        # TODO: Refactor
-        title    = help
 
         icon = HTML(self.render_icon(icon, cssclass="iconbutton"))
 

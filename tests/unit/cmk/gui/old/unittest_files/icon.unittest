@@ -1,6 +1,6 @@
 [{'function_name': 'icon',
   'input': {'arguments': {'cssclass': 'test',
-                          'help': 'Icon Title',
+                          'title': 'Icon Title',
                           'icon': 'TestIcon',
                           'id_': 'TestID',
                           'middle': True}},

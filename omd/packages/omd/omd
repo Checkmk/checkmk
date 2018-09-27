@@ -748,18 +748,18 @@ def file_owner_verify(path, user_id, group_id):
         return False
     return True
 
-def create_skeleton_files(sitename, dir):
+def create_skeleton_files(sitename, directory):
     read_skel_permissions()
     sitedir = site_dir(sitename)
     replacements = {
         "###SITE###" : sitename,
         "###ROOT###" : sitedir,
     }
-    # Hack: exclude tmp if dir is '.'
-    exclude_tmp = dir == "."
+    # Hack: exclude tmp if directory is '.'
+    exclude_tmp = directory == "."
     skelroot = "/omd/versions/%s/skel" % OMD_VERSION
     os.chdir(skelroot)  # make relative paths
-    for dirpath, dirnames, filenames in os.walk(dir):
+    for dirpath, dirnames, filenames in os.walk(directory):
         if dirpath.startswith("./"):
             dirpath = dirpath[2:]
         for entry in dirnames + filenames:
@@ -806,11 +806,11 @@ def create_skeleton_file(skelbase, userbase, relpath, replacements):
         os.chmod(user_path, mode)
 
 
-def chown_tree(dir, user):
+def chown_tree(directory, user):
     uid = pwd.getpwnam(user).pw_uid
     gid = pwd.getpwnam(user).pw_gid
-    os.chown(dir, uid, gid)
-    for dirpath, dirnames, filenames in os.walk(dir):
+    os.chown(directory, uid, gid)
+    for dirpath, dirnames, filenames in os.walk(directory):
         for entry in dirnames + filenames:
             os.lchown(dirpath + "/" + entry, uid, gid)
 
@@ -1271,7 +1271,7 @@ def update_file(relpath, old_version, new_version, userdir, old_perms):
         create_skeleton_file(new_skel, userdir, relpath, replacements)
         sys.stdout.write(good + " Installed %-4s %s\n" % (new_type, fn))
 
-    # 2) new version ships new skeleton file, but user's own file/dir/link
+    # 2) new version ships new skeleton file, but user's own file/directory/link
     #    is in the way.
     # 2a) the users file is identical with our new version
     elif not old_type and not differs:
@@ -1465,7 +1465,7 @@ def update_file(relpath, old_version, new_version, userdir, old_perms):
             sys.stdout.write(warn + " Delete your %s and created new default %s %s.\n" % (user_type, new_type, fn))
 
 
-    # Now the new file/link/dir is in place, deleted or whatever. The
+    # Now the new file/link/directory is in place, deleted or whatever. The
     # user might have interferred and changed things. We need to make sure
     # that file permissions are also updated. But the user might have changed
     # something himself.
@@ -2895,7 +2895,7 @@ def main_rm(args, options=None):
     if not reuse:
         remove_from_fstab(g_sitename)
         sys.stdout.write("Deleting user and group %s..." % g_sitename)
-        os.chdir("/") # Site dir not longer existant after userdel
+        os.chdir("/") # Site directory not longer existant after userdel
         userdel(g_sitename)
         ok()
 
@@ -3547,7 +3547,7 @@ def backup_site_files_to_tarfile(tar, options):
 
     def filter_files(filename):
         for glob_pattern in exclude:
-            # patterns are relative to site dir, filename is full path.
+            # patterns are relative to site directory, filename is full path.
             # strip of the g_sitedir prefix from full path
             if fnmatch.fnmatch(filename[len(g_sitedir)+1:], glob_pattern):
                 return True # exclude this file

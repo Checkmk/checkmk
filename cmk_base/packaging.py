@@ -103,7 +103,7 @@ def _get_permissions(path):
 
 # in case of local directories (OMD) use those instead
 # TODO: Since we only care about OMD environments: Simplify that -> remove ldir
-package_parts = [ (part, title, ldir if ldir else dir) for part, title, dir, ldir in [
+package_parts = [ (part, title, ldir if ldir else directory) for part, title, directory, ldir in [
   ( "checks",        "Checks",               cmk.paths.checks_dir,          cmk.paths.local_checks_dir ),
   ( "notifications", "Notification scripts", cmk.paths.notifications_dir,   cmk.paths.local_notifications_dir ),
   ( "inventory",     "Inventory plugins",    cmk.paths.inventory_dir,       cmk.paths.local_inventory_dir ),
@@ -253,16 +253,16 @@ def show_package(name, show_info = False):
     else:
         if logger.is_verbose():
             sys.stdout.write("Files in package %s:\n" % name)
-            for part, title, dir in get_package_parts():
+            for part, title, directory in get_package_parts():
                 files = package["files"].get(part, [])
                 if len(files) > 0:
                     sys.stdout.write("  %s%s%s:\n" % (tty.bold, title, tty.normal))
                     for f in files:
                         sys.stdout.write("    %s\n" % f)
         else:
-            for part, title, dir in get_package_parts():
+            for part, title, directory in get_package_parts():
                 for fn in package["files"].get(part, []):
-                    sys.stdout.write(dir + "/" + fn + "\n")
+                    sys.stdout.write(directory + "/" + fn + "\n")
 
 
 def package_create(args):
@@ -287,8 +287,8 @@ def package_create(args):
         "files"                : filelists
     }
     num_files = 0
-    for part, title, dir in get_package_parts():
-        files = unpackaged_files_in_dir(part, dir)
+    for part, title, directory in get_package_parts():
+        files = unpackaged_files_in_dir(part, directory)
         filelists[part] = files
         num_files += len(files)
         if len(files) > 0:
@@ -304,8 +304,8 @@ def package_create(args):
 
 def package_find(_no_args):
     first = True
-    for part, title, dir in get_package_parts() + config_parts:
-        files = unpackaged_files_in_dir(part, dir)
+    for part, title, directory in get_package_parts() + config_parts:
+        files = unpackaged_files_in_dir(part, directory)
         if len(files) > 0:
             if first:
                 logger.verbose("Unpackaged files:")
@@ -316,7 +316,7 @@ def package_find(_no_args):
                 if logger.is_verbose():
                     logger.verbose("    %s", f)
                 else:
-                    logger.info("%s/%s", dir, f)
+                    logger.info("%s/%s", directory, f)
 
     if first:
         logger.verbose("No unpackaged files found.")
@@ -357,8 +357,8 @@ def package_pack(args):
 
     # Make sure, user is not in data directories of Check_MK
     abs_curdir = os.path.abspath(os.curdir)
-    for dir in [cmk.paths.var_dir] + [ p[-1] for p in get_package_parts() + config_parts ]:
-        if abs_curdir == dir or abs_curdir.startswith(dir + "/"):
+    for directory in [cmk.paths.var_dir] + [ p[-1] for p in get_package_parts() + config_parts ]:
+        if abs_curdir == directory or abs_curdir.startswith(directory + "/"):
             raise PackageException("You are in %s!\n"
                                "Please leave the directories of Check_MK before creating\n"
                                "a packet file. Foreign files lying around here will mix up things." % p)
@@ -400,7 +400,7 @@ def create_mkp_file(package, file_name=None, file_object=None):
     tar.addfile(info, info_file)
 
     # Now pack the actual files into sub tars
-    for part, title, dir in get_package_parts() + config_parts:
+    for part, title, directory in get_package_parts() + config_parts:
         filenames = package["files"].get(part, [])
         if len(filenames) > 0:
             logger.verbose("  %s%s%s:", tty.bold, title, tty.normal)
@@ -408,7 +408,7 @@ def create_mkp_file(package, file_name=None, file_object=None):
                 logger.verbose("    %s", f)
             subtarname = part + ".tar"
             subdata = subprocess.check_output(["tar", "cf", "-", "--dereference", "--force-local",
-                                               "-C", dir] + filenames)
+                                               "-C", directory] + filenames)
             info = create_tar_info(subtarname, len(subdata))
             tar.addfile(info, StringIO(subdata))
     tar.close()
@@ -428,14 +428,14 @@ def package_remove(args):
 
 
 def remove_package(package):
-    for part, title, dir in get_package_parts() + config_parts:
+    for part, title, directory in get_package_parts() + config_parts:
         filenames = package["files"].get(part, [])
         if len(filenames) > 0:
             logger.verbose("  %s%s%s", tty.bold, title, tty.normal)
             for fn in filenames:
                 logger.verbose("    %s", fn)
                 try:
-                    path = dir + "/" + fn
+                    path = directory + "/" + fn
                     if part == 'ec_rule_packs':
                         cmk.ec.export.remove_packaged_rule_packs(filenames)
                     else:
@@ -479,13 +479,13 @@ def validate_package_files(pacname, files):
     for package_name in all_package_names():
         packages[package_name] = read_package_info(package_name)
 
-    for part, _unused_title, dir in get_package_parts():
-        validate_package_files_part(packages, pacname, part, dir, files.get(part, []))
+    for part, _unused_title, directory in get_package_parts():
+        validate_package_files_part(packages, pacname, part, directory, files.get(part, []))
 
 
-def validate_package_files_part(packages, pacname, part, dir, rel_paths):
+def validate_package_files_part(packages, pacname, part, directory, rel_paths):
     for rel_path in rel_paths:
-        path = os.path.join(dir, rel_path)
+        path = os.path.join(directory, rel_path)
         if not os.path.exists(path):
             raise PackageException("File %s does not exist." % path)
 
@@ -522,7 +522,7 @@ def install_package(file_name=None, file_object=None):
 
     # Before installing check for conflicts
     keep_files = {}
-    for part, _unused_title, dir in get_package_parts() + config_parts:
+    for part, _unused_title, directory in get_package_parts() + config_parts:
         packaged = packaged_files_in_dir(part)
         keep = []
         keep_files[part] = keep
@@ -531,7 +531,7 @@ def install_package(file_name=None, file_object=None):
             old_files = old_package["files"].get(part, [])
 
         for fn in package["files"].get(part, []):
-            path = os.path.join(dir, fn)
+            path = os.path.join(directory, fn)
             if update and fn in old_files:
                 keep.append(fn)
             elif fn in packaged:
@@ -541,7 +541,7 @@ def install_package(file_name=None, file_object=None):
 
 
     # Now install files, but only unpack files explicitely listed
-    for part, title, dir in get_package_parts() + config_parts:
+    for part, title, directory in get_package_parts() + config_parts:
         filenames = package["files"].get(part, [])
         if len(filenames) > 0:
             logger.verbose("  %s%s%s:", tty.bold, title, tty.normal)
@@ -549,13 +549,13 @@ def install_package(file_name=None, file_object=None):
                 logger.verbose("    %s", fn)
 
             # make sure target directory exists
-            if not os.path.exists(dir):
-                logger.verbose("    Creating directory %s", dir)
-                os.makedirs(dir)
+            if not os.path.exists(directory):
+                logger.verbose("    Creating directory %s", directory)
+                os.makedirs(directory)
 
             tarsource = tar.extractfile(part + ".tar")
 
-            tardest = subprocess.Popen(["tar", "xf", "-", "-C", dir] + filenames,
+            tardest = subprocess.Popen(["tar", "xf", "-", "-C", directory] + filenames,
                                        stdin=subprocess.PIPE)
             while True:
                 data = tarsource.read(4096)
@@ -568,7 +568,7 @@ def install_package(file_name=None, file_object=None):
 
             # Fix permissions of extracted files
             for filename in filenames:
-                path = os.path.join(dir, filename)
+                path = os.path.join(directory, filename)
                 desired_perm = _get_permissions(path)
                 has_perm = os.stat(path).st_mode & 07777
                 if has_perm != desired_perm:
@@ -581,12 +581,12 @@ def install_package(file_name=None, file_object=None):
 
     # In case of an update remove files from old_package not present in new one
     if update:
-        for part, title, dir in get_package_parts() + config_parts:
+        for part, title, directory in get_package_parts() + config_parts:
             filenames = old_package["files"].get(part, [])
             keep = keep_files.get(part, [])
             for fn in filenames:
                 if fn not in keep:
-                    path = os.path.join(dir, fn)
+                    path = os.path.join(directory, fn)
                     logger.verbose("Removing outdated file %s.", path)
                     try:
                         os.remove(path)
@@ -640,17 +640,17 @@ def verify_check_mk_version(package):
                                "but you have %s installed." % (min_version, cmk_version))
 
 
-def files_in_dir(part, dir, prefix = ""):
-    if dir == None or not os.path.exists(dir):
+def files_in_dir(part, directory, prefix = ""):
+    if directory == None or not os.path.exists(directory):
         return []
 
-    # Handle case where one part-dir lies below another
+    # Handle case where one part-directory lies below another
     taboo_dirs = [ d for p, _unused_t, d in get_package_parts() + config_parts if p != part ]
-    if dir in taboo_dirs:
+    if directory in taboo_dirs:
         return []
 
     result = []
-    files = os.listdir(dir)
+    files = os.listdir(directory)
     for f in files:
         if f in [ '.', '..' ] or f.startswith('.') or f.endswith('~') or f.endswith(".pyc"):
             continue
@@ -659,7 +659,7 @@ def files_in_dir(part, dir, prefix = ""):
         if prefix + f in ignored:
             continue
 
-        path = dir + "/" + f
+        path = directory + "/" + f
         if os.path.isdir(path):
             result += files_in_dir(part, path, prefix + f + "/")
         else:
@@ -670,31 +670,31 @@ def files_in_dir(part, dir, prefix = ""):
 
 def unpackaged_files():
     unpackaged = {}
-    for part, _unused_title, dir in get_package_parts() + config_parts:
-        unpackaged[part] = unpackaged_files_in_dir(part, dir)
+    for part, _unused_title, directory in get_package_parts() + config_parts:
+        unpackaged[part] = unpackaged_files_in_dir(part, directory)
     return unpackaged
 
 
 def package_part_info():
     part_info = {}
-    for part, title, dir in get_package_parts() + config_parts:
+    for part, title, directory in get_package_parts() + config_parts:
         try:
-            files = os.listdir(dir)
+            files = os.listdir(directory)
         except OSError:
             files = []
 
         part_info[part] = {
             "title"       : title,
-            "permissions" : map(_get_permissions, [os.path.join(dir, f) for f in files]),
-            "path"        : dir,
+            "permissions" : map(_get_permissions, [os.path.join(directory, f) for f in files]),
+            "path"        : directory,
             "files"       : files,
         }
 
     return part_info
 
 
-def unpackaged_files_in_dir(part, dir):
-    return [f for f in files_in_dir(part, dir)
+def unpackaged_files_in_dir(part, directory):
+    return [f for f in files_in_dir(part, directory)
             if f not in packaged_files_in_dir(part)]
 
 

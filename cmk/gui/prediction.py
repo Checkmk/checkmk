@@ -58,12 +58,11 @@ def page_graph():
     # Get current value from perf_data via Livestatus
     current_value = get_current_perfdata(host, service, dsname)
 
-    dir = "%s/prediction/%s/%s/%s" % (
-            cmk.paths.var_dir, host,
-            cmk.utils.pnp_cleanup(service),
-            cmk.utils.pnp_cleanup(dsname))
+    pred_dir = os.path.join(cmk.paths.var_dir, "prediction", host,
+                            cmk.utils.pnp_cleanup(service),
+                            cmk.utils.pnp_cleanup(dsname))
 
-    if not os.path.exists(dir):
+    if not os.path.exists(pred_dir):
         raise MKGeneralException(_("There is currently no prediction information "
                                    "available for this service."))
 
@@ -72,11 +71,11 @@ def page_graph():
     timegroup = None
     timegroups = []
     now = time.time()
-    for f in os.listdir(dir):
+    for f in os.listdir(pred_dir):
         if not f.endswith(".info"):
             continue
 
-        tg_info = store.load_data_from_file(dir + "/" + f)
+        tg_info = store.load_data_from_file(pred_dir + "/" + f)
         if tg_info == None:
             continue
 
@@ -106,7 +105,7 @@ def page_graph():
     html.end_form()
 
     # Get prediction data
-    path = dir + "/" + timegroup["name"]
+    path = pred_dir + "/" + timegroup["name"]
     tg_data = store.load_data_from_file(path)
     if tg_data == None:
         raise MKGeneralException(_("Missing prediction data."))

@@ -888,16 +888,16 @@ multisite_painters["svc_acknowledged"] = {
 def notes_matching_pattern_entries(dirs, item):
     from fnmatch import fnmatch
     matching = []
-    for dir in dirs:
-        if os.path.isdir(dir):
-            entries = [d for d in os.listdir(dir) if d[0] != '.']
+    for directory in dirs:
+        if os.path.isdir(directory):
+            entries = [d for d in os.listdir(directory) if d[0] != '.']
             entries.sort()
             entries.reverse()
             for pattern in entries:
                 if pattern[0] == '.':
                     continue
                 if fnmatch(item, pattern):
-                    matching.append(dir + "/" + pattern)
+                    matching.append(directory + "/" + pattern)
     return matching
 
 def paint_custom_notes(what, row):

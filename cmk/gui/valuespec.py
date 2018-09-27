@@ -1044,9 +1044,9 @@ class Filename(TextAscii):
         if value[-1] == "/":
             raise MKUserError(varprefix, _("Your filename must not end with a slash."))
 
-        dir = value.rsplit("/", 1)[0]
-        if not os.path.isdir(dir):
-            raise MKUserError(varprefix, _("The directory %s does not exist or is not a directory.") % dir)
+        directory = value.rsplit("/", 1)[0]
+        if not os.path.isdir(directory):
+            raise MKUserError(varprefix, _("The directory %s does not exist or is not a directory.") % directory)
 
         # Write permissions to the file cannot be checked here since we run with Apache
         # permissions and the file might be created with Nagios permissions (on OMD this
@@ -4214,14 +4214,14 @@ class IconSelector(ValueSpec):
         # Read all icons from the icon directories
         #
         icons = {}
-        for dir in dirs:
+        for directory in dirs:
             try:
-                files = os.listdir(dir)
+                files = os.listdir(directory)
             except OSError:
                 continue
 
             for file_name in files:
-                file_path = dir + "/" + file_name
+                file_path = directory + "/" + file_name
                 if file_name[-4:] == '.png' and os.path.isfile(file_path):
 
                     # extract the category from the meta data

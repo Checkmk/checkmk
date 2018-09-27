@@ -158,8 +158,8 @@ def autodetect_plugin(command_line):
     plugin_name = command_line.split()[0]
     if command_line[0] not in [ '$', '/' ]:
         try:
-            for dir in [ "/local", "" ]:
-                path = cmk.paths.omd_root + dir + "/lib/nagios/plugins/"
+            for directory in ["/local", ""]:
+                path = cmk.paths.omd_root + directory + "/lib/nagios/plugins/"
                 if os.path.exists(path + plugin_name):
                     command_line = path + command_line
                     break

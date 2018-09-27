@@ -214,18 +214,19 @@ def get_levels(hostname, service_description, dsname, params, cf, levels_factor=
        get_prediction_timegroup(now, period_info)
 
     # Compute directory for prediction data
-    dir = "%s/prediction/%s/%s/%s" % (cmk.paths.var_dir, hostname,
-             cmk.utils.pnp_cleanup(service_description), cmk.utils.pnp_cleanup(dsname))
-    if not os.path.exists(dir):
-        os.makedirs(dir)
+    pred_dir = os.path.join(cmk.paths.var_dir, "prediction", hostname,
+                            cmk.utils.pnp_cleanup(service_description),
+                            cmk.utils.pnp_cleanup(dsname))
+    if not os.path.exists(pred_dir):
+        os.makedirs(pred_dir)
 
-    pred_file = "%s/%s" % (dir, timegroup)
+    pred_file = "%s/%s" % (pred_dir, timegroup)
     info_file = pred_file + ".info"
 
     # In previous versions it could happen that the files were created with 0 bytes of size
     # which was never handled correctly so that the prediction could never be used again until
     # manual removal of the files. Clean this up.
-    for file_path in [ pred_file, info_file ]:
+    for file_path in [pred_file, info_file]:
         if os.path.exists(file_path) and os.stat(file_path).st_size == 0:
             os.unlink(file_path)
 
@@ -256,14 +257,14 @@ def get_levels(hostname, service_description, dsname, params, cf, levels_factor=
         # Remove all prediction files that result from other
         # prediction periods. This is e.g. needed if the user switches
         # the parameter from 'wday' to 'day'.
-        for f in os.listdir(dir):
+        for f in os.listdir(pred_dir):
             if f.endswith(".info"):
                 try:
-                    info = ast.literal_eval(file(dir + "/" + f).read())
+                    info = ast.literal_eval(file(pred_dir + "/" + f).read())
                     if info["period"] != params["period"]:
                         logger.verbose("Removing obsolete prediction %s", f[:-5])
-                        os.remove(dir + "/" + f)
-                        os.remove(dir + "/" + f[:-5])
+                        os.remove(pred_dir + "/" + f)
+                        os.remove(pred_dir + "/" + f[:-5])
                 except:
                     pass
 

@@ -7397,8 +7397,8 @@ class ModeNotifications(NotificationsMode):
         else:
             table.begin(title = _("Open bulk notifications"))
 
-        for dir, age, interval, timeperiod, maxcount, uuids in bulks:
-            dirparts = dir.split("/")
+        for directory, age, interval, timeperiod, maxcount, uuids in bulks:
+            dirparts = directory.split("/")
             contact = dirparts[-3]
             method = dirparts[-2]
             bulk_id = dirparts[-1].split(",", 2)[-1]
@@ -9910,13 +9910,13 @@ class ModeHostTags(WatoMode, watolib.HosttagsConfiguration):
             if html.check_transaction():
                 move_nr = int(move_nr)
                 if move_nr >= 0:
-                    dir = 1
+                    directory = 1
                 else:
                     move_nr = -move_nr
-                    dir = -1
+                    directory = -1
                 moved = self._hosttags[move_nr]
                 del self._hosttags[move_nr]
-                self._hosttags[move_nr+dir:move_nr+dir] = [moved]
+                self._hosttags[move_nr+directory:move_nr+directory] = [moved]
                 watolib.save_hosttags(self._hosttags, self._auxtags)
                 config.wato_host_tags = self._hosttags
                 watolib.add_change("edit-hosttags", _("Changed order of host tag groups"))

@@ -1,0 +1,11 @@
+Title: msexch_dag, msexch_database: Plugins are bakeable
+Level: 1
+Component: agents
+Class: fix
+Compatible: compat
+Edition: cee
+State: unknown
+Version: 1.5.0p5
+Date: 1537884913
+
+

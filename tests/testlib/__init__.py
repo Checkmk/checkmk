@@ -2,6 +2,7 @@
 # encoding: utf-8
 
 import os
+import glob
 import pwd
 import time
 import pytest
@@ -667,6 +668,8 @@ class Site(object):
             if start_again:
                 self.start()
 
+        sys.stdout.write("After livestatus port lock\n")
+
 
     def _gather_livestatus_port(self):
         if self.reuse and self.exists():
@@ -678,21 +681,17 @@ class Site(object):
 
 
     def get_free_port_from(self, port):
-        while True:
-            try:
-                print "Trying port %d" % port
-                sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-                sock.bind(("127.0.0.1", port))
-                sock.listen(1)
-                sock.close()
+        used_ports = set([])
+        for cfg_path in glob.glob("/omd/sites/*/etc/omd/site.conf"):
+            for line in cfg_path:
+                if line.startswith("CONFIG_LIVESTATUS_TCP_PORT="):
+                    port = int(line.strip().split("=", 1)[1].strip("'"))
+                    used_ports.add(port)
 
-                break # found a bindable port
-            except socket.error, e:
-                print "Failed to bind 127.0.0.1:%d: %s" % (port, e)
-                port += 1
+        while port in used_ports:
+            port += 1
 
-        print "Using port %d" % port
+        print "Livestatus ports already in use: %r, using port: %d" % (used_ports, port)
         return port
 
     # Problem: The group change only affects new sessions of the test_user

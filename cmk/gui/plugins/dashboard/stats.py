@@ -79,7 +79,7 @@ class DashletStats(Dashlet):
         pie_right_aspect = 0.8
         what             = self._livestatus_table()
         table            = self._table()
-        filter           = self._filter()
+        filter_          = self._filter()
 
         if what == 'hosts':
             info = 'host'
@@ -90,12 +90,12 @@ class DashletStats(Dashlet):
         use_filters = visuals.filters_of_visual(self._dashlet_spec, infos)
         for filt in use_filters:
             if filt.available() and not isinstance(filt, visuals.FilterSite):
-                filter += filt.filter(info)
+                filter_ += filt.filter(info)
 
         query = "GET %s\n" % what
         for entry in table:
             query += entry[3]
-        query += filter
+        query += filter_
 
         site = self._dashlet_spec['context'].get('siteopt', {}).get('site')
         if site:

@@ -865,9 +865,9 @@ licenses = {"v1": {}, "v1_disabled": {}, "v2": {}, "v2_disabled": {}}
 license_info = query("license-list-info")
 if license_info:
     licenses["v1"] = create_dict(license_info, custom_key = ["service"], is_counter = False)
-    for license, values in licenses["v1"].items():
+    for license_, values in licenses["v1"].items():
         if values.get("is-licensed", "") == "false":
-            licenses["v1_disabled"][license] = values
+            licenses["v1_disabled"][license_] = values
 
 # The v2 license info is not used, yet
 licensev2_info = query("license-v2-list-info")

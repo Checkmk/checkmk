@@ -1,0 +1,14 @@
+Title: Fixed duplicate view names in "link to" dropdown in view editor
+Level: 1
+Component: multisite
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0i1
+Date: 1538048999
+
+When editing the view a painter should link to, the list contained some
+duplicate names. The user often had to trial and error to select the
+correct view. The titles now contain a category prefix and also include
+the internal view ID which is used to identify the views.

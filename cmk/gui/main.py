@@ -51,5 +51,4 @@ def _get_start_url():
     # users to compromised pages.
     if utils.is_allowed_url(start_url):
         return start_url
-    else:
-        return "dashboard.py"
+    return "dashboard.py"

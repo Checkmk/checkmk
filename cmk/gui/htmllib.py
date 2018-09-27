@@ -1671,8 +1671,7 @@ class html(HTMLGenerator):
             style = "display: %s;" % ("block" if self.help_visible else "none")
             c = self.render_div(text.strip(), class_="help", style=style)
             return c
-        else:
-            return ""
+        return ""
 
 
     #
@@ -1705,8 +1704,7 @@ class html(HTMLGenerator):
             filename = self.urlencode(self.myfile) + ".py"
         if vars:
             return filename + "?" + self.urlencode_vars(vars)
-        else:
-            return filename
+        return filename
 
 
     def makeuri_contextless(self, vars, filename=None):
@@ -1714,8 +1712,7 @@ class html(HTMLGenerator):
             filename = self.myfile + ".py"
         if vars:
             return filename + "?" + self.urlencode_vars(vars)
-        else:
-            return filename
+        return filename
 
 
     def makeactionuri(self, addvars, filename=None, delvars=None):
@@ -1875,8 +1872,7 @@ class html(HTMLGenerator):
     def _get_body_css_classes(self):
         if self.screenshotmode:
             return self._body_classes + ["screenshotmode"]
-        else:
-            return self._body_classes
+        return self._body_classes
 
 
     def html_foot(self):
@@ -2095,8 +2091,7 @@ class html(HTMLGenerator):
     def form_submitted(self, form_name=None):
         if form_name:
             return self.var("filled_in") == form_name
-        else:
-            return self.has_var("filled_in")
+        return self.has_var("filled_in")
 
 
     # Get value of checkbox. Return True, False or None. None means
@@ -2108,9 +2103,9 @@ class html(HTMLGenerator):
             return bool(self.var(varname))
         elif not self.form_filled_in(form_name):
             return None
-        else:
-            # Form filled in but variable missing -> Checkbox not checked
-            return False
+
+        # Form filled in but variable missing -> Checkbox not checked
+        return False
 
 
     #
@@ -3015,8 +3010,7 @@ hy
     def set_cache_default(self, name, value):
         if self.is_cached(name):
             return self.get_cached(name)
-        else:
-            return self.set_cache(name, value)
+        return self.set_cache(name, value)
 
 
     def is_cached(self, name):

@@ -875,11 +875,11 @@ def cmk_graphs_possible(site_id = None):
 def site_is_running_cmc(site_id):
     if site_id:
         return sites.state(site_id, {}).get("program_version", "").startswith("Check_MK")
-    else:
-        for status in sites.states().values():
-            if status.get("program_version", "").startswith("Check_MK"):
-                return True
-        return False
+
+    for status in sites.states().values():
+        if status.get("program_version", "").startswith("Check_MK"):
+            return True
+    return False
 
 
 def browser_supports_canvas():

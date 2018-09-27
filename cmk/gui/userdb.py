@@ -186,8 +186,7 @@ def get_attributes(connection_id, what):
     connection = get_connection(connection_id)
     if connection:
         return getattr(connection, what)()
-    else:
-        return []
+    return []
 
 
 def new_user_template(connection_id):
@@ -359,8 +358,7 @@ def transform_userdb_automatic_sync(val):
         # legacy compat - all connections
         return "all"
 
-    else:
-        return val
+    return val
 
 #.
 #   .--User Session--------------------------------------------------------.
@@ -473,9 +471,9 @@ def load_session_info(username):
 def convert_session_info(value):
     if value == "":
         return None
-    else:
-        session_id, last_activity = value.split("|", 1)
-        return session_id, int(last_activity)
+
+    session_id, last_activity = value.split("|", 1)
+    return session_id, int(last_activity)
 
 
 

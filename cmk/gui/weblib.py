@@ -87,15 +87,14 @@ def selection_id():
         sel_id = utils.gen_id()
         html.set_var('selection', sel_id)
         return sel_id
-    else:
-        sel_id = html.var('selection')
-        # Avoid illegal file access by introducing .. or /
-        if not re.match("^[-0-9a-zA-Z]+$", sel_id):
-            new_id = utils.gen_id()
-            html.set_var('selection', new_id)
-            return new_id
-        else:
-            return sel_id
+
+    sel_id = html.var('selection')
+    # Avoid illegal file access by introducing .. or /
+    if not re.match("^[-0-9a-zA-Z]+$", sel_id):
+        new_id = utils.gen_id()
+        html.set_var('selection', new_id)
+        return new_id
+    return sel_id
 
 def get_rowselection(ident):
     vo = config.user.load_file("rowselection/%s" % selection_id(), {})

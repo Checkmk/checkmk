@@ -1336,8 +1336,7 @@ def info_params(info_key):
     single_spec = infos[info_key]['single_spec']
     if single_spec == None:
         return []
-    else:
-        return dict(single_spec).keys()
+    return dict(single_spec).keys()
 
 def get_single_info_keys(visual):
     keys = []

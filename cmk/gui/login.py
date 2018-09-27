@@ -62,8 +62,7 @@ def authenticate(request):
     if user_id:
         login(user_id)
         return True
-    else:
-        return False
+    return False
 
 
 # After the user has been authenticated, tell the different components
@@ -429,9 +428,7 @@ def page_login(no_html_output = False):
 
     if html.mobile:
         return cmk.gui.mobile.page_login()
-
-    else:
-        return normal_login_page()
+    return normal_login_page()
 
 def normal_login_page(called_directly = True):
     html.set_render_headfoot(False)

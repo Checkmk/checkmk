@@ -1,0 +1,17 @@
+Title: veeam_backup_status: Plugin is bakeable
+Level: 1
+Component: agents
+Compatible: compat
+Edition: cee
+Version: 1.4.0p37
+Date: 1538042010
+Class: fix
+
+If no 64-bit Windows agent is used you have to create a wrapper batch script,
+eg. {{veeam_backup_status.bat}} which calls the {{veeam_backup_status.ps1}}.
+In this case the powershell script needs to be put somewhere else (see example
+here) and is called from this .bat script with the 64 bit powershell:
+<code>
+@ECHO OFF
+%systemroot%\sysnative\WindowsPowerShell\v1.0\powershell.exe -ExecutionPolicy Unrestricted " & ""C:\scripts\veeam_backup_status.ps1"""
+</code>

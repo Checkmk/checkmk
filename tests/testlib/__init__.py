@@ -683,7 +683,7 @@ class Site(object):
     def get_free_port_from(self, port):
         used_ports = set([])
         for cfg_path in glob.glob("/omd/sites/*/etc/omd/site.conf"):
-            for line in cfg_path:
+            for line in open(cfg_path):
                 if line.startswith("CONFIG_LIVESTATUS_TCP_PORT="):
                     port = int(line.strip().split("=", 1)[1].strip("'"))
                     used_ports.add(port)

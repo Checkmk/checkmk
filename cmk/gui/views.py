@@ -1001,8 +1001,8 @@ def show_view(view, show_heading = False, show_buttons = True,
         rows = []
 
     # Apply non-Livestatus filters
-    for filter in all_active_filters:
-        rows = filter.filter_table(rows)
+    for filter_ in all_active_filters:
+        rows = filter_.filter_table(rows)
 
     if html.var("mode") == "availability":
         cmk.gui.plugins.views.availability.render_bi_availability(view_title(view), rows)

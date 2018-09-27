@@ -3352,19 +3352,19 @@ def table(columns, add_headers, only_sites, limit, filters):
     only_aggr_name = None
 
     required_groups = tuple()
-    for filter in filters:
-        if filter.name == "aggr_group":
-            val = filter.selected_group()
+    for filter_ in filters:
+        if filter_.name == "aggr_group":
+            val = filter_.selected_group()
             if val:
                 only_group = val
-        elif filter.name == "aggr_service":
-            only_service = filter.service_spec()
-        elif filter.name == "aggr_name":
-            only_aggr_name = filter.value().get("aggr_name")
+        elif filter_.name == "aggr_service":
+            only_service = filter_.service_spec()
+        elif filter_.name == "aggr_name":
+            only_aggr_name = filter_.value().get("aggr_name")
         # TODO: can be further improved by filtering aggr_name_regex
         #       See BITextFilter(Filter): filter_table(self, rows)
-        elif filter.name == "aggr_group_tree":
-            val = filter.value().get("aggr_group_tree")
+        elif filter_.name == "aggr_group_tree":
+            val = filter_.value().get("aggr_group_tree")
             if val:
                 required_groups = tuple(val.split("/"))
 

@@ -1007,9 +1007,9 @@ def filters_of_visual(visual, info_keys, show_all=False, link_filters=None):
 
     # Collect all available filters for these infos
     all_possible_filters = []
-    for _filter_name, filter in multisite_filters.items():
-        if filter.info in info_keys:
-            all_possible_filters.append(filter)
+    for _filter_name, filter_ in multisite_filters.items():
+        if filter_.info in info_keys:
+            all_possible_filters.append(filter_)
 
     for info_key in info_keys:
         if info_key in visual['single_infos']:
@@ -1034,12 +1034,12 @@ def filters_of_visual(visual, info_keys, show_all=False, link_filters=None):
     # add ubiquitary_filters that are possible for these infos
     for fn in get_ubiquitary_filters():
         # Disable 'wato_folder' filter, if WATO is disabled or there is a single host view
-        filter = get_filter(fn)
+        filter_ = get_filter(fn)
 
-        if fn == "wato_folder" and (not filter.available() or 'host' in visual['single_infos']):
+        if fn == "wato_folder" and (not filter_.available() or 'host' in visual['single_infos']):
             continue
-        if not filter.info or filter.info in info_keys:
-            filters.append(filter)
+        if not filter_.info or filter_.info in info_keys:
+            filters.append(filter_)
 
     return list(set(filters)) # remove duplicates
 
@@ -1159,10 +1159,10 @@ class VisualFilterList(ListOfMultiple):
         fspecs = {}
         self._filters = {}
         for info in self._infos:
-            for fname, filter in filters_allowed_for_info(info).items():
+            for fname, filter_ in filters_allowed_for_info(info).items():
                 if fname not in fspecs and fname not in ignore:
                     fspecs[fname] = VisualFilter(fname,
-                        title = filter.title,
+                        title = filter_.title,
                     )
                     self._filters[fname] = fspecs[fname]._filter
 

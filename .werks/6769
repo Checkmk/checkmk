@@ -1,0 +1,11 @@
+Title: genua_fan genua_pfstate: Fixed crashing discovery on empty data
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0p5
+Date: 1538052524
+
+

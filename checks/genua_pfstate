@@ -36,11 +36,11 @@ def inventory_genua_pfstate(info):
     # remove empty elements due to alternative enterprise id in snmp_info
     info = filter(None, info)
 
-    if info[0]:
-        if len(info[0][0]) == 3:
-            return [ (None, genua_pfstate_default_levels) ]
-    else:
-        return []
+    if not info or not info[0]:
+        return
+
+    if len(info[0][0]) == 3:
+        return [ (None, genua_pfstate_default_levels) ]
 
 
 def pfstate(st):

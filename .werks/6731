@@ -1,0 +1,12 @@
+Title: check_mk_agent.aix: Fixed multiline output processing
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.4.0p37
+Date: 1538031557
+Class: fix
+
+When running MRPE scripts which provide multilines
+a service was created for each line. This led to
+pointless services.

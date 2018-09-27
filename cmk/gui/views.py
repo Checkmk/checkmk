@@ -1382,8 +1382,7 @@ def get_limit():
         return config.hard_query_limit
     elif limitvar == "none" and config.user.may("general.ignore_hard_limit"):
         return None
-    else:
-        return config.soft_query_limit
+    return config.soft_query_limit
 
 def view_optiondial(view, option, choices, help):
     # Darn: The option "refresh" has the name "browser_reload" in the
@@ -1587,11 +1586,10 @@ def sort_data(data, sorters):
             return -1
         elif row2 == None:
             return 1
-        else:
-            if args:
-                return compfunc(row1, row2, *args)
-            else:
-                return compfunc(row1, row2)
+
+        if args:
+            return compfunc(row1, row2, *args)
+        return compfunc(row1, row2)
 
     sort_cmps = []
     for s in sorters:
@@ -1932,8 +1930,7 @@ def filter_selected_rows(view, rows, selected_ids):
 def get_context_link(user, viewname):
     if viewname in available_views:
         return "view.py?view_name=%s" % viewname
-    else:
-        return None
+    return None
 
 
 @cmk.gui.pages.register("export_views")

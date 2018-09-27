@@ -318,8 +318,7 @@ class PageUploadKey(object):
         if key in cert_spec:
             if cert_spec[key][0] == "upload":
                 return cert_spec[key][1][2]
-            else:
-                return cert_spec[key][1]
+            return cert_spec[key][1]
 
 
     def _upload_key(self, key_file, value):

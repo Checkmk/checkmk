@@ -212,8 +212,7 @@ class Request(object):
         val = self.vars.get(varname, deflt)
         if type(val) == str:
             return val.decode("utf-8")
-        else:
-            return val
+        return val
 
 
     def all_vars(self):
@@ -234,8 +233,7 @@ class Request(object):
             return self.listvars[varname]
         elif varname in self.vars:
             return [self.vars[varname]]
-        else:
-            return []
+        return []
 
 
     # Adds a variable to listvars and also set it

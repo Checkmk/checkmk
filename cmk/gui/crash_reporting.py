@@ -278,8 +278,7 @@ def handle_report_form(tardata, what):
 def get_crash_report_target(what):
     if what == "cma":
         return "feedback@check-mk.org"
-    else:
-        return config.crash_report_target
+    return config.crash_report_target
 
 
 # TODO: Would be cleaner to override if we used OOP
@@ -287,8 +286,7 @@ def get_version(what):
     if what == "cma":
         import cma  # pylint: disable=import-error
         return cma.version()
-    else:
-        return cmk.__version__
+    return cmk.__version__
 
 
 def warn_about_local_files(info):

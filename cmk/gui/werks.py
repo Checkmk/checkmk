@@ -380,12 +380,11 @@ def werk_group_value(werk, grouping):
         return None
     elif grouping == "version":
         return werk["version"]
-    else:
-        broken_time = time.localtime(werk["date"])
-        if grouping == "day":
-            return time.strftime("%Y-%m-%d", broken_time)
-        else:
-            return time.strftime("%s %%U - %%Y" % _("Week"), broken_time)
+
+    broken_time = time.localtime(werk["date"])
+    if grouping == "day":
+        return time.strftime("%Y-%m-%d", broken_time)
+    return time.strftime("%s %%U - %%Y" % _("Week"), broken_time)
 
 def werk_matches_options(werk, werk_table_options):
     if not ((not werk_table_options["id"] or werk["id"] == int(werk_table_options["id"])) and \
@@ -463,8 +462,7 @@ def render_werk_id(werk, with_link):
     if with_link:
         url = html.makeuri([("werk", werk["id"])], filename="werk.py")
         return html.render_a(render_werk_id(werk, with_link=False), url)
-    else:
-        return "#%04d" % werk["id"]
+    return "#%04d" % werk["id"]
 
 def render_werk_date(werk):
     return time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(werk["date"]))

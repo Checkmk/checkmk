@@ -50,8 +50,7 @@ def edit_dictionary(entries, value, **args):
     result = edit_dictionaries([("value", entries)], {"value": value}, **args)
     if result:
         return result["value"]
-    else:
-        return result
+    return result
 
 # Edit a list of several dictionaries. Those can either be dictionary
 # valuespec or just a list of elements. Each entry in dictionaries is
@@ -223,8 +222,7 @@ def strip_bad_chars(x):
             ord(u">"): None,
             ord(u"\""): None,
         })
-    else:
-        return s.translate(twofivesix, "'&;<>\"")
+    return s.translate(twofivesix, "'&;<>\"")
 
 def header(title, isopen = True, table_id = "", narrow = False, css=None):
     #html.guitest_record_output("forms", ("header", title))

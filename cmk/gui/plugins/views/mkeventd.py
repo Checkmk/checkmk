@@ -213,8 +213,7 @@ if config.mkeventd_enabled:
             for text in groups:
                 code += '<span>%s</span>' % text
             return "matchgroups", code
-        else:
-            return "", ""
+        return "", ""
 
     multisite_painters["event_match_groups"] = {
         "title"   : _("Match Groups"),
@@ -262,8 +261,7 @@ if config.mkeventd_enabled:
     def paint_event_host(row):
         if row["host_name"]:
             return "", row["host_name"]
-        else:
-            return "", row["event_host"]
+        return "", row["event_host"]
 
     multisite_painters["event_host"] = {
         "title"   : _("Hostname"),
@@ -333,8 +331,7 @@ if config.mkeventd_enabled:
         if config.user.may("mkeventd.edit"):
             urlvars = html.urlencode_vars([("mode", "mkeventd_edit_rule"), ("rule_id", rule_id)])
             return "", html.render_a(rule_id, "wato.py?%s" % urlvars)
-        else:
-            return "", rule_id
+        return "", rule_id
 
     multisite_painters["event_rule_id"] = {
         "title"   : _("Rule-ID"),
@@ -429,8 +426,7 @@ if config.mkeventd_enabled:
 
         if htmlcode:
             return "icons", htmlcode
-        else:
-            return "", ""
+        return "", ""
 
     multisite_painters["event_icons"] = {
         "title"   : _("Event Icons"),
@@ -456,8 +452,7 @@ if config.mkeventd_enabled:
             return "", ""
         elif cgs:
             return "", ", ".join(cgs)
-        else:
-            return "", "<i>"  + _("none") + "</i>"
+        return "", "<i>"  + _("none") + "</i>"
 
     multisite_painters["event_contact_groups"] = {
         "title"   : _("Contact groups defined in rule"),
@@ -476,8 +471,7 @@ if config.mkeventd_enabled:
             return "", ""
         elif cgs:
             return "", ", ".join(sorted(cgs))
-        else:
-            return "", "<i>"  + _("none") + "</i>"
+        return "", "<i>"  + _("none") + "</i>"
 
     multisite_painters["event_effective_contact_groups"] = {
         "title"   : _("Contact groups effective (Host or rule contact groups)"),

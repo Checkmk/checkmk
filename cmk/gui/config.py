@@ -279,8 +279,7 @@ def all_nonfunction_vars(var_dict):
 def get_language(default=None):
     if default == None:
         return default_language
-    else:
-        return default
+    return default
 
 
 def tag_alias(tag):
@@ -557,9 +556,9 @@ class LoggedInUser(object):
         authorized_sites = self.get_attribute("authorized_sites")
         if authorized_sites is None:
             return unfiltered_sites
-        else:
-            return [ (site_id, site) for site_id, site in unfiltered_sites
-                          if site_id in authorized_sites ]
+
+        return [ (site_id, site) for site_id, site in unfiltered_sites
+                      if site_id in authorized_sites ]
 
 
     def authorized_login_sites(self):
@@ -722,15 +721,13 @@ def roles_of_user(user_id):
         return existing_role_ids(default_user_profile['roles'])
     elif default_user_role:
         return existing_role_ids([ default_user_role ])
-    else:
-        return []
+    return []
 
 
 def alias_of_user(user_id):
     if user_id in multisite_users:
         return multisite_users[user_id].get("alias", user_id)
-    else:
-        return user_id
+    return user_id
 
 
 def user_may(user_id, pname):
@@ -1079,10 +1076,10 @@ def is_single_local_site():
         return False
     elif len(sites) == 0:
         return True
-    else:
-        # Also use Multisite mode if the one and only site is not local
-        sitename = sites.keys()[0]
-        return site_is_local(sitename)
+
+    # Also use Multisite mode if the one and only site is not local
+    sitename = sites.keys()[0]
+    return site_is_local(sitename)
 
 
 def site_attribute_default_value():
@@ -1146,5 +1143,4 @@ def theme_choices():
 def get_page_heading():
     if "%s" in page_heading:
         return page_heading % (site(omd_site()).get('alias', _("GUI")))
-    else:
-        return page_heading
+    return page_heading

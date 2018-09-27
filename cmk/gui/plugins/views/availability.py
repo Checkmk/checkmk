@@ -430,8 +430,8 @@ def render_availability_table(group_title, availability_table, what, avoptions):
             html.close_a()
 
         # Columns with the actual availability data
-        for (title, help), (text, css) in zip(av_table["cell_titles"], row["cells"]):
-            table.cell(title, text, css=css, help=help)
+        for (title, help_txt), (text, css) in zip(av_table["cell_titles"], row["cells"]):
+            table.cell(title, text, css=css, help=help_txt)
 
     if "summary" in av_table:
         table.row(css="summary", fixed=True)
@@ -443,8 +443,8 @@ def render_availability_table(group_title, availability_table, what, avoptions):
         if show_timeline:
             table.cell("", "")
 
-        for (title, help), (text, css) in zip(av_table["cell_titles"], av_table["summary"]):
-            table.cell(title, text, css="heading " + css, help=help)
+        for (title, help_txt), (text, css) in zip(av_table["cell_titles"], av_table["summary"]):
+            table.cell(title, text, css="heading " + css, help=help_txt)
 
     return table.end() # returns Table data if fetch == True
 

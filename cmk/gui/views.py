@@ -1381,7 +1381,7 @@ def get_limit():
         return None
     return config.soft_query_limit
 
-def view_optiondial(view, option, choices, help):
+def view_optiondial(view, option, choices, help_txt):
     # Darn: The option "refresh" has the name "browser_reload" in the
     # view definition
     if option == "refresh":
@@ -1399,7 +1399,7 @@ def view_optiondial(view, option, choices, help):
     choices = [ [c[0], str(c[1])] for c in choices ]
     html.open_div(id_="optiondial_%s" % option,
                   class_=["optiondial", option, "val_%s" % value],
-                  title=help,
+                  title=help_txt,
                   onclick="view_dial_option(this, \'%s\', \'%s\', %r)"
                                    % (view["name"], option, choices))
     html.div(title)
@@ -1450,11 +1450,11 @@ def show_context_links(thisview, datasource, show_filters,
     if display_options.enabled(display_options.F):
         if html.var("filled_in") == "filter":
             icon = "filters_set"
-            help = _("The current data is being filtered")
+            help_txt = _("The current data is being filtered")
         else:
             icon = "filters"
-            help = _("Set a filter for refining the shown data")
-        html.toggle_button("filters", filter_isopen, icon, help, disabled=not show_filters)
+            help_txt = _("Set a filter for refining the shown data")
+        html.toggle_button("filters", filter_isopen, icon, help_txt, disabled=not show_filters)
 
     if display_options.enabled(display_options.D):
         html.toggle_button("painteroptions", False, "painteroptions", _("Modify display options"),

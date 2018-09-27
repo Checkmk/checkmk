@@ -3094,10 +3094,10 @@ class Attribute(object):
     # The constructor stores name and title. If those are
     # dynamic then leave them out and override name() and
     # title()
-    def __init__(self, name=None, title=None, help=None, default_value=None):
+    def __init__(self, name=None, title=None, help_txt=None, default_value=None):
         self._name = name
         self._title = title
-        self._help = help
+        self._help = help_txt
         self._default_value = default_value
 
         self._show_in_table        = True
@@ -3271,9 +3271,9 @@ class Attribute(object):
 # A simple text attribute. It is stored in
 # a Python unicode string
 class TextAttribute(Attribute):
-    def __init__(self, name, title, help = None, default_value="",
+    def __init__(self, name, title, help_txt = None, default_value="",
                  mandatory=False, allow_empty=True, size=25):
-        Attribute.__init__(self, name, title, help, default_value)
+        Attribute.__init__(self, name, title, help_txt, default_value)
         self._mandatory = mandatory
         self._allow_empty = allow_empty
         self._size = size
@@ -3328,8 +3328,8 @@ def host_attribute_matches(crit, value):
 # systems (e.g. during an import of a host database from
 # another system).
 class FixedTextAttribute(TextAttribute):
-    def __init__(self, name, title, help = None):
-        TextAttribute.__init__(self, name, title, help, None)
+    def __init__(self, name, title, help_txt = None):
+        TextAttribute.__init__(self, name, title, help_txt, None)
         self._mandatory = False
 
     def render_input(self, varprefix, value):
@@ -3343,9 +3343,9 @@ class FixedTextAttribute(TextAttribute):
 
 # A text attribute that is stored in a Nagios custom macro
 class NagiosTextAttribute(TextAttribute):
-    def __init__(self, name, nag_name, title, help=None, default_value="",
+    def __init__(self, name, nag_name, title, help_txt=None, default_value="",
                  mandatory=False, allow_empty=True, size=25):
-        TextAttribute.__init__(self, name, title, help, default_value,
+        TextAttribute.__init__(self, name, title, help_txt, default_value,
                                mandatory, allow_empty, size)
         self.nag_name = nag_name
 
@@ -3363,8 +3363,8 @@ class NagiosTextAttribute(TextAttribute):
 # In all cases where no value is defined or the value is
 # not in the enumlist, the default value is being used.
 class EnumAttribute(Attribute):
-    def __init__(self, name, title, help, default_value, enumlist):
-        Attribute.__init__(self, name, title, help, default_value)
+    def __init__(self, name, title, help_txt, default_value, enumlist):
+        Attribute.__init__(self, name, title, help_txt, default_value)
         self._enumlist = enumlist
         self._enumdict = dict(enumlist)
 
@@ -7674,7 +7674,7 @@ class Rulespec(object):
     FACTORY_DEFAULT_UNUSED = [] # means this ruleset is not used if no rule is entered
 
     def __init__(self, name, group_name, valuespec, item_spec, item_type, item_name, item_help,
-                 item_enum, match_type, title, help, is_optional, factory_default, is_deprecated):
+                 item_enum, match_type, title, help_txt, is_optional, factory_default, is_deprecated):
         super(Rulespec, self).__init__()
 
         self.name            = name
@@ -7694,7 +7694,7 @@ class Rulespec(object):
         self.item_enum       = item_enum # possible fixed values for items
         self.match_type      = match_type # used by WATO rule analyzer (green and grey balls)
         self.title           = title or valuespec.title()
-        self.help            = help or valuespec.help()
+        self.help            = help_txt or valuespec.help()
         self.factory_default = factory_default
         self.is_optional     = is_optional # rule may be None (like only_hosts)
         self.is_deprecated   = is_deprecated
@@ -7702,8 +7702,8 @@ class Rulespec(object):
 
 
 def register_rule(group, varname, valuespec = None, title = None,
-                  help = None, itemspec = None, itemtype = None, itemname = None,
-                  itemhelp = None, itemenum = None,
+                  help = None, itemspec = None, itemtype = None, # pylint: disable=redefined-builtin
+                  itemname = None, itemhelp = None, itemenum = None,
                   match = "first", optional = False,
                   deprecated = False, **kwargs):
     factory_default = kwargs.get("factory_default", Rulespec.NO_FACTORY_DEFAULT)
@@ -7719,7 +7719,7 @@ def register_rule(group, varname, valuespec = None, title = None,
         item_enum=itemenum,
         match_type=match,
         title=title,
-        help=help,
+        help_txt=help,
         is_optional=optional,
         factory_default=factory_default,
         is_deprecated=deprecated,

@@ -408,11 +408,11 @@ class IPMIParameters(Dictionary):
 
 # NOTE: When changing this keep it in sync with cmk.translations.translate_hostname()
 def HostnameTranslation(**kwargs):
-    help = kwargs.get("help")
+    help_txt = kwargs.get("help")
     title = kwargs.get("title")
     return Dictionary(
         title = title,
-        help = help,
+        help = help_txt,
         elements = [
             ( "drop_domain",
               FixedValue(
@@ -424,11 +424,11 @@ def HostnameTranslation(**kwargs):
 
 
 def ServiceDescriptionTranslation(**kwargs):
-    help = kwargs.get("help")
+    help_txt = kwargs.get("help")
     title = kwargs.get("title")
     return Dictionary(
         title = title,
-        help = help,
+        help = help_txt,
         elements = _translation_elements("service")
     )
 
@@ -956,7 +956,7 @@ def Levels(**kwargs):
             return 1
         return 0
 
-    help = kwargs.get("help")
+    help_txt = kwargs.get("help")
     unit = kwargs.get("unit")
     title = kwargs.get("title")
     default_levels = kwargs.get("default_levels", (0.0, 0.0))
@@ -968,7 +968,7 @@ def Levels(**kwargs):
 
     return Alternative(
           title = title,
-          help = help,
+          help = help_txt,
           show_titles = False,
           style = "dropdown",
           elements = [

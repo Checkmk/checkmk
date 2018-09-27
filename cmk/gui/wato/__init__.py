@@ -11300,8 +11300,8 @@ class ModeEditRuleset(WatoMode):
         return make_action_link(vars_)
 
 
-    def _rule_button(self, action, help=None, folder=None, rulenr=0):
-        html.icon_button(self._action_url(action, folder, rulenr), help, action)
+    def _rule_button(self, action, help_=None, folder=None, rulenr=0):
+        html.icon_button(self._action_url(action, folder, rulenr), help_, action)
 
 
     # TODO: Refactor this whole method

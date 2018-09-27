@@ -1260,14 +1260,14 @@ def layout_availability_table(what, group_title, availability_table, avoptions):
     av_table["cell_titles"] = []
     os_aggrs, os_states = get_outage_statistic_options(avoptions)
     for timeformat, render_number in timeformats:
-        for sid, css, sname, help in availability_columns[what]:
+        for sid, css, sname, help_txt in availability_columns[what]:
             ssid = "%s-%s" % (sid, timeformat)
             if not cell_active(sid, avoptions):
                 continue
             if avoptions["av_mode"]:
                 sname = _("Avail.")
 
-            av_table["cell_titles"].append((sname, help))
+            av_table["cell_titles"].append((sname, help_txt))
 
             if sid in os_states:
                 for aggr in os_aggrs:
@@ -1329,7 +1329,7 @@ def layout_availability_table(what, group_title, availability_table, avoptions):
         row["cells"] = []
 
         for timeformat, render_number in timeformats:
-            for sid, css, sname, help in availability_columns[what]:
+            for sid, css, sname, help_txt in availability_columns[what]:
                 ssid = "%s-%s" % (sid, timeformat)
                 if not cell_active(sid, avoptions):
                     continue
@@ -1384,7 +1384,7 @@ def layout_availability_table(what, group_title, availability_table, avoptions):
         summary_cells = []
 
         for timeformat, render_number in timeformats:
-            for sid, css, sname, help in availability_columns[what]:
+            for sid, css, sname, help_txt in availability_columns[what]:
                 ssid = "%s-%s" % (sid, timeformat)
                 if not cell_active(sid, avoptions):
                     continue
@@ -1497,11 +1497,11 @@ def layout_timeline(what, timeline_rows, considered_duration, avoptions, style):
         until_text    = render_date(this_until_time)
         duration_text = apply_render_number_functions(row["duration"], considered_duration)
 
-        for sid, css, sname, help in availability_columns[what]:
+        for sid, css, sname, help_txt in availability_columns[what]:
             if sid != state_id:
                 continue
 
-            title = _("From %s until %s (%s) %s") % (from_text, until_text, duration_text, help and help or sname)
+            title = _("From %s until %s (%s) %s") % (from_text, until_text, duration_text, help_txt and help_txt or sname)
             if "log_output" in row and row["log_output"]:
                 title += " - " + row["log_output"]
             width = rest_percentage * row["duration"] / total_duration

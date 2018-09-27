@@ -42,13 +42,13 @@ def wato_link(folder, site, hostname, where):
            (html.urlencode(folder), html.urlencode(hostname))
         if where == "inventory":
             url += "&mode=inventory"
-            help = _("Edit services")
+            help_txt = _("Edit services")
             icon = "services"
         else:
             url += "&mode=edit_host"
-            help = _("Edit this host")
+            help_txt = _("Edit this host")
             icon = "wato"
-        return icon, help, url
+        return icon, help_txt, url
     else:
         return
 

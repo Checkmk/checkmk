@@ -3077,10 +3077,13 @@ class FoldableTreeRendererTree(FoldableTreeRenderer):
         with self._show_node(tree, show_host, mousecode=mc, img_class=css_class):
             if tree[2].get('icon'):
                 html.write(html.render_icon(tree[2]['icon']))
+                html.write("&nbsp;")
+
             if tree[2].get("docu_url"):
                 html.icon_button(tree[2]["docu_url"], _("Context information about this rule"),
                                  "url", target="_blank")
                 html.write("&nbsp;")
+
             html.write_text(tree[2]["title"])
 
         if not is_empty:

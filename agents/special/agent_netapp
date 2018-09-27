@@ -651,13 +651,15 @@ def query(what, return_toplevel_node = False):
         while tag_string:
             # We need to start additinal query until all data is fetched
             tag_response = server.get_response([what, [["max-records", max_records],["tag", tag_string]]])
-
-            # Get attributes-list and add this content to the initial response
-            tag_string   = tag_response.get_results().child_get_string("next-tag")
-            attr_childs  = tag_response.get_results().child_get("attributes-list")
+            if tag_response.result_status() != "passed":
+                return
             if tag_response.get_results().child_get_string("num-records") == "0":
                 break
-            results.extend_attributes_list(attr_childs)
+
+            # Get attributes-list and add this content to the initial response
+            tag_string = tag_response.get_results().child_get_string("next-tag")
+            attr_children = tag_response.get_results().child_get("attributes-list")
+            results.extend_attributes_list(attr_children)
 
     if return_toplevel_node:
         return results
@@ -713,13 +715,15 @@ def query_counters(what):
                 # We need to start additinal query until all data is fetched
                 tag_response = server.get_response(["perf-object-instance-list-info-iter",
                                                    [["objectname", what], ["max-records", max_records], ["tag", tag_string]]])
-
-                # Get attributes-list and add this content to the initial response
-                tag_string   = tag_response.get_results().child_get_string("next-tag")
-                attr_childs  = tag_response.get_results().child_get("attributes-list")
+                if tag_response.result_status() != "passed":
+                    return
                 if tag_response.get_results().child_get_string("num-records") == "0":
                     break
-                results.extend_attributes_list(attr_childs)
+
+                # Get attributes-list and add this content to the initial response
+                tag_string = tag_response.get_results().child_get_string("next-tag")
+                attr_children = tag_response.get_results().child_get("attributes-list")
+                results.extend_attributes_list(attr_children)
 
             if response.results_status() != "passed":
                 return

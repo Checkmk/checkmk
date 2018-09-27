@@ -171,10 +171,10 @@ def perfometer_check_mk_ntp(row, check_command, perf_data, unit = "ms"):
     offset = float(perf_data[0][1])
     absoffset = abs(offset)
     crit = float(perf_data[0][4])
-    max = crit * 2
-    if absoffset > max:
-        absoffset = max
-    rel = 50 * (absoffset / max)
+    max_ = crit * 2
+    if absoffset > max_:
+        absoffset = max_
+    rel = 50 * (absoffset / max_)
 
     color = { 0: "#0f8", 1: "#ff2", 2: "#f22", 3: "#fa2" }[row["service_state"]]
     if offset > 0:
@@ -429,9 +429,9 @@ perfometers["check_mk-cisco_qos"] = perfometer_check_mk_cisco_qos
 def perfometer_oracle_tablespaces(row, check_command, perf_data):
     current = float(perf_data[0][1])
     used = float(perf_data[1][1])
-    max = float(perf_data[2][1])
-    used_perc = used / max * 100
-    curr_perc = (current / max * 100) - used_perc
+    max_ = float(perf_data[2][1])
+    used_perc = used / max_ * 100
+    curr_perc = (current / max_ * 100) - used_perc
     data = [(used_perc, "#f0b000"),
             (curr_perc, "#00ff80"),
             (100 - used_perc - curr_perc, "#80c0ff")]
@@ -519,8 +519,8 @@ def perfometer_hpux_snmp_cs_cpu(row, check_command, perf_data):
             (float(perf_data[1][1]), "#ff6000"),
             (float(perf_data[2][1]), "#00d080"),
             (float(perf_data[3][1]), "#ffffff")]
-    sum = float(perf_data[0][1]) + float(perf_data[1][1]) + float(perf_data[2][1])
-    return "%.0f%%" % sum, render_perfometer(data)
+    total = float(perf_data[0][1]) + float(perf_data[1][1]) + float(perf_data[2][1])
+    return "%.0f%%" % total, render_perfometer(data)
 
 perfometers["check_mk-hpux_snmp_cs.cpu"] = perfometer_hpux_snmp_cs_cpu
 

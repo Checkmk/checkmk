@@ -160,7 +160,7 @@ def parse_perf_data(perf_data_string, check_command=None):
             value_parts = values.split(";")
             while len(value_parts) < 5:
                 value_parts.append(None)
-            value_text, warn, crit, min, max = value_parts[0:5]
+            value_text, warn, crit, min_, max_ = value_parts[0:5]
             if value_text.strip() == "":
                 continue # ignore useless empty variable
 
@@ -176,7 +176,7 @@ def parse_perf_data(perf_data_string, check_command=None):
             value = _float_or_int(value_text[:i])
 
             perf_data_tuple = (varname, value, unit_name)
-            for val in [ warn, crit, min, max ]:
+            for val in [ warn, crit, min_, max_ ]:
                 if val is not None:
                     try:
                         val = _float_or_int(val)

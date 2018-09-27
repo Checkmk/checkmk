@@ -45,10 +45,10 @@ def check_oracle_dataguard_stats(item, params, info):
         if str(timestamp)[0:1] == '+':
             days = int(timestamp[1:3])
             h = int(timestamp[4:6])
-            min = int(timestamp[7:9])
+            min_ = int(timestamp[7:9])
             sec = int(timestamp[10:12])
 
-            seconds = int(sec + min*60 + h*3600 + days*24*3600)
+            seconds = int(sec + min_*60 + h*3600 + days*24*3600)
             return seconds
         return int(-1)
 

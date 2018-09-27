@@ -644,7 +644,6 @@ tr.groupheader a, tr.groupheader body.main .popup_menu span, body.main .popup_me
 div.graph_with_timeranges {
   margin-bottom: 32px; }
   div.graph_with_timeranges div.graph {
-    padding: 8px !important;
     box-shadow: none !important;
     border: 1px solid #cccfdb !important;
     background-color: transparent !important;

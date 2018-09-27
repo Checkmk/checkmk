@@ -218,7 +218,7 @@ def render_grouped_boxes(rows, view, group_cells, cells, num_columns, show_check
         if column_headers != "off":
             show_header_line()
 
-        groups, rows_with_ids = calculate_grouping_of_services(rows_with_ids)
+        groups, rows_with_ids = calculate_view_grouping_of_services(rows_with_ids)
 
         visible_row_number = 0
         group_hidden, num_grouped_rows = None, 0
@@ -305,7 +305,14 @@ def grouped_row_title(index, group_spec, num_rows, trclass, num_cells):
 
 # Produces a dictionary where the row index of the first row is used as key
 # and a tuple of the group_spec and the number of rows in this group is the value
-def calculate_grouping_of_services(rows):
+#
+# TODO: Be aware: We have a naming issue here. There are two things named "grouping"
+#
+# a) There is the view grouping (service grouping based on regex matching with folding of rows)
+# b) Row grouping (Displaying header painters for each row)
+#
+# This is confusing and needs to be cleaned up!
+def calculate_view_grouping_of_services(rows):
     if not config.service_view_grouping:
         return {}, rows
 
@@ -316,29 +323,30 @@ def calculate_grouping_of_services(rows):
     group_id = None
     for index, (row_id, row) in enumerate(rows[:]):
         group_spec = try_to_match_group(row)
-        if group_spec:
-            if current_group == None:
-                group_id = row_id
-
-            elif current_group != group_spec:
-                group_id = row_id
-
-            # When the service is not OK and should not be grouped, move it's row
-            # in front of the group.
-            if row.get("service_state", -1) != 0 or is_stale(row):
-                if current_group == None or current_group != group_spec:
-                    continue # skip grouping first row
-
-                elif current_group == group_spec:
-                    row = rows.pop(index)
-                    rows.insert(index - len(groups[group_id][1]), row)
-                    continue
-
-            current_group = group_spec
-            groups.setdefault(group_id, (group_spec, []))
-            groups[group_id][1].append(row_id)
-        else:
+        if not group_spec:
             current_group = None
+            continue
+
+        if current_group == None:
+            group_id = row_id
+
+        elif current_group != group_spec:
+            group_id = row_id
+
+        # When the service is not OK and should not be grouped, move it's row
+        # in front of the group.
+        if row.get("service_state", -1) != 0 or is_stale(row):
+            if current_group == None or current_group != group_spec:
+                continue # skip grouping first row
+
+            elif current_group == group_spec:
+                row = rows.pop(index)
+                rows.insert(index - len(groups[group_id][1]), row)
+                continue
+
+        current_group = group_spec
+        groups.setdefault(group_id, (group_spec, []))
+        groups[group_id][1].append(row_id)
 
     # Now create the final structure as described above
     groupings = {}
@@ -573,7 +581,7 @@ def render_grouped_list(rows, view, group_cells, cells, num_columns, show_checkb
         show_header_line()
 
     rows_with_ids = [ (row_id(view, row), row) for row in rows ]
-    groups, rows_with_ids = calculate_grouping_of_services(rows_with_ids)
+    groups, rows_with_ids = calculate_view_grouping_of_services(rows_with_ids)
 
     visible_row_number = 0
     group_hidden, num_grouped_rows = None, 0

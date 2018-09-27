@@ -1465,7 +1465,7 @@ class ModeBIRules(ModeBI):
                 table.text_cell(_("Parameters"), " ".join(rule["params"]))
 
                 if rule.get('icon'):
-                    title = html.render_icon(rule["icon"]) + rule["title"]
+                    title = html.render_icon(rule["icon"]) + "&nbsp;" + rule["title"]
                 else:
                     title = rule["title"]
                 table.text_cell(_("Title"), title)

@@ -1508,10 +1508,10 @@ class BIStatusFilter(Filter):
         else:
             self.code = what[0]
         self.prefix = "bi%ss" % self.code
-        vars = [ self.prefix + str(x) for x in [ -1, 0, 1, 2, 3 ] ]
+        vars_ = [ self.prefix + str(x) for x in [ -1, 0, 1, 2, 3 ] ]
         if self.code == 'a':
-            vars.append(self.prefix + "n")
-        Filter.__init__(self, self.column, title, "aggr", vars, [])
+            vars_.append(self.prefix + "n")
+        Filter.__init__(self, self.column, title, "aggr", vars_, [])
 
 
     def filter(self, infoname):

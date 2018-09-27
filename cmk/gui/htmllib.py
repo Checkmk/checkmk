@@ -167,16 +167,16 @@ class Escaper(object):
 #   '----------------------------------------------------------------------'
 
 class Encoder(object):
-    def urlencode_vars(self, vars):
+    def urlencode_vars(self, vars_):
         """Convert a mapping object or a sequence of two-element tuples to a “percent-encoded” string
 
         This function returns a str object, never unicode!
         Note: This should be changed once we change everything to
         unicode internally.
         """
-        assert type(vars) == list
+        assert type(vars_) == list
         pairs = []
-        for varname, value in sorted(vars):
+        for varname, value in sorted(vars_):
             assert type(varname) == str
 
             if type(value) == int:
@@ -1359,8 +1359,8 @@ class html(HTMLGenerator):
     #
 
     # TODO: Cleanup all call sites to self.encoder.*
-    def urlencode_vars(self, vars):
-        return self.encoder.urlencode_vars(vars)
+    def urlencode_vars(self, vars_):
+        return self.encoder.urlencode_vars(vars_)
 
     # TODO: Cleanup all call sites to self.encoder.*
     def urlencode(self, value):
@@ -1694,24 +1694,24 @@ class html(HTMLGenerator):
     # [('varname1', value1), ('varname2', value2) ]
     def makeuri(self, addvars, remove_prefix=None, filename=None, delvars=None):
         new_vars = [ nv[0] for nv in addvars ]
-        vars = [ (v, self.var(v))
+        vars_ = [ (v, self.var(v))
                  for v in self.request.vars
                  if v[0] != "_" and v not in new_vars and (not delvars or v not in delvars) ]
         if remove_prefix != None:
-            vars = [ i for i in vars if not i[0].startswith(remove_prefix) ]
-        vars = vars + addvars
+            vars_ = [ i for i in vars_ if not i[0].startswith(remove_prefix) ]
+        vars_ = vars_ + addvars
         if filename == None:
             filename = self.urlencode(self.myfile) + ".py"
-        if vars:
-            return filename + "?" + self.urlencode_vars(vars)
+        if vars_:
+            return filename + "?" + self.urlencode_vars(vars_)
         return filename
 
 
-    def makeuri_contextless(self, vars, filename=None):
+    def makeuri_contextless(self, vars_, filename=None):
         if not filename:
             filename = self.myfile + ".py"
-        if vars:
-            return filename + "?" + self.urlencode_vars(vars)
+        if vars_:
+            return filename + "?" + self.urlencode_vars(vars_)
         return filename
 
 

@@ -11327,7 +11327,7 @@ class ModeEditRuleset(WatoMode):
 
 
     def _action_url(self, action, folder, rulenr):
-        vars = [
+        vars_ = [
             ("mode",    html.var('mode', 'edit_ruleset')),
             ("ruleset_back_mode", self._back_mode),
             ("varname", self._name),
@@ -11336,13 +11336,13 @@ class ModeEditRuleset(WatoMode):
             ("_action", action),
         ]
         if html.var("rule_folder"):
-            vars.append(("rule_folder", folder.path()))
+            vars_.append(("rule_folder", folder.path()))
         if html.var("host"):
-            vars.append(("host", self._hostname))
+            vars_.append(("host", self._hostname))
         if html.var("item"):
-            vars.append(("item", self._item))
+            vars_.append(("item", self._item))
 
-        return make_action_link(vars)
+        return make_action_link(vars_)
 
 
     def _rule_button(self, action, help=None, folder=None, rulenr=0):

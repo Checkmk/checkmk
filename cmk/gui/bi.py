@@ -175,8 +175,8 @@ def load_services(only_hosts):
     sites.live().set_auth_domain('read')
 
     for site, host, varnames, values, svcs, childs, parents, alias in data:
-        vars = dict(zip(varnames, values))
-        tags = vars.get("TAGS", "").split(" ")
+        vars_ = dict(zip(varnames, values))
+        tags = vars_.get("TAGS", "").split(" ")
         entry = (tags, svcs, childs, parents, alias)
         g_services[(site, host)] = entry
         g_services_by_hostname.setdefault(host, []).append((site, entry))
@@ -709,8 +709,8 @@ class BISitedataManager(object):
 
         site_dict = {}
         for site, host, varnames, values, svcs, childs, parents, alias in data:
-            vars = dict(zip(varnames, values))
-            tags = vars.get("TAGS", "").split(" ")
+            vars_ = dict(zip(varnames, values))
+            tags = vars_.get("TAGS", "").split(" ")
             entry = (tags, svcs, childs, parents, alias)
 
             site_dict.setdefault(site, {"services": {}, "services_by_hostname": {}})

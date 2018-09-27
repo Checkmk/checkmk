@@ -3872,19 +3872,19 @@ def load_configuration_settings(site_specific=False):
     return settings
 
 
-def save_global_settings(vars, site_specific=False):
+def save_global_settings(vars_, site_specific=False):
     per_domain = {}
     for varname, (domain, _valuespec, _need_restart, _allow_reset, _in_global_settings) in g_configvars.items():
-        if varname not in vars:
+        if varname not in vars_:
             continue
-        per_domain.setdefault(domain.ident, {})[varname] = vars[varname]
+        per_domain.setdefault(domain.ident, {})[varname] = vars_[varname]
 
     # The global setting wato_enabled is not registered in the configuration domains
     # since the user must not change it directly. It is set by D-WATO on slave sites.
-    if "wato_enabled" in vars:
-        per_domain.setdefault(ConfigDomainGUI.ident, {})["wato_enabled"] = vars["wato_enabled"]
-    if "userdb_automatic_sync" in vars:
-        per_domain.setdefault(ConfigDomainGUI.ident, {})["userdb_automatic_sync"] = vars["userdb_automatic_sync"]
+    if "wato_enabled" in vars_:
+        per_domain.setdefault(ConfigDomainGUI.ident, {})["wato_enabled"] = vars_["wato_enabled"]
+    if "userdb_automatic_sync" in vars_:
+        per_domain.setdefault(ConfigDomainGUI.ident, {})["userdb_automatic_sync"] = vars_["userdb_automatic_sync"]
 
     for domain in ConfigDomain.enabled_domains():
         if site_specific:
@@ -3893,8 +3893,8 @@ def save_global_settings(vars, site_specific=False):
             domain().save(per_domain.get(domain.ident, {}))
 
 
-def save_site_global_settings(vars):
-    save_global_settings(vars, site_specific=True)
+def save_site_global_settings(vars_):
+    save_global_settings(vars_, site_specific=True)
 
 
 #.
@@ -4028,12 +4028,12 @@ class SiteManagement(object):
         if not os.path.exists(sites_mk):
             return config.default_single_site_configuration()
 
-        vars = { "sites" : {} }
-        execfile(sites_mk, vars, vars)
+        vars_ = { "sites" : {} }
+        execfile(sites_mk, vars_, vars_)
 
         # Be compatible to old "disabled" value in socket attribute.
         # Can be removed one day.
-        for site in vars['sites'].itervalues():
+        for site in vars_['sites'].itervalues():
             socket = site.get("socket")
             if socket == 'disabled':
                 site['disabled'] = True
@@ -4042,12 +4042,12 @@ class SiteManagement(object):
             elif type(socket) == tuple and socket[0] == "proxy":
                 site["socket"] = ("proxy", cls.transform_old_connection_params(socket[1]))
 
-        if not vars["sites"]:
+        if not vars_["sites"]:
             # There seem to be installations out there which have a sites.mk
             # which has an empty sites dictionary. Apply the default configuration
             # for these sites too.
             return config.default_single_site_configuration()
-        return vars["sites"]
+        return vars_["sites"]
 
 
     @classmethod
@@ -4592,7 +4592,7 @@ def sync_changes_before_remote_automation(site_id):
                          state.get("_status_details"))
 
 
-def do_remote_automation(site, command, vars):
+def do_remote_automation(site, command, vars_):
     base_url = site["multisiteurl"]
     secret = site.get("secret")
     if not secret:
@@ -4605,7 +4605,7 @@ def do_remote_automation(site, command, vars):
                ("debug",   config.debug and '1' or '')
         ])
 
-    response = get_url(url, site.get('insecure', False), data=dict(vars))
+    response = get_url(url, site.get('insecure', False), data=dict(vars_))
 
     if not response:
         raise MKAutomationException(_("Empty output from remote site."))
@@ -4703,13 +4703,13 @@ def save_replication_status(status):
 
 
 # Updates one or more dict elements of a site in an atomic way.
-def update_replication_status(site_id, vars):
+def update_replication_status(site_id, vars_):
     store.mkdir(var_dir)
 
     repl_status = load_site_replication_status(site_id, lock=True)
     try:
         repl_status.setdefault("times", {})
-        repl_status.update(vars)
+        repl_status.update(vars_)
     finally:
         save_site_replication_status(site_id, repl_status)
 
@@ -10290,8 +10290,8 @@ def folder_preserving_link(add_vars):
     return Folder.current().url(add_vars)
 
 
-def make_action_link(vars):
-    return folder_preserving_link(vars + [("_transid", html.transaction_manager.get())])
+def make_action_link(vars_):
+    return folder_preserving_link(vars_ + [("_transid", html.transaction_manager.get())])
 
 
 def lock_exclusive():

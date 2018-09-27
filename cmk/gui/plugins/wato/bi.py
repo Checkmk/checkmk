@@ -113,31 +113,31 @@ class BIManagement(object):
     def _load_config(self):
         filename = watolib.multisite_dir + "bi.mk"
         try:
-            vars = { "aggregation_rules" : {},
+            vars_ = { "aggregation_rules" : {},
                      "aggregations"      : [],
                      "host_aggregations" : [],
                      "bi_packs" : {},
                    }
-            vars.update(self._bi_constants)
+            vars_.update(self._bi_constants)
             if os.path.exists(filename):
-                execfile(filename, vars, vars)
+                execfile(filename, vars_, vars_)
             else:
-                exec(bi_example, vars, vars)
+                exec(bi_example, vars_, vars_)
 
             # put legacy non-pack stuff into packs
-            if (vars["aggregation_rules"] or vars["aggregations"] or vars["host_aggregations"]) and \
-                "default" not in vars["bi_packs"]:
-                vars["bi_packs"]["default"] = {
+            if (vars_["aggregation_rules"] or vars_["aggregations"] or vars_["host_aggregations"]) and \
+                "default" not in vars_["bi_packs"]:
+                vars_["bi_packs"]["default"] = {
                     "title"             : _("Default Pack"),
-                    "rules"             : vars["aggregation_rules"],
-                    "aggregations"      : vars["aggregations"],
-                    "host_aggregations" : vars["host_aggregations"],
+                    "rules"             : vars_["aggregation_rules"],
+                    "aggregations"      : vars_["aggregations"],
+                    "host_aggregations" : vars_["host_aggregations"],
                     "public"            : True,
                     "contact_groups"    : [],
                 }
 
             self._packs = {}
-            for pack_id, pack in vars["bi_packs"].items():
+            for pack_id, pack in vars_["bi_packs"].items():
                 # Convert rules from old-style tuples to new-style dicts
                 aggregation_rules = {}
                 for ruleid, rule in pack["rules"].items():

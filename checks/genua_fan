@@ -39,7 +39,7 @@ def inventory_genua_fan(info):
         return
 
     inventory = []
-    for _fanNo, fanName, _fanRPM, _fanState in info[0]:
+    for fanName, _fanRPM, _fanState in info[0]:
         inventory.append( (fanName, {}) )
     return inventory
 
@@ -57,7 +57,7 @@ def check_genua_fan(item, params, info):
         "6" : (2, "unknown"), }
 
     for line in info[0]:
-        _fanNo, fanName, fanRPM, fanState = line
+        fanName, fanRPM, fanState = line
         if fanName != item:
             continue
 
@@ -74,13 +74,11 @@ check_info['genua_fan'] = {
     "service_description"       : "FAN %s",
     "has_perfdata"              : True,
     "snmp_info"                 : [( ".1.3.6.1.4.1.3717.2.1.1.1.1",[
-                                       "1", # "fanNo"
                                        "2", # "fanName"
                                        "3", # "fanRPM"
                                        "4"  # "fanState"
                                    ]),
                                    ( ".1.3.6.1.4.1.3137.2.1.1.1.1",[
-                                       "1", # "fanNo"
                                        "2", # "fanName"
                                        "3", # "fanRPM"
                                        "4"  # "fanState"

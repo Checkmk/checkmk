@@ -510,7 +510,7 @@ class BILock(object):
         return self
 
 
-    def __exit__(self, type, value, traceback):
+    def __exit__(self, exception_type, exception_value, traceback):
         if self._fd:
             log('BI: BILock %-2s %30s <<<%s>>>' % ( self._fd, "RELEASE", os.path.basename(self._filepath)))
             fcntl.flock(self._fd, fcntl.LOCK_UN)

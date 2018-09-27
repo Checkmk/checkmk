@@ -9186,7 +9186,7 @@ class ModeEditUser(WatoMode):
             # Notification period
             forms.section(_("Notification time period"))
             choices = [ ( id_, "%s" % (tp["alias"])) for (id_, tp) in self._timeperiods.items() ]
-            html.dropdown("notification_period", choices, deflt=self._user.get("notification_period"), sorted=True)
+            html.dropdown("notification_period", choices, deflt=self._user.get("notification_period"), ordered=True)
             html.help(_("Only during this time period the "
                          "user will get notifications about host or service alerts."))
 
@@ -9621,7 +9621,7 @@ class ModeEditRole(RoleManagement, WatoMode):
                         "not get those new permissions based on the default settings of the builtin role it's "
                         "based on."))
             choices = [ (i, r["alias"]) for i, r in self._roles.items() if r.get("builtin") ]
-            html.dropdown("basedon", choices, deflt=self._role.get("basedon", "user"), sorted=True)
+            html.dropdown("basedon", choices, deflt=self._role.get("basedon", "user"), ordered=True)
 
         forms.end()
 

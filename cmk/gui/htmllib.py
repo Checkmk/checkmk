@@ -2373,7 +2373,7 @@ class html(HTMLGenerator):
     def sorted_select(self, varname, choices, deflt='', onchange=None, attrs=None):
         if attrs is None:
             attrs = {}
-        self.dropdown(varname, choices, deflt=deflt, onchange=onchange, sorted = True, **attrs)
+        self.dropdown(varname, choices, deflt=deflt, onchange=onchange, ordered = True, **attrs)
 
 
     # TODO: DEPRECATED!!
@@ -2390,7 +2390,7 @@ class html(HTMLGenerator):
 
     # Choices is a list pairs of (key, title). They keys of the choices
     # and the default value must be of type None, str or unicode.
-    def dropdown(self, varname, choices, deflt='', sorted='', **attrs):
+    def dropdown(self, varname, choices, deflt='', ordered=False, **attrs):
 
         current = self.get_unicode_input(varname, deflt)
         error = self.user_errors.get(varname)
@@ -2399,7 +2399,7 @@ class html(HTMLGenerator):
         attrs.setdefault('size', 1)
 
         chs = choices[:]
-        if sorted:
+        if ordered:
             # Sort according to display texts, not keys
             chs.sort(key=lambda a: a[1].lower())
 
@@ -2440,9 +2440,9 @@ class html(HTMLGenerator):
 
 
     # Wrapper for DualListChoice
-    def multi_select(self, varname, choices, deflt='', sorted='', **attrs):
+    def multi_select(self, varname, choices, deflt='', ordered='', **attrs):
         attrs["multiple"] = "multiple"
-        self.dropdown(varname, choices, deflt=deflt, sorted=sorted, **attrs)
+        self.dropdown(varname, choices, deflt=deflt, ordered=ordered, **attrs)
 
 
     def upload_file(self, varname):

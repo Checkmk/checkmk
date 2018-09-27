@@ -280,7 +280,7 @@ def get_sorted_check_table(hostname, remove_duplicates=False, world="config", fi
 
     unsorted.sort(key=lambda x: x[3])
 
-    sorted = []
+    ordered = []
     while len(unsorted) > 0:
         unsorted_descrs = set([ entry[3] for entry in unsorted ])
         left = []
@@ -292,7 +292,7 @@ def get_sorted_check_table(hostname, remove_duplicates=False, world="config", fi
                     deps_fulfilled = False
                     break
             if deps_fulfilled:
-                sorted.append(check)
+                ordered.append(check)
                 at_least_one_hit = True
             else:
                 left.append(check)
@@ -302,4 +302,4 @@ def get_sorted_check_table(hostname, remove_duplicates=False, world="config", fi
             raise MKGeneralException("Cyclic service dependency of host %s. Problematic are: %s" %
                                      (hostname, ",".join(unsorted_descrs)))
         unsorted = left
-    return sorted
+    return ordered

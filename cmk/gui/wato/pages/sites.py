@@ -613,7 +613,7 @@ class ModeEditSite(ModeSites):
         html.write_text(_(" on monitoring site: "))
 
         choices = [ ("", _("(no status host)")) ] + [ (sk, si.get("alias", sk)) for (sk, si) in self._site_mgmt.load_sites().items() ]
-        html.dropdown("sh_site", choices, deflt=self._sh_site, sorted=True)
+        html.dropdown("sh_site", choices, deflt=self._sh_site, ordered=True)
 
         html.help( _("By specifying a status host for each non-local connection "
                      "you prevent Multisite from running into timeouts when remote sites do not respond. "

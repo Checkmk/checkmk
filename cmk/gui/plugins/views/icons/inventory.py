@@ -25,6 +25,7 @@
 # Boston, MA 02110-1301 USA.
 
 import cmk.gui.inventory as inventory
+import cmk.gui.config as config
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
 from . import multisite_icons_and_actions

@@ -585,8 +585,7 @@ class ActionHandler(object):
         elif html.var(self.delete_job_var):
             self.delete_job()
             return True
-        else:
-            return False
+        return False
 
 
     def did_acknowledge_job(self):
@@ -653,5 +652,4 @@ class ActionHandler(object):
         job_status = job.get_status()
         if job_status.get("title"):
             return " (%s)" % job_status["title"]
-        else:
-            return ""
+        return ""

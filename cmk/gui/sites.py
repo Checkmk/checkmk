@@ -219,8 +219,7 @@ def update_site_states_from_dead_sites():
 def _status_host_state_name(shs):
     if shs == None:
         return "dead"
-    else:
-        return { 1:"down", 2:"unreach", 3:"waiting", }.get(shs, "unknown")
+    return { 1:"down", 2:"unreach", 3:"waiting", }.get(shs, "unknown")
 
 
 def _init_site_status():

@@ -1178,8 +1178,7 @@ def page_edit_dashlet():
         if dashlet['type'] == 'view':
             import cmk.gui.views as views
             return views.get_view_infos(dashlet)
-        else:
-            return dashlet_registry[dashlet['type']].infos()
+        return dashlet_registry[dashlet['type']].infos()
 
     context_specs = visuals.get_context_specs(dashlet, info_handler=dashlet_info_handler)
 

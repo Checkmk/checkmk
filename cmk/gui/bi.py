@@ -191,8 +191,7 @@ def cache_needs_update():
 
     if new_config_information != g_config_information:
         return new_config_information
-    else:
-        return False
+    return False
 
 def reset_cache_status():
     global did_compilation
@@ -1731,8 +1730,7 @@ def compile_rule_node(aggr_type, calllist, lvl):
 
         return new_elements
 
-    else:
-        return compile_aggregation_rule(aggr_type, rule, arglist, lvl)
+    return compile_aggregation_rule(aggr_type, rule, arglist, lvl)
 
 
 def find_matching_services(aggr_type, what, calllist):
@@ -1822,8 +1820,7 @@ def get_services_filtered_by_host_alias(host_spec):
     honor_site = SITE_SEP in host_spec[1]
     if g_services_items:
         return host_spec, honor_site, g_services_items
-    else:
-        return host_spec, honor_site, g_services.items()
+    return host_spec, honor_site, g_services.items()
 
 
 def get_services_filtered_by_host_name(host_re):
@@ -1855,8 +1852,7 @@ def do_match(reg, text):
     mo = regex(reg).match(text)
     if not mo:
         return None
-    else:
-        return tuple(mo.groups())
+    return tuple(mo.groups())
 
 
 
@@ -1918,8 +1914,7 @@ def find_all_leaves(node):
         return entries
 
     # place holders
-    else:
-        return []
+    return []
 
 # Removes all empty nodes from the given rule tree
 def remove_empty_nodes(node):
@@ -1940,8 +1935,7 @@ def remove_empty_nodes(node):
 def node_is_empty(node):
     if node["type"] != NT_RULE: # leaf node
         return False
-    else:
-        return len(node["nodes"]) == 0
+    return len(node["nodes"]) == 0
 
 
 # Precompile one aggregation rule. This outputs a list of trees.
@@ -2180,8 +2174,7 @@ def match_host(hostname, hostalias, host_spec, tags, required_tags, site, honor_
         # an match the rule for all sites.
         if honor_site:
             return do_match(anchored, "%s%s%s" % (site, SITE_SEP, to_match))
-        else:
-            return do_match(anchored, to_match)
+        return do_match(anchored, to_match)
 
 
 # dictionary with hosts and its compiled services
@@ -2317,8 +2310,7 @@ def execute_tree(tree, status_info = None):
 def execute_node(node, status_info, aggregation_options):
     if node["type"] == NT_LEAF:
         return execute_leaf_node(node, status_info, aggregation_options)
-    else:
-        return execute_rule_node(node, status_info, aggregation_options)
+    return execute_rule_node(node, status_info, aggregation_options)
 
 
 def execute_leaf_node(node, status_info, aggregation_options):
@@ -2595,8 +2587,7 @@ def state_weight(s):
         return 10.0
     elif s == PENDING:
         return 0.5
-    else:
-        return float(s)
+    return float(s)
 
 def x_best_state(l, x):
     ll = [ (state_weight(s), s) for s in l ]
@@ -2636,8 +2627,7 @@ config.aggregation_functions["best"]  = aggr_best
 def aggr_countok_convert(num, count):
     if str(num)[-1] == "%":
         return int(num[:-1]) / 100.0 * count
-    else:
-        return int(num)
+    return int(num)
 
 def aggr_countok(nodes, needed_for_ok=2, needed_for_warn=1):
     states = [ i[0]["state"] for i in nodes ]
@@ -2665,8 +2655,7 @@ def aggr_countok(nodes, needed_for_ok=2, needed_for_warn=1):
     elif num_ok >= warn_count:
         return { "state": 1, "output": "" }
 
-    else:
-        return { "state": 2, "output": "" }
+    return { "state": 2, "output": "" }
 
 config.aggregation_functions["count_ok"] = aggr_countok
 
@@ -3273,8 +3262,7 @@ class FoldableTreeRendererTable(FoldableTreeRendererTree):
     def _gen_table(self, tree, height, show_host):
         if self._is_leaf(tree):
             return self._gen_leaf(tree, height, show_host)
-        else:
-            return self._gen_node(tree, height, show_host)
+        return self._gen_node(tree, height, show_host)
 
 
     def _gen_leaf(self, tree, height, show_host):
@@ -3631,19 +3619,18 @@ def save_ex_level(current_ex_level):
 def status_tree_depth(tree):
     if len(tree) == 3:
         return 1
-    else:
-        subtrees = tree[3]
-        maxdepth = 0
-        for node in subtrees:
-            maxdepth = max(maxdepth, status_tree_depth(node))
-        return maxdepth + 1
+
+    subtrees = tree[3]
+    maxdepth = 0
+    for node in subtrees:
+        maxdepth = max(maxdepth, status_tree_depth(node))
+    return maxdepth + 1
 
 def is_part_of_aggregation(what, site, host, service):
     compile_forest(config.user.id)
     if what == "host":
         return (site, host) in g_tree_cache["affected_hosts"]
-    else:
-        return (site, host, service) in g_tree_cache["affected_services"]
+    return (site, host, service) in g_tree_cache["affected_services"]
 
 def get_state_name(node):
     if node[1]['type'] == NT_LEAF:
@@ -3651,8 +3638,8 @@ def get_state_name(node):
             return service_state_names[node[0]['state']]
         else:
             return host_state_names[node[0]['state']]
-    else:
-        return service_state_names[node[0]['state']]
+
+    return service_state_names[node[0]['state']]
 
 
 def migrate_bi_configuration():

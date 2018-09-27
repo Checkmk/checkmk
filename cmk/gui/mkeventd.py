@@ -309,10 +309,8 @@ def event_rule_matches(rule_pack, rule, event):
     if rule.get("invert_matching"):
         if type(result) == tuple:
             return _("The rule would match, but matching is inverted.")
-        else:
-            return False, ()
-    else:
-        return result
+        return False, ()
+    return result
 
 
 def event_rule_matches_non_inverted(rule_pack, rule, event):
@@ -418,8 +416,7 @@ def match(pattern, text, complete = True):
             m = re.compile(pattern, re.IGNORECASE).search(text)
         if m:
             return m.groups()
-        else:
-            return False
+        return False
 
 def match_ipv4_network(pattern, ipaddress_text):
     network, network_bits = parse_ipv4_network(pattern) # is validated by valuespec

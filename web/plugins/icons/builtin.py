@@ -736,8 +736,13 @@ def paint_aggregations(what, row, tags, host_custom_vars):
     if config.bi_precompile_on_demand \
        or bi.is_part_of_aggregation(what, row["site"], row["host_name"],
                                  row.get("service_description")):
+        view_name = "aggr_%s" % what
+
+        if not config.user.may("view.%s" % view_name):
+            return
+
         urivars = [
-            ("view_name", "aggr_" + what),
+            ("view_name", view_name),
             ("aggr_%s_site" % what, row["site"]),
             ("aggr_%s_host" % what, row["host_name"]),
         ]

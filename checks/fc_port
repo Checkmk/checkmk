@@ -80,10 +80,10 @@ factory_settings["fc_port_default_levels"] = {
 
 # Helper function for computing item from port number
 def fc_port_getitem(num_ports, index, portname):
-    int_len  = str(len(str(num_ports))) # number of digits for index
-    itemname = ("%0" + int_len + "d") % (index - 1) # leading zeros
+    fmt = "%%0%dd" % len(str(num_ports)) # number of digits for index
+    itemname = fmt % (index - 1) # leading zeros
     if portname.strip() and fc_port_inventory_use_portname:
-        itemname += portname.strip()
+        return "%s %s" % (itemname, portname.strip())
     return itemname
 
 
@@ -167,11 +167,11 @@ def check_fc_port(item, params, info):
         warn_bytes, crit_bytes = None, None
     else:
         warn, crit = bw_thresh
-        if type(warn) == float:
+        if isinstance(warn, float):
             warn_bytes = wirespeed * warn / 100.0
         else: # in MB
             warn_bytes = warn * 1048576.0
-        if type(crit) == float:
+        if isinstance(crit, float):
             crit_bytes = wirespeed * crit / 100.0
         else: # in MB
             crit_bytes = crit * 1048576.0
@@ -187,10 +187,10 @@ def check_fc_port(item, params, info):
             perfaverages.append( ("%s_avg" % what.lower(), value, warn_bytes, crit_bytes, 0, wirespeed))
 
         # handle levels for in/out
-        if crit_bytes != None and value >= crit_bytes:
+        if crit_bytes is not None and value >= crit_bytes:
             summarystate = 2
             output.append(" >= %s/s(!!)" % (get_bytes_human_readable(crit_bytes)))
-        elif warn_bytes != None and value >= warn_bytes:
+        elif warn_bytes is not None and value >= warn_bytes:
             summarystate = max(1, summarystate)
             output.append(" >= %s/s(!!)" % (get_bytes_human_readable(warn_bytes)))
 
@@ -242,11 +242,11 @@ def check_fc_port(item, params, info):
 
         error_percentage = rate * 100.0
         warn, crit = params[counter]
-        if crit != None and error_percentage >= crit:
+        if crit is not None and error_percentage >= crit:
             summarystate = 2
             text += "(!!)"
             output.append(text)
-        elif warn != None and error_percentage >= warn:
+        elif warn is not None and error_percentage >= warn:
             summarystate = max(1, summarystate)
             text += "(!)"
             output.append(text)

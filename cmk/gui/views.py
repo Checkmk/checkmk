@@ -163,7 +163,7 @@ def load_plugins(force):
     config.declare_permission_section("view", _("Multisite Views"), do_sort = True)
     for name, view in multisite_builtin_views.items():
         config.declare_permission("view.%s" % name,
-                format_view_title(view),
+                format_view_title(name, view),
                 "%s - %s" % (name, _u(view["description"])),
                 config.builtin_role_ids)
 
@@ -383,15 +383,39 @@ def view_choices(only_with_hidden = False):
     choices = [("", "")]
     for name, view in available_views.items():
         if not only_with_hidden or view['single_infos']:
-            title = format_view_title(view)
+            title = format_view_title(name, view)
             choices.append(("%s" % name, title))
     return choices
 
-def format_view_title(view):
+def format_view_title(name, view):
+    title_parts = []
+
     if view.get('mobile', False):
-        return _('Mobile: ') + _u(view["title"])
-    else:
-        return _u(view["title"])
+        title_parts.append(_('Mobile'))
+
+    # Don't use the data source title because it does not really look good here
+    datasource = multisite_datasources[view["datasource"]]
+    infos = datasource["infos"]
+    if "event" in infos:
+        title_parts.append(_("Event Console"))
+    elif view["datasource"].startswith("inv"):
+        title_parts.append(_("HW/SW inventory"))
+    elif "aggr" in infos:
+        title_parts.append(_("BI"))
+    elif "log" in infos:
+        title_parts.append(_("Log"))
+    elif "service" in infos:
+        title_parts.append(_("Services"))
+    elif "host" in infos:
+        title_parts.append(_("Hosts"))
+    elif "hostgroup" in infos:
+        title_parts.append(_("Hostgroups"))
+    elif "servicegroup" in infos:
+        title_parts.append(_("Servicegroups"))
+
+    title_parts.append("%s (%s)" % (_u(view["title"]), name))
+
+    return " - ".join(title_parts)
 
 def view_editor_options():
     return [

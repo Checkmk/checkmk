@@ -92,8 +92,8 @@ def winperf_if_normalize_nic_name(name, nic_names):
 def parse_winperf_if(info):
     try:
         timestamp_info, names_info, data = info[0], info[1], info[2:]
-    except ValueError:
-        return []
+    except (IndexError, ValueError):
+        return None, [], [], [], {}
 
     try:
         agent_timestamp = float(timestamp_info[0])
@@ -155,7 +155,7 @@ def parse_winperf_if(info):
                         teaming_headers = lines.next()
                         break
 
-                    as_dict = dict(zip(headers, map(lambda x: x.rstrip(), line)))
+                    as_dict = dict(zip(headers, [x.strip() for x in line]))
 
                     # Unfortunately teamed interfaces lose their #x index and are no longer
                     # distinguishable with the data from the Win32_NetworkAdapter.
@@ -211,7 +211,6 @@ def parse_winperf_if(info):
                     nics[nic_name].update(as_dict)
     except StopIteration:
         pass
-
 
     # Now convert the dicts into the format that is needed by if.include
     converted = []

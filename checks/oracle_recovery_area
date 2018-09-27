@@ -79,4 +79,3 @@ check_info['oracle_recovery_area'] = {
     "default_levels_variable" : "oracle_recovery_area_defaults",
     "group"                   : "oracle_recovery_area",
 }
-

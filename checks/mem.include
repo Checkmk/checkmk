@@ -72,25 +72,25 @@ def check_memory(params, meminfo):
 
     details = []
     if swapused:
-        details.append("%s SWAP" % render.bytes(swapused))
+        details.append("%s SWAP" % render.fmt_bytes(swapused))
 
     if pagetables_kb:
-        details.append("%s Pagetables" % render.bytes(pagetables_kb * 1024.0))
+        details.append("%s Pagetables" % render.fmt_bytes(pagetables_kb * 1024.0))
 
     if details:
-        details.insert(0, "%s RAM" % render.bytes(memused - caches))
+        details.insert(0, "%s RAM" % render.fmt_bytes(memused - caches))
         details_txt = " + ".join(details) + ", "
     else:
         details_txt = ""
 
     if meminfo["SwapTotal"]:
-        swap_txt = (" + %s SWAP" % render.bytes(meminfo["SwapTotal"]))
+        swap_txt = (" + %s SWAP" % render.fmt_bytes(meminfo["SwapTotal"]))
     else:
         swap_txt = ""
 
     infotext = "%s used (%sthis is %.1f%% of %s RAM%s)" % \
-               (render.bytes(totalused), details_txt,
-                totalused_perc, render.bytes(totalmem), swap_txt)
+               (render.fmt_bytes(totalused), details_txt,
+                totalused_perc, render.fmt_bytes(totalmem), swap_txt)
 
 
     # Take into account averaging

@@ -479,13 +479,13 @@ class Jobs(BackupEntityCollection):
                     duration = state["finished"] - state["started"]
 
                 if "size" in state:
-                    size_txt = "Size: %s, " % render.bytes(state["size"])
+                    size_txt = "Size: %s, " % render.fmt_bytes(state["size"])
                 else:
                     size_txt = ""
 
                 html.write(_(" (Duration: %s, %sIO: %s/s)") %
                             (render.timespan(duration), size_txt,
-                             render.bytes(state["bytes_per_second"])))
+                             render.fmt_bytes(state["bytes_per_second"])))
 
             table.cell(_("Next run"))
             schedule = job.schedule()
@@ -1004,7 +1004,7 @@ class Target(BackupEntity):
             table.cell(_("Backup-ID"), html.render_text(backup_ident))
             table.cell(_("From"), html.render_text(from_info))
             table.cell(_("Finished"), render.date_and_time(info["finished"]))
-            table.cell(_("Size"), render.bytes(info["size"]))
+            table.cell(_("Size"), render.fmt_bytes(info["size"]))
             table.cell(_("Encrypted"))
             if info["config"]["encrypt"] != None:
                 html.write(info["config"]["encrypt"])

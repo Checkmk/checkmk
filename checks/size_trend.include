@@ -188,4 +188,3 @@ def size_trend(check, item, resource, levels, used_mb, size_mb, timestamp=None):
         infotext += " - %s" % ", ".join(problems)
 
     return state, infotext, perfdata
-

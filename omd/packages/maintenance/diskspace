@@ -3,6 +3,8 @@
 import os, sys, time, random, glob, traceback
 import subprocess
 
+from cmk.render import fmt_bytes
+
 opt_verbose = '-v' in sys.argv
 opt_force   = '-f' in sys.argv
 
@@ -117,20 +119,6 @@ def collect_file_infos():
         for path in plugin.get('cleanup_paths', []):
             result = os.stat(path)
             plugin.setdefault('file_infos', {})[path] = (result.st_size, result.st_mtime)
-
-def fmt_bytes(b):
-    b = float(b)
-    base = 1024
-    if b >= base * base * base * base:
-        return '%.2fTB' % (b / base / base / base / base)
-    elif b >= base * base * base:
-        return '%.2fGB' % (b / base / base / base)
-    elif b >= base * base:
-        return '%.2fMB' % (b / base / base)
-    elif b >= base:
-        return '%.2fkB' % (b / base)
-    else:
-        return '%.0fB' % b
 
 
 def get_free_space():

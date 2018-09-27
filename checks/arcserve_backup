@@ -167,4 +167,3 @@ check_info["arcserve_backup"] = {
     "service_description"   : "Arcserve Backup %s",
     "has_perfdata"          : True,
 }
-

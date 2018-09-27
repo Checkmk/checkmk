@@ -40,13 +40,13 @@ def inventory_rmon_stats(info):
         return inventory
 
 def check_rmon_stats(item, _no_params, info):
-    bytes = { 1: 'bcast', 2: 'mcast', 3: '0-63b', 4: '64-127b', 5: '128-255b', 6: '256-511b', 7: '512-1023b', 8: '1024-1518b' }
+    bytes_map = { 1: 'bcast', 2: 'mcast', 3: '0-63b', 4: '64-127b', 5: '128-255b', 6: '256-511b', 7: '512-1023b', 8: '1024-1518b' }
     perfdata = []
     infotext = ''
     now = time.time()
     for line in info:
         if line[0] == item:
-            for i, val in bytes.items():
+            for i, val in bytes_map.items():
                 octets = int(re.sub(' Packets','',line[i]))
                 rate = get_rate("%s-%s" % (item, val), now, octets)
                 perfdata.append((val, rate, 0, 0, 0))

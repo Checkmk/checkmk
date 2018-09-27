@@ -136,4 +136,3 @@ check_info["dell_om_disks"] = {
                               ]),
     "includes"              : [ "dell_om.include" ],
 }
-

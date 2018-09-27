@@ -2546,7 +2546,7 @@ class ModeEventConsoleMIBs(EventConsoleMode):
             table.text_cell(_("Filename"), filename)
             table.text_cell(_("MIB"), mib.get("name", ""))
             table.text_cell(_("Organization"), mib.get("organization", ""))
-            table.text_cell(_("Size"), cmk.render.bytes(mib.get("size", 0)), css="number")
+            table.text_cell(_("Size"), cmk.render.fmt_bytes(mib.get("size", 0)), css="number")
 
         table.end()
 

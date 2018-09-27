@@ -88,4 +88,3 @@ check_info["netapp_api_snapshots"] = {
     'has_perfdata'            : True,
     'includes'                : ["netapp_api.include"]
 }
-

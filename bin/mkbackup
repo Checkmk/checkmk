@@ -1286,8 +1286,8 @@ def complete_backup():
 
     log("--- Backup completed (Duration: %s, Size: %s, IO: %s/s) ---" %
            (render.timespan(duration),
-           render.bytes(info["size"]),
-           render.bytes(state["bytes_per_second"])))
+           render.fmt_bytes(info["size"]),
+           render.fmt_bytes(state["bytes_per_second"])))
 
 
 def cleanup_previous_incomplete_backup():
@@ -1793,7 +1793,7 @@ def complete_restore():
     state = load_state()
     duration = time.time() - state["started"]
     log("--- Restore completed (Duration: %s, IO: %s/s) ---" %
-        (render.timespan(duration), render.bytes(state["bytes_per_second"])))
+        (render.timespan(duration), render.fmt_bytes(state["bytes_per_second"])))
 
 
 def mode_list(target_id, opts):
@@ -1816,7 +1816,7 @@ def mode_list(target_id, opts):
 
         sys.stdout.write(fmt_detail % ("From:", from_info))
         sys.stdout.write(fmt_detail % ("Finished:", render.date_and_time(info["finished"])))
-        sys.stdout.write(fmt_detail % ("Size:", render.bytes(info["size"])))
+        sys.stdout.write(fmt_detail % ("Size:", render.fmt_bytes(info["size"])))
         if info["config"]["encrypt"] != None:
             sys.stdout.write(fmt_detail % ("Encrypted:", info["config"]["encrypt"]))
         else:

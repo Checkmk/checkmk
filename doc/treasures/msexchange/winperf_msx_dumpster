@@ -64,7 +64,7 @@ def check_winperf_msx_dumpster(_no_item, _no_params, info):
           ( 'size', size ),
           ( 'items', count),
         ]
-        return 0, "Size is %s (%d Items)" % ( get_bytes_human_readable(size), count ), perf 
+        return 0, "Size is %s (%d Items)" % ( get_bytes_human_readable(size), count ), perf
 
     return 3, "Counter not found"
 
@@ -75,4 +75,3 @@ check_info["winperf_msx_dumpster"] = {
     "service_description"   : "MSX Dumpster",
     "has_perfdata"          : True,
 }
-

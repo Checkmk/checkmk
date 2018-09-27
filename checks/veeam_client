@@ -164,4 +164,3 @@ check_info["veeam_client"] = {
     'default_levels_variable' : 'veeam_client',
     'has_perfdata':            True,
 }
-

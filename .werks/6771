@@ -1,0 +1,12 @@
+Title: Fixed minor graph rendering issues when using the modern theme
+Level: 1
+Component: metrics
+Compatible: compat
+Edition: cee
+Version: 1.6.0i1
+Date: 1538057332
+Class: fix
+
+The graph time axis labels had a slightly wrong background color. And
+the graph hover indicator line had a wrong position in relation to the
+mouse pointer.

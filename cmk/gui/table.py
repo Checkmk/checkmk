@@ -38,7 +38,7 @@ tables = []
 
 
 @contextmanager
-def open(table_id=None, title=None, **kwargs):
+def open_table(table_id=None, title=None, **kwargs):
     begin(table_id, title, **kwargs)
     yield
     end()

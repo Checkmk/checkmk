@@ -30,7 +30,7 @@ from cmk.gui.globals import html
 from cmk.gui.exceptions import MKUserError
 
 # A input function with the same call syntax as htmllib.textinput()
-def input(valuespec, varprefix, defvalue):
+def textinput(valuespec, varprefix, defvalue):
     if html.form_filled_in():
         value = valuespec.from_html_vars(varprefix)
     else:

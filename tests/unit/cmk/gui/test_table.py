@@ -85,7 +85,7 @@ def test_context(register_builtin_html):
     rows    = [ (i, i**3) for i in range(10) ]
     header  = ["Number", "Cubical"]
 
-    with table.open(table_id=table_id, searchable=False, sortable=False):
+    with table.open_table(table_id=table_id, searchable=False, sortable=False):
         for row in rows:
             table.row()
             for i in range(len(header)):
@@ -134,11 +134,11 @@ def test_nesting_context(register_builtin_html):
     id = 0
     title = " TEST "
 
-    with table.open(table_id=id, title=title, searchable=False, sortable=False):
+    with table.open_table(table_id=id, title=title, searchable=False, sortable=False):
         table.row()
         table.cell("A", "1")
         table.cell("B", "")
-        with table.open(id+1, title+"2", searchable=False, sortable=False):
+        with table.open_table(id+1, title+"2", searchable=False, sortable=False):
             table.row()
             table.cell("_", "+")
             table.cell("|", "-")

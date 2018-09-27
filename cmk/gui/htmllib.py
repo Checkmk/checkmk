@@ -2906,13 +2906,13 @@ hy
         self.end_foldable_container()
 
 
-    def debug_vars(self, prefix=None, hide_with_mouse=True, vars=None):
-        if not vars:
-            vars = self.request.vars
+    def debug_vars(self, prefix=None, hide_with_mouse=True, vars_=None):
+        if not vars_:
+            vars_ = self.request.vars
         hover = "this.style.display=\'none\';"
         self.open_table(class_=["debug_vars"], onmouseover=hover if hide_with_mouse else None)
         self.tr(self.render_th(_("POST / GET Variables"), colspan="2"))
-        for name, value in sorted(vars.items()):
+        for name, value in sorted(vars_.items()):
             if name in [ "_password", "password" ]:
                 value = "***"
             if not prefix or name.startswith(prefix):

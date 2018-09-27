@@ -34,6 +34,10 @@ def paint_icon_inventory(what, row, tags, customer_vars):
     from cmk.gui.plugins.views import url_to_view
     if (what == "host" or row.get("service_check_command","").startswith("check_mk_active-cmk_inv!")) \
         and inventory.has_inventory(row["host_name"]):
+
+        if not config.user.may("view.inv_host"):
+            return
+
         return 'inv', _("Show Hardware/Software Inventory of this host"), url_to_view(row, 'inv_host')
 
 multisite_icons_and_actions['inventory'] = {

@@ -1,0 +1,13 @@
+Title: Hide links to not permitted views from host context menu
+Level: 1
+Component: multisite
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0i1
+Date: 1538050817
+
+The entries for linking to BI aggregations of a host and HW/SW inventory of
+a host are now hidden from the host context menu when a user is not permitted
+to see the target views.

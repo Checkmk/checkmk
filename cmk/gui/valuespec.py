@@ -1721,7 +1721,7 @@ class DropdownChoice(ValueSpec):
             html.dropdown(varprefix, self._options_for_html(options),
                         deflt=self.option_id(defval),
                         onchange=self._on_change,
-                        sorted=self._sorted,
+                        ordered=self._sorted,
                         read_only=self._read_only)
 
 
@@ -1919,7 +1919,7 @@ class CascadingDropdown(ValueSpec):
 
         vp = varprefix + "_sel"
         onchange="valuespec_cascading_change(this, '%s', %d);" % (varprefix, len(choices))
-        html.dropdown(vp, options, deflt=def_val, onchange=onchange, sorted=self._sorted, label=self._label)
+        html.dropdown(vp, options, deflt=def_val, onchange=onchange, ordered=self._sorted, label=self._label)
 
         # make sure, that the visibility is done correctly, in both
         # cases:
@@ -2324,12 +2324,12 @@ class DualListChoice(ListChoice):
 
             html.open_td()
             attrs["onchange"] = onchange_func
-            html.multi_select("%s_%s" % (varprefix, suffix), choices, deflt='', sorted=self._custom_order, **attrs)
+            html.multi_select("%s_%s" % (varprefix, suffix), choices, deflt='', ordered=self._custom_order, **attrs)
             html.close_td()
         html.close_tr()
 
         html.close_table()
-        html.hidden_field(varprefix, '|'.join([k for k, v in selected]), id = varprefix, add_var = True)
+        html.hidden_field(varprefix, '|'.join([k for k, v in selected]), id_ = varprefix, add_var = True)
 
 
     def validate_value(self, value, varprefix):
@@ -3745,7 +3745,7 @@ class ElementSelection(ValueSpec):
             if self._label:
                 html.write("%s" % self._label)
                 html.nbsp()
-            html.dropdown(varprefix, self._elements.items(), deflt=value, sorted=True)
+            html.dropdown(varprefix, self._elements.items(), deflt=value, ordered=True)
 
     def value_to_text(self, value):
         self.load_elements()

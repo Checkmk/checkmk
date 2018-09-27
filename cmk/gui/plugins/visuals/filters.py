@@ -359,7 +359,7 @@ class FilterGroupCombo(Filter):
         choices = sites.all_groups(self.what.split("_")[-1])
         if not self.enforce:
             choices = [("", "")] + choices
-        html.dropdown(self.htmlvars[0], choices, sorted=True)
+        html.dropdown(self.htmlvars[0], choices, ordered=True)
         if not self.enforce:
             html.open_nobr()
             html.checkbox(self.htmlvars[1], False, label=_("negate"))
@@ -435,7 +435,7 @@ class FilterGroupSelection(Filter):
 
     def display(self):
         choices = sites.all_groups(self.what[:-5]) # chop off "group", leaves host or service
-        html.dropdown(self.htmlvars[0], choices, sorted=True)
+        html.dropdown(self.htmlvars[0], choices, ordered=True)
 
     def current_value(self):
         return html.var(self.htmlvars[0])
@@ -486,7 +486,7 @@ class FilterQueryDropdown(Filter):
 
     def display(self):
         selection = sites.live().query_column_unique(self.query)
-        html.dropdown(self.name, [("", "")] + [(x,x) for x in selection], sorted=True)
+        html.dropdown(self.name, [("", "")] + [(x,x) for x in selection], ordered=True)
 
     def filter(self, infoname):
         current = html.var(self.name)
@@ -985,14 +985,14 @@ class FilterHostTags(Filter):
             html.open_td()
             html.dropdown(prefix + '_grp', [("", "")] + groups,
                           onchange = 'host_tag_update_value(\'%s\', this.value)' % prefix,
-                          style='width:129px', sorted=True, class_="grp")
+                          style='width:129px', ordered=True, class_="grp")
             html.close_td()
             html.open_td()
-            html.dropdown(prefix + '_op', [("", "")] + operators, style="width:36px", sorted=True, class_="op")
+            html.dropdown(prefix + '_op', [("", "")] + operators, style="width:36px", ordered=True, class_="op")
             html.close_td()
             html.open_td()
             choices = grouped[html.var(prefix + '_grp')] if html.var(prefix + '_grp') else [("", "")]
-            html.dropdown(prefix + '_val', choices, style="width:129px", sorted=True, class_="val")
+            html.dropdown(prefix + '_val', choices, style="width:129px", ordered=True, class_="val")
             html.close_td()
             html.close_tr()
         html.close_table()
@@ -1066,7 +1066,7 @@ class FilterHostAuxTags(Filter):
 
     def display(self):
         for num in range(self.count):
-            html.dropdown('%s_%d' % (self.prefix, num), [("", "")] + self.auxtags, sorted=True, class_='neg')
+            html.dropdown('%s_%d' % (self.prefix, num), [("", "")] + self.auxtags, ordered=True, class_='neg')
             html.open_nobr()
             html.checkbox('%s_%d_neg' % (self.prefix, num), False, label=_("negate"))
             html.close_nobr()

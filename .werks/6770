@@ -1,0 +1,12 @@
+Title: Showing graph metric values at mouse position now
+Level: 2
+Component: metrics
+Compatible: compat
+Edition: cee
+Version: 1.6.0i1
+Date: 1538057133
+Class: feature
+
+When moving the mouse pointer on Check_MK graphs a hover popup will be shown at
+the mous position that contains  the date and time of the current mouse
+position together with the values of the single metrics.

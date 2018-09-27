@@ -676,6 +676,26 @@ div.graph_with_timeranges {
     div.graph_with_timeranges table.timeranges > tbody > tr > td:last-child {
       border-left: 0px solid; }
 
+div.graph_hover_popup {
+    background-color: #FFFFFF;
+    border: 1px solid #cccfdb;
+    box-shadow: 0px 0px 20px rgba(0, 0, 0, 0.1);
+    color: #1A243D !important;
+}
+
+div.graph_hover_popup div.color {
+    margin-right: 5px;
+}
+
+div.graph_hover_popup div.time {
+    letter-spacing: normal;
+    padding: 0 0 5px 0;
+}
+
+div.graph_hover_popup span.value {
+    float: right;
+}
+
 #reload_pause {
   top: 80px; }
   #reload_pause_counter {

@@ -3338,19 +3338,49 @@ var g_hover_menu = null;
 
 function hide_hover_menu()
 {
-    if (g_hover_menu) {
-        g_hover_menu.style.display = 'none';
-        document.body.style.cursor = 'auto';
+    if (!g_hover_menu) {
+        return;
     }
+
+    var hover_menu = g_hover_menu;
+    g_hover_menu = null;
+    hover_menu.parentNode.removeChild(hover_menu);
 }
 
 function show_hover_menu(event, code)
 {
     event = event || window.event;
-    var x = event.clientX;
-    var y = event.clientY;
+    add_hover_menu();
+    update_hover_menu_content(code);
+    update_hover_menu_position(event);
+}
 
-    hide_hover_menu();
+function add_hover_menu()
+{
+    if (g_hover_menu) {
+        return;
+    }
+
+    g_hover_menu = document.createElement('div');
+    g_hover_menu.setAttribute('id', 'hover_menu');
+    document.body.appendChild(g_hover_menu);
+}
+
+function update_hover_menu_content(code)
+{
+    if (!g_hover_menu) {
+        return;
+    }
+
+    g_hover_menu.innerHTML = code;
+    executeJSbyObject(g_hover_menu);
+}
+
+function update_hover_menu_position(event)
+{
+    if (!g_hover_menu) {
+        return;
+    }
 
     var hoverSpacer = 5;
 
@@ -3360,22 +3390,13 @@ function show_hover_menu(event, code)
     var scrollLeft = document.body.scrollLeft ? document.body.scrollLeft :
                                                 document.documentElement.scrollLeft;
 
-    if (g_hover_menu === null) {
-        g_hover_menu = document.createElement('div');
-        g_hover_menu.setAttribute('id', 'hover_menu');
-        document.body.appendChild(g_hover_menu);
-    }
-    g_hover_menu.innerHTML = code;
-    executeJSbyObject(g_hover_menu);
-
-    // Change cursor to "hand" when displaying hover menu
-    document.body.style.cursor = 'pointer';
+    var x = event.clientX;
+    var y = event.clientY;
 
     // hide the menu first to avoid an "up-then-over" visual effect
-    g_hover_menu.style.display = 'none';
+    g_hover_menu.style.display = 'block';
     g_hover_menu.style.left = (x + hoverSpacer + scrollLeft) + 'px';
     g_hover_menu.style.top = (y + hoverSpacer + scrollTop) + 'px';
-    g_hover_menu.style.display = '';
 
     /**
      * Check if the menu is "in screen" or too large.
@@ -3383,14 +3404,16 @@ function show_hover_menu(event, code)
      */
 
     var hoverPosAndSizeOk = true;
-    if (!hover_menu_in_screen(g_hover_menu, hoverSpacer))
+    if (!hover_menu_in_screen(g_hover_menu, hoverSpacer)) {
         hoverPosAndSizeOk = false;
+    }
 
     if (!hoverPosAndSizeOk) {
         g_hover_menu.style.left = (x - hoverSpacer - g_hover_menu.clientWidth) + 'px';
 
-        if (hover_menu_in_screen(g_hover_menu, hoverSpacer))
+        if (hover_menu_in_screen(g_hover_menu, hoverSpacer)) {
             hoverPosAndSizeOk = true;
+        }
     }
 
     // And if the hover menu is still not on the screen move it to the left edge
@@ -3403,8 +3426,9 @@ function show_hover_menu(event, code)
     var hoverTop = parseInt(g_hover_menu.style.top.replace('px', ''));
     // Only move the menu to the top when the new top will not be
     // out of sight
-    if (hoverTop +g_hover_menu.clientHeight > pageHeight() && hoverTop -g_hover_menu.clientHeight >= 0)
+    if (hoverTop +g_hover_menu.clientHeight > pageHeight() && hoverTop -g_hover_menu.clientHeight >= 0) {
         g_hover_menu.style.top = hoverTop -g_hover_menu.clientHeight - hoverSpacer + 'px';
+    }
 }
 
 function hover_menu_in_screen(hoverMenu, hoverSpacer)
@@ -3413,11 +3437,14 @@ function hover_menu_in_screen(hoverMenu, hoverSpacer)
     var scrollLeft = document.body.scrollLeft ? document.body.scrollLeft :
                                                 document.documentElement.scrollLeft;
 
-    if(hoverLeft + hoverMenu.clientWidth >= pageWidth() - scrollLeft)
+    if(hoverLeft + hoverMenu.clientWidth >= pageWidth() - scrollLeft) {
         return false;
+    }
 
-    if(hoverLeft - hoverSpacer < 0)
+    if(hoverLeft - hoverSpacer < 0) {
         return false;
+    }
+
     return true;
 }
 

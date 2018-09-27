@@ -343,46 +343,43 @@ def test_activate_changes(web, site):
         web.activate_changes()
 
 
-def test_get_graph(web, site):
-    try:
-        # No graph yet...
-        with pytest.raises(APIError) as e:
-            data = web.get_regular_graph("test-host-get-graph", "Check_MK", 0, expect_error=True)
-            assert "Cannot calculate graph recipes" in "%s" % e
+@pytest.fixture(scope="module")
+def graph_test_config(web, site):
+    # No graph yet...
+    with pytest.raises(APIError) as e:
+        web.get_regular_graph("test-host-get-graph", "Check_MK", 0, expect_error=True)
+        assert "Cannot calculate graph recipes" in "%s" % e
 
-        # Now add the host
-        web.add_host("test-host-get-graph", attributes={
-            "ipaddress": "127.0.0.1",
-        })
-        web.discover_services("test-host-get-graph")
-        web.activate_changes()
-        site.schedule_check("test-host-get-graph", "Check_MK", 0)
+    # Now add the host
+    web.add_host("test-host-get-graph", attributes={
+        "ipaddress": "127.0.0.1",
+    })
+    web.discover_services("test-host-get-graph")
+    web.activate_changes()
+    site.schedule_check("test-host-get-graph", "Check_MK", 0)
 
-        # Wait for RRD file creation
-        # Isn't this a bug that the graph is not instantly available?
-        timeout = 10
+    # Wait for RRD file creation
+    # Isn't this a bug that the graph is not instantly available?
+    timeout = 10
+    print "Checking for graph..."
+    while timeout and not site.file_exists("var/check_mk/rrd/test-host-get-graph/Check_MK.rrd"):
+        try:
+            web.get_regular_graph("test-host-get-graph", "Check_MK", 0, expect_error=True)
+        except Exception:
+            pass
+        timeout -= 1
+        time.sleep(1)
         print "Checking for graph..."
-        while timeout and not site.file_exists("var/check_mk/rrd/test-host-get-graph/Check_MK.rrd"):
-            try:
-                data = web.get_regular_graph("test-host-get-graph", "Check_MK", 0, expect_error=True)
-            except Exception:
-                pass
-            timeout -= 1
-            time.sleep(1)
-            print "Checking for graph..."
-        assert site.file_exists("var/check_mk/rrd/test-host-get-graph/Check_MK.rrd"), \
-                        "RRD %s is still missing" % "var/check_mk/rrd/test-host-get-graph/Check_MK.rrd"
+    assert site.file_exists("var/check_mk/rrd/test-host-get-graph/Check_MK.rrd"), \
+                    "RRD %s is still missing" % "var/check_mk/rrd/test-host-get-graph/Check_MK.rrd"
 
-        _test_get_graph_api(web)
-        _test_get_graph_image(web)
-        _test_get_graph_notification_image(web)
+    yield
 
-    finally:
-        web.delete_host("test-host-get-graph")
-        web.activate_changes()
+    web.delete_host("test-host-get-graph")
+    web.activate_changes()
 
 
-def _test_get_graph_api(web):
+def test_get_graph_api(web, graph_test_config):
     # Now we get a graph
     data = web.get_regular_graph("test-host-get-graph", "Check_MK", 0)
 
@@ -393,7 +390,7 @@ def _test_get_graph_api(web):
     assert data["curves"][3]["title"] == "Total execution time"
 
 
-def _test_get_graph_image(web):
+def test_get_graph_image(web, graph_test_config):
     result = web.post("graph_image.py", data={
         "request": json.dumps({
             "specification": ["template", {
@@ -410,12 +407,12 @@ def _test_get_graph_image(web):
     assert content.startswith('\x89PNG')
 
     try:
-        im = Image.open(StringIO(content))
+        Image.open(StringIO(content))
     except IOError:
         raise Exception("Failed to open image: %r" % content)
 
 
-def _test_get_graph_notification_image(web):
+def test_get_graph_notification_image(web, graph_test_config):
     result = web.get("ajax_graph_images.py?host=test-host-get-graph&service=Check_MK")
 
     # Provides a json list containing base64 encoded PNG images of the current 24h graphs
@@ -429,6 +426,108 @@ def _test_get_graph_notification_image(web):
         assert graph_image.startswith('\x89PNG')
 
         try:
-            im = Image.open(StringIO(graph_image))
+            Image.open(StringIO(graph_image))
         except IOError:
             raise Exception("Failed to open image: %r" % graph_image)
+
+
+def test_get_graph_hover(web, graph_test_config):
+    graph_context = {
+        u'definition': {
+            u'explicit_vertical_range': [None, None],
+            u'title': u'Time usage by phase',
+            u'horizontal_rules': [],
+            u'specification': [
+                u'template', {
+                    u'service_description': u'Check_MK',
+                    u'site': web.site.id,
+                    u'graph_index': 0,
+                    u'host_name': u'test-host-get-graph'
+                }
+            ],
+            u'consolidation_function': u'max',
+            u'metrics': [
+                {
+                    u'color': u'#87f058',
+                    u'line_type': u'stack',
+                    u'expression': [
+                        u'operator', u'+',
+                        [[u'rrd', u'heute', u'heute', u'Check_MK', u'user_time', None, 1], [u'rrd', u'heute', u'heute', u'Check_MK', u'children_user_time', None, 1]]
+                    ],
+                    u'unit': u's',
+                    u'title': u'CPU time in user space'
+                },
+                {
+                    u'color': u'#ff8840', u'line_type': u'stack',
+                    u'expression': [
+                        u'operator', u'+',
+                        [[u'rrd', u'heute', u'heute', u'Check_MK', u'system_time', None, 1], [u'rrd', u'heute', u'heute', u'Check_MK', u'children_system_time', None, 1]]
+                    ],
+                    u'unit': u's',
+                    u'title': u'CPU time in operating system'
+                },
+                {
+                    u'color': u'#00b2ff',
+                    u'line_type': u'stack',
+                    u'expression': [u'rrd', u'heute', u'heute', u'Check_MK', u'cmk_time_agent', None, 1],
+                    u'unit': u's',
+                    u'title': u'Time spent waiting for Check_MK agent'
+                },
+                {
+                    u'color': u'#d080af',
+                    u'line_type': u'line',
+                    u'expression': [u'rrd', u'heute', u'heute', u'Check_MK', u'execution_time', None, 1],
+                    u'unit': u's', u'title': u'Total execution time'
+                }
+            ],
+            u'omit_zero_metrics': False,
+            u'unit': u's'
+        },
+        u'graph_id': u'graph_0',
+        u'data_range': {
+            u'step': 20,
+            u"time_range": [time.time()-3600, time.time()]
+        },
+        u'render_options': {
+            u'preview': False,
+            u'editing': False,
+            u'font_size': 8,
+            u'show_graph_time': True,
+            u'resizable': True,
+            u'show_time_axis': True,
+            u'fixed_timerange': False,
+            u'foreground_color': u'#000000',
+            u'title_format': u'plain',
+            u'canvas_color': u'#ffffff',
+            u'show_legend': True,
+            u'interaction': True,
+            u'show_time_range_previews': True,
+            u'show_title': True,
+            u'show_margin': True,
+            u'vertical_axis_width': u'fixed',
+            u'show_controls': True,
+            u'show_pin': True,
+            u'background_color': u'#f8f4f0',
+            u'show_vertical_axis': True,
+            u'size': [70, 16]
+        }
+    }
+
+    result = web.post("ajax_graph_hover.py", data={
+        "context": json.dumps(graph_context),
+        "hover_time": int(time.time() - 300),
+    })
+
+    data = result.json()
+
+    assert "rendered_hover_time" in data
+    assert len(data["curve_values"]) == 4
+
+    for index, metric in enumerate(graph_context["definition"]["metrics"][::-1]):
+        curve_value = data["curve_values"][index]
+
+        assert curve_value["color"] == metric["color"]
+        assert curve_value["title"] == metric["title"]
+
+        assert isinstance(curve_value["rendered_value"][0], (int, float))
+        assert curve_value["rendered_value"][1] != ""

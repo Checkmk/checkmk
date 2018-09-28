@@ -31,7 +31,6 @@ from cmk.exceptions import MKGeneralException
 
 import cmk_base
 import cmk_base.config as config
-import cmk_base.piggyback as piggyback
 import cmk_base.item_state as item_state
 import cmk_base.check_utils
 import cmk_base.autochecks

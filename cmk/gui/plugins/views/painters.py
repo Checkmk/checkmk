@@ -64,18 +64,13 @@
 
 import os
 import time
-import traceback
-import copy
 
 import cmk.paths
 import cmk.render
 import cmk.man_pages as man_pages
-from cmk.regex import regex
 from cmk.defines import short_service_state_name, short_host_state_name
 
-import cmk.gui.bi as bi
 import cmk.gui.config as config
-import cmk.gui.utils as utils
 import cmk.gui.metrics as metrics
 from cmk.gui.htmllib import HTML
 from cmk.gui.i18n import _
@@ -100,7 +95,6 @@ from . import (
     get_host_tags,
     get_perfdata_nth_value,
     get_graph_timerange_from_painter_options,
-    get_tag_group,
     paint_age,
     paint_nagiosflag,
     replace_action_url_macros,

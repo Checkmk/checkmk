@@ -24,13 +24,11 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import os
 import ssl
 import sys
 import json
 import base64
 import getopt
-import pprint
 import socket
 import urllib2
 from httplib import HTTPConnection, HTTPSConnection

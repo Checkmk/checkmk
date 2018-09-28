@@ -32,21 +32,17 @@
 import time
 
 import cmk.paths
-import cmk.store as store
 
 import cmk.gui.config as config
 import cmk.gui.views as views
 import cmk.gui.dashboard as dashboard
 import cmk.gui.pagetypes as pagetypes
-import cmk.gui.table as table
 import cmk.gui.sites as sites
-import cmk.gui.watolib as watolib
 # TODO: Cleanup star import
 from cmk.gui.valuespec import *
 from cmk.gui.htmllib import HTML
-from cmk.gui.i18n import _u, _
+from cmk.gui.i18n import _
 from cmk.gui.globals import html
-from cmk.gui.log import logger
 
 from . import (
     sidebar_snapins,
@@ -55,7 +51,6 @@ from . import (
     link,
     footnotelinks,
     snapin_width,
-    render_link,
     snapin_site_choice,
     nagioscgilink,
     heading,

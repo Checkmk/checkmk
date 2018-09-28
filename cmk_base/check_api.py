@@ -89,6 +89,9 @@ Global variables:
 # NOTE: The above suppression is necessary because our testing framework blindly
 # concatenates lots of files, including this one.
 
+# We import several modules here for the checks
+# pylint: disable=unused-import
+
 import cmk.debug as _debug
 import cmk.defines as _defines
 import cmk.paths as _paths

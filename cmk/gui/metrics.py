@@ -34,15 +34,9 @@
 # unit:               The definition-dict of a unit like in unit_info
 # graph_template:     Template for a graph. Essentially a dict with the key "metrics"
 import math
-import time
-import colorsys
-import shlex
-import operator
-import random
 import string
 import json
 import traceback
-import livestatus
 
 import cmk.utils
 import cmk.render
@@ -50,8 +44,6 @@ from cmk.regex import regex
 
 import cmk.gui.utils as utils
 import cmk.gui.config as config
-import cmk.gui.pagetypes as pagetypes
-import cmk.gui.table as table
 import cmk.gui.sites as sites
 import cmk.gui.i18n
 import cmk.gui.pages
@@ -60,10 +52,10 @@ from cmk.gui.globals import html
 
 from cmk.gui.log import logger
 from cmk.gui.valuespec import *
-from cmk.gui.exceptions import MKGeneralException, MKUserError, MKInternalError, \
-                           MKUnauthenticatedException, MKAuthException
+from cmk.gui.exceptions import MKGeneralException, MKUserError, MKInternalError
 
-from cmk.gui.plugins.metrics.utils import (
+# Needed for legacy (pre 1.6) plugins
+from cmk.gui.plugins.metrics.utils import ( # pylint: disable=unused-import
     unit_info,
     metric_info,
     check_metrics,

@@ -31,7 +31,6 @@ from pyghmi.exceptions import IpmiException
 
 import cmk.debug
 
-import cmk_base.config as config
 from cmk_base.exceptions import MKAgentError
 
 from .abstract import CheckMKAgentDataSource, ManagementBoardDataSource

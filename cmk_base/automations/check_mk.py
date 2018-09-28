@@ -35,7 +35,6 @@ import cmk.paths
 from cmk.exceptions import MKGeneralException
 
 import cmk_base.utils
-import cmk_base.console as console
 import cmk_base.config as config
 import cmk_base.core
 import cmk_base.core_config as core_config

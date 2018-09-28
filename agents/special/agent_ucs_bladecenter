@@ -29,10 +29,8 @@
 
 
 import re
-import ssl
 import sys
 import getopt
-import pprint
 
 import requests
 

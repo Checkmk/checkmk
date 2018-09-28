@@ -28,11 +28,9 @@
 # only) by the alert handling
 
 import os
-import pprint
 import sys
 import select
 import socket
-import subprocess
 import time
 import traceback
 import urllib

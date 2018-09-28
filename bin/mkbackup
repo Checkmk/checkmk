@@ -27,14 +27,12 @@
 VERSION = "1.4.0i1"
 
 import ast
-import base64
 import errno
 import fcntl
 import fnmatch
 import getopt
 import glob
 import grp
-import io
 import os
 import pwd
 import re
@@ -56,7 +54,6 @@ from hashlib import md5
 from OpenSSL import crypto
 from Cryptodome.Cipher import AES, PKCS1_OAEP
 from Cryptodome.PublicKey import RSA
-import Cryptodome.Util.number
 
 import cmk.daemon as daemon
 import cmk.render as render

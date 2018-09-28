@@ -28,7 +28,6 @@ import os
 import sys
 import copy
 import marshal
-import math
 import ast
 import py_compile
 import struct

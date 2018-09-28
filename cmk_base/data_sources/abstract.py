@@ -43,8 +43,8 @@ import cmk_base.console as console
 import cmk_base.config as config
 import cmk_base.ip_lookup as ip_lookup
 import cmk_base.check_api_utils as check_api_utils
-from cmk_base.exceptions import MKSkipCheck, MKAgentError, MKEmptyAgentData, MKSNMPError, \
-                                MKParseFunctionError, MKTimeout, MKIPAddressLookupError
+from cmk_base.exceptions import MKAgentError, MKEmptyAgentData, MKSNMPError, \
+                                MKTimeout, MKIPAddressLookupError
 
 from .host_sections import HostSections
 

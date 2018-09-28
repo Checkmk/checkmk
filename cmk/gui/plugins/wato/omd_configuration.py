@@ -31,7 +31,6 @@ import traceback
 import cmk.paths
 import cmk.store as store
 
-import cmk.gui.log as log
 from cmk.gui.log import logger
 from cmk.gui.valuespec import *
 from cmk.gui.i18n import _

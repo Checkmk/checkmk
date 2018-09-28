@@ -26,7 +26,6 @@
 
 import os
 import socket
-import sys
 import time
 import inspect
 import signal
@@ -36,11 +35,9 @@ import cmk.tty as tty
 import cmk.paths
 from cmk.exceptions import MKGeneralException
 
-import cmk.store as store
 import cmk_base.crash_reporting
 import cmk_base.config as config
 import cmk_base.console as console
-import cmk_base.piggyback as piggyback
 import cmk_base.ip_lookup as ip_lookup
 import cmk_base.check_api_utils as check_api_utils
 import cmk_base.item_state as item_state
@@ -48,16 +45,11 @@ import cmk_base.checking as checking
 import cmk_base.data_sources as data_sources
 import cmk_base.check_table as check_table
 import cmk_base.core
-from cmk_base.exceptions import MKAgentError, MKParseFunctionError, MKTimeout
+from cmk_base.exceptions import MKParseFunctionError, MKTimeout
 import cmk_base.cleanup
 import cmk_base.check_utils
 import cmk_base.decorator
 import cmk_base.snmp_scan as snmp_scan
-
-try:
-    import cmk_base.cee.keepalive as keepalive
-except ImportError:
-    keepalive = None
 
 # Run the discovery queued by check_discovery() - if any
 _marked_host_discovery_timeout = 120

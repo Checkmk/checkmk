@@ -26,10 +26,8 @@
 
 import time
 import os
-import re
 import pprint
 import traceback
-import inspect
 import livestatus
 import types
 
@@ -39,10 +37,8 @@ import cmk.gui.utils as utils
 import cmk.gui.config as config
 import cmk.gui.weblib as weblib
 import cmk.gui.forms as forms
-import cmk.gui.valuespec as valuespec
 import cmk.gui.inventory as inventory
 import cmk.gui.visuals as visuals
-import cmk.gui.metrics as metrics
 import cmk.gui.sites as sites
 import cmk.gui.bi as bi
 import cmk.gui.i18n
@@ -52,10 +48,10 @@ from cmk.gui.valuespec import *
 from cmk.gui.i18n import _u, _
 from cmk.gui.globals import html
 from cmk.gui.htmllib import HTML
-from cmk.gui.log import logger
 from cmk.gui.exceptions import MKGeneralException, MKUserError, MKInternalError
 
-from cmk.gui.plugins.views.utils import (
+# Needed for legacy (pre 1.6) plugins
+from cmk.gui.plugins.views.utils import ( # pylint: disable=unused-import
     load_all_views,
     get_permitted_views,
     view_title,
@@ -115,7 +111,8 @@ from cmk.gui.plugins.views.utils import (
     painter_options,
 )
 
-from cmk.gui.plugins.views.icons import (
+# Needed for legacy (pre 1.6) plugins
+from cmk.gui.plugins.views.icons import ( # pylint: disable=unused-import
     multisite_icons,
     multisite_icons_and_actions,
     get_multisite_icons,

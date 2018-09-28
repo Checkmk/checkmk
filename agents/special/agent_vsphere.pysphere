@@ -206,8 +206,7 @@ def get_agent_info_tcp(hostname):
 error_exit = 1
 
 try:
-    from pysphere import VIServer, VIProperty, MORTypes
-    from pysphere.resources import VimService_services as VI
+    from pysphere import VIServer, MORTypes
 except:
     # Get check_mk agent output even if pysphere is missing
     if opt_agent:

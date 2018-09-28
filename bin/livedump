@@ -28,7 +28,6 @@ import os
 import sys
 import getopt
 import livestatus
-import tempfile
 import time
 
 # These variable will be substituted at 'make dist' time

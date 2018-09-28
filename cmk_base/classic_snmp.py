@@ -28,7 +28,6 @@ import os
 import subprocess
 import signal
 
-import cmk.debug
 import cmk.tty as tty
 from cmk.exceptions import MKGeneralException
 

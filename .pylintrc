@@ -42,10 +42,6 @@ disable=
     # depending on an implicit protocol to create them is an even worse one.
     global-variable-undefined,
     #---------------------------------------------------------------------------
-    # We have tons of unused imports, it is just a matter of removing them and
-    # leave those which have a "magic" purpose.
-    unused-import,
-    #---------------------------------------------------------------------------
     # Enabling these warnings would be nice, they are mostly a sign of sloppy
     # programming practice. In some cases, they can even hide bugs.
     bare-except,

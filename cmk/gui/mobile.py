@@ -24,8 +24,6 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import re
-
 import cmk.gui.views as views
 import cmk.gui.config as config
 import cmk.gui.visuals as visuals

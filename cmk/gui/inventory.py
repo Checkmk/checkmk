@@ -25,7 +25,6 @@
 # Boston, MA 02110-1301 USA.
 
 
-import re
 import os
 import json
 import ast
@@ -34,7 +33,6 @@ import dicttoxml
 import xml.dom.minidom
 
 import cmk.paths
-import cmk.store as store
 import cmk.profile
 from cmk.structured_data import StructuredDataTree, Container, Numeration, Attributes
 

@@ -44,7 +44,6 @@ import cmk.gui.userdb as userdb
 import cmk.gui.sites as sites
 from cmk.gui.exceptions import MKGeneralException, MKUserError
 from cmk.gui.valuespec import *
-import cmk.gui.table as table
 import cmk.gui.config as config
 import cmk.gui.forms as forms
 import cmk.crash_reporting

@@ -30,7 +30,6 @@ import cmk.gui.table as table
 import cmk.gui.notify as notify
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
-from cmk.gui.valuespec import TextUnicode
 
 from cmk.gui.plugins.dashboard import (
     Dashlet,

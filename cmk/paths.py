@@ -29,8 +29,6 @@ to all components of Check_MK."""
 
 import os
 
-from .exceptions import MKGeneralException
-
 # TODO: Clean this up one day by using the way recommended by gettext.
 # (See https://docs.python.org/2/library/gettext.html). For this we
 # need the path to the locale files here.

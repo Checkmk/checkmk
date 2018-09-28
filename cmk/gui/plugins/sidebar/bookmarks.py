@@ -26,7 +26,6 @@
 
 import urlparse
 
-import cmk
 import cmk.store as store
 
 import cmk.gui.config as config

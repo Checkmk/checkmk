@@ -34,7 +34,8 @@ import cmk.gui.notifications as notifications
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
 from cmk.gui.valuespec import Checkbox, ListOf, CascadingDropdown, Dictionary, TextUnicode
-from . import (
+# Things imported here are used by pre legacy (pre 1.6) cron plugins)
+from . import ( # pylint: disable=unused-import
     CustomizableSidebarSnapin,
     snapin_registry,
     write_snapin_exception,

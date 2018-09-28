@@ -26,7 +26,6 @@
 
 """Modes for managing timeperiod definitions for the core"""
 
-import re
 import time
 
 import cmk.defines as defines
@@ -42,7 +41,6 @@ from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
 from cmk.gui.valuespec import (
-    ID,
     FixedValue,
     Dictionary,
     Optional,
@@ -52,8 +50,6 @@ from cmk.gui.valuespec import (
     TextUnicode,
     ListOf,
     Tuple,
-    ValueSpec,
-    TimeofdayRange,
     ListChoice,
     CascadingDropdown,
     ListOfTimeRanges,

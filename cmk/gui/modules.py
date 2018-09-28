@@ -47,7 +47,6 @@
 
 import os
 import sys
-import importlib
 from types import ModuleType
 
 import cmk

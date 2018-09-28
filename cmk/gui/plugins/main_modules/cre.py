@@ -24,7 +24,8 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-# Import top level modules into the application
+"""Import top level modules into the application to make them able to register with the application."""
+# pylint: disable=unused-import
 
 import cmk.gui.main
 import cmk.gui.sidebar

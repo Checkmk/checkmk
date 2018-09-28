@@ -24,10 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import cmk.gui.views as views
-import cmk.gui.bi as bi
 from cmk.gui.i18n import _
-from cmk.gui.globals import html
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.valuespec import (
     TextAscii,

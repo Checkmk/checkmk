@@ -25,7 +25,6 @@
 # This script creates an ASCII email. It replaces the builtin ASCII email feature and
 # is configurable via WATO with named parameters (only).
 
-import subprocess
 import sys
 from email.mime.text import MIMEText
 from cmk.notification_plugins import utils

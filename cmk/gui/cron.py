@@ -26,7 +26,6 @@
 
 import os
 import time
-import traceback
 
 import cmk.paths
 import cmk.store as store
@@ -39,7 +38,8 @@ from cmk.gui.globals import html
 from cmk.gui.log import logger
 from cmk.gui.exceptions import MKGeneralException
 
-from cmk.gui.plugins.cron import (
+# Things imported here are used by pre legacy (pre 1.6) cron plugins
+from cmk.gui.plugins.cron import ( # pylint: disable=unused-import
     multisite_cronjobs,
     register_job,
 )

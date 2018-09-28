@@ -27,7 +27,6 @@
 import cmk.gui.notifications as notifications
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
-from cmk.gui.valuespec import TextUnicode
 
 from cmk.gui.plugins.dashboard import (
     Dashlet,

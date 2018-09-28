@@ -31,7 +31,6 @@ import os
 import json
 
 import cmk.paths
-import cmk.store as store
 
 from .exceptions import MKGeneralException
 

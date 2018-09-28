@@ -24,8 +24,6 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import math
-
 import cmk.gui.config as config
 import cmk.gui.metrics as metrics
 from cmk.gui.i18n import _

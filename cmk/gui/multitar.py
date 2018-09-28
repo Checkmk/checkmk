@@ -33,7 +33,6 @@ import tarfile
 import time
 import shutil
 import cStringIO
-import grp
 import glob
 import fnmatch
 import subprocess
@@ -45,7 +44,6 @@ import cmk.paths
 
 from cmk.gui.log import logger
 from cmk.gui.i18n import _
-from cmk.gui.globals import html
 from cmk.gui.exceptions import MKGeneralException
 
 

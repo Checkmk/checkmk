@@ -24,7 +24,6 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import __builtin__
 import os
 import gettext as gettext_module
 from typing import NamedTuple, Optional, List, Tuple  # pylint: disable=unused-import

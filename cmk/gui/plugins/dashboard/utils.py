@@ -367,6 +367,11 @@ class IFrameDashlet(Dashlet):
         self._show_initial_iframe_container()
 
 
+    def reload_on_resize(self):
+        """Whether or not the page should be reloaded when the dashlet is resized"""
+        return self._dashlet_spec.get("reload_on_resize", False)
+
+
     def _show_initial_iframe_container(self):
         iframe_url = self._get_iframe_url()
         if not iframe_url:
@@ -376,7 +381,7 @@ class IFrameDashlet(Dashlet):
 
         # Fix of iPad >:-P
         html.open_div(style="width: 100%; height: 100%; -webkit-overflow-scrolling:touch;")
-        html.iframe('', src="about:blank" if self._dashlet_spec.get("reload_on_resize") else iframe_url,
+        html.iframe('', src="about:blank" if self.reload_on_resize() else iframe_url,
                     id_="dashlet_iframe_%d" % self._dashlet_id,
                     allowTransparency="true",
                     frameborder="0",
@@ -384,7 +389,7 @@ class IFrameDashlet(Dashlet):
                     height="100%")
         html.close_div()
 
-        if self._dashlet_spec.get("reload_on_resize"):
+        if self.reload_on_resize():
             html.javascript('reload_on_resize["%d"] = "%s"' % (self._dashlet_id, iframe_url))
 
 

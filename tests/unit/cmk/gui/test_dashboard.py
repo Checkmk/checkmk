@@ -34,6 +34,7 @@ def test_dashlet_registry_plugins():
         'hoststats',
         'notify_failed_notifications',
         'mk_logo',
+        'network_topology',
         'servicestats',
         'url',
         'overview',

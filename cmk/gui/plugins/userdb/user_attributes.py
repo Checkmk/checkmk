@@ -119,8 +119,7 @@ class DisableNotificationsUserAttribute(UserAttribute):
     def _transform_disable_notification(self, p):
         if type(p) is not dict:
             return {"disable": True}
-        else:
-            return p
+        return p
 
 
     def permission(self):

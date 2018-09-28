@@ -74,8 +74,7 @@ class HtpasswdUserConnector(UserConnector):
 
         if self.password_valid(users[user_id], password):
             return user_id
-        else:
-            return False
+        return False
 
 
     def _is_automation_user(self, user_id):
@@ -102,8 +101,7 @@ class HtpasswdUserConnector(UserConnector):
         if pwhash.startswith('$1$') or pwhash.startswith('$apr1$'):
             prefix, salt = pwhash.split('$', 3)[1:3]
             return pwhash == encrypt_password(password, salt, prefix)
-        else:
-            return pwhash == crypt.crypt(password, pwhash[:2])
+        return pwhash == crypt.crypt(password, pwhash[:2])
 
 
     def save_users(self, users):

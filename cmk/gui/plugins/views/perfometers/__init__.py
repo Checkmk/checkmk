@@ -108,8 +108,7 @@ def calculate_half_row_logarithmic(left_or_right, value, color, half_value, base
                 pos = 49
         if left_or_right == "right":
             return [(pos, color), (50 - pos, "white")]
-        else:
-            return [(50 - pos, "white"), (pos, color)]
+        return [(50 - pos, "white"), (pos, color)]
 
 
 # Dual logarithmic Perf-O-Meter

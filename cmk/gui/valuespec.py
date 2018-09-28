@@ -93,8 +93,7 @@ class ValueSpec(object):
     def help(self):
         if type(self._help) in [types.FunctionType, types.MethodType]:
             return self._help()
-        else:
-            return self._help
+        return self._help
 
     # Create HTML-form elements that represent a given
     # value and let the user edit that value. The varprefix
@@ -123,8 +122,7 @@ class ValueSpec(object):
         try:
             if type(self._default_value) in [types.FunctionType, types.MethodType]:
                 return self._default_value()
-            else:
-                return self._default_value
+            return self._default_value
         except:
             return self.canonical_value()
 
@@ -197,8 +195,7 @@ class FixedValue(ValueSpec):
             return self._totext
         elif type(value) == unicode:
             return value
-        else:
-            return str(value)
+        return str(value)
 
     def from_html_vars(self, varprefix):
         return self._value
@@ -223,8 +220,7 @@ class Age(ValueSpec):
     def canonical_value(self):
         if self._minvalue:
             return self._minvalue
-        else:
-            return 0
+        return 0
 
     def render_input(self, varprefix, value):
         self.classtype_info()
@@ -276,8 +272,7 @@ class Age(ValueSpec):
 
         if parts:
             return " ".join(parts)
-        else:
-            return _("no time")
+        return _("no time")
 
 
     def validate_datatype(self, value, varprefix):
@@ -311,8 +306,7 @@ class Integer(ValueSpec):
     def canonical_value(self):
         if self._minvalue:
             return self._minvalue
-        else:
-            return 0
+        return 0
 
     def render_input(self, varprefix, value):
         self.classtype_info()
@@ -467,11 +461,10 @@ class TextAscii(ValueSpec):
     def value_to_text(self, value):
         if not value:
             return self._empty_text
-        else:
-            if self._attrencode:
-                return html.attrencode(value)
-            else:
-                return value
+
+        if self._attrencode:
+            return html.attrencode(value)
+        return value
 
     def from_html_vars(self, varprefix):
         value = html.var(varprefix, "")
@@ -479,8 +472,7 @@ class TextAscii(ValueSpec):
             value = value.strip()
         if self._none_is_empty and not value:
             return None
-        else:
-            return value
+        return value
 
     def validate_datatype(self, value, varprefix):
         if self._none_is_empty and value == None:
@@ -667,8 +659,7 @@ class EmailAddress(TextAscii):
         elif self._make_clickable:
             # TODO: This is a workaround for a bug. This function needs to return str objects right now.
             return "%s" % html.render_a(   HTML(value)   , href="mailto:%s" % value)
-        else:
-            return value
+        return value
 
 
 class EmailAddressUnicode(TextUnicode, EmailAddress):
@@ -797,8 +788,7 @@ class MonitoredHostname(TextAsciiAutocomplete):
     def autocomplete_choices(cls, value, params):
         if params["from_active_config"]:
             return cls._get_choices_via_livestatus(value)
-        else:
-            return cls._get_choices_via_wato(value)
+        return cls._get_choices_via_wato(value)
 
 
     @classmethod
@@ -986,8 +976,7 @@ class TextAreaUnicode(TextUnicode):
         if self._monospaced:
             # TODO: This is a workaround for a bug. This function needs to return str objects right now.
             return "%s" % html.render_pre(   HTML(value)   , class_="ve_textarea")
-        else:
-            return html.attrencode(value).replace("\n", "<br>")
+        return html.attrencode(value).replace("\n", "<br>")
 
     def render_input(self, varprefix, value):
         self.classtype_info()
@@ -1146,8 +1135,7 @@ class ListOfStrings(ValueSpec):
             # TODO: This is a workaround for a bug. This function needs to return str objects right now.
             s = [html.render_tr(html.render_td(HTML(self._valuespec.value_to_text(v)))) for v in value]
             return "%s" % html.render_table(HTML().join(s))
-        else:
-            return ", ".join([ self._valuespec.value_to_text(v) for v in value ])
+        return ", ".join([ self._valuespec.value_to_text(v) for v in value ])
 
     def from_html_vars(self, varprefix):
         value = []
@@ -1402,14 +1390,13 @@ class ListOf(ValueSpec):
         if self._totext:
             if "%d" in self._totext:
                 return self._totext % len(value)
-            else:
-                return self._totext
+            return self._totext
         elif not value:
             return self._text_if_empty
-        else:
-            # TODO: This is a workaround for a bug. This function needs to return str objects right now.
-            s = [html.render_tr(html.render_td(HTML(self._valuespec.value_to_text(v)))) for v in value]
-            return "%s" % html.render_table(HTML().join(s))
+
+        # TODO: This is a workaround for a bug. This function needs to return str objects right now.
+        s = [html.render_tr(html.render_td(HTML(self._valuespec.value_to_text(v)))) for v in value]
+        return "%s" % html.render_table(HTML().join(s))
 
 
     def get_indexes(self, varprefix):
@@ -1691,15 +1678,13 @@ class DropdownChoice(ValueSpec):
 
         if self._no_preselect:
             return [(self._no_preselect_value, self._no_preselect_title)] + result
-        else:
-            return result
+        return result
 
     def canonical_value(self):
         choices = self.choices()
         if len(choices) > 0:
             return choices[0][0]
-        else:
-            return None
+        return None
 
     def render_input(self, varprefix, value):
         self.classtype_info()
@@ -1743,8 +1728,7 @@ class DropdownChoice(ValueSpec):
     def _get_invalid_choice_title(self, value):
         if "%s" in self._invalid_choice_title or "%r" in self._invalid_choice_title:
             return self._invalid_choice_title % (value,)
-        else:
-            return self._invalid_choice_title
+        return self._invalid_choice_title
 
 
     def value_to_text(self, value):
@@ -1753,8 +1737,7 @@ class DropdownChoice(ValueSpec):
             if value == val:
                 if self._help_separator:
                     return html.attrencode(title.split(self._help_separator, 1)[0].strip())
-                else:
-                    return html.attrencode(title)
+                return html.attrencode(title)
         return html.attrencode(self._get_invalid_choice_title(value))
 
 
@@ -1900,8 +1883,7 @@ class CascadingDropdown(ValueSpec):
 
         if choices[0][2]:
             return self._encoding_type((choices[0][0], choices[0][2].canonical_value()))
-        else:
-            return choices[0][0]
+        return choices[0][0]
 
     def default_value(self):
         try:
@@ -1913,8 +1895,7 @@ class CascadingDropdown(ValueSpec):
 
             if choices[0][2]:
                 return self._encoding_type((choices[0][0], choices[0][2].default_value()))
-            else:
-                return choices[0][0]
+            return choices[0][0]
 
     def render_input(self, varprefix, value):
         self.classtype_info()
@@ -1986,9 +1967,8 @@ class CascadingDropdown(ValueSpec):
                (value == val):
                 if not vs:
                     return title
-                else:
-                    return title + self._separator + \
-                       vs.value_to_text(value[1])
+                return title + self._separator + \
+                   vs.value_to_text(value[1])
         return "" # Nothing selected? Should never happen
 
     def from_html_vars(self, varprefix):
@@ -2184,10 +2164,10 @@ class ListChoice(ValueSpec):
         texts = [ self._render_function(v, d.get(v,v)) for v in value ]
         if self._render_orientation == "horizontal":
             return ", ".join(texts)
-        else:
-            # TODO: This is a workaround for a bug. This function needs to return str objects right now.
-            return "%s" % html.render_table(html.render_tr(html.render_td(html.render_br().join(HTML(x) for x in texts))))
-            #OLD: return "<table><tr><td>" + "<br>".join(texts) + "</td></tr></table>"
+
+        # TODO: This is a workaround for a bug. This function needs to return str objects right now.
+        return "%s" % html.render_table(html.render_tr(html.render_td(html.render_br().join(HTML(x) for x in texts))))
+        #OLD: return "<table><tr><td>" + "<br>".join(texts) + "</td></tr></table>"
 
 
     def from_html_vars(self, varprefix):
@@ -2513,8 +2493,7 @@ class RelativeDate(OptionalDropdownChoice):
             return _("%d days ago") % -reldays
         elif reldays < len(self._choices):
             return self._choices[reldays][1]
-        else:
-            return _("in %d days") % reldays
+        return _("in %d days") % reldays
 
     def from_html_vars(self, varprefix):
         reldays = OptionalDropdownChoice.from_html_vars(self, varprefix)
@@ -2549,14 +2528,13 @@ class AbsoluteDate(ValueSpec):
     def default_value(self):
         if self._default_value != None:
             return self._default_value
-        else:
-            if self._allow_empty:
-                return None
 
-            if self._include_time:
-                return time.time()
-            else:
-                return today()
+        if self._allow_empty:
+            return None
+
+        if self._include_time:
+            return time.time()
+        return today()
 
     def canonical_value(self):
         return self.default_value()
@@ -2695,8 +2673,7 @@ class Timeofday(ValueSpec):
     def canonical_value(self):
         if self._allow_empty:
             return None
-        else:
-            return (0, 0)
+        return (0, 0)
 
     def render_input(self, varprefix, value):
         self.classtype_info()
@@ -2706,8 +2683,7 @@ class Timeofday(ValueSpec):
     def value_to_text(self, value):
         if value == None:
             return ""
-        else:
-            return "%02d:%02d" % value
+        return "%02d:%02d" % value
 
     def from_html_vars(self, varprefix):
         # Fully specified
@@ -2769,8 +2745,7 @@ class TimeofdayRange(ValueSpec):
     def canonical_value(self):
         if self._allow_empty:
             return None
-        else:
-            return (0, 0), (24, 0)
+        return (0, 0), (24, 0)
 
     def render_input(self, varprefix, value):
         self.classtype_info()
@@ -2785,9 +2760,9 @@ class TimeofdayRange(ValueSpec):
     def value_to_text(self, value):
         if value == None:
             return ""
-        else:
-            return self._bounds[0].value_to_text(value[0]) + "-" + \
-                   self._bounds[1].value_to_text(value[1])
+
+        return self._bounds[0].value_to_text(value[0]) + "-" + \
+               self._bounds[1].value_to_text(value[1])
 
     def from_html_vars(self, varprefix):
         from_value = self._bounds[0].from_html_vars(varprefix + "_from")
@@ -2796,8 +2771,7 @@ class TimeofdayRange(ValueSpec):
             raise MKUserError(varprefix + "_from", _("Please leave either both from and until empty or enter two times."))
         if from_value == None:
             return None
-        else:
-            return (from_value, until_value)
+        return (from_value, until_value)
 
     def validate_datatype(self, value, varprefix):
         if self._allow_empty and value == None:
@@ -3022,12 +2996,13 @@ class Timerange(CascadingDropdown):
 
             if rangespec[1] == '0':
                 return (from_time, now), titles[0]
-            else: # last (previous)
-                prev_time = TimeHelper.add(from_time, -1, rangespec[0])
-                # add one hour to the calculated time so that if dst started in that period,
-                # we don't round down a whole day
-                prev_time = TimeHelper.round(prev_time + 3600, 'd')
-                return (prev_time, from_time), titles[1]
+
+            # last (previous)
+            prev_time = TimeHelper.add(from_time, -1, rangespec[0])
+            # add one hour to the calculated time so that if dst started in that period,
+            # we don't round down a whole day
+            prev_time = TimeHelper.round(prev_time + 3600, 'd')
+            return (prev_time, from_time), titles[1]
 
 
 # A selection of various date formats
@@ -3124,15 +3099,13 @@ class Optional(ValueSpec):
     def value_to_text(self, value):
         if value == self._none_value:
             return self._none_label
-        else:
-            return self._valuespec.value_to_text(value)
+        return self._valuespec.value_to_text(value)
 
     def from_html_vars(self, varprefix):
         checkbox_checked = html.get_checkbox(varprefix + "_use") == True # not None or False
         if checkbox_checked != self._negate:
             return self._valuespec.from_html_vars(varprefix + "_value")
-        else:
-            return self._none_value
+        return self._none_value
 
     def validate_datatype(self, value, varprefix):
         if value != self._none_value:
@@ -3309,8 +3282,7 @@ class Alternative(ValueSpec):
         try:
             if type(self._default_value) == type(lambda:True):
                 return self._default_value()
-            else:
-                return self._default_value
+            return self._default_value
         except:
             return self._elements[0].default_value()
 
@@ -3499,16 +3471,14 @@ class Dictionary(ValueSpec):
     def migrate(self, value):
         if self._migrate:
             return self._migrate(value)
-        else:
-            return value
+        return value
 
     def _get_elements(self):
         if type(self._elements) == type(lambda: None) or isinstance(self._elements, types.MethodType):
             return self._elements()
         elif type(self._elements) == list:
             return self._elements
-        else:
-            return []
+        return []
 
     def render_input_as_form(self, varprefix, value):
         self.classtype_info()
@@ -3891,26 +3861,22 @@ class Transform(ValueSpec):
     def forth(self, value):
         if self._forth:
             return self._forth(value)
-        else:
-            return value
+        return value
 
     def back(self, value):
         if self._back:
             return self._back(value)
-        else:
-            return value
+        return value
 
     def title(self):
         if self._title:
             return self._title
-        else:
-            return self._valuespec.title()
+        return self._valuespec.title()
 
     def help(self):
         if self._help:
             return self._help
-        else:
-            return self._valuespec.help()
+        return self._valuespec.help()
 
     def render_input(self, varprefix, value):
         self.classtype_info()
@@ -4006,8 +3972,7 @@ class Password(TextAscii):
     def value_to_text(self, value):
         if value == None:
             return _("none")
-        else:
-            return '******'
+        return '******'
 
 
 
@@ -4040,8 +4005,7 @@ class FileUpload(ValueSpec):
     def canonical_value(self):
         if self._allow_empty:
             return None
-        else:
-            return ''
+        return ''
 
 
     def validate_value(self, value, varprefix):
@@ -4397,8 +4361,7 @@ class IconSelector(ValueSpec):
         icon = html.var(varprefix + '_value')
         if icon == 'empty':
             return None
-        else:
-            return icon
+        return icon
 
     def value_to_text(self, value):
         # TODO: This is a workaround for a bug. This function needs to return str objects right now.
@@ -4502,8 +4465,7 @@ class Color(ValueSpec):
         color = html.var(varprefix + '_value')
         if color == '':
             return None
-        else:
-            return color
+        return color
 
 
     def value_to_text(self, value):
@@ -4542,8 +4504,7 @@ class SSHKeyPair(ValueSpec):
     def from_html_vars(self, varprefix):
         if html.has_var(varprefix):
             return self._decode_key_from_url(html.var(varprefix))
-        else:
-            return self._generate_ssh_key(varprefix)
+        return self._generate_ssh_key(varprefix)
 
     @staticmethod
     def _encode_key_for_url(value):
@@ -4698,8 +4659,7 @@ class SiteChoice(DropdownChoice):
         default_value = config.site_attribute_default_value()
         if default_value:
             return default_value
-        else:
-            return self.canonical_value()
+        return self.canonical_value()
 
 
     def _site_choices(self):

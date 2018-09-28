@@ -700,8 +700,7 @@ class LDAPUserConnector(UserConnector):
 
         if no_escape:
             return (dn, user_id)
-        else:
-            return (dn.replace('\\', '\\\\'), user_id)
+        return (dn.replace('\\', '\\\\'), user_id)
 
 
 
@@ -933,8 +932,7 @@ class LDAPUserConnector(UserConnector):
             # The user does not exist
             if enforce_this_connection:
                 return False # Refuse login
-            else:
-                return None # Try next connection (if available)
+            return None # Try next connection (if available)
 
         user_dn, user_id = result
 
@@ -973,8 +971,7 @@ class LDAPUserConnector(UserConnector):
         suffix = self._get_suffix()
         if suffix and self._username_matches_suffix(username, suffix):
             return username[:-(len(suffix)+1)]
-        else:
-            return username
+        return username
 
 
     def _add_suffix(self, username):
@@ -1755,8 +1752,7 @@ def ldap_filter_of_connection(connection_id, *args, **kwargs):
 def ldap_sync_simple(user_id, ldap_user, user, user_attr, attr):
     if attr in ldap_user:
         return {user_attr: ldap_user[attr][0]}
-    else:
-        return {}
+    return {}
 
 
 def get_connection_choices(add_this=True):
@@ -1850,8 +1846,7 @@ def ldap_sync_mail(connection, plugin, params, user_id, ldap_user, user):
 
     if mail:
         return {'email': mail}
-    else:
-        return {}
+    return {}
 
 
 def ldap_needed_attributes_mail(connection, params):

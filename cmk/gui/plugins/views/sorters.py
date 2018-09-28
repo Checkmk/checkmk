@@ -84,8 +84,7 @@ def cmp_state_equiv(r):
     s = r["service_state"]
     if s <= 1:
         return s
-    else:
-        return 5 - s # swap crit and unknown
+    return 5 - s # swap crit and unknown
 
 def cmp_host_state_equiv(r):
     if r["host_has_been_checked"] == 0:
@@ -93,8 +92,7 @@ def cmp_host_state_equiv(r):
     s = r["host_state"]
     if s == 0:
         return 0
-    else:
-        return 2 - s # swap down und unreachable
+    return 2 - s # swap down und unreachable
 
 def cmp_svc_states(r1, r2):
     return cmp(cmp_state_equiv(r1), cmp_state_equiv(r2))
@@ -381,8 +379,7 @@ def log_what(t):
         return 1
     elif "SERVICE" in t or "SVC" in t:
         return 2
-    else:
-        return 0
+    return 0
 
 declare_1to1_sorter("log_what",                cmp_log_what)
 

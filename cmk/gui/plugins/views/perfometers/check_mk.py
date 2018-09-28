@@ -61,8 +61,7 @@ def number_human_readable(n, precision=1, unit="B"):
         return (f + "M%s") % (n / (base * base), unit)
     elif abs(n) > base:
         return (f + "k%s") % (n / base, unit)
-    else:
-        return (f + "%s") % (n, unit)
+    return (f + "%s") % (n, unit)
 
 
 def perfometer_esx_vsphere_datastores(row, check_command, perf_data):
@@ -344,23 +343,22 @@ def perfometer_bandwidth(in_traffic, out_traffic, in_bw, out_bw, unit = "B"):
         text = "%s/s&nbsp;&nbsp;&nbsp;%s/s" % (readable_in, readable_out)
         return text, perfometer_logarithmic_dual(in_traffic, "#0e6", out_traffic, "#2af", MB, 5)
     # if we have bandwidth
-    else:
-        txt, data = [], []
-        for name, bytes, bw, color in [("in",  in_traffic,  in_bw,  "#0e6"),
-                                       ("out", out_traffic, out_bw, "#2af")]:
-            rrate = bytes / bw
-            drate = max(0.02, rrate ** 0.5 ** 0.5)
-            rperc = 100 * rrate
-            dperc = 100 * drate
-            a = (dperc/2, color)
-            b = (50 - dperc/2, "#fff")
+    txt, data = [], []
+    for name, bytes, bw, color in [("in",  in_traffic,  in_bw,  "#0e6"),
+                                   ("out", out_traffic, out_bw, "#2af")]:
+        rrate = bytes / bw
+        drate = max(0.02, rrate ** 0.5 ** 0.5)
+        rperc = 100 * rrate
+        dperc = 100 * drate
+        a = (dperc/2, color)
+        b = (50 - dperc/2, "#fff")
 
-            txt.append("%.1f%%" % rperc)
-            if name == "in":
-                data.extend([b, a]) # white left, color right
-            else:
-                data.extend([a, b]) # color right, white left
-        return " &nbsp; ".join(txt), render_perfometer(data)
+        txt.append("%.1f%%" % rperc)
+        if name == "in":
+            data.extend([b, a]) # white left, color right
+        else:
+            data.extend([a, b]) # color right, white left
+    return " &nbsp; ".join(txt), render_perfometer(data)
 
 
 def perfometer_check_mk_if(row, check_command, perf_data):
@@ -938,9 +936,9 @@ def perfometer_check_mk_ibm_svc_license(row, check_command, perf_data):
         return "0 of 0 used", perfometer_linear(100, "white")
     elif licensed == 0:
         return "completely unlicensed", perfometer_linear(100, "silver")
-    else:
-        perc_used = 100 * used / licensed
-        return "%0.2f %% used" % perc_used, perfometer_linear(perc_used, "silver")
+
+    perc_used = 100 * used / licensed
+    return "%0.2f %% used" % perc_used, perfometer_linear(perc_used, "silver")
 
 perfometers["check_mk-ibm_svc_license"] = perfometer_check_mk_ibm_svc_license
 

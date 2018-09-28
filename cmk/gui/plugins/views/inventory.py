@@ -85,8 +85,7 @@ def paint_host_inventory_tree(row, invpath=".", column="host_inventory"):
     parsed_path, attributes_key = inventory.parse_tree_path(invpath)
     if attributes_key is None:
         return _paint_host_inventory_tree_children(struct_tree, parsed_path, tree_renderer)
-    else:
-        return _paint_host_inventory_tree_value(struct_tree, parsed_path, tree_renderer, invpath, attributes_key)
+    return _paint_host_inventory_tree_value(struct_tree, parsed_path, tree_renderer, invpath, attributes_key)
 
 
 def _paint_host_inventory_tree_children(struct_tree, parsed_path, tree_renderer):
@@ -212,8 +211,7 @@ def decorate_inv_paint(f):
     def wrapper(v):
         if v in ["", None]:
             return "", ""
-        else:
-            return f(v)
+        return f(v)
     return wrapper
 
 
@@ -223,8 +221,7 @@ def inv_paint_generic(v):
         return "number", "%.2f" % v
     elif isinstance(v, int):
         return "number", "%d" % v
-    else:
-        return "", html.escaper.escape_text("%s" % v)
+    return "", html.escaper.escape_text("%s" % v)
 
 
 @decorate_inv_paint
@@ -241,8 +238,7 @@ def inv_paint_hz(hz):
         return "number", "%.1f kHz" % (hz / 1000)
     elif hz < 1000000000:
         return "number", "%.1f MHz" % (hz / 1000000)
-    else:
-        return "number", "%.2f GHz" % (hz / 1000000000)
+    return "number", "%.2f GHz" % (hz / 1000000000)
 
 
 @decorate_inv_paint
@@ -290,8 +286,7 @@ def inv_paint_bytes_rounded(b):
 
     if i:
         return "number", "%.2f&nbsp;%s" % (b / fac, units[i])
-    else:
-        return "number", "%d&nbsp;%s" % (b, units[0])
+    return "number", "%d&nbsp;%s" % (b, units[0])
 
 
 def _nic_speed_human_readable(bits_per_second):
@@ -307,16 +302,14 @@ def _nic_speed_human_readable(bits_per_second):
         return "%s Kbit/s" % utils.drop_dotzero(bits_per_second / 1000.0, digits=1)
     elif bits_per_second < 1000000000:
         return "%s Mbit/s" % utils.drop_dotzero(bits_per_second / 1000000.0, digits=2)
-    else:
-        return "%s Gbit/s" % utils.drop_dotzero(bits_per_second / 1000000000.0, digits=2)
+    return "%s Gbit/s" % utils.drop_dotzero(bits_per_second / 1000000000.0, digits=2)
 
 
 @decorate_inv_paint
 def inv_paint_nic_speed(bits_per_second):
     if bits_per_second:
         return "number", _nic_speed_human_readable(int(bits_per_second))
-    else:
-        return "", ""
+    return "", ""
 
 
 @decorate_inv_paint
@@ -365,8 +358,7 @@ def inv_paint_mssql_node_names(node_names):
 def inv_paint_ipv4_network(nw):
     if nw == "0.0.0.0/0":
         return "", _("Default")
-    else:
-        return "", nw
+    return "", nw
 
 
 @decorate_inv_paint
@@ -375,24 +367,21 @@ def inv_paint_ip_address_type(t):
         return "", _("IPv4")
     elif t == "ipv6":
         return "", _("IPv6")
-    else:
-        return "", t
+    return "", t
 
 
 @decorate_inv_paint
 def inv_paint_route_type(rt):
     if rt == "local":
         return "", _("Local route")
-    else:
-        return "", _("Gateway route")
+    return "", _("Gateway route")
 
 
 @decorate_inv_paint
 def inv_paint_volt(volt):
     if volt:
         return "number", "%.1f V" % volt
-    else:
-        return "", ""
+    return "", ""
 
 
 @decorate_inv_paint
@@ -400,8 +389,7 @@ def inv_paint_date(timestamp):
     if timestamp:
         date_painted = time.strftime("%Y-%m-%d", time.localtime(timestamp))
         return "number", "%s" % date_painted
-    else:
-        return "", ""
+    return "", ""
 
 
 @decorate_inv_paint
@@ -409,16 +397,14 @@ def inv_paint_date_and_time(timestamp):
     if timestamp:
         date_painted = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(timestamp))
         return "number", "%s" % date_painted
-    else:
-        return "", ""
+    return "", ""
 
 
 @decorate_inv_paint
 def inv_paint_age(age):
     if age:
         return "number", cmk.render.approx_age(age)
-    else:
-        return "", ""
+    return "", ""
 
 
 @decorate_inv_paint
@@ -449,8 +435,7 @@ def inv_paint_timestamp_as_age_days(timestamp):
         return css_class, _("today")
     elif age_days == 1:
         return css_class, _("yesterday")
-    else:
-        return css_class, "%d %s ago" % (int(age_days), _("days"))
+    return css_class, "%d %s ago" % (int(age_days), _("days"))
 
 
 @decorate_inv_paint
@@ -562,8 +547,7 @@ def inv_titleinfo_long(invpath, node):
     if parent:
         _icon, parent_title = inv_titleinfo(parent, None)
         return parent_title + u" ➤ " + last_title
-    else:
-        return last_title
+    return last_title
 
 
 inventory_displayhints.update({
@@ -1580,8 +1564,7 @@ def paint_invhist_count(row, what):
     number = row["invhist_" + what]
     if number:
         return "narrow number", str(number)
-    else:
-        return "narrow number unused", "0"
+    return "narrow number unused", "0"
 
 multisite_painters["invhist_removed"] = {
     "title"    : _("Removed entries"),
@@ -1861,8 +1844,7 @@ class NodeRenderer(object):
     def _get_raw_path(self, path):
         if path is None:
             return self._invpath.strip(".")
-        else:
-            return path.strip(".")
+        return path.strip(".")
 
 
     def _get_header(self, title, key, hex_color):

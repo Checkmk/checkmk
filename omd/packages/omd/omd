@@ -66,6 +66,7 @@ import errno
 import fcntl
 import shlex
 import pprint
+import psutil
 import random
 import shutil
 import socket
@@ -3967,10 +3968,10 @@ def kill_site_user_processes(exclude_current_and_parents=False):
 def get_current_and_parent_pids():
     """Return list of PIDs of the current process and parent process tree till pid 0"""
     pids = []
-    pid = os.getpid()
-    while pid != 0:
-        pids.append(pid)
-        pid = int(file("/proc/%d/stat" % pid).read().split(" ")[3])
+    process = psutil.Process()
+    while process and process.pid != 0:
+        pids.append(process.pid)
+        process = process.parent()
     return pids
 
 

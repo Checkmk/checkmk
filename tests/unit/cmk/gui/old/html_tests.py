@@ -17,8 +17,8 @@ from cmk.gui.htmllib import HTML
 from classes import HTMLTester
 import tools
 
-unit_base_dir = cmk_path() + "/tests/unit/web/old"
-unit_test_files_dir = "%s/tests/unit/web/old/unittest_files" % cmk_path()
+unit_base_dir = cmk_path() + "/tests/unit/cmk/gui/old"
+unit_test_files_dir = "%s/tests/unit/cmk/gui/old/unittest_files" % cmk_path()
 
 
 #######################################################################################

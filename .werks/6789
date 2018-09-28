@@ -1,0 +1,9 @@
+Title: esx_vsphere_sensors: List sensors in long output
+Level: 1
+Component: checks
+Compatible: comp
+Edition: cre
+Version: 1.6.0i1
+Date: 1538126830
+Class: feature
+

@@ -1,0 +1,17 @@
+Title: Determine the parent process more reliably
+Level: 1
+Component: omd
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0p6
+Date: 1538138123
+
+Previously, the parent process was determined by parsing
+/proc/{PID}/stat and columns where assumed to be separated by space.
+This was unreliable because the filename in the second
+column may contain a space as well. If omd was issued e.g. from tmux
+the process name "tmux: server" was used. This resulted in a traceback
+during e.g. omd rm. Now the psutil module is used to determine the
+parent process.

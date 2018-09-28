@@ -754,7 +754,7 @@ def save_users(profiles):
     # Release the lock to make other threads access possible again asap
     # This lock is set by load_users() only in the case something is expected
     # to be written (like during user syncs, wato, ...)
-    store.release_lock(root_dir + "contacts.mk")
+    release_users_lock()
 
     # populate the users cache
     # TODO: Can we clean this up?
@@ -762,6 +762,10 @@ def save_users(profiles):
 
     # Call the users_saved hook
     hooks.call("users-saved", updated_profiles)
+
+
+def release_users_lock():
+    store.release_lock(root_dir + "contacts.mk")
 
 
 # TODO: Isn't this needed only while generating the contacts.mk?

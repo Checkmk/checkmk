@@ -1103,7 +1103,10 @@ class LDAPUserConnector(UserConnector):
         if changes and config.wato_enabled and not config.is_wato_slave_site():
             watolib.add_change("edit-users", "<br>\n".join(changes), add_user=False)
 
-        userdb.save_users(users)
+        if changes:
+            userdb.save_users(users)
+        else:
+            userdb.release_users_lock()
 
         self._set_last_sync_time()
 

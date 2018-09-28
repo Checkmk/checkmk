@@ -200,13 +200,6 @@ builtin_dashboards["main"] = {
     ]
 }
 
-def topology_url():
-    return config.url_prefix() + 'nagvis/frontend/nagvis-js/index.php?' + \
-           'mod=Map&header_template=on-demand-filter&header_menu=1&label_show=1' + \
-           '&sources=automap&act=view&backend_id=' + config.omd_site() + \
-           '&render_mode=undirected&url_target=main&filter_group=' + \
-           (config.topology_default_filter_group or '')
-
 builtin_dashboards["topology"] = {
     "single_infos": [],
     "context"     : {},
@@ -218,10 +211,7 @@ builtin_dashboards["topology"] = {
                       "hierarchical map."),
     "dashlets" : [
         {
-            "type"             : "url",
-            "title"            : "Topology of Site " + config.omd_site(),
-            "urlfunc"          : 'topology_url',
-            "reload_on_resize" : True,
+            "type"             : "network_topology",
             "position"         : (1, 1),
             "size"             : (GROW, GROW),
             "context"          : {},

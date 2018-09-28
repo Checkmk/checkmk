@@ -117,8 +117,7 @@ class Filter(object):
     def infoprefix(self, infoname):
         if self.info == infoname:
             return ""
-        else:
-            return self.info[:-1] + "_"
+        return self.info[:-1] + "_"
 
     # Hidden filters may contribute to the pages headers of the views
     def heading_info(self):
@@ -176,8 +175,7 @@ class FilterTristate(Filter):
             return ""
         elif current == 1:
             return self.filter_code(infoname, True)
-        else:
-            return self.filter_code(infoname, False)
+        return self.filter_code(infoname, False)
 
     def filter_code(self, infoname, positive):
         raise NotImplementedError()

@@ -616,8 +616,7 @@ class ModeEditTimeperiod(WatoMode):
     def title(self):
         if self._new:
             return _("Create new time period")
-        else:
-            return _("Edit time period")
+        return _("Edit time period")
 
 
     def buttons(self):

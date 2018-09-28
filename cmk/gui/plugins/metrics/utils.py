@@ -383,8 +383,7 @@ rpn_operators = {
 def _unit_mult(u1, u2):
     if u1 == unit_info[""] or u1 == unit_info["count"]:
         return u2
-    else:
-        return u1
+    return u1
 
 
 _unit_div = _unit_mult
@@ -396,8 +395,7 @@ def _choose_operator_color(a, b):
         return b
     elif b == None:
         return a
-    else:
-        return render_color(_mix_colors(parse_color(a), parse_color(b)))
+    return render_color(_mix_colors(parse_color(a), parse_color(b)))
 
 
 def _operator_minmax(a, b, func):
@@ -507,8 +505,7 @@ def replace_expressions(text, translated_metrics):
             unit = unit_info[unit_name]
         if value != None:
             return unit["render"](value)
-        else:
-            return _("n/a")
+        return _("n/a")
 
     r = cmk.regex.regex(r"%\([^)]*\)")
     return r.sub(eval_to_string, text)
@@ -800,8 +797,7 @@ def fade_color(rgb, v):
     gray = _rgb_to_gray(rgb)
     if gray > 0.5:
         return darken_color(rgb, v)
-    else:
-        return lighten_color(rgb, v)
+    return lighten_color(rgb, v)
 
 
 def darken_color(rgb, v):

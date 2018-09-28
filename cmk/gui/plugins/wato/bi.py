@@ -259,8 +259,7 @@ class BIManagement(object):
                 child_hostspec   = child_conditions[1] if child_conditions[1] else self._bi_constants['ALL_HOSTS']
                 return (self._bi_constants["FOREACH_" + what.upper()], child_tags, child_hostspec, tags, hostspec) \
                        + self._convert_node_to_bi(node[1][3])
-            else:
-                return (self._bi_constants["FOREACH_" + what.upper()], tags, hostspec) + self._convert_node_to_bi(node[1][3])
+            return (self._bi_constants["FOREACH_" + what.upper()], tags, hostspec) + self._convert_node_to_bi(node[1][3])
         elif node[0] == "foreach_service":
             tags = node[1][0]
             if node[1][1]:
@@ -364,8 +363,7 @@ class BIManagement(object):
                 return ("host", (node[0],))
             elif node[1] == self._bi_constants['REMAINING']:
                 return ("remaining", (node[0],))
-            else:
-                return ("service", node)
+            return ("service", node)
 
         else: # FOREACH_...
 
@@ -603,8 +601,7 @@ class ModeBI(WatoMode, BIManagement):
         pack = self.pack_containing_rule(choice)
         if pack:
             return (pack['id'], choice)
-        else:
-            return None
+        return None
 
 
     def _get_vs_host_re(self):
@@ -1090,8 +1087,7 @@ class ModeBIEditPack(ModeBI):
     def title(self):
         if self._pack:
             return ModeBI.title(self) + " - " + _("Edit BI Pack %s") % self._pack["title"]
-        else:
-            return ModeBI.title(self) + " - " + _("Create New BI Pack")
+        return ModeBI.title(self) + " - " + _("Create New BI Pack")
 
 
     def action(self):
@@ -1391,8 +1387,7 @@ class ModeBIRules(ModeBI):
     def title(self):
         if self._view_type == "list":
             return ModeBI.title(self) + " - " + _("Rules")
-        else:
-            return ModeBI.title(self) + " - " + _("Unused Rules")
+        return ModeBI.title(self) + " - " + _("Unused Rules")
 
 
     def buttons(self):
@@ -1693,8 +1688,7 @@ class ModeBIEditAggregation(ModeBI):
     def title(self):
         if self._new:
             return ModeBI.title(self) + " - " + _("Create New Aggregation")
-        else:
-            return ModeBI.title(self) + " - " + _("Edit Aggregation")
+        return ModeBI.title(self) + " - " + _("Edit Aggregation")
 
 
     def buttons(self):
@@ -1760,8 +1754,7 @@ class ModeBIEditRule(ModeBI):
     def title(self):
         if self._new:
             return ModeBI.title(self) + " - " + _("Create New Rule")
-        else:
-            return ModeBI.title(self) + " - " + _("Edit Rule") + " " + html.attrencode(self._ruleid)
+        return ModeBI.title(self) + " - " + _("Edit Rule") + " " + html.attrencode(self._ruleid)
 
 
     def buttons(self):
@@ -2360,8 +2353,7 @@ class BIHostRenamer(BIManagement):
         if renamed:
             self.save_config()
             return [ "bi" ] * renamed
-        else:
-            return []
+        return []
 
 
     def rename_host_in_pack(self, pack, oldname, newname):

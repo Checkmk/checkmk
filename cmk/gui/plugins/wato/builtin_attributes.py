@@ -513,8 +513,7 @@ class SiteAttribute(ValueSpecAttribute):
             return [ "site:" ]
         elif value != None:
             return [ "site:" + value ]
-        else:
-            return []
+        return []
 
 
 declare_host_attribute(SiteAttribute(), show_in_table = True, show_in_folder = True)

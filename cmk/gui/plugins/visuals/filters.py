@@ -196,9 +196,9 @@ class FilterIPAddress(Filter):
 
             if self._what == "primary":
                 return "Filter: host_address %s %s\n" % (op, address)
-            else:
-                varname = "ADDRESS_4" if self._what == "ipv4" else "ADDRESS_6"
-                return "Filter: host_custom_variables %s %s %s\n" % (op, varname, address)
+
+            varname = "ADDRESS_4" if self._what == "ipv4" else "ADDRESS_6"
+            return "Filter: host_custom_variables %s %s %s\n" % (op, varname, address)
         else:
             return ""
 
@@ -307,8 +307,7 @@ class FilterMultigroup(Filter):
         current = html.var(self.htmlvar, "").strip().split("|")
         if current == ['']:
             return []
-        else:
-            return current
+        return current
 
     def display(self):
         html.open_div(class_="multigroup")
@@ -445,8 +444,7 @@ class FilterGroupSelection(Filter):
         current_value = self.current_value()
         if current_value:
             return "Filter: %s_name = %s\n" % (self.what, livestatus.lqencode(current_value))
-        else:
-            return ""
+        return ""
 
     def variable_settings(self, row):
         group_name = row[self.what + "_name"]
@@ -466,8 +464,7 @@ class FilterHostgroupVisibility(Filter):
     def filter(self, infoname):
         if html.var("hostgroupshowempty"):
             return ""
-        else:
-            return "Filter: hostgroup_num_hosts > 0\n"
+        return "Filter: hostgroup_num_hosts > 0\n"
 
 declare_filter(101, FilterText("hostgroupnameregex",    _("Hostgroup (Regex)"),        "hostgroup",    "hostgroup_name",      "hostgroup_regex",    "~~"),
                                _("Search field allowing regular expressions and partial matches on the names of hostgroups"))
@@ -495,8 +492,7 @@ class FilterQueryDropdown(Filter):
         current = html.var(self.name)
         if current:
             return self.filterline % livestatus.lqencode(current)
-        else:
-            return ""
+        return ""
 
 declare_filter(110, FilterQueryDropdown("host_check_command", _("Host check command"), "host", \
         "GET commands\nCache: reload\nColumns: name\n", "Filter: host_check_command ~ ^%s(!.*)?\n"))
@@ -547,8 +543,7 @@ class FilterServiceState(Filter):
 
         if len(headers) == 5: # none allowed = all allowed (makes URL building easier)
             return ""
-        else:
-            return "".join(headers)
+        return "".join(headers)
 
 declare_filter(215, FilterServiceState("svcstate",     _("Service states"),      ""))
 declare_filter(216, FilterServiceState("svchardstate", _("Service hard states"), "hd"))
@@ -591,8 +586,7 @@ class FilterHostState(Filter):
 
         if len(headers) == 4: # none allowed = all allowed (makes URL building easier)
             return ""
-        else:
-            return "".join(headers)
+        return "".join(headers)
 
 declare_filter(115, FilterHostState())
 
@@ -623,8 +617,7 @@ class FilterHostsHavingServiceProblems(Filter):
         if len_headers > 0:
             headers.append("Or: %d\n" % len_headers)
             return "".join(headers)
-        else:
-            return ""
+        return ""
 
 declare_filter(120, FilterHostsHavingServiceProblems())
 
@@ -655,8 +648,7 @@ class FilterNagiosFlag(FilterTristate):
     def filter_code(self, infoname, positive):
         if positive:
             return "Filter: %s != 0\n" % self.column
-        else:
-            return "Filter: %s = 0\n" % self.column
+        return "Filter: %s = 0\n" % self.column
 
 
 class FilterNagiosExpression(FilterTristate):
@@ -829,8 +821,7 @@ class FilterLogClass(Filter):
 
         if len(headers) == 0:
             return "Limit: 0\n" # no class allowed
-        else:
-            return "".join(headers) + ("Or: %d\n" % len(headers))
+        return "".join(headers) + ("Or: %d\n" % len(headers))
 
 declare_filter(255, FilterLogClass())
 #                               filter          title              info       column           htmlvar
@@ -887,8 +878,7 @@ class FilterLogState(Filter):
             return "Limit: 0\n" # no allowed state
         elif len(headers) == len(self._items):
             return "" # all allowed or form not filled in
-        else:
-            return "".join(headers) + ("Or: %d\n" % len(headers))
+        return "".join(headers) + ("Or: %d\n" % len(headers))
 
 declare_filter(270, FilterLogState())
 
@@ -917,8 +907,7 @@ class NotificationPhaseFilter(FilterTristate):
         # In that case the filter is passive and lets everything through
         if positive:
             return "Filter: %s = check-mk-notify\nFilter: %s =\nOr: 2\n" % (self.column, self.column)
-        else:
-            return "Filter: %s != check-mk-notify\n" % self.column
+        return "Filter: %s != check-mk-notify\n" % self.column
 
 
 declare_filter(271, NotificationPhaseFilter())
@@ -1046,8 +1035,7 @@ class FilterHostTags(Filter):
 
         if headers:
             return '\n'.join(headers) + '\n'
-        else:
-            return ''
+        return ''
 
     def double_height(self):
         return True
@@ -1104,8 +1092,7 @@ class FilterHostAuxTags(Filter):
 
         if headers:
             return '\n'.join(headers) + '\n'
-        else:
-            return ''
+        return ''
 
 
     def double_height(self):
@@ -1320,8 +1307,7 @@ class BIGroupFilter(FilterUnicodeFilter):
         group = self.selected_group()
         if not group:
             return rows
-        else:
-            return [row for row in rows if row[self.column] == group]
+        return [row for row in rows if row[self.column] == group]
 
 
     def heading_info(self):
@@ -1435,8 +1421,7 @@ class BITextFilter(FilterUnicodeFilter):
                 return rows
 
             return [ row for row in rows if reg.search(row[self.column].lower()) ]
-        else:
-            return [ row for row in rows if row[self.column] == val ]
+        return [ row for row in rows if row[self.column] == val ]
 
 
 declare_filter(120, BITextFilter("name", suffix="_regex"))
@@ -1693,8 +1678,7 @@ if config.mkeventd_enabled:
             val = html.var(self._varname)
             if val:
                 return "Filter: event_%s %s %s\n" % (self._column, self._operator, val)
-            else:
-                return ""
+            return ""
 
 
     declare_filter(210, EventFilterDropdown("facility", _("Syslog Facility"), mkeventd.syslog_facilities))

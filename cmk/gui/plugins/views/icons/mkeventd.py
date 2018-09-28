@@ -25,7 +25,6 @@
 # Boston, MA 02110-1301 USA.
 
 import cmk.gui.config as config
-import cmk.gui.mkeventd as mkeventd
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
 

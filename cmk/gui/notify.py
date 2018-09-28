@@ -32,7 +32,6 @@ import cmk.store as store
 import cmk.gui.pages
 import cmk.gui.utils as utils
 import cmk.gui.config as config
-import cmk.gui.forms as forms
 import cmk.gui.userdb as userdb
 import cmk.gui.i18n
 from cmk.gui.i18n import _

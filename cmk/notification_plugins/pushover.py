@@ -23,7 +23,6 @@
 # Boston, MA 02110-1301 USA.
 
 import requests
-import re
 import sys
 from cmk.notification_plugins import utils
 api_url = "https://api.pushover.net/1/messages.json"

@@ -27,7 +27,6 @@
 import abc
 
 import cmk.gui.plugin_registry
-from cmk.gui.i18n import _
 
 #.
 #   .--ConnectorAPI--------------------------------------------------------.

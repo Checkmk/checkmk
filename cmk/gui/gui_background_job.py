@@ -24,11 +24,6 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import os
-import pprint
-import time
-import traceback
-
 import cmk
 import cmk.store
 from cmk.exceptions import MKGeneralException
@@ -40,9 +35,7 @@ from cmk.gui.htmllib import HTML
 import cmk.gui.sites as sites
 import cmk.gui.config as config
 import cmk.gui.log as log
-import cmk.gui.table as table
 import cmk.gui.background_job as background_job
-from cmk.gui.background_job import JobStatus
 
 loaded_with_language = False
 def load_plugins(force):

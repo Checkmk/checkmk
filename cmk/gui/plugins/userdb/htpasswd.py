@@ -33,7 +33,6 @@ import cmk.paths
 
 import cmk.gui.md5crypt
 from cmk.gui.i18n import _
-from cmk.gui.globals import html
 from cmk.gui.exceptions import MKUserError
 from . import UserConnector, user_connector_registry
 

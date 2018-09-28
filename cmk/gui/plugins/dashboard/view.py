@@ -28,7 +28,6 @@ import cmk.gui.views as views
 import cmk.gui.bi as bi
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
-from cmk.gui.valuespec import TextUnicode
 
 from cmk.gui.plugins.dashboard import (
     IFrameDashlet,

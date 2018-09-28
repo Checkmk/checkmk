@@ -31,7 +31,6 @@ import os
 import marshal
 import fcntl
 import md5
-import copy
 import multiprocessing
 from contextlib import contextmanager
 import traceback

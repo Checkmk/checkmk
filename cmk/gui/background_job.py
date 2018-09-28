@@ -40,7 +40,6 @@ import traceback
 import logging
 
 from cmk.gui.i18n import _
-from cmk.gui.globals import html
 import cmk
 import cmk.log
 import cmk.daemon as daemon

@@ -36,7 +36,6 @@ import re
 import sys
 import StringIO
 import subprocess
-import time
 
 import cmk.debug
 import cmk.paths

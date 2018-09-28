@@ -67,7 +67,6 @@ import json
 import abc
 import pprint
 
-from collections import deque
 from contextlib import contextmanager
 
 # Monkey patch in order to make the HTML class below json-serializable without changing the default json calls.

@@ -34,11 +34,10 @@ from cmk.gui.log import logger
 import cmk.gui.utils as utils
 import cmk.gui.config as config
 import cmk.gui.watolib as watolib
-import cmk.gui.userdb as userdb
 import cmk.gui.i18n
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
-from cmk.gui.exceptions import MKGeneralException, MKUserError, MKAuthException, \
+from cmk.gui.exceptions import MKUserError, MKAuthException, \
                            MKException
 from cmk.gui.valuespec import *
 
@@ -47,13 +46,8 @@ import cmk.gui.plugins.webapi
 if not cmk.is_raw_edition():
     import cmk.gui.cee.plugins.webapi
 
-if cmk.is_managed_edition():
-    import cmk.gui.cme.managed as managed
-else:
-    managed = None
-
 # TODO: Kept for compatibility reasons with legacy plugins
-from cmk.gui.plugins.webapi.utils import (
+from cmk.gui.plugins.webapi.utils import ( # pylint: disable=unused-import
     api_actions,
     add_configuration_hash,
     validate_request_keys,

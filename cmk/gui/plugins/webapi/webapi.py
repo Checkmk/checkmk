@@ -34,7 +34,6 @@ import cmk
 import cmk.gui.config as config
 import cmk.gui.userdb as userdb
 import cmk.gui.watolib as watolib
-from cmk.gui.log import logger
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
 from cmk.gui.exceptions import MKUserError, MKAuthException, MKException

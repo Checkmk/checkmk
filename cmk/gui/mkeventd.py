@@ -44,11 +44,6 @@ from cmk.gui.i18n import _
 from cmk.gui.globals import html
 from cmk.gui.exceptions import MKGeneralException
 
-if cmk.is_managed_edition():
-    import cmk.gui.cme.managed as managed
-else:
-    managed = None
-
 # ASN1 MIB source directory candidates. Non existing dirs are ok.
 # Please sync these paths with htdocs/mkeventd.py
 mib_dirs = [ ('/usr/share/snmp/mibs', _('System MIBs')) ]

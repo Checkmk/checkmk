@@ -27,13 +27,11 @@
 """Wrapper layer between WSGI and the GUI application code"""
 
 import re
-import time
 import werkzeug.http
 import cgi
 
 import cmk.gui.log as log
 from cmk.gui.i18n import _
-from cmk.gui.globals import html
 import cmk.gui.http_status
 from cmk.gui.exceptions import HTTPRedirect
 

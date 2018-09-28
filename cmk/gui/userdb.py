@@ -28,8 +28,6 @@
 
 import time
 import os
-import pprint
-import shutil
 import traceback
 import copy
 
@@ -43,7 +41,7 @@ import cmk.gui.config as config
 import cmk.gui.hooks as hooks
 import cmk.gui.background_job as background_job
 import cmk.gui.gui_background_job as gui_background_job
-from cmk.gui.exceptions import MKGeneralException, MKUserError, MKInternalError
+from cmk.gui.exceptions import MKUserError, MKInternalError
 from cmk.gui.log import logger
 from cmk.gui.valuespec import *
 import cmk.gui.i18n

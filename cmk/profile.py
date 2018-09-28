@@ -29,7 +29,6 @@ is to provide a contextmanager that can be added to existing code with
 minimal changes."""
 
 import cProfile
-import contextlib
 import os
 import time
 import cmk.log

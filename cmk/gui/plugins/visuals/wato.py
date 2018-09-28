@@ -26,8 +26,6 @@
 
 import time
 
-import cmk.paths
-
 import cmk.gui.watolib as watolib
 import cmk.gui.sites as sites
 import cmk.gui.config as config

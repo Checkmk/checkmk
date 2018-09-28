@@ -133,8 +133,7 @@ class ModeDistributedMonitoring(ModeSites):
         elif c == False:
             return ""
 
-        else:
-            return None
+        return None
 
 
     def _action_logout(self, logout_id):
@@ -379,8 +378,7 @@ class ModeEditSite(ModeSites):
     def title(self):
         if self._new:
             return _("Create new site connection")
-        else:
-            return _("Edit site connection %s") % html.render_tt(self._site_id)
+        return _("Edit site connection %s") % html.render_tt(self._site_id)
 
 
     def buttons(self):

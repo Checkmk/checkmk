@@ -731,12 +731,12 @@ class TimeperiodValuespec(ValueSpec):
             parameters = self._get_timeperiod_valuespec().from_html_vars(varprefix)
             if parameters[self.tp_values_key]:
                 return parameters
-            else:
-                # Fall back to enclosed valuespec data when no timeperiod is set
-                return parameters[self.tp_default_value_key]
-        else:
-            # Fetch the data from the enclosed valuespec
-            return self._enclosed_valuespec.from_html_vars(varprefix)
+
+            # Fall back to enclosed valuespec data when no timeperiod is set
+            return parameters[self.tp_default_value_key]
+
+        # Fetch the data from the enclosed valuespec
+        return self._enclosed_valuespec.from_html_vars(varprefix)
 
 
     def canonical_value(self):
@@ -801,16 +801,14 @@ class TimeperiodValuespec(ValueSpec):
     def _get_timeperiod_value(self, value):
         if isinstance(value, dict) and self.tp_default_value_key in value:
             return value
-        else:
-            return {self.tp_values_key: [], self.tp_default_value_key: value}
+        return {self.tp_values_key: [], self.tp_default_value_key: value}
 
 
     # Returns simply the value or converts tp-value back to a plain value
     def _get_timeless_value(self, value):
         if isinstance(value, dict) and self.tp_default_value_key in value:
             return value.get(self.tp_default_value_key)
-        else:
-            return value
+        return value
 
 
 
@@ -956,8 +954,7 @@ def Levels(**kwargs):
             return 2
         elif type(v) == tuple and v != (None, None):
             return 1
-        else:
-            return 0
+        return 0
 
     help = kwargs.get("help")
     unit = kwargs.get("unit")
@@ -1003,8 +1000,7 @@ def may_edit_ruleset(varname):
         return config.user.may("wato.rulesets") and config.user.may("wato.add_or_modify_executables")
     elif varname == "agent_config:custom_files":
         return config.user.may("wato.rulesets") and config.user.may("wato.agent_deploy_custom_files")
-    else:
-        return config.user.may("wato.rulesets")
+    return config.user.may("wato.rulesets")
 
 
 class CheckTypeSelection(DualListChoice):

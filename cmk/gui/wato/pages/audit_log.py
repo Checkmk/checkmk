@@ -177,8 +177,7 @@ class ModeAuditLog(WatoMode):
     def _get_start_date(self):
         if self._options["start"] == "now":
             return int(time.time()) / 86400 * 86400
-        else:
-            return int(self._options["start"][1])
+        return int(self._options["start"][1])
 
 
     def _get_multiple_days_log_entries(self, log):
@@ -327,8 +326,7 @@ class ModeAuditLog(WatoMode):
             return None, _("Cleared audit log.")
         elif c == False: # not yet confirmed
             return ""
-        else:
-            return None # browser reload
+        return None # browser reload
 
 
     def _clear_audit_log(self):

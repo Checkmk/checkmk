@@ -272,8 +272,7 @@ register_rule(group,
 def transform_cert_days(cert_days):
     if type(cert_days) != tuple:
         return (cert_days, 0)
-    else:
-        return cert_days
+    return cert_days
 
 
 register_rule(group,

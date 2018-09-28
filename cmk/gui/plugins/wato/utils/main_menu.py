@@ -81,8 +81,7 @@ class MenuItem(object):
         mode_or_url = self.mode_or_url
         if '?' in mode_or_url or '/' in mode_or_url or mode_or_url.endswith(".py"):
             return mode_or_url
-        else:
-            return watolib.folder_preserving_link([("mode", mode_or_url)])
+        return watolib.folder_preserving_link([("mode", mode_or_url)])
 
 
     def __repr__(self):

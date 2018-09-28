@@ -279,8 +279,7 @@ class FilterInvtableInterfaceType(Filter):
         current = html.var(self.name, "").strip().split("|")
         if current == ['']:
             return []
-        else:
-            return current
+        return current
 
     def display(self):
         html.open_div(class_="multigroup")
@@ -438,14 +437,14 @@ class FilterInvBool(FilterTristate):
         tri = self.tristate_value()
         if tri == -1:
             return rows
-        else:
-            wanted_value = tri == 1
-            newrows = []
-            for row in rows:
-                invdata = inventory.get_inventory_data(row["host_inventory"], self._invpath)
-                if wanted_value == invdata:
-                    newrows.append(row)
-            return newrows
+
+        wanted_value = tri == 1
+        newrows = []
+        for row in rows:
+            invdata = inventory.get_inventory_data(row["host_inventory"], self._invpath)
+            if wanted_value == invdata:
+                newrows.append(row)
+        return newrows
 
 
 class FilterHasInventory(FilterTristate):
@@ -464,8 +463,9 @@ class FilterHasInventory(FilterTristate):
             return rows
         elif tri == 1:
             return [ row for row in rows if row["host_inventory"] ]
-        else: # not
-            return [ row for row in rows if not row["host_inventory"] ]
+
+        # not
+        return [ row for row in rows if not row["host_inventory"] ]
 
 declare_filter(801, FilterHasInventory())
 

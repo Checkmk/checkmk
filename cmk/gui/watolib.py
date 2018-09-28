@@ -334,8 +334,7 @@ class ConfigDomain(object):
     def config_file(self, site_specific):
         if site_specific:
             return os.path.join(self.config_dir(), "sitespecific.mk")
-        else:
-            return os.path.join(self.config_dir(), "global.mk")
+        return os.path.join(self.config_dir(), "global.mk")
 
 
     def activate(self):
@@ -954,8 +953,7 @@ class BaseFolder(WithPermissionsAndAttributes):
             return True
         elif maybe_child.has_parent():
             return self.is_transitive_parent_of(maybe_child.parent())
-        else:
-            return False
+        return False
 
 
     def is_root(self):
@@ -1160,8 +1158,7 @@ class CREFolder(BaseFolder):
     def _split_folder_path(folder_path):
         if not folder_path:
             return []
-        else:
-            return folder_path.split("/")
+        return folder_path.split("/")
 
 
     @staticmethod
@@ -1624,8 +1621,7 @@ class CREFolder(BaseFolder):
         aliases = self._host_extra_conf(host_name, variables["extra_host_conf"]["alias"])
         if len(aliases) > 0:
             return aliases[0]
-        else:
-            return
+        return
 
 
     # This is a dummy implementation which works without tags
@@ -1682,8 +1678,7 @@ class CREFolder(BaseFolder):
     def _fallback_title(self):
         if self.is_root():
             return _("Main directory")
-        else:
-            return self.name()
+        return self.name()
 
 
     def load_subfolders(self):
@@ -1753,8 +1748,7 @@ class CREFolder(BaseFolder):
             return ""
         elif self.parent().is_root():
             return self.name()
-        else:
-            return self.parent().path() + "/" + self.name()
+        return self.parent().path() + "/" + self.name()
 
 
     def hosts(self):
@@ -1844,9 +1838,9 @@ class CREFolder(BaseFolder):
     def choices_for_moving_host(self):
         if self._choices_for_moving_host != None:
             return self._choices_for_moving_host # Cached
-        else:
-            self._choices_for_moving_host = self._choices_for_moving("host")
-            return self._choices_for_moving_host
+
+        self._choices_for_moving_host = self._choices_for_moving("host")
+        return self._choices_for_moving_host
 
 
     def folder_should_be_shown(self, how):
@@ -1899,8 +1893,7 @@ class CREFolder(BaseFolder):
             return self._attributes["site"]
         elif self.has_parent():
             return self.parent().site_id()
-        else:
-            return default_site()
+        return default_site()
 
 
     def all_site_ids(self):
@@ -1922,15 +1915,13 @@ class CREFolder(BaseFolder):
     def title_path_without_root(self):
         if self.is_root():
             return [ self.title() ]
-        else:
-            return self.title_path()[1:]
+        return self.title_path()[1:]
 
 
     def alias_path(self, show_main=True):
         if show_main:
             return " / ".join(self.title_path())
-        else:
-            return " / ".join(self.title_path_without_root())
+        return " / ".join(self.title_path_without_root())
 
 
     def effective_attributes(self):
@@ -2540,8 +2531,7 @@ def get_folder_title(path):
     folder = Folder.folder(path)
     if folder:
         return folder.title()
-    else:
-        return path
+    return path
 
 #.
 #   .--Search Folder-------------------------------------------------------.
@@ -2646,8 +2636,7 @@ class SearchFolder(BaseFolder):
     def path(self):
         if self._name:
             return self._base_folder.path() + "//search:" + self._name
-        else:
-            return self._base_folder.path() + "//search"
+        return self._base_folder.path() + "//search"
 
 
     def url(self, add_vars=None):
@@ -2904,8 +2893,7 @@ class CREHost(WithPermissionsAndAttributes):
                 except MKUserError, e:
                     errors.append("%s" % e)
             return errors
-        else:
-            return []
+        return []
 
 
     def effective_attributes(self):
@@ -3293,8 +3281,7 @@ class TextAttribute(Attribute):
     def paint(self, value, hostname):
         if not value:
             return "", ""
-        else:
-            return "", value
+        return "", value
 
     def is_mandatory(self):
         return self._mandatory
@@ -3331,9 +3318,9 @@ def host_attribute_matches(crit, value):
     if crit and crit[0] == "~":
         # insensitive infix regex match
         return re.search(crit[1:], value, re.IGNORECASE) != None
-    else:
-        # insensitive infix search
-        return crit.lower() in value.lower()
+
+    # insensitive infix search
+    return crit.lower() in value.lower()
 
 
 # A simple text attribute that is not editable by the user.
@@ -3368,8 +3355,7 @@ class NagiosTextAttribute(TextAttribute):
     def to_nagios(self, value):
         if value:
             return value
-        else:
-            return None
+        return None
 
 # An attribute for selecting one item out of list using
 # a drop down box (<select>). Enumlist is a list of
@@ -3421,8 +3407,7 @@ class HostTagAttribute(Attribute):
                 title = _u(title)
             if value:
                 return "", title
-            else:
-                return "", "%s %s" % (_("Not"), title)
+            return "", "%s %s" % (_("Not"), title)
         for entry in self._taglist:
             if value == entry[0]:
                 return "", entry[1] and _u(entry[1]) or ''
@@ -3460,8 +3445,7 @@ class HostTagAttribute(Attribute):
         if len(self._taglist) == 1:
             if html.get_checkbox(varname):
                 return self._taglist[0][0]
-            else:
-                return None
+            return None
         else:
             # strip of secondary tags
             value = html.var(varname).split("|")[0]
@@ -3534,8 +3518,7 @@ class NagiosValueSpecAttribute(ValueSpecAttribute):
         value = self._valuespec.value_to_text(value)
         if value:
             return value
-        else:
-            return None
+        return None
 
 
 
@@ -3545,21 +3528,20 @@ def convert_cgroups_from_tuple(value):
     if type(value) == dict:
         if "use_for_services" in value:
             return value
-        else:
-            new_value = {
-                "use_for_services" : False,
-            }
-            new_value.update(value)
-            return value
 
-    else:
-        return {
-            "groups"           : value[1],
-            "recurse_perms"    : False,
-            "use"              : value[0],
+        new_value = {
             "use_for_services" : False,
-            "recurse_use"      : False,
         }
+        new_value.update(value)
+        return value
+
+    return {
+        "groups"           : value[1],
+        "recurse_perms"    : False,
+        "use"              : value[0],
+        "use_for_services" : False,
+        "recurse_use"      : False,
+    }
 
 # Attribute needed for folder permissions
 class ContactGroupsAttribute(Attribute):
@@ -4065,8 +4047,7 @@ class SiteManagement(object):
             # which has an empty sites dictionary. Apply the default configuration
             # for these sites too.
             return config.default_single_site_configuration()
-        else:
-            return vars["sites"]
+        return vars["sites"]
 
 
     @classmethod
@@ -4649,8 +4630,7 @@ def do_remote_automation(site, command, vars):
 def default_site():
     if is_wato_slave_site():
         return False
-    else:
-        return config.default_site()
+    return config.default_site()
 
 
 # Returns a list of site ids which gets the Event Console configuration replicated
@@ -5149,8 +5129,7 @@ class ActivateChangesWriter(ActivateChanges):
         def serialize_object(obj):
             if obj == None:
                 return None
-            else:
-                return obj.__class__.__name__, obj.ident()
+            return obj.__class__.__name__, obj.ident()
 
         # Using attrencode here is against our regular rule to do the escaping
         # at the last possible time: When rendering. But this here is the last
@@ -5890,20 +5869,20 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
 
         if config.site_is_local(self._site_id):
             return execute_activate_changes(domains)
-        else:
-            try:
-                response = do_remote_automation(
-                    config.site(self._site_id), "activate-changes", [
-                        ("domains", repr(domains)),
-                        ("site_id", self._site_id),
-                    ])
-            except MKAutomationException, e:
-                if "Invalid automation command: activate-changes" in "%s" % e:
-                    return self._call_legacy_activate_changes_automation()
-                else:
-                    raise
 
-            return response
+        try:
+            response = do_remote_automation(
+                config.site(self._site_id), "activate-changes", [
+                    ("domains", repr(domains)),
+                    ("site_id", self._site_id),
+                ])
+        except MKAutomationException, e:
+            if "Invalid automation command: activate-changes" in "%s" % e:
+                return self._call_legacy_activate_changes_automation()
+            else:
+                raise
+
+        return response
 
 
     # This is needed to be able to activate the changes on legacy (pre 1.4.0i3) slave sites.
@@ -6217,8 +6196,7 @@ def get_snapshot_status(snapshot, validate_checksums = False):
         if file_stream:
             file_stream.seek(0)
             return handler(file_stream)
-        else:
-            return handler(snapshot_dir + name)
+        return handler(snapshot_dir + name)
 
     def check_size():
         if file_stream:
@@ -6410,8 +6388,7 @@ def snapshot_secret():
 def parse_hosttag_title(title):
     if '/' in title:
         return title.split('/', 1)
-    else:
-        return None, title
+    return None, title
 
 
 def hosttag_topics(hosttags, auxtags):
@@ -6847,15 +6824,13 @@ class HosttagsConfiguration(object):
     def parse_hosttag_title(title):
         if '/' in title:
             return title.split('/', 1)
-        else:
-            return None, title
+        return None, title
 
     @staticmethod
     def get_merged_topic_and_title(entity):
         if entity.topic:
             return "%s/%s" % (entity.topic, entity.title)
-        else:
-            return entity.title
+        return entity.title
 
 
     def get_hosttag_topics(self):
@@ -7195,8 +7170,7 @@ def check_mk_automation(siteid, command, args=None, indata="", stdin_data=None, 
 
     if not siteid or config.site_is_local(siteid):
         return check_mk_local_automation(command, args, indata, stdin_data, timeout)
-    else:
-        return check_mk_remote_automation(siteid, command, args, indata, stdin_data, timeout, sync)
+    return check_mk_remote_automation(siteid, command, args, indata, stdin_data, timeout, sync)
 
 
 def check_mk_local_automation(command, args=None, indata="", stdin_data=None, timeout=None):
@@ -8307,8 +8281,7 @@ class Ruleset(object):
         elif self.match_type() == "dict":
             return resultdict, effectiverules
 
-        else:
-            return None, [] # No match
+        return None, [] # No match
 
 
 
@@ -10240,8 +10213,7 @@ def site_neutral_path(path):
         parts = path.split('/')
         parts[3] = '[SITE_ID]'
         return '/'.join(parts)
-    else:
-        return path
+    return path
 
 
 def has_agent_bakery():
@@ -10265,8 +10237,7 @@ def is_a_checkbox(vs):
         return True
     elif isinstance(vs, Transform):
         return is_a_checkbox(vs._valuespec)
-    else:
-        return False
+    return False
 
 
 def get_search_expression():
@@ -10458,8 +10429,7 @@ def must_be_in_contactgroups(cgspec):
 def may_edit_configvar(varname):
     if varname in [ "actions" ]:
         return config.user.may("wato.add_or_modify_executables")
-    else:
-        return True
+    return True
 
 
 # TODO: Move to Folder()?
@@ -10527,8 +10497,7 @@ def mk_eval(s):
     try:
         if not config.wato_legacy_eval:
             return ast.literal_eval(base64.b64decode(s))
-        else:
-            return pickle.loads(base64.b64decode(s))
+        return pickle.loads(base64.b64decode(s))
     except:
         raise MKGeneralException(_('Unable to parse provided data: %s') % html.render_text(repr(s)))
 
@@ -10536,8 +10505,7 @@ def mk_eval(s):
 def mk_repr(s):
     if not config.wato_legacy_eval:
         return base64.b64encode(repr(s))
-    else:
-        return base64.b64encode(pickle.dumps(s))
+    return base64.b64encode(pickle.dumps(s))
 
 
 def format_config_value(value):

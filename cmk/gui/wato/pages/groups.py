@@ -400,8 +400,7 @@ class ModeEditServicegroup(ModeEditGroup):
     def title(self):
         if self._new:
             return _("Create new service group")
-        else:
-            return _("Edit service group")
+        return _("Edit service group")
 
 
 
@@ -422,8 +421,7 @@ class ModeEditHostgroup(ModeEditGroup):
     def title(self):
         if self._new:
             return _("Create new host group")
-        else:
-            return _("Edit host group")
+        return _("Edit host group")
 
 
 
@@ -444,8 +442,7 @@ class ModeEditContactgroup(ModeEditGroup):
     def title(self):
         if self._new:
             return _("Create new contact group")
-        else:
-            return _("Edit contact group")
+        return _("Edit contact group")
 
 
     def _determine_additional_group_data(self):

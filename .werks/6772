@@ -1,0 +1,17 @@
+Title: LDAP: Only save users on changed configuration
+Level: 1
+Component: multisite
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0i1
+Date: 1538063535
+
+The LDAP synchronization was rewriting the user configuration during
+every synchronization, even when no change has been made to the user
+configuration.
+
+This needless operation resulted in subsequent load because some
+processes, like the Check_MK alert and notify helper were reloading
+their configuration in case of a changed Check_MK config file.

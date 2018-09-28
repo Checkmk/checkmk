@@ -3976,7 +3976,7 @@ check_metrics["check-mk-host-tcp"] = {
     "time" : { "name": "response_time" }
 }
 
-for check in ['winperf_processor', 'docker_container_cpu', 'hr_cpu', 'bintec_cpu', 'esx_vsphere_hostsystem']:
+for check in ['winperf_processor.util', 'docker_container_cpu', 'hr_cpu', 'bintec_cpu', 'esx_vsphere_hostsystem']:
     check_metrics["check_mk-%s" % check] = {
         "avg": { "name": "util_average" }
     }

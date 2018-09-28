@@ -32,10 +32,8 @@ import email
 import base64
 import getopt
 import poplib
-import random
 import socket
 import imaplib
-import traceback
 
 import cmk.password_store
 

@@ -24,12 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import re
-import abc
-import pprint
-import os
 import copy
-import urlparse
 import traceback
 import json
 import time
@@ -38,7 +33,6 @@ from typing import Type, Union, List  # pylint: disable=unused-import
 
 import cmk
 import cmk.paths
-import cmk.store as store
 
 import cmk.gui.i18n
 from cmk.gui.i18n import _
@@ -57,7 +51,7 @@ import cmk.gui.plugin_registry
 import cmk.gui.plugins.sidebar
 import cmk.gui.plugins.sidebar.quicksearch
 from cmk.gui.valuespec import CascadingDropdown, Dictionary
-from cmk.gui.exceptions import MKGeneralException, MKUserError, MKException
+from cmk.gui.exceptions import MKGeneralException, MKUserError
 from cmk.gui.log import logger
 
 if not cmk.is_raw_edition():
@@ -69,7 +63,7 @@ if cmk.is_managed_edition():
 # Helper functions to be used by snapins
 # Kept for compatibility with legacy plugins
 # TODO: Drop once we don't support legacy snapins anymore
-from cmk.gui.plugins.sidebar.utils import (
+from cmk.gui.plugins.sidebar.utils import ( # pylint: disable=unused-import
     snapin_registry,
     sidebar_snapins,
     snapin_width,
@@ -88,7 +82,7 @@ from cmk.gui.plugins.sidebar.utils import (
     write_snapin_exception,
 )
 
-from cmk.gui.plugins.sidebar.quicksearch import QuicksearchMatchPlugin
+from cmk.gui.plugins.sidebar.quicksearch import QuicksearchMatchPlugin # pylint: disable=unused-import
 
 quicksearch_match_plugins = []
 

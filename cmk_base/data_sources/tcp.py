@@ -24,20 +24,16 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import os
-import signal
 import socket
-import subprocess
 
 import cmk.debug
 from cmk.exceptions import MKTerminate, MKGeneralException
 
 import cmk_base.utils as utils
-import cmk_base.console as console
 import cmk_base.config as config
 from cmk_base.exceptions import MKAgentError, MKEmptyAgentData
 
-from .abstract import DataSource, CheckMKAgentDataSource
+from .abstract import CheckMKAgentDataSource
 
 
 #.

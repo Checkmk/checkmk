@@ -39,7 +39,6 @@ import ConfigParser
 import glob
 import os
 import re
-import StringIO
 import subprocess
 import sys
 import time

@@ -30,7 +30,6 @@ import subprocess
 
 import cmk.paths
 
-import cmk_base.console as console
 import cmk_base.config as config
 import cmk_base.core_config as core_config
 from cmk_base.exceptions import MKAgentError, MKTimeout

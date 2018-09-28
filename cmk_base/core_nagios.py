@@ -27,7 +27,6 @@
 """Code for support of Nagios (and compatible) cores"""
 
 import os
-import subprocess
 import sys
 import py_compile
 import tempfile

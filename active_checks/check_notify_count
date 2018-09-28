@@ -28,7 +28,6 @@ import os
 import sys
 import time
 import getopt
-import socket
 
 import livestatus
 

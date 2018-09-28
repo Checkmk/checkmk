@@ -35,7 +35,6 @@ import smtplib
 import socket
 import sys
 import time
-import traceback
 
 import cmk.password_store
 

@@ -25,14 +25,12 @@
 # Boston, MA 02110-1301 USA.
 
 import ast
-import socket
 import time
 
 from cmk.exceptions import MKGeneralException
 
 import cmk_base.config as config
 import cmk_base.snmp as snmp
-import cmk_base.check_utils
 
 from .abstract import DataSource, ManagementBoardDataSource
 from .host_sections import HostSections

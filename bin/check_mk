@@ -53,12 +53,6 @@ import cmk_base.profiling as profiling
 from cmk_base.modes import modes
 import cmk_base.check_api as check_api
 
-try:
-    import cmk_base.cee.keepalive as keepalive
-except ImportError:
-    keepalive = None
-
-
 cmk.log.setup_console_logging()
 logger = cmk.log.get_logger("base")
 

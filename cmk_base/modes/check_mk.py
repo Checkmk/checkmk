@@ -25,17 +25,15 @@
 # Boston, MA 02110-1301 USA.
 
 import os
-import socket
 import sys
 
 import cmk
 import cmk.tty as tty
 import cmk.paths
-from cmk.exceptions import MKGeneralException, MKBailOut
+from cmk.exceptions import MKBailOut
 
 import cmk_base.console as console
 import cmk_base.config as config
-from cmk_base.exceptions import MKAgentError
 
 from cmk_base.modes import modes, Mode, Option, keepalive_option
 import cmk_base.check_utils

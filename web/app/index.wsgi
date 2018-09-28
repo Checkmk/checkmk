@@ -24,10 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import sys
 import os
-import pprint
-import __builtin__
 import traceback
 
 import livestatus

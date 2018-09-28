@@ -169,7 +169,6 @@ if opt_legacy:
         sys.exit(1)
 else:
     # The following code in the else: block completely replaces the used functionality of NaServer/NaElements
-    import base64
     import requests
     import urllib3
 

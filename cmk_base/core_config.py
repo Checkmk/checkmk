@@ -30,7 +30,6 @@ import sys
 
 import cmk.paths
 import cmk.tty as tty
-import cmk.store as store
 import cmk.password_store
 from cmk.exceptions import MKGeneralException
 

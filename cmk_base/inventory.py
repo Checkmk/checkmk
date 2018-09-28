@@ -29,12 +29,8 @@ while the inventory is performed for one host.
 
 In the future all inventory code should be moved to this module."""
 
-import gzip
 import inspect
 import os
-import pprint
-import re
-import sys
 
 import cmk
 import cmk.paths
@@ -46,7 +42,6 @@ import cmk_base.utils
 import cmk_base.console as console
 import cmk_base.config as config
 import cmk_base.check_api_utils as check_api_utils
-import cmk_base.snmp as snmp
 import cmk_base.snmp_scan as snmp_scan
 import cmk_base.ip_lookup as ip_lookup
 import cmk_base.data_sources as data_sources

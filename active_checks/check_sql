@@ -30,7 +30,6 @@
 #  https://pypi.python.org/pypi/ibm_db
 """Check_MK SQL Test"""
 import argparse
-import getopt
 import logging
 import os
 import sys

@@ -31,7 +31,6 @@
 # <domain> <age-of-newest-file> <size-of-newest-file> <total-size>
 
 import datetime
-import os
 import sys
 import time
 from ftplib import FTP

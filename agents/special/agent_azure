@@ -41,11 +41,9 @@ import calendar
 import sys
 import re
 import argparse
-import time
 import logging
 import atexit
 
-from collections import namedtuple
 from multiprocessing import Process, Lock
 
 # We have to set a null handler for logging before importing the azure stuff.

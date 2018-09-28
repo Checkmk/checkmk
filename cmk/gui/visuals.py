@@ -34,7 +34,7 @@ import importlib
 import cmk.gui.pages
 import cmk.gui.utils as utils
 from cmk.gui.log import logger
-from cmk.gui.exceptions import MKGeneralException, MKAuthException, MKUserError, MKInternalError
+from cmk.gui.exceptions import MKGeneralException, MKAuthException, MKUserError
 from cmk.gui.valuespec import *
 import cmk.gui.config as config
 import cmk.gui.table as table
@@ -46,7 +46,8 @@ import cmk.gui.i18n
 from cmk.gui.i18n import _u, _
 from cmk.gui.globals import html
 
-from cmk.gui.plugins.visuals.utils import (
+# Needed for legacy (pre 1.6) plugins
+from cmk.gui.plugins.visuals.utils import ( # pylint: disable=unused-import
     declare_info,
     declare_filter,
     multisite_filters,

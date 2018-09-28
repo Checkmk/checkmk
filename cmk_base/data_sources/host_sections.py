@@ -25,11 +25,9 @@
 # Boston, MA 02110-1301 USA.
 
 import sys
-import time
 
 import cmk.debug
 
-import cmk_base.console as console
 import cmk_base.config as config
 import cmk_base.caching as caching
 import cmk_base.ip_lookup as ip_lookup

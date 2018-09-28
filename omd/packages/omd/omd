@@ -65,7 +65,6 @@ import time
 import errno
 import fcntl
 import shlex
-import pprint
 import psutil
 import random
 import shutil

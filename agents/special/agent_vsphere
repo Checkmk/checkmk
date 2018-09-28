@@ -35,7 +35,6 @@ import re
 import sys
 import time
 import getopt
-import pprint
 import socket
 import httplib
 import datetime

@@ -1,0 +1,28 @@
+Title: Add Content-Security-Policy header to prevent some cross site scripting and injection attacks
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1538120513
+Class: security
+
+When requesting pages from the GUI a <tt>Content-Security-Policy</tt> is now been set in the HTTP
+response. Using this mechanism the application can tell the browser which things are allowed to
+be done by the web page in the context of the browser.
+
+We are now, for example limiting the URLs where AJAX calls can be made to or the URLs which can
+be used as form targets. This helps to prevent some XSS and other injection attacks.
+
+The configuration of this policy is made in the apache configuration file
+<tt>etc/apache/conf.d/security.conf</tt>. In case you want to have a look at the details or
+want to extend the policy somehow you may edit the file in the context of your site configuration.
+To apply the changes you need to restart your site apache using <tt>omd restart apache</tt>.
+
+In case of trouble please let us know. We can probably adapt the default configuration to solve
+common issues with this policy for all users.
+
+One thing that may affect users that include Check_MK pages on other web pages using frames or
+iframes: We set the <tt>frame-ancestors</tt> option to <tt>'self'</tt> which means that only pages
+with the same protocol, url and port as the Check_MK page may refer to Check_MK pages. You can
+extend this statement with the URLs you want to allow.

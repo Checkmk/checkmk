@@ -452,7 +452,7 @@ def test_get_graph_hover(web, graph_test_config):
                     u'line_type': u'stack',
                     u'expression': [
                         u'operator', u'+',
-                        [[u'rrd', u'heute', u'heute', u'Check_MK', u'user_time', None, 1], [u'rrd', u'heute', u'heute', u'Check_MK', u'children_user_time', None, 1]]
+                        [[u'rrd', u'test-host-get-graph', u'test-host-get-graph', u'Check_MK', u'user_time', None, 1], [u'rrd', u'test-host-get-graph', u'test-host-get-graph', u'Check_MK', u'children_user_time', None, 1]]
                     ],
                     u'unit': u's',
                     u'title': u'CPU time in user space'
@@ -461,7 +461,7 @@ def test_get_graph_hover(web, graph_test_config):
                     u'color': u'#ff8840', u'line_type': u'stack',
                     u'expression': [
                         u'operator', u'+',
-                        [[u'rrd', u'heute', u'heute', u'Check_MK', u'system_time', None, 1], [u'rrd', u'heute', u'heute', u'Check_MK', u'children_system_time', None, 1]]
+                        [[u'rrd', u'test-host-get-graph', u'test-host-get-graph', u'Check_MK', u'system_time', None, 1], [u'rrd', u'test-host-get-graph', u'test-host-get-graph', u'Check_MK', u'children_system_time', None, 1]]
                     ],
                     u'unit': u's',
                     u'title': u'CPU time in operating system'
@@ -469,14 +469,14 @@ def test_get_graph_hover(web, graph_test_config):
                 {
                     u'color': u'#00b2ff',
                     u'line_type': u'stack',
-                    u'expression': [u'rrd', u'heute', u'heute', u'Check_MK', u'cmk_time_agent', None, 1],
+                    u'expression': [u'rrd', u'test-host-get-graph', u'test-host-get-graph', u'Check_MK', u'cmk_time_agent', None, 1],
                     u'unit': u's',
                     u'title': u'Time spent waiting for Check_MK agent'
                 },
                 {
                     u'color': u'#d080af',
                     u'line_type': u'line',
-                    u'expression': [u'rrd', u'heute', u'heute', u'Check_MK', u'execution_time', None, 1],
+                    u'expression': [u'rrd', u'test-host-get-graph', u'test-host-get-graph', u'Check_MK', u'execution_time', None, 1],
                     u'unit': u's', u'title': u'Total execution time'
                 }
             ],

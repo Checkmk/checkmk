@@ -1,0 +1,19 @@
+Title: cmk-update-agent: Make executable-Format-rule relevant for Linux only
+Level: 1
+Component: agents
+Compatible: compat
+Edition: cee
+Version: 1.5.0p5
+Date: 1538135641
+Class: fix
+
+After introducing the binary Format for the agent updater, we added a rule to the
+agent updater ruleset that enables the user to choose the format of
+the cmk-update-agent executable.
+
+Hence the packaged binary format is only runnable on Linux, this rule now gets ignored
+for all other OSes.
+
+Please note: If you want to enable automatic updates on Linux hosts that run on an
+architecture other than x86-64 or x86, you have to explicitibly choose to deploy the
+python script format, since the binary formats are not runnable on these architectures.

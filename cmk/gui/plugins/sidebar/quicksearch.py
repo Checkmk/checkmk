@@ -716,8 +716,7 @@ class QuicksearchMatchPlugin(object):
         patterns = used_filters[self.get_filter_shortname()]
         if len(patterns) > 1:
             return "(%s)" % "|".join(patterns)
-        else:
-            return patterns[0]
+        return patterns[0]
 
 
 
@@ -749,15 +748,13 @@ class GroupMatchPlugin(QuicksearchMatchPlugin):
     def get_match_topic(self):
         if self._group_type == "host":
             return _("Hostgroup")
-        else:
-            return _("Servicegroup")
+        return _("Servicegroup")
 
 
     def get_livestatus_columns(self, livestatus_table):
         if livestatus_table == "%sgroups" % self._group_type:
             return ["name"]
-        else:
-            return ["%s_groups" % self._group_type]
+        return ["%s_groups" % self._group_type]
 
 
     def get_livestatus_filters(self, livestatus_table, used_filters):
@@ -863,15 +860,13 @@ class HostMatchPlugin(QuicksearchMatchPlugin):
             return _("Hostname")
         elif self._livestatus_field == "address":
             return _("Hostaddress")
-        else:
-            return _("Hostalias")
+        return _("Hostalias")
 
 
     def _get_real_fieldname(self, livestatus_table):
         if livestatus_table != "hosts":
             return "host_%s" % self._livestatus_field
-        else:
-            return self._livestatus_field
+        return self._livestatus_field
 
 
     def get_livestatus_columns(self, livestatus_table):
@@ -978,17 +973,17 @@ class HosttagMatchPlugin(QuicksearchMatchPlugin):
         if row:
             hostname = row.get("host_name", row.get("name"))
             return hostname, [(filter_name, hostname)]
-        else:
-            url_infos = []
-            hosttag_to_group_dict = self._get_hosttag_dict()
 
-            for idx, entry in enumerate(used_filters.get(self.get_filter_shortname())):
-                if entry in hosttag_to_group_dict:
-                    url_infos.append(("host_tag_%d_grp" % idx, hosttag_to_group_dict[entry]))
-                    url_infos.append(("host_tag_%d_op"  % idx, "is"))
-                    url_infos.append(("host_tag_%d_val" % idx, entry))
+        url_infos = []
+        hosttag_to_group_dict = self._get_hosttag_dict()
 
-            return "", url_infos
+        for idx, entry in enumerate(used_filters.get(self.get_filter_shortname())):
+            if entry in hosttag_to_group_dict:
+                url_infos.append(("host_tag_%d_grp" % idx, hosttag_to_group_dict[entry]))
+                url_infos.append(("host_tag_%d_op"  % idx, "is"))
+                url_infos.append(("host_tag_%d_val" % idx, entry))
+
+        return "", url_infos
 
 
 @match_plugin_registry.register

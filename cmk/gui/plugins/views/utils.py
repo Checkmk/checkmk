@@ -170,8 +170,7 @@ class PainterOptions(object):
         opt = multisite_painter_options[name]
         if type(lambda: None) == type(opt["valuespec"]):
             return opt["valuespec"]()
-        else:
-            return opt["valuespec"]
+        return opt["valuespec"]
 
 
     def _is_set(self, name):
@@ -256,8 +255,7 @@ def row_id(view, row):
 def get_painter_columns(painter):
     if type(lambda: None) == type(painter["columns"]):
         return painter["columns"]()
-    else:
-        return painter["columns"]
+    return painter["columns"]
 
 
 # The Group-value of a row is used for deciding whether
@@ -287,8 +285,7 @@ def _create_dict_key(value):
         return tuple(map(_create_dict_key, value))
     elif type(value) == dict:
         return tuple([ (k, _create_dict_key(v)) for (k, v) in sorted(value.items()) ])
-    else:
-        return value
+    return value
 
 
 # TODO: Refactor to plugin_registries
@@ -326,8 +323,7 @@ def register_command_group(ident, title, sort_index):
 def transform_action_url(url_spec):
     if type(url_spec) == tuple:
         return url_spec
-    else:
-        return (url_spec, None)
+    return (url_spec, None)
 
 def is_stale(row):
     return row.get('service_staleness', row.get('host_staleness', 0)) >= config.staleness_threshold
@@ -336,8 +332,7 @@ def is_stale(row):
 def paint_stalified(row, text):
     if is_stale(row):
         return "stale", text
-    else:
-        return "", text
+    return "", text
 
 
 def paint_host_list(site, hosts):
@@ -355,8 +350,7 @@ def link_to_view(content, row, view_name):
     url = url_to_view(row, view_name)
     if url:
         return html.render_a(content, href=url)
-    else:
-        return content
+    return content
 
 
 # TODO: There is duplicated logic with visuals.collect_context_links_of()
@@ -477,8 +471,7 @@ def paint_nagiosflag(row, field, bold_if_nonzero):
     yesno = {True: _("yes"), False: _("no")}[value != 0]
     if (value != 0) == bold_if_nonzero:
         return "badflag", yesno
-    else:
-        return "goodflag", yesno
+    return "goodflag", yesno
 
 
 def declare_simple_sorter(name, title, column, func):
@@ -522,8 +515,7 @@ def cmp_insensitive_string(v1, v2):
     # case!
     if c == 0:
         return cmp(v1, v2)
-    else:
-        return c
+    return c
 
 
 def cmp_string_list(column, r1, r2):
@@ -543,8 +535,7 @@ def cmp_service_name_equiv(r):
         return -3 # FIXME: Remove old name one day
     elif r == "Check_MK HW/SW Inventory":
         return -2
-    else:
-        return 0
+    return 0
 
 
 def cmp_custom_variable(r1, r2, key, cmp_func):
@@ -651,8 +642,7 @@ def query_data(datasource, columns, add_columns, add_headers,
     post_process_func = datasource.get("post_process")
     if post_process_func:
         return post_process_func(rows)
-    else:
-        return rows
+    return rows
 
 
 def do_query_data(query, columns, add_columns, merge_column,
@@ -704,14 +694,12 @@ def _merge_data(data, columns):
     def worst_service_state(a, b):
         if a == 2 or b == 2:
             return 2
-        else:
-            return max(a, b)
+        return max(a, b)
 
     def worst_host_state(a, b):
         if a == 1 or b == 1:
             return 1
-        else:
-            return max(a, b)
+        return max(a, b)
 
     for c in columns:
         _tablename, col = c.split("_", 1)
@@ -742,8 +730,7 @@ def _merge_data(data, columns):
 def join_row(row, cell):
     if type(cell) == JoinCell:
         return row.get("JOIN", {}).get(cell.join_service())
-    else:
-        return row
+    return row
 
 
 def get_view_infos(view):
@@ -1114,30 +1101,26 @@ class Cell(object):
 
         if vs_painter_params and self._painter_params == None:
             return vs_painter_params.default_value()
-        else:
-            return self._painter_params
+        return self._painter_params
 
 
     def title(self, use_short=True):
         painter = self.painter()
         if use_short:
             return self._get_short_title(painter)
-        else:
-            return self._get_long_title(painter)
+        return self._get_long_title(painter)
 
 
     def _get_short_title(self, painter):
         if type(painter.get("short")) in [types.FunctionType, types.MethodType]:
             return painter["short"](self.painter_parameters())
-        else:
-            return painter.get("short", self._get_long_title(painter))
+        return painter.get("short", self._get_long_title(painter))
 
 
     def _get_long_title(self, painter):
         if type(painter.get("title")) in [types.FunctionType, types.MethodType]:
             return painter["title"](self.painter_parameters())
-        else:
-            return painter["title"]
+        return painter["title"]
 
 
     # Can either be:
@@ -1405,8 +1388,7 @@ class JoinCell(Cell):
     def title(self, use_short=True):
         if self._custom_title:
             return self._custom_title
-        else:
-            return self._join_service_descr
+        return self._join_service_descr
 
 
     def export_title(self):
@@ -1488,8 +1470,7 @@ def get_primary_sorter_order(view, painter_name):
         return 'asc'
     elif user_sort and this_desc_sorter == user_sort[0]:
         return 'desc'
-    else:
-        return ''
+    return ''
 
 
 def parse_url_sorters(sort):
@@ -1520,5 +1501,4 @@ def get_painter_params_valuespec(painter):
 
     if isinstance(painter["params"], (types.FunctionType, types.MethodType)):
         return painter["params"]()
-    else:
-        return painter["params"]
+    return painter["params"]

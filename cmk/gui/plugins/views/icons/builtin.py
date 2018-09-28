@@ -310,9 +310,9 @@ def pnp_graph_icon_link(row, what):
 
     if not metrics.cmk_graphs_possible(row["site"]):
         return pnp_url(row, what)
-    else:
-        import cmk.gui.cee.plugins.views.graphs
-        return cmk.gui.cee.plugins.views.graphs.cmk_graph_url(row, what)
+
+    import cmk.gui.cee.plugins.views.graphs
+    return cmk.gui.cee.plugins.views.graphs.cmk_graph_url(row, what)
 
 
 def pnp_icon(row, what):
@@ -649,8 +649,7 @@ def paint_active_checks(what, row, tags, host_custom_vars):
     if "active_checks_enabled" in row[what + "_modified_attributes_list"]:
         if row[what + "_active_checks_enabled"] == 0:
             return 'disabled', _('Active checks have been manually disabled for this %s!') % what
-        else:
-            return 'enabled', _('Active checks have been manually enabled for this %s!') % what
+        return 'enabled', _('Active checks have been manually enabled for this %s!') % what
 
 multisite_icons_and_actions['status_active_checks'] = {
     'columns':         [ 'modified_attributes_list', 'active_checks_enabled' ],

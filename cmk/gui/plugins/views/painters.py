@@ -219,8 +219,7 @@ def paint_nagios_link(row):
 def paint_future_time(timestamp):
     if timestamp <= 0:
         return "", "-"
-    else:
-        return paint_age(timestamp, True, 0, what='future')
+    return paint_age(timestamp, True, 0, what='future')
 
 def paint_day(timestamp):
     return "", time.strftime("%A, %Y-%m-%d", time.localtime(timestamp))
@@ -301,8 +300,7 @@ multisite_painters["host_icons"] = {
 def paint_site_icon(row):
     if row.get("site") and config.use_siteicons:
         return None, "<img class=siteicon src=\"icons/site-%s-24.png\">" % row["site"]
-    else:
-        return None, ""
+    return None, ""
 
 multisite_painters["site_icon"] = {
     "title"   : _("Site icon"),
@@ -586,8 +584,7 @@ multisite_painters["svc_check_age"] = {
 def paint_cache_info(row):
     if not row["service_cached_at"]:
         return "", ""
-    else:
-        return "", render_cache_info("service", row)
+    return "", render_cache_info("service", row)
 
 multisite_painters["svc_check_cache_info"] = {
     "title"   : _("Cached agent data"),
@@ -790,8 +787,7 @@ def paint_time_graph(row, cell):
     if metrics.cmk_graphs_possible(row["site"]):
         import cmk.gui.cee.plugins.views.graphs
         return cmk.gui.cee.plugins.views.graphs.paint_time_graph_cmk(row, cell)
-    else:
-        return paint_time_graph_pnp(row)
+    return paint_time_graph_pnp(row)
 
 
 def paint_time_graph_pnp(row):
@@ -955,8 +951,7 @@ multisite_painters["svc_staleness"] = {
 def paint_is_stale(row):
     if is_stale(row):
         return "badflag", _('yes')
-    else:
-        return "goodflag", _('no')
+    return "goodflag", _('no')
 
 multisite_painters["svc_is_stale"] = {
     "title"   : _("Service is stale"),
@@ -1201,8 +1196,7 @@ def paint_host_black(row):
     state = row["host_state"]
     if state != 0:
         return "nobr", "<div class=hostdown>%s</div>" % row["host_name"]
-    else:
-        return "nobr", row["host_name"]
+    return "nobr", row["host_name"]
 
 multisite_painters["host_black"] = {
     "title"   : _("Hostname, red background if down or unreachable"),
@@ -1219,8 +1213,7 @@ def paint_host_black_with_link_to_old_nagios_services(row):
     state = row["host_state"]
     if state != 0:
         return None, html.render_div(html.render_a(host, url), class_="hostdown")
-    else:
-        return None, html.render_a(host, url)
+    return None, html.render_a(host, url)
 
 
 multisite_painters["host_black_nagios"] = {
@@ -1246,8 +1239,7 @@ def paint_host_with_state(row):
         state = "p"
     if state != 0:
         return "state hstate hstate%s" % state, row["host_name"]
-    else:
-        return "nobr", row["host_name"]
+    return "nobr", row["host_name"]
 
 multisite_painters["host_with_state"] = {
     "title"   : _("Hostname, marked red if down"),
@@ -1350,18 +1342,16 @@ multisite_painters["host_address_families"] = {
 def paint_svc_count(id, count):
     if count > 0:
         return "count svcstate state%s" % id, str(count)
-    else:
-        return "count svcstate statex", "0"
+    return "count svcstate statex", "0"
 
 def paint_host_count(id, count):
     if count > 0:
         if id != None:
             return "count hstate hstate%s" % id, str(count)
-        else: # pending
-            return "count hstate hstatep", str(count)
+        # pending
+        return "count hstate hstatep", str(count)
 
-    else:
-        return "count hstate hstatex", "0"
+    return "count hstate hstatex", "0"
 
 multisite_painters["num_services"] = {
     "title"   : _("Number of services"),
@@ -1416,8 +1406,7 @@ def paint_service_list(row, columnname):
     def sort_key(entry):
         if columnname.startswith("servicegroup"):
             return entry[0].lower(), entry[1].lower()
-        else:
-            return entry[0].lower()
+        return entry[0].lower()
 
     h = ""
     for entry in sorted(row[columnname], key = sort_key):
@@ -1571,8 +1560,7 @@ def paint_discovery_output(field, row):
                 html.urlencode(row["host_name"]),
                 html.urlencode(value))
         return None, html.render_div(html.render_a(value, link))
-    else:
-        return None, value
+    return None, value
 
 multisite_painters["service_discovery_state"] = {
     "title": _("Service discovery: State"),
@@ -1918,8 +1906,7 @@ def paint_downtime_recurring(row):
     r = row["downtime_recurring"]
     if not r:
         return "", _("no")
-    else:
-        return "", recurring_downtimes_types.get(r, _("(unknown: %d)") % r)
+    return "", recurring_downtimes_types.get(r, _("(unknown: %d)") % r)
 
 multisite_painters["downtime_recurring"] = {
     "title"   : _("Downtime recurring interval"),
@@ -1969,8 +1956,7 @@ multisite_painters["downtime_end_time"] = {
 def paint_downtime_duration(row):
     if row["downtime_fixed"] == 0:
         return "number", "%02d:%02d:00" % divmod(row["downtime_duration"] / 60, 60)
-    else:
-        return "", ""
+    return "", ""
 
 multisite_painters["downtime_duration"] = {
     "title"   : _("Downtime duration (if flexible)"),
@@ -2013,8 +1999,7 @@ def paint_log_plugin_output(row):
                 what = _("service")
             if lst == "STOPPED":
                 return "", _("The %s stopped flapping") % what
-            else:
-                return "", _("The %s started flapping") % what
+            return "", _("The %s started flapping") % what
 
         elif lst:
             return "", (lst + " - " + log_type)
@@ -2036,8 +2021,7 @@ def paint_log_type(row):
         return "", _("Host")
     elif "SERVICE" in lt or "SVC" in lt:
         return "", _("Service")
-    else:
-        return "", _("Program")
+    return "", _("Program")
 
 
 multisite_painters["log_what"] = {
@@ -2164,8 +2148,7 @@ def paint_log_icon(row):
 
     if img:
         return "icon", html.render_icon("alert_"+img, help=title)
-    else:
-        return "icon", ""
+    return "icon", ""
 
 multisite_painters["log_icon"] = {
     "title"   : _("Log: event icon"),
@@ -2227,8 +2210,7 @@ def paint_log_state(row):
        or row["log_type"].endswith("NOTIFICATION RESULT") \
        or row["log_type"].endswith("NOTIFICATION PROGRESS"):
         return paint_service_state_short({"service_has_been_checked":1, "service_state" : state})
-    else:
-        return paint_host_state_short({"host_has_been_checked":1, "host_state" : state})
+    return paint_host_state_short({"host_has_been_checked":1, "host_state" : state})
 
 multisite_painters["log_state"] = {
     "title"   : _("Log: state of host/service at log time"),

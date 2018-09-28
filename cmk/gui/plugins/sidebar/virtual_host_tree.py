@@ -180,8 +180,7 @@ class VirtualHostTree(SidebarSnapin):
             return False
         elif path[0] != cwd[0]:
             return False
-        else:
-            return self._is_tag_subdir(path[1:], cwd[1:])
+        return self._is_tag_subdir(path[1:], cwd[1:])
 
 
     def _tag_tree_bullet(self, state, path, leaf):
@@ -258,22 +257,22 @@ class VirtualHostTree(SidebarSnapin):
             return 3
         if "_state" in tree:
             return tree["_state"]
-        else:
-            states = map(self._tag_tree_worst_state, tree.values())
-            for x in states:
-                if x == 2:
-                    return 2
-            return max(states)
+
+        states = map(self._tag_tree_worst_state, tree.values())
+        for x in states:
+            if x == 2:
+                return 2
+        return max(states)
 
 
     def _tag_tree_has_svc_problems(self, tree):
         if "_svc_problems" in tree:
             return tree["_svc_problems"]
-        else:
-            for x in tree.values():
-                if self._tag_tree_has_svc_problems(x):
-                    return True
-            return False
+
+        for x in tree.values():
+            if self._tag_tree_has_svc_problems(x):
+                return True
+        return False
 
 
     def _javascript(self):

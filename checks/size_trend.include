@@ -153,8 +153,7 @@ def size_trend(check, item, resource, levels, used_mb, size_mb, timestamp=None):
                 return "%0.1f weeks" % (hours/ (7 * 24))
             elif hours > 2 * 24:   # 2 days
                 return "%0.1f days" % (hours/24)
-            else:
-                return "%d hours" % hours
+            return "%d hours" % hours
 
         hours_left = (size_mb - used_mb) / trend * range_hours
         hours_txt = format_hours(hours_left)

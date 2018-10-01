@@ -208,9 +208,8 @@ def process_matches_for_check(process_line, process_pattern, user_pattern):
         reg = regex(process_pattern[1:]) # skip "~"
         return reg.match(" ".join(command_line))
 
-    else:
-        # Exact match on name of executable
-        return command_line[0] == process_pattern
+    # Exact match on name of executable
+    return command_line[0] == process_pattern
 
 
 # produce text or html output intended for the long output field of a check from details about a
@@ -224,8 +223,7 @@ def format_process_list(processes, html_output):
         value, unit = value
         if isinstance(value, float):
             return "%.2f%s" % (value, unit)
-        else:
-            return "%s%s" % (value, unit)
+        return "%s%s" % (value, unit)
 
     if html_output:
         table_bracket  = "<table>%s</table>"

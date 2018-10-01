@@ -31,8 +31,7 @@ def fahrenheit_to_celsius(tempf, relative=False):
 
     if relative:
         return float(tempf) * (5.0 / 9.0)
-    else:
-        return (float(tempf) - 32) * (5.0 / 9.0)
+    return (float(tempf) - 32) * (5.0 / 9.0)
 
 def celsius_to_fahrenheit(tempc, relative=False):
     if tempc is None:
@@ -40,8 +39,7 @@ def celsius_to_fahrenheit(tempc, relative=False):
 
     if relative:
         return float(tempc) * (9.0 / 5.0)
-    else:
-        return (float(tempc) * (9.0 / 5.0)) + 32
+    return (float(tempc) * (9.0 / 5.0)) + 32
 
 def from_celsius(tempc, unit, relative=False):
     if unit == "f":
@@ -49,10 +47,8 @@ def from_celsius(tempc, unit, relative=False):
     elif unit == "k":
         if relative:
             return tempc
-        else:
-            return tempc + 273.15
-    else:
-        return tempc
+        return tempc + 273.15
+    return tempc
 
 def to_celsius(reading, unit, relative=False):
     if type(reading) == tuple:
@@ -64,10 +60,8 @@ def to_celsius(reading, unit, relative=False):
             return reading
         elif reading is None:
             return None
-        else:
-            return reading - 273.15
-    else:
-        return reading
+        return reading - 273.15
+    return reading
 
 def convert_unit_relative(value, in_unit, out_unit):
     return from_celsius(to_celsius(value, in_unit, relative=True),
@@ -78,8 +72,7 @@ def render_temp(n, output_unit, relative=False):
     t = from_celsius(n, output_unit, relative)
     if type(n) == int:
         return "%d" % t
-    else:
-        return "%.1f" % t
+    return "%.1f" % t
 
 temp_unitsym = {
     "c": u"°C",
@@ -219,8 +212,7 @@ def check_temperature_trend(temp, params, output_unit, crit, crit_lower, unique_
                         hours = minutes / 60
                         minutes += - int(hours) * 60
                         return "%dh %02dm" % (hours, minutes)
-                    else:
-                        return "%d minutes" % minutes
+                    return "%d minutes" % minutes
 
                 warn, crit = params["trend_timeleft"]
                 if minutes_left <= crit:
@@ -411,8 +403,7 @@ def check_temperature_list(sensorlist, params, unique_name):
             return max(a,b)
         elif a != 2 and b != 2:
             return 3
-        else:
-            return 2
+        return 2
 
     if sensorlist == []:
         return

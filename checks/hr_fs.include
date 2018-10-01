@@ -46,8 +46,7 @@ def fix_hr_fs_mountpoint(mp):
     elif "Label:" in mp:
         pos = mp.find("Label:")
         return mp[:pos].rstrip()
-    else:
-        return mp
+    return mp
 
 
 def inventory_hr_fs(info):

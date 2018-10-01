@@ -351,8 +351,7 @@ def wmi_determine_status(value, levels):
 def wmi_fix_levels(levels):
     if isinstance(levels, tuple):
         return {'upper': levels}
-    else:
-        return levels
+    return levels
 
 
 def wmi_yield_raw_persec(table, row, column, label, perfvar, levels=None, perfscale=1.0):
@@ -435,8 +434,7 @@ def wmi_calculate_raw_average_time(table, row, column):
 
     if base_per_sec == 0:
         return 0
-    else:
-        return value_per_sec / base_per_sec
+    return value_per_sec / base_per_sec
 
 
 def wmi_yield_raw_average(table, row, column, label, perfvar, levels=None, perfscale=1.0):

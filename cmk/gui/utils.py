@@ -75,17 +75,6 @@ def cmp_num_split(a, b):
     return cmp(num_split(a), num_split(b))
 
 
-def cmp_version(a, b):
-    """Compare two version numbers with each other
-    Allow numeric version numbers, but also characters.
-    """
-    if a == None or b == None:
-        return cmp(a, b)
-    aa = map(num_split, a.split("."))
-    bb = map(num_split, b.split("."))
-    return cmp(aa, bb)
-
-
 def is_allowed_url(url):
     """Checks whether or not the given URL is a URL it is allowed to redirect the user to"""
     # Also prevent using of "javascript:" URLs which could used to inject code
@@ -104,6 +93,17 @@ def is_allowed_url(url):
         return False
 
     return True
+
+
+def cmp_version(a, b):
+    """Compare two version numbers with each other
+    Allow numeric version numbers, but also characters.
+    """
+    if a == None or b == None:
+        return cmp(a, b)
+    aa = map(num_split, a.split("."))
+    bb = map(num_split, b.split("."))
+    return cmp(aa, bb)
 
 
 # TODO: Remove this helper function. Replace with explicit checks and covnersion

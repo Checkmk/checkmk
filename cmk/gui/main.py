@@ -45,9 +45,8 @@ def page_index():
 
 
 def _get_start_url():
-    start_url = html.var_utf8("start_url", config.user.get_attribute("start_url") or config.start_url).strip()
-    # Prevent redirecting to absolute URL which could be used to redirect
-    # users to compromised pages.
-    if utils.is_allowed_url(start_url):
-        return start_url
-    return "dashboard.py"
+    default_start_url = config.user.get_attribute("start_url", config.start_url) or config.start_url
+    if not utils.is_allowed_url(default_start_url):
+        default_start_url = "dashboard.py"
+
+    return html.get_url_input("start_url", default_start_url)

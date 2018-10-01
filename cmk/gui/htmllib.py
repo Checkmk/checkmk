@@ -1284,12 +1284,25 @@ class html(HTMLGenerator):
         self.request.vars = self._var_stash.pop()
 
 
+    def get_ascii_input(self, varname, deflt=None):
+        """Helper to retrieve a byte string and ensure it only contains ASCII characters
+        In case a non ASCII character is found an MKUserError() is raised."""
+        try:
+            value = self.var(varname, deflt)
+            if value is not None:
+                value.decode("ascii")
+            return value
+        except UnicodeDecodeError:
+            raise MKUserError(varname, _("The given text must only contain ASCII characters."))
+
+
     def get_unicode_input(self, varname, deflt = None):
         try:
             return self.var_utf8(varname, deflt)
         except UnicodeDecodeError:
             raise MKUserError(varname, _("The given text is wrong encoded. "
                                          "You need to provide a UTF-8 encoded text."))
+
 
     def get_integer_input(self, varname, deflt=None):
         if deflt is not None and not self.has_var(varname):
@@ -1301,6 +1314,33 @@ class html(HTMLGenerator):
             raise MKUserError(varname, _("The parameter \"%s\" is missing.") % varname)
         except ValueError:
             raise MKUserError(varname, _("The parameter \"%s\" is not an integer.") % varname)
+
+
+    # TODO: Invalid default URL is not validated. Should we do it?
+    # TODO: This is only protecting against some not allowed URLs but does not
+    #       really verify that this is some kind of URL.
+    def get_url_input(self, varname, deflt=None):
+        """Helper function to retrieve a URL from HTTP parameters
+
+        This is mostly used to the "back url" which can then be used to create
+        a link to the previous page. For this kind of functionality it is
+        necessary to restrict the URLs to prevent different attacks on users.
+
+        In case the parameter is not given or is not valid the deflt URL will
+        be used. In case no deflt URL is given a MKUserError() is raised.
+        """
+        if not self.has_var(varname):
+            if deflt is not None:
+                return deflt
+            raise MKUserError(varname, _("The parameter \"%s\" is missing.") % varname)
+
+        url = self.var(varname)
+        if not utils.is_allowed_url(url):
+            if deflt:
+                return deflt
+            raise MKUserError(varname, _("The parameter \"%s\" is not a valid URL.") % varname)
+
+        return url
 
 
     # Returns a dictionary containing all parameters the user handed over to this request.

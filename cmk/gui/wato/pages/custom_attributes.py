@@ -305,8 +305,7 @@ class ModeEditCustomUserAttr(ModeEditCustomAttr):
     def title(self):
         if self._new:
             return _("Create User Attribute")
-        else:
-            return _("Edit User Attribute")
+        return _("Edit User Attribute")
 
     def buttons(self):
         html.context_button(_("Back"), watolib.folder_preserving_link([
@@ -357,8 +356,7 @@ class ModeEditCustomHostAttr(ModeEditCustomAttr):
     def title(self):
         if self._new:
             return _("Create Host Attribute")
-        else:
-            return _("Edit Host Attribute")
+        return _("Edit Host Attribute")
 
     def buttons(self):
         html.context_button(_("Back"), watolib.folder_preserving_link([

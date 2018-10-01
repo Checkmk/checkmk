@@ -71,8 +71,7 @@ class History(object):
     def get(self, query):
         if self._config['archive_mode'] == 'mongodb':
             return _get_mongodb(self, query)
-        else:
-            return _get_files(self, query)
+        return _get_files(self, query)
 
     def housekeeping(self):
         if self._config['archive_mode'] == 'mongodb':
@@ -147,8 +146,7 @@ def _get_mongodb_max_history_age(mongodb):
     result = mongodb.db.ec_archive.index_information()
     if 'dt_-1' not in result or 'expireAfterSeconds' not in result['dt_-1']:
         return -1
-    else:
-        return result['dt_-1']['expireAfterSeconds']
+    return result['dt_-1']['expireAfterSeconds']
 
 
 def _update_mongodb_indexes(settings, mongodb):
@@ -194,8 +192,7 @@ def _mongodb_next_id(mongodb, name, first_id=0):
             'seq': first_id
         })
         return first_id
-    else:
-        return ret['seq']
+    return ret['seq']
 
 
 def _add_mongodb(history, event, what, who, addinfo):
@@ -573,10 +570,8 @@ def _unsplit(s):
     elif s.startswith('\1'):
         if len(s) == 1:
             return ()
-        else:
-            return tuple(s[1:].split('\1'))
-    else:
-        return s
+        return tuple(s[1:].split('\1'))
+    return s
 
 
 def _get_logfile_timespan(path):

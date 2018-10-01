@@ -2292,8 +2292,7 @@ def transform_websphere_mq_queues(source):
         del source["messages_not_processed_age"]
         return source
 
-    else:
-        return source
+    return source
 
 register_check_parameters(
     subgroup_applications,
@@ -6423,11 +6422,9 @@ def match_dual_level_type(value):
             if entry[1][0] < 0 or entry[1][1] < 0:
                 return 1
         return 0
-    else:
-        if value[0] < 0 or value[1] < 0:
-            return 1
-        else:
-            return 0
+    if value[0] < 0 or value[1] < 0:
+        return 1
+    return 0
 
 
 def get_free_used_dynamic_valuespec(what, name, default_value = (80.0, 90.0)):
@@ -6487,11 +6484,11 @@ def transform_filesystem_free(value):
 
     if type(value) == tuple:
         return tuple_convert(value)
-    else:
-        result = []
-        for item in value:
-            result.append((item[0], tuple_convert(item[1])))
-        return result
+
+    result = []
+    for item in value:
+        result.append((item[0], tuple_convert(item[1])))
+    return result
 
 
 fs_levels_elements = [
@@ -6716,13 +6713,12 @@ def transform_printer_supply(l):
     if type(l) == tuple:
         if len(l) == 2:
             return { "levels" : l }
-        else:
-            return {
-                "levels" : l[:2],
-                "upturn_toner" : l[2],
-            }
-    else:
-        return l
+
+        return {
+            "levels" : l[:2],
+            "upturn_toner" : l[2],
+        }
+    return l
 
 register_check_parameters(
     subgroup_printing,

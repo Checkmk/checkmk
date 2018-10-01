@@ -569,8 +569,7 @@ def send_mail_smtp(message, target, from_address, context):
         return 0
     elif retry_possible:
         return 1
-    else:
-        return 2
+    return 2
 
 
 def default_from_address():
@@ -621,8 +620,7 @@ def send_mail_smtp_impl(message, target, smarthost, from_address, context):
 def send_mail(message, target, from_address, context):
     if "PARAMETER_SMTP_PORT" in context:
         return send_mail_smtp(message, target, from_address, context)
-    else:
-        return utils.send_mail_sendmail(message, target, from_address)
+    return utils.send_mail_sendmail(message, target, from_address)
 
 
 def fetch_pnp_data(context, params):
@@ -742,8 +740,7 @@ def get_apache_port():
     port = get_omd_config("CONFIG_APACHE_TCP_PORT")
     if port == None:
         return 80
-    else:
-        return int(port)
+    return int(port)
 
 
 def use_cmk_graphs():

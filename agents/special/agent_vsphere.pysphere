@@ -266,8 +266,7 @@ all_hosts = host.get_hosts()
 def convert_hostname(h):
     if opt_spaces == "cut":
         return h.split()[0]
-    else:
-        return h.replace(" ", "_")
+    return h.replace(" ", "_")
 
 def output_profile():
     g_profile.dump_stats(g_profile_path)

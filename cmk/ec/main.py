@@ -290,8 +290,7 @@ def match(pattern, text, complete=True):
     elif type(pattern) in [str, unicode]:
         if complete:
             return () if pattern == text.lower() else False
-        else:
-            return () if pattern in text.lower() else False
+        return () if pattern in text.lower() else False
 
     # Assume compiled regex
     m = pattern.search(text)
@@ -763,8 +762,7 @@ class EventServer(ECServerThread):
                 self._slave_status["last_sync"],
                 self._slave_status["success"],
             ]
-        else:
-            return ["master", 0.0, False]
+        return ["master", 0.0, False]
 
     def _add_event_limit_status(self):
         return [
@@ -1401,8 +1399,7 @@ class EventServer(ECServerThread):
 
         if cmk.regex.is_regex(value):
             return re.compile(value, re.IGNORECASE)
-        else:
-            return val.lower()
+        return val.lower()
 
 
     def hash_rule(self, rule):
@@ -3671,8 +3668,7 @@ class EventStatus(object):
         if found["phase"] == "counting" and found["count"] >= count["count"]:
             found["phase"] = "open"
             return found  # do event action, return found copy of event
-        else:
-            return False  # do not do event action
+        return False  # do not do event action
 
     # locked with self.lock
     def delete_event(self, event_id, user):

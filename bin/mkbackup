@@ -857,8 +857,7 @@ class BackupStream(MKBackupStream):
     def _process_chunk(self, chunk):
         if self._encrypt():
             return self._cipher.encrypt(chunk)
-        else:
-            return chunk
+        return chunk
 
 
     def _get_encryption_public_key(self):
@@ -915,11 +914,10 @@ class RestoreStream(MKBackupStream):
             chunk = self._next_chunk[:-padding_length]
             return chunk, True
 
-        else:
-            # Processing regular chunk
-            chunk = self._next_chunk
-            self._next_chunk = this_chunk
-            return chunk, False
+        # Processing regular chunk
+        chunk = self._next_chunk
+        self._next_chunk = this_chunk
+        return chunk, False
 
 
     def _process_chunk(self, chunk):
@@ -999,8 +997,7 @@ class RestoreStream(MKBackupStream):
 def backup_base_path():
     if g_job_id != None:
         return job_backup_path_during_backup()
-    else:
-        return existing_backup_path()
+    return existing_backup_path()
 
 
 def existing_backup_path():

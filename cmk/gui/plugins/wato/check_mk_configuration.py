@@ -304,12 +304,15 @@ register_configvar(group,
 
 register_configvar(group,
     "start_url",
-    TextAscii(title = _("Start URL to display in main frame"),
-              help = _("When you point your browser to the Check_MK GUI, usually the dashboard "
-                       "is shown in the main (right) frame. You can replace this with any other "
-                       "URL you like here."),
-              size = 80,
-              attrencode = True),
+    TextAscii(
+        title = _("Start URL to display in main frame"),
+        help = _("When you point your browser to the Check_MK GUI, usually the dashboard "
+                 "is shown in the main (right) frame. You can replace this with any other "
+                 "URL you like here."),
+        size = 80,
+        allow_empty = False,
+        validate = utils.validate_start_url,
+    ),
     domain = "multisite")
 
 register_configvar(group,

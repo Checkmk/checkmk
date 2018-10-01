@@ -1,0 +1,11 @@
+Title: esx_vsphere_objects: Rule for VMs to run on different hosts
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1538373356
+Class: feature
+
+You can now create a rule to check that a given list of VMs
+ run on at least N different ESX hosts.

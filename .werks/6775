@@ -1,0 +1,11 @@
+Title: Parent scan now uses no-agent+no-snmp tags instead of ping
+Level: 1
+Component: core
+Compatible: compat
+Edition: cre
+Version: 1.5.0p6
+Date: 1538387717
+Class: fix
+
+Parent hosts created with the parent scan now get the correct no-agent
+together with the no-snmp tag set instead of ping.

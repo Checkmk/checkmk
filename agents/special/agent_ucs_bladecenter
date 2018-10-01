@@ -159,23 +159,22 @@ class Server(object):
 handle = Server(host_address)
 handle.login(opt_username, opt_password)
 
-for entry, fields in [
-        ## FANS
-        ("<<<ucs_bladecenter_fans:sep(9)>>>", None),
+entities = [
+    ## FANS
+    ("ucs_bladecenter_fans", [
         ("equipmentFan",                    ["Dn", "Model", "OperState"]),
         ("equipmentFanModuleStats",         ["Dn", "AmbientTemp"]),
         ("equipmentNetworkElementFanStats", ["Dn", "SpeedAvg"]),
         ("equipmentRackUnitFanStats",       ["Dn", "SpeedAvg"]),
         ("equipmentFanStats",               ["Dn", "SpeedAvg"]),
-
-        ### PSU
-        ("<<<ucs_bladecenter_psu:sep(9)>>>", None),
+    ]),
+    ### PSU
+    ("ucs_bladecenter_psu", [
         ("equipmentPsuInputStats",  ["Dn", "Current", "PowerAvg", "Voltage"]),
         ("equipmentPsuStats",       ["Dn", "AmbientTemp", "Output12vAvg", "Output3v3Avg"]),
-
-        # NETWORK
-        ("<<<ucs_bladecenter_if:sep(9)>>>", None),
-
+    ]),
+    # NETWORK
+    ("ucs_bladecenter_if", [
         # Fibrechannel
         ("fcStats",    ["Dn", "BytesRx", "BytesTx", "PacketsRx", "PacketsTx", "Suspect"]),
         ("fcErrStats", ["Dn", "Rx", "Tx", "CrcRx", "DiscardRx", "DiscardTx"]),
@@ -197,39 +196,39 @@ for entry, fields in [
         ("fabricDceSwSrvEp",   ["Dn", "EpDn", "AdminState", "OperState",               "PortId", "SwitchId", "SlotId"]),
         ("fabricDceSwSrvPc",   ["Dn",         "AdminState", "OperState",               "OperSpeed", "Name", "PortId"]),
         ("fabricDceSwSrvPcEp", ["Dn", "EpDn", "AdminState", "OperState",               "PortId", "SwitchId", "SlotId"]),
-
-        # Fault Instances
-        ("<<<ucs_bladecenter_faultinst:sep(9)>>>", None),
+    ]),
+    # Fault Instances
+    ("ucs_bladecenter_faultinst", [
         ("faultInst", ["Dn", "Descr", "Severity"]),
-
-        # TopSystem Info
-        ("<<<ucs_bladecenter_topsystem:sep(9)>>>", None),
+    ]),
+    # TopSystem Info
+    ("ucs_bladecenter_topsystem", [
         ("topSystem", ["Address", "CurrentTime", "Ipv6Addr", "Mode", "Name", "SystemUpTime"]),
-        ]:
-    try:
-        if fields == None:
-            # Just a new section header...
-            print entry
-            continue
+    ]),
+]
 
-        response = handle.get_class(entry)
-        elements = get_pattern('<%(entry)s (.*?)/>' % {"entry": entry}, response)
-        for element in elements:
-            sys.stdout.write("%s\t" % entry)
-            values = []
-            for field in fields:
-                tmp_field = field[0].lower()+ field[1:] # workaround
-                value = get_pattern('%s="(.*?)"' % tmp_field, element)[0]
-                if value:
-                    values.append("%s %s" % (field, value))
-            print "\t".join(values)
-    except Exception, e:
-        print e
-        if opt_debug:
-            try:
-                handle.Logout()
-            except:
-                pass
-            raise
+for header, entries in entities:
+    sys.stdout.write("<<<%s:sep(9)>>>\n" % header)
+    for entry, fields in entries:
+        try:
+            response = handle.get_class(entry)
+            elements = get_pattern('<%(entry)s (.*?)/>' % {"entry": entry}, response)
+            for element in elements:
+                sys.stdout.write("%s\t" % entry)
+                values = []
+                for field in fields:
+                    tmp_field = field[0].lower()+ field[1:] # workaround
+                    value = get_pattern('%s="(.*?)"' % tmp_field, element)[0]
+                    if value:
+                        values.append("%s %s" % (field, value))
+                sys.stdout.write("%s\n" % "\t".join(values))
+        except Exception, e:
+            sys.stderr.write("%s\n" % e)
+            if opt_debug:
+                try:
+                    handle.Logout()
+                except:
+                    pass
+                raise
 
 handle.Logout()

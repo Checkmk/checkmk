@@ -39,6 +39,7 @@ import cmk.paths
 
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
+from cmk.gui.exceptions import MKUserError
 
 
 def drop_dotzero(v, digits=2):
@@ -93,6 +94,12 @@ def is_allowed_url(url):
         return False
 
     return True
+
+
+def validate_start_url(value, varprefix):
+    if not is_allowed_url(value):
+        raise MKUserError(varprefix, _("The given value is not allowed. You may only configure "
+                                       "relative URLs like <tt>dashboard.py?name=my_dashboard</tt>."))
 
 
 def cmp_version(a, b):

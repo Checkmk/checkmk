@@ -28,7 +28,10 @@ from cmk.gui.config import theme_choices
 from cmk.gui.valuespec import *
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
-from . import UserAttribute, user_attribute_registry
+from cmk.gui.plugins.userdb import (
+    UserAttribute,
+    user_attribute_registry,
+)
 
 @user_attribute_registry.register
 class ForceAuthUserUserAttribute(UserAttribute):
@@ -160,7 +163,9 @@ class StartURLUserAttribute(UserAttribute):
                                  "URL you like here."),
                         size = 80,
                         default_value = "dashboard.py",
-                        attrencode = True
+                        attrencode = True,
+                        allow_empty = False,
+                        validate = utils.validate_start_url,
                     ),
                 ],
             ),

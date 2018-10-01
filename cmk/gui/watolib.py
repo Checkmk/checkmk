@@ -10536,7 +10536,6 @@ class LivestatusViaTCP(Dictionary):
         kwargs["optional_keys"] = [ "only_from" ]
         super(LivestatusViaTCP, self).__init__(**kwargs)
 
-
 #.
 #   .--CME-----------------------------------------------------------------.
 #   |                          ____ __  __ _____                           |

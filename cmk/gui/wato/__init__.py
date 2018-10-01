@@ -1230,7 +1230,7 @@ class ModeAjaxPopupMoveToFolder(WatoWebApiMode):
 
         self._ident = html.var("ident")
 
-        self._back_url = html.var("back_url")
+        self._back_url = html.get_url_input("back_url")
         if not self._back_url or not self._back_url.startswith("wato.py"):
             raise MKUserError("back_url", _("Invalid back URL provided."))
 
@@ -12635,7 +12635,7 @@ class AgentOutputPage(object):
             raise MKGeneralException(_("Invalid type specified."))
         self._ty = ty
 
-        self._back_url = html.var("back_url")
+        self._back_url = html.get_url_input("back_url")
 
         init_wato_datastructures(with_wato_lock=True)
 
@@ -13505,8 +13505,8 @@ class ModeCheckManPage(WatoMode):
 
     def buttons(self):
         global_buttons()
-        if html.var("back"):
-            back_url = html.var("back")
+        if html.has_var("back"):
+            back_url = html.get_url_input("back")
             html.context_button(_("Back"), back_url, "back")
 
         html.context_button(_("All Check Plugins"), html.makeuri_contextless([("mode", "check_plugins")]), "check_plugins")
@@ -13621,7 +13621,7 @@ class ModeIcons(WatoMode):
 
 
     def buttons(self):
-        back_url = html.var("back")
+        back_url = html.get_url_input("back")
         if back_url:
             html.context_button(_("Back"), back_url, "back")
         else:

@@ -1043,7 +1043,7 @@ class Overridable(Base):
     # Page for editing an existing page, or creating a new one
     @classmethod
     def page_edit(cls):
-        back_url = html.var("back", cls.list_url())
+        back_url = html.get_url_input("back", cls.list_url())
 
         cls.load()
         cls.need_overriding_permission("edit")

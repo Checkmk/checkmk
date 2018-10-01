@@ -4349,7 +4349,7 @@ class IconSelector(ValueSpec):
 
         import cmk.gui.config as config # FIXME: Clean this up. But how?
         if config.user.may('wato.icons'):
-            back_param = '&back='+html.urlencode(html.var('back')) if html.has_var('back') else ''
+            back_param = '&back='+html.urlencode(html.get_url_input('back')) if html.has_var('back') else ''
             html.buttonlink('wato.py?mode=icons' + back_param, _('Manage'))
 
         html.close_div()

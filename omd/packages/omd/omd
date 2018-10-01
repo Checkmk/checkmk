@@ -1099,8 +1099,7 @@ def merge_update_file(relpath, old_version, new_version):
         status = f.close()
         if status:
             return status / 256
-        else:
-            return 0
+        return 0
 
     if try_merge() == 0:
         # ACHTUNG: Hier müssen die Dateien $DATEI-alt, $DATEI-neu und $DATEI.orig
@@ -1549,8 +1548,7 @@ def filetype(p):
 def file_contents(path):
     if '/skel/' in path:
         return instantiate_skel(path)
-    else:
-        return file(path).read()
+    return file(path).read()
 
 
 #.
@@ -1785,9 +1783,8 @@ def call_init_scripts(sitename, command, daemon=None, exclude_daemons=None):
                 ok = False
 
     if ok:
-         return 0
-    else:
-         return 2
+        return 0
+    return 2
 
 def check_status(sitename, display=True, daemon=None, bare=False):
     num_running = 0
@@ -2300,8 +2297,7 @@ def init_action(command, args, options):
 
     if command == "status":
         return check_status(g_sitename, True, daemon, "bare" in options)
-    else:
-        return call_init_scripts(g_sitename, command, daemon)
+    return call_init_scripts(g_sitename, command, daemon)
 
 
 #.
@@ -2480,8 +2476,7 @@ def pipe_pager():
         pager = "less -F -X"
     if pager:
         return "| %s" % pager
-    else:
-        return ""
+    return ""
 
 def call_scripts(phase):
     path = g_sitedir + "/lib/omd/scripts/" + phase
@@ -3329,8 +3324,7 @@ def _get_edition(omd_version):
         return "enterprise"
     elif edition_short == "cme":
         return "managed"
-    else:
-        return "unknown"
+    return "unknown"
 
 
 def main_umount(args, options=None):
@@ -4091,8 +4085,7 @@ class PackageManager(object):
         if distro_code.startswith("el") \
            or distro_code.startswith("sles"):
             return PackageManagerRPM()
-        else:
-            return PackageManagerDEB()
+        return PackageManagerDEB()
 
 
     @abc.abstractmethod

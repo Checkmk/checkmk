@@ -205,8 +205,7 @@ def _get_event_tags(event_columns, event):
     def to_string(v):
         if type(v) in [str, unicode]:
             return v
-        else:
-            return "%s" % v
+        return "%s" % v
 
     tags = {}
     for key, value in substs:
@@ -430,5 +429,4 @@ def _core_has_notifications_disabled(event, logger):
 def to_utf8(x):
     if type(x) == unicode:
         return x.encode("utf-8")
-    else:
-        return x
+    return x

@@ -62,8 +62,7 @@ class MEIFolderCleaner(object):
         if process != 0:
             kernel32.CloseHandle(process)
             return True
-        else:
-            return False
+        return False
 
 
     def find_and_remove_leftover_folders(self, hint_filenames):
@@ -308,8 +307,7 @@ def is_inode_cabable(path):
         volume_info = win32api.GetVolumeInformation(volume_name)
         volume_type = volume_info[-1]
         return "ntfs" in volume_type.lower()
-    else:
-        return False
+    return False
 
 
 def process_logfile(logfile, patterns, opt, status):

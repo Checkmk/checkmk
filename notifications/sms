@@ -93,8 +93,7 @@ recipient = os.environ['NOTIFY_CONTACTPAGER'].replace(" ", "")
 def quote_message(msg, max_length=None):
     if max_length:
         return "'" + msg.replace("'", "'\"'\"'")[:max_length-2] + "'"
-    else:
-        return "'" + msg.replace("'", "'\"'\"'") + "'"
+    return "'" + msg.replace("'", "'\"'\"'") + "'"
 
 if send_path:
     if os.system("%s %s %s" % (send_path, recipient, quote_message(message, 160))) >> 8 != 0:

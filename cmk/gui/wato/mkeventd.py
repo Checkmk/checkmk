@@ -1140,8 +1140,7 @@ class EventConsoleMode(WatoMode):
 
         if html.var("simulate") or html.var("_generate"):
             return vs_mkeventd_event.from_html_vars("event")
-        else:
-            return None
+        return None
 
 
     def _event_simulation_action(self):
@@ -1801,8 +1800,7 @@ class ModeEventConsoleEditRulePack(EventConsoleMode):
     def title(self):
         if self._new:
             return _("Create new rule pack")
-        else:
-            return _("Edit rule pack %s") % self._rule_packs[self._edit_nr]["id"]
+        return _("Edit rule pack %s") % self._rule_packs[self._edit_nr]["id"]
 
 
     def buttons(self):
@@ -1867,8 +1865,7 @@ class ModeEventConsoleEditRulePack(EventConsoleMode):
     def _valuespec(self):
         if self._type == ec.RulePackType.internal:
             return vs_mkeventd_rule_pack()
-        else:
-            return vs_mkeventd_rule_pack(fixed_id=self._rule_pack['id'], fixed_title=self._rule_pack['title'])
+        return vs_mkeventd_rule_pack(fixed_id=self._rule_pack['id'], fixed_title=self._rule_pack['title'])
 
 
 
@@ -1929,8 +1926,7 @@ class ModeEventConsoleEditRule(EventConsoleMode):
     def title(self):
         if self._new:
             return _("Create new rule")
-        else:
-            return _("Edit rule %s") % self._rules[self._edit_nr]["id"]
+        return _("Edit rule %s") % self._rules[self._edit_nr]["id"]
 
 
     def buttons(self):
@@ -2079,8 +2075,7 @@ class ModeEventConsoleStatus(EventConsoleMode):
             return None, _("Switched to %s mode") % new_mode
         elif c == False:
             return ""
-        else:
-            return
+        return
 
 
     def page(self):
@@ -2155,8 +2150,7 @@ class ModeEventConsoleSettings(EventConsoleMode, GlobalSettingsMode):
     def title(self):
         if self._search:
             return html.render_text(_("Event Console configuration matching '%s'") % self._search)
-        else:
-            return _('Event Console Configuration')
+        return _('Event Console Configuration')
 
 
     def buttons(self):
@@ -2200,8 +2194,7 @@ class ModeEventConsoleSettings(EventConsoleMode, GlobalSettingsMode):
 
             if action == "_reset":
                 return "mkeventd_config", msg
-            else:
-                return "mkeventd_config"
+            return "mkeventd_config"
         elif c == False:
             return ""
 
@@ -2475,8 +2468,7 @@ class ModeEventConsoleMIBs(EventConsoleMode):
                 return
             elif c == False:
                 return "" # not yet confirmed
-            else:
-                return    # browser reload
+            return    # browser reload
 
 
     def _delete_mib(self, filename, mib_name):
@@ -3315,8 +3307,8 @@ def convert_mkevents_hostspec(value):
         return [ "$HOSTNAME$" ]
     elif value == "$HOSTNAME$/$HOSTADDRESS$":
         return [ "$HOSTNAME$", "$HOSTADDRESS$" ]
-    else: # custom
-        return value
+    # custom
+    return value
 
 register_rule(
     group,

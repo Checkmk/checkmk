@@ -74,8 +74,7 @@ class MailList(object):
     def __getitem__(self, idx):
         if isinstance(idx, slice):
             return MailList(self.__conn, self.__id_list[idx])
-        else:
-            return self.__get_by_index(self.__id_list[idx])
+        return self.__get_by_index(self.__id_list[idx])
 
     def __get_by_index(self, idx):
         return Mail(self.__conn, idx)

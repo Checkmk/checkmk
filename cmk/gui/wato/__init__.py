@@ -684,8 +684,7 @@ class ModeFolder(WatoMode):
             return "folder"
         elif c == False: # not yet confirmed
             return ""
-        else:
-            return None # browser reload
+        return None # browser reload
 
 
     def page(self):
@@ -1103,8 +1102,7 @@ class ModeFolder(WatoMode):
             return "folder", _("Successfully deleted %d hosts") % len(host_names)
         elif c == False: # not yet confirmed
             return ""
-        else:
-            return None # browser reload
+        return None # browser reload
 
 
     # FIXME: Cleanup
@@ -1193,8 +1191,7 @@ def delete_host_after_confirm(delname):
         return "folder"
     elif c == False: # not yet confirmed
         return ""
-    else:
-        return None # browser reload
+    return None # browser reload
 
 
 # Create list of all hosts that are select with checkboxes in the current file.
@@ -1260,8 +1257,7 @@ class ModeAjaxPopupMoveToFolder(WatoWebApiMode):
     def _move_title(self):
         if self._what == "host":
             return _('Move this host to:')
-        else:
-            return _('Move this folder to:')
+        return _('Move this folder to:')
 
 
     def _get_choices(self):
@@ -1667,8 +1663,7 @@ class ModeEditHost(HostMode):
         if html.var("delete"): # Delete this host
             if not html.transaction_valid():
                 return "folder"
-            else:
-                return delete_host_after_confirm(self._host.name())
+            return delete_host_after_confirm(self._host.name())
 
         if html.check_transaction():
             attributes = watolib.collect_attributes("host" if not self._is_cluster() else "cluster")
@@ -1680,8 +1675,7 @@ class ModeEditHost(HostMode):
         elif html.var("diag_host"):
             html.set_var("_try", "1")
             return "diag_host"
-        else:
-            return "folder"
+        return "folder"
 
 
     def _show_host_name(self):
@@ -1760,8 +1754,7 @@ class CreateHostMode(HostMode):
         elif html.var("diag_host"):
             html.set_var("_try", "1")
             return "diag_host", create_msg
-        else:
-            return "folder", create_msg
+        return "folder", create_msg
 
 
     def _show_host_name(self):
@@ -1786,8 +1779,7 @@ class ModeCreateHost(CreateHostMode):
     def title(self):
         if self._mode == "clone":
             return _("Create clone of %s") % self._host.name()
-        else:
-            return _("Create new host")
+        return _("Create new host")
 
 
     @classmethod
@@ -1828,8 +1820,7 @@ class ModeCreateCluster(CreateHostMode):
     def title(self):
         if self._mode == "clone":
             return _("Create clone of %s") % self._host.name()
-        else:
-            return _("Create new cluster")
+        return _("Create new cluster")
 
 
     @classmethod
@@ -1983,8 +1974,7 @@ class ModeBulkRenameHost(WatoMode):
 
         if new_hostname != hostname:
             return new_hostname
-        else:
-            return None
+        return None
 
 
     def _host_renaming_operation(self, operation, hostname):
@@ -2009,8 +1999,7 @@ class ModeBulkRenameHost(WatoMode):
             old_name, new_name = operation[1]
             if old_name == hostname:
                 return new_name
-            else:
-                return hostname
+            return hostname
         elif operation[0] == 'regex':
             match_regex, new_name = operation[1]
             match = regex(match_regex).match(hostname)
@@ -2019,8 +2008,7 @@ class ModeBulkRenameHost(WatoMode):
                     new_name = new_name.replace("\\%d" % (nr+1), group)
                 new_name = new_name.replace("\\0", hostname)
                 return new_name
-            else:
-                return hostname
+            return hostname
 
 
     def page(self):
@@ -2252,8 +2240,7 @@ def rename_host_as_cluster_node(all_hosts, oldname, newname):
                 clusters.append(somehost.name())
     if clusters:
         return [ "cluster_nodes" ] * len(clusters)
-    else:
-        return []
+    return []
 
 
 def rename_host_in_parents(oldname, newname):
@@ -2315,8 +2302,7 @@ def rename_host_in_rulesets(folder, oldname, newname):
         for varname in unique:
             actions += [ "wato_rules" ] * changed_rulesets.count(varname)
         return actions
-    else:
-        return []
+    return []
 
 
 def rename_host_in_event_rules(oldname, newname):
@@ -2413,8 +2399,7 @@ def rename_host_in_multisite(oldname, newname):
 
     if users_changed:
         return [ "favorites" ] * total_changed
-    else:
-        return []
+    return []
 
 
 def rename_host_in_bi(oldname, newname):
@@ -3591,8 +3576,7 @@ class ModeDiscovery(WatoMode):
 
         if rule:
             return [rule.folder]
-        else:
-            return []
+        return []
 
 
     def _get_rule_of_host(self, ruleset, value):
@@ -3608,22 +3592,21 @@ class ModeDiscovery(WatoMode):
                 return self.SERVICE_REMOVED
             elif table_source == self.SERVICE_IGNORED:
                 return self.SERVICE_IGNORED
-            else: #table_source in [self.SERVICE_MONITORED, self.SERVICE_UNDECIDED]
-                return self.SERVICE_MONITORED
-        else:
-            bulk_target = None
-            for target in [self.SERVICE_MONITORED, self.SERVICE_UNDECIDED,
-                           self.SERVICE_IGNORED, self.SERVICE_REMOVED]:
-                if html.has_var("_bulk_%s_%s" % (table_source, target)):
-                    bulk_target = target
-                    break
-            checkbox_var_value = html.var(self._checkbox_name(check_type, item))
-            if bulk_target and (checkbox_var_value == "on" or not self._show_checkboxes):
-                return bulk_target
-            elif checkbox_var_value:
-                return checkbox_var_value
-            else:
-                return table_source
+            #table_source in [self.SERVICE_MONITORED, self.SERVICE_UNDECIDED]
+            return self.SERVICE_MONITORED
+
+        bulk_target = None
+        for target in [self.SERVICE_MONITORED, self.SERVICE_UNDECIDED,
+                       self.SERVICE_IGNORED, self.SERVICE_REMOVED]:
+            if html.has_var("_bulk_%s_%s" % (table_source, target)):
+                bulk_target = target
+                break
+        checkbox_var_value = html.var(self._checkbox_name(check_type, item))
+        if bulk_target and (checkbox_var_value == "on" or not self._show_checkboxes):
+            return bulk_target
+        elif checkbox_var_value:
+            return checkbox_var_value
+        return table_source
 
     #.
     #   .--page helper---------------------------------------------------------.
@@ -3894,8 +3877,7 @@ class ModeDiscovery(WatoMode):
             return "checkgroup_parameters:" + checkgroup
         elif table_source in [self.SERVICE_ACTIVE, self.SERVICE_ACTIVE_IGNORED]:
             return "active_checks:" + check_type
-        else:
-            return None
+        return None
 
 
     def _show_check_parameters(self, table_source, check_type, checkgroup, params):
@@ -4285,8 +4267,7 @@ class ModeBulkImport(WatoMode):
             html.set_var('_bulk_inventory', '1')
             html.set_var('show_checkboxes', '1')
             return "bulkinventory"
-        else:
-            return "folder", msg
+        return "folder", msg
 
 
     def _delete_csv_file(self):
@@ -5453,21 +5434,20 @@ class ModeRandomHosts(WatoMode):
             folder.create_hosts(hosts_to_create)
             return count
 
-        else:
-            total_created = 0
-            created = 0
-            while created < folders:
-                created += 1
-                i = 1
-                while True:
-                    folder_name = "folder_%02d" % i
-                    if not folder.has_subfolder(folder_name):
-                        break
-                    i += 1
+        total_created = 0
+        created = 0
+        while created < folders:
+            created += 1
+            i = 1
+            while True:
+                folder_name = "folder_%02d" % i
+                if not folder.has_subfolder(folder_name):
+                    break
+                i += 1
 
-                subfolder = folder.create_subfolder(folder_name, "Subfolder %02d" % i, {})
-                total_created += self._create_random_hosts(subfolder, count, folders, levels - 1)
-            return total_created
+            subfolder = folder.create_subfolder(folder_name, "Subfolder %02d" % i, {})
+            total_created += self._create_random_hosts(subfolder, count, folders, levels - 1)
+        return total_created
 
 #.
 #   .--Pending & Replication-----------------------------------------------.
@@ -6288,8 +6268,7 @@ class ModeBackupRestore(backup.PageBackupRestore, WatoMode):
     def title(self):
         if not self._target:
             return _("Site restore")
-        else:
-            return _("Restore from target: %s") % self._target.title()
+        return _("Restore from target: %s") % self._target.title()
 
 
     def targets(self):
@@ -6545,8 +6524,7 @@ class ModeEditLDAPConnection(LDAPMode):
     def title(self):
         if self._new:
             return _("Create new LDAP Connection")
-        else:
-            return _("Edit LDAP Connection: %s") % html.render_text(self._connection_id)
+        return _("Edit LDAP Connection: %s") % html.render_text(self._connection_id)
 
 
     def buttons(self):
@@ -6664,8 +6642,7 @@ class ModeEditLDAPConnection(LDAPMode):
         conn, msg = connection.connect_server(address)
         if conn:
             return (True, _('Connection established. The connection settings seem to be ok.'))
-        else:
-            return (False, msg)
+        return (False, msg)
 
 
     def _test_user_base_dn(self, connection, address):
@@ -6678,9 +6655,8 @@ class ModeEditLDAPConnection(LDAPMode):
             return (False, _('The User Base DN could not be found. Maybe the provided '
                              'user (provided via bind credentials) has no permission to '
                              'access the Base DN or the credentials are wrong.'))
-        else:
-            return (False, _('The User Base DN could not be found. Seems you need '
-                             'to configure proper bind credentials.'))
+        return (False, _('The User Base DN could not be found. Seems you need '
+                         'to configure proper bind credentials.'))
 
 
     def _test_user_count(self, connection, address):
@@ -6696,14 +6672,12 @@ class ModeEditLDAPConnection(LDAPMode):
             if 'successful bind must be completed' in msg:
                 if not connection.has_bind_credentials_configured():
                     return (False, _('Please configure proper bind credentials.'))
-                else:
-                    return (False, _('Maybe the provided user (provided via bind credentials) has not '
+                return (False, _('Maybe the provided user (provided via bind credentials) has not '
                                      'enough permissions or the credentials are wrong.'))
 
         if ldap_users and len(ldap_users) > 0:
             return (True, _('Found %d users for synchronization.') % len(ldap_users))
-        else:
-            return (False, msg)
+        return (False, msg)
 
 
     def _test_group_base_dn(self, connection, address):
@@ -6712,8 +6686,7 @@ class ModeEditLDAPConnection(LDAPMode):
         connection.connect(enforce_new = True, enforce_server = address)
         if connection.group_base_dn_exists():
             return (True, _('The Group Base DN could be found.'))
-        else:
-            return (False, _('The Group Base DN could not be found.'))
+        return (False, _('The Group Base DN could not be found.'))
 
 
     def _test_group_count(self, connection, address):
@@ -6729,13 +6702,11 @@ class ModeEditLDAPConnection(LDAPMode):
             if 'successful bind must be completed' in msg:
                 if not connection.has_bind_credentials_configured():
                     return (False, _('Please configure proper bind credentials.'))
-                else:
-                    return (False, _('Maybe the provided user (provided via bind credentials) has not '
+                return (False, _('Maybe the provided user (provided via bind credentials) has not '
                                      'enough permissions or the credentials are wrong.'))
         if ldap_groups and len(ldap_groups) > 0:
             return (True, _('Found %d groups for synchronization.') % len(ldap_groups))
-        else:
-            return (False, msg)
+        return (False, msg)
 
 
     def _test_groups_to_roles(self, connection, address):
@@ -6799,8 +6770,7 @@ class ModeEditGlobals(GlobalSettingsMode):
     def title(self):
         if self._search:
             return _("Global Settings matching '%s'") % html.render_text(self._search)
-        else:
-            return _("Global Settings")
+        return _("Global Settings")
 
 
     def buttons(self):
@@ -6848,8 +6818,7 @@ class ModeEditGlobals(GlobalSettingsMode):
 
             if action == "_reset":
                 return "globalvars", msg
-            else:
-                return "globalvars"
+            return "globalvars"
         elif c == False:
             return ""
 
@@ -6969,8 +6938,7 @@ class NotificationsMode(EventsMode):
         def transform_ec_rule_id_match(val):
             if isinstance(val, list):
                 return val
-            else:
-                return [val]
+            return [val]
 
         return [
            ( "match_escalation",
@@ -8030,13 +7998,11 @@ class EditNotificationRuleMode(NotificationsMode):
         if self._new:
             if self._user_id():
                 return _("Create new notification rule for user %s") % self._user_id()
-            else:
-                return _("Create new notification rule")
-        else:
-            if self._user_id():
-                return _("Edit notification rule %d of user %s") % (self._edit_nr, self._user_id())
-            else:
-                return _("Edit notification rule %d") % self._edit_nr
+            return _("Create new notification rule")
+
+        if self._user_id():
+            return _("Edit notification rule %d of user %s") % (self._edit_nr, self._user_id())
+        return _("Edit notification rule %d") % self._edit_nr
 
 
     def buttons(self):
@@ -8126,8 +8092,7 @@ class ModeEditNotificationRule(EditNotificationRuleMode):
     def _back_mode(self):
         if self._user_id():
             return "user_notifications"
-        else:
-            return "notifications"
+        return "notifications"
 
 
 
@@ -8163,15 +8128,13 @@ class ModeEditPersonalNotificationRule(EditNotificationRuleMode):
     def _back_mode(self):
         if config.has_wato_slave_sites():
             return
-        else:
-            return "user_notifications_p"
+        return "user_notifications_p"
 
 
     def title(self):
         if self._new:
             return _("Create new notification rule")
-        else:
-            return _("Edit notification rule %d") % self._edit_nr
+        return _("Edit notification rule %d") % self._edit_nr
 
 
     def buttons(self):
@@ -8279,8 +8242,7 @@ class ModeEditSiteGlobals(ModeSites, GlobalSettingsMode):
 
             if action == "_reset":
                 return "edit_site_globals", msg
-            else:
-                return "edit_site_globals"
+            return "edit_site_globals"
 
         elif c == False:
             return ""
@@ -8846,8 +8808,7 @@ class ModeEditUser(WatoMode):
     def title(self):
         if self._is_new_user:
             return _("Create new user")
-        else:
-            return _("Edit user %s") % self._user_id
+        return _("Edit user %s") % self._user_id
 
 
     def buttons(self):
@@ -9311,8 +9272,7 @@ class ModeEditUser(WatoMode):
     def _pw_suffix(self):
         if self._is_new_user:
             return 'new'
-        else:
-            return base64.b64encode(self._user_id.encode("utf-8"))
+        return base64.b64encode(self._user_id.encode("utf-8"))
 
 
     def _is_locked(self, attr):
@@ -10075,8 +10035,7 @@ class ModeEditAuxtag(ModeEditHosttagConfiguration):
     def title(self):
         if self._is_new_aux_tag():
             return _("Create new auxiliary tag")
-        else:
-            return _("Edit auxiliary tag")
+        return _("Edit auxiliary tag")
 
 
     def _is_new_aux_tag(self):
@@ -10198,8 +10157,7 @@ class ModeEditHosttagGroup(ModeEditHosttagConfiguration):
     def title(self):
         if self._is_new_hosttag_group():
             return _("Create new tag group")
-        else:
-            return _("Edit tag group")
+        return _("Edit tag group")
 
 
     def _is_new_hosttag_group(self):
@@ -10665,8 +10623,7 @@ class ModeRuleEditor(WatoMode):
     def title(self):
         if self._only_host:
             return _("Rules effective on host ") + self._only_host
-        else:
-            return _("Rule-Based Configuration of Host & Service Parameters")
+        return _("Rule-Based Configuration of Host & Service Parameters")
 
 
     def buttons(self):
@@ -10789,8 +10746,7 @@ class RulesetMode(WatoMode):
     def title(self):
         if self._only_host:
             return _("%s - %s") % (self._only_host, self._title)
-        else:
-            return self._title
+        return self._title
 
 
     def buttons(self):
@@ -11133,8 +11089,7 @@ class ModeEditRuleset(WatoMode):
                 return
             elif c == False: # not yet confirmed
                 return ""
-            else:
-                return None # browser reload
+            return None # browser reload
 
         else:
             if not html.check_transaction():
@@ -11613,8 +11568,7 @@ class ModeRuleSearch(WatoMode):
     def title(self):
         if self.search_options:
             return _("Refine search")
-        else:
-            return _("Search rulesets and rules")
+        return _("Search rulesets and rules")
 
 
     def buttons(self):
@@ -13072,8 +13026,7 @@ class ModePatternEditor(WatoMode):
             return _("Logfile Patterns of Logfile %s on all Hosts") % (self._item)
         elif not self._item:
             return _("Logfile Patterns of Host %s") % (self._hostname)
-        else:
-            return _("Logfile Patterns of Logfile %s on Host %s") % (self._item, self._hostname)
+        return _("Logfile Patterns of Logfile %s on Host %s") % (self._item, self._hostname)
 
 
     def buttons(self):
@@ -13396,8 +13349,7 @@ class ModeCheckPlugins(WatoMode):
                 return False
             elif not op:
                 return True
-            else:
-                return p[0] == op[0] and path_prefix_matches(p[1:], op[1:])
+            return p[0] == op[0] and path_prefix_matches(p[1:], op[1:])
 
         def strip_manpage_entry(entry):
             return dict([ (k,v) for (k,v) in entry.items() if k in [
@@ -14253,8 +14205,7 @@ def configure_attributes(new, hosts, for_what, parent, myself=None, without_attr
     def sort_host_attributes(a, b):
         if a[0].name() == "tag_address_family":
             return -1
-        else:
-            return 0
+        return 0
 
     volatile_topics = []
     hide_attributes = []

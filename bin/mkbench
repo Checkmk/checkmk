@@ -2556,8 +2556,7 @@ class TestCase(object):
             return 0
         elif self.finished_at == None:
             return time.time() - self.started_at
-        else:
-            return self.finished_at - self.started_at
+        return self.finished_at - self.started_at
 
 
     def serialize(self):

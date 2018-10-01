@@ -701,8 +701,7 @@ def put_in_envelope(payload):
 def convert_hostname(h):
     if opt_spaces == "cut":
         return h.split()[0]
-    else:
-        return h.replace(" ", "_")
+    return h.replace(" ", "_")
 
 def get_counters(esx_version_num):
     needed_ids = [

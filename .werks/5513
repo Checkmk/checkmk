@@ -1,0 +1,11 @@
+Title: cmk-update-agent: Fix crash on more than two passed "-v" flags
+Level: 1
+Component: agents
+Class: fix
+Compatible: compat
+Edition: cee
+State: unknown
+Version: 1.6.0i1
+Date: 1538386230
+
+

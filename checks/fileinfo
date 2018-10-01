@@ -259,7 +259,6 @@ def check_fileinfo(item, params, parsed):
             return 0, "File not found - %s" % outof_range_txt
         else:
             return params.get("state_missing", 3), "File not found"
-    return fileinfo_check_function(check_definition, params, outof_range_txt)
 
 
 # FIXME the following does not apply anymore, because "%s" is allowed in group_name

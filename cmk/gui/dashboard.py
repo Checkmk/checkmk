@@ -1020,7 +1020,7 @@ def choose_view(name):
 
     html.header(_('Create Dashlet from existing View'), stylesheets=["pages"])
     html.begin_context_buttons()
-    back_url = html.var("back", "dashboard.py?edit=1&name=%s" % html.urlencode(html.var('name')))
+    back_url = html.get_url_input("back", "dashboard.py?edit=1&name=%s" % html.urlencode(html.var('name')))
     html.context_button(_("Back"), back_url, "back")
     html.end_context_buttons()
 
@@ -1129,8 +1129,8 @@ def page_edit_dashlet():
     html.header(title, stylesheets=["pages","views"])
 
     html.begin_context_buttons()
-    back_url = html.var('back', 'dashboard.py?name=%s&edit=1' % board)
-    next_url = html.var('next', back_url)
+    back_url = html.get_url_input('back', 'dashboard.py?name=%s&edit=1' % board)
+    next_url = html.get_url_input('next', back_url)
     html.context_button(_('Back'), back_url, 'back')
     html.context_button(_('All Dashboards'), 'edit_dashboards.py', 'dashboard')
     html.end_context_buttons()
@@ -1283,7 +1283,7 @@ def page_delete_dashlet():
     html.header(_('Confirm Dashlet Deletion'), stylesheets=["pages","views"])
 
     html.begin_context_buttons()
-    back_url = html.var('back', 'dashboard.py?name=%s&edit=1' % board)
+    back_url = html.get_url_input('back', 'dashboard.py?name=%s&edit=1' % board)
     html.context_button(_('Back'), back_url, 'back')
     html.end_context_buttons()
 

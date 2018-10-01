@@ -123,7 +123,7 @@ def paint_download_host_info(what, row, tags, host_custom_vars, ty):
         # When the download icon is part of the host/service action menu, then
         # the _back_url set in paint_action_menu() needs to be used. Otherwise
         # html.makeuri([]) (not html.requested_uri()) is the right choice.
-        back_url = html.var("_back_url", html.makeuri([]))
+        back_url = html.get_url_input("_back_url", html.makeuri([]))
         if back_url:
             params.append(("back_url", back_url))
 

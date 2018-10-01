@@ -70,8 +70,7 @@ def check_3ware_units(item, _no_params, info):
                 return (0, "unit status is " + infotext)
             elif status in [ "INITIALIZING", "VERIFY-PAUSED", "REBUILDING" ]:
                 return (1, "unit status is " + infotext)
-            else:
-                return (2, "unit status is " + infotext)
+            return (2, "unit status is " + infotext)
     return (3, "unit %s not found in agent output" % item)
 
 # declare the check to Check_MK

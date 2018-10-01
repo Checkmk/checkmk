@@ -44,8 +44,7 @@ def check_elphase(item, params, parsed):
     def tostring(value):
         if type(value) == int:
             return "%d" % value
-        else:
-            return "%.1f" % value
+        return "%.1f" % value
 
     class Bounds(object):
         Lower, Upper, Both = range(3)

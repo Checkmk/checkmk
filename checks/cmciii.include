@@ -47,8 +47,7 @@ def translate_cmciii_lcp_status(status):
         return 0
     elif statusl == "warning":
         return 1
-    else:
-        return 3
+    return 3
 
 def inventory_cmciii_lcp_fanunit(zone, direction, info):
     # these checks are considered obsolete as temp_in_out covers the same

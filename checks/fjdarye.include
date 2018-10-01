@@ -239,8 +239,7 @@ def check_fjdarye_rluns(item, _no_params, info):
                 return (0, "RLUN is in RAID0 state") # assumption state 42
             elif rawdata[2] == u'\x00':
                 return (0, "RLUN is in normal state") # assumption
-            else:
-                return (2, "RLUN in unknown state %02x" % ord(rawdata[2]) )
+            return (2, "RLUN in unknown state %02x" % ord(rawdata[2]) )
 
 
 #.
@@ -264,7 +263,6 @@ def check_fjdarye_sum(index, _no_param, info):
                 return (0, "%s" % text)
             elif status == 4:
                 return (1, "%s" % text)
-            else:
-                return (2, "%s" % text)
+            return (2, "%s" % text)
 
     return (3, "No status summary present" )

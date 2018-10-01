@@ -122,8 +122,7 @@ def get_filesystem_levels(mountpoint, size_gb, params):
     def convert_legacy_levels(value):
         if type(params) == tuple or not params.get("flex_levels"):
             return tuple(map(float, value))
-        else:
-            return value
+        return value
 
     # convert default levels to dictionary. This is in order support
     # old style levels like (80, 90)
@@ -300,8 +299,7 @@ def df_check_filesystem_list(item, params, fslist_blocks, fslist_inodes = None):
                                                   inodes_info.get(mp, {}).get("inodes_total", None),
                                                   inodes_info.get(mp, {}).get("inodes_avail", None),
                                                   params)
-        else:
-            return 3, "filesystem not found"
+        return 3, "filesystem not found"
 
 
 def df_check_filesystem_single(mountpoint, size_mb, avail_mb, reserved_mb, inodes_total, inodes_avail, params, this_time = None):

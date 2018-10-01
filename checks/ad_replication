@@ -39,10 +39,10 @@ ad_replication_default_params = (15,20)
 def parse_ad_replication_dates(s):
     if s == '0' or s == '(never)':
         return None, "unknown"
-    else:
-        s_val = time.mktime(time.strptime(s, '%Y-%m-%d %H:%M:%S'))
-        s_txt = get_relative_date_human_readable(s_val)
-        return s_val, s_txt
+
+    s_val = time.mktime(time.strptime(s, '%Y-%m-%d %H:%M:%S'))
+    s_txt = get_relative_date_human_readable(s_val)
+    return s_val, s_txt
 
 def parse_ad_replication_info(info):
     lines = []
@@ -124,8 +124,7 @@ def check_ad_replication(item, params, info):
 
     if status != 0:
         return (status, output.rstrip(', '))
-    else:
-        return (status, 'All replications are OK.')
+    return (status, 'All replications are OK.')
 
 
 check_info["ad_replication"] = {

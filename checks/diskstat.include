@@ -244,8 +244,7 @@ def check_diskstat_generic(item, params, this_time, info, mode='sectors'):
 
     if matching == 0:
         return 3, "No matching disk found"
-    else:
-        return check_diskstat_line(this_time, item, params, [None, ''] + summed_up, mode)
+    return check_diskstat_line(this_time, item, params, [None, ''] + summed_up, mode)
 
 
 # This is the legacy version of diskstat as used in <= 1.1.10.

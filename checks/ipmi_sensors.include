@@ -208,8 +208,7 @@ def freeipmi_status_txt_mapping(status_txt):
        status_txt.endswith("Presence detected") or \
        status_txt.endswith("Device Present"):
         return 0
-    else:
-        return 2
+    return 2
 
 
 def check_freeipmi(item, params, parsed):

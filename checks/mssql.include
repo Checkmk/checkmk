@@ -39,8 +39,7 @@ def _format_item_mssql_datafiles(inst, database, file_name):
         return "%s.%s" % (database, file_name)
     elif file_name is None:
         return "%s.%s" % (inst, database)
-    else:
-        return "%s.%s.%s" % (inst, database, file_name)
+    return "%s.%s.%s" % (inst, database, file_name)
 
 
 def _mssql_datafiles_process_sizes(params, used_size, allocated_size, max_size, unlimited):

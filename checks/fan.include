@@ -47,5 +47,4 @@ def check_fan(rpm, params):
     elif rpm < warn or warn_upper != None and rpm >= warn_upper:
         message += levelstext
         return 1, message, perfdata
-    else:
-        return 0, message, perfdata
+    return 0, message, perfdata

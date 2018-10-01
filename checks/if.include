@@ -74,8 +74,7 @@ def fix_if_64_highspeed(info):
 def cleanup_if_strings(s):
     if s and s != '':
         return "".join([ c for c in s if c not in nagios_illegal_chars+chr(0) ]).strip()
-    else:
-        return s
+    return s
 
 
 # This variant of int() lets the string if its not
@@ -111,8 +110,7 @@ def if_statename(st):
 def if_extract_node(line, has_nodeinfo):
     if has_nodeinfo:
         return line[0], line[1:]
-    else:
-        return None, line
+    return None, line
 
 
 def if_render_mac_address(ifPhysAddress):
@@ -143,14 +141,12 @@ def if_pad_with_zeroes(info, ifIndex, has_nodeinfo, pad_portnumbers):
         def get_index(line):
             if type(line[index]) == tuple:
                 return line[index][1]
-            else:
-                return line[index]
+            return line[index]
 
         max_index = max([int(get_index(line)) for line in info])
         digits = len(str(max_index))
         return ("%0"+str(digits)+"d") % int(ifIndex)
-    else:
-        return ifIndex
+    return ifIndex
 
 
 def if_get_traffic_levels(params):
@@ -934,8 +930,7 @@ def check_if_common_single(item, params, info, force_counter_wrap = False,
                 def format_value(value):
                     if unit == "Bit":
                         return get_nic_speed_human_readable(value*8)
-                    else:
-                        return "%s/s" % get_bytes_human_readable(value)
+                    return "%s/s" % get_bytes_human_readable(value)
 
                 # loop over incoming and outgoing traffic
                 for what, traffic, urate, nurate, discrate, errorrate, speed in \

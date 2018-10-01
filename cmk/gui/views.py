@@ -306,10 +306,7 @@ def page_create_view(next_url = None):
 
     html.header(_('Create View'), stylesheets=["pages"])
     html.begin_context_buttons()
-    back_url = html.var("back", "")
-    if not utils.is_allowed_url(back_url):
-        back_url = "edit_views.py"
-    html.context_button(_("Back"), back_url or "edit_views.py", "back")
+    html.context_button(_("Back"), html.get_url_input("back", "edit_views.py"), "back")
     html.end_context_buttons()
 
     if html.var('save') and html.check_transaction():

@@ -540,10 +540,7 @@ def page_create_visual(what, info_keys, next_url = None):
 
     html.header(_('Create %s') % title, stylesheets=["pages"])
     html.begin_context_buttons()
-    back_url = html.var("back", "")
-    if not utils.is_allowed_url(back_url):
-        back_url = "edit_%s.py" % what
-    html.context_button(_("Back"), back_url or "edit_%s.py" % what, "back")
+    html.context_button(_("Back"), html.get_url_input("back", "edit_%s.py" % what), "back")
     html.end_context_buttons()
 
     html.open_p()
@@ -737,10 +734,8 @@ def page_edit_visual(what, all_visuals, custom_field_handler = None,
 
     html.header(title, stylesheets=["pages", "views", "status", "bi"])
     html.begin_context_buttons()
-    back_url = html.var("back", "")
-    if not utils.is_allowed_url(back_url):
-        back_url = "edit_%s.py" % what
-    html.context_button(_("Back"), back_url or "edit_%s.py" % what, "back")
+    back_url = html.get_url_input("back", "edit_%s.py" % what)
+    html.context_button(_("Back"), back_url, "back")
 
     # Extra buttons to sub modules. These are used for things to edit about
     # this visual that are more complex to be done in one value spec.
@@ -855,14 +850,8 @@ def page_edit_visual(what, all_visuals, custom_field_handler = None,
 
             if html.var("save") or save_and_go:
                 if save_and_go:
-                    back = html.makeuri_contextless([(visual_types[what]['ident_attr'], visual['name'])],
+                    back_url = html.makeuri_contextless([(visual_types[what]['ident_attr'], visual['name'])],
                                                    filename = save_and_go + '.py')
-                else:
-                    back = html.var('back')
-                    if not back:
-                        back = 'edit_%s.py' % what
-                    if not utils.is_allowed_url(back):
-                        back = 'edit_%s.py' % what
 
                 if html.check_transaction():
                     all_visuals[(owner_user_id, visual["name"])] = visual
@@ -872,12 +861,12 @@ def page_edit_visual(what, all_visuals, custom_field_handler = None,
                         if (owner_user_id, oldname) in all_visuals:
                             del all_visuals[(owner_user_id, oldname)]
                         # -> change visual_name in back parameter
-                        if back:
+                        if back_url:
                             varstring = visual_type["ident_attr"] + "="
-                            back = back.replace(varstring + oldname, varstring + visual["name"])
+                            back_url = back_url.replace(varstring + oldname, varstring + visual["name"])
                     save(what, all_visuals, owner_user_id)
 
-                html.immediate_browser_redirect(1, back)
+                html.immediate_browser_redirect(1, back_url)
                 html.message(_('Your %s has been saved.') % visual_type["title"])
                 html.reload_sidebar()
                 html.footer()

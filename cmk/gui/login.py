@@ -365,13 +365,14 @@ def do_login():
             if password == '':
                 raise MKUserError('_password', _('No password given.'))
 
-            origtarget = html.var('_origtarget')
+            default_origtarget = config.url_prefix() + "check_mk/"
+            origtarget = html.get_url_input("_origtarget", default_origtarget)
+
             # Disallow redirections to:
             #  - logout.py: Happens after login
             #  - side.py: Happens when invalid login is detected during sidebar refresh
-            #  - Full qualified URLs (http://...) to prevent redirection attacks
-            if not origtarget or "logout.py" in origtarget or 'side.py' in origtarget or not utils.is_allowed_url(origtarget):
-                origtarget = config.url_prefix() + 'check_mk/'
+            if "logout.py" in origtarget or 'side.py' in origtarget:
+                origtarget = default_origtarget
 
             # None        -> User unknown, means continue with other connectors
             # '<user_id>' -> success
@@ -434,12 +435,8 @@ def normal_login_page(called_directly = True):
     html.set_render_headfoot(False)
     html.header(config.get_page_heading(), javascripts=[], stylesheets=["pages", "login"])
 
-    origtarget = html.var('_origtarget', '')
-    if not utils.is_allowed_url(origtarget):
-        origtarget = html.makeuri([])
-
-    if not origtarget and not html.myfile in [ 'login', 'logout' ]:
-        origtarget = html.makeuri([])
+    default_origtarget = "index.py" if html.myfile in [ "login", "logout" ] else html.makeuri([])
+    origtarget = html.get_url_input("_origtarget", default_origtarget)
 
     # Never allow the login page to be opened in a frameset. Redirect top page to login page.
     # This will result in a full screen login page.
@@ -449,7 +446,7 @@ def normal_login_page(called_directly = True):
 
     # When someone calls the login page directly and is already authed redirect to main page
     if html.myfile == 'login' and check_auth(html.request):
-        html.response.http_redirect(origtarget and origtarget or 'index.py')
+        html.response.http_redirect(origtarget)
 
     html.open_div(id_="login")
 

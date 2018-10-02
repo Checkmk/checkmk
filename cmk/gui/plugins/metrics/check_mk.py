@@ -438,6 +438,18 @@ metric_info["age"] = {
     "color" : "#80f000",
 }
 
+metric_info["last_updated"] = {
+    "title" : _("Last Updated"),
+    "unit"  : "s",
+    "color" : "#80f000",
+}
+
+metric_info["deferred_age"] = {
+    "title" : _("Deferred Files Age"),
+    "unit"  : "s",
+    "color" : "#80f000",
+}
+
 metric_info["runtime"] = {
     "title" : _("Process Runtime"),
     "unit"  : "s",
@@ -533,6 +545,23 @@ metric_info["file_count"] = {
     "color" : "23/a",
 }
 
+metric_info["new_files"] = {
+    "title" : _("New files in Spool"),
+    "unit"  : "count",
+    "color" : "23/a",
+}
+
+metric_info["deferred_files"] = {
+    "title" : _("Deferred files in Spool"),
+    "unit"  : "count",
+    "color" : "16/a",
+}
+
+metric_info["corrupted_files"] = {
+    "title" : _("Corrupted files in Spool"),
+    "unit"  : "count",
+    "color" : "34/a",
+}
 # database, tablespace
 
 metric_info["data_files"] = {
@@ -5558,6 +5587,13 @@ perfometer_info.append({
 
 perfometer_info.append({
     "type"       : "logarithmic",
+    "metric"     : "last_updated",
+    "half_value" : 40.0,
+    "exponent"   : 2,
+})
+
+perfometer_info.append({
+    "type"       : "logarithmic",
     "metric"     : "job_duration",
     "half_value" : 120.0,
     "exponent"   : 2,
@@ -8500,4 +8536,14 @@ graph_info['amount_of_mails_in_secondary_queues'] = {
         ( 'mail_queue_incoming_length', 'stack'),
         ( 'mail_queue_drop_length', 'stack'),
     ],
+}
+
+graph_info['files_notification_spool'] = {
+    'title': _('Amount of files in notification spool'),
+    'metrics': [
+        ('new_files', 'area'),
+        ('deferred_files', 'area'),
+        ('corrupted_files', 'area'),
+    ],
+    "optional_metrics": ['deferred_files', 'corrupted_files'],
 }

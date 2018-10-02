@@ -1,0 +1,13 @@
+Title: Performance data for mknotify
+Level: 1
+Component: nagvis
+Compatible: compat
+Edition: c1e
+Version: 1.6.0i1
+Date: 1538662417
+Class: feature
+
+The OMD Notification Spooler now includes performance data. Graphs about
+the last instant the spool was refreshed and how many new files are in the
+queue are shown. In case there are corrupted files in the spool or they
+have been deferred corresponding graphs will be included.

@@ -55,15 +55,16 @@
 # InputBuffer:     0 Bytes
 # OutputBuffer:    0 Bytes
 
+
 def parse_mknotifyd(info):
     parsed = {}
     for line in info:
         if line[0].startswith('['):
             site = line[0][1:-1]
             site_entry = {
-                "spools"      : {},
-                "connections" : {},
-                "queues"      : {}
+                "spools": {},
+                "connections": {},
+                "queues": {},
             }
             sub_entry = site_entry
             parsed[site] = site_entry
@@ -87,8 +88,13 @@ def parse_mknotifyd(info):
                 if value == "None":
                     value = None
                 elif value and varname not in [
-                    "Type", "State", "Version", "Status Message",
-                    "Pending Acknowledgements", "Connect Time" ]:
+                        "Type",
+                        "State",
+                        "Version",
+                        "Status Message",
+                        "Pending Acknowledgements",
+                        "Connect Time",
+                ]:
                     value = int(value.split()[0])
                 elif varname == "Connect Time":
                     value = float(value.split()[0])
@@ -111,12 +117,11 @@ def parse_mknotifyd(info):
                 stats["connections"][address] = connections[0]
             else:
                 for nr, connection in enumerate(connections):
-                    stats["connections"][address + "/" + str(nr+1)] = connection
+                    stats["connections"][address + "/" + str(nr + 1)] = connection
 
     return parsed
 
 
-#.
 #   .--Spooler Status------------------------------------------------------.
 #   | ____                    _             ____  _        _               |
 #   |/ ___| _ __   ___   ___ | | ___ _ __  / ___|| |_ __ _| |_ _   _ ___   |
@@ -128,8 +133,10 @@ def parse_mknotifyd(info):
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
+
 def inventory_mknotifyd(parsed):
-    return [ (p, {}) for p in parsed ]
+    return [(p, {}) for p in parsed]
+
 
 def check_mknotifyd(item, _no_params, parsed):
     if item not in parsed:
@@ -141,45 +148,53 @@ def check_mknotifyd(item, _no_params, parsed):
     version = stat["Version"]
 
     # Output Version
-    yield 0, "Version: " + version
+    yield 0, "Version: " + version, []
 
     # Check age of status file. It's updated every 20 seconds
     status_age = now - stat["Updated"]
     if status_age > 90:
-        yield 2, "Status last updated %s ago, spooler seems crashed or busy" % get_age_human_readable(status_age)
+        state = 2
+        infotext = "Status last updated %s ago, spooler seems crashed or busy" % get_age_human_readable(
+            status_age)
     else:
-        yield 0, "Spooler running"
+        state = 0
+        infotext = "Spooler running"
+    yield state, infotext, [('last_updated', status_age), ('new_files', stat['spools']['New']['Count'])]
 
     # Are there any corrupted files
     corrupted = stat["spools"]["Corrupted"]
     if corrupted["Count"]:
-        yield 1, "%d corrupted files: youngest %s ago" % (corrupted["Count"], get_age_human_readable(now - corrupted["Youngest"]))
+        age = now - corrupted["Youngest"]
+        perf_data = [('corrupted_files', corrupted["Count"])]
+        yield 1, "%d corrupted files: youngest %s ago" % (corrupted["Count"],
+                                                          get_age_human_readable(age)), perf_data
 
     # Are there deferred files that are too old?
     deferred = stat["spools"]["Deferred"]
     if deferred["Count"]:
         age = now - deferred["Oldest"]
         count = deferred["Count"]
+        perf_data = [('deferred_age', age), ('deferred_files', deferred["Count"])]
         if age > 5:
             state = 1
         elif age > 600:
             state = 2
         else:
             state = 0
-        yield state, "%d deferred files: oldest %s ago" % (count, get_age_human_readable(age))
+        yield state, "%d deferred files: oldest %s ago" % (count,
+                                                           get_age_human_readable(age)), perf_data
 
     return
 
+
 check_info["mknotifyd"] = {
-    "parse_function"      : parse_mknotifyd,
-    "inventory_function"  : inventory_mknotifyd,
-    "check_function"      : check_mknotifyd,
-    "service_description" : "OMD %s Notification Spooler",
+    "parse_function": parse_mknotifyd,
+    "inventory_function": inventory_mknotifyd,
+    "check_function": check_mknotifyd,
+    "has_perfdata": True,
+    "service_description": "OMD %s Notification Spooler",
 }
 
-
-
-#.
 #   .--Connections---------------------------------------------------------.
 #   |        ____                            _   _                         |
 #   |       / ___|___  _ __  _ __   ___  ___| |_(_) ___  _ __  ___         |
@@ -189,6 +204,7 @@ check_info["mknotifyd"] = {
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
+
 def inventory_mknotifyd_connection(parsed):
     for site_name, stats in parsed.items():
         for connection_name in stats["connections"]:
@@ -197,10 +213,10 @@ def inventory_mknotifyd_connection(parsed):
 
 def check_mknotifyd_connection(item, _no_params, parsed):
     states = {
-        "established" : (0, "Alive"),
-        "cooldown"    : (2, "Connection failed or terminated"),
-        "initial"     : (1, "Initialized"),
-        "connecting"  : (2, "Trying to connect"),
+        "established": (0, "Alive"),
+        "cooldown": (2, "Connection failed or terminated"),
+        "initial": (1, "Initialized"),
+        "connecting": (2, "Trying to connect"),
     }
 
     site_name, connection_name = item.split('-', 1)
@@ -227,15 +243,14 @@ def check_mknotifyd_connection(item, _no_params, parsed):
                 yield 0, "Connect time: %.3f sec" % connection["Connect Time"]
 
         # Stats
-        for what in ( "Sent", "Received" ):
+        for what in ("Sent", "Received"):
             num = connection["Notifications " + what]
             if num:
                 yield 0, "%d Notifications %s" % (num, what.lower())
 
 
-
 check_info["mknotifyd.connection"] = {
-    "inventory_function"  : inventory_mknotifyd_connection,
-    "check_function"      : check_mknotifyd_connection,
-    "service_description" : "OMD %s Notify Connection",
+    "inventory_function": inventory_mknotifyd_connection,
+    "check_function": check_mknotifyd_connection,
+    "service_description": "OMD %s Notify Connection",
 }

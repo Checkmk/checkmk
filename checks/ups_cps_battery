@@ -93,14 +93,12 @@ def check_ups_cps_battery(item, params, parsed):
     def check_lower_levels(value, levels):
         if not levels:
             return 0
-        else:
-            warn, crit = levels
-            if value < crit:
-                return 2
-            elif value < warn:
-                return 1
-            else:
-                return 0
+        warn, crit = levels
+        if value < crit:
+            return 2
+        elif value < warn:
+            return 1
+        return 0
 
     capacity = parsed["capacity"]
     capacity_params = params["capacity"]

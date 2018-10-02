@@ -33,8 +33,7 @@ factory_settings["ups_bat_temp_default"] = {
 def format_item_ups_bat_temp(name, new_format):
     if new_format:
         return "Battery %s" % name
-    else:
-        return name
+    return name
 
 
 def inventory_ups_bat_temp(info):

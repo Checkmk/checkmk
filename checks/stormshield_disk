@@ -37,12 +37,12 @@ def parse_stormshield_disk(info):
             new_info.extend(item[1:])
             parsed.append(new_info)
         return parsed
-    else:
-        new_info = []
-        new_info.append('0')
-        new_info.extend(standalone[0])
-        parsed.append(new_info)
-        return parsed
+
+    new_info = []
+    new_info.append('0')
+    new_info.extend(standalone[0])
+    parsed.append(new_info)
+    return parsed
 
 
 def inventory_stormshield_disk(parsed):

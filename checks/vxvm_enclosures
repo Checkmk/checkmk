@@ -33,8 +33,7 @@ def check_vxvm_enclosures(item, params, info):
         if line[0] == item:
             if line[3] != "CONNECTED":
                 return(2, "Status is %s" % line[3])
-            else:
-                return(0, "Status is CONNECTED")
+            return(0, "Status is CONNECTED")
     return(3, "Item not found")
 
 

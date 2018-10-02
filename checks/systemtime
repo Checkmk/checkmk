@@ -53,8 +53,7 @@ def check_systemtime(item, params, info):
         return (2, infotext, perfdata)
     elif abs(offset) >= warn:
         return (1, infotext, perfdata)
-    else:
-        return (0, infotext, perfdata)
+    return (0, infotext, perfdata)
 
 
 check_info["systemtime"] = {

@@ -80,8 +80,7 @@ def check_veeam_tapejobs(item, params, parsed):
             return 0, "Last backup successful" + statetext
         elif last_result == "Warning":
             return 1, "Last backup result: " + last_result + statetext
-        else:
-            return 2, "Last backup result: " + last_result + statetext
+        return 2, "Last backup result: " + last_result + statetext
 
 
 

@@ -121,8 +121,7 @@ def inventory_citrix_controller_sessions(info):
 
     if inv:
         return [ (None, {}) ]
-    else:
-        return []
+    return []
 
 
 def check_citrix_controller_sessions(_no_item, params, info):

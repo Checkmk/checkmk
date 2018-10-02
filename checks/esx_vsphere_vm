@@ -306,8 +306,7 @@ def check_esx_vsphere_vm_hb_status(_no_item, params, info):
             state = vm_heartbeat_map.get(vm_status)[0]
         if vm_status == 'gray':
             return state, "No VMWare Tools installed, outdated or not running"
-        else:
-            return state, "Heartbeat status is %s" % vm_status
+        return state, "Heartbeat status is %s" % vm_status
     else:
         return 3, "Unknown heartbeat status %s" % vm_status
 
@@ -385,8 +384,7 @@ def check_esx_vsphere_vm_snapshots(_no_item, params, info):
             return (2, "snapshot is older than %s" % get_age_human_readable(age))
         elif age >= warn:
             return (1, "snapshot is older than %s" % get_age_human_readable(age))
-        else:
-            return (0, "")
+        return (0, "")
 
     data = esx_vsphere_vm_convert(info)
 
@@ -491,8 +489,7 @@ def check_esx_vsphere_vm_mounted_devices(item, params, info):
     if mounted_devices:
         return 1, "HA functionality not guaranteed, Mounted devices: %s" % \
                   ", ".join(mounted_devices)
-    else:
-        return 0, "HA functionality guaranteed"
+    return 0, "HA functionality guaranteed"
 
 
 check_info['esx_vsphere_vm.mounted_devices'] = {

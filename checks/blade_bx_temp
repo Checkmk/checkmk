@@ -49,8 +49,7 @@ def check_blade_bx_temp(item, params, info):
             return (2, "Temperature not present or poweroff", perfdata)
         if status != 3:
             return (2, "Status is %s" % blade_bx_status.get(status, 1), perfdata)
-        else:
-            return statuscode, message, perfdata
+        return statuscode, message, perfdata
 
     return (3, "Device %s not found in SNMP data" % item, [])
 

@@ -74,8 +74,7 @@ def check_esx_vsphere_sensors(_no_item, params, info):
 
     if state > 0 or sensor_state_modified:
         return state, ", ".join(infos)
-    else:
-        return 0, "All sensors are in normal state"
+    return 0, "All sensors are in normal state"
 
 check_info['esx_vsphere_sensors'] = {
   "inventory_function"  : inventory_esx_vsphere_sensors,

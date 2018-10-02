@@ -28,8 +28,7 @@
 def check_ssh_desc(params):
     if params.get("description"):
         return "SSH %s" % params["description"]
-    else:
-        return "SSH"
+    return "SSH"
 
 
 def check_ssh_arguments(params):

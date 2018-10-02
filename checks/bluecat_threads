@@ -39,8 +39,7 @@ def check_bluecat_threads(item, params, info):
         return (2, "%d threads (critical at %d)" % (nthreads, crit), perfdata)
     elif nthreads >= warn:
         return (1, "%d threads (warning at %d)" % (nthreads, warn), perfdata)
-    else:
-        return (0, "%d threads" % (nthreads,), perfdata)
+    return (0, "%d threads" % (nthreads,), perfdata)
 
 check_info["bluecat_threads"] = {
     "check_function"            : check_bluecat_threads,

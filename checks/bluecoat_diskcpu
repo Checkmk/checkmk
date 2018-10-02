@@ -35,8 +35,7 @@ def check_bluecoat_diskcpu(item, _no_params, info):
             perfdata = [("value", line[1]) ]
             if line[2] == '1':
                 return (0, "%s" % (line[1],), perfdata)
-            else:
-                return (2, "%s" % (line[1], ), perfdata)
+            return (2, "%s" % (line[1], ), perfdata)
     return (3, "item not found in SNMP data")
 
 

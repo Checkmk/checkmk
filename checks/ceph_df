@@ -76,8 +76,7 @@ def parse_ceph_df(info):
             return float(value_str[:-1]) / 1024
         elif value_str == 'N/A':
             return 0.0
-        else:
-            return float(value_str) / (1024**2)
+        return float(value_str) / (1024**2)
 
     mps = []
     for mp, data in parsed.iteritems():

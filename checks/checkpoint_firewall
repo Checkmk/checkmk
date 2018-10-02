@@ -36,8 +36,7 @@ def check_checkpoint_firewall(item, params, info):
         if state.lower() == "installed":
             return 0, "%s (v%s.%s), filter: %s (since %s)" %\
                 (state, major, minor, filter_name, filter_date)
-        else:
-            return 2, "not installed, state: %s" % state
+        return 2, "not installed, state: %s" % state
 
 
 check_info['checkpoint_firewall'] = {

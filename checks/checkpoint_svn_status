@@ -36,8 +36,7 @@ def check_checkpoint_svn_status(item, params, info):
         ver = "v%s.%s" % (major, minor)
         if int(code) != 0:
             return 2, description
-        else:
-            return 0, "OK (%s)" % ver
+        return 0, "OK (%s)" % ver
 
 
 check_info['checkpoint_svn_status'] = {

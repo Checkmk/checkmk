@@ -303,8 +303,7 @@ def check_cisco_qos(item, params, info):
         if unit == "bit":
             value = value * 8
             return get_nic_speed_human_readable(value)
-        else:
-            return "%s/s" % get_bytes_human_readable(value)
+        return "%s/s" % get_bytes_human_readable(value)
 
     if average:
         post_rate = rates[1]

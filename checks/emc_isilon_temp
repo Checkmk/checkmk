@@ -47,8 +47,7 @@ def check_isilon_temp(item, params, info):
 def isilon_temp_item_name(sensor_name):
     if "CPU Throttle" in sensor_name:
         return sensor_name.split("(")[1].split(")")[0] # "CPU 1"
-    else:
-        return sensor_name[5:] # "Front Panel"
+    return sensor_name[5:] # "Front Panel"
 
 
 #   .--Air Temperature-----------------------------------------------------.

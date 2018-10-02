@@ -58,8 +58,7 @@ def check_f5_bigip_psu(item, _no_params, info):
                 return (2, "PSU state: bad!!")
             elif state == 2:
                 return (1, "PSU state: notpresent!")
-            else:
-                return (3, "PSU state is unknown")
+            return (3, "PSU state is unknown")
 
 
     return (3, "item not found in SNMP output")

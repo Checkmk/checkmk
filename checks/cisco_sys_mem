@@ -32,21 +32,19 @@ cisco_sys_mem_default_levels = (80.0, 90.0)
 def inventory_cisco_sys_mem(info):
     if info:
         return [ (None, "cisco_sys_mem_default_levels") ]
-    else:
-        return []
+    return []
 
 def check_cisco_sys_mem(_no_item, params, info):
     warn, crit = params
     if info[0][0]:
-       mem_used =  float(info[0][0])
-       perfdata = [("mem_used", mem_used, warn, crit, 0, 100)]
-       infotext = "%2.1f%% of supervisor memory used" % mem_used
-       if mem_used >= crit:
-           return (2, infotext + " (critical at %2.1f%%)" % crit, perfdata)
-       elif mem_used >= warn:
-           return (1, infotext + " (warning at %2.1f%%)" % warn, perfdata)
-       else:
-           return (0, infotext, perfdata)
+        mem_used =  float(info[0][0])
+        perfdata = [("mem_used", mem_used, warn, crit, 0, 100)]
+        infotext = "%2.1f%% of supervisor memory used" % mem_used
+        if mem_used >= crit:
+            return (2, infotext + " (critical at %2.1f%%)" % crit, perfdata)
+        elif mem_used >= warn:
+            return (1, infotext + " (warning at %2.1f%%)" % warn, perfdata)
+        return (0, infotext, perfdata)
 
 
 check_info["cisco_sys_mem"] = {

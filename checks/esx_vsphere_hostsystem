@@ -372,8 +372,7 @@ def check_esx_vsphere_hostsystem_maintenance(_no_item, params, info):
         state = 2
     if current_state == "true":
         return state, "System running is in Maintenance mode"
-    else:
-        return state, "System not in Maintenance mode"
+    return state, "System not in Maintenance mode"
 
 check_info['esx_vsphere_hostsystem.maintenance'] = {
   "inventory_function"  : inventory_esx_vsphere_hostsystem_maintenance,

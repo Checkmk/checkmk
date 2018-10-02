@@ -26,8 +26,7 @@ def check_mkevents_description(params):
     item = params.get('item', params.get('application'))
     if item:
         return "Events %s" % item
-    else:
-        return "Events"
+    return "Events"
 
 active_check_info['mkevents'] = {
     "command_line"        : '$USER1$/check_mkevents $ARG1$',

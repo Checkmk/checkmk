@@ -43,8 +43,7 @@ def check_cisco_asa_svcsessions(_no_item, params, info):
         return 2, message + levels, perfdata
     elif num_sessions >= warn:
         return 1, message + levels, perfdata
-    else:
-        return 0, message, perfdata
+    return 0, message, perfdata
 
 check_info["cisco_asa_svcsessions"]  = {
     "check_function"     : check_cisco_asa_svcsessions,

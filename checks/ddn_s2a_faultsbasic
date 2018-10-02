@@ -158,8 +158,7 @@ def check_ddn_s2a_faultsbasic_ps(_no_item, _no_params, parsed):
         infotext = "Power supply failure: "
         infotext += ", ".join(parsed[u"failed_avr_pwr_sup_item"])
         return 2, infotext
-    else:
-        return 0, "No power supply failures detected"
+    return 0, "No power supply failures detected"
 
 
 check_info["ddn_s2a_faultsbasic.ps"] = {
@@ -261,8 +260,7 @@ def inventory_ddn_s2a_faultsbasic_bootstatus(parsed):
 def check_ddn_s2a_faultsbasic_bootstatus(_no_item, _no_params, parsed):
     if parsed[u"system_fully_booted"] == u"TRUE":
         return 0, "System fully booted"
-    else:
-        return 1, "System not fully booted"
+    return 1, "System not fully booted"
 
 
 check_info["ddn_s2a_faultsbasic.bootstatus"] = {
@@ -305,9 +303,10 @@ def check_ddn_s2a_faultsbasic_cachecoh(_no_item, _no_params, parsed):
         }
 
         return cache_coherency_states.get(cache_coherency, 3), "Cache coherency: " + cache_coherency
-    else: # The value is only supplied in case of a failure. A missing value is an implicit OK
-          # according to the API documentation.
-        return 0, "Cache coherency: established"
+
+    # The value is only supplied in case of a failure. A missing value is an implicit OK
+    # according to the API documentation.
+    return 0, "Cache coherency: established"
 
 
 check_info["ddn_s2a_faultsbasic.cachecoh"] = {

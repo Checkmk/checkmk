@@ -61,8 +61,7 @@ def check_cmctc_psm_m(item, no_params, info):
      perf = [(unit, current_val,"","","","")]
      if int(line[2]) == 4:
        return (0, output, perf)
-     else:
-        return (2, output, perf)
+     return (2, output, perf)
 
    return (3, "Item no found in SNMP tree")
 

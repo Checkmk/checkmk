@@ -42,8 +42,7 @@ def check_apc_inrow_system_events(_no_item, params, parsed):
     events = parsed.get("events")
     if events:
         return params.get("state", 2), ", ".join(events)
-    else:
-        return 0, "No service events"
+    return 0, "No service events"
 
 
 check_info["apc_inrow_system_events"] = {

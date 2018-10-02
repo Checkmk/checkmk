@@ -36,8 +36,7 @@ def check_enviromux_digital(item, params, parsed):
         return 3, "Sensor value is unknown"
     elif sensor_value == sensor_normal_value:
         return 0, "Sensor Value is normal: %s" % sensor_value
-    else:
-        return 2, "Sensor Value is not normal: %s . It should be: %s" % (sensor_value, sensor_normal_value)
+    return 2, "Sensor Value is not normal: %s . It should be: %s" % (sensor_value, sensor_normal_value)
 
 
 check_info['enviromux_digital'] = {

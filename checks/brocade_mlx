@@ -55,9 +55,8 @@ def brocade_mlx_scan(oid):
 def brocade_mlx_combine_item(id_, descr):
     if descr == "":
         return id_
-    else:
-        descr = re.sub(" *Module", "", descr)
-        return "%s %s" % (id_, descr)
+    descr = re.sub(" *Module", "", descr)
+    return "%s %s" % (id_, descr)
 
 #   .--Overall Status------------------------------------------------------.
 #   |     ___                      _ _   ____  _        _                  |

@@ -68,8 +68,7 @@ def check_f5_bigip_fans(item, _no_params, info):
                     return (2, msgtxt)
                 elif speed < warn:
                     return (1, msgtxt)
-                else:
-                    return (3, "could not detect speed")
+                return (3, "could not detect speed")
 
     return (3, "item not found in SNMP output")
 

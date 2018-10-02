@@ -1,0 +1,11 @@
+Title: docker_node_network: Wrong API implementation caused a lot of small inventory history files
+Level: 1
+Component: inv
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0i1
+Date: 1538487487
+
+

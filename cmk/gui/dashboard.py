@@ -27,7 +27,6 @@
 import time
 import copy
 import json
-import traceback
 
 import cmk.gui.pages
 import cmk.gui.notify as notify
@@ -39,6 +38,7 @@ from cmk.gui.valuespec import *
 import cmk.gui.i18n
 from cmk.gui.i18n import _u, _
 from cmk.gui.log import logger
+from cmk.gui.htmllib import HTML
 from cmk.gui.globals import html
 
 from cmk.gui.exceptions import MKGeneralException, MKAuthException, MKUserError
@@ -529,11 +529,12 @@ def draw_dashboard(name):
     dashlet_coords     = [] # Dimensions and positions of dashlet
     on_resize_dashlets = [] # javascript function to execute after ressizing the dashlet
     for nr, dashlet in enumerate(board["dashlets"]):
-        dashlet_container_begin(nr, dashlet)
-        dashlet_type = get_dashlet_type(dashlet)
-        dashlet_instance = dashlet_type(name, board, nr, dashlet, wato_folder)
-
+        dashlet_content_html = ""
+        dashlet_title_html = ""
         try:
+            dashlet_type = get_dashlet_type(dashlet)
+            dashlet_instance = dashlet_type(name, board, nr, dashlet, wato_folder)
+
             refresh = get_dashlet_refresh(dashlet_instance)
             if refresh:
                 refresh_dashlets.append(refresh)
@@ -542,16 +543,15 @@ def draw_dashboard(name):
             if on_resize:
                 on_resize_dashlets.append(on_resize)
 
-            draw_dashlet(dashlet_instance)
-        except MKUserError, e:
-            dashlet_error(nr, dashlet, e)
-        except Exception, e:
-            if config.debug:
-                detail = traceback.format_exc()
-            else:
-                detail = e
-            dashlet_error(nr, dashlet, detail)
+            dashlet_title_html = render_dashlet_title_html(dashlet_instance)
+            dashlet_content_html = render_dashlet_content(dashlet_instance, is_update=False)
 
+        except Exception, e:
+            dashlet_content_html = render_dashlet_exception_content(dashlet_instance, nr, e)
+
+        # Now after the dashlet content has been calculated render the whole dashlet
+        dashlet_container_begin(nr, dashlet)
+        draw_dashlet(dashlet_instance, dashlet_content_html, dashlet_title_html)
         dashlet_container_end()
         dashlet_coords.append(get_dashlet_dimensions(dashlet_instance))
 
@@ -590,16 +590,6 @@ dashboard_scheduler(1);
     html.body_end() # omit regular footer with status icons, etc.
 
 
-def dashlet_error(nr, dashlet, msg):
-    html.open_div(id_="dashlet_inner_%d" % nr, class_=["dashlet_inner", "background", "err"])
-    html.open_div()
-    html.write(_('Problem while rendering dashlet %d of type %s: ') % (nr, dashlet["type"]))
-    html.write(html.attrencode(msg).replace("\n", "<br>"))
-    logger.exception(_('Problem while rendering dashlet %d of type %s: ') % (nr, dashlet["type"]))
-    html.close_div()
-    html.close_div()
-
-
 def dashlet_container_begin(nr, dashlet):
     dashlet_type = get_dashlet_type(dashlet)
 
@@ -614,7 +604,18 @@ def dashlet_container_end():
     html.close_div()
 
 
-def draw_dashlet_content(dashlet_instance, is_update, stash_html_vars=True):
+def render_dashlet_title_html(dashlet_instance):
+    title = dashlet_instance.display_title()
+    if title is not None and dashlet_instance.show_title():
+        url = dashlet_instance.title_url()
+        if url:
+            title = html.render_a(_u(title), url)
+        else:
+            title = _u(title)
+    return title
+
+
+def render_dashlet_content(dashlet_instance, is_update, stash_html_vars=True):
     if stash_html_vars:
         html.stash_vars()
         html.del_all_vars()
@@ -625,13 +626,30 @@ def draw_dashlet_content(dashlet_instance, is_update, stash_html_vars=True):
         if dashlet_instance.wato_folder is not None:
             html.set_var("wato_folder", dashlet_instance.wato_folder)
 
-        if not is_update:
-            dashlet_instance.show()
-        else:
-            dashlet_instance.update()
+        with html.plugged():
+            if not is_update:
+                dashlet_instance.show()
+            else:
+                dashlet_instance.update()
+
+            return html.drain()
     finally:
         if stash_html_vars:
             html.unstash_vars()
+
+
+def render_dashlet_exception_content(dashlet_instance, nr, e):
+    logger.exception("Problem while rendering dashlet %d of type %s" % (nr, dashlet_instance.type_name()))
+
+    # Unify different string types from exception messages to a unicode string
+    try:
+        exc_txt = unicode(e)
+    except UnicodeDecodeError:
+        exc_txt = str(e).decode("utf-8")
+
+    return html.render_error(
+        _("Problem while rendering dashlet %d of type %s: %s. Have a look at <tt>var/log/web.log</tt> for "
+          "further information.") % (nr, dashlet_instance.type_name(), exc_txt))
 
 
 def dashboard_edit_controls(name, board):
@@ -798,19 +816,16 @@ def get_dashlet(board, ident):
         raise MKGeneralException(_('The dashlet does not exist.'))
 
 
-# Create the HTML code for one dashlet. Each dashlet has an id "dashlet_%d",
-# where %d is its index (in board["dashlets"]). Javascript uses that id
-# for the resizing. Within that div there is an inner div containing the
-# actual dashlet content.
-def draw_dashlet(dashlet_instance):
-    title = dashlet_instance.display_title()
-    if title is not None and dashlet_instance.show_title():
-        url = dashlet_instance.title_url()
-        if url:
-            title = html.render_a(_u(title), url)
-        else:
-            title = _u(title)
-        html.div(html.render_span(title),
+def draw_dashlet(dashlet_instance, dashlet_content_html, dashlet_title_html):
+    """Draws the initial HTML code for one dashlet
+
+    Each dashlet has an id "dashlet_%d", where %d is its index (in
+    board["dashlets"]).  Javascript uses that id for the resizing. Within that
+    div there is an inner div containing the actual dashlet content. This content
+    is updated later using the dashboard_dashlet.py ajax call.
+    """
+    if dashlet_title_html is not None and dashlet_instance.show_title():
+        html.div(html.render_span(dashlet_title_html),
             id_="dashlet_title_%d" % dashlet_instance.dashlet_id,
             class_=["title"]
         )
@@ -820,9 +835,7 @@ def draw_dashlet(dashlet_instance):
         css.append("background")
 
     html.open_div(id_="dashlet_inner_%d" % dashlet_instance.dashlet_id, class_=css)
-
-    draw_dashlet_content(dashlet_instance, is_update=False)
-
+    html.write_html(dashlet_content_html)
     html.close_div()
 
 #.
@@ -880,7 +893,12 @@ def ajax_dashlet():
     dashlet_type = get_dashlet_type(the_dashlet)
     dashlet_instance = dashlet_type(name, board, ident, the_dashlet, wato_folder)
 
-    draw_dashlet_content(dashlet_instance, stash_html_vars=False, is_update=True)
+    try:
+        dashlet_content_html = render_dashlet_content(dashlet_instance, stash_html_vars=False, is_update=True)
+    except Exception, e:
+        dashlet_content_html = render_dashlet_exception_content(dashlet_instance, ident, e)
+
+    html.write_html(dashlet_content_html)
 
 #.
 #   .--Dashboard List------------------------------------------------------.

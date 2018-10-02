@@ -43,8 +43,7 @@ def check_ipr400_in_voltage(item, params, info):
         return 2, infotext + ", " + limitstext, perfdata
     elif power <= warn:
         return 1, infotext + ", " + limitstext, perfdata
-    else:
-        return 0, infotext, perfdata
+    return 0, infotext, perfdata
 
 check_info["ipr400_in_voltage"] = {
     "check_function"      : check_ipr400_in_voltage,

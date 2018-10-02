@@ -41,8 +41,7 @@ def parse_mysql_slave(info):
                 elif val == 'None':
                     val = None
             return line[0][:-1], val
-        else:
-            return None, None
+        return None, None
 
     parsed = {}
     instance = False

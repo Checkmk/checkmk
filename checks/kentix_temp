@@ -27,8 +27,7 @@
 def inventory_kentix_temp(info):
     if info[0][0].startswith('2.1.1'):
         return [ ('LAN',  {} ) ]
-    else:
-        return [ ('Rack', {} ) ]
+    return [ ('Rack', {} ) ]
 
 def check_kentix_temp(item, params, info):
     info[0][0] = info[0][0].split('.', 3)[-1]

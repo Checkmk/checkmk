@@ -181,8 +181,7 @@ def check_kentix_amp_sensors_leakage(item, params, parsed):
     if item in parsed:
         if parsed[item]['leakage'] > 0:
             return 2, "Alarm or disconnected"
-        else:
-            return 0, "Connected"
+        return 0, "Connected"
 
 
 check_info['kentix_amp_sensors.leakage'] = {

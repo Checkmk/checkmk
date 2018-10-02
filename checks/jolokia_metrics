@@ -333,8 +333,7 @@ def check_jolokia_metrics_serv_req(item, params, info):
 
     if wrapped:
         return (status, ', '.join(output))
-    else:
-        return (status, ', '.join(output), perfdata)
+    return (status, ', '.join(output), perfdata)
 
 
 check_info["jolokia_metrics.serv_req"] = {

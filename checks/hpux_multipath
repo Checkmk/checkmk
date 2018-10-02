@@ -105,8 +105,7 @@ def check_hpux_multipath(item, params, info):
         return (1, "%s: Invalid path status %s (should be %s)" %
                 (disk, hpux_multipath_format_pathstatus(pathcounts),
                        hpux_multipath_format_pathstatus(params)))
-    else:
-        return (0, "%s: %s" % (disk, hpux_multipath_format_pathstatus(pathcounts)))
+    return (0, "%s: %s" % (disk, hpux_multipath_format_pathstatus(pathcounts)))
 
 
 

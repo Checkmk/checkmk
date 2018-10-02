@@ -148,8 +148,7 @@ def check_hitachi_hnas_virtual_volume(item, params, parsed):
     if size_mb and avail_mb:
         fslist = [(item, size_mb, avail_mb, 0)]
         return df_check_filesystem_list(item, params, fslist)
-    else:
-        return 0, 'no quota size information', []
+    return 0, 'no quota size information', []
 
 
 check_info["hitachi_hnas_volume.virtual"] = {

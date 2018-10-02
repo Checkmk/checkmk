@@ -39,8 +39,7 @@ def check_iologik_register(item, params, info):
         if line[0] == item:
             if int(line[2]) in range(0, 2):
                 return (int(line[2]), line[1])
-            else:
-                return (3, "Invalid value %s for register" % line[2])
+            return (3, "Invalid value %s for register" % line[2])
 
     return (3, "Register not found")
 

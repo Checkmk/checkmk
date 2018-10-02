@@ -102,8 +102,7 @@ def check_netctr_combined(nic, params, info):
             return (2, infotxt, perfdata)
         elif error_percentage >= warn:
             return (1, infotxt, perfdata)
-        else:
-            return (0, infotxt, perfdata)
+        return (0, infotxt, perfdata)
 
     return (3, "NIC is not present")
 

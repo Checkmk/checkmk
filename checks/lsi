@@ -41,8 +41,7 @@ def inventory_lsi(check_type, info):
 
     if check_type == 'lsi.array':
         return [(item, "None") for (item, state) in arrays]
-    else:
-        return [(item, '"%s"' % state) for (item, state) in disks]
+    return [(item, '"%s"' % state) for (item, state) in disks]
 
 
 def check_lsi_array(item, _no_params, info):
@@ -54,8 +53,7 @@ def check_lsi_array(item, _no_params, info):
             status = line[1]
             if status == 'Okay(OKY)':
                 return (0, 'Status is Okay (OKY)')
-            else:
-                return (2, 'Status is %s' % (status,))
+            return (2, 'Status is %s' % (status,))
     return (2, 'RAID volume %d not existing' % item)
 
 check_info["lsi.array"] = {'check_function': check_lsi_array,
@@ -76,8 +74,7 @@ def check_lsi_disk(item, target_state, info):
             state = line[1].split('(')[-1][:-1]
             if state == target_state:
                 return (0, 'disk has state %s' % state)
-            else:
-                return (2, 'disk has state %s (should be %s)' % (state, target_state))
+            return (2, 'disk has state %s (should be %s)' % (state, target_state))
     return (2, 'disk not present')
 
 check_info["lsi.disk"] = {'check_function': check_lsi_disk,

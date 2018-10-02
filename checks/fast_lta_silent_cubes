@@ -28,8 +28,7 @@
 def inventory_fast_lta_silent_cubes_status(info):
     if len(info) > 0 and len(info[0]) > 1:
         return [ ("Total", {}) ]
-    else:
-        return []
+    return []
 
 def check_fast_lta_silent_cubes_status(item, params, info):
     fslist = []

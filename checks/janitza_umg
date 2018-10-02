@@ -162,8 +162,7 @@ def check_janitza_umg_freq(item, params, parsed):
             return 2, infotext + " " + levelstext, perfdata
         elif reading <= warn:
             return 1, infotext + " " + levelstext, perfdata
-        else:
-            return 0, infotext, perfdata
+        return 0, infotext, perfdata
 
 
 check_info['janitza_umg.freq'] = {

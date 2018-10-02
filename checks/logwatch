@@ -131,8 +131,7 @@ def logwatch_state(state):
         return "WARN"
     elif state != 0:
         return "CRIT"
-    else:
-        return "OK"
+    return "OK"
 
 
 def logwatch_level_name(level):
@@ -144,8 +143,7 @@ def logwatch_level_name(level):
         return 'WARN' # undefined states are treated as warning
     elif level == 'C':
         return 'CRIT'
-    else:
-        return 'IGN'
+    return 'IGN'
 
 
 def logwatch_level_worst(worst, level):
@@ -157,8 +155,7 @@ def logwatch_level_worst(worst, level):
         return max(worst, 1)
     elif level == 'C':
         return max(worst, 2)
-    else:
-        return worst
+    return worst
 
 
 # Extracts patterns that are relevant for the current host and item.
@@ -235,10 +232,8 @@ def logwatch_reclassify(counts, patterns, text, old_level):
                     return 'C'
                 elif newcount >= warn:
                     return 'W'
-                else:
-                    return 'I'
-            else:
-                return level
+                return 'I'
+            return level
 
     return new_level
 
@@ -707,15 +702,14 @@ def check_logwatch_generic(item, params, loglines, found, groups=False):
 
     if collect_block.worst <= 0:
         return (0, "no error messages")
-    else:
-        count_txt = []
-        for level, num in state_counts.iteritems():
-            count_txt.append('%d %s' % (num, logwatch_level_name(level)))
-        if logwatch_service_output == 'default':
-            return (collect_block.worst, "%s messages (Last worst: \"%s\")" %
-                                           (', '.join(count_txt), collect_block.last_worst_line))
-        else:
-            return (collect_block.worst, "%s messages" % ', '.join(count_txt))
+
+    count_txt = []
+    for level, num in state_counts.iteritems():
+        count_txt.append('%d %s' % (num, logwatch_level_name(level)))
+    if logwatch_service_output == 'default':
+        return (collect_block.worst, "%s messages (Last worst: \"%s\")" %
+                                       (', '.join(count_txt), collect_block.last_worst_line))
+    return (collect_block.worst, "%s messages" % ', '.join(count_txt))
 
 #.
 #   .--Event Console Forwarding--------------------------------------------.
@@ -744,8 +738,7 @@ def logwatch_to_prio(level):
         return 5
     elif level == '.':
         return 6
-    else:
-        return 4
+    return 4
 
 
 def inventory_logwatch_ec(info, one_svc_per_log):
@@ -956,8 +949,7 @@ def logwatch_forward_messages(method, item, messages):
     elif not method.startswith('spool:'):
         return logwatch_forward_pipe(method, messages)
 
-    else:
-        return logwatch_forward_spool_directory(method, item, messages)
+    return logwatch_forward_spool_directory(method, item, messages)
 
 
 # write into local event pipe

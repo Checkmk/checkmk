@@ -65,8 +65,7 @@ def check_mysql_ping(item, _no_params, parsed):
         message = parsed[item][0]
         if message == "mysqld is alive":
             return 0, "MySQL Deamon is alive"
-        else:
-            return 2, message
+        return 2, message
 
 
 check_info['mysql_ping'] = {

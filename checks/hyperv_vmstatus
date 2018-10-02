@@ -35,8 +35,7 @@ def inventory_hyperv_vmstatus(info):
 def check_hyperv_vmstatus(_no_item, _no_params, info):
     if info[0][1] != 'Ok':
         return 2, "Integration Service State: " + info[0][1]
-    else:
-        return 0, "Integration Services without errors"
+    return 0, "Integration Services without errors"
 
 check_info["hyperv_vmstatus"] = {
     "check_function"        : check_hyperv_vmstatus,

@@ -86,20 +86,19 @@ def check_iptables(_no_item, params, parsed):
             set_item_state("iptables.config",
                            {"config": parsed, "hash": new_config_hash})
             return 0, "accepted new filters after service rediscovery / reboot"
-        else:
-            return 0, "no changes in filters table detected"
-    else:
-        import difflib
+        return 0, "no changes in filters table detected"
 
-        reference_config = item_state["config"].splitlines()
-        actual_config = parsed.splitlines()
-        diff = difflib.context_diff(reference_config, actual_config,
-                                    fromfile="before", tofile="after",
-                                    lineterm="")
-        diff_output = "\n".join(diff)
+    import difflib
 
-        return 2, "\r\n".join(["changes in filters table detected",
-                               diff_output])
+    reference_config = item_state["config"].splitlines()
+    actual_config = parsed.splitlines()
+    diff = difflib.context_diff(reference_config, actual_config,
+                                fromfile="before", tofile="after",
+                                lineterm="")
+    diff_output = "\n".join(diff)
+
+    return 2, "\r\n".join(["changes in filters table detected",
+                           diff_output])
 
 
 check_info["iptables"] = {

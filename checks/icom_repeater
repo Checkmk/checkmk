@@ -254,8 +254,7 @@ check_info["icom_repeater.temp"] = {
 def inventory_icom_repeater(parsed):
     if parsed:
         return [(None, None)]
-    else:
-        return []
+    return []
 
 def check_icom_repeater(_no_item, _no_params, parsed):
     yield 0, "ESN Number: %s" % parsed["esnno"]

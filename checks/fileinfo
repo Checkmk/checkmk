@@ -257,8 +257,7 @@ def check_fileinfo(item, params, parsed):
     else:
         if outof_range_txt:
             return 0, "File not found - %s" % outof_range_txt
-        else:
-            return params.get("state_missing", 3), "File not found"
+        return params.get("state_missing", 3), "File not found"
 
 
 # FIXME the following does not apply anymore, because "%s" is allowed in group_name

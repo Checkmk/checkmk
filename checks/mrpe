@@ -111,8 +111,7 @@ def check_mrpe(item, params, info):
 
     if best_state is None:
         return (3, "Check output not found in output of MRPE")
-    else:
-        return best_result
+    return best_result
 
 
 check_info["mrpe"] = {

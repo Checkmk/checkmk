@@ -98,8 +98,7 @@ def check_fritz_config(_unused, _no_params, parsed):
 
     if output:
         return 0, ', '.join(output)
-    else:
-        return 3, 'Configuration info is missing'
+    return 3, 'Configuration info is missing'
 
 
 check_info['fritz.config'] = {
@@ -181,8 +180,7 @@ def check_fritz_link(_no_item, _no_params, parsed):
 
     if output:
         return 0, ', '.join(output)
-    else:
-        return 3, 'Link info is missing'
+    return 3, 'Link info is missing'
 
 
 check_info["fritz.link"] = {

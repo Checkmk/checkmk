@@ -63,8 +63,7 @@ def check_mssql_connections(item, params, parsed):
         return 2, 'Connections: %d (warn/crit at %d/%d)' % (connection_count, warn, crit)
     elif connection_count >= warn:
         return 1, 'Connections: %d (warn/crit at %d/%d)' % (connection_count, warn, crit)
-    else:
-        return 0, 'Connections: %d' % connection_count
+    return 0, 'Connections: %d' % connection_count
 
 
 check_info['mssql_connections'] = {

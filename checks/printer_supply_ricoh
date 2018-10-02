@@ -89,9 +89,8 @@ def check_printer_supply_ricoh(item, params, parsed):
             # -3 = full is based on user claim, but other walks also show
             # the device itself does not alert in this state
             return 0, "100%", 100
-        else:
-            # unknown code
-            return handle_regular(0)
+        # unknown code
+        return handle_regular(0)
 
     if type(params) == tuple:
         params = { "levels" : params }

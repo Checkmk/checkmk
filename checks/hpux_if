@@ -120,8 +120,7 @@ def hpux_parse_speed(speed):
 def hpux_parse_operstatus(txt):
     if txt.lower() == "up":
         return '1'
-    else:
-        return '2'
+    return '2'
 
 def inventory_hpux_if(info):
     return inventory_if_common(hpux_convert_to_if64(info))

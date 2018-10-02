@@ -64,8 +64,7 @@ def check_oracle_logswitches(item, params, info):
                 return (2, infotext, perfdata)
             elif logswitches >= warn or logswitches <= lowarn:
                 return (1, infotext, perfdata)
-            else:
-                return (0, infotext, perfdata)
+            return (0, infotext, perfdata)
 
     # In case of missing information we assume that the login into
     # the database has failed and we simply skip this check. It won't

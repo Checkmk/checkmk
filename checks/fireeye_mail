@@ -42,8 +42,7 @@ def fireeye_counter_generic(value, what, average):
         avg = get_average(' %s avg' % counter, this_time, rate, average)
         return (state, '%s rate: %.2f mails per %d second' % \
             (what, avg * average, average), perfdata)
-    else:
-        return (state, '%s rate: %.2f mails per second' % (what, rate ), perfdata)
+    return (state, '%s rate: %.2f mails per second' % (what, rate ), perfdata)
 
 
 #   .--mail----------------------------------------------------------------.

@@ -91,12 +91,12 @@ def check_hwg_temp(item, params, parsed):
     temp = attrs["temperature"]
     if temp is None:
         return state, "Status: %s" % state_readable
-    else:
-        state, infotext, perfdata = check_temperature(temp, params, "hwg_temp_%s" % item,
-                                                      dev_unit=attrs["dev_unit"], dev_status=state,
-                                                      dev_status_name=state_readable)
-        descr = attrs["description"]
-        return state, "%s%s" % ("[%s] " % descr if descr else "", infotext), perfdata
+
+    state, infotext, perfdata = check_temperature(temp, params, "hwg_temp_%s" % item,
+                                                  dev_unit=attrs["dev_unit"], dev_status=state,
+                                                  dev_status_name=state_readable)
+    descr = attrs["description"]
+    return state, "%s%s" % ("[%s] " % descr if descr else "", infotext), perfdata
 
 
 check_info['hwg_temp'] = {

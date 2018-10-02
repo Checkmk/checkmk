@@ -254,8 +254,7 @@ def drbd_get_block(item, info, checktype):
     block = drbd_extract_block(item, info)
     if len(block) > 0:
         return drbd_parse_block(block, checktype)
-    else:
-        return None
+    return None
 
 
 def check_drbd_general(item, params, info):

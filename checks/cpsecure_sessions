@@ -54,8 +54,7 @@ def check_cpsecure_sessions(item, params, info):
                 return (2, "%s sessions (critical at %d)" % (sessions, crit), perfdata)
             elif num_sessions >= warn:
                 return (1, "%s sessions (warning at %d)" % (sessions, warn), perfdata)
-            else:
-                return (0, "%s sessions" % sessions, perfdata)
+            return (0, "%s sessions" % sessions, perfdata)
 
     return (3, "service not found")
 

@@ -65,8 +65,7 @@ def check_brocade_info(item, params, info):
         wwn = brocade_info_parse_wwn(wwn)
         infotext = "Model: %s, SSN: %s, Firmware Version: %s, WWN: %s" % ( model, ssn, fw, wwn )
         return 0, infotext
-    else:
-        return 3, "no information found"
+    return 3, "no information found"
 
 check_info["brocade_info"] = {
     'check_function'        : check_brocade_info,

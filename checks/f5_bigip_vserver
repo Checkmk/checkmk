@@ -32,8 +32,7 @@ def parse_f5_bigip_vserver(info):
         elif len(ip) == 16:
             ip = "".join([chr(ord(x)) for x in ip])
             return socket.inet_ntop(socket.AF_INET6, ip)
-        else:
-            return "-"
+        return "-"
 
     vservers = {}
     for line in info:

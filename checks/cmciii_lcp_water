@@ -78,8 +78,7 @@ def check_cmciii_lcp_water(item, params, parsed):
             return 0
         elif status_name.lower() == "warning":
             return 1
-        else:
-            return 2
+        return 2
 
     unit_status_name = parsed[2]
     yield parse_status(unit_status_name), "Unit: %s" % unit_status_name

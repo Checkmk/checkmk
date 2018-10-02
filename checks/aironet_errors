@@ -42,8 +42,7 @@ def check_aironet_errors(item, params, info):
                 return (2, infotxt, perfdata)
             elif persec >= warn:
                 return (1, infotxt, perfdata)
-            else:
-                return (0, infotxt, perfdata)
+            return (0, infotxt, perfdata)
 
     return (3, "No radio %s available" % item)
 

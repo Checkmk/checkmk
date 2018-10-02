@@ -95,8 +95,7 @@ def parse_cisco_ip_sla(info):
             return '%d.%d.%d.%d' % tuple(int_list)
         elif len(int_list) == 6:
             return '%d:%d:%d:%d:%d:%d' % tuple(int_list)
-        else:
-            return ''
+        return ''
 
     #contains description, parse function, unit and type
     contents = [

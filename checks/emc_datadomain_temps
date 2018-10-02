@@ -28,8 +28,7 @@
 def format_emc_datadomain_temp(descr, encid, index, new_format):
     if new_format:
         return descr + " Enclosure " + encid
-    else:
-        return encid + "-" + index
+    return encid + "-" + index
 
 def inventory_emc_datadomain_temps(info):
     for encid, index, descr, _reading, _status in info:

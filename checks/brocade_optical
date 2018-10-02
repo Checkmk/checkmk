@@ -178,10 +178,8 @@ def check_brocade_optical(item, params, parsed):
                 return 0
             if state.endswith("warn"):
                 return 1
-            else:
-                return 2
-        else:
-            return 0
+            return 2
+        return 0
 
     def infotext(reading, title, unit):
         if reading[0] < -214748.0:

@@ -69,8 +69,7 @@ def check_docker_container_status_health(_no_item, params, parsed):
     elif health_status == "unhealthy":
         failing_streak = parsed[u"Health"][u"FailingStreak"]
         return 2, "Unhealthy - Failing Streak: %d" % failing_streak
-    else:
-        return 3, "Health Status '%s' unknown" % health_status
+    return 3, "Health Status '%s' unknown" % health_status
 
 
 check_info["docker_container_status.health"] = {

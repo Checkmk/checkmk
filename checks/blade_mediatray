@@ -37,8 +37,7 @@ def check_blade_mediatray(_no_item, _no_params, info):
         return (2, "media tray not present")
     elif communicating != "1":
         return (2, "media tray not communicating")
-    else:
-        return (0, "media tray present and communicating")
+    return (0, "media tray present and communicating")
 
 
 check_info["blade_mediatray"] = {

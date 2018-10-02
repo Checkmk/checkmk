@@ -62,8 +62,7 @@ def check_f5_bigip_cluster(item, _no_params, info):
         return (1, statustxt)
     elif statusid == "3":
         return (2, statustxt)
-    else:
-        return (3, "unexpected output from SNMP Agent")
+    return (3, "unexpected output from SNMP Agent")
 
 check_info["f5_bigip_cluster"] = {
     'check_function':          check_f5_bigip_cluster,

@@ -27,8 +27,7 @@
 def brocade_mlx_fan_combine_item(id_, descr):
     if descr == "" or "(RPM " in descr:
         return id_
-    else:
-        return "%s %s" % (id_, descr)
+    return "%s %s" % (id_, descr)
 
 def inventory_brocade_mlx_fan(info):
     inventory = []
@@ -47,8 +46,7 @@ def check_brocade_mlx_fan(item, _no_params, info):
                 return 2, "Fan reports state: failure"
             elif fan_state == "1":
                 return 3, "Fan reports state: other"
-            else:
-                return 3, "Fan reports an unhandled state (%s)" % fan_state
+            return 3, "Fan reports an unhandled state (%s)" % fan_state
     return 3, "Fan not found"
 
 check_info["brocade_mlx_fan"] = {

@@ -35,8 +35,7 @@ def check_bvip_video_alerts(item, _no_params, info):
         if cam.replace('\x00',"") == item:
             if alerts != '0':
                 return 2, "Device on Alarm State"
-            else:
-                return 0, "No alarms"
+            return 0, "No alarms"
 
 
 check_info["bvip_video_alerts"] = {

@@ -221,8 +221,7 @@ def check_ewon(item, params, parsed):
     if item == "eWON Status":
         if params["device"] is None:
             return 1, "This device requires configuration. Plese pick the device type."
-        else:
-            return 0, "Configured for %s" % params["device"]
+        return 0, "Configured for %s" % params["device"]
 
     deviceName = params["device"]
     if deviceName in set(["oxyreduct"]):

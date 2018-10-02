@@ -77,8 +77,7 @@ def check_aironet_clients(item, params, info):
         return (2, infotxt, perfdata)
     elif neg * avg <= neg * warn:
         return (1, infotxt, perfdata)
-    else:
-        return (0, infotxt, perfdata)
+    return (0, infotxt, perfdata)
 
 check_info["aironet_clients"] = {
     'check_function':          check_aironet_clients,

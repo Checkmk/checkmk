@@ -4,28 +4,12 @@ checkname = 'systemd_units'
 
 
 info = [['UNIT', 'LOAD', 'ACTIVE', 'SUB', 'DESCRIPTION'],
-        ['proc-sys-fs-binfmt_misc.automount',
-         'loaded',
-         'active',
-         'running',
-         'Arbitrary',
-         'Executable',
-         'File',
-         'Formats',
-         'File',
-         'System',
-         'Automount',
-         'Point'],
+        ['proc-sys-fs-binfmt_misc.automount', 'loaded', 'active', 'running', 'Arbitrary',
+         'Executable', 'File', 'Formats', 'File', 'System', 'Automount', 'Point'],
         ['dev-disk-by\\x2did-ata\\x2dAPPLE_SSD_SM0256G_S29CNYDG865465.device',
-         'loaded',
-         'active',
-         'plugged',
-         'APPLE_SSD_SM0256G'],
+         'loaded', 'active', 'plugged', 'APPLE_SSD_SM0256G'],
         ['dev-mapper-cryptswap1.device',
-         'loaded',
-         'inactive',
-         'dead',
-         'dev-mapper-cryptswap1.device'],
+         'loaded', 'inactive', 'dead', 'dev-mapper-cryptswap1.device'],
         ['cups.path', 'loaded', 'active', 'running', 'CUPS', 'Scheduler'],
         ['systemd-ask-password-console.path',
          'loaded',
@@ -431,20 +415,20 @@ info = [['UNIT', 'LOAD', 'ACTIVE', 'SUB', 'DESCRIPTION'],
 discovery = {'services': [], 'services_summary': [('Summary', {})]}
 
 
-checks = {'services': [('virtualbox', 'default',
-                        [(0, "Status: active", []),
-                         (0, "LSB: VirtualBox Linux kernel module", []),
-                        ]
-                       ),
-                       ('jamesthebutler', 'default',
-                        [(2, "Service not found", []),
-                        ]
-                       ),
-                      ],
-          'services_summary': [('Summary', 'default',
-                                [(0, '32 services in total', []),
-                                 (2, '1 services failed', []),
-                                ]
-                               ),
-                              ]
+checks = {
+    'services': [
+        ('virtualbox', 'default',
+            [(0, "Status: active", []),
+             (0, "LSB: VirtualBox Linux kernel module", []),
+            ]),
+        ('jamesthebutler', 'default',
+            [(2, "Service not found", []),
+            ]),
+    ],
+    'services_summary': [
+        ('Summary', 'default',
+            [(0, '32 services in total', []),
+             (2, '1 service failed: systemd-cryptsetup@cryptswap1', []),
+            ]),
+    ]
 }

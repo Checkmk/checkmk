@@ -41,8 +41,7 @@ def check_fsc_subsystems(item, params, info):
             return (0, "%s - no problems" % statusname)
         elif status >= 2 and status <= 4:
             return (2, "%s" % statusname)
-        else:
-            return (3, "unknown status %d" % status)
+        return (3, "unknown status %d" % status)
 
     return (3, "Subsystem %s not found in SNMP data" % item)
 

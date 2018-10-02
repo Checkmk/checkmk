@@ -130,8 +130,7 @@ def check_j4p_performance_mem(item, params, info):
         return (2, infotext, perfdata)
     elif total >= warn:
         return (1, infotext, perfdata)
-    else:
-        return (0, infotext, perfdata)
+    return (0, infotext, perfdata)
 
 check_info["j4p_performance.mem"] = {'check_function': check_j4p_performance_mem,
  'default_levels_variable': None,
@@ -218,8 +217,7 @@ def check_j4p_performance_app_state(item, _unused, info):
 
     if app['Running'] == '1':
         return (0, 'application is running')
-    else:
-        return (2, 'application is not running (Running: %s)')
+    return (2, 'application is not running (Running: %s)')
 
 
 check_info["j4p_performance.app_state"] = {'check_function': check_j4p_performance_app_state,

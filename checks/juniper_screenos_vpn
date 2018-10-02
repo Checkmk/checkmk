@@ -35,8 +35,7 @@ def check_juniper_screenos_vpn(item, params, info):
                return (0, "VPN Status %s is active" % vpn_id)
             elif vpn_status == "0":
                return (2, "VPN Status %s inactive" % vpn_id)
-            else:
-                return (1, "Unknown vpn status %s" % vpn_status)
+            return (1, "Unknown vpn status %s" % vpn_status)
     return (2, "VPN name not found in SNMP data")
 
 check_info["juniper_screenos_vpn"] = {

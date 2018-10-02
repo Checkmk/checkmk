@@ -35,8 +35,7 @@ def check_netapp_cpu(item, params, info):
         return (2, infotext + " (critical at %d%%)" % crit, perfdata)
     elif util >= warn:
         return (1, infotext + " (warning at %d%%)" % warn, perfdata)
-    else:
-        return (0, infotext, perfdata)
+    return (0, infotext, perfdata)
 
 check_info["netapp_cpu"] = {
     "check_function"        : check_netapp_cpu,

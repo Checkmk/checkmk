@@ -51,8 +51,7 @@ def check_hitachi_hnas_pnode(item, _no_params, info):
             status = int(status)
             if status == 0 or status >= len(statusmap):
                 return 3, "PNode reports unidentified status %s" % status
-            else:
-                return statusmap[status][1], "PNode reports status %s" % statusmap[status][0]
+            return statusmap[status][1], "PNode reports status %s" % statusmap[status][0]
 
     return 3, "SNMP did not report a status of this PNode"
 

@@ -119,8 +119,7 @@ def check_megaraid_bbu(item, _no_params, info):
     # return assembled info
     elif broken:
         return (state, ", ".join(broken) + charge)
-    else:
-        return (0, "all states as expected" + charge)
+    return (0, "all states as expected" + charge)
 
 check_info["megaraid_bbu"] = {
     'check_function':          check_megaraid_bbu,

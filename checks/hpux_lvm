@@ -60,8 +60,7 @@ def check_hpux_lvm(item, params, info):
                 infotext = "status is %s (VG = %s)" % (status, vg_name)
                 if status == "available,syncd":
                     return (0, infotext)
-                else:
-                    return (2, infotext)
+                return (2, infotext)
 
     return (3, "no such volume found")
 

@@ -53,8 +53,7 @@ def check_netapp_api_connection(_no_item, params, info):
 
     if infos:
         return state, ", ".join(infos)
-    else:
-        return 0, "The agent was able to retrieve all data from the filer"
+    return 0, "The agent was able to retrieve all data from the filer"
 
 check_info['netapp_api_connection'] = {
   "inventory_function"  : inventory_netapp_api_connection,

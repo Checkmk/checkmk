@@ -36,8 +36,7 @@ def check_juniper_screenos_fan(item, params, info):
                return (0, "status is good")
             elif fan_status == "2":
                return (2, "status is failed")
-            else:
-                return (2, "Unknown fan status %s" % fan_status )
+            return (2, "Unknown fan status %s" % fan_status )
     return (3, "Sensor not found in SNMP data")
 
 check_info["juniper_screenos_fan"] = {

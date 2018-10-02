@@ -130,8 +130,7 @@ def check_mtr(item, params, parsed):
                 hop_text_entries.append(hop_text)
 
             return what_state, ", ".join(hop_text_entries), perfdata
-        else:
-            return None, None, perfdata
+        return None, None, perfdata
 
     hc = int(hostinfo['hopcount'])
     hop_perfdata = [('hops', hc)]

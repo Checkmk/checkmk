@@ -47,8 +47,7 @@ def check_plesk_backups(item, params, info):
                 state = params.get('no_backup_found_state', 1)
                 return (state, 'No backup found')
 
-            else:
-                return (3, 'Unexpected line %r' % line)
+            return (3, 'Unexpected line %r' % line)
 
         _domain, _rc, timestamp, size, total_size = line
         size       = saveint(size)

@@ -50,13 +50,11 @@ def check_netif_link(item, targetstate, info):
     if link == targetstate:
         if link:
             return (0, "Link is up")
-        else:
-            return (0, "no link / NIC unused")
-    else:
-        if link:
-            return (1, "Link is up, NIC should be unused")
-        else:
-            return (2, "no link")
+        return (0, "no link / NIC unused")
+
+    if link:
+        return (1, "Link is up, NIC should be unused")
+    return (2, "no link")
 
 
 def inventory_netif_params(info):
@@ -73,9 +71,8 @@ def check_netif_params(item, params, info):
     act_params = tuple(infolist[0])
     if act_params == params:
         return (0, "%s" % (",".join(act_params),) )
-    else:
-        return (2, "%s (should be %s)" %
-            (",".join(act_params), ",".join(params)))
+    return (2, "%s (should be %s)" %
+        (",".join(act_params), ",".join(params)))
 
 
 

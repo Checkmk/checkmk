@@ -51,8 +51,7 @@ def check_ifoperstatus(item, targetstate, info):
                 return (0, "status is %s" % operstatus)
             elif operstatus == "up":
                 return (1, "port used, but should not be")
-            else:
-                return (2, "status is %s" % operstatus)
+            return (2, "status is %s" % operstatus)
 
     return (3, "interface %s missing" % item)
 

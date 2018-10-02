@@ -44,8 +44,7 @@ def fast_lta_headunit_scan(oid):
 def inventory_fast_lta_headunit_status(info):
     if len(info[0]) > 0:
         return [ (None, None) ]
-    else:
-        return []
+    return []
 
 def check_fast_lta_headunit_status(item, _no_params, info):
     head_unit_status_map = {
@@ -102,8 +101,7 @@ check_info["fast_lta_headunit.status"] = {
 def inventory_fast_lta_headunit_replication(info):
     if len(info[0]) > 0:
         return [ (None, None) ]
-    else:
-        return []
+    return []
 
 def check_fast_lta_headunit_replication(item, _no_params, info):
     head_unit_replication_map = {

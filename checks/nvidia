@@ -37,9 +37,9 @@ def format_nvidia_name(identifier):
     identifier = identifier.replace("Temp", "")
     if identifier == "GPUCore":
         return "GPU NVIDIA"
-    else:
-        # afaik temperature sensors can be GPU or Board, maybe memory
-        return "System NVIDIA %s" % identifier
+
+    # afaik temperature sensors can be GPU or Board, maybe memory
+    return "System NVIDIA %s" % identifier
 
 def inventory_nvidia_temp(core, info):
     for line in info:
@@ -87,8 +87,7 @@ def check_nvidia_errors(_no_item, _no_params, info):
             errors = int(line[1])
             if errors == 0:
                 return (0, "No GPU errors")
-            else:
-                return (2, "%d GPU errors" % errors)
+            return (2, "%d GPU errors" % errors)
     return (3, "incomplete output from agent")
 
 check_info["nvidia.errors"] = {

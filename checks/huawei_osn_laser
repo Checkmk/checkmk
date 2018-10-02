@@ -48,8 +48,7 @@ def check_huawei_osn_laser(item, params, info):
 
         if state:
             return state, "(warn/crit below %s/%s dBm)" % (warn, crit)
-        else:
-            return 0, None
+        return 0, None
 
     for line in info:
         if item == line[0]:

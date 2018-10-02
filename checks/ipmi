@@ -228,8 +228,7 @@ def ipmi_status_txt_mapping(status_txt):
         return 0
     elif status_txt.startswith('nc'):
         return 1
-    else:
-        return 2
+    return 2
 
 
 def check_ipmi(item, params, info):

@@ -83,8 +83,7 @@ def ntp_fmt_time(t):
         return int(t[:-1]) * 60 * 60
     elif t[-1] == "d":
         return int(t[:-1]) * 60 * 60 * 24
-    else:
-        return int(t)
+    return int(t)
 
 # Helper function that parses the information about one
 # peer and returns a tuple of
@@ -125,8 +124,7 @@ def check_ntp_server_state(line, params):
 
     elif abs(offset) >= warn:
         return (1, "offset too high" + " " + infotext, offset, jitter)
-    else:
-        return (0, infotext, offset, jitter)
+    return (0, infotext, offset, jitter)
 
 
 def check_ntp(item, params, info):

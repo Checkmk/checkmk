@@ -48,8 +48,7 @@ def check_orion_batterytest(item, params, info):
         state, state_readable = map_states.get(test_result, (3, 'unknown[%s]' % test_result))
         infotext = "Last performed: %s, Result: %s" % (last_test_date, state_readable)
         return state, infotext
-    else:
-        return 0, "No test result available"
+    return 0, "No test result available"
 
 
 check_info['orion_batterytest'] = {

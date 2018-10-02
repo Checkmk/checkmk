@@ -79,8 +79,7 @@ def status_result_oracle_diva_csm(reading):
         return 2, "offline"
     elif reading == '3':
         return 1, "unknown"
-    else:
-        return 3, "unexpected state"
+    return 3, "unexpected state"
 
 
 def check_oracle_diva_csm_status(name, idx, item, params, info):

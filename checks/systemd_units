@@ -188,8 +188,11 @@ def check_systemd_units_services_summary(_no_item, params, parsed):
         state = params["states"].get(active_state, params["states_default"])
         if state == 0:
             continue
-        count = sum(s.active == active_state for s in services)
-        yield state, "%d services %s" % (count,  active_state)
+
+        service_names = [s.name for s in services if s.active == active_state]
+        cnt = len(service_names)
+        service_names = ", ".join(service_names)
+        yield state, "%d service%s %s: %s" % (cnt, '' if cnt == 1 else 's', active_state, service_names)
 
 
 check_info['systemd_units.services_summary'] = {

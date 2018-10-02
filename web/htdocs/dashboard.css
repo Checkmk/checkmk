@@ -64,12 +64,14 @@ div.dashlet div.dashlet_inner {
     background-color: #cbd6da;
 }
 
-div.dashlet div.dashlet_inner.err {
-    color: #000;
-}
-
-div.dashlet div.dashlet_inner.err div {
-    padding: 10px;
+div.dashlet div.really,
+div.dashlet div.success,
+div.dashlet div.error,
+div.dashelt div.message,
+div.dashlet div.warning {
+    margin: 0;
+    border-radius: 0;
+    box-shadow: 0;
 }
 
 div.dashlet iframe {

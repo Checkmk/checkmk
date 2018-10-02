@@ -27,8 +27,7 @@
 def inventory_raritan_pdu_outletcount(info):
     if len(info) > 0 and len(info[0]) > 0:
         return [ (None, None) ]
-    else:
-        return []
+    return []
 
 def check_raritan_pdu_outletcount(item, params, info):
     outletcount = int(info[0][0])

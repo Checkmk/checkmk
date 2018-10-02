@@ -38,8 +38,7 @@ def parse_ra32e_sensors(info):
             return 'temp/analog'
         elif values_until(5):
             return 'temp/humidity'
-        else:
-            return 'unknown'
+        return 'unknown'
 
     parsed = {
         'temperature': {},

@@ -46,8 +46,7 @@ def check_viprinet_router(_no_item, params, info):
 
     if mode:
         return (0, mode)
-    else:
-        return (3, "Undefined Mode")
+    return (3, "Undefined Mode")
 
 check_info["viprinet_router"] = {
     'check_function'        : check_viprinet_router,

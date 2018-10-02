@@ -42,17 +42,16 @@ def parse_zpool(info):
             return "alloc"
         elif entry == "avail":
             return "free"
-        else:
-            return entry
+        return entry
 
     result = {}
     if len(info) == 0:
         return result
-    else:
-        header = [ canonize_header_entry(item.lower()) for item in info[0]]
-        for line in info[1:]:
-            result[line[0]] = dict(zip(header, line))
-        return result
+
+    header = [ canonize_header_entry(item.lower()) for item in info[0]]
+    for line in info[1:]:
+        result[line[0]] = dict(zip(header, line))
+    return result
 
 def inventory_zpool(parsed):
     return df_inventory(parsed.keys())

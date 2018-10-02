@@ -77,8 +77,7 @@ def check_strem1_sensors(item, params, info):
                 return (2, "%s is: " % typ + infotext, perfdata)
             elif warn and val >= warn:
                 return (1, "%s is: " % typ + infotext, perfdata)
-            else:
-                return (0, "%s is: " % typ + infotext, perfdata )
+            return (0, "%s is: " % typ + infotext, perfdata )
     return (3, "Sensor not found")
 
 check_info["strem1_sensors"] = {

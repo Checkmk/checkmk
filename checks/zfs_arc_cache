@@ -279,8 +279,7 @@ def parse_zfs_arc_cache(info):
 def inventory_zfs_arc_cache(parsed):
     if parsed.get("hits") and parsed.get("misses"):
         return [ (None, None) ]
-    else:
-        return []
+    return []
 
 
 def check_zfs_arc_cache(_no_item, _no_params, parsed):
@@ -344,8 +343,7 @@ def inventory_zfs_arc_cache_l2(parsed):
     # if l2_size == 0 there is no l2 cache available at all
     if "l2_size" in parsed.keys() and parsed["l2_size"] > 0:
         return [ (None, None) ]
-    else:
-        return []
+    return []
 
 
 def check_zfs_arc_cache_l2(_no_item, _no_params, parsed):

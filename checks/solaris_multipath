@@ -62,8 +62,7 @@ def check_solaris_multipath(item, params, info):
                         return 2, info + levels
                     elif operational <= warn_num:
                         return 1, info + levels
-                    else:
-                        return 0, info
+                    return 0, info
                 else:
                     expected = int(params) # should be int, just for legacy reasons
                 if operational > expected:

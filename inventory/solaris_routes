@@ -29,8 +29,7 @@ def parse_solaris_route(line):
     def parse_network(n):
         if n == "default":
             return "0.0.0.0/0"
-        else:
-            return n
+        return n
 
     route = {}
     if len(line) >= 5 and not line[0].startswith("---") and \

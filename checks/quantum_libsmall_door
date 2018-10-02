@@ -34,8 +34,7 @@ def check_quantum_libsmall_door(_no_item, _no_params, info):
         return 2, "Library door open"
     elif info[0][0] == "2":
         return 0, "Library door closed"
-    else:
-        return 3, "Library door status unknown"
+    return 3, "Library door status unknown"
 
 
 

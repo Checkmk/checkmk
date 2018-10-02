@@ -41,8 +41,7 @@ def check_zebra_printer_status(item, params, info):
         return 0, "Printer is warming up"
     elif zebra_status == 1:
         return 2, "Printer is offline"
-    else:
-        return 3, "Unknown printer status"
+    return 3, "Unknown printer status"
 
 
 check_info["zebra_printer_status"] = {

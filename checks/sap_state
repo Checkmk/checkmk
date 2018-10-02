@@ -35,8 +35,7 @@ def check_sap_state(item, _no_parameters, info):
     def value_to_status(value):
         if value == "OK":
             return 0
-        else:
-            return 2
+        return 2
 
     for line in info:
         if line[0] == item:

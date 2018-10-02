@@ -106,9 +106,9 @@ def check_siemens_plc_flag(item, params, info):
             if flag_state:
                 state = 0 if expected_state else 2
                 return state, 'On'
-            else:
-                state = 2 if expected_state else 0
-                return state, 'Off'
+
+            state = 2 if expected_state else 0
+            return state, 'Off'
 
 
 check_info['siemens_plc.flag'] = {
@@ -271,8 +271,7 @@ def check_siemens_plc_cpu_state(_no_item, _no_params, info):
         return 0, "CPU is running"
     elif state == "S7CpuStatusStop":
         return 2, "CPU is stopped"
-    else:
-        return 3, "CPU is in unknown state"
+    return 3, "CPU is in unknown state"
 
 
 check_info['siemens_plc_cpu_state'] = {

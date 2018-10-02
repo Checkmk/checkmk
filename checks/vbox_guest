@@ -48,8 +48,7 @@ def check_vbox_guest(_no_item, _no_params, info):
     host_revision = d['HostInfo/VBoxRev']
     if (host_version, host_revision) != (version, revision):
         return (1, infotext + ", Host has %s/%s" % (host_version, host_revision))
-    else:
-        return (0, infotext)
+    return (0, infotext)
 
 def inventory_vbox_guest(info):
     if len(info) > 0:

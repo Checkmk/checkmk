@@ -34,8 +34,7 @@ def parse_lnx_ip_route(line):
     def parse_network(n):
         if n == "default":
             return "0.0.0.0/0"
-        else:
-            return n
+        return n
 
     route = {
         "target" : parse_network(line[0]),

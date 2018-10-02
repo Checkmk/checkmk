@@ -44,8 +44,7 @@ def check_ups_out_load(item, params, info):
                 return (2, infotext, perfdata)
             elif power >= warn:
                 return (1, infotext, perfdata)
-            else:
-                return (0, infotext, perfdata)
+            return (0, infotext, perfdata)
 
     return (3, "Phase %s not found in SNMP output" % item)
 

@@ -44,16 +44,14 @@ def inv_mssql_versions(info):
         elif parts[0] == 10:
             if parts[1] == 50:
                 return "SQL Server 2008 R2"
-            else:
-                return "SQL Server 2008"
+            return "SQL Server 2008"
         elif parts[0] == 9:
             return "SQL Server 2005"
         elif parts[0] == 8:
             return "SQL Server 2000"
         elif parts[0] == 7:
             return "SQL Server 7.0"
-        else:
-            return "Unknown Product"
+        return "Unknown Product"
 
     def get_list_item(key, val):
         for item in node:

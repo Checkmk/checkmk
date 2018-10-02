@@ -32,8 +32,7 @@ def check_viprinet_power(_no_item, params, info):
     power_info = power_map.get(info[0][0])
     if power_info:
         return (0, power_info)
-    else:
-        return (3, "Invalid power status")
+    return (3, "Invalid power status")
 
 check_info["viprinet_power"] = {
     'check_function'        : check_viprinet_power,

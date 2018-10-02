@@ -51,8 +51,7 @@ def check_vms_users(item, params, info):
 
     if num_sessions:
         return (0, "Interactive users: " + ", ".join(infos), perfdata)
-    else:
-        return (0, "No interactive users", perfdata)
+    return (0, "No interactive users", perfdata)
 
 
 check_info['vms_users'] = {

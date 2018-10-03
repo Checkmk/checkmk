@@ -1098,8 +1098,7 @@ def page_edit_dashlet():
             'single_infos' : dashlet_type.single_infos(),
             'type'         : ty,
         }
-        ident   =  len(dashboard['dashlets'])
-        dashboard['dashlets'].append(dashlet)
+        ident = len(dashboard['dashlets'])
 
         single_infos_raw = html.var('single_infos')
         single_infos = []
@@ -1222,6 +1221,9 @@ def page_edit_dashlet():
 
             if context_specs:
                 dashlet['context'] = visuals.process_context_specs(context_specs)
+
+            if mode == "add":
+                dashboard['dashlets'].append(dashlet)
 
             visuals.save('dashboards', dashboards)
 

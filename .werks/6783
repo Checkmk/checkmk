@@ -1,0 +1,15 @@
+Title: Fixed audit log not showing todays entries when "current date" is selected
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.4.0p37
+Date: 1538594395
+Class: fix
+
+The audit log of WATO shows the entries of the "current date" by default. In some
+cases it could happen that the entries of the current day were not shown by default.
+The page displayed yesterdays entries instead.
+
+Workaround: Selecting todays date below the option "Start log from" shows the current
+entries.

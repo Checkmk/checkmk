@@ -4908,7 +4908,8 @@ class ModeAuditLog(WatoMode):
 
     def _get_start_date(self):
         if self._options["start"] == "now":
-            return int(time.time()) / 86400 * 86400
+            st = time.localtime()
+            return int(time.mktime(time.struct_time((st.tm_year, st.tm_mon, st.tm_mday, 0, 0, 0, 0, 0, 0))))
         else:
             return int(self._options["start"][1])
 

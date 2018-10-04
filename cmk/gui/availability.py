@@ -527,8 +527,7 @@ def render_number_function(timeformat):
         def render_number(n, d):
             if not d:
                 return _("n/a")
-            else:
-                return ("%." + timeformat[11:] + "f%%") % ( float(n) / float(d) * 100.0)
+            return ("%." + timeformat[11:] + "f%%") % ( float(n) / float(d) * 100.0)
     elif timeformat == "seconds":
         def render_number(n, d):
             return "%d s" % n
@@ -1081,8 +1080,8 @@ def compute_availability_groups(what, av_data, avoptions):
 def object_title(what, av_entry):
     if what == "host":
         return av_entry["host"]
-    else: # service and BI
-        return av_entry["host"] + " / " + av_entry["service"]
+    # service and BI
+    return av_entry["host"] + " / " + av_entry["service"]
 
 
 # Merge consecutive rows with same state
@@ -1444,8 +1443,7 @@ def layout_timeline(what, timeline_rows, considered_duration, avoptions, style):
         def render_date(ts):
             if avoptions["dateformat"] == "epoch":
                 return str(int(ts))
-            else:
-                return time.strftime(time_format, time.localtime(ts))
+            return time.strftime(time_format, time.localtime(ts))
         return render_date
 
     render_date = render_date_func(time_format)
@@ -1953,22 +1951,21 @@ def cell_active(sid, avoptions):
         return False
     if sid == "outof_notification_period" and avoptions["notification_period"] != "honor":
         return False
-    elif sid == "outof_service_period": # Never show this as a column
+    if sid == "outof_service_period": # Never show this as a column
         return False
-    elif sid == "in_downtime" and avoptions["downtimes"]["include"] != "honor":
+    if sid == "in_downtime" and avoptions["downtimes"]["include"] != "honor":
         return False
-    elif sid == "unmonitored" and not avoptions["consider"]["unmonitored"]:
+    if sid == "unmonitored" and not avoptions["consider"]["unmonitored"]:
         return False
-    elif sid == "flapping" and not avoptions["consider"]["flapping"]:
+    if sid == "flapping" and not avoptions["consider"]["flapping"]:
         return False
-    elif sid == "host_down" and not avoptions["consider"]["host_down"]:
+    if sid == "host_down" and not avoptions["consider"]["host_down"]:
         return False
-    elif sid in sg and sid not in sg.values():
+    if sid in sg and sid not in sg.values():
         return False
-    elif sid in hsg and sid not in hsg.values():
+    if sid in hsg and sid not in hsg.values():
         return False
-    else:
-        return True
+    return True
 
 # Check if the availability of some object is below the levels
 # that are configured in the avoptions.
@@ -1980,10 +1977,9 @@ def check_av_levels(ok_seconds, av_levels, considered_duration):
     warn, crit = av_levels
     if perc < crit:
         return 2
-    elif perc < warn:
+    if perc < warn:
         return 1
-    else:
-        return 0
+    return 0
 
 
 def get_av_groups(availability_table, avoptions):

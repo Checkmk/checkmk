@@ -210,8 +210,7 @@ check_info['mssql_backup'] = {
 def _mssql_backup_per_type_item(db_name, backup):
     if backup.type is None:
         return "%s UNKNOWN" % db_name
-    else:
-        return "%s %s" % (db_name, backup.type.title())
+    return "%s %s" % (db_name, backup.type.title())
 
 
 def inventory_mssql_backup_per_type(parsed):

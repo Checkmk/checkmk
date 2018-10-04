@@ -51,8 +51,7 @@ def drop_dotzero(v, digits=2):
     t = "%%.%df" % digits % v
     if "." in t:
         return t.rstrip("0").rstrip(".")
-    else:
-        return t
+    return t
 
 
 def num_split(s):

@@ -72,8 +72,7 @@ def is_site():
 def mkbackup_path():
     if not is_site():
         return "/usr/sbin/mkbackup"
-    else:
-        return "%s/bin/mkbackup" % os.environ["OMD_ROOT"]
+    return "%s/bin/mkbackup" % os.environ["OMD_ROOT"]
 
 
 def system_config_path():
@@ -402,8 +401,7 @@ class Job(MKBackupJob, BackupEntity):
     def _cron_userspec(self):
         if os.environ.get("OMD_SITE"):
             return ""
-        else:
-            return "root "
+        return "root "
 
 
     def _cron_cmdline(self):
@@ -1590,8 +1588,7 @@ class RestoreJob(MKBackupJob):
     def state_file_path(self):
         if not is_site():
             return "/var/lib/mkbackup/restore.state"
-        else:
-            return "/tmp/restore-%s.state" % os.environ["OMD_SITE"]
+        return "/tmp/restore-%s.state" % os.environ["OMD_SITE"]
 
 
     def complete(self):
@@ -1717,8 +1714,7 @@ class PageBackupRestore(object):
         backup_info = self._target.get_backup(backup_ident)
         if backup_info["config"]["encrypt"] != None:
             return self._start_encrypted_restore(backup_ident, backup_info)
-        else:
-            return self._start_unencrypted_restore(backup_ident)
+        return self._start_unencrypted_restore(backup_ident)
 
 
     def _complete_restore(self, backup_ident):

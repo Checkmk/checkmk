@@ -213,8 +213,7 @@ class LegacyDashlet(cmk.gui.plugins.dashboard.IFrameDashlet):
         title_func = self._spec.get("title_func")
         if title_func:
             return title_func(self._dashlet_spec)
-        else:
-            return self.title()
+        return self.title()
 
 
     def on_resize(self):

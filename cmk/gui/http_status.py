@@ -80,15 +80,14 @@ def status_with_reason(code):
     # type: (int) -> str
     if code == HTTP_OK:
         return '200 OK'
-    elif code == HTTP_MOVED_TEMPORARILY:
+    if code == HTTP_MOVED_TEMPORARILY:
         return '301 Moved Permanently'
-    elif code == HTTP_MOVED_PERMANENTLY:
+    if code == HTTP_MOVED_PERMANENTLY:
         return '302 Found'
-    elif code == HTTP_NOT_MODIFIED:
+    if code == HTTP_NOT_MODIFIED:
         return '304 Not Modified'
-    elif code == HTTP_INTERNAL_SERVER_ERROR:
+    if code == HTTP_INTERNAL_SERVER_ERROR:
         return '500 Internal Server Error'
-    elif code == HTTP_NOT_FOUND:
+    if code == HTTP_NOT_FOUND:
         return '404 Not Found'
-    else:
-        return str(code)
+    return str(code)

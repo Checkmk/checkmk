@@ -263,19 +263,17 @@ class Dashlet(object):
     def _add_wato_folder_to_url(self, url):
         if not self._wato_folder:
             return url
-        elif '/' in url:
+        if '/' in url:
             return url # do not append wato_folder to non-Check_MK-urls
-        elif '?' in url:
+        if '?' in url:
             return url + "&wato_folder=" + html.urlencode(self._wato_folder)
-        else:
-            return url + "?wato_folder=" + html.urlencode(self._wato_folder)
+        return url + "?wato_folder=" + html.urlencode(self._wato_folder)
 
 
     def size(self):
         if self.is_resizable():
             return self._dashlet_spec.get("size", self.initial_size())
-        else:
-            return self.initial_size()
+        return self.initial_size()
 
 
     def position(self):
@@ -295,8 +293,7 @@ class Dashlet(object):
             on_refresh = self.on_refresh()
             if on_refresh:
                 return 'function() {%s}' % on_refresh
-            else:
-                return '"%s"' % self._add_wato_folder_to_url(url) # url to dashboard_dashlet.py
+            return '"%s"' % self._add_wato_folder_to_url(url) # url to dashboard_dashlet.py
         except Exception:
             # Ignore the exceptions in non debug mode, assuming the exception also occures
             # while dashlet rendering, which is then shown in the dashlet itselfs.

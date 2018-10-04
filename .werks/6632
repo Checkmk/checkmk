@@ -1,0 +1,13 @@
+Title: aix_memory: Fix graph colouring and labelling
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0i1
+Date: 1538650039
+
+The check shares logic with a number of other memory checks,
+but failed to map all of the old performance value names to
+the new metrics. This has been fixed.

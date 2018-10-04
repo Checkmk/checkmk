@@ -1470,7 +1470,7 @@ def show_context_links(thisview, datasource, show_filters,
             html.toggle_button(
                 id_="checkbox",
                 icon="checkbox",
-                help_txt=_("Enable/Disable checkboxes for selecting rows for commands"),
+                title=_("Enable/Disable checkboxes for selecting rows for commands"),
                 onclick="location.href='%s';" % html.makeuri([('show_checkboxes', show_checkboxes and '0' or '1')]),
                 isopen=show_checkboxes,
                 hidden=True,

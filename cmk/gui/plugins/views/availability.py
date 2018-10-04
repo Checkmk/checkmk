@@ -431,7 +431,7 @@ def render_availability_table(group_title, availability_table, what, avoptions):
 
         # Columns with the actual availability data
         for (title, help_txt), (text, css) in zip(av_table["cell_titles"], row["cells"]):
-            table.cell(title, text, css=css, help=help_txt)
+            table.cell(title, text, css=css, help_txt=help_txt)
 
     if "summary" in av_table:
         table.row(css="summary", fixed=True)
@@ -444,7 +444,7 @@ def render_availability_table(group_title, availability_table, what, avoptions):
             table.cell("", "")
 
         for (title, help_txt), (text, css) in zip(av_table["cell_titles"], av_table["summary"]):
-            table.cell(title, text, css="heading " + css, help=help_txt)
+            table.cell(title, text, css="heading " + css, help_txt=help_txt)
 
     return table.end() # returns Table data if fetch == True
 

@@ -444,14 +444,14 @@ class SidebarRenderer(object):
         if config.user.may("general.configure_sidebar"):
             # Icon for mini/maximizing
             html.open_div(class_="minisnapin")
-            html.icon_button(url=None, help=_("Toggle this snapin"), icon="%ssnapin" % minimaxi,
+            html.icon_button(url=None, title=_("Toggle this snapin"), icon="%ssnapin" % minimaxi,
                              onclick="toggle_sidebar_snapin(this, '%s')" % toggle_url)
             html.close_div()
 
             # Button for closing (removing) a snapin
             html.open_div(class_="closesnapin")
             close_url = "sidebar_openclose.py?name=%s&state=off" % name
-            html.icon_button(url=None, help=_("Remove this snapin"), icon="closesnapin",
+            html.icon_button(url=None, title=_("Remove this snapin"), icon="closesnapin",
                              onclick="remove_sidebar_snapin(this, '%s')" % close_url)
             html.close_div()
 

@@ -1468,9 +1468,9 @@ def show_context_links(thisview, datasource, show_filters,
         selection_enabled = enable_checkboxes if enable_commands else thisview.get('force_checkboxes')
         if not thisview.get("force_checkboxes"):
             html.toggle_button(
-                id="checkbox",
+                id_="checkbox",
                 icon="checkbox",
-                help=_("Enable/Disable checkboxes for selecting rows for commands"),
+                help_txt=_("Enable/Disable checkboxes for selecting rows for commands"),
                 onclick="location.href='%s';" % html.makeuri([('show_checkboxes', show_checkboxes and '0' or '1')]),
                 isopen=show_checkboxes,
                 hidden=True,
@@ -1516,7 +1516,7 @@ def show_context_links(thisview, datasource, show_filters,
         # Buttons to other views, dashboards, etc.
         links = visuals.collect_context_links(thisview)
         for linktitle, uri, icon, buttonid in links:
-            html.context_button(linktitle, url=uri, icon=icon, id=buttonid, bestof=config.context_buttons_to_show)
+            html.context_button(linktitle, url=uri, icon=icon, id_=buttonid, bestof=config.context_buttons_to_show)
 
     # Customize/Edit view button
     if display_options.enabled(display_options.E) and config.user.may("general.edit_views"):
@@ -1529,7 +1529,7 @@ def show_context_links(thisview, datasource, show_filters,
             url_vars.append(("load_user", thisview["owner"]))
 
         url = html.makeuri_contextless(url_vars, filename="edit_view.py")
-        html.context_button(_("Edit View"), url, "edit", id="edit", bestof=config.context_buttons_to_show)
+        html.context_button(_("Edit View"), url, "edit", id_="edit", bestof=config.context_buttons_to_show)
 
     if display_options.enabled(display_options.E):
         if show_availability and config.user.may("general.see_availability"):

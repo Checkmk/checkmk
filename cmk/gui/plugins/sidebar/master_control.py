@@ -117,7 +117,7 @@ class MasterControlSnapin(SidebarSnapin):
                     html.open_td()
                     html.toggle_switch(
                         enabled=colvalue,
-                        help=_("Switch '%s' to '%s'") % (title, _("off") if colvalue else _("on")),
+                        help_txt=_("Switch '%s' to '%s'") % (title, _("off") if colvalue else _("on")),
                         onclick=onclick,
                     )
                     html.close_td()

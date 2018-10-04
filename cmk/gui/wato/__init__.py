@@ -1036,7 +1036,7 @@ class ModeFolder(WatoMode):
                 # 1. add <nobr> round the single tags to prevent wrap within tags
                 # 2. add "zero width space" (&#8203;)
                 tag_title = "|".join([ '%s' % t for t in host.tags() ])
-                table.cell(_("Tags"), help=tag_title, css="tag-ellipsis")
+                table.cell(_("Tags"), help_txt=tag_title, css="tag-ellipsis")
                 html.write("<b style='color: #888;'>|</b>&#8203;".join([ '<nobr>%s</nobr>' % t for t in host.tags() ]))
 
             # Located in folder

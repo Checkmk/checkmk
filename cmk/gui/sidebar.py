@@ -547,7 +547,7 @@ class SidebarRenderer(object):
             html.icon_button("logout.py", _("Log out"), "sidebar_logout", target="_top")
 
         html.icon_button("return void();", _("You have pending messages."),
-                         "sidebar_messages", onclick = 'read_message()', id = 'msg_button', style = 'display:none')
+                         "sidebar_messages", onclick = 'read_message()', id_ = 'msg_button', style = 'display:none')
         html.open_div(style="display:none;", id_="messages")
         self.render_messages()
         html.close_div()

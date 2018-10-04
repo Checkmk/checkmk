@@ -90,13 +90,13 @@ class SiteStatus(SidebarSnapin):
             html.close_td()
             html.open_td(class_="state")
             if switch == "missing":
-                html.status_label(content=state, status=state, help=_("Site is missing"))
+                html.status_label(content=state, status=state, title=_("Site is missing"))
             else:
                 url = html.makeactionuri_contextless([
                     ("_site_switch", "%s:%s" % (sitename, switch)),
                 ], filename="switch_site.py")
                 html.status_label_button(content=state, status=state,
-                    help=_("enable this site") if state == "disabled" else _("disable this site"),
+                    title=_("enable this site") if state == "disabled" else _("disable this site"),
                     onclick="switch_site(%s)" % (json.dumps(url)))
             html.close_tr()
         html.close_table()

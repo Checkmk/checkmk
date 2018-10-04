@@ -1505,7 +1505,7 @@ def show_context_links(thisview, datasource, show_filters,
                 url = watolib.link_to_host_by_name(host)
             else:
                 url = watolib.link_to_folder_by_path(html.var("wato_folder", ""))
-            html.context_button(_("WATO"), url, "wato", id="wato",
+            html.context_button(_("WATO"), url, "wato", id_="wato",
                 bestof = config.context_buttons_to_show)
 
         # Button for creating an instant report (if reporting is available)

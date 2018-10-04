@@ -238,7 +238,7 @@ class Table(object):
             if self.options["foldable"]:
                 html.begin_foldable_container(
                     treename="table",
-                    id=self.id,
+                    id_=self.id,
                     isopen=True,
                     indent=False,
                     title=html.render_h3(self.title, class_=["treeangle", "title"])

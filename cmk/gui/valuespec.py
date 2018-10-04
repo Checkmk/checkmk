@@ -4266,7 +4266,7 @@ class IconSelector(ValueSpec):
         if not icon_name:
             icon_name = self._empty_img
 
-        icon = html.render_icon(icon_name, help=title, middle=True, id_=id_)
+        icon = html.render_icon(icon_name, title=title, middle=True, id_=id_)
         if onclick:
             icon = html.render_a(icon, href="javascript:void(0)", onclick=onclick)
 

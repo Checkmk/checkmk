@@ -2111,7 +2111,7 @@ class html(HTMLGenerator):
 
 
     def button(self, varname, title, cssclass = None, style=None, help_=None):
-        self.write_html(self.render_button(varname, title, cssclass, style))
+        self.write_html(self.render_button(varname, title, cssclass, style, help_=help_))
 
 
     def render_button(self, varname, title, cssclass = None, style=None, help_=None):
@@ -2596,7 +2596,7 @@ class html(HTMLGenerator):
             if icon:
                 self.img(class_=["treeangle", "title"], src="images/icon_%s.png" % icon)
             else:
-                self.img(id_=img_id, class_=["treeangle", "nform", "open" if isopen else "closed"],
+                self.img(id=img_id, class_=["treeangle", "nform", "open" if isopen else "closed"],
                          src="images/%s_closed.png" % tree_img, align="absbottom")
             self.write_text(title)
             self.close_td()
@@ -2605,7 +2605,7 @@ class html(HTMLGenerator):
             self.open_div(class_="foldable")
 
             if not icon:
-                self.img(id_="treeimg.%s.%s" % (treename, id_),
+                self.img(id="treeimg.%s.%s" % (treename, id_),
                          class_=["treeangle", "open" if isopen else "closed"],
                          src="images/%s_closed.png" % tree_img, align="absbottom", onclick=onclick)
             if isinstance(title, HTML): # custom HTML code
@@ -2833,7 +2833,7 @@ hy
         icon = HTML(self.render_icon(icon, cssclass="iconbutton"))
 
         return self.render_a(icon, **{'title'   : title,
-                                      'id_'      : id_,
+                                      'id'      : id_,
                                       'class'   : cssclass,
                                       'style'   : style,
                                       'target'  : target if target else '',

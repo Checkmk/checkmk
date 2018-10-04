@@ -25,12 +25,37 @@
 # Boston, MA 02110-1301 USA.
 
 
+import json
+
+
+def parse_docker_node_info_nojson(info):
+    parsed = {}
+    prefix = ""
+    for row in info:
+        if not row:
+            continue
+        # ignore misssing keys / pad lines that are not of "key: value" type
+        if len(row) == 1:
+            row.append('')
+        key = row[0].strip()
+        value = ':'.join(row[1:]).strip()
+        # indented keys are prefixed by the last not indented key
+        # this does the right thing in the cases used below.
+        indent = len(row[0]) - len(key)
+        if indent == 0:
+            parsed[key] = value
+            prefix = key
+        else:
+            parsed[prefix + key] = value
+
+    return parsed
+
+
 def parse_docker_node_info(info):
     try:
-        import json
-        return json.loads("".join(info[0]))
+        return json.loads(":".join(info[0]))
     except ValueError:
-        return " ".join(info[0])
+        return parse_docker_node_info_nojson(info)
 
 
 def inventory_docker_node_info(parsed):

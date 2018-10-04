@@ -389,8 +389,7 @@ def _may_see(host_name, site):
 
     if not result:
         return False
-    else:
-        return result[0] > 0
+    return result[0] > 0
 
 
 def _write_xml(response):

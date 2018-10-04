@@ -3635,8 +3635,7 @@ def get_state_name(node):
     if node[1]['type'] == NT_LEAF:
         if 'service' in node[1]:
             return service_state_names[node[0]['state']]
-        else:
-            return host_state_names[node[0]['state']]
+        return host_state_names[node[0]['state']]
 
     return service_state_names[node[0]['state']]
 

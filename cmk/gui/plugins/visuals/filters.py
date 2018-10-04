@@ -229,8 +229,7 @@ class FilterAddressFamily(Filter):
         family = html.var("address_family", "both")
         if family == "both":
             return ""
-        else:
-            return "Filter: host_custom_variables = ADDRESS_FAMILY %s\n" % livestatus.lqencode(family)
+        return "Filter: host_custom_variables = ADDRESS_FAMILY %s\n" % livestatus.lqencode(family)
 
 
 declare_filter(103, FilterAddressFamily())

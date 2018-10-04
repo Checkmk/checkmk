@@ -71,7 +71,6 @@ subgroup_inventory =    _("Discovery - automatic service detection")
 # from there into their appropriate sections until "Unsorted" is empty.
 # Create new rules directly in the correct secions.
 
-
 #   .--Networking----------------------------------------------------------.
 #   |        _   _      _                      _    _                      |
 #   |       | \ | | ___| |___      _____  _ __| | _(_)_ __   __ _          |
@@ -10735,6 +10734,26 @@ register_check_parameters(
     "dict"
 )
 
+def _vs_mssql_backup_age(title):
+    return Alternative(
+        title=_("%s" % title),
+        style="dropdown",
+        elements=[
+            Tuple(
+                title=_("Set levels"),
+                elements=[
+                    Age(title=_("Warning if older than")),
+                    Age(title=_("Critical if older than")),
+            ]),
+            Tuple(
+                title=_("No levels"),
+                elements=[
+                    FixedValue(None, totext=""),
+                    FixedValue(None, totext=""),
+            ]),
+        ]
+    )
+
 register_check_parameters(
     subgroup_applications,
     "mssql_backup",
@@ -10747,54 +10766,14 @@ register_check_parameters(
                      "Backup</i>, etc.) you can use the option <i>Database Backup"
                      "</i> to set a general limit"),
             elements = [
-                ("database", Tuple(
-                    title = _("Database Backup"),
-                    elements = [
-                        Age(title = _("Warning if older than")),
-                        Age(title = _("Critical if older than")),
-                ])),
-                ("database_diff", Tuple(
-                    title = _("Database Diff Backup"),
-                    elements = [
-                        Age(title = _("Warning if older than")),
-                        Age(title = _("Critical if older than")),
-                ])),
-                ("log", Tuple(
-                    title = _("Log Backup"),
-                    elements = [
-                        Age(title = _("Warning if older than")),
-                        Age(title = _("Critical if older than")),
-                ])),
-                ("file_or_filegroup", Tuple(
-                    title = _("File or Filegroup Backup"),
-                    elements = [
-                        Age(title = _("Warning if older than")),
-                        Age(title = _("Critical if older than")),
-                ])),
-                ("file_diff", Tuple(
-                    title = _("File Diff Backup"),
-                    elements = [
-                        Age(title = _("Warning if older than")),
-                        Age(title = _("Critical if older than")),
-                ])),
-                ("partial", Tuple(
-                    title = _("Partial Backup"),
-                    elements = [
-                        Age(title = _("Warning if older than")),
-                        Age(title = _("Critical if older than")),
-                ])),
-                ("partial_diff", Tuple(
-                    title = _("Partial Diff Backup"),
-                    elements = [
-                        Age(title = _("Warning if older than")),
-                        Age(title = _("Critical if older than")),
-                ])),
-                ("unspecific", Tuple(
-                    title = _("Unspecific Backup"),
-                    elements = [
-                        Age(title = _("Warning if older than")),
-                        Age(title = _("Critical if older than")),
-                ])),
+                ("database", _vs_mssql_backup_age("Database backup")),
+                ("database_diff", _vs_mssql_backup_age("Database diff backup")),
+                ("log", _vs_mssql_backup_age("Log backup")),
+                ("file_or_filegroup", _vs_mssql_backup_age("File or filegroup backup")),
+                ("file_diff", _vs_mssql_backup_age("File diff backup")),
+                ("partial", _vs_mssql_backup_age("Partial backup")),
+                ("partial_diff", _vs_mssql_backup_age("Partial diff backup")),
+                ("unspecific", _vs_mssql_backup_age("Unspecific backup")),
                 ("not_found", MonitoringState(title=_("State if no backup found"))),
             ]
         ),
@@ -10813,12 +10792,7 @@ register_check_parameters(
     _("MSSQL Backup"),
     Dictionary(
         elements=[
-            ("levels", Tuple(
-                title=_("Upper levels for the backup age"),
-                elements = [
-                    Age(title = _("Warning if older than")),
-                    Age(title = _("Critical if older than")),
-            ])),
+            ("levels", _vs_mssql_backup_age("Upper levels for the backup age")),
         ]
     ),
     TextAscii(

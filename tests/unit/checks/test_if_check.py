@@ -51,6 +51,10 @@ pytestmark = pytest.mark.checks
     ([["1", "FOO", "6", "10", "2"] + 13*["0"] + ["FOO-ALIAS", "00:00:00:00:00:00"],
       ["2", "FOO", "6", "10", "1"] + 13*["0"] + ["FOO-ALIAS", "00:00:00:00:00:00"]],
      [{"use_desc": True}], ["FOO 2"]),
+    ([["1", "FOO", "6", "10", "2"] + 13*["0"] + ["FOO-ALIAS", "00:00:00:00:00:00"],
+      ["2", "FOO", "6", "10", "1"] + 13*["0"] + ["FOO-ALIAS", "00:00:00:00:00:00"],
+      ["3", "BAR", "6", "10", "1"] + 13*["0"] + ["FOO-ALIAS", "00:00:00:00:00:00"]],
+     [{"use_desc": True}, {"use_desc": True}], ["FOO 2", "BAR"]),
 ])
 def test_if_inventory_if_common_discovered_items(check_manager, monkeypatch, info, settings, items):
     check = check_manager.get_check("if")

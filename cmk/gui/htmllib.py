@@ -2299,14 +2299,14 @@ class html(HTMLGenerator):
 
 
     # Shows a colored badge with text (used on WATO activation page for the site status)
-    def status_label(self, content, status, help_txt, **attrs):
-        self.status_label_button(content, status, help_txt, onclick=None, **attrs)
+    def status_label(self, content, status, title, **attrs):
+        self.status_label_button(content, status, title, onclick=None, **attrs)
 
 
     # Shows a colored button with text (used in site and customer status snapins)
-    def status_label_button(self, content, status, help_txt, onclick, **attrs):
+    def status_label_button(self, content, status, title, onclick, **attrs):
         button_cls = "button" if onclick else None
-        self.div(content, title=help_txt, class_=[ "status_label", button_cls, status ],
+        self.div(content, title=title, class_=[ "status_label", button_cls, status ],
                  onclick=onclick, **attrs)
 
 

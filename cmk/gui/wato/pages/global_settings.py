@@ -184,7 +184,7 @@ class GlobalSettingsMode(WatoMode):
                     html.open_div(class_=["toggle_switch_container", modified_cls])
                     html.toggle_switch(
                         enabled=value,
-                        help=_("Immediately toggle this setting"),
+                        help_txt=_("Immediately toggle this setting"),
                         href=html.makeactionuri([("_action", "toggle"), ("_varname", varname)]),
                         class_=modified_cls,
                         title=title,

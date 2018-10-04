@@ -290,7 +290,6 @@ def inventory_if_common(info, has_nodeinfo = False):
     settings_sets = host_extra_conf(host_name(), inventory_if_rules)
     seen_indicies = set()
     pre_inventory = []
-    global_seen_items = set()
     duplicates = set()
 
     if not settings_sets:
@@ -307,6 +306,7 @@ def inventory_if_common(info, has_nodeinfo = False):
 
     group_patterns = _prepare_if_group_patterns_from_conf()
     for settings in settings_sets:
+        global_seen_items = set()
         uses_description = settings.get('use_desc', if_inventory_uses_description)
         uses_alias       = settings.get('use_alias', if_inventory_uses_alias)
         # Need to copy porttypes as the discovery function appends to the list below.

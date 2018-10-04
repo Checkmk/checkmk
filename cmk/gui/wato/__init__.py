@@ -5634,7 +5634,7 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
         valuespec = self._vs_activation()
 
         html.begin_form("activate", method="POST", action="")
-        html.hidden_field("activate_until", self._get_last_change_id(), id="activate_until")
+        html.hidden_field("activate_until", self._get_last_change_id(), id_="activate_until")
         forms.header(valuespec.title())
 
         valuespec.render_input("activate", self._value)

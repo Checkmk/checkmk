@@ -1250,7 +1250,7 @@ class ListOf(ValueSpec):
 
         html.hidden_field('%s_count' % varprefix,
             str(count),
-            id = '%s_count' % varprefix,
+            id_ = '%s_count' % varprefix,
             add_var = True)
 
         self._show_entries(varprefix, value)

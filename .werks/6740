@@ -1,0 +1,12 @@
+Title: statgrab_mem: Mark ruleset as deprecated
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1538656098
+Class: fix
+
+The ruleset {{Statgrab Memory Usage}} was replaced by the ruleset
+{{Main memory usage (UNIX / Other Devices)}} in version 1.2.7 but
+not marked as {{deprecated}}.

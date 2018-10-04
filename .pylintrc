@@ -51,10 +51,6 @@ disable=
     # uncover bugs. Fixing this is not rocket science, just some work.
     inconsistent-return-statements,
     #---------------------------------------------------------------------------
-    # Enabling this warning would be nice, it is mostly a sign of sloppy
-    # programming practice. In some cases, they can even hide bugs.
-    no-else-return,
-    #---------------------------------------------------------------------------
     # Enabling this would enhance readability quite a bit and it might even
     # uncover bugs. Fixing this is not rocket science, just some work: Roughly
     # 400 warnings in about 60 modules, but this can be fixed step by step.

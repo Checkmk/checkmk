@@ -8529,7 +8529,8 @@ register_check_parameters(
         ]
     ),
     None,
-    "first"
+    "first",
+    deprecated=True,
 )
 
 register_check_parameters(

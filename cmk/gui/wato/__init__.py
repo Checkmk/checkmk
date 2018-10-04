@@ -3037,13 +3037,13 @@ class ModeDiagHost(WatoMode):
                 html.open_div()
                 html.img("images/icon_reload.png", class_="icon", id="%s_img" % ident)
                 html.open_a(href="")
-                html.img("images/icon_reload.png", class_=["icon", "retry"], id_="%s_retry" % ident, title=_('Retry this test'))
+                html.img("images/icon_reload.png", class_=["icon", "retry"], id="%s_retry" % ident, title=_('Retry this test'))
                 html.close_a()
                 html.close_div()
                 html.close_td()
 
                 html.open_td()
-                html.div('', class_="log", id_="%s_log" % ident)
+                html.div('', class_="log", id="%s_log" % ident)
                 html.close_td()
 
                 html.close_tr()
@@ -3657,7 +3657,7 @@ class ModeDiscovery(WatoMode):
 
         def bulk_button(source, target, target_label, label):
             html.button("_bulk_%s_%s" % (source, target), target_label,
-                        help=_("Move %s to %s services") % (label, target))
+                        help_=_("Move %s to %s services") % (label, target))
 
         table.row(collect_headers=collect_headers, fixed=True)
         table.cell(css="bulkactions service_discovery", colspan=self._bulk_action_colspan())
@@ -3682,7 +3682,7 @@ class ModeDiscovery(WatoMode):
         elif table_source == self.SERVICE_VANISHED:
             if config.user.may("wato.service_discovery_to_removed"):
                 html.button("_bulk_%s_removed" % table_source, _("Remove"),
-                            help=_("Remove %s services") % label)
+                            help_=_("Remove %s services") % label)
             if config.user.may("wato.service_discovery_to_ignored"):
                 bulk_button(table_source, self.SERVICE_IGNORED, _("Disable"), label)
 
@@ -5492,7 +5492,7 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
         if self._may_discard_changes():
             html.context_button(_("Discard Changes!"),
                 html.makeactionuri([("_action", "discard")]),
-                "discard", id="discard_changes_button")
+                "discard", id_="discard_changes_button")
 
         if config.user.may("wato.sites"):
             html.context_button(_("Site Configuration"), watolib.folder_preserving_link([("mode", "sites")]), "sites")
@@ -5786,17 +5786,17 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
             # State
             if can_activate_all and need_sync:
                 html.icon_button(url="javascript:void(0)",
-                    id="activate_%s" % site_id,
+                    id_="activate_%s" % site_id,
                     cssclass=["activate_site"],
-                    help=_("This site is not update and needs a replication. Start it now."),
+                    title=_("This site is not update and needs a replication. Start it now."),
                     icon="need_replicate",
                     onclick="activate_changes(\"site\", \"%s\")" % site_id)
 
             if can_activate_all and need_restart:
                 html.icon_button(url="javascript:void(0)",
-                    id="activate_%s" % site_id,
+                    id_="activate_%s" % site_id,
                     cssclass=["activate_site"],
-                    help=_("This site needs a restart for activating the changes. Start it now."),
+                    title=_("This site needs a restart for activating the changes. Start it now."),
                     icon="need_restart",
                     onclick="activate_changes(\"site\", \"%s\")" % site_id)
 
@@ -5811,7 +5811,7 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
 
             # Livestatus
             table.cell(_("Status"), css="narrow nobr")
-            html.status_label(content=status, status=status, help=_("This site is %s") % status)
+            html.status_label(content=status, status=status, title=_("This site is %s") % status)
 
             # Livestatus-/Check_MK-Version
             table.cell(_("Version"), site_status.get("livestatus_version", ""), css="narrow nobr")
@@ -7182,7 +7182,7 @@ class NotificationsMode(EventsMode):
                 if num_conditions:
                     title = _("%d conditions") % num_conditions
                     html.begin_foldable_container(treename="rule_%d" % nr,
-                        id="%s" % nr,
+                        id_="%s" % nr,
                         isopen=False,
                         title=title,
                         indent=False,

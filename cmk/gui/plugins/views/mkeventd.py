@@ -371,7 +371,7 @@ if config.mkeventd_enabled:
         else:
             return ''
 
-        return html.render_icon(phase, help=title)
+        return html.render_icon(phase, title=title)
 
     def render_delete_event_icons(row):
         if config.user.may("mkeventd.delete"):

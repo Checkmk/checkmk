@@ -2141,7 +2141,7 @@ def paint_log_icon(row):
             title = _("Stopped acknowledgement")
 
     if img:
-        return "icon", html.render_icon("alert_"+img, help=title)
+        return "icon", html.render_icon("alert_"+img, title=title)
     return "icon", ""
 
 multisite_painters["log_icon"] = {

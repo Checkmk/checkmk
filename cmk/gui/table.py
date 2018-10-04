@@ -189,7 +189,7 @@ class Table(object):
             self.options["collect_headers"] = False
 
 
-    def add_cell(self, title="", text="", css=None, help_=None, colspan=None, sortable=True, escape_text=False):
+    def add_cell(self, title="", text="", css=None, help_txt=None, colspan=None, sortable=True, escape_text=False):
         if escape_text:
             text = html.permissive_attrencode(text)
         else:
@@ -205,7 +205,7 @@ class Table(object):
             # buttons are never sortable
             if css and 'buttons' in css and sortable:
                 sortable = False
-            self.headers.append((title, css, help_, sortable))
+            self.headers.append((title, css, help_txt, sortable))
 
         self.rows[-1][0].append((htmlcode, css, colspan))
 

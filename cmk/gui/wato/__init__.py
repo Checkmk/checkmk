@@ -784,7 +784,7 @@ class ModeFolder(WatoMode):
             subfolder.edit_url(subfolder.parent()),
             _("Edit the properties of this folder"),
             "edit",
-            id = 'edit_' + subfolder.name(),
+            id_ = 'edit_' + subfolder.name(),
             cssclass = 'edit',
             style = 'display:none',
         )
@@ -795,7 +795,7 @@ class ModeFolder(WatoMode):
             make_action_link([("mode", "folder"), ("_delete_folder", subfolder.name())]),
             _("Delete this folder"),
             "delete",
-            id = 'delete_' + subfolder.name(),
+            id_ = 'delete_' + subfolder.name(),
             cssclass = 'delete',
             style = 'display:none',
         )
@@ -839,7 +839,7 @@ class ModeFolder(WatoMode):
             style = "display:none"
 
         html.popup_trigger(
-            html.render_icon("move", help=_("Move this %s to another folder") % what_title,
+            html.render_icon("move", title=_("Move this %s to another folder") % what_title,
                              cssclass="iconbutton"),
             ident="move_"+obj.name(),
             what="move_to_folder",
@@ -878,7 +878,7 @@ class ModeFolder(WatoMode):
                 checkbox_title = _('Hide Checkboxes and bulk actions')
 
             html.toggle_button("checkbox_on", show_checkboxes, "checkbox",
-                help=checkbox_title,
+                title=checkbox_title,
                 onclick="location.href=\'%s\'" % onclick_uri,
                 is_context_button=False)
 
@@ -11300,8 +11300,8 @@ class ModeEditRuleset(WatoMode):
         return make_action_link(vars_)
 
 
-    def _rule_button(self, action, help_=None, folder=None, rulenr=0):
-        html.icon_button(self._action_url(action, folder, rulenr), help_, action)
+    def _rule_button(self, action, title=None, folder=None, rulenr=0):
+        html.icon_button(self._action_url(action, folder, rulenr), title, action)
 
 
     # TODO: Refactor this whole method

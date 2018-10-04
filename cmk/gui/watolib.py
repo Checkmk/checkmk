@@ -8715,7 +8715,7 @@ class RuleComment(TextAreaUnicode):
 
         html.nbsp()
         html.icon_button(None,
-            help=_("Prefix date and your name to the comment"),
+            title=_("Prefix date and your name to the comment"),
             icon="insertdate",
             onclick="vs_rule_comment_prefix_date_and_user(this, '%s');" % date_and_user
         )

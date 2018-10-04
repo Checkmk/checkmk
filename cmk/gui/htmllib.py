@@ -2144,7 +2144,7 @@ class html(HTMLGenerator):
 
 
     # TODO: Refactor the arguments. It is only used in views/wato
-    def toggle_button(self, id_, isopen, icon, help_txt, hidden=False, disabled=False, onclick=None, is_context_button=True):
+    def toggle_button(self, id_, isopen, icon, title, hidden=False, disabled=False, onclick=None, is_context_button=True):
         if is_context_button:
             self.begin_context_buttons() # TODO: Check all calls. If done before, remove this!
 
@@ -2154,7 +2154,7 @@ class html(HTMLGenerator):
         if disabled:
             state    = "off" if disabled else "on"
             cssclass = ""
-            help_txt     = ""
+            title    = ""
         else:
             state = "on"
             if isopen:
@@ -2165,7 +2165,7 @@ class html(HTMLGenerator):
         self.open_div(
             id_="%s_%s" % (id_, state),
             class_=["togglebutton", state, icon, cssclass],
-            title=help_txt,
+            title=title,
             style='display:none' if hidden else None,
         )
         self.open_a("javascript:void(0)", onclick=onclick)

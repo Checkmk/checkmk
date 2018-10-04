@@ -28,7 +28,7 @@ def render_webconf():
     # Our version of iconlink -> the images are located elsewhere
     def iconlink(text, url, icon):
         html.open_a(class_=["iconlink", "link"], target="main", href=url)
-        html.icon(icon="/webconf/images/icon_%s.png" % icon, help=None, cssclass="inline")
+        html.icon(icon="/webconf/images/icon_%s.png" % icon, title=None, cssclass="inline")
         html.write(text)
         html.close_a()
         html.br()

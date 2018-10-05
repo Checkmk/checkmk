@@ -85,6 +85,7 @@ class ModeUsers(WatoMode):
 
     def __init__(self):
         super(ModeUsers, self).__init__()
+        self._job = userdb.UserSyncBackgroundJob()
         self._job_snapshot = userdb.UserSyncBackgroundJob().get_status_snapshot()
 
 
@@ -100,7 +101,7 @@ class ModeUsers(WatoMode):
         if userdb.sync_possible():
             if not self._job_snapshot.is_running():
                 html.context_button(_("Sync users"), html.makeactionuri([("_sync", 1)]), "replicate")
-                html.context_button(_("Last sync result"), self._job_details_url(), "background_job_details")
+                html.context_button(_("Last sync result"), self._job.detail_url(), "background_job_details")
 
 
         if config.user.may("general.notify"):
@@ -189,8 +190,7 @@ class ModeUsers(WatoMode):
 
 
     def _job_details_link(self):
-        job = userdb.UserSyncBackgroundJob().get_status_snapshot()
-        return html.render_a("%s" % job.get_title(), href=self._job_details_url())
+        return html.render_a("%s" % self._job.get_title(), href=self._job.detail_url())
 
 
     def _job_details_url(self):

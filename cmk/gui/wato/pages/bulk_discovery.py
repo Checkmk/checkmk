@@ -65,13 +65,8 @@ class BulkDiscoveryBackgroundJob(WatoBackgroundJob):
         super(BulkDiscoveryBackgroundJob, self).__init__(self.job_prefix, **kwargs)
 
 
-    # TODO: Move something like this to one of the parent classes
-    def detail_url(self):
-        return html.makeuri_contextless([
-            ("mode", "background_job_details"),
-            ("job_id", self.get_job_id()),
-            ("back_url", watolib.Folder.current().url()),
-        ], filename="wato.py")
+    def _back_url(self):
+        return watolib.Folder.current().url()
 
 
     def do_execute(self, mode, use_cache, do_scan, error_handling, tasks, job_interface=None):

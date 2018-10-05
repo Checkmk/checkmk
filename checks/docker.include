@@ -23,6 +23,7 @@
 # License along with GNU Make; see the file  COPYING.  If  not,  write
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
+import json
 
 
 def docker_size_to_bytes(size_string):
@@ -33,3 +34,66 @@ def docker_size_to_bytes(size_string):
     if size_string.endswith('kB'):
         return int(float(size_string[:-2]) * 10**3)
     return float(size_string[:-1])
+
+
+def parse_docker_node_info(info):
+    try:
+        return json.loads(":".join(info[0]))
+    except ValueError:
+        pass
+
+    parsed = {}
+    prefix = ""
+    for row in info:
+        if not row:
+            continue
+        # ignore misssing keys / pad lines that are not of "key: value" type
+        if len(row) == 1:
+            row.append('')
+        key = row[0].strip()
+        value = ':'.join(row[1:]).strip()
+        # indented keys are prefixed by the last not indented key
+        # this does the right thing in the cases used below.
+        indent = len(row[0]) - len(key)
+        if indent == 0:
+            parsed[key] = value
+            prefix = key
+        else:
+            parsed[prefix + key] = value
+
+    return parsed
+
+
+def _parse_docker_node_disk_usage_dict(data):
+    key = data.pop('Type').lower()
+
+    act = data.get('Active')
+    if act is not None:
+        data['Active'] = int(act) if act else 0
+
+    tc = data.get('TotalCount') or data.get('Total')
+    if tc is not None:
+        data['TotalCount'] = int(tc) if tc else 0
+
+    sz = data.get('Size')
+    if sz is not None:
+        data['Size'] = docker_size_to_bytes(sz)
+
+    rc = data.get('Reclaimable')
+    if rc is not None:
+        reclaimable = rc.split(' ')[0]    # discard percentage
+        data['Reclaimable'] = docker_size_to_bytes(reclaimable)
+
+    return key, data
+
+
+def parse_docker_node_disk_usage(info):
+    try:
+        data_dicts = [json.loads(" ".join(line)) for line in info]
+    except ValueError:
+        header = [field.title() for field in info[0]]
+        data_dicts = [{k: v for k, v in zip(header, row)}
+                      for row in info[1:]]
+
+    return dict(map(_parse_docker_node_disk_usage_dict, data_dicts))
+

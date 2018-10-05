@@ -1330,6 +1330,10 @@ class UserSyncBackgroundJob(gui_background_job.GUIBackgroundJob):
         super(UserSyncBackgroundJob, self).__init__(self.job_prefix, **kwargs)
 
 
+    def _back_url(self):
+        return html.makeuri_contextless([("mode", "users")], filename="wato.py")
+
+
     def do_sync(self, job_interface, add_to_changelog, enforce_sync):
         job_interface.send_progress_update(_("Synchronization started..."))
         if self._execute_sync_action(job_interface, add_to_changelog, enforce_sync):

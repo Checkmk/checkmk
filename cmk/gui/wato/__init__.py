@@ -324,6 +324,21 @@ class RenameHostsBackgroundJob(WatoBackgroundJob):
             raise MKGeneralException(_("Another renaming operation is currently in progress"))
 
 
+    def _back_url(self):
+        return html.makeuri([])
+
+
+
+class RenameHostBackgroundJob(RenameHostsBackgroundJob):
+    def __init__(self, host, title=None):
+        super(RenameHostBackgroundJob, self).__init__(title)
+        self._host = host
+
+
+    def _back_url(self):
+        return self._host.folder().url()
+
+
 #.
 #   .--Main----------------------------------------------------------------.
 #   |                        __  __       _                                |
@@ -1861,11 +1876,7 @@ class ModeBulkRenameHost(WatoMode):
         html.context_button(_("Folder"), watolib.folder_preserving_link([("mode", "folder")]), "back")
         host_renaming_job = RenameHostsBackgroundJob()
         if host_renaming_job.is_available():
-            html.context_button(_("Last result"), html.makeuri([
-                ("mode", "background_job_details"),
-                ("job_id", host_renaming_job.get_job_id()),
-                ("back_url", html.makeuri([])),
-            ], filename="wato.py"), "background_job_details")
+            html.context_button(_("Last result"), host_renaming_job.detail_url(), "background_job_details")
 
 
     def action(self):
@@ -1897,13 +1908,7 @@ class ModeBulkRenameHost(WatoMode):
             except background_job.BackgroundJobAlreadyRunning, e:
                 raise MKGeneralException(_("Another host renaming job is already running: %s") % e)
 
-            job_id = host_renaming_job.get_job_id()
-            job_details_url = html.makeuri_contextless([
-                ("mode", "background_job_details"),
-                ("job_id", job_id),
-                ("back_url", html.makeuri([])),
-            ], filename="wato.py")
-            html.response.http_redirect(job_details_url)
+            html.response.http_redirect(host_renaming_job.detail_url())
         elif c == False: # not yet confirmed
             return ""
         else:
@@ -2138,13 +2143,9 @@ class ModeRenameHost(WatoMode):
         global_buttons()
         html.context_button(_("Host Properties"), self._host.edit_url(), "back")
 
-        host_renaming_job = RenameHostsBackgroundJob()
+        host_renaming_job = RenameHostBackgroundJob(self._host)
         if host_renaming_job.is_available():
-            html.context_button(_("Last result"), html.makeuri([
-                ("mode", "background_job_details"),
-                ("job_id", host_renaming_job.get_job_id()),
-                ("back_url", html.makeuri([])),
-            ], filename="wato.py"), "background_job_details")
+            html.context_button(_("Last result"), host_renaming_job.detail_url(), "background_job_details")
 
 
     def action(self):
@@ -2160,7 +2161,7 @@ class ModeRenameHost(WatoMode):
         if c:
             # Creating pending entry. That makes the site dirty and that will force a sync of
             # the config to that site before the automation is being done.
-            host_renaming_job = RenameHostsBackgroundJob(title=_("Renaming of %s -> %s") % (self._host.name(), newname))
+            host_renaming_job = RenameHostBackgroundJob(self._host, title=_("Renaming of %s -> %s") % (self._host.name(), newname))
             renamings = [(watolib.Folder.current(), self._host.name(), newname)]
             host_renaming_job.set_function(rename_hosts_background_job, renamings)
 
@@ -2169,14 +2170,7 @@ class ModeRenameHost(WatoMode):
             except background_job.BackgroundJobAlreadyRunning, e:
                 raise MKGeneralException(_("Another host renaming job is already running: %s") % e)
 
-            job_id = host_renaming_job.get_job_id()
-
-            job_details_url = html.makeuri_contextless([
-                ("mode", "background_job_details"),
-                ("job_id", job_id),
-                ("back_url", self._host.folder().url()),
-            ], filename="wato.py")
-            html.response.http_redirect(job_details_url)
+            html.response.http_redirect(host_renaming_job.detail_url())
 
         elif c == False: # not yet confirmed
             return ""

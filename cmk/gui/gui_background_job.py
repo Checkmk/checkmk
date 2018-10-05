@@ -183,6 +183,20 @@ class GUIBackgroundJob(GUIBackgroundJobSnapshottedFunctions):
         self.update_status({"acknowledged_by": user_id})
 
 
+    def detail_url(self):
+        """Returns the URL that displays the job detail page"""
+        return html.makeuri_contextless([
+            ("mode", "background_job_details"),
+            ("job_id", self.get_job_id()),
+            ("back_url", self._back_url()),
+        ], filename="wato.py")
+
+
+    def _back_url(self):
+        """Returns either None or the URL that the job detail page may be link back"""
+        return None
+
+
     @classmethod
     def get_concrete_subclasses(cls):
         # Note: Due to the strange execfile plugin mechanism, there is a risk

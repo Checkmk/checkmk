@@ -1853,7 +1853,7 @@ mk_ora_db_connect () {
         fi
     fi
 
-    logging "[${sid}] [mk_ora_db_connect]" "DB connection: ${ORADBUSER}/***@${TNSALIAS}${assysdbaconnect}"
+    logging "[${sid}] [mk_ora_db_connect]" "DB connection: ${ORADBUSER}/${DBPASSWORD//?/*}@${TNSALIAS}${assysdbaconnect}"
     echo "${ORADBUSER}/${DBPASSWORD}@${TNSALIAS}${assysdbaconnect}"
 
 }

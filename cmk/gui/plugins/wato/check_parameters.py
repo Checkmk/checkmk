@@ -109,68 +109,38 @@ register_check_parameters(
     "dict"
 )
 
-def transform_fortinet_signatures_to_gui(p):
-    for k in ["av_age", "av_ext_age", "ips_age", "ips_ext_age"]:
-        p.setdefault(k, None)
-    return p
+def _vs_fortinet_signatures(title):
+    return Alternative(
+        title=_("%s" % title),
+        style="dropdown",
+        elements=[
+            Tuple(title=_("Set levels"),
+                elements = [
+                    Age(title=_("Warning at"), default_value=86400),
+                    Age(title=_("Critical at"), default_value=2*86400),
+            ]),
+            Tuple(
+                title=_("No levels"),
+                elements=[
+                    FixedValue(None, totext=""),
+                    FixedValue(None, totext=""),
+
+            ]),
+        ]
+    )
 
 register_check_parameters(
     subgroup_networking,
     "fortinet_signatures",
     "Fortigate Signatures",
-    Transform(Dictionary(
+    Dictionary(
         elements = [
-            ('av_age', Alternative(
-                title=_("Age of Anti-Virus signature"),
-                style="dropdown",
-                elements=[
-                    FixedValue(None, title=_("No levels"), totext=""),
-                    Tuple(title=_("Set levels"),
-                        elements = [
-                            Age(title=_("Warning at"), default_value = 86400),
-                            Age(title=_("Critical at"), default_value = 2*86400),
-                     ]),
-                ]),
-            ),
-            ('av_ext_age', Alternative(
-                title=_("Age of Anti-Virus signature extended database"),
-                style="dropdown",
-                elements=[
-                    FixedValue(None, title=_("No levels"), totext=""),
-                    Tuple(title=_("Set levels"),
-                        elements = [
-                            Age(title=_("Warning at"), default_value = 86400),
-                            Age(title=_("Critical at"), default_value = 2*86400),
-                     ]),
-                ]),
-            ),
-            ('ips_age', Alternative(
-                title=_("Age of Intrusion Prevention signature"),
-                style="dropdown",
-                elements=[
-                    FixedValue(None, title=_("No levels"), totext=""),
-                    Tuple(title=_("Set levels"),
-                        elements = [
-                            Age(title=_("Warning at"), default_value = 86400),
-                            Age(title=_("Critical at"), default_value = 2*86400),
-                     ]),
-                ]),
-            ),
-            ('ips_ext_age', Alternative(
-                title=_("Age of Intrusion Prevention signature extended database"),
-                style="dropdown",
-                elements=[
-                    FixedValue(None, title=_("No levels"), totext=""),
-                    Tuple(title=_("Set levels"),
-                        elements = [
-                            Age(title=_("Warning at"), default_value = 86400),
-                            Age(title=_("Critical at"), default_value = 2*86400),
-                     ]),
-                ]),
-            ),
+            ('av_age', _vs_fortinet_signatures("Age of Anti-Virus signature")),
+            ('av_ext_age', _vs_fortinet_signatures("Age of Anti-Virus signature extended database")),
+            ('ips_age', _vs_fortinet_signatures("Age of Intrusion Prevention signature")),
+            ('ips_ext_age', _vs_fortinet_signatures("Age of Intrusion Prevention signature extended database")),
         ],
-        optional_keys=[],
-    ), forth=transform_fortinet_signatures_to_gui),
+    ),
     None,
     "dict"
 )

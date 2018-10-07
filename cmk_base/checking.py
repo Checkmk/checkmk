@@ -451,34 +451,24 @@ def _sanitize_yield_check_result(result, is_snmp):
     if not subresults:
         return _item_not_found(is_snmp)
 
-    # Simple check with no separate subchecks (yield wouldn't have been neccessary here!)
-    if len(subresults) == 1:
-        state, infotext, perfdata = _sanitize_tuple_check_result(subresults[0], allow_missing_infotext=True)
-        if infotext == None:
-            return state, u"", perfdata
-        else:
-            return state, infotext, perfdata
 
-    # Several sub results issued with multiple yields. Make that worst sub check
-    # decide the total state, join the texts and performance data. Subresults with
-    # an infotext of None are used for adding performance data.
-    else:
-        perfdata = []
-        infotexts = []
-        status = 0
+    perfdata = []
+    infotexts = []
+    status = 0
 
-        for subresult in subresults:
-            st, text, perf = _sanitize_tuple_check_result(subresult, allow_missing_infotext=True)
+    for subresult in subresults:
+        st, text, perf = _sanitize_tuple_check_result(subresult, allow_missing_infotext=True)
 
-            # FIXME/TODO: Why is the state only aggregated when having text != None?
-            if text != None:
-                infotexts.append(text + ["", "(!)", "(!!)", "(?)"][st])
-                status = cmk_base.utils.worst_service_state(st, status)
+        status = cmk_base.utils.worst_service_state(st, status)
 
-            if perf != None:
-                perfdata += subresult[2]
+        if text != None:
+            infotexts.append(text + ["", "(!)", "(!!)", "(?)"][st])
 
-        return status, ", ".join(infotexts), perfdata
+        if perf != None:
+            perfdata += perf
+
+    return status, ", ".join(infotexts), perfdata
+
 
 
 def _item_not_found(is_snmp):

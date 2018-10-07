@@ -1,0 +1,13 @@
+Title: Checks may now yield the value None as plugin output
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0p6
+Date: 1539174883
+Class: feature
+
+A check usually returns a state, followed by text and optional perfdata.
+The plugin output was not well formatted, in case yield returned an empty string.
+It is now possible to yield None as plugin output, which instructs the Check API
+to ignore this value.

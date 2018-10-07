@@ -150,6 +150,22 @@ def test_release_lock(tmpdir):
     assert store.have_lock(path) == False
 
 
+def test_release_lock_already_closed(tmpdir):
+    locked_file = tmpdir.join("locked_file")
+    locked_file.write("")
+
+    path = "%s" % locked_file
+
+    assert store.have_lock(path) == False
+    store.aquire_lock(path)
+    assert store.have_lock(path) == True
+
+    os.close([ fd for p, fd in store.g_aquired_locks if p == path ][0])
+
+    store.release_lock(path)
+    assert store.have_lock(path) == False
+
+
 def test_release_all_locks(tmpdir):
     locked_file1 = tmpdir.join("locked_file1")
     locked_file1.write("")
@@ -171,6 +187,21 @@ def test_release_all_locks(tmpdir):
     assert store.have_lock(path1) == False
     assert store.have_lock(path2) == False
 
+
+def test_release_all_locks_already_closed(tmpdir):
+    locked_file = tmpdir.join("locked_file")
+    locked_file.write("")
+
+    path = "%s" % locked_file
+
+    assert store.have_lock(path) == False
+    store.aquire_lock(path)
+    assert store.have_lock(path) == True
+
+    os.close([ fd for p, fd in store.g_aquired_locks if p == path ][0])
+
+    store.release_all_locks()
+    assert store.have_lock(path) == False
 
 
 class LockTestThread(threading.Thread):

@@ -261,7 +261,7 @@ class LDAPUserConnector(UserConnector):
 
 
     def _format_ldap_uri(self, server):
-        if self._use_ssl():
+        if self.use_ssl():
             uri = 'ldaps://'
         else:
             uri = 'ldap://'
@@ -381,7 +381,7 @@ class LDAPUserConnector(UserConnector):
         return servers
 
 
-    def _use_ssl(self):
+    def use_ssl(self):
         return 'use_ssl' in self._config
 
 

@@ -315,10 +315,19 @@ def release_lock(path):
         return # no unlocking needed
 
     for lock_path, fd in g_aquired_locks:
-        if lock_path == path:
-            fcntl.flock(fd, fcntl.LOCK_UN)
+        if lock_path != path:
+            continue
+
+        try:
             os.close(fd)
-            g_aquired_locks.remove((lock_path, fd))
+        except OSError as e:
+            if e.errno == 9: # OSError: [Errno 9] Bad file descriptor
+                pass
+            else:
+                raise
+
+        g_aquired_locks.remove((lock_path, fd))
+        break
 
     g_locked_paths.remove(path)
 
@@ -330,14 +339,8 @@ def have_lock(path):
 def release_all_locks():
     global g_aquired_locks, g_locked_paths
 
-    for _unused_path, fd in g_aquired_locks:
-        try:
-            os.close(fd)
-        except OSError, e:
-            if e.errno == 9: # OSError: [Errno 9] Bad file descriptor
-                pass
-            else:
-                raise
+    for path, _unused_fd in g_aquired_locks:
+        release_lock(path)
 
     g_aquired_locks = []
     g_locked_paths  = []

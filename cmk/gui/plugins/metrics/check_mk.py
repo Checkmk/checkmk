@@ -4430,6 +4430,24 @@ metric_info["dtu_percent"] = {
     "color" : "#4040ff"
 }
 
+metric_info["connections_max_used"] ={
+    "title": _("Maximum used parallel connections"),
+    "unit"  : "count",
+    "color" : "42/a",
+}
+
+metric_info["connections_max"] ={
+    "title": _("Maximum parallel connections"),
+    "unit"  : "count",
+    "color" : "51/b",
+}
+
+metric_info["connections_perc_used"] ={
+    "title": _("Parallel connections load"),
+    "unit"  : "%",
+    "color" : "21/a",
+}
+
 #.
 #   .--Checks--------------------------------------------------------------.
 #   |                    ____ _               _                            |
@@ -6751,6 +6769,12 @@ perfometer_info.append({
     "exponent"      : 2,
 })
 
+perfometer_info.append({
+    "type"   : "linear",
+    "segments" : ["connections_perc_used"],
+    "total"  : 100,
+})
+
 #.
 #   .--Graphs--------------------------------------------------------------.
 #   |                    ____                 _                            |
@@ -8552,4 +8576,12 @@ graph_info['files_notification_spool'] = {
         ('corrupted_files', 'area'),
     ],
     "optional_metrics": ['deferred_files', 'corrupted_files'],
+}
+
+graph_info['DB_connections'] = {
+    'title'  : _('Parallel connections'),
+    'metrics': [
+        ('connections_max_used', 'area'),
+        ('connections_max', 'line'),
+    ],
 }

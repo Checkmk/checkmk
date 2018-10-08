@@ -1,0 +1,11 @@
+Title: MySQL connections performance Data
+Level: 1
+Component: core
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1538991035
+Class: feature
+
+MySQL parallel connections performance data is now captured and historic graphs and Perf-O-Meter are views are generated.
+

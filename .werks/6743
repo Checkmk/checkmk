@@ -1,0 +1,10 @@
+Title: mgmt_fsc_sc2_cpu_status, mgmt_fsc_sc2_fans, mgmt_fsc_sc2_info, mgmt_fsc_sc2_mem_status, mgmt_fsc_sc2_power_consumption, mgmt_fsc_sc2_temp, mgmt_fsc_sc2_voltage: New checks for SNMP management boards
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1539002474
+Class: feature
+
+

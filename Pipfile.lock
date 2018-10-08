@@ -484,6 +484,7 @@
                 "sha256:5722cd09762faa01276230270ff16af7acf7c5c45d623868d9ba116f15791ce8"
             ],
             "index": "pypi",
+            "markers": null,
             "version": "==2.13.0"
         },
         "requests-kerberos": {
@@ -923,11 +924,11 @@
         },
         "pytest": {
             "hashes": [
-                "sha256:453cbbbe5ce6db38717d282b758b917de84802af4288910c12442984bde7b823",
-                "sha256:a8a07f84e680482eb51e244370aaf2caa6301ef265f37c2bdefb3dd3b663f99d"
+                "sha256:7e258ee50338f4e46957f9e09a0f10fb1c2d05493fa901d113a8dafd0790de4e",
+                "sha256:9332147e9af2dcf46cd7ceb14d5acadb6564744ddff1fe8c17f0ce60ece7d9a2"
             ],
             "index": "pypi",
-            "version": "==3.8.0"
+            "version": "==3.8.2"
         },
         "pytest-cov": {
             "hashes": [
@@ -975,6 +976,7 @@
                 "sha256:5722cd09762faa01276230270ff16af7acf7c5c45d623868d9ba116f15791ce8"
             ],
             "index": "pypi",
+            "markers": null,
             "version": "==2.13.0"
         },
         "scandir": {

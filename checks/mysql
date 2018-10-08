@@ -208,10 +208,12 @@ check_info['mysql.innodb_io'] = {
 #   |                                                                      |
 #   +----------------------------------------------------------------------+
 
+
 def inventory_mysql_connections(parsed):
     for instance, values in parsed.items():
         if 'Max_used_connections' in values and 'max_connections' in values:
             yield instance, {}
+
 
 # TODO: This check should rather output the current number of connections.
 # The historic maximum can be viewed in the RRD data...
@@ -232,6 +234,11 @@ def check_mysql_connections(item, params, parsed):
 
         status = 0
         status_txt = ''
+        perf_data = [
+            ("connections_max_used", conn),
+            ("connections_max", max_conn),
+            ('connections_perc_used', perc_used),
+        ]
 
         if 'perc_used' in params:
             warn, crit = params['perc_used']
@@ -244,13 +251,15 @@ def check_mysql_connections(item, params, parsed):
                 status_txt = ' (Threshold (%0.2f%%) for number of maximum parallel connections ' \
                              'has been reached at least once since program start' % warn
 
+
         return status, 'Max. parallel Connections: %d (Max.: %d): %0.2f%%%s' % \
-                (conn, max_conn, perc_used, status_txt)
+                (conn, max_conn, perc_used, status_txt), perf_data
 
 
 check_info['mysql.connections'] = {
-    "inventory_function"      : inventory_mysql_connections,
-    "check_function"          : check_mysql_connections,
-    "service_description"     : "MySQL Connections %s",
-    "group"                   : "mysql_connections",
+    "inventory_function": inventory_mysql_connections,
+    "check_function": check_mysql_connections,
+    "service_description": "MySQL Connections %s",
+    "group": "mysql_connections",
+    "has_perfdata": True,
 }

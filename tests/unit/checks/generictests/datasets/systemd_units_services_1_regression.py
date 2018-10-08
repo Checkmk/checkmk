@@ -428,7 +428,7 @@ checks = {
     'services_summary': [
         ('Summary', 'default',
             [(0, '32 services in total', []),
-             (2, '1 service failed: systemd-cryptsetup@cryptswap1', []),
+             (2, '1 service failed (systemd-cryptsetup@cryptswap1)', []),
             ]),
     ]
 }

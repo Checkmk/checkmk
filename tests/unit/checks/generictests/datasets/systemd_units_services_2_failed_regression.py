@@ -27,4 +27,4 @@ discovery = {'services': [], 'services_summary': [('Summary', {})]}
 checks = {'services_summary': [('Summary',
                                 'default',
                                 [(0, '2 services in total', []),
-                                 (2, '2 services failed: foo, bar', [])])]}
+                                 (2, '2 services failed (foo, bar)', [])])]}

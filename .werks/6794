@@ -1,0 +1,11 @@
+Title: esx_vsphere_objects: Don't crash without matching rule
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1539342283
+Class: fix
+
+Since werk 6790 the check crashed if no matching rule was configured.
+This has been fixed.

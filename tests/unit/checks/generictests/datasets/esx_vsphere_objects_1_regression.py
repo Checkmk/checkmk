@@ -60,7 +60,7 @@ discovery = {'': [('HostSystem 10.1.1.111', {}),
                   ('VM virt1-1.4.2', {}),
                   ('VM win2003', {}),
                   ('VM win2016rechner', {})],
-             'count': [(None, None)]}
+             'count': [(None, {})]}
 
 
 checks = {'': [('HostSystem 10.1.1.111', 'default',

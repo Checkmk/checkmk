@@ -966,6 +966,8 @@ class WebSession(requests.Session):
 
         response = self.get(path, expected_code=expected_code, allow_redirects=False)
         if expected_target:
+            if response.headers['Location'] != expected_target:
+                raise AssertionError("REDIRECT FAILED: '%s' != '%s'" % (response.headers['Location'], expected_target))
             assert response.headers['Location'] == expected_target
 
 

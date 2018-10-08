@@ -368,7 +368,7 @@ setup:
 	    chrpath \
 	    enchant \
 	    p7zip-full
-	sudo pip install -U pipenv
+	sudo -H pip install -U pipenv
 	$(MAKE) -C omd setup
 	$(MAKE) -C omd/packages/openhardwaremonitor setup
 	$(MAKE) -C docker setup

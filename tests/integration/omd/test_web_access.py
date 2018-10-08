@@ -18,7 +18,8 @@ def test_www_dir(site):
 
 def test_base_path_redirects(site):
     web = CMKWebSession(site)
-    expected_target = '%s://%s/%s/check_mk/' % (site.http_proto, site.http_address, site.id)
+    expected_target = '%s://%s:%d/%s/check_mk/' % \
+        (site.http_proto, site.http_address, site.apache_port, site.id)
 
     web.check_redirect("/%s" % site.id, expected_target=expected_target)
     web.check_redirect("/%s/" % site.id, expected_target=expected_target)

@@ -1,0 +1,10 @@
+Title: mgmt_snmp_info: New check for SNMP management board
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1539002444
+Class: feature
+
+

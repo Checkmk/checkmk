@@ -1,0 +1,11 @@
+Title: UPS output load WATO rules
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1539010234
+Class: feature
+
+UPS output load includes default levels for warn and crit levels. This
+threshold levels are now configurable in WATO

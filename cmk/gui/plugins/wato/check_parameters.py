@@ -13890,6 +13890,22 @@ register_check_parameters(
 
 register_check_parameters(
     subgroup_environment,
+    "ups_out_load",
+    _("Parameters for output loads of UPSs and PDUs"),
+    Tuple(
+        elements = [
+            Integer(title = _("warning at"), unit = u"%", default_value = 85),
+            Integer(title = _("critical at"), unit = u"%", default_value = 90),
+        ]
+    ),
+    TextAscii(
+        title = _("Phase"),
+        help = _("The identifier of the phase the power is related to.")),
+    "first"
+)
+
+register_check_parameters(
+    subgroup_environment,
     "epower_single",
     _("Electrical Power for Devices with only one phase"),
     Tuple(

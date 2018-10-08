@@ -1,0 +1,10 @@
+Title: mgmt_hp_proliant_cpu, mgmt_hp_proliant_da_cntlr, mgmt_hp_proliant_fans, mgmt_hp_proliant_mem, mgmt_hp_proliant_temp: New checks for SNMP Mmanagement boards
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1539004348
+Class: feature
+
+

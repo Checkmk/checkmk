@@ -1,0 +1,10 @@
+Title: mgmt_dell_poweredge_amperage, mgmt_dell_poweredge_cpu, mgmt_dell_poweredge_mem, mgmt_dell_poweredge_netdev, mgmt_dell_poweredge_pci, mgmt_dell_poweredge_status, mgmt_dell_poweredge_temp: New checks for SNMP management boards
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1539003584
+Class: feature
+
+

@@ -400,7 +400,7 @@ setup:
 	    python-pip \
 	    chrpath \
 	    enchant
-	sudo pip install pipenv
+	sudo -H pip install pipenv
 	$(MAKE) -C omd setup
 	$(MAKE) -C omd/packages/openhardwaremonitor setup
 	$(MAKE) -C docker setup

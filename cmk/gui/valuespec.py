@@ -1476,7 +1476,7 @@ class ListOfMultiple(ValueSpec):
         # Save all selected items
         html.hidden_field('%s_active' % varprefix,
             ';'.join([ k for k in value.keys() if k in self._choice_dict]),
-            id = '%s_active' % varprefix, add_var = True)
+            id_ = '%s_active' % varprefix, add_var = True)
 
         # Actual table of currently existing entries
         html.open_table(id_="%s_table" % varprefix, class_=["valuespec_listof", extra_css])

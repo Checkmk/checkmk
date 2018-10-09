@@ -56,11 +56,6 @@ disable=
     # 400 warnings in about 60 modules, but this can be fixed step by step.
     redefined-outer-name,
     #---------------------------------------------------------------------------
-    # Enabling this would be nice, but not crucial. At the moment, we have quite
-    # a few violations (about 200 in roughly 50 modules), so we postpone fixing
-    # this.
-    # redefined-builtin,
-    #---------------------------------------------------------------------------
     # Enabling this would be nice, but not crucial. Nevertheless, this would
     # improve readability and involve some cleanups in our class hierarchy, so
     # we should do this some day.

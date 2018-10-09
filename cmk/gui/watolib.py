@@ -82,6 +82,7 @@ import cmk.gui.backup as backup
 import cmk.gui.log as log
 import cmk.gui.background_job as background_job
 import cmk.gui.gui_background_job as gui_background_job
+import cmk.gui.weblib as weblib
 from cmk.gui.i18n import _u, _
 from cmk.gui.globals import html
 from cmk.gui.htmllib import HTML
@@ -10767,6 +10768,32 @@ class LivestatusViaTCP(Dictionary):
         ]
         kwargs["optional_keys"] = [ "only_from" ]
         super(LivestatusViaTCP, self).__init__(**kwargs)
+
+
+def get_hostnames_from_checkboxes(filterfunc = None):
+    """Create list of all host names that are select with checkboxes in the current file.
+    This is needed for bulk operations."""
+    show_checkboxes = html.var("show_checkboxes") == "1"
+    if show_checkboxes:
+        selected = weblib.get_rowselection('wato-folder-/' + Folder.current().path())
+    search_text = html.var("search")
+
+    selected_host_names = []
+    for host_name, host in sorted(Folder.current().hosts().items()):
+        if (not search_text or (search_text.lower() in host_name.lower())) \
+            and (not show_checkboxes or ('_c_' + host_name) in selected):
+                if filterfunc == None or \
+                   filterfunc(host):
+                    selected_host_names.append(host_name)
+    return selected_host_names
+
+
+def get_hosts_from_checkboxes(filterfunc = None):
+    """Create list of all host objects that are select with checkboxes in the current file.
+    This is needed for bulk operations."""
+    folder = Folder.current()
+    return [ folder.host(host_name) for host_name in get_hostnames_from_checkboxes(filterfunc) ]
+
 
 #.
 #   .--CME-----------------------------------------------------------------.

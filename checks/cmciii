@@ -97,7 +97,7 @@ def parse_cmciii(info):
             "status"     : status,
             "_location_" : endoid, })
 
-    for oidend, variable, var_type, scale, value_str, value_int in var_table:
+    for oidend, variable, var_type, var_unit, scale, value_str, value_int in var_table:
         location, _index   = oidend.split(".")
         variable_splitted = variable.split(".")
         device            = devices.get(location)
@@ -165,7 +165,8 @@ def parse_cmciii(info):
                 value = int(value_int)
 
         if "Power" in container or "Energy" in container:
-            value = value * 1000 # kW, kWh
+            if var_unit == "kW" or var_unit == "KWh" or var_unit == "kVA":
+                value = value * 1000 # Convert from kW, kWh, kVA to W, Wh, VA
 
         if itemname in parsed[this_table] and \
            parsed[this_table][itemname]["_location_"] != location:
@@ -241,6 +242,7 @@ check_info['cmciii'] = {
                                 OID_END,
                                 "3",    # RITTAL-CMC-III-MIB::cmcIIIVarName
                                 "4",    # RITTAL-CMC-III-MIB::cmcIIIVarType
+                                "5",    # RITTAL-CMC-III-MIB::cmcIIIVarUnit
                                 "7",    # RITTAL-CMC-III-MIB::cmcIIIVarScale
                                 "10",   # RITTAL-CMC-III-MIB::cmcIIIVarValueStr
                                 "11",   # RITTAL-CMC-III-MIB::cmcIIIVarValueInt

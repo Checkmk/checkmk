@@ -213,7 +213,11 @@ class TCPDataSource(CheckMKAgentDataSource):
 
     def _sub_result_only_from(self, agent_info):
         agent_only_from = agent_info.get("onlyfrom")
+
         ruleset = config.agent_config.get("only_from")
+        if not ruleset:
+            return 0, ''
+
         entries = config.host_extra_conf(self._hostname, ruleset)
         config_only_from = entries[0] if entries else None
         if None in (agent_only_from, config_only_from):

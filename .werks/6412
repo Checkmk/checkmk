@@ -1,0 +1,16 @@
+Title: mk_docker_container_piggybacked: don't try to execute the check_mk_agent inside a container if no bash is available
+Level: 1
+Component: checks
+Class: fix
+Compatible: incomp
+Edition: cre
+State: unknown
+Version: 1.6.0i1
+Date: 1539094056
+
+If bash is not available in a docker container docker reports the error on stdout.
+The mk_docker_container_piggybacked plugin misinterpreted the error as an
+available check_mk_agent inside of the container.
+
+Affected hosts using the mk_docker_container_piggybacked plugin have to update
+the plugin to the new version to avoid this behaviour.

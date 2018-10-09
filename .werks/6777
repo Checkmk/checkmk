@@ -1,0 +1,17 @@
+Title: Background job logs were not always shown in job output
+Level: 1
+Component: multisite
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0i1
+Date: 1539106361
+
+In some situations log entries which should be written to the job output,
+which is visible from the GUI, was not written to it.
+
+Background: The default logger was based on cmk.log logger which is not
+initialized with the GUI log level. The job logger is now based on cmk.gui.log
+logger as intended which makes the job log entries now available in the job
+progress dialog by default.

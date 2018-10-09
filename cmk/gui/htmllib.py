@@ -69,6 +69,13 @@ import pprint
 
 from contextlib import contextmanager
 
+try:
+    # First try python3
+    from html import escape as html_escape
+except ImportError:
+    # Default to python2
+    from cgi import escape as html_escape
+
 # Monkey patch in order to make the HTML class below json-serializable without changing the default json calls.
 def _default(self, obj):
     return getattr(obj.__class__, "to_json", _default.default)(obj)
@@ -120,13 +127,11 @@ class Escaper(object):
             return "%s" % value # This is HTML code which must not be escaped
         elif attr_type not in [str, unicode]: # also possible: type Exception!
             value = "%s" % value # Note: this allows Unicode. value might not have type str now
-        return value.replace("&", "&amp;")\
-                    .replace('"', "&quot;")\
-                    .replace("<", "&lt;")\
-                    .replace(">", "&gt;")
+        return html_escape(value, quote=True)
 
 
     def unescape_attributes(self, value):
+        # In python3 use html.unescape
         return value.replace("&amp;", "&")\
                     .replace("&quot;", "\"")\
                     .replace("&lt;", "<")\
@@ -2332,7 +2337,7 @@ class html(HTMLGenerator):
 
         if label:
             self.label(label, for_=id_)
-        self.write_html(self.render_input(varname, type_=args.get("type", "text"), **attributes))
+        self.write_html(self.render_input(varname, type_=args.get("type_", "text"), **attributes))
 
         if error:
             self.close_x()
@@ -2377,7 +2382,7 @@ class html(HTMLGenerator):
 
 
     def password_input(self, varname, default_value = "", size=12, **args):
-        self.text_input(varname, default_value, type="password", size = size, **args)
+        self.text_input(varname, default_value, type_="password", size = size, **args)
 
 
     def text_area(self, varname, deflt="", rows=4, cols=30, attrs=None, try_max_width=False):
@@ -2636,7 +2641,7 @@ class html(HTMLGenerator):
             if icon:
                 self.img(class_=["treeangle", "title"], src="images/icon_%s.png" % icon)
             else:
-                self.img(id=img_id, class_=["treeangle", "nform", "open" if isopen else "closed"],
+                self.img(id_=img_id, class_=["treeangle", "nform", "open" if isopen else "closed"],
                          src="images/%s_closed.png" % tree_img, align="absbottom")
             self.write_text(title)
             self.close_td()
@@ -2645,7 +2650,7 @@ class html(HTMLGenerator):
             self.open_div(class_="foldable")
 
             if not icon:
-                self.img(id="treeimg.%s.%s" % (treename, id_),
+                self.img(id_="treeimg.%s.%s" % (treename, id_),
                          class_=["treeangle", "open" if isopen else "closed"],
                          src="images/%s_closed.png" % tree_img, align="absbottom", onclick=onclick)
             if isinstance(title, HTML): # custom HTML code

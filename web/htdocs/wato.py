@@ -9765,9 +9765,7 @@ class ModeTimeperiodImportICal(WatoMode):
 
             # Resolve multiple days
             resolved, cur_timestamp, day = [], time.mktime(cur_start_time), 1
-            # day < 100 is just some plausibilty check. In case such an event
-            # is needed eventually remove this
-            while cur_timestamp < time.mktime(event["end"]) and day < 100:
+            while cur_timestamp < time.mktime(event["end"]):
                 resolved.append({
                     "name" : "%s %s" % (event["name"], _(" (day %d)") % day),
                     "date" : time.strftime("%Y-%m-%d", time.localtime(cur_timestamp)),

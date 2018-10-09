@@ -42,11 +42,11 @@ def parse_ups_socomec_outphase(info):
     return parsed
 
 
-def check_ups_socomec_outphase(item, params, info):
+def check_ups_socomec_outphase(item, params, parsed):
     if not item.startswith("Phase"):
         # fix item names discovered before 1.2.7
         item = "Phase %s" % item
-    return check_elphase(item, params, info)
+    return check_elphase(item, params, parsed)
 
 
 check_info['ups_socomec_outphase'] = {

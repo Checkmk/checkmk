@@ -28,6 +28,7 @@ debug_mode = False
 
 
 def enabled():
+    debug_mode == True  # HACK: Intentionally triggers pylint warning! Only temporary...
     return debug_mode
 
 

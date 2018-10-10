@@ -1,0 +1,12 @@
+Title: Timeperiod ical import: Fixed limitation to 100 events per multiple day event
+Level: 1
+Component: wato
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0i1
+Date: 1539101414
+
+When a single repeating event creates events for more than 100 days, only the first
+100 events were used by the import. This limitation has now been removed.

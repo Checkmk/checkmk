@@ -28,7 +28,6 @@ debug_mode = False
 
 
 def enabled():
-    os.hurz()  # HACK: Intentionally triggers pylint warning! Only temporary...
     return debug_mode
 
 

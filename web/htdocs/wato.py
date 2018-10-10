@@ -8769,7 +8769,7 @@ def render_notification_rules(rules, userid="", show_title=False, show_buttons=T
             num_conditions = len([key for key in rule if key.startswith("match_")])
             if num_conditions:
                 title = _("%d conditions") % num_conditions
-                html.begin_foldable_container(treename="rule_%d" % nr,
+                html.begin_foldable_container(treename="rule_%s_%d" % (userid, nr),
                     id="%s" % nr,
                     isopen=False,
                     title=title,

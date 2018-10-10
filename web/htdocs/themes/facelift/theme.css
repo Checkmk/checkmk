@@ -578,24 +578,24 @@ table {
         border-bottom: 1px solid #cccfdb;
         padding-bottom: 32px;
         padding-top: 8px; }
-      table.nform table.valuespec_listof.regular.filter .vlof_content.filter .floatfilter {
+      table.nform table.valuespec_listof.filter .vlof_content.filter .floatfilter {
         height: auto;
         box-shadow: none;
         border: 1px solid #cccfdb;
         background-color: #FFFFFF;
         width: 400px; }
-        table.nform table.valuespec_listof.regular.filter .vlof_content.filter .floatfilter .legend {
+        table.nform table.valuespec_listof.filter .vlof_content.filter .floatfilter .legend {
           font-size: 12px;
           text-transform: uppercase;
           letter-spacing: 1px;
           color: #2a2a2a;
           padding: 16px 0px 0px 16px; }
-        table.nform table.valuespec_listof.regular.filter .vlof_content.filter .floatfilter .content {
+        table.nform table.valuespec_listof.filter .vlof_content.filter .floatfilter .content {
           padding: 16px;
           width: 100%; }
-          table.nform table.valuespec_listof.regular.filter .vlof_content.filter .floatfilter .content table {
+          table.nform table.valuespec_listof.filter .vlof_content.filter .floatfilter .content table {
             border-spacing: 8px 4px; }
-      table.nform table.valuespec_listof.regular.filter .vlof_buttons.filter img {
+      table.nform table.valuespec_listof.filter .vlof_buttons.filter img {
         top: 8px;
         left: -40px; }
   table.report_contents td.preview img {

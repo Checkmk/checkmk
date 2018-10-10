@@ -23,6 +23,9 @@ help:
 ../.venv:
 	$(MAKE) -C .. .venv
 
+pipenv-check: ../.venv
+	$(PIPENV) check
+
 test-unit: ../.venv
 	$(PYTEST) -T unit
 

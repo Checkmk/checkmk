@@ -28,10 +28,7 @@ def check_files(base_dir):
 
 
 def add_file(f, path):
-    # Change path to be relative to "workdir" /home/git or the workdir
-    # in the build system.
-    relpath = os.path.relpath(os.path.realpath(path),
-                              os.path.dirname(os.path.dirname(os.getcwd())))
+    relpath = os.path.relpath(os.path.realpath(path), cmk_path())
     f.write("# -*- encoding: utf-8 -*-")
     f.write("#\n")
     f.write("# ORIG-FILE: " + relpath + "\n")
@@ -118,11 +115,6 @@ def is_python_file(path):
 # to real modules
 class CMKFixFileMixin(object):
     def handle_message(self, msg):
-        # This hack is not needed for already modularized paths
-        if msg.abspath.startswith(cmk_path()):
-            super(CMKFixFileMixin, self).handle_message(msg)
-            return
-
         new_path, new_line = self._orig_location_from_compiled_file(msg)
 
         if new_path == None:
@@ -137,13 +129,7 @@ class CMKFixFileMixin(object):
 
 
     def _change_path_to_repo_path(self, msg):
-        abspath = os.path.join(os.getcwd(), msg.abspath)
-        parts = abspath.split("/")
-        while parts and parts[0] not in ["check_mk", "cmc"]:
-            parts.pop(0)
-
-        if parts:
-            return "/".join(parts)
+        return os.path.relpath(msg.abspath, cmk_path())
 
 
     def _orig_location_from_compiled_file(self, msg):

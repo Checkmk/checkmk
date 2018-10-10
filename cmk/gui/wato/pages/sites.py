@@ -206,10 +206,10 @@ class ModeDistributedMonitoring(ModeSites):
 
         html.begin_form("login", method="POST")
         forms.header(_('Login credentials'))
-        forms.section(_('Adminstrator name:'))
+        forms.section(_('Administrator name:'))
         html.text_input("_name")
         html.set_focus("_name")
-        forms.section(_('Adminstrator password:'))
+        forms.section(_('Administrator password:'))
         html.password_input("_passwd")
         forms.end()
         html.button("_do_login", _("Login"))

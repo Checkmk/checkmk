@@ -106,11 +106,9 @@ check_info["kernel"] = {
 #   |  Check system/user/io-wait                                           |
 #   '----------------------------------------------------------------------'
 
-
-def inventory_cpu_utilization(info):
-    for x in info:
-        if len(x) > 0 and x[0] == 'cpu':
-            return [(None, {})]
+@discover
+def inventory_cpu_utilization(line):
+    return len(line) > 0 and line[0] == 'cpu'
 
 
 def transform_cpu_info(element):
@@ -162,4 +160,3 @@ check_info["kernel.util"] = {
     'group':                    'cpu_iowait',
     'includes':                 ['cpu_util.include'],
 }
-

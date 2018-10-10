@@ -54,12 +54,6 @@ def parse_mysql_ping(info):
 
     return parsed
 
-
-def inventory_mysql_ping(parsed):
-    for instance in parsed.keys():
-        yield instance, None
-
-
 def check_mysql_ping(item, _no_params, parsed):
     if item in parsed:
         message = parsed[item][0]
@@ -70,8 +64,7 @@ def check_mysql_ping(item, _no_params, parsed):
 
 check_info['mysql_ping'] = {
     "parse_function"          : parse_mysql_ping,
-    "inventory_function"      : inventory_mysql_ping,
+    "inventory_function"      : discover(),
     "check_function"          : check_mysql_ping,
     "service_description"     : "MySQL Instance %s",
 }
-

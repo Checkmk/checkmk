@@ -67,13 +67,12 @@ def parse_mysql_capacity(info):
     return parsed
 
 
-def inventory_mysql_size(parsed):
-    for instance, values in parsed.items():
-        for dbname, used, avail in values:
-            if dbname not in [ "information_schema", "mysql", "performance_schema" ] \
-               and used != 'NULL' and avail != 'NULL':
-                yield "%s:%s" % (instance, dbname), None
-
+@discover
+def inventory_mysql_size(instance, values):
+    for dbname, used, avail in values:
+        if dbname not in ["information_schema", "mysql", "performance_schema"] \
+            and used != 'NULL' and avail != 'NULL':
+            yield "%s:%s" % (instance, dbname)
 
 def check_mysql_size(item, params, parsed):
     if ":" not in item:

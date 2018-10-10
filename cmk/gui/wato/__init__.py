@@ -13621,7 +13621,7 @@ class ModeIcons(WatoMode):
 
 
     def buttons(self):
-        back_url = html.get_url_input("back")
+        back_url = html.get_url_input("back", "")
         if back_url:
             html.context_button(_("Back"), back_url, "back")
         else:

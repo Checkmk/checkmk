@@ -1839,6 +1839,12 @@ metric_info["sync_latency"] = {
     "color" : "#ffb080",
 }
 
+metric_info["relay_log_space"] = {
+    "title" : _("Relay Log Size"),
+    "unit"  : "bytes",
+    "color" : "#ffb080",
+}
+
 metric_info["mail_latency"] = {
     "title" : _("Mail latency"),
     "unit"  : "s",

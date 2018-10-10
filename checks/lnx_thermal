@@ -40,8 +40,9 @@ factory_settings["lnx_thermal_default_levels"] = {
     "device_levels_handling"    : "devdefault",
 }
 
-def inventory_lnx_thermal(info):
-    return [ (l[0].replace('thermal_zone', 'Zone '), {}) for l in info ]
+@discover
+def inventory_lnx_thermal(line):
+    return line[0].replace('thermal_zone', 'Zone ')
 
 
 def check_lnx_thermal(item, params, info):

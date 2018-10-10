@@ -66,11 +66,9 @@ def parse_mysql_slave(info):
 
     return parsed
 
-
-def inventory_mysql_slave(parsed):
-    for instance, values in parsed.items():
-        if len(values) > 0:
-            yield instance, {}
+@discover
+def inventory_mysql_slave(key, values):
+    return len(values) > 0
 
 
 @get_parsed_item_data

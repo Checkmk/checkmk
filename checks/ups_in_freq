@@ -39,10 +39,9 @@ def parse_ups_in_freq(info):
     return parsed
 
 
-def inventory_ups_in_freq(parsed):
-    for name, freq in parsed.iteritems():
-        if freq is not None and freq > 0:
-            yield name, "ups_in_freq_default_levels"
+@discover(default_params="ups_in_freq_default_levels")
+def inventory_ups_in_freq(key, freq):
+    return freq is not None and freq > 0
 
 
 def check_ups_in_freq(item, params, parsed):

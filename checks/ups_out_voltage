@@ -27,12 +27,8 @@
 
 ups_out_voltage_default_levels = (210, 180) # warning / critical
 
-def inventory_ups_out_voltage(info):
-    if len(info) > 0:
-        return [ ( x[0], "ups_out_voltage_default_levels") for x in info if int(x[1]) > 0 ]
-
 check_info['ups_out_voltage'] = {
-  "inventory_function"  : inventory_ups_out_voltage,
+  "inventory_function"  : discover(lambda line: int(line[1]) > 0, "ups_out_voltage_default_levels"),
   "check_function"      : check_ups_out_voltage,
   "service_description" : "OUT voltage phase %s",
   "has_perfdata"        : True,

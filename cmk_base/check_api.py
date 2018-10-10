@@ -32,11 +32,12 @@ Modules available by default (pre imported by Check_MK):
     collections
     enum
     fnmatch
+    functools
     math
+    os
     re
     socket
     sys
-    os
     time
     pprint
 
@@ -92,6 +93,15 @@ Global variables:
 # We import several modules here for the checks
 # pylint: disable=unused-import
 
+from typing import List, Dict, Tuple, Union, Optional, Iterable  # pylint: disable=unused-import
+
+try:
+    # does not exist in Py3, but is supper class of str & unicode in py2
+    basestring
+except NameError:
+    basestring = str  # pylint: disable=redefined-builtin
+    unicode = str  # pylint: disable=redefined-builtin
+
 import cmk.debug as _debug
 import cmk.defines as _defines
 import cmk.paths as _paths
@@ -108,7 +118,7 @@ import cmk_base.snmp_utils as _snmp_utils
 import cmk_base.item_state as _item_state
 import cmk_base.prediction as _prediction
 import cmk_base.check_api_utils as _check_api_utils
-import functools as _functools
+
 
 def get_check_api_context():
     """This is called from cmk_base code to get the Check API things. Don't
@@ -131,14 +141,15 @@ def get_check_api_context():
 import collections
 import enum
 import fnmatch
+import functools
 import math
+import os
 import re
 import socket
 import sys
-import os
 import time
 # NOTE: We do not use pprint in this module, but it is part of the check API.
-import pprint # pylint: disable=unused-import
+import pprint  # pylint: disable=unused-import
 
 # Names of texts usually output by checks
 core_state_names = _defines.short_service_state_names()
@@ -332,7 +343,7 @@ def check_levels(value, dsname, params, unit="", factor=1.0, scale=1.0, statemar
              the scale is 1024*1024.
     """
     if unit:
-        unit = " " + unit # Insert space before MB, GB, etc.
+        unit = " " + unit  # Insert space before MB, GB, etc.
     perfdata = []
     infotexts = []
 
@@ -351,11 +362,11 @@ def check_levels(value, dsname, params, unit="", factor=1.0, scale=1.0, statemar
 
     # Pair of numbers -> static levels
     elif type(params) == tuple:
-        if len(params) == 2: # upper warn and crit
+        if len(params) == 2:  # upper warn and crit
             warn_upper, crit_upper = scale_value(params[0]), scale_value(params[1])
             warn_lower, crit_lower = None, None
 
-        else: # upper and lower warn and crit
+        else:  # upper and lower warn and crit
             warn_upper, crit_upper = scale_value(params[0]), scale_value(params[1])
             warn_lower, crit_lower = scale_value(params[2]), scale_value(params[3])
 
@@ -373,12 +384,12 @@ def check_levels(value, dsname, params, unit="", factor=1.0, scale=1.0, statemar
             else:
                 infotexts.append("no reference for prediction yet")
 
-        except MKGeneralException, e:
+        except MKGeneralException as e:
             ref_value = None
             warn_upper, crit_upper, warn_lower, crit_lower = None, None, None, None
             infotexts.append("no reference for prediction (%s)" % e)
 
-        except Exception, e:
+        except Exception as e:
             if _debug.enabled():
                 raise
             return 3, "%s" % e, []
@@ -424,7 +435,7 @@ def get_effective_service_level():
     """Get the service level that applies to the current service.
     This can only be used within check functions, not during discovery nor parsing."""
     service_levels = _config.service_extra_conf(host_name(), service_description(),
-                                        _config.service_service_levels)
+                                                _config.service_service_levels)
 
     if service_levels:
         return service_levels[0]
@@ -497,14 +508,140 @@ def get_parsed_item_data(check_function):
     cmk_base returning 3 (UNKN state) with an item not found message
     (see cmk_base/checking.py).
     """
-    @_functools.wraps(check_function)
+
+    @functools.wraps(check_function)
     def wrapped_check_function(item, params, parsed):
         if not isinstance(parsed, dict):
             return 3, "Wrong usage of decorator function 'get_parsed_item_data': parsed is not a dict"
         if item not in parsed or not parsed[item]:
             return
         return check_function(item, params, parsed[item])
+
     return wrapped_check_function
+
+
+def discover_single(info):
+    # type: (Union[List, Dict]) -> Optional[List]
+    """Return a discovered item in case there is info text or parsed"""
+    if info:
+        return [(None, {})]
+    return None
+
+
+def validate_filter(filter_function):
+    # type: Callable -> Callable
+    """Validate function argument is a callable and return it"""
+
+    if callable(filter_function):
+        return filter_function
+    elif filter_function is not None:
+        raise ValueError("Filtering function is not a callable,"
+                         " a {} has been given.".format(type(filter_function)))
+    return lambda *entry: entry[0]
+
+
+def discover(selector=None, default_params=None):
+    # type (Callable, Union[dict, str]) -> Callable
+    """Helper function to assist with service discoveries
+
+    The discovery function is in many cases just a boilerplate function to
+    recognize services listed in your parsed dictionary or the info
+    list. It in general looks like
+
+        def inventory_check(parsed):
+            for key, value in parsed.items():
+                if some_condition_based_on(key, value):
+                    yield key, parameters
+
+
+    The idea of this helper is to allow you only to worry about the logic
+    function that decides if an entry is a service to be discovered or not.
+
+
+    Keyword Arguments:
+    selector       -- Filtering function (default lambda entry: entry[0])
+        Default: Uses the key or first item of info variable
+    default_params -- Default parameters for discovered items (default {})
+
+    Possible uses:
+
+        If your discovery function recognizes every entry of your parsed
+        dictionary or every row of the info list as a service, then you
+        just need to call discover().
+
+            check_info["chk"] = {'inventory_function': discover()}
+
+        In case you want to have a simple filter function when dealing with
+        the info list, you can directly give a lambda function. If this
+        function returns a Boolean the first item of every entry is taken
+        as the service name, if the function returns a string that will be
+        taken as the service name. For this example we discover as services
+        entries where item3 is positive and name the service according to
+        item2.
+
+            check_info["chk"] = {'inventory_function': discover(selector=lambda line: line[2] if line[3]>0 else False)}
+
+        In case you have a more complicated selector condition and also
+        want to include default parameters you may use a decorator.
+
+        Please note: that this discovery function does not work with the
+        whole parsed/info data but only implements the logic for selecting
+        each individual entry as a service.
+
+        In the next example, we will process each entry of the parsed data
+        dictionary. Use as service name the capitalized key when the
+        corresponding value has certain keywords.
+
+            @discover(default_params="the_check_default_levels")
+            def inventory_thecheck(key, value):
+                required_entries = ["used", "ready", "total", "uptime"]
+                if all(data in value for data in required_entries):
+                    return key.upper()
+
+            check_info["chk"] = {'inventory_function': inventory_thecheck}
+    """
+
+    def roller(parsed):
+        if isinstance(parsed, dict):
+            return parsed.iteritems()
+        elif isinstance(parsed, (list, tuple)):
+            return parsed
+        raise ValueError("Discovery function only works with dictionaries,"
+                         " lists, and tuples you gave a {}".format(type(parsed)))
+
+    def _discovery(filter_function):
+        # type (Callable) -> Callable
+        @functools.wraps(filter_function)
+        def discoverer(parsed):
+            # type (Union[dict,list]) -> Iterable[Tuple]
+
+            params = default_params if isinstance(default_params, (basestring, dict)) else {}
+            filterer = validate_filter(filter_function)
+            from_dict = isinstance(parsed, dict)
+
+            for entry in roller(parsed):
+                if from_dict:
+                    key, value = entry
+                    name = filterer(key, value)
+                else:
+                    name = filterer(entry)
+
+                if isinstance(name, basestring):
+                    yield (name, params)
+                elif name is True and from_dict:
+                    yield (key, params)
+                elif name is True and not from_dict:
+                    yield (entry[0], params)
+                elif name and hasattr(name, '__iter__'):
+                    for new_name in name:
+                        yield (new_name, params)
+
+        return discoverer
+
+    if callable(selector):
+        return _discovery(selector)
+
+    return _discovery
 
 
 # NOTE: Currently this is not really needed, it is just here to keep any start

@@ -27,9 +27,9 @@
 
 ups_in_voltage_default_levels = (210, 180) # warning / critical
 
-def inventory_ups_in_voltage(info):
-    if len(info) > 0:
-        return [ ( x[0], "ups_in_voltage_default_levels") for x in info if int(x[1]) > 0 ]
+@discover(default_params="ups_in_voltage_default_levels")
+def inventory_ups_in_voltage(entry):
+    return entry[0] if int(entry[1]) > 0 else False
 
 check_info['ups_in_voltage'] = {
   "inventory_function"  : inventory_ups_in_voltage,

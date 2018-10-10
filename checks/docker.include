@@ -26,17 +26,102 @@
 import json
 
 
-def docker_size_to_bytes(size_string):
-    if size_string.endswith('GB'):
-        return int(float(size_string[:-2]) * 10**9)
-    if size_string.endswith('MB'):
-        return int(float(size_string[:-2]) * 10**6)
-    if size_string.endswith('kB'):
-        return int(float(size_string[:-2]) * 10**3)
-    return float(size_string[:-1])
+def _docker_get_bytes(string):
+    '''get number of bytes from string
+
+    e.g.
+    "123GB (42%)" -> 123000000000
+    "0 B"         -> 0
+    "2B"          -> 2
+    "23 kB"       -> 23000
+    '''
+    # remove percent
+    string = string.split('(')[0].strip()
+    value_string = string.rstrip('kKMGB').strip()
+    unit_string = string.lstrip('0123456789.').strip()
+    try:
+        factor = {
+            'GB': 10**9,
+            'MB': 10**6,
+            'kB': 10**3,
+        }.get(unit_string, 1)
+        return int(float(value_string) * factor)
+    except (ValueError, TypeError):
+        return None
+
+
+def _docker_trunc_id(hash_string):
+    '''normalize to short ID
+
+    Some docker commands use shortened, some long IDs:
+    Convert long ones to short ones, e.g.
+    "sha256:8b15606a9e3e430cb7ba739fde2fbb3734a19f8a59a825ffa877f9be49059817"
+    to
+    "8b15606a9e3e"
+    '''
+    long_id = hash_string.split(':', 1)[-1]
+    return long_id[:12]
+
+
+#   .--parse---------------------------------------------------------------.
+#   |                                                                      |
+#   |                      _ __   __ _ _ __ ___  ___                       |
+#   |                     | '_ \ / _` | '__/ __|/ _ \                      |
+#   |                     | |_) | (_| | |  \__ \  __/                      |
+#   |                     | .__/ \__,_|_|  |___/\___|                      |
+#   |                     |_|                                              |
+#   +----------------------------------------------------------------------+
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
+
+def _get_json(info):
+    try:
+        return json.loads(''.join(row[0] for row in info if row))
+    except ValueError:
+        return None
+
+
+def _docker_parse_table(rows, fields, keys):
+    '''docker provides us with space separated tables with field containing spaces
+
+    e.g.:
+
+    TYPE           TOTAL  ACTIVE   SIZE       RECLAIMABLE
+    Images         7      6        2.076 GB   936.9 MB (45%)
+    Containers     22     0        2.298 GB   2.298 GB (100%)
+    Local Volumes  5      5        304 B      0 B (0%)
+    '''
+    if not rows or not rows[0]:
+        return []
+
+    indices = []
+    for field in fields:
+        rex = regex(field + r'\ *')
+        m = rex.search(rows[0][0])
+        if m is not None:
+            start, end = m.start(), m.end()
+            if end - start == len(field):
+                end = None
+            indices.append((start, end))
+        else:
+            indices.append((0, 0))
+
+    table = []
+    for row in rows[1:]:
+        if not row:
+            continue
+        try:
+            line = {k: row[0][i:j].strip() for k, (i, j) in zip(keys, indices)}
+        except IndexError:
+            continue
+        table.append(line)
+
+    return table
 
 
 def parse_docker_node_info(info):
+    '''parse output of "docker info"'''
     try:
         return json.loads(":".join(info[0]))
     except ValueError:
@@ -53,7 +138,7 @@ def parse_docker_node_info(info):
         key = row[0].strip()
         value = ':'.join(row[1:]).strip()
         # indented keys are prefixed by the last not indented key
-        # this does the right thing in the cases used below.
+        # this does the right thing in the cases we use
         indent = len(row[0]) - len(key)
         if indent == 0:
             parsed[key] = value
@@ -61,41 +146,69 @@ def parse_docker_node_info(info):
         else:
             parsed[prefix + key] = value
 
+    # reconstruct labels (they where not in "k: v" format)
+    parsed["Labels"] = []
+    for k in parsed.keys():  # pylint: disable=C0201
+        if k.startswith("Labels") and k != "Labels":
+            parsed["Labels"].append(k[6:] + parsed.pop(k))
+
     return parsed
 
 
-def _parse_docker_node_disk_usage_dict(data):
-    key = data.pop('Type').lower()
+def parse_docker_system_df(info):
+    parsed = {}
+    header = ('TYPE', 'TOTAL', 'ACTIVE', 'SIZE', 'RECLAIMABLE')
+    keys = ('Type', 'TotalCount', 'Active', 'Size', 'Reclaimable')
+    types = (str, int, int, _docker_get_bytes, _docker_get_bytes)
+    table = _docker_parse_table(info, header, keys)
 
-    act = data.get('Active')
-    if act is not None:
-        data['Active'] = int(act) if act else 0
+    for line in table:
+        for key, type_ in zip(keys, types):
+            v = line.get(key)
+            if v is not None:
+                line[key] = type_(v)
+        parsed[line.get("Type").lower()] = line
 
-    tc = data.get('TotalCount') or data.get('Total')
-    if tc is not None:
-        data['TotalCount'] = int(tc) if tc else 0
-
-    sz = data.get('Size')
-    if sz is not None:
-        data['Size'] = docker_size_to_bytes(sz)
-
-    rc = data.get('Reclaimable')
-    if rc is not None:
-        reclaimable = rc.split(' ')[0]    # discard percentage
-        data['Reclaimable'] = docker_size_to_bytes(reclaimable)
-
-    return key, data
+    return parsed
 
 
-def parse_docker_node_disk_usage(info):
-    try:
-        data_dicts = [json.loads(" ".join(line)) for line in info]
-    except ValueError:
-        header = [field.title() for field in info[0]]
-        data_dicts = [{k: v for k, v in zip(header, row)}
-                      for row in info[1:]]
+def parse_docker_images(info):
+    parsed = {}
+    header = ('REPOSITORY', 'TAG', r'IMAGE\ ID', 'CREATED', 'SIZE')
+    keys = ('Repository', 'Tag', 'ID', 'CreatedAt', 'VirtualSize')
+    table = _docker_parse_table(info, header, keys)
 
-    return dict(map(_parse_docker_node_disk_usage_dict, data_dicts))
+    for item in table:
+        v = item.get("VirtualSize")
+        if v is not None:
+            item["VirtualSize"] = _docker_get_bytes(v)
+        parsed[item.get("ID")] = item
+
+    return parsed
+
+
+def parse_docker_image_inspect(info):
+    data = _get_json(info)
+    if data is None:
+        return []
+    return data
+
+
+def parse_docker_ps_all(info):
+    header = (r'CONTAINER\ ID', 'IMAGE', 'COMMAND', 'CREATED', 'STATUS', 'PORTS', 'NAMES')
+    keys = ('ID', 'Image', 'Command', 'CreatedAt', 'Status', 'Ports', 'Names')
+    table = _docker_parse_table(info, header, keys)
+
+    parsed = {}
+    for item in table:
+        image_name = item["Image"]
+        if ":" in image_name:
+            item["Repository"], item["Tag"] = image_name.split(":", 1)
+        else:
+            item["Repository"], item["Tag"] = image_name, "latest"
+        parsed[item.get("ID")] = item
+
+    return parsed
 
 
 def _split_subsections(info):
@@ -111,33 +224,6 @@ def _split_subsections(info):
     return subsections
 
 
-def _parse_subsection_images(subinfo):
-    '''parse output of "docker images"'''
-    parsed = {}
-    for row in subinfo:
-        data = json.loads(" ".join(row))
-        parsed.setdefault(data["ID"], data)
-    return parsed
-
-
-def _parse_subsection_labels(subinfo):
-    return [json.loads(" ".join(row)) for row in subinfo]
-
-
-def _parse_subsection_containers(subinfo):
-    parsed = {}
-    for row in subinfo:
-        data = json.loads(" ".join(row))
-
-        image_name = data["Image"]
-        if ":" in image_name:
-            data["Repository"], data["Tag"] = image_name.split(":", 1)
-        else:
-            data["Repository"], data["Tag"] = image_name, "latest"
-        parsed[data["ID"]] = data
-    return parsed
-
-
 def parse_docker_node_images(info):
     '''parse output of <<<docker_node_images>>>
 
@@ -145,30 +231,40 @@ def parse_docker_node_images(info):
     $ docker images
     $ echo "[[[image_labels]]]"
     $ IMAGE_IDS=$(docker images ls | awk 'BEGIN {ORF=" "} NR>1 {print $3}')
-    $ docker image inspect "$IMAGE_IDS"
+    $ docker image inspect $IMAGE_IDS
     $ echo "[[[containers]]]"
     $ docker ps --all
     '''
     subsections = _split_subsections(info)
 
-    images = _parse_subsection_images(subsections.get("images", []))
-    label_data = _parse_subsection_labels(subsections.get("images_labels", []))
-    containers = _parse_subsection_containers(subsections.get("containers", []))
+    images = parse_docker_images(subsections.get("images", []))
+    label_data = parse_docker_image_inspect(subsections.get("images_labels", []))
+    containers = parse_docker_ps_all(subsections.get("containers", []))
 
-    for image_id, labels in label_data:
+    for item in label_data:
+        image_id = _docker_trunc_id(item.get("Id"))
+        labels = item.get("Config", {}).get("Labels")
         image = images.get(image_id)
         if None not in (image_id, labels, image):
             image.setdefault("__labels__", {}).update(labels)
 
-    mapping = {(i['Repository'], i['Tag']): i['ID'] for i in images}
-    for c in containers:
+    mapping = {(i['Repository'], i['Tag']): i['ID'] for i in images.itervalues()}
+    for c in containers.itervalues():
         image_id = mapping.get((c["Repository"], c["Tag"]))
         image = images.get(image_id)
         if image is not None:
             image.setdefault("__containers__", []).append(c)
 
-        lab = (p.split("=", 1) for p in c.get("Labels", []).split(","))
-        c["Labels"] = list(lab)
+        labels = c.get("Labels")
+        if labels is not None:
+            lab = (p.split("=", 1) for p in labels.split(","))
+            c["Labels"] = list(lab)
 
     return {"images": images, "containers": containers}
 
+
+def parse_docker_network_inspect(info):
+    data = _get_json(info)
+    if data is None:
+        return []
+    return data

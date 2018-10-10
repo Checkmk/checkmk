@@ -1082,8 +1082,8 @@ class Overridable(Base):
                 page = cls.instance((load_user, page_name))
             page_dict = page.internal_representation()
 
-
-        html.header(title) ### TODO: extra stylesheets for BI. Move bi.css into views.css , stylesheets=["pages", "views", "status", "bi"])
+        ### TODO: extra stylesheets for BI. Move bi.css into views.css , stylesheets=["pages", "views", "status", "bi"])
+        html.header(title, stylesheets=["pages", "views", "status"])
         html.begin_context_buttons()
         html.context_button(_("Back"), back_url, "back")
         html.end_context_buttons()

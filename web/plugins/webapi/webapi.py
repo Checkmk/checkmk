@@ -245,6 +245,8 @@ class APICallHosts(APICallCollection):
             watolib.Folder.create_missing_folders(folder_path)
 
         # Add host
+        if cluster_nodes:
+            cluster_nodes = map(str, cluster_nodes)
         watolib.Folder.folder(folder_path).create_hosts([(hostname, attributes, cluster_nodes)])
 
 
@@ -277,6 +279,9 @@ class APICallHosts(APICallCollection):
 
         if not cluster_nodes:
             cluster_nodes = host.cluster_nodes()
+
+        if cluster_nodes:
+            cluster_nodes = map(str, cluster_nodes)
 
         host.edit(current_attributes, cluster_nodes)
 

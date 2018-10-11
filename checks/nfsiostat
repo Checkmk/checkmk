@@ -1,0 +1,124 @@
+#!/usr/bin/python
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2018             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+
+# example output
+#
+#y.y.y.y:/mount/name mounted on /var/log/da:
+#
+# op/s         rpc bklog
+#2579.20            0.00
+#read:             ops/s            kB/s           kB/op         retrans         avg RTT (ms)    avg exe (ms)
+#                0.000           0.000           0.000        0 (0.0%)           0.000           0.000
+#write:            ops/s            kB/s           kB/op         retrans         avg RTT (ms)    avg exe (ms)
+#              2578.200        165768.087       64.296        0 (0.0%)          21.394         13980.817
+#
+#x.x.x.x:/mount/name mounted on /data:
+# ...
+
+param_name = {
+    "0" : ("op_s","Operations", 1, "%.2f/s"),
+    "1" : ("rpc_backlog", "RPC Backlog", 1, "%.2f"),
+    "2" : ("read_ops", "Read operations /s", 1, "%.3f/s"),
+    "3" : ("read_b_s", "Reads size /s", 1000, "%.3fB/s"),
+    "4" : ("read_b_op", "Read bytes per operation", 1000, "%.3fB/op"),
+    "5" : ("read_retrans", "Read Retransmission", 1, "%.1f%%"),
+    "6" : ("read_retrans", "Read Retransmission", 1, "%.1f%%"),
+    "7" : ("read_avg_rtt_ms", "Read average RTT", 1000, "%.3f/s",),
+    "8" : ("read_avg_exe_ms", "Read average EXE", 1000, "%.3f/s",),
+    "9" : ("write_ops_s", "Write operations /s", 1, "%.3f/s"),
+    "10" : ("write_b_s", "Writes size /s", 1000, "%.3fkB/s"),
+    "11" : ("write_b_op", "Write bytes per operation", 1000, "%.3fB/op"),
+    "12" : ("write_retrans", "Write Retransmission", 1, "%.1f%%"),
+    "13" : ("write_retrans", "Write Retransmission", 1, "%.3f%%"),
+    "14" : ("write_avg_rtt_ms", "Write Average RTT", 1, "%.3f/ms"),
+    "15" : ("write_avg_exe_ms", "Write Average EXE", 1, "%.3f/ms"),
+}
+
+
+def parse_nfsiostat(info):
+    #removes double list
+    [new_info] = info
+    import re
+    # Result is a dictionary with mountpoint as key and a list of (currently 16)
+    # metrics. Metrics are in the same order, from left to right, top to bottom,
+    # as in the output of nfsiostat.
+    # The first regex group (m0) identifies the mountpount and the second group
+    # (m1) provides a space separated list of metrics.
+    # Future expandibility or changes to the nfsiostat command will require
+    # at most a re-ordering of these values (in check_nfsiostat_parames) and
+    # changing the check to include new metrics (via swtiches/flags)
+    parsed = {m[0]: m[1:] for m in re.findall(r'(\S+:/\S+)%s' % \
+        (r'.*?([\d.]+)' * 16), str(new_info).strip('[]'), flags=re.DOTALL)}
+    return parsed
+
+
+def inventory_nfsiostat(parsed):
+    for mountname in parsed.keys():
+        yield mountname, {}
+
+
+def check_nfsiostat(item, params, parsed):
+    # check the value we recieved against our map of values
+    # assign appropriate type to value
+    def check_nfsiostat_params(count, value):
+        item = param_name[str(count)][0]
+        title = param_name[str(count)][1]
+        factor = param_name[str(count)][2]
+        fmt = param_name[str(count)][3]
+        value = float(value)
+
+        if params:
+            if params.get(item, 0):
+                crit = float(params[item][1])
+                warn = float(params[item][0])
+                if value >= crit:
+                    perfdata = [ (item, value, warn, crit ) ]
+                    return(2, "%s: %s" % (title, fmt % value), perfdata)
+                elif value >= warn:
+                    perfdata = [ (item, value, warn, crit ) ]
+                    return(1, "%s: %s" % (title, fmt % value), perfdata)
+
+        perfdata = [ (item, value ) ]
+        return(0, "%s: %s" % (title, fmt % value), perfdata)
+
+    for mountpoint, values in parsed.items():
+        # We have duplicate items at index 5 and 12. We exclude the dupes here
+        if mountpoint == item:
+            count = 0
+            for value in values:
+                if count != 5 and count != 12:
+                    yield(check_nfsiostat_params(count, value))
+                count = count + 1
+
+
+check_info['nfsiostat'] = {
+    'parse_function'         : parse_nfsiostat,
+    'inventory_function'     : inventory_nfsiostat,
+    'check_function'         : check_nfsiostat,
+    'service_description'    : 'NFS IO stats %s',
+    'group'                  : 'nfsiostat',
+    'has_perfdata'           : True,
+}

@@ -1249,3 +1249,12 @@ def perfometer_f5_bigip_vserver(row, check_command, perf_data):
 
 
 perfometers["check_mk-f5_bigip_vserver"] = perfometer_f5_bigip_vserver
+
+def perfometer_nfsiostat(row, check_command, perf_data):
+    for pd in perf_data:
+        if pd[0] == u'op_s':
+            ops = float(pd[1])
+            color = '#ff6347'
+            return '%d op/s' % ops, perfometer_linear(ops, color)
+
+perfometers["check_mk-nfsiostat"] = perfometer_nfsiostat

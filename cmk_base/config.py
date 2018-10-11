@@ -2237,7 +2237,7 @@ def load_checks(get_check_api_context, filelist):
         except MKTerminate:
             raise
 
-        except Exception, e:
+        except Exception as e:
             console.error("Error in plugin file %s: %s\n", f, e)
             if cmk.debug.enabled():
                 raise

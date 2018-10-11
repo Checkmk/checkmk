@@ -23,14 +23,35 @@
 # License along with GNU Make; see the file  COPYING.  If  not,  write
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
-
 GRAB_USER = False
 
 factory_settings["ps_default_levels"] = {
-    "levels" : (1, 1, 99999, 99999),
+    "levels": (1, 1, 99999, 99999),
 }
 
+ps_info = collections.namedtuple(
+    "Process_Info", ('user', 'virtual', 'physical', 'cputime', 'process_id', 'pagefile',
+                     'usermode_time', 'kernelmode_time', 'handles', 'threads', 'uptime'))
+
+ps_info.__new__.__defaults__ = (None,) * len(ps_info._fields)
+
+
+def ps_info_tuple(entry):
+    ps_tuple_re = regex(r"^\((.*)\)$")
+    matched_ps_info = ps_tuple_re.match(entry)
+    if matched_ps_info:
+        return ps_info(*matched_ps_info.group(1).split(","))
+    return False
+
+
 def ps_get_inventory_specs(invdata, invrules):
+
+    return ps_data_configured_inventory_rules(invdata) + ps_wato_configured_inventory_rules(
+        invrules)
+
+
+# This is old function and don't have source data to test it.
+def ps_data_configured_inventory_rules(invdata):
     inventory_specs = []
 
     # Handle inventory_processes, inventory_processes_perf variables
@@ -53,17 +74,21 @@ def ps_get_inventory_specs(invdata, invrules):
             default_levels = inv_entry[4:8]
 
         # Filter out entries with do not match our current host
-        if tags != None and ( not hosttags_match_taglist(tags_of_host(host_name()), tags) or
-                              not in_extraconf_hostlist(hostlist, host_name())):
+        if tags is not None and (not hosttags_match_taglist(tags_of_host(host_name()), tags) or
+                                 not in_extraconf_hostlist(hostlist, host_name())):
             continue
 
-        if len(inv_entry) == 7: # extend old inventory_processes
+        if len(inv_entry) == 7:  # extend old inventory_processes
             inv_entry += ([],)
             default_levels = inv_entry[3:7]
 
-        inventory_specs.append(inv_entry[:3] + (None,) + ({ "levels" : default_levels },))
+        inventory_specs.append(inv_entry[:3] + (None,) + ({"levels": default_levels},))
 
-    # Handle new WATO style inventory rules
+    return inventory_specs
+
+
+def ps_wato_configured_inventory_rules(invrules):
+    inventory_specs = []
     for rule in invrules:
         taglist, hostlist = rule[1:3]
         if len(rule) >= 4:
@@ -74,11 +99,12 @@ def ps_get_inventory_specs(invdata, invrules):
         # Filter out entries with do not match our current host
         if not hosttags_match_taglist(tags_of_host(host_name()), taglist) \
            or not in_extraconf_hostlist(hostlist, host_name()):
-            continue
+            continue  # TODO Test this jump
 
         v = rule[0]
 
-        inventory_specs.append((v['descr'], v.get('match'), v.get('user'), v.get('icon'), v.get('default_params', v)))
+        inventory_specs.append((v['descr'], v.get('match'), v.get('user'),
+                                v.get('icon'), v.get('default_params', v)))
 
     return inventory_specs
 
@@ -87,110 +113,100 @@ def inventory_ps_common(invdata, invrules, parsed):
     inventory_specs = ps_get_inventory_specs(invdata, invrules)
 
     inventory = []
-    for servicedesc, pattern, userspec, icon, default_params in inventory_specs:
-        num_perc_s = servicedesc.count("%s")
-        for line in parsed:
+    for line in parsed:
+        for servicedesc, pattern, userspec, icon, default_params in inventory_specs:
             # First entry in line is the node name or None for non-clusters
             process_line = line[1:]
-            matches, grabbed_user = process_matches_for_discovery(process_line, pattern, userspec)
-            if matches is False:
-                continue # skip not matched lines
+            matches = process_matches(process_line, pattern, userspec)
+            if not matches:
+                continue  # skip not matched lines
 
-            if len(matches) < num_perc_s:
-                raise MKGeneralException("Invalid entry in inventory_processes: service description '%s' contains "
-                        "%d times '%%s', but regular expression '%s' contains only %d subexpression(s)." % \
-                        (servicedesc, num_perc_s, pattern, len(matches)))
-
+            # User capturing on rule
             if userspec == GRAB_USER:
-                i_userspec = grabbed_user
-                i_servicedesc = servicedesc.replace("%u", grabbed_user)
+                i_userspec = process_line[0].user
             else:
                 i_userspec = userspec
-                i_servicedesc = servicedesc
 
-            # New in 1.2.2b4: Alle %1, %2, etc. to be replaced with first, second, ...
-            # group. This allows a reordering of the matched groups
-            for nr, group in enumerate(matches):
-                i_servicedesc = i_servicedesc.replace("%%%d" % (nr+1), group)
+            i_servicedesc = servicedesc.replace("%u", i_userspec or "")
 
-            # It is allowed (1.1.4) that the pattern contains more subexpressions then the
-            # service description. In that case only the first subexpressions are used as
-            # item.
-            i_servicedesc = i_servicedesc % tuple(matches[:num_perc_s])
+            # Process capture
+            if hasattr(matches, 'groups'):
+                matches = [g if g else "" for g in matches.groups()]
+            else:
+                matches = []
+
+            i_servicedesc = replace_service_description(servicedesc, matches, pattern)
 
             # Problem here: We need to instantiate all subexpressions
             # with their actual values of the found process.
             i_pattern = instantiate_regex_pattern(pattern, matches)
 
             inv_params = {
-                "process" : i_pattern,
-                "user"    : i_userspec,
+                "process": i_pattern,
+                "user": i_userspec,
             }
 
             if icon:
                 inv_params["icon"] = icon
 
-            # default_params is either a clean dict with optional parameters to set as default
-            # or - from version 1.2.4 - the dict from the rule itself. In the later case
-            # we need o remove the keys that do not specify default parameters
+            # default_params is either a clean dict with optional
+            # parameters to set as default or - from version 1.2.4 - the
+            # dict from the rule itself. In the later case we need to remove
+            # the keys that do not specify default parameters
             for key, value in default_params.items():
-                if key not in ( "descr", "match", "user", "perfdata" ):
-                    inv_params.setdefault(key, value)
-            inv = ( i_servicedesc, inv_params )
+                if key not in ("descr", "match", "user", "perfdata"):
+                    inv_params[key] = value
+
+            inv = (i_servicedesc, inv_params)
 
             if inv not in inventory:
                 inventory.append(inv)
 
+            # Once a process is matched, don't need to iterate the other
+            # inventory_specs
+            break
+
     return inventory
+
+
+def replace_service_description(service_description, matches, pattern):
+
+    # New in 1.2.2b4: Alle %1, %2, etc. to be replaced with first, second, ...
+    # group. This allows a reordering of the matched groups
+    service_description = re.sub(r'%(\d+)', r'{\1}', service_description)
+
+    # First argument is None, because format is zero indexed
+    service_description = service_description.format(None, *matches)
+
+    num_elements_replace = service_description.count('%s')
+    if len(matches) < num_elements_replace:
+        raise MKGeneralException("Invalid entry in inventory_processes: "
+                                 "service description '%s' contains "
+                                 "%d replaceable elements, but "
+                                 "regular expression '%s' contains only %d subexpression(s)." %
+                                 (service_description, num_elements_replace, pattern, len(matches)))
+
+    # It is allowed (1.1.4) that the pattern contains more subexpressions
+    # then the service description. In that case only the first
+    # subexpressions are used as item.
+    service_description = service_description % tuple(matches[:num_elements_replace])
+
+    return service_description
+
 
 def instantiate_regex_pattern(pattern, matches):
     for m in matches:
         pattern = instantiate_regex_pattern_once(pattern, m)
     return pattern
 
+
 def instantiate_regex_pattern_once(pattern, match):
     from cmk.regex import escape_regex_chars
     # this correctly handles \( and \) but not [^)] - sorry
-    return re.compile(r"(?<!\\)\(.*?(?<!\\)\)").sub(escape_regex_chars(match), pattern, 1)
-
-# FIXME: Merge logic of process_matches_for_* functions
-def process_matches_for_discovery(process_line, process_pattern, userspec):
-    user, command_line = process_line[0][0], process_line[1:]
-
-    if user != None:
-        if userspec:
-            if userspec.startswith('~'):
-                if not re.match(userspec[1:], user):
-                    return False, None
-
-            elif userspec != user:
-                return False, None
-
-        grabbed_user = user
-    else:
-        grabbed_user = None
-
-    if not process_pattern:
-        return (), grabbed_user
-
-    elif process_pattern.startswith("~"):
-        reg = regex(process_pattern[1:]) # skip "~"
-        matchobject = reg.match(" ".join(command_line))
-        if matchobject:
-            return [ g and g or "" for g in matchobject.groups() ], grabbed_user
-    else:
-        if command_line[0] == process_pattern:
-            return (), grabbed_user
-
-    return False, grabbed_user
+    return regex(r"(?<!\\)\(.*?(?<!\\)\)").sub(escape_regex_chars(match), pattern, 1)
 
 
-# Returns True or False
-def process_matches_for_check(process_line, process_pattern, user_pattern):
-    user, command_line = process_line[0][0], process_line[1:]
-
-    # Check process owner. Note: the first field with process information is
-    # optional and might be missing (old agents).
+def match_user(user, user_pattern):
     if user_pattern:
         if user_pattern.startswith('~'):
             if not regex(user_pattern[1:]).match(user):
@@ -198,6 +214,14 @@ def process_matches_for_check(process_line, process_pattern, user_pattern):
 
         elif user_pattern != user:
             return False
+    return None
+
+
+def process_matches(process_line, process_pattern, user_pattern):
+    user, command_line = process_line[0].user, process_line[1:]
+
+    if match_user(user, user_pattern) is False:
+        return False
 
     if not process_pattern:
         # Process name not relevant
@@ -205,19 +229,19 @@ def process_matches_for_check(process_line, process_pattern, user_pattern):
 
     elif process_pattern.startswith("~"):
         # Regex for complete process command line
-        reg = regex(process_pattern[1:]) # skip "~"
+        reg = regex(process_pattern[1:])  # skip "~"
         return reg.match(" ".join(command_line))
 
     # Exact match on name of executable
     return command_line[0] == process_pattern
 
 
-# produce text or html output intended for the long output field of a check from details about a
-# process.
-# the input is expected to be a list (one per process) of lists (one per data field) of key-value
-# tuples where the value is again a 2-field tuple, first is the value, second is the unit.
-# This function is actually fairly generic so it could be used for other data structured the same
-# way
+# produce text or html output intended for the long output field of a check
+# from details about a process.  the input is expected to be a list (one
+# per process) of lists (one per data field) of key-value tuples where the
+# value is again a 2-field tuple, first is the value, second is the unit.
+# This function is actually fairly generic so it could be used for other
+# data structured the same way
 def format_process_list(processes, html_output):
     def format_value(value):
         value, unit = value
@@ -226,9 +250,9 @@ def format_process_list(processes, html_output):
         return "%s%s" % (value, unit)
 
     if html_output:
-        table_bracket  = "<table>%s</table>"
-        line_bracket   = "<tr>%s</tr>"
-        cell_bracket   = "<td>%.0s%s</td>"
+        table_bracket = "<table>%s</table>"
+        line_bracket = "<tr>%s</tr>"
+        cell_bracket = "<td>%.0s%s</td>"
         cell_seperator = ""
 
         headers = []
@@ -244,63 +268,59 @@ def format_process_list(processes, html_output):
         processes_filled = []
         for process in processes:
             dictified = dict(process)
-            processes_filled.append([
-                (key, dictified.get(key, "")) for key in headers
-            ])
+            processes_filled.append([(key, dictified.get(key, "")) for key in headers])
         processes = processes_filled
         header_line = "<tr><th>" + "</th><th>".join(headers) + "</th></tr>"
     else:
-        table_bracket  = "%s"
-        line_bracket   = "%s\r\n"
-        cell_bracket   = "%s %s"
+        table_bracket = "%s"
+        line_bracket = "%s\r\n"
+        cell_bracket = "%s %s"
         cell_seperator = ", "
-        header_line    = ""
+        header_line = ""
 
     return table_bracket % (header_line + "".join([
-        line_bracket % cell_seperator.join([
-            cell_bracket % (key, format_value(value)) for key, value in process
-        ])
+        line_bracket % cell_seperator.join(
+            [cell_bracket % (key, format_value(value))
+             for key, value in process])
         for process in processes
     ]))
 
 
-# New parameter format: dictionary. Example:
-# {
-#    "user" : "foo",
-#    "process" : "/usr/bin/food",
-#    "warnmin" : 1,
-#    "okmin"   : 1,
-#    "okmax"   : 1,
-#    "warnmax" : 1,
-# }
-
-# Even newer format:
-# {
-#   "user" : "foo",
-#   "levels" : (1, 1, 99999, 99999)
-# }
 # Parse time as output by ps into seconds.
 # Example 1: "12:17"
 # Example 2: "55:12:17"
 # Example 3: "7-12:34:59" (with 7 days)
+# Example 4: "7123459" (only seconds, windows)
 def parse_ps_time(text):
     if "-" in text:
         tokens = text.split("-")
-        days   = int(tokens[0])
-        text   = tokens[1]
+        days = int(tokens[0])
+        text = tokens[1]
     else:
         days = 0
-    parts = map(int, text.split(":"))
-    if len(parts) == 3:
-        hours, minutes, seconds = parts
-    else:
-        hours, minutes, seconds = 0, parts[0], parts[1]
 
-    return 86400 * days + 3600 * hours + 60 * minutes + seconds
+    day_secs = sum([factor * int(v) for factor, v in zip([1, 60, 3600], reversed(text.split(":")))])
+
+    return 86400 * days + day_secs
 
 
 def ps_cleanup_params(params):
-    if type(params) in (list, tuple):
+    # New parameter format: dictionary. Example:
+    # {
+    #    "user" : "foo",
+    #    "process" : "/usr/bin/food",
+    #    "warnmin" : 1,
+    #    "okmin"   : 1,
+    #    "okmax"   : 1,
+    #    "warnmax" : 1,
+    # }
+
+    # Even newer format:
+    # {
+    #   "user" : "foo",
+    #   "levels" : (1, 1, 99999, 99999)
+    # }
+    if isinstance(params, (list, tuple)):
         if len(params) == 5:
             procname, warnmin, okmin, okmax, warnmax = params
             user = None
@@ -308,302 +328,330 @@ def ps_cleanup_params(params):
             procname, user, warnmin, okmin, okmax, warnmax = params
 
         params = {
-            "process" : procname,
-            "levels" :  (warnmin, okmin, okmax, warnmax),
+            "process": procname,
+            "levels": (warnmin, okmin, okmax, warnmax),
         }
 
-        if user != None:
-            params["user"] = user
+        params["user"] = user
 
-    elif "okmin" in params or "warnmin" in params or "okmax" in params or "warnmax" in params:
+    elif isinstance(params, dict):
         params["levels"] = (
-            params.get("warnmin", 1),
-            params.get("okmin", 1),
-            params.get("okmax", 99999),
-            params.get("warnmax", 99999),
+            params.pop("warnmin", 1),
+            params.pop("okmin", 1),
+            params.pop("okmax", 99999),
+            params.pop("warnmax", 99999),
         )
 
     return params
 
 
-def ps_has_extended_perfdata(process_info):
-    try:
-        _dummy = process_info[4]
-        return True
-    except IndexError:
-        return False
-
-
-def check_ps_common(item, params, parsed, cpu_cores = 1, info_name = "processes", total_ram = None):
-    now = time.time()
+def check_ps_common(item, params, parsed, cpu_cores=1, info_name="process", total_ram=None):
     params = ps_cleanup_params(params)
 
-    count = 0
-    virtual_size   = 0
-    resident_size  = 0
-    handle_count   = 0
-    percent_cpu    = 0.0
-    max_elapsed    = None
-    min_elapsed    = None
-    extended_perfdata = False
-    processes = []
+    processes = check_ps_process_capture(parsed, params, cpu_cores)
 
-    running_on_nodes = set() # collect information about nodes the processes run on
+    yield ps_count_check(processes, params, info_name)
+
+    for memory_state in memory_check(processes, params):
+        yield memory_state
+
+    if processes.resident_size and "resident_levels_perc" in params:
+        yield memory_perc_check(processes, params, total_ram)
+
+    # CPU
+    yield cpu_check(processes.percent_cpu, item, params)
+
+    if "single_cpulevels" in params:
+        for ps_state in individual_process_check(processes, params):
+            yield ps_state
+
+    # only check handle_count if provided by wmic counters
+    if processes.handle_count:
+        yield handle_count_check(processes, params)
+
+    if processes.min_elapsed is not None:
+        yield uptime_check(processes, params)
+
+    if params.get("process_info", None):
+        infotext = "\n" + format_process_list(processes, params["process_info"] == "html")
+        yield 0, infotext
+
+
+def upperlevels(value, warn, crit):
+    infotext = ''
+    if value >= crit:
+        state = 2
+    elif value >= warn:
+        state = 1
+    else:
+        state = 0
+    if state:
+        infotext = ": (warn/crit at %d/%d)" % (warn, crit)
+
+    return state, infotext
+
+
+def boundary_levels(value, warnmin, okmin, okmax, warnmax):
+    infotext = ''
+    state = 0
+    if value > warnmax or value < warnmin:
+        state = 2
+    elif value > okmax or value < okmin:
+        state = 1
+    else:
+        state = 0
+    if state:
+        infotext = ": (ok from %d to %d)" % (okmin, okmax)
+
+    return state, infotext
+
+def ps_count_check(processes, params, info_name):
+    warnmin, okmin, okmax, warnmax = params["levels"]
+    count = processes.count
+
+    perfdata = [("count", count, okmax + 1, warnmax + 1, 0)]
+    infotext = "%d %s%s" % (count, info_name, '' if count == 1 else 'es')
+
+    state, warntext = boundary_levels(count, warnmin, okmin, okmax, warnmax)
+    infotext += warntext
+
+    if processes.running_on_nodes:
+        infotext += " [running on %s]" % ", ".join(processes.running_on_nodes)
+
+    return state, infotext, perfdata
+
+
+def memory_check(processes, params):
+    """Check levels for virtual and physical used memory"""
+    for size, title, levels, metric in [
+        (processes.virtual_size, "virtual", "virtual_levels", "vsz"),
+        (processes.resident_size, "physical", "resident_levels", "rss"),
+    ]:
+        if size is None:
+            continue
+
+        infotext = "%s %s" % (get_bytes_human_readable(size * 1024.0), title)
+        warn_levels, crit_levels = params.get(levels, (None, None))
+        state, levelstext = upperlevels(size * 1024, warn_levels,
+                                        crit_levels) if levels in params else (0, "")
+        yield state, infotext + levelstext, [(metric, size, warn_levels, crit_levels)]
+
+
+def memory_perc_check(processes, params, total_ram):
+    """Check levels that are in percent of the total RAM of the host"""
+    warn_perc, crit_perc = params["resident_levels_perc"]
+    if not total_ram:
+        infotext = "percentual RAM levels configured, but total RAM is unknown"
+        state = 3
+    else:
+        resident_perc = 100 * float(processes.resident_size * 1024) / total_ram
+        infotext = "%s of total RAM" % get_percent_human_readable(resident_perc)
+        state, levelstext = upperlevels(resident_perc, warn_perc, crit_perc)
+        infotext += levelstext
+
+    return state, infotext
+
+
+def cpu_check(percent_cpu, item, params):
+    """Check levels for cpu utilization from given process"""
+
+    infotext = "%.1f%% CPU" % percent_cpu
+    warn_cpu, crit_cpu = params.get("cpulevels", (None, None))
+    perf_data = [("pcpu", percent_cpu, warn_cpu, crit_cpu)]
+
+    # CPU might come with previous
+    if "cpu_average" in params:
+        now = time.time()
+        avg_cpu = get_average("ps.%s.cpu" % item, now, percent_cpu, params["cpu_average"], False)
+        infotext += " (%d min average: %.1f%%)" % (params["cpu_average"], avg_cpu)
+        perf_data.append(("pcpuavg", avg_cpu, warn_cpu, crit_cpu, 0, params["cpu_average"]))
+        percent_cpu = avg_cpu  # use this for level comparison
+
+    state, levelstext = upperlevels(percent_cpu, warn_cpu,
+                                    crit_cpu) if "cpulevels" in params else (0, "")
+    return state, infotext + levelstext, perf_data
+
+
+def individual_process_check(processes, params):
+    warn_cpu_single, crit_cpu_single = params["single_cpulevels"]
+    for p in processes:
+        cpu_usage, name, pid = 0.0, None, None
+
+        for the_item, (value, _unit) in p:
+            if the_item == "name":
+                name = value
+            if the_item == "pid":
+                pid = value
+            elif the_item.startswith("cpu usage"):
+                cpu_usage += value
+
+        state, levelstext = upperlevels(cpu_usage, warn_cpu_single, crit_cpu_single)
+        process_description = name + " with PID %s" % pid if pid else ""
+        infotext = "%.1f%% CPU for %s%s" % (cpu_usage, process_description, levelstext)
+        yield state, infotext
+
+
+def uptime_check(times, params):
+    """Check how long the process is running"""
+    state = 0
+    if times.min_elapsed == times.max_elapsed:
+        infotext = "running for %s" % get_age_human_readable(times.min_elapsed)
+    else:
+        infotext = "youngest running for {}, oldest running for {}".format(
+            *map(get_age_human_readable, [times.min_elapsed, times.max_elapsed]))
+
+    if "max_age" in params:
+        warn_age, crit_age = params["max_age"]
+        state, levelstext = upperlevels(times.max_elapsed, warn_age, crit_age)
+        infotext += levelstext
+
+    return state, infotext
+
+
+def handle_count_check(processes, params):
+    infotext = "%d process handles" % processes.handle_count
+    warn_handle, crit_handle = params.get("handle_count", (None, None))
+    state, levelstext = upperlevels(processes.handle_count, warn_handle,
+                                    crit_handle) if "handle_count" in params else (0, "")
+    return state, infotext + levelstext, [("process_handles", processes.handle_count, warn_handle,
+                                           crit_handle)]
+
+
+def cpu_rate(counter, now, lifetime):
+    try:
+        return get_rate(counter, now, lifetime, onwrap=RAISE)
+    except MKCounterWrapped:
+        return 0
+
+
+class ProcessAggregator(object):
+    """Collects information about all instances of monitored processes"""
+
+    def __init__(self, cpu_cores):
+        self.cpu_cores = cpu_cores
+        self.virtual_size = 0
+        self.resident_size = 0
+        self.handle_count = 0
+        self.percent_cpu = 0.0
+        self.max_elapsed = None
+        self.min_elapsed = None
+        self.processes = []
+        self.running_on_nodes = set()
+
+    def __getitem__(self, item):
+        return self.processes[item]
+
+    @property
+    def count(self):
+        return len(self.processes)
+
+    def append(self, process):
+        self.processes.append(process)
+
+    def lifetimes(self, process_info, process):
+        # process_info.cputime contains the used CPU time and possibly,
+        # separated by /, also the total elapsed time since the birth of the
+        # process.
+        if '/' in process_info.cputime:
+            elapsed_text = process_info.cputime.split('/')[1]
+        else:
+            # uptime is a windows only value, introduced in Werk 4029. For
+            # future consistency should be moved to the cputime entry and
+            # separated by a /
+            if process_info.uptime:
+                elapsed_text = process_info.uptime
+            else:
+                elapsed_text = None
+
+        if elapsed_text:
+            elapsed = parse_ps_time(elapsed_text)
+            self.min_elapsed = min(self.min_elapsed or elapsed, elapsed)
+            self.max_elapsed = max(self.max_elapsed, elapsed)
+
+            now = time.time()
+            creation_time_unix = int(now - elapsed)
+            if creation_time_unix != 0:
+                process.append(("creation time",
+                                (get_timestamp_human_readable(creation_time_unix),
+                                 "")))
+
+    def cpu_usage(self, process_info, process):
+
+        now = time.time()
+
+        pcpu_text = process_info.cputime.split('/')[0]
+
+        if ":" in pcpu_text:  # In linux is a time
+            total_seconds = parse_ps_time(pcpu_text)
+            pid = process_info.process_id
+            cputime = cpu_rate("ps_stat.pcpu.%s" % pid, now, total_seconds)
+
+            pcpu = cputime * 100
+            process.append(("pid", (pid, "")))
+
+        # windows cpu times
+        elif process_info.usermode_time and process_info.kernelmode_time:
+            pid = process_info.process_id
+
+            user_per_sec = cpu_rate("ps_wmic.user.%s" % pid, now,
+                                    int(process_info.usermode_time))
+            kernel_per_sec = cpu_rate("ps_wmic.kernel.%s" % pid, now,
+                                      int(process_info.kernelmode_time))
+
+            if not all([user_per_sec, kernel_per_sec]):
+                user_per_sec = 0
+                kernel_per_sec = 0
+
+            user_perc = user_per_sec / 100000.0  # / cpu_cores
+            kernel_perc = kernel_per_sec / 100000.0  #/ cpu_cores
+            pcpu = user_perc + kernel_perc
+            process.append(("cpu usage (user space)", (user_perc, "%")))
+            process.append(("cpu usage (kernel space)", (kernel_perc, "%")))
+            process.append(("pid", (pid, "")))
+
+        else:  # Solaris, BSD, aix cpu times
+            pcpu = float(pcpu_text)
+
+        if process_info.pagefile:
+            process.append(("pagefile usage", (process_info.pagefile, "")))
+
+        if process_info.handles:
+            self.handle_count += int(process_info.handles)
+            process.append(("handle count", (int(process_info.handles), "")))
+
+        self.percent_cpu += pcpu
+        process.append(("cpu usage", (pcpu, "%")))
+
+
+def check_ps_process_capture(parsed, params, cpu_cores):
+
+    ps_aggregator = ProcessAggregator(cpu_cores)
+
     for line in parsed:
         node_name, process_line = line[0], line[1:]
         process_info, command_line = process_line[0], process_line[1:]
 
-        if process_matches_for_check(process_line, params.get("process"), params.get("user")):
+        if process_matches(process_line, params.get("process"), params.get("user")):
             process = []
-            count += 1
 
-            if node_name != None:
-                running_on_nodes.add(node_name)
+            if node_name is not None:
+                ps_aggregator.running_on_nodes.add(node_name)
 
-            if process_info:
-                if command_line:
-                    process.append(("name", (command_line[0], "")))
-
-                if len(process_info) >= 4: # extended performance data: virtualsize, residentsize, %cpu
-                    extended_perfdata = True
-                    process.append(("user",          (process_info[0], "")))
-                    process.append(("virtual size",  (int(process_info[1]), "kB")))
-                    process.append(("resident size", (int(process_info[2]), "kB")))
-
-                    virtual_size  += int(process_info[1])  # kB
-                    resident_size += int(process_info[2]) # kB
-                    if len(process_info) >= 10:
-                        # even more data: processId, pagefile_usage, usermodetime, kernelmodetime, threadCount, openHandles
-                        pid, pagefile_usage, user_c, kernel_c, handle_c = map(saveint, process_info[4:9])
-
-                        # Info may include creation time
-                        if len(process_info) >= 11:
-                            uptime_secs = int(process_info[10])
-                            creation_time_unix = int(now - uptime_secs)
-                            if creation_time_unix != 0:
-                                process.append(("creation time", (get_timestamp_human_readable(creation_time_unix), "")))
-
-                            elapsed = now - creation_time_unix
-                            max_elapsed = max(max_elapsed, elapsed)
-                            if min_elapsed is None:
-                                min_elapsed = elapsed
-                            else:
-                                min_elapsed = min(min_elapsed, elapsed)
-
-                        process.append(("pagefile usage", (pagefile_usage, "")))
-                        process.append(("handle count",   (handle_c, "")))
-
-                        counter_wrapped = False
-                        try:
-                            user_per_sec   = get_rate("ps_wmic.user.%d" % pid, now, user_c, onwrap=RAISE)
-                        except MKCounterWrapped:
-                            counter_wrapped = True
-
-                        try:
-                            kernel_per_sec = get_rate("ps_wmic.kernel.%d" % pid, now, kernel_c, onwrap=RAISE)
-                        except MKCounterWrapped:
-                            counter_wrapped = True
-
-                        if counter_wrapped:
-                            user_per_sec   = 0
-                            kernel_per_sec = 0
-
-                        user_perc = user_per_sec / 100000.0 / cpu_cores
-                        kernel_perc = kernel_per_sec / 100000.0 / cpu_cores
-                        percent_cpu += user_perc + kernel_perc
-                        handle_count += handle_c
-                        process.append(("cpu usage (user space)",   (user_perc, "%")))
-                        process.append(("cpu usage (kernel space)", (kernel_perc, "%")))
-                        process.append(("pid", (pid, "")))
-                    else:
-                        # process_info[3] contains the used CPU time and possibly, separated by /, also
-                        # the total elapsed time since the birth of the process.
-                        if '/' in process_info[3]:
-                            pcpu_text, elapsed_text = process_info[3].split('/')
-                        else:
-                            pcpu_text = process_info[3]
-                            elapsed_text = None
-
-                        if elapsed_text:
-                            elapsed = parse_ps_time(elapsed_text)
-                            max_elapsed = max(max_elapsed, elapsed)
-                            if min_elapsed is None:
-                                min_elapsed = elapsed
-                            else:
-                                min_elapsed = min(min_elapsed, elapsed)
-
-                        if ":" in pcpu_text:
-                            total_seconds = parse_ps_time(pcpu_text)
-                            pid = process_info[4]
-                            try:
-                                cputime = get_rate("ps_stat.pcpu.%s" % pid, now, total_seconds, onwrap=RAISE)
-                            except MKCounterWrapped:
-                                cputime = 0
-
-                            pcpu = cputime * 100
-                            process.append(("pid", (pid, "")))
-                        else:
-                            pcpu = float(pcpu_text)
-
-                        percent_cpu += pcpu
-                        process.append(("cpu usage", (pcpu, "%")))
-
-
-            elif command_line:
-                # otherwise we have only two fields, one of which is the node. if the remaining
-                # field is not the process name, that ps makes no sense at all
+            if command_line:
                 process.append(("name", (command_line[0], "")))
 
-            processes.append(process)
+            # extended performance data: virtualsize, residentsize, %cpu
+            if all(process_info[1:4]):
+                process.append(("user", (process_info.user, "")))
+                process.append(("virtual size", (int(process_info.virtual), "kB")))
+                process.append(("resident size", (int(process_info.physical), "kB")))
 
-    if "cpulevels" in params:
-        warn_cpu, crit_cpu = params["cpulevels"]
-    else:
-        warn_cpu, crit_cpu = None, None
+                ps_aggregator.virtual_size += int(process_info.virtual)  # kB
+                ps_aggregator.resident_size += int(process_info.physical)  # kB
 
-    warnmin, okmin, okmax, warnmax = params["levels"]
-    perfdata = [ ("count", count, okmax+1, warnmax+1, 0) ]
-    if count == 0 and not extended_perfdata:
-        # No matching process found. Therefore we don't know yet,
-        # whether the agents sends extended data for processes.
-        # We need to know this in order to create the RRD with the
-        # correct number of DSes. To just look at the first process
-        # in the agent output to make sure. We assume that at least
-        # one process is always present.
-        extended_perfdata = ps_has_extended_perfdata(parsed[0][1])
+                ps_aggregator.lifetimes(process_info, process)
+                ps_aggregator.cpu_usage(process_info, process)
 
-    if extended_perfdata:
-        warn_rss, crit_rss = params.get("resident_levels", (None, None))
-        perfdata += [ ("vsz", virtual_size, warn_rss, crit_rss),
-                      ("rss", resident_size, warn_rss, crit_rss)]
-        perfdata.append(("pcpu", percent_cpu, warn_cpu, crit_cpu))
+            ps_aggregator.append(process)
 
-    infotext = "%d %s" % (count, info_name)
-
-    if running_on_nodes:
-        infotext += " [running on %s]" % ", ".join(running_on_nodes)
-
-    state = 0
-    if count > warnmax or count < warnmin:
-        state = 2
-        infotext += " (ok from %d to %d)(!!)" % (okmin, okmax)
-    elif count > okmax or count < okmin:
-        state = 1
-        infotext += " (ok from %d to %d)(!)" % (okmin, okmax)
-
-    if virtual_size:
-        for size, name, title in [
-            (virtual_size, "virtual", "virtual"),
-            (resident_size, "resident", "physical"),
-        ]:
-            infotext += " %.1f MB %s" % ((size / 1024.0), title)
-            if "%s_levels" % name in params:
-                warn_level, crit_level = params["%s_levels" % name]
-                if size * 1024 >= crit_level:
-                    state = 2
-                    infotext += "(!!)"
-                elif size * 1024 >= warn_level:
-                    state = max(state, 1)
-                    infotext += "(!)"
-            infotext += ","
-
-        # Check levels that are in percent of the total RAM of the host
-        if "resident_levels_perc" in params:
-            warn_perc, crit_perc = params["resident_levels_perc"]
-            if not total_ram:
-                infotext += ", percentual RAM levels, but total RAM is unknown"
-                if state in (0, 1):
-                    state = 3
-            else:
-                resident_perc = 100 * float(resident_size * 1024) / total_ram
-                infotext += " %s of total RAM" % get_percent_human_readable(resident_perc)
-                levelstext = " (warn/crit at %d%%/%d%%)" % (warn_perc, crit_perc)
-                if resident_perc >= crit_perc:
-                    state = 2
-                    infotext += levelstext
-                elif resident_perc >= warn_perc:
-                    state = max(state, 1)
-                    infotext += levelstext
-                else:
-                    infotext += levelstext
-
-            infotext += ","
-
-        infotext += " %.1f%% CPU" % percent_cpu
-
-        if "cpu_average" in params:
-            avg_cpu = get_average("ps.%s.cpu" % item, now, percent_cpu, params["cpu_average"], False)
-            infotext += " (%d min average: %.1f%%)" % (params["cpu_average"], avg_cpu)
-            percent_cpu = avg_cpu # use this for level comparison
-            if extended_perfdata:
-                perfdata.append(("pcpuavg", avg_cpu, warn_cpu, crit_cpu, 0, params["cpu_average"]))
-
-        if "cpulevels" in params:
-            if percent_cpu >= crit_cpu:
-                state = 2
-                infotext += "(!!)"
-            elif percent_cpu >= warn_cpu:
-                state = max(state, 1)
-                infotext += "(!)"
-
-        if "single_cpulevels" in params:
-            warn_cpu_single, crit_cpu_single = params["single_cpulevels"]
-            for p in processes:
-                cpu_usage, name, pid = 0.0, None, None
-
-                for the_item, (value, _unit) in p:
-                    if the_item == "name":
-                        name = value
-                    if the_item == "pid":
-                        pid = value
-                    elif the_item.startswith("cpu usage"):
-                        cpu_usage += value
-
-                if cpu_usage >= warn_cpu_single:
-                    process_description = "%s with PID %s" % (name, pid) if pid else name
-                    infotext += ", %.1f%% CPU for %s (warn/crit at %s/%s)" % (
-                        cpu_usage, process_description, warn_cpu_single, crit_cpu_single
-                    )
-
-                if cpu_usage >= crit_cpu_single:
-                    state = 2
-                    infotext +="(!!)"
-                elif cpu_usage >= warn_cpu_single:
-                    state = max(state, 1)
-                    infotext +="(!)"
-
-        # only check handle_count if provided by wmic counters
-        if handle_count:
-            infotext += ", %d process handles" % handle_count
-            if "handle_count" in params:
-                warn_handle, crit_handle = params["handle_count"]
-                if handle_count >= crit_handle:
-                    state = 2
-                    infotext += "(!!)"
-                elif handle_count >= warn_handle:
-                    state = max(state, 1)
-                    infotext += "(!)"
-            else:
-                warn_handle, crit_handle = None, None
-            perfdata.append(("process_handles", handle_count, warn_handle, crit_handle))
-
-    # Check how long the process is running
-    if min_elapsed != None:
-        if min_elapsed == max_elapsed:
-            infotext += ", running for %s" % get_age_human_readable(min_elapsed)
-        else:
-            infotext += ", youngest running for %s" % get_age_human_readable(min_elapsed)
-            infotext += ", oldest running for %s" % get_age_human_readable(max_elapsed)
-    if "max_age" in params:
-        warn_age, crit_age = params["max_age"]
-        if max_elapsed >= crit_age:
-            state = 2
-            infotext += "(!!)"
-        elif max_elapsed >= warn_age:
-            state = max(state, 1)
-            infotext += "(!)"
-
-    if params.get("process_info", None) is not None:
-        infotext += "\r\n" + format_process_list(processes, params["process_info"] == "html")
-
-    return state, infotext, perfdata
+    return ps_aggregator

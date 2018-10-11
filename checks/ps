@@ -35,7 +35,7 @@
 
 # Forth generation (>=1.2.5), additional columns in bracket:
 # (user, virtual_size, resident_size, %cpu, processID, pagefile_usage, usermodetime, kernelmodetime, openHandles, threadCount) name
-#(\\KLAPPRECHNER\ab,29284,2948,0,3124,904,400576,901296,35,1)    NOTEPAD.EXE
+# (\\KLAPPRECHNER\ab,29284,2948,0,3124,904,400576,901296,35,1)    NOTEPAD.EXE
 
 # Sixth generation (>=1.2.7) adds an optional etime, joined by "/" with the CPU time
 
@@ -56,7 +56,6 @@
 # WINDOWSXP,167500000,services.exe,1765376,16,13750000,22601728,4444160^M
 # WINDOWSXP,16875000,lsass.exe,3964928,21,3906250,43462656,6647808^M
 # WINDOWSXP,8750000,VBoxService.exe,1056768,8,468750,26652672,3342336^M
-
 
 # New since 1.2.1i2: WATO compatible syntax
 #
@@ -84,6 +83,9 @@ def ps_cleanup_counters(parsed):
     pids = ps_get_current_pids(parsed)
     cleanup_idents += ps_get_counters_to_delete(pids)
 
+    # Avoid growing up the item state with info about processes that aren't
+    # executing anymore. Clean all information about process that are not
+    # the ones specifically inside the current parsed agent output
     clear_item_states_by_full_keys(cleanup_idents)
 
 
@@ -95,11 +97,11 @@ def ps_cleanup_counters(parsed):
 # New magic keys:        ('ps', None, 'ps_wmic.kernel.692'): (1448633487.573496, 1092007),
 def ps_get_counters_to_delete(pids):
     counters_to_delete = []
-    for ident in get_all_item_states().iterkeys():
-        ident_type = type(ident)
-        if ident_type == tuple and ident[0] == "ps":
+    for ident in get_all_item_states():
+        if isinstance(ident, tuple) and ident[0] == "ps":
             check_ident = ident[2]
-        elif ident_type != tuple and (ident.startswith("ps_stat") or ident.startswith("ps_wmic")):
+        elif not isinstance(ident, tuple) and (ident.startswith("ps_stat") or
+                                               ident.startswith("ps_wmic")):
             check_ident = ident
         else:
             continue
@@ -107,27 +109,48 @@ def ps_get_counters_to_delete(pids):
         pid = check_ident.split(".")[-1]
         if pid.isdigit() and pid not in pids:
             counters_to_delete.append(ident)
-    return counters_to_delete
+
+    return list(counters_to_delete)
 
 
 def ps_get_current_pids(parsed):
     pids = set()
     for line in parsed:
         process_info = line[1]
-        if ps_has_extended_perfdata(process_info):
-            pids.add(process_info[4])
+        if process_info.process_id:
+            pids.add(process_info.process_id)
     return pids
 
 
-# FIXME: Refactor this function for better readability
+# This function is only concerned with deprecated output from psperf.bat,
+# in case of all other output it just returns info unmodified. But if it is
+# a windows output it will extract the number of cpu cores
 def ps_merge_wmic_info(info):
-    ps_result     = []
-    lines         = iter(info)
-    wmic_info     = {}
-    use_wmic_info = True
-    cpu_cores     = 1
+    # Agent output version cmk>1.2.5
+    # Assumes line = [CLUSTER, PS_INFO, COMMAND]
+    has_wmic = False
+    for line in info:
+        if len(line) > 2 and line[2].lower() == "system idle process":
+            cpu_cores = int(line[1][1:-1].split(",")[9])
+            return cpu_cores, info
+        if "wmic process" in line[-1]:
+            has_wmic = True
+            break
 
+    # Data from other systems than windows
+    if not has_wmic:
+        return 1, info
+
+    # Data from windows with wmic info, cmk<1.2.5
+    return extract_wmic_info(info)
+
+
+def extract_wmic_info(info):
+    ps_result = []
+    lines = iter(info)
+    wmic_info = {}
     is_wmic = False
+
     while True:
         try:
             line = lines.next()
@@ -139,22 +162,9 @@ def ps_merge_wmic_info(info):
                 is_wmic = False
                 continue
         except StopIteration:
-            break # Finished with all lines
+            break  # Finished with all lines
 
-        if not is_wmic:
-            # Ignore data from the psperf.bat if the agent has this feature builtin
-            if use_wmic_info and len(line[1].split(",")) >= 10:
-                use_wmic_info = False
-            if not use_wmic_info:
-                # We need to determine the number of cpu_cores without the wmic_info
-                if len(line) < 3:
-                    # On some rare instances the name of the process is missing
-                    # This line will be ignored
-                    continue
-                if line[2].lower() == "system idle process":
-                    cpu_cores = int(line[1][1:-1].split(",")[9])
-            ps_result.append(line)
-        else:
+        if is_wmic:
             row = dict(zip(wmic_headers, line))
             # Row might be damaged. I've seen this agent output:
             # Node - TILE-BUILDER02
@@ -164,37 +174,44 @@ def ps_merge_wmic_info(info):
             # Node,
             if "Name" in row and "ProcessId" in row:
                 wmic_info[(row["node"], row["Name"], row["ProcessId"])] = row
+        else:
+            ps_result.append(line)  # plain list of process names
+
+    return merge_wmic(ps_result, wmic_info, wmic_headers)
 
 
-    # Add wmic_info to process table, but only if present:
-    if use_wmic_info and wmic_info:
-        def get_ps_info(node, name, processId = 0):
-            for key, value in wmic_info.items():
-                if (not processId and key[0:2] == (node, name)) or key == (node, name, processId):
-                    # each info is only returned once!
-                    del wmic_info[key]
-                    return value
-        info = []
-        seen_pids = set([]) # Remove duplicate entries
-        for line in ps_result:
-            psinfo = get_ps_info(line[0], line[1])
-            # Get number of CPU cores from system idle process
-            if psinfo:
-                if "ThreadCount" in wmic_headers and psinfo["Name"].lower() == "system idle process":
-                    cpu_cores = int(psinfo["ThreadCount"])
-                pid = int(psinfo["ProcessId"])
-                if pid not in seen_pids:
-                    seen_pids.add(pid)
-                    virt     = int(psinfo["VirtualSize"])    / 1024 # Bytes -> KB
-                    resi     = int(psinfo["WorkingSetSize"]) / 1024 # Bytes -> KB
-                    pagefile = int(psinfo["PageFileUsage"])  / 1024 # Bytes -> KB
-                    userc    = int(psinfo["UserModeTime"])   # do not resolve counter here!
-                    kernelc  = int(psinfo["KernelModeTime"]) # do not resolve counter here!
-                    handlec  = int(psinfo.get("HandleCount", 0)) # Only in newer psperf.bat versions
-                    threadc  = int(psinfo["ThreadCount"])    # do not resolve counter here!
-                    line[1:1] = [ "(unknown,%d,%d,0,%d,%d,%d,%d,%d,%d,)" %
-                                    (virt, resi, pid, pagefile, userc, kernelc, handlec, threadc) ]
-            info.append(line)
+def merge_wmic(ps_result, wmic_info, wmic_headers):
+    def get_ps_info(node, name, processId=0):
+        for key, value in wmic_info.items():
+            if (not processId and key[0:2] == (node, name)) or key == (node, name, processId):
+                # each info is only returned once!
+                del wmic_info[key]
+                return value
+
+    info = []
+    seen_pids = set([])  # Remove duplicate entries
+    cpu_cores = 1
+    for line in ps_result:
+        psinfo = get_ps_info(line[0], line[1])
+        # Get number of CPU cores from system idle process
+        if psinfo:
+            if "ThreadCount" in wmic_headers and psinfo["Name"].lower() == "system idle process":
+                cpu_cores = int(psinfo["ThreadCount"])
+            pid = int(psinfo["ProcessId"])
+            if pid not in seen_pids:
+                seen_pids.add(pid)
+                virt = int(psinfo["VirtualSize"]) / 1024  # Bytes -> KB
+                resi = int(psinfo["WorkingSetSize"]) / 1024  # Bytes -> KB
+                pagefile = int(psinfo["PageFileUsage"]) / 1024  # Bytes -> KB
+                userc = int(psinfo["UserModeTime"])  # do not resolve counter here!
+                kernelc = int(psinfo["KernelModeTime"])  # do not resolve counter here!
+                handlec = int(psinfo.get("HandleCount", 0))  # Only in newer psperf.bat versions
+                threadc = int(psinfo["ThreadCount"])  # do not resolve counter here!
+                line[1:1] = [
+                    "(unknown,%d,%d,0,%d,%d,%d,%d,%d,%d,)" % (virt, resi, pid, pagefile, userc,
+                                                              kernelc, handlec, threadc)
+                ]
+        info.append(line)
 
     return cpu_cores, info
 
@@ -204,16 +221,16 @@ def ps_parse_process_entries(parsed):
     # line[0] = node
     # line[1] = process_info OR (if no process info available) = process name
     for line in parsed:
-        process_info = line[1]
-        if process_info[0] == "(" and process_info[-1] == ")":
-            line[1] = tuple(process_info[1:-1].split(","))
+        process_info = ps_info_tuple(line[1])
+        if process_info:
+            line[1] = process_info
         else:
             # Make number of columns in line consistent for discovery/check
-            line.insert(1, (None,))
+            line.insert(1, ps_info())
 
     # Filter out any lines where no process command line is available, e.g.
     # [None, u'(<defunct>,,,)']
-    parsed = [ x for x in parsed if len(x) > 2 ]
+    parsed = [x for x in parsed if len(x) > 2]
     return parsed
 
 
@@ -236,12 +253,17 @@ def parse_ps(info):
 
 
 def inventory_ps(info):
-    (_cpu_cores, parsed), _mem_info, _solaris_mem_info, _statgrab_mem_info, _aix_memory_info = info
+    _cpu_cores, parsed = info[0]
     return inventory_ps_common(inventory_processes, inventory_processes_rules, parsed)
 
 
 def check_ps(item, params, info):
-    (cpu_cores, parsed), mem_info, solaris_mem_info, statgrab_mem_info, aix_memory_info = info
+    (cpu_cores, parsed), mem_info, solaris_mem_info, statgrab_mem_info, aix_memory_info, cpu_info = info
+
+    # cpu_info for non windows systems
+    if cpu_info and len(cpu_info[0]) == 6:
+        cpu_cores = int(cpu_info[0][5])
+
     if mem_info:
         total_ram = parse_proc_meminfo_bytes(mem_info).get("MemTotal")
     elif solaris_mem_info:
@@ -253,31 +275,31 @@ def check_ps(item, params, info):
     else:
         total_ram = None
 
-    return check_ps_common(item, params, parsed, cpu_cores = cpu_cores, total_ram = total_ram)
+    return check_ps_common(item, params, parsed, cpu_cores=cpu_cores, total_ram=total_ram)
 
 
 check_info['ps'] = {
-    "parse_function"          : parse_ps,
-    "inventory_function"      : inventory_ps,
-    "check_function"          : check_ps,
-    "service_description"     : "Process %s",
-    "includes"                : [ "ps.include", "mem.include" ],
-    "has_perfdata"            : True,
-    "node_info"               : True, # add first column with actual host name
-    "group"                   : "ps",
-    "default_levels_variable" : "ps_default_levels",
-    "extra_sections"          : [ "mem", "solaris_mem", "statgrab_mem", "aix_memory" ],
+    "parse_function": parse_ps,
+    "inventory_function": inventory_ps,
+    "check_function": check_ps,
+    "service_description": "Process %s",
+    "includes": ["ps.include", "mem.include"],
+    "has_perfdata": True,
+    "node_info": True,  # add first column with actual host name
+    "group": "ps",
+    "default_levels_variable": "ps_default_levels",
+    "extra_sections": ["mem", "solaris_mem", "statgrab_mem", "aix_memory", "cpu"],
 }
 
 # NOTE: This check is deprecated and will be removed any decade now. ps now
 # does always performance data.
 check_info['ps.perf'] = {
-    "check_function"          : check_ps,
-    "service_description"     : "Process %s",
-    "includes"                : [ "ps.include", "mem.include" ],
-    "has_perfdata"            : True,
-    "node_info"               : True, # add first column with actual host name
-    "group"                   : "ps",
-    "default_levels_variable" : "ps_default_levels",
-    "extra_sections"          : [ "mem", "solaris_mem", "statgrab_mem", "aix_memory" ],
+    "check_function": check_ps,
+    "service_description": "Process %s",
+    "includes": ["ps.include", "mem.include"],
+    "has_perfdata": True,
+    "node_info": True,  # add first column with actual host name
+    "group": "ps",
+    "default_levels_variable": "ps_default_levels",
+    "extra_sections": ["mem", "solaris_mem", "statgrab_mem", "aix_memory", "cpu"],
 }

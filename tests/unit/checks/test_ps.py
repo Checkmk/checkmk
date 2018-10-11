@@ -1,0 +1,470 @@
+import pytest
+from cmk_base.check_api import MKGeneralException
+from checktestlib import CheckResult, assertCheckResultsEqual
+
+pytestmark = pytest.mark.checks
+
+
+def splitter(text, split_symbol=None, node=None):
+    return [[node] + line.split(split_symbol) for line in text.split("\n")]
+
+
+def generate_inputs():
+    return [
+        # CMK 1.5
+        # linux, openwrt agent(5 entry, cmk>=1.2.7)
+        splitter("""(root,225948,9684,00:00:03/05:05:29,1) /sbin/init splash
+(root,0,0,00:00:00/05:05:29,2) [kthreadd]
+(on,288260,7240,00:00:00/05:03:00,4480) /usr/bin/gnome-keyring-daemon --start --foreground --components=secrets
+(on,1039012,11656,00:00:00/05:02:41,5043) /usr/bin/pulseaudio --start --log-target=syslog
+(on,1050360,303252,00:14:59/1-03:59:39,9902) emacs
+(on,2924232,472252,00:12:05/07:24:15,7912) /usr/lib/firefox/firefox"""),
+        # solaris (5 entry cmk>=1.5)
+        splitter("(root,4056,1512,0.0/52-04:56:05,5689) /usr/lib/ssh/sshd", node="solaris"),
+        # windows agent
+        splitter(
+            """(SYSTEM,0,0,0,0,0,0,0,0,1,0)	System Idle Process
+(\\NT AUTHORITY\SYSTEM,46640,10680,0,600,5212,27924179,58500375,370,11,12)	svchost.exe
+(\\NT AUTHORITY\NETWORK SERVICE,36792,10040,0,676,5588,492183155,189541215,380,8,50)	svchost.exe
+(\\NT AUTHORITY\LOCAL SERVICE,56100,18796,0,764,56632,1422261117,618855967,454,13,4300)	svchost.exe
+(\\KLAPPRECHNER\ab,29284,2948,0,3124,904,400576,901296,35,1,642)\tNOTEPAD.EXE""", "\t"),
+        # aix, bsd, hpux, macos, netbsd, openbsd agent(4 entry, cmk>=1.1.5)
+        splitter("(db2prtl,17176,17540,0.0) /usr/lib/ssh/sshd", node="bsd"),
+        # aix with zombies
+        splitter("""(oracle,9588,298788,0.0) ora_dmon_uc4prd
+(<defunct>,,,)
+(oracle,11448,300648,0.0) oraclemetroprd (LOCAL=NO)"""),
+        # windows agent(10 entry, cmk>1.2.5)
+        splitter(
+            """(SYSTEM,0,0,0,0,0,0,0,0,2)	System Idle Process
+(\\KLAPPRECHNER\ab,29284,2948,0,3124,904,400576,901296,35,1)\tNOTEPAD.EXE""", "\t"),
+        # windows agent(wmic_info, cmk<1.2.5)# From server-windows-mssql-2
+        splitter("""[System Process]
+System
+System Idle Process
+smss.exe
+csrss.exe
+csrss.exe""", "\0") + splitter(
+            """[wmic process]
+Node,HandleCount,KernelModeTime,Name,PageFileUsage,ProcessId,ThreadCount,UserModeTime,VirtualSize,WorkingSetSize
+WSOPREKPFS01,0,388621186093750,System Idle Process,0,0,24,0,65536,24576
+WSOPREKPFS01,1227,368895625000,System,132,4,273,0,14831616,10862592
+WSOPREKPFS01,53,2031250,smss.exe,360,520,2,156250,4685824,323584
+WSOPREKPFS01,679,10051718750,csrss.exe,2640,680,10,2222031250,70144000,2916352
+WSOPREKPFS01,85,126562500,csrss.exe,1176,744,8,468750,44486656,569344
+[wmic process end]""", ","),
+        # Second Generation
+        splitter(
+            "(root) /usr/sbin/xinetd -pidfile /var/run/xinetd.pid -stayalive -inetd_compat -inetd_ipv6"
+        ),
+        # First Generation
+        splitter(
+            "/usr/sbin/xinetd -pidfile /var/run/xinetd.pid -stayalive -inetd_compat -inetd_ipv6"),
+    ]
+
+
+result_parse = [
+    (1,
+     [[None, ("root", "225948", "9684", "00:00:03/05:05:29", "1"), "/sbin/init", "splash"],
+      [None, ("root", "0", "0", "00:00:00/05:05:29", "2"), "[kthreadd]"],
+      [
+          None, ("on", "288260", "7240", "00:00:00/05:03:00", "4480"),
+          "/usr/bin/gnome-keyring-daemon", "--start", "--foreground", "--components=secrets"
+      ],
+      [
+          None, ("on", "1039012", "11656", "00:00:00/05:02:41", "5043"), "/usr/bin/pulseaudio",
+          "--start", "--log-target=syslog"
+      ],
+      [None, ("on", "1050360", "303252", "00:14:59/1-03:59:39", "9902"),
+       "emacs"],
+      [None, ("on", "2924232", "472252", "00:12:05/07:24:15", "7912"),
+       "/usr/lib/firefox/firefox"]]),
+    (1, [["solaris", ("root", "4056", "1512", "0.0/52-04:56:05", "5689"), "/usr/lib/ssh/sshd"]]),
+    (1,
+     [[None, ("SYSTEM", "0", "0", "0", "0", "0", "0", "0", "0", "1", "0"), "System Idle Process"],
+      [
+          None,
+          ("\\NT AUTHORITY\\SYSTEM", "46640", "10680", "0", "600", "5212", "27924179", "58500375",
+           "370", "11", "12"), "svchost.exe"
+      ],
+      [
+          None,
+          ("\\NT AUTHORITY\\NETWORK SERVICE", "36792", "10040", "0", "676", "5588", "492183155",
+           "189541215", "380", "8", "50"), "svchost.exe"
+      ],
+      [
+          None,
+          ("\\NT AUTHORITY\\LOCAL SERVICE", "56100", "18796", "0", "764", "56632", "1422261117",
+           "618855967", "454", "13", "4300"), "svchost.exe"
+      ],
+      [
+          None,
+          ("\\KLAPPRECHNER\x07b", "29284", "2948", "0", "3124", "904", "400576", "901296", "35",
+           "1", "642"), "NOTEPAD.EXE"
+      ]]),
+    (1, [["bsd", ("db2prtl", "17176", "17540", "0.0"), "/usr/lib/ssh/sshd"]]),
+    (1, [
+        [None, ("oracle", "9588", "298788", "0.0"), "ora_dmon_uc4prd"],
+        [None, ("oracle", "11448", "300648", "0.0"), "oraclemetroprd", "(LOCAL=NO)"],
+    ]),
+    (2, [
+        [None, ("SYSTEM", "0", "0", "0", "0", "0", "0", "0", "0", "2"), "System Idle Process"],
+        [
+            None,
+            ("\\KLAPPRECHNER\x07b", "29284", "2948", "0", "3124", "904", "400576", "901296", "35",
+             "1"), "NOTEPAD.EXE"
+        ],
+    ]),
+    (24, [[None, (None,), u"[System Process]"],
+          [
+              None,
+              ("unknown", "14484", "10608", "0", "4", "0", "0", "368895625000", "1227", "273", ""),
+              u"System"
+          ],
+          [
+              None, ("unknown", "64", "24", "0", "0", "0", "0", "388621186093750", "0", "24", ""),
+              u"System Idle Process"
+          ],
+          [
+              None, ("unknown", "4576", "316", "0", "520", "0", "156250", "2031250", "53", "2", ""),
+              u"smss.exe"
+          ],
+          [
+              None,
+              ("unknown", "43444", "556", "0", "744", "1", "468750", "126562500", "85", "8", ""),
+              u"csrss.exe"
+          ],
+          [
+              None,
+              ("unknown", "68500", "2848", "0", "680", "2", "2222031250", "10051718750", "679",
+               "10", ""), u"csrss.exe"
+          ]]),
+    (1, [[
+        None, ("root",), "/usr/sbin/xinetd", "-pidfile", "/var/run/xinetd.pid", "-stayalive",
+        "-inetd_compat", "-inetd_ipv6"
+    ]]),
+    (1, [[
+        None, (None,), "/usr/sbin/xinetd", "-pidfile", "/var/run/xinetd.pid", "-stayalive",
+        "-inetd_compat", "-inetd_ipv6"
+    ]]),
+]
+input_ids = [
+    "linux, openwrt agent(5 entry, cmk>=1.2.7)",
+    "solaris (5 entry cmk>=1.5)",
+    "windows agent(11 entry, cmk>=)",
+    "aix, bsd, hpux, macos, netbsd, openbsd, agent(4 entry, cmk>=1.1.5)",
+    "aix with zombies",
+    "windows agent(10 entry, cmk>1.2.5)",
+    "windows agent(wmic_info, cmk<1.2.5)",
+    "Second Generation user info only",
+    "First Generation process only",
+]
+
+
+@pytest.mark.parametrize("capture, result", zip(generate_inputs(), result_parse), ids=input_ids)
+def test_parse_ps(check_manager, capture, result):
+    check = check_manager.get_check("ps")
+    #assert check.context["ps_merge_wmic_info"](capture) == result
+
+    parsed = check.run_parse(capture)
+    assert parsed[0] == result[0]  # cpu_cores
+    for out, ref in zip(parsed[1], result[1]):
+        assert out[0] == ref[0]
+        assert out[1] == check.context["ps_info"](*ref[1])
+        assert out[2:] == ref[2:]
+
+
+PS_DISCOVERY_WATO_RULES = [
+    ({
+        "default_params": {},
+        "descr": "smss",
+        "match": "~smss.exe"
+    }, [], ["@all"], {
+        "description": u"smss"
+    }),
+    ({
+        "default_params": {
+            "cpulevels": (90.0, 98.0),
+            "handle_count": (1000, 2000),
+            "levels": (1, 1, 99999, 99999),
+            "max_age": (3600, 7200),
+            "resident_levels": (104857600, 209715200),
+            "resident_levels_perc": (25.0, 50.0),
+            "single_cpulevels": (90.0, 98.0),
+            "virtual_levels": (1073741824000, 2147483648000),
+        },
+        "descr": "svchost",
+        "match": "svchost.exe"
+    }, [], ["@all"], {
+        "description": u"svchost win"
+    }),
+    ({
+        "default_params": {
+            "process_info": "text"
+        },
+        "match": "~.*(fire)fox",
+        "descr": "firefox is on %s",
+        "user": None,
+    }, [], ["@all"], {
+        "description": u"Firefox"
+    }),
+    ({
+        "default_params": {
+            "cpu_average": 15,
+            "process_info": "html",
+            "resident_levels_perc": (25.0, 50.0),
+        },
+        "icon": "emacs.png",
+        "descr": "emacs",
+        "match": "emacs",
+        "user": False
+    }, [], ["@all"], {
+        "description": u"emacs",
+    }),
+    ({
+        "default_params": {
+            "max_age": (3600, 7200),
+            "resident_levels_perc": (25.0, 50.0),
+            "single_cpulevels": (90.0, 98.0),
+            "resident_levels": (104857600, 209715200),
+        },
+        "match": "~.*cron",
+        "descr": "cron",
+        "user": "root"
+    }, [], ["@all"], {
+        "description": u"cron"
+    }),
+    ({
+        "default_params": {},
+        "descr": "sshd",
+        "match": "~.*sshd"
+    }, [], ["@all"], {
+        "description": u"sshd"
+    }),
+    ({
+        "default_params": {},
+        "descr": "Term",
+        "match": "~.*term"
+    }, [], ["@all"], {
+        "disabled": True,
+        "description": u"sshd"
+    }),
+]
+
+PS_DISCOVERY_SPECS = [
+    ("smss", "~smss.exe", None, None, {}),
+    ("svchost", "svchost.exe", None, None, {
+        "cpulevels": (90.0, 98.0),
+        "handle_count": (1000, 2000),
+        "levels": (1, 1, 99999, 99999),
+        "max_age": (3600, 7200),
+        "resident_levels": (104857600, 209715200),
+        "resident_levels_perc": (25.0, 50.0),
+        "single_cpulevels": (90.0, 98.0),
+        "virtual_levels": (1073741824000, 2147483648000),
+    }),
+    ("firefox is on %s", "~.*(fire)fox", None, None, {
+        "process_info": "text"
+    }),
+    ("emacs", "emacs", False, "emacs.png", {
+        "cpu_average": 15,
+        "process_info": "html",
+        "resident_levels_perc": (25.0, 50.0),
+    }),
+    ("cron", "~.*cron", "root", None, {
+        "max_age": (3600, 7200),
+        "resident_levels_perc": (25.0, 50.0),
+        "single_cpulevels": (90.0, 98.0),
+        "resident_levels": (104857600, 209715200)
+    }),
+    ("sshd", "~.*sshd", None, None, {}),
+]
+
+
+def test_wato_rules(check_manager):
+    check = check_manager.get_check("ps")
+    assert check.context["ps_wato_configured_inventory_rules"](
+        PS_DISCOVERY_WATO_RULES) == PS_DISCOVERY_SPECS
+
+
+@pytest.mark.parametrize("ps_line, ps_pattern, user_pattern, result", [
+    (["test", "ps"], "", None, True),
+    (["test", "ps"], "ps", None, True),
+    (["test", "ps"], "ps", "root", False),
+    (["test", "ps"], "ps", "~.*y$", False),
+    (["test", "ps"], "ps", "~.*t$", True),
+    (["test", "ps"], "sp", "~.*t$", False),
+    (["root", "/sbin/init", "splash"], "/sbin/init", None, True),
+])
+def test_process_matches(check_manager, ps_line, ps_pattern, user_pattern, result):
+    check = check_manager.get_check("ps")
+    assert check.context["process_matches"]([check.context["ps_info"](ps_line[0])] + ps_line[1:],
+                                            ps_pattern, user_pattern) == result
+
+
+@pytest.mark.parametrize("text, result", [
+    ("12:17", 737),
+    ("55:12:17", 198737),
+    ("7-12:34:59", 650099),
+    ("650099", 650099),
+    ("0", 0),
+])
+def test_parse_ps_time(check_manager, text, result):
+    check = check_manager.get_check("ps")
+    assert check.context["parse_ps_time"](text) == result
+
+
+@pytest.mark.parametrize("params, result", [
+    (("sshd", 1, 1, 99, 99), {
+        "process": "sshd",
+        "user": None,
+        "levels": (1, 1, 99, 99)
+    }),
+    (("sshd", "root", 2, 2, 5, 5), {
+        "process": "sshd",
+        "user": "root",
+        "levels": (2, 2, 5, 5)
+    }),
+    ({
+        "user": "foo",
+        "process": "/usr/bin/foo",
+        "warnmin": 1,
+        "okmin": 1,
+        "okmax": 3,
+        "warnmax": 3,
+    }, {
+        "user": "foo",
+        "process": "/usr/bin/foo",
+        "levels": (1, 1, 3, 3),
+    }),
+])
+def test_cleanup_params(check_manager, params, result):
+    check = check_manager.get_check("ps")
+    assert check.context["ps_cleanup_params"](params) == result
+
+
+PS_DISCOVERED_ITEMS = [
+    ("emacs", {
+        "cpu_average": 15,
+        "resident_levels_perc": (25.0, 50.0),
+        "process": "emacs",
+        "icon": "emacs.png",
+        "user": "on",
+        "process_info": "html",
+    }),
+    ("firefox is on fire", {
+        "process": "~.*firefox",
+        "process_info": "text",
+        "user": None,
+    }),
+    ("sshd", {
+        "process": "~.*sshd",
+        "user": None
+    }),
+    ("svchost", {
+        "cpulevels": (90.0, 98.0),
+        "handle_count": (1000, 2000),
+        "levels": (1, 1, 99999, 99999),
+        "max_age": (3600, 7200),
+        "process": "svchost.exe",
+        "resident_levels": (104857600, 209715200),
+        "resident_levels_perc": (25.0, 50.0),
+        "single_cpulevels": (90.0, 98.0),
+        "user": None,
+        "virtual_levels": (1073741824000, 2147483648000),
+    }),
+    ("smss", {
+        "process": "~smss.exe",
+        "user": None
+    }),
+]
+
+
+def test_inventory_common(check_manager):
+    check = check_manager.get_check("ps")
+    info = sum(generate_inputs(), [])
+    parsed = check.run_parse(info)[1]
+    assert check.context["inventory_ps_common"]([], PS_DISCOVERY_WATO_RULES,
+                                                parsed) == PS_DISCOVERED_ITEMS
+
+
+@pytest.mark.parametrize("service_description, matches, result", [
+    ("PS %2 %1", ["service", "check"], "PS check service"),
+    ("PS %2 %1", ["service", "check", "sm"], "PS check service"),
+    ("PS %s %s", ["service", "rename"], "PS service rename"),
+    ("PS %2 %s", ["service", "rename"], "PS rename service"),
+])
+def test_replace_service_description(check_manager, service_description, matches, result):
+    check = check_manager.get_check("ps")
+    assert check.context["replace_service_description"](service_description, matches, "") == result
+
+
+def test_replace_service_description_exception(check_manager):
+    check = check_manager.get_check("ps")
+
+    with pytest.raises(MKGeneralException, match="1 replaceable elements"):
+        check.context["replace_service_description"]("%s", [], "")
+
+
+check_results = [
+    CheckResult([
+        (0, "1 process", [("count", 1, 100000, 100000, 0)]),
+        (0, "1.00 GB virtual", [("vsz", 1050360, None, None, None, None)]),
+        (0, "296.14 MB physical", [("rss", 303252, None, None, None, None)]),
+        (1, "28.9% of total RAM: (warn/crit at 25/50)"),
+        (0, "0.0% CPU (15 min average: 0.0%)", [("pcpu", 0.0, None, None, None, None),
+                                                ("pcpuavg", 0.0, None, None, 0, 15)]),
+        (0, "running for 27 h", []),
+        (0, "\n<table><tr><th>name</th><th>user</th><th>virtual size</th><th>resident size</th><th>creation time</th><th>pid</th><th>cpu usage</th></tr><tr><td>emacs</td><td>on</td><td>1050360kB</td><td>303252kB</td><td>2018-10-23 08:02:43</td><td>9902</td><td>0%</td></tr></table>"),
+    ]),
+    CheckResult([
+        (0, "1 process", [("count", 1, 100000, 100000, 0, None)]),
+        (0, "2.79 GB virtual", [("vsz", 2924232, None, None, None, None)]),
+        (0, "461.18 MB physical", [("rss", 472252, None, None, None, None)]),
+        (0, "0.0% CPU", [("pcpu", 0.0, None, None, None, None)]), (0, "running for 7 h", []),
+        (0,
+         "\nname /usr/lib/firefox/firefox, user on, virtual size 2924232kB, resident size 472252kB, creation time 2018-10-24 04:38:07, pid 7912, cpu usage 0%\r\n",
+         [])
+    ]),
+    CheckResult([
+        (0, "2 processes [running on bsd, solaris]", [("count", 2, 100000, 100000, 0, None)]),
+        (0, "20.73 MB virtual", [("vsz", 21232, None, None, None, None)]),
+        (0, "18.61 MB physical", [("rss", 19052, None, None, None, None)]),
+        (0, "0.0% CPU", [("pcpu", 0.0, None, None, None, None)]),
+        (0, "running for 52 d", []),
+    ]),
+    CheckResult([
+        (0, "3 processes", [("count", 3, 100000, 100000, 0, None)]),
+        (0, "136.26 MB virtual", [("vsz", 139532, 1073741824000, 2147483648000, None, None)]),
+        (0, "38.59 MB physical", [("rss", 39516, 104857600, 209715200, None, None)]),
+        (3, "percentual RAM levels configured, but total RAM is unknown", []),
+        (0, "0.0% CPU", [("pcpu", 0.0, 90.0, 98.0, None, None)]),
+        (0, "0.0% CPU for svchost.exe with PID 600"),
+        (0, "0.0% CPU for svchost.exe with PID 676"),
+        (0, "0.0% CPU for svchost.exe with PID 764"),
+        (1, "1204 process handles: (warn/crit at 1000/2000)", [("process_handles", 1204, 1000, 2000,
+                                                                None, None)]),
+        (1, "youngest running for 12.0 s, oldest running for 71 m: (warn/crit at 3600/7200)", []),
+    ]),
+    CheckResult([
+        (0, "1 process", [("count", 1, 100000, 100000, 0, None)]),
+        (0, "4.47 MB virtual", [("vsz", 4576, None, None, None, None)]),
+        (0, "316.00 kB physical", [("rss", 316, None, None, None, None)]),
+        (0, "0.0% CPU", [("pcpu", 0.0, None, None, None, None)]),
+        (0, "53 process handles", [("process_handles", 53, None, None, None, None)]),
+    ]),
+]
+
+
+@pytest.mark.parametrize(
+    "inv_item, reference",
+    zip(PS_DISCOVERED_ITEMS, check_results),
+    ids=[a[0] for a in PS_DISCOVERED_ITEMS])
+def test_check_ps_common(check_manager, monkeypatch, inv_item, reference):
+    check = check_manager.get_check("ps")
+    parsed = sum([check.run_parse(info)[1] for info in generate_inputs()], [])
+    total_ram = 1024**3 if inv_item[0] == "emacs" else None
+    monkeypatch.setattr('time.time',lambda : 1540375342)
+    test_result = CheckResult(check.context["check_ps_common"](
+        inv_item[0], inv_item[1], parsed, total_ram=total_ram))
+    assertCheckResultsEqual(test_result, reference)

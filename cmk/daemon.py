@@ -81,6 +81,24 @@ def daemonize(user=0, group=0):
     os.close(so)
 
 
+def closefrom(lowfd):
+    """Closes all file descriptors starting with "lowfd", ignoring errors
+
+    Deletes all open file descriptors greater than or equal to lowfd from the
+    per-process object reference table.  Any errors encountered while closing
+    file descriptors are ignored.
+
+    Difference to os.closerange() is that this automatically determines the
+    highest fd number to close.
+    """
+    try:
+        highfd = os.sysconf("SC_OPEN_MAX")
+    except ValueError:
+        highfd = 1024
+
+    os.closerange(lowfd, highfd)
+
+
 def lock_with_pid_file(path):
     """
     Use this after daemonizing or in foreground mode to ensure there is only

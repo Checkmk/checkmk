@@ -1,0 +1,14 @@
+Title: Windows agent: Increased maximum allowed plugin output from 2MB to 16MB
+Level: 1
+Component: checks
+Class: feature
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0i1
+Date: 1539244926
+
+If the combined output of all plugins exceeded 2MB, subsequent plugin data got discarded.
+
+
+

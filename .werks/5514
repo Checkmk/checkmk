@@ -1,0 +1,21 @@
+Title: cmk-update-agent: Use POST-requests for server communications
+Level: 1
+Component: agents
+Class: security
+Compatible: compat
+Edition: cee
+State: unknown
+Version: 1.4.0p37
+Date: 1539267867
+
+The agent updater now uses POST requests for all communications
+to the Check_MK Server.
+
+This improves security because all data, including sensitive data like
+login-credentials, are now sent within the HTTP-Body instead of
+within the URL. Notably, no sensitive data will ne exposed to the
+apache logfiles on the Check_MK server.
+
+This Change is relevant for Check_MK 1.4 only, whereas the agent updater
+shiped with Check_MK 1.5 or newer has another code base that employs
+POST requests since its first release.

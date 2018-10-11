@@ -1,0 +1,16 @@
+Title: Additional fix for URL redirect from /[site]/ to /[site]/check_mk/
+Level: 1
+Component: multisite
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0i1
+Date: 1539180918
+
+The werk #6773 changed the behaviour of the URL redirect from <tt>/[site]/</tt> or <tt>/[site]</tt>
+to <tt>/[site]/check_mk/</tt>. The change tried to respect custom ports but was breaking some
+specific reverse proxy setups.
+
+We have now again changed this setting to completely ignore the protocl, host and port when producing the
+redirect answer which makes the client responsible for adding the correct protocol, host and port.

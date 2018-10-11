@@ -1,0 +1,7 @@
+#!/bin/bash
+
+if command nfsiostat > /dev/null ; then
+    echo '<<<nfsiostat>>>'
+    nfsiostat | paste -sd " " - | tr -s ' '
+fi
+

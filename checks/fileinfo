@@ -442,7 +442,8 @@ def fileinfo_check_function(check_definition, params, outof_range_txt):
 
 
 def _fileinfo_check_file(value, params, key):
-    if type(value) not in [long, int]:  # because strings go into infos but not into perfdata
+    if not isinstance(value, (long, int)):
+        # because strings go into infos but not into perfdata
         return []
     results = []
     for how, comp_text, cfunc in [

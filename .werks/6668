@@ -1,0 +1,11 @@
+Title: WATO API: fixed broken configuration when setting cluster nodes in edit_host/add_host API call
+Level: 1
+Component: wato
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0i1
+Date: 1539262029
+
+

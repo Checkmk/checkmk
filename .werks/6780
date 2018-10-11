@@ -1,0 +1,22 @@
+Title: Fixed random alert / notify helper crashes on some platforms
+Level: 2
+Component: core
+Compatible: compat
+Edition: cee
+Version: 1.5.0p6
+Date: 1539283109
+Class: fix
+
+The alert and notify helpers of the Microcore could crash "randomly"
+after hours of operation.
+
+The crash was visible in form of "ImportError: cannot import name" messages
+in the var/log/notify.log or var/log/alert.log.
+
+Due to another problem, which will also be fixed soon, the crash of the
+helper process made the Microcore process crash.
+
+As far as we know this happened only on Debian Jessie, CentOS/RedHat 7 and
+SLES12 SP1/SP2.
+
+CMK-1085

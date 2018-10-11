@@ -40,6 +40,7 @@ import urllib
 import livestatus
 import cmk
 from cmk.regex import regex
+import cmk.daemon
 
 import cmk_base.config as config
 import cmk_base.rulesets as rulesets
@@ -75,7 +76,16 @@ def event_keepalive(event_function, log_function, call_every_loop=None, loop_int
                     log_function("Configuration has changed. Restarting myself.")
                     if shutdown_function:
                         shutdown_function()
+
                     os.putenv("CMK_EVENT_RESTART", "1")
+
+                    # Close all unexpected file descriptors before invoking
+                    # execvp() to prevent inheritance of them. In CMK-1085 we
+                    # had an issue related to os.urandom() which kept FDs open.
+                    # This specific issue of Python 2.7.9 should've been fixed
+                    # since Python 2.7.10. Just to be sure we keep cleaning up.
+                    cmk.daemon.closefrom(3)
+
                     os.execvp("cmk", sys.argv)
 
                 data = ""

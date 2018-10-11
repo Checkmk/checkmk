@@ -123,7 +123,7 @@ import cmk_base.check_api_utils as _check_api_utils
 def get_check_api_context():
     """This is called from cmk_base code to get the Check API things. Don't
     use this from checks."""
-    return {k: v for k, v in globals().iteritems() if not k.startswith("_")}
+    return {k: v for k, v in globals().items() if not k.startswith("_")}
 
 #.
 #   .--Check API-----------------------------------------------------------.

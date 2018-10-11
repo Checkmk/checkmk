@@ -1,0 +1,11 @@
+Title: Add success message after signing all agents
+Level: 1
+Component: agents
+Class: fix
+Compatible: compat
+Edition: cee
+State: unknown
+Version: 1.6.0i1
+Date: 1539285008
+
+

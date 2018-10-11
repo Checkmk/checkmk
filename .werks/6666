@@ -1,0 +1,12 @@
+Title: Windows agent: Fixed race condition leading to missing plugin output
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0i1
+Date: 1539242160
+
+Due to an memory management error, the plugin data sometimes could get
+discarded when plugins produced more than 16KB plugin output.

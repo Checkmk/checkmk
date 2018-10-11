@@ -66,6 +66,12 @@ def handler(mod_python_req, fields = None, is_profiling = False):
         # time before the first login for generating auth.php.
         modules.load_all_plugins()
 
+        # Clean up left over livestatus + connection objects (which are
+        # globally stored in sites module).  This is a quick fix for the 1.5
+        # and will be cleaned up in 1.6 by storing these objects in the user
+        # request context instead of a global context.
+        sites.disconnect()
+
         # Get page handler.
         handler = modules.get_handler(html.myfile, page_not_found)
 

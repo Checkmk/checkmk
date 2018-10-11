@@ -1,0 +1,13 @@
+Title: Fixed displaying unrelated livestatus data to users randomly
+Level: 2
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 1.5.0p6
+Date: 1539264368
+Class: fix
+
+Because subsequent requests to the GUI could use left over livestatus connections
+of other users it could randomly happen that one user used the livestatus connection
+of another user which could then result in wrong data shown to the user in the
+GUI.

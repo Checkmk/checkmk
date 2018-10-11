@@ -98,7 +98,7 @@ int launch_program(script_container *cont) {
                     break;
                 }
 
-                while (out_offset + available > current_heap_size) {
+                while (out_offset + available >= current_heap_size) {
                     // Increase heap buffer
                     if (current_heap_size * 2 <= HEAP_BUFFER_MAX) {
                         cont->buffer_work.reset(

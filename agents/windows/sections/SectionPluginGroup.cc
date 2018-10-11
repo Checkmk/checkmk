@@ -40,7 +40,7 @@ extern struct script_statistics_t {
 } g_script_stat;
 
 
-static const size_t HEAP_BUFFER_MAX = 2097152L;
+static const size_t HEAP_BUFFER_MAX = 16777216L;
 static const size_t HEAP_BUFFER_DEFAULT = 16384L;
 
 

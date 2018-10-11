@@ -44,6 +44,7 @@ import cmk
 import cmk.log
 import cmk.daemon as daemon
 import cmk.store as store
+import cmk.daemon as daemon
 from cmk.exceptions import MKGeneralException
 
 import cmk.gui.log
@@ -183,9 +184,7 @@ class BackgroundProcess(multiprocessing.Process):
         os.setsid()
 
         daemon.set_procname(BackgroundJobDefines.process_name)
-
-        # Close file descpriptors. This also closes logfile handles!
-        self._close_fds()
+        daemon.closefrom(0)
 
         ##################### ALL HANDLES HAVE BEEN CLOSED BOUNDARY ###########################
 
@@ -203,17 +202,6 @@ class BackgroundProcess(multiprocessing.Process):
             progress_info     = BackgroundProcessInterface.parse_progress_info(exception_message)
             self._jobstatus.update_status({"progress_info": progress_info,
                                            "state": JobStatus.state_exception})
-
-
-
-    def _close_fds(self):
-        try:
-            MAXFD = os.sysconf("SC_OPEN_MAX")
-        except:
-            MAXFD = 256
-
-        # Close all file descriptors
-        os.closerange(0, MAXFD)
 
 
     def initialize_environment(self):

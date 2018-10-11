@@ -1,7 +1,7 @@
 Title: netscaler_vserver: Discovers readable names
 Level: 1
 Component: checks
-Compatible: compat
+Compatible: incomp
 Edition: cre
 Version: 1.6.0i1
 Date: 1536583837

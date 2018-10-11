@@ -32,7 +32,7 @@
 
 namespace {
 
-const size_t HEAP_BUFFER_MAX = 2097152L;
+const size_t HEAP_BUFFER_MAX = 16777216L;
 const size_t HEAP_BUFFER_DEFAULT = 16384L;
 
 const char *typeToSection(script_type type) {

@@ -152,7 +152,7 @@ def invalidate_auth_session():
         userdb.invalidate_session(config.user.id)
 
     del_auth_cookie()
-    cmk.gui.i18n.del_language_cookie()
+    html.del_language_cookie()
 
 
 def renew_auth_session(username):

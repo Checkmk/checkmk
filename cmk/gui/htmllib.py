@@ -1704,6 +1704,20 @@ class html(HTMLGenerator):
                         % self.render_a("in the global settings", href=url))
 
 
+    def del_language_cookie(self):
+        self.response.del_cookie("language")
+
+
+    def set_language_cookie(self, lang):
+        # type: (str) -> None
+        cookie_lang = self.request.cookie("language")
+        if cookie_lang != lang:
+            if lang != None:
+                self.response.set_cookie("language", lang)
+            else:
+                self.del_language_cookie()
+
+
     def help(self, text):
         self.write_html(self.render_help(text))
 

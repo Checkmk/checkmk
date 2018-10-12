@@ -24,7 +24,7 @@ from importlib import import_module
 pytestmark = pytest.mark.checks
 
 
-EXCLUDES = ('', '__init__', 'conftest')
+EXCLUDES = ('', '__init__', 'conftest', '__pycache__')
 
 DATASET_DIR = os.path.join(os.path.dirname(__file__), 'generictests', 'datasets')
 

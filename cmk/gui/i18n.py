@@ -30,8 +30,6 @@ from typing import NamedTuple, Optional, List, Tuple  # pylint: disable=unused-i
 
 import cmk.paths
 
-from cmk.gui.globals import html
-
 #.
 #   .--Gettext i18n--------------------------------------------------------.
 #   |           ____      _   _            _     _ _  ___                  |
@@ -112,12 +110,6 @@ def unlocalize():
 
 def localize(lang):
     # type: (str) -> None
-    set_language_cookie(lang)
-    _do_localize(lang)
-
-
-def _do_localize(lang):
-    # type: (str) -> None
     global _translation
     if lang is None:
         unlocalize()
@@ -153,20 +145,6 @@ def _get_cmk_locale_path(lang):
 def initialize():
     # type: () -> None
     unlocalize()
-
-
-def del_language_cookie():
-    html.response.del_cookie("language")
-
-
-def set_language_cookie(lang):
-    # type: (str) -> None
-    cookie_lang = html.request.cookie("language")
-    if cookie_lang != lang:
-        if lang != None:
-            html.response.set_cookie("language", lang)
-        else:
-            del_language_cookie()
 
 
 #.

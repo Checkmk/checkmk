@@ -235,7 +235,10 @@ class Application(object):
 
     def _localize_request(self):
         previous_language = cmk.gui.i18n.get_current_language()
-        cmk.gui.i18n.localize(html.var("lang", config.user.language()))
+        user_language = html.get_ascii_input("lang", config.user.language())
+
+        html.set_language_cookie(user_language)
+        cmk.gui.i18n.localize(user_language)
 
         # All plugins might have to be reloaded due to a language change. Only trigger
         # a second plugin loading when the user is really using a custom localized GUI.

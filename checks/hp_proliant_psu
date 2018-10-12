@@ -53,6 +53,10 @@ def parse_hp_proliant_psu(info):
                                int(used), int(capacity_maximum))
         except ValueError:
             pass
+    if parsed:
+        PsuTotal = collections.namedtuple("Psu", ['used', 'max'])
+        parsed['Total'] = PsuTotal(sum(v.used for v in parsed.values()),
+                                   sum(v.max for v in parsed.values()))
     return parsed
 
 
@@ -60,23 +64,17 @@ def inventory_hp_proliant_psu(parsed):
     """Inventorizes all present PSUs, as well as the Sum over all PSUs"""
     for item in parsed:
         yield item, None
-    yield 'Total', None
 
 
 def check_hp_proliant_psu(item, params, parsed):
-
     psu = parsed.get(item)
-    if psu is not None:
+    if psu is None:
+        yield 3, "item not found in snmp data"
+        return
+    elif item != 'Total':
         yield 0, "Chassis %s/Bay %s" % (psu.chassis, psu.bay)
         snmp_state, status = condition_map[psu.condition]
         yield status, 'State: "%s"' % snmp_state
-    elif item != 'Total':
-        yield 3, "item not found in snmp data"
-        return
-    else:  # compute Total
-        PsuTotal = collections.namedtuple("Psu", ['used', 'max'])
-        psu = PsuTotal(sum(v.used for v in parsed.values()),
-                       sum(v.max for v in parsed.values()))
 
     # usage info
     info = 'Usage: %d Watts' % psu.used

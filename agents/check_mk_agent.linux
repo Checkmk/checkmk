@@ -1046,8 +1046,8 @@ if type docker > /dev/null 2>&1 && [ -z "$MK_IS_PIGGYBACKED" ]; then
     docker container ls --all --format "{{json .}}"
 
     echo "<<<docker_node_network:sep(0)>>>"
-    NETWORK_IDS=$(docker network ls -f 'driver=bridge' --format='{{.ID}}')
-    docker network inspect "$NETWORK_IDS"
+    NETWORK_IDS=$(docker network ls -f 'driver=bridge' | awk 'NR>1 {print $1}')
+    docker network inspect $NETWORK_IDS
 fi
 
 # Start new liveupdate process in background on each agent execution. Starting

@@ -1,0 +1,12 @@
+Title: docker_node_disk_usage: Support older Docker versions
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1539334871
+Class: feature
+
+Some old Docker verions do not supprt the "--format" option,
+which resulted in faulty or missing agent data.
+This has been fixed.

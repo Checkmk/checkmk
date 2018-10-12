@@ -44,7 +44,6 @@ import cmk
 import cmk.log
 import cmk.daemon as daemon
 import cmk.store as store
-import cmk.daemon as daemon
 from cmk.exceptions import MKGeneralException
 
 import cmk.gui.log

@@ -150,6 +150,8 @@ def inventory_oracle_rman(parsed):
 
     return inventory
 
+# Cannot use generic decorator @get_parsed_item_data because this check function
+# needs special treatment
 def check_oracle_rman(item, params, parsed):
 
     rman_backup = parsed.get(item)

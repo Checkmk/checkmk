@@ -38,13 +38,8 @@ def inventory_netapp_api_luns(parsed):
     for lun in parsed.keys():
         yield lun, {}
 
-def check_netapp_api_luns(item, params, parsed):
-    lun = parsed.get(item)
-
-    if not lun:
-        yield 3, "LUN not found in agent output"
-        return
-
+@get_parsed_item_data
+def check_netapp_api_luns(item, params, lun):
     if lun.get("online") != "true":
         yield 2, "LUN is offline"
 

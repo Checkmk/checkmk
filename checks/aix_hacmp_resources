@@ -57,11 +57,8 @@ def inventory_aix_hacmp_resources(parsed):
     return [ (key, None) for key in parsed ]
 
 
-def check_aix_hacmp_resources(item, params, parsed):
-    data = parsed.get(item)
-    if data is None:
-        return
-
+@get_parsed_item_data
+def check_aix_hacmp_resources(item, params, data):
     if params is None:
         expected_behaviour = "first"
     else:
@@ -69,7 +66,7 @@ def check_aix_hacmp_resources(item, params, parsed):
 
     resource_states = []
     infotext = ""
-    for node_name, resource_state in parsed[item]:
+    for node_name, resource_state in data:
         resource_states.append(resource_state)
         infotext += "%s on node %s, " % (resource_state, node_name)
 

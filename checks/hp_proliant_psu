@@ -66,12 +66,9 @@ def inventory_hp_proliant_psu(parsed):
         yield item, None
 
 
-def check_hp_proliant_psu(item, params, parsed):
-    psu = parsed.get(item)
-    if psu is None:
-        yield 3, "item not found in snmp data"
-        return
-    elif item != 'Total':
+@get_parsed_item_data
+def check_hp_proliant_psu(item, params, psu):
+    if item != 'Total':
         yield 0, "Chassis %s/Bay %s" % (psu.chassis, psu.bay)
         snmp_state, status = condition_map[psu.condition]
         yield status, 'State: "%s"' % snmp_state

@@ -35,11 +35,8 @@ def inventory_netapp_api_snapvault(parsed):
         if "lag-time" in values:
             yield snapvault, {}
 
-def check_netapp_api_snapvault(item, params, parsed):
-    snapvault = parsed.get(item)
-    if not snapvault:
-        return
-
+@get_parsed_item_data
+def check_netapp_api_snapvault(item, params, snapvault):
     for what in [ "source-system", "destination-system", "policy", "status", "state" ]:
         if what in snapvault:
             yield 0, "%s: %s" % (what.title(), snapvault[what])

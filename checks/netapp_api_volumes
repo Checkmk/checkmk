@@ -48,14 +48,14 @@ def inventory_netapp_api_volumes(parsed):
     for volume in parsed.keys():
         yield volume, {}
 
+# Cannot use decorator get_parsed_item_data for this check function due to the
+# specific error message for legacy checks with a UUID as item
 def check_netapp_api_volumes(item, params, parsed):
     volume = parsed.get(item)
-
     if not volume:
-        # Specific error message for legacy checks with an uuid as item
         if len(item.split("-")) > 4:
-            return 3, "The service description with an UUID is no longer supported. Please do a rediscovery."
-        return 3, "Volume not found in agent output"
+            return 3, "The service description with a UUID is no longer supported. Please do a rediscovery."
+        return
 
     if volume.get("state") != "online":
         return 1, "Volume is %s" % volume.get("state")

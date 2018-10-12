@@ -46,7 +46,7 @@ import cmk.daemon as daemon
 import cmk.store as store
 from cmk.exceptions import MKGeneralException
 
-import log
+import cmk.gui.log
 
 class BackgroundJobAlreadyRunning(MKGeneralException):
     pass
@@ -218,7 +218,7 @@ class BackgroundProcess(multiprocessing.Process):
 
     def initialize_environment(self):
         if not self._logger:
-            self._logger = log.logger
+            self._logger = cmk.gui.log.logger
 
         self._open_stdout_and_stderr()
         self._enable_logging_to_stdout()
@@ -296,7 +296,7 @@ class BackgroundProcess(multiprocessing.Process):
         in stdout (which results in job progress info)"""
         handler = logging.StreamHandler(stream=sys.stdout)
         handler.setFormatter(cmk.log.get_formatter())
-        log.logger.addHandler(handler)
+        cmk.gui.log.logger.addHandler(handler)
 
 
 

@@ -75,11 +75,10 @@ def _docker_trunc_id(hash_string):
 #   '----------------------------------------------------------------------'
 
 
-def _get_json(info):
-    try:
-        return json.loads(''.join(row[0] for row in info if row))
-    except ValueError:
-        return None
+def _get_repo_tag(string):
+    if ":" in string:
+        return tuple(string.split(":", 1))
+    return string, "latest"
 
 
 def _docker_parse_table(rows, fields, keys):
@@ -197,12 +196,23 @@ def parse_docker_system_df(info):
     return parsed
 
 
-def parse_docker_images(info):
-    parsed = {}
-    header = ('REPOSITORY', 'TAG', r'IMAGE\ ID', 'CREATED', 'SIZE')
-    keys = ('Repository', 'Tag', 'ID', 'CreatedAt', 'VirtualSize')
-    table = _docker_parse_table(info, header, keys)
+def _get_json_list(info):
+    json_list = []
+    for row in info:
+        if not row:
+            continue
+        try:
+            json_list.append(json.loads(' '.join(row)))
+        except ValueError:
+            pass
+    return json_list
 
+
+def parse_docker_subsection_images(info):
+
+    table = _get_json_list(info)
+
+    parsed = {}
     for item in table:
         v = item.get("VirtualSize")
         if v is not None:
@@ -212,25 +222,30 @@ def parse_docker_images(info):
     return parsed
 
 
-def parse_docker_image_inspect(info):
-    data = _get_json(info)
-    if data is None:
-        return []
-    return data
+def parse_docker_subsection_image_labels(info):
+
+    table = _get_json_list(info)
+
+    return {_docker_trunc_id(long_id): data
+            for long_id, data in table if data is not None}
 
 
-def parse_docker_ps_all(info):
-    header = (r'CONTAINER\ ID', 'IMAGE', 'COMMAND', 'CREATED', 'STATUS', 'PORTS', 'NAMES')
-    keys = ('ID', 'Image', 'Command', 'CreatedAt', 'Status', 'Ports', 'Names')
-    table = _docker_parse_table(info, header, keys)
+def parse_docker_subsection_image_inspect(info):
+    try:
+        table = json.loads(' '.join(' '.join(row) for row in info if row))
+    except ValueError:
+        return {}
+    return {_docker_trunc_id(image["Id"]): image for image in table}
+
+
+def parse_docker_subsection_containers(info):
+
+    table = _get_json_list(info)
 
     parsed = {}
     for item in table:
-        image_name = item["Image"]
-        if ":" in image_name:
-            item["Repository"], item["Tag"] = image_name.split(":", 1)
-        else:
-            item["Repository"], item["Tag"] = image_name, "latest"
+        image_name = item.get("Image", "")
+        item["Repository"], item["Tag"] = _get_repo_tag(image_name)
         parsed[item.get("ID")] = item
 
     return parsed
@@ -250,46 +265,52 @@ def _split_subsections(info):
 
 
 def parse_docker_node_images(info):
-    '''parse output of <<<docker_node_images>>>
-
-    $ echo "[[[images]]]"
-    $ docker images
-    $ echo "[[[image_labels]]]"
-    $ IMAGE_IDS=$(docker images ls | awk 'BEGIN {ORF=" "} NR>1 {print $3}')
-    $ docker image inspect $IMAGE_IDS
-    $ echo "[[[containers]]]"
-    $ docker ps --all
-    '''
     subsections = _split_subsections(info)
+    images = parse_docker_subsection_images(subsections.get("images", []))
+    image_labels = parse_docker_subsection_image_labels(subsections.get("image_labels", []))
+    image_inspect = parse_docker_subsection_image_inspect(subsections.get("image_inspect", []))
+    containers = parse_docker_subsection_containers(subsections.get("containers", []))
 
-    images = parse_docker_images(subsections.get("images", []))
-    label_data = parse_docker_image_inspect(subsections.get("images_labels", []))
-    containers = parse_docker_ps_all(subsections.get("containers", []))
-
-    for item in label_data:
-        image_id = _docker_trunc_id(item.get("Id"))
-        labels = item.get("Config", {}).get("Labels")
-        image = images.get(image_id)
-        if None not in (image_id, labels, image):
+    for image_id, pref_info in image_inspect.iteritems():
+        image = images.setdefault(image_id, {})
+        image["ID"] = image_id
+        labels = pref_info.get("Config", {}).get("Labels")
+        if labels is not None:
             image.setdefault("__labels__", {}).update(labels)
+        image["CreatedAt"] = pref_info["Created"]
+        image["VirtualSize"] = pref_info["VirtualSize"]
+        repotags = pref_info.get("RepoTags")
+        if repotags:
+            image["Repository"], image["Tag"] = _get_repo_tag(repotags[-1])
 
-    mapping = {(i['Repository'], i['Tag']): i['ID'] for i in images.itervalues()}
+    for image in images.itervalues():
+        image["amount_containers"] = 0
+        image.setdefault("__labels__", {})
+
+    for image_id, labels in image_labels.iteritems():
+        image = images.get(_docker_trunc_id(image_id))
+        if image is not None and labels is not None:
+           image["__labels__"].update(labels)
+
+    mapping = {(i['Repository'], i['Tag']): i['ID']
+               for i in images.itervalues()}
+
     for c in containers.itervalues():
         image_id = mapping.get((c["Repository"], c["Tag"]))
         image = images.get(image_id)
         if image is not None:
-            image.setdefault("__containers__", []).append(c)
+            image["amount_containers"] += 1
 
         labels = c.get("Labels")
-        if labels is not None:
+        if isinstance(labels, (str, unicode)):
             lab = (p.split("=", 1) for p in labels.split(","))
-            c["Labels"] = list(lab)
+            c["Labels"] = dict(lab)
 
     return {"images": images, "containers": containers}
 
 
 def parse_docker_network_inspect(info):
-    data = _get_json(info)
-    if data is None:
+    try:
+        return json.loads(''.join(row[0] for row in info if row))
+    except ValueError:
         return []
-    return data

@@ -1,0 +1,12 @@
+Title: docker_node_images: Support old Docker versions
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1539755509
+Class: feature
+
+Some old Docker versions do not support the "--format" option,
+which resulted in faulty or missing agent data.
+This option is now avoided as far as possible.

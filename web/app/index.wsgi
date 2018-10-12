@@ -168,6 +168,12 @@ class Application(object):
         # time before the first login for generating auth.php.
         modules.load_all_plugins()
 
+        # Clean up left over livestatus + connection objects (which are
+        # globally stored in sites module).  This is a quick fix for the 1.5
+        # and will be cleaned up in 1.6 by storing these objects in the user
+        # request context instead of a global context.
+        sites.disconnect()
+
         handler = pages.get_page_handler(html.myfile, self._page_not_found)
 
         # Some pages do skip authentication. This is done by adding

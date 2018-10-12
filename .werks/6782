@@ -1,0 +1,12 @@
+Title: Fixed automatic refresh of "Custom graph" pages
+Level: 1
+Component: metrics
+Compatible: compat
+Edition: cee
+Version: 1.5.0p6
+Date: 1539323264
+Class: fix
+
+The graphs on the dedicated custom graph pages that are linked
+from the sidebar were not refreshed at all. Now they are refreshed
+regularly, just like the other views.

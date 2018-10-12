@@ -1032,8 +1032,8 @@ if type docker > /dev/null 2>&1 && [ -z "$MK_IS_PIGGYBACKED" ]; then
     # sed: protect leading whitespace
     docker info | sed 's/^/|/'
 
-    echo "<<<docker_node_disk_usage>>>"
-    docker system df --format "{{json .}}" || docker system df
+    echo "<<<docker_node_disk_usage:sep(0)>>>"
+    docker system df
 
     echo "<<<docker_node_images>>>"
     echo "[[[images]]]"

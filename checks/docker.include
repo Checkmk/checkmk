@@ -160,12 +160,17 @@ def parse_docker_node_info(info):
 
 
 def parse_docker_system_df(info):
-    parsed = {}
-    header = ('TYPE', 'TOTAL', 'ACTIVE', 'SIZE', 'RECLAIMABLE')
+
     keys = ('Type', 'TotalCount', 'Active', 'Size', 'Reclaimable')
     types = (str, int, int, _docker_get_bytes, _docker_get_bytes)
-    table = _docker_parse_table(info, header, keys)
 
+    try:  # parse legacy json output: from 1.5.0 - 1.5.0p6
+        table = [json.loads(",".join(row)) for row in info if row]
+    except ValueError:
+        header = ('TYPE', 'TOTAL', 'ACTIVE', 'SIZE', 'RECLAIMABLE')
+        table = _docker_parse_table(info, header, keys)
+
+    parsed = {}
     for line in table:
         for key, type_ in zip(keys, types):
             v = line.get(key)

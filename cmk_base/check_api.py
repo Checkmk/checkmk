@@ -492,15 +492,16 @@ def get_parsed_item_data(check_function):
 
     In case of parsed not being a dict the decorator returns 3
     (UNKN state) with a wrong usage message.
-    In case of item not existing in parsed the decorator gives an
-    empty return leading to cmk_base returning 3 (UNKN state) with
-    an item not found message (see cmk_base/checking.py).
+    In case of item not existing as a key in parsed or parsed[item]
+    not existing the decorator gives an empty return leading to
+    cmk_base returning 3 (UNKN state) with an item not found message
+    (see cmk_base/checking.py).
     """
     @_functools.wraps(check_function)
     def wrapped_check_function(item, params, parsed):
         if not isinstance(parsed, dict):
             return 3, "Wrong usage of decorator function 'get_parsed_item_data': parsed is not a dict"
-        if item not in parsed:
+        if item not in parsed or not parsed[item]:
             return
         return check_function(item, params, parsed[item])
     return wrapped_check_function

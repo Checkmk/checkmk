@@ -25,21 +25,15 @@
 # Boston, MA 02110-1301 USA.
 
 
-def _parse_docker_node_network(info):
-    import json
-    return json.loads("".join([ l[0] for l in info ]))
-
-
 def inv_docker_node_network_networks(info, inventory_tree, status_data_tree):
-    parsed = _parse_docker_node_network(info)
+    parsed = parse_docker_network_inspect(info)
     for network in parsed:
-        labels = sorted(["%s: %s" % (k,v) for k,v in network.get("Labels", {}).items()])
 
         containers = []
         for container_id, container in network["Containers"].items():
             containers.append({
                 "name"         : container["Name"],
-                "id"           : container_id[:12],
+                "id"           : _docker_trunc_id(container_id),
                 "ipv4_address" : container["IPv4Address"],
                 "ipv6_address" : container["IPv6Address"],
                 "mac_address"  : container["MacAddress"],
@@ -58,14 +52,17 @@ def inv_docker_node_network_networks(info, inventory_tree, status_data_tree):
         network_ = {
             "name"              : network_name,
             "host_ifname"       : network["Options"]["com.docker.network.bridge.name"],
-            "network_id"        : network["Id"][:12],
+            "network_id"        : _docker_trunc_id(network["Id"]),
             "scope"             : network["Scope"],
         }
+
+        labels = sorted(["%s: %s" % (k,v) for k,v in network.get("Labels", {}).items()])
         if labels:
             network_["labels"] = ", ".join(labels)
         inventory_networks.update(network_)
 
 
 inv_info["docker_node_network.networks"] = {
+    "includes": ["docker.include"],
     "inv_function": inv_docker_node_network_networks,
 }

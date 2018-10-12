@@ -1029,7 +1029,8 @@ fi
 # Iterate all running containers and report piggyback data for them
 if type docker > /dev/null 2>&1 && [ -z "$MK_IS_PIGGYBACKED" ]; then
     echo "<<<docker_node_info:sep(58)>>>"
-    docker info --format "{{json .}}" || docker info
+    # sed: protect leading whitespace
+    docker info | sed 's/^/|/'
 
     echo "<<<docker_node_disk_usage>>>"
     docker system df --format "{{json .}}" || docker system df

@@ -21,7 +21,7 @@ Quick start
 You can start a Check_MK container like this:
 
 ....
-docker container run -dit -p 8080:5000 --tmpfs /omd/sites/cmk/tmp -v /omd/sites --name monitoring -v /etc/localtime:/etc/localtime --restart always checkmk/check-mk-enterprise:1.5.0p2
+docker container run -dit -p 8080:5000 --tmpfs /omd/sites/cmk/tmp -v /omd/sites --name monitoring -v /etc/localtime:/etc/localtime --restart always checkmk/check-mk-enterprise:1.5.0p5
 ....
 
 The Check_MK GUI should now be reachable via

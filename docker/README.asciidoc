@@ -29,30 +29,44 @@ The Check_MK GUI should now be reachable via
 
 The initial password of the initial administrative account `cmkadmin`
 will be written to the container logs (see
-`docker container monitoring logs`). You can customize this during
+`docker container logs monitoring`). You can customize this during
 container creation if you like, see below.
 
 Details about the arguments used above:
 
 [cols="20%,80%",options="header",]
 |=======================================================================
-|Argument |Description
-|`-p 8080:5000` |The sites web server listens on port 5000 by default. With this
-                 example it is opened at port 8080 of the node. You may also use
-                 port 80 here in case you don't have another process listening on
-                 it. For more flexible options or HTTPS have a look below
-|`--tmpfs /omd/sites/cmk/tmp` | For best performance you should mount a
-tmpfs at the sites `tmp` directory. In case you rename you site ID (see
+
+|Option
+|Description
+
+|`-p 8080:5000`
+|The sites web server listens on port 5000 by default. With this
+example it is opened at port 8080 of the node. You may also use
+port 80 here in case you don't have another process listening on
+it. For more flexible options or HTTPS have a look below
+
+|`--tmpfs /omd/sites/cmk/tmp`
+|For best performance you should mount a
+tmpfs at the sites `tmp` directory. In case you rename your site ID (see
 below for details), you will have to change this path.
-|`-v /omd/sites` |
-This makes all site data be persisted even when the container is
+
+|`-v /omd/sites`
+|This makes all site data be persisted even when the container is
 destroyed. In case you don't use this you will loose all you
 configuration and monitoring data.
-|`--name monitoring` | The name of the container. It must be unique per docker node. All examples below use
+
+|`--name monitoring`
+|The name of the container. It must be unique per docker node. All examples below use
 this name. In case you change this you will have to use your custom name
 e.g. during update.
-|`-v /etc/localtime:/etc/localtime` | Make the container use the same local time (timezone) config as your docker node.
-|`--restart always` | Always restart the container if it stops.
+
+|`-v /etc/localtime:/etc/localtime`
+| Make the container use the same local time (timezone) config as your docker node.
+
+|`--restart always`
+| Always restart the container if it stops.
+
 |=======================================================================
 
 [[use-packages-from-our-website]]

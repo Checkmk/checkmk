@@ -9,7 +9,7 @@ execfile(os.path.join(os.path.dirname(__file__), '../../../checks/docker.include
 regex = re.compile
 
 @pytest.mark.parametrize('indata,outdata', [
-    ([], []),
+    ([], {}),
     ([
       ['['],
       ['    {'],
@@ -297,8 +297,8 @@ regex = re.compile
       ['        }'],
       ['    }'],
       [']'],
-     ], [
-    {
+     ], {
+    "4a77be28f8e5": {
         "Id": "sha256:4a77be28f8e54a4e6a8ecd8cfbd1963463d1e7ac719990206ced057af41e9957",
         "RepoTags": [
             "checkmk/check-mk-raw:1.5.0p5"
@@ -441,7 +441,7 @@ regex = re.compile
             "LastTagTime": "0001-01-01T00:00:00Z"
         }
     },
-    {
+    "f4bfbb70768f": {
         "Id": "sha256:f4bfbb70768f233f1adca8e9e7333695a263773c2663a97732519f3e0eed87b7",
         "RepoTags": [
             "docker-tests/check-mk-enterprise-master-1.5.0p3:latest"
@@ -582,8 +582,8 @@ regex = re.compile
             "LastTagTime": "2018-09-17T09:47:56.078067461+02:00"
         }
     },
-          ]),
+         }),
 ])
 def test_parse_docker_image_inspect(indata, outdata):
-    parsed = parse_docker_image_inspect(indata)
+    parsed = parse_docker_subsection_image_inspect(indata)
     assert parsed == outdata, "expected: %r, got %r" % (outdata, parsed)

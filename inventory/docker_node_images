@@ -31,21 +31,21 @@ def inv_docker_node_images(info, inventory_tree, status_data_tree):
     inv_node = inventory_tree.get_list(path)
     status_node = status_data_tree.get_list(path)
 
-    for image_id, image in sorted(images.iteritems()):
+    for image in sorted(images.itervalues(), key=lambda i: i["ID"]):
         inv_node.append({
             "repository"        : image["Repository"],
             "tag"               : image["Tag"],
-            "id"                : image_id,
+            "id"                : image["ID"],
             "creation"          : image["CreatedAt"],
             "size"              : image["VirtualSize"],
-            "labels"            : _format_labels(image.get("__labels__", {}).items()),
+            "labels"            : _format_labels(image.get("__labels__", {})),
         })
 
         status_node.append({
             "repository"        : image["Repository"],
             "tag"               : image["Tag"],
-            "id"                : image_id,
-            "amount_containers" : len(image.get("__containers__", [])),
+            "id"                : image["ID"],
+            "amount_containers" : image["amount_containers"],  # len(image.get("__containers__", [])),
         })
 
 
@@ -60,9 +60,9 @@ def inv_docker_node_images_containers(info, inventory_tree, status_data_tree):
     containers = parse_docker_node_images(info).get("containers", {})
     status_node = status_data_tree.get_list("software.applications.docker.containers:")
 
-    for id_, container in sorted(containers.iteritems()):
+    for container in sorted(containers.itervalues(), lambda c: c["ID"]):
         status_node.append({
-            "id"                : id_,
+            "id"                : container["ID"],
             "repository"        : container["Repository"],
             "tag"               : container["Tag"],
             "name"              : container["Names"],
@@ -73,7 +73,9 @@ def inv_docker_node_images_containers(info, inventory_tree, status_data_tree):
 
 
 def _format_labels(labels):
-    return ", ".join([ ": ".join(p) for p in labels ])
+    if isinstance(labels, dict):
+        labels = labels.iteritems()
+    return ", ".join(["%s: %s" % item for item in labels])
 
 # TODO: This section contains also information about the containers. We should
 # better split it into multiple sections and add them to the different plugins

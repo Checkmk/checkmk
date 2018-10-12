@@ -1039,12 +1039,13 @@ if type docker > /dev/null 2>&1 && [ -z "$MK_IS_PIGGYBACKED" ]; then
     echo "[[[images]]]"
     docker images --format "{{json .}}"
 
-    echo "[[[image_labels]]]"
-    IMAGE_IDS=$(docker images --format '{{.ID}}')
-    docker image inspect --format "[ {{json .Id}}, {{json .Config.Labels}} ]" "$IMAGE_IDS"
+    echo "[[[image_inspect]]]"
+    IMAGE_IDS=$(docker images | awk 'NR>1 {print $3}')
+    docker image inspect $IMAGE_IDS
 
     echo "[[[containers]]]"
-    docker container ls --all --format "{{json .}}"
+    # equivalent of 'docker ps' for newer docker versions: 'docker container ls'
+    docker ps --all --format "{{json .}}"
 
     echo "<<<docker_node_network:sep(0)>>>"
     NETWORK_IDS=$(docker network ls -f 'driver=bridge' | awk 'NR>1 {print $1}')

@@ -132,6 +132,10 @@ def parse_docker_node_info(info):
     for row in info:
         if not row:
             continue
+        # remove '|', it was protecting leading whitespace
+        row[0] = row[0][1:]
+        if not row[0]:
+            continue
         # ignore misssing keys / pad lines that are not of "key: value" type
         if len(row) == 1:
             row.append('')

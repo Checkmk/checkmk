@@ -45,6 +45,7 @@ import cmk.gui.sites as sites
 import cmk.gui.visuals as visuals
 import cmk.gui.forms as forms
 import cmk.gui.utils
+import cmk.gui.view_utils
 from cmk.gui.log import logger
 from cmk.gui.htmllib import HTML
 from cmk.gui.i18n import _
@@ -335,11 +336,11 @@ def paint_stalified(row, text):
 
 
 def paint_host_list(site, hosts):
-    return "", ", ".join(cmk.gui.utils.get_host_list_links(site, hosts))
+    return "", ", ".join(cmk.gui.view_utils.get_host_list_links(site, hosts))
 
 
 def format_plugin_output(output, row):
-    return cmk.gui.utils.format_plugin_output(output, row, shall_escape=config.escape_plugin_output)
+    return cmk.gui.view_utils.format_plugin_output(output, row, shall_escape=config.escape_plugin_output)
 
 
 def link_to_view(content, row, view_name):

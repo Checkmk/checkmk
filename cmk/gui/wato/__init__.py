@@ -123,6 +123,7 @@ import cmk.gui.gui_background_job as gui_background_job
 import cmk.gui.i18n
 import cmk.gui.pages
 import cmk.gui.plugin_registry
+import cmk.gui.view_utils
 import cmk.gui.plugins.wato.utils
 import cmk.gui.plugins.wato.utils.base_modes
 import cmk.gui.wato.mkeventd
@@ -7454,7 +7455,7 @@ class ModeNotifications(NotificationsMode):
             table.cell(_("Service"), context.get("SERVICEDESC", ""))
             output = context.get("SERVICEOUTPUT", context.get("HOSTOUTPUT"))
 
-            table.cell(_("Plugin output"), utils.format_plugin_output(output, shall_escape=config.escape_plugin_output))
+            table.cell(_("Plugin output"), cmk.gui.view_utils.format_plugin_output(output, shall_escape=config.escape_plugin_output))
 
             # Add toggleable notitication context
             table.row(class_="notification_context hidden",

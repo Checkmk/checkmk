@@ -43,6 +43,7 @@ import cmk.gui.sites as sites
 import cmk.gui.bi as bi
 import cmk.gui.i18n
 import cmk.gui.pages
+import cmk.gui.view_utils
 from cmk.gui.display_options import display_options
 from cmk.gui.valuespec import *
 from cmk.gui.i18n import _u, _
@@ -1239,7 +1240,7 @@ def render_view(view, rows, datasource, group_painters, painters,
     if not has_done_actions:
         # Limit exceeded? Show warning
         if display_options.enabled(display_options.W):
-            utils.check_limit(rows, get_limit(), config.user)
+            cmk.gui.view_utils.check_limit(rows, get_limit(), config.user)
         layout["render"](rows, view, group_painters, painters, num_columns,
                          show_checkboxes and not html.do_actions())
         headinfo = "%d %s" % (row_count, _("row") if row_count == 1 else _("rows"))

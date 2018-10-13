@@ -48,6 +48,7 @@ from cmk.gui.globals import html
 from cmk.gui.htmllib import HTML
 from cmk.gui.log import logger
 from cmk.gui.exceptions import MKConfigError, MKGeneralException
+import cmk.gui.view_utils
 
 # Datastructures and functions needed before plugins can be loaded
 loaded_with_language = False
@@ -3144,7 +3145,7 @@ class FoldableTreeRendererTree(FoldableTreeRenderer):
 
             html.close_span()
 
-        output = cmk.gui.utils.format_plugin_output(effective_state["output"], shall_escape=config.escape_plugin_output)
+        output = cmk.gui.view_utils.format_plugin_output(effective_state["output"], shall_escape=config.escape_plugin_output)
         if output:
             output = html.render_b(HTML("&diams;"), class_="bullet") + output
         else:
@@ -3441,7 +3442,7 @@ def table(columns, add_headers, only_sites, limit, filters):
 
             row["aggr_group"] = group
             rows.append(row)
-            if not cmk.gui.utils.check_limit(rows, limit, config.user):
+            if not cmk.gui.view_utils.check_limit(rows, limit, config.user):
                 return rows
     return rows
 
@@ -3584,7 +3585,7 @@ def singlehost_table(columns, add_headers, only_sites, limit, filters, joinbynam
             row.update(new_row)
             row["aggr_group"] = group
             rows.append(row)
-            if not cmk.gui.utils.check_limit(rows, limit, config.user):
+            if not cmk.gui.view_utils.check_limit(rows, limit, config.user):
                 return rows
 
     log("* Assembled %d rows." % len(rows))

@@ -30,7 +30,6 @@ import cmk.log
 import cmk.paths
 
 from cmk.gui.i18n import _
-from cmk.gui.globals import html
 
 class CMKWebLogger(_logging.getLoggerClass()):
     def exception(self, *args, **kwargs):
@@ -47,6 +46,7 @@ class CMKWebLogger(_logging.getLoggerClass()):
             msg = _('Internal error')
         msg = kwargs.pop('msg', msg)
 
+        from cmk.gui.globals import html
         if html.in_html_context():
             msg = "%s %s" % (html.request.requested_url, msg)
 

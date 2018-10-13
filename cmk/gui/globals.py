@@ -24,10 +24,10 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-# Previously the current html object was available to all GUI code via the
-# __builtin__ namespace while processing a request. This was tool friendly
-# and has been replaced with this mechanism. We have a proxy object which
-# forwards all requests to the html() object of the current request.
+# Imports are needed for type hints. These type hints are useful for
+# editors completion of "html" object methods and for mypy.
+from typing import Union # pylint: disable=unused-import
+import cmk.gui.htmllib # pylint: disable=unused-import
 
 class HTMLProxy(object):
     def __init__(self):
@@ -61,4 +61,4 @@ class HTMLProxy(object):
         return repr(self._current_html)
 
 
-html = HTMLProxy()
+html = HTMLProxy() # type: Union[cmk.gui.htmllib.html, HTMLProxy]

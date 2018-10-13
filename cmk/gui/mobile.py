@@ -29,13 +29,13 @@ import cmk.gui.config as config
 import cmk.gui.visuals as visuals
 import cmk.gui.metrics as metrics
 import cmk.gui.utils
+import cmk.gui.view_utils
+import cmk.gui.plugins.views.utils
 
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
 from cmk.gui.htmllib import HTML
 from cmk.gui.exceptions import MKGeneralException, MKUserError
-
-from cmk.gui.plugins.views import painter_options
 
 def mobile_html_head(title, ready_code=""):
     html.mobile = True
@@ -208,7 +208,7 @@ def page_index():
             url = "mobile_view.py?view_name=%s" % view_name
             count = ""
             if not view.get("mustsearch"):
-                painter_options.load(view_name)
+                cmk.gui.plugins.views.utils.painter_options.load(view_name)
                 count = views.show_view(view, only_count = True)
                 count = '<span class="ui-li-count">%d</span>' % count
             items.append((view.get("topic"), url, '%s %s' % (view.get("linktitle", view["title"]), count)))
@@ -244,7 +244,7 @@ def page_view():
     title = views.view_title(view)
     mobile_html_head(title)
 
-    painter_options.load(view_name)
+    cmk.gui.plugins.views.utils.painter_options.load(view_name)
 
     try:
         views.show_view(view, show_heading = False, show_buttons = False,
@@ -314,7 +314,7 @@ def render_view(view, rows, datasource, group_painters, painters,
               html.write(_("No hosts/services found."))
           else:
               try:
-                  cmk.gui.utils.check_limit(rows, views.get_limit(), config.user)
+                  cmk.gui.view_utils.check_limit(rows, views.get_limit(), config.user)
                   layout["render"](rows, view, group_painters, painters, num_columns,
                                   show_checkboxes and not html.do_actions())
               except Exception, e:

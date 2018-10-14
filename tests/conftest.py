@@ -105,6 +105,8 @@ def fake_version_and_paths():
     monkeypatch.setattr("cmk.paths.inventory_dir",      "%s/inventory" % cmk_path())
     monkeypatch.setattr("cmk.paths.check_manpages_dir", "%s/checkman" % cmk_path())
     monkeypatch.setattr("cmk.paths.tmp_dir",            tmp_dir)
+    monkeypatch.setattr("cmk.paths.precompiled_checks_dir", os.path.join(tmp_dir, "var/check_mk/precompiled_checks"))
+    monkeypatch.setattr("cmk.paths.include_cache_dir",      os.path.join(tmp_dir, "check_mk/check_includes"))
 
 
 # Cleanup temporary directory created above

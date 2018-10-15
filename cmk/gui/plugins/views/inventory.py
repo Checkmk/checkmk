@@ -1903,6 +1903,8 @@ class DeltaNodeRenderer(NodeRenderer):
             html.open_span(class_="invold")
             self._show_child_value(old, hint)
             html.close_span()
+        elif old == new:
+            self._show_child_value(old, hint)
         elif old is not None and new is not None:
             html.open_span(class_="invold")
             self._show_child_value(old, hint)
@@ -1911,8 +1913,6 @@ class DeltaNodeRenderer(NodeRenderer):
             html.open_span(class_="invnew")
             self._show_child_value(new, hint)
             html.close_span()
-        elif old == new:
-            self._show_child_value(old, hint)
 
 
 # Ajax call for fetching parts of the tree

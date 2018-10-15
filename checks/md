@@ -105,66 +105,123 @@
 # unused devices: <none>
 # ---------------------------------------------------------
 
-# TODO: Write a parse function!
 
-def inventory_md(info):
-    inventory = []
+def parse_md(info):
+    parsed = {}
+    instance = {}
     for line in info:
-        if len(line) < 3:
-            continue
         if line[0].startswith("md") and line[1] == ':':
-            device = line[0]
-        elif line[1] == 'blocks':
-            if line[-1] != "chunks": # ignore RAID 0 devices
-                inventory.append( (device, None) )
-    return inventory
+            if line[3].startswith("(") and line[3].endswith(")"):
+                raid_state = line[2] + line[3]
+                raid_name = line[4]
+                disk_list = line[5:]
+            else:
+                raid_state = line[2]
+                raid_name = line[3]
+                disk_list = line[4:]
+
+            spare_disks = len([x for x in disk_list if x.endswith("(S)")])
+            failed_disks = len([x for x in disk_list if x.endswith("(F)")])
+
+            instance = parsed.setdefault(line[0], {
+                'raid_name'     : raid_name,
+                'raid_state'    : raid_state,
+                'spare_disks'   : spare_disks,
+                'failed_disks'  : failed_disks,
+                'active_disks'  : len(disk_list) - spare_disks - failed_disks,
+            })
+
+        elif instance:
+            if line[0].startswith("resync="):
+                k, v = line[0].split("=")
+                instance["%s_state" % k] = v
+                continue
+
+            if line[0].startswith("[") and line[0].endswith("]"):
+                for idx, e in enumerate(line[1:]):
+                    if e.startswith("finish=") or e.startswith("speed="):
+                        k, v = e.split("=")
+                        instance[k] = v
+                    elif e in ["recovery", "resync"]:
+                        instance["%s_values" % e] = line[idx+3]
+                continue
+
+            if line[-1].startswith("[") and line[-1].endswith("]"):
+                instance["working_disks"] = line[-1][1:-1]
+
+            if len(line) >= 2 and line[-2].startswith("[") and line[-2].endswith("]"):
+                for key, value in zip(["num_disks", "expected_disks"], line[-2][1:-1].split('/')):
+                    try:
+                        instance[key] = int(value)
+                    except ValueError:
+                        pass
+
+    return parsed
 
 
-def check_md(item, _no_params, info):
-    raid_state = ''
-    its_next = False
-    state_next = False
-    for line in info:
-        if line[0] == item and line[1] == ':':
-            raid_state = line[2]
-            if raid_state != 'active' and raid_state != 'active(auto-read-only)':
-                return (2, "raid state is '%s' (should be 'active')" % (raid_state,))
-            disk_list = line[4:]
-            # Usually (auto-read-only) sticks to active without a space.
-            # But on some kernels it appears separated by a space
-            if line[3] == '(auto-read-only)':
-                disk_list.pop(0)
-            all_disks = len(disk_list) # all disks
-            spare_disks = len([x for x in disk_list if x.endswith("(S)") ]) # spare disks
-            failed_disks = len([x for x in disk_list if x.endswith("(F)") ]) # failed disks
-            active_disks = all_disks - spare_disks - failed_disks
-            its_next = True
-        elif its_next:
-            disk_state_1 = line[-2]
-            (num_disks, expected_disks) = map(int,disk_state_1[1:-1].split('/'))
-            disk_state_2 = line[-1]
-            working_disks = disk_state_2.count('U')
-            state_next = True
-            its_next = False
-        elif state_next:
-            if num_disks == expected_disks and active_disks == working_disks:
-                return (0, 'raid active, disk state is %s %s' % (disk_state_1, disk_state_2))
-            if len(line) > 6 and line[-6] != '' and "speed=" in line[-1]:
-                build_state_1 = line[-6]
-                build_state_2 = line[-4]
-                build_est = line[-2].partition('=')[2]
-                build_speed = float(line[-1].partition('=')[2][:-5]) / 1024
-                return (1, 'disk state is %s %s (expected %d disks to be up) - %s %s @ %.1fMB/s (%s)' %
-                           (disk_state_1, disk_state_2, expected_disks, build_state_1, build_state_2, build_speed, build_est))
-            return (2, 'disk state is %s %s (expected %d disks to be up)' %
-                            (disk_state_1, disk_state_2, expected_disks))
-    return (2, 'no RAID device %s' % item)
+def inventory_md(parsed):
+    for device, attrs in parsed.iteritems():
+        if attrs["raid_name"] != "raid0":
+            yield device, None
 
+
+def check_md(item, _no_params, parsed):
+    data = parsed.get(item)
+    if data is None:
+        return
+
+    raid_state = data["raid_state"]
+    infotext = "Status: %s" % raid_state
+    if raid_state == "active" or raid_state == "active(auto-read-only)":
+        state = 0
+    else:
+        infotext += " (should be 'active')"
+        state = 2
+    yield state, infotext
+
+    spare_disks = data["spare_disks"]
+    failed_disks = data["failed_disks"]
+    active_disks = data["active_disks"]
+    yield 0, "Spare: %s, Failed: %s, Active: %s" % (spare_disks, failed_disks, active_disks)
+
+    num_disks = data["num_disks"]
+    expected_disks = data["expected_disks"]
+    working_disks = data["working_disks"]
+
+    infotext = "Status: %s/%s, %s" % (num_disks, expected_disks, working_disks)
+    if num_disks == expected_disks and active_disks == working_disks.count("U"):
+        yield 0, infotext
+    else:
+        yield 2, infotext
+
+    header = "[Resync/Recovery]"
+    infotexts = []
+    if "resync_state" in data:
+        header = "[Resync]"
+        infotexts.append("Status: %s" % data["resync_state"])
+
+    if "resync_values" in data:
+        header = "[Resync]"
+        infotexts.append(data["resync_values"])
+
+    if "recovery_values" in data:
+        header = "[Recovery]"
+        infotexts.append(data["recovery_values"])
+
+    if "finish" in data:
+        infotexts.append("Finish: %s" % data["finish"])
+
+    if "speed" in data:
+        infotexts.append("Speed: %s" % data["speed"])
+
+    if infotexts:
+        yield 1, "%s %s" % (header, ", ".join(infotexts))
 
 
 check_info["md"] = {
-    'check_function':          check_md,
-    'inventory_function':      inventory_md,
-    'service_description':     'MD Softraid %s',
-    'group':                   'raid',
+    'parse_function'        : parse_md,
+    'inventory_function'    : inventory_md,
+    'check_function'        : check_md,
+    'service_description'   : 'MD Softraid %s',
+    'group'                 : 'raid',
 }

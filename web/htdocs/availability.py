@@ -1098,6 +1098,7 @@ def melt_short_intervals(entries, duration, dont_merge):
     n = 1
     need_merge = False
     while n < len(entries) - 1:
+
         if entries[n][0]["duration"] <= duration and \
             (entries[n-1][0]["until"] == entries[n][0]["from"] or entries[n][0]["until"] == entries[n+1][0]["from"]) and \
             entries[n-1][1] == entries[n+1][1]:
@@ -1130,7 +1131,7 @@ def melt_short_intervals(entries, duration, dont_merge):
 #         {
 #            "from"       : 1238288548,
 #            "until"      : 1238292845,
-#            "text"       : u"Das ist ein Text über mehrere Zeilen, oder was weiß ich",
+#            "text"       : u"Das ist ein Text Ã¼ber mehrere Zeilen, oder was weiÃŸ ich",
 #            "date"       : 12348854885, # Time of entry
 #            "author"     : "mk",
 #            "downtime"   : True, # Can also be False or None or missing. None is like missing
@@ -1206,9 +1207,9 @@ def delete_annotation(annotations, site_host_svc, fromtime, untiltime):
 # When grouping is enabled, this function is called once for each group
 # TODO: range_title sollte hier ueberfluessig sein
 # TODO: Hier jetzt nicht direkt HTML erzeugen, sondern eine saubere
-# Datenstruktur füllen, welche die Daten so repräsentiert, dass sie
-# nur noch 1:1 dargestellt werden müssen.
-# Beispiel für einen Rückgabewert:
+# Datenstruktur fÃ¼llen, welche die Daten so reprÃ¤sentiert, dass sie
+# nur noch 1:1 dargestellt werden mÃ¼ssen.
+# Beispiel fÃ¼r einen RÃ¼ckgabewert:
 # {
 #    "title" : "Hostgroup foobar",
 #    "headers" : [ "OK, "CRIT", "Downtime" ],

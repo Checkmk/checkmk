@@ -1,0 +1,14 @@
+Title: Availability: don't try to merge completely disconnected intervals
+Level: 1
+Component: reporting
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0i1
+Date: 1539594354
+
+If the option "Ignore intervals shorter or equal X sec" was used an exception
+occured if intervals should be merged that were completely disconnected.
+Disconnected intervals occur e.g. if the a host/service is outside of
+the host/service period.

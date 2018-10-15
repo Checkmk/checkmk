@@ -16,6 +16,7 @@ init-hook=
     import conftest
 #load-plugins=testlib.pylint_cmk,testlib.pylint_checker_wrong_i18n
 load-plugins=testlib.pylint_cmk,testlib.pylint_checker_localization
+jobs=0
 persistent=yes
 # We only want to see errors for the moment. Disable this one day. But prepare to cleanup a lot of stuff.
 errors-only=yes

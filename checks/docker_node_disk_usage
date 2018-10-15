@@ -25,26 +25,6 @@
 # Boston, MA 02110-1301 USA.
 
 
-def parse_docker_node_disk_usage(info):
-    import json
-
-    parsed = {}
-    for line in info:
-        data = json.loads(",".join(line))
-
-        type_ = data.pop('Type').lower()
-        parsed[type_] = data
-
-        data['Active'] = int(data['Active']) if data['Active'] else 0
-        data['TotalCount'] = int(data['TotalCount']) if data['TotalCount'] else 0
-        data['Size'] = docker_size_to_bytes(data['Size'])
-
-        reclaimable = data['Reclaimable'].split(' ')[0]    # discard percentage
-        data['Reclaimable'] = docker_size_to_bytes(reclaimable)
-
-    return parsed
-
-
 def inventory_docker_node_disk_usage(parsed):
     for item in parsed:
         yield item, {}
@@ -78,7 +58,7 @@ def check_docker_node_disk_usage(item, params, parsed):
 
 
 check_info["docker_node_disk_usage"] = {
-    "parse_function": parse_docker_node_disk_usage,
+    "parse_function": parse_docker_system_df,
     "inventory_function": inventory_docker_node_disk_usage,
     "check_function": check_docker_node_disk_usage,
     "service_description": "Docker disk usage - %s",

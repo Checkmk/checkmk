@@ -23,13 +23,97 @@
 # License along with GNU Make; see the file  COPYING.  If  not,  write
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
+import json
+import re
 
 
-def docker_size_to_bytes(size_string):
-    if size_string.endswith('GB'):
-        return int(float(size_string[:-2]) * 10**9)
-    if size_string.endswith('MB'):
-        return int(float(size_string[:-2]) * 10**6)
-    if size_string.endswith('kB'):
-        return int(float(size_string[:-2]) * 10**3)
-    return float(size_string[:-1])
+def _docker_get_bytes(string):
+    '''get number of bytes from string
+
+    e.g.
+    "123GB (42%)" -> 123000000000
+    "0 B"         -> 0
+    "2B"          -> 2
+    "23 kB"       -> 23000
+    '''
+    # remove percent
+    string = string.split('(')[0].strip()
+    tmp = re.split('([a-zA-Z]+)', string)
+    value_string = tmp[0].strip()
+    unit_string = tmp[1].strip() if len(tmp) > 1 else 'B'
+    try:
+        factor = {
+            'TB': 10**12,
+            'GB': 10**9,
+            'MB': 10**6,
+            'KB': 10**3,
+            'kB': 10**3,
+            'B' : 1,
+            ''  : 1,
+        }[unit_string]
+        return int(float(value_string) * factor)
+    except (ValueError, TypeError):
+        return None
+
+
+def _docker_parse_table(rows, fields, keys):
+    '''docker provides us with space separated tables with field containing spaces
+
+    e.g.:
+
+    TYPE           TOTAL  ACTIVE   SIZE       RECLAIMABLE
+    Images         7      6        2.076 GB   936.9 MB (45%)
+    Containers     22     0        2.298 GB   2.298 GB (100%)
+    Local Volumes  5      5        304 B      0 B (0%)
+    '''
+    if not rows or not rows[0]:
+        return []
+
+    indices = []
+    for field in fields:
+        rex = regex(field + r'\ *')
+        m = rex.search(rows[0][0])
+        if m is not None:
+            start, end = m.start(), m.end()
+            if end - start == len(field):
+                end = None
+            indices.append((start, end))
+        else:
+            indices.append((0, 0))
+
+    table = []
+    for row in rows[1:]:
+        if not row:
+            continue
+        try:
+            line = {k: row[0][i:j].strip() for k, (i, j) in zip(keys, indices)}
+        except IndexError:
+            continue
+        table.append(line)
+
+    return table
+
+
+def parse_docker_system_df(info):
+
+    field_map = (
+        ('TYPE', 'TOTAL', 'ACTIVE', 'SIZE', 'RECLAIMABLE'),
+        ('Type', 'TotalCount', 'Active', 'Size', 'Reclaimable'),
+        (str, int, int, _docker_get_bytes, _docker_get_bytes),
+    )
+
+    try:  # parse legacy json output: from 1.5.0 - 1.5.0p6
+        table = [json.loads(",".join(row)) for row in info if row]
+    except ValueError:
+        table = _docker_parse_table(info, field_map[0], field_map[1])
+
+    parsed = {}
+    for line in table:
+        for key, type_ in zip(field_map[1], field_map[2]):
+            v = line.get(key)
+            if v is not None:
+                line[key] = type_(v)
+        parsed[line.get("Type").lower()] = line
+
+    return parsed
+

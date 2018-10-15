@@ -1000,8 +1000,8 @@ if type docker > /dev/null 2>&1 && [ -z "$MK_IS_PIGGYBACKED" ]; then
     echo "<<<docker_node_info>>>"
     docker info --format "{{json .}}" 2>&1
 
-    echo "<<<docker_node_disk_usage:sep(44)>>>"
-    docker system df --format "{{json .}}"
+    echo "<<<docker_node_disk_usage:sep(0)>>>"
+    docker system df
 
     echo "<<<docker_node_images>>>"
     echo "[[[images]]]"

@@ -36,12 +36,8 @@ def inventory_netapp_api_qtree_quota(parsed):
         if attrs.get("quota-type") == "tree" and attrs.get("disk-limit").isdigit():
             yield qtree, {}
 
-def check_netapp_api_qtree_quota(item, params, parsed):
-    qtree = parsed.get(item)
-
-    if not qtree:
-        return 3, "Qtree not found in agent output"
-
+@get_parsed_item_data
+def check_netapp_api_qtree_quota(item, params, qtree):
     disk_limit = qtree.get("disk-limit")
     if not disk_limit.isdigit():
         return 3, "Qtree has no disk limit set"

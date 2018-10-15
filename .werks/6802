@@ -1,0 +1,12 @@
+Title: HW/SW Inventory: Equal entries are not displayed correctly
+Level: 1
+Component: inv
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0p7
+Date: 1539612833
+
+Equal entries are displayed as changed entries like {{OLD -> NEW}}
+after computing delta tree.

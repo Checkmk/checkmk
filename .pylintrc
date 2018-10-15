@@ -15,6 +15,7 @@ init-hook=
     sys.path.insert(0, os.environ.get("TEST_PATH", tests_dir))
     import conftest
 load-plugins=testlib.pylint_cmk,testlib.pylint_checker_localization
+jobs=0
 # TODO: Why do we need persistence?
 persistent=yes
 extension-pkg-whitelist=rrdtool,_ldap,netifaces,pymssql

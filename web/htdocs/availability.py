@@ -1099,6 +1099,7 @@ def melt_short_intervals(entries, duration, dont_merge):
     need_merge = False
     while n < len(entries) - 1:
         if entries[n][0]["duration"] <= duration and \
+            (entries[n-1][0]["until"] == entries[n][0]["from"] or entries[n][0]["until"] == entries[n+1][0]["from"]) and \
             entries[n-1][1] == entries[n+1][1]:
             entries[n] = (entries[n][0], entries[n-1][1])
             need_merge = True

@@ -1,0 +1,11 @@
+Title: printer_supply_ricoh: Fixed conversion of parameters which have an old format
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0i1
+Date: 1539696328
+
+

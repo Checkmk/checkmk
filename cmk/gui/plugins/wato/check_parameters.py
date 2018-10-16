@@ -6723,16 +6723,14 @@ register_check_parameters(
 #   |                                               |___/                  |
 #   '----------------------------------------------------------------------'
 
-def transform_printer_supply(l):
-    if type(l) == tuple:
-        if len(l) == 2:
-            return { "levels" : l }
-
-        return {
-            "levels" : l[:2],
-            "upturn_toner" : l[2],
-        }
-    return l
+def transform_printer_supply(params):
+    if isinstance(params, tuple):
+        if len(params) == 2:
+            return {"levels" : params}
+        else:
+            return {"levels" : params[:2],
+                    "upturn_toner": params[2]}
+    return params
 
 register_check_parameters(
     subgroup_printing,

@@ -327,6 +327,8 @@ def calculate_view_grouping_of_services(rows, row_group_cells):
         elif current_group != group_spec:
             group_id = row_id
 
+        groups.setdefault(group_id, (group_spec, []))
+
         # When the service is not OK and should not be grouped, move it's row
         # in front of the group.
         if row.get("service_state", -1) != 0 or is_stale(row):
@@ -339,7 +341,6 @@ def calculate_view_grouping_of_services(rows, row_group_cells):
                 continue
 
         current_group = group_spec
-        groups.setdefault(group_id, (group_spec, []))
         groups[group_id][1].append(row_id)
 
     # Now create the final structure as described above

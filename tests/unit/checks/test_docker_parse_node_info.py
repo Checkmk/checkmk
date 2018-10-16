@@ -75,15 +75,25 @@ execfile(os.path.join(os.path.dirname(__file__), '../../../checks/docker.include
       ['| 127.0.0.0/8'],
       ['|Live Restore Enabled', ' false'],
       ['|Registries', ' registry.access.redhat.com (secure), registry.access.redhat.com (secure),'],
-     ], {"Name": "Tiberius",
-         "Containers": "22",
-         "ContainersRunning": "0",
-         "ContainersStopped": "22",
-         "ContainersPaused": "0",
-         "Swarm": "inactive",
-         "Images": "7",
-         "Registry": "https://registry.access.redhat.com/v1/",
-         "Server Version": "1.13.1",
+     ], {
+         # needed for inventory:
+         "ServerVersion": "1.13.1",  # -> version
+         "IndexServerAddress": "https://registry.access.redhat.com/v1/",  # -> registry
+         "Swarm": {
+             "LocalNodeState": "inactive",
+         },
+         "Containers": 22,
+         "ContainersRunning": 0,
+         "ContainersStopped": 22,
+         "ContainersPaused": 0,
+         "Images": 7,
+         "Labels": [],
+         # needed for check:
+         "Name": "Tiberius",
+         "Containers": 22,
+         "ContainersRunning": 0,
+         "ContainersStopped": 22,
+         "ContainersPaused": 0,
         }),
     ([
       ['|Containers', ' 14'],
@@ -162,18 +172,27 @@ execfile(os.path.join(os.path.dirname(__file__), '../../../checks/docker.include
       ['|  http', '//192.168.1.2/'],
       ['|  http', '//registry-mirror.example.com', '5000/'],
       ['|Live Restore Enabled', ' false'],
-     ], {"Name": "ubuntu",
-         "Containers": "14",
-         "ContainersRunning": "3",
-         "ContainersStopped": "10",
-         "ContainersPaused": "1",
-         "Swarm": "active",
-         "SwarmManagers": "1",
-         "SwarmNodeID": "rdjq45w1op418waxlairloqbm",
-         "Images": "52",
-         "Registry": "https://index.docker.io/v1/",
-         "Server Version": "1.13.0",
+     ], {
+         # needed for inventory:
+         "ServerVersion": "1.13.0",  # -> version
+         "IndexServerAddress": "https://index.docker.io/v1/",  # -> registry
+         "Swarm": {
+             "LocalNodeState": "active",
+             "RemoteManagers": "1",
+             "NodeID": "rdjq45w1op418waxlairloqbm",
+         },
+         "Containers": 14,
+         "ContainersRunning": 3,
+         "ContainersStopped": 10,
+         "ContainersPaused": 1,
+         "Images": 52,
          "Labels": ["storage=ssd", "staging=true"],
+         # needed for check:
+         "Name": "ubuntu",
+         "Containers": 14,
+         "ContainersRunning": 3,
+         "ContainersStopped": 10,
+         "ContainersPaused": 1,
         }),
      ([
        ['|Containers', ' 2'],
@@ -220,22 +239,93 @@ execfile(os.path.join(os.path.dirname(__file__), '../../../checks/docker.include
        ['|Insecure Registries', ''],
        ['| 127.0.0.0/8'],
        ['|Live Restore Enabled', ' false'],
-      ], {"Name": "Klappspaten",
-         "Containers": "2",
-         "ContainersRunning": "1",
-         "ContainersStopped": "1",
-         "ContainersPaused": "0",
-         "Swarm": "inactive",
-         "Images": "107",
-         "Registry": "https://index.docker.io/v1/",
-         "Server Version": "18.06.1-ce",
-    })
+      ], {
+         # needed for inventory:
+         "ServerVersion": "18.06.1-ce",  # -> version
+         "IndexServerAddress": "https://index.docker.io/v1/",  # -> registry
+         "Swarm": {
+             "LocalNodeState": "inactive",
+         },
+         "Containers": 2,
+         "ContainersRunning": 1,
+         "ContainersStopped": 1,
+         "ContainersPaused": 0,
+         "Images": 107,
+         "Labels": [],
+         # needed for check:
+         "Name": "Klappspaten",
+         "Containers": 2,
+         "ContainersRunning": 1,
+         "ContainersStopped": 1,
+         "ContainersPaused": 0,
+    }),
+    ([
+      ['{"ID":"UY52:B5IQ:QBD5:M36B:EKTQ:ZR6X:NJLK:QDLG:ZFOE:KPXB:YXJK:4OAV",'
+        '"Containers":2,"ContainersRunning":1,"ContainersPaused":0,'
+        '"ContainersStopped":1,"Images":107,"Driver":"overlay2",'
+        '"DriverStatus":[["Backing', 'Filesystem","extfs"],["Supports',
+       'd_type","true"],["Native', 'Overlay', 'Diff","true"]],"SystemStatus":null,'
+        '"Plugins":{"Volume":["local"],"Network":["bridge","host","macvlan",'
+        '"null","overlay"],"Authorization":null,"Log":["awslogs","fluentd","gcplogs",'
+        '"gelf","journald","json-file","logentries","splunk","syslog"]},'
+        '"MemoryLimit":true,"SwapLimit":false,"KernelMemory":true,"CpuCfsPeriod":true,'
+        '"CpuCfsQuota":true,"CPUShares":true,"CPUSet":true,"IPv4Forwarding":true,'
+        '"BridgeNfIptables":true,"BridgeNfIp6tables":true,"Debug":false,"NFd":29,'
+        '"OomKillDisable":true,"NGoroutines":50,"SystemTime":'
+        '"2018-10-09T13:08:31.024759984+02:00","LoggingDriver":"json-file",'
+        '"CgroupDriver":"cgroupfs","NEventsListener":0,"KernelVersion":'
+        '"4.13.0-41-generic","OperatingSystem":"Ubuntu', '17.10","OSType":"linux",'
+        '"Architecture":"x86_64","IndexServerAddress":"https://index.docker.io/v1/",'
+        '"RegistryConfig":{"AllowNondistributableArtifactsCIDRs":[],'
+        '"AllowNondistributableArtifactsHostnames":[],"InsecureRegistryCIDRs":'
+        '["127.0.0.0/8"],"IndexConfigs":{"docker.io":{"Name":"docker.io","Mirrors":[],'
+        '"Secure":true,"Official":true}},"Mirrors":[]},"NCPU":8,"MemTotal":16690483200,'
+        '"GenericResources":null,"DockerRootDir":"/var/lib/docker","HttpProxy":"",'
+        '"HttpsProxy":"","NoProxy":"","Name":"Klappspaten","Labels":[],'
+        '"ExperimentalBuild":false,"ServerVersion":"18.06.1-ce","ClusterStore":""'
+        ',"ClusterAdvertise":"","Runtimes":{"runc":{"path":"docker-runc"}},'
+        '"DefaultRuntime":"runc","Swarm":{"NodeID":"","NodeAddr":"",'
+        '"LocalNodeState":"inactive","ControlAvailable":false,"Error":"",'
+        '"RemoteManagers":null},"LiveRestoreEnabled":false,"Isolation":"",'
+        '"InitBinary":"docker-init","ContainerdCommit":{"ID":"468a545b9edcd5932818e'
+        'b9de8e72413e616e86e","Expected":"468a545b9edcd5932818eb9de8e72413e616e86e"},'
+        '"RuncCommit":{"ID":"69663f0bd4b60df09991c08812a60108003fa340",'
+        '"Expected":"69663f0bd4b60df09991c08812a60108003fa340"},"InitCommit":'
+        '{"ID":"fec3683","Expected":"fec3683"},'
+        '"SecurityOptions":["name=apparmor","name=seccomp,profile=default"]}'],
+       ], {
+         # needed for inventory:
+         "ServerVersion": "18.06.1-ce",  # -> version
+         "IndexServerAddress": "https://index.docker.io/v1/",  # -> registry
+         "Swarm": {
+             u"LocalNodeState": u"inactive",
+         },
+         "Containers": 2,
+         "ContainersRunning": 1,
+         "ContainersStopped": 1,
+         "ContainersPaused": 0,
+         "Images": 107,
+         "Labels": [],
+         # needed for check:
+         "Name": "Klappspaten",
+         "Containers": 2,
+         "ContainersRunning": 1,
+         "ContainersStopped": 1,
+         "ContainersPaused": 0,
+       })
 ])
 def test_parse_docker_node_info(indata, outdata_subset):
+    
+    def assert_contains(dic, key, value):
+        assert key in dic, "missing key: %r" % key
+        if isinstance(value, dict):
+            for r_key, r_value in value.iteritems():
+                assert_contains(dic[key], r_key, r_value)
+        else:
+            assert dic[key] == value, "expected: %r, got %r" % (v, parsed[k])
 
     parsed = parse_docker_node_info(indata)
     for k, v in outdata_subset.iteritems():
-        assert k in parsed, "missing key: %r" % k
-        assert parsed[k] == v, "expected: %r, got %r" % (v, parsed[k])
+        assert_contains(parsed, k, v)
 
 

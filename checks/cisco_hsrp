@@ -108,14 +108,11 @@ def check_cisco_hsrp(item, params, info):
             # Validate that we the inventorized state is a "good one"
             # if it's also the one we have now, then we're fine.
 
-            if    hsrp_state_wanted == 5  and hsrp_state == hsrp_state_wanted:
+            if hsrp_state_wanted in [3, 5, 6] and hsrp_state == hsrp_state_wanted:
                 state = 0
                 msgtxt = "Redundancy Group %s is OK" %  vip_grp
-            elif  hsrp_state_wanted == 6  and hsrp_state == hsrp_state_wanted:
-                state = 0
-                msgtxt = "Redundancy Group %s is OK" % vip_grp
             # otherwise if it's a good one, but flipped, then we are in a failover
-            elif hsrp_state == 5 or hsrp_state == 6:
+            elif hsrp_state in [5, 6]:
                 state = 1
                 msgtxt = "Redundancy Group %s has failed over" % hsrp_grp
             # anything else must be a non-operative state already

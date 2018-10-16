@@ -1,0 +1,16 @@
+Title: Status data inventory is ignored for Check_MK clusters
+Level: 1
+Component: inv
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0i1
+Date: 1538487393
+
+Status data inventory is not executed for Check_MK clusters
+because they do not have own data sources for which status data
+inventory is reasonable.
+If status data inventory should be done for the related nodes
+then you enable {{Status data inventory}} wihtin the ruleset
+{{Do hardware/software Inventory}} for these nodes.

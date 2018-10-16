@@ -1,15 +1,23 @@
 # This file initializes the py.test environment
+
+import pytest
+# TODO: Can we somehow push some of the registrations below to the subdirectories?
+pytest.register_assert_rewrite(
+    "testlib",  #
+    "unit.checks.checktestlib",  #
+    "unit.checks.generictests.run",  #
+    "unit.cmk.gui.old.html_tests",  #
+    "unit.cmk.gui.tools")
+
+import _pytest.monkeypatch
+import collections
+import errno
 import os
 import pwd
-import pytest
-import _pytest.monkeypatch
-import sys
-import glob
-import testlib
-import tempfile
 import shutil
-import errno
-from collections import OrderedDict
+import sys
+import tempfile
+import testlib
 
 #
 # Each test is of one of the following types.
@@ -24,7 +32,7 @@ from collections import OrderedDict
 
 EXECUTE_IN_SITE, EXECUTE_IN_VENV = True, False
 
-test_types = OrderedDict([
+test_types = collections.OrderedDict([
     ("unit",        EXECUTE_IN_VENV),
     ("pylint",      EXECUTE_IN_VENV),
     ("docker",      EXECUTE_IN_VENV),

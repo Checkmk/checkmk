@@ -152,8 +152,10 @@ def do_inv_check(hostname, options):
 
 
 def do_status_data_inventory(sources, multi_host_sections, hostname, ipaddress):
-    import cmk_base.inventory_plugins as inventory_plugins
+    if config.is_cluster(hostname):
+        return
     # cmk_base/modes/check_mk.py loads check plugins but not inventory plugins
+    import cmk_base.inventory_plugins as inventory_plugins
     do_inv = False
     section_names = multi_host_sections.get_host_sections().get((hostname, ipaddress)).sections.keys()
     inventory_plugins.load_plugins(check_api.get_check_api_context, get_inventory_context)
@@ -337,6 +339,7 @@ def _save_inventory_tree(hostname, inventory_tree):
     filepath = _inventory_output_dir + "/" + hostname
     if inventory_tree:
         old_tree = StructuredDataTree().load_from(filepath)
+        old_tree.normalize_nodes()
         if old_tree.is_equal(inventory_tree):
             console.verbose("Inventory was unchanged\n")
         else:

@@ -1,0 +1,13 @@
+Title: Fixed handling of multiple Graphite/InfluxDB connections.
+Level: 1
+Component: core
+Compatible: compat
+Edition: cee
+Version: 1.6.0i1
+Date: 1539685739
+Class: fix
+
+The Check_MK Micro Core went into a crash loop when more than one
+Graphite/InfluxDB connection was configured.  This has been fixed.
+
+FEED-3021

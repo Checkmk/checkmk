@@ -123,7 +123,7 @@ def _docker_parse_table(rows, fields, keys):
 def parse_docker_node_info(info):
     '''parse output of "docker info"'''
     try:
-        return json.loads(":".join(info[0]))
+        return json.loads(" ".join(info[0]))
     except ValueError:
         pass
 
@@ -150,11 +150,27 @@ def parse_docker_node_info(info):
         else:
             parsed[prefix + key] = value
 
+    ## some modifications to match json output:
+    for key in ("Images", "Containers", "ContainersRunning",
+                "ContainersStopped", "ContainersPaused"):
+        try:
+            parsed[key] = int(parsed[key])
+        except (KeyError, ValueError):
+            pass
     # reconstruct labels (they where not in "k: v" format)
     parsed["Labels"] = []
-    for k in parsed.keys():  # pylint: disable=C0201
+    for k in parsed.keys():  # pylint: disable=consider-iterating-dictionary
         if k.startswith("Labels") and k != "Labels":
             parsed["Labels"].append(k[6:] + parsed.pop(k))
+    # reconstruct swarm info:
+    swarm = {"LocalNodeState": parsed["Swarm"]}
+    if "SwarmNodeID" in parsed:
+        swarm["NodeID"] = parsed["SwarmNodeID"]
+    if "SwarmManagers" in parsed:
+        swarm["RemoteManagers"] = parsed["SwarmManagers"]
+    parsed["Swarm"] = swarm
+    parsed["ServerVersion"] = parsed["Server Version"]
+    parsed["IndexServerAddress"] = parsed["Registry"]
 
     return parsed
 

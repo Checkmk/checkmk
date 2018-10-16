@@ -202,8 +202,8 @@ def page_clear():
         html.reload_sidebar()
 
         if config.user.authorized_login_sites():
-            import cmk.gui.wato as wato # TODO: Clean this up
-            wato.user_profile_async_replication_page()
+            import cmk.gui.wato.user_profile
+            cmk.gui.wato.user_profile.user_profile_async_replication_page()
             return
 
     failed_notifications = load_failed_notifications(before=acktime,

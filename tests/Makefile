@@ -3,8 +3,9 @@ PIPENV   := PIPENV_VENV_IN_PROJECT=true pipenv
 PYTEST   := $(PIPENV) run py.test -s -vv
 COVERAGE := $(PIPENV) run coverage
 
-.PHONY: help test-unit test-unit-coverage-html test-integration test-gui-crawl \
-        test-pylint test-packaging test-bandit test-shellcheck
+.PHONY: help pipenv-check test-unit test-unit-coverage-html test-integration \
+        test-gui-crawl test-pylint test-packaging test-docker test-bandit \
+        test-shellcheck
 
 help:
 	@echo "setup                     - Install dependencies"

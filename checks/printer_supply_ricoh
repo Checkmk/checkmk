@@ -93,11 +93,14 @@ def check_printer_supply_ricoh(item, params, parsed):
             # unknown code
             return handle_regular(0)
 
-    if type(params) == tuple:
-        params = { "levels" : params }
+    if isinstance(params, tuple):
+        if len(params) == 2:
+            params = {"levels" : params}
+        else:
+            params = {"levels" : params[:2],
+                      "upturn_toner": params[2]}
 
     warn, crit = params["levels"]
-
     for name, supply_level in parsed.items():
         if item == name:
             if supply_level < 0:

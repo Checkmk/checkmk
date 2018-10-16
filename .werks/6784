@@ -1,0 +1,13 @@
+Title: Fixed grouping of service description KeyError exception
+Level: 1
+Component: multisite
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0i1
+Date: 1539688295
+
+When using the service description grouping of views a KeyError could
+occur while rendering the view in case some of the pattern matching
+services is not in OK state or stale.

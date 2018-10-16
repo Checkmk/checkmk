@@ -4732,9 +4732,7 @@ def transform_printer_supply(params):
     if isinstance(params, tuple):
         if len(params) == 2:
             return {"levels" : params}
-        else:
-            return {"levels" : params[:2],
-                    "upturn_toner": params[2]}
+        return {"levels": params[:2], "upturn_toner": params[2]}
     return params
 
 register_check_parameters(

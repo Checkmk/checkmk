@@ -1,5 +1,7 @@
 # This file initializes the py.test environment
 
+print("==================== executing tests/conftest.py")
+
 import pytest
 # TODO: Can we somehow push some of the registrations below to the subdirectories?
 pytest.register_assert_rewrite(

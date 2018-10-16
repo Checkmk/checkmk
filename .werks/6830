@@ -1,0 +1,12 @@
+Title: docker_node_network: Fix missing info in case of multiple networks
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0p7
+Date: 1539680587
+Class: fix
+
+Previously the docker node network information has been missing
+in case of multiple network IDs. This has been fixed.
+

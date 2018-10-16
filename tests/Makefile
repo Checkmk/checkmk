@@ -1,16 +1,17 @@
-SHELL=/bin/bash -e
-PYTEST=pipenv run py.test -s -vv
+SHELL    := /bin/bash -e
+PIPENV   := PIPENV_VENV_IN_PROJECT=true pipenv
+PYTEST   := $(PIPENV) run py.test -s -vv
 
-.PHONY: help test-pylint test-integration test-gui-crawl \
-	test-bandit test-shellcheck setup format test-mypy \
-        test-pylint-simple test-unit test-packaging
+.PHONY: help pipenv-check test-unit test-integration test-gui-crawl test-pylint \
+        test-packaging test-docker test-bandit test-shellcheck sanitize format \
+        test-mypy test-pylint-simple
 
 help:
 	@echo "setup                     - Install dependencies"
 	@echo "test-unit                 - Run unit tests"
-	@echo "test-pylint               - Run pylint based tests"
 	@echo "test-integration          - Run integration tests"
 	@echo "test-gui-crawl            - Run GUI crawl test"
+	@echo "test-pylint               - Run pylint based tests"
 	@echo "test-bandit               - Run bandit (security) tests"
 	@echo "test-shellcheck           - Run shellcheck tests"
 	@echo "test-docker               - Run docker tests"
@@ -29,18 +30,14 @@ pipenv-check: ../.venv
 test-unit: ../.venv
 	$(PYTEST) -T unit
 
-
 test-integration: ../.venv
 	$(PYTEST) -T integration
-
 
 test-gui-crawl: ../.venv
 	$(PYTEST) -T gui_crawl
 
-
 test-pylint: ../.venv
 	$(PYTEST) -T pylint
-
 
 test-packaging: ../.venv
 	$(PYTEST) -T packaging
@@ -65,7 +62,6 @@ test-bandit: ../.venv
 		$$(grep -l python "$$ENTERPRISE_DIR"/bin/*) \
 		"$$ENTERPRISE_DIR"/agents/plugins/*.py \
 		"$$ENTERPRISE_DIR"/agents/bakery/*
-
 
 test-shellcheck:
 	@CMK_DIR="$(realpath ..)" ; \

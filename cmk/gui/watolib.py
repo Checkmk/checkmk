@@ -80,6 +80,7 @@ import cmk.gui.sites as sites
 import cmk.gui.mkeventd as mkeventd
 import cmk.gui.backup as backup
 import cmk.gui.log as log
+import cmk.gui.background_job as background_job
 import cmk.gui.gui_background_job as gui_background_job
 from cmk.gui.i18n import _u, _
 from cmk.gui.globals import html
@@ -175,6 +176,237 @@ g_host_attribute = {}
 
 def load_watolib_plugins():
     utils.load_web_plugins("watolib", globals())
+
+
+# TODO: Must only be unlocked when it was not locked before. We should find a more
+# robust way for doing something like this. If it is locked before, it can now happen
+# that this call unlocks the wider locking when calling this funktion in a wrong way.
+def init_wato_datastructures(with_wato_lock=False):
+    init_watolib_datastructures()
+    if os.path.exists(ConfigDomainCACertificates.trusted_cas_file) and\
+        not _need_to_create_sample_config():
+        return
+
+    if with_wato_lock:
+        lock_exclusive()
+
+    if not os.path.exists(ConfigDomainCACertificates.trusted_cas_file):
+        ConfigDomainCACertificates().activate()
+
+    _create_sample_config()
+
+    if with_wato_lock:
+        unlock_exclusive()
+
+
+# TODO: Create a hook here and move CEE and other specific things away
+def _create_sample_config():
+    """Create a very basic sample configuration
+
+    But only if none of the
+    files that we will create already exists. That is e.g. the case
+    after an update from an older version where no sample config had
+    been created.
+    """
+    if not _need_to_create_sample_config():
+        return
+
+    # Just in case. If any of the following functions try to write Git messages
+    if config.wato_use_git:
+        prepare_git_commit()
+
+    # Global configuration settings
+    save_global_settings(
+        {
+            "use_new_descriptions_for": [
+                "df",
+                "df_netapp",
+                "df_netapp32",
+                "esx_vsphere_datastores",
+                "hr_fs",
+                "vms_diskstat.df",
+                "zfsget",
+                "ps",
+                "ps.perf",
+                "wmic_process",
+                "services",
+                "logwatch",
+                "logwatch.groups",
+                "cmk-inventory",
+                "hyperv_vms",
+                "ibm_svc_mdiskgrp",
+                "ibm_svc_system",
+                "ibm_svc_systemstats.diskio",
+                "ibm_svc_systemstats.iops",
+                "ibm_svc_systemstats.disk_latency",
+                "ibm_svc_systemstats.cache",
+                "casa_cpu_temp",
+                "cmciii.temp",
+                "cmciii.psm_current",
+                "cmciii_lcp_airin",
+                "cmciii_lcp_airout",
+                "cmciii_lcp_water",
+                "etherbox.temp",
+                "liebert_bat_temp",
+                "nvidia.temp",
+                "ups_bat_temp",
+                "innovaphone_temp",
+                "enterasys_temp",
+                "raritan_emx",
+                "raritan_pdu_inlet",
+                "mknotifyd",
+                "mknotifyd.connection",
+                "postfix_mailq",
+                "nullmailer_mailq",
+                "barracuda_mailqueues",
+                "qmail_stats",
+                "http",
+                "mssql_backup",
+                "mssql_counters.cache_hits",
+                "mssql_counters.transactions",
+                "mssql_counters.locks",
+                "mssql_counters.sqlstats",
+                "mssql_counters.pageactivity",
+                "mssql_counters.locks_per_batch",
+                "mssql_counters.file_sizes",
+                "mssql_databases",
+                "mssql_datafiles",
+                "mssql_tablespaces",
+                "mssql_transactionlogs",
+                "mssql_versions",
+            ],
+            "enable_rulebased_notifications": True,
+            "ui_theme": "facelift",
+        }
+    )
+
+
+    # A contact group for all hosts and services
+    groups = {
+        "contact" : { 'all' : {'alias': u'Everything'} },
+    }
+    save_group_information(groups)
+
+    # Basic setting of host tags
+    wato_host_tags = \
+    [('criticality',
+      u'Criticality',
+      [('prod', u'Productive system', []),
+       ('critical', u'Business critical', []),
+       ('test', u'Test system', []),
+       ('offline', u'Do not monitor this host', [])]),
+     ('networking',
+      u'Networking Segment',
+      [('lan', u'Local network (low latency)', []),
+       ('wan', u'WAN (high latency)', []),
+       ('dmz', u'DMZ (low latency, secure access)', [])]),
+    ]
+
+    wato_aux_tags = []
+
+    save_hosttags(wato_host_tags, wato_aux_tags)
+
+    # Rules that match the upper host tag definition
+    ruleset_config = {
+        # Make the tag 'offline' remove hosts from the monitoring
+        'only_hosts': [
+            (['!offline'], ['@all'],
+            {'description': u'Do not monitor hosts with the tag "offline"'})],
+
+        # Rule for WAN hosts with adapted PING levels
+        'ping_levels': [
+            ({'loss': (80.0, 100.0),
+              'packets': 6,
+              'rta': (1500.0, 3000.0),
+              'timeout': 20}, ['wan'], ['@all'],
+              {'description': u'Allow longer round trip times when pinging WAN hosts'})],
+
+        # All hosts should use SNMP v2c if not specially tagged
+        'bulkwalk_hosts': [
+            (['snmp', '!snmp-v1'], ['@all'], {'description': u'Hosts with the tag "snmp-v1" must not use bulkwalk'})],
+
+        # Put all hosts and the contact group 'all'
+        'host_contactgroups': [
+            ('all', [], ALL_HOSTS, {'description': u'Put all hosts into the contact group "all"'} ),
+        ],
+
+        # Interval for HW/SW-Inventory check
+        'extra_service_conf': {
+            'check_interval': [
+                ( 1440, [], ALL_HOSTS, [ "Check_MK HW/SW Inventory$" ], {'description': u'Restrict HW/SW-Inventory to once a day'} ),
+            ],
+        },
+
+        # Disable unreachable notifications by default
+        'extra_host_conf': {
+            'notification_options': [
+                ( 'd,r,f,s', [], ALL_HOSTS, {} ),
+            ],
+        },
+
+        # Periodic service discovery
+        'periodic_discovery': [
+            ({'severity_unmonitored': 1,
+              'severity_vanished': 0,
+              'inventory_check_do_scan': True,
+              'check_interval': 120.0}, [], ALL_HOSTS, {'description': u'Perform every two hours a service discovery'} ),
+        ],
+    }
+
+    rulesets = FolderRulesets(Folder.root_folder())
+    rulesets.from_config(Folder.root_folder(), ruleset_config)
+    rulesets.save()
+
+    notification_rules = [{
+        'allow_disable'          : True,
+        'contact_all'            : False,
+        'contact_all_with_email' : False,
+        'contact_object'         : True,
+        'description'            : 'Notify all contacts of a host/service via HTML email',
+        'disabled'               : False,
+        'notify_plugin'          : ('mail', {}),
+    }]
+    save_notification_rules(notification_rules)
+
+    try:
+        import cmk.gui.cee.plugins.wato.sample_config
+        cmk.gui.cee.plugins.wato.sample_config.create_cee_sample_config()
+    except ImportError:
+        pass
+
+    # Make sure the host tag attributes are immediately declared!
+    config.wato_host_tags = wato_host_tags
+    config.wato_aux_tags = wato_aux_tags
+
+    # Initial baking of agents (when bakery is available)
+    if has_agent_bakery():
+        import cmk.gui.cee.plugins.wato.agent_bakery
+        bake_job = cmk.gui.cee.plugins.wato.agent_bakery.BakeAgentsBackgroundJob()
+        bake_job.set_function(cmk.gui.cee.plugins.wato.agent_bakery.bake_agents_background_job)
+        try:
+            bake_job.start()
+        except background_job.BackgroundJobAlreadyRunning:
+            pass
+
+
+    # This is not really the correct place for such kind of action, but the best place we could
+    # find to execute it only for new created sites.
+    import cmk.gui.werks as werks
+    werks.acknowledge_all_werks(check_permission=False)
+
+    cmk.gui.wato.mkeventd.save_mkeventd_sample_config()
+
+    userdb.create_cmk_automation_user()
+
+
+def _need_to_create_sample_config():
+    if os.path.exists(multisite_dir + "hosttags.mk") \
+        or os.path.exists(wato_root_dir + "rules.mk") \
+        or os.path.exists(wato_root_dir + "groups.mk") \
+        or os.path.exists(wato_root_dir + "notifications.mk") \
+        or os.path.exists(wato_root_dir + "global.mk"):
+        return False
+    return True
 
 
 def init_watolib_datastructures():

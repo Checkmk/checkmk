@@ -2400,6 +2400,19 @@ class html(HTMLGenerator, RequestHandler):
         attrs["cols"] = cols
         attrs["name"] = varname
 
+        # Fix handling of leading newlines (https://www.w3.org/TR/html5/syntax.html#element-restrictions)
+        #
+        # """
+        # A single newline may be placed immediately after the start tag of pre
+        # and textarea elements. This does not affect the processing of the
+        # element. The otherwise optional newline must be included if the
+        # element’s contents themselves start with a newline (because otherwise
+        # the leading newline in the contents would be treated like the
+        # optional newline, and ignored).
+        # """
+        if value and value.startswith("\n"):
+            value = "\n" + value
+
         if error:
             self.open_x(class_="inputerror")
         self.write_html(self._render_content_tag("textarea", value, **attrs))

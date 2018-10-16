@@ -1,0 +1,14 @@
+Title: Fixed truncating leading new lines in text area input fields
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 1.5.0p7
+Date: 1539700301
+Class: fix
+
+When a multi line text area was used for editing a text that starts with an
+empty line, the leading empty line was stripped off during rendering of the
+dialog.
+
+This affected, for example, the body template of ASCII mail notifications.

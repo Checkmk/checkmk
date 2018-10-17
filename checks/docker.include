@@ -56,6 +56,25 @@ def _docker_get_bytes(string):
         return None
 
 
+def _docker_trunc_id(hash_string):
+    '''normalize to short ID
+
+    Some docker commands use shortened, some long IDs:
+    Convert long ones to short ones, e.g.
+    "sha256:8b15606a9e3e430cb7ba739fde2fbb3734a19f8a59a825ffa877f9be49059817"
+    to
+    "8b15606a9e3e"
+    '''
+    long_id = hash_string.split(':', 1)[-1]
+    return long_id[:12]
+
+
+def _get_repo_tag(string):
+    if ":" in string:
+        return tuple(string.split(":", 1))
+    return string, "latest"
+
+
 def parse_docker_node_info(info):
     '''parse output of "docker info"'''
     try:
@@ -170,4 +189,117 @@ def parse_docker_system_df(info):
         parsed[line.get("Type").lower()] = line
 
     return parsed
+
+
+def _get_json_list(info):
+    json_list = []
+    for row in info:
+        if not row:
+            continue
+        try:
+            json_list.append(json.loads(' '.join(row)))
+        except ValueError:
+            pass
+    return json_list
+
+
+def parse_docker_subsection_images(info):
+
+    table = _get_json_list(info)
+
+    parsed = {}
+    for item in table:
+        v = item.get("VirtualSize")
+        if v is not None:
+            item["VirtualSize"] = _docker_get_bytes(v)
+        parsed[item.get("ID")] = item
+
+    return parsed
+
+
+def parse_docker_subsection_image_labels(info):
+
+    table = _get_json_list(info)
+
+    return {_docker_trunc_id(long_id): data
+            for long_id, data in table if data is not None}
+
+
+def parse_docker_subsection_image_inspect(info):
+    try:
+        table = json.loads(' '.join(' '.join(row) for row in info if row))
+    except ValueError:
+        return {}
+    return {_docker_trunc_id(image["Id"]): image for image in table}
+
+
+def parse_docker_subsection_containers(info):
+
+    table = _get_json_list(info)
+
+    parsed = {}
+    for item in table:
+        image_name = item.get("Image", "")
+        item["Repository"], item["Tag"] = _get_repo_tag(image_name)
+        parsed[item.get("ID")] = item
+
+    return parsed
+
+
+def _split_subsections(info):
+    subname = ''
+    subsections = {}
+    for row in info:
+        if not row:
+            continue
+        if row[0].startswith('[[[') and row[0].endswith(']]]'):
+            subname = row[0].strip('[]')
+            continue
+        subsections.setdefault(subname,  []).append(row)
+    return subsections
+
+
+def parse_docker_node_images(info):
+    subsections = _split_subsections(info)
+    images = parse_docker_subsection_images(subsections.get("images", []))
+    image_labels = parse_docker_subsection_image_labels(subsections.get("image_labels", []))
+    image_inspect = parse_docker_subsection_image_inspect(subsections.get("image_inspect", []))
+    containers = parse_docker_subsection_containers(subsections.get("containers", []))
+
+    for image_id, pref_info in image_inspect.iteritems():
+        image = images.setdefault(image_id, {})
+        image["ID"] = image_id
+        labels = pref_info.get("Config", {}).get("Labels")
+        if labels is not None:
+            image.setdefault("__labels__", {}).update(labels)
+        image["CreatedAt"] = pref_info["Created"]
+        image["VirtualSize"] = pref_info["VirtualSize"]
+        repotags = pref_info.get("RepoTags")
+        if repotags:
+            image["Repository"], image["Tag"] = _get_repo_tag(repotags[-1])
+
+    for image in images.itervalues():
+        image["amount_containers"] = 0
+        image.setdefault("__labels__", {})
+
+    for image_id, labels in image_labels.iteritems():
+        image = images.get(_docker_trunc_id(image_id))
+        if image is not None and labels is not None:
+           image["__labels__"].update(labels)
+
+    mapping = {(i['Repository'], i['Tag']): i['ID']
+               for i in images.itervalues()}
+
+    for c in containers.itervalues():
+        image_id = mapping.get((c["Repository"], c["Tag"]))
+        image = images.get(image_id)
+        if image is not None:
+            image["amount_containers"] += 1
+
+        labels = c.get("Labels")
+        if isinstance(labels, (str, unicode)):
+            lab = (p.split("=", 1) for p in labels.split(","))
+            c["Labels"] = dict(lab)
+
+    return {"images": images, "containers": containers}
 

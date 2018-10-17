@@ -45,7 +45,7 @@ def inv_docker_node_images(info, inventory_tree, status_data_tree):
             "repository"        : image["Repository"],
             "tag"               : image["Tag"],
             "id"                : image["ID"],
-            "amount_containers" : image["amount_containers"],  # len(image.get("__containers__", [])),
+            "amount_containers" : image["amount_containers"],
         })
 
 
@@ -60,7 +60,7 @@ def inv_docker_node_images_containers(info, inventory_tree, status_data_tree):
     containers = parse_docker_node_images(info).get("containers", {})
     status_node = status_data_tree.get_list("software.applications.docker.containers:")
 
-    for container in sorted(containers.itervalues(), lambda c: c["ID"]):
+    for container in sorted(containers.itervalues(), key=lambda c: c["ID"]):
         status_node.append({
             "id"                : container["ID"],
             "repository"        : container["Repository"],

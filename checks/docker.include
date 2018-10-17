@@ -26,6 +26,7 @@
 import json
 import re
 
+
 def _docker_get_bytes(string):
     '''get number of bytes from string
 
@@ -72,44 +73,6 @@ def _get_repo_tag(string):
     if ":" in string:
         return tuple(string.split(":", 1))
     return string, "latest"
-
-
-def _docker_parse_table(rows, fields, keys):
-    '''docker provides us with space separated tables with field containing spaces
-
-    e.g.:
-
-    TYPE           TOTAL  ACTIVE   SIZE       RECLAIMABLE
-    Images         7      6        2.076 GB   936.9 MB (45%)
-    Containers     22     0        2.298 GB   2.298 GB (100%)
-    Local Volumes  5      5        304 B      0 B (0%)
-    '''
-    if not rows or not rows[0]:
-        return []
-
-    indices = []
-    for field in fields:
-        rex = regex(field + r'\ *')
-        m = rex.search(rows[0][0])
-        if m is not None:
-            start, end = m.start(), m.end()
-            if end - start == len(field):
-                end = None
-            indices.append((start, end))
-        else:
-            indices.append((0, 0))
-
-    table = []
-    for row in rows[1:]:
-        if not row:
-            continue
-        try:
-            line = {k: row[0][i:j].strip() for k, (i, j) in zip(keys, indices)}
-        except IndexError:
-            continue
-        table.append(line)
-
-    return table
 
 
 def parse_docker_node_info(info):
@@ -164,6 +127,44 @@ def parse_docker_node_info(info):
     parsed["IndexServerAddress"] = parsed["Registry"]
 
     return parsed
+
+
+def _docker_parse_table(rows, fields, keys):
+    '''docker provides us with space separated tables with field containing spaces
+
+    e.g.:
+
+    TYPE           TOTAL  ACTIVE   SIZE       RECLAIMABLE
+    Images         7      6        2.076 GB   936.9 MB (45%)
+    Containers     22     0        2.298 GB   2.298 GB (100%)
+    Local Volumes  5      5        304 B      0 B (0%)
+    '''
+    if not rows or not rows[0]:
+        return []
+
+    indices = []
+    for field in fields:
+        rex = regex(field + r'\ *')
+        m = rex.search(rows[0][0])
+        if m is not None:
+            start, end = m.start(), m.end()
+            if end - start == len(field):
+                end = None
+            indices.append((start, end))
+        else:
+            indices.append((0, 0))
+
+    table = []
+    for row in rows[1:]:
+        if not row:
+            continue
+        try:
+            line = {k: row[0][i:j].strip() for k, (i, j) in zip(keys, indices)}
+        except IndexError:
+            continue
+        table.append(line)
+
+    return table
 
 
 def parse_docker_system_df(info):

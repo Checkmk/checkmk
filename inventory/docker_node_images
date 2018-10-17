@@ -25,105 +25,44 @@
 # Boston, MA 02110-1301 USA.
 
 
-def _parse_docker_node_images(info):
-    import json
-    parsed = {}
-    section_name = None
-    for line in info:
-        if line[0].startswith("[[[") and line[0].endswith("]]]"):
-            section_name = line[0][3:-3]
-            continue
-
-        data = json.loads(" ".join(line))
-
-        if section_name == "images" and data:
-            parsed.setdefault(data["ID"], data)
-
-        elif section_name == "images_labels":
-            if len(data) == 2:
-                image_id, labels = data
-                image = parsed.get(image_id)
-                if image is not None and labels:
-                    image.setdefault("__labels__", labels)
-
-        elif section_name == "containers":
-            image_name = data["Image"]
-            if ":" in image_name:
-                repository, tag = image_name.split(":", 1)
-            else:
-                repository, tag = image_name, "latest"
-
-            image = parsed.get((repository, tag))
-            if image is not None:
-                image.setdefault("__containers__", []).append(data)
-    return parsed
-
-
 def inv_docker_node_images(info, inventory_tree, status_data_tree):
-    parsed = _parse_docker_node_images(info)
+    images = parse_docker_node_images(info).get("images", {})
     path = "software.applications.docker.images:"
     inv_node = inventory_tree.get_list(path)
     status_node = status_data_tree.get_list(path)
 
-    for image_id, image in sorted(parsed.iteritems()):
+    for image in sorted(images.itervalues(), key=lambda i: i["ID"]):
         inv_node.append({
             "repository"        : image["Repository"],
             "tag"               : image["Tag"],
-            "id"                : image_id,
+            "id"                : image["ID"],
             "creation"          : image["CreatedAt"],
             "size"              : image["VirtualSize"],
-            "labels"            : _format_labels(image.get("__labels__", {}).items()),
+            "labels"            : _format_labels(image.get("__labels__", {})),
         })
 
         status_node.append({
             "repository"        : image["Repository"],
             "tag"               : image["Tag"],
-            "id"                : image_id,
-            "amount_containers" : len(image.get("__containers__", [])),
+            "id"                : image["ID"],
+            "amount_containers" : image["amount_containers"],
         })
 
 
 inv_info['docker_node_images'] = {
+    'includes'        : ['docker.include'],
     'inv_function'    : inv_docker_node_images,
     'has_status_data' : True,
 }
 
 
-def _parse_docker_node_containers(info):
-    import json
-    parsed = {}
-    section_name = None
-    for line in info:
-        if line[0].startswith("[[[") and line[0].endswith("]]]"):
-            section_name = line[0][3:-3]
-            continue
-
-        if section_name != "containers":
-            continue
-
-        data = json.loads(" ".join(line))
-
-        image_name = data["Image"]
-        if ":" in image_name:
-            data["Repository"], data["Tag"] = image_name.split(":", 1)
-        else:
-            data["Repository"], data["Tag"] = image_name, "latest"
-
-        data["Labels"] = [ p.split("=", 1) for p in data["Labels"].split(",") ]
-
-        parsed[data["ID"]] = data
-
-
-    return parsed
-
-
 def inv_docker_node_images_containers(info, inventory_tree, status_data_tree):
-    parsed = _parse_docker_node_containers(info)
+    containers = parse_docker_node_images(info).get("containers", {})
     status_node = status_data_tree.get_list("software.applications.docker.containers:")
 
-    for id_, container in sorted(parsed.iteritems()):
+    for container in sorted(containers.itervalues(), key=lambda c: c["ID"]):
         status_node.append({
-            "id"                : id_,
+            "id"                : container["ID"],
             "repository"        : container["Repository"],
             "tag"               : container["Tag"],
             "name"              : container["Names"],
@@ -134,13 +73,16 @@ def inv_docker_node_images_containers(info, inventory_tree, status_data_tree):
 
 
 def _format_labels(labels):
-    return ", ".join([ ": ".join(p) for p in labels ])
+    if isinstance(labels, dict):
+        labels = labels.iteritems()
+    return ", ".join(["%s: %s" % item for item in labels])
 
 # TODO: This section contains also information about the containers. We should
 # better split it into multiple sections and add them to the different plugins
 # using the extra_sections feature. In case this is not possible for the inventory
 # plugins at the moment we should make it possible.
 inv_info['docker_node_images.containers'] = {
+    'includes'        : ['docker.include'],
     'inv_function'    : inv_docker_node_images_containers,
     'has_status_data' : True,
 }

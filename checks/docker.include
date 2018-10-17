@@ -24,7 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 import json
-
+import re
 
 def _docker_get_bytes(string):
     '''get number of bytes from string
@@ -37,14 +37,19 @@ def _docker_get_bytes(string):
     '''
     # remove percent
     string = string.split('(')[0].strip()
-    value_string = string.rstrip('kKMGB').strip()
-    unit_string = string.lstrip('0123456789.').strip()
+    tmp = re.split('([a-zA-Z]+)', string)
+    value_string = tmp[0].strip()
+    unit_string = tmp[1].strip() if len(tmp) > 1 else 'B'
     try:
         factor = {
+            'TB': 10**12,
             'GB': 10**9,
             'MB': 10**6,
+            'KB': 10**3,
             'kB': 10**3,
-        }.get(unit_string, 1)
+            'B' : 1,
+            ''  : 1,
+        }[unit_string]
         return int(float(value_string) * factor)
     except (ValueError, TypeError):
         return None
@@ -61,18 +66,6 @@ def _docker_trunc_id(hash_string):
     '''
     long_id = hash_string.split(':', 1)[-1]
     return long_id[:12]
-
-
-#   .--parse---------------------------------------------------------------.
-#   |                                                                      |
-#   |                      _ __   __ _ _ __ ___  ___                       |
-#   |                     | '_ \ / _` | '__/ __|/ _ \                      |
-#   |                     | |_) | (_| | |  \__ \  __/                      |
-#   |                     | .__/ \__,_|_|  |___/\___|                      |
-#   |                     |_|                                              |
-#   +----------------------------------------------------------------------+
-#   |                                                                      |
-#   '----------------------------------------------------------------------'
 
 
 def _get_repo_tag(string):
@@ -122,6 +115,7 @@ def _docker_parse_table(rows, fields, keys):
 def parse_docker_node_info(info):
     '''parse output of "docker info"'''
     try:
+        # parse legacy json output (verisons 1.5.0 - 1.5.0p6)
         return json.loads(" ".join(info[0]))
     except ValueError:
         pass
@@ -132,18 +126,16 @@ def parse_docker_node_info(info):
         if not row:
             continue
         # remove '|', it was protecting leading whitespace
-        row[0] = row[0][1:]
-        if not row[0]:
+        row0 = row[0][1:]
+        if not row0:
             continue
         # ignore misssing keys / pad lines that are not of "key: value" type
         if len(row) == 1:
             row.append('')
-        key = row[0].strip()
+        key = row0.strip()
         value = ':'.join(row[1:]).strip()
         # indented keys are prefixed by the last not indented key
-        # this does the right thing in the cases we use
-        indent = len(row[0]) - len(key)
-        if indent == 0:
+        if len(row0) - len(key) == 0:
             parsed[key] = value
             prefix = key
         else:
@@ -176,18 +168,20 @@ def parse_docker_node_info(info):
 
 def parse_docker_system_df(info):
 
-    keys = ('Type', 'TotalCount', 'Active', 'Size', 'Reclaimable')
-    types = (str, int, int, _docker_get_bytes, _docker_get_bytes)
+    field_map = (
+        ('TYPE', 'TOTAL', 'ACTIVE', 'SIZE', 'RECLAIMABLE'),
+        ('Type', 'TotalCount', 'Active', 'Size', 'Reclaimable'),
+        (str, int, int, _docker_get_bytes, _docker_get_bytes),
+    )
 
     try:  # parse legacy json output: from 1.5.0 - 1.5.0p6
         table = [json.loads(",".join(row)) for row in info if row]
     except ValueError:
-        header = ('TYPE', 'TOTAL', 'ACTIVE', 'SIZE', 'RECLAIMABLE')
-        table = _docker_parse_table(info, header, keys)
+        table = _docker_parse_table(info, field_map[0], field_map[1])
 
     parsed = {}
     for line in table:
-        for key, type_ in zip(keys, types):
+        for key, type_ in zip(field_map[1], field_map[2]):
             v = line.get(key)
             if v is not None:
                 line[key] = type_(v)

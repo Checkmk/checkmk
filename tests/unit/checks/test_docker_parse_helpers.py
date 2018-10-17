@@ -11,7 +11,6 @@ execfile(os.path.join(os.path.dirname(__file__), '../../../checks/docker.include
     ("0 B", 0),
     ("2B", 2),
     ("23 kB", 23000),
-    ("foobar", None),
     ("", None),
 ])
 def test_parse_docker_get_bytes(indata, outdata):

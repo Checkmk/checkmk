@@ -2137,6 +2137,17 @@ register_check_parameters(
     match_type = "dict",
 )
 
+def transform_ssh_config(choice):
+    """
+    In the sshd_config the options without-password and
+    prohibit-password are equivalent. Therefore, we
+    transform the old Check_MK option without-password
+    to the new option key-based which represents both values.
+    """
+    if choice == "without-password":
+       return "key-based"
+    return choice
+
 register_check_parameters(
     subgroup_applications,
     "sshd_config",
@@ -2144,15 +2155,18 @@ register_check_parameters(
     Dictionary(
         elements = [
             ("PermitRootLogin",
-            DropdownChoice(
-                title = _("Permit root login"),
-                choices = [
-                    ('yes',                     _('Yes')),
-                    ('without-password',        _('Without password')),
-                    ('forced-commands-only',    _('Forced commands only')),
-                    ('no',                      _('No')),
-                ],
-                default_value = "without-password",
+            Transform(
+                DropdownChoice(
+                    title = _("Permit root login"),
+                    choices = [
+                        ('yes',                     _('yes')),
+                        ('key-based',        _('without-password/prohibit-password (Key based)')),
+                        ('forced-commands-only',    _('forced-commands-only')),
+                        ('no',                      _('no')),
+                    ],
+                    default_value = "key-based",
+                ),
+                forth=transform_ssh_config
             )),
             ("Protocol",
             DropdownChoice(

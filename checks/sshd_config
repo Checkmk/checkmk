@@ -39,13 +39,19 @@
 
 def parse_sshd_config(info):
     identity = lambda x: x
+
+    def map_permit_root_login(value):
+        if value in [u"prohibit-password", u"without-password"]:
+            return u"key-based"
+        return value
+
     relevant_options = {
         #option                             parse function
         "Protocol":                         lambda x: ",".join(sorted(x.split(","))),
         # Port can be defined multiple times in sshd_config.
         # Therefore we use a list of ints.
         "Port":                             lambda x: [int(x)],
-        "PermitRootLogin":                  identity,
+        "PermitRootLogin":                  map_permit_root_login,
         "PasswordAuthentication":           identity,
         "PermitEmptyPasswords":             identity,
         "ChallengeResponseAuthentication":  identity,
@@ -79,6 +85,10 @@ def inventory_sshd_config(parsed):
 
 
 def check_sshd_config(_no_item, params, parsed):
+    root_login = params.get("PermitRootLogin", "")
+    if root_login == "without-password":
+        params["PermitRootLogin"] = "key-based"
+
     # type_ is needed because info contains unicode and params str
     convert = lambda x, type_: (x if isinstance(x, type_)
                                 else ", ".join(map(type_, x)))

@@ -180,7 +180,7 @@ def run(check_manager, dataset, write=False):
     """Run all possible tests on 'dataset'"""
     print("START: %r" % dataset)
     checklist = checkhandler.get_applicables(dataset.checkname)
-    assert checklist
+    assert checklist, "Found no check plugin for %r" % dataset.checkname
 
     immu = Immutables()
     # test the parse function

@@ -178,6 +178,7 @@ class LDAPUserConnector(UserConnector):
         self._ldap_obj_config = None
         self._logger          = log.logger.getChild("ldap.Connection(%s)" % self.id())
 
+        self._num_queries = 0
         self._user_cache  = {}
         self._group_cache = {}
 
@@ -519,6 +520,7 @@ class LDAPUserConnector(UserConnector):
             columns = []
 
         self._logger.info('LDAP_SEARCH "%s" "%s" "%s" "%r"' % (base, scope, filt, columns))
+        self._num_queries += 1
         start_time = time.time()
 
         # In some environments, the connection to the LDAP server does not seem to
@@ -1097,7 +1099,8 @@ class LDAPUserConnector(UserConnector):
                     changes.append(_("LDAP [%s]: Modified user %s (%s)") % (connection_id, user_id, ', '.join(details)))
 
         duration = time.time() - start_time
-        self._logger.info('SYNC FINISHED - Duration: %0.3f sec', duration)
+        self._logger.info('SYNC FINISHED - Duration: %0.3f sec, Queries: %d' %
+                    (duration, self._num_queries))
 
         import cmk.gui.watolib as watolib # TODO: Cleanup
         if changes and config.wato_enabled and not config.is_wato_slave_site():
@@ -1131,6 +1134,7 @@ class LDAPUserConnector(UserConnector):
 
 
     def _flush_caches(self):
+        self._num_queries = 0
         self._user_cache.clear()
         self._group_cache.clear()
 

@@ -303,3 +303,9 @@ def parse_docker_node_images(info):
 
     return {"images": images, "containers": containers}
 
+
+def parse_docker_network_inspect(info):
+    try:
+        return json.loads(''.join(row[0] for row in info if row))
+    except ValueError:
+        return []

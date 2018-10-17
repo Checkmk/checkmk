@@ -1,7 +1,7 @@
 include ../../Makefile.omd
 
 NAME       := boost
-VERSION    := 1_66_0
+VERSION    := 1_68_0
 DIR        := $(NAME)_$(VERSION)
 
 # For some obscure reason (GCC's dual ABI) we have to link all Boost stuff
@@ -20,7 +20,7 @@ B2_LINK_OPTION := "link=static"
 .PHONY: build install skel clean
 
 build: check-python
-	tar xzf $(NAME)_$(VERSION).tar.gz
+	tar xjf $(NAME)_$(VERSION).tar.bz2
 # basically what part of AC_PROC_CXX does
 	@CXX="" ; \
 	for PROG in g++-8 g++-7 clang++-6.0 clang++-5.0 g++-6 clang++-4.0 g++-5 clang++-3.9 clang++-3.8 clang++-3.7 clang++-3.6 clang++-3.5 g++-4.9 g++ clang++; do \

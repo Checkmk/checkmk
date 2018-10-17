@@ -1,0 +1,12 @@
+Title: SLES15: Fixed dependencies of gd
+Level: 1
+Component: omd
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1539787840
+Class: fix
+
+In newer versions of SLES gd is only available if the module Desktop-Applications is
+activated. For Check_MK the package libgd3 is fully sufficient and available
+in all installations, so the depedencies changed from gd to libgd3.

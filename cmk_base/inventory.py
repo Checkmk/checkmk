@@ -38,6 +38,7 @@ import sys
 
 import cmk
 import cmk.paths
+import cmk.store
 import cmk.tty as tty
 from cmk.exceptions import MKGeneralException
 from cmk.structured_data import StructuredDataTree
@@ -54,10 +55,6 @@ import cmk_base.discovery as discovery
 import cmk_base.ip_lookup as ip_lookup
 import cmk_base.data_sources as data_sources
 
-_inventory_output_dir  = cmk.paths.var_dir + "/inventory"
-_inventory_archive_dir = cmk.paths.var_dir + "/inventory_archive"
-_status_data_dir       = cmk.paths.tmp_dir + "/status_data"
-
 #.
 #   .--Inventory-----------------------------------------------------------.
 #   |            ___                      _                                |
@@ -71,8 +68,8 @@ _status_data_dir       = cmk.paths.tmp_dir + "/status_data"
 #   '----------------------------------------------------------------------'
 
 def do_inv(hostnames):
-    _ensure_directory(_inventory_output_dir)
-    _ensure_directory(_inventory_archive_dir)
+    cmk.store.makedirs(cmk.paths.inventory_output_dir)
+    cmk.store.makedirs(cmk.paths.inventory_archive_dir)
 
     for hostname in hostnames:
         console.section_begin(hostname)
@@ -125,7 +122,7 @@ def do_inv_check(hostname, options):
             status = max(status, _inv_sw_missing)
 
         if old_timestamp:
-            path = "%s/%s/%d" % (_inventory_archive_dir, hostname, old_timestamp)
+            path = "%s/%s/%d" % (cmk.paths.inventory_archive_dir, hostname, old_timestamp)
             old_tree = StructuredDataTree().load_from(path)
 
             if not old_tree.is_equal(inventory_tree, edges=["software"]):
@@ -161,16 +158,9 @@ def do_status_data_inventory(sources, multi_host_sections, hostname, ipaddress):
         return
     # cmk_base/modes/check_mk.py loads check plugins but not inventory plugins
     import cmk_base.inventory_plugins as inventory_plugins
-    do_inv = False
-    section_names = multi_host_sections.get_host_sections().get((hostname, ipaddress)).sections.keys()
     inventory_plugins.load()
-    for plugin_name, plugin in inventory_plugins.inv_info.iteritems():
-        if plugin_name in section_names and plugin.get("has_status_data"):
-            do_inv = True
-            break
-    if do_inv:
-        _do_inv_for(sources, multi_host_sections=multi_host_sections, hostname=hostname,
-                    ipaddress=ipaddress, do_status_data_inv=True)
+    _do_inv_for(sources, multi_host_sections=multi_host_sections, hostname=hostname,
+                ipaddress=ipaddress, do_status_data_inv=True)
 
 
 def _do_inv_for(sources, multi_host_sections, hostname, ipaddress, do_status_data_inv):
@@ -195,8 +185,8 @@ def _do_inv_for(sources, multi_host_sections, hostname, ipaddress, do_status_dat
     console.section_success("Found %s%s%d%s inventory entries" %
             (tty.bold, tty.yellow, inventory_tree.count_entries(), tty.normal))
 
-    status_data_tree.normalize_nodes()
     if do_status_data_inv:
+        status_data_tree.normalize_nodes()
         _save_status_data_tree(hostname, status_data_tree)
 
         console.section_success("Found %s%s%d%s status entries" %
@@ -289,22 +279,6 @@ def _gather_snmp_check_plugin_names_inventory(access_data, on_error, do_snmp_sca
 def _get_inv_params(hostname, section_name):
     return rulesets.host_extra_conf_merged(hostname, config.inv_parameters.get(section_name, []))
 
-
-# Creates the directory at path if it does not exist.  If that path does exist
-# it is assumed that it is a directory. the file type is not being checked.
-# This function is atomar so that no exception can arise if two processes
-# at the same time try to create the directory. Only fails if the directory
-# is not present for any reason after this function call.
-# TODO: Is not called often. Should we make this available in a general place
-# and use it more often or drop it?
-def _ensure_directory(path):
-    try:
-        os.makedirs(path)
-    except Exception:
-        if os.path.exists(path):
-            return
-        raise
-
 #.
 #   .--Inventory Tree------------------------------------------------------.
 #   |  ___                      _                     _____                |
@@ -337,11 +311,10 @@ def inv_tree_list(path): # TODO Remove one day. Deprecated with version 1.5.0i3?
 
 
 def _save_inventory_tree(hostname, inventory_tree):
-    if not os.path.exists(_inventory_output_dir):
-        os.makedirs(_inventory_output_dir)
+    cmk.store.makedirs(cmk.paths.inventory_output_dir)
 
     old_time = None
-    filepath = _inventory_output_dir + "/" + hostname
+    filepath = cmk.paths.inventory_output_dir + "/" + hostname
     if inventory_tree:
         old_tree = StructuredDataTree().load_from(filepath)
         old_tree.normalize_nodes()
@@ -353,11 +326,10 @@ def _save_inventory_tree(hostname, inventory_tree):
             else:
                 console.verbose("Inventory tree has changed\n")
                 old_time = os.stat(filepath).st_mtime
-                arcdir = "%s/%s" % (_inventory_archive_dir, hostname)
-                if not os.path.exists(arcdir):
-                    os.makedirs(arcdir)
+                arcdir = "%s/%s" % (cmk.paths.inventory_archive_dir, hostname)
+                cmk.store.makedirs(arcdir)
                 os.rename(filepath, arcdir + ("/%d" % old_time))
-            inventory_tree.save_to(_inventory_output_dir, hostname)
+            inventory_tree.save_to(cmk.paths.inventory_output_dir, hostname)
 
     else:
         if os.path.exists(filepath): # Remove empty inventory files. Important for host inventory icon
@@ -369,18 +341,9 @@ def _save_inventory_tree(hostname, inventory_tree):
 
 
 def _save_status_data_tree(hostname, status_data_tree):
-    if not os.path.exists(_status_data_dir):
-        os.makedirs(_status_data_dir)
-
-    filepath = "%s/%s" % (_status_data_dir, hostname)
     if status_data_tree and not status_data_tree.is_empty():
-        status_data_tree.save_to(_status_data_dir, hostname)
-
-    else:
-        if os.path.exists(filepath): # Remove empty status data files.
-            os.remove(filepath)
-        if os.path.exists(filepath + ".gz"):
-            os.remove(filepath + ".gz")
+        cmk.store.makedirs(cmk.paths.status_data_dir)
+        status_data_tree.save_to(cmk.paths.status_data_dir, hostname)
 
 
 def _run_inventory_export_hooks(hostname, inventory_tree):

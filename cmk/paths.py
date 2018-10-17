@@ -109,6 +109,9 @@ local_locale_dir          = None
 local_bin_dir             = None
 local_lib_dir             = None
 local_mib_dir             = None
+inventory_output_dir      = None
+inventory_archive_dir     = None
+status_data_dir           = None
 
 
 def _set_paths():
@@ -148,6 +151,10 @@ def _set_paths():
         "livestatus_unix_socket"      : os.path.join(omd_root, "tmp/run/live"),
         "pnp_rraconf_dir"             : os.path.join(omd_root, "share/check_mk/pnp-rraconf"),
         "livebackendsdir"             : os.path.join(omd_root, "share/check_mk/livestatus"),
+
+        "inventory_output_dir"        : os.path.join(omd_root, "var/check_mk/inventory"),
+        "inventory_archive_dir"       : os.path.join(omd_root, "var/check_mk/inventory_archive"),
+        "status_data_dir"             : os.path.join(omd_root, "tmp/check_mk/status_data"),
     })
 
     _set_core_specific_paths()

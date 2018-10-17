@@ -127,12 +127,10 @@ def load_plugin_includes(check_file_path, plugin_context):
                 continue
 
 
-
 def is_snmp_plugin(plugin_type):
     section_name = checks.section_name_of(plugin_type)
     return "snmp_info" in inv_info.get(section_name, {}) \
            or checks.is_snmp_check(plugin_type)
-
 
 #.
 #   .--Plugin API----------------------------------------------------------.

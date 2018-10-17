@@ -33,6 +33,9 @@
 # TODO: Think about some subclassing for the different directory types.
 # This would make some code a lot easier to understand.
 
+# TODO: Change ldap bytes_mode to False and remove all decoding stuff from
+# the ldap connector code.
+
 
 #   .--Declarations--------------------------------------------------------.
 #   |       ____            _                 _   _                        |

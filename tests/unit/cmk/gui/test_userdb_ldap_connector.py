@@ -29,165 +29,197 @@ def test_sync_plugins():
     ]
 
 
-tree = {
-    "dc=org": {
-        "objectclass": ["domain"],
-        "objectcategory": ["domain"],
-        "dn": ["dc=org"],
-        "dc": "org",
-    },
-    "dc=check-mk,dc=org": {
-        "objectclass": ["domain"],
-        "objectcategory": ["domain"],
-        "dn": ["dc=check-mk,dc=org"],
-        "dc": "check-mk",
-    },
-    "ou=users,dc=check-mk,dc=org": {
-        "objectclass": ["organizationalUnit"],
-        "objectcategory": ["organizationalUnit"],
-        "dn": ["ou=users,dc=check-mk,dc=org"],
-        "ou": "users",
-    },
-    "ou=groups,dc=check-mk,dc=org": {
-        "objectclass": ["organizationalUnit"],
-        "objectcategory": ["organizationalUnit"],
-        "dn": ["ou=groups,dc=check-mk,dc=org"],
-        "ou": "groups",
-    },
-    "cn=admin,ou=users,dc=check-mk,dc=org": {
-        "objectclass": ["user"],
-        "objectcategory": ["person"],
-        "dn": ["cn=admin,ou=users,dc=check-mk,dc=org"],
-        "cn": ["Admin"],
-        "samaccountname": [u"admin"],
-        "userPassword": ["ldap-test"],
-        "mail": ["admin@check-mk.org"],
-    },
-    "cn=härry,ou=users,dc=check-mk,dc=org": {
-        "objectclass": ["user"],
-        "objectcategory": ["person"],
-        "dn": ["cn=härry,ou=users,dc=check-mk,dc=org"],
-        "cn": ["Härry Hörsch"],
-        "samaccountname": ["härry"],
-        "userPassword": ["ldap-test"],
-        "mail": ["härry@check-mk.org"],
-    },
-    "cn=sync-user,ou=users,dc=check-mk,dc=org": {
-        "objectclass": ["user"],
-        "objectcategory": ["person"],
-        "dn": ["cn=sync-user,ou=users,dc=check-mk,dc=org"],
-        "cn": ["sync-user"],
-        "samaccountname": ["sync-user"],
-        "userPassword": ["sync-secret"],
-    },
-    "cn=admins,ou=groups,dc=check-mk,dc=org": {
-        "objectclass": ["group"],
-        "objectcategory": ["group"],
-        "dn": ["cn=admins,ou=groups,dc=check-mk,dc=org"],
-        "cn": ["admins"],
-        "member": [
-            "cn=admin,ou=users,dc=check-mk,dc=org",
-        ],
-    },
-    "cn=älle,ou=groups,dc=check-mk,dc=org": {
-        "objectclass": ["group"],
-        "objectcategory": ["group"],
-        "dn": ["cn=älle,ou=groups,dc=check-mk,dc=org"],
-        "cn": ["alle"],
-        "member": [
-            "cn=admin,ou=users,dc=check-mk,dc=org",
-            "cn=härry,ou=users,dc=check-mk,dc=org",
-        ],
-    },
-    "cn=top-level,ou=groups,dc=check-mk,dc=org": {
-        "objectclass": ["group"],
-        "objectcategory": ["group"],
-        "dn": ["cn=top-level,ou=groups,dc=check-mk,dc=org"],
-        "cn": ["top-level"],
-        "member": [
-            "cn=level1,ou=groups,dc=check-mk,dc=org",
-            "cn=sync-user,ou=users,dc=check-mk,dc=org",
-        ],
-    },
-    "cn=level1,ou=groups,dc=check-mk,dc=org": {
-        "objectclass": ["group"],
-        "objectcategory": ["group"],
-        "dn": ["cn=level1,ou=groups,dc=check-mk,dc=org"],
-        "cn": ["level1"],
-        "member": [
-            "cn=level2,ou=groups,dc=check-mk,dc=org",
-        ],
-    },
-    "cn=level2,ou=groups,dc=check-mk,dc=org": {
-        "objectclass": ["group"],
-        "objectcategory": ["group"],
-        "dn": ["cn=level2,ou=groups,dc=check-mk,dc=org"],
-        "cn": ["level2"],
-        "member": [
-            "cn=admin,ou=users,dc=check-mk,dc=org",
-            "cn=härry,ou=users,dc=check-mk,dc=org",
-        ],
-    },
-    "cn=loop1,ou=groups,dc=check-mk,dc=org": {
-        "objectclass": ["group"],
-        "objectcategory": ["group"],
-        "dn": ["cn=loop1,ou=groups,dc=check-mk,dc=org"],
-        "cn": ["loop1"],
-        "member": [
-            "cn=admin,ou=users,dc=check-mk,dc=org",
-            "cn=loop2,ou=groups,dc=check-mk,dc=org",
-        ],
-    },
-    "cn=loop2,ou=groups,dc=check-mk,dc=org": {
-        "objectclass": ["group"],
-        "objectcategory": ["group"],
-        "dn": ["cn=loop2,ou=groups,dc=check-mk,dc=org"],
-        "cn": ["loop2"],
-        "member": [
-            "cn=loop3,ou=groups,dc=check-mk,dc=org",
-        ],
-    },
-    "cn=loop3,ou=groups,dc=check-mk,dc=org": {
-        "objectclass": ["group"],
-        "objectcategory": ["group"],
-        "dn": ["cn=loop3,ou=groups,dc=check-mk,dc=org"],
-        "cn": ["loop3"],
-        "member": [
-            "cn=loop1,ou=groups,dc=check-mk,dc=org",
-            "cn=härry,ou=users,dc=check-mk,dc=org",
-        ],
-    },
-    "cn=empty,ou=groups,dc=check-mk,dc=org": {
-        "objectclass": ["group"],
-        "objectcategory": ["group"],
-        "dn": ["cn=empty,ou=groups,dc=check-mk,dc=org"],
-        "cn": ["empty"],
-        "member": [
-        ],
-    },
-    "cn=member-out-of-scope,ou=groups,dc=check-mk,dc=org": {
-        "objectclass": ["group"],
-        "objectcategory": ["group"],
-        "dn": ["cn=member-out-of-scope,ou=groups,dc=check-mk,dc=org"],
-        "cn": ["member-out-of-scope"],
-        "member": [
-            "cn=nono,ou=out-of-scope,dc=check-mk,dc=org",
-        ],
-    },
-    "cn=out-of-scope,dc=check-mk,dc=org": {
-        "objectclass": ["group"],
-        "objectcategory": ["group"],
-        "dn": ["cn=out-of-scope,ou=groups,dc=check-mk,dc=org"],
-        "cn": ["out-of-scope"],
-        "member": [
-            "cn=admin,ou=users,dc=check-mk,dc=org",
-        ],
-    },
-}
+def _ldap_tree():
+    tree = {
+        "dc=org": {
+            "objectclass": ["domain"],
+            "objectcategory": ["domain"],
+            "dn": ["dc=org"],
+            "dc": "org",
+        },
+        "dc=check-mk,dc=org": {
+            "objectclass": ["domain"],
+            "objectcategory": ["domain"],
+            "dn": ["dc=check-mk,dc=org"],
+            "dc": "check-mk",
+        },
+        "ou=users,dc=check-mk,dc=org": {
+            "objectclass": ["organizationalUnit"],
+            "objectcategory": ["organizationalUnit"],
+            "dn": ["ou=users,dc=check-mk,dc=org"],
+            "ou": "users",
+        },
+        "ou=groups,dc=check-mk,dc=org": {
+            "objectclass": ["organizationalUnit"],
+            "objectcategory": ["organizationalUnit"],
+            "dn": ["ou=groups,dc=check-mk,dc=org"],
+            "ou": "groups",
+        },
+    }
+
+    users = {
+        "cn=admin,ou=users,dc=check-mk,dc=org": {
+            "objectclass": ["user"],
+            "objectcategory": ["person"],
+            "dn": ["cn=admin,ou=users,dc=check-mk,dc=org"],
+            "cn": ["Admin"],
+            "samaccountname": ["admin"],
+            "userPassword": ["ldap-test"],
+            "mail": ["admin@check-mk.org"],
+        },
+        "cn=härry,ou=users,dc=check-mk,dc=org": {
+            "objectclass": ["user"],
+            "objectcategory": ["person"],
+            "dn": ["cn=härry,ou=users,dc=check-mk,dc=org"],
+            "cn": ["Härry Hörsch"],
+            "samaccountname": ["härry"],
+            "userPassword": ["ldap-test"],
+            "mail": ["härry@check-mk.org"],
+        },
+        "cn=sync-user,ou=users,dc=check-mk,dc=org": {
+            "objectclass": ["user"],
+            "objectcategory": ["person"],
+            "dn": ["cn=sync-user,ou=users,dc=check-mk,dc=org"],
+            "cn": ["sync-user"],
+            "samaccountname": ["sync-user"],
+            "userPassword": ["sync-secret"],
+        },
+    }
+
+    groups = {
+        "cn=admins,ou=groups,dc=check-mk,dc=org": {
+            "objectclass": ["group"],
+            "objectcategory": ["group"],
+            "dn": ["cn=admins,ou=groups,dc=check-mk,dc=org"],
+            "cn": ["admins"],
+            "member": [
+                "cn=admin,ou=users,dc=check-mk,dc=org",
+            ],
+        },
+        u"cn=älle,ou=groups,dc=check-mk,dc=org": {
+            "objectclass": ["group"],
+            "objectcategory": ["group"],
+            "dn": [u"cn=älle,ou=groups,dc=check-mk,dc=org"],
+            "cn": ["alle"],
+            "member": [
+                "cn=admin,ou=users,dc=check-mk,dc=org",
+                "cn=härry,ou=users,dc=check-mk,dc=org",
+            ],
+        },
+        "cn=top-level,ou=groups,dc=check-mk,dc=org": {
+            "objectclass": ["group"],
+            "objectcategory": ["group"],
+            "dn": ["cn=top-level,ou=groups,dc=check-mk,dc=org"],
+            "cn": ["top-level"],
+            "member": [
+                "cn=level1,ou=groups,dc=check-mk,dc=org",
+                "cn=sync-user,ou=users,dc=check-mk,dc=org",
+            ],
+        },
+        "cn=level1,ou=groups,dc=check-mk,dc=org": {
+            "objectclass": ["group"],
+            "objectcategory": ["group"],
+            "dn": ["cn=level1,ou=groups,dc=check-mk,dc=org"],
+            "cn": ["level1"],
+            "member": [
+                "cn=level2,ou=groups,dc=check-mk,dc=org",
+            ],
+        },
+        "cn=level2,ou=groups,dc=check-mk,dc=org": {
+            "objectclass": ["group"],
+            "objectcategory": ["group"],
+            "dn": ["cn=level2,ou=groups,dc=check-mk,dc=org"],
+            "cn": ["level2"],
+            "member": [
+                "cn=admin,ou=users,dc=check-mk,dc=org",
+                "cn=härry,ou=users,dc=check-mk,dc=org",
+            ],
+        },
+        "cn=loop1,ou=groups,dc=check-mk,dc=org": {
+            "objectclass": ["group"],
+            "objectcategory": ["group"],
+            "dn": ["cn=loop1,ou=groups,dc=check-mk,dc=org"],
+            "cn": ["loop1"],
+            "member": [
+                "cn=admin,ou=users,dc=check-mk,dc=org",
+                "cn=loop2,ou=groups,dc=check-mk,dc=org",
+            ],
+        },
+        "cn=loop2,ou=groups,dc=check-mk,dc=org": {
+            "objectclass": ["group"],
+            "objectcategory": ["group"],
+            "dn": ["cn=loop2,ou=groups,dc=check-mk,dc=org"],
+            "cn": ["loop2"],
+            "member": [
+                "cn=loop3,ou=groups,dc=check-mk,dc=org",
+            ],
+        },
+        "cn=loop3,ou=groups,dc=check-mk,dc=org": {
+            "objectclass": ["group"],
+            "objectcategory": ["group"],
+            "dn": ["cn=loop3,ou=groups,dc=check-mk,dc=org"],
+            "cn": ["loop3"],
+            "member": [
+                "cn=loop1,ou=groups,dc=check-mk,dc=org",
+                "cn=härry,ou=users,dc=check-mk,dc=org",
+            ],
+        },
+        "cn=empty,ou=groups,dc=check-mk,dc=org": {
+            "objectclass": ["group"],
+            "objectcategory": ["group"],
+            "dn": ["cn=empty,ou=groups,dc=check-mk,dc=org"],
+            "cn": ["empty"],
+            "member": [
+            ],
+        },
+        "cn=member-out-of-scope,ou=groups,dc=check-mk,dc=org": {
+            "objectclass": ["group"],
+            "objectcategory": ["group"],
+            "dn": ["cn=member-out-of-scope,ou=groups,dc=check-mk,dc=org"],
+            "cn": ["member-out-of-scope"],
+            "member": [
+                "cn=nono,ou=out-of-scope,dc=check-mk,dc=org",
+            ],
+        },
+        "cn=out-of-scope,dc=check-mk,dc=org": {
+            "objectclass": ["group"],
+            "objectcategory": ["group"],
+            "dn": ["cn=out-of-scope,ou=groups,dc=check-mk,dc=org"],
+            "cn": ["out-of-scope"],
+            "member": [
+                "cn=admin,ou=users,dc=check-mk,dc=org",
+            ],
+        },
+    }
+
+    tree.update(users)
+    tree.update(groups)
+
+    # Dynamically patch memberOf attribute into the user objects to make checking
+    # of nested group memberships work without redundancy
+    for group_dn, group in sorted(groups.items()):
+        for member_dn in group["member"]:
+            if member_dn in tree:
+                tree[member_dn].setdefault("memberof", []).append(group_dn)
+
+    return tree
+
+
+def encode_to_byte_strings(inp):
+    if isinstance(inp, dict):
+        return {encode_to_byte_strings(key): encode_to_byte_strings(value) for key, value in inp.iteritems()}
+    elif isinstance(inp, list):
+        return [encode_to_byte_strings(element) for element in inp]
+    elif isinstance(inp, tuple):
+        return tuple([encode_to_byte_strings(element) for element in inp])
+    elif isinstance(inp, unicode):
+        return inp.encode("utf-8")
+    return inp
+
 
 @pytest.fixture(scope="module")
 def mocked_ldap():
-    ldap_mock = MockLdap(tree)
+    ldap_mock = MockLdap(_ldap_tree())
 
     ldap_connection = ldap.LDAPUserConnector({
         "id"   : "default",
@@ -214,10 +246,28 @@ def mocked_ldap():
     ldap_connection._ldap_obj = ldap_mock["ldap://127.0.0.1"]
 
     def search_ext(self, base, scope, filterstr='(objectclass=*)', attrlist=None, attrsonly=0, serverctrls=None):
+
+        # MockLdap does not exactly behave like python ldap library in terms of
+        # encoding. The latter want's to have byte encoded strings and MockLdap
+        # wants unicode strings :-/. Prepare the data we normally send to
+        # python-ldap for MockLdap here.
+        if type(base) != unicode:
+            base = base.decode("utf-8")
+
+        if type(filterstr) != unicode:
+            filterstr = filterstr.decode("utf-8")
+
         return self.search(base, scope, filterstr, attrlist, attrsonly)
 
+
     LDAPObject.search_ext = search_ext
-    LDAPObject.result3 = lambda *args, **kwargs: tuple(list(LDAPObject.result(*args, **kwargs)) + [None, []])
+
+    def result_3(self, *args, **kwargs):
+        unused_code, response, unused_msgid, serverctrls = \
+            tuple(list(LDAPObject.result(self, *args, **kwargs)) + [None, []])
+        return unused_code, encode_to_byte_strings(response), unused_msgid, serverctrls
+
+    LDAPObject.result3 = result_3
 
     return ldap_connection
 
@@ -318,8 +368,9 @@ def test_get_users(mocked_ldap):
     }
 
 
-def test_get_group_memberships_flat(mocked_ldap):
-    assert mocked_ldap.get_group_memberships(["admins"]) == {
+@pytest.mark.parametrize("nested", [True, False])
+def test_get_group_memberships_simple(mocked_ldap, nested):
+    assert mocked_ldap.get_group_memberships(["admins"], nested=nested) == {
         u'cn=admins,ou=groups,dc=check-mk,dc=org': {
             'cn': u'admins',
             'members': [
@@ -329,12 +380,13 @@ def test_get_group_memberships_flat(mocked_ldap):
     }
 
 
-def test_get_group_memberships_flat_group_out_of_scope(mocked_ldap):
-    assert mocked_ldap.get_group_memberships(["out-of-scope"]) == {}
+@pytest.mark.parametrize("nested", [True, False])
+def test_get_group_memberships_flat_out_of_scope(mocked_ldap, nested):
+    assert mocked_ldap.get_group_memberships(["out-of-scope"], nested=nested) == {}
 
 
 # TODO: Currently failing. Need to fix the code.
-#def test_get_group_memberships_flat_out_of_scope_member(mocked_ldap):
+#def test_get_group_memberships_out_of_scope_member(mocked_ldap):
 #    assert mocked_ldap.get_group_memberships(["member-out-of-scope"]) == {
 #        u'cn=member-out-of-scope,ou=groups,dc=check-mk,dc=org': {
 #            'cn': u'member-out-of-scope',
@@ -355,8 +407,9 @@ def test_get_group_memberships_flat_group_out_of_scope(mocked_ldap):
 #    }
 
 
-def test_get_group_memberships_flat_with_non_ascii(mocked_ldap):
-    assert mocked_ldap.get_group_memberships(["alle"]) == {
+@pytest.mark.parametrize("nested", [True, False])
+def test_get_group_memberships_with_non_ascii(mocked_ldap, nested):
+    assert mocked_ldap.get_group_memberships(["alle"], nested=nested) == {
         u'cn=älle,ou=groups,dc=check-mk,dc=org': {
             'cn': u'alle',
             'members': [
@@ -367,40 +420,45 @@ def test_get_group_memberships_flat_with_non_ascii(mocked_ldap):
     }
 
 
-def test_get_group_memberships_not_existing(mocked_ldap):
-    assert mocked_ldap.get_group_memberships(["not-existing"]) == {}
+@pytest.mark.parametrize("nested", [True, False])
+def test_get_group_memberships_not_existing(mocked_ldap, nested):
+    assert mocked_ldap.get_group_memberships(["not-existing"], nested=nested) == {}
 
 
-# TODO: The LdapMock can currently not deal with the AD specific "memberOf:1.2.840.113556.1.4.1941:"
-# filter. During 1.6 development we'll drop this filter usage and replace it with our own nested
-# search. Enable this test then to verify it's working.
-#def test_get_group_memberships_nested(mocked_ldap):
-#    assert mocked_ldap.get_group_memberships(["empty", "top-level", "level1", "loop1], nested=True) == {
-#        u'cn=empty,ou=groups,dc=check-mk,dc=org': {
-#            'cn': u'empty',
-#            'members': [
-#            ],
-#        },
-#        u'cn=level1,ou=groups,dc=check-mk,dc=org': {
-#            'cn': u'level1',
-#            'members': [
-#                u"cn=admin,ou=users,dc=check-mk,dc=org",
-#                u"cn=härry,ou=users,dc=check-mk,dc=org",
-#            ],
-#        },
-#        u'cn=top-level,ou=groups,dc=check-mk,dc=org': {
-#            'cn': u'top-level',
-#            'members': [
-#                u"cn=sync-user,ou=users,dc=check-mk,dc=org",
-#                u"cn=admin,ou=users,dc=check-mk,dc=org",
-#                u"cn=härry,ou=users,dc=check-mk,dc=org",
-#            ],
-#        },
-#        u'cn=loop1,ou=groups,dc=check-mk,dc=org': {
-#            'cn': u'loop1',
-#            'members': [
-#                u"cn=admin,ou=users,dc=check-mk,dc=org",
-#                u"cn=härry,ou=users,dc=check-mk,dc=org",
-#            ],
-#        },
-#    }
+def test_get_group_memberships_nested(mocked_ldap):
+    memberships = mocked_ldap.get_group_memberships(["empty", "top-level", "level1", "level2"], nested=True)
+
+    assert len(memberships) == 4
+
+    needed_groups = [
+        (u'cn=empty,ou=groups,dc=check-mk,dc=org', {
+            'cn': u'empty',
+            'members': [
+            ],
+        }),
+        (u'cn=level2,ou=groups,dc=check-mk,dc=org', {
+            'cn': u'level2',
+            'members': [
+                u"cn=admin,ou=users,dc=check-mk,dc=org",
+                u"cn=härry,ou=users,dc=check-mk,dc=org",
+            ],
+        }),
+        (u'cn=level1,ou=groups,dc=check-mk,dc=org', {
+            'cn': u'level1',
+            'members': [
+                u"cn=admin,ou=users,dc=check-mk,dc=org",
+                u"cn=härry,ou=users,dc=check-mk,dc=org",
+            ],
+        }),
+        (u'cn=top-level,ou=groups,dc=check-mk,dc=org', {
+            'cn': u'top-level',
+            'members': [
+                u"cn=admin,ou=users,dc=check-mk,dc=org",
+                u"cn=härry,ou=users,dc=check-mk,dc=org",
+                u"cn=sync-user,ou=users,dc=check-mk,dc=org",
+            ],
+        }),
+    ]
+
+    for needed_group_dn, needed_group in needed_groups:
+        assert memberships[needed_group_dn] == needed_group

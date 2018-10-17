@@ -1,0 +1,11 @@
+Title: docker_node_info: Support old Docker versions
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0p7
+Date: 1539756651
+Class: feature
+
+Fixed incompatibility with old Docker versions not supporting
+the "--format" option, which resulted in faulty or missing agent data.

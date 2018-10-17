@@ -25,14 +25,6 @@
 # Boston, MA 02110-1301 USA.
 
 
-def parse_docker_node_info(info):
-    try:
-        import json
-        return json.loads("".join(info[0]))
-    except ValueError:
-        return " ".join(info[0])
-
-
 def inventory_docker_node_info(parsed):
     if parsed and isinstance(parsed, dict):
         return [(None, {})]
@@ -47,6 +39,7 @@ def check_docker_node_info(item, params, parsed):
 
 
 check_info['docker_node_info'] = {
+    'includes'              : ['docker.include'],
     'parse_function'        : parse_docker_node_info,
     'inventory_function'    : inventory_docker_node_info,
     'check_function'        : check_docker_node_info,

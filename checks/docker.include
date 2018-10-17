@@ -56,6 +56,60 @@ def _docker_get_bytes(string):
         return None
 
 
+def parse_docker_node_info(info):
+    '''parse output of "docker info"'''
+    try:
+        # parse legacy json output (verisons 1.5.0 - 1.5.0p6)
+        return json.loads(" ".join(info[0]))
+    except ValueError:
+        pass
+
+    parsed = {}
+    prefix = ""
+    for row in info:
+        if not row:
+            continue
+        # remove '|', it was protecting leading whitespace
+        row0 = row[0][1:]
+        if not row0:
+            continue
+        # ignore misssing keys / pad lines that are not of "key: value" type
+        if len(row) == 1:
+            row.append('')
+        key = row0.strip()
+        value = ':'.join(row[1:]).strip()
+        # indented keys are prefixed by the last not indented key
+        if len(row0) - len(key) == 0:
+            parsed[key] = value
+            prefix = key
+        else:
+            parsed[prefix + key] = value
+
+    ## some modifications to match json output:
+    for key in ("Images", "Containers", "ContainersRunning",
+                "ContainersStopped", "ContainersPaused"):
+        try:
+            parsed[key] = int(parsed[key])
+        except (KeyError, ValueError):
+            pass
+    # reconstruct labels (they where not in "k: v" format)
+    parsed["Labels"] = []
+    for k in parsed.keys():  # pylint: disable=consider-iterating-dictionary
+        if k.startswith("Labels") and k != "Labels":
+            parsed["Labels"].append(k[6:] + parsed.pop(k))
+    # reconstruct swarm info:
+    swarm = {"LocalNodeState": parsed["Swarm"]}
+    if "SwarmNodeID" in parsed:
+        swarm["NodeID"] = parsed["SwarmNodeID"]
+    if "SwarmManagers" in parsed:
+        swarm["RemoteManagers"] = parsed["SwarmManagers"]
+    parsed["Swarm"] = swarm
+    parsed["ServerVersion"] = parsed["Server Version"]
+    parsed["IndexServerAddress"] = parsed["Registry"]
+
+    return parsed
+
+
 def _docker_parse_table(rows, fields, keys):
     '''docker provides us with space separated tables with field containing spaces
 

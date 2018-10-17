@@ -1925,7 +1925,7 @@ def ldap_sync_auth_expire(connection, plugin, params, user_id, ldap_user, user):
     # Special handling for active directory: Is the user enabled / disabled?
     if connection.is_active_directory() and ldap_user.get('useraccountcontrol'):
         # see http://www.selfadsi.de/ads-attributes/user-userAccountControl.htm for details
-        locked_in_ad = saveint(ldap_user['useraccountcontrol'][0]) & 2
+        locked_in_ad = int(ldap_user['useraccountcontrol'][0]) & 2
         locked_in_cmk = user.get("locked", False)
 
         if locked_in_ad and not locked_in_cmk:

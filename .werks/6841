@@ -1,0 +1,10 @@
+Title: Fixed missing hostname in graph collection graph titles
+Level: 1
+Component: metrics
+Compatible: compat
+Edition: cee
+Version: 1.5.0p7
+Date: 1539875901
+Class: fix
+
+

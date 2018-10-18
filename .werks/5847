@@ -1,0 +1,11 @@
+Title: lnx_thermal: Fixed to only gather values of temp & type
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0p6
+Date: 1539338001
+Class: fix
+
+The Linux agent collected too many values when hysteresis data was available and the check crashed.
+This has been fixed now by fixing the required values.

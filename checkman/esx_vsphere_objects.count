@@ -6,7 +6,8 @@ distribution: check_mk
 description:
  This Check only counts the nubmer of Virtualmachines on a Hostsystem, or the number of
  Virtualmachines and Hostsystems on a vCenter.
- It's always {OK}
+ Via the rule "Distribution of virtual machines over ESX hosts" you can make sure that a
+ given set of VMs is running on a given number of different Hosts.
 
 inventory:
  One service will be created

@@ -966,12 +966,15 @@ fi
 # Gather thermal information provided e.g. by acpi
 # At the moment only supporting thermal sensors
 if [ -z "$MK_IN_CONTAINER" ] && ls /sys/class/thermal/thermal_zone* >/dev/null 2>&1; then
-    echo '<<<lnx_thermal>>>'
+    echo '<<<lnx_thermal:sep(124)>>>'
     for F in /sys/class/thermal/thermal_zone*; do
-        echo -n "${F##*/} "
-        if [ ! -e "$F/mode" ] ; then echo -n "- " ; fi
-        cat "$F"/{mode,type,temp,trip_point_*} | tr \\n " "
-        echo
+        line="${F##*/}"
+        if [ ! -e "$F/mode" ] ; then line="${line}|-" ; else line="${line}|$(cat "$F"/mode)"; fi
+        line="${line}|$(cat "$F"/{type,temp} | tr \\n "|")"
+        for G in $(ls "$F"/trip_point_*_{temp,type}); do
+            line="${line}$(< "$G" tr \\n "|")"
+        done
+        echo "${line%?}"
     done
 fi
 

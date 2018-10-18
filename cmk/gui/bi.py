@@ -24,13 +24,13 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+import hashlib
 import re
 import pprint
 import time
 import os
 import marshal
 import fcntl
-import md5
 import multiprocessing
 from contextlib import contextmanager
 import traceback
@@ -413,7 +413,7 @@ class JobWorker(multiprocessing.Process):
 
         # Generates a unique id for the given entry
         def get_hash(entry):
-            return md5.md5(repr(entry) + repr(job)).hexdigest()
+            return hashlib.md5(repr(entry) + repr(job)).hexdigest()
 
         for group in {sg for g in groups for sg in g}: # Flattened groups
             new_entries_hash = map(get_hash, new_entries)

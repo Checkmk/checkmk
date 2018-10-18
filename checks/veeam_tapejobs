@@ -48,8 +48,12 @@ def inventory_veeam_tapejobs(parsed):
 
 
 def check_veeam_tapejobs(item, params, parsed):
-    last_result = parsed[item]["last_result"]
-    last_state = parsed[item]["last_state"]
+    data = parsed.get(item)
+    if data is None:
+        return
+
+    last_result = data["last_result"]
+    last_state = data["last_state"]
     statetext = ", last state: " + last_state
 
     warn, crit = params

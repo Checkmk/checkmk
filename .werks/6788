@@ -1,0 +1,35 @@
+Title: Notification spooler: Fixed deserialization of arbitrary input
+Level: 2
+Component: notifications
+Compatible: incomp
+Edition: cee
+Version: 1.4.0p37
+Date: 1539862587
+Class: security
+
+The notification daemon of one site connects to the notification daemon of
+another site to exchange notifications between both sites.
+
+The messages that are sent between the notification daemons were encoded in an
+insecure format which allowed code injections between the communication
+partners. This means it was possible to inject code from one notification
+spooler to another.
+
+We have now changed the message format to a secure alternative which prevents
+code injections.
+
+To be able to perform this transition without loosing notifications and
+preventing subtile incompatibilities we decided to keep the new format disabled
+by default for all sites created with Check_MK 1.4 and 1.5. This means your
+installation will still be affected by this issue by default after updating.
+
+However, once you have updated all your sites to at least 1.4.0p37 in case of
+the 1.4.0 branch or or at least 1.5.0p7 in case of the 1.5.0 branch you can
+change the main configuration option "Notification Spooler insecure messages"
+to "off" and activate the new configuration. Once you have done this all
+notification spoolers will use the new secure message format.
+
+Please note that the 1.6 notification spoolers will always use the new message
+format and not be compatible to the old message format of the 1.5 notification
+spoolers anymore. If you plan to use 1.5 and 1.6 together during migration you
+will have to ensure that you use the new message format in your 1.5 sites.

@@ -514,7 +514,7 @@ def replace_expressions(text, translated_metrics):
 def get_graph_template_choices():
     # TODO: v.get("title", k): Use same algorithm as used in
     # GraphIdentificationTemplateBased._parse_template_metric()
-    return sorted([ (k, v.get("title", k)) for k, v in graph_info.items() ], key=lambda (k, v): v)
+    return sorted([ (k, v.get("title", k)) for k, v in graph_info.items() ], key=lambda k_v: k_v[1])
 
 
 def get_graph_template(template_id):

@@ -154,7 +154,7 @@ class ModeEditBackupJob(backup.PageEditBackupJob, WatoMode):
             if key not in choice_dict:
                 choices.append((key, _("%s (system wide)") % title))
 
-        return sorted(choices, key=lambda (x, y): y.title())
+        return sorted(choices, key=lambda x_y: x_y[1].title())
 
 
     def _validate_target(self, value, varprefix):

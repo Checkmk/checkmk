@@ -5199,7 +5199,7 @@ class ActivateChanges(object):
                 affected_sites = changes[change_id].setdefault("affected_sites", [])
                 affected_sites.append(site_id)
 
-        self._changes = sorted(changes.items(), key=lambda (k, v): v["time"])
+        self._changes = sorted(changes.items(), key=lambda k_v: k_v[1]["time"])
 
 
 

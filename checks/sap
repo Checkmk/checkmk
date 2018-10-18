@@ -264,9 +264,9 @@ def check_sap_value_groups(item, params, info, deprecated=False):
 
 # Deprecated with 1.4.0i1. Remove some versions after!
 check_info['sap.value-groups'] = {
-    'check_function'      : lambda (item, params, info): \
-                                check_sap_value_groups(item, params, info, deprecated=True),
-    'inventory_function'  : lambda (info): [],
+    'check_function'      : lambda item_params_info: \
+                                check_sap_value_groups(item_params_info[0], item_params_info[1], item_params_info[2], deprecated=True),
+    'inventory_function'  : lambda info: [],
     'service_description' : "%s",
 }
 precompile_params['sap.value-groups'] = sap_value_groups_precompile

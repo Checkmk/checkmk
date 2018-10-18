@@ -417,38 +417,7 @@ class ACTestBackupNotEncryptedConfigured(ACTest):
 
 
 
-class ACMicrocoreTest(object):
-    """Abstract base class for microcore specific tests"""
-    __metaclass__ = abc.ABCMeta
-
-    def _uses_microcore(self):
-        local_connection = sites.livestatus.LocalConnection()
-        version = local_connection.query_value("GET status\nColumns: program_version\n", deflt="")
-        return version.startswith("Check_MK")
-
-
-    def _get_effective_global_setting(self, varname):
-        global_settings = watolib.load_configuration_settings()
-        default_values = watolib.ConfigDomain().get_all_default_globals()
-
-        if watolib.is_wato_slave_site():
-            current_settings = watolib.load_configuration_settings(site_specific=True)
-        else:
-            sites = watolib.SiteManagementFactory.factory().load_sites()
-            current_settings = sites[config.omd_site()].get("globals", {})
-
-        if varname in current_settings:
-            value = current_settings[varname]
-        elif varname in global_settings:
-            value = global_settings[varname]
-        else:
-            value = default_values[varname]
-
-        return value
-
-
-
-class ACApacheTest(object):
+class ACApacheTest(ACTest):
     """Abstract base class for apache related tests"""
     __metaclass__ = abc.ABCMeta
 
@@ -483,7 +452,7 @@ class ACApacheTest(object):
 
 
 
-class ACTestApacheNumberOfProcesses(ACTest, ACApacheTest):
+class ACTestApacheNumberOfProcesses(ACApacheTest):
     def category(self):
         return ACTestCategories.performance
 
@@ -567,7 +536,7 @@ class ACTestApacheNumberOfProcesses(ACTest, ACApacheTest):
 
 
 
-class ACTestApacheProcessUsage(ACTest, ACApacheTest):
+class ACTestApacheProcessUsage(ACApacheTest):
     def category(self):
         return ACTestCategories.performance
 
@@ -609,7 +578,7 @@ class ACTestApacheProcessUsage(ACTest, ACApacheTest):
 
 
 
-class ACTestCheckMKHelperUsage(ACTest, ACMicrocoreTest):
+class ACTestCheckMKHelperUsage(ACTest):
     def category(self):
         return ACTestCategories.performance
 
@@ -671,7 +640,7 @@ class ACTestCheckMKHelperUsage(ACTest, ACMicrocoreTest):
 
 
 
-class ACTestAlertHandlerEventTypes(ACTest, ACMicrocoreTest):
+class ACTestAlertHandlerEventTypes(ACTest):
     def category(self):
         return ACTestCategories.performance
 
@@ -699,7 +668,7 @@ class ACTestAlertHandlerEventTypes(ACTest, ACMicrocoreTest):
 
 
 
-class ACTestGenericCheckHelperUsage(ACTest, ACMicrocoreTest):
+class ACTestGenericCheckHelperUsage(ACTest):
     def category(self):
         return ACTestCategories.performance
 

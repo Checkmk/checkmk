@@ -63,7 +63,8 @@ def j4p_performance_parse(info):
     return parsed
 
 
-def j4p_performance_app(info, (inst, app)):
+def j4p_performance_app(info, split_item):
+    inst, app = split_item
     parsed = j4p_performance_parse(info)
     if not inst in parsed \
        or not app in parsed[inst].get('apps', {}):
@@ -71,7 +72,8 @@ def j4p_performance_app(info, (inst, app)):
     return parsed[inst]['apps'][app]
 
 
-def j4p_performance_serv(info, (inst, app, serv)):
+def j4p_performance_serv(info, split_item):
+    inst, app, serv = split_item
     app = j4p_performance_app(info, (inst, app))
     if not app or not serv in app.get('servlets', {}):
         return None

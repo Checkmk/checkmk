@@ -1823,7 +1823,7 @@ def mode_jobs(opts):
     fmt = "%-29s %-30s\n"
     sys.stdout.write(fmt % ("Job-ID", "Title"))
     sys.stdout.write("%s\n" % ("-" * 60))
-    for job_id, job_cfg in sorted(g_config["jobs"].items(), key=lambda (x, y): x):
+    for job_id, job_cfg in sorted(g_config["jobs"].items(), key=lambda x_y: x_y[0]):
         sys.stdout.write(fmt % (job_id, job_cfg["title"].encode("utf-8")))
 
 
@@ -1831,7 +1831,7 @@ def mode_targets(opts):
     fmt = "%-29s %-30s\n"
     sys.stdout.write(fmt % ("Target-ID", "Title"))
     sys.stdout.write("%s\n" % ("-" * 60))
-    for job_id, job_cfg in sorted(g_config["targets"].items(), key=lambda (x, y): x):
+    for job_id, job_cfg in sorted(g_config["targets"].items(), key=lambda x_y1: x_y1[0]):
         sys.stdout.write(fmt % (job_id, job_cfg["title"].encode("utf-8")))
 
 
@@ -1868,7 +1868,7 @@ def usage(error=None):
             sys.stdout.write("%sMODE OPTIONS:\n" % mode_indent)
             sys.stdout.write("\n")
 
-            for opt_id, opt in sorted(opts.items(), key=lambda (k, v): k):
+            for opt_id, opt in sorted(opts.items(), key=lambda k_v: k_v[0]):
                 sys.stdout.write("%s  --%-13s %s\n" % (mode_indent, opt_id, opt["description"]))
             sys.stdout.write("\n")
 

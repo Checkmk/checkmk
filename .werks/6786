@@ -1,0 +1,19 @@
+Title: Livestatus proxy: Fixed file path traversal vulnerability
+Level: 2
+Component: liveproxy
+Compatible: compat
+Edition: cee
+Version: 1.4.0p37
+Date: 1539844674
+Class: security
+
+The livestatus proxy connects to the livestatus server of remote sites. One task is to
+fetch the inventory data of the remote site and replicate it to the master site to make
+client accesses faster.
+
+The livestatus proxy was not validating the incoming data correctly which made it possible
+for an attacker that has access to the remote sites to compromise the site the livestatus
+proxy daemon is running in.
+
+Using this vulnerability it was possible to write write files in directories that are writable
+by the liveproxy site user. This could be used to gain access to the liveproxy site.

@@ -57,7 +57,7 @@ def pytest_configure(config):
 def pytest_collection_modifyitems(items):
     """Mark collected test types based on their location"""
     for item in items:
-        type_marker = item.get_marker("type")
+        type_marker = item.get_closest_marker("type")
         if type_marker and type_marker.args:
             continue # Do not modify manually set marks
 
@@ -82,7 +82,7 @@ def pytest_collection_modifyitems(items):
 
 def pytest_runtest_setup(item):
     """Skip tests of unwanted types"""
-    test_type = item.get_marker("type")
+    test_type = item.get_closest_marker("type")
     if test_type is None:
         raise Exception("Test is not TYPE marked: %s" % item)
 

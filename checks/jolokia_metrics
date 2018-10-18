@@ -246,7 +246,8 @@ def inventory_jolokia_metrics_apps(info, what):
 #   '----------------------------------------------------------------------'
 
 # This bisects the app server and its values
-def jolokia_metrics_app(info, (inst, app)):
+def jolokia_metrics_app(info, split_item):
+    inst, app = split_item
     parsed = jolokia_metrics_parse(info)
     if parsed.get(inst, "") == None:
         raise MKCounterWrapped("No information from Jolokia agent")
@@ -257,13 +258,15 @@ def jolokia_metrics_app(info, (inst, app)):
     return parsed[inst]['apps'][app]
 
 # This bisects info from BEA and passes on to jolokia_metrics_app
-def jolokia_metrics_serv(info, (inst, app, serv)):
+def jolokia_metrics_serv(info, split_item):
+    inst, app, serv = split_item
     app = jolokia_metrics_app(info, (inst, app))
     if not app or not serv in app.get('servlets', {}):
         return None
     return app['servlets'][serv]
 
-def jolokia_metrics_gc(info, (inst, typ, gc)):
+def jolokia_metrics_gc(info, split_item):
+    inst, _typ, gc = split_item
     parsed = jolokia_metrics_parse(info)
     if parsed.get(inst, "") == None:
         raise MKCounterWrapped("No information from Jolokia agent")
@@ -444,7 +447,8 @@ check_info["jolokia_metrics.gc"] = {
 #   |                        |_|                                           |
 #   '----------------------------------------------------------------------'
 
-def jolokia_metrics_tp(info, (inst, typ, threadpool_name)):
+def jolokia_metrics_tp(info, split_item):
+    inst, typ, threadpool_name = split_item
     parsed = jolokia_metrics_parse(info)
     if parsed.get(inst, "") == None:
         raise MKCounterWrapped("No information from Jolokia agent")

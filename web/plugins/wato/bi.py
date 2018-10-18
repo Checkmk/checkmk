@@ -1907,9 +1907,9 @@ class ModeBIEditRule(ModeBI):
             ( "state_messages",
                 Optional(
                 Dictionary(
-                    elements = map(lambda (state, name):
-                            (state, TextAscii(
-                                    title = _("Message when rule result is %s") % name,
+                    elements = map(lambda state_name:
+                            (state_name[0], TextAscii(
+                                    title = _("Message when rule result is %s") % state_name[1],
                                     default_value = None, size = 80)),
                                     [("0", "OK"),
                                      ("1", "WARN"),

@@ -10198,10 +10198,41 @@ class ACTest(object):
         return self._results
 
 
+    def _uses_microcore(self):
+        """Whether or not the local site is using the CMC"""
+        local_connection = sites.livestatus.LocalConnection()
+        version = local_connection.query_value("GET status\nColumns: program_version\n", deflt="")
+        return version.startswith("Check_MK")
+
+
+    def _get_effective_global_setting(self, varname):
+        global_settings = load_configuration_settings()
+        default_values = ConfigDomain().get_all_default_globals()
+
+        if is_wato_slave_site():
+            current_settings = load_configuration_settings(site_specific=True)
+        else:
+            sites = SiteManagementFactory.factory().load_sites()
+            current_settings = sites[config.omd_site()].get("globals", {})
+
+        if varname in current_settings:
+            value = current_settings[varname]
+        elif varname in global_settings:
+            value = global_settings[varname]
+        else:
+            value = default_values[varname]
+
+        return value
+
+
 
 def check_analyze_config():
     results = []
+    # TODO: I'll clean up this plugin mechanism soon
     for test_cls in ACTest.__subclasses__(): # pylint: disable=no-member
+        if test_cls.__subclasses__(): # pylint: disable=no-member
+            continue # Only use leaf classes
+
         test = test_cls()
 
         if not test.is_relevant():

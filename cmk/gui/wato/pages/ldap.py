@@ -31,6 +31,7 @@ import cmk.gui.config as config
 import cmk.gui.watolib as watolib
 import cmk.gui.userdb as userdb
 import cmk.gui.table as table
+import cmk.gui.plugins.userdb.ldap_connector
 from cmk.gui.log import logger
 from cmk.gui.htmllib import HTML
 from cmk.gui.exceptions import MKUserError
@@ -262,7 +263,7 @@ class ModeEditLDAPConnection(LDAPMode):
                            'href="https://mathias-kettner.com/checkmk_multisite_ldap_integration.html">'
                            'LDAP Documentation</a>.'))))
         else:
-            connection = userdb.get_connection(self._connection_id)
+            connection = userdb.get_connection(self._connection_id) # type: cmk.gui.plugins.userdb.ldap_connector.LDAPUserConnector
             for address in connection.servers():
                 html.h3("%s: %s" % (_('Server'), address))
                 table.begin('test', searchable = False)
@@ -382,22 +383,22 @@ class ModeEditLDAPConnection(LDAPMode):
         if 'groups_to_roles' not in active_plugins:
             return True, _('Skipping this test (Plugin is not enabled)')
 
+        params = active_plugins['groups_to_roles']
         connection.connect(enforce_new = True, enforce_server = address)
-        num = 0
+
+        ldap_groups = cmk.gui.plugins.userdb.ldap_connector.fetch_needed_groups_for_groups_to_roles(connection, params)
+
+        num_groups = 0
         for role_id, group_distinguished_names in active_plugins['groups_to_roles'].items():
             if type(group_distinguished_names) != list:
                 group_distinguished_names = [group_distinguished_names]
 
-            for dn in group_distinguished_names:
-                if type(dn) in [ str, unicode ]:
-                    num += 1
-                    try:
-                        ldap_groups = connection.get_groups(dn)
-                        if not ldap_groups:
-                            return False, _('Could not find the group specified for role %s') % role_id
-                    except Exception, e:
-                        return False, _('Error while fetching group for role %s: %s') % (role_id, e)
-        return True, _('Found all %d groups.') % num
+            for dn, _search_connection_id in group_distinguished_names:
+                if dn.lower() not in ldap_groups:
+                    return False, _('Could not find the group specified for role %s') % role_id
+
+                num_groups += 1
+        return True, _('Found all %d groups.') % num_groups
 
 
     def _valuespec(self):

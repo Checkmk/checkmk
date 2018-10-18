@@ -353,7 +353,7 @@ def test_non_contact_attributes(mocked_ldap):
 
 
 def test_get_users(mocked_ldap):
-    users = mocked_ldap._get_users()
+    users = mocked_ldap.get_users()
     assert len(users) == 3
 
     assert u"härry" in users

@@ -68,7 +68,7 @@ from cmk.gui.valuespec import *
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
 from cmk.gui.exceptions import MKGeneralException, MKUserError
-from . import UserConnector, user_connector_registry
+from cmk.gui.plugins.userdb.utils import UserConnector, user_connector_registry
 
 if cmk.is_managed_edition():
     import cmk.gui.cme.managed as managed
@@ -710,7 +710,7 @@ class LDAPUserConnector(UserConnector):
 
 
 
-    def _get_users(self, add_filter = ''):
+    def get_users(self, add_filter = ''):
         user_id_attr = self._user_id_attr()
 
         columns = [
@@ -748,6 +748,21 @@ class LDAPUserConnector(UserConnector):
                 result[user_id] = ldap_user
 
         return result
+
+
+    def get_groups(self, specific_dn = None):
+        filt = self.ldap_filter('groups')
+        dn   = self.get_group_dn()
+
+        if specific_dn:
+            # When using AD, the groups can be filtered by the DN attribute. With
+            # e.g. OpenLDAP this is not possible. In that case, change the DN.
+            if self.is_active_directory():
+                filt = '(&%s(distinguishedName=%s))' % (filt, specific_dn)
+            else:
+                dn = specific_dn
+
+        return self._ldap_search(dn, filt, ['cn'], self._config['group_scope'])
 
 
     # TODO: Use get_group_memberships()?
@@ -1072,7 +1087,7 @@ class LDAPUserConnector(UserConnector):
         self._logger.info('SYNC STARTED')
         self._logger.info('  SYNC PLUGINS: %s' % ', '.join(self._config['active_plugins'].keys()))
 
-        ldap_users = self._get_users()
+        ldap_users = self.get_users()
 
         import cmk.gui.userdb as userdb # TODO: Cleanup
         users = userdb.load_users(lock = True)
@@ -2251,15 +2266,7 @@ ldap_attribute_plugins['groups_to_attributes'] = {
 #   '----------------------------------------------------------------------'
 
 def ldap_sync_groups_to_roles(connection, plugin, params, user_id, ldap_user, user):
-    import cmk.gui.userdb as userdb # TODO: Cleanup
-
-    # Load the needed LDAP groups, which match the DNs mentioned in the role sync plugin config
-    ldap_groups = {}
-    for connection_id, group_dns in get_groups_to_fetch(connection, params).items():
-        conn = userdb.get_connection(connection_id)
-        ldap_groups.update(dict(conn.get_group_memberships(group_dns,
-                                filt_attr = 'distinguishedname',
-                                nested = params.get('nested', False))))
+    ldap_groups = fetch_needed_groups_for_groups_to_roles(connection, params)
 
     # posixGroup objects use the memberUid attribute to specify the group
     # memberships. This is the username instead of the users DN. So the
@@ -2294,7 +2301,21 @@ def ldap_sync_groups_to_roles(connection, plugin, params, user_id, ldap_user, us
     return {'roles': list(roles)}
 
 
-def get_groups_to_fetch(connection, params):
+def fetch_needed_groups_for_groups_to_roles(connection, params):
+    import cmk.gui.userdb as userdb # TODO: Cleanup
+
+    # Load the needed LDAP groups, which match the DNs mentioned in the role sync plugin config
+    ldap_groups = {}
+    for connection_id, group_dns in _get_groups_to_fetch(connection, params).items():
+        conn = userdb.get_connection(connection_id)
+        ldap_groups.update(dict(conn.get_group_memberships(group_dns,
+                                filt_attr = 'distinguishedname',
+                                nested = params.get('nested', False))))
+
+    return ldap_groups
+
+
+def _get_groups_to_fetch(connection, params):
     groups_to_fetch = {}
     for group_specs in params.itervalues():
         if type(group_specs) == list:

@@ -1,0 +1,18 @@
+Title: Notification spooler: Fixed file path traversal vulnerability
+Level: 2
+Component: notifications
+Compatible: compat
+Edition: cee
+Version: 1.4.0p37
+Date: 1539847243
+Class: security
+
+The notification daemon of one site connects to the notification daemon of another site
+to exchange notifications between both sites.
+
+The notification daemon was not validating the incoming data correctly which made it possible
+for an attacker that has access to the notification sending site to compromise the receiving
+site.
+
+Using this vulnerability it was possible to write write files in directories that are writable
+by the receiving site user. This could be used to gain access to the site.

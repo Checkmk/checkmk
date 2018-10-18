@@ -6124,7 +6124,7 @@ class ModeEditBackupJob(backup.PageEditBackupJob, WatoMode):
             if key not in choice_dict:
                 choices.append((key, _("%s (system wide)") % title))
 
-        return sorted(choices, key=lambda (x, y): y.title())
+        return sorted(choices, key=lambda x_y: x_y[1].title())
 
 
     def _validate_target(self, value, varprefix):
@@ -13280,7 +13280,7 @@ class ModeRulesets(WatoMode):
 
         html.open_div(class_="rulesets")
 
-        grouped_rulesets = sorted(rulesets.get_grouped(), key=lambda (k, v): watolib.get_rulegroup(k).title)
+        grouped_rulesets = sorted(rulesets.get_grouped(), key=lambda k_v: watolib.get_rulegroup(k_v[0]).title)
 
         for main_group_name, sub_groups in grouped_rulesets:
             # Display the main group header only when there are several main groups shown

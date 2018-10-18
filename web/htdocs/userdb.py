@@ -128,7 +128,7 @@ def active_connections():
 def connection_choices():
     return sorted([ (cid, "%s (%s)" % (cid, c.type())) for cid, c in get_connections(only_enabled=False)
                      if c.type() == "ldap" ],
-                  key=lambda (x, y): y)
+                  key=lambda x_y: x_y[1])
 
 
 # When at least one LDAP connection is defined and active a sync is possible

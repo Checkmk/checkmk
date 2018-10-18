@@ -175,7 +175,7 @@ class BackupEntityCollection(object):
 
     def choices(self):
         return sorted([ (ident, obj.title()) for ident, obj in self.objects.items() ],
-                        key=lambda (x, y): y.title())
+                        key=lambda x_y: x_y[1].title())
 
 
     def add(self, obj):
@@ -809,7 +809,7 @@ class PageEditBackupJob(object):
 
 
     def backup_target_choices(self):
-        return sorted(self.targets().choices(), key=lambda (x, y): y.title())
+        return sorted(self.targets().choices(), key=lambda x_y1: x_y1[1].title())
 
 
     def action(self):

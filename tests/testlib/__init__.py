@@ -1,8 +1,6 @@
 #!/usr/bin/env python
 # encoding: utf-8
 
-print("==================== executing tests/testlib/__init__.py")
-
 import os
 import glob
 import pwd

@@ -4,7 +4,7 @@ include ../../Makefile.omd
 # principle we could use any tag by exporting it manually via:
 #    ( TAG=2018-02-01; git archive --prefix=re2-$TAG/ --output=re2-$TAG.tar.gz $TAG )
 NAME     = re2
-VERSION  = 2018-02-01
+VERSION  = 2018-10-01
 DIR      = $(NAME)-$(VERSION)
 
 .PHONY: build unpacks install skel clean
@@ -36,10 +36,6 @@ build: unpack
 
 unpack:
 	tar xzf $(DIR).tar.gz
-	for p in patches/*.patch; do \
-		echo "applying $$p..." ; \
-		patch -p1 -b -d $(DIR) < $$p ; \
-	done
 
 install:
 

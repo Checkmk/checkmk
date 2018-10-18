@@ -92,6 +92,7 @@ from cmk.gui.watolib import (
     ValueSpecAttribute,
     ACTestCategories,
     ACTest,
+    ac_test_registry,
     ACResultCRIT,
     ACResultWARN,
     ACResultOK,

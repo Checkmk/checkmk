@@ -83,6 +83,7 @@ import cmk.gui.log as log
 import cmk.gui.background_job as background_job
 import cmk.gui.gui_background_job as gui_background_job
 import cmk.gui.weblib as weblib
+import cmk.gui.plugin_registry
 from cmk.gui.i18n import _u, _
 from cmk.gui.globals import html
 from cmk.gui.htmllib import HTML
@@ -10226,13 +10227,21 @@ class ACTest(object):
 
 
 
+class ACTestRegistry(cmk.gui.plugin_registry.ClassRegistry):
+    def plugin_base_class(self):
+        return ACTest
+
+
+    def _register(self, plugin_class):
+        self._entries[plugin_class.__name__] = plugin_class
+
+
+ac_test_registry = ACTestRegistry()
+
+
 def check_analyze_config():
     results = []
-    # TODO: I'll clean up this plugin mechanism soon
-    for test_cls in ACTest.__subclasses__(): # pylint: disable=no-member
-        if test_cls.__subclasses__(): # pylint: disable=no-member
-            continue # Only use leaf classes
-
+    for test_cls in ac_test_registry.values():
         test = test_cls()
 
         if not test.is_relevant():

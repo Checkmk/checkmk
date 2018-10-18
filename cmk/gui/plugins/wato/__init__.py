@@ -45,6 +45,7 @@ from cmk.gui.plugins.wato.utils import (
     ACResultWARN,
     ACTest,
     ACTestCategories,
+    ac_test_registry,
     add_change,
     add_replication_paths,
     changelog_button,

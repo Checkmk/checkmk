@@ -37,14 +37,17 @@ from cmk.gui.i18n import _
 from cmk.gui.globals import html
 from cmk.gui.exceptions import MKGeneralException
 
-from . import \
-    ACTestCategories, \
-    ACTest, \
-    ACResultCRIT, \
-    ACResultWARN, \
-    ACResultOK, \
-    ConfigDomainOMD
+from cmk.gui.plugins.wato import (
+    ACTestCategories,
+    ACTest,
+    ac_test_registry,
+    ACResultCRIT,
+    ACResultWARN,
+    ACResultOK,
+    ConfigDomainOMD,
+)
 
+@ac_test_registry.register
 class ACTestPersistentConnections(ACTest):
     def category(self):
         return ACTestCategories.performance
@@ -93,6 +96,7 @@ class ACTestPersistentConnections(ACTest):
 
 
 
+@ac_test_registry.register
 class ACTestLiveproxyd(ACTest):
     def category(self):
         return "performance"
@@ -127,6 +131,7 @@ class ACTestLiveproxyd(ACTest):
 
 
 
+@ac_test_registry.register
 class ACTestLivestatusUsage(ACTest):
     def category(self):
         return ACTestCategories.performance
@@ -176,6 +181,7 @@ class ACTestLivestatusUsage(ACTest):
 
 
 
+@ac_test_registry.register
 class ACTestTmpfs(ACTest):
     def category(self):
         return ACTestCategories.performance
@@ -223,6 +229,7 @@ class ACTestTmpfs(ACTest):
 
 
 
+@ac_test_registry.register
 class ACTestLDAPSecured(ACTest):
     def category(self):
         return ACTestCategories.security
@@ -258,6 +265,7 @@ class ACTestLDAPSecured(ACTest):
 
 
 
+@ac_test_registry.register
 class ACTestNumberOfUsers(ACTest):
     def category(self):
         return ACTestCategories.performance
@@ -292,6 +300,7 @@ class ACTestNumberOfUsers(ACTest):
 
 
 
+@ac_test_registry.register
 class ACTestHTTPSecured(ACTest):
     def category(self):
         return ACTestCategories.security
@@ -321,6 +330,7 @@ class ACTestHTTPSecured(ACTest):
 
 
 
+@ac_test_registry.register
 class ACTestOldDefaultCredentials(ACTest):
     def category(self):
         return ACTestCategories.security
@@ -353,6 +363,7 @@ class ACTestOldDefaultCredentials(ACTest):
 
 
 
+@ac_test_registry.register
 class ACTestBackupConfigured(ACTest):
     def category(self):
         return ACTestCategories.reliability
@@ -387,6 +398,7 @@ class ACTestBackupConfigured(ACTest):
 
 
 
+@ac_test_registry.register
 class ACTestBackupNotEncryptedConfigured(ACTest):
     def category(self):
         return ACTestCategories.security
@@ -452,6 +464,7 @@ class ACApacheTest(ACTest):
 
 
 
+@ac_test_registry.register
 class ACTestApacheNumberOfProcesses(ACApacheTest):
     def category(self):
         return ACTestCategories.performance
@@ -536,6 +549,7 @@ class ACTestApacheNumberOfProcesses(ACApacheTest):
 
 
 
+@ac_test_registry.register
 class ACTestApacheProcessUsage(ACApacheTest):
     def category(self):
         return ACTestCategories.performance
@@ -578,6 +592,7 @@ class ACTestApacheProcessUsage(ACApacheTest):
 
 
 
+@ac_test_registry.register
 class ACTestCheckMKHelperUsage(ACTest):
     def category(self):
         return ACTestCategories.performance
@@ -640,6 +655,7 @@ class ACTestCheckMKHelperUsage(ACTest):
 
 
 
+@ac_test_registry.register
 class ACTestAlertHandlerEventTypes(ACTest):
     def category(self):
         return ACTestCategories.performance
@@ -668,6 +684,7 @@ class ACTestAlertHandlerEventTypes(ACTest):
 
 
 
+@ac_test_registry.register
 class ACTestGenericCheckHelperUsage(ACTest):
     def category(self):
         return ACTestCategories.performance
@@ -722,6 +739,7 @@ class ACTestGenericCheckHelperUsage(ACTest):
 
 
 
+@ac_test_registry.register
 class ACTestSizeOfExtensions(ACTest):
     def category(self):
         return ACTestCategories.performance
@@ -769,6 +787,8 @@ class ACTestSizeOfExtensions(ACTest):
         return int(subprocess.check_output(["du", "-sb", "%s/local" % cmk.paths.omd_root]).split()[0])
 
 
+
+@ac_test_registry.register
 class ACTestESXDatasources(ACTest):
     def category(self):
         return ACTestCategories.deprecations
@@ -806,6 +826,7 @@ class ACTestESXDatasources(ACTest):
             yield ACResultOK(_("No configured rules are affected"))
 
 
+@ac_test_registry.register
 class ACTestRulebasedNotifications(ACTest):
     def category(self):
         return ACTestCategories.deprecations

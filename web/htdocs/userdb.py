@@ -49,7 +49,7 @@ connection_dict = {}
 g_connections   = {}
 auth_logger = logger.getChild("auth")
 
-# declare lobal vars
+# declare global vars
 multisite_user_connectors = {}
 
 # Load all userdb plugins
@@ -1112,6 +1112,9 @@ def save_connection_config(connections, base_dir=None):
     store.save_to_mk_file(os.path.join(base_dir, "user_connections.mk"),
                           "user_connections", connections)
 
+    for connector_class in multisite_user_connectors.values():
+        connector_class.config_changed()
+
 #.
 #   .--ConnectorAPI--------------------------------------------------------.
 #   |     ____                            _              _    ____ ___     |
@@ -1139,6 +1142,11 @@ class UserConnector(object):
     # The string representing this connector to humans
     @classmethod
     def title(self):
+        return None
+
+
+    @classmethod
+    def config_changed(self):
         return None
 
 

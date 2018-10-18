@@ -24,6 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+import re
 import sys
 import time
 import getopt
@@ -292,7 +293,7 @@ else:
                     print "Error: Unable to parse content of response:\n%s" % netapp_response.results_reason(
                     )
                     if netapp_response.results_status() == "parse-exception":
-                        print "Raw response text:\n%s" % netapp_response.raw_response_text
+                        print "Raw response text:\n%r" % netapp_response.raw_response_text
                 else:
                     print prettify(netapp_response.get_results().get_node())
 
@@ -374,6 +375,14 @@ else:
 
     # NetApp Response Oject, holds the actual content in the NetAppNode member variable
     class NetAppResponse(object):
+
+        # We have seen devices (NetApp Release 8.3.2P9) occasionally send
+        # invalid XML characters, leading to an exception during parsing.
+        # In that case replace them and try again.
+        # According to https://www.w3.org/TR/xml/#charsets
+        # these should never be in an XML output:
+        INVALID_XML = re.compile(u'[\x00-\x08\x0B-\x0C\x0E-\x1F\x7F]')
+
         def __init__(self, response):
             self.content = None
             self.reason = None
@@ -389,9 +398,13 @@ else:
             # We except an XML answer (not HTML)
             try:
                 self.content = NetAppNode(ET.fromstring(self.raw_response_text))
-            except ET.ParseError, exc:
-                self.status = "parse-exception"
-                self.reason = str(exc)
+            except ET.ParseError:
+                try:
+                    clean = NetAppResponse.INVALID_XML.sub('', self.raw_response_text)
+                    self.content = NetAppNode(ET.fromstring(clean))
+                except ET.ParseError, exc:
+                    self.status = "parse-exception"
+                    self.reason = str(exc)
                 return
 
             self.status = self.content.child_get("results").node.attrib["status"]

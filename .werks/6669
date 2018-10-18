@@ -1,0 +1,14 @@
+Title: LDAP connections: Improved performance for "Automatically discover LDAP server"
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 1.5.0p7
+Date: 1540209516
+Class: feature
+
+The discovery process for the fastet LDAP server could take a large amount of time.
+The result of this discovery is now cached, which can considerably increase the performance
+during user login and other ldap related queries.
+
+

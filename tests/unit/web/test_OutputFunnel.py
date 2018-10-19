@@ -135,7 +135,7 @@ def test_context_raise():
             assert html.plug_text == [['B']]
             raise Exception("Test exception")
     except Exception, e:
-        assert e.message == "Test exception"
+        assert "%s" % e == "Test exception"
     finally:
         assert not html.is_plugged()
 
@@ -154,7 +154,7 @@ def test_try_finally():
             html.write("finally2\n")
     except Exception, e:
         html.write("except1\n")
-        html.write("%s\n" % e.message)
+        html.write("%s\n" % e)
     finally:
         html.write("finally1\n")
     assert html.written == "try1\ntry2\nexcept2\nfinally2\nexcept1\nError\nfinally1\n"

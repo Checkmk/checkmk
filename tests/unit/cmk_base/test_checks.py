@@ -1,7 +1,6 @@
 import pytest
 
 import cmk_base.checks as checks
-import cmk_base.discovery as discovery
 import cmk_base.config as config
 import cmk_base.rulesets as rulesets
 
@@ -67,7 +66,6 @@ def test_do_status_data_inventory_for(monkeypatch, result, ruleset):
 
 ############ Management board checks
 
-@pytest.fixture
 def _check_plugins():
     return {
         "tcp_check_mgmt_only"       : "mgmt_only",

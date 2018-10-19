@@ -18,7 +18,7 @@ discovery = {'': [(u'C:/', {}), (u'E:/', {}), (u'F:/', {})]}
 
 
 checks = {'': [(u'C:/', 'default',
-                [(2, '94.3% used (7.37 of 7.81 GB), (warn/crit at 80.00/90.00%), trend: 0.00 B / 24 hours',
+                [(2, '94.3% used (7.37 of 7.81 GB), (warn/crit at 80.0%/90.0%), trend: 0.00 B / 24 hours',
                   [(u'C:/', 7543.23046875, 6400.484375, 7200.544921875, 0, 8000.60546875),
                    ('fs_size', 8000.60546875, None, None, None, None),
                    ('growth', 0.0, None, None, None, None),

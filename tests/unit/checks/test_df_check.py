@@ -240,10 +240,8 @@ info_empty_inodes = [
 
 @pytest.mark.parametrize("info,expected_result,inventory_df_rules", [
     ([], [], {}),
-    (info_df_lnx, [(u'/', {})], {}),                                                                     # Linux
     (info_df_lnx, [(u'/', {})], { "include_volume_name" : False }),                                      # Linux w/ volume name unset
     (info_df_lnx, [(u'/dev/sda4 /', {})], { "include_volume_name" : True}),                              # Linux w/ volume name option
-    (info_df_win, [(u'E:/', {}), (u'F:/', {}), (u'C:/', {})], {}),                                       # Windows
     (info_df_win, [(u'New_Volume E:/', {}), (u'New_Volume F:/', {}), (u'C:\\ C:/', {})],
                                                          { "include_volume_name" : True }),              # Windows w/ volume name option
     (info_df_lnx_tmpfs, [], {}),                                                                         # Ignoring tmpfs
@@ -279,12 +277,7 @@ def test_df_discovery_with_parse(check_manager, info, expected_result, inventory
 
 
 @pytest.mark.parametrize("item,params,info,expected_result", [
-    (u"/", "default", info_df_lnx, {}),
-    (u'/dev/sda4 /', "default", info_df_lnx, {}),
-    (u'E:/', "default", info_df_win, {}),
-    (u'New_Volume E:/', "default", info_df_win, {}),
     (u'btrfs /dev/sda1', "default", info_df_btrfs, {}),
-    (u"/home", "default", info_df_lnx, {}), # When called with an item not found in info, the check should not crash.
 ])
 def test_df_check_with_parse(check_manager, item, params, info, expected_result):
     check = check_manager.get_check("df")

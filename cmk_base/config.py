@@ -2752,14 +2752,6 @@ def _get_checkgroup_parameters(host, checktype, item):
         raise MKGeneralException(str(e) + " (on host %s, checktype %s)" % (host, checktype))
 
 
-def get_management_board_precedence(check_plugin_name):
-    mgmt_board = check_info[check_plugin_name]["management_board"]
-    if mgmt_board is None:
-        return check_api_utils.HOST_PRECEDENCE
-
-    return mgmt_board
-
-
 # TODO: Better move this function to py
 def do_status_data_inventory_for(hostname):
     rules = active_checks.get('cmk_inv')
@@ -2780,7 +2772,8 @@ def do_status_data_inventory_for(hostname):
 
 
 def filter_by_management_board(hostname, found_check_plugin_names,
-                               for_mgmt_board, for_discovery=False):
+                               for_mgmt_board, for_discovery=False,
+                               for_inventory=False):
     """
     In order to decide which check is used for which data source
     we have to filter the found check plugins. This is done via
@@ -2808,8 +2801,8 @@ def filter_by_management_board(hostname, found_check_plugin_names,
         - there is an equivalent 'MGMT_ONLY'-management board check plugin.
     """
 
-    mgmt_only, host_precedence_snmp, host_only_snmp,\
-        host_precedence_tcp, host_only_tcp = _get_categorized_check_plugins(found_check_plugin_names)
+    mgmt_only, host_precedence_snmp, host_only_snmp, host_precedence_tcp, host_only_tcp =\
+        _get_categorized_check_plugins(found_check_plugin_names, for_inventory=for_inventory)
 
     final_collection = set()
     is_snmp_host_ = is_snmp_host(hostname)
@@ -2852,7 +2845,14 @@ def filter_by_management_board(hostname, found_check_plugin_names,
     return final_collection
 
 
-def _get_categorized_check_plugins(check_plugin_names):
+def _get_categorized_check_plugins(check_plugin_names, for_inventory=False):
+    if for_inventory:
+        is_snmp_check_f = cmk_base.inventory_plugins.is_snmp_plugin
+        plugins_info = cmk_base.inventory_plugins.inv_info
+    else:
+        is_snmp_check_f = cmk_base.check_utils.is_snmp_check
+        plugins_info = check_info
+
     mgmt_only = set()
     host_precedence_snmp = set()
     host_precedence_tcp = set()
@@ -2860,8 +2860,8 @@ def _get_categorized_check_plugins(check_plugin_names):
     host_only_tcp = set()
 
     for check_plugin_name in check_plugin_names:
-        is_snmp_check_ = cmk_base.check_utils.is_snmp_check(check_plugin_name)
-        mgmt_board = get_management_board_precedence(check_plugin_name)
+        is_snmp_check_ = is_snmp_check_f(check_plugin_name)
+        mgmt_board = _get_management_board_precedence(check_plugin_name, plugins_info)
         if mgmt_board == check_api_utils.HOST_PRECEDENCE:
             if is_snmp_check_:
                 host_precedence_snmp.add(check_plugin_name)
@@ -2879,5 +2879,13 @@ def _get_categorized_check_plugins(check_plugin_names):
 
     return mgmt_only, host_precedence_snmp, host_only_snmp,\
            host_precedence_tcp, host_only_tcp
+
+
+def _get_management_board_precedence(check_plugin_name, plugins_info):
+    mgmt_board = plugins_info[check_plugin_name].get("management_board")
+    if mgmt_board is None:
+        return check_api_utils.HOST_PRECEDENCE
+    return mgmt_board
+
 
 cmk_base.cleanup.register_cleanup(check_api_utils.reset_hostname)

@@ -1,0 +1,10 @@
+Title: Management boards: Fixed execution of inventory plugins
+Level: 1
+Component: inv
+Compatible: compat
+Edition: cre
+Version: 1.5.0p7
+Date: 1539776847
+Class: fix
+
+

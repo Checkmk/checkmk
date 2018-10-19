@@ -987,17 +987,17 @@ def get_agent_info_tcp(hostname):
 
 # Globals of ESX System. These settings are available after the first "systeminfo" query
 systemfields = [
- ("apiVersion", float),
- ("name", None),
- ("rootFolder", None),
- ("perfManager", None),
- ("sessionManager", None),
- ("licenseManager", None),
- ("propertyCollector", None),
- ("version", None),
- ("build", None),
- ("vendor", None),
- ("osType", None),
+ "apiVersion",
+ "name",
+ "rootFolder",
+ "perfManager",
+ "sessionManager",
+ "licenseManager",
+ "propertyCollector",
+ "version",
+ "build",
+ "vendor",
+ "osType",
 ]
 
 systeminfo = {}
@@ -1144,10 +1144,10 @@ def retrieve_systeminfo():
     # Retrieve basic data, which requires no login
     payload = telegram_list["systeminfo"]
     reply_code, reply_msg, reply_headers, reply_data = query_server(payload)
-    for entry, function in systemfields:
+    for entry in systemfields:
          element = get_pattern("<%(entry)s.*>(.*)</%(entry)s>" % { "entry": entry }, reply_data)
          if element:
-             systeminfo[entry] = function and function(element[0]) or element[0]
+             systeminfo[entry] = element[0]
 
 def login():
     global server_cookie

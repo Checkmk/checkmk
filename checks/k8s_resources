@@ -1,0 +1,94 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2018             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+
+def get_k8s_resources_inventory_function(name):
+    def inventory_function(parsed):
+        if parsed.get('capacity', {}).get(name):
+            return [(None, {})]
+
+    return inventory_function
+
+
+def get_k8s_resources_check_function(name, default, readable):
+    def check_resources(_no_item, params, parsed):
+        request = parsed.get('requests', {}).get(name, default)
+        yield 0, 'Request: %s' % readable(request), [('k8s_%s_request' % name, request)]
+
+        limit = parsed.get('limits', {}).get(name)
+        if limit:
+            if math.isinf(limit):
+                yield 0, 'Limit: n.a.'
+            elif limit:
+                yield 0, 'Limit: %s' % readable(limit), [('k8s_%s_limit' % name, limit)]
+
+        allocatable = parsed.get('allocatable', {}).get(name, default)
+        yield 0, 'Allocatable: %s' % readable(allocatable), [('k8s_%s_allocatable' % name,
+                                                              allocatable)]
+
+        capacity = parsed.get('capacity', {}).get(name, default)
+        yield 0, 'Capacity: %s' % readable(capacity), [('k8s_%s_capacity' % name, capacity)]
+
+        if allocatable:
+            usage = 100.0 * request / allocatable
+            yield check_levels_backport(
+                usage,
+                'k8s_%s_usage' % name,
+                params.get(name),
+                infoname='Usage',
+                human_readable_func=get_percent_human_readable)
+
+    return check_resources
+
+
+check_info['k8s_resources'] = {
+    'parse_function': parse_k8s,
+    'includes': ['backport.include', 'k8s.include'],
+}
+
+check_info['k8s_resources.pods'] = {
+    'inventory_function': get_k8s_resources_inventory_function('pods'),
+    'check_function': get_k8s_resources_check_function('pods', 0, str),
+    'service_description': 'Pod resources',
+    'has_perfdata': True,
+    'group': 'k8s_resources',
+}
+
+check_info['k8s_resources.cpu'] = {
+    'inventory_function': get_k8s_resources_inventory_function('cpu'),
+    'check_function': get_k8s_resources_check_function('cpu', 0.0, lambda x: '%.3f' % x),
+    'service_description': 'CPU resources',
+    'has_perfdata': True,
+    'group': 'k8s_resources',
+}
+
+check_info['k8s_resources.memory'] = {
+    'inventory_function': get_k8s_resources_inventory_function('memory'),
+    'check_function': get_k8s_resources_check_function('memory', 0.0, get_bytes_human_readable),
+    'service_description': 'Memory resources',
+    'has_perfdata': True,
+    'group': 'k8s_resources',
+}

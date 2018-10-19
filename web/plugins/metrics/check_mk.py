@@ -4211,6 +4211,114 @@ metric_info["docker_reclaimable"] = {
     "color" : "41/a",
 }
 
+metric_info["k8s_nodes"] = {
+    "title": _("Nodes"),
+    "unit": "count",
+    "color": "11/a",
+}
+
+metric_info["k8s_pods_request"] = {
+    "title": _("Pods"),
+    "unit": "count",
+    "color": "16/b",
+}
+
+metric_info["k8s_pods_allocatable"] = {
+    "title": _("Allocatable"),
+    "unit": "count",
+    "color": "#e0e0e0",
+}
+
+metric_info["k8s_pods_capacity"] = {
+    "title": _("Capacity"),
+    "unit": "count",
+    "color": "c0c0c0",
+}
+
+metric_info["k8s_cpu_request"] = {
+    "title": _("Request"),
+    "unit": "",
+    "color": "26/b",
+}
+
+metric_info["k8s_cpu_limit"] = {
+    "title": _("Limit"),
+    "unit": "",
+    "color": "26/a",
+}
+
+metric_info["k8s_cpu_allocatable"] = {
+    "title": _("Allocatable"),
+    "unit": "",
+    "color": "#e0e0e0",
+}
+
+metric_info["k8s_cpu_capacity"] = {
+    "title": _("Capacity"),
+    "unit": "",
+    "color": "#c0c0c0",
+}
+
+metric_info["k8s_memory_request"] = {
+    "title": _("Request"),
+    "unit": "bytes",
+    "color": "42/b",
+}
+
+metric_info["k8s_memory_limit"] = {
+    "title": _("Limit"),
+    "unit": "bytes",
+    "color": "42/a",
+}
+
+metric_info["k8s_memory_allocatable"] = {
+    "title": _("Allocatable"),
+    "unit": "bytes",
+    "color": "#e0e0e0",
+}
+
+metric_info["k8s_memory_capacity"] = {
+    "title": _("Capacity"),
+    "unit": "bytes",
+    "color": "#c0c0c0",
+}
+
+metric_info["k8s_pods_usage"] = {
+    "title": _("Pod usage"),
+    "unit": "%",
+    "color": "31/a",
+}
+
+metric_info["k8s_memory_usage"] = {
+    "title": _("Memory usage"),
+    "unit": "%",
+    "color": "31/a",
+}
+
+metric_info["k8s_cpu_usage"] = {
+    "title": _("CPU usage"),
+    "unit": "%",
+    "color": "31/a",
+}
+
+metric_info["k8s_total_roles"] = {
+    "title": _("Total"),
+    "unit": "",
+    "color": "31/a",
+}
+
+metric_info["k8s_cluster_roles"] = {
+    "title": _("Cluster roles"),
+    "unit": "",
+    "color": "21/a",
+}
+
+metric_info["k8s_roles"] = {
+    "title": _("Roles"),
+    "unit": "",
+    "color": "21/b",
+}
+
 metric_info["active_vms"] = {
     "title" : _("Active VMs"),
     "unit"  : "count",
@@ -6909,6 +7017,37 @@ graph_info["citrix_serverload"] = {
         ( "citrix_load",    "area" ),
     ],
     "range"     : (0, 100),
+}
+
+graph_info["k8s_resources.pods"] = {
+    "title": _("Pods"),
+    "metrics": [
+        ("k8s_pods_capacity", "area"),
+        ("k8s_pods_allocatable", "area"),
+        ("k8s_pods_request", "area"),
+    ],
+}
+
+graph_info["k8s_resources.cpu"] = {
+    "title": _("CPU"),
+    "metrics": [
+        ("k8s_cpu_capacity", "area"),
+        ("k8s_cpu_allocatable", "area"),
+        ("k8s_cpu_limit", "area"),
+        ("k8s_cpu_request", "area"),
+    ],
+    "optional_metrics": ["k8s_cpu_limit"],
+}
+
+graph_info["k8s_resources.memory"] = {
+    "title": _("Memory"),
+    "metrics": [
+        ("k8s_memory_capacity", "area"),
+        ("k8s_memory_allocatable", "area"),
+        ("k8s_memory_limit", "area"),
+        ("k8s_memory_request", "area"),
+    ],
+    "optional_metrics": ["k8s_memory_limit"],
 }
 
 graph_info["used_cpu_time"] = {

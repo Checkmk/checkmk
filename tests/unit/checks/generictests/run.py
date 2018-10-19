@@ -42,24 +42,24 @@ def get_info_argument(dataset, subcheck, fallback_parsed=None):#   .
 #.
 
 
-def get_merged_parameters(default_p, discovered_p):#   .
+def get_merged_parameters(default_p, provided_p):#   .
     """return (merged_params, description_string)
 
     I think this is a mess.
     I'm trying to do the right thing, any ideas wellcome.
     """
-    if not discovered_p:
+    if not provided_p:
         return default_p, "default"
-    elif isinstance(discovered_p, str):
+    elif isinstance(provided_p, str):
         return default_p, "default"
-    elif type(default_p) == type(discovered_p) == dict:
-        default_p.update(discovered_p)
+    elif type(default_p) == type(provided_p) == dict:
+        default_p.update(provided_p)
         return default_p, repr(default_p)
     elif not default_p:
-        return discovered_p, repr(discovered_p)
+        return provided_p, repr(provided_p)
 
     raise DiscoveryParameterTypeError("unhandled: %r/%r" \
-                                      % (default_p, discovered_p))
+                                      % (default_p, provided_p))
 #.
 
 
@@ -162,8 +162,8 @@ def check_listed_result(check, list_entry, info_arg, immu):#   .
     item, params, results_expected_raw = list_entry
     print("Dataset item %r in check %r" % (item, check.name))
 
-    if params == "default":
-        params = check.default_parameters()
+    default_params = check.default_parameters()
+    params, __ = get_merged_parameters(default_params, params)
     immu.register(params, 'params')
 
     result_raw = check.run_check(item, params, info_arg)

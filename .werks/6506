@@ -1,0 +1,12 @@
+Title: Disable logging of unknown packets for smart ping.
+Level: 1
+Component: cmc
+Compatible: compat
+Edition: cee
+Version: 1.6.0i1
+Date: 1539941535
+Class: fix
+
+Smart ping used to log packets it couldn't understand, but for some setups
+this is far too much and there is nothing actionable for a user, so this has
+been disabled.

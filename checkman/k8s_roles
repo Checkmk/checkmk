@@ -1,0 +1,14 @@
+title: Kubernetes roles
+agents: linux
+catalog: app/kubernetes
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the the cluster roles and roles of all namespaces
+ in a kubernetes cluster. It always returns {OK}.
+
+inventory:
+ One service is per role created.
+
+item:
+ The name of the role.

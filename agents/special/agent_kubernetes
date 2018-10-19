@@ -1,0 +1,538 @@
+#!/usr/bin/env python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2018             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+"""
+Special agent for monitoring Kubernetes clusters.
+"""
+
+from __future__ import (
+    absolute_import,
+    division,
+    print_function,
+)
+
+import argparse
+from collections import OrderedDict
+import itertools
+import json
+import logging
+import os
+import sys
+import time
+from typing import Any, Dict, List, Mapping, Optional, Union  # pylint: disable=unused-import
+
+from kubernetes import client
+
+import cmk.profile
+import cmk.password_store
+
+
+def parse(args):
+    # type: (List[str]) -> argparse.Namespace
+    p = argparse.ArgumentParser(description=__doc__)
+    p.add_argument('--debug', action='store_true', help='Debug mode: raise Python exceptions')
+    p.add_argument(
+        '-v',
+        '--verbose',
+        action='count',
+        default=0,
+        help='Verbose mode (for even more output use -vvv)')
+    p.add_argument('host', metavar='HOST', help='Kubernetes host to connect to')
+    p.add_argument('--port', type=int, default=443, help='Port to connect to')
+    p.add_argument('--token', required=True, help='Token for that user')
+    p.add_argument('--no-cert-check', action='store_true', help='Disable certificate verification')
+    p.add_argument(
+        '--profile',
+        metavar='FILE',
+        help='Profile the performance of the agent and write the output to a file')
+
+    arguments = p.parse_args(args)
+    return arguments
+
+
+def setup_logging(verbosity):
+    # type: (int) -> None
+    if verbosity >= 3:
+        fmt = '%(levelname)s: %(name)s: %(filename)s: %(lineno)s: %(message)s'
+        lvl = logging.DEBUG
+    elif verbosity == 2:
+        fmt = '%(levelname)s: %(filename)s: %(lineno)s: %(message)s'
+        lvl = logging.DEBUG
+    elif verbosity == 1:
+        fmt = '%(levelname)s: %(funcName)s: %(message)s'
+        lvl = logging.INFO
+    else:
+        fmt = '%(levelname)s: %(message)s'
+        lvl = logging.WARNING
+    logging.basicConfig(level=lvl, format=fmt)
+
+
+def parse_int(value):
+    # type: (Optional[str]) -> Optional[int]
+    if value is None:
+        return None
+    return int(value)
+
+
+def parse_cpu(value):
+    # type: (Optional[str]) -> Optional[float]
+    if value is None:
+        return None
+    if value.endswith('m'):
+        return 0.001 * float(value[:-1])
+    return float(value)
+
+
+def parse_memory(value):
+    # type: (Optional[str]) -> Optional[float]
+    if value is None:
+        return None
+
+    if value.endswith('Ki'):
+        return 1024**1 * float(value[:-2])
+    if value.endswith('Mi'):
+        return 1024**2 * float(value[:-2])
+    if value.endswith('Gi'):
+        return 1024**3 * float(value[:-2])
+    if value.endswith('Ti'):
+        return 1024**4 * float(value[:-2])
+    if value.endswith('Pi'):
+        return 1024**5 * float(value[:-2])
+    if value.endswith('Ei'):
+        return 1024**6 * float(value[:-2])
+
+    if value.endswith('K'):
+        return 1e3 * float(value[:-1])
+    if value.endswith('M'):
+        return 1e6 * float(value[:-1])
+    if value.endswith('G'):
+        return 1e9 * float(value[:-1])
+    if value.endswith('T'):
+        return 1e12 * float(value[:-1])
+    if value.endswith('P'):
+        return 1e15 * float(value[:-1])
+    if value.endswith('E'):
+        return 1e18 * float(value[:-1])
+
+    return float(value)
+
+
+class Nodes(object):
+    def __init__(self, items):
+        # type: (List[client.V1Node]) -> None
+        super(Nodes, self).__init__()
+        self.items = items
+
+    def list_nodes(self):
+        # type: () -> Dict[str, List[str]]
+        return {'nodes': [node.metadata.name for node in self.items if node.metadata.name]}
+
+    def conditions(self):
+        view = {}
+        for node in self.items:
+            name = node.metadata.name
+            if not name:
+                continue
+            node_data = {}
+            status = node.status
+            if status:
+                conditions = status.conditions
+                if conditions:
+                    for condition in conditions:
+                        node_data[condition.type] = condition.status
+            view[name] = node_data
+        return view
+
+    def resources(self):
+        # type: () -> Dict[str, Dict[str, Dict[str, Optional[float]]]]
+        view = {}
+        for node in self.items:
+            if not node.metadata.name:
+                continue
+
+            node_data = {}
+            status = node.status
+            if status:
+                capacity = status.capacity
+                if capacity:
+                    node_data['capacity'] = {
+                        'cpu': parse_cpu(capacity.get('cpu')),
+                        'memory': parse_memory(capacity.get('memory')),
+                        'pods': parse_int(capacity.get('pods')),
+                    }
+            view[node.metadata.name] = node_data
+        return view
+
+
+class ComponentStatuses(object):
+    def __init__(self, items):
+        # type: (List[client.V1ComponentStatus]) -> None
+        super(ComponentStatuses, self).__init__()
+        self.items = items
+
+    def list_statuses(self):
+        # type: () -> Dict[str, List[Dict[str, str]]]
+        view = {}
+        for status in self.items:
+            if not status.metadata or not status.metadata.name or not status.conditions:
+                continue
+            view[status.metadata.name] = [{
+                'type': condition.type,
+                'status': condition.status,
+            } for condition in status.conditions]
+        return view
+
+
+class Pods(object):
+    def __init__(self, items):
+        # type: (List[client.V1Pod]) -> None
+        super(Pods, self).__init__()
+        self.items = items
+
+    def pods_per_node(self):
+        # type: () -> Dict[str, Dict[str, Dict[str, int]]]
+        view = {}  # type: Dict[str, Dict[str, Dict[str, int]]]
+        for pod in self.items:
+            if pod.spec:
+                data = view.setdefault(pod.spec.node_name, {'allocations': {'pods': 0}})
+                data['allocations']['pods'] += 1
+        return view
+
+    def resources_per_node(self):
+        # TODO: add annotation from below and fix parse_cpu and parse_memory
+        view = {}  # type: Dict[str, Dict[str, Dict[str, Optional[float]]]]
+        for pod in self.items:
+            if pod.spec:
+                node_data = view.setdefault(pod.spec.node_name, {
+                    'limits': {
+                        'cpu': 0.0,
+                        'memory': 0.0,
+                    },
+                    'requests': {
+                        'cpu': 0.0,
+                        'memory': 0.0,
+                    },
+                })
+
+                for container in pod.spec.containers:
+                    resources = container.resources
+                    if resources:
+                        limits = resources.limits
+                        if limits:
+                            node_data['limits']['cpu'] += parse_cpu(limits.get('cpu', '0.0'))
+                            node_data['limits']['memory'] += parse_memory(
+                                limits.get('memory', '0.0'))
+                        requests = resources.requests
+                        if requests:
+                            node_data['requests']['cpu'] += parse_cpu(requests.get('cpu', '0.0'))
+                            node_data['requests']['memory'] += parse_memory(
+                                requests.get('memory', '0.0'))
+        return view
+
+
+class Namespaces(object):
+    def __init__(self, items):
+        # type: (List[client.V1Namespace]) -> None
+        super(Namespaces, self).__init__()
+        self.items = items
+
+    def list_namespaces(self):
+        # type: () -> Dict[str, Dict[str, Dict[str, str]]]
+        # TODO: namespaces may have resource quotas and limits
+        # https://kubernetes.io/docs/tasks/administer-cluster/namespaces/
+        return {
+            namespace.metadata.name: {
+                'status': {
+                    'phase': namespace.status.phase,
+                },
+            } for namespace in self.items
+        }
+
+
+class PersistentVolumes(object):
+    def __init__(self, items):
+        # type: (List[client.V1PersistentVolume]) -> None
+        super(PersistentVolumes, self).__init__()
+        self.items = items
+
+    def list_volumes(self):
+        # type: () -> Dict[str, Dict[str, Union[str, Optional[float], Dict[str, str]]]]
+        # TODO: Output details of the different types of volumes
+        return {
+            pv.metadata.name: {
+                'access': pv.spec.access_modes,
+                'capacity': parse_memory(pv.spec.capacity['storage']),
+                'status': {
+                    'phase': pv.status.phase,
+                },
+            } for pv in self.items
+        }
+
+
+class PersistentVolumeClaims(object):
+    def __init__(self, items):
+        # type: (List[client.V1PersistentVolumeClaim]) -> None
+        super(PersistentVolumeClaims, self).__init__()
+        self.items = items
+
+    def list_volume_claims(self):
+        # type: () -> Dict[str, Dict[str, str]]
+        return {
+            pvc.metadata.name: {
+                'namespace': pvc.metadata.namespace,
+                'condition': pvc.status.conditions,
+                'phase': pvc.status.phase,
+                'volume': pvc.spec.volume_name,
+            } for pvc in self.items
+        }
+
+
+class StorageClasses(object):
+    def __init__(self, items):
+        # type: (List[client.V1StorageClass]) -> None
+        super(StorageClasses, self).__init__()
+        self.items = items
+
+    def list_storage_classes(self):
+        view = {}
+        for storage_class in self.items:
+            name = storage_class.metadata.name
+            if not name:
+                continue
+            view[name] = {
+                'provisioner': storage_class.provisioner,
+                'reclaim_policy': storage_class.reclaim_policy,
+            }
+        return view
+
+
+class Roles(object):
+    def __init__(self, roles, cluster_roles):
+        # type: (List[client.V1Role], List[client.V1ClusterRole]) -> None
+        super(Roles, self).__init__()
+        self.roles = roles
+        self.cluster_roles = cluster_roles
+
+    def list_roles(self):
+        view = {}
+        for role in itertools.chain(self.roles, self.cluster_roles):
+            metadata = role.metadata
+            if not metadata:
+                continue
+            name = metadata.name
+            if not name:
+                continue
+            creation = metadata.creation_timestamp
+            if creation:
+                creation = time.mktime(creation.timetuple())
+
+            view[name] = {
+                'namespace': metadata.namespace,
+                'creation_timestamp': creation,
+            }
+        return view
+
+
+class Group(object):
+    """
+    A group of elements where an element is e.g. a piggyback host.
+    """
+
+    def __init__(self):
+        # type: () -> None
+        super(Group, self).__init__()
+        self.elements = OrderedDict()  # type: OrderedDict[str, Element]
+
+    def get(self, element_name):
+        # type: (str) -> Element
+        if element_name not in self.elements:
+            self.elements[element_name] = Element()
+        return self.elements[element_name]
+
+    def join(self, section_name, pairs):
+        # type: (str, Mapping[str, Dict[str, Any]]) -> Group
+        for element_name, data in pairs.iteritems():
+            section = self.get(element_name).get(section_name)
+            section.insert(data)
+        return self
+
+    def output(self):
+        # type: () -> List[str]
+        data = []
+        for name, element in self.elements.iteritems():
+            data.append('<<<<%s>>>>' % name)
+            data.extend(element.output())
+            data.append('<<<<>>>>')
+        return data
+
+
+class Element(object):
+    """
+    An element that bundles a collection of sections.
+    """
+
+    def __init__(self):
+        # type: () -> None
+        super(Element, self).__init__()
+        self.sections = OrderedDict()  # type: OrderedDict[str, Section]
+
+    def get(self, section_name):
+        # type: (str) -> Section
+        if section_name not in self.sections:
+            self.sections[section_name] = Section()
+        return self.sections[section_name]
+
+    def output(self):
+        # type: () -> List[str]
+        data = []
+        for name, section in self.sections.iteritems():
+            data.append('<<<%s:sep(0)>>>' % name)
+            data.append(section.output())
+        return data
+
+
+class Section(object):
+    """
+    An agent section.
+    """
+
+    def __init__(self):
+        # type: () -> None
+        super(Section, self).__init__()
+        self.content = OrderedDict()  # type: OrderedDict[str, Dict[str, Any]]
+
+    def insert(self, data):
+        # type: (Dict[str, Any]) -> None
+        self.content.update(data)
+
+    def output(self):
+        # type: () -> str
+        return json.dumps(self.content)
+
+
+class ApiData(object):
+    """
+    Contains the collected API data.
+    """
+
+    def __init__(self, api_client):
+        # type: (client.ApiClient) -> None
+        super(ApiData, self).__init__()
+        logging.info('Collecting API data')
+
+        logging.debug('Constructing API client wrappers')
+        core_api = client.CoreV1Api(api_client)
+        storage_api = client.StorageV1Api(api_client)
+        rbac_authorization_api = client.RbacAuthorizationV1Api(api_client)
+
+        logging.debug('Retrieving data')
+        storage_classes = storage_api.list_storage_class()
+        namespaces = core_api.list_namespace()
+        roles = rbac_authorization_api.list_role_for_all_namespaces()
+        cluster_roles = rbac_authorization_api.list_cluster_role()
+        component_statuses = core_api.list_component_status()
+        nodes = core_api.list_node()
+        pvs = core_api.list_persistent_volume()
+        pvcs = core_api.list_persistent_volume_claim_for_all_namespaces()
+        pods = core_api.list_pod_for_all_namespaces()
+
+        logging.debug('Assigning collected data')
+        self.storage_classes = StorageClasses(storage_classes.items)
+        self.namespaces = Namespaces(namespaces.items)
+        self.roles = Roles(roles.items, cluster_roles.items)
+        self.component_statuses = ComponentStatuses(component_statuses.items)
+        self.nodes = Nodes(nodes.items)
+        self.persistent_volumes = PersistentVolumes(pvs.items)
+        self.persistent_volume_claims = PersistentVolumeClaims(pvcs.items)
+        self.pods = Pods(pods.items)
+
+    def cluster_sections(self):
+        # type: () -> str
+        logging.info('Output cluster sections')
+        e = Element()
+        e.get('k8s_nodes').insert(self.nodes.list_nodes())
+        e.get('k8s_namespaces').insert(self.namespaces.list_namespaces())
+        e.get('k8s_persistent_volumes').insert(self.persistent_volumes.list_volumes())
+        e.get('k8s_component_statuses').insert(self.component_statuses.list_statuses())
+        e.get('k8s_persistent_volume_claims').insert(
+            self.persistent_volume_claims.list_volume_claims())
+        e.get('k8s_storage_classes').insert(self.storage_classes.list_storage_classes())
+        e.get('k8s_roles').insert(self.roles.list_roles())
+        return '\n'.join(e.output())
+
+    def node_sections(self):
+        # type: () -> str
+        logging.info('Output node sections')
+        g = Group()
+        g.join('k8s_resources', self.nodes.resources())
+        g.join('k8s_resources', self.pods.resources_per_node())
+        g.join('k8s_resources', self.pods.pods_per_node())
+        return '\n'.join(g.output())
+
+
+def get_api_client(arguments):
+    # type: (argparse.Namespace) -> client.ApiClient
+    logging.info('Constructing API client')
+
+    config = client.Configuration()
+    config.host = 'https://%s:%s' % (arguments.host, arguments.port)
+    config.api_key_prefix['authorization'] = 'Bearer'
+    config.api_key['authorization'] = arguments.token
+
+    if arguments.no_cert_check:
+        logging.warn('Disabling SSL certificate verification')
+        config.verify_ssl = False
+    else:
+        config.ssl_ca_cert = os.environ.get('REQUESTS_CA_BUNDLE')
+
+    return client.ApiClient(config)
+
+
+def main(args=None):
+    # type: (Optional[List[str]]) -> int
+    if args is None:
+        cmk.password_store.replace_passwords()
+        args = sys.argv[1:]
+    arguments = parse(args)
+
+    try:
+        setup_logging(arguments.verbose)
+        logging.debug('parsed arguments: %s\n', arguments)
+
+        with cmk.profile.Profile(enabled=bool(arguments.profile), profile_file=arguments.profile):
+            api_client = get_api_client(arguments)
+            api_data = ApiData(api_client)
+            print(api_data.cluster_sections())
+            print(api_data.node_sections())
+    except Exception as e:
+        if arguments.debug:
+            raise
+        print("%s" % e, file=sys.stderr)
+        return 1
+    return 0
+
+
+if __name__ == '__main__':
+    sys.exit(main())

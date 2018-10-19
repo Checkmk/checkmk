@@ -99,6 +99,30 @@ register_rule(
 
 register_rule(
     group,
+    "special_agents:kubernetes",
+    Dictionary(
+        elements=[
+            ("token", IndividualOrStoredPassword(
+                title=_("Token"),
+                allow_empty=False,
+            )),
+            ("port", Integer(title=_(u"Port"), default_value=443)),
+            ("no-cert-check",
+             Alternative(
+                 title=_("Disable certificate verification"),
+                 elements=[
+                     FixedValue(False, title=_("Deactivated"), totext=""),
+                     FixedValue(True, title=_("Activated"), totext=""),
+                 ],
+                 default_value=False)),
+        ],
+        optional_keys=["port", "no-cert-check"],
+    ),
+    match="first",
+    title=_(u"Kubernetes"),
+)
+
+register_rule(group,
     "special_agents:vsphere",
     Transform(
         valuespec=Dictionary(

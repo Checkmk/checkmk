@@ -1,0 +1,14 @@
+title: Kubernetes persistent volumes
+agents: linux
+catalog: app/kubernetes
+license: GPL
+distribution: check_mk
+description:
+ This check monitors a persistent volume in a kubernetes cluster.
+ The check returns {OK} if a volume is bound otherwise {CRIT}.
+
+inventory:
+ One service per persistent volume is created.
+
+item:
+ The name of the persistent volume.

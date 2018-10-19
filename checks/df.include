@@ -37,11 +37,11 @@ if 'size_trend' not in globals():
 # Common include file for all filesystem checks (df, df_netapp, hr_fs, ...)
 
 # Settings for filesystem checks (df, df_vms, df_netapp and maybe others)
-filesystem_levels         = [] # obsolete. Just here to check config and warn if changed
-filesystem_default_levels = {} # can also be dropped some day in future
+filesystem_levels         = []  # obsolete. Just here to check config and warn if changed
+filesystem_default_levels = {}  # can also be dropped some day in future
 
 # Filesystems to ignore (shouldn't be sent by agent anyway)
-inventory_df_exclude_mountpoints   = [ '/dev' ]
+inventory_df_exclude_mountpoints   = ['/dev']
 
 # Grouping of filesystems into groups that are monitored as one entity
 # Example:
@@ -64,11 +64,11 @@ filesystem_groups = []
 # }
 
 factory_settings["filesystem_default_levels"] = {
-    "levels"          : (80.0, 90.0), # warn/crit in percent
-    "magic_normsize"  : 20,       # Standard size if 20 GB
-    "levels_low"      : (50.0, 60.0), # Never move warn level below 50% due to magic factor
+    "levels"          : (80.0, 90.0),  # warn/crit in percent
+    "magic_normsize"  : 20,  # Standard size if 20 GB
+    "levels_low"      : (50.0, 60.0),  # Never move warn level below 50% due to magic factor
     "trend_range"     : 24,
-    "trend_perfdata"  : True,    # do send performance data for trends
+    "trend_perfdata"  : True,  # do send performance data for trends
     "show_levels"     : "onmagic",
     "inodes_levels"   : (10.0, 5.0),
     "show_inodes"     : "onlow",
@@ -103,8 +103,8 @@ def df_inventory(mplist):
 
     ungrouped_mountpoints, groups = ungrouped_mountpoints_and_groups(mplist, group_patterns)
 
-    return [ (mp, {}) for mp in ungrouped_mountpoints ] \
-            + [ (group, {"patterns" : group_patterns[group]}) for group in groups ]
+    return [(mp, {}) for mp in ungrouped_mountpoints] \
+            + [(group, {"patterns" : group_patterns[group]}) for group in groups]
 
 
 # Users might have set filesystem_default_levels to old format like (80, 90)
@@ -120,13 +120,13 @@ def get_filesystem_levels(mountpoint, size_gb, params):
     levels = factory_settings["filesystem_default_levels"].copy()
 
     def convert_legacy_levels(value):
-        if type(params) == tuple or not params.get("flex_levels"):
+        if isinstance(params, tuple) or not params.get("flex_levels"):
             return tuple(map(float, value))
         return value
 
     # convert default levels to dictionary. This is in order support
     # old style levels like (80, 90)
-    if type(filesystem_default_levels) == dict:
+    if isinstance(filesystem_default_levels, dict):
         fs_default_levels = filesystem_default_levels.copy()
         fs_levels = fs_default_levels.get("levels")
         if fs_levels:
@@ -141,16 +141,16 @@ def get_filesystem_levels(mountpoint, size_gb, params):
             levels["magic"] = filesystem_default_levels[2]
 
     # If params is a dictionary, make that override the default values
-    if type(params) == dict:
+    if isinstance(params, dict):
         levels.update(params)
 
-    else: # simple format - explicitely override levels and magic
+    else:  # simple format - explicitely override levels and magic
         levels["levels"] = convert_legacy_levels(params[:2])
         if len(params) >= 3:
             levels["magic"] = params[2]
 
     # Determine real warn, crit levels
-    if type(levels["levels"]) == tuple:
+    if isinstance(levels["levels"], tuple):
         warn, crit = levels["levels"]
     else:
         # A list of levels. Choose the correct one depending on the
@@ -165,7 +165,7 @@ def get_filesystem_levels(mountpoint, size_gb, params):
                 found_size = to_size
                 found = True
         if not found:
-            warn, crit = 100.0, 100.0 # entry not found in list
+            warn, crit = 100.0, 100.0  # entry not found in list
 
     # Take into account magic scaling factor (third optional argument
     # in check params). A factor of 1.0 changes nothing. Factor should
@@ -178,17 +178,17 @@ def get_filesystem_levels(mountpoint, size_gb, params):
     # if magic not 1.0
     if magic and magic != 1.0:
         # convert warn/crit to percentage
-        if type(warn) != float:
+        if not isinstance(warn, float):
             warn = savefloat(warn * mega / float(size_gb * giga)) * 100
-        if type(crit) != float:
+        if not isinstance(crit, float):
             crit = savefloat(crit * mega / float(size_gb * giga)) * 100
 
         normsize = levels["magic_normsize"]
         hgb_size = size_gb / float(normsize)
         felt_size = hgb_size ** magic
         scale = felt_size / hgb_size
-        warn_scaled = 100 - (( 100 - warn ) * scale)
-        crit_scaled = 100 - (( 100 - crit ) * scale)
+        warn_scaled = 100 - ((100 - warn) * scale)
+        crit_scaled = 100 - ((100 - crit) * scale)
 
         # Make sure, levels do never get too low due to magic factor
         lowest_warning_level, lowest_critical_level = levels["levels_low"]
@@ -197,12 +197,12 @@ def get_filesystem_levels(mountpoint, size_gb, params):
         if crit_scaled < lowest_critical_level:
             crit_scaled = lowest_critical_level
     else:
-        if type(warn) != float:
+        if not isinstance(warn, float):
             warn_scaled = savefloat(warn * mega / float(size_gb * giga)) * 100
         else:
             warn_scaled = warn
 
-        if type(crit) != float:
+        if not isinstance(crit, float):
             crit_scaled = savefloat(crit * mega / float(size_gb * giga)) * 100
         else:
             crit_scaled = crit
@@ -211,14 +211,15 @@ def get_filesystem_levels(mountpoint, size_gb, params):
     warn_mb     = savefloat(size_mb * warn_scaled / 100)
     crit_mb     = savefloat(size_mb * crit_scaled / 100)
     levels["levels_mb"] = (warn_mb, crit_mb)
-    if type(warn) == float:
+    if isinstance(warn, float):
         if warn_scaled < 0 and crit_scaled < 0:
             label = 'warn/crit at free space below'
             warn_scaled *= -1
             crit_scaled *= -1
         else:
             label = 'warn/crit at'
-        levels["levels_text"] = "(%s %.2f/%.2f%%)" % (label, warn_scaled, crit_scaled)
+        levels["levels_text"] = "(%s %s/%s)" % (label, get_percent_human_readable(warn_scaled),
+                                                       get_percent_human_readable(crit_scaled))
     else:
         if warn * mega < 0 and crit * mega < 0:
             label = 'warn/crit at free space below'
@@ -231,7 +232,7 @@ def get_filesystem_levels(mountpoint, size_gb, params):
         levels["levels_text"] = "(%s %s/%s)" % (label, warn_hr, crit_hr)
 
     if "inodes_levels" in params:
-        if type(levels["inodes_levels"]) == tuple:
+        if isinstance(levels["inodes_levels"], tuple):
             warn, crit = levels["inodes_levels"]
         else:
             # A list of inode levels. Choose the correct one depending on the
@@ -246,7 +247,7 @@ def get_filesystem_levels(mountpoint, size_gb, params):
                     found_size = to_size
                     found = True
             if not found:
-                warn, crit = 100.0, 100.0 # entry not found in list
+                warn, crit = 100.0, 100.0  # entry not found in list
         levels["inodes_levels"] = warn, crit
     else:
         levels["inodes_levels"] = (None, None)
@@ -255,19 +256,19 @@ def get_filesystem_levels(mountpoint, size_gb, params):
 
 
 # New function for checks that support groups.
-def df_check_filesystem_list(item, params, fslist_blocks, fslist_inodes = None):
+def df_check_filesystem_list(item, params, fslist_blocks, fslist_inodes=None):
 
-    blocks_info = { mp : { "size_mb"        : size_mb,
-                           "avail_mb"       : avail_mb,
-                           "reserved_mb"    : reserved_mb,
-                         }
-                    for (mp, size_mb, avail_mb, reserved_mb) in fslist_blocks }
+    blocks_info = {mp: {"size_mb"        : size_mb,
+                        "avail_mb"       : avail_mb,
+                        "reserved_mb"    : reserved_mb,
+                        }
+                    for (mp, size_mb, avail_mb, reserved_mb) in fslist_blocks}
 
     if fslist_inodes:
-        inodes_info = { mp : { "inodes_total"   : inodes_total,
-                               "inodes_avail"   : inodes_avail,
-                             }
-                        for (mp, inodes_total, inodes_avail) in fslist_inodes }
+        inodes_info = {mp: {"inodes_total"   : inodes_total,
+                            "inodes_avail"   : inodes_avail,
+                            }
+                        for (mp, inodes_total, inodes_avail) in fslist_inodes}
     else:
         inodes_info = {}
 
@@ -302,29 +303,26 @@ def df_check_filesystem_list(item, params, fslist_blocks, fslist_inodes = None):
         return 3, "filesystem not found"
 
 
-def df_check_filesystem_single(mountpoint, size_mb, avail_mb, reserved_mb, inodes_total, inodes_avail, params, this_time = None):
+def df_check_filesystem_single(mountpoint, size_mb, avail_mb, reserved_mb, inodes_total, inodes_avail, params, this_time=None):
     if size_mb == 0:
         return (1, "Size of filesystem is 0 MB", [])
 
     used_mb   = size_mb - avail_mb
     used_perc = 100.0 * (float(used_mb) / size_mb)
-    size_gb   = size_mb / 1024.0
 
     # Get warning and critical levels already with 'magic factor' applied
-    levels = get_filesystem_levels(mountpoint, size_gb, params)
+    levels = get_filesystem_levels(mountpoint, size_mb / 1024., params)
     warn_mb, crit_mb       = levels["levels_mb"]
     warn_inode, crit_inode = levels["inodes_levels"]
 
     used_hr = get_bytes_human_readable(used_mb * 1024 * 1024)
     size_hr = get_bytes_human_readable(size_mb * 1024 * 1024)
-    # If both numbers end with both MB or GB or TB, then drop the first one
+    used_perc_hr = get_percent_human_readable(used_perc)
+    # If both numbers end with the same unit, then drop the first one
     if used_hr[-2:] == size_hr[-2:]:
         used_hr = used_hr[:-3]
 
-    # Show enough decimal digits so that very small percentages are still
-    # visible!
-    infotext = "%s used (%s of %s)" % (
-       get_percent_human_readable(used_perc), used_hr, size_hr)
+    infotext = "%s used (%s of %s)" % (used_perc_hr, used_hr, size_hr)
 
     if warn_mb < 0.0:
         # Negative levels, so user configured thresholds based on space left. Calculate the
@@ -336,24 +334,31 @@ def df_check_filesystem_single(mountpoint, size_mb, avail_mb, reserved_mb, inode
     if used_mb >= crit_mb:
         status = 2
     elif used_mb >= warn_mb:
-        status = max(1, status)
+        status = 1
 
     # TODO: In some future version use a fixed name as perf variable
     perf_var = mountpoint.replace(" ", "_")
     perfdata = [(perf_var, used_mb, warn_mb, crit_mb, 0, size_mb),
                 ('fs_size', size_mb)]
 
-    if type(params) == dict:
+    try:
         show_levels = params.get("show_levels")
-        if show_levels == "always" or \
-            (show_levels == "onproblem" and status > 0) or \
-            (show_levels == "onmagic" and (status > 0 or levels.get("magic", 1.0) != 1.0)):
-            infotext += ", " + levels["levels_text"]
+        show_reserved = params.get("show_reserved")
+    except AttributeError:
+        show_levels = False
+        show_reserved = False
 
-        if reserved_mb > 0 and params.get("show_reserved"):
-            reserved_perc = 100.0 * float(reserved_mb) / size_mb
-            infotext += ", therein reserved for root: %.1f%% (%.2f MB)" % (reserved_perc, reserved_mb)
-            perfdata.append(("reserved", reserved_mb))
+    if show_levels == "always" or \
+        (show_levels == "onproblem" and status > 0) or \
+        (show_levels == "onmagic" and (status > 0 or levels.get("magic", 1.0) != 1.0)):
+        infotext += ", " + levels["levels_text"]
+
+    if reserved_mb > 0 and show_reserved:
+        reserved_perc = 100.0 * float(reserved_mb) / size_mb
+        reserved_hr = get_bytes_human_readable(reserved_mb * 1024 * 1024)
+        reserved_perc_hr = get_percent_human_readable(reserved_perc)
+        infotext += ", therein reserved for root: %s (%s)" % (reserved_perc_hr, reserved_hr)
+        perfdata.append(("reserved", reserved_mb))
 
     if levels.get("trend_range"):
         trend_status, trend_infotext, trend_perfdata = size_trend(
@@ -370,7 +375,7 @@ def df_check_filesystem_single(mountpoint, size_mb, avail_mb, reserved_mb, inode
         inodes_warn, inodes_crit = levels["inodes_levels"]
         if inodes_warn != None:
             # Levels in absolute numbers
-            if type(inodes_warn) == int:
+            if isinstance(inodes_warn, int):
                 if inodes_crit > inodes_avail:
                     inode_status = 2
                     problems.append("less than %dk inodes available(!!)" % (crit_inode / 1000))
@@ -384,10 +389,12 @@ def df_check_filesystem_single(mountpoint, size_mb, avail_mb, reserved_mb, inode
             else:
                 if inodes_crit > inodes_avail_perc:
                     inode_status = 2
-                    problems.append("less than %0.2f%% inodes available(!!)" % inodes_crit)
+                    problems.append("less than %s inodes available(!!)"
+                                    % get_percent_human_readable(inodes_crit))
                 elif inodes_warn > inodes_avail_perc:
                     inode_status = 1
-                    problems.append("less than %.02f%% inodes available(!)" % inodes_warn)
+                    problems.append("less than %s inodes available(!)"
+                                    % get_percent_human_readable(inodes_warn))
                 inodes_warn_abs = (100 - inodes_warn) / 100.0 * inodes_total
                 inodes_crit_abs = (100 - inodes_crit) / 100.0 * inodes_total
 
@@ -401,12 +408,12 @@ def df_check_filesystem_single(mountpoint, size_mb, avail_mb, reserved_mb, inode
         if show_inodes == "always" or \
             (show_inodes == "onlow" and (inode_status or inodes_avail_perc < 50)) or \
             (show_inodes == "onproblem" and inode_status):
-            infotext += ", inodes available: %dk/%0.2f%%" % (inodes_avail / 1000, inodes_avail_perc)
+            infotext += ", inodes available: %dk/%s" % (
+                        inodes_avail / 1000, get_percent_human_readable(inodes_avail_perc))
 
         perfdata += [ ("inodes_used", inodes_total - inodes_avail, inodes_warn_abs, inodes_crit_abs, 0, inodes_total) ]
 
     if problems:
         infotext += " - %s" % ", ".join(problems)
-        problems = []
 
     return status, infotext, perfdata

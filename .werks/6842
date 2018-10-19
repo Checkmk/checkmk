@@ -1,0 +1,10 @@
+Title: Fixed dashlet top offset in classic theme
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 1.5.0p7
+Date: 1539932331
+Class: fix
+
+CMK-1147

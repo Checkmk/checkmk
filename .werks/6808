@@ -1,0 +1,11 @@
+Title: agent_vsphere: Fixed retrieving system information
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0p7
+Date: 1539938611
+
+

@@ -11,7 +11,7 @@ class Tuploid(object):
         if isinstance(other_value, self.__class__):
             return other_value.tuple == self.tuple
         elif type(other_value) == tuple:
-            return all(x==y for x, y in zip(other_value, self.tuple))
+            return all(x == y for x, y in zip(other_value, self.tuple))
 
     def __ne__(self, other_value):
         return not self.__eq__(other_value)
@@ -23,7 +23,6 @@ class Tuploid(object):
     def __iter__(self):
         for x in self.tuple:
             yield x
-
 
 
 class PerfValue(Tuploid):
@@ -67,6 +66,23 @@ class PerfValue(Tuploid):
 
     def __repr__(self):
         return "PerfValue(%r, %r, %r, %r, %r, %r)" % self.tuple
+
+
+def assertPerfValuesEqual(actual, expected):
+    """
+    Compare two PerfValues.
+
+    This gives more helpful output than 'assert actual == expected'
+    """
+    assert isinstance(actual, PerfValue), "not a PerfValue: %r" % actual
+    assert isinstance(expected, PerfValue), "not a PerfValue: %r" % expected
+    assert expected.key == actual.key, "expected %r, but key is %r" % (expected, actual.key)
+    assert expected.value == actual.value, "expected %r, but value is %r" % (expected, actual.value)
+    assert expected.warn == actual.warn, "expected %r, but warn is %r" % (expected, actual.warn)
+    assert expected.crit == actual.crit, "expected %r, but crit is %r" % (expected, actual.crit)
+    assert expected.minimum == actual.minimum, "expected %r, but minimum is %r" % (expected, actual.minimum)
+    assert expected.maximum == actual.maximum, "expected %r, but maximum is %r" % (expected, actual.maximum)
+
 
 
 class BasicCheckResult(Tuploid):
@@ -118,6 +134,22 @@ class BasicCheckResult(Tuploid):
 
     def __repr__(self):
         return 'BasicCheckResult(%r, %r, %r, multiline=%r)' % self.tuple
+
+
+def assertBasicCheckResultsEqual(actual, expected):
+    """
+    Compare two BasicCheckResults.
+
+    This gives more helpful output than 'assert actual == expected'
+    """
+    assert isinstance(actual, BasicCheckResult), "not a BasicCheckResult: %r" % actual
+    assert isinstance(expected, BasicCheckResult), "not a BasicCheckResult: %r" % expected
+    assert expected.status == actual.status, "expected %r, but status is %r" % (expected, actual.status)
+    assert expected.infotext == actual.infotext, "expected %r, but infotext is %r" % (expected, actual.infotext)
+    assert len(expected.perfdata) == len(actual.perfdata), "expected %r, but got %d perfdata" % (expected, len(actual.perfdata))
+    for pact, pexp in zip(actual.perfdata, expected.perfdata):
+        assertPerfValuesEqual(pact, pexp)
+    assert expected.multiline == actual.multiline, "expected %r, but multiline is %r" % (expected, actual.multiline)
 
 
 class CheckResult(object):
@@ -199,9 +231,7 @@ def assertCheckResultsEqual(actual, expected):
     This gives more helpful output than 'assert actual == expected'
     """
     if isinstance(actual, BasicCheckResult):
-        assert isinstance(expected, BasicCheckResult), \
-               "%r is not a BasicCheckResult instance" % expected
-        assert actual == expected, "%s != %s" % (actual, expected)
+        assertBasicCheckResultsEqual(actual, expected)
 
     else:
         assert isinstance(actual, CheckResult), \
@@ -209,9 +239,9 @@ def assertCheckResultsEqual(actual, expected):
         assert isinstance(expected, CheckResult), \
                "%r is not a CheckResult instance" % expected
         assert len(actual.subresults) == len(expected.subresults), \
-               "subresults not of equal length"
+               "subresults not of equal length (expected %d)" % len(expected.subresults)
         for suba, sube in zip(actual.subresults, expected.subresults):
-            assert suba == sube, "%r != %r" % (suba, sube)
+            assertBasicCheckResultsEqual(suba, sube)
 
 
 class DiscoveryEntry(Tuploid):

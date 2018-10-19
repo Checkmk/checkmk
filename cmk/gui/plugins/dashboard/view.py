@@ -99,4 +99,4 @@ class ViewDashlet(IFrameDashlet):
 
         views.load_views()
         views.painter_options.load(self._dashlet_spec["name"])
-        views.show_view(self._dashlet_spec, show_heading=True, show_buttons=True, show_footer=True)
+        views.show_view(self._dashlet_spec, show_heading=True, show_buttons=False, show_footer=True)

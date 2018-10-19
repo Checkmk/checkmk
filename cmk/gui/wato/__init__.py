@@ -131,77 +131,16 @@ from cmk.gui.exceptions import MKGeneralException, MKUserError, MKAuthException,
                            MKInternalError, MKException
 from cmk.gui.log import logger
 from cmk.gui.display_options import display_options
-
 from cmk.gui.plugins.wato.utils.base_modes import WatoMode, WatoWebApiMode
 from cmk.gui.wato.pages.global_settings import GlobalSettingsMode, EditGlobalSettingMode
-from cmk.gui.wato.pages.sites import ModeSites, ModeEditSite
-from cmk.gui.wato.pages.password_store import ModePasswords, ModeEditPassword
-from cmk.gui.wato.pages.audit_log import ModeAuditLog
-from cmk.gui.wato.pages.custom_attributes import (
-    ModeEditCustomAttr,
-    ModeEditCustomUserAttr,
-    ModeEditCustomHostAttr,
-    ModeCustomAttrs,
-    ModeCustomUserAttrs,
-    ModeCustomHostAttrs,
+
+from cmk.gui.wato.pages.activate_changes import (
+    ModeActivateChanges,
+    ModeAjaxStartActivation,
+    ModeAjaxActivationState
 )
-from cmk.gui.wato.pages.timeperiods import ModeTimeperiods, ModeTimeperiodImportICal, ModeEditTimeperiod
 from cmk.gui.wato.pages.analyze_configuration import ModeAnalyzeConfig
-from cmk.gui.wato.pages.bulk_discovery import ModeBulkDiscovery
-from cmk.gui.wato.pages.groups import (
-    ModeGroups,
-    ModeHostgroups,
-    ModeServicegroups,
-    ModeContactgroups,
-    ModeEditGroup,
-    ModeEditHostgroup,
-    ModeEditServicegroup,
-    ModeEditContactgroup,
-)
-from cmk.gui.wato.pages.icons import ModeIcons
-from cmk.gui.wato.pages.check_catalog import ModeCheckManPage, ModeCheckPlugins
-from cmk.gui.wato.pages.host_tags import (
-    ModeHostTags,
-    ModeEditHosttagConfiguration,
-    ModeEditAuxtag,
-    ModeEditHosttagGroup,
-)
-from cmk.gui.wato.pages.roles import (
-    ModeRoles,
-    ModeEditRole,
-    ModeRoleMatrix,
-)
-from cmk.gui.wato.pages.users import (
-    ModeUsers,
-    ModeEditUser,
-)
-from cmk.gui.wato.pages.notifications import (
-    ModeNotifications,
-    ModeUserNotifications,
-    ModePersonalUserNotifications,
-    ModeEditNotificationRule,
-    ModeEditPersonalNotificationRule,
-)
-from cmk.gui.wato.pages.random_hosts import ModeRandomHosts
-from cmk.gui.wato.pages.pattern_editor import ModePatternEditor
-from cmk.gui.wato.pages.host_diagnose import ModeDiagHost
-from cmk.gui.wato.pages.rulesets import (
-    ModeRuleEditor,
-    ModeRulesets,
-    ModeStaticChecksRulesets,
-    ModeEditRuleset,
-    ModeRuleSearch,
-    ModeEditRule,
-    ModeCloneRule,
-    ModeNewRule,
-)
-from cmk.gui.wato.pages.ldap import ModeLDAPConfig, ModeEditLDAPConnection
-from cmk.gui.wato.pages.host_rename import ModeBulkRenameHost, ModeRenameHost
-from cmk.gui.wato.pages.bulk_import import ModeBulkImport
-from cmk.gui.wato.pages.download_agents import ModeDownloadAgents
-from cmk.gui.wato.pages.read_only import ModeManageReadOnly
-from cmk.gui.wato.pages.main import ModeMain
-from cmk.gui.wato.pages.object_parameters import ModeObjectParameters
+from cmk.gui.wato.pages.audit_log import ModeAuditLog
 from cmk.gui.wato.pages.backup import (
     ModeBackup,
     ModeBackupTargets,
@@ -214,6 +153,19 @@ from cmk.gui.wato.pages.backup import (
     ModeBackupDownloadKey,
     ModeBackupRestore,
 )
+from cmk.gui.wato.pages.bulk_discovery import ModeBulkDiscovery
+from cmk.gui.wato.pages.bulk_edit import ModeBulkEdit, ModeBulkCleanup
+from cmk.gui.wato.pages.bulk_import import ModeBulkImport
+from cmk.gui.wato.pages.check_catalog import ModeCheckManPage, ModeCheckPlugins
+from cmk.gui.wato.pages.custom_attributes import (
+    ModeEditCustomAttr,
+    ModeEditCustomUserAttr,
+    ModeEditCustomHostAttr,
+    ModeCustomAttrs,
+    ModeCustomUserAttrs,
+    ModeCustomHostAttrs,
+)
+from cmk.gui.wato.pages.download_agents import ModeDownloadAgents
 from cmk.gui.wato.pages.folders import (
         ModeFolder,
         ModeAjaxPopupMoveToFolder,
@@ -221,11 +173,65 @@ from cmk.gui.wato.pages.folders import (
         ModeCreateFolder,
         ModeAjaxSetFoldertree,
 )
+from cmk.gui.wato.pages.groups import (
+    ModeGroups,
+    ModeHostgroups,
+    ModeServicegroups,
+    ModeContactgroups,
+    ModeEditGroup,
+    ModeEditHostgroup,
+    ModeEditServicegroup,
+    ModeEditContactgroup,
+)
+from cmk.gui.wato.pages.host_diagnose import ModeDiagHost
+from cmk.gui.wato.pages.host_rename import ModeBulkRenameHost, ModeRenameHost
+from cmk.gui.wato.pages.host_tags import (
+    ModeHostTags,
+    ModeEditHosttagConfiguration,
+    ModeEditAuxtag,
+    ModeEditHosttagGroup,
+)
 from cmk.gui.wato.pages.hosts import ModeEditHost, ModeCreateHost, ModeCreateCluster
+from cmk.gui.wato.pages.icons import ModeIcons
+from cmk.gui.wato.pages.ldap import ModeLDAPConfig, ModeEditLDAPConnection
+from cmk.gui.wato.pages.main import ModeMain
+from cmk.gui.wato.pages.notifications import (
+    ModeNotifications,
+    ModeUserNotifications,
+    ModePersonalUserNotifications,
+    ModeEditNotificationRule,
+    ModeEditPersonalNotificationRule,
+)
+from cmk.gui.wato.pages.object_parameters import ModeObjectParameters
+from cmk.gui.wato.pages.password_store import ModePasswords, ModeEditPassword
+from cmk.gui.wato.pages.pattern_editor import ModePatternEditor
+from cmk.gui.wato.pages.random_hosts import ModeRandomHosts
+from cmk.gui.wato.pages.read_only import ModeManageReadOnly
+from cmk.gui.wato.pages.roles import (
+    ModeRoles,
+    ModeEditRole,
+    ModeRoleMatrix,
+)
+from cmk.gui.wato.pages.rulesets import (
+    ModeRuleEditor,
+    ModeRulesets,
+    ModeStaticChecksRulesets,
+    ModeEditRuleset,
+    ModeRuleSearch,
+    ModeEditRule,
+    ModeCloneRule,
+    ModeNewRule,
+)
 from cmk.gui.wato.pages.services import (
         ModeDiscovery,
         ModeFirstDiscovery,
         ModeAjaxExecuteCheck
+)
+from cmk.gui.wato.pages.sites import ModeSites, ModeEditSite
+from cmk.gui.wato.pages.timeperiods import ModeTimeperiods, ModeTimeperiodImportICal, ModeEditTimeperiod
+from cmk.gui.wato.pages.users import (
+    ModeUsers,
+    ModeEditUser,
 )
 
 import cmk.gui.plugins.wato
@@ -628,218 +634,6 @@ class ModeSearch(WatoMode):
 
 
 #.
-#   .--Bulk-Edit-----------------------------------------------------------.
-#   |                ____        _ _      _____    _ _ _                   |
-#   |               | __ ) _   _| | | __ | ____|__| (_) |_                 |
-#   |               |  _ \| | | | | |/ / |  _| / _` | | __|                |
-#   |               | |_) | |_| | |   <  | |__| (_| | | |_                 |
-#   |               |____/ \__,_|_|_|\_\ |_____\__,_|_|\__|                |
-#   |                                                                      |
-#   +----------------------------------------------------------------------+
-#   | Change the attributes of a number of selected host at once. Also the |
-#   | cleanup is implemented here: the bulk removal of explicit attribute  |
-#   | values.                                                              |
-#   '----------------------------------------------------------------------'
-
-@mode_registry.register
-class ModeBulkEdit(WatoMode):
-    @classmethod
-    def name(cls):
-        return "bulkedit"
-
-
-    @classmethod
-    def permissions(cls):
-        return ["hosts", "edit_hosts"]
-
-
-    def title(self):
-        return _("Bulk edit hosts")
-
-
-    def buttons(self):
-        html.context_button(_("Folder"), watolib.folder_preserving_link([("mode", "folder")]), "back")
-
-
-    def action(self):
-        if not html.check_transaction():
-            return
-
-        config.user.need_permission("wato.edit_hosts")
-
-        changed_attributes = watolib.collect_attributes("bulk")
-        host_names = get_hostnames_from_checkboxes()
-        for host_name in host_names:
-            host = watolib.Folder.current().host(host_name)
-            host.update_attributes(changed_attributes)
-            # call_hook_hosts_changed() is called too often.
-            # Either offer API in class Host for bulk change or
-            # delay saving until end somehow
-
-        return "folder", _("Edited %d hosts") % len(host_names)
-
-
-    def page(self):
-        host_names = get_hostnames_from_checkboxes()
-        hosts = dict([(host_name, watolib.Folder.current().host(host_name)) for host_name in host_names])
-        current_host_hash = sha256(repr(hosts))
-
-        # When bulk edit has been made with some hosts, then other hosts have been selected
-        # and then another bulk edit has made, the attributes need to be reset before
-        # rendering the form. Otherwise the second edit will have the attributes of the
-        # first set.
-        host_hash = html.var("host_hash")
-        if not host_hash or host_hash != current_host_hash:
-            html.del_all_vars(prefix="attr_")
-            html.del_all_vars(prefix="bulk_change_")
-
-        html.p("%s%s %s" % (
-            _("You have selected <b>%d</b> hosts for bulk edit. You can now change "
-              "host attributes for all selected hosts at once. ") % len(hosts),
-            _("If a select is set to <i>don't change</i> then currenty not all selected "
-              "hosts share the same setting for this attribute. "
-              "If you leave that selection, all hosts will keep their individual settings."),
-            _("In case you want to <i>unset</i> attributes on multiple hosts, you need to "
-              "use the <i>bulk cleanup</i> action instead of bulk edit.")))
-
-        html.begin_form("edit_host", method = "POST")
-        html.prevent_password_auto_completion()
-        html.hidden_field("host_hash", current_host_hash)
-        configure_attributes(False, hosts, "bulk", parent = watolib.Folder.current())
-        forms.end()
-        html.button("_save", _("Save & Finish"))
-        html.hidden_fields()
-        html.end_form()
-
-
-#.
-#   .--Bulk-Cleanup--------------------------------------------------------.
-#   |      ____        _ _       ____ _                                    |
-#   |     | __ ) _   _| | | __  / ___| | ___  __ _ _ __  _   _ _ __        |
-#   |     |  _ \| | | | | |/ / | |   | |/ _ \/ _` | '_ \| | | | '_ \       |
-#   |     | |_) | |_| | |   <  | |___| |  __/ (_| | | | | |_| | |_) |      |
-#   |     |____/ \__,_|_|_|\_\  \____|_|\___|\__,_|_| |_|\__,_| .__/       |
-#   |                                                         |_|          |
-#   +----------------------------------------------------------------------+
-#   | Mode for removing attributes from host in bulk mode.                 |
-#   '----------------------------------------------------------------------'
-
-
-@mode_registry.register
-class ModeBulkCleanup(WatoMode):
-    @classmethod
-    def name(cls):
-        return "bulkcleanup"
-
-
-    @classmethod
-    def permissions(cls):
-        return ["hosts", "edit_hosts"]
-
-
-    def _from_vars(self):
-        self._folder = watolib.Folder.current()
-
-
-    def title(self):
-        return _("Bulk removal of explicit attributes")
-
-
-    def buttons(self):
-        html.context_button(_("Back"), self._folder.url(), "back")
-
-
-    def action(self):
-        if not html.check_transaction():
-            return
-
-        config.user.need_permission("wato.edit_hosts")
-        to_clean = self._bulk_collect_cleaned_attributes()
-        if "contactgroups" in to_clean:
-            self._folder.need_permission("write")
-
-        hosts = get_hosts_from_checkboxes()
-
-        # Check all permissions before doing any edit
-        for host in hosts:
-            host.need_permission("write")
-
-        for host in hosts:
-            host.clean_attributes(to_clean)
-
-        return "folder"
-
-
-    def _bulk_collect_cleaned_attributes(self):
-        to_clean = []
-        for attr, _topic in watolib.all_host_attributes():
-            attrname = attr.name()
-            if html.get_checkbox("_clean_" + attrname) == True:
-                to_clean.append(attrname)
-        return to_clean
-
-
-    def page(self):
-        hosts = get_hosts_from_checkboxes()
-
-        html.p(_("You have selected <b>%d</b> hosts for bulk cleanup. This means removing "
-                 "explicit attribute values from hosts. The hosts will then inherit attributes "
-                 "configured at the host list or folders or simply fall back to the builtin "
-                 "default values.") % len(hosts))
-
-        html.begin_form("bulkcleanup", method = "POST")
-        forms.header(_("Attributes to remove from hosts"))
-        if not self._select_attributes_for_bulk_cleanup(hosts):
-            forms.end()
-            html.write_text(_("The selected hosts have no explicit attributes"))
-        else:
-            forms.end()
-            html.button("_save", _("Save & Finish"))
-        html.hidden_fields()
-        html.end_form()
-
-
-    def _select_attributes_for_bulk_cleanup(self, hosts):
-        num_shown = 0
-        for attr, _topic in watolib.all_host_attributes():
-            attrname = attr.name()
-
-            # only show attributes that at least on host have set
-            num_haveit = 0
-            for host in hosts:
-                if host.has_explicit_attribute(attrname):
-                    num_haveit += 1
-
-            if num_haveit == 0:
-                continue
-
-            # If the attribute is mandatory and no value is inherited
-            # by file or folder, the attribute cannot be cleaned.
-            container = self._folder
-            is_inherited = False
-            while container:
-                if container.has_explicit_attribute(attrname):
-                    is_inherited = True
-                    break
-                container = container.parent()
-
-            num_shown += 1
-
-            # Legend and Help
-            forms.section(attr.title())
-
-            if attr.is_mandatory() and not is_inherited:
-                html.write_text(_("This attribute is mandatory and there is no value "
-                                  "defined in the host list or any parent folder."))
-            else:
-                label = "clean this attribute on <b>%s</b> hosts" % \
-                    (num_haveit == len(hosts) and "all selected" or str(num_haveit))
-                html.checkbox("_clean_%s" % attrname, False, label=label)
-            html.help(attr.help())
-
-        return num_shown > 0
-
-#.
 #   .--Parentscan----------------------------------------------------------.
 #   |          ____                      _                                 |
 #   |         |  _ \ __ _ _ __ ___ _ __ | |_ ___  ___ __ _ _ __            |
@@ -1202,472 +996,6 @@ class ModeParentScan(WatoMode):
             for subfolder in folder.all_subfolders().values():
                 entries += self._recurse_hosts(subfolder, recurse, select)
         return entries
-
-#.
-#   .--Pending & Replication-----------------------------------------------.
-#   |                 ____                _ _                              |
-#   |                |  _ \ ___ _ __   __| (_)_ __   __ _                  |
-#   |                | |_) / _ \ '_ \ / _` | | '_ \ / _` |                 |
-#   |                |  __/  __/ | | | (_| | | | | | (_| |                 |
-#   |                |_|   \___|_| |_|\__,_|_|_| |_|\__, |                 |
-#   |                                               |___/                  |
-#   +----------------------------------------------------------------------+
-#   | Mode for activating pending changes. Does also replication with      |
-#   | remote sites in distributed WATO.                                    |
-#   '----------------------------------------------------------------------'
-
-
-@mode_registry.register
-class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
-    @classmethod
-    def name(cls):
-        return "changelog"
-
-
-    @classmethod
-    def permissions(cls):
-        return []
-
-
-    def __init__(self):
-        self._value = {}
-        super(ModeActivateChanges, self).__init__()
-        super(ModeActivateChanges, self).load()
-
-
-    def title(self):
-        return _("Activate pending changes")
-
-
-    def buttons(self):
-        home_button()
-
-        # TODO: Remove once new changes mechanism has been implemented
-        if self._may_discard_changes():
-            html.context_button(_("Discard Changes!"),
-                html.makeactionuri([("_action", "discard")]),
-                "discard", id_="discard_changes_button")
-
-        if config.user.may("wato.sites"):
-            html.context_button(_("Site Configuration"), watolib.folder_preserving_link([("mode", "sites")]), "sites")
-
-        if config.user.may("wato.auditlog"):
-            html.context_button(_("Audit Log"), watolib.folder_preserving_link([("mode", "auditlog")]), "auditlog")
-
-
-
-    def _may_discard_changes(self):
-        if not config.user.may("wato.activate"):
-            return False
-
-        if not self.has_changes():
-            return False
-
-        if not config.user.may("wato.activateforeign") and self._has_foreign_changes_on_any_site():
-            return False
-
-        if not self._get_last_wato_snapshot_file():
-            return False
-
-        return True
-
-
-    def action(self):
-        if html.var("_action") != "discard":
-            return
-
-        if not html.check_transaction():
-            return
-
-        if not self._may_discard_changes():
-            return
-
-        # TODO: Remove once new changes mechanism has been implemented
-        # Now remove all currently pending changes by simply restoring the last automatically
-        # taken snapshot. Then activate the configuration. This should revert all pending changes.
-        file_to_restore = self._get_last_wato_snapshot_file()
-
-        if not file_to_restore:
-            raise MKUserError(None, _('There is no WATO snapshot to be restored.'))
-
-        msg = _("Discarded pending changes (Restored %s)") % file_to_restore
-
-        # All sites and domains can be affected by a restore: Better restart everything.
-        add_change("changes-discarded", msg, sites=self.activation_site_ids(),
-            domains=watolib.ConfigDomain.enabled_domains(),
-            need_restart=True)
-
-        self._extract_snapshot(file_to_restore)
-        watolib.execute_activate_changes([ d.ident for d in watolib.ConfigDomain.enabled_domains() ])
-
-        for site_id in self.activation_site_ids():
-            self.confirm_site_changes(site_id)
-
-        html.header(self.title(), javascripts=["wato"], stylesheets=wato_styles,
-                    show_body_start=display_options.enabled(display_options.H),
-                    show_top_heading=display_options.enabled(display_options.T))
-        html.open_div(class_="wato")
-
-        html.begin_context_buttons()
-        home_button()
-        html.end_context_buttons()
-
-        html.message(_("Successfully discarded all pending changes."))
-        html.javascript("hide_changes_buttons();")
-        html.footer()
-
-        return False
-
-
-    # TODO: Remove once new changes mechanism has been implemented
-    def _extract_snapshot(self, snapshot_file):
-        self._extract_from_file(watolib.snapshot_dir + snapshot_file, watolib.backup_domains)
-
-
-    # TODO: Remove once new changes mechanism has been implemented
-    def _extract_from_file(self, filename, elements):
-        if type(elements) == list:
-            multitar.extract(tarfile.open(filename, "r"), elements)
-
-        elif type(elements) == dict:
-            multitar.extract_domains(tarfile.open(filename, "r"), elements)
-
-
-    # TODO: Remove once new changes mechanism has been implemented
-    def _get_last_wato_snapshot_file(self):
-        for snapshot_file in self._get_snapshots():
-            status = watolib.get_snapshot_status(snapshot_file)
-            if status['type'] == 'automatic' and not status['broken']:
-                return snapshot_file
-
-
-    # TODO: Remove once new changes mechanism has been implemented
-    def _get_snapshots(self):
-        snapshots = []
-        try:
-            for f in os.listdir(watolib.snapshot_dir):
-                if os.path.isfile(watolib.snapshot_dir + f):
-                    snapshots.append(f)
-            snapshots.sort(reverse=True)
-        except OSError:
-            pass
-        return snapshots
-
-
-    def page(self):
-        self._activation_msg()
-        self._activation_form()
-
-        html.h2(_("Activation status"))
-        self._activation_status()
-
-        html.h2(_("Pending changes"))
-        self._change_table()
-
-
-    def _activation_msg(self):
-        html.open_div(id_="activation_msg", style="display:none")
-        html.show_info("")
-        html.close_div()
-
-
-    def _activation_form(self):
-        if not config.user.may("wato.activate"):
-            html.show_warning(_("You are not permitted to activate configuration changes."))
-            return
-
-        if not self._changes:
-            html.show_info(_("Currently there are no changes to activate."))
-            return
-
-        if not config.user.may("wato.activateforeign") \
-           and self._has_foreign_changes_on_any_site():
-            html.show_warning(_("Sorry, you are not allowed to activate changes of other users."))
-            return
-
-        valuespec = self._vs_activation()
-
-        html.begin_form("activate", method="POST", action="")
-        html.hidden_field("activate_until", self._get_last_change_id(), id_="activate_until")
-        forms.header(valuespec.title())
-
-        valuespec.render_input("activate", self._value)
-        valuespec.set_focus("activate")
-        html.help(valuespec.help())
-
-        if self.has_foreign_changes():
-            if config.user.may("wato.activateforeign"):
-                html.show_warning(
-                    _("There are some changes made by your colleagues that you will "
-                      "activate if you proceed. You need to enable the checkbox above "
-                      "to confirm the activation of these changes."))
-            else:
-                html.show_warning(
-                    _("There are some changes made by your colleagues that you can not "
-                      "activate because you are not permitted to. You can only activate "
-                      "the changes on the sites that are not affected by these changes. "
-                      "<br>"
-                      "If you need to activate your changes on all sites, please contact "
-                      "a permitted user to do it for you."))
-
-        forms.end()
-        html.jsbutton("activate_affected", _("Activate affected"),
-                      "activate_changes(\"affected\")", cssclass="hot")
-        html.jsbutton("activate_selected", _("Activate selected"),
-                      "activate_changes(\"selected\")")
-
-        html.hidden_fields()
-        html.end_form()
-
-
-    def _vs_activation(self):
-        if self.has_foreign_changes() and config.user.may("wato.activateforeign"):
-            foreign_changes_elements = [
-                ("foreign", Checkbox(
-                    title = _("Activate foreign changes"),
-                    label = _("Activate changes of other users"),
-                )),
-            ]
-        else:
-            foreign_changes_elements = []
-
-        return Dictionary(
-            title = self.title(),
-            elements = [
-                ("comment", TextAreaUnicode(
-                    title = _("Comment (optional)"),
-                    cols = 40,
-                    try_max_width = True,
-                    rows = 3,
-                    help = _("You can provide an optional comment for the current activation. "
-                             "This can be useful to document the reason why the changes you "
-                             "activate have been made."),
-                )),
-            ] + foreign_changes_elements,
-            optional_keys = [],
-            render = "form_part",
-        )
-
-
-    def _change_table(self):
-        table.begin("changes", sortable=False, searchable=False, css="changes", limit=None)
-        for _change_id, change in reversed(self._changes):
-            css = []
-            if self._is_foreign(change):
-                css.append("foreign")
-            if not config.user.may("wato.activateforeign"):
-                css.append("not_permitted")
-
-            table.row(css=" ".join(css))
-
-            table.cell(_("Object"), css="narrow nobr")
-            rendered = self._render_change_object(change["object"])
-            if rendered:
-                html.write(rendered)
-
-            table.cell(_("Time"), render.date_and_time(change["time"]), css="narrow nobr")
-            table.cell(_("User"), css="narrow nobr")
-            html.write_text(change["user_id"] if change["user_id"] else "")
-            if self._is_foreign(change):
-                html.icon(_("This change has been made by another user"), "foreign_changes")
-
-            table.cell(_("Affected sites"), css="narrow nobr")
-            if self._affects_all_sites(change):
-                html.write_text("<i>%s</i>" % _("All sites"))
-            else:
-                html.write_text(", ".join(sorted(change["affected_sites"])))
-
-            table.cell(_("Change"), change["text"])
-        table.end()
-
-
-    def _render_change_object(self, obj):
-        if not obj:
-            return
-
-        ty, ident = obj
-        url, title = None, None
-
-        if ty == "Host":
-            host = watolib.Host.host(ident)
-            if host:
-                url = host.edit_url()
-                title = host.name()
-
-        elif ty == "Folder":
-            if watolib.Folder.folder_exists(ident):
-                folder = watolib.Folder.folder(ident)
-                url = folder.url()
-                title = folder.title()
-
-        if url and title:
-            return html.render_a(title, href=url)
-
-
-    def _activation_status(self):
-        table.begin("site-status", searchable=False, sortable=False, css="activation")
-
-        for site_id, site in sort_sites(self._activation_sites()):
-            table.row()
-
-            site_status, status = self._get_site_status(site_id, site)
-
-            is_online        = self._site_is_online(status)
-            is_logged_in     = self._site_is_logged_in(site_id, site)
-            has_foreign      = self._site_has_foreign_changes(site_id)
-            can_activate_all = not has_foreign or config.user.may("wato.activateforeign")
-
-            # Disable actions for offline sites and not logged in sites
-            if not is_online or not is_logged_in:
-                can_activate_all = False
-
-            need_restart = self._is_activate_needed(site_id)
-            need_sync    = self.is_sync_needed(site_id)
-            need_action  = need_restart or need_sync
-
-            # Activation checkbox
-            table.cell("", css="buttons")
-            if can_activate_all and need_action:
-                html.checkbox("site_%s" % site_id, cssclass="site_checkbox")
-
-            # Iconbuttons
-            table.cell(_("Actions"), css="buttons")
-
-            if config.user.may("wato.sites"):
-                edit_url = watolib.folder_preserving_link([("mode", "edit_site"), ("edit", site_id)])
-                html.icon_button(edit_url, _("Edit the properties of this site"), "edit")
-
-            # State
-            if can_activate_all and need_sync:
-                html.icon_button(url="javascript:void(0)",
-                    id_="activate_%s" % site_id,
-                    cssclass=["activate_site"],
-                    title=_("This site is not update and needs a replication. Start it now."),
-                    icon="need_replicate",
-                    onclick="activate_changes(\"site\", \"%s\")" % site_id)
-
-            if can_activate_all and need_restart:
-                html.icon_button(url="javascript:void(0)",
-                    id_="activate_%s" % site_id,
-                    cssclass=["activate_site"],
-                    title=_("This site needs a restart for activating the changes. Start it now."),
-                    icon="need_restart",
-                    onclick="activate_changes(\"site\", \"%s\")" % site_id)
-
-            if can_activate_all and not need_action:
-                html.icon(_("This site is up-to-date."), "siteuptodate")
-
-            site_url = site.get("multisiteurl")
-            if site_url:
-                html.icon_button(site_url, _("Open this site's local web user interface"), "url", target="_blank")
-
-            table.text_cell(_("Site"), site.get("alias", site_id))
-
-            # Livestatus
-            table.cell(_("Status"), css="narrow nobr")
-            html.status_label(content=status, status=status, title=_("This site is %s") % status)
-
-            # Livestatus-/Check_MK-Version
-            table.cell(_("Version"), site_status.get("livestatus_version", ""), css="narrow nobr")
-
-            table.cell(_("Changes"), "%d" % len(self._changes_of_site(site_id)), css="number narrow nobr")
-
-            table.cell(_("Progress"), css="repprogress")
-            html.open_div(id_="site_%s_status" % site_id, class_=["msg"])
-            html.close_div()
-            html.open_div(id_="site_%s_progress" % site_id, class_=["progress"])
-            html.close_div()
-
-            # Hidden on initial rendering and shown on activation start
-            table.cell(_("Details"), css="details")
-            html.open_div(id_="site_%s_details" % site_id)
-
-            # Shown on initial rendering and hidden on activation start
-            table.cell(_("Last result"), css="last_result")
-            last_state = self._last_activation_state(site_id)
-
-            if not is_logged_in:
-                html.write_text(_("Is not logged in.") + " ")
-
-            if not last_state:
-                html.write_text(_("Has never been activated"))
-            else:
-                html.write_text("%s: %s. " % (_("State"), last_state["_status_text"]))
-                if last_state["_status_details"]:
-                    html.write(last_state["_status_details"])
-
-        table.end()
-
-
-
-class ModeAjaxStartActivation(WatoWebApiMode):
-    def page(self):
-        init_wato_datastructures(with_wato_lock=True)
-
-        config.user.need_permission("wato.activate")
-
-        request = self.webapi_request()
-
-        activate_until = request.get("activate_until")
-        if not activate_until:
-            raise MKUserError("activate_until", _("Missing parameter \"%s\".") % "activate_until")
-
-        manager = watolib.ActivateChangesManager()
-        manager.load()
-
-        affected_sites = request.get("sites", "").strip()
-        if not affected_sites:
-            affected_sites = manager.dirty_and_active_activation_sites()
-        else:
-            affected_sites = affected_sites.split(",")
-
-        comment = request.get("comment", "").strip()
-        if comment == "":
-            comment = None
-
-        activate_foreign = request.get("activate_foreign", "0") == "1"
-
-        activation_id = manager.start(affected_sites, activate_until, comment, activate_foreign)
-
-        return {
-            "activation_id": activation_id,
-        }
-
-
-
-
-class ModeAjaxActivationState(WatoWebApiMode):
-    def page(self):
-        init_wato_datastructures(with_wato_lock=True)
-
-        config.user.need_permission("wato.activate")
-
-        request = self.webapi_request()
-
-        activation_id = request.get("activation_id")
-        if not activation_id:
-            raise MKUserError("activation_id", _("Missing parameter \"%s\".") % "activation_id")
-
-        manager = watolib.ActivateChangesManager()
-        manager.load()
-        manager.load_activation(activation_id)
-
-        return manager.get_state()
-
-
-
-def do_activate_changes_automation():
-    watolib.verify_slave_site_config(html.var("site_id"))
-
-    try:
-        domains = ast.literal_eval(html.var("domains"))
-    except SyntaxError:
-        raise watolib.MKAutomationException(_("Garbled automation response: '%s'") % html.var("domains"))
-
-    return watolib.execute_activate_changes(domains)
-
-
-watolib.register_automation_command("activate-changes", do_activate_changes_automation)
 
 #.
 #   .--Progress------------------------------------------------------------.

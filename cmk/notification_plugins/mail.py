@@ -34,6 +34,7 @@ import base64
 import os
 import socket
 import sys
+import subprocess
 import urllib
 import urllib2
 import json
@@ -630,17 +631,20 @@ def fetch_pnp_data(context, params):
         path = "%s/share/pnp4nagios/htdocs/index.php" % context['OMD_ROOT'].encode('utf-8')
         php_save_path = "-d session.save_path=%s/tmp/php/session" % context['OMD_ROOT'].encode(
             'utf-8')
-        env = 'REMOTE_USER="check-mk" SKIP_AUTHORIZATION=1'
+        env = {
+            'REMOTE_USER': "check-mk",
+            "SKIP_AUTHORIZATION": 1,
+        }
     except:
         # Non-omd environment - use plugin argument 1
         path = context.get('PARAMETER_1', '')
         php_save_path = ""  # Using default path
-        env = 'REMOTE_USER="%s"' % context['CONTACTNAME'].encode('utf-8')
+        env = {'REMOTE_USER': context['CONTACTNAME'].encode('utf-8')}
 
     if not os.path.exists(path):
         raise GraphException('Unable to locate pnp4nagios index.php (%s)' % path)
 
-    return os.popen('%s php %s %s "%s"' % (env, php_save_path, path, params)).read()
+    return subprocess.check_output(["php", php_save_path, path, params], env=env)
 
 
 def fetch_num_sources(context):
@@ -739,7 +743,7 @@ def get_omd_config(key):
 
 def get_apache_port():
     port = get_omd_config("CONFIG_APACHE_TCP_PORT")
-    if port == None:
+    if port is None:
         return 80
     return int(port)
 

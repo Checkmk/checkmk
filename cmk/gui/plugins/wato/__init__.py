@@ -36,9 +36,6 @@ from cmk.plugin_loader import load_plugins
 #   |                         |___/                                        |
 #   '----------------------------------------------------------------------'
 
-# TODO: Would be better to replace this star import with an explicit list of
-# names needed for the plugins. Then we would have something like an official
-# plugin API. At least a list of names that are intended to be used by plugins.
 from cmk.gui.plugins.wato.utils import (
     ACResultCRIT,
     ACResultOK,

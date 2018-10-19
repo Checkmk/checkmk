@@ -1,0 +1,18 @@
+Title: df: Optionally produce metrics compatible to unix df command
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1540211203
+Class: feature
+
+Add an option to exclude space reserved for the <tt>root</tt> user from
+the calculation of used space, to produce metrics matching the ouput of
+the unix df command.
+By default Check_MK treats space that is reserved for the <tt>root</tt> user on
+Linux and Unix as used space. Usually, 5% are being reserved for root when a new
+filesystem is being created.
+With this new option in the ruleset "Filesystem (used space and growth)" you can
+have Check_MK exclude the current amount of reserved but yet unused space from
+the calculations regarding the used space (absolute and percentage).

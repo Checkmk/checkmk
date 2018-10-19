@@ -29,7 +29,7 @@
 # an exception to provide an error message to the user. If dependencies
 # between include files are possible this will not be necessary anymore.
 if 'size_trend' not in globals():
-    def size_trend(check, item, resource, levels, used_mb, size_mb, timestamp=None):
+    def size_trend(*_args, **_kwargs):
         raise MKGeneralException('Function size_trend not found. Please include '
                                  '"size_trend.include" in your check')
 
@@ -307,8 +307,22 @@ def df_check_filesystem_single(mountpoint, size_mb, avail_mb, reserved_mb, inode
     if size_mb == 0:
         return (1, "Size of filesystem is 0 MB", [])
 
-    used_mb   = size_mb - avail_mb
-    used_perc = 100.0 * (float(used_mb) / size_mb)
+    try:
+        show_levels = params.get("show_levels")
+        subtract_reserved = bool(params.get("subtract_reserved")) and reserved_mb > 0
+        show_reserved = params.get("show_reserved") and reserved_mb > 0
+    except AttributeError:
+        show_levels = False
+        subtract_reserved = False
+        show_reserved = False
+
+    used_mb = size_mb - avail_mb
+    used_max = size_mb
+    if subtract_reserved:
+        used_mb -= reserved_mb
+        used_max -= reserved_mb
+
+    used_perc = 100.0 * (float(used_mb) / used_max)
 
     # Get warning and critical levels already with 'magic factor' applied
     levels = get_filesystem_levels(mountpoint, size_mb / 1024., params)
@@ -316,19 +330,19 @@ def df_check_filesystem_single(mountpoint, size_mb, avail_mb, reserved_mb, inode
     warn_inode, crit_inode = levels["inodes_levels"]
 
     used_hr = get_bytes_human_readable(used_mb * 1024 * 1024)
-    size_hr = get_bytes_human_readable(size_mb * 1024 * 1024)
+    used_max_hr = get_bytes_human_readable(used_max * 1024 * 1024)
     used_perc_hr = get_percent_human_readable(used_perc)
     # If both numbers end with the same unit, then drop the first one
-    if used_hr[-2:] == size_hr[-2:]:
+    if used_hr[-2:] == used_max_hr[-2:]:
         used_hr = used_hr[:-3]
 
-    infotext = "%s used (%s of %s)" % (used_perc_hr, used_hr, size_hr)
+    infotext = "%s used (%s of %s)" % (used_perc_hr, used_hr, used_max_hr)
 
     if warn_mb < 0.0:
         # Negative levels, so user configured thresholds based on space left. Calculate the
         # upper thresholds based on the size of the filesystem
-        crit_mb = size_mb + crit_mb
-        warn_mb = size_mb + warn_mb
+        crit_mb = used_max + crit_mb
+        warn_mb = used_max + warn_mb
 
     status = 0
     if used_mb >= crit_mb:
@@ -341,23 +355,25 @@ def df_check_filesystem_single(mountpoint, size_mb, avail_mb, reserved_mb, inode
     perfdata = [(perf_var, used_mb, warn_mb, crit_mb, 0, size_mb),
                 ('fs_size', size_mb)]
 
-    try:
-        show_levels = params.get("show_levels")
-        show_reserved = params.get("show_reserved")
-    except AttributeError:
-        show_levels = False
-        show_reserved = False
-
     if show_levels == "always" or \
         (show_levels == "onproblem" and status > 0) or \
         (show_levels == "onmagic" and (status > 0 or levels.get("magic", 1.0) != 1.0)):
         infotext += ", " + levels["levels_text"]
 
-    if reserved_mb > 0 and show_reserved:
+    if show_reserved:
         reserved_perc = 100.0 * float(reserved_mb) / size_mb
-        reserved_hr = get_bytes_human_readable(reserved_mb * 1024 * 1024)
         reserved_perc_hr = get_percent_human_readable(reserved_perc)
-        infotext += ", therein reserved for root: %s (%s)" % (reserved_perc_hr, reserved_hr)
+        reserved_hr = get_bytes_human_readable(reserved_mb * 1024 * 1024)
+        if subtract_reserved:
+            infotext += ", additionally reserved for root: %s" % reserved_hr
+        else:
+            infotext += ", therein reserved for root: %s (%s)" \
+                        % (reserved_perc_hr, reserved_hr)
+
+    if subtract_reserved:
+        perfdata.append(("fs_free", avail_mb, None, None, 0, size_mb))
+
+    if subtract_reserved or show_reserved:
         perfdata.append(("reserved", reserved_mb))
 
     if levels.get("trend_range"):

@@ -6561,7 +6561,19 @@ fs_reserved_elements = [
             ( True, _("Show reserved space") ),
             ( False, _("Do now show reserved space") ),
          ]
-    ))
+    )),
+    ( "subtract_reserved",
+      DropdownChoice(
+          title = _("Exclude space reserved for the <tt>root</tt> user from calculation of used space"),
+          help = _("By default Check_MK treats space that is reserved for the <tt>root</tt> user on Linux and Unix as "
+                   "used space. Usually, 5% are being reserved for root when a new filesystem is being created. "
+                   "With this option you can have Check_MK exclude the current amount of reserved but yet unused "
+                   "space from the calculations regarding the used space percentage."),
+          choices = [
+            ( False, _("Include reserved space") ),
+            ( True, _("Exclude reserved space") ),
+         ]
+    )),
 ]
 
 

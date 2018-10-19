@@ -683,7 +683,7 @@ def dashlet_view(nr, dashlet):
     import views # FIXME: HACK, clean this up somehow
     views.load_views()
     views.prepare_painter_options()
-    views.show_view(dashlet, True, True, True)
+    views.show_view(dashlet, show_heading=True, show_buttons=False, show_footer=True)
 
 def dashlet_view_add_url():
     return 'create_view_dashlet.py?name=%s&back=%s' % \

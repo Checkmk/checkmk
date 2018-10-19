@@ -1,0 +1,15 @@
+title: Kubernetes memory resources
+agents: linux
+catalog: app/kubernetes
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the requested memory as well as the memory limits and capacity
+ of a Kubernetes entity. If at least one container running on a node does not specify
+ limits, the node has no applicable limits.
+
+ By default the check always returns {OK}. Optionally levels can be defined
+ for the Memory usage, i.e. the ratio between requested and allocatable Memory.
+
+inventory:
+ One service is created.

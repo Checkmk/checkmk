@@ -858,7 +858,14 @@ inventory_displayhints.update({
     ".software.applications.docker.networks.*.containers:*.mac_address": {
         "title" : _("MAC address"),
     },
+    ".software.applications.kubernetes.roles:": {
+        "title": _("Roles"),
+        "keyorder": ["role", "namespace", "age"],
+    },
 
+    ".software.applications.k8s.roles:*.role"                     : {"title"  : _("Name")},
+    ".software.applications.k8s.roles:*.namespace"                : {"title"  : _("Namespace")},
+    ".software.applications.k8s.roles:*.age"                      : {"title"  : _("Age")},
     ".software.applications.citrix."                              : { "title" : _("Citrix") },
     ".software.applications.citrix.controller."                   : { "title" : _("Controller") },
     ".software.applications.citrix.controller.controller_version" : { "title" : _("Controller Version"), },

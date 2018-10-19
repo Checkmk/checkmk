@@ -15793,6 +15793,80 @@ register_check_parameters(
 
 register_check_parameters(
     subgroup_applications,
+    "k8s_resources",
+    _("Kubernetes resources"),
+    Dictionary(elements=[
+        ('pods',
+         Tuple(
+             title=_('Pods'),
+             default_value=(80.0, 90.0),
+             elements=[
+                 Percentage(title=_("Warning above")),
+                 Percentage(title=_("Critical above")),
+             ],
+         )),
+        ('cpu',
+         Tuple(
+             title=_('CPU'),
+             default_value=(80.0, 90.0),
+             elements=[
+                 Percentage(title=_("Warning above")),
+                 Percentage(title=_("Critical above")),
+             ],
+         )),
+        ('memory',
+         Tuple(
+             title=_('Memory'),
+             default_value=(80.0, 90.0),
+             elements=[
+                 Percentage(title=_("Warning above")),
+                 Percentage(title=_("Critical above")),
+             ],
+         )),
+    ]),
+    None,
+    match_type="dict",
+)
+
+register_check_parameters(
+    subgroup_applications,
+    "k8s_roles",
+    _("Kubernetes roles"),
+    Dictionary(elements=[
+        ('total',
+         Tuple(
+             title=_('Total'),
+             default_value=(80.0, 90.0),
+             elements=[
+                 Integer(title=_("Warning above")),
+                 Integer(title=_("Critical above")),
+             ],
+         )),
+        ('cluster_roles',
+         Tuple(
+             title=_('Cluster roles'),
+             default_value=(80.0, 90.0),
+             elements=[
+                 Integer(title=_("Warning above")),
+                 Integer(title=_("Critical above")),
+             ],
+         )),
+        ('roles',
+         Tuple(
+             title=_('Roles'),
+             default_value=(80.0, 90.0),
+             elements=[
+                 Integer(title=_("Warning above")),
+                 Integer(title=_("Critical above")),
+             ],
+         )),
+    ]),
+    None,
+    match_type="dict",
+)
+
+register_check_parameters(
+    subgroup_applications,
     "azure_agent_info",
     ("Azure Agent Info"),
     Dictionary(elements=[

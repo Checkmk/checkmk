@@ -748,6 +748,7 @@ class ModeBI(WatoMode, BIManagement):
                           help = _("A regular expression matching the <b>beginning</b> of a service description. You can "
                                    "use a trailing <tt>$</tt> in order to define an exact match. For each "
                                    "matching service on the specified hosts one child node will be created. "),
+                          size = 80,
                       ),
                   ]
               ),

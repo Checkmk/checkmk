@@ -1,0 +1,16 @@
+Title: Avoid CMC crash during event helper restarts.
+Level: 1
+Component: core
+Class: fix
+Compatible: compat
+Edition: cee
+State: unknown
+Version: 1.5.0p7
+Date: 1539869658
+
+When an event helper (for notifications/alerts) should be restarted, the
+Check_MK Micro Core could go into an infinite recursion, ultimately leading
+to a crash of the CMC itself.  This has been fixed.
+
+CMK-1117
+

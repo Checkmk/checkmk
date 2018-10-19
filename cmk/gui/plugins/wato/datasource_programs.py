@@ -28,10 +28,11 @@ import cmk.gui.watolib as watolib
 from cmk.gui.i18n import _
 from cmk.gui.valuespec import *
 
-from . import (
+from cmk.gui.plugins.wato import (
     register_rulegroup,
     register_rule,
     monitoring_macro_help,
+    IndividualOrStoredPassword,
 )
 
 register_rulegroup("datasource_programs",
@@ -1166,7 +1167,7 @@ register_rule("datasource_programs",
                 ("user", TextAscii(title = _("Username"),
                     allow_empty = False,
                 )),
-                ("password", Password(title = _("Password"),
+                ("password", IndividualOrStoredPassword(title = _("Password"),
                     allow_empty = False,
                 )),
                 ("verify_cert", DropdownChoice(

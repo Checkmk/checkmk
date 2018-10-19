@@ -1815,6 +1815,10 @@ class CheckManager(object):
         self.load([name])
         return ActiveCheck(name)
 
+    def get_special_agent(self, name):
+        self.load([name])
+        return SpecialAgent(name)
+
 
 class MissingCheckInfoError(KeyError):
     pass
@@ -1918,3 +1922,12 @@ class ActiveCheck(BaseCheck):
 
     def run_service_description(self, params):
         return self.info['service_description'](params)
+
+
+class SpecialAgent(object):
+    def __init__(self, name):
+        import cmk_base.config as config
+        super(SpecialAgent, self).__init__()
+        self.name = name
+        assert self.name.startswith('agent_'), 'Specify the full name of the active check, e.g. agent_3par'
+        self.argument_func = config.special_agent_info[self.name[len('agent_'):]]

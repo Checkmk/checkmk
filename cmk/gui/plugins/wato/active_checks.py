@@ -29,7 +29,7 @@ from cmk.gui.i18n import _
 # TODO: Clean this * import up!
 from cmk.gui.valuespec import *
 
-from . import (
+from cmk.gui.plugins.wato import (
     register_rulegroup,
     register_rule,
     PluginCommandLine,

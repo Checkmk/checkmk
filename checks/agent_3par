@@ -25,16 +25,16 @@
 # Boston, MA 02110-1301 USA.
 
 def agent_3par_arguments(params, hostname, ipaddress):
-    args = ''
+    args = []
 
-    args += " -u " + quote_shell_string(params["user"])
-    args += " -p " + quote_shell_string(params["password"])
-    args += " --verify-certs=%s" % ("yes" if params.get("verify_cert", False) else "no")
+    args += [ "-u", params["user"] ]
+    args += [ passwordstore_get_cmdline("-p%s", params["password"]) ]
+    args += [ "--verify-certs=%s" % ("yes" if params.get("verify_cert", False) else "no") ]
 
     if "values" in params:
-        args += " -v " + quote_shell_string(",".join(params["values"]))
+        args += [ "-v", ",".join(params["values"]) ]
 
-    args += " " + quote_shell_string(ipaddress)
+    args.append(ipaddress)
 
     return args
 

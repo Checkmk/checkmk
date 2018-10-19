@@ -24,7 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-"""Pages for managing folders for WATO"""
+"""Modes for managing folders"""
 
 import abc
 import json
@@ -37,19 +37,17 @@ import cmk.gui.table as table
 import cmk.gui.weblib as weblib
 import cmk.gui.forms as forms
 
-from cmk.gui.plugins.wato import mode_registry
+from cmk.gui.plugins.wato.utils import mode_registry, configure_attributes
 from cmk.gui.plugins.wato.utils.base_modes import WatoMode, WatoWebApiMode
 from cmk.gui.plugins.wato.utils.html_elements import wato_confirm
 from cmk.gui.plugins.wato.utils.main_menu import MainMenu, MenuItem
 from cmk.gui.plugins.wato.utils.context_buttons import folder_status_button, global_buttons
 
-from cmk.gui.watolib import make_action_link, get_hostnames_from_checkboxes
 from cmk.gui.globals import html
 from cmk.gui.htmllib import HTML
 from cmk.gui.i18n import _
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.valuespec import TextUnicode
-from cmk.gui.plugins.wato.utils import configure_attributes
 
 
 @mode_registry.register
@@ -147,7 +145,7 @@ class ModeFolder(WatoMode):
         if html.var("_hosts_reset_sorting") or html.var("_hosts_sort"):
             return
 
-        selected_host_names = get_hostnames_from_checkboxes()
+        selected_host_names = watolib.get_hostnames_from_checkboxes()
         if len(selected_host_names) == 0:
             raise MKUserError(None,
             _("Please select some hosts before doing bulk operations on hosts."))
@@ -305,7 +303,7 @@ class ModeFolder(WatoMode):
 
     def _show_subfolder_delete_button(self, subfolder):
         html.icon_button(
-            make_action_link([("mode", "folder"), ("_delete_folder", subfolder.name())]),
+            watolib.make_action_link([("mode", "folder"), ("_delete_folder", subfolder.name())]),
             _("Delete this folder"),
             "delete",
             id_ = 'delete_' + subfolder.name(),
@@ -603,7 +601,7 @@ class ModeFolder(WatoMode):
             if config.user.may("wato.manage_hosts"):
                 if config.user.may("wato.clone_hosts"):
                     html.icon_button(host.clone_url(), _("Create a clone of this host"), "insert")
-                delete_url  = make_action_link([("mode", "folder"), ("_delete_host", host.name())])
+                delete_url  = watolib.make_action_link([("mode", "folder"), ("_delete_host", host.name())])
                 html.icon_button(delete_url, _("Delete this host"), "delete")
 
 

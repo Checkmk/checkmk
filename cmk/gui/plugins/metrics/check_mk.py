@@ -1263,6 +1263,18 @@ metric_info["tapes_util"] = {
     "color" : "#ff8020",
 }
 
+metric_info["fs_free"] = {
+    "title": _("Free filesystem space"),
+    "unit" : "bytes",
+    "color": "#e3fff9",
+}
+
+metric_info["reserved"] = {
+    "title" : _("Reserved filesystem space"),
+    "unit"  : "bytes",
+    "color" : "#ffcce6",
+}
+
 metric_info["fs_used"] = {
     "title" : _("Used filesystem space"),
     "unit"  : "bytes",
@@ -4789,11 +4801,13 @@ check_metrics["check_mk_active-disk_smb"] = {
 }
 
 
-df_basic_perfvarnames = ["inodes_used", "fs_size", "growth", "trend",
-                         "fs_provisioning", "uncommitted", "overprovisioned"]
+df_basic_perfvarnames = ["inodes_used", "fs_size", "growth", "trend", "reserved",
+                         "fs_free", "fs_provisioning", "uncommitted", "overprovisioned"]
 df_translation = {
     "~(?!%s).*$" % "|".join(df_basic_perfvarnames) : { "name"  : "fs_used", "scale" : MB },
     "fs_size" : { "scale" : MB },
+    "reserved": {"scale": MB },
+    "fs_free" : {"scale": MB},
     "growth"  : { "name"  : "fs_growth", "scale" : MB / 86400.0 },
     "trend"   : { "name"  : "fs_trend", "scale" : MB / 86400.0 },
 }
@@ -7144,6 +7158,22 @@ graph_info["fs_used"] = {
         ( "fs_used", "area" ),
         ( "fs_size,fs_used,-#e3fff9", "stack", _("Free space") ),
         ( "fs_size", "line" ),
+    ],
+    "scalars" : [
+        "fs_used:warn",
+        "fs_used:crit",
+    ],
+    "range" : (0, "fs_used:max"),
+    "conflicting_metrics": ["fs_free"],
+}
+
+# draw a different graph if space reserved for root was excluded
+graph_info["fs_used_2"] = {
+    "metrics" : [
+        ("fs_used",  "area"),
+        ("fs_free",  "stack"),
+        ("reserved", "stack" ),
+        ("fs_size",  "line" ),
     ],
     "scalars" : [
         "fs_used:warn",

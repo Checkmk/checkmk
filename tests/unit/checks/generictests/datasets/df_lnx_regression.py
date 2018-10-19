@@ -42,6 +42,20 @@ checks = {
               ),
              ]
          ),
+         (u'/dev/sda4 /', {"subtract_reserved": True, "show_reserved": True},
+             [(0, '74.5% used (96.94 of 130.14 GB), additionally reserved for root: 6.99 GB,' \
+                  ' trend: 0.00 B / 24 hours',
+                 [(u'/', 99263.20703125, 112333.35625, 126375.02578125, 0, 140416.6953125),
+                  ('fs_size', 140416.6953125, None, None, None, None),
+                  ('fs_free', 33998.19140625, None, None, 0, 140416.6953125),
+                  ('reserved', 7155.296875, None, None, None, None),
+                  ('growth', 0.0, None, None, None, None),
+                  ('trend', 0, None, None, 0, 5850.695638020833),
+                  ('inodes_used', 1654272, 8228044.8, 8685158.4, 0, 9142272),
+                 ]
+              ),
+             ]
+         ),
          (u'/', {"show_reserved": True},
              [(0, '75.8% used (103.92 of 137.13 GB), therein reserved for root: 5.1% (6.99 GB),' \
                   ' trend: 0.00 B / 24 hours',

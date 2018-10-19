@@ -24,30 +24,27 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+"""Editor for global settings in main.mk and modes for these global
+settings"""
+
 import abc
 
+import cmk
 import cmk.gui.config as config
 import cmk.gui.watolib as watolib
 import cmk.gui.forms as forms
+
+from cmk.gui.plugins.wato.utils import mode_registry
 from cmk.gui.plugins.wato.utils.base_modes import WatoMode
+from cmk.gui.plugins.wato.utils.html_elements import search_form, wato_confirm
+from cmk.gui.plugins.wato.utils.context_buttons import global_buttons
+
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
-from cmk.gui.exceptions import MKGeneralException, MKAuthException
+from cmk.gui.exceptions import MKGeneralException, MKAuthException, MKUserError
 from cmk.gui.log import logger
 from cmk.gui.htmllib import HTML
 
-from cmk.gui.plugins.wato.utils.html_elements import (
-    search_form,
-    wato_confirm,
-)
-
-from cmk.gui.watolib import (
-    configvar_order,
-    is_a_checkbox,
-    get_search_expression,
-    may_edit_configvar,
-    add_change,
-)
 
 class GlobalSettingsMode(WatoMode):
     def __init__(self):
@@ -62,7 +59,7 @@ class GlobalSettingsMode(WatoMode):
 
 
     def _from_vars(self):
-        self._search = get_search_expression()
+        self._search = watolib.get_search_expression()
         self._show_only_modified = html.has_var("show_only_modified")
 
 
@@ -82,7 +79,7 @@ class GlobalSettingsMode(WatoMode):
             if add:
                 group_names.append(group_name)
 
-        return sorted(group_names, key=lambda a: configvar_order().get(a, 999))
+        return sorted(group_names, key=lambda a: watolib.configvar_order().get(a, 999))
 
 
     def _edit_mode(self):
@@ -180,7 +177,7 @@ class GlobalSettingsMode(WatoMode):
                     modified_cls = None
                     title = None
 
-                if is_a_checkbox(valuespec):
+                if watolib.is_a_checkbox(valuespec):
                     html.open_div(class_=["toggle_switch_container", modified_cls])
                     html.toggle_switch(
                         enabled=value,
@@ -205,7 +202,6 @@ class GlobalSettingsMode(WatoMode):
         html.close_div()
 
 
-
 class EditGlobalSettingMode(WatoMode):
     @abc.abstractmethod
     def _back_mode(self):
@@ -220,7 +216,7 @@ class EditGlobalSettingMode(WatoMode):
         except KeyError:
             raise MKGeneralException(_("The global setting \"%s\" does not exist.") % self._varname)
 
-        if not may_edit_configvar(self._varname):
+        if not watolib.may_edit_configvar(self._varname):
             raise MKAuthException(_("You are not permitted to edit this global setting."))
 
         self._current_settings = watolib.load_configuration_settings()
@@ -229,7 +225,7 @@ class EditGlobalSettingMode(WatoMode):
 
     def action(self):
         if html.var("_reset"):
-            if not is_a_checkbox(self._valuespec):
+            if not watolib.is_a_checkbox(self._valuespec):
                 c = wato_confirm(
                     _("Resetting configuration variable"),
                     _("Do you really want to reset this configuration variable "
@@ -257,7 +253,7 @@ class EditGlobalSettingMode(WatoMode):
             msg = HTML(msg)
 
         self._save()
-        add_change("edit-configvar", msg, sites=self._affected_sites(), domains=[self._domain], need_restart=self._need_restart)
+        watolib.add_change("edit-configvar", msg, sites=self._affected_sites(), domains=[self._domain], need_restart=self._need_restart)
 
         return self._back_mode()
 
@@ -323,3 +319,165 @@ class EditGlobalSettingMode(WatoMode):
 
     def _show_global_setting(self):
         pass
+
+
+@mode_registry.register
+class ModeEditGlobals(GlobalSettingsMode):
+    @classmethod
+    def name(cls):
+        return "globalvars"
+
+
+    @classmethod
+    def permissions(cls):
+        return ["global"]
+
+
+    def __init__(self):
+        super(ModeEditGlobals, self).__init__()
+
+        self._current_settings = watolib.load_configuration_settings()
+
+
+    def title(self):
+        if self._search:
+            return _("Global Settings matching '%s'") % html.render_text(self._search)
+        return _("Global Settings")
+
+
+    def buttons(self):
+        global_buttons()
+
+        if config.user.may("wato.set_read_only"):
+            html.context_button(_("Read only mode"), watolib.folder_preserving_link([("mode", "read_only")]), "read_only")
+
+        if cmk.is_managed_edition():
+            cmk.gui.cme.plugins.wato.managed.cme_global_settings_buttons()
+
+
+    def action(self):
+        varname = html.var("_varname")
+        if not varname:
+            return
+
+        action = html.var("_action")
+
+        domain, valuespec, need_restart, _allow_reset, _in_global_settings = watolib.configvars()[varname]
+        def_value = self._default_values[varname]
+
+        if action == "reset" and not watolib.is_a_checkbox(valuespec):
+            c = wato_confirm(
+                _("Resetting configuration variable"),
+                _("Do you really want to reset the configuration variable <b>%s</b> "
+                  "back to the default value of <b><tt>%s</tt></b>?") %
+                   (varname, valuespec.value_to_text(def_value)))
+        else:
+            if not html.check_transaction():
+                return
+            c = True # no confirmation for direct toggle
+
+        if c:
+            if varname in self._current_settings:
+                self._current_settings[varname] = not self._current_settings[varname]
+            else:
+                self._current_settings[varname] = not def_value
+            msg = _("Changed Configuration variable %s to %s.") % (varname,
+                     "on" if self._current_settings[varname] else "off")
+            watolib.save_global_settings(self._current_settings)
+
+            watolib.add_change("edit-configvar", msg, domains=[domain],
+                need_restart=need_restart)
+
+            if action == "_reset":
+                return "globalvars", msg
+            return "globalvars"
+        elif c == False:
+            return ""
+
+    def page(self):
+        self._show_configuration_variables(self._group_names())
+
+
+
+@mode_registry.register
+class ModeEditGlobalSetting(EditGlobalSettingMode):
+    @classmethod
+    def name(cls):
+        return "edit_configvar"
+
+
+    @classmethod
+    def permissions(cls):
+        return ["global"]
+
+
+    def title(self):
+        return _("Global configuration settings for Check_MK")
+
+
+    def buttons(self):
+        html.context_button(_("Abort"), watolib.folder_preserving_link([("mode", "globalvars")]), "abort")
+
+
+    def _back_mode(self):
+        return"globalvars"
+
+
+    def _affected_sites(self):
+        return None # All sites
+
+
+
+@mode_registry.register
+class ModeEditSiteGlobalSetting(EditGlobalSettingMode):
+    @classmethod
+    def name(cls):
+        return "edit_site_configvar"
+
+
+    @classmethod
+    def permissions(cls):
+        return ["global"]
+
+
+    def _back_mode(self):
+        return "edit_site_globals"
+
+
+    def _from_vars(self):
+        super(ModeEditSiteGlobalSetting, self)._from_vars()
+
+        self._site_id = html.var("site")
+        if self._site_id:
+            self._configured_sites = watolib.SiteManagementFactory().factory().load_sites()
+            try:
+                site = self._configured_sites[self._site_id]
+            except KeyError:
+                raise MKUserError("site", _("Invalid site"))
+
+        self._current_settings = site.setdefault("globals", {})
+        self._global_settings  = watolib.load_configuration_settings()
+
+
+    def title(self):
+        return _("Site-specific global configuration for %s") % self._site_id
+
+
+    def buttons(self):
+        html.context_button(_("Abort"), watolib.folder_preserving_link([("mode", "edit_site_globals"),
+                                                                ("site", self._site_id)]), "abort")
+
+
+    def _affected_sites(self):
+        return [self._site_id]
+
+
+    def _save(self):
+        watolib.SiteManagementFactory().factory().save_sites(self._configured_sites, activate=False)
+        if self._site_id == config.omd_site():
+            watolib.save_site_global_settings(self._current_settings)
+
+
+    def _show_global_setting(self):
+        forms.section(_("Global setting"))
+        html.write_html(self._valuespec.value_to_text(self._global_settings[self._varname]))

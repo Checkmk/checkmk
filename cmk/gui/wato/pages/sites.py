@@ -24,6 +24,8 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+"""Mode for managing sites"""
+
 import re
 import traceback
 
@@ -32,24 +34,18 @@ import cmk.gui.watolib as watolib
 import cmk.gui.userdb as userdb
 import cmk.gui.forms as forms
 import cmk.gui.table as table
+
+from cmk.gui.plugins.wato.utils import mode_registry, sort_sites
+from cmk.gui.plugins.wato.utils.base_modes import WatoMode
+from cmk.gui.plugins.wato.utils.html_elements import wato_html_head, wato_confirm
+from cmk.gui.plugins.wato.utils.context_buttons import global_buttons
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.log import logger
 
-from cmk.gui.plugins.wato.utils.html_elements import (
-    wato_html_head,
-    wato_confirm,
-)
+from cmk.gui.wato.pages.global_settings import GlobalSettingsMode
 
-from cmk.gui.plugins.wato import (
-    add_change,
-    WatoMode,
-    mode_registry,
-    global_buttons,
-    make_action_link,
-    sort_sites,
-)
 
 # TODO: Rename to SitesMode()
 class ModeSites(WatoMode):
@@ -60,277 +56,6 @@ class ModeSites(WatoMode):
 
     def buttons(self):
         global_buttons()
-
-
-@mode_registry.register
-class ModeDistributedMonitoring(ModeSites):
-    @classmethod
-    def name(cls):
-        return "sites"
-
-
-    @classmethod
-    def permissions(cls):
-        return ["sites"]
-
-
-    def title(self):
-        return _("Distributed Monitoring")
-
-
-    def buttons(self):
-        super(ModeDistributedMonitoring, self).buttons()
-        html.context_button(_("New connection"),
-                            watolib.folder_preserving_link([("mode", "edit_site")]),
-                            "new")
-
-
-    def action(self):
-        delete_id = html.var("_delete")
-        if delete_id and html.transaction_valid():
-            self._action_delete(delete_id)
-
-        logout_id = html.var("_logout")
-        if logout_id:
-            return self._action_logout(logout_id)
-
-        login_id = html.var("_login")
-        if login_id:
-            return self._action_login(login_id)
-
-
-    def _action_delete(self, delete_id):
-        configured_sites = self._site_mgmt.load_sites()
-        # The last connection can always be deleted. In that case we
-        # fall back to non-distributed-WATO and the site attribute
-        # will be removed.
-        test_sites = dict(configured_sites.items())
-        del test_sites[delete_id]
-
-        # Make sure that site is not being used by hosts and folders
-        if delete_id in watolib.Folder.root_folder().all_site_ids():
-            search_url = html.makeactionuri([
-                ("host_search_change_site", "on"),
-                ("host_search_site", delete_id),
-                ("host_search",      "1"),
-                ("folder",           ""),
-                ("mode",             "search"),
-                ("filled_in",        "edit_host"),
-            ])
-            raise MKUserError(None,
-                _("You cannot delete this connection. It has folders/hosts "
-                  "assigned to it. You can use the <a href=\"%s\">host "
-                  "search</a> to get a list of the hosts.") % search_url)
-
-
-        c = wato_confirm(_("Confirm deletion of site %s") % html.render_tt(delete_id),
-                         _("Do you really want to delete the connection to the site %s?") % \
-                         html.render_tt(delete_id))
-        if c:
-            self._site_mgmt.delete_site(delete_id)
-            return None
-
-        elif c == False:
-            return ""
-
-        return None
-
-
-    def _action_logout(self, logout_id):
-        configured_sites = self._site_mgmt.load_sites()
-        site = configured_sites[logout_id]
-        c = wato_confirm(_("Confirm logout"),
-                         _("Do you really want to log out of '%s'?") % \
-                         html.render_tt(site["alias"]))
-        if c:
-            if "secret" in site:
-                del site["secret"]
-            self._site_mgmt.save_sites(configured_sites)
-            add_change("edit-site", _("Logged out of remote site %s") % html.render_tt(site["alias"]),
-                       domains=[watolib.ConfigDomainGUI], sites=[watolib.default_site()])
-            return None, _("Logged out.")
-
-        elif c == False:
-            return ""
-
-        else:
-            return None
-
-
-    def _action_login(self, login_id):
-        configured_sites = self._site_mgmt.load_sites()
-        if html.var("_abort"):
-            return "sites"
-
-        if not html.check_transaction():
-            return
-
-        site  = configured_sites[login_id]
-        error = None
-        # Fetch name/password of admin account
-        if html.has_var("_name"):
-            name   = html.var("_name", "").strip()
-            passwd = html.var("_passwd", "").strip()
-            try:
-                secret = watolib.do_site_login(login_id, name, passwd)
-                site["secret"] = secret
-                self._site_mgmt.save_sites(configured_sites)
-                message = _("Successfully logged into remote site %s.") % html.render_tt(site["alias"])
-                watolib.log_audit(None, "edit-site", message)
-                return None, message
-
-            except watolib.MKAutomationException, e:
-                error = _("Cannot connect to remote site: %s") % e
-
-            except MKUserError, e:
-                html.add_user_error(e.varname, e)
-                error = "%s" % e
-
-            except Exception, e:
-                logger.exception()
-                if config.debug:
-                    raise
-                html.add_user_error("_name", error)
-                error = (_("Internal error: %s\n%s") % (e, traceback.format_exc())).replace("\n", "\n<br>")
-
-        wato_html_head(_("Login into site \"%s\"") % site["alias"])
-        if error:
-            html.show_error(error)
-
-        html.p(_("For the initial login into the slave site %s "
-                 "we need once your administration login for the Multsite "
-                 "GUI on that site. Your credentials will only be used for "
-                 "the initial handshake and not be stored. If the login is "
-                 "successful then both side will exchange a login secret "
-                 "which is used for the further remote calls.") % html.render_tt(site["alias"]))
-
-        html.begin_form("login", method="POST")
-        forms.header(_('Login credentials'))
-        forms.section(_('Administrator name:'))
-        html.text_input("_name")
-        html.set_focus("_name")
-        forms.section(_('Administrator password:'))
-        html.password_input("_passwd")
-        forms.end()
-        html.button("_do_login", _("Login"))
-        html.button("_abort", _("Abort"))
-        html.hidden_field("_login", login_id)
-        html.hidden_fields()
-        html.end_form()
-        html.footer()
-        return False
-
-
-    def page(self):
-        table.begin("sites", _("Connections to local and remote sites"),
-                    empty_text = _("You have not configured any local or remotes sites. Multisite will "
-                                   "implicitely add the data of the local monitoring site. If you add remotes "
-                                   "sites, please do not forget to add your local monitoring site also, if "
-                                   "you want to display its data."))
-
-        sites = sort_sites(self._site_mgmt.load_sites().items())
-        for site_id, site in sites:
-            table.row()
-
-            self._page_buttons(site_id, site)
-            self._page_basic_settings(site_id, site)
-            self._page_livestatus_settings(site_id, site)
-            self._page_replication_configuration(site_id, site)
-
-        table.end()
-
-
-    def _page_buttons(self, site_id, site):
-        table.cell(_("Actions"), css="buttons")
-        edit_url = watolib.folder_preserving_link([("mode", "edit_site"), ("edit", site_id)])
-        html.icon_button(edit_url, _("Properties"), "edit")
-
-        clone_url = watolib.folder_preserving_link([("mode", "edit_site"), ("clone", site_id)])
-        html.icon_button(clone_url, _("Clone this connection in order to create a new one"), "clone")
-
-        delete_url = html.makeactionuri([("_delete", site_id)])
-        html.icon_button(delete_url, _("Delete"), "delete")
-
-        if (config.has_wato_slave_sites()
-            and (site.get("replication") or config.site_is_local(site_id))) \
-           or watolib.is_wato_slave_site():
-            globals_url = watolib.folder_preserving_link([("mode", "edit_site_globals"), ("site", site_id)])
-
-            has_site_globals = bool(site.get("globals"))
-            title = _("Site specific global configuration")
-            if has_site_globals:
-                icon = "site_globals_modified"
-                title += " (%s)" % (_("%d specific settings") % len(site.get("globals")))
-            else:
-                icon = "site_globals"
-
-            html.icon_button(globals_url, title, icon)
-
-
-    def _page_basic_settings(self, site_id, site):
-        table.text_cell(_("ID"), site_id)
-        table.text_cell(_("Alias"), site.get("alias", ""))
-
-
-    def _page_livestatus_settings(self, site_id, site):
-        # Socket
-        socket = site.get("socket", _("local site"))
-        if socket == "disabled:":
-            socket = _("don't query status")
-        table.cell(_("Socket"))
-        if type(socket) == tuple and socket[0] == "proxy":
-            html.write_text(_("Use livestatus Proxy-Daemon"))
-        else:
-            html.write_text(socket)
-
-        # Status host
-        if site.get("status_host"):
-            sh_site, sh_host = site["status_host"]
-            table.text_cell(_("Status host"), "%s/%s" % (sh_site, sh_host))
-        else:
-            table.text_cell(_("Status host"))
-
-        # Disabled
-        if site.get("disabled", False) == True:
-            table.text_cell(_("Disabled"), "<b>%s</b>" % _("yes"))
-        else:
-            table.text_cell(_("Disabled"), _("no"))
-
-        # Timeout
-        if "timeout" in site:
-            table.text_cell(_("Timeout"), _("%d sec") % int(site["timeout"]), css="number")
-        else:
-            table.text_cell(_("Timeout"), "")
-
-        # Persist
-        if site.get("persist", False):
-            table.text_cell(_("Pers."), "<b>%s</b>" % _("yes"))
-        else:
-            table.text_cell(_("Pers."), _("no"))
-
-
-    def _page_replication_configuration(self, site_id, site):
-        # Replication
-        if site.get("replication"):
-            repl = _("Slave")
-            if site.get("replicate_ec"):
-                repl += ", " + _("EC")
-            if site.get("replicate_mkps"):
-                repl += ", " + _("MKPs")
-        else:
-            repl = ""
-        table.text_cell(_("Replication"), repl)
-
-        # Login-Button for Replication
-        table.cell(_("Login"))
-        if repl:
-            if site.get("secret"):
-                logout_url = make_action_link([("mode", "sites"), ("_logout", site_id)])
-                html.buttonlink(logout_url, _("Logout"))
-            else:
-                login_url = make_action_link([("mode", "sites"), ("_login", site_id)])
-                html.buttonlink(login_url, _("Login"))
-
 
 
 @mode_registry.register
@@ -417,7 +142,7 @@ class ModeEditSite(ModeSites):
 
         # Don't know exactly what have been changed, so better issue a change
         # affecting all domains
-        add_change("edit-sites", msg, sites=[self._id], domains=watolib.ConfigDomain.enabled_domains())
+        watolib.add_change("edit-sites", msg, sites=[self._id], domains=watolib.ConfigDomain.enabled_domains())
 
         # In case a site is not being replicated anymore, confirm all changes for this site!
         if not self._repl:
@@ -425,7 +150,7 @@ class ModeEditSite(ModeSites):
 
         if self._id != config.omd_site():
             # On central site issue a change only affecting the GUI
-            add_change("edit-sites", msg, sites=[config.omd_site()], domains=[watolib.ConfigDomainGUI])
+            watolib.add_change("edit-sites", msg, sites=[config.omd_site()], domains=[watolib.ConfigDomainGUI])
 
         return "sites", detail_msg
 
@@ -700,3 +425,393 @@ class ModeEditSite(ModeSites):
                     "that are installed on your master site and all other files below the <tt>~/local/</tt> "
                     "directory will be also transferred to the slave site. Note: <b>all other MKPs and files "
                     "below <tt>~/local/</tt> on the slave will be removed</b>."))
+
+
+@mode_registry.register
+class ModeDistributedMonitoring(ModeSites):
+    @classmethod
+    def name(cls):
+        return "sites"
+
+
+    @classmethod
+    def permissions(cls):
+        return ["sites"]
+
+
+    def title(self):
+        return _("Distributed Monitoring")
+
+
+    def buttons(self):
+        super(ModeDistributedMonitoring, self).buttons()
+        html.context_button(_("New connection"),
+                            watolib.folder_preserving_link([("mode", "edit_site")]),
+                            "new")
+
+
+    def action(self):
+        delete_id = html.var("_delete")
+        if delete_id and html.transaction_valid():
+            self._action_delete(delete_id)
+
+        logout_id = html.var("_logout")
+        if logout_id:
+            return self._action_logout(logout_id)
+
+        login_id = html.var("_login")
+        if login_id:
+            return self._action_login(login_id)
+
+
+    def _action_delete(self, delete_id):
+        configured_sites = self._site_mgmt.load_sites()
+        # The last connection can always be deleted. In that case we
+        # fall back to non-distributed-WATO and the site attribute
+        # will be removed.
+        test_sites = dict(configured_sites.items())
+        del test_sites[delete_id]
+
+        # Make sure that site is not being used by hosts and folders
+        if delete_id in watolib.Folder.root_folder().all_site_ids():
+            search_url = html.makeactionuri([
+                ("host_search_change_site", "on"),
+                ("host_search_site", delete_id),
+                ("host_search",      "1"),
+                ("folder",           ""),
+                ("mode",             "search"),
+                ("filled_in",        "edit_host"),
+            ])
+            raise MKUserError(None,
+                _("You cannot delete this connection. It has folders/hosts "
+                  "assigned to it. You can use the <a href=\"%s\">host "
+                  "search</a> to get a list of the hosts.") % search_url)
+
+
+        c = wato_confirm(_("Confirm deletion of site %s") % html.render_tt(delete_id),
+                         _("Do you really want to delete the connection to the site %s?") % \
+                         html.render_tt(delete_id))
+        if c:
+            self._site_mgmt.delete_site(delete_id)
+            return None
+
+        elif c == False:
+            return ""
+
+        return None
+
+
+    def _action_logout(self, logout_id):
+        configured_sites = self._site_mgmt.load_sites()
+        site = configured_sites[logout_id]
+        c = wato_confirm(_("Confirm logout"),
+                         _("Do you really want to log out of '%s'?") % \
+                         html.render_tt(site["alias"]))
+        if c:
+            if "secret" in site:
+                del site["secret"]
+            self._site_mgmt.save_sites(configured_sites)
+            watolib.add_change("edit-site", _("Logged out of remote site %s") % html.render_tt(site["alias"]),
+                       domains=[watolib.ConfigDomainGUI], sites=[watolib.default_site()])
+            return None, _("Logged out.")
+
+        elif c == False:
+            return ""
+
+        else:
+            return None
+
+
+    def _action_login(self, login_id):
+        configured_sites = self._site_mgmt.load_sites()
+        if html.var("_abort"):
+            return "sites"
+
+        if not html.check_transaction():
+            return
+
+        site  = configured_sites[login_id]
+        error = None
+        # Fetch name/password of admin account
+        if html.has_var("_name"):
+            name   = html.var("_name", "").strip()
+            passwd = html.var("_passwd", "").strip()
+            try:
+                secret = watolib.do_site_login(login_id, name, passwd)
+                site["secret"] = secret
+                self._site_mgmt.save_sites(configured_sites)
+                message = _("Successfully logged into remote site %s.") % html.render_tt(site["alias"])
+                watolib.log_audit(None, "edit-site", message)
+                return None, message
+
+            except watolib.MKAutomationException, e:
+                error = _("Cannot connect to remote site: %s") % e
+
+            except MKUserError, e:
+                html.add_user_error(e.varname, e)
+                error = "%s" % e
+
+            except Exception, e:
+                logger.exception()
+                if config.debug:
+                    raise
+                html.add_user_error("_name", error)
+                error = (_("Internal error: %s\n%s") % (e, traceback.format_exc())).replace("\n", "\n<br>")
+
+        wato_html_head(_("Login into site \"%s\"") % site["alias"])
+        if error:
+            html.show_error(error)
+
+        html.p(_("For the initial login into the slave site %s "
+                 "we need once your administration login for the Multsite "
+                 "GUI on that site. Your credentials will only be used for "
+                 "the initial handshake and not be stored. If the login is "
+                 "successful then both side will exchange a login secret "
+                 "which is used for the further remote calls.") % html.render_tt(site["alias"]))
+
+        html.begin_form("login", method="POST")
+        forms.header(_('Login credentials'))
+        forms.section(_('Administrator name:'))
+        html.text_input("_name")
+        html.set_focus("_name")
+        forms.section(_('Administrator password:'))
+        html.password_input("_passwd")
+        forms.end()
+        html.button("_do_login", _("Login"))
+        html.button("_abort", _("Abort"))
+        html.hidden_field("_login", login_id)
+        html.hidden_fields()
+        html.end_form()
+        html.footer()
+        return False
+
+
+    def page(self):
+        table.begin("sites", _("Connections to local and remote sites"),
+                    empty_text = _("You have not configured any local or remotes sites. Multisite will "
+                                   "implicitely add the data of the local monitoring site. If you add remotes "
+                                   "sites, please do not forget to add your local monitoring site also, if "
+                                   "you want to display its data."))
+
+        sites = sort_sites(self._site_mgmt.load_sites().items())
+        for site_id, site in sites:
+            table.row()
+
+            self._page_buttons(site_id, site)
+            self._page_basic_settings(site_id, site)
+            self._page_livestatus_settings(site_id, site)
+            self._page_replication_configuration(site_id, site)
+
+        table.end()
+
+
+    def _page_buttons(self, site_id, site):
+        table.cell(_("Actions"), css="buttons")
+        edit_url = watolib.folder_preserving_link([("mode", "edit_site"), ("edit", site_id)])
+        html.icon_button(edit_url, _("Properties"), "edit")
+
+        clone_url = watolib.folder_preserving_link([("mode", "edit_site"), ("clone", site_id)])
+        html.icon_button(clone_url, _("Clone this connection in order to create a new one"), "clone")
+
+        delete_url = html.makeactionuri([("_delete", site_id)])
+        html.icon_button(delete_url, _("Delete"), "delete")
+
+        if (config.has_wato_slave_sites()
+            and (site.get("replication") or config.site_is_local(site_id))) \
+           or watolib.is_wato_slave_site():
+            globals_url = watolib.folder_preserving_link([("mode", "edit_site_globals"), ("site", site_id)])
+
+            has_site_globals = bool(site.get("globals"))
+            title = _("Site specific global configuration")
+            if has_site_globals:
+                icon = "site_globals_modified"
+                title += " (%s)" % (_("%d specific settings") % len(site.get("globals")))
+            else:
+                icon = "site_globals"
+
+            html.icon_button(globals_url, title, icon)
+
+
+    def _page_basic_settings(self, site_id, site):
+        table.text_cell(_("ID"), site_id)
+        table.text_cell(_("Alias"), site.get("alias", ""))
+
+
+    def _page_livestatus_settings(self, site_id, site):
+        # Socket
+        socket = site.get("socket", _("local site"))
+        if socket == "disabled:":
+            socket = _("don't query status")
+        table.cell(_("Socket"))
+        if type(socket) == tuple and socket[0] == "proxy":
+            html.write_text(_("Use livestatus Proxy-Daemon"))
+        else:
+            html.write_text(socket)
+
+        # Status host
+        if site.get("status_host"):
+            sh_site, sh_host = site["status_host"]
+            table.text_cell(_("Status host"), "%s/%s" % (sh_site, sh_host))
+        else:
+            table.text_cell(_("Status host"))
+
+        # Disabled
+        if site.get("disabled", False) == True:
+            table.text_cell(_("Disabled"), "<b>%s</b>" % _("yes"))
+        else:
+            table.text_cell(_("Disabled"), _("no"))
+
+        # Timeout
+        if "timeout" in site:
+            table.text_cell(_("Timeout"), _("%d sec") % int(site["timeout"]), css="number")
+        else:
+            table.text_cell(_("Timeout"), "")
+
+        # Persist
+        if site.get("persist", False):
+            table.text_cell(_("Pers."), "<b>%s</b>" % _("yes"))
+        else:
+            table.text_cell(_("Pers."), _("no"))
+
+
+    def _page_replication_configuration(self, site_id, site):
+        # Replication
+        if site.get("replication"):
+            repl = _("Slave")
+            if site.get("replicate_ec"):
+                repl += ", " + _("EC")
+            if site.get("replicate_mkps"):
+                repl += ", " + _("MKPs")
+        else:
+            repl = ""
+        table.text_cell(_("Replication"), repl)
+
+        # Login-Button for Replication
+        table.cell(_("Login"))
+        if repl:
+            if site.get("secret"):
+                logout_url = watolib.make_action_link([("mode", "sites"), ("_logout", site_id)])
+                html.buttonlink(logout_url, _("Logout"))
+            else:
+                login_url = watolib.make_action_link([("mode", "sites"), ("_login", site_id)])
+                html.buttonlink(login_url, _("Login"))
+
+
+@mode_registry.register
+class ModeEditSiteGlobals(ModeSites, GlobalSettingsMode):
+    @classmethod
+    def name(cls):
+        return "edit_site_globals"
+
+
+    @classmethod
+    def permissions(cls):
+        return ["sites"]
+
+
+    def __init__(self):
+        super(ModeEditSiteGlobals, self).__init__()
+        self._site_id = html.var("site")
+        self._configured_sites = self._site_mgmt.load_sites()
+        try:
+            self._site = self._configured_sites[self._site_id]
+        except KeyError:
+            raise MKUserError("site", _("This site does not exist."))
+
+        # 2. Values of global settings
+        self._global_settings = watolib.load_configuration_settings()
+
+        # 3. Site specific global settings
+
+        if watolib.is_wato_slave_site():
+            self._current_settings = watolib.load_configuration_settings(site_specific=True)
+        else:
+            self._current_settings = self._site.get("globals", {})
+
+
+    def title(self):
+        return _("Edit site specific global settings of %s") % \
+               html.render_tt(self._site_id)
+
+
+    def buttons(self):
+        super(ModeEditSiteGlobals, self).buttons()
+        html.context_button(_("All Sites"),
+                            watolib.folder_preserving_link([("mode", "sites")]),
+                            "back")
+        html.context_button(_("Connection"),
+                            watolib.folder_preserving_link([("mode", "edit_site"),
+                            ("edit", self._site_id)]), "sites")
+
+
+    # TODO: Consolidate with ModeEditGlobals.action()
+    def action(self):
+        varname = html.var("_varname")
+        action  = html.var("_action")
+        if not varname:
+            return
+
+        _domain, valuespec, need_restart, _allow_reset, _in_global_settings = watolib.configvars()[varname]
+        def_value = self._global_settings.get(varname, self._default_values[varname])
+
+        if action == "reset" and not watolib.is_a_checkbox(valuespec):
+            c = wato_confirm(
+                _("Removing site specific configuration variable"),
+                _("Do you really want to remove the configuration variable <b>%s</b> "
+                  "of the specific configuration of this site and that way use the global value "
+                  "of <b><tt>%s</tt></b>?") %
+                  (varname, valuespec.value_to_text(def_value)))
+
+        else:
+            if not html.check_transaction():
+                return
+            # No confirmation for direct toggle
+            c = True
+
+        if c:
+            if varname in self._current_settings:
+                self._current_settings[varname] = not self._current_settings[varname]
+            else:
+                self._current_settings[varname] = not def_value
+
+            msg = _("Changed site specific configuration variable %s to %s.") % \
+                  (varname, _("on") if self._current_settings[varname] else _("off"))
+
+            self._site.setdefault("globals", {})[varname] = self._current_settings[varname]
+            self._site_mgmt.save_sites(self._configured_sites, activate=False)
+
+            watolib.add_change("edit-configvar", msg, sites=[self._site_id], need_restart=need_restart)
+
+            if action == "_reset":
+                return "edit_site_globals", msg
+            return "edit_site_globals"
+
+        elif c == False:
+            return ""
+
+        else:
+            return None
+
+
+    def _edit_mode(self):
+        return "edit_site_configvar"
+
+
+    def page(self):
+        html.help(_("Here you can configure global settings, that should just be applied "
+                    "on that site. <b>Note</b>: this only makes sense if the site "
+                    "is part of a distributed setup."))
+
+        if not watolib.is_wato_slave_site():
+            if not config.has_wato_slave_sites():
+               html.show_error(_("You can not configure site specific global settings "
+                                 "in non distributed setups."))
+               return
+
+            if not self._site.get("replication") and not config.site_is_local(self._site_id):
+                html.show_error(_("This site is not the master site nor a replication slave. "
+                                  "You cannot configure specific settings for it."))
+                return
+
+        group_names = self._group_names(show_all=True)
+        self._show_configuration_variables(group_names)

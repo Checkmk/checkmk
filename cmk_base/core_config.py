@@ -33,7 +33,6 @@ import cmk.tty as tty
 import cmk.password_store
 from cmk.exceptions import MKGeneralException
 
-import cmk_base.utils
 import cmk_base.console as console
 import cmk_base.config as config
 import cmk_base.ip_lookup as ip_lookup
@@ -303,45 +302,11 @@ def do_update(core, with_precompile):
 #   '----------------------------------------------------------------------'
 
 def active_check_arguments(hostname, description, args):
-    if type(args) in [ str, unicode ]:
-        return args
-
-    elif type(args) == list:
-        passwords, formated = [], []
-        for arg in args:
-            arg_type = type(arg)
-
-            if arg_type in [ int, float ]:
-                formated.append("%s" % arg)
-
-            elif arg_type in [ str, unicode ]:
-                formated.append(cmk_base.utils.quote_shell_string(arg))
-
-            elif arg_type == tuple and len(arg) == 3:
-                pw_ident, preformated_arg = arg[1:]
-                try:
-                    password = config.stored_passwords[pw_ident]["password"]
-                except KeyError:
-                    warning("The stored password \"%s\" used by service \"%s\" on host "
-                                        "\"%s\" does not exist (anymore)." %
-                                            (pw_ident, description, hostname))
-                    password = "%%%"
-
-                pw_start_index = str(preformated_arg.index("%s"))
-                formated.append(cmk_base.utils.quote_shell_string(preformated_arg % ("*" * len(password))))
-                passwords.append((str(len(formated)), pw_start_index, pw_ident))
-
-            else:
-                raise MKGeneralException("Invalid argument for command line: %s" % arg)
-
-        if passwords:
-            formated = [ "--pwstore=%s" % ",".join([ "@".join(p) for p in passwords ]) ] + formated
-
-        return " ".join(formated)
-
-    else:
+    if not isinstance(args, (str, unicode, list)):
         raise MKGeneralException("The check argument function needs to return either a list of arguments or a "
                                  "string of the concatenated arguments (Host: %s, Service: %s)." % (hostname, description))
+
+    return config.prepare_check_command(args, hostname, description)
 
 
 #.

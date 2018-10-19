@@ -185,6 +185,7 @@ class SpecialAgentDataSource(ProgramDataSource):
         """Create command line using the special_agent_info"""
         info_func = config.special_agent_info[self._special_agent_id]
         cmd_arguments = info_func(self._params, self._hostname, self._ipaddress)
+        final_arguments = config.prepare_check_command(cmd_arguments, self._hostname, service_description=None)
 
         special_agents_dir       = cmk.paths.agents_dir + "/special"
         local_special_agents_dir = cmk.paths.local_agents_dir + "/special"
@@ -194,4 +195,4 @@ class SpecialAgentDataSource(ProgramDataSource):
         else:
             path = special_agents_dir + "/agent_" + self._special_agent_id
 
-        return path + " " + cmd_arguments
+        return path + " " + final_arguments

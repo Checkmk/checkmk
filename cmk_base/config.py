@@ -1527,6 +1527,61 @@ def get_service_translations(hostname):
     translations_cache[hostname] = translations
     return translations
 
+
+def prepare_check_command(command_spec, hostname, service_description):
+    """Prepares a check command for execution by Check_MK.
+
+    This function either accepts a string or a list of arguments as
+    command_spec.  In case a list is given it quotes the single elements. It
+    also prepares password store entries for the command line. These entries
+    will be completed by the executed program later to get the password from
+    the password store.
+    """
+    if isinstance(command_spec, basestring):
+        return command_spec
+
+    if not isinstance(command_spec, list):
+        raise NotImplementedError()
+
+    passwords, formated = [], []
+    for arg in command_spec:
+        arg_type = type(arg)
+
+        if arg_type in [ int, float ]:
+            formated.append("%s" % arg)
+
+        elif arg_type in [ str, unicode ]:
+            formated.append(cmk_base.utils.quote_shell_string(arg))
+
+        elif arg_type == tuple and len(arg) == 3:
+            pw_ident, preformated_arg = arg[1:]
+            try:
+                password = stored_passwords[pw_ident]["password"]
+            except KeyError:
+                if hostname and service_description:
+                    descr = " used by service \"%s\" on host \"%s\"" % (service_description, hostname)
+                elif hostname:
+                    descr = " used by host host \"%s\"" % (hostname)
+                else:
+                    descr = ""
+
+                console.warning("The stored password \"%s\"%s does not exist (anymore)." %
+                                        (pw_ident, descr))
+                password = "%%%"
+
+            pw_start_index = str(preformated_arg.index("%s"))
+            formated.append(cmk_base.utils.quote_shell_string(preformated_arg % ("*" * len(password))))
+            passwords.append((str(len(formated)), pw_start_index, pw_ident))
+
+        else:
+            raise MKGeneralException("Invalid argument for command line: %r" % (arg,))
+
+    if passwords:
+        formated = [ "--pwstore=%s" % ",".join([ "@".join(p) for p in passwords ]) ] + formated
+
+    return " ".join(formated)
+
+
 #.
 #   .--Service rules-------------------------------------------------------.
 #   |      ____                  _                       _                 |

@@ -1,0 +1,54 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2018             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+
+def parse_k8s_storage_classes(info):
+    import json
+    return json.loads(info[0][0])
+
+
+def inventory_k8s_storage_classes(parsed):
+    for storage_name in parsed:
+        yield storage_name, {}
+
+
+@get_parsed_item_data
+def check_k8s_storage_classes(_no_item, _no_params, storage):
+    reclaim_policy = storage.get('reclaim_policy')
+    if reclaim_policy:
+        yield 0, 'Reclaim policy: %s' % reclaim_policy
+
+    provisioner = storage.get('provisioner')
+    if provisioner:
+        yield 0, 'Provisioner: %s' % provisioner
+
+
+check_info['k8s_storage_classes'] = {
+    'parse_function': parse_k8s_storage_classes,
+    'inventory_function': inventory_k8s_storage_classes,
+    'check_function': check_k8s_storage_classes,
+    'service_description': 'Storage class %s',
+}

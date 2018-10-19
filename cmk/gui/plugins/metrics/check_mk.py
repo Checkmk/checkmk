@@ -4363,6 +4363,12 @@ metric_info["docker_reclaimable"] = {
     "color": "41/a",
 }
 
+metric_info["k8s_nodes"] = {
+    "title": _("Nodes"),
+    "unit": "count",
+    "color": "11/a",
+}
+
 metric_info["active_vms"] = {
     "title": _("Active VMs"),
     "unit": "count",

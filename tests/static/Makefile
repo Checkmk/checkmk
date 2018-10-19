@@ -5,7 +5,8 @@ FILES_TO_CHECK := $(realpath $(addprefix ../../cmk/ec/,defaults.py export.py mai
 		  $(realpath $(addprefix ../../cmk/gui/plugins/userdb/,htpasswd.py utils.py)) \
 		  $(realpath $(addprefix ../../cmk/gui/plugins/wato/utils/,base_modes.py)) \
 		  $(realpath $(addprefix ../../cmk/notification_plugins/,pagerduty.py slack.py utils.py victorops.py)) \
-			$(realpath $(addprefix ../../cmk_base/,check_api.py))
+			$(realpath $(addprefix ../../cmk_base/,check_api.py)) \
+			$(realpath $(addprefix ../../agents/special/,agent_kubernetes))
 MYPYPATH       := $(realpath typeshed)
 PIPENV         := PIPENV_NO_INHERIT=true PIPENV_VENV_IN_PROJECT=true pipenv
 

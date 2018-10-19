@@ -29,11 +29,12 @@
 # TODO: More feature related splitting up would be better
 
 import abc
+import json
 
 import cmk.gui.config as config
 import cmk.gui.userdb as userdb
 import cmk.gui.plugin_registry
-from cmk.gui.i18n import _
+from cmk.gui.i18n import _u, _
 from cmk.gui.globals import html
 from cmk.gui.htmllib import HTML
 from cmk.gui.exceptions import MKUserError, MKGeneralException
@@ -43,27 +44,23 @@ from cmk.gui.valuespec import (TextAscii, Dictionary, RadioChoice, Tuple,
     OptionalDropdownChoice, Percentage, Float,
     CascadingDropdown, ListChoice, ListOfStrings,
     DualListChoice, ValueSpec)
-
 from cmk.gui.plugins.wato.utils.base_modes import WatoMode
 from cmk.gui.plugins.wato.utils.context_buttons import (
     global_buttons,
     changelog_button,
     home_button,
 )
-
 from cmk.gui.plugins.wato.utils.html_elements import (
     wato_styles,
     wato_confirm,
     search_form,
 )
-
 from cmk.gui.plugins.wato.utils.main_menu import (
     MainMenu,
     MenuItem,
     WatoModule,
     register_modules
 )
-
 import cmk.gui.watolib as watolib
 from cmk.gui.watolib import (
     service_levels,
@@ -109,6 +106,7 @@ from cmk.gui.watolib import (
     simple_host_rule_match_conditions,
     transform_simple_to_multi_host_rule_match_conditions,
 )
+import cmk.gui.forms as forms
 
 
 def rule_option_elements(disabling=True):
@@ -1306,3 +1304,325 @@ class ModeRegistry(cmk.gui.plugin_registry.ClassRegistry):
 
 
 mode_registry = ModeRegistry()
+
+
+# Show HTML form for editing attributes.
+#
+# new: Boolean flag if this is a creation step or editing
+# for_what can be:
+#   "host"        -> normal host edit dialog
+#   "cluster"     -> normal host edit dialog
+#   "folder"      -> properties of folder or file
+#   "host_search" -> host search dialog
+#   "bulk"        -> bulk change
+# parent: The parent folder of the objects to configure
+# myself: For mode "folder" the folder itself or None, if we edit a new folder
+#         This is needed for handling mandatory attributes.
+def configure_attributes(new, hosts, for_what, parent, myself=None, without_attributes=None, varprefix=""):
+    if without_attributes is None:
+        without_attributes = []
+
+    # show attributes grouped by topics, in order of their
+    # appearance. If only one topic exists, do not show topics
+    # Make sure, that the topics "Basic settings" and host tags
+    # are always show first.
+    # TODO: Clean this up! Implement some explicit sorting
+    topics = [None]
+    if config.host_tag_groups():
+        topics.append(_("Address"))
+        topics.append(_("Data sources"))
+        topics.append(_("Host tags"))
+
+    # The remaining topics are shown in the order of the
+    # appearance of the attribute declarations:
+    for attr, topic in watolib.all_host_attributes():
+        if topic not in topics and attr.is_visible(for_what):
+            topics.append(topic)
+
+    # Collect dependency mapping for attributes (attributes that are only
+    # visible, if certain host tags are set).
+    dependency_mapping_tags = {}
+    dependency_mapping_roles = {}
+    inherited_tags     = {}
+
+    # Hack to sort the address family host tag attribute above the IPv4/v6 addresses
+    # TODO: Clean this up by implementing some sort of explicit sorting
+    def sort_host_attributes(a, b):
+        if a[0].name() == "tag_address_family":
+            return -1
+        return 0
+
+    volatile_topics = []
+    hide_attributes = []
+    for topic in topics:
+        topic_is_volatile = True # assume topic is sometimes hidden due to dependencies
+        if len(topics) > 1:
+            if topic == None:
+                title = _("Basic settings")
+            else:
+                title = _u(topic)
+
+            if topic == _("Host tags"):
+                topic_id = "wato_host_tags"
+            elif topic == _("Address"):
+                topic_id = "address"
+            elif topic == _("Data sources"):
+                topic_id = "data_sources"
+            else:
+                topic_id = None
+
+            forms.header(title, isopen = topic in [ None, _("Address"), _("Data sources") ], table_id = topic_id)
+
+        for attr, atopic in sorted(watolib.all_host_attributes(), cmp=sort_host_attributes):
+            if atopic != topic:
+                continue
+
+            attrname = attr.name()
+            if attrname in without_attributes:
+                continue # e.g. needed to skip ipaddress in CSV-Import
+
+            # Determine visibility information if this attribute is not always hidden
+            if attr.is_visible(for_what):
+                depends_on_tags = attr.depends_on_tags()
+                depends_on_roles = attr.depends_on_roles()
+                # Add host tag dependencies, but only in host mode. In other
+                # modes we always need to show all attributes.
+                if for_what in [ "host", "cluster" ] and depends_on_tags:
+                    dependency_mapping_tags[attrname] = depends_on_tags
+
+                if depends_on_roles:
+                    dependency_mapping_roles[attrname] = depends_on_roles
+
+                if for_what not in [ "host", "cluster" ]:
+                    topic_is_volatile = False
+
+                elif not depends_on_tags and not depends_on_roles:
+                    # One attribute is always shown -> topic is always visible
+                    topic_is_volatile = False
+            else:
+                hide_attributes.append(attr.name())
+
+            # "bulk": determine, if this attribute has the same setting for all hosts.
+            values = []
+            num_haveit = 0
+            for host in hosts.itervalues():
+                if host and host.has_explicit_attribute(attrname):
+                    num_haveit += 1
+                    if host.attribute(attrname) not in values:
+                        values.append(host.attribute(attrname))
+
+            # The value of this attribute is unique amongst all hosts if
+            # either no host has a value for this attribute, or all have
+            # one and have the same value
+            unique = num_haveit == 0 or (len(values) == 1 and num_haveit == len(hosts))
+
+            if for_what in [ "host", "cluster", "folder" ]:
+                if hosts:
+                    host = hosts.values()[0]
+                else:
+                    host = None
+
+            # Collect information about attribute values inherited from folder.
+            # This information is just needed for informational display to the user.
+            # This does not apply in "host_search" mode.
+            inherited_from = None
+            inherited_value = None
+            has_inherited = False
+            container = None
+
+            if attr.show_inherited_value():
+                if for_what in [ "host", "cluster" ]:
+                    url = watolib.Folder.current().edit_url()
+
+                container = parent # container is of type Folder
+                while container:
+                    if attrname in container.attributes():
+                        url = container.edit_url()
+                        inherited_from = _("Inherited from ") + html.render_a(container.title(), href=url)
+
+                        inherited_value = container.attributes()[attrname]
+                        has_inherited = True
+                        if isinstance(attr, watolib.HostTagAttribute):
+                            inherited_tags["attr_%s" % attrname] = '|'.join(attr.get_tag_list(inherited_value))
+                        break
+
+                    container = container.parent()
+
+            if not container: # We are the root folder - we inherit the default values
+                inherited_from = _("Default value")
+                inherited_value = attr.default_value()
+                # Also add the default values to the inherited values dict
+                if isinstance(attr, watolib.HostTagAttribute):
+                    inherited_tags["attr_%s" % attrname] = '|'.join(attr.get_tag_list(inherited_value))
+
+            # Checkbox for activating this attribute
+
+            # Determine current state of visibility: If the form has already been submitted (i.e. search
+            # or input error), then we take the previous state of the box. In search mode we make those
+            # boxes active that have an empty string as default value (simple text boxed). In bulk
+            # mode we make those attributes active that have an explicitely set value over all hosts.
+            # In host and folder mode we make those attributes active that are currently set.
+
+            # Also determine, if the attribute can be switched off at all. Problematic here are
+            # mandatory attributes. We must make sure, that at least one folder/file/host in the
+            # chain defines an explicit value for that attribute. If we show a host and no folder/file
+            # inherits an attribute to that host, the checkbox will be always active and locked.
+            # The same is the case if we show a file/folder and at least one host below this
+            # has not set that attribute. In case of bulk edit we never lock: During bulk edit no
+            # attribute ca be removed anyway.
+
+            checkbox_name = for_what + "_change_%s" % attrname
+            cb = html.get_checkbox(checkbox_name)
+            force_entry = False
+            disabled = False
+
+            # first handle mandatory cases
+            if for_what == "folder" and attr.is_mandatory() \
+                and myself \
+                and some_host_hasnt_set(myself, attrname) \
+                and not has_inherited:
+                force_entry = True
+                active = True
+            elif for_what in [ "host", "cluster" ] and attr.is_mandatory() and not has_inherited:
+                force_entry = True
+                active = True
+            elif cb != None:
+                active = cb # get previous state of checkbox
+            elif for_what == "bulk":
+                active = unique and len(values) > 0
+            elif for_what == "folder" and myself:
+                active = myself.has_explicit_attribute(attrname)
+            elif for_what in [ "host", "cluster" ] and host: # "host"
+                active = host.has_explicit_attribute(attrname)
+            else:
+                active = False
+
+            if not new and (not attr.editable() or not attr.may_edit()):
+                # Bug in pylint 1.9.2 https://github.com/PyCQA/pylint/issues/1984, already fixed in master.
+                if active:  # pylint: disable=simplifiable-if-statement
+                    force_entry = True
+                else:
+                    disabled = True
+
+            if (for_what in [ "host", "cluster" ] and parent.locked_hosts()) or (for_what == "folder" and myself and myself.locked()):
+                checkbox_code = None
+            elif force_entry:
+                checkbox_code  = html.render_checkbox("ignored_" + checkbox_name, add_attr=["disabled"])
+                checkbox_code += html.render_hidden_field(checkbox_name, "on")
+            else:
+                add_attr = ["disabled"] if disabled else []
+                onclick = "wato_fix_visibility(); wato_toggle_attribute(this, '%s');" % attrname
+                checkbox_code = html.render_checkbox(checkbox_name, active,
+                                                  onclick=onclick, add_attr=add_attr)
+
+            forms.section(_u(attr.title()), checkbox=checkbox_code, section_id="attr_" + attrname)
+            html.help(attr.help())
+
+            if len(values) == 1:
+                defvalue = values[0]
+            elif attr.is_checkbox_tag():
+                defvalue = True
+            else:
+                defvalue = attr.default_value()
+
+            if not new and (not attr.editable() or not attr.may_edit()):
+                # In edit mode only display non editable values, don't show the
+                # input fields
+                html.open_div(id_="attr_hidden_%s" %attrname, style="display:none;")
+                attr.render_input(varprefix, defvalue)
+                html.close_div()
+
+                html.open_div(id_="attr_visible_%s" % attrname, class_=["inherited"])
+
+            else:
+                # Now comes the input fields and the inherited / default values
+                # as two DIV elements, one of which is visible at one time.
+
+                # DIV with the input elements
+                html.open_div(id_="attr_entry_%s" % attrname, style="display: none;" if not active else None)
+                attr.render_input(varprefix, defvalue)
+                html.close_div()
+
+                html.open_div(class_="inherited", id_="attr_default_%s" % attrname,
+                              style="display: none;" if active else None)
+
+            #
+            # DIV with actual / inherited / default value
+            #
+
+            # in bulk mode we show inheritance only if *all* hosts inherit
+            explanation = u""
+            if for_what == "bulk":
+                if num_haveit == 0:
+                    explanation = u" (%s)" % inherited_from
+                    value = inherited_value
+                elif not unique:
+                    explanation = _("This value differs between the selected hosts.")
+                else:
+                    value = values[0]
+
+            elif for_what in [ "host", "cluster", "folder" ]:
+                if not new and (not attr.editable() or not attr.may_edit()) and active:
+                    value = values[0]
+                else:
+                    explanation = " (" + inherited_from + ")"
+                    value = inherited_value
+
+            if for_what != "host_search" and not (for_what == "bulk" and not unique):
+                _tdclass, content = attr.paint(value, "")
+                if not content:
+                    content = _("empty")
+
+                if isinstance(attr, ValueSpecAttribute):
+                    html.open_b()
+                    html.write(content)
+                    html.close_b()
+                else:
+                    html.b(_u(content))
+
+            html.write_text(explanation)
+            html.close_div()
+
+
+        if len(topics) > 1:
+            if topic_is_volatile:
+                volatile_topics.append((topic or _("Basic settings")).encode('utf-8'))
+
+    forms.end()
+    # Provide Javascript world with the tag dependency information
+    # of all attributes.
+    html.javascript("var inherited_tags = %s;\n"\
+                    "var wato_check_attributes = %s;\n"\
+                    "var wato_depends_on_tags = %s;\n"\
+                    "var wato_depends_on_roles = %s;\n"\
+                    "var volatile_topics = %s;\n"\
+                    "var user_roles = %s;\n"\
+                    "var hide_attributes = %s;\n"\
+                    "wato_fix_visibility();\n" % (
+                       json.dumps(inherited_tags),
+                       json.dumps(list(set(dependency_mapping_tags.keys()+dependency_mapping_roles.keys()+hide_attributes))),
+                       json.dumps(dependency_mapping_tags),
+                       json.dumps(dependency_mapping_roles),
+                       json.dumps(volatile_topics),
+                       json.dumps(config.user.role_ids),
+                       json.dumps(hide_attributes)))
+
+
+# Check if at least one host in a folder (or its subfolders)
+# has not set a certain attribute. This is needed for the validation
+# of mandatory attributes.
+def some_host_hasnt_set(folder, attrname):
+    # Check subfolders
+    for subfolder in folder.all_subfolders().values():
+        # If the attribute is not set in the subfolder, we need
+        # to check all hosts and that folder.
+        if attrname not in subfolder.attributes() \
+            and some_host_hasnt_set(subfolder, attrname):
+            return True
+
+    # Check hosts in this folder
+    for host in folder.hosts().values():
+        if not host.has_explicit_attribute(attrname):
+            return True
+
+    return False

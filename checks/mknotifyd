@@ -86,6 +86,12 @@ def parse_mknotifyd(info):
             else:
                 if value == "None":
                     value = None
+                elif value and varname == "Listening FD":
+                    # May be the listening FD number or an error message
+                    try:
+                        value = int(value.split()[0])
+                    except ValueError:
+                        pass
                 elif value and varname not in [
                     "Type", "State", "Version", "Status Message",
                     "Pending Acknowledgements", "Connect Time" ]:

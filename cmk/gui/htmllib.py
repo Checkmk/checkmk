@@ -1118,7 +1118,10 @@ class html(HTMLGenerator):
         # user related and are required to be up-to-date on every refresh
         self.response.set_http_header("Cache-Control", "no-cache")
 
-        self.set_output_format(self.var("output_format", "html").lower())
+        try:
+            self.set_output_format(self.get_ascii_input("output_format", "html").lower())
+        except (MKUserError, MKGeneralException):
+            pass # Silently ignore unsupported formats
 
 
     # TODO: Refactor call sites

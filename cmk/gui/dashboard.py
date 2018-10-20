@@ -470,7 +470,7 @@ def page_dashboard():
         name = "main"
         html.set_var("name", name) # make sure that URL context is always complete
     if name not in available_dashboards:
-        raise MKGeneralException(_("The requested dashboard can not be found."))
+        raise MKUserError("name", _('The requested dashboard does not exist.'))
 
     draw_dashboard(name)
 
@@ -814,7 +814,7 @@ def get_dashlet_type(dashlet):
 
 def get_dashlet(board, ident):
     if board not in available_dashboards:
-        raise MKGeneralException(_('The requested dashboard does not exist.'))
+        raise MKUserError("name", _('The requested dashboard does not exist.'))
     dashboard = available_dashboards[board]
 
     try:
@@ -861,20 +861,17 @@ def draw_dashlet(dashlet_instance, dashlet_content_html, dashlet_title_html):
 def ajax_dashlet():
     name = html.var('name')
     if not name:
-        raise MKGeneralException(_('The name of the dashboard is missing.'))
+        raise MKUserError("name", _('The name of the dashboard is missing.'))
 
-    try:
-        ident = int(html.var('id'))
-    except ValueError:
-        raise MKGeneralException(_('Invalid dashlet ident provided.'))
+    ident = html.get_integer_input("id")
 
     load_dashboards()
 
     if name not in available_dashboards:
-        raise MKGeneralException(_('The requested dashboard does not exist.'))
+        raise MKUserError("name", _('The requested dashboard does not exist.'))
     board = available_dashboards[name]
 
-    mtime = int(html.var('mtime', 0))
+    mtime = html.get_integer_input('mtime', 0)
     if mtime < board['mtime']:
         # prevent reloading on the dashboard which already has the current mtime,
         # this is normally the user editing this dashboard. All others: reload
@@ -890,10 +887,10 @@ def ajax_dashlet():
             break
 
     if not the_dashlet:
-        raise MKGeneralException(_('The dashlet can not be found on the dashboard.'))
+        raise MKUserError("id", _('The dashlet can not be found on the dashboard.'))
 
     if the_dashlet['type'] not in dashlet_registry:
-        raise MKGeneralException(_('The requested dashlet type does not exist.'))
+        raise MKUserError("id", _('The requested dashlet type does not exist.'))
 
     wato_folder = html.var("wato_folder")
 
@@ -1022,7 +1019,7 @@ def page_create_view_dashlet_infos():
     import cmk.gui.views as views
     ds_name = html.var('datasource')
     if ds_name not in views.multisite_datasources:
-        raise MKGeneralException(_('The given datasource is not supported'))
+        raise MKUserError("datasource", _('The given datasource is not supported'))
 
     # Create a new view by choosing the datasource and the single object types
     visuals.page_create_visual('views', views.multisite_datasources[ds_name]['infos'],
@@ -1091,31 +1088,33 @@ def page_edit_dashlet():
 
     board = html.var('name')
     if not board:
-        raise MKGeneralException(_('The name of the dashboard is missing.'))
+        raise MKUserError("name", _('The name of the dashboard is missing.'))
 
     ty = html.var('type')
 
     if html.has_var('id'):
-        try:
-            ident = int(html.var('id'))
-        except ValueError:
-            raise MKGeneralException(_('Invalid dashlet id'))
+        ident = html.get_integer_input("id")
     else:
         ident = None
 
     if ident == None and not ty:
-        raise MKGeneralException(_('The ID of the dashlet is missing.'))
+        raise MKUserError("id", _('The ID of the dashlet is missing.'))
 
     load_dashboards(lock=html.is_transaction())
 
     if board not in available_dashboards:
-        raise MKGeneralException(_('The requested dashboard does not exist.'))
+        raise MKUserError("name", _('The requested dashboard does not exist.'))
     dashboard = available_dashboards[board]
 
     if ident == None:
         mode         = 'add'
         title        = _('Add Dashlet')
-        dashlet_type = dashlet_registry[ty]
+
+        try:
+            dashlet_type = dashlet_registry[ty]
+        except KeyError:
+            raise MKUserError("type", _('The requested dashlet type does not exist.'))
+
         # Initial configuration
         dashlet = {
             'position'     : dashlet_type.initial_position(),
@@ -1144,7 +1143,7 @@ def page_edit_dashlet():
         try:
             dashlet = dashboard['dashlets'][ident]
         except IndexError:
-            raise MKGeneralException(_('The dashlet does not exist.'))
+            raise MKUserError("id", _('The dashlet does not exist.'))
 
         ty           = dashlet['type']
         dashlet_type = dashlet_registry[ty]
@@ -1289,23 +1288,20 @@ def page_delete_dashlet():
 
     board = html.var('name')
     if not board:
-        raise MKGeneralException(_('The name of the dashboard is missing.'))
+        raise MKUserError("name", _('The name of the dashboard is missing.'))
 
-    try:
-        ident = int(html.var('id'))
-    except ValueError:
-        raise MKGeneralException(_('Invalid dashlet id'))
+    ident = html.get_integer_input("id")
 
     load_dashboards(lock=True)
 
     if board not in available_dashboards:
-        raise MKGeneralException(_('The requested dashboard does not exist.'))
+        raise MKUserError("name", _('The requested dashboard does not exist.'))
     dashboard = available_dashboards[board]
 
     try:
         _dashlet = dashboard['dashlets'][ident]
     except IndexError:
-        raise MKGeneralException(_('The dashlet does not exist.'))
+        raise MKUserError("id", _('The dashlet does not exist.'))
 
     html.header(_('Confirm Dashlet Deletion'), stylesheets=["pages","views"])
 
@@ -1351,20 +1347,20 @@ def check_ajax_update():
 
     board = html.var('name')
     if not board:
-        raise MKGeneralException(_('The name of the dashboard is missing.'))
+        raise MKUserError("name", _('The name of the dashboard is missing.'))
 
-    ident = int(html.var('id'))
+    ident = html.get_integer_input("id")
 
     load_dashboards(lock=True)
 
     if board not in available_dashboards:
-        raise MKGeneralException(_('The requested dashboard does not exist.'))
+        raise MKUserError("name", _('The requested dashboard does not exist.'))
     dashboard = available_dashboards[board]
 
     try:
         dashlet = dashboard['dashlets'][ident]
     except IndexError:
-        raise MKGeneralException(_('The dashlet does not exist.'))
+        raise MKUserError("id", _('The dashlet does not exist.'))
 
     return dashlet, dashboard
 

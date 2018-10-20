@@ -719,7 +719,7 @@ def page_edit_visual(what, all_visuals, custom_field_handler = None,
                 visual = all_visuals.get(('', visualname)) # load builtin visual
                 mode = 'clone'
                 if not visual:
-                    raise MKGeneralException(_('The requested %s does not exist.') % visual_types[what]['title'])
+                    raise MKUserError(None, _('The requested %s does not exist.') % visual_types[what]['title'])
                 visual["public"] = False
 
         single_infos = visual['single_infos']

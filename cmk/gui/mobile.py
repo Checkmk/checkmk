@@ -35,7 +35,7 @@ import cmk.gui.plugins.views.utils
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
 from cmk.gui.htmllib import HTML
-from cmk.gui.exceptions import MKGeneralException, MKUserError
+from cmk.gui.exceptions import MKUserError
 
 def mobile_html_head(title, ready_code=""):
     html.mobile = True
@@ -239,7 +239,7 @@ def page_view():
 
     view = views.permitted_views().get(view_name)
     if not view:
-        raise MKGeneralException("No view defined with the name '%s'." % view_name)
+        raise MKUserError("view_name", "No view defined with the name '%s'." % view_name)
 
     title = views.view_title(view)
     mobile_html_head(title)

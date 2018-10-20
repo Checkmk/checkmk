@@ -1809,7 +1809,7 @@ class ModeEventConsoleEditRulePack(EventConsoleMode):
 
 
     def _from_vars(self):
-        self._edit_nr = int(html.var("edit", -1)) # missing -> new rule pack
+        self._edit_nr = html.get_integer_input("edit", -1) # missing -> new rule pack
         self._new = self._edit_nr < 0
 
         if self._new:

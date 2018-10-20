@@ -38,7 +38,8 @@ import cmk.gui.inventory as inventory
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
 from cmk.gui.htmllib import HTML
-from cmk.gui.valuespec import Checkbox
+from cmk.gui.valuespec import Checkbox, Hostname
+from cmk.gui.exceptions import MKUserError
 
 import cmk.gui.plugins.visuals
 import cmk.gui.plugins.visuals.inventory
@@ -1305,6 +1306,12 @@ def _create_view_enabled_check_func(invpath, is_history=False):
         if hostname is None:
             return True # No host data? Keep old behaviour
         elif hostname == "":
+            return False
+
+        # TODO: host is not correctly validated by visuals. Do it here for the moment.
+        try:
+            Hostname().validate_value(hostname, None)
+        except MKUserError:
             return False
 
         # FIXME In order to decide whether this view is enabled

@@ -200,12 +200,12 @@ class EditGlobalSettingMode(WatoMode):
         raise NotImplementedError()
 
     def _from_vars(self):
-        self._varname = html.var("varname")
+        self._varname = html.get_ascii_input("varname")
         try:
             self._domain, self._valuespec, self._need_restart, \
             self._allow_reset, _in_global_settings = watolib.configvars()[self._varname]
         except KeyError:
-            raise MKGeneralException(_("The global setting \"%s\" does not exist.") % self._varname)
+            raise MKUserError("varname", _("The global setting \"%s\" does not exist.") % self._varname)
 
         if not watolib.may_edit_configvar(self._varname):
             raise MKAuthException(_("You are not permitted to edit this global setting."))

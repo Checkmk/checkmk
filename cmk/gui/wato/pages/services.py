@@ -42,7 +42,7 @@ from cmk.gui.plugins.wato.utils.context_buttons import host_status_button, globa
 from cmk.gui.pages import register_page_handler
 from cmk.gui.globals import html
 from cmk.gui.i18n import _
-from cmk.gui.exceptions import MKGeneralException
+from cmk.gui.exceptions import MKUserError
 from cmk.gui.log import logger
 from cmk.defines import short_service_state_name
 
@@ -81,7 +81,7 @@ class ModeDiscovery(WatoMode):
         self._host_name = html.var("host")
         self._host = watolib.Folder.current().host(self._host_name)
         if not self._host:
-            raise MKGeneralException(_("You called this page with an invalid host name."))
+            raise MKUserError("host", _("You called this page with an invalid host name."))
 
         self._host.need_permission("read")
         self._do_scan = html.has_var("_scan")
@@ -819,15 +819,15 @@ class ModeFirstDiscovery(ModeDiscovery):
 class ModeAjaxExecuteCheck(WatoWebApiMode):
     def _from_vars(self):
         # TODO: Validate the site
-        self._site = html.var("site")
+        self._site      = html.get_ascii_input("site")
 
-        self._host_name = html.var("host")
-        self._host = watolib.Folder.current().host(self._host_name)
+        self._host_name = html.get_ascii_input("host")
+        self._host      = watolib.Folder.current().host(self._host_name)
         if not self._host:
-            raise MKGeneralException(_("You called this page with an invalid host name."))
+            raise MKUserError("host", _("You called this page with an invalid host name."))
 
         # TODO: Validate
-        self._check_type = html.var("checktype")
+        self._check_type = html.get_ascii_input("checktype")
         # TODO: Validate
         self._item = html.var("item")
 

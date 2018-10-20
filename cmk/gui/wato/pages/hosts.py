@@ -178,10 +178,10 @@ class ModeEditHost(HostMode):
         return ["hosts"]
 
     def _init_host(self):
-        hostname = html.var("host")  # may be empty in new/clone mode
+        hostname = html.get_ascii_input("host") # may be empty in new/clone mode
 
         if not watolib.Folder.current().has_host(hostname):
-            raise MKGeneralException(_("You called this page with an invalid host name."))
+            raise MKUserError("host", _("You called this page with an invalid host name."))
 
         return watolib.Folder.current().host(hostname)
 
@@ -278,10 +278,10 @@ class CreateHostMode(HostMode):
             self._mode = "new"
 
     def _init_host(self):
-        clonename = html.var("clone")
+        clonename = html.get_ascii_input("clone")
         if clonename:
             if not watolib.Folder.current().has_host(clonename):
-                raise MKGeneralException(_("You called this page with an invalid host name."))
+                raise MKUserError("host", _("You called this page with an invalid host name."))
 
             if not config.user.may("wato.clone_hosts"):
                 raise MKAuthException(_("Sorry, you are not allowed to clone hosts."))

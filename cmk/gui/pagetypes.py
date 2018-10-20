@@ -1085,7 +1085,11 @@ class Overridable(Base):
             else: # clone
                 title = cls.phrase("clone")
                 load_user = html.var_utf8("load_user") # FIXME: Change varname to "owner"
-                page = cls.instance((load_user, page_name))
+
+                try:
+                    page = cls.instance((load_user, page_name))
+                except KeyError:
+                    raise MKUserError(None, _("The requested %s does not exist") % cls.phrase("title"))
             page_dict = page.internal_representation()
 
         ### TODO: extra stylesheets for BI. Move bi.css into views.css , stylesheets=["pages", "views", "status", "bi"])

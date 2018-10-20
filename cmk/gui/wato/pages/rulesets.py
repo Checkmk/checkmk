@@ -165,7 +165,7 @@ class RulesetMode(WatoMode):
         raise NotImplementedError()
 
     def _from_vars(self):
-        self._group_name = html.var("group")
+        self._group_name = html.get_ascii_input("group")
 
         #  Explicitly hide deprecated rulesets by default
         if not html.has_var("search_p_ruleset_deprecated"):
@@ -193,7 +193,7 @@ class RulesetMode(WatoMode):
 
         self._search_options = ModeRuleSearch().search_options
 
-        self._only_host = html.var("host")
+        self._only_host = html.get_ascii_input("host")
 
     @abc.abstractmethod
     def _rulesets(self):
@@ -407,8 +407,8 @@ class ModeEditRuleset(WatoMode):
         return []
 
     def _from_vars(self):
-        self._name = html.var("varname")
-        self._back_mode = html.var("back_mode", html.var("ruleset_back_mode", "rulesets"))
+        self._name = html.get_ascii_input("varname")
+        self._back_mode = html.get_ascii_input("back_mode", html.get_ascii_input("ruleset_back_mode", "rulesets"))
 
         if not may_edit_ruleset(self._name):
             raise MKAuthException(_("You are not permitted to access this ruleset."))
@@ -416,8 +416,8 @@ class ModeEditRuleset(WatoMode):
         self._item = None
 
         # TODO: Clean this up. In which case is it used?
-        if html.var("check_command"):
-            check_command = html.var("check_command")
+        check_command = html.get_ascii_input("check_command")
+        if check_command:
             checks = watolib.check_mk_local_automation("get-check-information")
             if check_command.startswith("check_mk-"):
                 check_command = check_command[9:]
@@ -446,7 +446,7 @@ class ModeEditRuleset(WatoMode):
                 except:
                     pass
 
-        hostname = html.var("host")
+        hostname = html.get_ascii_input("host")
         if hostname and watolib.Folder.current().has_host(hostname):
             self._hostname = hostname
         else:

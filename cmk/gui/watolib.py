@@ -1454,7 +1454,10 @@ class CREFolder(BaseFolder):
             return folder
 
         if html.has_var("folder"):
-            folder = Folder.folder(html.var("folder"))
+            try:
+                folder = Folder.folder(html.var("folder"))
+            except MKGeneralException, e:
+                raise MKUserError("folder", "%s" % e)
         else:
             host_name = html.var("host")
             folder = Folder.root_folder()

@@ -1625,7 +1625,9 @@ class ModeBIRuleTree(ModeBI):
 
     def __init__(self):
         ModeBI.__init__(self)
-        self._ruleid = html.var("id")
+        self._ruleid = html.get_ascii_input("id")
+        if not self.pack_containing_rule(self._ruleid):
+            raise MKUserError("id", _("This BI rule does not exist"))
 
 
     def title(self):
@@ -1753,8 +1755,11 @@ class ModeBIEditRule(ModeBI):
 
     def __init__(self):
         ModeBI.__init__(self)
-        self._ruleid = html.var("id") # In case of Aggregations: index in list
-        self._new = not self._ruleid
+        self._ruleid = html.get_ascii_input("id") # In case of Aggregations: index in list
+        self._new = self._ruleid is None
+
+        if not self._new and not self.pack_containing_rule(self._ruleid):
+            raise MKUserError("id", _("This BI rule does not exist"))
 
 
     def title(self):

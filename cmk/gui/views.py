@@ -794,12 +794,12 @@ def show_filter_form(is_open, filters):
 @cmk.gui.pages.register("view")
 def page_view():
     load_views()
-    view_name = html.var("view_name")
+    view_name = html.get_ascii_input("view_name")
     if view_name == None:
-        raise MKGeneralException(_("Missing the variable view_name in the URL."))
+        raise MKUserError("view_name", _("Missing the variable view_name in the URL."))
     view = available_views.get(view_name)
     if not view:
-        raise MKGeneralException(_("No view defined with the name '%s'.") % html.attrencode(view_name))
+        raise MKUserError("view_name", _("No view defined with the name '%s'.") % view_name)
 
     # Gather the page context which is needed for the "add to visual" popup menu
     # to add e.g. views to dashboards or reports
@@ -898,7 +898,11 @@ def show_view(view, show_heading = False, show_buttons = True,
     filterheaders = ""
     all_active_filters = [ f for f in use_filters if f.available() ]
     for filt in all_active_filters:
-        header = filt.filter(tablename)
+        try:
+            header = filt.filter(tablename)
+        except MKUserError, e:
+            html.add_user_error(e.varname, e)
+            continue
         filterheaders += header
 
     # Apply the site hint / filter

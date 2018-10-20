@@ -164,10 +164,7 @@ class FilterTristate(Filter):
         html.end_radio_group()
 
     def tristate_value(self):
-        current = html.var(self.varname)
-        if current in [ None, "" ]:
-            return self.deflt
-        return int(current)
+        return html.get_integer_input(self.varname, self.deflt)
 
     def filter(self, infoname):
         current = self.tristate_value()
@@ -243,23 +240,20 @@ class FilterTime(Filter):
 
     def _get_time_range_of(self, what):
         varprefix = self.name + "_" + what
-        count = html.var(varprefix)
-        if count == "":
-            return None
 
         rangename = html.var(varprefix + "_range")
         if rangename == "abs":
             try:
-                return time.mktime(time.strptime(count, "%Y-%m-%d"))
+                return time.mktime(time.strptime(html.var(varprefix), "%Y-%m-%d"))
             except:
                 html.add_user_error(varprefix, _("Please enter the date in the format YYYY-MM-DD."))
                 return None
 
         elif rangename == "unix":
-            return int(count)
+            return html.get_integer_input(varprefix)
 
         try:
-            count = int(count)
+            count = html.get_integer_input(varprefix)
             secs = count * int(rangename)
             return int(time.time()) - secs
         except:

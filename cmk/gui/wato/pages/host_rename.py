@@ -359,13 +359,13 @@ class ModeRenameHost(WatoMode):
         return ["hosts", "manage_hosts"]
 
     def _from_vars(self):
-        host_name = html.var("host")
+        host_name = html.get_ascii_input("host")
 
         if not watolib.Folder.current().has_host(host_name):
-            raise MKGeneralException(_("You called this page with an invalid host name."))
+            raise MKUserError("host", _("You called this page with an invalid host name."))
 
         if not config.user.may("wato.rename_hosts"):
-            raise MKGeneralException(_("You don't have the right to rename hosts"))
+            raise MKAuthException(_("You don't have the right to rename hosts"))
 
         self._host = watolib.Folder.current().host(host_name)
         self._host.need_permission("write")

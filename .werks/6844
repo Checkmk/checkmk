@@ -1,0 +1,13 @@
+Title: mknotifyd: Fixed parse exception when failed to open listen socket
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0i1
+Date: 1540056102
+
+When a mknotifyd instance fails to open it's listen socket the parse
+function of the check was unable to process the agent output of the
+mknotifyd. This resulted in a crash, e.g. during service discovery.

@@ -155,6 +155,7 @@ MODULES += requests-oauthlib-1.0.0.tar.gz
 MODULES += urllib3-1.23.tar.gz
 # Added for the GUI
 MODULES += Werkzeug-0.14.1.tar.gz
+MODULES += passlib-1.7.1.tar.gz
 
 
 .PHONY: build check-freetds install skel clean

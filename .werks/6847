@@ -1,0 +1,12 @@
+Title: LDAP: Improved nested group lookup performance
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1540200391
+Class: feature
+
+Instead of relying on the on the incredibly slow memberOf:1.2.840.113556.1.4.1941: chain matching 
+mechanism of the Active Diretory the LDAP synchronization is now performing it's own nested group
+resolution. 

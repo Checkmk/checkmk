@@ -418,18 +418,21 @@ def check_ps_common(item, params, parsed, cpu_cores = 1, info_name = "processes"
                     else:
                         # process_info[3] contains the used CPU time and possibly, separated by /, also
                         # the total elapsed time since the birth of the process.
-                        if ":" in process_info[3]:
-                            if '/' in process_info[3]:
-                                pcpu_text, elapsed_text = process_info[3].split('/')
-                                elapsed = parse_ps_time(elapsed_text)
-                                max_elapsed = max(max_elapsed, elapsed)
-                                if min_elapsed is None:
-                                    min_elapsed = elapsed
-                                else:
-                                    min_elapsed = min(min_elapsed, elapsed)
-                            else:
-                                pcpu_text = process_info[3]
+                        if '/' in process_info[3]:
+                            pcpu_text, elapsed_text = process_info[3].split('/')
+                        else:
+                            pcpu_text = process_info[3]
+                            elapsed_text = None
 
+                        if elapsed_text:
+                            elapsed = parse_ps_time(elapsed_text)
+                            max_elapsed = max(max_elapsed, elapsed)
+                            if min_elapsed is None:
+                                min_elapsed = elapsed
+                            else:
+                                min_elapsed = min(min_elapsed, elapsed)
+
+                        if ":" in pcpu_text:
                             total_seconds = parse_ps_time(pcpu_text)
                             pid = process_info[4]
                             try:
@@ -440,9 +443,11 @@ def check_ps_common(item, params, parsed, cpu_cores = 1, info_name = "processes"
                             pcpu = cputime * 100
                             process.append(("pid", (pid, "")))
                         else:
-                            pcpu = savefloat(process_info[3])
+                            pcpu = float(pcpu_text)
+
                         percent_cpu += pcpu
                         process.append(("cpu usage", (pcpu, "%")))
+
 
             elif command_line:
                 # otherwise we have only two fields, one of which is the node. if the remaining

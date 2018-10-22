@@ -3022,7 +3022,7 @@ class FoldableTreeRenderer(object):
 
         html.icon_button(
             url=None,
-            help=_("Assume another state for this item (reload page to activate)"),
+            title=_("Assume another state for this item (reload page to activate)"),
             icon="assume_%s" % current_state,
             onclick="toggle_assumption(this, '%s', '%s', '%s');" % (site, host, service.replace('\\', '\\\\') if service else ''),
             cssclass="assumption",

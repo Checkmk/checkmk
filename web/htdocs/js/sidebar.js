@@ -651,19 +651,16 @@ function toggle_sidebar_snapin(oH2, url) {
         else if (child.tagName == 'DIV' && (child.className == 'head open' || child.className == "head closed"))
             var oHead = child;
     }
-    var oImgMini = oHead.childNodes[0].childNodes[0].childNodes[0];
 
     // FIXME: Does oContent really exist?
     var closed = oContent.style.display == "none";
     if (closed) {
         oContent.style.display = "block";
-        oHead.className = "head open";
-        oImgMini.src = "images/button_minisnapin.png";
+        change_class(oHead, "closed", "open");
     }
     else {
         oContent.style.display = "none";
-        oHead.className = "head closed";
-        oImgMini.src = "images/button_maxisnapin.png";
+        change_class(oHead, "open", "closed");
     }
     /* make this persistent -> save */
     get_url(url + (closed ? "open" : "closed"));

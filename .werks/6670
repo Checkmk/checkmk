@@ -1,0 +1,10 @@
+Title: SLA: Fixed exception in view when SLA had no service percentage requirement and result summary was shown
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cee
+Version: 1.5.0p7
+Date: 1540221771
+Class: fix
+
+

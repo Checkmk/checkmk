@@ -206,7 +206,7 @@ def render_availability_page(view, datasource, context, filterheaders, only_site
         av_data = availability.compute_availability(what, av_rawdata, avoptions)
 
     # Do CSV ouput
-    if html.output_format == "csv_export":
+    if html.output_format == "csv_export" and config.user.may("general.csv_export"):
         output_availability_csv(what, av_data, avoptions)
         return
 
@@ -232,7 +232,7 @@ def render_availability_page(view, datasource, context, filterheaders, only_site
         if config.reporting_available() and config.user.may("general.reporting"):
             html.context_button(_("Export as PDF"), html.makeuri([], filename="report_instant.py"), "report")
 
-        if av_mode == "table":
+        if av_mode == "table" and config.user.may("general.csv_export"):
             html.context_button(_("Export as CSV"), html.makeuri([("output_format", "csv_export")]), "download_csv")
 
         if av_mode == "timeline" or av_object:
@@ -526,7 +526,7 @@ def render_bi_availability(title, aggr_rows):
         html.context_button(_("Status View"), html.makeuri([("mode", "status")]), "status")
         if config.reporting_available() and config.user.may("general.reporting"):
             html.context_button(_("Export as PDF"), html.makeuri([], filename="report_instant.py"), "report")
-        if av_mode == "availability":
+        if av_mode == "availability" and config.user.may("general.csv_export"):
             html.context_button(_("Export as CSV"), html.makeuri([("output_format", "csv_export")]), "download_csv")
 
         if av_mode == "timeline":
@@ -654,7 +654,7 @@ def render_bi_availability(title, aggr_rows):
                                   html.makeuri([("_unset_logrow_limit", "1")]))
             html.show_warning(text)
 
-        if html.output_format == "csv_export":
+        if html.output_format == "csv_export" and config.user.may("general.csv_export"):
             output_availability_csv("bi", av_data, avoptions)
             return
 

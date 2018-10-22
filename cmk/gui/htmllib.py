@@ -3003,7 +3003,7 @@ hy
                          "pageurl", target="_top", cssclass="inline")
 
         # TODO: Move this away from here. Make a context button. The view should handle this
-        if self.myfile == "view" and self.var('mode') != 'availability':
+        if self.myfile == "view" and self.var('mode') != 'availability' and config.user.may("general.csv_export"):
             self.icon_button(self.makeuri([("output_format", "csv_export")]),
                              _("Export as CSV"),
                              "download_csv", target="_top", cssclass="inline")

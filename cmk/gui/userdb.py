@@ -49,6 +49,7 @@ from cmk.gui.i18n import _
 from cmk.gui.globals import html
 import cmk.gui.plugin_registry
 import cmk.gui.plugins.userdb
+from cmk.gui.plugins.userdb.htpasswd import Htpasswd
 
 from cmk.gui.plugins.userdb.utils import (
     user_attribute_registry,
@@ -240,21 +241,13 @@ def user_exists(username):
     if _user_exists_according_to_profile(username):
         return True
 
-    return _user_exists_htpasswd(username)
+    return Htpasswd(cmk.paths.htpasswd_file).exists(username)
 
 
 def _user_exists_according_to_profile(username):
     base_path = config.config_dir + "/" + username.encode("utf-8") + "/"
     return os.path.exists(base_path + "transids.mk") \
             or os.path.exists(base_path + "serial.mk")
-
-
-def _user_exists_htpasswd(username):
-    for line in open(cmk.paths.htpasswd_file):
-        l = line.decode("utf-8")
-        if l.startswith("%s:" % username):
-            return True
-    return False
 
 
 def user_locked(username):

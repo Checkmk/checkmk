@@ -1,0 +1,10 @@
+Title: Add permission "Use CSV export" to control access to this feature
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1540068749
+Class: feature
+
+

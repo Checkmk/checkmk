@@ -424,10 +424,8 @@ class SidebarRenderer(object):
         # When not permitted to open/close snapins, the snapins are always opened
         if snapin.visible == SnapinVisibility.OPEN or not config.user.may("general.configure_sidebar"):
             style = None
-            minimaxi = "mini"
         else:
             style = "display:none"
-            minimaxi = "maxi"
 
         toggle_url = "sidebar_openclose.py?name=%s&state=" % name
 
@@ -443,10 +441,8 @@ class SidebarRenderer(object):
 
         if config.user.may("general.configure_sidebar"):
             # Icon for mini/maximizing
-            html.open_div(class_="minisnapin")
-            html.icon_button(url=None, title=_("Toggle this snapin"), icon="%ssnapin" % minimaxi,
-                             onclick="toggle_sidebar_snapin(this, '%s')" % toggle_url)
-            html.close_div()
+            html.div("", class_="minisnapin", title=_("Toggle this snapin"),
+                     onclick="toggle_sidebar_snapin(this, '%s')" % toggle_url)
 
             # Button for closing (removing) a snapin
             html.open_div(class_="closesnapin")

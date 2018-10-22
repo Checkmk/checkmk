@@ -252,11 +252,13 @@ div.snapin div.minisnapin {
     margin-top: 6px;
     line-height: 0px;
     height: 8px;
+    width: 8px;
+    cursor: pointer;
+    background-image: url("images/icon_minisnapin.png");
 }
 
-div.snapin div.minisnapin img {
-    width: 8px;
-    height: 8px;
+div.snapin div.head.closed div.minisnapin {
+    background-image: url("images/icon_maxisnapin.png");
 }
 
 div.snapin div.content {

@@ -3559,10 +3559,9 @@ function toggle_assumption(link, site, host, service)
     var img = link.getElementsByTagName("img")[0];
 
     // get current state
-    var current = img.src;
-    while (current.indexOf('/') > -1)
-        current = current.substr(current.indexOf('/') + 1);
-    current = current.replace(/button_assume_/, "").replace(/.png/, "");
+    var path_parts = img.src.split("/");
+    var file_part = path_parts.pop();
+    var current = file_part.replace(/icon_assume_/, "").replace(/.png/, "");
 
     if (current == 'none')
         // Assume WARN when nothing assumed yet
@@ -3574,7 +3573,7 @@ function toggle_assumption(link, site, host, service)
         // Disable assumption when ok assumed
         current = 'none';
     else
-        // In all other cases increas the assumption
+        // In all other cases increase the assumption
         current = parseInt(current) + 1;
 
     var url = "bi_set_assumption.py?site=" + encodeURIComponent(site)
@@ -3583,7 +3582,7 @@ function toggle_assumption(link, site, host, service)
         url += '&service=' + encodeURIComponent(service);
     }
     url += '&state=' + current;
-    img.src = "images/button_assume_" + current + ".png";
+    img.src = path_parts.join("/") + "/icon_assume_" + current + ".png";
     get_url(url);
 }
 

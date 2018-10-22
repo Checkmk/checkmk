@@ -52,6 +52,7 @@ import os
 import time
 import copy
 import sys
+import shutil
 
 # docs: http://www.python-ldap.org/doc/html/index.html
 import ldap
@@ -254,6 +255,7 @@ class LDAPUserConnector(UserConnector):
             return conn, None
 
         except (ldap.SERVER_DOWN, ldap.TIMEOUT, ldap.LOCAL_ERROR, ldap.LDAPError), e:
+            self.clear_nearest_dc_cache()
             if type(e[0]) == dict:
                 msg = e[0].get('info', e[0].get('desc', ''))
             else:
@@ -262,6 +264,7 @@ class LDAPUserConnector(UserConnector):
             return None, "%s: %s" % (uri, msg)
 
         except MKLDAPException, e:
+            self.clear_nearest_dc_cache()
             return None, "%s" % e
 
 
@@ -331,11 +334,17 @@ class LDAPUserConnector(UserConnector):
 
 
     def _discover_nearest_dc(self, domain):
+        cached_server = self._get_nearest_dc_from_cache()
+        if cached_server:
+            self._logger.info(_('Using cached DC %s') % cached_server)
+            return cached_server
+
         import ad  # pylint: disable=import-error
         locator = ad.Locator()
         locator.m_logger = self._logger
         try:
             server = locator.locate(domain)
+            self._cache_nearest_dc(server)
             self._logger.info('  DISCOVERY: Discovered server %r from %r' % (server, domain))
             return server
         except Exception:
@@ -343,6 +352,50 @@ class LDAPUserConnector(UserConnector):
             self._logger.exception()
             self._logger.info('  DISCOVERY: Try to use domain DNS name %r as server' % domain)
             return domain
+
+
+    def _get_nearest_dc_from_cache(self):
+        try:
+            return file(self._nearest_dc_cache_filepath()).read()
+        except IOError:
+            pass
+
+
+    def _cache_nearest_dc(self, server):
+        self._logger.debug(_('Caching nearest DC %s') % server)
+        cmk.store.save_file(self._nearest_dc_cache_filepath(), server)
+
+
+    def clear_nearest_dc_cache(self):
+        if not self._uses_discover_nearest_server():
+            return
+
+        try:
+            os.unlink(self._nearest_dc_cache_filepath())
+        except OSError:
+            pass
+
+    def _nearest_dc_cache_filepath(self):
+        return os.path.join(self._ldap_caches_filepath(), "nearest_server.%s" % self.id())
+
+
+    @classmethod
+    def _ldap_caches_filepath(cls):
+        return os.path.join(cmk.paths.tmp_dir, "ldap_caches")
+
+
+    @classmethod
+    def config_changed(cls):
+        cls.clear_all_ldap_caches()
+
+
+    @classmethod
+    def clear_all_ldap_caches(cls):
+        try:
+            shutil.rmtree(cls._ldap_caches_filepath())
+        except OSError, e:
+            if e.errno != 2:
+                raise
 
 
     # Bind with the default credentials
@@ -375,15 +428,23 @@ class LDAPUserConnector(UserConnector):
 
 
     def servers(self):
-        # 'directory_type': ('ad', {'connect_to': ('discover', {'domain': 'corp.de'})}),
-        connect_method, connect_params = self._config['directory_type'][1]["connect_to"]
-
-        if connect_method == "discover":
+        connect_params = self._get_connect_params()
+        if self._uses_discover_nearest_server():
             servers = [ self._discover_nearest_dc(connect_params["domain"]) ]
         else:
             servers = [ connect_params['server'] ] + connect_params.get('failover_servers', [])
 
         return servers
+
+
+    def _uses_discover_nearest_server(self):
+        # 'directory_type': ('ad', {'connect_to': ('discover', {'domain': 'corp.de'})}),
+        return self._config['directory_type'][1]["connect_to"][0] == "discover"
+
+
+    def _get_connect_params(self):
+        # 'directory_type': ('ad', {'connect_to': ('discover', {'domain': 'corp.de'})}),
+        return self._config['directory_type'][1]["connect_to"][1]
 
 
     def use_ssl(self):
@@ -563,6 +624,8 @@ class LDAPUserConnector(UserConnector):
                                             'incomplete results. You should change the scope of operation '
                                             'within the ldap or adapt the limit settings of the LDAP server.'))
             except (ldap.SERVER_DOWN, ldap.TIMEOUT, MKLDAPException), e:
+                self.clear_nearest_dc_cache()
+
                 last_exc = e
                 if implicit_connect and tries_left:
                     self._logger.info('  Received %r. Retrying with clean connection...' % e)

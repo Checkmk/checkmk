@@ -1158,6 +1158,9 @@ def save_connection_config(connections, base_dir=None):
     store.save_to_mk_file(os.path.join(base_dir, "user_connections.mk"),
                           "user_connections", connections)
 
+    for connector_id, connector_class in user_connector_registry.items():
+        connector_class.config_changed()
+
 #.
 
 

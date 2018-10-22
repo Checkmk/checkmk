@@ -69,6 +69,10 @@ class UserConnector(object):
         raise NotImplementedError()
 
 
+    @classmethod
+    def config_changed(cls):
+        return
+
     #
     # USERDB API METHODS
     #

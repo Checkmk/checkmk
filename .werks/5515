@@ -1,0 +1,19 @@
+Title: Allow Configuration of TMPDIR environment variable in the context of Check_MK Agent
+Level: 1
+Component: agents
+Class: feature
+Compatible: compat
+Edition: cee
+State: unknown
+Version: 1.6.0i1
+Date: 1540199339
+
+It is now possible so set the environment variable TMPDIR in the context of the execution
+of the Check_MK Agent. This can be configured within the Agent ruleset "Installation paths
+for agent files (Linux, UNIX).
+
+
+Some agent commands or plugins may follow the environment variable TMPDIR for storage of
+temporary files.  For some reasons, you might want to adapt this path. Namely, the agent
+updater won't work with a "\tmp" dir that is mounted with a "noexec"-flag. Please note
+that the Check_MK Agent does no automatic cleaning on this custom path.

@@ -32,6 +32,9 @@ export MK_LIBDIR="/usr/lib/check_mk_agent"
 export MK_CONFDIR="/etc/check_mk"
 export MK_VARDIR="/var/lib/check_mk_agent"
 
+# Optionally set a tempdir for all subsequent calls
+#export TMPDIR=
+
 # Provide information about the remote host. That helps when data
 # is being sent only once to each remote host.
 if [ "$REMOTE_HOST" ] ; then

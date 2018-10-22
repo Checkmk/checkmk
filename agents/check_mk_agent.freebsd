@@ -45,6 +45,8 @@ export MK_LIBDIR="/usr/local/lib/check_mk_agent"
 export MK_CONFDIR="/etc/check_mk"
 export MK_TMPDIR="/var/run/check_mk"
 
+# Optionally set a tempdir for all subsequent calls
+#export TMPDIR=
 
 # Make sure, locally installed binaries are found
 PATH=$PATH:/usr/local/bin:/usr/local/sbin

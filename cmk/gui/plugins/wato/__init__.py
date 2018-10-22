@@ -47,6 +47,7 @@ from cmk.gui.plugins.wato.utils import (
     add_replication_paths,
     changelog_button,
     CheckTypeSelection,
+    config_domain_registry,
     ConfigDomain,
     ConfigDomainCore,
     ConfigDomainEventConsole,

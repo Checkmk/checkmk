@@ -93,6 +93,7 @@ from cmk.gui.watolib import (
     ACResultCRIT,
     ACResultWARN,
     ACResultOK,
+    config_domain_registry,
     ConfigDomain,
     ConfigDomainCore,
     ConfigDomainOMD,

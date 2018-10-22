@@ -515,37 +515,18 @@ class ConfigDomain(object):
     in_global_settings = True
 
     @classmethod
-    def all_classes(cls):
-        # Classes may be registered twice, only store one of the occurances.
-        # TODO(lm): Find the reason for this and solve this issue in the plugin mechanism.
-        # NOTE: One reason is the rampant execfile usage in the plugin folders
-        #       each language change creates additional class definitions
-
-        # The latest "fix" changes the behaviour to return the last declared class with the
-        # same class name. This is usually a better idea, than returning outdated classes
-        classes = {}
-        for subclass in cls.__subclasses__(): # pylint: disable=no-member
-            classes[subclass.__name__] = subclass
-
-        return classes.values()
-
-
-    @classmethod
     def enabled_domains(cls):
-        return [ d for d in cls.all_classes() if d.enabled() ]
+        return [ d for d in config_domain_registry.values() if d.enabled() ]
 
 
     @classmethod
     def get_always_activate_domain_idents(cls):
-        return [ d.ident for d in cls.all_classes() if d.always_activate ]
+        return [ d.ident for d in config_domain_registry.values() if d.always_activate ]
 
 
     @classmethod
     def get_class(cls, ident):
-        for domain_class in cls.all_classes():
-            if domain_class.ident == ident:
-                return domain_class
-        raise NotImplementedError(_("The domain \"%s\" does not exist") % ident)
+        return config_domain_registry[ident]
 
 
     @classmethod
@@ -628,6 +609,20 @@ class ConfigDomain(object):
 
 
 
+class ConfigDomainRegistry(cmk.gui.plugin_registry.ClassRegistry):
+    def plugin_base_class(self):
+        return ConfigDomain
+
+
+    def _register(self, plugin_class):
+        self._entries[plugin_class.ident] = plugin_class
+
+
+config_domain_registry = ConfigDomainRegistry()
+
+
+
+@config_domain_registry.register
 class ConfigDomainCore(ConfigDomain):
     needs_sync       = True
     needs_activation = True
@@ -646,6 +641,7 @@ class ConfigDomainCore(ConfigDomain):
 
 
 
+@config_domain_registry.register
 class ConfigDomainGUI(ConfigDomain):
     needs_sync       = True
     needs_activation = False
@@ -664,6 +660,7 @@ class ConfigDomainGUI(ConfigDomain):
 
 
 
+@config_domain_registry.register
 class ConfigDomainEventConsole(ConfigDomain):
     needs_sync         = True
     needs_activation   = True
@@ -693,6 +690,7 @@ class ConfigDomainEventConsole(ConfigDomain):
 
 
 
+@config_domain_registry.register
 class ConfigDomainCACertificates(ConfigDomain):
     needs_sync       = True
     needs_activation = True
@@ -818,6 +816,7 @@ class ConfigDomainCACertificates(ConfigDomain):
 
 
 
+@config_domain_registry.register
 class ConfigDomainOMD(ConfigDomain):
     needs_sync       = True
     needs_activation = True
@@ -4356,6 +4355,7 @@ class CRESiteManagement(SiteManagement):
 # to extract SiteManagement() to a separate module (depends on Folder, add_change, ...).
 # As soon as we have untied this we should re-establish a watolib plugin hierarchy and
 # move this to a CEE/CME specific watolib plugin
+@config_domain_registry.register
 class ConfigDomainLiveproxy(ConfigDomain):
     needs_sync         = False
     needs_activation   = False

@@ -25,3 +25,19 @@ def test_registered_ac_tests():
         'ACTestSizeOfExtensions',
         'ACTestTmpfs'
     ]
+
+
+def test_registered_config_domains():
+    registered = sorted(watolib.config_domain_registry.keys())
+    assert registered == [
+        'apache',
+        'ca-certificates',
+        'check_mk',
+        'diskspace',
+        'ec',
+        'liveproxyd',
+        'mknotifyd',
+        'multisite',
+        'omd',
+        'rrdcached',
+    ]

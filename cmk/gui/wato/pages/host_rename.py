@@ -38,6 +38,7 @@ import cmk.gui.watolib as watolib
 import cmk.gui.userdb as userdb
 import cmk.gui.forms as forms
 import cmk.gui.background_job as background_job
+import cmk.gui.gui_background_job as gui_background_job
 from cmk.gui.htmllib import HTML
 from cmk.gui.exceptions import MKUserError, MKGeneralException, MKAuthException
 from cmk.gui.i18n import _
@@ -65,6 +66,7 @@ from cmk.gui.plugins.wato import (
 )
 
 
+@gui_background_job.job_registry.register
 class RenameHostsBackgroundJob(watolib.WatoBackgroundJob):
     gui_title  = _("Host renaming")
     job_prefix = "rename-hosts"
@@ -91,6 +93,7 @@ class RenameHostsBackgroundJob(watolib.WatoBackgroundJob):
 
 
 
+@gui_background_job.job_registry.register
 class RenameHostBackgroundJob(RenameHostsBackgroundJob):
     def __init__(self, host, title=None):
         super(RenameHostBackgroundJob, self).__init__(title)

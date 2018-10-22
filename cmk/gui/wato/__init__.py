@@ -2328,6 +2328,7 @@ class PageFetchAgentOutput(AgentOutputPage):
 
 
 
+@gui_background_job.job_registry.register
 class FetchAgentOutputBackgroundJob(WatoBackgroundJob):
     job_prefix = "agent-output-"
     gui_title  = _("Fetch agent output")

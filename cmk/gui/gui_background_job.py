@@ -36,6 +36,7 @@ import cmk.gui.sites as sites
 import cmk.gui.config as config
 import cmk.gui.log as log
 import cmk.gui.background_job as background_job
+import cmk.gui.plugin_registry
 
 loaded_with_language = False
 def load_plugins(force):
@@ -197,24 +198,17 @@ class GUIBackgroundJob(GUIBackgroundJobSnapshottedFunctions):
         return None
 
 
-    @classmethod
-    def get_concrete_subclasses(cls):
-        # Note: Due to the strange execfile plugin mechanism, there is a risk
-        #       that a class gets declared multiple times. We always use the last
-        #       declaration of the given class
-        classes = {}
-        for subclass in cls.__subclasses__(): # pylint: disable=no-member
-            classes[subclass.__name__] = subclass
 
-        all_subclasses = []
-        for subclass in classes.values():
-            # Concrete subclasses have an attribute job_prefix
-            if hasattr(subclass, "job_prefix"):
-                all_subclasses.append(subclass)
-            all_subclasses.extend(subclass.get_concrete_subclasses())
+class GUIBackgroundJobRegistry(cmk.gui.plugin_registry.ClassRegistry):
+    def plugin_base_class(self):
+        return GUIBackgroundJob
 
-        return all_subclasses
 
+    def _register(self, plugin_class):
+        self._entries[plugin_class.__name__] = plugin_class
+
+
+job_registry = GUIBackgroundJobRegistry()
 
 
 # GUI pages are built in several phases, and each face can take a non-trivial
@@ -277,9 +271,6 @@ class GUIBackgroundJobManager(background_job.BackgroundJobManager):
     def show_status_of_job_classes(self, job_classes, **kwargs):
         job_class_infos = {}
         for job_class in job_classes:
-            if not hasattr(job_class, "job_prefix"):
-                # Skip abstract classes
-                continue
             all_job_ids = self.get_all_job_ids(job_class)
             jobs_info = self._get_job_infos(all_job_ids)
             job_class_infos[job_class] = jobs_info

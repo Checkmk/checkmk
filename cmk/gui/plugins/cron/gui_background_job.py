@@ -32,7 +32,7 @@ from cmk.gui.log import logger
 from . import register_job
 
 def housekeeping():
-    housekeep_classes = gui_background_job.GUIBackgroundJob.get_concrete_subclasses()
+    housekeep_classes = gui_background_job.job_registry.values()
     cmk.gui.background_job.BackgroundJobManager(logger).do_housekeeping(housekeep_classes)
 
 register_job(housekeeping)

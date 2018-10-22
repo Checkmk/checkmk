@@ -1317,6 +1317,7 @@ def ajax_sync():
             html.write('ERROR %s\n' % e)
 
 
+@gui_background_job.job_registry.register
 class UserSyncBackgroundJob(gui_background_job.GUIBackgroundJob):
     job_prefix = "user_sync"
     gui_title  = _("User synchronization")

@@ -40,6 +40,7 @@ from cmk.gui.log import logger
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
+import cmk.gui.gui_background_job as gui_background_job
 
 from cmk.gui.plugins.wato import (
     WatoMode,
@@ -51,6 +52,7 @@ DiscoveryTask = namedtuple("DiscoveryTask", ["site_id", "folder_path", "host_nam
 
 
 # TODO: This job should be executable multiple times at once
+@gui_background_job.job_registry.register
 class BulkDiscoveryBackgroundJob(WatoBackgroundJob):
     job_prefix = "bulk_discovery"
     gui_title  = _("Bulk Discovery")

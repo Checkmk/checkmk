@@ -66,20 +66,12 @@ class ModeBackgroundJobsOverview(WatoMode):
 
     def page(self):
         job_manager = gui_background_job.GUIBackgroundJobManager()
-        jobs_running = False
 
         back_url = html.makeuri_contextless([("mode", "background_jobs_overview")])
-        job_manager.show_status_of_job_classes(gui_background_job.GUIBackgroundJob.get_concrete_subclasses(), job_details_back_url=back_url)
+        job_manager.show_status_of_job_classes(gui_background_job.job_registry.values(), job_details_back_url=back_url)
 
-        for job_class in gui_background_job.GUIBackgroundJob.get_concrete_subclasses():
-            if not hasattr(job_class, "job_prefix"):
-                # Skip abstract classes
-                continue
-
-            if job_manager.get_running_job_ids(job_class):
-                jobs_running = True
-
-        if jobs_running:
+        if any(job_manager.get_running_job_ids(c)
+                for c in gui_background_job.job_registry.values()):
             html.javascript("set_reload(0.8)")
 
 

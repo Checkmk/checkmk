@@ -27,6 +27,8 @@
 import time
 import crypt
 import os
+import pathlib2 as pathlib
+from typing import Dict, Text # pylint: disable=unused-import
 
 import cmk.store as store
 import cmk.paths
@@ -35,6 +37,45 @@ import cmk.gui.md5crypt
 from cmk.gui.i18n import _
 from cmk.gui.exceptions import MKUserError
 from . import UserConnector, user_connector_registry
+
+class Htpasswd(object):
+    """Thin wrapper for loading and saving the htpasswd file"""
+
+    def __init__(self, path):
+        # type: (pathlib.Path) -> None
+        super(Htpasswd, self).__init__()
+        self._path = path
+
+
+    def load(self):
+        # type: (None) -> Dict[Text, Text]
+        """Loads the contents of a valid htpasswd file into a dictionary and returns the dictionary"""
+        entries = {}
+
+        with self._path.open(encoding="utf-8") as f:
+            for l in f:
+                if ':' not in l:
+                    continue
+
+                user_id, pw_hash = l.split(':', 1)
+                entries[user_id] = pw_hash.rstrip('\n')
+
+        return entries
+
+
+    def exists(self, user_id):
+        """Whether or not a user exists according to the htpasswd file"""
+        # type: (Text) -> bool
+        return user_id in self.load()
+
+
+    def save(self, entries):
+        # type: (Dict[Text, Text]) -> None
+        """Save the dictionary entries (unicode username and hash) to the htpasswd file"""
+        output = "\n".join("%s:%s" % entry for entry in sorted(entries.iteritems())) + "\n"
+        store.save_file("%s" % self._path, output.encode("utf-8"))
+
+
 
 def encrypt_password(password, salt=None, prefix="1"):
     if not salt:
@@ -64,7 +105,7 @@ class HtpasswdUserConnector(UserConnector):
     #
 
     def check_credentials(self, user_id, password):
-        users = self.load_htpasswd()
+        users = Htpasswd(pathlib.Path(cmk.paths.htpasswd_file)).load()
         if user_id not in users:
             return None # not existing user, skip over
 
@@ -78,19 +119,6 @@ class HtpasswdUserConnector(UserConnector):
 
     def _is_automation_user(self, user_id):
         return os.path.isfile(cmk.paths.var_dir + "/web/" + user_id.encode("utf-8") + "/automation.secret")
-
-
-    # Loads the contents of a valid htpasswd file into a dictionary
-    # and returns the dictionary
-    def load_htpasswd(self):
-        creds = {}
-
-        for line in open(cmk.paths.htpasswd_file, 'r'):
-            if ':' in line:
-                user_id, pwhash = line.split(':', 1)
-                creds[user_id.decode("utf-8")] = pwhash.rstrip('\n')
-
-        return creds
 
 
     # Validate hashes taken from the htpasswd file. This method handles
@@ -109,7 +137,7 @@ class HtpasswdUserConnector(UserConnector):
         # users from htpasswd are lost. If you start managing users with
         # WATO, you should continue to do so or stop doing to for ever...
         # Locked accounts get a '!' before their password. This disable it.
-        output = ""
+        creds = {}
 
         for uid, user in users.items():
             # only process users which are handled by htpasswd connector
@@ -121,6 +149,7 @@ class HtpasswdUserConnector(UserConnector):
                     locksym = '!'
                 else:
                     locksym = ""
-                output += "%s:%s%s\n" % (uid.encode("utf-8"), locksym, user["password"])
 
-        store.save_file(cmk.paths.htpasswd_file, output)
+                creds[uid] = "%s%s" % (locksym, user["password"])
+
+        Htpasswd(cmk.paths.htpasswd_file).save(creds)

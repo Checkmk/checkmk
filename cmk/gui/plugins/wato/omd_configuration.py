@@ -36,7 +36,8 @@ from cmk.gui.valuespec import *
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
 
-from . import (
+from cmk.gui.plugins.wato import (
+    config_domain_registry,
     ConfigDomain,
     ConfigDomainOMD,
     LivestatusViaTCP,
@@ -171,6 +172,7 @@ register_configvar(group,
 #   '----------------------------------------------------------------------'
 
 # TODO: Diskspace cleanup does not support site specific globals!
+@config_domain_registry.register
 class ConfigDomainDiskspace(ConfigDomain):
     needs_sync       = True
     needs_activation = False
@@ -324,6 +326,7 @@ add_replication_paths([
 #   | Manage settings of the site apache                                   |
 #   '----------------------------------------------------------------------'
 
+@config_domain_registry.register
 class ConfigDomainApache(ConfigDomain):
     needs_sync       = True
     needs_activation = True
@@ -428,6 +431,7 @@ register_configvar(group,
 #   | Use these options to tune the performance of the rrdcached           |
 #   '----------------------------------------------------------------------'
 
+@config_domain_registry.register
 class ConfigDomainRRDCached(ConfigDomain):
     needs_sync       = True
     needs_activation = True

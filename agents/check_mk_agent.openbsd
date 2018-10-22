@@ -37,6 +37,9 @@ unset LANG
 export MK_LIBDIR="/usr/lib/check_mk_agent"
 export MK_CONFDIR="/etc"
 
+# Optionally set a tempdir for all subsequent calls
+#export TMPDIR=
+
 # Make sure, locally installed binaries are found
 PATH=$PATH:/usr/local/bin
 

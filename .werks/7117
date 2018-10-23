@@ -1,0 +1,11 @@
+Title: netapp_api_disk: Fixed displaying correct numbers for parity and data drives
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.4.0p39
+Date: 1551793061
+
+Before this would only be shown if the respective drive has the status "prefailed".

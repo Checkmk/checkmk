@@ -23,6 +23,7 @@
 // Boston, MA 02110-1301 USA.
 
 #include "SectionPS.h"
+#include <cstdint>
 #include <iomanip>
 #include "Environment.h"
 #include "Logger.h"
@@ -158,6 +159,8 @@ bool SectionPS::produceOutputInner(std::ostream &out,
     }
 }
 
+#include <inttypes.h> /* For PRIu64 */
+
 void SectionPS::outputProcess(std::ostream &out, ULONGLONG virtual_size,
                               ULONGLONG working_set_size,
                               long long pagefile_usage, ULONGLONG uptime,
@@ -168,11 +171,18 @@ void SectionPS::outputProcess(std::ostream &out, ULONGLONG virtual_size,
                               const std::string &exe_file) {
     // Note: CPU utilization is determined out of usermodetime and
     // kernelmodetime
-    out << "(" << user << "," << virtual_size / 1024 << ","
-        << working_set_size / 1024 << ",0"
-        << "," << process_id << "," << pagefile_usage / 1024 << ","
-        << usermode_time << "," << kernelmode_time << ","
-        << process_handle_count << "," << thread_count << "," << uptime << ")\t"
+    out << "(" << user << ","              //  1: name
+        << virtual_size / 1024 << ","      //  2: Virtual Memory size
+        << working_set_size / 1024 << ","  //  3: Working Set Size
+        << "0"
+        << ","                           //  4: Nothing
+        << process_id << ","             //  5: Process Id
+        << pagefile_usage / 1024 << ","  //  6: PageFile
+        << usermode_time << ","          //  7: User Time
+        << kernelmode_time << ","        //  8: Kernel Time
+        << process_handle_count << ","   //  9: Handle Count
+        << thread_count << ","           // 10: Thread COunt
+        << uptime << ")\t"               // 11: Uptime
         << exe_file << "\n";
 }
 
@@ -188,21 +198,28 @@ bool SectionPS::outputWMI(std::ostream &out) {
         bool more = result.valid();
 
         while (more) {
-            long long processId = result.get<long long>(L"ProcessId");
+            // lambda to load data correctly, we are loading 32 bit values(MSDN)
+            // and immediately convert tehm to 64 bits to preserve onternal API.
+            // Stupid, yes.
+            auto load_uint32 = [result](const wchar_t *Name) -> auto {
+                return static_cast<int64_t>(result.get<uint32_t>(
+                    Name));  // read 32bit unsigned and convert to 64 bit signed
+            };
+
+            auto process_id = load_uint32(L"ProcessId");
 
             NullHandle process(
                 _winapi.OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ,
-                                    FALSE, processId),
+                                    FALSE, static_cast<DWORD>(process_id)),
                 _winapi);
             std::string user = "SYSTEM";
             ExtractProcessOwner(process, user);
             std::wstring process_name;
 
-            if (*_full_commandline && result.contains(L"ExecutablePath")) {
+            if (*_full_commandline && result.contains(L"ExecutablePath"))
                 process_name = result.get<std::wstring>(L"ExecutablePath");
-            } else {
+            else
                 process_name = result.get<std::wstring>(L"Caption");
-            }
 
             if (*_full_commandline && result.contains(L"CommandLine")) {
                 int argc;
@@ -233,14 +250,23 @@ bool SectionPS::outputWMI(std::ostream &out) {
 
             auto uptime = static_cast<ULONGLONG>(std::max(timeDiff, 1LL));
 
+            auto handle_count =
+                load_uint32(L"HandleCount");  // according to MSDN  HandleCount
+                                              // is 32 bit UNSIGNED
+            auto thread_count =
+                load_uint32(L"ThreadCount");  // according to MSDN  ThreadCount
+                                              // is 32 bit UNSIGNED
+            auto pagefile_usage =
+                load_uint32(L"PagefileUsage");  // according to MSDN ThreadCount
+                                                // is 32 bit UNSIGNED
+
             outputProcess(
                 out, std::stoull(result.get<std::string>(L"VirtualSize")),
                 std::stoull(result.get<std::string>(L"WorkingSetSize")),
-                result.get<long long>(L"PagefileUsage"), uptime,
+                pagefile_usage, uptime,
                 std::stoull(result.get<std::wstring>(L"UserModeTime")),
                 std::stoull(result.get<std::wstring>(L"KernelModeTime")),
-                processId, result.get<long long>(L"HandleCount"),
-                result.get<long long>(L"ThreadCount"), user,
+                process_id, handle_count, thread_count, user,
                 to_utf8(process_name));
 
             more = result.next();
@@ -248,7 +274,7 @@ bool SectionPS::outputWMI(std::ostream &out) {
         return true;
     } catch (const wmi::ComException &e) {
         // the most likely cause is that the wmi query fails, i.e. because the
-        // service is currently offline.
+        // service is currently off line.
         Error(_logger) << "ComException: " << e.what();
     } catch (const wmi::ComTypeException &e) {
         Error(_logger) << "ComTypeException: " << e.what();

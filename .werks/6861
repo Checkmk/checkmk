@@ -1,0 +1,12 @@
+Title: Correct "ps" section output for Process Id, Pagefile usage, etc
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1540375060
+Class: fix
+
+Now Windows Agent produces correct output for Process Id, Handle Counts,
+Thread Counts, Pagefile Usage when 32-bit OS used.
+

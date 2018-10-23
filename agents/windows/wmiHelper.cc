@@ -253,15 +253,27 @@ bool Result::next() {
     }
 }
 
+// this is correct function, but NOT TESTED
 template <>
-long long Variant::get() const {
+uint32_t Variant::get() const {
     switch (_value.vt) {
+        // 8 bits values
+        case VT_UI1:
+            return static_cast<uint32_t>(_value.bVal);
         case VT_I1:
-            return _value.iVal;
+            return static_cast<uint32_t>(_value.cVal);
+        // 16 bits values
+        case VT_UI2:
+            return static_cast<uint32_t>(_value.uiVal);
         case VT_I2:
-            return _value.intVal;
+            return static_cast<uint32_t>(_value.iVal);
+        // 32 bits values
+        case VT_UI4:
+            return _value
+                .uintVal;  // no conversion here, we expect good type here
         case VT_I4:
-            return _value.llVal;
+            return static_cast<uint32_t>(_value.intVal);
+
         default:
             throw ComTypeException(string("wrong value type requested: ") +
                                    to_string(_value.vt));
@@ -280,14 +292,25 @@ bool Variant::get() const {
 }
 
 template <>
-ULONG Variant::get() const {
+int32_t Variant::get() const {
     switch (_value.vt) {
+        // 8 bits values
         case VT_UI1:
-            return _value.cVal;
+            return static_cast<int32_t>(_value.bVal);
+        case VT_I1:
+            return static_cast<int32_t>(_value.cVal);
+        // 16 bits values
         case VT_UI2:
-            return _value.uiVal;
+            return static_cast<int32_t>(_value.uiVal);
+        case VT_I2:
+            return static_cast<int32_t>(_value.iVal);
+        // 32 bits values
         case VT_UI4:
-            return _value.ulVal;
+            return static_cast<int32_t>(_value.uintVal);
+        case VT_I4:
+            return _value
+                .intVal;  // no conversion here, we expect good type here
+
         default:
             throw ComTypeException(string("wrong value type requested: ") +
                                    to_string(_value.vt));
@@ -295,7 +318,7 @@ ULONG Variant::get() const {
 }
 
 template <>
-ULONGLONG Variant::get() const {
+uint64_t Variant::get() const {
     switch (_value.vt) {
         case VT_UI8:
             return _value.ullVal;
@@ -358,16 +381,19 @@ wstring Variant::get() const {
             return std::to_wstring(get<float>());
         case VT_R8:
             return std::to_wstring(get<double>());
+
         case VT_I1:
         case VT_I2:
         case VT_I4:
-            return std::to_wstring(get<long long>());
+            return std::to_wstring(get<int32_t>());
         case VT_UI1:
         case VT_UI2:
         case VT_UI4:
-            return std::to_wstring(get<ULONG>());
+            return std::to_wstring(get<uint32_t>());
+
         case VT_UI8:
-            return std::to_wstring(get<ULONGLONG>());
+            return std::to_wstring(get<uint64_t>());
+
         case VT_BOOL:
             return std::to_wstring(get<bool>());
         case VT_NULL:

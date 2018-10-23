@@ -30,7 +30,9 @@
 #include "stringutil.h"
 #include "wmiHelper.h"
 
+#if !defined(SUCCEEDED)
 #define SUCCEEDED(hr) ((HRESULT)(hr) >= 0)
+#endif
 
 // How to fix broken performance counters
 // http://johansenreidar.blogspot.de/2014/01/windows-server-rebuild-all-performance.html

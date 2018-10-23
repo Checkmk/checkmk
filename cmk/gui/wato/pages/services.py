@@ -40,6 +40,7 @@ from cmk.gui.plugins.wato.utils import mode_registry, may_edit_ruleset
 from cmk.gui.plugins.wato.utils.base_modes import WatoMode, WatoWebApiMode
 from cmk.gui.plugins.wato.utils.context_buttons import host_status_button, global_buttons
 
+from cmk.gui.pages import register_page_handler
 from cmk.gui.globals import html
 from cmk.gui.i18n import _
 from cmk.gui.exceptions import MKGeneralException
@@ -837,3 +838,5 @@ class ModeAjaxExecuteCheck(WatoWebApiMode):
             "state_name" : short_service_state_name(state, "UNKN"),
             "output"     : output,
         }
+
+register_page_handler("wato_ajax_execute_check", lambda: ModeAjaxExecuteCheck().handle_page())

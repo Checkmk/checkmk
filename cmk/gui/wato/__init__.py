@@ -618,7 +618,6 @@ class AgentOutputPage(object):
         return "%s-%s-%s.txt" % (site_id, host_name, ty)
 
 
-
 class PageFetchAgentOutput(AgentOutputPage):
     def page(self):
         html.header(_("%s: Download agent output") % self._host.name(),
@@ -668,6 +667,9 @@ class PageFetchAgentOutput(AgentOutputPage):
         job_manager = gui_background_job.GUIBackgroundJobManager()
         job_manager.show_job_details_from_snapshot(job_snapshot=job_snapshot)
 
+# TODO: Clean this up! We would like to use the cmk.gui.pages.register() decorator instead
+# of this
+cmk.gui.pages.register_page_handler("fetch_agent_output", lambda: PageFetchAgentOutput().page())
 
 
 @gui_background_job.job_registry.register
@@ -710,7 +712,6 @@ class FetchAgentOutputBackgroundJob(WatoBackgroundJob):
         job_interface.send_result_message(_("%s Finished.") % button)
 
 
-
 class PageDownloadAgentOutput(AgentOutputPage):
     def page(self):
         file_name = self.file_name(self._host.site_id(), self._host.name(), self._ty)
@@ -720,6 +721,9 @@ class PageDownloadAgentOutput(AgentOutputPage):
 
         preview_filepath = os.path.join(self._job.get_work_dir(), file_name)
         html.write(file(preview_filepath).read())
+
+cmk.gui.pages.register_page_handler("download_agent_output", lambda: PageDownloadAgentOutput().page())
+
 
 #.
 #   .--Network Scan--------------------------------------------------------.
@@ -1189,21 +1193,3 @@ def load_plugins(force):
     # exceptions all the time and not only the first time (when the plugins
     # are loaded).
     loaded_with_language = cmk.gui.i18n.get_current_language()
-
-
-# TODO: Clean this up! We would like to use the cmk.gui.pages.register() decorator instead
-# of this
-_wato_pages = {
-    "ajax_start_activation"     : lambda: ModeAjaxStartActivation().handle_page(),
-    "ajax_activation_state"     : lambda: ModeAjaxActivationState().handle_page(),
-
-    "automation_login"          : lambda: ModeAutomationLogin().page(),
-    "noauth:automation"         : lambda: ModeAutomation().page(),
-    "ajax_set_foldertree"       : lambda: ModeAjaxSetFoldertree().handle_page(),
-    "wato_ajax_execute_check"   : lambda: ModeAjaxExecuteCheck().handle_page(),
-    "fetch_agent_output"        : lambda: PageFetchAgentOutput().page(),
-    "download_agent_output"     : lambda: PageDownloadAgentOutput().page(),
-    "ajax_popup_move_to_folder" : lambda: ModeAjaxPopupMoveToFolder().page(),
-}
-for path, page_func in _wato_pages.items():
-    cmk.gui.pages.register_page_handler(path, page_func)

@@ -33,6 +33,7 @@ import cmk.gui.config as config
 import cmk.gui.watolib as watolib
 import cmk.gui.userdb as userdb
 
+from cmk.gui.pages import register_page_handler
 from cmk.gui.plugins.wato.utils.base_modes import WatoWebApiMode
 from cmk.gui.log import logger
 from cmk.gui.globals import html
@@ -52,6 +53,8 @@ class ModeAutomationLogin(WatoWebApiMode):
 
         html.set_output_format("python")
         html.write_html(repr(watolib.get_login_secret(True)))
+
+register_page_handler("automation_login", lambda: ModeAutomationLogin().page())
 
 
 class ModeAutomation(WatoWebApiMode):
@@ -168,3 +171,5 @@ class ModeAutomation(WatoWebApiMode):
                 raise
             html.write_text(_("Internal automation error: %s\n%s") % \
                             (e, traceback.format_exc()))
+
+register_page_handler("noauth:automation", lambda: ModeAutomation().page())

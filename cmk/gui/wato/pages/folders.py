@@ -43,6 +43,7 @@ from cmk.gui.plugins.wato.utils.html_elements import wato_confirm
 from cmk.gui.plugins.wato.utils.main_menu import MainMenu, MenuItem
 from cmk.gui.plugins.wato.utils.context_buttons import folder_status_button, global_buttons
 
+from cmk.gui.pages import register_page_handler
 from cmk.gui.globals import html
 from cmk.gui.htmllib import HTML
 from cmk.gui.i18n import _
@@ -763,6 +764,8 @@ class ModeAjaxPopupMoveToFolder(WatoWebApiMode):
 
         return choices
 
+register_page_handler("ajax_popup_move_to_folder", lambda: ModeAjaxPopupMoveToFolder().page())
+
 
 class FolderMode(WatoMode):
     __metaclass__ = abc.ABCMeta
@@ -913,3 +916,5 @@ class ModeAjaxSetFoldertree(WatoWebApiMode):
     def page(self):
         request = self.webapi_request()
         config.user.save_file("foldertree", (request.get('topic'), request.get('target')))
+
+register_page_handler("ajax_set_foldertree", lambda: ModeAjaxSetFoldertree().handle_page())

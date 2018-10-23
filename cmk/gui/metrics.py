@@ -33,6 +33,8 @@
 # unit_name:          The ID of a unit, e.g. "%"
 # unit:               The definition-dict of a unit like in unit_info
 # graph_template:     Template for a graph. Essentially a dict with the key "metrics"
+
+import abc
 import math
 import string
 import json
@@ -47,6 +49,7 @@ import cmk.gui.config as config
 import cmk.gui.sites as sites
 import cmk.gui.i18n
 import cmk.gui.pages
+import cmk.gui.plugin_registry
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
 
@@ -338,21 +341,12 @@ class Perfometers(object):
 
 
 class MetricometerRenderer(object):
+    __metaclass__ = abc.ABCMeta
+
     """Abstract base class for all metricometer renderers"""
     @classmethod
     def type_name(cls):
         raise NotImplementedError()
-
-
-    @classmethod
-    def get_renderer(cls, perfometer, translated_metrics):
-        subclasses = cls.__subclasses__() # pylint: disable=no-member
-
-        for subclass in subclasses:
-            if subclass.type_name() == perfometer["type"]:
-                return subclass(perfometer, translated_metrics)
-
-        raise NotImplementedError(_("Invalid perfometer type: %s") % perfometer["type"])
 
 
     def __init__(self, perfometer, translated_metrics):
@@ -361,6 +355,7 @@ class MetricometerRenderer(object):
         self._translated_metrics = translated_metrics
 
 
+    @abc.abstractmethod
     def get_stack(self):
         """Return a list of perfometer elements
 
@@ -391,11 +386,13 @@ class MetricometerRenderer(object):
         return self._get_type_label()
 
 
+    @abc.abstractmethod
     def _get_type_label(self):
         """Returns the label for this perfometer type"""
         raise NotImplementedError()
 
 
+    @abc.abstractmethod
     def get_sort_number(self):
         """Returns the number to sort this perfometer with compared to the other
         performeters in the current performeter sort group"""
@@ -403,6 +400,25 @@ class MetricometerRenderer(object):
 
 
 
+class MetricometerRendererRegistry(cmk.gui.plugin_registry.ClassRegistry):
+    def plugin_base_class(self):
+        return MetricometerRenderer
+
+
+    def _register(self, plugin_class):
+        self._entries[plugin_class.type_name()] = plugin_class
+
+
+    def get_renderer(self, perfometer, translated_metrics):
+        subclass = self[perfometer["type"]]
+        return subclass(perfometer, translated_metrics)
+
+
+
+renderer_registry = MetricometerRendererRegistry()
+
+
+@renderer_registry.register
 class MetricometerRendererLogarithmic(MetricometerRenderer):
     @classmethod
     def type_name(cls):
@@ -451,6 +467,7 @@ class MetricometerRendererLogarithmic(MetricometerRenderer):
 
 
 
+@renderer_registry.register
 class MetricometerRendererLinear(MetricometerRenderer):
     @classmethod
     def type_name(cls):
@@ -503,6 +520,7 @@ class MetricometerRendererLinear(MetricometerRenderer):
 
 
 
+@renderer_registry.register
 class MetricometerRendererStacked(MetricometerRenderer):
     @classmethod
     def type_name(cls):
@@ -512,7 +530,7 @@ class MetricometerRendererStacked(MetricometerRenderer):
     def get_stack(self):
         stack = []
         for sub_perfometer in self._perfometer["perfometers"]:
-            renderer = MetricometerRenderer.get_renderer(sub_perfometer, self._translated_metrics)
+            renderer = renderer_registry.get_renderer(sub_perfometer, self._translated_metrics)
 
             sub_stack = renderer.get_stack()
             stack.append(sub_stack[0])
@@ -523,7 +541,7 @@ class MetricometerRendererStacked(MetricometerRenderer):
     def _get_type_label(self):
         sub_labels = []
         for sub_perfometer in self._perfometer["perfometers"]:
-            renderer = MetricometerRenderer.get_renderer(sub_perfometer, self._translated_metrics)
+            renderer = renderer_registry.get_renderer(sub_perfometer, self._translated_metrics)
 
             sub_label = renderer.get_label()
             if sub_label:
@@ -538,11 +556,12 @@ class MetricometerRendererStacked(MetricometerRenderer):
     def get_sort_number(self):
         """Use the number of the first stack element."""
         sub_perfometer = self._perfometer["perfometers"][0]
-        renderer = MetricometerRenderer.get_renderer(sub_perfometer, self._translated_metrics)
+        renderer = renderer_registry.get_renderer(sub_perfometer, self._translated_metrics)
         return renderer.get_sort_number()
 
 
 
+@renderer_registry.register
 class MetricometerRendererDual(MetricometerRenderer):
     @classmethod
     def type_name(cls):
@@ -560,7 +579,7 @@ class MetricometerRendererDual(MetricometerRenderer):
     def get_stack(self):
         content = []
         for nr, sub_perfometer in enumerate(self._perfometer["perfometers"]):
-            renderer = MetricometerRenderer.get_renderer(sub_perfometer, self._translated_metrics)
+            renderer = renderer_registry.get_renderer(sub_perfometer, self._translated_metrics)
 
             sub_stack = renderer.get_stack()
             if len(sub_stack) != 1:
@@ -577,7 +596,7 @@ class MetricometerRendererDual(MetricometerRenderer):
     def _get_type_label(self):
         sub_labels = []
         for sub_perfometer in self._perfometer["perfometers"]:
-            renderer = MetricometerRenderer.get_renderer(sub_perfometer, self._translated_metrics)
+            renderer = renderer_registry.get_renderer(sub_perfometer, self._translated_metrics)
 
             sub_label = renderer.get_label()
             if sub_label:
@@ -597,7 +616,7 @@ class MetricometerRendererDual(MetricometerRenderer):
         """
         sub_sort_numbers = []
         for sub_perfometer in self._perfometer["perfometers"]:
-            renderer = MetricometerRenderer.get_renderer(sub_perfometer, self._translated_metrics)
+            renderer = renderer_registry.get_renderer(sub_perfometer, self._translated_metrics)
             sub_sort_numbers.append(renderer.get_sort_number())
 
         return max(*sub_sort_numbers)

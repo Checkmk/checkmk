@@ -1,0 +1,11 @@
+diff -Nur heirloom-pkgtools-070227.orig/libpkg/verify.c heirloom-pkgtools-070227/libpkg/verify.c
+--- heirloom-pkgtools-070227.orig/libpkg/verify.c       2018-10-23 17:00:45.157728635 +0000
++++ heirloom-pkgtools-070227/libpkg/verify.c    2018-10-23 17:00:59.885893565 +0000
+@@ -47,6 +47,7 @@
+ #include <sys/param.h>
+ #include <sys/stat.h>
+ #include <sys/statvfs.h>
++#include <sys/sysmacros.h>
+ #include <grp.h>
+ #include <pwd.h>
+ #include <errno.h>

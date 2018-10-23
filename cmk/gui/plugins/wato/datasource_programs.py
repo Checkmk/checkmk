@@ -1364,13 +1364,25 @@ register_rule('datasource_programs',
                               )),
                   ],
              )),
+             ("--piggyback-vms", DropdownChoice(
+                  title = _("Create piggyback VM data"),
+                  help = _("You can choose to <i>additionally</i> send data concerning VMs to"
+                           " the host that is associated with the special agent, to a piggyback"
+                           " host with name of the VM itself, or both. By default data is sent"
+                           " to the corresponding resource group only."),
+                  choices = [
+                      ("agenthost", _("Send data to agent host")),
+                      ("self", _("Send data to the VM itself")),
+                      ("all", _("Send data to both the agent host and the VM itself")),
+                  ],
+             )),
              ("--sequential", Checkbox(
                   title = _("Run in single thread"),
                   help = _("Check this to avoid multiprocessing. "
                            "Recommended for debugging purposes only."),
              )),
         ],
-        optional_keys = False,
+        optional_keys = ["--piggyback-vms"],
     ),
     match = 'first',
 )

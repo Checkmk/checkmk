@@ -83,6 +83,12 @@ def parse_arguments(argv):
         type=int,
         help='''Timeout for process joining in seconds
                         (default 10)''')
+    parser.add_argument(
+        "--piggyback-vms",
+        default="",
+        choices=["agenthost", "self", "all"],
+        help='''Additionally create VM piggyback data for the host running the agent,
+        the VM iteself, or both''')
 
     # REQUIRED
     parser.add_argument("--subscription-id", required=True, help="Azure subscription ID")
@@ -319,12 +325,17 @@ class AzureComputeClient(object):
         super(AzureComputeClient, self).__init__()
         self._client = ComputeManagementClient(creds, subs)
 
-    def process(self, vm):
+    def process(self, vm, args):
         use_keys = ('statuses',)
         inst_view = self._client.virtual_machines.get(
             vm.info["group"], vm.info["name"], expand='instanceView').instance_view.as_dict()
         items = ((k, inst_view.get(k)) for k in use_keys)
         vm.info["specific_info"] = {k: v for k, v in items if v is not None}
+
+        if args.piggyback_vms in ("agenthost", "all"):
+            vm.piggytargets.append('')
+        if args.piggyback_vms in ("self", "all"):
+            vm.piggytargets.append(vm.info["name"])
 
 
 class IssueCollecter(list):
@@ -343,16 +354,15 @@ class AzureClient(object):
 
     def __init__(self, args):
         super(AzureClient, self).__init__()
-        self.debug = args.debug
+        self.args = args
         self.remaining_reads = "unknown (no metrics fetched)"
-        self.subscription = args.subscription_id
 
         self._creds = ServicePrincipalCredentials(
             client_id=args.client_id, secret=args.secret, tenant=args.tenant_id)
         # azure-api-call
-        self._monitor_client = MonitorManagementClient(self._creds, self.subscription)
+        self._monitor_client = MonitorManagementClient(self._creds, self.args.subscription_id)
         # azure-api-call
-        self._resource_client = ResourceManagementClient(self._creds, self.subscription)
+        self._resource_client = ResourceManagementClient(self._creds, self.args.subscription_id)
 
         self.specific_clients = {}
 
@@ -373,13 +383,13 @@ class AzureClient(object):
         for rtp in r_types:
             client_class = AzureClient.SPECIFIC_CLIENTS.get(rtp)
             if client_class is not None:
-                self.specific_clients[rtp] = client_class(self._creds, self.subscription)
+                self.specific_clients[rtp] = client_class(self._creds, self.args.subscription_id)
 
     def process_specific(self, resource):
         client = self.specific_clients.get(resource.info["type"])
         if client is None:
             return
-        client.process(resource)
+        client.process(resource, self.args)
 
     def discover_resources(self):
         if self.resources_cache is None:
@@ -485,7 +495,7 @@ class AzureClient(object):
             ]
             LOG.debug("fetched metrics: %s", metricnames)
         except ErrorResponseException as exc:
-            if self.debug:
+            if self.args.debug:
                 raise exc
             err.append("exception", rid, exc.message)
             LOG.exception(exc)
@@ -532,7 +542,6 @@ class Threads(object):
             atexit.register(self.terminate)
 
     def run(self, resources, client, config):
-
         if self.sequential:
             self._run_sequential(resources, client, config)
         else:

@@ -34,7 +34,7 @@
 #include <vector>
 #include "BitMask.h"
 
-enum class PollEvents { in = 1 << 0, out = 1 << 1 };
+enum class PollEvents { in = 1 << 0, out = 1 << 1, hup = 1 << 2 };
 IS_BIT_MASK(PollEvents);
 
 class Poller {
@@ -78,7 +78,8 @@ private:
         // guaranteed short value range.
         return static_cast<short>(
             (is_empty_bit_mask(e & PollEvents::in) ? 0 : POLLIN) |
-            (is_empty_bit_mask(e & PollEvents::out) ? 0 : POLLOUT));
+            (is_empty_bit_mask(e & PollEvents::out) ? 0 : POLLOUT) |
+            (is_empty_bit_mask(e & PollEvents::hup) ? 0 : POLLHUP));
     }
 };
 

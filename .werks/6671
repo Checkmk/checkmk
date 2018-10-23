@@ -1,0 +1,14 @@
+Title: WATO Web API: Now able to configured rulesets with boolean settings
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.5.0p8
+Date: 1540298086
+Class: fix
+
+Rules with a configurable positive/negative outcome where incorrectly translated
+in a <tt>get_ruleset</tt> API call. Furthermore, <tt>set_ruleset</tt> had an error when
+validating these kind of rules.
+
+

@@ -36,6 +36,8 @@
 #include "WinApiInterface.h"
 #include "stringutil.h"
 
+#include <cstdint>
+
 class Logger;
 class WinApiInterface;
 
@@ -79,13 +81,15 @@ private:
 };
 
 template <>
-long long Variant::get() const;
+int32_t Variant::get() const;
 template <>
 bool Variant::get() const;
 template <>
-ULONG Variant::get() const;
+uint32_t Variant::get() const;
+
 template <>
-ULONGLONG Variant::get() const;
+uint64_t Variant::get() const;
+
 template <>
 std::string Variant::get() const;
 template <>

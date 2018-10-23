@@ -29,6 +29,9 @@ export PATH=$PATH:/usr/sbin:/usr/bin:/usr/contrib/bin
 export MK_LIBDIR="/usr/lib/check_mk_agent"
 export MK_CONFDIR="/etc/check_mk"
 
+# Optionally set a tempdir for all subsequent calls
+#export TMPDIR=
+
 # All executables in PLUGINSDIR will simply be executed and their
 # ouput appended to the output of the agent. Plugins define their own
 # sections and must output headers with '<<<' and '>>>'

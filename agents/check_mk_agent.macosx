@@ -34,6 +34,9 @@ unset LANG
 export MK_LIBDIR="/to/be/changed"
 export MK_CONFDIR="/to/be/changed"
 
+# Optionally set a tempdir for all subsequent calls
+#export TMPDIR=
+
 # close standard input (for security reasons) and stderr
 if [ "$1" = -d ]
 then

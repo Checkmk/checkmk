@@ -37,6 +37,9 @@ unset LANG
 export MK_LIBDIR="/change/me/"
 export MK_CONFDIR="/change/me"
 
+# Optionally set a tempdir for all subsequent calls
+#export TMPDIR=
+
 # Make sure, locally installed binaries are found
 PATH=$PATH:/usr/pkg/bin
 

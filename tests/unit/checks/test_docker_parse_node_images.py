@@ -264,7 +264,7 @@ INFO1 = [
         '{"Command":"\\"/usr/sbin/init\\"","CreatedAt":"2018-10-12', '11:13:24', '+0200',
         'CEST","ID":"f1641e401237","Image":"local/c7-systemd-httpd","Labels":"org.label-schema.build-date=20180804,org.label-schema.license=GPLv2,org.label-schema.name=CentOS',
         'Base',
-        'Image,org.label-schema.schema-version=1.0,org.label-schema.vendor=CentOS","LocalVolumes":"0","Mounts":"/sys/fs/cgroup","Names":"sad_stonebraker","Networks":"bridge","Ports":"0.0.0.0:8080-\u003e80/tcp","RunningFor":"5',
+        'Image,org.label-schema.schema-version=1.0,funny.value.with.commas=This', 'is', 'really,', 'really', 'stupid.,org.label-schema.vendor=CentOS","LocalVolumes":"0","Mounts":"/sys/fs/cgroup","Names":"sad_stonebraker","Networks":"bridge","Ports":"0.0.0.0:8080-\u003e80/tcp","RunningFor":"5',
         'hours', 'ago","Size":"0B","Status":"Up', '5', 'hours"}'
     ],
     [
@@ -1212,6 +1212,7 @@ EXPECTED_CONTAINERS1 = {
             u'org.label-schema.build-date': u'20180804',
             u'org.label-schema.license': u'GPLv2',
             u'org.label-schema.name': u'CentOS Base Image',
+            u'funny.value.with.commas': u'This is really, really stupid.',
             u'org.label-schema.schema-version': u'1.0',
             u'org.label-schema.vendor': u'CentOS'
         },

@@ -200,7 +200,8 @@ def _get_json_list(info):
             json_list.append(json.loads(' '.join(row)))
         except ValueError:
             pass
-    return json_list
+    # some buggy docker commands produce empty output
+    return [element for element in json_list if element]
 
 
 def parse_docker_subsection_images(info):
@@ -255,8 +256,22 @@ def _split_subsections(info):
         if row[0].startswith('[[[') and row[0].endswith(']]]'):
             subname = row[0].strip('[]')
             continue
-        subsections.setdefault(subname,  []).append(row)
+        subsections.setdefault(subname, []).append(row)
     return subsections
+
+
+def parse_docker_messed_up_labels(string):
+    '''yield key value pairs
+
+    'string' is in the format "key1=value1,key2=value2,...", but there
+    may be unescaped commas in the values.
+    '''
+    def toggle_key_value():
+        for chunk in string.split('='):
+            for item in chunk.rsplit(',', 1):
+                yield item
+    toggler = toggle_key_value()
+    return dict(zip(toggler, toggler))
 
 
 def parse_docker_node_images(info):
@@ -285,7 +300,7 @@ def parse_docker_node_images(info):
     for image_id, labels in image_labels.iteritems():
         image = images.get(_docker_trunc_id(image_id))
         if image is not None and labels is not None:
-           image["__labels__"].update(labels)
+            image["__labels__"].update(labels)
 
     mapping = {(i['Repository'], i['Tag']): i['ID']
                for i in images.itervalues()}
@@ -298,8 +313,7 @@ def parse_docker_node_images(info):
 
         labels = c.get("Labels")
         if isinstance(labels, (str, unicode)):
-            lab = (p.split("=", 1) for p in labels.split(","))
-            c["Labels"] = dict(lab)
+            c["Labels"] = parse_docker_messed_up_labels(labels)
 
     return {"images": images, "containers": containers}
 

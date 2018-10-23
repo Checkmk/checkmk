@@ -67,14 +67,15 @@ def check_netapp_api_disk_summary(_no_item, params, info):
             disk['state'] = 'failed'
         elif disk.get("prefailed", "false") not in [ "false", "None" ]:
             disk['state'] = 'prefailed'
-            if raid_type in ["parity", "dparity"]:
-                disk['type'] = 'parity'
-            elif raid_type == "data":
-                disk['type'] = 'data'
         elif raid_state == "spare":
             disk['state'] = "spare"
         else:
             disk['state'] = 'ok'
+
+        if raid_type in ["parity", "dparity"]:
+            disk['type'] = 'parity'
+        elif raid_type == "data":
+            disk['type'] = 'data'
 
         disks_converted.append(disk)
 

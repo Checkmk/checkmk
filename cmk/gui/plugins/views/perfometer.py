@@ -98,7 +98,7 @@ class Perfometer(object):
         if not perfometer_definition:
             return None, None
 
-        renderer = metrics.MetricometerRenderer.get_renderer(perfometer_definition, self._translated_metrics)
+        renderer = metrics.renderer_registry.get_renderer(perfometer_definition, self._translated_metrics)
         return renderer.get_label(), render_metricometer(renderer.get_stack())
 
 
@@ -179,7 +179,7 @@ class Perfometer(object):
         if not perfometer_definition:
             return None
 
-        renderer = metrics.MetricometerRenderer.get_renderer(perfometer_definition, self._translated_metrics)
+        renderer = metrics.renderer_registry.get_renderer(perfometer_definition, self._translated_metrics)
         return renderer.get_sort_number()
 
 

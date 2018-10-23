@@ -14,7 +14,6 @@ def clear_config_caches(monkeypatch):
     monkeypatch.setattr(cmk_base, "runtime_cache", cmk_base.caching.CacheManager())
 
 
-@pytest.fixture(scope="function")
 def reload_config():
     # Needs to be done together, even when the checks are not directly needed
     import cmk_base.check_api as check_api
@@ -31,7 +30,8 @@ def enable_debug():
 
 
 @pytest.fixture(autouse=True)
-def test_cfg(web, clear_config_caches, reload_config, enable_debug):
+def test_cfg(web, clear_config_caches, enable_debug):
+    reload_config()
     yield
 
     #

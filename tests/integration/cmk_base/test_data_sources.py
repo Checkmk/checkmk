@@ -198,7 +198,7 @@ def test_mode_inventory_caching(test_cfg, hosts, cache, force, monkeypatch):
         cmk_base.data_sources.abstract.DataSource.set_use_outdated_cache_file(False)
 
 
-def test_mode_inventory_as_check(test_cfg, monkeypatch, mock):
+def test_mode_inventory_as_check(test_cfg, monkeypatch):
     _patch_data_source_run(monkeypatch)
     assert cmk_base.modes.check_mk.mode_inventory_as_check({}, "ds-test-host1") == 0
     assert _counter_run == 2
@@ -211,13 +211,13 @@ def test_mode_discover_marked_hosts(test_cfg, monkeypatch):
     #assert _counter_run == 2
 
 
-def test_mode_check_discovery_default(test_cfg, monkeypatch, mock):
+def test_mode_check_discovery_default(test_cfg, monkeypatch):
     _patch_data_source_run(monkeypatch, _max_cachefile_age=0)
     assert cmk_base.modes.check_mk.mode_check_discovery("ds-test-host1") == 1
     assert _counter_run == 2
 
 
-def test_mode_check_discovery_cached(test_cfg, monkeypatch, mock):
+def test_mode_check_discovery_cached(test_cfg, monkeypatch):
     _patch_data_source_run(monkeypatch, _max_cachefile_age=120, _use_outdated_cache_file=True, _may_use_cache_file=True)
 
     try:
@@ -229,7 +229,7 @@ def test_mode_check_discovery_cached(test_cfg, monkeypatch, mock):
         cmk_base.data_sources.abstract.DataSource.set_use_outdated_cache_file(False)
 
 
-def test_mode_discover_all_hosts(test_cfg, monkeypatch, mock):
+def test_mode_discover_all_hosts(test_cfg, monkeypatch):
     _patch_data_source_run(monkeypatch, _may_use_cache_file=True, _max_cachefile_age=120)
     cmk_base.modes.check_mk.mode_discover({"discover": 1}, [])
     assert _counter_run == len(config.all_active_realhosts())*2
@@ -461,7 +461,6 @@ def test_data_sources_of_hosts(clear_config_caches, monkeypatch):
     ]
 
     import cmk_base.data_sources
-    import cmk_base.config as config
 
     all_hosts = [ ("%s|%s" % (name, h["tags"])) for name, h in hosts ]
     monkeypatch.setattr(config, "all_hosts", all_hosts)

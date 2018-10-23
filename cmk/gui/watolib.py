@@ -8687,9 +8687,9 @@ class Rule(object):
             result["value"]  = self.value
         else:
             if self.value:
-                result["conditions"]["negate"] = False
+                result["negate"] = False
             else:
-                result["conditions"]["negate"] = True
+                result["negate"] = True
 
         result["conditions"]["host_specs"] = self.host_list
         result["conditions"]["host_tags"]  = self.tag_specs

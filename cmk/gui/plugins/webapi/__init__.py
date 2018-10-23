@@ -42,6 +42,7 @@ __all__ = [ os.path.basename(f)[:-3] for f in modules if f not in [ "__init__.py
 
 from cmk.gui.plugins.webapi.utils import (
     APICallCollection,
+    api_call_collection_registry,
     api_actions,
     validate_request_keys,
     validate_host_attributes,

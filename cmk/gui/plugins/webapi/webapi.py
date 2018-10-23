@@ -39,8 +39,9 @@ from cmk.gui.globals import html
 from cmk.gui.exceptions import MKUserError, MKAuthException, MKException
 from cmk.gui.plugins.userdb.htpasswd import encrypt_password
 
-from . import (
+from cmk.gui.plugins.webapi import (
     APICallCollection,
+    api_call_collection_registry,
     api_actions,
     validate_request_keys,
     validate_host_attributes,
@@ -60,6 +61,7 @@ from . import (
 #   |                                                                      |
 #   +----------------------------------------------------------------------+
 
+@api_call_collection_registry.register
 class APICallFolders(APICallCollection):
     def get_api_calls(self):
         return {
@@ -200,6 +202,7 @@ class APICallFolders(APICallCollection):
 #   |                                                                      |
 #   +----------------------------------------------------------------------+
 
+@api_call_collection_registry.register
 class APICallHosts(APICallCollection):
     def get_api_calls(self):
         return {
@@ -574,6 +577,7 @@ api_actions["edit_users"] = {
 #   |                                                                      |
 #   +----------------------------------------------------------------------+
 
+@api_call_collection_registry.register
 class APICallRules(APICallCollection):
     def get_api_calls(self):
         required_permissions = ["wato.rulesets"] # wato.services ?
@@ -731,6 +735,7 @@ class APICallRules(APICallCollection):
 #   |                                            |___/                     |
 #   +----------------------------------------------------------------------+
 
+@api_call_collection_registry.register
 class APICallHosttags(APICallCollection):
     def get_api_calls(self):
         required_permissions = ["wato.hosttags"]
@@ -844,6 +849,7 @@ class APICallHosttags(APICallCollection):
 #   |                                                                      |
 #   +----------------------------------------------------------------------+
 
+@api_call_collection_registry.register
 class APICallSites(APICallCollection):
     def get_api_calls(self):
         required_permissions = ["wato.sites"]
@@ -953,11 +959,6 @@ class APICallSites(APICallCollection):
         if "secret" in site:
             del site["secret"]
             site_mgmt.save_sites(all_sites)
-
-
-for api_call_class in APICallCollection.all_classes():
-    api_actions.update(api_call_class().get_api_calls())
-
 
 
 #.
@@ -1080,5 +1081,5 @@ api_actions["activate_changes"] = {
 }
 
 
-for api_call_class in APICallCollection.all_classes():
+for api_call_class in api_call_collection_registry.values():
     api_actions.update(api_call_class().get_api_calls())

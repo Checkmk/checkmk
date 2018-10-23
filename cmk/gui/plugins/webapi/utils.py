@@ -34,6 +34,7 @@ from hashlib import md5
 
 import cmk.gui.config as config
 import cmk.gui.watolib as watolib
+import cmk.gui.plugin_registry
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
 from cmk.gui.log import logger
@@ -47,19 +48,22 @@ api_actions = {}
 class APICallCollection(object):
     __metaclass__ = abc.ABCMeta
 
-    @classmethod
-    def all_classes(cls):
-        classes = {}
-        for subclass in cls.__subclasses__(): # pylint: disable=no-member
-            classes[subclass.__name__] = subclass
-
-        return classes.values()
-
-
     @abc.abstractmethod
     def get_api_calls(self):
         raise NotImplementedError("This API collection does not register any API call")
 
+
+
+class APICallCollectionRegistry(cmk.gui.plugin_registry.ClassRegistry):
+    def plugin_base_class(self):
+        return APICallCollection
+
+
+    def _register(self, plugin_class):
+        self._entries[plugin_class.__name__] = plugin_class
+
+
+api_call_collection_registry = APICallCollectionRegistry()
 
 #.
 #   .--API Helpers-------------------------------------------------------------.

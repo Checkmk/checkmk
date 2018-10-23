@@ -1,0 +1,13 @@
+Title: Docker: Fix crash in Docker inventory for buggy Docker versions
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0p8
+Date: 1540297710
+Class: fix
+
+Since version 1.5.0p7 the docker inventory crashed when confronted
+with empty docker image descriptions or container labels containing
+commas.
+

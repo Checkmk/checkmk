@@ -102,7 +102,7 @@ else ifneq ($(filter $(DISTRO_CODE),el6),)
     MODULES += cryptography-1.5.3.tar.gz
     PATCHES += patches/0004-CMS_DEBUG_DECRYPT-fix.patch
     PATCHES += patches/0009-cryptography-1.5.3-disable-version-warning.patch
-else ifneq ($(filter $(DISTRO_CODE),sles15),)
+else ifneq ($(filter $(DISTRO_CODE),sles15 cosmic),)
 # cryptography-1.9 is not compatible with the OpenSSL 1.1.0h on SLES15. For the
 # moment we only use the new version on this platfrom. Make the others also use
 # this version in the future.

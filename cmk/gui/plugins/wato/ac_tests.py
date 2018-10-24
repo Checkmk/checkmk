@@ -70,12 +70,19 @@ class ACTestPersistentConnections(ACTest):
 
 
     def is_relevant(self):
-        return True
+        # This check is only executed on the central instance of multisite setups
+        return len(config.sitenames()) > 1
 
 
     def execute(self):
-        site_id = config.omd_site()
-        site_config = config.site(site_id)
+        for site_id in config.sitenames():
+            site_config = config.site(site_id)
+            for result in self._check_site(site_id, site_config):
+                result.site_id = site_id
+                yield result
+
+
+    def _check_site(self, site_id, site_config):
         persist = site_config.get("persist", False)
 
         if persist and watolib.site_is_using_livestatus_proxy(site_id):
@@ -114,11 +121,18 @@ class ACTestLiveproxyd(ACTest):
 
 
     def is_relevant(self):
-        return True
+        # This check is only executed on the central instance of multisite setups
+        return len(config.sitenames()) > 1
 
 
     def execute(self):
-        site_id = config.omd_site()
+        for site_id in config.sitenames():
+            for result in self._check_site(site_id):
+                result.site_id = site_id
+                yield result
+
+
+    def _check_site(self, site_id):
         if watolib.site_is_using_livestatus_proxy(site_id):
             yield ACResultOK(_("Site is using the Livestatus Proxy Daemon"))
 

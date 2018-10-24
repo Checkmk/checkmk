@@ -934,7 +934,7 @@ def create_cmk_automation_user():
         'alias'                 : u"Check_MK Automation - used for calling web services",
         'contactgroups'         : [],
         'automation_secret'     : secret,
-        'password'              : cmk.gui.plugins.userdb.htpasswd.encrypt_password(secret),
+        'password'              : cmk.gui.plugins.userdb.htpasswd.hash_password(secret),
         'roles'                 : ['admin'],
         'locked'                : False,
         'serial'                : 0,

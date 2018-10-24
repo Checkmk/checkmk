@@ -41,7 +41,7 @@ import cmk.gui.forms as forms
 import cmk.gui.background_job as background_job
 import cmk.gui.gui_background_job as gui_background_job
 from cmk.gui.htmllib import HTML
-from cmk.gui.plugins.userdb.htpasswd import encrypt_password
+from cmk.gui.plugins.userdb.htpasswd import hash_password
 from cmk.gui.log import logger
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _, _u
@@ -482,7 +482,7 @@ class ModeEditUser(WatoMode):
         if auth_method == "secret":
             secret = html.var("_auth_secret", "").strip()
             user_attrs["automation_secret"] = secret
-            user_attrs["password"] = encrypt_password(secret)
+            user_attrs["password"] = hash_password(secret)
             increase_serial = True # password changed, reflect in auth serial
 
         else:
@@ -503,7 +503,7 @@ class ModeEditUser(WatoMode):
                     del user_attrs["password"] # which was the encrypted automation password!
 
             if password:
-                user_attrs["password"] = encrypt_password(password)
+                user_attrs["password"] = hash_password(password)
                 user_attrs["last_pw_change"] = int(time.time())
                 increase_serial = True # password changed, reflect in auth serial
 

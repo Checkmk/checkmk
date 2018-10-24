@@ -35,7 +35,7 @@ import cmk.gui.config as config
 import cmk.gui.watolib as watolib
 import cmk.gui.forms as forms
 import cmk.gui.login as login
-from cmk.gui.plugins.userdb.htpasswd import encrypt_password
+from cmk.gui.plugins.userdb.htpasswd import hash_password
 from cmk.gui.exceptions import MKUserError, MKGeneralException, MKAuthException
 from cmk.gui.i18n import _, _u
 from cmk.gui.globals import html
@@ -187,7 +187,7 @@ def page_user_profile(change_pw=False):
                         raise MKUserError("password2", _("The both new passwords do not match."))
 
                     watolib.verify_password_policy(password)
-                    users[config.user.id]['password'] = encrypt_password(password)
+                    users[config.user.id]['password'] = hash_password(password)
                     users[config.user.id]['last_pw_change'] = int(time.time())
 
                     if change_pw:

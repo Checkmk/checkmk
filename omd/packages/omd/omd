@@ -737,7 +737,7 @@ def calculate_admin_password(options):
 
 
 def set_admin_password(pw):
-    file("%s/etc/htpasswd" % g_sitedir, "w").write("cmkadmin:%s\n" % encrypt_password(pw))
+    file("%s/etc/htpasswd" % g_sitedir, "w").write("cmkadmin:%s\n" % hash_password(pw))
 
 
 def file_owner_verify(path, user_id, group_id):
@@ -4478,7 +4478,7 @@ def random_password():
     return ''.join(random.choice(string.ascii_letters + string.digits) for i in range(8))
 
 
-def encrypt_password(password):
+def hash_password(password):
     return sha256_crypt.hash(password)
 
 #.

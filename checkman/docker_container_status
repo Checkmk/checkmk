@@ -7,6 +7,9 @@ description:
  Monitors the status of docker containers. A status of "running" is treated as OK,
  any other status is treated as CRIT.
 
+ To make this check work the agent plugin
+ {{mk_docker_container_piggybacked}} have to be installed.
+
 item:
  None
 

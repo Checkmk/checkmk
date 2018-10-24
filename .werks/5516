@@ -3,7 +3,7 @@ Level: 1
 Component: agents
 Compatible: compat
 Edition: cee
-Version: 1.5.0p7
+Version: 1.5.0p8
 Date: 1540222280
 Class: fix
 
@@ -13,7 +13,7 @@ while the server enforces HTTPS. The reason is that the POST data
 sent by the Agent Updater will be lost on the redirect.
 
 So far, this is normal HTTP behavior. Nonetheless, the Agent Updater
-now handles this situation by detecting the redirect and directly 
+now handles this situation by detecting the redirect and directly
 sending its data via (unverified) HTTPS.
 
 A warning will therefore be displayed to the user respectively written

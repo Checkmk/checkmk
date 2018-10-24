@@ -1,9 +1,9 @@
 include ../../Makefile.omd
 
-NAME     = perl-modules
-VERSION  = $(OMD_VERSION)
+NAME     := perl-modules
+VERSION  : $(OMD_VERSION)
 
-MODULES = \
+MODULES := \
           Capture-Tiny-0.27.tar.gz \
           Carp-Clan-6.04.tar.gz \
           Class-Accessor-0.34.tar.gz \
@@ -81,48 +81,60 @@ MODULES = \
           Nagios-Plugin-0.36.tar.gz \
           DateTime-1.18.tar.gz
 
-build:
-	mkdir -p $(PACKAGE_PERL_MODULES_DESTDIR)/dest
-	mkdir -p $(PACKAGE_PERL_MODULES_DESTDIR)/src
-	rsync -a src/. $(PACKAGE_PERL_MODULES_DESTDIR)/src/.
-	rsync -a build_module.pl lib $(PACKAGE_PERL_MODULES_DESTDIR)/src/.
+# Programms being called by make
+# TODO: Define only once
+MKDIR := $(shell which mkdir) -p
+RSYNC := $(shell which rsync) -a
+TOUCH := $(shell which touch)
+
+BUILD-HELPER-DIR := .$(NAME)-build-helper
+BUILD := $(BUILD-HELPER-DIR)/build
+
+build: $(BUILD)
+
+$(BUILD):
+	$(MKDIR) $(PACKAGE_PERL_MODULES_DESTDIR)/dest
+	$(MKDIR) $(PACKAGE_PERL_MODULES_DESTDIR)/src
+	$(RSYNC) src/. $(PACKAGE_PERL_MODULES_DESTDIR)/src/.
+	$(RSYNC) build_module.pl lib $(PACKAGE_PERL_MODULES_DESTDIR)/src/.
 	echo "install --install_base $(PACKAGE_PERL_MODULES_DESTDIR)/dest" > $(PACKAGE_PERL_MODULES_DESTDIR)/dest/.modulebuildrc
 	unset LANG; \
-	unset PERL5LIB; \
-	unset PERL_MB_OPT; \
-	unset PERL_LOCAL_LIB_ROOT; \
-	unset PERL_MM_OPT; \
-	export PATH=$(PACKAGE_PERL_MODULES_DESTDIR)/dest/bin:$$PATH; \
+	    unset PERL5LIB; \
+	    unset PERL_MB_OPT; \
+	    unset PERL_LOCAL_LIB_ROOT; \
+	    unset PERL_MM_OPT; \
+	    export PATH=$(PACKAGE_PERL_MODULES_DESTDIR)/dest/bin:$$PATH; \
 	    export PERL_MM_OPT=INSTALL_BASE=$(PACKAGE_PERL_MODULES_DESTDIR)/dest; \
 	    export PERL_MB_OPT=--install_base=$(PACKAGE_PERL_MODULES_DESTDIR)/dest; \
 	    export MODULEBUILDRC=$(PACKAGE_PERL_MODULES_DESTDIR)/dest/.modulebuildrc; \
 	    export PERL5LIB=$(PACKAGE_PERL_MODULES_PERL5LIB):$(PACKAGE_PERL_MODULES_DESTDIR)/src/lib:$(PACKAGE_PERL_MODULES_DESTDIR)/src/Crypt-SSLeay-0.72; \
-	    cd $(PACKAGE_PERL_MODULES_DESTDIR)/src && \
-	        FORCE=1 ./build_module.pl -d "$(DISTRO_INFO)" -p $(PACKAGE_PERL_MODULES_DESTDIR)/dest \
-	            ExtUtils-MakeMaker-*.tar.gz \
-	            parent-*.tar.gz \
-	            version-*.tar.gz \
-	            Module-CoreList-*.tar.gz \
-	            common-sense-*.tar.gz \
-	            Types-Serialiser-*.tar.gz \
-	            JSON-*.tar.gz; \
+	    cd $(PACKAGE_PERL_MODULES_DESTDIR)/src ; \
+		FORCE=1 ./build_module.pl -d "$(DISTRO_INFO)" -p $(PACKAGE_PERL_MODULES_DESTDIR)/dest \
+			ExtUtils-MakeMaker-*.tar.gz \
+			parent-*.tar.gz \
+		    version-*.tar.gz \
+		    Module-CoreList-*.tar.gz \
+		    common-sense-*.tar.gz \
+		    Types-Serialiser-*.tar.gz \
+		    JSON-*.tar.gz; \
 	    export PERL_JSON_BACKEND='JSON::XS'; \
-	    cd $(PACKAGE_PERL_MODULES_DESTDIR)/src && \
-	        ./build_module.pl -d "$(DISTRO_INFO)" -p $(PACKAGE_PERL_MODULES_DESTDIR)/dest $(MODULES)
-	cd $(PACKAGE_PERL_MODULES_PERL5LIB)/ && rm -f utils.pm && ln -s ../../../nagios/plugins/utils.pm .
-	mkdir -p $(PACKAGE_PERL_MODULES_PERL5LIB)/CPAN
+	    cd $(PACKAGE_PERL_MODULES_DESTDIR)/src ; \
+	    ./build_module.pl -d "$(DISTRO_INFO)" -p $(PACKAGE_PERL_MODULES_DESTDIR)/dest $(MODULES)
+	cd $(PACKAGE_PERL_MODULES_PERL5LIB)/ ; $(RM) utils.pm ; ln -s ../../../nagios/plugins/utils.pm .
+	$(MKDIR) $(PACKAGE_PERL_MODULES_PERL5LIB)/CPAN
 	cp MyConfig.pm $(PACKAGE_PERL_MODULES_PERL5LIB)/CPAN/MyConfig.skel
+	$(MKDIR) $(BUILD-HELPER-DIR)
+	$(TOUCH) $@
 
 install:
 	if [ -z $(DESTDIR) ]; then echo "cannot install without DESTDIR set!"; exit 1; fi
-	mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/perl5 $(DESTDIR)$(OMD_ROOT)/bin
-	rsync -a $(PACKAGE_PERL_MODULES_DESTDIR)/dest/lib $(DESTDIR)$(OMD_ROOT)/lib/perl5/
-	rsync -a $(PACKAGE_PERL_MODULES_DESTDIR)/dest/bin $(DESTDIR)$(OMD_ROOT)/lib/perl5/
-	mkdir -p $(DESTDIR)$(OMD_ROOT)/local/lib/perl5
+	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/lib/perl5 $(DESTDIR)$(OMD_ROOT)/bin
+	$(RSYNC) $(PACKAGE_PERL_MODULES_DESTDIR)/dest/lib $(DESTDIR)$(OMD_ROOT)/lib/perl5/
+	$(RSYNC) $(PACKAGE_PERL_MODULES_DESTDIR)/dest/bin $(DESTDIR)$(OMD_ROOT)/lib/perl5/
+	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/local/lib/perl5
 	install -m 755 bin/cpan.wrapper $(DESTDIR)$(OMD_ROOT)/bin/cpan.wrapper
-
 skel:
 	echo "install  --install_base  ###ROOT###/local/lib/perl5" > $(SKEL)/.modulebuildrc
 
 clean:
-	rm -rf src/inc $(PACKAGE_PERL_MODULES_DESTDIR)
+	$(RM) -r src/inc $(PACKAGE_PERL_MODULES_DESTDIR) $(BUILD-HELPER-DIR)

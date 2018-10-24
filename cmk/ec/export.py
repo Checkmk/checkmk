@@ -203,7 +203,7 @@ def load_config(settings):
     for path in [settings.paths.main_config_file.value] + \
             sorted(settings.paths.config_dir.value.glob('**/*.mk')):
         with open(str(path)) as file_object:
-            exec(file_object, config)  # pylint: disable=exec-used
+            exec (file_object, config)  # pylint: disable=exec-used
     config.pop("MkpRulePackProxy", None)
     _bind_to_rule_pack_proxies(config['rule_packs'], config['mkp_rule_packs'])
 

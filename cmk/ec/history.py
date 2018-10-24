@@ -33,8 +33,8 @@ import time
 import cmk.ec.actions
 import cmk.render
 
-
 # TODO: As one can see clearly below, we should really have a class hierarchy here...
+
 
 class History(object):
     def __init__(self, settings, config, logger, event_columns, history_columns):
@@ -92,7 +92,6 @@ class History(object):
 #   | The Event Log Archive can be stored in a MongoDB instead of files,   |
 #   | this section contains MongoDB related code.                          |
 #   '----------------------------------------------------------------------'
-
 
 try:
     from pymongo.connection import Connection
@@ -171,26 +170,20 @@ def _update_mongodb_history_lifetime(settings, config, mongodb):
         pass  # Ignore not existing index
 
     # Delete messages after x days
-    mongodb.db.ec_archive.ensure_index(
-        [('dt', DESCENDING)],
-        expireAfterSeconds=config['history_lifetime'] * 86400,
-        unique=False
-    )
+    mongodb.db.ec_archive.ensure_index([('dt', DESCENDING)],
+                                       expireAfterSeconds=config['history_lifetime'] * 86400,
+                                       unique=False)
 
 
 def _mongodb_next_id(mongodb, name, first_id=0):
     ret = mongodb.db.counters.find_and_modify(
-        query={'_id': name},
-        update={'$inc': {'seq': 1}},
-        new=True
-    )
+        query={'_id': name}, update={'$inc': {
+            'seq': 1
+        }}, new=True)
 
     if not ret:
         # Initialize the index!
-        mongodb.db.counters.insert({
-            '_id': name,
-            'seq': first_id
-        })
+        mongodb.db.counters.insert({'_id': name, 'seq': first_id})
         return first_id
     return ret['seq']
 
@@ -252,7 +245,8 @@ def _get_mongodb(history, query):
         elif operator_name == 'in':
             mongo_filter = {'$in': argument}
         else:
-            raise Exception('Filter operator of filter %s not implemented for MongoDB archive' % column_name)
+            raise Exception(
+                'Filter operator of filter %s not implemented for MongoDB archive' % column_name)
 
         if column_name[:6] == 'event_':
             query['event.' + column_name[6:]] = mongo_filter
@@ -302,6 +296,7 @@ def _get_mongodb(history, query):
 #   | Functions for logging the history of events                          |
 #   '----------------------------------------------------------------------'
 
+
 def _reload_configuration_files(history):
     pass
 
@@ -324,16 +319,14 @@ def _housekeeping_files(history):
 def _add_files(history, event, what, who, addinfo):
     _log_event(history._config, history._logger, event, what, who, addinfo)
     with history._lock:
-        columns = [
-            str(time.time()),
-            scrub_string(what),
-            scrub_string(who),
-            scrub_string(addinfo)
+        columns = [str(time.time()), scrub_string(what), scrub_string(who), scrub_string(addinfo)]
+        columns += [
+            quote_tab(event.get(colname[6:], defval))  # drop "event_"
+            for colname, defval in history._event_columns
         ]
-        columns += [quote_tab(event.get(colname[6:], defval))  # drop "event_"
-                    for colname, defval in history._event_columns]
 
-        with get_logfile(history._config, history._settings.paths.history_dir.value, history._active_history_period).open(mode='ab') as f:
+        with get_logfile(history._config, history._settings.paths.history_dir.value,
+                         history._active_history_period).open(mode='ab') as f:
             f.write("\t".join(map(cmk.ec.actions.to_utf8, columns)) + "\n")
 
 
@@ -374,8 +367,7 @@ def get_logfile(config, log_dir, active_history_period):
     if active_history_period.value is None or timestamp > active_history_period.value:
 
         # Look if newer files exist
-        timestamps = sorted(int(str(path.name)[:-4])
-                            for path in log_dir.glob('*.log'))
+        timestamps = sorted(int(str(path.name)[:-4]) for path in log_dir.glob('*.log'))
         if len(timestamps) > 0:
             timestamp = max(timestamps[-1], timestamp)
 
@@ -433,7 +425,7 @@ def _get_files(history, query):
         'event_owner',
         'event_ipaddress',
         'event_core_host',
-        ]
+    ]
     greptexts = []
     for column_name, operator_name, _predicate, argument in filters:
         # Make sure that the greptexts are in the same order as in the
@@ -448,8 +440,7 @@ def _get_files(history, query):
     greptexts.sort()
     greptexts = [x[1] for x in greptexts]
 
-    time_filters = [f for f in filters
-                    if f[0].split("_")[-1] == "time"]
+    time_filters = [f for f in filters if f[0].split("_")[-1] == "time"]
 
     # We do not want to open all files. So our strategy is:
     # look for "time" filters and first apply the filter to
@@ -526,35 +517,35 @@ def _parse_history_file(history, path, query, greptexts, limit, logger):
 # of log line back to Python values
 def _convert_history_line(history, values):
     # NOTE: history_line column is missing here, so indices are off by 1! :-P
-    values[0] = float(values[0])         # history_time
-    values[4] = int(values[4])           # event_id
-    values[5] = int(values[5])           # event_count
-    values[7] = float(values[7])         # event_first
-    values[8] = float(values[8])         # event_last
-    values[10] = int(values[10])         # event_sl
-    values[14] = int(values[14])         # event_pid
-    values[15] = int(values[15])         # event_priority
-    values[16] = int(values[16])         # event_facility
-    values[18] = int(values[18])         # event_state
-    values[21] = _unsplit(values[21])    # event_match_groups
+    values[0] = float(values[0])  # history_time
+    values[4] = int(values[4])  # event_id
+    values[5] = int(values[5])  # event_count
+    values[7] = float(values[7])  # event_first
+    values[8] = float(values[8])  # event_last
+    values[10] = int(values[10])  # event_sl
+    values[14] = int(values[14])  # event_pid
+    values[15] = int(values[15])  # event_priority
+    values[16] = int(values[16])  # event_facility
+    values[18] = int(values[18])  # event_state
+    values[21] = _unsplit(values[21])  # event_match_groups
     num_values = len(values)
-    if num_values <= 22:                 # event_contact_groups
+    if num_values <= 22:  # event_contact_groups
         values.append(None)
     else:
         values[22] = _unsplit(values[22])
-    if num_values <= 23:                 # event_ipaddress
+    if num_values <= 23:  # event_ipaddress
         values.append(history._history_columns[24][1])
-    if num_values <= 24:                 # event_orig_host
+    if num_values <= 24:  # event_orig_host
         values.append(history._history_columns[25][1])
-    if num_values <= 25:                 # event_contact_groups_precedence
+    if num_values <= 25:  # event_contact_groups_precedence
         values.append(history._history_columns[26][1])
-    if num_values <= 26:                 # event_core_host
+    if num_values <= 26:  # event_core_host
         values.append(history._history_columns[27][1])
-    if num_values <= 27:                 # event_host_in_downtime
+    if num_values <= 27:  # event_host_in_downtime
         values.append(history._history_columns[28][1])
     else:
         values[27] = values[27] == "1"
-    if num_values <= 28:                 # event_match_groups_syslog_application
+    if num_values <= 28:  # event_match_groups_syslog_application
         values.append(history._history_columns[29][1])
     else:
         values[28] = _unsplit(values[28])
@@ -599,10 +590,4 @@ def scrub_string(s):
 
 
 scrub_string.str_table = string.maketrans("\t", " ")
-scrub_string.unicode_table = {
-    0: None,
-    1: None,
-    2: None,
-    ord("\n"): None,
-    ord("\t"): ord(" ")
-}
+scrub_string.unicode_table = {0: None, 1: None, 2: None, ord("\n"): None, ord("\t"): ord(" ")}

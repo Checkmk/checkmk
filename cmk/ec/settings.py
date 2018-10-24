@@ -255,6 +255,5 @@ if __name__ == "__main__":
     import sys
     import cmk
     import cmk.paths
-    print(
-        settings(cmk.__version__, Path(cmk.paths.omd_root), Path(cmk.paths.default_config_dir),
-                 sys.argv))
+    print(settings(cmk.__version__, Path(cmk.paths.omd_root), Path(cmk.paths.default_config_dir),
+                   sys.argv))

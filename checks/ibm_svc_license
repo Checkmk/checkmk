@@ -58,18 +58,20 @@ def parse_ibm_svc_license(info):
             licenses[license_][1] = float(line[1])
     return licenses
 
-def inventory_ibm_svc_license(info):
-    return [ (license_, None)
-             for license_ in parse_ibm_svc_license(info) ]
+def inventory_ibm_svc_license(parsed):
+    for license, data in parsed.items():
+        if data != [0.0, 0.0]:
+            # Omit unused svc features
+            yield license, None
 
-def check_ibm_svc_license(item, params, info):
-    licenses = parse_ibm_svc_license(info)
-    licensed, used = licenses[item]
+def check_ibm_svc_license(item, params, parsed):
+    licensed, used = parsed[item]
     return license_check_levels(licensed, used, params)
 
 check_info["ibm_svc_license"] = {
     "check_function"        : check_ibm_svc_license,
     "inventory_function"    : inventory_ibm_svc_license,
+    "parse_function"        : parse_ibm_svc_license,
     "service_description"   : "License %s",
     "group"                 : "ibmsvc_licenses",
     "has_perfdata"          : True,

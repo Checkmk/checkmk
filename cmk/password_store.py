@@ -23,7 +23,6 @@
 # License along with GNU Make; see the file  COPYING.  If  not,  write
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
-
 """This module is meant to be used by active checks that support getting
 credentials from the Check_MK password store.
 
@@ -45,6 +44,7 @@ import cmk.store as store
 
 password_store_path = cmk.paths.var_dir + "/stored_passwords"
 
+
 def bail_out(s):
     sys.stdout.write("UNKNOWN - %s\n" % s)
     sys.exit(3)
@@ -52,10 +52,10 @@ def bail_out(s):
 
 def replace_passwords():
     if len(sys.argv) < 2:
-        return # command line too short
+        return  # command line too short
 
-    if not [ a for a in sys.argv if a.startswith("--pwstore")  ]:
-        return # no password store in use
+    if not [a for a in sys.argv if a.startswith("--pwstore")]:
+        return  # no password store in use
 
     # --pwstore=4@4@web,6@0@foo
     #  In the 4th argument at char 4 replace the following bytes

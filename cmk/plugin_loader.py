@@ -31,9 +31,11 @@ import importlib
 
 def load_plugins(init_file_path, package_name):
     plugin_files = sorted(glob.glob(os.path.join(os.path.dirname(init_file_path), "*.py")))
-    plugins = [os.path.basename(f)[:-3]
-               for f in plugin_files
-               if not os.path.basename(f)[:-3] in ["__init__", "utils"]]
+    plugins = [
+        os.path.basename(f)[:-3]
+        for f in plugin_files
+        if not os.path.basename(f)[:-3] in ["__init__", "utils"]
+    ]
 
     for plugin_name in plugins:
         importlib.import_module(package_name + '.' + plugin_name)

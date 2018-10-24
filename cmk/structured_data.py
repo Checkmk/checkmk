@@ -23,7 +23,6 @@
 # License along with GNU Make; see the file  COPYING.  If  not,  write
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
-
 """This module handles tree structures for HW/SW inventory system and
 structured monitoring data of Check_MK."""
 
@@ -34,7 +33,6 @@ import pprint
 
 import cmk.store as store
 from cmk.exceptions import MKGeneralException
-
 
 # TODO add type annotations for mypy
 # Example:
@@ -48,7 +46,6 @@ from cmk.exceptions import MKGeneralException
 #     """DOCSTRING"""
 #     ... do something
 #     return x*x
-
 
 #     ____            ____
 #    /    \          /    \     max. 1 per type
@@ -69,7 +66,6 @@ from cmk.exceptions import MKGeneralException
 #             A:    Attributes      (leaf)
 #             E:    Numeration      (leaf)
 
-
 #   .--StructuredDataTree--------------------------------------------------.
 #   |         ____  _                   _                      _           |
 #   |        / ___|| |_ _ __ _   _  ___| |_ _   _ _ __ ___  __| |          |
@@ -85,6 +81,7 @@ from cmk.exceptions import MKGeneralException
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
+
 class StructuredDataTree(object):
     """Interface for structured data tree"""
 
@@ -97,17 +94,14 @@ class StructuredDataTree(object):
     def get_dict(self, tree_path):
         return self._get_object(tree_path, Attributes())
 
-
     def get_list(self, tree_path):
         return self._get_object(tree_path, Numeration())
-
 
     def _get_object(self, tree_path, child):
         self._validate_tree_path(tree_path)
         path = self._parse_tree_path(tree_path)
         parent = self._create_hierarchy(path[:-1])
         return parent.add_child(path[-1], child, tuple(path)).get_child_data()
-
 
     def _validate_tree_path(self, tree_path):
         if not tree_path:
@@ -119,14 +113,12 @@ class StructuredDataTree(object):
         if bool(re.compile('[^a-zA-Z0-9_.:-]').search(tree_path)):
             raise MKGeneralException("Specified tree path contains unexpected characters.")
 
-
     def _parse_tree_path(self, tree_path):
         if tree_path.startswith("."):
             tree_path = tree_path[1:]
         if tree_path.endswith(":") or tree_path.endswith("."):
             tree_path = tree_path[:-1]
         return tree_path.split(".")
-
 
     def _create_hierarchy(self, path):
         if not path:
@@ -149,17 +141,14 @@ class StructuredDataTree(object):
         # Inform Livestatus about the latest inventory update
         store.save_file("%s/.last" % path, "")
 
-
     def load_from(self, filepath):
         raw_tree = store.load_data_from_file(filepath)
         return self.create_tree_from_raw_tree(raw_tree)
-
 
     def create_tree_from_raw_tree(self, raw_tree):
         if raw_tree:
             self._create_hierarchy_from_data(raw_tree, self._root, tuple())
         return self
-
 
     def _create_hierarchy_from_data(self, raw_tree, parent, parent_path):
         for edge, attrs in raw_tree.iteritems():
@@ -184,7 +173,6 @@ class StructuredDataTree(object):
                     container = parent.add_child(edge, Container(), abs_path)
                     self._create_hierarchy_from_data(sub_raw_tree, container, abs_path)
 
-
     def _get_child_data(self, raw_entries):
         leaf_data = {}
         sub_raw_tree = {}
@@ -208,7 +196,6 @@ class StructuredDataTree(object):
                 leaf_data.setdefault(k, v)
         return sub_raw_tree, leaf_data
 
-
     def _is_numeration(self, entries):
         for entry in entries:
             # Skipping invalid entries such as
@@ -226,46 +213,35 @@ class StructuredDataTree(object):
     def is_empty(self):
         return self._root.is_empty()
 
-
     def is_equal(self, struct_tree, edges=None):
         return self._root.is_equal(struct_tree._root, edges=edges)
-
 
     def count_entries(self):
         return self._root.count_entries()
 
-
     def get_raw_tree(self):
         return self._root.get_raw_tree()
-
 
     def normalize_nodes(self):
         self._root.normalize_nodes()
 
-
     def merge_with(self, struct_tree):
         self._root.merge_with(struct_tree._root)
-
 
     def has_edge(self, edge):
         return self._root.has_edge(edge)
 
-
     def get_children(self, edges=None):
         return self._root.get_children(edges=edges)
-
 
     def get_sub_container(self, path):
         return self._root.get_sub_container(path)
 
-
     def get_sub_numeration(self, path):
         return self._root.get_sub_numeration(path)
 
-
     def get_sub_attributes(self, path):
         return self._root.get_sub_attributes(path)
-
 
     def get_sub_children(self, path):
         return self._root.get_sub_children(path)
@@ -278,16 +254,13 @@ class StructuredDataTree(object):
         delta._root = delta_tree
         return new, changed, removed, delta
 
-
     def copy(self):
         new = StructuredDataTree()
         new._root = self._root.copy()
         return new
 
-
     def get_root_container(self):
         return self._root
-
 
     def get_filtered_tree(self, allowed_paths):
         if allowed_paths is None:
@@ -305,7 +278,6 @@ class StructuredDataTree(object):
     def get_tree_repr(self):
         # Just for testing
         return self._root.get_tree_repr()
-
 
     def __repr__(self):
         return "%s(%s)" % (self.__class__.__name__, pprint.pformat(self.get_raw_tree()))
@@ -325,42 +297,35 @@ class StructuredDataTree(object):
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
+
 class NodeAttribute(object):
     """Interface for all node attributes"""
 
     def is_empty(self):
         raise NotImplementedError()
 
-
     def is_equal(self, foreign, edges=None):
         """At the moment 'edges' argument just allowed for root node."""
         raise NotImplementedError()
 
-
     def count_entries(self):
         raise NotImplementedError()
-
 
     def compare_with(self, old, keep_identical=False):
         """Compares new tree with old one: new_tree.compare_with(old_tree)."""
         raise NotImplementedError()
 
-
     def get_delta_tree(self, mode):
         raise NotImplementedError()
-
 
     def get_raw_tree(self):
         raise NotImplementedError()
 
-
     def normalize_nodes(self):
         raise NotImplementedError()
 
-
     def merge_with(self, foreign):
         raise NotImplementedError()
-
 
     def copy(self):
         raise NotImplementedError()
@@ -370,7 +335,6 @@ class NodeAttribute(object):
     def get_tree_repr(self):
         # Just for testing
         raise NotImplementedError()
-
 
     def __repr__(self):
         return "%s(%s)" % (self.__class__.__name__, pprint.pformat(self.get_raw_tree()))
@@ -390,18 +354,17 @@ class NodeAttribute(object):
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
+
 class Container(NodeAttribute):
     def __init__(self):
         super(Container, self).__init__()
         self._edges = {}
-
 
     def is_empty(self):
         for _, __, child in self.get_children():
             if not child.is_empty():
                 return False
         return True
-
 
     def is_equal(self, foreign, edges=None):
         for _, __, my_child, foreign_child in \
@@ -410,10 +373,8 @@ class Container(NodeAttribute):
                 return False
         return True
 
-
     def count_entries(self):
         return sum([child.count_entries() for _, __, child in self.get_children()])
-
 
     def compare_with(self, old, keep_identical=False):
         my_edges = set(self._edges.keys())
@@ -452,13 +413,11 @@ class Container(NodeAttribute):
 
         return new, changed, removed, delta
 
-
     def get_delta_tree(self, mode):
         delta = Container()
         for edge, abs_path, child in self.get_children():
             delta.add_child(edge, child.get_delta_tree(mode), abs_path)
         return delta
-
 
     def get_raw_tree(self):
         tree = {}
@@ -472,14 +431,12 @@ class Container(NodeAttribute):
                 tree.setdefault(edge, {}).update(child_tree)
         return tree
 
-
     def _is_nested_numeration_tree(self, child):
         if isinstance(child, Container):
             for key in child._edges.keys():
                 if isinstance(key, int):
                     return True
         return False
-
 
     def normalize_nodes(self):
         """
@@ -495,13 +452,11 @@ numerated nodes ('arrays') containing real numerations ('devices').
         for edge, abs_path, child in self.get_children():
             if isinstance(child, Numeration) and \
                self._has_nested_numeration_node(child.get_child_data()):
-                self._set_nested_numeration_node(edge, child.get_child_data(),
-                                                 abs_path)
+                self._set_nested_numeration_node(edge, child.get_child_data(), abs_path)
             if child.is_empty():
                 self._edges[edge].remove_node_child(child)
                 continue
             child.normalize_nodes()
-
 
     def _has_nested_numeration_node(self, node_data):
         for entry in node_data:
@@ -509,7 +464,6 @@ numerated nodes ('arrays') containing real numerations ('devices').
                 if isinstance(v, list):
                     return True
         return False
-
 
     def _set_nested_numeration_node(self, edge, child_data, abs_path):
         del self._edges[edge]
@@ -524,16 +478,14 @@ numerated nodes ('arrays') containing real numerations ('devices').
                 else:
                     attrs.setdefault(k, v)
             if attrs:
-                attributes = parent.add_child(nr, Attributes(), abs_path+(nr,))
+                attributes = parent.add_child(nr, Attributes(), abs_path + (nr,))
                 attributes.set_child_data(attrs)
-
 
     def merge_with(self, foreign):
         for edge, abs_path, my_child, foreign_child in \
             self._get_comparable_children(foreign):
             my_child = self.add_child(edge, my_child, abs_path)
             my_child.merge_with(foreign_child)
-
 
     def copy(self):
         new = Container()
@@ -558,10 +510,8 @@ numerated nodes ('arrays') containing real numerations ('devices').
         node = self._edges.setdefault(edge, Node(abs_path))
         return node.add_node_child(child)
 
-
     def has_edge(self, edge):
         return bool(self._edges.get(edge))
-
 
     def get_filtered_branch(self, path, keys, parent):
         sub_node = self._get_sub_node(path[:1])
@@ -599,7 +549,6 @@ numerated nodes ('arrays') containing real numerations ('devices').
     def get_edge_nodes(self):
         return self._edges.iteritems()
 
-
     def get_children(self, edges=None):
         """Returns a flatten list of tuples (edge, absolute path, child)"""
         children = set()
@@ -617,7 +566,6 @@ numerated nodes ('arrays') containing real numerations ('devices').
                     children.add((edge, node_abs_path, child))
         return children
 
-
     def _get_comparable_children(self, foreign, edges=None):
         """Returns a flatten list of tuples (edge, absolute path, my child, foreign child)"""
         comparable_children = set()
@@ -631,13 +579,11 @@ numerated nodes ('arrays') containing real numerations ('devices').
                 comparable_children.add((edge, abs_path, my_child, foreign_child))
         return comparable_children
 
-
     def get_sub_container(self, path):
         sub_node = self._get_sub_node(path)
         if sub_node is None:
             return None
         return sub_node.get_node_container()
-
 
     def get_sub_numeration(self, path):
         sub_node = self._get_sub_node(path)
@@ -645,20 +591,17 @@ numerated nodes ('arrays') containing real numerations ('devices').
             return None
         return sub_node.get_node_numeration()
 
-
     def get_sub_attributes(self, path):
         sub_node = self._get_sub_node(path)
         if sub_node is None:
             return None
         return sub_node.get_node_attributes()
 
-
     def get_sub_children(self, path):
         sub_node = self._get_sub_node(path)
         if sub_node is None:
             return None
         return sub_node.get_node_children()
-
 
     def _get_sub_node(self, path):
         if not path:
@@ -693,24 +636,21 @@ numerated nodes ('arrays') containing real numerations ('devices').
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
+
 class Leaf(NodeAttribute):
     """Interface for all primitive nodes/leaves"""
 
     def normalize_nodes(self):
         pass
 
-
     def set_child_data(self, data):
         raise NotImplementedError()
-
 
     def get_child_data(self):
         raise NotImplementedError()
 
-
     def get_filtered_data(self, keys):
         raise NotImplementedError()
-
 
     def _compare_entries(self, new_entries, old_entries):
         """
@@ -734,10 +674,9 @@ Format of compared entries:
                 changed.setdefault(k, (old_v, new_v))
         return new, changed, removed, identical
 
-
     def _get_filtered_entries(self, entries, keys):
         filtered = {}
-        for k,v in entries.iteritems():
+        for k, v in entries.iteritems():
             if k in keys:
                 filtered.setdefault(k, v)
             else:
@@ -754,23 +693,20 @@ Format of compared entries:
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
+
 class Numeration(Leaf):
     def __init__(self):
         super(Numeration, self).__init__()
         self._numeration = []
 
-
     def is_empty(self):
         return self._numeration == []
-
 
     def is_equal(self, foreign, edges=None):
         return self._numeration == foreign._numeration
 
-
     def count_entries(self):
         return sum(map(len, self._numeration))
-
 
     def compare_with(self, old, keep_identical=False):
         if len(self._numeration) == len(old._numeration):
@@ -785,7 +721,6 @@ class Numeration(Leaf):
         else:
             delta = None
         return new, changed, removed, delta
-
 
     def _compare_with_fixed_length(self, old, keep_identical=False):
         # In this case we assume that each entry corresponds to the
@@ -808,7 +743,6 @@ class Numeration(Leaf):
                 data.append(entry)
         return new, changed, removed, data
 
-
     def _compare_with_different_length(self, old, keep_identical=False):
         my_converted = self._convert_numeration()
         old_converted = old._convert_numeration()
@@ -825,13 +759,13 @@ class Numeration(Leaf):
             for index in my_converted[new_key].keys():
                 my_entry = self._numeration[index]
                 new += len(my_entry)
-                data.append({k: (None,v) for k,v in my_entry.iteritems()})
+                data.append({k: (None, v) for k, v in my_entry.iteritems()})
 
         for removed_key in removed_keys:
             for index in old_converted[removed_key].keys():
                 old_entry = old._numeration[index]
                 removed += len(old_entry)
-                data.append({k: (v,None) for k,v in old_entry.iteritems()})
+                data.append({k: (v, None) for k, v in old_entry.iteritems()})
 
         for intersect_key in intersect_keys:
             my_entries = my_converted[intersect_key].values()
@@ -855,46 +789,42 @@ class Numeration(Leaf):
                 new_entries = my_entries - old_entries
                 removed_entries = old_entries - my_entries
                 for new_entry in new_entries:
-                    data.append({k: (None,v) for k,v in zip(intersect_key, new_entry)})
+                    data.append({k: (None, v) for k, v in zip(intersect_key, new_entry)})
                 for removed_entry in removed_entries:
-                    data.append({k: (v,None) for k,v in zip(intersect_key, removed_entry)})
+                    data.append({k: (v, None) for k, v in zip(intersect_key, removed_entry)})
                 new += len(new_entries)
                 removed += len(removed_entries)
                 if keep_identical:
                     for _intersect_entry in my_entries.intersection(old_entries):
-                        data.append({k: (v,v) for k,v in zip(intersect_key, old_entry)})
+                        data.append({k: (v, v) for k, v in zip(intersect_key, old_entry)})
         return new, changed, removed, data
-
 
     def _convert_numeration(self):
         converted = {}
         for index, entry in enumerate(self._numeration):
             key, values = [], []
-            for k,v in sorted(entry.iteritems()):
+            for k, v in sorted(entry.iteritems()):
                 key.append(k)
                 values.append(v)
             entries = converted.setdefault(tuple(key), {})
             entries.setdefault(index, tuple(values))
         return converted
 
-
     def get_delta_tree(self, mode):
         delta = Numeration()
         data = []
         for entry in self._numeration:
             if mode == "new":
-                data.append({k: (None,v) for k,v in entry.iteritems()})
+                data.append({k: (None, v) for k, v in entry.iteritems()})
             elif mode == "removed":
-                data.append({k: (v,None) for k,v in entry.iteritems()})
+                data.append({k: (v, None) for k, v in entry.iteritems()})
             else:
                 break
         delta.set_child_data(data)
         return delta
 
-
     def get_raw_tree(self):
         return self._numeration
-
 
     def merge_with(self, foreign):
         foreign_keys = foreign._get_numeration_keys()
@@ -909,8 +839,9 @@ class Numeration(Leaf):
 
         # Try to match rows of both trees based on the keys that are found in
         # both. Matching rows are updated. Others are appended.
-        foreign_num = {foreign._prepare_key(entry, intersect_keys): entry
-                       for entry in foreign._numeration}
+        foreign_num = {
+            foreign._prepare_key(entry, intersect_keys): entry for entry in foreign._numeration
+        }
 
         for entry in self._numeration:
             key = self._prepare_key(entry, intersect_keys)
@@ -920,17 +851,14 @@ class Numeration(Leaf):
 
         self._numeration += foreign_num.values()
 
-
     def _get_numeration_keys(self):
         keys = set()
         for entry in self._numeration:
             keys.update(entry.keys())
         return keys
 
-
     def _prepare_key(self, entry, keys):
         return tuple(entry[key] for key in sorted(keys) if key in entry)
-
 
     def copy(self):
         new = Numeration()
@@ -948,10 +876,8 @@ class Numeration(Leaf):
     def set_child_data(self, data):
         self._numeration += data
 
-
     def get_child_data(self):
         return self._numeration
-
 
     def get_filtered_data(self, keys):
         filtered = Numeration()
@@ -976,23 +902,20 @@ class Numeration(Leaf):
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
+
 class Attributes(Leaf):
     def __init__(self):
         super(Attributes, self).__init__()
         self._attributes = {}
 
-
     def is_empty(self):
         return self._attributes == {}
-
 
     def is_equal(self, foreign, edges=None):
         return self._attributes == foreign._attributes
 
-
     def count_entries(self):
         return len(self._attributes)
-
 
     def compare_with(self, old, keep_identical=False):
         new, changed, removed, identical = \
@@ -1008,26 +931,22 @@ class Attributes(Leaf):
             delta = None
         return len(new), len(changed), len(removed), delta
 
-
     def get_delta_tree(self, mode):
         delta = Attributes()
         if mode == "new":
-            data = {k: (None,v) for k,v in self._attributes.iteritems()}
+            data = {k: (None, v) for k, v in self._attributes.iteritems()}
         elif mode == "removed":
-            data = {k: (v,None) for k,v in self._attributes.iteritems()}
+            data = {k: (v, None) for k, v in self._attributes.iteritems()}
         else:
             data = {}
         delta.set_child_data(data)
         return delta
 
-
     def get_raw_tree(self):
         return self._attributes
 
-
     def merge_with(self, foreign):
         self._attributes.update(foreign._attributes)
-
 
     def copy(self):
         new = Attributes()
@@ -1045,10 +964,8 @@ class Attributes(Leaf):
     def set_child_data(self, data):
         self._attributes.update(data)
 
-
     def get_child_data(self):
         return self._attributes
-
 
     def get_filtered_data(self, keys):
         filtered = Attributes()
@@ -1071,6 +988,7 @@ class Attributes(Leaf):
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
+
 class Node(object):
     """Node contains max. one node attribute per type."""
 
@@ -1084,36 +1002,28 @@ class Node(object):
         else:
             self._abs_path = abs_path
 
-
     def get_absolute_path(self):
         return self._abs_path
 
-
     def add_node_child(self, child):
         return self._children.setdefault(type(child), child)
-
 
     def remove_node_child(self, child):
         child_type = type(child)
         if child_type in self._children:
             del self._children[child_type]
 
-
     def get_node_container(self, default=None):
         return self._children.get(type(Container()), default)
-
 
     def get_node_numeration(self, default=None):
         return self._children.get(type(Numeration()), default)
 
-
     def get_node_attributes(self, default=None):
         return self._children.get(type(Attributes()), default)
 
-
     def get_node_children(self):
         return set(self._children.values())
-
 
     def get_comparable_node_children(self, foreign):
         # If we merge empty tree with existing one
@@ -1130,11 +1040,9 @@ class Node(object):
             if self._children.get(child_type) is None \
                and foreign._children.get(child_type) is None:
                 continue
-            comparable_children.add((abs_path,
-                                     self._children.get(child_type, child),
+            comparable_children.add((abs_path, self._children.get(child_type, child),
                                      foreign._children.get(child_type, child)))
         return comparable_children
-
 
     def copy(self):
         new = Node(self.get_absolute_path())

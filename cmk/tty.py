@@ -23,7 +23,6 @@
 # License along with GNU Make; see the file  COPYING.  If  not,  write
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
-
 """This module contains constants and functions for neat output formating
 on ttys while being compatible when the command is not attached to a TTY"""
 
@@ -34,41 +33,37 @@ import termios
 import io
 
 if sys.stdout.isatty():
-    red       = '\033[31m'
-    green     = '\033[32m'
-    yellow    = '\033[33m'
-    blue      = '\033[34m'
-    magenta   = '\033[35m'
-    cyan      = '\033[36m'
-    white     = '\033[37m'
-    bgblue    = '\033[44m'
+    red = '\033[31m'
+    green = '\033[32m'
+    yellow = '\033[33m'
+    blue = '\033[34m'
+    magenta = '\033[35m'
+    cyan = '\033[36m'
+    white = '\033[37m'
+    bgblue = '\033[44m'
     bgmagenta = '\033[45m'
-    bgwhite   = '\033[47m'
-    bold      = '\033[1m'
+    bgwhite = '\033[47m'
+    bold = '\033[1m'
     underline = '\033[4m'
-    normal    = '\033[0m'
+    normal = '\033[0m'
 else:
-    red       = ''
-    green     = ''
-    yellow    = ''
-    blue      = ''
-    magenta   = ''
-    cyan      = ''
-    white     = ''
-    bgblue    = ''
+    red = ''
+    green = ''
+    yellow = ''
+    blue = ''
+    magenta = ''
+    cyan = ''
+    white = ''
+    bgblue = ''
     bgmagenta = ''
-    bold      = ''
+    bold = ''
     underline = ''
-    normal    = ''
+    normal = ''
 
 ok = green + bold + 'OK' + normal
 
-states = {
-    0: green,
-    1: yellow,
-    2: red,
-    3: magenta
-}
+states = {0: green, 1: yellow, 2: red, 3: magenta}
+
 
 def colorset(fg=-1, bg=-1, attr=-1):
     if not sys.stdout.isatty():
@@ -92,7 +87,7 @@ def get_size():
         if lines > 0 and columns > 0:
             return lines, columns
     except io.UnsupportedOperation:
-        pass # When sys.stdout is StringIO() or similar, then .fileno() is not available
+        pass  # When sys.stdout is StringIO() or similar, then .fileno() is not available
     except IOError, e:
         if e.errno == 25:
             # Inappropriate ioctl for device: Occurs when redirecting output
@@ -111,14 +106,14 @@ def print_table(headers, colors, rows, indent=""):
     lengths = _column_lengths(headers, rows, num_columns)
     fmt = _row_template(lengths, colors, indent)
 
-    for index, row in enumerate([ headers ] + rows):
+    for index, row in enumerate([headers] + rows):
         sys.stdout.write(fmt % tuple(_make_utf8(c) for c in row[:num_columns]))
         if index == 0:
             sys.stdout.write(fmt % tuple("-" * l for l in lengths))
 
 
 def _column_lengths(headers, rows, num_columns):
-    lengths = [ len(h) for h in headers ]
+    lengths = [len(h) for h in headers]
     for row in rows:
         for index, column in enumerate(row[:num_columns]):
             lengths[index] = max(len(_make_utf8(column)), lengths[index])
@@ -128,7 +123,7 @@ def _column_lengths(headers, rows, num_columns):
 def _row_template(lengths, colors, indent):
     fmt = indent
     sep = ""
-    for l,c in zip(lengths, colors):
+    for l, c in zip(lengths, colors):
         fmt += c + sep + "%-" + str(l) + "s" + normal
         sep = " "
     fmt += "\n"

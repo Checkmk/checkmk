@@ -26,6 +26,7 @@
 
 from cmk.i18n import _
 
+
 # never used directly in the code. Just some wrapper to make all of our
 # exceptions handleable with one call
 class MKException(Exception):

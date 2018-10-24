@@ -23,7 +23,6 @@
 # License along with GNU Make; see the file  COPYING.  If  not,  write
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
-
 """A helper module to implement profiling functionalitiy. The main part
 is to provide a contextmanager that can be added to existing code with
 minimal changes."""
@@ -41,14 +40,12 @@ class Profile(object):
         self._kwargs = kwargs
         self._profile = None
 
-
     def __enter__(self):
         if self._enabled:
             cmk.log.logger.info("Recording profile")
             self._profile = cProfile.Profile(**self._kwargs)
             self._profile.enable()
         return self
-
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         if not self._enabled:
@@ -62,11 +59,11 @@ class Profile(object):
             self._profile.dump_stats(self._profile_file)
             cmk.log.logger.info("Created profile file: %s", self._profile_file)
 
-            file(self._profile_file + ".py", "w").write(
-                "#!/usr/bin/env python\n"
-                "import pstats\n"
-                "stats = pstats.Stats(%r)\n"
-                "stats.sort_stats('time').print_stats()\n" % self._profile_file)
+            file(self._profile_file + ".py",
+                 "w").write("#!/usr/bin/env python\n"
+                            "import pstats\n"
+                            "stats = pstats.Stats(%r)\n"
+                            "stats.sort_stats('time').print_stats()\n" % self._profile_file)
             os.chmod(self._profile_file + ".py", 0o755)
             cmk.log.logger.info("Created profile dump script: %s.py", self._profile_file)
 
@@ -83,12 +80,14 @@ Examples:
   @cmk.profile.profile_call(base_dir="/PATH/TO/DIR", enabled=True)
   @cmk.profile.profile_call(base_dir="/PATH/TO/DIR", enabled=False)
 """
+
     def decorate(f):
         def wrapper(*args, **kwargs):
             filepath = "%s/%s_%s.profile" % \
                 (base_dir.rstrip("/"), f.__name__, time.time())
-            with Profile(enabled=enabled,
-                         profile_file=filepath):
-               return f(*args, **kwargs)
+            with Profile(enabled=enabled, profile_file=filepath):
+                return f(*args, **kwargs)
+
         return wrapper
+
     return decorate

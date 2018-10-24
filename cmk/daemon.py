@@ -146,6 +146,6 @@ def set_procname(cmdline):
     # This is for example used by top and killall
     #libc.prctl(15, new_cmdline, 0, 0, 0)
 
-    name_buffer = ctypes.create_string_buffer(len(cmdline)+1)
+    name_buffer = ctypes.create_string_buffer(len(cmdline) + 1)
     name_buffer.value = cmdline
     libc.prctl(15, ctypes.byref(name_buffer), 0, 0, 0)

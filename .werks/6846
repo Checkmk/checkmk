@@ -1,0 +1,27 @@
+Title: More secure password hashing
+Level: 2
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1540187529
+Class: security
+
+Passwords of local users of the Check_MK GUI are now hashed using SHA256
+(salted, 535000 rounds) to increase the security of the stored user logon
+passwords.
+
+All existing users will still be able to login using their already hashed
+passwords. Once a user changes his password or a new user is created, these
+will be hashed using the new algorithm.
+
+Why SHA256? Check_MK supports different authentication frontends for verifying
+the local credentials: a) basic authentication (done by apache) and b) the GUI
+form + cookie based authentication. 
+
+The default is b). This option is toggled with the "omd config" option
+MULTISITE_COOKIE_AUTH. In case the basic authentication is chosen it is only
+possible to use hashing algorithms that are supported by apache which
+performs the authentication in this situation.
+
+For best compatibility in all mentioned situations we use the SHA256 scheme.

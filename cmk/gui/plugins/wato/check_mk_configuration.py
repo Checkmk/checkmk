@@ -34,12 +34,39 @@ import cmk.gui.sites as sites
 import cmk.gui.config as config
 import cmk.gui.watolib as watolib
 import cmk.gui.userdb as userdb
+import cmk.gui.utils as utils
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.valuespec import *
 from cmk.gui.i18n import _
-from cmk.gui.globals import html
 
-from . import (
+from cmk.gui.valuespec import (
+    Dictionary,
+    TextAscii,
+    TextUnicode,
+    DropdownChoice,
+    Tuple,
+    ListOf,
+    Integer,
+    Float,
+    Transform,
+    ListOfStrings,
+    IPNetwork,
+    CascadingDropdown,
+    MonitoringState,
+    RegExpUnicode,
+    IconSelector,
+    PasswordSpec,
+    ListOfTimeRanges,
+    Age,
+    FixedValue,
+    Optional,
+    Alternative,
+    ListChoice,
+    Checkbox,
+    ID,
+    ListOfCAs,
+)
+
+from cmk.gui.plugins.wato import (
     configvar_order,
     site_neutral_path,
     register_configvar,

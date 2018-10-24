@@ -35,7 +35,20 @@ import cmk.gui.pages
 import cmk.gui.utils as utils
 from cmk.gui.log import logger
 from cmk.gui.exceptions import MKGeneralException, MKAuthException, MKUserError
-from cmk.gui.valuespec import *
+from cmk.gui.valuespec import (
+    Dictionary,
+    CascadingDropdown,
+    ListChoice,
+    ValueSpec,
+    ListOfMultiple,
+    FixedValue,
+    IconSelector,
+    TextUnicode,
+    TextAscii,
+    TextAreaUnicode,
+    type_name,
+)
+import cmk.gui.forms as forms
 import cmk.gui.config as config
 import cmk.gui.table as table
 import cmk.gui.userdb as userdb

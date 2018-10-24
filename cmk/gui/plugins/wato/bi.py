@@ -40,14 +40,35 @@ else:
 import cmk.gui.config as config
 import cmk.gui.userdb as userdb
 import cmk.gui.table as table
+import cmk.gui.forms as forms
 import cmk.gui.watolib as watolib
-from cmk.gui.valuespec import *
 from cmk.gui.exceptions import MKUserError, MKGeneralException, MKAuthException
+from cmk.gui.valuespec import (
+    Tuple,
+    Transform,
+    Percentage,
+    Integer,
+    Alternative,
+    FixedValue,
+    TextAscii,
+    Dictionary,
+    MonitoringState,
+    IconSelector,
+    ListOf,
+    CascadingDropdown,
+    ListOfStrings,
+    Checkbox,
+    TextUnicode,
+    TextAreaUnicode,
+    Optional,
+    ID,
+    DropdownChoice,
+)
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
 from cmk.gui.htmllib import HTML
 
-from . import (
+from cmk.gui.plugins.wato import (
     WatoMode,
     WatoModule,
     mode_registry,

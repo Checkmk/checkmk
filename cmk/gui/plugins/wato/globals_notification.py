@@ -31,11 +31,20 @@
 
 import cmk.paths
 
-from cmk.gui.valuespec import *
+from cmk.gui.valuespec import (
+    Age,
+    TextUnicode,
+    Integer,
+    Tuple,
+    ListOf,
+    DropdownChoice,
+    Transform,
+    EmailAddress,
+    Checkbox,
+)
 from cmk.gui.i18n import _
-from cmk.gui.globals import html
 
-from . import (
+from cmk.gui.plugins.wato import (
     configvar_order,
     register_configvar,
     site_neutral_path,

@@ -43,13 +43,13 @@ import cmk.gui.plugins.config
 # This import is added for static analysis tools like pylint to make them
 # know about all shipped config options. The default config options are
 # later handled with the default_config dict and _load_default_config()
-from cmk.gui.plugins.config.base import *
+from cmk.gui.plugins.config.base import * # pylint: disable=wildcard-import,unused-wildcard-import
 
 if not cmk.is_raw_edition():
-    from cmk.gui.cee.plugins.config.cee import *
+    from cmk.gui.cee.plugins.config.cee import * # pylint: disable=wildcard-import,unused-wildcard-import
 
 if cmk.is_managed_edition():
-    from cmk.gui.cme.plugins.config.cme import *
+    from cmk.gui.cme.plugins.config.cme import * # pylint: disable=wildcard-import,unused-wildcard-import
 
 #   .--Declarations--------------------------------------------------------.
 #   |       ____            _                 _   _                        |

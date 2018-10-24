@@ -130,7 +130,6 @@ from cmk.gui.htmllib import HTML
 from cmk.gui.exceptions import MKGeneralException, MKUserError, MKAuthException, \
                            MKInternalError, MKException
 from cmk.gui.log import logger
-from cmk.gui.valuespec import *
 from cmk.gui.display_options import display_options
 
 from cmk.gui.plugins.wato.utils.base_modes import WatoMode, WatoWebApiMode
@@ -247,6 +246,7 @@ wato_root_dir = watolib.wato_root_dir
 multisite_dir = watolib.multisite_dir
 
 # TODO: Kept for old plugin compatibility. Remove this one day
+from cmk.gui.valuespec import * # pylint: disable=wildcard-import
 syslog_facilities = cmk.gui.mkeventd.syslog_facilities
 ALL_HOSTS         = watolib.ALL_HOSTS
 ALL_SERVICES      = watolib.ALL_SERVICES

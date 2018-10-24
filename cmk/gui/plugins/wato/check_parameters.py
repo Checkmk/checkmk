@@ -29,9 +29,39 @@ import cmk.defines as defines
 from cmk.gui.plugins.wato.active_checks import check_icmp_params
 
 import cmk.gui.mkeventd as mkeventd
+from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import *
-from . import (
+from cmk.gui.valuespec import (
+    Dictionary,
+    Tuple,
+    Integer,
+    Float,
+    TextAscii,
+    Age,
+    DropdownChoice,
+    Checkbox,
+    RegExp,
+    Filesize,
+    Alternative,
+    Percentage,
+    ListChoice,
+    Transform,
+    ListOf,
+    ListOfStrings,
+    ListOfTimeRanges,
+    CascadingDropdown,
+    FixedValue,
+    Optional,
+    MonitoringState,
+    DualListChoice,
+    RadioChoice,
+    IPv4Address,
+    TextUnicode,
+    OptionalDropdownChoice,
+    ListOfIntegers,
+    RegExpUnicode,
+)
+from cmk.gui.plugins.wato import (
     register_rulegroup,
     register_rule,
     register_check_parameters,

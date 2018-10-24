@@ -24,15 +24,26 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+import time
+
 import cmk.gui.config as config
 import cmk.gui.availability as availability
 import cmk.gui.table as table
 import cmk.gui.bi as bi
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
-from cmk.gui.valuespec import *
+from cmk.gui.exceptions import MKUserError
+from cmk.gui.valuespec import (
+    TextAreaUnicode,
+    TextAscii,
+    Dictionary,
+    TextUnicode,
+    Optional,
+    AbsoluteDate,
+    DropdownChoice,
+)
 
-from . import (
+from cmk.gui.plugins.views import (
     view_title,
     display_options,
 )

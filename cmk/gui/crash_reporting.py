@@ -24,6 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+import os
 import subprocess
 import base64
 import time
@@ -43,7 +44,11 @@ from cmk.gui.htmllib import HTML
 import cmk.gui.userdb as userdb
 import cmk.gui.sites as sites
 from cmk.gui.exceptions import MKGeneralException, MKUserError
-from cmk.gui.valuespec import *
+from cmk.gui.valuespec import (
+    EmailAddress,
+    TextUnicode,
+    Dictionary,
+)
 import cmk.gui.config as config
 import cmk.gui.forms as forms
 import cmk.crash_reporting

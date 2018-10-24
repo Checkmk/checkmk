@@ -24,10 +24,20 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+import cmk.gui.utils as utils
 from cmk.gui.config import theme_choices
-from cmk.gui.valuespec import *
+from cmk.gui.valuespec import (
+    DropdownChoice,
+    FixedValue,
+    Alternative,
+    Transform,
+    TextAscii,
+    AbsoluteDate,
+    Tuple,
+    Dictionary,
+    Checkbox,
+)
 from cmk.gui.i18n import _
-from cmk.gui.globals import html
 from cmk.gui.plugins.userdb import (
     UserAttribute,
     user_attribute_registry,

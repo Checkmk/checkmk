@@ -29,6 +29,7 @@
 
 import os
 import re
+import time
 
 import cmk.store as store
 import cmk.paths
@@ -38,9 +39,18 @@ import cmk.gui.pages
 import cmk.gui.utils as utils
 import cmk.gui.config as config
 import cmk.gui.table as table
+from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
-from cmk.gui.valuespec import *
+from cmk.gui.valuespec import (
+    ListChoice,
+    Timerange,
+    TextAscii,
+    DropdownChoice,
+    Tuple,
+    Integer,
+    TextUnicode,
+)
 
 acknowledgement_path = cmk.paths.var_dir + "/acknowledged_werks.mk"
 

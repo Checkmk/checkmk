@@ -43,9 +43,24 @@ import cmk.render as render
 import cmk.store as store
 from cmk.schedule import next_scheduled_time
 
+import cmk.gui.forms as forms
 import cmk.gui.table as table
 import cmk.gui.key_mgmt as key_mgmt
-from cmk.gui.valuespec import *
+from cmk.gui.valuespec import (
+    Password,
+    Dictionary,
+    TextUnicode,
+    DropdownChoice,
+    Checkbox,
+    Alternative,
+    FixedValue,
+    CascadingDropdown,
+    ID,
+    AbsoluteDirname,
+    SchedulePeriod,
+    ListOf,
+    Timeofday,
+)
 from cmk.gui.exceptions import MKUserError, MKGeneralException
 from cmk.gui.i18n import _
 from cmk.gui.globals import html

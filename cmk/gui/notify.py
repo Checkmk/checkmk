@@ -24,6 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+import os
 import time
 import subprocess
 
@@ -37,8 +38,16 @@ import cmk.gui.i18n
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
 from cmk.gui.htmllib import HTML
-from cmk.gui.valuespec import *
 from cmk.gui.exceptions import MKInternalError, MKAuthException, MKUserError
+from cmk.gui.valuespec import (
+    Dictionary,
+    TextAreaUnicode,
+    CascadingDropdown,
+    ListChoice,
+    Optional,
+    AbsoluteDate,
+    DualListChoice,
+)
 
 def get_gui_messages(user_id = None):
     if user_id is None:

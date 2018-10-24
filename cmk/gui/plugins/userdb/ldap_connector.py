@@ -49,6 +49,7 @@
 #   '----------------------------------------------------------------------'
 
 import os
+import re
 import time
 import copy
 import sys
@@ -65,7 +66,24 @@ import cmk.log
 
 import cmk.gui.config as config
 import cmk.gui.log as log
-from cmk.gui.valuespec import *
+from cmk.gui.valuespec import (
+    FixedValue,
+    Dictionary,
+    Transform,
+    ListOf,
+    TextAscii,
+    ListOfStrings,
+    LDAPDistinguishedName,
+    Tuple,
+    DropdownChoice,
+    Integer,
+    Float,
+    TextUnicode,
+    CascadingDropdown,
+    ListChoice,
+    Age,
+    Password,
+)
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
 from cmk.gui.exceptions import MKGeneralException, MKUserError

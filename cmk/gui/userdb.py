@@ -43,7 +43,7 @@ import cmk.gui.background_job as background_job
 import cmk.gui.gui_background_job as gui_background_job
 from cmk.gui.exceptions import MKUserError, MKInternalError
 from cmk.gui.log import logger
-from cmk.gui.valuespec import *
+from cmk.gui.valuespec import DualListChoice
 import cmk.gui.i18n
 from cmk.gui.i18n import _
 from cmk.gui.globals import html

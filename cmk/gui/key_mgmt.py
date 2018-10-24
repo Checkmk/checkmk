@@ -26,6 +26,7 @@
 
 import os
 import pprint
+import time
 
 # This is needed for at least CentOS 5.5
 # TODO: Drop this until all supported platforms have newer versions available.
@@ -40,7 +41,14 @@ import cmk.gui.table as table
 import cmk.gui.config as config
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
-from cmk.gui.valuespec import *
+from cmk.gui.valuespec import (
+    Dictionary,
+    Password,
+    TextAreaUnicode,
+    FileUpload,
+    CascadingDropdown,
+    TextUnicode,
+)
 from cmk.gui.exceptions import MKUserError
 
 

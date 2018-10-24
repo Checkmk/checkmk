@@ -25,6 +25,8 @@
 # Boston, MA 02110-1301 USA.
 
 import os
+import re
+import time
 import zipfile
 import cStringIO
 
@@ -40,16 +42,43 @@ if cmk.is_managed_edition():
 else:
     managed = None
 
+import cmk.gui.forms as forms
 import cmk.gui.config as config
 import cmk.gui.sites as sites
 import cmk.gui.mkeventd
 import cmk.gui.watolib as watolib
 import cmk.gui.hooks as hooks
 import cmk.gui.table as table
-from cmk.gui.valuespec import *
+from cmk.gui.valuespec import (
+    TextUnicode,
+    DropdownChoice,
+    TextAscii,
+    Integer,
+    Tuple,
+    FixedValue,
+    Alternative,
+    ListChoice,
+    RegExp,
+    RegExpUnicode,
+    TextAreaUnicode,
+    Transform,
+    Dictionary,
+    ID,
+    CascadingDropdown,
+    Optional,
+    Checkbox,
+    ListOf,
+    ListOfStrings,
+    Age,
+    IPv4Address,
+    IPv4Network,
+    Foldable,
+    DualListChoice,
+)
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
 from cmk.gui.htmllib import HTML
+from cmk.gui.exceptions import MKUserError, MKGeneralException
 from cmk.gui.wato.pages.global_settings import GlobalSettingsMode, EditGlobalSettingMode
 
 from cmk.gui.plugins.wato.utils import (

@@ -2800,12 +2800,6 @@ class TimeofdayRange(ValueSpec):
             raise MKUserError(varprefix + "_until", _("The <i>from</i> time must not be later then the <i>until</i> time."))
         ValueSpec.custom_validate(self, value, varprefix)
 
-# TODO: Move to cmklib
-month_names = [
-  _("January"),   _("February"), _("March"),    _("April"),
-  _("May"),       _("June"),     _("July"),     _("August"),
-  _("September"), _("October"),  _("November"), _("December")
-]
 
 
 class TimeHelper(object):
@@ -2990,8 +2984,8 @@ class Timerange(CascadingDropdown):
                 'd': (_("Today"),     _("Yesterday")),
                 'w': (_("This week"), _("Last week")),
                 'y': (str(year),      str(year - 1)),
-                'm': ("%s %d" % (month_names[month - 1], year),
-                      "%s %d" % (month_names[(month + 10) % 12], year - int(month == 1))),
+                'm': ("%s %d" % (defines.month_name(month - 1), year),
+                      "%s %d" % (defines.month_name((month + 10) % 12), year - int(month == 1))),
             }[rangespec[0]]
 
             if rangespec[1] == '0':

@@ -24,6 +24,9 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+import time
+import os
+
 import cmk.defines as defines
 import cmk.paths
 import cmk.store as store
@@ -31,7 +34,19 @@ import cmk.store as store
 import cmk.gui.utils as utils
 import cmk.gui.bi as bi
 import cmk.gui.sites as sites
-from cmk.gui.valuespec import *
+from cmk.gui.valuespec import (
+    Integer,
+    Age,
+    Checkbox,
+    DropdownChoice,
+    Dictionary,
+    Percentage,
+    Tuple,
+    ListChoice,
+    Optional,
+    Timerange,
+    RadioChoice,
+)
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
 
@@ -1639,7 +1654,7 @@ def find_next_choord(broken, scale):
             broken[1] = 1
             broken[0] += 1
         epoch = time.mktime(broken)
-        title = "%s %d" % (month_names[broken[1]-1], broken[0])
+        title = "%s %d" % (defines.month_name(broken[1] - 1), broken[0])
 
     dst = broken[8]
     if old_dst == 1 and dst == 0:

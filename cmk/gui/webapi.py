@@ -37,9 +37,11 @@ import cmk.gui.watolib as watolib
 import cmk.gui.i18n
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
-from cmk.gui.exceptions import MKUserError, MKAuthException, \
-                           MKException
-from cmk.gui.valuespec import *
+from cmk.gui.exceptions import (
+    MKUserError,
+    MKAuthException,
+    MKException
+)
 
 import cmk.gui.plugins.webapi
 

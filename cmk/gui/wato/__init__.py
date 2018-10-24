@@ -132,7 +132,6 @@ from cmk.gui.exceptions import MKGeneralException, MKUserError, MKAuthException,
 from cmk.gui.log import logger
 from cmk.gui.valuespec import *
 from cmk.gui.display_options import display_options
-from cmk.gui.plugins.userdb.htpasswd import encrypt_password
 
 from cmk.gui.plugins.wato.utils.base_modes import WatoMode, WatoWebApiMode
 from cmk.gui.wato.pages.global_settings import GlobalSettingsMode, EditGlobalSettingMode

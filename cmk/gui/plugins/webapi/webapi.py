@@ -37,7 +37,7 @@ import cmk.gui.watolib as watolib
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
 from cmk.gui.exceptions import MKUserError, MKAuthException, MKException
-from cmk.gui.plugins.userdb.htpasswd import encrypt_password
+from cmk.gui.plugins.userdb.htpasswd import hash_password
 
 from cmk.gui.plugins.webapi import (
     APICallCollection,
@@ -510,7 +510,7 @@ def action_add_users(request):
     for user_id, values in users_from_request.items():
         user_template = userdb.new_user_template("htpasswd")
         if "password" in values:
-            values["password"] = encrypt_password(values["password"])
+            values["password"] = hash_password(values["password"])
             values["serial"]   = 1
 
         user_template.update(values)
@@ -553,7 +553,7 @@ def action_edit_users(request):
 
         new_password = settings.get("set_attributes", {}).get("password")
         if new_password:
-            user_attrs["password"] = encrypt_password(new_password)
+            user_attrs["password"] = hash_password(new_password)
             user_attrs["serial"]   = user_attrs.get("serial", 0) + 1
 
         edit_user_objects[user_id] = {"attributes": user_attrs, "is_new_user": False}

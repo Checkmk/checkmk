@@ -47,11 +47,11 @@ def test_htpasswd_save(htpasswd_file):
         == saved_file.open(encoding="utf-8").read()
 
 
-def test_encrypt_password():
-    hashed_pw = htpasswd.encrypt_password("blä")
+def test_hash_password():
+    hashed_pw = htpasswd.hash_password("blä")
     assert sha256_crypt.verify(u"blä", hashed_pw)
 
-    hashed_pw = htpasswd.encrypt_password(u"blä")
+    hashed_pw = htpasswd.hash_password(u"blä")
     assert sha256_crypt.verify("blä", hashed_pw)
 
 

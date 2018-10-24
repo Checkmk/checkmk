@@ -101,7 +101,7 @@ class Htpasswd(object):
 #
 # For best compatibility in all mentioned situations we use the sha256_crypt
 # scheme.
-def encrypt_password(password):
+def hash_password(password):
     return sha256_crypt.hash(password)
 
 

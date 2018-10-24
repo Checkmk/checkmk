@@ -43,12 +43,12 @@ import traceback
 
 import cmk.render
 
+
 class SNMPTrapEngine(object):
 
     # Disable receiving of SNMPv3 INFORM messages. We do not support them (yet)
     class ECNotificationReceiver(pysnmp.entity.rfc3413.ntfrcv.NotificationReceiver):
         pduTypes = (pysnmp.proto.api.v1.TrapPDU.tagSet, pysnmp.proto.api.v2c.SNMPv2TrapPDU.tagSet)
-
 
     def __init__(self, settings, config, logger, callback):
         super(SNMPTrapEngine, self).__init__()
@@ -57,7 +57,8 @@ class SNMPTrapEngine(object):
             return
         self.snmp_engine = pysnmp.entity.engine.SnmpEngine()
         self._initialize_snmp_credentials(config)
-        self._snmp_receiver = SNMPTrapEngine.ECNotificationReceiver(self.snmp_engine, self._handle_snmptrap)
+        self._snmp_receiver = SNMPTrapEngine.ECNotificationReceiver(self.snmp_engine,
+                                                                    self._handle_snmptrap)
         self._snmp_trap_translator = SNMPTrapTranslator(settings, config, logger)
         self._callback = callback
 
@@ -65,9 +66,8 @@ class SNMPTrapEngine(object):
         pysnmp.debug.setLogger(pysnmp.debug.Debug("all", printer=logger.debug))
 
         self.snmp_engine.observer.registerObserver(self._handle_unauthenticated_snmptrap,
-                    "rfc2576.prepareDataElements:sm-failure", "rfc3412.prepareDataElements:sm-failure")
-
-
+                                                   "rfc2576.prepareDataElements:sm-failure",
+                                                   "rfc3412.prepareDataElements:sm-failure")
 
     @staticmethod
     def _auth_proto_for(proto_name):
@@ -77,7 +77,6 @@ class SNMPTrapEngine(object):
             return pysnmp.entity.config.usmHMACSHAAuthProtocol
         raise Exception("Invalid SNMP auth protocol: %s" % proto_name)
 
-
     @staticmethod
     def _priv_proto_for(proto_name):
         if proto_name == "DES":
@@ -85,7 +84,6 @@ class SNMPTrapEngine(object):
         if proto_name == "AES":
             return pysnmp.entity.config.usmAesCfb128Protocol
         raise Exception("Invalid SNMP priv protocol: %s" % proto_name)
-
 
     def _initialize_snmp_credentials(self, config):
         user_num = 0
@@ -124,58 +122,60 @@ class SNMPTrapEngine(object):
                 raise Exception("Invalid SNMP security level: %s" % securityLevel)
 
             for engine_id in spec.get("engine_ids", []):
-                self._logger.info("adding SNMPv3 user: userName=%s, authProtocol=%s, privProtocol=%s, securityEngineId=%s" %
-                                  (user_id,
-                                   ".".join(str(i) for i in auth_proto),
-                                   ".".join(str(i) for i in priv_proto),
-                                   engine_id))
+                self._logger.info(
+                    "adding SNMPv3 user: userName=%s, authProtocol=%s, privProtocol=%s, securityEngineId=%s"
+                    % (user_id, ".".join(str(i) for i in auth_proto), ".".join(
+                        str(i) for i in priv_proto), engine_id))
                 pysnmp.entity.config.addV3User(
-                    self.snmp_engine, user_id,
-                    auth_proto, auth_key,
-                    priv_proto, priv_key,
+                    self.snmp_engine,
+                    user_id,
+                    auth_proto,
+                    auth_key,
+                    priv_proto,
+                    priv_key,
                     securityEngineId=pysnmp.proto.api.v2c.OctetString(hexValue=engine_id))
-
 
     def process_snmptrap(self, message, sender_address):
         """Receives an incoming SNMP trap from the socket and hands it over to PySNMP for parsing
         and processing. PySNMP is calling the registered call back (self._handle_snmptrap) back."""
-        self._logger.verbose("Trap received from %s:%d. Checking for acceptance now." % sender_address)
+        self._logger.verbose(
+            "Trap received from %s:%d. Checking for acceptance now." % sender_address)
         self.snmp_engine.setUserContext(sender_address=sender_address)
         self.snmp_engine.msgAndPduDsp.receiveMessage(
             snmpEngine=self.snmp_engine,
             transportDomain=(),
             transportAddress=sender_address,
-            wholeMsg=message
-        )
-
+            wholeMsg=message)
 
     def _handle_snmptrap(self, snmp_engine, state_reference, context_engine_id, context_name,
-                        var_binds, cb_ctx):
+                         var_binds, cb_ctx):
         ipaddress = self.snmp_engine.getUserContext("sender_address")[0]
         self._log_snmptrap_details(context_engine_id, context_name, var_binds, ipaddress)
         trap = self._snmp_trap_translator.translate(ipaddress, var_binds)
         self._callback(trap, ipaddress)
 
-
     def _log_snmptrap_details(self, context_engine_id, context_name, var_binds, ipaddress):
         if self._logger.is_verbose():
-            self._logger.verbose('Trap accepted from %s (ContextEngineId "%s", ContextName "%s")' %
-                                 (ipaddress, context_engine_id.prettyPrint(), context_name.prettyPrint()))
+            self._logger.verbose(
+                'Trap accepted from %s (ContextEngineId "%s", ContextName "%s")' %
+                (ipaddress, context_engine_id.prettyPrint(), context_name.prettyPrint()))
 
             for name, val in var_binds:
                 self._logger.verbose('%-40s = %s' % (name.prettyPrint(), val.prettyPrint()))
 
-
     def _handle_unauthenticated_snmptrap(self, snmp_engine, execpoint, variables, cb_ctx):
-        if variables["securityLevel"] in [ 1, 2 ] and variables["statusInformation"]["errorIndication"] == pysnmp.proto.errind.unknownCommunityName:
+        if variables["securityLevel"] in [1, 2] and variables["statusInformation"][
+                "errorIndication"] == pysnmp.proto.errind.unknownCommunityName:
             msg = "Unknown community (%s)" % variables["statusInformation"].get("communityName", "")
-        elif variables["securityLevel"] == 3 and variables["statusInformation"]["errorIndication"] == pysnmp.proto.errind.unknownSecurityName:
-            msg = "Unknown credentials (msgUserName: %s)" % variables["statusInformation"].get("msgUserName", "")
+        elif variables["securityLevel"] == 3 and variables["statusInformation"][
+                "errorIndication"] == pysnmp.proto.errind.unknownSecurityName:
+            msg = "Unknown credentials (msgUserName: %s)" % variables["statusInformation"].get(
+                "msgUserName", "")
         else:
             msg = "%s" % variables["statusInformation"]
 
-        self._logger.verbose("Trap (v%d) dropped from %s: %s",
-            variables["securityLevel"], variables["transportAddress"][0], msg)
+        self._logger.verbose("Trap (v%d) dropped from %s: %s", variables["securityLevel"],
+                             variables["transportAddress"][0], msg)
 
 
 class SNMPTrapTranslator(object):
@@ -186,14 +186,15 @@ class SNMPTrapTranslator(object):
         if translation_config == False:
             self.translate = self._translate_simple
         elif translation_config == (True, {}):
-            self._mib_resolver = self._construct_resolver(logger, settings.paths.compiled_mibs_dir.value, False)
+            self._mib_resolver = self._construct_resolver(
+                logger, settings.paths.compiled_mibs_dir.value, False)
             self.translate = self._translate_via_mibs
         elif translation_config == (True, {'add_description': True}):
-            self._mib_resolver = self._construct_resolver(logger, settings.paths.compiled_mibs_dir.value, True)
+            self._mib_resolver = self._construct_resolver(
+                logger, settings.paths.compiled_mibs_dir.value, True)
             self.translate = self._translate_via_mibs
         else:
             raise Exception("invalid SNMP trap translation")
-
 
     @staticmethod
     def _construct_resolver(logger, mibs_dir, load_texts):
@@ -201,7 +202,8 @@ class SNMPTrapTranslator(object):
             builder = pysnmp.smi.builder.MibBuilder()  # manages python MIB modules
 
             # load MIBs from our compiled MIB and default MIB paths
-            builder.setMibSources(*[pysnmp.smi.builder.DirMibSource(str(mibs_dir))] + list(builder.getMibSources()))
+            builder.setMibSources(
+                *[pysnmp.smi.builder.DirMibSource(str(mibs_dir))] + list(builder.getMibSources()))
 
             # Indicate if we wish to load DESCRIPTION and other texts from MIBs
             builder.loadTexts = load_texts
@@ -219,7 +221,6 @@ class SNMPTrapTranslator(object):
             logger.info("Exception while loading MIB modules. Proceeding without modules!")
             logger.exception("Exception: %s" % e)
             return None
-
 
     # Convert pysnmp datatypes to simply handable ones
     def _translate_simple(self, ipaddress, var_bind_list):
@@ -241,7 +242,6 @@ class SNMPTrapTranslator(object):
             var_binds.append((key, val))
         return var_binds
 
-
     # Convert pysnmp datatypes to simply handable ones
     def _translate_via_mibs(self, ipaddress, var_bind_list):
         var_binds = []
@@ -253,7 +253,8 @@ class SNMPTrapTranslator(object):
         def do_translate(oid, value):
             # Disable mib_var[0] type detection
             # pylint: disable=no-member
-            mib_var = pysnmp.smi.rfc1902.ObjectType(pysnmp.smi.rfc1902.ObjectIdentity(oid), value).resolveWithMib(self._mib_resolver)
+            mib_var = pysnmp.smi.rfc1902.ObjectType(pysnmp.smi.rfc1902.ObjectIdentity(oid),
+                                                    value).resolveWithMib(self._mib_resolver)
 
             node = mib_var[0].getMibNode()
             translated_oid = mib_var[0].prettyPrint().replace("\"", "")
@@ -271,10 +272,11 @@ class SNMPTrapTranslator(object):
                 if description:
                     translated_value += "(%s)" % description
             except (pysnmp.smi.error.SmiError, pyasn1.error.ValueConstraintError) as e:
-                self._logger.warning('Failed to translate OID %s (in trap from %s): %s '
-                                     '(enable debug logging for details)' %
-                                     (oid.prettyPrint(), ipaddress, e))
-                self._logger.debug('Failed trap var binds:\n%s' % "\n".join(["%s: %r" % i for i in var_bind_list]))
+                self._logger.warning(
+                    'Failed to translate OID %s (in trap from %s): %s '
+                    '(enable debug logging for details)' % (oid.prettyPrint(), ipaddress, e))
+                self._logger.debug(
+                    'Failed trap var binds:\n%s' % "\n".join(["%s: %r" % i for i in var_bind_list]))
                 self._logger.debug(traceback.format_exc())
                 translated_oid = str(oid)
                 translated_value = str(value)

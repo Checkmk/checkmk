@@ -45,6 +45,7 @@ import livestatus
 #   | executing scripts.                                                   |
 #   '----------------------------------------------------------------------'
 
+
 def event_has_opened(history, settings, config, logger, event_server, event_columns, rule, event):
     # Prepare for events with a limited livetime. This time starts
     # when the event enters the open state or acked state
@@ -57,12 +58,22 @@ def event_has_opened(history, settings, config, logger, event_server, event_colu
         logger.info("Skip actions for event %d: Host is in downtime" % event["id"])
         return
 
-    do_event_actions(history, settings, config, logger, event_server, event_columns, rule.get("actions", []), event, is_cancelling=False)
+    do_event_actions(
+        history,
+        settings,
+        config,
+        logger,
+        event_server,
+        event_columns,
+        rule.get("actions", []),
+        event,
+        is_cancelling=False)
 
 
 # Execute a list of actions on an event that has just been
 # opened or cancelled.
-def do_event_actions(history, settings, config, logger, event_server, event_columns, actions, event, is_cancelling):
+def do_event_actions(history, settings, config, logger, event_server, event_columns, actions, event,
+                     is_cancelling):
     for aname in actions:
         if aname == "@NOTIFY":
             do_notify(event_server, logger, event, is_cancelling=is_cancelling)
@@ -70,16 +81,16 @@ def do_event_actions(history, settings, config, logger, event_server, event_colu
             action = config["action"].get(aname)
             if not action:
                 logger.info("Cannot execute undefined action '%s'" % aname)
-                logger.info("We have to following actions: %s" %
-                            ", ".join(config["action"].keys()))
+                logger.info("We have to following actions: %s" % ", ".join(config["action"].keys()))
             else:
-                logger.info("Going to execute action '%s' on event %d" %
-                              (action["title"], event["id"]))
+                logger.info(
+                    "Going to execute action '%s' on event %d" % (action["title"], event["id"]))
                 do_event_action(history, settings, config, logger, event_columns, action, event, "")
 
 
 # Rule actions are currently done synchronously. Actions should
 # not hang for more than a couple of ms.
+
 
 def do_event_action(history, settings, config, logger, event_columns, action, event, user):
     if action["disabled"]:
@@ -89,17 +100,25 @@ def do_event_action(history, settings, config, logger, event_columns, action, ev
     try:
         action_type, action_settings = action["action"]
         if action_type == 'email':
-            to = _escape_null_bytes(_substitute_event_tags(event_columns, action_settings["to"], event))
-            subject = _escape_null_bytes(_substitute_event_tags(event_columns, action_settings["subject"], event))
-            body = _escape_null_bytes(_substitute_event_tags(event_columns, action_settings["body"], event))
+            to = _escape_null_bytes(
+                _substitute_event_tags(event_columns, action_settings["to"], event))
+            subject = _escape_null_bytes(
+                _substitute_event_tags(event_columns, action_settings["subject"], event))
+            body = _escape_null_bytes(
+                _substitute_event_tags(event_columns, action_settings["body"], event))
 
             _send_email(config, to, subject, body, logger)
             history.add(event, "EMAIL", user, "%s|%s" % (to, subject))
         elif action_type == 'script':
-            _execute_script(event_columns, _escape_null_bytes(_substitute_event_tags(event_columns, action_settings["script"], _get_quoted_event(event, logger))), event, logger)
+            _execute_script(
+                event_columns,
+                _escape_null_bytes(
+                    _substitute_event_tags(event_columns, action_settings["script"],
+                                           _get_quoted_event(event, logger))), event, logger)
             history.add(event, "SCRIPT", user, action['id'])
         else:
-            logger.error("Cannot execute action %s: invalid action type %s" % (action["id"], action_type))
+            logger.error(
+                "Cannot execute action %s: invalid action type %s" % (action["id"], action_type))
     except Exception:
         if settings.options.debug:
             raise
@@ -144,15 +163,21 @@ def quote_shell_string(s):
 
 
 def _send_email(config, to, subject, body, logger):
-    command_utf8 = ["mail", "-S", "sendcharsets=utf-8",
-                    "-s", subject.encode("utf-8"),
-                    to.encode("utf-8")]
+    command_utf8 = [
+        "mail", "-S", "sendcharsets=utf-8", "-s",
+        subject.encode("utf-8"),
+        to.encode("utf-8")
+    ]
 
     if config["debug_rules"]:
         logger.info("  Executing: %s" % " ".join(command_utf8))
 
-    p = subprocess.Popen(command_utf8, close_fds=True, stdout=subprocess.PIPE,
-                         stderr=subprocess.PIPE, stdin=subprocess.PIPE)
+    p = subprocess.Popen(
+        command_utf8,
+        close_fds=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        stdin=subprocess.PIPE)
     # FIXME: This may lock on too large buffer. We should move all "mail sending" code
     # to a general place and fix this for all our components (notification plugins,
     # notify.py, this one, ...)
@@ -183,7 +208,9 @@ def _execute_script(event_columns, body, event, logger):
     # body. Otherwise suprocess.Popen will crash.
     p = subprocess.Popen(
         ['/bin/bash'],
-        stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+        stdin=subprocess.PIPE,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
         close_fds=True,
         env=script_env,
     )
@@ -194,9 +221,9 @@ def _execute_script(event_columns, body, event, logger):
 
 
 def _get_event_tags(event_columns, event):
-    substs = [("match_group_%d" % (nr + 1), g)
-              for (nr, g)
-              in enumerate(event.get("match_groups", ()))]
+    substs = [
+        ("match_group_%d" % (nr + 1), g) for (nr, g) in enumerate(event.get("match_groups", ()))
+    ]
 
     for key, defaultvalue in event_columns:
         varname = key[6:]
@@ -231,13 +258,13 @@ def _get_event_tags(event_columns, event):
 #   |  EC create Check_MK native notifications via cmk --notify.           |
 #   '----------------------------------------------------------------------'
 
-
 # Es fehlt:
 # - Wenn CONTACTS fehlen, dann müssen in notify.py die Fallbackadressen
 #   genommen werden.
 # - Was ist mit Nagios als Core. Sendet der CONTACTS? Nein!!
 #
 # - Das muss sich in den Hilfetexten wiederspiegeln
+
 
 # This function creates a Check_MK Notification for a locally running Check_MK.
 # We simulate a *service* notification.
@@ -254,17 +281,19 @@ def do_notify(event_server, logger, event, username=None, is_cancelling=False):
 
     if context["HOSTDOWNTIME"] != "0":
         logger.info("Host %s is currently in scheduled downtime. "
-                    "Skipping notification of event %s." %
-                    (context["HOSTNAME"], event["id"]))
+                    "Skipping notification of event %s." % (context["HOSTNAME"], event["id"]))
         return
 
     # Send notification context via stdin.
     context_string = to_utf8("".join([
         "%s=%s\n" % (varname, value.replace("\n", "\\n"))
-        for (varname, value) in context.iteritems()]))
+        for (varname, value) in context.iteritems()
+    ]))
 
-    p = subprocess.Popen(["cmk", "--notify", "stdin"], stdin=subprocess.PIPE,
-                         stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+    p = subprocess.Popen(["cmk", "--notify", "stdin"],
+                         stdin=subprocess.PIPE,
+                         stdout=subprocess.PIPE,
+                         stderr=subprocess.STDOUT,
                          close_fds=True)
     response = p.communicate(input=context_string)[0]
     status = p.returncode
@@ -283,48 +312,89 @@ def _create_notification_context(event_server, event, username, is_cancelling, l
 
 def _base_notification_context(event, username, is_cancelling):
     return {
-        "WHAT": "SERVICE",
-        "CONTACTNAME": "check-mk-notify",
-        "DATE": str(int(event["last"])),  # -> Event: Time
-        "MICROTIME": str(int(event["last"] * 1000000)),
-        "LASTSERVICESTATE": is_cancelling and "CRITICAL" or "OK",  # better assume OK, we have no transition information
-        "LASTSERVICESTATEID": is_cancelling and "2" or "0",  # -> immer OK
-        "LASTSERVICEOK": "0",  # 1.1.1970
-        "LASTSERVICESTATECHANGE": str(int(event["last"])),
-        "LONGSERVICEOUTPUT": "",
-        "NOTIFICATIONAUTHOR": username or "",
-        "NOTIFICATIONAUTHORALIAS": username or "",
-        "NOTIFICATIONAUTHORNAME": username or "",
-        "NOTIFICATIONCOMMENT": "",
-        "NOTIFICATIONTYPE": is_cancelling and "RECOVERY" or "PROBLEM",
-        "SERVICEACKAUTHOR": "",
-        "SERVICEACKCOMMENT": "",
-        "SERVICEATTEMPT": "1",
-        "SERVICECHECKCOMMAND": event["rule_id"] is None and "ec-internal" or "ec-rule-" + event["rule_id"],
-        "SERVICEDESC": event["application"] or "Event Console",
-        "SERVICENOTIFICATIONNUMBER": "1",
-        "SERVICEOUTPUT": event["text"],
-        "SERVICEPERFDATA": "",
-        "SERVICEPROBLEMID": "ec-id-" + str(event["id"]),
-        "SERVICESTATE": cmk.defines.service_state_name(event["state"]),
-        "SERVICESTATEID": str(event["state"]),
-        "SERVICE_EC_CONTACT": event.get("owner", ""),
-        "SERVICE_SL": str(event["sl"]),
-        "SVC_SL": str(event["sl"]),
+        "WHAT":
+            "SERVICE",
+        "CONTACTNAME":
+            "check-mk-notify",
+        "DATE":
+            str(int(event["last"])),  # -> Event: Time
+        "MICROTIME":
+            str(int(event["last"] * 1000000)),
+        "LASTSERVICESTATE":
+            is_cancelling and "CRITICAL"
+            or "OK",  # better assume OK, we have no transition information
+        "LASTSERVICESTATEID":
+            is_cancelling and "2" or "0",  # -> immer OK
+        "LASTSERVICEOK":
+            "0",  # 1.1.1970
+        "LASTSERVICESTATECHANGE":
+            str(int(event["last"])),
+        "LONGSERVICEOUTPUT":
+            "",
+        "NOTIFICATIONAUTHOR":
+            username or "",
+        "NOTIFICATIONAUTHORALIAS":
+            username or "",
+        "NOTIFICATIONAUTHORNAME":
+            username or "",
+        "NOTIFICATIONCOMMENT":
+            "",
+        "NOTIFICATIONTYPE":
+            is_cancelling and "RECOVERY" or "PROBLEM",
+        "SERVICEACKAUTHOR":
+            "",
+        "SERVICEACKCOMMENT":
+            "",
+        "SERVICEATTEMPT":
+            "1",
+        "SERVICECHECKCOMMAND":
+            event["rule_id"] is None and "ec-internal" or "ec-rule-" + event["rule_id"],
+        "SERVICEDESC":
+            event["application"] or "Event Console",
+        "SERVICENOTIFICATIONNUMBER":
+            "1",
+        "SERVICEOUTPUT":
+            event["text"],
+        "SERVICEPERFDATA":
+            "",
+        "SERVICEPROBLEMID":
+            "ec-id-" + str(event["id"]),
+        "SERVICESTATE":
+            cmk.defines.service_state_name(event["state"]),
+        "SERVICESTATEID":
+            str(event["state"]),
+        "SERVICE_EC_CONTACT":
+            event.get("owner", ""),
+        "SERVICE_SL":
+            str(event["sl"]),
+        "SVC_SL":
+            str(event["sl"]),
 
         # Some fields only found in EC notifications
-        "EC_ID": str(event["id"]),
-        "EC_RULE_ID": event["rule_id"] or "",
-        "EC_PRIORITY": str(event["priority"]),
-        "EC_FACILITY": str(event["facility"]),
-        "EC_PHASE": event["phase"],
-        "EC_COMMENT": event.get("comment", ""),
-        "EC_OWNER": event.get("owner", ""),
-        "EC_CONTACT": event.get("contact", ""),
-        "EC_PID": str(event.get("pid", 0)),
-        "EC_MATCH_GROUPS": "\t".join(event["match_groups"]),
-        "EC_CONTACT_GROUPS": " ".join(event.get("contact_groups") or []),
-        "EC_ORIG_HOST": event.get("orig_host", event["host"]),
+        "EC_ID":
+            str(event["id"]),
+        "EC_RULE_ID":
+            event["rule_id"] or "",
+        "EC_PRIORITY":
+            str(event["priority"]),
+        "EC_FACILITY":
+            str(event["facility"]),
+        "EC_PHASE":
+            event["phase"],
+        "EC_COMMENT":
+            event.get("comment", ""),
+        "EC_OWNER":
+            event.get("owner", ""),
+        "EC_CONTACT":
+            event.get("contact", ""),
+        "EC_PID":
+            str(event.get("pid", 0)),
+        "EC_MATCH_GROUPS":
+            "\t".join(event["match_groups"]),
+        "EC_CONTACT_GROUPS":
+            " ".join(event.get("contact_groups") or []),
+        "EC_ORIG_HOST":
+            event.get("orig_host", event["host"]),
     }
 
 
@@ -380,6 +450,7 @@ def _add_contacts_from_rule(context, event, logger):
            not event['core_host']):
         _add_contact_information_to_context(context, event["contact_groups"], logger)
 
+
 def _add_contact_information_to_context(context, contact_groups, logger):
     contact_names = _rbn_groups_contacts(contact_groups)
     context["CONTACTS"] = ",".join(contact_names)
@@ -416,12 +487,15 @@ def _rbn_groups_contacts(groups):
 
 def _core_has_notifications_disabled(event, logger):
     try:
-        notifications_enabled = livestatus.LocalConnection().query_value("GET status\nColumns: enable_notifications")
+        notifications_enabled = livestatus.LocalConnection().query_value(
+            "GET status\nColumns: enable_notifications")
         if not notifications_enabled:
-            logger.info("Notifications are currently disabled. Skipped notification for event %d" % event["id"])
+            logger.info("Notifications are currently disabled. Skipped notification for event %d" %
+                        event["id"])
             return True
     except Exception as e:
-        logger.info("Cannot determine whether notifcations are enabled in core: %s. Assuming YES." % e)
+        logger.info(
+            "Cannot determine whether notifcations are enabled in core: %s. Assuming YES." % e)
 
     return False
 

@@ -54,7 +54,6 @@ from cmk.gui.i18n import _
 from cmk.gui.globals import html
 
 from cmk.gui.log import logger
-from cmk.gui.valuespec import *
 from cmk.gui.exceptions import MKGeneralException, MKUserError, MKInternalError
 
 # Needed for legacy (pre 1.6) plugins

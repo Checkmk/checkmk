@@ -33,12 +33,19 @@ import cmk.gui.notify as notify
 import cmk.gui.config as config
 import cmk.gui.visuals as visuals
 import cmk.gui.watolib as watolib
+import cmk.gui.forms as forms
 import cmk.gui.utils as utils
-from cmk.gui.valuespec import *
+from cmk.gui.valuespec import (
+    Transform,
+    Dictionary,
+    TextUnicode,
+    DropdownChoice,
+    Checkbox,
+    FixedValue,
+)
 import cmk.gui.i18n
 from cmk.gui.i18n import _u, _
 from cmk.gui.log import logger
-from cmk.gui.htmllib import HTML
 from cmk.gui.globals import html
 
 from cmk.gui.exceptions import MKGeneralException, MKAuthException, MKUserError

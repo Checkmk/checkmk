@@ -29,11 +29,27 @@ import socket
 import cmk
 import cmk.gui.mkeventd as mkeventd
 import cmk.gui.config as config
-from cmk.gui.valuespec import *
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
 
-from . import register_notification_parameters
+from cmk.gui.valuespec import (
+    DropdownChoice,
+    FixedValue,
+    Tuple,
+    Age,
+    TextAscii,
+    CascadingDropdown,
+    Transform,
+    TextAreaUnicode,
+    TextUnicode,
+    ListChoice,
+    Dictionary,
+    Password,
+    IPv4Address,
+    EmailAddress,
+)
+
+from cmk.gui.plugins.wato import register_notification_parameters
 
 # We have to transform because 'add_to_event_context'
 # in modules/events.py can't handle complex data structures

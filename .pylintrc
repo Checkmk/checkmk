@@ -72,11 +72,6 @@ disable=
     # when fixing these warnings!
     len-as-condition,
     #---------------------------------------------------------------------------
-    # We should really find out where wildcard imports are just laziness or
-    # where they are actually needed (and why).
-    unused-wildcard-import,
-    wildcard-import,
-    #---------------------------------------------------------------------------
     # Enabling this would be nice, but not crucial. At the moment, we have quite
     # a few violations, so we postpone fixing this. When we do it eventually, we
     # probably want to use "include-naming-hint=yes" in the BASIC section.

@@ -45,13 +45,25 @@ import cmk.gui.i18n
 import cmk.gui.pages
 import cmk.gui.view_utils
 from cmk.gui.display_options import display_options
-from cmk.gui.valuespec import *
+from cmk.gui.valuespec import (
+    DropdownChoice,
+    Integer,
+    ListChoice,
+    Dictionary,
+    FixedValue,
+    IconSelector,
+    ListOf,
+    Tuple,
+    TextUnicode,
+    Alternative,
+    CascadingDropdown,
+)
 from cmk.gui.i18n import _u, _
 from cmk.gui.globals import html
-from cmk.gui.htmllib import HTML
 from cmk.gui.exceptions import MKGeneralException, MKUserError, MKInternalError
 
 # Needed for legacy (pre 1.6) plugins
+from cmk.gui.htmllib import HTML # pylint: disable=unused-import
 from cmk.gui.plugins.views.utils import ( # pylint: disable=unused-import
     load_all_views,
     get_permitted_views,

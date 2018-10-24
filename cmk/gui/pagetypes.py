@@ -48,7 +48,13 @@ import cmk.gui.config as config
 import cmk.gui.table as table
 import cmk.gui.forms as forms
 import cmk.gui.userdb as userdb
-from cmk.gui.valuespec import *
+from cmk.gui.valuespec import (
+    ID,
+    Dictionary,
+    Checkbox,
+    TextUnicode,
+    TextAreaUnicode,
+)
 from cmk.gui.i18n import _u, _
 from cmk.gui.globals import html
 

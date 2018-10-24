@@ -24,6 +24,8 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+import time
+
 from cmk.regex import regex
 import cmk.defines as defines
 import cmk.render
@@ -35,7 +37,8 @@ import cmk.gui.utils as utils
 import cmk.gui.inventory as inventory
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
-from cmk.gui.valuespec import *
+from cmk.gui.htmllib import HTML
+from cmk.gui.valuespec import Checkbox
 
 import cmk.gui.plugins.visuals
 import cmk.gui.plugins.visuals.inventory

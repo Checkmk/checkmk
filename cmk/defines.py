@@ -116,6 +116,25 @@ def weekdays_by_name():
     ]
 
 
+def month_name(month_num):
+    """Returns the human readable month name of a given month number
+    (starting with 0 = January)"""
+    return [
+      _("January"),
+      _("February"),
+      _("March"),
+      _("April"),
+      _("May"),
+      _("June"),
+      _("July"),
+      _("August"),
+      _("September"),
+      _("October"),
+      _("November"),
+      _("December"),
+    ][month_num]
+
+
 def interface_oper_state_name(state_num, deflt=""):
     return interface_oper_states().get(state_num, deflt)
 

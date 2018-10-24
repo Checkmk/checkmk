@@ -24,6 +24,9 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+# Load plugin names into this module to have a single set of default settings
+# pylint: disable=wildcard-import
+
 from .base import *
 from .notify import *
 

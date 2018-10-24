@@ -27,11 +27,18 @@
 import cmk.paths
 import cmk.defines as defines
 
-from cmk.gui.valuespec import *
+from cmk.gui.valuespec import (
+    DualListChoice,
+    Age,
+    Dictionary,
+    Transform,
+    DropdownChoice,
+    TextAscii,
+    MonitoringState,
+)
 from cmk.gui.i18n import _
-from cmk.gui.globals import html
 
-from . import (
+from cmk.gui.plugins.wato import (
     register_rulegroup,
     register_rule
 )

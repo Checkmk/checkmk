@@ -26,7 +26,27 @@
 
 import cmk.gui.watolib as watolib
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import *
+from cmk.gui.exceptions import MKUserError
+from cmk.gui.valuespec import (
+    HTTPUrl,
+    ListChoice,
+    Checkbox,
+    ListOf,
+    FixedValue,
+    Dictionary,
+    Integer,
+    TextAscii,
+    Password,
+    Alternative,
+    ListOfStrings,
+    DropdownChoice,
+    Transform,
+    TextUnicode,
+    Tuple,
+    ID,
+    CascadingDropdown,
+    Float,
+)
 
 from cmk.gui.plugins.wato import (
     register_rulegroup,

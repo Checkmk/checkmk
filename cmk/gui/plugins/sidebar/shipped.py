@@ -30,6 +30,7 @@
 #       from sidebar.py to the snapin objects that need these pages.
 
 import time
+import re
 
 import cmk.paths
 
@@ -38,13 +39,11 @@ import cmk.gui.views as views
 import cmk.gui.dashboard as dashboard
 import cmk.gui.pagetypes as pagetypes
 import cmk.gui.sites as sites
-# TODO: Cleanup star import
-from cmk.gui.valuespec import *
 from cmk.gui.htmllib import HTML
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
 
-from . import (
+from cmk.gui.plugins.sidebar import (
     sidebar_snapins,
     visuals_by_topic,
     bulletlink,

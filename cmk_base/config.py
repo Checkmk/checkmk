@@ -53,7 +53,7 @@ import cmk_base.cleanup
 # This is mainly needed for pylint to detect all available
 # configuration options during static analysis. The defaults
 # are loaded later with load_default_config() again.
-from cmk_base.default_config import *
+from cmk_base.default_config import * # pylint: disable=wildcard-import,unused-wildcard-import
 
 class TimespecificParamList(list):
     pass

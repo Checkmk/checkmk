@@ -29,11 +29,11 @@ from cmk.defines import short_service_state_name
 import cmk.gui.config as config
 import cmk.gui.sites as sites
 import cmk.gui.mkeventd as mkeventd
-from cmk.gui.valuespec import *
+from cmk.gui.valuespec import MonitoringState
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
 
-from . import (
+from cmk.gui.plugins.views import (
     multisite_datasources,
     multisite_painters,
     multisite_commands,

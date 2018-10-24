@@ -24,6 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+import os
 import glob
 import subprocess
 import traceback
@@ -32,9 +33,18 @@ import cmk.paths
 import cmk.store as store
 
 from cmk.gui.log import logger
-from cmk.gui.valuespec import *
 from cmk.gui.i18n import _
-from cmk.gui.globals import html
+from cmk.gui.valuespec import (
+    Integer,
+    Age,
+    Dictionary,
+    Tuple,
+    Filesize,
+    Optional,
+    ListChoice,
+    DropdownChoice,
+    Checkbox,
+)
 
 from cmk.gui.plugins.wato import (
     config_domain_registry,

@@ -30,7 +30,6 @@ import socket
 import traceback
 
 import snap7
-from snap7.util import *
 from snap7.snap7types import S7AreaCT, S7AreaDB, S7AreaMK, S7AreaPA, S7AreaPE, S7AreaTM
 
 
@@ -180,8 +179,8 @@ datatypes = {
     # type-name   size(bytes) parse-function
     # A size of None means the size is provided by configuration
     'dint':      (4,          lambda data, offset, size, bit: get_dint(data, offset)),
-    'real':      (8,          lambda data, offset, size, bit: get_real(data, offset)),
-    'bit':       (1,          lambda data, offset, size, bit: get_bool(data, offset, bit)),
+    'real':      (8,          lambda data, offset, size, bit: snap7.util.get_real(data, offset)),
+    'bit':       (1,          lambda data, offset, size, bit: snap7.util.get_bool(data, offset, bit)),
     # str currently handles "zeichen" (character?) formated strings. For byte coded strings
     # we would have to use get_string(data, offset-1)) from snap7.utils
     'str':       (None,       lambda data, offset, size, bit: data[offset:offset+size]),

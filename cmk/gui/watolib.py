@@ -42,6 +42,7 @@
 #   |  Doing this that must be done when the module WATO is loaded.        |
 #   '----------------------------------------------------------------------'
 
+import re
 import os
 import shutil
 import subprocess
@@ -57,6 +58,8 @@ import tarfile
 import cStringIO
 import requests
 import copy
+import socket
+import time
 import threading
 from hashlib import sha256
 from pathlib2 import Path
@@ -88,8 +91,33 @@ from cmk.gui.i18n import _u, _
 from cmk.gui.globals import html
 from cmk.gui.htmllib import HTML
 from cmk.gui.log import logger
-from cmk.gui.valuespec import *
 from cmk.gui.exceptions import MKGeneralException, MKAuthException, MKUserError
+from cmk.gui.valuespec import (
+    Dictionary,
+    Integer,
+    ListOfStrings,
+    IPv4Network,
+    Checkbox,
+    Transform,
+    DropdownChoice,
+    ListOf,
+    EmailAddressUnicode,
+    DualListChoice,
+    UserID,
+    FixedValue,
+    Alternative,
+    CascadingDropdown,
+    TextAscii,
+    TextUnicode,
+    TextAreaUnicode,
+    ValueSpec,
+    ListChoice,
+    Float,
+    Foldable,
+    Tuple,
+    Age,
+    RegExp,
+)
 
 if cmk.is_managed_edition():
     import cmk.gui.cme.managed as managed

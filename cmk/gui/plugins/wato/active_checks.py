@@ -26,8 +26,32 @@
 
 import cmk.gui.mkeventd as mkeventd
 from cmk.gui.i18n import _
-# TODO: Clean this * import up!
-from cmk.gui.valuespec import *
+from cmk.gui.valuespec import (
+    Dictionary,
+    Tuple,
+    Integer,
+    Float,
+    TextAscii,
+    FixedValue,
+    Alternative,
+    ListOfStrings,
+    Age,
+    TextUnicode,
+    DropdownChoice,
+    RegExp,
+    RegExpUnicode,
+    Transform,
+    EmailAddress,
+    ListOf,
+    Checkbox,
+    RadioChoice,
+    Password,
+    Percentage,
+    CascadingDropdown,
+    UploadOrPasteTextFile,
+    Hostname,
+    Optional,
+)
 
 from cmk.gui.plugins.wato import (
     register_rulegroup,

@@ -160,8 +160,8 @@ else:
 
 if opt_legacy:
     try:
-        from NaElement import * # pylint: disable=import-error
-        from NaServer import *  # pylint: disable=import-error
+        from NaElement import NaElement # pylint: disable=import-error
+        from NaServer import NaServer # pylint: disable=import-error
     except Exception, e:
         sys.stderr.write("Unable to import the files NaServer.py/NaElement.py.\nThese files are "\
                          "provided by the NetApp Managability SDK and must be put into "\

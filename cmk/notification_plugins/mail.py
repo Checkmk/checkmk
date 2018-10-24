@@ -44,6 +44,7 @@ from email.mime.text import MIMEText
 
 from cmk.notification_plugins import utils
 
+
 def tmpl_head_html(html_section):
     return '''
 <html>

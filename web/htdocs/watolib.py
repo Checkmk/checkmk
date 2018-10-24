@@ -9653,6 +9653,7 @@ class ACResult(object):
     def __init__(self, text):
         super(ACResult, self).__init__()
         self.text = text
+        self.site_id = config.omd_site()
 
 
     def from_test(self, test):
@@ -9660,7 +9661,6 @@ class ACResult(object):
         self.category = test.category()
         self.title    = test.title()
         self.help     = test.help()
-        self.site_id  = config.omd_site()
 
 
     @classmethod
@@ -9796,6 +9796,16 @@ class ACTest(object):
     def run(self):
         self._executed = True
         try:
+            # Do not merge results that have been gathered on one site for different sites
+            results = list(self.execute())
+            num_sites = len(set(r.site_id for r in results))
+            if num_sites > 1:
+                for result in results:
+                    result.from_test(self)
+                    yield result
+                return
+
+            # Merge multiple results produced for a single site
             total_result = ACResult.merge(*list(self.execute()))
             total_result.from_test(self)
             yield total_result

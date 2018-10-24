@@ -8,6 +8,9 @@ description:
  the HEALTHCHECK API. A Status of "healthy" is treated as OK,
  "starting" as WARN, "unhealthy" as CRIT.
 
+ To make this check work the agent plugin
+ {{mk_docker_container_piggybacked}} have to be installed.
+
 item:
  None
 

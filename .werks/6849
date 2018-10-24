@@ -1,0 +1,14 @@
+Title: Analyze configuration: Fixed wrong results for liveproxyd and persistent connection tests
+Level: 1
+Component: wato
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0i1
+Date: 1540386842
+
+Previously all analyze configuration tests were executed locally on each site.
+In case of the liveproxyd tests and persistent connection tests this was wrong
+because the tests have to check the connection configuration for a specific
+site on the central site.

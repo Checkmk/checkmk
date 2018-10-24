@@ -23,7 +23,6 @@
 # License along with GNU Make; see the file  COPYING.  If  not,  write
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
-
 """Check_MK's library for code used by different components of Check_MK.
 
 This library is currently handled as internal module of Check_MK and
@@ -36,6 +35,7 @@ import os
 import cmk.paths
 from cmk.exceptions import MKGeneralException
 from cmk.i18n import _
+
 
 def omd_version():
     return os.path.basename(os.readlink(cmk.paths.omd_root + "/version"))

@@ -23,7 +23,6 @@
 # License along with GNU Make; see the file  COPYING.  If  not,  write
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
-
 """This module cares about Check_MK's file storage accessing. Most important
 functionality is the locked file opening realized with the File() context
 manager."""
@@ -56,6 +55,7 @@ from cmk.i18n import _
 #   | functions.                                                           |
 #   '----------------------------------------------------------------------'
 
+
 def mkdir(path, mode=0770):
     pathlib.Path(path).mkdir(mode=mode, exist_ok=True)
 
@@ -80,6 +80,7 @@ def makedirs(path, mode=0770):
 #       the using code again shorter in some cases. It would not have to care about
 #       encoding anymore.
 
+
 # This function generalizes reading from a .mk configuration file. It is basically meant to
 # generalize the exception handling for all file IO. This function handles all those files
 # that are read with execfile().
@@ -97,7 +98,7 @@ def load_mk_file(path, default=None, lock=False):
             execfile(path, globals(), default)
             return default
         except IOError, e:
-            if e.errno == 2: # IOError: [Errno 2] No such file or directory
+            if e.errno == 2:  # IOError: [Errno 2] No such file or directory
                 return default
             else:
                 raise
@@ -136,7 +137,7 @@ def load_data_from_file(path, default=None, lock=False):
 
             return ast.literal_eval(content)
         except IOError, e:
-            if e.errno == 2: # IOError: [Errno 2] No such file or directory
+            if e.errno == 2:  # IOError: [Errno 2] No such file or directory
                 return default
 
             raise
@@ -179,9 +180,9 @@ def save_file(path, content, mode=0660):
         # Please note that this already creates the file with 0 bytes (in case it is missing).
         aquire_lock(path)
 
-        with tempfile.NamedTemporaryFile("w", dir=os.path.dirname(path),
-                                         prefix=".%s.new" % os.path.basename(path),
-                                         delete=False) as tmp:
+        with tempfile.NamedTemporaryFile(
+                "w", dir=os.path.dirname(path), prefix=".%s.new" % os.path.basename(path),
+                delete=False) as tmp:
             tmp_path = tmp.name
             os.chmod(tmp_path, mode)
             tmp.write(content)
@@ -219,7 +220,7 @@ def save_file(path, content, mode=0660):
             if tmp_path:
                 os.unlink(tmp_path)
         except IOError, e:
-            if e.errno == 2: # No such file or directory
+            if e.errno == 2:  # No such file or directory
                 pass
             else:
                 raise
@@ -232,7 +233,7 @@ def save_file(path, content, mode=0660):
 
 
 # A simple wrapper for cases where you only have to write a single value to a .mk file.
-def save_to_mk_file(path, key, value, pprint_value = False):
+def save_to_mk_file(path, key, value, pprint_value=False):
     format_func = pprint.pformat if pprint_value else repr
 
     if type(value) == dict:
@@ -260,11 +261,12 @@ def save_to_mk_file(path, key, value, pprint_value = False):
 #   '----------------------------------------------------------------------'
 
 g_aquired_locks = []
-g_locked_paths  = []
+g_locked_paths = []
+
 
 def aquire_lock(path, blocking=True):
     if path in g_locked_paths:
-        return True # No recursive locking
+        return True  # No recursive locking
 
     # Create file (and base dir) for locking if not existant yet
     if not os.path.exists(os.path.dirname(path)):
@@ -296,7 +298,7 @@ def try_aquire_lock(path):
         aquire_lock(path, blocking=False)
         return True
     except IOError, e:
-        if e.errno == 11: # Resource temporarily unavailable
+        if e.errno == 11:  # Resource temporarily unavailable
             return False
         else:
             raise
@@ -304,7 +306,7 @@ def try_aquire_lock(path):
 
 def release_lock(path):
     if path not in g_locked_paths:
-        return # no unlocking needed
+        return  # no unlocking needed
 
     for lock_path, fd in g_aquired_locks:
         if lock_path != path:
@@ -313,7 +315,7 @@ def release_lock(path):
         try:
             os.close(fd)
         except OSError as e:
-            if e.errno == 9: # OSError: [Errno 9] Bad file descriptor
+            if e.errno == 9:  # OSError: [Errno 9] Bad file descriptor
                 pass
             else:
                 raise
@@ -335,7 +337,7 @@ def release_all_locks():
         release_lock(path)
 
     g_aquired_locks = []
-    g_locked_paths  = []
+    g_locked_paths = []
 
 
 # Experimental but not used yet.

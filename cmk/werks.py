@@ -23,7 +23,6 @@
 # License along with GNU Make; see the file  COPYING.  If  not,  write
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
-
 """Code for processing Check_MK werks. This is needed by several components,
 so it's best place is in the central library."""
 
@@ -137,7 +136,7 @@ def load_raw_files(werks_dir):
                     raise MKGeneralException(_("Failed to load werk \"%s\": %s") % (werk_id, e))
     except OSError, e:
         if e.errno == 2:
-            pass # werk directory not existing
+            pass  # werk directory not existing
         else:
             raise
 
@@ -146,7 +145,7 @@ def load_raw_files(werks_dir):
 
 def _load_werk(path):
     werk = {
-        "body" : [],
+        "body": [],
     }
     in_header = True
     for line in file(path):
@@ -213,8 +212,7 @@ def write_werk_as_text(f, werk):
     else:
         omit = ""
 
-    f.write("    * %04d%s %s%s\n" %
-        (werk["id"], prefix, werk["title"].encode("utf-8"), omit))
+    f.write("    * %04d%s %s%s\n" % (werk["id"], prefix, werk["title"].encode("utf-8"), omit))
 
     if werk["compatible"] == "incomp":
         f.write("            NOTE: Please refer to the migration notes!\n")
@@ -262,13 +260,13 @@ def parse_check_mk_version(v):
         val = 50000 + num
     elif rest[0] == 'i':
         num, rest = extract_number(rest[1:])
-        val = 10000 + num*100
+        val = 10000 + num * 100
 
         if rest and rest[0] == 'p':
             num, rest = extract_number(rest[1:])
             val += num
     elif rest[0] == 'b':
         num, rest = extract_number(rest[1:])
-        val = 20000 + num*100
+        val = 20000 + num * 100
 
     return int('%02d%02d%02d%05d' % (int(major), int(minor), sub, val))

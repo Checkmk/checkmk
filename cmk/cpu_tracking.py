@@ -37,6 +37,7 @@ times = {}
 last_time_snapshot = []
 phase_stack = []
 
+
 def start(initial_phase):
     global times, last_time_snapshot
     console.vverbose("[cpu_tracking] Start with phase '%s'\n" % initial_phase)
@@ -83,13 +84,14 @@ def _add_times_to_phase():
     global last_time_snapshot
     new_time_snapshot = _time_snapshot()
     for phase in phase_stack[-1], "TOTAL":
-        phase_times = times.get(phase, [ 0.0 ] * len(new_time_snapshot))
+        phase_times = times.get(phase, [0.0] * len(new_time_snapshot))
         times[phase] = [
             phase_times[i] + new_time_snapshot[i] - last_time_snapshot[i]
-            for i in range(len(new_time_snapshot)) ]
+            for i in range(len(new_time_snapshot))
+        ]
     last_time_snapshot = new_time_snapshot
 
 
 def _time_snapshot():
     # TODO: Create a better structure for this data
-    return list(os.times()[:4]) + [ time.time() ]
+    return list(os.times()[:4]) + [time.time()]

@@ -24,7 +24,6 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-
 from cmk.regex import regex
 
 
@@ -68,7 +67,7 @@ def _translate(translation, name):
         if mo:
             name = subst
             for nr, text in enumerate(mo.groups("")):
-                name = name.replace("\\%d" % (nr+1), text)
+                name = name.replace("\\%d" % (nr + 1), text)
             break
 
     # 4. Explicity mapping

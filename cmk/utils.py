@@ -23,11 +23,11 @@
 # License along with GNU Make; see the file  COPYING.  If  not,  write
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
-
 """This is an unsorted collection of small unrelated helper functions which are
 usable in all components of Check_MK
 
 Please try to find a better place for the things you want to put here."""
+
 
 def make_utf8(x):
     if type(x) == unicode:

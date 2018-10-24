@@ -23,7 +23,6 @@
 # License along with GNU Make; see the file  COPYING.  If  not,  write
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
-
 """This module contains functions that can be used in all Check_MK components
 to produce crash reports in a generic format which can then be sent to Check_MK
 developers for analyzing the crashes."""
@@ -39,6 +38,7 @@ import subprocess
 import json
 
 import cmk
+
 
 # The default JSON encoder raises an exception when detecting unknown types. For the crash
 # reporting it is totally ok to have some string representations of the objects.
@@ -82,32 +82,33 @@ def create_crash_info(crash_type, details=None, version=None):
         exc_txt = str(exc_value).decode("utf-8")
 
     return {
-        "crash_type"    : crash_type,
-        "time"          : time.time(),
-        "os"            : get_os_info(),
-        "version"       : version,
-        "edition"       : cmk.edition_short(),
-        "core"          : _current_monitoring_core(),
+        "crash_type": crash_type,
+        "time": time.time(),
+        "os": get_os_info(),
+        "version": version,
+        "edition": cmk.edition_short(),
+        "core": _current_monitoring_core(),
         "python_version": sys.version,
-        "python_paths"  : sys.path,
-        "exc_type"      : exc_type.__name__,
-        "exc_value"     : exc_txt,
-        "exc_traceback" : tb_list,
-        "local_vars"    : get_local_vars_of_last_exception(),
-        "details"       : details,
+        "python_paths": sys.path,
+        "exc_type": exc_type.__name__,
+        "exc_value": exc_txt,
+        "exc_traceback": tb_list,
+        "local_vars": get_local_vars_of_last_exception(),
+        "details": details,
     }
 
 
 def get_os_info():
     if "OMD_ROOT" in os.environ:
-        return file(os.environ["OMD_ROOT"]+"/share/omd/distro.info").readline().split("=", 1)[1].strip()
+        return file(os.environ["OMD_ROOT"] + "/share/omd/distro.info").readline().split(
+            "=", 1)[1].strip()
     elif os.path.exists("/etc/redhat-release"):
         return file("/etc/redhat-release").readline().strip()
     elif os.path.exists("/etc/SuSE-release"):
         return file("/etc/SuSE-release").readline().strip()
 
     info = {}
-    for f in [ "/etc/os-release", "/etc/lsb-release" ]:
+    for f in ["/etc/os-release", "/etc/lsb-release"]:
         if os.path.exists(f):
             for line in file(f).readlines():
                 if "=" in line:
@@ -124,8 +125,12 @@ def get_os_info():
 
 
 def _current_monitoring_core():
-    p = subprocess.Popen(["omd", "config", "show", "CORE"], close_fds=True, shell=False,
-            stdin=open(os.devnull), stdout=subprocess.PIPE, stderr=open(os.devnull, "w"))
+    p = subprocess.Popen(["omd", "config", "show", "CORE"],
+                         close_fds=True,
+                         shell=False,
+                         stdin=open(os.devnull),
+                         stdout=subprocess.PIPE,
+                         stderr=open(os.devnull, "w"))
     return p.communicate()[0]
 
 
@@ -141,27 +146,28 @@ def get_local_vars_of_last_exception():
 
     # This needs to be encoded as the local vars might contain binary data which can not be
     # transported using JSON.
-    return base64.b64encode(format_var_for_export(pprint.pformat(local_vars), maxsize=5*1024*1024))
+    return base64.b64encode(
+        format_var_for_export(pprint.pformat(local_vars), maxsize=5 * 1024 * 1024))
 
 
-def format_var_for_export(val, maxdepth=4, maxsize=1024*1024):
+def format_var_for_export(val, maxdepth=4, maxsize=1024 * 1024):
     if maxdepth == 0:
         return "Max recursion depth reached"
 
     if isinstance(val, dict):
         val = val.copy()
         for item_key, item_val in val.items():
-            val[item_key] = format_var_for_export(item_val, maxdepth-1)
+            val[item_key] = format_var_for_export(item_val, maxdepth - 1)
 
     elif isinstance(val, list):
         val = val[:]
         for index, item in enumerate(val):
-            val[index] = format_var_for_export(item, maxdepth-1)
+            val[index] = format_var_for_export(item, maxdepth - 1)
 
     elif isinstance(val, tuple):
         new_val = ()
         for item in val:
-            new_val += (format_var_for_export(item, maxdepth-1),)
+            new_val += (format_var_for_export(item, maxdepth - 1),)
         val = new_val
 
     # Check and limit size

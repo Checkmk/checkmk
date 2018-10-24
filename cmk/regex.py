@@ -23,16 +23,16 @@
 # License along with GNU Make; see the file  COPYING.  If  not,  write
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
-
 """This module wraps some regex handling functions used by Check_MK"""
 
 import re
-from typing import Dict, Pattern # pylint:disable=unused-import
+from typing import Dict, Pattern  # pylint:disable=unused-import
 
 from cmk.exceptions import MKGeneralException
 from cmk.i18n import _
 
-g_compiled_regexes = {} # type: Dict[str, Pattern]
+g_compiled_regexes = {}  # type: Dict[str, Pattern]
+
 
 def regex(pattern):
     """Compile regex or look it up in already compiled regexes.

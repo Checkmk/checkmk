@@ -57,20 +57,19 @@ import logging as _logging
 # levels, this would force us to log normal stuff with a WARNING level, which
 # looks wrong.
 
-
 # Users should be able to set log levels without importing "logging"
 
 CRITICAL = _logging.CRITICAL
-ERROR    = _logging.ERROR
-WARNING  = _logging.WARNING
-INFO     = _logging.INFO
-DEBUG    = _logging.DEBUG
-
+ERROR = _logging.ERROR
+WARNING = _logging.WARNING
+INFO = _logging.INFO
+DEBUG = _logging.DEBUG
 
 # We need an additional log level between INFO and DEBUG to reflect the
 # verbose() and vverbose() mechanisms of Check_MK.
 
 VERBOSE = 15
+
 
 class CMKLogger(_logging.getLoggerClass()):
     def __init__(self, name, level=_logging.NOTSET):
@@ -82,25 +81,21 @@ class CMKLogger(_logging.getLoggerClass()):
         if self.is_verbose():
             self._log(VERBOSE, msg, args, **kwargs)
 
-
     def is_verbose(self):
         return self.isEnabledFor(VERBOSE)
 
-
     def is_very_verbose(self):
         return self.isEnabledFor(DEBUG)
-
 
     def set_format(self, fmt):
         handler = _logging.StreamHandler(stream=sys.stdout)
         handler.setFormatter(get_formatter(fmt))
 
-        del self.handlers[:] # Remove all previously existing handlers
+        del self.handlers[:]  # Remove all previously existing handlers
         self.addHandler(handler)
 
 
 _logging.setLoggerClass(CMKLogger)
-
 
 # Set default logging handler to avoid "No handler found" warnings.
 # Python 2.7+
@@ -155,7 +150,7 @@ def open_log(log_file_path, fallback_to=None):
         logfile = file(log_file_path, "a")
         logfile.flush()
     except Exception, e:
-        logger.exception("Cannot open log file '%s': %s", log_file_path , e)
+        logger.exception("Cannot open log file '%s': %s", log_file_path, e)
 
         if fallback_to:
             logfile = fallback_to
@@ -174,7 +169,7 @@ def setup_logging_handler(stream):
     handler = _logging.StreamHandler(stream=stream)
     handler.setFormatter(get_formatter("%(asctime)s [%(levelno)s] [%(name)s] %(message)s"))
 
-    del logger.handlers[:] # Remove all previously existing handlers
+    del logger.handlers[:]  # Remove all previously existing handlers
     logger.addHandler(handler)
 
 
@@ -206,8 +201,8 @@ class LogMixin(object):
     "self.cls_logger" for the class.
     """
     __parent_logger = None
-    __logger        = None
-    __cls_logger    = None
+    __logger = None
+    __cls_logger = None
 
     @property
     def _logger(self):
@@ -215,7 +210,6 @@ class LogMixin(object):
             parent = self.__parent_logger or logger
             self.__logger = parent.getChild('.'.join([self.__class__.__name__]))
         return self.__logger
-
 
     @classmethod
     def _cls_logger(cls):

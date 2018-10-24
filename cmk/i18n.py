@@ -23,10 +23,10 @@
 # License along with GNU Make; see the file  COPYING.  If  not,  write
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
-
 """Stub for future i18n code on cmk main module level"""
 
-from typing import AnyStr, Text # pylint:disable=unused-import
+from typing import AnyStr, Text  # pylint:disable=unused-import
+
 
 # TODO: Clean this up one day by using the way recommended by gettext.
 # (See https://docs.python.org/2/library/gettext.html). For this we

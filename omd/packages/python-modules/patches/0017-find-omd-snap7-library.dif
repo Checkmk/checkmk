@@ -1,6 +1,5 @@
-diff -Nur dest.orig/python-snap7-0.9/snap7/common.py dest/python-snap7-0.9/snap7/common.py
---- dest.orig/python-snap7-0.9/snap7/common.py	2014-07-27 20:33:00.000000000 +0200
-+++ dest/python-snap7-0.9/snap7/common.py	2015-02-18 10:31:15.711334756 +0100
+--- dest/python-snap7-0.10.orig/snap7/common.py	2018-10-25 14:24:55.196934609 +0200
++++ dest/python-snap7-0.10/snap7/common.py	2018-10-25 14:26:26.308308626 +0200
 @@ -40,7 +40,7 @@
      def __init__(self, lib_location=None):
          if self.cdll:

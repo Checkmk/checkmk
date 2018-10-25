@@ -26,15 +26,6 @@
 import json
 
 
-def get_resource(check_function):
-    def wrapped_check_function(item, params, parsed):
-        resource = parsed.get(item)
-        if resource is None:
-            return
-        return check_function(resource, params)
-    return wrapped_check_function
-
-
 def azure_iter_informative_attrs(resource):
 
     loc = resource.get('location')
@@ -46,40 +37,46 @@ def azure_iter_informative_attrs(resource):
             yield k[0].upper() + k[1:], v
 
 
-def check_azure_metric(resource, metric_key, cmk_key, display_name, levels=None,
-                       levels_lower=None, minv=None, maxv=None, use_rate=False):
-      metric = resource.get('metrics', {}).get(metric_key)
-      if metric is None:
-          return None
+def check_azure_metric(resource,
+                       metric_key,
+                       cmk_key,
+                       display_name,
+                       levels=None,
+                       levels_lower=None,
+                       minv=None,
+                       maxv=None,
+                       use_rate=False):
+    metric = resource.get('metrics', {}).get(metric_key)
+    if metric is None:
+        return None
 
-      if use_rate:
-          countername = "%s.%s" % (resource['id'], metric_key)
-          value = get_rate(countername, time.time(), metric.value)
-      else:
-          value = metric.value
+    if use_rate:
+        countername = "%s.%s" % (resource['id'], metric_key)
+        value = get_rate(countername, time.time(), metric.value)
+    else:
+        value = metric.value
 
-      l_state, u_state, text = 0, 0, "%s: %s" % (display_name, value)
-      if value is None:
-          return 3, text
+    l_state, u_state, text = 0, 0, "%s: %s" % (display_name, value)
+    if value is None:
+        return 3, text
 
-      warn_lower, crit_lower = levels_lower or (None, None)
-      if crit_lower is not None and value <= crit_lower:
-          l_state = 2
-      elif warn_lower is not None and value <= warn_lower:
-          l_state = 1
-      if l_state != 0:
-          text += " (warn/crit below %s/%s)" % (warn_lower, crit_lower)
+    warn_lower, crit_lower = levels_lower or (None, None)
+    if crit_lower is not None and value <= crit_lower:
+        l_state = 2
+    elif warn_lower is not None and value <= warn_lower:
+        l_state = 1
+    if l_state != 0:
+        text += " (warn/crit below %s/%s)" % (warn_lower, crit_lower)
 
-      warn, crit = levels or (None, None)
-      if crit is not None and value >= crit:
-          u_state = 2
-      elif warn is not None and value >= warn:
-          u_state = 1
-      if u_state != 0:
-          text += " (warn/crit at %s/%s)" % (warn, crit)
+    warn, crit = levels or (None, None)
+    if crit is not None and value >= crit:
+        u_state = 2
+    elif warn is not None and value >= warn:
+        u_state = 1
+    if u_state != 0:
+        text += " (warn/crit at %s/%s)" % (warn, crit)
 
-      return max(l_state, u_state), text, [(cmk_key, value, warn, crit, minv, maxv)]
-
+    return max(l_state, u_state), text, [(cmk_key, value, warn, crit, minv, maxv)]
 
 
 #   .--Parse---------------------------------------------------------------.
@@ -91,9 +88,8 @@ def check_azure_metric(resource, metric_key, cmk_key, display_name, levels=None,
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-
-Metric = collections.namedtuple("Metric", ["name", "aggregation", "value", "unit",
-                                           "timestamp", "timegrain", "filters"])
+Metric = collections.namedtuple(
+    "Metric", ["name", "aggregation", "value", "unit", "timestamp", "timegrain", "filters"])
 
 
 def _read(row, types, defaults=None):
@@ -126,9 +122,9 @@ def _parse_resource(info):
         return resource
 
     # header = info[2]
-    for mline in info[3: 3 + count]:
-        name, aggregation, value, unit, timestamp, timegrain, filters = _read(mline,
-            (str, str, float, str, str, str, str))
+    for mline in info[3:3 + count]:
+        name, aggregation, value, unit, timestamp, timegrain, filters = _read(
+            mline, (str, str, float, str, str, str, str))
         if unit in ('count', 'bytes') and value is not None:
             # even integer values are formated '42.0', so we needed float(.)
             value = int(value)
@@ -156,7 +152,6 @@ def parse_azure(info):
 
 #.
 
-
 #   .--Discovery-----------------------------------------------------------.
 #   |              ____  _                                                 |
 #   |             |  _ \(_)___  ___ _____   _____ _ __ _   _               |
@@ -169,16 +164,12 @@ def parse_azure(info):
 
 def discover_azure_by_metrics(*desired_metrics):
     """Return a discovery function, that will discover if any of the metrics are found"""
+
     def discovery_function(parsed):
         for name, resource in parsed.iteritems():
             metr = resource.get('metrics', {})
             if set(desired_metrics) & set(metr.keys()):
                 yield name, {}
+
     return discovery_function
-
-
-def discover_resources(parsed):
-    for name in parsed:
-        yield name, {}
 #.
-

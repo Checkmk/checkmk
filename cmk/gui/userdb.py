@@ -519,11 +519,16 @@ def declare_user_attribute(name, vs, user_editable = True, permission = None,
                            show_in_table = False, topic = None, add_custom_macro = False,
                            domain = "multisite", from_config = False):
 
+    # FIXME: The classmethods "name" and "topic" shadow the arguments from the function scope.
+    # Any use off "name" and "topic" inside the class will result in a NameError.
+    attr_name = name
+    attr_topic = topic
+
     @user_attribute_registry.register
     class LegacyUserAttribute(GenericUserAttribute):
-        _name = name
+        _name = attr_name
         _valuespec = vs
-        _topic = topic if topic else 'personal'
+        _topic = attr_topic if attr_topic else 'personal'
 
         @classmethod
         def name(cls):

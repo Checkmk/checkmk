@@ -185,7 +185,7 @@ function sections_systemd()
 {
     if type systemctl >/dev/null 2>&1 ; then
         echo '<<<systemd_units>>>'
-        systemctl --all
+        systemctl --all --no-pager
     fi
 }
 

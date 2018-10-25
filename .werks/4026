@@ -6,7 +6,7 @@ Version: 1.5.0i1
 Date: 1487595108
 Class: feature
 
-The mk_logwatch plugin is no longer restricted to windows.
+The mk_logwatch plugin is no longer restricted to linux.
 It now runs as a frozen python binary under windows, which requires no extra python installation.
 
 The plugin reads its configuration from the config/logwatch.cfg file.

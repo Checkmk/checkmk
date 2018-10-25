@@ -975,14 +975,30 @@ def show_filter(f):
 
 
 def get_filter(name):
+    # type: (str) -> Type[Filter]
+    """Returns the filter object identified by the given name
+    Raises a KeyError in case a not existing filter is requested."""
     return multisite_filters[name]
 
+
 def filters_allowed_for_info(info):
+    # type (str) -> Dict[str, Type[Filter]]
+    """Returns a map of filter names and filter objects that are registered for the given info"""
     allowed = {}
     for fname, filt in multisite_filters.items():
         if filt.info == None or info == filt.info:
             allowed[fname] = filt
     return allowed
+
+
+def filters_allowed_for_infos(infos):
+    # type (List[str]) -> Dict[str, Type[Filter]]
+    """Same as filters_allowed_for_info() but for multiple infos"""
+    filters = {}
+    for info in infos:
+        filters.update(filters_allowed_for_info(info))
+    return filters
+
 
 # For all single_infos which are configured for a view which datasource
 # does not provide these infos, try to match the keys of the single_info
@@ -1002,37 +1018,28 @@ def get_link_filter_names(visual, info_keys, link_filters):
     return names
 
 # Collects all filters to be used for the given visual
-def filters_of_visual(visual, info_keys, show_all=False, link_filters=None):
+def filters_of_visual(visual, info_keys, link_filters=None):
     if link_filters is None:
         link_filters = []
 
     filters = []
 
-    # Collect all available filters for these infos
-    all_possible_filters = []
-    for _filter_name, filter_ in multisite_filters.items():
-        if filter_.info in info_keys:
-            all_possible_filters.append(filter_)
-
     for info_key in info_keys:
         if info_key in visual['single_infos']:
             for key in info_params(info_key):
                 filters.append(get_filter(key))
+            continue
 
-        elif not show_all:
-            for key, val in visual['context'].items():
-                if type(val) == dict: # this is a real filter
-                    try:
-                        filters.append(get_filter(key))
-                    except KeyError:
-                        pass # Silently ignore not existing filters
+        for key, val in visual['context'].items():
+            if type(val) == dict: # this is a real filter
+                try:
+                    filters.append(get_filter(key))
+                except KeyError:
+                    pass # Silently ignore not existing filters
 
     # See get_link_filter_names() comment for details
     for key, dst_key in get_link_filter_names(visual, info_keys, link_filters):
         filters.append(get_filter(dst_key))
-
-    if show_all: # add *all* available filters of these infos
-        filters += all_possible_filters
 
     # add ubiquitary_filters that are possible for these infos
     for fn in get_ubiquitary_filters():

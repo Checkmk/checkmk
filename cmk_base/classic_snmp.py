@@ -279,3 +279,56 @@ def _snmp_base_command(what, access_data, context_name):
         options += ["-n", context_name]
 
     return command + options
+
+#.
+#   .--SNMP helpers--------------------------------------------------------.
+#   |     ____  _   _ __  __ ____    _          _                          |
+#   |    / ___|| \ | |  \/  |  _ \  | |__   ___| |_ __   ___ _ __ ___      |
+#   |    \___ \|  \| | |\/| | |_) | | '_ \ / _ \ | '_ \ / _ \ '__/ __|     |
+#   |     ___) | |\  | |  | |  __/  | | | |  __/ | |_) |  __/ |  \__ \     |
+#   |    |____/|_| \_|_|  |_|_|     |_| |_|\___|_| .__/ \___|_|  |___/     |
+#   |                                            |_|                       |
+#   +----------------------------------------------------------------------+
+#   | Internal helpers for processing SNMP things                          |
+#   '----------------------------------------------------------------------'
+
+
+def strip_snmp_value(value, hex_plain=False):
+    v = value.strip()
+    if v.startswith('"'):
+        v = v[1:-1]
+        if len(v) > 2 and _is_hex_string(v):
+            return value if hex_plain else _convert_from_hex(v)
+        # Fix for non hex encoded string which have been somehow encoded by the
+        # netsnmp command line tools. An example:
+        # Checking windows systems via SNMP with hr_fs: disk names like c:\
+        # are reported as c:\\, fix this to single \
+        return v.strip().replace('\\\\', '\\')
+    return v
+
+
+def _is_hex_string(value):
+    # as far as I remember, snmpwalk puts a trailing space within
+    # the quotes in case of hex strings. So we require that space
+    # to be present in order make sure, we really deal with a hex string.
+    if value[-1] != ' ':
+        return False
+    hexdigits = "0123456789abcdefABCDEF"
+    n = 0
+    for x in value:
+        if n % 3 == 2:
+            if x != ' ':
+                return False
+        else:
+            if x not in hexdigits:
+                return False
+        n += 1
+    return True
+
+
+def _convert_from_hex(value):
+    hexparts = value.split()
+    r = ""
+    for hx in hexparts:
+        r += chr(int(hx, 16))
+    return r

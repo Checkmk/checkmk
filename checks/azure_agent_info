@@ -25,7 +25,6 @@
 # Boston, MA 02110-1301 USA.
 import json
 
-
 factory_settings['azure_agent_info_levels'] = {
     'warning_levels': (1, 10),
     'exception_levels': (1, 1),
@@ -104,12 +103,11 @@ def check_azure_agent_info(item, params, parsed):
 
 
 check_info['azure_agent_info'] = {
-    'parse_function'         : parse_azure_agent_info,
-    'inventory_function'     : discovery_azure_agent_info,
-    'check_function'         : check_azure_agent_info,
-    'service_description'    : "%s",
+    'parse_function': parse_azure_agent_info,
+    'inventory_function': discovery_azure_agent_info,
+    'check_function': check_azure_agent_info,
+    'service_description': "%s",
     'default_levels_variable': "azure_agent_info_levels",
-    'has_perfdata'           : True,
-    'group'                  : "azure_agent_info",
+    'has_perfdata': True,
+    'group': "azure_agent_info",
 }
-

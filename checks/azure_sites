@@ -24,31 +24,28 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-
 factory_settings['levels_azure_sites'] = {
     # https://www.nngroup.com/articles/response-times-3-important-limits/
-    'avg_response_time_levels' : (1.0, 10.0),
+    'avg_response_time_levels': (1.0, 10.0),
     # https://www.unigma.com/2016/07/11/best-practices-for-monitoring-microsoft-azure/
     'error_rate_levels': (0.01, 0.04),
-    'cpu_time_percent_levels'  : (85., 95.),
+    'cpu_time_percent_levels': (85., 95.),
 }
 
-
-_AZURE_SITES_METRICS = (
-    # metric key                  cmk key,              display                  use_rate
-    ('total_CpuTime',             'cpu_time_percent',   'CPU time',              True),
-    ('total_AverageResponseTime', 'avg_response_time',  'Average response time', False),
-    ('total_Http5xx',             'error_rate',         'Rate of server errors', True),
+_AZURE_SITES_METRICS = (  # metric_key, cmk_key, display_name, use_rate_flag
+    ('total_CpuTime', 'cpu_time_percent', 'CPU time', True),
+    ('total_AverageResponseTime', 'avg_response_time', 'Average response time', False),
+    ('total_Http5xx', 'error_rate', 'Rate of server errors', True),
 )
 
 
-@get_resource
-def check_azure_sites(resource, params):
+@get_parsed_item_data
+def check_azure_sites(_item, params, resource):
 
     for key, cmk_key, displ, use_rate in _AZURE_SITES_METRICS:
         levels = params.get("%s_levels" % cmk_key, (None, None))
-        mcheck = check_azure_metric(resource, key, cmk_key, displ, levels=levels,
-                                    minv=0, use_rate=use_rate)
+        mcheck = check_azure_metric(
+            resource, key, cmk_key, displ, levels=levels, minv=0, use_rate=use_rate)
         if mcheck:
             yield mcheck
 
@@ -57,12 +54,12 @@ def check_azure_sites(resource, params):
 
 
 check_info['azure_sites'] = {
-    'parse_function'         : parse_azure,
-    'inventory_function'     : discover_resources,
-    'check_function'         : check_azure_sites,
-    'has_perfdata'           : True,
-    'service_description'    : "Site %s",
-    'includes'               : ['azure.include'],
+    'parse_function': parse_azure,
+    'inventory_function': discover(),
+    'check_function': check_azure_sites,
+    'has_perfdata': True,
+    'service_description': "Site %s",
+    'includes': ['azure.include'],
     'default_levels_variable': 'levels_azure_sites',
-    'group'                  : 'webserver',
+    'group': 'webserver',
 }

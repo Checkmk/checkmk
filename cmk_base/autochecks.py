@@ -34,6 +34,7 @@ import cmk.paths
 import cmk_base.config
 import cmk_base.console
 
+
 # Read automatically discovered checks of one host.
 # world: "config" -> File in var/check_mk/autochecks
 #        "active" -> Copy in var/check_mk/core/autochecks
@@ -51,12 +52,12 @@ def read_autochecks_of(hostname, world="config"):
     filepath = basedir + '/' + hostname + '.mk'
 
     if not os.path.exists(filepath):
-       return []
+        return []
 
     check_config = cmk_base.config.get_check_variables()
     try:
         autochecks_raw = eval(file(filepath).read(), check_config, check_config)
-    except SyntaxError,e:
+    except SyntaxError, e:
         cmk_base.console.verbose("Syntax error in file %s: %s\n", filepath, e, stream=sys.stderr)
         if cmk.debug.enabled():
             raise
@@ -71,7 +72,7 @@ def read_autochecks_of(hostname, world="config"):
     # the user. Also merge with default levels for modern dictionary based checks.
     autochecks = []
     for entry in autochecks_raw:
-        if len(entry) == 4: # old format where hostname is at the first place
+        if len(entry) == 4:  # old format where hostname is at the first place
             entry = entry[1:]
         check_plugin_name, item, parameters = entry
 
@@ -81,9 +82,11 @@ def read_autochecks_of(hostname, world="config"):
             item = cmk_base.config.decode_incoming_string(item)
 
         if type(check_plugin_name) not in (str, unicode):
-            raise cmk.exceptions.MKGeneralException("Invalid entry '%r' in check table of host '%s': "
-                                                    "The check type must be a string." % (entry, hostname))
+            raise cmk.exceptions.MKGeneralException(
+                "Invalid entry '%r' in check table of host '%s': "
+                "The check type must be a string." % (entry, hostname))
 
         autochecks.append((check_plugin_name, item,
-            cmk_base.config.compute_check_parameters(hostname, check_plugin_name, item, parameters)))
+                           cmk_base.config.compute_check_parameters(hostname, check_plugin_name,
+                                                                    item, parameters)))
     return autochecks

@@ -43,12 +43,13 @@ import cmk_base.ip_lookup as ip_lookup
 
 def do_scan_parents(hosts):
     if not hosts:
-        hosts = [h
-                 for h in config.all_active_realhosts()
-                 if config.in_binary_hostlist(h, config.scanparent_hosts)]
+        hosts = [
+            h for h in config.all_active_realhosts()
+            if config.in_binary_hostlist(h, config.scanparent_hosts)
+        ]
 
     parent_hosts = []
-    parent_ips   = {}
+    parent_ips = {}
     parent_rules = []
     gateway_hosts = set([])
 
@@ -58,10 +59,9 @@ def do_scan_parents(hosts):
     outfilename = cmk.paths.check_mk_config_dir + "/parents.mk"
 
     if not traceroute_available():
-        raise MKGeneralException(
-           'The program "traceroute" was not found.\n'
-           'The parent scan needs this program.\n'
-           'Please install it and try again.')
+        raise MKGeneralException('The program "traceroute" was not found.\n'
+                                 'The parent scan needs this program.\n'
+                                 'Please install it and try again.')
 
     if os.path.exists(outfilename):
         first_line = file(outfilename, "r").readline()
@@ -88,7 +88,7 @@ def do_scan_parents(hosts):
         for host, (gw, _unused_state, _unused_ping_fails, _unused_message) in zip(chunk, gws):
             if gw:
                 gateway, gateway_ip, dns_name = gw
-                if not gateway: # create artificial host
+                if not gateway:  # create artificial host
                     if dns_name:
                         gateway = dns_name
                     else:
@@ -98,11 +98,12 @@ def do_scan_parents(hosts):
                         parent_hosts.append("%s|parent|ping" % gateway)
                         parent_ips[gateway] = gateway_ip
                         if config.monitoring_host:
-                            parent_rules.append( (config.monitoring_host, [gateway]) ) # make Nagios a parent of gw
-                parent_rules.append( (gateway, [host]) )
+                            parent_rules.append((config.monitoring_host,
+                                                 [gateway]))  # make Nagios a parent of gw
+                parent_rules.append((gateway, [host]))
             elif host != config.monitoring_host and config.monitoring_host:
                 # make monitoring host the parent of all hosts without real parent
-                parent_rules.append( (config.monitoring_host, [host]) )
+                parent_rules.append((config.monitoring_host, [host]))
 
     with file(outfilename, "w") as out:
         out.write("# Automatically created by --scan-parents at %s\n\n" % time.asctime())
@@ -146,17 +147,20 @@ def scan_parents_of(hosts, silent=False, settings=None):
         console.verbose("%s " % host)
         try:
             ip = ip_lookup.lookup_ipv4_address(host)
-            command = [ "traceroute",
-                            "-w", "%d" % settings.get("timeout", 8),
-                            "-q", "%d" % settings.get("probes", 2),
-                            "-m", "%d" % settings.get("max_ttl", 10),
-                            "-n", ip ]
+            command = [
+                "traceroute", "-w",
+                "%d" % settings.get("timeout", 8), "-q",
+                "%d" % settings.get("probes", 2), "-m",
+                "%d" % settings.get("max_ttl", 10), "-n", ip
+            ]
             console.vverbose("Running '%s'\n" % subprocess.list2cmdline(command))
 
-            procs.append((host, ip, subprocess.Popen(command,
-                                        stdout=subprocess.PIPE,
-                                        stderr=subprocess.STDOUT,
-                                        close_fds=True)))
+            procs.append((host, ip,
+                          subprocess.Popen(
+                              command,
+                              stdout=subprocess.PIPE,
+                              stderr=subprocess.STDOUT,
+                              close_fds=True)))
         except Exception, e:
             if cmk.debug.enabled():
                 raise
@@ -171,16 +175,17 @@ def scan_parents_of(hosts, silent=False, settings=None):
     # we add a triple to gateways: the gateway, a scan state  and a diagnostic output
     gateways = []
     for host, ip, proc_or_error in procs:
-        if type(proc_or_error) in [ str, unicode ]:
-            lines      = [ proc_or_error ]
+        if type(proc_or_error) in [str, unicode]:
+            lines = [proc_or_error]
             exitstatus = 1
         else:
             exitstatus = proc_or_error.wait()
-            lines = [ l.strip() for l in proc_or_error.stdout.readlines() ]
+            lines = [l.strip() for l in proc_or_error.stdout.readlines()]
 
         if exitstatus:
             dot(tty.red, '*')
-            gateways.append((None, "failed", 0, "Traceroute failed with exit code %d" % (exitstatus & 255)))
+            gateways.append((None, "failed", 0,
+                             "Traceroute failed with exit code %d" % (exitstatus & 255)))
             continue
 
         if len(lines) == 1 and lines[0].startswith("ERROR:"):
@@ -192,7 +197,8 @@ def scan_parents_of(hosts, silent=False, settings=None):
 
         elif len(lines) == 0:
             if cmk.debug.enabled():
-                raise MKGeneralException("Cannot execute %s. Is traceroute installed? Are you root?" % command)
+                raise MKGeneralException(
+                    "Cannot execute %s. Is traceroute installed? Are you root?" % command)
             else:
                 dot(tty.red, '!')
             continue
@@ -200,8 +206,8 @@ def scan_parents_of(hosts, silent=False, settings=None):
         elif len(lines) < 2:
             if not silent:
                 console.error("%s: %s\n" % (host, ' '.join(lines)))
-            gateways.append((None, "garbled", 0, "The output of traceroute seem truncated:\n%s" %
-                    ("".join(lines))))
+            gateways.append((None, "garbled", 0,
+                             "The output of traceroute seem truncated:\n%s" % ("".join(lines))))
             dot(tty.blue)
             continue
 
@@ -226,11 +232,10 @@ def scan_parents_of(hosts, silent=False, settings=None):
             if route.count('.') == 3:
                 routes.append(route)
             elif route == '*':
-                routes.append(None) # No answer from this router
+                routes.append(None)  # No answer from this router
             else:
                 if not silent:
-                    console.error("%s: invalid output line from traceroute: '%s'\n" %
-                                                    (host, line))
+                    console.error("%s: invalid output line from traceroute: '%s'\n" % (host, line))
 
         if len(routes) == 0:
             error = "incomplete output from traceroute. No routes found."
@@ -245,13 +250,13 @@ def scan_parents_of(hosts, silent=False, settings=None):
         # this in monitoring_host.
         elif len(routes) == 1:
             if ip == nagios_ip:
-                gateways.append( (None, "root", 0, "") ) # We are the root-monitoring host
+                gateways.append((None, "root", 0, ""))  # We are the root-monitoring host
                 dot(tty.white, 'N')
             elif config.monitoring_host:
-                gateways.append( ((config.monitoring_host, nagios_ip, None), "direct", 0, "") )
+                gateways.append(((config.monitoring_host, nagios_ip, None), "direct", 0, ""))
                 dot(tty.cyan, 'L')
             else:
-                gateways.append( (None, "direct", 0, "") )
+                gateways.append((None, "direct", 0, ""))
             continue
 
         # Try far most route which is not identical with host itself
@@ -288,16 +293,18 @@ def scan_parents_of(hosts, silent=False, settings=None):
 
         # Try to find DNS name of host via reverse DNS lookup
         dns_name = _ip_to_dnsname(gateway_ip)
-        gateways.append( ((gateway, gateway_ip, dns_name), "gateway", skipped_gateways, "") )
+        gateways.append(((gateway, gateway_ip, dns_name), "gateway", skipped_gateways, ""))
         dot(tty.green, 'G')
     return gateways
 
 
 def gateway_reachable_via_ping(ip, probes):
-    return subprocess.call(["ping", "-q", "-i", "0.2", "-l", "3", "-c",
-                             "%d" % probes, "-W", "5", ip ],
-                           stdout=open(os.devnull, "w"),
-                           stderr=subprocess.STDOUT, close_fds=True) == 0
+    return subprocess.call(
+        ["ping", "-q", "-i", "0.2", "-l", "3", "-c",
+         "%d" % probes, "-W", "5", ip],
+        stdout=open(os.devnull, "w"),
+        stderr=subprocess.STDOUT,
+        close_fds=True) == 0
 
 
 # find hostname belonging to an ip address. We must not use

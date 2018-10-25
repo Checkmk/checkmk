@@ -23,7 +23,6 @@
 # License along with GNU Make; see the file  COPYING.  If  not,  write
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
-
 """Performing the actual checks."""
 
 import os
@@ -57,15 +56,14 @@ try:
 except Exception:
     keepalive = None
 
-
 # global variables used to cache temporary values that do not need
 # to be reset after a configuration change.
-_nagios_command_pipe   = None # Filedescriptor to open nagios command pipe.
-_checkresult_file_fd   = None
+_nagios_command_pipe = None  # Filedescriptor to open nagios command pipe.
+_checkresult_file_fd = None
 _checkresult_file_path = None
 
 _submit_to_core = True
-_show_perfdata  = False
+_show_perfdata = False
 
 
 #.
@@ -79,6 +77,7 @@ _show_perfdata  = False
 #   +----------------------------------------------------------------------+
 #   | Execute the Check_MK checks on hosts                                 |
 #   '----------------------------------------------------------------------'
+
 
 @cmk_base.decorator.handle_check_mk_check_result("mk", "Check_MK")
 def do_check(hostname, ipaddress, only_check_plugin_names=None):
@@ -139,8 +138,8 @@ def do_check(hostname, ipaddress, only_check_plugin_names=None):
             ]
 
             for phase, times in phase_times.items():
-                if phase in [ "agent", "snmp", "ds" ]:
-                    t = times[4] - sum(times[:4]) # real time - CPU time
+                if phase in ["agent", "snmp", "ds"]:
+                    t = times[4] - sum(times[:4])  # real time - CPU time
                     perfdata.append("cmk_time_%s=%.3f" % (phase, t))
         else:
             perfdata.append("execution_time=%.3f" % run_time)
@@ -170,9 +169,11 @@ def _check_missing_sections(missing_sections, exit_spec):
             generic_missing_sections.add(section)
 
     generic_missing_sections_status = exit_spec.get("missing_sections", 1)
-    infotexts = ["Missing agent sections: %s%s" % (
-                 ", ".join(sorted(generic_missing_sections)),
-                 check_api_utils.state_markers[generic_missing_sections_status])]
+    infotexts = [
+        "Missing agent sections: %s%s" %
+        (", ".join(sorted(generic_missing_sections)),
+         check_api_utils.state_markers[generic_missing_sections_status])
+    ]
 
     for section, status in sorted(specific_missing_sections):
         infotexts.append("%s%s" % (section, check_api_utils.state_markers[status]))
@@ -194,8 +195,11 @@ def _do_all_checks_on_host(sources, hostname, ipaddress, only_check_plugin_names
     if belongs_to_cluster:
         filter_mode = "include_clustered"
 
-    table = check_table.get_precompiled_check_table(hostname, remove_duplicates=True, filter_mode=filter_mode,
-                                    world="active" if _in_keepalive_mode() else "config")
+    table = check_table.get_precompiled_check_table(
+        hostname,
+        remove_duplicates=True,
+        filter_mode=filter_mode,
+        world="active" if _in_keepalive_mode() else "config")
 
     # When check types are specified via command line, enforce them. Otherwise use the
     # list of checks defined by the check table.
@@ -220,15 +224,16 @@ def _do_all_checks_on_host(sources, hostname, ipaddress, only_check_plugin_names
                 neg_match.add(check_plugin_name)
         only_check_plugin_names -= (pos_match - neg_match)
 
-
     for check_plugin_name, item, params, description in table:
         if only_check_plugin_names != None and check_plugin_name not in only_check_plugin_names:
             continue
 
-        if belongs_to_cluster and hostname != config.host_of_clustered_service(hostname, description):
+        if belongs_to_cluster and hostname != config.host_of_clustered_service(
+                hostname, description):
             continue
 
-        success = execute_check(multi_host_sections, hostname, ipaddress, check_plugin_name, item, params, description)
+        success = execute_check(multi_host_sections, hostname, ipaddress, check_plugin_name, item,
+                                params, description)
         if success:
             num_success += 1
         elif success is None:
@@ -251,13 +256,14 @@ def _do_all_checks_on_host(sources, hostname, ipaddress, only_check_plugin_names
 
 def _cleanup_status_data(hostname):
     filepath = "%s/%s" % (cmk.paths.status_data_dir, hostname)
-    if os.path.exists(filepath): # Remove empty status data files.
+    if os.path.exists(filepath):  # Remove empty status data files.
         os.remove(filepath)
     if os.path.exists(filepath + ".gz"):
         os.remove(filepath + ".gz")
 
 
-def execute_check(multi_host_sections, hostname, ipaddress, check_plugin_name, item, params, description):
+def execute_check(multi_host_sections, hostname, ipaddress, check_plugin_name, item, params,
+                  description):
     # Make a bit of context information globally available, so that functions
     # called by checks now this context
     check_api_utils.set_service(check_plugin_name, description)
@@ -266,7 +272,8 @@ def execute_check(multi_host_sections, hostname, ipaddress, check_plugin_name, i
     # Skip checks that are not in their check period
     period = config.check_period_of(hostname, description)
     if period and not cmk_base.core.check_timeperiod(period):
-        console.verbose("Skipping service %s: currently not in timeperiod %s.\n" % (description, period))
+        console.verbose(
+            "Skipping service %s: currently not in timeperiod %s.\n" % (description, period))
         return None
 
     elif period:
@@ -279,8 +286,8 @@ def execute_check(multi_host_sections, hostname, ipaddress, check_plugin_name, i
     try:
         # TODO: There is duplicate code with discovery._execute_discovery(). Find a common place!
         try:
-            section_content = multi_host_sections.get_section_content(hostname,
-                                                        ipaddress, section_name, for_discovery=False)
+            section_content = multi_host_sections.get_section_content(
+                hostname, ipaddress, section_name, for_discovery=False)
         except MKParseFunctionError, e:
             x = e.exc_info()
             # re-raise the original exception to not destory the trace. This may raise a MKCounterWrapped
@@ -288,7 +295,7 @@ def execute_check(multi_host_sections, hostname, ipaddress, check_plugin_name, i
             raise x[0], x[1], x[2]
 
         # TODO: Move this to a helper function
-        if section_content is None: # No data for this check type
+        if section_content is None:  # No data for this check type
             return False
 
         # In case of SNMP checks but missing agent response, skip this check.
@@ -306,7 +313,8 @@ def execute_check(multi_host_sections, hostname, ipaddress, check_plugin_name, i
         item_state.reset_wrapped_counters()
 
         raw_result = check_function(item, determine_check_params(params), section_content)
-        result = sanitize_check_result(raw_result, cmk_base.check_utils.is_snmp_check(check_plugin_name))
+        result = sanitize_check_result(raw_result,
+                                       cmk_base.check_utils.is_snmp_check(check_plugin_name))
         item_state.raise_counter_wrap()
 
     except item_state.MKCounterWrapped, e:
@@ -322,9 +330,9 @@ def execute_check(multi_host_sections, hostname, ipaddress, check_plugin_name, i
     except Exception, e:
         if cmk.debug.enabled():
             raise
-        result = 3, cmk_base.crash_reporting.create_crash_dump(hostname, check_plugin_name, item,
-                                    is_manual_check(hostname, check_plugin_name, item),
-                                    params, description, section_content), []
+        result = 3, cmk_base.crash_reporting.create_crash_dump(
+            hostname, check_plugin_name, item, is_manual_check(hostname, check_plugin_name, item),
+            params, description, section_content), []
 
     if not dont_submit:
         # Now add information about the age of the data in the agent
@@ -338,7 +346,7 @@ def execute_check(multi_host_sections, hostname, ipaddress, check_plugin_name, i
                 return b
             elif b == None:
                 return a
-            return min(a,b)
+            return min(a, b)
 
         for host_sections in multi_host_sections.get_host_sections().values():
             section_entries = host_sections.cache_info
@@ -347,8 +355,12 @@ def execute_check(multi_host_sections, hostname, ipaddress, check_plugin_name, i
                 oldest_cached_at = minn(oldest_cached_at, cached_at)
                 largest_interval = max(largest_interval, cache_interval)
 
-        _submit_check_result(hostname, description, result,
-                            cached_at=oldest_cached_at, cache_interval=largest_interval)
+        _submit_check_result(
+            hostname,
+            description,
+            result,
+            cached_at=oldest_cached_at,
+            cache_interval=largest_interval)
     return True
 
 
@@ -356,15 +368,15 @@ def determine_check_params(entries):
     if not isinstance(entries, cmk_base.config.TimespecificParamList):
         return entries
 
-
     # Check if first entry is not dict based or if its dict based
     # check if the tp_default_value is not a dict
     if not isinstance(entries[0], dict) or \
        not isinstance(entries[0].get("tp_default_value", {}), dict):
         # This rule is tuple based, means no dict-key merging
         if not isinstance(entries[0], dict):
-            return entries[0] # A tuple rule, simply return first match
-        return _evaluate_timespecific_entry(entries[0]) # A timespecific rule, determine the correct tuple
+            return entries[0]  # A tuple rule, simply return first match
+        return _evaluate_timespecific_entry(
+            entries[0])  # A timespecific rule, determine the correct tuple
 
     # This rule is dictionary based, evaluate all entries and merge matching keys
     timespecific_entries = {}
@@ -406,9 +418,11 @@ def _evaluate_timespecific_entry(entry):
 
 
 def is_manual_check(hostname, check_plugin_name, item):
-    manual_checks = check_table.get_check_table(hostname, remove_duplicates=True,
-                                    world="active" if _in_keepalive_mode() else "config",
-                                    skip_autochecks=True)
+    manual_checks = check_table.get_check_table(
+        hostname,
+        remove_duplicates=True,
+        world="active" if _in_keepalive_mode() else "config",
+        skip_autochecks=True)
     return (check_plugin_name, item) in manual_checks
 
 
@@ -430,7 +444,6 @@ def _sanitize_yield_check_result(result, is_snmp):
     # Empty list? Check returned nothing
     if not subresults:
         return _item_not_found(is_snmp)
-
 
     # Several sub results issued with multiple yields. Make that worst sub check
     # decide the total state, join the texts and performance data. Subresults with
@@ -493,14 +506,14 @@ def _sanitize_check_result_infotext(infotext, allow_missing_infotext):
 
 def _convert_perf_data(p):
     # replace None with "" and fill up to 7 values
-    p = (map(_convert_perf_value, p) + ['','','',''])[0:6]
-    return "%s=%s;%s;%s;%s;%s" %  tuple(p)
+    p = (map(_convert_perf_value, p) + ['', '', '', ''])[0:6]
+    return "%s=%s;%s;%s;%s;%s" % tuple(p)
 
 
 def _convert_perf_value(x):
     if x == None:
         return ""
-    elif type(x) in [ str, unicode ]:
+    elif type(x) in [str, unicode]:
         return x
     elif type(x) == float:
         return ("%.6f" % x).rstrip("0").rstrip(".")
@@ -522,19 +535,17 @@ def _convert_perf_value(x):
 #   '----------------------------------------------------------------------'
 # TODO: Put the core specific things to dedicated files
 
+
 def _submit_check_result(host, servicedesc, result, cached_at=None, cache_interval=None):
     if not result:
         result = 3, "Check plugin did not return any result"
 
     if len(result) != 3:
-        raise MKGeneralException("Invalid check result: %s" % (result, ))
+        raise MKGeneralException("Invalid check result: %s" % (result,))
     state, infotext, perfdata = result
 
-    if not (
-        infotext.startswith("OK -") or
-        infotext.startswith("WARN -") or
-        infotext.startswith("CRIT -") or
-        infotext.startswith("UNKNOWN -")):
+    if not (infotext.startswith("OK -") or infotext.startswith("WARN -") or
+            infotext.startswith("CRIT -") or infotext.startswith("UNKNOWN -")):
         infotext = defines.short_service_state_name(state) + " - " + infotext
 
     # make sure that plugin output does not contain a vertical bar. If that is the
@@ -583,16 +594,17 @@ def _output_check_result(servicedesc, state, infotext, perftexts):
         p = ''
         infotext_fmt = "%s"
 
-    console.verbose("%-20s %s%s"+infotext_fmt+"%s%s\n",
-        servicedesc.encode('utf-8'), tty.bold, tty.states[state],
-        cmk_base.utils.make_utf8(infotext.split('\n')[0]),
-        tty.normal, cmk_base.utils.make_utf8(p))
+    console.verbose("%-20s %s%s" + infotext_fmt + "%s%s\n",
+                    servicedesc.encode('utf-8'), tty.bold, tty.states[state],
+                    cmk_base.utils.make_utf8(infotext.split('\n')[0]), tty.normal,
+                    cmk_base.utils.make_utf8(p))
 
 
-def _do_submit_to_core(host, service, state, output, cached_at = None, cache_interval = None):
+def _do_submit_to_core(host, service, state, output, cached_at=None, cache_interval=None):
     if _in_keepalive_mode():
         # Regular case for the CMC - check helpers are running in keepalive mode
-        keepalive.add_keepalive_check_result(host, service, state, output, cached_at, cache_interval)
+        keepalive.add_keepalive_check_result(host, service, state, output, cached_at,
+                                             cache_interval)
 
     elif config.check_submission == "pipe" or config.monitoring_core == "cmc":
         # In case of CMC this is used when running "cmk" manually
@@ -611,8 +623,8 @@ def _submit_via_check_result_file(host, service, state, output):
     _open_checkresult_file()
     if _checkresult_file_fd:
         now = time.time()
-        os.write(_checkresult_file_fd,
-                """host_name=%s
+        os.write(
+            _checkresult_file_fd, """host_name=%s
 service_description=%s
 check_type=1
 check_options=0
@@ -623,8 +635,7 @@ finish_time=%.1f
 return_code=%d
 output=%s
 
-""" % (host, cmk_base.utils.make_utf8(service), now, now,
-       state, cmk_base.utils.make_utf8(output)))
+""" % (host, cmk_base.utils.make_utf8(service), now, now, state, cmk_base.utils.make_utf8(output)))
 
 
 def _open_checkresult_file():
@@ -635,8 +646,8 @@ def _open_checkresult_file():
             _checkresult_file_fd, _checkresult_file_path = \
                 tempfile.mkstemp('', 'c', cmk.paths.check_result_path)
         except Exception, e:
-            raise MKGeneralException("Cannot create check result file in %s: %s" %
-                    (cmk.paths.check_result_path, e))
+            raise MKGeneralException(
+                "Cannot create check result file in %s: %s" % (cmk.paths.check_result_path, e))
 
 
 def _close_checkresult_file():
@@ -653,10 +664,8 @@ def _submit_via_command_pipe(host, service, state, output):
     if _nagios_command_pipe:
         # [<timestamp>] PROCESS_SERVICE_CHECK_RESULT;<host_name>;<svc_description>;<return_code>;<plugin_output>
         _nagios_command_pipe.write("[%d] PROCESS_SERVICE_CHECK_RESULT;%s;%s;%d;%s\n" %
-                               (int(time.time()), host,
-                                cmk_base.utils.make_utf8(service),
-                                state,
-                                cmk_base.utils.make_utf8(output)))
+                                   (int(time.time()), host, cmk_base.utils.make_utf8(service),
+                                    state, cmk_base.utils.make_utf8(output)))
         # Important: Nagios needs the complete command in one single write() block!
         # Python buffers and sends chunks of 4096 bytes, if we do not flush.
         _nagios_command_pipe.flush()
@@ -666,14 +675,15 @@ def _open_command_pipe():
     global _nagios_command_pipe
     if _nagios_command_pipe == None:
         if not os.path.exists(cmk.paths.nagios_command_pipe_path):
-            _nagios_command_pipe = False # False means: tried but failed to open
-            raise MKGeneralException("Missing core command pipe '%s'" % cmk.paths.nagios_command_pipe_path)
+            _nagios_command_pipe = False  # False means: tried but failed to open
+            raise MKGeneralException(
+                "Missing core command pipe '%s'" % cmk.paths.nagios_command_pipe_path)
         else:
             try:
                 signal.signal(signal.SIGALRM, _core_pipe_open_timeout)
-                signal.alarm(3) # three seconds to open pipe
-                _nagios_command_pipe =  file(cmk.paths.nagios_command_pipe_path, 'w')
-                signal.alarm(0) # cancel alarm
+                signal.alarm(3)  # three seconds to open pipe
+                _nagios_command_pipe = file(cmk.paths.nagios_command_pipe_path, 'w')
+                signal.alarm(0)  # cancel alarm
             except Exception, e:
                 _nagios_command_pipe = False
                 raise MKGeneralException("Error writing to command pipe: %s" % e)
@@ -693,6 +703,7 @@ def _core_pipe_open_timeout(signum, stackframe):
 #   +----------------------------------------------------------------------+
 #   | Various helper functions                                             |
 #   '----------------------------------------------------------------------'
+
 
 def show_perfdata():
     global _show_perfdata

@@ -23,7 +23,6 @@
 # License along with GNU Make; see the file  COPYING.  If  not,  write
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
-
 """
 These functions allow checks to keep a memory until the next time
 the check is being executed. The most frequent use case is compu-
@@ -49,19 +48,21 @@ from cmk.exceptions import MKGeneralException
 import cmk_base.cleanup
 
 # Constants for counters
-SKIP  = None
+SKIP = None
 RAISE = False
-ZERO  = 0.0
+ZERO = 0.0
 
-g_last_counter_wrap  = None #
-g_suppress_on_wrap   = True # Suppress check on wrap (raise an exception)
-                           # e.g. do not suppress this check on check_mk -nv
+g_last_counter_wrap = None  #
+g_suppress_on_wrap = True  # Suppress check on wrap (raise an exception)
+
+# e.g. do not suppress this check on check_mk -nv
 
 
 class MKCounterWrapped(Exception):
     def __init__(self, reason):
         self.reason = reason
         super(MKCounterWrapped, self).__init__(reason)
+
     def __str__(self):
         return self.reason
 
@@ -71,31 +72,27 @@ class CachedItemStates(object):
         super(CachedItemStates, self).__init__()
         self.reset()
 
-
     def clear_all_item_states(self):
         removed_item_state_keys = self._item_states.keys()
         self.reset()
         self._removed_item_state_keys = removed_item_state_keys
 
-
     def reset(self):
         # The actual cached data
-        self._item_states       = {}
+        self._item_states = {}
         self._item_state_prefix = ()
-        self._last_mtime        = None # timestamp of last modification
+        self._last_mtime = None  # timestamp of last modification
         self._removed_item_state_keys = []
         self._updated_item_states = {}
-
 
     def load(self, hostname):
         filename = cmk.paths.counters_dir + "/" + hostname
         try:
             # TODO: refactoring. put these two values into a named tuple
             self._item_states = cmk.store.load_data_from_file(filename, default={}, lock=True)
-            self._last_mtime  = os.stat(filename).st_mtime
+            self._last_mtime = os.stat(filename).st_mtime
         finally:
             cmk.store.release_lock(filename)
-
 
     # TODO: self._last_mtime needs be updated accordingly after the save_data_to_file operation
     #       right now, the current mechanism is sufficient enough, since the save() function is only
@@ -136,16 +133,13 @@ class CachedItemStates(object):
         finally:
             cmk.store.release_lock(filename)
 
-
     def clear_item_state(self, user_key):
         key = self.get_unique_item_state_key(user_key)
         self.remove_full_key(key)
 
-
     def clear_item_states_by_full_keys(self, full_keys):
         for key in full_keys:
             self.remove_full_key(key)
-
 
     def remove_full_key(self, full_key):
         try:
@@ -154,34 +148,30 @@ class CachedItemStates(object):
         except KeyError:
             pass
 
-
     def get_item_state(self, user_key, default=None):
         key = self.get_unique_item_state_key(user_key)
         return self._item_states.get(key, default)
-
 
     def set_item_state(self, user_key, state):
         key = self.get_unique_item_state_key(user_key)
         self._item_states[key] = state
         self._updated_item_states[key] = state
 
-
     def get_all_item_states(self):
         return self._item_states
-
 
     def get_item_state_prefix(self):
         return self._item_state_prefix
 
-
     def set_item_state_prefix(self, args):
         self._item_state_prefix = args
-
 
     def get_unique_item_state_key(self, user_key):
         return self._item_state_prefix + (user_key,)
 
+
 _cached_item_states = CachedItemStates()
+
 
 def load(hostname):
     _cached_item_states.reset()
@@ -285,7 +275,7 @@ def _get_counter(countername, this_time, this_val, allow_negative=False, is_rate
 
     last_time, last_val = old_state
     timedif = this_time - last_time
-    if timedif <= 0: # do not update counter
+    if timedif <= 0:  # do not update counter
         if not g_suppress_on_wrap:
             return 1.0, 0.0
         raise MKCounterWrapped('No time difference')
@@ -320,10 +310,10 @@ def last_counter_wrap():
 
 def raise_counter_wrap():
     if g_last_counter_wrap:
-        raise g_last_counter_wrap # pylint: disable=raising-bad-type
+        raise g_last_counter_wrap  # pylint: disable=raising-bad-type
 
 
-def get_average(itemname, this_time, this_val, backlog_minutes, initialize_zero = True):
+def get_average(itemname, this_time, this_val, backlog_minutes, initialize_zero=True):
     """Compute average by gliding exponential algorithm
 
     itemname        : unique ID for storing this average until the next check
@@ -338,7 +328,7 @@ def get_average(itemname, this_time, this_val, backlog_minutes, initialize_zero 
         if initialize_zero:
             this_val = 0
         set_item_state(itemname, (this_time, this_val))
-        return this_val # avoid time diff of 0.0 -> avoid division by zero
+        return this_val  # avoid time diff of 0.0 -> avoid division by zero
 
     # Get previous value and time difference
     last_time, last_val = old_state
@@ -362,10 +352,10 @@ def get_average(itemname, this_time, this_val, backlog_minutes, initialize_zero 
         # Then the weight can be computed as backlog_minutes'th root of 1-W
         percentile = 0.50
 
-        weight_per_minute = (1 - percentile) ** (1.0 / backlog_minutes)
+        weight_per_minute = (1 - percentile)**(1.0 / backlog_minutes)
 
         # now let's compute the weight per second. This is done
-        weight = weight_per_minute ** (timedif / 60.0)
+        weight = weight_per_minute**(timedif / 60.0)
 
     except OverflowError:
         weight = 0

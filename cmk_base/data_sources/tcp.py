@@ -67,6 +67,7 @@ def _normalize_ip_addresses(ip_addresses):
 #   | Real communication with the target system.                           |
 #   '----------------------------------------------------------------------'
 
+
 class TCPDataSource(CheckMKAgentDataSource):
     _use_only_cache = False
 
@@ -75,14 +76,11 @@ class TCPDataSource(CheckMKAgentDataSource):
         self._port = None
         self._timeout = None
 
-
     def id(self):
         return "agent"
 
-
     def set_port(self, port):
         self._port = port
-
 
     def _get_port(self):
         if self._port is not None:
@@ -90,10 +88,8 @@ class TCPDataSource(CheckMKAgentDataSource):
 
         return config.agent_port_of(self._hostname)
 
-
     def set_timeout(self, timeout):
         self._timeout = timeout
-
 
     def _get_timeout(self):
         if self._timeout:
@@ -101,10 +97,10 @@ class TCPDataSource(CheckMKAgentDataSource):
 
         return config.tcp_connect_timeout_of(self._hostname)
 
-
     def _execute(self):
         if self._use_only_cache:
-            raise MKAgentError("Got no data: No usable cache file present at %s" % self._cache_file_path())
+            raise MKAgentError(
+                "Got no data: No usable cache file present at %s" % self._cache_file_path())
 
         self._verify_ipaddress()
 
@@ -112,14 +108,14 @@ class TCPDataSource(CheckMKAgentDataSource):
 
         encryption_settings = config.agent_encryption_of(self._hostname)
 
-        socktype = (socket.AF_INET6 if config.is_ipv6_primary(self._hostname)
-                    else socket.AF_INET)
+        socktype = (socket.AF_INET6 if config.is_ipv6_primary(self._hostname) else socket.AF_INET)
         s = socket.socket(socktype, socket.SOCK_STREAM)
 
         timeout = self._get_timeout()
 
         output = []
-        self._logger.debug("Connecting via TCP to %s:%d (%ss timeout)" % (self._ipaddress, port, timeout))
+        self._logger.debug(
+            "Connecting via TCP to %s:%d (%ss timeout)" % (self._ipaddress, port, timeout))
         try:
             s.settimeout(timeout)
             s.connect((self._ipaddress, port))
@@ -145,16 +141,16 @@ class TCPDataSource(CheckMKAgentDataSource):
             s.close()
         output = ''.join(output)
 
-        if len(output) == 0: # may be caused by xinetd not allowing our address
+        if len(output) == 0:  # may be caused by xinetd not allowing our address
             raise MKEmptyAgentData("Empty output from agent at TCP port %d" % port)
 
         elif len(output) < 16:
             raise MKAgentError("Too short output from agent: %r" % output)
 
-
         output_is_plaintext = output.startswith("<<<")
         if encryption_settings["use_regular"] == "enforce" and output_is_plaintext:
-            raise MKAgentError("Agent output is plaintext but encryption is enforced by configuration")
+            raise MKAgentError(
+                "Agent output is plaintext but encryption is enforced by configuration")
 
         if not output_is_plaintext and encryption_settings["use_regular"] in ["enforce", "allow"]:
             try:
@@ -174,7 +170,6 @@ class TCPDataSource(CheckMKAgentDataSource):
                     pass
 
         return output
-
 
     def _sub_result_version(self, agent_info):
         agent_version = agent_info["version"]
@@ -210,7 +205,6 @@ class TCPDataSource(CheckMKAgentDataSource):
 
         return status, output
 
-
     def _sub_result_only_from(self, agent_info):
         agent_only_from = agent_info.get("onlyfrom")
 
@@ -240,24 +234,22 @@ class TCPDataSource(CheckMKAgentDataSource):
         return 1, ", invalid access configuration: %s%s" \
                   % (", ".join(infotexts), state_markers[1])
 
-
     def _summary_result(self):
         agent_info = self._get_agent_info()
         status, output, perfdata = super(TCPDataSource, self)._summary_result()
 
         for sub_status, sub_output in [
-            self._sub_result_version(agent_info),
-            self._sub_result_only_from(agent_info),
+                self._sub_result_version(agent_info),
+                self._sub_result_only_from(agent_info),
         ]:
             status = max(status, sub_status)
             output += ", %s" % sub_output
 
         return status, output, perfdata
 
-
     def _is_expected_agent_version(self, agent_version, expected_version):
         try:
-            if agent_version in [ '(unknown)', None, 'None' ]:
+            if agent_version in ['(unknown)', None, 'None']:
                 return False
 
             if type(expected_version) == str and expected_version != agent_version:
@@ -272,7 +264,7 @@ class TCPDataSource(CheckMKAgentDataSource):
                     if branch == "master":
                         agent = int(agent_version.replace('.', ''))
 
-                    else: # branch build (e.g. 1.2.4-2014.06.01)
+                    else:  # branch build (e.g. 1.2.4-2014.06.01)
                         agent = int(agent_version.split('-')[1].replace('.', ''))
 
                     if agent < expected:
@@ -290,15 +282,15 @@ class TCPDataSource(CheckMKAgentDataSource):
         except Exception, e:
             if cmk.debug.enabled():
                 raise
-            raise MKGeneralException("Unable to check agent version (Agent: %s Expected: %s, Error: %s)" %
-                    (agent_version, expected_version, e))
-
+            raise MKGeneralException(
+                "Unable to check agent version (Agent: %s Expected: %s, Error: %s)" %
+                (agent_version, expected_version, e))
 
     def _decrypt_package(self, encrypted_pkg, encryption_key):
         from Cryptodome.Cipher import AES
         from hashlib import md5
 
-        unpad = lambda s : s[0:-ord(s[-1])]
+        unpad = lambda s: s[0:-ord(s[-1])]
 
         # Adapt OpenSSL handling of key and iv
         def derive_key_and_iv(password, key_length, iv_length):
@@ -306,7 +298,7 @@ class TCPDataSource(CheckMKAgentDataSource):
             while len(d) < key_length + iv_length:
                 d_i = md5(d_i + password).digest()
                 d += d_i
-            return d[:key_length], d[key_length:key_length+iv_length]
+            return d[:key_length], d[key_length:key_length + iv_length]
 
         key, iv = derive_key_and_iv(encryption_key, 32, AES.block_size)
         decryption_suite = AES.new(key, AES.MODE_CBC, iv)
@@ -315,11 +307,9 @@ class TCPDataSource(CheckMKAgentDataSource):
         # Strip of fill bytes of openssl
         return unpad(decrypted_pkg)
 
-
     def describe(self):
         """Return a short textual description of the agent"""
         return "TCP: %s:%d" % (self._ipaddress, config.agent_port_of(self._hostname))
-
 
     @classmethod
     def use_only_cache(cls):

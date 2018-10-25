@@ -23,7 +23,6 @@
 # License along with GNU Make; see the file  COPYING.  If  not,  write
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
-
 """Code for predictive monitoring / anomaly detection"""
 
 import os
@@ -42,13 +41,14 @@ from cmk.exceptions import MKGeneralException
 
 logger = cmk.log.get_logger(__name__)
 
+
 # Fetch RRD historic metrics data of a specific service. returns a tuple
 # of (step, [value1, value2, ...])
 # TODO: IMPORTANT: Until we have a central library, keep this function in sync with
 # the function get_rrd_data() from web/prediction.py.
 def get_rrd_data(hostname, service_description, varname, cf, fromtime, untiltime):
     step = 1
-    rpn = "%s.%s" % (varname, cf.lower()) # "MAX" -> "max"
+    rpn = "%s.%s" % (varname, cf.lower())  # "MAX" -> "max"
 
     lql = "GET services\n" \
           "Columns: rrddata:m1:%s:%d:%d:%d\n" \
@@ -71,9 +71,11 @@ def get_rrd_data(hostname, service_description, varname, cf, fromtime, untiltime
     step, values = response[2], response[3:]
     return step, values
 
+
 # Check wether a certain time stamp lies with in daylight safing time (DST)
 def is_dst(timestamp):
     return time.localtime(timestamp).tm_isdst
+
 
 # Returns the timezone *including* DST shift at a certain point of time
 def timezone_at(timestamp):
@@ -81,43 +83,47 @@ def timezone_at(timestamp):
         return time.altzone
     return time.timezone
 
+
 def group_by_wday(t):
     wday = time.localtime(t).tm_wday
     rel_time = divmod(t - timezone_at(t), 86400)[1]
     return defines.weekday_ids()[wday], rel_time
 
+
 def group_by_day(t):
     return "everyday", (t - timezone_at(t)) % 86400
+
 
 def group_by_day_of_month(t):
     broken = time.localtime(t)
     mday = broken[2]
     return str(mday), (t - timezone_at(t)) % 86400
 
+
 def group_by_everyhour(t):
     return "everyhour", (t - timezone_at(t)) % 3600
 
 
 prediction_periods = {
-    "wday" : {
-        "slice"     : 86400, # 7 slices
-        "groupby"   : group_by_wday,
-        "valid"     : 7,
+    "wday": {
+        "slice": 86400,  # 7 slices
+        "groupby": group_by_wday,
+        "valid": 7,
     },
-    "day" : {
-        "slice"     : 86400, # 31 slices
-        "groupby"   : group_by_day_of_month,
-        "valid"     : 28,
+    "day": {
+        "slice": 86400,  # 31 slices
+        "groupby": group_by_day_of_month,
+        "valid": 28,
     },
-    "hour" : {
-        "slice"     : 86400, # 1 slice
-        "groupby"   : group_by_day,
-        "valid"     : 1,
+    "hour": {
+        "slice": 86400,  # 1 slice
+        "groupby": group_by_day,
+        "valid": 1,
     },
-    "minute" : {
-        "slice"     : 3600, # 1 slice
-        "groupby"   : group_by_everyhour,
-        "valid"     : 24,
+    "minute": {
+        "slice": 3600,  # 1 slice
+        "groupby": group_by_everyhour,
+        "valid": 24,
     },
 }
 
@@ -130,7 +136,8 @@ def get_prediction_timegroup(t, period_info):
     return timegroup, from_time, until_time, rel_time
 
 
-def compute_prediction(hostname, service_description, pred_file, timegroup, params, period_info, from_time, dsname, cf):
+def compute_prediction(hostname, service_description, pred_file, timegroup, params, period_info,
+                       from_time, dsname, cf):
     # Collect all slices back into the past until the time horizon
     # is reached
     begin = from_time
@@ -150,8 +157,7 @@ def compute_prediction(hostname, service_description, pred_file, timegroup, para
     while begin >= absolute_begin:
         tg, fr, un = get_prediction_timegroup(begin, period_info)[:3]
         if tg == timegroup:
-            step, data = get_rrd_data(hostname, service_description,
-                                      dsname, cf, fr, un-1)
+            step, data = get_rrd_data(hostname, service_description, dsname, cf, fr, un - 1)
             if smallest_step == None:
                 smallest_step = step
             slices.append((fr, step / smallest_step, data))
@@ -176,24 +182,25 @@ def compute_prediction(hostname, service_description, pred_file, timegroup, para
         if point_line:
             average = sum(point_line) / len(point_line)
             consolidated.append([
-                 average,
-                 min(point_line),
-                 max(point_line),
-                 stdev(point_line, average),
+                average,
+                min(point_line),
+                max(point_line),
+                stdev(point_line, average),
             ])
         else:
             consolidated.append([None, None, None, None])
 
     result = {
-        "num_points" : num_points,
-        "step"       : smallest_step,
-        "columns"    : [ "average", "min", "max", "stdev" ],
-        "points"     : consolidated,
+        "num_points": num_points,
+        "step": smallest_step,
+        "columns": ["average", "min", "max", "stdev"],
+        "points": consolidated,
     }
     return result
 
+
 def stdev(point_line, average):
-    return math.sqrt(sum([ (p-average)**2 for p in point_line ]) / len(point_line))
+    return math.sqrt(sum([(p - average)**2 for p in point_line]) / len(point_line))
 
 
 # cf: consilidation function (MAX, MIN, AVERAGE)
@@ -269,15 +276,15 @@ def get_levels(hostname, service_description, dsname, params, cf, levels_factor=
                     pass
 
         logger.verbose("Computing prediction for time group %s", timegroup)
-        prediction = compute_prediction(hostname, service_description, pred_file, timegroup,
-                                        params, period_info, from_time, dsname, cf)
+        prediction = compute_prediction(hostname, service_description, pred_file, timegroup, params,
+                                        period_info, from_time, dsname, cf)
 
         info = {
-            "time"         : now,
-            "range"        : (from_time, until_time),
-            "cf"           : cf,
-            "dsname"       : dsname,
-            "slice"        : period_info["slice"],
+            "time": now,
+            "range": (from_time, until_time),
+            "cf": cf,
+            "dsname": dsname,
+            "slice": period_info["slice"],
         }
         info.update(params)
 
@@ -293,21 +300,22 @@ def get_levels(hostname, service_description, dsname, params, cf, levels_factor=
     ref_value = reference["average"]
     stdev = reference["stdev"]
     levels = []
-    if not ref_value: # No reference data available
+    if not ref_value:  # No reference data available
         levels = ((None, None), (None, None))
     else:
-        for what, sig in [ ( "upper", 1 ), ( "lower", -1 )]:
+        for what, sig in [("upper", 1), ("lower", -1)]:
             p = "levels_" + what
             if p in params:
                 how, (warn, crit) = params[p]
                 if how == "absolute":
-                    this_levels = (ref_value + (sig * warn * levels_factor), ref_value + (sig * crit * levels_factor))
+                    this_levels = (ref_value + (sig * warn * levels_factor),
+                                   ref_value + (sig * crit * levels_factor))
                 elif how == "relative":
                     this_levels = (ref_value + sig * (ref_value * warn / 100),
                                    ref_value + sig * (ref_value * crit / 100))
-                else: #  how == "stdev":
+                else:  #  how == "stdev":
                     this_levels = (ref_value + sig * (stdev * warn),
-                                  ref_value + sig * (stdev * crit))
+                                   ref_value + sig * (stdev * crit))
 
                 if what == "upper" and "levels_upper_min" in params:
                     limit_warn, limit_crit = params["levels_upper_min"]

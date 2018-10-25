@@ -69,14 +69,11 @@ def _handle_false_positive_warnings(reading):
 
 
 class IPMIManagementBoardDataSource(ManagementBoardDataSource, CheckMKAgentDataSource):
-
     def id(self):
         return "mgmt_ipmi"
 
-
     def title(self):
         return "Management board - IPMI"
-
 
     def describe(self):
         return "%s (Address: %s, User: %s)" % (
@@ -85,14 +82,11 @@ class IPMIManagementBoardDataSource(ManagementBoardDataSource, CheckMKAgentDataS
             self._credentials["username"],
         )
 
-
     def _cpu_tracking_id(self):
         return self.id()
 
-
     def _gather_check_plugin_names(self):
         return ["mgmt_ipmi_sensors"]
-
 
     def _execute(self):
         try:
@@ -113,7 +107,6 @@ class IPMIManagementBoardDataSource(ManagementBoardDataSource, CheckMKAgentDataS
             else:
                 raise
 
-
     def _create_ipmi_connection(self):
         # Do not use the (custom) ipaddress for the host. Use the management board
         # address instead
@@ -121,11 +114,11 @@ class IPMIManagementBoardDataSource(ManagementBoardDataSource, CheckMKAgentDataS
 
         self._logger.debug("Connecting to %s:623 (User: %s, Privlevel: 2)" %
                            (self._ipaddress, credentials["username"]))
-        return ipmi_cmd.Command(bmc=self._ipaddress,
-                               userid=credentials["username"],
-                               password=credentials["password"],
-                               privlevel=2)
-
+        return ipmi_cmd.Command(
+            bmc=self._ipaddress,
+            userid=credentials["username"],
+            password=credentials["password"],
+            privlevel=2)
 
     def _fetch_ipmi_sensors_section(self, connection):
         self._logger.debug("Fetching sensor data via UDP from %s:623" % (self._ipaddress))
@@ -178,21 +171,18 @@ class IPMIManagementBoardDataSource(ManagementBoardDataSource, CheckMKAgentDataS
 
         return output
 
-
     def _fetch_ipmi_firmware_section(self, connection):
         self._logger.debug("Fetching firmware information via UDP from %s:623" % (self._ipaddress))
 
         output = "<<<mgmt_ipmi_firmware:sep(124)>>>\n"
         for entity_name, attributes in connection.get_firmware():
             for attribute_name, value in attributes.items():
-               output += "%s|%s|%s\n" % (entity_name, attribute_name, value)
+                output += "%s|%s|%s\n" % (entity_name, attribute_name, value)
 
         return output
 
-
     def _summary_result(self):
         return 0, "Version: %s" % self._get_ipmi_version(), []
-
 
     def _get_ipmi_version(self):
         if self._host_sections is None:

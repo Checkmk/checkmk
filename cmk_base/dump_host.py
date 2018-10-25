@@ -38,6 +38,7 @@ import cmk_base.ip_lookup as ip_lookup
 import cmk_base.check_table as check_table
 import cmk_base.checking as checking
 
+
 def dump_host(hostname):
     console.output("\n")
     if config.is_cluster(hostname):
@@ -46,8 +47,8 @@ def dump_host(hostname):
     else:
         color = tty.bgblue
         add_txt = ""
-    console.output("%s%s%s%-78s %s\n" %
-        (color, tty.bold, tty.white, hostname + add_txt, tty.normal))
+    console.output(
+        "%s%s%s%-78s %s\n" % (color, tty.bold, tty.white, hostname + add_txt, tty.normal))
 
     ipaddress = _ip_address_for_dump_host(hostname)
 
@@ -70,7 +71,8 @@ def dump_host(hostname):
         else:
             addresses += " (Primary: IPv4)"
 
-    console.output(tty.yellow + "Addresses:              " + tty.normal + (addresses if addresses is not None else "No IP") + "\n")
+    console.output(tty.yellow + "Addresses:              " + tty.normal +
+                   (addresses if addresses is not None else "No IP") + "\n")
 
     tags = config.tags_of_host(hostname)
     console.output(tty.yellow + "Tags:                   " + tty.normal + ", ".join(tags) + "\n")
@@ -79,9 +81,12 @@ def dump_host(hostname):
     else:
         parents_list = config.parents_of(hostname)
     if len(parents_list) > 0:
-        console.output(tty.yellow + "Parents:                " + tty.normal + ", ".join(parents_list) + "\n")
-    console.output(tty.yellow + "Host groups:            " + tty.normal + cmk_base.utils.make_utf8(", ".join(config.hostgroups_of(hostname))) + "\n")
-    console.output(tty.yellow + "Contact groups:         " + tty.normal + cmk_base.utils.make_utf8(", ".join(config.contactgroups_of(hostname))) + "\n")
+        console.output(tty.yellow + "Parents:                " + tty.normal +
+                       ", ".join(parents_list) + "\n")
+    console.output(tty.yellow + "Host groups:            " + tty.normal +
+                   cmk_base.utils.make_utf8(", ".join(config.hostgroups_of(hostname))) + "\n")
+    console.output(tty.yellow + "Contact groups:         " + tty.normal +
+                   cmk_base.utils.make_utf8(", ".join(config.contactgroups_of(hostname))) + "\n")
 
     agenttypes = []
     sources = data_sources.DataSources(hostname, ipaddress)
@@ -101,32 +106,33 @@ def dump_host(hostname):
         console.output("\n  ")
         console.output("\n  ".join(agenttypes) + "\n")
 
-
     console.output(tty.yellow + "Services:" + tty.normal + "\n")
     check_items = check_table.get_sorted_check_table(hostname)
 
-    headers = ["checktype", "item",    "params", "description", "groups"]
-    colors =  [ tty.normal,  tty.blue, tty.normal, tty.green, tty.normal ]
+    headers = ["checktype", "item", "params", "description", "groups"]
+    colors = [tty.normal, tty.blue, tty.normal, tty.green, tty.normal]
     if config.service_dependencies != []:
         headers.append("depends on")
         colors.append(tty.magenta)
 
-    tty.print_table(headers, colors, [ [
+    tty.print_table(headers, colors, [[
         checktype,
         cmk_base.utils.make_utf8(item),
         _evaluate_params(params),
         cmk_base.utils.make_utf8(description),
-        cmk_base.utils.make_utf8(",".join(config.service_extra_conf(hostname, description, config.service_groups))),
+        cmk_base.utils.make_utf8(",".join(
+            config.service_extra_conf(hostname, description, config.service_groups))),
         ",".join(deps)
-        ]
-                  for checktype, item, params, description, deps in check_items ], "  ")
+    ] for checktype, item, params, description, deps in check_items], "  ")
+
 
 def _evaluate_params(params):
     if not isinstance(params, cmk_base.config.TimespecificParamList):
         return params
 
     current_params = checking.determine_check_params(params)
-    return "Timespecific parameters at %s: %r" % (cmk.render.date_and_time(time.time()), current_params)
+    return "Timespecific parameters at %s: %r" % (cmk.render.date_and_time(time.time()),
+                                                  current_params)
 
 
 def _ip_address_for_dump_host(hostname, family=None):

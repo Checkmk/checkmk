@@ -43,7 +43,12 @@ import cmk.daemon
 import cmk_base.config as config
 import cmk_base.core
 
-def event_keepalive(event_function, log_function, call_every_loop=None, loop_interval=None, shutdown_function=None):
+
+def event_keepalive(event_function,
+                    log_function,
+                    call_every_loop=None,
+                    loop_interval=None,
+                    shutdown_function=None):
     last_config_timestamp = config_timestamp()
 
     # Send signal that we are ready to receive the next event, but
@@ -101,7 +106,7 @@ def event_keepalive(event_function, log_function, call_every_loop=None, loop_int
                         log_function("CMC has closed the connection. Shutting down.")
                         if shutdown_function:
                             shutdown_function()
-                        sys.exit(0) # closed stdin, this is
+                        sys.exit(0)  # closed stdin, this is
                     data += new_data
 
                 try:
@@ -115,7 +120,6 @@ def event_keepalive(event_function, log_function, call_every_loop=None, loop_int
                 # Signal that we are ready for the next event
                 sys.stdout.write("*")
                 sys.stdout.flush()
-
 
         # Fix vor Python 2.4:
         except SystemExit, e:
@@ -140,9 +144,9 @@ def config_timestamp():
         for f in filenames:
             mtime = max(mtime, os.stat(dirpath + "/" + f).st_mtime)
 
-    for path in [ cmk.paths.main_config_file,
-                  cmk.paths.final_config_file,
-                  cmk.paths.local_config_file ]:
+    for path in [
+            cmk.paths.main_config_file, cmk.paths.final_config_file, cmk.paths.local_config_file
+    ]:
         try:
             mtime = max(mtime, os.stat(path).st_mtime)
         except:
@@ -161,10 +165,11 @@ def raw_context_from_string(data):
         for line in data.split('\n'):
             varname, value = line.strip().split("=", 1)
             context[varname] = expand_backslashes(value)
-    except Exception: # line without '=' ignored or alerted
+    except Exception:  # line without '=' ignored or alerted
         if cmk.debug.enabled():
             raise
     return context
+
 
 def raw_context_from_stdin():
     context = {}
@@ -218,7 +223,6 @@ def find_host_service_in_context(context):
     return host
 
 
-
 # Fetch information about an objects contacts via Livestatus. This is
 # neccessary for notifications from Nagios, which does not send this
 # information in macros.
@@ -231,7 +235,7 @@ def livestatus_fetch_contacts(host, service):
             query = "GET hosts\nFilter: host_name = %s\nColumns: contacts" % host
 
         contact_list = livestatus.LocalConnection().query_value(query)
-        if "check-mk-notify" in contact_list: # Remove artifical contact used for rule based notifications
+        if "check-mk-notify" in contact_list:  # Remove artifical contact used for rule based notifications
             contact_list.remove("check-mk-notify")
         return contact_list
 
@@ -245,22 +249,19 @@ def livestatus_fetch_contacts(host, service):
     except Exception:
         if cmk.debug.enabled():
             raise
-        return None # We must allow notifications without Livestatus access
-
+        return None  # We must allow notifications without Livestatus access
 
 
 def add_rulebased_macros(raw_context):
     # For the rule based notifications we need the list of contacts
     # an object has. The CMC does send this in the macro "CONTACTS"
     if "CONTACTS" not in raw_context:
-        contact_list = livestatus_fetch_contacts(
-                raw_context["HOSTNAME"],
-                raw_context.get("SERVICEDESC"))
+        contact_list = livestatus_fetch_contacts(raw_context["HOSTNAME"],
+                                                 raw_context.get("SERVICEDESC"))
         if contact_list != None:
             raw_context["CONTACTS"] = ",".join(contact_list)
         else:
-            raw_context["CONTACTS"] = "?" # means: contacts could not be determined!
-
+            raw_context["CONTACTS"] = "?"  # means: contacts could not be determined!
 
     # Add a pseudo contact name. This is needed for the correct creation
     # of spool files. Spool files are created on a per-contact-base, as in classical
@@ -302,7 +303,7 @@ def complete_raw_context(raw_context, with_dump, event_log):
             # In case the microtime is not provided, e.g. when using Nagios, then set it here
             # from the current time. We could look for "LONGDATETIME" and calculate the timestamp
             # from that one, but we try to keep this simple here.
-            raw_context["MICROTIME"] = "%d" % (time.time()*1000000)
+            raw_context["MICROTIME"] = "%d" % (time.time() * 1000000)
 
         raw_context['HOSTURL'] = '/check_mk/index.py?start_url=%s' % \
                             urllib.quote('view.py?view_name=hoststatus&host=%s&site=%s' % (raw_context['HOSTNAME'], raw_context['OMD_SITE']))
@@ -312,10 +313,11 @@ def complete_raw_context(raw_context, with_dump, event_log):
                                                      (raw_context['HOSTNAME'], raw_context['SERVICEDESC'], raw_context['OMD_SITE']))
 
         # Relative Timestamps for several macros
-        for macro in [ 'LASTHOSTSTATECHANGE', 'LASTSERVICESTATECHANGE', 'LASTHOSTUP', 'LASTSERVICEOK' ]:
+        for macro in [
+                'LASTHOSTSTATECHANGE', 'LASTSERVICESTATECHANGE', 'LASTHOSTUP', 'LASTSERVICEOK'
+        ]:
             if macro in raw_context:
                 raw_context[macro + '_REL'] = get_readable_rel_date(raw_context[macro])
-
 
         # Rule based notifications enabled? We might need to complete a few macros
         contact = raw_context.get("CONTACTNAME")
@@ -324,9 +326,9 @@ def complete_raw_context(raw_context, with_dump, event_log):
 
         # For custom notifications the number is set to 0 by the core (Nagios and CMC). We force at least
         # number 1 here, so that rules with conditions on numbers do not fail (the minimum is 1 here)
-        for what in [ "HOST", "SERVICE" ]:
+        for what in ["HOST", "SERVICE"]:
             key = what + "NOTIFICATIONNUMBER"
-            if key in raw_context and  raw_context[key] == "0":
+            if key in raw_context and raw_context[key] == "0":
                 raw_context[key] = "1"
 
         # Add the previous hard state. This is neccessary for notification rules that depend on certain transitions,
@@ -378,7 +380,8 @@ def complete_raw_context(raw_context, with_dump, event_log):
             raw_context["HOSTOUTPUT_HTML"] = format_plugin_output(raw_context["HOSTOUTPUT"])
         if raw_context["WHAT"] == "SERVICE":
             raw_context["SERVICEOUTPUT_HTML"] = format_plugin_output(raw_context["SERVICEOUTPUT"])
-            raw_context["LONGSERVICEOUTPUT_HTML"] = format_plugin_output(raw_context["LONGSERVICEOUTPUT"])
+            raw_context["LONGSERVICEOUTPUT_HTML"] = format_plugin_output(
+                raw_context["LONGSERVICEOUTPUT"])
 
         convert_context_to_unicode(raw_context)
 
@@ -386,17 +389,21 @@ def complete_raw_context(raw_context, with_dump, event_log):
         event_log("Error on completing raw context: %s" % e)
 
     if with_dump:
-        event_log("Computed variables:\n"
-                   + "\n".join(sorted(["                    %s=%s" % (k, raw_context[k]) for k in raw_context if k not in raw_keys])))
+        event_log("Computed variables:\n" + "\n".join(
+            sorted([
+                "                    %s=%s" % (k, raw_context[k])
+                for k in raw_context
+                if k not in raw_keys
+            ])))
 
 
 # There is common code with web/htdocs/lib.py:format_plugin_output(). Please check
 # whether or not that function needs to be changed too
 # TODO(lm): Find a common place to unify this functionality.
 def format_plugin_output(output):
-    ok_marker      = '<b class="stmarkOK">OK</b>'
-    warn_marker    = '<b class="stmarkWARNING">WARN</b>'
-    crit_marker    = '<b class="stmarkCRITICAL">CRIT</b>'
+    ok_marker = '<b class="stmarkOK">OK</b>'
+    warn_marker = '<b class="stmarkWARNING">WARN</b>'
+    crit_marker = '<b class="stmarkCRITICAL">CRIT</b>'
     unknown_marker = '<b class="stmarkUNKNOWN">UNKN</b>'
 
     output = output.replace("(!)", warn_marker) \
@@ -467,8 +474,10 @@ def event_match_folder(rule, context):
             if tag.startswith("/wato/"):
                 hasfolder = tag[6:].rstrip("/")
                 haspath = hasfolder.split("/")
-                if mustpath == ["",]:
-                    return # Match is on main folder, always OK
+                if mustpath == [
+                        "",
+                ]:
+                    return  # Match is on main folder, always OK
                 while mustpath:
                     if not haspath or mustpath[0] != haspath[0]:
                         return "The rule requires WATO folder '%s', but the host is in '%s'" % (
@@ -485,11 +494,11 @@ def event_match_hosttags(rule, context):
     if required:
         tags = context.get("HOSTTAGS", "").split()
         if not config.hosttags_match_taglist(tags, required):
-            return "The host's tags %s do not match the required tags %s" % (
-                "|".join(tags), "|".join(required))
+            return "The host's tags %s do not match the required tags %s" % ("|".join(tags),
+                                                                             "|".join(required))
 
 
-def event_match_servicegroups(rule, context, is_regex = False):
+def event_match_servicegroups(rule, context, is_regex=False):
     if is_regex:
         match_type, required_groups = rule.get("match_servicegroups_regex", (None, None))
     else:
@@ -508,14 +517,15 @@ def event_match_servicegroups(rule, context, is_regex = False):
         if sgn:
             servicegroups = sgn.split(",")
         else:
-            return "The service is in no service group, but %s%s is required" % ((is_regex and "regex " or ""),
-                 " or ".join(required_groups))
+            return "The service is in no service group, but %s%s is required" % (
+                (is_regex and "regex " or ""), " or ".join(required_groups))
 
         for group in required_groups:
             if is_regex:
                 r = regex(group)
                 for sg in servicegroups:
-                    match_value = config.define_servicegroups[sg] if match_type == "match_alias" else sg
+                    match_value = config.define_servicegroups[
+                        sg] if match_type == "match_alias" else sg
                     if r.search(match_value):
                         return
             elif group in servicegroups:
@@ -524,16 +534,17 @@ def event_match_servicegroups(rule, context, is_regex = False):
         if is_regex:
             if match_type == "match_alias":
                 return "The service is only in the groups %s. None of these patterns match: %s" % (
-                      '"' + '", "'.join(config.define_servicegroups[x] for x in servicegroups) + '"',
-                      '"' + '" or "'.join(required_groups)) + '"'
+                    '"' + '", "'.join(config.define_servicegroups[x] for x in servicegroups) + '"',
+                    '"' + '" or "'.join(required_groups)) + '"'
 
             return "The service is only in the groups %s. None of these patterns match: %s" % (
-                      '"' + '", "'.join(servicegroups) + '"', '"' + '" or "'.join(required_groups)) + '"'
+                '"' + '", "'.join(servicegroups) + '"', '"' + '" or "'.join(required_groups)) + '"'
 
         return "The service is only in the groups %s, but %s is required" % (
-                  sgn, " or ".join(required_groups))
+            sgn, " or ".join(required_groups))
 
-def event_match_exclude_servicegroups(rule, context, is_regex = False):
+
+def event_match_exclude_servicegroups(rule, context, is_regex=False):
     if is_regex:
         match_type, excluded_groups = rule.get("match_exclude_servicegroups_regex", (None, None))
     else:
@@ -555,14 +566,16 @@ def event_match_exclude_servicegroups(rule, context, is_regex = False):
             if is_regex:
                 r = regex(group)
                 for sg in servicegroups:
-                    match_value         = config.define_servicegroups[sg] if match_type == "match_alias" else sg
-                    match_value_inverse = sg if match_type == "match_alias" else config.define_servicegroups[sg]
+                    match_value = config.define_servicegroups[
+                        sg] if match_type == "match_alias" else sg
+                    match_value_inverse = sg if match_type == "match_alias" else config.define_servicegroups[
+                        sg]
 
                     if r.search(match_value):
                         return "The service group \"%s\" (%s) is excluded per regex pattern: %s" %\
                              (match_value, match_value_inverse, group)
             elif group in servicegroups:
-                    return "The service group %s is excluded" % group
+                return "The service group %s is excluded" % group
 
 
 def event_match_contacts(rule, context):
@@ -572,16 +585,15 @@ def event_match_contacts(rule, context):
     required_contacts = rule["match_contacts"]
     contacts_text = context["CONTACTS"]
     if not contacts_text:
-        return "The object has no contact, but %s is required" % (
-            " or ".join(required_contacts))
+        return "The object has no contact, but %s is required" % (" or ".join(required_contacts))
 
     contacts = contacts_text.split(",")
     for contact in required_contacts:
         if contact in contacts:
             return
 
-    return "The object has the contacts %s, but %s is required" % (
-        contacts_text, " or ".join(required_contacts))
+    return "The object has the contacts %s, but %s is required" % (contacts_text,
+                                                                   " or ".join(required_contacts))
 
 
 def event_match_contactgroups(rule, context):
@@ -604,7 +616,8 @@ def event_match_contactgroups(rule, context):
         if group in contactgroups:
             return
 
-    return "The object is only in the groups %s, but %s is required" % (cgn, " or ".join(required_groups))
+    return "The object is only in the groups %s, but %s is required" % (
+        cgn, " or ".join(required_groups))
 
 
 def event_match_hostgroups(rule, context):
@@ -617,15 +630,14 @@ def event_match_hostgroups(rule, context):
         if hgn:
             hostgroups = hgn.split(",")
         else:
-            return "The host is in no group, but %s is required" % (
-                 " or ".join(required_groups))
+            return "The host is in no group, but %s is required" % (" or ".join(required_groups))
 
         for group in required_groups:
             if group in hostgroups:
                 return
 
         return "The host is only in the groups %s, but %s is required" % (
-              hgn, " or ".join(required_groups))
+            hgn, " or ".join(required_groups))
 
 
 def event_match_hosts(rule, context):
@@ -699,7 +711,7 @@ def event_match_timeperiod(rule):
 def event_match_servicelevel(rule, context):
     if "match_sl" in rule:
         from_sl, to_sl = rule["match_sl"]
-        if context['WHAT'] == "SERVICE" and context.get('SVC_SL','').isdigit():
+        if context['WHAT'] == "SERVICE" and context.get('SVC_SL', '').isdigit():
             sl = saveint(context.get('SVC_SL'))
         else:
             sl = saveint(context.get('HOST_SL'))
@@ -711,6 +723,7 @@ def event_match_servicelevel(rule, context):
 def add_context_to_environment(plugin_context, prefix):
     for key in plugin_context:
         os.putenv(prefix + key, plugin_context[key].encode('utf-8'))
+
 
 def remove_context_from_environment(plugin_context, prefix):
     for key in plugin_context:
@@ -737,9 +750,9 @@ def add_to_event_context(plugin_context, prefix, param):
 
 
 def plugin_param_to_string(value):
-    if type(value) in ( str, unicode ):
+    if type(value) in (str, unicode):
         return value
-    elif type(value) in ( int, float ):
+    elif type(value) in (int, float):
         return str(value)
     elif value == None:
         return ""
@@ -747,10 +760,10 @@ def plugin_param_to_string(value):
         return "yes"
     elif value == False:
         return ""
-    elif type(value) in ( tuple, list ):
+    elif type(value) in (tuple, list):
         return "\t".join(value)
 
-    return repr(value) # Should never happen
+    return repr(value)  # Should never happen
 
 
 # int() function that return 0 for strings the

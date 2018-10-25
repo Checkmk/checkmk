@@ -48,6 +48,7 @@ from cmk_base.exceptions import MKAgentError, MKEmptyAgentData, MKSNMPError, \
 
 from .host_sections import HostSections
 
+
 class DataSource(object):
     """Abstract base class for all data source classes"""
     __metaclass__ = abc.ABCMeta
@@ -86,13 +87,11 @@ class DataSource(object):
         self._host_sections = None
         self._exit_code_spec = config.exit_code_spec(hostname, data_source_id=self.id())
 
-
     def _setup_logger(self):
         """Add the source log prefix to the class logger"""
         self._logger.propagate = False
-        self._logger.set_format(" %s[%s%s%s]%s %%(message)s" %
-                    (tty.bold, tty.normal, self.id(), tty.bold, tty.normal))
-
+        self._logger.set_format(
+            " %s[%s%s%s]%s %%(message)s" % (tty.bold, tty.normal, self.id(), tty.bold, tty.normal))
 
     def run(self, hostname=None, ipaddress=None, get_raw_data=False):
         """Wrapper for self._execute() that unifies several things:
@@ -152,7 +151,6 @@ class DataSource(object):
             return ""
         return HostSections()
 
-
     def _get_raw_data(self):
         """Returns the current raw data of this data source
 
@@ -176,11 +174,9 @@ class DataSource(object):
         self._write_cache_file(raw_data)
         return raw_data, False
 
-
     def run_raw(self):
         """Small wrapper for self.run() which always returns raw data source data"""
         return self.run(get_raw_data=True)
-
 
     @abc.abstractmethod
     def _execute(self):
@@ -192,7 +188,6 @@ class DataSource(object):
         CheckMKAgentDataSource sources. The SNMPDataSource source already
         return the final data structure to be wrapped into HostSections()."""
         raise NotImplementedError()
-
 
     def _read_cache_file(self):
         assert self._max_cachefile_age is not None
@@ -212,9 +207,10 @@ class DataSource(object):
             return
 
         may_use_outdated = config.simulation_mode or self._use_outdated_cache_file
-        if not may_use_outdated and cmk_base.utils.cachefile_age(cachefile) > self._max_cachefile_age:
+        if not may_use_outdated and cmk_base.utils.cachefile_age(
+                cachefile) > self._max_cachefile_age:
             self._logger.debug("Not using cache (Too old. Age is %d sec, allowed is %s sec)" %
-                             (cmk_base.utils.cachefile_age(cachefile), self._max_cachefile_age))
+                               (cmk_base.utils.cachefile_age(cachefile), self._max_cachefile_age))
             return
 
         # TODO: Use some generic store file read function to generalize error handling,
@@ -227,7 +223,6 @@ class DataSource(object):
         self._logger.verbose("Using data from cache file %s" % (cachefile))
         return self._from_cache_file(result)
 
-
     def _write_cache_file(self, raw_data):
         if self.is_agent_cache_disabled():
             self._logger.debug("Not writing data to cache file (Cache usage disabled)")
@@ -239,12 +234,13 @@ class DataSource(object):
             try:
                 os.makedirs(os.path.dirname(cachefile))
             except OSError, e:
-                if e.errno == 17: # File exists
+                if e.errno == 17:  # File exists
                     pass
                 else:
                     raise
         except Exception, e:
-            raise MKGeneralException("Cannot create directory %r: %s" % (os.path.dirname(cachefile), e))
+            raise MKGeneralException(
+                "Cannot create directory %r: %s" % (os.path.dirname(cachefile), e))
 
         self._logger.debug("Write data to cache file %s" % (cachefile))
         try:
@@ -252,42 +248,33 @@ class DataSource(object):
         except Exception, e:
             raise MKGeneralException("Cannot write cache file %s: %s" % (cachefile, e))
 
-
     def _from_cache_file(self, raw_data):
         return raw_data
 
-
     def _to_cache_file(self, raw_data):
         return raw_data
-
 
     @abc.abstractmethod
     def _convert_to_sections(self, raw_data):
         """See _execute() for details"""
         raise NotImplementedError()
 
-
     def _cache_file_path(self):
         return os.path.join(self._cache_dir(), self._hostname)
-
 
     def _cache_dir(self):
         return os.path.join(cmk.paths.data_source_cache_dir, self.id())
 
-
     def _persisted_sections_file_path(self):
         return os.path.join(self._persisted_sections_dir(), self._hostname)
 
-
     def _persisted_sections_dir(self):
         return os.path.join(cmk.paths.var_dir, "persisted_sections", self.id())
-
 
     def get_check_plugin_names(self):
         if self._enforced_check_plugin_names is not None:
             return self._enforced_check_plugin_names
         return self._gather_check_plugin_names()
-
 
     @abc.abstractmethod
     def _gather_check_plugin_names(self):
@@ -299,7 +286,6 @@ class DataSource(object):
         """
         raise NotImplementedError()
 
-
     def enforce_check_plugin_names(self, check_plugin_names):
         """
         Returns a subset of beforehand gathered check plugin names which are
@@ -308,23 +294,20 @@ class DataSource(object):
         Example: management board checks only for management board data sources
         """
         if check_plugin_names is not None:
-            self._enforced_check_plugin_names = config.filter_by_management_board(self._hostname,
-                                                       check_plugin_names, self._for_mgmt_board)
+            self._enforced_check_plugin_names = config.filter_by_management_board(
+                self._hostname, check_plugin_names, self._for_mgmt_board)
         else:
             self._enforced_check_plugin_names = check_plugin_names
-
 
     @abc.abstractmethod
     def _cpu_tracking_id(self):
         raise NotImplementedError()
-
 
     @abc.abstractmethod
     def id(self):
         """Return a unique identifier for this data source type
         It is used to identify the different data source types."""
         raise NotImplementedError()
-
 
     def name(self):
         """Return a unique (per host) textual identification of the data source
@@ -338,44 +321,37 @@ class DataSource(object):
         """
         return ":".join([self.id(), self._hostname, self._ipaddress])
 
-
     @abc.abstractmethod
     def describe(self):
         """Return a short textual description of the datasource"""
         raise NotImplementedError()
 
-
     def _verify_ipaddress(self):
         if not self._ipaddress:
             raise MKIPAddressLookupError("Host as no IP address configured.")
 
-        if self._ipaddress in [ "0.0.0.0", "::" ]:
-            raise MKIPAddressLookupError("Failed to lookup IP address and no explicit IP address configured")
-
+        if self._ipaddress in ["0.0.0.0", "::"]:
+            raise MKIPAddressLookupError(
+                "Failed to lookup IP address and no explicit IP address configured")
 
     def set_max_cachefile_age(self, max_cachefile_age):
         self._max_cachefile_age = max_cachefile_age
-
 
     @classmethod
     def disable_data_source_cache(cls):
         cls._no_cache = True
 
-
     @classmethod
     def is_agent_cache_disabled(cls):
         return cls._no_cache
-
 
     @classmethod
     def get_may_use_cache_file(cls):
         return cls._may_use_cache_file
 
-
     @classmethod
     def set_may_use_cache_file(cls, state=True):
         cls._may_use_cache_file = state
-
 
     # TODO: Refactor the returned data of this method and self._summary_result()
     # to some wrapped object like CheckResult(...)
@@ -405,7 +381,6 @@ class DataSource(object):
 
         return status, exc_msg + check_api_utils.state_markers[status], []
 
-
     def _summary_result(self):
         """Produce a source specific summary result in case no exception occured.
 
@@ -415,7 +390,6 @@ class DataSource(object):
         The default is to return empty summary information, which will then be
         ignored by the code that processes the summary result."""
         return 0, "Success", []
-
 
     def exception(self):
         """Provides exceptions happened during last self.run() call or None"""
@@ -444,14 +418,13 @@ class DataSource(object):
         try:
             os.makedirs(os.path.dirname(file_path))
         except OSError, e:
-            if e.errno == 17: # File exists
+            if e.errno == 17:  # File exists
                 pass
             else:
                 raise
 
         store.save_data_to_file(file_path, persisted_sections, pretty=False)
         self._logger.debug("Stored persisted sections: %s" % (", ".join(persisted_sections.keys())))
-
 
     def _update_info_with_persisted_sections(self, host_sections):
         persisted_sections = self._load_persisted_sections()
@@ -460,19 +433,19 @@ class DataSource(object):
 
         for section_name, entry in persisted_sections.items():
             if len(entry) == 2:
-                continue # Skip entries of "old" format
+                continue  # Skip entries of "old" format
 
             persisted_from, persisted_until, section_info = entry
 
             # Don't overwrite sections that have been received from the source with this call
             if section_name not in host_sections.sections:
                 self._logger.debug("Using persisted section %r" % (section_name))
-                host_sections.add_cached_section(section_name, section_info, persisted_from, persisted_until)
+                host_sections.add_cached_section(section_name, section_info, persisted_from,
+                                                 persisted_until)
             else:
                 self._logger.debug("Skipping persisted section %r" % (section_name))
 
         return host_sections
-
 
     def _load_persisted_sections(self):
         file_path = self._persisted_sections_file_path()
@@ -483,10 +456,10 @@ class DataSource(object):
         if not persisted_sections:
             self._logger.debug("No persisted sections loaded")
         else:
-            self._logger.debug("Loaded persisted sections: %s" % (", ".join(persisted_sections.keys())))
+            self._logger.debug(
+                "Loaded persisted sections: %s" % (", ".join(persisted_sections.keys())))
 
         return persisted_sections
-
 
     # TODO: This is not race condition free when modifying the data. Either remove
     # the possible write here and simply ignore the outdated sections or lock when
@@ -502,7 +475,7 @@ class DataSource(object):
 
             if not self._use_outdated_persisted_sections and now > persisted_until:
                 self._logger.debug("Persisted section %s is outdated by %d seconds. Deleting it." %
-                                                       (section_name, now - persisted_until))
+                                   (section_name, now - persisted_until))
                 del persisted_sections[section_name]
                 modified = True
 
@@ -517,16 +490,13 @@ class DataSource(object):
 
         return persisted_sections
 
-
     @classmethod
     def use_outdated_persisted_sections(cls):
         cls._use_outdated_persisted_sections = True
 
-
     @classmethod
     def set_use_outdated_cache_file(cls, state=True):
         cls._use_outdated_cache_file = state
-
 
 
 class CheckMKAgentDataSource(DataSource):
@@ -543,7 +513,6 @@ class CheckMKAgentDataSource(DataSource):
         super(CheckMKAgentDataSource, self).__init__(hostname, ipaddress)
         self._is_main_agent_data_source = False
 
-
     # TODO: We should cleanup these old directories one day. Then we can remove this special case
     def set_main_agent_data_source(self):
         """Tell the data source that it's the main agent based data source
@@ -555,14 +524,11 @@ class CheckMKAgentDataSource(DataSource):
         """
         self._is_main_agent_data_source = True
 
-
     def _gather_check_plugin_names(self):
         return config.discoverable_tcp_checks()
 
-
     def _cpu_tracking_id(self):
         return "agent"
-
 
     def _cache_dir(self):
         # The main agent has another cache directory to be compatible with older Check_MK
@@ -571,7 +537,6 @@ class CheckMKAgentDataSource(DataSource):
 
         return super(CheckMKAgentDataSource, self)._cache_dir()
 
-
     def _persisted_sections_dir(self):
         # The main agent has another cache directory to be compatible with older Check_MK
         if self._is_main_agent_data_source:
@@ -579,13 +544,11 @@ class CheckMKAgentDataSource(DataSource):
 
         return super(CheckMKAgentDataSource, self)._persisted_sections_dir()
 
-
     def _convert_to_sections(self, raw_data):
         if config.agent_simulator:
             raw_data = cmk_base.agent_simulator.process(raw_data)
 
         return self._parse_info(raw_data.split("\n"))
-
 
     def _parse_info(self, lines):
         """Split agent output in chunks, splits lines by whitespaces.
@@ -596,13 +559,13 @@ class CheckMKAgentDataSource(DataSource):
         # Unparsed info for other hosts. A dictionary, indexed by the piggybacked host name.
         # The value is a list of lines which were received for this host.
         piggybacked_raw_data = {}
-        persisted_sections = {} # handle sections with option persist(...)
+        persisted_sections = {}  # handle sections with option persist(...)
         host = None
         section_content = []
         section_options = {}
         agent_cache_info = {}
         separator = None
-        encoding  = None
+        encoding = None
         for line in lines:
             line = line.rstrip("\r")
             stripped_line = line.strip()
@@ -613,7 +576,7 @@ class CheckMKAgentDataSource(DataSource):
                 else:
                     host = config.translate_piggyback_host(self._hostname, host)
                     if host == self._hostname:
-                        host = None # unpiggybacked "normal" host
+                        host = None  # unpiggybacked "normal" host
 
                     # Protect Check_MK against unallowed host names. Normally source scripts
                     # like agent plugins should care about cleaning their provided host names
@@ -622,7 +585,7 @@ class CheckMKAgentDataSource(DataSource):
                     if host:
                         host = host.replace(" ", "_")
 
-            elif host: # processing data for an other host
+            elif host:  # processing data for an other host
                 piggybacked_raw_data.setdefault(host, []).append(line)
 
             # Found normal section header
@@ -642,7 +605,7 @@ class CheckMKAgentDataSource(DataSource):
                     section_options[opt_name] = opt_args
 
                 section_content = sections.get(section_name, None)
-                if section_content == None: # section appears in output for the first time
+                if section_content == None:  # section appears in output for the first time
                     section_content = []
                     sections[section_name] = section_content
                 try:
@@ -653,13 +616,14 @@ class CheckMKAgentDataSource(DataSource):
                 # Split of persisted section for server-side caching
                 if "persist" in section_options:
                     until = int(section_options["persist"])
-                    cached_at = int(time.time()) # Estimate age of the data
+                    cached_at = int(time.time())  # Estimate age of the data
                     cache_interval = int(until - cached_at)
                     agent_cache_info[section_name] = (cached_at, cache_interval)
-                    persisted_sections[section_name] = ( cached_at, until, section_content )
+                    persisted_sections[section_name] = (cached_at, until, section_content)
 
                 if "cached" in section_options:
-                    agent_cache_info[section_name] = tuple(map(int, section_options["cached"].split(",")))
+                    agent_cache_info[section_name] = tuple(
+                        map(int, section_options["cached"].split(",")))
 
                 # The section data might have a different encoding
                 encoding = section_options.get("encoding")
@@ -677,7 +641,6 @@ class CheckMKAgentDataSource(DataSource):
 
         return HostSections(sections, agent_cache_info, piggybacked_raw_data, persisted_sections)
 
-
     # TODO: refactor
     def _summary_result(self):
         agent_info = self._get_agent_info()
@@ -691,11 +654,10 @@ class CheckMKAgentDataSource(DataSource):
 
         return 0, ", ".join(output), []
 
-
     def _get_agent_info(self):
         agent_info = {
-            "version" : "unknown",
-            "agentos" : "unknown",
+            "version": "unknown",
+            "agentos": "unknown",
         }
 
         if self._host_sections is None:
@@ -708,7 +670,6 @@ class CheckMKAgentDataSource(DataSource):
                 agent_info[line[0][:-1].lower()] = value
 
         return agent_info
-
 
 
 class ManagementBoardDataSource(DataSource):
@@ -730,7 +691,6 @@ class ManagementBoardDataSource(DataSource):
         super(ManagementBoardDataSource, self).__init__(hostname, ipaddress)
         self._credentials = config.management_credentials_of(self._hostname)
 
-
     def _management_board_ipaddress(self, hostname):
         mgmt_ipaddress = config.management_address_of(hostname)
 
@@ -744,7 +704,6 @@ class ManagementBoardDataSource(DataSource):
                 return None
         else:
             return mgmt_ipaddress
-
 
     # TODO: Why is it used only here?
     @staticmethod

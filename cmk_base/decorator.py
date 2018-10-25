@@ -42,6 +42,7 @@ except Exception:
 def handle_check_mk_check_result(check_plugin_name, description):
     """Decorator function used to wrap all functions used to execute the "Check_MK *" checks
     Main purpose: Equalize the exception handling of all such functions"""
+
     def wrap(check_func):
         def wrapped_check_func(hostname, *args, **kwargs):
             exit_spec = config.exit_code_spec(hostname)
@@ -72,13 +73,14 @@ def handle_check_mk_check_result(check_plugin_name, description):
             except Exception:
                 if cmk.debug.enabled():
                     raise
-                crash_output = cmk_base.crash_reporting.create_crash_dump(hostname, check_plugin_name, None,
-                                                                          False, None, description, [])
+                crash_output = cmk_base.crash_reporting.create_crash_dump(
+                    hostname, check_plugin_name, None, False, None, description, [])
                 infotexts.append(crash_output.replace("Crash dump:\n", "Crash dump:\\n"))
                 status = max(status, exit_spec.get("exception", 3))
 
             # Produce the service check result output
-            output_txt = "%s - %s" % (defines.short_service_state_name(status),  ", ".join(infotexts))
+            output_txt = "%s - %s" % (defines.short_service_state_name(status),
+                                      ", ".join(infotexts))
             if perfdata:
                 output_txt += " | %s" % " ".join(perfdata)
             if long_infotexts:
@@ -92,7 +94,9 @@ def handle_check_mk_check_result(check_plugin_name, description):
                 console.output(output_txt.encode("utf-8"))
 
             return status
+
         return wrapped_check_func
+
     return wrap
 
 

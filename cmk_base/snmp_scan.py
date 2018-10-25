@@ -36,13 +36,21 @@ import cmk_base.check_api_utils as check_api_utils
 
 
 # gather auto_discovered check_plugin_names for this host
-def gather_snmp_check_plugin_names(access_data, on_error, do_snmp_scan, for_inventory=False, for_mgmt_board=False):
+def gather_snmp_check_plugin_names(access_data,
+                                   on_error,
+                                   do_snmp_scan,
+                                   for_inventory=False,
+                                   for_mgmt_board=False):
     check_plugin_names = set()
 
     try:
-        check_plugin_names.update(_snmp_scan(access_data, on_error=on_error,
-                                     do_snmp_scan=do_snmp_scan, for_inv=for_inventory,
-                                     for_mgmt_board=for_mgmt_board))
+        check_plugin_names.update(
+            _snmp_scan(
+                access_data,
+                on_error=on_error,
+                do_snmp_scan=do_snmp_scan,
+                for_inv=for_inventory,
+                for_mgmt_board=for_mgmt_board))
     except Exception, e:
         if on_error == "raise":
             raise
@@ -52,7 +60,11 @@ def gather_snmp_check_plugin_names(access_data, on_error, do_snmp_scan, for_inve
     return list(check_plugin_names)
 
 
-def _snmp_scan(access_data, on_error="ignore", for_inv=False, do_snmp_scan=True, for_mgmt_board=False):
+def _snmp_scan(access_data,
+               on_error="ignore",
+               for_inv=False,
+               do_snmp_scan=True,
+               for_mgmt_board=False):
     import cmk_base.inventory_plugins as inventory_plugins
 
     hostname = access_data["hostname"]
@@ -65,8 +77,8 @@ def _snmp_scan(access_data, on_error="ignore", for_inv=False, do_snmp_scan=True,
     snmp.initialize_single_oid_cache(access_data)
     console.vverbose("  SNMP scan:\n")
     if not config.in_binary_hostlist(hostname, config.snmp_without_sys_descr):
-        for oid, name in [ (".1.3.6.1.2.1.1.1.0", "system description"),
-                           (".1.3.6.1.2.1.1.2.0", "system object") ]:
+        for oid, name in [(".1.3.6.1.2.1.1.1.0", "system description"),
+                          (".1.3.6.1.2.1.1.2.0", "system object")]:
             value = snmp.get_single_oid(access_data, oid, do_snmp_scan=do_snmp_scan)
             if value == None:
                 raise MKSNMPError(
@@ -77,7 +89,7 @@ def _snmp_scan(access_data, on_error="ignore", for_inv=False, do_snmp_scan=True,
     else:
         # Fake OID values to prevent issues with a lot of scan functions
         console.vverbose("       Skipping system description OID "
-                 "(Set .1.3.6.1.2.1.1.1.0 and .1.3.6.1.2.1.1.2.0 to \"\")\n")
+                         "(Set .1.3.6.1.2.1.1.1.0 and .1.3.6.1.2.1.1.2.0 to \"\")\n")
         snmp.set_single_oid_cache(hostname, ".1.3.6.1.2.1.1.1.0", "")
         snmp.set_single_oid_cache(hostname, ".1.3.6.1.2.1.1.2.0", "")
 
@@ -115,15 +127,17 @@ def _snmp_scan(access_data, on_error="ignore", for_inv=False, do_snmp_scan=True,
 
         if scan_function:
             try:
+
                 def oid_function(oid, default_value=None, cp_name=check_plugin_name):
-                    value = snmp.get_single_oid(access_data, oid, cp_name, do_snmp_scan=do_snmp_scan)
+                    value = snmp.get_single_oid(
+                        access_data, oid, cp_name, do_snmp_scan=do_snmp_scan)
                     return default_value if value is None else value
 
                 result = scan_function(oid_function)
-                if result is not None and type(result) not in [ str, bool ]:
+                if result is not None and type(result) not in [str, bool]:
                     if on_error == "warn":
                         console.warning("   SNMP scan function of %s returns invalid type %s." %
-                                (check_plugin_name, type(result)))
+                                        (check_plugin_name, type(result)))
                     elif on_error == "raise":
                         raise MKGeneralException("SNMP Scan aborted.")
                 elif result:
@@ -146,9 +160,12 @@ def _snmp_scan(access_data, on_error="ignore", for_inv=False, do_snmp_scan=True,
     if default_found:
         _output_snmp_check_plugins("SNMP without scan function", default_found)
 
-    filtered = config.filter_by_management_board(hostname, found_check_plugin_names,
-                                                 for_mgmt_board, for_discovery=True,
-                                                 for_inventory=for_inv)
+    filtered = config.filter_by_management_board(
+        hostname,
+        found_check_plugin_names,
+        for_mgmt_board,
+        for_discovery=True,
+        for_inventory=for_inv)
 
     _output_snmp_check_plugins("SNMP filtered check plugin names", filtered)
     snmp.write_single_oid_cache(access_data)

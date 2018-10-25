@@ -36,6 +36,7 @@ import cmk_base.check_utils
 
 from cmk_base.exceptions import MKParseFunctionError
 
+
 class HostSections(object):
     """A wrapper class for the host information read by the data sources
 
@@ -49,14 +50,16 @@ class HostSections(object):
                                     (dict section name -> (cached_at, cache_interval))
     """
 
-
-    def __init__(self, sections=None, cache_info=None, piggybacked_raw_data=None, persisted_sections=None):
+    def __init__(self,
+                 sections=None,
+                 cache_info=None,
+                 piggybacked_raw_data=None,
+                 persisted_sections=None):
         super(HostSections, self).__init__()
         self.sections = sections if sections is not None else {}
         self.cache_info = cache_info if cache_info is not None else {}
         self.piggybacked_raw_data = piggybacked_raw_data if piggybacked_raw_data is not None else {}
         self.persisted_sections = persisted_sections if persisted_sections is not None else {}
-
 
     # TODO: It should be supported that different sources produce equal sections.
     # this is handled for the self.sections data by simply concatenating the lines
@@ -77,11 +80,9 @@ class HostSections(object):
         if host_sections.persisted_sections:
             self.persisted_sections.update(host_sections.persisted_sections)
 
-
     def add_cached_section(self, section_name, section, persisted_from, persisted_until):
         self.cache_info[section_name] = (persisted_from, persisted_until - persisted_from)
         self.sections[section_name] = section
-
 
 
 class MultiHostSections(object):
@@ -94,16 +95,13 @@ class MultiHostSections(object):
         self._multi_host_sections = {}
         self._section_content_cache = caching.DictCache()
 
-
     def add_or_get_host_sections(self, hostname, ipaddress, deflt=None):
         if deflt is None:
             deflt = HostSections()
         return self._multi_host_sections.setdefault((hostname, ipaddress), deflt)
 
-
     def get_host_sections(self):
         return self._multi_host_sections
-
 
     def get_section_content(self, hostname, ipaddress, check_plugin_name, for_discovery):
         """Prepares the section_content construct for a Check_MK check on ANY host
@@ -130,12 +128,14 @@ class MultiHostSections(object):
         try:
             return self._section_content_cache[(hostname, ipaddress, section_name, for_discovery)]
         except KeyError:
-            section_content = self._get_section_content(hostname, ipaddress, check_plugin_name, section_name, for_discovery)
-            self._section_content_cache[(hostname, ipaddress, section_name, for_discovery)] = section_content
+            section_content = self._get_section_content(hostname, ipaddress, check_plugin_name,
+                                                        section_name, for_discovery)
+            self._section_content_cache[(hostname, ipaddress, section_name,
+                                         for_discovery)] = section_content
             return section_content
 
-
-    def _get_section_content(self, hostname, ipaddress, check_plugin_name, section_name, for_discovery):
+    def _get_section_content(self, hostname, ipaddress, check_plugin_name, section_name,
+                             for_discovery):
         # First abstract cluster / non cluster hosts
         host_entries = []
         nodes = config.nodes_of(hostname)
@@ -154,8 +154,8 @@ class MultiHostSections(object):
             except KeyError:
                 continue
 
-            host_section_content = self._update_with_node_column(host_section_content,
-                                          check_plugin_name, host_entry[0], for_discovery)
+            host_section_content = self._update_with_node_column(
+                host_section_content, check_plugin_name, host_entry[0], for_discovery)
 
             if section_content is None:
                 section_content = []
@@ -168,11 +168,10 @@ class MultiHostSections(object):
         assert type(section_content) == list
 
         section_content = self._update_with_parse_function(section_content, section_name)
-        section_content = self._update_with_extra_sections(section_content,
-                                        hostname, ipaddress, section_name, for_discovery)
+        section_content = self._update_with_extra_sections(section_content, hostname, ipaddress,
+                                                           section_name, for_discovery)
 
         return section_content
-
 
     def _update_with_node_column(self, section_content, check_plugin_name, hostname, for_discovery):
         """Add cluster node information to the section content
@@ -188,8 +187,9 @@ class MultiHostSections(object):
         be added to the cluster or the node. This decision is made later during creation of the
         configuation. This means that the discovery function must work independent from the node info.
         """
-        if check_plugin_name not in config.check_info or not config.check_info[check_plugin_name]["node_info"]:
-            return section_content # unknown check_plugin_name or does not want node info -> do nothing
+        if check_plugin_name not in config.check_info or not config.check_info[check_plugin_name][
+                "node_info"]:
+            return section_content  # unknown check_plugin_name or does not want node info -> do nothing
 
         node_name = None
         if not for_discovery and config.clusters_of(hostname):
@@ -197,39 +197,37 @@ class MultiHostSections(object):
 
         return self._add_node_column(section_content, node_name)
 
-
     def _add_node_column(self, section_content, nodename):
         new_section_content = []
         for line in section_content:
             if len(line) > 0 and type(line[0]) == list:
                 new_entry = []
                 for entry in line:
-                    new_entry.append([ nodename ] + entry)
+                    new_entry.append([nodename] + entry)
                 new_section_content.append(new_entry)
             else:
-                new_section_content.append([ nodename ] + line)
+                new_section_content.append([nodename] + line)
         return new_section_content
 
-
-    def _update_with_extra_sections(self, section_content, hostname, ipaddress,
-                                    section_name, for_discovery):
+    def _update_with_extra_sections(self, section_content, hostname, ipaddress, section_name,
+                                    for_discovery):
         """Adds additional agent sections to the section_content the check receives.
 
         Please note that this is not a check/subcheck individual setting. This option is related
         to the agent section.
         """
-        if section_name not in config.check_info or not config.check_info[section_name]["extra_sections"]:
+        if section_name not in config.check_info or not config.check_info[section_name][
+                "extra_sections"]:
             return section_content
 
         # In case of extra_sections the existing info is wrapped into a new list to which all
         # extra sections are appended
-        section_content = [ section_content ]
+        section_content = [section_content]
         for extra_section_name in config.check_info[section_name]["extra_sections"]:
-            section_content.append(self.get_section_content(hostname, ipaddress,
-                                                    extra_section_name, for_discovery))
+            section_content.append(
+                self.get_section_content(hostname, ipaddress, extra_section_name, for_discovery))
 
         return section_content
-
 
     def _update_with_parse_function(self, section_content, section_name):
         """Transform the section_content using the defined parse functions.
@@ -264,7 +262,6 @@ class MultiHostSections(object):
             item_state.set_item_state_prefix(*orig_item_state_prefix)
 
         return section_content
-
 
     def get_check_plugin_names(self):
         # TODO: There is a function 'section_name_of' in check_utils.py

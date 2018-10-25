@@ -51,7 +51,7 @@ class MonitoringCore(object):
 
 
 _ignore_ip_lookup_failures = False
-_failed_ip_lookups         = []
+_failed_ip_lookups = []
 
 #.
 #   .--Warnings------------------------------------------------------------.
@@ -91,8 +91,11 @@ def get_configuration_warnings():
 
 
 # TODO: Cleanup the hostcheck_commands_to_define, custom_commands_to_define thing
-def host_check_command(hostname, ip, is_clust, hostcheck_commands_to_define=None,
-                                               custom_commands_to_define=None):
+def host_check_command(hostname,
+                       ip,
+                       is_clust,
+                       hostcheck_commands_to_define=None,
+                       custom_commands_to_define=None):
     # Check dedicated host check command
     values = config.host_extra_conf(hostname, config.host_check_commands)
     if values:
@@ -105,19 +108,19 @@ def host_check_command(hostname, ip, is_clust, hostcheck_commands_to_define=None
         value = "ping"
 
     if config.monitoring_core != "cmc" and value == "smart":
-        value = "ping" # avoid problems when switching back to nagios core
+        value = "ping"  # avoid problems when switching back to nagios core
 
     if value == "smart" and not is_clust:
         return "check-mk-host-smart"
 
-    elif value in [ "ping", "smart" ]: # Cluster host
+    elif value in ["ping", "smart"]:  # Cluster host
         ping_args = check_icmp_arguments_of(hostname)
 
-        if is_clust and ip: # Do check cluster IP address if one is there
+        if is_clust and ip:  # Do check cluster IP address if one is there
             return "check-mk-host-ping!%s" % ping_args
-        elif ping_args and is_clust: # use check_icmp in cluster mode
+        elif ping_args and is_clust:  # use check_icmp in cluster mode
             return "check-mk-host-ping-cluster!%s" % ping_args
-        elif ping_args: # use special arguments
+        elif ping_args:  # use special arguments
             return "check-mk-host-ping!%s" % ping_args
 
         return None
@@ -132,10 +135,10 @@ def host_check_command(hostname, ip, is_clust, hostcheck_commands_to_define=None
             return "check-mk-host-service!" + service
 
         command = "check-mk-host-custom-%d" % (len(hostcheck_commands_to_define) + 1)
-        hostcheck_commands_to_define.append((command,
-           'echo "$SERVICEOUTPUT:%s:%s$" && exit $SERVICESTATEID:%s:%s$' %
-                (hostname, service.replace('$HOSTNAME$', hostname),
-                 hostname, service.replace('$HOSTNAME$', hostname))))
+        hostcheck_commands_to_define.append(
+            (command, 'echo "$SERVICEOUTPUT:%s:%s$" && exit $SERVICESTATEID:%s:%s$' %
+             (hostname, service.replace('$HOSTNAME$', hostname), hostname,
+              service.replace('$HOSTNAME$', hostname))))
         return command
 
     elif value[0] == "tcp":
@@ -145,16 +148,16 @@ def host_check_command(hostname, ip, is_clust, hostcheck_commands_to_define=None
         try:
             custom_commands_to_define.add("check-mk-custom")
         except:
-            pass # not needed and not available with CMC
+            pass  # not needed and not available with CMC
         return "check-mk-custom!" + autodetect_plugin(value[1])
 
-    raise MKGeneralException("Invalid value %r for host_check_command of host %s." % (
-            value, hostname))
+    raise MKGeneralException(
+        "Invalid value %r for host_check_command of host %s." % (value, hostname))
 
 
 def autodetect_plugin(command_line):
     plugin_name = command_line.split()[0]
-    if command_line[0] not in [ '$', '/' ]:
+    if command_line[0] not in ['$', '/']:
         try:
             for directory in ["/local", ""]:
                 path = cmk.paths.omd_root + directory + "/lib/nagios/plugins/"
@@ -166,16 +169,17 @@ def autodetect_plugin(command_line):
     return command_line
 
 
-def icons_and_actions_of(what, hostname, svcdesc = None, checkname = None, params = None):
+def icons_and_actions_of(what, hostname, svcdesc=None, checkname=None, params=None):
     if what == 'host':
         return list(set(config.host_extra_conf(hostname, config.host_icons_and_actions)))
     else:
-        actions = set(config.service_extra_conf(hostname, svcdesc, config.service_icons_and_actions))
+        actions = set(
+            config.service_extra_conf(hostname, svcdesc, config.service_icons_and_actions))
 
         # Some WATO rules might register icons on their own
         if checkname:
             checkgroup = config.check_info[checkname]["group"]
-            if checkgroup in [ 'ps', 'services' ] and type(params) == dict:
+            if checkgroup in ['ps', 'services'] and type(params) == dict:
                 icon = params.get('icon')
                 if icon:
                     actions.add(icon)
@@ -186,7 +190,7 @@ def icons_and_actions_of(what, hostname, svcdesc = None, checkname = None, param
 def check_icmp_arguments_of(hostname, add_defaults=True, family=None):
     values = config.host_extra_conf(hostname, config.ping_levels)
     levels = {}
-    for value in values[::-1]: # make first rules have precedence
+    for value in values[::-1]:  # make first rules have precedence
         levels.update(value)
     if not add_defaults and not levels:
         return ""
@@ -227,10 +231,10 @@ def check_icmp_arguments_of(hostname, add_defaults=True, family=None):
 #   | Code for managing the core configuration creation.                   |
 #   '----------------------------------------------------------------------'
 
+
 # TODO: Move to modes?
 def do_create_config(core, with_agents):
-    console.output("Generating configuration for core (type %s)..." %
-                                                config.monitoring_core)
+    console.output("Generating configuration for core (type %s)..." % config.monitoring_core)
     create_core_config(core)
     console.output(tty.ok + "\n")
 
@@ -271,9 +275,9 @@ def _verify_non_deprecated_checkgroups():
 def _verify_non_duplicate_hosts():
     duplicates = config.duplicate_hosts()
     if duplicates:
-        warning(
-              "The following host names have duplicates: %s. "
-              "This might lead to invalid/incomplete monitoring for these hosts." % ", ".join(duplicates))
+        warning("The following host names have duplicates: %s. "
+                "This might lead to invalid/incomplete monitoring for these hosts." %
+                ", ".join(duplicates))
 
 
 def do_update(core, with_precompile):
@@ -301,10 +305,13 @@ def do_update(core, with_precompile):
 #   | Active check specific functions                                      |
 #   '----------------------------------------------------------------------'
 
+
 def active_check_arguments(hostname, description, args):
     if not isinstance(args, (str, unicode, list)):
-        raise MKGeneralException("The check argument function needs to return either a list of arguments or a "
-                                 "string of the concatenated arguments (Host: %s, Service: %s)." % (hostname, description))
+        raise MKGeneralException(
+            "The check argument function needs to return either a list of arguments or a "
+            "string of the concatenated arguments (Host: %s, Service: %s)." % (hostname,
+                                                                               description))
 
     return config.prepare_check_command(args, hostname, description)
 
@@ -320,6 +327,7 @@ def active_check_arguments(hostname, description, args):
 #   +----------------------------------------------------------------------+
 #   | Managing of host attributes                                          |
 #   '----------------------------------------------------------------------'
+
 
 def get_host_attributes(hostname, tags):
     attrs = _extra_host_attributes(hostname)
@@ -356,13 +364,13 @@ def get_host_attributes(hostname, tags):
     if add_ipv4addrs:
         attrs["_ADDRESSES_4"] = " ".join(add_ipv4addrs)
         for nr, ipv4_address in enumerate(add_ipv4addrs):
-            key = "_ADDRESS_4_%s" % (nr+1)
+            key = "_ADDRESS_4_%s" % (nr + 1)
             attrs[key] = ipv4_address
 
     if add_ipv6addrs:
         attrs["_ADDRESSES_6"] = " ".join(add_ipv6addrs)
         for nr, ipv6_address in enumerate(add_ipv6addrs):
-            key = "_ADDRESS_6_%s" % (nr+1)
+            key = "_ADDRESS_6_%s" % (nr + 1)
             attrs[key] = ipv6_address
 
     # Add the optional WATO folder path
@@ -376,7 +384,7 @@ def get_host_attributes(hostname, tags):
         attrs["_ACTIONS"] = ",".join(actions)
 
     if cmk.is_managed_edition():
-        attrs["_CUSTOMER"] = config.current_customer # pylint: disable=no-member
+        attrs["_CUSTOMER"] = config.current_customer  # pylint: disable=no-member
 
     return attrs
 
@@ -423,11 +431,10 @@ def get_cluster_attributes(hostname, nodes):
     else:
         node_ips = node_ips_4
 
-    for suffix, val in [ ("", node_ips), ("_4", node_ips_4), ("_6", node_ips_6) ]:
+    for suffix, val in [("", node_ips), ("_4", node_ips_4), ("_6", node_ips_6)]:
         attrs["_NODEIPS%s" % suffix] = " ".join(val)
 
     return attrs
-
 
 
 def get_cluster_nodes_for_config(hostname):
@@ -436,8 +443,8 @@ def get_cluster_nodes_for_config(hostname):
     nodes = config.nodes_of(hostname)[:]
     for node in nodes:
         if node not in config.all_active_realhosts():
-            warning("Node '%s' of cluster '%s' is not a monitored host in this site." %
-                                                                                      (node, hostname))
+            warning("Node '%s' of cluster '%s' is not a monitored host in this site." % (node,
+                                                                                         hostname))
             nodes.remove(node)
     return nodes
 
@@ -461,7 +468,7 @@ def _verify_cluster_address_family(hostname):
 
     if mixed:
         warning("Cluster '%s' has different primary address families: %s" %
-                                    (hostname, ", ".join(address_families)))
+                (hostname, ", ".join(address_families)))
 
 
 def ip_address_of(hostname, family=None):
@@ -499,9 +506,9 @@ def fallback_ip_for(hostname, family=None):
 
 def get_host_macros_from_attributes(hostname, attrs):
     macros = {
-        "$HOSTNAME$"     : hostname,
-        "$HOSTADDRESS$"  : attrs['address'],
-        "$HOSTALIAS$"    : attrs['alias'],
+        "$HOSTNAME$": hostname,
+        "$HOSTADDRESS$": attrs['address'],
+        "$HOSTALIAS$": attrs['alias'],
     }
 
     # Add custom macros
@@ -517,12 +524,12 @@ def get_host_macros_from_attributes(hostname, attrs):
 def replace_macros(s, macros):
     for key, value in macros.items():
         if type(value) in (int, long, float):
-            value = str(value) # e.g. in _EC_SL (service level)
+            value = str(value)  # e.g. in _EC_SL (service level)
 
         # TODO: Clean this up
         try:
             s = s.replace(key, value)
-        except: # Might have failed due to binary UTF-8 encoding in value
+        except:  # Might have failed due to binary UTF-8 encoding in value
             try:
                 s = s.replace(key, value.decode("utf-8"))
             except:

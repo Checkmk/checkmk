@@ -34,7 +34,7 @@ import cmk_base.console as console
 import cmk_base.config as config
 from cmk_base.exceptions import MKIPAddressLookupError
 
-_fake_dns          = False
+_fake_dns = False
 _enforce_localhost = False
 
 
@@ -63,7 +63,7 @@ def lookup_ipv6_address(hostname):
 # returns None instead of raising an exception.
 # FIXME: This different handling is bad. Clean this up!
 def lookup_ip_address(hostname, family=None):
-    if family == None: # choose primary family
+    if family == None:  # choose primary family
         family = 6 if config.is_ipv6_primary(hostname) else 4
 
     # Quick hack, where all IP addresses are faked (--fake-dns)
@@ -123,14 +123,15 @@ def cached_dns_lookup(hostname, family):
 
     # Now do the actual DNS lookup
     try:
-        ipa = socket.getaddrinfo(hostname, None, family == 4 and socket.AF_INET or socket.AF_INET6)[0][4][0]
+        ipa = socket.getaddrinfo(hostname, None, family == 4 and socket.AF_INET or
+                                 socket.AF_INET6)[0][4][0]
 
         # Update our cached address if that has changed or was missing
         if ipa != cached_ip:
             console.verbose("Updating IPv%d DNS cache for %s: %s\n" % (family, hostname, ipa))
             _update_ip_lookup_cache(cache_id, ipa)
 
-        cache[cache_id] = ipa # Update in-memory-cache
+        cache[cache_id] = ipa  # Update in-memory-cache
         return ipa
 
     except Exception, e:
@@ -142,8 +143,7 @@ def cached_dns_lookup(hostname, family):
         else:
             cache[cache_id] = None
             raise MKIPAddressLookupError(
-                "Failed to lookup IPv%d address of %s via DNS: %s" %
-                (family, hostname, e))
+                "Failed to lookup IPv%d address of %s via DNS: %s" % (family, hostname, e))
 
 
 def _initialize_ip_lookup_cache():
@@ -188,9 +188,7 @@ def _update_ip_lookup_cache(cache_id, ipa):
 
     # Read already known data
     cache_path = cmk.paths.var_dir + '/ipaddresses.cache'
-    data_from_file = cmk.store.load_data_from_file(cache_path,
-                                                   default={},
-                                                   lock=True)
+    data_from_file = cmk.store.load_data_from_file(cache_path, default={}, lock=True)
 
     _convert_legacy_ip_lookup_cache(data_from_file)
     ip_lookup_cache.update(data_from_file)
@@ -209,9 +207,7 @@ def _write_ip_lookup_cache():
     cache_path = cmk.paths.var_dir + '/ipaddresses.cache'
 
     # Read already known data
-    data_from_file = cmk.store.load_data_from_file(cache_path,
-                                                   default={},
-                                                   lock=True)
+    data_from_file = cmk.store.load_data_from_file(cache_path, default={}, lock=True)
     data_from_file.update(ip_lookup_cache)
     # The lock from the previous call is released in the following function
     # (I don't like this)
@@ -232,7 +228,7 @@ def update_dns_cache():
     for hostname in config.all_active_hosts():
         # Use intelligent logic. This prevents DNS lookups for hosts
         # with statically configured addresses, etc.
-        for family in [ 4, 6]:
+        for family in [4, 6]:
             if (family == 4 and config.is_ipv4_host(hostname)) \
                or (family == 6 and config.is_ipv6_host(hostname)):
                 console.verbose("%s (IPv%d)..." % (hostname, family))

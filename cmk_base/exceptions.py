@@ -31,11 +31,11 @@ import traceback
 
 from cmk.exceptions import MKGeneralException as _MKGeneralException
 
+
 class MKAgentError(Exception):
     def __init__(self, reason):
         super(MKAgentError, self).__init__(reason)
         self.reason = reason
-
 
     def __str__(self):
         return self.reason
@@ -47,7 +47,6 @@ class MKIPAddressLookupError(_MKGeneralException):
 
 class MKEmptyAgentData(MKAgentError):
     pass
-
 
 
 class MKParseFunctionError(Exception):
@@ -64,19 +63,17 @@ class MKParseFunctionError(Exception):
         return "%r\n%s" % (self.exception, "".join(traceback.format_tb(self.backtrace)))
 
 
-
 class MKSNMPError(Exception):
     def __init__(self, reason):
         self.reason = reason
         super(MKSNMPError, self).__init__(reason)
+
     def __str__(self):
         return self.reason
 
 
-
 class MKSkipCheck(Exception):
     pass
-
 
 
 # This exception is raised when a previously configured timeout is reached.

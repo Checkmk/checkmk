@@ -47,7 +47,8 @@ def get_piggyback_raw_data(piggyback_max_cachefile_age, hostname):
         return []
 
     piggyback_data = []
-    for source_host, piggyback_file_path in _get_piggyback_files(piggyback_max_cachefile_age, hostname):
+    for source_host, piggyback_file_path in _get_piggyback_files(piggyback_max_cachefile_age,
+                                                                 hostname):
         try:
             raw_data = file(piggyback_file_path).read()
         except IOError, e:
@@ -82,7 +83,7 @@ def _get_piggyback_files(piggyback_max_cachefile_age, hostname):
     try:
         source_host_names = os.listdir(piggyback_dir)
     except OSError, e:
-        if e.errno == 2: # No such file or directory
+        if e.errno == 2:  # No such file or directory
             return files
         else:
             raise
@@ -96,21 +97,25 @@ def _get_piggyback_files(piggyback_max_cachefile_age, hostname):
         try:
             file_age = cmk_base.utils.cachefile_age(piggyback_file_path)
         except MKGeneralException, e:
-            continue # File might've been deleted. That's ok.
+            continue  # File might've been deleted. That's ok.
 
         # Skip piggyback files that are outdated at all
         if file_age > piggyback_max_cachefile_age:
-            console.verbose("Piggyback file %s is outdated (%d seconds too old). Skip processing.\n" %
-                            (piggyback_file_path, file_age - piggyback_max_cachefile_age))
+            console.verbose("Piggyback file %s is outdated (%d seconds too old). Skip processing.\n"
+                            % (piggyback_file_path, file_age - piggyback_max_cachefile_age))
             continue
 
         status_file_path = _piggyback_source_status_path(source_host)
         if not os.path.exists(status_file_path):
-            console.verbose("Piggyback file %s is outdated (Source not sending piggyback). Skip processing.\n" % piggyback_file_path)
+            console.verbose(
+                "Piggyback file %s is outdated (Source not sending piggyback). Skip processing.\n" %
+                piggyback_file_path)
             continue
 
         if _is_piggyback_file_outdated(status_file_path, piggyback_file_path):
-            console.verbose("Piggyback file %s is outdated (Not updated by source). Skip processing.\n" % piggyback_file_path)
+            console.verbose(
+                "Piggyback file %s is outdated (Not updated by source). Skip processing.\n" %
+                piggyback_file_path)
             continue
 
         files.append((source_host, piggyback_file_path))
@@ -125,7 +130,7 @@ def _is_piggyback_file_outdated(status_file_path, piggyback_file_path):
         # (We're using os.utime() in _store_status_file_of())
         return os.stat(status_file_path)[8] > os.stat(piggyback_file_path)[8]
     except OSError, e:
-        if e.errno == 2: # No such file or directory
+        if e.errno == 2:  # No such file or directory
             return True
         else:
             raise
@@ -140,7 +145,7 @@ def _remove_piggyback_file(piggyback_file_path):
         os.remove(piggyback_file_path)
         return True
     except OSError, e:
-        if e.errno == 2: # No such file or directory
+        if e.errno == 2:  # No such file or directory
             return False
         else:
             raise
@@ -156,7 +161,8 @@ def remove_source_status_file(source_host):
 def store_piggyback_raw_data(source_host, piggybacked_raw_data):
     piggyback_file_paths = []
     for piggybacked_host, lines in piggybacked_raw_data.items():
-        piggyback_file_path = os.path.join(cmk.paths.tmp_dir, "piggyback", piggybacked_host, source_host)
+        piggyback_file_path = os.path.join(cmk.paths.tmp_dir, "piggyback", piggybacked_host,
+                                           source_host)
         console.verbose("Storing piggyback data for: %s\n" % piggybacked_host)
         content = "\n".join(lines) + "\n"
         store.save_file(piggyback_file_path, content)
@@ -174,9 +180,11 @@ def store_piggyback_raw_data(source_host, piggybacked_raw_data):
 
 
 def _store_status_file_of(status_file_path, piggyback_file_paths):
-    with tempfile.NamedTemporaryFile("w", dir=os.path.dirname(status_file_path),
-                                     prefix=".%s.new" % os.path.basename(status_file_path),
-                                     delete=False) as tmp:
+    with tempfile.NamedTemporaryFile(
+            "w",
+            dir=os.path.dirname(status_file_path),
+            prefix=".%s.new" % os.path.basename(status_file_path),
+            delete=False) as tmp:
         tmp_path = tmp.name
         os.chmod(tmp_path, 0660)
         tmp.write("")
@@ -187,7 +195,7 @@ def _store_status_file_of(status_file_path, piggyback_file_paths):
             try:
                 os.utime(piggyback_file_path, status_file_times)
             except OSError, e:
-                if e.errno == 2: # No such file or directory
+                if e.errno == 2:  # No such file or directory
                     continue
                 else:
                     raise
@@ -226,10 +234,11 @@ def _cleanup_old_source_status_files(piggyback_max_cachefile_age):
         try:
             file_age = cmk_base.utils.cachefile_age(piggyback_file_path)
         except MKGeneralException:
-            continue # File might've been deleted. That's ok.
+            continue  # File might've been deleted. That's ok.
 
         if file_age > piggyback_max_cachefile_age:
-            console.verbose("Removing outdated piggyback source status file %s\n" % piggyback_file_path)
+            console.verbose(
+                "Removing outdated piggyback source status file %s\n" % piggyback_file_path)
             _remove_piggyback_file(piggyback_file_path)
 
 
@@ -258,29 +267,32 @@ def _cleanup_old_piggybacked_files(piggyback_max_cachefile_age):
 
             piggyback_file_path = os.path.join(backed_host_dir_path, source_host_name)
 
-            delete_reason = _shall_cleanup_piggyback_file(piggyback_max_cachefile_age, piggyback_file_path, source_host_name, keep_sources)
+            delete_reason = _shall_cleanup_piggyback_file(
+                piggyback_max_cachefile_age, piggyback_file_path, source_host_name, keep_sources)
             if delete_reason:
-                console.verbose("Removing outdated piggyback file (%s) %s\n" % (delete_reason, piggyback_file_path))
+                console.verbose("Removing outdated piggyback file (%s) %s\n" %
+                                (delete_reason, piggyback_file_path))
                 _remove_piggyback_file(piggyback_file_path)
 
         # Remove empty backed host directory
         try:
             os.rmdir(backed_host_dir_path)
         except OSError, e:
-            if e.errno == 39: #Directory not empty
+            if e.errno == 39:  #Directory not empty
                 pass
             else:
                 raise
 
 
-def _shall_cleanup_piggyback_file(piggyback_max_cachefile_age, piggyback_file_path, source_host_name, keep_sources):
+def _shall_cleanup_piggyback_file(piggyback_max_cachefile_age, piggyback_file_path,
+                                  source_host_name, keep_sources):
     if source_host_name not in keep_sources:
         return "Source not sending piggyback data"
 
     try:
         file_age = cmk_base.utils.cachefile_age(piggyback_file_path)
     except MKGeneralException:
-        return None # File might've been deleted. That's ok.
+        return None  # File might've been deleted. That's ok.
 
     # Skip piggyback files that are outdated at all
     if file_age > piggyback_max_cachefile_age:

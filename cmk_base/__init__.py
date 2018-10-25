@@ -23,7 +23,6 @@
 # License along with GNU Make; see the file  COPYING.  If  not,  write
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
-
 """This is the python module hierarchy used by Check_MK's core
 components, former called modules. This hosts the checking,
 discovery and a lot of other functionality."""

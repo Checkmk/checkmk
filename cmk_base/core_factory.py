@@ -26,6 +26,7 @@
 
 import cmk_base.config
 
+
 def create_core(options=None):
     if cmk_base.config.monitoring_core == "cmc":
         from cmk_base.cee.core_cmc import CMC

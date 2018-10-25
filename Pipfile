@@ -26,29 +26,29 @@ mockldap = "*"
 isort = "*"
 
 [packages]
-setuptools_scm = "==2.1.0"
+setuptools_scm = "==3.1.0"
 pysphere = "==0.1.7"
-"pyasn1" = "==0.4.3"
+"pyasn1" = "==0.4.4"
 "pyasn1-modules" = "==0.2.2"
-pycryptodomex = "==3.4.7"
+pycryptodomex = "==3.6.6"
 ordereddict = "==1.1"
 ply = "==3.11"
-pysmi = "==0.3.0"
+pysmi = "==0.3.2"
 pysnmp = "==4.4.4"
 pymssql = "==2.1.3"
 python-ldap = "==3.1.0"
-simplejson = "==3.15.0"
+simplejson = "==3.16.0"
 mysqlclient = "==1.3.13"
 psycopg2 = "==2.7"  # This is actually a lie: We ship 2.6.2, but installation fails for PostgreSQL > 9. Alas, 2.7 removed support for clients < 9.1. >:-(
 dicttoxml = "==1.7.4"
 pycparser = "==2.19"
 enum34 = "==1.1.6"
 cffi = "==1.11.5"
-Pillow = "==5.1.0"
-reportlab = "==3.4.0"
+Pillow = "==5.3.0"
+reportlab = "==3.5.9"
 PyPDF2 = "==1.26.0"
 npyscreen = "==4.10.5"
-psutil = "==5.4.5"
+psutil = "==5.4.7"
 six = "==1.11.0"
 ipaddress = "==1.0.22"
 netifaces = "==0.10.7"
@@ -57,39 +57,39 @@ dnspython = "==1.15.0"
 idna = "==2.7"
 asn1crypto = "==0.24.0"
 # For 1.5 we ship cryptography 1.9 with Check_MK and ignore the requirement of pyghmi of 2.1 in regular packages
-cryptography = "==2.1"
-requests = { version = "==2.19.1", extras = ["security"] }
-pyOpenSSL = "==16.2.0"
+cryptography = "==2.3.1"
+requests = { version = "==2.20.0", extras = ["security"] }
+pyOpenSSL = "==18.0.0"
 pykerberos = "==1.2.1"
-requests-kerberos = "==0.11.0"
-tinkerforge = "==2.1.15"
-paramiko = "==2.1.2"
-pbr = "==4.0.3"
+requests-kerberos = "==0.12.0"
+tinkerforge = "==2.1.19"
+paramiko = "==2.4.2"
+pbr = "==5.1.0"
 pyghmi = "==1.2.14"
 typing = "==3.6.6"
-scandir = "==1.7"
+scandir = "==1.9"
 pathlib2 = "==2.3.2"
 python-dateutil = "==2.7.3"
-python-snap7 = "==0.9"
+python-snap7 = "==0.10"
 rrdtool = "==0.1.14"  # Actually we ship the binding which comes with rrdtool itself...
-azure-common = "==1.1.15"
+azure-common = "==1.1.16"
 azure-mgmt-monitor = "==0.5.2"
 azure-mgmt-resource = "==2.0.0"
-azure-mgmt-compute = "==4.1.0"
+azure-mgmt-compute = "==4.3.1"
 PyJWT = "==1.6.4"   # needed by azure stuff
 SecretStorage = {version = "==2.3.1", markers = "sys_platform == 'linux2' and python_version < '3.5'"}  # needed by azure stuff
-adal = "==1.1.0"  # needed by azure stuff
-certifi = "==2018.8.24"  # needed by azure stuff
+adal = "==1.2.0"  # needed by azure stuff
+certifi = "==2018.10.15"  # needed by azure stuff
 chardet = "==3.0.4"  # needed by azure stuff
 configparser = "==3.5.0"  # needed by azure stuff
 entrypoints = "==0.2.3"  # needed by azure stuff
 isodate = "==0.6.0"  # needed by azure stuff
-keyring = "==13.2.1"  # needed by azure stuff
-msrest = "==0.5.5"  # needed by azure stuff
+keyring = "==15.1.0"  # needed by azure stuff
+msrest = "==0.6.1"  # needed by azure stuff
 msrestazure = "==0.5.0"  # needed by azure stuff
 oauthlib = "==2.1.0"  # needed by azure stuff
 requests-oauthlib = "==1.0.0"  # needed by azure stuff
-urllib3 = "==1.23"  # needed by azure stuff
+urllib3 = "==1.24"  # needed by azure stuff
 Werkzeug = "==0.14.1" # Added for the GUI
 passlib = "==1.7.1" # Added for the GUI
 

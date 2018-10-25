@@ -46,6 +46,9 @@ from cmk.gui.valuespec import (
     ID,
     CascadingDropdown,
     Float,
+    RegExp,
+    RegExpUnicode,
+    MonitoringState,
 )
 
 from cmk.gui.plugins.wato import (
@@ -55,9 +58,14 @@ from cmk.gui.plugins.wato import (
     IndividualOrStoredPassword,
 )
 
-register_rulegroup("datasource_programs", _("Datasource Programs"),
-                   _("Specialized agents, e.g. check via SSH, ESX vSphere, SAP R/3"))
+import cmk.gui.bi as bi
+
 group = "datasource_programs"
+
+register_rulegroup(group,
+    _("Datasource Programs"),
+    _("Specialized agents, e.g. check via SSH, ESX vSphere, SAP R/3"))
+
 
 register_rule(
     group, "datasource_programs",
@@ -1310,3 +1318,126 @@ register_rule(
     ),
     match='first',
 )
+
+class MultisiteBiDatasource(object):
+    def get_valuespec(self):
+        return Dictionary(
+                    elements = self._get_dynamic_valuespec_elements(),
+                    optional_keys = ["filter", "options", "assignments"],
+                )
+
+    def _get_dynamic_valuespec_elements(self):
+       return [
+           ("site", CascadingDropdown(choices = [
+                   ("local", _("Connect to the local site")),
+                   ("url",   _("Connect to site url"), HTTPUrl(help=_("URL of the remote site, for example https://10.3.1.2/testsite"))),
+               ],
+               sorted=False,
+               orientation="horizontal",
+               title = _("Site connection")
+           )),
+           ("credentials", CascadingDropdown(choices = [
+               ("automation", _("Use the credentials of the 'automation' user")),
+               ("configured", _("Use the following credentials"),
+                   Tuple(
+                       elements = [
+                          TextAscii(title = _("Automation Username"), allow_empty = True),
+                          Password(title = _("Automation Secret"), allow_empty = True)
+                        ],
+                   )
+                )],
+                help = _("Here you can configured the credentials to be used. Keep in mind that the <tt>automation</tt> user need "
+                         "to exist if you choose this option"),
+                title = _("Login credentials"),
+                default_value = "automation"
+                )),
+           ( "filter", self._vs_filters()),
+           ( "assignments", self._vs_aggregation_assignments()),
+           ( "options", self._vs_options())]
+
+
+    def _vs_aggregation_assignments(self):
+            return Dictionary(
+                    title = _("Aggregation assignment"),
+                    elements = [
+                    ("querying_host",   FixedValue("querying_host", totext="", title=_("Assign to the querying host"))),
+                    ("affected_hosts",  FixedValue("affected_hosts", totext="", title=_("Assign to the affected hosts"))),
+                    ("regex",
+                        ListOf(
+                            Tuple(
+                                orientation = "horizontal",
+                                elements    =  [
+                                    RegExpUnicode(
+                                        title          = _("Regular expression"),
+                                        help           = _("Must contain at least one subgroup <tt>(...)</tt>"),
+                                        mingroups      = 0,
+                                        maxgroups      = 9,
+                                        size           = 30,
+                                        allow_empty    = False,
+                                        mode           = RegExp.prefix,
+                                        case_sensitive = False,
+                                    ),
+                                    TextUnicode(
+                                        title       = _("Replacement"),
+                                        help        = _("Use <tt>\\1</tt>, <tt>\\2</tt> etc. to replace matched subgroups"),
+                                        size        = 30,
+                                        allow_empty = False,
+                                    )
+                                ],
+                            ),
+                            title     = _("Assign via regular expressions"),
+                            help      = _("You can add any number of expressions here which are executed succesively until the first match. "
+                                          "Please specify a regular expression in the first field. This expression should at "
+                                          "least contain one subexpression exclosed in brackets - for example <tt>vm_(.*)_prod</tt>. "
+                                          "In the second field you specify the translated aggregation and can refer to the first matched "
+                                          "group with <tt>\\1</tt>, the second with <tt>\\2</tt> and so on, for example <tt>\\1.example.org</tt>. "
+                                          ""),
+                            add_label = _("Add expression"),
+                            movable   = False,
+                        ),
+                    ),
+                ])
+
+
+
+    def _vs_filters(self):
+        return Dictionary(
+                    elements=[
+                        ("aggr_name_regex", ListOf(
+                                        RegExp(mode=RegExp.prefix, title=_("Pattern")),
+                                        title=_("By regular expression"),
+                                        add_label=_("Add new pattern"),
+                                        movable=False)
+                        ),
+                        ("aggr_groups", ListOf(
+                                        DropdownChoice(choices=bi.aggregation_group_choices),
+                                        title=_("By aggregation groups"),
+                                        add_label=_("Add new group"),
+                                        movable=False)
+                        ),
+                    ],
+                    title=_("Filter aggregations")
+                    )
+
+
+    def _vs_options(self):
+        return Dictionary(
+            elements=[
+                ("state_scheduled_downtime", MonitoringState(title=_("State, if BI aggregate is in scheduled downtime"))),
+                ("state_acknowledged", MonitoringState(title=_("State, if BI aggregate is acknowledged"))),
+            ],
+            optional_keys = ["state_scheduled_downtime", "state_acknowledged"],
+            title=_("Additional options"),
+            )
+
+
+
+register_rule("datasource_programs",
+    "special_agents:bi",
+    ListOf(
+        MultisiteBiDatasource().get_valuespec()
+    ),
+    title = _("Check state of BI Aggregations"),
+    help = _("This rule allows you to check multiple BI aggregations from multiple sites at once. "
+             "You can also assign aggregations to specific hosts through the piggyback mechanism."),
+    match = 'first')

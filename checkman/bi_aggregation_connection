@@ -1,0 +1,9 @@
+title: Status information for BI aggregation connection
+agents: bi
+catalog: os/misc
+license: GPL
+distribution: check_mk
+description:
+ The check shows some status information for the agent_bi special agent.
+ The information includes connection errors, missing data from sites and
+ missing aggregations, because of missing data.

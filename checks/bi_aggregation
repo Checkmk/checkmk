@@ -1,0 +1,64 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2018             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+def parse_bi_aggregation(info):
+    import ast
+    parsed = {}
+    for line in info:
+        parsed.update(ast.literal_eval(line[0]))
+    return parsed
+
+def discover_bi_aggregation(parsed):
+    for aggr_name in parsed:
+        yield aggr_name, None
+
+def check_bi_aggregation(item, _no_params, parsed):
+    bi_data = parsed.get(item)
+    if not bi_data:
+        return
+
+    aggr_state = bi_data["aggr_state"]
+    bi_state = aggr_state["state_computed_by_agent"]
+
+    infotext = "Aggregation is %s" % core_state_names[bi_state]
+    extra_info = []
+    if aggr_state.get("in_downtime"):
+        extra_info.append("in downtime")
+    if aggr_state.get("acknowledged"):
+        extra_info.append("is acknowledged")
+
+    if extra_info:
+        infotext += " (%s)" % ", ".join(extra_info)
+
+    yield bi_state, infotext
+
+
+check_info["bi_aggregation"] = {
+    "parse_function" : parse_bi_aggregation,
+    "inventory_function" : discover_bi_aggregation,
+    "check_function" : check_bi_aggregation,
+    "service_description" : "Aggr %s",
+}

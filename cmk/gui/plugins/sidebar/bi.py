@@ -28,6 +28,7 @@
 import cmk.gui.bi as bi
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
+from cmk.gui.htmllib import HTML
 
 from . import (
     sidebar_snapins,
@@ -47,9 +48,7 @@ from . import (
 
 def render_bi_groups():
     html.open_ul()
-    # Aggregation groups/group paths are of the form:
-    # [['GROUPNAME'], ['PATH', 'TO', 'GROUP'], ...]
-    for group in sorted({group_path[-1] for group_path in bi.get_aggregation_group_trees()}):
+    for group in sorted(bi.get_aggregation_group_trees()):
         bulletlink(group, "view.py?view_name=aggr_group&aggr_group=%s" %
                    html.urlencode(group))
     html.close_ul()
@@ -77,7 +76,7 @@ sidebar_snapins["biaggr_groups"] = {
 def render_bi_groups_tree():
     tree = {}
     for group in bi.get_aggregation_group_trees():
-        _build_tree(group, tree, tuple())
+        _build_tree(group.split("/"), tree, tuple())
     _render_tree(tree)
 
 
@@ -93,17 +92,19 @@ def _build_tree(group, parent, path):
 
 def _render_tree(tree):
     for group, attrs in tree.iteritems():
+        fetch_url = html.makeuri_contextless([
+            ("view_name", "aggr_all"),
+            ("aggr_group_tree", "/".join(attrs["__path__"]))],
+            "view.py")
+
         if attrs.get('__children__'):
-            html.begin_foldable_container("bi_aggregation_group_trees",
-                                          "".join(attrs["__path__"]), False, group)
+            html.begin_foldable_container("bi_aggregation_group_trees", group, False,
+                                          HTML(html.render_a(group, href=fetch_url,
+                                               target="main")))
             _render_tree(attrs['__children__'])
             html.end_foldable_container()
         else:
             html.open_ul()
-            fetch_url = html.makeuri_contextless([
-                ("view_name", "aggr_all"),
-                ("aggr_group_tree", "/".join(attrs["__path__"]))],
-                "view.py")
             bulletlink(group, fetch_url)
             html.close_ul()
 

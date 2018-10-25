@@ -30,6 +30,7 @@ import time
 import os
 import traceback
 import copy
+import pathlib2 as pathlib
 
 import cmk.utils
 import cmk.paths
@@ -241,7 +242,7 @@ def user_exists(username):
     if _user_exists_according_to_profile(username):
         return True
 
-    return Htpasswd(cmk.paths.htpasswd_file).exists(username)
+    return Htpasswd(pathlib.Path(cmk.paths.htpasswd_file)).exists(username)
 
 
 def _user_exists_according_to_profile(username):

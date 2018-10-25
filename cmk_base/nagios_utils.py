@@ -34,12 +34,11 @@ import cmk_base.console
 
 
 def do_check_nagiosconfig():
-    command = [ cmk.paths.nagios_binary, "-vp", cmk.paths.nagios_config_file ]
+    command = [cmk.paths.nagios_binary, "-vp", cmk.paths.nagios_config_file]
     cmk_base.console.verbose("Running '%s'\n" % subprocess.list2cmdline(command))
     cmk_base.console.output("Validating Nagios configuration...")
 
-    p = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
-                         close_fds=True)
+    p = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, close_fds=True)
     exit_status = p.wait()
     if not exit_status:
         cmk_base.console.output(cmk.tty.ok + "\n")

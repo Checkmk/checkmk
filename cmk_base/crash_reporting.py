@@ -23,7 +23,6 @@
 # License along with GNU Make; see the file  COPYING.  If  not,  write
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
-
 """Check_MK base specific code of the crash reporting"""
 
 import os
@@ -39,17 +38,21 @@ import cmk_base.config as config
 import cmk_base.utils
 import cmk_base.check_utils
 
+
 # Create a crash dump with a backtrace and the agent output.
 # This is put into a directory per service. The content is then
 # put into a tarball, base64 encoded and put into the long output
 # of the check :-)
-def create_crash_dump(hostname, check_plugin_name, item, is_manual_check, params, description, info):
+def create_crash_dump(hostname, check_plugin_name, item, is_manual_check, params, description,
+                      info):
     text = "check failed - please submit a crash report!"
     try:
-        crash_dir = cmk.paths.var_dir + "/crashed_checks/" + hostname + "/" + description.replace("/", "\\")
+        crash_dir = cmk.paths.var_dir + "/crashed_checks/" + hostname + "/" + description.replace(
+            "/", "\\")
         _prepare_crash_dump_directory(crash_dir)
 
-        _create_crash_dump_info_file(crash_dir, hostname, check_plugin_name, item, is_manual_check, params, description, info, text)
+        _create_crash_dump_info_file(crash_dir, hostname, check_plugin_name, item, is_manual_check,
+                                     params, description, info, text)
 
         # TODO: Add caches of all data sources
         if cmk_base.check_utils.is_snmp_check(check_plugin_name):
@@ -76,20 +79,24 @@ def _prepare_crash_dump_directory(crash_dir):
             pass
 
 
-def _create_crash_dump_info_file(crash_dir, hostname, check_plugin_name, item, is_manual_check, params, description, info, text):
-    crash_info = crash_reporting.create_crash_info("check", details={
-        "check_output"  : text,
-        "host"          : hostname,
-        "is_cluster"    : config.is_cluster(hostname),
-        "description"   : description,
-        "check_type"    : check_plugin_name,
-        "item"          : item,
-        "params"        : params,
-        "uses_snmp"     : cmk_base.check_utils.is_snmp_check(check_plugin_name),
-        "inline_snmp"   : config.is_inline_snmp_host(hostname),
-        "manual_check"  : is_manual_check,
-    })
-    file(crash_dir+"/crash.info", "w").write(crash_reporting.crash_info_to_string(crash_info)+"\n")
+def _create_crash_dump_info_file(crash_dir, hostname, check_plugin_name, item, is_manual_check,
+                                 params, description, info, text):
+    crash_info = crash_reporting.create_crash_info(
+        "check",
+        details={
+            "check_output": text,
+            "host": hostname,
+            "is_cluster": config.is_cluster(hostname),
+            "description": description,
+            "check_type": check_plugin_name,
+            "item": item,
+            "params": params,
+            "uses_snmp": cmk_base.check_utils.is_snmp_check(check_plugin_name),
+            "inline_snmp": config.is_inline_snmp_host(hostname),
+            "manual_check": is_manual_check,
+        })
+    file(crash_dir + "/crash.info",
+         "w").write(crash_reporting.crash_info_to_string(crash_info) + "\n")
 
 
 def _write_crash_dump_snmp_info(crash_dir, hostname, check_plugin_name):

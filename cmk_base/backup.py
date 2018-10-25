@@ -23,7 +23,6 @@
 # License along with GNU Make; see the file  COPYING.  If  not,  write
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
-
 """ Check_MK comes with a simple backup and restore of the current
 configuration and cache files (cmk --backup and cmk --restore). This
 is implemented here. """
@@ -40,7 +39,10 @@ from cmk.exceptions import MKGeneralException
 
 import cmk_base.console as console
 
+
 def backup_paths():
+    # TODO: Refactor to named tuples
+    # yapf: disable
     return [
         # tarname               path                 canonical name   description                is_dir
         ('check_mk_configfile', cmk.paths.main_config_file,    "main.mk",       "Main configuration file",           False, ),
@@ -51,6 +53,7 @@ def backup_paths():
         ('tcp_cache_dir',       cmk.paths.tcp_cache_dir,       "",              "Agent cache",                       True,  ),
         ('logwatch_dir',        cmk.paths.logwatch_dir,        "",              "Logwatch",                          True,  ),
     ]
+    # yapf: enable
 
 
 def do_backup(tarname):
@@ -79,7 +82,8 @@ def do_backup(tarname):
             info.mode = 0644
             info.type = tarfile.REGTYPE
             info.name = subtarname
-            console.verbose("  Added %s (%s) with a size of %s\n", descr, absdir, render.fmt_bytes(info.size))
+            console.verbose("  Added %s (%s) with a size of %s\n", descr, absdir,
+                            render.fmt_bytes(info.size))
             tar.addfile(info, StringIO.StringIO(subdata))
 
     tar.close()
@@ -102,7 +106,7 @@ def do_restore(tarname):
                 # The path might point to a symbalic link. So it is no option
                 # to call shutil.rmtree(). We must delete just the contents
                 for f in os.listdir(absdir):
-                    if f not in [ '.', '..' ]:
+                    if f not in ['.', '..']:
                         try:
                             p = absdir + "/" + f
                             if os.path.isdir(p):

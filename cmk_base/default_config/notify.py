@@ -31,15 +31,15 @@ import cmk as _cmk
 # 1 -> normal logging
 # 2 -> full dump of all variables and command
 notification_logging = 1
-notification_backlog = 10 # keep the last 10 notification contexts for reference
+notification_backlog = 10  # keep the last 10 notification contexts for reference
 
 # Settings for new rule based notifications
 enable_rulebased_notifications = False
-notification_fallback_email    = ""
-notification_rules             = []
+notification_fallback_email = ""
+notification_rules = []
 # Check every 10 seconds for ripe bulks
-notification_bulk_interval     = 10
-notification_plugin_timeout    = 60
+notification_bulk_interval = 10
+notification_plugin_timeout = 60
 
 # Notification Spooling.
 

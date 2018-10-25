@@ -157,24 +157,24 @@ core_state_names = _defines.short_service_state_names()
 # Symbolic representations of states in plugin output
 state_markers = _check_api_utils.state_markers
 
-BINARY     = _snmp_utils.BINARY
+BINARY = _snmp_utils.BINARY
 CACHED_OID = _snmp_utils.CACHED_OID
 
-OID_END              = _snmp_utils.OID_END
-OID_STRING           = _snmp_utils.OID_STRING
-OID_BIN              = _snmp_utils.OID_BIN
-OID_END_BIN          = _snmp_utils.OID_END_BIN
+OID_END = _snmp_utils.OID_END
+OID_STRING = _snmp_utils.OID_STRING
+OID_BIN = _snmp_utils.OID_BIN
+OID_END_BIN = _snmp_utils.OID_END_BIN
 OID_END_OCTET_STRING = _snmp_utils.OID_END_OCTET_STRING
-binstring_to_int     = _snmp_utils.binstring_to_int
+binstring_to_int = _snmp_utils.binstring_to_int
 
 # Management board checks
-MGMT_ONLY       = _check_api_utils.MGMT_ONLY       # Use host address/credentials when it's a SNMP HOST
-HOST_PRECEDENCE = _check_api_utils.HOST_PRECEDENCE # Check is only executed for mgmt board (e.g. Managegment Uptime)
-HOST_ONLY       = _check_api_utils.HOST_ONLY       # Check is only executed for real SNMP host (e.g. interfaces)
+MGMT_ONLY = _check_api_utils.MGMT_ONLY  # Use host address/credentials when it's a SNMP HOST
+HOST_PRECEDENCE = _check_api_utils.HOST_PRECEDENCE  # Check is only executed for mgmt board (e.g. Managegment Uptime)
+HOST_ONLY = _check_api_utils.HOST_ONLY  # Check is only executed for real SNMP host (e.g. interfaces)
 
-host_name           = _check_api_utils.host_name
+host_name = _check_api_utils.host_name
 service_description = _check_api_utils.service_description
-check_type          = _check_api_utils.check_type
+check_type = _check_api_utils.check_type
 
 
 def saveint(i):
@@ -212,23 +212,23 @@ def savefloat(f):
 #       cmk_base.config module.
 no_discovery_possible = _check_api_utils.no_discovery_possible
 
-service_extra_conf       = _config.service_extra_conf
-host_extra_conf          = _config.host_extra_conf
-in_binary_hostlist       = _config.in_binary_hostlist
-in_extraconf_hostlist    = _config.in_extraconf_hostlist
-hosttags_match_taglist   = _config.hosttags_match_taglist
-host_extra_conf_merged   = _config.host_extra_conf_merged
-get_rule_options         = _config.get_rule_options
-all_matching_hosts       = _config.all_matching_hosts
+service_extra_conf = _config.service_extra_conf
+host_extra_conf = _config.host_extra_conf
+in_binary_hostlist = _config.in_binary_hostlist
+in_extraconf_hostlist = _config.in_extraconf_hostlist
+hosttags_match_taglist = _config.hosttags_match_taglist
+host_extra_conf_merged = _config.host_extra_conf_merged
+get_rule_options = _config.get_rule_options
+all_matching_hosts = _config.all_matching_hosts
 
-tags_of_host             = _config.tags_of_host
-nagios_illegal_chars     = _config.nagios_illegal_chars
-is_ipv6_primary          = _config.is_ipv6_primary
-is_cmc                   = _config.is_cmc
+tags_of_host = _config.tags_of_host
+nagios_illegal_chars = _config.nagios_illegal_chars
+is_ipv6_primary = _config.is_ipv6_primary
+is_cmc = _config.is_cmc
 
-get_age_human_readable   = lambda secs: str(render.Age(secs))
+get_age_human_readable = lambda secs: str(render.Age(secs))
 get_bytes_human_readable = render.fmt_bytes
-quote_shell_string       = _utils.quote_shell_string
+quote_shell_string = _utils.quote_shell_string
 
 
 def get_checkgroup_parameters(group, deflt=None):
@@ -310,21 +310,22 @@ def get_percent_human_readable(perc, precision=2):
 # Counter handling
 #
 
-set_item_state                 = _item_state.set_item_state
-get_item_state                 = _item_state.get_item_state
-get_all_item_states            = _item_state.get_all_item_states
-clear_item_state               = _item_state.clear_item_state
+set_item_state = _item_state.set_item_state
+get_item_state = _item_state.get_item_state
+get_all_item_states = _item_state.get_all_item_states
+clear_item_state = _item_state.clear_item_state
 clear_item_states_by_full_keys = _item_state.clear_item_states_by_full_keys
-get_rate                       = _item_state.get_rate
-get_average                    = _item_state.get_average
+get_rate = _item_state.get_rate
+get_average = _item_state.get_average
 # TODO: Cleanup checks and deprecate this
-last_counter_wrap              = _item_state.last_counter_wrap
+last_counter_wrap = _item_state.last_counter_wrap
 
-SKIP  = _item_state.SKIP
+SKIP = _item_state.SKIP
 RAISE = _item_state.RAISE
-ZERO  = _item_state.ZERO
+ZERO = _item_state.ZERO
 
 MKCounterWrapped = _item_state.MKCounterWrapped
+
 
 def check_levels(value, dsname, params, unit="", factor=1.0, scale=1.0, statemarkers=False):
     """Generic function for checking a value against levels

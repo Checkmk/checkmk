@@ -55,7 +55,6 @@ import cmk_base.ip_lookup as ip_lookup
 import cmk_base.piggyback
 import cmk_base.check_table as check_table
 
-
 from .snmp import SNMPDataSource, SNMPManagementBoardDataSource
 from .ipmi import IPMIManagementBoardDataSource
 from .tcp import TCPDataSource
@@ -68,10 +67,12 @@ try:
 except Exception:
     keepalive = None
 
+
 def _in_keepalive_mode():
     if keepalive:
         return keepalive.enabled()
     return False
+
 
 # TODO: Cluster with different data sources, eg. TCP node and SNMP node:
 # - Discovery works.
@@ -89,6 +90,7 @@ def _in_keepalive_mode():
 #   | The monitoring data is fetched using so called data sources.         |
 #   '----------------------------------------------------------------------'
 
+
 class DataSources(object):
     def __init__(self, hostname, ipaddress):
         super(DataSources, self).__init__()
@@ -99,7 +101,6 @@ class DataSources(object):
         # Has currently no effect. The value possibly set during execution on the single data
         # sources is kept here in this object to return it later on
         self._enforced_check_plugin_names = None
-
 
     def _initialize_data_sources(self):
         self._sources = {}
@@ -112,7 +113,6 @@ class DataSources(object):
         self._initialize_agent_based_data_sources()
         self._initialize_snmp_data_sources()
         self._initialize_management_board_data_sources()
-
 
     def _initialize_agent_based_data_sources(self):
         if config.is_all_agents_host(self._hostname):
@@ -132,11 +132,9 @@ class DataSources(object):
 
         self._add_source(PiggyBackDataSource(self._hostname, self._ipaddress))
 
-
     def _initialize_snmp_data_sources(self):
         if config.is_snmp_host(self._hostname):
             self._add_source(SNMPDataSource(self._hostname, self._ipaddress))
-
 
     def _initialize_management_board_data_sources(self):
         protocol = config.management_protocol_of(self._hostname)
@@ -151,15 +149,12 @@ class DataSources(object):
         else:
             raise NotImplementedError()
 
-
     def _add_sources(self, sources):
         for source in sources:
             self._add_source(source)
 
-
     def _add_source(self, source):
         self._sources[source.id()] = source
-
 
     def describe_data_sources(self):
         if config.is_all_agents_host(self._hostname):
@@ -173,7 +168,6 @@ class DataSources(object):
 
         return "No agent"
 
-
     def _get_agent_data_source(self, ignore_special_agents=False):
         if not ignore_special_agents:
             special_agents = self._get_special_agent_data_sources()
@@ -185,7 +179,6 @@ class DataSources(object):
             return DSProgramDataSource(self._hostname, self._ipaddress, programs[0])
 
         return TCPDataSource(self._hostname, self._ipaddress)
-
 
     def _get_special_agent_data_sources(self):
         special_agents = []
@@ -199,11 +192,10 @@ class DataSources(object):
         for agentname, ruleset in sorted(config.special_agents.items()):
             params = config.host_extra_conf(self._hostname, ruleset)
             if params:
-                special_agents.append(SpecialAgentDataSource(self._hostname, self._ipaddress,
-                                                             agentname, params[0]))
+                special_agents.append(
+                    SpecialAgentDataSource(self._hostname, self._ipaddress, agentname, params[0]))
 
         return special_agents
-
 
     def get_check_plugin_names(self):
         """Returns the list of check types the caller may execute on the sections produced
@@ -219,27 +211,23 @@ class DataSources(object):
 
         return list(check_plugin_names)
 
-
     def enforce_check_plugin_names(self, check_plugin_names):
         self._enforced_check_plugin_names = check_plugin_names
         for source in self.get_data_sources():
             source.enforce_check_plugin_names(check_plugin_names)
 
-
     def get_enforced_check_plugin_names(self):
         """Returns either the collection of enforced check plugin names (when they have been set before) or None"""
         return self._enforced_check_plugin_names
 
-
     def get_data_sources(self):
         # Always execute piggyback at the end
-        return sorted(self._sources.values(), key=lambda s: (isinstance(s, PiggyBackDataSource), s.id()))
-
+        return sorted(
+            self._sources.values(), key=lambda s: (isinstance(s, PiggyBackDataSource), s.id()))
 
     def set_max_cachefile_age(self, max_cachefile_age):
         for source in self.get_data_sources():
             source.set_max_cachefile_age(max_cachefile_age)
-
 
     def get_host_sections(self, max_cachefile_age=None):
         """Gather ALL host info data for any host (hosts, nodes, clusters) in Check_MK.
@@ -262,13 +250,16 @@ class DataSources(object):
             for node_hostname in nodes:
                 node_ipaddress = ip_lookup.lookup_ip_address(node_hostname)
 
-                table = check_table.get_precompiled_check_table(node_hostname, remove_duplicates=True, filter_mode="only_clustered",
-                                                                world="active" if _in_keepalive_mode() else "config")
+                table = check_table.get_precompiled_check_table(
+                    node_hostname,
+                    remove_duplicates=True,
+                    filter_mode="only_clustered",
+                    world="active" if _in_keepalive_mode() else "config")
 
                 node_data_sources = DataSources(node_hostname, node_ipaddress)
                 node_data_sources.enforce_check_plugin_names(set([e[0] for e in table]))
-                hosts.append((node_hostname, node_ipaddress,
-                              node_data_sources, config.cluster_max_cachefile_age))
+                hosts.append((node_hostname, node_ipaddress, node_data_sources,
+                              config.cluster_max_cachefile_age))
         else:
             hosts.append((self._hostname, self._ipaddress, self, config.check_max_cachefile_age))
 
@@ -289,11 +280,13 @@ class DataSources(object):
 
             for source in these_sources.get_data_sources():
                 host_sections_from_source = source.run()
-                host_sections = multi_host_sections.add_or_get_host_sections(this_hostname, this_ipaddress)
+                host_sections = multi_host_sections.add_or_get_host_sections(
+                    this_hostname, this_ipaddress)
                 host_sections.update(host_sections_from_source)
 
             # Store piggyback information received from all sources of this host. This
             # also implies a removal of piggyback files received during previous calls.
-            cmk_base.piggyback.store_piggyback_raw_data(this_hostname, host_sections.piggybacked_raw_data)
+            cmk_base.piggyback.store_piggyback_raw_data(this_hostname,
+                                                        host_sections.piggybacked_raw_data)
 
         return multi_host_sections

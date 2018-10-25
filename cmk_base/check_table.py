@@ -23,7 +23,6 @@
 # License along with GNU Make; see the file  COPYING.  If  not,  write
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
-
 """Code for computing the table of checks of hosts."""
 
 from cmk.regex import regex
@@ -38,14 +37,20 @@ import cmk_base.check_api_utils as check_api_utils
 
 # TODO: Refactor this to OO. The check table needs to be an object.
 
+
 # Returns check table for a specific host
 # Format: (checkname, item) -> (params, description)
 #
 # filter_mode: None                -> default, returns only checks for this host
 # filter_mode: "only_clustered"    -> returns only checks belonging to clusters
 # filter_mode: "include_clustered" -> returns checks of own host, including clustered checks
-def get_check_table(hostname, remove_duplicates=False, use_cache=True,
-                    world='config', skip_autochecks=False, filter_mode=None, skip_ignored=True):
+def get_check_table(hostname,
+                    remove_duplicates=False,
+                    use_cache=True,
+                    world='config',
+                    skip_autochecks=False,
+                    filter_mode=None,
+                    skip_ignored=True):
     if config.is_ping_host(hostname):
         skip_autochecks = True
 
@@ -64,12 +69,13 @@ def get_check_table(hostname, remove_duplicates=False, use_cache=True,
     check_table = {}
 
     single_host_checks = cmk_base.config_cache.get_dict("single_host_checks")
-    multi_host_checks  = cmk_base.config_cache.get_list("multi_host_checks")
+    multi_host_checks = cmk_base.config_cache.get_list("multi_host_checks")
 
     hosttags = config.tags_of_host(hostname)
 
     # Just a local cache and its function
     is_checkname_valid_cache = {}
+
     def is_checkname_valid(checkname):
         the_id = (hostname, checkname)
         if the_id in is_checkname_valid_cache:
@@ -91,10 +97,9 @@ def get_check_table(hostname, remove_duplicates=False, use_cache=True,
         is_checkname_valid_cache[the_id] = passed
         return passed
 
-
     def handle_entry(entry):
         num_elements = len(entry)
-        if num_elements == 3: # from autochecks
+        if num_elements == 3:  # from autochecks
             hostlist = hostname
             checkname, item, params = entry
             tags = []
@@ -104,12 +109,14 @@ def get_check_table(hostname, remove_duplicates=False, use_cache=True,
         elif num_elements == 5:
             tags, hostlist, checkname, item, params = entry
             if type(tags) != list:
-                raise MKGeneralException("Invalid entry '%r' in check table. First entry must be list of host tags." %
-                                         (entry, ))
+                raise MKGeneralException(
+                    "Invalid entry '%r' in check table. First entry must be list of host tags." %
+                    (entry,))
 
         else:
-            raise MKGeneralException("Invalid entry '%r' in check table. It has %d entries, but must have 4 or 5." %
-                                     (entry, len(entry)))
+            raise MKGeneralException(
+                "Invalid entry '%r' in check table. It has %d entries, but must have 4 or 5." %
+                (entry, len(entry)))
 
         # hostlist list might be:
         # 1. a plain hostname (string)
@@ -118,10 +125,10 @@ def get_check_table(hostname, remove_duplicates=False, use_cache=True,
         # In autochecks there are always single untagged hostnames. We optimize for that.
         if type(hostlist) == str:
             if hostlist != hostname:
-                return # optimize most common case: hostname mismatch
-            hostlist = [ hostlist ]
+                return  # optimize most common case: hostname mismatch
+            hostlist = [hostlist]
         elif type(hostlist[0]) == str:
-            pass # regular case: list of hostnames
+            pass  # regular case: list of hostnames
         elif hostlist != []:
             raise MKGeneralException("Invalid entry '%r' in check table. Must be single hostname "
                                      "or list of hostnames" % hostlist)
@@ -142,7 +149,7 @@ def get_check_table(hostname, remove_duplicates=False, use_cache=True,
             elif filter_mode == "only_clustered" and svc_is_mine:
                 return
 
-            deps  = service_deps(hostname, descr)
+            deps = service_deps(hostname, descr)
             check_table[(checkname, item)] = (params, descr, deps)
 
     # Now process all entries that are specific to the host
@@ -167,16 +174,16 @@ def get_check_table(hostname, remove_duplicates=False, use_cache=True,
                 node_checks = node_checks + cmk_base.autochecks.read_autochecks_of(node, world)
             for entry in node_checks:
                 if len(entry) == 4:
-                    entry = entry[1:] # drop hostname from single_host_checks
+                    entry = entry[1:]  # drop hostname from single_host_checks
                 checkname, item, params = entry
                 descr = config.service_description(node, checkname, item)
                 if hostname == config.host_of_clustered_service(node, descr):
-                    cluster_params = config.compute_check_parameters(hostname, checkname, item, params)
+                    cluster_params = config.compute_check_parameters(hostname, checkname, item,
+                                                                     params)
                     handle_entry((hostname, checkname, item, cluster_params))
 
-
     # Remove dependencies to non-existing services
-    all_descr = set([ descr for ((checkname, item), (params, descr, deps)) in check_table.items() ])
+    all_descr = set([descr for ((checkname, item), (params, descr, deps)) in check_table.items()])
     for (checkname, item), (params, descr, deps) in check_table.items():
         deeps = deps[:]
         del deps[:]
@@ -192,8 +199,13 @@ def get_check_table(hostname, remove_duplicates=False, use_cache=True,
     return check_table
 
 
-def get_precompiled_check_table(hostname, remove_duplicates=True, world="config", filter_mode=None, skip_ignored=True):
-    host_checks = get_sorted_check_table(hostname, remove_duplicates, world, filter_mode=filter_mode, skip_ignored=skip_ignored)
+def get_precompiled_check_table(hostname,
+                                remove_duplicates=True,
+                                world="config",
+                                filter_mode=None,
+                                skip_ignored=True):
+    host_checks = get_sorted_check_table(
+        hostname, remove_duplicates, world, filter_mode=filter_mode, skip_ignored=skip_ignored)
     precomp_table = []
     for check_plugin_name, item, params, description, _unused_deps in host_checks:
         # make these globals available to the precompile function
@@ -201,7 +213,8 @@ def get_precompiled_check_table(hostname, remove_duplicates=True, world="config"
         item_state.set_item_state_prefix(check_plugin_name, item)
 
         params = get_precompiled_check_parameters(hostname, item, params, check_plugin_name)
-        precomp_table.append((check_plugin_name, item, params, description)) # deps not needed while checking
+        precomp_table.append((check_plugin_name, item, params,
+                              description))  # deps not needed while checking
     return precomp_table
 
 
@@ -269,24 +282,31 @@ def _remove_duplicate_checks(check_table):
 # if there already is a TCP based one with the same
 # description. E.g: df vs hr_fs.
 # TODO: Clean this up!
-def get_sorted_check_table(hostname, remove_duplicates=False, world="config", filter_mode=None, skip_ignored=True):
+def get_sorted_check_table(hostname,
+                           remove_duplicates=False,
+                           world="config",
+                           filter_mode=None,
+                           skip_ignored=True):
     # Convert from dictionary into simple tuple list. Then sort
     # it according to the service dependencies.
-    unsorted = [ (checkname, item, params, descr, deps)
-                 for ((checkname, item), (params, descr, deps))
-                 in get_check_table(hostname, remove_duplicates=remove_duplicates, world=world,
-				    filter_mode=filter_mode, skip_ignored=skip_ignored).items() ]
+    unsorted = [(checkname, item, params, descr, deps)
+                for ((checkname, item), (params, descr, deps)) in get_check_table(
+                    hostname,
+                    remove_duplicates=remove_duplicates,
+                    world=world,
+                    filter_mode=filter_mode,
+                    skip_ignored=skip_ignored).items()]
 
     unsorted.sort(key=lambda x: x[3])
 
     ordered = []
     while len(unsorted) > 0:
-        unsorted_descrs = set([ entry[3] for entry in unsorted ])
+        unsorted_descrs = set([entry[3] for entry in unsorted])
         left = []
         at_least_one_hit = False
         for check in unsorted:
             deps_fulfilled = True
-            for dep in check[4]: # deps
+            for dep in check[4]:  # deps
                 if dep in unsorted_descrs:
                     deps_fulfilled = False
                     break

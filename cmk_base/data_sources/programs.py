@@ -48,34 +48,43 @@ from .abstract import CheckMKAgentDataSource
 #   | Fetching agent data from program calls instead of an agent           |
 #   '----------------------------------------------------------------------'
 
+
 class ProgramDataSource(CheckMKAgentDataSource):
     """Abstract base class for all data source classes that execute external programs"""
+
     def _cpu_tracking_id(self):
         return "ds"
-
 
     def _execute(self):
         command_line = self._get_command_line()
         return self._get_agent_info_program(command_line)
 
-
     def _get_agent_info_program(self, commandline):
-        exepath = commandline.split()[0] # for error message, hide options!
+        exepath = commandline.split()[0]  # for error message, hide options!
 
         self._logger.debug("Calling external program %r" % (commandline))
         p = None
         try:
             if config.monitoring_core == "cmc":
-                p = subprocess.Popen(commandline, shell=True, stdin=open(os.devnull), # nosec
-                                     stdout=subprocess.PIPE, stderr = subprocess.PIPE,
-                                     preexec_fn=os.setsid, close_fds=True)
+                p = subprocess.Popen(
+                    commandline,
+                    shell=True,
+                    stdin=open(os.devnull),  # nosec
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                    preexec_fn=os.setsid,
+                    close_fds=True)
             else:
                 # We can not create a separate process group when running Nagios
                 # Upon reaching the service_check_timeout Nagios only kills the process
                 # group of the active check.
-                p = subprocess.Popen(commandline, shell=True, stdin=open(os.devnull), # nosec
-                                     stdout=subprocess.PIPE, stderr = subprocess.PIPE,
-                                     close_fds=True)
+                p = subprocess.Popen(
+                    commandline,
+                    shell=True,
+                    stdin=open(os.devnull),  # nosec
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                    close_fds=True)
             stdout, stderr = p.communicate()
             exitstatus = p.returncode
         except MKTimeout:
@@ -100,17 +109,13 @@ class ProgramDataSource(CheckMKAgentDataSource):
 
         return stdout
 
-
     def _get_command_line(self):
         """Returns the final command line to be executed"""
         raise NotImplementedError()
 
-
     def describe(self):
         """Return a short textual description of the agent"""
         return "Program: %s" % self._get_command_line()
-
-
 
 
 class DSProgramDataSource(ProgramDataSource):
@@ -118,16 +123,13 @@ class DSProgramDataSource(ProgramDataSource):
         super(DSProgramDataSource, self).__init__(hostname, ipaddress)
         self._command_template = command_template
 
-
     def id(self):
         return "agent"
-
 
     def name(self):
         """Return a unique (per host) textual identification of the data source"""
         program = self._get_command_line().split(" ")[0]
         return os.path.basename(program)
-
 
     def _get_command_line(self):
         cmd = self._command_template
@@ -137,11 +139,9 @@ class DSProgramDataSource(ProgramDataSource):
 
         return cmd
 
-
     def _translate_legacy_macros(self, cmd):
         # Make "legacy" translation. The users should use the $...$ macros in future
         return cmd.replace("<IP>", self._ipaddress or "").replace("<HOST>", self._hostname)
-
 
     def _translate_host_macros(self, cmd):
         tags = config.tags_of_host(self._hostname)
@@ -155,39 +155,34 @@ class DSProgramDataSource(ProgramDataSource):
         return core_config.replace_macros(cmd, macros)
 
 
-
 class SpecialAgentDataSource(ProgramDataSource):
     def __init__(self, hostname, ipaddress, special_agent_id, params):
         self._special_agent_id = special_agent_id
         super(SpecialAgentDataSource, self).__init__(hostname, ipaddress)
         self._params = params
 
-
     def id(self):
         return "special_%s" % self._special_agent_id
-
 
     @property
     def special_agent_plugin_file_name(self):
         return "agent_%s" % self._special_agent_id
 
-
     def _get_individual_exit_code_spec(self, exit_code_spec):
         return exit_code_spec["individual"]["special"]
-
 
     # TODO: Can't we make this more specific in case of special agents?
     def _gather_check_plugin_names(self):
         return config.discoverable_tcp_checks()
 
-
     def _get_command_line(self):
         """Create command line using the special_agent_info"""
         info_func = config.special_agent_info[self._special_agent_id]
         cmd_arguments = info_func(self._params, self._hostname, self._ipaddress)
-        final_arguments = config.prepare_check_command(cmd_arguments, self._hostname, service_description=None)
+        final_arguments = config.prepare_check_command(
+            cmd_arguments, self._hostname, service_description=None)
 
-        special_agents_dir       = cmk.paths.agents_dir + "/special"
+        special_agents_dir = cmk.paths.agents_dir + "/special"
         local_special_agents_dir = cmk.paths.local_agents_dir + "/special"
 
         if os.path.exists(local_special_agents_dir + "/agent_" + self._special_agent_id):

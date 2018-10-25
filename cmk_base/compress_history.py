@@ -34,6 +34,7 @@ from cmk.exceptions import MKBailOut
 import cmk.log
 logger = cmk.log.get_logger(__name__)
 
+
 def do_compress_history(args):
     if not args:
         raise MKBailOut("Please specify files to compress.")
@@ -75,7 +76,7 @@ def compress_history_file(input_path, output_path):
 
         elif line_type == "INITIAL":
             if machine_state == "OPERATION":
-                pass # happens at CMC. That does not create a log entry on reload
+                pass  # happens at CMC. That does not create a log entry on reload
             elif machine_state == "START":
                 machine_state = "INITIAL"
                 known_services.setdefault(host, set([])).add(service)
@@ -106,8 +107,6 @@ def compress_history_file(input_path, output_path):
                 machine_state = "OPERATION"
         else:
             pass
-
-
 
         if not skip_this_line:
             output.write(line)

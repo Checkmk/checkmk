@@ -23,7 +23,6 @@
 # License along with GNU Make; see the file  COPYING.  If  not,  write
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
-
 """Utiliy module for holding generic methods that implement handling
 of console input / output"""
 
@@ -40,6 +39,7 @@ logger = cmk.log.get_logger("base")
 # Generic / low level functions
 #
 
+
 # would rather use "def output(text, *args, stream=sys.stdout)", but this is not possible
 # with python 2.7
 def output(text, *args, **kwargs):
@@ -53,7 +53,7 @@ def output(text, *args, **kwargs):
         stream.flush()
     except:
         # TODO: Way to generic!
-        pass # avoid exception on broken pipe (e.g. due to | head)
+        pass  # avoid exception on broken pipe (e.g. due to | head)
 
 
 # Output text if opt_verbose is set (-v). Adds no linefeed
@@ -71,6 +71,7 @@ def vverbose(text, *args, **kwargs):
 #
 # More top level wrappers
 #
+
 
 # TODO: Inconsistent -> Adds newline and other functions don't
 def warning(text, *args, **kwargs):

@@ -38,25 +38,24 @@ import cmk_base.check_utils
 # TODO: Clean this up!
 #from cmk_base.config import *
 
-inv_info   = {} # Inventory plugins
-inv_export = {} # Inventory export hooks
-_plugin_contexts  = {} # The checks are loaded into this dictionary. Each check
-                       # becomes a separat sub-dictionary, named by the check name
-_include_contexts = {} # These are the contexts of the check include files
+inv_info = {}  # Inventory plugins
+inv_export = {}  # Inventory export hooks
+_plugin_contexts = {}  # The checks are loaded into this dictionary. Each check
+# becomes a separat sub-dictionary, named by the check name
+_include_contexts = {}  # These are the contexts of the check include files
 
 
 def load_plugins(get_check_api_context, get_inventory_context):
     loaded_files = set()
-    filelist = config.get_plugin_paths(cmk.paths.local_inventory_dir,
-                                       cmk.paths.inventory_dir)
+    filelist = config.get_plugin_paths(cmk.paths.local_inventory_dir, cmk.paths.inventory_dir)
 
     for f in filelist:
         if f[0] == "." or f[-1] == "~":
-            continue # ignore editor backup / temp files
+            continue  # ignore editor backup / temp files
 
-        file_name  = os.path.basename(f)
+        file_name = os.path.basename(f)
         if file_name in loaded_files:
-            continue # skip already loaded files (e.g. from local)
+            continue  # skip already loaded files (e.g. from local)
 
         try:
             plugin_context = _new_inv_context(get_check_api_context, get_inventory_context)
@@ -81,8 +80,8 @@ def load_plugins(get_check_api_context, get_inventory_context):
 def _new_inv_context(get_check_api_context, get_inventory_context):
     # Add the data structures where the inventory plugins register with Check_MK
     context = {
-        "inv_info"   : inv_info,
-        "inv_export" : inv_export,
+        "inv_info": inv_info,
+        "inv_export": inv_export,
     }
     # NOTE: For better separation it would be better to copy the values, but
     # this might consume too much memory, so we simply reference them.

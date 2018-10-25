@@ -23,7 +23,6 @@
 # License along with GNU Make; see the file  COPYING.  If  not,  write
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
-
 """Currently this module manages the inventory tree which is built
 while the inventory is performed for one host.
 
@@ -62,6 +61,7 @@ import cmk_base.check_api as check_api
 #   | Code for doing the actual inventory                                  |
 #   '----------------------------------------------------------------------'
 
+
 def do_inv(hostnames):
     cmk.store.makedirs(cmk.paths.inventory_output_dir)
     cmk.store.makedirs(cmk.paths.inventory_archive_dir)
@@ -75,8 +75,12 @@ def do_inv(hostnames):
                 ipaddress = ip_lookup.lookup_ip_address(hostname)
 
             sources = data_sources.DataSources(hostname, ipaddress)
-            _do_inv_for(sources, multi_host_sections=None, hostname=hostname, ipaddress=ipaddress,
-                        do_status_data_inv=config.do_status_data_inventory_for(hostname))
+            _do_inv_for(
+                sources,
+                multi_host_sections=None,
+                hostname=hostname,
+                ipaddress=ipaddress,
+                do_status_data_inv=config.do_status_data_inventory_for(hostname))
         except Exception, e:
             if cmk.debug.enabled():
                 raise
@@ -86,12 +90,14 @@ def do_inv(hostnames):
             cmk_base.cleanup.cleanup_globals()
 
 
-@cmk_base.decorator.handle_check_mk_check_result("check_mk_active-cmk_inv", "Check_MK HW/SW Inventory")
+@cmk_base.decorator.handle_check_mk_check_result("check_mk_active-cmk_inv",
+                                                 "Check_MK HW/SW Inventory")
 def do_inv_check(hostname, options):
-    _inv_hw_changes  = options.get("hw-changes", 0)
-    _inv_sw_changes  = options.get("sw-changes", 0)
-    _inv_sw_missing  = options.get("sw-missing", 0)
-    _inv_fail_status = options.get("inv-fail-status", 1) # State in case of an error (default: WARN)
+    _inv_hw_changes = options.get("hw-changes", 0)
+    _inv_sw_changes = options.get("sw-changes", 0)
+    _inv_sw_missing = options.get("sw-missing", 0)
+    _inv_fail_status = options.get("inv-fail-status",
+                                   1)  # State in case of an error (default: WARN)
 
     if config.is_cluster(hostname):
         ipaddress = None
@@ -113,7 +119,8 @@ def do_inv_check(hostname, options):
         infotexts.append("Found %d inventory entries" % inventory_tree.count_entries())
 
         if not inventory_tree.has_edge("software") and _inv_sw_missing:
-            infotexts.append("software information is missing" + check_api_utils.state_markers[_inv_sw_missing])
+            infotexts.append("software information is missing" +
+                             check_api_utils.state_markers[_inv_sw_missing])
             status = max(status, _inv_sw_missing)
 
         if old_timestamp:
@@ -154,8 +161,12 @@ def do_status_data_inventory(sources, multi_host_sections, hostname, ipaddress):
     # cmk_base/modes/check_mk.py loads check plugins but not inventory plugins
     import cmk_base.inventory_plugins as inventory_plugins
     inventory_plugins.load_plugins(check_api.get_check_api_context, get_inventory_context)
-    _do_inv_for(sources, multi_host_sections=multi_host_sections, hostname=hostname,
-                ipaddress=ipaddress, do_status_data_inv=True)
+    _do_inv_for(
+        sources,
+        multi_host_sections=multi_host_sections,
+        hostname=hostname,
+        ipaddress=ipaddress,
+        do_status_data_inv=True)
 
 
 def _do_inv_for(sources, multi_host_sections, hostname, ipaddress, do_status_data_inv):
@@ -169,8 +180,8 @@ def _do_inv_for(sources, multi_host_sections, hostname, ipaddress, do_status_dat
         _do_inv_for_cluster(hostname, inventory_tree)
     else:
         node["is_cluster"] = False
-        _do_inv_for_realhost(sources, multi_host_sections, hostname, ipaddress,
-                             inventory_tree, status_data_tree)
+        _do_inv_for_realhost(sources, multi_host_sections, hostname, ipaddress, inventory_tree,
+                             status_data_tree)
 
     inventory_tree.normalize_nodes()
     old_timestamp = _save_inventory_tree(hostname, inventory_tree)
@@ -178,14 +189,15 @@ def _do_inv_for(sources, multi_host_sections, hostname, ipaddress, do_status_dat
     _run_inventory_export_hooks(hostname, inventory_tree)
 
     console.section_success("Found %s%s%d%s inventory entries" %
-            (tty.bold, tty.yellow, inventory_tree.count_entries(), tty.normal))
+                            (tty.bold, tty.yellow, inventory_tree.count_entries(), tty.normal))
 
     if do_status_data_inv:
         status_data_tree.normalize_nodes()
         _save_status_data_tree(hostname, status_data_tree)
 
-        console.section_success("Found %s%s%d%s status entries" %
-                (tty.bold, tty.yellow, status_data_tree.count_entries(), tty.normal))
+        console.section_success(
+            "Found %s%s%d%s status entries" % (tty.bold, tty.yellow,
+                                               status_data_tree.count_entries(), tty.normal))
 
     return old_timestamp, inventory_tree, status_data_tree
 
@@ -194,12 +206,12 @@ def _do_inv_for_cluster(hostname, inventory_tree):
     inv_node = inventory_tree.get_list("software.applications.check_mk.cluster.nodes:")
     for node_name in config.nodes_of(hostname):
         inv_node.append({
-            "name" : node_name,
+            "name": node_name,
         })
 
 
-def _do_inv_for_realhost(sources, multi_host_sections, hostname, ipaddress,
-                         inventory_tree, status_data_tree):
+def _do_inv_for_realhost(sources, multi_host_sections, hostname, ipaddress, inventory_tree,
+                         status_data_tree):
     for source in sources.get_data_sources():
         if isinstance(source, data_sources.SNMPDataSource):
             source.set_on_error("raise")
@@ -225,14 +237,14 @@ def _do_inv_for_realhost(sources, multi_host_sections, hostname, ipaddress,
     import cmk_base.inventory_plugins as inventory_plugins
     console.verbose("Plugins:")
     for section_name, plugin in inventory_plugins.inv_info.items():
-        section_content = multi_host_sections.get_section_content(hostname, ipaddress,
-                                                                  section_name, for_discovery=False)
-        if section_content is None: # No data for this check type
+        section_content = multi_host_sections.get_section_content(
+            hostname, ipaddress, section_name, for_discovery=False)
+        if section_content is None:  # No data for this check type
             continue
 
         # TODO: Don't we need to take config.check_info[check_plugin_name]["handle_empty_info"]:
         #       like it is done in checking.execute_check()? Standardize this!
-        if not section_content: # section not present (None or [])
+        if not section_content:  # section not present (None or [])
             # Note: this also excludes existing sections without info..
             continue
 
@@ -266,9 +278,12 @@ def _do_inv_for_realhost(sources, multi_host_sections, hostname, ipaddress,
     console.verbose("\n")
 
 
-def _gather_snmp_check_plugin_names_inventory(access_data, on_error, do_snmp_scan, for_mgmt_board=False):
-    return snmp_scan.gather_snmp_check_plugin_names(access_data, on_error, do_snmp_scan,
-                                                    for_inventory=True, for_mgmt_board=for_mgmt_board)
+def _gather_snmp_check_plugin_names_inventory(access_data,
+                                              on_error,
+                                              do_snmp_scan,
+                                              for_mgmt_board=False):
+    return snmp_scan.gather_snmp_check_plugin_names(
+        access_data, on_error, do_snmp_scan, for_inventory=True, for_mgmt_board=for_mgmt_board)
 
 
 def _get_inv_params(hostname, section_name):
@@ -286,22 +301,21 @@ def _get_inv_params(hostname, section_name):
 #   | Managing the inventory tree of a host                                |
 #   '----------------------------------------------------------------------'
 
+g_inv_tree = StructuredDataTree()  # TODO Remove one day. Deprecated with version 1.5.0i3??
 
-g_inv_tree = StructuredDataTree() # TODO Remove one day. Deprecated with version 1.5.0i3??
 
-
-def _initialize_inventory_tree(): # TODO Remove one day. Deprecated with version 1.5.0i3??
+def _initialize_inventory_tree():  # TODO Remove one day. Deprecated with version 1.5.0i3??
     global g_inv_tree
     g_inv_tree = StructuredDataTree()
 
 
 # Dict based
-def inv_tree(path): # TODO Remove one day. Deprecated with version 1.5.0i3??
+def inv_tree(path):  # TODO Remove one day. Deprecated with version 1.5.0i3??
     return g_inv_tree.get_dict(path)
 
 
 # List based
-def inv_tree_list(path): # TODO Remove one day. Deprecated with version 1.5.0i3??
+def inv_tree_list(path):  # TODO Remove one day. Deprecated with version 1.5.0i3??
     return g_inv_tree.get_list(path)
 
 
@@ -327,7 +341,8 @@ def _save_inventory_tree(hostname, inventory_tree):
             inventory_tree.save_to(cmk.paths.inventory_output_dir, hostname)
 
     else:
-        if os.path.exists(filepath): # Remove empty inventory files. Important for host inventory icon
+        if os.path.exists(
+                filepath):  # Remove empty inventory files. Important for host inventory icon
             os.remove(filepath)
         if os.path.exists(filepath + ".gz"):
             os.remove(filepath + ".gz")
@@ -354,16 +369,15 @@ def _run_inventory_export_hooks(hostname, inventory_tree):
 
     console.step("Execute inventory export hooks")
     for hookname, params in hooks:
-        console.verbose("Execute export hook: %s%s%s%s" %
-                            (tty.blue, tty.bold, hookname, tty.normal))
+        console.verbose(
+            "Execute export hook: %s%s%s%s" % (tty.blue, tty.bold, hookname, tty.normal))
         try:
             func = inventory_plugins.inv_export[hookname]["export_function"]
             func(hostname, params, inventory_tree.get_raw_tree())
         except Exception, e:
             if cmk.debug.enabled():
                 raise
-            raise MKGeneralException("Failed to execute export hook %s: %s" % (
-                hookname, e))
+            raise MKGeneralException("Failed to execute export hook %s: %s" % (hookname, e))
 
 #.
 #   .--Plugin API----------------------------------------------------------.
@@ -378,6 +392,7 @@ def _run_inventory_export_hooks(hostname, inventory_tree):
 #   | to all things defined by the regular Check_MK check API and all the  |
 #   | things declared here.                                                |
 #   '----------------------------------------------------------------------'
+
 
 def get_inventory_context():
     return {

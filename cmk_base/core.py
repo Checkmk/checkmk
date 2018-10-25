@@ -23,7 +23,6 @@
 # License along with GNU Make; see the file  COPYING.  If  not,  write
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
-
 """All core related things like direct communication with the running core"""
 
 import fcntl
@@ -60,6 +59,7 @@ _restart_lock_fd = None
 #   | Invoke actions affecting the core like reload/restart                |
 #   '----------------------------------------------------------------------'
 
+
 def do_reload(core):
     do_restart(core, only_reload=True)
 
@@ -77,7 +77,11 @@ def do_restart(core, only_reload=False):
         # Save current configuration
         if os.path.exists(cmk.paths.nagios_objects_file):
             backup_path = cmk.paths.nagios_objects_file + ".save"
-            console.verbose("Renaming %s to %s\n", cmk.paths.nagios_objects_file, backup_path, stream=sys.stderr)
+            console.verbose(
+                "Renaming %s to %s\n",
+                cmk.paths.nagios_objects_file,
+                backup_path,
+                stream=sys.stderr)
             os.rename(cmk.paths.nagios_objects_file, backup_path)
         else:
             backup_path = None
@@ -106,7 +110,8 @@ def do_restart(core, only_reload=False):
 
             broken_config_path = "%s/check_mk_objects.cfg.broken" % cmk.paths.tmp_dir
             file(broken_config_path, "w").write(file(cmk.paths.nagios_objects_file).read())
-            console.error("The broken file has been copied to \"%s\" for analysis.\n" % broken_config_path)
+            console.error(
+                "The broken file has been copied to \"%s\" for analysis.\n" % broken_config_path)
 
             if backup_path:
                 os.rename(backup_path, cmk.paths.nagios_objects_file)
@@ -137,8 +142,8 @@ def try_get_activation_lock():
         fcntl.fcntl(_restart_lock_fd, fcntl.F_SETFD, fcntl.FD_CLOEXEC)
         try:
             console.verbose("Waiting for exclusive lock on %s.\n" % lock_file, stream=sys.stderr)
-            fcntl.flock(_restart_lock_fd, fcntl.LOCK_EX |
-                ( config.restart_locking == "abort" and fcntl.LOCK_NB or 0))
+            fcntl.flock(_restart_lock_fd,
+                        fcntl.LOCK_EX | (config.restart_locking == "abort" and fcntl.LOCK_NB or 0))
         except:
             return True
     return False
@@ -151,13 +156,11 @@ def do_core_action(action, quiet=False):
 
     if config.monitoring_core == "nagios":
         os.putenv("CORE_NOVERIFY", "yes")
-        command = [ "%s/etc/init.d/core" % cmk.paths.omd_root,
-                    action ]
+        command = ["%s/etc/init.d/core" % cmk.paths.omd_root, action]
     else:
-        command = [ "omd", action, "cmc" ]
+        command = ["omd", action, "cmc"]
 
-    p = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
-                        close_fds=True)
+    p = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, close_fds=True)
     result = p.wait()
     if result != 0:
         output = p.stdout.read()
@@ -179,6 +182,7 @@ def do_core_action(action, quiet=False):
 #   +----------------------------------------------------------------------+
 #   | Fetching timeperiods from the core                                   |
 #   '----------------------------------------------------------------------'
+
 
 # Check if a timeperiod is currently active. We have no other way than
 # doing a Livestatus query. This is not really nice, but if you have a better

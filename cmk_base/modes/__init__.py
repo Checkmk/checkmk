@@ -37,11 +37,10 @@ import cmk_base.config as config
 class Modes(object):
     def __init__(self):
         # TODO: This disable is needed because of a pylint bug. Remove one day.
-        super(Modes, self).__init__() # pylint: disable=bad-super-call
-        self._mode_map        = {}
-        self._modes           = []
+        super(Modes, self).__init__()  # pylint: disable=bad-super-call
+        self._mode_map = {}
+        self._modes = []
         self._general_options = []
-
 
     def register(self, mode):
         self._modes.append(mode)
@@ -50,14 +49,12 @@ class Modes(object):
         if mode.has_short_option():
             self._mode_map[mode.short_option] = mode
 
-
     def exists(self, opt):
         try:
             self._get(opt)
             return True
         except KeyError:
             return False
-
 
     def call(self, opt, arg, all_opts, all_args):
         mode = self._get(opt)
@@ -74,11 +71,9 @@ class Modes(object):
 
         return mode.handler_function(*handler_args)
 
-
     def _get(self, opt):
         opt_name = self._strip_dashes(opt)
         return self._mode_map[opt_name]
-
 
     def _strip_dashes(self, opt):
         if opt.startswith("--"):
@@ -88,10 +83,8 @@ class Modes(object):
         else:
             raise NotImplementedError()
 
-
     def get(self, name):
         return self._mode_map[name]
-
 
     def short_getopt_specs(self):
         options = ""
@@ -101,7 +94,6 @@ class Modes(object):
             options += "".join(option.short_getopt_specs())
         return options
 
-
     def long_getopt_specs(self):
         options = []
         for mode in self._modes:
@@ -109,7 +101,6 @@ class Modes(object):
         for option in self._general_options:
             options += option.long_getopt_specs()
         return options
-
 
     def short_help(self):
         texts = []
@@ -119,7 +110,6 @@ class Modes(object):
                 texts.append(text)
         return "\n".join(sorted(texts, key=lambda x: x.lstrip(" -").lower()))
 
-
     def long_help(self):
         texts = []
         for mode in self._modes:
@@ -128,7 +118,6 @@ class Modes(object):
                 texts.append(text)
         return "\n\n".join(sorted(texts, key=lambda x: x.lstrip(" -").lower()))
 
-
     def non_config_options(self):
         options = []
         for mode in self._modes:
@@ -136,14 +125,12 @@ class Modes(object):
                 options += mode.options()
         return options
 
-
     def non_checks_options(self):
         options = []
         for mode in self._modes:
             if not mode.needs_checks:
                 options += mode.options()
         return options
-
 
     def parse_hostname_list(self, args, with_clusters=True, with_foreign_hosts=False):
         if with_foreign_hosts:
@@ -180,7 +167,6 @@ class Modes(object):
     def register_general_option(self, option):
         self._general_options.append(option)
 
-
     def process_general_options(self, all_opts):
         for o, a in all_opts:
             option = self._get_general_option(o)
@@ -192,7 +178,6 @@ class Modes(object):
             else:
                 option.handler_function()
 
-
     def general_option_help(self):
         texts = []
         for option in self._general_options:
@@ -200,7 +185,6 @@ class Modes(object):
             if text:
                 texts.append("%s" % text)
         return "\n".join(sorted(texts, key=lambda x: x.lstrip(" -").lower()))
-
 
     def _get_general_option(self, opt):
         opt_name = self._strip_dashes(opt)
@@ -210,32 +194,36 @@ class Modes(object):
         return None
 
 
-
 class Option(object):
-    def __init__(self, long_option, short_help, short_option=None,
-            argument=False, argument_descr=None, argument_conv=None,
-            argument_optional=False, count=False, handler_function=None):
+    def __init__(self,
+                 long_option,
+                 short_help,
+                 short_option=None,
+                 argument=False,
+                 argument_descr=None,
+                 argument_conv=None,
+                 argument_optional=False,
+                 count=False,
+                 handler_function=None):
         # TODO: This disable is needed because of a pylint bug. Remove one day.
-        super(Option, self).__init__() # pylint: disable=bad-super-call
-        self.long_option       = long_option
-        self.short_help        = short_help
-        self.short_option      = short_option
+        super(Option, self).__init__()  # pylint: disable=bad-super-call
+        self.long_option = long_option
+        self.short_help = short_help
+        self.short_option = short_option
 
         # An option can either
         # a) have an argument
         # b) have no argument and count it's occurance
         # c) have no argument (will always be True in sub_options)
-        self.count             = count
-        self.argument          = argument
-        self.argument_descr    = argument_descr
-        self.argument_conv     = argument_conv
+        self.count = count
+        self.argument = argument
+        self.argument_descr = argument_descr
+        self.argument_conv = argument_conv
         self.argument_optional = argument_optional
-        self.handler_function  = handler_function
-
+        self.handler_function = handler_function
 
     def name(self):
         return self.long_option
-
 
     def options(self):
         options = []
@@ -244,14 +232,11 @@ class Option(object):
         options.append("--%s" % self.long_option)
         return options
 
-
     def has_short_option(self):
         return self.short_option != None
 
-
     def takes_argument(self):
         return self.argument
-
 
     def short_help_text(self, fmt):
         if self.short_help is None:
@@ -276,7 +261,6 @@ class Option(object):
         )
         return wrapper.fill(self.short_help)
 
-
     def short_getopt_specs(self):
         if not self.has_short_option():
             return []
@@ -284,47 +268,58 @@ class Option(object):
         spec = self.short_option
         if self.argument and not self.argument_optional:
             spec += ":"
-        return [ spec ]
-
+        return [spec]
 
     def long_getopt_specs(self):
         spec = self.long_option
         if self.argument and not self.argument_optional:
             spec += "="
-        return [ spec ]
-
+        return [spec]
 
 
 class Mode(Option):
-    def __init__(self, long_option, handler_function, short_help, short_option=None,
-                 argument=False, argument_descr=None, argument_conv=None, argument_optional=False,
-                 long_help=None, needs_config=True, needs_checks=True, sub_options=None):
+    def __init__(self,
+                 long_option,
+                 handler_function,
+                 short_help,
+                 short_option=None,
+                 argument=False,
+                 argument_descr=None,
+                 argument_conv=None,
+                 argument_optional=False,
+                 long_help=None,
+                 needs_config=True,
+                 needs_checks=True,
+                 sub_options=None):
         # TODO: This disable is needed because of a pylint bug. Remove one day.
         # pylint: disable=bad-super-call
-        super(Mode, self).__init__(long_option, short_help, short_option, argument,
-                argument_descr, argument_conv, argument_optional,
-                handler_function=handler_function)
-        self.long_help        = long_help
-        self.needs_config     = needs_config
-        self.needs_checks     = needs_checks
-        self.sub_options      = sub_options or []
-
+        super(Mode, self).__init__(
+            long_option,
+            short_help,
+            short_option,
+            argument,
+            argument_descr,
+            argument_conv,
+            argument_optional,
+            handler_function=handler_function)
+        self.long_help = long_help
+        self.needs_config = needs_config
+        self.needs_checks = needs_checks
+        self.sub_options = sub_options or []
 
     def short_getopt_specs(self):
         # TODO: This disable is needed because of a pylint bug. Remove one day.
-        specs = super(Mode, self).short_getopt_specs() # pylint: disable=bad-super-call
+        specs = super(Mode, self).short_getopt_specs()  # pylint: disable=bad-super-call
         for option in self.sub_options:
             specs += option.short_getopt_specs()
         return specs
 
-
     def long_getopt_specs(self):
         # TODO: This disable is needed because of a pylint bug. Remove one day.
-        specs = super(Mode, self).long_getopt_specs() # pylint: disable=bad-super-call
+        specs = super(Mode, self).long_getopt_specs()  # pylint: disable=bad-super-call
         for option in self.sub_options:
             specs += option.long_getopt_specs()
         return specs
-
 
     # expected format is like this
     #  -i, --inventory does a HW/SW-Inventory for all, one or several
@@ -364,7 +359,6 @@ class Mode(Option):
             text.append("    Additional options:\n\n%s" % "\n".join(sub_texts))
 
         return "\n\n".join(text)
-
 
     def get_sub_options(self, all_opts):
         if not self.sub_options:

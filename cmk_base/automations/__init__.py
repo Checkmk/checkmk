@@ -43,25 +43,21 @@ import cmk_base.check_api as check_api
 class MKAutomationError(Exception):
     def __init__(self, reason):
         # TODO: This disable is needed because of a pylint bug. Remove one day.
-        super(MKAutomationError, self).__init__(reason) # pylint: disable=bad-super-call
+        super(MKAutomationError, self).__init__(reason)  # pylint: disable=bad-super-call
         self.reason = reason
-
 
     def __str__(self):
         return self.reason
 
 
-
 class Automations(object):
     def __init__(self):
         # TODO: This disable is needed because of a pylint bug. Remove one day.
-        super(Automations, self).__init__() # pylint: disable=bad-super-call
+        super(Automations, self).__init__()  # pylint: disable=bad-super-call
         self._automations = {}
-
 
     def register(self, automation):
         self._automations[automation.cmd] = automation
-
 
     def execute(self, cmd, args):
         self._handle_generic_arguments(args)
@@ -96,12 +92,11 @@ class Automations(object):
             profiling.output_profile()
 
         if cmk.debug.enabled():
-            console.output(pprint.pformat(result)+"\n")
+            console.output(pprint.pformat(result) + "\n")
         else:
             console.output("%r\n" % (result,))
 
         sys.exit(0)
-
 
     # Handle generic arguments (currently only the optional timeout argument)
     def _handle_generic_arguments(self, args):
@@ -114,15 +109,13 @@ class Automations(object):
                 signal.signal(signal.SIGALRM, self._raise_automation_timeout)
                 signal.alarm(timeout)
 
-
     def _raise_automation_timeout(self, signum, stackframe):
         raise MKTimeout("Action timed out. The timeout of %d "
                         "seconds was reached." % MKTimeout.timeout)
 
 
-
 class Automation(object):
-    cmd          = None
+    cmd = None
     needs_checks = False
     needs_config = False
 

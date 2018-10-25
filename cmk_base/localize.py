@@ -34,20 +34,22 @@ import cmk.paths
 import cmk.log
 logger = cmk.log.get_logger(__name__)
 
+
 # TODO: Inherit from MKGeneralException?
 class LocalizeException(Exception):
     def __init__(self, reason):
         self.reason = reason
         super(LocalizeException, self).__init__(reason)
+
     def __str__(self):
         return self.reason
 
 
 domain = 'multisite'
 
-pot_file   = None
-po_file    = None
-mo_file    = None
+pot_file = None
+po_file = None
+mo_file = None
 alias_file = None
 locale_base = cmk.paths.local_locale_dir
 
@@ -61,7 +63,8 @@ try:
 except:
     pass
 
-def localize_usage(err = ''):
+
+def localize_usage(err=''):
     sys.stdout.write("""Usage: check_mk [-v] --localize COMMAND [ARGS]
 
 Available commands are:
@@ -82,6 +85,7 @@ Available commands are:
  Locale files are located in: %s
 """ % locale_base)
 
+
 def do_localize(args):
     if len(args) == 0:
         localize_usage()
@@ -98,9 +102,9 @@ def do_localize(args):
         alias = args[2]
 
     commands = {
-        "update"  : localize_update,
-        "compile" : localize_compile,
-        "edit"    : localize_edit,
+        "update": localize_update,
+        "compile": localize_compile,
+        "edit": localize_edit,
     }
     f = commands.get(command)
     if f:
@@ -115,10 +119,11 @@ def do_localize(args):
     else:
         allc = commands.keys()
         allc.sort()
-        allc = [ tty.bold + c + tty.normal for c in allc ]
-        logger.error("Invalid localize command. Allowed are: %s and %s.",
-                                            ", ".join(allc[:-1]), allc[-1])
+        allc = [tty.bold + c + tty.normal for c in allc]
+        logger.error("Invalid localize command. Allowed are: %s and %s.", ", ".join(allc[:-1]),
+                     allc[-1])
         sys.exit(1)
+
 
 def write_alias(alias):
     if not alias:
@@ -129,21 +134,22 @@ def write_alias(alias):
     else:
         file(alias_file, 'w').write(alias)
 
+
 def check_binaries():
     # Are the xgettext utils available?
-    for b in [ 'xgettext', 'msgmerge', 'msgfmt' ]:
-        if subprocess.call(['which', b], stdout=open(os.devnull , "wb")) != 0:
+    for b in ['xgettext', 'msgmerge', 'msgfmt']:
+        if subprocess.call(['which', b], stdout=open(os.devnull, "wb")) != 0:
             raise LocalizeException('%s binary not found in PATH\n' % b)
 
 
 def get_languages():
-    return [ l for l in os.listdir(locale_base) if os.path.isdir(locale_base + '/' + l) ]
+    return [l for l in os.listdir(locale_base) if os.path.isdir(locale_base + '/' + l)]
 
 
 def init_files(lang):
     global po_file, mo_file, alias_file
-    po_file    = locale_base + '/%s/LC_MESSAGES/%s.po' % (lang, domain)
-    mo_file    = locale_base + '/%s/LC_MESSAGES/%s.mo' % (lang, domain)
+    po_file = locale_base + '/%s/LC_MESSAGES/%s.po' % (lang, domain)
+    mo_file = locale_base + '/%s/LC_MESSAGES/%s.mo' % (lang, domain)
     alias_file = locale_base + '/%s/alias' % (lang)
 
 
@@ -157,8 +163,8 @@ def localize_update_po():
 
 
 def localize_init_po(lang):
-    if subprocess.call(['msginit', '-i', pot_file, '--no-translator', '-l', lang,
-                '-o', po_file], stdout=open(os.devnull, "wb")) != 0:
+    if subprocess.call(['msginit', '-i', pot_file, '--no-translator', '-l', lang, '-o', po_file],
+                       stdout=open(os.devnull, "wb")) != 0:
         logger.error('Failed!\n')
 
 
@@ -166,7 +172,7 @@ def localize_init_po(lang):
 def localize_sniff():
     logger.info('Sniffing source code...')
 
-    paths = [ cmk.paths.default_config_dir, cmk.paths.web_dir ]
+    paths = [cmk.paths.default_config_dir, cmk.paths.web_dir]
     if os.path.exists(cmk.paths.local_web_dir):
         paths.append(cmk.paths.local_web_dir)
 
@@ -177,10 +183,12 @@ def localize_sniff():
                 if f.endswith(".py") or f.endswith(".mk"):
                     sniff_files.append(os.path.join(root, f))
 
-    if subprocess.call(['xgettext', '--no-wrap', '--sort-output', '--force-po',
-                 '-L', 'Python', '--from-code=utf-8', '--omit-header',
-                 '-o', pot_file ] + sniff_files,
-                 stdout=open(os.devnull, "wb")) != 0:
+    if subprocess.call(
+        [
+            'xgettext', '--no-wrap', '--sort-output', '--force-po', '-L', 'Python',
+            '--from-code=utf-8', '--omit-header', '-o', pot_file
+        ] + sniff_files,
+            stdout=open(os.devnull, "wb")) != 0:
         logger.error('Failed!\n')
     else:
         header = r'''# +------------------------------------------------------------------+
@@ -255,7 +263,8 @@ def localize_update(lang):
     # the default hierarchy
     if not os.path.exists(po_file) \
        and os.path.exists(cmk.paths.locale_dir + '/%s/LC_MESSAGES/%s.po' % (lang, domain)):
-        file(po_file, 'w').write(file(cmk.paths.locale_dir + '/%s/LC_MESSAGES/%s.po' % (lang, domain)).read())
+        file(po_file, 'w').write(
+            file(cmk.paths.locale_dir + '/%s/LC_MESSAGES/%s.po' % (lang, domain)).read())
         logger.info('Initialize %s with the file in the default hierarchy', po_file)
 
     localize_sniff()
@@ -266,6 +275,7 @@ def localize_update(lang):
     else:
         logger.info('Updating .po file for language %s...', lang)
         localize_update_po()
+
 
 # Create a .mo file from the given .po file
 def localize_compile(lang):
@@ -280,7 +290,8 @@ def localize_compile(lang):
     # the default hierarchy
     if not os.path.exists(po_file) \
        and os.path.exists(cmk.paths.locale_dir + '/%s/LC_MESSAGES/%s.po' % (lang, domain)):
-        file(po_file, 'w').write(file(cmk.paths.locale_dir + '/%s/LC_MESSAGES/%s.po' % (lang, domain)).read())
+        file(po_file, 'w').write(
+            file(cmk.paths.locale_dir + '/%s/LC_MESSAGES/%s.po' % (lang, domain)).read())
         logger.info('Initialize %s with the file in the default hierarchy', po_file)
 
     if not os.path.exists(po_file):

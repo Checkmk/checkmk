@@ -103,6 +103,8 @@ def _get_permissions(path):
 
 # in case of local directories (OMD) use those instead
 # TODO: Since we only care about OMD environments: Simplify that -> remove ldir
+# TODO: Refactor this to named tuples and cleanup yapf disable
+# yapf: disable
 package_parts = [ (part, title, ldir if ldir else directory) for part, title, directory, ldir in [
   ( "checks",        "Checks",               cmk.paths.checks_dir,          cmk.paths.local_checks_dir ),
   ( "notifications", "Notification scripts", cmk.paths.notifications_dir,   cmk.paths.local_notifications_dir ),
@@ -119,6 +121,7 @@ package_parts = [ (part, title, ldir if ldir else directory) for part, title, di
   ( "alert_handlers", "Alert handlers",      cmk.paths.share_dir + "/alert_handlers",
                                              cmk.paths.local_share_dir + "/alert_handlers" ),
 ]]
+# yapf: enable
 
 config_parts = [
     ("ec_rule_packs", "Event Console rule packs", str(cmk.ec.export.mkp_rule_pack_dir())),

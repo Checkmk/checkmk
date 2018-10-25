@@ -48,23 +48,28 @@ from cmk_base.exceptions import MKSNMPError, MKTimeout
 #   | Implements the neccessary function for Check_MK                      |
 #   '----------------------------------------------------------------------'
 
+
 def walk(access_data, oid, hex_plain=False, context_name=None):
     hostname = access_data["hostname"]
     ipaddress = access_data["ipaddress"]
     protospec = _snmp_proto_spec(hostname)
     portspec = _snmp_port_spec(hostname)
     command = _snmp_walk_command(access_data, context_name)
-    command += [ "-OQ", "-OU", "-On", "-Ot", "%s%s%s" % (protospec, ipaddress, portspec), oid ]
+    command += ["-OQ", "-OU", "-On", "-Ot", "%s%s%s" % (protospec, ipaddress, portspec), oid]
 
-    debug_cmd = [ "''" if a == "" else a for a in command ]
+    debug_cmd = ["''" if a == "" else a for a in command]
     console.vverbose("Running '%s'\n" % " ".join(debug_cmd))
 
     snmp_process = None
     exitstatus = None
     rowinfo = []
     try:
-        snmp_process = subprocess.Popen(command, close_fds=True, stdin=open(os.devnull),
-                                        stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        snmp_process = subprocess.Popen(
+            command,
+            close_fds=True,
+            stdin=open(os.devnull),
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE)
 
         rowinfo = _get_rowinfo_from_snmp_process(snmp_process, hex_plain)
 
@@ -86,8 +91,10 @@ def walk(access_data, oid, hex_plain=False, context_name=None):
             snmp_process.stderr.close()
 
     if exitstatus:
-        console.verbose(tty.red + tty.bold + "ERROR: " + tty.normal + "SNMP error: %s\n" % error.strip())
-        raise MKSNMPError("SNMP Error on %s: %s (Exit-Code: %d)" % (ipaddress, error.strip(), exitstatus))
+        console.verbose(tty.red + tty.bold + "ERROR: " + tty.normal +
+                        "SNMP error: %s\n" % error.strip())
+        raise MKSNMPError(
+            "SNMP Error on %s: %s (Exit-Code: %d)" % (ipaddress, error.strip(), exitstatus))
     return rowinfo
 
 
@@ -108,7 +115,7 @@ def _get_rowinfo_from_snmp_process(snmp_process, hex_plain):
 
         parts = line.split('=', 1)
         if len(parts) < 2:
-            continue # broken line, must contain =
+            continue  # broken line, must contain =
         oid = parts[0].strip()
         value = parts[1].strip()
         # Filter out silly error messages from snmpwalk >:-P
@@ -117,8 +124,9 @@ def _get_rowinfo_from_snmp_process(snmp_process, hex_plain):
            or value.startswith('No Such Instance currently exists'):
             continue
 
-        if value == '"' or (len(value) > 1 and value[0] == '"' and (value[-1] != '"')): # to be continued
-            while True: # scan for end of this dataset
+        if value == '"' or (len(value) > 1 and value[0] == '"' and
+                            (value[-1] != '"')):  # to be continued
+            while True:  # scan for end of this dataset
                 nextline = line_iter.next().strip()
                 value += " " + nextline
                 if value[-1] == '"':
@@ -144,15 +152,15 @@ def get(access_data, oid, context_name=None):
                  "%s%s%s" % (protospec, ipaddress, portspec),
                  oid_prefix ]
 
-    debug_cmd = [ "''" if a == "" else a for a in command ]
+    debug_cmd = ["''" if a == "" else a for a in command]
     console.vverbose("Running '%s'\n" % " ".join(debug_cmd))
 
-    snmp_process = subprocess.Popen(command, close_fds=True,
-                                    stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    snmp_process = subprocess.Popen(
+        command, close_fds=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     exitstatus = snmp_process.wait()
     if exitstatus:
         console.verbose(tty.red + tty.bold + "ERROR: " + tty.normal + "SNMP error\n")
-        console.verbose(snmp_process.stderr.read()+"\n")
+        console.verbose(snmp_process.stderr.read() + "\n")
         return None
 
     line = snmp_process.stdout.readline().strip()
@@ -196,7 +204,7 @@ def _snmp_proto_spec(hostname):
 # options for authentication. This handles communities and
 # authentication for SNMP V3. Also bulkwalk hosts
 def _snmp_walk_command(access_data, context_name):
-    return _snmp_base_command('walk', access_data, context_name) + [ "-Cc" ]
+    return _snmp_base_command('walk', access_data, context_name) + ["-Cc"]
 
 
 # if the credentials are a string, we use that as community,
@@ -214,112 +222,60 @@ def _snmp_base_command(what, access_data, context_name):
     options = []
 
     if what == 'get':
-        command = [ 'snmpget' ]
+        command = ['snmpget']
     elif what == 'getnext':
-        command = [ 'snmpgetnext', '-Cf' ]
+        command = ['snmpgetnext', '-Cf']
     elif config.is_bulkwalk_host(hostname):
-        command = [ 'snmpbulkwalk' ]
+        command = ['snmpbulkwalk']
 
         options.append("-Cr%d" % config.bulk_walk_size_of(hostname))
     else:
-        command = [ 'snmpwalk' ]
+        command = ['snmpwalk']
 
-    if type(credentials) in [ str, unicode ]:
+    if type(credentials) in [str, unicode]:
         # Handle V1 and V2C
         if config.is_bulkwalk_host(hostname):
             options.append('-v2c')
         else:
             if what == 'walk':
-                command = [ 'snmpwalk' ]
+                command = ['snmpwalk']
             if config.is_snmpv2c_host(hostname):
                 options.append('-v2c')
             else:
                 options.append('-v1')
 
-        options += [ "-c", credentials ]
+        options += ["-c", credentials]
 
     else:
         # Handle V3
         if len(credentials) == 6:
             options += [
-                "-v3", "-l", credentials[0], "-a", credentials[1],
-                "-u", credentials[2], "-A", credentials[3],
-                "-x", credentials[4], "-X", credentials[5],
+                "-v3", "-l", credentials[0], "-a", credentials[1], "-u", credentials[2], "-A",
+                credentials[3], "-x", credentials[4], "-X", credentials[5]
             ]
         elif len(credentials) == 4:
             options += [
-                "-v3", "-l", credentials[0], "-a", credentials[1],
-                "-u", credentials[2], "-A", credentials[3],
+                "-v3", "-l", credentials[0], "-a", credentials[1], "-u", credentials[2], "-A",
+                credentials[3]
             ]
         elif len(credentials) == 2:
-            options += [
-                "-v3", "-l", credentials[0], "-u", credentials[1],
-            ]
+            options += ["-v3", "-l", credentials[0], "-u", credentials[1]]
         else:
-            raise MKGeneralException("Invalid SNMP credentials '%r' for host %s: must be "
-                                     "string, 2-tuple, 4-tuple or 6-tuple" % (credentials, hostname))
+            raise MKGeneralException(
+                "Invalid SNMP credentials '%r' for host %s: must be "
+                "string, 2-tuple, 4-tuple or 6-tuple" % (credentials, hostname))
 
     # Do not load *any* MIB files. This save lot's of CPU.
-    options += [ "-m", "", "-M", "" ]
+    options += ["-m", "", "-M", ""]
 
     # Configuration of timing and retries
     settings = config.snmp_timing_of(hostname)
     if "timeout" in settings:
-        options += [ "-t", "%0.2f" % settings["timeout"] ]
+        options += ["-t", "%0.2f" % settings["timeout"]]
     if "retries" in settings:
-        options += [ "-r", "%d" % settings["retries"] ]
+        options += ["-r", "%d" % settings["retries"]]
 
     if context_name != None:
-        options += [ "-n", context_name ]
+        options += ["-n", context_name]
 
     return command + options
-
-#.
-#   .--SNMP helpers--------------------------------------------------------.
-#   |     ____  _   _ __  __ ____    _          _                          |
-#   |    / ___|| \ | |  \/  |  _ \  | |__   ___| |_ __   ___ _ __ ___      |
-#   |    \___ \|  \| | |\/| | |_) | | '_ \ / _ \ | '_ \ / _ \ '__/ __|     |
-#   |     ___) | |\  | |  | |  __/  | | | |  __/ | |_) |  __/ |  \__ \     |
-#   |    |____/|_| \_|_|  |_|_|     |_| |_|\___|_| .__/ \___|_|  |___/     |
-#   |                                            |_|                       |
-#   +----------------------------------------------------------------------+
-#   | Internal helpers for processing SNMP things                          |
-#   '----------------------------------------------------------------------'
-
-def strip_snmp_value(value, hex_plain = False):
-    v = value.strip()
-    if v.startswith('"'):
-        v = v[1:-1]
-        if len(v) > 2 and _is_hex_string(v):
-            return value if hex_plain else _convert_from_hex(v)
-        # Fix for non hex encoded string which have been somehow encoded by the
-        # netsnmp command line tools. An example:
-        # Checking windows systems via SNMP with hr_fs: disk names like c:\
-        # are reported as c:\\, fix this to single \
-        return v.strip().replace('\\\\', '\\')
-    return v
-
-def _is_hex_string(value):
-    # as far as I remember, snmpwalk puts a trailing space within
-    # the quotes in case of hex strings. So we require that space
-    # to be present in order make sure, we really deal with a hex string.
-    if value[-1] != ' ':
-        return False
-    hexdigits = "0123456789abcdefABCDEF"
-    n = 0
-    for x in value:
-        if n % 3 == 2:
-            if x != ' ':
-                return False
-        else:
-            if x not in hexdigits:
-                return False
-        n += 1
-    return True
-
-def _convert_from_hex(value):
-    hexparts = value.split()
-    r = ""
-    for hx in hexparts:
-        r += chr(int(hx, 16))
-    return r

@@ -43,15 +43,12 @@ class PiggyBackDataSource(CheckMKAgentDataSource):
         super(PiggyBackDataSource, self).__init__(hostname, ipaddress)
         self._source_hostnames = set()
 
-
     def id(self):
         return "piggyback"
-
 
     def describe(self):
         path = os.path.join(tmp_dir, "piggyback", self._hostname)
         return "Process piggyback data from %s" % path
-
 
     def _execute(self):
         entries = _raw_data(self._hostname) + _raw_data(self._ipaddress)
@@ -62,7 +59,6 @@ class PiggyBackDataSource(CheckMKAgentDataSource):
             raw_data += source_raw_data
         return raw_data
 
-
     def _get_raw_data(self):
         """Returns the current raw data of this data source
 
@@ -70,7 +66,6 @@ class PiggyBackDataSource(CheckMKAgentDataSource):
         """
         self._logger.verbose("Execute data source")
         return self._execute(), False
-
 
     def _summary_result(self):
         """Returns useful information about the data source execution

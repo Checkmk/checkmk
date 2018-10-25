@@ -31,7 +31,6 @@
 
 import cmk_base.console as console
 
-
 # Symbolic representations of states in plugin output
 state_markers = ["", "(!)", "(!!)", "(?)"]
 
@@ -48,13 +47,12 @@ def no_discovery_possible(check_plugin_name, info):
 
 
 # Management board checks
-MGMT_ONLY       = "mgmt_only"       # Use host address/credentials when it's a SNMP HOST
-HOST_PRECEDENCE = "host_precedence" # Check is only executed for mgmt board (e.g. Managegment Uptime)
-HOST_ONLY       = "host_only"       # Check is only executed for real SNMP host (e.g. interfaces)
-
+MGMT_ONLY = "mgmt_only"  # Use host address/credentials when it's a SNMP HOST
+HOST_PRECEDENCE = "host_precedence"  # Check is only executed for mgmt board (e.g. Managegment Uptime)
+HOST_ONLY = "host_only"  # Check is only executed for real SNMP host (e.g. interfaces)
 
 # Is set before check/discovery function execution
-_hostname = None # Host currently being checked
+_hostname = None  # Host currently being checked
 _check_type = None
 _service_description = None
 

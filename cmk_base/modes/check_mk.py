@@ -59,6 +59,7 @@ from cmk_base.core_factory import create_core
 
 _verbosity = 0
 
+
 def option_verbosity():
     global _verbosity
     _verbosity += 1
@@ -66,12 +67,14 @@ def option_verbosity():
     import cmk.log
     cmk.log.set_verbosity(verbosity=_verbosity)
 
-modes.register_general_option(Option(
-    long_option="verbose",
-    short_option="v",
-    short_help="Enable verbose output (Use twice for more)",
-    handler_function=option_verbosity,
-))
+
+modes.register_general_option(
+    Option(
+        long_option="verbose",
+        short_option="v",
+        short_help="Enable verbose output (Use twice for more)",
+        handler_function=option_verbosity,
+    ))
 
 _verbosity = 0
 
@@ -81,37 +84,43 @@ def option_cache():
     data_sources.abstract.DataSource.set_may_use_cache_file()
     data_sources.abstract.DataSource.set_use_outdated_cache_file()
 
-modes.register_general_option(Option(
-    long_option="cache",
-    short_help="Read info from data source cache files when existant, even when it "
-               "is outdated. Only contact the data sources when the cache file "
-               "is absent",
-    handler_function=option_cache,
-))
+
+modes.register_general_option(
+    Option(
+        long_option="cache",
+        short_help="Read info from data source cache files when existant, even when it "
+        "is outdated. Only contact the data sources when the cache file "
+        "is absent",
+        handler_function=option_cache,
+    ))
 
 
 def option_no_cache():
     import cmk_base.data_sources.abstract
     cmk_base.data_sources.abstract.DataSource.disable_data_source_cache()
 
-modes.register_general_option(Option(
-    long_option="no-cache",
-    short_help="Never use cached information",
-    handler_function=option_no_cache,
-))
+
+modes.register_general_option(
+    Option(
+        long_option="no-cache",
+        short_help="Never use cached information",
+        handler_function=option_no_cache,
+    ))
 
 
 def option_no_tcp():
     import cmk_base.data_sources as data_sources
     data_sources.tcp.TCPDataSource.use_only_cache()
 
+
 # TODO: Check whether or not this is used only for -I as written in the help.
 # Does it affect inventory/checking too?
-modes.register_general_option(Option(
-    long_option="no-tcp",
-    short_help="For -I: Only use cache files. Skip hosts without cache files.",
-    handler_function=option_no_tcp,
-))
+modes.register_general_option(
+    Option(
+        long_option="no-tcp",
+        short_help="For -I: Only use cache files. Skip hosts without cache files.",
+        handler_function=option_no_tcp,
+    ))
 
 
 def option_usewalk():
@@ -120,47 +129,55 @@ def option_usewalk():
     snmp.enforce_use_stored_walks()
     ip_lookup.enforce_localhost()
 
-modes.register_general_option(Option(
-    long_option="usewalk",
-    short_help="Use snmpwalk stored with --snmpwalk",
-    handler_function=option_usewalk,
-))
+
+modes.register_general_option(
+    Option(
+        long_option="usewalk",
+        short_help="Use snmpwalk stored with --snmpwalk",
+        handler_function=option_usewalk,
+    ))
 
 
 def option_debug():
     import cmk.debug
     cmk.debug.enable()
 
-modes.register_general_option(Option(
-    long_option="debug",
-    short_help="Let most Python exceptions raise through",
-    handler_function=option_debug,
-))
+
+modes.register_general_option(
+    Option(
+        long_option="debug",
+        short_help="Let most Python exceptions raise through",
+        handler_function=option_debug,
+    ))
 
 
 def option_profile():
     import cmk_base.profiling as profiling
     profiling.enable()
 
-modes.register_general_option(Option(
-    long_option="profile",
-    short_help="Enable profiling mode",
-    handler_function=option_profile,
-))
+
+modes.register_general_option(
+    Option(
+        long_option="profile",
+        short_help="Enable profiling mode",
+        handler_function=option_profile,
+    ))
 
 
 def option_fake_dns(a):
     import cmk_base.ip_lookup as ip_lookup
     ip_lookup.enforce_fake_dns(a)
 
-modes.register_general_option(Option(
-    long_option="fake-dns",
-    short_help="Fake IP addresses of all hosts to be IP. This "
-               "prevents DNS lookups.",
-    handler_function=option_fake_dns,
-    argument=True,
-    argument_descr="IP",
-))
+
+modes.register_general_option(
+    Option(
+        long_option="fake-dns",
+        short_help="Fake IP addresses of all hosts to be IP. This "
+        "prevents DNS lookups.",
+        handler_function=option_fake_dns,
+        argument=True,
+        argument_descr="IP",
+    ))
 
 
 #.
@@ -173,6 +190,7 @@ modes.register_general_option(Option(
 #   |             |_|_|___/\__|    |_| |_|\___/|___/\__|___/               |
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
+
 
 def mode_list_hosts(options, args):
     hosts = _list_all_hosts(args, options)
@@ -187,7 +205,7 @@ def _list_all_hosts(hostgroups, options):
     hostnames = set()
 
     if options.get("all-sites"):
-        hostnames.update(config.all_configured_hosts()) # Return all hosts, including offline
+        hostnames.update(config.all_configured_hosts())  # Return all hosts, including offline
         if not "include-offline" in options:
             hostnames -= config.all_configured_offline_hosts()
     else:
@@ -195,10 +213,8 @@ def _list_all_hosts(hostgroups, options):
         if "include-offline" in options:
             hostnames.update(config.all_offline_hosts())
 
-
     if not hostgroups:
         return sorted(hostnames)
-
 
     hostlist = []
     for hn in hostnames:
@@ -210,30 +226,30 @@ def _list_all_hosts(hostgroups, options):
     return sorted(hostlist)
 
 
-modes.register(Mode(
-    long_option="list-hosts",
-    short_option="l",
-    handler_function=mode_list_hosts,
-    argument=True,
-    argument_descr="G1 G2...",
-    argument_optional=True,
-    short_help="Print list of all hosts or members of host groups",
-    long_help=[
-        "Called without argument lists all hosts. You may "
-        "specify one or more host groups to restrict the output to hosts "
-        "that are in at least one of those groups.",
-    ],
-    sub_options=[
-        Option(
-            long_option="all-sites",
-            short_help="Include hosts of foreign sites",
-        ),
-        Option(
-            long_option="include-offline",
-            short_help="Include offline hosts",
-        ),
-    ]
-))
+modes.register(
+    Mode(
+        long_option="list-hosts",
+        short_option="l",
+        handler_function=mode_list_hosts,
+        argument=True,
+        argument_descr="G1 G2...",
+        argument_optional=True,
+        short_help="Print list of all hosts or members of host groups",
+        long_help=[
+            "Called without argument lists all hosts. You may "
+            "specify one or more host groups to restrict the output to hosts "
+            "that are in at least one of those groups.",
+        ],
+        sub_options=[
+            Option(
+                long_option="all-sites",
+                short_help="Include hosts of foreign sites",
+            ),
+            Option(
+                long_option="include-offline",
+                short_help="Include offline hosts",
+            ),
+        ]))
 
 #.
 #   .--list-tag------------------------------------------------------------.
@@ -244,6 +260,7 @@ modes.register(Mode(
 #   |                  |_|_|___/\__|     \__\__,_|\__, |                   |
 #   |                                             |___/                    |
 #   '----------------------------------------------------------------------'
+
 
 def mode_list_tag(args):
     hosts = _list_all_hosts_with_tags(args)
@@ -266,17 +283,15 @@ def _list_all_hosts_with_tags(tags):
     return hosts
 
 
-modes.register(Mode(
-    long_option="list-tag",
-    handler_function=mode_list_tag,
-    argument=True,
-    argument_descr="TAG1 TAG2...",
-    argument_optional=True,
-    short_help="List hosts having certain tags",
-    long_help=[
-        "Prints all hosts that have all of the specified tags at once."
-    ]
-))
+modes.register(
+    Mode(
+        long_option="list-tag",
+        handler_function=mode_list_tag,
+        argument=True,
+        argument_descr="TAG1 TAG2...",
+        argument_optional=True,
+        short_help="List hosts having certain tags",
+        long_help=["Prints all hosts that have all of the specified tags at once."]))
 
 #.
 #   .--list-checks---------------------------------------------------------.
@@ -322,13 +337,14 @@ def mode_list_checks():
             console.error("ERROR in check %r: %s\n" % (check_plugin_name, e))
 
 
-modes.register(Mode(
-    long_option="list-checks",
-    short_option="L",
-    handler_function=mode_list_checks,
-    needs_config=False,
-    short_help="List all available Check_MK checks",
-))
+modes.register(
+    Mode(
+        long_option="list-checks",
+        short_option="L",
+        handler_function=mode_list_checks,
+        needs_config=False,
+        short_help="List all available Check_MK checks",
+    ))
 
 #.
 #   .--dump-agent----------------------------------------------------------.
@@ -339,6 +355,7 @@ modes.register(Mode(
 #   |    \__,_|\__,_|_| |_| |_| .__/       \__,_|\__, |\___|_| |_|\__|     |
 #   |                         |_|                |___/                     |
 #   '----------------------------------------------------------------------'
+
 
 def mode_dump_agent(hostname):
     import cmk_base.data_sources as data_sources
@@ -374,19 +391,20 @@ def mode_dump_agent(hostname):
             raise
         raise MKBailOut("Unhandled exception: %s" % e)
 
-modes.register(Mode(
-    long_option="dump-agent",
-    short_option="d",
-    handler_function=mode_dump_agent,
-    argument=True,
-    argument_descr="HOSTNAME|ADDRESS",
-    short_help="Show raw information from agent",
-    long_help=[
-        "Shows the raw information received from the given host. For regular "
-        "hosts it shows the agent output plus possible piggyback information. "
-        "Does not work on clusters but only on real hosts. "
-    ]
-))
+
+modes.register(
+    Mode(
+        long_option="dump-agent",
+        short_option="d",
+        handler_function=mode_dump_agent,
+        argument=True,
+        argument_descr="HOSTNAME|ADDRESS",
+        short_help="Show raw information from agent",
+        long_help=[
+            "Shows the raw information received from the given host. For regular "
+            "hosts it shows the agent output plus possible piggyback information. "
+            "Does not work on clusters but only on real hosts. "
+        ]))
 
 
 #.
@@ -399,6 +417,7 @@ modes.register(Mode(
 #   |                                          |_|                         |
 #   '----------------------------------------------------------------------'
 
+
 def mode_dump_hosts(hostlist):
     import cmk_base.dump_host
     if not hostlist:
@@ -408,20 +427,20 @@ def mode_dump_hosts(hostlist):
         cmk_base.dump_host.dump_host(hostname)
 
 
-modes.register(Mode(
-    long_option="dump",
-    short_option="D",
-    handler_function=mode_dump_hosts,
-    argument=True,
-    argument_descr="H1 H2...",
-    argument_optional=True,
-    short_help="Dump info about all or some hosts",
-    long_help=[
-        "Dumps out the complete configuration and information "
-        "about one, several or all hosts. It shows all services, hostgroups, "
-        "contacts and other information about that host.",
-    ]
-))
+modes.register(
+    Mode(
+        long_option="dump",
+        short_option="D",
+        handler_function=mode_dump_hosts,
+        argument=True,
+        argument_descr="H1 H2...",
+        argument_optional=True,
+        short_help="Dump info about all or some hosts",
+        long_help=[
+            "Dumps out the complete configuration and information "
+            "about one, several or all hosts. It shows all services, hostgroups, "
+            "contacts and other information about that host.",
+        ]))
 
 
 #.
@@ -434,6 +453,7 @@ modes.register(Mode(
 #   |                     |_|                                              |
 #   '----------------------------------------------------------------------'
 
+
 def mode_paths():
     inst = 1
     conf = 2
@@ -444,53 +464,55 @@ def mode_paths():
     fil = 2
 
     paths = [
-        ( cmk.paths.modules_dir,                 directory, inst, "Main components of check_mk"),
-        ( cmk.paths.checks_dir,                  directory, inst, "Checks"),
-        ( cmk.paths.notifications_dir,           directory, inst, "Notification scripts"),
-        ( cmk.paths.inventory_dir,               directory, inst, "Inventory plugins"),
-        ( cmk.paths.agents_dir,                  directory, inst, "Agents for operating systems"),
-        ( cmk.paths.doc_dir,                     directory, inst, "Documentation files"),
-        ( cmk.paths.web_dir,                     directory, inst, "Check_MK's web pages"),
-        ( cmk.paths.check_manpages_dir,          directory, inst, "Check manpages (for check_mk -M)"),
-        ( cmk.paths.lib_dir,                     directory, inst, "Binary plugins (architecture specific)"),
-        ( cmk.paths.pnp_templates_dir,           directory, inst, "Templates for PNP4Nagios"),
+        (cmk.paths.modules_dir, directory, inst, "Main components of check_mk"),
+        (cmk.paths.checks_dir, directory, inst, "Checks"),
+        (cmk.paths.notifications_dir, directory, inst, "Notification scripts"),
+        (cmk.paths.inventory_dir, directory, inst, "Inventory plugins"),
+        (cmk.paths.agents_dir, directory, inst, "Agents for operating systems"),
+        (cmk.paths.doc_dir, directory, inst, "Documentation files"),
+        (cmk.paths.web_dir, directory, inst, "Check_MK's web pages"),
+        (cmk.paths.check_manpages_dir, directory, inst, "Check manpages (for check_mk -M)"),
+        (cmk.paths.lib_dir, directory, inst, "Binary plugins (architecture specific)"),
+        (cmk.paths.pnp_templates_dir, directory, inst, "Templates for PNP4Nagios"),
     ]
     if config.monitoring_core == "nagios":
         paths += [
-            ( cmk.paths.nagios_startscript,          fil, inst, "Startscript for Nagios daemon"),
-            ( cmk.paths.nagios_binary,               fil, inst, "Path to Nagios executable"),
-            ( cmk.paths.nagios_config_file,          fil, conf, "Main configuration file of Nagios"),
-            ( cmk.paths.nagios_conf_dir,             directory, conf, "Directory where Nagios reads all *.cfg files"),
-            ( cmk.paths.nagios_objects_file,         fil, data, "File into which Nagios configuration is written"),
-            ( cmk.paths.nagios_status_file,          fil, data, "Path to Nagios status.dat"),
-            ( cmk.paths.nagios_command_pipe_path,    fil, pipe, "Nagios' command pipe"),
-            ( cmk.paths.check_result_path,           fil, pipe, "Nagios' check results directory"),
+            (cmk.paths.nagios_startscript, fil, inst, "Startscript for Nagios daemon"),
+            (cmk.paths.nagios_binary, fil, inst, "Path to Nagios executable"),
+            (cmk.paths.nagios_config_file, fil, conf, "Main configuration file of Nagios"),
+            (cmk.paths.nagios_conf_dir, directory, conf,
+             "Directory where Nagios reads all *.cfg files"),
+            (cmk.paths.nagios_objects_file, fil, data,
+             "File into which Nagios configuration is written"),
+            (cmk.paths.nagios_status_file, fil, data, "Path to Nagios status.dat"),
+            (cmk.paths.nagios_command_pipe_path, fil, pipe, "Nagios' command pipe"),
+            (cmk.paths.check_result_path, fil, pipe, "Nagios' check results directory"),
         ]
 
     paths += [
-        ( cmk.paths.default_config_dir,          directory, conf, "Directory that contains main.mk"),
-        ( cmk.paths.check_mk_config_dir,         directory, conf, "Directory containing further *.mk files"),
-        ( cmk.paths.apache_config_dir,           directory, conf, "Directory where Apache reads all config files"),
-        ( cmk.paths.htpasswd_file,               fil, conf, "Users/Passwords for HTTP basic authentication"),
-
-        ( cmk.paths.var_dir,                     directory, data, "Base working directory for variable data"),
-        ( cmk.paths.autochecks_dir,              directory, data, "Checks found by inventory"),
-        ( cmk.paths.precompiled_hostchecks_dir,  directory, data, "Precompiled host checks"),
-        ( cmk.paths.snmpwalks_dir,               directory, data, "Stored snmpwalks (output of --snmpwalk)"),
-        ( cmk.paths.counters_dir,                directory, data, "Current state of performance counters"),
-        ( cmk.paths.tcp_cache_dir,               directory, data, "Cached output from agents"),
-        ( cmk.paths.logwatch_dir,                directory, data, "Unacknowledged logfiles of logwatch extension"),
-        ( cmk.paths.livestatus_unix_socket,     fil, pipe, "Socket of Check_MK's livestatus module"),
-
-        ( cmk.paths.local_checks_dir,           directory, local, "Locally installed checks"),
-        ( cmk.paths.local_notifications_dir,    directory, local, "Locally installed notification scripts"),
-        ( cmk.paths.local_inventory_dir,        directory, local, "Locally installed inventory plugins"),
-        ( cmk.paths.local_check_manpages_dir,   directory, local, "Locally installed check man pages"),
-        ( cmk.paths.local_agents_dir,           directory, local, "Locally installed agents and plugins"),
-        ( cmk.paths.local_web_dir,              directory, local, "Locally installed Multisite addons"),
-        ( cmk.paths.local_pnp_templates_dir,    directory, local, "Locally installed PNP templates"),
-        ( cmk.paths.local_doc_dir,              directory, local, "Locally installed documentation"),
-        ( cmk.paths.local_locale_dir,           directory, local, "Locally installed localizations"),
+        (cmk.paths.default_config_dir, directory, conf, "Directory that contains main.mk"),
+        (cmk.paths.check_mk_config_dir, directory, conf, "Directory containing further *.mk files"),
+        (cmk.paths.apache_config_dir, directory, conf,
+         "Directory where Apache reads all config files"),
+        (cmk.paths.htpasswd_file, fil, conf, "Users/Passwords for HTTP basic authentication"),
+        (cmk.paths.var_dir, directory, data, "Base working directory for variable data"),
+        (cmk.paths.autochecks_dir, directory, data, "Checks found by inventory"),
+        (cmk.paths.precompiled_hostchecks_dir, directory, data, "Precompiled host checks"),
+        (cmk.paths.snmpwalks_dir, directory, data, "Stored snmpwalks (output of --snmpwalk)"),
+        (cmk.paths.counters_dir, directory, data, "Current state of performance counters"),
+        (cmk.paths.tcp_cache_dir, directory, data, "Cached output from agents"),
+        (cmk.paths.logwatch_dir, directory, data, "Unacknowledged logfiles of logwatch extension"),
+        (cmk.paths.livestatus_unix_socket, fil, pipe, "Socket of Check_MK's livestatus module"),
+        (cmk.paths.local_checks_dir, directory, local, "Locally installed checks"),
+        (cmk.paths.local_notifications_dir, directory, local,
+         "Locally installed notification scripts"),
+        (cmk.paths.local_inventory_dir, directory, local, "Locally installed inventory plugins"),
+        (cmk.paths.local_check_manpages_dir, directory, local, "Locally installed check man pages"),
+        (cmk.paths.local_agents_dir, directory, local, "Locally installed agents and plugins"),
+        (cmk.paths.local_web_dir, directory, local, "Locally installed Multisite addons"),
+        (cmk.paths.local_pnp_templates_dir, directory, local, "Locally installed PNP templates"),
+        (cmk.paths.local_doc_dir, directory, local, "Locally installed documentation"),
+        (cmk.paths.local_locale_dir, directory, local, "Locally installed localizations"),
     ]
 
     def show_paths(title, t):
@@ -501,24 +523,25 @@ def mode_paths():
             if typp == t:
                 if filedir == directory:
                     path += "/"
-                console.output("  %-47s: %s%s%s\n" %
-                    (descr, tty.bold + tty.blue, path, tty.normal))
+                console.output("  %-47s: %s%s%s\n" % (descr, tty.bold + tty.blue, path, tty.normal))
 
     for title, t in [
-        ( "Files copied or created during installation", inst ),
-        ( "Configuration files edited by you", conf ),
-        ( "Data created by Nagios/Check_MK at runtime", data ),
-        ( "Sockets and pipes", pipe ),
-        ( "Locally installed addons", local ),
-        ]:
+        ("Files copied or created during installation", inst),
+        ("Configuration files edited by you", conf),
+        ("Data created by Nagios/Check_MK at runtime", data),
+        ("Sockets and pipes", pipe),
+        ("Locally installed addons", local),
+    ]:
         show_paths(title, t)
 
-modes.register(Mode(
-    long_option="paths",
-    handler_function=mode_paths,
-    needs_config=False,
-    short_help="List all pathnames and directories",
-))
+
+modes.register(
+    Mode(
+        long_option="paths",
+        handler_function=mode_paths,
+        needs_config=False,
+        short_help="List all pathnames and directories",
+    ))
 
 #.
 #   .--donate--------------------------------------------------------------.
@@ -530,28 +553,30 @@ modes.register(Mode(
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
+
 def mode_donate():
     import cmk_base.donate
     cmk_base.donate.do_donation()
 
-modes.register(Mode(
-    long_option="donate",
-    handler_function=mode_donate,
-    short_help="Email data of configured hosts to MK",
-    long_help=[
-        "This is for those who decided to help the Check_MK project "
-        "by donating live host data. It tars the cached agent data of "
-        "those host which are configured in main.mk:donation_hosts and sends "
-        "them via email to donatehosts@mathias-kettner.de. The host data "
-        "is then publicly available for others and can be used for setting "
-        "up demo sites, implementing checks and so on.",
 
-        "Do this only with test data from test hosts - not with productive "
-        "data! By donating real-live host data you help others trying out "
-        "Check_MK and developing checks by donating hosts. This is completely "
-        "voluntary and turned off by default."
-    ],
-))
+modes.register(
+    Mode(
+        long_option="donate",
+        handler_function=mode_donate,
+        short_help="Email data of configured hosts to MK",
+        long_help=[
+            "This is for those who decided to help the Check_MK project "
+            "by donating live host data. It tars the cached agent data of "
+            "those host which are configured in main.mk:donation_hosts and sends "
+            "them via email to donatehosts@mathias-kettner.de. The host data "
+            "is then publicly available for others and can be used for setting "
+            "up demo sites, implementing checks and so on.",
+            "Do this only with test data from test hosts - not with productive "
+            "data! By donating real-live host data you help others trying out "
+            "Check_MK and developing checks by donating hosts. This is completely "
+            "voluntary and turned off by default."
+        ],
+    ))
 
 #.
 #   .--backup/restore------------------------------------------------------.
@@ -563,38 +588,43 @@ modes.register(Mode(
 #   |                                 |_|                                  |
 #   '----------------------------------------------------------------------'
 
+
 def mode_backup(*args):
     import cmk_base.backup
     cmk_base.backup.do_backup(*args)
 
-modes.register(Mode(
-    long_option="backup",
-    handler_function=mode_backup,
-    argument=True,
-    argument_descr="BACKUPFILE.tar.gz",
-    short_help="make backup of configuration and data",
-    long_help=[
-        "Saves all configuration and runtime data to a gzip "
-        "compressed tar file to the path specified as argument.",
-    ],
-))
+
+modes.register(
+    Mode(
+        long_option="backup",
+        handler_function=mode_backup,
+        argument=True,
+        argument_descr="BACKUPFILE.tar.gz",
+        short_help="make backup of configuration and data",
+        long_help=[
+            "Saves all configuration and runtime data to a gzip "
+            "compressed tar file to the path specified as argument.",
+        ],
+    ))
 
 
 def mode_restore(*args):
     import cmk_base.backup
     cmk_base.backup.do_restore(*args)
 
-modes.register(Mode(
-    long_option="restore",
-    handler_function=mode_restore,
-    argument=True,
-    argument_descr="BACKUPFILE.tar.gz",
-    short_help="restore configuration and data",
-    long_help=[
-        "*Erases* the current configuration and data and replaces "
-        "it with that from the backup file."
-    ],
-))
+
+modes.register(
+    Mode(
+        long_option="restore",
+        handler_function=mode_restore,
+        argument=True,
+        argument_descr="BACKUPFILE.tar.gz",
+        short_help="restore configuration and data",
+        long_help=[
+            "*Erases* the current configuration and data and replaces "
+            "it with that from the backup file."
+        ],
+    ))
 
 #.
 #   .--package-------------------------------------------------------------.
@@ -606,25 +636,28 @@ modes.register(Mode(
 #   |               |_|                         |___/                      |
 #   '----------------------------------------------------------------------'
 
+
 def mode_packaging(*args):
     import cmk_base.packaging
     cmk_base.packaging.do_packaging(*args)
 
-modes.register(Mode(
-    long_option="package",
-    short_option="P",
-    handler_function=mode_packaging,
-    argument=True,
-    argument_descr="COMMAND",
-    argument_optional=True,
-    short_help="Do package operations",
-    long_help=[
-        "Brings you into packager mode. Packages are "
-        "used to ship inofficial extensions of Check_MK. Call without "
-        "arguments for a help on packaging."
-    ],
-    needs_config=False,
-))
+
+modes.register(
+    Mode(
+        long_option="package",
+        short_option="P",
+        handler_function=mode_packaging,
+        argument=True,
+        argument_descr="COMMAND",
+        argument_optional=True,
+        short_help="Do package operations",
+        long_help=[
+            "Brings you into packager mode. Packages are "
+            "used to ship inofficial extensions of Check_MK. Call without "
+            "arguments for a help on packaging."
+        ],
+        needs_config=False,
+    ))
 
 #.
 #   .--localize------------------------------------------------------------.
@@ -636,24 +669,27 @@ modes.register(Mode(
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
+
 def mode_localize(*args):
     import cmk_base.localize
     cmk_base.localize.do_localize(*args)
 
-modes.register(Mode(
-    long_option="localize",
-    handler_function=mode_localize,
-    needs_config=False,
-    argument=True,
-    argument_descr="COMMAND",
-    argument_optional=True,
-    short_help="Do localization operations",
-    long_help=[
-        "Brings you into localization mode. You can create "
-        "and/or improve the localization of Check_MKs GUI. "
-        "Call without arguments for a help on localization."
-    ],
-))
+
+modes.register(
+    Mode(
+        long_option="localize",
+        handler_function=mode_localize,
+        needs_config=False,
+        argument=True,
+        argument_descr="COMMAND",
+        argument_optional=True,
+        short_help="Do localization operations",
+        long_help=[
+            "Brings you into localization mode. You can create "
+            "and/or improve the localization of Check_MKs GUI. "
+            "Call without arguments for a help on localization."
+        ],
+    ))
 
 #.
 #   .--config-check--------------------------------------------------------.
@@ -666,12 +702,13 @@ modes.register(Mode(
 #   '----------------------------------------------------------------------'
 # TODO: Can we remove this?
 
-modes.register(Mode(
-    long_option="config-check",
-    short_option="X",
-    handler_function=lambda: None,
-    short_help="Check configuration for invalid vars",
-))
+modes.register(
+    Mode(
+        long_option="config-check",
+        short_option="X",
+        handler_function=lambda: None,
+        short_help="Check configuration for invalid vars",
+    ))
 
 
 #.
@@ -684,15 +721,18 @@ modes.register(Mode(
 #   |             |_|                                                      |
 #   '----------------------------------------------------------------------'
 
+
 def mode_update_dns_cache():
     import cmk_base.ip_lookup
     cmk_base.ip_lookup.update_dns_cache()
 
-modes.register(Mode(
-    long_option="update-dns-cache",
-    handler_function=mode_update_dns_cache,
-    short_help="Update IP address lookup cache",
-))
+
+modes.register(
+    Mode(
+        long_option="update-dns-cache",
+        handler_function=mode_update_dns_cache,
+        short_help="Update IP address lookup cache",
+    ))
 
 #.
 #   .--clean.-piggyb.------------------------------------------------------.
@@ -704,15 +744,18 @@ modes.register(Mode(
 #   |                                 |_|      |___/ |___/ |___/           |
 #   '----------------------------------------------------------------------'
 
+
 def mode_cleanup_piggyback():
     from cmk_base.piggyback import cleanup_piggyback_files
     cleanup_piggyback_files(config.piggyback_max_cachefile_age)
 
-modes.register(Mode(
-    long_option="cleanup-piggyback",
-    handler_function=mode_cleanup_piggyback,
-    short_help="Cleanup outdated piggyback files",
-))
+
+modes.register(
+    Mode(
+        long_option="cleanup-piggyback",
+        handler_function=mode_cleanup_piggyback,
+        short_help="Cleanup outdated piggyback files",
+    ))
 
 #.
 #   .--scan-parents--------------------------------------------------------.
@@ -724,6 +767,7 @@ modes.register(Mode(
 #   |                             |_|                                      |
 #   '----------------------------------------------------------------------'
 
+
 def mode_scan_parents(options, args):
     import cmk_base.parent_scan
     config.load(exclude_parents_mk=True)
@@ -733,32 +777,33 @@ def mode_scan_parents(options, args):
 
     cmk_base.parent_scan.do_scan_parents(args)
 
-modes.register(Mode(
-    long_option="scan-parents",
-    handler_function=mode_scan_parents,
-    needs_config=False,
-    # TODO: Sadly needs to be True because the checks need to initialize the check specific
-    # configuration variables before the config can be loaded.
-    needs_checks=True,
-    argument=True,
-    argument_descr="HOST1 HOST2...",
-    argument_optional=True,
-    short_help="Autoscan parents, create conf.d/parents.mk",
-    long_help=[
-        "Uses traceroute in order to automatically detect hosts's parents. "
-        "It creates the file conf.d/parents.mk which "
-        "defines gateway hosts and parent declarations.",
-    ],
-    sub_options=[
-        Option(
-            long_option="procs",
-            argument=True,
-            argument_descr="N",
-            argument_conv=int,
-            short_help="Start up to N processes in parallel. Defaults to 50.",
-        ),
-    ]
-))
+
+modes.register(
+    Mode(
+        long_option="scan-parents",
+        handler_function=mode_scan_parents,
+        needs_config=False,
+        # TODO: Sadly needs to be True because the checks need to initialize the check specific
+        # configuration variables before the config can be loaded.
+        needs_checks=True,
+        argument=True,
+        argument_descr="HOST1 HOST2...",
+        argument_optional=True,
+        short_help="Autoscan parents, create conf.d/parents.mk",
+        long_help=[
+            "Uses traceroute in order to automatically detect hosts's parents. "
+            "It creates the file conf.d/parents.mk which "
+            "defines gateway hosts and parent declarations.",
+        ],
+        sub_options=[
+            Option(
+                long_option="procs",
+                argument=True,
+                argument_descr="N",
+                argument_conv=int,
+                short_help="Start up to N processes in parallel. Defaults to 50.",
+            ),
+        ]))
 
 #.
 #   .--snmptranslate-------------------------------------------------------.
@@ -769,6 +814,7 @@ modes.register(Mode(
 #   | |___/_| |_|_| |_| |_| .__/ \__|_|  \__,_|_| |_|___/_|\__,_|\__\___|  |
 #   |                     |_|                                              |
 #   '----------------------------------------------------------------------'
+
 
 def mode_snmptranslate(*args):
     import cmk_base.snmp as snmp
@@ -801,6 +847,7 @@ modes.register(Mode(
 
 _oids, _extra_oids = [], []
 
+
 def mode_snmpwalk(options, args):
     if _oids:
         options["oids"] = _oids
@@ -810,42 +857,43 @@ def mode_snmpwalk(options, args):
     import cmk_base.snmp as snmp
     snmp.do_snmpwalk(options, args)
 
-modes.register(Mode(
-    long_option="snmpwalk",
-    handler_function=mode_snmpwalk,
-    argument=True,
-    argument_descr="HOST1 HOST2...",
-    argument_optional=True,
-    short_help="Do snmpwalk on one or more hosts",
-    long_help=[
-        "Does a complete snmpwalk for the specified hosts both "
-        "on the standard MIB and the enterprises MIB and stores the "
-        "result in the directory '%s'. Use the option --oid one or several "
-        "times in order to specify alternative OIDs to walk. You need to "
-        "specify numeric OIDs. If you want to keep the two standard OIDS "
-        ".1.3.6.1.2.1 and .1.3.6.1.4.1 then use --extraoid for just adding "
-        "additional OIDs to walk." % cmk.paths.snmpwalks_dir,
-    ],
-    sub_options=[
-        Option(
-            long_option="extraoid",
-            argument=True,
-            argument_descr="A",
-            argument_conv=_extra_oids.append,
-            short_help="Walk also on this OID, in addition to mib-2 and "
-                       "enterprises. You can specify this option multiple "
-                       "times.",
-        ),
-        Option(
-            long_option="oid",
-            argument=True,
-            argument_descr="A",
-            argument_conv=_oids.append,
-            short_help="Walk on this OID instead of mib-2 and enterprises. "
-                       "You can specify this option multiple times."
-        ),
-    ],
-))
+
+modes.register(
+    Mode(
+        long_option="snmpwalk",
+        handler_function=mode_snmpwalk,
+        argument=True,
+        argument_descr="HOST1 HOST2...",
+        argument_optional=True,
+        short_help="Do snmpwalk on one or more hosts",
+        long_help=[
+            "Does a complete snmpwalk for the specified hosts both "
+            "on the standard MIB and the enterprises MIB and stores the "
+            "result in the directory '%s'. Use the option --oid one or several "
+            "times in order to specify alternative OIDs to walk. You need to "
+            "specify numeric OIDs. If you want to keep the two standard OIDS "
+            ".1.3.6.1.2.1 and .1.3.6.1.4.1 then use --extraoid for just adding "
+            "additional OIDs to walk." % cmk.paths.snmpwalks_dir,
+        ],
+        sub_options=[
+            Option(
+                long_option="extraoid",
+                argument=True,
+                argument_descr="A",
+                argument_conv=_extra_oids.append,
+                short_help="Walk also on this OID, in addition to mib-2 and "
+                "enterprises. You can specify this option multiple "
+                "times.",
+            ),
+            Option(
+                long_option="oid",
+                argument=True,
+                argument_descr="A",
+                argument_conv=_oids.append,
+                short_help="Walk on this OID instead of mib-2 and enterprises. "
+                "You can specify this option multiple times."),
+        ],
+    ))
 
 #.
 #   .--snmpget-------------------------------------------------------------.
@@ -857,22 +905,25 @@ modes.register(Mode(
 #   |                                 |_|    |___/                         |
 #   '----------------------------------------------------------------------'
 
+
 def mode_snmpget(*args):
     import cmk_base.snmp as snmp
     snmp.do_snmpget(*args)
 
-modes.register(Mode(
-    long_option="snmpget",
-    handler_function=mode_snmpget,
-    argument=True,
-    argument_descr="OID [HOST1 HOST2...]",
-    argument_optional=True,
-    short_help="Fetch single OID from one or multiple hosts",
-    long_help=[
-        "Does a snmpget on the given OID on one or multiple hosts. In case "
-        "no host is given, all known SNMP hosts are queried."
-    ],
-))
+
+modes.register(
+    Mode(
+        long_option="snmpget",
+        handler_function=mode_snmpget,
+        argument=True,
+        argument_descr="OID [HOST1 HOST2...]",
+        argument_optional=True,
+        short_help="Fetch single OID from one or multiple hosts",
+        long_help=[
+            "Does a snmpget on the given OID on one or multiple hosts. In case "
+            "no host is given, all known SNMP hosts are queried."
+        ],
+    ))
 
 
 #.
@@ -884,6 +935,7 @@ modes.register(Mode(
 #   |                       |_| |_|\__,_|___/_| |_|                        |
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
+
 
 def mode_flush(hosts):
     import cmk_base.piggyback as piggyback
@@ -924,7 +976,7 @@ def mode_flush(hosts):
         # piggy files from this as source host
         d = piggyback.remove_source_status_file(host)
         if d:
-            console.output(tty.bold + tty.magenta  + " piggyback(1)")
+            console.output(tty.bold + tty.magenta + " piggyback(1)")
 
         # logfiles
         log_dir = cmk.paths.logwatch_dir + "/" + host
@@ -959,21 +1011,22 @@ def mode_flush(hosts):
         console.output(tty.normal + "\n")
 
 
-modes.register(Mode(
-    long_option="flush",
-    handler_function=mode_flush,
-    argument=True,
-    argument_descr="HOST1 HOST2...",
-    argument_optional=True,
-    needs_config=False,
-    short_help="Flush all data of some or all hosts",
-    long_help=[
-        "Deletes all runtime data belonging to a host. This includes "
-        "the inventorized checks, the state of performance counters, "
-        "cached agent output, and logfiles. Precompiled host checks "
-        "are not deleted.",
-    ],
-))
+modes.register(
+    Mode(
+        long_option="flush",
+        handler_function=mode_flush,
+        argument=True,
+        argument_descr="HOST1 HOST2...",
+        argument_optional=True,
+        needs_config=False,
+        short_help="Flush all data of some or all hosts",
+        long_help=[
+            "Deletes all runtime data belonging to a host. This includes "
+            "the inventorized checks, the state of performance counters, "
+            "cached agent output, and logfiles. Precompiled host checks "
+            "are not deleted.",
+        ],
+    ))
 
 #.
 #   .--nagios-config-------------------------------------------------------.
@@ -985,50 +1038,55 @@ modes.register(Mode(
 #   |               |___/                                         |___/    |
 #   '----------------------------------------------------------------------'
 
+
 def mode_dump_nagios_config(args):
     from cmk_base.core_nagios import create_config
     create_config(sys.stdout, args if len(args) else None)
 
-modes.register(Mode(
-    long_option="nagios-config",
-    short_option="N",
-    handler_function=mode_dump_nagios_config,
-    argument=True,
-    argument_descr="HOST1 HOST2...",
-    argument_optional=True,
-    short_help="Output Nagios configuration",
-    long_help=[
-        "Outputs the Nagios configuration. You may optionally add a list "
-        "of hosts. In that case the configuration is generated only for "
-        "that hosts (useful for debugging).",
-    ],
-))
+
+modes.register(
+    Mode(
+        long_option="nagios-config",
+        short_option="N",
+        handler_function=mode_dump_nagios_config,
+        argument=True,
+        argument_descr="HOST1 HOST2...",
+        argument_optional=True,
+        short_help="Output Nagios configuration",
+        long_help=[
+            "Outputs the Nagios configuration. You may optionally add a list "
+            "of hosts. In that case the configuration is generated only for "
+            "that hosts (useful for debugging).",
+        ],
+    ))
 
 
 def mode_update_no_precompile(options):
     from cmk_base.core_config import do_update
     do_update(create_core(options), with_precompile=False)
 
-modes.register(Mode(
-    long_option="update-no-precompile",
-    short_option="B",
-    handler_function=mode_update_no_precompile,
-    short_help="Create configuration for core",
-    long_help=[
-        "Updates the configuration for the monitoring core. In case of Nagios, "
-        "the file etc/nagios/conf.d/check_mk_objects.cfg is updated. In case of "
-        "the Microcore, either the file var/check_mk/core/config or the file "
-        "specified with the option --cmc-file is written.",
-    ],
-    sub_options=[
-        Option(
-            long_option="cmc-file",
-            argument=True,
-            argument_descr="X",
-            short_help="Relative filename for CMC config file",
-        ),
-    ],
-))
+
+modes.register(
+    Mode(
+        long_option="update-no-precompile",
+        short_option="B",
+        handler_function=mode_update_no_precompile,
+        short_help="Create configuration for core",
+        long_help=[
+            "Updates the configuration for the monitoring core. In case of Nagios, "
+            "the file etc/nagios/conf.d/check_mk_objects.cfg is updated. In case of "
+            "the Microcore, either the file var/check_mk/core/config or the file "
+            "specified with the option --cmc-file is written.",
+        ],
+        sub_options=[
+            Option(
+                long_option="cmc-file",
+                argument=True,
+                argument_descr="X",
+                short_help="Relative filename for CMC config file",
+            ),
+        ],
+    ))
 
 
 #.
@@ -1041,16 +1099,19 @@ modes.register(Mode(
 #   |                                    |_|                               |
 #   '----------------------------------------------------------------------'
 
+
 def mode_compile():
     import cmk_base.core_nagios
     cmk_base.core_nagios.precompile_hostchecks()
 
-modes.register(Mode(
-    long_option="compile",
-    short_option="C",
-    handler_function=mode_compile,
-    short_help="Precompile host checks",
-))
+
+modes.register(
+    Mode(
+        long_option="compile",
+        short_option="C",
+        handler_function=mode_compile,
+        short_help="Precompile host checks",
+    ))
 
 #.
 #   .--update--------------------------------------------------------------.
@@ -1062,33 +1123,35 @@ modes.register(Mode(
 #   |                        |_|                                           |
 #   '----------------------------------------------------------------------'
 
+
 def mode_update(options):
     from cmk_base.core_config import do_update
     do_update(create_core(options), with_precompile=True)
 
-modes.register(Mode(
-    long_option="update",
-    short_option="U",
-    handler_function=mode_update,
-    short_help="Precompile + create config for core",
-    long_help=[
-        "Updates the core configuration based on the current Check_MK "
-        "configuration. When using the Nagios core, the precompiled host "
-        "checks are created and the nagios configuration is updated. "
 
-        "CEE only: When using the Check_MK Microcore, the core is created "
-        "and the configuration for the Check_MK check helpers is being created.",
-        "The agent bakery is updating the agents.",
-    ],
-    sub_options=[
-        Option(
-            long_option="cmc-file",
-            argument=True,
-            argument_descr="X",
-            short_help="Relative filename for CMC config file",
-        ),
-    ],
-))
+modes.register(
+    Mode(
+        long_option="update",
+        short_option="U",
+        handler_function=mode_update,
+        short_help="Precompile + create config for core",
+        long_help=[
+            "Updates the core configuration based on the current Check_MK "
+            "configuration. When using the Nagios core, the precompiled host "
+            "checks are created and the nagios configuration is updated. "
+            "CEE only: When using the Check_MK Microcore, the core is created "
+            "and the configuration for the Check_MK check helpers is being created.",
+            "The agent bakery is updating the agents.",
+        ],
+        sub_options=[
+            Option(
+                long_option="cmc-file",
+                argument=True,
+                argument_descr="X",
+                short_help="Relative filename for CMC config file",
+            ),
+        ],
+    ))
 
 
 #.
@@ -1101,16 +1164,19 @@ modes.register(Mode(
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
+
 def mode_restart():
     import cmk_base.core
     cmk_base.core.do_restart(create_core())
 
-modes.register(Mode(
-    long_option="restart",
-    short_option="R",
-    handler_function=mode_restart,
-    short_help="Precompile + config + core restart",
-))
+
+modes.register(
+    Mode(
+        long_option="restart",
+        short_option="R",
+        handler_function=mode_restart,
+        short_help="Precompile + config + core restart",
+    ))
 
 
 #.
@@ -1123,16 +1189,19 @@ modes.register(Mode(
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
+
 def mode_reload():
     import cmk_base.core
     cmk_base.core.do_reload(create_core())
 
-modes.register(Mode(
-    long_option="reload",
-    short_option="O",
-    handler_function=mode_reload,
-    short_help="Precompile + config + core reload",
-))
+
+modes.register(
+    Mode(
+        long_option="reload",
+        short_option="O",
+        handler_function=mode_reload,
+        short_help="Precompile + config + core reload",
+    ))
 
 #.
 #   .--man-----------------------------------------------------------------.
@@ -1144,6 +1213,7 @@ modes.register(Mode(
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
+
 def mode_man(*args):
     import cmk.man_pages as man_pages
     if args[0]:
@@ -1151,21 +1221,23 @@ def mode_man(*args):
     else:
         man_pages.print_man_page_table()
 
-modes.register(Mode(
-    long_option="man",
-    short_option="M",
-    handler_function=mode_man,
-    argument=True,
-    argument_descr="CHECKTYPE",
-    argument_optional=True,
-    needs_config=False,
-    short_help="Show manpage for check CHECKTYPE",
-    long_help=[
-        "Shows documentation about a check type. If /usr/bin/less is "
-        "available it is used as pager. Exit by pressing Q. "
-        "Use -M without an argument to show a list of all manual pages."
-    ],
-))
+
+modes.register(
+    Mode(
+        long_option="man",
+        short_option="M",
+        handler_function=mode_man,
+        argument=True,
+        argument_descr="CHECKTYPE",
+        argument_optional=True,
+        needs_config=False,
+        short_help="Show manpage for check CHECKTYPE",
+        long_help=[
+            "Shows documentation about a check type. If /usr/bin/less is "
+            "available it is used as pager. Exit by pressing Q. "
+            "Use -M without an argument to show a list of all manual pages."
+        ],
+    ))
 
 
 #.
@@ -1178,17 +1250,20 @@ modes.register(Mode(
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
+
 def mode_browse_man():
     import cmk.man_pages as man_pages
     man_pages.print_man_page_browser()
 
-modes.register(Mode(
-    long_option="browse-man",
-    short_option="m",
-    handler_function=mode_browse_man,
-    needs_config=False,
-    short_help="Open interactive manpage browser",
-))
+
+modes.register(
+    Mode(
+        long_option="browse-man",
+        short_option="m",
+        handler_function=mode_browse_man,
+        needs_config=False,
+        short_help="Open interactive manpage browser",
+    ))
 
 #.
 #   .--inventory-----------------------------------------------------------.
@@ -1199,6 +1274,7 @@ modes.register(Mode(
 #   |            |_|_| |_|\_/ \___|_| |_|\__\___/|_|   \__, |              |
 #   |                                                  |___/               |
 #   '----------------------------------------------------------------------'
+
 
 def mode_inventory(options, args):
     import cmk_base.inventory as inventory
@@ -1213,7 +1289,8 @@ def mode_inventory(options, args):
     else:
         # No hosts specified: do all hosts and force caching
         hostnames = config.all_active_hosts()
-        data_sources.abstract.DataSource.set_may_use_cache_file(not data_sources.abstract.DataSource.is_agent_cache_disabled())
+        data_sources.abstract.DataSource.set_may_use_cache_file(
+            not data_sources.abstract.DataSource.is_agent_cache_disabled())
         console.verbose("Doing HW/SW inventory on all hosts\n")
 
     if "force" in options:
@@ -1221,27 +1298,28 @@ def mode_inventory(options, args):
 
     inventory.do_inv(hostnames)
 
-modes.register(Mode(
-    long_option="inventory",
-    short_option="i",
-    handler_function=mode_inventory,
-    argument=True,
-    argument_descr="HOST1 HOST2...",
-    argument_optional=True,
-    short_help="Do a HW/SW-Inventory on some ar all hosts",
-    long_help=[
-        "Does a HW/SW-Inventory for all, one or several "
-        "hosts. If you add the option -f, --force then persisted sections "
-        "will be used even if they are outdated."
-    ],
-    sub_options=[
-        Option(
-            long_option="force",
-            short_option="f",
-            short_help="Use cached agent data even if it's outdated.",
-        ),
-    ]
-))
+
+modes.register(
+    Mode(
+        long_option="inventory",
+        short_option="i",
+        handler_function=mode_inventory,
+        argument=True,
+        argument_descr="HOST1 HOST2...",
+        argument_optional=True,
+        short_help="Do a HW/SW-Inventory on some ar all hosts",
+        long_help=[
+            "Does a HW/SW-Inventory for all, one or several "
+            "hosts. If you add the option -f, --force then persisted sections "
+            "will be used even if they are outdated."
+        ],
+        sub_options=[
+            Option(
+                long_option="force",
+                short_option="f",
+                short_help="Use cached agent data even if it's outdated.",
+            ),
+        ]))
 
 #.
 #   .--inventory-as-check--------------------------------------------------.
@@ -1253,6 +1331,7 @@ modes.register(Mode(
 #   |                                      |___/                           |
 #   '----------------------------------------------------------------------'
 
+
 def mode_inventory_as_check(options, hostname):
     import cmk_base.inventory as inventory
     import cmk_base.inventory_plugins as inventory_plugins
@@ -1261,43 +1340,45 @@ def mode_inventory_as_check(options, hostname):
 
     return inventory.do_inv_check(hostname, options)
 
-modes.register(Mode(
-    long_option="inventory-as-check",
-    handler_function=mode_inventory_as_check,
-    argument=True,
-    argument_descr="HOST",
-    short_help="Do HW/SW-Inventory, behave like check plugin",
-    sub_options=[
-        Option(
-            long_option="hw-changes",
-            argument=True,
-            argument_descr="S",
-            argument_conv=int,
-            short_help="Use monitoring state S for HW changes",
-        ),
-        Option(
-            long_option="sw-changes",
-            argument=True,
-            argument_descr="S",
-            argument_conv=int,
-            short_help="Use monitoring state S for SW changes",
-        ),
-        Option(
-            long_option="sw-missing",
-            argument=True,
-            argument_descr="S",
-            argument_conv=int,
-            short_help="Use monitoring state S for missing SW packages info",
-        ),
-        Option(
-            long_option="inv-fail-status",
-            argument=True,
-            argument_descr="S",
-            argument_conv=int,
-            short_help="Use monitoring state S in case of error",
-        ),
-    ],
-))
+
+modes.register(
+    Mode(
+        long_option="inventory-as-check",
+        handler_function=mode_inventory_as_check,
+        argument=True,
+        argument_descr="HOST",
+        short_help="Do HW/SW-Inventory, behave like check plugin",
+        sub_options=[
+            Option(
+                long_option="hw-changes",
+                argument=True,
+                argument_descr="S",
+                argument_conv=int,
+                short_help="Use monitoring state S for HW changes",
+            ),
+            Option(
+                long_option="sw-changes",
+                argument=True,
+                argument_descr="S",
+                argument_conv=int,
+                short_help="Use monitoring state S for SW changes",
+            ),
+            Option(
+                long_option="sw-missing",
+                argument=True,
+                argument_descr="S",
+                argument_conv=int,
+                short_help="Use monitoring state S for missing SW packages info",
+            ),
+            Option(
+                long_option="inv-fail-status",
+                argument=True,
+                argument_descr="S",
+                argument_conv=int,
+                short_help="Use monitoring state S in case of error",
+            ),
+        ],
+    ))
 
 #.
 #   .--automation----------------------------------------------------------.
@@ -1309,6 +1390,7 @@ modes.register(Mode(
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
+
 def mode_automation(args):
     import cmk_base.automations as automations
 
@@ -1317,16 +1399,18 @@ def mode_automation(args):
 
     automations.automations.execute(args[0], args[2:])
 
-modes.register(Mode(
-    long_option="automation",
-    handler_function=mode_automation,
-    needs_config=False,
-    needs_checks=False,
-    argument=True,
-    argument_descr="COMMAND...",
-    argument_optional=True,
-    short_help="Internal helper to invoke Check_MK actions",
-))
+
+modes.register(
+    Mode(
+        long_option="automation",
+        handler_function=mode_automation,
+        needs_config=False,
+        needs_checks=False,
+        argument=True,
+        argument_descr="COMMAND...",
+        argument_optional=True,
+        short_help="Internal helper to invoke Check_MK actions",
+    ))
 
 
 #.
@@ -1339,32 +1423,35 @@ modes.register(Mode(
 #   |                                           |___/                      |
 #   '----------------------------------------------------------------------'
 
+
 def mode_notify(options, *args):
     import cmk_base.notify as notify
     config.load(with_conf_d=True, validate_hosts=False)
     # TODO: Fix the code and remove the pragma below!
     return notify.do_notify(options, *args)  # pylint: disable=no-value-for-parameter
 
-modes.register(Mode(
-    long_option="notify",
-    handler_function=mode_notify,
-    needs_config=False,
-    # TODO: Sadly needs to be True because the checks need to initialize the check specific
-    # configuration variables before the config can be loaded.
-    needs_checks=True,
-    argument=True,
-    argument_descr="MODE",
-    argument_optional=True,
-    short_help="Used to send notifications from core",
-    # TODO: Write long help
-    sub_options=[
-        Option(
-            long_option="log-to-stdout",
-            short_help="Also write log messages to console",
-        ),
-        keepalive_option,
-    ],
-))
+
+modes.register(
+    Mode(
+        long_option="notify",
+        handler_function=mode_notify,
+        needs_config=False,
+        # TODO: Sadly needs to be True because the checks need to initialize the check specific
+        # configuration variables before the config can be loaded.
+        needs_checks=True,
+        argument=True,
+        argument_descr="MODE",
+        argument_optional=True,
+        short_help="Used to send notifications from core",
+        # TODO: Write long help
+        sub_options=[
+            Option(
+                long_option="log-to-stdout",
+                short_help="Also write log messages to console",
+            ),
+            keepalive_option,
+        ],
+    ))
 
 #.
 #   .--discover-marked-hosts-----------------------------------------------.
@@ -1376,21 +1463,24 @@ modes.register(Mode(
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
+
 def mode_discover_marked_hosts():
     import cmk_base.discovery as discovery
     discovery.discover_marked_hosts(create_core())
 
-modes.register(Mode(
-    long_option="discover-marked-hosts",
-    handler_function=mode_discover_marked_hosts,
-    short_help="Run discovery for hosts known to have changed services",
-    long_help=[
-        "Run actual service discovery on all hosts that "
-        "are known to have new/vanished services due to an earlier run of "
-        "check-discovery. The results of this discovery may be activated "
-        "automatically if configured.",
-    ],
-))
+
+modes.register(
+    Mode(
+        long_option="discover-marked-hosts",
+        handler_function=mode_discover_marked_hosts,
+        short_help="Run discovery for hosts known to have changed services",
+        long_help=[
+            "Run actual service discovery on all hosts that "
+            "are known to have new/vanished services due to an earlier run of "
+            "check-discovery. The results of this discovery may be activated "
+            "automatically if configured.",
+        ],
+    ))
 
 
 #.
@@ -1403,23 +1493,26 @@ modes.register(Mode(
 #   |                                                             |___/    |
 #   '----------------------------------------------------------------------'
 
+
 def mode_check_discovery(hostname):
     import cmk_base.discovery as discovery
     return discovery.check_discovery(hostname, ipaddress=None)
 
-modes.register(Mode(
-    long_option="check-discovery",
-    handler_function=mode_check_discovery,
-    argument=True,
-    argument_descr="HOSTNAME",
-    short_help="Check for not yet monitored services",
-    long_help=[
-        "Make Check_MK behave as monitoring plugins that checks if an "
-        "inventory would find new or vanished services for the host. "
-        "If configured to do so, this will queue those hosts for automatic "
-        "discover-marked-hosts"
-    ],
-))
+
+modes.register(
+    Mode(
+        long_option="check-discovery",
+        handler_function=mode_check_discovery,
+        argument=True,
+        argument_descr="HOSTNAME",
+        short_help="Check for not yet monitored services",
+        long_help=[
+            "Make Check_MK behave as monitoring plugins that checks if an "
+            "inventory would find new or vanished services for the host. "
+            "If configured to do so, this will queue those hosts for automatic "
+            "discover-marked-hosts"
+        ],
+    ))
 
 #.
 #   .--discover------------------------------------------------------------.
@@ -1431,6 +1524,7 @@ modes.register(Mode(
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
+
 def mode_discover(options, args):
     import cmk_base.discovery as discovery
     import cmk_base.data_sources as data_sources
@@ -1441,49 +1535,48 @@ def mode_discover(options, args):
         # by default. Otherwise Check_MK would have to connect to ALL hosts.
         # This will make Check_MK only contact hosts in case the cache is not
         # new enough.
-        data_sources.abstract.DataSource.set_may_use_cache_file(not data_sources.abstract.DataSource.is_agent_cache_disabled())
+        data_sources.abstract.DataSource.set_may_use_cache_file(
+            not data_sources.abstract.DataSource.is_agent_cache_disabled())
 
-    discovery.do_discovery(hostnames, options.get("checks"),
-                           options["discover"] == 1)
+    discovery.do_discovery(hostnames, options.get("checks"), options["discover"] == 1)
 
-modes.register(Mode(
-    long_option="discover",
-    short_option="I",
-    handler_function=mode_discover,
-    argument=True,
-    argument_descr="[-I] HOST1 HOST2...",
-    argument_optional=True,
-    short_help="Find new services",
-    long_help=[
-        "Make Check_MK behave as monitoring plugins that checks if an "
-        "inventory would find new or vanished services for the host. "
-        "If configured to do so, this will queue those hosts for automatic "
-        "discover-marked-hosts",
 
-        "Can be restricted to certain check types. Write '--checks df -I' if "
-        "you just want to look for new filesystems. Use 'check_mk -L' for a "
-        "list of all check types. Use 'tcp' for all TCP based checks and "
-        "'snmp' for all SNMP based checks.",
-
-        "-II does the same as -I but deletes all existing checks of the "
-        "specified types and hosts."
-    ],
-    sub_options=[
-        Option(
-            long_option="discover",
-            short_option="I",
-            short_help="Delete existing services before starting discovery",
-            count=True,
-        ),
-        Option(
-            long_option="checks",
-            short_help="Restrict discovery to certain check types",
-            argument=True,
-            argument_descr="C",
-            argument_conv=lambda x: config.check_info.keys() if x == "@all" else x.split(","),
-        ),
-    ]
-))
+modes.register(
+    Mode(
+        long_option="discover",
+        short_option="I",
+        handler_function=mode_discover,
+        argument=True,
+        argument_descr="[-I] HOST1 HOST2...",
+        argument_optional=True,
+        short_help="Find new services",
+        long_help=[
+            "Make Check_MK behave as monitoring plugins that checks if an "
+            "inventory would find new or vanished services for the host. "
+            "If configured to do so, this will queue those hosts for automatic "
+            "discover-marked-hosts",
+            "Can be restricted to certain check types. Write '--checks df -I' if "
+            "you just want to look for new filesystems. Use 'check_mk -L' for a "
+            "list of all check types. Use 'tcp' for all TCP based checks and "
+            "'snmp' for all SNMP based checks.",
+            "-II does the same as -I but deletes all existing checks of the "
+            "specified types and hosts."
+        ],
+        sub_options=[
+            Option(
+                long_option="discover",
+                short_option="I",
+                short_help="Delete existing services before starting discovery",
+                count=True,
+            ),
+            Option(
+                long_option="checks",
+                short_help="Restrict discovery to certain check types",
+                argument=True,
+                argument_descr="C",
+                argument_conv=lambda x: config.check_info.keys() if x == "@all" else x.split(","),
+            ),
+        ]))
 
 #.
 #   .--check---------------------------------------------------------------.
@@ -1494,6 +1587,7 @@ modes.register(Mode(
 #   |                      \___|_| |_|\___|\___|_|\_\                      |
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
+
 
 def mode_check(options, args):
     import cmk_base.checking as checking
@@ -1528,58 +1622,56 @@ def mode_check(options, args):
 
     return checking.do_check(hostname, ipaddress, options.get("checks"))
 
-modes.register(Mode(
-    long_option="check",
-    handler_function=mode_check,
-    argument=True,
-    argument_descr="HOST [IPADDRESS]",
-    argument_optional=True,
-    short_help="Check all services on the given HOST",
-    long_help=[
-        "Execute all checks on the given HOST. Optionally you can specify "
-        "a second argument, the IPADDRESS. If you don't set this, the "
-        "configured IP address of the HOST is used.",
 
-        "By default the check results are sent to the core. If you provide "
-        "the option '-n', the results will not be sent to the core and the "
-        "counters of the check will not be stored.",
-
-        "You can use '-v' to see the results of the checks. Add '-p' to "
-        "also see the performance data of the checks."
-
-        "Can be restricted to certain check types. Write '--checks df -I' if "
-        "you just want to look for new filesystems. Use 'check_mk -L' for a "
-        "list of all check types. Use 'tcp' for all TCP based checks and "
-        "'snmp' for all SNMP based checks.",
-    ],
-    sub_options=[
-        Option(
-            long_option="no-submit",
-            short_option="n",
-            short_help="Do not submit results to core, do not save counters",
-        ),
-        Option(
-            long_option="perfdata",
-            short_option="p",
-            short_help="Also show performance data (use with -v)",
-        ),
-        Option(
-            long_option="checks",
-            short_help="Restrict discovery to certain check types",
-            argument=True,
-            argument_descr="C",
-            argument_conv=lambda x: config.check_info.keys() if x == "@all" else x.split(","),
-        ),
-        keepalive_option,
-        Option(
-            long_option="keepalive-fd",
-            argument=True,
-            argument_descr="I",
-            argument_conv=int,
-            short_help="File descriptor to send output to",
-        ),
-    ]
-))
+modes.register(
+    Mode(
+        long_option="check",
+        handler_function=mode_check,
+        argument=True,
+        argument_descr="HOST [IPADDRESS]",
+        argument_optional=True,
+        short_help="Check all services on the given HOST",
+        long_help=[
+            "Execute all checks on the given HOST. Optionally you can specify "
+            "a second argument, the IPADDRESS. If you don't set this, the "
+            "configured IP address of the HOST is used.",
+            "By default the check results are sent to the core. If you provide "
+            "the option '-n', the results will not be sent to the core and the "
+            "counters of the check will not be stored.",
+            "You can use '-v' to see the results of the checks. Add '-p' to "
+            "also see the performance data of the checks."
+            "Can be restricted to certain check types. Write '--checks df -I' if "
+            "you just want to look for new filesystems. Use 'check_mk -L' for a "
+            "list of all check types. Use 'tcp' for all TCP based checks and "
+            "'snmp' for all SNMP based checks.",
+        ],
+        sub_options=[
+            Option(
+                long_option="no-submit",
+                short_option="n",
+                short_help="Do not submit results to core, do not save counters",
+            ),
+            Option(
+                long_option="perfdata",
+                short_option="p",
+                short_help="Also show performance data (use with -v)",
+            ),
+            Option(
+                long_option="checks",
+                short_help="Restrict discovery to certain check types",
+                argument=True,
+                argument_descr="C",
+                argument_conv=lambda x: config.check_info.keys() if x == "@all" else x.split(","),
+            ),
+            keepalive_option,
+            Option(
+                long_option="keepalive-fd",
+                argument=True,
+                argument_descr="I",
+                argument_conv=int,
+                short_help="File descriptor to send output to",
+            ),
+        ]))
 
 #.
 #   .--version-------------------------------------------------------------.
@@ -1590,6 +1682,7 @@ modes.register(Mode(
 #   |                   \_/ \___|_|  |___/_|\___/|_| |_|                   |
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
+
 
 def mode_version():
     console.output("""This is Check_MK version %s %s
@@ -1613,14 +1706,15 @@ Copyright (C) 2009 Mathias Kettner
 """ % (cmk.__version__, cmk.edition_short().upper()))
 
 
-modes.register(Mode(
-    long_option="version",
-    short_option="V",
-    handler_function=mode_version,
-    short_help="Print the version of Check_MK",
-    needs_config=False,
-    needs_checks=False,
-))
+modes.register(
+    Mode(
+        long_option="version",
+        short_option="V",
+        handler_function=mode_version,
+        short_help="Print the version of Check_MK",
+        needs_config=False,
+        needs_checks=False,
+    ))
 
 
 #.
@@ -1633,6 +1727,7 @@ modes.register(Mode(
 #   |                                     |_|                              |
 #   '----------------------------------------------------------------------'
 
+
 def mode_help():
     console.output("""WAYS TO CALL:
 %s
@@ -1644,17 +1739,18 @@ NOTES:
 %s
 
 """ % (
-    modes.short_help(),
-    modes.general_option_help(),
-    modes.long_help(),
-))
+        modes.short_help(),
+        modes.general_option_help(),
+        modes.long_help(),
+    ))
 
 
-modes.register(Mode(
-    long_option="help",
-    short_option="h",
-    handler_function=mode_help,
-    short_help="Print this help",
-    needs_config=False,
-    needs_checks=False,
-))
+modes.register(
+    Mode(
+        long_option="help",
+        short_option="h",
+        handler_function=mode_help,
+        short_help="Print this help",
+        needs_config=False,
+        needs_checks=False,
+    ))

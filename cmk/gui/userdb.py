@@ -43,7 +43,7 @@ import cmk.gui.background_job as background_job
 import cmk.gui.gui_background_job as gui_background_job
 from cmk.gui.exceptions import MKUserError, MKInternalError
 from cmk.gui.log import logger
-from cmk.gui.valuespec import DualListChoice
+from cmk.gui.valuespec import DualListChoice, TextAscii
 import cmk.gui.i18n
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
@@ -1114,7 +1114,13 @@ def update_config_based_user_attributes():
     _clear_config_based_user_attributes()
 
     for attr in config.wato_user_attrs:
-        vs = globals()[attr['type']](title = attr['title'], help = attr['help'])
+        if attr["type"] == "TextAscii":
+            vs = TextAscii(title = attr['title'], help = attr['help'])
+        else:
+            raise NotImplementedError()
+
+        # TODO: This method uses LegacyUserAttribute(). Use another class for
+        # this kind of attribute
         declare_user_attribute(attr['name'], vs,
             user_editable = attr['user_editable'],
             show_in_table = attr.get('show_in_table', False),

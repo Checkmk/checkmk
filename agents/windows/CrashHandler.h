@@ -30,7 +30,11 @@
 #ifndef WINAPI
 
 #if defined(_WIN32) || defined(_WIN64)
+#if defined(_MSC_BUILD)
+#define WINAPI __stdcall
+#else
 #define WINAPI __attribute__((__stdcall__))
+#endif
 #else
 #define WINAPI
 #endif  // _WIN32 || _WIN64

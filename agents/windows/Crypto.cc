@@ -137,7 +137,8 @@ HCRYPTKEY Crypto::importKey(const BYTE *key, DWORD key_size) const {
     key_blob.insert(key_blob.end(), key, key + key_size);
 
     HCRYPTKEY result;
-    if (!_winapi.CryptImportKey(_provider, &key_blob[0], key_blob.size(), 0, 0,
+    if (!_winapi.CryptImportKey(_provider, &key_blob[0],
+                                static_cast<DWORD>(key_blob.size()), 0, 0,
                                 &result)) {
         throw win_exception(_winapi, "failed to import key");
     }
@@ -202,17 +203,18 @@ void Crypto::deriveOpenSSLKey(const std::string &password, KeyLength key_length,
         if (first_iteration) {
             first_iteration = false;
         } else {
-            checked(_winapi.CryptHashData(hash, &buffer[0], buffer.size(), 0),
+            checked(_winapi.CryptHashData(hash, &buffer[0],
+                                          static_cast<DWORD>(buffer.size()), 0),
                     "failed to hash data");
         }
         // include password in hash (duh!)
         checked(_winapi.CryptHashData(hash, (BYTE *)&password[0],
-                                      password.size(), 0),
+                                      static_cast<DWORD>(password.size()), 0),
                 "failed to hash data");
 
         // TODO include salt
 
-        DWORD buffer_size = buffer.size();
+        auto buffer_size = static_cast<DWORD>(buffer.size());
         checked(_winapi.CryptGetHashParam(hash, HP_HASHVAL, &buffer[0],
                                           &buffer_size, 0),
                 "failed to retrieve hash");
@@ -222,10 +224,10 @@ void Crypto::deriveOpenSSLKey(const std::string &password, KeyLength key_length,
             checked(
                 _winapi.CryptDuplicateHash(hash_template, 0, 0, &hash_inner),
                 "failed to duplicate hash");
-            checked(
-                _winapi.CryptHashData(hash_inner, &buffer[0], buffer.size(), 0),
-                "failed to hash data");
-            buffer_size = buffer.size();
+            checked(_winapi.CryptHashData(hash_inner, &buffer[0],
+                                          static_cast<DWORD>(buffer.size()), 0),
+                    "failed to hash data");
+            buffer_size = static_cast<DWORD>(buffer.size());
             checked(_winapi.CryptGetHashParam(hash_inner, HP_HASHVAL,
                                               &buffer[0], &buffer_size, 0),
                     "failed to retrieve hash");
@@ -241,7 +243,7 @@ void Crypto::deriveOpenSSLKey(const std::string &password, KeyLength key_length,
                 // apply key. we do this right away so that we can query the
                 // necessary
                 // size for the iv and don't need own logic to deduce it.
-                _key = importKey(&key[0], key.size());
+                _key = importKey(&key[0], static_cast<DWORD>(key.size()));
                 iv.resize(blockSize() / 8);
             }
         }

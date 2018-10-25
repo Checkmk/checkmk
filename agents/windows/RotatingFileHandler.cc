@@ -97,7 +97,7 @@ void RotatingFileHandler::rollover() {
     _os.close();
     if (_backupCount > 0) {
         // backup old logfiles as agent.log.1 ... agent.log.<backupCount>
-        for (int i = _backupCount; i > 0; i--) {
+        for (auto i = static_cast<int>(_backupCount); i > 0; i--) {
             const string oldName =
                 i > 1 ? getArchiveFilename(_filename, i - 1) : _filename;
             const string newName = getArchiveFilename(_filename, i);

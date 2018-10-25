@@ -141,7 +141,11 @@ struct script_container {
 class SectionPluginGroup : public Section {
     friend DWORD
 #if defined(_WIN32) || defined(_WIN64)
+#if defined(_MSC_BUILD)
+        __stdcall
+#else
         __attribute__((__stdcall__))
+#endif
 #endif  // _WIN32 || _WIN64
         DataCollectionThread(LPVOID lpParam);
 

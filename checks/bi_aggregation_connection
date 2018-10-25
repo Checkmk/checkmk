@@ -1,0 +1,62 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2018             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+
+def parse_bi_aggregation_connection(info):
+    import ast
+    fields = ["missing_sites", "missing_aggr", "generic_errors"]
+    parsed = {}
+    for line in info:
+        connection_info = ast.literal_eval(line[0])
+        for field in fields:
+            if connection_info[field]:
+                parsed.setdefault(field, set()).update(connection_info[field])
+
+    return parsed
+
+
+def discover_bi_aggregation_connection(parsed):
+    yield None, None
+
+
+def check_bi_aggregation_connection(_no_item, _no_params, parsed):
+    if parsed.get("missing_sites"):
+        yield 1, "Unable to query data from site(s): %s" % ", ".join(parsed["missing_sites"])
+    if parsed.get("missing_aggr"):
+        yield 1, "Unable to display aggregations because of missing data: %s" % ", ".join(parsed["missing_aggr"])
+    if parsed.get("generic_errors"):
+        yield 1, "Error during data collection: %s" % ", ".join(parsed["generic_errors"])
+
+    if not parsed:
+        yield 0, "No connection problems"
+
+
+check_info["bi_aggregation_connection"] = {
+    "parse_function" : parse_bi_aggregation_connection,
+    "inventory_function" : discover_bi_aggregation_connection,
+    "check_function" : check_bi_aggregation_connection,
+    "service_description" : "BI Datasource Connection",
+}

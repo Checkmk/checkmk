@@ -1,0 +1,53 @@
+Title: Introducing BI datasource program and get_bi_aggregations API call
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1541775502
+Class: feature
+
+This werks introduces the
+<ul>
+<li>Thew new Web API interface get_bi_aggregations</li>
+<li>A datasource program, which uses this interface</li>
+<li>Two checks bi_aggregation and bi_aggregation_connection, which evaluate the data</li>
+</ul>
+
+Monitoring of BI aggregations was already available with the active check <tt>Check state of BI aggregation</tt>.
+This active check could only monitor one aggregation at a time and furthermore drastically slowed the Web GUI when
+configured for multiple hosts. In some rare instances, when configured for hundreds of hosts it could also lock down
+the GUI by occupying all available apache workers.
+
+The purpose of this datasource program is to fetch all data in one call and distribute it to specific hosts via piggyback.
+The use of the BI datasource program is the new recommended way when monitoring BI aggregations.
+
+
+<h3>New API Interface: <tt>get_bi_aggregations</tt></h3>
+Calling this API interface without any extra options returns a dictionary, which includes
+a list of all aggregation and some additional information about unresponsive sites and unavailable aggregations
+You can specify a filter dictionary which currently may have two different kind of filter types.
+
+For example
+<tt>"filter": {"names": ["Aggr HostA", "Aggr HostB"]}</tt><br>
+<tt>"filter": {"groups": ["AggregationGroup1", "AggregationGroup2"]}</tt><br>
+<tt>"filter": {"names": ["Aggr HostA"], "groups": ["AggregationGroup1"]}</tt>
+
+You can find more information in our official documentation soon.
+
+
+<h3>New datasource program: <tt>Check BI Aggregations via Web Interface</tt></h3>
+The datasource program is configurable in WATO. It is able to contact multiple monitoring sites at the same time.
+Each site can be configured indepedently. The configuration offers the following options
+<ul>
+<li>Filter fetched aggregations by regex and aggregation groups</li>
+<li>Assign fetched aggregations to specific hosts via piggyback, for example all hosts which are affected by this aggregations</li>
+<li>Rewrite of aggregation states, e.g. State if aggregation is in downtime, State if aggregation is acknowledged</li>
+</ul>
+
+<h3>New checks</h3>
+There are two new checks.
+
+<tt>bi_aggregation</tt> simply displays the state of the aggregation. It is not configurable
+<tt>bi_aggregation_connection</tt> shows connections problems with the monitoring site(s).
+

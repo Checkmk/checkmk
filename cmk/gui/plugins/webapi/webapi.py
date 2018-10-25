@@ -39,6 +39,8 @@ from cmk.gui.globals import html
 from cmk.gui.exceptions import MKUserError, MKAuthException, MKException
 from cmk.gui.plugins.userdb.htpasswd import hash_password
 
+import cmk.gui.bi as bi
+
 from cmk.gui.plugins.webapi import (
     APICallCollection,
     api_call_collection_registry,
@@ -974,6 +976,26 @@ class APICallSites(APICallCollection):
         if "secret" in site:
             del site["secret"]
             site_mgmt.save_sites(all_sites)
+
+
+
+
+@api_call_collection_registry.register
+class APICallBIAggregationState(APICallCollection):
+    def get_api_calls(self):
+        required_permissions = ["bi.see_all"]
+        return {
+            "get_bi_aggregations": {
+                "handler"             : self._get,
+                "required_permissions": required_permissions,
+            },
+        }
+
+
+    def _get(self, request):
+        return bi.api_get_aggregation_state(filter_names  = request.get("filter", {}).get("names"),
+                                            filter_groups = request.get("filter", {}).get("groups"))
+
 
 
 #.

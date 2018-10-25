@@ -261,6 +261,17 @@ def get_aggregation_group_trees():
     return groups
 
 
+def aggregation_group_choices():
+    """ Returns a sorted list of aggregation group names """
+    migrate_bi_configuration()
+
+    group_names = set()
+    for aggr_def in config.aggregations + config.host_aggregations:
+        group_names.update(aggr_def[1])
+
+    return [(g, g) for g in sorted(group_names, key=lambda x: x.lower())]
+
+
 def log(*args):
     for idx, arg in enumerate(args):
         if type(arg) not in [unicode, str]:
@@ -1312,12 +1323,63 @@ def setup_bi_instances():
         raise MKConfigError(g_bi_cache_manager.get_error_info())
 
 
+def api_get_aggregation_state(filter_names=None, filter_groups=None):
+    """ returns the computed aggregation states """
+    compile_forest()
+    load_assumptions()  # user specific, always loaded
 
-# Precompile the forest of BI rules. Forest? A collection of trees.
-# The compiled forest does not contain any regular expressions anymore.
-# Everything is resolved. Sites, hosts and services are hardcoded. The
-# aggregation functions are still left as names. That way the forest
-# printable (and storable in Python syntax to a file).
+    rows = []
+    missing_sites = set()
+    missing_bi_aggr = set()
+    online_sites = set([x[0] for x in get_current_sitestats()["online_sites"]])
+
+    def is_tree_required(tree):
+        aggr_name = tree.get("title")
+        if filter_names and aggr_name not in filter_names:
+            return False
+
+        aggr_sites = set(x[0] for x in tree.get("reqhosts"))
+
+        missing_sites.update(aggr_sites - online_sites)
+        if not aggr_sites.intersection(online_sites):
+            missing_bi_aggr.add(aggr_name)
+            return False
+        return True
+
+    required_hosts = set()
+    required_trees = set()
+    tree_lookup = {}
+
+    for group, trees in g_tree_cache["forest"].iteritems():
+        if filter_groups and group not in filter_groups:
+            continue
+
+        for tree in iter(trees):
+            if not is_tree_required(tree):
+                continue
+            required_hosts.update(tree.get("reqhosts"))
+
+            aggr_title = tree["title"]
+            required_trees.add(aggr_title)
+            tree_lookup.setdefault(aggr_title, {"tree": tree, "groups": set()})["groups"].add(group)
+
+    # Prefetch data for later usage - this saves lots of redundant livestatus queries
+    status_info = get_status_info(required_hosts)
+
+    for aggr_title in required_trees:
+        aggr_tree = create_aggregation_row(tree_lookup[aggr_title]["tree"], status_info)
+        if aggr_tree["aggr_state"]["state"] == None:
+            continue  # Not yet monitored, aggregation is not displayed
+
+        aggr_response = {"groups": list(tree_lookup[aggr_title]["groups"]), "tree": aggr_tree}
+        rows.append(aggr_response)
+
+    response = {
+        "missing_sites": list(missing_sites),
+        "missing_aggr": list(missing_bi_aggr),
+        "rows": rows
+    }
+    return response
 
 
 def compile_forest(only_hosts=None, only_groups=None):

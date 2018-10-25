@@ -56,6 +56,10 @@ def test_discover_single(parsed, result):
     ({
         "one": None,
         "two": None,
+    }, None, [("one", {}), ("two", {})]),
+    ({
+        "one": None,
+        "two": None,
     }, lambda k, v: k, [("one", {}), ("two", {})]),
     ({
         "one": None,

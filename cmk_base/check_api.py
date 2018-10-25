@@ -642,6 +642,9 @@ def discover(selector=None, default_params=None):
     if callable(selector):
         return _discovery(selector)
 
+    if selector is None and default_params is None:
+        return _discovery(lambda *args: args[0])
+
     return _discovery
 
 

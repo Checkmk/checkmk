@@ -1,5 +1,4 @@
 #include "WinApi.h"
-
 // WINADVAPI:
 WINBOOL WinApi::CloseEventLog(HANDLE hEventLog) const {
     return ::CloseEventLog(hEventLog);
@@ -413,10 +412,16 @@ VOID WinApi::GetStartupInfo(LPSTARTUPINFO lpStartupInfo) const {
 VOID WinApi::GetSystemInfo(LPSYSTEM_INFO lpSystemInfo) const {
     return ::GetSystemInfo(lpSystemInfo);
 }
-
+#if defined(_MSC_BUILD)
+#pragma warning(push)
+#pragma warning(disable : 4996)
+#endif
 WINBOOL WinApi::GetVersionEx(LPOSVERSIONINFO lpVersionInformation) const {
     return ::GetVersionExA(lpVersionInformation);
 }
+#if defined(_MSC_BUILD)
+#pragma warning(pop)
+#endif
 
 WINBOOL WinApi::GetVolumeInformation(
     LPCSTR lpRootPathName, LPSTR lpVolumeNameBuffer, DWORD nVolumeNameSize,

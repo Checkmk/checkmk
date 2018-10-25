@@ -55,11 +55,13 @@ public:
             throw win_exception(_winapi,
                                 "EvtRender function not found in wevtapi.dll");
 
-        _evt.render(renderContext, _event, EvtRenderEventValues, _buffer.size(),
-                    &_buffer[0], &required, &property_count);
+        _evt.render(renderContext, _event, EvtRenderEventValues,
+                    static_cast<DWORD>(_buffer.size()), &_buffer[0], &required,
+                    &property_count);
         _buffer.resize(required);
-        _evt.render(renderContext, _event, EvtRenderEventValues, _buffer.size(),
-                    &_buffer[0], &required, &property_count);
+        _evt.render(renderContext, _event, EvtRenderEventValues,
+                    static_cast<DWORD>(_buffer.size()), &_buffer[0], &required,
+                    &property_count);
     }
 
     static EVT_HANDLE createRenderContext(const WinApiInterface &winapi,
@@ -77,8 +79,8 @@ public:
                                     L"/Event/System/TimeCreated/@SystemTime",
                                     L"/Event/EventData/Data"};
 
-        return evt.createRenderContext(fields.size(), &fields[0],
-                                       EvtRenderContextValues);
+        return evt.createRenderContext(static_cast<DWORD>(fields.size()),
+                                       &fields[0], EvtRenderContextValues);
     }
 
     virtual uint16_t eventId() const override {
@@ -171,7 +173,8 @@ public:
                 DWORD required;
                 if (_evt.formatMessage(publisher_meta.get(), _event, 0, 0,
                                        nullptr, EvtFormatMessageEvent,
-                                       result.size(), &result[0], &required)) {
+                                       static_cast<DWORD>(result.size()),
+                                       &result[0], &required)) {
                     result.resize(required);
                     break;
                 } else if (_winapi.GetLastError() ==
@@ -306,7 +309,7 @@ std::wstring EventLogVista::renderBookmark(EVT_HANDLE bookmark) const {
 
     for (;;) {
         if (_evt.render(nullptr, bookmark, EvtRenderBookmark,
-                        buffer.size() * sizeof(wchar_t),
+                        static_cast<DWORD>(buffer.size() * sizeof(wchar_t)),
                         reinterpret_cast<void *>(&buffer[0]), &required,
                         &count)) {
             buffer.resize(required);
@@ -453,8 +456,9 @@ bool EventLogVista::fillBuffer() {
     if (res == WAIT_OBJECT_0) {
         std::vector<EVT_HANDLE> rawEvents(EVENT_BLOCK_SIZE, nullptr);
         DWORD num_events = 0;
-        BOOL success = _evt.next(_handle.get(), rawEvents.size(),
-                                 rawEvents.data(), INFINITE, 0, &num_events);
+        BOOL success =
+            _evt.next(_handle.get(), static_cast<DWORD>(rawEvents.size()),
+                      rawEvents.data(), INFINITE, 0, &num_events);
         if (!success) {
             if (_winapi.GetLastError() != ERROR_NO_MORE_ITEMS) {
                 throw win_exception(_winapi, "failed to enumerate events");

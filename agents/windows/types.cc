@@ -33,7 +33,7 @@ ipspec from_string<ipspec>(const WinApiInterface &winapi,
                            const std::string &value) {
     ipspec result{winapi};
 
-    char *slash_pos = strchr(value.c_str(), '/');
+    auto slash_pos = strchr(value.c_str(), '/');
     if (slash_pos != NULL) {
         // ipv4/ipv6 agnostic
         result.bits = strtol(slash_pos + 1, NULL, 10);

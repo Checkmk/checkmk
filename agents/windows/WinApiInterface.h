@@ -15,6 +15,9 @@
 #include <cstdarg>
 #include <cstddef>
 #include <cstring>
+#if defined(MSVC_BUILD)
+typedef int WINBOOL;
+#endif
 
 #undef CopyFile
 #undef CreateDirectory

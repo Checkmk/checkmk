@@ -36,7 +36,7 @@
 #include <vector>
 #include "WinApiInterface.h"
 
-#if (__SIZEOF_POINTER__ == 8)
+#if (__SIZEOF_POINTER__ == 8 || defined(_WIN64))
 #define PRIdword "d"
 #define PRIudword "lu"
 #define PRIdtime "lld"

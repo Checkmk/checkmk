@@ -327,17 +327,9 @@ class BIManagement(object):
 
 
     def _convert_aggregation_groups(self, old_groups):
-        #TODO Clean up duplicate in htdocs/bi.py
-        groups = []
         if isinstance(old_groups, list):
-            for old_group in old_groups:
-                if isinstance(old_group, list):
-                    groups.append(old_group)
-                else:
-                    groups.append([old_group])
-        else:
-            groups.append([old_groups])
-        return groups
+            return old_groups
+        return [old_groups]
 
 
     # Make some conversions so that the format of the
@@ -805,23 +797,21 @@ class ModeBI(WatoMode, BIManagement):
         def transform_aggregation_groups_to_gui(groups):
             if not isinstance(groups, list):
                 groups = [groups]
-
             new = []
             for group in groups:
-                if isinstance(group, list) and len(group) == 1:
-                    new.append(group[0])
+                if "/" in group:
+                    new.append(group.split("/"))
                 else:
                     new.append(group)
             return new
 
         def transform_aggregation_groups_to_disk(groups):
-            # result is always of the form [["SINGLE NAME"], ["ANY", "PATH"], ...]
             new = []
             for group in groups:
                 if isinstance(group, list):
-                    new.append(group)
+                    new.append("/".join(group))
                 else:
-                    new.append([group])
+                    new.append(group)
             return new
 
         if cmk.is_managed_edition():
@@ -1354,13 +1344,7 @@ class ModeBIAggregations(ModeBI):
             if aggregation["single_host"]:
                 html.icon(_("This aggregation covers only data from a single host."), "host")
 
-            group_infos = []
-            for group in aggregation["groups"]:
-                if isinstance(group, list):
-                    group_infos.append("/".join(group))
-                else:
-                    group_infos.append(group)
-            table.text_cell(_("Groups"), ", ".join(group_infos))
+            table.text_cell(_("Groups"), ", ".join(aggregation["groups"]))
 
             ruleid, description = self.rule_called_by_node(aggregation["node"])
             edit_url = html.makeuri([("mode", "bi_edit_rule"), ("pack", self._pack_id), ("id", ruleid)])
@@ -1698,7 +1682,7 @@ class ModeBIEditAggregation(ModeBI):
         self._edited_nr = html.get_integer_input("id", -1) # In case of Aggregations: index in list
         if self._edited_nr == -1:
             self._new = True
-            self._edited_aggregation = {"groups" : [[_("Main")]]}
+            self._edited_aggregation = {"groups" : [_("Main")]}
         else:
             self._new = False
             try:

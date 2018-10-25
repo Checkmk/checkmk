@@ -267,9 +267,9 @@ def get_aggregation_group_trees():
             continue
         legacy_group = aggr_def[1]
         if isinstance(legacy_group, list):
-            groups.extend([g if isinstance(g, list) else [g] for g in legacy_group])
+            groups.extend(legacy_group)
         else:
-            groups.append([legacy_group])
+            groups.append(legacy_group)
     return groups
 
 
@@ -334,7 +334,6 @@ class JobWorker(multiprocessing.Process):
                     new_data["compiled_hosts"] = job["info"]["queued_hosts"]
 
                 self._compiled_aggr.append((job, new_data))
-
 
         # Notify the parent process that there is data to read
         self._compilation_finished.value = 1
@@ -415,7 +414,7 @@ class JobWorker(multiprocessing.Process):
         def get_hash(entry):
             return hashlib.md5(repr(entry) + repr(job)).hexdigest()
 
-        for group in {sg for g in groups for sg in g}: # Flattened groups
+        for group in {g for g in groups}: # Flattened groups
             new_entries_hash = map(get_hash, new_entries)
             if group not in new_data['forest']:
                 new_data['forest_ref'][group] = new_entries_hash
@@ -1280,8 +1279,8 @@ def get_enabled_aggregations():
 
 def get_aggr_groups(aggr_def):
     groups = []
-    for group_list in aggr_def[1]:
-        groups.append(tuple(group_list))
+    for group in aggr_def[1]:
+        groups.append(group)
     return tuple(groups)
 
 
@@ -3350,8 +3349,7 @@ def table(columns, add_headers, only_sites, limit, filters):
     only_group = None
     only_service = None
     only_aggr_name = None
-
-    required_groups = tuple()
+    group_prefix = None
     for filter_ in filters:
         if filter_.name == "aggr_group":
             val = filter_.selected_group()
@@ -3364,9 +3362,7 @@ def table(columns, add_headers, only_sites, limit, filters):
         # TODO: can be further improved by filtering aggr_name_regex
         #       See BITextFilter(Filter): filter_table(self, rows)
         elif filter_.name == "aggr_group_tree":
-            val = filter_.value().get("aggr_group_tree")
-            if val:
-                required_groups = tuple(val.split("/"))
+            group_prefix = filter_.value().get("aggr_group_tree")
 
     if config.bi_precompile_on_demand and only_group:
         # optimized mode: if aggregation group known only precompile this one
@@ -3402,21 +3398,6 @@ def table(columns, add_headers, only_sites, limit, filters):
             return False
         return True
 
-    def is_sub_tree(row, group):
-        try:
-            aggr_group_tree = row["aggr_tree"]["aggr_group_tree"]
-        except KeyError:
-            return True
-
-        if not required_groups:
-            return True
-
-        l = len(required_groups)
-        for aggr_group in aggr_group_tree:
-            if group in aggr_group[l-1:] and aggr_group[:l] == required_groups:
-                return True
-        return False
-
     required_hosts = set()
     for group, trees in items.iteritems():
         for tree in trees:
@@ -3429,6 +3410,9 @@ def table(columns, add_headers, only_sites, limit, filters):
         if only_group not in [ None, group ]:
             continue
 
+        if group_prefix and not group.startswith(group_prefix):
+            continue
+
         for tree in trees:
             if not is_tree_required(tree):
                 continue
@@ -3436,9 +3420,6 @@ def table(columns, add_headers, only_sites, limit, filters):
             row = create_aggregation_row(tree, status_info)
             if row["aggr_state"]["state"] == None:
                 continue # Not yet monitored, aggregation is not displayed
-
-            if not is_sub_tree(row, group):
-                continue
 
             row["aggr_group"] = group
             rows.append(row)
@@ -3667,13 +3648,9 @@ def _convert_aggregation(aggr_tuple):
     old_groups = aggr_tuple[1]
     updated_groups = []
     if isinstance(old_groups, list):
-        for old_group in old_groups:
-            if isinstance(old_group, list):
-                updated_groups.append(old_group)
-            else:
-                updated_groups.append([old_group])
+        updated_groups.extend(old_groups)
     else:
-        updated_groups.append([old_groups])
+        updated_groups.append(old_groups)
 
     updated_groups.sort()
     tmp_aggr_list = list(aggr_tuple)

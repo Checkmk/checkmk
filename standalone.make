@@ -25,6 +25,8 @@
 # TODO(sp) We should really use autotools here...
 ifneq ($(shell which g++-8 2>/dev/null),)
         CXX := g++-8 -std=c++17
+else ifneq ($(shell which clang++-7 2>/dev/null),)
+        CXX := clang++-7 -std=c++17
 else ifneq ($(shell which g++-7 2>/dev/null),)
         CXX := g++-7 -std=c++17
 else ifneq ($(shell which clang++-6.0 2>/dev/null),)

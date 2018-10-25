@@ -811,14 +811,14 @@ def page_view():
     painter_options.load(view_name)
     painter_options.update_from_url(view_name, view)
 
-    show_view(view, True, True, True)
+    show_view(view, show_heading=True, show_buttons=True, show_footer=True)
 
 
 # Display view with real data. This is *the* function everying
 # is about.
 def show_view(view, show_heading = False, show_buttons = True,
               show_footer = True, render_function = None, only_count=False,
-              all_filters_active=False, limit=None):
+              limit=None):
 
     display_options.load_from_html()
 
@@ -844,15 +844,13 @@ def show_view(view, show_heading = False, show_buttons = True,
 
     tablename = datasource["table"]
 
-    # Filters to use in the view
-    # In case of single object views, the needed filters are fixed, but not always present
-    # in context. In this case, take them from the context type definition.
-    use_filters = visuals.filters_of_visual(view, datasource['infos'],
-                                        all_filters_active, datasource.get('link_filters', {}))
+    # Always allow the users to specify all allowed filters using the URL
+    use_filters = visuals.filters_allowed_for_infos(datasource['infos']).values()
 
     # Not all filters are really shown later in show_filter_form(), because filters which
     # have a hardcoded value are not changeable by the user
-    show_filters = visuals.visible_filters_of_visual(view, use_filters)
+    show_filters = visuals.filters_of_visual(view, datasource['infos'], link_filters=datasource.get('link_filters', {}))
+    show_filters = visuals.visible_filters_of_visual(view, show_filters)
 
     # FIXME TODO HACK to make grouping single contextes possible on host/service infos
     # Is hopefully cleaned up soon.

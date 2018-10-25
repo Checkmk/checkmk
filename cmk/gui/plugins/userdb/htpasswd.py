@@ -41,6 +41,7 @@ from . import UserConnector, user_connector_registry
 crypt_context = CryptContext(schemes=[
     "sha256_crypt",
     # Kept for compatibility with Check_MK < 1.6
+    "md5_crypt",
     "apr_md5_crypt",
     "des_crypt",
 ])

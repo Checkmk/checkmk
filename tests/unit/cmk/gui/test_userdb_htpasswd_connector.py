@@ -14,6 +14,7 @@ def htpasswd_file(tmpdir):
         # Pre 1.6 hashing formats (see cmk.gui.plugins.userdb.htpasswd for more details)
         u"bärnd:$apr1$/FU.SwEZ$Ye0XG1Huf2j7Jws7KD.h2/\n"
         u"cmkadmin:NEr3kqi287FQc\n"
+        u"harry:$1$478020$ldQUQ3RIwRYk5wjKfsWPD.\n"
         # A disabled user
         u"locked:!NEr3kqi287FQc\n"
         # A >= 1.6 sha256 hashed password
@@ -62,5 +63,6 @@ def test_user_connector_verify_password(htpasswd_file, monkeypatch):
     assert c.check_credentials(u"cmkadmin", u"cmk") == u"cmkadmin"
     assert c.check_credentials(u"bärnd", u"cmk") == u"bärnd"
     assert c.check_credentials(u"sha256user", u"cmk") == u"sha256user"
+    assert c.check_credentials(u"harry", u"cmk") == u"harry"
     assert c.check_credentials(u"dingeling", u"aaa") is None
     assert c.check_credentials(u"locked", u"locked") == False

@@ -55,11 +55,13 @@ from cmk.gui.exceptions import (
     MKAuthException,
     MKUnauthenticatedException,
     FinalizeRequest,
-    HTTPRedirect
+    HTTPRedirect,
 )
+
 
 class Application(object):
     """The Check_MK GUI WSGI entry point"""
+
     def __init__(self, wsgi_environ, start_response):
         self._start_response = start_response
         self._request = cmk.gui.http.Request(wsgi_environ)
@@ -80,12 +82,12 @@ class Application(object):
 
         self._process_request()
 
-
     def _process_request(self):
         try:
             config.initialize()
 
-            with cmk.profile.Profile(enabled=self._profiling_enabled(),
+            with cmk.profile.Profile(
+                    enabled=self._profiling_enabled(),
                     profile_file=os.path.join(cmk.paths.var_dir, "multisite.profile")):
                 self._handle_request()
 
@@ -96,8 +98,15 @@ class Application(object):
         except FinalizeRequest, e:
             html.response.set_status_code(e.status)
 
-        except (MKUserError, MKAuthException, MKUnauthenticatedException, MKConfigError, MKGeneralException,
-                livestatus.MKLivestatusNotFoundError, livestatus.MKLivestatusException), e:
+        except (
+                MKUserError,
+                MKAuthException,
+                MKUnauthenticatedException,
+                MKConfigError,
+                MKGeneralException,
+                livestatus.MKLivestatusNotFoundError,
+                livestatus.MKLivestatusException,
+        ), e:
             # TODO: Refactor all the special cases handled here to simplify the exception handling
 
             html.unplug_all()
@@ -110,7 +119,7 @@ class Application(object):
                 title       = _("Livestatus problem")
                 plain_title = _("Livestatus problem")
             else:
-                title       = e.title()
+                title = e.title()
                 plain_title = e.plain_title()
 
             if self._plain_error():
@@ -120,7 +129,6 @@ class Application(object):
                 html.header(title)
                 html.show_error(e)
                 html.footer()
-
 
             # Some exception need to set a specific HTTP status code
             if ty == MKUnauthenticatedException:
@@ -150,7 +158,6 @@ class Application(object):
                 logger.exception()
                 raise
 
-
     def _teardown(self):
         """Final steps that are performed after each handled HTTP request"""
         store.release_all_locks()
@@ -158,7 +165,6 @@ class Application(object):
         sites.disconnect()
         html.finalize()
         cmk.gui.globals.html.unset_current()
-
 
     def _handle_request(self):
         html.init_modes()
@@ -206,12 +212,10 @@ class Application(object):
         self._ensure_general_access()
         handler()
 
-
     def _show_exception_info(self, e):
         html.write_text("%s" % e)
         if config.debug:
             html.write_text(traceback.format_exc())
-
 
     def _handle_not_authenticated(self):
         if self._fail_silently():
@@ -223,7 +227,7 @@ class Application(object):
         # or "dashboard.py". This results in strange problems.
         if html.myfile != 'login':
             html.response.http_redirect('%scheck_mk/login.py?_origtarget=%s' %
-                               (config.url_prefix(), html.urlencode(html.makeuri([]))))
+                                        (config.url_prefix(), html.urlencode(html.makeuri([]))))
         else:
             # This either displays the login page or validates the information submitted
             # to the login form. After successful login a http redirect to the originally
@@ -231,7 +235,6 @@ class Application(object):
             login.page_login(self._plain_error())
 
         raise FinalizeRequest()
-
 
     def _localize_request(self):
         previous_language = cmk.gui.i18n.get_current_language()
@@ -246,28 +249,24 @@ class Application(object):
         if cmk.gui.i18n.get_current_language() != previous_language:
             modules.load_all_plugins()
 
-
     def _fail_silently(self):
         """Ajax-Functions want no HTML output in case of an error but
         just a plain server result code of 500"""
         return html.has_var("_ajaxid")
-
 
     def _plain_error(self):
         """Webservice functions may decide to get a normal result code
         but a text with an error message in case of an error"""
         return html.has_var("_plain_error") or html.myfile == "webapi"
 
-
     def _profiling_enabled(self):
         if config.profile == False:
-            return False # Not enabled
+            return False  # Not enabled
 
         if config.profile == "enable_by_var" and not html.has_var("_profile"):
-            return False # Not enabled by HTTP variable
+            return False  # Not enabled by HTTP variable
 
         return True
-
 
     # TODO: This is a page handler. It should not be located in generic application
     # object. Move it to another place
@@ -278,7 +277,6 @@ class Application(object):
             html.header(_("Page not found"))
             html.show_error(_("This page was not found. Sorry."))
         html.footer()
-
 
     def _ensure_general_access(self):
         if config.user.may("general.use"):
@@ -301,7 +299,6 @@ class Application(object):
             login.del_auth_cookie()
 
         raise MKAuthException(" ".join(reason))
-
 
     def __iter__(self):
         """Is called by the WSGI server to serve the current page"""

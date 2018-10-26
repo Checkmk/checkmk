@@ -88,6 +88,8 @@ def check_azure_metric(resource,
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
+_AZURE_AGENT_SEPARATOR = '|'
+
 Metric = collections.namedtuple(
     "Metric", ["name", "aggregation", "value", "unit", "timestamp", "timegrain", "filters"])
 
@@ -107,18 +109,24 @@ def _read(row, types, defaults=None):
 
 
 def _parse_resource(info):
+    '''read resource json and parse metric lines
 
+    Metrics are stored in a dict. Key is name, prefixed by their aggregation,
+    spaces become underspcores:
+      Disk Read Bytes|average|0.0|...
+    is stored at
+      resource["metrics"]["average_Disk_Read_Bytes"]
+    '''
     try:
-        resource = json.loads(' '.join(info[0]))
+        resource = json.loads(_AZURE_AGENT_SEPARATOR.join(info[0]))
     except:
         return None
 
-    if len(info) < 4 or info[1][:2] != ["metrics", "following:"]:
+    if len(info) < 4:
         return resource
 
-    try:
-        count = int(info[1][2])
-    except (ValueError, IndexError):
+    key, count = _read(info[1], (str, int), ("", 0))
+    if key != "metrics following":
         return resource
 
     # header = info[2]
@@ -129,7 +137,7 @@ def _parse_resource(info):
             # even integer values are formated '42.0', so we needed float(.)
             value = int(value)
 
-        key = "%s_%s" % (aggregation, name)
+        key = "%s_%s" % (aggregation, name.replace(" ", "_"))
         m = Metric(name, aggregation, value, unit, timestamp, timegrain, filters)
         resource.setdefault('metrics', {})[key] = m
 
@@ -139,6 +147,7 @@ def _parse_resource(info):
 def parse_azure(info):
     raw_resources = []
 
+    # create list of lines per resource
     for row in info:
         if row == ["Resource"]:
             raw_resources.append([])

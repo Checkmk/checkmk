@@ -248,9 +248,57 @@ class ExplicitConfig(object):
         return "\n".join(str(group) for group in self.groups.values())
 
 
+class Section(object):
+    SEP = 124
+    LOCK = Lock()
+
+    def __init__(self, name, piggytarget=''):
+        super(Section, self).__init__()
+        self._head = []
+        self._cont = []
+        self._foot = []
+        if piggytarget != '':
+            self._head.append('<<<<%s>>>>\n' % piggytarget)
+            self._foot.append('<<<<>>>>\n')
+        self._head.append('<<<azure_%s:sep(%s)>>>\n' % (name, Section.SEP))
+
+    @staticmethod
+    def formatline(tokens):
+        return chr(Section.SEP).join(map(str, tokens)) + '\n'
+
+    def add(self, info):
+        if isinstance(info[0], (list, tuple)):  # we got a list of lines
+            for row in info:
+                self._cont.append(self.formatline(row))
+        else:  # assume one single line
+            self._cont.append(self.formatline(info))
+
+    def write(self):
+        self.LOCK.acquire()
+        sys.stdout.writelines(self._head + self._cont + self._foot)
+        sys.stdout.flush()
+        self.LOCK.release()
+
+
+class IssueCollecter(object):
+    def __init__(self):
+        super(IssueCollecter, self).__init__()
+        self._list = []
+
+    def add(self, issue_type, issued_by, issue_msg):
+        issue = {'type': issue_type, 'issued_by': issued_by, 'msg': issue_msg}
+        self._list.append(('issue', json.dumps(issue)))
+
+    def dumpinfo(self):
+        return self._list
+
+    def __len__(self):
+        return len(self._list)
+
+
 class AzureMetric(object):
 
-    HEADER = ' '.join(("name", "aggregation", "value", "unit", "timestamp", "timegrain", "filters"))
+    HEADER = ("name", "aggregation", "value", "unit", "timestamp", "timegrain", "filters")
     AGGREGATIONS = ("total", "average", "maximum", "minimum", "last", "count")
 
     def __init__(self, metric, rid, time_grain, filters, err):
@@ -263,7 +311,7 @@ class AzureMetric(object):
         count = len(metric.timeseries)
         if count <> 1:
             msg = "timeseries has %d elements for metric %s" % (count, self.name)
-            err.append("info", rid, msg)
+            err.add("info", rid, msg)
             LOG.warning(msg + " for resource %s" % rid)
 
         for measurement in reversed(metric.timeseries):
@@ -286,11 +334,7 @@ class AzureMetric(object):
                                   time_grain, filters)
         if not self.rows:
             LOG.info("Found no aggregation for metric %r", self.name)
-
         return
-
-    def get_lines(self):
-        return [' '.join(map(str, r)) for r in self.rows]
 
 
 class AzureResource(object):
@@ -309,14 +353,12 @@ class AzureResource(object):
         self.piggytargets = [self.info["group"]]
         self.metrics = []
 
-    def __str__(self):
-        tmp = ["Resource", json.dumps(self.info)]
-        m_lines = []
-        for metr in self.metrics:
-            m_lines += metr.get_lines()
+    def dumpinfo(self):
+        lines = [("Resource",), (json.dumps(self.info),)]
+        m_lines = sum((m.rows for m in self.metrics), [])
         if m_lines:
-            tmp += ["metrics following: %d" % len(m_lines), self.metrics[0].HEADER] + m_lines
-        return '\n'.join(tmp)
+            lines += [("metrics following", len(m_lines)), self.metrics[0].HEADER] + m_lines
+        return lines
 
 
 class AzureComputeClient(object):
@@ -336,14 +378,6 @@ class AzureComputeClient(object):
             vm.piggytargets.append('')
         if args.piggyback_vms in ("self", "all"):
             vm.piggytargets.append(vm.info["name"])
-
-
-class IssueCollecter(list):
-    # basically a list of strings, just fancy appending.
-    def append(self, issue_type, issued_by, issue_msg):
-        issue = {'type': issue_type, 'issued_by': issued_by, 'msg': issue_msg}
-        text = 'issue %s' % json.dumps(issue)
-        super(IssueCollecter, self).append(text)
 
 
 class AzureClient(object):
@@ -412,11 +446,6 @@ class AzureClient(object):
             LOG.debug("%d discovered metrics: %r", len(md_list), [md.name.value for md in md_list])
         return self.metrics_cache[rid]
 
-    def discover_groups(self, resources=None):
-        if resources is None:
-            resources = self.discover_resources()
-        return sorted(set(r.info['group'] for r in resources))
-
     @staticmethod
     def _categorize_metric(definition):
 
@@ -454,8 +483,8 @@ class AzureClient(object):
             if metrics_req_dim:
                 for metr in metrics_req_dim:
                     dim_names = ','.join(d.value for d in metr.dimensions)
-                    err.append("warning", rid,
-                               "metric %r requires dimension (%s)" % (metr.name.value, dim_names))
+                    err.add("warning", rid, "metric %r requires dimension (%s)" % (metr.name.value,
+                                                                                   dim_names))
 
         return metrics
 
@@ -497,7 +526,7 @@ class AzureClient(object):
         except ErrorResponseException as exc:
             if self.args.debug:
                 raise exc
-            err.append("exception", rid, exc.message)
+            err.add("exception", rid, exc.message)
             LOG.exception(exc)
 
         return metrics
@@ -513,22 +542,10 @@ class AzureClient(object):
                 time_grain = additional_config.get('time_grain', 'PT1M')
                 aggregations = additional_config.get('aggregations')
                 filters = additional_config.get('filters')
-                metrics += self._fetch_specific_metrics(
-                    rid, metricnames, time_grain, aggregations, filters, err=err)
+                metrics += self._fetch_specific_metrics(rid, metricnames, time_grain, aggregations,
+                                                        filters, err)
 
         return metrics
-
-
-def _write(data, lock=Lock()):
-    lock.acquire()
-    sys.stdout.write(data)
-    sys.stdout.flush()
-    lock.release()
-
-
-def _write_agent_info(key, value):
-    data = ('<<<azure_agent_info>>>\n' '%s %s\n' % (key, json.dumps(value)))
-    _write(data)
 
 
 class Threads(object):
@@ -546,8 +563,6 @@ class Threads(object):
             self._run_sequential(resources, client, config)
         else:
             self._run_parallel(resources, client, config)
-
-        _write_agent_info('monitored-groups', client.discover_groups(resources))
 
     def _run_sequential(self, resources, client, config):
         for resource in resources:
@@ -586,19 +601,18 @@ def process_resource(resource, client, config):
     for metric in client.get_metrics(resource, r_config, err):
         resource.metrics.append(metric)
 
-    for piggytarget in resource.piggytargets:
-        output = [
-            '<<<<%s>>>>' % piggytarget,
-            '<<<azure_%s>>>' % resource.section,
-            '%s' % resource,
-        ]
-        if err:
-            output.append('<<<azure_agent_info>>>')
-            output.extend(err)
-        output.extend(['<<<<>>>>', ''])
-        _write('\n'.join(output))
+    section = Section('agent_info')
+    section.add(('remaining-reads', client.remaining_reads))
+    section.write()
 
-    _write_agent_info('remaining-reads', client.remaining_reads)
+    for piggytarget in resource.piggytargets:
+        section = Section(resource.section, piggytarget)
+        section.add(resource.dumpinfo())
+        section.write()
+        if err:
+            err_section = Section('agent_info', piggytarget)
+            err_section.add(err.dumpinfo())
+            err_section.write()
 
 
 def main(argv=None):
@@ -615,10 +629,16 @@ def main(argv=None):
     try:
         client = AzureClient(args)
         resources = [r for r in client.discover_resources() if config.is_configured(r)]
+        groups = sorted(set(r.info['group'] for r in resources))
+
+        section = Section('agent_info')
+        section.add(('monitored-groups', json.dumps(groups)))
+        section.write()
+
         client.init_specific(resources)
         Threads(args).run(resources, client, config)
     except () if args.debug else Exception, exc:
-        _write(_add_hint(str(exc)))
+        sys.stderr.write(_add_hint(str(exc)))
         return 1
     return 0
 

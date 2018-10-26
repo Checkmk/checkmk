@@ -53,6 +53,7 @@ import cmk.gui.config as config
 import cmk.gui.forms as forms
 import cmk.crash_reporting
 
+
 @cmk.gui.pages.register("crashed_check")
 def page_crashed_check():
     page_crashed("check")
@@ -76,8 +77,8 @@ def page_crashed(what):
         return
 
     if what == "check":
-        site    = html.var("site")
-        host    = html.var("host")
+        site = html.var("site")
+        host = html.var("host")
         service = html.var("service")
 
         tardata = get_crash_report_archive_as_string(site, host, service)
@@ -119,9 +120,8 @@ def page_crashed(what):
         show_crash_report(info)
         show_crash_report_details(info)
     else:
-        report_url = html.makeuri([
-            ("subject", "Check_MK Crash Report - " + get_version(what)),
-        ], filename="mailto:" + get_crash_report_target(what))
+        report_url = html.makeuri([("subject", "Check_MK Crash Report - " + get_version(what))],
+                                  filename="mailto:" + get_crash_report_target(what))
         html.message(_("This crash report is in a legacy format and can not be submitted "
                        "automatically. Please download it manually and send it to <a href=\"%s\">%s</a>")
                                 % (report_url , get_crash_report_target(what)))
@@ -142,19 +142,17 @@ def show_crash_report_details(info):
 def show_context_buttons(what, tardata):
     html.begin_context_buttons()
     if what == "check":
-        site    = html.var("site")
-        host    = html.var("host")
+        site = html.var("site")
+        host = html.var("host")
         service = html.var("service")
 
-        host_url = html.makeuri([("view_name", "hoststatus"),
-                                 ("host",      host),
-                                 ("site",      site)], filename="view.py")
+        host_url = html.makeuri([("view_name", "hoststatus"), ("host", host), ("site", site)],
+                                filename="view.py")
         html.context_button(_("Host status"), host_url, "status")
 
-        host_url = html.makeuri([("view_name", "service"),
-                                 ("host",      host),
-                                 ("service",   service),
-                                 ("site",      site)], filename="view.py")
+        host_url = html.makeuri([("view_name", "service"), ("host", host), ("service", service),
+                                 ("site", site)],
+                                filename="view.py")
         html.context_button(_("Service status"), host_url, "status")
 
         download_url = html.makeuri([], filename="download_crash_report.py")
@@ -198,7 +196,8 @@ def get_crash_info(tardata):
 
 def fetch_file_from_tar(tardata, filename):
     p = subprocess.Popen(['tar', 'xzf', '-', '--to-stdout', filename],
-                         stdin=subprocess.PIPE, stdout=subprocess.PIPE,
+                         stdin=subprocess.PIPE,
+                         stdout=subprocess.PIPE,
                          stderr=open(os.devnull, "w"),
                          close_fds=True)
     result = p.communicate(tardata)
@@ -210,6 +209,7 @@ def output_box(title, content):
     html.open_div(class_="log_output")
     html.write(html.attrencode(content).replace("\n", "<br>").replace(' ', '&nbsp;'))
     html.close_div()
+
 
 def vs_crash_report():
     return Dictionary(
@@ -265,7 +265,8 @@ def handle_report_form(tardata, what):
         html.open_div(id_="fail_msg", style="display:none")
         report_url = html.makeuri([
             ("subject", "Check_MK Crash Report - " + get_version(what)),
-        ], filename="mailto:" + get_crash_report_target(what))
+        ],
+                                  filename="mailto:" + get_crash_report_target(what))
         html.show_error(_("Failed to send the crash report. Please download it manually and send it "
                           "to <a href=\"%s\">%s</a>") % (report_url , get_crash_report_target(what)))
         html.close_div()
@@ -313,7 +314,7 @@ def show_report_form(what, details):
     if what == "gui":
         add_gui_user_infos_to_details(details)
 
-    html.begin_form("report", method = "GET")
+    html.begin_form("report", method="GET")
     html.show_user_errors()
     vs = vs_crash_report()
     vs.render_input("_report", details)
@@ -337,7 +338,7 @@ def _crash_row(title, infotext, odd=True, legend=False, pre=False):
     html.open_tr(class_=trclass)
     html.td(title, class_=tdclass)
     if pre:
-        html.td( html.render_pre(infotext) )
+        html.td(html.render_pre(infotext))
     else:
         html.td(infotext)
     html.close_tr()
@@ -448,25 +449,30 @@ def show_old_dump_trace(tardata):
 
 def show_agent_output(tardata):
     agent_output = fetch_file_from_tar(tardata, "agent_output")
-    if agent_output == "": # handle old tar format
+    if agent_output == "":  # handle old tar format
         agent_output = fetch_file_from_tar(tardata, "./agent_output")
     if agent_output:
         output_box(_("Agent output"), agent_output)
 
 
 def create_crash_dump_info_file(tar, what):
-    crash_info = cmk.crash_reporting.create_crash_info(what, details={
-        "page"           : html.myfile+".py",
-        "vars"           : {key: "***" if value in ["password", "_password"] else value
-                            for key, value in html.request.vars.iteritems()},
-        "username"       : config.user.id,
-        "user_agent"     : html.request.user_agent,
-        "referer"        : html.request.referer,
-        "is_mobile"      : html.is_mobile(),
-        "is_ssl_request" : html.request.is_ssl_request,
-        "language"       : cmk.gui.i18n.get_current_language(),
-        "request_method" : html.request.request_method,
-    }, version=get_version(what))
+    crash_info = cmk.crash_reporting.create_crash_info(
+        what,
+        details={
+            "page": html.myfile + ".py",
+            "vars": {
+                key: "***" if value in ["password", "_password"] else value
+                for key, value in html.request.vars.iteritems()
+            },
+            "username": config.user.id,
+            "user_agent": html.request.user_agent,
+            "referer": html.request.referer,
+            "is_mobile": html.is_mobile(),
+            "is_ssl_request": html.request.is_ssl_request,
+            "language": cmk.gui.i18n.get_current_language(),
+            "request_method": html.request.request_method,
+        },
+        version=get_version(what))
 
     content = cStringIO.StringIO()
     content.write(cmk.crash_reporting.crash_info_to_string(crash_info))
@@ -492,8 +498,8 @@ def create_gui_crash_report(what):
 
 @cmk.gui.pages.register("download_crash_report")
 def page_download_crash_report():
-    site    = html.var("site")
-    host    = html.var("host")
+    site = html.var("site")
+    host = html.var("host")
     service = html.var("service")
 
     filename = "Check_MK_Crash_%s_%s_%s.tar.gz" % \

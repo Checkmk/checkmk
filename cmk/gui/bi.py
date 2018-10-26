@@ -54,6 +54,7 @@ import cmk.gui.view_utils
 loaded_with_language = False
 compile_logger = logger.getChild("bi.compilation")
 
+
 # Load all view plugins
 def load_plugins(force):
     global loaded_with_language
@@ -74,6 +75,7 @@ def load_plugins(force):
     # are loaded).
     loaded_with_language = cmk.gui.i18n.get_current_language()
 
+
 #      ____                _              _
 #     / ___|___  _ __  ___| |_ __ _ _ __ | |_ ___
 #    | |   / _ \| '_ \/ __| __/ _` | '_ \| __/ __|
@@ -86,7 +88,7 @@ SINGLE = 'single'
 MULTIPLE = 'multi'
 
 # possible aggregated states
-MISSING = -2 # currently unused
+MISSING = -2  # currently unused
 PENDING = -1
 OK = 0
 WARN = 1
@@ -94,10 +96,21 @@ CRIT = 2
 UNKNOWN = 3
 UNAVAIL = 4
 
-service_state_names = { OK:_("OK"), WARN:_("WARN"), CRIT:_("CRIT"), UNKNOWN:_("UNKNOWN"), PENDING:_("PENDING"), UNAVAIL:_("UNAVAILABLE")}
-host_state_names = { 0:_("UP"), 1:_("DOWN"), 2:_("UNREACHABLE") }
+service_state_names = {
+    OK: _("OK"),
+    WARN: _("WARN"),
+    CRIT: _("CRIT"),
+    UNKNOWN: _("UNKNOWN"),
+    PENDING: _("PENDING"),
+    UNAVAIL: _("UNAVAILABLE")
+}
+host_state_names = {
+    0: _("UP"),
+    1: _("DOWN"),
+    2: _("UNREACHABLE")
+}
 
-AGGR_HOST  = 0
+AGGR_HOST = 0
 AGGR_MULTI = 1
 
 # character that separates sites and hosts
@@ -129,19 +142,18 @@ SITE_SEP = '#'
 NT_LEAF = 1
 NT_RULE = 2
 NT_REMAINING = 3
-NT_PLACEHOLDER = 4 # temporary dummy entry needed for REMAINING
-
+NT_PLACEHOLDER = 4  # temporary dummy entry needed for REMAINING
 
 # Global variables
-g_cache = {}                  # per-user cache
-g_bi_cache_manager    = None
+g_cache = {}  # per-user cache
+g_bi_cache_manager = None
 g_bi_sitedata_manager = None
-g_bi_job_manager      = None
-g_services_items      = None
+g_bi_job_manager = None
+g_services_items = None
 
 g_tree_cache = {}
-g_config_information = None   # for invalidating cache after config change
-did_compilation = False       # Is set to true if anything has been compiled
+g_config_information = None  # for invalidating cache after config change
+did_compilation = False  # Is set to true if anything has been compiled
 
 
 # Load the static configuration of all services and hosts (including tags)
@@ -164,13 +176,10 @@ def load_services(only_hosts):
     sites.live().set_prepend_site(True)
     sites.live().set_auth_domain('bi')
 
-    data = sites.live().query(
-        "GET hosts\n"
-        +filter_txt+
-        "Columns: name custom_variable_names custom_variable_values "
-        "services childs parents alias\n"
-        "Cache: reload\n"
-    )
+    data = sites.live().query("GET hosts\n" + filter_txt +
+                              "Columns: name custom_variable_names custom_variable_values "
+                              "services childs parents alias\n"
+                              "Cache: reload\n")
     sites.live().set_prepend_site(False)
     sites.live().set_auth_domain('read')
 
@@ -180,6 +189,7 @@ def load_services(only_hosts):
         entry = (tags, svcs, childs, parents, alias)
         g_services[(site, host)] = entry
         g_services_by_hostname.setdefault(host, []).append((site, entry))
+
 
 # Keep complete list of time stamps of configuration
 # and start of each site. Unreachable sites are registered
@@ -193,11 +203,13 @@ def cache_needs_update():
         return new_config_information
     return False
 
+
 def reset_cache_status():
     global did_compilation
     did_compilation = False
     global used_cache
     used_cache = False
+
 
 # The sitestats are used to define the integrity of the currently used cache
 # If file timestamps change -> Cache is invalid
@@ -219,7 +231,6 @@ def get_current_sitestats():
         mtime = os.stat(filename).st_mtime
         sitestats_timestamps.append((filename, mtime))
 
-
     # Filter relevant files which can affect the BI trees
     # Anything in ~/etc/check_mk/multisite.d/wato/, except bi.mk is irrelevant
     relevant_configuration_timestamps = []
@@ -231,10 +242,11 @@ def get_current_sitestats():
         else:
             relevant_configuration_timestamps.append(entry)
 
-
-    current_world = {"timestamps":   relevant_configuration_timestamps,
-                     "online_sites": set(),
-                     "known_sites":  set()}
+    current_world = {
+        "timestamps": relevant_configuration_timestamps,
+        "online_sites": set(),
+        "known_sites": set()
+    }
 
     # This request here is mandatory, since the sites.states() info might be outdated
     sites.live().set_prepend_site(True)
@@ -248,6 +260,7 @@ def get_current_sitestats():
             current_world["online_sites"].add((site, program_start_times.get(site, 0)))
 
     return current_world
+
 
 # TODO: do we need this?
 def reused_compilation():
@@ -274,9 +287,10 @@ def get_aggregation_group_trees():
 
 def log(*args):
     for idx, arg in enumerate(args):
-        if type(arg) not in [ unicode, str ]:
+        if type(arg) not in [unicode, str]:
             arg = pprint.pformat(arg)
         compile_logger.debug('BI: %s%s' % (idx > 5 and "\n" or "", arg))
+
 
 def get_cache_dir():
     bi_cache_dir = cmk.paths.tmp_dir + "/bi_cache"
@@ -290,40 +304,43 @@ def get_cache_dir():
 class JobWorker(multiprocessing.Process):
     def __init__(self, site_data, jobs):
         super(JobWorker, self).__init__()
-        self._site_data          = site_data
-        self._jobs               = jobs
-        self._compiled_aggr      = []
+        self._site_data = site_data
+        self._jobs = jobs
+        self._compiled_aggr = []
         self._compilation_errors = []
 
         # This flag is toggled, when the compiled data is ready for transmission
         self._compilation_finished = multiprocessing.Value("i", 0)
 
-        self._recv_pipe, self._send_pipe             = multiprocessing.Pipe(duplex = False)
-        self._recv_error_pipe, self._send_error_pipe = multiprocessing.Pipe(duplex = False)
+        self._recv_pipe, self._send_pipe = multiprocessing.Pipe(duplex=False)
+        self._recv_error_pipe, self._send_error_pipe = multiprocessing.Pipe(duplex=False)
 
         self._parent_pid = os.getpid()
-
 
     def compilation_finished(self):
         return bool(self._compilation_finished.value)
 
-
     def get_compiled_aggregations(self):
         return self._recv_pipe.recv()
 
-
     def get_compilation_errors(self):
         return self._recv_error_pipe.recv()
-
 
     def run(self):
         new_data = {}
         for job in self._jobs:
             try:
                 start_time = time.time()
-                log("[%s] ###################################### Compiling %r" % (self._parent_pid, job["id"]))
+                log("[%s] ###################################### Compiling %r" % (
+                    self._parent_pid,
+                    job["id"],
+                ))
                 new_data = self.compile_job(job["id"], job["info"])
-                log("[%s] Compilation finished %r - took %.3f sec" % (self._parent_pid, job["id"], time.time() - start_time))
+                log("[%s] Compilation finished %r - took %.3f sec" % (
+                    self._parent_pid,
+                    job["id"],
+                    time.time() - start_time,
+                ))
             except Exception:
                 log("[%s] MP-Worker Exception %s" % (self._parent_pid, traceback.format_exc()))
                 self._compilation_errors.append("Aggregation error: %s" % traceback.format_exc())
@@ -337,9 +354,15 @@ class JobWorker(multiprocessing.Process):
         # Notify the parent process that there is data to read
         self._compilation_finished.value = 1
 
-        log("[%s] Send BI data to pipe, size %d" % (self._parent_pid, len(repr(self._compiled_aggr))))
+        log("[%s] Send BI data to pipe, size %d" % (
+            self._parent_pid,
+            len(repr(self._compiled_aggr)),
+        ))
         self._send_pipe.send(self._compiled_aggr)
-        log("[%s] Send ERROR data to pipe, size %d" % (self._parent_pid, len(repr(self._compilation_errors))))
+        log("[%s] Send ERROR data to pipe, size %d" % (
+            self._parent_pid,
+            len(repr(self._compilation_errors)),
+        ))
         self._send_error_pipe.send(self._compilation_errors)
         log("[%s] Finish worker" % self._parent_pid)
 
@@ -355,11 +378,11 @@ class JobWorker(multiprocessing.Process):
 
         # Prepare service globals for this job
         if aggr_type == AGGR_MULTI:
-            g_services             = self._site_data["services"]
+            g_services = self._site_data["services"]
             g_services_by_hostname = self._site_data["services_by_hostname"]
         else:
             # Single host aggregation. The data parameter contains the requested hosts
-            g_services             = {}
+            g_services = {}
             g_services_by_hostname = {}
 
             required_hosts = job_info["queued_hosts"]
@@ -374,7 +397,12 @@ class JobWorker(multiprocessing.Process):
 
         g_services_items = g_services.items()
 
-        log("Compiling aggregation %d/%d: %r with %d hosts" % (aggr_type, aggr_idx, groups, len(g_services_by_hostname)))
+        log("Compiling aggregation %d/%d: %r with %d hosts" % (
+            aggr_type,
+            aggr_idx,
+            groups,
+            len(g_services_by_hostname),
+        ))
         enabled_aggregations = get_enabled_aggregations()
 
         # Check if the aggregation is still correct
@@ -405,7 +433,7 @@ class JobWorker(multiprocessing.Process):
             this_entry["use_hard_states"] = use_hard_states
             this_entry["downtime_aggr_warn"] = downtime_aggr_warn
 
-        new_entries = [ e for e in new_entries if len(e["nodes"]) > 0 ]
+        new_entries = [e for e in new_entries if len(e["nodes"]) > 0]
         for entry in new_entries:
             entry["aggr_group_tree"] = groups
 
@@ -420,7 +448,6 @@ class JobWorker(multiprocessing.Process):
             else:
                 new_data['forest_ref'][group] += new_entries_hash
 
-
             # Update several global speed-up indices
             for aggr in new_entries:
                 aggr_hash = get_hash(aggr)
@@ -430,7 +457,10 @@ class JobWorker(multiprocessing.Process):
 
                 # Aggregations by last part of title (assumed to be host name)
                 name = aggr["title"].split()[-1]
-                new_data["aggregations_by_hostname_ref"].setdefault(name, []).append((group, aggr_hash))
+                new_data["aggregations_by_hostname_ref"].setdefault(name, []).append((
+                    group,
+                    aggr_hash,
+                ))
 
                 # All single-host aggregations looked up per host
                 # Only process the aggregations of hosts which are mentioned in only_hosts
@@ -442,23 +472,34 @@ class JobWorker(multiprocessing.Process):
                     # would be better to register this for all hosts mentioned in req_hosts. Give it a try...
                     # ASSERT: len(req_hosts) == 1!
                     for host in req_hosts:
-                        new_data["host_aggregations_ref"].setdefault(host, []).append((group, aggr_hash))
+                        new_data["host_aggregations_ref"].setdefault(host, []).append((
+                            group,
+                            aggr_hash,
+                        ))
 
                 # Also all other aggregations that contain exactly one hosts are considered to
                 # be "single host aggregations"
                 elif len(req_hosts) == 1:
-                    new_data["host_aggregations_ref"].setdefault(req_hosts[0],[]).append((group, aggr_hash))
+                    new_data["host_aggregations_ref"].setdefault(req_hosts[0], []).append((
+                        group,
+                        aggr_hash,
+                    ))
 
                 # All aggregations containing a specific host
                 for h in req_hosts:
-                    new_data["affected_hosts_ref"].setdefault(h, []).append((group, aggr_hash))
+                    new_data["affected_hosts_ref"].setdefault(h, []).append((
+                        group,
+                        aggr_hash,
+                    ))
 
                 # All aggregations containing a specific service
                 services = find_all_leaves(aggr)
-                for s in services: # triples of site, host, service
-                    new_data["affected_services_ref"].setdefault(s, []).append((group, aggr_hash))
+                for s in services:  # triples of site, host, service
+                    new_data["affected_services_ref"].setdefault(s, []).append((
+                        group,
+                        aggr_hash,
+                    ))
         return new_data
-
 
 
 # This class handles the fcntl-locking of one file
@@ -471,18 +512,16 @@ class JobWorker(multiprocessing.Process):
 # Since this class has __enter__ and __exit__ functions its best use
 # is in conjunction with a with-statement
 class BILock(object):
-    def __init__(self, filepath, shared = False, blocking = True):
+    def __init__(self, filepath, shared=False, blocking=True):
         self._filepath = filepath
         self._blocking = blocking
-        self._shared   = shared
-        self._fd       = None
+        self._shared = shared
+        self._fd = None
 
         super(BILock, self).__init__()
 
-
     def has_lock(self):
         return self._fd != None
-
 
     def __enter__(self):
         if not os.path.exists(self._filepath):
@@ -495,7 +534,11 @@ class BILock(object):
         lock_info = []
         lock_info.append(self._shared and "SHARED" or "EXCLUSIVE")
         lock_info.append(self._blocking and "BLOCKING" or "NON-BLOCKING")
-        log('BI: BILock %-2s %30s <<<%s>>>' % (self._fd, " ".join(lock_info), os.path.basename(self._filepath)))
+        log('BI: BILock %-2s %30s <<<%s>>>' % (
+            self._fd,
+            " ".join(lock_info),
+            os.path.basename(self._filepath),
+        ))
 
         try:
             fcntl.flock(self._fd, lock_options)
@@ -507,14 +550,16 @@ class BILock(object):
 
         return self
 
-
     def __exit__(self, exception_type, exception_value, traceback):
         if self._fd:
-            log('BI: BILock %-2s %30s <<<%s>>>' % ( self._fd, "RELEASE", os.path.basename(self._filepath)))
+            log('BI: BILock %-2s %30s <<<%s>>>' % (
+                self._fd,
+                "RELEASE",
+                os.path.basename(self._filepath),
+            ))
             fcntl.flock(self._fd, fcntl.LOCK_UN)
             os.close(self._fd)
             self._fd = None
-
 
 
 def marshal_save_data(filepath, data):
@@ -522,9 +567,9 @@ def marshal_save_data(filepath, data):
         marshal.dump(data, the_file)
         os.fsync(the_file.fileno())
 
+
 def marshal_load_data(filepath):
     return marshal.load(file(filepath))
-
 
 
 # This class allows you to load and save python data
@@ -538,9 +583,9 @@ def marshal_load_data(filepath):
 #         or truncated. This helps preserving any locked filedescriptor
 class BICacheFile(object):
     def __init__(self, **kwargs):
-        self._filepath            = kwargs.get("filepath")
-        self._cached_data         = None
-        self._filetime            = None
+        self._filepath = kwargs.get("filepath")
+        self._cached_data = None
+        self._filetime = None
 
         try:
             file(self._filepath, "a")
@@ -549,16 +594,13 @@ class BICacheFile(object):
 
         super(BICacheFile, self).__init__()
 
-
     def clear_cache(self):
         if self._cached_data != None:
             log("Discarded cached data from file %s" % self._filepath)
             self._cached_data = None
 
-
     def get_filepath(self):
         return self._filepath
-
 
     def has_new_data(self):
         try:
@@ -577,7 +619,6 @@ class BICacheFile(object):
         except OSError:
             return False
 
-
     def load(self):
         try:
             filestats = os.stat(self._filepath)
@@ -586,7 +627,7 @@ class BICacheFile(object):
                 return None
 
             if (not self._filetime or self._filetime != filestats.st_mtime):
-                with BILock(self._filepath, shared = True):
+                with BILock(self._filepath, shared=True):
                     log("Loaded data from %s" % self._filepath)
                     self._cached_data = marshal_load_data(self._filepath)
                     self._filetime = filestats.st_mtime
@@ -594,13 +635,11 @@ class BICacheFile(object):
         except OSError:
             return None
 
-
     def save(self, data):
         with BILock(self._filepath):
             marshal_save_data(self._filepath, data)
             self._cached_data = data
             self._filetime = os.stat(self._filepath).st_mtime
-
 
     def truncate(self):
         log("Truncate %s" % self._filepath)
@@ -608,7 +647,6 @@ class BICacheFile(object):
             file(self._filepath, "w")
             self._cached_data = None
             self._filetime = os.stat(self._filepath).st_mtime
-
 
 
 # This class contains all host and service data used for the compilation
@@ -621,47 +659,40 @@ class BISitedataManager(object):
         self._reset_cached_data()
 
         # Housekeeping parameters
-        self._clear_orphaned_caches_after  = 120 # Remove data files older than x seconds
-        self._cache_update_interval        = 30  # Touch data files every x seconds when used
+        self._clear_orphaned_caches_after = 120  # Remove data files older than x seconds
+        self._cache_update_interval = 30  # Touch data files every x seconds when used
 
         super(BISitedataManager, self).__init__()
 
-
     def _reset_cached_data(self):
         # The actual processed data this class provides
-        self._data             = {"services": {}, "services_by_hostname": {}}
+        self._data = {"services": {}, "services_by_hostname": {}}
         # Sites from which we have data
-        self._have_sites       = set()
+        self._have_sites = set()
         # Cached all hosts info
         self._all_hosts_cached = None
 
-
     def discard_cached_data(self):
         self._reset_cached_data()
-
 
     def get_data(self):
         self._aquire_data()
         return self._data
 
-
     def get_all_hosts(self):
-        self._aquire_data() # Updates the following value
+        self._aquire_data()  # Updates the following value
         return self._all_hosts_cached
-
 
     def _get_sitedata_filepath(self, siteinfo):
         return "%s/bi_cache_data.%s.%s" % (get_cache_dir(), siteinfo[0], siteinfo[1])
-
 
     def _datafile_exists(self, siteinfo):
         filepath = self._get_sitedata_filepath(siteinfo)
         return os.path.exists(filepath) and os.stat(filepath).st_size > 0
 
-
     def _cleanup_orphaned_files(self):
         current_sitestats = get_current_sitestats()
-        known_sites       = dict(current_sitestats.get("known_sites"))
+        known_sites = dict(current_sitestats.get("known_sites"))
 
         # Cleanup obsolete files
         for filename in os.listdir(get_cache_dir()):
@@ -687,19 +718,16 @@ class BISitedataManager(object):
                 except:
                     pass
 
-
     def _query_data(self, only_sites):
         try:
             sites.live().set_only_sites(only_sites)
             sites.live().set_prepend_site(True)
             sites.live().set_auth_domain('bi_all')
 
-            data = sites.live().query(
-                "GET hosts\n"
-                "Columns: name custom_variable_names custom_variable_values "
-                "services childs parents alias\n"
-                "Cache: reload\n"
-            )
+            data = sites.live().query("GET hosts\n"
+                                      "Columns: name custom_variable_names custom_variable_values "
+                                      "services childs parents alias\n"
+                                      "Cache: reload\n")
         finally:
             sites.live().set_auth_domain('read')
             sites.live().set_prepend_site(False)
@@ -717,7 +745,6 @@ class BISitedataManager(object):
 
         return site_dict
 
-
     def _get_missing_sites(self, online_sites):
         site_data_on_disk = set([])
         for siteinfo in online_sites:
@@ -725,14 +752,12 @@ class BISitedataManager(object):
                 site_data_on_disk.add(siteinfo)
         return online_sites - site_data_on_disk
 
-
     def _absorb_sitedata(self, siteinfo, new_data):
         for key, values in new_data.iteritems():
             self._data.setdefault(key, {})
             self._data[key].update(values)
         self._have_sites.add(siteinfo)
         log("Absorbed data %s/%s" % siteinfo)
-
 
     # Returns True if data was actuall queried
     def _query_missing_sitedata(self, online_sites):
@@ -745,7 +770,7 @@ class BISitedataManager(object):
             missing_sites = self._get_missing_sites(online_sites)
             if missing_sites:
                 only_sites = [x[0] for x in missing_sites]
-                new_data   = self._query_data(only_sites)
+                new_data = self._query_data(only_sites)
 
                 sites_with_no_data = {x[0] for x in missing_sites} - set(new_data.keys())
                 for site in sites_with_no_data:
@@ -753,7 +778,7 @@ class BISitedataManager(object):
 
                 for site, sitedata in new_data.iteritems():
                     # Write data to disk
-                    siteinfo          = (site, dict(missing_sites).get(site))
+                    siteinfo = (site, dict(missing_sites).get(site))
                     sitedata_filepath = self._get_sitedata_filepath(siteinfo)
                     log("Saving datafile: %s" % os.path.basename(sitedata_filepath))
                     marshal_save_data(sitedata_filepath, sitedata)
@@ -764,9 +789,8 @@ class BISitedataManager(object):
                         self._absorb_sitedata(siteinfo, sitedata)
             return True
 
-
     def _read_missing_sitedata(self, online_sites):
-        with BILock(self._data_filepath_lock, shared = True):
+        with BILock(self._data_filepath_lock, shared=True):
             for siteinfo in online_sites:
                 if siteinfo in self._have_sites:
                     continue
@@ -783,7 +807,6 @@ class BISitedataManager(object):
                     except OSError:
                         pass
 
-
     # Returns True if new data was aquired
     def _aquire_data(self):
         online_sites = get_current_sitestats().get("online_sites")
@@ -791,13 +814,14 @@ class BISitedataManager(object):
         if online_sites == self._have_sites:
             return False
 
+
 # TODO: check this, currently once read data is never discarded
 #        if self._have_sites - online_sites:
 #            # There is too much cached site data.
 #            # Discard and reread cache. Can be optimized easily
 #            self._reset_caches()
 
-        # Query missing files returns True if it queried any data
+# Query missing files returns True if it queried any data
         cleanup_orphaned_files = self._query_missing_sitedata(online_sites)
 
         self._read_missing_sitedata(online_sites)
@@ -812,7 +836,6 @@ class BISitedataManager(object):
         return True
 
 
-
 class BIJobManager(object):
     def _get_only_hosts_and_only_groups(self, aggr_ids, only_hosts, only_groups, all_hosts):
         all_groups = set([])
@@ -821,31 +844,28 @@ class BIJobManager(object):
 
         if not only_hosts and not only_groups:
             # All aggregations
-            required_hosts  = all_hosts
+            required_hosts = all_hosts
             required_groups = all_groups
         elif only_hosts and not only_groups:
             # All aggregations, Host aggregations not fully compiled
-            required_hosts  = set(only_hosts)
+            required_hosts = set(only_hosts)
             required_groups = all_groups
         elif not only_hosts and only_groups:
             # Aggregations filtered by group, all hosts
-            required_hosts  = all_hosts
+            required_hosts = all_hosts
             required_groups = set(only_groups)
         else:
             # Explicit hosts and groups
-            required_hosts  = set(only_hosts)
+            required_hosts = set(only_hosts)
             required_groups = set(only_groups)
 
         return required_hosts, required_groups
 
-
     def get_missing_jobs(self, only_hosts, only_groups, all_hosts):
         jobs = {}
         aggr_ids = get_aggr_ids([AGGR_HOST, AGGR_MULTI])
-        required_hosts, required_groups = self._get_only_hosts_and_only_groups(aggr_ids,
-                                                                               only_hosts,
-                                                                               only_groups,
-                                                                               all_hosts)
+        required_hosts, required_groups = self._get_only_hosts_and_only_groups(
+            aggr_ids, only_hosts, only_groups, all_hosts)
 
         # Get involved aggregations and filter out already compiled aggregations
         compiled_trees = g_bi_cache_manager.get_compiled_trees()
@@ -860,8 +880,9 @@ class BIJobManager(object):
                 continue
 
             if aggr_type == AGGR_HOST:
-                compiled_hosts = compiled_trees["compiled_host_aggr"].get(aggr_id, {}).get("compiled_hosts", set([]))
-                missing_hosts  = required_hosts - compiled_hosts
+                compiled_hosts = compiled_trees["compiled_host_aggr"].get(aggr_id, {}).get(
+                    "compiled_hosts", set([]))
+                missing_hosts = required_hosts - compiled_hosts
                 if missing_hosts:
                     jobs[aggr_id] = {"queued_hosts": missing_hosts}
 
@@ -872,7 +893,6 @@ class BIJobManager(object):
 
         return jobs
 
-
     def _prepare_compilation(self, discard_old_cache=False):
         # Check if the currently known cache is worth keeping
         # The cache may have more, but not less than the required sites
@@ -880,7 +900,7 @@ class BIJobManager(object):
         if discard_old_cache:
             log("#### CLEARING CACHEFILES ####")
             g_bi_cache_manager.truncate_cachefiles()  # Clears files
-            g_bi_cache_manager.reset_cached_data() # Reset internal caches
+            g_bi_cache_manager.reset_cached_data()  # Reset internal caches
 
         # Determine number of workers
         self._maximum_workers = multiprocessing.cpu_count()
@@ -891,10 +911,8 @@ class BIJobManager(object):
         # Contains the worker processes
         self._workers = []
 
-
     def _is_compilation_finished(self):
         return not self._workers
-
 
     def _start_workers(self):
         site_data = g_bi_sitedata_manager.get_data()
@@ -908,10 +926,9 @@ class BIJobManager(object):
             self._workers.append(new_worker)
         self._queued_jobs = []
 
-
     def _reap_worker_results(self):
         results = []
-        errors  = []
+        errors = []
 
         still_running = []
         for worker in self._workers:
@@ -919,13 +936,12 @@ class BIJobManager(object):
                 log("Read BI data from worker [%s]" % worker.pid)
                 results += worker.get_compiled_aggregations()
                 log("Read ERROR data from worker [%s]" % worker.pid)
-                errors  += worker.get_compilation_errors()
+                errors += worker.get_compilation_errors()
             else:
                 still_running.append(worker)
 
         self._workers = still_running
         return results, errors
-
 
     def _merge_worker_results(self, results):
         if not results:
@@ -936,12 +952,13 @@ class BIJobManager(object):
 
         g_bi_cache_manager.generate_cachefiles()
 
-
     def _compile_jobs_parallel(self):
-        with BILock("%s/bi_cache_COMPILATION_LOCK" % get_cache_dir(), blocking = False) as compilation_lock:
+        with BILock(
+                "%s/bi_cache_COMPILATION_LOCK" % get_cache_dir(),
+                blocking=False) as compilation_lock:
             if not compilation_lock.has_lock():
                 log("Did not get compilation lock")
-                return False # Someone else is compiling
+                return False  # Someone else is compiling
 
             log("Has compilation lock")
 
@@ -952,10 +969,9 @@ class BIJobManager(object):
                 g_bi_cache_manager.load_cachefile()
                 return
 
-
             log("Do compilation, discarding old caches")
             self._queued_jobs = self._get_all_jobs()
-            self._prepare_compilation(discard_old_cache = True)
+            self._prepare_compilation(discard_old_cache=True)
             self._set_compilation_info(current_sitestats)
 
             error_info = ""
@@ -976,22 +992,22 @@ class BIJobManager(object):
                 time.sleep(0.05)
 
             try:
-                check_aggregation_title_uniqueness(g_bi_cache_manager.get_compiled_trees()["aggr_ref"])
+                check_aggregation_title_uniqueness(
+                    g_bi_cache_manager.get_compiled_trees()["aggr_ref"])
             except MKConfigError, e:
                 error_info += str(e)
 
             g_bi_cache_manager.get_compiled_trees()["compiled_all"] = True
-            g_bi_cache_manager.generate_cachefiles(error_info = error_info)
+            g_bi_cache_manager.generate_cachefiles(error_info=error_info)
 
         # Everything is compiled, clear cached data
         g_bi_sitedata_manager.discard_cached_data()
         g_bi_cache_manager.discard_cachefile_data()
-        return True # Did compilation
-
+        return True  # Did compilation
 
     def _get_all_jobs(self):
         jobs = []
-        aggr_ids  = get_aggr_ids([AGGR_HOST, AGGR_MULTI])
+        aggr_ids = get_aggr_ids([AGGR_HOST, AGGR_MULTI])
         all_hosts = g_bi_sitedata_manager.get_all_hosts()
 
         for aggr_id in aggr_ids:
@@ -1005,16 +1021,13 @@ class BIJobManager(object):
 
         return jobs
 
-
     # Returns True if compilation was done
     def compile_all_jobs(self):
         return self._compile_jobs_parallel()
 
-
     # Sets the information which is used during the compilation
     def _set_compilation_info(self, info):
         self._compilation_info = info
-
 
     # Returns the information which was using during the compilation
     def get_compilation_info(self):
@@ -1024,34 +1037,32 @@ class BIJobManager(object):
 class BICacheManager(object):
     def __init__(self):
         # Contains compiled trees
-        self._bicache_file     = BICacheFile(filepath = "%s/bi_cache" % get_cache_dir())
+        self._bicache_file = BICacheFile(filepath="%s/bi_cache" % get_cache_dir())
         # Contains info about compiled trees (small file)
-        self._bicacheinfo_file = BICacheFile(filepath = "%s_info" % self._bicache_file.get_filepath())
+        self._bicacheinfo_file = BICacheFile(filepath="%s_info" % self._bicache_file.get_filepath())
         self.reset_cached_data()
 
         super(BICacheManager, self).__init__()
 
-
     @staticmethod
     def empty_compiled_tree():
         return {
-            "forest":                   {},
+            "forest": {},
             "aggregations_by_hostname": {},
-            "host_aggregations":        {},
-            "affected_hosts":           {},
-            "affected_services":        {},
-            "compiled_host_aggr":       {},
-            "compiled_multi_aggr":      {},
+            "host_aggregations": {},
+            "affected_hosts": {},
+            "affected_services": {},
+            "compiled_host_aggr": {},
+            "compiled_multi_aggr": {},
 
             # Parameters to slim the cache file
-            "aggr_ref":                      {},
-            "forest_ref":                    {},
-            "aggregations_by_hostname_ref":  {},
-            "host_aggregations_ref":         {},
-            "affected_hosts_ref":            {},
-            "affected_services_ref":         {},
+            "aggr_ref": {},
+            "forest_ref": {},
+            "aggregations_by_hostname_ref": {},
+            "host_aggregations_ref": {},
+            "affected_hosts_ref": {},
+            "affected_services_ref": {},
         }
-
 
     # Resets everything the class knows of
     def reset_cached_data(self):
@@ -1060,34 +1071,27 @@ class BICacheManager(object):
         self._bicache_file.clear_cache()
         self._bicacheinfo_file.clear_cache()
 
-
     # Clears just the cachefile cached data if it is no longer required (e.g. fully compiled)
     def discard_cachefile_data(self):
         self._bicache_file.clear_cache()
-
 
     def get_error_info(self):
         cacheinfo_content = self.get_bicacheinfo()
         return cacheinfo_content.get('error_info', None) if cacheinfo_content else None
 
-
     def truncate_cachefiles(self):
         self._bicache_file.truncate()
         self._bicacheinfo_file.truncate()
-
 
     def get_online_sites(self):
         cacheinfo_content = self.get_bicacheinfo()
         return cacheinfo_content.get('compiled_sites', []) if cacheinfo_content else []
 
-
     def get_bicacheinfo(self):
         return self._bicacheinfo_file.load()
 
-
     def get_compiled_trees(self):
         return self._compiled_trees
-
 
     def can_handle_sitestats(self, new_sitestats):
         old_sitestats = self.get_bicacheinfo()
@@ -1099,19 +1103,18 @@ class BICacheManager(object):
         # Check if the current online sites are at least a subset of the previously known
         # online sites. It doesn't matter if the world contains more information than we need
         if new_sitestats["online_sites"] - old_sitestats["compiled_sites"]:
-            log("Old cache invalid: Cached aggregations were compiled for fewer sites, missing %r" % (
-                new_sitestats["online_sites"] - old_sitestats["compiled_sites"]))
+            log("Old cache invalid: Cached aggregations were compiled for fewer sites, missing %r" %
+                (new_sitestats["online_sites"] - old_sitestats["compiled_sites"]))
             return False
 
         if old_sitestats["compiled_sites"] - new_sitestats["online_sites"]:
-            log("WORLD SHRINKS") # No problem at all
+            log("WORLD SHRINKS")  # No problem at all
 
         if old_sitestats["timestamps"] != new_sitestats["timestamps"]:
             log("Old cache invalid: File timestamps differ")
             return False
 
         return True
-
 
     def load_cachefile(self, force_validation=False):
         log("Loading cachefile")
@@ -1134,13 +1137,18 @@ class BICacheManager(object):
             self._compiled_trees = cachefile_content
             self._compiled_trees["forest"] = {}
 
-            for what in [ "aggregations_by_hostname", "host_aggregations", "affected_hosts", "affected_services" ]:
+            for what in [
+                    "aggregations_by_hostname",
+                    "host_aggregations",
+                    "affected_hosts",
+                    "affected_services",
+            ]:
                 self._compiled_trees[what] = {}
                 for key, values in self._compiled_trees["%s_ref" % what].iteritems():
                     self._compiled_trees[what].setdefault(key, [])
                     for value in values:
                         new_value = value
-                        if type(value[1]) == str: # a reference
+                        if type(value[1]) == str:  # a reference
                             new_value = self._compiled_trees["aggr_ref"][value[1]]
                         self._compiled_trees[what][key].append((value[0], new_value))
 
@@ -1158,25 +1166,23 @@ class BICacheManager(object):
 
         return True
 
-
     def generate_cachefiles(self, error_info=""):
-        self._save_cacheinfofile(error_info = error_info)
+        self._save_cacheinfofile(error_info=error_info)
         self._save_cachefile()
 
-
     def _save_cacheinfofile(self, error_info=""):
-        old_compilation_info    = self.get_bicacheinfo()
+        old_compilation_info = self.get_bicacheinfo()
         if not old_compilation_info:
-            old_compiled_sites      = None
+            old_compiled_sites = None
             old_compiled_timestamps = None
         else:
-            old_compiled_sites      = old_compilation_info.get("compiled_sites")
+            old_compiled_sites = old_compilation_info.get("compiled_sites")
             old_compiled_timestamps = old_compilation_info.get("timestamps")
 
-        new_compilation_info    = g_bi_job_manager.get_compilation_info()
+        new_compilation_info = g_bi_job_manager.get_compilation_info()
         new_compiled_timestamps = new_compilation_info.get("timestamps")
         # online_sites gets renamed to compiled_sites for the sake of clarity in the bicacheinfo file
-        new_compiled_sites      = new_compilation_info.get("online_sites")
+        new_compiled_sites = new_compilation_info.get("online_sites")
 
         # If timestamps differ the cache needs to be rewritten on the next update
         if old_compiled_timestamps and old_compiled_timestamps != new_compiled_timestamps:
@@ -1190,26 +1196,26 @@ class BICacheManager(object):
         else:
             compiled_sites = new_compiled_sites
 
-        content  = { "timestamps":          compiled_timestamps,
-                     "compiled_sites":      compiled_sites,
-                     "error_info":  error_info
-                }
+        content = {
+            "timestamps": compiled_timestamps,
+            "compiled_sites": compiled_sites,
+            "error_info": error_info,
+        }
 
         self._bicacheinfo_file.save(content)
 
-
     def _save_cachefile(self):
         keys_for_cachefile = [
-                              "aggr_ref",
-                              "forest_ref",
-                              "aggregations_by_hostname_ref",
-                              "host_aggregations_ref",
-                              "affected_hosts_ref",
-                              "affected_services_ref",
-                              "compiled_host_aggr",
-                              "compiled_multi_aggr",
-                              "compiled_all"
-                              ]
+            "aggr_ref",
+            "forest_ref",
+            "aggregations_by_hostname_ref",
+            "host_aggregations_ref",
+            "affected_hosts_ref",
+            "affected_services_ref",
+            "compiled_host_aggr",
+            "compiled_multi_aggr",
+            "compiled_all",
+        ]
         cache_to_dump = {}
         for what in keys_for_cachefile:
             cache_to_dump[what] = self._compiled_trees.get(what)
@@ -1222,14 +1228,14 @@ class BICacheManager(object):
         info = self.get_compiled_trees()
         return info.get('compiled_all', False) if info else False
 
-
     def _merge_compiled_data(self, job, new_data):
         # Rendering related parameters
-        for what in  [ "affected_hosts",
-                       "aggregations_by_hostname",
-                       "host_aggregations",
-                       "affected_services",
-                       ]:
+        for what in [
+                "affected_hosts",
+                "aggregations_by_hostname",
+                "host_aggregations",
+                "affected_services",
+        ]:
             for key, ref_values in new_data.get("%s_ref" % what, {}).iteritems():
                 self._compiled_trees["%s_ref" % what].setdefault(key, []).extend(ref_values)
 
@@ -1239,14 +1245,12 @@ class BICacheManager(object):
                     linked_aggr = new_data["aggr_ref"][ref_value]
                     self._compiled_trees[what][key].append((ident, linked_aggr))
 
-
         for key, ref_values in new_data.get("forest_ref", {}).iteritems():
             self._compiled_trees["forest_ref"].setdefault(key, []).extend(ref_values)
 
             for ref_value in ref_values:
                 linked_aggr = new_data["aggr_ref"][ref_value]
                 self._compiled_trees["forest"].setdefault(key, []).append(linked_aggr)
-
 
         # Rendering related parameters
         self._compiled_trees["aggr_ref"].update(new_data.get("aggr_ref", {}))
@@ -1256,20 +1260,23 @@ class BICacheManager(object):
         aggr_type, _idx, _aggr_groups = job_id
 
         if aggr_type == AGGR_HOST:
-            self._compiled_trees["compiled_host_aggr"].setdefault(job_id, {"compiled_hosts": set([])})
-            self._compiled_trees["compiled_host_aggr"][job_id]["compiled_hosts"].update(new_data["compiled_hosts"])
+            self._compiled_trees["compiled_host_aggr"].setdefault(job_id,
+                                                                  {"compiled_hosts": set([])})
+            self._compiled_trees["compiled_host_aggr"][job_id]["compiled_hosts"].update(
+                new_data["compiled_hosts"])
         else:
             self._compiled_trees["compiled_multi_aggr"].setdefault(job_id, {})
             self._compiled_trees["compiled_multi_aggr"][job_id]["compiled"] = True
 
 
-
 def get_enabled_aggregations():
     result = []
-    for aggr_type, what in [ (AGGR_MULTI, config.aggregations),
-                             (AGGR_HOST, config.host_aggregations) ]:
+    for aggr_type, what in [
+        (AGGR_MULTI, config.aggregations),
+        (AGGR_HOST, config.host_aggregations),
+    ]:
         for aggr_def in sorted(what):
-            if aggr_def[0].get("disabled"): # options field
+            if aggr_def[0].get("disabled"):  # options field
                 continue
             result.append((aggr_type, aggr_def))
 
@@ -1283,7 +1290,7 @@ def get_aggr_groups(aggr_def):
     return tuple(groups)
 
 
-def get_aggr_ids(what = None): # AGGR_HOST / AGGR_MULTI
+def get_aggr_ids(what=None):  # AGGR_HOST / AGGR_MULTI
     if what is None:
         what = []
     result = []
@@ -1323,10 +1330,11 @@ def setup_bi_instances():
     # - Core restarts
     # - More sites are online than the current cache knows of
 
-    cache_is_valid = g_bi_cache_manager.load_cachefile(force_validation = True)
+    cache_is_valid = g_bi_cache_manager.load_cachefile(force_validation=True)
 
     if cache_is_valid and g_bi_cache_manager.get_error_info():
         raise MKConfigError(g_bi_cache_manager.get_error_info())
+
 
 def compile_forest_improved(only_hosts=None, only_groups=None):
     # Prevent multiple redundant calls of this function
@@ -1338,16 +1346,20 @@ def compile_forest_improved(only_hosts=None, only_groups=None):
 
     compilation_start_time = time.time()
     log("###########################################################")
-    log("Query only hosts: %d, only_groups: %d (%r)" % (len(only_hosts or []), len(only_groups or []), only_groups))
+    log("Query only hosts: %d, only_groups: %d (%r)" % (
+        len(only_hosts or []),
+        len(only_groups or []),
+        only_groups,
+    ))
     # log("Open filelocks :%d" % num_filelocks())
 
     setup_bi_instances()
 
     # TODO: can be removed soon
-    global used_cache      # Boolean
-    global did_compilation # Boolean
+    global used_cache  # Boolean
+    global did_compilation  # Boolean
     did_compilation = False
-    used_cache      = True
+    used_cache = True
 
     try:
         if not get_aggr_ids([AGGR_HOST, AGGR_MULTI]):
@@ -1365,7 +1377,7 @@ def compile_forest_improved(only_hosts=None, only_groups=None):
                 return
 
             all_hosts = g_bi_sitedata_manager.get_all_hosts()
-            jobs      = g_bi_job_manager.get_missing_jobs(only_hosts, only_groups, all_hosts)
+            jobs = g_bi_job_manager.get_missing_jobs(only_hosts, only_groups, all_hosts)
             if not jobs:
                 log("No jobs required")
                 return
@@ -1395,8 +1407,6 @@ def compile_forest_improved(only_hosts=None, only_groups=None):
         log("-- Finished, took %.4f --" % (time.time() - compilation_start_time))
 
 
-
-
 # Precompile the forest of BI rules. Forest? A collection of trees.
 # The compiled forest does not contain any regular expressions anymore.
 # Everything is resolved. Sites, hosts and services are hardcoded. The
@@ -1404,10 +1414,9 @@ def compile_forest_improved(only_hosts=None, only_groups=None):
 # printable (and storable in Python syntax to a file).
 
 
-
 # TODO: Remove this function with version 1.5/1.6
 #       Also remove the feature config.modification_timestamps
-def compile_forest(user, only_hosts = None, only_groups = None):
+def compile_forest(user, only_hosts=None, only_groups=None):
     migrate_bi_configuration()
 
     if not config.bi_use_legacy_compilation:
@@ -1431,14 +1440,14 @@ def compile_forest(user, only_hosts = None, only_groups = None):
 
     def empty_user_cache():
         return {
-            "forest" :                   {},
-            "aggregations_by_hostname" : {},
-            "host_aggregations" :        {},
-            "affected_hosts" :           {},
-            "affected_services":         {},
-            "compiled_hosts" :           set([]),
-            "compiled_groups" :          set([]),
-            "compiled_all" :             False,
+            "forest": {},
+            "aggregations_by_hostname": {},
+            "host_aggregations": {},
+            "affected_hosts": {},
+            "affected_services": {},
+            "compiled_hosts": set([]),
+            "compiled_groups": set([]),
+            "compiled_all": False,
         }
 
     # Try to get data from per-user cache:
@@ -1456,10 +1465,10 @@ def compile_forest(user, only_hosts = None, only_groups = None):
     if g_tree_cache["compiled_all"]:
         log('PID: %d - Already compiled everything' % os.getpid())
         used_cache = True
-        return # In this case simply skip further compilations
+        return  # In this case simply skip further compilations
 
     if not config.aggregations and not config.host_aggregations:
-        return # nothing to do, BI not used
+        return  # nothing to do, BI not used
 
     # If we have previously only partly compiled and now there is no
     # filter, then throw away partly compiled data.
@@ -1485,14 +1494,14 @@ def compile_forest(user, only_hosts = None, only_groups = None):
         if not only_hosts:
             log('PID: %d - All requested hosts have already been compiled' % os.getpid())
             used_cache = True
-            return # Nothing to do - everything is cached
+            return  # Nothing to do - everything is cached
 
     if only_groups and cache['compiled_groups']:
         only_groups = to_compile(only_groups, 'groups')
         if not only_groups:
             log('PID: %d - All requested groups have already been compiled' % os.getpid())
             used_cache = True
-            return # Nothing to do - everything is cached
+            return  # Nothing to do - everything is cached
 
     # Set a flag that anything has been compiled in this call
     did_compilation = True
@@ -1504,11 +1513,15 @@ def compile_forest(user, only_hosts = None, only_groups = None):
     # compilation.
     load_services(only_hosts)
 
-    log("This request: User: %s, Only-Groups: %r, Only-Hosts: %s PID: %d"
-        % (user, only_groups, only_hosts, os.getpid()))
+    log("This request: User: %s, Only-Groups: %r, Only-Hosts: %s PID: %d" % (
+        user,
+        only_groups,
+        only_hosts,
+        os.getpid(),
+    ))
 
-    before   = time.time()
-    num_new_host_aggrs  = 0
+    before = time.time()
+    num_new_host_aggrs = 0
     num_new_multi_aggrs = 0
 
     aggr_list = [(AGGR_MULTI, config.aggregations), (AGGR_HOST, config.host_aggregations)]
@@ -1522,7 +1535,7 @@ def compile_forest(user, only_hosts = None, only_groups = None):
                 continue
 
             downtime_aggr_warn = options.get("downtime_aggr_warn", False)
-            use_hard_states    = options.get("use_hard_states", False)
+            use_hard_states = options.get("use_hard_states", False)
 
             if len(aggr_def) < 3:
                 raise MKConfigError(_("<h1>Invalid aggregation <tt>%s</tt></h1>"
@@ -1533,11 +1546,11 @@ def compile_forest(user, only_hosts = None, only_groups = None):
 
             if only_groups and not groups_set.intersection(only_groups):
                 log('Skip aggr (No group of the aggr has been requested: %r)' % groups)
-                continue # skip not requested groups if filtered by groups
+                continue  # skip not requested groups if filtered by groups
 
             if len(groups_set) == len(groups_set.intersection(cache['compiled_groups'])):
                 log('Skip aggr (All groups have already been compiled')
-                continue # skip if all groups have already been compiled
+                continue  # skip if all groups have already been compiled
 
             new_entries = compile_rule_node(aggr_type, aggr_def[2:], 0)
 
@@ -1546,7 +1559,7 @@ def compile_forest(user, only_hosts = None, only_groups = None):
                 this_entry["use_hard_states"] = use_hard_states
                 this_entry["downtime_aggr_warn"] = downtime_aggr_warn
 
-            new_entries = [ e for e in new_entries if len(e["nodes"]) > 0 ]
+            new_entries = [e for e in new_entries if len(e["nodes"]) > 0]
 
             if aggr_type == AGGR_HOST:
                 num_new_host_aggrs += len(new_entries)
@@ -1557,7 +1570,7 @@ def compile_forest(user, only_hosts = None, only_groups = None):
             for group in groups:
                 if group in cache['compiled_groups']:
                     log('Skip aggr (group %s already compiled)' % group)
-                    continue # the group has already been compiled completely
+                    continue  # the group has already been compiled completely
 
                 if group not in cache['forest']:
                     cache['forest'][group] = new_entries[:]
@@ -1583,7 +1596,10 @@ def compile_forest(user, only_hosts = None, only_groups = None):
                         # ASSERT: len(req_hosts) == 1!
                         for host in req_hosts:
                             if not only_hosts or host in only_hosts:
-                                cache["host_aggregations"].setdefault(host, []).append((group, aggr))
+                                cache["host_aggregations"].setdefault(host, []).append((
+                                    group,
+                                    aggr,
+                                ))
 
                                 # construct a list of compiled single-host aggregations for cached registration
                                 single_affected_hosts.append(host)
@@ -1591,16 +1607,25 @@ def compile_forest(user, only_hosts = None, only_groups = None):
                     # Also all other aggregations that contain exactly one hosts are considered to
                     # be "single host aggregations"
                     elif len(req_hosts) == 1:
-                        cache["host_aggregations"].setdefault(req_hosts[0], []).append((group, aggr))
+                        cache["host_aggregations"].setdefault(req_hosts[0], []).append((
+                            group,
+                            aggr,
+                        ))
 
                     # All aggregations containing a specific host
                     for h in req_hosts:
-                        cache["affected_hosts"].setdefault(h, []).append((group, aggr))
+                        cache["affected_hosts"].setdefault(h, []).append((
+                            group,
+                            aggr,
+                        ))
 
                     # All aggregations containing a specific service
                     services = find_all_leaves(aggr)
-                    for s in services: # triples of site, host, service
-                        cache["affected_services"].setdefault(s, []).append((group, aggr))
+                    for s in services:  # triples of site, host, service
+                        cache["affected_services"].setdefault(s, []).append((
+                            group,
+                            aggr,
+                        ))
 
     # Register compiled objects
     if only_hosts:
@@ -1612,7 +1637,7 @@ def compile_forest(user, only_hosts = None, only_groups = None):
 
     else:
         # The list of ALL hosts
-        cache['compiled_hosts']  = set(g_services.keys())
+        cache['compiled_hosts'] = set(g_services.keys())
         cache['compiled_groups'] = set(cache['forest'].keys())
         cache['compiled_all'] = True
 
@@ -1644,22 +1669,23 @@ def compile_forest(user, only_hosts = None, only_groups = None):
         "  Everything compiled: %r\n"
         "  %d compiled multi aggrs, %d compiled host aggrs, %d compiled groups\n"
         "Config:\n"
-        "  Multi-Aggregations: %d, Host-Aggregations: %d"
-        % (
-           user, only_groups, only_hosts,
-           os.getpid(),
-           num_services, len(g_services_by_hostname),
-           after - before,
-
-           num_new_multi_aggrs, num_new_host_aggrs,
-           only_groups and len(only_groups) or 0,
-
-           cache['compiled_all'],
-           num_total_aggr - num_host_aggr,
-           num_host_aggr,
-           len(cache['compiled_groups']),
-           len(config.aggregations),
-           len(config.host_aggregations),
+        "  Multi-Aggregations: %d, Host-Aggregations: %d" % (
+            user,
+            only_groups,
+            only_hosts,
+            os.getpid(),
+            num_services,
+            len(g_services_by_hostname),
+            after - before,
+            num_new_multi_aggrs,
+            num_new_host_aggrs,
+            only_groups and len(only_groups) or 0,
+            cache['compiled_all'],
+            num_total_aggr - num_host_aggr,
+            num_host_aggr,
+            len(cache['compiled_groups']),
+            len(config.aggregations),
+            len(config.host_aggregations),
         ))
 
 
@@ -1716,10 +1742,11 @@ def compile_rule_node(aggr_type, calllist, lvl):
             config.FOREACH_CHILD,
             config.FOREACH_CHILD_WITH,
             config.FOREACH_PARENT,
-            config.FOREACH_SERVICE ]:
+            config.FOREACH_SERVICE,
+    ]:
         matches = find_matching_services(aggr_type, what, calllist[1:])
         new_elements = []
-        handled_args = set() # avoid duplicate rule incarnations
+        handled_args = set()  # avoid duplicate rule incarnations
         for (hostname, hostalias), matchgroups in matches:
             args = substitute_matches(arglist, hostname, hostalias, matchgroups)
             if tuple(args) not in handled_args:
@@ -1732,10 +1759,10 @@ def compile_rule_node(aggr_type, calllist, lvl):
 
 
 def find_matching_services(aggr_type, what, calllist):
-    if what == config.FOREACH_CHILD_WITH: # extract foreach child specific parameters
+    if what == config.FOREACH_CHILD_WITH:  # extract foreach child specific parameters
         required_child_tags = calllist[0]
         child_spec = calllist[1]
-        calllist   = calllist[2:]
+        calllist = calllist[2:]
 
     # honor list of host tags preceding the host_re
     if type(calllist[0]) == list:
@@ -1748,7 +1775,12 @@ def find_matching_services(aggr_type, what, calllist):
         raise MKConfigError(_("Invalid syntax in FOREACH_..."))
 
     host_spec = calllist[0]
-    if what in [ config.FOREACH_HOST, config.FOREACH_CHILD, config.FOREACH_CHILD_WITH, config.FOREACH_PARENT ]:
+    if what in [
+            config.FOREACH_HOST,
+            config.FOREACH_CHILD,
+            config.FOREACH_CHILD_WITH,
+            config.FOREACH_PARENT,
+    ]:
         service_re = config.HOST_STATE
     else:
         service_re = calllist[1]
@@ -1766,12 +1798,11 @@ def find_matching_services(aggr_type, what, calllist):
         if aggr_type == AGGR_HOST and (site, hostname) in g_tree_cache.get('compiled_hosts', []):
             continue
 
-        host_matches = match_host(hostname, alias, host_spec,
-                                  tags, required_tags, site, honor_site)
+        host_matches = match_host(hostname, alias, host_spec, tags, required_tags, site, honor_site)
         list_of_matches = []
         if host_matches != None:
             if what == config.FOREACH_CHILD:
-                list_of_matches = [ host_matches + (child_name,) for child_name in childs ]
+                list_of_matches = [host_matches + (child_name,) for child_name in childs]
 
             elif what == config.FOREACH_CHILD_WITH:
                 for child_name in childs:
@@ -1783,10 +1814,10 @@ def find_matching_services(aggr_type, what, calllist):
                         list_of_matches.append(host_matches + child_matches)
 
             elif what == config.FOREACH_PARENT:
-                list_of_matches  = [ host_matches + (parent,) for parent in parents ]
+                list_of_matches = [host_matches + (parent,) for parent in parents]
 
             else:
-                list_of_matches = [ host_matches ]
+                list_of_matches = [host_matches]
 
         for host_matches in list_of_matches:
             if service_re == config.HOST_STATE:
@@ -1828,13 +1859,13 @@ def get_services_filtered_by_host_name(host_re):
         # Exact host match
         middle = host_re[2:-2]
         if middle in g_services_by_hostname:
-            entries = [ ((e[0], host_re), e[1]) for e in g_services_by_hostname[middle] ]
+            entries = [((e[0], host_re), e[1]) for e in g_services_by_hostname[middle]]
             host_re = "(.*)"
 
     elif not honor_site and not '*' in host_re and not '$' in host_re \
          and not '|' in host_re and not '[' in host_re:
         # Exact host match
-        entries = [ ((e[0], host_re), e[1]) for e in g_services_by_hostname.get(host_re, []) ]
+        entries = [((e[0], host_re), e[1]) for e in g_services_by_hostname.get(host_re, [])]
 
     else:
         # All services
@@ -1853,7 +1884,6 @@ def do_match(reg, text):
     return tuple(mo.groups())
 
 
-
 # Debugging function
 def render_forest():
     for group, trees in g_tree_cache["forest"].iteritems():
@@ -1862,12 +1892,17 @@ def render_forest():
             ascii = render_tree(tree)
             html.write("<pre>\n" + ascii + "<pre>\n")
 
+
 # Debugging function
-def render_tree(node, indent = ""):
+def render_tree(node, indent=""):
     h = ""
-    if node["type"] == NT_LEAF: # leaf node
-        h += indent + "S/H/S: %s/%s/%s%s\n" % (node["host"][0], node["host"][1], node.get("service"),
-                node.get("hidden") == True and " (hidden)" or "")
+    if node["type"] == NT_LEAF:  # leaf node
+        h += indent + "S/H/S: %s/%s/%s%s\n" % (
+            node["host"][0],
+            node["host"][1],
+            node.get("service"),
+            node.get("hidden") == True and " (hidden)" or "",
+        )
     else:
         h += indent + "Aggregation:\n"
         indent += "    "
@@ -1898,11 +1933,12 @@ def make_arginfo(arglist, args):
         arginfo[name] = (expansion, value)
     return arginfo
 
+
 def find_all_leaves(node):
     # leaf node
     if node["type"] == NT_LEAF:
         site, host = node["host"]
-        return [ (site, host, node.get("service") ) ]
+        return [(site, host, node.get("service"))]
 
     # rule node
     elif node["type"] == NT_RULE:
@@ -1913,6 +1949,7 @@ def find_all_leaves(node):
 
     # place holders
     return []
+
 
 # Removes all empty nodes from the given rule tree
 def remove_empty_nodes(node):
@@ -1929,9 +1966,10 @@ def remove_empty_nodes(node):
             if node_is_empty(subnodes[i]):
                 del subnodes[i]
 
+
 # Checks whether or not a rule node has no subnodes
 def node_is_empty(node):
-    if node["type"] != NT_RULE: # leaf node
+    if node["type"] != NT_RULE:  # leaf node
         return False
     return len(node["nodes"]) == 0
 
@@ -1990,7 +2028,7 @@ def compile_aggregation_rule(aggr_type, rule, args, lvl):
         # Each node can return more than one incarnation (due to regexes in
         # leaf nodes and FOREACH in rule nodes)
 
-        if node[1] in [ config.HOST_STATE, config.REMAINING ]:
+        if node[1] in [config.HOST_STATE, config.REMAINING]:
             new_elements = compile_leaf_node(subst_vars(node[0], arginfo), node[1])
             new_new_elements = []
             for entry in new_elements:
@@ -1998,7 +2036,7 @@ def compile_aggregation_rule(aggr_type, rule, args, lvl):
                 # remaining services of host
                 if entry["type"] == NT_REMAINING:
                     # create unique pointer which we find later
-                    placeholder = {"type" : NT_PLACEHOLDER, "id" : str(len(g_remaining_refs)) }
+                    placeholder = {"type": NT_PLACEHOLDER, "id": str(len(g_remaining_refs))}
                     g_remaining_refs.append((entry["host"], elements, placeholder))
 
                     new_new_elements.append(placeholder)
@@ -2011,27 +2049,30 @@ def compile_aggregation_rule(aggr_type, rule, args, lvl):
                     config.FOREACH_HOST,
                     config.FOREACH_CHILD,
                     config.FOREACH_PARENT,
-                    config.FOREACH_SERVICE ]:
+                    config.FOREACH_SERVICE,
+            ]:
                 # Handle case that leaf elements also need to be iterable via FOREACH_HOST
                 # 1: config.FOREACH_HOST
                 # 2: (['waage'], '(.*)')
                 calllist = []
                 for n in node[1:-2]:
-                    if type(n) in [ str, unicode, list, tuple ]:
+                    if type(n) in [str, unicode, list, tuple]:
                         n = subst_vars(n, arginfo)
                     calllist.append(n)
 
                 matches = find_matching_services(aggr_type, node[0], calllist)
                 new_elements = []
-                handled_args = set() # avoid duplicate rule incarnations
+                handled_args = set()  # avoid duplicate rule incarnations
                 for (hostname, hostalias), matchgroups in matches:
                     if tuple(args) + matchgroups not in handled_args:
-                        new_elements += compile_leaf_node(substitute_matches(node[-2], hostname, hostalias, matchgroups),
-                                                          substitute_matches(node[-1], hostname, hostalias, matchgroups))
+                        new_elements += compile_leaf_node(
+                            substitute_matches(node[-2], hostname, hostalias, matchgroups),
+                            substitute_matches(node[-1], hostname, hostalias, matchgroups))
                         handled_args.add(tuple(args) + matchgroups)
             else:
                 # This is a plain leaf node with just host/service
-                new_elements = compile_leaf_node(subst_vars(node[0], arginfo), subst_vars(node[1], arginfo))
+                new_elements = compile_leaf_node(
+                    subst_vars(node[0], arginfo), subst_vars(node[1], arginfo))
 
         else:
             # substitute our arguments in rule arguments
@@ -2039,8 +2080,8 @@ def compile_aggregation_rule(aggr_type, rule, args, lvl):
             # ['$1$']
             # rule_parts:
             # (<class _mp_84b7bd024cff73bf04ba9045f980becb.FOREACH_HOST at 0x7f03600dc8d8>, ['waage'], '(.*)', 'host')
-            rule_args = [ subst_vars(a, arginfo) for a in node[-1] ]
-            rule_parts = tuple([ subst_vars(part, arginfo) for part in node[:-1] ])
+            rule_args = [subst_vars(a, arginfo) for a in node[-1]]
+            rule_parts = tuple([subst_vars(part, arginfo) for part in node[:-1]])
             new_elements = compile_rule_node(aggr_type, rule_parts + (rule_args,), lvl + 1)
 
         if hidden:
@@ -2053,11 +2094,13 @@ def compile_aggregation_rule(aggr_type, rule, args, lvl):
     for element in elements:
         needed_hosts.update(element.get("reqhosts", []))
 
-    aggregation = { "type"     : NT_RULE,
-                    "reqhosts" : needed_hosts,
-                    "title"    : inst_description,
-                    "func"     : funcname,
-                    "nodes"    : elements}
+    aggregation = {
+        "type": NT_RULE,
+        "reqhosts": needed_hosts,
+        "title": inst_description,
+        "func": funcname,
+        "nodes": elements
+    }
 
     if state_messages:
         aggregation["state_messages"] = state_messages
@@ -2075,11 +2118,11 @@ def compile_aggregation_rule(aggr_type, rule, args, lvl):
             for entry in new_entries:
                 aggregation['reqhosts'].update(entry['reqhosts'])
             where_to_put = ref.index(placeholder)
-            ref[where_to_put:where_to_put+1] = new_entries
+            ref[where_to_put:where_to_put + 1] = new_entries
 
     aggregation['reqhosts'] = list(aggregation['reqhosts'])
 
-    return [ aggregation ]
+    return [aggregation]
 
 
 def find_remaining_services(hostspec, aggregation):
@@ -2088,13 +2131,13 @@ def find_remaining_services(hostspec, aggregation):
 
     remaining = all_services - g_compiled_services_leafes.get(hostspec, set([]))
     g_compiled_services_leafes.get(hostspec, set([])).update(remaining)
-    return [ {
-        "type"     : NT_LEAF,
-        "host"     : hostspec,
-        "reqhosts" : [hostspec],
-        "service"  : service,
-        "title"    : "%s - %s" % (hostspec[1], service)}
-        for service in remaining ]
+    return [{
+        "type": NT_LEAF,
+        "host": hostspec,
+        "reqhosts": [hostspec],
+        "service": service,
+        "title": "%s - %s" % (hostspec[1], service)
+    } for service in remaining]
 
 
 # Helper function that finds all occurrances of a variable
@@ -2113,19 +2156,19 @@ def find_variables(pattern, varname):
 
 def subst_vars(pattern, arginfo):
     if type(pattern) == list:
-        return [subst_vars(x, arginfo) for x in pattern ]
+        return [subst_vars(x, arginfo) for x in pattern]
     elif type(pattern) == tuple:
-        return tuple([subst_vars(x, arginfo) for x in pattern ])
+        return tuple([subst_vars(x, arginfo) for x in pattern])
 
     for name, value in arginfo.iteritems():
-        if type(pattern) in [ str, unicode ]:
-            pattern = pattern.replace('$'+name+'$', value)
+        if type(pattern) in [str, unicode]:
+            pattern = pattern.replace('$' + name + '$', value)
     return pattern
 
 
 def substitute_matches(arg, hostname, hostalias, matchgroups):
-    arginfo = dict([(str(n+1), x) for (n,x) in enumerate(matchgroups)])
-    arginfo["HOSTNAME"]  = hostname
+    arginfo = dict([(str(n + 1), x) for (n, x) in enumerate(matchgroups)])
+    arginfo["HOSTNAME"] = hostname
     arginfo["HOSTALIAS"] = hostalias
 
     return subst_vars(arg, arginfo)
@@ -2148,15 +2191,15 @@ def match_host(hostname, hostalias, host_spec, tags, required_tags, site, honor_
     if not match_host_tags(tags, required_tags):
         return None
 
-    if type(host_spec) != tuple: # matching by host name
-        pattern  = host_spec
+    if type(host_spec) != tuple:  # matching by host name
+        pattern = host_spec
         to_match = hostname
     else:
         pattern = host_spec[1]
         to_match = hostalias
 
     if pattern == '(.*)':
-        return (to_match, )
+        return (to_match,)
     else:
         # For regex to have '$' anchor for end. Users might be surprised
         # to get a prefix match on host names. This is almost never what
@@ -2178,13 +2221,14 @@ def match_host(hostname, hostalias, host_spec, tags, required_tags, site, honor_
 # dictionary with hosts and its compiled services
 g_compiled_services_leafes = {}
 
-regex_host_hit_cache   = set()
-regex_host_miss_cache  = set()
+regex_host_hit_cache = set()
+regex_host_miss_cache = set()
 
-regex_svc_hit_cache    = set()
-regex_svc_miss_cache   = set()
+regex_svc_hit_cache = set()
+regex_svc_miss_cache = set()
 
-def compile_leaf_node(host_re, service_re = config.HOST_STATE):
+
+def compile_leaf_node(host_re, service_re=config.HOST_STATE):
     found = []
 
     if host_re == "$1$":
@@ -2194,7 +2238,7 @@ def compile_leaf_node(host_re, service_re = config.HOST_STATE):
     if not honor_site and not '*' in host_re and not '$' in host_re \
         and not '|' in host_re and '[' not in host_re:
         # Exact host match
-        entries = [ ((e[0], host_re), e[1]) for e in g_services_by_hostname.get(host_re, []) ]
+        entries = [((e[0], host_re), e[1]) for e in g_services_by_hostname.get(host_re, [])]
 
     else:
         if g_services_items:
@@ -2221,7 +2265,6 @@ def compile_leaf_node(host_re, service_re = config.HOST_STATE):
         else:
             search_term = hostname
 
-
         cache_id = (anchored, search_term)
         if cache_id in regex_host_miss_cache:
             continue
@@ -2234,15 +2277,19 @@ def compile_leaf_node(host_re, service_re = config.HOST_STATE):
                 continue
 
         if service_re == config.HOST_STATE:
-            found.append({"type"     : NT_LEAF,
-                          "reqhosts" : [(site, hostname)],
-                          "host"     : (site, hostname),
-                          "title"    : hostname})
+            found.append({
+                "type": NT_LEAF,
+                "reqhosts": [(site, hostname)],
+                "host": (site, hostname),
+                "title": hostname
+            })
 
         elif service_re == config.REMAINING:
-            found.append({"type"     : NT_REMAINING,
-                          "reqhosts" : [(site, hostname)],
-                          "host"     : (site, hostname)})
+            found.append({
+                "type": NT_REMAINING,
+                "reqhosts": [(site, hostname)],
+                "host": (site, hostname)
+            })
         else:
             for service in services:
                 mo = (service_re, service)
@@ -2256,11 +2303,13 @@ def compile_leaf_node(host_re, service_re = config.HOST_STATE):
                         regex_svc_miss_cache.add(mo)
                         continue
 
-                found.append({"type"     : NT_LEAF,
-                              "reqhosts" : [(site, hostname)],
-                              "host"     : (site, hostname),
-                              "service"  : service,
-                              "title"    : "%s - %s" % (hostname, service)} )
+                found.append({
+                    "type": NT_LEAF,
+                    "reqhosts": [(site, hostname)],
+                    "host": (site, hostname),
+                    "service": service,
+                    "title": "%s - %s" % (hostname, service)
+                })
 
     found.sort()
 
@@ -2293,10 +2342,10 @@ def compile_leaf_node(host_re, service_re = config.HOST_STATE):
 
 # Execution of the trees. Returns a tree object reflecting
 # the states of all nodes
-def execute_tree(tree, status_info = None):
+def execute_tree(tree, status_info=None):
     aggregation_options = {
-        "use_hard_states"    : tree["use_hard_states"],
-        "downtime_aggr_warn" : tree["downtime_aggr_warn"],
+        "use_hard_states": tree["use_hard_states"],
+        "downtime_aggr_warn": tree["downtime_aggr_warn"],
     }
 
     if status_info == None:
@@ -2337,11 +2386,13 @@ def execute_leaf_node(node, status_info, aggregation_options):
 
     # assemble state
     if service:
-        for entry in service_state: # list of all services of that host
+        for entry in service_state:  # list of all services of that host
             if entry[0] == service:
                 if len(entry) < 10:
-                    entry = entry + [ True ] # old versions of Livestatus do not send in_service_period
-                state, has_been_checked, output, hard_state, _attempt, _max_attempts, downtime_depth, acknowledged, in_service_period = entry[1:10]
+                    # old versions of Livestatus do not send in_service_period
+                    entry = entry + [True]
+                (state, has_been_checked, output, hard_state, _attempt, _max_attempts,
+                 downtime_depth, acknowledged, in_service_period) = entry[1:10]
                 if has_been_checked == 0:
                     output = _("This service has not been checked yet")
                     state = PENDING
@@ -2350,11 +2401,11 @@ def execute_leaf_node(node, status_info, aggregation_options):
                 else:
                     st = state
                 state = {
-                    "state"             : st,
-                    "output"            : output,
-                    "in_downtime"       : downtime_depth > 0 and 2 or host_in_downtime != 0 and 1 or 0,
-                    "acknowledged"      : bool(acknowledged),
-                    "in_service_period" : in_service_period,
+                    "state": st,
+                    "output": output,
+                    "in_downtime": downtime_depth > 0 and 2 or host_in_downtime != 0 and 1 or 0,
+                    "acknowledged": bool(acknowledged),
+                    "in_service_period": in_service_period,
                 }
                 if state_assumption != None:
                     assumed_state = {
@@ -2382,13 +2433,13 @@ def execute_leaf_node(node, status_info, aggregation_options):
             st = host_hard_state
         else:
             st = host_state
-        aggr_state = {0:OK, 1:CRIT, 2:UNKNOWN, -1:PENDING, None: None}[st]
+        aggr_state = {0: OK, 1: CRIT, 2: UNKNOWN, -1: PENDING, None: None}[st]
         state = {
-            "state"             : aggr_state,
-            "output"            : host_output,
-            "in_downtime"       : host_in_downtime,
-            "acknowledged"      : host_acknowledged,
-            "in_service_period" : host_in_service_period,
+            "state": aggr_state,
+            "output": host_output,
+            "in_downtime": host_in_downtime,
+            "acknowledged": host_acknowledged,
+            "in_service_period": host_in_service_period,
         }
         if state_assumption != None:
             assumed_state = {
@@ -2420,26 +2471,47 @@ def execute_rule_node(node, status_info, aggregation_options):
     assumed_states = []
     downtime_states = []
     service_period_states = []
-    ack_states = [] # Needed for computing the acknowledgement of non-OK nodes
+    ack_states = []  # Needed for computing the acknowledgement of non-OK nodes
     one_assumption = False
     for n in node["nodes"]:
-        result = execute_node(n, status_info, aggregation_options) # state, assumed_state, node [, subtrees]
-        if result[0]["state"] == None: # Omit this node (used in availability for unmonitored things)
+        # state, assumed_state, node [, subtrees]
+        result = execute_node(n, status_info, aggregation_options)
+
+        if result[0][
+                "state"] == None:  # Omit this node (used in availability for unmonitored things)
             continue
         subtrees.append(result)
 
         # Assume items in downtime as CRIT when computing downtime state
-        downtime_states.append(({"state": result[0]["in_downtime"] != 0 and 2 or 0, "output" : ""}, result[2]))
+        downtime_states.append((
+            {
+                "state": result[0]["in_downtime"] != 0 and 2 or 0,
+                "output": "",
+            },
+            result[2],
+        ))
 
         # Assume non-OK nodes that are acked as OK
         if result[0]["acknowledged"]:
             acked_state = 0
         else:
             acked_state = result[0]["state"]
-        ack_states.append(({"state": acked_state, "output" : ""}, result[2]))
+        ack_states.append((
+            {
+                "state": acked_state,
+                "output": "",
+            },
+            result[2],
+        ))
 
         # Assume items oo their service period as CRIT when computing in_service_period of aggregate
-        service_period_states.append(({"state": (not result[0]["in_service_period"]) and 2 or 0, "output" : ""}, result[2]))
+        service_period_states.append((
+            {
+                "state": (not result[0]["in_service_period"]) and 2 or 0,
+                "output": "",
+            },
+            result[2],
+        ))
 
         node_states.append((result[0], result[2]))
         if result[1] != None:
@@ -2462,9 +2534,9 @@ def execute_rule_node(node, status_info, aggregation_options):
         state["in_downtime"] = downtime_state["state"] >= 2
 
     # Compute acknowledgedment state
-    if state["state"] > 0: # Non-OK-State -> compute acknowledgedment
+    if state["state"] > 0:  # Non-OK-State -> compute acknowledgedment
         ack_state = func(*([ack_states] + funcargs))
-        state["acknowledged"] = ack_state["state"] == 0 # would be OK if acked problems would be OK
+        state["acknowledged"] = ack_state["state"] == 0  # would be OK if acked problems would be OK
     else:
         state["acknowledged"] = False
 
@@ -2502,10 +2574,9 @@ def get_status_info(required_hosts):
     sites.live().set_only_sites(list(req_sites))
     sites.live().set_prepend_site(True)
     data = sites.live().query(
-            "GET hosts\n"
-            "Columns: name state hard_state plugin_output scheduled_downtime_depth "
-            "acknowledged in_service_period services_with_fullstate\n"
-            + host_filter)
+        "GET hosts\n"
+        "Columns: name state hard_state plugin_output scheduled_downtime_depth "
+        "acknowledged in_service_period services_with_fullstate\n" + host_filter)
     sites.live().set_auth_domain('read')
     sites.live().set_only_sites(None)
     sites.live().set_prepend_site(False)
@@ -2515,9 +2586,20 @@ def get_status_info(required_hosts):
 # This variant of the function is configured not with a list of
 # hosts but with a livestatus filter header and a list of columns
 # that need to be fetched in any case
-def get_status_info_filtered(filter_header, only_sites, limit, add_columns, precompile_on_demand, bygroup):
-    columns = [ "name", "host_name", "state", "hard_state", "plugin_output", "scheduled_downtime_depth",
-                "host_in_service_period", "acknowledged", "services_with_fullstate", "parents" ] + add_columns
+def get_status_info_filtered(filter_header, only_sites, limit, add_columns, precompile_on_demand,
+                             bygroup):
+    columns = [
+        "name",
+        "host_name",
+        "state",
+        "hard_state",
+        "plugin_output",
+        "scheduled_downtime_depth",
+        "host_in_service_period",
+        "acknowledged",
+        "services_with_fullstate",
+        "parents",
+    ] + add_columns
 
     query = "GET hosts%s\n" % ("bygroup" if bygroup else "")
     query += "Columns: " + (" ".join(columns)) + "\n"
@@ -2533,9 +2615,9 @@ def get_status_info_filtered(filter_header, only_sites, limit, add_columns, prec
     sites.live().set_only_sites(None)
     sites.live().set_auth_domain('read')
 
-    headers = [ "site" ] + columns
-    hostnames = [ row[1] for row in data ]
-    rows = [ dict(zip(headers, row)) for row in data]
+    headers = ["site"] + columns
+    hostnames = [row[1] for row in data]
+    rows = [dict(zip(headers, row)) for row in data]
 
     # on demand compile: if parents have been found, also fetch data of the parents.
     # This is needed to allow cluster hosts (which have the nodes as parents) in the
@@ -2543,18 +2625,19 @@ def get_status_info_filtered(filter_header, only_sites, limit, add_columns, prec
     if precompile_on_demand:
         parent_filter = []
         for row in rows:
-            parent_filter += [ 'Filter: host_name = %s\n' % p for p in row["parents"] ]
+            parent_filter += ['Filter: host_name = %s\n' % p for p in row["parents"]]
 
         if parent_filter:
-            parent_filter_txt  = ''.join(parent_filter)
+            parent_filter_txt = ''.join(parent_filter)
             parent_filter_txt += 'Or: %d\n' % len(parent_filter)
 
-            for row in get_status_info_filtered(parent_filter_txt, only_sites,
-                                                limit, add_columns, False, bygroup):
+            for row in get_status_info_filtered(parent_filter_txt, only_sites, limit, add_columns,
+                                                False, bygroup):
                 if row['name'] not in hostnames:
                     rows.append(row)
 
     return rows
+
 
 #       _                      _____                 _   _
 #      / \   __ _  __ _ _ __  |  ___|   _ _ __   ___| |_(_) ___  _ __  ___
@@ -2587,8 +2670,9 @@ def state_weight(s):
         return 0.5
     return float(s)
 
+
 def x_best_state(l, x):
-    ll = [ (state_weight(s), s) for s in l ]
+    ll = [(state_weight(s), s) for s in l]
     ll.sort()
     if x < 0:
         ll.reverse()
@@ -2596,10 +2680,13 @@ def x_best_state(l, x):
     if len(ll) < n:
         n = len(ll)
 
-    return ll[n-1][1]
+    return ll[n - 1][1]
 
-def aggr_nth_state(nodelist, n, worst_state, ignore_states = None):
-    states = [ i[0]["state"] for i in nodelist if not ignore_states or i[0]["state"] not in ignore_states ]
+
+def aggr_nth_state(nodelist, n, worst_state, ignore_states=None):
+    states = [
+        i[0]["state"] for i in nodelist if not ignore_states or i[0]["state"] not in ignore_states
+    ]
     # In case of the ignored states it might happen that the states list is empty. Use the
     # OK state in this case.
     if not states:
@@ -2611,34 +2698,39 @@ def aggr_nth_state(nodelist, n, worst_state, ignore_states = None):
     if state_weight(state) > state_weight(worst_state):
         state = worst_state
 
-    return { "state" : state, "output" : "" }
+    return {"state": state, "output": ""}
 
-def aggr_worst(nodes, n = 1, worst_state = CRIT, ignore_states = None):
+
+def aggr_worst(nodes, n=1, worst_state=CRIT, ignore_states=None):
     return aggr_nth_state(nodes, -int(n), int(worst_state), ignore_states)
 
-def aggr_best(nodes, n = 1, worst_state = CRIT, ignore_states = None):
+
+def aggr_best(nodes, n=1, worst_state=CRIT, ignore_states=None):
     return aggr_nth_state(nodes, int(n), int(worst_state), ignore_states)
 
+
 config.aggregation_functions["worst"] = aggr_worst
-config.aggregation_functions["best"]  = aggr_best
+config.aggregation_functions["best"] = aggr_best
+
 
 def aggr_countok_convert(num, count):
     if str(num)[-1] == "%":
         return int(num[:-1]) / 100.0 * count
     return int(num)
 
+
 def aggr_countok(nodes, needed_for_ok=2, needed_for_warn=1):
-    states = [ i[0]["state"] for i in nodes ]
-    num_ok      = len([s for s in states if s == 0 ])
-    num_nonok   = len([s for s in states if s > 0 ])
-    num_nodes   = num_ok + num_nonok
+    states = [i[0]["state"] for i in nodes]
+    num_ok = len([s for s in states if s == 0])
+    num_nonok = len([s for s in states if s > 0])
+    num_nodes = num_ok + num_nonok
 
     # We need to handle the special case "PENDING" separately.
     # Example: count is set to 50%. You have 10 nodes, all of
     # which are PENDING, then the outcome must be PENDING, not
     # CRIT.
-    if num_nodes == 0: # All are pending
-        return { "state": -1, "output": "" }
+    if num_nodes == 0:  # All are pending
+        return {"state": -1, "output": ""}
 
     # counts can be specified as integer (e.g. '2') or
     # as percentages (e.g. '70%').
@@ -2647,13 +2739,14 @@ def aggr_countok(nodes, needed_for_ok=2, needed_for_warn=1):
 
     # Enough nodes are OK -> state is OK
     if num_ok >= ok_count:
-        return { "state": 0, "output": "" }
+        return {"state": 0, "output": ""}
 
     # Enough nodes OK in order to trigger warn level -> WARN
     elif num_ok >= warn_count:
-        return { "state": 1, "output": "" }
+        return {"state": 1, "output": ""}
 
-    return { "state": 2, "output": "" }
+    return {"state": 2, "output": ""}
+
 
 config.aggregation_functions["count_ok"] = aggr_countok
 
@@ -2680,8 +2773,8 @@ def aggr_running_on(nodes, regex):
     # host we run on not found. Strange...
     return {"state": UNKNOWN, "output": _("running on unknown host '%s'") % running_on }
 
-config.aggregation_functions['running_on'] = aggr_running_on
 
+config.aggregation_functions['running_on'] = aggr_running_on
 
 #      ____
 #     |  _ \ __ _  __ _  ___  ___
@@ -2689,6 +2782,7 @@ config.aggregation_functions['running_on'] = aggr_running_on
 #     |  __/ (_| | (_| |  __/\__ \
 #     |_|   \__,_|\__, |\___||___/
 #                 |___/
+
 
 # Just for debugging
 @cmk.gui.pages.register("bi_debug")
@@ -2731,6 +2825,7 @@ def ajax_set_assumption():
         g_assumptions[key] = int(state)
     save_assumptions()
 
+
 @cmk.gui.pages.register("bi_save_treestate")
 def ajax_save_treestate():
     path_id = html.get_unicode_input("path")
@@ -2746,10 +2841,11 @@ def ajax_save_treestate():
 
     save_ex_level(current_ex_level)
 
+
 @cmk.gui.pages.register("bi_render_tree")
 def ajax_render_tree():
     aggr_group = html.get_unicode_input("group")
-    reqhosts = [ tuple(sitehost.split('#')) for sitehost in html.var("reqhosts").split(',') ]
+    reqhosts = [tuple(sitehost.split('#')) for sitehost in html.var("reqhosts").split(',')]
     aggr_title = html.get_unicode_input("title")
     omit_root = bool(html.var("omit_root"))
     boxes = bool(html.var("boxes"))
@@ -2757,7 +2853,7 @@ def ajax_render_tree():
 
     # Make sure that BI aggregates are available
     if config.bi_precompile_on_demand:
-        compile_forest(config.user.id, only_hosts = reqhosts, only_groups = [ aggr_group ])
+        compile_forest(config.user.id, only_hosts=reqhosts, only_groups=[aggr_group])
     else:
         compile_forest(config.user.id)
 
@@ -2774,7 +2870,7 @@ def ajax_render_tree():
         if tree["title"] == aggr_title:
             row = create_aggregation_row(tree)
             if row["aggr_state"]["state"] == None:
-                continue # Not yet monitored, aggregation is not displayed
+                continue  # Not yet monitored, aggregation is not displayed
             row["aggr_group"] = aggr_group
 
             if boxes:
@@ -2783,8 +2879,12 @@ def ajax_render_tree():
                 renderer_cls = FoldableTreeRendererTree
 
             # ZUTUN: omit_root, boxes, only_problems has HTML-Variablen
-            renderer = renderer_cls(row, omit_root=omit_root, expansion_level=load_ex_level(),
-                                    only_problems=only_problems, lazy=False)
+            renderer = renderer_cls(
+                row,
+                omit_root=omit_root,
+                expansion_level=load_ex_level(),
+                only_problems=only_problems,
+                lazy=False)
             html.write(renderer.render())
             return
 
@@ -2812,7 +2912,6 @@ def render_tree_json(row):
         html.set_tree_states('bi', treestate)
         html.save_tree_states()
 
-
     def render_node_json(tree, show_host):
         is_leaf = len(tree) == 3
         if is_leaf:
@@ -2825,12 +2924,12 @@ def render_tree_json(row):
             title = tree[2]["title"]
 
         json_node = {
-            "title"             : title,
+            "title": title,
             # 2 -> This element is currently in a scheduled downtime
             # 1 -> One of the subelements is in a scheduled downtime
-            "in_downtime"       : tree[0]["in_downtime"],
-            "acknowledged"      : tree[0]["acknowledged"],
-            "in_service_period" : tree[0]["in_service_period"],
+            "in_downtime": tree[0]["in_downtime"],
+            "acknowledged": tree[0]["acknowledged"],
+            "in_service_period": tree[0]["in_service_period"],
         }
 
         # Check if we have an assumed state: comparing assumed state (tree[1]) with state (tree[0])
@@ -2844,7 +2943,6 @@ def render_tree_json(row):
         json_node["state"] = effective_state["state"]
         json_node["output"] = compute_output_message(effective_state, tree[2])
         return json_node
-
 
     def render_subtree_json(node, path, show_host):
         json_node = render_node_json(node, show_host)
@@ -2867,17 +2965,15 @@ def render_tree_json(row):
     return "", render_subtree_json(root_node, [root_node[2]["title"]], len(affected_hosts) > 1)
 
 
-
 class FoldableTreeRenderer(object):
     def __init__(self, row, omit_root, expansion_level, only_problems, lazy, wrap_texts=True):
-        self._row             = row
-        self._omit_root       = omit_root
+        self._row = row
+        self._omit_root = omit_root
         self._expansion_level = expansion_level
-        self._only_problems   = only_problems
-        self._lazy            = lazy
-        self._wrap_texts      = wrap_texts
+        self._only_problems = only_problems
+        self._lazy = lazy
+        self._wrap_texts = wrap_texts
         self._load_tree_state()
-
 
     def _load_tree_state(self):
         saved_expansion_level = load_ex_level()
@@ -2887,16 +2983,13 @@ class FoldableTreeRenderer(object):
             html.set_tree_states('bi', self._treestate)
             html.save_tree_states()
 
-
     def css_class(self):
         raise NotImplementedError()
-
 
     def render(self):
         with html.plugged():
             self._show_tree()
             return html.drain()
-
 
     def _show_tree(self):
         tree = self._get_tree()
@@ -2905,29 +2998,26 @@ class FoldableTreeRenderer(object):
         group = self._row["aggr_group"]
 
         url_id = html.urlencode_vars([
-            ( "group", group ),
-            ( "title", title ),
-            ( "omit_root", "yes" if self._omit_root else ""),
-            ( "renderer", self.__class__.__name__),
-            ( "only_problems", "yes" if self._only_problems else ""),
-            ( "reqhosts", ",".join('%s#%s' % sitehost for sitehost in affected_hosts) ),
+            ("group", group),
+            ("title", title),
+            ("omit_root", "yes" if self._omit_root else ""),
+            ("renderer", self.__class__.__name__),
+            ("only_problems", "yes" if self._only_problems else ""),
+            ("reqhosts", ",".join('%s#%s' % sitehost for sitehost in affected_hosts)),
         ])
 
         html.open_div(id_=url_id, class_="bi_tree_container")
         self._show_subtree(tree, path=[tree[2]["title"]], show_host=len(affected_hosts) > 1)
         html.close_div()
 
-
     def _show_subtree(self, tree, path, show_host):
         raise NotImplementedError()
-
 
     def _get_tree(self):
         tree = self._row["aggr_treestate"]
         if self._only_problems:
             tree = self._filter_tree_only_problems(tree)
         return tree
-
 
     # Convert tree to tree contain only node in non-OK state
     def _filter_tree_only_problems(self, tree):
@@ -2936,7 +3026,7 @@ class FoldableTreeRenderer(object):
         new_subtrees = []
         for subtree in subtrees:
             effective_state = subtree[1] if subtree[1] is not None else subtree[0]
-            if effective_state["state"] not in [ OK, PENDING ]:
+            if effective_state["state"] not in [OK, PENDING]:
                 if len(subtree) == 3:
                     new_subtrees.append(subtree)
                 else:
@@ -2944,14 +3034,11 @@ class FoldableTreeRenderer(object):
 
         return state, assumed_state, node, new_subtrees
 
-
     def _is_leaf(self, tree):
         return len(tree) == 3
 
-
     def _path_id(self, path):
         return "/".join(path)
-
 
     def _is_open(self, path):
         is_open = self._treestate.get(self._path_id(path))
@@ -2964,18 +3051,14 @@ class FoldableTreeRenderer(object):
 
         return is_open
 
-
     def _omit_content(self, path):
         return self._lazy and not self._is_open(path)
-
 
     def _get_mousecode(self, path):
         return "%s(this, %d);" % (self._toggle_js_function(), self._omit_content(path))
 
-
     def _toggle_js_function(self):
         raise NotImplementedError()
-
 
     def _show_leaf(self, tree, show_host):
         site, host = tree[2]["host"]
@@ -2988,10 +3071,14 @@ class FoldableTreeRenderer(object):
         # (4) CPU load                  (show_host == False, service != None)
 
         if show_host or not service:
-            host_url = html.makeuri_contextless([("view_name", "hoststatus"), ("site", site), ("host", host)], filename="view.py")
+            host_url = html.makeuri_contextless([("view_name", "hoststatus"), ("site", site),
+                                                 ("host", host)],
+                                                filename="view.py")
 
         if service:
-            service_url = html.makeuri_contextless([("view_name", "service"), ("site", site), ("host", host), ("service", service)], filename="view.py")
+            service_url = html.makeuri_contextless([("view_name", "service"), ("site", site),
+                                                    ("host", host), ("service", service)],
+                                                   filename="view.py")
 
         with self._show_node(tree, show_host):
             self._assume_icon(site, host, service)
@@ -3005,10 +3092,8 @@ class FoldableTreeRenderer(object):
             else:
                 html.a(service.replace(" ", "&nbsp;"), href=service_url)
 
-
     def _show_node(self, tree, show_host, mousecode=None, img_class=None):
         raise NotImplementedError()
-
 
     def _assume_icon(self, site, host, service):
         if service:
@@ -3026,7 +3111,6 @@ class FoldableTreeRenderer(object):
             cssclass="assumption",
         )
 
-
     def _render_bi_state(self, state):
         return { PENDING: _("PD"),
                  OK:      _("OK"),
@@ -3036,7 +3120,6 @@ class FoldableTreeRenderer(object):
                  MISSING: _("MI"),
                  UNAVAIL: _("NA"),
         }.get(state, _("??"))
-
 
 
 class FoldableTreeRendererTree(FoldableTreeRenderer):
@@ -3074,8 +3157,9 @@ class FoldableTreeRendererTree(FoldableTreeRenderer):
             html.write_text(tree[2]["title"])
 
         if not is_empty:
-            html.open_ul(id_="%d:%s" % (self._expansion_level or 0, self._path_id(path)),
-                         class_=["subtree", css_class])
+            html.open_ul(
+                id_="%d:%s" % (self._expansion_level or 0, self._path_id(path)),
+                class_=["subtree", css_class])
 
             if not self._omit_content(path):
                 for node in tree[3]:
@@ -3089,7 +3173,6 @@ class FoldableTreeRendererTree(FoldableTreeRenderer):
 
         html.close_span()
 
-
     @contextmanager
     def _show_node(self, tree, show_host, mousecode=None, img_class=None):
         # Check if we have an assumed state: comparing assumed state (tree[1]) with state (tree[0])
@@ -3100,16 +3183,20 @@ class FoldableTreeRendererTree(FoldableTreeRenderer):
             addclass = None
             effective_state = tree[0]
 
-        html.open_span(
-            class_=["content", "state", "state%d" % effective_state["state"] if effective_state["state"] != None else -1,
-                    addclass])
+        html.open_span(class_=[
+            "content", "state",
+            "state%d" %
+            effective_state["state"] if effective_state["state"] != None else -1, addclass
+        ])
         html.write_text(self._render_bi_state(effective_state["state"]))
         html.close_span()
 
         if mousecode:
             if img_class:
-                html.img(src="images/tree_black_closed.png", class_=["treeangle", img_class],
-                         onclick=mousecode)
+                html.img(
+                    src="images/tree_black_closed.png",
+                    class_=["treeangle", img_class],
+                    onclick=mousecode)
 
             html.open_span(class_=["content", "name"])
 
@@ -3143,7 +3230,8 @@ class FoldableTreeRendererTree(FoldableTreeRenderer):
 
             html.close_span()
 
-        output = cmk.gui.view_utils.format_plugin_output(effective_state["output"], shall_escape=config.escape_plugin_output)
+        output = cmk.gui.view_utils.format_plugin_output(
+            effective_state["output"], shall_escape=config.escape_plugin_output)
         if output:
             output = html.render_b(HTML("&diams;"), class_="bullet") + output
         else:
@@ -3152,15 +3240,12 @@ class FoldableTreeRendererTree(FoldableTreeRenderer):
         html.span(output, class_=["content", "output"])
 
 
-
 class FoldableTreeRendererBoxes(FoldableTreeRenderer):
     def css_class(self):
         return "aggrtree_box"
 
-
     def _toggle_js_function(self):
         return "bi_toggle_box"
-
 
     def _show_subtree(self, tree, path, show_host):
         # Check if we have an assumed state: comparing assumed state (tree[1]) with state (tree[0])
@@ -3190,8 +3275,10 @@ class FoldableTreeRendererBoxes(FoldableTreeRenderer):
 
         omit = self._omit_root and len(path) == 1
         if not omit:
-            html.open_span(id_="%d:%s" % (self._expansion_level or 0, self._path_id(path)),
-                           class_=classes, onclick=mc)
+            html.open_span(
+                id_="%d:%s" % (self._expansion_level or 0, self._path_id(path)),
+                class_=classes,
+                onclick=mc)
 
             if is_leaf:
                 self._show_leaf(tree, show_host)
@@ -3201,34 +3288,30 @@ class FoldableTreeRendererBoxes(FoldableTreeRenderer):
             html.close_span()
 
         if not is_leaf and not self._omit_content(path):
-            html.open_span(class_="bibox", style="display: none;" if not self._is_open(path) and not omit else "")
+            html.open_span(
+                class_="bibox",
+                style="display: none;" if not self._is_open(path) and not omit else "")
             for node in tree[3]:
                 new_path = path + [node[2]["title"]]
                 self._show_subtree(node, new_path, show_host)
             html.close_span()
 
-
     @contextmanager
     def _show_node(self, tree, show_host, mousecode=None, img_class=None):
         yield
 
-
     def _assume_icon(self, site, host, service):
-        return # No assume icon with boxes
-
+        return  # No assume icon with boxes
 
 
 class FoldableTreeRendererTable(FoldableTreeRendererTree):
     _mirror = False
 
-
     def css_class(self):
         return "aggrtree"
 
-
     def _toggle_js_function(self):
         return "bi_toggle_subtree"
-
 
     def _show_tree(self):
         td_style = None if self._wrap_texts == "wrap" else "white-space: nowrap;"
@@ -3256,19 +3339,16 @@ class FoldableTreeRendererTable(FoldableTreeRendererTree):
 
         html.close_table()
 
-
     def _gen_table(self, tree, height, show_host):
         if self._is_leaf(tree):
             return self._gen_leaf(tree, height, show_host)
         return self._gen_node(tree, height, show_host)
-
 
     def _gen_leaf(self, tree, height, show_host):
         with html.plugged():
             self._show_leaf(tree, show_host)
             content = HTML(html.drain())
         return [(content, height, [])]
-
 
     def _gen_node(self, tree, height, show_host):
         leaves = []
@@ -3289,15 +3369,12 @@ class FoldableTreeRendererTable(FoldableTreeRendererTree):
         return leaves
 
 
-
 class FoldableTreeRendererBottomUp(FoldableTreeRendererTable):
     pass
 
 
-
 class FoldableTreeRendererTopDown(FoldableTreeRendererTable):
     _mirror = True
-
 
 
 #    ____        _
@@ -3307,7 +3384,8 @@ class FoldableTreeRendererTopDown(FoldableTreeRendererTable):
 #   |____/ \__,_|\__\__,_|___/\___/ \__,_|_|  \___\___||___/
 #
 
-def create_aggregation_row(tree, status_info = None):
+
+def create_aggregation_row(tree, status_info=None):
     tree_state = execute_tree(tree, status_info)
 
     # TODO: the tree state may include hosts the current user has
@@ -3324,20 +3402,21 @@ def create_aggregation_row(tree, status_info = None):
     output = compute_output_message(eff_state, node)
 
     return {
-        "aggr_tree"            : tree,
-        "aggr_treestate"       : tree_state,
-        "aggr_state"           : state,          # state disregarding assumptions
-        "aggr_assumed_state"   : assumed_state,  # is None, if there are no assumptions
-        "aggr_effective_state" : eff_state,      # is assumed_state, if there are assumptions, else real state
-        "aggr_name"            : node["title"],
-        "aggr_output"          : output,
-        "aggr_hosts"           : node["reqhosts"],
-        "aggr_function"        : node["func"],
+        "aggr_tree": tree,
+        "aggr_treestate": tree_state,
+        "aggr_state": state,  # state disregarding assumptions
+        "aggr_assumed_state": assumed_state,  # is None, if there are no assumptions
+        "aggr_effective_state":
+            eff_state,  # is assumed_state, if there are assumptions, else real state
+        "aggr_name": node["title"],
+        "aggr_output": output,
+        "aggr_hosts": node["reqhosts"],
+        "aggr_function": node["func"],
     }
 
 
 def table(columns, add_headers, only_sites, limit, filters):
-    load_assumptions() # user specific, always loaded
+    load_assumptions()  # user specific, always loaded
     # Hier müsste man jetzt die Filter kennen, damit man nicht sinnlos
     # alle Aggregationen berechnet.
     rows = []
@@ -3365,7 +3444,7 @@ def table(columns, add_headers, only_sites, limit, filters):
 
     if config.bi_precompile_on_demand and only_group:
         # optimized mode: if aggregation group known only precompile this one
-        compile_forest(config.user.id, only_groups = [ only_group ])
+        compile_forest(config.user.id, only_groups=[only_group])
     else:
         # classic mode: precompile everything
         compile_forest(config.user.id)
@@ -3406,7 +3485,7 @@ def table(columns, add_headers, only_sites, limit, filters):
     status_info = get_status_info(required_hosts)
 
     for group, trees in items.iteritems():
-        if only_group not in [ None, group ]:
+        if only_group not in [None, group]:
             continue
 
         if group_prefix and not group.startswith(group_prefix):
@@ -3418,7 +3497,7 @@ def table(columns, add_headers, only_sites, limit, filters):
 
             row = create_aggregation_row(tree, status_info)
             if row["aggr_state"]["state"] == None:
-                continue # Not yet monitored, aggregation is not displayed
+                continue  # Not yet monitored, aggregation is not displayed
 
             row["aggr_group"] = group
             rows.append(row)
@@ -3443,7 +3522,7 @@ def host_table(columns, add_headers, only_sites, limit, filters):
 def singlehost_table(columns, add_headers, only_sites, limit, filters, joinbyname, bygroup):
     log("--------------------------------------------------------------------")
     log("* Starting to compute singlehost_table (joinbyname = %s)" % joinbyname)
-    load_assumptions() # user specific, always loaded
+    load_assumptions()  # user specific, always loaded
     log("* Assumptions are loaded.")
 
     # Create livestatus filter for filtering out hosts. We can
@@ -3457,7 +3536,8 @@ def singlehost_table(columns, add_headers, only_sites, limit, filters, joinbynam
 
     log("* Getting status information about hosts...")
     host_columns = [c for c in columns if c.startswith("host_")]
-    hostrows = get_status_info_filtered(filter_code, only_sites, limit, host_columns, config.bi_precompile_on_demand, bygroup)
+    hostrows = get_status_info_filtered(filter_code, only_sites, limit, host_columns,
+                                        config.bi_precompile_on_demand, bygroup)
     log("* Got %d host rows" % len(hostrows))
 
     # Apply aggregation group filter. This is important for performance. We
@@ -3468,19 +3548,21 @@ def singlehost_table(columns, add_headers, only_sites, limit, filters, joinbynam
         if filt.name == "aggr_group":
             val = filt.selected_group()
             if val:
-                only_groups = [ filt.selected_group() ]
+                only_groups = [filt.selected_group()]
 
     if config.bi_precompile_on_demand:
         log("* Compiling forest on demand...")
-        compile_forest(config.user.id, only_groups = only_groups,
-                       only_hosts = [ (h['site'], h['name']) for h in hostrows ])
+        compile_forest(
+            config.user.id,
+            only_groups=only_groups,
+            only_hosts=[(h['site'], h['name']) for h in hostrows])
     else:
         log("* Compiling forest...")
         compile_forest(config.user.id)
 
     # rows by site/host - needed for later cluster state gathering
     if config.bi_precompile_on_demand and not joinbyname:
-        row_dict = dict([ ((r['site'], r['name']), r) for r in hostrows])
+        row_dict = dict([((r['site'], r['name']), r) for r in hostrows])
 
     rows = []
     # Now compute aggregations of these hosts
@@ -3517,25 +3599,29 @@ def singlehost_table(columns, add_headers, only_sites, limit, filters, joinbynam
                     else:
                         row = rows_by_host[sitehost]
                         status_info[sitehost] = [
-                             row["state"],
-                             row["hard_state"],
-                             row["plugin_output"],
-                             hostrow["scheduled_downtime_depth"] > 0,
-                             bool(hostrow["acknowledged"]),
-                             hostrow["host_in_service_period"],
-                             row["services_with_fullstate"] ]
+                            row["state"],
+                            row["hard_state"],
+                            row["plugin_output"],
+                            hostrow["scheduled_downtime_depth"] > 0,
+                            bool(hostrow["acknowledged"]),
+                            hostrow["host_in_service_period"],
+                            row["services_with_fullstate"],
+                        ]
                 if status_info == None:
                     break
         else:
             aggrs = g_tree_cache["host_aggregations"].get((site, host), [])
-            status_info = { (site, host) : [
-                hostrow["state"],
-                hostrow["hard_state"],
-                hostrow["plugin_output"],
-                hostrow["scheduled_downtime_depth"] > 0,
-                bool(hostrow["acknowledged"]),
-                hostrow["host_in_service_period"],
-                hostrow["services_with_fullstate"] ] }
+            status_info = {
+                (site, host): [
+                    hostrow["state"],
+                    hostrow["hard_state"],
+                    hostrow["plugin_output"],
+                    hostrow["scheduled_downtime_depth"] > 0,
+                    bool(hostrow["acknowledged"]),
+                    hostrow["host_in_service_period"],
+                    hostrow["services_with_fullstate"],
+                ]
+            }
 
         for group, aggregation in aggrs:
             row = hostrow.copy()
@@ -3543,7 +3629,8 @@ def singlehost_table(columns, add_headers, only_sites, limit, filters, joinbynam
             # on demand compile: host aggregations of clusters need data of several hosts.
             # It is not enough to only process the hostrow. The status_info construct must
             # also include the data of the other required hosts.
-            if config.bi_precompile_on_demand and not joinbyname and len(aggregation['reqhosts']) > 1:
+            if config.bi_precompile_on_demand and not joinbyname and len(
+                    aggregation['reqhosts']) > 1:
                 status_info = {}
                 for site, host in aggregation['reqhosts']:
                     this_row = row_dict.get((site, host))
@@ -3560,7 +3647,7 @@ def singlehost_table(columns, add_headers, only_sites, limit, filters, joinbynam
 
             new_row = create_aggregation_row(aggregation, status_info)
             if new_row["aggr_state"]["state"] == None:
-                continue # Not yet monitored, aggregation is not displayed
+                continue  # Not yet monitored, aggregation is not displayed
 
             row.update(new_row)
             row["aggr_group"] = group
@@ -3579,22 +3666,28 @@ def singlehost_table(columns, add_headers, only_sites, limit, filters, joinbynam
 #    |_| |_|\___|_| .__/ \___|_|  |___/
 #                 |_|
 
+
 def debug(x):
     p = pprint.pformat(x)
     html.write("<pre>%s</pre>\n" % p)
+
 
 def load_assumptions():
     global g_assumptions
     g_assumptions = config.user.load_file("bi_assumptions", {})
 
+
 def save_assumptions():
     config.user.save_file("bi_assumptions", g_assumptions)
 
+
 def load_ex_level():
-    return config.user.load_file("bi_treestate", (None, ))[0]
+    return config.user.load_file("bi_treestate", (None,))[0]
+
 
 def save_ex_level(current_ex_level):
-    config.user.save_file("bi_treestate", (current_ex_level, ))
+    config.user.save_file("bi_treestate", (current_ex_level,))
+
 
 def status_tree_depth(tree):
     if len(tree) == 3:
@@ -3606,11 +3699,13 @@ def status_tree_depth(tree):
         maxdepth = max(maxdepth, status_tree_depth(node))
     return maxdepth + 1
 
+
 def is_part_of_aggregation(what, site, host, service):
     compile_forest(config.user.id)
     if what == "host":
         return (site, host) in g_tree_cache["affected_hosts"]
     return (site, host, service) in g_tree_cache["affected_services"]
+
 
 def get_state_name(node):
     if node[1]['type'] == NT_LEAF:
@@ -3634,8 +3729,10 @@ def migrate_bi_configuration():
 
     converted_host_aggregations += map(_convert_aggregation, config.host_aggregations)
     converted_aggregations += map(_convert_aggregation, config.aggregations)
-    converted_aggregation_rules.update({rule_id: _convert_legacy_aggregation_rule(rule)
-                                        for rule_id, rule in config.aggregation_rules.iteritems()})
+    converted_aggregation_rules.update({
+        rule_id: _convert_legacy_aggregation_rule(rule)
+        for rule_id, rule in config.aggregation_rules.iteritems()
+    })
 
     config.host_aggregations = converted_host_aggregations
     config.aggregations = converted_aggregations
@@ -3656,12 +3753,12 @@ def _convert_aggregation(aggr_tuple):
     aggr_tuple = tuple(tmp_aggr_list)
 
     if type(aggr_tuple[0]) == dict:
-        return aggr_tuple # already converted
+        return aggr_tuple  # already converted
 
     options = {}
     map_class_to_key = {
-        config.DISABLED:     "disabled",
-        config.HARD_STATES:  "hard_states",
+        config.DISABLED: "disabled",
+        config.HARD_STATES: "hard_states",
         config.DT_AGGR_WARN: "downtime_aggr_warn",
     }
     for idx, token in enumerate(list(aggr_tuple)):
@@ -3687,8 +3784,9 @@ def _convert_legacy_aggregation_rule(rule):
         # zip function:
         # The returned list is truncated in length to the length of the
         # shortest argument sequence.
-        return dict(zip(["title", "params", "aggregation", "nodes",
-                         "state_messages", "docu_url", "icon"], rule))
+        return dict(
+            zip(["title", "params", "aggregation", "nodes", "state_messages", "docu_url", "icon"],
+                rule))
 
     raise MKConfigError(_("<b>Invalid BI aggregation rule</b>: "
                           "Aggregation rules must contain at least four elements: "

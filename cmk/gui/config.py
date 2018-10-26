@@ -43,13 +43,13 @@ import cmk.gui.plugins.config
 # This import is added for static analysis tools like pylint to make them
 # know about all shipped config options. The default config options are
 # later handled with the default_config dict and _load_default_config()
-from cmk.gui.plugins.config.base import * # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.gui.plugins.config.base import *  # pylint: disable=wildcard-import,unused-wildcard-import
 
 if not cmk.is_raw_edition():
-    from cmk.gui.cee.plugins.config.cee import * # pylint: disable=wildcard-import,unused-wildcard-import
+    from cmk.gui.cee.plugins.config.cee import *  # pylint: disable=wildcard-import,unused-wildcard-import
 
 if cmk.is_managed_edition():
-    from cmk.gui.cme.plugins.config.cme import * # pylint: disable=wildcard-import,unused-wildcard-import
+    from cmk.gui.cme.plugins.config.cme import *  # pylint: disable=wildcard-import,unused-wildcard-import
 
 #   .--Declarations--------------------------------------------------------.
 #   |       ____            _                 _   _                        |
@@ -62,12 +62,12 @@ if cmk.is_managed_edition():
 #   |  Declarations of global variables and constants                      |
 #   '----------------------------------------------------------------------'
 
-sites           = {}
+sites = {}
 multisite_users = {}
-admin_users     = []
+admin_users = []
 
 # hard coded in various permissions
-builtin_role_ids = [ "user", "admin", "guest" ]
+builtin_role_ids = ["user", "admin", "guest"]
 
 # Base directory of dynamic configuration
 config_dir = cmk.paths.var_dir + "/web"
@@ -80,33 +80,52 @@ default_config = {}
 
 # Global table of available permissions. Plugins may add their own
 # permissions by calling declare_permission()
-permissions_by_name              = {}
-permissions_by_order             = []
-permission_sections              = {}
+permissions_by_name = {}
+permissions_by_order = []
+permission_sections = {}
 permission_declaration_functions = []
 
 # Constants for BI
 ALL_HOSTS = '(.*)'
 HOST_STATE = ('__HOST_STATE__',)
 HIDDEN = ('__HIDDEN__',)
+
+
 class FOREACH_HOST(object):
     pass
+
+
 class FOREACH_CHILD(object):
     pass
+
+
 class FOREACH_CHILD_WITH(object):
     pass
+
+
 class FOREACH_PARENT(object):
     pass
+
+
 class FOREACH_SERVICE(object):
     pass
+
+
 class REMAINING(object):
     pass
+
+
 class DISABLED(object):
     pass
+
+
 class HARD_STATES(object):
     pass
+
+
 class DT_AGGR_WARN(object):
     pass
+
 
 # Has to be declared here once since the functions can be assigned in
 # bi.py and also in multisite.mk. "Double" declarations are no problem
@@ -234,16 +253,16 @@ def _load_default_config_from_module_plugins():
 
 def _load_default_config_from_legacy_plugins(vars_before_plugins, vars_after_plugins):
     new_vars = vars_after_plugins.difference(vars_before_plugins)
-    default_config.update(dict([ (k, copy.deepcopy(globals()[k])) for k in new_vars ]))
+    default_config.update(dict([(k, copy.deepcopy(globals()[k])) for k in new_vars]))
 
 
 def _config_plugin_modules():
-    return [module
-            for name, module in sys.modules.items()
-            if (name.startswith("cmk.gui.plugins.config.") or
-                name.startswith("cmk.gui.cee.plugins.config.") or
-                name.startswith("cmk.gui.cme.plugins.config.")) and
-               module is not None]
+    return [
+        module for name, module in sys.modules.items()
+        if (name.startswith("cmk.gui.plugins.config.") or name.startswith(
+            "cmk.gui.cee.plugins.config.") or name.startswith("cmk.gui.cme.plugins.config.")) and
+        module is not None
+    ]
 
 
 def reporting_available():
@@ -269,8 +288,10 @@ def hide_language(lang):
 
 
 def all_nonfunction_vars(var_dict):
-    return set([ name for name,value in var_dict.items()
-                 if name[0] != '_' and type(value) != type(lambda:0) ])
+    return set([
+        name for name, value in var_dict.items()
+        if name[0] != '_' and type(value) != type(lambda: 0)
+    ])
 
 
 def get_language(default=None):
@@ -310,12 +331,13 @@ def tag_group_title(tag):
 #   | Declarations of permissions and roles                                |
 #   '----------------------------------------------------------------------'
 
+
 def declare_permission(name, title, description, defaults):
     perm = {
-        "name"        : name,
-        "title"       : title,
-        "description" : description,
-        "defaults"    : defaults,
+        "name": name,
+        "title": title,
+        "description": description,
+        "defaults": defaults,
     }
 
     # Detect if this permission has already been declared before
@@ -335,7 +357,7 @@ def declare_permission(name, title, description, defaults):
     permissions_by_name[name] = perm
 
 
-def declare_permission_section(name, title, prio = 0, do_sort = False):
+def declare_permission_section(name, title, prio=0, do_sort=False):
     # Prio can be a number which is used for sorting. Higher numbers will
     # be listed first, e.g. in the edit dialogs
     permission_sections[name] = (prio, title, do_sort)
@@ -390,13 +412,13 @@ def _may_with_roles(some_role_ids, pname):
         if he_may == None and pname.startswith("general."):
             he_may = role.get("permissions", {}).get(pname[8:])
 
-        if he_may == None: # not explicitely listed -> take defaults
+        if he_may == None:  # not explicitely listed -> take defaults
             if "basedon" in role:
                 base_role_id = role["basedon"]
             else:
                 base_role_id = role_id
             if pname not in permissions_by_name:
-                return False # Permission unknown. Assume False. Functionality might be missing
+                return False  # Permission unknown. Assume False. Functionality might be missing
             perm = permissions_by_name[pname]
             he_may = base_role_id in perm["defaults"]
         if he_may:
@@ -418,6 +440,7 @@ def _may_with_roles(some_role_ids, pname):
 #   '----------------------------------------------------------------------'
 # TODO: Shouldn't this be moved to e.g. login.py or userdb.py?
 
+
 # This objects intention is currently only to handle the currently logged in user after authentication.
 # But maybe this can be used for managing all user objects in future.
 # TODO: Cleanup accesses to module global vars and functions
@@ -430,7 +453,6 @@ class LoggedInUser(object):
         self._load_attributes()
         self._load_permissions()
         self._load_site_config()
-
 
     # TODO: Clean up that baserole_* stuff?
     def _load_roles(self):
@@ -453,10 +475,8 @@ class LoggedInUser(object):
         else:
             self.baserole_id = "guest"
 
-
     def _gather_roles(self):
         return roles_of_user(self.id)
-
 
     def _load_base_roles(self):
         base_roles = set([])
@@ -468,7 +488,6 @@ class LoggedInUser(object):
 
         self.baserole_ids = list(base_roles)
 
-
     def _load_attributes(self):
         self.attributes = self.load_file("cached_profile", None)
         if self.attributes == None:
@@ -476,47 +495,40 @@ class LoggedInUser(object):
                 self.attributes = multisite_users[self.id]
             else:
                 self.attributes = {
-                    "roles" : self.role_ids,
+                    "roles": self.role_ids,
                 }
 
         self.alias = self.attributes.get("alias", self.id)
         self.email = self.attributes.get("email", self.id)
-
 
     def _load_permissions(self):
         # Prepare cache of already computed permissions
         # Make sure, admin can restore permissions in any case!
         if self.id in admin_users:
             self.permissions = {
-                "general.use" : True, # use Multisite
-                "wato.use"    : True, # enter WATO
-                "wato.edit"   : True, # make changes in WATO...
-                "wato.users"  : True, # ... with access to user management
+                "general.use": True,  # use Multisite
+                "wato.use": True,  # enter WATO
+                "wato.edit": True,  # make changes in WATO...
+                "wato.users": True,  # ... with access to user management
             }
         else:
             self.permissions = {}
-
 
     def _load_confdir(self):
         self.confdir = config_dir + "/" + self.id.encode("utf-8")
         store.mkdir(self.confdir)
 
-
     def _load_site_config(self):
         self.siteconf = self.load_file("siteconfig", {})
-
 
     def save_site_config(self):
         self.save_file("siteconfig", self.siteconf)
 
-
     def get_attribute(self, key, deflt=None):
         return self.attributes.get(key, deflt)
 
-
     def set_attribute(self, key, value):
         self.attributes[key] = value
-
 
     def unset_attribute(self, key):
         try:
@@ -524,27 +536,21 @@ class LoggedInUser(object):
         except KeyError:
             pass
 
-
     def language(self, default=None):
         return self.get_attribute("language", get_language(default))
-
 
     def contact_groups(self):
         return self.get_attribute("contactgroups", [])
 
-
     def load_stars(self):
         return set(self.load_file("favorites", []))
-
 
     def save_stars(self, stars):
         self.save_file("favorites", list(stars))
 
-
     def is_site_disabled(self, site_id):
         siteconf = self.siteconf.get(site_id, {})
         return siteconf.get("disabled", False)
-
 
     def authorized_sites(self, unfiltered_sites=None):
         if unfiltered_sites is None:
@@ -554,16 +560,15 @@ class LoggedInUser(object):
         if authorized_sites is None:
             return unfiltered_sites
 
-        return [ (site_id, site) for site_id, site in unfiltered_sites
-                      if site_id in authorized_sites ]
-
+        return [(site_id, site) for site_id, site in unfiltered_sites if site_id in authorized_sites
+               ]
 
     def authorized_login_sites(self):
         login_site_ids = get_login_slave_sites()
-        login_sites = [ (site_id, site) for site_id, site in allsites().items()
-                             if site_id in login_site_ids ]
+        login_sites = [
+            (site_id, site) for site_id, site in allsites().items() if site_id in login_site_ids
+        ]
         return self.authorized_sites(login_sites)
-
 
     def may(self, pname):
         if pname in self.permissions:
@@ -571,7 +576,6 @@ class LoggedInUser(object):
         he_may = _may_with_roles(user.role_ids, pname)
         self.permissions[pname] = he_may
         return he_may
-
 
     def need_permission(self, pname):
         if not self.may(pname):
@@ -581,21 +585,18 @@ class LoggedInUser(object):
                                   "then please ask you administrator to provide you with "
                                   "the following permission: '<b>%s</b>'.") % perm["title"])
 
-
     def load_file(self, name, deflt, lock=False):
         # In some early error during login phase there are cases where it might
         # happen that a user file is requested but the user is not yet
         # set. We have all information to set it, then do it.
         if not user:
-            return deflt # No user known at this point of time
+            return deflt  # No user known at this point of time
 
         path = self.confdir + "/" + name + ".mk"
         return store.load_data_from_file(path, deflt, lock)
 
-
     def save_file(self, name, content, unlock=False):
         save_user_file(name, content, self.id, unlock)
-
 
     def file_modified(self, name):
         if self.confdir == None:
@@ -610,7 +611,6 @@ class LoggedInUser(object):
                 raise
 
 
-
 # Login a user that has all permissions. This is needed for making
 # Livestatus queries from unauthentiated page handlers
 # TODO: Can we somehow get rid of this?
@@ -620,22 +620,17 @@ class LoggedInSuperUser(LoggedInUser):
         self.alias = "Superuser for unauthenticated pages"
         self.email = "admin"
 
-
     def _gather_roles(self):
-        return [ "admin" ]
-
+        return ["admin"]
 
     def _load_confdir(self):
         self.confdir = None
 
-
     def _load_site_config(self):
         self.siteconf = {}
 
-
     def load_file(self, name, deflt, lock=False):
         return deflt
-
 
 
 class LoggedInNobody(LoggedInUser):
@@ -644,22 +639,17 @@ class LoggedInNobody(LoggedInUser):
         self.alias = "Unauthenticated user"
         self.email = "nobody"
 
-
     def _gather_roles(self):
         return []
-
 
     def _load_confdir(self):
         self.confdir = None
 
-
     def _load_site_config(self):
         self.siteconf = {}
 
-
     def load_file(self, name, deflt, lock=False):
         return deflt
-
 
 
 def clear_user_login():
@@ -697,27 +687,25 @@ user = LoggedInNobody()
 #   | more related to this module than to the userdb module.               |
 #   '----------------------------------------------------------------------'
 
+
 def roles_of_user(user_id):
     def existing_role_ids(role_ids):
-        return [
-            role_id for role_id in role_ids
-            if role_id in roles
-        ]
+        return [role_id for role_id in role_ids if role_id in roles]
 
     if user_id in multisite_users:
         return existing_role_ids(multisite_users[user_id]["roles"])
     elif user_id in admin_users:
-        return [ "admin" ]
+        return ["admin"]
     elif user_id in guest_users:
-        return [ "guest" ]
+        return ["guest"]
     elif users != None and user_id in users:
-        return [ "user" ]
+        return ["user"]
     elif os.path.exists(config_dir + "/" + user_id.encode("utf-8") + "/automation.secret"):
-        return [ "guest" ] # unknown user with automation account
+        return ["guest"]  # unknown user with automation account
     elif 'roles' in default_user_profile:
         return existing_role_ids(default_user_profile['roles'])
     elif default_user_role:
-        return existing_role_ids([ default_user_role ])
+        return existing_role_ids([default_user_role])
     return []
 
 
@@ -750,6 +738,7 @@ def save_user_file(name, data, user, unlock=False):
 #   |  Helper functions for dealing with host tags                         |
 #   '----------------------------------------------------------------------'
 
+
 class BuiltinTags(object):
     def host_tags(self):
         return [
@@ -777,7 +766,6 @@ class BuiltinTags(object):
             ),
         ]
 
-
     def aux_tags(self):
         return [
             ("ip-v4", "%s/%s" % (_("Address"), _("IPv4"))),
@@ -787,12 +775,11 @@ class BuiltinTags(object):
             ("ping",  "%s/%s" % (_("Data sources"), _("Only ping this device"))),
         ]
 
-
     def get_effective_tag_groups(self, tag_groups):
         """Extend the given tag group definitions with the builtin tag groups
         and return the extended list"""
         tag_groups = tag_groups[:]
-        tag_group_ids = set([ tg[0] for tg in tag_groups ])
+        tag_group_ids = set([tg[0] for tg in tag_groups])
 
         for tag_group in self.host_tags():
             if tag_group[0] not in tag_group_ids:
@@ -800,10 +787,9 @@ class BuiltinTags(object):
 
         return tag_groups
 
-
     def get_effective_aux_tags(self, aux_tag_list):
         aux_tags = aux_tag_list[:]
-        aux_tag_ids = set([ at[0] for at in aux_tag_list ])
+        aux_tag_ids = set([at[0] for at in aux_tag_list])
 
         for aux_tag in self.aux_tags():
             if aux_tag[0] not in aux_tag_ids:
@@ -826,13 +812,15 @@ def migrate_old_sample_config_tag_groups(host_tags, aux_tags):
 
 
 def remove_old_sample_config_tag_groups(host_tags, aux_tags):
-    legacy_tag_group_default = ('agent', u'Agent type',
+    legacy_tag_group_default = (
+        'agent',
+        u'Agent type',
         [
             ('cmk-agent', u'Check_MK Agent (Server)', ['tcp']),
             ('snmp-only', u'SNMP (Networking device, Appliance)', ['snmp']),
-            ('snmp-v1',   u'Legacy SNMP device (using V1)', ['snmp']),
-            ('snmp-tcp',  u'Dual: Check_MK Agent + SNMP', ['snmp', 'tcp']),
-            ('ping',      u'No Agent', []),
+            ('snmp-v1', u'Legacy SNMP device (using V1)', ['snmp']),
+            ('snmp-tcp', u'Dual: Check_MK Agent + SNMP', ['snmp', 'tcp']),
+            ('ping', u'No Agent', []),
         ],
     )
 
@@ -841,10 +829,11 @@ def remove_old_sample_config_tag_groups(host_tags, aux_tags):
 
         # Former tag choices (see above) are added as aux tags to allow the user to migrate
         # these tags and the objects that use them
-        aux_tags.insert(0, ("snmp-only", "Data sources/Legacy: SNMP (Networking device, Appliance)"))
+        aux_tags.insert(0,
+                        ("snmp-only", "Data sources/Legacy: SNMP (Networking device, Appliance)"))
         aux_tags.insert(0, ("snmp-tcp", "Data sources/Legacy: Dual: Check_MK Agent + SNMP"))
     except ValueError:
-        pass # Not there or modified
+        pass  # Not there or modified
 
     legacy_aux_tag_ids = [
         'snmp',
@@ -881,21 +870,21 @@ def extend_user_modified_tag_groups(host_tags):
             tag_group = this_tag_group
 
     if tag_group is None:
-        return # Tag group does not exist
+        return  # Tag group does not exist
 
     # Mark all existing tag choices as legacy to help the user that this should be cleaned up
     for index, tag_choice in enumerate(tag_group[2][:]):
-        if tag_choice[0] in [ "no-agent", "special-agents", "all-agents", "cmk-agent" ]:
-            continue # Don't prefix the standard choices
+        if tag_choice[0] in ["no-agent", "special-agents", "all-agents", "cmk-agent"]:
+            continue  # Don't prefix the standard choices
 
         if tag_choice[1].startswith("Legacy: "):
-            continue # Don't prefix already prefixed choices
+            continue  # Don't prefix already prefixed choices
 
         tag_choice_list = list(tag_choice)
         tag_choice_list[1] = "Legacy: %s" % tag_choice_list[1]
         tag_group[2][index] = tuple(tag_choice_list)
 
-    tag_choices = [ c[0] for c in tag_group[2] ]
+    tag_choices = [c[0] for c in tag_group[2]]
 
     if "no-agent" not in tag_choices:
         tag_group[2].insert(0, ("no-agent",       _("No agent"), []))
@@ -944,13 +933,17 @@ def aux_tags():
 #   |  The config module provides some helper functions for sites.         |
 #   '----------------------------------------------------------------------'
 
+
 def omd_site():
     return os.environ["OMD_SITE"]
+
 
 def url_prefix():
     return "/%s/" % omd_site()
 
+
 use_siteicons = False
+
 
 def default_single_site_configuration():
     return {
@@ -967,10 +960,13 @@ def default_single_site_configuration():
             'user_login'   : True,
     }}
 
+
 sites = {}
+
 
 def sitenames():
     return sites.keys()
+
 
 # TODO: Cleanup: Make clear that this function is used by the status GUI (and not WATO)
 # and only returns the currently enabled sites. Or should we redeclare the "disabled" state
@@ -979,14 +975,13 @@ def sitenames():
 # TODO: All site listing functions should return the same data structure, e.g. a list of
 #       pairs (site_id, site)
 def allsites():
-    return dict( [(name, site(name))
-                  for name in sitenames()
-                  if not site(name).get("disabled", False)
-                     and site(name)['socket'] != 'disabled' ] )
+    return dict([(name, site(name))
+                 for name in sitenames()
+                 if not site(name).get("disabled", False) and site(name)['socket'] != 'disabled'])
 
 
 def configured_sites():
-    return [(site_id, site(site_id)) for site_id in sitenames() ]
+    return [(site_id, site(site_id)) for site_id in sitenames()]
 
 
 def has_wato_slave_sites():
@@ -1004,7 +999,7 @@ def _has_distributed_wato_file():
 
 def get_login_sites():
     """Returns the WATO slave sites a user may login and the local site"""
-    return get_login_slave_sites() + [ omd_site() ]
+    return get_login_slave_sites() + [omd_site()]
 
 
 # TODO: All site listing functions should return the same data structure, e.g. a list of
@@ -1019,14 +1014,14 @@ def get_login_slave_sites():
 
 
 def wato_slave_sites():
-    return [ (site_id, site) for site_id, site in sites.items()
-                                                  if site.get("replication") ]
+    return [(site_id, site) for site_id, site in sites.items() if site.get("replication")]
+
 
 def sorted_sites():
     sitenames = []
     for site_id, site in user.authorized_sites():
         sitenames.append((site_id, site['alias']))
-    sitenames = sorted(sitenames, key=lambda k: k[1], cmp = lambda a,b: cmp(a.lower(), b.lower()))
+    sitenames = sorted(sitenames, key=lambda k: k[1], cmp=lambda a, b: cmp(a.lower(), b.lower()))
 
     return sitenames
 
@@ -1037,7 +1032,7 @@ def site(site_id):
     # Add missing entries by supplying default values.
     s.setdefault("alias", site_id)
     s.setdefault("socket", "unix:" + cmk.paths.livestatus_unix_socket)
-    s.setdefault("url_prefix", "../") # relative URL from /check_mk/
+    s.setdefault("url_prefix", "../")  # relative URL from /check_mk/
     if type(s["socket"]) == tuple and s["socket"][0] == "proxy":
         s["cache"] = s["socket"][1].get("cache", True)
         s["socket"] = "unix:" + cmk.paths.livestatus_unix_socket + "proxy/" + site_id
@@ -1107,7 +1102,8 @@ def site_choices(filter_func=None):
 
 
 def get_event_console_site_choices():
-    return site_choices(filter_func=lambda site_id, site: site_is_local(site_id) or site.get("replicate_ec"))
+    return site_choices(
+        filter_func=lambda site_id, site: site_is_local(site_id) or site.get("replicate_ec"))
 
 #.
 #   .--Plugins-------------------------------------------------------------.
@@ -1121,6 +1117,7 @@ def get_event_console_site_choices():
 #   |  Handling of our own plugins. In plugins other software pieces can   |
 #   |  declare defaults for configuration variables.                       |
 #   '----------------------------------------------------------------------'
+
 
 def load_plugins(force):
     utils.load_web_plugins("config", globals())

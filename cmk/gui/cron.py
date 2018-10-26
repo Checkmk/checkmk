@@ -39,14 +39,14 @@ from cmk.gui.log import logger
 from cmk.gui.exceptions import MKGeneralException
 
 # Things imported here are used by pre legacy (pre 1.6) cron plugins
-from cmk.gui.plugins.cron import ( # pylint: disable=unused-import
-    multisite_cronjobs,
-    register_job,
+from cmk.gui.plugins.cron import (  # pylint: disable=unused-import
+    multisite_cronjobs, register_job,
 )
 
 loaded_with_language = False
 
 lock_file = cmk.paths.tmp_dir + "/cron.lastrun"
+
 
 # Load all view plugins
 def load_plugins(force):
@@ -73,7 +73,7 @@ def page_run_cron():
         last_run = os.stat(lock_file).st_mtime
         if time.time() - last_run < 59:
             raise MKGeneralException("Cron called too early. Skipping.")
-    file(lock_file, "w") # touches the file
+    file(lock_file, "w")  # touches the file
     store.aquire_lock(lock_file)
 
     # The cron page is accessed unauthenticated. After leaving the page_run_cron area

@@ -29,7 +29,6 @@
 # TODO: Refactor all snapins to the new snapin API and move page handlers
 #       from sidebar.py to the snapin objects that need these pages.
 
-import time
 import re
 
 import cmk.paths
@@ -404,40 +403,6 @@ table.performance td.right {
 }
 
 """ % (snapin_width - 2)
-}
-
-#.
-#   .--Server Time---------------------------------------------------------.
-#   |       ____                             _____ _                       |
-#   |      / ___|  ___ _ ____   _____ _ __  |_   _(_)_ __ ___   ___        |
-#   |      \___ \ / _ \ '__\ \ / / _ \ '__|   | | | | '_ ` _ \ / _ \       |
-#   |       ___) |  __/ |   \ V /  __/ |      | | | | | | | | |  __/       |
-#   |      |____/ \___|_|    \_/ \___|_|      |_| |_|_| |_| |_|\___|       |
-#   |                                                                      |
-#   '----------------------------------------------------------------------'
-
-def render_current_time():
-    html.div(time.strftime("%H:%M"), class_="time")
-
-sidebar_snapins["time"] = {
-    "title" : _("Server Time"),
-    "description" : _("A large clock showing the current time of the web server"),
-    "refresh" : True,
-    "render" : render_current_time,
-    "allowed" : [ "user", "admin", "guest", ],
-    "styles" : """
-div.time {
-   text-align: center;
-   font-size: 18pt;
-   font-weight: bold;
-   /* The border needs to be substracted from the width */
-   border: 1px solid #8cc;
-   -moz-border-radius: 10px;
-   background-color: #588;
-   color: #aff;
-   width: %dpx;
-}
-"""  % (snapin_width - 2)
 }
 
 #.

@@ -1,3 +1,4 @@
+from collections import namedtuple
 import pytest
 from cmk_base.check_api import MKGeneralException
 from checktestlib import CheckResult, assertCheckResultsEqual
@@ -213,12 +214,13 @@ PS_DISCOVERY_WATO_RULES = [
             "cpu_average": 15,
             "process_info": "html",
             "resident_levels_perc": (25.0, 50.0),
-            "virtual_levels": (1024**3, 2*1024**3),
-            "resident_levels": (1024**3, 2*1024**3),
+            "virtual_levels": (1024**3, 2 * 1024**3),
+            "resident_levels": (1024**3, 2 * 1024**3),
         },
         "icon": "emacs.png",
         "descr": "emacs",
         "match": "emacs",
+        'cpu_rescale_max': True,
         "user": False
     }, [], ["@all"], {
         "description": u"emacs",
@@ -254,9 +256,10 @@ PS_DISCOVERY_WATO_RULES = [
 ]
 
 PS_DISCOVERY_SPECS = [
-    ("smss", "~smss.exe", None, None, {}),
+    ("smss", "~smss.exe", None, None, {'cpu_rescale_max': None}),
     ("svchost", "svchost.exe", None, None, {
         "cpulevels": (90.0, 98.0),
+        'cpu_rescale_max': None,
         "handle_count": (1000, 2000),
         "levels": (1, 1, 99999, 99999),
         "max_age": (3600, 7200),
@@ -266,22 +269,25 @@ PS_DISCOVERY_SPECS = [
         "virtual_levels": (1073741824000, 2147483648000),
     }),
     ("firefox is on %s", "~.*(fire)fox", None, None, {
-        "process_info": "text"
+        "process_info": "text",
+        'cpu_rescale_max': None,
     }),
     ("emacs", "emacs", False, "emacs.png", {
         "cpu_average": 15,
+        'cpu_rescale_max': True,
         "process_info": "html",
         "resident_levels_perc": (25.0, 50.0),
-        "virtual_levels": (1024**3, 2*1024**3),
-        "resident_levels": (1024**3, 2*1024**3),
+        "virtual_levels": (1024**3, 2 * 1024**3),
+        "resident_levels": (1024**3, 2 * 1024**3),
     }),
     ("cron", "~.*cron", "root", None, {
         "max_age": (3600, 7200),
+        'cpu_rescale_max': None,
         "resident_levels_perc": (25.0, 50.0),
         "single_cpulevels": (90.0, 98.0),
         "resident_levels": (104857600, 209715200)
     }),
-    ("sshd", "~.*sshd", None, None, {}),
+    ("sshd", "~.*sshd", None, None, {'cpu_rescale_max': None}),
 ]
 
 
@@ -350,22 +356,25 @@ def test_cleanup_params(check_manager, params, result):
 PS_DISCOVERED_ITEMS = [
     ("emacs", {
         "cpu_average": 15,
+        'cpu_rescale_max': True,
         "resident_levels_perc": (25.0, 50.0),
         "process": "emacs",
         "icon": "emacs.png",
         "user": "on",
         "process_info": "html",
-        "virtual_levels": (1024**3, 2*1024**3),
-        "resident_levels": (1024**3, 2*1024**3),
+        "virtual_levels": (1024**3, 2 * 1024**3),
+        "resident_levels": (1024**3, 2 * 1024**3),
     }),
     ("firefox is on fire", {
         "process": "~.*firefox",
         "process_info": "text",
         "user": None,
+        'cpu_rescale_max': None,
     }),
     ("sshd", {
         "process": "~.*sshd",
-        "user": None
+        "user": None,
+        'cpu_rescale_max': None,
     }),
     ("svchost", {
         "cpulevels": (90.0, 98.0),
@@ -378,10 +387,12 @@ PS_DISCOVERED_ITEMS = [
         "single_cpulevels": (90.0, 98.0),
         "user": None,
         "virtual_levels": (1073741824000, 2147483648000),
+        'cpu_rescale_max': None,
     }),
     ("smss", {
         "process": "~smss.exe",
-        "user": None
+        "user": None,
+        'cpu_rescale_max': None,
     }),
 ]
 
@@ -415,21 +426,25 @@ def test_replace_service_description_exception(check_manager):
 check_results = [
     CheckResult([
         (0, "1 process", [("count", 1, 100000, 100000, 0)]),
-        (1, "1.00 GB virtual: (warn/crit at 1.00 GB/2.00 GB)", [("vsz", 1050360, 1073741824, 2147483648, None, None)]),
+        (1, "1.00 GB virtual: (warn/crit at 1.00 GB/2.00 GB)", [("vsz", 1050360, 1073741824,
+                                                                 2147483648, None, None)]),
         (0, "296.14 MB physical", [("rss", 303252, 1073741824, 2147483648, None, None)]),
         (1, "28.9% of total RAM: (warn/crit at 25.0%/50.0%)"),
         (0, "0.0% CPU (15 min average: 0.0%)", [("pcpu", 0.0, None, None, None, None),
                                                 ("pcpuavg", 0.0, None, None, 0, 15)]),
         (0, "running for 27 h", []),
-        (0, "\n<table><tr><th>name</th><th>user</th><th>virtual size</th><th>resident size</th><th>creation time</th><th>pid</th><th>cpu usage</th></tr><tr><td>emacs</td><td>on</td><td>1050360kB</td><td>303252kB</td><td>2018-10-23 08:02:43</td><td>9902</td><td>0%</td></tr></table>"),
+        (0,
+         "\n<table><tr><th>name</th><th>user</th><th>virtual size</th><th>resident size</th><th>creation time</th><th>pid</th><th>cpu usage</th></tr><tr><td>emacs</td><td>on</td><td>1050360kB</td><td>303252kB</td><td>2018-10-23 08:02:43</td><td>9902</td><td>0.0%</td></tr></table>"
+        ),
     ]),
     CheckResult([
-        (0, "1 process", [("count", 1, 100000, 100000, 0, None)]),
+        (0, "1 process", [("count", 1, 100000, 100000, 0,
+                           None)]),
         (0, "2.79 GB virtual", [("vsz", 2924232, None, None, None, None)]),
         (0, "461.18 MB physical", [("rss", 472252, None, None, None, None)]),
         (0, "0.0% CPU", [("pcpu", 0.0, None, None, None, None)]), (0, "running for 7 h", []),
         (0,
-         "\nname /usr/lib/firefox/firefox, user on, virtual size 2924232kB, resident size 472252kB, creation time 2018-10-24 04:38:07, pid 7912, cpu usage 0%\r\n",
+         "\nname /usr/lib/firefox/firefox, user on, virtual size 2924232kB, resident size 472252kB, creation time 2018-10-24 04:38:07, pid 7912, cpu usage 0.0%\r\n",
          [])
     ]),
     CheckResult([
@@ -470,7 +485,69 @@ def test_check_ps_common(check_manager, monkeypatch, inv_item, reference):
     check = check_manager.get_check("ps")
     parsed = sum([check.run_parse(info)[1] for info in generate_inputs()], [])
     total_ram = 1024**3 if inv_item[0] == "emacs" else None
-    monkeypatch.setattr('time.time',lambda : 1540375342)
+    monkeypatch.setattr('time.time', lambda: 1540375342)
     test_result = CheckResult(check.context["check_ps_common"](
         inv_item[0], inv_item[1], parsed, total_ram=total_ram))
     assertCheckResultsEqual(test_result, reference)
+
+
+cpu_config = namedtuple("CPU_config", "name agent_info cputime cpu_cores exp_load cpu_rescale_max")
+cpu_util_data = [
+    cpu_config('linux no cpu scale conf 1 core', "(on,105,30,00:00:{:02}/03:59:39,902) test", 30, 1, 50, None),
+    cpu_config('linux no cpu scale conf 2 cores', "(on,105,30,00:00:{:02}/03:59:39,902) test", 30, 2, 50, None),
+    cpu_config('linux No_Core_division 2 cores',
+               "(on,105,30,00:00:{:02}/03:59:39,902) test", 120, 2, 200, False),
+    cpu_config('linux Core_division 2 cores',
+               "(on,105,30,00:00:{:02}/03:59:39,902) test", 30, 2, 25, True),
+    cpu_config("Win no cpu scale conf 2 cores",
+               "(\\KLAPPRECHNER\ab,105,30,0,3124,904,{0}0000000,{0}0000000,0,1,14340) test.exe", 54,
+               2, 90, None),
+    cpu_config("Win No_Core_division 2 cores",
+               "(\\KLAPPRECHNER\ab,105,30,0,3124,904,{0}0000000,{0}0000000,0,1,14340) test.exe", 54,
+               2, 180, False),
+    cpu_config("Win Core_division 2 cores",
+               "(\\KLAPPRECHNER\ab,105,30,0,3124,904,{0}0000000,{0}0000000,0,1,14340) test.exe", 54,
+               2, 90, True),
+    cpu_config('Solaris,BSD,etc no cpu conf 1 core', "(on,105,30,{}/03:59:39,902) test",
+               30.8, 1, 30.8, None),
+    cpu_config('Solaris,BSD,etc no cpu conf 2 cores', "(on,105,30,{}/03:59:39,902) test",
+               174.8, 2, 174.8, None),
+    cpu_config('Solaris,BSD,etc No_Core_division 2 cores',
+               "(on,105,30,{}/03:59:39,902) test", 174.8, 2, 174.8, False),
+    cpu_config('Solaris,BSD,etc Core_division 2 cores',
+               "(on,105,30,{}/03:59:39,902) test", 174.8, 2, 174.8 / 2, True),
+]
+
+
+@pytest.mark.parametrize("data", cpu_util_data, ids=[a.name for a in cpu_util_data])
+def test_check_ps_common_cpu(check_manager, monkeypatch, data):
+    check = check_manager.get_check("ps")
+
+    def time_info(agent_info, check_time, cputime, cpu_cores):
+        monkeypatch.setattr('time.time', lambda: check_time)
+        parsed = check.run_parse(splitter(agent_info.format(cputime)))[1]
+
+        return CheckResult(check.context["check_ps_common"](
+            inv_item[0], inv_item[1], parsed, cpu_cores=cpu_cores))
+
+    inv_item = ("test", {
+        "process": "~test",
+        "user": None,
+    })
+    if data.cpu_rescale_max is not None:
+        inv_item[1].update({"cpu_rescale_max": data.cpu_rescale_max})
+
+    # Initialize counters
+    time_info(data.agent_info, 0, 0, data.cpu_cores)
+    # Check_cpu_utilization
+    output = time_info(data.agent_info, 60, data.cputime, data.cpu_cores)
+
+    reference = CheckResult([
+        (0, "1 process", [("count", 1, 100000, 100000, 0)]),
+        (0, "105.00 kB virtual", [("vsz", 105, None, None, None, None)]),
+        (0, "30.00 kB physical", [("rss", 30, None, None, None, None)]),
+        check.context["cpu_check"](data.exp_load, inv_item[0], inv_item[1]),
+        (0, "running for 239 m", []),
+    ])
+
+    assertCheckResultsEqual(output, reference)

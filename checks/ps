@@ -110,7 +110,7 @@ def ps_get_counters_to_delete(pids):
         if pid.isdigit() and pid not in pids:
             counters_to_delete.append(ident)
 
-    return list(counters_to_delete)
+    return counters_to_delete
 
 
 def ps_get_current_pids(parsed):

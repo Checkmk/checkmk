@@ -37,7 +37,7 @@ def parse_azure_agent_info(info):
 
     parsed = {}
     for row in info:
-        k, v = row[0], json.loads(' '.join(row[1:]))
+        k, v = row[0], json.loads(_AZURE_AGENT_SEPARATOR.join(row[1:]))
 
         if k == 'remaining-reads':
             try:
@@ -110,4 +110,5 @@ check_info['azure_agent_info'] = {
     'default_levels_variable': "azure_agent_info_levels",
     'has_perfdata': True,
     'group': "azure_agent_info",
+    'includes': ['azure.include'],
 }

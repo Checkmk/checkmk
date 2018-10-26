@@ -3,14 +3,14 @@ checkname = "azure_databases"
 info = [
     ['Resource'],
     [
-        '{"sku":', '{"tier":', '"Basic",', '"capacity":', '5,', '"name":', '"Basic"},', '"kind":',
-        '"v12.0,user",', '"group":', '"Woodstock",', '"location":', '"westeurope",', '"provider":',
-        '"Microsoft.Sql",', '"subscription":', '"2fac104f-cb9c-461d-be57-037039662426",', '"type":',
-        '"Microsoft.Sql/servers/databases",', '"id":',
-        '"/subscriptions/2fac104f-cb9c-461d-be57-037039662426/resourceGroups/Woodstock/providers/Microsoft.Sql/servers/hugo-server/databases/Testdatabase",',
-        '"name":', '"hugo-server/Testdatabase"}'
+        '{"sku": {"tier": "Basic", "capacity": 5, "name": "Basic"}, "kind":'
+        ' "v12.0,user", "group": "Woodstock", "location": "westeurope", "provider":'
+        ' "Microsoft.Sql", "subscription": "2fac104f-cb9c-461d-be57-037039662426", "type":'
+        ' "Microsoft.Sql/servers/databases", "id": "/subscriptions/2fac104f-cb9c-461d-be57'
+        '-037039662426/resourceGroups/Woodstock/providers/Microsoft.Sql/servers/hugo-server'
+        '/databases/Testdatabase", "name": "hugo-server/Testdatabase"}'
     ],
-    ['metrics', 'following:', '15'],
+    ['metrics following', '15'],
     ['name', 'aggregation', 'value', 'unit', 'timestamp', 'timegrain', 'filters'],
     ['cpu_percent', 'average', '0.0', 'percent', '1537538160', 'PT1M', 'None'],
     ['physical_data_read_percent', 'average', '0.0', 'percent', '1537538160', 'PT1M', 'None'],

@@ -465,7 +465,7 @@ def check_ps_common(item, params, parsed, cpu_cores = 1, info_name = "processes"
     perfdata = [ ("count", count, okmax+1, warnmax+1, 0) ]
     if count == 0 and not extended_perfdata:
         # No matching process found. Therefore we don't know yet,
-        # wether the agents sends extended data for processes.
+        # whether the agents sends extended data for processes.
         # We need to know this in order to create the RRD with the
         # correct number of DSes. To just look at the first process
         # in the agent output to make sure. We assume that at least

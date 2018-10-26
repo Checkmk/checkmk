@@ -1205,16 +1205,9 @@ if not error:
 
         # Note: If the cookie fails inbetween these calls, we also start a second run
         try:
-            ##########################
-            # Check MK header and Agent Version
-            output("<<<check_mk>>>")
-            output("Version: %.1f" % systeminfo["apiVersion"])
-            output("AgentOS: %s" %   systeminfo["name"])
-
             output("<<<esx_systeminfo>>>")
             for entry in systeminfo.items():
                 output("%s %s" % entry)
-
 
             #############################
             # Determine available host systems

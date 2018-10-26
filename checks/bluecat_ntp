@@ -32,9 +32,11 @@ factory_settings["bluecat_ntp"] = {
     "stratum" : ( 8, 10 ),
 }
 
+
 def inventory_bluecat_ntp(info):
     if len(info) > 0 and info[0][0] != 'NULL':
         return [(None, None)]
+
 
 def check_bluecat_ntp(item, params, info):
     oper_state, sys_leap, stratum = map(int, info[0])
@@ -74,6 +76,7 @@ def check_bluecat_ntp(item, params, info):
     elif stratum >= warn:
         state = 1
     yield state, "Stratum: %s" % stratum
+
 
 check_info["bluecat_ntp"] = {
     "check_function"            : check_bluecat_ntp,

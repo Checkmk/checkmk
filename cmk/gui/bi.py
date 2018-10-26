@@ -259,7 +259,6 @@ def get_aggregation_group_trees():
     # aggregation group definitions:
     # - "GROUP"
     # - ["GROUP_1", "GROUP2", ..]
-    # - [["GROUP1"], ["PATH", "TO", "GROUP2"]]
     migrate_bi_configuration() # convert bi_packs into legacy variables
     groups = []
     for aggr_def in config.aggregations + config.host_aggregations:
@@ -3644,7 +3643,6 @@ def migrate_bi_configuration():
 
 
 def _convert_aggregation(aggr_tuple):
-    # Convert group string or list of group string to list of list of group strings O.o
     old_groups = aggr_tuple[1]
     updated_groups = []
     if isinstance(old_groups, list):

@@ -22,7 +22,11 @@ OpenHardwareMonitorCLI.exe OpenHardwareMonitorLib.dll: $(DIR)/Bin/Release/OpenHa
 	cp -p $(DIR)/Bin/Release/OpenHardwareMonitorCLI.exe $(DIR)/Bin/Release/OpenHardwareMonitorLib.dll .
 
 $(DIR)/Bin/Release/OpenHardwareMonitorCLI.exe $(DIR)/Bin/Release/OpenHardwareMonitorLib.dll: $(DIR) $(DIR)/OpenHardwareMonitorCLI $(DIR)/OpenHardwareMonitor.sln
-	xbuild /p:Configuration=Release /p:TargetFrameworkVersion="v4.5" $(DIR)/OpenHardwareMonitor.sln /target:OpenHardwareMonitorCLI
+# The strange "cat" below is necessary because the extremely ancient Mono
+# versions coming with even the latest Ubuntus still contain the rather severe
+# bug https://github.com/mono/mono/issues/6752. ("...System.Exception: Magic
+# number is wrong: 542") :-P
+	xbuild /p:Configuration=Release /p:TargetFrameworkVersion="v4.5" $(DIR)/OpenHardwareMonitor.sln /target:OpenHardwareMonitorCLI | cat
 
 $(DIR): $(DIR).zip
 	unzip -o $<

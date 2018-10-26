@@ -28,23 +28,33 @@ import time
 
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
+from . import SidebarSnapin, snapin_registry
+from cmk.gui.plugins.sidebar import snapin_width
 
-from cmk.gui.plugins.sidebar import (
-    sidebar_snapins,
-    snapin_width,
-)
+@snapin_registry.register
+class CurrentTime(SidebarSnapin):
+    @staticmethod
+    def type_name():
+        return "time"
 
+    @classmethod
+    def title(cls):
+        return _("Server Time")
 
-def render_current_time():
-    html.div(time.strftime("%H:%M"), class_="time")
+    @classmethod
+    def description(cls):
+        return _("A large clock showing the current time of "
+                 "the web server"),
 
-sidebar_snapins["time"] = {
-    "title" : _("Server Time"),
-    "description" : _("A large clock showing the current time of the web server"),
-    "refresh" : True,
-    "render" : render_current_time,
-    "allowed" : [ "user", "admin", "guest", ],
-    "styles" : """
+    def show(self):
+        html.div(time.strftime("%H:%M"), class_="time")
+
+    @classmethod
+    def allowed_roles(cls):
+        return [ "admin", "user", "guest" ]
+
+    def styles(self):
+        return """
 div.time {
    text-align: center;
    font-size: 18pt;
@@ -56,5 +66,4 @@ div.time {
    color: #aff;
    width: %dpx;
 }
-"""  % (snapin_width - 2)
-}
+""" % (snapin_width - 2)

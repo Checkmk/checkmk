@@ -24,7 +24,6 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-
 import os
 import sys
 import time
@@ -48,6 +47,7 @@ from cmk.exceptions import MKGeneralException
 
 import cmk.gui.log
 
+
 class BackgroundJobAlreadyRunning(MKGeneralException):
     pass
 
@@ -68,37 +68,32 @@ class BackgroundJobAlreadyRunning(MKGeneralException):
 #   |                                                                      |
 #   +----------------------------------------------------------------------+
 
+
 class BackgroundProcessInterface(object):
     progress_update_message = "JobProgressUpdate"
-    result_message          = "JobResult"
-    exception_message       = "JobException"
+    result_message = "JobResult"
+    exception_message = "JobException"
 
     def __init__(self, job_parameters):
         super(BackgroundProcessInterface, self).__init__()
         self._job_parameters = job_parameters
 
-
     def get_work_dir(self):
         return self._job_parameters["work_dir"]
-
 
     def get_job_id(self):
         return self._job_parameters["job_id"]
 
-
     def get_logger(self):
         return self._job_parameters["logger"]
-
 
     @classmethod
     def send_progress_update(cls, info):
         print "%s:%s" % (cls.progress_update_message, info.encode("utf-8"))
 
-
     @classmethod
     def send_result_message(cls, info):
         print "%s:%s" % (cls.result_message, info.encode("utf-8"))
-
 
     @classmethod
     def send_exception(cls, info):
@@ -106,13 +101,13 @@ class BackgroundProcessInterface(object):
         # Some error messages tend not output a \n at the end..
         print "\n%s:%s" % (cls.exception_message, info.encode("utf-8"))
 
-
     @classmethod
     def parse_progress_info(cls, progress_info_rawdata):
-        response = {cls.progress_update_message: [],
-                    cls.result_message         : [],
-                    cls.exception_message      : []}
-
+        response = {
+            cls.progress_update_message: [],
+            cls.result_message: [],
+            cls.exception_message: [],
+        }
 
         def finalize_last_block():
             if not message_block:
@@ -127,7 +122,7 @@ class BackgroundProcessInterface(object):
                 if line.startswith(message_type):
                     finalize_last_block()
                     current_message_type = message_type
-                    message_block = line[len(message_type)+1:]
+                    message_block = line[len(message_type) + 1:]
                     break
             else:
                 message_block += "\n%s" % line
@@ -153,19 +148,18 @@ class BackgroundProcessInterface(object):
 #   | When started, BackgroundJob spawns one instance of BackgroundProcess |
 #   '----------------------------------------------------------------------'
 
+
 class BackgroundProcess(multiprocessing.Process):
     def __init__(self, job_parameters):
         super(BackgroundProcess, self).__init__()
         self._job_parameters = job_parameters
-        self._jobstatus      = self._job_parameters["jobstatus"]
-        self._logger         = None # the logger is initialized in the run function
+        self._jobstatus = self._job_parameters["jobstatus"]
+        self._logger = None  # the logger is initialized in the run function
 
         self._register_signal_handlers()
 
-
     def _register_signal_handlers(self):
         signal.signal(signal.SIGTERM, self._handle_sigterm)
-
 
     def _handle_sigterm(self, signum, frame):
         status = self._jobstatus.get_status()
@@ -176,7 +170,6 @@ class BackgroundProcess(multiprocessing.Process):
 
         self._jobstatus.update_status({"state": JobStatus.state_stopped})
         os._exit(0)
-
 
     def run(self):
         # Detach from parent (apache) -> Remain running when apache is restarted
@@ -190,18 +183,23 @@ class BackgroundProcess(multiprocessing.Process):
         # Setup environment (Logging, Livestatus handles, etc.)
         try:
             self.initialize_environment()
-            self._jobstatus.update_status({"progress_info": BackgroundProcessInterface.parse_progress_info(""),
-                                           "state": JobStatus.state_running})
+            self._jobstatus.update_status({
+                "progress_info": BackgroundProcessInterface.parse_progress_info(""),
+                "state": JobStatus.state_running,
+            })
 
             # The actual function call
             self._execute_function()
         except Exception:
-            exception_message = "%s:Exception while preparing background function environment: %s" %\
-                                (BackgroundProcessInterface.exception_message, traceback.format_exc())
-            progress_info     = BackgroundProcessInterface.parse_progress_info(exception_message)
-            self._jobstatus.update_status({"progress_info": progress_info,
-                                           "state": JobStatus.state_exception})
-
+            exception_message = "%s:Exception while preparing background function environment: %s" % (
+                BackgroundProcessInterface.exception_message,
+                traceback.format_exc(),
+            )
+            progress_info = BackgroundProcessInterface.parse_progress_info(exception_message)
+            self._jobstatus.update_status({
+                "progress_info": progress_info,
+                "state": JobStatus.state_exception,
+            })
 
     def initialize_environment(self):
         if not self._logger:
@@ -212,12 +210,12 @@ class BackgroundProcess(multiprocessing.Process):
 
         self._job_parameters["logger"] = self._logger
 
-
     def _execute_function(self):
         # The specific function is called in a separate thread The main thread
         # collects the output produced by the function-thread and updates the
         # status file accordingly
-        t = threading.Thread(target=self._call_function_with_exception_handling, args=[self._job_parameters])
+        t = threading.Thread(
+            target=self._call_function_with_exception_handling, args=[self._job_parameters])
         t.start()
 
         last_progress_info = ""
@@ -225,7 +223,9 @@ class BackgroundProcess(multiprocessing.Process):
             time.sleep(0.2)
             progress_info = self._read_output()
             if progress_info != last_progress_info:
-                self._jobstatus.update_status({"progress_info": BackgroundProcessInterface.parse_progress_info(progress_info)})
+                self._jobstatus.update_status({
+                    "progress_info": BackgroundProcessInterface.parse_progress_info(progress_info),
+                })
                 last_progress_info = progress_info
         t.join()
 
@@ -233,7 +233,9 @@ class BackgroundProcess(multiprocessing.Process):
         job_status_update = {}
         progress_info = self._read_output()
         if progress_info != last_progress_info:
-             job_status_update.update({"progress_info": BackgroundProcessInterface.parse_progress_info(progress_info)})
+            job_status_update.update({
+                "progress_info": BackgroundProcessInterface.parse_progress_info(progress_info),
+            })
 
         # Final status message update
         job_status = self._jobstatus.get_status()
@@ -242,10 +244,12 @@ class BackgroundProcess(multiprocessing.Process):
         else:
             final_state = JobStatus.state_finished
 
-        job_status_update.update({"state": final_state, "duration": time.time() - job_status["started"]})
+        job_status_update.update({
+            "state": final_state,
+            "duration": time.time() - job_status["started"],
+        })
 
         self._jobstatus.update_status(job_status_update)
-
 
     @staticmethod
     def _call_function_with_exception_handling(job_parameters):
@@ -262,7 +266,6 @@ class BackgroundProcess(multiprocessing.Process):
             logger.error("Exception in background function:\n%s" % (traceback.format_exc()))
             job_interface.send_exception(_("Exception: %s") % (e))
 
-
     def _open_stdout_and_stderr(self):
         """Create a temporary file and use it as stdout / stderr buffer"""
         # We can not use io.BytesIO() or similar because we need real file descriptors
@@ -271,12 +274,10 @@ class BackgroundProcess(multiprocessing.Process):
         os.dup2(sys.stdout.fileno(), 1)
         os.dup2(sys.stderr.fileno(), 2)
 
-
     def _read_output(self):
         sys.stderr.flush()
         sys.stderr.seek(0, io.SEEK_SET)
         return sys.stderr.read()
-
 
     def _enable_logging_to_stdout(self):
         """In addition to the web.log we also want to see the job specific logs
@@ -286,10 +287,9 @@ class BackgroundProcess(multiprocessing.Process):
         cmk.gui.log.logger.addHandler(handler)
 
 
-
 class BackgroundJobDefines(object):
     base_dir = os.path.join(cmk.paths.var_dir, "background_jobs")
-    process_name = "cmk-job" # NOTE: keep this name short! psutil.Process tends to truncate long names
+    process_name = "cmk-job"  # NOTE: keep this name short! psutil.Process tends to truncate long names
 
 
 
@@ -311,10 +311,11 @@ class BackgroundJobDefines(object):
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
+
 class BackgroundJob(object):
     _background_process_class = BackgroundProcess
     housekeeping_max_age_sec = 86400 * 30
-    housekeeping_max_count   = 50
+    housekeeping_max_count = 50
 
     def __init__(self, job_id, logger=None, **kwargs):
         super(BackgroundJob, self).__init__()
@@ -328,37 +329,30 @@ class BackgroundJob(object):
 
         kwargs.setdefault("stoppable", True)
 
-        self._kwargs       = kwargs
-        self._work_dir     = os.path.join(self._job_base_dir, self._job_id)
-        self._jobstatus    = JobStatus(os.path.join(self._work_dir, "jobstatus.mk"))
+        self._kwargs = kwargs
+        self._work_dir = os.path.join(self._job_base_dir, self._job_id)
+        self._jobstatus = JobStatus(os.path.join(self._work_dir, "jobstatus.mk"))
 
         # The function ptr and its args/kwargs
         self._queued_function = None
 
-
     def get_job_id(self):
         return self._job_id
-
 
     def get_title(self):
         return self._jobstatus.get_status().get("title", _("Background job"))
 
-
     def get_work_dir(self):
         return self._work_dir
-
 
     def exists(self):
         return os.path.exists(self._work_dir) and self._jobstatus.statusfile_exists()
 
-
     def is_available(self):
         return self.exists()
 
-
     def is_stoppable(self):
         return self._jobstatus.get_status().get("stoppable", True) == True
-
 
     def is_running(self):
         if not self.exists():
@@ -377,7 +371,7 @@ class BackgroundJob(object):
                     # Additionally it has no open file handle to the status file
                     # The _is_correct_process check will fail in this gray area
                     # We consider this scenario as OK, if the start time was recent enough
-                    if time.time() - job_status["started"] < 5: # 5 seconds
+                    if time.time() - job_status["started"] < 5:  # 5 seconds
                         return True
 
                 if self._is_correct_process(job_status, p):
@@ -387,10 +381,8 @@ class BackgroundJob(object):
 
         return False
 
-
     def update_status(self, new_data):
         self._jobstatus.update_status(new_data)
-
 
     def stop(self):
         if not self.is_running():
@@ -403,9 +395,10 @@ class BackgroundJob(object):
 
         job_status = self._jobstatus.get_status()
         duration = time.time() - job_status["started"]
-        self._jobstatus.update_status({"state": self._jobstatus.state_stopped, "duration": duration})
-
-
+        self._jobstatus.update_status({
+            "state": self._jobstatus.state_stopped,
+            "duration": duration,
+        })
 
     def delete(self):
         if not self.is_stoppable() and self.is_running():
@@ -414,16 +407,14 @@ class BackgroundJob(object):
         self._terminate_processes()
         self._delete_work_dir()
 
-
     def _delete_work_dir(self):
         try:
             shutil.rmtree(self._work_dir)
         except OSError, e:
-            if e.errno == 2: # No such file or directory
+            if e.errno == 2:  # No such file or directory
                 pass
             else:
                 raise
-
 
     def _terminate_processes(self):
         job_status = self.get_status()
@@ -440,10 +431,9 @@ class BackgroundJob(object):
         except (psutil.NoSuchProcess, psutil.AccessDenied):
             return
 
-
         # Give the jobs some time to terminate
         start_time = time.time()
-        while time.time() - start_time < 10: # 10 seconds SIGTERM grace period
+        while time.time() - start_time < 10:  # 10 seconds SIGTERM grace period
             job_still_running = False
             try:
                 process = psutil.Process(job_status["pid"])
@@ -457,8 +447,6 @@ class BackgroundJob(object):
                 break
             time.sleep(0.1)
 
-
-
         # Kill unresponsive jobs
         # Send SIGKILL
         try:
@@ -468,13 +456,11 @@ class BackgroundJob(object):
         except (psutil.NoSuchProcess, psutil.AccessDenied):
             return
 
-
     def _is_correct_process(self, job_status, psutil_process):
         if psutil_process.name() != BackgroundJobDefines.process_name:
             return False
 
         return True
-
 
     def get_status(self):
         status = self._jobstatus.get_status()
@@ -492,10 +478,8 @@ class BackgroundJob(object):
 
         return status
 
-
     def set_function(self, func_ptr, *args, **kwargs):
         self._queued_function = (func_ptr, args, kwargs)
-
 
     def start(self):
         try:
@@ -504,7 +488,6 @@ class BackgroundJob(object):
         finally:
             cmk.store.release_lock(self._job_initializiation_lock)
 
-
     def _start(self):
         if self.is_running():
             raise BackgroundJobAlreadyRunning(_("Background Job %s already running") % self._job_id)
@@ -512,16 +495,18 @@ class BackgroundJob(object):
         self._prepare_work_dir()
 
         # Start processes
-        initial_status = {"state": JobStatus.state_initialized,
-                          "statusfile": os.path.join(self._job_id, "jobstatus.mk"),
-                          "started": time.time()}
+        initial_status = {
+            "state": JobStatus.state_initialized,
+            "statusfile": os.path.join(self._job_id, "jobstatus.mk"),
+            "started": time.time(),
+        }
         initial_status.update(self._kwargs)
         self._jobstatus.update_status(initial_status)
 
         job_parameters = {}
-        job_parameters["work_dir"]            = self._work_dir
-        job_parameters["job_id"]              = self._job_id
-        job_parameters["jobstatus"]           = self._jobstatus
+        job_parameters["work_dir"] = self._work_dir
+        job_parameters["job_id"] = self._job_id
+        job_parameters["jobstatus"] = self._jobstatus
         job_parameters["function_parameters"] = self._queued_function
         p = multiprocessing.Process(target=self._start_background_subprocess, args=[job_parameters])
         p.start()
@@ -530,11 +515,9 @@ class BackgroundJob(object):
         job_status = self.get_status()
         self._logger.debug("Started job \"%s\" (PID: %d)" % (self._job_id, job_status["pid"]))
 
-
     def _prepare_work_dir(self):
         self._delete_work_dir()
         os.makedirs(self._work_dir)
-
 
     def _start_background_subprocess(self, job_parameters):
         try:
@@ -546,26 +529,22 @@ class BackgroundJob(object):
         os._exit(0)
 
 
-
 class JobStatus(object):
     state_initialized = "initialized"
-    state_running     = "running"
-    state_finished    = "finished"
-    state_stopped     = "stopped"
-    state_exception   = "exception"
+    state_running = "running"
+    state_finished = "finished"
+    state_stopped = "stopped"
+    state_exception = "exception"
 
     def __init__(self, job_statusfilepath):
         super(JobStatus, self).__init__()
-        self._job_statusfilepath     = job_statusfilepath
-
+        self._job_statusfilepath = job_statusfilepath
 
     def get_status(self):
         return store.load_data_from_file(self._job_statusfilepath, default={})
 
-
     def statusfile_exists(self):
         return os.path.exists(self._job_statusfilepath)
-
 
     def update_status(self, params):
         if not os.path.exists(os.path.dirname(self._job_statusfilepath)):
@@ -581,18 +560,18 @@ class JobStatus(object):
         return pprint.pformat(value)
 
 
-
 class BackgroundJobManager(object):
     def __init__(self, logger):
         self._logger = logger.getChild("job_manager")
         super(BackgroundJobManager, self).__init__()
 
-
     # Checks for running jobs in the jobs default basedir
     def get_running_job_ids(self, job_class):
         all_jobs = self.get_all_job_ids(job_class)
-        return [job_id for job_id in all_jobs if BackgroundJob(job_id, logger=self._logger).is_running()]
-
+        return [
+            job_id for job_id in all_jobs
+            if BackgroundJob(job_id, logger=self._logger).is_running()
+        ]
 
     # Checks for running jobs in the jobs default basedir
     def get_all_job_ids(self, job_class):
@@ -607,12 +586,11 @@ class BackgroundJobManager(object):
 
         return job_ids
 
-
     def do_housekeeping(self, job_classes):
         try:
             for job_class in job_classes:
                 job_ids = self.get_all_job_ids(job_class)
-                max_age   = job_class.housekeeping_max_age_sec
+                max_age = job_class.housekeeping_max_age_sec
                 max_count = job_class.housekeeping_max_count
                 all_jobs = []
 

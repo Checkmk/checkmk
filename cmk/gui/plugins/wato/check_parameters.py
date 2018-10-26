@@ -1328,15 +1328,13 @@ def ps_convert_from_singlekeys(old_params):
     params.update(ps_convert_from_tuple(old_params))
     if "warnmin" in params:
         params["levels"] = (
-            params.get("warnmin",     1),
-            params.get("okmin",       1),
-            params.get("warnmax", 99999),
-            params.get("okmax",   99999),
+            params.pop("warnmin", 1),
+            params.pop("okmin", 1),
+            params.pop("warnmax", 99999),
+            params.pop("okmax", 99999),
         )
-        for key in [ "warnmin", "warnmax", "okmin", "okmax" ]:
-            if key in params:
-                del params[key]
     return params
+
 
 def ps_convert_inventorized_from_singlekeys(old_params):
     params = ps_convert_from_singlekeys(old_params)
@@ -1383,6 +1381,7 @@ process_level_elements = [
         elements = [
            Percentage(title = _("Warning at"),  default_value = 90, maxvalue = 10000),
            Percentage(title = _("Critical at"), default_value = 98, maxvalue = 10000),
+
         ],
     )),
     ( "cpu_average",
@@ -1486,6 +1485,11 @@ def convert_inventory_processes(old_dict):
             new_dict["default_params"][key] = value
         elif key != "perfdata":
             new_dict[key] = value
+
+    # New cpu rescaling load rule
+    if old_dict.get('cpu_rescale_max') is None:
+        new_dict['cpu_rescale_max'] = True
+
     return new_dict
 
 register_rule(group + '/' + subgroup_inventory,
@@ -1576,6 +1580,21 @@ register_rule(group + '/' + subgroup_inventory,
                     title = _("Add custom icon or action"),
                     help = _("You can assign icons or actions to the found services in the status GUI."),
                 )),
+                ("cpu_rescale_max", RadioChoice(
+                    title = _("CPU rescale maximum load"),
+                    help = _("CPU utilization is delivered by the Operating "
+                             "System as a per CPU core basis. Thus each core contributes "
+                             "with a 100% at full utilization, producing a maximum load "
+                             "of N*100% (N=number of cores). For simplicity this maximum "
+                             "can be rescaled down, making 100% the maximum and thinking "
+                             "in terms of total CPU utilization."),
+                    default_value = True,
+                    orientation = "vertical",
+                    choices = [
+                        ( True,  _("100% is all cores at full load") ),
+                        ( False, _("<b>N</b> * 100% as each core contributes with 100% at full load") ),
+                    ]
+                )),
                 ('default_params',
                  Dictionary(
                      title = _("Default parameters for detected services"),
@@ -1588,7 +1607,7 @@ register_rule(group + '/' + subgroup_inventory,
                      elements = process_level_elements,
                 )),
             ],
-            required_keys = [ "descr" ],
+            required_keys = [ "descr", "cpu_rescale_max" ],
         ),
         forth = convert_inventory_processes,
     ),

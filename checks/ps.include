@@ -102,9 +102,11 @@ def ps_wato_configured_inventory_rules(invrules):
             continue  # TODO Test this jump
 
         v = rule[0]
+        default_params = v.get('default_params', v)
+        default_params['cpu_rescale_max'] = v.get('cpu_rescale_max')
 
         inventory_specs.append((v['descr'], v.get('match'), v.get('user'),
-                                v.get('icon'), v.get('default_params', v)))
+                                v.get('icon'), default_params))
 
     return inventory_specs
 
@@ -246,7 +248,7 @@ def format_process_list(processes, html_output):
     def format_value(value):
         value, unit = value
         if isinstance(value, float):
-            return "%.2f%s" % (value, unit)
+            return "%.1f%s" % (value, unit)
         return "%s%s" % (value, unit)
 
     if html_output:
@@ -405,6 +407,7 @@ def boundary_levels(value, warnmin, okmin, okmax, warnmax):
 
     return state, infotext
 
+
 def ps_count_check(processes, params, info_name):
     warnmin, okmin, okmax, warnmax = params["levels"]
     count = processes.count
@@ -460,7 +463,7 @@ def cpu_check(percent_cpu, item, params):
     """Check levels for cpu utilization from given process"""
 
     infotext = "%.1f%% CPU" % percent_cpu
-    warn_cpu, crit_cpu = params.get("cpulevels", (None, None))
+    warn_cpu, crit_cpu = params.get("cpulevels", (None, None, None))[:2]
     perf_data = [("pcpu", percent_cpu, warn_cpu, crit_cpu)]
 
     # CPU might come with previous
@@ -534,8 +537,9 @@ def cpu_rate(counter, now, lifetime):
 class ProcessAggregator(object):
     """Collects information about all instances of monitored processes"""
 
-    def __init__(self, cpu_cores):
+    def __init__(self, cpu_cores, params):
         self.cpu_cores = cpu_cores
+        self.params = params
         self.virtual_size = 0
         self.resident_size = 0
         self.handle_count = 0
@@ -554,6 +558,20 @@ class ProcessAggregator(object):
 
     def append(self, process):
         self.processes.append(process)
+
+    def core_weight(self, is_win):
+        cpu_rescale_max = self.params.get('cpu_rescale_max')
+
+        # Rule not set up, only windows scaled
+        if cpu_rescale_max is None and not is_win:
+            return 1.0
+
+        # Current rule is set. Explicitly ask not to divide
+        if cpu_rescale_max is False:
+            return 1.0
+
+        # Use default of division
+        return 1.0 / self.cpu_cores
 
     def lifetimes(self, process_info, process):
         # process_info.cputime contains the used CPU time and possibly,
@@ -593,15 +611,14 @@ class ProcessAggregator(object):
             pid = process_info.process_id
             cputime = cpu_rate("ps_stat.pcpu.%s" % pid, now, total_seconds)
 
-            pcpu = cputime * 100
+            pcpu = cputime * 100 * self.core_weight(is_win=False)
             process.append(("pid", (pid, "")))
 
         # windows cpu times
         elif process_info.usermode_time and process_info.kernelmode_time:
             pid = process_info.process_id
 
-            user_per_sec = cpu_rate("ps_wmic.user.%s" % pid, now,
-                                    int(process_info.usermode_time))
+            user_per_sec = cpu_rate("ps_wmic.user.%s" % pid, now, int(process_info.usermode_time))
             kernel_per_sec = cpu_rate("ps_wmic.kernel.%s" % pid, now,
                                       int(process_info.kernelmode_time))
 
@@ -609,15 +626,19 @@ class ProcessAggregator(object):
                 user_per_sec = 0
                 kernel_per_sec = 0
 
-            user_perc = user_per_sec / 100000.0  # / cpu_cores
-            kernel_perc = kernel_per_sec / 100000.0  #/ cpu_cores
+            core_weight = self.core_weight(is_win=True)
+            user_perc = user_per_sec / 100000.0 * core_weight
+            kernel_perc = kernel_per_sec / 100000.0 * core_weight
             pcpu = user_perc + kernel_perc
             process.append(("cpu usage (user space)", (user_perc, "%")))
             process.append(("cpu usage (kernel space)", (kernel_perc, "%")))
             process.append(("pid", (pid, "")))
 
         else:  # Solaris, BSD, aix cpu times
-            pcpu = float(pcpu_text)
+            pcpu = float(pcpu_text) * self.core_weight(is_win=False)
+
+        self.percent_cpu += pcpu
+        process.append(("cpu usage", (pcpu, "%")))
 
         if process_info.pagefile:
             process.append(("pagefile usage", (process_info.pagefile, "")))
@@ -626,13 +647,10 @@ class ProcessAggregator(object):
             self.handle_count += int(process_info.handles)
             process.append(("handle count", (int(process_info.handles), "")))
 
-        self.percent_cpu += pcpu
-        process.append(("cpu usage", (pcpu, "%")))
-
 
 def check_ps_process_capture(parsed, params, cpu_cores):
 
-    ps_aggregator = ProcessAggregator(cpu_cores)
+    ps_aggregator = ProcessAggregator(cpu_cores, params)
 
     for line in parsed:
         node_name, process_line = line[0], line[1:]

@@ -1,5 +1,6 @@
 .cache
 .mypy_cache/
 __pycache__
+bandit.ini
 test.log
 var

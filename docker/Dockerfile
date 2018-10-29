@@ -36,7 +36,7 @@ RUN set -e \
     && echo "exit 101" > /usr/sbin/policy-rc.d \
     && chmod +x /usr/sbin/policy-rc.d \
     && export DEBIAN_FRONTEND=noninteractive \
-    && echo 'ftp.de.debian.org/debian stretch main' > /etc/apt/sources.list
+    && echo 'ftp.de.debian.org/debian stretch main' > /etc/apt/sources.list \
     && apt-get update \
     && apt-get install -y --no-install-recommends \
         ca-certificates \

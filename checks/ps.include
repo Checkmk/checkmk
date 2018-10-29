@@ -377,7 +377,7 @@ def check_ps_common(item, params, parsed, cpu_cores=1, info_name="process", tota
         yield 0, infotext
 
 
-def upperlevels(value, warn, crit):
+def upperlevels(value, warn, crit, readable=str):
     infotext = ''
     if value >= crit:
         state = 2
@@ -386,7 +386,7 @@ def upperlevels(value, warn, crit):
     else:
         state = 0
     if state:
-        infotext = ": (warn/crit at %d/%d)" % (warn, crit)
+        infotext = ": (warn/crit at %s/%s)" % tuple(map(readable, (warn, crit)))
 
     return state, infotext
 
@@ -432,8 +432,11 @@ def memory_check(processes, params):
 
         infotext = "%s %s" % (get_bytes_human_readable(size * 1024.0), title)
         warn_levels, crit_levels = params.get(levels, (None, None))
-        state, levelstext = upperlevels(size * 1024, warn_levels,
-                                        crit_levels) if levels in params else (0, "")
+        if levels in params:
+            state, levelstext = upperlevels(size * 1024, warn_levels, crit_levels,
+                                            get_bytes_human_readable)
+        else:
+            state, levelstext = 0, ""
         yield state, infotext + levelstext, [(metric, size, warn_levels, crit_levels)]
 
 
@@ -446,7 +449,8 @@ def memory_perc_check(processes, params, total_ram):
     else:
         resident_perc = 100 * float(processes.resident_size * 1024) / total_ram
         infotext = "%s of total RAM" % get_percent_human_readable(resident_perc)
-        state, levelstext = upperlevels(resident_perc, warn_perc, crit_perc)
+        state, levelstext = upperlevels(resident_perc, warn_perc, crit_perc,
+                                        get_percent_human_readable)
         infotext += levelstext
 
     return state, infotext
@@ -467,8 +471,9 @@ def cpu_check(percent_cpu, item, params):
         perf_data.append(("pcpuavg", avg_cpu, warn_cpu, crit_cpu, 0, params["cpu_average"]))
         percent_cpu = avg_cpu  # use this for level comparison
 
-    state, levelstext = upperlevels(percent_cpu, warn_cpu,
-                                    crit_cpu) if "cpulevels" in params else (0, "")
+    state, levelstext = upperlevels(percent_cpu, warn_cpu, crit_cpu,
+                                    get_percent_human_readable) if "cpulevels" in params else (0,
+                                                                                               "")
     return state, infotext + levelstext, perf_data
 
 
@@ -485,7 +490,8 @@ def individual_process_check(processes, params):
             elif the_item.startswith("cpu usage"):
                 cpu_usage += value
 
-        state, levelstext = upperlevels(cpu_usage, warn_cpu_single, crit_cpu_single)
+        state, levelstext = upperlevels(cpu_usage, warn_cpu_single, crit_cpu_single,
+                                        get_percent_human_readable)
         process_description = name + " with PID %s" % pid if pid else ""
         infotext = "%.1f%% CPU for %s%s" % (cpu_usage, process_description, levelstext)
         yield state, infotext
@@ -502,7 +508,8 @@ def uptime_check(times, params):
 
     if "max_age" in params:
         warn_age, crit_age = params["max_age"]
-        state, levelstext = upperlevels(times.max_elapsed, warn_age, crit_age)
+        state, levelstext = upperlevels(times.max_elapsed, warn_age, crit_age,
+                                        get_age_human_readable)
         infotext += levelstext
 
     return state, infotext

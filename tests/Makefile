@@ -1,6 +1,7 @@
 SHELL    := /bin/bash -e
 PIPENV   := PIPENV_VENV_IN_PROJECT=true pipenv
 PYTEST   := $(PIPENV) run py.test -s -vv
+BANDIT   := $(PIPENV) run bandit
 
 .PHONY: help pipenv-check test-unit test-integration test-gui-crawl test-pylint \
         test-packaging test-docker test-bandit test-shellcheck sanitize format \
@@ -47,21 +48,35 @@ test-docker: ../.venv
 	$(PYTEST) -T docker
 
 test-bandit: ../.venv
+# Finding all the Python stuff in our project is a bit tricky/ugly...
+	( cd .. ; \
+	  echo '[bandit]'; \
+	  echo -n 'targets: '; \
+	  for i in $$(find $$(realpath active_checks \
+	                               agents \
+	                               bin \
+	                               checks \
+	                               cmk \
+	                               cmk_base \
+	                               doc \
+	                               enterprise \
+	                               inventory \
+	                               livestatus \
+	                               managed \
+	                               notifications \
+	                               omd/packages/cma \
+	                               omd/packages/maintenance \
+	                               omd/packages/omd \
+	                               scripts \
+	                               tests \
+	                               web \
+	                               werk ) \
+	                   -type f | sort ); do \
+	      { [[ "$$i" == *.py ]] || { head -n 1 "$$i" | grep -q '^#!.*python$$'; } ; } && echo -n "$$i,"; \
+	  done ) | sed 's/,$$//' > bandit.ini
 # Currently only care about high severity reported issues. Once this is reached,
 # go and enable the medium/low checks.
-	CMK_DIR="$(realpath ..)" ; \
-	ENTERPRISE_DIR="$(realpath ../enterprise)" ; \
-	bandit \
-		-c "$$CMK_DIR/bandit.yaml" \
-		-r \
-		-lll \
-		$(BANDIT_OUTPUT_ARGS) \
-		"$$CMK_DIR" \
-		$$(grep -l python "$$CMK_DIR"/bin/*) \
-		"$$CMK_DIR"/{checks,inventory}/* \
-		$$(grep -l python "$$ENTERPRISE_DIR"/bin/*) \
-		"$$ENTERPRISE_DIR"/agents/plugins/*.py \
-		"$$ENTERPRISE_DIR"/agents/bakery/*
+	$(BANDIT) -c ../bandit.yaml -r -lll --ini bandit.ini $(BANDIT_OUTPUT_ARGS)
 
 test-shellcheck:
 	@CMK_DIR="$(realpath ..)" ; \

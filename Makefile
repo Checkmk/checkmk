@@ -540,9 +540,11 @@ Pipfile.lock: Pipfile
 	rm -rf .venv
 
 .venv: Pipfile.lock
-	$(PIPENV) install --dev
-	$(PIPENV) clean
-# TODO: Part 2 of the hack for the Pipfile.lock target.
+# Remake .venv everytime Pipfile or Pipfile.lock are updated. Using the 'sync'
+# mode installs the dependencies exactly as speciefied in the Pipfile.lock.
+# This is extremely fast since the dependencies do not have to be resolved.
+	$(RM) -r .venv
+	$(PIPENV) sync --dev
 	touch .venv
 
 # This dummy rule is called from subdirectories whenever one of the

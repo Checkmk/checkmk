@@ -4515,6 +4515,7 @@ check_metrics["check_mk-aix_memory"] = {
     "ramused" : { "name" : "mem_used", "scale": MB },
     "swapused" : { "name" : "swap_used", "scale": MB },
     "memused" : { "name" : "mem_lnx_total_used", "scale" : MB },
+    "memusedavg" : { "name" : "memory_avg", "scale" : MB },
 }
 
 check_metrics["check_mk-mem.win"] = {

@@ -27,6 +27,7 @@
 import os
 import signal
 import subprocess
+import collections
 
 import cmk.paths
 
@@ -56,10 +57,10 @@ class ProgramDataSource(CheckMKAgentDataSource):
         return "ds"
 
     def _execute(self):
-        command_line = self._get_command_line()
-        return self._get_agent_info_program(command_line)
+        command_line, command_stdin = self._get_command_line_and_stdin()
+        return self._get_agent_info_program(command_line, command_stdin)
 
-    def _get_agent_info_program(self, commandline):
+    def _get_agent_info_program(self, commandline, command_stdin):
         exepath = commandline.split()[0]  # for error message, hide options!
 
         self._logger.debug("Calling external program %r" % (commandline))
@@ -69,7 +70,7 @@ class ProgramDataSource(CheckMKAgentDataSource):
                 p = subprocess.Popen(  # nosec
                     commandline,
                     shell=True,
-                    stdin=open(os.devnull),
+                    stdin=subprocess.PIPE if command_stdin else open(os.devnull),
                     stdout=subprocess.PIPE,
                     stderr=subprocess.PIPE,
                     preexec_fn=os.setsid,
@@ -81,11 +82,11 @@ class ProgramDataSource(CheckMKAgentDataSource):
                 p = subprocess.Popen(  # nosec
                     commandline,
                     shell=True,
-                    stdin=open(os.devnull),
+                    stdin=subprocess.PIPE if command_stdin else open(os.devnull),
                     stdout=subprocess.PIPE,
                     stderr=subprocess.PIPE,
                     close_fds=True)
-            stdout, stderr = p.communicate()
+            stdout, stderr = p.communicate(input=command_stdin)
             exitstatus = p.returncode
         except MKTimeout:
             # On timeout exception try to stop the process to prevent child process "leakage"
@@ -109,13 +110,18 @@ class ProgramDataSource(CheckMKAgentDataSource):
 
         return stdout
 
-    def _get_command_line(self):
+    def _get_command_line_and_stdin(self):
         """Returns the final command line to be executed"""
         raise NotImplementedError()
 
     def describe(self):
         """Return a short textual description of the agent"""
-        return "Program: %s" % self._get_command_line()
+        command_line, command_stdin = self._get_command_line_and_stdin()
+        response = ["Program: %s" % command_line]
+        if command_stdin:
+            response.extend(["  Program stdin:", command_stdin])
+        return "\n".join(response)
+
 
 
 class DSProgramDataSource(ProgramDataSource):
@@ -128,16 +134,17 @@ class DSProgramDataSource(ProgramDataSource):
 
     def name(self):
         """Return a unique (per host) textual identification of the data source"""
-        program = self._get_command_line().split(" ")[0]
+        command_line, _command_stdin = self._get_command_line_and_stdin()
+        program = command_line.split(" ")[0]
         return os.path.basename(program)
 
-    def _get_command_line(self):
+    def _get_command_line_and_stdin(self):
         cmd = self._command_template
 
         cmd = self._translate_legacy_macros(cmd)
         cmd = self._translate_host_macros(cmd)
 
-        return cmd
+        return cmd, None
 
     def _translate_legacy_macros(self, cmd):
         # Make "legacy" translation. The users should use the $...$ macros in future
@@ -154,6 +161,8 @@ class DSProgramDataSource(ProgramDataSource):
         macros = core_config.get_host_macros_from_attributes(self._hostname, attrs)
         return core_config.replace_macros(cmd, macros)
 
+
+SpecialAgentConfiguration = collections.namedtuple("SpecialAgentConfiguration", ["args", "stdin"])
 
 class SpecialAgentDataSource(ProgramDataSource):
     def __init__(self, hostname, ipaddress, special_agent_id, params):
@@ -175,10 +184,17 @@ class SpecialAgentDataSource(ProgramDataSource):
     def _gather_check_plugin_names(self):
         return config.discoverable_tcp_checks()
 
-    def _get_command_line(self):
+    def _get_command_line_and_stdin(self):
         """Create command line using the special_agent_info"""
         info_func = config.special_agent_info[self._special_agent_id]
-        cmd_arguments = info_func(self._params, self._hostname, self._ipaddress)
+        agent_configuration = info_func(self._params, self._hostname, self._ipaddress)
+        if isinstance(agent_configuration, SpecialAgentConfiguration):
+            cmd_arguments = agent_configuration.args
+            command_stdin = agent_configuration.stdin
+        else:
+            cmd_arguments = agent_configuration
+            command_stdin = None
+
         final_arguments = config.prepare_check_command(
             cmd_arguments, self._hostname, service_description=None)
 
@@ -190,4 +206,4 @@ class SpecialAgentDataSource(ProgramDataSource):
         else:
             path = special_agents_dir + "/agent_" + self._special_agent_id
 
-        return path + " " + final_arguments
+        return path + " " + final_arguments, command_stdin

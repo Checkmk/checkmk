@@ -1,11 +1,13 @@
 import pytest
 
 import cmk_base.data_sources.abstract
+import cmk_base.data_sources.programs
 import cmk_base.data_sources.snmp
 import cmk_base.data_sources.tcp
 import cmk_base.ip_lookup as ip_lookup
 import cmk_base.config as config
 import cmk_base.exceptions
+
 
 def test_data_source_cache_default():
     source = cmk_base.data_sources.snmp.SNMPDataSource("hostname", "ipaddress")
@@ -57,14 +59,17 @@ def test_mgmt_board_data_source_is_ip_address():
     ("127.0.1.1", "lolo", True),
     (None, "lolo", False),
 ])
-def test_mgmt_board_data_source_management_board_ipaddress(monkeypatch, result, address, resolvable):
+def test_mgmt_board_data_source_management_board_ipaddress(monkeypatch, result, address,
+                                                           resolvable):
     source = cmk_base.data_sources.snmp.SNMPManagementBoardDataSource("hostname", "ipaddress")
 
     if resolvable:
         monkeypatch.setattr(ip_lookup, "lookup_ip_address", lambda h: "127.0.1.1")
     else:
+
         def raise_exc(h):
             raise cmk_base.exceptions.MKIPAddressLookupError("Failed to...")
+
         monkeypatch.setattr(ip_lookup, "lookup_ip_address", raise_exc)
 
     monkeypatch.setattr(config, "management_address_of", lambda h: address)
@@ -85,9 +90,9 @@ def test_normalize_ip(ip_in, ips_out):
     ((0, ''), None, "127.0.0.1"),
     ((0, ', allowed IP ranges: 1.2.3.4'), "1.2.3.4", "1.2.3.4"),
     ((1, ', invalid access configuration:'
-         ' agent allows extra: 1.2.4.6 1.2.5.6(!)'), "1.2.{3,4,5}.6", "1.2.3.6"),
+      ' agent allows extra: 1.2.4.6 1.2.5.6(!)'), "1.2.{3,4,5}.6", "1.2.3.6"),
     ((1, ', invalid access configuration:'
-         ' agent blocks: 1.2.3.5 1.2.3.4(!)'), "1.2.3.6", "1.2.3.{4,5,6}"),
+      ' agent blocks: 1.2.3.5 1.2.3.4(!)'), "1.2.3.6", "1.2.3.{4,5,6}"),
 ])
 def test_tcpdatasource_only_from(monkeypatch, result, reported, rule):
     source = cmk_base.data_sources.tcp.TCPDataSource("hostname", "ipaddress")
@@ -97,3 +102,44 @@ def test_tcpdatasource_only_from(monkeypatch, result, reported, rule):
 
     assert source._sub_result_only_from({"onlyfrom": reported}) == result
 
+
+@pytest.mark.parametrize("info_func_result,expected", [
+    (
+        "arg0 arg1",
+        ("arg0 arg1", None),
+    ),
+    (
+        ["arg0", "arg1"],
+        ("'arg0' 'arg1'", None),
+    ),
+    (
+        cmk_base.data_sources.programs.SpecialAgentConfiguration("arg0", None),
+        ("arg0", None),
+    ),
+    (
+        cmk_base.data_sources.programs.SpecialAgentConfiguration("arg0 arg1", None),
+        ("arg0 arg1", None),
+    ),
+    (
+        cmk_base.data_sources.programs.SpecialAgentConfiguration(["list0", "list1"], None),
+        ("'list0' 'list1'", None),
+    ),
+    (
+        cmk_base.data_sources.programs.SpecialAgentConfiguration("arg0 arg1", "stdin_blob"),
+        ("arg0 arg1", "stdin_blob"),
+    ),
+    (
+        cmk_base.data_sources.programs.SpecialAgentConfiguration(["list0", "list1"], "stdin_blob"),
+        ("'list0' 'list1'", "stdin_blob"),
+    ),
+])
+def test_get_command_line_and_stdin(monkeypatch, info_func_result, expected):
+    special_agent_id = "bi"
+    agent_prefix = "share/check_mk/agents/special/agent_%s " % special_agent_id
+    ds = cmk_base.data_sources.programs.SpecialAgentDataSource("testhost", "127.0.0.1",
+                                                               special_agent_id, None)
+    monkeypatch.setattr(config, "special_agent_info",
+                        {special_agent_id: lambda a, b, c: info_func_result})
+    command_line, command_stdin = ds._get_command_line_and_stdin()
+    assert command_line == agent_prefix + expected[0]
+    assert command_stdin == expected[1]

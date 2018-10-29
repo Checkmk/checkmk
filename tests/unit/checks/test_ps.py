@@ -213,6 +213,8 @@ PS_DISCOVERY_WATO_RULES = [
             "cpu_average": 15,
             "process_info": "html",
             "resident_levels_perc": (25.0, 50.0),
+            "virtual_levels": (1024**3, 2*1024**3),
+            "resident_levels": (1024**3, 2*1024**3),
         },
         "icon": "emacs.png",
         "descr": "emacs",
@@ -270,6 +272,8 @@ PS_DISCOVERY_SPECS = [
         "cpu_average": 15,
         "process_info": "html",
         "resident_levels_perc": (25.0, 50.0),
+        "virtual_levels": (1024**3, 2*1024**3),
+        "resident_levels": (1024**3, 2*1024**3),
     }),
     ("cron", "~.*cron", "root", None, {
         "max_age": (3600, 7200),
@@ -351,6 +355,8 @@ PS_DISCOVERED_ITEMS = [
         "icon": "emacs.png",
         "user": "on",
         "process_info": "html",
+        "virtual_levels": (1024**3, 2*1024**3),
+        "resident_levels": (1024**3, 2*1024**3),
     }),
     ("firefox is on fire", {
         "process": "~.*firefox",
@@ -409,9 +415,9 @@ def test_replace_service_description_exception(check_manager):
 check_results = [
     CheckResult([
         (0, "1 process", [("count", 1, 100000, 100000, 0)]),
-        (0, "1.00 GB virtual", [("vsz", 1050360, None, None, None, None)]),
-        (0, "296.14 MB physical", [("rss", 303252, None, None, None, None)]),
-        (1, "28.9% of total RAM: (warn/crit at 25/50)"),
+        (1, "1.00 GB virtual: (warn/crit at 1.00 GB/2.00 GB)", [("vsz", 1050360, 1073741824, 2147483648, None, None)]),
+        (0, "296.14 MB physical", [("rss", 303252, 1073741824, 2147483648, None, None)]),
+        (1, "28.9% of total RAM: (warn/crit at 25.0%/50.0%)"),
         (0, "0.0% CPU (15 min average: 0.0%)", [("pcpu", 0.0, None, None, None, None),
                                                 ("pcpuavg", 0.0, None, None, 0, 15)]),
         (0, "running for 27 h", []),
@@ -444,7 +450,7 @@ check_results = [
         (0, "0.0% CPU for svchost.exe with PID 764"),
         (1, "1204 process handles: (warn/crit at 1000/2000)", [("process_handles", 1204, 1000, 2000,
                                                                 None, None)]),
-        (1, "youngest running for 12.0 s, oldest running for 71 m: (warn/crit at 3600/7200)", []),
+        (1, "youngest running for 12.0 s, oldest running for 71 m: (warn/crit at 60 m/120 m)", []),
     ]),
     CheckResult([
         (0, "1 process", [("count", 1, 100000, 100000, 0, None)]),

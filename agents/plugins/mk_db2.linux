@@ -55,7 +55,7 @@ if [ $# -eq 0 ]; then
         echo "$INSTANCE" "$DBVERSION"
         VERSION_NUMBER=$(echo "$DBVERSION" | sed  -e 's/DB2v\(.*\),.*/\1/' | awk -v FS="." '{print $1"."$2}')
 
-        DBS=$(su - "${INSTANCE}" -c "db2 list active databases" | grep 'Database name' | awk '{ print $NF }')
+        DBS=$(su - "${INSTANCE}" -c "db2 list db directory" | grep -B6 -i 'indirect\|home' | grep 'Database name' | awk '{ print $NF }')
 
         DB_PORT='port 0'
         GET_PORT=1

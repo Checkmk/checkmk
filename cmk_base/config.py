@@ -2492,7 +2492,8 @@ def _is_plugin_precompiled(path, precompiled_path):
     except struct.error:
         return False
 
-    if long(os.stat(path).st_mtime) > origin_file_mtime:
+
+    if long(os.stat(path).st_mtime) != origin_file_mtime:
         return False
 
     return True

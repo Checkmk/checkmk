@@ -1,0 +1,14 @@
+Title: Checks from mkps did not always replace existing checks
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1540909691
+Class: fix
+
+Check_MK precompiles check plugins, so that they can be faster reused later on.
+The mechanism which detects if a plugin needs to be precompiled again, missed the fact
+that files extracted from mkps may have an older timestamp than the precompiled one.
+This also applies to old check files which are moved into the local checks dir.
+

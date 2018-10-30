@@ -1,0 +1,12 @@
+Title: mk_db2.linux: Also gather information about inactive databases
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1551792489
+Class: fix
+
+Please see
+https://developer.ibm.com/answers/questions/194101/how-does-itcam-db2-agent-find-status-of-a-database/ 
+for detailed information

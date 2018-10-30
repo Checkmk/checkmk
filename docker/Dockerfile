@@ -31,12 +31,10 @@ COPY needed-packages /needed-packages
 # Then fetch the package and install it. This will make sure all Check_MK
 # containers will share all dependencies, including this step.
 # hadolint ignore=SC2046,DL3008
-# Add sources.list since 'deb http://deb.debian.org/debian stretch main' is not always resolved correctly
 RUN set -e \
     && echo "exit 101" > /usr/sbin/policy-rc.d \
     && chmod +x /usr/sbin/policy-rc.d \
     && export DEBIAN_FRONTEND=noninteractive \
-    && echo 'deb http://ftp.de.debian.org/debian stretch main' > /etc/apt/sources.list \
     && apt-get update \
     && apt-get install -y --no-install-recommends \
         ca-certificates \

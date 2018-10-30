@@ -48,3 +48,23 @@ def pnp_cleanup(s):
         .replace(':', '_') \
         .replace('/', '_') \
         .replace('\\', '_')
+
+
+def cmp_config_paths(a, b):
+    """Compare function for Check_MK configuration file paths
+
+    Helper functions that determines the sort order of the
+    configuration files. The following two rules are implemented:
+
+    1. *.mk files in the same directory will be read
+       according to their lexical order.
+    2. subdirectories in the same directory will be
+       scanned according to their lexical order.
+    3. subdirectories of a directory will always be read *after*
+       the *.mk files in that directory.
+    """
+    pa = a.split('/')
+    pb = b.split('/')
+    return cmp(pa[:-1], pb[:-1]) or \
+           cmp(len(pa), len(pb)) or \
+           cmp(pa, pb)

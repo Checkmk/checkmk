@@ -47,6 +47,7 @@ import cmk.paths
 from cmk.regex import regex, is_regex
 import cmk.translations
 import cmk.store as store
+import cmk.utils
 from cmk.exceptions import MKGeneralException, MKTerminate
 
 import cmk_base
@@ -271,7 +272,7 @@ def _get_config_file_paths(with_conf_d):
                      for f in fs
                      if f.endswith(".mk")]
                     for d, _unused_sb, fs in os.walk(cmk.paths.check_mk_config_dir)], []),
-            cmp=_cmp_config_paths)
+            cmp=cmk.utils.cmp_config_paths)
         list_of_files = [cmk.paths.main_config_file] + list_of_files
     else:
         list_of_files = [cmk.paths.main_config_file]
@@ -418,22 +419,6 @@ def all_nonfunction_vars():
         name for name, value in globals().items()
         if name[0] != '_' and not callable(value)
     ])
-
-
-# Helper functions that determines the sort order of the
-# configuration files. The following two rules are implemented:
-# 1. *.mk files in the same directory will be read
-#    according to their lexical order.
-# 2. subdirectories in the same directory will be
-#    scanned according to their lexical order.
-# 3. subdirectories of a directory will always be read *after*
-#    the *.mk files in that directory.
-def _cmp_config_paths(a, b):
-    pa = a.split('/')
-    pb = b.split('/')
-    return cmp(pa[:-1], pb[:-1]) or \
-           cmp(len(pa), len(pb)) or \
-           cmp(pa, pb)
 
 
 class PackedConfig(object):

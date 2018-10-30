@@ -106,3 +106,7 @@ def load():
         ident, password = line.strip().split(":", 1)
         passwords[ident] = password
     return passwords
+
+
+def extract(password_id):
+    return load().get(password_id)

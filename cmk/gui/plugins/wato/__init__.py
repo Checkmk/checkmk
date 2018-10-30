@@ -64,6 +64,7 @@ from cmk.gui.plugins.wato.utils import (
     home_button,
     HostnameTranslation,
     IndividualOrStoredPassword,
+    passwordstore_choices,
     IPMIParameters,
     is_wato_slave_site,
     Levels,

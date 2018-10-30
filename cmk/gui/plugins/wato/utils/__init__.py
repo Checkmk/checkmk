@@ -544,6 +544,11 @@ class GroupSelection(ElementSelection):
         return dict(elements)
 
 
+def passwordstore_choices():
+    return [
+        (ident, pw["title"]) for ident, pw in watolib.PasswordStore().usable_passwords().items()
+    ]
+
 
 class PasswordFromStore(CascadingDropdown):
     def __init__(self, *args, **kwargs):
@@ -552,7 +557,7 @@ class PasswordFromStore(CascadingDropdown):
                 allow_empty = kwargs.get("allow_empty", True),
             )),
             ("store", _("Stored password"), DropdownChoice(
-                choices = self._password_choices,
+                choices = passwordstore_choices,
                 sorted = True,
                 invalid_choice = "complain",
                 invalid_choice_title = _("Password does not exist or using not permitted"),
@@ -566,16 +571,10 @@ class PasswordFromStore(CascadingDropdown):
         CascadingDropdown.__init__(self, *args, **kwargs)
 
 
-    def _password_choices(self):
-        return [ (ident, pw["title"]) for ident, pw
-                 in watolib.PasswordStore().usable_passwords().items() ]
-
-
-
 def IndividualOrStoredPassword(*args, **kwargs):
     return Transform(
         PasswordFromStore(*args, **kwargs),
-        forth = lambda v: ("password", v) if type(v) != tuple else v,
+        forth=lambda v: ("password", v) if type(v) != tuple else v,
     )
 
 

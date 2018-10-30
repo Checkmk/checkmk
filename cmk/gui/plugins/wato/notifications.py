@@ -33,23 +33,25 @@ from cmk.gui.i18n import _
 from cmk.gui.globals import html
 
 from cmk.gui.valuespec import (
-    DropdownChoice,
-    FixedValue,
-    Tuple,
     Age,
-    TextAscii,
     CascadingDropdown,
-    Transform,
-    TextAreaUnicode,
-    TextUnicode,
-    ListChoice,
     Dictionary,
-    Password,
-    IPv4Address,
+    DropdownChoice,
     EmailAddress,
+    FixedValue,
+    HTTPUrl,
+    IPv4Address,
+    ListChoice,
+    Password,
+    TextAreaUnicode,
+    TextAscii,
+    TextUnicode,
+    Transform,
+    Tuple,
 )
 
-from cmk.gui.plugins.wato import register_notification_parameters
+from cmk.gui.plugins.wato import (register_notification_parameters, passwordstore_choices)
+
 
 # We have to transform because 'add_to_event_context'
 # in modules/events.py can't handle complex data structures
@@ -208,9 +210,9 @@ def html_email_parameter_elements():
 register_notification_parameters(
     "mail",
     Dictionary(
-        elements = html_email_parameter_elements, # must be called at run time!!
-    )
-)
+        elements=html_email_parameter_elements,  # must be called at run time!!
+    ))
+
 
 register_notification_parameters(
     "slack",
@@ -218,20 +220,26 @@ register_notification_parameters(
         optional_keys=["url_prefix"],
         elements=[
             ("webhook_url",
-                TextAscii(
+                CascadingDropdown(
                     title=_("Slack Webhook-URL"),
-                    size=80,
-                    allow_empty=False,
-                    help=_(
-                        "URL from Slack Webhook. Setup one <a href=\"https://my.slack.com/services/new/incoming-webhook/\" target=\"_blank\"> here </a>"),
-                    regex="^https://hooks.slack.com/services/.+",
-                    regex_error=_("The Webhook-URL must begin with "
-                                  "<tt>https://hooks.slack.com/services/</tt>"),
-                )
-            ),
+                    help=_("URL from Slack Webhook. Setup one "+
+                           "<a href=\"https://my.slack.com/services/new/incoming-webhook/\" target=\"_blank\"> here </a>"
+                           "<br />This URL can also be collected from the Password Store from Check_MK."),
+                    choices=[
+                        ("webhook_url", _("Webhook URL"), HTTPUrl(
+                            size=80,
+                            allow_empty=False,
+                            regex="^https://hooks.slack.com/services/.+",
+                            regex_error=_("The Webhook-URL must begin with "
+                                          "<tt>https://hooks.slack.com/services/</tt>")),),
+                        ("store", _("URL from password store"), DropdownChoice(
+                            sorted = True,
+                            choices=passwordstore_choices,
+                        ))
+                    ]
+            )),
             ("url_prefix",
                 Transform(CascadingDropdown(
-                    style="dropdown",
                     title=_("URL prefix for links to Check_MK"),
                     help=_("If you use <b>Automatic HTTP/s</b> the URL prefix for "
                            "host and service links within the notification mail "
@@ -303,7 +311,7 @@ register_notification_parameters(
                     cols = 58,
                     monospaced = True,
                     default_value =
-"""Host:     $HOSTNAME$
+                    """Host:     $HOSTNAME$
 Alias:    $HOSTALIAS$
 Address:  $HOSTADDRESS$
 """,
@@ -316,7 +324,7 @@ Address:  $HOSTADDRESS$
                     cols = 58,
                     monospaced = True,
                     default_value =
-"""Event:    $EVENT_TXT$
+                    """Event:    $EVENT_TXT$
 Output:   $HOSTOUTPUT$
 Perfdata: $HOSTPERFDATA$
 $LONGHOSTOUTPUT$
@@ -330,7 +338,7 @@ $LONGHOSTOUTPUT$
                     cols = 58,
                     monospaced = True,
                     default_value =
-"""Service:  $SERVICEDESC$
+                    """Service:  $SERVICEDESC$
 Event:    $EVENT_TXT$
 Output:   $SERVICEOUTPUT$
 Perfdata: $SERVICEPERFDATA$
@@ -417,15 +425,19 @@ register_notification_parameters(
     )
 )
 
+
 # We have to transform because 'add_to_event_context'
 # in modules/events.py can't handle complex data structures
 def transform_back_pushover_priority(params):
     if type(params) == tuple:
-        return {"priority" : "2",
-                "retry"    : params[1][0],
-                "expire"   : params[1][1],
-                "receipts" : params[1][2]}
+        return {
+            "priority": "2",
+            "retry": params[1][0],
+            "expire": params[1][1],
+            "receipts": params[1][2]
+        }
     return params
+
 
 def transform_forth_pushover_priority(params):
     if type(params) == dict:

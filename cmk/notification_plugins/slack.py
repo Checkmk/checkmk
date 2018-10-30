@@ -34,6 +34,7 @@ import sys
 import requests
 
 from cmk.notification_plugins import utils
+import cmk.password_store
 
 COLORS = {
     "CRITICAL": "#EE0000",
@@ -89,7 +90,12 @@ def construct_message(context):
 def main():
     context = utils.collect_context()
 
-    url = context.get("PARAMETER_WEBHOOK_URL")
+    url = context.get("PARAMETER_WEBHOOK_URL").split()
+
+    if url[0] == 'store':
+        url = cmk.password_store.extract(url[1])
+    else:
+        url = url[1]
 
     r = requests.post(url=url, json=construct_message(context))
 

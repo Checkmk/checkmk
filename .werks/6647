@@ -1,0 +1,13 @@
+Title: Enable use of Passwordstore for Slack's Webhook-URL
+Level: 1
+Component: notifications
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1540910427
+Class: feature
+
+It is now possible to configure Slack's notification plugin using values
+stored in Check_MK Password store. In this way the Webhook URL is not shown
+in the Notifications Parameters but is just recovered from the password
+store vault.

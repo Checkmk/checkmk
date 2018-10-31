@@ -8,7 +8,7 @@ from cmk.notification_plugins import utils
         "HOSTURL": "/view?key=val",
         "HOSTNAME": "site",
         "WHAT": 'HOST',
-    }, "<%s|%s>", "LINKEDHOSTNAME", "<https://host/site/view?key=val|site>"),
+    }, "<{}|{}>", "LINKEDHOSTNAME", "<https://host/site/view?key=val|site>"),
     ({
         "PARAMETER_URL_PREFIX_AUTOMATIC": "http",
         "MONITORING_HOST": "localhost",
@@ -18,13 +18,13 @@ from cmk.notification_plugins import utils
         "HOSTNAME": "site1",
         "SERVICEDESC": "first",
         "WHAT": 'SERVICE',
-    }, '<a href="%s">%s</a>', "LINKEDSERVICEDESC",
+    }, '<a href="{}">{}</a>', "LINKEDSERVICEDESC",
      '<a href="http://localhost/testsite/view?key=val">first</a>'),
     ({
         "HOSTURL": "/view?key=val",
         "HOSTNAME": "site2",
         "WHAT": 'SERVICE',
-    }, '<a href="%s">%s</a>', "LINKEDSERVICEDESC", ''),
+    }, '<a href="{}">{}</a>', "LINKEDSERVICEDESC", ''),
 ])
 def test_extend_with_link_urls(context, link_template, testkey, result):
     utils.extend_context_with_link_urls(context, link_template)

@@ -26,8 +26,9 @@
 from typing import Dict  # pylint: disable=unused-import
 import os
 import re
-import sys
+import requests
 import subprocess
+import sys
 
 try:
     # First try python3
@@ -37,6 +38,7 @@ except ImportError:
     from cgi import escape as html_escape
 
 from cmk_base.notify import find_wato_folder
+import cmk.password_store
 
 
 def collect_context():
@@ -65,11 +67,11 @@ def extend_context_with_link_urls(context, link_template):
         base_url = re.sub('/check_mk/?', '', url_prefix)
         host_url = base_url + context['HOSTURL']
 
-        context['LINKEDHOSTNAME'] = link_template % (host_url, context['HOSTNAME'])
+        context['LINKEDHOSTNAME'] = link_template.format(host_url, context['HOSTNAME'])
 
         if context['WHAT'] == 'SERVICE':
             service_url = base_url + context['SERVICEURL']
-            context['LINKEDSERVICEDESC'] = link_template % (service_url, context['SERVICEDESC'])
+            context['LINKEDSERVICEDESC'] = link_template.format(service_url, context['SERVICEDESC'])
 
     else:
         context['LINKEDHOSTNAME'] = context['HOSTNAME']
@@ -203,3 +205,25 @@ def get_bulk_notification_subject(contexts, hosts):
 
     subject = substitute_context(subject, bulk_context)
     return subject
+
+
+#################################################################################################
+# REST
+def post_request(message_constructor):
+    context = collect_context()
+
+    url = context.get("PARAMETER_WEBHOOK_URL").split()
+
+    if url[0] == 'store':
+        url = cmk.password_store.extract(url[1])
+    else:
+        url = url[1]
+
+    r = requests.post(url=url, json=message_constructor(context))
+
+    if r.status_code == 200:
+        sys.exit(0)
+    else:
+        sys.stderr.write(
+            "Failed to send notification. Status: %i, Response: %s\n" % (r.status_code, r.text))
+        sys.exit(2)

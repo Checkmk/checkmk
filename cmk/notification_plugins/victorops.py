@@ -23,10 +23,10 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 r"""
-Send notification messages to Slack
-===================================
+Send notification messages to VictorOPS
+=======================================
 
-Use a slack webhook to send notification messages
+Create a JSON message to be sent to VictorOPS REST API
 """
 from __future__ import unicode_literals
 
@@ -34,52 +34,40 @@ from typing import Dict  # pylint: disable=unused-import
 
 from cmk.notification_plugins.utils import extend_context_with_link_urls
 
-COLORS = {
-    "CRITICAL": "#EE0000",
-    "DOWN": "#EE0000",
-    "WARNING": "#FFDD00",
-    "OK": "#00CC00",
-    "UP": "#00CC00",
-    "UNKNOWN": "#CCCCCC",
-    "UNREACHABLE": "#CCCCCC",
-}
+
+def translate_states(state):
+    if state in ['OK', 'UP']:
+        return 'OK'
+    if state in ['CRITICAL', 'DOWN']:
+        return 'CRITICAL'
+    if state in ['UNKNOWN', 'UNREACHABLE']:
+        return 'INFO'
+    return state  # This is WARNING
 
 
-def slack_msg(context):
+def victorops_msg(context):
     # type: (Dict) -> Dict
     """Build the message for slack"""
 
-    extend_context_with_link_urls(context, '<{}|{}>')
+    extend_context_with_link_urls(context, '{0}')
 
     if context.get('SERVICESTATE', None):
-        color = COLORS.get(context["SERVICESTATE"])
-        title = "Service {NOTIFICATIONTYPE} notification".format(**context)
-        text = "Host: {LINKEDHOSTNAME} (IP: {HOSTADDRESS})\nService: {LINKEDSERVICEDESC}\nState: {SERVICESTATE}".format(
-            **context)
-        output = context["SERVICEOUTPUT"]
+        state = translate_states(context["SERVICESTATE"])
+        entity_id = '{SERVICEDESC}/{HOSTNAME}:{HOSTADDRESS}'.format(**context).replace(" ", "")
+        title = "{SERVICEDESC} on {HOSTNAME}".format(**context)
+        text = "{SERVICEOUTPUT}\n\n{LINKEDSERVICEDESC}".format(**context)
     else:
-        color = COLORS.get(context["HOSTSTATE"])
-        title = "Host {NOTIFICATIONTYPE} notification".format(**context)
-        text = "Host: {LINKEDHOSTNAME} (IP: {HOSTADDRESS})\nState: {HOSTSTATE}".format(**context)
-        output = context["HOSTOUTPUT"]
+        state = translate_states(context["HOSTSTATE"])
+        entity_id = '{HOSTNAME}:{HOSTADDRESS}'.format(**context).replace(" ", "")
+        title = '{HOSTNAME} is {HOSTSTATE}'.format(**context)
+        text = "{HOSTOUTPUT}\n\n{LINKEDHOSTNAME}".format(**context)
+    hostname = context.get('HOSTNAME')
 
     return {
-        "attachments": [
-            {
-                "color": color,
-                "title": title,
-                "text": text,
-            },
-            {
-                "color":
-                    color,
-                "title":
-                    "Additional Info",
-                "text":
-                    output + "\nPlease take a look: " + ", ".join(
-                        map("@{}".format, context["CONTACTNAME"].split(','))),
-                "footer":
-                    "Check_MK notification: {LONGDATETIME}".format(**context),
-            },
-        ]
+        "message_type": state,
+        "entity_id": entity_id,
+        "entity_display_name": title,
+        "state_message": text,
+        "host_name": hostname,
+        "monitoring_tool": "Check_MK notification",
     }

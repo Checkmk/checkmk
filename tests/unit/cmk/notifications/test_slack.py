@@ -1,5 +1,8 @@
+# -*- coding: utf-8 -*-
+from __future__ import unicode_literals
+
 import pytest
-from cmk.notification_plugins.slack import construct_message
+from cmk.notification_plugins.slack import slack_msg
 
 
 @pytest.mark.parametrize("context, result", [
@@ -37,6 +40,6 @@ from cmk.notification_plugins.slack import construct_message
         ]
     }),
 ])
-def test_construct_message(context, result):
-    msg = construct_message(context)
+def test_slack_message(context, result):
+    msg = slack_msg(context)
     assert msg == result

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
-# Slack
-from cmk.notification_plugins.slack import slack_msg
+# VictorOPS
+from cmk.notification_plugins.victorops import victorops_msg
 from cmk.notification_plugins.utils import post_request
 
 if __name__ == "__main__":
-    post_request(slack_msg)
+    post_request(victorops_msg)

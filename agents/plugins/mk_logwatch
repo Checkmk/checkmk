@@ -107,13 +107,6 @@ class MEIFolderCleaner(object):
                 pass
 #.
 
-os_type = "linux"
-try:
-    import platform
-    os_type = platform.system().lower()
-except:
-    pass
-
 if '-d' in sys.argv[1:] or '--debug' in sys.argv[1:]:
     tty_red = '\033[1;31m'
     tty_green = '\033[1;32m'
@@ -166,9 +159,16 @@ def status_filename():
     return "%s/logwatch.state" % mk_vardir
 
 
+def os_type():
+    try:
+        import platform  # added in Python 2.3
+        return platform.system().lower()
+    except ImportError:
+        return "linux"
+
+
 def is_not_comment(line):
-    if line.lstrip().startswith('#') or \
-       line.strip() == '':
+    if line.lstrip().startswith('#') or line.strip() == '':
         return False
     return True
 
@@ -312,9 +312,9 @@ def next_line(file_handle):
 
 
 def is_inode_cabable(path):
-    if "linux" in os_type:
+    if "linux" in os_type():
         return True
-    elif "windows" in os_type:
+    elif "windows" in os_type():
         volume_name = "%s:\\\\" % path.split(":", 1)[0]
         import win32api  # pylint: disable=import-error
         volume_info = win32api.GetVolumeInformation(volume_name)
@@ -378,7 +378,7 @@ def process_logfile(logfile, patterns, opt, status):
 
     # now seek to offset where interesting data begins
     os.lseek(file_desc, offset, 0)  # os.SEEK_SET not available in Python 2.4
-    if os_type == "windows":
+    if "windows" in os_type():
         import io  # Available with python 2.6
         # Some windows files are encoded in utf_16
         # Peak the first two bytes to determine the encoding...

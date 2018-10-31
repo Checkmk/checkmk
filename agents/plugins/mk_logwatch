@@ -148,25 +148,23 @@ sys.stdout.write("<<<logwatch>>>\n")
 config_filename = mk_confdir + "/logwatch.cfg"
 config_dir      = mk_confdir + "/logwatch.d/*.cfg"
 
-
-# Determine the name of the state file
-# $REMOTE set                   -> logwatch.state.$REMOTE
-# $REMOTE not set and a tty     -> logwatch.state.local
-# $REMOTE not set and not a tty -> logwatch.state
-remote_hostname = os.getenv("REMOTE", "")
-remote_hostname = remote_hostname.replace(":", "_")
-if remote_hostname != "":
-    status_filename = "%s/logwatch.state.%s" % (mk_vardir, remote_hostname)
-else:
-    if sys.stdout.isatty():
-        status_filename = "%s/logwatch.state.local" % mk_vardir
-    else:
-        status_filename = "%s/logwatch.state" % mk_vardir
-
 # Copy the last known state from the logwatch.state when there is no status_filename yet.
-if not os.path.exists(status_filename) and os.path.exists("%s/logwatch.state" % mk_vardir):
+if not os.path.exists(status_filename()) and os.path.exists("%s/logwatch.state" % mk_vardir):
     import shutil
-    shutil.copy("%s/logwatch.state" % mk_vardir, status_filename)
+    shutil.copy("%s/logwatch.state" % mk_vardir, status_filename())
+
+
+def status_filename():
+    # Determine the name of the state file
+    # $REMOTE set                   -> logwatch.state.$REMOTE
+    # $REMOTE not set and a tty     -> logwatch.state.local
+    # $REMOTE not set and not a tty -> logwatch.state
+    remote_hostname = os.getenv("REMOTE", "").replace(":", "_")
+    if remote_hostname != "":
+        return "%s/logwatch.state.%s" % (mk_vardir, remote_hostname)
+    if sys.stdout.isatty():
+        return "%s/logwatch.state.local" % mk_vardir
+    return "%s/logwatch.state" % mk_vardir
 
 def is_not_comment(line):
     if line.lstrip().startswith('#') or \
@@ -251,7 +249,7 @@ def read_status():
         return {}
 
     status = {}
-    for line in file(status_filename):
+    for line in file(status_filename()):
         # TODO: Remove variants with spaces. rsplit is
         # not portable. split fails if logfilename contains
         # spaces
@@ -272,7 +270,7 @@ def read_status():
     return status
 
 def save_status(status):
-    f = file(status_filename, "w")
+    f = file(status_filename(), "w")
     for filename, (offset, inode) in status.items():
         f.write("%s|%d|%d\n" % (filename, offset, inode))
 

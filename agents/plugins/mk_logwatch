@@ -33,21 +33,6 @@ import shutil
 import sys
 import time
 
-if '-d' in sys.argv[1:] or '--debug' in sys.argv[1:]:
-    tty_red = '\033[1;31m'
-    tty_green = '\033[1;32m'
-    tty_yellow = '\033[1;33m'
-    tty_blue = '\033[1;34m'
-    tty_normal = '\033[0m'
-    debug = True
-else:
-    tty_red = ''
-    tty_green = ''
-    tty_yellow = ''
-    tty_blue = ''
-    tty_normal = ''
-    debug = False
-
 pushed_back_line = None
 
 #   .--MEI-Cleanup---------------------------------------------------------.
@@ -126,6 +111,10 @@ class MEIFolderCleaner(object):
 #.
 
 
+def debug():
+    return '-d' in sys.argv[1:] or '--debug' in sys.argv[1:]
+
+
 # The configuration file and status file are searched
 # in the directory named by the environment variable
 # LOGWATCH_DIR. If that is not set, MK_CONFDIR is used.
@@ -192,7 +181,7 @@ def read_config():
                                              file(config_filename).readlines())
         ]
     except IOError:
-        if debug:
+        if debug():
             raise
 
     # Add config from a logwatch.d folder
@@ -242,7 +231,7 @@ def parse_cont_pattern(pattern):
         try:
             return re.compile(pattern)
         except:
-            if debug:
+            if debug():
                 raise
             raise Exception("Invalid regular expression in line '%s'" % pattern)
 
@@ -252,7 +241,7 @@ def parse_cont_pattern(pattern):
 # /var/log/messages|7767698|32455445
 # /var/test/x12134.log|12345|32444355
 def read_status():
-    if debug:
+    if debug():
         return {}
 
     status = {}
@@ -319,6 +308,19 @@ def is_inode_cabable(path):
 def process_logfile(logfile, patterns, opt, status):
     global pushed_back_line
 
+    if debug():
+        tty_red = '\033[1;31m'
+        tty_green = '\033[1;32m'
+        tty_yellow = '\033[1;33m'
+        tty_blue = '\033[1;34m'
+        tty_normal = '\033[0m'
+    else:
+        tty_red = ''
+        tty_green = ''
+        tty_yellow = ''
+        tty_blue = ''
+        tty_normal = ''
+
     # Look at which file offset we have finished scanning
     # the logfile last time. If we have never seen this file
     # before, we set the offset to -1
@@ -330,7 +332,7 @@ def process_logfile(logfile, patterns, opt, status):
         else:
             inode = os.fstat(file_desc)[1]  # 1 = st_ino
     except:
-        if debug:
+        if debug():
             raise
         sys.stdout.write("[[[%s:cannotopen]]]\n" % logfile)
         return
@@ -345,7 +347,7 @@ def process_logfile(logfile, patterns, opt, status):
     # current pointer to the file end. We do not want to make
     # a fuss about ancient log messages...
     if offset == -1:
-        if not debug:
+        if not debug():
             return
         else:
             offset = 0
@@ -461,7 +463,7 @@ def process_logfile(logfile, patterns, opt, status):
                 break  # matching rule found and executed
 
         color = {'C': tty_red, 'W': tty_yellow, 'O': tty_green, 'I': tty_blue, '.': ''}[level]
-        if debug:
+        if debug():
             line = line.replace("\1", "\nCONT:")
         if level == "I":
             level = "."
@@ -551,7 +553,7 @@ class Options(object):
             else:
                 raise ValueError("Invalid option: %r" % opt_str)
         except ValueError, e:
-            if debug:
+            if debug():
                 raise
             sys.stdout.write("INVALID CONFIGURATION: %s\n" % e)
             sys.exit(1)
@@ -604,7 +606,7 @@ def main():
     try:
         config = read_config()
     except Exception, e:
-        if debug:
+        if debug():
             raise
         sys.stdout.write("CANNOT READ CONFIG FILE: %s\n" % e)
         sys.exit(1)
@@ -620,7 +622,7 @@ def main():
     for logfile, (patterns, options) in parse_sections(config):
         process_logfile(logfile, patterns, options, status)
 
-    if not debug:
+    if not debug():
         save_status(status)
 
 

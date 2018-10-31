@@ -33,8 +33,6 @@ import shutil
 import sys
 import time
 
-pushed_back_line = None
-
 #   .--MEI-Cleanup---------------------------------------------------------.
 #   |     __  __ _____ ___       ____ _                                    |
 #   |    |  \/  | ____|_ _|     / ___| | ___  __ _ _ __  _   _ _ __        |
@@ -272,25 +270,22 @@ def save_status(status):
         f.write("%s|%d|%d\n" % (filename, offset, inode))
 
 
-def next_line(file_handle):
-    global pushed_back_line
-    if pushed_back_line is not None:
-        line = pushed_back_line
-        pushed_back_line = None
-        return line
-    else:
-        try:
-            line = file_handle.next()
-            # Avoid parsing of (yet) incomplete lines (when acutal application
-            # is just in the process of writing)
-            # Just check if the line ends with a \n. This handles \n and \r\n
-            if not line.endswith("\n"):
-                begin_of_line_offset = file_handle.tell() - len(line)
-                os.lseek(file_handle.fileno(), begin_of_line_offset, 0)
-                return None
-            return line
-        except:
-            return None
+def next_line(file_handle, continuation_line):
+    if continuation_line is not None:
+        return continuation_line, None
+
+    try:
+        line = file_handle.next()
+        # Avoid parsing of (yet) incomplete lines (when actual application
+        # is just in the process of writing)
+        # Just check if the line ends with a \n. This handles \n and \r\n
+        if not line.endswith("\n"):
+            begin_of_line_offset = file_handle.tell() - len(line)
+            os.lseek(file_handle.fileno(), begin_of_line_offset, 0)
+            return None, None
+        return line, None
+    except:
+        return None, None
 
 
 def is_inode_cabable(path):
@@ -306,8 +301,6 @@ def is_inode_cabable(path):
 
 
 def process_logfile(logfile, patterns, opt, status):
-    global pushed_back_line
-
     if debug():
         tty_red = '\033[1;31m'
         tty_green = '\033[1;32m'
@@ -389,13 +382,15 @@ def process_logfile(logfile, patterns, opt, status):
         file_handle = io.open(file_desc, encoding=use_encoding)
     else:
         file_handle = os.fdopen(file_desc)
+
     worst = -1
     outputtxt = ""
     lines_parsed = 0
     start_time = time.time()
+    pushed_back_line = None
 
     while True:
-        line = next_line(file_handle)
+        line, pushed_back_line = next_line(file_handle, pushed_back_line)
         if line is None:
             break  # End of file
 
@@ -438,14 +433,14 @@ def process_logfile(logfile, patterns, opt, status):
                 for cont_pattern in cont_patterns:
                     if type(cont_pattern) == int:  # add that many lines
                         for _unused_x in range(cont_pattern):
-                            cont_line = next_line(file_handle)
+                            cont_line, pushed_back_line = next_line(file_handle, pushed_back_line)
                             if cont_line is None:  # end of file
                                 break
                             line = line[:-1] + "\1" + cont_line
 
                     else:  # pattern is regex
                         while True:
-                            cont_line = next_line(file_handle)
+                            cont_line, pushed_back_line = next_line(file_handle, pushed_back_line)
                             if cont_line is None:  # end of file
                                 break
                             elif cont_pattern.search(cont_line[:-1]):

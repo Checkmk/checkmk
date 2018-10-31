@@ -21,3 +21,4 @@ chroot
 Makefile.in
 junit.xml
 coverage.info
+/packages/

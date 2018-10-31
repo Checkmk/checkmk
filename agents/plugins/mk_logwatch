@@ -51,6 +51,7 @@ import time
 ### In the bright future we will move this code into a library #########
 ########################################################################
 
+
 class MEIFolderCleaner(object):
     def pid_running(self, pid):
         import ctypes
@@ -63,7 +64,6 @@ class MEIFolderCleaner(object):
             kernel32.CloseHandle(process)
             return True
         return False
-
 
     def find_and_remove_leftover_folders(self, hint_filenames):
         if not hasattr(sys, "frozen"):
@@ -88,9 +88,9 @@ class MEIFolderCleaner(object):
                 if invalid_dir:
                     continue
 
-                pyinstaller_tmp_path = win32file.GetLongPathName(sys._MEIPASS).lower() # pylint: disable=no-member
+                pyinstaller_tmp_path = win32file.GetLongPathName(sys._MEIPASS).lower()  # pylint: disable=no-member
                 if pyinstaller_tmp_path == path.lower():
-                    continue # Skip our own directory
+                    continue  # Skip our own directory
 
                 # Extract the process id from the directory and check whether or not it is still
                 # running. Don't delete directories of running processes!
@@ -115,18 +115,18 @@ except:
     pass
 
 if '-d' in sys.argv[1:] or '--debug' in sys.argv[1:]:
-    tty_red     = '\033[1;31m'
-    tty_green   = '\033[1;32m'
-    tty_yellow  = '\033[1;33m'
-    tty_blue    = '\033[1;34m'
-    tty_normal  = '\033[0m'
+    tty_red = '\033[1;31m'
+    tty_green = '\033[1;32m'
+    tty_yellow = '\033[1;33m'
+    tty_blue = '\033[1;34m'
+    tty_normal = '\033[0m'
     debug = True
 else:
-    tty_red     = ''
-    tty_green   = ''
-    tty_yellow  = ''
-    tty_blue    = ''
-    tty_normal  = ''
+    tty_red = ''
+    tty_green = ''
+    tty_yellow = ''
+    tty_blue = ''
+    tty_normal = ''
     debug = False
 
 # The configuration file and status file are searched
@@ -142,11 +142,10 @@ else:
     mk_confdir = os.getenv("MK_CONFDIR") or "."
     mk_vardir = os.getenv("MK_VARDIR") or os.getenv("MK_STATEDIR") or "."
 
-
 sys.stdout.write("<<<logwatch>>>\n")
 
 config_filename = mk_confdir + "/logwatch.cfg"
-config_dir      = mk_confdir + "/logwatch.d/*.cfg"
+config_dir = mk_confdir + "/logwatch.d/*.cfg"
 
 # Copy the last known state from the logwatch.state when there is no status_filename yet.
 if not os.path.exists(status_filename()) and os.path.exists("%s/logwatch.state" % mk_vardir):
@@ -166,17 +165,20 @@ def status_filename():
         return "%s/logwatch.state.local" % mk_vardir
     return "%s/logwatch.state" % mk_vardir
 
+
 def is_not_comment(line):
     if line.lstrip().startswith('#') or \
        line.strip() == '':
         return False
     return True
 
+
 def parse_filenames(line):
     return line.split()
 
+
 def parse_pattern(level, pattern, line):
-    if level not in [ 'C', 'W', 'I', 'O' ]:
+    if level not in ['C', 'W', 'I', 'O']:
         raise Exception("Invalid pattern line '%s'" % line)
 
     try:
@@ -186,17 +188,24 @@ def parse_pattern(level, pattern, line):
 
     return (level, compiled)
 
+
 def read_config():
     config_lines = []
     try:
-        config_lines += [ line.rstrip() for line in filter(is_not_comment, file(config_filename).readlines()) ]
+        config_lines += [
+            line.rstrip() for line in filter(is_not_comment,
+                                             file(config_filename).readlines())
+        ]
     except IOError:
         if debug:
             raise
 
     # Add config from a logwatch.d folder
     for config_file in glob.glob(config_dir):
-        config_lines += [ line.rstrip() for line in filter(is_not_comment, file(config_file).readlines()) ]
+        config_lines += [
+            line.rstrip() for line in filter(is_not_comment,
+                                             file(config_file).readlines())
+        ]
 
     patterns = None
     config = []
@@ -204,7 +213,7 @@ def read_config():
     rewrite_list = []
 
     for line in config_lines:
-        if line[0].isspace(): # pattern line
+        if line[0].isspace():  # pattern line
             if patterns is None:
                 raise Exception("Missing logfile names")
 
@@ -221,13 +230,14 @@ def read_config():
                 rewrite_list = []
                 patterns.append((level, compiled, cont_list, rewrite_list))
 
-        else: # filename line
+        else:  # filename line
             patterns = []
-            cont_list = [] # Clear list of continuation patterns from last file
-            rewrite_list = [] # Same for rewrite patterns
+            cont_list = []  # Clear list of continuation patterns from last file
+            rewrite_list = []  # Same for rewrite patterns
             config.append((parse_filenames(line), patterns))
 
     return config
+
 
 def parse_cont_pattern(pattern):
     try:
@@ -239,6 +249,7 @@ def parse_cont_pattern(pattern):
             if debug:
                 raise
             raise Exception("Invalid regular expression in line '%s'" % pattern)
+
 
 # structure of statusfile
 # # LOGFILE         OFFSET    INODE
@@ -269,12 +280,16 @@ def read_status():
         status[filename] = int(offset), int(inode)
     return status
 
+
 def save_status(status):
     f = file(status_filename(), "w")
     for filename, (offset, inode) in status.items():
         f.write("%s|%d|%d\n" % (filename, offset, inode))
 
+
 pushed_back_line = None
+
+
 def next_line(file_handle):
     global pushed_back_line
     if pushed_back_line is not None:
@@ -318,9 +333,9 @@ def process_logfile(logfile, patterns, opt, status):
     try:
         file_desc = os.open(logfile, os.O_RDONLY)
         if not is_inode_cabable(logfile):
-            inode = 1 # Create a dummy inode
+            inode = 1  # Create a dummy inode
         else:
-            inode = os.fstat(file_desc)[1] # 1 = st_ino
+            inode = os.fstat(file_desc)[1]  # 1 = st_ino
     except:
         if debug:
             raise
@@ -330,7 +345,7 @@ def process_logfile(logfile, patterns, opt, status):
     sys.stdout.write("[[[%s]]]\n" % logfile)
 
     # Seek to the current end in order to determine file size
-    current_end = os.lseek(file_desc, 0, 2) # os.SEEK_END not available in Python 2.4
+    current_end = os.lseek(file_desc, 0, 2)  # os.SEEK_END not available in Python 2.4
     status[logfile] = current_end, inode
 
     # If we have never seen this file before, we just set the
@@ -342,7 +357,6 @@ def process_logfile(logfile, patterns, opt, status):
         else:
             offset = 0
 
-
     # If the inode of the logfile has changed it has appearently
     # been started from new (logfile rotation). At least we must
     # assume that. In some rare cases (restore of a backup, etc)
@@ -353,7 +367,7 @@ def process_logfile(logfile, patterns, opt, status):
     # Our previously stored offset is the current end ->
     # no new lines in this file
     if offset == current_end:
-        return # nothing new
+        return  # nothing new
 
     # If our offset is beyond the current end, the logfile has been
     # truncated or wrapped while keeping the same inode. We assume
@@ -363,9 +377,9 @@ def process_logfile(logfile, patterns, opt, status):
         offset = 0
 
     # now seek to offset where interesting data begins
-    os.lseek(file_desc, offset, 0) # os.SEEK_SET not available in Python 2.4
+    os.lseek(file_desc, offset, 0)  # os.SEEK_SET not available in Python 2.4
     if os_type == "windows":
-        import io # Available with python 2.6
+        import io  # Available with python 2.6
         # Some windows files are encoded in utf_16
         # Peak the first two bytes to determine the encoding...
         peak_handle = os.fdopen(file_desc, "rb")
@@ -376,8 +390,8 @@ def process_logfile(logfile, patterns, opt, status):
         elif first_two_bytes == "\xFE\xFF":
             use_encoding = "utf_16_be"
 
-        os.lseek(file_desc, offset, 0) # os.SEEK_SET not available in Python 2.4
-        file_handle = io.open(file_desc, encoding = use_encoding)
+        os.lseek(file_desc, offset, 0)  # os.SEEK_SET not available in Python 2.4
+        file_handle = io.open(file_desc, encoding=use_encoding)
     else:
         file_handle = os.fdopen(file_desc)
     worst = -1
@@ -388,7 +402,7 @@ def process_logfile(logfile, patterns, opt, status):
     while True:
         line = next_line(file_handle)
         if line is None:
-            break # End of file
+            break  # End of file
 
         # Handle option maxlinesize
         if opt.maxlinesize is not None and len(line) > opt.maxlinesize:
@@ -398,9 +412,11 @@ def process_logfile(logfile, patterns, opt, status):
         # Check if maximum number of new log messages is exceeded
         if opt.maxlines is not None and lines_parsed > opt.maxlines:
             outputtxt += "%s Maximum number (%d) of new log messages exceeded.\n" % (
-               opt.overflow, opt.maxlines)
+                opt.overflow,
+                opt.maxlines,
+            )
             worst = max(worst, opt.overflow_level)
-            os.lseek(file_desc, 0, os.SEEK_END) # skip all other messages
+            os.lseek(file_desc, 0, os.SEEK_END)  # skip all other messages
             break
 
         # Check if maximum processing time (per file) is exceeded. Check only
@@ -408,9 +424,11 @@ def process_logfile(logfile, patterns, opt, status):
         if opt.maxtime is not None and lines_parsed % 100 == 10 \
             and time.time() - start_time > opt.maxtime:
             outputtxt += "%s Maximum parsing time (%.1f sec) of this log file exceeded.\n" % (
-               opt.overflow, opt.maxtime)
+                opt.overflow,
+                opt.maxtime,
+            )
             worst = max(worst, opt.overflow_level)
-            os.lseek(file_desc, 0, os.SEEK_END) # skip all other messages
+            os.lseek(file_desc, 0, os.SEEK_END)  # skip all other messages
             break
 
         level = "."
@@ -423,31 +441,31 @@ def process_logfile(logfile, patterns, opt, status):
 
                 # Check for continuation lines
                 for cont_pattern in cont_patterns:
-                    if type(cont_pattern) == int: # add that many lines
+                    if type(cont_pattern) == int:  # add that many lines
                         for _unused_x in range(cont_pattern):
                             cont_line = next_line(file_handle)
-                            if cont_line is None: # end of file
+                            if cont_line is None:  # end of file
                                 break
                             line = line[:-1] + "\1" + cont_line
 
-                    else: # pattern is regex
+                    else:  # pattern is regex
                         while True:
                             cont_line = next_line(file_handle)
-                            if cont_line is None: # end of file
+                            if cont_line is None:  # end of file
                                 break
                             elif cont_pattern.search(cont_line[:-1]):
                                 line = line[:-1] + "\1" + cont_line
                             else:
-                                pushed_back_line = cont_line # sorry for stealing this line
+                                pushed_back_line = cont_line  # sorry for stealing this line
                                 break
 
                 # Replacement
                 for replace in replacements:
                     line = replace.replace('\\0', line.rstrip()) + "\n"
                     for nr, group in enumerate(matches.groups()):
-                        line = line.replace('\\%d' % (nr+1), group)
+                        line = line.replace('\\%d' % (nr + 1), group)
 
-                break # matching rule found and executed
+                break  # matching rule found and executed
 
         color = {'C': tty_red, 'W': tty_yellow, 'O': tty_green, 'I': tty_blue, '.': ''}[level]
         if debug:
@@ -458,7 +476,7 @@ def process_logfile(logfile, patterns, opt, status):
             continue
         outputtxt += "%s%s %s%s\n" % (color, level, line[:-1], tty_normal)
 
-    new_offset = os.lseek(file_desc, 0, 1) # os.SEEK_CUR not available in Python 2.4
+    new_offset = os.lseek(file_desc, 0, 1)  # os.SEEK_CUR not available in Python 2.4
     status[logfile] = new_offset, inode
 
     # output all lines if at least one warning, error or ok has been found
@@ -468,8 +486,13 @@ def process_logfile(logfile, patterns, opt, status):
 
     # Handle option maxfilesize, regardless of warning or errors that have happened
     if opt.maxfilesize is not None and (offset / opt.maxfilesize) < (new_offset / opt.maxfilesize):
-        sys.stdout.write("%sW Maximum allowed logfile size (%d bytes) exceeded for the %dth time.%s\n" %
-                  (tty_yellow, opt.maxfilesize, new_offset / opt.maxfilesize, tty_normal))
+        sys.stdout.write(
+            "%sW Maximum allowed logfile size (%d bytes) exceeded for the %dth time.%s\n" % (
+                tty_yellow,
+                opt.maxfilesize,
+                new_offset / opt.maxfilesize,
+                tty_normal,
+            ))
 
 
 class Options(object):
@@ -495,22 +518,32 @@ class Options(object):
         return self.MAP_OVERFLOW[self.overflow]
 
     def update(self, other):
-        for attr in ('maxfilesize' , 'maxlines', 'maxtime', 'maxlinesize',
-                     'regex', '_overflow', 'nocontext'):
+        for attr in (
+                'maxfilesize',
+                'maxlines',
+                'maxtime',
+                'maxlinesize',
+                'regex',
+                '_overflow',
+                'nocontext',
+        ):
             new = getattr(other, attr)
             if new is not None:
                 setattr(self, attr, new)
 
     def set_opt(self, opt_str):
         try:
-            key, value  = opt_str.split('=', 1)
+            key, value = opt_str.split('=', 1)
             if key in ('maxlines', 'maxlinesize', 'maxfilesize'):
                 setattr(self, key, int(value))
             elif key in ('maxtime',):
                 setattr(self, key, float(value))
             elif key == 'overflow':
                 if value not in self.MAP_OVERFLOW.keys():
-                    raise ValueError("Invalid overflow: %r (choose from %r)" % (value, self.MAP_OVERFLOW.keys()))
+                    raise ValueError("Invalid overflow: %r (choose from %r)" % (
+                        value,
+                        self.MAP_OVERFLOW.keys(),
+                    ))
                 self._overflow = value
             elif key in ('regex', 'iregex'):
                 self.regex = re.compile(value, re.I if key.startswith('i') else 0)
@@ -518,7 +551,11 @@ class Options(object):
                 try:
                     setattr(self, key, self.MAP_BOOL[value.lower()])
                 except KeyError:
-                    raise ValueError("Invalid %s: %r (choose from %r)" % (key, value, self.MAP_BOOL.keys()))
+                    raise ValueError("Invalid %s: %r (choose from %r)" % (
+                        key,
+                        value,
+                        self.MAP_BOOL.keys(),
+                    ))
             else:
                 raise ValueError("Invalid option: %r" % opt_str)
         except ValueError, e:
@@ -562,7 +599,7 @@ def main():
     try:
         # This removes leftover folders which may be generated by crashing frozen binaries
         folder_cleaner = MEIFolderCleaner()
-        folder_cleaner.find_and_remove_leftover_folders(hint_filenames = ["mk_logwatch.exe.manifest"])
+        folder_cleaner.find_and_remove_leftover_folders(hint_filenames=["mk_logwatch.exe.manifest"])
     except Exception, e:
         sys.stdout.write("ERROR WHILE DOING FOLDER: %s\n" % e)
         sys.exit(1)

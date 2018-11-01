@@ -1340,6 +1340,7 @@ mode_registry = ModeRegistry()
 # parent: The parent folder of the objects to configure
 # myself: For mode "folder" the folder itself or None, if we edit a new folder
 #         This is needed for handling mandatory attributes.
+# TODO: Wow, this function REALLY has to be cleaned up
 def configure_attributes(new,
                          hosts,
                          for_what,
@@ -1436,9 +1437,17 @@ def configure_attributes(new,
 
             # "bulk": determine, if this attribute has the same setting for all hosts.
             values = []
+            num_have_locked_it = 0
             num_haveit = 0
             for host in hosts.itervalues():
-                if host and host.has_explicit_attribute(attrname):
+                if not host:
+                    continue
+
+                locked = host.attribute("locked")
+                if locked and attrname in locked["attributes"]:
+                    num_have_locked_it += 1
+
+                if host.has_explicit_attribute(attrname):
                     num_haveit += 1
                     if host.attribute(attrname) not in values:
                         values.append(host.attribute(attrname))
@@ -1532,7 +1541,9 @@ def configure_attributes(new,
             else:
                 active = False
 
-            if not new and (not attr.editable() or not attr.may_edit()):
+            is_editable = attr.editable() and attr.may_edit() and num_have_locked_it == 0
+
+            if not new and not is_editable:
                 # Bug in pylint 1.9.2 https://github.com/PyCQA/pylint/issues/1984, already fixed in master.
                 if active:  # pylint: disable=simplifiable-if-statement
                     force_entry = True
@@ -1562,7 +1573,7 @@ def configure_attributes(new,
             else:
                 defvalue = attr.default_value()
 
-            if not new and (not attr.editable() or not attr.may_edit()):
+            if not new and not is_editable:
                 # In edit mode only display non editable values, don't show the
                 # input fields
                 html.open_div(id_="attr_hidden_%s" % attrname, style="display:none;")
@@ -1602,7 +1613,7 @@ def configure_attributes(new,
                     value = values[0]
 
             elif for_what in ["host", "cluster", "folder"]:
-                if not new and (not attr.editable() or not attr.may_edit()) and active:
+                if not new and not is_editable and active:
                     value = values[0]
                 else:
                     explanation = " (" + inherited_from + ")"

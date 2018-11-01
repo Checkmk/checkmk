@@ -578,7 +578,7 @@ class ModeDiscovery(WatoMode):
             sortable=False,
             css="checkbox")
         html.checkbox(self._checkbox_name(check_type, item),
-                      True, add_attr = ['title="%s"' % _('Temporarily ignore this service')])
+                      True, title=_("Temporarily ignore this service"))
 
     def _bulk_action_colspan(self):
         colspan = 5

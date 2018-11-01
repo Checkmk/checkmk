@@ -1485,6 +1485,7 @@ class CREFolder(BaseFolder):
             return
 
         variables = self._load_hosts_file()
+        # Can either be set to True or a string (which will be used as host lock message)
         self._locked_hosts = variables["_lock"]
 
         # Add entries in clusters{} to all_hosts, prepare cluster to node mapping
@@ -1817,7 +1818,9 @@ class CREFolder(BaseFolder):
         wato_info = self._load_wato_info()
         self._title = wato_info.get("title", self._fallback_title())
         self._attributes = self._transform_old_attributes(wato_info.get("attributes", {}))
+        # Can either be set to True or a string (which will be used as host lock message)
         self._locked = wato_info.get("lock", False)
+        # Can either be set to True or a string (which will be used as host lock message)
         self._locked_subfolders = wato_info.get("lock_subfolders", False)
 
         if "num_hosts" in wato_info:

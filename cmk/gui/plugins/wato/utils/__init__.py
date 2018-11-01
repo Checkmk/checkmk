@@ -1522,13 +1522,13 @@ def configure_attributes(new,
                 checkbox_code = None
             elif force_entry:
                 checkbox_code = html.render_checkbox(
-                    "ignored_" + checkbox_name, add_attr=["disabled"])
+                    "ignored_" + checkbox_name, disabled="disabled")
                 checkbox_code += html.render_hidden_field(checkbox_name, "on")
             else:
-                add_attr = ["disabled"] if disabled else []
                 onclick = "wato_fix_visibility(); wato_toggle_attribute(this, '%s');" % attrname
+                checkbox_kwargs = {"disabled": "disabled"} if disabled else {}
                 checkbox_code = html.render_checkbox(
-                    checkbox_name, active, onclick=onclick, add_attr=add_attr)
+                    checkbox_name, active, onclick=onclick, **checkbox_kwargs)
 
             forms.section(_u(attr.title()), checkbox=checkbox_code, section_id="attr_" + attrname)
             html.help(attr.help())

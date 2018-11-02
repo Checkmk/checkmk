@@ -256,7 +256,9 @@ PS_DISCOVERY_WATO_RULES = [
 ]
 
 PS_DISCOVERY_SPECS = [
-    ("smss", "~smss.exe", None, None, {'cpu_rescale_max': None}),
+    ("smss", "~smss.exe", None, None, {
+        'cpu_rescale_max': None
+    }),
     ("svchost", "svchost.exe", None, None, {
         "cpulevels": (90.0, 98.0),
         'cpu_rescale_max': None,
@@ -287,7 +289,9 @@ PS_DISCOVERY_SPECS = [
         "single_cpulevels": (90.0, 98.0),
         "resident_levels": (104857600, 209715200)
     }),
-    ("sshd", "~.*sshd", None, None, {'cpu_rescale_max': None}),
+    ("sshd", "~.*sshd", None, None, {
+        'cpu_rescale_max': None
+    }),
 ]
 
 
@@ -486,19 +490,23 @@ def test_check_ps_common(check_manager, monkeypatch, inv_item, reference):
     parsed = sum([check.run_parse(info)[1] for info in generate_inputs()], [])
     total_ram = 1024**3 if inv_item[0] == "emacs" else None
     monkeypatch.setattr('time.time', lambda: 1540375342)
+    factory_defaults = {"levels": (1, 1, 99999, 99999)}
+    factory_defaults.update(inv_item[1])
     test_result = CheckResult(check.context["check_ps_common"](
-        inv_item[0], inv_item[1], parsed, total_ram=total_ram))
+        inv_item[0], factory_defaults, parsed, total_ram=total_ram))
     assertCheckResultsEqual(test_result, reference)
 
 
 cpu_config = namedtuple("CPU_config", "name agent_info cputime cpu_cores exp_load cpu_rescale_max")
 cpu_util_data = [
-    cpu_config('linux no cpu scale conf 1 core', "(on,105,30,00:00:{:02}/03:59:39,902) test", 30, 1, 50, None),
-    cpu_config('linux no cpu scale conf 2 cores', "(on,105,30,00:00:{:02}/03:59:39,902) test", 30, 2, 50, None),
-    cpu_config('linux No_Core_division 2 cores',
-               "(on,105,30,00:00:{:02}/03:59:39,902) test", 120, 2, 200, False),
-    cpu_config('linux Core_division 2 cores',
-               "(on,105,30,00:00:{:02}/03:59:39,902) test", 30, 2, 25, True),
+    cpu_config('linux no cpu scale conf 1 core', "(on,105,30,00:00:{:02}/03:59:39,902) test", 30, 1,
+               50, None),
+    cpu_config('linux no cpu scale conf 2 cores', "(on,105,30,00:00:{:02}/03:59:39,902) test", 30,
+               2, 50, None),
+    cpu_config('linux No_Core_division 2 cores', "(on,105,30,00:00:{:02}/03:59:39,902) test", 120,
+               2, 200, False),
+    cpu_config('linux Core_division 2 cores', "(on,105,30,00:00:{:02}/03:59:39,902) test", 30, 2,
+               25, True),
     cpu_config("Win no cpu scale conf 2 cores",
                "(\\KLAPPRECHNER\ab,105,30,0,3124,904,{0}0000000,{0}0000000,0,1,14340) test.exe", 54,
                2, 90, None),
@@ -508,14 +516,14 @@ cpu_util_data = [
     cpu_config("Win Core_division 2 cores",
                "(\\KLAPPRECHNER\ab,105,30,0,3124,904,{0}0000000,{0}0000000,0,1,14340) test.exe", 54,
                2, 90, True),
-    cpu_config('Solaris,BSD,etc no cpu conf 1 core', "(on,105,30,{}/03:59:39,902) test",
-               30.8, 1, 30.8, None),
-    cpu_config('Solaris,BSD,etc no cpu conf 2 cores', "(on,105,30,{}/03:59:39,902) test",
-               174.8, 2, 174.8, None),
-    cpu_config('Solaris,BSD,etc No_Core_division 2 cores',
-               "(on,105,30,{}/03:59:39,902) test", 174.8, 2, 174.8, False),
-    cpu_config('Solaris,BSD,etc Core_division 2 cores',
-               "(on,105,30,{}/03:59:39,902) test", 174.8, 2, 174.8 / 2, True),
+    cpu_config('Solaris,BSD,etc no cpu conf 1 core', "(on,105,30,{}/03:59:39,902) test", 30.8, 1,
+               30.8, None),
+    cpu_config('Solaris,BSD,etc no cpu conf 2 cores', "(on,105,30,{}/03:59:39,902) test", 174.8, 2,
+               174.8, None),
+    cpu_config('Solaris,BSD,etc No_Core_division 2 cores', "(on,105,30,{}/03:59:39,902) test",
+               174.8, 2, 174.8, False),
+    cpu_config('Solaris,BSD,etc Core_division 2 cores', "(on,105,30,{}/03:59:39,902) test", 174.8,
+               2, 174.8 / 2, True),
 ]
 
 
@@ -530,10 +538,13 @@ def test_check_ps_common_cpu(check_manager, monkeypatch, data):
         return CheckResult(check.context["check_ps_common"](
             inv_item[0], inv_item[1], parsed, cpu_cores=cpu_cores))
 
-    inv_item = ("test", {
-        "process": "~test",
-        "user": None,
-    })
+    inv_item = (
+        "test",
+        {
+            "process": "~test",
+            "user": None,
+            "levels": (1, 1, 99999, 99999)  # from factory defaults
+        })
     if data.cpu_rescale_max is not None:
         inv_item[1].update({"cpu_rescale_max": data.cpu_rescale_max})
 
@@ -550,4 +561,31 @@ def test_check_ps_common_cpu(check_manager, monkeypatch, data):
         (0, "running for 239 m", []),
     ])
 
+    assertCheckResultsEqual(output, reference)
+
+
+@pytest.mark.parametrize("levels, reference", [
+    ((1, 1, 99999, 99999),
+     CheckResult([
+         (2, "0 processes: (ok from 1 to 99999)", [("count", 0, 100000, 100000, 0)]),
+         (0, "0.0% CPU", [("pcpu", 0)]),
+     ])),
+    ((0, 0, 99999, 99999),
+     CheckResult([
+         (0, "0 processes", [("count", 0, 100000, 100000, 0)]),
+         (0, "0.0% CPU", [("pcpu", 0)]),
+     ])),
+])
+def test_check_ps_common_count(check_manager, levels, reference):
+    check = check_manager.get_check("ps")
+
+    parsed = check.run_parse(splitter("(on,105,30,00:00:{:02}/03:59:39,902) single"))[1]
+
+    params = {
+        "process": "~test",
+        "user": None,
+        "levels": levels,
+    }
+
+    output = CheckResult(check.context["check_ps_common"]('empty', params, parsed, cpu_cores=1))
     assertCheckResultsEqual(output, reference)

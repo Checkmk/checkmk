@@ -336,7 +336,7 @@ def ps_cleanup_params(params):
 
         params["user"] = user
 
-    elif isinstance(params, dict):
+    elif any(k in params for k in ['okmin', 'warnmin', 'okmax', 'warnmax']):
         params["levels"] = (
             params.pop("warnmin", 1),
             params.pop("okmin", 1),
@@ -430,7 +430,7 @@ def memory_check(processes, params):
         (processes.virtual_size, "virtual", "virtual_levels", "vsz"),
         (processes.resident_size, "physical", "resident_levels", "rss"),
     ]:
-        if size is None:
+        if size == 0:
             continue
 
         infotext = "%s %s" % (get_bytes_human_readable(size * 1024.0), title)

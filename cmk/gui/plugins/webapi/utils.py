@@ -23,7 +23,6 @@
 # License along with GNU Make; see the file  COPYING.  If  not,  write
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
-
 """Module to hold shared code for module internals and the plugins"""
 
 # TODO: More feature related splitting up would be better
@@ -53,11 +52,9 @@ class APICallCollection(object):
         raise NotImplementedError("This API collection does not register any API call")
 
 
-
 class APICallCollectionRegistry(cmk.gui.plugin_registry.ClassRegistry):
     def plugin_base_class(self):
         return APICallCollection
-
 
     def _register(self, plugin_class):
         self._entries[plugin_class.__name__] = plugin_class
@@ -76,8 +73,9 @@ api_call_collection_registry = APICallCollectionRegistry()
 #   +----------------------------------------------------------------------+
 # TODO: encapsulate in module/class
 
+
 # TODO: Rename to validate_hostname to be in sync with other functions
-def check_hostname(hostname, should_exist = True):
+def check_hostname(hostname, should_exist=True):
     # Validate hostname with valuespec
     Hostname().validate_value(hostname, "hostname")
 
@@ -90,12 +88,11 @@ def check_hostname(hostname, should_exist = True):
             raise MKUserError(None, _("Host %s already exists in the folder %s") % (hostname, watolib.Host.host(hostname).folder().path()))
 
 
-def validate_request_keys(request, required_keys = None, optional_keys = None):
+def validate_request_keys(request, required_keys=None, optional_keys=None):
     if required_keys:
         missing = set(required_keys) - set(request.keys())
         if missing:
             raise MKUserError(None, _("Missing required key(s): %s") % ", ".join(missing))
-
 
     all_keys = (required_keys or []) + (optional_keys or [])
     for key in request.keys():
@@ -119,7 +116,7 @@ def add_configuration_hash(response, configuration_object):
 def compute_config_hash(entity):
     try:
         entity_encoded = json.dumps(entity, sort_keys=True)
-        entity_hash    = md5(entity_encoded).hexdigest()
+        entity_hash = md5(entity_encoded).hexdigest()
     except Exception, e:
         logger.error("Error %s" % e)
         entity_hash = "0"
@@ -128,14 +125,17 @@ def compute_config_hash(entity):
 
 
 def validate_host_attributes(attributes):
-    _validate_general_host_attributes(dict((key, value) for key, value in attributes.items() if not key.startswith("tag_")))
-    _validate_host_tags(dict((key[4:], value) for key, value in attributes.items() if key.startswith("tag_")))
+    _validate_general_host_attributes(
+        dict((key, value) for key, value in attributes.items() if not key.startswith("tag_")))
+    _validate_host_tags(
+        dict((key[4:], value) for key, value in attributes.items() if key.startswith("tag_")))
 
 
 # Check if the given attribute name exists, no type check
 def _validate_general_host_attributes(host_attributes):
     # inventory_failed and site are no "real" host_attributes (TODO: Clean this up!)
-    all_host_attribute_names = [x.name() for x, _y in watolib.all_host_attributes()] + ["inventory_failed", "site"]
+    all_host_attribute_names = [x.name() for x, _y in watolib.all_host_attributes()
+                               ] + ["inventory_failed", "site"]
     for name, value in host_attributes.items():
         if name not in all_host_attribute_names:
             raise MKUserError(None, _("Unknown attribute: %s") % html.attrencode(name))

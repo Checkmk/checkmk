@@ -196,7 +196,7 @@ def page_clear():
     else:
         acktime = float(acktime)
 
-    prev_url = html.get_url_input('prev_url')
+    prev_url = html.get_url_input('prev_url', '')
     if html.var('_confirm'):
         acknowledge_failed_notifications(acktime)
         html.reload_sidebar()

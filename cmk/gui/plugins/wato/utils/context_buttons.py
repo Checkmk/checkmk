@@ -27,6 +27,7 @@ import cmk.gui.watolib as watolib
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
 
+
 def global_buttons():
     changelog_button()
     home_button()
@@ -51,7 +52,8 @@ def changelog_button():
         buttontext = _("No changes")
         hot = False
         icon = "wato_nochanges"
-    html.context_button(buttontext, watolib.folder_preserving_link([("mode", "changelog")]), icon, hot)
+    html.context_button(buttontext, watolib.folder_preserving_link([("mode", "changelog")]), icon,
+                        hot)
 
 
 def host_status_button(hostname, viewname):
@@ -74,7 +76,7 @@ def service_status_button(hostname, servicedesc):
            "status")
 
 
-def folder_status_button(viewname = "allhosts"):
+def folder_status_button(viewname="allhosts"):
     html.context_button(_("Status"),
        "view.py?" + html.urlencode_vars([
            ("view_name", viewname),

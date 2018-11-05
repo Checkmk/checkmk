@@ -27,10 +27,11 @@
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
 
-wato_styles = [ "pages", "wato", "status" ]
+wato_styles = ["pages", "wato", "status"]
 
 # TODO: Refactor to context handler or similar?
 _html_head_open = False
+
 
 # Show confirmation dialog, send HTML-header if dialog is shown.
 def wato_confirm(html_title, message):
@@ -67,7 +68,7 @@ def wato_html_footer(*args, **kwargs):
 def search_form(title=None, mode=None, default_value=""):
     html.begin_form("search", add_transid=False)
     if title:
-        html.write_text(title+' ')
+        html.write_text(title + ' ')
     html.text_input("search", size=32, default_value=default_value)
     html.hidden_fields()
     if mode:

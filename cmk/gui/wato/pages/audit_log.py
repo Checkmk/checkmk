@@ -23,7 +23,6 @@
 # License along with GNU Make; see the file  COPYING.  If  not,  write
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
-
 """Handling of the audit logfiles"""
 
 import os
@@ -51,6 +50,7 @@ from cmk.gui.globals import html
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato import WatoMode, mode_registry, wato_confirm
 
+
 @mode_registry.register
 class ModeAuditLog(WatoMode):
     log_path = watolib.audit_log_path
@@ -59,20 +59,16 @@ class ModeAuditLog(WatoMode):
     def name(cls):
         return "auditlog"
 
-
     @classmethod
     def permissions(cls):
         return ["auditlog"]
 
-
     def __init__(self):
-        self._options  = self._vs_audit_log_options().default_value()
+        self._options = self._vs_audit_log_options().default_value()
         super(ModeAuditLog, self).__init__()
-
 
     def title(self):
         return _("Audit log")
-
 
     def buttons(self):
         changelog_button()
@@ -85,10 +81,8 @@ class ModeAuditLog(WatoMode):
                 html.context_button(_("Clear Log"),
                     html.makeactionuri([("_action", "clear")]), "trash")
 
-
     def _log_exists(self):
         return os.path.exists(self.log_path)
-
 
     def action(self):
         if html.var("_action") == "clear":
@@ -106,7 +100,6 @@ class ModeAuditLog(WatoMode):
             config.user.need_permission("wato.auditlog")
             return self._export_audit_log()
 
-
     def page(self):
         audit = self._parse_audit_log()
 
@@ -118,7 +111,6 @@ class ModeAuditLog(WatoMode):
 
         else:
             self._display_multiple_days_audit_log(audit)
-
 
     def _display_daily_audit_log(self, log):
         log, times = self._get_next_daily_paged_log(log)
@@ -134,7 +126,6 @@ class ModeAuditLog(WatoMode):
 
         self._display_page_controls(*times)
 
-
     def _display_multiple_days_audit_log(self, log):
         log = self._get_multiple_days_log_entries(log)
 
@@ -147,10 +138,8 @@ class ModeAuditLog(WatoMode):
 
         self._display_log(log)
 
-
     def _display_log(self, log):
-        table.begin(css="data wato auditlog audit", limit=None,
-                    sortable=False, searchable=False)
+        table.begin(css="data wato auditlog audit", limit=None, sortable=False, searchable=False)
         for t, linkinfo, user, _action, text in log:
             table.row()
             table.cell(_("Object"), self._render_logfile_linkinfo(linkinfo))
@@ -162,7 +151,6 @@ class ModeAuditLog(WatoMode):
             table.cell(_("Change"), text.replace("\\n", "<br>\n"), css="fill")
         table.end()
 
-
     def _get_next_daily_paged_log(self, log):
         start = self._get_start_date()
 
@@ -170,16 +158,16 @@ class ModeAuditLog(WatoMode):
             log_today, times = self._paged_log_from(log, start)
             if len(log) == 0 or len(log_today) > 0:
                 return log_today, times
-            else: # No entries today, but log not empty -> go back in time
+            else:  # No entries today, but log not empty -> go back in time
                 start -= 24 * 3600
-
 
     def _get_start_date(self):
         if self._options["start"] == "now":
             st = time.localtime()
-            return int(time.mktime(time.struct_time((st.tm_year, st.tm_mon, st.tm_mday, 0, 0, 0, 0, 0, 0))))
+            return int(
+                time.mktime(
+                    time.struct_time((st.tm_year, st.tm_mon, st.tm_mday, 0, 0, 0, 0, 0, 0))))
         return int(self._options["start"][1])
-
 
     def _get_multiple_days_log_entries(self, log):
         start_time = self._get_start_date() + 86399
@@ -194,13 +182,12 @@ class ModeAuditLog(WatoMode):
 
         return logs
 
-
     def _paged_log_from(self, log, start):
         start_time, end_time = self._get_timerange(start)
         previous_log_time = None
-        next_log_time     = None
-        first_log_index   = None
-        last_log_index    = None
+        next_log_time = None
+        first_log_index = None
+        last_log_index = None
         for index, (t, _linkinfo, _user, _action, _text) in enumerate(log):
             if t >= end_time:
                 # This log is too new
@@ -226,18 +213,18 @@ class ModeAuditLog(WatoMode):
         if last_log_index is None:
             last_log_index = len(log)
 
-        return log[first_log_index:last_log_index], (start_time, end_time, previous_log_time, next_log_time)
-
+        return log[first_log_index:last_log_index], (start_time, end_time, previous_log_time,
+                                                     next_log_time)
 
     def _display_page_controls(self, start_time, end_time, previous_log_time, next_log_time):
         html.open_div(class_="paged_controls")
 
         def time_url_args(t):
             return [
-                ("options_p_start_1_day",   time.strftime("%d", time.localtime(t))),
+                ("options_p_start_1_day", time.strftime("%d", time.localtime(t))),
                 ("options_p_start_1_month", time.strftime("%m", time.localtime(t))),
-                ("options_p_start_1_year",  time.strftime("%Y", time.localtime(t))),
-                ("options_p_start_sel",     "1"),
+                ("options_p_start_1_year", time.strftime("%Y", time.localtime(t))),
+                ("options_p_start_sel", "1"),
             ]
 
         if next_log_time is not None:
@@ -261,13 +248,12 @@ class ModeAuditLog(WatoMode):
 
         html.close_div()
 
-
     def _get_timerange(self, t):
-        st    = time.localtime(int(t))
-        start = int(time.mktime(time.struct_time((st[0], st[1], st[2], 0, 0, 0, st[6], st[7], st[8]))))
-        end   = start + 86399
+        st = time.localtime(int(t))
+        start = int(
+            time.mktime(time.struct_time((st[0], st[1], st[2], 0, 0, 0, st[6], st[7], st[8]))))
+        end = start + 86399
         return start, end
-
 
     def _display_audit_log_options(self):
         if display_options.disabled(display_options.C):
@@ -281,7 +267,6 @@ class ModeAuditLog(WatoMode):
         html.button("options", _("Apply"))
         html.hidden_fields()
         html.end_form()
-
 
     def _vs_audit_log_options(self):
         return Dictionary(
@@ -318,17 +303,15 @@ class ModeAuditLog(WatoMode):
             optional_keys = [],
         )
 
-
     def _clear_audit_log_after_confirm(self):
         c = wato_confirm(_("Confirm deletion of audit log"),
                          _("Do you really want to clear the audit log?"))
         if c:
             self._clear_audit_log()
             return None, _("Cleared audit log.")
-        elif c == False: # not yet confirmed
+        elif c == False:  # not yet confirmed
             return ""
-        return None # browser reload
-
+        return None  # browser reload
 
     def _clear_audit_log(self):
         if not os.path.exists(self.log_path):
@@ -346,10 +329,8 @@ class ModeAuditLog(WatoMode):
 
         os.rename(self.log_path, newpath)
 
-
-
     def _render_logfile_linkinfo(self, linkinfo):
-        if ':' in linkinfo: # folder:host
+        if ':' in linkinfo:  # folder:host
             path, host_name = linkinfo.split(':', 1)
             if watolib.Folder.folder_exists(path):
                 folder = watolib.Folder.folder(path)
@@ -360,7 +341,7 @@ class ModeAuditLog(WatoMode):
                         title = host_name
                     else:
                         return host_name
-                else: # only folder
+                else:  # only folder
                     url = folder.url()
                     title = folder.title()
             else:
@@ -370,17 +351,19 @@ class ModeAuditLog(WatoMode):
 
         return html.render_a(title, href=url)
 
-
     def _export_audit_log(self):
         html.set_output_format("csv")
 
         if self._options["display"] == "daily":
-            filename = "wato-auditlog-%s_%s.csv" % (render.date(time.time()), render.time_of_day(time.time()))
+            filename = "wato-auditlog-%s_%s.csv" % (render.date(time.time()),
+                                                    render.time_of_day(time.time()))
         else:
-            filename = "wato-auditlog-%s_%s_days.csv" % (render.date(time.time()), self._options["display"][1])
+            filename = "wato-auditlog-%s_%s_days.csv" % (render.date(time.time()),
+                                                         self._options["display"][1])
         html.write(filename)
 
-        html.response.set_http_header("Content-Disposition", "attachment; filename=\"%s\"" % filename)
+        html.response.set_http_header("Content-Disposition",
+                                      "attachment; filename=\"%s\"" % filename)
 
         titles = (
             _('Date'),
@@ -399,9 +382,8 @@ class ModeAuditLog(WatoMode):
                 continue
 
             html.write_text(','.join((render.date(int(t)), render.time_of_day(int(t)), linkinfo,
-                                 user, action, '"' + text + '"')) + '\n')
+                                      user, action, '"' + text + '"')) + '\n')
         return False
-
 
     def _parse_audit_log(self):
         if not os.path.exists(self.log_path):
@@ -424,7 +406,6 @@ class ModeAuditLog(WatoMode):
         entries.reverse()
 
         return entries
-
 
     def _filter_entry(self, user, action, text):
         if not self._options["filter_regex"]:

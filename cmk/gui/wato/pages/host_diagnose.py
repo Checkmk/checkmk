@@ -23,7 +23,6 @@
 # License along with GNU Make; see the file  COPYING.  If  not,  write
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
-
 """Verify or find out a hosts agent related configuration"""
 
 import json
@@ -62,11 +61,9 @@ class ModeDiagHost(WatoMode):
     def name(cls):
         return "diag_host"
 
-
     @classmethod
     def permissions(cls):
         return ["hosts", "diag_host"]
-
 
     @classmethod
     def diag_host_tests(cls):
@@ -80,7 +77,6 @@ class ModeDiagHost(WatoMode):
             ('traceroute',    _('Traceroute')),
         ]
 
-
     def _from_vars(self):
         self._hostname = html.var("host")
         if not self._hostname:
@@ -92,10 +88,8 @@ class ModeDiagHost(WatoMode):
         if self._host.is_cluster():
             raise MKGeneralException(_('This page does not support cluster hosts.'))
 
-
     def title(self):
         return _('Diagnostic of host') + " " + self._hostname
-
 
     def buttons(self):
         html.context_button(_("Folder"), watolib.folder_preserving_link([("mode", "folder")]), "back")
@@ -104,7 +98,6 @@ class ModeDiagHost(WatoMode):
         if config.user.may('wato.rulesets'):
             html.context_button(_("Parameters"), self._host.params_url(), "rulesets")
         html.context_button(_("Services"), self._host.services_url(), "services")
-
 
     def action(self):
         if not html.check_transaction():
@@ -136,19 +129,18 @@ class ModeDiagHost(WatoMode):
             html.set_var("folder", watolib.Folder.current().path())
             return "edit_host", return_message
 
-
     def page(self):
         html.open_div(class_="diag_host")
         html.open_table()
         html.open_tr()
         html.open_td()
 
-        html.begin_form('diag_host', method = "POST")
+        html.begin_form('diag_host', method="POST")
         html.prevent_password_auto_completion()
 
         forms.header(_('Host Properties'))
 
-        forms.section(legend = False)
+        forms.section(legend=False)
 
         # The diagnose page shows both snmp variants at the same time
         # We need to analyse the preconfigured community and set either the
@@ -173,7 +165,7 @@ class ModeDiagHost(WatoMode):
         forms.header(_('Options'))
 
         value = {}
-        forms.section(legend = False)
+        forms.section(legend=False)
         vs_rules = self._vs_rules()
         vs_rules.render_input("vs_rules", value)
         html.help(vs_rules.help())
@@ -218,13 +210,13 @@ class ModeDiagHost(WatoMode):
                 html.close_tr()
                 html.close_table()
                 html.javascript('start_host_diag_test(%s, %s, %s)' %
-                    (json.dumps(ident), json.dumps(self._hostname), json.dumps(html.transaction_manager.fresh_transid())))
+                                (json.dumps(ident), json.dumps(self._hostname),
+                                 json.dumps(html.transaction_manager.fresh_transid())))
 
         html.close_td()
         html.close_tr()
         html.close_table()
         html.close_div()
-
 
     def _vs_host(self):
         return Dictionary(
@@ -248,8 +240,6 @@ class ModeDiagHost(WatoMode):
                 ),
             ]
         )
-
-
 
     def _vs_rules(self):
         if config.user.may('wato.add_or_modify_executables'):
@@ -312,7 +302,6 @@ class ModeDiagHost(WatoMode):
         )
 
 
-
 class ModeAjaxDiagHost(WatoWebApiMode):
     def page(self):
         watolib.init_wato_datastructures(with_wato_lock=True)
@@ -348,33 +337,39 @@ class ModeAjaxDiagHost(WatoWebApiMode):
 
         # TODO: Use ModeDiagHost._vs_rules() for processing/validation?
         args = [""] * 13
-        for idx, what in enumerate ([ 'ipaddress',
-                                      'snmp_community',
-                                      'agent_port',
-                                      'snmp_timeout',
-                                      'snmp_retries',
-                                      'tcp_connect_timeout',
-                                      ]):
+        for idx, what in enumerate([
+                'ipaddress',
+                'snmp_community',
+                'agent_port',
+                'snmp_timeout',
+                'snmp_retries',
+                'tcp_connect_timeout',
+        ]):
             args[idx] = request.get(what, "")
 
         if config.user.may('wato.add_or_modify_executables'):
             args[6] = request.get("datasource_program", "")
 
         if request.get("snmpv3_use"):
-            snmpv3_use = { "0": "noAuthNoPriv",
-                           "1": "authNoPriv",
-                           "2": "authPriv",
-                         }.get(request.get("snmpv3_use"))
+            snmpv3_use = {
+                "0": "noAuthNoPriv",
+                "1": "authNoPriv",
+                "2": "authPriv",
+            }.get(request.get("snmpv3_use"))
             args[7] = snmpv3_use
             if snmpv3_use != "noAuthNoPriv":
-                snmpv3_auth_proto = { DropdownChoice.option_id("md5"): "md5",
-                                      DropdownChoice.option_id("sha"): "sha" }.get(request.get("snmpv3_auth_proto"))
+                snmpv3_auth_proto = {
+                    DropdownChoice.option_id("md5"): "md5",
+                    DropdownChoice.option_id("sha"): "sha"
+                }.get(request.get("snmpv3_auth_proto"))
                 args[8] = snmpv3_auth_proto
                 args[9] = request.get("snmpv3_security_name")
                 args[10] = request.get("snmpv3_security_password")
                 if snmpv3_use == "authPriv":
-                    snmpv3_privacy_proto = { DropdownChoice.option_id("DES"): "DES",
-                                             DropdownChoice.option_id("AES"): "AES" }.get(request.get("snmpv3_privacy_proto"))
+                    snmpv3_privacy_proto = {
+                        DropdownChoice.option_id("DES"): "DES",
+                        DropdownChoice.option_id("AES"): "AES"
+                    }.get(request.get("snmpv3_privacy_proto"))
                     args[11] = snmpv3_privacy_proto
                     args[12] = request.get("snmpv3_privacy_password")
             else:
@@ -382,9 +377,9 @@ class ModeAjaxDiagHost(WatoWebApiMode):
 
         result = watolib.check_mk_automation(host.site_id(), "diag-host", [hostname, _test] + args)
         return {
-            "next_transid" : html.transaction_manager.fresh_transid(),
-            "status_code"  : result[0],
-            "output"       : result[1],
+            "next_transid": html.transaction_manager.fresh_transid(),
+            "status_code": result[0],
+            "output": result[1],
         }
 
 

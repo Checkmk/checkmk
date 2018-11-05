@@ -23,7 +23,6 @@
 # License along with GNU Make; see the file  COPYING.  If  not,  write
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
-
 """Mode for managing sites"""
 
 import re
@@ -53,7 +52,6 @@ class ModeSites(WatoMode):
         super(ModeSites, self).__init__()
         self._site_mgmt = watolib.SiteManagementFactory().factory()
 
-
     def buttons(self):
         global_buttons()
 
@@ -64,47 +62,42 @@ class ModeEditSite(ModeSites):
     def name(cls):
         return "edit_site"
 
-
     @classmethod
     def permissions(cls):
         return ["sites"]
-
 
     def __init__(self):
         super(ModeEditSite, self).__init__()
         self._from_html_vars()
 
-        self._new        = self._site_id == None
-        self._new_site   = {}
+        self._new = self._site_id == None
+        self._new_site = {}
         configured_sites = self._site_mgmt.load_sites()
 
         if self._clone_id:
             self._site = configured_sites[self._clone_id]
 
         elif self._new:
-            self._site = { "replicate_mkps" : True }
+            self._site = {"replicate_mkps": True}
 
         else:
             self._site = configured_sites.get(self._site_id, {})
 
-
     def _from_html_vars(self):
-        self._site_id      = html.var("edit")
-        self._clone_id     = html.var("clone")
-        self._id           = html.var("id")
-        self._url_prefix   = html.var("url_prefix", "").strip()
-        self._timeout      = html.var("timeout", "").strip()
-        self._sh_site      = html.var("sh_site")
-        self._sh_host      = html.var("sh_host")
-        self._repl         = html.var("replication")
+        self._site_id = html.var("edit")
+        self._clone_id = html.var("clone")
+        self._id = html.var("id")
+        self._url_prefix = html.var("url_prefix", "").strip()
+        self._timeout = html.var("timeout", "").strip()
+        self._sh_site = html.var("sh_site")
+        self._sh_host = html.var("sh_host")
+        self._repl = html.var("replication")
         self._multisiteurl = html.var("multisiteurl", "").strip()
-
 
     def title(self):
         if self._new:
             return _("Create new site connection")
         return _("Edit site connection %s") % html.render_tt(self._site_id)
-
 
     def buttons(self):
         super(ModeEditSite, self).buttons()
@@ -113,7 +106,6 @@ class ModeEditSite(ModeSites):
             html.context_button(_("Site-Globals"),
                                 watolib.folder_preserving_link([("mode", "edit_site_globals"),
                                 ("site", self._site_id)]), "configuration")
-
 
     def action(self):
         if not html.check_transaction():
@@ -142,7 +134,8 @@ class ModeEditSite(ModeSites):
 
         # Don't know exactly what have been changed, so better issue a change
         # affecting all domains
-        watolib.add_change("edit-sites", msg, sites=[self._id], domains=watolib.ConfigDomain.enabled_domains())
+        watolib.add_change(
+            "edit-sites", msg, sites=[self._id], domains=watolib.ConfigDomain.enabled_domains())
 
         # In case a site is not being replicated anymore, confirm all changes for this site!
         if not self._repl:
@@ -150,10 +143,10 @@ class ModeEditSite(ModeSites):
 
         if self._id != config.omd_site():
             # On central site issue a change only affecting the GUI
-            watolib.add_change("edit-sites", msg, sites=[config.omd_site()], domains=[watolib.ConfigDomainGUI])
+            watolib.add_change(
+                "edit-sites", msg, sites=[config.omd_site()], domains=[watolib.ConfigDomainGUI])
 
         return "sites", detail_msg
-
 
     def _set_site_attributes(self):
         # Save copy of old site for later
@@ -171,7 +164,7 @@ class ModeEditSite(ModeSites):
         vs_connection = self._site_mgmt.connection_method_valuespec()
         method = vs_connection.from_html_vars("method")
         vs_connection.validate_value(method, "method")
-        if type(method) == tuple and method[0] in [ "unix", "tcp"]:
+        if type(method) == tuple and method[0] in ["unix", "tcp"]:
             if method[0] == "unix":
                 self._new_site["socket"] = "unix:" + method[1]
             else:
@@ -181,7 +174,6 @@ class ModeEditSite(ModeSites):
 
         elif "socket" in self._new_site:
             del self._new_site["socket"]
-
 
         # Timeout
         if self._timeout != "":
@@ -238,9 +230,8 @@ class ModeEditSite(ModeSites):
                 if key not in self._new_site and key != "socket":
                     self._new_site[key] = old_site[key]
 
-
-        self._site_mgmt.validate_configuration(self._site_id or self._id, self._new_site, configured_sites)
-
+        self._site_mgmt.validate_configuration(self._site_id or self._id, self._new_site,
+                                               configured_sites)
 
     def page(self):
         html.begin_form("site")
@@ -253,7 +244,6 @@ class ModeEditSite(ModeSites):
         html.button("save", _("Save"))
         html.hidden_fields()
         html.end_form()
-
 
     def _page_basic_settings(self):
         forms.header(_("Basic settings"))
@@ -268,11 +258,10 @@ class ModeEditSite(ModeSites):
         html.help(_("The site ID must be identical (case sensitive) with the instance's exact name."))
         # Alias
         forms.section(_("Alias"))
-        html.text_input("alias", self._site.get("alias", ""), size = 60)
+        html.text_input("alias", self._site.get("alias", ""), size=60)
         if not self._new:
             html.set_focus("alias")
         html.help(_("An alias or description of the site."))
-
 
     def _page_livestatus_settings(self):
         forms.header(_("Livestatus settings"))
@@ -283,7 +272,7 @@ class ModeEditSite(ModeSites):
             method = ('unix', method[5:])
 
         elif type(method) == str and method.startswith("tcp:"):
-            parts = method.split(":")[1:] # pylint: disable=no-member
+            parts = method.split(":")[1:]  # pylint: disable=no-member
             method = ('tcp', (parts[0], int(parts[1])))
 
         self._site_mgmt.connection_method_valuespec().render_input("method", method)
@@ -313,7 +302,7 @@ class ModeEditSite(ModeSites):
         # URL-Prefix
         docu_url = "https://mathias-kettner.com/checkmk_multisite_modproxy.html"
         forms.section(_("URL prefix"))
-        html.text_input("url_prefix", self._site.get("url_prefix", ""), size = 60)
+        html.text_input("url_prefix", self._site.get("url_prefix", ""), size=60)
         html.help(_("The URL prefix will be prepended to links of addons like PNP4Nagios "
                      "or the classical Nagios GUI when a link to such applications points to a host or "
                      "service on that site. You can either use an absolute URL prefix like <tt>http://some.host/mysite/</tt> "
@@ -351,7 +340,6 @@ class ModeEditSite(ModeSites):
         html.checkbox("disabled", self._site.get("disabled", False), label = _("Temporarily disable this connection"))
         html.help( _("If you disable a connection, then no data of this site will be shown in the status GUI. "
                      "The replication is not affected by this, however."))
-
 
     def _page_replication_configuration(self):
         # Replication
@@ -395,8 +383,10 @@ class ModeEditSite(ModeSites):
                     'related option is changed in the master site.'))
 
         forms.section(_("Sync with LDAP connections"), simple=True)
-        self._site_mgmt.user_sync_valuespec().render_input("user_sync",
-                             self._site.get("user_sync", None if self._new else userdb.user_sync_default_config(self._site_id)))
+        self._site_mgmt.user_sync_valuespec().render_input(
+            "user_sync",
+            self._site.get("user_sync",
+                           None if self._new else userdb.user_sync_default_config(self._site_id)))
         html.br()
         html.help(_('By default the users are synchronized automatically in the interval configured '
                     'in the connection. For example the LDAP connector synchronizes the users every '
@@ -433,22 +423,18 @@ class ModeDistributedMonitoring(ModeSites):
     def name(cls):
         return "sites"
 
-
     @classmethod
     def permissions(cls):
         return ["sites"]
 
-
     def title(self):
         return _("Distributed Monitoring")
-
 
     def buttons(self):
         super(ModeDistributedMonitoring, self).buttons()
         html.context_button(_("New connection"),
                             watolib.folder_preserving_link([("mode", "edit_site")]),
                             "new")
-
 
     def action(self):
         delete_id = html.var("_delete")
@@ -463,7 +449,6 @@ class ModeDistributedMonitoring(ModeSites):
         if login_id:
             return self._action_login(login_id)
 
-
     def _action_delete(self, delete_id):
         configured_sites = self._site_mgmt.load_sites()
         # The last connection can always be deleted. In that case we
@@ -477,10 +462,10 @@ class ModeDistributedMonitoring(ModeSites):
             search_url = html.makeactionuri([
                 ("host_search_change_site", "on"),
                 ("host_search_site", delete_id),
-                ("host_search",      "1"),
-                ("folder",           ""),
-                ("mode",             "search"),
-                ("filled_in",        "edit_host"),
+                ("host_search", "1"),
+                ("folder", ""),
+                ("mode", "search"),
+                ("filled_in", "edit_host"),
             ])
             raise MKUserError(None,
                 _("You cannot delete this connection. It has folders/hosts "
@@ -499,7 +484,6 @@ class ModeDistributedMonitoring(ModeSites):
             return ""
 
         return None
-
 
     def _action_logout(self, logout_id):
         configured_sites = self._site_mgmt.load_sites()
@@ -521,7 +505,6 @@ class ModeDistributedMonitoring(ModeSites):
         else:
             return None
 
-
     def _action_login(self, login_id):
         configured_sites = self._site_mgmt.load_sites()
         if html.var("_abort"):
@@ -530,11 +513,11 @@ class ModeDistributedMonitoring(ModeSites):
         if not html.check_transaction():
             return
 
-        site  = configured_sites[login_id]
+        site = configured_sites[login_id]
         error = None
         # Fetch name/password of admin account
         if html.has_var("_name"):
-            name   = html.var("_name", "").strip()
+            name = html.var("_name", "").strip()
             passwd = html.var("_passwd", "").strip()
             try:
                 secret = watolib.do_site_login(login_id, name, passwd)
@@ -585,7 +568,6 @@ class ModeDistributedMonitoring(ModeSites):
         html.footer()
         return False
 
-
     def page(self):
         table.begin("sites", _("Connections to local and remote sites"),
                     empty_text = _("You have not configured any local or remotes sites. Multisite will "
@@ -604,7 +586,6 @@ class ModeDistributedMonitoring(ModeSites):
 
         table.end()
 
-
     def _page_buttons(self, site_id, site):
         table.cell(_("Actions"), css="buttons")
         edit_url = watolib.folder_preserving_link([("mode", "edit_site"), ("edit", site_id)])
@@ -619,7 +600,8 @@ class ModeDistributedMonitoring(ModeSites):
         if (config.has_wato_slave_sites()
             and (site.get("replication") or config.site_is_local(site_id))) \
            or watolib.is_wato_slave_site():
-            globals_url = watolib.folder_preserving_link([("mode", "edit_site_globals"), ("site", site_id)])
+            globals_url = watolib.folder_preserving_link([("mode", "edit_site_globals"),
+                                                          ("site", site_id)])
 
             has_site_globals = bool(site.get("globals"))
             title = _("Site specific global configuration")
@@ -631,11 +613,9 @@ class ModeDistributedMonitoring(ModeSites):
 
             html.icon_button(globals_url, title, icon)
 
-
     def _page_basic_settings(self, site_id, site):
         table.text_cell(_("ID"), site_id)
         table.text_cell(_("Alias"), site.get("alias", ""))
-
 
     def _page_livestatus_settings(self, site_id, site):
         # Socket
@@ -673,7 +653,6 @@ class ModeDistributedMonitoring(ModeSites):
         else:
             table.text_cell(_("Pers."), _("no"))
 
-
     def _page_replication_configuration(self, site_id, site):
         # Replication
         if site.get("replication"):
@@ -703,11 +682,9 @@ class ModeEditSiteGlobals(ModeSites, GlobalSettingsMode):
     def name(cls):
         return "edit_site_globals"
 
-
     @classmethod
     def permissions(cls):
         return ["sites"]
-
 
     def __init__(self):
         super(ModeEditSiteGlobals, self).__init__()
@@ -728,11 +705,9 @@ class ModeEditSiteGlobals(ModeSites, GlobalSettingsMode):
         else:
             self._current_settings = self._site.get("globals", {})
 
-
     def title(self):
         return _("Edit site specific global settings of %s") % \
                html.render_tt(self._site_id)
-
 
     def buttons(self):
         super(ModeEditSiteGlobals, self).buttons()
@@ -743,15 +718,15 @@ class ModeEditSiteGlobals(ModeSites, GlobalSettingsMode):
                             watolib.folder_preserving_link([("mode", "edit_site"),
                             ("edit", self._site_id)]), "sites")
 
-
     # TODO: Consolidate with ModeEditGlobals.action()
     def action(self):
         varname = html.var("_varname")
-        action  = html.var("_action")
+        action = html.var("_action")
         if not varname:
             return
 
-        _domain, valuespec, need_restart, _allow_reset, _in_global_settings = watolib.configvars()[varname]
+        _domain, valuespec, need_restart, _allow_reset, _in_global_settings = watolib.configvars(
+        )[varname]
         def_value = self._global_settings.get(varname, self._default_values[varname])
 
         if action == "reset" and not watolib.is_a_checkbox(valuespec):
@@ -780,7 +755,8 @@ class ModeEditSiteGlobals(ModeSites, GlobalSettingsMode):
             self._site.setdefault("globals", {})[varname] = self._current_settings[varname]
             self._site_mgmt.save_sites(self._configured_sites, activate=False)
 
-            watolib.add_change("edit-configvar", msg, sites=[self._site_id], need_restart=need_restart)
+            watolib.add_change(
+                "edit-configvar", msg, sites=[self._site_id], need_restart=need_restart)
 
             if action == "_reset":
                 return "edit_site_globals", msg
@@ -792,10 +768,8 @@ class ModeEditSiteGlobals(ModeSites, GlobalSettingsMode):
         else:
             return None
 
-
     def _edit_mode(self):
         return "edit_site_configvar"
-
 
     def page(self):
         html.help(_("Here you can configure global settings, that should just be applied "
@@ -804,9 +778,9 @@ class ModeEditSiteGlobals(ModeSites, GlobalSettingsMode):
 
         if not watolib.is_wato_slave_site():
             if not config.has_wato_slave_sites():
-               html.show_error(_("You can not configure site specific global settings "
-                                 "in non distributed setups."))
-               return
+                html.show_error(_("You can not configure site specific global settings "
+                                  "in non distributed setups."))
+                return
 
             if not self._site.get("replication") and not config.site_is_local(self._site_id):
                 html.show_error(_("This site is not the master site nor a replication slave. "

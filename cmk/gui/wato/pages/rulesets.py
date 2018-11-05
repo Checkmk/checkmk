@@ -23,7 +23,6 @@
 # License along with GNU Make; see the file  COPYING.  If  not,  write
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
-
 """WATO's awesome rule editor: Lets the user edit rule based parameters"""
 
 import abc
@@ -74,29 +73,27 @@ class ModeRuleEditor(WatoMode):
     def name(cls):
         return "ruleeditor"
 
-
     @classmethod
     def permissions(cls):
         return ["rulesets"]
 
-
     def __init__(self):
         super(ModeRuleEditor, self).__init__()
         self._only_host = html.var("host")
-
 
     def title(self):
         if self._only_host:
             return _("Rules effective on host ") + self._only_host
         return _("Rule-Based Configuration of Host & Service Parameters")
 
-
     def buttons(self):
         global_buttons()
 
         if self._only_host:
-            html.context_button(self._only_host,
-                watolib.folder_preserving_link([("mode", "edit_host"), ("host", self._only_host)]), "host")
+            html.context_button(
+                self._only_host,
+                watolib.folder_preserving_link([("mode", "edit_host"), ("host", self._only_host)]),
+                "host")
 
         html.context_button(_("Used Rulesets"), watolib.folder_preserving_link([
             ("mode", "rulesets"),
@@ -118,7 +115,6 @@ class ModeRuleEditor(WatoMode):
 
         rule_search_button()
 
-
     def page(self):
         if self._only_host:
             html.h3("%s: %s" % (_("Host"), self._only_host))
@@ -134,24 +130,24 @@ class ModeRuleEditor(WatoMode):
             if self._only_host:
                 url_vars.append(("host", self._only_host))
             url = watolib.folder_preserving_link(url_vars)
-            if groupname == "static": # these have moved into their own WATO module
+            if groupname == "static":  # these have moved into their own WATO module
                 continue
 
             rulegroup = watolib.get_rulegroup(groupname)
             icon = "rulesets"
 
             if rulegroup.help:
-                help_text = rulegroup.help.split('\n')[0] # Take only first line as button text
+                help_text = rulegroup.help.split('\n')[0]  # Take only first line as button text
             else:
                 help_text = None
 
-            menu.add_item(MenuItem(
-                mode_or_url=url,
-                title=rulegroup.title,
-                icon=icon,
-                permission="rulesets",
-                description=help_text
-            ))
+            menu.add_item(
+                MenuItem(
+                    mode_or_url=url,
+                    title=rulegroup.title,
+                    icon=icon,
+                    permission="rulesets",
+                    description=help_text))
         menu.show()
 
 
@@ -164,11 +160,9 @@ class RulesetMode(WatoMode):
 
         self._set_title_and_help()
 
-
     @abc.abstractmethod
     def _set_title_and_help(self):
         raise NotImplementedError()
-
 
     def _from_vars(self):
         self._group_name = html.var("group")
@@ -181,8 +175,7 @@ class RulesetMode(WatoMode):
         # Transform group argument to the "rule search arguments"
         # Keeping this for compatibility reasons for the moment
         if self._group_name:
-            html.set_var("search_p_ruleset_group",
-                           DropdownChoice.option_id(self._group_name))
+            html.set_var("search_p_ruleset_group", DropdownChoice.option_id(self._group_name))
             html.set_var("search_p_ruleset_group_USE", "on")
             html.del_var("group")
 
@@ -202,17 +195,14 @@ class RulesetMode(WatoMode):
 
         self._only_host = html.var("host")
 
-
     @abc.abstractmethod
     def _rulesets(self):
         raise NotImplementedError()
-
 
     def title(self):
         if self._only_host:
             return _("%s - %s") % (self._only_host, self._title)
         return self._title
-
 
     def buttons(self):
         global_buttons()
@@ -224,12 +214,12 @@ class RulesetMode(WatoMode):
 
         rule_search_button(self._search_options, mode=self.name())
 
-
     def _only_host_buttons(self):
         html.context_button(_("All Rulesets"), watolib.folder_preserving_link([("mode", "ruleeditor"), ("host", self._only_host)]), "back")
-        html.context_button(self._only_host,
-             watolib.folder_preserving_link([("mode", "edit_host"), ("host", self._only_host)]), "host")
-
+        html.context_button(
+            self._only_host,
+            watolib.folder_preserving_link([("mode", "edit_host"), ("host", self._only_host)]),
+            "host")
 
     def _regular_buttons(self):
         if self.name() != "static_checks":
@@ -240,7 +230,6 @@ class RulesetMode(WatoMode):
 
         if self._group_name == "agents":
             html.context_button(_("Agent Bakery"), watolib.folder_preserving_link([("mode", "agents")]), "agents")
-
 
     def page(self):
         if not self._only_host:
@@ -260,7 +249,8 @@ class RulesetMode(WatoMode):
 
         html.open_div(class_="rulesets")
 
-        grouped_rulesets = sorted(rulesets.get_grouped(), key=lambda k_v: watolib.get_rulegroup(k_v[0]).title)
+        grouped_rulesets = sorted(
+            rulesets.get_grouped(), key=lambda k_v: watolib.get_rulegroup(k_v[0]).title)
 
         for main_group_name, sub_groups in grouped_rulesets:
             # Display the main group header only when there are several main groups shown
@@ -276,7 +266,8 @@ class RulesetMode(WatoMode):
                     float_cls = None
                     if not config.wato_hide_help_in_lists:
                         float_cls = "nofloat" if html.help_visible else "float"
-                    html.open_div(class_=["ruleset", float_cls], title=html.strip_tags(ruleset.help() or ''))
+                    html.open_div(
+                        class_=["ruleset", float_cls], title=html.strip_tags(ruleset.help() or ''))
                     html.open_div(class_="text")
 
                     url_vars = [
@@ -288,7 +279,10 @@ class RulesetMode(WatoMode):
                         url_vars.append(("host", self._only_host))
                     view_url = html.makeuri(url_vars)
 
-                    html.a(ruleset.title(), href=view_url, class_="nonzero" if ruleset.is_empty() else "zero")
+                    html.a(
+                        ruleset.title(),
+                        href=view_url,
+                        class_="nonzero" if ruleset.is_empty() else "zero")
                     html.span("." * 100, class_="dots")
                     html.close_div()
 
@@ -296,7 +290,9 @@ class RulesetMode(WatoMode):
                     if ruleset.search_matching_rules:
                         num_rules = "%d/%d" % (len(ruleset.search_matching_rules), num_rules)
 
-                    html.div(num_rules, class_=["rulecount", "nonzero" if ruleset.is_empty() else "zero"])
+                    html.div(
+                        num_rules,
+                        class_=["rulecount", "nonzero" if ruleset.is_empty() else "zero"])
                     if not config.wato_hide_help_in_lists and ruleset.help():
                         html.help(ruleset.help())
 
@@ -316,22 +312,18 @@ class RulesetMode(WatoMode):
         html.close_div()
 
 
-
 @mode_registry.register
 class ModeRulesets(RulesetMode):
     @classmethod
     def name(cls):
         return "rulesets"
 
-
     @classmethod
     def permissions(cls):
         return ["rulesets"]
 
-
     def _rulesets(self):
         return watolib.NonStaticChecksRulesets()
-
 
     def _set_title_and_help(self):
         if self._search_options.keys() == ["ruleset_deprecated"]:
@@ -357,29 +349,23 @@ class ModeRulesets(RulesetMode):
             self._title, self._help = rulegroup.title, rulegroup.help
 
 
-
-
 @mode_registry.register
 class ModeStaticChecksRulesets(RulesetMode):
     @classmethod
     def name(cls):
         return "static_checks"
 
-
     @classmethod
     def permissions(cls):
         return ["rulesets"]
 
-
     def _rulesets(self):
         return watolib.StaticChecksRulesets()
-
 
     def _set_title_and_help(self):
         self._title = _("Manual Checks")
         self._help = _("Here you can create explicit checks that are not being created by the "
                        "automatic service discovery.")
-
 
 
 def rule_search_button(search_options=None, mode="rulesets"):
@@ -400,11 +386,14 @@ def rule_search_button(search_options=None, mode="rulesets"):
     else:
         title = _("Search")
 
-    html.context_button(title, html.makeuri([
-        ("mode", "rule_search"),
-        ("back_mode", mode),
-    ],
-    delvars=["filled_in"]), "search", hot=is_searching)
+    html.context_button(
+        title,
+        html.makeuri([
+            ("mode", "rule_search"),
+            ("back_mode", mode),
+        ], delvars=["filled_in"]),
+        "search",
+        hot=is_searching)
 
 
 @mode_registry.register
@@ -413,11 +402,9 @@ class ModeEditRuleset(WatoMode):
     def name(cls):
         return "edit_ruleset"
 
-
     @classmethod
     def permissions(cls):
         return []
-
 
     def _from_vars(self):
         self._name = html.var("varname")
@@ -434,8 +421,8 @@ class ModeEditRuleset(WatoMode):
             checks = watolib.check_mk_local_automation("get-check-information")
             if check_command.startswith("check_mk-"):
                 check_command = check_command[9:]
-                self._name = "checkgroup_parameters:" + checks[check_command].get("group","")
-                descr_pattern  = checks[check_command]["service_description"].replace("%s", "(.*)")
+                self._name = "checkgroup_parameters:" + checks[check_command].get("group", "")
+                descr_pattern = checks[check_command]["service_description"].replace("%s", "(.*)")
                 matcher = re.search(descr_pattern, html.var("service_description"))
                 if matcher:
                     try:
@@ -467,7 +454,6 @@ class ModeEditRuleset(WatoMode):
 
         self._just_edited_rule_from_vars()
 
-
     # After actions like editing or moving a rule there is a rule that the user has been
     # working before. Focus this rule row again to make multiple actions with a single
     # rule easier to handle
@@ -482,11 +468,10 @@ class ModeEditRuleset(WatoMode):
         ruleset = rulesets.get(self._name)
 
         try:
-            rulenr = int(html.var("rulenr")) # rule number relative to folder
+            rulenr = int(html.var("rulenr"))  # rule number relative to folder
             self._just_edited_rule = ruleset.get_rule(rule_folder, rulenr)
         except (IndexError, TypeError, ValueError, KeyError):
             self._just_edited_rule = None
-
 
     def title(self):
         title = self._rulespec.title
@@ -497,7 +482,6 @@ class ModeEditRuleset(WatoMode):
                 title += _(" and %s '%s'") % (self._rulespec.item_name, self._item)
 
         return title
-
 
     def buttons(self):
         global_buttons()
@@ -528,7 +512,6 @@ class ModeEditRuleset(WatoMode):
             import cmk.gui.cee.plugins.wato.agent_bakery
             cmk.gui.cee.plugins.wato.agent_bakery.agent_bakery_context_button(self._name)
 
-
     def action(self):
         rule_folder = watolib.Folder.folder(html.var("_folder", html.var("folder")))
         rule_folder.need_permission("write")
@@ -537,7 +520,7 @@ class ModeEditRuleset(WatoMode):
         ruleset = rulesets.get(self._name)
 
         try:
-            rulenr = int(html.var("_rulenr")) # rule number relativ to folder
+            rulenr = int(html.var("_rulenr"))  # rule number relativ to folder
             rule = ruleset.get_rule(rule_folder, rulenr)
         except (IndexError, TypeError, ValueError, KeyError):
             raise MKUserError("rulenr", _("You are trying to edit a rule which does not exist "
@@ -552,13 +535,13 @@ class ModeEditRuleset(WatoMode):
                 ruleset.delete_rule(rule)
                 rulesets.save()
                 return
-            elif c == False: # not yet confirmed
+            elif c == False:  # not yet confirmed
                 return ""
-            return None # browser reload
+            return None  # browser reload
 
         else:
             if not html.check_transaction():
-                return None # browser reload
+                return None  # browser reload
 
             if action == "up":
                 ruleset.move_rule_up(rule)
@@ -573,10 +556,9 @@ class ModeEditRuleset(WatoMode):
 
             rulesets.save()
 
-
     def page(self):
         if not self._hostname:
-            watolib.Folder.current().show_breadcrump(keepvarnames=True) # = ["mode", "varname"])
+            watolib.Folder.current().show_breadcrump(keepvarnames=True)  # = ["mode", "varname"])
 
         if not config.wato_hide_varnames:
             display_varname = '%s["%s"]' % tuple(self._name.split(":")) \
@@ -598,7 +580,6 @@ class ModeEditRuleset(WatoMode):
 
         self._create_form()
 
-
     def _explain_match_type(self, match_type):
         html.b("%s: " % _("Matching"))
         if match_type == "first":
@@ -614,11 +595,10 @@ class ModeEditRuleset(WatoMode):
         else:
             html.write_text(_("Unknown match type: %s") % match_type)
 
-
     # TODO: Clean this function up!
     def _rule_listing(self, ruleset):
         alread_matched = False
-        match_keys = set([]) # in case if match = "dict"
+        match_keys = set([])  # in case if match = "dict"
         last_folder = None
 
         search_options = ModeRuleSearch().search_options
@@ -639,7 +619,7 @@ class ModeEditRuleset(WatoMode):
 
                 last_folder = folder
 
-                alias_path = folder.alias_path(show_main = False)
+                alias_path = folder.alias_path(show_main=False)
                 table_id = "rules_%s_%s" % (self._name, folder.ident())
                 table.begin(table_id, title="%s %s (%d)" % (_("Rules in folder"), alias_path,
                                                             ruleset.num_rules_in_folder(folder)),
@@ -659,7 +639,8 @@ class ModeEditRuleset(WatoMode):
 
             table.row(css=" ".join(css) if css else None)
 
-            if self._just_edited_rule and self._just_edited_rule.folder == rule.folder and self._just_edited_rule.index() == rulenr:
+            if self._just_edited_rule and self._just_edited_rule.folder == rule.folder and self._just_edited_rule.index(
+            ) == rulenr:
                 html.focus_here()
 
             # Rule matching
@@ -668,7 +649,9 @@ class ModeEditRuleset(WatoMode):
                 if rule.is_disabled():
                     reasons = [ _("This rule is disabled") ]
                 else:
-                    reasons = list(rule.get_mismatch_reasons(watolib.Folder.current(), self._hostname, self._item))
+                    reasons = list(
+                        rule.get_mismatch_reasons(watolib.Folder.current(), self._hostname,
+                                                  self._item))
 
                 matches_rule = not reasons
 
@@ -678,7 +661,7 @@ class ModeEditRuleset(WatoMode):
                         title = _("This rule matches, but does not define any parameters.")
                         img = 'imatch'
                     else:
-                        new_keys = set(rule.value.keys()) # pylint: disable=no-member
+                        new_keys = set(rule.value.keys())  # pylint: disable=no-member
                         if match_keys.isdisjoint(new_keys):
                             title = _("This rule matches and defines new parameters.")
                             img = 'match'
@@ -745,10 +728,9 @@ class ModeEditRuleset(WatoMode):
         if last_folder != None:
             table.end()
 
-
     def _action_url(self, action, folder, rulenr):
         vars_ = [
-            ("mode",    html.var('mode', 'edit_ruleset')),
+            ("mode", html.var('mode', 'edit_ruleset')),
             ("ruleset_back_mode", self._back_mode),
             ("varname", self._name),
             ("_folder", folder.path()),
@@ -764,15 +746,13 @@ class ModeEditRuleset(WatoMode):
 
         return make_action_link(vars_)
 
-
     def _rule_button(self, action, title=None, folder=None, rulenr=0):
         html.icon_button(self._action_url(action, folder, rulenr), title, action)
 
-
     # TODO: Refactor this whole method
     def _rule_cells(self, rule):
-        rulespec  = rule.ruleset.rulespec
-        value     = rule.value
+        rulespec = rule.ruleset.rulespec
+        value = rule.value
         rule_options = rule.rule_options
 
         # Conditions
@@ -795,7 +775,7 @@ class ModeEditRuleset(WatoMode):
                            + _("The value of this rule is not valid. ") \
                            + reason
         else:
-            img ="yes" if value else "no"
+            img = "yes" if value else "no"
             title = _("This rule results in a positive outcome.") if value else _("this rule results in a negative outcome.")
             value_html = '<img align=absmiddle class=icon title="%s" src="images/rule_%s.png">' \
                             % (title, img)
@@ -811,14 +791,12 @@ class ModeEditRuleset(WatoMode):
         desc = rule_options.get("description") or rule_options.get("comment", "")
         html.write_text(desc)
 
-
     def _rule_conditions(self, rule):
         html.open_ul(class_="conditions")
         self._tag_conditions(rule)
         self._host_conditions(rule)
         self._service_conditions(rule)
         html.close_ul()
-
 
     def _tag_conditions(self, rule):
         # Host tags
@@ -853,7 +831,6 @@ class ModeEditRuleset(WatoMode):
                     html.tt(tag)
             html.close_li()
 
-
     def _host_conditions(self, rule):
         if rule.host_list == watolib.ALL_HOSTS:
             return
@@ -862,7 +839,6 @@ class ModeEditRuleset(WatoMode):
         condition = self._render_host_condition_text(rule)
         if condition:
             html.li(condition, class_="condition")
-
 
     def _render_host_condition_text(self, rule):
         if rule.host_list == []:
@@ -918,12 +894,10 @@ class ModeEditRuleset(WatoMode):
         if len(text_list) == 1:
             condition.append(text_list[0])
         else:
-            condition.append(", ".join([ "%s" % s for s in text_list[:-1] ]))
+            condition.append(", ".join(["%s" % s for s in text_list[:-1]]))
             condition.append(_(" or ") + text_list[-1])
 
         return HTML(" ").join(condition)
-
-
 
     def _service_conditions(self, rule):
         if not rule.ruleset.rulespec.item_type or rule.item_list == watolib.ALL_SERVICES:
@@ -937,7 +911,9 @@ class ModeEditRuleset(WatoMode):
         is_negate = rule.item_list[-1] == watolib.ALL_SERVICES[0]
         if is_negate:
             item_list = rule.item_list[:-1]
-            cleaned_item_list = [ i.lstrip(watolib.ENTRY_NEGATE_CHAR) for i in is_negate and item_list ]
+            cleaned_item_list = [
+                i.lstrip(watolib.ENTRY_NEGATE_CHAR) for i in is_negate and item_list
+            ]
         else:
             item_list = rule.item_list
             cleaned_item_list = rule.item_list
@@ -965,15 +941,14 @@ class ModeEditRuleset(WatoMode):
         if len(text_list) == 1:
             condition += text_list[0]
         else:
-            condition += ", ".join([ "%s" % s for s in text_list[:-1] ])
+            condition += ", ".join(["%s" % s for s in text_list[:-1]])
             condition += _(" or ") + text_list[-1]
 
         if condition:
             html.li(condition, class_="condition")
 
-
     def _create_form(self):
-        html.begin_form("new_rule", add_transid = False)
+        html.begin_form("new_rule", add_transid=False)
         html.hidden_field("ruleset_back_mode", self._back_mode, add_var=True)
 
         html.open_table()
@@ -1012,34 +987,28 @@ class ModeEditRuleset(WatoMode):
         html.end_form()
 
 
-
 @mode_registry.register
 class ModeRuleSearch(WatoMode):
     @classmethod
     def name(cls):
         return "rule_search"
 
-
     @classmethod
     def permissions(cls):
         return ["rulesets"]
 
-
     def __init__(self):
         self.back_mode = html.var("back_mode", "rulesets")
         super(ModeRuleSearch, self).__init__()
-
 
     def title(self):
         if self.search_options:
             return _("Refine search")
         return _("Search rulesets and rules")
 
-
     def buttons(self):
         global_buttons()
         html.context_button(_("Back"), html.makeuri([("mode", self.back_mode)]), "back")
-
 
     def page(self):
         html.begin_form("rule_search", method="GET")
@@ -1052,7 +1021,6 @@ class ModeRuleSearch(WatoMode):
         html.button("_reset_search", _("Reset"))
         html.hidden_fields()
         html.end_form()
-
 
     def _from_vars(self):
         if html.var("_reset_search"):
@@ -1069,7 +1037,6 @@ class ModeRuleSearch(WatoMode):
             html.del_all_vars("search_")
 
         self.search_options = value
-
 
     def _valuespec(self):
         return Dictionary(
@@ -1227,10 +1194,8 @@ class EditRuleMode(WatoMode):
 
         self._set_rule()
 
-
     def _set_folder(self):
         self._folder = watolib.Folder.folder(html.var("rule_folder"))
-
 
     def _set_rule(self):
         if html.var("rulenr"):
@@ -1247,10 +1212,8 @@ class EditRuleMode(WatoMode):
         else:
             raise NotImplementedError()
 
-
     def title(self):
         return _("Edit rule: %s") % self._rulespec.title
-
 
     def buttons(self):
         if self._back_mode == 'edit_ruleset':
@@ -1264,13 +1227,10 @@ class EditRuleMode(WatoMode):
             backurl = watolib.folder_preserving_link(var_list)
 
         else:
-            backurl = watolib.folder_preserving_link([
-                ('mode', self._back_mode),
-                ("host", html.var("host",""))
-            ])
+            backurl = watolib.folder_preserving_link([('mode', self._back_mode),
+                                                      ("host", html.var("host", ""))])
 
         html.context_button(_("Abort"), backurl, "abort")
-
 
     def action(self):
         if not html.check_transaction():
@@ -1311,7 +1271,6 @@ class EditRuleMode(WatoMode):
 
         return (self._back_mode, self._success_message())
 
-
     def _update_rule_from_html_vars(self):
         # Additional options
         rule_options = self._vs_rule_options().from_html_vars("options")
@@ -1332,21 +1291,17 @@ class EditRuleMode(WatoMode):
             value = html.var("value") == "yes"
         self._rule.value = value
 
-
     @abc.abstractmethod
     def _save_rule(self):
         raise NotImplementedError()
-
 
     def _remove_from_orig_folder(self):
         self._ruleset.delete_rule(self._rule)
         self._rulesets.save()
 
-
     def _success_message(self):
         return _("Edited rule in ruleset \"%s\" in folder \"%s\"") % \
                  (self._ruleset.title(), self._folder.alias_path())
-
 
     def _get_rule_conditions(self):
         tag_list = watolib.get_tag_conditions()
@@ -1360,12 +1315,12 @@ class EditRuleMode(WatoMode):
             host_list = vs.from_html_vars("hostlist")
             vs.validate_value(host_list, "hostlist")
             if negate:
-                host_list = [ watolib.ENTRY_NEGATE_CHAR + h for h in host_list ]
+                host_list = [watolib.ENTRY_NEGATE_CHAR + h for h in host_list]
             # append watolib.ALL_HOSTS to negated host lists
             if len(host_list) > 0 and host_list[0][0] == watolib.ENTRY_NEGATE_CHAR:
                 host_list += watolib.ALL_HOSTS
             elif len(host_list) == 0 and negate:
-                host_list = watolib.ALL_HOSTS # equivalent
+                host_list = watolib.ALL_HOSTS  # equivalent
 
         # Item list
         itemtype = self._rulespec.item_type
@@ -1378,20 +1333,20 @@ class EditRuleMode(WatoMode):
                 negate = html.get_checkbox("negate_entries")
 
                 if itemenum:
-                    itemspec = ListChoice(choices = itemenum, columns = 3)
-                    item_list = [ x+"$" for x in itemspec.from_html_vars("item") ]
+                    itemspec = ListChoice(choices=itemenum, columns=3)
+                    item_list = [x + "$" for x in itemspec.from_html_vars("item")]
                 else:
                     vs = self._vs_service_conditions()
                     item_list = vs.from_html_vars("itemlist")
                     vs.validate_value(item_list, "itemlist")
 
                 if negate:
-                    item_list = [ watolib.ENTRY_NEGATE_CHAR + i for i in item_list]
+                    item_list = [watolib.ENTRY_NEGATE_CHAR + i for i in item_list]
 
                 if len(item_list) > 0 and item_list[0][0] == watolib.ENTRY_NEGATE_CHAR:
                     item_list += watolib.ALL_SERVICES
                 elif len(item_list) == 0 and negate:
-                    item_list = watolib.ALL_SERVICES # equivalent
+                    item_list = watolib.ALL_SERVICES  # equivalent
 
                 if len(item_list) == 0:
                     raise MKUserError("item_0", _("Please specify at least one %s or "
@@ -1401,14 +1356,12 @@ class EditRuleMode(WatoMode):
 
         return tag_list, host_list, item_list
 
-
     def page(self):
         if html.var("_export_rule"):
             self._show_rule_representation()
 
         else:
             self._show_rule_editor()
-
 
     def _show_rule_editor(self):
         if self._ruleset.help():
@@ -1443,7 +1396,7 @@ class EditRuleMode(WatoMode):
         else:
             forms.header(_("Positive / Negative"))
             forms.section("")
-            for posneg, img in [ ("positive", "yes"), ("negative", "no")]:
+            for posneg, img in [("positive", "yes"), ("negative", "no")]:
                 val = img == "yes"
                 html.img("images/rule_%s.png" % img, class_="ruleyesno", align="top")
                 html.radiobutton("value", img, self._rule.value == val, _("Make the outcome of the ruleset <b>%s</b><br>") % posneg)
@@ -1472,10 +1425,10 @@ class EditRuleMode(WatoMode):
         html.open_div(style="display:none;" if not checked else None, id_=div_id)
         negate_hosts = len(self._rule.host_list) > 0 and self._rule.host_list[0].startswith("!")
 
-        explicit_hosts = [ h.strip("!") for h in self._rule.host_list if h != watolib.ALL_HOSTS[0] ]
+        explicit_hosts = [h.strip("!") for h in self._rule.host_list if h != watolib.ALL_HOSTS[0]]
         ListOfStrings(
-            orientation = "horizontal",
-            valuespec = TextAscii(size = 30)).render_input("hostlist", explicit_hosts)
+            orientation="horizontal", valuespec=TextAscii(size=30)).render_input(
+                "hostlist", explicit_hosts)
 
         html.checkbox("negate_hosts", negate_hosts, label =
                      _("<b>Negate:</b> make rule apply for <b>all but</b> the above hosts"))
@@ -1516,23 +1469,27 @@ class EditRuleMode(WatoMode):
                 raise MKUserError(None, "Invalid item type '%s'" % itemtype)
 
             checked = html.get_checkbox("explicit_services")
-            if checked == None: # read from rule itself
+            if checked == None:  # read from rule itself
                 checked = len(self._rule.item_list) == 0 or self._rule.item_list[0] != ""
             div_id = "item_list"
             html.checkbox("explicit_services", checked, onclick="valuespec_toggle_option(this, %r)" % div_id,
                          label = _("Specify explicit values"))
-            html.open_div(id_=div_id, style=["display: none;" if not checked else "", "padding: 0px;"])
+            html.open_div(
+                id_=div_id, style=["display: none;" if not checked else "", "padding: 0px;"])
 
-            negate_entries = len(self._rule.item_list) > 0 and self._rule.item_list[0].startswith(watolib.ENTRY_NEGATE_CHAR)
+            negate_entries = len(self._rule.item_list) > 0 and self._rule.item_list[0].startswith(
+                watolib.ENTRY_NEGATE_CHAR)
             if negate_entries:
-                cleaned_item_list = [ i.lstrip(watolib.ENTRY_NEGATE_CHAR) for i in self._rule.item_list[:-1] ] # strip last entry (watolib.ALL_SERVICES)
+                cleaned_item_list = [
+                    i.lstrip(watolib.ENTRY_NEGATE_CHAR) for i in self._rule.item_list[:-1]
+                ]  # strip last entry (watolib.ALL_SERVICES)
             else:
                 cleaned_item_list = self._rule.item_list
 
             itemenum = self._ruleset.item_enum()
             if itemenum:
-                value = [ x.rstrip("$") for x in cleaned_item_list ]
-                itemspec = ListChoice(choices = itemenum, columns = 3)
+                value = [x.rstrip("$") for x in cleaned_item_list]
+                itemspec = ListChoice(choices=itemenum, columns=3)
                 itemspec.render_input("item", value)
             else:
                 self._vs_service_conditions().render_input("itemlist", cleaned_item_list)
@@ -1551,7 +1508,6 @@ class EditRuleMode(WatoMode):
 
         html.end_form()
 
-
     def _show_rule_representation(self):
         content = "<pre>%s</pre>" % html.render_text(pprint.pformat(self._rule.to_dict_config()))
 
@@ -1567,22 +1523,17 @@ class EditRuleMode(WatoMode):
         html.close_tr()
 
         html.open_tr()
-        html.td(html.render_div(content,  id_="rule_representation"), class_="log")
+        html.td(html.render_div(content, id_="rule_representation"), class_="log")
         html.close_tr()
 
         html.close_table()
         html.close_center()
 
-
     def _vs_service_conditions(self,):
         return ListOfStrings(
-            orientation = "horizontal",
-            valuespec = RegExpUnicode(
-                size = 30,
-                mode = RegExpUnicode.prefix
-            ),
+            orientation="horizontal",
+            valuespec=RegExpUnicode(size=30, mode=RegExpUnicode.prefix),
         )
-
 
     def _vs_rule_options(self, disabling=True):
         return Dictionary(
@@ -1593,24 +1544,20 @@ class EditRuleMode(WatoMode):
         )
 
 
-
 @mode_registry.register
 class ModeEditRule(EditRuleMode):
     @classmethod
     def name(cls):
         return "edit_rule"
 
-
     @classmethod
     def permissions(cls):
         return []
-
 
     def _save_rule(self):
         # Just editing without moving to other folder
         self._ruleset.edit_rule(self._rule)
         self._rulesets.save()
-
 
 
 @mode_registry.register
@@ -1619,18 +1566,15 @@ class ModeCloneRule(EditRuleMode):
     def name(cls):
         return "clone_rule"
 
-
     @classmethod
     def permissions(cls):
         return []
-
 
     def _set_rule(self):
         super(ModeCloneRule, self)._set_rule()
 
         self._orig_rule = self._rule
         self._rule = self._orig_rule.clone()
-
 
     def _save_rule(self):
         if self._rule.folder == self._orig_rule.folder:
@@ -1640,10 +1584,8 @@ class ModeCloneRule(EditRuleMode):
 
         self._rulesets.save()
 
-
     def _remove_from_orig_folder(self):
-        pass # Cloned rule is not yet in folder, don't try to remove
-
+        pass  # Cloned rule is not yet in folder, don't try to remove
 
 
 @mode_registry.register
@@ -1652,15 +1594,12 @@ class ModeNewRule(EditRuleMode):
     def name(cls):
         return "new_rule"
 
-
     @classmethod
     def permissions(cls):
         return []
 
-
     def title(self):
         return _("New rule: %s") % self._rulespec.title
-
 
     def _set_folder(self):
         if html.has_var("_new_rule"):
@@ -1675,10 +1614,9 @@ class ModeNewRule(EditRuleMode):
             # Submitting the creation dialog
             self._folder = watolib.Folder.folder(html.var("new_rule_folder"))
 
-
     def _set_rule(self):
         host_list = watolib.ALL_HOSTS
-        item_list = [ "" ]
+        item_list = [""]
 
         if html.has_var("_new_host_rule"):
             hostname = html.var("host")
@@ -1686,12 +1624,12 @@ class ModeNewRule(EditRuleMode):
                 host_list = [hostname]
 
             if self._rulespec.item_type:
-                item = watolib.mk_eval(html.var("item")) if html.has_var("item") else watolib.NO_ITEM
+                item = watolib.mk_eval(
+                    html.var("item")) if html.has_var("item") else watolib.NO_ITEM
                 if item != watolib.NO_ITEM:
-                    item_list = [ "%s$" % escape_regex_chars(item) ]
+                    item_list = ["%s$" % escape_regex_chars(item)]
 
         self._rule = watolib.Rule.create(self._folder, self._ruleset, host_list, item_list)
-
 
     def _save_rule(self):
         self._ruleset.append_rule(self._folder, self._rule)
@@ -1700,7 +1638,6 @@ class ModeNewRule(EditRuleMode):
                 (self._ruleset.title(),
                  self._folder.alias_path()), # pylint: disable=no-member
                  sites=self._folder.all_site_ids()) # pylint: disable=no-member
-
 
     def _success_message(self):
         return _("Created new rule in ruleset \"%s\" in folder \"%s\"") % \

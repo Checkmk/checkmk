@@ -23,7 +23,6 @@
 # License along with GNU Make; see the file  COPYING.  If  not,  write
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
-
 """Mode for automatic scan of parents (similar to cmk --scan-parents)"""
 
 import json
@@ -48,33 +47,29 @@ class ModeParentScan(WatoMode):
     def name(cls):
         return "parentscan"
 
-
     @classmethod
     def permissions(cls):
         return ["hosts", "parentscan"]
 
-
     def title(self):
         return _("Parent scan")
 
-
     def buttons(self):
         html.context_button(_("Folder"), watolib.Folder.current().url(), "back")
-
 
     def _from_vars(self):
         # Ignored during initial form display
         # TODO: Make dedicated class or class members
         self._settings = {
-            "where"          : html.var("where"),
-            "alias"          : html.get_unicode_input("alias", "").strip() or None,
-            "recurse"        : html.get_checkbox("recurse"),
-            "select"         : html.var("select"),
-            "timeout"        : utils.saveint(html.var("timeout")) or 8,
-            "probes"         : utils.saveint(html.var("probes")) or 2,
-            "max_ttl"        : utils.saveint(html.var("max_ttl")) or 10,
-            "force_explicit" : html.get_checkbox("force_explicit"),
-            "ping_probes"    : utils.saveint(html.var("ping_probes")) or 0,
+            "where": html.var("where"),
+            "alias": html.get_unicode_input("alias", "").strip() or None,
+            "recurse": html.get_checkbox("recurse"),
+            "select": html.var("select"),
+            "timeout": utils.saveint(html.var("timeout")) or 8,
+            "probes": utils.saveint(html.var("probes")) or 2,
+            "max_ttl": utils.saveint(html.var("max_ttl")) or 10,
+            "force_explicit": html.get_checkbox("force_explicit"),
+            "ping_probes": utils.saveint(html.var("ping_probes")) or 0,
         }
 
         if not html.var("all"):
@@ -89,9 +84,9 @@ class ModeParentScan(WatoMode):
             # all host in this folder, maybe recursively
             self._complete_folder = True
             self._items = []
-            for host in self._recurse_hosts(watolib.Folder.current(), self._settings["recurse"], self._settings["select"]):
+            for host in self._recurse_hosts(watolib.Folder.current(), self._settings["recurse"],
+                                            self._settings["select"]):
                 self._items.append("%s|%s" % (host.folder().path(), host.name()))
-
 
     def action(self):
         if not html.var("_item"):
@@ -102,11 +97,14 @@ class ModeParentScan(WatoMode):
             folder = watolib.Folder.folder(folderpath)
             host = folder.host(host_name)
             site_id = host.site_id()
-            params = map(str, [ self._settings["timeout"], self._settings["probes"], self._settings["max_ttl"], self._settings["ping_probes"] ])
+            params = map(str, [
+                self._settings["timeout"], self._settings["probes"], self._settings["max_ttl"],
+                self._settings["ping_probes"]
+            ])
             gateways = watolib.check_mk_automation(site_id, "scan-parents", params + [host_name])
             gateway, state, skipped_gateways, error = gateways[0]
 
-            if state in [ "direct", "root", "gateway" ]:
+            if state in ["direct", "root", "gateway"]:
                 message, pconf, gwcreat = \
                     self._configure_gateway(state, site_id, host, gateway)
             else:
@@ -116,20 +114,21 @@ class ModeParentScan(WatoMode):
 
             # Possible values for state are:
             # failed, dnserror, garbled, root, direct, notfound, gateway
-            counts = [ 'continue',
-                1,                                           # Total hosts
-                1 if gateway else 0,                          # Gateways found
-                1 if state in [ "direct", "root" ] else 0,    # Directly reachable hosts
-                skipped_gateways,                            # number of failed PING probes
-                1 if state == "notfound" else 0,              # No gateway found
-                1 if pconf else 0,                            # New parents configured
-                1 if gwcreat else 0,                          # Gateway hosts created
-                1 if state in [ "failed", "dnserror", "garbled" ] else 0, # Errors
+            counts = [
+                'continue',
+                1,  # Total hosts
+                1 if gateway else 0,  # Gateways found
+                1 if state in ["direct", "root"] else 0,  # Directly reachable hosts
+                skipped_gateways,  # number of failed PING probes
+                1 if state == "notfound" else 0,  # No gateway found
+                1 if pconf else 0,  # New parents configured
+                1 if gwcreat else 0,  # Gateway hosts created
+                1 if state in ["failed", "dnserror", "garbled"] else 0,  # Errors
             ]
             result = "%s\n%s: %s<br>\n" % (json.dumps(counts), host_name, message)
 
         except Exception, e:
-            result = json.dumps([ 'failed', 1, 0, 0, 0, 0, 0, 1 ]) + "\n"
+            result = json.dumps(['failed', 1, 0, 0, 0, 0, 0, 1]) + "\n"
             if site_id:
                 msg = _("Error during parent scan of %s on site %s: %s") % (host_name, site_id, e)
             else:
@@ -142,12 +141,11 @@ class ModeParentScan(WatoMode):
         html.write(result)
         return ""
 
-
     def _configure_gateway(self, state, site_id, host, gateway):
         # Settings for configuration and gateway creation
         force_explicit = html.get_checkbox("force_explicit")
-        where          = html.var("where")
-        alias          = html.var("alias")
+        where = html.var("where")
+        alias = html.var("alias")
 
         # If we have found a gateway, we need to know a matching
         # host name from our configuration. If there is none,
@@ -164,7 +162,7 @@ class ModeParentScan(WatoMode):
                         False, False
 
                 # Determine folder where to create the host.
-                elif where == "here": # directly in current folder
+                elif where == "here":  # directly in current folder
                     gw_folder = watolib.Folder.current_disk_folder()
 
                 elif where == "subfolder":
@@ -177,7 +175,7 @@ class ModeParentScan(WatoMode):
                         # Create new gateway folder
                         gw_folder = current.create_subfolder("parents", _("Parents"), {})
 
-                elif where == "there": # In same folder as host
+                elif where == "there":  # In same folder as host
                     gw_folder = host.folder()
 
                 # Create gateway host
@@ -188,7 +186,7 @@ class ModeParentScan(WatoMode):
                 else:
                     gw_host_name = "gw-%s" % (gw_ip.replace(".", "-"))
 
-                new_host_attributes = { "ipaddress" : gw_ip }
+                new_host_attributes = {"ipaddress": gw_ip}
                 if alias:
                     new_host_attributes["alias"] = alias
                 if gw_folder.site_id() != site_id:
@@ -197,7 +195,7 @@ class ModeParentScan(WatoMode):
                 gw_folder.create_hosts([(gw_host_name, new_host_attributes, None)])
                 gwcreat = True
 
-            parents = [ gw_host_name ]
+            parents = [gw_host_name]
 
         else:
             parents = []
@@ -205,7 +203,6 @@ class ModeParentScan(WatoMode):
         if host.effective_attribute("parents") == parents:
             return _("Parents unchanged at %s") %  \
                     (",".join(parents) if parents else _("none")), False, gwcreat
-
 
         if force_explicit or host.folder().effective_attribute("parents") != parents:
             host.update_attributes({"parents": parents})
@@ -221,13 +218,11 @@ class ModeParentScan(WatoMode):
 
         return message, True, gwcreat
 
-
     def page(self):
         if html.var("_start"):
             self._show_progress_dialog()
         else:
             self._show_parameter_form()
-
 
     def _show_progress_dialog(self):
         # Persist settings
@@ -251,9 +246,8 @@ class ModeParentScan(WatoMode):
             fail_stats = [ 1 ],
         )
 
-
     def _show_parameter_form(self):
-        html.begin_form("parentscan", method = "POST")
+        html.begin_form("parentscan", method="POST")
         html.hidden_fields()
 
         # Mode of action
@@ -370,7 +364,6 @@ class ModeParentScan(WatoMode):
         forms.end()
         html.button("_start", _("Start"))
 
-
     # select: 'noexplicit' -> no explicit parents
     #         'no'         -> no implicit parents
     #         'ignore'     -> not important
@@ -381,7 +374,6 @@ class ModeParentScan(WatoMode):
             if host.effective_attribute("parents"):
                 return False
         return True
-
 
     def _recurse_hosts(self, folder, recurse, select):
         entries = []

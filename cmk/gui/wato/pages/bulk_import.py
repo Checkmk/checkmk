@@ -23,7 +23,6 @@
 # License along with GNU Make; see the file  COPYING.  If  not,  write
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
-
 """The bulk import for hosts can be used to import multiple new hosts into a
 single WATO folder. The hosts can either be provided by uploading a CSV file or
 by pasting the contents of a CSV file into a textbox."""
@@ -59,6 +58,7 @@ from cmk.gui.plugins.wato import (
     mode_registry,
 )
 
+
 @mode_registry.register
 class ModeBulkImport(WatoMode):
     _upload_tmp_path = cmk.paths.tmp_dir + "/host-import"
@@ -67,27 +67,22 @@ class ModeBulkImport(WatoMode):
     def name(cls):
         return "bulk_import"
 
-
     @classmethod
     def permissions(cls):
         return ["hosts", "manage_hosts"]
-
 
     def __init__(self):
         super(ModeBulkImport, self).__init__()
         self._csv_reader = None
         self._params = None
 
-
     def title(self):
         return _("Bulk host import")
-
 
     def buttons(self):
         html.context_button(_("Abort"), watolib.folder_preserving_link([("mode", "folder")]), "abort")
         if html.has_var("file_id"):
             html.context_button(_("Back"), watolib.folder_preserving_link([("mode", "bulk_import")]), "back")
-
 
     def action(self):
         if html.transaction_valid():
@@ -99,11 +94,9 @@ class ModeBulkImport(WatoMode):
             if html.var("_do_import"):
                 return self._import()
 
-
     def _file_path(self):
         file_id = html.var("file_id", "%s-%d" % (config.user.id, int(time.time())))
         return self._upload_tmp_path + "/%s.csv" % file_id
-
 
     # Upload the CSV file into a temporary directoy to make it available not only
     # for this request. It needs to be available during several potential "confirm"
@@ -127,7 +120,6 @@ class ModeBulkImport(WatoMode):
         if upload_info["do_service_detection"]:
             html.set_var("do_service_detection", "1")
 
-
     def _cleanup_old_files(self):
         for f in os.listdir(self._upload_tmp_path):
             path = self._upload_tmp_path + "/" + f
@@ -135,13 +127,11 @@ class ModeBulkImport(WatoMode):
             if mtime < time.time() - 3600:
                 os.unlink(path)
 
-
     def _get_custom_csv_dialect(self, delim):
         class CustomCSVDialect(csv.excel):
             delimiter = delim
 
         return CustomCSVDialect()
-
 
     def _read_csv_file(self):
         try:
@@ -169,15 +159,13 @@ class ModeBulkImport(WatoMode):
                 else:
                     raise
 
-
         # Save for preview in self.page()
         self._csv_reader = csv.reader(csv_file, csv_dialect)
-
 
     def _import(self):
         if self._params.get("has_title_line"):
             try:
-                self._csv_reader.next() # skip header
+                self._csv_reader.next()  # skip header
             except StopIteration:
                 pass
 
@@ -187,7 +175,7 @@ class ModeBulkImport(WatoMode):
 
         for row in self._csv_reader:
             if not row:
-                continue # skip empty lines
+                continue  # skip empty lines
 
             host_name, attributes = self._get_host_info_from_row(row)
             try:
@@ -208,20 +196,18 @@ class ModeBulkImport(WatoMode):
                 msg += "<li>%s</li>" % fail_msg
             msg += "</ul>"
 
-
         if num_succeeded > 0 and html.var("do_service_detection") == "1":
             # Create a new selection for performing the bulk discovery
-            weblib.set_rowselection('wato-folder-/' + watolib.Folder.current().path(), selected, 'set')
+            weblib.set_rowselection('wato-folder-/' + watolib.Folder.current().path(), selected,
+                                    'set')
             html.set_var('mode', 'bulkinventory')
             html.set_var('_bulk_inventory', '1')
             html.set_var('show_checkboxes', '1')
             return "bulkinventory"
         return "folder", msg
 
-
     def _delete_csv_file(self):
         os.unlink(self._file_path())
-
 
     def _get_host_info_from_row(self, row):
         host_name = None
@@ -254,13 +240,11 @@ class ModeBulkImport(WatoMode):
 
         return host_name, attributes
 
-
     def page(self):
         if not html.has_var("file_id"):
             self._upload_form()
         else:
             self._preview()
-
 
     def _upload_form(self):
         html.begin_form("upload", method="POST")
@@ -272,7 +256,6 @@ class ModeBulkImport(WatoMode):
         html.hidden_fields()
         html.button("_do_upload", _("Upload"))
         html.end_form()
-
 
     def _vs_upload(self):
         return Dictionary(
@@ -292,19 +275,19 @@ class ModeBulkImport(WatoMode):
             optional_keys = [],
         )
 
-
     def _preview(self):
         html.begin_form("preview", method="POST")
         self._preview_form()
 
         attributes = self._attribute_choices()
 
-        self._read_csv_file() # first line could be missing in situation of import error
+        self._read_csv_file()  # first line could be missing in situation of import error
         if not self._csv_reader:
-            return # don't try to show preview when CSV could not be read
+            return  # don't try to show preview when CSV could not be read
 
         html.h2(_("Preview"))
-        attribute_list = "<ul>%s</ul>" % "".join([ "<li>%s (%s)</li>" % a for a in attributes if a[0] != None ])
+        attribute_list = "<ul>%s</ul>" % "".join(
+            ["<li>%s (%s)</li>" % a for a in attributes if a[0] != None])
         html.help(
             _("This list shows you the first 10 rows from your CSV file in the way the import is "
               "currently parsing it. If the lines are not splitted correctly or the title line is "
@@ -326,16 +309,17 @@ class ModeBulkImport(WatoMode):
             try:
                 headers = list(self._csv_reader.next())
             except StopIteration:
-                headers = [] # nope, there is no header
+                headers = []  # nope, there is no header
         else:
             headers = []
 
         rows = list(self._csv_reader)
 
         # Determine how many columns should be rendered by using the longest column
-        num_columns = max([ len(r) for r in [headers] + rows ])
+        num_columns = max([len(r) for r in [headers] + rows])
 
-        table.begin(sortable=False, searchable=False, omit_headers = not self._params.get("has_title_line"))
+        table.begin(
+            sortable=False, searchable=False, omit_headers=not self._params.get("has_title_line"))
 
         # Render attribute selection fields
         table.row()
@@ -349,7 +333,8 @@ class ModeBulkImport(WatoMode):
                 attribute_method = self._try_detect_default_attribute(attributes, header)
                 html.del_var(attribute_varname)
 
-            html.dropdown("attribute_%d" % col_num, attributes, deflt=attribute_method, autocomplete="off")
+            html.dropdown(
+                "attribute_%d" % col_num, attributes, deflt=attribute_method, autocomplete="off")
 
         # Render sample rows
         for row in rows:
@@ -360,7 +345,6 @@ class ModeBulkImport(WatoMode):
         table.end()
         html.end_form()
 
-
     def _preview_form(self):
         if self._params != None:
             params = self._params
@@ -370,7 +354,6 @@ class ModeBulkImport(WatoMode):
         html.hidden_fields()
         html.button("_do_preview", _("Update preview"))
         html.button("_do_import", _("Import"))
-
 
     def _vs_parse_params(self):
         return Dictionary(
@@ -390,7 +373,6 @@ class ModeBulkImport(WatoMode):
             title = _("File Parsing Settings"),
             default_keys = ["has_title_line"],
         )
-
 
     def _attribute_choices(self):
         attributes = [
@@ -414,7 +396,6 @@ class ModeBulkImport(WatoMode):
             attributes.append((name, _("Custom variable: %s") % name))
 
         return attributes
-
 
     # Try to detect the host attribute to choose for this column based on the header
     # of this column (if there is some).

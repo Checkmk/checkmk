@@ -23,7 +23,6 @@
 # License along with GNU Make; see the file  COPYING.  If  not,  write
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
-
 """Pages for managing backup and restore of WATO"""
 
 import cmk.paths
@@ -47,34 +46,27 @@ class SiteBackupTargets(backup.Targets):
         super(SiteBackupTargets, self).__init__(backup.site_config_path())
 
 
-
 @mode_registry.register
 class ModeBackup(backup.PageBackup, WatoMode):
     @classmethod
     def name(cls):
         return "backup"
 
-
     @classmethod
     def permissions(cls):
         return ["backups"]
 
-
     def title(self):
         return _("Site backup")
-
 
     def jobs(self):
         return watolib.SiteBackupJobs()
 
-
     def keys(self):
         return SiteBackupKeypairStore()
 
-
     def home_button(self):
         home_button()
-
 
 
 @mode_registry.register
@@ -83,28 +75,22 @@ class ModeBackupTargets(backup.PageBackupTargets, WatoMode):
     def name(cls):
         return "backup_targets"
 
-
     @classmethod
     def permissions(cls):
         return ["backups"]
 
-
     def title(self):
         return _("Site backup targets")
-
 
     def targets(self):
         return SiteBackupTargets()
 
-
     def jobs(self):
         return watolib.SiteBackupJobs()
-
 
     def page(self):
         self.targets().show_list()
         backup.SystemBackupTargetsReadOnly().show_list(editable=False, title=_("System global targets"))
-
 
 
 @mode_registry.register
@@ -113,15 +99,12 @@ class ModeEditBackupTarget(backup.PageEditBackupTarget, WatoMode):
     def name(cls):
         return "edit_backup_target"
 
-
     @classmethod
     def permissions(cls):
         return ["backups"]
 
-
     def targets(self):
         return SiteBackupTargets()
-
 
 
 @mode_registry.register
@@ -130,19 +113,15 @@ class ModeEditBackupJob(backup.PageEditBackupJob, WatoMode):
     def name(cls):
         return "edit_backup_job"
 
-
     @classmethod
     def permissions(cls):
         return ["backups"]
 
-
     def jobs(self):
         return watolib.SiteBackupJobs()
 
-
     def targets(self):
         return SiteBackupTargets()
-
 
     def backup_target_choices(self):
         choices = self.targets().choices()
@@ -156,7 +135,6 @@ class ModeEditBackupJob(backup.PageEditBackupJob, WatoMode):
 
         return sorted(choices, key=lambda x_y: x_y[1].title())
 
-
     def _validate_target(self, value, varprefix):
         targets = self.targets()
         try:
@@ -167,10 +145,8 @@ class ModeEditBackupJob(backup.PageEditBackupJob, WatoMode):
 
         targets.validate_target(value, varprefix)
 
-
     def keys(self):
         return SiteBackupKeypairStore()
-
 
 
 @mode_registry.register
@@ -179,15 +155,12 @@ class ModeBackupJobState(backup.PageBackupJobState, WatoMode):
     def name(cls):
         return "backup_job_state"
 
-
     @classmethod
     def permissions(cls):
         return ["backups"]
 
-
     def jobs(self):
         return watolib.SiteBackupJobs()
-
 
 
 class ModeAjaxBackupJobState(WatoWebApiMode):
@@ -200,15 +173,14 @@ class ModeAjaxBackupJobState(WatoWebApiMode):
         page.show_job_details()
 
 
-cmk.gui.pages.register_page_handler("ajax_backup_job_state", lambda: ModeAjaxBackupJobState().page())
+cmk.gui.pages.register_page_handler("ajax_backup_job_state",
+                                    lambda: ModeAjaxBackupJobState().page())
 
 
 class SiteBackupKeypairStore(backup.BackupKeypairStore):
     def __init__(self):
         super(SiteBackupKeypairStore, self).__init__(
-            cmk.paths.default_config_dir + "/backup_keys.mk",
-            "keys")
-
+            cmk.paths.default_config_dir + "/backup_keys.mk", "keys")
 
 
 @mode_registry.register
@@ -217,15 +189,12 @@ class ModeBackupKeyManagement(SiteBackupKeypairStore, backup.PageBackupKeyManage
     def name(cls):
         return "backup_keys"
 
-
     @classmethod
     def permissions(cls):
         return ["backups"]
 
-
     def jobs(self):
         return watolib.SiteBackupJobs()
-
 
 
 @mode_registry.register
@@ -234,11 +203,9 @@ class ModeBackupEditKey(SiteBackupKeypairStore, backup.PageBackupEditKey, WatoMo
     def name(cls):
         return "backup_edit_key"
 
-
     @classmethod
     def permissions(cls):
         return ["backups"]
-
 
 
 @mode_registry.register
@@ -247,17 +214,14 @@ class ModeBackupUploadKey(SiteBackupKeypairStore, backup.PageBackupUploadKey, Wa
     def name(cls):
         return "backup_upload_key"
 
-
     @classmethod
     def permissions(cls):
         return ["backups"]
-
 
     def _upload_key(self, key_file, value):
         watolib.log_audit(None, "upload-backup-key",
                   _("Uploaded backup key '%s'") % value["alias"])
         super(ModeBackupUploadKey, self)._upload_key(key_file, value)
-
 
 
 @mode_registry.register
@@ -266,15 +230,12 @@ class ModeBackupDownloadKey(SiteBackupKeypairStore, backup.PageBackupDownloadKey
     def name(cls):
         return "backup_download_key"
 
-
     @classmethod
     def permissions(cls):
         return ["backups"]
 
-
     def _file_name(self, key_id, key):
         return "Check_MK-%s-%s-backup_key-%s.pem" % (backup.hostname(), config.omd_site(), key_id)
-
 
 
 @mode_registry.register
@@ -283,25 +244,20 @@ class ModeBackupRestore(backup.PageBackupRestore, WatoMode):
     def name(cls):
         return "backup_restore"
 
-
     @classmethod
     def permissions(cls):
         return ["backups"]
-
 
     def title(self):
         if not self._target:
             return _("Site restore")
         return _("Restore from target: %s") % self._target.title()
 
-
     def targets(self):
         return SiteBackupTargets()
 
-
     def keys(self):
         return SiteBackupKeypairStore()
-
 
     def _get_target(self, target_ident):
         try:
@@ -309,12 +265,10 @@ class ModeBackupRestore(backup.PageBackupRestore, WatoMode):
         except KeyError:
             return backup.SystemBackupTargetsReadOnly().get(target_ident)
 
-
     def _show_target_list(self):
         super(ModeBackupRestore, self)._show_target_list()
         backup.SystemBackupTargetsReadOnly().show_list(
                                 editable=False, title=_("System global targets"))
-
 
     def _show_backup_list(self):
         self._target.show_backup_list("Check_MK")

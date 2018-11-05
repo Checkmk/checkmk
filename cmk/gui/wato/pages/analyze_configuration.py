@@ -23,7 +23,6 @@
 # License along with GNU Make; see the file  COPYING.  If  not,  write
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
-
 """
 Provides the user with hints about his setup. Performs different
 checks and tells the user what could be improved.
@@ -52,6 +51,7 @@ from cmk.gui.plugins.wato import (
     mode_registry,
 )
 
+
 @mode_registry.register
 class ModeAnalyzeConfig(WatoMode):
     _ack_path = cmk.paths.var_dir + "/acknowledged_bp_tests.mk"
@@ -60,46 +60,40 @@ class ModeAnalyzeConfig(WatoMode):
     def name(cls):
         return "analyze_config"
 
-
     @classmethod
     def permissions(cls):
         return []
-
 
     def __init__(self):
         super(ModeAnalyzeConfig, self).__init__()
         self._logger = logger.getChild("analyze-config")
         self._acks = self._load_acknowledgements()
 
-
     def _from_vars(self):
-        self._show_ok     = html.has_var("show_ok")
+        self._show_ok = html.has_var("show_ok")
         self._show_failed = not html.has_var("hide_failed")
-        self._show_ack    = html.has_var("show_ack")
-
+        self._show_ack = html.has_var("show_ack")
 
     def title(self):
-       return _("Analyze configuration")
-
+        return _("Analyze configuration")
 
     def action(self):
         if not html.check_transaction():
             return
 
-        test_id   = html.var("_test_id")
-        site_id   = html.var("_site_id")
+        test_id = html.var("_test_id")
+        site_id = html.var("_site_id")
         status_id = html.get_integer_input("_status_id", 0)
 
         if not test_id:
             raise MKUserError("_ack_test_id", _("Needed variable missing"))
 
-        if html.var("_do") in [ "ack", "unack" ]:
+        if html.var("_do") in ["ack", "unack"]:
             if not site_id:
                 raise MKUserError("_ack_site_id", _("Needed variable missing"))
 
             if site_id not in watolib.ActivateChanges().activation_site_ids():
                 raise MKUserError("_ack_site_id", _("Invalid site given"))
-
 
         if html.var("_do") == "ack":
             self._acknowledge_test(test_id, site_id, status_id)
@@ -116,7 +110,6 @@ class ModeAnalyzeConfig(WatoMode):
         else:
             raise NotImplementedError()
 
-
     def page(self):
         if not self._analyze_site_ids():
             html.show_info(_("Analyze configuration can only be used with the local site and "
@@ -127,16 +120,19 @@ class ModeAnalyzeConfig(WatoMode):
 
         site_ids = sorted(self._analyze_site_ids())
 
-        for category_name, results_by_test in sorted(results_by_category.items(),
-                                             key=lambda x: watolib.ACTestCategories.title(x[0])):
-            table.begin(title=watolib.ACTestCategories.title(category_name), css="data analyze_config",
-                        sortable=False, searchable=False)
+        for category_name, results_by_test in sorted(
+                results_by_category.items(), key=lambda x: watolib.ACTestCategories.title(x[0])):
+            table.begin(
+                title=watolib.ACTestCategories.title(category_name),
+                css="data analyze_config",
+                sortable=False,
+                searchable=False)
 
-            for test_id, test_results_by_site in sorted(results_by_test.items(), key=lambda x: x[1]["test"]["title"]):
+            for test_id, test_results_by_site in sorted(
+                    results_by_test.items(), key=lambda x: x[1]["test"]["title"]):
                 self._show_test_row(test_id, test_results_by_site, site_ids)
 
             table.end()
-
 
     def _show_test_row(self, test_id, test_results_by_site, site_ids):
         table.row()
@@ -146,8 +142,8 @@ class ModeAnalyzeConfig(WatoMode):
                          "toggle_details",
                          onclick="toggle_container('test_result_details_%s')" % test_id)
 
-        worst_result = sorted(test_results_by_site["site_results"].values(),
-                              key=lambda result: result.status)[0]
+        worst_result = sorted(
+            test_results_by_site["site_results"].values(), key=lambda result: result.status)[0]
 
         # Disabling of test in total
         is_test_disabled = self._is_test_disabled(test_id)
@@ -223,11 +219,9 @@ class ModeAnalyzeConfig(WatoMode):
             else:
                 html.write("")
 
-
         # Add toggleable notitication context
-        table.row(class_="ac_test_details hidden",
-                  id_="test_result_details_%s" % test_id)
-        table.cell(colspan = 2 + 2 * len(site_ids))
+        table.row(class_="ac_test_details hidden", id_="test_result_details_%s" % test_id)
+        table.cell(colspan=2 + 2 * len(site_ids))
 
         html.write_text(test_results_by_site["test"]["help"])
 
@@ -247,7 +241,6 @@ class ModeAnalyzeConfig(WatoMode):
         # This dummy row is needed for not destroying the odd/even row highlighting
         table.row(class_="hidden")
 
-
     def _perform_tests(self):
         test_site_ids = self._analyze_site_ids()
 
@@ -259,13 +252,13 @@ class ModeAnalyzeConfig(WatoMode):
 
         processes = []
         for site_id in test_site_ids:
-            process = multiprocessing.Process(target=self._perform_tests_for_site,
-                                              args=(site_id, result_queue))
+            process = multiprocessing.Process(
+                target=self._perform_tests_for_site, args=(site_id, result_queue))
             process.start()
             processes.append((site_id, process))
 
         # Now collect the results from the queue until all processes are finished
-        while any([ p.is_alive() for site_id, p in processes ]):
+        while any([p.is_alive() for site_id, p in processes]):
             try:
                 site_id, results_data = result_queue.get_nowait()
                 result_queue.task_done()
@@ -286,7 +279,7 @@ class ModeAnalyzeConfig(WatoMode):
                     raise NotImplementedError()
 
             except Queue.Empty:
-                time.sleep(0.5) # wait some time to prevent CPU hogs
+                time.sleep(0.5)  # wait some time to prevent CPU hogs
 
             except Exception, e:
                 logger.exception()
@@ -302,8 +295,8 @@ class ModeAnalyzeConfig(WatoMode):
                 test_results_by_site = category_results.setdefault(result.test_id, {
                     "site_results": {},
                     "test": {
-                        "title" : result.title,
-                        "help"  : result.help,
+                        "title": result.title,
+                        "help": result.help,
                     }
                 })
 
@@ -311,10 +304,8 @@ class ModeAnalyzeConfig(WatoMode):
 
         return results_by_category
 
-
     def _analyze_site_ids(self):
         return watolib.ActivateChanges().activation_site_ids()
-
 
     # Executes the tests on the site. This method is executed in a dedicated
     # subprocess (One per site)
@@ -346,16 +337,15 @@ class ModeAnalyzeConfig(WatoMode):
             self._logger.debug("[%s] Finished" % site_id)
 
             result = {
-                "state"    : 0,
-                "response" : results_data,
+                "state": 0,
+                "response": results_data,
             }
 
         except Exception:
             self._logger.exception("[%s] Failed" % site_id)
             result = {
-                "state"    : 1,
-                "response" : "Traceback:<br>%s" %
-                        (traceback.format_exc().replace("\n", "<br>\n")),
+                "state": 1,
+                "response": "Traceback:<br>%s" % (traceback.format_exc().replace("\n", "<br>\n")),
             }
         finally:
             result_queue.put((site_id, repr(result)))
@@ -363,14 +353,11 @@ class ModeAnalyzeConfig(WatoMode):
             result_queue.join_thread()
             result_queue.join()
 
-
     def _is_acknowledged(self, result):
         return (result.test_id, result.site_id, result.status) in self._acks
 
-
     def _is_test_disabled(self, test_id):
         return self._acks.get(test_id, True) == False
-
 
     def _unacknowledge_test(self, test_id, site_id, status_id):
         self._acks = self._load_acknowledgements(lock=True)
@@ -380,29 +367,24 @@ class ModeAnalyzeConfig(WatoMode):
         except KeyError:
             pass
 
-
     def _acknowledge_test(self, test_id, site_id, status_id):
         self._acks = self._load_acknowledgements(lock=True)
         self._acks[(test_id, site_id, status_id)] = {
-            "user_id" : config.user.id,
-            "time"    : time.time(),
+            "user_id": config.user.id,
+            "time": time.time(),
         }
         self._save_acknowledgements(self._acks)
-
 
     def _enable_test(self, test_id, enabling=True):
         self._acks = self._load_acknowledgements(lock=True)
         self._acks[(test_id)] = enabling
         self._save_acknowledgements(self._acks)
 
-
     def _disable_test(self, test_id):
         self._enable_test(test_id, False)
 
-
     def _save_acknowledgements(self, acknowledged_werks):
         store.save_data_to_file(self._ack_path, acknowledged_werks)
-
 
     def _load_acknowledgements(self, lock=False):
         return store.load_data_from_file(self._ack_path, {}, lock=lock)

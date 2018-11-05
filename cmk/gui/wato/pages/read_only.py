@@ -23,7 +23,6 @@
 # License along with GNU Make; see the file  COPYING.  If  not,  write
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
-
 """WATO can be set into read only mode manually using this mode"""
 
 import time
@@ -58,25 +57,20 @@ class ModeManageReadOnly(WatoMode):
     def name(cls):
         return "read_only"
 
-
     @classmethod
     def permissions(cls):
         return ["set_read_only"]
-
 
     def __init__(self):
         super(ModeManageReadOnly, self).__init__()
         self._settings = config.wato_read_only
 
-
     def title(self):
         return _("Manage configuration read only mode")
-
 
     def buttons(self):
         global_buttons()
         html.context_button(_("Back"), watolib.folder_preserving_link([("mode", "globalvars")]), "back")
-
 
     def action(self):
         settings = self._vs().from_html_vars("_read_only")
@@ -85,11 +79,12 @@ class ModeManageReadOnly(WatoMode):
 
         self._save()
 
-
     def _save(self):
-        store.save_to_mk_file(watolib.multisite_dir + "read_only.mk",
-                          "wato_read_only", self._settings, pprint_value = config.wato_pprint_config)
-
+        store.save_to_mk_file(
+            watolib.multisite_dir + "read_only.mk",
+            "wato_read_only",
+            self._settings,
+            pprint_value=config.wato_pprint_config)
 
     def page(self):
         html.p(
@@ -101,7 +96,6 @@ class ModeManageReadOnly(WatoMode):
         html.button('_save', _('Save'), 'submit')
         html.hidden_fields()
         html.end_form()
-
 
     def _vs(self):
         return Dictionary(

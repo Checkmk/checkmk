@@ -23,7 +23,6 @@
 # License along with GNU Make; see the file  COPYING.  If  not,  write
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
-
 """Mange custom attributes of users and hosts"""
 
 import abc
@@ -55,26 +54,28 @@ def update_host_custom_attrs():
 
 def load_custom_attrs_from_mk_file(lock):
     filename = os.path.join(watolib.multisite_dir, "custom_attrs.mk")
-    vars_ = store.load_mk_file(filename, {
-        'wato_user_attrs': [],
-        'wato_host_attrs': [],
-    }, lock=lock)
+    vars_ = store.load_mk_file(
+        filename, {
+            'wato_user_attrs': [],
+            'wato_host_attrs': [],
+        }, lock=lock)
 
     attrs = {}
-    for what in [ "user", "host" ]:
+    for what in ["user", "host"]:
         attrs[what] = vars_.get("wato_%s_attrs" % what, [])
     return attrs
 
 
 def save_custom_attrs_to_mk_file(attrs):
     output = watolib.wato_fileheader()
-    for what in [ "user", "host" ]:
+    for what in ["user", "host"]:
         if what in attrs and len(attrs[what]) > 0:
             output += "if type(wato_%s_attrs) != list:\n    wato_%s_attrs = []\n" % (what, what)
             output += "wato_%s_attrs += %s\n\n" % (what, pprint.pformat(attrs[what]))
 
     store.mkdir(watolib.multisite_dir)
     store.save_file(watolib.multisite_dir + "custom_attrs.mk", output)
+
 
 def custom_attr_types():
     return [
@@ -90,7 +91,7 @@ class ModeEditCustomAttr(WatoMode):
         return self._all_attrs[self._type]
 
     def _from_vars(self):
-        self._name = html.var("edit") # missing -> new custom attr
+        self._name = html.var("edit")  # missing -> new custom attr
         self._new = self._name == None
 
         # TODO: Inappropriate Intimacy: custom host attributes should not now about
@@ -99,7 +100,7 @@ class ModeEditCustomAttr(WatoMode):
         self._all_attrs = load_custom_attrs_from_mk_file(lock=html.is_transaction())
 
         if not self._new:
-            self._attr = [ a for a in self._attrs if a['name'] == self._name ]
+            self._attr = [a for a in self._attrs if a['name'] == self._name]
             if not self._attr:
                 raise MKUserError(None, _('The attribute does not exist.'))
             else:
@@ -167,16 +168,16 @@ class ModeEditCustomAttr(WatoMode):
                 raise MKUserError("name", _("Sorry, spaces are not allowed in attribute names."))
             if not re.match("^[-a-z0-9A-Z_]*$", self._name):
                 raise MKUserError("name", _("Invalid attribute name. Only the characters a-z, A-Z, 0-9, _ and - are allowed."))
-            if [ a for a in self._attrs if a['name'] == self._name ]:
+            if [a for a in self._attrs if a['name'] == self._name]:
                 raise MKUserError("name", _("Sorry, there is already an attribute with that name."))
 
             ty = html.var('type', '').strip()
-            if ty not in [ t[0] for t in custom_attr_types() ]:
+            if ty not in [t[0] for t in custom_attr_types()]:
                 raise MKUserError('type', _('The choosen attribute type is invalid.'))
 
             self._attr = {
-                'name' : self._name,
-                'type' : ty,
+                'name': self._name,
+                'type': ty,
             }
             self._attrs.append(self._attr)
 
@@ -184,11 +185,11 @@ class ModeEditCustomAttr(WatoMode):
         else:
             add_change("edit-%sattr" % self._type, _("Modified %s attribute %s") % (self._type, self._name))
         self._attr.update({
-            'title'            : title,
-            'topic'            : topic,
-            'help'             : help_txt,
-            'show_in_table'    : show_in_table,
-            'add_custom_macro' : add_custom_macro,
+            'title': title,
+            'topic': topic,
+            'help': help_txt,
+            'show_in_table': show_in_table,
+            'add_custom_macro': add_custom_macro,
         })
 
         self._add_extra_attrs_from_html_vars()
@@ -241,8 +242,8 @@ class ModeEditCustomAttr(WatoMode):
 
         forms.section(_('Add as custom macro'))
         html.help(self._macro_help)
-        html.checkbox('add_custom_macro', self._attr.get('add_custom_macro', False),
-                      label=self._macro_label)
+        html.checkbox(
+            'add_custom_macro', self._attr.get('add_custom_macro', False), label=self._macro_label)
 
         forms.end()
         html.show_localization_hint()
@@ -251,23 +252,19 @@ class ModeEditCustomAttr(WatoMode):
         html.end_form()
 
 
-
 @mode_registry.register
 class ModeEditCustomUserAttr(ModeEditCustomAttr):
     @classmethod
     def name(cls):
         return "edit_user_attr"
 
-
     @classmethod
     def permissions(cls):
         return ["users", "custom_attributes"]
 
-
     @property
     def _type(self):
         return 'user'
-
 
     @property
     def _topics(self):
@@ -318,11 +315,9 @@ class ModeEditCustomHostAttr(ModeEditCustomAttr):
     def name(cls):
         return "edit_host_attr"
 
-
     @classmethod
     def permissions(cls):
         return ["hosts", "manage_hosts", "custom_attributes"]
-
 
     @property
     def _type(self):
@@ -331,7 +326,8 @@ class ModeEditCustomHostAttr(ModeEditCustomAttr):
     @property
     def _topics(self):
         default = self._default_topic
-        topics = list(set((a[1], a[1]) for a in watolib.all_host_attributes() if a[1] not in (None, default)))
+        topics = list(
+            set((a[1], a[1]) for a in watolib.all_host_attributes() if a[1] not in (None, default)))
         topics.insert(0, (default, default))
         return topics
 
@@ -437,7 +433,6 @@ class ModeCustomUserAttrs(ModeCustomAttrs):
     def name(cls):
         return "user_attrs"
 
-
     @classmethod
     def permissions(cls):
         return ["users", "custom_attributes"]
@@ -463,11 +458,9 @@ class ModeCustomHostAttrs(ModeCustomAttrs):
     def name(cls):
         return "host_attrs"
 
-
     @classmethod
     def permissions(cls):
         return ["hosts", "manage_hosts", "custom_attributes"]
-
 
     @property
     def _type(self):

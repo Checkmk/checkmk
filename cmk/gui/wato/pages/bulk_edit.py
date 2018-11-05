@@ -23,7 +23,6 @@
 # License along with GNU Make; see the file  COPYING.  If  not,  write
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
-
 """Change the attributes of a number of selected hosts at once. Also the
 cleanup is implemented here: the bulk removal of explicit attribute
 values."""
@@ -47,19 +46,15 @@ class ModeBulkEdit(WatoMode):
     def name(cls):
         return "bulkedit"
 
-
     @classmethod
     def permissions(cls):
         return ["hosts", "edit_hosts"]
 
-
     def title(self):
         return _("Bulk edit hosts")
 
-
     def buttons(self):
         html.context_button(_("Folder"), watolib.folder_preserving_link([("mode", "folder")]), "back")
-
 
     def action(self):
         if not html.check_transaction():
@@ -78,10 +73,10 @@ class ModeBulkEdit(WatoMode):
 
         return "folder", _("Edited %d hosts") % len(host_names)
 
-
     def page(self):
         host_names = watolib.get_hostnames_from_checkboxes()
-        hosts = dict([(host_name, watolib.Folder.current().host(host_name)) for host_name in host_names])
+        hosts = dict(
+            [(host_name, watolib.Folder.current().host(host_name)) for host_name in host_names])
         current_host_hash = sha256(repr(hosts))
 
         # When bulk edit has been made with some hosts, then other hosts have been selected
@@ -102,10 +97,10 @@ class ModeBulkEdit(WatoMode):
             _("In case you want to <i>unset</i> attributes on multiple hosts, you need to "
               "use the <i>bulk cleanup</i> action instead of bulk edit.")))
 
-        html.begin_form("edit_host", method = "POST")
+        html.begin_form("edit_host", method="POST")
         html.prevent_password_auto_completion()
         html.hidden_field("host_hash", current_host_hash)
-        configure_attributes(False, hosts, "bulk", parent = watolib.Folder.current())
+        configure_attributes(False, hosts, "bulk", parent=watolib.Folder.current())
         forms.end()
         html.button("_save", _("Save & Finish"))
         html.hidden_fields()
@@ -118,23 +113,18 @@ class ModeBulkCleanup(WatoMode):
     def name(cls):
         return "bulkcleanup"
 
-
     @classmethod
     def permissions(cls):
         return ["hosts", "edit_hosts"]
 
-
     def _from_vars(self):
         self._folder = watolib.Folder.current()
-
 
     def title(self):
         return _("Bulk removal of explicit attributes")
 
-
     def buttons(self):
         html.context_button(_("Back"), self._folder.url(), "back")
-
 
     def action(self):
         if not html.check_transaction():
@@ -156,7 +146,6 @@ class ModeBulkCleanup(WatoMode):
 
         return "folder"
 
-
     def _bulk_collect_cleaned_attributes(self):
         to_clean = []
         for attr, _topic in watolib.all_host_attributes():
@@ -164,7 +153,6 @@ class ModeBulkCleanup(WatoMode):
             if html.get_checkbox("_clean_" + attrname) == True:
                 to_clean.append(attrname)
         return to_clean
-
 
     def page(self):
         hosts = watolib.get_hosts_from_checkboxes()
@@ -174,7 +162,7 @@ class ModeBulkCleanup(WatoMode):
                  "configured at the host list or folders or simply fall back to the builtin "
                  "default values.") % len(hosts))
 
-        html.begin_form("bulkcleanup", method = "POST")
+        html.begin_form("bulkcleanup", method="POST")
         forms.header(_("Attributes to remove from hosts"))
         if not self._select_attributes_for_bulk_cleanup(hosts):
             forms.end()
@@ -184,7 +172,6 @@ class ModeBulkCleanup(WatoMode):
             html.button("_save", _("Save & Finish"))
         html.hidden_fields()
         html.end_form()
-
 
     def _select_attributes_for_bulk_cleanup(self, hosts):
         num_shown = 0

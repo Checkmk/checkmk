@@ -49,21 +49,19 @@ from cmk.gui.plugins.wato import (
     make_action_link,
 )
 
+
 @mode_registry.register
 class ModeIcons(WatoMode):
     @classmethod
     def name(cls):
         return "icons"
 
-
     @classmethod
     def permissions(cls):
         return ["icons"]
 
-
     def title(self):
         return _('Manage Icons')
-
 
     def buttons(self):
         back_url = html.get_url_input("back", "")
@@ -72,11 +70,9 @@ class ModeIcons(WatoMode):
         else:
             global_buttons()
 
-
     def _load_custom_icons(self):
         s = IconSelector()
         return s.available_icons(only_local=True)
-
 
     def _vs_upload(self):
         return Dictionary(
@@ -98,14 +94,12 @@ class ModeIcons(WatoMode):
             ]
         )
 
-
     def _validate_icon(self, value, varprefix):
         file_name = value[0]
         if os.path.exists("%s/share/check_mk/web/htdocs/images/icon_%s" % (cmk.paths.omd_root, file_name)) \
            or os.path.exists("%s/share/check_mk/web/htdocs/images/icons/%s" % (cmk.paths.omd_root, file_name)):
             raise MKUserError(varprefix, _('Your icon conflicts with a Check_MK builtin icon. Please '
                                            'choose another name for your icon.'))
-
 
     def action(self):
         if html.has_var("_delete"):
@@ -115,7 +109,7 @@ class ModeIcons(WatoMode):
                                  _("Do you really want to delete the icon <b>%s</b>?") % icon_name)
                 if c:
                     os.remove("%s/local/share/check_mk/web/htdocs/images/icons/%s.png" %
-                                                        (cmk.paths.omd_root, icon_name))
+                              (cmk.paths.omd_root, icon_name))
                 elif c == False:
                     return ""
                 else:
@@ -127,7 +121,6 @@ class ModeIcons(WatoMode):
             vs_upload.validate_value(icon_info, '_upload_icon')
             self._upload_icon(icon_info)
 
-
     def _upload_icon(self, icon_info):
         # Add the icon category to the PNG comment
         from PIL import Image, PngImagePlugin
@@ -135,7 +128,7 @@ class ModeIcons(WatoMode):
         im = Image.open(StringIO(icon_info['icon'][2]))
         im.info['Comment'] = icon_info['category']
         meta = PngImagePlugin.PngInfo()
-        for k,v in im.info.iteritems():
+        for k, v in im.info.iteritems():
             if isinstance(v, (str, unicode)):
                 meta.add_text(k, v, 0)
 
@@ -144,11 +137,10 @@ class ModeIcons(WatoMode):
         cmk.store.makedirs(dest_dir)
         try:
             file_name = os.path.basename(icon_info['icon'][0])
-            im.save(dest_dir+'/'+file_name, 'PNG', pnginfo=meta)
+            im.save(dest_dir + '/' + file_name, 'PNG', pnginfo=meta)
         except IOError, e:
             # Might happen with interlaced PNG files and PIL version < 1.1.7
             raise MKUserError(None, _('Unable to upload icon: %s') % e)
-
 
     def page(self):
         html.h3(_("Upload Icon"))

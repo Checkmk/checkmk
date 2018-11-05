@@ -23,7 +23,6 @@
 # License along with GNU Make; see the file  COPYING.  If  not,  write
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
-
 """Bulk inventory and other longer procedures are separated in single
 steps and run by an JavaScript scheduler showing a progress bar and
 buttons for aborting and pausing."""
@@ -37,8 +36,14 @@ from cmk.gui.i18n import _
 
 # success_stats: Fields from the stats list to use for checking if something has been found
 # fail_stats:    Fields from the stats list to used to count failed elements
-def interactive_progress(items, title, stats, finishvars, timewait,
-                         success_stats=None, termvars=None, fail_stats=None):
+def interactive_progress(items,
+                         title,
+                         stats,
+                         finishvars,
+                         timewait,
+                         success_stats=None,
+                         termvars=None,
+                         fail_stats=None):
     if success_stats is None:
         success_stats = []
 
@@ -104,7 +109,7 @@ def interactive_progress(items, title, stats, finishvars, timewait,
     # Remove all sel_* variables. We do not need them for our ajax-calls.
     # They are just needed for the Abort/Finish links. Those must be converted
     # to POST.
-    base_url = html.makeuri([], remove_prefix = "sel")
+    base_url = html.makeuri([], remove_prefix="sel")
     finish_url = watolib.folder_preserving_link([("mode", "folder")] + finishvars)
     term_url = watolib.folder_preserving_link([("mode", "folder")] + termvars)
 

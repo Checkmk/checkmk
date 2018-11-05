@@ -23,7 +23,6 @@
 # License along with GNU Make; see the file  COPYING.  If  not,  write
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
-
 """This module allows the creation of large numbers of random hosts
 for test and development."""
 
@@ -39,25 +38,22 @@ from cmk.gui.plugins.wato import (
     mode_registry,
 )
 
+
 @mode_registry.register
 class ModeRandomHosts(WatoMode):
     @classmethod
     def name(cls):
         return "random_hosts"
 
-
     @classmethod
     def permissions(cls):
         return ["hosts", "random_hosts"]
 
-
     def title(self):
         return _("Random Hosts")
 
-
     def buttons(self):
         html.context_button(_("Folder"), watolib.Folder.current().url(), "back")
-
 
     def action(self):
         if not html.check_transaction():
@@ -68,7 +64,6 @@ class ModeRandomHosts(WatoMode):
         levels = int(html.var("levels"))
         created = self._create_random_hosts(watolib.Folder.current(), count, folders, levels)
         return "folder", _("Created %d random hosts.") % created
-
 
     def page(self):
         html.begin_form("random")
@@ -89,13 +84,12 @@ class ModeRandomHosts(WatoMode):
         html.hidden_fields()
         html.end_form()
 
-
     def _create_random_hosts(self, folder, count, folders, levels):
         if levels == 0:
             hosts_to_create = []
             while len(hosts_to_create) < count:
                 host_name = "random_%010d" % int(random.random() * 10000000000)
-                hosts_to_create.append((host_name, {"ipaddress" : "127.0.0.1"}, None))
+                hosts_to_create.append((host_name, {"ipaddress": "127.0.0.1"}, None))
             folder.create_hosts(hosts_to_create)
             return count
 

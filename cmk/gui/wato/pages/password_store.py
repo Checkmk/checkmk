@@ -53,31 +53,27 @@ from cmk.gui.plugins.wato import (
     make_action_link,
 )
 
+
 @mode_registry.register
 class ModePasswords(WatoMode, watolib.PasswordStore):
     @classmethod
     def name(cls):
         return "passwords"
 
-
     @classmethod
     def permissions(cls):
         return ["passwords"]
-
 
     def __init__(self):
         super(ModePasswords, self).__init__()
         self._contact_groups = userdb.load_group_information().get("contact", {})
 
-
     def title(self):
         return _("Passwords")
-
 
     def buttons(self):
         global_buttons()
         html.context_button(_("New password"), html.makeuri_contextless([("mode", "edit_password")]), "new")
-
 
     def action(self):
         if not html.transaction_valid():
@@ -91,7 +87,7 @@ class ModePasswords(WatoMode, watolib.PasswordStore):
             return False
 
         elif confirm:
-            html.check_transaction() # invalidate transid
+            html.check_transaction()  # invalidate transid
 
             passwords = self._load_for_modification()
 
@@ -105,7 +101,6 @@ class ModePasswords(WatoMode, watolib.PasswordStore):
 
             return None, _("The password has been deleted.")
 
-
     def page(self):
         html.p(_("This password management module stores the passwords you use in your checks and "
                  "special agents in a central place. Please note that this password store is no "
@@ -114,7 +109,6 @@ class ModePasswords(WatoMode, watolib.PasswordStore):
                  "including this password store, are needed in plain text to contact remote systems "
                  "for monitoring. So all those passwords have to be stored readable by the monitoring."))
 
-
         passwords = self._owned_passwords()
         table.begin("passwords", _("Passwords"))
         for ident, password in sorted(passwords.items(), key=lambda e: e[1]["title"]):
@@ -122,7 +116,6 @@ class ModePasswords(WatoMode, watolib.PasswordStore):
             self._password_row(ident, password)
 
         table.end()
-
 
     def _password_row(self, ident, password):
         table.cell(_("Actions"), css="buttons")
@@ -142,12 +135,11 @@ class ModePasswords(WatoMode, watolib.PasswordStore):
         if not password["shared_with"]:
             html.write_text(_("Not shared"))
         else:
-            html.write_text(", ".join([ self._contact_group_alias(g) for g in password["shared_with"]]))
-
+            html.write_text(", ".join(
+                [self._contact_group_alias(g) for g in password["shared_with"]]))
 
     def _contact_group_alias(self, name):
         return self._contact_groups.get(name, {"alias": name})["alias"]
-
 
 
 @mode_registry.register
@@ -156,11 +148,9 @@ class ModeEditPassword(WatoMode, watolib.PasswordStore):
     def name(cls):
         return "edit_password"
 
-
     @classmethod
     def permissions(cls):
         return ["passwords"]
-
 
     def __init__(self):
         super(ModeEditPassword, self).__init__()
@@ -172,24 +162,21 @@ class ModeEditPassword(WatoMode, watolib.PasswordStore):
             except KeyError:
                 raise MKUserError("ident", _("This password does not exist."))
 
-            self._new   = False
+            self._new = False
             self._ident = ident
-            self._cfg   = password
+            self._cfg = password
             self._title = _("Edit password: %s") % password["title"]
         else:
-            self._new   = True
+            self._new = True
             self._ident = None
-            self._cfg   = {}
+            self._cfg = {}
             self._title = _("New password")
-
 
     def title(self):
         return self._title
 
-
     def buttons(self):
         html.context_button(_("Back"), html.makeuri_contextless([("mode", "passwords")]), "back")
-
 
     def valuespec(self):
         return Dictionary(
@@ -197,7 +184,6 @@ class ModeEditPassword(WatoMode, watolib.PasswordStore):
             elements      = self._vs_elements(),
             optional_keys = ["contact_groups"],
             render        = "form", )
-
 
     def _vs_elements(self):
         if self._new:
@@ -267,7 +253,6 @@ class ModeEditPassword(WatoMode, watolib.PasswordStore):
             )),
         ]
 
-
     def __contact_group_choices(self, only_own=False):
         contact_groups = userdb.load_group_information().get("contact", {})
 
@@ -276,10 +261,10 @@ class ModeEditPassword(WatoMode, watolib.PasswordStore):
         else:
             user_groups = []
 
-        entries = [ (c, g['alias']) for c, g in contact_groups.items()
-                    if not only_own or c in user_groups ]
+        entries = [
+            (c, g['alias']) for c, g in contact_groups.items() if not only_own or c in user_groups
+        ]
         return sorted(entries)
-
 
     def action(self):
         if html.transaction_valid():
@@ -307,7 +292,6 @@ class ModeEditPassword(WatoMode, watolib.PasswordStore):
             self._save(passwords)
 
         return "passwords"
-
 
     def page(self):
         html.begin_form("edit", method="POST")

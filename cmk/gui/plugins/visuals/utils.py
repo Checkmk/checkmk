@@ -23,7 +23,6 @@
 # License along with GNU Make; see the file  COPYING.  If  not,  write
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
-
 """Module to hold shared code for main module internals and the plugins"""
 
 # TODO: More feature related splitting up would be better
@@ -37,19 +36,22 @@ from cmk.gui.i18n import _
 from cmk.gui.globals import html
 
 # TODO: Refactor to standard registry API
-multisite_filters  = {}
+multisite_filters = {}
 # TODO: Refactor to standard registry API
 _infos = {}
 # TODO: Refactor to standard registry API
 visual_types = {}
 
+
 def declare_info(infoname, info):
     _infos[infoname] = info
 
-def declare_filter(sort_index, f, comment = None):
+
+def declare_filter(sort_index, f, comment=None):
     multisite_filters[f.name] = f
     f.comment = comment
     f.sort_index = sort_index
+
 
 # Base class for all filters
 # name:          The unique id of that filter. This id is e.g. used in the
@@ -112,7 +114,7 @@ class Filter(object):
         return rows
 
     def variable_settings(self, row):
-        return [] # return pairs of htmlvar and name according to dataset in row
+        return []  # return pairs of htmlvar and name according to dataset in row
 
     def infoprefix(self, infoname):
         if self.info == infoname:
@@ -138,7 +140,6 @@ class Filter(object):
             html.set_var(varname, value.get(varname))
 
 
-
 # TODO: We should merge this with Filter() and make all vars unicode ...
 class FilterUnicodeFilter(Filter):
     def value(self):
@@ -149,17 +150,17 @@ class FilterUnicodeFilter(Filter):
 
 
 class FilterTristate(Filter):
-    def __init__(self, name, title, info, column, deflt = -1):
+    def __init__(self, name, title, info, column, deflt=-1):
         self.column = column
         self.varname = "is_" + name
-        super(FilterTristate, self).__init__(name, title, info, [ self.varname ], [])
+        super(FilterTristate, self).__init__(name, title, info, [self.varname], [])
         self.deflt = deflt
 
     def display(self):
         current = html.var(self.varname)
         html.begin_radio_group(horizontal=True)
         for value, text in [("1", _("yes")), ("0", _("no")), ("-1", _("(ignore)"))]:
-            checked = current == value or (current in [ None, ""] and int(value) == self.deflt)
+            checked = current == value or (current in [None, ""] and int(value) == self.deflt)
             html.radiobutton(self.varname, value, checked, text + " &nbsp; ")
         html.end_radio_group()
 
@@ -168,7 +169,7 @@ class FilterTristate(Filter):
 
     def filter(self, infoname):
         current = self.tristate_value()
-        if current == -1: # ignore
+        if current == -1:  # ignore
             return ""
         elif current == 1:
             return self.filter_code(infoname, True)
@@ -180,6 +181,7 @@ class FilterTristate(Filter):
 
 class FilterTime(Filter):
     """Filter for setting time ranges, e.g. on last_state_change and last_check"""
+
     def __init__(self, info, name, title, column):
         self.column = column
         self.name = name
@@ -189,11 +191,9 @@ class FilterTime(Filter):
            (60,     _("min")),
            (1,      _("sec")),
         ]
-        varnames = [ name + "_from", name + "_from_range",
-                     name + "_until", name + "_until_range" ]
+        varnames = [name + "_from", name + "_from_range", name + "_until", name + "_until_range"]
 
         super(FilterTime, self).__init__(name, title, info, varnames, [column])
-
 
     def double_height(self):
         return True
@@ -221,7 +221,6 @@ class FilterTime(Filter):
             html.close_tr()
         html.close_table()
 
-
     def filter(self, infoname):
         fromsecs, untilsecs = self.get_time_range()
         filtertext = ""
@@ -231,12 +230,10 @@ class FilterTime(Filter):
             filtertext += "Filter: %s <= %d\n" % (self.column, untilsecs)
         return filtertext
 
-
     # Extract timerange user has selected from HTML variables
     def get_time_range(self):
         return self._get_time_range_of("from"), \
                self._get_time_range_of("until")
-
 
     def _get_time_range_of(self, what):
         varprefix = self.name + "_" + what
@@ -266,16 +263,14 @@ class FilterSite(Filter):
         super(FilterSite, self).__init__(name, _("Site") + (enforce and _( " (enforced)") or ""), 'host', ["site"], [])
         self.enforce = enforce
 
-
     def display(self):
         html.dropdown("site", self._choices())
-
 
     def _choices(self):
         if self.enforce:
             choices = []
         else:
-            choices = [("","")]
+            choices = [("", "")]
 
         for sitename, state in sites.states().items():
             if state["state"] == "online":
@@ -283,13 +278,11 @@ class FilterSite(Filter):
 
         return sorted(choices, key=lambda a: a[1].lower())
 
-
     def heading_info(self):
         current_value = html.var("site")
         if current_value:
             alias = config.site(current_value)["alias"]
             return alias
-
 
     def variable_settings(self, row):
         return [("site", row["site"])]

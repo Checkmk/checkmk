@@ -51,6 +51,7 @@ from . import (
     FilterSite,
 )
 
+
 # Filters for substring search, displaying a text input field
 class FilterText(Filter):
     def __init__(self, name, title, info, column, htmlvar, op, negateable=False, show_heading=True):
@@ -87,12 +88,17 @@ class FilterText(Filter):
         if current_value:
             if type(current_value) == unicode:
                 current_value = current_value.encode("utf-8")
-            return "Filter: %s %s%s %s\n" % (self.column, negate, self.op, livestatus.lqencode(current_value))
+            return "Filter: %s %s%s %s\n" % (
+                self.column,
+                negate,
+                self.op,
+                livestatus.lqencode(current_value),
+            )
         else:
             return ""
 
     def variable_settings(self, row):
-        return [ (self.htmlvars[0], row[self.column]) ]
+        return [(self.htmlvars[0], row[self.column])]
 
     def heading_info(self):
         if self._show_heading:
@@ -106,6 +112,7 @@ class FilterUnicode(FilterText):
     def _current_value(self):
         htmlvar = self.htmlvars[0]
         return html.get_unicode_input(htmlvar, "")
+
 
 class FilterHostnameOrAlias(FilterUnicode):
     def __init__(self, *args):
@@ -122,9 +129,14 @@ class FilterHostnameOrAlias(FilterUnicode):
         if current_value:
             if type(current_value) == unicode:
                 current_value = current_value.encode("utf-8")
-            return "Filter: host_name %s%s %s\nFilter: alias %s%s %s\nOr: 2\n" % ((negate, self.op, livestatus.lqencode(current_value)) * 2)
+            return "Filter: host_name %s%s %s\nFilter: alias %s%s %s\nOr: 2\n" % ((
+                negate,
+                self.op,
+                livestatus.lqencode(current_value),
+            ) * 2)
         else:
             return ""
+
 
 #                               filter          title              info       column           htmlvar
 declare_filter(100, FilterText("hostregex",    _("Hostname"),        "host",    "host_name",      "host_regex",    "~~" , True),
@@ -169,7 +181,7 @@ class FilterIPAddress(Filter):
             link_columns = []
 
         # name, title, info, htmlvars, link_columns
-        Filter.__init__(self, varname, title, "host", [varname, varname+"_prefix"], link_columns)
+        Filter.__init__(self, varname, title, "host", [varname, varname + "_prefix"], link_columns)
 
     def display(self):
         html.text_input(self.htmlvars[0])
@@ -202,7 +214,7 @@ class FilterIPAddress(Filter):
             return ""
 
     def variable_settings(self, row):
-        return [ (self.htmlvars[0], row["host_address"]) ]
+        return [(self.htmlvars[0], row["host_address"])]
 
     def heading_info(self):
         return html.var(self.htmlvars[0])
@@ -234,6 +246,7 @@ class FilterAddressFamily(Filter):
 
 declare_filter(103, FilterAddressFamily())
 
+
 class FilterAddressFamilies(Filter):
     def __init__(self):
         Filter.__init__(self,
@@ -263,32 +276,37 @@ class FilterAddressFamilies(Filter):
                 tag = "ip-v4"
             elif family[0] == "6":
                 tag = "ip-v6"
-            filt = "Filter: host_custom_variables ~ TAGS (^|[ ])%s($|[ ])\n" % livestatus.lqencode(tag)
+            filt = "Filter: host_custom_variables ~ TAGS (^|[ ])%s($|[ ])\n" % livestatus.lqencode(
+                tag)
 
             if family.endswith("_only"):
                 if family[0] == "4":
                     tag = "ip-v6"
                 elif family[0] == "6":
                     tag = "ip-v4"
-                filt += "Filter: host_custom_variables !~ TAGS (^|[ ])%s($|[ ])\n" % livestatus.lqencode(tag)
+                filt += "Filter: host_custom_variables !~ TAGS (^|[ ])%s($|[ ])\n" % livestatus.lqencode(
+                    tag)
 
             return filt
 
 
 declare_filter(103, FilterAddressFamilies())
 
+
 class FilterMultigroup(Filter):
     def __init__(self, what, title, negateable=False):
         self.htmlvar = what + "groups"
-        htmlvars = [ self.htmlvar ]
+        htmlvars = [self.htmlvar]
         self.negateable = negateable
         if self.negateable:
             htmlvars.append("neg_" + self.htmlvar)
-        Filter.__init__(self, self.htmlvar, # name
-                              title,
-                              what,        # info, e.g. "service"
-                              htmlvars,
-                              [])          # no link info needed
+        Filter.__init__(
+            self,
+            self.htmlvar,  # name
+            title,
+            what,  # info, e.g. "service"
+            htmlvars,
+            [])  # no link info needed
         self.what = what
 
     def double_height(self):
@@ -296,10 +314,9 @@ class FilterMultigroup(Filter):
 
     def valuespec(self):
         return DualListChoice(
-            choices = sites.all_groups(self.what),
+            choices=sites.all_groups(self.what),
             rows=3 if self.negateable else 4,
-            enlarge_active=True
-        )
+            enlarge_active=True)
 
     def selection(self):
         current = html.var(self.htmlvar, "").strip().split("|")
@@ -319,17 +336,18 @@ class FilterMultigroup(Filter):
     def filter(self, infoname):
         current = self.selection()
         if len(current) == 0:
-            return "" # No group selected = all groups selected, filter unused
+            return ""  # No group selected = all groups selected, filter unused
         # not (A or B) => (not A) and (not B)
         if self.negateable and html.get_checkbox(self.htmlvars[1]):
             negate = "!"
             op = "And"
         else:
-            negate  = ""
+            negate = ""
             op = "Or"
         filters = ""
         for group in current:
-            filters += "Filter: %s_groups %s>= %s\n" % (self.what, negate, livestatus.lqencode(group))
+            filters += "Filter: %s_groups %s>= %s\n" % (self.what, negate,
+                                                        livestatus.lqencode(group))
         if len(current) > 1:
             filters += "%s: %d\n" % (op, len(current))
         return filters
@@ -340,14 +358,16 @@ class FilterGroupCombo(Filter):
     def __init__(self, what, title, enforce):
         self.enforce = enforce
         self.prefix = "opt" if not self.enforce else ""
-        htmlvars = [ self.prefix + what + "_group" ]
+        htmlvars = [self.prefix + what + "_group"]
         if not enforce:
             htmlvars.append("neg_" + htmlvars[0])
-        Filter.__init__(self, self.prefix + what + "group", # name,     e.g. "hostgroup"
-                title,                                      # title,    e.g. "Hostgroup"
-                what.split("_")[0],                         # info,     e.g. "host"
-                htmlvars,                                   # htmlvars, e.g. "host_group"
-                [ what + "group_name" ])                    # rows needed to fetch for link information
+        Filter.__init__(
+            self,
+            self.prefix + what + "group",  # name, e.g. "hostgroup"
+            title,  # title, e.g. "Hostgroup"
+            what.split("_")[0],  # info, e.g. "host"
+            htmlvars,  # htmlvars, e.g. "host_group"
+            [what + "group_name"])  # rows needed to fetch for link information
         self.what = what
 
     def double_height(self):
@@ -369,18 +389,20 @@ class FilterGroupCombo(Filter):
 
     def filter(self, infoname):
         if not html.has_var(self.htmlvars[0]):
-            return "" # Skip if filter is not being set at all
+            return ""  # Skip if filter is not being set at all
 
         current_value = self.current_value()
         if not current_value:
             if not self.enforce:
                 return ""
             # Take first group with the name we search
-            table = self.what.replace("host_contact", "contact").replace("service_contact", "contact")
-            current_value = sites.live().query_value("GET %sgroups\nCache: reload\nColumns: name\nLimit: 1\n" % table, None)
+            table = self.what.replace("host_contact", "contact").replace(
+                "service_contact", "contact")
+            current_value = sites.live().query_value(
+                "GET %sgroups\nCache: reload\nColumns: name\nLimit: 1\n" % table, None)
 
         if current_value == None:
-            return "" # no {what}group exists!
+            return ""  # no {what}group exists!
 
         col = self.what + "_groups"
         if not self.enforce and html.var(self.htmlvars[1]):
@@ -405,8 +427,10 @@ class FilterGroupCombo(Filter):
     def heading_info(self):
         current_value = self.current_value()
         if current_value:
-            table = self.what.replace("host_contact", "contact").replace("service_contact", "contact")
-            alias = sites.live().query_value("GET %sgroups\nCache: reload\nColumns: alias\nFilter: name = %s\n" %
+            table = self.what.replace("host_contact", "contact").replace(
+                "service_contact", "contact")
+            alias = sites.live().query_value(
+                "GET %sgroups\nCache: reload\nColumns: alias\nFilter: name = %s\n" %
                 (table, livestatus.lqencode(current_value)), current_value)
             return alias
 
@@ -428,11 +452,12 @@ declare_filter(207, FilterText("service_ctc_regex", _("Service Contact (Regex)")
 # Selection of one group to be used in the info "hostgroup" or "servicegroup".
 class FilterGroupSelection(Filter):
     def __init__(self, infoname, title):
-        Filter.__init__(self, name=infoname, title=title, info=infoname, htmlvars=[infoname], link_columns=[])
+        Filter.__init__(
+            self, name=infoname, title=title, info=infoname, htmlvars=[infoname], link_columns=[])
         self.what = infoname
 
     def display(self):
-        choices = sites.all_groups(self.what[:-5]) # chop off "group", leaves host or service
+        choices = sites.all_groups(self.what[:-5])  # chop off "group", leaves host or service
         html.dropdown(self.htmlvars[0], choices, ordered=True)
 
     def current_value(self):
@@ -446,15 +471,23 @@ class FilterGroupSelection(Filter):
 
     def variable_settings(self, row):
         group_name = row[self.what + "_name"]
-        return [ (self.htmlvars[0], group_name) ]
+        return [(self.htmlvars[0], group_name)]
+
 
 # Filter for selecting one specific host group in the hostgroup views
 declare_filter(104, FilterGroupSelection("hostgroup",    _("Host Group")),       _("Selection of the host group"))
 declare_filter(104, FilterGroupSelection("servicegroup", _("Service Group")), _("Selection of the service group"))
 
+
 class FilterHostgroupVisibility(Filter):
     def __init__(self, name, title):
-        Filter.__init__(self, name=name, title=title, info="hostgroup", htmlvars=[ "hostgroupshowempty" ], link_columns=[])
+        Filter.__init__(
+            self,
+            name=name,
+            title=title,
+            info="hostgroup",
+            htmlvars=["hostgroupshowempty"],
+            link_columns=[])
 
     def display(self):
         html.checkbox("hostgroupshowempty", False, label="Show empty groups")
@@ -476,15 +509,16 @@ declare_filter(101, FilterText("servicegroupnameregex", _("Servicegroup (Regex)"
 declare_filter(101, FilterText("servicegroupname", _("Servicegroup (enforced)"),   "servicegroup", "servicegroup_name",   "servicegroup_name", "="),
                           _("Exact match, used for linking"))
 
+
 class FilterQueryDropdown(Filter):
     def __init__(self, name, title, info, query, filterline):
-        Filter.__init__(self, name, title, info, [ name ], [])
+        Filter.__init__(self, name, title, info, [name], [])
         self.query = query
         self.filterline = filterline
 
     def display(self):
         selection = sites.live().query_column_unique(self.query)
-        html.dropdown(self.name, [("", "")] + [(x,x) for x in selection], ordered=True)
+        html.dropdown(self.name, [("", "")] + [(x, x) for x in selection], ordered=True)
 
     def filter(self, infoname):
         current = html.var(self.name)
@@ -497,10 +531,17 @@ declare_filter(110, FilterQueryDropdown("host_check_command", _("Host check comm
 declare_filter(210, FilterQueryDropdown("check_command", _("Service check command"), "service", \
         "GET commands\nCache: reload\nColumns: name\n", "Filter: service_check_command ~ ^%s(!.*)?$\n"))
 
+
 class FilterServiceState(Filter):
     def __init__(self, name, title, prefix):
-        Filter.__init__(self, name, title,
-                "service", [ prefix + "_filled", prefix + "st0", prefix + "st1", prefix + "st2", prefix + "st3", prefix + "stp" ], [])
+        Filter.__init__(self, name, title, "service", [
+            prefix + "_filled",
+            prefix + "st0",
+            prefix + "st1",
+            prefix + "st2",
+            prefix + "st3",
+            prefix + "stp",
+        ], [])
         self.prefix = prefix
 
     def display(self):
@@ -513,11 +554,11 @@ class FilterServiceState(Filter):
         html.end_checkbox_group()
 
     def _filter_used(self):
-        return any([ html.has_var(v) for v in self.htmlvars ])
+        return any([html.has_var(v) for v in self.htmlvars])
 
     def filter(self, infoname):
         headers = []
-        for i in [0,1,2,3]:
+        for i in [0, 1, 2, 3]:
             check_result = html.get_checkbox(self.prefix + "st%d" % i)
 
             # When a view is displayed e.g. as a dashlet the unchecked checkboxes are not set in
@@ -539,12 +580,13 @@ class FilterServiceState(Filter):
         if html.get_checkbox(self.prefix + "stp") == False:
             headers.append("Filter: service_has_been_checked = 1\n")
 
-        if len(headers) == 5: # none allowed = all allowed (makes URL building easier)
+        if len(headers) == 5:  # none allowed = all allowed (makes URL building easier)
             return ""
         return "".join(headers)
 
 declare_filter(215, FilterServiceState("svcstate",     _("Service states"),      ""))
 declare_filter(216, FilterServiceState("svchardstate", _("Service hard states"), "hd"))
+
 
 class FilterHostState(Filter):
     def __init__(self):
@@ -560,11 +602,11 @@ class FilterHostState(Filter):
         html.end_checkbox_group()
 
     def _filter_used(self):
-        return any([ html.has_var(v) for v in self.htmlvars ])
+        return any([html.has_var(v) for v in self.htmlvars])
 
     def filter(self, infoname):
         headers = []
-        for i in [0,1,2]:
+        for i in [0, 1, 2]:
             check_result = html.get_checkbox("hst%d" % i)
 
             # When a view is displayed e.g. as a dashlet the unchecked checkboxes are not set in
@@ -582,11 +624,13 @@ class FilterHostState(Filter):
         if html.get_checkbox("hstp") == False:
             headers.append("Filter: host_has_been_checked = 1\n")
 
-        if len(headers) == 4: # none allowed = all allowed (makes URL building easier)
+        if len(headers) == 4:  # none allowed = all allowed (makes URL building easier)
             return ""
         return "".join(headers)
 
+
 declare_filter(115, FilterHostState())
+
 
 class FilterHostsHavingServiceProblems(Filter):
     def __init__(self):
@@ -607,7 +651,7 @@ class FilterHostsHavingServiceProblems(Filter):
 
     def filter(self, infoname):
         headers = []
-        for var in [ "warn", "crit", "pending", "unknown" ]:
+        for var in ["warn", "crit", "pending", "unknown"]:
             if html.get_checkbox("hosts_having_services_%s" % var) == True:
                 headers.append("Filter: host_num_services_%s > 0\n" % var)
 
@@ -617,18 +661,19 @@ class FilterHostsHavingServiceProblems(Filter):
             return "".join(headers)
         return ""
 
+
 declare_filter(120, FilterHostsHavingServiceProblems())
 
 
 class FilterStateType(FilterTristate):
-    def __init__(self, info, column, title, deflt = -1):
+    def __init__(self, info, column, title, deflt=-1):
         FilterTristate.__init__(self, column, title, info, None, deflt)
 
     def display(self):
         current = html.var(self.varname)
         html.begin_radio_group(horizontal=True)
         for value, text in [("0", _("SOFT")), ("1", _("HARD")), ("-1", _("(ignore)"))]:
-            checked = current == value or (current in [ None, ""] and int(value) == self.deflt)
+            checked = current == value or (current in [None, ""] and int(value) == self.deflt)
             html.radiobutton(self.varname, value, checked, text + " &nbsp; ")
         html.end_radio_group()
 
@@ -640,7 +685,7 @@ declare_filter(217, FilterStateType("service", "service_state_type", _("Service 
 
 
 class FilterNagiosFlag(FilterTristate):
-    def __init__(self, info, column, title, deflt = -1):
+    def __init__(self, info, column, title, deflt=-1):
         FilterTristate.__init__(self, column, title, info, column, deflt)
 
     def filter_code(self, infoname, positive):
@@ -650,7 +695,7 @@ class FilterNagiosFlag(FilterTristate):
 
 
 class FilterNagiosExpression(FilterTristate):
-    def __init__(self, info, name, title, pos, neg, deflt = -1):
+    def __init__(self, info, name, title, pos, neg, deflt=-1):
         FilterTristate.__init__(self, name, title, info, None, deflt)
         self.pos = pos
         self.neg = neg
@@ -700,16 +745,18 @@ def declare_site_filters():
     declare_filter(501, cls("site",    True),
                    _("Selection of site is enforced, use this filter for joining"))
 
+
 declare_site_filters()
+
 
 # name: internal id of filter
 # title: user displayed title of the filter
 # info: usually either "host" or "service"
 # column: a livestatus column of type int or float
-class FilterNumberRange(Filter): # type is int
+class FilterNumberRange(Filter):  # type is int
     def __init__(self, name, title, info, column):
         self.column = column
-        varnames = [ name + "_from", name + "_until" ]
+        varnames = [name + "_from", name + "_until"]
         Filter.__init__(self, name, title, info, varnames, [])
 
     def display(self):
@@ -720,7 +767,7 @@ class FilterNumberRange(Filter): # type is int
 
     def filter(self, infoname):
         lql = ""
-        for i, op in [ (0, ">="), (1, "<=") ]:
+        for i, op in [(0, ">="), (1, "<=")]:
             try:
                 txt = html.var(self.htmlvars[i])
                 int(txt.strip())
@@ -758,6 +805,7 @@ declare_filter(256, FilterText("downtime_author", _("Downtime author"), "downtim
 #               |___/
 
 declare_filter(252, FilterTime("log", "logtime", _("Time of log entry"), "log_time"))
+
 # INFO          0 // all messages not in any other class
 # ALERT         1 // alerts: the change service/host state
 # PROGRAM       2 // important programm events (restart, ...)
@@ -766,6 +814,7 @@ declare_filter(252, FilterTime("log", "logtime", _("Time of log entry"), "log_ti
 # COMMAND       5 // external commands
 # STATE         6 // initial or current states
 # ALERT HANDLERS 8
+
 
 class FilterLogClass(Filter):
     def __init__(self):
@@ -818,8 +867,9 @@ class FilterLogClass(Filter):
                 headers.append("Filter: class = %d\n" % l)
 
         if len(headers) == 0:
-            return "Limit: 0\n" # no class allowed
+            return "Limit: 0\n"  # no class allowed
         return "".join(headers) + ("Or: %d\n" % len(headers))
+
 
 declare_filter(255, FilterLogClass())
 #                               filter          title              info       column           htmlvar
@@ -830,6 +880,7 @@ declare_filter(260, FilterText("log_contact_name",   _("Log: contact name (exact
                                                                                                   _("Exact match, used for linking"))
 declare_filter(261, FilterText("log_contact_name_regex",   _("Log: contact name"),  "log", "log_contact_name",  "log_contact_name_regex",  "~~", negateable=True))
 declare_filter(262, FilterText("log_command_name_regex",  _("Log: command"),  "log", "log_command_name",  "log_command_name_regex",  "~~", negateable=True))
+
 
 class FilterLogState(Filter):
     def __init__(self):
@@ -869,16 +920,19 @@ class FilterLogState(Filter):
     def filter(self, infoname):
         headers = []
         for varsuffix, what, state, _text in self._items:
-            if html.get_checkbox("logst_" + varsuffix) != False: # None = form not filled in = allow
+            if html.get_checkbox("logst_" +
+                                 varsuffix) != False:  # None = form not filled in = allow
                 headers.append("Filter: log_type ~ %s .*\nFilter: log_state = %d\nAnd: 2\n" %
-                            (what.upper(), state))
+                               (what.upper(), state))
         if len(headers) == 0:
-            return "Limit: 0\n" # no allowed state
+            return "Limit: 0\n"  # no allowed state
         elif len(headers) == len(self._items):
-            return "" # all allowed or form not filled in
+            return ""  # all allowed or form not filled in
         return "".join(headers) + ("Or: %d\n" % len(headers))
 
+
 declare_filter(270, FilterLogState())
+
 
 class NotificationPhaseFilter(FilterTristate):
     def __init__(self):
@@ -895,7 +949,7 @@ class NotificationPhaseFilter(FilterTristate):
             ("1",  _("Show just preliminary notifications")),
             ("0",  _("Show just end-user-notifications")),
         ]:
-            checked = current == value or (current in [ None, ""] and int(value) == self.deflt)
+            checked = current == value or (current in [None, ""] and int(value) == self.deflt)
             html.radiobutton(self.varname, value, checked, text + " &nbsp; ")
             html.br()
         html.end_radio_group()
@@ -904,11 +958,13 @@ class NotificationPhaseFilter(FilterTristate):
         # Note: this filter also has to work for entries that are no notification.
         # In that case the filter is passive and lets everything through
         if positive:
-            return "Filter: %s = check-mk-notify\nFilter: %s =\nOr: 2\n" % (self.column, self.column)
+            return "Filter: %s = check-mk-notify\nFilter: %s =\nOr: 2\n" % (self.column,
+                                                                            self.column)
         return "Filter: %s != check-mk-notify\n" % self.column
 
 
 declare_filter(271, NotificationPhaseFilter())
+
 
 class BIServiceIsUsedFilter(FilterTristate):
     def __init__(self):
@@ -923,8 +979,8 @@ class BIServiceIsUsedFilter(FilterTristate):
             return rows
         new_rows = []
         for row in rows:
-            is_part = bi.is_part_of_aggregation(
-                   "service", row["site"], row["host_name"], row["service_description"])
+            is_part = bi.is_part_of_aggregation("service", row["site"], row["host_name"],
+                                                row["service_description"])
             if (is_part and current == 1) or \
                (not is_part and current == 0):
                 new_rows.append(row)
@@ -938,12 +994,13 @@ declare_filter(300, BIServiceIsUsedFilter())
 
 declare_filter(301, FilterText("downtime_id", _("Downtime ID"), "downtime", "downtime_id", "downtime_id", "="))
 
+
 class FilterHostTags(Filter):
     def __init__(self):
         self.count = 3
         htmlvars = []
         for num in range(self.count):
-            htmlvars += [ 'host_tag_%d_grp' % num, 'host_tag_%d_op' % num, 'host_tag_%d_val' % num ]
+            htmlvars += ['host_tag_%d_grp' % num, 'host_tag_%d_op' % num, 'host_tag_%d_val' % num]
 
         Filter.__init__(self,
             name = 'host_tags',
@@ -954,7 +1011,7 @@ class FilterHostTags(Filter):
         )
 
     def display(self):
-        groups = [ (e[0], e[1].lstrip("/") ) for e in config.host_tag_groups() ]
+        groups = [(e[0], e[1].lstrip("/")) for e in config.host_tag_groups()]
         operators = [
             ("is", "="),
             ("isnot", u"≠"),
@@ -966,7 +1023,7 @@ class FilterHostTags(Filter):
             grouped.setdefault(entry[0], [["", ""]])
 
             for tag_entry in entry[2]:
-                tag   = tag_entry[0]
+                tag = tag_entry[0]
                 title = tag_entry[1]
                 if tag is None:
                     tag = ''
@@ -981,22 +1038,31 @@ class FilterHostTags(Filter):
             prefix = 'host_tag_%d' % num
             html.open_tr()
             html.open_td()
-            html.dropdown(prefix + '_grp', [("", "")] + groups,
-                          onchange = 'host_tag_update_value(\'%s\', this.value)' % prefix,
-                          style='width:129px', ordered=True, class_="grp")
+            html.dropdown(
+                prefix + '_grp', [("", "")] + groups,
+                onchange='host_tag_update_value(\'%s\', this.value)' % prefix,
+                style='width:129px',
+                ordered=True,
+                class_="grp")
             html.close_td()
             html.open_td()
-            html.dropdown(prefix + '_op', [("", "")] + operators, style="width:36px", ordered=True, class_="op")
+            html.dropdown(
+                prefix + '_op', [("", "")] + operators,
+                style="width:36px",
+                ordered=True,
+                class_="op")
             html.close_td()
             html.open_td()
-            choices = grouped[html.var(prefix + '_grp')] if html.var(prefix + '_grp') else [("", "")]
+            choices = grouped[html.var(prefix + '_grp')] if html.var(prefix + '_grp') else [("",
+                                                                                             "")]
             html.dropdown(prefix + '_val', choices, style="width:129px", ordered=True, class_="val")
             html.close_td()
             html.close_tr()
         html.close_table()
 
     def hosttag_filter(self, negate, tag):
-        return  'Filter: host_custom_variables %s TAGS (^|[ ])%s($|[ ])' % (negate and '!~' or '~', livestatus.lqencode(tag))
+        return 'Filter: host_custom_variables %s TAGS (^|[ ])%s($|[ ])' % (negate and '!~' or '~',
+                                                                           livestatus.lqencode(tag))
 
     def filter(self, infoname):
         headers = []
@@ -1006,7 +1072,7 @@ class FilterHostTags(Filter):
         num = 0
         while html.has_var('host_tag_%d_op' % num):
             prefix = 'host_tag_%d' % num
-            op  = html.var(prefix + '_op')
+            op = html.var(prefix + '_op')
             tag = html.var(prefix + '_val')
 
             if op:
@@ -1019,9 +1085,9 @@ class FilterHostTags(Filter):
                     grouptags = None
                     for entry in config.host_tag_groups():
                         if entry[0] == group:  # found our group
-                            grouptags = [ x[0] for x in entry[2] if x[0] ]
+                            grouptags = [x[0] for x in entry[2] if x[0]]
                             break
-                    if grouptags: # should never be empty, but maybe faked URL
+                    if grouptags:  # should never be empty, but maybe faked URL
                         for tag in grouptags:
                             headers.append(self.hosttag_filter(False, tag))
                         if len(grouptags) > 1:
@@ -1038,13 +1104,13 @@ class FilterHostTags(Filter):
     def double_height(self):
         return True
 
-declare_filter(302, FilterHostTags())
 
+declare_filter(302, FilterHostTags())
 
 
 class FilterHostAuxTags(Filter):
     def __init__(self):
-        self.count  = 3
+        self.count = 3
         self.prefix = 'host_auxtags'
         htmlvars = []
         for num in range(self.count):
@@ -1061,18 +1127,17 @@ class FilterHostAuxTags(Filter):
 
         self.auxtags = config.wato_aux_tags
 
-
     def display(self):
         for num in range(self.count):
-            html.dropdown('%s_%d' % (self.prefix, num), [("", "")] + self.auxtags, ordered=True, class_='neg')
+            html.dropdown(
+                '%s_%d' % (self.prefix, num), [("", "")] + self.auxtags, ordered=True, class_='neg')
             html.open_nobr()
             html.checkbox('%s_%d_neg' % (self.prefix, num), False, label=_("negate"))
             html.close_nobr()
 
-
     def host_auxtags_filter(self, tag, negate):
-        return "Filter: host_custom_variables %s~ TAGS (^|[ ])%s($|[ ])" % (negate, livestatus.lqencode(tag))
-
+        return "Filter: host_custom_variables %s~ TAGS (^|[ ])%s($|[ ])" % (
+            negate, livestatus.lqencode(tag))
 
     def filter(self, infoname):
         headers = []
@@ -1080,11 +1145,10 @@ class FilterHostAuxTags(Filter):
         # Do not restrict to a certain number, because we'd like to link to this
         # via an URL, e.g. from the virtual host tree snapin
         num = 0
-        while html.has_var( '%s_%d' % (self.prefix, num) ):
-            this_tag = html.var( '%s_%d' % (self.prefix, num) )
+        while html.has_var('%s_%d' % (self.prefix, num)):
+            this_tag = html.var('%s_%d' % (self.prefix, num))
             if this_tag:
-                negate = ("!" if html.get_checkbox('%s_%d_neg' % (self.prefix, num))
-                        else "")
+                negate = ("!" if html.get_checkbox('%s_%d_neg' % (self.prefix, num)) else "")
                 headers.append(self.host_auxtags_filter(this_tag, negate))
             num += 1
 
@@ -1092,14 +1156,11 @@ class FilterHostAuxTags(Filter):
             return '\n'.join(headers) + '\n'
         return ''
 
-
     def double_height(self):
         return True
 
 
-
 declare_filter(302, FilterHostAuxTags())
-
 
 
 # choices = [ (value, "readable"), .. ]
@@ -1108,24 +1169,22 @@ class FilterECServiceLevelRange(Filter):
         self.lower_bound_varname = "%s_lower" % name
         self.upper_bound_varname = "%s_upper" % name
 
-        Filter.__init__( self, name, title, info,
-                         [ self.lower_bound_varname,
-                           self.upper_bound_varname, ], [] )
-
+        Filter.__init__(self, name, title, info, [
+            self.lower_bound_varname,
+            self.upper_bound_varname,
+        ], [])
 
     def _prepare_choices(self):
         choices = config.mkeventd_service_levels[:]
         choices.sort()
-        return [( str(x[0]), "%s - %s" % (x[0], x[1]) ) for x in choices]
-
+        return [(str(x[0]), "%s - %s" % (x[0], x[1])) for x in choices]
 
     def display(self):
-        selection = [ ("", "") ] + self._prepare_choices()
+        selection = [("", "")] + self._prepare_choices()
         html.write_text("From")
         html.dropdown(self.lower_bound_varname, selection)
         html.write_text("To")
         html.select(self.upper_bound_varname, selection)
-
 
     def filter(self, infoname):
         lower_bound = html.var(self.lower_bound_varname)
@@ -1149,7 +1208,7 @@ class FilterECServiceLevelRange(Filter):
                     filterline_values.append( "Filter: %s_custom_variable_values >= %s" % \
                                               (self.info, livestatus.lqencode(str(value))) )
 
-            filterline += "%s\n" % "\n".join( filterline_values )
+            filterline += "%s\n" % "\n".join(filterline_values)
 
             len_filterline_values = len(filterline_values)
             if len_filterline_values > 1:
@@ -1159,7 +1218,6 @@ class FilterECServiceLevelRange(Filter):
 
         else:
             return ""
-
 
     def double_height(self):
         return True
@@ -1174,19 +1232,19 @@ declare_filter(310, FilterECServiceLevelRange(
         "hst_service_level", _("Host service level"), "host"))
 
 
-
 class FilterStarred(FilterTristate):
     def __init__(self, what):
         self.what = what
 
         title = _("Favorite Hosts") if what == "host" else _("Favorite Services")
 
-        FilterTristate.__init__(self,
-            name   = what + "_favorites",
-            title  = HTML(title),
-            info   = what,
-            column = what + "_favorite", # Column, not used
-            deflt  = -1,
+        FilterTristate.__init__(
+            self,
+            name=what + "_favorites",
+            title=HTML(title),
+            info=what,
+            column=what + "_favorite",  # Column, not used
+            deflt=-1,
         )
 
     def filter(self, infoname):
@@ -1235,6 +1293,7 @@ class FilterStarred(FilterTristate):
 declare_filter(501, FilterStarred("host"))
 declare_filter(501, FilterStarred("service"))
 
+
 class FilterDiscoveryState(Filter):
     def __init__(self):
         self.__options = [
@@ -1246,27 +1305,23 @@ class FilterDiscoveryState(Filter):
                 [ o[0] for o in self.__options ], [])
         self.__varname = "discovery_state"
 
-
     def display(self):
         html.begin_checkbox_group()
         for varname, title in self.__options:
             html.checkbox(varname, True, label=title)
         html.end_checkbox_group()
 
-
     def value(self):
         val = {}
         for varname in self.htmlvars:
             value = html.get_checkbox(varname)
             if value == None:
-                value = True # Default setting for filter: all checked!
+                value = True  # Default setting for filter: all checked!
             val[varname] = value
         return val
 
-
     def filter(self, infoname):
         return ""
-
 
     def filter_table(self, rows):
         new_rows = []
@@ -1286,27 +1341,22 @@ class BIGroupFilter(FilterUnicodeFilter):
         FilterUnicodeFilter.__init__(self, self.column, _("Aggregation group"),
                                      self.column, [self.column], [self.column])
 
-
     def variable_settings(self, row):
-        return [ (self.htmlvars[0], row[self.column]) ]
-
+        return [(self.htmlvars[0], row[self.column])]
 
     def display(self):
         htmlvar = self.htmlvars[0]
-        html.dropdown(htmlvar, [("", "")] + [(group, group)
-                      for group in bi.get_aggregation_group_trees()])
-
+        html.dropdown(htmlvar,
+                      [("", "")] + [(group, group) for group in bi.get_aggregation_group_trees()])
 
     def selected_group(self):
         return html.get_unicode_input(self.htmlvars[0])
-
 
     def filter_table(self, rows):
         group = self.selected_group()
         if not group:
             return rows
         return [row for row in rows if row[self.column] == group]
-
 
     def heading_info(self):
         return html.get_unicode_input(self.htmlvars[0])
@@ -1321,23 +1371,18 @@ class BIGroupTreeFilter(FilterUnicodeFilter):
         FilterUnicodeFilter.__init__(self, self.column, _("Aggregation group tree"),
                                      "aggr_group", [self.column], [self.column])
 
-
     def variable_settings(self, row):
-        return [ (self.htmlvars[0], row[self.column]) ]
-
+        return [(self.htmlvars[0], row[self.column])]
 
     def display(self):
         htmlvar = self.htmlvars[0]
         html.dropdown(htmlvar, [("", "")] + self._get_selection())
 
-
     def selected_group(self):
         return html.get_unicode_input(self.htmlvars[0])
 
-
     def heading_info(self):
         return html.get_unicode_input(self.htmlvars[0])
-
 
     def _get_selection(self):
         def _build_tree(group, parent, path):
@@ -1391,21 +1436,17 @@ class BITextFilter(FilterUnicodeFilter):
             label = _('Aggregation output')
         if how == "exact":
             label += _(" (exact match)")
-        FilterUnicodeFilter.__init__(self, self.column + suffix,
-                        label, "aggr", [self.column + suffix], [self.column])
-
+        FilterUnicodeFilter.__init__(self, self.column + suffix, label, "aggr",
+                                     [self.column + suffix], [self.column])
 
     def variable_settings(self, row):
-        return [ (self.htmlvars[0], row[self.column]) ]
-
+        return [(self.htmlvars[0], row[self.column])]
 
     def display(self):
         html.text_input(self.htmlvars[0])
 
-
     def heading_info(self):
         return html.get_unicode_input(self.htmlvars[0])
-
 
     def filter_table(self, rows):
         val = html.get_unicode_input(self.htmlvars[0])
@@ -1418,8 +1459,8 @@ class BITextFilter(FilterUnicodeFilter):
                 html.add_user_error(None, "Invalid regular expression: %s" % e)
                 return rows
 
-            return [ row for row in rows if reg.search(row[self.column].lower()) ]
-        return [ row for row in rows if row[self.column] == val ]
+            return [row for row in rows if reg.search(row[self.column].lower())]
+        return [row for row in rows if row[self.column] == val]
 
 
 declare_filter(120, BITextFilter("name", suffix="_regex"))
@@ -1432,14 +1473,11 @@ class BIHostFilter(Filter):
         self.column = "aggr_hosts"
         Filter.__init__(self, self.column, _("Affected hosts contain"), "aggr", ["aggr_host_site", "aggr_host_host"], [])
 
-
     def display(self):
         html.text_input(self.htmlvars[1])
 
-
     def heading_info(self):
         return html.var(self.htmlvars[1])
-
 
     def find_host(self, host, hostlist):
         for _s, h in hostlist:
@@ -1447,17 +1485,15 @@ class BIHostFilter(Filter):
                 return True
         return False
 
-
     # Used for linking
     def variable_settings(self, row):
-        return [ ("aggr_host_host", row["host_name"]), ("aggr_host_site", row["site"]) ]
-
+        return [("aggr_host_host", row["host_name"]), ("aggr_host_site", row["site"])]
 
     def filter_table(self, rows):
         val = html.var(self.htmlvars[1])
         if not val:
             return rows
-        return [ row for row in rows if self.find_host(val, row["aggr_hosts"]) ]
+        return [row for row in rows if self.find_host(val, row["aggr_hosts"])]
 
 
 declare_filter(130, BIHostFilter(), _("Filter for all aggregations that base on status information of that host. Exact match (no regular expression)"))
@@ -1467,10 +1503,8 @@ class BIServiceFilter(Filter):
     def __init__(self):
         Filter.__init__(self, "aggr_service", _("Affected by service"), "aggr", ["aggr_service_site", "aggr_service_host", "aggr_service_service"], [])
 
-
     def double_height(self):
         return True
-
 
     def display(self):
         html.write(_("Host") + ": ")
@@ -1478,20 +1512,19 @@ class BIServiceFilter(Filter):
         html.write(_("Service") + ": ")
         html.text_input(self.htmlvars[2])
 
-
     def heading_info(self):
         return html.get_unicode_input(self.htmlvars[1], "") \
                + " / " + html.get_unicode_input(self.htmlvars[2], "")
 
-
     def service_spec(self):
         if html.has_var(self.htmlvars[2]):
-            return html.get_unicode_input(self.htmlvars[0]), html.get_unicode_input(self.htmlvars[1]), html.get_unicode_input(self.htmlvars[2])
-
+            return html.get_unicode_input(self.htmlvars[0]), html.get_unicode_input(
+                self.htmlvars[1]), html.get_unicode_input(self.htmlvars[2])
 
     # Used for linking
     def variable_settings(self, row):
-        return [ ("site", row["site"]), ("host", row["host_name"]), ("service", row["service_description"]) ]
+        return [("site", row["site"]), ("host", row["host_name"]),
+                ("service", row["service_description"])]
 
 
 declare_filter(131, BIServiceFilter(), _("Filter for all aggregations that are affected by one specific service on a specific host (no regular expression)"))
@@ -1506,19 +1539,16 @@ class BIStatusFilter(Filter):
         else:
             self.code = what[0]
         self.prefix = "bi%ss" % self.code
-        vars_ = [ self.prefix + str(x) for x in [ -1, 0, 1, 2, 3 ] ]
+        vars_ = [self.prefix + str(x) for x in [-1, 0, 1, 2, 3]]
         if self.code == 'a':
             vars_.append(self.prefix + "n")
         Filter.__init__(self, self.column, title, "aggr", vars_, [])
 
-
     def filter(self, infoname):
         return ""
 
-
     def double_height(self):
         return self.column == "aggr_assumed_state"
-
 
     def display(self):
         if html.var("filled_in"):
@@ -1528,12 +1558,11 @@ class BIStatusFilter(Filter):
         for varend, text in [('0', _('OK')), ('1', _('WARN')), ('2', _('CRIT')),
                              ('3', _('UNKN')), ('-1', _('PENDING')), ('n', _('no assumed state set'))]:
             if self.code != 'a' and varend == 'n':
-                continue # no unset for read and effective state
+                continue  # no unset for read and effective state
             if varend == 'n':
                 html.br()
             var = self.prefix + varend
             html.checkbox(var, defval, label=text)
-
 
     def filter_table(self, rows):
         if html.var("filled_in"):
@@ -1542,7 +1571,7 @@ class BIStatusFilter(Filter):
             defval = "on"
 
         allowed_states = []
-        for i in ['0','1','2','3','-1','n']:
+        for i in ['0', '1', '2', '3', '-1', 'n']:
             if html.var(self.prefix + i, defval) == "on":
                 if i == 'n':
                     s = None
@@ -1560,10 +1589,9 @@ class BIStatusFilter(Filter):
         return newrows
 
 
-declare_filter(150,  BIStatusFilter(""))
-declare_filter(151,  BIStatusFilter("effective_"))
-declare_filter(152,  BIStatusFilter("assumed_"))
-
+declare_filter(150, BIStatusFilter(""))
+declare_filter(151, BIStatusFilter("effective_"))
+declare_filter(152, BIStatusFilter("assumed_"))
 
 if config.mkeventd_enabled:
     declare_filter(200, FilterText("event_id",         _("Event ID"),                        "event",   "event_id",           "event_id",               "="))
@@ -1580,10 +1608,10 @@ if config.mkeventd_enabled:
     declare_filter(222, FilterText("history_line",     _("Line number in history logfile"),  "history", "history_line",       "history_line",           "="))
     declare_filter(223, FilterNagiosFlag("event", "event_host_in_downtime", _("Host in downtime during event creation")))
 
-
     class EventFilterCount(Filter):
         def __init__(self, name, title):
-            super(EventFilterCount, self).__init__(name, title, "event", [name + "_from", name + "_to"], [name])
+            super(EventFilterCount, self).__init__(name, title, "event",
+                                                   [name + "_from", name + "_to"], [name])
             self._name = name
 
         def display(self):
@@ -1605,7 +1633,7 @@ if config.mkeventd_enabled:
 
     class EventFilterState(Filter):
         def __init__(self, table, name, title, choices):
-            varnames = [ name + "_" + str(c[0]) for c in choices ]
+            varnames = [name + "_" + str(c[0]) for c in choices]
             super(EventFilterState, self).__init__(name, title, table, varnames, [name])
             self._name = name
             self._choices = choices
@@ -1654,13 +1682,13 @@ if config.mkeventd_enabled:
     declare_filter(221, FilterTime("event",   "event_last",   _("Last occurrance of event"),       "event_last",  ))
     declare_filter(222, FilterTime("history", "history_time", _("Time of entry in event history"), "history_time",))
 
-
     class EventFilterDropdown(Filter):
-        def __init__(self, name, title, choices, operator = '=', column=None):
+        def __init__(self, name, title, choices, operator='=', column=None):
             if column == None:
                 column = name
             self._varname = "event_" + name
-            Filter.__init__(self, "event_" + name, title, "event", [ self._varname ], [ "event_" + column ])
+            Filter.__init__(self, "event_" + name, title, "event", [self._varname],
+                            ["event_" + column])
             self._choices = choices
             self._column = column
             self._operator = operator
@@ -1670,7 +1698,7 @@ if config.mkeventd_enabled:
                 choices = self._choices
             else:
                 choices = self._choices()
-            html.dropdown(self._varname, [ ("", "") ] + [(str(n),t) for (n,t) in choices])
+            html.dropdown(self._varname, [("", "")] + [(str(n), t) for (n, t) in choices])
 
         def filter(self, infoname):
             val = html.var(self._varname)
@@ -1683,7 +1711,6 @@ if config.mkeventd_enabled:
     declare_filter(211, EventFilterDropdown("sl", _("Service Level at least"), mkeventd.service_levels, operator='>='))
     declare_filter(211, EventFilterDropdown("sl_max", _("Service Level at most"), mkeventd.service_levels, operator='<=', column="sl"))
 
-
     class EventFilterEffectiveContactGroupCombo(FilterGroupCombo):
         def __init__(self, enforce=False):
             # TODO: Cleanup hierarchy here. The FilterGroupCombo constructor needs to be refactored
@@ -1694,21 +1721,23 @@ if config.mkeventd_enabled:
             )
             self.what = "contact"
             self.info = "event"
-            self.link_columns = [ "event_contact_groups", "event_contact_groups_precedence", "host_contact_groups" ]
-
+            self.link_columns = [
+                "event_contact_groups", "event_contact_groups_precedence", "host_contact_groups"
+            ]
 
         def filter(self, infoname):
             if not html.has_var(self.htmlvars[0]):
-                return "" # Skip if filter is not being set at all
+                return ""  # Skip if filter is not being set at all
 
             current_value = self.current_value()
             if not current_value:
                 if not self.enforce:
                     return ""
-                current_value = sites.live().query_value("GET contactgroups\nCache: reload\nColumns: name\nLimit: 1\n", None)
+                current_value = sites.live().query_value(
+                    "GET contactgroups\nCache: reload\nColumns: name\nLimit: 1\n", None)
 
             if current_value == None:
-                return "" # no {what}group exists!
+                return ""  # no {what}group exists!
 
             if not self.enforce and html.var(self.htmlvars[1]):
                 negate = "!"
@@ -1723,7 +1752,6 @@ if config.mkeventd_enabled:
                    "And: 2\n" \
                    "Or: 2\n" % (negate, livestatus.lqencode(current_value),
                                 negate, livestatus.lqencode(current_value))
-
 
         def variable_settings(self, row):
             return []

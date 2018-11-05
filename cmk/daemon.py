@@ -30,9 +30,11 @@ from pwd import getpwnam
 from grp import getgrnam
 import ctypes
 import ctypes.util
+from pathlib2 import Path # pylint: disable=unused-import
+from contextlib import contextmanager
 
 import cmk.store
-from .exceptions import MKGeneralException
+from cmk.exceptions import MKGeneralException
 
 
 def daemonize(user=0, group=0):
@@ -99,7 +101,9 @@ def closefrom(lowfd):
     os.closerange(lowfd, highfd)
 
 
+# TODO: Change API and call sites to work with Path() objects
 def lock_with_pid_file(path):
+    # type: (str) -> None
     """
     Use this after daemonizing or in foreground mode to ensure there is only
     one process running.
@@ -112,6 +116,32 @@ def lock_with_pid_file(path):
     # The pid can then be used by the init script.
     with file(path, "w") as f:
         f.write("%d\n" % os.getpid())
+
+
+# TODO: Change API and call sites to work with Path() objects
+def _cleanup_locked_pid_file(path):
+    # type: (str) -> None
+    """Cleanup the lock + file acquired by the function above"""
+    if not cmk.store.have_lock(path):
+        return
+
+    cmk.store.release_lock(path)
+
+    try:
+        os.remove(path)
+    except OSError:
+        pass
+
+
+@contextmanager
+def pid_file_lock(path):
+    # type: (Path) -> None
+    """Context manager for PID file based locking"""
+    lock_with_pid_file("%s" % path)
+    try:
+        yield
+    finally:
+        _cleanup_locked_pid_file("%s" % path)
 
 
 def set_cmdline(cmdline):

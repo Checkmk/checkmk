@@ -42,48 +42,42 @@ from cmk.gui.plugins.dashboard import (
     dashlet_registry,
 )
 
+
 @dashlet_registry.register
 class GraphDashlet(Dashlet):
     """Dashlet for rendering a single performance graph"""
+
     @classmethod
     def type_name(cls):
         return "pnpgraph"
-
 
     @classmethod
     def title(cls):
         return _("Performance Graph")
 
-
     @classmethod
     def description(cls):
         return _("Displays a performance graph of a host or service.")
-
 
     @classmethod
     def sort_index(cls):
         return 20
 
-
     @classmethod
     def initial_refresh_interval(cls):
         return 60
-
 
     @classmethod
     def initial_size(cls):
         return (60, 21)
 
-
     @classmethod
     def infos(cls):
         return ["service", "host"]
 
-
     @classmethod
     def single_infos(cls):
         return ["service", "host"]
-
 
     @classmethod
     def vs_parameters(cls):
@@ -93,7 +87,6 @@ class GraphDashlet(Dashlet):
             optional_keys = [],
             elements = cls._parameter_elements,
         )
-
 
     @classmethod
     def _parameter_elements(cls):
@@ -119,16 +112,16 @@ class GraphDashlet(Dashlet):
         import cmk.gui.cee.plugins.metrics.graphs as graphs
         if metrics.cmk_graphs_possible():
             elements += [
-                ("graph_render_options", graphs.vs_graph_render_options(
-                    default_values=graphs.default_dashlet_graph_render_options,
-                    exclude=[
-                        "show_time_range_previews",
-                    ],
-                )),
+                ("graph_render_options",
+                 graphs.vs_graph_render_options(
+                     default_values=graphs.default_dashlet_graph_render_options,
+                     exclude=[
+                         "show_time_range_previews",
+                     ],
+                 )),
             ]
 
         return elements
-
 
     @classmethod
     def styles(cls):
@@ -149,7 +142,6 @@ class GraphDashlet(Dashlet):
     color: #000;
 }
 """
-
 
     @classmethod
     def script(cls):
@@ -279,24 +271,21 @@ function load_graph_img(nr, img, img_url, c_w, c_h)
     def on_resize(self):
         return self._reload_js()
 
-
     def on_refresh(self):
         return self._reload_js()
-
 
     def _reload_js(self):
         # Be compatible to pre 1.5.0i2 format
         # TODO: Do this conversion during __init__() or during config loading
         if "graph_render_options" not in self._dashlet_spec:
             if self._dashlet_spec.pop("show_service", True):
-                title_format = ("add_title_infos", ["add_host_name",
-                                                    "add_service_description"])
+                title_format = ("add_title_infos", ["add_host_name", "add_service_description"])
             else:
                 title_format = ("plain", [])
 
             self._dashlet_spec["graph_render_options"] = {
-                "show_legend"  : self._dashlet_spec.pop("show_legend", False),
-                "title_format" : title_format,
+                "show_legend": self._dashlet_spec.pop("show_legend", False),
+                "title_format": title_format,
             }
 
         host = self._dashlet_spec['context'].get('host', html.var("host"))
@@ -326,10 +315,10 @@ function load_graph_img(nr, img, img_url, c_w, c_h)
         timerange = self._dashlet_spec.get('timerange', '1')
 
         graph_identification = ("template", {
-            "site"                : site,
-            "host_name"           : host,
-            "service_description" : service,
-            "graph_index"         : self._dashlet_spec["source"] -1,
+            "site": site,
+            "host_name": host,
+            "service_description": service,
+            "graph_index": self._dashlet_spec["source"] - 1,
         })
 
         graph_render_options = self._dashlet_spec["graph_render_options"]
@@ -337,7 +326,6 @@ function load_graph_img(nr, img, img_url, c_w, c_h)
         return "dashboard_render_graph(%d, %s, %s, '%s')" % \
                 (self._dashlet_id, json.dumps(graph_identification),
                  json.dumps(graph_render_options), timerange)
-
 
     def show(self):
         html.div("", id_="dashlet_graph_%d" % self._dashlet_id)

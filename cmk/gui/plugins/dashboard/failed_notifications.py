@@ -33,38 +33,34 @@ from cmk.gui.plugins.dashboard import (
     dashlet_registry,
 )
 
+
 @dashlet_registry.register
 class FailedNotificationsDashlet(Dashlet):
     """Dashlet notifying users in case of failure to send notifications"""
+
     @classmethod
     def type_name(cls):
         return "notify_failed_notifications"
-
 
     @classmethod
     def title(cls):
         return _("Failed Notifications")
 
-
     @classmethod
     def description(cls):
         return _("Display GUI notifications in case notification mechanism fails")
-
 
     @classmethod
     def sort_index(cls):
         return 0
 
-
     @classmethod
     def initial_refresh_interval(cls):
         return 60
 
-
     @classmethod
     def is_selectable(cls):
         return False
-
 
     @classmethod
     def styles(cls):
@@ -87,10 +83,9 @@ class FailedNotificationsDashlet(Dashlet):
     height:32px;
 }"""
 
-
     def show(self):
-        notdata = notifications.load_failed_notifications(after=notifications.acknowledged_time(),
-                                                          stat_only=True)
+        notdata = notifications.load_failed_notifications(
+            after=notifications.acknowledged_time(), stat_only=True)
 
         if notdata is None:
             failed_notifications = 0
@@ -106,7 +101,8 @@ class FailedNotificationsDashlet(Dashlet):
         confirm_url = html.makeuri_contextless([], filename="clear_failed_notifications.py")
         html.icon_button(confirm_url, _("Clear failed notifications"), "closetimewarp", target="main")
 
-        view_url = html.makeuri_contextless([("view_name", "failed_notifications")], filename="view.py")
+        view_url = html.makeuri_contextless([("view_name", "failed_notifications")],
+                                            filename="view.py")
         html.a(_("%d failed notifications") % failed_notifications, href=view_url)
 
         html.close_div()

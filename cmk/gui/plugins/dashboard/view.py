@@ -33,18 +33,18 @@ from cmk.gui.plugins.dashboard import (
     dashlet_registry,
 )
 
+
 @dashlet_registry.register
 class ViewDashlet(IFrameDashlet):
     """Dashlet that displays a Check_MK view"""
+
     @classmethod
     def type_name(cls):
         return "view"
 
-
     @classmethod
     def title(cls):
         return _("View")
-
 
     @classmethod
     def description(cls):
@@ -54,11 +54,9 @@ class ViewDashlet(IFrameDashlet):
     def sort_index(cls):
         return 10
 
-
     @classmethod
     def initial_size(cls):
         return (40, 20)
-
 
     @classmethod
     def vs_parameters(cls):
@@ -76,12 +74,10 @@ class ViewDashlet(IFrameDashlet):
 
         return _render_input, _handle_input
 
-
     @classmethod
     def add_url(cls):
         return 'create_view_dashlet.py?name=%s&back=%s' % \
             (html.urlencode(html.var('name')), html.urlencode(html.makeuri([('edit', '1')])))
-
 
     def update(self):
         is_reload = html.has_var("_reload")
@@ -90,7 +86,7 @@ class ViewDashlet(IFrameDashlet):
         if not is_reload:
             display_options += "HR"
 
-        html.set_var('display_options',  display_options)
+        html.set_var('display_options', display_options)
         html.set_var('_display_options', display_options)
         html.add_body_css_class('dashlet')
 

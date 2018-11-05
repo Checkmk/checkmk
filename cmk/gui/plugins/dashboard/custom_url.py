@@ -36,18 +36,18 @@ from cmk.gui.plugins.dashboard import (
     dashlet_registry,
 )
 
+
 @dashlet_registry.register
 class URLDashlet(IFrameDashlet):
     """Dashlet that displays a custom webpage"""
+
     @classmethod
     def type_name(cls):
         return "url"
 
-
     @classmethod
     def title(cls):
         return _("Custom URL")
-
 
     @classmethod
     def description(cls):
@@ -57,11 +57,9 @@ class URLDashlet(IFrameDashlet):
     def sort_index(cls):
         return 80
 
-
     @classmethod
     def initial_size(cls):
         return (30, 10)
-
 
     @classmethod
     def vs_parameters(cls):
@@ -78,10 +76,8 @@ class URLDashlet(IFrameDashlet):
             )),
         ]
 
-
     def update(self):
-        pass # Not called at all. This dashlet always opens configured pages (see below)
-
+        pass  # Not called at all. This dashlet always opens configured pages (see below)
 
     def _get_iframe_url(self):
         if not self._dashlet_spec.get('show_in_iframe', True):

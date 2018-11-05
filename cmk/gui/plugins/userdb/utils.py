@@ -42,6 +42,7 @@ import cmk.gui.plugin_registry
 #   | overridden by the specific connector classes.                        |
 #   '----------------------------------------------------------------------'
 
+
 class UserConnector(object):
     __metaclass__ = abc.ABCMeta
 
@@ -49,12 +50,10 @@ class UserConnector(object):
         super(UserConnector, self).__init__()
         self._config = config
 
-
     @classmethod
     @abc.abstractmethod
     def type(cls):
         raise NotImplementedError()
-
 
     @classmethod
     @abc.abstractmethod
@@ -62,12 +61,10 @@ class UserConnector(object):
         """The string representing this connector to humans"""
         raise NotImplementedError()
 
-
     @classmethod
     @abc.abstractmethod
     def short_title(cls):
         raise NotImplementedError()
-
 
     @classmethod
     def config_changed(cls):
@@ -92,18 +89,15 @@ class UserConnector(object):
     def check_credentials(self, user_id, password):
         return None
 
-
     # Optional: Hook function can be registered here to be executed
     # to synchronize all users.
     def do_sync(self, add_to_changelog, only_username):
         pass
 
-
     # Optional: Tells whether or not the synchronization (using do_sync()
     # method) is needed.
     def sync_is_needed(self):
         return False
-
 
     # Optional: Tells whether or not the given user is currently
     # locked which would mean that he is not allowed to login.
@@ -138,9 +132,9 @@ class UserConnector(object):
 #   | Base class for user attributes                                       |
 #   '----------------------------------------------------------------------'
 
+
 class UserAttribute(object):
     __metaclass__ = abc.ABCMeta
-
 
     @classmethod
     @abc.abstractmethod
@@ -148,42 +142,34 @@ class UserAttribute(object):
         # type: () -> bytes
         raise NotImplementedError()
 
-
     @abc.abstractmethod
     def topic(self):
         # type: () -> bytes
         raise NotImplementedError()
 
-
     @abc.abstractmethod
     def valuespec(self):
         raise NotImplementedError()
-
 
     def from_config(self):
         # type: () -> bool
         return False
 
-
     def user_editable(self):
         # type: () -> bool
         return True
-
 
     def permission(self):
         # type: () -> Optional[bytes]
         return None
 
-
     def show_in_table(self):
         # type: () -> bool
         return False
 
-
     def add_custom_macro(self):
         # type: () -> bool
         return False
-
 
     def domain(self):
         # type: () -> bytes
@@ -205,9 +191,9 @@ class UserConnectorRegistry(cmk.gui.plugin_registry.ClassRegistry):
     """The management object for all available user connector classes.
 
     Have a look at the base class for details."""
+
     def plugin_base_class(self):
         return cmk.gui.plugins.userdb.UserConnector
-
 
     def _register(self, plugin_class):
         plugin_class.migrate_config()
@@ -220,9 +206,9 @@ user_connector_registry = UserConnectorRegistry()
 class UserAttributeRegistry(cmk.gui.plugin_registry.ClassRegistry):
     """The management object for all available user attributes.
     Have a look at the base class for details."""
+
     def plugin_base_class(self):
         return cmk.gui.plugins.userdb.UserAttribute
-
 
     def _register(self, plugin_class):
         self._entries[plugin_class.name()] = plugin_class

@@ -66,7 +66,8 @@ import cmk.gui.hooks as hooks
 
 g_auth_base_dir = cmk.paths.var_dir + '/wato/auth'
 
-def format_php(data, lvl = 1):
+
+def format_php(data, lvl=1):
     s = ''
     if isinstance(data, (list, tuple)):
         s += 'array(\n'
@@ -214,8 +215,7 @@ function permitted_maps($username) {
 }
 
 ?>
-''' % (callee, format_php(nagvis_users), format_php(role_permissions),
-       format_php(groups)))
+''' % (callee, format_php(nagvis_users), format_php(role_permissions), format_php(groups)))
 
     # Now really replace the file
     os.rename(tempfile, g_auth_base_dir + '/auth.php')
@@ -224,7 +224,7 @@ function permitted_maps($username) {
 
 
 def create_auth_file(callee, users=None):
-    import cmk.gui.userdb as userdb # TODO: Cleanup
+    import cmk.gui.userdb as userdb  # TODO: Cleanup
     if users is None:
         userdb.load_users()
 
@@ -240,7 +240,7 @@ def create_auth_file(callee, users=None):
 
 
 # TODO: Should we not execute this hook also when folders are modified?
-hooks.register('users-saved',         lambda users: create_auth_file("users-saved", users))
-hooks.register('roles-saved',         lambda x: create_auth_file("roles-saved"))
+hooks.register('users-saved', lambda users: create_auth_file("users-saved", users))
+hooks.register('roles-saved', lambda x: create_auth_file("roles-saved"))
 hooks.register('contactgroups-saved', lambda x: create_auth_file("contactgroups-saved"))
-hooks.register('activate-changes',    lambda x: create_auth_file("activate-changes"))
+hooks.register('activate-changes', lambda x: create_auth_file("activate-changes"))

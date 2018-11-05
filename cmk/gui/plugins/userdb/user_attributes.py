@@ -43,16 +43,15 @@ from cmk.gui.plugins.userdb import (
     user_attribute_registry,
 )
 
+
 @user_attribute_registry.register
 class ForceAuthUserUserAttribute(UserAttribute):
     @classmethod
     def name(cls):
         return "force_authuser"
 
-
     def topic(self):
         return "personal"
-
 
     def valuespec(self):
         return Checkbox(
@@ -63,10 +62,8 @@ class ForceAuthUserUserAttribute(UserAttribute):
                      "even if he has the permission for seeing all objects."),
         )
 
-
     def permission(self):
         return "general.see_all"
-
 
 
 # TODO: Remove this with 1.5.0/1.6.0
@@ -76,10 +73,8 @@ class ForceAuthUserWebserviceUserAttribute(UserAttribute):
     def name(cls):
         return "force_authuser_webservice"
 
-
     def topic(self):
         return "personal"
-
 
     def valuespec(self):
         return Checkbox(
@@ -91,10 +86,8 @@ class ForceAuthUserWebserviceUserAttribute(UserAttribute):
                      "even if he has the permission for seeing all objects."),
         )
 
-
     def permission(self):
         return "general.see_all"
-
 
 
 @user_attribute_registry.register
@@ -103,10 +96,8 @@ class DisableNotificationsUserAttribute(UserAttribute):
     def name(cls):
         return "disable_notifications"
 
-
     def topic(self):
         return "personal"
-
 
     def valuespec(self):
         return Transform(Dictionary(
@@ -128,20 +119,16 @@ class DisableNotificationsUserAttribute(UserAttribute):
             ],
         ), forth = self._transform_disable_notification)
 
-
     def _transform_disable_notification(self, p):
         if type(p) is not dict:
             return {"disable": True}
         return p
 
-
     def permission(self):
         return "general.disable_notifications"
 
-
     def domain(self):
         return "check_mk"
-
 
 
 @user_attribute_registry.register
@@ -150,10 +137,8 @@ class StartURLUserAttribute(UserAttribute):
     def name(cls):
         return "start_url"
 
-
     def topic(self):
         return "personal"
-
 
     def valuespec(self):
         return Transform(
@@ -182,10 +167,8 @@ class StartURLUserAttribute(UserAttribute):
             forth = lambda v: None if v == "" else v,
         )
 
-
     def domain(self):
         return "multisite"
-
 
 
 @user_attribute_registry.register
@@ -194,10 +177,8 @@ class UIThemeUserAttribute(UserAttribute):
     def name(cls):
         return "ui_theme"
 
-
     def topic(self):
         return "personal"
-
 
     def valuespec(self):
         return Alternative(
@@ -215,7 +196,6 @@ class UIThemeUserAttribute(UserAttribute):
                 ),
             ],
         )
-
 
     def domain(self):
         return "multisite"

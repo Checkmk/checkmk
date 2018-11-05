@@ -23,66 +23,68 @@
 # License along with GNU Make; see the file  COPYING.  If  not,  write
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
-
 """Register general nagvis permissions"""
 
 import cmk.gui.config as config
 from cmk.gui.i18n import _
 
-config.declare_permission_section('nagvis', _('NagVis'))
+config.declare_permission_section(
+    'nagvis',
+    _('NagVis'),
+)
 
 config.declare_permission(
     'nagvis.*_*_*',
     _('Full access'),
     _('This permission grants full access to NagVis.'),
-    [ 'admin' ]
+    ['admin'],
 )
 
 config.declare_permission(
     'nagvis.Rotation_view_*',
     _('Use all map rotations'),
     _('Grants read access to all rotations.'),
-    [ 'guest' ]
+    ['guest'],
 )
 
 config.declare_permission(
     'nagvis.Map_view_*',
     _('View all maps'),
     _('Grants read access to all maps.'),
-    [ 'guest' ]
+    ['guest'],
 )
 
 config.declare_permission(
     'nagvis.Map_edit_*',
     _('Edit all maps'),
     _('Grants modify access to all maps.'),
-    []
+    [],
 )
 
 config.declare_permission(
     'nagvis.Map_delete_*',
     _('Delete all maps'),
     _('Permits to delete all maps.'),
-    []
+    [],
 )
 
 config.declare_permission(
     'nagvis.Map_view',
     _('View permitted maps'),
     _('Grants read access to all maps the user is a contact for.'),
-    ['user']
+    ['user'],
 )
 
 config.declare_permission(
     'nagvis.Map_edit',
     _('Edit permitted maps'),
     _('Grants modify access to all maps the user is contact for.'),
-    ['user']
+    ['user'],
 )
 
 config.declare_permission(
     'nagvis.Map_delete',
     _('Delete permitted maps'),
     _('Permits to delete all maps the user is contact for.'),
-    ['user']
+    ['user'],
 )

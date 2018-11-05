@@ -39,14 +39,16 @@ from . import (
     mode_registry,
 )
 
-register_modules(WatoModule(
-    mode_or_url="background_jobs_overview",
-    title=_("Background jobs"),
-    icon="background_jobs",
-    permission="background_jobs.manage_jobs",
-    description=_("Manage longer running tasks in the Check_MK GUI"),
-    sort_index=90,
-))
+register_modules(
+    WatoModule(
+        mode_or_url="background_jobs_overview",
+        title=_("Background jobs"),
+        icon="background_jobs",
+        permission="background_jobs.manage_jobs",
+        description=_("Manage longer running tasks in the Check_MK GUI"),
+        sort_index=90,
+    ))
+
 
 @mode_registry.register
 class ModeBackgroundJobsOverview(WatoMode):
@@ -54,31 +56,28 @@ class ModeBackgroundJobsOverview(WatoMode):
     def name(cls):
         return "background_jobs_overview"
 
-
     @classmethod
     def permissions(cls):
         return ["background_jobs.manage_jobs"]
 
-
     def title(self):
         return _("Background jobs overview")
-
 
     def page(self):
         job_manager = gui_background_job.GUIBackgroundJobManager()
 
         back_url = html.makeuri_contextless([("mode", "background_jobs_overview")])
-        job_manager.show_status_of_job_classes(gui_background_job.job_registry.values(), job_details_back_url=back_url)
+        job_manager.show_status_of_job_classes(
+            gui_background_job.job_registry.values(), job_details_back_url=back_url)
 
-        if any(job_manager.get_running_job_ids(c)
+        if any(
+                job_manager.get_running_job_ids(c)
                 for c in gui_background_job.job_registry.values()):
             html.javascript("set_reload(0.8)")
-
 
     def action(self):
         action_handler = gui_background_job.ActionHandler(stylesheets=wato_styles)
         action_handler.handle_actions()
-
 
 
 @mode_registry.register
@@ -87,24 +86,19 @@ class ModeBackgroundJobDetails(WatoMode):
     def name(cls):
         return "background_job_details"
 
-
     @classmethod
     def permissions(cls):
         return []
 
-
     def title(self):
         return _("Background job details")
-
 
     def buttons(self):
         if self._back_url():
             html.context_button(_("Back"), self._back_url(), "back")
 
-
     def _back_url(self):
         return html.get_url_input("back_url")
-
 
     def page(self):
         job_id = html.var("job_id")
@@ -126,7 +120,6 @@ class ModeBackgroundJobDetails(WatoMode):
         job_manager.show_job_details_from_snapshot(job_snapshot)
         if job_snapshot.is_running():
             html.javascript("set_reload(1)")
-
 
     def action(self):
         action_handler = gui_background_job.ActionHandler(stylesheets=wato_styles)

@@ -312,7 +312,14 @@ execfile(os.path.join(os.path.dirname(__file__), '../../../checks/docker.include
          "ContainersRunning": 1,
          "ContainersStopped": 1,
          "ContainersPaused": 0,
-       })
+       }),
+    ([[u'Got', u'permission', u'denied', u'while', u'trying', u'to', u'connect',
+       u'to', u'the', u'Docker', u'daemon', u'socket', u'at',
+       u'unix:///var/run/docker.sock:', u'Get',
+       u'http://%2Fvar%2Frun%2Fdocker.sock/v1.26/info:', u'dial', u'unix',
+       u'/var/run/docker.sock:', u'connect:', u'permission', u'denied']
+     ], {}),
+    ([], {}),
 ])
 def test_parse_docker_node_info(indata, outdata_subset):
     

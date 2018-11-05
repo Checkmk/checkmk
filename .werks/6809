@@ -1,0 +1,10 @@
+Title: aix_if: Transmit/Receive errors are no longer ignored
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.4.0p38
+Date: 1541408976
+Class: fix
+
+

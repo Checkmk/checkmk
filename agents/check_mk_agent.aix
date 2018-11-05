@@ -190,8 +190,8 @@ echo "<<<aix_if>>>"
 for ent in $(ifconfig -a | grep '^en' | cut -d ":" -f 1)
 do
     echo "[$ent]"
-    entstat $ent | grep -E "(^Hardware|^Bytes:|^Packets:|^Transmit:|^Broadcast:|^Multicast:)"
-    entstat $ent | grep -p "Driver Flags:"
+    entstat "$ent" | grep -E "(^Hardware|^Bytes:|^Packets:|^Transmit|^Broadcast:|^Multicast:)"
+    entstat "$ent" | grep -p "Driver Flags:"
 done
 
 

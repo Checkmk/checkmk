@@ -39,6 +39,37 @@ regex = re.compile
       ['Images              15                  2                   9.57GB              8.674GB (90%)'],
       ['Containers          2                   1                   1.226GB             1.224GB (99%)'],
       ['Local Volumes       1                   1                   9.323MB             0B (0%)'],
+      ['Build Cache                                                 0B                  0B'],
+      ], {"images": {
+              "Type": "Images",
+              "TotalCount": 15,
+              "Active": 2,
+              "Size": 9570000000,
+              "Reclaimable": 8674000000},
+          "containers": {
+              "Type": "Containers",
+              "TotalCount": 2,
+              "Active": 1,
+              "Size": 1226000000,
+              "Reclaimable": 1224000000},
+          "local volumes": {
+              "Type": "Local Volumes",
+              "TotalCount": 1,
+              "Active": 1,
+              "Size": 9323000,
+              "Reclaimable": 0},
+          "build cache": {
+              "Type": "Build Cache",
+              "TotalCount": 0,
+              "Active": 0,
+              "Size": 0,
+              "Reclaimable": 0},
+          }),
+    ([
+      ['TYPE                TOTAL               ACTIVE              SIZE                RECLAIMABLE'],
+      ['Images              15                  2                   9.57GB              8.674GB (90%)'],
+      ['Containers          2                   1                   1.226GB             1.224GB (99%)'],
+      ['Local Volumes       1                   1                   9.323MB             0B (0%)'],
       ['Build Cache         0                   0                   0B                  0B'],
       ], {"images": {
               "Type": "Images",

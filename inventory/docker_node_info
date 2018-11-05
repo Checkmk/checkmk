@@ -27,7 +27,7 @@
 
 
 def inv_docker_node_info(parsed, inventory_tree, status_data_tree):
-    if not isinstance(parsed, dict):
+    if not parsed or not isinstance(parsed, dict):
         # String with error message in case the daemon is not running
         return
 

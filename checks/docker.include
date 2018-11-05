@@ -71,15 +71,21 @@ def _docker_trunc_id(hash_string):
 
 def _get_repo_tag(string):
     if ":" in string:
-        return tuple(string.split(":", 1))
+        return tuple(string.rsplit(":", 1))
     return string, "latest"
 
 
 def parse_docker_node_info(info):
     '''parse output of "docker info"'''
+    if not info:
+        return {}
+
+    # parse legacy json output (verisons 1.5.0 - 1.5.0p6)
+    joined = " ".join(info[0])
+    if joined.endswith("permission denied"):
+        return {}
     try:
-        # parse legacy json output (verisons 1.5.0 - 1.5.0p6)
-        return json.loads(" ".join(info[0]))
+        return json.loads(joined)
     except ValueError:
         pass
 
@@ -169,10 +175,13 @@ def _docker_parse_table(rows, fields, keys):
 
 def parse_docker_system_df(info):
 
+    def int_or_zero(s):
+        return int(s.strip() or 0)
+
     field_map = (
         ('TYPE', 'TOTAL', 'ACTIVE', 'SIZE', 'RECLAIMABLE'),
         ('Type', 'TotalCount', 'Active', 'Size', 'Reclaimable'),
-        (str, int, int, _docker_get_bytes, _docker_get_bytes),
+        (str, int_or_zero, int_or_zero, _docker_get_bytes, _docker_get_bytes),
     )
 
     try:  # parse legacy json output: from 1.5.0 - 1.5.0p6
@@ -292,6 +301,9 @@ def parse_docker_node_images(info):
         repotags = pref_info.get("RepoTags")
         if repotags:
             image["Repository"], image["Tag"] = _get_repo_tag(repotags[-1])
+        else:
+            repo = pref_info.get("RepoDigest", "").split('@', 1)[0]
+            image["Repository"], image["Tag"] = _get_repo_tag(repo)
 
     for image in images.itervalues():
         image["amount_containers"] = 0
@@ -305,15 +317,15 @@ def parse_docker_node_images(info):
     mapping = {(i['Repository'], i['Tag']): i['ID']
                for i in images.itervalues()}
 
-    for c in containers.itervalues():
-        image_id = mapping.get((c["Repository"], c["Tag"]))
+    for cont in containers.itervalues():
+        image_id = mapping.get((cont["Repository"], cont["Tag"]))
         image = images.get(image_id)
         if image is not None:
             image["amount_containers"] += 1
 
-        labels = c.get("Labels")
+        labels = cont.get("Labels")
         if isinstance(labels, (str, unicode)):
-            c["Labels"] = parse_docker_messed_up_labels(labels)
+            cont["Labels"] = parse_docker_messed_up_labels(labels)
 
     return {"images": images, "containers": containers}
 

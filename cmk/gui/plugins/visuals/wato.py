@@ -37,11 +37,11 @@ from . import (
     declare_filter,
 )
 
+
 class FilterWatoFile(Filter):
     def __init__(self):
         super(FilterWatoFile, self).__init__("wato_folder", _("WATO Folder"), "host", ["wato_folder"], [])
         self.last_wato_data_update = None
-
 
     def available(self):
         # This filter is also available on slave sites with disabled WATO
@@ -49,25 +49,23 @@ class FilterWatoFile(Filter):
         # file and the absence of any site configuration
         return config.wato_enabled or watolib.is_wato_slave_site()
 
-
     def load_wato_data(self):
         self.tree = watolib.Folder.root_folder()
-        self.path_to_tree = {} # will be filled by self.folder_selection
+        self.path_to_tree = {}  # will be filled by self.folder_selection
         self.selection = self.folder_selection(self.tree, "", 0)
         self.last_wato_data_update = time.time()
-
 
     def check_wato_data_update(self):
         if not self.last_wato_data_update or time.time() - self.last_wato_data_update > 5:
             self.load_wato_data()
-
 
     def display(self):
         self.check_wato_data_update()
         # Note: WATO Folders that the user has not permissions to must not be visible.
         # Permissions in this case means, that the user has view permissions for at
         # least one host in that folder.
-        result = sites.live().query("GET hosts\nCache: reload\nColumns: filename\nStats: state >= 0\n")
+        result = sites.live().query(
+            "GET hosts\nCache: reload\nColumns: filename\nStats: state >= 0\n")
         allowed_folders = set([""])
         for path, _host_count in result:
             # convert '/wato/server/hosts.mk' to 'server'
@@ -81,18 +79,20 @@ class FilterWatoFile(Filter):
                 subfolder += part
                 allowed_folders.add(subfolder)
 
-        html.dropdown(self.name, [("", "")] + [ entry for entry in self.selection if entry[0] in allowed_folders ])
+        html.dropdown(
+            self.name,
+            [("", "")] + [entry for entry in self.selection if entry[0] in allowed_folders])
 
     def filter(self, infoname):
         self.check_wato_data_update()
         current = html.var(self.name)
         if current:
-            path_regex = "^/wato/%s" % current.replace("\n", "") # prevent insertions attack
-            if current.endswith("/"): # Hosts directly in this folder
+            path_regex = "^/wato/%s" % current.replace("\n", "")  # prevent insertions attack
+            if current.endswith("/"):  # Hosts directly in this folder
                 path_regex += "hosts.mk"
             else:
                 path_regex += "/"
-            if "*" in current: # used by virtual host tree snapin
+            if "*" in current:  # used by virtual host tree snapin
                 path_regex = path_regex.replace(".", "\\.").replace("*", ".*")
                 op = "~~"
             else:
@@ -111,10 +111,9 @@ class FilterWatoFile(Filter):
         else:
             title_prefix = ""
         self.path_to_tree[my_path] = folder.title()
-        sel = [ (my_path , title_prefix + folder.title()) ]
+        sel = [(my_path, title_prefix + folder.title())]
         sel += self.sublist(folder.all_subfolders(), my_path, depth)
         return sel
-
 
     def sublist(self, elements, my_path, depth):
         vs = elements.values()
@@ -123,7 +122,6 @@ class FilterWatoFile(Filter):
         for e in vs:
             sel += self.folder_selection(e, my_path, depth + 1)
         return sel
-
 
     def heading_info(self):
         # FIXME: There is a problem with caching data and changing titles of WATO files

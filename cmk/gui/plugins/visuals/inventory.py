@@ -42,6 +42,7 @@ from . import (
     declare_info,
 )
 
+
 class FilterInvtableText(Filter):
     def __init__(self, infoname, name, title):
         varname = infoname + "_" + name
@@ -73,7 +74,6 @@ class FilterInvtableText(Filter):
         return newrows
 
 
-
 # Filter for choosing a range in which an age lies
 class FilterInvtableAge(Filter):
     def __init__(self, infoname, name, title, only_days=False):
@@ -99,14 +99,11 @@ class FilterInvtableAge(Filter):
 
         html.close_table()
 
-
     def double_height(self):
         return True
 
-
     def filter_table(self, rows):
         return self.filter_table_with_conversion(rows, lambda age: age)
-
 
     def filter_table_with_conversion(self, rows, conv):
         from_value = Age().from_html_vars(self.name + "_from")
@@ -129,16 +126,13 @@ class FilterInvtableAge(Filter):
         return newrows
 
 
-
 class FilterInvtableTimestampAsAge(FilterInvtableAge):
     def __init__(self, infoname, name, title, only_days=True):
         FilterInvtableAge.__init__(self, infoname, name, title, only_days)
 
-
     def filter_table(self, rows):
         now = time.time()
         return self.filter_table_with_conversion(rows, lambda timestamp: now - timestamp)
-
 
 
 # Filter for choosing a range in which a certain integer lies
@@ -176,14 +170,14 @@ class FilterInvtableIDRange(Filter):
 class FilterInvtableOperStatus(Filter):
     def __init__(self, infoname, name, title):
         varname = infoname + "_" + name
-        varnames = [ varname + "_" + str(x) for x in defines.interface_oper_states() ]
+        varnames = [varname + "_" + str(x) for x in defines.interface_oper_states()]
         Filter.__init__(self, varname, title, infoname, varnames, [])
 
     def display(self):
         html.begin_checkbox_group()
         for state, state_name in sorted(defines.interface_oper_states().items()):
             if state >= 8:
-                continue # skip artificial state 8 (degraded) and 9 (admin down)
+                continue  # skip artificial state 8 (degraded) and 9 (admin down)
             varname = self.name + "_" + str(state)
             html.checkbox(varname, True, label=state_name)
             if state in (4, 7):
@@ -214,7 +208,7 @@ class FilterInvtableOperStatus(Filter):
 class FilterInvtableAdminStatus(Filter):
     def __init__(self, infoname, name, title):
         varname = infoname + "_" + name
-        Filter.__init__(self, varname, title, infoname, [ varname ], [])
+        Filter.__init__(self, varname, title, infoname, [varname], [])
 
     def display(self):
         html.begin_radio_group(horizontal=True)
@@ -234,10 +228,11 @@ class FilterInvtableAdminStatus(Filter):
                 new_rows.append(row)
         return new_rows
 
+
 class FilterInvtableAvailable(Filter):
     def __init__(self, infoname, name, title):
         varname = infoname + "_" + name
-        Filter.__init__(self, varname, title, infoname, [ varname ], [])
+        Filter.__init__(self, varname, title, infoname, [varname], [])
 
     def display(self):
         html.begin_radio_group(horizontal=True)
@@ -263,17 +258,18 @@ class FilterInvtableAvailable(Filter):
 class FilterInvtableInterfaceType(Filter):
     def __init__(self, infoname, name, title):
         varname = infoname + "_" + name
-        Filter.__init__(self, varname, title, infoname, [ varname ], [])
+        Filter.__init__(self, varname, title, infoname, [varname], [])
 
     def double_height(self):
         return True
 
     def valuespec(self):
         return DualListChoice(
-            choices = defines.interface_port_types(),
-            rows = 4,
-            enlarge_active = True,
-            custom_order = True)
+            choices=defines.interface_port_types(),
+            rows=4,
+            enlarge_active=True,
+            custom_order=True,
+        )
 
     def selection(self):
         current = html.var(self.name, "").strip().split("|")
@@ -289,7 +285,7 @@ class FilterInvtableInterfaceType(Filter):
     def filter_table(self, rows):
         current = self.selection()
         if len(current) == 0:
-            return rows # No types selected, filter is unused
+            return rows  # No types selected, filter is unused
         new_rows = []
         for row in rows:
             if str(row[self.name]) in current:
@@ -311,9 +307,9 @@ class FilterInvtableVersion(Filter):
 
     def filter_table(self, rows):
         from_version = html.var(self.htmlvars[0])
-        to_version   = html.var(self.htmlvars[1])
+        to_version = html.var(self.htmlvars[1])
         if not from_version and not to_version:
-            return rows # Filter not used
+            return rows  # Filter not used
 
         new_rows = []
         for row in rows:
@@ -431,7 +427,7 @@ class FilterInvBool(FilterTristate):
         return True
 
     def filter(self, infoname):
-        return "" # No Livestatus filtering right now
+        return ""  # No Livestatus filtering right now
 
     def filter_table(self, rows):
         tri = self.tristate_value()
@@ -455,20 +451,20 @@ class FilterHasInventory(FilterTristate):
         return True
 
     def filter(self, infoname):
-        return "" # No Livestatus filtering right now
+        return ""  # No Livestatus filtering right now
 
     def filter_table(self, rows):
         tri = self.tristate_value()
         if tri == -1:
             return rows
         elif tri == 1:
-            return [ row for row in rows if row["host_inventory"] ]
+            return [row for row in rows if row["host_inventory"]]
 
         # not
-        return [ row for row in rows if not row["host_inventory"] ]
+        return [row for row in rows if not row["host_inventory"]]
+
 
 declare_filter(801, FilterHasInventory())
-
 
 
 class FilterInvHasSoftwarePackage(Filter):
@@ -506,9 +502,9 @@ class FilterInvHasSoftwarePackage(Filter):
             return rows
 
         from_version = html.var(self._varprefix + "from_version")
-        to_version   = html.var(self._varprefix + "to_version")
-        negate       = html.get_checkbox(self._varprefix + "negate")
-        match        = html.var(self._varprefix + "match")
+        to_version = html.var(self._varprefix + "to_version")
+        negate = html.get_checkbox(self._varprefix + "negate")
+        match = html.var(self._varprefix + "match")
         if match == "regex":
             try:
                 name = re.compile(name)
@@ -538,7 +534,7 @@ class FilterInvHasSoftwarePackage(Filter):
                 if not name.search(package["name"]):
                     continue
             if not from_version and not to_version:
-                return True # version not relevant
+                return True  # version not relevant
             version = package["version"]
             if from_version == to_version and from_version != version:
                 continue
@@ -553,6 +549,7 @@ class FilterInvHasSoftwarePackage(Filter):
 
     def version_is_higher(self, a, b):
         return utils.cmp_version(a, b) == 1
+
 
 declare_filter(801, FilterInvHasSoftwarePackage())
 

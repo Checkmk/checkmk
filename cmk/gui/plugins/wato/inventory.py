@@ -38,63 +38,59 @@ from cmk.gui.valuespec import (
 )
 from cmk.gui.i18n import _
 
-from cmk.gui.plugins.wato import (
-    register_rulegroup,
-    register_rule
-)
+from cmk.gui.plugins.wato import (register_rulegroup, register_rule)
 
-register_rulegroup("inventory",
-    _("Hardware/Software-Inventory"),
-    _("Configuration of the Check_MK Hardware and Software Inventory System"))
+register_rulegroup("inventory", _("Hardware/Software-Inventory"),
+                   _("Configuration of the Check_MK Hardware and Software Inventory System"))
 group = "inventory"
 
-register_rule(group,
+register_rule(
+    group,
     "active_checks:cmk_inv",
     Transform(
-        Dictionary(
-            elements = [
-                ( "sw_changes",
-                  MonitoringState(
-                      title = _("State when software changes are detected"),
-                      default_value = 0,
-                )),
-                ( "sw_missing",
-                  MonitoringState(
-                      title = _("State when software packages info is missing"),
-                      default_value = 0,
-                )),
-                ( "hw_changes",
-                  MonitoringState(
-                      title = _("State when hardware changes are detected"),
-                      default_value = 0,
-                )),
-                ( "fail_status",
-                  MonitoringState(
-                      title = _("State when inventory fails"),
-                      help = _("The check takes this state in case the inventory cannot be "
-                               "updated because of any possible reason. A common use is "
-                               "setting this to OK for workstations that can be switched "
-                               "off - so you will get no notifications in that case."),
-                      default_value = 1,
-                )),
-                ("status_data_inventory", DropdownChoice(
-                    title=_("Status data inventory"),
-                    help=_("All hosts configured via this ruleset will do a hardware and "
-                         "software inventory after every check cycle if there's at least "
-                         "one inventory plugin which processes status data. "
-                         "<b>Note:</b> in order to get any useful "
-                         "result for agent based hosts make sure that you have installed "
-                         "the agent plugin <tt>mk_inventory</tt> on these hosts."),
-                    choices=[
-                        (True, _("Do status data inventory")),
-                        (False, _("Do not status data inventory")),
-                    ],
-                    default_value=True,
-                )),
-            ]
-        ),
-        title = _("Do hardware/software Inventory"),
-        help = _("All hosts configured via this ruleset will do a hardware and "
+        Dictionary(elements=[
+            ("sw_changes",
+             MonitoringState(
+                 title=_("State when software changes are detected"),
+                 default_value=0,
+             )),
+            ("sw_missing",
+             MonitoringState(
+                 title=_("State when software packages info is missing"),
+                 default_value=0,
+             )),
+            ("hw_changes",
+             MonitoringState(
+                 title=_("State when hardware changes are detected"),
+                 default_value=0,
+             )),
+            ("fail_status",
+             MonitoringState(
+                 title=_("State when inventory fails"),
+                 help=_("The check takes this state in case the inventory cannot be "
+                        "updated because of any possible reason. A common use is "
+                        "setting this to OK for workstations that can be switched "
+                        "off - so you will get no notifications in that case."),
+                 default_value=1,
+             )),
+            ("status_data_inventory",
+             DropdownChoice(
+                 title=_("Status data inventory"),
+                 help=_("All hosts configured via this ruleset will do a hardware and "
+                        "software inventory after every check cycle if there's at least "
+                        "one inventory plugin which processes status data. "
+                        "<b>Note:</b> in order to get any useful "
+                        "result for agent based hosts make sure that you have installed "
+                        "the agent plugin <tt>mk_inventory</tt> on these hosts."),
+                 choices=[
+                     (True, _("Do status data inventory")),
+                     (False, _("Do not status data inventory")),
+                 ],
+                 default_value=True,
+             )),
+        ]),
+        title=_("Do hardware/software Inventory"),
+        help=_("All hosts configured via this ruleset will do a hardware and "
                "software inventory. For each configured host a new active check "
                "will be created. You should also create a rule for changing the "
                "normal interval for that check to something between a couple of "
@@ -102,81 +98,85 @@ register_rule(group,
                "<b>Note:</b> in order to get any useful "
                "result for agent based hosts make sure that you have installed "
                "the agent plugin <tt>mk_inventory</tt> on these hosts."),
-        forth = lambda x: x != None and x or {}, # convert from legacy None
+        forth=lambda x: x != None and x or {},  # convert from legacy None
     ),
-    match = "all",
+    match="all",
 )
 
-register_rule(group,
+register_rule(
+    group,
     "inv_exports:software_csv",
     Dictionary(
-        title = _("Export List of Software packages as CSV file"),
-        elements = [
-            ( "filename",
-              TextAscii(
-                  title = _("Export file to create, containing <tt>&ly;HOST&gt;</tt> for the hostname"),
-                  help = _("Please specify the path to the export file. The text <tt>&lt;HOST&gt;</tt> "
-                           "will be replaced with the host name the inventory has been done for. "
-                           "If you use a relative path then that will be relative to Check_MK's directory "
-                           "for variable data, which is <tt>%s</tt>.") % cmk.paths.var_dir,
-                  allow_empty = False,
-                  size = 64,
-                  default_value = "csv-export/<HOST>.csv",
-              )),
-            ( "separator",
-              TextAscii(
-                  title = _("Separator"),
-                  allow_empty = False,
-                  size = 1,
-                  default_value = ";",
-            )),
-            ( "quotes",
-              DropdownChoice(
-                  title = _("Quoting"),
-                  choices = [
-                    ( None, _("Don't use quotes") ),
-                    ( "single", _("Use single quotes, escape contained quotes with backslash") ),
-                    ( "double", _("Use double quotes, escape contained quotes with backslash") ),
+        title=_("Export List of Software packages as CSV file"),
+        elements=[
+            ("filename",
+             TextAscii(
+                 title=_(
+                     "Export file to create, containing <tt>&ly;HOST&gt;</tt> for the hostname"),
+                 help=_(
+                     "Please specify the path to the export file. The text <tt>&lt;HOST&gt;</tt> "
+                     "will be replaced with the host name the inventory has been done for. "
+                     "If you use a relative path then that will be relative to Check_MK's directory "
+                     "for variable data, which is <tt>%s</tt>.") % cmk.paths.var_dir,
+                 allow_empty=False,
+                 size=64,
+                 default_value="csv-export/<HOST>.csv",
+             )),
+            ("separator",
+             TextAscii(
+                 title=_("Separator"),
+                 allow_empty=False,
+                 size=1,
+                 default_value=";",
+             )),
+            ("quotes",
+             DropdownChoice(
+                 title=_("Quoting"),
+                 choices=[
+                     (None, _("Don't use quotes")),
+                     ("single", _("Use single quotes, escape contained quotes with backslash")),
+                     ("double", _("Use double quotes, escape contained quotes with backslash")),
                  ],
-                 default_value = None,
-            )),
-            ( "headers",
-              DropdownChoice(
-                  title = _("Column headers"),
-                  choices = [
-                    ( False, _("Do not add column headers") ),
-                    ( True, _("Add a first row with column titles") ),
-                  ],
-                  default_value = False,
-            )),
+                 default_value=None,
+             )),
+            ("headers",
+             DropdownChoice(
+                 title=_("Column headers"),
+                 choices=[
+                     (False, _("Do not add column headers")),
+                     (True, _("Add a first row with column titles")),
+                 ],
+                 default_value=False,
+             )),
         ],
-        required_keys = [ "filename" ],
+        required_keys=["filename"],
     ),
-    match = "first"
-)
+    match="first")
 
-register_rule(group,
+register_rule(
+    group,
     "inv_parameters:inv_if",
     Dictionary(
-        title = _("Parameters for switch port inventory"),
-        elements = [
-            ( "unused_duration",
-              Age(
-                  title = _("Port down time until considered unused"),
-                  help = _("After this time in the state <i>down</i> a port is considered unused."),
-                  default_value = 30 * 86400,
-            )),
-            ( "usage_port_types",
-              DualListChoice(
-                title = _("Port types to include in usage statistics"),
-                choices = defines.interface_port_types(),
-                autoheight = False,
-                rows = 40,
-                enlarge_active = False,
-                custom_order = True,
-                default_value = [ '6', '32', '62', '117', '127', '128', '129', '180', '181', '182', '205', '229' ],
-            )),
-        ]
-    ),
-    match = "dict",
+        title=_("Parameters for switch port inventory"),
+        elements=[
+            ("unused_duration",
+             Age(
+                 title=_("Port down time until considered unused"),
+                 help=_("After this time in the state <i>down</i> a port is considered unused."),
+                 default_value=30 * 86400,
+             )),
+            ("usage_port_types",
+             DualListChoice(
+                 title=_("Port types to include in usage statistics"),
+                 choices=defines.interface_port_types(),
+                 autoheight=False,
+                 rows=40,
+                 enlarge_active=False,
+                 custom_order=True,
+                 default_value=[
+                     '6', '32', '62', '117', '127', '128', '129', '180', '181', '182', '205', '229'
+                 ],
+             )),
+        ]),
+    match="dict",
 )

@@ -23,7 +23,6 @@
 # License along with GNU Make; see the file  COPYING.  If  not,  write
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
-
 """WATO-Module for the rules and aggregations of Check_MK BI"""
 
 import os
@@ -90,31 +89,32 @@ from cmk.gui.plugins.wato import (
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
+
 class BIManagement(object):
     def __init__(self):
         # We need to replace the BI constants internally with something
         # that we can replace back after writing the BI-Rules out
         # with pprint.pformat
         self._bi_constants = {
-            'ALL_HOSTS'          : 'ALL_HOSTS-f41e728b-0bce-40dc-82ea-51091d034fc3',
-            'HOST_STATE'         : 'HOST_STATE-f41e728b-0bce-40dc-82ea-51091d034fc3',
-            'HIDDEN'             : 'HIDDEN-f41e728b-0bce-40dc-82ea-51091d034fc3',
-            'FOREACH_HOST'       : 'FOREACH_HOST-f41e728b-0bce-40dc-82ea-51091d034fc3',
-            'FOREACH_CHILD'      : 'FOREACH_CHILD-f41e728b-0bce-40dc-82ea-51091d034fc3',
-            'FOREACH_CHILD_WITH' : 'FOREACH_CHILD_WITH-f41e728b-0bce-40dc-82ea-51091d034fc3',
-            'FOREACH_PARENT'     : 'FOREACH_PARENT-f41e728b-0bce-40dc-82ea-51091d034fc3',
-            'FOREACH_SERVICE'    : 'FOREACH_SERVICE-f41e728b-0bce-40dc-82ea-51091d034fc3',
-            'REMAINING'          : 'REMAINING-f41e728b-0bce-40dc-82ea-51091d034fc3',
-            'DISABLED'           : 'DISABLED-f41e728b-0bce-40dc-82ea-51091d034fc3',
-            'HARD_STATES'        : 'HARD_STATES-f41e728b-0bce-40dc-82ea-51091d034fc3',
-            'DT_AGGR_WARN'       : 'DT_AGGR_WARN-f41e728b-0bce-40dc-82ea-51091d034fc3',
+            'ALL_HOSTS': 'ALL_HOSTS-f41e728b-0bce-40dc-82ea-51091d034fc3',
+            'HOST_STATE': 'HOST_STATE-f41e728b-0bce-40dc-82ea-51091d034fc3',
+            'HIDDEN': 'HIDDEN-f41e728b-0bce-40dc-82ea-51091d034fc3',
+            'FOREACH_HOST': 'FOREACH_HOST-f41e728b-0bce-40dc-82ea-51091d034fc3',
+            'FOREACH_CHILD': 'FOREACH_CHILD-f41e728b-0bce-40dc-82ea-51091d034fc3',
+            'FOREACH_CHILD_WITH': 'FOREACH_CHILD_WITH-f41e728b-0bce-40dc-82ea-51091d034fc3',
+            'FOREACH_PARENT': 'FOREACH_PARENT-f41e728b-0bce-40dc-82ea-51091d034fc3',
+            'FOREACH_SERVICE': 'FOREACH_SERVICE-f41e728b-0bce-40dc-82ea-51091d034fc3',
+            'REMAINING': 'REMAINING-f41e728b-0bce-40dc-82ea-51091d034fc3',
+            'DISABLED': 'DISABLED-f41e728b-0bce-40dc-82ea-51091d034fc3',
+            'HARD_STATES': 'HARD_STATES-f41e728b-0bce-40dc-82ea-51091d034fc3',
+            'DT_AGGR_WARN': 'DT_AGGR_WARN-f41e728b-0bce-40dc-82ea-51091d034fc3',
         }
         self._load_config()
 
         if not config.user.may("wato.bi_admin"):
             self._user_contactgroups = userdb.contactgroups_of_user(config.user.id)
         else:
-            self._user_contactgroups = None # meaning I am admin
+            self._user_contactgroups = None  # meaning I am admin
 
         # Most modes need a pack as context
         if html.has_var("pack"):
@@ -134,27 +134,28 @@ class BIManagement(object):
     def _load_config(self):
         filename = watolib.multisite_dir + "bi.mk"
         try:
-            vars_ = { "aggregation_rules" : {},
-                     "aggregations"      : [],
-                     "host_aggregations" : [],
-                     "bi_packs" : {},
-                   }
+            vars_ = {
+                "aggregation_rules": {},
+                "aggregations": [],
+                "host_aggregations": [],
+                "bi_packs": {},
+            }
             vars_.update(self._bi_constants)
             if os.path.exists(filename):
                 execfile(filename, vars_, vars_)
             else:
-                exec(bi_example, vars_, vars_)
+                exec (bi_example, vars_, vars_)
 
             # put legacy non-pack stuff into packs
             if (vars_["aggregation_rules"] or vars_["aggregations"] or vars_["host_aggregations"]) and \
                 "default" not in vars_["bi_packs"]:
                 vars_["bi_packs"]["default"] = {
-                    "title"             : _("Default Pack"),
-                    "rules"             : vars_["aggregation_rules"],
-                    "aggregations"      : vars_["aggregations"],
-                    "host_aggregations" : vars_["host_aggregations"],
-                    "public"            : True,
-                    "contact_groups"    : [],
+                    "title": _("Default Pack"),
+                    "rules": vars_["aggregation_rules"],
+                    "aggregations": vars_["aggregations"],
+                    "host_aggregations": vars_["host_aggregations"],
+                    "public": True,
+                    "contact_groups": [],
                 }
 
             self._packs = {}
@@ -166,34 +167,31 @@ class BIManagement(object):
 
                 aggregations = []
                 for aggregation in pack["aggregations"]:
-                    aggregations.append(self._convert_aggregation_from_bi(aggregation, single_host = False))
+                    aggregations.append(
+                        self._convert_aggregation_from_bi(aggregation, single_host=False))
                 for aggregation in pack["host_aggregations"]:
-                    aggregations.append(self._convert_aggregation_from_bi(aggregation, single_host = True))
+                    aggregations.append(
+                        self._convert_aggregation_from_bi(aggregation, single_host=True))
 
                 self._packs[pack_id] = {
-                    "id"             : pack_id,
-                    "title"          : pack["title"],
-                    "rules"          : aggregation_rules,
-                    "aggregations"   : aggregations,
-                    "public"         : pack["public"],
-                    "contact_groups" : pack["contact_groups"],
+                    "id": pack_id,
+                    "title": pack["title"],
+                    "rules": aggregation_rules,
+                    "aggregations": aggregations,
+                    "public": pack["public"],
+                    "contact_groups": pack["contact_groups"],
                 }
-
 
         except Exception, e:
             if config.debug:
                 raise
 
-            raise MKGeneralException(_("Cannot read configuration file %s: %s") %
-                              (filename, e))
-
+            raise MKGeneralException(_("Cannot read configuration file %s: %s") % (filename, e))
 
     def save_config(self):
         output = self.generate_bi_config_file_content(self._packs)
         store.mkdir(watolib.multisite_dir)
         store.save_file(watolib.multisite_dir + "bi.mk", output)
-
-
 
     def generate_bi_config_file_content(self, packs):
         output = watolib.wato_fileheader()
@@ -203,12 +201,10 @@ class BIManagement(object):
                 pack_id, self._replace_bi_constants(pprint.pformat(converted_pack, width=50)))
         return output
 
-
     def _convert_pack_to_bi(self, pack):
         converted_rules = dict([
-            (rule_id, self._convert_rule_to_bi(rule))
-            for (rule_id, rule)
-            in pack["rules"].items() ])
+            (rule_id, self._convert_rule_to_bi(rule)) for (rule_id, rule) in pack["rules"].items()
+        ])
         converted_aggregations = []
         converted_host_aggregations = []
         for aggregation in pack["aggregations"]:
@@ -224,7 +220,6 @@ class BIManagement(object):
         converted_pack["rules"] = converted_rules
         return converted_pack
 
-
     def _replace_bi_constants(self, s):
         for name, uuid in self._bi_constants.items():
             while True:
@@ -235,13 +230,12 @@ class BIManagement(object):
                     break
         return s[0] + '\n ' + s[1:-1] + '\n' + s[-1]
 
-
     def _convert_aggregation_to_bi(self, aggr):
         node = self._convert_node_to_bi(aggr["node"])
         option_keys = [
-            ("hard_states",        False),
+            ("hard_states", False),
             ("downtime_aggr_warn", False),
-            ("disabled",           False),
+            ("disabled", False),
         ]
 
         if cmk.is_managed_edition():
@@ -253,7 +247,6 @@ class BIManagement(object):
             options[option] = aggr.get(option, default_value)
 
         return (options, self._convert_aggregation_groups(aggr["groups"])) + node
-
 
     def _convert_node_to_bi(self, node):
         if node[0] == "call":
@@ -275,12 +268,14 @@ class BIManagement(object):
 
             if type(what == tuple) and what[0] == 'child_with':
                 child_conditions = what[1]
-                what             = what[0]
-                child_tags       = child_conditions[0]
-                child_hostspec   = child_conditions[1] if child_conditions[1] else self._bi_constants['ALL_HOSTS']
+                what = what[0]
+                child_tags = child_conditions[0]
+                child_hostspec = child_conditions[1] if child_conditions[1] else self._bi_constants[
+                    'ALL_HOSTS']
                 return (self._bi_constants["FOREACH_" + what.upper()], child_tags, child_hostspec, tags, hostspec) \
                        + self._convert_node_to_bi(node[1][3])
-            return (self._bi_constants["FOREACH_" + what.upper()], tags, hostspec) + self._convert_node_to_bi(node[1][3])
+            return (self._bi_constants["FOREACH_" + what.upper()], tags,
+                    hostspec) + self._convert_node_to_bi(node[1][3])
         elif node[0] == "foreach_service":
             tags = node[1][0]
             if node[1][1]:
@@ -288,8 +283,8 @@ class BIManagement(object):
             else:
                 spec = self._bi_constants['ALL_HOSTS']
             service = node[1][2]
-            return (self._bi_constants["FOREACH_SERVICE"], tags, spec, service) + self._convert_node_to_bi(node[1][3])
-
+            return (self._bi_constants["FOREACH_SERVICE"], tags, spec,
+                    service) + self._convert_node_to_bi(node[1][3])
 
     def _convert_aggregation_from_bi(self, aggr, single_host):
         if type(aggr[0]) == dict:
@@ -318,19 +313,17 @@ class BIManagement(object):
 
         node = self._convert_node_from_bi(aggr[1:])
         aggr_dict = {
-            "groups"             : self._convert_aggregation_groups(aggr[0]),
-            "node"               : node,
-            "single_host"        : single_host,
+            "groups": self._convert_aggregation_groups(aggr[0]),
+            "node": node,
+            "single_host": single_host,
         }
         aggr_dict.update(options)
         return aggr_dict
-
 
     def _convert_aggregation_groups(self, old_groups):
         if isinstance(old_groups, list):
             return old_groups
         return [old_groups]
-
 
     # Make some conversions so that the format of the
     # valuespecs is matched
@@ -343,10 +336,10 @@ class BIManagement(object):
 
         if type(rule) == tuple:
             rule = {
-                "title"       : rule[0],
-                "params"      : rule[1],
-                "aggregation" : rule[2],
-                "nodes"       : rule[3],
+                "title": rule[0],
+                "params": rule[1],
+                "aggregation": rule[2],
+                "nodes": rule[3],
             }
         crule = {}
         crule.update(rule)
@@ -362,10 +355,8 @@ class BIManagement(object):
         if "id" in brule:
             del brule["id"]
         brule["nodes"] = map(self._convert_node_to_bi, rule["nodes"])
-        brule["aggregation"] = "!".join(
-                    [ rule["aggregation"][0] ] + map(str, rule["aggregation"][1]))
+        brule["aggregation"] = "!".join([rule["aggregation"][0]] + map(str, rule["aggregation"][1]))
         return brule
-
 
     # Convert node-Tuple into format used by CascadingDropdown
     def _convert_node_from_bi(self, node):
@@ -378,7 +369,7 @@ class BIManagement(object):
                 return ("remaining", (node[0],))
             return ("service", node)
 
-        else: # FOREACH_...
+        else:  # FOREACH_...
 
             foreach_spec = node[0]
             if foreach_spec == self._bi_constants['FOREACH_CHILD_WITH']:
@@ -416,10 +407,8 @@ class BIManagement(object):
                     what = "parent"
                 return ("foreach_host", (what, tags, hostspec, subnode))
 
-
     def get_packs(self):
         return self._packs
-
 
     def find_aggregation_rule_usages(self):
         aggregations_that_use_rule = {}
@@ -429,9 +418,9 @@ class BIManagement(object):
                 aggregations_that_use_rule.setdefault(rule_id, []).append((aggr_id, aggregation))
                 sub_rule_ids = self._aggregation_recursive_sub_rule_ids(rule_id)
                 for sub_rule_id in sub_rule_ids:
-                    aggregations_that_use_rule.setdefault(sub_rule_id, []).append((aggr_id, aggregation))
+                    aggregations_that_use_rule.setdefault(sub_rule_id, []).append((aggr_id,
+                                                                                   aggregation))
         return aggregations_that_use_rule
-
 
     def _aggregation_recursive_sub_rule_ids(self, ruleid):
         rule = self.find_rule_by_id(ruleid)
@@ -447,19 +436,16 @@ class BIManagement(object):
             result += self._aggregation_recursive_sub_rule_ids(sub_rule_id)
         return result
 
-
     def find_rule_by_id(self, ruleid):
         pack = self.pack_containing_rule(ruleid)
         if pack:
             return pack["rules"][ruleid]
-
 
     def pack_containing_rule(self, ruleid):
         for pack in self._packs.values():
             if ruleid in pack["rules"]:
                 return pack
         return None
-
 
     def aggregation_sub_rule_ids(self, rule):
         sub_rule_ids = []
@@ -468,7 +454,6 @@ class BIManagement(object):
             if r:
                 sub_rule_ids.append(r[0])
         return sub_rule_ids
-
 
     def rule_called_by_node(self, node):
         """Returns the rule called by a node - if any
@@ -495,8 +480,6 @@ class BIManagement(object):
                 return subnode[1][0], _("Called for each service...")
 
 
-
-
 # TODO: Rename to BIMode
 class ModeBI(WatoMode, BIManagement):
 
@@ -507,24 +490,21 @@ class ModeBI(WatoMode, BIManagement):
         super(ModeBI, self).__init__()
         self._create_valuespecs()
 
-
     def title(self):
         title = _("Business Intelligence")
         if self._pack:
             title += " - " + html.attrencode(self._pack["title"])
         return title
 
-
     def buttons(self):
         global_buttons()
         if self._pack:
-            html.context_button(_("All Packs"), html.makeuri_contextless([("mode", "bi_packs")]), "back")
-
+            html.context_button(
+                _("All Packs"), html.makeuri_contextless([("mode", "bi_packs")]), "back")
 
     def _add_change(self, action_name, text):
         site_ids = [site[0] for site in config.wato_slave_sites()] + [config.omd_site()]
         add_change(action_name, text, domains=[watolib.ConfigDomainGUI], sites=site_ids)
-
 
     # .--------------------------------------------------------------------.
     # | Valuespecs                                                         |
@@ -537,23 +517,23 @@ class ModeBI(WatoMode, BIManagement):
         self._vs_node = self._get_vs_node()
         self._vs_aggregation = self._get_vs_aggregation()
 
-
     def _allowed_rule_choices(self):
         choices = []
         for pack_id, pack in sorted(self._packs.iteritems()):
             if self.may_use_rules_in_pack(pack):
-                pack_choices = [(rule_id, rule["title"]) for rule_id, rule in pack["rules"].iteritems()]
-                choices.append((pack_id, pack["title"], DropdownChoice(choices=sorted(pack_choices))))
+                pack_choices = [
+                    (rule_id, rule["title"]) for rule_id, rule in pack["rules"].iteritems()
+                ]
+                choices.append((pack_id, pack["title"],
+                                DropdownChoice(choices=sorted(pack_choices))))
         return choices
-
 
     def may_use_rules_in_pack(self, pack):
         return pack["public"] or self.is_contact_for_pack(pack)
 
-
     def is_contact_for_pack(self, pack=None):
         if self._user_contactgroups == None:
-            return True # I am BI admin
+            return True  # I am BI admin
 
         if pack == None:
             pack = self._pack
@@ -563,15 +543,14 @@ class ModeBI(WatoMode, BIManagement):
                 return True
         return False
 
-
     def must_be_contact_for_pack(self, pack=None):
         if not self.is_contact_for_pack(pack=pack):
             if pack is None:
                 pack_title = self._pack["title"]
             else:
                 pack_title = pack["title"]
-            raise MKAuthException(_("You have no permission for changes in this BI pack %s.") % pack_title)
-
+            raise MKAuthException(
+                _("You have no permission for changes in this BI pack %s.") % pack_title)
 
     def _validate_rule_call(self, value, varprefix):
         rule_id, arguments = value
@@ -579,15 +558,17 @@ class ModeBI(WatoMode, BIManagement):
         rule_params = rule['params']
 
         if len(arguments) != len(rule_params):
-            raise MKUserError(varprefix + "_1_0", _("The rule you selected needs %d argument(s) (%s), "
-                                           "but you configured %d arguments.") %
-                                    (len(rule_params), ', '.join(rule_params), len(arguments)))
-
+            raise MKUserError(
+                varprefix + "_1_0",
+                _("The rule you selected needs %d argument(s) (%s), "
+                  "but you configured %d arguments.") % (len(rule_params), ', '.join(rule_params),
+                                                         len(arguments)))
 
     def _get_vs_call_rule(self):
         return Tuple(
-            elements = [
-                Transform(CascadingDropdown(
+            elements=[
+                Transform(
+                    CascadingDropdown(
                         title=_("Rule:"),
                         orientation="horizontal",
                         choices=self._allowed_rule_choices(),
@@ -597,18 +578,16 @@ class ModeBI(WatoMode, BIManagement):
                     forth=self._transform_forth_vs_call_rule,
                 ),
                 ListOfStrings(
-                    orientation = "horizontal",
-                    size = 80,
-                    title = _("Arguments:"),
+                    orientation="horizontal",
+                    size=80,
+                    title=_("Arguments:"),
                 ),
             ],
-            validate = self._validate_rule_call,
+            validate=self._validate_rule_call,
         )
-
 
     def _transform_back_vs_call_rule(self, choice):
         return choice[1]
-
 
     def _transform_forth_vs_call_rule(self, choice):
         pack = self.pack_containing_rule(choice)
@@ -616,171 +595,150 @@ class ModeBI(WatoMode, BIManagement):
             return (pack['id'], choice)
         return None
 
-
     def _get_vs_host_re(self):
-        host_re_help = _("Either an exact host name or a regular expression exactly matching the host "
-                         "name. Example: <tt>srv.*p</tt> will match <tt>srv4711p</tt> but not <tt>xsrv4711p2</tt>. ")
-        return TextUnicode(
-            title = _("Host:"),
-            help = host_re_help,
-            allow_empty = False,
+        host_re_help = _(
+            "Either an exact host name or a regular expression exactly matching the host "
+            "name. Example: <tt>srv.*p</tt> will match <tt>srv4711p</tt> but not <tt>xsrv4711p2</tt>. "
         )
-
+        return TextUnicode(
+            title=_("Host:"),
+            help=host_re_help,
+            allow_empty=False,
+        )
 
     def _node_call_choices(self):
         # Configuration of explicit rule call
-        return [ ( "call", _("Call a Rule"), self._vs_call_rule ), ]
-
+        return [
+            ("call", _("Call a Rule"), self._vs_call_rule),
+        ]
 
     def _host_valuespec(self, title):
         return Alternative(
-            title = title,
-            style = "dropdown",
-            elements = [
-                FixedValue(None,
-                    title = _("All Hosts"),
-                    totext = "",
+            title=title,
+            style="dropdown",
+            elements=[
+                FixedValue(
+                    None,
+                    title=_("All Hosts"),
+                    totext="",
                 ),
-                TextAscii(
-                    title = _("Regex for host name"),
-                    size = 60
-                ),
+                TextAscii(title=_("Regex for host name"), size=60),
                 Tuple(
-                    title = _("Regex for host alias"),
-                    elements = [
-                        FixedValue("alias",
-                            totext = "",
+                    title=_("Regex for host alias"),
+                    elements=[
+                        FixedValue(
+                            "alias",
+                            totext="",
                         ),
-                        TextAscii(
-                            size = 60,
-                        ),
+                        TextAscii(size=60,),
                     ],
                 ),
             ],
-            help = _("If you choose \"Regex for host name\" or \"Regex for host alias\", "
-                     "you need to provide a regex which results in exactly one match group."),
-            default_value = None,
+            help=_("If you choose \"Regex for host name\" or \"Regex for host alias\", "
+                   "you need to provide a regex which results in exactly one match group."),
+            default_value=None,
         )
-
 
     # Configuration of FOREACH_...-type nodes
     def _foreach_choices(self, subnode_choices):
         return [
-          ( "foreach_host", _("Create nodes based on a host search"),
-             Tuple(
-                 elements = [
-                    CascadingDropdown(
-                        title = _("Refer to:"),
-                        choices = [
-                            ( 'host',       _("The found hosts themselves") ),
-                            ( 'child',      _("The found hosts' childs") ),
-                            ( 'child_with', _("The found hosts' childs (with child filtering)"),
-                                Tuple(elements = [
-                                    watolib.HostTagCondition(
-                                        title = _("Child Host Tags:")
-                                    ),
-                                    self._host_valuespec(_("Child host name:")),
-                                ]),
-                            ),
-                            ( 'parent',     _("The found hosts' parents") ),
-                        ],
-                        help = _('When selecting <i>The found hosts\' childs</i>, the conditions '
-                          '(tags and host name) are used to match a host, but you will get one '
-                          'node created for each child of the matched host. The '
-                          'place holder <tt>$HOSTNAME$</tt> contains the name of the found child '
-                          'and the place holder <tt>$HOSTALIAS$</tt> contains it\'s alias.<br><br>'
-                          'When selecting <i>The found hosts\' parents</i>, the conditions '
-                          '(tags and host name) are used to match a host, but you will get one '
-                          'node created for each of the parent hosts of the matched host. '
-                          'The place holder <tt>$HOSTNAME$</tt> contains the name of the child '
-                          'host and <tt>$2$</tt> the name of the parent host.'),
-                    ),
-                    watolib.HostTagCondition(
-                        title = _("Host Tags:")
-                    ),
-                    self._host_valuespec(_("Host name:")),
-                    CascadingDropdown(
-                        title = _("Nodes to create:"),
-                        help = _("When calling a rule you can use the place holder "
-                                 "<tt>$HOSTNAME$</tt> in the rule arguments. It will be replaced "
-                                 "by the actual host names found by the search - one host name "
-                                 "for each rule call. Use <tt>$HOSTALIAS$</tt> to get the alias of"
-                                 " the matched host."),
-                        choices = subnode_choices,
-                    ),
-                 ]
-            )
-          ),
-          ( "foreach_service", _("Create nodes based on a service search"),
-             Tuple(
-                 elements = [
-                    watolib.HostTagCondition(
-                        title = _("Host Tags:")
-                    ),
-                    self._host_valuespec(_("Host name:")),
-                    TextAscii(
-                        title = _("Service Regex:"),
-                        help = _("Subexpressions enclosed in <tt>(</tt> and <tt>)</tt> will be available "
-                                 "as arguments <tt>$2$</tt>, <tt>$3$</tt>, etc."),
-                        size = 80,
-                    ),
-                    CascadingDropdown(
-                        title = _("Nodes to create:"),
-                        help = _("When calling a rule you can use the place holder <tt>$HOSTNAME$</tt> "
-                                 "in the rule arguments. It will be replaced by the actual host "
-                                 "names found by the search - one host name for each rule call. "
-                                 "Use <tt>$HOSTALIAS$</tt> to get the alias of the matched host. "
-                                 "If you have regular expression subgroups in the service pattern, then "
-                                 "the place holders <tt>$2$</tt> will represent the first group match, "
-                                 "<tt>$3</tt> the second, and so on..."),
-                        choices = subnode_choices,
-                    ),
-                 ]
-            )
-          )
+            ("foreach_host", _("Create nodes based on a host search"),
+             Tuple(elements=[
+                 CascadingDropdown(
+                     title=_("Refer to:"),
+                     choices=[
+                         ('host', _("The found hosts themselves")),
+                         ('child', _("The found hosts' childs")),
+                         ('child_with', _("The found hosts' childs (with child filtering)"),
+                          Tuple(elements=[
+                              watolib.HostTagCondition(title=_("Child Host Tags:")),
+                              self._host_valuespec(_("Child host name:")),
+                          ])),
+                         ('parent', _("The found hosts' parents")),
+                     ],
+                     help=_(
+                         'When selecting <i>The found hosts\' childs</i>, the conditions '
+                         '(tags and host name) are used to match a host, but you will get one '
+                         'node created for each child of the matched host. The '
+                         'place holder <tt>$HOSTNAME$</tt> contains the name of the found child '
+                         'and the place holder <tt>$HOSTALIAS$</tt> contains it\'s alias.<br><br>'
+                         'When selecting <i>The found hosts\' parents</i>, the conditions '
+                         '(tags and host name) are used to match a host, but you will get one '
+                         'node created for each of the parent hosts of the matched host. '
+                         'The place holder <tt>$HOSTNAME$</tt> contains the name of the child '
+                         'host and <tt>$2$</tt> the name of the parent host.'),
+                 ),
+                 watolib.HostTagCondition(title=_("Host Tags:")),
+                 self._host_valuespec(_("Host name:")),
+                 CascadingDropdown(
+                     title=_("Nodes to create:"),
+                     help=_("When calling a rule you can use the place holder "
+                            "<tt>$HOSTNAME$</tt> in the rule arguments. It will be replaced "
+                            "by the actual host names found by the search - one host name "
+                            "for each rule call. Use <tt>$HOSTALIAS$</tt> to get the alias of"
+                            " the matched host."),
+                     choices=subnode_choices,
+                 ),
+             ])),
+            ("foreach_service", _("Create nodes based on a service search"),
+             Tuple(elements=[
+                 watolib.HostTagCondition(title=_("Host Tags:")),
+                 self._host_valuespec(_("Host name:")),
+                 TextAscii(
+                     title=_("Service Regex:"),
+                     help=_(
+                         "Subexpressions enclosed in <tt>(</tt> and <tt>)</tt> will be available "
+                         "as arguments <tt>$2$</tt>, <tt>$3$</tt>, etc."),
+                     size=80,
+                 ),
+                 CascadingDropdown(
+                     title=_("Nodes to create:"),
+                     help=_("When calling a rule you can use the place holder <tt>$HOSTNAME$</tt> "
+                            "in the rule arguments. It will be replaced by the actual host "
+                            "names found by the search - one host name for each rule call. "
+                            "Use <tt>$HOSTALIAS$</tt> to get the alias of the matched host. "
+                            "If you have regular expression subgroups in the service pattern, then "
+                            "the place holders <tt>$2$</tt> will represent the first group match, "
+                            "<tt>$3</tt> the second, and so on..."),
+                     choices=subnode_choices,
+                 ),
+             ]))
         ]
-
 
     def _get_vs_node(self):
         # Configuration of leaf nodes
         vs_node_simplechoices = [
-            ( "host", _("State of a host"),
-               Tuple(
-                   help = _("Will create child nodes representing the state of hosts (usually the "
-                            "host check is done via ping)."),
-                   elements = [ self._vs_host_re, ]
-               )
-            ),
-            ( "service", _("State of a service"),
-              Tuple(
-                  help = _("Will create child nodes representing the state of services."),
-                  elements = [
-                      self._vs_host_re,
-                      TextUnicode(
-                          title = _("Service:"),
-                          help = _("A regular expression matching the <b>beginning</b> of a service description. You can "
-                                   "use a trailing <tt>$</tt> in order to define an exact match. For each "
-                                   "matching service on the specified hosts one child node will be created. "),
-                          size = 80,
-                      ),
-                  ]
-              ),
-            ),
-            ( "remaining", _("State of remaining services"),
-              Tuple(
-                  help = _("Create a child node for each service on the specified hosts that is not "
-                           "contained in any other node of the aggregation."),
-                  elements = [ self._vs_host_re ],
-              )
-            ),
+            ("host", _("State of a host"),
+             Tuple(
+                 help=_("Will create child nodes representing the state of hosts (usually the "
+                        "host check is done via ping)."),
+                 elements=[self._vs_host_re])),
+            ("service", _("State of a service"),
+             Tuple(
+                 help=_("Will create child nodes representing the state of services."),
+                 elements=[
+                     self._vs_host_re,
+                     TextUnicode(
+                         title=_("Service:"),
+                         help=_(
+                             "A regular expression matching the <b>beginning</b> of a service "
+                             "description. You can use a trailing <tt>$</tt> in order to define an "
+                             "exact match. For each matching service on the specified hosts one child "
+                             "node will be created. "),
+                         size=80,
+                     ),
+                 ])),
+            ("remaining", _("State of remaining services"),
+             Tuple(
+                 help=_("Create a child node for each service on the specified hosts that is not "
+                        "contained in any other node of the aggregation."),
+                 elements=[self._vs_host_re],
+             )),
         ]
 
-
         return CascadingDropdown(
-           choices = vs_node_simplechoices + self._node_call_choices() \
-                  + self._foreach_choices(vs_node_simplechoices + self._node_call_choices())
-        )
-
+            choices=vs_node_simplechoices + self._node_call_choices() +
+            self._foreach_choices(vs_node_simplechoices + self._node_call_choices()))
 
     def _aggregation_choices(self):
         choices = []
@@ -791,7 +749,6 @@ class ModeBI(WatoMode, BIManagement):
                 ainfo["valuespec"],
             ))
         return choices
-
 
     def _get_vs_aggregation(self):
         def transform_aggregation_groups_to_gui(groups):
@@ -820,74 +777,77 @@ class ModeBI(WatoMode, BIManagement):
             cme_elements = []
 
         return Dictionary(
-            title = _("Aggregation Properties"),
-            optional_keys = False,
-            render = "form",
-            elements = cme_elements + [
-            ("groups", Transform(ListOf(
-                Alternative(
-                    style="dropdown",
-                    orientation="horizontal",
-                    elements=[
-                        TextUnicode(title=_("Group name")),
-                        ListOfStrings(title=_("Group path"), orientation="horizontal", separator="/"),
-                    ],
+            title=_("Aggregation Properties"),
+            optional_keys=False,
+            render="form",
+            elements=cme_elements + [
+                ("groups",
+                 Transform(
+                     ListOf(
+                         Alternative(
+                             style="dropdown",
+                             orientation="horizontal",
+                             elements=[
+                                 TextUnicode(title=_("Group name")),
+                                 ListOfStrings(
+                                     title=_("Group path"), orientation="horizontal",
+                                     separator="/"),
+                             ],
+                         ),
+                         title=_("Aggregation Groups")),
+                     forth=transform_aggregation_groups_to_gui,
+                     back=transform_aggregation_groups_to_disk,
+                 )),
+                ("node",
+                 CascadingDropdown(
+                     title=_("Rule to call"),
+                     choices=self._node_call_choices() + self._foreach_choices(
+                         self._node_call_choices()))),
+                ("disabled",
+                 Checkbox(
+                     title=_("Disabled"),
+                     label=_("Currently disable this aggregation"),
+                 )),
+                ("hard_states",
+                 Checkbox(
+                     title=_("Use Hard States"),
+                     label=_("Base state computation on hard states"),
+                     help=
+                     _("Hard states can only differ from soft states if at least one host or service "
+                       "of the BI aggregate has more than 1 maximum check attempt. For example if you "
+                       "set the maximum check attempts of a service to 3 and the service is CRIT "
+                       "just since one check then it's soft state is CRIT, but its hard state is still OK. "
+                       "<b>Note:</b> When computing the availbility of a BI aggregate this option "
+                       "has no impact. For that purpose always the soft (i.e. real) states will be used."
+                      ),
+                 )),
+                ("downtime_aggr_warn",
+                 Checkbox(
+                     title=_("Aggregation of Downtimes"),
+                     label=_("Escalate downtimes based on aggregated WARN state"),
+                     help=
+                     _("When computing the state 'in scheduled downtime' for an aggregate "
+                       "first all leaf nodes that are within downtime are assumed CRIT and all others "
+                       "OK. Then each aggregated node is assumed to be in downtime if the state "
+                       "is CRIT under this assumption. You can change this to WARN. The influence of "
+                       "this setting is especially relevant if you use aggregation functions of type <i>count</i> "
+                       "and want the downtime information also escalated in case such a node would go into "
+                       "WARN state."),
+                 )),
+                (
+                    "single_host",
+                    Checkbox(
+                        title=_("Optimization"),
+                        label=_("The aggregation covers data from only one host and its parents."),
+                        help=_(
+                            "If you have a large number of aggregations that cover only one host and "
+                            "maybe its parents (such as Check_MK cluster hosts), "
+                            "then please enable this optimization. It reduces the time for the "
+                            "computation. Do <b>not</b> enable this for aggregations that contain "
+                            "data of more than one host!"),
+                    ),
                 ),
-                title=_("Aggregation Groups")),
-                forth=transform_aggregation_groups_to_gui,
-                back=transform_aggregation_groups_to_disk,
-            )),
-            ( "node",
-              CascadingDropdown(
-                  title = _("Rule to call"),
-                  choices = self._node_call_choices() + self._foreach_choices(self._node_call_choices())
-              )
-            ),
-            ( "disabled",
-              Checkbox(
-                  title = _("Disabled"),
-                  label = _("Currently disable this aggregation"),
-              )
-            ),
-            ( "hard_states",
-              Checkbox(
-                  title = _("Use Hard States"),
-                  label = _("Base state computation on hard states"),
-                  help = _("Hard states can only differ from soft states if at least one host or service "
-                           "of the BI aggregate has more than 1 maximum check attempt. For example if you "
-                           "set the maximum check attempts of a service to 3 and the service is CRIT "
-                           "just since one check then it's soft state is CRIT, but its hard state is still OK. "
-                           "<b>Note:</b> When computing the availbility of a BI aggregate this option "
-                           "has no impact. For that purpose always the soft (i.e. real) states will be used."),
-              )
-            ),
-            ( "downtime_aggr_warn",
-              Checkbox(
-                  title = _("Aggregation of Downtimes"),
-                  label = _("Escalate downtimes based on aggregated WARN state"),
-                  help = _("When computing the state 'in scheduled downtime' for an aggregate "
-                           "first all leaf nodes that are within downtime are assumed CRIT and all others "
-                           "OK. Then each aggregated node is assumed to be in downtime if the state "
-                           "is CRIT under this assumption. You can change this to WARN. The influence of "
-                           "this setting is especially relevant if you use aggregation functions of type <i>count</i> "
-                           "and want the downtime information also escalated in case such a node would go into "
-                           "WARN state."),
-            )),
-            ( "single_host",
-              Checkbox(
-                  title = _("Optimization"),
-                  label = _("The aggregation covers data from only one host and its parents."),
-                  help = _("If you have a large number of aggregations that cover only one host and "
-                           "maybe its parents (such as Check_MK cluster hosts), "
-                           "then please enable this optimization. It reduces the time for the "
-                           "computation. Do <b>not</b> enable this for aggregations that contain "
-                           "data of more than one host!"),
-              ),
-            ),
-          ]
-        )
-
-
+            ])
 
     # .--------------------------------------------------------------------.
     # | Methods for analysing the rules and aggregations                   |
@@ -897,18 +857,15 @@ class ModeBI(WatoMode, BIManagement):
         rule = self.aggregation_toplevel_rule(aggregation)
         return "%s (%s)" % (rule["title"], rule["id"])
 
-
     def aggregation_toplevel_rule(self, aggregation):
         rule_id, _description = self.rule_called_by_node(aggregation["node"])
         return self.find_rule_by_id(rule_id)
-
 
     def have_rules(self):
         for pack in self._packs.values():
             if pack["rules"]:
                 return True
         return False
-
 
     # Checks if the rule 'rule' uses either directly
     # or indirectly the rule with the id 'ruleid'. In
@@ -918,7 +875,7 @@ class ModeBI(WatoMode, BIManagement):
             r = self.rule_called_by_node(node)
             if r:
                 ru_id, _info = r
-                if ru_id == ruleid: # Rule is directly being used
+                if ru_id == ruleid:  # Rule is directly being used
                     return level + 1
                 # Check if lower rules use it
                 else:
@@ -927,7 +884,6 @@ class ModeBI(WatoMode, BIManagement):
                     if l:
                         return l
         return False
-
 
     def count_rule_references(self, ruleid):
         aggr_refs = 0
@@ -948,7 +904,6 @@ class ModeBI(WatoMode, BIManagement):
 
         return aggr_refs, rule_refs, level
 
-
     # .--------------------------------------------------------------------.
     # | Generic rendering                                                  |
     # '--------------------------------------------------------------------'
@@ -956,11 +911,11 @@ class ModeBI(WatoMode, BIManagement):
     def url_to_pack(self, addvars):
         return html.makeuri_contextless(addvars + [("pack", self._pack_id)])
 
-
     def render_rule_tree(self, ruleid, tree_path, tree_prefix=""):
         pack = self.pack_containing_rule(ruleid)
         rule = pack["rules"][ruleid]
-        edit_url = html.makeuri_contextless([("mode", "bi_edit_rule"), ("id", ruleid), ("pack", pack["id"])])
+        edit_url = html.makeuri_contextless([("mode", "bi_edit_rule"), ("id", ruleid),
+                                             ("pack", pack["id"])])
         title = "%s (%s)" % (rule["title"], ruleid)
 
         sub_rule_ids = self.aggregation_sub_rule_ids(rule)
@@ -971,8 +926,13 @@ class ModeBI(WatoMode, BIManagement):
             html.close_a()
             html.close_li()
         else:
-            html.begin_foldable_container("bi_rule_trees", "%s%s" % (tree_prefix, tree_path), False, title,
-                                          title_url=edit_url, tree_img="tree_black")
+            html.begin_foldable_container(
+                "bi_rule_trees",
+                "%s%s" % (tree_prefix, tree_path),
+                False,
+                title,
+                title_url=edit_url,
+                tree_img="tree_black")
             for sub_rule_id in sub_rule_ids:
                 self.render_rule_tree(sub_rule_id, tree_path + "/" + sub_rule_id, tree_prefix)
             html.end_foldable_container()
@@ -1001,28 +961,26 @@ class ModeBI(WatoMode, BIManagement):
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
+
 @mode_registry.register
 class ModeBIPacks(ModeBI):
     @classmethod
     def name(cls):
         return "bi_packs"
 
-
     @classmethod
     def permissions(cls):
         return ["bi_rules"]
-
 
     def __init__(self):
         ModeBI.__init__(self)
         self._contact_group_names = userdb.load_group_information().get("contact", {})
 
-
     def buttons(self):
         ModeBI.buttons(self)
         if config.user.may("wato.bi_admin"):
-            html.context_button(_("New BI Pack"), html.makeuri_contextless([("mode", "bi_edit_pack")]), "new")
-
+            html.context_button(
+                _("New BI Pack"), html.makeuri_contextless([("mode", "bi_edit_pack")]), "new")
 
     def action(self):
         if config.user.may("wato.bi_admin") and html.has_var("_delete"):
@@ -1033,10 +991,14 @@ class ModeBIPacks(ModeBI):
                 raise MKUserError("_delete", _("This BI pack does not exist."))
 
             if pack["rules"]:
-                raise MKUserError(None, _("You cannot delete this pack. It contains <b>%d</b> rules.") % len(pack["rules"]))
-            c = wato_confirm(_("Confirm BI pack deletion"),
-                             _("Do you really want to delete the BI pack <b>%s</b> <i>%s</i> with <b>%d</b> rules and <b>%d</b> aggregations?") %
-                               (pack_id, pack["title"], len(pack["rules"]), len(pack["aggregations"])))
+                raise MKUserError(
+                    None,
+                    _("You cannot delete this pack. It contains <b>%d</b> rules.") % len(
+                        pack["rules"]))
+            c = wato_confirm(
+                _("Confirm BI pack deletion"),
+                _("Do you really want to delete the BI pack <b>%s</b> <i>%s</i> with <b>%d</b> rules and <b>%d</b> aggregations?"
+                 ) % (pack_id, pack["title"], len(pack["rules"]), len(pack["aggregations"])))
             if c:
                 self._add_change("delete-bi-pack", _("Deleted BI pack %s") % pack_id)
                 del self._packs[pack_id]
@@ -1044,9 +1006,8 @@ class ModeBIPacks(ModeBI):
             elif c == False:
                 return ""
 
-
     def page(self):
-        table.begin(title = _("BI Configuration Packs"))
+        table.begin(title=_("BI Configuration Packs"))
         for pack_id, pack in sorted(self._packs.items()):
             if not self.may_use_rules_in_pack(pack):
                 continue
@@ -1058,16 +1019,19 @@ class ModeBIPacks(ModeBI):
                 html.icon_button(edit_url, _("Edit properties of this BI pack"), "edit")
                 delete_url = html.makeactionuri([("_delete", pack_id)])
                 html.icon_button(delete_url, _("Delete this BI pack"), "delete")
-            rules_url  = html.makeuri_contextless([("mode", "bi_rules"), ("pack", pack_id)])
-            html.icon_button(rules_url, _("View and edit the rules and aggregations in this BI pack"), "bi_rules")
+            rules_url = html.makeuri_contextless([("mode", "bi_rules"), ("pack", pack_id)])
+            html.icon_button(rules_url,
+                             _("View and edit the rules and aggregations in this BI pack"),
+                             "bi_rules")
             table.text_cell(_("ID"), pack_id)
             table.text_cell(_("Title"), pack["title"])
             table.text_cell(_("Public"), pack["public"] and _("Yes") or _("No"))
             table.text_cell(_("Aggregations"), len(pack["aggregations"]), css="number")
             table.text_cell(_("Rules"), len(pack["rules"]), css="number")
-            table.text_cell(_("Contact groups"), HTML(", ").join(map(self._render_contact_group, pack["contact_groups"])))
+            table.text_cell(
+                _("Contact groups"),
+                HTML(", ").join(map(self._render_contact_group, pack["contact_groups"])))
         table.end()
-
 
     def _render_contact_group(self, c):
         display_name = self._contact_group_names.get(c, {'alias': c})['alias']
@@ -1084,23 +1048,21 @@ class ModeBIPacks(ModeBI):
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
+
 @mode_registry.register
 class ModeBIEditPack(ModeBI):
     @classmethod
     def name(cls):
         return "bi_edit_pack"
 
-
     @classmethod
     def permissions(cls):
         return ["bi_rules", "bi_admin"]
-
 
     def title(self):
         if self._pack:
             return ModeBI.title(self) + " - " + _("Edit BI Pack %s") % self._pack["title"]
         return ModeBI.title(self) + " - " + _("Create New BI Pack")
-
 
     def action(self):
         if html.check_transaction():
@@ -1122,10 +1084,8 @@ class ModeBIEditPack(ModeBI):
 
         return "bi_packs"
 
-
     def buttons(self):
         html.context_button(_("Abort"), html.makeuri([("mode", "bi_packs")]), "abort")
-
 
     def page(self):
         html.begin_form("bi_pack", method="POST")
@@ -1139,47 +1099,47 @@ class ModeBIEditPack(ModeBI):
             html.set_focus("bi_pack_p_id")
         html.end_form()
 
-
     def _vs_pack(self):
         if self._pack:
-            id_element = FixedValue(title = _("Pack ID"), value = self._pack_id)
+            id_element = FixedValue(title=_("Pack ID"), value=self._pack_id)
         else:
             id_element = ID(
-                title = _("BI pack ID"),
-                help = _("A unique ID of this BI pack."),
-                allow_empty = False,
-                size = 24,
+                title=_("BI pack ID"),
+                help=_("A unique ID of this BI pack."),
+                allow_empty=False,
+                size=24,
             )
         return Dictionary(
-            title = _("BI Pack Properties"),
-            optional_keys = False,
-            render = "form",
-            elements = [
-                ( "id", id_element ),
-                ( "title",
-                  TextUnicode(
-                      title = _("Title"),
-                      help = _("A descriptive title for this rule pack"),
-                      allow_empty = False,
-                      size = 64,
-                )),
-                ( "contact_groups",
-                  ListOf(
-                      GroupSelection("contact"),
-                      title = _("Permitted Contact Groups"),
-                      help = _("The rules and aggregations in this pack can be edited by all members of the "
-                               "contact groups specified here - even if they have no administrator priviledges."),
-                      movable = False,
-                      add_label = _("Add Contact Group"),
-                )),
-                ( "public",
-                  Checkbox(
-                      title = _("Public"),
-                      label = _("Allow all users to refer to rules contained in this pack"),
-                      help = _("Without this option users can only use rules if they have administrator "
-                               "priviledges or are member of the listed contact groups."),
-                ))
-            ],
+            title=_("BI Pack Properties"),
+            optional_keys=False,
+            render="form",
+            elements=
+            [("id", id_element),
+             ("title",
+              TextUnicode(
+                  title=_("Title"),
+                  help=_("A descriptive title for this rule pack"),
+                  allow_empty=False,
+                  size=64,
+              )),
+             ("contact_groups",
+              ListOf(
+                  GroupSelection("contact"),
+                  title=_("Permitted Contact Groups"),
+                  help=_(
+                      "The rules and aggregations in this pack can be edited by all members of the "
+                      "contact groups specified here - even if they have no administrator priviledges."
+                  ),
+                  movable=False,
+                  add_label=_("Add Contact Group"),
+              )),
+             ("public",
+              Checkbox(
+                  title=_("Public"),
+                  label=_("Allow all users to refer to rules contained in this pack"),
+                  help=_("Without this option users can only use rules if they have administrator "
+                         "priviledges or are member of the listed contact groups."),
+              ))],
         )
 
 
@@ -1200,7 +1160,6 @@ class ModeBIAggregations(ModeBI):
     def name(cls):
         return "bi_aggregations"
 
-
     @classmethod
     def permissions(cls):
         return ["bi_rules"]
@@ -1208,14 +1167,12 @@ class ModeBIAggregations(ModeBI):
     def title(self):
         return ModeBI.title(self) + " - " + _("Aggregations")
 
-
     def buttons(self):
         ModeBI.buttons(self)
         html.context_button(_("Rules"), self.url_to_pack([("mode", "bi_rules")]), "aggr")
         if self.have_rules() and self.is_contact_for_pack():
-            html.context_button(_("New Aggregation"),
-                                self.url_to_pack([("mode", "bi_edit_aggregation")]), "new")
-
+            html.context_button(
+                _("New Aggregation"), self.url_to_pack([("mode", "bi_edit_aggregation")]), "new")
 
     def action(self):
         self.must_be_contact_for_pack()
@@ -1229,18 +1186,19 @@ class ModeBIAggregations(ModeBI):
         elif html.var("_bulk_move_bi_aggregations"):
             return self._bulk_move_after_confirm()
 
-
     def _delete_after_confirm(self):
         aggregation_id = html.get_integer_input("_del_aggr")
-        c = wato_confirm(_("Confirm aggregation deletion"),
-            _("Do you really want to delete the aggregation number <b>%s</b>?") % (aggregation_id+1))
+        c = wato_confirm(
+            _("Confirm aggregation deletion"),
+            _("Do you really want to delete the aggregation number <b>%s</b>?") %
+            (aggregation_id + 1))
         if c:
             del self._pack["aggregations"][aggregation_id]
-            self._add_change("bi-delete-aggregation", _("Deleted BI aggregation number %d") % (aggregation_id+1))
+            self._add_change("bi-delete-aggregation",
+                             _("Deleted BI aggregation number %d") % (aggregation_id + 1))
             self.save_config()
-        elif c == False: # not yet confirmed
+        elif c == False:  # not yet confirmed
             return ""
-
 
     def _bulk_delete_after_confirm(self):
         selection = map(int, self._get_selection("aggregation"))
@@ -1253,12 +1211,11 @@ class ModeBIAggregations(ModeBI):
                 for aggregation_id in selection[::-1]:
                     del self._pack["aggregations"][aggregation_id]
                     self._add_change("bi-delete-aggregation",
-                                   _("Deleted BI aggregation with ID %s") % (aggregation_id+1))
+                                     _("Deleted BI aggregation with ID %s") % (aggregation_id + 1))
                 self.save_config()
 
             elif c == False:
                 return ""
-
 
     def _bulk_move_after_confirm(self):
         target = None
@@ -1289,48 +1246,62 @@ class ModeBIAggregations(ModeBI):
             elif c == False:
                 return ""
 
-
     def page(self):
         html.begin_form("bulk_delete_form", method="POST")
         self._render_aggregations()
         html.hidden_fields()
         if self._pack["aggregations"]:
             fieldstyle = "margin-top:10px"
-            html.button("_bulk_delete_bi_aggregations", _("Bulk delete"), "submit", style=fieldstyle)
+            html.button(
+                "_bulk_delete_bi_aggregations", _("Bulk delete"), "submit", style=fieldstyle)
 
-            move_choices = [ (pack_id, attrs["title"]) for pack_id, attrs in self._packs.items()
-                        if pack_id is not self._pack["id"] and self.is_contact_for_pack(attrs) ]
+            move_choices = [(pack_id, attrs["title"])
+                            for pack_id, attrs in self._packs.items()
+                            if pack_id is not self._pack["id"] and self.is_contact_for_pack(attrs)]
 
             if move_choices:
-                html.button("_bulk_move_bi_aggregations",   _("Bulk move"),   "submit", style=fieldstyle)
+                html.button(
+                    "_bulk_move_bi_aggregations", _("Bulk move"), "submit", style=fieldstyle)
 
                 if html.has_var('bulk_moveto'):
                     html.javascript('update_bulk_moveto("%s")' % html.var('bulk_moveto', ''))
 
-                html.select("bulk_moveto", move_choices, "@",
-                             onchange = "update_bulk_moveto(this.value)",
-                             attrs = {'class': 'bulk_moveto', 'style': fieldstyle})
+                html.select(
+                    "bulk_moveto",
+                    move_choices,
+                    "@",
+                    onchange="update_bulk_moveto(this.value)",
+                    attrs={
+                        'class': 'bulk_moveto',
+                        'style': fieldstyle
+                    })
         html.end_form()
-
 
     def _render_aggregations(self):
         table.begin("bi_aggr", _("Aggregations"))
         for aggregation_id, aggregation in enumerate(self._pack["aggregations"]):
             table.row()
-            table.cell(html.render_input("_toggle_group", type_="button",
-                        class_="checkgroup", onclick="toggle_all_rows();",
-                        value='X'), sortable=False, css="checkbox")
+            table.cell(
+                html.render_input(
+                    "_toggle_group",
+                    type_="button",
+                    class_="checkgroup",
+                    onclick="toggle_all_rows();",
+                    value='X'),
+                sortable=False,
+                css="checkbox")
             html.checkbox("_c_aggregation_%s" % aggregation_id)
 
             table.cell(_("Actions"), css="buttons")
-            edit_url = html.makeuri_contextless([("mode", "bi_edit_aggregation"), ("id", aggregation_id), ("pack", self._pack_id)])
+            edit_url = html.makeuri_contextless([("mode", "bi_edit_aggregation"),
+                                                 ("id", aggregation_id), ("pack", self._pack_id)])
             html.icon_button(edit_url, _("Edit this aggregation"), "edit")
 
             if self.is_contact_for_pack():
                 delete_url = html.makeactionuri([("_del_aggr", aggregation_id)])
                 html.icon_button(delete_url, _("Delete this aggregation"), "delete")
 
-            table.text_cell(_("Nr."), aggregation_id+1, css="number")
+            table.text_cell(_("Nr."), aggregation_id + 1, css="number")
 
             if cmk.is_managed_edition():
                 table.text_cell(_("Customer"))
@@ -1347,19 +1318,20 @@ class ModeBIAggregations(ModeBI):
             table.text_cell(_("Groups"), ", ".join(aggregation["groups"]))
 
             ruleid, description = self.rule_called_by_node(aggregation["node"])
-            edit_url = html.makeuri([("mode", "bi_edit_rule"), ("pack", self._pack_id), ("id", ruleid)])
+            edit_url = html.makeuri([("mode", "bi_edit_rule"), ("pack", self._pack_id),
+                                     ("id", ruleid)])
             table.cell(_("Rule Tree"), css="bi_rule_tree")
             self.render_aggregation_rule_tree(aggregation_id, aggregation)
             table.text_cell(_("Note"), description)
         table.end()
-
 
     def render_aggregation_rule_tree(self, aggregation_id, aggregation):
         toplevel_rule = self.aggregation_toplevel_rule(aggregation)
         if not toplevel_rule:
             html.show_error(_("The top level rule does not exist."))
             return
-        self.render_rule_tree(toplevel_rule["id"], toplevel_rule["id"], tree_prefix="%s_" % aggregation_id)
+        self.render_rule_tree(
+            toplevel_rule["id"], toplevel_rule["id"], tree_prefix="%s_" % aggregation_id)
 
 
 
@@ -1373,39 +1345,40 @@ class ModeBIAggregations(ModeBI):
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
+
 @mode_registry.register
 class ModeBIRules(ModeBI):
     @classmethod
     def name(cls):
         return "bi_rules"
 
-
     @classmethod
     def permissions(cls):
         return ["bi_rules"]
 
-
     def __init__(self):
         ModeBI.__init__(self)
         self._view_type = html.var("view", "list")
-
 
     def title(self):
         if self._view_type == "list":
             return ModeBI.title(self) + " - " + _("Rules")
         return ModeBI.title(self) + " - " + _("Unused Rules")
 
-
     def buttons(self):
         ModeBI.buttons(self)
         if self._view_type == "list":
-            html.context_button(_("Aggregations"), self.url_to_pack([("mode", "bi_aggregations")]), "aggr")
+            html.context_button(
+                _("Aggregations"), self.url_to_pack([("mode", "bi_aggregations")]), "aggr")
             if self.is_contact_for_pack():
-                html.context_button(_("New Rule"), self.url_to_pack([("mode", "bi_edit_rule"), ("pack", self._pack_id)]), "new")
-            html.context_button(_("Unused Rules"), self.url_to_pack([("mode", "bi_rules"), ("view", "unused")]), "unusedbirules")
+                html.context_button(
+                    _("New Rule"),
+                    self.url_to_pack([("mode", "bi_edit_rule"), ("pack", self._pack_id)]), "new")
+            html.context_button(
+                _("Unused Rules"), self.url_to_pack([("mode", "bi_rules"), ("view", "unused")]),
+                "unusedbirules")
         else:
             html.context_button(_("Back"), html.makeuri([("view", "list")]), "back")
-
 
     def action(self):
         self.must_be_contact_for_pack()
@@ -1419,21 +1392,19 @@ class ModeBIRules(ModeBI):
         elif html.var("_bulk_move_bi_rules"):
             return self._bulk_move_after_confirm()
 
-
     def _delete_after_confirm(self):
         rule_id = html.var("_del_rule")
         self._check_delete_rule_id_permission(rule_id)
-        c = wato_confirm(_("Confirm rule deletion"),
-                         _("Do you really want to delete the rule with "
-                           "the ID <b>%s</b>?") % rule_id)
+        c = wato_confirm(
+            _("Confirm rule deletion"),
+            _("Do you really want to delete the rule with "
+              "the ID <b>%s</b>?") % rule_id)
         if c:
             del self._pack["rules"][rule_id]
-            self._add_change("bi-delete-rule",
-                           _("Deleted BI rule with ID %s") % rule_id)
+            self._add_change("bi-delete-rule", _("Deleted BI rule with ID %s") % rule_id)
             self.save_config()
-        elif c == False: # not yet confirmed
+        elif c == False:  # not yet confirmed
             return ""
-
 
     def _bulk_delete_after_confirm(self):
         selection = self._get_selection("rule")
@@ -1448,20 +1419,19 @@ class ModeBIRules(ModeBI):
             if c:
                 for rule_id in selection:
                     del self._pack["rules"][rule_id]
-                    self._add_change("bi-delete-rule",
-                                   _("Deleted BI rule with ID %s") % rule_id)
+                    self._add_change("bi-delete-rule", _("Deleted BI rule with ID %s") % rule_id)
                 self.save_config()
             elif c == False:
                 return ""
 
-
     def _check_delete_rule_id_permission(self, rule_id):
         aggr_refs, rule_refs, _level = self.count_rule_references(rule_id)
         if aggr_refs:
-            raise MKUserError(None, _("You cannot delete this rule: it is still used by aggregations."))
+            raise MKUserError(None,
+                              _("You cannot delete this rule: it is still used by aggregations."))
         if rule_refs:
-            raise MKUserError(None, _("You cannot delete this rule: it is still used by other rules."))
-
+            raise MKUserError(None,
+                              _("You cannot delete this rule: it is still used by other rules."))
 
     def _bulk_move_after_confirm(self):
         target = None
@@ -1485,71 +1455,85 @@ class ModeBIRules(ModeBI):
                     rule_attrs = self._pack["rules"][rule_id]
                     target_pack["rules"].setdefault(rule_id, rule_attrs)
                     del self._pack["rules"][rule_id]
-                    self._add_change("bi-move-rule",
-                                   _("Moved BI rule with ID %s to BI pack %s") % (rule_id, target))
+                    self._add_change(
+                        "bi-move-rule",
+                        _("Moved BI rule with ID %s to BI pack %s") % (rule_id, target))
                 self.save_config()
             elif c == False:
                 return ""
-
 
     def page(self):
         self.must_be_contact_for_pack()
         if not self._pack["aggregations"] and not self._pack["rules"]:
             menu = MainMenu()
-            menu.add_item(MenuItem(
-                mode_or_url = self.url_to_pack([("mode", "bi_edit_rule")]),
-                title = _("Create aggregation rule"),
-                icon = "new",
-                permission = "bi_rules",
-                description = _("Rules are the nodes in BI aggregations. "
-                             "Each aggregation has one rule as its root."),
-            ))
+            menu.add_item(
+                MenuItem(
+                    mode_or_url=self.url_to_pack([("mode", "bi_edit_rule")]),
+                    title=_("Create aggregation rule"),
+                    icon="new",
+                    permission="bi_rules",
+                    description=_("Rules are the nodes in BI aggregations. "
+                                  "Each aggregation has one rule as its root."),
+                ))
             menu.show()
             return
 
-        html.begin_form("bulk_delete_form", method = "POST")
+        html.begin_form("bulk_delete_form", method="POST")
         if self._view_type == "list":
-            self.render_rules(_("Rules"), only_unused = False)
+            self.render_rules(_("Rules"), only_unused=False)
         else:
-            self.render_rules(_("Unused BI Rules"), only_unused = True)
+            self.render_rules(_("Unused BI Rules"), only_unused=True)
 
         html.hidden_fields()
         if self._pack["rules"]:
             fieldstyle = "margin-top:10px"
             html.button("_bulk_delete_bi_rules", _("Bulk delete"), "submit", style=fieldstyle)
 
-            move_choices = [ (pack_id, attrs["title"]) for pack_id, attrs in self._packs.items()
-                        if pack_id is not self._pack["id"] and self.is_contact_for_pack(attrs) ]
+            move_choices = [(pack_id, attrs["title"])
+                            for pack_id, attrs in self._packs.items()
+                            if pack_id is not self._pack["id"] and self.is_contact_for_pack(attrs)]
 
             if move_choices:
-                html.button("_bulk_move_bi_rules",   _("Bulk move"),   "submit", style=fieldstyle)
+                html.button("_bulk_move_bi_rules", _("Bulk move"), "submit", style=fieldstyle)
 
                 if html.has_var('bulk_moveto'):
                     html.javascript('update_bulk_moveto("%s")' % html.var('bulk_moveto', ''))
 
-                html.select("bulk_moveto", move_choices, "@",
-                             onchange = "update_bulk_moveto(this.value)",
-                             attrs = {'class': 'bulk_moveto', 'style': fieldstyle})
+                html.select(
+                    "bulk_moveto",
+                    move_choices,
+                    "@",
+                    onchange="update_bulk_moveto(this.value)",
+                    attrs={
+                        'class': 'bulk_moveto',
+                        'style': fieldstyle
+                    })
         html.end_form()
-
 
     def render_rules(self, title, only_unused):
         aggregations_that_use_rule = self.find_aggregation_rule_usages()
 
         rules = self._pack["rules"].items()
         # Sort rules according to nesting level, and then to id
-        rules_refs = [ (rule_id, rule, self.count_rule_references(rule_id))
-                       for (rule_id, rule) in rules ]
-        rules_refs.sort(cmp = lambda a,b: cmp(a[2][2], b[2][2]) or cmp(a[1]["title"], b[1]["title"]))
+        rules_refs = [
+            (rule_id, rule, self.count_rule_references(rule_id)) for (rule_id, rule) in rules
+        ]
+        rules_refs.sort(cmp=lambda a, b: cmp(a[2][2], b[2][2]) or cmp(a[1]["title"], b[1]["title"]))
 
         table.begin("bi_rules", title)
         for rule_id, rule, (aggr_refs, rule_refs, level) in rules_refs:
             refs = aggr_refs + rule_refs
             if not only_unused or refs == 0:
                 table.row()
-                table.cell(html.render_input("_toggle_group", type_="button",
-                            class_="checkgroup", onclick="toggle_all_rows();",
-                            value='X'), sortable=False, css="checkbox")
+                table.cell(
+                    html.render_input(
+                        "_toggle_group",
+                        type_="button",
+                        class_="checkgroup",
+                        onclick="toggle_all_rows();",
+                        value='X'),
+                    sortable=False,
+                    css="checkbox")
                 html.checkbox("_c_rule_%s" % rule_id)
 
                 table.cell(_("Actions"), css="buttons")
@@ -1561,15 +1545,19 @@ class ModeBIRules(ModeBI):
 
                 if rule_refs == 0:
                     tree_url = html.makeuri([("mode", "bi_rule_tree"), ("id", rule_id)])
-                    html.icon_button(tree_url, _("This is a top-level rule. Show rule tree"), "bitree")
+                    html.icon_button(tree_url, _("This is a top-level rule. Show rule tree"),
+                                     "bitree")
 
                 if refs == 0:
-                    delete_url = html.makeactionuri_contextless([("mode", "bi_rules"), ("_del_rule", rule_id), ("pack", self._pack_id)])
+                    delete_url = html.makeactionuri_contextless([("mode", "bi_rules"),
+                                                                 ("_del_rule", rule_id),
+                                                                 ("pack", self._pack_id)])
                     html.icon_button(delete_url, _("Delete this rule"), "delete")
 
                 table.cell("", css="narrow")
                 if rule.get("disabled"):
-                    html.icon(_("This rule is currently disabled and will not be applied"), "disabled")
+                    html.icon(
+                        _("This rule is currently disabled and will not be applied"), "disabled")
                 else:
                     html.empty_icon_button()
 
@@ -1583,14 +1571,17 @@ class ModeBIRules(ModeBI):
                     title = rule["title"]
                 table.text_cell(_("Title"), title)
 
-                table.text_cell(_("Aggregation"),  "/".join([rule["aggregation"][0]] + map(str, rule["aggregation"][1])))
+                table.text_cell(
+                    _("Aggregation"),
+                    "/".join([rule["aggregation"][0]] + map(str, rule["aggregation"][1])))
                 table.text_cell(_("Nodes"), len(rule["nodes"]), css="number")
                 table.cell(_("Used by"))
                 have_this = set([])
                 for (aggr_id, aggregation) in aggregations_that_use_rule.get(rule_id, []):
                     if aggr_id not in have_this:
                         pack = self.pack_containing_rule(rule_id)
-                        aggr_url = html.makeuri_contextless([("mode", "bi_edit_aggregation"), ("id", aggr_id), ("pack", pack["id"])])
+                        aggr_url = html.makeuri_contextless([("mode", "bi_edit_aggregation"),
+                                                             ("id", aggr_id), ("pack", pack["id"])])
                         html.a(self.aggregation_title(aggregation), href=aggr_url)
                         html.br()
                         have_this.add(aggr_id)
@@ -1611,17 +1602,16 @@ class ModeBIRules(ModeBI):
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
+
 @mode_registry.register
 class ModeBIRuleTree(ModeBI):
     @classmethod
     def name(cls):
         return "bi_rule_tree"
 
-
     @classmethod
     def permissions(cls):
         return ["bi_rules"]
-
 
     def __init__(self):
         ModeBI.__init__(self)
@@ -1629,15 +1619,12 @@ class ModeBIRuleTree(ModeBI):
         if not self.pack_containing_rule(self._ruleid):
             raise MKUserError("id", _("This BI rule does not exist"))
 
-
     def title(self):
         return ModeBI.title(self) + " - " + _("Rule Tree of") + " " + self._ruleid
-
 
     def buttons(self):
         ModeBI.buttons(self)
         html.context_button(_("Back"), html.makeuri([("mode", "bi_rules")]), "back")
-
 
     def page(self):
         _aggr_refs, rule_refs, _level = self.count_rule_references(self._ruleid)
@@ -1667,24 +1654,23 @@ class ModeBIRuleTree(ModeBI):
 #   |             |___/ |___/          |___/                               |
 #   '----------------------------------------------------------------------'
 
+
 @mode_registry.register
 class ModeBIEditAggregation(ModeBI):
     @classmethod
     def name(cls):
         return "bi_edit_aggregation"
 
-
     @classmethod
     def permissions(cls):
         return ["bi_rules"]
 
-
     def __init__(self):
         ModeBI.__init__(self)
-        self._edited_nr = html.get_integer_input("id", -1) # In case of Aggregations: index in list
+        self._edited_nr = html.get_integer_input("id", -1)  # In case of Aggregations: index in list
         if self._edited_nr == -1:
             self._new = True
-            self._edited_aggregation = {"groups" : [_("Main")]}
+            self._edited_aggregation = {"groups": [_("Main")]}
         else:
             self._new = False
             try:
@@ -1692,16 +1678,13 @@ class ModeBIEditAggregation(ModeBI):
             except IndexError:
                 raise MKUserError("id", _("This aggregation does not exist."))
 
-
     def title(self):
         if self._new:
             return ModeBI.title(self) + " - " + _("Create New Aggregation")
         return ModeBI.title(self) + " - " + _("Edit Aggregation")
 
-
     def buttons(self):
         html.context_button(_("Abort"), html.makeuri([("mode", "bi_aggregations")]), "abort")
-
 
     def action(self):
         self.must_be_contact_for_pack()
@@ -1709,16 +1692,19 @@ class ModeBIEditAggregation(ModeBI):
             new_aggr = self._vs_aggregation.from_html_vars('aggr')
             self._vs_aggregation.validate_value(new_aggr, 'aggr')
             if len(new_aggr["groups"]) == 0:
-                raise MKUserError('rule_p_groups_0', _("Please define at least one aggregation group"))
+                raise MKUserError('rule_p_groups_0',
+                                  _("Please define at least one aggregation group"))
             if self._new:
                 self._pack["aggregations"].append(new_aggr)
-                self._add_change("bi-new-aggregation", _("Created new BI aggregation %d") % (len(self._pack["aggregations"])))
+                self._add_change(
+                    "bi-new-aggregation",
+                    _("Created new BI aggregation %d") % (len(self._pack["aggregations"])))
             else:
                 self._pack["aggregations"][self._edited_nr] = new_aggr
-                self._add_change("bi-edit-aggregation", _("Modified BI aggregation %d") % (self._edited_nr + 1))
+                self._add_change("bi-edit-aggregation",
+                                 _("Modified BI aggregation %d") % (self._edited_nr + 1))
             self.save_config()
         return "bi_aggregations"
-
 
     def page(self):
         html.begin_form("biaggr", method="POST")
@@ -1741,17 +1727,16 @@ class ModeBIEditAggregation(ModeBI):
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
+
 @mode_registry.register
 class ModeBIEditRule(ModeBI):
     @classmethod
     def name(cls):
         return "bi_edit_rule"
 
-
     @classmethod
     def permissions(cls):
         return ["bi_rules"]
-
 
     def __init__(self):
         ModeBI.__init__(self)
@@ -1761,16 +1746,13 @@ class ModeBIEditRule(ModeBI):
         if not self._new and not self.pack_containing_rule(self._ruleid):
             raise MKUserError("id", _("This BI rule does not exist"))
 
-
     def title(self):
         if self._new:
             return ModeBI.title(self) + " - " + _("Create New Rule")
         return ModeBI.title(self) + " - " + _("Edit Rule") + " " + html.attrencode(self._ruleid)
 
-
     def buttons(self):
         html.context_button(_("Abort"), html.makeuri([("mode", "bi_rules")]), "abort")
-
 
     def action(self):
         self.must_be_contact_for_pack()
@@ -1782,8 +1764,9 @@ class ModeBIEditRule(ModeBI):
         if self._ruleid and self._ruleid != new_rule["id"]:
             forbidden_packs = self._get_forbidden_packs_using_rule()
             if forbidden_packs:
-                raise MKAuthException(_("You have no permission for changes in BI packs <b>%s</b> "
-                                        "which uses rule <b>%s</b>.") % (", ".join(forbidden_packs), self._ruleid))
+                raise MKAuthException(
+                    _("You have no permission for changes in BI packs <b>%s</b> "
+                      "which uses rule <b>%s</b>.") % (", ".join(forbidden_packs), self._ruleid))
 
             new_ruleid = new_rule["id"]
             c = wato_confirm(_("Confirm renaming existing BI rule"),
@@ -1792,7 +1775,8 @@ class ModeBIEditRule(ModeBI):
 
             if c:
                 self._rename_ruleid_after_confirm(new_ruleid)
-                self._add_change("bi-edit-rule", _("Renamed BI rule from %s to %s") % (self._ruleid, new_ruleid))
+                self._add_change("bi-edit-rule",
+                                 _("Renamed BI rule from %s to %s") % (self._ruleid, new_ruleid))
                 self.save_config()
 
             else:
@@ -1805,14 +1789,15 @@ class ModeBIEditRule(ModeBI):
             if self._new and self.find_rule_by_id(self._ruleid):
                 existing_rule = self.find_rule_by_id(self._ruleid)
                 pack = self.pack_containing_rule(self._ruleid)
-                raise MKUserError('rule_p_id',
+                raise MKUserError(
+                    'rule_p_id',
                     _("There is already a rule with the ID <b>%s</b>. "
-                      "It is in the pack <b>%s</b> and as the title <b>%s</b>") % (
-                            self._ruleid, pack["title"], existing_rule["title"]))
+                      "It is in the pack <b>%s</b> and as the title <b>%s</b>") %
+                    (self._ruleid, pack["title"], existing_rule["title"]))
 
             if not new_rule["nodes"]:
                 raise MKUserError(None,
-                    _("Please add at least one child node. Empty rules are useless."))
+                                  _("Please add at least one child node. Empty rules are useless."))
 
             if self._new:
                 del new_rule["id"]
@@ -1822,14 +1807,15 @@ class ModeBIEditRule(ModeBI):
                 self._pack["rules"][self._ruleid].update(new_rule)
                 new_rule["id"] = self._ruleid
                 if self.rule_uses_rule(new_rule, new_rule["id"]):
-                    raise MKUserError(None, _("There is a cycle in your rules. This rule calls itself - "
-                                              "either directly or indirectly."))
+                    raise MKUserError(
+                        None,
+                        _("There is a cycle in your rules. This rule calls itself - "
+                          "either directly or indirectly."))
                 self._add_change("bi-edit-rule", _("Modified BI rule %s") % self._ruleid)
 
             self.save_config()
 
         return "bi_rules"
-
 
     def _get_forbidden_packs_using_rule(self):
         forbidden_packs = set()
@@ -1858,7 +1844,6 @@ class ModeBIEditRule(ModeBI):
             if uses_rule and not self.is_contact_for_pack(pack=packinfo):
                 forbidden_packs.add(packid)
         return forbidden_packs
-
 
     def _rename_ruleid_after_confirm(self, new_ruleid):
         new_packs = self._packs.copy()
@@ -1895,24 +1880,21 @@ class ModeBIEditRule(ModeBI):
         self._packs = new_packs
         self._ruleid = new_ruleid
 
-
     def _get_new_node(self, node, new_ruleid):
         new_node = None
         if node[0] == 'call' and self._ruleid == node[1][0]:
             new_node = self._create_call_node(new_ruleid, node[1][1])
         elif node[0] in ["foreach_host", "foreach_service"] and node[-1][-1][0] == 'call' and \
              self._ruleid == node[-1][-1][1][0]:
-            new_node = self._create_foreach_node(node[0], list(node[1][:-1]), new_ruleid, node[-1][-1][1][1])
+            new_node = self._create_foreach_node(node[0], list(node[1][:-1]), new_ruleid,
+                                                 node[-1][-1][1][1])
         return new_node
-
 
     def _create_call_node(self, ruleid, arguments):
         return ('call', (ruleid, arguments))
 
-
     def _create_foreach_node(self, what, parameters, ruleid, arguments):
         return (what, tuple(parameters + [self._create_call_node(ruleid, arguments)]))
-
 
     def page(self):
         self.must_be_contact_for_pack()
@@ -1946,7 +1928,6 @@ class ModeBIEditRule(ModeBI):
             html.set_focus("rule_p_title")
         html.end_form()
 
-
     def _may_use_rules_from_packs(self, rulepack):
         rules_without_permissions = {}
         for node in rulepack.get("nodes", []):
@@ -1955,7 +1936,7 @@ class ModeBIEditRule(ModeBI):
                 continue
 
             node_ruleid = node_content[0]
-            pack        = self.pack_containing_rule(node_ruleid)
+            pack = self.pack_containing_rule(node_ruleid)
             if pack is not None and not self.may_use_rules_in_pack(pack):
                 packid = (pack['id'], pack['title'])
                 rules_without_permissions.setdefault(packid, [])
@@ -1965,128 +1946,123 @@ class ModeBIEditRule(ModeBI):
             message = ", ".join([_("BI rules %s from BI pack '%s'") % \
                                  (", ".join([ "'%s'" % ruleid for ruleid in ruleids]), title)
                                  for (_nodeid, title), ruleids in rules_without_permissions.items()])
-            raise MKAuthException(_("You have no permission for changes in this rule using %s.") % message)
-
+            raise MKAuthException(
+                _("You have no permission for changes in this rule using %s.") % message)
 
     def valuespec(self):
         elements = [
-            ( "id",
-              TextAscii(
-                  title = _("Rule ID"),
-                  help = _("The ID of the rule must be a unique text. It will be used as an internal key "
-                           "when rules refer to each other. The rule IDs will not be visible in the status "
-                           "GUI. They are just used within the configuration."),
-                  allow_empty = False,
-                  size = 80,
-              ),
-            ),
-            ( "title",
-               TextUnicode(
-                   title = _("Rule Title"),
-                   help = _("The title of the BI nodes which are created from this rule. This will be "
-                            "displayed as the name of the node in the BI view. For "
-                            "top level nodes this title must be unique. You can insert "
-                            "rule parameters like <tt>$FOO$</tt> or <tt>$BAR$</tt> here."),
-                   allow_empty = False,
-                   size = 80,
-               ),
-            ),
-            ( "comment",
-               TextAreaUnicode(
-                   title = _("Comment"),
-                   help = _("An arbitrary comment of this rule for you."),
-                   cols = 80,
-                   rows = 4,
-               ),
-            ),
-            ( "docu_url",
-              TextAscii(
-                title = _("Documentation URL"),
-                help = HTML(_("An optional URL pointing to documentation or any other page. This will be "
-                              "displayed as an icon %s and open "
-                              "a new page when clicked. You can use either global URLs (beginning with "
-                              "<tt>http://</tt>), absolute local urls (beginning with <tt>/</tt>) or relative "
-                              "URLs (that are relative to <tt>check_mk/</tt>).") %
-                                html.render_icon("url")),
-                size = 80,
-              ),
-            ),
-            ( "params",
-              ListOfStrings(
-                  title = _("Parameters"),
-                  help = _("Parameters are used in order to make rules more flexible. They must "
-                           "be named like variables in programming languages. For example you can "
-                           "make your rule have the two parameters <tt>HOST</tt> and <tt>INST</tt>. "
-                           "When calling the rule - from an aggergation or a higher level rule - "
-                           "you can then specify two arbitrary values for these parameters. In the "
-                           "title of the rule as well as the host and service names, you can insert the "
-                           "actual value of the parameters by <tt>$HOST$</tt> and <tt>$INST$</tt> "
-                           "(enclosed in dollar signs)."),
-                  orientation="horizontal",
-                  valuespec = TextAscii(
-                    size = 80,
-                    regex = '[A-Za-z_][A-Za-z0-9_]*',
-                    regex_error = _("Parameters must contain only A-Z, a-z, 0-9 and _ "
-                                    "and must not begin with a digit."),
-                  )
-              )
-            ),
-            ( "disabled",
-              Checkbox(
-                  title = _("Rule activation"),
-                  help  = _("Disabled rules are kept in the configuration but are not applied."),
-                  label = _("do not apply this rule"),
-              )
-            ),
-            ( "aggregation",
-              CascadingDropdown(
-                title = _("Aggregation Function"),
-                help = _("The aggregation function decides how the status of a node "
-                         "is constructed from the states of the child nodes."),
-                orientation = "horizontal",
-                choices = self._aggregation_choices(),
-              )
-            ),
-            ( "nodes",
-              ListOf(
-                  self._vs_node,
-                  add_label = _("Add child node generator"),
-                  title = _("Nodes that are aggregated by this rule"),
-              ),
-            ),
-            ( "state_messages",
-                Optional(
-                Dictionary(
-                    elements = [(state, TextAscii(title = _("Message when rule result is %s") % name,
-                                                  default_value = None,
-                                                  size = 80))
-                                for state, name in [("0", "OK"),
-                                                    ("1", "WARN"),
-                                                    ("2", "CRIT"),
-                                                    ("3", "UNKNOWN")]]
-                ),
-                title = _("Additional messages describing rule state"),
-                help  = _("This option allows you to display an additional, freely configurable text, to the rule outcome, "
-                          "which may describe the state more in detail. For example, instead of <tt>CRIT</tt>, the rule can now "
-                          "display <tt>CRIT, less than 70% of servers reachable</tt>. This message is also shown within the BI aggregation "
-                          "check plugins."),
-                label  = _("Add messages")
-                )
-            ),
+            ("id",
+             TextAscii(
+                 title=_("Rule ID"),
+                 help=_(
+                     "The ID of the rule must be a unique text. It will be used as an internal key "
+                     "when rules refer to each other. The rule IDs will not be visible in the status "
+                     "GUI. They are just used within the configuration."),
+                 allow_empty=False,
+                 size=80,
+             )),
+            ("title",
+             TextUnicode(
+                 title=_("Rule Title"),
+                 help=_("The title of the BI nodes which are created from this rule. This will be "
+                        "displayed as the name of the node in the BI view. For "
+                        "top level nodes this title must be unique. You can insert "
+                        "rule parameters like <tt>$FOO$</tt> or <tt>$BAR$</tt> here."),
+                 allow_empty=False,
+                 size=80,
+             )),
+            ("comment",
+             TextAreaUnicode(
+                 title=_("Comment"),
+                 help=_("An arbitrary comment of this rule for you."),
+                 cols=80,
+                 rows=4,
+             )),
+            ("docu_url",
+             TextAscii(
+                 title=_("Documentation URL"),
+                 help=HTML(
+                     _("An optional URL pointing to documentation or any other page. This will be "
+                       "displayed as an icon %s and open "
+                       "a new page when clicked. You can use either global URLs (beginning with "
+                       "<tt>http://</tt>), absolute local urls (beginning with <tt>/</tt>) or relative "
+                       "URLs (that are relative to <tt>check_mk/</tt>).") %
+                     html.render_icon("url")),
+                 size=80,
+             )),
+            ("params",
+             ListOfStrings(
+                 title=_("Parameters"),
+                 help=_(
+                     "Parameters are used in order to make rules more flexible. They must "
+                     "be named like variables in programming languages. For example you can "
+                     "make your rule have the two parameters <tt>HOST</tt> and <tt>INST</tt>. "
+                     "When calling the rule - from an aggergation or a higher level rule - "
+                     "you can then specify two arbitrary values for these parameters. In the "
+                     "title of the rule as well as the host and service names, you can insert the "
+                     "actual value of the parameters by <tt>$HOST$</tt> and <tt>$INST$</tt> "
+                     "(enclosed in dollar signs)."),
+                 orientation="horizontal",
+                 valuespec=TextAscii(
+                     size=80,
+                     regex='[A-Za-z_][A-Za-z0-9_]*',
+                     regex_error=_("Parameters must contain only A-Z, a-z, 0-9 and _ "
+                                   "and must not begin with a digit."),
+                 ))),
+            ("disabled",
+             Checkbox(
+                 title=_("Rule activation"),
+                 help=_("Disabled rules are kept in the configuration but are not applied."),
+                 label=_("do not apply this rule"),
+             )),
+            ("aggregation",
+             CascadingDropdown(
+                 title=_("Aggregation Function"),
+                 help=_("The aggregation function decides how the status of a node "
+                        "is constructed from the states of the child nodes."),
+                 orientation="horizontal",
+                 choices=self._aggregation_choices(),
+             )),
+            ("nodes",
+             ListOf(
+                 self._vs_node,
+                 add_label=_("Add child node generator"),
+                 title=_("Nodes that are aggregated by this rule"),
+             )),
+            ("state_messages",
+             Optional(
+                 Dictionary(elements=[(state,
+                                       TextAscii(
+                                           title=_("Message when rule result is %s") % name,
+                                           default_value=None,
+                                           size=80,
+                                       )) for state, name in [
+                                           ("0", "OK"),
+                                           ("1", "WARN"),
+                                           ("2", "CRIT"),
+                                           ("3", "UNKNOWN"),
+                                       ]]),
+                 title=_("Additional messages describing rule state"),
+                 help=
+                 _("This option allows you to display an additional, freely configurable text, to the rule outcome, "
+                   "which may describe the state more in detail. For example, instead of <tt>CRIT</tt>, the rule can now "
+                   "display <tt>CRIT, less than 70% of servers reachable</tt>. This message is also shown within the BI aggregation "
+                   "check plugins."),
+                 label=_("Add messages"))),
             ("icon", IconSelector(title=_("Icon"))),
         ]
 
         return Dictionary(
-            title = _("Rule Properties"),
-            optional_keys = False,
-            render = "form",
-            elements = elements,
-            headers = [
-                ( _("Rule Properties"),     [ "id", "title", "docu_url", "comment", "params", "disabled" ]),
-                ( _("Child Node Generation"),  [ "nodes" ] ),
-                ( _("Aggregation Function"),   [ "aggregation", "state_messages", "icon" ], ),
-            ]
-        )
+            title=_("Rule Properties"),
+            optional_keys=False,
+            render="form",
+            elements=elements,
+            headers=[
+                (_("Rule Properties"), ["id", "title", "docu_url", "comment", "params",
+                                        "disabled"]),
+                (_("Child Node Generation"), ["nodes"]),
+                (_("Aggregation Function"), ["aggregation", "state_messages", "icon"]),
+            ])
 
 
 #.
@@ -2102,78 +2078,82 @@ class ModeBIEditRule(ModeBI):
 bi_aggregation_functions = {}
 
 bi_aggregation_functions["worst"] = {
-    "title"     : _("Worst - take worst of all node states"),
-    "valuespec" : Tuple(
-        elements = [
+    "title":
+        _("Worst - take worst of all node states"),
+    "valuespec":
+        Tuple(elements=[
             Integer(
-                help = _("Normally this value is <tt>1</tt>, which means that the worst state "
-                         "of all child nodes is being used as the total state. If you set it for example "
-                         "to <tt>3</tt>, then instead the node with the 3rd worst state is being regarded. "
-                         "Example: In the case of five nodes with the states CRIT CRIT WARN OK OK then "
-                         "resulting state would be WARN. Or you could say that the worst to nodes are "
-                         "first dropped and then the worst of the remaining nodes defines the state. "),
-                title = _("Take n'th worst state for n = "),
-                default_value = 1,
-                min_value = 1),
+                help=
+                _("Normally this value is <tt>1</tt>, which means that the worst state "
+                  "of all child nodes is being used as the total state. If you set it for example "
+                  "to <tt>3</tt>, then instead the node with the 3rd worst state is being regarded. "
+                  "Example: In the case of five nodes with the states CRIT CRIT WARN OK OK then "
+                  "resulting state would be WARN. Or you could say that the worst to nodes are "
+                  "first dropped and then the worst of the remaining nodes defines the state. "),
+                title=_("Take n'th worst state for n = "),
+                default_value=1,
+                min_value=1),
             MonitoringState(
-                title = _("Restrict severity to at worst"),
-                help = _("Here a maximum severity of the node state can be set. This severity is not "
-                         "exceeded, even if some of the childs have more severe states."),
-                default_value = 2,
+                title=_("Restrict severity to at worst"),
+                help=_("Here a maximum severity of the node state can be set. This severity is not "
+                       "exceeded, even if some of the childs have more severe states."),
+                default_value=2,
             ),
         ]),
 }
 
 bi_aggregation_functions["best"] = {
-    "title"     : _("Best - take best of all node states"),
-    "valuespec" : Tuple(
-        elements = [
+    "title":
+        _("Best - take best of all node states"),
+    "valuespec":
+        Tuple(elements=[
             Integer(
-                help = _("Normally this value is <tt>1</tt>, which means that the best state "
-                         "of all child nodes is being used as the total state. If you set it for example "
-                         "to <tt>2</tt>, then the node with the best state is not being regarded. "
-                         "If the states of the child nodes would be CRIT, WARN and OK, then to total "
-                         "state would be WARN."),
-                title = _("Take n'th best state for n = "),
-                default_value = 1,
-                min_value = 1),
+                help=_(
+                    "Normally this value is <tt>1</tt>, which means that the best state "
+                    "of all child nodes is being used as the total state. If you set it for example "
+                    "to <tt>2</tt>, then the node with the best state is not being regarded. "
+                    "If the states of the child nodes would be CRIT, WARN and OK, then to total "
+                    "state would be WARN."),
+                title=_("Take n'th best state for n = "),
+                default_value=1,
+                min_value=1),
             MonitoringState(
-                title = _("Restrict severity to at worst"),
-                help = _("Here a maximum severity of the node state can be set. This severity is not "
-                         "exceeded, even if some of the childs have more severe states."),
-                default_value = 2,
+                title=_("Restrict severity to at worst"),
+                help=_("Here a maximum severity of the node state can be set. This severity is not "
+                       "exceeded, even if some of the childs have more severe states."),
+                default_value=2,
             ),
         ]),
 }
 
+
 def vs_count_ok_count(title, defval, defvalperc):
     return Alternative(
-        title = title,
-        style = "dropdown",
-        match = lambda x: str(x).endswith("%") and 1 or 0,
-        elements = [
+        title=title,
+        style="dropdown",
+        match=lambda x: str(x).endswith("%") and 1 or 0,
+        elements=[
             Integer(
-                title = _("Explicit number"),
+                title=_("Explicit number"),
                 label=_("Number of OK-nodes"),
-                min_value = 0,
-                default_value = defval
-            ),
+                min_value=0,
+                default_value=defval),
             Transform(
                 Percentage(
-                    label=_("Percent of OK-nodes"),
-                    display_format = "%.0f",
-                    default_value = defvalperc),
-                title = _("Percentage"),
-                forth = lambda x: float(x[:-1]),
-                back = lambda x: "%d%%" % x,
+                    label=_("Percent of OK-nodes"), display_format="%.0f",
+                    default_value=defvalperc),
+                title=_("Percentage"),
+                forth=lambda x: float(x[:-1]),
+                back=lambda x: "%d%%" % x,
             ),
-        ]
-    )
+        ])
+
 
 bi_aggregation_functions["count_ok"] = {
-    "title"     : _("Count the number of nodes in state OK"),
-    "valuespec" : Tuple(
-        elements = [
+    "title":
+        _("Count the number of nodes in state OK"),
+    "valuespec":
+        Tuple(elements=[
             vs_count_ok_count(_("Required number of OK-nodes for a total state of OK:"), 2, 50),
             vs_count_ok_count(_("Required number of OK-nodes for a total state of WARN:"), 1, 25),
         ]),
@@ -2329,19 +2309,19 @@ host_aggregations += [
 #   |  Integrate all that stuff into WATO                                  |
 #   '----------------------------------------------------------------------'
 
-config.declare_permission("wato.bi_rules",
-    _("Business Intelligence Rules and Aggregations"),
-    _("User the WATO BI module, create, modify and delete BI rules and aggregations in packs that you are a contact of"),
-     [ "admin", "user" ])
+config.declare_permission(
+    "wato.bi_rules", _("Business Intelligence Rules and Aggregations"),
+    _("User the WATO BI module, create, modify and delete BI rules and aggregations in packs that you are a contact of"
+     ), ["admin", "user"])
 
-config.declare_permission("wato.bi_admin",
-    _("Business Intelligence Administration"),
-    _("Edit all rules and aggregations for Business Intelligence, create, modify and delete rule packs."),
-     [ "admin" ])
+config.declare_permission(
+    "wato.bi_admin", _("Business Intelligence Administration"),
+    _("Edit all rules and aggregations for Business Intelligence, create, modify and delete rule packs."
+     ), ["admin"])
 
-
-register_modules(WatoModule("bi_packs", _("Business Intelligence"), "aggr", "bi_rules",
-      _("Configuration of Check_MK's Business Intelligence component."), 70))
+register_modules(
+    WatoModule("bi_packs", _("Business Intelligence"), "aggr", "bi_rules",
+               _("Configuration of Check_MK's Business Intelligence component."), 70))
 
 
 #.
@@ -2356,6 +2336,7 @@ register_modules(WatoModule("bi_packs", _("Business Intelligence"), "aggr", "bi_
 #   |  Class just for renaming hosts in the BI configuration.              |
 #   '----------------------------------------------------------------------'
 
+
 class BIHostRenamer(BIManagement):
     def rename_host(self, oldname, newname):
         renamed = 0
@@ -2363,9 +2344,8 @@ class BIHostRenamer(BIManagement):
             renamed += self.rename_host_in_pack(pack, oldname, newname)
         if renamed:
             self.save_config()
-            return [ "bi" ] * renamed
+            return ["bi"] * renamed
         return []
-
 
     def rename_host_in_pack(self, pack, oldname, newname):
         renamed = 0
@@ -2375,7 +2355,6 @@ class BIHostRenamer(BIManagement):
             renamed += self.rename_host_in_rule(rule, oldname, newname)
         return renamed
 
-
     def rename_host_in_aggregation(self, aggregation, oldname, newname):
         node = aggregation["node"]
         if node[0] == 'call':
@@ -2383,14 +2362,13 @@ class BIHostRenamer(BIManagement):
                 return 1
         return 0
 
-
     def rename_host_in_rule(self, rule, oldname, newname):
         renamed = 0
         nodes = rule["nodes"]
         for nr, node in enumerate(nodes):
-            if node[0] in [ "host", "service", "remaining" ]:
+            if node[0] in ["host", "service", "remaining"]:
                 if node[1][0] == oldname:
-                    nodes[nr] = (node[0], ( newname, ) + node[1][1:])
+                    nodes[nr] = (node[0], (newname,) + node[1][1:])
                     renamed = 1
             elif node[0] == "call":
                 if watolib.rename_host_in_list(node[1][1], oldname, newname):

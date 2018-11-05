@@ -1,0 +1,12 @@
+Title: Solaris Agent: Correctly separate cputime and elapsed time in agent info
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0p8
+Date: 1540280877
+
+The process information delivered by the agent has been upgrated multiple times by requirements of users or information available from the OS. The ps agent tracked the memory outilization of a process by its name, but could not access information of process id and the time of life(elapsed time) of a running process, as such information was misplaced by the agent and thus ignored by the check. This fix brings this data into consideration by the check.
+

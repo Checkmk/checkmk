@@ -28,15 +28,14 @@ import cmk.gui.config as config
 import cmk.gui.watolib as watolib
 from cmk.gui.globals import html
 
+
 class MainMenu(object):
     def __init__(self, items=None, columns=2):
-        self._items   = items or []
+        self._items = items or []
         self._columns = columns
-
 
     def add_item(self, item):
         self._items.append(item)
-
 
     def show(self):
         html.open_div(class_="mainmenu")
@@ -62,7 +61,6 @@ class MenuItem(object):
         self.description = description
         self.sort_index = sort_index
 
-
     def may_see(self):
         """Whether or not the currently logged in user is allowed to see this module"""
         if self.permission is None:
@@ -75,13 +73,11 @@ class MenuItem(object):
 
         return config.user.may(permission) or config.user.may("wato.seeall")
 
-
     def get_url(self):
         mode_or_url = self.mode_or_url
         if '?' in mode_or_url or '/' in mode_or_url or mode_or_url.endswith(".py"):
             return mode_or_url
         return watolib.folder_preserving_link([("mode", mode_or_url)])
-
 
     def __repr__(self):
         return "%s(mode_or_url=%r, title=%r, icon=%r, permission=%r, description=%r, sort_index=%r)" % \
@@ -90,6 +86,7 @@ class MenuItem(object):
 
 # TODO: Clean this up to a plugin_registry.Registry
 _modules = []
+
 
 class WatoModule(MenuItem):
     pass

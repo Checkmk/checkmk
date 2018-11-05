@@ -23,7 +23,6 @@
 # License along with GNU Make; see the file  COPYING.  If  not,  write
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
-
 """Module to hold shared code for WATO internals and the WATO plugins"""
 
 # TODO: More feature related splitting up would be better
@@ -38,12 +37,32 @@ from cmk.gui.i18n import _u, _
 from cmk.gui.globals import html
 from cmk.gui.htmllib import HTML
 from cmk.gui.exceptions import MKUserError, MKGeneralException
-from cmk.gui.valuespec import (TextAscii, Dictionary, RadioChoice, Tuple,
-    Checkbox, Integer, DropdownChoice, Alternative, Password, Transform,
-    FixedValue, ListOf, RegExpUnicode, RegExp, TextUnicode, ElementSelection,
-    OptionalDropdownChoice, Percentage, Float,
-    CascadingDropdown, ListChoice, ListOfStrings,
-    DualListChoice, ValueSpec)
+from cmk.gui.valuespec import (
+    TextAscii,
+    Dictionary,
+    RadioChoice,
+    Tuple,
+    Checkbox,
+    Integer,
+    DropdownChoice,
+    Alternative,
+    Password,
+    Transform,
+    FixedValue,
+    ListOf,
+    RegExpUnicode,
+    RegExp,
+    TextUnicode,
+    ElementSelection,
+    OptionalDropdownChoice,
+    Percentage,
+    Float,
+    CascadingDropdown,
+    ListChoice,
+    ListOfStrings,
+    DualListChoice,
+    ValueSpec,
+)
 from cmk.gui.plugins.wato.utils.base_modes import WatoMode
 from cmk.gui.plugins.wato.utils.context_buttons import (
     global_buttons,
@@ -59,7 +78,7 @@ from cmk.gui.plugins.wato.utils.main_menu import (
     MainMenu,
     MenuItem,
     WatoModule,
-    register_modules
+    register_modules,
 )
 import cmk.gui.watolib as watolib
 from cmk.gui.watolib import (
@@ -143,7 +162,6 @@ def rule_option_elements(disabling=True):
             ),
         ]
     return elements
-
 
 
 def PluginCommandLine():
@@ -241,10 +259,10 @@ class UserIconOrAction(DropdownChoice):
                           "wato.py?mode=edit_configvar&varname=user_icons_and_actions"
 
         kwargs.update({
-            'choices'     : self.list_user_icons_and_actions,
-            'allow_empty' : False,
-            'empty_text'  : empty_text,
-            'help'        : kwargs.get('help', '') + ' '+empty_text,
+            'choices': self.list_user_icons_and_actions,
+            'allow_empty': False,
+            'empty_text': empty_text,
+            'help': kwargs.get('help', '') + ' ' + empty_text,
         })
         super(UserIconOrAction, self).__init__(**kwargs)
 
@@ -253,12 +271,12 @@ class UserIconOrAction(DropdownChoice):
         for key, action in config.user_icons_and_actions.items():
             label = key
             if 'title' in action:
-                label += ' - '+action['title']
+                label += ' - ' + action['title']
             if 'url' in action:
-                label += ' ('+action['url'][0]+')'
+                label += ' (' + action['url'][0] + ')'
 
             choices.append((key, label))
-        return sorted(choices, key = lambda x: x[1])
+        return sorted(choices, key=lambda x: x[1])
 
 
 class SNMPCredentials(Alternative):
@@ -292,7 +310,7 @@ class SNMPCredentials(Alternative):
             ]
 
             # Wrap match() function defined above
-            match = lambda x: 0 if x is None else (alternative_match(x)+1)
+            match = lambda x: 0 if x is None else (alternative_match(x) + 1)
         else:
             none_elements = []
             match = alternative_match
@@ -367,7 +385,6 @@ class SNMPCredentials(Alternative):
         kwargs["orientation"] = "vertical"
         super(SNMPCredentials, self).__init__(**kwargs)
 
-
     def _snmpv3_auth_elements(self):
         return [
             DropdownChoice(
@@ -386,7 +403,6 @@ class SNMPCredentials(Alternative):
                 minlen = 8,
             )
         ]
-
 
 
 class IPMIParameters(Dictionary):
@@ -427,9 +443,9 @@ def ServiceDescriptionTranslation(**kwargs):
     help_txt = kwargs.get("help")
     title = kwargs.get("title")
     return Dictionary(
-        title = title,
-        help = help_txt,
-        elements = _translation_elements("service")
+        title=title,
+        help=help_txt,
+        elements=_translation_elements("service"),
     )
 
 
@@ -536,7 +552,7 @@ class GroupSelection(ElementSelection):
         all_groups = userdb.load_group_information()
         this_group = all_groups.get(self._what, {})
         # replace the title with the key if the title is empty
-        elements = [ (k, t['alias'] if t['alias'] else k) for (k, t) in this_group.items() ]
+        elements = [(k, t['alias'] if t['alias'] else k) for (k, t) in this_group.items()]
         if self._no_selection:
             # Beware: ElementSelection currently can only handle string
             # keys, so we cannot take 'None' as a value.
@@ -578,15 +594,20 @@ def IndividualOrStoredPassword(*args, **kwargs):
     )
 
 
-
-
-def register_check_parameters(subgroup, checkgroup, title, valuespec, itemspec,
-                               match_type, has_inventory=True, register_static_check=True,
-                               deprecated=False):
+def register_check_parameters(subgroup,
+                              checkgroup,
+                              title,
+                              valuespec,
+                              itemspec,
+                              match_type,
+                              has_inventory=True,
+                              register_static_check=True,
+                              deprecated=False):
     """Special version of register_rule, dedicated to checks."""
     if valuespec and isinstance(valuespec, Dictionary) and match_type != "dict":
-        raise MKGeneralException("Check parameter definition for %s has type Dictionary, but match_type %s" %
-                                 (checkgroup, match_type))
+        raise MKGeneralException(
+            "Check parameter definition for %s has type Dictionary, but match_type %s" %
+            (checkgroup, match_type))
 
     # Enclose this valuespec with a TimeperiodValuespec
     # The given valuespec will be transformed to a list of valuespecs,
@@ -595,13 +616,13 @@ def register_check_parameters(subgroup, checkgroup, title, valuespec, itemspec,
         valuespec = TimeperiodValuespec(valuespec)
 
     # Register rule for discovered checks
-    if valuespec and has_inventory: # would be useless rule if check has no parameters
+    if valuespec and has_inventory:  # would be useless rule if check has no parameters
         itemenum = None
         if itemspec:
             itemtype = "item"
             itemname = itemspec.title()
             itemhelp = itemspec.help()
-            if  isinstance(itemspec, (DropdownChoice, OptionalDropdownChoice)):
+            if isinstance(itemspec, (DropdownChoice, OptionalDropdownChoice)):
                 itemenum = itemspec._choices
         else:
             itemtype = None
@@ -610,16 +631,16 @@ def register_check_parameters(subgroup, checkgroup, title, valuespec, itemspec,
 
         register_rule(
             "checkparams/" + subgroup,
-            varname = "checkgroup_parameters:%s" % checkgroup,
-            title = title,
-            valuespec = valuespec,
-            itemspec = itemspec,
-            itemtype = itemtype,
-            itemname = itemname,
-            itemhelp = itemhelp,
-            itemenum = itemenum,
-            match = match_type,
-            deprecated = deprecated)
+            varname="checkgroup_parameters:%s" % checkgroup,
+            title=title,
+            valuespec=valuespec,
+            itemspec=itemspec,
+            itemtype=itemtype,
+            itemname=itemname,
+            itemhelp=itemhelp,
+            itemenum=itemenum,
+            match=match_type,
+            deprecated=deprecated)
 
     if register_static_check:
         # Register rule for static checks
@@ -635,7 +656,7 @@ def register_check_parameters(subgroup, checkgroup, title, valuespec, itemspec,
             # valuespec to add "None" as second element in the tuple
             elements.append(FixedValue(
                 None,
-                totext = '',
+                totext='',
             ))
         if not valuespec:
             valuespec =\
@@ -651,43 +672,41 @@ def register_check_parameters(subgroup, checkgroup, title, valuespec, itemspec,
         register_rule(
             "static/" + subgroup,
             "static_checks:%s" % checkgroup,
-            title = title,
-            valuespec = Tuple(
-                title = valuespec.title(),
-                elements = elements,
+            title=title,
+            valuespec=Tuple(
+                title=valuespec.title(),
+                elements=elements,
             ),
-            itemspec = itemspec,
-            match = "all",
-            deprecated = deprecated)
+            itemspec=itemspec,
+            match="all",
+            deprecated=deprecated)
 
 
 class TimeperiodValuespec(ValueSpec):
-    tp_toggle_var        = "tp_toggle"        # Used by GUI switch
-    tp_current_mode      = "tp_active"        # The actual set mode
-                                              # "0" - no timespecific settings
-                                              # "1" - timespecific settings active
+    # Used by GUI switch
+    # The actual set mode
+    # "0" - no timespecific settings
+    # "1" - timespecific settings active
+    tp_toggle_var = "tp_toggle"
+    tp_current_mode = "tp_active"
 
-    tp_default_value_key = "tp_default_value" # Used in valuespec
-    tp_values_key        = "tp_values"        # Used in valuespec
-
+    tp_default_value_key = "tp_default_value"  # Used in valuespec
+    tp_values_key = "tp_values"  # Used in valuespec
 
     def __init__(self, valuespec):
         super(TimeperiodValuespec, self).__init__(
-            title = valuespec.title(),
-            help  = valuespec.help()
+            title=valuespec.title(),
+            help=valuespec.help(),
         )
         self._enclosed_valuespec = valuespec
-
 
     def default_value(self):
         # If nothing is configured, simply return the default value of the enclosed valuespec
         return self._enclosed_valuespec.default_value()
 
-
     def render_input(self, varprefix, value):
         # The display mode differs when the valuespec is activated
         vars_copy = html.request.vars.copy()
-
 
         # The timeperiod mode can be set by either the GUI switch or by the value itself
         # GUI switch overrules the information stored in the value
@@ -713,7 +732,6 @@ class TimeperiodValuespec(ValueSpec):
             html.buttonlink(toggle_url, _("%s timespecific parameters") % mode, class_=["toggle_timespecific_parameter"])
             return r
 
-
     def value_to_text(self, value):
         text = ""
         if self.is_active(value):
@@ -722,7 +740,6 @@ class TimeperiodValuespec(ValueSpec):
         else:
             text += self._enclosed_valuespec.value_to_text(value)
         return text
-
 
     def from_html_vars(self, varprefix):
         if html.var(self.tp_current_mode) == "1":
@@ -737,10 +754,8 @@ class TimeperiodValuespec(ValueSpec):
         # Fetch the data from the enclosed valuespec
         return self._enclosed_valuespec.from_html_vars(varprefix)
 
-
     def canonical_value(self):
         return self._enclosed_valuespec.canonical_value()
-
 
     def validate_datatype(self, value, varprefix):
         if self.is_active(value):
@@ -748,13 +763,11 @@ class TimeperiodValuespec(ValueSpec):
         else:
             self._enclosed_valuespec.validate_datatype(value, varprefix)
 
-
     def validate_value(self, value, varprefix):
         if self.is_active(value):
             self._get_timeperiod_valuespec().validate_value(value, varprefix)
         else:
             self._enclosed_valuespec.validate_value(value, varprefix)
-
 
     def _get_timeperiod_valuespec(self):
         return Dictionary(
@@ -785,16 +798,13 @@ class TimeperiodValuespec(ValueSpec):
                 optional_keys = False,
             )
 
-
     # Checks whether the tp-mode is switched on through the gui
     def _is_switched_on(self):
         return html.var(self.tp_toggle_var) == "1"
 
-
     # Checks whether the value itself already uses the tp-mode
     def is_active(self, value):
         return isinstance(value, dict) and self.tp_default_value_key in value
-
 
     # Returns simply the value or converts a plain value to a tp-value
     def _get_timeperiod_value(self, value):
@@ -802,13 +812,11 @@ class TimeperiodValuespec(ValueSpec):
             return value
         return {self.tp_values_key: [], self.tp_default_value_key: value}
 
-
     # Returns simply the value or converts tp-value back to a plain value
     def _get_timeless_value(self, value):
         if isinstance(value, dict) and self.tp_default_value_key in value:
             return value.get(self.tp_default_value_key)
         return value
-
 
 
 class CheckTypeGroupSelection(ElementSelection):
@@ -818,13 +826,13 @@ class CheckTypeGroupSelection(ElementSelection):
 
     def get_elements(self):
         checks = watolib.check_mk_local_automation("get-check-information")
-        elements = dict([ (cn, "%s - %s" % (cn, c["title"])) for (cn, c) in checks.items()
-                     if c.get("group") == self._checkgroup ])
+        elements = dict([(cn, "%s - %s" % (cn, c["title"]))
+                         for (cn, c) in checks.items()
+                         if c.get("group") == self._checkgroup])
         return elements
 
     def value_to_text(self, value):
         return "<tt>%s</tt>" % value
-
 
 
 # The following function looks like a value spec and in fact
@@ -947,7 +955,6 @@ def PredictiveLevels(**args):
 # To be used as ValueSpec for levels on numeric values, with
 # prediction
 def Levels(**kwargs):
-
     def match_levels_alternative(v):
         if type(v) == dict:
             return 2
@@ -959,7 +966,7 @@ def Levels(**kwargs):
     unit = kwargs.get("unit")
     title = kwargs.get("title")
     default_levels = kwargs.get("default_levels", (0.0, 0.0))
-    default_difference = kwargs.get("default_difference", (0,0))
+    default_difference = kwargs.get("default_difference", (0, 0))
     if "default_value" in kwargs:
         default_value = kwargs["default_value"]
     else:
@@ -995,10 +1002,12 @@ def Levels(**kwargs):
 def may_edit_ruleset(varname):
     if varname == "ignored_services":
         return config.user.may("wato.services") or config.user.may("wato.rulesets")
-    elif varname in [ "custom_checks", "datasource_programs" ]:
-        return config.user.may("wato.rulesets") and config.user.may("wato.add_or_modify_executables")
+    elif varname in ["custom_checks", "datasource_programs"]:
+        return config.user.may("wato.rulesets") and config.user.may(
+            "wato.add_or_modify_executables")
     elif varname == "agent_config:custom_files":
-        return config.user.may("wato.rulesets") and config.user.may("wato.agent_deploy_custom_files")
+        return config.user.may("wato.rulesets") and config.user.may(
+            "wato.agent_deploy_custom_files")
     return config.user.may("wato.rulesets")
 
 
@@ -1008,7 +1017,7 @@ class CheckTypeSelection(DualListChoice):
 
     def get_elements(self):
         checks = watolib.check_mk_local_automation("get-check-information")
-        elements = [ (cn, (cn + " - " + c["title"])[:60]) for (cn, c) in checks.items()]
+        elements = [(cn, (cn + " - " + c["title"])[:60]) for (cn, c) in checks.items()]
         elements.sort()
         return elements
 
@@ -1021,7 +1030,6 @@ class EventsMode(WatoMode):
     def _rule_match_conditions(cls):
         raise NotImplementedError()
 
-
     # flavour = "notify" or "alert"
     @classmethod
     def _event_rule_match_conditions(cls, flavour):
@@ -1033,7 +1041,7 @@ class EventsMode(WatoMode):
                 ( 'as', _("Alert handler execution, successful")),
                 ( 'af', _("Alert handler execution, failed")),
             ]
-            add_default = [ 'f', 's', 'x', 'as', 'af' ]
+            add_default = ['f', 's', 'x', 'as', 'af']
         else:
             add_choices = []
             add_default = []
@@ -1101,7 +1109,6 @@ class EventsMode(WatoMode):
               )
             ),
         ]
-
 
     @classmethod
     def _generic_rule_match_conditions(cls):
@@ -1249,11 +1256,9 @@ class EventsMode(WatoMode):
             ),
         ]
 
-
     @abc.abstractmethod
     def _add_change(self, log_what, log_text):
         raise NotImplementedError()
-
 
     def _generic_rule_list_actions(self, rules, what, what_title, save_rules):
         if html.has_var("_delete"):
@@ -1276,28 +1281,27 @@ class EventsMode(WatoMode):
                 from_pos = html.get_integer_input("_move")
                 to_pos = html.get_integer_input("_index")
                 rule = rules[from_pos]
-                del rules[from_pos] # make to_pos now match!
+                del rules[from_pos]  # make to_pos now match!
                 rules[to_pos:to_pos] = [rule]
                 save_rules(rules)
                 self._add_change(what + "-move-rule",
                     _("Changed position of %s %d") % (what_title, from_pos))
 
 
-
 # Sort given sites argument by local, followed by slaves
 # TODO: Change to sorted() mechanism
 def sort_sites(sitelist):
-    def custom_sort(a,b):
+    def custom_sort(a, b):
         return cmp(a[1].get("replication"), b[1].get("replication")) or \
                cmp(a[1].get("alias"), b[1].get("alias"))
-    sitelist.sort(cmp = custom_sort)
+
+    sitelist.sort(cmp=custom_sort)
     return sitelist
 
 
 class ModeRegistry(cmk.gui.plugin_registry.ClassRegistry):
     def plugin_base_class(self):
         return WatoMode
-
 
     def _register(self, plugin_class):
         self._entries[plugin_class.name()] = plugin_class
@@ -1318,7 +1322,13 @@ mode_registry = ModeRegistry()
 # parent: The parent folder of the objects to configure
 # myself: For mode "folder" the folder itself or None, if we edit a new folder
 #         This is needed for handling mandatory attributes.
-def configure_attributes(new, hosts, for_what, parent, myself=None, without_attributes=None, varprefix=""):
+def configure_attributes(new,
+                         hosts,
+                         for_what,
+                         parent,
+                         myself=None,
+                         without_attributes=None,
+                         varprefix=""):
     if without_attributes is None:
         without_attributes = []
 
@@ -1343,7 +1353,7 @@ def configure_attributes(new, hosts, for_what, parent, myself=None, without_attr
     # visible, if certain host tags are set).
     dependency_mapping_tags = {}
     dependency_mapping_roles = {}
-    inherited_tags     = {}
+    inherited_tags = {}
 
     # Hack to sort the address family host tag attribute above the IPv4/v6 addresses
     # TODO: Clean this up by implementing some sort of explicit sorting
@@ -1355,7 +1365,7 @@ def configure_attributes(new, hosts, for_what, parent, myself=None, without_attr
     volatile_topics = []
     hide_attributes = []
     for topic in topics:
-        topic_is_volatile = True # assume topic is sometimes hidden due to dependencies
+        topic_is_volatile = True  # assume topic is sometimes hidden due to dependencies
         if len(topics) > 1:
             if topic == None:
                 title = _("Basic settings")
@@ -1379,7 +1389,7 @@ def configure_attributes(new, hosts, for_what, parent, myself=None, without_attr
 
             attrname = attr.name()
             if attrname in without_attributes:
-                continue # e.g. needed to skip ipaddress in CSV-Import
+                continue  # e.g. needed to skip ipaddress in CSV-Import
 
             # Determine visibility information if this attribute is not always hidden
             if attr.is_visible(for_what):
@@ -1387,13 +1397,13 @@ def configure_attributes(new, hosts, for_what, parent, myself=None, without_attr
                 depends_on_roles = attr.depends_on_roles()
                 # Add host tag dependencies, but only in host mode. In other
                 # modes we always need to show all attributes.
-                if for_what in [ "host", "cluster" ] and depends_on_tags:
+                if for_what in ["host", "cluster"] and depends_on_tags:
                     dependency_mapping_tags[attrname] = depends_on_tags
 
                 if depends_on_roles:
                     dependency_mapping_roles[attrname] = depends_on_roles
 
-                if for_what not in [ "host", "cluster" ]:
+                if for_what not in ["host", "cluster"]:
                     topic_is_volatile = False
 
                 elif not depends_on_tags and not depends_on_roles:
@@ -1416,7 +1426,7 @@ def configure_attributes(new, hosts, for_what, parent, myself=None, without_attr
             # one and have the same value
             unique = num_haveit == 0 or (len(values) == 1 and num_haveit == len(hosts))
 
-            if for_what in [ "host", "cluster", "folder" ]:
+            if for_what in ["host", "cluster", "folder"]:
                 if hosts:
                     host = hosts.values()[0]
                 else:
@@ -1431,10 +1441,10 @@ def configure_attributes(new, hosts, for_what, parent, myself=None, without_attr
             container = None
 
             if attr.show_inherited_value():
-                if for_what in [ "host", "cluster" ]:
+                if for_what in ["host", "cluster"]:
                     url = watolib.Folder.current().edit_url()
 
-                container = parent # container is of type Folder
+                container = parent  # container is of type Folder
                 while container:
                     if attrname in container.attributes():
                         url = container.edit_url()
@@ -1443,17 +1453,19 @@ def configure_attributes(new, hosts, for_what, parent, myself=None, without_attr
                         inherited_value = container.attributes()[attrname]
                         has_inherited = True
                         if isinstance(attr, watolib.HostTagAttribute):
-                            inherited_tags["attr_%s" % attrname] = '|'.join(attr.get_tag_list(inherited_value))
+                            inherited_tags["attr_%s" % attrname] = '|'.join(
+                                attr.get_tag_list(inherited_value))
                         break
 
                     container = container.parent()
 
-            if not container: # We are the root folder - we inherit the default values
+            if not container:  # We are the root folder - we inherit the default values
                 inherited_from = _("Default value")
                 inherited_value = attr.default_value()
                 # Also add the default values to the inherited values dict
                 if isinstance(attr, watolib.HostTagAttribute):
-                    inherited_tags["attr_%s" % attrname] = '|'.join(attr.get_tag_list(inherited_value))
+                    inherited_tags["attr_%s" % attrname] = '|'.join(
+                        attr.get_tag_list(inherited_value))
 
             # Checkbox for activating this attribute
 
@@ -1483,16 +1495,16 @@ def configure_attributes(new, hosts, for_what, parent, myself=None, without_attr
                 and not has_inherited:
                 force_entry = True
                 active = True
-            elif for_what in [ "host", "cluster" ] and attr.is_mandatory() and not has_inherited:
+            elif for_what in ["host", "cluster"] and attr.is_mandatory() and not has_inherited:
                 force_entry = True
                 active = True
             elif cb != None:
-                active = cb # get previous state of checkbox
+                active = cb  # get previous state of checkbox
             elif for_what == "bulk":
                 active = unique and len(values) > 0
             elif for_what == "folder" and myself:
                 active = myself.has_explicit_attribute(attrname)
-            elif for_what in [ "host", "cluster" ] and host: # "host"
+            elif for_what in ["host", "cluster"] and host:  # "host"
                 active = host.has_explicit_attribute(attrname)
             else:
                 active = False
@@ -1504,16 +1516,18 @@ def configure_attributes(new, hosts, for_what, parent, myself=None, without_attr
                 else:
                     disabled = True
 
-            if (for_what in [ "host", "cluster" ] and parent.locked_hosts()) or (for_what == "folder" and myself and myself.locked()):
+            if (for_what in ["host", "cluster"] and
+                    parent.locked_hosts()) or (for_what == "folder" and myself and myself.locked()):
                 checkbox_code = None
             elif force_entry:
-                checkbox_code  = html.render_checkbox("ignored_" + checkbox_name, add_attr=["disabled"])
+                checkbox_code = html.render_checkbox(
+                    "ignored_" + checkbox_name, add_attr=["disabled"])
                 checkbox_code += html.render_hidden_field(checkbox_name, "on")
             else:
                 add_attr = ["disabled"] if disabled else []
                 onclick = "wato_fix_visibility(); wato_toggle_attribute(this, '%s');" % attrname
-                checkbox_code = html.render_checkbox(checkbox_name, active,
-                                                  onclick=onclick, add_attr=add_attr)
+                checkbox_code = html.render_checkbox(
+                    checkbox_name, active, onclick=onclick, add_attr=add_attr)
 
             forms.section(_u(attr.title()), checkbox=checkbox_code, section_id="attr_" + attrname)
             html.help(attr.help())
@@ -1528,7 +1542,7 @@ def configure_attributes(new, hosts, for_what, parent, myself=None, without_attr
             if not new and (not attr.editable() or not attr.may_edit()):
                 # In edit mode only display non editable values, don't show the
                 # input fields
-                html.open_div(id_="attr_hidden_%s" %attrname, style="display:none;")
+                html.open_div(id_="attr_hidden_%s" % attrname, style="display:none;")
                 attr.render_input(varprefix, defvalue)
                 html.close_div()
 
@@ -1539,12 +1553,15 @@ def configure_attributes(new, hosts, for_what, parent, myself=None, without_attr
                 # as two DIV elements, one of which is visible at one time.
 
                 # DIV with the input elements
-                html.open_div(id_="attr_entry_%s" % attrname, style="display: none;" if not active else None)
+                html.open_div(
+                    id_="attr_entry_%s" % attrname, style="display: none;" if not active else None)
                 attr.render_input(varprefix, defvalue)
                 html.close_div()
 
-                html.open_div(class_="inherited", id_="attr_default_%s" % attrname,
-                              style="display: none;" if active else None)
+                html.open_div(
+                    class_="inherited",
+                    id_="attr_default_%s" % attrname,
+                    style="display: none;" if active else None)
 
             #
             # DIV with actual / inherited / default value
@@ -1561,7 +1578,7 @@ def configure_attributes(new, hosts, for_what, parent, myself=None, without_attr
                 else:
                     value = values[0]
 
-            elif for_what in [ "host", "cluster", "folder" ]:
+            elif for_what in ["host", "cluster", "folder"]:
                 if not new and (not attr.editable() or not attr.may_edit()) and active:
                     value = values[0]
                 else:
@@ -1582,7 +1599,6 @@ def configure_attributes(new, hosts, for_what, parent, myself=None, without_attr
 
             html.write_text(explanation)
             html.close_div()
-
 
         if len(topics) > 1:
             if topic_is_volatile:

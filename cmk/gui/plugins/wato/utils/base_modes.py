@@ -34,13 +34,13 @@ from cmk.gui.exceptions import MKException
 from cmk.gui.log import logger
 from .context_buttons import global_buttons
 
+
 class WatoMode(object):
     __metaclass__ = abc.ABCMeta
 
     def __init__(self):
         super(WatoMode, self).__init__()
         self._from_vars()
-
 
     @classmethod
     @abc.abstractmethod
@@ -52,7 +52,6 @@ class WatoMode(object):
         for each permission in the list."""
         raise NotImplementedError()
 
-
     @classmethod
     @abc.abstractmethod
     def name(cls):
@@ -60,32 +59,25 @@ class WatoMode(object):
         """Wato wide unique mode name which is used to access this mode"""
         raise NotImplementedError("%s misses name()" % cls.__name__)
 
-
     def _from_vars(self):
         """Override this method to set mode specific attributes based on the
         given HTTP variables."""
         pass
 
-
     def title(self):
         return _("(Untitled module)")
-
 
     def buttons(self):
         global_buttons()
 
-
     def action(self):
         pass
-
 
     def page(self):
         html.message(_("(This module is not yet implemented)"))
 
-
     def handle_page(self):
         return self.page()
-
 
 
 # TODO: WatoWebApiMode ist not a mode in the sense of WatoMode. Rename to page
@@ -97,33 +89,29 @@ class WatoWebApiMode(object):
         super(WatoWebApiMode, self).__init__()
         self._from_vars()
 
-
     def _from_vars(self):
         """Override this method to set mode specific attributes based on the
         given HTTP variables."""
         pass
 
-
     def webapi_request(self):
         return html.get_request()
-
 
     def handle_page(self):
         html.set_output_format("json")
         try:
             action_response = self.page()
-            response = { "result_code": 0, "result": action_response }
+            response = {"result_code": 0, "result": action_response}
         except MKException, e:
-            response = { "result_code": 1, "result": "%s" % e }
+            response = {"result_code": 1, "result": "%s" % e}
 
         except Exception, e:
             if config.debug:
                 raise
             logger.exception()
-            response = { "result_code": 1, "result": "%s" % e }
+            response = {"result_code": 1, "result": "%s" % e}
 
         html.write(json.dumps(response))
-
 
     @abc.abstractmethod
     def page(self):

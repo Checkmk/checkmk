@@ -23,7 +23,6 @@
 # License along with GNU Make; see the file  COPYING.  If  not,  write
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
-
 """Modes for services and discovery"""
 
 import json
@@ -55,17 +54,17 @@ class ModeDiscovery(WatoMode):
     # - passive: new/vanished/old/ignored/removed
     # - active/custom/legacy: old/ignored
     SERVICE_UNDECIDED = "new"
-    SERVICE_VANISHED  = "vanished"
+    SERVICE_VANISHED = "vanished"
     SERVICE_MONITORED = "old"
-    SERVICE_IGNORED   = "ignored"
-    SERVICE_REMOVED   = "removed"
+    SERVICE_IGNORED = "ignored"
+    SERVICE_REMOVED = "removed"
 
-    SERVICE_MANUAL         = "manual"
-    SERVICE_ACTIVE         = "active"
-    SERVICE_CUSTOM         = "custom"
-    SERVICE_LEGACY         = "legacy"
-    SERVICE_CLUSTERED_OLD  = "clustered_old"
-    SERVICE_CLUSTERED_NEW  = "clustered_new"
+    SERVICE_MANUAL = "manual"
+    SERVICE_ACTIVE = "active"
+    SERVICE_CUSTOM = "custom"
+    SERVICE_LEGACY = "legacy"
+    SERVICE_CLUSTERED_OLD = "clustered_old"
+    SERVICE_CLUSTERED_NEW = "clustered_new"
     SERVICE_ACTIVE_IGNORED = "active_ignored"
     SERVICE_CUSTOM_IGNORED = "custom_ignored"
     SERVICE_LEGACY_IGNORED = "legacy_ignored"
@@ -74,11 +73,9 @@ class ModeDiscovery(WatoMode):
     def name(cls):
         return "inventory"
 
-
     @classmethod
     def permissions(cls):
         return ["hosts"]
-
 
     def _from_vars(self):
         self._host_name = html.var("host")
@@ -109,7 +106,6 @@ class ModeDiscovery(WatoMode):
         self._options = cache_options + error_options + [self._host_name]
         self._fixall = html.var("_fixall")
 
-
     def title(self):
         title = _("Services of host %s") % self._host_name
         if self._do_scan:
@@ -117,7 +113,6 @@ class ModeDiscovery(WatoMode):
         else:
             title += _(" (might be cached data)")
         return title
-
 
     def buttons(self):
         global_buttons()
@@ -145,11 +140,10 @@ class ModeDiscovery(WatoMode):
                  watolib.folder_preserving_link([("mode", "diag_host"),
                                          ("host", self._host_name)]), "diagnose")
 
-
     def action(self):
         if not html.check_transaction():
             return
-        host     = self._host
+        host = self._host
         hostname = self._host.name()
         config.user.need_permission("wato.services")
         if html.var("_refresh"):
@@ -159,7 +153,6 @@ class ModeDiscovery(WatoMode):
         if not host.locked():
             self._host.clear_discovery_failed()
 
-
     def _automatic_refresh_discovery(self, hostname):
         config.user.need_permission("wato.service_discovery_to_undecided")
         config.user.need_permission("wato.service_discovery_to_monitored")
@@ -167,13 +160,12 @@ class ModeDiscovery(WatoMode):
         config.user.need_permission("wato.service_discovery_to_removed")
 
         counts, _failed_hosts = watolib.check_mk_automation(self._host.site_id(), "inventory",
-                                                   ["@scan", "refresh", hostname])
+                                                            ["@scan", "refresh", hostname])
         count_added, _count_removed, _count_kept, _count_new = counts[hostname]
         message = _("Refreshed check configuration of host '%s' with %d services") % \
                     (hostname, count_added)
         watolib.add_service_change(self._host, "refresh-autochecks", message)
         return message
-
 
     def _do_discovery(self, host):
         check_table = self._get_check_table()
@@ -187,8 +179,11 @@ class ModeDiscovery(WatoMode):
             if table_source != table_target:
                 if table_target == self.SERVICE_UNDECIDED:
                     config.user.need_permission("wato.service_discovery_to_undecided")
-                elif table_target in [self.SERVICE_MONITORED, self.SERVICE_CLUSTERED_NEW,
-                                      self.SERVICE_CLUSTERED_OLD]:
+                elif table_target in [
+                        self.SERVICE_MONITORED,
+                        self.SERVICE_CLUSTERED_NEW,
+                        self.SERVICE_CLUSTERED_OLD,
+                ]:
                     config.user.need_permission("wato.service_discovery_to_undecided")
                 elif table_target == self.SERVICE_IGNORED:
                     config.user.need_permission("wato.service_discovery_to_ignored")
@@ -211,30 +206,42 @@ class ModeDiscovery(WatoMode):
                     add_disabled_rule.append(descr)
 
             elif table_source == self.SERVICE_MONITORED:
-                if table_target in [self.SERVICE_MONITORED, self.SERVICE_IGNORED]:
+                if table_target in [
+                        self.SERVICE_MONITORED,
+                        self.SERVICE_IGNORED,
+                ]:
                     services_to_save[(check_type, item)] = paramstring
                 if table_target == self.SERVICE_IGNORED:
                     add_disabled_rule.append(descr)
 
             elif table_source == self.SERVICE_IGNORED:
-                if table_target in [self.SERVICE_MONITORED, self.SERVICE_UNDECIDED,
-                                    self.SERVICE_VANISHED]:
+                if table_target in [
+                        self.SERVICE_MONITORED,
+                        self.SERVICE_UNDECIDED,
+                        self.SERVICE_VANISHED,
+                ]:
                     remove_disabled_rule.append(descr)
-                if table_target in [self.SERVICE_MONITORED, self.SERVICE_IGNORED]:
+                if table_target in [
+                        self.SERVICE_MONITORED,
+                        self.SERVICE_IGNORED,
+                ]:
                     services_to_save[(check_type, item)] = paramstring
                 if table_target == self.SERVICE_IGNORED:
                     add_disabled_rule.append(descr)
 
-            elif table_source in [self.SERVICE_CLUSTERED_NEW, self.SERVICE_CLUSTERED_OLD]:
+            elif table_source in [
+                    self.SERVICE_CLUSTERED_NEW,
+                    self.SERVICE_CLUSTERED_OLD,
+            ]:
                 services_to_save[(check_type, item)] = paramstring
 
         if apply_changes:
             need_sync = False
             if remove_disabled_rule or add_disabled_rule:
-                self._save_host_service_enable_disable_rules(remove_disabled_rule, add_disabled_rule)
+                self._save_host_service_enable_disable_rules(remove_disabled_rule,
+                                                             add_disabled_rule)
                 need_sync = True
             self._save_services(services_to_save, need_sync)
-
 
     def page(self):
         try:
@@ -260,11 +267,13 @@ class ModeDiscovery(WatoMode):
                                 (url, _("Clustered services")))
             return
 
-        map_icons = {self.SERVICE_UNDECIDED: "undecided",
-                     self.SERVICE_MONITORED: "monitored",
-                     self.SERVICE_IGNORED: "disabled"}
+        map_icons = {
+            self.SERVICE_UNDECIDED: "undecided",
+            self.SERVICE_MONITORED: "monitored",
+            self.SERVICE_IGNORED: "disabled"
+        }
 
-        html.begin_form("checks_action", method = "POST")
+        html.begin_form("checks_action", method="POST")
         self._show_action_buttons(check_table)
         html.hidden_fields()
         html.end_form()
@@ -279,10 +288,11 @@ class ModeDiscovery(WatoMode):
             if not checks:
                 continue
 
-            html.begin_form("checks_%s" % table_group, method = "POST")
+            html.begin_form("checks_%s" % table_group, method="POST")
             table.begin(css="data", searchable=False, limit=None, sortable=False)
             if table_group in map_icons:
-                group_header = "%s %s" % (html.render_icon("%s_service" % map_icons[table_group]), header)
+                group_header = "%s %s" % (html.render_icon("%s_service" % map_icons[table_group]),
+                                          header)
             else:
                 group_header = header
             table.groupheader(group_header + html.render_help(help_text))
@@ -310,11 +320,9 @@ class ModeDiscovery(WatoMode):
         watolib.add_service_change(host, "set-autochecks", message, need_sync=need_sync)
         watolib.check_mk_automation(host.site_id(), "set-autochecks", [hostname], checks)
 
-
     def _save_host_service_enable_disable_rules(self, to_enable, to_disable):
         self._save_service_enable_disable_rules(to_enable, value=False)
         self._save_service_enable_disable_rules(to_disable, value=True)
-
 
     # Load all disabled services rules from the folder, then check whether or not there is a
     # rule for that host and check whether or not it currently disabled the services in question.
@@ -342,7 +350,8 @@ class ModeDiscovery(WatoMode):
         modified_folders = []
 
         service_patterns = _compile_patterns(services)
-        modified_folders += self._remove_from_rule_of_host(ruleset, service_patterns, value=not value)
+        modified_folders += self._remove_from_rule_of_host(
+            ruleset, service_patterns, value=not value)
 
         # Check whether or not the service still needs a host specific setting after removing
         # the host specific setting above and remove all services from the service list
@@ -359,7 +368,6 @@ class ModeDiscovery(WatoMode):
         for folder in modified_folders:
             rulesets.save_folder(folder)
 
-
     def _remove_from_rule_of_host(self, ruleset, service_patterns, value):
         other_rule = self._get_rule_of_host(ruleset, value)
         if other_rule:
@@ -369,10 +377,9 @@ class ModeDiscovery(WatoMode):
             if not other_rule.item_list:
                 ruleset.delete_rule(other_rule)
 
-            return [ other_rule.folder ]
+            return [other_rule.folder]
 
         return []
-
 
     def _update_rule_of_host(self, ruleset, service_patterns, value):
         folder = self._host.folder()
@@ -385,7 +392,7 @@ class ModeDiscovery(WatoMode):
 
         elif service_patterns:
             rule = watolib.Rule.create(folder, ruleset, [self._host.name()],
-                               sorted(service_patterns))
+                                       sorted(service_patterns))
             rule.value = value
             ruleset.prepend_rule(folder, rule)
 
@@ -393,13 +400,11 @@ class ModeDiscovery(WatoMode):
             return [rule.folder]
         return []
 
-
     def _get_rule_of_host(self, ruleset, value):
         for _folder, _index, rule in ruleset.get_rules():
             if rule.is_discovery_rule_of(self._host) and rule.value == value:
                 return rule
         return None
-
 
     def _get_table_target(self, table_source, check_type, item):
         if self._fixall:
@@ -411,8 +416,12 @@ class ModeDiscovery(WatoMode):
             return self.SERVICE_MONITORED
 
         bulk_target = None
-        for target in [self.SERVICE_MONITORED, self.SERVICE_UNDECIDED,
-                       self.SERVICE_IGNORED, self.SERVICE_REMOVED]:
+        for target in [
+                self.SERVICE_MONITORED,
+                self.SERVICE_UNDECIDED,
+                self.SERVICE_IGNORED,
+                self.SERVICE_REMOVED,
+        ]:
             if html.has_var("_bulk_%s_%s" % (table_source, target)):
                 bulk_target = target
                 break
@@ -461,10 +470,8 @@ class ModeDiscovery(WatoMode):
             html.buttonlink(html.makeuri([("_hide_parameters", "no")]),
                             _("Show check parameters"))
 
-
     def _show_parameter_column(self):
         return config.user.load_file("parameter_column", False)
-
 
     def _bulk_actions(self, table_source, collect_headers):
         if not config.user.may("wato.services"):
@@ -507,7 +514,6 @@ class ModeDiscovery(WatoMode):
             if config.user.may("wato.service_discovery_to_ignored"):
                 bulk_button(table_source, self.SERVICE_IGNORED, _("Disable"), label)
 
-
     def _check_row(self, check, show_bulk_actions):
         table_source, check_type, checkgroup, item, _paramstring, params, \
             descr, state, output, _perfdata = check
@@ -516,7 +522,7 @@ class ModeDiscovery(WatoMode):
         if statename == "":
             statename = short_service_state_name(-1)
             stateclass = "state svcstate statep"
-            state = 0 # for tr class
+            state = 0  # for tr class
         else:
             stateclass = "state svcstate state%s" % state
 
@@ -528,8 +534,12 @@ class ModeDiscovery(WatoMode):
         table.cell(_("State"), statename, css=stateclass)
         table.cell(_("Service"), html.attrencode(descr))
         table.cell(_("Status detail"))
-        if table_source in [self.SERVICE_CUSTOM, self.SERVICE_ACTIVE,
-                            self.SERVICE_CUSTOM_IGNORED, self.SERVICE_ACTIVE_IGNORED]:
+        if table_source in [
+                self.SERVICE_CUSTOM,
+                self.SERVICE_ACTIVE,
+                self.SERVICE_CUSTOM_IGNORED,
+                self.SERVICE_ACTIVE_IGNORED,
+        ]:
             div_id = "activecheck_%s" % descr
             html.div(html.render_icon("reload", cssclass="reloading"), id_=div_id)
             html.final_javascript("execute_active_check(%s, %s, %s, %s, %s);" % (
@@ -537,7 +547,7 @@ class ModeDiscovery(WatoMode):
                 json.dumps(self._host_name),
                 json.dumps(check_type),
                 json.dumps(item),
-                json.dumps(div_id)
+                json.dumps(div_id),
             ))
         else:
             html.write_text(output)
@@ -554,7 +564,6 @@ class ModeDiscovery(WatoMode):
             table.cell(_("Check parameters"))
             self._show_check_parameters(table_source, check_type, checkgroup, params)
 
-
     def _show_bulk_checkbox(self, check_type, item, show_bulk_actions):
         if not self._show_checkboxes or not config.user.may("wato.services"):
             return
@@ -563,12 +572,13 @@ class ModeDiscovery(WatoMode):
             table.cell(css="checkbox")
             return
 
-        table.cell("<input type=button class=checkgroup name=_toggle_group"
-                   " onclick=\"toggle_group_rows(this);\" value=\"X\" />", sortable=False,
-                   css="checkbox")
+        table.cell(
+            "<input type=button class=checkgroup name=_toggle_group"
+            " onclick=\"toggle_group_rows(this);\" value=\"X\" />",
+            sortable=False,
+            css="checkbox")
         html.checkbox(self._checkbox_name(check_type, item),
                       True, add_attr = ['title="%s"' % _('Temporarily ignore this service')])
-
 
     def _bulk_action_colspan(self):
         colspan = 5
@@ -577,7 +587,6 @@ class ModeDiscovery(WatoMode):
         if self._show_checkboxes:
             colspan += 1
         return colspan
-
 
     def _show_actions(self, check):
         def icon_button(table_source, checkbox_name, table_target, descr_target):
@@ -597,17 +606,22 @@ class ModeDiscovery(WatoMode):
 
         def check_parameters_button():
             if table_source == self.SERVICE_MANUAL:
-                url = watolib.folder_preserving_link(
-                             [('mode', 'edit_ruleset'), ('varname', "static_checks:" + checkgroup),
-                              ('host', self._host_name)])
+                url = watolib.folder_preserving_link([
+                    ('mode', 'edit_ruleset'),
+                    ('varname', "static_checks:" + checkgroup),
+                    ('host', self._host_name),
+                ])
             else:
                 ruleset_name = self._get_ruleset_name(table_source, check_type, checkgroup)
                 if ruleset_name is None:
                     return
 
-                url = watolib.folder_preserving_link(
-                             [("mode", "edit_ruleset"), ("varname", ruleset_name),
-                              ("host", self._host_name), ("item", watolib.mk_repr(item)), ]),
+                url = watolib.folder_preserving_link([
+                    ("mode", "edit_ruleset"),
+                    ("varname", ruleset_name),
+                    ("host", self._host_name),
+                    ("item", watolib.mk_repr(item)),
+                ]),
 
             html.icon_button(url,
                 _("Edit and analyze the check parameters of this service"), "check_parameters")
@@ -684,7 +698,6 @@ class ModeDiscovery(WatoMode):
             html.empty_icon()
             num_buttons += 1
 
-
     def _get_ruleset_name(self, table_source, check_type, checkgroup):
         if checkgroup == "logwatch":
             return "logwatch_rules"
@@ -693,7 +706,6 @@ class ModeDiscovery(WatoMode):
         elif table_source in [self.SERVICE_ACTIVE, self.SERVICE_ACTIVE_IGNORED]:
             return "active_checks:" + check_type
         return None
-
 
     def _show_check_parameters(self, table_source, check_type, checkgroup, params):
         varname = self._get_ruleset_name(table_source, check_type, checkgroup)
@@ -729,7 +741,6 @@ class ModeDiscovery(WatoMode):
         if options.count("@scan"):
             self._already_scanned = True
         return watolib.check_mk_automation(self._host.site_id(), "try-inventory", options)
-
 
     def _ordered_table_groups(self):
         return [
@@ -791,7 +802,6 @@ class ModeDiscovery(WatoMode):
               "<i>Disabled services</i> oder <i>Disabled checks</i>.")),
         ]
 
-
     # This function returns the HTTP variable name to use for a service. This needs to be unique
     # for each host. Since this text is used as variable name, it must not contain any umlauts
     # or other special characters that are disallowed by html.parse_field_storage(). Since item
@@ -809,34 +819,36 @@ class ModeFirstDiscovery(ModeDiscovery):
 class ModeAjaxExecuteCheck(WatoWebApiMode):
     def _from_vars(self):
         # TODO: Validate the site
-        self._site      = html.var("site")
+        self._site = html.var("site")
 
         self._host_name = html.var("host")
-        self._host      = watolib.Folder.current().host(self._host_name)
+        self._host = watolib.Folder.current().host(self._host_name)
         if not self._host:
             raise MKGeneralException(_("You called this page with an invalid host name."))
 
         # TODO: Validate
         self._check_type = html.var("checktype")
         # TODO: Validate
-        self._item       = html.var("item")
+        self._item = html.var("item")
 
         self._host.need_permission("read")
-
 
     def page(self):
         watolib.init_wato_datastructures(with_wato_lock=True)
         try:
-            state, output = watolib.check_mk_automation(self._site, "active-check",
-                                [ self._host_name, self._check_type, self._item ], sync=False)
+            state, output = watolib.check_mk_automation(
+                self._site,
+                "active-check", [self._host_name, self._check_type, self._item],
+                sync=False)
         except Exception, e:
-            state  = 3
+            state = 3
             output = "%s" % e
 
         return {
-            "state"      : state,
-            "state_name" : short_service_state_name(state, "UNKN"),
-            "output"     : output,
+            "state": state,
+            "state_name": short_service_state_name(state, "UNKN"),
+            "output": output,
         }
+
 
 register_page_handler("wato_ajax_execute_check", lambda: ModeAjaxExecuteCheck().handle_page())

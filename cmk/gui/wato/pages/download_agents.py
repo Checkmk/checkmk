@@ -23,7 +23,6 @@
 # License along with GNU Make; see the file  COPYING.  If  not,  write
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
-
 """Simple download page for the builtin agents and plugins"""
 
 import os
@@ -50,22 +49,18 @@ class ModeDownloadAgents(WatoMode):
     def name(cls):
         return "download_agents"
 
-
     @classmethod
     def permissions(cls):
         return ["download_agents"]
 
-
     def title(self):
         return _("Agents and Plugins")
-
 
     def buttons(self):
         global_buttons()
         if watolib.has_agent_bakery():
             html.context_button(_("Baked agents"), watolib.folder_preserving_link([("mode", "agents")]), "download_agents")
         html.context_button(_("Release Notes"), "version.py", "mk")
-
 
     def page(self):
         html.open_div(class_="rulesets")
@@ -127,13 +122,12 @@ class ModeDownloadAgents(WatoMode):
                 self._download_table(title, file_titles, sorted(useful_file_paths))
         html.close_div()
 
-
     def _download_table(self, title, file_titles, paths):
         forms.header(title)
         forms.container()
         for path in paths:
-            os_path  = path
-            relpath  = path.replace(cmk.paths.agents_dir+'/', '')
+            os_path = path
+            relpath = path.replace(cmk.paths.agents_dir + '/', '')
             filename = path.split('/')[-1]
             title = file_titles.get(os_path, filename)
 
@@ -150,9 +144,8 @@ class ModeDownloadAgents(WatoMode):
             html.close_div()
         forms.end()
 
-
     def _read_plugin_inline_comments(self, file_paths):
-        comment_prefixes = [ "# ", "REM ", "$!# " ]
+        comment_prefixes = ["# ", "REM ", "$!# "]
         windows_bom = "\xef\xbb\xbf"
         file_titles = {}
         for path in file_paths:
@@ -162,13 +155,13 @@ class ModeDownloadAgents(WatoMode):
             first_lines = first_bytes.splitlines()
             for line in first_lines:
                 for prefix in comment_prefixes:
-                    if line.startswith(prefix) and len(line) > len(prefix) and line[len(prefix)].isalpha():
+                    if line.startswith(prefix) and len(line) > len(prefix) and line[len(
+                            prefix)].isalpha():
                         file_titles[path] = line[len(prefix):].strip()
                         break
                 if path in file_titles:
                     break
         return file_titles
-
 
     def _read_agent_contents_file(self, root):
         file_titles = {}

@@ -23,7 +23,6 @@
 # License along with GNU Make; see the file  COPYING.  If  not,  write
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
-
 """Mode for activating pending changes. Does also replication with
 remote sites in distributed WATO."""
 
@@ -57,21 +56,17 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
     def name(cls):
         return "changelog"
 
-
     @classmethod
     def permissions(cls):
         return []
-
 
     def __init__(self):
         self._value = {}
         super(ModeActivateChanges, self).__init__()
         super(ModeActivateChanges, self).load()
 
-
     def title(self):
         return _("Activate pending changes")
-
 
     def buttons(self):
         home_button()
@@ -88,8 +83,6 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
         if config.user.may("wato.auditlog"):
             html.context_button(_("Audit Log"), watolib.folder_preserving_link([("mode", "auditlog")]), "auditlog")
 
-
-
     def _may_discard_changes(self):
         if not config.user.may("wato.activate"):
             return False
@@ -104,7 +97,6 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
             return False
 
         return True
-
 
     def action(self):
         if html.var("_action") != "discard":
@@ -127,19 +119,25 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
         msg = _("Discarded pending changes (Restored %s)") % file_to_restore
 
         # All sites and domains can be affected by a restore: Better restart everything.
-        watolib.add_change("changes-discarded", msg, sites=self.activation_site_ids(),
+        watolib.add_change(
+            "changes-discarded",
+            msg,
+            sites=self.activation_site_ids(),
             domains=watolib.ConfigDomain.enabled_domains(),
             need_restart=True)
 
         self._extract_snapshot(file_to_restore)
-        watolib.execute_activate_changes([ d.ident for d in watolib.ConfigDomain.enabled_domains() ])
+        watolib.execute_activate_changes([d.ident for d in watolib.ConfigDomain.enabled_domains()])
 
         for site_id in self.activation_site_ids():
             self.confirm_site_changes(site_id)
 
-        html.header(self.title(), javascripts=["wato"], stylesheets=wato_styles,
-                    show_body_start=display_options.enabled(display_options.H),
-                    show_top_heading=display_options.enabled(display_options.T))
+        html.header(
+            self.title(),
+            javascripts=["wato"],
+            stylesheets=wato_styles,
+            show_body_start=display_options.enabled(display_options.H),
+            show_top_heading=display_options.enabled(display_options.T))
         html.open_div(class_="wato")
 
         html.begin_context_buttons()
@@ -152,11 +150,9 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
 
         return False
 
-
     # TODO: Remove once new changes mechanism has been implemented
     def _extract_snapshot(self, snapshot_file):
         self._extract_from_file(watolib.snapshot_dir + snapshot_file, watolib.backup_domains)
-
 
     # TODO: Remove once new changes mechanism has been implemented
     def _extract_from_file(self, filename, elements):
@@ -166,14 +162,12 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
         elif type(elements) == dict:
             multitar.extract_domains(tarfile.open(filename, "r"), elements)
 
-
     # TODO: Remove once new changes mechanism has been implemented
     def _get_last_wato_snapshot_file(self):
         for snapshot_file in self._get_snapshots():
             status = watolib.get_snapshot_status(snapshot_file)
             if status['type'] == 'automatic' and not status['broken']:
                 return snapshot_file
-
 
     # TODO: Remove once new changes mechanism has been implemented
     def _get_snapshots(self):
@@ -187,7 +181,6 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
             pass
         return snapshots
 
-
     def page(self):
         self._activation_msg()
         self._activation_form()
@@ -198,12 +191,10 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
         html.h2(_("Pending changes"))
         self._change_table()
 
-
     def _activation_msg(self):
         html.open_div(id_="activation_msg", style="display:none")
         html.show_info("")
         html.close_div()
-
 
     def _activation_form(self):
         if not config.user.may("wato.activate"):
@@ -253,7 +244,6 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
         html.hidden_fields()
         html.end_form()
 
-
     def _vs_activation(self):
         if self.has_foreign_changes() and config.user.may("wato.activateforeign"):
             foreign_changes_elements = [
@@ -281,7 +271,6 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
             optional_keys = [],
             render = "form_part",
         )
-
 
     def _change_table(self):
         table.begin("changes", sortable=False, searchable=False, css="changes", limit=None)
@@ -314,7 +303,6 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
             table.cell(_("Change"), change["text"])
         table.end()
 
-
     def _render_change_object(self, obj):
         if not obj:
             return
@@ -337,7 +325,6 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
         if url and title:
             return html.render_a(title, href=url)
 
-
     def _activation_status(self):
         table.begin("site-status", searchable=False, sortable=False, css="activation")
 
@@ -346,9 +333,9 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
 
             site_status, status = self._get_site_status(site_id, site)
 
-            is_online        = self._site_is_online(status)
-            is_logged_in     = self._site_is_logged_in(site_id, site)
-            has_foreign      = self._site_has_foreign_changes(site_id)
+            is_online = self._site_is_online(status)
+            is_logged_in = self._site_is_logged_in(site_id, site)
+            has_foreign = self._site_has_foreign_changes(site_id)
             can_activate_all = not has_foreign or config.user.may("wato.activateforeign")
 
             # Disable actions for offline sites and not logged in sites
@@ -356,8 +343,8 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
                 can_activate_all = False
 
             need_restart = self._is_activate_needed(site_id)
-            need_sync    = self.is_sync_needed(site_id)
-            need_action  = need_restart or need_sync
+            need_sync = self.is_sync_needed(site_id)
+            need_action = need_restart or need_sync
 
             # Activation checkbox
             table.cell("", css="buttons")
@@ -368,7 +355,8 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
             table.cell(_("Actions"), css="buttons")
 
             if config.user.may("wato.sites"):
-                edit_url = watolib.folder_preserving_link([("mode", "edit_site"), ("edit", site_id)])
+                edit_url = watolib.folder_preserving_link([("mode", "edit_site"), ("edit",
+                                                                                   site_id)])
                 html.icon_button(edit_url, _("Edit the properties of this site"), "edit")
 
             # State
@@ -466,6 +454,7 @@ class ModeAjaxStartActivation(WatoWebApiMode):
             "activation_id": activation_id,
         }
 
+
 register_page_handler("ajax_start_activation", lambda: ModeAjaxStartActivation().handle_page())
 
 
@@ -486,6 +475,7 @@ class ModeAjaxActivationState(WatoWebApiMode):
         manager.load_activation(activation_id)
 
         return manager.get_state()
+
 
 register_page_handler("ajax_activation_state", lambda: ModeAjaxActivationState().handle_page())
 

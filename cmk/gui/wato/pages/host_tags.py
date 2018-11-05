@@ -23,7 +23,6 @@
 # License along with GNU Make; see the file  COPYING.  If  not,  write
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
-
 """Manage the variable config.wato_host_tags -> The set of tags to be assigned
 to hosts and that is the basis of the rules."""
 
@@ -50,8 +49,7 @@ from cmk.gui.plugins.wato.utils.main_menu import (
 )
 
 from cmk.gui.plugins.wato.utils.html_elements import (
-    wato_html_head,
-)
+    wato_html_head,)
 
 from cmk.gui.plugins.wato import (
     WatoMode,
@@ -62,32 +60,28 @@ from cmk.gui.plugins.wato import (
     add_change,
 )
 
+
 @mode_registry.register
 class ModeHostTags(WatoMode, watolib.HosttagsConfiguration):
     @classmethod
     def name(cls):
         return "hosttags"
 
-
     @classmethod
     def permissions(cls):
         return ["hosttags"]
-
 
     def __init__(self):
         super(ModeHostTags, self).__init__()
         self._hosttags, self._auxtags = self._load_hosttags()
 
-
     def title(self):
         return _("Host tag groups")
-
 
     def buttons(self):
         global_buttons()
         html.context_button(_("New Tag group"), watolib.folder_preserving_link([("mode", "edit_hosttag")]), "new")
         html.context_button(_("New Aux tag"), watolib.folder_preserving_link([("mode", "edit_auxtag")]), "new")
-
 
     def action(self):
         # Deletion of tag groups
@@ -98,11 +92,10 @@ class ModeHostTags(WatoMode, watolib.HosttagsConfiguration):
                 if e[0] == del_id:
                     # In case of tag group deletion, the operations is a pair of tag_id
                     # and list of choice-ids.
-                    operations = [ x[0] for x in e[2] ]
-
+                    operations = [x[0] for x in e[2]]
 
             message = rename_host_tags_after_confirmation(del_id, operations)
-            if message == True: # no confirmation yet
+            if message == True:  # no confirmation yet
                 c = wato_confirm(_("Confirm deletion of the host "
                                    "tag group '%s'") % del_id,
                                 _("Do you really want to delete the "
@@ -113,7 +106,7 @@ class ModeHostTags(WatoMode, watolib.HosttagsConfiguration):
                     return None
 
             if message:
-                self._hosttags = [ e for e in self._hosttags if e[0] != del_id ]
+                self._hosttags = [e for e in self._hosttags if e[0] != del_id]
                 watolib.save_hosttags(self._hosttags, self._auxtags)
                 watolib.Folder.invalidate_caches()
                 watolib.Folder.root_folder().rewrite_hosts_files()
@@ -135,9 +128,9 @@ class ModeHostTags(WatoMode, watolib.HosttagsConfiguration):
                             raise MKUserError(None, _("You cannot delete this auxiliary tag. "
                                "It is being used in the tag group <b>%s</b>.") % entry[1])
 
-            operations = { del_id : False }
+            operations = {del_id: False}
             message = rename_host_tags_after_confirmation(None, operations)
-            if message == True: # no confirmation yet
+            if message == True:  # no confirmation yet
                 c = wato_confirm(_("Confirm deletion of the auxiliary "
                                    "tag '%s'") % del_id,
                                 _("Do you really want to delete the "
@@ -174,11 +167,10 @@ class ModeHostTags(WatoMode, watolib.HosttagsConfiguration):
                     directory = -1
                 moved = self._hosttags[move_nr]
                 del self._hosttags[move_nr]
-                self._hosttags[move_nr+directory:move_nr+directory] = [moved]
+                self._hosttags[move_nr + directory:move_nr + directory] = [moved]
                 watolib.save_hosttags(self._hosttags, self._auxtags)
                 config.wato_host_tags = self._hosttags
                 watolib.add_change("edit-hosttags", _("Changed order of host tag groups"))
-
 
     def page(self):
         if not self._hosttags + self._auxtags:
@@ -192,7 +184,6 @@ class ModeHostTags(WatoMode, watolib.HosttagsConfiguration):
         else:
             self._render_host_tag_list()
             self._render_aux_tag_list()
-
 
     def _render_host_tag_list(self):
         table.begin("hosttags", _("Host tag groups"),
@@ -212,15 +203,16 @@ class ModeHostTags(WatoMode, watolib.HosttagsConfiguration):
             return
 
         for nr, entry in enumerate(effective_tag_groups):
-            tag_id, title, choices = entry[:3] # fourth: tag dependency information
+            tag_id, title, choices = entry[:3]  # fourth: tag dependency information
             topic, title = map(_u, watolib.parse_hosttag_title(title))
             table.row()
             table.cell(_("Actions"), css="buttons")
             if watolib.is_builtin_host_tag_group(tag_id):
                 html.i("(%s)" % _("builtin"))
             else:
-                edit_url     = watolib.folder_preserving_link([("mode", "edit_hosttag"), ("edit", tag_id)])
-                delete_url   = make_action_link([("mode", "hosttags"), ("_delete", tag_id)])
+                edit_url = watolib.folder_preserving_link([("mode", "edit_hosttag"), ("edit",
+                                                                                      tag_id)])
+                delete_url = make_action_link([("mode", "hosttags"), ("_delete", tag_id)])
                 if nr == 0:
                     html.empty_icon_button()
                 else:
@@ -248,7 +240,6 @@ class ModeHostTags(WatoMode, watolib.HosttagsConfiguration):
             html.end_form()
         table.end()
 
-
     def _render_aux_tag_list(self):
         table.begin("auxtags", _("Auxiliary tags"),
                     help = _("Auxiliary tags can be attached to other tags. That way "
@@ -272,8 +263,8 @@ class ModeHostTags(WatoMode, watolib.HosttagsConfiguration):
             if watolib.is_builtin_aux_tag(tag_id):
                 html.i("(%s)" % _("builtin"))
             else:
-                edit_url     = watolib.folder_preserving_link([("mode", "edit_auxtag"), ("edit", nr)])
-                delete_url   = make_action_link([("mode", "hosttags"), ("_delaux", nr)])
+                edit_url = watolib.folder_preserving_link([("mode", "edit_auxtag"), ("edit", nr)])
+                delete_url = make_action_link([("mode", "hosttags"), ("_delaux", nr)])
                 html.icon_button(edit_url, _("Edit this auxiliary tag"), "edit")
                 html.icon_button(delete_url, _("Delete this auxiliary tag"), "delete")
             table.text_cell(_("ID"), tag_id)
@@ -284,10 +275,8 @@ class ModeHostTags(WatoMode, watolib.HosttagsConfiguration):
                             ", ".join(self._get_tags_using_aux_tag(effective_tag_groups, tag_id)))
         table.end()
 
-
     def _get_effective_tag_groups(self):
         return config.BuiltinTags().get_effective_tag_groups(self._hosttags)
-
 
     def _get_tags_using_aux_tag(self, tag_groups, aux_tag):
         used_tags = set()
@@ -298,13 +287,11 @@ class ModeHostTags(WatoMode, watolib.HosttagsConfiguration):
         return sorted(used_tags)
 
 
-
 class ModeEditHosttagConfiguration(WatoMode):
     def __init__(self):
         super(ModeEditHosttagConfiguration, self).__init__()
         self._untainted_hosttags_config = watolib.HosttagsConfiguration()
         self._untainted_hosttags_config.load()
-
 
     def _get_topic_valuespec(self):
         return OptionalDropdownChoice(
@@ -317,38 +304,32 @@ class ModeEditHosttagConfiguration(WatoMode):
         )
 
 
-
 @mode_registry.register
 class ModeEditAuxtag(ModeEditHosttagConfiguration):
     @classmethod
     def name(cls):
         return "edit_auxtag"
 
-
     @classmethod
     def permissions(cls):
         return ["hosttags"]
-
 
     def title(self):
         if self._is_new_aux_tag():
             return _("Create new auxiliary tag")
         return _("Edit auxiliary tag")
 
-
     def _is_new_aux_tag(self):
         return html.var("edit") == None
 
-
     def buttons(self):
         html.context_button(_("All Hosttags"), watolib.folder_preserving_link([("mode", "hosttags")]), "back")
-
 
     def action(self):
         if not html.transaction_valid():
             return "hosttags"
 
-        html.check_transaction() # use up transaction id
+        html.check_transaction()  # use up transaction id
 
         if self._is_new_aux_tag():
             changed_aux_tag = watolib.AuxTag()
@@ -371,7 +352,6 @@ class ModeEditAuxtag(ModeEditHosttagConfiguration):
                 raise MKUserError("tag_id",
                 _("This tag id is already being used in the host tag group %s") % tag_group.title)
 
-
         changed_hosttags_config = watolib.HosttagsConfiguration()
         changed_hosttags_config.load()
         if self._is_new_aux_tag():
@@ -383,14 +363,11 @@ class ModeEditAuxtag(ModeEditHosttagConfiguration):
 
         return "hosttags"
 
-
     def _get_tag_number(self):
         return int(html.var("edit"))
 
-
     def _get_tag_id(self):
         return html.var("tag_id")
-
 
     def page(self):
         if self._is_new_aux_tag():
@@ -415,7 +392,7 @@ class ModeEditAuxtag(ModeEditHosttagConfiguration):
 
         # Title
         forms.section(_("Title") + "<sup>*</sup>")
-        html.text_input("title", changed_aux_tag.title, size = 30)
+        html.text_input("title", changed_aux_tag.title, size=30)
         html.help(_("An alias or description of this auxiliary tag"))
 
         # The (optional) topic
@@ -432,46 +409,40 @@ class ModeEditAuxtag(ModeEditHosttagConfiguration):
         html.end_form()
 
 
-
 @mode_registry.register
 class ModeEditHosttagGroup(ModeEditHosttagConfiguration):
     @classmethod
     def name(cls):
         return "edit_hosttag"
 
-
     @classmethod
     def permissions(cls):
         return ["hosttags"]
 
-
     def __init__(self):
         super(ModeEditHosttagGroup, self).__init__()
-        self._untainted_tag_group = self._untainted_hosttags_config.get_tag_group(self._get_taggroup_id())
+        self._untainted_tag_group = self._untainted_hosttags_config.get_tag_group(
+            self._get_taggroup_id())
         if not self._untainted_tag_group:
             self._untainted_tag_group = watolib.HosttagGroup()
-
 
     def title(self):
         if self._is_new_hosttag_group():
             return _("Create new tag group")
         return _("Edit tag group")
 
-
     def _is_new_hosttag_group(self):
         return html.var("edit") == None
 
-
     def buttons(self):
         html.context_button(_("All Hosttags"), watolib.folder_preserving_link([("mode", "hosttags")]), "back")
-
 
     def action(self):
         if not html.transaction_valid():
             return "hosttags"
 
         if self._is_new_hosttag_group():
-            html.check_transaction() # use up transaction id
+            html.check_transaction()  # use up transaction id
 
         changed_tag_group = watolib.HosttagGroup()
         changed_tag_group.id = self._get_taggroup_id()
@@ -483,10 +454,8 @@ class ModeEditHosttagGroup(ModeEditHosttagConfiguration):
         changed_tag_group.title = html.get_unicode_input("title").strip()
         changed_tag_group.topic = forms.get_input(self._get_topic_valuespec(), "topic")
 
-
         for tag_entry in forms.get_input(self._get_taggroups_valuespec(), "choices"):
             changed_tag_group.tags.append(watolib.GroupedHosttag(tag_entry))
-
 
         if self._is_new_hosttag_group():
             # Inserts and verifies changed tag group
@@ -514,14 +483,13 @@ class ModeEditHosttagGroup(ModeEditHosttagConfiguration):
             operations = {}
 
             # Detect renaming
-            new_by_title = dict([(tag.title, tag.id)
-                                 for tag in changed_tag_group.tags])
+            new_by_title = dict([(tag.title, tag.id) for tag in changed_tag_group.tags])
 
             for former_tag in self._untainted_tag_group.tags:
                 if former_tag.title in new_by_title:
                     new_id = new_by_title[former_tag.title]
                     if new_id != former_tag.id:
-                        operations[former_tag.id] = new_id # might be None
+                        operations[former_tag.id] = new_id  # might be None
 
             # Detect removal
             for former_tag in self._untainted_tag_group.tags:
@@ -530,7 +498,6 @@ class ModeEditHosttagGroup(ModeEditHosttagConfiguration):
                     and former_tag.id not in operations:
                     # remove explicit tag (hosts/folders) or remove it from tag specs (rules)
                     operations[former_tag.id] = False
-
 
             # Now check, if any folders, hosts or rules are affected
             message = rename_host_tags_after_confirmation(changed_tag_group.id, operations)
@@ -543,9 +510,8 @@ class ModeEditHosttagGroup(ModeEditHosttagConfiguration):
 
         return "hosttags"
 
-
     def page(self):
-        html.begin_form("hosttaggroup", method = 'POST')
+        html.begin_form("hosttaggroup", method='POST')
         forms.header(_("Edit group") + (self._untainted_tag_group.title and " %s" % self._untainted_tag_group.title or ""))
 
         # Tag ID
@@ -561,7 +527,7 @@ class ModeEditHosttagGroup(ModeEditHosttagConfiguration):
         # Title
         forms.section(_("Title") + "<sup>*</sup>")
         html.help(_("An alias or description of this tag group"))
-        html.text_input("title", self._untainted_tag_group.title, size = 30)
+        html.text_input("title", self._untainted_tag_group.title, size=30)
 
         # The (optional) topic
         forms.section(_("Topic") + "<sup>*</sup>")
@@ -582,7 +548,8 @@ class ModeEditHosttagGroup(ModeEditHosttagConfiguration):
                      "change its title at the same time! Otherwise WATO will not "
                      "be able to detect the renaming and cannot exchange the tags "
                      "in all folders, hosts and rules accordingly."))
-        forms.textinput(self._get_taggroups_valuespec(), "choices", self._untainted_tag_group.get_tags_legacy_format())
+        forms.textinput(self._get_taggroups_valuespec(), "choices",
+                        self._untainted_tag_group.get_tags_legacy_format())
 
         # Button and end
         forms.end()
@@ -592,13 +559,12 @@ class ModeEditHosttagGroup(ModeEditHosttagConfiguration):
         html.hidden_fields()
         html.end_form()
 
-
     def _get_taggroup_id(self):
         return html.var("edit", html.var("tag_id"))
 
-
     def _get_taggroups_valuespec(self):
-        aux_tags = config.BuiltinTags().get_effective_aux_tags(self._untainted_hosttags_config.get_legacy_format()[1])
+        aux_tags = config.BuiltinTags().get_effective_aux_tags(
+            self._untainted_hosttags_config.get_legacy_format()[1])
 
         return ListOf(
             Tuple(
@@ -632,6 +598,7 @@ class ModeEditHosttagGroup(ModeEditHosttagConfiguration):
             sort_by = 1, # sort by description
         )
 
+
 def rename_host_tags_after_confirmation(tag_id, operations):
     """Handle renaming and deletion of host tags
 
@@ -644,7 +611,9 @@ def rename_host_tags_after_confirmation(tag_id, operations):
         raise MKUserError("id_0", _("Aborting change."))
 
     elif mode:
-        if tag_id and type(operations) == list: # make attribute unknown to system, important for save() operations
+        if tag_id and type(
+                operations
+        ) == list:  # make attribute unknown to system, important for save() operations
             watolib.undeclare_host_tag_attribute(tag_id)
         affected_folders, affected_hosts, affected_rulesets = \
         _change_host_tags_in_folders(tag_id, operations, mode, watolib.Folder.root_folder())
@@ -678,18 +647,17 @@ def rename_host_tags_after_confirmation(tag_id, operations):
     if affected_rulesets:
         message += _("Rulesets that contain rules with references to the changed tags") + ":<ul>"
         for ruleset in affected_rulesets:
-            message += '<li><a href="%s">%s</a></li>' % (
-                watolib.folder_preserving_link([("mode", "edit_ruleset"), ("varname", ruleset.name)]),
-                ruleset.title())
+            message += '<li><a href="%s">%s</a></li>' % (watolib.folder_preserving_link(
+                [("mode", "edit_ruleset"), ("varname", ruleset.name)]), ruleset.title())
         message += "</ul>"
 
-    if not message and type(operations) == tuple: # deletion of unused tag group
+    if not message and type(operations) == tuple:  # deletion of unused tag group
         html.open_div(class_="really")
         html.begin_form("confirm")
         html.write_text(_("Please confirm the deletion of the tag group."))
         html.button("_abort", _("Abort"))
         html.button("_do_confirm", _("Proceed"))
-        html.hidden_fields(add_action_vars = True)
+        html.hidden_fields(add_action_vars=True)
         html.end_form()
         html.close_div()
 
@@ -735,7 +703,7 @@ def rename_host_tags_after_confirmation(tag_id, operations):
         html.close_ul()
 
         html.button("_do_confirm", _("Proceed"), "")
-        html.hidden_fields(add_action_vars = True)
+        html.hidden_fields(add_action_vars=True)
         html.end_form()
         html.close_div()
         return False
@@ -753,8 +721,8 @@ def _change_host_tags_in_folders(tag_id, operations, mode, folder):
     if tag_id:
         attrname = "tag_" + tag_id
         attributes = folder.attributes()
-        if attrname in attributes: # this folder has set the tag group in question
-            if type(operations) == list: # deletion of tag group
+        if attrname in attributes:  # this folder has set the tag group in question
+            if type(operations) == list:  # deletion of tag group
                 if attrname in attributes:
                     affected_folders.append(folder)
                     if mode != "check":
@@ -766,7 +734,7 @@ def _change_host_tags_in_folders(tag_id, operations, mode, folder):
                     affected_folders.append(folder)
                     if mode != "check":
                         new_tag = operations[current]
-                        if new_tag == False: # tag choice has been removed -> fall back to default
+                        if new_tag == False:  # tag choice has been removed -> fall back to default
                             del attributes[attrname]
                         else:
                             attributes[attrname] = new_tag
@@ -779,12 +747,14 @@ def _change_host_tags_in_folders(tag_id, operations, mode, folder):
                 pass
 
         for subfolder in folder.all_subfolders().values():
-            aff_folders, aff_hosts, aff_rulespecs = _change_host_tags_in_folders(tag_id, operations, mode, subfolder)
+            aff_folders, aff_hosts, aff_rulespecs = _change_host_tags_in_folders(
+                tag_id, operations, mode, subfolder)
             affected_folders += aff_folders
             affected_hosts += aff_hosts
             affected_rulesets += aff_rulespecs
 
-        affected_hosts += _change_host_tags_in_hosts(folder, tag_id, operations, mode, folder.hosts())
+        affected_hosts += _change_host_tags_in_hosts(folder, tag_id, operations, mode,
+                                                     folder.hosts())
 
     affected_rulesets += _change_host_tags_in_rules(folder, operations, mode)
     return affected_folders, affected_hosts, affected_rulesets
@@ -797,7 +767,7 @@ def _change_host_tags_in_hosts(folder, tag_id, operations, mode, hostlist):
         attributes = host.attributes()
         attrname = "tag_" + tag_id
         if attrname in attributes:
-            if type(operations) == list: # delete complete tag group
+            if type(operations) == list:  # delete complete tag group
                 affected_hosts.append(host)
                 if mode != "check":
                     del attributes[attrname]
@@ -807,7 +777,7 @@ def _change_host_tags_in_hosts(folder, tag_id, operations, mode, hostlist):
                     affected_hosts.append(host)
                     if mode != "check":
                         new_tag = operations[attributes[attrname]]
-                        if new_tag == False: # tag choice has been removed -> fall back to default
+                        if new_tag == False:  # tag choice has been removed -> fall back to default
                             del attributes[attrname]
                         else:
                             attributes[attrname] = new_tag
@@ -838,9 +808,9 @@ def _change_host_tags_in_rules(folder, operations, mode):
     for ruleset in rulesets.get_rulesets().itervalues():
         for _folder, _rulenr, rule in ruleset.get_rules():
             # Handle deletion of complete tag group
-            if type(operations) == list: # this list of tags to remove
+            if type(operations) == list:  # this list of tags to remove
                 for tag in operations:
-                    if tag != None and (tag in rule.tag_specs or "!"+tag in rule.tag_specs):
+                    if tag != None and (tag in rule.tag_specs or "!" + tag in rule.tag_specs):
                         affected_rulesets.add(ruleset)
 
                         if mode != "check":
@@ -849,8 +819,8 @@ def _change_host_tags_in_rules(folder, operations, mode):
                                 ruleset.delete_rule(rule)
                             elif tag in rule.tag_specs:
                                 rule.tag_specs.remove(tag)
-                            elif "+"+tag in rule.tag_specs:
-                                rule.tag_specs.remove("!"+tag)
+                            elif "+" + tag in rule.tag_specs:
+                                rule.tag_specs.remove("!" + tag)
 
             # Removal or renamal of single tag choices
             else:
@@ -874,10 +844,10 @@ def _change_host_tags_in_rules(folder, operations, mode):
                                     ruleset.delete_rule(rule)
 
                             # negated tag has been renamed or removed
-                            if "!"+old_tag in rule.tag_specs:
-                                rule.tag_specs.remove("!"+old_tag)
+                            if "!" + old_tag in rule.tag_specs:
+                                rule.tag_specs.remove("!" + old_tag)
                                 if new_tag:
-                                    rule.tag_specs.append("!"+new_tag)
+                                    rule.tag_specs.append("!" + new_tag)
                                 # the case "delete" need not be handled here. Negated
                                 # tags can always be removed without changing the rule's
                                 # behaviour.

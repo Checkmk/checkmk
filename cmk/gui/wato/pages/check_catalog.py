@@ -36,8 +36,7 @@ from cmk.gui.i18n import _
 from cmk.gui.globals import html
 
 from cmk.gui.valuespec import (
-    ID,
-)
+    ID,)
 
 from cmk.gui.plugins.wato.utils.main_menu import (
     MainMenu,
@@ -65,31 +64,30 @@ from cmk.gui.plugins.wato import (
 #   | Catalog of check plugins                                             |
 #   '----------------------------------------------------------------------'
 
+
 @mode_registry.register
 class ModeCheckPlugins(WatoMode):
     @classmethod
     def name(cls):
         return "check_plugins"
 
-
     @classmethod
     def permissions(cls):
         return []
 
-
     def _from_vars(self):
         self._search = get_search_expression()
-        self._topic  = html.var("topic")
+        self._topic = html.var("topic")
         if self._topic and not self._search:
             if not re.match("^[a-zA-Z0-9_./]+$", self._topic):
                 raise Exception("Invalid topic")
 
-            self._path = tuple(self._topic.split("/")) # e.g. [ "hw", "network" ]
+            self._path = tuple(self._topic.split("/"))  # e.g. [ "hw", "network" ]
         else:
             self._path = tuple()
 
         for comp in self._path:
-            ID().validate_value(comp, None) # Beware against code injection!
+            ID().validate_value(comp, None)  # Beware against code injection!
 
         self._manpages = self._get_check_catalog()
         self._titles = man_pages.man_page_catalog_titles()
@@ -105,7 +103,6 @@ class ModeCheckPlugins(WatoMode):
             if len(self._path) == 2:
                 self._topic_title = self._titles.get(self._path[1], self._path[1])
 
-
     def title(self):
         if self._topic and not self._search:
             heading = "%s - %s" % ( _("Catalog of Check Plugins"), self._topic_title )
@@ -115,7 +112,6 @@ class ModeCheckPlugins(WatoMode):
             heading = _("Catalog of Check Plugins")
         return heading
 
-
     def buttons(self):
         global_buttons()
         if self._topic:
@@ -124,7 +120,6 @@ class ModeCheckPlugins(WatoMode):
             else:
                 back_url = html.makeuri([("topic", "")])
             html.context_button(_("Back"), back_url, "back")
-
 
     def page(self):
         html.help(_("This catalog of check plugins gives you a complete listing of all plugins "
@@ -149,51 +144,50 @@ class ModeCheckPlugins(WatoMode):
         else:
             menu = MainMenu()
             for topic, _has_second_level, title, helptext in self._man_page_catalog_topics():
-                menu.add_item(MenuItem(
-                    mode_or_url=html.makeuri([("topic", topic)]),
-                    title=title,
-                    icon="plugins_" + topic,
-                    permission=None,
-                    description=helptext
-                ))
+                menu.add_item(
+                    MenuItem(
+                        mode_or_url=html.makeuri([("topic", topic)]),
+                        title=title,
+                        icon="plugins_" + topic,
+                        permission=None,
+                        description=helptext))
             menu.show()
 
-
     def _get_manpages_after_search(self):
-        collection  = {}
+        collection = {}
         handled_check_names = set([])
 
         # searches in {"name" : "asd", "title" : "das", ...}
-        def get_matched_entry( entry ):
-            if type( entry ) == dict:
-                name = entry.get( "name", "" )
-                if type( name ) == str:
-                    name = name.decode( "utf8" )
+        def get_matched_entry(entry):
+            if type(entry) == dict:
+                name = entry.get("name", "")
+                if type(name) == str:
+                    name = name.decode("utf8")
 
-                title = entry.get( "title", "" )
-                if type( title ) == str:
-                    title = title.decode( "utf8" )
+                title = entry.get("title", "")
+                if type(title) == str:
+                    title = title.decode("utf8")
                 if self._search in name.lower() or self._search in title.lower():
                     return entry
 
             return None
 
-        def check_entries( key, entries ):
-            if type( entries ) == list:
+        def check_entries(key, entries):
+            if type(entries) == list:
                 these_matches = []
                 for entry in entries:
-                    match = get_matched_entry( entry )
+                    match = get_matched_entry(entry)
                     if match:
-                        these_matches.append( match )
+                        these_matches.append(match)
 
                 if these_matches:
-                    collection.setdefault( key, [] )
+                    collection.setdefault(key, [])
                     # avoid duplicates due to the fact that a man page can have more than
                     # one places in the global tree of man pages.
                     for match in these_matches:
                         name = match.get("name")
                         if name and name in handled_check_names:
-                            continue # avoid duplicate
+                            continue  # avoid duplicate
                         else:
                             collection[key].append(match)
                             if name:
@@ -201,13 +195,12 @@ class ModeCheckPlugins(WatoMode):
 
             elif type(entries) == dict:
                 for k, subentries in entries.items():
-                    check_entries( k, subentries )
+                    check_entries(k, subentries)
 
         for key, entries in self._manpages.items():
-            check_entries( key, entries )
+            check_entries(key, entries)
 
         return collection.items()
-
 
     def _get_check_catalog(self):
         def path_prefix_matches(p, op):
@@ -218,9 +211,7 @@ class ModeCheckPlugins(WatoMode):
             return p[0] == op[0] and path_prefix_matches(p[1:], op[1:])
 
         def strip_manpage_entry(entry):
-            return dict([ (k,v) for (k,v) in entry.items() if k in [
-                "name", "agents", "title"
-            ]])
+            return dict([(k, v) for (k, v) in entry.items() if k in ["name", "agents", "title"]])
 
         tree = {}
         if len(self._path) > 0:
@@ -241,7 +232,6 @@ class ModeCheckPlugins(WatoMode):
 
         return tree
 
-
     def _render_manpage_topic(self):
         if type(self._manpages) == list:
             self._render_manpage_list(self._manpages, self._path[-1], self._topic_title)
@@ -255,13 +245,14 @@ class ModeCheckPlugins(WatoMode):
                 title = self._titles.get(path_comp, path_comp)
                 helptext = self._get_check_plugin_stats(subnode)
 
-                menu.add_item(MenuItem(
-                    mode_or_url=url,
-                    title=title,
-                    icon="check_plugins",
-                    permission=None,
-                    description=helptext,
-                ))
+                menu.add_item(
+                    MenuItem(
+                        mode_or_url=url,
+                        title=title,
+                        icon="check_plugins",
+                        permission=None,
+                        description=helptext,
+                    ))
             menu.show()
 
         else:
@@ -271,11 +262,10 @@ class ModeCheckPlugins(WatoMode):
                 title = self._titles.get(path_comp, path_comp)
                 entries.append((title, subnode, path_comp))
 
-            entries.sort(cmp = lambda a,b: cmp(a[0].lower(), b[0].lower()))
+            entries.sort(cmp=lambda a, b: cmp(a[0].lower(), b[0].lower()))
 
             for title, subnode, path_comp in entries:
                 self._render_manpage_list(subnode, path_comp, title)
-
 
     def _get_check_plugin_stats(self, subnode):
         if type(subnode) == list:
@@ -293,23 +283,22 @@ class ModeCheckPlugins(WatoMode):
         text += "%d %s" % (num_plugins, _("check plugins"))
         return text
 
-
     def _render_manpage_list(self, manpage_list, path_comp, heading):
         def translate(t):
             return self._titles.get(t, t)
 
         html.h2(heading)
         table.begin(searchable=False, sortable=False, css="check_catalog")
-        for entry in sorted(manpage_list, cmp=lambda a,b: cmp(a["title"], b["title"])):
+        for entry in sorted(manpage_list, cmp=lambda a, b: cmp(a["title"], b["title"])):
             if type(entry) != dict:
                 continue
             table.row()
-            url = html.makeuri([("mode", "check_manpage"), ("check_type", entry["name"]), ("back", html.makeuri([]))])
+            url = html.makeuri([("mode", "check_manpage"), ("check_type", entry["name"]),
+                                ("back", html.makeuri([]))])
             table.cell(_("Type of Check"), "<a href='%s'>%s</a>" % (url, entry["title"]), css="title")
             table.cell(_("Plugin Name"), "<tt>%s</tt>" % entry["name"], css="name")
             table.cell(_("Agents"), ", ".join(map(translate, sorted(entry["agents"]))), css="agents")
         table.end()
-
 
     def _man_page_catalog_topics(self):
         # topic, has_second_level, title, description
@@ -336,18 +325,15 @@ class ModeCheckPlugins(WatoMode):
         ]
 
 
-
 @mode_registry.register
 class ModeCheckManPage(WatoMode):
     @classmethod
     def name(cls):
         return "check_manpage"
 
-
     @classmethod
     def permissions(cls):
         return []
-
 
     def _from_vars(self):
         self._check_type = html.var("check_type")
@@ -360,14 +346,12 @@ class ModeCheckManPage(WatoMode):
         # TODO: remove call of automation and then the automation. This can be done once the check_info
         # data is also available in the "cmk." module because the get-check-manpage automation not only
         # fetches the man page. It also contains info from check_info. What a hack.
-        self._manpage = watolib.check_mk_local_automation("get-check-manpage", [ self._check_type ])
+        self._manpage = watolib.check_mk_local_automation("get-check-manpage", [self._check_type])
         if self._manpage == None:
             raise MKUserError(None, _("There is no manpage for this check."))
 
-
     def title(self):
         return _("Check plugin manual page") + " - " + self._manpage["header"]["title"]
-
 
     def buttons(self):
         global_buttons()
@@ -382,9 +366,10 @@ class ModeCheckManPage(WatoMode):
         else:
             command = "check_mk-" + self._check_type
 
-        url = html.makeuri_contextless([("view_name", "searchsvc"), ("check_command", command), ("filled_in", "filter")], filename="view.py")
+        url = html.makeuri_contextless([("view_name", "searchsvc"), ("check_command", command),
+                                        ("filled_in", "filter")],
+                                       filename="view.py")
         html.context_button(_("Find usage"), url, "status")
-
 
     # TODO
     # We could simply detect on how many hosts and services this plugin
@@ -449,7 +434,6 @@ class ModeCheckManPage(WatoMode):
             show_ruleset(varname)
 
         html.close_table()
-
 
     def _manpage_text(self, text):
         html_code = text.replace("<br>", "\n")\

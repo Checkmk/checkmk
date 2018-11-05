@@ -37,19 +37,15 @@ class ModeNotImplemented(WatoMode):
     def name(cls):
         return ""
 
-
     @classmethod
     def permissions(cls):
         return []
 
-
     def title(self):
         return _("Sorry")
 
-
     def buttons(self):
         home_button()
-
 
     def page(self):
         html.show_error(_("This module has not yet been implemented."))

@@ -67,15 +67,12 @@ class ModeGroups(WatoMode):
         super(ModeGroups, self).__init__()
         self._load_groups()
 
-
     def _load_groups(self):
         all_groups = userdb.load_group_information()
         self._groups = all_groups.setdefault(self.type_name, {})
 
-
     def buttons(self):
         global_buttons()
-
 
     def action(self):
         if html.var('_delete'):
@@ -102,20 +99,19 @@ class ModeGroups(WatoMode):
 
         return None
 
-
     def _page_no_groups(self):
         html.div(_("No groups are defined yet."), class_="info")
-
 
     def _collect_additional_data(self):
         pass
 
-
     def _show_row_cells(self, name, group):
         table.cell(_("Actions"), css="buttons")
-        edit_url   = watolib.folder_preserving_link([("mode", "edit_%s_group" % self.type_name), ("edit", name)])
+        edit_url = watolib.folder_preserving_link([("mode", "edit_%s_group" % self.type_name),
+                                                   ("edit", name)])
         delete_url = html.makeactionuri([("_delete", name)])
-        clone_url  = watolib.folder_preserving_link([("mode", "edit_%s_group" % self.type_name), ("clone", name)])
+        clone_url = watolib.folder_preserving_link([("mode", "edit_%s_group" % self.type_name),
+                                                    ("clone", name)])
         html.icon_button(edit_url, _("Properties"), "edit")
         html.icon_button(clone_url, _("Create a copy of this group"), "clone")
         html.icon_button(delete_url, _("Delete"), "delete")
@@ -123,14 +119,13 @@ class ModeGroups(WatoMode):
         table.cell(_("Name"), html.attrencode(name))
         table.cell(_("Alias"), html.attrencode(group['alias']))
 
-
     def page(self):
         if not self._groups:
             self._page_no_groups()
             return
 
         sorted_groups = self._groups.items()
-        sorted_groups.sort(cmp = lambda a,b: cmp(a[1]['alias'], b[1]['alias']))
+        sorted_groups.sort(cmp=lambda a, b: cmp(a[1]['alias'], b[1]['alias']))
 
         self._collect_additional_data()
 
@@ -147,23 +142,21 @@ class ModeEditGroup(WatoMode):
     type_name = None
 
     def __init__(self):
-        self._name   = None
-        self._new    = False
+        self._name = None
+        self._new = False
         self._groups = {}
-        self.group   = {}
+        self.group = {}
 
         self._load_groups()
 
         super(ModeEditGroup, self).__init__()
 
-
     def _load_groups(self):
         all_groups = userdb.load_group_information()
         self._groups = all_groups.setdefault(self.type_name, {})
 
-
     def _from_vars(self):
-        self._name = html.var("edit") # missing -> new group
+        self._name = html.var("edit")  # missing -> new group
         self._new = self._name == None
 
         if self._new:
@@ -179,22 +172,18 @@ class ModeEditGroup(WatoMode):
 
         self.group.setdefault("alias", self._name)
 
-
     def _get_group(self, group_name):
         try:
             return self._groups[self._name]
         except KeyError:
             raise MKUserError(None, _("This group does not exist."))
 
-
     def buttons(self):
         html.context_button(_("All groups"),
             watolib.folder_preserving_link([("mode", "%s_groups" % self.type_name)]), "back")
 
-
     def _determine_additional_group_data(self):
         pass
-
 
     def action(self):
         if not html.check_transaction():
@@ -204,9 +193,7 @@ class ModeEditGroup(WatoMode):
         if not alias:
             raise MKUserError("alias", _("Please specify an alias name."))
 
-        self.group = {
-            "alias": alias
-        }
+        self.group = {"alias": alias}
 
         self._determine_additional_group_data()
 
@@ -218,10 +205,8 @@ class ModeEditGroup(WatoMode):
 
         return "%s_groups" % self.type_name
 
-
     def _show_extra_page_elements(self):
         pass
-
 
     def page(self):
         html.begin_form("group")
@@ -248,7 +233,6 @@ class ModeEditGroup(WatoMode):
         html.end_form()
 
 
-
 @mode_registry.register
 class ModeHostgroups(ModeGroups):
     type_name = "host"
@@ -257,15 +241,12 @@ class ModeHostgroups(ModeGroups):
     def name(cls):
         return "host_groups"
 
-
     @classmethod
     def permissions(cls):
         return ["groups"]
 
-
     def title(self):
         return _("Host Groups")
-
 
     def _page_no_groups(self):
         menu = MainMenu()
@@ -278,13 +259,11 @@ class ModeHostgroups(ModeGroups):
         ))
         menu.show()
 
-
     def buttons(self):
         super(ModeHostgroups, self).buttons()
         html.context_button(_("Service groups"), watolib.folder_preserving_link([("mode", "service_groups")]), "hostgroups")
         html.context_button(_("New host group"), watolib.folder_preserving_link([("mode", "edit_host_group")]), "new")
         html.context_button(_("Rules"), watolib.folder_preserving_link([("mode", "edit_ruleset"), ("varname", "host_groups")]), "rulesets")
-
 
 
 @mode_registry.register
@@ -295,15 +274,12 @@ class ModeServicegroups(ModeGroups):
     def name(cls):
         return "service_groups"
 
-
     @classmethod
     def permissions(cls):
         return ["groups"]
 
-
     def title(self):
         return _("Service Groups")
-
 
     def _page_no_groups(self):
         menu = MainMenu()
@@ -316,13 +292,11 @@ class ModeServicegroups(ModeGroups):
         ))
         menu.show()
 
-
     def buttons(self):
         super(ModeServicegroups, self).buttons()
         html.context_button(_("Host groups"), watolib.folder_preserving_link([("mode", "host_groups")]), "servicegroups")
         html.context_button(_("New service group"), watolib.folder_preserving_link([("mode", "edit_service_group")]), "new")
         html.context_button(_("Rules"), watolib.folder_preserving_link([("mode", "edit_ruleset"), ("varname", "service_groups")]), "rulesets")
-
 
 
 @mode_registry.register
@@ -333,23 +307,19 @@ class ModeContactgroups(ModeGroups):
     def name(cls):
         return "contact_groups"
 
-
     @classmethod
     def permissions(cls):
         return ["users"]
 
-
     def title(self):
         self._members = {}
         return _("Contact Groups")
-
 
     def buttons(self):
         super(ModeContactgroups, self).buttons()
         html.context_button(_("New contact group"), watolib.folder_preserving_link([("mode", "edit_contact_group")]), "new")
         html.context_button(_("Rules"), watolib.folder_preserving_link([("mode", "rulesets"),
                              ("filled_in", "search"), ("search", "contactgroups")]), "rulesets")
-
 
     def _page_no_groups(self):
         menu = MainMenu()
@@ -362,7 +332,6 @@ class ModeContactgroups(ModeGroups):
         ))
         menu.show()
 
-
     def _collect_additional_data(self):
         users = userdb.load_users()
         self._members = {}
@@ -371,14 +340,16 @@ class ModeContactgroups(ModeGroups):
             for cg in cgs:
                 self._members.setdefault(cg, []).append((userid, user.get('alias', userid)))
 
-
     def _show_row_cells(self, name, group):
         super(ModeContactgroups, self)._show_row_cells(name, group)
         table.cell(_("Members"))
-        html.write_html(HTML(", ").join(
-           [ html.render_a(alias, href=watolib.folder_preserving_link([("mode", "edit_user"), ("edit", userid)]))
-             for userid, alias in self._members.get(name, [])]))
-
+        html.write_html(
+            HTML(", ").join([
+                html.render_a(
+                    alias,
+                    href=watolib.folder_preserving_link([("mode", "edit_user"), ("edit", userid)]))
+                for userid, alias in self._members.get(name, [])
+            ]))
 
 
 @mode_registry.register
@@ -389,17 +360,14 @@ class ModeEditServicegroup(ModeEditGroup):
     def name(cls):
         return "edit_service_group"
 
-
     @classmethod
     def permissions(cls):
         return ["groups"]
-
 
     def title(self):
         if self._new:
             return _("Create new service group")
         return _("Edit service group")
-
 
 
 @mode_registry.register
@@ -410,17 +378,14 @@ class ModeEditHostgroup(ModeEditGroup):
     def name(cls):
         return "edit_host_group"
 
-
     @classmethod
     def permissions(cls):
         return ["groups"]
-
 
     def title(self):
         if self._new:
             return _("Create new host group")
         return _("Edit host group")
-
 
 
 @mode_registry.register
@@ -431,17 +396,14 @@ class ModeEditContactgroup(ModeEditGroup):
     def name(cls):
         return "edit_contact_group"
 
-
     @classmethod
     def permissions(cls):
         return ["users"]
-
 
     def title(self):
         if self._new:
             return _("Create new contact group")
         return _("Edit contact group")
-
 
     def _determine_additional_group_data(self):
         super(ModeEditContactgroup, self)._determine_additional_group_data()
@@ -456,19 +418,18 @@ class ModeEditContactgroup(ModeEditGroup):
         if permitted_maps:
             self.group["nagvis_maps"] = permitted_maps
 
-
     def _show_extra_page_elements(self):
         super(ModeEditContactgroup, self)._show_extra_page_elements()
 
         forms.header(_("Permissions"))
         forms.section(_("Permitted HW/SW inventory paths"))
-        self._vs_inventory_paths().render_input('inventory_paths', self.group.get('inventory_paths'))
+        self._vs_inventory_paths().render_input('inventory_paths',
+                                                self.group.get('inventory_paths'))
 
         if self._get_nagvis_maps():
             forms.section(_("Access to NagVis Maps"))
             html.help(_("Configure access permissions to NagVis maps."))
             self._vs_nagvis_maps().render_input('nagvis_maps', self.group.get('nagvis_maps', []))
-
 
     def _vs_inventory_paths(self):
         return CascadingDropdown(
@@ -497,14 +458,12 @@ class ModeEditContactgroup(ModeEditGroup):
             default_value="allow_all",
         )
 
-
     def _vs_nagvis_maps(self):
         return ListChoice(
             title = _('NagVis Maps'),
             choices = self._get_nagvis_maps,
             toggle_all = True,
         )
-
 
     def _get_nagvis_maps(self):
         # Find all NagVis maps in the local installation to register permissions

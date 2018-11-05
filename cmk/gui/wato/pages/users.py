@@ -23,7 +23,6 @@
 # License along with GNU Make; see the file  COPYING.  If  not,  write
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
-
 """Modes for managing users and contacts"""
 
 import base64
@@ -55,8 +54,7 @@ from cmk.gui.valuespec import (
 )
 
 from cmk.gui.plugins.wato.utils.html_elements import (
-    wato_styles,
-)
+    wato_styles,)
 
 from cmk.gui.plugins.wato import (
     WatoMode,
@@ -71,27 +69,24 @@ if cmk.is_managed_edition():
 else:
     managed = None
 
+
 @mode_registry.register
 class ModeUsers(WatoMode):
     @classmethod
     def name(cls):
         return "users"
 
-
     @classmethod
     def permissions(cls):
         return ["users"]
-
 
     def __init__(self):
         super(ModeUsers, self).__init__()
         self._job = userdb.UserSyncBackgroundJob()
         self._job_snapshot = userdb.UserSyncBackgroundJob().get_status_snapshot()
 
-
     def title(self):
         return _("Users")
-
 
     def buttons(self):
         global_buttons()
@@ -103,11 +98,9 @@ class ModeUsers(WatoMode):
                 html.context_button(_("Sync users"), html.makeactionuri([("_sync", 1)]), "replicate")
                 html.context_button(_("Last sync result"), self._job.detail_url(), "background_job_details")
 
-
         if config.user.may("general.notify"):
             html.context_button(_("Notify users"), 'notify.py', "notification")
         html.context_button(_("LDAP connections"), watolib.folder_preserving_link([("mode", "ldap_config")]), "ldap")
-
 
     def action(self):
         if html.var('_delete'):
@@ -145,7 +138,6 @@ class ModeUsers(WatoMode):
                 self._job_snapshot = userdb.UserSyncBackgroundJob().get_status_snapshot()
                 return None, _("Synchronization job acknowledged")
 
-
     def _bulk_delete_users_after_confirm(self):
         selected_users = []
         users = userdb.load_users()
@@ -162,7 +154,6 @@ class ModeUsers(WatoMode):
                 watolib.delete_users(selected_users)
             elif c == False:
                 return ""
-
 
     def page(self):
         if not self._job_snapshot.exists():
@@ -187,19 +178,16 @@ class ModeUsers(WatoMode):
 
         self._show_user_list()
 
-
-
     def _job_details_link(self):
         return html.render_a("%s" % self._job.get_title(), href=self._job.detail_url())
 
-
     def _job_details_url(self):
-        return html.makeuri_contextless([
-            ("mode", "background_job_details"),
-            ("back_url", html.makeuri_contextless([("mode", "users")], filename="%s.py" % html.myfile)),
-            ("job_id", self._job_snapshot.get_job_id())
-        ], filename="wato.py")
-
+        return html.makeuri_contextless(
+            [("mode", "background_job_details"),
+             ("back_url",
+              html.makeuri_contextless([("mode", "users")], filename="%s.py" % html.myfile)),
+             ("job_id", self._job_snapshot.get_job_id())],
+            filename="wato.py")
 
     def _show_job_info(self):
         if self._job_snapshot.is_running():
@@ -212,21 +200,18 @@ class ModeUsers(WatoMode):
         job_manager.show_job_details_from_snapshot(job_snapshot=self._job_snapshot)
         html.br()
 
-
     def _show_user_list(self):
         visible_custom_attrs = [
-            (name, attr)
-            for name, attr
-            in userdb.get_user_attributes()
-            if attr.show_in_table()
+            (name, attr) for name, attr in userdb.get_user_attributes() if attr.show_in_table()
         ]
 
         users = userdb.load_users()
 
         entries = users.items()
-        entries.sort(cmp = lambda a, b: cmp(a[1].get("alias", a[0]).lower(), b[1].get("alias", b[0]).lower()))
+        entries.sort(
+            cmp=lambda a, b: cmp(a[1].get("alias", a[0]).lower(), b[1].get("alias", b[0]).lower()))
 
-        html.begin_form("bulk_delete_form", method = "POST")
+        html.begin_form("bulk_delete_form", method="POST")
 
         roles = userdb.load_roles()
         timeperiods = watolib.load_timeperiods()
@@ -238,9 +223,15 @@ class ModeUsers(WatoMode):
             table.row()
 
             # Checkboxes
-            table.cell(html.render_input("_toggle_group", type_="button",
-                        class_="checkgroup", onclick="toggle_all_rows();",
-                        value='X'), sortable=False, css="checkbox")
+            table.cell(
+                html.render_input(
+                    "_toggle_group",
+                    type_="button",
+                    class_="checkgroup",
+                    onclick="toggle_all_rows();",
+                    value='X'),
+                sortable=False,
+                css="checkbox")
 
             if uid != config.user.id:
                 html.checkbox("_c_user_%s" % base64.b64encode(uid.encode("utf-8")))
@@ -250,7 +241,7 @@ class ModeUsers(WatoMode):
 
             # Buttons
             table.cell(_("Actions"), css="buttons")
-            if connection: # only show edit buttons when the connector is available and enabled
+            if connection:  # only show edit buttons when the connector is available and enabled
                 edit_url = watolib.folder_preserving_link([("mode", "edit_user"), ("edit", uid)])
                 html.icon_button(edit_url, _("Properties"), "edit")
 
@@ -260,7 +251,8 @@ class ModeUsers(WatoMode):
             delete_url = make_action_link([("mode", "users"), ("_delete", uid)])
             html.icon_button(delete_url, _("Delete"), "delete")
 
-            notifications_url = watolib.folder_preserving_link([("mode", "user_notifications"), ("user", uid)])
+            notifications_url = watolib.folder_preserving_link([("mode", "user_notifications"),
+                                                                ("user", uid)])
             if watolib.load_configuration_settings().get("enable_rulebased_notifications"):
                 html.icon_button(notifications_url, _("Custom notification table of this user"), "notifications")
 
@@ -286,7 +278,8 @@ class ModeUsers(WatoMode):
 
                 table.cell(_("Last seen"))
                 if last_seen != 0:
-                    html.write_text("%s %s" % (render.date(last_seen), render.time_of_day(last_seen)))
+                    html.write_text(
+                        "%s %s" % (render.date(last_seen), render.time_of_day(last_seen)))
                 else:
                     html.write_text(_("Never logged in"))
 
@@ -316,7 +309,7 @@ class ModeUsers(WatoMode):
                 html.icon(_('The login is currently locked'), 'user_locked')
 
             if "disable_notifications" in user and type(user["disable_notifications"]) == bool:
-                disable_notifications_opts = {"disable" : user["disable_notifications"]}
+                disable_notifications_opts = {"disable": user["disable_notifications"]}
             else:
                 disable_notifications_opts = user.get("disable_notifications", {})
 
@@ -332,17 +325,26 @@ class ModeUsers(WatoMode):
             # Roles
             table.cell(_("Roles"))
             if user.get("roles", []):
-                role_links = [ (watolib.folder_preserving_link([("mode", "edit_role"), ("edit", role)]), roles[role].get("alias"))
-                                    for role in user["roles"] ]
-                html.write_html(HTML(", ").join(html.render_a(alias, href=link) for (link, alias) in role_links))
+                role_links = [(watolib.folder_preserving_link(
+                    [("mode", "edit_role"), ("edit", role)]), roles[role].get("alias"))
+                              for role in user["roles"]]
+                html.write_html(
+                    HTML(", ").join(
+                        html.render_a(alias, href=link) for (link, alias) in role_links))
 
             # contact groups
             table.cell(_("Contact groups"))
             cgs = user.get("contactgroups", [])
             if cgs:
                 cg_aliases = [contact_groups[c]['alias'] if c in contact_groups else c for c in cgs]
-                cg_urls    = [watolib.folder_preserving_link([("mode", "edit_contact_group"), ("edit", c)]) for c in cgs]
-                html.write_html(HTML(", ").join(html.render_a(content, href=url) for (content, url) in zip(cg_aliases, cg_urls)))
+                cg_urls = [
+                    watolib.folder_preserving_link([("mode", "edit_contact_group"), ("edit", c)])
+                    for c in cgs
+                ]
+                html.write_html(
+                    HTML(", ").join(
+                        html.render_a(content, href=url)
+                        for (content, url) in zip(cg_aliases, cg_urls)))
             else:
                 html.i(_("none"))
 
@@ -365,7 +367,8 @@ class ModeUsers(WatoMode):
                     if tp not in timeperiods:
                         tp = tp + _(" (invalid)")
                     elif tp not in watolib.builtin_timeperiods():
-                        url = watolib.folder_preserving_link([("mode", "edit_timeperiod"), ("edit", tp)])
+                        url = watolib.folder_preserving_link([("mode", "edit_timeperiod"),
+                                                              ("edit", tp)])
                         tp = html.render_a(timeperiods[tp].get("alias", tp), href=url)
                     else:
                         tp = timeperiods[tp].get("alias", tp)
@@ -391,8 +394,8 @@ class ModeUsers(WatoMode):
                          "make them monitoring contacts. Only monitoring contacts can receive "
                          "notifications.") % url)
             html.write(" you can assign users to them und thus "
-                        "make them monitoring contacts. Only monitoring contacts can receive "
-                        "notifications.")
+                       "make them monitoring contacts. Only monitoring contacts can receive "
+                       "notifications.")
             html.close_div()
 
 
@@ -405,11 +408,9 @@ class ModeEditUser(WatoMode):
     def name(cls):
         return "edit_user"
 
-
     @classmethod
     def permissions(cls):
         return ["users"]
-
 
     def __init__(self):
         super(ModeEditUser, self).__init__()
@@ -417,16 +418,15 @@ class ModeEditUser(WatoMode):
         # Load data that is referenced - in order to display dropdown
         # boxes and to check for validity.
         self._contact_groups = userdb.load_group_information().get("contact", {})
-        self._timeperiods    = watolib.load_timeperiods()
-        self._roles          = userdb.load_roles()
+        self._timeperiods = watolib.load_timeperiods()
+        self._roles = userdb.load_roles()
 
         if cmk.is_managed_edition():
             self._vs_customer = managed.vs_customer()
 
-
     def _from_vars(self):
-        self._user_id = html.get_unicode_input("edit") # missing -> new user
-        self._cloneid = html.get_unicode_input("clone") # Only needed in 'new' mode
+        self._user_id = html.get_unicode_input("edit")  # missing -> new user
+        self._cloneid = html.get_unicode_input("clone")  # Only needed in 'new' mode
         self._is_new_user = self._user_id == None
 
         self._users = userdb.load_users(lock=html.is_transaction())
@@ -441,12 +441,10 @@ class ModeEditUser(WatoMode):
 
         self._locked_attributes = userdb.locked_attributes(self._user.get('connector'))
 
-
     def title(self):
         if self._is_new_user:
             return _("Create new user")
         return _("Edit user %s") % self._user_id
-
 
     def buttons(self):
         html.context_button(_("Users"), watolib.folder_preserving_link([("mode", "users")]), "back")
@@ -455,13 +453,12 @@ class ModeEditUser(WatoMode):
                     ("user", self._user_id)]), "notifications")
         return
 
-
     def action(self):
         if not html.check_transaction():
             return "users"
 
         if self._is_new_user:
-            self._user_id = UserID(allow_empty = False).from_html_vars("user_id")
+            self._user_id = UserID(allow_empty=False).from_html_vars("user_id")
             user_attrs = {}
         else:
             self._user_id = html.get_unicode_input("edit").strip()
@@ -474,8 +471,9 @@ class ModeEditUser(WatoMode):
         user_attrs["locked"] = html.get_checkbox("locked")
         increase_serial = False
 
-        if self._user_id in self._users and self._users[self._user_id]["locked"] != user_attrs["locked"] and user_attrs["locked"]:
-            increase_serial = True # when user is being locked now, increase the auth serial
+        if self._user_id in self._users and self._users[
+                self._user_id]["locked"] != user_attrs["locked"] and user_attrs["locked"]:
+            increase_serial = True  # when user is being locked now, increase the auth serial
 
         # Authentication: Password or Secret
         auth_method = html.var("authmethod")
@@ -483,10 +481,10 @@ class ModeEditUser(WatoMode):
             secret = html.var("_auth_secret", "").strip()
             user_attrs["automation_secret"] = secret
             user_attrs["password"] = hash_password(secret)
-            increase_serial = True # password changed, reflect in auth serial
+            increase_serial = True  # password changed, reflect in auth serial
 
         else:
-            password  = html.var("_password_" + self._pw_suffix(), '').strip()
+            password = html.var("_password_" + self._pw_suffix(), '').strip()
             password2 = html.var("_password2_" + self._pw_suffix(), '').strip()
 
             # We compare both passwords only, if the user has supplied
@@ -500,18 +498,17 @@ class ModeEditUser(WatoMode):
             if "automation_secret" in user_attrs:
                 del user_attrs["automation_secret"]
                 if "password" in user_attrs:
-                    del user_attrs["password"] # which was the encrypted automation password!
+                    del user_attrs["password"]  # which was the encrypted automation password!
 
             if password:
                 user_attrs["password"] = hash_password(password)
                 user_attrs["last_pw_change"] = int(time.time())
-                increase_serial = True # password changed, reflect in auth serial
+                increase_serial = True  # password changed, reflect in auth serial
 
             # PW change enforcement
             user_attrs["enforce_pw_change"] = html.get_checkbox("enforce_pw_change")
             if user_attrs["enforce_pw_change"]:
-                increase_serial = True # invalidate all existing user sessions, enforce relogon
-
+                increase_serial = True  # invalidate all existing user sessions, enforce relogon
 
         # Increase serial (if needed)
         if increase_serial:
@@ -549,7 +546,9 @@ class ModeEditUser(WatoMode):
             del user_attrs["authorized_sites"]
 
         # Roles
-        user_attrs["roles"] = [role for role in self._roles.keys() if html.get_checkbox("role_" + role)]
+        user_attrs["roles"] = [
+            role for role in self._roles.keys() if html.get_checkbox("role_" + role)
+        ]
 
         # Language configuration
         set_lang = html.get_checkbox("_set_lang")
@@ -579,9 +578,9 @@ class ModeEditUser(WatoMode):
                 ntp = "24X7"
             user_attrs["notification_period"] = ntp
 
-            for what, opts in [ ( "host", "durfs"), ("service", "wucrfs") ]:
+            for what, opts in [("host", "durfs"), ("service", "wucrfs")]:
                 user_attrs[what + "_notification_options"] = "".join(
-                  [ opt for opt in opts if html.get_checkbox(what + "_" + opt) ])
+                    [opt for opt in opts if html.get_checkbox(what + "_" + opt)])
 
             value = watolib.get_vs_flexible_notifications().from_html_vars("notification_method")
             user_attrs["notification_method"] = value
@@ -599,7 +598,6 @@ class ModeEditUser(WatoMode):
         watolib.edit_users(user_object)
         return "users"
 
-
     def page(self):
         # Let exceptions from loading notification scripts happen now
         watolib.load_notification_scripts()
@@ -612,7 +610,7 @@ class ModeEditUser(WatoMode):
         # ID
         forms.section(_("Username"), simple = not self._is_new_user)
         if self._is_new_user:
-            vs_user_id = UserID(allow_empty = False)
+            vs_user_id = UserID(allow_empty=False)
 
         else:
             vs_user_id = FixedValue(self._user_id)
@@ -620,7 +618,7 @@ class ModeEditUser(WatoMode):
 
         def lockable_input(name, dflt):
             if not self._is_locked(name):
-                html.text_input(name, self._user.get(name, dflt), size = 50)
+                html.text_input(name, self._user.get(name, dflt), size=50)
             else:
                 html.write_text(self._user.get(name, dflt))
                 html.hidden_field(name, self._user.get(name, dflt))
@@ -693,7 +691,9 @@ class ModeEditUser(WatoMode):
             html.td("%s:" % _("Enforce change"))
             html.open_td()
             # Only make password enforcement selection possible when user is allowed to change the PW
-            if self._is_new_user or config.user_may(self._user_id, 'general.edit_profile') and config.user_may(self._user_id, 'general.change_password'):
+            if self._is_new_user or config.user_may(self._user_id,
+                                                    'general.edit_profile') and config.user_may(
+                                                        self._user_id, 'general.change_password'):
                 html.checkbox("enforce_pw_change", self._user.get("enforce_pw_change", False),
                               label=_("Change password at next login or access"))
             else:
@@ -712,8 +712,11 @@ class ModeEditUser(WatoMode):
                          _("Automation secret for machine accounts"))
 
         html.open_ul()
-        html.text_input("_auth_secret", self._user.get("automation_secret", ""), size=30,
-                        id_="automation_secret")
+        html.text_input(
+            "_auth_secret",
+            self._user.get("automation_secret", ""),
+            size=30,
+            id_="automation_secret")
         html.write_text(" ")
         html.open_b(style=["position: relative", "top: 4px;"])
         html.write(" &nbsp;")
@@ -754,7 +757,7 @@ class ModeEditUser(WatoMode):
         # Roles
         forms.section(_("Roles"))
         entries = self._roles.items()
-        entries.sort(cmp = lambda a,b: cmp((a[1]["alias"],a[0]), (b[1]["alias"],b[0])))
+        entries.sort(cmp=lambda a, b: cmp((a[1]["alias"], a[0]), (b[1]["alias"], b[0])))
         is_member_of_at_least_one = False
         for role_id, role in entries:
             if not self._is_locked("roles"):
@@ -778,13 +781,15 @@ class ModeEditUser(WatoMode):
         # Contact groups
         forms.header(_("Contact Groups"), isopen=False)
         forms.section()
-        groups_page_url  = watolib.folder_preserving_link([("mode", "contact_groups")])
-        group_assign_url = watolib.folder_preserving_link([("mode", "rulesets"), ("group", "grouping")])
+        groups_page_url = watolib.folder_preserving_link([("mode", "contact_groups")])
+        group_assign_url = watolib.folder_preserving_link([("mode", "rulesets"),
+                                                           ("group", "grouping")])
         if not self._contact_groups:
             html.write(_("Please first create some <a href='%s'>contact groups</a>") %
                     groups_page_url)
         else:
-            entries = sorted([ (group['alias'] or c, c) for c, group in self._contact_groups.items() ])
+            entries = sorted(
+                [(group['alias'] or c, c) for c, group in self._contact_groups.items()])
             is_member_of_at_least_one = False
             for alias, gid in entries:
                 is_member = gid in self._user.get("contactgroups", [])
@@ -797,7 +802,8 @@ class ModeEditUser(WatoMode):
                     html.hidden_field("cg_" + gid, '1' if is_member else '')
 
                 if not self._is_locked('contactgroups') or is_member:
-                    url = watolib.folder_preserving_link([("mode", "edit_contact_group"), ("edit", gid)])
+                    url = watolib.folder_preserving_link([("mode", "edit_contact_group"),
+                                                          ("edit", gid)])
                     html.a(alias, href=url)
                     html.br()
 
@@ -822,8 +828,12 @@ class ModeEditUser(WatoMode):
 
             # Notification period
             forms.section(_("Notification time period"))
-            choices = [ ( id_, "%s" % (tp["alias"])) for (id_, tp) in self._timeperiods.items() ]
-            html.dropdown("notification_period", choices, deflt=self._user.get("notification_period"), ordered=True)
+            choices = [(id_, "%s" % (tp["alias"])) for (id_, tp) in self._timeperiods.items()]
+            html.dropdown(
+                "notification_period",
+                choices,
+                deflt=self._user.get("notification_period"),
+                ordered=True)
             html.help(_("Only during this time period the "
                          "user will get notifications about host or service alerts."))
 
@@ -854,9 +864,9 @@ class ModeEditUser(WatoMode):
 
                 user_opts = self._user.get(what + "_notification_options", opts)
                 for opt in opts:
-                    opt_name = notification_option_names[what].get(opt,
-                           notification_option_names["both"].get(opt))
-                    html.checkbox(what + "_" + opt, opt in user_opts, label = opt_name)
+                    opt_name = notification_option_names[what].get(
+                        opt, notification_option_names["both"].get(opt))
+                    html.checkbox(what + "_" + opt, opt in user_opts, label=opt_name)
                     html.br()
                 html.close_ul()
 
@@ -865,7 +875,8 @@ class ModeEditUser(WatoMode):
                        "and used if the user is member of a contact group."))
 
             forms.section(_("Notification Method"))
-            watolib.get_vs_flexible_notifications().render_input("notification_method", self._user.get("notification_method"))
+            watolib.get_vs_flexible_notifications().render_input(
+                "notification_method", self._user.get("notification_method"))
 
         else:
             forms.section(_("Fallback notifications"), simple=True)
@@ -900,23 +911,19 @@ class ModeEditUser(WatoMode):
         html.hidden_fields()
         html.end_form()
 
-
     def _rbn_enabled(self):
         # Check if rule based notifications are enabled (via WATO)
         return watolib.load_configuration_settings().get("enable_rulebased_notifications")
-
 
     def _pw_suffix(self):
         if self._is_new_user:
             return 'new'
         return base64.b64encode(self._user_id.encode("utf-8"))
 
-
     def _is_locked(self, attr):
         """Returns true if an attribute is locked and should be read only. Is only
         checked when modifying an existing user"""
         return not self._is_new_user and attr in self._locked_attributes
-
 
     def _vs_sites(self):
         return Alternative(
@@ -936,11 +943,10 @@ class ModeEditUser(WatoMode):
             ],
         )
 
-
     def _show_custom_user_attributes(self, topic):
         for name, attr in userdb.get_user_attributes():
             if topic is not None and topic != attr.topic():
-                continue # skip attrs of other topics
+                continue  # skip attrs of other topics
 
             vs = attr.valuespec()
             forms.section(_u(vs.title()))
@@ -955,14 +961,17 @@ class ModeEditUser(WatoMode):
             html.help(_u(vs.help()))
 
 
-
 def select_language(user):
-    languages = [ l for l in cmk.gui.i18n.get_languages() if not config.hide_language(l[0]) ]
+    languages = [l for l in cmk.gui.i18n.get_languages() if not config.hide_language(l[0])]
     if languages:
         active = 'language' in user
         forms.section(_("Language"), checkbox = ('_set_lang', active, 'language'))
         default_label = _('Default: %s') % cmk.gui.i18n.get_language_alias(config.default_language)
-        html.div(default_label, class_="inherited", id_="attr_default_language", style= "display: none" if active else "")
+        html.div(
+            default_label,
+            class_="inherited",
+            id_="attr_default_language",
+            style="display: none" if active else "")
         html.open_div(id_="attr_entry_language", style="display: none" if not active else "")
 
         language = user.get('language') if user.get('language') != None else ''

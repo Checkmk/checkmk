@@ -23,7 +23,6 @@
 # License along with GNU Make; see the file  COPYING.  If  not,  write
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
-
 """Main entry page for configuration of global variables, rules, groups,
 timeperiods, users, etc."""
 
@@ -40,25 +39,22 @@ from cmk.gui.plugins.wato import (
     changelog_button,
 )
 
+
 @mode_registry.register
 class ModeMain(WatoMode):
     @classmethod
     def name(cls):
         return "main"
 
-
     @classmethod
     def permissions(cls):
         return []
 
-
     def title(self):
         return _("WATO - Check_MK's Web Administration Tool")
 
-
     def buttons(self):
         changelog_button()
-
 
     def page(self):
         MainMenu(get_modules()).show()

@@ -23,7 +23,6 @@
 # License along with GNU Make; see the file  COPYING.  If  not,  write
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
-
 """Mode for searching hosts"""
 
 import cmk.gui.watolib as watolib
@@ -36,35 +35,30 @@ from cmk.gui.plugins.wato.utils.context_buttons import global_buttons
 from cmk.gui.globals import html
 from cmk.gui.i18n import _
 
+
 @mode_registry.register
 class ModeSearch(WatoMode):
     @classmethod
     def name(cls):
         return "search"
 
-
     @classmethod
     def permissions(cls):
         return ["hosts"]
-
 
     def __init__(self):
         super(ModeSearch, self).__init__()
         self._folder = watolib.Folder.current()
 
-
     def title(self):
         return _("Search for hosts below %s") % self._folder.title()
-
 
     def buttons(self):
         global_buttons()
         html.context_button(_("Folder"), self._folder.url(), "back")
 
-
     def action(self):
         return "folder"
-
 
     def page(self):
         self._folder.show_breadcrump()
@@ -78,9 +72,7 @@ class ModeSearch(WatoMode):
         html.set_focus("host_search_host")
 
         # Attributes
-        configure_attributes(False, {}, "host_search",
-                             parent=None,
-                             varprefix="host_search_")
+        configure_attributes(False, {}, "host_search", parent=None, varprefix="host_search_")
 
         # Button
         forms.end()

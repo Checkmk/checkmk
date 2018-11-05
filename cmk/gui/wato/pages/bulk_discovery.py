@@ -23,7 +23,6 @@
 # License along with GNU Make; see the file  COPYING.  If  not,  write
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
-
 """When the user wants to scan the services of multiple hosts at once
 this mode is used."""
 
@@ -66,10 +65,8 @@ class BulkDiscoveryBackgroundJob(WatoBackgroundJob):
 
         super(BulkDiscoveryBackgroundJob, self).__init__(self.job_prefix, **kwargs)
 
-
     def _back_url(self):
         return watolib.Folder.current().url()
-
 
     def do_execute(self, mode, use_cache, do_scan, error_handling, tasks, job_interface=None):
         self._initialize_statistics()
@@ -87,7 +84,6 @@ class BulkDiscoveryBackgroundJob(WatoBackgroundJob):
 
         job_interface.send_result_message(_("Bulk discovery successful"))
 
-
     def _initialize_statistics(self):
         self._num_hosts_total = 0
         self._num_hosts_succeeded = 0
@@ -98,12 +94,12 @@ class BulkDiscoveryBackgroundJob(WatoBackgroundJob):
         self._num_services_kept = 0
         self._num_services_total = 0
 
-
     def _bulk_discover_item(self, task, mode, use_cache, do_scan, error_handling, job_interface):
         self._num_hosts_total += len(task.host_names)
 
         try:
-            counts, failed_hosts = self._execute_discovery(task, mode, use_cache, do_scan, error_handling)
+            counts, failed_hosts = self._execute_discovery(task, mode, use_cache, do_scan,
+                                                           error_handling)
             self._process_discovery_results(task, job_interface, counts, failed_hosts)
         except Exception:
             self._num_hosts_failed += len(task.host_names)
@@ -114,24 +110,22 @@ class BulkDiscoveryBackgroundJob(WatoBackgroundJob):
                 msg = _("Error during discovery of %s") % (", ".join(task.host_names))
             self._logger.exception(msg)
 
-
     def _execute_discovery(self, task, mode, use_cache, do_scan, error_handling):
         arguments = [mode] + task.host_names
 
         if use_cache:
-            arguments = [ "@cache" ] + arguments
+            arguments = ["@cache"] + arguments
         if do_scan:
-            arguments = [ "@scan" ] + arguments
+            arguments = ["@scan"] + arguments
         if not error_handling:
-            arguments = [ "@raiseerrors" ] + arguments
+            arguments = ["@raiseerrors"] + arguments
 
         timeout = html.request.request_timeout - 2
 
-        counts, failed_hosts = watolib.check_mk_automation(task.site_id, "inventory",
-                                                   arguments, timeout=timeout)
+        counts, failed_hosts = watolib.check_mk_automation(
+            task.site_id, "inventory", arguments, timeout=timeout)
 
         return counts, failed_hosts
-
 
     def _process_discovery_results(self, task, job_interface, counts, failed_hosts):
         try:
@@ -144,19 +138,18 @@ class BulkDiscoveryBackgroundJob(WatoBackgroundJob):
 
             for hostname in task.host_names:
                 self._process_service_counts_for_host(counts[hostname])
-                msg = self._process_discovery_result_for_host(folder.host(hostname), failed_hosts.get(hostname, False), counts[hostname])
+                msg = self._process_discovery_result_for_host(
+                    folder.host(hostname), failed_hosts.get(hostname, False), counts[hostname])
                 job_interface.send_progress_update("%s: %s" % (hostname, msg))
 
         finally:
             watolib.unlock_exclusive()
-
 
     def _process_service_counts_for_host(self, host_counts):
         self._num_services_added += host_counts[0]
         self._num_services_removed += host_counts[1]
         self._num_services_kept += host_counts[2]
         self._num_services_total += host_counts[3]
-
 
     def _process_discovery_result_for_host(self, host, failed_reason, host_counts):
         if failed_reason is None:
@@ -181,51 +174,46 @@ class BulkDiscoveryBackgroundJob(WatoBackgroundJob):
         return _("discovery successful")
 
 
-
 @mode_registry.register
 class ModeBulkDiscovery(WatoMode):
     @classmethod
     def name(cls):
         return "bulkinventory"
 
-
     @classmethod
     def permissions(cls):
         return ["hosts", "services"]
 
-
     def _from_vars(self):
         self._start = bool(html.var("_start"))
-        self._all =  bool(html.var("all"))
+        self._all = bool(html.var("all"))
         self._just_started = False
         self._get_bulk_discovery_params()
         self._job = BulkDiscoveryBackgroundJob()
-
 
     def _get_bulk_discovery_params(self):
         self._bulk_discovery_params = copy.deepcopy(config.bulk_discovery_default_settings)
 
         if self._start:
             # Only do this when the start form has been submitted
-            bulk_discover_params = cmk.gui.plugins.wato.vs_bulk_discovery().from_html_vars("bulkinventory")
-            cmk.gui.plugins.wato.vs_bulk_discovery().validate_value(bulk_discover_params, "bulkinventory")
+            bulk_discover_params = cmk.gui.plugins.wato.vs_bulk_discovery().from_html_vars(
+                "bulkinventory")
+            cmk.gui.plugins.wato.vs_bulk_discovery().validate_value(bulk_discover_params,
+                                                                    "bulkinventory")
             self._bulk_discovery_params.update(bulk_discover_params)
 
         self._recurse, self._only_failed, self._only_failed_invcheck, \
             self._only_ok_agent = self._bulk_discovery_params["selection"]
         self._use_cache, self._do_scan, self._bulk_size = \
             self._bulk_discovery_params["performance"]
-        self._mode           = self._bulk_discovery_params["mode"]
+        self._mode = self._bulk_discovery_params["mode"]
         self._error_handling = self._bulk_discovery_params["error_handling"]
-
 
     def title(self):
         return _("Bulk Service Discovery")
 
-
     def buttons(self):
         html.context_button(_("Folder"), watolib.Folder.current().url(), "back")
-
 
     def action(self):
         config.user.need_permission("wato.services")
@@ -234,7 +222,8 @@ class ModeBulkDiscovery(WatoMode):
 
         try:
             html.check_transaction()
-            self._job.set_function(self._job.do_execute, self._mode, self._use_cache, self._do_scan, self._error_handling, tasks)
+            self._job.set_function(self._job.do_execute, self._mode, self._use_cache, self._do_scan,
+                                   self._error_handling, tasks)
             self._job.start()
         except Exception, e:
             if config.debug:
@@ -243,7 +232,6 @@ class ModeBulkDiscovery(WatoMode):
             raise MKUserError(None, _("Failed to start discovery: %s") % ("%s" % e).replace("\n", "\n<br>"))
 
         html.response.http_redirect(self._job.detail_url())
-
 
     def page(self):
         config.user.need_permission("wato.services")
@@ -254,7 +242,6 @@ class ModeBulkDiscovery(WatoMode):
             return
 
         self._show_start_form()
-
 
     def _show_start_form(self):
         html.begin_form("bulkinventory", method="POST")
@@ -283,7 +270,6 @@ class ModeBulkDiscovery(WatoMode):
         html.button("_start", _("Start"))
         html.hidden_fields()
         html.end_form()
-
 
     def _get_hosts_to_discover(self):
         if self._only_failed_invcheck:
@@ -330,7 +316,6 @@ class ModeBulkDiscovery(WatoMode):
 
         return sorted(hosts_to_discover)
 
-
     def _get_tasks(self, hosts_to_discover):
         """Create a list of tasks for the job
 
@@ -349,7 +334,6 @@ class ModeBulkDiscovery(WatoMode):
             current_site_and_folder = site_id, folder
         return tasks
 
-
     def _recurse_hosts(self, folder):
         entries = []
         for host_name, host in folder.hosts().items():
@@ -360,22 +344,18 @@ class ModeBulkDiscovery(WatoMode):
                 entries += self._recurse_hosts(subfolder)
         return entries
 
-
     def _find_hosts_with_failed_discovery_check(self):
         # Old service name "Check_MK inventory" needs to be kept because old
         # installations may still use that name
-        return sites.live().query_column(
-            "GET services\n"
-            "Filter: description = Check_MK inventory\n"
-            "Filter: description = Check_MK Discovery\n"
-            "Or: 2\n"
-            "Filter: state > 0\n"
-            "Columns: host_name")
-
+        return sites.live().query_column("GET services\n"
+                                         "Filter: description = Check_MK inventory\n"
+                                         "Filter: description = Check_MK Discovery\n"
+                                         "Or: 2\n"
+                                         "Filter: state > 0\n"
+                                         "Columns: host_name")
 
     def _find_hosts_with_failed_agent(self):
-        return sites.live().query_column(
-            "GET services\n"
-            "Filter: description = Check_MK\n"
-            "Filter: state >= 2\n"
-            "Columns: host_name")
+        return sites.live().query_column("GET services\n"
+                                         "Filter: description = Check_MK\n"
+                                         "Filter: state >= 2\n"
+                                         "Columns: host_name")

@@ -23,7 +23,6 @@
 # License along with GNU Make; see the file  COPYING.  If  not,  write
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
-
 """Modes for creating and editing hosts"""
 
 import abc
@@ -46,25 +45,20 @@ from cmk.gui.wato.pages.folders import delete_host_after_confirm
 class HostMode(WatoMode):
     __metaclass__ = abc.ABCMeta
 
-
     @abc.abstractmethod
     def _init_host(self):
         raise NotImplementedError()
-
 
     def __init__(self):
         self._host = self._init_host()
         self._mode = "edit"
         super(HostMode, self).__init__()
 
-
     def buttons(self):
         html.context_button(_("Folder"), watolib.folder_preserving_link([("mode", "folder")]), "back")
 
-
     def _is_cluster(self):
         return self._host.is_cluster()
-
 
     def _get_cluster_nodes(self):
         if not self._is_cluster():
@@ -83,7 +77,6 @@ class HostMode(WatoMode):
                                   " (must be a host that is configured with WATO)") % cluster_node)
         return cluster_nodes
 
-
     # TODO: Extract cluster specific parts from this method
     def page(self):
         # Show outcome of host validation. Do not validate new hosts
@@ -91,7 +84,8 @@ class HostMode(WatoMode):
         if self._mode != "edit":
             watolib.Folder.current().show_breadcrump()
         else:
-            errors = watolib.validate_all_hosts([self._host.name()]).get(self._host.name(), []) + self._host.validation_errors()
+            errors = watolib.validate_all_hosts([self._host.name()]).get(
+                self._host.name(), []) + self._host.validation_errors()
 
         if errors:
             html.open_div(class_="info")
@@ -138,7 +132,8 @@ class HostMode(WatoMode):
         # Cluster: nodes
         if self._is_cluster():
             forms.section(_("Nodes"))
-            self._vs_cluster_nodes().render_input("nodes", self._host.cluster_nodes() if self._host else [])
+            self._vs_cluster_nodes().render_input("nodes",
+                                                  self._host.cluster_nodes() if self._host else [])
             html.help(_('Enter the host names of the cluster nodes. These '
                        'hosts must be present in WATO. '))
 
@@ -146,8 +141,7 @@ class HostMode(WatoMode):
             new=self._mode != "edit",
             hosts={self._host.name(): self._host} if self._mode != "new" else {},
             for_what="host" if not self._is_cluster() else "cluster",
-            parent = watolib.Folder.current()
-        )
+            parent=watolib.Folder.current())
 
         forms.end()
         if not watolib.Folder.current().locked_hosts():
@@ -158,13 +152,11 @@ class HostMode(WatoMode):
         html.hidden_fields()
         html.end_form()
 
-
     def _vs_cluster_nodes(self):
         return ListOfStrings(
-            valuespec = TextAscii(size = 19),
-            orientation = "horizontal",
+            valuespec=TextAscii(size=19),
+            orientation="horizontal",
         )
-
 
     @abc.abstractmethod
     def _show_host_name(self):
@@ -181,24 +173,20 @@ class ModeEditHost(HostMode):
     def name(cls):
         return "edit_host"
 
-
     @classmethod
     def permissions(cls):
         return ["hosts"]
 
-
     def _init_host(self):
-        hostname = html.var("host") # may be empty in new/clone mode
+        hostname = html.var("host")  # may be empty in new/clone mode
 
         if not watolib.Folder.current().has_host(hostname):
             raise MKGeneralException(_("You called this page with an invalid host name."))
 
         return watolib.Folder.current().host(hostname)
 
-
     def title(self):
         return _("Properties of host") + " " + self._host.name()
-
 
     def buttons(self):
         super(ModeEditHost, self).buttons()
@@ -231,12 +219,12 @@ class ModeEditHost(HostMode):
         html.context_button(_("Update DNS Cache"),
                   html.makeactionuri([("_update_dns_cache", "1")]), "update")
 
-
     def action(self):
         if html.var("_update_dns_cache"):
             if html.check_transaction():
                 config.user.need_permission("wato.update_dns_cache")
-                num_updated, failed_hosts = watolib.check_mk_automation(self._host.site_id(), "update-dns-cache", [])
+                num_updated, failed_hosts = watolib.check_mk_automation(
+                    self._host.site_id(), "update-dns-cache", [])
                 infotext = _("Successfully updated IP addresses of %d hosts.") % num_updated
                 if failed_hosts:
                     infotext += "<br><br><b>Hostnames failed to lookup:</b> " \
@@ -245,7 +233,7 @@ class ModeEditHost(HostMode):
             else:
                 return None
 
-        if html.var("delete"): # Delete this host
+        if html.var("delete"):  # Delete this host
             if not html.transaction_valid():
                 return "folder"
             return delete_host_after_confirm(self._host.name())
@@ -262,11 +250,9 @@ class ModeEditHost(HostMode):
             return "diag_host"
         return "folder"
 
-
     def _show_host_name(self):
         forms.section(_("Hostname"), simple=True)
         html.write_text(self._host.name())
-
 
 
 class CreateHostMode(HostMode):
@@ -275,25 +261,21 @@ class CreateHostMode(HostMode):
     def _init_new_host_object(cls):
         raise NotImplementedError()
 
-
     @classmethod
     @abc.abstractmethod
     def _host_type_name(cls):
         raise NotImplementedError()
-
 
     @classmethod
     @abc.abstractmethod
     def _verify_host_type(cls, host):
         raise NotImplementedError()
 
-
     def _from_vars(self):
         if html.var("clone") and self._init_host():
             self._mode = "clone"
         else:
             self._mode = "new"
-
 
     def _init_host(self):
         clonename = html.var("clone")
@@ -309,7 +291,6 @@ class CreateHostMode(HostMode):
             return host
         else:
             return self._init_new_host_object()
-
 
     def action(self):
         if not html.transaction_valid():
@@ -341,12 +322,10 @@ class CreateHostMode(HostMode):
             return "diag_host", create_msg
         return "folder", create_msg
 
-
     def _show_host_name(self):
         forms.section(_("Hostname"))
         Hostname().render_input("host", "")
         html.set_focus("host")
-
 
 
 @mode_registry.register
@@ -355,35 +334,31 @@ class ModeCreateHost(CreateHostMode):
     def name(cls):
         return "newhost"
 
-
     @classmethod
     def permissions(cls):
         return ["hosts", "manage_hosts"]
-
 
     def title(self):
         if self._mode == "clone":
             return _("Create clone of %s") % self._host.name()
         return _("Create new host")
 
-
     @classmethod
     def _init_new_host_object(cls):
-        return watolib.Host(folder=watolib.Folder.current(), host_name=html.var("host"),
-                            attributes={}, cluster_nodes=None)
-
+        return watolib.Host(
+            folder=watolib.Folder.current(),
+            host_name=html.var("host"),
+            attributes={},
+            cluster_nodes=None)
 
     @classmethod
     def _host_type_name(cls):
         return "host"
 
-
     @classmethod
     def _verify_host_type(cls, host):
         if host.is_cluster():
             raise MKGeneralException(_("Can not clone a cluster host as regular host"))
-
-
 
 
 @mode_registry.register
@@ -392,32 +367,29 @@ class ModeCreateCluster(CreateHostMode):
     def name(cls):
         return "newcluster"
 
-
     @classmethod
     def permissions(cls):
         return ["hosts", "manage_hosts"]
 
-
     def _is_cluster(self):
         return True
-
 
     def title(self):
         if self._mode == "clone":
             return _("Create clone of %s") % self._host.name()
         return _("Create new cluster")
 
-
     @classmethod
     def _init_new_host_object(cls):
-        return watolib.Host(folder=watolib.Folder.current(), host_name=html.var("host"),
-                            attributes={}, cluster_nodes=[])
-
+        return watolib.Host(
+            folder=watolib.Folder.current(),
+            host_name=html.var("host"),
+            attributes={},
+            cluster_nodes=[])
 
     @classmethod
     def _host_type_name(cls):
         return "cluster"
-
 
     @classmethod
     def _verify_host_type(cls, host):

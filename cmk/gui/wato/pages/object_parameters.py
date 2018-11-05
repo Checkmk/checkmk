@@ -23,7 +23,6 @@
 # License along with GNU Make; see the file  COPYING.  If  not,  write
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
-
 """Mode for displaying and modifying the rule based host and service
 parameters. This is a host/service overview page over all things that can be
 modified via rules."""
@@ -45,6 +44,7 @@ from cmk.gui.plugins.wato.utils.context_buttons import (
     service_status_button,
 )
 
+
 @mode_registry.register
 class ModeObjectParameters(WatoMode):
     _PARAMETERS_UNKNOWN = []
@@ -54,14 +54,12 @@ class ModeObjectParameters(WatoMode):
     def name(cls):
         return "object_parameters"
 
-
     @classmethod
     def permissions(cls):
         return ["hosts", "rulesets"]
 
-
     def _from_vars(self):
-        self._hostname = html.get_ascii_input("host") # may be empty in new/clone mode
+        self._hostname = html.get_ascii_input("host")  # may be empty in new/clone mode
         self._host = watolib.Folder.current().host(self._hostname)
         if self._host is None:
             raise MKUserError("host", _('The given host does not exist.'))
@@ -70,13 +68,11 @@ class ModeObjectParameters(WatoMode):
         # TODO: Validate?
         self._service = html.get_unicode_input("service")
 
-
     def title(self):
         title = _("Parameters of") + " " + self._hostname
         if self._service:
             title += " / " + self._service
         return title
-
 
     def buttons(self):
         if self._service:
@@ -94,7 +90,6 @@ class ModeObjectParameters(WatoMode):
             html.context_button(prefix + _("Diagnostic"),
               watolib.folder_preserving_link([("mode", "diag_host"), ("host", self._hostname)]), "diagnose")
 
-
     def page(self):
         all_rulesets = watolib.AllRulesets()
         all_rulesets.load()
@@ -104,28 +99,32 @@ class ModeObjectParameters(WatoMode):
         if self._service:
             self._show_service_rules(all_rulesets)
 
-
         last_maingroup = None
         for groupname in sorted(watolib.g_rulespecs.get_host_groups()):
             maingroup = groupname.split("/")[0]
-            for rulespec in sorted(watolib.g_rulespecs.get_by_group(groupname), key = lambda x: x.title):
+            for rulespec in sorted(
+                    watolib.g_rulespecs.get_by_group(groupname), key=lambda x: x.title):
                 if (rulespec.item_type == 'service') == (not self._service):
-                    continue # This rule is not for hosts/services
+                    continue  # This rule is not for hosts/services
 
                 # Open form for that group here, if we know that we have at least one rule
                 if last_maingroup != maingroup:
                     last_maingroup = maingroup
                     rulegroup = watolib.get_rulegroup(maingroup)
-                    forms.header(rulegroup.title, isopen = maingroup == "monconf", narrow=True, css="rulesettings")
+                    forms.header(
+                        rulegroup.title,
+                        isopen=maingroup == "monconf",
+                        narrow=True,
+                        css="rulesettings")
                     html.help(rulegroup.help)
 
                 self._output_analysed_ruleset(all_rulesets, rulespec, self._service)
 
         forms.end()
 
-
     def _show_service_rules(self, all_rulesets):
-        serviceinfo = watolib.check_mk_automation(self._host.site_id(), "analyse-service", [self._hostname, self._service])
+        serviceinfo = watolib.check_mk_automation(self._host.site_id(), "analyse-service",
+                                                  [self._hostname, self._service])
         if not serviceinfo:
             return
 
@@ -140,7 +139,7 @@ class ModeObjectParameters(WatoMode):
         self._render_rule_reason(_("Type of check"), None, "", "", False, origin_txt)
 
         # First case: discovered checks. They come from var/check_mk/autochecks/HOST.
-        if origin ==  "auto":
+        if origin == "auto":
             checkgroup = serviceinfo["checkgroup"]
             checktype = serviceinfo["checktype"]
             if not checkgroup:
@@ -151,8 +150,8 @@ class ModeObjectParameters(WatoMode):
             # WATO module.
             elif checkgroup == "logwatch":
                 rulespec = watolib.g_rulespecs.get("logwatch_rules")
-                self._output_analysed_ruleset(all_rulesets, rulespec,
-                                        serviceinfo["item"], serviceinfo["parameters"])
+                self._output_analysed_ruleset(all_rulesets, rulespec, serviceinfo["item"],
+                                              serviceinfo["parameters"])
 
             else:
                 # Note: some discovered checks have a check group but
@@ -169,7 +168,10 @@ class ModeObjectParameters(WatoMode):
                         rulespec = None
 
                     if rulespec:
-                        url = watolib.folder_preserving_link([('mode', 'edit_ruleset'), ('varname', "static_checks:" + checkgroup), ('host', self._hostname)])
+                        url = watolib.folder_preserving_link([('mode', 'edit_ruleset'),
+                                                              ('varname',
+                                                               "static_checks:" + checkgroup),
+                                                              ('host', self._hostname)])
                         self._render_rule_reason(_("Parameters"), url, _("Determined by discovery"), None, False,
                                    rulespec.valuespec._elements[2].value_to_text(serviceinfo["parameters"]))
                     else:
@@ -177,8 +179,8 @@ class ModeObjectParameters(WatoMode):
 
                 else:
                     rulespec = watolib.g_rulespecs.get(grouprule)
-                    self._output_analysed_ruleset(all_rulesets, rulespec,
-                                            serviceinfo["item"], serviceinfo["parameters"])
+                    self._output_analysed_ruleset(all_rulesets, rulespec, serviceinfo["item"],
+                                                  serviceinfo["parameters"])
 
         elif origin == "static":
             checkgroup = serviceinfo["checkgroup"]
@@ -195,13 +197,12 @@ class ModeObjectParameters(WatoMode):
                     item_text = serviceinfo["item"]
                     title = _("Item")
                 self._render_rule_reason(title, None, "", "", False, item_text)
-                self._output_analysed_ruleset(all_rulesets, rulespec,
-                                        serviceinfo["item"], self._PARAMETERS_OMIT)
+                self._output_analysed_ruleset(all_rulesets, rulespec, serviceinfo["item"],
+                                              self._PARAMETERS_OMIT)
                 html.write(rulespec.valuespec._elements[2].value_to_text(serviceinfo["parameters"]))
                 html.close_td()
                 html.close_tr()
                 html.close_table()
-
 
         elif origin == "active":
             checktype = serviceinfo["checktype"]
@@ -209,18 +210,18 @@ class ModeObjectParameters(WatoMode):
             self._output_analysed_ruleset(all_rulesets, rulespec, None, serviceinfo["parameters"])
 
         elif origin == "classic":
-            rule_nr  = serviceinfo["rule_nr"]
-            rules    = all_rulesets.get("custom_checks").get_rules()
+            rule_nr = serviceinfo["rule_nr"]
+            rules = all_rulesets.get("custom_checks").get_rules()
             rule_folder, rule_index, _rule = rules[rule_nr]
 
-            url = watolib.folder_preserving_link([('mode', 'edit_ruleset'), ('varname', "custom_checks"), ('host', self._hostname)])
+            url = watolib.folder_preserving_link([('mode', 'edit_ruleset'),
+                                                  ('varname', "custom_checks"),
+                                                  ('host', self._hostname)])
             forms.section(html.render_a(_("Command Line"), href=url))
-            url = watolib.folder_preserving_link([
-                ('mode', 'edit_rule'),
-                ('varname', "custom_checks"),
-                ('rule_folder', rule_folder.path()),
-                ('rulenr', rule_index),
-                ('host', self._hostname)])
+            url = watolib.folder_preserving_link([('mode', 'edit_rule'), ('varname',
+                                                                          "custom_checks"),
+                                                  ('rule_folder', rule_folder.path()),
+                                                  ('rulenr', rule_index), ('host', self._hostname)])
 
             html.open_table(class_="setting")
             html.open_tr()
@@ -237,7 +238,6 @@ class ModeObjectParameters(WatoMode):
 
             html.close_tr()
             html.close_table()
-
 
     def _render_rule_reason(self, title, title_url, reason, reason_url, is_default, setting):
         if title_url:
@@ -258,19 +258,18 @@ class ModeObjectParameters(WatoMode):
         html.close_tr()
         html.close_table()
 
-
     def _output_analysed_ruleset(self, all_rulesets, rulespec, service, known_settings=None):
         if known_settings is None:
             known_settings = self._PARAMETERS_UNKNOWN
 
         def rule_url(rule):
             return watolib.folder_preserving_link([
-                ('mode',        'edit_rule'),
-                ('varname',     varname),
+                ('mode', 'edit_rule'),
+                ('varname', varname),
                 ('rule_folder', rule.folder.path()),
-                ('rulenr',      rule.index()),
-                ('host',        self._hostname),
-                ('item',        watolib.mk_repr(service) if service else ''),
+                ('rulenr', rule.index()),
+                ('host', self._hostname),
+                ('item', watolib.mk_repr(service) if service else ''),
             ])
 
         varname = rulespec.name
@@ -338,7 +337,7 @@ class ModeObjectParameters(WatoMode):
                     fd.update(setting)
                     setting = fd
 
-            if valuespec and not rules: # show the default value
+            if valuespec and not rules:  # show the default value
                 if rulespec.factory_default is watolib.Rulespec.FACTORY_DEFAULT_UNUSED:
                     # Some rulesets are ineffective if they are empty
                     html.write_text(_("(unused)"))

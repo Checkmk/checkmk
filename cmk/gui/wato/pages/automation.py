@@ -23,7 +23,6 @@
 # License along with GNU Make; see the file  COPYING.  If  not,  write
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
-
 """These functions implement a web service with that a master can call
 automation functions on slaves,"""
 
@@ -40,6 +39,7 @@ from cmk.gui.globals import html
 from cmk.gui.i18n import _
 from cmk.gui.exceptions import MKAuthException, MKGeneralException
 
+
 class ModeAutomationLogin(WatoWebApiMode):
     """Is executed by the central Check_MK site during creation of the WATO master/slave sync to
 
@@ -47,12 +47,14 @@ class ModeAutomationLogin(WatoWebApiMode):
     logged in using valid credentials of an administrative user. The login is
     done be exchanging a login secret. If such a secret is not yet present it
     is created on the fly."""
+
     def page(self):
         if not config.user.may("wato.automation"):
             raise MKAuthException(_("This account has no permission for automation."))
 
         html.set_output_format("python")
         html.write_html(repr(watolib.get_login_secret(True)))
+
 
 register_page_handler("automation_login", lambda: ModeAutomationLogin().page())
 
@@ -81,11 +83,9 @@ class ModeAutomation(WatoWebApiMode):
 
         watolib.init_wato_datastructures(with_wato_lock=False)
 
-
     def _from_vars(self):
         self._authenticate()
         self._command = html.var("command")
-
 
     def _authenticate(self):
         secret = html.var("secret")
@@ -95,7 +95,6 @@ class ModeAutomation(WatoWebApiMode):
 
         if secret != watolib.get_login_secret():
             raise MKAuthException(_("Invalid automation secret."))
-
 
     def page(self):
         if self._command == "checkmk-automation":
@@ -110,17 +109,15 @@ class ModeAutomation(WatoWebApiMode):
         else:
             raise MKGeneralException(_("Invalid automation command: %s.") % self._command)
 
-
     def _execute_cmk_automation(self):
         cmk_command = html.var("automation")
-        args        = watolib.mk_eval(html.var("arguments"))
-        indata      = watolib.mk_eval(html.var("indata"))
-        stdin_data  = watolib.mk_eval(html.var("stdin_data"))
-        timeout     = watolib.mk_eval(html.var("timeout"))
+        args = watolib.mk_eval(html.var("arguments"))
+        indata = watolib.mk_eval(html.var("indata"))
+        stdin_data = watolib.mk_eval(html.var("stdin_data"))
+        timeout = watolib.mk_eval(html.var("timeout"))
         result = watolib.check_mk_local_automation(cmk_command, args, indata, stdin_data, timeout)
         # Don't use write_text() here (not needed, because no HTML document is rendered)
         html.write(repr(result))
-
 
     def _execute_push_profile(self):
         try:
@@ -131,7 +128,6 @@ class ModeAutomation(WatoWebApiMode):
             if config.debug:
                 raise
             html.write_text(_("Internal automation error: %s\n%s") % (e, traceback.format_exc()))
-
 
     def _automation_push_profile(self):
         site_id = html.var("siteid")
@@ -153,13 +149,12 @@ class ModeAutomation(WatoWebApiMode):
         if not profile:
             raise MKGeneralException(_('Invalid call: The profile is missing.'))
 
-        users = userdb.load_users(lock = True)
+        users = userdb.load_users(lock=True)
         profile = watolib.mk_eval(profile)
         users[user_id] = profile
         userdb.save_users(users)
 
         return True
-
 
     def _execute_automation_command(self):
         try:
@@ -171,5 +166,6 @@ class ModeAutomation(WatoWebApiMode):
                 raise
             html.write_text(_("Internal automation error: %s\n%s") % \
                             (e, traceback.format_exc()))
+
 
 register_page_handler("noauth:automation", lambda: ModeAutomation().page())

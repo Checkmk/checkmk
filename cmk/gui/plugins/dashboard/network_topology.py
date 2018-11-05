@@ -32,18 +32,18 @@ from cmk.gui.plugins.dashboard import (
     dashlet_registry,
 )
 
+
 @dashlet_registry.register
 class NetworkTopologyDashlet(IFrameDashlet):
     """Dashlet that displays a NagVis automap"""
+
     @classmethod
     def type_name(cls):
         return "network_topology"
 
-
     @classmethod
     def title(cls):
         return _("Network topology")
-
 
     @classmethod
     def description(cls):
@@ -53,27 +53,21 @@ class NetworkTopologyDashlet(IFrameDashlet):
     def sort_index(cls):
         return 90
 
-
     @classmethod
     def initial_size(cls):
         return (30, 10)
 
-
     def reload_on_resize(self):
         return True
-
 
     def display_title(self):
         return _("Network topology of site %s") % self._site_id()
 
-
     def update(self):
-        pass # Not called at all. This dashlet always opens configured pages (see below)
-
+        pass  # Not called at all. This dashlet always opens configured pages (see below)
 
     def _site_id(self):
         return self._dashlet_spec["context"].get("site", {"site": config.omd_site()})["site"]
-
 
     def _get_iframe_url(self):
         return ('../nagvis/frontend/nagvis-js/index.php?mod=Map&header_template=on-demand-filter'

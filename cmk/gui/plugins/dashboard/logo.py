@@ -32,33 +32,30 @@ from cmk.gui.plugins.dashboard import (
     dashlet_registry,
 )
 
+
 @dashlet_registry.register
 class MKLogoDashlet(Dashlet):
     """Dashlet that displays the Check_MK logo"""
+
     @classmethod
     def type_name(cls):
         return "mk_logo"
-
 
     @classmethod
     def title(cls):
         return _("Check_MK Logo")
 
-
     @classmethod
     def description(cls):
         return _("Shows the Check_MK logo.")
-
 
     @classmethod
     def sort_index(cls):
         return 0
 
-
     @classmethod
     def is_selectable(cls):
-        return False # can not be selected using the dashboard editor
-
+        return False  # can not be selected using the dashboard editor
 
     def show(self):
         html.open_a(href="https://mathias-kettner.com/check_mk.html")

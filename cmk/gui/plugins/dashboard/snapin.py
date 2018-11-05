@@ -34,38 +34,34 @@ from cmk.gui.plugins.dashboard import (
     dashlet_registry,
 )
 
+
 @dashlet_registry.register
 class SnapinDashlet(IFrameDashlet):
     """Dashlet that displays a sidebar snapin"""
+
     @classmethod
     def type_name(cls):
         return "snapin"
-
 
     @classmethod
     def title(cls):
         return _("Sidebar Snapin")
 
-
     @classmethod
     def description(cls):
         return _("Displays a sidebar snapin.")
-
 
     @classmethod
     def sort_index(cls):
         return 55
 
-
     @classmethod
     def initial_size(cls):
         return (27, 20)
 
-
     @classmethod
     def initial_refresh_interval(cls):
         return 30
-
 
     @classmethod
     def vs_parameters(cls):
@@ -77,18 +73,15 @@ class SnapinDashlet(IFrameDashlet):
             )),
         ]
 
-
     @classmethod
     def _snapin_choices(cls):
         import cmk.gui.sidebar as sidebar
-        return sorted([ (k, v.title()) for k, v in sidebar.snapin_registry.items() ],
-                        key=lambda x: x[1])
-
+        return sorted([(k, v.title()) for k, v in sidebar.snapin_registry.items()],
+                      key=lambda x: x[1])
 
     def display_title(self):
         import cmk.gui.sidebar as sidebar
         return sidebar.snapin_registry[self._dashlet_spec["snapin"]].title()
-
 
     def update(self):
         import cmk.gui.sidebar as sidebar

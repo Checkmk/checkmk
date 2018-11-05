@@ -37,6 +37,7 @@ from cmk.gui.plugins.dashboard import (
     dashlet_registry,
 )
 
+
 class DashletStats(Dashlet):
     __metaclass__ = abc.ABCMeta
 
@@ -44,49 +45,43 @@ class DashletStats(Dashlet):
     def is_resizable(cls):
         return False
 
-
     @classmethod
     def initial_size(cls):
         return (30, 18)
-
 
     @classmethod
     def initial_refresh_interval(cls):
         return 60
 
-
     @abc.abstractmethod
     def _livestatus_table(self):
         raise NotImplementedError()
-
 
     @abc.abstractmethod
     def _table(self):
         raise NotImplementedError()
 
-
     @abc.abstractmethod
     def _filter(self):
         raise NotImplementedError()
 
-
     # TODO: Refactor this method
     def show(self):
         # pie_id, what, table, filter, dashlet):
-        pie_id           = "dashlet_%d" % self._dashlet_id
-        pie_diameter     = 130
-        pie_left_aspect  = 0.5
+        pie_id = "dashlet_%d" % self._dashlet_id
+        pie_diameter = 130
+        pie_left_aspect = 0.5
         pie_right_aspect = 0.8
-        what             = self._livestatus_table()
-        table            = self._table()
-        filter_          = self._filter()
+        what = self._livestatus_table()
+        table = self._table()
+        filter_ = self._filter()
 
         if what == 'hosts':
             info = 'host'
-            infos = [ info ]
+            infos = [info]
         else:
             info = 'service'
-            infos = [ 'host', 'service' ]
+            infos = ['host', 'service']
         use_filters = visuals.filters_of_visual(self._dashlet_spec, infos)
         for filt in use_filters:
             if filt.available() and not isinstance(filt, visuals.FilterSite):
@@ -109,14 +104,21 @@ class DashletStats(Dashlet):
         total = sum([x[1] for x in pies])
 
         html.open_div(class_="stats")
-        html.canvas('', class_="pie", id_="%s_stats" % pie_id, width=pie_diameter, height=pie_diameter, style="float: left")
+        html.canvas(
+            '',
+            class_="pie",
+            id_="%s_stats" % pie_id,
+            width=pie_diameter,
+            height=pie_diameter,
+            style="float: left")
         html.img("images/globe.png", class_="globe")
 
-        html.open_table(class_=["hoststats"] + (["narrow"] if len(pies) > 0 else []), style="float:left")
+        html.open_table(
+            class_=["hoststats"] + (["narrow"] if len(pies) > 0 else []), style="float:left")
 
         table_entries = pies
         while len(table_entries) < 6:
-            table_entries = table_entries + [ (("", None, "", ""), HTML("&nbsp;")) ]
+            table_entries = table_entries + [(("", None, "", ""), HTML("&nbsp;"))]
         table_entries.append(((_("Total"), "", "all%s" % what, ""), total))
 
         for (name, color, viewurl, query), count in table_entries:
@@ -151,26 +153,29 @@ class DashletStats(Dashlet):
             # Each non-zero class gets at least a view pixels of visible thickness.
             # We reserve that space right now. All computations are done in percent
             # of the radius.
-            separator = 0.02                                    # 3% of radius
+            separator = 0.02  # 3% of radius
             remaining_separatorspace = num_nonzero * separator  # space for separators
-            remaining_radius = 1 - remaining_separatorspace     # remaining space
-            remaining_part = 1.0 # keep track of remaining part, 1.0 = 100%
+            remaining_radius = 1 - remaining_separatorspace  # remaining space
+            remaining_part = 1.0  # keep track of remaining part, 1.0 = 100%
 
             # Loop over classes, begin with most outer sphere. Inner spheres show
             # worse states and appear larger to the user (which is the reason we
             # are doing all this stuff in the first place)
             for (name, color, viewurl, _q), value in pies[::1]:
-                if value > 0 and remaining_part > 0: # skip empty classes
+                if value > 0 and remaining_part > 0:  # skip empty classes
 
                     # compute radius of this sphere *including all inner spheres!* The first
                     # sphere always gets a radius of 1.0, of course.
-                    radius = remaining_separatorspace + remaining_radius * (remaining_part ** (1/3.0))
-                    pie_parts.append('chart_pie("%s", %f, %f, %r, true);' % (pie_id, pie_right_aspect, radius, color))
-                    pie_parts.append('chart_pie("%s", %f, %f, %r, false);' % (pie_id, pie_left_aspect, radius, color))
+                    radius = remaining_separatorspace + remaining_radius * (remaining_part**
+                                                                            (1 / 3.0))
+                    pie_parts.append('chart_pie("%s", %f, %f, %r, true);' %
+                                     (pie_id, pie_right_aspect, radius, color))
+                    pie_parts.append('chart_pie("%s", %f, %f, %r, false);' %
+                                     (pie_id, pie_left_aspect, radius, color))
 
                     # compute relative part of this class
-                    part = float(value) / total # ranges from 0 to 1
-                    remaining_part           -= part
+                    part = float(value) / total  # ranges from 0 to 1
+                    remaining_part -= part
                     remaining_separatorspace -= separator
 
         html.close_div()
@@ -202,36 +207,36 @@ function chart_pie(pie_id, x_scale, radius, color, right_side) {
 if (has_canvas_support()) {
     %(p)s
 }
-""" % { "x" : pie_diameter / 2, "y": pie_diameter/2, "d" : pie_diameter, 'p': '\n'.join(pie_parts) })
-
+""" % {
+            "x": pie_diameter / 2,
+            "y": pie_diameter / 2,
+            "d": pie_diameter,
+            'p': '\n'.join(pie_parts)
+        })
 
 
 @dashlet_registry.register
 class HostStatsDashlet(DashletStats):
     """Dashlet that displays statistics about host states as globe and a table"""
+
     @classmethod
     def type_name(cls):
         return "hoststats"
-
 
     @classmethod
     def title(cls):
         return _("Host Statistics")
 
-
     @classmethod
     def description(cls):
         return _("Displays statistics about host states as globe and a table.")
-
 
     @classmethod
     def sort_index(cls):
         return 45
 
-
     def _livestatus_table(self):
         return "hosts"
-
 
     # TODO: Refactor this data structure
     def _table(self):
@@ -260,7 +265,6 @@ class HostStatsDashlet(DashletStats):
            )
         ]
 
-
     def _filter(self):
         return "Filter: custom_variable_names < _REALNAME\n"
 
@@ -268,29 +272,25 @@ class HostStatsDashlet(DashletStats):
 @dashlet_registry.register
 class ServiceStatsDashlet(DashletStats):
     """Dashlet that displays statistics about service states as globe and a table"""
+
     @classmethod
     def type_name(cls):
         return "servicestats"
-
 
     @classmethod
     def title(cls):
         return _("Service Statistics")
 
-
     @classmethod
     def description(cls):
         return _("Displays statistics about service states as globe and a table.")
-
 
     @classmethod
     def sort_index(cls):
         return 50
 
-
     def _livestatus_table(self):
         return "services"
-
 
     def _table(self):
         return [
@@ -343,7 +343,6 @@ class ServiceStatsDashlet(DashletStats):
             "Stats: host_has_been_checked = 1\n" \
             "StatsAnd: 5\n"),
         ]
-
 
     def _filter(self):
         return "Filter: host_custom_variable_names < _REALNAME\n"

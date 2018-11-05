@@ -32,33 +32,30 @@ from cmk.gui.plugins.dashboard import (
     dashlet_registry,
 )
 
+
 @dashlet_registry.register
 class OverviewDashlet(Dashlet):
     """Dashlet that displays an introduction and Check_MK logo"""
+
     @classmethod
     def type_name(cls):
         return "overview"
-
 
     @classmethod
     def title(cls):
         return _("Overview / Introduction")
 
-
     @classmethod
     def description(cls):
         return _("Displays an introduction and Check_MK logo.")
-
 
     @classmethod
     def sort_index(cls):
         return 0
 
-
     @classmethod
     def is_selectable(cls):
-        return False # can not be selected using the dashboard editor
-
+        return False  # can not be selected using the dashboard editor
 
     def show(self):
         html.open_table(class_="dashlet_overview")
@@ -71,10 +68,11 @@ class OverviewDashlet(Dashlet):
 
         html.open_td()
         html.h2("Check_MK Multisite")
-        html.write_html('Welcome to Check_MK Multisite. If you want to learn more about Multisite, please visit '
-                        'our <a href="https://mathias-kettner.com/checkmk_multisite.html">online documentation</a>. '
-                        'Multisite is part of <a href="https://mathias-kettner.com/check_mk.html">Check_MK</a> - an Open Source '
-                        'project by <a href="https://mathias-kettner.com">Mathias Kettner</a>.')
+        html.write_html(
+            'Welcome to Check_MK Multisite. If you want to learn more about Multisite, please visit '
+            'our <a href="https://mathias-kettner.com/checkmk_multisite.html">online documentation</a>. '
+            'Multisite is part of <a href="https://mathias-kettner.com/check_mk.html">Check_MK</a> - an Open Source '
+            'project by <a href="https://mathias-kettner.com">Mathias Kettner</a>.')
         html.close_td()
 
         html.close_tr()

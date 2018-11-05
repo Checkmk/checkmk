@@ -33,28 +33,26 @@ from cmk.gui.plugins.dashboard import (
     dashlet_registry,
 )
 
+
 @dashlet_registry.register
 class StaticTextDashlet(Dashlet):
     """Dashlet that displays a static text"""
+
     @classmethod
     def type_name(cls):
         return "nodata"
-
 
     @classmethod
     def title(cls):
         return _("Static text")
 
-
     @classmethod
     def description(cls):
         return _("Displays a static text to the user.")
 
-
     @classmethod
     def sort_index(cls):
         return 100
-
 
     @classmethod
     def vs_parameters(cls):
@@ -65,14 +63,12 @@ class StaticTextDashlet(Dashlet):
             )),
         ]
 
-
     def show(self):
         html.open_div(class_="nodata")
         html.open_div(class_="msg")
         html.write(self._dashlet_spec.get("text", ""))
         html.close_div()
         html.close_div()
-
 
     @classmethod
     def styles(cls):

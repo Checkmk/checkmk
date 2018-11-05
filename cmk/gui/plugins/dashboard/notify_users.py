@@ -36,28 +36,26 @@ from cmk.gui.plugins.dashboard import (
     dashlet_registry,
 )
 
+
 @dashlet_registry.register
 class NotifyUsersDashlet(Dashlet):
     """Dashlet that displays GUI notifications for users"""
+
     @classmethod
     def type_name(cls):
         return "notify_users"
-
 
     @classmethod
     def title(cls):
         return _("User notifications")
 
-
     @classmethod
     def description(cls):
         return _("Display GUI notifications sent to users.")
 
-
     @classmethod
     def sort_index(cls):
         return 75
-
 
     @classmethod
     def styles(cls):
@@ -68,7 +66,6 @@ class NotifyUsersDashlet(Dashlet):
     overflow: auto;
 }"""
 
-
     @classmethod
     def script(cls):
         return """
@@ -77,7 +74,6 @@ function delete_user_notification(msg_id, btn) {
     var row = btn.parentNode.parentNode;
     row.parentNode.removeChild(row);
 }"""
-
 
     def show(self):
         html.open_div(class_="notify_users")
@@ -89,9 +85,9 @@ function delete_user_notification(msg_id, btn) {
 
             table.row()
 
-            msg_id   = entry["id"]
+            msg_id = entry["id"]
             datetime = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(entry['time']))
-            message  = entry["text"].replace("\n", " ")
+            message = entry["text"].replace("\n", " ")
 
             table.cell(_("Actions"), css="buttons", sortable=False)
             html.icon_button("", _("Delete"), "delete", onclick="delete_user_notification('%s', this);" % msg_id)

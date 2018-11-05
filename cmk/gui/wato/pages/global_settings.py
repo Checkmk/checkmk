@@ -33,6 +33,13 @@ import cmk.gui.config as config
 import cmk.gui.watolib as watolib
 import cmk.gui.forms as forms
 
+from cmk.gui.plugins.watolib.utils import (
+    configvar_show_in_global_settings,
+    configvar_groups,
+    configvar_order,
+    configvars,
+    ConfigDomain,
+)
 from cmk.gui.plugins.wato.utils import mode_registry
 from cmk.gui.plugins.wato.utils.base_modes import WatoMode
 from cmk.gui.plugins.wato.utils.html_elements import search_form, wato_confirm
@@ -52,7 +59,7 @@ class GlobalSettingsMode(WatoMode):
 
         super(GlobalSettingsMode, self).__init__()
 
-        self._default_values = watolib.ConfigDomain.get_all_default_globals()
+        self._default_values = ConfigDomain.get_all_default_globals()
         self._global_settings = {}
         self._current_settings = {}
 
@@ -63,11 +70,10 @@ class GlobalSettingsMode(WatoMode):
     def _group_names(self, show_all=False):
         group_names = []
 
-        for group_name, group_vars in watolib.configvar_groups().items():
+        for group_name, group_vars in configvar_groups().items():
             add = False
             for domain, varname, _valuespec in group_vars:
-                if not show_all and (not watolib.configvars()[varname][4] or
-                                     not domain.in_global_settings):
+                if not show_all and (not configvars()[varname][4] or not domain.in_global_settings):
                     continue  # do not edit via global settings
 
                 add = True
@@ -76,7 +82,7 @@ class GlobalSettingsMode(WatoMode):
             if add:
                 group_names.append(group_name)
 
-        return sorted(group_names, key=lambda a: watolib.configvar_order().get(a, 999))
+        return sorted(group_names, key=lambda a: configvar_order().get(a, 999))
 
     def _edit_mode(self):
         return "edit_configvar"
@@ -99,7 +105,7 @@ class GlobalSettingsMode(WatoMode):
         for group_name in group_names:
             header_is_painted = False  # needed for omitting empty groups
 
-            for domain, varname, valuespec in watolib.configvar_groups()[group_name]:
+            for domain, varname, valuespec in configvar_groups()[group_name]:
                 if not domain.enabled():
                     continue
 
@@ -111,7 +117,7 @@ class GlobalSettingsMode(WatoMode):
                     else:
                         continue
 
-                if not watolib.configvar_show_in_global_settings(varname):
+                if not configvar_show_in_global_settings(varname):
                     continue
 
                 if self._show_only_modified and varname not in self._current_settings:
@@ -203,7 +209,7 @@ class EditGlobalSettingMode(WatoMode):
         self._varname = html.get_ascii_input("varname")
         try:
             self._domain, self._valuespec, self._need_restart, \
-            self._allow_reset, _in_global_settings = watolib.configvars()[self._varname]
+            self._allow_reset, _in_global_settings = configvars()[self._varname]
         except KeyError:
             raise MKUserError("varname",
                               _("The global setting \"%s\" does not exist.") % self._varname)
@@ -355,8 +361,7 @@ class ModeEditGlobals(GlobalSettingsMode):
 
         action = html.var("_action")
 
-        domain, valuespec, need_restart, _allow_reset, _in_global_settings = watolib.configvars(
-        )[varname]
+        domain, valuespec, need_restart, _allow_reset, _in_global_settings = configvars()[varname]
         def_value = self._default_values[varname]
 
         if action == "reset" and not watolib.is_a_checkbox(valuespec):

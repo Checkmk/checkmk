@@ -93,10 +93,7 @@ from cmk.gui.watolib import (
     wato_fileheader,
     add_change,
     log_audit,
-    configvar_order,
     site_neutral_path,
-    register_configvar_group,
-    register_configvar,
     register_rulegroup,
     register_rule,
     declare_host_attribute,
@@ -126,6 +123,11 @@ from cmk.gui.watolib import (
     multifolder_host_rule_match_conditions,
     simple_host_rule_match_conditions,
     transform_simple_to_multi_host_rule_match_conditions,
+)
+from cmk.gui.plugins.watolib.utils import (
+    configvar_order,
+    register_configvar_group,
+    register_configvar,
 )
 import cmk.gui.forms as forms
 

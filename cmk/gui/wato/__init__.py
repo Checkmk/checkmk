@@ -303,8 +303,6 @@ from cmk.gui.watolib import (
     TimeperiodSelection,
     register_rulegroup,
     register_rule,
-    register_configvar,
-    register_configvar_group,
     register_hook,
     add_replication_paths,
     UserSelection,
@@ -312,7 +310,6 @@ from cmk.gui.watolib import (
     ConfigDomainCore,
     ConfigDomainOMD,
     ConfigDomainEventConsole,
-    configvar_order,
     add_change,
     add_service_change,
     site_neutral_path,
@@ -340,6 +337,11 @@ from cmk.gui.watolib import (
     init_wato_datastructures,
     get_hostnames_from_checkboxes,
     get_hosts_from_checkboxes,
+)
+from cmk.gui.plugins.watolib.utils import (
+    register_configvar,
+    register_configvar_group,
+    configvar_order,
 )
 
 modes = {}

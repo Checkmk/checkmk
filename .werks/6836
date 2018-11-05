@@ -1,0 +1,12 @@
+Title: Fix Docker crashes
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1541405122
+Class: fix
+
+Work around missing 'Repository' key if Repository Tags are not defined in image inspect output.
+Work around missing values if values are zero in 'docker system df'.
+Do not crash upon empty section in case of missing permissions.

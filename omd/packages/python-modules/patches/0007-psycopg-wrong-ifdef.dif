@@ -1,0 +1,19 @@
+diff -Nur dest/psycopg2-2.6.2.orig/psycopg/lobject_type.c dest/psycopg2-2.6.2/psycopg/lobject_type.c > patches/0007-psycopg-wrong-ifdef.dif
+--- dest/psycopg2-2.6.2.orig/psycopg/lobject_type.c	2016-07-07 04:16:24.000000000 +0200
++++ dest/psycopg2-2.6.2/psycopg/lobject_type.c	2017-01-10 10:31:42.291540705 +0100
+@@ -306,7 +306,7 @@
+ 
+     Py_RETURN_NONE;
+ }
+-
++#endif
+ 
+ /** the lobject object **/
+ 
+@@ -475,6 +475,3 @@
+     0,          /*tp_alloc*/
+     lobject_new, /*tp_new*/
+ };
+-
+-#endif
+-

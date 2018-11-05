@@ -26,7 +26,7 @@
 
 import os
 import pathlib2 as pathlib
-from typing import Dict, Text # pylint: disable=unused-import
+from typing import Dict, Text  # pylint: disable=unused-import
 
 from passlib.context import CryptContext
 from passlib.hash import sha256_crypt
@@ -46,6 +46,7 @@ crypt_context = CryptContext(schemes=[
     "des_crypt",
 ])
 
+
 class Htpasswd(object):
     """Thin wrapper for loading and saving the htpasswd file"""
 
@@ -53,7 +54,6 @@ class Htpasswd(object):
         # type: (pathlib.Path) -> None
         super(Htpasswd, self).__init__()
         self._path = path
-
 
     def load(self):
         # type: (None) -> Dict[Text, Text]
@@ -70,12 +70,10 @@ class Htpasswd(object):
 
         return entries
 
-
     def exists(self, user_id):
         """Whether or not a user exists according to the htpasswd file"""
         # type: (Text) -> bool
         return user_id in self.load()
-
 
     def save(self, entries):
         # type: (Dict[Text, Text]) -> None
@@ -112,26 +110,22 @@ class HtpasswdUserConnector(UserConnector):
     def type(cls):
         return 'htpasswd'
 
-
     @classmethod
     def title(cls):
         return _('Apache Local Password File (htpasswd)')
-
 
     @classmethod
     def short_title(cls):
         return _('htpasswd')
 
-
     #
     # USERDB API METHODS
     #
 
-
     def check_credentials(self, user_id, password):
         users = self._get_htpasswd().load()
         if user_id not in users:
-            return None # not existing user, skip over
+            return None  # not existing user, skip over
 
         if self._is_automation_user(user_id):
             raise MKUserError(None, _("Automation user rejected"))
@@ -140,10 +134,9 @@ class HtpasswdUserConnector(UserConnector):
             return user_id
         return False
 
-
     def _is_automation_user(self, user_id):
-        return os.path.isfile(cmk.paths.var_dir + "/web/" + user_id.encode("utf-8") + "/automation.secret")
-
+        return os.path.isfile(cmk.paths.var_dir + "/web/" + user_id.encode("utf-8") +
+                              "/automation.secret")
 
     # Validate hashes taken from the htpasswd file. For the moment this function
     # needs to be able to deal with des_crypt and apr-md5 hashes which were used
@@ -157,7 +150,6 @@ class HtpasswdUserConnector(UserConnector):
             # Is raised in case of locked users because we prefix the hashes with
             # a "!" sign in this situation.
             return False
-
 
     def save_users(self, users):
         # Apache htpasswd. We only store passwords here. During
@@ -177,7 +169,6 @@ class HtpasswdUserConnector(UserConnector):
                     ("!" if user.get("locked", False) else "", user["password"])
 
         self._get_htpasswd().save(entries)
-
 
     def _get_htpasswd(self):
         return Htpasswd(pathlib.Path(cmk.paths.htpasswd_file))

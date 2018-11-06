@@ -14016,7 +14016,8 @@ class ModeRuleSearch(WatoMode):
     def _from_vars(self):
         if html.var("_reset_search"):
             html.del_all_vars("search_")
-            return {}
+            self.search_options = {}
+            return
 
         value = self._valuespec().from_html_vars("search")
         self._valuespec().validate_value(value, "search")

@@ -181,7 +181,7 @@ class TCPDataSource(CheckMKAgentDataSource):
             # a) a single version string
             # b) a tuple of ("at_least", {'daily_build': '2014.06.01', 'release': '1.2.5i4'}
             #    (the dict keys are optional)
-            if type(expected_version) == tuple and expected_version[0] == 'at_least':
+            if isinstance(expected_version, tuple) and expected_version[0] == 'at_least':
                 expected = 'at least'
                 if 'daily_build' in expected_version[1]:
                     expected += ' build %s' % expected_version[1]['daily_build']
@@ -252,10 +252,10 @@ class TCPDataSource(CheckMKAgentDataSource):
             if agent_version in ['(unknown)', None, 'None']:
                 return False
 
-            if type(expected_version) == str and expected_version != agent_version:
+            if isinstance(expected_version, str) and expected_version != agent_version:
                 return False
 
-            elif type(expected_version) == tuple and expected_version[0] == 'at_least':
+            elif isinstance(expected_version, tuple) and expected_version[0] == 'at_least':
                 spec = expected_version[1]
                 if utils.is_daily_build_version(agent_version) and 'daily_build' in spec:
                     expected = int(spec['daily_build'].replace('.', ''))

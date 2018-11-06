@@ -102,7 +102,7 @@ class IPMIManagementBoardDataSource(ManagementBoardDataSource, CheckMKAgentDataS
                 raise
 
             # Improve bad exceptions thrown by pyghmi e.g. in case of connection issues
-            if type(e) == IpmiException and "%s" % e == "None":
+            if isinstance(e, IpmiException) and "%s" % e == "None":
                 raise MKAgentError("IPMI communication failed: %r" % e)
             else:
                 raise

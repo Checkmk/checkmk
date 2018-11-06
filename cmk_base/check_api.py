@@ -362,7 +362,7 @@ def check_levels(value, dsname, params, unit="", factor=1.0, scale=1.0, statemar
         return 0, "", []
 
     # Pair of numbers -> static levels
-    elif type(params) == tuple:
+    elif isinstance(params, tuple):
         if len(params) == 2:  # upper warn and crit
             warn_upper, crit_upper = scale_value(params[0]), scale_value(params[1])
             warn_lower, crit_lower = None, None
@@ -457,7 +457,7 @@ def utc_mktime(time_struct):
 def passwordstore_get_cmdline(fmt, pw):
     """Use this to prepare a command line argument for using a password from the
     Check_MK password store or an explicitly configured password."""
-    if type(pw) != tuple:
+    if not isinstance(pw, tuple):
         pw = ("password", pw)
 
     if pw[0] == "password":

@@ -121,7 +121,7 @@ $LONGSERVICEOUTPUT$
 
 
 def _transform_user_disable_notifications_opts(contact):
-    if "disable_notifications" in contact and type(contact["disable_notifications"]) == bool:
+    if "disable_notifications" in contact and isinstance(contact["disable_notifications"], bool):
         return {"disable": contact["disable_notifications"]}
 
     return contact.get("disable_notifications", {})
@@ -339,7 +339,7 @@ def locally_deliver_raw_context(raw_context, analyse=False):
         else:
             method = "email"
 
-        if type(method) == tuple and method[0] == 'flexible':
+        if isinstance(method, tuple) and method[0] == 'flexible':
             # 2. FLEXIBLE NOTIFICATIONS
             notify_log("Preparing flexible notifications for %s" % contactname)
             notify_flexible(raw_context, method[1])
@@ -582,7 +582,7 @@ def rbn_fallback_contacts():
 
 def rbn_finalize_plugin_parameters(hostname, plugin, rule_parameters):
     # Right now we are only able to finalize notification plugins with dict parameters..
-    if type(rule_parameters) == dict:
+    if isinstance(rule_parameters, dict):
         parameters = config.host_extra_conf_merged(hostname,
                                                    config.notification_parameters.get(plugin, []))
         parameters.update(rule_parameters)
@@ -638,7 +638,7 @@ def rbn_add_contact_information(plugin_context, contacts):
     keys = {"name", "alias", "email", "pager"}
 
     for contact in contacts:
-        if type(contact) is dict:
+        if isinstance(contact, dict):
             contact_dict = contact
         elif contact.startswith("mailto:"):  # Fake contact
             contact_dict = {
@@ -1740,7 +1740,7 @@ def notify_bulk(dirname, uuids):
         # Per default the uuids are sorted chronologically from oldest to newest
         # Therefore the notification plugin also shows the oldest entry first
         # The following configuration option allows to reverse the sorting
-        if type(old_params) == dict and old_params.get("bulk_sort_order") == "newest_first":
+        if isinstance(old_params, dict) and old_params.get("bulk_sort_order") == "newest_first":
             bulk_context.reverse()
 
         # Converts bulk context from [[1,2],[3,4]] to [1,2,3,4]

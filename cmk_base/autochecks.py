@@ -78,7 +78,7 @@ def read_autochecks_of(hostname, world="config"):
 
         # With Check_MK 1.2.7i3 items are now defined to be unicode strings. Convert
         # items from existing autocheck files for compatibility. TODO remove this one day
-        if type(item) == str:
+        if isinstance(item, str):
             item = cmk_base.config.decode_incoming_string(item)
 
         if type(check_plugin_name) not in (str, unicode):

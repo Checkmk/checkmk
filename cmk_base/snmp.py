@@ -447,7 +447,7 @@ def _compute_fetch_oid(oid, suboid, column):
         fetchoid += "." + str(suboid)
 
     if column != "":
-        if type(column) == tuple:
+        if isinstance(column, tuple):
             fetchoid += "." + str(column[1])
             if column[0] == "binary":
                 value_encoding = "binary"
@@ -554,7 +554,7 @@ def _construct_snmp_table_of_rows(columns):
 
 
 def _is_snmpwalk_cachable(column):
-    return type(column) == tuple and column[0] == "cached"
+    return isinstance(column, tuple) and column[0] == "cached"
 
 
 def _get_cached_snmpwalk(hostname, fetchoid):

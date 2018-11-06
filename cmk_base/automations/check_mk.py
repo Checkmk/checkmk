@@ -1162,9 +1162,14 @@ class AutomationDiagHost(Automation):
                 if hostname not in config.explicit_snmp_communities:
                     communities = config.host_extra_conf(hostname, config.snmp_communities)
                     for entry in communities:
-                        if (type(entry) == tuple) == (test == "snmpv3"):
-                            config.explicit_snmp_communities[hostname] = entry
-                            break
+                        if (test == "snmpv3") and not isinstance(entry, tuple):
+                            continue
+
+                        if (test != "snmpv3") and isinstance(entry, tuple):
+                            continue
+
+                        config.explicit_snmp_communities[hostname] = entry
+                        break
 
                 # Override timing settings if provided
                 if snmp_timeout or snmp_retries:

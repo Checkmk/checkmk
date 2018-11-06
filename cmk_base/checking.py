@@ -427,7 +427,7 @@ def is_manual_check(hostname, check_plugin_name, item):
 
 
 def sanitize_check_result(result, is_snmp):
-    if type(result) == tuple:
+    if isinstance(result, tuple):
         return _sanitize_tuple_check_result(result)
 
     elif result == None:
@@ -498,7 +498,7 @@ def _sanitize_check_result_infotext(infotext, allow_missing_infotext):
     if infotext == None and not allow_missing_infotext:
         raise MKGeneralException("Invalid infotext from check: \"None\"")
 
-    if type(infotext) == str:
+    if isinstance(infotext, str):
         return infotext.decode('utf-8')
 
     return infotext
@@ -515,7 +515,7 @@ def _convert_perf_value(x):
         return ""
     elif type(x) in [str, unicode]:
         return x
-    elif type(x) == float:
+    elif isinstance(x, float):
         return ("%.6f" % x).rstrip("0").rstrip(".")
 
     return str(x)

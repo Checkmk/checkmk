@@ -174,7 +174,7 @@ def test_automation_discovery_single_host(test_cfg, site):
     data = _execute_automation(site, "inventory",
             args=["@raiseerrors", "new", "modes-test-host"])
 
-    assert type(data) == tuple
+    assert isinstance(data, tuple)
     assert len(data) == 2
 
     assert len(data[0]) == 1
@@ -188,7 +188,7 @@ def test_automation_discovery_multiple_hosts(test_cfg, site):
     data = _execute_automation(site, "inventory",
             args=["@raiseerrors", "new", "modes-test-host", "modes-test-host2"])
 
-    assert type(data) == tuple
+    assert isinstance(data, tuple)
     assert len(data) == 2
 
     assert len(data[0]) == 2
@@ -204,7 +204,7 @@ def test_automation_discovery_not_existing_host(test_cfg, site):
     data = _execute_automation(site, "inventory",
             args=["@raiseerrors", "new", "xxxhost"])
 
-    assert type(data) == tuple
+    assert isinstance(data, tuple)
     assert len(data) == 2
 
     assert data[0]["xxxhost"] == [0, 0, 0, 0]
@@ -215,7 +215,7 @@ def test_automation_discovery_with_cache_option(test_cfg, site):
     data = _execute_automation(site, "inventory",
             args=["@cache", "new", "modes-test-host"])
 
-    assert type(data) == tuple
+    assert isinstance(data, tuple)
     assert len(data) == 2
 
     assert len(data[0]) == 1
@@ -269,13 +269,13 @@ def test_automation_get_autochecks_known_host(test_cfg, site):
     data = _execute_automation(site, "get-autochecks",
             args=["modes-test-host"])
 
-    assert type(data) == list
+    assert isinstance(data, list)
     for entry in data:
         assert len(entry) == 4
         checktype, item, resolved_paramstring, paramstring = entry
-        assert type(checktype) == str
-        assert item is None or type(item) == unicode
-        assert type(paramstring) == str
+        assert isinstance(checktype, str)
+        assert item is None or isinstance(item, unicode)
+        assert isinstance(paramstring, str)
 
 
 def test_automation_set_autochecks(test_cfg, site):
@@ -314,7 +314,7 @@ def test_automation_update_dns_cache(test_cfg, site, web):
         web.add_host("localhost")
 
         data = _execute_automation(site, "update-dns-cache")
-        assert type(data) == tuple
+        assert isinstance(data, tuple)
         assert len(data) == 2
 
         assert data[0] > 0
@@ -323,7 +323,7 @@ def test_automation_update_dns_cache(test_cfg, site, web):
         assert site.file_exists(cache_path)
 
         cache = eval(site.read_file(cache_path))
-        assert type(cache) == dict
+        assert isinstance(cache, dict)
         assert cache[("localhost", 4)] == "127.0.0.1"
 
     finally:
@@ -345,29 +345,29 @@ def test_automation_restart(test_cfg, site):
 
 def test_automation_get_check_information(test_cfg, site):
     data = _execute_automation(site, "get-check-information")
-    assert type(data) == dict
+    assert isinstance(data, dict)
     assert len(data) > 1000
 
     for check_type, info in data.items():
-        assert type(info["title"]) == unicode
+        assert isinstance(info["title"], unicode)
         assert "service_description" in info
         assert "snmp" in info
 
 
 def test_automation_get_real_time_checks(test_cfg, site):
     data = _execute_automation(site, "get-real-time-checks")
-    assert type(data) == list
+    assert isinstance(data, list)
     assert len(data) > 5
 
     for check_type, title in data:
-        assert type(check_type) == str
-        assert type(title) == unicode
+        assert isinstance(check_type, str)
+        assert isinstance(title, unicode)
 
 
 def test_automation_get_check_manpage(test_cfg, site):
     data = _execute_automation(site, "get-check-manpage",
                 args=["uptime"])
-    assert type(data) == dict
+    assert isinstance(data, dict)
     assert data["type"] == "check_mk"
 
     for key in [ "snmp_info", "has_perfdata", "service_description", "group", "header" ]:
@@ -393,7 +393,7 @@ def test_automation_notification_analyse(test_cfg, site):
 
     data = _execute_automation(site, "notification-analyse",
                 args=["0"])
-    assert type(data) == tuple
+    assert isinstance(data, tuple)
 
 
 def test_automation_notification_get_bulks(test_cfg, site):
@@ -404,11 +404,11 @@ def test_automation_notification_get_bulks(test_cfg, site):
 def test_automation_get_agent_output(test_cfg, site):
     data = _execute_automation(site, "get-agent-output",
                 args=["modes-test-host", "agent"])
-    assert type(data) == tuple
+    assert isinstance(data, tuple)
     assert len(data) == 3
 
     assert data[1] == ""
-    assert type(data[2]) == str
+    assert isinstance(data[2], str)
     assert "<<<uptime>>>" in data[2]
     assert data[0] == True
 
@@ -416,7 +416,7 @@ def test_automation_get_agent_output(test_cfg, site):
 def test_automation_get_agent_output_unknown_host(test_cfg, site):
     data = _execute_automation(site, "get-agent-output",
                 args=["xxxhost", "agent"])
-    assert type(data) == tuple
+    assert isinstance(data, tuple)
     assert len(data) == 3
 
     assert data[1].startswith("Failed to fetch data from ")
@@ -445,7 +445,7 @@ def test_automation_get_configuration(test_cfg, site):
 
     data = _execute_automation(site, "get-configuration",
                 stdin=repr(variable_names))
-    assert type(data) == dict
+    assert isinstance(data, dict)
     assert data["agent_port"] == 6556
 
     try:
@@ -481,7 +481,7 @@ def test_automation_get_configuration(test_cfg, site):
 
 def test_automation_get_service_configurations(test_cfg, site):
     data = _execute_automation(site, "get-service-configurations")
-    assert type(data) == dict
+    assert isinstance(data, dict)
     assert data["checkgroup_of_checks"]
     assert data["hosts"]["modes-test-host"]
     print data["hosts"]["modes-test-host"]

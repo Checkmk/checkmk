@@ -1,2 +1,3 @@
-destdir/
 .deps.cache
+.perl-modules-build-helper/
+destdir/

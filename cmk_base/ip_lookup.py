@@ -190,21 +190,23 @@ def _update_ip_lookup_cache(cache_id, ipa):
 
     # Read already known data
     cache_path = cmk.paths.var_dir + '/ipaddresses.cache'
-    data_from_file = cmk.store.load_data_from_file(cache_path,
-                                                   default={},
-                                                   lock=True)
+    try:
+        data_from_file = cmk.store.load_data_from_file(cache_path, default={}, lock=True)
 
-    _convert_legacy_ip_lookup_cache(data_from_file)
-    ip_lookup_cache.update(data_from_file)
-    ip_lookup_cache[cache_id] = ipa
+        _convert_legacy_ip_lookup_cache(data_from_file)
+        ip_lookup_cache.update(data_from_file)
+        ip_lookup_cache[cache_id] = ipa
 
-    # (I don't like this)
-    # TODO: this file always grows... there should be a cleanup mechanism
-    #       maybe on "cmk --update-dns-cache"
-    # The cache_path is already locked from a previous function call..
-    cmk.store.save_data_to_file(cache_path, ip_lookup_cache)
+        # (I don't like this)
+        # TODO: this file always grows... there should be a cleanup mechanism
+        #       maybe on "cmk --update-dns-cache"
+        # The cache_path is already locked from a previous function call..
+        cmk.store.save_data_to_file(cache_path, ip_lookup_cache)
+    finally:
+        cmk.store.release_lock(cache_path)
 
 
+# TODO: remove unused code?
 def _write_ip_lookup_cache():
     ip_lookup_cache = cmk_base.config_cache.get_dict("ip_lookup")
 

@@ -1,0 +1,11 @@
+Title: Fixed broken ruleset search reset function
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.5.0p8
+Date: 1541518998
+Class: fix
+
+The reset functionality of the ruleset search was not working at all. It always
+resulted in an exception like: "AttributeError: 'ModeRuleSearch' object has no attribute 'search_options'"

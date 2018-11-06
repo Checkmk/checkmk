@@ -1,4 +1,4 @@
-// +------------------------------------------------------------------+
+﻿// +------------------------------------------------------------------+
 // |             ____ _               _        __  __ _  __           |
 // |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
 // |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
@@ -110,6 +110,10 @@ using std::chrono::milliseconds;
 
 static const char RT_PROTOCOL_VERSION_ENCRYPTED[2] = {'0', '0'};
 static const char RT_PROTOCOL_VERSION_UNENCRYPTED[2] = {'9', '9'};
+
+// set during start
+static std::string G_ServiceDirectory = "";
+static std::wstring G_AgentParentPath = L"";
 
 #define SERVICE_NAME "Check_MK_Agent"
 
@@ -545,6 +549,13 @@ void do_test(const Environment &env) {
     outputFileBase(env, stdout);
 }
 
+void TestPerfReaderCall(const wchar_t *CounterList);
+
+void do_perfread(const Environment &env) {
+    printf("Starting testing perfread...\n");
+    TestPerfReaderCall(L"510");
+}
+
 void do_file(const Environment &env, const char *filename) {
     std::unique_ptr<FILE, decltype(&fclose)> file(fopen(filename, "w"), fclose);
 
@@ -558,7 +569,7 @@ void do_file(const Environment &env, const char *filename) {
 
 bool ctrl_handler(DWORD fdwCtrlType) {
     switch (fdwCtrlType) {
-        /* handle the CTRL-C signal */
+            /* handle the CTRL-C signal */
         case CTRL_C_EVENT:
             stop_threads();
             g_should_terminate = true;
@@ -986,9 +997,60 @@ void addIPv6Addresses() {
     }
 }
 
+// copy pasted from the Environment::determineAgentDirectory
+// ATM Environment is absent.
+// *********************************************************
+// We have here here disaster: absolutely universal code   
+// to obtain location of our folder and plugins had been 
+// closed into the Environment class and forced to use
+// persistent data from those class. This was quite bad idea.
+static const int MAX_PATH_UNICODE = 32767;
+
+static std::string DetermineAgentDirectory(const WinApiInterface &WinApi) {
+    HKEY key = nullptr;
+    DWORD ret = WinApi.RegOpenKeyEx(
+        HKEY_LOCAL_MACHINE,
+        "SYSTEM\\CurrentControlSet\\Services\\check_mk_agent", 0, KEY_READ,
+        &key);
+
+    HKeyHandle hKey{key, WinApi};
+
+    if (ret == ERROR_SUCCESS) {
+        vector<unsigned char> buffer(MAX_PATH_UNICODE, '\0');
+        DWORD dsize = MAX_PATH_UNICODE;
+
+        if (ERROR_SUCCESS == WinApi.RegQueryValueEx(hKey.get(), "ImagePath",
+                                                    NULL, NULL, buffer.data(),
+                                                    &dsize)) {
+            buffer.resize(dsize);
+            string directory{buffer.begin(), buffer.end()};
+            // search backwards for backslash
+            size_t found = directory.find_last_of("/\\");
+            directory = directory.substr(0, found);
+
+            // Handle case where name is quoted with double quotes.
+            // This is reported to happen on some 64 Bit systems when spaces
+            // are in the directory name.
+            if (directory.front() == '"') {
+                directory.erase(directory.begin());
+            }
+
+            return directory;
+        } else {  // Avoid returning null-filled enormous string upon read
+                  // error:
+            return "";
+        }
+    } else {
+        return "";
+    }
+}
+// end of copy-paste
+
 void RunImmediate(const char *mode, int argc, char **argv) {
     // base directory structure on current working directory or registered dir
     // (from registry)?
+    G_ServiceDirectory = DetermineAgentDirectory(s_winapi);
+
     bool use_cwd = !strcmp(mode, "adhoc") || !strcmp(mode, "test");
     Logger *logger = Logger::getLogger("winagent");
     Environment env(use_cwd, strcmp(mode, "test") == 0, logger, s_winapi);
@@ -1034,6 +1096,8 @@ void RunImmediate(const char *mode, int argc, char **argv) {
 
     if (!strcmp(mode, "test"))
         do_test(env);
+    else if (!strcmp(mode, "perfread"))
+        do_perfread(env);
     else if (!strcmp(mode, "file")) {
         if (argc < 1) {
             std::cerr << "Please specify the name of an output file."
@@ -1064,8 +1128,15 @@ inline LONG WINAPI exception_handler(LPEXCEPTION_POINTERS ptrs) {
         .handleCrash(ptrs);
 }
 
+namespace cma {
+std::string GetServiceDirectory() { return G_ServiceDirectory; }
+std::wstring GetAgentParentPath() { return G_AgentParentPath; }
+}  // namespace cma
+
 int main(int argc, char **argv) {
     wsa_startup();
+    fs::path p(argv[0]);
+    G_AgentParentPath = p.parent_path();
 
     s_winapi.SetUnhandledExceptionFilter(exception_handler);
 

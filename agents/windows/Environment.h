@@ -108,4 +108,10 @@ private:
     const bool _with_stderr{false};
 };
 
+// in main
+namespace cma {
+std::string GetServiceDirectory();  // from the registry
+std::wstring GetAgentParentPath();  // from starting module
+};                                  // namespace cma
+
 #endif  // Environment_h

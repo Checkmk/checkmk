@@ -1,4 +1,4 @@
-#ifndef WinApiInterface_h
+﻿#ifndef WinApiInterface_h
 #define WinApiInterface_h
 
 #include <winsock2.h>
@@ -15,8 +15,8 @@
 #include <cstdarg>
 #include <cstddef>
 #include <cstring>
-#if defined(MSVC_BUILD)
-typedef int WINBOOL;
+#if defined(_MSC_BUILD)
+typedef int WINBOOL;  // this is defined somewhere in MinGW
 #endif
 
 #undef CopyFile

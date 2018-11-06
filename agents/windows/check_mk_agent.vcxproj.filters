@@ -1,0 +1,306 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="check_mk_agent.cc">
+      <Filter>sources</Filter>
+    </ClCompile>
+    <ClCompile Include="Configuration.cc">
+      <Filter>sources</Filter>
+    </ClCompile>
+    <ClCompile Include="CrashHandler.cc">
+      <Filter>sources</Filter>
+    </ClCompile>
+    <ClCompile Include="Crypto.cc">
+      <Filter>sources</Filter>
+    </ClCompile>
+    <ClCompile Include="Environment.cc">
+      <Filter>sources</Filter>
+    </ClCompile>
+    <ClCompile Include="EventLog.cc">
+      <Filter>sources</Filter>
+    </ClCompile>
+    <ClCompile Include="EventLogBase.cc">
+      <Filter>sources</Filter>
+    </ClCompile>
+    <ClCompile Include="EventLogVista.cc">
+      <Filter>sources</Filter>
+    </ClCompile>
+    <ClCompile Include="ExternalCmd.cc">
+      <Filter>sources</Filter>
+    </ClCompile>
+    <ClCompile Include="ListenSocket.cc">
+      <Filter>sources</Filter>
+    </ClCompile>
+    <ClCompile Include="OHMMonitor.cc">
+      <Filter>sources</Filter>
+    </ClCompile>
+    <ClCompile Include="OutputProxy.cc">
+      <Filter>sources</Filter>
+    </ClCompile>
+    <ClCompile Include="PerfCounter.cc">
+      <Filter>sources</Filter>
+    </ClCompile>
+    <ClCompile Include="PerfCounterCommon.cc">
+      <Filter>sources</Filter>
+    </ClCompile>
+    <ClCompile Include="RotatingFileHandler.cc">
+      <Filter>sources</Filter>
+    </ClCompile>
+    <ClCompile Include="SectionManager.cc">
+      <Filter>sources</Filter>
+    </ClCompile>
+    <ClCompile Include="SettingsCollector.cc">
+      <Filter>sources</Filter>
+    </ClCompile>
+    <ClCompile Include="stringutil.cc">
+      <Filter>sources</Filter>
+    </ClCompile>
+    <ClCompile Include="Thread.cc">
+      <Filter>sources</Filter>
+    </ClCompile>
+    <ClCompile Include="types.cc">
+      <Filter>sources</Filter>
+    </ClCompile>
+    <ClCompile Include="win_error.cc">
+      <Filter>sources</Filter>
+    </ClCompile>
+    <ClCompile Include="WinApi.cc">
+      <Filter>sources</Filter>
+    </ClCompile>
+    <ClCompile Include="wmiHelper.cc">
+      <Filter>sources</Filter>
+    </ClCompile>
+    <ClCompile Include="WritableFile.cc">
+      <Filter>sources</Filter>
+    </ClCompile>
+    <ClCompile Include="sections\Section.cc">
+      <Filter>section</Filter>
+    </ClCompile>
+    <ClCompile Include="sections\SectionCheckMK.cc">
+      <Filter>section</Filter>
+    </ClCompile>
+    <ClCompile Include="sections\SectionDF.cc">
+      <Filter>section</Filter>
+    </ClCompile>
+    <ClCompile Include="sections\SectionEventlog.cc">
+      <Filter>section</Filter>
+    </ClCompile>
+    <ClCompile Include="sections\SectionFileinfo.cc">
+      <Filter>section</Filter>
+    </ClCompile>
+    <ClCompile Include="sections\SectionGroup.cc">
+      <Filter>section</Filter>
+    </ClCompile>
+    <ClCompile Include="sections\SectionLogwatch.cc">
+      <Filter>section</Filter>
+    </ClCompile>
+    <ClCompile Include="sections\SectionMem.cc">
+      <Filter>section</Filter>
+    </ClCompile>
+    <ClCompile Include="sections\SectionMRPE.cc">
+      <Filter>section</Filter>
+    </ClCompile>
+    <ClCompile Include="sections\SectionOHM.cc">
+      <Filter>section</Filter>
+    </ClCompile>
+    <ClCompile Include="sections\SectionPerfcounter.cc">
+      <Filter>section</Filter>
+    </ClCompile>
+    <ClCompile Include="sections\SectionPluginGroup.cc">
+      <Filter>section</Filter>
+    </ClCompile>
+    <ClCompile Include="sections\SectionPS.cc">
+      <Filter>section</Filter>
+    </ClCompile>
+    <ClCompile Include="sections\SectionServices.cc">
+      <Filter>section</Filter>
+    </ClCompile>
+    <ClCompile Include="sections\SectionSkype.cc">
+      <Filter>section</Filter>
+    </ClCompile>
+    <ClCompile Include="sections\SectionSpool.cc">
+      <Filter>section</Filter>
+    </ClCompile>
+    <ClCompile Include="sections\SectionSystemtime.cc">
+      <Filter>section</Filter>
+    </ClCompile>
+    <ClCompile Include="sections\SectionUptime.cc">
+      <Filter>section</Filter>
+    </ClCompile>
+    <ClCompile Include="sections\SectionWinperf.cc">
+      <Filter>section</Filter>
+    </ClCompile>
+    <ClCompile Include="sections\SectionWMI.cc">
+      <Filter>section</Filter>
+    </ClCompile>
+    <ClCompile Include="LoggerIncluder.cc">
+      <Filter>sources</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Configurable.h">
+      <Filter>headers</Filter>
+    </ClInclude>
+    <ClInclude Include="Configuration.h">
+      <Filter>headers</Filter>
+    </ClInclude>
+    <ClInclude Include="CrashHandler.h">
+      <Filter>headers</Filter>
+    </ClInclude>
+    <ClInclude Include="Crypto.h">
+      <Filter>headers</Filter>
+    </ClInclude>
+    <ClInclude Include="dynamic_func.h">
+      <Filter>headers</Filter>
+    </ClInclude>
+    <ClInclude Include="Environment.h">
+      <Filter>headers</Filter>
+    </ClInclude>
+    <ClInclude Include="EventLog.h">
+      <Filter>headers</Filter>
+    </ClInclude>
+    <ClInclude Include="EventLogBase.h">
+      <Filter>headers</Filter>
+    </ClInclude>
+    <ClInclude Include="EventLogVista.h">
+      <Filter>headers</Filter>
+    </ClInclude>
+    <ClInclude Include="ExternalCmd.h">
+      <Filter>headers</Filter>
+    </ClInclude>
+    <ClInclude Include="ListenSocket.h">
+      <Filter>headers</Filter>
+    </ClInclude>
+    <ClInclude Include="Logger.h">
+      <Filter>headers</Filter>
+    </ClInclude>
+    <ClInclude Include="OHMMonitor.h">
+      <Filter>headers</Filter>
+    </ClInclude>
+    <ClInclude Include="OutputProxy.h">
+      <Filter>headers</Filter>
+    </ClInclude>
+    <ClInclude Include="PerfCounterCommon.h">
+      <Filter>headers</Filter>
+    </ClInclude>
+    <ClInclude Include="PerfCounter.h">
+      <Filter>headers</Filter>
+    </ClInclude>
+    <ClInclude Include="WritableFile.h">
+      <Filter>headers</Filter>
+    </ClInclude>
+    <ClInclude Include="wmiHelper.h">
+      <Filter>headers</Filter>
+    </ClInclude>
+    <ClInclude Include="WinApiInterface.h">
+      <Filter>headers</Filter>
+    </ClInclude>
+    <ClInclude Include="WinApi.h">
+      <Filter>headers</Filter>
+    </ClInclude>
+    <ClInclude Include="win_error.h">
+      <Filter>headers</Filter>
+    </ClInclude>
+    <ClInclude Include="types.h">
+      <Filter>headers</Filter>
+    </ClInclude>
+    <ClInclude Include="Thread.h">
+      <Filter>headers</Filter>
+    </ClInclude>
+    <ClInclude Include="stringutil.h">
+      <Filter>headers</Filter>
+    </ClInclude>
+    <ClInclude Include="SettingsCollector.h">
+      <Filter>headers</Filter>
+    </ClInclude>
+    <ClInclude Include="SectionManager.h">
+      <Filter>headers</Filter>
+    </ClInclude>
+    <ClInclude Include="RotatingFileHandler.h">
+      <Filter>headers</Filter>
+    </ClInclude>
+    <ClInclude Include="PerfCounterPdh.h">
+      <Filter>headers</Filter>
+    </ClInclude>
+    <ClInclude Include="pch.h">
+      <Filter>headers</Filter>
+    </ClInclude>
+    <ClInclude Include="config.h">
+      <Filter>headers</Filter>
+    </ClInclude>
+    <ClInclude Include="sections\Section.h">
+      <Filter>section</Filter>
+    </ClInclude>
+    <ClInclude Include="sections\SectionCheckMK.h">
+      <Filter>section</Filter>
+    </ClInclude>
+    <ClInclude Include="sections\SectionDF.h">
+      <Filter>section</Filter>
+    </ClInclude>
+    <ClInclude Include="sections\SectionEventlog.h">
+      <Filter>section</Filter>
+    </ClInclude>
+    <ClInclude Include="sections\SectionFileinfo.h">
+      <Filter>section</Filter>
+    </ClInclude>
+    <ClInclude Include="sections\SectionGroup.h">
+      <Filter>section</Filter>
+    </ClInclude>
+    <ClInclude Include="sections\SectionHeader.h">
+      <Filter>section</Filter>
+    </ClInclude>
+    <ClInclude Include="sections\SectionLogwatch.h">
+      <Filter>section</Filter>
+    </ClInclude>
+    <ClInclude Include="sections\SectionMem.h">
+      <Filter>section</Filter>
+    </ClInclude>
+    <ClInclude Include="sections\SectionMRPE.h">
+      <Filter>section</Filter>
+    </ClInclude>
+    <ClInclude Include="sections\SectionOHM.h">
+      <Filter>section</Filter>
+    </ClInclude>
+    <ClInclude Include="sections\SectionPerfcounter.h">
+      <Filter>section</Filter>
+    </ClInclude>
+    <ClInclude Include="sections\SectionPluginGroup.h">
+      <Filter>section</Filter>
+    </ClInclude>
+    <ClInclude Include="sections\SectionPS.h">
+      <Filter>section</Filter>
+    </ClInclude>
+    <ClInclude Include="sections\SectionServices.h">
+      <Filter>section</Filter>
+    </ClInclude>
+    <ClInclude Include="sections\SectionSkype.h">
+      <Filter>section</Filter>
+    </ClInclude>
+    <ClInclude Include="sections\SectionSpool.h">
+      <Filter>section</Filter>
+    </ClInclude>
+    <ClInclude Include="sections\SectionSystemtime.h">
+      <Filter>section</Filter>
+    </ClInclude>
+    <ClInclude Include="sections\SectionUptime.h">
+      <Filter>section</Filter>
+    </ClInclude>
+    <ClInclude Include="sections\SectionWinperf.h">
+      <Filter>section</Filter>
+    </ClInclude>
+    <ClInclude Include="sections\SectionWMI.h">
+      <Filter>section</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="headers">
+      <UniqueIdentifier>{263ca30a-95da-4e50-a13b-1ad0da997133}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="sources">
+      <UniqueIdentifier>{bf20c437-fe1d-4da4-90d9-deb63b6302d7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="section">
+      <UniqueIdentifier>{a55ce763-9d76-4263-b879-a79d35a2a735}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>

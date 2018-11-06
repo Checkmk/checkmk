@@ -6,12 +6,14 @@
 #include <sstream>
 #include <stdexcept>
 #include <vector>
+#include "Environment.h"
 #include "Logger.h"
 #include "PerfCounterCommon.h"
 #include "stringutil.h"
 #include "types.h"
 #include "win_error.h"
 // Helper functions to navigate the performance counter data
+#include "ModuleControl.h"
 
 PERF_OBJECT_TYPE *FirstObject(PERF_DATA_BLOCK *dataBlock) {
     return (PERF_OBJECT_TYPE *)((BYTE *)dataBlock + dataBlock->HeaderLength);
@@ -150,7 +152,7 @@ std::vector<ULONGLONG> PerfCounter::values(
     const std::vector<PERF_INSTANCE_DEFINITION *> &instances) const {
     std::vector<ULONGLONG> result;
     if (_datablock != NULL) {
-        // instanceless counter - instances should be empty
+        // instance less counter - instances should be empty
         PERF_COUNTER_BLOCK *counterBlock = (PERF_COUNTER_BLOCK *)_datablock;
         result.push_back(extractValue(counterBlock));
     } else {
@@ -168,45 +170,109 @@ DWORD PerfCounter::titleIndex() const {
 
 DWORD PerfCounter::offset() const { return _counter->CounterOffset; }
 
-static const size_t DEFAULT_BUFFER_SIZE = 40960L;
+static const size_t kDefaultBufferSize = 40960L;
+
+// wrapper to call external util to read counters to save to file
+static cma::DataBlock PerfReaderCall(const wchar_t *CounterList,
+                                     bool Test = false) {
+    using namespace cma;
+
+    // folder list where we are looking for per_reader
+    static const std::wstring paths[] = {cma::wnd::kLocalFolder,
+                                         cma::wnd::kUtilsFolder,
+                                         cma::wnd::kPluginsFolder};
+    static const std::wstring exe(cma::wnd::kPerfReaderExe);
+    std::string agent_path = cma::GetServiceDirectory();  // from registry
+    std::wstring agent_wide_path(agent_path.begin(), agent_path.end());
+
+    for (auto &path : paths) {
+        // find path, first local, second service
+        auto full_path = FindModule(path, exe);
+        if (!full_path[0])
+            full_path = FindModule(
+                agent_wide_path + fs::path::preferred_separator + path, exe);
+
+        if (full_path[0]) {
+            if (Test) printf("Found %ls\n", full_path.c_str());
+            // found, try to call it and obtain results
+            auto fname = cma::BuildTmpProcIdFileName(
+                CounterList);  // make tmp file to store reg value
+            if (Test) printf("Fname %ls\n", fname.c_str());
+            auto result =
+                cma::RunModule(full_path, fname + L" " + CounterList);  // exec
+            if (Test) printf("Result %ls\n", result ? L"OK" : L"FAIL");
+            if (result) {
+                auto data = cma::ReadFile(fname.c_str());  // read data
+                if (Test)
+                    printf("Data Read %p size = %d\n", data.data_, data.len_);
+                DeleteFileW(fname.c_str());   // must cleanup
+                if (data.data_ && data.len_)  // sanity check
+                {
+                    return data;
+                }
+            }
+        }
+    }
+
+    return cma::DataBlock();
+}
+
+void TestPerfReaderCall(const wchar_t *CounterList) {
+    PerfReaderCall(CounterList, true);
+}
 
 std::vector<BYTE> PerfCounterObject::retrieveCounterData(
-    const wchar_t *counterList) {
+    const wchar_t *CounterList) {
+    // THIS code will try to use external exe to obtain data from the registry
+    // new process should prevent us from Windows Handle Leaks
+    auto data = PerfReaderCall(CounterList);
+    if (data.data_ && data.len_) {
+        auto data_array = reinterpret_cast<BYTE *>(data.data_);
+        std::vector<BYTE> result(data_array, data_array + data.len_);
+        return result;
+    }
+
+    // Something is wrong(util is absent for example)
     std::vector<BYTE> result;
-    result.resize(DEFAULT_BUFFER_SIZE);
 
-    DWORD buffer_size = result.size();
-    DWORD type{0};
-    DWORD ret;
+    result.resize(kDefaultBufferSize);
 
-    while ((ret = _winapi.RegQueryValueExW(HKEY_PERFORMANCE_DATA, counterList,
-                                           nullptr, &type, &result[0],
-                                           &buffer_size)) != ERROR_SUCCESS) {
+    auto buffer_size = static_cast<DWORD>(result.size());
+
+    while (1) {
+        DWORD type = 0;
+        auto ret =
+            _winapi.RegQueryValueExW(HKEY_PERFORMANCE_DATA, CounterList,
+                                     nullptr, &type, &result[0], &buffer_size);
+        _winapi.RegCloseKey(
+            HKEY_PERFORMANCE_DATA);       // according to MSDN we MUST close
+                                          // Handle in any case this will not
+                                          // help in 100% cases but sometimes
+        if (ret == ERROR_SUCCESS) break;  // ready
+
+        // retry with probably realloc:
         if (_logger) {
             Debug(_logger) << "PerfCounterObject::retrieveCounterData: "
                            << "RegQueryValueExW returned " << ret;
         }
+
         if (ret == ERROR_MORE_DATA) {
-            // the size of performance counter blocks is varible and may change
+            // the size of performance counter blocks is variable and may change
             // concurrently, so there is no way to ensure the buffer is large
             // enough before the call, we can only increase the buffer size
             // until the call succeeds
-            buffer_size = result.size() * 2;
+            buffer_size = static_cast<DWORD>(result.size()) * 2;
             result.resize(buffer_size);
         } else {
             throw std::runtime_error(get_win_error_as_string(_winapi));
         }
     }
+
     if (_logger) {
         Debug(_logger) << "PerfCounterObject::retrieveCounterData: closing key";
     }
-    // apparently this handle is opened on demand by RegQueryValueEx but needs
-    // to be closed manually, otherwise we may be blocking installation of apps
-    // that create new performance counters.
-    // say WHAT???
-    HKeyHandle hKey{HKEY_PERFORMANCE_DATA, _winapi};
 
-    result.resize(buffer_size);
+    result.resize(buffer_size);  // size decrease may happen here
     return result;
 }
 

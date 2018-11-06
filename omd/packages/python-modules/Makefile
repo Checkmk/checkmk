@@ -159,6 +159,8 @@ MODULES += passlib-1.7.1.tar.gz
 
 .PHONY: build check-freetds install skel clean
 
+# NOTE: Cruel hack below! We need to have a recent GCC visible in the PATH
+# because the SSSE3 detection in pycryptodomex is slightly broken. :-/
 build: check-python check-freetds unpack
 	set -e ; cd dest && \
 	    mkdir -p $(PACKAGE_PYTHON_MODULES_PYTHONPATH) || true; \
@@ -167,6 +169,7 @@ build: check-python check-freetds unpack
 	    export CPATH="$(PACKAGE_FREETDS_DESTDIR)/include" ; \
 	    export LDFLAGS="$(PACKAGE_PYTHON_LDFLAGS) $(PACKAGE_FREETDS_LDFLAGS)" ; \
 	    export LD_LIBRARY_PATH="$(PACKAGE_PYTHON_LD_LIBRARY_PATH)" ; \
+	    PATH="$(abspath ../python/bin):$$PATH" ; \
 	    for M in $(MODULES); do \
 		echo "Building $$M..." ; \
 		PKG=$${M//.tar.gz/} ; \
@@ -200,6 +203,7 @@ unpack:
 	    patch -p1 -b -d dest < $$p ; \
 	done
 
+# NOTE: For the reason for PATH hack, see the 'build' target above.
 install:
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/python
 	set -e ; cd dest && \
@@ -208,6 +212,7 @@ install:
 	    export CPATH="$(PACKAGE_FREETDS_DESTDIR)/include" ; \
 	    export LDFLAGS="$(PACKAGE_PYTHON_LDFLAGS) $(PACKAGE_FREETDS_LDFLAGS)" ; \
 	    export LD_LIBRARY_PATH="$(PACKAGE_PYTHON_LD_LIBRARY_PATH)" ; \
+	    PATH="$(abspath ../python/bin):$$PATH" ; \
 	    for M in $$(ls); do \
 		echo "Installing $$M..." ; \
 		cd $$M ; \

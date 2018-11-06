@@ -1,0 +1,11 @@
+Title: BI tree: Removed code for legacy computation
+Level: 1
+Component: bi
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1541508392
+Class: feature
+
+BI are now always computed with the new computation routine, which allows
+sharing of computed trees between apache processes.

@@ -191,25 +191,6 @@ def load_services(only_hosts):
         g_services_by_hostname.setdefault(host, []).append((site, entry))
 
 
-# Keep complete list of time stamps of configuration
-# and start of each site. Unreachable sites are registered
-# with 0.
-def cache_needs_update():
-    new_config_information = [tuple(config.modification_timestamps)]
-    for site in sites.states().values():
-        new_config_information.append(site.get("program_start", 0))
-
-    if new_config_information != g_config_information:
-        return new_config_information
-    return False
-
-
-def reset_cache_status():
-    global did_compilation
-    did_compilation = False
-    global used_cache
-    used_cache = False
-
 
 # The sitestats are used to define the integrity of the currently used cache
 # If file timestamps change -> Cache is invalid
@@ -262,17 +243,12 @@ def get_current_sitestats():
     return current_world
 
 
-# TODO: do we need this?
-def reused_compilation():
-    return used_cache and not did_compilation
-
-
 def get_aggregation_group_trees():
     # Here we have to deal with weird legacy
     # aggregation group definitions:
     # - "GROUP"
     # - ["GROUP_1", "GROUP2", ..]
-    migrate_bi_configuration() # convert bi_packs into legacy variables
+    migrate_bi_configuration()  # convert bi_packs into legacy variables
     groups = []
     for aggr_def in config.aggregations + config.host_aggregations:
         if aggr_def[0].get("disabled"):
@@ -441,7 +417,7 @@ class JobWorker(multiprocessing.Process):
         def get_hash(entry):
             return hashlib.md5(repr(entry) + repr(job)).hexdigest()
 
-        for group in {g for g in groups}: # Flattened groups
+        for group in {g for g in groups}:  # Flattened groups
             new_entries_hash = map(get_hash, new_entries)
             if group not in new_data['forest']:
                 new_data['forest_ref'][group] = new_entries_hash
@@ -1336,7 +1312,17 @@ def setup_bi_instances():
         raise MKConfigError(g_bi_cache_manager.get_error_info())
 
 
-def compile_forest_improved(only_hosts=None, only_groups=None):
+
+# Precompile the forest of BI rules. Forest? A collection of trees.
+# The compiled forest does not contain any regular expressions anymore.
+# Everything is resolved. Sites, hosts and services are hardcoded. The
+# aggregation functions are still left as names. That way the forest
+# printable (and storable in Python syntax to a file).
+
+
+def compile_forest(only_hosts=None, only_groups=None):
+    migrate_bi_configuration()
+
     # Prevent multiple redundant calls of this function
     # Sometimes, the GUI likes to call this function a hundred times in the same request
     html_cache_id = "BI_CACHE_%r/%r" % (only_hosts, only_groups)
@@ -1405,288 +1391,6 @@ def compile_forest_improved(only_hosts=None, only_groups=None):
         global g_tree_cache
         g_tree_cache = g_bi_cache_manager.get_compiled_trees()
         log("-- Finished, took %.4f --" % (time.time() - compilation_start_time))
-
-
-# Precompile the forest of BI rules. Forest? A collection of trees.
-# The compiled forest does not contain any regular expressions anymore.
-# Everything is resolved. Sites, hosts and services are hardcoded. The
-# aggregation functions are still left as names. That way the forest
-# printable (and storable in Python syntax to a file).
-
-
-# TODO: Remove this function with version 1.5/1.6
-#       Also remove the feature config.modification_timestamps
-def compile_forest(user, only_hosts=None, only_groups=None):
-    migrate_bi_configuration()
-
-    if not config.bi_use_legacy_compilation:
-        compile_forest_improved(only_hosts, only_groups)
-        return
-
-    global g_cache, g_tree_cache
-    global used_cache, did_compilation
-
-    new_config_information = cache_needs_update()
-    if new_config_information:
-        log("Configuration has changed. Forcing recompile.")
-        g_cache = {}
-        global g_config_information
-        g_config_information = new_config_information
-
-    # OPTIMIZE: All users that have the permissing bi.see_all
-    # can use the same cache.
-    if config.user.may("bi.see_all"):
-        user = '<<<see_all>>>'
-
-    def empty_user_cache():
-        return {
-            "forest": {},
-            "aggregations_by_hostname": {},
-            "host_aggregations": {},
-            "affected_hosts": {},
-            "affected_services": {},
-            "compiled_hosts": set([]),
-            "compiled_groups": set([]),
-            "compiled_all": False,
-        }
-
-    # Try to get data from per-user cache:
-    # make sure, BI permissions have not changed since last time.
-    # g_tree_cache is a global variable for all succeeding functions, so
-    # that they do not need to check the user again
-    cache = g_cache.get(user)
-    if cache:
-        g_tree_cache = cache
-    else:
-        # Initialize empty caching structure
-        cache = empty_user_cache()
-        g_tree_cache = cache
-
-    if g_tree_cache["compiled_all"]:
-        log('PID: %d - Already compiled everything' % os.getpid())
-        used_cache = True
-        return  # In this case simply skip further compilations
-
-    if not config.aggregations and not config.host_aggregations:
-        return  # nothing to do, BI not used
-
-    # If we have previously only partly compiled and now there is no
-    # filter, then throw away partly compiled data.
-    if (cache["compiled_hosts"] or cache["compiled_groups"]) \
-       and (not config.bi_precompile_on_demand \
-       or (config.bi_precompile_on_demand and not only_groups and not only_hosts)):
-        log("Invalidating incomplete cache, since we compile all now.")
-        cache = empty_user_cache()
-        g_tree_cache = cache
-
-    # Reduces a list of hosts by the already compiled hosts
-    def to_compile(objects, what):
-        todo = []
-        for obj in objects:
-            if obj not in cache['compiled_' + what]:
-                todo.append(obj)
-        return todo
-
-    if only_hosts and cache['compiled_hosts']:
-        # if only hosts is given and there are already compiled hosts
-        # check whether or not hosts are not compiled yet
-        only_hosts = to_compile(only_hosts, 'hosts')
-        if not only_hosts:
-            log('PID: %d - All requested hosts have already been compiled' % os.getpid())
-            used_cache = True
-            return  # Nothing to do - everything is cached
-
-    if only_groups and cache['compiled_groups']:
-        only_groups = to_compile(only_groups, 'groups')
-        if not only_groups:
-            log('PID: %d - All requested groups have already been compiled' % os.getpid())
-            used_cache = True
-            return  # Nothing to do - everything is cached
-
-    # Set a flag that anything has been compiled in this call
-    did_compilation = True
-
-    # Load all (needed) services
-    # The only_hosts variable is only set in "precompile on demand" mode to filter out
-    # the needed hosts/services if possible. It is used in the load_services() function
-    # to reduce the amount of hosts/services. Reducing the host/services leads to faster
-    # compilation.
-    load_services(only_hosts)
-
-    log("This request: User: %s, Only-Groups: %r, Only-Hosts: %s PID: %d" % (
-        user,
-        only_groups,
-        only_hosts,
-        os.getpid(),
-    ))
-
-    before = time.time()
-    num_new_host_aggrs = 0
-    num_new_multi_aggrs = 0
-
-    aggr_list = [(AGGR_MULTI, config.aggregations), (AGGR_HOST, config.host_aggregations)]
-
-    single_affected_hosts = []
-    for aggr_type, aggregations in aggr_list:
-        for aggr_def in aggregations:
-            options = aggr_def[0]
-
-            if options.get("disabled"):
-                continue
-
-            downtime_aggr_warn = options.get("downtime_aggr_warn", False)
-            use_hard_states = options.get("use_hard_states", False)
-
-            if len(aggr_def) < 3:
-                raise MKConfigError(_("<h1>Invalid aggregation <tt>%s</tt></h1>"
-                                      "Must have at least 3 entries (has %d)") % (aggr_def, len(aggr_def)))
-
-            groups = aggr_def[1]
-            groups_set = set(groups)
-
-            if only_groups and not groups_set.intersection(only_groups):
-                log('Skip aggr (No group of the aggr has been requested: %r)' % groups)
-                continue  # skip not requested groups if filtered by groups
-
-            if len(groups_set) == len(groups_set.intersection(cache['compiled_groups'])):
-                log('Skip aggr (All groups have already been compiled')
-                continue  # skip if all groups have already been compiled
-
-            new_entries = compile_rule_node(aggr_type, aggr_def[2:], 0)
-
-            for this_entry in new_entries:
-                remove_empty_nodes(this_entry)
-                this_entry["use_hard_states"] = use_hard_states
-                this_entry["downtime_aggr_warn"] = downtime_aggr_warn
-
-            new_entries = [e for e in new_entries if len(e["nodes"]) > 0]
-
-            if aggr_type == AGGR_HOST:
-                num_new_host_aggrs += len(new_entries)
-            else:
-                num_new_multi_aggrs += len(new_entries)
-
-            # enter new aggregations into dictionary for these groups
-            for group in groups:
-                if group in cache['compiled_groups']:
-                    log('Skip aggr (group %s already compiled)' % group)
-                    continue  # the group has already been compiled completely
-
-                if group not in cache['forest']:
-                    cache['forest'][group] = new_entries[:]
-                else:
-                    cache['forest'][group] += new_entries
-
-                # Update several global speed-up indices
-                for aggr in new_entries:
-                    req_hosts = aggr["reqhosts"]
-
-                    # Aggregations by last part of title (assumed to be host name)
-                    name = aggr["title"].split()[-1]
-                    cache["aggregations_by_hostname"].setdefault(name, []).append((group, aggr))
-
-                    # All single-host aggregations looked up per host
-                    # Only process the aggregations of hosts which are mentioned in only_hosts
-                    if aggr_type == AGGR_HOST:
-                        # In normal cases a host aggregation has only one req_hosts item, we could use
-                        # index 0 here. But clusters (which are also allowed now) have all their nodes
-                        # in the list of required nodes.
-                        # Before the latest change this used the last item of the req_hosts. I think it
-                        # would be better to register this for all hosts mentioned in req_hosts. Give it a try...
-                        # ASSERT: len(req_hosts) == 1!
-                        for host in req_hosts:
-                            if not only_hosts or host in only_hosts:
-                                cache["host_aggregations"].setdefault(host, []).append((
-                                    group,
-                                    aggr,
-                                ))
-
-                                # construct a list of compiled single-host aggregations for cached registration
-                                single_affected_hosts.append(host)
-
-                    # Also all other aggregations that contain exactly one hosts are considered to
-                    # be "single host aggregations"
-                    elif len(req_hosts) == 1:
-                        cache["host_aggregations"].setdefault(req_hosts[0], []).append((
-                            group,
-                            aggr,
-                        ))
-
-                    # All aggregations containing a specific host
-                    for h in req_hosts:
-                        cache["affected_hosts"].setdefault(h, []).append((
-                            group,
-                            aggr,
-                        ))
-
-                    # All aggregations containing a specific service
-                    services = find_all_leaves(aggr)
-                    for s in services:  # triples of site, host, service
-                        cache["affected_services"].setdefault(s, []).append((
-                            group,
-                            aggr,
-                        ))
-
-    # Register compiled objects
-    if only_hosts:
-        cache['compiled_hosts'].update(single_affected_hosts)
-
-    elif only_groups:
-        cache['compiled_groups'].update(only_groups)
-        cache['compiled_hosts'].update(single_affected_hosts)
-
-    else:
-        # The list of ALL hosts
-        cache['compiled_hosts'] = set(g_services.keys())
-        cache['compiled_groups'] = set(cache['forest'].keys())
-        cache['compiled_all'] = True
-
-    # Remember successful compile in cache
-    g_cache[user] = cache
-
-    check_title_uniqueness(cache["forest"])
-
-    num_total_aggr = 0
-    for aggrs in cache['forest'].itervalues():
-        num_total_aggr += len(aggrs)
-
-    num_host_aggr = 0
-    for aggrs in cache['host_aggregations'].itervalues():
-        num_host_aggr += len(aggrs)
-
-    num_services = 0
-    for val in g_services.itervalues():
-        num_services += len(val[1])
-
-    after = time.time()
-
-    log("\nThis request:\n"
-        "  User: %s, Only-Groups: %r, Only-Hosts: %s\n"
-        "  PID: %d, Processed %d services on %d hosts in %.3f seconds.\n"
-        "\n"
-        "  %d compiled multi aggrs, %d compiled host aggrs, %d compiled groups\n"
-        "Cache:\n"
-        "  Everything compiled: %r\n"
-        "  %d compiled multi aggrs, %d compiled host aggrs, %d compiled groups\n"
-        "Config:\n"
-        "  Multi-Aggregations: %d, Host-Aggregations: %d" % (
-            user,
-            only_groups,
-            only_hosts,
-            os.getpid(),
-            num_services,
-            len(g_services_by_hostname),
-            after - before,
-            num_new_multi_aggrs,
-            num_new_host_aggrs,
-            only_groups and len(only_groups) or 0,
-            cache['compiled_all'],
-            num_total_aggr - num_host_aggr,
-            num_host_aggr,
-            len(cache['compiled_groups']),
-            len(config.aggregations),
-            len(config.host_aggregations),
-        ))
 
 
 def check_title_uniqueness(forest):
@@ -2787,7 +2491,7 @@ config.aggregation_functions['running_on'] = aggr_running_on
 # Just for debugging
 @cmk.gui.pages.register("bi_debug")
 def page_debug():
-    compile_forest(config.user.id)
+    compile_forest()
 
     html.header("BI Debug")
     render_forest()
@@ -2798,7 +2502,7 @@ def page_debug():
 @cmk.gui.pages.register("bi")
 def page_all():
     html.header("All")
-    compile_forest(config.user.id)
+    compile_forest()
     load_assumptions()
     for group, trees in g_tree_cache["forest"].iteritems():
         html.write("<h2>%s</h2>" % group)
@@ -2853,9 +2557,9 @@ def ajax_render_tree():
 
     # Make sure that BI aggregates are available
     if config.bi_precompile_on_demand:
-        compile_forest(config.user.id, only_hosts=reqhosts, only_groups=[aggr_group])
+        compile_forest(only_hosts=reqhosts, only_groups=[aggr_group])
     else:
-        compile_forest(config.user.id)
+        compile_forest()
 
     # Load current assumptions
     load_assumptions()
@@ -3444,10 +3148,10 @@ def table(columns, add_headers, only_sites, limit, filters):
 
     if config.bi_precompile_on_demand and only_group:
         # optimized mode: if aggregation group known only precompile this one
-        compile_forest(config.user.id, only_groups=[only_group])
+        compile_forest(only_groups=[only_group])
     else:
         # classic mode: precompile everything
-        compile_forest(config.user.id)
+        compile_forest()
 
     # TODO: Optimation of affected_hosts filter!
     if only_service:
@@ -3553,12 +3257,10 @@ def singlehost_table(columns, add_headers, only_sites, limit, filters, joinbynam
     if config.bi_precompile_on_demand:
         log("* Compiling forest on demand...")
         compile_forest(
-            config.user.id,
-            only_groups=only_groups,
-            only_hosts=[(h['site'], h['name']) for h in hostrows])
+            only_groups=only_groups, only_hosts=[(h['site'], h['name']) for h in hostrows])
     else:
         log("* Compiling forest...")
-        compile_forest(config.user.id)
+        compile_forest()
 
     # rows by site/host - needed for later cluster state gathering
     if config.bi_precompile_on_demand and not joinbyname:
@@ -3701,7 +3403,7 @@ def status_tree_depth(tree):
 
 
 def is_part_of_aggregation(what, site, host, service):
-    compile_forest(config.user.id)
+    compile_forest()
     if what == "host":
         return (site, host) in g_tree_cache["affected_hosts"]
     return (site, host, service) in g_tree_cache["affected_services"]

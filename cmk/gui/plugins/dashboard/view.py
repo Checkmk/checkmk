@@ -25,7 +25,6 @@
 # Boston, MA 02110-1301 USA.
 
 import cmk.gui.views as views
-import cmk.gui.bi as bi
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
 
@@ -85,8 +84,6 @@ class ViewDashlet(IFrameDashlet):
 
 
     def update(self):
-        bi.reset_cache_status() # needed for status icon
-
         is_reload = html.has_var("_reload")
 
         display_options = "SIXLW"

@@ -108,7 +108,7 @@ def get_check_table(hostname,
             tags = []
         elif num_elements == 5:
             tags, hostlist, checkname, item, params = entry
-            if type(tags) != list:
+            if not isinstance(tags, list):
                 raise MKGeneralException(
                     "Invalid entry '%r' in check table. First entry must be list of host tags." %
                     (entry,))
@@ -123,11 +123,11 @@ def get_check_table(hostname,
         # 2. a list of hostnames (list of strings)
         # Hostnames may be tagged. Tags are removed.
         # In autochecks there are always single untagged hostnames. We optimize for that.
-        if type(hostlist) == str:
+        if isinstance(hostlist, str):
             if hostlist != hostname:
                 return  # optimize most common case: hostname mismatch
             hostlist = [hostlist]
-        elif type(hostlist[0]) == str:
+        elif isinstance(hostlist[0], str):
             pass  # regular case: list of hostnames
         elif hostlist != []:
             raise MKGeneralException("Invalid entry '%r' in check table. Must be single hostname "

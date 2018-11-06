@@ -800,7 +800,7 @@ def _execute_discovery(multi_host_sections, hostname, ipaddress, check_plugin_na
             discovered_items = []
 
         # New yield based api style
-        elif type(discovered_items) != list:
+        elif not isinstance(discovered_items, list):
             discovered_items = list(discovered_items)
 
         result = []
@@ -824,7 +824,7 @@ def _execute_discovery(multi_host_sections, hostname, ipaddress, check_plugin_na
             # Check_MK 1.2.7i3 defines items to be unicode strings. Convert non unicode
             # strings here seamless. TODO remove this conversion one day and replace it
             # with a validation that item needs to be of type unicode
-            if type(item) == str:
+            if isinstance(item, str):
                 item = config.decode_incoming_string(item)
 
             description = config.service_description(hostname, check_plugin_name, item)
@@ -1054,7 +1054,7 @@ def get_check_preview(hostname, use_caches, do_snmp_scan, on_error):
         if check_source not in ['legacy', 'active', 'custom']:
             # apply check_parameters
             try:
-                if type(paramstring) == str:
+                if isinstance(paramstring, str):
                     params = resolve_paramstring(check_plugin_name, paramstring)
                 else:
                     params = paramstring
@@ -1249,7 +1249,7 @@ def parse_autochecks_file(hostname):
             item = eval(itemstring)
             # With Check_MK 1.2.7i3 items are now defined to be unicode strings. Convert
             # items from existing autocheck files for compatibility. TODO remove this one day
-            if type(item) == str:
+            if isinstance(item, str):
                 item = config.decode_incoming_string(item)
 
             table.append((eval(checktypestring), item, paramstring))

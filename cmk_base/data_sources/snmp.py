@@ -210,7 +210,7 @@ class SNMPDataSource(DataSource):
 
             # oid_info can now be a list: Each element  of that list is interpreted as one real oid_info
             # and fetches a separate snmp table.
-            if type(oid_info) == list:
+            if isinstance(oid_info, list):
                 check_info = []
                 for entry in oid_info:
                     check_info_part = snmp.get_snmp_table(access_data, check_plugin_name, entry,

@@ -692,7 +692,7 @@ def _create_nagios_config_contactgroups(outfile):
     outfile.write("# Contact groups (controlled by define_contactgroups)\n")
     outfile.write("# ------------------------------------------------------------\n\n")
     for name in sorted(cgs):
-        if type(config.define_contactgroups) == dict:
+        if isinstance(config.define_contactgroups, dict):
             alias = config.define_contactgroups.get(name, name)
         else:
             alias = name

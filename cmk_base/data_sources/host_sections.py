@@ -165,7 +165,7 @@ class MultiHostSections(object):
         if section_content is None:
             return None
 
-        assert type(section_content) == list
+        assert isinstance(section_content, list)
 
         section_content = self._update_with_parse_function(section_content, section_name)
         section_content = self._update_with_extra_sections(section_content, hostname, ipaddress,
@@ -200,7 +200,7 @@ class MultiHostSections(object):
     def _add_node_column(self, section_content, nodename):
         new_section_content = []
         for line in section_content:
-            if len(line) > 0 and type(line[0]) == list:
+            if len(line) > 0 and isinstance(line[0], list):
                 new_entry = []
                 for entry in line:
                     new_entry.append([nodename] + entry)

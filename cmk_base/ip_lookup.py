@@ -173,7 +173,7 @@ def _convert_legacy_ip_lookup_cache(ip_lookup_cache):
         return
 
     # New version has (hostname, ip family) as key
-    if type(ip_lookup_cache.keys()[0]) == tuple:
+    if isinstance(ip_lookup_cache.keys()[0], tuple):
         return
 
     new_cache = {}

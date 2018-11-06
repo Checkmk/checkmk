@@ -334,7 +334,7 @@ def add_wato_static_checks_to_checks():
             # Make sure, that for dictionary based checks
             # at least those keys defined in the factory
             # settings are present in the parameters
-            if type(params) == dict:
+            if isinstance(params, dict):
                 def_levels_varname = check_plugin_info.get("default_levels_variable")
                 if def_levels_varname:
                     for key, value in factory_settings.get(def_levels_varname, {}).items():
@@ -361,7 +361,7 @@ def initialize_check_caches():
     multi_host_checks = cmk_base.config_cache.get_list("multi_host_checks")
 
     for entry in checks:
-        if len(entry) == 4 and type(entry[0]) == str:
+        if len(entry) == 4 and isinstance(entry[0], str):
             single_host_checks.setdefault(entry[0], []).append(entry)
         else:
             multi_host_checks.append(entry)
@@ -399,7 +399,7 @@ def verify_non_invalid_variables(vars_before_config):
 
 def verify_snmp_communities_type():
     # Special handling for certain deprecated variables
-    if type(snmp_communities) == dict:
+    if isinstance(snmp_communities, dict):
         console.error("ERROR: snmp_communities cannot be a dict any more.\n")
         sys.exit(1)
 
@@ -407,7 +407,7 @@ def verify_snmp_communities_type():
 def all_nonfunction_vars():
     return set([
         name for name, value in globals().items()
-        if name[0] != '_' and type(value) != type(lambda: 0)
+        if name[0] != '_' and not callable(value)
     ])
 
 
@@ -1013,7 +1013,7 @@ def agent_target_version(hostname):
             return None
         elif spec == "site":
             return cmk.__version__
-        elif type(spec) == str:
+        elif isinstance(spec, str):
             # Compatibility to old value specification format (a single version string)
             return spec
         elif spec[0] == 'specific':
@@ -1084,7 +1084,7 @@ def snmp_port_of(hostname):
 
 
 def is_snmpv3_host(hostname):
-    return type(snmp_credentials_of(hostname)) == tuple
+    return isinstance(snmp_credentials_of(hostname), tuple)
 
 
 def is_bulkwalk_host(hostname):
@@ -1140,7 +1140,7 @@ def contactgroups_of(hostname):
     # recognized.
     first_list = True
     for entry in host_extra_conf(hostname, host_contactgroups):
-        if type(entry) == list and first_list:
+        if isinstance(entry, list) and first_list:
             cgrs += entry
             first_list = False
         else:
@@ -1394,7 +1394,7 @@ def service_description(hostname, check_plugin_name, item):
         else:
             descr_format = check_info[check_plugin_name]["service_description"]
 
-    if type(descr_format) == str:
+    if isinstance(descr_format, str):
         descr_format = descr_format.decode("utf-8")
 
     # Note: we strip the service description (remove spaces).
@@ -1472,7 +1472,7 @@ def _checktype_ignored_for_host(host, checktype):
         return True
     ignored = host_extra_conf(host, ignored_checks)
     for e in ignored:
-        if checktype == e or (type(e) == list and checktype in e):
+        if checktype == e or (isinstance(e, list) and checktype in e):
             return True
     return False
 
@@ -1925,7 +1925,7 @@ def in_binary_hostlist(hostname, conf):
         pass
 
     # if we have just a list of strings just take it as list of hostnames
-    if conf and type(conf[0]) == str:
+    if conf and isinstance(conf[0], str):
         result = hostname in conf
         cache[cache_id] = result
     else:
@@ -1944,7 +1944,7 @@ def in_binary_hostlist(hostname, conf):
                 # entry should be one-tuple or two-tuple. Tuple's elements are
                 # lists of strings. User might forget comma in one tuple. Then the
                 # entry is the list itself.
-                if type(entry) == list:
+                if isinstance(entry, list):
                     hostlist = entry
                     tags = []
                 else:
@@ -1989,7 +1989,7 @@ def get_rule_options(entry):
 
     Pick out the option element of a rule. Currently the options "disabled"
     and "comments" are being honored."""
-    if type(entry[-1]) == dict:
+    if isinstance(entry[-1], dict):
         return entry[:-1], entry[-1]
 
     return entry, {}
@@ -2265,7 +2265,7 @@ def load_checks(get_check_api_context, filelist):
         for check_plugin_name in new_checks:
             # The check_info is not converted yet (convert_check_info()). This means we need
             # to deal with old style tuple configured checks
-            if type(check_info[check_plugin_name]) == tuple:
+            if isinstance(check_info[check_plugin_name], tuple):
                 default_levels_varname = check_default_levels.get(check_plugin_name)
             else:
                 default_levels_varname = check_info[check_plugin_name].get(
@@ -2563,7 +2563,7 @@ def convert_check_info():
     for check_plugin_name, info in check_info.items():
         section_name = cmk_base.check_utils.section_name_of(check_plugin_name)
 
-        if type(info) != dict:
+        if not isinstance(info, dict):
             # Convert check declaration from old style to new API
             check_function, service_description, has_perfdata, inventory_function = info
             if inventory_function == check_api_utils.no_discovery_possible:
@@ -2740,12 +2740,12 @@ def _update_with_default_check_parameters(checktype, params):
     # levels, if possible.
     if params == None and def_levels_varname:
         fs = factory_settings.get(def_levels_varname)
-        if type(fs) == dict:
+        if isinstance(fs, dict):
             params = {}
 
     # Honor factory settings for dict-type checks. Merge
     # dict type checks with multiple matching rules
-    if type(params) == dict:
+    if isinstance(params, dict):
 
         # Start with factory settings
         if def_levels_varname:
@@ -2757,7 +2757,7 @@ def _update_with_default_check_parameters(checktype, params):
         check_context = _check_contexts[checktype]
         if def_levels_varname and def_levels_varname in check_context:
             def_levels = check_context[def_levels_varname]
-            if type(def_levels) == dict:
+            if isinstance(def_levels, dict):
                 new_params.update(def_levels)
 
         # Merge params from inventory onto it
@@ -2784,10 +2784,10 @@ def _update_with_configured_check_parameters(host, checktype, item, params):
 
         # loop from last to first (first must have precedence)
         for entry in entries[::-1]:
-            if type(params) == dict and type(entry) == dict:
+            if isinstance(params, dict) and isinstance(entry, dict):
                 params.update(entry)
             else:
-                if type(entry) == dict:
+                if isinstance(entry, dict):
                     # The entry still has the reference from the rule..
                     # If we don't make a deepcopy the rule might be modified by
                     # a followup params.update(...)

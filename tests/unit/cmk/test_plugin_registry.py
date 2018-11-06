@@ -1,12 +1,12 @@
 import pytest
 
-import cmk.gui.plugin_registry
+import cmk.plugin_registry
 
 class Plugin(object):
     pass
 
 
-class PluginRegistry(cmk.gui.plugin_registry.ClassRegistry):
+class PluginRegistry(cmk.plugin_registry.ClassRegistry):
     def plugin_base_class(self):
         return Plugin
 

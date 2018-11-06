@@ -31,9 +31,10 @@ import abc
 import json
 from hashlib import md5
 
+import cmk.plugin_registry
+
 import cmk.gui.config as config
 import cmk.gui.watolib as watolib
-import cmk.gui.plugin_registry
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
 from cmk.gui.log import logger
@@ -52,7 +53,7 @@ class APICallCollection(object):
         raise NotImplementedError("This API collection does not register any API call")
 
 
-class APICallCollectionRegistry(cmk.gui.plugin_registry.ClassRegistry):
+class APICallCollectionRegistry(cmk.plugin_registry.ClassRegistry):
     def plugin_base_class(self):
         return APICallCollection
 

@@ -30,9 +30,10 @@
 import abc
 import json
 
+import cmk.plugin_registry
+
 import cmk.gui.config as config
 import cmk.gui.userdb as userdb
-import cmk.gui.plugin_registry
 from cmk.gui.i18n import _u, _
 from cmk.gui.globals import html
 from cmk.gui.htmllib import HTML
@@ -1299,7 +1300,7 @@ def sort_sites(sitelist):
     return sitelist
 
 
-class ModeRegistry(cmk.gui.plugin_registry.ClassRegistry):
+class ModeRegistry(cmk.plugin_registry.ClassRegistry):
     def plugin_base_class(self):
         return WatoMode
 

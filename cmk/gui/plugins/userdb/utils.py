@@ -26,7 +26,7 @@
 
 import abc
 
-import cmk.gui.plugin_registry
+import cmk.plugin_registry
 
 #.
 #   .--ConnectorAPI--------------------------------------------------------.
@@ -187,7 +187,7 @@ class UserAttribute(object):
 #   '----------------------------------------------------------------------'
 
 
-class UserConnectorRegistry(cmk.gui.plugin_registry.ClassRegistry):
+class UserConnectorRegistry(cmk.plugin_registry.ClassRegistry):
     """The management object for all available user connector classes.
 
     Have a look at the base class for details."""
@@ -203,7 +203,7 @@ class UserConnectorRegistry(cmk.gui.plugin_registry.ClassRegistry):
 user_connector_registry = UserConnectorRegistry()
 
 
-class UserAttributeRegistry(cmk.gui.plugin_registry.ClassRegistry):
+class UserAttributeRegistry(cmk.plugin_registry.ClassRegistry):
     """The management object for all available user attributes.
     Have a look at the base class for details."""
 

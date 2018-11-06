@@ -47,7 +47,6 @@ import cmk.gui.notify as notify
 import cmk.gui.werks as werks
 import cmk.gui.sites as sites
 import cmk.gui.pages
-import cmk.gui.plugin_registry
 import cmk.gui.plugins.sidebar
 import cmk.gui.plugins.sidebar.quicksearch
 from cmk.gui.valuespec import CascadingDropdown, Dictionary

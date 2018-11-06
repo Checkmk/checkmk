@@ -29,14 +29,15 @@ import abc
 import livestatus
 import traceback
 
+import cmk.plugin_registry
+
 import cmk.gui.config as config
 import cmk.gui.sites as sites
-import cmk.gui.plugin_registry
 from cmk.gui.log import logger
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
 from cmk.gui.exceptions import MKGeneralException, MKException
-from . import SidebarSnapin, snapin_registry
+from cmk.gui.plugins.sidebar import SidebarSnapin, snapin_registry
 
 @snapin_registry.register
 class QuicksearchSnapin(SidebarSnapin):
@@ -720,7 +721,7 @@ class QuicksearchMatchPlugin(object):
 
 
 
-class MatchPluginRegistry(cmk.gui.plugin_registry.ClassRegistry):
+class MatchPluginRegistry(cmk.plugin_registry.ClassRegistry):
     def plugin_base_class(self):
         return QuicksearchMatchPlugin
 

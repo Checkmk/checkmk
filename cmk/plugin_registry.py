@@ -33,6 +33,9 @@ import abc
 # TODO: _register should always validate that the given plugin class is
 # based on plugin_base_class
 
+# TODO: Decide which base class to implement
+# (https://docs.python.org/2/library/collections.html) and cleanup
+
 class ClassRegistry(object):
     """The management object for all available plugins of a component.
 

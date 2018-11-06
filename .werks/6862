@@ -1,0 +1,12 @@
+Title: Fixed Handle Leak in Windows Agent
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1541519108
+Class: fix
+
+To prevent handle leaks in Windows Agent for certain versions of Windows OS
+provided perf_reader.exe utility in ~/share/doc/check_mk/treasures/windows directory. 
+Short description can be found ~/share/doc/check_mk/treasures/windows/readme.txt

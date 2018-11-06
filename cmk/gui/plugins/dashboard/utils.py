@@ -27,7 +27,8 @@
 
 import abc
 
-import cmk.gui.plugin_registry
+import cmk.plugin_registry
+
 import cmk.gui.config as config
 import cmk.gui.visuals as visuals
 from cmk.gui.globals import html
@@ -365,7 +366,7 @@ class IFrameDashlet(Dashlet):
         raise NotImplementedError()
 
 
-class DashletRegistry(cmk.gui.plugin_registry.ClassRegistry):
+class DashletRegistry(cmk.plugin_registry.ClassRegistry):
     """The management object for all available plugins."""
 
     def plugin_base_class(self):

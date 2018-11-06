@@ -26,6 +26,7 @@
 
 import cmk
 import cmk.store
+import cmk.plugin_registry
 from cmk.exceptions import MKGeneralException
 
 import cmk.gui.i18n
@@ -36,7 +37,6 @@ import cmk.gui.sites as sites
 import cmk.gui.config as config
 import cmk.gui.log as log
 import cmk.gui.background_job as background_job
-import cmk.gui.plugin_registry
 
 loaded_with_language = False
 def load_plugins(force):
@@ -199,7 +199,7 @@ class GUIBackgroundJob(GUIBackgroundJobSnapshottedFunctions):
 
 
 
-class GUIBackgroundJobRegistry(cmk.gui.plugin_registry.ClassRegistry):
+class GUIBackgroundJobRegistry(cmk.plugin_registry.ClassRegistry):
     def plugin_base_class(self):
         return GUIBackgroundJob
 

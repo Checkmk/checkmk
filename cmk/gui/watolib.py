@@ -73,6 +73,7 @@ import cmk.render as render
 import cmk.ec.defaults
 import cmk.ec.export
 import cmk.regex
+import cmk.plugin_registry
 
 import cmk.gui.utils as utils
 import cmk.gui.config as config
@@ -86,7 +87,6 @@ import cmk.gui.log as log
 import cmk.gui.background_job as background_job
 import cmk.gui.gui_background_job as gui_background_job
 import cmk.gui.weblib as weblib
-import cmk.gui.plugin_registry
 from cmk.gui.i18n import _u, _
 from cmk.gui.globals import html
 from cmk.gui.htmllib import HTML
@@ -637,7 +637,7 @@ class ConfigDomain(object):
 
 
 
-class ConfigDomainRegistry(cmk.gui.plugin_registry.ClassRegistry):
+class ConfigDomainRegistry(cmk.plugin_registry.ClassRegistry):
     def plugin_base_class(self):
         return ConfigDomain
 
@@ -10288,7 +10288,7 @@ class ACTest(object):
 
 
 
-class ACTestRegistry(cmk.gui.plugin_registry.ClassRegistry):
+class ACTestRegistry(cmk.plugin_registry.ClassRegistry):
     def plugin_base_class(self):
         return ACTest
 

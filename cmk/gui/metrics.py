@@ -42,6 +42,7 @@ import traceback
 
 import cmk.utils
 import cmk.render
+import cmk.plugin_registry
 from cmk.regex import regex
 
 import cmk.gui.utils as utils
@@ -49,7 +50,6 @@ import cmk.gui.config as config
 import cmk.gui.sites as sites
 import cmk.gui.i18n
 import cmk.gui.pages
-import cmk.gui.plugin_registry
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
 
@@ -399,7 +399,7 @@ class MetricometerRenderer(object):
 
 
 
-class MetricometerRendererRegistry(cmk.gui.plugin_registry.ClassRegistry):
+class MetricometerRendererRegistry(cmk.plugin_registry.ClassRegistry):
     def plugin_base_class(self):
         return MetricometerRenderer
 

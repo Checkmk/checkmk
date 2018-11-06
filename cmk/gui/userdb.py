@@ -48,7 +48,6 @@ from cmk.gui.valuespec import DualListChoice, TextAscii
 import cmk.gui.i18n
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
-import cmk.gui.plugin_registry
 import cmk.gui.plugins.userdb
 from cmk.gui.plugins.userdb.htpasswd import Htpasswd
 

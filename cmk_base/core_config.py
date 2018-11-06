@@ -25,6 +25,7 @@
 # Boston, MA 02110-1301 USA.
 
 import abc
+import numbers
 import os
 import sys
 
@@ -523,7 +524,7 @@ def get_host_macros_from_attributes(hostname, attrs):
 
 def replace_macros(s, macros):
     for key, value in macros.items():
-        if type(value) in (int, long, float):
+        if isinstance(value, (numbers.Integral, float)):
             value = str(value)  # e.g. in _EC_SL (service level)
 
         # TODO: Clean this up

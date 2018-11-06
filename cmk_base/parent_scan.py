@@ -31,6 +31,13 @@ import subprocess
 import time
 import pprint
 
+try:
+    # does not exist in Py3, but is supper class of str & unicode in py2
+    basestring
+except NameError:
+    basestring = str  # pylint: disable=redefined-builtin
+    unicode = str  # pylint: disable=redefined-builtin
+
 import cmk.tty as tty
 import cmk.paths
 from cmk.exceptions import MKGeneralException
@@ -175,7 +182,7 @@ def scan_parents_of(hosts, silent=False, settings=None):
     # we add a triple to gateways: the gateway, a scan state  and a diagnostic output
     gateways = []
     for host, ip, proc_or_error in procs:
-        if type(proc_or_error) in [str, unicode]:
+        if isinstance(proc_or_error, basestring):
             lines = [proc_or_error]
             exitstatus = 1
         else:

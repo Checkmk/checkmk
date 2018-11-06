@@ -31,6 +31,13 @@ import tempfile
 import time
 import copy
 
+try:
+    # does not exist in Py3, but is supper class of str & unicode in py2
+    basestring
+except NameError:
+    basestring = str  # pylint: disable=redefined-builtin
+    unicode = str  # pylint: disable=redefined-builtin
+
 import cmk
 import cmk.defines as defines
 import cmk.tty as tty
@@ -511,9 +518,9 @@ def _convert_perf_data(p):
 
 
 def _convert_perf_value(x):
-    if x == None:
+    if x is None:
         return ""
-    elif type(x) in [str, unicode]:
+    elif isinstance(x, basestring):
         return x
     elif isinstance(x, float):
         return ("%.6f" % x).rstrip("0").rstrip(".")
@@ -566,7 +573,7 @@ def _submit_check_result(host, servicedesc, result, cached_at=None, cache_interv
         # list of perfdata. It is of type string. And it might be
         # needed by the graphing tool in order to choose the correct
         # template. Currently this is used only by mrpe.
-        if len(perfdata) > 0 and type(perfdata[-1]) in (str, unicode):
+        if len(perfdata) > 0 and isinstance(perfdata[-1], basestring):
             check_command = perfdata[-1]
             del perfdata[-1]
         else:

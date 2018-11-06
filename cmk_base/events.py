@@ -35,6 +35,13 @@ import time
 import traceback
 import urllib
 
+try:
+    # does not exist in Py3, but is supper class of str & unicode in py2
+    basestring
+except NameError:
+    basestring = str  # pylint: disable=redefined-builtin
+    unicode = str  # pylint: disable=redefined-builtin
+
 import livestatus
 import cmk
 from cmk.regex import regex
@@ -750,17 +757,17 @@ def add_to_event_context(plugin_context, prefix, param):
 
 
 def plugin_param_to_string(value):
-    if type(value) in (str, unicode):
+    if isinstance(value, basestring):
         return value
-    elif type(value) in (int, float):
+    elif isinstance(value, (int, float)):
         return str(value)
-    elif value == None:
+    elif value is None:
         return ""
-    elif value == True:
+    elif value is True:
         return "yes"
-    elif value == False:
+    elif value is False:
         return ""
-    elif type(value) in (tuple, list):
+    elif isinstance(value, (tuple, list)):
         return "\t".join(value)
 
     return repr(value)  # Should never happen

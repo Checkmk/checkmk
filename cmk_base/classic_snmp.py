@@ -28,6 +28,13 @@ import os
 import subprocess
 import signal
 
+try:
+    # does not exist in Py3, but is supper class of str & unicode in py2
+    basestring
+except NameError:
+    basestring = str  # pylint: disable=redefined-builtin
+    unicode = str  # pylint: disable=redefined-builtin
+
 import cmk.tty as tty
 from cmk.exceptions import MKGeneralException
 
@@ -232,7 +239,7 @@ def _snmp_base_command(what, access_data, context_name):
     else:
         command = ['snmpwalk']
 
-    if type(credentials) in [str, unicode]:
+    if isinstance(credentials, basestring):
         # Handle V1 and V2C
         if config.is_bulkwalk_host(hostname):
             options.append('-v2c')

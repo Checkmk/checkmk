@@ -72,9 +72,6 @@ builtin_role_ids = ["user", "admin", "guest"]
 # Base directory of dynamic configuration
 config_dir = cmk.paths.var_dir + "/web"
 
-# Detect modification in configuration
-modification_timestamps = []
-
 # Stores the initial configuration values
 default_config = {}
 
@@ -163,9 +160,7 @@ def include(filename):
     # during setup.sh. Better signal an error then simply ignore
     # Absence.
     try:
-        lm = os.stat(filename).st_mtime
         execfile(filename, globals(), globals())
-        modification_timestamps.append((filename, lm))
     except Exception, e:
         raise MKConfigError(_("Cannot read configuration file %s: %s:") % (filename, e))
 
@@ -177,8 +172,7 @@ def include(filename):
 # plugins of other modules. This may save significant time in case of small requests like
 # the graph ajax page or similar.
 def load_config():
-    global modification_timestamps, sites
-    modification_timestamps = []
+    global sites
 
     # Set default values for all user-changable configuration settings
     _initialize_with_default_config()

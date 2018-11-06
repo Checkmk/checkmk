@@ -599,28 +599,6 @@ register_configvar(group,
 )
 
 register_configvar(group,
-    "bi_use_legacy_compilation",
-    Checkbox(title = _("Use legacy compilation for BI aggregations (slower)"),
-             label = _("Use legacy BI compilation"),
-    ),
-    domain = "multisite")
-
-register_configvar(group,
-    "bi_precompile_on_demand",
-    Checkbox(title = _("Precompile aggregations on demand"),
-             label = _("Only precompile on demand"),
-             help = _(
-                "By default all aggregations in Check_MK BI are precompiled on first "
-                "usage of a BI or host/service related dialog in the status GUI. "
-                "In case of large environments with many BI aggregations this complete "
-                "precompilation might take too much time (several seconds). It is now possible "
-                "to change the precompilation to be executed on demand. BI only precompiles the "
-                "aggregations which are really requested by the users."
-             ),
-    ),
-    domain = "multisite")
-
-register_configvar(group,
     "auth_by_http_header",
     Optional(
         TextAscii(

@@ -40,7 +40,6 @@ import cmk.gui.forms as forms
 import cmk.gui.inventory as inventory
 import cmk.gui.visuals as visuals
 import cmk.gui.sites as sites
-import cmk.gui.bi as bi
 import cmk.gui.i18n
 import cmk.gui.pages
 import cmk.gui.view_utils
@@ -794,8 +793,6 @@ def show_filter_form(is_open, filters):
 
 @cmk.gui.pages.register("view")
 def page_view():
-    bi.reset_cache_status() # needed for status icon
-
     load_views()
     view_name = html.var("view_name")
     if view_name == None:
@@ -1297,8 +1294,6 @@ def render_view(view, rows, datasource, group_painters, painters,
         pid = os.getpid()
         if sites.live().successfully_persisted():
             html.add_status_icon("persist", _("Reused persistent livestatus connection from earlier request (PID %d)") % pid)
-        if bi.reused_compilation():
-            html.add_status_icon("aggrcomp", _("Reused cached compiled BI aggregations (PID %d)") % pid)
 
         html.bottom_focuscode()
         if display_options.enabled(display_options.Z):

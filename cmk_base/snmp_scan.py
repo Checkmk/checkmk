@@ -134,7 +134,7 @@ def _snmp_scan(access_data,
                     return default_value if value is None else value
 
                 result = scan_function(oid_function)
-                if result is not None and type(result) not in [str, bool]:
+                if result is not None and not isinstance(result, (str, bool)):
                     if on_error == "warn":
                         console.warning("   SNMP scan function of %s returns invalid type %s." %
                                         (check_plugin_name, type(result)))

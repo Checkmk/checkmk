@@ -24,14 +24,23 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import os
-import sys
-import copy
-import marshal
+from collections import OrderedDict
 import ast
+import copy
+import inspect
+import marshal
+import numbers
+import os
 import py_compile
 import struct
-from collections import OrderedDict
+import sys
+
+try:
+    # does not exist in Py3, but is supper class of str & unicode in py2
+    basestring
+except NameError:
+    basestring = str  # pylint: disable=redefined-builtin
+    unicode = str  # pylint: disable=redefined-builtin
 
 import cmk.debug
 import cmk.paths
@@ -552,7 +561,7 @@ class PackedConfig(object):
     def _packable(self, varname, val):
         """Checks whether or not a variable can be written to the config.mk
         and read again from it."""
-        if type(val) in [int, str, unicode, bool] or not val:
+        if isinstance(val, (int, basestring, bool)) or not val:
             return True
 
         try:
@@ -1401,7 +1410,7 @@ def service_description(hostname, check_plugin_name, item):
     # One check defines "Pages %s" as a description, but the item
     # can by empty in some cases. Nagios silently drops leading
     # and trailing spaces in the configuration file.
-    if add_item and type(item) in [str, unicode, int, long]:
+    if add_item and isinstance(item, (basestring, numbers.Integral)):
         if "%s" not in descr_format:
             descr_format += " %s"
         descr = descr_format % (item,)
@@ -2213,7 +2222,7 @@ def load_checks(get_check_api_context, filelist):
     cmk_global_vars = set(get_variable_names())
 
     loaded_files = set()
-    ignored_variable_types = [type(lambda: None), type(os)]
+
     for f in filelist:
         if f[0] == "." or f[-1] == "~":
             continue  # ignore editor backup / temp files
@@ -2285,13 +2294,18 @@ def load_checks(get_check_api_context, filelist):
             if varname in cmk_global_vars:
                 continue
 
-            if varname[0] != '_' and type(value) not in ignored_variable_types:
-                _check_variable_defaults[varname] = value
+            if varname.startswith("_"):
+                continue
 
-                # Keep track of which variable needs to be set to which context
-                context_ident_list = _check_variables.setdefault(varname, [])
-                context_ident_list += new_checks
-                context_ident_list += new_active_checks
+            if inspect.isfunction(value) or inspect.ismodule(value):
+                continue
+
+            _check_variable_defaults[varname] = value
+
+            # Keep track of which variable needs to be set to which context
+            context_ident_list = _check_variables.setdefault(varname, [])
+            context_ident_list += new_checks
+            context_ident_list += new_active_checks
 
     # Now convert check_info to new format.
     convert_check_info()

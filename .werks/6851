@@ -1,0 +1,12 @@
+Title: Reduced minimal dashlet height to the half
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 1.5.0p8
+Date: 1541577233
+Class: fix
+
+To be able to create smaller "custom text" dashlets the minimal
+dashlet height for all dashlet types has been reduced to the half
+of the previous setting.

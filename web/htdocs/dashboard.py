@@ -48,7 +48,7 @@ dashlet_padding  = 34, 4, -2, 4, 4 # Margin (N, E, S, W, N w/o title) between ou
 #dashlet_padding  = 23, 2, 2, 2, 2 # Margin (N, E, S, W, N w/o title) between outer border of dashlet and its content
 corner_overlap   = 22
 raster           = 10            # Raster the dashlet coords are measured in (px)
-dashlet_min_size = 10, 10        # Minimum width and height of dashlets in raster units
+dashlet_min_size = 10, 5        # Minimum width and height of dashlets in raster units
 
 # Load plugins in web/plugins/dashboard and declare permissions,
 # note: these operations produce language-specific results and

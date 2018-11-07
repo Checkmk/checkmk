@@ -38,7 +38,7 @@ BUILD_PACKAGES += libfreeradius-dev
 #
 # Check_MK build specific packages below
 #
-BUILD_PACKAGES += libgsf-1-dev # needed for msitools
+BUILD_PACKAGES   += intltool # needed for building libgsf # needed for msitools
 BUILD_PACKAGES += librrd-dev # needed for CMC
 BUILD_PACKAGES += libffi-dev # needed for pyOpenSSL (and dependant) compilations
 BUILD_PACKAGES += libkrb5-dev # needed for python kerberos support
@@ -82,7 +82,6 @@ OS_PACKAGES    += libpcap0.8 # needed for cmc
 OS_PACKAGES    += rpm # needed by msitools/Agent Bakery
 OS_PACKAGES    += binutils # needed by msitools/Agent Bakery
 OS_PACKAGES    += lcab # needed for creating MSI packages
-OS_PACKAGES    += libgsf-1-114 # needed by msitools/Agent Bakery
 OS_PACKAGES    += libglib2.0-0 # needed by msitools/Agent Bakery
 OS_PACKAGES    += cpio # needed for Agent bakery (solaris pkgs)
 OS_PACKAGES    += poppler-utils # needed for preview of PDF in reporting

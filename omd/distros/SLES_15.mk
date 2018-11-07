@@ -63,7 +63,6 @@ OS_PACKAGES    += libltdl7
 OS_PACKAGES    += libreadline7
 OS_PACKAGES    += libuuid1
 OS_PACKAGES    += pango
-OS_PACKAGES    += patch
 OS_PACKAGES    += php-fastcgi
 OS_PACKAGES    += php-gd
 OS_PACKAGES    += php-iconv

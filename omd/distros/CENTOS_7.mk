@@ -62,7 +62,6 @@ OS_PACKAGES      += libdbi
 OS_PACKAGES      += libtool-ltdl
 OS_PACKAGES      += rpcbind
 OS_PACKAGES      += pango
-OS_PACKAGES      += patch
 OS_PACKAGES      += perl-Locale-Maketext-Simple
 OS_PACKAGES      += perl-IO-Zlib
 OS_PACKAGES      += php

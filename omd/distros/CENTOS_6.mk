@@ -58,7 +58,6 @@ OS_PACKAGES      += httpd
 OS_PACKAGES      += libevent
 OS_PACKAGES      += libtool-ltdl
 OS_PACKAGES      += pango
-OS_PACKAGES      += patch
 OS_PACKAGES      += php
 OS_PACKAGES      += php-cli
 OS_PACKAGES      += php-xml

@@ -6600,7 +6600,10 @@ class AuxtagList(object):
     def append(self, aux_tag):
         if is_builtin_aux_tag(aux_tag.id):
             raise MKUserError("tag_id", _("You can not override a builtin auxiliary tag."))
+        self._append(aux_tag)
 
+
+    def _append(self, aux_tag):
         if self.has_aux_tag(aux_tag):
             raise MKUserError("tag_id", _("This tag id does already exist in the list "
                                           "of auxiliary tags."))
@@ -6644,6 +6647,10 @@ class AuxtagList(object):
             response.append(tag.get_dict_format())
         return response
 
+
+class BuiltinAuxtagList(AuxtagList):
+    def append(self, aux_tag):
+        self._append(aux_tag)
 
 
 class GroupedHosttag(Hosttag):
@@ -6703,7 +6710,7 @@ class HosttagGroup(object):
 
     def _parse_legacy_format(self, group_info):
         self._initialize()
-        group_id, group_title, tag_list = group_info
+        group_id, group_title, tag_list = group_info[:3]
 
         self.id = group_id
         self.topic, self.title = HosttagsConfiguration.parse_hosttag_title(group_title)
@@ -6839,7 +6846,10 @@ class HosttagsConfiguration(object):
     def insert_tag_group(self, tag_group):
         if is_builtin_host_tag_group(tag_group.id):
             raise MKUserError("tag_id", _("You can not override a builtin tag group."))
+        self._insert_tag_group(tag_group)
 
+
+    def _insert_tag_group(self, tag_group):
         self.tag_groups.append(tag_group)
         self._validate_group(tag_group)
 
@@ -6975,7 +6985,13 @@ class HosttagsConfiguration(object):
         return result
 
 
+class BuiltinHosttagsConfiguration(HosttagsConfiguration):
+    def _initialize(self):
+        self.tag_groups   = []
+        self.aux_tag_list = BuiltinAuxtagList()
 
+    def insert_tag_group(self, tag_group):
+        self._insert_tag_group(tag_group)
 
 #.
 #   .--Hooks---------------------------------------------------------------.

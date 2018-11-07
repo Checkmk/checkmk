@@ -26,6 +26,7 @@
 
 import time
 
+import cmk
 import cmk.gui.config as config
 import cmk.gui.availability as availability
 import cmk.gui.table as table
@@ -34,6 +35,7 @@ from cmk.gui.i18n import _
 from cmk.gui.globals import html
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.valuespec import (
+    Checkbox,
     TextAreaUnicode,
     TextAscii,
     Dictionary,
@@ -767,6 +769,8 @@ def show_annotations(annotations, av_rawdata, what, avoptions, omit_service):
         table.cell(_("Annotation"), html.render_text(annotation["text"]))
         table.cell(_("Author"), annotation["author"])
         table.cell(_("Entry"), render_date(annotation["date"]), css="nobr narrow")
+        if not cmk.is_raw_edition():
+            table.cell(_("Hide in report"), _("Yes") if annotation.get("hide_from_report") else _("No"))
     table.end()
 
 
@@ -837,6 +841,10 @@ def edit_annotation():
 
 
 def _vs_annotation():
+    extra_elements = []
+    if not cmk.is_raw_edition():
+        extra_elements.append(("hide_from_report", Checkbox(title = _("Hide annotation in report"))))
+
     return Dictionary(
         elements = [
             ("site",     TextAscii(title = _("Site")) ),
@@ -855,7 +863,7 @@ def _vs_annotation():
                               label = _("Reclassify downtime of this period"),
             )),
             ("text",    TextAreaUnicode(title = _("Annotation"), allow_empty = False) ),
-        ],
+        ] + extra_elements,
         title = _("Edit annotation"),
         optional_keys = [],
     )

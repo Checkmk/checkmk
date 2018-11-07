@@ -1,0 +1,10 @@
+Title: It is now possible to hide specific annotations in PDF reports
+Level: 1
+Component: reporting
+Compatible: compat
+Edition: cee
+Version: 1.6.0i1
+Date: 1541614522
+Class: feature
+
+A new option <tt>Hide annotation in report</tt> is now available when editing an annotation.

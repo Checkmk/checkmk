@@ -3,3 +3,9 @@ based_on_style=google
 blank_line_before_nested_class_or_def=False
 column_limit=100
 indent_dictionary_value=True
+
+# We do not use i18n comments. Therefore we allow yapf to also format these things.
+# Most declarations e.g. in cmk/gui/plugins/wato/active_checks.py are only reformatted
+# with this change.
+i18n_comment=
+i18n_function_call=

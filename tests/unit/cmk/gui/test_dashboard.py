@@ -180,7 +180,7 @@ def test_old_dashlet_position(mocker):
 
 def test_old_dashlet_size(mocker):
     dashlet_type = _legacy_dashlet_type({})
-    assert dashlet_type.initial_size() == (10, 10)
+    assert dashlet_type.initial_size() == (10, 5)
 
     dashlet_type = _legacy_dashlet_type({"size": (25, 10)})
     assert dashlet_type.initial_size() == (25, 10)

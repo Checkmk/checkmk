@@ -114,8 +114,9 @@ def parse_apc_symmetra(info):
 # crit_capacity, crit_sys_temp, crit_batt_curr, crit_voltage = levels
 # Temperature default now 60C: regadring to a apc technician a temperature up tp 70C is possible
 factory_settings["apc_default_levels"] = {
-    "capacity"          : ( 95, 80 ),
-    "calibration_state" : 0
+    "capacity"              : ( 95, 80 ),
+    "calibration_state"     : 0,
+    "battery_replace_state" : 1,
 }
 
 
@@ -165,7 +166,7 @@ def check_apc_symmetra(_no_item, params, parsed):
     if battery_replace:
         state, state_readable = {
             "1" : (0, "no battery needs replacing"),
-            "2" : (1, "battery needs replacing"), }[battery_replace]
+            "2" : (params.get("battery_replace_state"), "battery needs replacing"), }[battery_replace]
         if battery_num_batt_packs and int(battery_num_batt_packs) > 1:
             yield 2, "%i batteries need replacement" % int(battery_num_batt_packs)
         elif state:

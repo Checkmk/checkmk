@@ -85,7 +85,8 @@ def parse_docker_node_info(info):
     if joined.endswith("permission denied"):
         return {}
     try:
-        return json.loads(joined)
+        # this may contain a certificate containing newlines.
+        return json.loads(joined.replace("\n", "\\n"))
     except ValueError:
         pass
 

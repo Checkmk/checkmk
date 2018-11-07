@@ -1,0 +1,11 @@
+Title: docker_node_info: Handle unescaped newlines
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1541576572
+Class: fix
+
+Previously the check did not handle unescaped newlines,
+ultimately resulting in the unhelpful exception "KeyError: 'Swarm'".

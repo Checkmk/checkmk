@@ -48,7 +48,7 @@ class Dashlet(object):
     __metaclass__ = abc.ABCMeta
 
     # Minimum width and height of dashlets in raster units
-    minimum_size = (10, 10)
+    minimum_size = (10, 5)
 
     @classmethod
     @abc.abstractmethod

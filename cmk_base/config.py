@@ -462,7 +462,6 @@ class PackedConfig(object):
         "host_paths",
         "timeperiods",
         "extra_service_conf",
-        "extra_host_conf",
         "extra_nagios_conf",
     ]
 

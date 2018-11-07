@@ -67,7 +67,6 @@ OS_PACKAGES    += libreadline7
 OS_PACKAGES    += libuuid1
 OS_PACKAGES    += net-snmp
 OS_PACKAGES    += pango
-OS_PACKAGES    += patch
 OS_PACKAGES    += perl-Net-SNMP
 OS_PACKAGES    += perl-SNMP
 OS_PACKAGES    += php-fastcgi

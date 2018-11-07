@@ -166,7 +166,8 @@ def check_apc_symmetra(_no_item, params, parsed):
     if battery_replace:
         state, state_readable = {
             "1" : (0, "no battery needs replacing"),
-            "2" : (params.get("battery_replace_state"), "battery needs replacing"), }[battery_replace]
+            "2" : (params.get("battery_replace_state", 1), "battery needs replacing"),
+        }.get(battery_replace, (3, "battery needs replacing: unknown"))
         if battery_num_batt_packs and int(battery_num_batt_packs) > 1:
             yield 2, "%i batteries need replacement" % int(battery_num_batt_packs)
         elif state:

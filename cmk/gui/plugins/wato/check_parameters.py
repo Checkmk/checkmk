@@ -5426,10 +5426,16 @@ register_check_parameters(
                         help = _("Time Left on Battery at and below which a critical state is triggered"),
                         default_value = 0,
                         display = [ "hours", "minutes" ]
-                    ),
+                       ),
                 ],
+                ),
             ),
-        )],
+            ("battery_replace_state",
+                MonitoringState(
+                    title = _("State if battery needs replacement"),
+                    default_value = 1,
+                )
+            )],
             optional_keys = ['post_calibration_levels', 'output_load', 'battime'],
         ),
         forth = transform_apc_symmetra,

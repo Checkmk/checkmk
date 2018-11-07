@@ -1,0 +1,10 @@
+Title: apc_symmetra: Customizable state if battery needs replacing
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1541602837
+Class: feature
+
+Previously the state in case the battery needs replacement was hardcoded to 1. The state may be configured via WATO now.

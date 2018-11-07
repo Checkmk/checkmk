@@ -60,7 +60,6 @@ OS_PACKAGES    += libltdl7
 OS_PACKAGES    += libreadline5
 OS_PACKAGES    += libuuid1
 OS_PACKAGES    += pango
-OS_PACKAGES    += patch
 OS_PACKAGES    += php53-fastcgi
 OS_PACKAGES    += php53-gd
 OS_PACKAGES    += php53-iconv

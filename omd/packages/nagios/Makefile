@@ -1,7 +1,7 @@
 include ../../Makefile.omd
 
 NAME = nagios
-VERSION = 3.5.0
+VERSION = 3.5.1
 DIR = $(NAME)-$(VERSION)
 
 # Configure options for Nagios. Since we want to compile
@@ -31,8 +31,6 @@ compile:
 unpack:
 	rm -rf $(DIR)
 	tar xzf $(DIR).tar.gz
-	mv nagios $(DIR)
-
 
 patch:
 	set -e ; for p in patches/*.dif ; do \

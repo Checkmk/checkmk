@@ -1,0 +1,13 @@
+Title: Make custom attributes of a host available for the core
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0p8
+Date: 1541609874
+
+Fixes a bug that made custom attributes of a host inaccessible for the core.
+Therefore, e.g. the rulset "Individual program call instead of agent access"
+could not resolve these values.

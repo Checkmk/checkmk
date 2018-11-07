@@ -2,9 +2,9 @@
 +++ nagios.b/html/main.php	2013-03-24 13:55:49.000000000 +0100
 @@ -40,38 +40,10 @@
  <div class="product">Nagios<sup><span style="font-size: small;">&reg;</span></sup> Core<sup><span style="font-size: small;">&trade;</span></sup></div>
- <div class="version">Version 3.5.0</div>
- <div class="releasedate">March 15, 2013</div>
--<div class="checkforupdates"><a href="http://www.nagios.org/checkforupdates/?version=3.5.0&product=nagioscore" target="_blank">Check for updates</a></div>
+ <div class="version">Version 3.5.1</div>
+ <div class="releasedate">August 30, 2013</div>
+-<div class="checkforupdates"><a href="http://www.nagios.org/checkforupdates/?version=3.5.1&product=nagioscore" target="_blank">Check for updates</a></div>
  <!--<div class="whatsnew"><a href="http://go.nagios.com/nagioscore/whatsnew">Read what's new in Nagios Core 3</a></div>-->
  </div>
  

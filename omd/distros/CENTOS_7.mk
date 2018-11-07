@@ -69,7 +69,6 @@ OS_PACKAGES      += rpcbind
 OS_PACKAGES      += net-snmp
 OS_PACKAGES      += net-snmp-utils
 OS_PACKAGES      += pango
-OS_PACKAGES      += patch
 OS_PACKAGES      += perl-Net-SNMP
 OS_PACKAGES      += perl-Locale-Maketext-Simple
 OS_PACKAGES      += perl-IO-Zlib

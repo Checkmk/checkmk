@@ -57,7 +57,6 @@ OS_PACKAGES      += libperl5.10
 OS_PACKAGES      += libreadline5
 OS_PACKAGES      += libsnmp-perl
 OS_PACKAGES      += libuuid1
-OS_PACKAGES      += patch
 OS_PACKAGES      += binutils # Needed by Check_MK Agent Bakery
 OS_PACKAGES      += rpm
 OS_PACKAGES      += php5

@@ -65,7 +65,6 @@ OS_PACKAGES      += libtool-ltdl
 OS_PACKAGES      += net-snmp
 OS_PACKAGES      += net-snmp-utils
 OS_PACKAGES      += pango
-OS_PACKAGES      += patch
 OS_PACKAGES      += perl-Net-SNMP
 OS_PACKAGES      += php
 OS_PACKAGES      += php-cli

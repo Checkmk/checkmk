@@ -55,7 +55,6 @@ OS_PACKAGES      += libmcrypt
 OS_PACKAGES      += libtool-ltdl
 OS_PACKAGES      += net-snmp
 OS_PACKAGES      += pango
-OS_PACKAGES      += patch
 OS_PACKAGES      += binutils # Needed by Check_MK Agent Bakery
 OS_PACKAGES      += rpm-build # Needed by Check_MK Agent Bakery
 OS_PACKAGES      += perl-Net-SNMP

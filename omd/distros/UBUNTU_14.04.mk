@@ -63,7 +63,6 @@ OS_PACKAGES    += libreadline5
 OS_PACKAGES    += libsnmp-perl
 OS_PACKAGES    += libuuid1
 OS_PACKAGES    += libxml2
-OS_PACKAGES    += patch
 OS_PACKAGES    += rpm
 OS_PACKAGES    += binutils
 OS_PACKAGES    += php5-cli

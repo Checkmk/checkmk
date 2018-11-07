@@ -9,3 +9,6 @@ Version: 1.4.0p38
 Date: 1541591281
 
 Bakery rule wrote multiple perfcounters to the same INI line, missing CR character has been fixed now.
+
+This is an incompatible change, because affected agents must get baked newly after applying this change.
+You usually must already do this after an update of your site so this should only apply to those users applying the werk manually.

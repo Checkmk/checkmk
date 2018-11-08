@@ -26,9 +26,7 @@
 
 
 def inventory_wmi_cpuload(tables):
-    if ("computer_system" not in tables.keys() or
-        "system_perf" not in tables.keys() or
-        any(isinstance(table, NullTable) for table in tables.itervalues())):
+    if _required_tables_missing(tables, ["computer_system", "system_perf"]):
         return []
     return [(None, None)]
 

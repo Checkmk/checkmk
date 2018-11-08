@@ -54,6 +54,13 @@ import copy
 import sys
 import shutil
 
+try:
+    # does not exist in Py3, but is supper class of str & unicode in py2
+    basestring
+except NameError:
+    basestring = str  # pylint: disable=redefined-builtin
+    unicode = str  # pylint: disable=redefined-builtin
+
 # docs: http://www.python-ldap.org/doc/html/index.html
 import ldap
 import ldap.filter
@@ -164,7 +171,7 @@ class LDAPUserConnector(UserConnector):
 
         # For a short time in git master the directory_type could be:
         # ('ad', {'discover_nearest_dc': True/False})
-        if type(config["directory_type"]) == tuple and config["directory_type"][0] == "ad" \
+        if isinstance(config["directory_type"], tuple) and config["directory_type"][0] == "ad" \
            and "discover_nearest_dc" in config["directory_type"][1]:
             auto_discover = config["directory_type"][1]["discover_nearest_dc"]
 
@@ -177,7 +184,7 @@ class LDAPUserConnector(UserConnector):
                     }),
                 })
 
-        if type(config["directory_type"]) != tuple and "server" in config:
+        if not isinstance(config["directory_type"], tuple) and "server" in config:
             # Old separate configuration of directory_type and server
             servers = {
                 "server": config["server"],
@@ -267,7 +274,7 @@ class LDAPUserConnector(UserConnector):
 
         except (ldap.SERVER_DOWN, ldap.TIMEOUT, ldap.LOCAL_ERROR, ldap.LDAPError), e:
             self.clear_nearest_dc_cache()
-            if type(e[0]) == dict:
+            if isinstance(e[0], dict):
                 msg = e[0].get('info', e[0].get('desc', ''))
             else:
                 msg = "%s" % e
@@ -531,10 +538,10 @@ class LDAPUserConnector(UserConnector):
 
         lc = SimplePagedResultsControl(size=page_size, cookie='')
 
-        if type(base) == unicode:
+        if isinstance(base, unicode):
             base = base.encode("utf-8")
 
-        if type(filt) == unicode:
+        if isinstance(filt, unicode):
             filt = filt.encode("utf-8")
 
         results = []
@@ -566,7 +573,7 @@ class LDAPUserConnector(UserConnector):
                      columns=None,
                      scope='sub',
                      implicit_connect=True):
-        if columns == None:
+        if columns is None:
             columns = []
 
         self._logger.info('LDAP_SEARCH "%s" "%s" "%s" "%r"' % (base, scope, filt, columns))
@@ -1266,7 +1273,7 @@ class LDAPUserConnector(UserConnector):
         for key in keys:
             value = user[key]
             new_value = new_user[key]
-            if type(value) == list and type(new_value) == list:
+            if isinstance(value, list) and isinstance(new_value, list):
                 is_changed = sorted(value) != sorted(new_value)
             else:
                 is_changed = value != new_value
@@ -1299,7 +1306,7 @@ class LDAPUserConnector(UserConnector):
     def is_enabled(self):
         import cmk.gui.userdb as userdb  # TODO: Cleanup
         sync_config = userdb.user_sync_config()
-        if type(sync_config) == tuple and self.id() not in sync_config[1]:
+        if isinstance(sync_config, tuple) and self.id() not in sync_config[1]:
             #self._ldap_logger('Skipping disabled connection %s' % (self.id()))
             return False
         return True
@@ -1322,7 +1329,7 @@ class LDAPUserConnector(UserConnector):
         locked = set(['password'])  # This attributes are locked in all cases!
         for key, params in self._config['active_plugins'].items():
             lock_attrs = ldap_attribute_plugins.get(key, {}).get('lock_attributes', [])
-            if type(lock_attrs) == list:
+            if isinstance(lock_attrs, list):
                 locked.update(lock_attrs)
             else:  # maby be a function which returns a list
                 locked.update(lock_attrs(params))
@@ -1816,7 +1823,7 @@ class LDAPConnectionValuespec(Transform):
             for index, group_spec in enumerate(group_specs):
                 dn, connection_id = group_spec
 
-                if connection_id == None:
+                if connection_id is None:
                     group_dn = value["group_dn"]
 
                 else:
@@ -2431,13 +2438,13 @@ def ldap_sync_groups_to_roles(connection, plugin, params, user_id, ldap_user, us
 
     # Loop all roles mentioned in params (configured to be synchronized)
     for role_id, group_specs in params.items():
-        if type(group_specs) != list:
+        if not isinstance(group_specs, list):
             group_specs = [group_specs]  # be compatible to old single group configs
 
         for group_spec in group_specs:
-            if type(group_spec) in [str, unicode]:
+            if isinstance(group_spec, basestring):
                 dn = group_spec  # be compatible to old config without connection spec
-            elif type(group_spec) != tuple:
+            elif not isinstance(group_spec, tuple):
                 continue  # skip non configured ones (old valuespecs allowed None)
             else:
                 dn = group_spec[0]
@@ -2473,11 +2480,11 @@ def fetch_needed_groups_for_groups_to_roles(connection, params):
 def _get_groups_to_fetch(connection, params):
     groups_to_fetch = {}
     for group_specs in params.itervalues():
-        if type(group_specs) == list:
+        if isinstance(group_specs, list):
             for group_spec in group_specs:
-                if type(group_spec) == tuple:
+                if isinstance(group_spec, tuple):
                     this_conn_id = group_spec[1]
-                    if this_conn_id == None:
+                    if this_conn_id is None:
                         this_conn_id = connection.id()
                     groups_to_fetch.setdefault(this_conn_id, [])
                     groups_to_fetch[this_conn_id].append(group_spec[0].lower())
@@ -2487,7 +2494,7 @@ def _get_groups_to_fetch(connection, params):
                     groups_to_fetch.setdefault(this_conn_id, [])
                     groups_to_fetch[this_conn_id].append(group_spec.lower())
 
-        elif type(group_specs) in [str, unicode]:
+        elif isinstance(group_specs, basestring):
             # Need to be compatible to old config formats
             this_conn_id = connection.id()
             groups_to_fetch.setdefault(this_conn_id, [])

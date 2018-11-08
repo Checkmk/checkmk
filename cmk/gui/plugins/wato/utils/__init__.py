@@ -506,7 +506,7 @@ def _translation_elements(what):
                     add_label = _("Add expression"),
                     movable   = False,
                 ),
-                forth = lambda x: type(x) == tuple and [x] or x,
+                forth = lambda x: isinstance(x, tuple) and [x] or x,
             )
         ),
         ( "mapping",
@@ -591,7 +591,7 @@ class PasswordFromStore(CascadingDropdown):
 def IndividualOrStoredPassword(*args, **kwargs):
     return Transform(
         PasswordFromStore(*args, **kwargs),
-        forth=lambda v: ("password", v) if type(v) != tuple else v,
+        forth=lambda v: ("password", v) if not isinstance(v, tuple) else v,
     )
 
 
@@ -957,9 +957,9 @@ def PredictiveLevels(**args):
 # prediction
 def Levels(**kwargs):
     def match_levels_alternative(v):
-        if type(v) == dict:
+        if isinstance(v, dict):
             return 2
-        elif type(v) == tuple and v != (None, None):
+        elif isinstance(v, tuple) and v != (None, None):
             return 1
         return 0
 

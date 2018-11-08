@@ -351,7 +351,7 @@ def render_nagios():
         ("extinfo.cgi?type=7", "Scheduling Queue"),
         ("config.cgi", "Configuration"),
     ]:
-        if type(entry) == str:
+        if isinstance(entry, str):
             html.close_ul()
             heading(entry)
             html.open_ul()
@@ -401,14 +401,14 @@ def render_custom_links():
         for entry in links:
             n += 1
             try:
-                if type(entry[1]) == type(True):
+                if isinstance(entry[1], type(True)):
                     idss = ids + [str(n)]
                     id_ = '/'.join(idss)
                     html.begin_foldable_container(
                         "customlinks", id_, isopen=entry[1], title=entry[0])
                     render_list(idss, entry[2])
                     html.end_foldable_container()
-                elif type(entry[1]) == str:
+                elif isinstance(entry[1], str):
                     frame = entry[3] if len(entry) > 3 else "main"
 
                     if len(entry) > 2 and entry[2]:

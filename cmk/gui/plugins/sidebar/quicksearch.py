@@ -773,7 +773,7 @@ class GroupMatchPlugin(QuicksearchMatchPlugin):
         else:
             value = used_filters.get(self.get_filter_shortname())
 
-        if type(value) == list:
+        if isinstance(value, list):
             value = "|".join(value)
 
         return value, [(filter_name, value)]

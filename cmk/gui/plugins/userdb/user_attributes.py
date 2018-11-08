@@ -125,7 +125,7 @@ class DisableNotificationsUserAttribute(UserAttribute):
             forth=self._transform_disable_notification)
 
     def _transform_disable_notification(self, p):
-        if type(p) is not dict:
+        if not isinstance(p, dict):
             return {"disable": True}
         return p
 

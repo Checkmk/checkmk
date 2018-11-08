@@ -120,6 +120,7 @@ class UserConnector(object):
     def non_contact_attributes(self):
         return []
 
+
 #.
 #   .--UserAttribute-------------------------------------------------------.
 #   |     _   _                _   _   _        _ _           _            |

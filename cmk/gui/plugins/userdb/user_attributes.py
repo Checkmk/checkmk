@@ -55,11 +55,11 @@ class ForceAuthUserUserAttribute(UserAttribute):
 
     def valuespec(self):
         return Checkbox(
-            title = _("Visibility of Hosts/Services"),
-            label = _("Only show hosts and services the user is a contact for"),
-            help = _("When this option is checked, then the status GUI will only "
-                     "display hosts and services that the user is a contact for - "
-                     "even if he has the permission for seeing all objects."),
+            title=_("Visibility of Hosts/Services"),
+            label=_("Only show hosts and services the user is a contact for"),
+            help=_("When this option is checked, then the status GUI will only "
+                   "display hosts and services that the user is a contact for - "
+                   "even if he has the permission for seeing all objects."),
         )
 
     def permission(self):
@@ -78,12 +78,12 @@ class ForceAuthUserWebserviceUserAttribute(UserAttribute):
 
     def valuespec(self):
         return Checkbox(
-            title = _("Hosts/Service visibility (Webservice, Deprecated)"),
-            label = _("Export only hosts and services the user is a contact for. "
-                      "<b>Please don't use this option anymore, it is deprecated.</b>"),
-            help = _("When this option is checked, then the Multisite webservice "
-                     "will only export hosts and services that the user is a contact for - "
-                     "even if he has the permission for seeing all objects."),
+            title=_("Hosts/Service visibility (Webservice, Deprecated)"),
+            label=_("Export only hosts and services the user is a contact for. "
+                    "<b>Please don't use this option anymore, it is deprecated.</b>"),
+            help=_("When this option is checked, then the Multisite webservice "
+                   "will only export hosts and services that the user is a contact for - "
+                   "even if he has the permission for seeing all objects."),
         )
 
     def permission(self):
@@ -100,24 +100,29 @@ class DisableNotificationsUserAttribute(UserAttribute):
         return "personal"
 
     def valuespec(self):
-        return Transform(Dictionary(
-            title=_("Disable Notifications"),
-            help = _("When this option is active the you will not get <b>any</b> "
-                     "alerts or other notifications via email, SMS or similar. "
-                     "This overrides all other notification settings or rules, so make "
-                     "sure that you know what you do. Moreover you can customize a timerange "
-                     "within no notifications are generated."),
-            elements = [
-                ("disable", FixedValue(True,
-                    title=_("Temporarily disable <b>all</b> notifications!"),
-                    totext="",
-                )),
-                ("timerange", Tuple(title=_("Customize timerange"), elements = [
-                    AbsoluteDate(title=_("From:"), include_time=True),
-                    AbsoluteDate(title=_("To:"), include_time=True),
-                ]))
-            ],
-        ), forth = self._transform_disable_notification)
+        return Transform(
+            Dictionary(
+                title=_("Disable Notifications"),
+                help=_("When this option is active the you will not get <b>any</b> "
+                       "alerts or other notifications via email, SMS or similar. "
+                       "This overrides all other notification settings or rules, so make "
+                       "sure that you know what you do. Moreover you can customize a timerange "
+                       "within no notifications are generated."),
+                elements=[("disable",
+                           FixedValue(
+                               True,
+                               title=_("Temporarily disable <b>all</b> notifications!"),
+                               totext="",
+                           )),
+                          ("timerange",
+                           Tuple(
+                               title=_("Customize timerange"),
+                               elements=[
+                                   AbsoluteDate(title=_("From:"), include_time=True),
+                                   AbsoluteDate(title=_("To:"), include_time=True),
+                               ]))],
+            ),
+            forth=self._transform_disable_notification)
 
     def _transform_disable_notification(self, p):
         if type(p) is not dict:
@@ -143,28 +148,30 @@ class StartURLUserAttribute(UserAttribute):
     def valuespec(self):
         return Transform(
             Alternative(
-                title = _("Start URL to display in main frame"),
-                style = "dropdown",
-                orientation = "horizontal",
-                elements = [
-                    FixedValue(None,
-                        title = _("Use the default start URL"),
-                        totext = "",
+                title=_("Start URL to display in main frame"),
+                style="dropdown",
+                orientation="horizontal",
+                elements=[
+                    FixedValue(
+                        None,
+                        title=_("Use the default start URL"),
+                        totext="",
                     ),
                     TextAscii(
-                        title = _("Use this custom start URL"),
-                        help = _("When you point your browser to the Check_MK GUI, usually the dashboard "
-                                 "is shown in the main (right) frame. You can replace this with any other "
-                                 "URL you like here."),
-                        size = 80,
-                        default_value = "dashboard.py",
-                        attrencode = True,
-                        allow_empty = False,
-                        validate = utils.validate_start_url,
+                        title=_("Use this custom start URL"),
+                        help=
+                        _("When you point your browser to the Check_MK GUI, usually the dashboard "
+                          "is shown in the main (right) frame. You can replace this with any other "
+                          "URL you like here."),
+                        size=80,
+                        default_value="dashboard.py",
+                        attrencode=True,
+                        allow_empty=False,
+                        validate=utils.validate_start_url,
                     ),
                 ],
             ),
-            forth = lambda v: None if v == "" else v,
+            forth=lambda v: None if v == "" else v,
         )
 
     def domain(self):
@@ -182,17 +189,18 @@ class UIThemeUserAttribute(UserAttribute):
 
     def valuespec(self):
         return Alternative(
-            title = _("User interface theme"),
-            style = "dropdown",
-            orientation = "horizontal",
-            elements = [
-                FixedValue(None,
-                    title = _("Use the default theme"),
-                    totext = "",
+            title=_("User interface theme"),
+            style="dropdown",
+            orientation="horizontal",
+            elements=[
+                FixedValue(
+                    None,
+                    title=_("Use the default theme"),
+                    totext="",
                 ),
                 DropdownChoice(
-                    title = _("Set custom theme"),
-                    choices = theme_choices(),
+                    title=_("Set custom theme"),
+                    choices=theme_choices(),
                 ),
             ],
         )

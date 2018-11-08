@@ -26,7 +26,6 @@
 
 from cmk.plugin_loader import load_plugins
 
-
 #.
 #   .--Plugin API----------------------------------------------------------.
 #   |           ____  _             _            _    ____ ___             |
@@ -43,7 +42,6 @@ from cmk.gui.plugins.userdb.utils import (
     UserConnector,
     user_connector_registry,
 )
-
 
 #.
 #   .--Plugins-------------------------------------------------------------.

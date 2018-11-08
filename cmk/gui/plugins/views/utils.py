@@ -73,7 +73,7 @@ class PainterOptions(object):
 
     # Load the options to be used for this view
     def _load_used_options(self, view):
-        if self._used_option_names != None:
+        if self._used_option_names is not None:
             return  # only load once per request
 
         options = set([])
@@ -83,7 +83,7 @@ class PainterOptions(object):
 
         # Also layouts can register painter options
         layout_name = view.get("layout")
-        if layout_name != None:
+        if layout_name is not None:
             options.update(multisite_layouts[layout_name].get("options", []))
 
         # TODO: Improve sorting. Add a sort index?
@@ -101,7 +101,7 @@ class PainterOptions(object):
         self._options = vo.get(view_name, {})
 
     def _is_anonymous_view(self, view_name):
-        return view_name == None
+        return view_name is None
 
     def save_to_config(self, view_name):
         vo = config.user.load_file("viewoptions", {}, lock=True)
@@ -160,7 +160,7 @@ class PainterOptions(object):
 
     def get_valuespec_of(self, name):
         opt = multisite_painter_options[name]
-        if type(lambda: None) == type(opt["valuespec"]):
+        if callable(opt["valuespec"]):
             return opt["valuespec"]()
         return opt["valuespec"]
 
@@ -174,7 +174,7 @@ class PainterOptions(object):
     # Returns either the set value, the provided default value or if none
     # provided, it returns the default value of the valuespec.
     def get(self, name, dflt=None):
-        if dflt == None:
+        if dflt is None:
             try:
                 dflt = self.get_valuespec_of(name).default_value()
             except KeyError:
@@ -237,7 +237,7 @@ def row_id(view, row):
 
 
 def get_painter_columns(painter):
-    if type(lambda: None) == type(painter["columns"]):
+    if callable(painter["columns"]):
         return painter["columns"]()
     return painter["columns"]
 
@@ -265,9 +265,9 @@ def group_value(row, group_cells):
 
 
 def _create_dict_key(value):
-    if type(value) in (list, tuple):
+    if isinstance(value, (list, tuple)):
         return tuple(map(_create_dict_key, value))
-    elif type(value) == dict:
+    elif isinstance(value, dict):
         return tuple([(k, _create_dict_key(v)) for (k, v) in sorted(value.items())])
     return value
 
@@ -307,7 +307,7 @@ def register_command_group(ident, title, sort_index):
 
 
 def transform_action_url(url_spec):
-    if type(url_spec) == tuple:
+    if isinstance(url_spec, tuple):
         return url_spec
     return (url_spec, None)
 
@@ -393,10 +393,10 @@ def url_to_view(row, view_name):
 
 
 def get_host_tags(row):
-    if type(row.get("host_custom_variables")) == dict:
+    if isinstance(row.get("host_custom_variables"), dict):
         return row["host_custom_variables"].get("TAGS", "")
 
-    if type(row.get("host_custom_variable_names")) != list:
+    if not isinstance(row.get("host_custom_variable_names"), list):
         return ""
 
     for name, val in zip(row["host_custom_variable_names"], row["host_custom_variable_values"]):
@@ -415,7 +415,7 @@ def paint_age(timestamp, has_been_checked, bold_if_younger_than, mode=None, what
     if not has_been_checked:
         return "age", "-"
 
-    if mode == None:
+    if mode is None:
         mode = painter_options.get("ts_format")
 
     if mode == "epoch":
@@ -601,7 +601,7 @@ def query_data(datasource,
     if only_sites is None:
         only_sites = []
 
-    if tablename == None:
+    if tablename is None:
         tablename = datasource["table"]
 
     add_headers += datasource.get("add_headers", "")
@@ -645,7 +645,7 @@ def do_query_data(query, columns, add_columns, merge_column, add_headers, only_s
     query += add_headers
     sites.live().set_prepend_site(True)
 
-    if limit != None:
+    if limit is not None:
         sites.live().set_limit(limit + 1)  # + 1: We need to know, if limit is exceeded
     else:
         sites.live().set_limit(None)
@@ -721,7 +721,7 @@ def _merge_data(data, columns):
 
 
 def join_row(row, cell):
-    if type(cell) == JoinCell:
+    if isinstance(cell, JoinCell):
         return row.get("JOIN", {}).get(cell.join_service())
     return row
 
@@ -980,7 +980,7 @@ class Cell(object):
     # but this should be cleaned up more. TODO: Move this to another place
     @staticmethod
     def painter_exists(painter_spec):
-        if type(painter_spec[0]) == tuple:
+        if isinstance(painter_spec[0], tuple):
             painter_name = painter_spec[0][0]
         else:
             painter_name = painter_spec[0]
@@ -1021,12 +1021,12 @@ class Cell(object):
     # Same as above but instead of the "Painter name" a two element tuple with the painter name as
     # first element and a dictionary of parameters as second element is set.
     def _from_view(self, painter_spec):
-        if type(painter_spec[0]) == tuple:
+        if isinstance(painter_spec[0], tuple):
             self._painter_name, self._painter_params = painter_spec[0]
         else:
             self._painter_name = painter_spec[0]
 
-        if painter_spec[1] != None:
+        if painter_spec[1] is not None:
             self._link_view_name = painter_spec[1]
 
         # Clean this call to Cell.painter_exists() up!
@@ -1059,7 +1059,7 @@ class Cell(object):
         return None
 
     def _has_link(self):
-        return self._link_view_name != None
+        return self._link_view_name is not None
 
     def _link_view(self):
         try:
@@ -1087,7 +1087,7 @@ class Cell(object):
         if not vs_painter_params:
             return
 
-        if vs_painter_params and self._painter_params == None:
+        if vs_painter_params and self._painter_params is None:
             return vs_painter_params.default_value()
         return self._painter_params
 
@@ -1098,12 +1098,12 @@ class Cell(object):
         return self._get_long_title(painter)
 
     def _get_short_title(self, painter):
-        if type(painter.get("short")) in [types.FunctionType, types.MethodType]:
+        if isinstance(painter.get("short"), (types.FunctionType, types.MethodType)):
             return painter["short"](self.painter_parameters())
         return painter.get("short", self._get_long_title(painter))
 
     def _get_long_title(self, painter):
-        if type(painter.get("title")) in [types.FunctionType, types.MethodType]:
+        if isinstance(painter.get("title"), (types.FunctionType, types.MethodType)):
             return painter["title"](self.painter_parameters())
         return painter["title"]
 
@@ -1115,7 +1115,7 @@ class Cell(object):
         return self.painter().get("printable", True)
 
     def has_tooltip(self):
-        return self._tooltip_painter_name != None
+        return self._tooltip_painter_name is not None
 
     def tooltip_painter_name(self):
         return self._tooltip_painter_name
@@ -1217,7 +1217,7 @@ class Cell(object):
             logger.exception("Failed to render painter '%s' (Row: %r)" % (self._painter_name, row))
             raise
 
-        if tdclass == None:
+        if tdclass is None:
             tdclass = ""
 
         if tdclass == "" and content == "":
@@ -1307,7 +1307,7 @@ class Cell(object):
         has_content = content != ""
 
         if is_last_cell:
-            if tdclass == None:
+            if tdclass is None:
                 tdclass = "last_col"
             else:
                 tdclass += " last_col"
@@ -1389,7 +1389,7 @@ def get_group_cells(view):
 def output_csv_headers(view):
     filename = '%s-%s.csv' % (view['name'],
                               time.strftime('%Y-%m-%d_%H-%M-%S', time.localtime(time.time())))
-    if type(filename) == unicode:
+    if isinstance(filename, unicode):
         filename = filename.encode("utf-8")
     html.response.set_http_header("Content-Disposition", "Attachment; filename=\"%s\"" % filename)
 

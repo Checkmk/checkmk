@@ -76,7 +76,7 @@ def render_json(rows, view, group_cells, cells, num_columns, show_checkboxes, ex
     if export:
         filename = '%s-%s.json' % (view['name'],
                                    time.strftime('%Y-%m-%d_%H-%M-%S', time.localtime(time.time())))
-        if type(filename) == unicode:
+        if isinstance(filename, unicode):
             filename = filename.encode("utf-8")
         html.response.set_http_header("Content-Disposition",
                                       "Attachment; filename=\"%s\"" % filename)
@@ -93,13 +93,13 @@ def render_json(rows, view, group_cells, cells, num_columns, show_checkboxes, ex
         for cell in cells:
             joined_row = join_row(row, cell)
             content = cell.render_content(joined_row)[1]
-            if type(content) in [list, dict]:
+            if isinstance(content, (list, dict)):
                 # Allow painters to return lists and dicts, then json encode them
                 # as such data structures without wrapping them into strings
                 pass
 
             else:
-                if type(content) == unicode:
+                if isinstance(content, unicode):
                     content = content.encode("utf-8")
                 else:
                     content = "%s" % content

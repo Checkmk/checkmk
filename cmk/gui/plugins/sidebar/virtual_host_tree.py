@@ -53,7 +53,7 @@ class VirtualHostTree(SidebarSnapin):
 
     def _load_user_settings(self):
         tree_conf = config.user.load_file("virtual_host_tree", {"tree": 0, "cwd": {}})
-        if type(tree_conf) == int:
+        if isinstance(tree_conf, int):
             tree_conf = {"tree": tree_conf, "cwd": {}}  # convert from old style
 
         tree_id = tree_conf["tree"]

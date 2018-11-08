@@ -92,9 +92,12 @@ std::optional<int32_t> IntFilter::greatestLowerBoundFor(
         case RelationalOperator::doesnt_match_icase:  // contains none of
         case RelationalOperator::less:
         case RelationalOperator::less_or_equal:
-            return {};
+            // NOTE: If we use the equivalent 'return {}' here and the other
+            // std::nullopt occurences below, we run into g++/libstdc++ bug
+            // https://gcc.gnu.org/bugzilla/show_bug.cgi?id=86465. :-/
+            return std::nullopt;
     }
-    return {};  // unreachable
+    return std::nullopt;  // unreachable
 }
 
 std::optional<int32_t> IntFilter::leastUpperBoundFor(
@@ -118,9 +121,9 @@ std::optional<int32_t> IntFilter::leastUpperBoundFor(
         case RelationalOperator::doesnt_match_icase:  // contains none of
         case RelationalOperator::greater_or_equal:
         case RelationalOperator::greater:
-            return {};
+            return std::nullopt;
     }
-    return {};  // unreachable
+    return std::nullopt;  // unreachable
 }
 
 std::optional<std::bitset<32>> IntFilter::valueSetLeastUpperBoundFor(

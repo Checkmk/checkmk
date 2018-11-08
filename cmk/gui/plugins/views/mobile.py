@@ -45,21 +45,22 @@ from . import (
 #   | Views optimated for usage in the mobile UI                           |
 #   '----------------------------------------------------------------------'
 
+
 def mobile_view(d):
     x = {
-        'mobile'          : True,
-        'browser_reload'  : 0,
-        'column_headers'  : 'perpage',
-        'description'     : 'This view is used by the mobile GUI',
-        'hidden'          : False,
-        'hidebutton'      : False,
-        'icon'            : None,
-        'public'          : True,
-        'topic'           : _('Mobile'),
-        'user_sortable'   : False,
-        'play_sounds'     : False,
-        'show_checkboxes' : False,
-        'mustsearch'      : False,
+        'mobile': True,
+        'browser_reload': 0,
+        'column_headers': 'perpage',
+        'description': 'This view is used by the mobile GUI',
+        'hidden': False,
+        'hidebutton': False,
+        'icon': None,
+        'public': True,
+        'topic': _('Mobile'),
+        'user_sortable': False,
+        'play_sounds': False,
+        'show_checkboxes': False,
+        'mustsearch': False,
     }
     x.update(d)
     return x
@@ -67,71 +68,69 @@ def mobile_view(d):
 
 multisite_builtin_views.update({
 
-   #Service search
-   'mobile_searchsvc': mobile_view({
-               'datasource': 'services',
-               'group_painters': [
-                   ('sitealias', 'sitehosts'),
-                   ('host', 'host')],
-               'hard_filters': [],
-               'hard_filtervars': [
-                  ('is_service_in_notification_period', '-1'),
-                  ('optservicegroup', ''),
-                  ('is_service_notifications_enabled', '-1'),
-                  ('is_host_in_notification_period', '-1'),
-                  ('is_in_downtime', '-1'),
-                  ('is_service_scheduled_downtime_depth', '-1'),
-                  ('is_service_acknowledged', '-1'),
-                  ('host', ''),
-                  ('is_service_active_checks_enabled', '-1'),
-                  ('service', ''),
-                  ('check_command', ''),
-                  ('st0', 'on'),
-                  ('st1', 'on'),
-                  ('st2', 'on'),
-                  ('st3', 'on'),
-                  ('stp', 'on'),
-                  ('opthostgroup', ''),
-                  ('service_output', ''),
-                  ('is_service_is_flapping', '-1')
-                ],
-               'hide_filters': [],
-               'layout': 'mobilelist',
-               'mustsearch': True,
-               'name': 'mobile_searchsvc',
-               'num_columns': 2,
-               'owner': '',
-               'painters': [
-                   ('service_state', None, ''),
-                   ('host',                'mobile_hoststatus', ''),
-                   ('service_description', 'mobile_service', ''),
-                   ('svc_plugin_output',   '' ),
-                   ('svc_state_age', None, ''),
-                 ],
-                   'public': True,
-                   'show_filters': [
-                       'service_in_notification_period',
-                       'service_notifications_enabled',
-                       'host_in_notification_period',
-                       'in_downtime',
-                       'service_scheduled_downtime_depth',
-                       'service_acknowledged',
-                       'hostregex',
-                       'serviceregex',
-                       'hoststate',
-                       'svcstate',
-                       'svchardstate',
-                       'opthostgroup',
-                       'output'
-                       ],
-               'sorters': [
-                   ('site', False),
-                   ('site_host', False),
-                   ('svcdescr', False)],
-               'title': _('Search'),
-               'topic': _('Services')
-             }),
-
+    #Service search
+    'mobile_searchsvc': mobile_view({
+        'datasource': 'services',
+        'group_painters': [('sitealias', 'sitehosts'), ('host', 'host')],
+        'hard_filters': [],
+        'hard_filtervars': [
+            ('is_service_in_notification_period', '-1'),
+            ('optservicegroup', ''),
+            ('is_service_notifications_enabled', '-1'),
+            ('is_host_in_notification_period', '-1'),
+            ('is_in_downtime', '-1'),
+            ('is_service_scheduled_downtime_depth', '-1'),
+            ('is_service_acknowledged', '-1'),
+            ('host', ''),
+            ('is_service_active_checks_enabled', '-1'),
+            ('service', ''),
+            ('check_command', ''),
+            ('st0', 'on'),
+            ('st1', 'on'),
+            ('st2', 'on'),
+            ('st3', 'on'),
+            ('stp', 'on'),
+            ('opthostgroup', ''),
+            ('service_output', ''),
+            ('is_service_is_flapping', '-1'),
+        ],
+        'hide_filters': [],
+        'layout': 'mobilelist',
+        'mustsearch': True,
+        'name': 'mobile_searchsvc',
+        'num_columns': 2,
+        'owner': '',
+        'painters': [
+            ('service_state', None, ''),
+            ('host', 'mobile_hoststatus', ''),
+            ('service_description', 'mobile_service', ''),
+            ('svc_plugin_output', ''),
+            ('svc_state_age', None, ''),
+        ],
+        'public': True,
+        'show_filters': [
+            'service_in_notification_period',
+            'service_notifications_enabled',
+            'host_in_notification_period',
+            'in_downtime',
+            'service_scheduled_downtime_depth',
+            'service_acknowledged',
+            'hostregex',
+            'serviceregex',
+            'hoststate',
+            'svcstate',
+            'svchardstate',
+            'opthostgroup',
+            'output',
+        ],
+        'sorters': [
+            ('site', False),
+            ('site_host', False),
+            ('svcdescr', False),
+        ],
+        'title': _('Search'),
+        'topic': _('Services')
+    }),
 
     # View of all current service problems
     'mobile_svcproblems': mobile_view({
@@ -149,16 +148,16 @@ multisite_builtin_views.update({
             ('hst1', ''),
             ('hst2', ''),
             ('hstp', 'on'),
-         ],
+        ],
         'hide_filters': [],
         'layout': 'mobilelist',
         'name': 'mobile_svcproblems',
         'num_columns': 2,
         'painters': [
             ('service_state', None, ''),
-            ('host',                'mobile_hoststatus', ''),
+            ('host', 'mobile_hoststatus', ''),
             ('service_description', 'mobile_service', ''),
-            ('svc_plugin_output',   '' ),
+            ('svc_plugin_output', ''),
             ('svc_state_age', None, ''),
         ],
         'show_filters': [
@@ -166,12 +165,13 @@ multisite_builtin_views.update({
             'service_acknowledged',
             'svcstate',
             'svchardstate',
-            'hoststate'
-         ],
+            'hoststate',
+        ],
         'sorters': [
             ('svcstate', True),
             ('stateage', False),
-            ('svcdescr', False)],
+            ('svcdescr', False),
+        ],
         'title': _('Problems (all)'),
         'topic': _('Services'),
     }),
@@ -206,21 +206,22 @@ multisite_builtin_views.update({
         'num_columns': 2,
         'painters': [
             ('service_state', None, ''),
-            ('host',                'mobile_hoststatus', ''),
+            ('host', 'mobile_hoststatus', ''),
             ('service_description', 'mobile_service', ''),
-            ('svc_plugin_output',   '' ),
+            ('svc_plugin_output', ''),
             ('svc_state_age', None, ''),
         ],
         'show_filters': [
             'service_in_notification_period',
             'hoststate',
             'svchardstate',
-            'svcstate'],
+            'svcstate',
+        ],
         'sorters': [
             ('svcstate', True),
             ('stateage', False),
-            ('svcdescr', False)
-         ],
+            ('svcdescr', False),
+        ],
         'linktitle': _('Problems (unhandled)'),
         'title': _('Problems (unhandled)'),
         'topic': _('Services'),
@@ -237,7 +238,7 @@ multisite_builtin_views.update({
         'linktitle': 'Details',
         'name': 'mobile_service',
         'num_columns': 1,
-        'hidden' : True,
+        'hidden': True,
         'painters': [
             ('sitealias', None, ''),
             ('host', 'mobile_host', ''),
@@ -277,13 +278,13 @@ multisite_builtin_views.update({
         'group_painters': [],
         'hard_filters': [],
         'hard_filtervars': [
-              ('st0', 'on'),
-              ('st1', 'on'),
-              ('st2', 'on'),
-              ('st3', 'on'),
-              ('stp', 'on'),
+            ('st0', 'on'),
+            ('st1', 'on'),
+            ('st2', 'on'),
+            ('st3', 'on'),
+            ('stp', 'on'),
         ],
-        'hidden' : True,
+        'hidden': True,
         'hide_filters': ['site', 'host'],
         'layout': 'mobilelist',
         'name': 'mobile_svcproblems',
@@ -295,11 +296,8 @@ multisite_builtin_views.update({
             ('svc_state_age', None),
         ],
         'show_filters': ['svcstate', 'serviceregex'],
-        'sorters': [
-            ('svcstate', True),
-            ('stateage', False),
-            ('svcdescr', False)],
-        'linktitle' : _('Services of this host'),
+        'sorters': [('svcstate', True), ('stateage', False), ('svcdescr', False)],
+        'linktitle': _('Services of this host'),
         'title': _('Services of host'),
     }),
 
@@ -310,9 +308,9 @@ multisite_builtin_views.update({
         'hard_filters': [],
         'hard_filtervars': [],
         'hide_filters': ['site', 'host'],
-        'icon' : 'status',
+        'icon': 'status',
         'layout': 'mobiledataset',
-        'hidden' : True,
+        'hidden': True,
         'painters': [
             ('sitealias', None),
             ('host', 'mobile_host'),
@@ -372,9 +370,9 @@ multisite_builtin_views.update({
         'mustsearch': True,
         'num_columns': 2,
         'painters': [
-                      ('host_state', None),
-                      ('host', 'mobile_host'),
-                      ('host_plugin_output', None),
+            ('host_state', None),
+            ('host', 'mobile_host'),
+            ('host_plugin_output', None),
         ],
         'show_filters': [
             'hoststate',
@@ -386,333 +384,342 @@ multisite_builtin_views.update({
         'topic': _('Hosts'),
     }),
 
-     #List all host problems
-     'mobile_hostproblems': mobile_view({
-                  'datasource': 'hosts',
-                  'group_painters': [('host_state', None)],
-                  'hard_filters': ['host_scheduled_downtime_depth'],
-                  'hard_filtervars': [
-                      ('is_host_scheduled_downtime_depth', '0'),
-                      ('is_host_in_notification_period', '-1'),
-                      ('hst0', ''),
-                      ('hst1', 'on'),
-                      ('hst2', 'on'),
-                      ('hstp', ''),
-                      ('is_host_acknowledged', '-1'),
-                      ('host', ''),
-                      ('opthostgroup', '')
-                   ],
-                  'hide_filters': [],
-                  'layout': 'mobilelist',
-                  'mustsearch': False,
-                  'name': 'hostproblems',
-                  'num_columns': 2,
-                  'painters': [
-                      ('host_state', None),
-                      ('host', 'mobile_host'),
-                      ('host_plugin_output', None),
-                   ],
-                  'public': True,
-                  'show_filters': [
-                      'host_in_notification_period',
-                      'hoststate',
-                      'hostregex',
-                      'opthostgroup',
-                      'host_acknowledged'
-                   ],
-                  'sorters': [],
-                  'title': _('Problems (all)'),
-                  'topic': _('Hosts')}),
+    #List all host problems
+    'mobile_hostproblems': mobile_view({
+        'datasource': 'hosts',
+        'group_painters': [('host_state', None)],
+        'hard_filters': ['host_scheduled_downtime_depth'],
+        'hard_filtervars': [
+            ('is_host_scheduled_downtime_depth', '0'),
+            ('is_host_in_notification_period', '-1'),
+            ('hst0', ''),
+            ('hst1', 'on'),
+            ('hst2', 'on'),
+            ('hstp', ''),
+            ('is_host_acknowledged', '-1'),
+            ('host', ''),
+            ('opthostgroup', ''),
+        ],
+        'hide_filters': [],
+        'layout': 'mobilelist',
+        'mustsearch': False,
+        'name': 'hostproblems',
+        'num_columns': 2,
+        'painters': [
+            ('host_state', None),
+            ('host', 'mobile_host'),
+            ('host_plugin_output', None),
+        ],
+        'public': True,
+        'show_filters': [
+            'host_in_notification_period',
+            'hoststate',
+            'hostregex',
+            'opthostgroup',
+            'host_acknowledged',
+        ],
+        'sorters': [],
+        'title': _('Problems (all)'),
+        'topic': _('Hosts')
+    }),
 
+    #List unhandled host problems
+    'mobile_hostproblems_unack': mobile_view({
+        'datasource': 'hosts',
+        'group_painters': [('host_state', None)],
+        'hard_filters': ['host_scheduled_downtime_depth', 'host_acknowledged'],
+        'hard_filtervars': [
+            ('is_host_scheduled_downtime_depth', '0'),
+            ('is_host_in_notification_period', '-1'),
+            ('hst0', ''),
+            ('hst1', 'on'),
+            ('hst2', 'on'),
+            ('hstp', ''),
+            ('is_host_acknowledged', '0'),
+            ('host', ''),
+            ('opthostgroup', ''),
+        ],
+        'hide_filters': [],
+        'layout': 'mobilelist',
+        'mustsearch': False,
+        'name': 'hostproblems',
+        'num_columns': 2,
+        'painters': [
+            ('host_state', None),
+            ('host', 'mobile_host'),
+            ('host_plugin_output', None),
+        ],
+        'public': True,
+        'show_filters': [
+            'host_in_notification_period',
+            'hoststate',
+            'hostregex',
+            'opthostgroup',
+        ],
+        'sorters': [],
+        'title': _('Problems (unhandled)'),
+        'topic': _('Hosts')
+    }),
 
-     #List unhandled host problems
-     'mobile_hostproblems_unack': mobile_view({
-                  'datasource': 'hosts',
-                  'group_painters': [('host_state', None)],
-                  'hard_filters': ['host_scheduled_downtime_depth', 'host_acknowledged'],
-                  'hard_filtervars': [
-                      ('is_host_scheduled_downtime_depth', '0'),
-                      ('is_host_in_notification_period', '-1'),
-                      ('hst0', ''),
-                      ('hst1', 'on'),
-                      ('hst2', 'on'),
-                      ('hstp', ''),
-                      ('is_host_acknowledged', '0'),
-                      ('host', ''),
-                      ('opthostgroup', '')],
-                  'hide_filters': [],
-                  'layout': 'mobilelist',
-                  'mustsearch': False,
-                  'name': 'hostproblems',
-                  'num_columns': 2,
-                  'painters': [
-                      ('host_state', None),
-                      ('host', 'mobile_host'),
-                      ('host_plugin_output', None),
-                   ],
-                  'public': True,
-                  'show_filters': ['host_in_notification_period',
-                                   'hoststate',
-                                   'hostregex',
-                                   'opthostgroup'],
-                  'sorters': [],
-                  'title': _('Problems (unhandled)'),
-                  'topic': _('Hosts')}),
+    # All Nagios Events at all
+    'mobile_events': mobile_view({
+        'datasource': 'log_events',
+        'group_painters': [],
+        'hard_filters': ['logtime'],
+        'hard_filtervars': [
+            ('logtime_from_range', '3600'),
+            ('logtime_from', '4'),
+        ],
+        'hide_filters': [],
+        'layout': 'mobilelist',
+        'linktitle': 'Events',
+        'mustsearch': False,
+        'name': 'mobile_events',
+        'num_columns': 1,
+        'painters': [
+            ('log_icon', None),
+            ('log_time', None),
+            ('host', 'mobile_hostsvcevents'),
+            ('service_description', 'mobile_svcevents'),
+            ('log_plugin_output', None),
+        ],
+        'public': True,
+        'show_filters': [],
+        'sorters': [('log_time', False), ('log_lineno', False)],
+        'title': 'Events',
+        'topic': _('Events')
+    }),
 
-            # All Nagios Events at all
-            'mobile_events': mobile_view({
-            'datasource': 'log_events',
-            'group_painters': [],
-            'hard_filters': ['logtime'],
-            'hard_filtervars': [
-                                ('logtime_from_range', '3600'),
-                                ('logtime_from', '4'),
-                               ],
-            'hide_filters': [],
-            'layout': 'mobilelist',
-            'linktitle': 'Events',
-            'mustsearch': False,
-            'name': 'mobile_events',
-            'num_columns': 1,
-            'painters': [('log_icon', None),
-                         ('log_time', None),
-                         ('host', 'mobile_hostsvcevents'),
-                         ('service_description', 'mobile_svcevents'),
-                         ('log_plugin_output', None)],
-            'public': True,
-            'show_filters': [],
-            'sorters': [('log_time', False), ('log_lineno', False)],
-            'title': 'Events',
-            'topic': _('Events')}),
+    # All Notifications at all
+    'mobile_notifications': mobile_view({
+        'datasource': 'log',
+        'group_painters': [('log_date', None, '')],
+        'hard_filters': ['log_class'],
+        'hard_filtervars': [
+            ('logclass0', ''),
+            ('logclass1', ''),
+            ('logclass2', ''),
+            ('logclass3', 'on'),
+            ('logclass4', ''),
+            ('logclass5', ''),
+            ('logclass6', ''),
+            ('host', ''),
+            ('service', ''),
+            ('log_plugin_output', ''),
+            ('logtime_from_range', '3600'),
+            ('logtime_from', '24'),
+        ],
+        'hide_filters': [],
+        'icon': 'notification',
+        'layout': 'mobilelist',
+        'linktitle': _('Notifications'),
+        'mustsearch': False,
+        'name': 'mobile_notifications',
+        'num_columns': 2,
+        'painters': [
+            ('log_state', None, ''),
+            ('host', 'mobile_hostsvcnotifications', ''),
+            ('service_description', 'mobile_svcnotifications', ''),
+            ('log_time', None, ''),
+            ('log_contact_name', 'mobile_contactnotifications', ''),
+            ('log_type', None, ''),
+            ('log_plugin_output', None, ''),
+        ],
+        'public': True,
+        'show_filters': [
+            'hostregex',
+            'serviceregex',
+            'log_plugin_output',
+            'logtime',
+        ],
+        'sorters': [('log_time', False), ('log_lineno', False)],
+        'title': _('Notifications'),
+        'topic': _('Events')
+    }),
 
-            # All Notifications at all
-            'mobile_notifications': mobile_view({
-                   'datasource': 'log',
-                   'group_painters': [('log_date', None, '')],
-                   'hard_filters': ['log_class'],
-                   'hard_filtervars': [
-                       ('logclass0', ''),
-                       ('logclass1', ''),
-                       ('logclass2', ''),
-                       ('logclass3', 'on'),
-                       ('logclass4', ''),
-                       ('logclass5', ''),
-                       ('logclass6', ''),
-                       ('host', ''),
-                       ('service', ''),
-                       ('log_plugin_output', ''),
-                       ('logtime_from_range', '3600'),
-                       ('logtime_from', '24'),
-                    ],
-                   'hide_filters': [],
-                   'icon': 'notification',
-                   'layout': 'mobilelist',
-                   'linktitle': _('Notifications'),
-                   'mustsearch': False,
-                   'name': 'mobile_notifications',
-                   'num_columns': 2,
-                   'painters': [
-                       ('log_state', None, ''),
-                       ('host', 'mobile_hostsvcnotifications', ''),
-                       ('service_description', 'mobile_svcnotifications',''),
-                       ('log_time', None, ''),
-                       ('log_contact_name', 'mobile_contactnotifications', ''),
-                       ('log_type', None, ''),
-                       ('log_plugin_output', None, '')],
-                   'public': True,
-                   'show_filters': ['hostregex',
-                                    'serviceregex',
-                                    'log_plugin_output',
-                                    'logtime'],
-                   'sorters': [('log_time', False), ('log_lineno', False)],
-                   'title': _('Notifications'),
-                   'topic': _('Events')}),
+    # All events of a Host
+    'mobile_hostsvcevents': mobile_view({
+        'browser_reload': 0,
+        'datasource': 'log_events',
+        'group_painters': [('log_date', None)],
+        'hard_filters': [],
+        'hard_filtervars': [
+            ('logtime_from_range', '86400'),
+            ('logtime_from', '7'),
+        ],
+        'hidden': True,
+        'hide_filters': ['site', 'host'],
+        'icon': 'history',
+        'layout': 'mobilelist',
+        'linktitle': _('Host+Svc history'),
+        'name': 'events',
+        'num_columns': 2,
+        'painters': [
+            ('log_icon', None),
+            ('log_time', None),
+            ('log_type', None),
+            ('host', None),
+            ('service_description', 'mobile_svcevents'),
+            ('log_state_type', None),
+            ('log_plugin_output', None),
+        ],
+        'show_filters': ['logtime', 'log_state'],
+        'sorters': [('log_time', False), ('log_lineno', False)],
+        'title': _('Events of host & services')
+    }),
 
-                   # All events of a Host
-                   'mobile_hostsvcevents': mobile_view({'browser_reload': 0,
-                        'datasource': 'log_events',
-                        'group_painters': [('log_date', None)],
-                        'hard_filters': [],
-                        'hard_filtervars': [
-                            ('logtime_from_range', '86400'),
-                            ('logtime_from', '7'),
-                         ],
-                        'hidden': True,
-                        'hide_filters': ['site', 'host'],
-                        'icon' : 'history',
-                        'layout': 'mobilelist',
-                        'linktitle': _('Host+Svc history'),
-                        'name': 'events',
-                        'num_columns': 2,
-                        'painters': [
-                            ('log_icon', None),
-                            ('log_time', None),
-                            ('log_type', None),
-                            ('host', None),
-                            ('service_description', 'mobile_svcevents'),
-                            ('log_state_type', None),
-                            ('log_plugin_output', None),
-                         ],
-                        'show_filters': ['logtime', 'log_state'],
-                        'sorters': [('log_time', False), ('log_lineno', False)],
-                        'title': _('Events of host & services')}),
+    # All events of one service
+    'mobile_svcevents': mobile_view({
+        'browser_reload': 0,
+        'datasource': 'log_events',
+        'group_painters': [('log_date', None)],
+        'hard_filters': [],
+        'hard_filtervars': [
+            ('logtime_from_range', '86400'),
+            ('logtime_from', '7'),
+        ],
+        'hidden': True,
+        'hide_filters': ['site', 'host', 'service'],
+        'icon': 'history',
+        'layout': 'mobilelist',
+        'linktitle': _('History'),
+        'name': 'events',
+        'num_columns': 2,
+        'painters': [
+            ('log_icon', None),
+            ('log_time', None),
+            ('log_type', None),
+            ('log_state_type', None),
+            ('log_plugin_output', None),
+        ],
+        'show_filters': ['logtime'],
+        'sorters': [('log_time', False), ('log_lineno', False)],
+        'title': _('Events of service')
+    }),
 
-                        # All events of one service
-                        'mobile_svcevents': mobile_view({
-                            'browser_reload': 0,
-                            'datasource': 'log_events',
-                            'group_painters': [('log_date', None)],
-                            'hard_filters': [],
-                            'hard_filtervars': [
-                               ('logtime_from_range', '86400'),
-                               ('logtime_from', '7'),
-                            ],
-                            'hidden': True,
-                            'hide_filters': ['site', 'host', 'service'],
-                            'icon' : 'history',
-                            'layout': 'mobilelist',
-                            'linktitle': _('History'),
-                            'name': 'events',
-                            'num_columns': 2,
-                            'painters': [('log_icon', None),
-                                         ('log_time', None),
-                                         ('log_type', None),
-                                         ('log_state_type', None),
-                                         ('log_plugin_output', None),
-                                             ],
-                            'show_filters': ['logtime'],
-                            'sorters': [('log_time', False), ('log_lineno', False)],
-                            'title': _('Events of service')}),
+    # All Notfications of a contact
+    'mobile_contactnotifications': mobile_view({
+        'datasource': 'log',
+        'group_painters': [('log_date', None, '')],
+        'hard_filters': ['log_class'],
+        'hard_filtervars': [
+            ('logclass0', ''),
+            ('logclass1', ''),
+            ('logclass2', ''),
+            ('logclass3', 'on'),
+            ('logclass4', ''),
+            ('logclass5', ''),
+            ('logclass6', ''),
+            ('host', ''),
+            ('service', ''),
+            ('log_plugin_output', ''),
+            ('logtime_from_range', '86400'),
+            ('logtime_from', '7'),
+        ],
+        'hidden': True,
+        'hide_filters': ['log_contact_name'],
+        'hidebutton': False,
+        'icon': 'notification',
+        'layout': 'mobilelist',
+        'linktitle': _('Contact notification'),
+        'name': 'mobile_contactnotifications',
+        'num_columns': 2,
+        'painters': [
+            ('log_time', None, ''),
+            ('host', 'mobile_hostsvcnotifications', ''),
+            ('service_description', 'mobile_svcnotifications', ''),
+            ('log_type', None, ''),
+            ('log_state', None, ''),
+            ('log_plugin_output', None, ''),
+        ],
+        'public': True,
+        'show_filters': ['host', 'serviceregex', 'log_plugin_output', 'logtime'],
+        'sorters': [('log_time', False), ('log_lineno', False)],
+        'title': _('Notifications of contact'),
+        'topic': _('Other')
+    }),
 
-                        # All Notfications of a contact
-                        'mobile_contactnotifications': mobile_view({
-                             'datasource': 'log',
-                             'group_painters': [('log_date', None, '')],
-                             'hard_filters': ['log_class'],
-                             'hard_filtervars': [
-                                 ('logclass0', ''),
-                                 ('logclass1', ''),
-                                 ('logclass2', ''),
-                                 ('logclass3', 'on'),
-                                 ('logclass4', ''),
-                                 ('logclass5', ''),
-                                 ('logclass6', ''),
-                                 ('host', ''),
-                                 ('service', ''),
-                                 ('log_plugin_output', ''),
-                                 ('logtime_from_range', '86400'),
-                                 ('logtime_from', '7'),
-                                ],
-                             'hidden': True,
-                             'hide_filters': ['log_contact_name'],
-                             'hidebutton': False,
-                             'icon': 'notification',
-                             'layout': 'mobilelist',
-                             'linktitle': _('Contact notification'),
-                             'name': 'mobile_contactnotifications',
-                             'num_columns': 2,
-                             'painters': [
-                                 ('log_time', None, ''),
-                                 ('host', 'mobile_hostsvcnotifications', ''),
-                                 ('service_description', 'mobile_svcnotifications',''),
-                                 ('log_type', None, ''),
-                                 ('log_state', None, ''),
-                                 ('log_plugin_output', None, '')
-                              ],
-                             'public': True,
-                             'show_filters': [
-                                 'host',
-                                 'serviceregex',
-                                 'log_plugin_output',
-                                 'logtime'],
-                             'sorters': [('log_time', False), ('log_lineno', False)],
-                             'title': _('Notifications of contact'),
-                             'topic': _('Other')}),
+    # All Notfications of Host
+    'mobile_hostsvcnotifications': mobile_view({
+        'datasource': 'log',
+        'group_painters': [('log_date', None, '')],
+        'hard_filters': ['log_class'],
+        'hard_filtervars': [
+            ('logclass0', ''),
+            ('logclass1', ''),
+            ('logclass2', ''),
+            ('logclass3', 'on'),
+            ('logclass4', ''),
+            ('logclass5', ''),
+            ('logclass6', ''),
+            ('service', ''),
+            ('log_plugin_output', ''),
+            ('logtime_from_range', '86400'),
+            ('logtime_from', '7'),
+        ],
+        'hidden': True,
+        'hide_filters': ['site', 'host'],
+        'hidebutton': False,
+        'icon': 'notification',
+        'layout': 'mobilelist',
+        'linktitle': _('Host+Svc notifications'),
+        'name': 'hostsvcnotifications',
+        'num_columns': 2,
+        'painters': [
+            ('log_time', None, ''),
+            ('log_contact_name', 'mobile_contactnotifications', ''),
+            ('log_type', None, ''),
+            ('host', 'mobile_hostsvcnotifications', ''),
+            ('service_description', 'mobile_svcnotifications', ''),
+            ('log_state', None, ''),
+            ('log_plugin_output', None, ''),
+        ],
+        'show_filters': ['serviceregex', 'log_plugin_output', 'logtime'],
+        'sorters': [('log_time', False), ('log_lineno', False)],
+        'title': _('Notifications of host & services'),
+        'topic': _('Other')
+    }),
 
-                               # All Notfications of Host
-                               'mobile_hostsvcnotifications': mobile_view({
-                                   'datasource': 'log',
-                                   'group_painters': [('log_date', None, '')],
-                                   'hard_filters': ['log_class'],
-                                   'hard_filtervars': [
-                                       ('logclass0', ''),
-                                       ('logclass1', ''),
-                                       ('logclass2', ''),
-                                       ('logclass3', 'on'),
-                                       ('logclass4', ''),
-                                       ('logclass5', ''),
-                                       ('logclass6', ''),
-                                       ('service', ''),
-                                       ('log_plugin_output', ''),
-                                       ('logtime_from_range', '86400'),
-                                       ('logtime_from', '7'),
-                                    ],
-                                   'hidden': True,
-                                   'hide_filters': ['site', 'host'],
-                                   'hidebutton': False,
-                                   'icon': 'notification',
-                                   'layout': 'mobilelist',
-                                   'linktitle': _('Host+Svc notifications'),
-                                   'name': 'hostsvcnotifications',
-                                   'num_columns': 2,
-                                   'painters': [
-                                       ('log_time', None, ''),
-                                       ('log_contact_name', 'mobile_contactnotifications', ''),
-                                       ('log_type', None, ''),
-                                       ('host', 'mobile_hostsvcnotifications', ''),
-                                       ('service_description', 'mobile_svcnotifications', ''),
-                                       ('log_state', None, ''),
-                                       ('log_plugin_output', None, '')
-                                    ],
-                                   'show_filters': [
-                                       'serviceregex',
-                                       'log_plugin_output',
-                                       'logtime'
-                                    ],
-                                   'sorters': [('log_time', False), ('log_lineno', False)],
-                                   'title': _('Notifications of host & services'),
-                                   'topic': _('Other')}),
-
-
-                           # All Notfications of a service
-                           'mobile_svcnotifications': mobile_view({
-                               'datasource': 'log',
-                               'group_painters': [('log_date', None, '')],
-                               'hard_filters': ['log_class'],
-                               'hard_filtervars': [
-                                   ('logclass0', ''),
-                                   ('logclass1', ''),
-                                   ('logclass2', ''),
-                                   ('logclass3', 'on'),
-                                   ('logclass4', ''),
-                                   ('logclass5', ''),
-                                   ('logclass6', ''),
-                                   ('log_plugin_output', ''),
-                                   ('logtime_from_range', '86400'),
-                                   ('logtime_from', '7'),
-                               ],
-                               'hidden': True,
-                               'hide_filters': ['site', 'service', 'host'],
-                               'hidebutton': False,
-                               'icon': 'notification',
-                               'layout': 'mobilelist',
-                               'linktitle': _('Notifications'),
-                               'name': 'mobile_svcnotifications',
-                               'num_columns': 2,
-                               'painters': [('log_time', None, ''),
-                                    ('log_contact_name', 'mobile_contactnotifications', ''),
-                                    ('host', None, ''),
-                                    ('log_state', None, ''),
-                                    ('log_plugin_output', None, '')],
-                               'play_sounds': False,
-                               'public': True,
-                               'show_filters': ['log_plugin_output', 'logtime'],
-                               'sorters': [('log_time', False), ('log_lineno', False)],
-                               'title': _('Service Notifications'),
-                               'topic': _('Other')}),
-
+    # All Notfications of a service
+    'mobile_svcnotifications': mobile_view({
+        'datasource': 'log',
+        'group_painters': [('log_date', None, '')],
+        'hard_filters': ['log_class'],
+        'hard_filtervars': [
+            ('logclass0', ''),
+            ('logclass1', ''),
+            ('logclass2', ''),
+            ('logclass3', 'on'),
+            ('logclass4', ''),
+            ('logclass5', ''),
+            ('logclass6', ''),
+            ('log_plugin_output', ''),
+            ('logtime_from_range', '86400'),
+            ('logtime_from', '7'),
+        ],
+        'hidden': True,
+        'hide_filters': ['site', 'service', 'host'],
+        'hidebutton': False,
+        'icon': 'notification',
+        'layout': 'mobilelist',
+        'linktitle': _('Notifications'),
+        'name': 'mobile_svcnotifications',
+        'num_columns': 2,
+        'painters': [
+            ('log_time', None, ''),
+            ('log_contact_name', 'mobile_contactnotifications', ''),
+            ('host', None, ''),
+            ('log_state', None, ''),
+            ('log_plugin_output', None, ''),
+        ],
+        'play_sounds': False,
+        'public': True,
+        'show_filters': ['log_plugin_output', 'logtime'],
+        'sorters': [('log_time', False), ('log_lineno', False)],
+        'title': _('Service Notifications'),
+        'topic': _('Other')
+    }),
 })
-
 
 #.
 #   .--Layouts-------------------------------------------------------------.
@@ -726,6 +733,7 @@ multisite_builtin_views.update({
 #   | Display-Layouts for the views used by mobile. There are two layouts: |
 #   | one for a list of items, one for a single dataset.                   |
 #   '----------------------------------------------------------------------'
+
 
 def render_mobile_table(rows, view, group_cells, cells, num_columns, show_checkboxes):
     if not html.mobile:
@@ -763,12 +771,14 @@ def render_mobile_table(rows, view, group_cells, cells, num_columns, show_checkb
     html.close_table()
     html.javascript('$("table.mobile a").attr("data-ajax", "false");')
 
+
 multisite_layouts["mobiletable"] = {
-    "title"      : _("Mobile: Table"),
-    "render"     : render_mobile_table,
-    "group"      : False,
-    "checkboxes" : False,
+    "title": _("Mobile: Table"),
+    "render": render_mobile_table,
+    "group": False,
+    "checkboxes": False,
 }
+
 
 def render_mobile_list(rows, view, group_cells, cells, num_columns, show_checkboxes):
     if not html.mobile:
@@ -778,25 +788,25 @@ def render_mobile_list(rows, view, group_cells, cells, num_columns, show_checkbo
     # Force relative timestamp always. This saves space.
     painter_options.set("ts_format", "rel")
 
-    html.open_ul(class_="mobilelist", **{"data-role":"listview"})
+    html.open_ul(class_="mobilelist", **{"data-role": "listview"})
 
     # Paint data rows
     for row in rows:
         html.open_li()
-        rendered_cells = [ cell.render(row) for cell in cells ]
-        if rendered_cells: # First cell (assumedly state) is left
+        rendered_cells = [cell.render(row) for cell in cells]
+        if rendered_cells:  # First cell (assumedly state) is left
             rendered_class, rendered_content = rendered_cells[0]
             html.open_p(class_=["ui-li-aside", "ui-li-desc", rendered_class])
             html.write(rendered_content)
             html.close_p()
 
             if len(rendered_cells) > 1:
-                content = " &middot; ".join([ rendered_cell[1] for rendered_cell
-                                              in rendered_cells[1:num_columns+1]])
+                content = " &middot; ".join(
+                    [rendered_cell[1] for rendered_cell in rendered_cells[1:num_columns + 1]])
                 html.h3(HTML(content))
 
-                for rendered_cell, cell in zip(rendered_cells[num_columns+1:],
-                                               cells[num_columns+1:]):
+                for rendered_cell, cell in zip(rendered_cells[num_columns + 1:],
+                                               cells[num_columns + 1:]):
                     rendered_class, rendered_content = rendered_cell
                     html.open_p(class_="ui-li-desc")
                     cell.paint_as_header()
@@ -810,12 +820,14 @@ def render_mobile_list(rows, view, group_cells, cells, num_columns, show_checkbo
     html.close_ul()
     html.javascript('$("ul.mobilelist a").attr("data-ajax", "false");')
 
+
 multisite_layouts["mobilelist"] = {
-    "title"      : _("Mobile: List"),
-    "render"     : render_mobile_list,
-    "group"      : False,
-    "checkboxes" : False,
+    "title": _("Mobile: List"),
+    "render": render_mobile_list,
+    "group": False,
+    "checkboxes": False,
 }
+
 
 def render_mobile_dataset(rows, view, group_cells, cells, num_columns, show_checkboxes):
     if not html.mobile:
@@ -829,7 +841,7 @@ def render_mobile_dataset(rows, view, group_cells, cells, num_columns, show_chec
         for cell in cells:
             _tdclass, content = cell.render(row)
             if not content:
-                continue # Omit empty cells
+                continue  # Omit empty cells
 
             html.open_tr(class_="header")
             html.open_th()
@@ -842,13 +854,14 @@ def render_mobile_dataset(rows, view, group_cells, cells, num_columns, show_chec
             html.close_tr()
 
         html.close_table()
-    html.javascript('$("table.dataset > tbody > tr.data > td").addClass("ui-shadow").not(".state").addClass("nonstatus");\n'
-                    '$("table.dataset > tbody > tr.data a").attr("data-ajax", "false");\n')
+    html.javascript(
+        '$("table.dataset > tbody > tr.data > td").addClass("ui-shadow").not(".state").addClass("nonstatus");\n'
+        '$("table.dataset > tbody > tr.data a").attr("data-ajax", "false");\n')
 
 
 multisite_layouts["mobiledataset"] = {
-    "title"      : _("Mobile: Dataset"),
-    "render"     : render_mobile_dataset,
-    "group"      : False,
-    "checkboxes" : False,
+    "title": _("Mobile: Dataset"),
+    "render": render_mobile_dataset,
+    "group": False,
+    "checkboxes": False,
 }

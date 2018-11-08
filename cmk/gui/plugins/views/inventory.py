@@ -72,24 +72,28 @@ from . import (
     cmp_simple_number,
 )
 
+
 def paint_host_inventory_tree(row, invpath=".", column="host_inventory"):
     struct_tree = row.get(column)
     if struct_tree is None:
         return "", ""
 
     if column == "host_inventory":
-        tree_renderer = AttributeRenderer(row["site"],
-                            row["host_name"], "", invpath,
-                            show_internal_tree_paths=painter_options.get('show_internal_tree_paths'))
+        tree_renderer = AttributeRenderer(
+            row["site"],
+            row["host_name"],
+            "",
+            invpath,
+            show_internal_tree_paths=painter_options.get('show_internal_tree_paths'))
     else:
         tree_id = "/" + str(row["invhist_time"])
-        tree_renderer = DeltaNodeRenderer(row["site"],
-                            row["host_name"], tree_id, invpath)
+        tree_renderer = DeltaNodeRenderer(row["site"], row["host_name"], tree_id, invpath)
 
     parsed_path, attributes_key = inventory.parse_tree_path(invpath)
     if attributes_key is None:
         return _paint_host_inventory_tree_children(struct_tree, parsed_path, tree_renderer)
-    return _paint_host_inventory_tree_value(struct_tree, parsed_path, tree_renderer, invpath, attributes_key)
+    return _paint_host_inventory_tree_value(struct_tree, parsed_path, tree_renderer, invpath,
+                                            attributes_key)
 
 
 def _paint_host_inventory_tree_children(struct_tree, parsed_path, tree_renderer):
@@ -106,14 +110,15 @@ def _paint_host_inventory_tree_children(struct_tree, parsed_path, tree_renderer)
     return "invtree", code
 
 
-def _paint_host_inventory_tree_value(struct_tree, parsed_path, tree_renderer, invpath, attributes_key):
+def _paint_host_inventory_tree_value(struct_tree, parsed_path, tree_renderer, invpath,
+                                     attributes_key):
     if attributes_key == []:
         child = struct_tree.get_sub_numeration(parsed_path)
     else:
         child = struct_tree.get_sub_attributes(parsed_path)
 
     if child is None:
-        return  "", ""
+        return "", ""
 
     with html.plugged():
         if invpath.endswith(".") or invpath.endswith(":"):
@@ -128,16 +133,29 @@ def _paint_host_inventory_tree_value(struct_tree, parsed_path, tree_renderer, in
 
 
 inv_filter_info = {
-    "bytes"         : { "unit" : _("MB"),    "scale" : 1024*1024 },
-    "bytes_rounded" : { "unit" : _("MB"),    "scale" : 1024*1024 },
-    "hz"            : { "unit" : _("MHz"),   "scale" : 1000000 },
-    "volt"          : { "unit" : _("Volt") },
-    "timestamp"     : { "unit" : _("secs") },
+    "bytes": {
+        "unit": _("MB"),
+        "scale": 1024 * 1024
+    },
+    "bytes_rounded": {
+        "unit": _("MB"),
+        "scale": 1024 * 1024
+    },
+    "hz": {
+        "unit": _("MHz"),
+        "scale": 1000000
+    },
+    "volt": {
+        "unit": _("Volt")
+    },
+    "timestamp": {
+        "unit": _("secs")
+    },
 }
 
 
 # Declares painters, sorters and filters to be used in views based on all host related datasources.
-def declare_inv_column(invpath, datatype, title, short = None):
+def declare_inv_column(invpath, datatype, title, short=None):
     if invpath == ".":
         name = "inv"
     else:
@@ -145,12 +163,12 @@ def declare_inv_column(invpath, datatype, title, short = None):
 
     # Declare column painter
     multisite_painters[name] = {
-        "title"    : invpath == "." and _("Inventory Tree") or (_("Inventory") + ": " + title),
-        "columns"  : ["host_inventory", "host_structured_status"],
-        "options"  : ["show_internal_tree_paths"],
-        "load_inv" : True,
-        "paint"    : lambda row: paint_host_inventory_tree(row, invpath),
-        "sorter"   : name,
+        "title": invpath == "." and _("Inventory Tree") or (_("Inventory") + ": " + title),
+        "columns": ["host_inventory", "host_structured_status"],
+        "options": ["show_internal_tree_paths"],
+        "load_inv": True,
+        "paint": lambda row: paint_host_inventory_tree(row, invpath),
+        "sorter": name,
     }
     if short:
         multisite_painters[name]["short"] = short
@@ -159,22 +177,29 @@ def declare_inv_column(invpath, datatype, title, short = None):
     if invpath[-1] not in ":.":
         # Declare sorter. It will detect numbers automatically
         multisite_sorters[name] = {
-            "title"    : _("Inventory") + ": " + title,
-            "columns"  : ["host_inventory", "host_structured_status"],
-            "load_inv" : True,
-            "cmp"      : lambda a, b: cmp_inventory_node(a, b, invpath),
+            "title": _("Inventory") + ": " + title,
+            "columns": ["host_inventory", "host_structured_status"],
+            "load_inv": True,
+            "cmp": lambda a, b: cmp_inventory_node(a, b, invpath),
         }
 
         # Declare filter. Sync this with declare_invtable_columns()
         if datatype == "str":
-            cmk.gui.plugins.visuals.inventory.declare_filter(800, FilterInvText(name, invpath, title))
+            cmk.gui.plugins.visuals.inventory.declare_filter(800, FilterInvText(
+                name, invpath, title))
         elif datatype == "bool":
-            cmk.gui.plugins.visuals.inventory.declare_filter(800, FilterInvBool(name, invpath, title))
+            cmk.gui.plugins.visuals.inventory.declare_filter(800, FilterInvBool(
+                name, invpath, title))
         else:
             filter_info = inv_filter_info.get(datatype, {})
-            cmk.gui.plugins.visuals.inventory.declare_filter(800, FilterInvFloat(name, invpath, title,
-               unit = filter_info.get("unit"),
-               scale = filter_info.get("scale", 1.0)))
+            cmk.gui.plugins.visuals.inventory.declare_filter(
+                800,
+                FilterInvFloat(
+                    name,
+                    invpath,
+                    title,
+                    unit=filter_info.get("unit"),
+                    scale=filter_info.get("scale", 1.0)))
 
 
 def cmp_inventory_node(a, b, invpath):
@@ -184,21 +209,19 @@ def cmp_inventory_node(a, b, invpath):
 
 
 multisite_painter_options["show_internal_tree_paths"] = {
-    'valuespec' : Checkbox(
-        title = _("Show internal tree paths"),
-        default_value = False,
+    'valuespec': Checkbox(
+        title=_("Show internal tree paths"),
+        default_value=False,
     )
 }
 
-
 multisite_painters["inventory_tree"] = {
-    "title"    : _("Hardware & Software Tree"),
-    "columns"  : ["host_inventory", "host_structured_status"],
-    "options"  : ["show_internal_tree_paths"],
-    "load_inv" : True,
-    "paint"    : paint_host_inventory_tree,
+    "title": _("Hardware & Software Tree"),
+    "columns": ["host_inventory", "host_structured_status"],
+    "options": ["show_internal_tree_paths"],
+    "load_inv": True,
+    "paint": paint_host_inventory_tree,
 }
-
 
 #.
 #   .--paint helper--------------------------------------------------------.
@@ -216,6 +239,7 @@ def decorate_inv_paint(f):
         if v in ["", None]:
             return "", ""
         return f(v)
+
     return wrapper
 
 
@@ -250,9 +274,9 @@ def inv_paint_bytes(b):
     if b == 0:
         return "number", "0"
 
-    units = [ 'B', 'kB', 'MB', 'GB', 'TB' ]
+    units = ['B', 'kB', 'MB', 'GB', 'TB']
     i = 0
-    while b % 1024 == 0 and i+1 < len(units):
+    while b % 1024 == 0 and i + 1 < len(units):
         b = b / 1024
         i += 1
     return "number", "%d %s" % (b, units[i])
@@ -281,9 +305,9 @@ def inv_paint_bytes_rounded(b):
     if b == 0:
         return "number", "0"
 
-    units = [ 'B', 'kB', 'MB', 'GB', 'TB' ]
+    units = ['B', 'kB', 'MB', 'GB', 'TB']
     i = len(units) - 1
-    fac = 1024 ** (len(units) - 1)
+    fac = 1024**(len(units) - 1)
     while b < fac * 1.5 and i > 0:
         i -= 1
         fac = fac / 1024.0
@@ -428,7 +452,18 @@ def inv_paint_timestamp_as_age(timestamp):
 def inv_paint_timestamp_as_age_days(timestamp):
     def round_to_day(ts):
         broken = time.localtime(ts)
-        return int(time.mktime((broken.tm_year, broken.tm_mon, broken.tm_mday, 0, 0, 0, broken.tm_wday, broken.tm_yday, broken.tm_isdst)))
+        return int(
+            time.mktime((
+                broken.tm_year,
+                broken.tm_mon,
+                broken.tm_mday,
+                0,
+                0,
+                0,
+                broken.tm_wday,
+                broken.tm_yday,
+                broken.tm_isdst,
+            )))
 
     now_day = round_to_day(time.time())
     change_day = round_to_day(timestamp)
@@ -448,6 +483,7 @@ def inv_paint_docker_labels(labels):
         return "", ""
 
     return "labels", html.render_br().join(sorted(labels.split(", ")))
+
 
 #.
 #   .--display hints-------------------------------------------------------.
@@ -503,7 +539,7 @@ def _find_display_hint_id(invpath):
     invpath_parts = invpath.split(".")
     star_index = len(invpath_parts) - 1
     while star_index >= 0:
-        parts = invpath_parts[:star_index] + ["*"] + invpath_parts[star_index+1:]
+        parts = invpath_parts[:star_index] + ["*"] + invpath_parts[star_index + 1:]
         invpath_with_star = "%s" % ".".join(parts)
         candidates.append(invpath_with_star)
         star_index -= 1
@@ -514,11 +550,11 @@ def _find_display_hint_id(invpath):
         if candidate in inventory_displayhints:
             return candidate
 
-        if candidate+"." in inventory_displayhints:
-            return candidate+"."
+        if candidate + "." in inventory_displayhints:
+            return candidate + "."
 
-        if candidate+":" in inventory_displayhints:
-            return candidate+":"
+        if candidate + ":" in inventory_displayhints:
+            return candidate + ":"
 
     return None
 
@@ -540,7 +576,8 @@ def inv_titleinfo(invpath, node):
         if type(title) == type(lambda: None):
             title = title(node)
     else:
-        title = invpath.rstrip(".").rstrip(':').split('.')[-1].split(':')[-1].replace("_", " ").title()
+        title = invpath.rstrip(".").rstrip(':').split('.')[-1].split(':')[-1].replace("_",
+                                                                                      " ").title()
     return icon, title
 
 
@@ -554,479 +591,683 @@ def inv_titleinfo_long(invpath, node):
     return last_title
 
 
-inventory_displayhints.update({
-    "."                                                : { "title" : _("Inventory") },
-    ".hardware."                                       : { "title" : _("Hardware"), "icon" : "hardware", },
-    ".hardware.bios."                                  : { "title" : _("BIOS"), },
-    ".hardware.bios.vendor"                            : { "title" : _("Vendor"), },
-    ".hardware.bios.version"                           : { "title" : _("Version"), },
-    ".hardware.bios.date"                              : { "title" : _("Date"), "paint": "date"},
-    ".hardware.chassis."                               : { "title" : _("Chassis"), },
-    ".hardware.cpu."                                   : { "title" : _("Processor"), },
-    ".hardware.cpu.model"                              : { "title" : _("Model"), "short" : _("CPU Model"), },
-    ".hardware.cpu.cache_size"                         : { "title" : _("Cache Size"),                     "paint" : "bytes" },
-    ".hardware.cpu.max_speed"                          : { "title" : _("Maximum Speed"),                  "paint" : "hz" },
-    ".hardware.cpu.bus_speed"                          : { "title" : _("Bus Speed"),                      "paint" : "hz" },
-    ".hardware.cpu.voltage"                            : { "title" : _("Voltage"),                        "paint" : "volt" },
-    ".hardware.cpu.cores_per_cpu"                      : { "title" : _("Cores per CPU"),                  "paint" : "count" },
-    ".hardware.cpu.threads_per_cpu"                    : { "title" : _("Hyperthreads per CPU"),           "paint" : "count" },
-    ".hardware.cpu.threads"                            : { "title" : _("Total Number of Hyperthreads"),   "paint" : "count" },
-    ".hardware.cpu.cpus"                               : { "title" : _("Total Number of CPUs"),  "short" : _("CPUs"),  "paint" : "count" },
-    ".hardware.cpu.arch"                               : { "title" : _("CPU Architecture"),  "short" : _("CPU Arch"), },
-    ".hardware.cpu.cores"                              : { "title" : _("Total Number of Cores"), "short" : _("Cores"), "paint" : "count" },
-    ".hardware.memory."                                : { "title" : _("Memory (RAM)"), },
-    ".hardware.memory.total_ram_usable"                : { "title" : _("Total usable RAM"),               "paint" : "bytes_rounded" },
-    ".hardware.memory.total_swap"                      : { "title" : _("Total swap space"),               "paint" : "bytes_rounded" },
-    ".hardware.memory.total_vmalloc"                   : { "title" : _("Virtual addresses for mapping"),  "paint" : "bytes_rounded" },
-    ".hardware.memory.arrays:"                         : { "title" : _("Arrays (Controllers)") },
-    ".hardware.memory.arrays:*."                       : { "title" : _("Controller %d") },
-    ".hardware.memory.arrays:*.devices:"               : { "title" : _("Devices"),
-                                                           "keyorder" : [ "locator", "bank_locator", "type", "form_factor", "speed",
-                                                                          "data_width", "total_width", "manufacturer", "serial" ]},
-    ".hardware.memory.arrays:*.maximum_capacity"       : { "title" : _("Maximum Capacity"),       "paint" : "bytes" },
-    ".hardware.memory.arrays:*.devices:*."             : { "title" : lambda v: v["locator"], },
-    ".hardware.memory.arrays:*.devices:*.size"         : { "title" : _("Size"),                   "paint" : "bytes", },
-    ".hardware.memory.arrays:*.devices:*.speed"        : { "title" : _("Speed"),                  "paint" : "hz", },
+# YAPF is disabled in the next section to get simpler overview of the keys
+# present in the dictionary as they are packed together much more
+# densely. You are responsible of manually formatting this dictionary, or
+# at your choice adding temporarily in the style file the option:
+# each_dict_entry_on_separate_line=False
 
-    ".hardware.system."                                : { "title" : _("System") },
-    ".hardware.system.product"                         : { "title" : _("Product") },
-    ".hardware.system.serial"                          : { "title" : _("Serial Number") },
-    ".hardware.system.expresscode"                     : { "title" : _("Express Servicecode") },
-    ".hardware.system.model"                           : { "title" : _("Model Name") },
-    ".hardware.system.manufacturer"                    : { "title" : _("Manufacturer") },
+# yapf: disable
+
+inventory_displayhints.update({
+    ".": {"title": _("Inventory")},
+    ".hardware.": {"title": _("Hardware"), "icon": "hardware"},
+    ".hardware.bios.": {"title": _("BIOS")},
+    ".hardware.bios.vendor": {"title": _("Vendor")},
+    ".hardware.bios.version": {"title": _("Version")},
+    ".hardware.bios.date": {"title": _("Date"), "paint": "date"},
+    ".hardware.chassis.": {"title": _("Chassis")},
+    ".hardware.cpu.": {"title": _("Processor")},
+    ".hardware.cpu.model": {"title": _("Model"), "short": _("CPU Model")},
+    ".hardware.cpu.cache_size": {"title": _("Cache Size"), "paint": "bytes"},
+    ".hardware.cpu.max_speed": {"title": _("Maximum Speed"), "paint": "hz"},
+    ".hardware.cpu.bus_speed": {"title": _("Bus Speed"), "paint": "hz"},
+    ".hardware.cpu.voltage": {"title": _("Voltage"), "paint": "volt"},
+    ".hardware.cpu.cores_per_cpu": {"title": _("Cores per CPU"), "paint": "count"},
+    ".hardware.cpu.threads_per_cpu": {"title": _("Hyperthreads per CPU"), "paint": "count"},
+    ".hardware.cpu.threads": {"title": _("Total Number of Hyperthreads"), "paint": "count"},
+    ".hardware.cpu.cpus": {
+        "title": _("Total Number of CPUs"), "short": _("CPUs"), "paint": "count"
+    },
+    ".hardware.cpu.arch": {"title": _("CPU Architecture"), "short": _("CPU Arch")},
+    ".hardware.cpu.cores": {
+        "title": _("Total Number of Cores"), "short": _("Cores"), "paint": "count"
+    },
+    ".hardware.memory.": {"title": _("Memory (RAM)")},
+    ".hardware.memory.total_ram_usable": {"title": _("Total usable RAM"), "paint": "bytes_rounded"},
+    ".hardware.memory.total_swap": {"title": _("Total swap space"), "paint": "bytes_rounded"},
+    ".hardware.memory.total_vmalloc": {
+        "title": _("Virtual addresses for mapping"), "paint": "bytes_rounded"
+    },
+    ".hardware.memory.arrays:": {"title": _("Arrays (Controllers)")},
+    ".hardware.memory.arrays:*.": {"title": _("Controller %d")},
+    ".hardware.memory.arrays:*.devices:": {
+        "title": _("Devices"),
+        "keyorder": [
+            "locator",
+            "bank_locator",
+            "type",
+            "form_factor",
+            "speed",
+            "data_width",
+            "total_width",
+            "manufacturer",
+            "serial",
+        ],
+    },
+    ".hardware.memory.arrays:*.maximum_capacity": {
+        "title": _("Maximum Capacity"), "paint": "bytes"
+    },
+    ".hardware.memory.arrays:*.devices:*.": {"title": lambda v: v["locator"]},
+    ".hardware.memory.arrays:*.devices:*.size": {"title": _("Size"), "paint": "bytes"},
+    ".hardware.memory.arrays:*.devices:*.speed": {"title": _("Speed"), "paint": "hz"},
+    ".hardware.system.": {"title": _("System")},
+    ".hardware.system.product": {"title": _("Product")},
+    ".hardware.system.serial": {"title": _("Serial Number")},
+    ".hardware.system.expresscode": {"title": _("Express Servicecode")},
+    ".hardware.system.model": {"title": _("Model Name")},
+    ".hardware.system.manufacturer": {"title": _("Manufacturer")},
 
     # Legacy ones. Kept to not break existing views - DON'T use these values for new plugins
-    ".hardware.system.serial_number"                   : { "title" : _("Serial Number - LEGACY, don't use") },
-    ".hardware.system.model_name"                      : { "title" : _("Model Name - LEGACY, don't use") },
-
-    ".hardware.components."                            : { "title" : _("Physical Components") },
-    ".hardware.components.others:"                     : { "title" : _("Other entities"),
-                                                            "keyorder" : [ "index", "name", "description", "software", "serial", "manufacturer", "model", "location" ],
-                                                            "view" : "invother_of_host" },
-    ".hardware.components.others:*.index"              : { "title" : _("Index") },
-    ".hardware.components.others:*.name"               : { "title" : _("Name") },
-    ".hardware.components.others:*.description"        : { "title" : _("Description") },
-    ".hardware.components.others:*.software"           : { "title" : _("Software") },
-    ".hardware.components.others:*.serial"             : { "title" : _("Serial Number") },
-    ".hardware.components.others:*.manufacturer"       : { "title" : _("Manufacturer") },
-    ".hardware.components.others:*.model"              : { "title" : _("Model Name") },
-    ".hardware.components.others:*.location"           : { "title" : _("Location") },
-
-    ".hardware.components.unknowns:"                   : { "title" : _("Unknown entities"),
-                                                          "keyorder" : [ "index", "name", "description", "software", "serial", "manufacturer", "model", "location" ],
-                                                          "view" : "invunknown_of_host" },
-    ".hardware.components.unknowns:*.index"            : { "title" : _("Index") },
-    ".hardware.components.unknowns:*.name"             : { "title" : _("Name") },
-    ".hardware.components.unknowns:*.description"      : { "title" : _("Description") },
-    ".hardware.components.unknowns:*.software"         : { "title" : _("Software") },
-    ".hardware.components.unknowns:*.serial"           : { "title" : _("Serial Number") },
-    ".hardware.components.unknowns:*.manufacturer"     : { "title" : _("Manufacturer") },
-    ".hardware.components.unknowns:*.model"            : { "title" : _("Model Name") },
-    ".hardware.components.unknowns:*.location"         : { "title" : _("Location") },
-
-    ".hardware.components.chassis:"                    : { "title" : _("Chassis"),
-                                                           "keyorder" : [ "index", "name", "description", "software", "serial", "manufacturer", "model", "location" ],
-                                                           "view" : "invchassis_of_host" },
-    ".hardware.components.chassis:*.index"             : { "title" : _("Index") },
-    ".hardware.components.chassis:*.name"              : { "title" : _("Name") },
-    ".hardware.components.chassis:*.description"       : { "title" : _("Description") },
-    ".hardware.components.chassis:*.software"          : { "title" : _("Software") },
-    ".hardware.components.chassis:*.serial"            : { "title" : _("Serial Number") },
-    ".hardware.components.chassis:*.manufacturer"      : { "title" : _("Manufacturer") },
-    ".hardware.components.chassis:*.model"             : { "title" : _("Model Name") },
-    ".hardware.components.chassis:*.location"          : { "title" : _("Location") },
-
-    ".hardware.components.backplanes:"                 : { "title" : _("Backplanes"),
-                                                           "keyorder" : [ "index", "name", "description", "software", "serial", "manufacturer", "model", "location" ],
-                                                           "view" : "invbackplane_of_host" },
-    ".hardware.components.backplanes:*.index"          : { "title" : _("Index") },
-    ".hardware.components.backplanes:*.name"           : { "title" : _("Name") },
-    ".hardware.components.backplanes:*.description"    : { "title" : _("Description") },
-    ".hardware.components.backplanes:*.software"       : { "title" : _("Software") },
-    ".hardware.components.backplanes:*.serial"         : { "title" : _("Serial Number") },
-    ".hardware.components.backplanes:*.manufacturer"   : { "title" : _("Manufacturer") },
-    ".hardware.components.backplanes:*.model"          : { "title" : _("Model Name") },
-    ".hardware.components.backplanes:*.location"       : { "title" : _("Location") },
-
-    ".hardware.components.containers:"                 : { "title" : _("Containers"),
-                                                           "keyorder" : [ "index", "name", "description", "software", "serial", "manufacturer", "model", "location" ],
-                                                           "view" : "invcontainer_of_host" },
-    ".hardware.components.containers:*.index"          : { "title" : _("Index") },
-    ".hardware.components.containers:*.name"           : { "title" : _("Name") },
-    ".hardware.components.containers:*.description"    : { "title" : _("Description") },
-    ".hardware.components.containers:*.software"       : { "title" : _("Software") },
-    ".hardware.components.containers:*.serial"         : { "title" : _("Serial Number") },
-    ".hardware.components.containers:*.manufacturer"   : { "title" : _("Manufacturer") },
-    ".hardware.components.containers:*.model"          : { "title" : _("Model Name") },
-    ".hardware.components.containers:*.location"       : { "title" : _("Location") },
-
-    ".hardware.components.psus:"                       : { "title" : _("Power Supplies"),
-                                                           "keyorder" : [ "index", "name", "description", "software", "serial", "manufacturer", "model", "location" ],
-                                                           "view" : "invpsu_of_host" },
-    ".hardware.components.psus:*.index"                : { "title" : _("Index") },
-    ".hardware.components.psus:*.name"                 : { "title" : _("Name") },
-    ".hardware.components.psus:*.description"          : { "title" : _("Description") },
-    ".hardware.components.psus:*.software"             : { "title" : _("Software") },
-    ".hardware.components.psus:*.serial"               : { "title" : _("Serial Number") },
-    ".hardware.components.psus:*.manufacturer"         : { "title" : _("Manufacturer") },
-    ".hardware.components.psus:*.model"                : { "title" : _("Model Name") },
-    ".hardware.components.psus:*.location"             : { "title" : _("Location") },
-
-    ".hardware.components.fans:"                       : { "title" : _("Fans"),
-                                                           "keyorder" : [ "index", "name", "description", "software", "serial", "manufacturer", "model", "location" ],
-                                                           "view" : "invfan_of_host" },
-    ".hardware.components.fans:*.index"                : { "title" : _("Index") },
-    ".hardware.components.fans:*.name"                 : { "title" : _("Name") },
-    ".hardware.components.fans:*.description"          : { "title" : _("Description") },
-    ".hardware.components.fans:*.software"             : { "title" : _("Software") },
-    ".hardware.components.fans:*.serial"               : { "title" : _("Serial Number") },
-    ".hardware.components.fans:*.manufacturer"         : { "title" : _("Manufacturer") },
-    ".hardware.components.fans:*.model"                : { "title" : _("Model Name") },
-    ".hardware.components.fans:*.location"             : { "title" : _("Location") },
-
-    ".hardware.components.sensors:"                    : { "title" : _("Sensors"),
-                                                           "keyorder" : [ "index", "name", "description", "software", "serial", "manufacturer", "model", "location" ],
-                                                           "view" : "invsensor_of_host" },
-    ".hardware.components.sensors:*.index"             : { "title" : _("Index") },
-    ".hardware.components.sensors:*.name"              : { "title" : _("Name") },
-    ".hardware.components.sensors:*.description"       : { "title" : _("Description") },
-    ".hardware.components.sensors:*.software"          : { "title" : _("Software") },
-    ".hardware.components.sensors:*.serial"            : { "title" : _("Serial Number") },
-    ".hardware.components.sensors:*.manufacturer"      : { "title" : _("Manufacturer") },
-    ".hardware.components.sensors:*.model"             : { "title" : _("Model Name") },
-    ".hardware.components.sensors:*.location"          : { "title" : _("Location") },
-
-    ".hardware.components.modules:"                    : { "title" : _("Modules"),
-                                                           "keyorder" : [ "index", "name", "description", "software", "serial", "model",
-                                                                          "manufacturer", "bootloader", "firmware", "type", "location" ],
-                                                           "view" : "invmodule_of_host" },
-    ".hardware.components.modules:*.index"             : { "title" : _("Index") },
-    ".hardware.components.modules:*.name"              : { "title" : _("Name") },
-    ".hardware.components.modules:*.description"       : { "title" : _("Description") },
-    ".hardware.components.modules:*.software"          : { "title" : _("Software") },
-    ".hardware.components.modules:*.serial"            : { "title" : _("Serial Number") },
-    ".hardware.components.modules:*.model"             : { "title" : _("Model Name") },
-    ".hardware.components.modules:*.manufacturer"      : { "title" : _("Manufacturer") },
-    ".hardware.components.modules:*.bootloader"        : { "title" : _("Bootloader") },
-    ".hardware.components.modules:*.firmware"          : { "title" : _("Firmware") },
-    ".hardware.components.modules:*.type"              : { "title" : _("Type") },
-    ".hardware.components.modules:*.location"          : { "title" : _("Location") },
-
-    ".hardware.components.stacks:"                     : { "title" : _("Stacks"),
-                                                            "keyorder" : [ "index", "name", "description", "software", "serial", "model", "location" ],
-                                                            "view" : "invstack_of_host" },
-    ".hardware.components.stacks:*.index"              : { "title" : _("Index") },
-    ".hardware.components.stacks:*.name"               : { "title" : _("Name") },
-    ".hardware.components.stacks:*.description"        : { "title" : _("Description") },
-    ".hardware.components.stacks:*.software"           : { "title" : _("Software") },
-    ".hardware.components.stacks:*.serial"             : { "title" : _("Serial Number") },
-    ".hardware.components.stacks:*.manufacturer"       : { "title" : _("Manufacturer") },
-    ".hardware.components.stacks:*.model"              : { "title" : _("Model Name") },
-    ".hardware.components.stacks:*.location"           : { "title" : _("Location") },
-
-    ".hardware.storage."                               : { "title" : _("Storage") },
-    ".hardware.storage.controller."                    : { "title" : _("Controller") },
-    ".hardware.storage.controller.version"             : { "title" : _("Version") },
-    ".hardware.storage.disks:"                         : { "title" : _("Block Devices"), },
-    ".hardware.storage.disks:*."                       : { "title" : _("Block Device %d") },
-    ".hardware.storage.disks:*.signature"              : { "title" : _("Disk ID") },
-    ".hardware.storage.disks:*.vendor"                 : { "title" : _("Vendor") },
-    ".hardware.storage.disks:*.local"                  : { "title" : _("Local") },
-    ".hardware.storage.disks:*.bus"                    : { "title" : _("Bus") },
-    ".hardware.storage.disks:*.product"                : { "title" : _("Product") },
-    ".hardware.storage.disks:*.fsnode"                 : { "title" : _("Filesystem Node") },
-    ".hardware.storage.disks:*.serial"                 : { "title" : _("Serial Number") },
-    ".hardware.storage.disks:*.size"                   : { "title" : _("Size"), "paint" : "size" },
-    ".hardware.storage.disks:*.type"                   : { "title" : _("Type") },
-    ".hardware.video:"                                 : { "title" : _("Graphic Cards") },
-    ".hardware.video:*."                               : { "title" : _("Graphic Card %d") },
-    ".hardware.video:*.name"                           : { "title" : _("Graphic Card Name"), "short" : _("Card Name") },
-    ".hardware.video:*.subsystem"                      : { "title" : _("Vendor and Device ID"), "short" : _("Vendor") },
-    ".hardware.video:*.driver"                         : { "title" : _("Driver"), "short" : _("Driver") },
-    ".hardware.video:*.driver_date"                    : { "title" : _("Driver Date"), "short" : _("Driver Date") },
-    ".hardware.video:*.driver_version"                 : { "title" : _("Driver Version"), "short" : _("Driver Version") },
-    ".hardware.video:*.graphic_memory"                 : { "title" : _("Memory"), "paint" : "bytes_rounded" },
-
-    ".hardware.nwadapter:"                             : { "title" : _("Network Adapters"), },
-    ".hardware.nwadapter:*."                           : { "title" : _("Network Adapter %d"), },
-    ".hardware.nwadapter:*.name"                       : { "title" : _("Name"), },
-    ".hardware.nwadapter:*.type"                       : { "title" : _("Type"), },
-    ".hardware.nwadapter:*.macaddress"                 : { "title" : _("Physical Address (MAC)"), },
-    ".hardware.nwadapter:*.speed"                      : { "title" : _("Speed"), "paint" : "nic_speed", },
-    ".hardware.nwadapter:*.ipv4_address"               : { "title" : _("IPv4 Address"), },
-    ".hardware.nwadapter:*.ipv4_subnet"                : { "title" : _("IPv4 Subnet"), },
-    ".hardware.nwadapter:*.ipv6_address"               : { "title" : _("IPv6 Address"), },
-    ".hardware.nwadapter:*.ipv6_subnet"                : { "title" : _("IPv6 Subnet"), },
-    ".hardware.nwadapter:*.gateway"                    : { "title" : _("Gateway"), },
-
-    ".software."                                       : { "title" : _("Software"), "icon" : "software" },
-    ".software.os."                                    : { "title" : _("Operating System") },
-    ".software.os.name"                                : { "title" : _("Name"), "short" : _("Operating System") },
-    ".software.os.version"                             : { "title" : _("Version"), },
-    ".software.os.vendor"                              : { "title" : _("Vendor"), },
-    ".software.os.type"                                : { "title" : _("Type"), }, # e.g. "linux"
-    ".software.os.install_date"                        : { "title" : _("Install Date"), "paint" : "date" },
-    ".software.os.kernel_version"                      : { "title" : _("Kernel Version"), "short" : _("Kernel") },
-    ".software.os.arch"                                : { "title" : _("Kernel Architecture"), "short" : _("Architecture") },
-    ".software.os.service_pack"                        : { "title" : _("Latest Service Pack"), "short" : _("Service Pack") },
-    ".software.os.service_packs:"                      : { "title" : _("Service Packs"),
-                                                            "keyorder" : [ "name" ] },
-    ".software.configuration."                         : { "title" : _("Configuration"), },
-    ".software.configuration.snmp_info."               : { "title" : _("SNMP Information"), },
-    ".software.configuration.snmp_info.contact"        : { "title" : _("Contact"), },
-    ".software.configuration.snmp_info.location"       : { "title" : _("Location"), },
-    ".software.configuration.snmp_info.name"           : { "title" : _("System name"), },
-    ".software.packages:"                              : { "title" : _("Packages"), "icon" : "packages",
-                                                           "keyorder" : [ "name", "version", "arch", "package_type", "summary"], "view" : "invswpac_of_host" },
-    ".software.packages:*.name"                        : { "title" : _("Name"), },
-    ".software.packages:*.arch"                        : { "title" : _("Architecture"), },
-    ".software.packages:*.package_type"                : { "title" : _("Type"), },
-    ".software.packages:*.summary"                     : { "title" : _("Description"), },
-    ".software.packages:*.version"                     : { "title" : _("Version"), "sort" : utils.cmp_version, "filter" : FilterInvtableVersion  },
-    ".software.packages:*.vendor"                      : { "title" : _("Publisher"), },
-    ".software.packages:*.package_version"             : { "title" : _("Package Version"), "sort" : utils.cmp_version, "filter" : FilterInvtableVersion },
-    ".software.packages:*.install_date"                : { "title" : _("Install Date"), "paint" : "date"},
-    ".software.packages:*.size"                        : { "title" : _("Size"), "paint" : "count" },
-    ".software.packages:*.path"                        : { "title" : _("Path"), },
-
-    ".software.applications."                          : { "title" : _("Applications"), },
-
-    ".software.applications.check_mk."                         : { "title" : _("Check_MK"), },
-    ".software.applications.check_mk.cluster.is_cluster"       : { "title"    : _("Cluster host"),
-                                                                   "short"    : _("Cluster"),
-                                                                   "paint"    : "bool",
-                                                                 },
-    ".software.applications.check_mk.cluster.nodes:"           : { "title"    : _("Nodes"),},
-
+    ".hardware.system.serial_number": {"title": _("Serial Number - LEGACY, don't use")},
+    ".hardware.system.model_name": {"title": _("Model Name - LEGACY, don't use")},
+    ".hardware.components.": {"title": _("Physical Components")},
+    ".hardware.components.others:": {
+        "title": _("Other entities"),
+        "keyorder": [
+            "index",
+            "name",
+            "description",
+            "software",
+            "serial",
+            "manufacturer",
+            "model",
+            "location",
+        ],
+        "view": "invother_of_host",
+    },
+    ".hardware.components.others:*.index": {"title": _("Index")},
+    ".hardware.components.others:*.name": {"title": _("Name")},
+    ".hardware.components.others:*.description": {"title": _("Description")},
+    ".hardware.components.others:*.software": {"title": _("Software")},
+    ".hardware.components.others:*.serial": {"title": _("Serial Number")},
+    ".hardware.components.others:*.manufacturer": {"title": _("Manufacturer")},
+    ".hardware.components.others:*.model": {"title": _("Model Name")},
+    ".hardware.components.others:*.location": {"title": _("Location")},
+    ".hardware.components.unknowns:": {
+        "title": _("Unknown entities"),
+        "keyorder": [
+            "index",
+            "name",
+            "description",
+            "software",
+            "serial",
+            "manufacturer",
+            "model",
+            "location",
+        ],
+        "view": "invunknown_of_host",
+    },
+    ".hardware.components.unknowns:*.index": {"title": _("Index")},
+    ".hardware.components.unknowns:*.name": {"title": _("Name")},
+    ".hardware.components.unknowns:*.description": {"title": _("Description")},
+    ".hardware.components.unknowns:*.software": {"title": _("Software")},
+    ".hardware.components.unknowns:*.serial": {"title": _("Serial Number")},
+    ".hardware.components.unknowns:*.manufacturer": {"title": _("Manufacturer")},
+    ".hardware.components.unknowns:*.model": {"title": _("Model Name")},
+    ".hardware.components.unknowns:*.location": {"title": _("Location")},
+    ".hardware.components.chassis:": {
+        "title": _("Chassis"),
+        "keyorder": [
+            "index",
+            "name",
+            "description",
+            "software",
+            "serial",
+            "manufacturer",
+            "model",
+            "location",
+        ],
+        "view": "invchassis_of_host",
+    },
+    ".hardware.components.chassis:*.index": {"title": _("Index")},
+    ".hardware.components.chassis:*.name": {"title": _("Name")},
+    ".hardware.components.chassis:*.description": {"title": _("Description")},
+    ".hardware.components.chassis:*.software": {"title": _("Software")},
+    ".hardware.components.chassis:*.serial": {"title": _("Serial Number")},
+    ".hardware.components.chassis:*.manufacturer": {"title": _("Manufacturer")},
+    ".hardware.components.chassis:*.model": {"title": _("Model Name")},
+    ".hardware.components.chassis:*.location": {"title": _("Location")},
+    ".hardware.components.backplanes:": {
+        "title": _("Backplanes"),
+        "keyorder": [
+            "index",
+            "name",
+            "description",
+            "software",
+            "serial",
+            "manufacturer",
+            "model",
+            "location",
+        ],
+        "view": "invbackplane_of_host",
+    },
+    ".hardware.components.backplanes:*.index": {"title": _("Index")},
+    ".hardware.components.backplanes:*.name": {"title": _("Name")},
+    ".hardware.components.backplanes:*.description": {"title": _("Description")},
+    ".hardware.components.backplanes:*.software": {"title": _("Software")},
+    ".hardware.components.backplanes:*.serial": {"title": _("Serial Number")},
+    ".hardware.components.backplanes:*.manufacturer": {"title": _("Manufacturer")},
+    ".hardware.components.backplanes:*.model": {"title": _("Model Name")},
+    ".hardware.components.backplanes:*.location": {"title": _("Location")},
+    ".hardware.components.containers:": {
+        "title": _("Containers"),
+        "keyorder": [
+            "index",
+            "name",
+            "description",
+            "software",
+            "serial",
+            "manufacturer",
+            "model",
+            "location",
+        ],
+        "view": "invcontainer_of_host",
+    },
+    ".hardware.components.containers:*.index": {"title": _("Index")},
+    ".hardware.components.containers:*.name": {"title": _("Name")},
+    ".hardware.components.containers:*.description": {"title": _("Description")},
+    ".hardware.components.containers:*.software": {"title": _("Software")},
+    ".hardware.components.containers:*.serial": {"title": _("Serial Number")},
+    ".hardware.components.containers:*.manufacturer": {"title": _("Manufacturer")},
+    ".hardware.components.containers:*.model": {"title": _("Model Name")},
+    ".hardware.components.containers:*.location": {"title": _("Location")},
+    ".hardware.components.psus:": {
+        "title": _("Power Supplies"),
+        "keyorder": [
+            "index",
+            "name",
+            "description",
+            "software",
+            "serial",
+            "manufacturer",
+            "model",
+            "location",
+        ],
+        "view": "invpsu_of_host",
+    },
+    ".hardware.components.psus:*.index": {"title": _("Index")},
+    ".hardware.components.psus:*.name": {"title": _("Name")},
+    ".hardware.components.psus:*.description": {"title": _("Description")},
+    ".hardware.components.psus:*.software": {"title": _("Software")},
+    ".hardware.components.psus:*.serial": {"title": _("Serial Number")},
+    ".hardware.components.psus:*.manufacturer": {"title": _("Manufacturer")},
+    ".hardware.components.psus:*.model": {"title": _("Model Name")},
+    ".hardware.components.psus:*.location": {"title": _("Location")},
+    ".hardware.components.fans:": {
+        "title": _("Fans"),
+        "keyorder": [
+            "index",
+            "name",
+            "description",
+            "software",
+            "serial",
+            "manufacturer",
+            "model",
+            "location",
+        ],
+        "view": "invfan_of_host",
+    },
+    ".hardware.components.fans:*.index": {"title": _("Index")},
+    ".hardware.components.fans:*.name": {"title": _("Name")},
+    ".hardware.components.fans:*.description": {"title": _("Description")},
+    ".hardware.components.fans:*.software": {"title": _("Software")},
+    ".hardware.components.fans:*.serial": {"title": _("Serial Number")},
+    ".hardware.components.fans:*.manufacturer": {"title": _("Manufacturer")},
+    ".hardware.components.fans:*.model": {"title": _("Model Name")},
+    ".hardware.components.fans:*.location": {"title": _("Location")},
+    ".hardware.components.sensors:": {
+        "title": _("Sensors"),
+        "keyorder": [
+            "index",
+            "name",
+            "description",
+            "software",
+            "serial",
+            "manufacturer",
+            "model",
+            "location",
+        ],
+        "view": "invsensor_of_host",
+    },
+    ".hardware.components.sensors:*.index": {"title": _("Index")},
+    ".hardware.components.sensors:*.name": {"title": _("Name")},
+    ".hardware.components.sensors:*.description": {"title": _("Description")},
+    ".hardware.components.sensors:*.software": {"title": _("Software")},
+    ".hardware.components.sensors:*.serial": {"title": _("Serial Number")},
+    ".hardware.components.sensors:*.manufacturer": {"title": _("Manufacturer")},
+    ".hardware.components.sensors:*.model": {"title": _("Model Name")},
+    ".hardware.components.sensors:*.location": {"title": _("Location")},
+    ".hardware.components.modules:": {
+        "title": _("Modules"),
+        "keyorder": [
+            "index",
+            "name",
+            "description",
+            "software",
+            "serial",
+            "model",
+            "manufacturer",
+            "bootloader",
+            "firmware",
+            "type",
+            "location",
+        ],
+        "view": "invmodule_of_host",
+    },
+    ".hardware.components.modules:*.index": {"title": _("Index")},
+    ".hardware.components.modules:*.name": {"title": _("Name")},
+    ".hardware.components.modules:*.description": {"title": _("Description")},
+    ".hardware.components.modules:*.software": {"title": _("Software")},
+    ".hardware.components.modules:*.serial": {"title": _("Serial Number")},
+    ".hardware.components.modules:*.model": {"title": _("Model Name")},
+    ".hardware.components.modules:*.manufacturer": {"title": _("Manufacturer")},
+    ".hardware.components.modules:*.bootloader": {"title": _("Bootloader")},
+    ".hardware.components.modules:*.firmware": {"title": _("Firmware")},
+    ".hardware.components.modules:*.type": {"title": _("Type")},
+    ".hardware.components.modules:*.location": {"title": _("Location")},
+    ".hardware.components.stacks:": {
+        "title": _("Stacks"),
+        "keyorder": ["index", "name", "description", "software", "serial", "model", "location"],
+        "view": "invstack_of_host",
+    },
+    ".hardware.components.stacks:*.index": {"title": _("Index")},
+    ".hardware.components.stacks:*.name": {"title": _("Name")},
+    ".hardware.components.stacks:*.description": {"title": _("Description")},
+    ".hardware.components.stacks:*.software": {"title": _("Software")},
+    ".hardware.components.stacks:*.serial": {"title": _("Serial Number")},
+    ".hardware.components.stacks:*.manufacturer": {"title": _("Manufacturer")},
+    ".hardware.components.stacks:*.model": {"title": _("Model Name")},
+    ".hardware.components.stacks:*.location": {"title": _("Location")},
+    ".hardware.storage.": {"title": _("Storage")},
+    ".hardware.storage.controller.": {"title": _("Controller")},
+    ".hardware.storage.controller.version": {"title": _("Version")},
+    ".hardware.storage.disks:": {"title": _("Block Devices")},
+    ".hardware.storage.disks:*.": {"title": _("Block Device %d")},
+    ".hardware.storage.disks:*.signature": {"title": _("Disk ID")},
+    ".hardware.storage.disks:*.vendor": {"title": _("Vendor")},
+    ".hardware.storage.disks:*.local": {"title": _("Local")},
+    ".hardware.storage.disks:*.bus": {"title": _("Bus")},
+    ".hardware.storage.disks:*.product": {"title": _("Product")},
+    ".hardware.storage.disks:*.fsnode": {"title": _("Filesystem Node")},
+    ".hardware.storage.disks:*.serial": {"title": _("Serial Number")},
+    ".hardware.storage.disks:*.size": {"title": _("Size"), "paint": "size"},
+    ".hardware.storage.disks:*.type": {"title": _("Type")},
+    ".hardware.video:": {"title": _("Graphic Cards")},
+    ".hardware.video:*.": {"title": _("Graphic Card %d")},
+    ".hardware.video:*.name": {"title": _("Graphic Card Name"), "short": _("Card Name")},
+    ".hardware.video:*.subsystem": {"title": _("Vendor and Device ID"), "short": _("Vendor")},
+    ".hardware.video:*.driver": {"title": _("Driver"), "short": _("Driver")},
+    ".hardware.video:*.driver_date": {"title": _("Driver Date"), "short": _("Driver Date")},
+    ".hardware.video:*.driver_version": {
+        "title": _("Driver Version"), "short": _("Driver Version")
+    },
+    ".hardware.video:*.graphic_memory": {"title": _("Memory"), "paint": "bytes_rounded"},
+    ".hardware.nwadapter:": {"title": _("Network Adapters")},
+    ".hardware.nwadapter:*.": {"title": _("Network Adapter %d")},
+    ".hardware.nwadapter:*.name": {"title": _("Name")},
+    ".hardware.nwadapter:*.type": {"title": _("Type")},
+    ".hardware.nwadapter:*.macaddress": {"title": _("Physical Address (MAC)")},
+    ".hardware.nwadapter:*.speed": {"title": _("Speed"), "paint": "nic_speed"},
+    ".hardware.nwadapter:*.ipv4_address": {"title": _("IPv4 Address")},
+    ".hardware.nwadapter:*.ipv4_subnet": {"title": _("IPv4 Subnet")},
+    ".hardware.nwadapter:*.ipv6_address": {"title": _("IPv6 Address")},
+    ".hardware.nwadapter:*.ipv6_subnet": {"title": _("IPv6 Subnet")},
+    ".hardware.nwadapter:*.gateway": {"title": _("Gateway")},
+    ".software.": {"title": _("Software"), "icon": "software"},
+    ".software.os.": {"title": _("Operating System")},
+    ".software.os.name": {"title": _("Name"), "short": _("Operating System")},
+    ".software.os.version": {"title": _("Version")},
+    ".software.os.vendor": {"title": _("Vendor")},
+    ".software.os.type": {"title": _("Type")},  # e.g. "linux"
+    ".software.os.install_date": {"title": _("Install Date"), "paint": "date"},
+    ".software.os.kernel_version": {"title": _("Kernel Version"), "short": _("Kernel")},
+    ".software.os.arch": {"title": _("Kernel Architecture"), "short": _("Architecture")},
+    ".software.os.service_pack": {"title": _("Latest Service Pack"), "short": _("Service Pack")},
+    ".software.os.service_packs:": {"title": _("Service Packs"), "keyorder": ["name"]},
+    ".software.configuration.": {"title": _("Configuration")},
+    ".software.configuration.snmp_info.": {"title": _("SNMP Information")},
+    ".software.configuration.snmp_info.contact": {"title": _("Contact")},
+    ".software.configuration.snmp_info.location": {"title": _("Location")},
+    ".software.configuration.snmp_info.name": {"title": _("System name")},
+    ".software.packages:": {
+        "title": _("Packages"),
+        "icon": "packages",
+        "keyorder": ["name", "version", "arch", "package_type", "summary"],
+        "view": "invswpac_of_host",
+    },
+    ".software.packages:*.name": {"title": _("Name")},
+    ".software.packages:*.arch": {"title": _("Architecture")},
+    ".software.packages:*.package_type": {"title": _("Type")},
+    ".software.packages:*.summary": {"title": _("Description")},
+    ".software.packages:*.version": {
+        "title": _("Version"), "sort": utils.cmp_version, "filter": FilterInvtableVersion
+    },
+    ".software.packages:*.vendor": {"title": _("Publisher")},
+    ".software.packages:*.package_version": {
+        "title": _("Package Version"), "sort": utils.cmp_version, "filter": FilterInvtableVersion
+    },
+    ".software.packages:*.install_date": {"title": _("Install Date"), "paint": "date"},
+    ".software.packages:*.size": {"title": _("Size"), "paint": "count"},
+    ".software.packages:*.path": {"title": _("Path")},
+    ".software.applications.": {"title": _("Applications")},
+    ".software.applications.check_mk.": {"title": _("Check_MK")},
+    ".software.applications.check_mk.cluster.is_cluster": {
+        "title": _("Cluster host"), "short": _("Cluster"), "paint": "bool"
+    },
+    ".software.applications.check_mk.cluster.nodes:": {"title": _("Nodes")},
     ".software.applications.docker.": {
-        "icon": "docker",
-        "title": "Docker",
-        "keyorder": [ "version", "num_containers_total", "num_containers_running", "num_containers_stopped",
-                      "num_containers_paused", "num_images", "registry" ],
+        "icon": "docker", "title": "Docker", "keyorder": [
+            "version",
+            "num_containers_total",
+            "num_containers_running",
+            "num_containers_stopped",
+            "num_containers_paused",
+            "num_images",
+            "registry",
+        ]
     },
-    ".software.applications.docker.num_containers_total": {
-        "title": _("# Containers"),
-    },
-    ".software.applications.docker.num_containers_running": {
-        "title": _("# Containers running"),
-    },
-    ".software.applications.docker.num_containers_stopped": {
-        "title": _("# Containers stopped"),
-    },
-    ".software.applications.docker.num_containers_paused": {
-        "title": _("# Containers paused"),
-    },
-    ".software.applications.docker.num_images": {
-        "title": _("# Images"),
-    },
-
+    ".software.applications.docker.num_containers_total": {"title": _("# Containers")},
+    ".software.applications.docker.num_containers_running": {"title": _("# Containers running")},
+    ".software.applications.docker.num_containers_stopped": {"title": _("# Containers stopped")},
+    ".software.applications.docker.num_containers_paused": {"title": _("# Containers paused")},
+    ".software.applications.docker.num_images": {"title": _("# Images")},
     ".software.applications.docker.images:": {
-        "title" : _("Images"),
+        "title": _("Images"),
         "keyorder": ["id", "repository", "tag", "creation", "size", "labels", "amount_containers"],
-        "view" : "invdockerimages_of_host",
+        "view": "invdockerimages_of_host",
     },
-    ".software.applications.docker.images:*.id": {
-        "title" : _("ID"),
-    },
-    ".software.applications.docker.images:*.labels": {
-        "paint" : "docker_labels",
-    },
-    ".software.applications.docker.images:*.amount_containers" : {
-        "title" : _("# Containers"),
-    },
+    ".software.applications.docker.images:*.id": {"title": _("ID")},
+    ".software.applications.docker.images:*.labels": {"paint": "docker_labels"},
+    ".software.applications.docker.images:*.amount_containers": {"title": _("# Containers")},
 
     # Node containers
     ".software.applications.docker.containers:": {
-        "title" : _("Containers"),
+        "title": _("Containers"),
         "keyorder": ["id", "repository", "tag", "creation", "name", "creation", "labels", "status"],
-        "view" : "invdockercontainers_of_host",
+        "view": "invdockercontainers_of_host",
     },
-    ".software.applications.docker.containers:*.id": {
-        "title" : _("ID"),
-    },
-    ".software.applications.docker.containers:*.labels": {
-        "paint" : "docker_labels",
-    },
-
-    ".software.applications.docker.networks.*.": {
-        "title": "Network %s",
-    },
-    ".software.applications.docker.networks.*.network_id": {
-        "title": "Network ID",
-    },
-
-    ".software.applications.docker.container.": {
-        "title" : _("Container"),
-    },
-    ".software.applications.docker.container.node_name": {
-        "title" : _("Node name"),
-    },
+    ".software.applications.docker.containers:*.id": {"title": _("ID")},
+    ".software.applications.docker.containers:*.labels": {"paint": "docker_labels"},
+    ".software.applications.docker.networks.*.": {"title": "Network %s"},
+    ".software.applications.docker.networks.*.network_id": {"title": "Network ID"},
+    ".software.applications.docker.container.": {"title": _("Container")},
+    ".software.applications.docker.container.node_name": {"title": _("Node name")},
     ".software.applications.docker.container.ports:": {
-        "title" : _("Ports"),
-        "keyorder" : [ "port", "protocol", "host_addresses" ],
+        "title": _("Ports"),
+        "keyorder": ["port", "protocol", "host_addresses"],
     },
-
     ".software.applications.docker.container.networks:": {
-        "title" : _("Networks"),
-        "keyorder" : [ "name", "ip_address", "ip_prefixlen", "gateway",
-                       "mac_address", "network_id" ],
+        "title": _("Networks"),
+        "keyorder": ["name", "ip_address", "ip_prefixlen", "gateway", "mac_address", "network_id"],
     },
-    ".software.applications.docker.container.networks:*.ip_address": {
-        "title" : _("IP address"),
-    },
-    ".software.applications.docker.container.networks:*.ip_prefixlen": {
-        "title" : _("IP Prefix"),
-    },
-    ".software.applications.docker.container.networks:*.mac_address": {
-        "title" : _("MAC address"),
-    },
-    ".software.applications.docker.container.networks:*.network_id": {
-        "title" : _("Network ID"),
-    },
-
+    ".software.applications.docker.container.networks:*.ip_address": {"title": _("IP address")},
+    ".software.applications.docker.container.networks:*.ip_prefixlen": {"title": _("IP Prefix")},
+    ".software.applications.docker.container.networks:*.mac_address": {"title": _("MAC address")},
+    ".software.applications.docker.container.networks:*.network_id": {"title": _("Network ID")},
     ".software.applications.docker.networks.*.containers:": {
-        "keyorder" : [ "name", "id", "ipv4_address", "ipv6_address", "mac_address" ],
+        "keyorder": ["name", "id", "ipv4_address", "ipv6_address", "mac_address"],
     },
-    ".software.applications.docker.networks.*.containers:*.id": {
-        "title" : _("ID"),
-    },
+    ".software.applications.docker.networks.*.containers:*.id": {"title": _("ID")},
     ".software.applications.docker.networks.*.containers:*.ipv4_address": {
-        "title" : _("IPv4 address"),
+        "title": _("IPv4 address"),
     },
     ".software.applications.docker.networks.*.containers:*.ipv6_address": {
-        "title" : _("IPv6 address"),
+        "title": _("IPv6 address"),
     },
     ".software.applications.docker.networks.*.containers:*.mac_address": {
-        "title" : _("MAC address"),
+        "title": _("MAC address"),
     },
-
-    ".software.applications.citrix."                              : { "title" : _("Citrix") },
-    ".software.applications.citrix.controller."                   : { "title" : _("Controller") },
-    ".software.applications.citrix.controller.controller_version" : { "title" : _("Controller Version"), },
-    ".software.applications.citrix.vm."                           : { "title" : _("Virtual Machine") },
-    ".software.applications.citrix.vm.desktop_group_name"         : { "title" : _("Desktop Group Name"), },
-    ".software.applications.citrix.vm.catalog"                    : { "title" : _("Catalog"), },
-    ".software.applications.citrix.vm.agent_version"              : { "title" : _("Agent Version"), },
-
-    ".software.applications.oracle." : { "title" : _("Oracle DB") },
-
-    ".software.applications.oracle.instance:"                   : { "title"    : _("Instances"),
-                                                                    "keyorder" : [ "sid", "version", "openmode", "logmode",
-                                                                                   "logins", "db_uptime", "db_creation_time" ],
-                                                                    "view"     : "invorainstance_of_host" },
-    ".software.applications.oracle.instance:*.sid"              : { "title" : _("SID"), },
-    ".software.applications.oracle.instance:*.version"          : { "title" : _("Version"), },
-    ".software.applications.oracle.instance:*.openmode"         : { "title" : _("Open mode"), },
-    ".software.applications.oracle.instance:*.logmode"          : { "title" : _("Log mode"), },
-    ".software.applications.oracle.instance:*.logins"           : { "title" : _("Logins"), },
-    ".software.applications.oracle.instance:*.db_uptime"        : { "title" : _("Uptime"), "paint" : "age" },
-    ".software.applications.oracle.instance:*.db_creation_time" : { "title" : _("Creation time"), "paint" : "date_and_time" },
-
-    ".software.applications.oracle.dataguard_stats:"             : { "title"    : _("Dataguard statistics"),
-                                                                     "keyorder" : [ "sid", "db_unique", "role", "switchover" ],
-                                                                     "view"     : "invoradataguardstats_of_host" },
-    ".software.applications.oracle.dataguard_stats:*.sid"        : { "title" : _("SID"), },
-    ".software.applications.oracle.dataguard_stats:*.db_unique"  : { "title" : _("Name"), },
-    ".software.applications.oracle.dataguard_stats:*.role"       : { "title" : _("Role"), },
-    ".software.applications.oracle.dataguard_stats:*.switchover" : { "title" : _("Switchover"), },
-
-    ".software.applications.oracle.recovery_area:"            : { "title"    : _("Recovery area"),
-                                                                  "keyorder" : [ "sid", "flashback" ],
-                                                                  "view"     : "invorarecoveryarea_of_host" },
-    ".software.applications.oracle.recovery_area:*.sid"       : { "title" : _("SID"), },
-    ".software.applications.oracle.recovery_area:*.flashback" : { "title" : _("Flashback"), },
-
-    ".software.applications.oracle.sga:"                        : { "title"    : _("SGA Info"),
-                                                                    "keyorder" : [ "sid", "fixed_size", "redo_buffer", "buf_cache_size",
-                                                                                   "in_mem_area_size", "shared_pool_size", "large_pool_size",
-                                                                                   "java_pool_size", "streams_pool_size", "shared_io_pool_size",
-                                                                                   "data_trans_cache_size", "granule_size", "max_size",
-                                                                                   "start_oh_shared_pool", "free_mem_avail" ],
-                                                                    "view"     : "invorasga_of_host" },
-    ".software.applications.oracle.sga:*.sid"                   : { "title" : _("SID"), },
-    ".software.applications.oracle.sga:*.fixed_size"            : { "title" : _("Fixed size"), "paint" : "size" },
-    ".software.applications.oracle.sga:*.max_size"              : { "title" : _("Maximum size"), "paint" : "size" },
-    ".software.applications.oracle.sga:*.redo_buffer"           : { "title" : _("Redo buffers"), "paint" : "size" },
-    ".software.applications.oracle.sga:*.buf_cache_size"        : { "title" : _("Buffer cache size"), "paint" : "size" },
-    ".software.applications.oracle.sga:*.in_mem_area_size"      : { "title" : _("In-memory area"), "paint" : "size" },
-    ".software.applications.oracle.sga:*.shared_pool_size"      : { "title" : _("Shared pool size"), "paint" : "size" },
-    ".software.applications.oracle.sga:*.large_pool_size"       : { "title" : _("Large pool size"), "paint" : "size" },
-    ".software.applications.oracle.sga:*.java_pool_size"        : { "title" : _("Java pool size"), "paint" : "size" },
-    ".software.applications.oracle.sga:*.streams_pool_size"     : { "title" : _("Streams pool size"), "paint" : "size" },
-    ".software.applications.oracle.sga:*.shared_io_pool_size"   : { "title" : _("Shared pool size"), "paint" : "size" },
-    ".software.applications.oracle.sga:*.data_trans_cache_size" : { "title" : _("Data transfer cache size"), "paint" : "size" },
-    ".software.applications.oracle.sga:*.granule_size"          : { "title" : _("Granule size"), "paint" : "size" },
-    ".software.applications.oracle.sga:*.start_oh_shared_pool"  : { "title" : _("Startup overhead in shared pool"), "paint" : "size" },
-    ".software.applications.oracle.sga:*.free_mem_avail"        : { "title" : _("Free SGA memory available"), "paint" : "size" },
-
-    ".software.applications.oracle.tablespaces:"                 : { "title"    : _("Tablespaces"),
-                                                                     "keyorder" : ["sid", "name", "version", "type", "autoextensible",
-                                                                                    "current_size", "max_size", "used_size", "num_increments",
-                                                                                    "increment_size", "free_space"],
-                                                                     "view"     : "invoratablespace_of_host" },
-    ".software.applications.oracle.tablespaces:*.sid"            : { "title" : _("SID"), },
-    ".software.applications.oracle.tablespaces:*.name"           : { "title" : _("Name"), },
-    ".software.applications.oracle.tablespaces:*.version"        : { "title" : _("Version"), },
-    ".software.applications.oracle.tablespaces:*.type"           : { "title" : _("Type"), },
-    ".software.applications.oracle.tablespaces:*.autoextensible" : { "title" : _("Autoextensible"), },
-    ".software.applications.oracle.tablespaces:*.current_size"   : { "title" : _("Current size"), "paint" : "size" },
-    ".software.applications.oracle.tablespaces:*.max_size"       : { "title" : _("Max. size"), "paint" : "size" },
-    ".software.applications.oracle.tablespaces:*.used_size"      : { "title" : _("Used size"), "paint" : "size" },
-    ".software.applications.oracle.tablespaces:*.num_increments" : { "title" : _("Number of increments"), },
-    ".software.applications.oracle.tablespaces:*.increment_size" : { "title" : _("Increment size"), "paint" : "size" },
-    ".software.applications.oracle.tablespaces:*.free_space"     : { "title" : _("Free space"), "paint" : "size" },
-
-    ".software.applications.vmwareesx:*."              : { "title" : _("Datacenter %d") },
-    ".software.applications.vmwareesx:*.clusters:*."   : { "title" : _("Cluster %d") },
-
-    ".software.applications.mssql."                    : { "title" : _("MSSQL") },
-    ".software.applications.mssql.instances:"          : { "title" : _("Instances"),
-                                                           "keyorder" : [ "name", "product", "edition", "version", "clustered",
-                                                                          "cluster_name", "active_node", "node_names" ],
-                                                         },
-    ".software.applications.mssql.instances:*.clustered" : { "title" : _("Clustered"), "paint" : "mssql_is_clustered"},
-
-    ".networking."                                     : { "title" : _("Networking"), "icon" : "networking" },
-    ".networking.total_interfaces"                     : { "title" : _("Interfaces"), "paint" : "count", },
-    ".networking.total_ethernet_ports"                 : { "title" : _("Ports"), "paint" : "count", },
-    ".networking.available_ethernet_ports"             : { "title" : _("Ports available"), "paint" : "count", },
-    ".networking.addresses:"                           : { "title" : _("IP Addresses"),
-                                                           "keyorder" : [ "address", "device", "type" ], },
-    ".networking.addresses:*.address"                  : { "title" : _("Address") },
-    ".networking.addresses:*.device"                   : { "title" : _("Device") },
-    ".networking.addresses:*.type"                     : { "title" : _("Address Type"), "paint" : "ip_address_type" },
-    ".networking.routes:"                              : { "title" : _("Routes"),
-                                                           "keyorder" : [ "target", "device", "type", "gateway" ] },
-    ".networking.routes:*.target"                      : { "title" : _("Target"), "paint" : "ipv4_network" },
-    ".networking.routes:*.device"                      : { "title" : _("Device") },
-    ".networking.routes:*.type"                        : { "title" : _("Type of route"), "paint" : "route_type" },
-    ".networking.routes:*.gateway"                     : { "title" : _("Gateway") },
-    ".networking.interfaces:"                          : { "title" : _("Interfaces"),
-                                                           "keyorder" : [ "index", "description", "alias", "oper_status", "admin_status", "available", "speed" ],
-                                                           "view" : "invinterface_of_host", },
-    ".networking.interfaces:*.index"                   : { "title" : _("Index"), "paint" : "number", "filter" : FilterInvtableIDRange },
-    ".networking.interfaces:*.description"             : { "title" : _("Description") },
-    ".networking.interfaces:*.alias"                   : { "title" : _("Alias") },
-    ".networking.interfaces:*.phys_address"            : { "title" : _("Physical Address (MAC)")  },
-    ".networking.interfaces:*.oper_status"             : { "title" : _("Operational Status"), "short" : _("Status"), "paint" : "if_oper_status", "filter" : FilterInvtableOperStatus },
-    ".networking.interfaces:*.admin_status"            : { "title" : _("Administrative Status"), "short" : _("Admin"), "paint" : "if_admin_status", "filter" : FilterInvtableAdminStatus },
-    ".networking.interfaces:*.available"               : { "title" : _("Port Usage"), "short" : _("Used"), "paint" : "if_available", "filter" : FilterInvtableAvailable },
-    ".networking.interfaces:*.speed"                   : { "title" : _("Speed"), "paint" : "nic_speed", },
-    ".networking.interfaces:*.port_type"               : { "title" : _("Type"), "paint" : "if_port_type", "filter" : FilterInvtableInterfaceType },
-    ".networking.interfaces:*.last_change"             : { "title" : _("Last Change"), "paint" : "timestamp_as_age_days", "filter" : FilterInvtableTimestampAsAge },
-    ".networking.interfaces:*.vlans"                   : { "title" : _("VLANs") },
-    ".networking.interfaces:*.vlantype"                : { "title" : _("VLAN type") },
-
-    ".networking.wlan"                                 : { "title" : _("WLAN") },
-    ".networking.wlan.controller"                      : { "title" : _("Controller") },
-    ".networking.wlan.controller.accesspoints:"        : { "title" : _("Access Points"), "keyorder" : ["name", "group", "ip_addr", "model", "serial", "sys_location"], },
-    ".networking.wlan.controller.accesspoints:*.name"         : { "title" : _("Name") },
-    ".networking.wlan.controller.accesspoints:*.group"        : { "title" : _("Group") },
-    ".networking.wlan.controller.accesspoints:*.ip_addr"      : { "title" : _("IP Address") },
-    ".networking.wlan.controller.accesspoints:*.model"        : { "title" : _("Model") },
-    ".networking.wlan.controller.accesspoints:*.serial"       : { "title" : _("Serial Number") },
-    ".networking.wlan.controller.accesspoints:*.sys_location" : { "title" : _("System Location") },
+    ".software.applications.citrix.": {"title": _("Citrix")},
+    ".software.applications.citrix.controller.": {"title": _("Controller")},
+    ".software.applications.citrix.controller.controller_version": {
+        "title": _("Controller Version"),
+    },
+    ".software.applications.citrix.vm.": {"title": _("Virtual Machine")},
+    ".software.applications.citrix.vm.desktop_group_name": {"title": _("Desktop Group Name")},
+    ".software.applications.citrix.vm.catalog": {"title": _("Catalog")},
+    ".software.applications.citrix.vm.agent_version": {"title": _("Agent Version")},
+    ".software.applications.oracle.": {"title": _("Oracle DB")},
+    ".software.applications.oracle.instance:": {
+        "title": _("Instances"),
+        "keyorder": [
+            "sid",
+            "version",
+            "openmode",
+            "logmode",
+            "logins",
+            "db_uptime",
+            "db_creation_time",
+        ],
+        "view": "invorainstance_of_host",
+    },
+    ".software.applications.oracle.instance:*.sid": {"title": _("SID")},
+    ".software.applications.oracle.instance:*.version": {"title": _("Version")},
+    ".software.applications.oracle.instance:*.openmode": {"title": _("Open mode")},
+    ".software.applications.oracle.instance:*.logmode": {"title": _("Log mode")},
+    ".software.applications.oracle.instance:*.logins": {"title": _("Logins")},
+    ".software.applications.oracle.instance:*.db_uptime": {"title": _("Uptime"), "paint": "age"},
+    ".software.applications.oracle.instance:*.db_creation_time": {
+        "title": _("Creation time"), "paint": "date_and_time"
+    },
+    ".software.applications.oracle.dataguard_stats:": {
+        "title": _("Dataguard statistics"),
+        "keyorder": ["sid", "db_unique", "role", "switchover"],
+        "view": "invoradataguardstats_of_host",
+    },
+    ".software.applications.oracle.dataguard_stats:*.sid": {"title": _("SID")},
+    ".software.applications.oracle.dataguard_stats:*.db_unique": {"title": _("Name")},
+    ".software.applications.oracle.dataguard_stats:*.role": {"title": _("Role")},
+    ".software.applications.oracle.dataguard_stats:*.switchover": {"title": _("Switchover")},
+    ".software.applications.oracle.recovery_area:": {
+        "title": _("Recovery area"),
+        "keyorder": ["sid", "flashback"],
+        "view": "invorarecoveryarea_of_host",
+    },
+    ".software.applications.oracle.recovery_area:*.sid": {"title": _("SID")},
+    ".software.applications.oracle.recovery_area:*.flashback": {"title": _("Flashback")},
+    ".software.applications.oracle.sga:": {
+        "title": _("SGA Info"),
+        "keyorder": [
+            "sid",
+            "fixed_size",
+            "redo_buffer",
+            "buf_cache_size",
+            "in_mem_area_size",
+            "shared_pool_size",
+            "large_pool_size",
+            "java_pool_size",
+            "streams_pool_size",
+            "shared_io_pool_size",
+            "data_trans_cache_size",
+            "granule_size",
+            "max_size",
+            "start_oh_shared_pool",
+            "free_mem_avail",
+        ],
+        "view": "invorasga_of_host",
+    },
+    ".software.applications.oracle.sga:*.sid": {"title": _("SID")},
+    ".software.applications.oracle.sga:*.fixed_size": {"title": _("Fixed size"), "paint": "size"},
+    ".software.applications.oracle.sga:*.max_size": {"title": _("Maximum size"), "paint": "size"},
+    ".software.applications.oracle.sga:*.redo_buffer": {
+        "title": _("Redo buffers"), "paint": "size"
+    },
+    ".software.applications.oracle.sga:*.buf_cache_size": {
+        "title": _("Buffer cache size"), "paint": "size"
+    },
+    ".software.applications.oracle.sga:*.in_mem_area_size": {
+        "title": _("In-memory area"), "paint": "size"
+    },
+    ".software.applications.oracle.sga:*.shared_pool_size": {
+        "title": _("Shared pool size"), "paint": "size"
+    },
+    ".software.applications.oracle.sga:*.large_pool_size": {
+        "title": _("Large pool size"), "paint": "size"
+    },
+    ".software.applications.oracle.sga:*.java_pool_size": {
+        "title": _("Java pool size"), "paint": "size"
+    },
+    ".software.applications.oracle.sga:*.streams_pool_size": {
+        "title": _("Streams pool size"), "paint": "size"
+    },
+    ".software.applications.oracle.sga:*.shared_io_pool_size": {
+        "title": _("Shared pool size"), "paint": "size"
+    },
+    ".software.applications.oracle.sga:*.data_trans_cache_size": {
+        "title": _("Data transfer cache size"), "paint": "size"
+    },
+    ".software.applications.oracle.sga:*.granule_size": {
+        "title": _("Granule size"), "paint": "size"
+    },
+    ".software.applications.oracle.sga:*.start_oh_shared_pool": {
+        "title": _("Startup overhead in shared pool"), "paint": "size"
+    },
+    ".software.applications.oracle.sga:*.free_mem_avail": {
+        "title": _("Free SGA memory available"), "paint": "size"
+    },
+    ".software.applications.oracle.tablespaces:": {
+        "title": _("Tablespaces"),
+        "keyorder": [
+            "sid",
+            "name",
+            "version",
+            "type",
+            "autoextensible",
+            "current_size",
+            "max_size",
+            "used_size",
+            "num_increments",
+            "increment_size",
+            "free_space",
+        ],
+        "view": "invoratablespace_of_host",
+    },
+    ".software.applications.oracle.tablespaces:*.sid": {"title": _("SID")},
+    ".software.applications.oracle.tablespaces:*.name": {"title": _("Name")},
+    ".software.applications.oracle.tablespaces:*.version": {"title": _("Version")},
+    ".software.applications.oracle.tablespaces:*.type": {"title": _("Type")},
+    ".software.applications.oracle.tablespaces:*.autoextensible": {"title": _("Autoextensible")},
+    ".software.applications.oracle.tablespaces:*.current_size": {
+        "title": _("Current size"), "paint": "size"
+    },
+    ".software.applications.oracle.tablespaces:*.max_size": {
+        "title": _("Max. size"), "paint": "size"
+    },
+    ".software.applications.oracle.tablespaces:*.used_size": {
+        "title": _("Used size"), "paint": "size"
+    },
+    ".software.applications.oracle.tablespaces:*.num_increments": {
+        "title": _("Number of increments"),
+    },
+    ".software.applications.oracle.tablespaces:*.increment_size": {
+        "title": _("Increment size"), "paint": "size"
+    },
+    ".software.applications.oracle.tablespaces:*.free_space": {
+        "title": _("Free space"), "paint": "size"
+    },
+    ".software.applications.vmwareesx:*.": {"title": _("Datacenter %d")},
+    ".software.applications.vmwareesx:*.clusters:*.": {"title": _("Cluster %d")},
+    ".software.applications.mssql.": {"title": _("MSSQL")},
+    ".software.applications.mssql.instances:": {
+        "title": _("Instances"),
+        "keyorder": [
+            "name",
+            "product",
+            "edition",
+            "version",
+            "clustered",
+            "cluster_name",
+            "active_node",
+            "node_names",
+        ],
+    },
+    ".software.applications.mssql.instances:*.clustered": {
+        "title": _("Clustered"), "paint": "mssql_is_clustered"
+    },
+    ".networking.": {"title": _("Networking"), "icon": "networking"},
+    ".networking.total_interfaces": {"title": _("Interfaces"), "paint": "count"},
+    ".networking.total_ethernet_ports": {"title": _("Ports"), "paint": "count"},
+    ".networking.available_ethernet_ports": {"title": _("Ports available"), "paint": "count"},
+    ".networking.addresses:": {
+        "title": _("IP Addresses"),
+        "keyorder": ["address", "device", "type"],
+    },
+    ".networking.addresses:*.address": {"title": _("Address")},
+    ".networking.addresses:*.device": {"title": _("Device")},
+    ".networking.addresses:*.type": {"title": _("Address Type"), "paint": "ip_address_type"},
+    ".networking.routes:": {
+        "title": _("Routes"), "keyorder": ["target", "device", "type", "gateway"]
+    },
+    ".networking.routes:*.target": {"title": _("Target"), "paint": "ipv4_network"},
+    ".networking.routes:*.device": {"title": _("Device")},
+    ".networking.routes:*.type": {"title": _("Type of route"), "paint": "route_type"},
+    ".networking.routes:*.gateway": {"title": _("Gateway")},
+    ".networking.interfaces:": {
+        "title": _("Interfaces"),
+        "keyorder": [
+            "index",
+            "description",
+            "alias",
+            "oper_status",
+            "admin_status",
+            "available",
+            "speed",
+        ],
+        "view": "invinterface_of_host",
+    },
+    ".networking.interfaces:*.index": {
+        "title": _("Index"), "paint": "number", "filter": FilterInvtableIDRange
+    },
+    ".networking.interfaces:*.description": {"title": _("Description")},
+    ".networking.interfaces:*.alias": {"title": _("Alias")},
+    ".networking.interfaces:*.phys_address": {"title": _("Physical Address (MAC)")},
+    ".networking.interfaces:*.oper_status": {
+        "title": _("Operational Status"),
+        "short": _("Status"),
+        "paint": "if_oper_status",
+        "filter": FilterInvtableOperStatus,
+    },
+    ".networking.interfaces:*.admin_status": {
+        "title": _("Administrative Status"),
+        "short": _("Admin"),
+        "paint": "if_admin_status",
+        "filter": FilterInvtableAdminStatus,
+    },
+    ".networking.interfaces:*.available": {
+        "title": _("Port Usage"),
+        "short": _("Used"),
+        "paint": "if_available",
+        "filter": FilterInvtableAvailable,
+    },
+    ".networking.interfaces:*.speed": {"title": _("Speed"), "paint": "nic_speed"},
+    ".networking.interfaces:*.port_type": {
+        "title": _("Type"),
+        "paint": "if_port_type",
+        "filter": FilterInvtableInterfaceType,
+    },
+    ".networking.interfaces:*.last_change": {
+        "title": _("Last Change"),
+        "paint": "timestamp_as_age_days",
+        "filter": FilterInvtableTimestampAsAge,
+    },
+    ".networking.interfaces:*.vlans": {"title": _("VLANs")},
+    ".networking.interfaces:*.vlantype": {"title": _("VLAN type")},
+    ".networking.wlan": {"title": _("WLAN")},
+    ".networking.wlan.controller": {"title": _("Controller")},
+    ".networking.wlan.controller.accesspoints:": {
+        "title": _("Access Points"),
+        "keyorder": ["name", "group", "ip_addr", "model", "serial", "sys_location"],
+    },
+    ".networking.wlan.controller.accesspoints:*.name": {"title": _("Name")},
+    ".networking.wlan.controller.accesspoints:*.group": {"title": _("Group")},
+    ".networking.wlan.controller.accesspoints:*.ip_addr": {"title": _("IP Address")},
+    ".networking.wlan.controller.accesspoints:*.model": {"title": _("Model")},
+    ".networking.wlan.controller.accesspoints:*.serial": {"title": _("Serial Number")},
+    ".networking.wlan.controller.accesspoints:*.sys_location": {"title": _("System Location")},
 })
+
+# yapf: enable
 
 
 def declare_inventory_columns():
@@ -1056,6 +1297,7 @@ def declare_inventory_columns():
 #   |  painters that are available in the hosts info.                      |
 #   '----------------------------------------------------------------------'
 
+
 def _create_inv_rows(hostrow, invpath, infoname):
     merged_tree = inventory.load_filtered_and_merged_tree(hostrow)
     if merged_tree is None:
@@ -1080,8 +1322,8 @@ def inv_multisite_table(infoname, invpath, columns, add_headers, only_sites, lim
         if not header.startswith("Sites:"):
             filter_code += header
 
-    host_columns = ["host_name"] + list({c for c in columns
-                                         if c.startswith("host_") and c != "host_name"})
+    host_columns = ["host_name"] + list(
+        {c for c in columns if c.startswith("host_") and c != "host_name"})
     if infoname != "invhist":
         host_columns.append("host_structured_status")
 
@@ -1103,7 +1345,7 @@ def inv_multisite_table(infoname, invpath, columns, add_headers, only_sites, lim
     sites.live().set_prepend_site(False)
     sites.live().set_only_sites(None)
 
-    headers = [ "site" ] + host_columns
+    headers = ["site"] + host_columns
     # Now create big table of all inventory entries of these hosts
     rows = []
     for row in data:
@@ -1118,6 +1360,7 @@ def inv_multisite_table(infoname, invpath, columns, add_headers, only_sites, lim
             subrow.update(hostrow)
             rows.append(subrow)
     return rows
+
 
 def inv_find_subtable_columns(invpath):
     """Find the name of all columns of an embedded table that have a display
@@ -1142,7 +1385,7 @@ def inv_find_subtable_columns(invpath):
         if key not in columns:
             columns.append(key)
 
-    columns.sort(cmp = lambda a,b: cmp(order.get(a, 999), order.get(b, 999)) or cmp(a,b))
+    columns.sort(cmp=lambda a, b: cmp(order.get(a, 999), order.get(b, 999)) or cmp(a, b))
     return columns
 
 
@@ -1172,49 +1415,50 @@ def declare_invtable_columns(infoname, invpath, topic):
 
         title = inv_titleinfo(sub_invpath, None)[1]
 
-        declare_invtable_column(infoname, name, topic, title,
-                           hint.get("short", title), sortfunc, paint_function, filter_class)
+        declare_invtable_column(infoname, name, topic, title, hint.get("short", title), sortfunc,
+                                paint_function, filter_class)
 
 
-def declare_invtable_column(infoname, name, topic, title, short_title,
-                            sortfunc, paint_function, filter_class):
+def declare_invtable_column(infoname, name, topic, title, short_title, sortfunc, paint_function,
+                            filter_class):
     column = infoname + "_" + name
     multisite_painters[column] = {
-        "title"   : topic + ": " + title,
-        "short"   : short_title,
-        "columns" : [ column ],
-        "paint"   : lambda row: paint_function(row.get(column)),
-        "sorter"  : column,
+        "title": topic + ": " + title,
+        "short": short_title,
+        "columns": [column],
+        "paint": lambda row: paint_function(row.get(column)),
+        "sorter": column,
     }
     multisite_sorters[column] = {
-        "title"    : _("Inventory") + ": " + title,
-        "columns" : [ column ],
-        "cmp"      : lambda a, b: sortfunc(a.get(column), b.get(column))
+        "title": _("Inventory") + ": " + title,
+        "columns": [column],
+        "cmp": lambda a, b: sortfunc(a.get(column), b.get(column)),
     }
 
-    cmk.gui.plugins.visuals.inventory.declare_filter(800, filter_class(infoname, name, topic + ": " + title))
+    cmk.gui.plugins.visuals.inventory.declare_filter(
+        800, filter_class(infoname, name, topic + ": " + title))
 
 
 # One master function that does all
 def declare_invtable_view(infoname, invpath, title_singular, title_plural):
-
     def inv_table(columns, add_headers, only_sites, limit, filters):
-        return inv_multisite_table(infoname, invpath, columns, add_headers, only_sites, limit, filters)
+        return inv_multisite_table(infoname, invpath, columns, add_headers, only_sites, limit,
+                                   filters)
 
     # Declare the "info" (like a database table)
     cmk.gui.plugins.visuals.declare_info(infoname, {
-        'title'       : title_singular,
+        'title': title_singular,
         'title_plural': title_plural,
-        'single_spec' : None,
+        'single_spec': None,
     })
 
     # Create the datasource (like a database view)
     multisite_datasources[infoname] = {
-        "title"        : "%s: %s" % (_("Inventory"), title_plural),
-        "table"        : inv_table,
-        "infos"        : [ "host", infoname ],
-        "keys"         : [],
-        "idkeys"       : [],
+        "title": "%s: %s" % (_("Inventory"), title_plural),
+        "table": inv_table,
+        "infos": ["host", infoname],
+        "keys": [],
+        "idkeys": [],
     }
 
     # Declare a painter, sorter and filters for each path with display hint
@@ -1225,42 +1469,41 @@ def declare_invtable_view(infoname, invpath, title_singular, title_plural):
     filters = []
     for name in inv_find_subtable_columns(invpath):
         column = infoname + "_" + name
-        painters.append( ( column, '', '' ) )
+        painters.append((column, '', ''))
         filters.append(column)
 
     # Declare two views: one for searching globally. And one
     # for the items of one host.
 
     view_spec = {
-        'datasource'                   : infoname,
-        'topic'                        : _('Inventory'),
-        'public'                       : True,
-        'layout'                       : 'table',
-        'num_columns'                  : 1,
-        'browser_reload'               : 0,
-        'column_headers'               : 'pergroup',
-        'user_sortable'                : True,
-        'play_sounds'                  : False,
-        'force_checkboxes'             : False,
-        'mobile'                       : False,
-
-        'group_painters'               : [],
-        'sorters'                      : [],
+        'datasource': infoname,
+        'topic': _('Inventory'),
+        'public': True,
+        'layout': 'table',
+        'num_columns': 1,
+        'browser_reload': 0,
+        'column_headers': 'pergroup',
+        'user_sortable': True,
+        'play_sounds': False,
+        'force_checkboxes': False,
+        'mobile': False,
+        'group_painters': [],
+        'sorters': [],
     }
 
     # View for searching for items
     multisite_builtin_views[infoname + "_search"] = {
         # General options
-        'title'                        : _("Search %s") % title_plural,
-        'description'                  : _('A view for searching in the inventory data for %s') % title_plural,
-        'hidden'                       : False,
-        'mustsearch'                   : True,
+        'title': _("Search %s") % title_plural,
+        'description': _('A view for searching in the inventory data for %s') % title_plural,
+        'hidden': False,
+        'mustsearch': True,
 
         # Columns
-        'painters'                     : [ ('host','inv_host', '') ] + painters,
+        'painters': [('host', 'inv_host', '')] + painters,
 
         # Filters
-        'show_filters'                 : [
+        'show_filters': [
             'siteopt',
             'hostregex',
             'hostgroups',
@@ -1269,29 +1512,30 @@ def declare_invtable_view(infoname, invpath, title_singular, title_plural):
             'host_address',
             'host_tags',
             'hostalias',
-            'host_favorites',] + filters,
-        'hide_filters' : [ ],
-        'hard_filters' : [],
-        'hard_filtervars' : [],
+            'host_favorites',
+        ] + filters,
+        'hide_filters': [],
+        'hard_filters': [],
+        'hard_filtervars': [],
     }
     multisite_builtin_views[infoname + "_search"].update(view_spec)
 
     # View for the items of one host
     multisite_builtin_views[infoname + "_of_host"] = {
         # General options
-        'title'                        : title_plural,
-        'description'                  : _('A view for the %s of one host') % title_plural,
-        'hidden'                       : True,
-        'mustsearch'                   : False,
+        'title': title_plural,
+        'description': _('A view for the %s of one host') % title_plural,
+        'hidden': True,
+        'mustsearch': False,
 
         # Columns
-        'painters'                     : painters,
+        'painters': painters,
 
         # Filters
-        'show_filters'                 : filters,
-        'hard_filters' : [ ],
-        'hard_filtervars' : [],
-        'hide_filters' : [ "host" ],
+        'show_filters': filters,
+        'hard_filters': [],
+        'hard_filtervars': [],
+        'hide_filters': ["host"],
     }
     multisite_builtin_views[infoname + "_of_host"].update(view_spec)
 
@@ -1304,7 +1548,7 @@ def _create_view_enabled_check_func(invpath, is_history=False):
         context = dict(context_vars)
         hostname = context.get("host")
         if hostname is None:
-            return True # No host data? Keep old behaviour
+            return True  # No host data? Keep old behaviour
         elif hostname == "":
             return False
 
@@ -1336,37 +1580,131 @@ def _create_view_enabled_check_func(invpath, is_history=False):
         if children is None:
             return False
         return True
+
     return _check_view_enabled
 
 
 # Now declare Multisite views for a couple of embedded tables
-declare_invtable_view("invswpac",      ".software.packages:",       _("Software package"),   _("Software packages"))
-declare_invtable_view("invinterface",  ".networking.interfaces:",   _("Network interface"),  _("Network interfaces"))
+declare_invtable_view(
+    "invswpac",
+    ".software.packages:",
+    _("Software package"),
+    _("Software packages"),
+)
+declare_invtable_view(
+    "invinterface",
+    ".networking.interfaces:",
+    _("Network interface"),
+    _("Network interfaces"),
+)
 
-declare_invtable_view("invdockerimages",  ".software.applications.docker.images:",   _("Docker images"),  _("Docker images"))
-declare_invtable_view("invdockercontainers",  ".software.applications.docker.containers:",   _("Docker containers"),  _("Docker containers"))
+declare_invtable_view(
+    "invdockerimages",
+    ".software.applications.docker.images:",
+    _("Docker images"),
+    _("Docker images"),
+)
+declare_invtable_view(
+    "invdockercontainers",
+    ".software.applications.docker.containers:",
+    _("Docker containers"),
+    _("Docker containers"),
+)
 
-declare_invtable_view("invother", ".hardware.components.others:", _("Other entity"), _("Other entities"))
-declare_invtable_view("invunknown", ".hardware.components.unknowns:", _("Unknown entity"), _("Unknown entities"))
-declare_invtable_view("invchassis", ".hardware.components.chassis:", _("Chassis"), _("Chassis"))
-declare_invtable_view("invbackplane", ".hardware.components.backplanes:", _("Backplane"), _("Backplanes"))
-declare_invtable_view("invcontainer", ".hardware.components.containers:", _("HW container"), _("HW containers"))
-declare_invtable_view("invpsu", ".hardware.components.psus:", _("Power supply"), _("Power supplies"))
-declare_invtable_view("invfan", ".hardware.components.fans:", _("Fan"), _("Fans"))
-declare_invtable_view("invsensor", ".hardware.components.sensors:", _("Sensor"), _("Sensors"))
-declare_invtable_view("invmodule", ".hardware.components.modules:", _("Module"), _("Modules"))
-declare_invtable_view("invstack", ".hardware.components.stacks:", _("Stack"), _("Stacks"))
+declare_invtable_view(
+    "invother",
+    ".hardware.components.others:",
+    _("Other entity"),
+    _("Other entities"),
+)
+declare_invtable_view(
+    "invunknown",
+    ".hardware.components.unknowns:",
+    _("Unknown entity"),
+    _("Unknown entities"),
+)
+declare_invtable_view(
+    "invchassis",
+    ".hardware.components.chassis:",
+    _("Chassis"),
+    _("Chassis"),
+)
+declare_invtable_view(
+    "invbackplane",
+    ".hardware.components.backplanes:",
+    _("Backplane"),
+    _("Backplanes"),
+)
+declare_invtable_view(
+    "invcontainer",
+    ".hardware.components.containers:",
+    _("HW container"),
+    _("HW containers"),
+)
+declare_invtable_view(
+    "invpsu",
+    ".hardware.components.psus:",
+    _("Power supply"),
+    _("Power supplies"),
+)
+declare_invtable_view(
+    "invfan",
+    ".hardware.components.fans:",
+    _("Fan"),
+    _("Fans"),
+)
+declare_invtable_view(
+    "invsensor",
+    ".hardware.components.sensors:",
+    _("Sensor"),
+    _("Sensors"),
+)
+declare_invtable_view(
+    "invmodule",
+    ".hardware.components.modules:",
+    _("Module"),
+    _("Modules"),
+)
+declare_invtable_view(
+    "invstack",
+    ".hardware.components.stacks:",
+    _("Stack"),
+    _("Stacks"),
+)
 
-declare_invtable_view("invorainstance",       ".software.applications.oracle.instance:",        _("Oracle instance"),            _("Oracle instances"))
-declare_invtable_view("invorarecoveryarea",   ".software.applications.oracle.recovery_area:",   _("Oracle recovery area"),       _("Oracle recovery areas"))
-declare_invtable_view("invoradataguardstats", ".software.applications.oracle.dataguard_stats:", _("Oracle dataguard statistic"), _("Oracle dataguard statistics"))
-declare_invtable_view("invoratablespace",     ".software.applications.oracle.tablespaces:",     _("Oracle tablespace"),          _("Oracle tablespaces"))
-declare_invtable_view("invorasga",            ".software.applications.oracle.sga:",             _("Oracle performance"),         _("Oracle performance"))
-
+declare_invtable_view(
+    "invorainstance",
+    ".software.applications.oracle.instance:",
+    _("Oracle instance"),
+    _("Oracle instances"),
+)
+declare_invtable_view(
+    "invorarecoveryarea",
+    ".software.applications.oracle.recovery_area:",
+    _("Oracle recovery area"),
+    _("Oracle recovery areas"),
+)
+declare_invtable_view(
+    "invoradataguardstats",
+    ".software.applications.oracle.dataguard_stats:",
+    _("Oracle dataguard statistic"),
+    _("Oracle dataguard statistics"),
+)
+declare_invtable_view(
+    "invoratablespace",
+    ".software.applications.oracle.tablespaces:",
+    _("Oracle tablespace"),
+    _("Oracle tablespaces"),
+)
+declare_invtable_view(
+    "invorasga",
+    ".software.applications.oracle.sga:",
+    _("Oracle performance"),
+    _("Oracle performance"),
+)
 
 # This would also be possible. But we muss a couple of display and filter hints.
 # declare_invtable_view("invdisks",       ".hardware.storage.disks:",  _("Hard Disk"),          _("Hard Disks"))
-
 
 #.
 #   .--Views---------------------------------------------------------------.
@@ -1383,40 +1721,40 @@ declare_invtable_view("invorasga",            ".software.applications.oracle.sga
 # View for Inventory tree of one host
 multisite_builtin_views["inv_host"] = {
     # General options
-    'datasource'                   : 'hosts',
-    'topic'                        : _('Inventory'),
-    'title'                        : _('Inventory of host'),
-    'linktitle'                    : _('Inventory'),
-    'description'                  : _('The complete hardware- and software inventory of a host'),
-    'icon'                         : 'inv',
-    'hidebutton'                   : False,
-    'public'                       : True,
-    'hidden'                       : True,
+    'datasource': 'hosts',
+    'topic': _('Inventory'),
+    'title': _('Inventory of host'),
+    'linktitle': _('Inventory'),
+    'description': _('The complete hardware- and software inventory of a host'),
+    'icon': 'inv',
+    'hidebutton': False,
+    'public': True,
+    'hidden': True,
 
     # Layout options
-    'layout'                       : 'dataset',
-    'num_columns'                  : 1,
-    'browser_reload'               : 0,
-    'column_headers'               : 'pergroup',
-    'user_sortable'                : False,
-    'play_sounds'                  : False,
-    'force_checkboxes'             : False,
-    'mustsearch'                   : False,
-    'mobile'                       : False,
+    'layout': 'dataset',
+    'num_columns': 1,
+    'browser_reload': 0,
+    'column_headers': 'pergroup',
+    'user_sortable': False,
+    'play_sounds': False,
+    'force_checkboxes': False,
+    'mustsearch': False,
+    'mobile': False,
 
     # Columns
-    'group_painters'               : [],
-    'painters'                     : [
-            ('host',           'host', ''),
-            ('inv',            None,   ''),
+    'group_painters': [],
+    'painters': [
+        ('host', 'host', ''),
+        ('inv', None, ''),
     ],
 
     # Filters
-    'hard_filters'                 : [],
-    'hard_filtervars'              : [],
-    'hide_filters'                 : ['host', 'site'],
-    'show_filters'                 : [],
-    'sorters'                      : [],
+    'hard_filters': [],
+    'hard_filtervars': [],
+    'hide_filters': ['host', 'site'],
+    'show_filters': [],
+    'sorters': [],
 }
 
 view_is_enabled["inv_host"] = _create_view_enabled_check_func(".")
@@ -1426,96 +1764,89 @@ generic_host_filters = multisite_builtin_views["allhosts"]["show_filters"]
 # View with table of all hosts, with some basic information
 multisite_builtin_views["inv_hosts_cpu"] = {
     # General options
-    'datasource'                   : 'hosts',
-    'topic'                        : _('Inventory'),
-    'title'                        : _('CPU Related Inventory of all Hosts'),
-    'linktitle'                    : _('CPU Inv. (all Hosts)'),
-    'description'                  : _('A list of all hosts with some CPU related inventory data'),
-    'public'                       : True,
-    'hidden'                       : False,
+    'datasource': 'hosts',
+    'topic': _('Inventory'),
+    'title': _('CPU Related Inventory of all Hosts'),
+    'linktitle': _('CPU Inv. (all Hosts)'),
+    'description': _('A list of all hosts with some CPU related inventory data'),
+    'public': True,
+    'hidden': False,
 
     # Layout options
-    'layout'                       : 'table',
-    'num_columns'                  : 1,
-    'browser_reload'               : 0,
-    'column_headers'               : 'pergroup',
-    'user_sortable'                : True,
-    'play_sounds'                  : False,
-    'force_checkboxes'             : False,
-    'mustsearch'                   : False,
-    'mobile'                       : False,
+    'layout': 'table',
+    'num_columns': 1,
+    'browser_reload': 0,
+    'column_headers': 'pergroup',
+    'user_sortable': True,
+    'play_sounds': False,
+    'force_checkboxes': False,
+    'mustsearch': False,
+    'mobile': False,
 
     # Columns
-    'group_painters'               : [],
-    'painters'                     : [
-         ('host',                       'inv_host', ''),
-         ('inv_software_os_name',       None,   ''),
-         ('inv_hardware_cpu_cpus',      None,   ''),
-         ('inv_hardware_cpu_cores',     None,   ''),
-         ('inv_hardware_cpu_max_speed', None,   ''),
-         ('perfometer',                 None, '', 'CPU load'),
-         ('perfometer',                 None, '', 'CPU utilization'),
-
+    'group_painters': [],
+    'painters': [
+        ('host', 'inv_host', ''),
+        ('inv_software_os_name', None, ''),
+        ('inv_hardware_cpu_cpus', None, ''),
+        ('inv_hardware_cpu_cores', None, ''),
+        ('inv_hardware_cpu_max_speed', None, ''),
+        ('perfometer', None, '', 'CPU load'),
+        ('perfometer', None, '', 'CPU utilization'),
     ],
 
     # Filters
-    'hard_filters'                 : [
-        'has_inv'
+    'hard_filters': ['has_inv'],
+    'hard_filtervars': [('is_has_inv', '1')],
+    'hide_filters': [],
+    'show_filters': [
+        'inv_hardware_cpu_cpus',
+        'inv_hardware_cpu_cores',
+        'inv_hardware_cpu_max_speed',
     ],
-    'hard_filtervars'              : [
-        ('is_has_inv', '1' ),
-    ],
-    'hide_filters'                 : [],
-    'show_filters'                 : [
-         'inv_hardware_cpu_cpus',
-         'inv_hardware_cpu_cores',
-         'inv_hardware_cpu_max_speed',
-     ],
-    'sorters'                      : [],
+    'sorters': [],
 }
-
 
 # View with available and used ethernet ports
 multisite_builtin_views["inv_hosts_ports"] = {
     # General options
-    'datasource'                   : 'hosts',
-    'topic'                        : _('Inventory'),
-    'title'                        : _('Switch port statistics'),
-    'linktitle'                    : _('Switch ports (all Hosts)'),
-    'description'                  : _('A list of all hosts with statistics about total, used and free networking interfaces'),
-    'public'                       : True,
-    'hidden'                       : False,
+    'datasource': 'hosts',
+    'topic': _('Inventory'),
+    'title': _('Switch port statistics'),
+    'linktitle': _('Switch ports (all Hosts)'),
+    'description':
+        _('A list of all hosts with statistics about total, used and free networking interfaces'),
+    'public': True,
+    'hidden': False,
 
     # Layout options
-    'layout'                       : 'table',
-    'num_columns'                  : 1,
-    'browser_reload'               : 0,
-    'column_headers'               : 'pergroup',
-    'user_sortable'                : True,
-    'play_sounds'                  : False,
-    'force_checkboxes'             : False,
-    'mustsearch'                   : False,
-    'mobile'                       : False,
+    'layout': 'table',
+    'num_columns': 1,
+    'browser_reload': 0,
+    'column_headers': 'pergroup',
+    'user_sortable': True,
+    'play_sounds': False,
+    'force_checkboxes': False,
+    'mustsearch': False,
+    'mobile': False,
 
     # Columns
-    'group_painters'               : [],
-    'painters'                     : [
-         ('host',                       'invinterface_of_host', ''),
-         ('inv_hardware_system_product',             None, ''),
-         ('inv_networking_total_interfaces',         None, ''),
-         ('inv_networking_total_ethernet_ports',     None, ''),
-         ('inv_networking_available_ethernet_ports', None, ''),
+    'group_painters': [],
+    'painters': [
+        ('host', 'invinterface_of_host', ''),
+        ('inv_hardware_system_product', None, ''),
+        ('inv_networking_total_interfaces', None, ''),
+        ('inv_networking_total_ethernet_ports', None, ''),
+        ('inv_networking_available_ethernet_ports', None, ''),
     ],
 
     # Filters
-    'hard_filters'                 : [ 'has_inv' ],
-    'hard_filtervars'              : [ ('is_has_inv', '1' ), ],
-    'hide_filters'                 : [],
-    'show_filters'                 : generic_host_filters + [],
-    'sorters'                      : [ ('inv_networking_available_ethernet_ports', True) ],
+    'hard_filters': ['has_inv'],
+    'hard_filtervars': [('is_has_inv', '1')],
+    'hide_filters': [],
+    'show_filters': generic_host_filters + [],
+    'sorters': [('inv_networking_available_ethernet_ports', True)],
 }
-
-
 
 #.
 #   .--History-------------------------------------------------------------.
@@ -1538,35 +1869,36 @@ def _create_hist_rows(hostname, columns):
     for old_timestamp, old_tree, new_tree in inventory.get_history(hostname):
         new, changed, removed, delta_tree = new_tree.compare_with(old_tree)
         newrow = {
-            "invhist_time"    : old_timestamp,
-            "invhist_delta"   : delta_tree,
-            "invhist_removed" : removed,
-            "invhist_new"     : new,
-            "invhist_changed" : changed,
+            "invhist_time": old_timestamp,
+            "invhist_delta": delta_tree,
+            "invhist_removed": removed,
+            "invhist_new": new,
+            "invhist_changed": changed,
         }
         yield newrow
 
 
 multisite_datasources["invhist"] = {
-    "title"        : _("Inventory: History"),
-    "table"        : inv_history_table,
-    "infos"        : [ "host", "invhist" ],
-    "keys"         : [],
-    "idkeys"       : [ "host_name", "invhist_time" ],
+    "title": _("Inventory: History"),
+    "table": inv_history_table,
+    "infos": ["host", "invhist"],
+    "keys": [],
+    "idkeys": ["host_name", "invhist_time"],
 }
 
 multisite_painters["invhist_time"] = {
-    "title"    : _("Inventory Date/Time"),
-    "short"    : _("Date/Time"),
-    "columns"  : [ "invhist_time" ],
-    "options"  : [ "ts_format", "ts_date" ],
-    "paint"    : lambda row: paint_age(row["invhist_time"], True, 60 * 10),
+    "title": _("Inventory Date/Time"),
+    "short": _("Date/Time"),
+    "columns": ["invhist_time"],
+    "options": ["ts_format", "ts_date"],
+    "paint": lambda row: paint_age(row["invhist_time"], True, 60 * 10),
 }
 
 multisite_painters["invhist_delta"] = {
-    "title"    : _("Inventory changes"),
-    "columns"  : [ "invhist_delta" "invhist_time" ],
-    "paint"    : lambda row: paint_host_inventory_tree(row, column="invhist_delta"),
+    "title": _("Inventory changes"),
+    "columns": ["invhist_delta"
+                "invhist_time"],
+    "paint": lambda row: paint_host_inventory_tree(row, column="invhist_delta"),
 }
 
 
@@ -1576,75 +1908,75 @@ def paint_invhist_count(row, what):
         return "narrow number", str(number)
     return "narrow number unused", "0"
 
+
 multisite_painters["invhist_removed"] = {
-    "title"    : _("Removed entries"),
-    "short"    : _("Removed"),
-    "columns"  : [ "invhist_removed" ],
-    "paint"    : lambda row: paint_invhist_count(row, "removed"),
+    "title": _("Removed entries"),
+    "short": _("Removed"),
+    "columns": ["invhist_removed"],
+    "paint": lambda row: paint_invhist_count(row, "removed"),
 }
 
 multisite_painters["invhist_new"] = {
-    "title"    : _("new entries"),
-    "short"    : _("new"),
-    "columns"  : [ "invhist_new" ],
-    "paint"    : lambda row: paint_invhist_count(row, "new"),
+    "title": _("new entries"),
+    "short": _("new"),
+    "columns": ["invhist_new"],
+    "paint": lambda row: paint_invhist_count(row, "new"),
 }
 
 multisite_painters["invhist_changed"] = {
-    "title"    : _("changed entries"),
-    "short"    : _("changed"),
-    "columns"  : [ "invhist_changed" ],
-    "paint"    : lambda row: paint_invhist_count(row, "changed"),
+    "title": _("changed entries"),
+    "short": _("changed"),
+    "columns": ["invhist_changed"],
+    "paint": lambda row: paint_invhist_count(row, "changed"),
 }
 
-
 # sorters
-declare_1to1_sorter("invhist_time",    cmp_simple_number, reverse=True)
+declare_1to1_sorter("invhist_time", cmp_simple_number, reverse=True)
 declare_1to1_sorter("invhist_removed", cmp_simple_number)
-declare_1to1_sorter("invhist_new",     cmp_simple_number)
+declare_1to1_sorter("invhist_new", cmp_simple_number)
 declare_1to1_sorter("invhist_changed", cmp_simple_number)
 
 # View for inventory history of one host
 
 multisite_builtin_views["inv_host_history"] = {
     # General options
-    'datasource'                   : 'invhist',
-    'topic'                        : _('Inventory'),
-    'title'                        : _('Inventory history of host'),
-    'linktitle'                    : _('Inventory History'),
-    'description'                  : _('The history for changes in hardware- and software inventory of a host'),
-    'icon'                         : 'inv',
-    'hidebutton'                   : False,
-    'public'                       : True,
-    'hidden'                       : True,
+    'datasource': 'invhist',
+    'topic': _('Inventory'),
+    'title': _('Inventory history of host'),
+    'linktitle': _('Inventory History'),
+    'description': _('The history for changes in hardware- and software inventory of a host'),
+    'icon': 'inv',
+    'hidebutton': False,
+    'public': True,
+    'hidden': True,
 
     # Layout options
-    'layout'                       : 'table',
-    'num_columns'                  : 1,
-    'browser_reload'               : 0,
-    'column_headers'               : 'pergroup',
-    'user_sortable'                : True,
-    'play_sounds'                  : False,
-    'force_checkboxes'             : False,
-    'mustsearch'                   : False,
-    'mobile'                       : False,
+    'layout': 'table',
+    'num_columns': 1,
+    'browser_reload': 0,
+    'column_headers': 'pergroup',
+    'user_sortable': True,
+    'play_sounds': False,
+    'force_checkboxes': False,
+    'mustsearch': False,
+    'mobile': False,
 
     # Columns
-    'group_painters'               : [],
-    'painters'                     : [
-            ('invhist_time',     None,   ''),
-            ('invhist_removed',  None,   ''),
-            ('invhist_new',      None,   ''),
-            ('invhist_changed',  None,   ''),
-            ('invhist_delta',    None,   ''),
+    'group_painters': [],
+    'painters': [
+        ('invhist_time', None, ''),
+        ('invhist_removed', None, ''),
+        ('invhist_new', None, ''),
+        ('invhist_changed', None, ''),
+        ('invhist_delta', None, ''),
     ],
 
     # Filters
-    'hard_filters'                 : [],
-    'hard_filtervars'              : [],
-    'hide_filters'                 : ['host'],
-    'show_filters'                 : [],
-    'sorters'                      : [('invhist_time', False)],
+    'hard_filters': [],
+    'hard_filtervars': [],
+    'hide_filters': ['host'],
+    'show_filters': [],
+    'sorters': [('invhist_time', False)],
 }
 
 view_is_enabled["inv_host_history"] = _create_view_enabled_check_func(".", is_history=True)
@@ -1665,10 +1997,8 @@ def render_inv_dicttable(*args):
     pass
 
 
-
 class NodeRenderer(object):
-    def __init__(self, site_id, hostname, tree_id, invpath,
-                 show_internal_tree_paths=False):
+    def __init__(self, site_id, hostname, tree_id, invpath, show_internal_tree_paths=False):
         self._site_id = site_id
         self._hostname = hostname
         self._tree_id = tree_id
@@ -1694,20 +2024,29 @@ class NodeRenderer(object):
                 title = self._replace_placeholders(title, invpath)
 
             header = self._get_header(title, ".".join(map(str, node_abs_path)), "#666")
-            fetch_url = html.makeuri_contextless([("site", self._site_id),
-                                                  ("host", self._hostname),
-                                                  ("path", invpath),
-                                                  ("show_internal_tree_paths", self._show_internal_tree_paths),
-                                                  ("treeid", self._tree_id)],
-                                                 "ajax_inv_render_tree.py")
+            fetch_url = html.makeuri_contextless(
+                [
+                    ("site", self._site_id),
+                    ("host", self._hostname),
+                    ("path", invpath),
+                    ("show_internal_tree_paths", self._show_internal_tree_paths),
+                    ("treeid", self._tree_id),
+                ],
+                "ajax_inv_render_tree.py",
+            )
 
-            if html.begin_foldable_container("inv_%s%s" % (self._hostname, self._tree_id), invpath, False,
-                                             header, icon=icon, fetch_url=fetch_url, tree_img="tree_black"):
+            if html.begin_foldable_container(
+                    "inv_%s%s" % (self._hostname, self._tree_id),
+                    invpath,
+                    False,
+                    header,
+                    icon=icon,
+                    fetch_url=fetch_url,
+                    tree_img="tree_black"):
                 # Render only if it is open. We'll get the stuff via ajax later if it's closed
                 for child in inventory.sort_children(node.get_node_children()):
                     child.show(self, path=raw_invpath)
             html.end_foldable_container()
-
 
     def _replace_placeholders(self, raw_title, invpath):
         hint_id = _find_display_hint_id(invpath)
@@ -1726,7 +2065,6 @@ class NodeRenderer(object):
         num_macros = raw_title.count("%d") + raw_title.count("%s")
         return raw_title % tuple(replace_vars[:num_macros])
 
-
     #   ---numeration-----------------------------------------------------------
 
     def show_numeration(self, numeration, path=None):
@@ -1734,7 +2072,7 @@ class NodeRenderer(object):
         # Clean this up one day.
         invpath = ".%s:" % self._get_raw_path(path)
         hint = _inv_display_hint(invpath)
-        keyorder = hint.get("keyorder", []) # well known keys
+        keyorder = hint.get("keyorder", [])  # well known keys
         data = numeration.get_child_data()
 
         # Add titles for those keys
@@ -1760,22 +2098,24 @@ class NodeRenderer(object):
 
         # Link to Multisite view with exactly this table
         if "view" in hint:
-            url = html.makeuri_contextless([
-                ("view_name", hint["view"] ),
-                ("host", self._hostname)],
-                filename="view.py")
-            html.div(html.render_a(_("Open this table for filtering / sorting"), href=url),
-                     class_="invtablelink")
+            url = html.makeuri_contextless(
+                [
+                    ("view_name", hint["view"]),
+                    ("host", self._hostname),
+                ],
+                filename="view.py",
+            )
+            html.div(
+                html.render_a(_("Open this table for filtering / sorting"), href=url),
+                class_="invtablelink")
 
         self._show_numeration_table(titles, invpath, data)
-
 
     def _get_numeration_keys(self, data):
         keys = set([])
         for entry in data:
             keys.update(entry.keys())
         return keys
-
 
     def _show_numeration_table(self, titles, invpath, data):
         # We cannot use table here, since html.plug() does not work recursively
@@ -1804,7 +2144,6 @@ class NodeRenderer(object):
                 html.close_td()
             html.close_tr()
         html.close_table()
-
 
     def _show_numeration_value(self, value, hint):
         raise NotImplementedError()
@@ -1845,7 +2184,6 @@ class NodeRenderer(object):
             html.close_tr()
         html.close_table()
 
-
     def show_attribute(self, value, hint):
         raise NotImplementedError()
 
@@ -1856,14 +2194,11 @@ class NodeRenderer(object):
             return self._invpath.strip(".")
         return path.strip(".")
 
-
     def _get_header(self, title, key, hex_color):
         header = HTML(title)
         if self._show_internal_tree_paths:
-            header += HTML(" <span style='color: %s'>(%s)</span>" % \
-                           (hex_color, key))
+            header += HTML(" <span style='color: %s'>(%s)</span>" % (hex_color, key))
         return header
-
 
     def _show_child_value(self, value, hint):
         if "paint_function" in hint:
@@ -1885,15 +2220,12 @@ class NodeRenderer(object):
             html.write(str(value))
 
 
-
 class AttributeRenderer(NodeRenderer):
     def _show_numeration_value(self, value, hint):
         self._show_child_value(value, hint)
 
-
     def show_attribute(self, value, hint):
         self._show_child_value(value, hint)
-
 
 
 class DeltaNodeRenderer(NodeRenderer):
@@ -1901,7 +2233,6 @@ class DeltaNodeRenderer(NodeRenderer):
         if value is None:
             value = (None, None)
         self.show_attribute(value, hint)
-
 
     def show_attribute(self, value, hint):
         old, new = value
@@ -1939,8 +2270,8 @@ def ajax_inv_render_tree():
     else:
         row = inventory.get_status_data_via_livestatus(site_id, hostname)
         struct_tree = inventory.load_filtered_and_merged_tree(row)
-        tree_renderer = AttributeRenderer(site_id, hostname, "", invpath,
-                        show_internal_tree_paths=show_internal_tree_paths)
+        tree_renderer = AttributeRenderer(
+            site_id, hostname, "", invpath, show_internal_tree_paths=show_internal_tree_paths)
 
     if struct_tree is None:
         html.show_error(_("No such inventory tree."))
@@ -1952,7 +2283,8 @@ def ajax_inv_render_tree():
         children = [struct_tree.get_root_container()]
 
     if children is None:
-        html.show_error(_("Invalid path in inventory tree: '%s' >> %s") % (invpath, repr(parsed_path)))
+        html.show_error(
+            _("Invalid path in inventory tree: '%s' >> %s") % (invpath, repr(parsed_path)))
     else:
         for child in inventory.sort_children(children):
             child.show(tree_renderer, path=invpath)

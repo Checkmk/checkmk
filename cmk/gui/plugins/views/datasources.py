@@ -85,153 +85,163 @@ from . import (
 #
 
 multisite_datasources["hosts"] = {
-    "title"   : _("All hosts"),
-    "table"   : "hosts",
-    "infos"   : [ "host" ],
-    "keys"    : [ "host_name", "host_downtimes" ],
-    "join"    : ( "services", "host_name" ),
-    "idkeys"  : [ "site", "host_name" ],
-    "description"  : _("Displays a list of hosts."),
+    "title": _("All hosts"),
+    "table": "hosts",
+    "infos": ["host"],
+    "keys": ["host_name", "host_downtimes"],
+    "join": ("services", "host_name"),
+    "idkeys": ["site", "host_name"],
+    "description": _("Displays a list of hosts."),
     # When the single info "hostgroup" is used, use the "opthostgroup" filter
     # to handle the data provided by the single_spec value of the "hostgroup"
     # info, which is in fact the name of the wanted hostgroup
-    "link_filters" : { "hostgroup": "opthostgroup" },
+    "link_filters": {
+        "hostgroup": "opthostgroup"
+    },
 }
 
 multisite_datasources["hostsbygroup"] = {
-    "title"   : _("Hosts grouped by host groups"),
-    "table"   : "hostsbygroup",
-    "infos"   : [ "host", "hostgroup" ],
-    "keys"    : [ "host_name", "host_downtimes" ],
-    "join"    : ( "services", "host_name" ),
-    "idkeys"  : [ "site", "hostgroup_name", "host_name" ],
-    "description" : _("This datasource has a separate row for each group membership that a host has."),
+    "title": _("Hosts grouped by host groups"),
+    "table": "hostsbygroup",
+    "infos": ["host", "hostgroup"],
+    "keys": ["host_name", "host_downtimes"],
+    "join": ("services", "host_name"),
+    "idkeys": ["site", "hostgroup_name", "host_name"],
+    "description":
+        _("This datasource has a separate row for each group membership that a host has."),
 }
 
 multisite_datasources["services"] = {
-    "title"   : _("All services"),
-    "table"   : "services",
-    "infos"   : [ "service", "host" ],
-    "keys"    : [ "host_name", "service_description", "service_downtimes" ],
-    "joinkey" : "service_description",
-    "idkeys"  : [ "site", "host_name", "service_description" ],
+    "title": _("All services"),
+    "table": "services",
+    "infos": ["service", "host"],
+    "keys": ["host_name", "service_description", "service_downtimes"],
+    "joinkey": "service_description",
+    "idkeys": ["site", "host_name", "service_description"],
     # When the single info "hostgroup" is used, use the "opthostgroup" filter
     # to handle the data provided by the single_spec value of the "hostgroup"
     # info, which is in fact the name of the wanted hostgroup
-    "link_filters" : {
-        "hostgroup"    : "opthostgroup",
-        "servicegroup" : "optservicegroup",
+    "link_filters": {
+        "hostgroup": "opthostgroup",
+        "servicegroup": "optservicegroup",
     },
 }
 
 multisite_datasources["servicesbygroup"] = {
-    "title"   : _("Services grouped by service groups"),
-    "table"   : "servicesbygroup",
-    "infos"   : [ "service", "host", "servicegroup" ],
-    "keys"    : [ "host_name", "service_description", "service_downtimes" ],
-    "idkeys"  : [ "site", "servicegroup_name", "host_name", "service_description" ],
+    "title": _("Services grouped by service groups"),
+    "table": "servicesbygroup",
+    "infos": ["service", "host", "servicegroup"],
+    "keys": ["host_name", "service_description", "service_downtimes"],
+    "idkeys": ["site", "servicegroup_name", "host_name", "service_description"],
 }
 
 multisite_datasources["servicesbyhostgroup"] = {
-    "title"   : _("Services grouped by host groups"),
-    "table"   : "servicesbyhostgroup",
-    "infos"   : [ "service", "host", "hostgroup" ],
-    "keys"    : [ "host_name", "service_description", "service_downtimes" ],
-    "idkeys"  : [ "site", "hostgroup_name", "host_name", "service_description" ],
+    "title": _("Services grouped by host groups"),
+    "table": "servicesbyhostgroup",
+    "infos": ["service", "host", "hostgroup"],
+    "keys": ["host_name", "service_description", "service_downtimes"],
+    "idkeys": ["site", "hostgroup_name", "host_name", "service_description"],
 }
 
 multisite_datasources["hostgroups"] = {
-    "title"   : _("Hostgroups"),
-    "table"   : "hostgroups",
-    "infos"   : [ "hostgroup" ],
-    "keys"    : [ "hostgroup_name" ],
-    "idkeys"  : [ "site", "hostgroup_name" ],
+    "title": _("Hostgroups"),
+    "table": "hostgroups",
+    "infos": ["hostgroup"],
+    "keys": ["hostgroup_name"],
+    "idkeys": ["site", "hostgroup_name"],
 }
 
 # Merged groups across sites
 multisite_datasources["merged_hostgroups"] = {
-    "title"    : _("Hostgroups, merged"),
-    "table"    : "hostgroups",
-    "merge_by" : "hostgroup_name",
-    "infos"    : [ "hostgroup" ],
-    "keys"     : [ "hostgroup_name" ],
-    "idkeys"   : [ "hostgroup_name" ],
+    "title": _("Hostgroups, merged"),
+    "table": "hostgroups",
+    "merge_by": "hostgroup_name",
+    "infos": ["hostgroup"],
+    "keys": ["hostgroup_name"],
+    "idkeys": ["hostgroup_name"],
 }
 
 multisite_datasources["servicegroups"] = {
-    "title"    : _("Servicegroups"),
-    "table"    : "servicegroups",
-    "infos"    : [ "servicegroup" ],
-    "keys"     : [ "servicegroup_name" ],
-    "idkeys"   : [ "site", "servicegroup_name" ],
+    "title": _("Servicegroups"),
+    "table": "servicegroups",
+    "infos": ["servicegroup"],
+    "keys": ["servicegroup_name"],
+    "idkeys": ["site", "servicegroup_name"],
 }
 
 # Merged groups across sites
 multisite_datasources["merged_servicegroups"] = {
-    "title"    : _("Servicegroups, merged"),
-    "table"    : "servicegroups",
-    "merge_by" : "servicegroup_name",
-    "infos"    : [ "servicegroup" ],
-    "keys"     : [ "servicegroup_name" ],
-    "idkeys"   : [ "servicegroup_name" ],
+    "title": _("Servicegroups, merged"),
+    "table": "servicegroups",
+    "merge_by": "servicegroup_name",
+    "infos": ["servicegroup"],
+    "keys": ["servicegroup_name"],
+    "idkeys": ["servicegroup_name"],
 }
 
 multisite_datasources["comments"] = {
-    "title"    : _("Host- and Servicecomments"),
-    "table"    : "comments",
-    "infos"    : [ "comment", "host", "service" ],
-    "keys"     : [ "comment_id", "comment_type", "host_name", "service_description" ],
-    "idkeys"   : [ "comment_id" ],
+    "title": _("Host- and Servicecomments"),
+    "table": "comments",
+    "infos": ["comment", "host", "service"],
+    "keys": ["comment_id", "comment_type", "host_name", "service_description"],
+    "idkeys": ["comment_id"],
 }
 
 multisite_datasources["downtimes"] = {
-    "title"    : _("Scheduled Downtimes"),
-    "table"    : "downtimes",
-    "infos"    : [ "downtime", "host", "service" ],
-    "keys"     : [ "downtime_id", "service_description" ],
-    "idkeys"   : [ "downtime_id" ],
+    "title": _("Scheduled Downtimes"),
+    "table": "downtimes",
+    "infos": ["downtime", "host", "service"],
+    "keys": ["downtime_id", "service_description"],
+    "idkeys": ["downtime_id"],
 }
 
 multisite_datasources["log"] = {
-    "title"    : _("The Logfile"),
-    "table"    : "log",
-    "infos"    : [ "log", "host", "service", "contact", "command" ],
-    "keys"     : [],
-    "idkeys"   : [ "log_lineno" ],
-    "time_filters" : [ "logtime" ],
+    "title": _("The Logfile"),
+    "table": "log",
+    "infos": ["log", "host", "service", "contact", "command"],
+    "keys": [],
+    "idkeys": ["log_lineno"],
+    "time_filters": ["logtime"],
 }
 
 multisite_datasources["log_events"] = {
-    "title"       : _("Host and Service Events"),
-    "table"       : "log",
-    "add_headers" : "Filter: class = 1\nFilter: class = 3\nFilter: class = 8\nOr: 3\n",
-    "infos"       : [ "log", "host", "service" ],
-    "keys"        : [],
-    "idkeys"      : [ "log_lineno" ],
-    "time_filters" : [ "logtime" ],
+    "title": _("Host and Service Events"),
+    "table": "log",
+    "add_headers": "Filter: class = 1\nFilter: class = 3\nFilter: class = 8\nOr: 3\n",
+    "infos": ["log", "host", "service"],
+    "keys": [],
+    "idkeys": ["log_lineno"],
+    "time_filters": ["logtime"],
 }
 
 multisite_datasources["log_host_events"] = {
-    "title"       : _("Host Events"),
-    "table"       : "log",
-    "add_headers" : "Filter: class = 1\nFilter: class = 3\nFilter: class = 8\nOr: 3\nFilter: service_description = \n",
-    "infos"       : [ "log", "host" ],
-    "keys"        : [],
-    "idkeys"      : [ "log_lineno" ],
-    "time_filters" : [ "logtime" ],
+    "title": _("Host Events"),
+    "table": "log",
+    "add_headers": "Filter: class = 1\nFilter: class = 3\nFilter: class = 8\nOr: 3\nFilter: service_description = \n",
+    "infos": ["log", "host"],
+    "keys": [],
+    "idkeys": ["log_lineno"],
+    "time_filters": ["logtime"],
 }
 
 multisite_datasources["alert_stats"] = {
-    "title"        : _("Alert Statistics"),
-    "table"        : "log",
-    "add_headers"  : "Filter: class = 1\nStats: state = 0\nStats: state = 1\nStats: state = 2\nStats: state = 3\nStats: state != 0\n",
-    "add_columns"  : [ "log_alerts_ok", "log_alerts_warn", "log_alerts_crit", "log_alerts_unknown", "log_alerts_problem" ],
-    "infos"        : [ "log", "host", "service", "contact", "command" ],
-    "keys"         : [],
-    "idkeys"       : [ 'host_name', 'service_description' ],
-    "ignore_limit" : True,
-    "time_filters" : [ "logtime" ],
+    "title": _("Alert Statistics"),
+    "table": "log",
+    "add_headers": "Filter: class = 1\nStats: state = 0\nStats: state = 1\nStats: state = 2\nStats: state = 3\nStats: state != 0\n",
+    "add_columns": [
+        "log_alerts_ok",
+        "log_alerts_warn",
+        "log_alerts_crit",
+        "log_alerts_unknown",
+        "log_alerts_problem",
+    ],
+    "infos": ["log", "host", "service", "contact", "command"],
+    "keys": [],
+    "idkeys": ['host_name', 'service_description'],
+    "ignore_limit": True,
+    "time_filters": ["logtime"],
 }
+
 
 # The livestatus query constructed by the filters of the view may
 # contain filters that are related to the discovery info and should only be
@@ -245,7 +255,8 @@ def query_service_discovery(columns, query, only_sites, limit, all_active_filter
     if "long_plugin_output" not in columns:
         columns.append("long_plugin_output")
 
-    service_rows = do_query_data("GET services\n", columns, [], [], query, only_sites, limit, "read")
+    service_rows = do_query_data("GET services\n", columns, [], [], query, only_sites, limit,
+                                 "read")
 
     rows = []
     for row in service_rows:
@@ -253,7 +264,7 @@ def query_service_discovery(columns, query, only_sites, limit, all_active_filter
             if not service_line:
                 continue
 
-            parts = [s.strip() for s in  service_line.split(":", 2)]
+            parts = [s.strip() for s in service_line.split(":", 2)]
             if len(parts) != 3:
                 continue
 
@@ -263,9 +274,9 @@ def query_service_discovery(columns, query, only_sites, limit, all_active_filter
 
             this_row = row.copy()
             this_row.update({
-                "discovery_state"   : state,
-                "discovery_check"   : check,
-                "discovery_service" : service_description
+                "discovery_state": state,
+                "discovery_check": check,
+                "discovery_service": service_description
             })
             rows.append(this_row)
 
@@ -273,10 +284,10 @@ def query_service_discovery(columns, query, only_sites, limit, all_active_filter
 
 
 multisite_datasources["service_discovery"] = {
-    "title"       : _("Service discovery"),
-    "table"       : query_service_discovery,
-    "add_columns" : [ "discovery_state", "discovery_check", "discovery_service" ],
-    "infos"       : [ "host", "discovery" ],
-    "keys"        : [],
-    "idkeys"      : [ "host_name" ]
+    "title": _("Service discovery"),
+    "table": query_service_discovery,
+    "add_columns": ["discovery_state", "discovery_check", "discovery_service"],
+    "infos": ["host", "discovery"],
+    "keys": [],
+    "idkeys": ["host_name"]
 }

@@ -34,15 +34,15 @@ from . import (
     multisite_sorters,
 )
 
-
 multisite_painters["host_filename"] = {
-    "title"   : _("Check_MK config filename"),
-    "short"   : _("Filename"),
-    "columns" : ["host_filename"],
-    "paint"   : lambda row: ("tt", row["host_filename"]),
+    "title": _("Check_MK config filename"),
+    "short": _("Filename"),
+    "columns": ["host_filename"],
+    "paint": lambda row: ("tt", row["host_filename"]),
 }
 
-def get_wato_folder(row, how, with_links = True):
+
+def get_wato_folder(row, how, with_links=True):
     filename = row["host_filename"]
     if not filename.startswith("/wato/") or not filename.endswith("/hosts.mk"):
         return ""
@@ -73,51 +73,54 @@ def get_wato_folder(row, how, with_links = True):
         depth = current_path.count('/') + 1
         return " / ".join(title_path[depth:])
 
+
 def paint_wato_folder(row, how):
     return "", get_wato_folder(row, how)
 
 
 multisite_painters["wato_folder_abs"] = {
-    "title"   : _("WATO folder - complete path"),
-    "short"   : _("WATO folder"),
-    "columns" : ["host_filename"],
-    "paint"   : lambda row: paint_wato_folder(row, "abs"),
-    "sorter"  : 'wato_folder_abs',
+    "title": _("WATO folder - complete path"),
+    "short": _("WATO folder"),
+    "columns": ["host_filename"],
+    "paint": lambda row: paint_wato_folder(row, "abs"),
+    "sorter": 'wato_folder_abs',
 }
 
 multisite_painters["wato_folder_rel"] = {
-    "title"   : _("WATO folder - relative path"),
-    "short"   : _("WATO folder"),
-    "columns" : ["host_filename"],
-    "paint"   : lambda row: paint_wato_folder(row, "rel"),
-    "sorter"  : 'wato_folder_rel',
+    "title": _("WATO folder - relative path"),
+    "short": _("WATO folder"),
+    "columns": ["host_filename"],
+    "paint": lambda row: paint_wato_folder(row, "rel"),
+    "sorter": 'wato_folder_rel',
 }
 
 multisite_painters["wato_folder_plain"] = {
-    "title"   : _("WATO folder - just folder name"),
-    "short"   : _("WATO folder"),
-    "columns" : ["host_filename"],
-    "paint"   : lambda row: paint_wato_folder(row, "plain"),
-    "sorter"  : 'wato_folder_plain',
+    "title": _("WATO folder - just folder name"),
+    "short": _("WATO folder"),
+    "columns": ["host_filename"],
+    "paint": lambda row: paint_wato_folder(row, "plain"),
+    "sorter": 'wato_folder_plain',
 }
+
 
 def cmp_wato_folder(r1, r2, how):
     return cmp(get_wato_folder(r1, how, False), get_wato_folder(r2, how, False))
 
+
 multisite_sorters["wato_folder_abs"] = {
-    "title"   : _("WATO folder - complete path"),
-    "columns" : [ "host_filename" ],
-    "cmp"     : lambda r1, r2: cmp_wato_folder(r1, r2, 'abs'),
+    "title": _("WATO folder - complete path"),
+    "columns": ["host_filename"],
+    "cmp": lambda r1, r2: cmp_wato_folder(r1, r2, 'abs'),
 }
 
 multisite_sorters["wato_folder_rel"] = {
-    "title"   : _("WATO folder - relative path"),
-    "columns" : [ "host_filename" ],
-    "cmp"     : lambda r1, r2: cmp_wato_folder(r1, r2, 'rel'),
+    "title": _("WATO folder - relative path"),
+    "columns": ["host_filename"],
+    "cmp": lambda r1, r2: cmp_wato_folder(r1, r2, 'rel'),
 }
 
 multisite_sorters["wato_folder_plain"] = {
-    "title"   : _("WATO folder - just folder name"),
-    "columns" : [ "host_filename" ],
-    "cmp"     : lambda r1, r2: cmp_wato_folder(r1, r2, 'plain'),
+    "title": _("WATO folder - just folder name"),
+    "columns": ["host_filename"],
+    "cmp": lambda r1, r2: cmp_wato_folder(r1, r2, 'plain'),
 }

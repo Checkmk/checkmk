@@ -120,15 +120,15 @@ def _ec_filter_host_information_of_not_permitted_hosts(rows):
         # Now remove the host information. This can sadly not apply the cores
         # default values for the different columns. We try our best to clean up
         for key in remove_keys:
-            if type(row[key]) == list:
+            if isinstance(row[key], list):
                 row[key] = []
-            elif type(row[key]) == int:
+            elif isinstance(row[key], int):
                 row[key] = 0
-            elif type(row[key]) == float:
+            elif isinstance(row[key], float):
                 row[key] = 0.0
-            elif type(row[key]) == str:
+            elif isinstance(row[key], str):
                 row[key] = ""
-            elif type(row[key]) == unicode:
+            elif isinstance(row[key], unicode):
                 row[key] = u""
 
 
@@ -452,7 +452,7 @@ if config.mkeventd_enabled:
 
     def paint_event_contact_groups(row):
         cgs = row.get("event_contact_groups")
-        if cgs == None:
+        if cgs is None:
             return "", ""
         elif cgs:
             return "", ", ".join(cgs)
@@ -471,7 +471,7 @@ if config.mkeventd_enabled:
         else:
             cgs = row["event_contact_groups"]
 
-        if cgs == None:
+        if cgs is None:
             return "", ""
         elif cgs:
             return "", ", ".join(sorted(cgs))

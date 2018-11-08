@@ -254,7 +254,7 @@ def inv_paint_generic(v):
 
 @decorate_inv_paint
 def inv_paint_hz(hz):
-    if hz == None:
+    if hz is None:
         return "", ""
     if hz < 10:
         return "number", "%.2f" % hz
@@ -437,7 +437,7 @@ def inv_paint_age(age):
 
 @decorate_inv_paint
 def inv_paint_bool(value):
-    if value == None:
+    if value is None:
         return "", ""
     return "", (_("Yes") if value else _("No"))
 
@@ -573,7 +573,7 @@ def inv_titleinfo(invpath, node):
     icon = hint.get("icon")
     if "title" in hint:
         title = hint["title"]
-        if type(title) == type(lambda: None):
+        if callable(title):
             title = title(node)
     else:
         title = invpath.rstrip(".").rstrip(':').split('.')[-1].split(':')[-1].replace("_",
@@ -2134,7 +2134,7 @@ class NodeRenderer(object):
                     #FIXME At the moment  we need it to get tdclass
                     # Clean this up one day.
                     # The value is not really needed, but we need to deal with the delta mode
-                    unused_value = value[1] if type(value) == tuple else value
+                    unused_value = value[1] if isinstance(value, tuple) else value
                     tdclass, _ = hint["paint_function"](unused_value)
                 else:
                     tdclass = None
@@ -2204,19 +2204,19 @@ class NodeRenderer(object):
         if "paint_function" in hint:
             _tdclass, code = hint["paint_function"](value)
             html.write(code)
-        elif type(value) == str:
+        elif isinstance(value, str):
             try:
                 text = value.decode("utf-8")
             except:
                 text = value
             html.write_text(text)
-        elif type(value) == unicode:
+        elif isinstance(value, unicode):
             html.write_text(value)
-        elif type(value) == int:
+        elif isinstance(value, int):
             html.write(str(value))
-        elif type(value) == float:
+        elif isinstance(value, float):
             html.write("%.2f" % value)
-        elif value != None:
+        elif value is not None:
             html.write(str(value))
 
 

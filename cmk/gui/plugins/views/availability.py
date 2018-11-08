@@ -679,7 +679,7 @@ def render_bi_availability(title, aggr_rows):
                     previous_span = None
                     for span in these_spans:
                         if not button_back_shown and int(
-                                span["from"]) == timewarp and previous_span != None:
+                                span["from"]) == timewarp and previous_span is not None:
                             html.icon_button(
                                 html.makeuri([("timewarp", str(int(previous_span["from"])))]),
                                 _("Jump one phase back"), "back")
@@ -1051,6 +1051,6 @@ def av_output_set_content_disposition(title):
         title,
         time.strftime('%Y-%m-%d_%H-%M-%S', time.localtime(time.time())),
     )
-    if type(filename) == unicode:
+    if isinstance(filename, unicode):
         filename = filename.encode("utf-8")
     html.response.set_http_header("Content-Disposition", "Attachment; filename=\"%s\"" % filename)

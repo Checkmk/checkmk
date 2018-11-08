@@ -31,11 +31,12 @@
 
 void Livestatus::connectUNIX(const char *socket_path) {
     _connection = socket(PF_LOCAL, SOCK_STREAM, 0);
-    struct sockaddr_un sa;
-    sa.sun_family = AF_LOCAL;
-    strncpy(sa.sun_path, socket_path, sizeof(sa.sun_path));
-    if (0 > connect(_connection, (const struct sockaddr *)&sa,
-                    sizeof(sockaddr_un))) {
+    struct sockaddr_un sockaddr;
+    sockaddr.sun_family = AF_UNIX;
+    strncpy(sockaddr.sun_path, socket_path, sizeof(sockaddr.sun_path) - 1);
+    sockaddr.sun_path[sizeof(sockaddr.sun_path) - 1] = '\0';
+    if (0 > connect(_connection, (const struct sockaddr *)&sockaddr,
+                    sizeof(sockaddr))) {
         close(_connection);
         _connection = -1;
     } else

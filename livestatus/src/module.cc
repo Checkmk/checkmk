@@ -408,7 +408,8 @@ bool open_unix_socket() {
     struct sockaddr_un sockaddr;
     sockaddr.sun_family = AF_UNIX;
     strncpy(sockaddr.sun_path, fl_socket_path.c_str(),
-            sizeof(sockaddr.sun_path));
+            sizeof(sockaddr.sun_path) - 1);
+    sockaddr.sun_path[sizeof(sockaddr.sun_path) - 1] = '\0';
     if (bind(g_unix_socket, reinterpret_cast<struct sockaddr *>(&sockaddr),
              sizeof(sockaddr)) < 0) {
         generic_error ge("cannot bind UNIX socket to address " +

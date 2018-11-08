@@ -57,7 +57,6 @@ from cmk.gui.plugins.sidebar.utils import (
     write_snapin_exception,
 )
 
-
 #.
 #   .--Plugins-------------------------------------------------------------.
 #   |                   ____  _             _                              |

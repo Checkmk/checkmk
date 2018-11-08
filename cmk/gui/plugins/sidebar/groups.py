@@ -29,10 +29,11 @@ import cmk.gui.sites as sites
 from cmk.gui.plugins.sidebar import (
     SidebarSnapin,
     snapin_registry,
-    bulletlink
+    bulletlink,
 )
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
+
 
 class GroupSnapin(SidebarSnapin):
     __metaclass__ = abc.ABCMeta
@@ -53,6 +54,7 @@ class GroupSnapin(SidebarSnapin):
     def refresh_on_restart(cls):
         return True
 
+
 @snapin_registry.register
 class HostGroups(GroupSnapin):
     def _group_type_ident(self):
@@ -69,6 +71,7 @@ class HostGroups(GroupSnapin):
     @classmethod
     def description(cls):
         return _("Directs links to all host groups")
+
 
 @snapin_registry.register
 class ServiceGroups(GroupSnapin):

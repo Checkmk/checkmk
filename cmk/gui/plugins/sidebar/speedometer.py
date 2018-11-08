@@ -32,17 +32,16 @@ import cmk.gui.sites as sites
 
 from . import SidebarSnapin, snapin_registry
 
+
 @snapin_registry.register
 class Speedometer(SidebarSnapin):
     @staticmethod
     def type_name():
         return "speedometer"
 
-
     @classmethod
     def title(cls):
         return _("Service Speed-O-Meter")
-
 
     @classmethod
     def description(cls):
@@ -50,7 +49,6 @@ class Speedometer(SidebarSnapin):
                  "the scheduled check rate. If the Speed-O-Meter shows a speed "
                  "of 100 percent, all service checks are being executed in exactly "
                  "the rate that is desired.")
-
 
     def show(self):
         html.open_div(class_="speedometer")
@@ -166,11 +164,9 @@ function move_needle(from_perc, to_perc)
 speedometer_show_speed(0, 0, 0);
 """)
 
-
     @classmethod
     def allowed_roles(cls):
-        return [ "admin" ]
-
+        return ["admin"]
 
     def styles(self):
         return """
@@ -194,9 +190,8 @@ canvas#speedometer {
 
     def page_handlers(self):
         return {
-            "sidebar_ajax_speedometer"    : self._ajax_speedometer,
+            "sidebar_ajax_speedometer": self._ajax_speedometer,
         }
-
 
     def _ajax_speedometer(self):
         html.set_output_format("json")
@@ -204,14 +199,14 @@ canvas#speedometer {
             # Try to get values from last call in order to compute
             # driftig speedometer-needle and to reuse the scheduled
             # check reate.
-            last_perc          = float(html.var("last_perc"))
-            scheduled_rate     = float(html.var("scheduled_rate"))
+            last_perc = float(html.var("last_perc"))
+            scheduled_rate = float(html.var("scheduled_rate"))
             last_program_start = int(html.var("program_start"))
 
             # Get the current rates and the program start time. If there
             # are more than one site, we simply add the start times.
             data = sites.live().query_summed_stats("GET status\n"
-                   "Columns: service_checks_rate program_start")
+                                                   "Columns: service_checks_rate program_start")
             current_rate = data[0]
             program_start = data[1]
 
@@ -228,8 +223,8 @@ canvas#speedometer {
                 # Manually added services without check_interval could be a problem, but
                 # we have no control there.
                 scheduled_rate = sites.live().query_summed_stats(
-                            "GET services\n"
-                            "Stats: suminv check_interval\n")[0] / 60.0
+                    "GET services\n"
+                    "Stats: suminv check_interval\n")[0] / 60.0
 
             percentage = 100.0 * current_rate / scheduled_rate
             title = _("Scheduled service check rate: %.1f/s, current rate: %.1f/s, that is "
@@ -244,11 +239,11 @@ canvas#speedometer {
             title = _("No performance data: %s") % e
 
         data = {
-            "scheduled_rate" : scheduled_rate,
-            "program_start"  : program_start,
-            "percentage"     : percentage,
-            "last_perc"      : last_perc,
-            "title"          : title,
+            "scheduled_rate": scheduled_rate,
+            "program_start": program_start,
+            "percentage": percentage,
+            "last_perc": last_perc,
+            "title": title,
         }
 
         html.write(json.dumps(data))

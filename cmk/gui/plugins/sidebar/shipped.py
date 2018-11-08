@@ -64,32 +64,36 @@ from cmk.gui.plugins.sidebar import (
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
+
 def render_dashboards():
     dashboard.load_dashboards()
 
-    def render_topic(topic, s, foldable = True):
+    def render_topic(topic, s, foldable=True):
         first = True
         for t, title, name, _is_view in s:
             if t == topic:
                 if first:
                     if foldable:
-                        html.begin_foldable_container("dashboards", topic, False, topic, indent=True)
+                        html.begin_foldable_container(
+                            "dashboards", topic, False, topic, indent=True)
                     else:
                         html.open_ul()
                     first = False
-                bulletlink(title, 'dashboard.py?name=%s' % name, onclick = "return wato_views_clicked(this)")
+                bulletlink(
+                    title, 'dashboard.py?name=%s' % name, onclick="return wato_views_clicked(this)")
 
-        if not first: # at least one item rendered
+        if not first:  # at least one item rendered
             if foldable:
                 html.end_foldable_container()
             else:
                 html.open_ul()
 
-    by_topic = visuals_by_topic(dashboard.permitted_dashboards().items(), default_order = [ _('Overview') ])
-    topics = [ topic for topic, _entry in by_topic ]
+    by_topic = visuals_by_topic(
+        dashboard.permitted_dashboards().items(), default_order=[_('Overview')])
+    topics = [topic for topic, _entry in by_topic]
 
     if len(topics) < 2:
-        render_topic(by_topic[0][0], by_topic[0][1], foldable = False)
+        render_topic(by_topic[0][0], by_topic[0][1], foldable=False)
 
     else:
         for topic, s in by_topic:
@@ -102,11 +106,12 @@ def render_dashboards():
         links.append((_("Edit"), "edit_dashboards.py"))
         footnotelinks(links)
 
+
 sidebar_snapins["dashboards"] = {
-    "title"       : _("Dashboards"),
-    "description" : _("Links to all dashboards"),
-    "render"      : render_dashboards,
-    "allowed"     : [ "user", "admin", "guest" ],
+    "title": _("Dashboards"),
+    "description": _("Links to all dashboards"),
+    "render": render_dashboards,
+    "allowed": ["user", "admin", "guest"],
 }
 
 #.
@@ -118,6 +123,7 @@ sidebar_snapins["dashboards"] = {
 #   |                      |_| |_|\___/|___/\__|___/                       |
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
+
 
 def render_hosts(mode):
     sites.live().set_prepend_site(True)
@@ -181,31 +187,31 @@ def render_hosts(mode):
         html.close_tr()
     html.close_table()
 
+
 snapin_allhosts_styles = """
   .snapin table.allhosts { width: 100%; }
   .snapin table.allhosts td { width: 50%; padding: 0px 0px; }
 """
 
 sidebar_snapins["hosts"] = {
-    "title" : _("All Hosts"),
-    "description" : _("A summary state of each host with a link to the view "
-                      "showing its services"),
-    "render" : lambda: render_hosts("hosts"),
-    "allowed" : [ "user", "admin", "guest" ],
-    "refresh" : True,
-    "styles" : snapin_allhosts_styles,
+    "title": _("All Hosts"),
+    "description": _("A summary state of each host with a link to the view "
+                     "showing its services"),
+    "render": lambda: render_hosts("hosts"),
+    "allowed": ["user", "admin", "guest"],
+    "refresh": True,
+    "styles": snapin_allhosts_styles,
 }
 
 sidebar_snapins["problem_hosts"] = {
-    "title" : _("Problem Hosts"),
-    "description" : _("A summary state of all hosts that have a problem, with "
-                      "links to problems of those hosts"),
-    "render" : lambda: render_hosts("problems"),
-    "allowed" : [ "user", "admin", "guest" ],
-    "refresh" : True,
-    "styles" : snapin_allhosts_styles,
+    "title": _("Problem Hosts"),
+    "description": _("A summary state of all hosts that have a problem, with "
+                     "links to problems of those hosts"),
+    "render": lambda: render_hosts("problems"),
+    "allowed": ["user", "admin", "guest"],
+    "refresh": True,
+    "styles": snapin_allhosts_styles,
 }
-
 
 #.
 #   .--Performance---------------------------------------------------------.
@@ -217,9 +223,9 @@ sidebar_snapins["problem_hosts"] = {
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
+
 def render_performance():
-    only_sites = snapin_site_choice("performance",
-                                    config.site_choices())
+    only_sites = snapin_site_choice("performance", config.site_choices())
 
     def write_line(left, right):
         html.open_tr()
@@ -231,10 +237,9 @@ def render_performance():
 
     try:
         sites.live().set_only_sites(only_sites)
-        data = sites.live().query(
-            "GET status\nColumns: service_checks_rate host_checks_rate "
-            "external_commands_rate connections_rate forks_rate "
-            "log_messages_rate cached_log_messages\n")
+        data = sites.live().query("GET status\nColumns: service_checks_rate host_checks_rate "
+                                  "external_commands_rate connections_rate forks_rate "
+                                  "log_messages_rate cached_log_messages\n")
     finally:
         sites.live().set_only_sites(None)
 
@@ -251,7 +256,7 @@ def render_performance():
     if only_sites is None and len(config.allsites()) == 1:
         try:
             data = sites.live().query("GET status\nColumns: external_command_buffer_slots "
-                                   "external_command_buffer_max\n")
+                                      "external_command_buffer_max\n")
         finally:
             sites.live().set_only_sites(None)
         size = sum([row[0] for row in data])
@@ -262,12 +267,12 @@ def render_performance():
 
 
 sidebar_snapins["performance"] = {
-    "title" : _("Server Performance"),
-    "description" : _("Live monitor of the overall performance of all monitoring servers"),
-    "refresh" : True,
-    "render" : render_performance,
-    "allowed" : [ "admin", ],
-    "styles" : """
+    "title": _("Server Performance"),
+    "description": _("Live monitor of the overall performance of all monitoring servers"),
+    "refresh": True,
+    "render": render_performance,
+    "allowed": ["admin",],
+    "styles": """
 #snapin_performance select {
     margin-bottom: 2px;
     width: 100%%;
@@ -304,16 +309,17 @@ table.performance td.right {
 #   |                                |___/                                 |
 #   '----------------------------------------------------------------------'
 
+
 def render_nagios():
     html.open_ul()
     bulletlink("Home", "http://www.nagios.org")
     bulletlink("Documentation", "%snagios/docs/toc.html" % config.url_prefix())
     html.close_ul()
     for entry in [
-        "General",
+            "General",
         ("tac.cgi", "Tactical Overview"),
         ("statusmap.cgi?host=all", "Map"),
-        "Current Status",
+            "Current Status",
         ("status.cgi?hostgroup=all&amp;style=hostdetail", "Hosts"),
         ("status.cgi?host=all", "Services"),
         ("status.cgi?hostgroup=all&amp;style=overview", "Host Groups"),
@@ -323,10 +329,12 @@ def render_nagios():
         ("status.cgi?servicegroup=all&amp;style=summary", "*Summary"),
         ("status.cgi?servicegroup=all&amp;style=grid", "*Grid"),
         ("status.cgi?host=all&amp;servicestatustypes=28", "Problems"),
-        ("status.cgi?host=all&amp;type=detail&amp;hoststatustypes=3&amp;serviceprops=42&amp;servicestatustypes=28", "*Service (Unhandled)"),
-        ("status.cgi?hostgroup=all&amp;style=hostdetail&amp;hoststatustypes=12&amp;hostprops=42", "*Hosts (Unhandled)"),
+        ("status.cgi?host=all&amp;type=detail&amp;hoststatustypes=3&amp;serviceprops=42&amp;servicestatustypes=28",
+         "*Service (Unhandled)"),
+        ("status.cgi?hostgroup=all&amp;style=hostdetail&amp;hoststatustypes=12&amp;hostprops=42",
+         "*Hosts (Unhandled)"),
         ("outages.cgi", "Network Outages"),
-        "Reports",
+            "Reports",
         ("avail.cgi", "Availability"),
         ("trends.cgi", "Trends"),
         ("history.cgi?host=all", "Alerts"),
@@ -335,14 +343,14 @@ def render_nagios():
         ("histogram.cgi", "*Histogram"),
         ("notifications.cgi?contact=all", "Notifications"),
         ("showlog.cgi", "Event Log"),
-        "System",
+            "System",
         ("extinfo.cgi?type=3", "Comments"),
         ("extinfo.cgi?type=6", "Downtime"),
         ("extinfo.cgi?type=0", "Process Info"),
         ("extinfo.cgi?type=4", "Performance Info"),
         ("extinfo.cgi?type=7", "Scheduling Queue"),
         ("config.cgi", "Configuration"),
-        ]:
+    ]:
         if type(entry) == str:
             html.close_ul()
             heading(entry)
@@ -356,12 +364,17 @@ def render_nagios():
             else:
                 nagioscgilink(text, ref)
 
+
 sidebar_snapins["nagios_legacy"] = {
-    "title" : _("Old Nagios GUI"),
-    "description" : _("The classical sidebar of Nagios 3.2.0 with links to "
-                      "your local Nagios instance (no multi site support)"),
-    "render" : render_nagios,
-    "allowed" : [ "user", "admin", "guest", ],
+    "title": _("Old Nagios GUI"),
+    "description": _("The classical sidebar of Nagios 3.2.0 with links to "
+                     "your local Nagios instance (no multi site support)"),
+    "render": render_nagios,
+    "allowed": [
+        "user",
+        "admin",
+        "guest",
+    ],
 }
 
 #.
@@ -374,11 +387,13 @@ sidebar_snapins["nagios_legacy"] = {
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
+
 def render_custom_links():
     links = config.custom_links.get(config.user.baserole_id)
     if not links:
-        html.write_text((_("Please edit <tt>%s</tt> in order to configure which links are shown in this snapin.") %
-                  (cmk.paths.default_config_dir + "/multisite.mk")) + "\n")
+        html.write_text((_(
+            "Please edit <tt>%s</tt> in order to configure which links are shown in this snapin.") %
+                         (cmk.paths.default_config_dir + "/multisite.mk")) + "\n")
         return
 
     def render_list(ids, links):
@@ -389,11 +404,12 @@ def render_custom_links():
                 if type(entry[1]) == type(True):
                     idss = ids + [str(n)]
                     id_ = '/'.join(idss)
-                    html.begin_foldable_container("customlinks", id_, isopen=entry[1], title=entry[0])
+                    html.begin_foldable_container(
+                        "customlinks", id_, isopen=entry[1], title=entry[0])
                     render_list(idss, entry[2])
                     html.end_foldable_container()
                 elif type(entry[1]) == str:
-                    frame =entry[3] if len(entry) > 3 else "main"
+                    frame = entry[3] if len(entry) > 3 else "main"
 
                     if len(entry) > 2 and entry[2]:
                         icon_file = entry[2]
@@ -409,20 +425,22 @@ def render_custom_links():
 
                     simplelink(linktext, entry[1], frame)
                 else:
-                    html.write_text(_("Second part of tuple must be list or string, not %s\n") % str(entry[1]))
+                    html.write_text(
+                        _("Second part of tuple must be list or string, not %s\n") % str(entry[1]))
             except Exception, e:
                 html.write_text(_("invalid entry %s: %s<br>\n") % (entry, e))
 
     render_list([], links)
 
+
 sidebar_snapins["custom_links"] = {
-    "title" : _("Custom Links"),
-    "description" : _("This snapin contains custom links which can be "
-                      "configured via the configuration variable "
-                      "<tt>custom_links</tt> in <tt>multisite.mk</tt>"),
-    "render" : render_custom_links,
-    "allowed" : [ "user", "admin", "guest" ],
-    "styles" : """
+    "title": _("Custom Links"),
+    "description": _("This snapin contains custom links which can be "
+                     "configured via the configuration variable "
+                     "<tt>custom_links</tt> in <tt>multisite.mk</tt>"),
+    "render": render_custom_links,
+    "allowed": ["user", "admin", "guest"],
+    "styles": """
 #snapin_custom_links div.sublist {
     padding-left: 10px;
 }
@@ -435,7 +453,6 @@ sidebar_snapins["custom_links"] = {
 }
 """
 }
-
 
 #.
 #   .--Dokuwiki------------------------------------------------------------.
@@ -457,6 +474,7 @@ sidebar_snapins["custom_links"] = {
 #Heading2:
 #   * [[link3]]
 #   * [[link4]]
+
 
 def render_wiki():
     filename = cmk.paths.omd_root + '/var/dokuwiki/data/pages/sidebar.txt'
@@ -495,7 +513,7 @@ def render_wiki():
             elif line.startswith("*"):
                 if start_ul == True:
                     if title:
-                         html.begin_foldable_container("wikisnapin", title, True, title, indent=True)
+                        html.begin_foldable_container("wikisnapin", title, True, title, indent=True)
                     else:
                         html.open_ul()
                     start_ul = False
@@ -528,18 +546,20 @@ def render_wiki():
         if ul_started == True:
             html.close_ul()
     except IOError:
-        sidebar = html.render_a("sidebar",
-                                href="/%s/wiki/doku.php?id=%s" % (config.omd_site(), _("sidebar")),
-                                target = "main")
+        sidebar = html.render_a(
+            "sidebar",
+            href="/%s/wiki/doku.php?id=%s" % (config.omd_site(), _("sidebar")),
+            target="main")
         html.write_html("<p>To get a navigation menu, you have to create a %s in your wiki first.</p>"\
                                                                            % sidebar)
 
+
 sidebar_snapins["wiki"] = {
-    "title" : _("Wiki"),
-    "description" : _("Shows the Wiki Navigation of the OMD Site"),
-    "render" : render_wiki,
-    "allowed" : [ "admin", "user", "guest" ],
-    "styles" : """
+    "title": _("Wiki"),
+    "description": _("Shows the Wiki Navigation of the OMD Site"),
+    "render": render_wiki,
+    "allowed": ["admin", "user", "guest"],
+    "styles": """
     #snapin_container_wiki div.content {
         font-weight: bold;
         color: white;

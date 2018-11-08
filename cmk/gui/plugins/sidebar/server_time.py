@@ -31,6 +31,7 @@ from cmk.gui.globals import html
 from . import SidebarSnapin, snapin_registry
 from cmk.gui.plugins.sidebar import snapin_width
 
+
 @snapin_registry.register
 class CurrentTime(SidebarSnapin):
     @staticmethod
@@ -43,8 +44,7 @@ class CurrentTime(SidebarSnapin):
 
     @classmethod
     def description(cls):
-        return _("A large clock showing the current time of "
-                 "the web server")
+        return _("A large clock showing the current time of the web server")
 
     def show(self):
         html.div(time.strftime("%H:%M"), class_="time")

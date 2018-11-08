@@ -39,24 +39,22 @@ from cmk.gui.globals import html
 from cmk.gui.exceptions import MKGeneralException, MKException
 from cmk.gui.plugins.sidebar import SidebarSnapin, snapin_registry
 
+
 @snapin_registry.register
 class QuicksearchSnapin(SidebarSnapin):
     @staticmethod
     def type_name():
         return "search"
 
-
     @classmethod
     def title(cls):
         return _("Quicksearch")
-
 
     @classmethod
     def description(cls):
         return _("Interactive search field for direct access to hosts, services, host- and "\
                  "servicegroups.<br>You can use the following filters:<br> <i>h:</i> Host, <i>s:</i> Service<br> "\
                  "<i>hg:</i> Hostgroup, <i>sg:</i> Servicegroup<br><i>ad:</i> Address, <i>al:</i> Alias, <i>tg:</i> Hosttag")
-
 
     def show(self):
         html.open_div(id_="mk_side_search", class_="content_center", onclick="mkSearchClose();")
@@ -66,11 +64,9 @@ class QuicksearchSnapin(SidebarSnapin):
         html.div('', id_="mk_side_clear")
         html.javascript_file(html.javascript_filename_for_browser("search"))
 
-
     @classmethod
     def allowed_roles(cls):
-        return [ "user", "admin", "guest" ]
-
+        return ["user", "admin", "guest"]
 
     def styles(self):
         return """
@@ -166,7 +162,6 @@ class QuicksearchSnapin(SidebarSnapin):
             "search_open": self._page_search_open,
         }
 
-
     def _ajax_search(self):
         q = html.var_utf8('q').strip()
         if not q:
@@ -182,7 +177,6 @@ class QuicksearchSnapin(SidebarSnapin):
                 raise
             html.show_error(traceback.format_exc())
 
-
     def _page_search_open(self):
         q = html.var('q').strip()
         if not q:
@@ -192,7 +186,6 @@ class QuicksearchSnapin(SidebarSnapin):
         html.response.http_redirect(url)
 
 
-
 # Ensures the provided search string is a regex, does some basic conversion
 # and then tries to verify it is a regex
 def _to_regex(s):
@@ -200,24 +193,26 @@ def _to_regex(s):
     try:
         re.compile(s)
     except re.error:
-        raise MKGeneralException(_('You search statement is not valid. You need to provide a regular '
-            'expression (regex). For example you need to use <tt>\\\\</tt> instead of <tt>\\</tt> '
-            'if you like to search for a single backslash.'))
+        raise MKGeneralException(
+            _('You search statement is not valid. You need to provide a regular '
+              'expression (regex). For example you need to use <tt>\\\\</tt> instead of <tt>\\</tt> '
+              'if you like to search for a single backslash.'))
     return s
 
 
 class TooManyRowsError(MKException):
     pass
 
+
 class LivestatusSearchBase(object):
-    def _build_url(self, url_params, restore_regex = False):
+    def _build_url(self, url_params, restore_regex=False):
         new_params = []
         if restore_regex:
             for key, value in url_params:
                 new_params.append((key, value.replace("\\", "\\\\")))
         else:
             new_params.extend(url_params)
-        return html.makeuri(new_params, delvars  = "q", filename = "view.py")
+        return html.makeuri(new_params, delvars="q", filename="view.py")
 
 
 # Handles exactly one livestatus query
@@ -225,37 +220,30 @@ class LivestatusSearchConductor(LivestatusSearchBase):
     def __init__(self, used_filters, filter_behaviour):
         # used_filters:     {u'h': [u'heute'], u's': [u'Check_MK']}
         # filter_behaviour: "continue"
-        self._used_filters       = used_filters
-        self._filter_behaviour   = filter_behaviour
+        self._used_filters = used_filters
+        self._filter_behaviour = filter_behaviour
 
-        self._livestatus_command = None # Computed livestatus query
-        self._rows               = []   # Raw data from livestatus
-        self._elements           = []   # Postprocessed rows
-
+        self._livestatus_command = None  # Computed livestatus query
+        self._rows = []  # Raw data from livestatus
+        self._elements = []  # Postprocessed rows
 
     def get_filter_behaviour(self):
         return self._filter_behaviour
 
-
     def do_query(self):
         self._execute_livestatus_command()
-
 
     def num_rows(self):
         return len(self._rows)
 
-
     def remove_rows_from_end(self, num):
         self._rows = self._rows[:-num]
-
 
     def row_limit_exceeded(self):
         return self._too_much_rows
 
-
     def get_elements(self):
         return self._elements
-
 
     def get_match_topic(self):
         if len(self._used_filters.keys()) > 1:
@@ -263,14 +251,12 @@ class LivestatusSearchConductor(LivestatusSearchBase):
         shortname = self._used_filters.keys()[0]
         return self._get_plugin_with_shortname(shortname).get_match_topic()
 
-
     def _get_plugin_with_shortname(self, shortname):
         for plugin_class in match_plugin_registry.values():
             plugin = plugin_class()
             if plugin.get_filter_shortname() == shortname:
                 return plugin
         raise NotImplementedError()
-
 
     def _execute_livestatus_command(self):
         self._rows = []
@@ -289,20 +275,18 @@ class LivestatusSearchConductor(LivestatusSearchBase):
         if not results:
             return
 
-        headers =  ["site"] + self._queried_livestatus_columns
+        headers = ["site"] + self._queried_livestatus_columns
         self._rows = [dict(zip(headers, x)) for x in results]
-
 
         limit = config.quicksearch_dropdown_limit
         if len(self._rows) > limit:
             self._too_much_rows = True
-            self._rows.pop() # Remove limit+1nth element
-
+            self._rows.pop()  # Remove limit+1nth element
 
     def _generate_livestatus_command(self):
         self._determine_livestatus_table()
-        columns_to_query           = set(self._get_livestatus_default_columns())
-        livestatus_filter_domains  = {} # Filters sorted by domain
+        columns_to_query = set(self._get_livestatus_default_columns())
+        livestatus_filter_domains = {}  # Filters sorted by domain
 
         self._used_search_plugins = self._get_used_search_plugins()
 
@@ -310,8 +294,8 @@ class LivestatusSearchConductor(LivestatusSearchBase):
             columns_to_query.update(set(plugin.get_livestatus_columns(self._livestatus_table)))
             name = plugin.get_filter_shortname()
             livestatus_filter_domains.setdefault(name, [])
-            livestatus_filter_domains[name].append(plugin.get_livestatus_filters(self._livestatus_table,
-                                                                                 self._used_filters))
+            livestatus_filter_domains[name].append(
+                plugin.get_livestatus_filters(self._livestatus_table, self._used_filters))
 
         # Combine filters of same domain (h/s/sg/hg/..)
         livestatus_filters = []
@@ -324,21 +308,22 @@ class LivestatusSearchConductor(LivestatusSearchBase):
             livestatus_filters.append("And: %d" % len(livestatus_filters))
 
         self._queried_livestatus_columns = list(columns_to_query)
-        self._livestatus_command         = "GET %s\nColumns: %s\n%s\n" % (self._livestatus_table,
-                                              " ".join(self._queried_livestatus_columns),
-                                              "\n".join(livestatus_filters))
+        self._livestatus_command = "GET %s\nColumns: %s\n%s\n" % (
+            self._livestatus_table,
+            " ".join(self._queried_livestatus_columns),
+            "\n".join(livestatus_filters),
+        )
 
         # Limit number of results
         limit = config.quicksearch_dropdown_limit
         self._livestatus_command += "Cache: reload\nLimit: %d\nColumnHeaders: off" % (limit + 1)
 
-
     def _get_used_search_plugins(self):
-        return [ plugin
-                 for plugin_class in match_plugin_registry.values()
-                 for plugin in [ plugin_class() ]
-                 if plugin.is_used_for_table(self._livestatus_table, self._used_filters) ]
-
+        return [
+            plugin for plugin_class in match_plugin_registry.values()
+            for plugin in [plugin_class()]
+            if plugin.is_used_for_table(self._livestatus_table, self._used_filters)
+        ]
 
     # Returns the livestatus table fitting the given filters
     def _determine_livestatus_table(self):
@@ -353,7 +338,6 @@ class LivestatusSearchConductor(LivestatusSearchBase):
         for shortname in self._used_filters.keys():
             plugin = self._get_plugin_with_shortname(shortname)
             preferred_tables.append(plugin.get_preferred_livestatus_table())
-
 
         table_to_query = ""
         if "services" in preferred_tables:
@@ -370,34 +354,32 @@ class LivestatusSearchConductor(LivestatusSearchBase):
 
         self._livestatus_table = table_to_query
 
-
     def _get_livestatus_default_columns(self):
         return {
-            "services":      ["description", "host_name"],
-            "hosts":         ["name"],
-            "hostgroups":    ["name"],
+            "services": ["description", "host_name"],
+            "hosts": ["name"],
+            "hostgroups": ["name"],
             "servicegroups": ["name"],
-        } [self._livestatus_table]
-
+        }[self._livestatus_table]
 
     def get_search_url_params(self):
         exact_match = self.num_rows() == 1
-        target_view = self._get_target_view(exact_match = exact_match)
+        target_view = self._get_target_view(exact_match=exact_match)
 
         url_params = [("view_name", target_view), ("filled_in", "filter")]
         for plugin in self._used_search_plugins:
-            match_info = plugin.get_matches(target_view,
-                                            exact_match and self._rows[0] or None,
-                                            self._livestatus_table,
-                                            self._used_filters,
-                                            rows = self._rows)
+            match_info = plugin.get_matches(
+                target_view,
+                exact_match and self._rows[0] or None,
+                self._livestatus_table,
+                self._used_filters,
+                rows=self._rows)
             if not match_info:
                 continue
             _text, url_filters = match_info
             url_params.extend(url_filters)
 
         return url_params
-
 
     def create_result_elements(self):
         self._elements = []
@@ -417,7 +399,8 @@ class LivestatusSearchConductor(LivestatusSearchBase):
                 if plugin.is_group_match():
                     skip_site = True
 
-                match_info = plugin.get_matches(target_view, row, self._livestatus_table, self._used_filters)
+                match_info = plugin.get_matches(target_view, row, self._livestatus_table,
+                                                self._used_filters)
                 if not match_info:
                     continue
                 text, url_filters = match_info
@@ -427,17 +410,14 @@ class LivestatusSearchConductor(LivestatusSearchBase):
             url_tokens = [("view_name", target_view)] + url_params
             if not skip_site:
                 url_tokens.append(("site", row.get("site")))
-            entry["url"] = self._build_url(url_tokens, restore_regex = True)
-
+            entry["url"] = self._build_url(url_tokens, restore_regex=True)
 
             entry["raw_data"] = row
             self._elements.append(entry)
 
         self._generate_display_texts()
 
-
-
-    def _get_target_view(self, exact_match = True):
+    def _get_target_view(self, exact_match=True):
         if exact_match:
             if self._livestatus_table == "hosts":
                 return "host"
@@ -457,14 +437,12 @@ class LivestatusSearchConductor(LivestatusSearchBase):
             elif self._livestatus_table == "servicegroups":
                 return "svcgroups"
 
-
     def _generate_display_texts(self):
         for element in self._elements:
             if self._livestatus_table == "services":
                 element["display_text"] = element["raw_data"]["description"]
             else:
                 element["display_text"] = element["text_tokens"][0][1]
-
 
         if self._element_texts_unique():
             return
@@ -475,7 +453,7 @@ class LivestatusSearchConductor(LivestatusSearchBase):
         if self._livestatus_table in ["hostgroups", "servicegroups"]:
             # Discard redundant hostgroups
             new_elements = []
-            used_groups  = set()
+            used_groups = set()
             for element in self._elements:
                 if element["display_text"] in used_groups:
                     continue
@@ -496,7 +474,6 @@ class LivestatusSearchConductor(LivestatusSearchBase):
                 else:
                     element["display_text"] += " <b>%s</b>" % hostname
 
-
     def _element_texts_unique(self):
         used_texts = set()
         for entry in self._elements:
@@ -506,13 +483,11 @@ class LivestatusSearchConductor(LivestatusSearchBase):
         return True
 
 
-
 class LivestatusQuicksearch(LivestatusSearchBase):
     def __init__(self, query):
         self._query = query
-        self._search_objects     = []    # Each of these objects do exactly one ls query
+        self._search_objects = []  # Each of these objects do exactly one ls query
         super(LivestatusQuicksearch, self).__init__()
-
 
     def generate_dropdown_results(self):
         try:
@@ -522,7 +497,6 @@ class LivestatusQuicksearch(LivestatusSearchBase):
 
         self._evaluate_results()
         self._render_dropdown_elements()
-
 
     def generate_search_url(self):
         try:
@@ -541,17 +515,17 @@ class LivestatusQuicksearch(LivestatusSearchBase):
                     restore_regex = True
                 break
         else:
-            url_params.extend([("view_name", "allservices"),
-                               ("filled_in", "filter"),
-                               ("service_regex", self._query)])
+            url_params.extend([
+                ("view_name", "allservices"),
+                ("filled_in", "filter"),
+                ("service_regex", self._query),
+            ])
 
-        return self._build_url(url_params, restore_regex = restore_regex)
-
+        return self._build_url(url_params, restore_regex=restore_regex)
 
     def _query_data(self):
         self._determine_search_objects()
         self._conduct_search()
-
 
     def _determine_search_objects(self):
         filter_names = {"%s" % x().get_filter_shortname() for x in match_plugin_registry.values()}
@@ -568,7 +542,7 @@ class LivestatusQuicksearch(LivestatusSearchBase):
             filter_spec = {}
             current_string = self._query
             for filter_type, offset in found_filters[-1::-1]:
-                filter_text = _to_regex(current_string[offset+len(filter_type):]).strip()
+                filter_text = _to_regex(current_string[offset + len(filter_type):]).strip()
                 filter_name = filter_type.strip().rstrip(":")
                 filter_spec.setdefault(filter_name, []).append(filter_text)
                 current_string = current_string[:offset]
@@ -577,8 +551,10 @@ class LivestatusQuicksearch(LivestatusSearchBase):
             # No explicit filters set.
             # Use configured quicksearch search order
             for (filter_name, filter_behaviour) in config.quicksearch_search_order:
-                self._search_objects.append(LivestatusSearchConductor({filter_name: [_to_regex(self._query)]}, filter_behaviour))
-
+                self._search_objects.append(
+                    LivestatusSearchConductor({
+                        filter_name: [_to_regex(self._query)]
+                    }, filter_behaviour))
 
     # Collect the raw data from livestatus
     def _conduct_search(self):
@@ -589,24 +565,25 @@ class LivestatusQuicksearch(LivestatusSearchBase):
 
             if total_rows > config.quicksearch_dropdown_limit:
                 search_object.remove_rows_from_end(total_rows - config.quicksearch_dropdown_limit)
-                raise TooManyRowsError(_("More than %d results") % config.quicksearch_dropdown_limit)
+                raise TooManyRowsError(
+                    _("More than %d results") % config.quicksearch_dropdown_limit)
 
             if search_object.row_limit_exceeded():
-                raise TooManyRowsError(_("More than %d results") % config.quicksearch_dropdown_limit)
+                raise TooManyRowsError(
+                    _("More than %d results") % config.quicksearch_dropdown_limit)
 
             if search_object.num_rows() > 0 and search_object.get_filter_behaviour() != "continue":
                 if search_object.get_filter_behaviour() == "finished_distinct":
                     # Discard all data of previous filters and break
-                    for i in range(idx-1, -1, -1):
-                        self._search_objects[i].remove_rows_from_end(config.quicksearch_dropdown_limit)
+                    for i in range(idx - 1, -1, -1):
+                        self._search_objects[i].remove_rows_from_end(
+                            config.quicksearch_dropdown_limit)
                 break
-
 
     # Generates elements out of the raw data
     def _evaluate_results(self):
         for search_object in self._search_objects:
             search_object.create_result_elements()
-
 
     # Renders the elements
     def _render_dropdown_elements(self):
@@ -617,14 +594,17 @@ class LivestatusQuicksearch(LivestatusSearchBase):
             if not search_object.num_rows():
                 continue
             elements = search_object.get_elements()
-            elements.sort(key = lambda x: x["display_text"])
+            elements.sort(key=lambda x: x["display_text"])
             if show_match_topics:
                 match_topic = search_object.get_match_topic()
                 html.div(_("Results for %s") % match_topic, class_="topic")
 
             for entry in elements:
-                html.a(entry["display_text"], id="result_%s" % self._query, href=entry["url"], target="main")
-
+                html.a(
+                    entry["display_text"],
+                    id="result_%s" % self._query,
+                    href=entry["url"],
+                    target="main")
 
 
 def generate_results(query):
@@ -656,23 +636,19 @@ class QuicksearchMatchPlugin(object):
     __metaclass__ = abc.ABCMeta
 
     def __init__(self, supported_livestatus_tables, preferred_livestatus_table, filter_shortname):
-        self._filter_shortname  = filter_shortname
+        self._filter_shortname = filter_shortname
         self._supported_livestatus_tables = supported_livestatus_tables
         self._preferred_livestatus_table = preferred_livestatus_table
         super(QuicksearchMatchPlugin, self).__init__()
 
-
     def get_filter_shortname(self):
         return self._filter_shortname
-
 
     def get_preferred_livestatus_table(self):
         return self._preferred_livestatus_table
 
-
     def is_filter_set(self, used_filters):
         return self.get_filter_shortname() in used_filters
-
 
     def is_used_for_table(self, livestatus_table, used_filters):
         # Check if this filters handles the table at all
@@ -684,34 +660,27 @@ class QuicksearchMatchPlugin(object):
 
         return True
 
-
     @abc.abstractmethod
     def get_match_topic(self):
         raise NotImplementedError()
-
 
     @abc.abstractmethod
     def get_livestatus_columns(self, livestatus_table):
         raise NotImplementedError()
 
-
     @abc.abstractmethod
     def get_livestatus_filters(self, livestatus_table, used_filters):
         raise NotImplementedError()
 
-
     @abc.abstractmethod
-    def get_matches(self, for_view, row, livestatus_table, used_filters, rows = None):
+    def get_matches(self, for_view, row, livestatus_table, used_filters, rows=None):
         raise NotImplementedError()
-
 
     def is_group_match(self):
         return False
 
-
     def _matches_regex(self, pattern, value):
         return re.match(pattern, value)
-
 
     def _create_textfilter_regex(self, used_filters):
         patterns = used_filters[self.get_filter_shortname()]
@@ -720,11 +689,9 @@ class QuicksearchMatchPlugin(object):
         return patterns[0]
 
 
-
 class MatchPluginRegistry(cmk.plugin_registry.ClassRegistry):
     def plugin_base_class(self):
         return QuicksearchMatchPlugin
-
 
     def _register(self, plugin_class):
         self._entries[plugin_class.__name__] = plugin_class
@@ -735,28 +702,26 @@ match_plugin_registry = MatchPluginRegistry()
 
 @match_plugin_registry.register
 class GroupMatchPlugin(QuicksearchMatchPlugin):
-    def __init__(self, group_type = None, filter_shortname = None):
-        super(GroupMatchPlugin, self).__init__(["%sgroups" % group_type, "%ss" % group_type, "services"],
-                                                "%sgroups" % group_type,
-                                                filter_shortname)
+    def __init__(self, group_type=None, filter_shortname=None):
+        super(GroupMatchPlugin, self).__init__(
+            ["%sgroups" % group_type, "%ss" % group_type, "services"],
+            "%sgroups" % group_type,
+            filter_shortname,
+        )
         self._group_type = group_type
-
 
     def is_group_match(self):
         return True
-
 
     def get_match_topic(self):
         if self._group_type == "host":
             return _("Hostgroup")
         return _("Servicegroup")
 
-
     def get_livestatus_columns(self, livestatus_table):
         if livestatus_table == "%sgroups" % self._group_type:
             return ["name"]
         return ["%s_groups" % self._group_type]
-
 
     def get_livestatus_filters(self, livestatus_table, used_filters):
         filter_lines = []
@@ -774,23 +739,28 @@ class GroupMatchPlugin(QuicksearchMatchPlugin):
 
         return "\n".join(filter_lines)
 
-
-    def get_matches(self, for_view, row, livestatus_table, used_filters, rows = None):
+    def get_matches(self, for_view, row, livestatus_table, used_filters, rows=None):
         supported_views = {
             ### View name    url fieldname,                  key in row
             # Group domains (hostgroups, servicegroups)
-            "hostgroup":    ["hostgroup",                    "name"],
-            "hostgroups":   ["hostgroup_regex",              "name"],
-            "servicegroup": ["servicegroup",                 "name"],
-            "svcgroups":    ["servicegroup_regex",           "name"],
+            "hostgroup": ["hostgroup", "name"],
+            "hostgroups": ["hostgroup_regex", "name"],
+            "servicegroup": ["servicegroup", "name"],
+            "svcgroups": ["servicegroup_regex", "name"],
 
             # Host/Service domain (hosts, services)
-            "allservices":  ["%sgroups" % self._group_type ,
-                             self._group_type == "service" and "groups" or "host_groups"],
-            "searchsvc":    ["%sgroups" % self._group_type ,
-                             self._group_type == "service" and "groups" or "host_groups"],
-            "searchhost":   ["%sgroups" % self._group_type ,
-                             self._group_type == "service" and "groups" or "host_groups"]
+            "allservices": [
+                "%sgroups" % self._group_type, self._group_type == "service" and "groups" or
+                "host_groups"
+            ],
+            "searchsvc": [
+                "%sgroups" % self._group_type, self._group_type == "service" and "groups" or
+                "host_groups"
+            ],
+            "searchhost": [
+                "%sgroups" % self._group_type, self._group_type == "service" and "groups" or
+                "host_groups"
+            ]
         }
 
         view_info = supported_views.get(for_view)
@@ -809,20 +779,16 @@ class GroupMatchPlugin(QuicksearchMatchPlugin):
         return value, [(filter_name, value)]
 
 
-
 @match_plugin_registry.register
 class ServiceMatchPlugin(QuicksearchMatchPlugin):
     def __init__(self):
         super(ServiceMatchPlugin, self).__init__(["services"], "services", "s")
 
-
     def get_match_topic(self):
         return _("Service Description")
 
-
     def get_livestatus_columns(self, livestatus_table):
         return ["service_description"]
-
 
     def get_livestatus_filters(self, livestatus_table, used_filters):
         filter_lines = []
@@ -834,8 +800,7 @@ class ServiceMatchPlugin(QuicksearchMatchPlugin):
 
         return "\n".join(filter_lines)
 
-
-    def get_matches(self, for_view, row, livestatus_table, used_filters, rows = None):
+    def get_matches(self, for_view, row, livestatus_table, used_filters, rows=None):
         supported_views = ["allservices", "searchsvc"]
         if for_view not in supported_views:
             return
@@ -848,13 +813,11 @@ class ServiceMatchPlugin(QuicksearchMatchPlugin):
         return field_value, [("service_regex", field_value)]
 
 
-
 @match_plugin_registry.register
 class HostMatchPlugin(QuicksearchMatchPlugin):
-    def __init__(self, livestatus_field = None, filter_shortname = None):
+    def __init__(self, livestatus_field=None, filter_shortname=None):
         super(HostMatchPlugin, self).__init__(["hosts", "services"], "hosts", filter_shortname)
-        self._livestatus_field = livestatus_field # address, name or alias
-
+        self._livestatus_field = livestatus_field  # address, name or alias
 
     def get_match_topic(self):
         if self._livestatus_field == "name":
@@ -863,47 +826,51 @@ class HostMatchPlugin(QuicksearchMatchPlugin):
             return _("Hostaddress")
         return _("Hostalias")
 
-
     def _get_real_fieldname(self, livestatus_table):
         if livestatus_table != "hosts":
             return "host_%s" % self._livestatus_field
         return self._livestatus_field
 
-
     def get_livestatus_columns(self, livestatus_table):
         return [self._get_real_fieldname(livestatus_table), "host_name"]
-
 
     def get_livestatus_filters(self, livestatus_table, used_filters):
         filter_lines = []
         for entry in used_filters.get(self.get_filter_shortname()):
-            filter_lines.append("Filter: %s ~~ %s" % (self._get_real_fieldname(livestatus_table), entry))
+            filter_lines.append(
+                "Filter: %s ~~ %s" % (self._get_real_fieldname(livestatus_table), entry))
 
         if len(filter_lines) > 1:
             filter_lines.append("Or: %d" % len(filter_lines))
 
         return "\n".join(filter_lines)
 
-
-    def get_matches(self, for_view, row, livestatus_table, used_filters, rows = None):
+    def get_matches(self, for_view, row, livestatus_table, used_filters, rows=None):
         supported_views = {
             # View name     Filter name
             # Exact matches (always uses hostname as filter)
-            "host":         {"name":    "host",
-                             "address": "host",
-                             "alias":   "host"},
-            "allservices":  {"name":    "host_regex",
-                             "address": "host_regex",
-                             "alias":   "host_regex"},
+            "host": {
+                "name": "host",
+                "address": "host",
+                "alias": "host"
+            },
+            "allservices": {
+                "name": "host_regex",
+                "address": "host_regex",
+                "alias": "host_regex"
+            },
             # Multi matches
-            "searchhost":   {"name":    "host_regex",
-                             "address": "host_address",
-                             "alias":   "hostalias"},
-            "searchsvc":    {"name":    "host_regex",
-                             "address": "host_address",
-                             "alias":   "hostalias"}
+            "searchhost": {
+                "name": "host_regex",
+                "address": "host_address",
+                "alias": "hostalias"
+            },
+            "searchsvc": {
+                "name": "host_regex",
+                "address": "host_address",
+                "alias": "hostalias"
+            }
         }
-
 
         view_info = supported_views.get(for_view)
         if not view_info:
@@ -913,8 +880,8 @@ class HostMatchPlugin(QuicksearchMatchPlugin):
 
         if row:
             field_value = row.get(self._get_real_fieldname(livestatus_table))
-            hostname    = row.get("host_name", row.get("name"))
-            url_info    = [(filter_name, hostname)]
+            hostname = row.get("host_name", row.get("name"))
+            url_info = [(filter_name, hostname)]
         else:
             field_value = self._create_textfilter_regex(used_filters)
             url_info = [(filter_name, field_value)]
@@ -924,12 +891,10 @@ class HostMatchPlugin(QuicksearchMatchPlugin):
         return field_value, url_info
 
 
-
 @match_plugin_registry.register
 class HosttagMatchPlugin(QuicksearchMatchPlugin):
     def __init__(self):
         super(HosttagMatchPlugin, self).__init__(["hosts", "services"], "hosts", "tg")
-
 
     def _get_hosttag_dict(self):
         lookup_dict = {}
@@ -943,10 +908,8 @@ class HosttagMatchPlugin(QuicksearchMatchPlugin):
     def get_match_topic(self):
         return _("Hosttag")
 
-
     def get_livestatus_columns(self, livestatus_table):
         return ["custom_variables"]
-
 
     def get_livestatus_filters(self, livestatus_table, used_filters):
         filter_lines = []
@@ -955,17 +918,16 @@ class HosttagMatchPlugin(QuicksearchMatchPlugin):
             raise MKGeneralException("You can only set up to three 'tg:' filters")
 
         for entry in used_filters.get(self.get_filter_shortname()):
-            filter_lines.append("Filter: host_custom_variables ~ TAGS (^|[ ])%s($|[ ])" % livestatus.lqencode(entry))
+            filter_lines.append("Filter: host_custom_variables ~ TAGS (^|[ ])%s($|[ ])" %
+                                livestatus.lqencode(entry))
 
         if len(filter_lines) > 1:
             filter_lines.append("And: %d" % len(filter_lines))
 
         return "\n".join(filter_lines)
 
-
-    def get_matches(self, for_view, row, livestatus_table, used_filters, rows = None):
-        supported_views = {"searchhost": "host_regex",
-                           "host":       "host"}
+    def get_matches(self, for_view, row, livestatus_table, used_filters, rows=None):
+        supported_views = {"searchhost": "host_regex", "host": "host"}
 
         filter_name = supported_views.get(for_view)
         if not filter_name:
@@ -981,7 +943,7 @@ class HosttagMatchPlugin(QuicksearchMatchPlugin):
         for idx, entry in enumerate(used_filters.get(self.get_filter_shortname())):
             if entry in hosttag_to_group_dict:
                 url_infos.append(("host_tag_%d_grp" % idx, hosttag_to_group_dict[entry]))
-                url_infos.append(("host_tag_%d_op"  % idx, "is"))
+                url_infos.append(("host_tag_%d_op" % idx, "is"))
                 url_infos.append(("host_tag_%d_val" % idx, entry))
 
         return "", url_infos
@@ -990,28 +952,29 @@ class HosttagMatchPlugin(QuicksearchMatchPlugin):
 @match_plugin_registry.register
 class ServiceGroupMatchPlugin(GroupMatchPlugin):
     def __init__(self):
-        super(ServiceGroupMatchPlugin, self).__init__(group_type = "service", filter_shortname = "sg")
+        super(ServiceGroupMatchPlugin, self).__init__(group_type="service", filter_shortname="sg")
 
 
 @match_plugin_registry.register
 class HostGroupMatchPlugin(GroupMatchPlugin):
     def __init__(self):
-        super(HostGroupMatchPlugin, self).__init__(group_type = "host", filter_shortname = "hg")
+        super(HostGroupMatchPlugin, self).__init__(group_type="host", filter_shortname="hg")
 
 
 @match_plugin_registry.register
 class HostNameMatchPlugin(HostMatchPlugin):
     def __init__(self):
-        super(HostNameMatchPlugin, self).__init__(livestatus_field = "name", filter_shortname = "h")
+        super(HostNameMatchPlugin, self).__init__(livestatus_field="name", filter_shortname="h")
 
 
 @match_plugin_registry.register
 class HostAliasMatchPlugin(HostMatchPlugin):
     def __init__(self):
-        super(HostAliasMatchPlugin, self).__init__(livestatus_field = "alias", filter_shortname = "al")
+        super(HostAliasMatchPlugin, self).__init__(livestatus_field="alias", filter_shortname="al")
 
 
 @match_plugin_registry.register
 class HostAddressMatchPlugin(HostMatchPlugin):
     def __init__(self):
-        super(HostAddressMatchPlugin, self).__init__(livestatus_field = "address", filter_shortname = "ad")
+        super(HostAddressMatchPlugin, self).__init__(
+            livestatus_field="address", filter_shortname="ad")

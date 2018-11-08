@@ -50,6 +50,7 @@ from . import (
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
+
 def render_wato(mini):
     if not config.wato_enabled:
         html.write_text(_("WATO is disabled."))
@@ -80,19 +81,19 @@ def render_wato(mini):
 
 
 sidebar_snapins["admin"] = {
-    "title" : _("WATO &middot; Configuration"),
-    "description" : _("Direct access to WATO - the web administration GUI of Check_MK"),
-    "render" : lambda: render_wato(False),
-    "refresh" : 60, # refresh pending changes, if other user modifies something
-    "allowed" : [ "admin", "user" ],
+    "title": _("WATO &middot; Configuration"),
+    "description": _("Direct access to WATO - the web administration GUI of Check_MK"),
+    "render": lambda: render_wato(False),
+    "refresh": 60,  # refresh pending changes, if other user modifies something
+    "allowed": ["admin", "user"],
 }
 
 sidebar_snapins["admin_mini"] = {
-    "title" : _("WATO &middot; Quickaccess"),
-    "description" : _("Access to WATO modules with only icons (saves space)"),
-    "render" : lambda: render_wato(True),
-    "refresh" : 60, # refresh pending changes, if other user modifies something
-    "allowed" : [ "admin", "user" ],
+    "title": _("WATO &middot; Quickaccess"),
+    "description": _("Access to WATO modules with only icons (saves space)"),
+    "render": lambda: render_wato(True),
+    "refresh": 60,  # refresh pending changes, if other user modifies something
+    "allowed": ["admin", "user"],
     "styles": """
 #snapin_admin_mini {
     padding-top: 6px;
@@ -127,6 +128,7 @@ sidebar_snapins["admin_mini"] = {
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
+
 def compute_foldertree():
     sites.live().set_prepend_site(True)
     query = "GET hosts\n" \
@@ -136,15 +138,14 @@ def compute_foldertree():
     sites.live().set_prepend_site(False)
     hosts.sort()
 
-    def get_folder(path, num = 0):
+    def get_folder(path, num=0):
         folder = watolib.Folder.folder(path)
         return {
-            'title':      folder.title() or path.split('/')[-1],
-            '.path':      path,
+            'title': folder.title() or path.split('/')[-1],
+            '.path': path,
             '.num_hosts': num,
-            '.folders':   {},
+            '.folders': {},
         }
-
 
     # After the query we have a list of lists where each
     # row is a folder with the number of hosts on this level.
@@ -171,7 +172,7 @@ def compute_foldertree():
     #
     # Now build the folder tree
     #
-    for folder_path, folder in sorted(user_folders.items(), reverse = True):
+    for folder_path, folder in sorted(user_folders.items(), reverse=True):
         if not folder_path:
             continue
         folder_parts = folder_path.split('/')
@@ -206,18 +207,21 @@ def compute_foldertree():
 # We fetch the information via livestatus - not from WATO.
 def render_tree_folder(tree_id, folder, js_func):
     subfolders = folder.get(".folders", {}).values()
-    subfolders.sort(cmp = lambda f1, f2: cmp(f1["title"].lower(), f2["title"].lower()))
+    subfolders.sort(cmp=lambda f1, f2: cmp(f1["title"].lower(), f2["title"].lower()))
 
     is_leaf = len(subfolders) == 0
 
     # Suppress indentation for non-emtpy root folder
     if folder['.path'] == '' and is_leaf:
-        html.open_ul() # empty root folder
+        html.open_ul()  # empty root folder
     elif folder and folder['.path'] != '':
         html.open_ul(style="padding-left:0px;")
 
-    title = html.render_a("%s (%d)" % (folder["title"], folder[".num_hosts"]), href="#", class_="link",
-                          onclick="%s(this, \'%s\');" % (js_func, folder[".path"]))
+    title = html.render_a(
+        "%s (%d)" % (folder["title"], folder[".num_hosts"]),
+        href="#",
+        class_="link",
+        onclick="%s(this, \'%s\');" % (js_func, folder[".path"]))
 
     if not is_leaf:
         html.begin_foldable_container(tree_id, "/" + folder[".path"], False, HTML(title))
@@ -233,9 +237,9 @@ def render_tree_folder(tree_id, folder, js_func):
 def sort_by_title(folders):
     def folder_cmp(f1, f2):
         return cmp(f1["title"].lower(), f2["title"].lower())
-    folders.sort(cmp = folder_cmp)
-    return folders
 
+    folders.sort(cmp=folder_cmp)
+    return folders
 
 
 def render_wato_foldertree():
@@ -253,8 +257,9 @@ def render_wato_foldertree():
 
     views.load_views()
     dashboard.load_dashboards()
-    topic_views  = visuals_by_topic(views.permitted_views().items() + dashboard.permitted_dashboards().items())
-    topics = [ (t, t) for t, _s in topic_views ]
+    topic_views = visuals_by_topic(views.permitted_views().items() +
+                                   dashboard.permitted_dashboards().items())
+    topics = [(t, t) for t, _s in topic_views]
 
     html.open_table()
     html.open_tr()
@@ -284,8 +289,12 @@ def render_wato_foldertree():
             default, style = '', 'display:none'
         else:
             default, style = selected_target, None
-        html.dropdown("target_%s" % topic, targets, deflt=default,
-                      onchange='wato_tree_target_changed(this)', style=style)
+        html.dropdown(
+            "target_%s" % topic,
+            targets,
+            deflt=default,
+            onchange='wato_tree_target_changed(this)',
+            style=style)
 
     html.close_td()
     html.close_tr()
@@ -297,13 +306,13 @@ def render_wato_foldertree():
 
 
 sidebar_snapins['wato_foldertree'] = {
-    'title'       : _('Tree of folders'),
-    'description' : _('This snapin shows the folders defined in WATO. It can be used to '
-                       'open views filtered by the WATO folder. It works standalone, without '
-                       'interaction with any other snapin.'),
-    'render'      : render_wato_foldertree,
-    'allowed'     : [ 'admin', 'user', 'guest' ],
-    'styles'      : """
+    'title': _('Tree of folders'),
+    'description': _('This snapin shows the folders defined in WATO. It can be used to '
+                     'open views filtered by the WATO folder. It works standalone, without '
+                     'interaction with any other snapin.'),
+    'render': render_wato_foldertree,
+    'allowed': ['admin', 'user', 'guest'],
+    'styles': """
 #snapin_wato_foldertree table {
     width: 100%;
     border-spacing: 0;
@@ -323,18 +332,20 @@ sidebar_snapins['wato_foldertree'] = {
 """
 }
 
+
 def render_wato_folders():
     user_folders = compute_foldertree()
 
     if user_folders:
         render_tree_folder("wato-folders", user_folders.values()[0], 'wato_folders_clicked')
 
+
 sidebar_snapins['wato_folders'] = {
-    'title'       : _('Folders'),
-    'description' : _('This snapin shows the folders defined in WATO. It can '
-                      'be used to open views filtered by the WATO folder. This '
-                      'snapin interacts with the "Views" snapin, when both are '
-                      'enabled.'),
-    'render'      : render_wato_folders,
-    'allowed'     : [ 'admin', 'user', 'guest' ],
+    'title': _('Folders'),
+    'description': _('This snapin shows the folders defined in WATO. It can '
+                     'be used to open views filtered by the WATO folder. This '
+                     'snapin interacts with the "Views" snapin, when both are '
+                     'enabled.'),
+    'render': render_wato_folders,
+    'allowed': ['admin', 'user', 'guest'],
 }

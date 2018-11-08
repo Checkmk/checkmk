@@ -29,31 +29,28 @@ from cmk.gui.i18n import _
 
 from . import SidebarSnapin, snapin_registry
 
+
 @snapin_registry.register
 class NagVisMaps(SidebarSnapin):
     @staticmethod
     def type_name():
         return "nagvis_maps"
 
-
     @classmethod
     def title(cls):
         return _("NagVis Maps")
-
 
     @classmethod
     def description(cls):
         return _("List of available NagVis maps. This only works with NagVis 1.5 and above. ")
 
-
     def show(self):
-        return "%snagvis/server/core/ajax_handler.php?mod=Multisite&act=getMaps" % (config.url_prefix())
-
+        return "%snagvis/server/core/ajax_handler.php?mod=Multisite&act=getMaps" % (
+            config.url_prefix())
 
     @classmethod
     def allowed_roles(cls):
-        return [ "admin", "user", "guest" ]
-
+        return ["admin", "user", "guest"]
 
     def styles(self):
         return """

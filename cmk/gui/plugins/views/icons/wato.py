@@ -70,13 +70,13 @@ def paint_wato(what, row, tags, custom_vars):
     if wato_folder != None:
         if what == "host":
             return wato_link(wato_folder, row["site"], row["host_name"], "edithost")
-        elif row["service_description"] in [ "Check_MK inventory", "Check_MK Discovery" ]:
+        elif row["service_description"] in ["Check_MK inventory", "Check_MK Discovery"]:
             return wato_link(wato_folder, row["site"], row["host_name"], "inventory")
 
 
 multisite_icons_and_actions['wato'] = {
-    'host_columns' : [ "filename" ],
-    'paint'        :  paint_wato,
+    'host_columns': ["filename"],
+    'paint': paint_wato,
 }
 
 #.
@@ -90,6 +90,7 @@ multisite_icons_and_actions['wato'] = {
 #   +----------------------------------------------------------------------+
 #   | Action for downloading the current agent output                      |
 #   '----------------------------------------------------------------------'
+
 
 def paint_download_agent_output(*args):
     return paint_download_host_info(*args, ty="agent")  # pylint: disable=no-value-for-parameter
@@ -114,9 +115,9 @@ def paint_download_host_info(what, row, tags, host_custom_vars, ty):
             return
 
         params = [
-            ("host",   row["host_name"]),
+            ("host", row["host_name"]),
             ("folder", wato_folder_from_filename(row["host_filename"])),
-            ("type",   ty),
+            ("type", ty),
             ("_start", "1"),
         ]
 
@@ -137,15 +138,15 @@ def paint_download_host_info(what, row, tags, host_custom_vars, ty):
 
 
 multisite_icons_and_actions['download_agent_output'] = {
-    'host_columns'    : [ "filename", "check_type" ],
-    'paint'           : paint_download_agent_output,
-    'toplevel'        : False,
-    'sort_index'      : 50,
+    'host_columns': ["filename", "check_type"],
+    'paint': paint_download_agent_output,
+    'toplevel': False,
+    'sort_index': 50,
 }
 
 multisite_icons_and_actions['download_snmp_walk'] = {
-    'host_columns'    : [ "filename" ],
-    'paint'           : paint_download_snmp_walk,
-    'toplevel'        : False,
-    'sort_index'      : 50,
+    'host_columns': ["filename"],
+    'paint': paint_download_snmp_walk,
+    'toplevel': False,
+    'sort_index': 50,
 }

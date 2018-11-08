@@ -29,7 +29,7 @@ CONFIGUREOPTS = \
 
 build:
 	tar xzf $(DIR).tar.gz
-	for p in patches/*.diff ; do \
+	for p in patches/*.dif ; do \
 		echo "applying $$p..." ; \
 		patch -p1 -b -d $(DIR) < $$p ; \
         done

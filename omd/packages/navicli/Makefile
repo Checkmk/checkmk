@@ -3,13 +3,6 @@ include ../../Makefile.omd
 NAME    = navicli
 VERSION = 0.7.1
 
-UNAME_M := $(shell uname -m)
-ifeq ($(UNAME_M),x86_64)
-    SOURCE_DIR=navisphere-64
-endif
-ifeq ($(UNAME_M),i686)
-    SOURCE_DIR=navisphere-32
-endif
 
 .PHONY: build install skel clean
 
@@ -23,9 +16,6 @@ build:
 # consequence, we install the libraries to a subdirectory which is not searched
 # and call the command via a wrapper which sets LD_LIBRARY_PATH.
 install:
-ifeq ($(SOURCE_DIR),)
-    $(warning unsupported architecture $(UNAME_M))
-else
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/bin
 	install -m 755 $(SOURCE_DIR)/bin/admsnap $(DESTDIR)$(OMD_ROOT)/bin
 	install -m 755 $(SOURCE_DIR)/bin/setlevel_cli.sh $(DESTDIR)$(OMD_ROOT)/bin
@@ -37,6 +27,5 @@ else
 	install -m 755 $(SOURCE_DIR)/lib/seccli/* $(DESTDIR)$(OMD_ROOT)/lib/seccli
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/navicli
 	cp -pr $(SOURCE_DIR)/seccli/CST $(DESTDIR)$(OMD_ROOT)/share/navicli
-endif
 
 skel:

@@ -36,7 +36,6 @@ import cmk.paths
 import cmk.gui.config as config
 import cmk.gui.views as views
 import cmk.gui.dashboard as dashboard
-import cmk.gui.pagetypes as pagetypes
 import cmk.gui.sites as sites
 from cmk.gui.htmllib import HTML
 from cmk.gui.i18n import _
@@ -54,84 +53,6 @@ from cmk.gui.plugins.sidebar import (
     heading,
     simplelink,
 )
-
-#.
-#   .--Views---------------------------------------------------------------.
-#   |                    __     ___                                        |
-#   |                    \ \   / (_) _____      _____                      |
-#   |                     \ \ / /| |/ _ \ \ /\ / / __|                     |
-#   |                      \ V / | |  __/\ V  V /\__ \                     |
-#   |                       \_/  |_|\___| \_/\_/ |___/                     |
-#   |                                                                      |
-#   '----------------------------------------------------------------------'
-
-
-def render_views():
-    views.load_views()
-    dashboard.load_dashboards()
-
-    def render_topic(topic, entries):
-        first = True
-        for t, title, name, is_view in entries:
-            if is_view and config.visible_views and name not in config.visible_views:
-                continue
-            if is_view and config.hidden_views and name in config.hidden_views:
-                continue
-            if t == topic:
-                if first:
-                    html.begin_foldable_container("views", topic, False, topic, indent=True)
-                    first = False
-                if is_view:
-                    bulletlink(title, "view.py?view_name=%s" % name, onclick = "return wato_views_clicked(this)")
-                elif "?name=" in name:
-                    bulletlink(title, name)
-                else:
-                    bulletlink(title, 'dashboard.py?name=%s' % name, onclick = "return wato_views_clicked(this)")
-
-        # TODO: One day pagestypes should handle the complete snapin.
-        # for page_type in pagetypes.all_page_types().values():
-        #     if issubclass(page_type, pagetypes.PageRenderer):
-        #         for t, title, url in page_type.sidebar_links():
-        #             if t == topic:
-        #                 bulletlink(title, url)
-
-        if not first: # at least one item rendered
-            html.end_foldable_container()
-
-    # TODO: One bright day drop this whole visuals stuff and only use page_types
-    page_type_topics = {}
-    for page_type in pagetypes.all_page_types().values():
-        if issubclass(page_type, pagetypes.PageRenderer):
-            for t, title, url in page_type.sidebar_links():
-                page_type_topics.setdefault(t, []).append((t, title, url, False))
-
-    visuals_topics_with_entries = visuals_by_topic(views.permitted_views().items() + dashboard.permitted_dashboards().items())
-    all_topics_with_entries = []
-    for topic, entries in visuals_topics_with_entries:
-        if topic in page_type_topics:
-            entries = entries + page_type_topics[topic]
-            del page_type_topics[topic]
-        all_topics_with_entries.append((topic, entries))
-
-    all_topics_with_entries += sorted(page_type_topics.items())
-
-    for topic, entries in all_topics_with_entries:
-        render_topic(topic, entries)
-
-
-    links = []
-    if config.user.may("general.edit_views"):
-        if config.debug:
-            links.append((_("Export"), "export_views.py"))
-        links.append((_("Edit"), "edit_views.py"))
-        footnotelinks(links)
-
-sidebar_snapins["views"] = {
-    "title" : _("Views"),
-    "description" : _("Links to global views and dashboards"),
-    "render" : render_views,
-    "allowed" : [ "user", "admin", "guest" ],
-}
 
 #.
 #   .--Dashboards----------------------------------------------------------.

@@ -189,38 +189,6 @@ sidebar_snapins["dashboards"] = {
 }
 
 #.
-#   .--Groups--------------------------------------------------------------.
-#   |                    ____                                              |
-#   |                   / ___|_ __ ___  _   _ _ __  ___                    |
-#   |                  | |  _| '__/ _ \| | | | '_ \/ __|                   |
-#   |                  | |_| | | | (_) | |_| | |_) \__ \                   |
-#   |                   \____|_|  \___/ \__,_| .__/|___/                   |
-#   |                                        |_|                           |
-#   '----------------------------------------------------------------------'
-
-def render_groups(what):
-    html.open_ul()
-    for name, alias in sites.all_groups(what):
-        url = "view.py?view_name=%sgroup&%sgroup=%s" % (what, what, html.urlencode(name))
-        bulletlink(alias or name, url)
-    html.close_ul()
-
-sidebar_snapins["hostgroups"] = {
-    "title" : _("Host Groups"),
-    "description" : _("Directs links to all host groups"),
-    "render" : lambda: render_groups("host"),
-    "restart":     True,
-    "allowed" : [ "user", "admin", "guest" ]
-}
-sidebar_snapins["servicegroups"] = {
-    "title" : _("Service Groups"),
-    "description" : _("Direct links to all service groups"),
-    "render" : lambda: render_groups("service"),
-    "restart":     True,
-    "allowed" : [ "user", "admin", "guest" ]
-}
-
-#.
 #   .--Hosts---------------------------------------------------------------.
 #   |                       _   _           _                              |
 #   |                      | | | | ___  ___| |_ ___                        |

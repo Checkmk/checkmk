@@ -1188,7 +1188,7 @@ class AutomationDiagHost(Automation):
                 access_data = {
                     "hostname": hostname,
                     "ipaddress": ipaddress,
-                    "credentials": snmp_community,
+                    "credentials": config.snmp_credentials_of(hostname),
                 }
                 data = snmp.get_snmp_table(access_data, None,
                        ('.1.3.6.1.2.1.1', ['1.0', '4.0', '5.0', '6.0']),

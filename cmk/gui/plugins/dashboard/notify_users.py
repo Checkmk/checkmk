@@ -90,10 +90,11 @@ function delete_user_notification(msg_id, btn) {
             message = entry["text"].replace("\n", " ")
 
             table.cell(_("Actions"), css="buttons", sortable=False)
-            html.icon_button("", _("Delete"), "delete", onclick="delete_user_notification('%s', this);" % msg_id)
+            html.icon_button(
+                "", _("Delete"), "delete", onclick="delete_user_notification('%s', this);" % msg_id)
 
             table.text_cell(_("Message"), message)
-            table.text_cell(_("Date"),    datetime)
+            table.text_cell(_("Date"), datetime)
 
         table.end()
         html.close_div()

@@ -58,8 +58,8 @@ class StaticTextDashlet(Dashlet):
     def vs_parameters(cls):
         return [
             ("text", TextUnicode(
-                title = _('Text'),
-                size = 50,
+                title=_('Text'),
+                size=50,
             )),
         ]
 

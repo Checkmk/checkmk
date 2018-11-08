@@ -31,7 +31,6 @@
 # [ [segment, segment, segment], [segment, segment] ] --> horizontal gespaltet.
 # Darin die vertikalen Balken.
 
-
 import math
 
 import cmk.gui.utils as utils
@@ -66,6 +65,7 @@ perfometers = {}
 #   |  Perf-O-Meter helper functions for old classical Perf-O-Meters.      |
 #   '----------------------------------------------------------------------'
 
+
 #helper function for perfometer tables
 def render_perfometer_td(perc, color):
     style = ["width: %d%%;" % int(float(perc)), "background-color: %s" % color]
@@ -81,34 +81,35 @@ def render_perfometer(data):
 
 # Paint linear performeter with one value
 def perfometer_linear(perc, color):
-    return render_perfometer([(perc, color), (100-perc, "white")])
+    return render_perfometer([(perc, color), (100 - perc, "white")])
 
 
 # Paint logarithm with base 10, half_value is being
 # displayed at 50% of the width
 def perfometer_logarithmic(value, half_value, base, color):
     return render_metricometer([
-        metrics.MetricometerRendererLogarithmic(None, None).get_stack_from_values(value, half_value, base, color)
+        metrics.MetricometerRendererLogarithmic(None, None).get_stack_from_values(
+            value, half_value, base, color)
     ])
 
 
 # prepare the rows for logarithmic perfometers (left or right)
 def calculate_half_row_logarithmic(left_or_right, value, color, half_value, base):
-        value = float(value)
+    value = float(value)
 
-        if value == 0.0:
-            pos = 0
-        else:
-            half_value = float(half_value)
-            h = math.log(half_value, base) # value to be displayed at 50%
-            pos = 25 + 10.0 * (math.log(value, base) - h)
-            if pos < 1:
-                pos = 1
-            if pos > 49:
-                pos = 49
-        if left_or_right == "right":
-            return [(pos, color), (50 - pos, "white")]
-        return [(50 - pos, "white"), (pos, color)]
+    if value == 0.0:
+        pos = 0
+    else:
+        half_value = float(half_value)
+        h = math.log(half_value, base)  # value to be displayed at 50%
+        pos = 25 + 10.0 * (math.log(value, base) - h)
+        if pos < 1:
+            pos = 1
+        if pos > 49:
+            pos = 49
+    if left_or_right == "right":
+        return [(pos, color), (50 - pos, "white")]
+    return [(50 - pos, "white"), (pos, color)]
 
 
 # Dual logarithmic Perf-O-Meter
@@ -122,8 +123,11 @@ def perfometer_logarithmic_dual(value_left, color_left, value_right, color_right
 def perfometer_logarithmic_dual_independent\
     (value_left, color_left, half_value_left, base_left, value_right, color_right, half_value_right, base_right):
     data = []
-    data.extend(calculate_half_row_logarithmic("left", value_left, color_left, half_value_left, base_left))
-    data.extend(calculate_half_row_logarithmic("right", value_right, color_right, half_value_right, base_right))
+    data.extend(
+        calculate_half_row_logarithmic("left", value_left, color_left, half_value_left, base_left))
+    data.extend(
+        calculate_half_row_logarithmic("right", value_right, color_right, half_value_right,
+                                       base_right))
     return render_perfometer(data)
 
 
@@ -139,10 +143,12 @@ def perfometer_logarithmic_dual_independent\
 #   |  Perf-O-Meters created by new metrics system                         |
 #   '----------------------------------------------------------------------'
 
+
 # Create HTML representation of Perf-O-Meter
 def render_metricometer(stack):
     if len(stack) not in (1, 2):
-        raise MKGeneralException(_("Invalid Perf-O-Meter definition %r: only one or two entries are allowed") % stack)
+        raise MKGeneralException(
+            _("Invalid Perf-O-Meter definition %r: only one or two entries are allowed") % stack)
     h = HTML().join(map(render_perfometer, stack))
     if len(stack) == 2:
         h = html.render_div(h, class_="stacked")

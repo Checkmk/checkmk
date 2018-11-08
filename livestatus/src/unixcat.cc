@@ -131,7 +131,8 @@ int main(int argc, char **argv) {
     /* Connect */
     struct sockaddr_un sockaddr;
     sockaddr.sun_family = AF_UNIX;
-    strncpy(sockaddr.sun_path, unixpath.c_str(), sizeof(sockaddr.sun_path));
+    strncpy(sockaddr.sun_path, unixpath.c_str(), sizeof(sockaddr.sun_path) - 1);
+    sockaddr.sun_path[sizeof(sockaddr.sun_path) - 1] = '\0';
     if (connect(sock, reinterpret_cast<struct sockaddr *>(&sockaddr),
                 sizeof(sockaddr)) != 0) {
         printErrno("Couldn't connect to UNIX-socket at " + unixpath);

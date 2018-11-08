@@ -44,6 +44,7 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 
 from cmk.notification_plugins import utils
+import cmk.site as site
 
 
 def tmpl_head_html(html_section):
@@ -711,7 +712,7 @@ def render_cmk_graphs(context):
         svc_desc = context["SERVICEDESC"]
 
     url = "http://localhost:%d/%s/check_mk/ajax_graph_images.py?host=%s&service=%s" % \
-                    (get_apache_port(), os.environ["OMD_SITE"],
+                    (site.get_apache_port(), os.environ["OMD_SITE"],
                      urllib.quote(context["HOSTNAME"]), urllib.quote(svc_desc))
 
     try:
@@ -734,22 +735,8 @@ def render_cmk_graphs(context):
     return map(base64.b64decode, base64_strings)
 
 
-def get_omd_config(key):
-    for l in file(os.environ["OMD_ROOT"] + "/etc/omd/site.conf"):
-        if l.startswith(key + "="):
-            return l.split("=")[-1].strip("'\n")
-    return None
-
-
-def get_apache_port():
-    port = get_omd_config("CONFIG_APACHE_TCP_PORT")
-    if port is None:
-        return 80
-    return int(port)
-
-
 def use_cmk_graphs():
-    return get_omd_config("CONFIG_CORE") == "cmc"
+    return site.get_omd_config("CONFIG_CORE") == "cmc"
 
 
 def render_performance_graphs(context):

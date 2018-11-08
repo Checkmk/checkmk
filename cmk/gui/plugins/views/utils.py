@@ -23,7 +23,6 @@
 # License along with GNU Make; see the file  COPYING.  If  not,  write
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
-
 """Module to hold shared code for internals and the plugins"""
 
 # TODO: More feature related splitting up would be better
@@ -52,6 +51,7 @@ from cmk.gui.i18n import _
 from cmk.gui.globals import html
 from cmk.gui.exceptions import MKGeneralException
 
+
 # TODO: Better name it PainterOptions or DisplayOptions? There are options which only affect
 # painters, but some which affect generic behaviour of the views, so DisplayOptions might
 # be better.
@@ -60,22 +60,21 @@ class PainterOptions(object):
     These options are controlled throught the painter options form which
     is accessible through the small monitor icon on the top left of the
     views."""
+
     def __init__(self):
         super(PainterOptions, self).__init__()
         # The names of the painter options used by the current view
         self._used_option_names = None
         # The effective options for this view
-        self._options           = {}
-
+        self._options = {}
 
     def load(self, view_name=None):
         self._load_from_config(view_name)
 
-
     # Load the options to be used for this view
     def _load_used_options(self, view):
         if self._used_option_names != None:
-            return # only load once per request
+            return  # only load once per request
 
         options = set([])
 
@@ -90,10 +89,9 @@ class PainterOptions(object):
         # TODO: Improve sorting. Add a sort index?
         self._used_option_names = sorted(options)
 
-
     def _load_from_config(self, view_name):
         if self._is_anonymous_view(view_name):
-            return # never has options
+            return  # never has options
 
         if not self.painter_options_permitted():
             return
@@ -102,16 +100,13 @@ class PainterOptions(object):
         vo = config.user.load_file("viewoptions", {})
         self._options = vo.get(view_name, {})
 
-
     def _is_anonymous_view(self, view_name):
         return view_name == None
-
 
     def save_to_config(self, view_name):
         vo = config.user.load_file("viewoptions", {}, lock=True)
         vo[view_name] = self._options
         config.user.save_file("viewoptions", vo)
-
 
     def update_from_url(self, view_name, view):
         self._load_used_options(view)
@@ -125,7 +120,6 @@ class PainterOptions(object):
 
         elif html.has_var("_update_painter_options"):
             self._set_from_submitted_form(view_name)
-
 
     def _set_from_submitted_form(self, view_name):
         # TODO: Remove all keys that are in multisite_painter_options
@@ -144,7 +138,6 @@ class PainterOptions(object):
 
         if modified:
             self.save_to_config(view_name)
-
 
     def _clear_painter_options(self, view_name):
         # TODO: This never removes options that are not existant anymore
@@ -165,22 +158,18 @@ class PainterOptions(object):
         for varname in html.all_varnames_with_prefix("po_"):
             html.del_var(varname)
 
-
     def get_valuespec_of(self, name):
         opt = multisite_painter_options[name]
         if type(lambda: None) == type(opt["valuespec"]):
             return opt["valuespec"]()
         return opt["valuespec"]
 
-
     def _is_set(self, name):
         return name in self._options
-
 
     # Sets a painter option value (only for this request). Is not persisted!
     def set(self, name, value):
         self._options[name] = value
-
 
     # Returns either the set value, the provided default value or if none
     # provided, it returns the default value of the valuespec.
@@ -197,24 +186,19 @@ class PainterOptions(object):
                 pass
         return self._options.get(name, dflt)
 
-
     # Not falling back to a default value, simply returning None in case
     # the option is not set.
     def get_without_default(self, name):
         return self._options.get(name)
 
-
     def get_all(self):
         return self._options
-
 
     def painter_options_permitted(self):
         return config.user.may("general.painter_options")
 
-
     def painter_option_form_enabled(self):
         return self._used_option_names and self.painter_options_permitted()
-
 
     def show_form(self, view):
         self._load_used_options(view)
@@ -284,28 +268,29 @@ def _create_dict_key(value):
     if type(value) in (list, tuple):
         return tuple(map(_create_dict_key, value))
     elif type(value) == dict:
-        return tuple([ (k, _create_dict_key(v)) for (k, v) in sorted(value.items()) ])
+        return tuple([(k, _create_dict_key(v)) for (k, v) in sorted(value.items())])
     return value
 
 
 # TODO: Refactor to plugin_registries
-multisite_painter_options  = {}
-multisite_datasources      = {}
-multisite_layouts          = {}
-multisite_painters         = {}
-multisite_sorters          = {}
-multisite_builtin_views    = {}
-multisite_commands         = []
-multisite_command_groups   = {}
-view_hooks                 = {}
-inventory_displayhints     = {}
+multisite_painter_options = {}
+multisite_datasources = {}
+multisite_layouts = {}
+multisite_painters = {}
+multisite_sorters = {}
+multisite_builtin_views = {}
+multisite_commands = []
+multisite_command_groups = {}
+view_hooks = {}
+inventory_displayhints = {}
 # For each view a function can be registered that has to return either True
 # or False to show a view as context link
-view_is_enabled            = {}
+view_is_enabled = {}
 
 
 def view_title(view):
     return visuals.visual_title('view', view)
+
 
 from cmk.gui.display_options import display_options
 
@@ -313,10 +298,11 @@ from cmk.gui.display_options import display_options
 # it contains request specific information
 painter_options = PainterOptions()
 
+
 def register_command_group(ident, title, sort_index):
     multisite_command_groups[ident] = {
-        "title"      : title,
-        "sort_index" : sort_index,
+        "title": title,
+        "sort_index": sort_index,
     }
 
 
@@ -324,6 +310,7 @@ def transform_action_url(url_spec):
     if type(url_spec) == tuple:
         return url_spec
     return (url_spec, None)
+
 
 def is_stale(row):
     return row.get('service_staleness', row.get('host_staleness', 0)) >= config.staleness_threshold
@@ -340,7 +327,8 @@ def paint_host_list(site, hosts):
 
 
 def format_plugin_output(output, row):
-    return cmk.gui.view_utils.format_plugin_output(output, row, shall_escape=config.escape_plugin_output)
+    return cmk.gui.view_utils.format_plugin_output(
+        output, row, shall_escape=config.escape_plugin_output)
 
 
 def link_to_view(content, row, view_name):
@@ -377,7 +365,7 @@ def url_to_view(row, view_name):
 
         # See get_link_filter_names() comment for details
         for src_key, dst_key in visuals.get_link_filter_names(view, datasource['infos'],
-                                                datasource.get('link_filters', {})):
+                                                              datasource.get('link_filters', {})):
             try:
                 url_vars += visuals.get_filter(src_key).variable_settings(row)
             except KeyError:
@@ -388,8 +376,11 @@ def url_to_view(row, view_name):
             except KeyError:
                 pass
 
-        add_site_hint = visuals.may_add_site_hint(view_name, info_keys=datasource["infos"],
-                                                  single_info_keys=view["single_infos"], filter_names=dict(url_vars).keys())
+        add_site_hint = visuals.may_add_site_hint(
+            view_name,
+            info_keys=datasource["infos"],
+            single_info_keys=view["single_infos"],
+            filter_names=dict(url_vars).keys())
         if add_site_hint and row.get('site'):
             url_vars.append(('site', row['site']))
 
@@ -408,10 +399,9 @@ def get_host_tags(row):
     if type(row.get("host_custom_variable_names")) != list:
         return ""
 
-    for name, val in zip(row["host_custom_variable_names"],
-                         row["host_custom_variable_values"]):
+    for name, val in zip(row["host_custom_variable_names"], row["host_custom_variable_values"]):
         if name == "TAGS":
-            return  val
+            return val
     return ""
 
 
@@ -451,7 +441,6 @@ def paint_age(timestamp, has_been_checked, bold_if_younger_than, mode=None, what
     elif what == 'both' and age > 0:
         output_format = "%%s %s" % _("ago")
 
-
     # Time delta less than two days => make relative time
     if age < 0:
         age = -age
@@ -476,16 +465,16 @@ def paint_nagiosflag(row, field, bold_if_nonzero):
 
 def declare_simple_sorter(name, title, column, func):
     multisite_sorters[name] = {
-        "title"   : title,
-        "columns" : [ column ],
-        "cmp"     : lambda r1, r2: func(column, r1, r2)
+        "title": title,
+        "columns": [column],
+        "cmp": lambda r1, r2: func(column, r1, r2)
     }
 
 
-def declare_1to1_sorter(painter_name, func, col_num = 0, reverse = False):
+def declare_1to1_sorter(painter_name, func, col_num=0, reverse=False):
     multisite_sorters[painter_name] = {
-        "title"   : multisite_painters[painter_name]['title'],
-        "columns" : multisite_painters[painter_name]['columns'],
+        "title": multisite_painters[painter_name]['title'],
+        "columns": multisite_painters[painter_name]['columns'],
     }
     if not reverse:
         multisite_sorters[painter_name]["cmp"] = \
@@ -532,7 +521,7 @@ def cmp_service_name_equiv(r):
     elif r == "Check_MK Discovery":
         return -4
     elif r == "Check_MK inventory":
-        return -3 # FIXME: Remove old name one day
+        return -3  # FIXME: Remove old name one day
     elif r == "Check_MK HW/SW Inventory":
         return -2
     return 0
@@ -548,26 +537,26 @@ def cmp_ip_address(column, r1, r2):
             return tuple(int(part) for part in ip.split('.'))
         except:
             return ip
+
     v1, v2 = split_ip(r1.get(column, '')), split_ip(r2.get(column, ''))
     return cmp(v1, v2)
 
 
 def get_custom_var(row, key):
-    for name, val in zip(row["custom_variable_names"],
-                         row["custom_variable_values"]):
+    for name, val in zip(row["custom_variable_names"], row["custom_variable_values"]):
         if name == key:
-            return  val
+            return val
     return ""
 
 
-def get_perfdata_nth_value(row, n, remove_unit = False):
+def get_perfdata_nth_value(row, n, remove_unit=False):
     perfdata = row.get("service_perf_data")
     if not perfdata:
         return ''
     try:
         parts = perfdata.split()
         if len(parts) <= n:
-            return "" # too few values in perfdata
+            return ""  # too few values in perfdata
         _varname, rest = parts[n].split("=")
         number = rest.split(';')[0]
         # Remove unit. Why should we? In case of sorter (numeric)
@@ -583,6 +572,7 @@ def get_perfdata_nth_value(row, n, remove_unit = False):
 # TODO: Refactor to caching object
 _taggroups_by_id = {}
 
+
 def get_tag_group(tgid):
     # Build a cache
     if not _taggroups_by_id:
@@ -590,7 +580,6 @@ def get_tag_group(tgid):
             _taggroups_by_id[entry[0]] = (entry[1], entry[2])
 
     return _taggroups_by_id.get(tgid, (_("N/A"), []))
-
 
 
 # Retrieve data via livestatus, convert into list of dicts,
@@ -602,8 +591,13 @@ def get_tag_group(tgid):
 # add_headers: additional livestatus headers to add
 # only_sites: list of sites the query is limited to
 # limit: maximum number of data rows to query
-def query_data(datasource, columns, add_columns, add_headers,
-               only_sites = None, limit = None, tablename=None):
+def query_data(datasource,
+               columns,
+               add_columns,
+               add_headers,
+               only_sites=None,
+               limit=None,
+               tablename=None):
     if only_sites is None:
         only_sites = []
 
@@ -623,9 +617,9 @@ def query_data(datasource, columns, add_columns, add_headers,
     if "log" not in datasource["infos"]:
         state_columns = []
         if "service" in datasource["infos"]:
-            state_columns += [ "service_has_been_checked", "service_state" ]
+            state_columns += ["service_has_been_checked", "service_state"]
         if "host" in datasource["infos"]:
-            state_columns += [ "host_has_been_checked", "host_state" ]
+            state_columns += ["host_has_been_checked", "host_state"]
         for c in state_columns:
             if c not in columns:
                 columns.append(c)
@@ -633,10 +627,10 @@ def query_data(datasource, columns, add_columns, add_headers,
     auth_domain = datasource.get("auth_domain", "read")
 
     # Remove columns which are implicitely added by the datasource
-    columns = [ c for c in columns if c not in add_columns ]
+    columns = [c for c in columns if c not in add_columns]
     query = "GET %s\n" % tablename
-    rows = do_query_data(query, columns, add_columns, merge_column,
-                         add_headers, only_sites, limit, auth_domain)
+    rows = do_query_data(query, columns, add_columns, merge_column, add_headers, only_sites, limit,
+                         auth_domain)
 
     # Datasource may have optional post processing function to filter out rows
     post_process_func = datasource.get("post_process")
@@ -645,14 +639,14 @@ def query_data(datasource, columns, add_columns, add_headers,
     return rows
 
 
-def do_query_data(query, columns, add_columns, merge_column,
-                  add_headers, only_sites, limit, auth_domain):
+def do_query_data(query, columns, add_columns, merge_column, add_headers, only_sites, limit,
+                  auth_domain):
     query += "Columns: %s\n" % " ".join(columns)
     query += add_headers
     sites.live().set_prepend_site(True)
 
     if limit != None:
-        sites.live().set_limit(limit + 1) # + 1: We need to know, if limit is exceeded
+        sites.live().set_limit(limit + 1)  # + 1: We need to know, if limit is exceeded
     else:
         sites.live().set_limit(None)
 
@@ -662,7 +656,6 @@ def do_query_data(query, columns, add_columns, merge_column,
         html.tt(query.replace('\n', '<br>\n'))
         html.close_div()
 
-
     if only_sites:
         sites.live().set_only_sites(only_sites)
     sites.live().set_auth_domain(auth_domain)
@@ -670,7 +663,7 @@ def do_query_data(query, columns, add_columns, merge_column,
     sites.live().set_auth_domain("read")
     sites.live().set_only_sites(None)
     sites.live().set_prepend_site(False)
-    sites.live().set_limit() # removes limit
+    sites.live().set_limit()  # removes limit
 
     if merge_column:
         data = _merge_data(data, columns)
@@ -678,7 +671,7 @@ def do_query_data(query, columns, add_columns, merge_column,
     # convert lists-rows into dictionaries.
     # performance, but makes live much easier later.
     columns = ["site"] + columns + add_columns
-    rows = [ dict(zip(columns, row)) for row in data ]
+    rows = [dict(zip(columns, row)) for row in data]
 
     return rows
 
@@ -689,7 +682,7 @@ def do_query_data(query, columns, add_columns, merge_column,
 # to be the *second* column (right after the site column)
 def _merge_data(data, columns):
     merged = {}
-    mergefuncs = [lambda a,b: ""] # site column is not merged
+    mergefuncs = [lambda a, b: ""]  # site column is not merged
 
     def worst_service_state(a, b):
         if a == 2 or b == 2:
@@ -704,27 +697,27 @@ def _merge_data(data, columns):
     for c in columns:
         _tablename, col = c.split("_", 1)
         if col.startswith("num_") or col.startswith("members"):
-            mergefunc = lambda a,b: a+b
+            mergefunc = lambda a, b: a + b
         elif col.startswith("worst_service"):
             return worst_service_state
         elif col.startswith("worst_host"):
             return worst_host_state
         else:
-            mergefunc = lambda a,b: a
+            mergefunc = lambda a, b: a
         mergefuncs.append(mergefunc)
 
     for row in data:
         mergekey = row[1]
         if mergekey in merged:
             oldrow = merged[mergekey]
-            merged[mergekey] = [ f(a,b) for f,a,b in zip(mergefuncs, oldrow, row) ]
+            merged[mergekey] = [f(a, b) for f, a, b in zip(mergefuncs, oldrow, row)]
         else:
             merged[mergekey] = row
 
     # return all rows sorted according to merge key
     mergekeys = merged.keys()
     mergekeys.sort()
-    return [ merged[k] for k in mergekeys ]
+    return [merged[k] for k in mergekeys]
 
 
 def join_row(row, cell):
@@ -741,9 +734,9 @@ def get_view_infos(view):
 
 def replace_action_url_macros(url, what, row):
     macros = {
-        "HOSTNAME"    : row['host_name'],
-        "HOSTADDRESS" : row['host_address'],
-        "USER_ID"     : config.user.id,
+        "HOSTNAME": row['host_name'],
+        "HOSTADDRESS": row['host_address'],
+        "USER_ID": config.user.id,
     }
     if what == 'service':
         macros.update({
@@ -756,8 +749,9 @@ def replace_action_url_macros(url, what, row):
 
     return url
 
+
 # Intelligent Links to PNP4Nagios 0.6.X
-def pnp_url(row, what, how = 'graph'):
+def pnp_url(row, what, how='graph'):
     sitename = row["site"]
     host = cmk.utils.pnp_cleanup(row["host_name"])
     if what == "host":
@@ -798,8 +792,10 @@ def render_cache_info(what, row):
 
 def load_all_views():
     # Skip views which do not belong to known datasources
-    all_views = visuals.load('views', multisite_builtin_views,
-                    skip_func = lambda v: v['datasource'] not in multisite_datasources)
+    all_views = visuals.load(
+        'views',
+        multisite_builtin_views,
+        skip_func=lambda v: v['datasource'] not in multisite_datasources)
     return _transform_old_views(all_views)
 
 
@@ -811,10 +807,10 @@ def get_permitted_views(all_views):
 # FIXME: Can be removed one day. Mark as incompatible change or similar.
 def _transform_old_views(all_views):
     for view in all_views.values():
-        ds_name    = view['datasource']
+        ds_name = view['datasource']
         datasource = multisite_datasources[ds_name]
 
-        if "context" not in view: # legacy views did not have this explicitly
+        if "context" not in view:  # legacy views did not have this explicitly
             view.setdefault("user_sortable", True)
 
         if 'context_type' in view:
@@ -860,14 +856,15 @@ def _transform_old_views(all_views):
                     # For all other context types assume the view is showing multiple objects
                     # and the datasource can simply be gathered from the datasource
                     view['single_infos'] = []
-            except: # Exceptions can happen for views saved with certain GIT versions
+            except:  # Exceptions can happen for views saved with certain GIT versions
                 if config.debug:
                     raise
 
         # Convert from show_filters, hide_filters, hard_filters and hard_filtervars
         # to context construct
         if 'context' not in view:
-            view['show_filters'] = view['hide_filters'] + view['hard_filters'] + view['show_filters']
+            view[
+                'show_filters'] = view['hide_filters'] + view['hard_filters'] + view['show_filters']
 
             single_keys = visuals.get_single_info_keys(view)
 
@@ -877,7 +874,7 @@ def _transform_old_views(all_views):
             all_vars = {}
             for filter_name in view['show_filters']:
                 if filter_name in single_keys:
-                    continue # skip conflictings vars / filters
+                    continue  # skip conflictings vars / filters
 
                 context.setdefault(filter_name, {})
                 try:
@@ -954,7 +951,7 @@ def _transform_old_views(all_views):
             view['context'] = context
 
         # Cleanup unused attributes
-        for k in [ 'hide_filters', 'hard_filters', 'show_filters', 'hard_filtervars' ]:
+        for k in ['hide_filters', 'hard_filters', 'show_filters', 'hard_filtervars']:
             try:
                 del view[k]
             except KeyError:
@@ -976,6 +973,7 @@ def _transform_old_views(all_views):
 #   | painter to render a table cell.                                      |
 #   '----------------------------------------------------------------------'
 
+
 # A cell is an instance of a painter in a view (-> a cell or a grouping cell)
 class Cell(object):
     # Wanted to have the "parse painter spec logic" in one place (The Cell() class)
@@ -989,19 +987,17 @@ class Cell(object):
 
         return painter_name in multisite_painters
 
-
     # Wanted to have the "parse painter spec logic" in one place (The Cell() class)
     # but this should be cleaned up more. TODO: Move this to another place
     @staticmethod
     def is_join_cell(painter_spec):
         return len(painter_spec) >= 4
 
-
     def __init__(self, view, painter_spec=None):
-        self._view               = view
-        self._painter_name       = None
-        self._painter_params     = None
-        self._link_view_name     = None
+        self._view = view
+        self._painter_name = None
+        self._painter_params = None
+        self._link_view_name = None
         self._tooltip_painter_name = None
 
         if painter_spec:
@@ -1037,7 +1033,6 @@ class Cell(object):
         if len(painter_spec) >= 3 and Cell.painter_exists((painter_spec[2], None)):
             self._tooltip_painter_name = painter_spec[2]
 
-
     # Get a list of columns we need to fetch in order to render this cell
     def needed_columns(self):
         columns = set(get_painter_columns(self.painter()))
@@ -1047,7 +1042,9 @@ class Cell(object):
                 link_view = self._link_view()
                 if link_view:
                     # TODO: Clean this up here
-                    for filt in [ visuals.get_filter(fn) for fn in visuals.get_single_info_keys(link_view) ]:
+                    for filt in [
+                            visuals.get_filter(fn) for fn in visuals.get_single_info_keys(link_view)
+                    ]:
                         columns.update(filt.link_columns)
 
         if self.has_tooltip():
@@ -1055,18 +1052,14 @@ class Cell(object):
 
         return columns
 
-
     def is_joined(self):
         return False
-
 
     def join_service(self):
         return None
 
-
     def _has_link(self):
         return self._link_view_name != None
-
 
     def _link_view(self):
         try:
@@ -1074,22 +1067,17 @@ class Cell(object):
         except KeyError:
             return None
 
-
     def painter(self):
         return multisite_painters[self._painter_name]
-
 
     def painter_name(self):
         return self._painter_name
 
-
     def export_title(self):
         return self._painter_name
 
-
     def painter_options(self):
         return self.painter().get("options", [])
-
 
     # The parameters configured in the view for this painter. In case the
     # painter has params, it defaults to the valuespec default value and
@@ -1103,25 +1091,21 @@ class Cell(object):
             return vs_painter_params.default_value()
         return self._painter_params
 
-
     def title(self, use_short=True):
         painter = self.painter()
         if use_short:
             return self._get_short_title(painter)
         return self._get_long_title(painter)
 
-
     def _get_short_title(self, painter):
         if type(painter.get("short")) in [types.FunctionType, types.MethodType]:
             return painter["short"](self.painter_parameters())
         return painter.get("short", self._get_long_title(painter))
 
-
     def _get_long_title(self, painter):
         if type(painter.get("title")) in [types.FunctionType, types.MethodType]:
             return painter["title"](self.painter_parameters())
         return painter["title"]
-
 
     # Can either be:
     # True       : Is printable in PDF
@@ -1130,18 +1114,14 @@ class Cell(object):
     def printable(self):
         return self.painter().get("printable", True)
 
-
     def has_tooltip(self):
         return self._tooltip_painter_name != None
-
 
     def tooltip_painter_name(self):
         return self._tooltip_painter_name
 
-
     def tooltip_painter(self):
         return multisite_painters[self._tooltip_painter_name]
-
 
     def paint_as_header(self, is_last_column_header=False):
         # Optional: Sort link in title cell
@@ -1161,9 +1141,9 @@ class Cell(object):
             if display_options.title_options:
                 params.append(('display_options', display_options.title_options))
 
-            classes += [ "sort", get_primary_sorter_order(self._view, self.painter_name()) ]
+            classes += ["sort", get_primary_sorter_order(self._view, self.painter_name())]
             onclick = "location.href=\'%s\'" % html.makeuri(params, 'sort')
-            title   = _('Sort by %s') % self.title()
+            title = _('Sort by %s') % self.title()
 
         if is_last_column_header:
             classes.append("last_col")
@@ -1172,7 +1152,6 @@ class Cell(object):
         html.write(self.title())
         html.close_th()
         #html.guitest_record_output("view", ("header", title))
-
 
     def _sort_url(self):
         """
@@ -1195,10 +1174,10 @@ class Cell(object):
         sorter_name = get_sorter_name_of_painter(self.painter_name())
         if self.is_joined():
             # TODO: Clean this up and then remove Cell.join_service()
-            this_asc_sorter  = (sorter_name, False, self.join_service())
+            this_asc_sorter = (sorter_name, False, self.join_service())
             this_desc_sorter = (sorter_name, True, self.join_service())
         else:
-            this_asc_sorter  = (sorter_name, False)
+            this_asc_sorter = (sorter_name, False)
             this_desc_sorter = (sorter_name, True)
 
         if user_sort and this_asc_sorter == user_sort[0]:
@@ -1212,7 +1191,7 @@ class Cell(object):
         else:
             # First click: add this sorter as primary user sorter
             # Maybe the sorter is already in the user sorters or view sorters, remove it
-            for s in [ user_sort, view_sort ]:
+            for s in [user_sort, view_sort]:
                 if this_asc_sorter in s:
                     s.remove(this_asc_sorter)
                 if this_desc_sorter in s:
@@ -1229,16 +1208,13 @@ class Cell(object):
 
         return ','.join(p)
 
-
-
     def render(self, row):
         row = join_row(row, self)
 
         try:
             tdclass, content = self.render_content(row)
         except:
-            logger.exception("Failed to render painter '%s' (Row: %r)" %
-                                        (self._painter_name, row))
+            logger.exception("Failed to render painter '%s' (Row: %r)" % (self._painter_name, row))
             raise
 
         if tdclass == None:
@@ -1259,7 +1235,6 @@ class Cell(object):
             content = '<span title="%s">%s</span>' % (tooltip_text, content)
 
         return tdclass, content
-
 
     # Same as self.render() for HTML output: Gets a painter and a data
     # row and creates the text for being painted.
@@ -1301,15 +1276,12 @@ class Cell(object):
 
             return css_classes, txt
         except Exception:
-            raise MKGeneralException('Failed to paint "%s": %s' %
-                                    (self.painter_name(), traceback.format_exc()))
-
-
+            raise MKGeneralException(
+                'Failed to paint "%s": %s' % (self.painter_name(), traceback.format_exc()))
 
     def render_content(self, row):
         if not row:
-            return "", "" # nothing to paint
-
+            return "", ""  # nothing to paint
 
         painter = self.painter()
         paint_func = painter["paint"]
@@ -1329,7 +1301,6 @@ class Cell(object):
             painter_args += painter["args"]
 
         return painter["paint"](*painter_args)
-
 
     def paint(self, row, tdattrs="", is_last_cell=False):
         tdclass, content = self.render(row)
@@ -1354,13 +1325,11 @@ class Cell(object):
         return has_content
 
 
-
 class JoinCell(Cell):
     def __init__(self, view, painter_spec):
         self._join_service_descr = None
-        self._custom_title       = None
+        self._custom_title = None
         super(JoinCell, self).__init__(view, painter_spec)
-
 
     def _from_view(self, painter_spec):
         super(JoinCell, self)._from_view(painter_spec)
@@ -1371,39 +1340,31 @@ class JoinCell(Cell):
         if len(painter_spec) == 5:
             self._custom_title = painter_spec[4]
 
-
     def is_joined(self):
         return True
-
 
     def join_service(self):
         return self._join_service_descr
 
-
     def livestatus_filter(self, join_column_name):
         return "Filter: %s = %s" % \
             (livestatus.lqencode(join_column_name), livestatus.lqencode(self._join_service_descr))
-
 
     def title(self, use_short=True):
         if self._custom_title:
             return self._custom_title
         return self._join_service_descr
 
-
     def export_title(self):
         return "%s.%s" % (self._painter_name, self.join_service())
-
 
 
 class EmptyCell(Cell):
     def render(self, row):
         return "", ""
 
-
     def paint(self, row, tdattrs="", is_last_cell=False):
         return False
-
 
 
 def get_cells(view):
@@ -1422,12 +1383,12 @@ def get_cells(view):
 
 
 def get_group_cells(view):
-    return [ Cell(view, e) for e in view["group_painters"]
-             if Cell.painter_exists(e) ]
+    return [Cell(view, e) for e in view["group_painters"] if Cell.painter_exists(e)]
 
 
 def output_csv_headers(view):
-    filename = '%s-%s.csv' % (view['name'], time.strftime('%Y-%m-%d_%H-%M-%S', time.localtime(time.time())))
+    filename = '%s-%s.csv' % (view['name'],
+                              time.strftime('%Y-%m-%d_%H-%M-%S', time.localtime(time.time())))
     if type(filename) == unicode:
         filename = filename.encode("utf-8")
     html.response.set_http_header("Content-Disposition", "Attachment; filename=\"%s\"" % filename)
@@ -1443,11 +1404,10 @@ def get_sorter_name_of_painter(painter_name):
 
 
 def get_separated_sorters(view):
-    group_sort = [ (get_sorter_name_of_painter(p[0]), False)
-                   for p in view['group_painters']
-                   if p[0] in multisite_painters
-                      and get_sorter_name_of_painter(p[0]) is not None ]
-    view_sort  = [ s for s in view['sorters'] if not s[0] in group_sort ]
+    group_sort = [(get_sorter_name_of_painter(p[0]), False)
+                  for p in view['group_painters']
+                  if p[0] in multisite_painters and get_sorter_name_of_painter(p[0]) is not None]
+    view_sort = [s for s in view['sorters'] if not s[0] in group_sort]
 
     # Get current url individual sorters. Parse the "sort" url parameter,
     # then remove the group sorters. The left sorters must be the user
@@ -1463,7 +1423,7 @@ def get_separated_sorters(view):
 
 def get_primary_sorter_order(view, painter_name):
     sorter_name = get_sorter_name_of_painter(painter_name)
-    this_asc_sorter  = (sorter_name, False)
+    this_asc_sorter = (sorter_name, False)
     this_desc_sorter = (sorter_name, True)
     _group_sort, user_sort, _view_sort = get_separated_sorters(view)
     if user_sort and this_asc_sorter == user_sort[0]:

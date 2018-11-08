@@ -36,15 +36,18 @@ from . import (
     output_csv_headers,
 )
 
+
 def render_python_raw(data, view, group_cells, cells, num_columns, show_checkboxes):
     html.write(repr(data))
 
+
 multisite_layouts["python-raw"] = {
-    "title"  : _("Python raw data output"),
-    "render" : render_python_raw,
-    "group"  : False,
-    "hide"   : True,
+    "title": _("Python raw data output"),
+    "render": render_python_raw,
+    "group": False,
+    "hide": True,
 }
+
 
 def render_python(rows, view, group_cells, cells, num_columns, show_checkboxes):
     html.write_text("[\n")
@@ -60,19 +63,23 @@ def render_python(rows, view, group_cells, cells, num_columns, show_checkboxes):
         html.write_text("],")
     html.write_text("\n]\n")
 
+
 multisite_layouts["python"] = {
-    "title"  : _("Python data output"),
-    "render" : render_python,
-    "group"  : False,
-    "hide"   : True,
+    "title": _("Python data output"),
+    "render": render_python,
+    "group": False,
+    "hide": True,
 }
+
 
 def render_json(rows, view, group_cells, cells, num_columns, show_checkboxes, export=False):
     if export:
-        filename = '%s-%s.json' % (view['name'], time.strftime('%Y-%m-%d_%H-%M-%S', time.localtime(time.time())))
+        filename = '%s-%s.json' % (view['name'],
+                                   time.strftime('%Y-%m-%d_%H-%M-%S', time.localtime(time.time())))
         if type(filename) == unicode:
             filename = filename.encode("utf-8")
-        html.response.set_http_header("Content-Disposition", "Attachment; filename=\"%s\"" % filename)
+        html.response.set_http_header("Content-Disposition",
+                                      "Attachment; filename=\"%s\"" % filename)
 
     painted_rows = []
 
@@ -86,7 +93,7 @@ def render_json(rows, view, group_cells, cells, num_columns, show_checkboxes, ex
         for cell in cells:
             joined_row = join_row(row, cell)
             content = cell.render_content(joined_row)[1]
-            if type(content) in [ list, dict ]:
+            if type(content) in [list, dict]:
                 # Allow painters to return lists and dicts, then json encode them
                 # as such data structures without wrapping them into strings
                 pass
@@ -96,7 +103,7 @@ def render_json(rows, view, group_cells, cells, num_columns, show_checkboxes, ex
                     content = content.encode("utf-8")
                 else:
                     content = "%s" % content
-                content = html.strip_tags(content.replace("<br>","\n"))
+                content = html.strip_tags(content.replace("<br>", "\n"))
 
             painted_row.append(content)
 
@@ -106,32 +113,35 @@ def render_json(rows, view, group_cells, cells, num_columns, show_checkboxes, ex
 
 
 multisite_layouts["json_export"] = {
-    "title"  : _("JSON data export"),
-    "render" : lambda a,b,c,d,e,f: render_json(a,b,c,d,e,f,True),
-    "group"  : False,
-    "hide"   : True,
+    "title": _("JSON data export"),
+    "render": lambda a, b, c, d, e, f: render_json(a, b, c, d, e, f, True),
+    "group": False,
+    "hide": True,
 }
 
 multisite_layouts["json"] = {
-    "title"  : _("JSON data output"),
-    "render" : lambda a,b,c,d,e,f: render_json(a,b,c,d,e,f,False),
-    "group"  : False,
-    "hide"   : True,
+    "title": _("JSON data output"),
+    "render": lambda a, b, c, d, e, f: render_json(a, b, c, d, e, f, False),
+    "group": False,
+    "hide": True,
 }
+
 
 def render_jsonp(rows, view, group_cells, cells, num_columns, show_checkboxes):
     html.write("%s(\n" % html.var('jsonp', 'myfunction'))
     render_json(rows, view, group_cells, cells, num_columns, show_checkboxes)
     html.write_text(");\n")
 
+
 multisite_layouts["jsonp"] = {
-    "title"  : _("JSONP data output"),
-    "render" : render_jsonp,
-    "group"  : False,
-    "hide"   : True,
+    "title": _("JSONP data output"),
+    "render": render_jsonp,
+    "group": False,
+    "hide": True,
 }
 
-def render_csv(rows, view, group_cells, cells, num_columns, show_checkboxes, export = False):
+
+def render_csv(rows, view, group_cells, cells, num_columns, show_checkboxes, export=False):
     if export:
         output_csv_headers(view)
 
@@ -163,16 +173,17 @@ def render_csv(rows, view, group_cells, cells, num_columns, show_checkboxes, exp
             _tdclass, content = cell.render_content(joined_row)
             html.write('"%s"' % format_for_csv(content))
 
+
 multisite_layouts["csv_export"] = {
-    "title"  : _("CSV data export"),
-    "render" : lambda a,b,c,d,e,f: render_csv(a,b,c,d,e,f,True),
-    "group"  : False,
-    "hide"   : True,
+    "title": _("CSV data export"),
+    "render": lambda a, b, c, d, e, f: render_csv(a, b, c, d, e, f, True),
+    "group": False,
+    "hide": True,
 }
 
 multisite_layouts["csv"] = {
-    "title"  : _("CSV data output"),
-    "render" : lambda a,b,c,d,e,f: render_csv(a,b,c,d,e,f,False),
-    "group"  : False,
-    "hide"   : True,
+    "title": _("CSV data output"),
+    "render": lambda a, b, c, d, e, f: render_csv(a, b, c, d, e, f, False),
+    "group": False,
+    "hide": True,
 }

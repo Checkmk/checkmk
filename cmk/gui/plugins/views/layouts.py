@@ -45,6 +45,7 @@ from . import (
     output_csv_headers,
 )
 
+
 def init_rowselect(view):
     # Don't make rows selectable when no commands can be fired
     # Ignore "C" display option here. Otherwise the rows will not be selectable
@@ -57,25 +58,32 @@ def init_rowselect(view):
         'g_page_id = "view-%s";\n'
         'g_selection = "%s";\n'
         'g_selected_rows = %s;\n'
-        'init_rowselect();' % (view['name'], weblib.selection_id(), json.dumps(selected))
-    )
+        'init_rowselect();' % (view['name'], weblib.selection_id(), json.dumps(selected)))
+
 
 def render_checkbox(view, row, num_tds):
     # value contains the number of columns of this datarow. This is
     # needed for hiliting the correct number of TDs
-    html.input(type_="checkbox", name=row_id(view, row), value=(num_tds+1))
+    html.input(type_="checkbox", name=row_id(view, row), value=(num_tds + 1))
     html.label("", row_id(view, row))
+
 
 def render_checkbox_td(view, row, num_tds):
     html.open_td(class_="checkbox")
     render_checkbox(view, row, num_tds)
     html.close_td()
 
+
 def render_group_checkbox_th():
     html.open_th()
-    html.input(type_="button", class_="checkgroup", name="_toggle_group",
-               onclick="toggle_group_rows(this);", value='X')
+    html.input(
+        type_="button",
+        class_="checkgroup",
+        name="_toggle_group",
+        onclick="toggle_group_rows(this);",
+        value='X')
     html.close_th()
+
 
 #.
 #   .--Dataset-------------------------------------------------------------.
@@ -112,7 +120,11 @@ def render_single_dataset(rows, view, group_cells, cells, num_columns, _ignore_s
                 cell.paint(row)
 
             if len(thispart) < num_columns:
-                html.td('', class_="gap", style="border-style: none;", colspan=(1 + num_columns - len(thispart)))
+                html.td(
+                    '',
+                    class_="gap",
+                    style="border-style: none;",
+                    colspan=(1 + num_columns - len(thispart)))
             html.close_tr()
         rownum += num_columns
     html.close_table()
@@ -120,12 +132,11 @@ def render_single_dataset(rows, view, group_cells, cells, num_columns, _ignore_s
 
 
 multisite_layouts["dataset"] = {
-    "title"  : _("Single dataset"),
-    "render" : render_single_dataset,
-    "group"  : False,
-    "checkboxes" : False,
+    "title": _("Single dataset"),
+    "render": render_single_dataset,
+    "group": False,
+    "checkboxes": False,
 }
-
 
 
 #.
@@ -140,9 +151,15 @@ multisite_layouts["dataset"] = {
 #   |  The boxed layout is useful in views with a width > 1, boxes are     |
 #   |  stacked in columns and can have different sizes.                    |
 #   '----------------------------------------------------------------------'
-def render_grouped_boxes(rows, view, group_cells, cells, num_columns, show_checkboxes, css_class=None):
+def render_grouped_boxes(rows,
+                         view,
+                         group_cells,
+                         cells,
+                         num_columns,
+                         show_checkboxes,
+                         css_class=None):
 
-    repeat_heading_every = 20 # in case column_headers is "repeat"
+    repeat_heading_every = 20  # in case column_headers is "repeat"
 
     # N columns. Each should contain approx the same number of entries
     groups = []
@@ -157,10 +174,10 @@ def render_grouped_boxes(rows, view, group_cells, cells, num_columns, show_check
 
     def height_of(groups):
         # compute total space needed. I count the group header like two rows.
-        return sum([ len(rows) for _header, rows in groups ]) + 2 * len(groups)
+        return sum([len(rows) for _header, rows in groups]) + 2 * len(groups)
 
     # Create empty columns
-    columns = [ ]
+    columns = []
     for _x in xrange(num_columns):
         columns.append([])
 
@@ -176,7 +193,7 @@ def render_grouped_boxes(rows, view, group_cells, cells, num_columns, show_check
         hdst = height_of(dst)
         shift = len(src[-1][1]) + 2
         if max(hsrc, hdst) > max(hsrc - shift, hdst + shift):
-            dst[0:0] = [ src[-1] ]
+            dst[0:0] = [src[-1]]
             del src[-1]
             return True
         return False
@@ -186,13 +203,12 @@ def render_grouped_boxes(rows, view, group_cells, cells, num_columns, show_check
     while did_something:
         did_something = False
         for i in range(0, num_columns - 1):
-            if balance(columns[i], columns[i+1]):
+            if balance(columns[i], columns[i + 1]):
                 did_something = True
-
 
     # render one group
     def render_group(header, rows_with_ids):
-        html.open_table(class_="groupheader", cellspacing=0,  cellpadding=0, border=0)
+        html.open_table(class_="groupheader", cellspacing=0, cellpadding=0, border=0)
         html.open_tr(class_="groupheader")
         painted = False
         for cell in group_cells:
@@ -218,7 +234,8 @@ def render_grouped_boxes(rows, view, group_cells, cells, num_columns, show_check
         if column_headers != "off":
             show_header_line()
 
-        groups, rows_with_ids = calculate_view_grouping_of_services(rows_with_ids, row_group_cells=None)
+        groups, rows_with_ids = calculate_view_grouping_of_services(
+            rows_with_ids, row_group_cells=None)
 
         visible_row_number = 0
         group_hidden, num_grouped_rows = None, 0
@@ -235,15 +252,15 @@ def render_grouped_boxes(rows, view, group_cells, cells, num_columns, show_check
             if state == None:
                 state = utils.saveint(row.get("host_state", 0))
                 if state > 0:
-                    state +=1 # 1 is critical for hosts
+                    state += 1  # 1 is critical for hosts
 
             num_cells = len(cells)
 
             if index in groups:
                 group_spec, num_grouped_rows = groups[index]
-                group_hidden = grouped_row_title(index, group_spec, num_grouped_rows, odd, num_cells)
+                group_hidden = grouped_row_title(index, group_spec, num_grouped_rows, odd,
+                                                 num_cells)
                 odd = "even" if odd == "odd" else "odd"
-
 
             css_classes = []
 
@@ -290,11 +307,17 @@ def render_grouped_boxes(rows, view, group_cells, cells, num_columns, show_check
 
 def grouped_row_title(index, group_spec, num_rows, trclass, num_cells):
     is_open = html.foldable_container_is_open("grouped_rows", index, False)
-    html.open_tr(class_=["data", "grouped_row_header", "closed" if not is_open else '', "%s0" % trclass])
-    html.open_td(colspan=num_cells,
-                 onclick="toggle_grouped_rows('grouped_rows', '%s', this, %d)" % (index, num_rows))
+    html.open_tr(
+        class_=["data", "grouped_row_header", "closed" if not is_open else '',
+                "%s0" % trclass])
+    html.open_td(
+        colspan=num_cells,
+        onclick="toggle_grouped_rows('grouped_rows', '%s', this, %d)" % (index, num_rows))
 
-    html.img("images/tree_black_closed.png", align="absbottom", class_=["treeangle", "nform", "open" if is_open else "closed"])
+    html.img(
+        "images/tree_black_closed.png",
+        align="absbottom",
+        class_=["treeangle", "nform", "open" if is_open else "closed"])
     html.write_text("%s (%d)" % (group_spec["title"], num_rows))
 
     html.close_td()
@@ -348,7 +371,7 @@ def calculate_view_grouping_of_services(rows, row_group_cells):
         # in front of the group.
         if row.get("service_state", -1) != 0 or is_stale(row):
             if current_group == None or current_group != group_spec:
-                continue # skip grouping first row
+                continue  # skip grouping first row
 
             elif current_group == group_spec:
                 row = rows.pop(index)
@@ -377,10 +400,10 @@ def try_to_match_group(row):
 
 
 multisite_layouts["boxed"] = {
-    "title"  : _("Balanced boxes"),
-    "render" : render_grouped_boxes,
-    "group"  : True,
-    "checkboxes" : True,
+    "title": _("Balanced boxes"),
+    "render": render_grouped_boxes,
+    "group": True,
+    "checkboxes": True,
 }
 
 #.
@@ -397,16 +420,15 @@ multisite_layouts["boxed"] = {
 
 
 def render_grouped_boxed_graphs(*args):
-    return render_grouped_boxes(*args, css_class="graph") # pylint: disable=no-value-for-parameter
+    return render_grouped_boxes(*args, css_class="graph")  # pylint: disable=no-value-for-parameter
 
 
 multisite_layouts["boxed_graph"] = {
-    "title"      : _("Balanced graph boxes"),
-    "render"     : render_grouped_boxed_graphs,
-    "group"      : True,
-    "checkboxes" : True,
+    "title": _("Balanced graph boxes"),
+    "render": render_grouped_boxed_graphs,
+    "group": True,
+    "checkboxes": True,
 }
-
 
 #.
 #   .--Tiled---------------------------------------------------------------.
@@ -419,6 +441,7 @@ multisite_layouts["boxed_graph"] = {
 #   +----------------------------------------------------------------------+
 #   |  The tiled layout puts each dataset into one box with a fixed size.  |
 #   '----------------------------------------------------------------------'
+
 
 def render_tiled(rows, view, group_cells, cells, _ignore_num_columns, show_checkboxes):
     html.open_table(class_="data tiled")
@@ -458,7 +481,6 @@ def render_tiled(rows, view, group_cells, cells, _ignore_num_columns, show_check
                 group_open = True
                 last_group = this_group
 
-
         # background color of tile according to item state
         state = row.get("service_state", -1)
         if state == -1:
@@ -485,14 +507,14 @@ def render_tiled(rows, view, group_cells, cells, _ignore_num_columns, show_check
 
         # We need at least five cells
         if len(cells) < 5:
-            cells = cells + ([ EmptyCell(view) ] * (5 - len(cells)))
+            cells = cells + ([EmptyCell(view)] * (5 - len(cells)))
 
-        rendered = [ cell.render(row) for cell in cells ]
+        rendered = [cell.render(row) for cell in cells]
 
         html.open_tr()
         html.open_td(class_=["tl", rendered[1][0]])
         if show_checkboxes:
-            render_checkbox(view, row, len(cells)-1)
+            render_checkbox(view, row, len(cells) - 1)
         html.write("%s" % rendered[1][1])
         html.close_td()
         html.open_td(class_=["tr", rendered[2][0]])
@@ -534,12 +556,11 @@ def render_tiled(rows, view, group_cells, cells, _ignore_num_columns, show_check
 
 
 multisite_layouts["tiled"] = {
-    "title"  : _("Tiles"),
-    "render" : render_tiled,
-    "group"  : True,
-    "checkboxes" : True,
+    "title": _("Tiles"),
+    "render": render_tiled,
+    "group": True,
+    "checkboxes": True,
 }
-
 
 #.
 #   .--Table---------------------------------------------------------------.
@@ -558,7 +579,7 @@ multisite_layouts["tiled"] = {
 
 def render_grouped_list(rows, view, group_cells, cells, num_columns, show_checkboxes):
 
-    repeat_heading_every = 20 # in case column_headers is "repeat"
+    repeat_heading_every = 20  # in case column_headers is "repeat"
 
     html.open_table(class_='data table')
     last_group = None
@@ -590,8 +611,9 @@ def render_grouped_list(rows, view, group_cells, cells, num_columns, show_checkb
     if not group_cells and view.get("column_headers") != "off":
         show_header_line()
 
-    rows_with_ids = [ (row_id(view, row), row) for row in rows ]
-    groups, rows_with_ids = calculate_view_grouping_of_services(rows_with_ids, row_group_cells=group_cells)
+    rows_with_ids = [(row_id(view, row), row) for row in rows]
+    groups, rows_with_ids = calculate_view_grouping_of_services(
+        rows_with_ids, row_group_cells=group_cells)
 
     visible_row_number = 0
     group_hidden, num_grouped_rows = None, 0
@@ -601,8 +623,8 @@ def render_grouped_list(rows, view, group_cells, cells, num_columns, show_checkb
         if group_cells:
             this_group = group_value(row, group_cells)
             if this_group != last_group:
-                if column != 1: # not a the beginning of a new line
-                    for _i in xrange(column-1, num_columns):
+                if column != 1:  # not a the beginning of a new line
+                    for _i in xrange(column - 1, num_columns):
                         html.td('', class_="gap")
                         html.td('', class_="fillup", colspan=num_cells)
                     html.close_tr()
@@ -621,7 +643,9 @@ def render_grouped_list(rows, view, group_cells, cells, num_columns, show_checkb
 
                 if not header_is_empty:
                     html.open_tr(class_="groupheader")
-                    html.open_td(class_="groupheader", colspan=(num_cells * (num_columns + 2) + (num_columns - 1)))
+                    html.open_td(
+                        class_="groupheader",
+                        colspan=(num_cells * (num_columns + 2) + (num_columns - 1)))
                     html.open_table(class_="groupheader", cellspacing=0, cellpadding=0, border=0)
                     html.open_tr()
                     painted = False
@@ -659,7 +683,7 @@ def render_grouped_list(rows, view, group_cells, cells, num_columns, show_checkb
                 if not row.get('service_description'):
                     state = row.get("host_state", 0)
                     if state > 0:
-                        state +=1 # 1 is critical for hosts
+                        state += 1  # 1 is critical for hosts
                 else:
                     state = row.get("service_state", 0)
             else:
@@ -667,7 +691,8 @@ def render_grouped_list(rows, view, group_cells, cells, num_columns, show_checkb
 
             if index in groups:
                 group_spec, num_grouped_rows = groups[index]
-                group_hidden = grouped_row_title(index, group_spec, num_grouped_rows, odd, num_cells)
+                group_hidden = grouped_row_title(index, group_spec, num_grouped_rows, odd,
+                                                 num_cells)
                 odd = "even" if odd == "odd" else "odd"
 
             css_classes = []
@@ -696,18 +721,17 @@ def render_grouped_list(rows, view, group_cells, cells, num_columns, show_checkb
             html.open_td(class_="gap")
             html.close_td()
 
-
         if show_checkboxes:
             render_checkbox_td(view, row, num_cells)
 
         last_cell = cells[-1]
         for cell in cells:
-            cell.paint(row, is_last_cell=last_cell==cell)
+            cell.paint(row, is_last_cell=last_cell == cell)
 
         column += 1
 
     if group_open:
-        for _i in xrange(column-1, num_columns):
+        for _i in xrange(column - 1, num_columns):
             html.td('', class_="gap")
             html.td('', class_="fillup", colspan=num_cells)
         html.close_tr()
@@ -715,15 +739,12 @@ def render_grouped_list(rows, view, group_cells, cells, num_columns, show_checkb
     init_rowselect(view)
 
 
-
-
 multisite_layouts["table"] = {
-    "title"  : _("Table"),
-    "render" : render_grouped_list,
-    "group"  : True,
-    "checkboxes" : True,
+    "title": _("Table"),
+    "render": render_grouped_list,
+    "group": True,
+    "checkboxes": True,
 }
-
 
 #.
 #   .--Matrix--------------------------------------------------------------.
@@ -739,6 +760,7 @@ multisite_layouts["table"] = {
 #   |  are entities with the same value in all those datasets. Typicall    |
 #   |  The columns are hosts and the rows are services.                    |
 #   '----------------------------------------------------------------------'
+
 
 def render_matrix(rows, view, group_cells, cells, num_columns, _ignore_show_checkboxes):
 
@@ -761,7 +783,7 @@ def render_matrix(rows, view, group_cells, cells, num_columns, _ignore_show_chec
                 tdclass, content = cell.render(group_row)
                 if cell_nr > 0:
                     gv = group_value(group_row, [cell])
-                    majority_value = header_majorities.get(cell_nr-1, None)
+                    majority_value = header_majorities.get(cell_nr - 1, None)
                     if majority_value != None and majority_value != gv:
                         tdclass += " minority"
                 html.open_td(class_=["left", tdclass])
@@ -803,7 +825,7 @@ def render_matrix(rows, view, group_cells, cells, num_columns, _ignore_show_chec
                         tdclass, content = cell.render(cell_row)
 
                         gv = group_value(cell_row, [cell])
-                        majority_value =  row_majorities[row_id].get(cell_nr, None)
+                        majority_value = row_majorities[row_id].get(cell_nr, None)
                         if majority_value != None and majority_value != gv:
                             tdclass += " minority"
 
@@ -826,7 +848,8 @@ def render_matrix(rows, view, group_cells, cells, num_columns, _ignore_show_chec
 def csv_export_matrix(rows, view, group_cells, cells):
     output_csv_headers(view)
 
-    groups, unique_row_ids, matrix_cells = list(create_matrices(rows, group_cells, cells, num_columns=None))[0]
+    groups, unique_row_ids, matrix_cells = list(
+        create_matrices(rows, group_cells, cells, num_columns=None))[0]
     value_counts, _row_majorities = matrix_find_majorities(rows, cells)
 
     table.begin(output_format="csv")
@@ -871,13 +894,13 @@ def matrix_find_majorities_for_header(rows, group_cells):
 
 
 def matrix_find_majorities(rows, cells, for_header=False):
-    counts = {} # dict row_id -> cell_nr -> value -> count
+    counts = {}  # dict row_id -> cell_nr -> value -> count
 
     for row in rows:
         if for_header:
             row_id = None
         else:
-            row_id = tuple(group_value(row, [ cells[0] ]))
+            row_id = tuple(group_value(row, [cells[0]]))
 
         for cell_nr, cell in enumerate(cells[1:]):
             value = group_value(row, [cell])
@@ -886,14 +909,13 @@ def matrix_find_majorities(rows, cells, for_header=False):
             cell_entry.setdefault(value, 0)
             cell_entry[value] += 1
 
-
     # Now find majorities for each row
-    majorities = {} # row_id -> cell_nr -> majority value
+    majorities = {}  # row_id -> cell_nr -> majority value
     for row_id, row_entry in counts.items():
         maj_entry = majorities.setdefault(row_id, {})
         for cell_nr, cell_entry in row_entry.items():
             maj_value = None
-            max_non_unique = 0 # maximum count, but maybe non unique
+            max_non_unique = 0  # maximum count, but maybe non unique
             for value, count in cell_entry.items():
                 if count > max_non_unique and count >= 2:
                     maj_value = value
@@ -909,18 +931,20 @@ def matrix_find_majorities(rows, cells, for_header=False):
 def create_matrices(rows, group_cells, cells, num_columns):
 
     if len(cells) < 2:
-        raise MKGeneralException(_("Cannot display this view in matrix layout. You need at least two columns!"))
+        raise MKGeneralException(
+            _("Cannot display this view in matrix layout. You need at least two columns!"))
 
     if not group_cells:
-        raise MKGeneralException(_("Cannot display this view in matrix layout. You need at least one group column!"))
+        raise MKGeneralException(
+            _("Cannot display this view in matrix layout. You need at least one group column!"))
 
     # First find the groups - all rows that have the same values for
     # all group columns. Usually these should correspond with the hosts
     # in the matrix
     groups = []
     last_group_id = None
-    unique_row_ids = [] # not a set, but a list. Need to keep sort order!
-    matrix_cells = {} # Dict from row_id -> group_id -> row
+    unique_row_ids = []  # not a set, but a list. Need to keep sort order!
+    matrix_cells = {}  # Dict from row_id -> group_id -> row
     col_num = 0
 
     for row in rows:
@@ -930,8 +954,8 @@ def create_matrices(rows, group_cells, cells, num_columns):
             if num_columns != None and col_num > num_columns:
                 yield (groups, unique_row_ids, matrix_cells)
                 groups = []
-                unique_row_ids = [] # not a set, but a list. Need to keep sort order!
-                matrix_cells = {} # Dict from row_id -> group_id -> row
+                unique_row_ids = []  # not a set, but a list. Need to keep sort order!
+                matrix_cells = {}  # Dict from row_id -> group_id -> row
                 col_num = 1
 
             last_group_id = group_id
@@ -940,7 +964,7 @@ def create_matrices(rows, group_cells, cells, num_columns):
         # Now the rule is that the *first* cell (usually the service
         # description) will define the left legend of the matrix. It defines
         # the set of possible rows.
-        row_id = group_value(row, [ cells[0] ])
+        row_id = group_value(row, [cells[0]])
         if row_id not in matrix_cells:
             unique_row_ids.append(row_id)
             matrix_cells[row_id] = {}
@@ -950,12 +974,11 @@ def create_matrices(rows, group_cells, cells, num_columns):
         yield (groups, unique_row_ids, matrix_cells)
 
 
-
 multisite_layouts["matrix"] = {
-    "title"      : _("Matrix"),
-    "render"     : render_matrix,
-    "csv_export" : csv_export_matrix,
-    "group"      : True,
-    "checkboxes" : False,
-    "options"    : [ "matrix_omit_uniform" ],
+    "title": _("Matrix"),
+    "render": render_matrix,
+    "csv_export": csv_export_matrix,
+    "group": True,
+    "checkboxes": False,
+    "options": ["matrix_omit_uniform"],
 }

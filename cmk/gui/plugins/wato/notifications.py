@@ -56,7 +56,7 @@ from cmk.gui.plugins.wato import (register_notification_parameters, passwordstor
 # We have to transform because 'add_to_event_context'
 # in modules/events.py can't handle complex data structures
 def transform_back_html_mail_url_prefix(p):
-    if type(p) == tuple:
+    if isinstance(p, tuple):
         return {p[0]: p[1]}
     if p == "automatic_http":
         return {"automatic": "http"}
@@ -66,7 +66,7 @@ def transform_back_html_mail_url_prefix(p):
 
 
 def transform_forth_html_mail_url_prefix(p):
-    if type(p) != dict:
+    if not isinstance(p, dict):
         return ("manual", p)
 
     k, v = p.items()[0]
@@ -450,7 +450,7 @@ register_notification_parameters(
 # We have to transform because 'add_to_event_context'
 # in modules/events.py can't handle complex data structures
 def transform_back_pushover_priority(params):
-    if type(params) == tuple:
+    if isinstance(params, tuple):
         return {
             "priority": "2",
             "retry": params[1][0],
@@ -461,7 +461,7 @@ def transform_back_pushover_priority(params):
 
 
 def transform_forth_pushover_priority(params):
-    if type(params) == dict:
+    if isinstance(params, dict):
         return (params['priority'], (params["retry"], params["expire"], params["receipts"]))
     return params
 

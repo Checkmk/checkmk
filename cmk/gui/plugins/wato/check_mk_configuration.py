@@ -463,7 +463,7 @@ def transform_virtual_host_trees(trees):
         return re.sub("[^-a-zA-Z0-9_]+", "", title.lower())
 
     for index, tree in enumerate(trees):
-        if type(tree) == tuple:
+        if isinstance(tree, tuple):
             trees[index] = {
                 "id": id_from_title(tree[0]),
                 "title": tree[0],
@@ -786,7 +786,7 @@ register_configvar(
                                          ),
                                      ],
                                  ),
-                                 forth=lambda x: type(x) != tuple and (x, "_self") or x,
+                                 forth=lambda x: not isinstance(x, tuple) and (x, "_self") or x,
                              )),
                             ('toplevel',
                              FixedValue(
@@ -2920,7 +2920,7 @@ register_rule(
         ),
         # In the past, this was a OptionalDropdownChoice() which values could be strings:
         # ignore, site or a custom string representing a version number.
-        forth=lambda x: type(x) == str and x not in ["ignore", "site"] and ("specific", x) or x))
+        forth=lambda x: isinstance(x, str) and x not in ["ignore", "site"] and ("specific", x) or x))
 
 register_rule(
     "agents/" + _("Generic Options"),

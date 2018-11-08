@@ -24,6 +24,13 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+try:
+    # does not exist in Py3, but is supper class of str & unicode in py2
+    basestring
+except NameError:
+    basestring = str  # pylint: disable=redefined-builtin
+    unicode = str  # pylint: disable=redefined-builtin
+
 import cmk.gui.mkeventd as mkeventd
 from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
@@ -278,7 +285,7 @@ register_rule(
 
 # Several active checks just had crit levels as one integer
 def transform_cert_days(cert_days):
-    if type(cert_days) != tuple:
+    if not isinstance(cert_days, tuple):
         return (cert_days, 0)
     return cert_days
 
@@ -337,7 +344,7 @@ register_rule(
                 ),
             ),
         ]),
-        forth=lambda x: type(x) == tuple and x[1] or x,
+        forth=lambda x: isinstance(x, tuple) and x[1] or x,
         title=_("Check FTP Service"),
     ),
     match="all")
@@ -459,7 +466,7 @@ register_rule(
                                        "IP address then the answer will be host names, that end "
                                        "with a dot."),
                             ),
-                            forth=lambda old: type(old) in (str, unicode) and [old] or old,
+                            forth=lambda old: isinstance(old, basestring) and [old] or old,
                         ),
                     ),
                     ("expected_authority",

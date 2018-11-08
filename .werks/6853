@@ -1,0 +1,11 @@
+Title: Fixed host diagnose not using SNMP retry of 0
+Level: 1
+Component: wato
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0i1
+Date: 1541688153
+
+

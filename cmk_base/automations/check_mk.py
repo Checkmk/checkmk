@@ -1171,14 +1171,12 @@ class AutomationDiagHost(Automation):
                         config.explicit_snmp_communities[hostname] = entry
                         break
 
-                # Override timing settings if provided
-                if snmp_timeout or snmp_retries:
-                    timing = {}
-                    if snmp_timeout:
-                        timing['timeout'] = snmp_timeout
-                    if snmp_retries:
-                        timing['retries'] = snmp_retries
-                    config.snmp_timing.insert(0, (timing, [], [hostname]))
+                # Enforce automation call timing settings
+                timing = {
+                    'timeout': snmp_timeout,
+                    'retries': snmp_retries,
+                }
+                config.snmp_timing.insert(0, (timing, [], [hostname]))
 
                 # SNMP versions
                 if test in ['snmpv2', 'snmpv3']:

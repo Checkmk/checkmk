@@ -6554,12 +6554,6 @@ check_metrics["check_mk-cisco_mem_asa64"] = {
     },
 }
 
-check_metrics["check_mk-cisco_mem_asa64"] = {
-    "mem_used": {
-        "name": "mem_used_percent"
-    },
-}
-
 check_metrics["check_mk-fortigate_sessions_base"] = {
     "session": {
         "name": "active_sessions"

@@ -251,13 +251,17 @@ def wmi_filter_global_only(tables, row):
 #   |                                                   |___/              |
 #   '----------------------------------------------------------------------'
 
+def _required_tables_missing(tables, required_tables):
+    is_subset = set(required_tables).issubset(set(tables.keys()))
+    contains_null = any(isinstance(table, NullTable) for table in tables.itervalues())
+    return not is_subset or contains_null
 
-def inventory_wmi_table(tables, **kwargs):
-    required_tables = kwargs.get('required_tables', tables.keys())
-    if (not set(required_tables) <= set(tables.keys()) or
-            any(isinstance(table, NullTable) for table in tables.itervalues())):
-        # if table is missing, nothing gets inventorized. This can
-        # only happen if required_tables was set
+
+def inventory_wmi_table_instances(tables, required_tables=None, filt=None, levels=None):
+    if required_tables is None:
+        required_tables = tables.keys()
+
+    if _required_tables_missing(tables, required_tables):
         return []
 
     potential_instances = set()
@@ -269,16 +273,46 @@ def inventory_wmi_table(tables, **kwargs):
         else:
             potential_instances = set(table_rows)
 
-    # if there are multiple instances, don't include the summary line as it is redundant
-    if len(potential_instances) > 1:
-        potential_instances.discard(None)
+    # don't include the summary line
+    potential_instances.discard(None)
 
-    # apply row-filter if the caller provided one
-    filt = kwargs.get('filt', lambda tables, row: True)
+    return [(row, levels) for row in potential_instances if filt is None or filt(tables, row)]
 
-    return [(row, kwargs.get('levels', None))
-            for row in potential_instances
-            if filt(tables, row)]
+
+
+def inventory_wmi_table_total(tables, required_tables=None, filt=None, levels=None):
+    if required_tables is None:
+        required_tables = tables.keys()
+
+    if not tables or _required_tables_missing(tables, required_tables):
+        return []
+
+    if filt is not None and not filt(tables, None):
+        return []
+
+    total_present = all(None in tables[required_table].row_labels()
+                        for required_table in required_tables)
+
+    if not total_present:
+        return []
+    return [(None, levels)]
+
+
+def inventory_wmi_table(tables, required_tables=None, filt=None, levels=None):
+    '''DO NOT USE
+
+    Please use either inventory_wmi_table_instances or inventory_wmi_table_total
+    directly. This function sometimes returns strings and sometimes None as an item.
+    '''
+    instances = inventory_wmi_table_instances(tables, required_tables, filt, levels)
+    if instances:
+        return instances
+
+    total = inventory_wmi_table_total(tables, required_tables, filt, levels)
+    if total:
+        return total
+
+    return []
 
 
 #.

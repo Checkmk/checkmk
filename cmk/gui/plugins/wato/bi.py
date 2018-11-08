@@ -287,7 +287,7 @@ class BIManagement(object):
                     service) + self._convert_node_to_bi(node[1][3])
 
     def _convert_aggregation_from_bi(self, aggr, single_host):
-        if type(aggr[0]) == dict:
+        if isinstance(aggr[0], dict):
             options = aggr[0]
             aggr = aggr[1:]
         else:
@@ -334,7 +334,7 @@ class BIManagement(object):
             except:
                 return x
 
-        if type(rule) == tuple:
+        if isinstance(rule, tuple):
             rule = {
                 "title": rule[0],
                 "params": rule[1],
@@ -361,7 +361,7 @@ class BIManagement(object):
     # Convert node-Tuple into format used by CascadingDropdown
     def _convert_node_from_bi(self, node):
         if len(node) == 2:
-            if type(node[1]) == list:
+            if isinstance(node[1], list):
                 return ("call", node)
             elif node[1] == self._bi_constants['HOST_STATE']:
                 return ("host", (node[0],))
@@ -380,7 +380,7 @@ class BIManagement(object):
                 node = node[0:1] + node[3:]
 
             # Extract the list of tags
-            if type(node[1]) == list:
+            if isinstance(node[1], list):
                 tags = node[1]
                 node = node[0:1] + node[2:]
             else:

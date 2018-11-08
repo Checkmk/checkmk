@@ -655,7 +655,7 @@ register_check_parameters(
                       ("tunnels_ignore_levels",
                        ListOfStrings(title=_("Tunnels which ignore levels")))],
             optional_keys=[]),
-        forth=lambda params: type(params) == dict and params or {"levels": params},
+        forth=lambda params: isinstance(params, dict) and params or {"levels": params},
     ),
     None,
     "dict",
@@ -1921,7 +1921,7 @@ register_rule(
             ],
             optional_keys=["reclassify_states"],
         ),
-        forth=lambda x: type(x) == dict and x or {"reclassify_patterns": x}),
+        forth=lambda x: isinstance(x, dict) and x or {"reclassify_patterns": x}),
     itemtype='item',
     itemname='Logfile',
     itemhelp=_("Put the item names of the logfiles here. For example \"System$\" "
@@ -4737,7 +4737,7 @@ register_check_parameters(
 
 
 def transform_apc_symmetra(params):
-    if type(params) in (list, tuple):
+    if isinstance(params, (list, tuple)):
         params = {"levels": params}
 
     if "levels" in params and len(params["levels"]) > 2:
@@ -5758,7 +5758,7 @@ fs_levels_elements_hack = [
 # -- available percentage, negative float (-2.0, -4.0)
 # (4 alternatives)
 def match_dual_level_type(value):
-    if type(value) == list:
+    if isinstance(value, list):
         for entry in value:
             if entry[1][0] < 0 or entry[1][1] < 0:
                 return 1
@@ -5819,7 +5819,7 @@ def get_free_used_dynamic_valuespec(what, name, default_value=(80.0, 90.0)):
 def transform_filesystem_free(value):
     tuple_convert = lambda val: tuple(-x for x in val)
 
-    if type(value) == tuple:
+    if isinstance(value, tuple):
         return tuple_convert(value)
 
     result = []
@@ -6444,7 +6444,7 @@ register_rule(
                             TextAscii(title=_("Exclude Pattern"), size=40),
                         ],
                     ),
-                    forth=lambda params: type(params) == str and (params, '') or params),
+                    forth=lambda params: isinstance(params, str) and (params, '') or params),
             ],
         ),
         add_label=_("Add pattern group"),
@@ -7082,7 +7082,7 @@ register_check_parameters(
             ]
         ),
         # old params = (crit_low, warn_low, warn, crit)
-        forth = lambda v: type(v) == tuple and { "levels" : (v[2], v[3]), "levels_lower" : (v[1], v[0]) } or v,
+        forth = lambda v: isinstance(v, tuple) and { "levels" : (v[2], v[3]), "levels_lower" : (v[1], v[0]) } or v,
     ),
     TextAscii( title = _("Name of Wifi")),
     "first"
@@ -7405,7 +7405,7 @@ register_check_parameters(
 
 
 def transform_msx_queues(params):
-    if type(params) == tuple:
+    if isinstance(params, tuple):
         return {"levels": (params[0], params[1])}
     return params
 
@@ -7612,18 +7612,18 @@ def vs_interface_traffic():
 def transform_if(v):
     new_traffic = []
 
-    if 'traffic' in v and type(v['traffic']) != list:
+    if 'traffic' in v and not isinstance(v['traffic'], list):
         warn, crit = v['traffic']
-        if type(warn) == int:
+        if isinstance(warn, int):
             new_traffic.append(('both', ('upper', ('abs', (warn, crit)))))
-        elif type(warn) == float:
+        elif isinstance(warn, float):
             new_traffic.append(('both', ('upper', ('perc', (warn, crit)))))
 
     if 'traffic_minimum' in v:
         warn, crit = v['traffic_minimum']
-        if type(warn) == int:
+        if isinstance(warn, int):
             new_traffic.append(('both', ('lower', ('abs', (warn, crit)))))
-        elif type(warn) == float:
+        elif isinstance(warn, float):
             new_traffic.append(('both', ('lower', ('perc', (warn, crit)))))
         del v['traffic_minimum']
 
@@ -8173,7 +8173,7 @@ register_check_parameters(
                          ]),
                  ])),
         ] + size_trend_elements),
-        forth=lambda spec: spec if type(spec) == dict else {"levels": spec},
+        forth=lambda spec: spec if isinstance(spec, dict) else {"levels": spec},
     ),
     TextAscii(title=_("Memory Pool Name"), allow_empty=False),
     match_type="first",
@@ -8546,7 +8546,7 @@ register_check_parameters(
             ],
             optional_keys=["average"],
         ),
-        forth=lambda t: type(t) == tuple and {"levels": t} or t,
+        forth=lambda t: isinstance(t, tuple) and {"levels": t} or t,
     ),
     None,
     match_type="first",
@@ -8597,7 +8597,7 @@ register_check_parameters(
             optional_keys=[],
         ),
         # Convert default levels from discovered checks
-        forth=lambda v: type(v) != dict and {"levels": ("perc_used", v)} or v,
+        forth=lambda v: not isinstance(v, dict) and {"levels": ("perc_used", v)} or v,
     ),
     TextAscii(
         title=_("Module name or empty"),
@@ -8900,9 +8900,9 @@ def windows_printer_queues_forth(old):
         "warn_states": [8, 11],
         "crit_states": [9, 10],
     }
-    if type(old) == tuple:
+    if isinstance(old, tuple):
         default['levels'] = old
-    if type(old) == dict:
+    if isinstance(old, dict):
         return old
     return default
 
@@ -9224,7 +9224,7 @@ register_check_parameters(
                       ),
                  )),
             ] + cpu_util_common_elements,),
-        forth=lambda old: type(old) != dict and {"iowait": old} or old,
+        forth=lambda old: not isinstance(old, dict) and {"iowait": old} or old,
     ),
     None,
     "dict",
@@ -9232,7 +9232,7 @@ register_check_parameters(
 
 
 def transform_humidity(p):
-    if type(p) in [list, tuple]:
+    if isinstance(p, (list, tuple)):
         p = {
             "levels_lower": (float(p[1]), float(p[0])),
             "levels": (float(p[2]), float(p[3])),
@@ -11282,7 +11282,7 @@ register_check_parameters(
                 ),
             ]
         ),
-        forth = lambda params: type(params) == tuple and {"free_leases" : (float(params[0]), float(params[1]))} or params,
+        forth = lambda params: isinstance(params, tuple) and {"free_leases" : (float(params[0]), float(params[1]))} or params,
     ),
     TextAscii(
         title = _("Pool name"),
@@ -11858,7 +11858,7 @@ register_check_parameters(
     _("Number of mails in outgoing mail queue"),
     Transform(
         mailqueue_params,
-        forth=lambda old: type(old) != dict and {"deferred": old} or old,
+        forth=lambda old: not isinstance(old, dict) and {"deferred": old} or old,
     ),
     None,
     match_type="dict",
@@ -11871,7 +11871,7 @@ register_check_parameters(
     _("Number of mails in outgoing mail queue"),
     Transform(
         mailqueue_params,
-        forth=lambda old: type(old) != dict and {"deferred": old} or old,
+        forth=lambda old: not isinstance(old, dict) and {"deferred": old} or old,
     ),
     TextAscii(title=_("Mail queue name")),
     match_type="dict",
@@ -12700,7 +12700,7 @@ register_check_parameters(
                  default_value=True,
              )),
         ]),
-        forth=lambda x: type(x) is str and {"expected_state": x} or x,
+        forth=lambda x: isinstance(x, str) and {"expected_state": x} or x,
     ),
     TextAscii(
         title=_("Number or ID of the disk"),
@@ -12885,7 +12885,7 @@ register_check_parameters(
                 ),
             ),
         ]),
-        forth=lambda v: type(v) == tuple and {"levels": v} or v,
+        forth=lambda v: isinstance(v, tuple) and {"levels": v} or v,
     ),
     TextAscii(title=_("Sensor ID"), help=_("The identifier of the thermal sensor.")),
     "dict",
@@ -13422,7 +13422,7 @@ register_check_parameters(
                      ),
                  ])),
         ]),
-        forth=lambda params: type(params) == tuple and {"ntp_levels": params} or params), None,
+        forth=lambda params: isinstance(params, tuple) and {"ntp_levels": params} or params), None,
     "dict")
 
 register_check_parameters(subgroup_os, "ntp_peer", _("State of NTP peer"), ntp_params,
@@ -14035,10 +14035,10 @@ register_check_parameters(subgroup_applications,
                                     ],
                                 ),
                             ],
-                            match = lambda x: 4 if type(x) == tuple else (0 if not x else (2 if x == 'spool:' else (3 if x.startswith('spool:') else 1)))
+                            match = lambda x: 4 if isinstance(x, tuple) else (0 if not x else (2 if x == 'spool:' else (3 if x.startswith('spool:') else 1)))
                         ),
                         # migrate old (tcp, address, port) tuple to new dict
-                        forth = lambda v: (v[0], {"address": v[1], "port": v[2]}) if (type(v) == tuple and type(v[1]) != dict) else v,
+                        forth = lambda v: (v[0], {"address": v[1], "port": v[2]}) if (isinstance(v, tuple) and not isinstance(v[1], dict)) else v,
                     )),
                     ('facility', DropdownChoice(
                         title = _("Syslog facility for forwarded messages"),
@@ -14176,7 +14176,7 @@ register_check_parameters(
 
 # Add checks that have parameters but are only configured as manual checks
 def ps_convert_from_tuple(params):
-    if type(params) in (list, tuple):
+    if isinstance(params, (list, tuple)):
         if len(params) == 5:
             procname, warnmin, okmin, okmax, warnmax = params
             user = None

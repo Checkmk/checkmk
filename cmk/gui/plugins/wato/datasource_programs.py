@@ -328,7 +328,7 @@ vs_ipmitool = Dictionary(elements=vs_ipmi_common_elements, optional_keys=[])
 
 
 def transform_ipmi_sensors(params):
-    if type(params) == dict:
+    if isinstance(params, dict):
         return ("freeipmi", params)
     return params
 
@@ -754,7 +754,7 @@ _siemens_plc_value = [
             sorted=True,
         ),
         # Transform old Integer() value spec to new cascading dropdown value
-        forth=lambda x: type(x) == int and ("db", x) or x,
+        forth=lambda x: isinstance(x, int) and ("db", x) or x,
     ),
     Float(
         title=_("Address"),

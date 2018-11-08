@@ -94,13 +94,13 @@ size_t g_thread_stack_size = 1024 * 1024; /* stack size of threads */
 void *g_nagios_handle;
 int g_unix_socket = -1;
 int g_max_fd_ever = 0;
-static char fl_socket_path[4096];
+static std::string fl_socket_path;
 static char fl_pnp_path[4096];
 static char fl_mk_inventory_path[4096];
 static char fl_structured_status_path[4096];
 static char fl_mk_logwatch_path[4096];
-static char fl_logfile_path[4096];
-static char fl_mkeventd_socket_path[4096];
+static std::string fl_logfile_path;
+static std::string fl_mkeventd_socket_path;
 static bool fl_should_terminate = false;
 
 struct ThreadInfo {
@@ -376,13 +376,12 @@ void terminate_threads() {
 
 bool open_unix_socket() {
     struct stat st;
-    if (stat(fl_socket_path, &st) == 0) {
-        if (unlink(fl_socket_path) == 0) {
+    if (stat(fl_socket_path.c_str(), &st) == 0) {
+        if (unlink(fl_socket_path.c_str()) == 0) {
             Debug(fl_logger_nagios)
                 << "removed old socket file " << fl_socket_path;
         } else {
-            generic_error ge("cannot remove old socket file " +
-                             std::string(fl_socket_path));
+            generic_error ge("cannot remove old socket file " + fl_socket_path);
             Alert(fl_logger_nagios) << ge;
             return false;
         }
@@ -408,11 +407,12 @@ bool open_unix_socket() {
     // fl_socket_path
     struct sockaddr_un sockaddr;
     sockaddr.sun_family = AF_UNIX;
-    strncpy(sockaddr.sun_path, fl_socket_path, sizeof(sockaddr.sun_path));
+    strncpy(sockaddr.sun_path, fl_socket_path.c_str(),
+            sizeof(sockaddr.sun_path));
     if (bind(g_unix_socket, reinterpret_cast<struct sockaddr *>(&sockaddr),
              sizeof(sockaddr)) < 0) {
         generic_error ge("cannot bind UNIX socket to address " +
-                         std::string(fl_socket_path));
+                         fl_socket_path);
         Error(fl_logger_nagios) << ge;
         close(g_unix_socket);
         return false;
@@ -420,17 +420,16 @@ bool open_unix_socket() {
 
     // Make writable group members (fchmod didn't do nothing for me. Don't know
     // why!)
-    if (0 != chmod(fl_socket_path, 0660)) {
+    if (0 != chmod(fl_socket_path.c_str(), 0660)) {
         generic_error ge("cannot change file permissions for UNIX socket at " +
-                         std::string(fl_socket_path) + " to 0660");
+                         fl_socket_path + " to 0660");
         Error(fl_logger_nagios) << ge;
         close(g_unix_socket);
         return false;
     }
 
     if (0 != listen(g_unix_socket, 3 /* backlog */)) {
-        generic_error ge("cannot listen to UNIX socket at " +
-                         std::string(fl_socket_path));
+        generic_error ge("cannot listen to UNIX socket at " + fl_socket_path);
         Error(fl_logger_nagios) << ge;
         close(g_unix_socket);
         return false;
@@ -442,7 +441,7 @@ bool open_unix_socket() {
 }
 
 void close_unix_socket() {
-    unlink(fl_socket_path);
+    unlink(fl_socket_path.c_str());
     if (g_unix_socket >= 0) {
         close(g_unix_socket);
         g_unix_socket = -1;
@@ -901,20 +900,16 @@ void check_path(const char *name, char *path) {
 }
 
 void livestatus_parse_arguments(const char *args_orig) {
-    /* set default socket path */
-    strncpy(fl_socket_path, default_socket_path, sizeof(fl_socket_path));
+    fl_socket_path = default_socket_path;
 
-    /* set default path to our logfile to be in the same path as nagios.log */
-    strncpy(fl_logfile_path, log_file,
-            sizeof(fl_logfile_path) - 16 /* len of "livestatus.log" */);
-    char *slash = strrchr(fl_logfile_path, '/');
-    if (slash == nullptr) {
-        strncpy(fl_logfile_path, "/tmp/livestatus.log", 20);
-    } else {
-        strncpy(slash + 1, "livestatus.log", 15);
-    }
+    // set default path to our logfile to be in the same path as nagios.log
+    std::string lf{log_file};
+    auto slash = lf.rfind('/');
+    fl_logfile_path =
+        (slash == std::string::npos ? "/tmp/" : lf.substr(0, slash + 1)) +
+        "livestatus.log";
 
-    fl_mkeventd_socket_path[0] = 0;
+    fl_mkeventd_socket_path = "";
 
     /* there is no default PNP path */
     fl_pnp_path[0] = 0;
@@ -932,7 +927,7 @@ void livestatus_parse_arguments(const char *args_orig) {
         char *left = next_token(&part, '=');
         char *right = next_token(&part, 0);
         if (right == nullptr) {
-            strncpy(fl_socket_path, left, sizeof(fl_socket_path));
+            fl_socket_path = left;
         } else {
             if (strcmp(left, "debug") == 0) {
                 int debug_level = atoi(right);
@@ -946,10 +941,9 @@ void livestatus_parse_arguments(const char *args_orig) {
                 Notice(fl_logger_nagios)
                     << "setting debug level to " << fl_livestatus_log_level;
             } else if (strcmp(left, "log_file") == 0) {
-                strncpy(fl_logfile_path, right, sizeof(fl_logfile_path));
+                fl_logfile_path = right;
             } else if (strcmp(left, "mkeventd_socket_path") == 0) {
-                strncpy(fl_mkeventd_socket_path, right,
-                        sizeof(fl_mkeventd_socket_path));
+                fl_mkeventd_socket_path = right;
             } else if (strcmp(left, "max_cached_messages") == 0) {
                 fl_max_cached_messages = strtoul(right, nullptr, 10);
                 Notice(fl_logger_nagios)
@@ -1093,15 +1087,12 @@ void livestatus_parse_arguments(const char *args_orig) {
         }
     }
 
-    if (fl_mkeventd_socket_path[0] == 0) {
-        strncpy(fl_mkeventd_socket_path, fl_socket_path,
-                sizeof(fl_mkeventd_socket_path));
-        char *slash = strrchr(fl_mkeventd_socket_path, '/');
-        char *pos = slash == nullptr ? fl_mkeventd_socket_path : (slash + 1);
-        strncpy(
-            pos, "mkeventd/status",
-            &fl_mkeventd_socket_path[sizeof(fl_mkeventd_socket_path)] - pos);
-        fl_mkeventd_socket_path[sizeof(fl_mkeventd_socket_path) - 1] = 0;
+    if (fl_mkeventd_socket_path.empty()) {
+        std::string sp{fl_socket_path};
+        auto slash = sp.rfind('/');
+        fl_mkeventd_socket_path =
+            (slash == std::string::npos ? "" : sp.substr(0, slash + 1)) +
+            "mkeventd/status";
     }
     Warning(fl_logger_nagios)
         << "fl_socket_path=[" << fl_socket_path

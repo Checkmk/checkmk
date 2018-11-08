@@ -22,7 +22,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-CLANG_VERSION ?= 6.0
+CLANG_VERSION ?= 7
 
 BEAR ?= bear
 CPPCHECK ?= cppcheck

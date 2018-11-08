@@ -772,14 +772,22 @@ class APICallHosttags(APICallCollection):
         hosttags_config = watolib.HosttagsConfiguration()
         hosttags_config.load()
 
-        response = hosttags_config.get_dict_format()
-        add_configuration_hash(response, response)  # Looks strange, but is OK
+        hosttags_dict = hosttags_config.get_dict_format()
 
-        return response
+        # The configuration hash is computed for the configurable hosttags
+        add_configuration_hash(hosttags_dict, hosttags_dict) # Looks strange, but is OK
+
+        hosttags_dict["builtin"] = self._get_builtin_tags_configuration()
+        return hosttags_dict
+
+    def _get_builtin_tags_configuration(self):
+        builtin_tags_config = watolib.BuiltinHosttagsConfiguration()
+        builtin_tags_config.parse_config((watolib.builtin_host_tags, watolib.builtin_aux_tags))
+        return builtin_tags_config.get_dict_format()
 
     def _set(self, request):
         validate_request_keys(
-            request, required_keys=["tag_groups", "aux_tags"], optional_keys=["configuration_hash"])
+            request, required_keys=["tag_groups", "aux_tags"], optional_keys=["configuration_hash", "builtin"])
 
         hosttags_config = watolib.HosttagsConfiguration()
         hosttags_config.load()

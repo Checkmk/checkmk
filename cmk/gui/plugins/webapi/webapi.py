@@ -782,7 +782,7 @@ class APICallHosttags(APICallCollection):
 
     def _get_builtin_tags_configuration(self):
         builtin_tags_config = watolib.BuiltinHosttagsConfiguration()
-        builtin_tags_config.parse_config((watolib.builtin_host_tags, watolib.builtin_aux_tags))
+        builtin_tags_config.load()
         return builtin_tags_config.get_dict_format()
 
     def _set(self, request):

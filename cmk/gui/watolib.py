@@ -7317,6 +7317,10 @@ class BuiltinHosttagsConfiguration(HosttagsConfiguration):
     def insert_tag_group(self, tag_group):
         self._insert_tag_group(tag_group)
 
+    def load(self):
+        builtin_tags = config.BuiltinTags()
+        self._parse_legacy_format(builtin_tags.host_tags(), builtin_tags.aux_tags())
+
 #.
 #   .--Hooks---------------------------------------------------------------.
 #   |                     _   _             _                              |

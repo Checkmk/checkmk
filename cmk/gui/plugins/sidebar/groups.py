@@ -24,30 +24,65 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+import abc
 import cmk.gui.sites as sites
+from cmk.gui.plugins.sidebar import (
+    SidebarSnapin,
+    snapin_registry,
+    bulletlink
+)
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
 
-from cmk.gui.plugins.sidebar import sidebar_snapins, bulletlink
+class GroupSnapin(SidebarSnapin):
+    __metaclass__ = abc.ABCMeta
 
-def render_groups(what):
-    html.open_ul()
-    for name, alias in sites.all_groups(what):
-        url = "view.py?view_name=%sgroup&%sgroup=%s" % (what, what, html.urlencode(name))
-        bulletlink(alias or name, url)
-    html.close_ul()
+    @abc.abstractmethod
+    def _group_type_ident(self):
+        raise NotImplementedError()
 
-sidebar_snapins["hostgroups"] = {
-    "title" : _("Host Groups"),
-    "description" : _("Directs links to all host groups"),
-    "render" : lambda: render_groups("host"),
-    "restart":     True,
-    "allowed" : [ "user", "admin", "guest" ]
-}
-sidebar_snapins["servicegroups"] = {
-    "title" : _("Service Groups"),
-    "description" : _("Direct links to all service groups"),
-    "render" : lambda: render_groups("service"),
-    "restart":     True,
-    "allowed" : [ "user", "admin", "guest" ]
-}
+    def show(self):
+        group_type = self._group_type_ident()
+        html.open_ul()
+        for name, alias in sites.all_groups(group_type.replace("group", "")):
+            url = "view.py?view_name=%s&%s=%s" % (group_type, group_type, html.urlencode(name))
+            bulletlink(alias or name, url)
+        html.close_ul()
+
+    @classmethod
+    def refresh_on_restart(cls):
+        return True
+
+@snapin_registry.register
+class HostGroups(GroupSnapin):
+    def _group_type_ident(self):
+        return "hostgroup"
+
+    @staticmethod
+    def type_name():
+        return "hostgroups"
+
+    @classmethod
+    def title(cls):
+        return _("Host Groups")
+
+    @classmethod
+    def description(cls):
+        return _("Directs links to all host groups")
+
+@snapin_registry.register
+class ServiceGroups(GroupSnapin):
+    def _group_type_ident(self):
+        return "servicegroup"
+
+    @staticmethod
+    def type_name():
+        return "servicegroups"
+
+    @classmethod
+    def title(cls):
+        return _("Service Groups")
+
+    @classmethod
+    def description(cls):
+        return _("Direct links to all service groups")

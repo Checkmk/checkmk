@@ -25,10 +25,12 @@
 # Boston, MA 02110-1301 USA.
 
 
-def inventory_wmi_cpuload(parsed):
-    return inventory_wmi_table(parsed, \
-                required_tables = [ "computer_system", "system_perf" ],
-                skip_intersection=True)
+def inventory_wmi_cpuload(tables):
+    if ("computer_system" not in tables.keys() or
+        "system_perf" not in tables.keys() or
+        any(isinstance(table, NullTable) for table in tables.itervalues())):
+        return []
+    return [(None, None)]
 
 
 def check_wmi_cpuload(item, params, parsed):

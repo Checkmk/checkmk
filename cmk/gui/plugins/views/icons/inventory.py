@@ -29,6 +29,7 @@ import cmk.gui.config as config
 from cmk.gui.i18n import _
 from . import multisite_icons_and_actions
 
+
 def paint_icon_inventory(what, row, tags, customer_vars):
     # TODO: Clean this up somehow
     from cmk.gui.plugins.views import url_to_view
@@ -38,9 +39,11 @@ def paint_icon_inventory(what, row, tags, customer_vars):
         if not config.user.may("view.inv_host"):
             return
 
-        return 'inv', _("Show Hardware/Software Inventory of this host"), url_to_view(row, 'inv_host')
+        return 'inv', _("Show Hardware/Software Inventory of this host"), url_to_view(
+            row, 'inv_host')
+
 
 multisite_icons_and_actions['inventory'] = {
-    'host_columns' : [ "name" ],
-    'paint'        : paint_icon_inventory,
+    'host_columns': ["name"],
+    'paint': paint_icon_inventory,
 }

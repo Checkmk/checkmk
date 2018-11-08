@@ -30,6 +30,7 @@ from cmk.gui.globals import html
 
 from . import multisite_icons
 
+
 def paint_mkeventd(what, row, tags, custom_vars):
     # show for services based on the mkevents active check
     command = row[what + '_check_command']
@@ -41,7 +42,7 @@ def paint_mkeventd(what, row, tags, custom_vars):
         return
 
     host = None
-    app  = None
+    app = None
 
     # Extract parameters from check_command:
     args = command.split('!')[1].split()
@@ -51,7 +52,7 @@ def paint_mkeventd(what, row, tags, custom_vars):
     # Handle -a and -H options. Sorry for the hack. We currently
     # have no better idea
     if len(args) >= 2 and args[0] == '-H':
-        args = args[2:] # skip two arguments
+        args = args[2:]  # skip two arguments
     if len(args) >= 1 and args[0] == '-a':
         args = args[1:]
 
@@ -78,15 +79,15 @@ def paint_mkeventd(what, row, tags, custom_vars):
         url_prefix = site['url_prefix'] + 'check_mk/'
 
     url_vars = [
-          ("view_name", "ec_events_of_monhost"),
-          ("site", row["site"]),
-          ("host", row["host_name"]),
+        ("view_name", "ec_events_of_monhost"),
+        ("site", row["site"]),
+        ("host", row["host_name"]),
     ]
 
     title = _('Events of Host %s') % (row["host_name"])
 
     if len(args) >= 2:
-        app   = args[1].strip('\'').replace("\\\\", "\\")
+        app = args[1].strip('\'').replace("\\\\", "\\")
         title = _('Events of Application "%s" on Host %s') % (app, host)
         url_vars.append(("event_application", app))
 
@@ -94,9 +95,10 @@ def paint_mkeventd(what, row, tags, custom_vars):
 
     return 'mkeventd', title, url_prefix + url
 
+
 if config.mkeventd_enabled:
     multisite_icons.append({
-        'columns': [ 'check_command' ],
-        'host_columns': [ 'address', 'name' ],
-        'paint':   paint_mkeventd,
+        'columns': ['check_command'],
+        'host_columns': ['address', 'name'],
+        'paint': paint_mkeventd,
     })

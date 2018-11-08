@@ -65,15 +65,16 @@ class URLDashlet(IFrameDashlet):
     def vs_parameters(cls):
         return [
             ("url", TextAscii(
-                title = _('URL'),
-                size = 50,
-                allow_empty = False,
+                title=_('URL'),
+                size=50,
+                allow_empty=False,
             )),
-            ("show_in_iframe", Checkbox(
-                title = _('Render in iframe'),
-                label = _('Render URL contents in own frame'),
-                default_value = True,
-            )),
+            ("show_in_iframe",
+             Checkbox(
+                 title=_('Render in iframe'),
+                 label=_('Render URL contents in own frame'),
+                 default_value=True,
+             )),
         ]
 
     def update(self):

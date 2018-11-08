@@ -66,11 +66,12 @@ class SnapinDashlet(IFrameDashlet):
     @classmethod
     def vs_parameters(cls):
         return [
-            ("snapin", DropdownChoice(
-                title = _("Snapin"),
-                help = _("Choose the snapin you would like to show."),
-                choices = cls._snapin_choices,
-            )),
+            ("snapin",
+             DropdownChoice(
+                 title=_("Snapin"),
+                 help=_("Choose the snapin you would like to show."),
+                 choices=cls._snapin_choices,
+             )),
         ]
 
     @classmethod
@@ -92,7 +93,8 @@ class SnapinDashlet(IFrameDashlet):
         snapin_instance = snapin()
 
         html.set_browser_reload(self.refresh_interval())
-        html.html_head(_('Snapin Dashlet'), javascripts=['sidebar'], stylesheets=['sidebar', 'status'])
+        html.html_head(
+            _('Snapin Dashlet'), javascripts=['sidebar'], stylesheets=['sidebar', 'status'])
         html.style('''
 #side_content {
     height: auto;

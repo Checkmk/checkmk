@@ -82,29 +82,32 @@ class GraphDashlet(Dashlet):
     @classmethod
     def vs_parameters(cls):
         return Dictionary(
-            title = _('Properties'),
-            render = 'form',
-            optional_keys = [],
-            elements = cls._parameter_elements,
+            title=_('Properties'),
+            render='form',
+            optional_keys=[],
+            elements=cls._parameter_elements,
         )
 
     @classmethod
     def _parameter_elements(cls):
         elements = [
             # TODO: Cleanup: switch to generic Timerange() valuespec!
-            ("timerange", DropdownChoice(
-                title = _('Timerange'),
-                default_value = '1',
-                choices= [
-                    ("0", _("4 Hours")),  ("1", _("25 Hours")),
-                    ("2", _("One Week")), ("3", _("One Month")),
-                    ("4", _("One Year")),
-                ],
-            )),
+            ("timerange",
+             DropdownChoice(
+                 title=_('Timerange'),
+                 default_value='1',
+                 choices=[
+                     ("0", _("4 Hours")),
+                     ("1", _("25 Hours")),
+                     ("2", _("One Week")),
+                     ("3", _("One Month")),
+                     ("4", _("One Year")),
+                 ],
+             )),
             ("source", Integer(
-                title = _("Source (n'th graph)"),
-                default_value = 1,
-                minvalue = 1,
+                title=_("Source (n'th graph)"),
+                default_value=1,
+                minvalue=1,
             )),
         ]
 

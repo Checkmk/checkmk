@@ -527,7 +527,7 @@ class FilterInvHasSoftwarePackage(Filter):
 
     def find_package(self, packages, name, from_version, to_version):
         for package in packages:
-            if type(name) == unicode:
+            if isinstance(name, unicode):
                 if package["name"] != name:
                     continue
             else:

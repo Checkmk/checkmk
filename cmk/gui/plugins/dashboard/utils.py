@@ -303,7 +303,7 @@ class Dashlet(object):
             return None
 
         urlfunc = self._dashlet_spec['urlfunc']
-        if type(urlfunc) == type(lambda x: x):
+        if callable(urlfunc):
             return urlfunc()
 
         if '.' in urlfunc:

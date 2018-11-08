@@ -44,14 +44,10 @@ class CurrentTime(SidebarSnapin):
     @classmethod
     def description(cls):
         return _("A large clock showing the current time of "
-                 "the web server"),
+                 "the web server")
 
     def show(self):
         html.div(time.strftime("%H:%M"), class_="time")
-
-    @classmethod
-    def allowed_roles(cls):
-        return [ "admin", "user", "guest" ]
 
     def styles(self):
         return """

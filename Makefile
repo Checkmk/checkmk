@@ -36,7 +36,7 @@ TAROPTS            := --owner=root --group=root --exclude=.svn --exclude=*~ \
                       --exclude=.gitignore --exclude=*.swp --exclude=.f12
 # We could add clang's -Wshorten-64-to-32 and g++'c/clang's -Wsign-conversion here.
 CXX_FLAGS          := -g -O3 -Wall -Wextra
-CLANG_VERSION      := 6.0
+CLANG_VERSION      := 7
 CLANG_FORMAT       := clang-format-$(CLANG_VERSION)
 CLANG_TIDY         := clang-tidy-$(CLANG_VERSION)
 export RUN_CLANG_TIDY := run-clang-tidy-$(CLANG_VERSION).py
@@ -349,18 +349,18 @@ setup:
 	    autoconf \
 	    bear \
 	    build-essential \
-	    clang-6.0 \
-	    clang-format-6.0 \
-	    clang-tidy-6.0 \
+	    clang-7 \
+	    clang-format-7 \
+	    clang-tidy-7 \
 	    doxygen \
 	    figlet \
 	    g++ \
 	    libboost-dev \
 	    libboost-system-dev \
-	    libclang-6.0-dev \
+	    libclang-7-dev \
 	    libpcap-dev \
 	    librrd-dev \
-	    llvm-6.0-dev \
+	    llvm-7-dev \
 	    libsasl2-dev \
 	    pngcrush \
 	    slimit \

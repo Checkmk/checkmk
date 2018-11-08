@@ -86,7 +86,7 @@ class FilterText(Filter):
             negate = ""
 
         if current_value:
-            if type(current_value) == unicode:
+            if isinstance(current_value, unicode):
                 current_value = current_value.encode("utf-8")
             return "Filter: %s %s%s %s\n" % (
                 self.column,
@@ -127,7 +127,7 @@ class FilterHostnameOrAlias(FilterUnicode):
             negate = ""
 
         if current_value:
-            if type(current_value) == unicode:
+            if isinstance(current_value, unicode):
                 current_value = current_value.encode("utf-8")
             return "Filter: host_name %s%s %s\nFilter: alias %s%s %s\nOr: 2\n" % ((
                 negate,
@@ -1694,7 +1694,7 @@ if config.mkeventd_enabled:
             self._operator = operator
 
         def display(self):
-            if type(self._choices) == list:
+            if isinstance(self._choices, list):
                 choices = self._choices
             else:
                 choices = self._choices()

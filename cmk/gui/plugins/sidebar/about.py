@@ -30,33 +30,30 @@ from cmk.gui.i18n import _
 from cmk.gui.globals import html
 from . import SidebarSnapin, snapin_registry, bulletlink
 
+
 @snapin_registry.register
 class About(SidebarSnapin):
     @staticmethod
     def type_name():
         return "about"
 
-
     @classmethod
     def title(cls):
         return _("About Check_MK")
-
 
     @classmethod
     def description(cls):
         return _("Version information and Links to Documentation, "
                  "Homepage and Download of Check_MK")
 
-
     def show(self):
         html.write(_("Version: ") + cmk.__version__)
         html.open_ul()
-        bulletlink(_("Homepage"),        "https://mathias-kettner.com/index.html")
-        bulletlink(_("Documentation"),   "https://mathias-kettner.com/cms.html")
-        bulletlink(_("Download"),        "https://mathias-kettner.com/download.php")
+        bulletlink(_("Homepage"), "https://mathias-kettner.com/index.html")
+        bulletlink(_("Documentation"), "https://mathias-kettner.com/cms.html")
+        bulletlink(_("Download"), "https://mathias-kettner.com/download.php")
         html.close_ul()
-
 
     @classmethod
     def allowed_roles(cls):
-        return [ "admin", "user", "guest" ]
+        return ["admin", "user", "guest"]

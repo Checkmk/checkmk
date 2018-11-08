@@ -38,28 +38,25 @@ from . import (
     render_link,
 )
 
+
 @snapin_registry.register
 class SiteStatus(SidebarSnapin):
     @staticmethod
     def type_name():
         return "sitestatus"
 
-
     @classmethod
     def refresh_regularly(cls):
         return True
-
 
     @classmethod
     def title(cls):
         return _("Site Status")
 
-
     @classmethod
     def description(cls):
         return _("Connection state of each site and button for enabling "
                  "and disabling the site connection")
-
 
     def show(self):
         html.open_table(cellspacing=0, class_="sitestate")
@@ -82,7 +79,8 @@ class SiteStatus(SidebarSnapin):
                     text = site["alias"]
                 else:
                     switch = "off"
-                    text = render_link(site["alias"], "view.py?view_name=sitehosts&site=%s" % sitename)
+                    text = render_link(site["alias"],
+                                       "view.py?view_name=sitehosts&site=%s" % sitename)
 
             html.open_tr()
             html.open_td(class_="left")
@@ -94,18 +92,19 @@ class SiteStatus(SidebarSnapin):
             else:
                 url = html.makeactionuri_contextless([
                     ("_site_switch", "%s:%s" % (sitename, switch)),
-                ], filename="switch_site.py")
-                html.status_label_button(content=state, status=state,
+                ],
+                                                     filename="switch_site.py")
+                html.status_label_button(
+                    content=state,
+                    status=state,
                     title=_("enable this site") if state == "disabled" else _("disable this site"),
                     onclick="switch_site(%s)" % (json.dumps(url)))
             html.close_tr()
         html.close_table()
 
-
     @classmethod
     def allowed_roles(cls):
-        return [ "user", "admin" ]
-
+        return ["user", "admin"]
 
     def styles(self):
         return """
@@ -143,7 +142,6 @@ table.sitestate td.state {
         return {
             "switch_site": self._ajax_switch_site,
         }
-
 
     def _ajax_switch_site(self):
         html.set_output_format("json")

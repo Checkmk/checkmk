@@ -1,0 +1,10 @@
+Title: Fixed broken validation of host diagnose user input
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.5.0p8
+Date: 1541687135
+Class: fix
+
+

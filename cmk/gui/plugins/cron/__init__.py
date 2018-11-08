@@ -45,6 +45,7 @@ multisite_cronjobs = []
 def register_job(cron_job):
     multisite_cronjobs.append(cron_job)
 
+
 #.
 #   .--Plugins-------------------------------------------------------------.
 #   |                   ____  _             _                              |
@@ -54,6 +55,5 @@ def register_job(cron_job):
 #   |                  |_|   |_|\__,_|\__, |_|_| |_|___/                   |
 #   |                                 |___/                                |
 #   '----------------------------------------------------------------------'
-
 
 load_plugins(__file__, __package__)

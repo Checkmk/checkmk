@@ -23,7 +23,6 @@
 # License along with GNU Make; see the file  COPYING.  If  not,  write
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
-
 """Module to hold shared code for main module internals and the plugins"""
 
 from collections import OrderedDict
@@ -44,30 +43,29 @@ class AutomaticDict(OrderedDict):
     """Dictionary class with the ability of appending items like provided
     by a list."""
 
-    def __init__(self, list_identifier = None, start_index = None):
+    def __init__(self, list_identifier=None, start_index=None):
         OrderedDict.__init__(self)
         self._list_identifier = list_identifier or "item"
         self._item_index = start_index or 0
-
 
     def append(self, item):
         self["%s_%i" % (self._list_identifier, self._item_index)] = item
         self._item_index += 1
 
+
 # TODO: Refactor to plugin_registry structures
-unit_info       = {}
-metric_info     = {}
-check_metrics   = {}
+unit_info = {}
+metric_info = {}
+check_metrics = {}
 perfometer_info = []
 # _AutomaticDict is used here to provide some list methods.
 # This is needed to maintain backwards-compatibility.
-graph_info      = AutomaticDict("manual_graph_template")
+graph_info = AutomaticDict("manual_graph_template")
 
 scalar_colors = {
-    "warn" : "#ffff00",
-    "crit" : "#ff0000",
+    "warn": "#ffff00",
+    "crit": "#ff0000",
 }
-
 
 #.
 #   .--Constants-----------------------------------------------------------.
@@ -96,18 +94,18 @@ T = G * 1000
 P = T * 1000
 
 scale_symbols = {
-  m  : "m",
-  1  : "",
-  KB : "k",
-  MB : "M",
-  GB : "G",
-  TB : "T",
-  PB : "P",
-  K  : "k",
-  M  : "M",
-  G  : "G",
-  T  : "T",
-  P  : "P",
+    m: "m",
+    1: "",
+    KB: "k",
+    MB: "M",
+    GB: "G",
+    TB: "T",
+    PB: "P",
+    K: "k",
+    M: "M",
+    G: "G",
+    T: "T",
+    P: "P",
 }
 
 
@@ -142,7 +140,7 @@ def parse_perf_data(perf_data_string, check_command=None):
     # Python's isdigit() works only on str. We deal with unicode since
     # we deal with data coming from Livestatus
     def isdigit(x):
-        return x in [ '0', '1', '2', '3', '4', '5', '6', '7', '8', '9' ]
+        return x in ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
 
     # Parse performance data, at least try
     perf_data = []
@@ -162,12 +160,12 @@ def parse_perf_data(perf_data_string, check_command=None):
                 value_parts.append(None)
             value_text, warn, crit, min_, max_ = value_parts[0:5]
             if value_text.strip() == "":
-                continue # ignore useless empty variable
+                continue  # ignore useless empty variable
 
             # separate value from unit
             i = 0
-            while i < len(value_text) and (isdigit(value_text[i])
-                                           or value_text[i] in ['.', ',', '-']):
+            while i < len(value_text) and (isdigit(value_text[i]) or
+                                           value_text[i] in ['.', ',', '-']):
                 i += 1
 
             unit_name = value_text[i:]
@@ -176,7 +174,7 @@ def parse_perf_data(perf_data_string, check_command=None):
             value = _float_or_int(value_text[:i])
 
             perf_data_tuple = (varname, value, unit_name)
-            for val in [ warn, crit, min_, max_ ]:
+            for val in [warn, crit, min_, max_]:
                 if val is not None:
                     try:
                         val = _float_or_int(val)
@@ -210,13 +208,14 @@ def _split_perf_data(perf_data_string):
 def perfvar_translation(perfvar_nr, perfvar_name, check_command):
     """Get translation info for one performance var."""
     cm = check_metrics.get(check_command, {})
-    translation_entry = {} # Default: no translation neccessary
+    translation_entry = {}  # Default: no translation neccessary
 
     if perfvar_name in cm:
         translation_entry = cm[perfvar_name]
     else:
         for orig_varname, te in cm.items():
-            if orig_varname[0] == "~" and cmk.regex.regex(orig_varname[1:]).match(perfvar_name): # Regex entry
+            if orig_varname[0] == "~" and cmk.regex.regex(
+                    orig_varname[1:]).match(perfvar_name):  # Regex entry
                 translation_entry = te
                 break
 
@@ -224,9 +223,9 @@ def perfvar_translation(perfvar_nr, perfvar_name, check_command):
     scale = translation_entry.get("scale", 1.0)
 
     return {
-        "name"       : metric_name,
-        "scale"      : scale,
-        "auto_graph" : translation_entry.get("auto_graph", True)
+        "name": metric_name,
+        "scale": scale,
+        "auto_graph": translation_entry.get("auto_graph", True)
     }
 
 
@@ -248,32 +247,32 @@ def translate_metrics(perf_data, check_command):
         metric_name = translation_entry["name"]
 
         if metric_name in translated_metrics:
-            continue # ignore duplicate value
+            continue  # ignore duplicate value
 
         if metric_name not in metric_info:
             color_index += 1
             palette_color = get_palette_color_by_index(color_index)
             mi = {
-                "title" : metric_name.title(),
-                "unit" : "",
-                "color" : parse_color_into_hexrgb(palette_color),
+                "title": metric_name.title(),
+                "unit": "",
+                "color": parse_color_into_hexrgb(palette_color),
             }
         else:
             mi = metric_info[metric_name].copy()
             mi["color"] = parse_color_into_hexrgb(mi["color"])
 
         new_entry = {
-            "value"      : value * translation_entry["scale"],
-            "orig_name"  : varname,
-            "scale"      : translation_entry["scale"], # needed for graph recipes
-            "scalar"     : {},
+            "value": value * translation_entry["scale"],
+            "orig_name": varname,
+            "scale": translation_entry["scale"],  # needed for graph recipes
+            "scalar": {},
         }
 
         # Do not create graphs for ungraphed metrics if listed here
         new_entry["auto_graph"] = translation_entry["auto_graph"]
 
         # Add warn, crit, min, max
-        for index, key in [ (3, "warn"), (4, "crit"), (5, "min"), (6, "max") ]:
+        for index, key in [(3, "warn"), (4, "crit"), (5, "min"), (6, "max")]:
             if len(entry) < index + 1:
                 break
             elif entry[index] is not None:
@@ -282,7 +281,6 @@ def translate_metrics(perf_data, check_command):
                 except:
                     if config.debug:
                         raise
-
 
         new_entry.update(mi)
         new_entry["unit"] = unit_info[new_entry["unit"]]
@@ -293,6 +291,7 @@ def translate_metrics(perf_data, check_command):
         #     # TODO: lower and upper levels
         #     translated_metrics[metric_name]["warn"] = float(entry[2])
     return translated_metrics
+
 
 #.
 #   .--Evaluation----------------------------------------------------------.
@@ -306,6 +305,7 @@ def translate_metrics(perf_data, check_command):
 #   |  Parsing of performance data into metrics, evaluation of expressions |
 #   '----------------------------------------------------------------------'
 # TODO: Refactor evaluate and all helpers into single class
+
 
 # Evaluates an expression, returns a triple of value, unit and color.
 # e.g. "fs_used:max"    -> 12.455, "b", "#00ffc6",
@@ -322,12 +322,13 @@ def evaluate(expression, translated_metrics):
         return _evaluate_literal(expression, translated_metrics)
     else:
         if "#" in expression:
-            expression, explicit_color = expression.rsplit("#", 1) # drop appended color information
+            expression, explicit_color = expression.rsplit("#",
+                                                           1)  # drop appended color information
         else:
             explicit_color = None
 
         if "@" in expression:
-            expression, explicit_unit_name = expression.rsplit("@", 1) # appended unit name
+            expression, explicit_unit_name = expression.rsplit("@", 1)  # appended unit name
         else:
             explicit_unit_name = None
 
@@ -344,38 +345,40 @@ def evaluate(expression, translated_metrics):
 
 def _evaluate_rpn(expression, translated_metrics):
     parts = expression.split(",")
-    stack = [] # stack tuples of (value, unit, color)
+    stack = []  # stack tuples of (value, unit, color)
     while parts:
         operator_name = parts[0]
         parts = parts[1:]
         if operator_name in rpn_operators:
             if len(stack) < 2:
-                raise MKGeneralException("Syntax error in expression '%s': too few operands" % expression)
+                raise MKGeneralException(
+                    "Syntax error in expression '%s': too few operands" % expression)
             op1 = stack[-2]
             op2 = stack[-1]
             result = rpn_operators[operator_name](op1, op2)
-            stack = stack[:-2] + [ result ]
+            stack = stack[:-2] + [result]
         else:
             stack.append(_evaluate_literal(operator_name, translated_metrics))
 
     if len(stack) != 1:
-        raise MKGeneralException("Syntax error in expression '%s': too many operands left" % expression)
+        raise MKGeneralException(
+            "Syntax error in expression '%s': too many operands left" % expression)
 
     return stack[0]
 
 
 # TODO: Do real unit computation, detect non-matching units
 rpn_operators = {
-    "+"  : lambda a, b: ((a[0] +  b[0]),                _unit_mult(a[1], b[1]), _choose_operator_color(a[2], b[2])),
-    "-"  : lambda a, b: ((a[0] -  b[0]),                _unit_sub(a[1], b[1]), _choose_operator_color(a[2], b[2])),
-    "*"  : lambda a, b: ((a[0] *  b[0]),                _unit_add(a[1], b[1]), _choose_operator_color(a[2], b[2])),
-    "/"  : lambda a, b: ((a[0] /  b[0]),                _unit_div(a[1], b[1]), _choose_operator_color(a[2], b[2])),
-    ">"  : lambda a, b: ((a[0] >  b[0] and 1.0 or 0.0), unit_info[""],         "#000000"),
-    "<"  : lambda a, b: ((a[0] <  b[0] and 1.0 or 0.0), unit_info[""],         "#000000"),
-    ">=" : lambda a, b: ((a[0] >= b[0] and 1.0 or 0.0), unit_info[""],         "#000000"),
-    "<=" : lambda a, b: ((a[0] <= b[0] and 1.0 or 0.0), unit_info[""],         "#000000"),
-    "MIN" : lambda a, b: _operator_minmax(a, b, min),
-    "MAX" : lambda a, b: _operator_minmax(a, b, max),
+    "+": lambda a, b: ((a[0] + b[0]), _unit_mult(a[1], b[1]), _choose_operator_color(a[2], b[2])),
+    "-": lambda a, b: ((a[0] - b[0]), _unit_sub(a[1], b[1]), _choose_operator_color(a[2], b[2])),
+    "*": lambda a, b: ((a[0] * b[0]), _unit_add(a[1], b[1]), _choose_operator_color(a[2], b[2])),
+    "/": lambda a, b: ((a[0] / b[0]), _unit_div(a[1], b[1]), _choose_operator_color(a[2], b[2])),
+    ">": lambda a, b: ((a[0] > b[0] and 1.0 or 0.0), unit_info[""], "#000000"),
+    "<": lambda a, b: ((a[0] < b[0] and 1.0 or 0.0), unit_info[""], "#000000"),
+    ">=": lambda a, b: ((a[0] >= b[0] and 1.0 or 0.0), unit_info[""], "#000000"),
+    "<=": lambda a, b: ((a[0] <= b[0] and 1.0 or 0.0), unit_info[""], "#000000"),
+    "MIN": lambda a, b: _operator_minmax(a, b, min),
+    "MAX": lambda a, b: _operator_minmax(a, b, max),
 }
 
 
@@ -389,6 +392,7 @@ def _unit_mult(u1, u2):
 _unit_div = _unit_mult
 _unit_add = _unit_mult
 _unit_sub = _unit_mult
+
 
 def _choose_operator_color(a, b):
     if a == None:
@@ -418,7 +422,6 @@ def _operator_minmax(a, b, func):
     return v, unit, winner[2] or loser[2]
 
 
-
 def _evaluate_literal(expression, translated_metrics):
     if type(expression) == int:
         return float(expression), unit_info["count"], None
@@ -429,7 +432,8 @@ def _evaluate_literal(expression, translated_metrics):
     elif expression[0].isdigit() or expression[0] == '-':
         return float(expression), unit_info[""], None
 
-    if expression.endswith(".max") or expression.endswith(".min") or expression.endswith(".average"):
+    if expression.endswith(".max") or expression.endswith(".min") or expression.endswith(
+            ".average"):
         expression = expression.rsplit(".", 1)[0]
 
     color = None
@@ -482,9 +486,10 @@ def _evaluate_literal(expression, translated_metrics):
 #   |  templates for PNP here.                                             |
 #   '----------------------------------------------------------------------'
 
+
 def get_graph_range(graph_template, translated_metrics):
     if "range" not in graph_template:
-        return None, None # Compute range of displayed data points
+        return None, None  # Compute range of displayed data points
 
     try:
         return evaluate(graph_template["range"][0], translated_metrics)[0], \
@@ -495,6 +500,7 @@ def get_graph_range(graph_template, translated_metrics):
 
 def replace_expressions(text, translated_metrics):
     """Replace expressions in strings like CPU Load - %(load1:max@count) CPU Cores"""
+
     def eval_to_string(match):
         expression = match.group()[2:-1]
         unit_name = None
@@ -514,7 +520,7 @@ def replace_expressions(text, translated_metrics):
 def get_graph_template_choices():
     # TODO: v.get("title", k): Use same algorithm as used in
     # GraphIdentificationTemplateBased._parse_template_metric()
-    return sorted([ (k, v.get("title", k)) for k, v in graph_info.items() ], key=lambda k_v: k_v[1])
+    return sorted([(k, v.get("title", k)) for k, v in graph_info.items()], key=lambda k_v: k_v[1])
 
 
 def get_graph_template(template_id):
@@ -528,11 +534,9 @@ def get_graph_template(template_id):
 
 def generic_graph_template(metric_name):
     return {
-        "id" : "METRIC_" + metric_name,
-        "metrics" : [
-            ( metric_name, "area" ),
-        ],
-        "scalars" : [
+        "id": "METRIC_" + metric_name,
+        "metrics": [(metric_name, "area"),],
+        "scalars": [
             metric_name + ":warn",
             metric_name + ":crit",
         ]
@@ -555,7 +559,8 @@ def _get_explicit_graph_templates(translated_metrics):
         if _graph_possible(graph_template, translated_metrics):
             templates.append(graph_template)
         elif _graph_possible_without_optional_metrics(graph_template, translated_metrics):
-            templates.append(_graph_without_missing_optional_metrics(graph_template, translated_metrics))
+            templates.append(
+                _graph_without_missing_optional_metrics(graph_template, translated_metrics))
     return templates
 
 
@@ -585,7 +590,7 @@ def _metrics_used_in_definition(metric_definition):
     without_color = metric_definition.split("#")[0]
     parts = without_color.split(",")
     for part in parts:
-        metric_name = part.split(".")[0] # drop .min, .max, .average
+        metric_name = part.split(".")[0]  # drop .min, .max, .average
         if metric_name in metric_info:
             yield metric_name
 
@@ -609,8 +614,9 @@ def _graph_possible(graph_template, translated_metrics):
 
 def _graph_possible_without_optional_metrics(graph_template, translated_metrics):
     if "optional_metrics" in graph_template:
-        return _graph_possible(graph_template,
-                      _add_fake_metrics(translated_metrics, graph_template["optional_metrics"]))
+        return _graph_possible(
+            graph_template, _add_fake_metrics(translated_metrics,
+                                              graph_template["optional_metrics"]))
 
 
 def _graph_without_missing_optional_metrics(graph_template, translated_metrics):
@@ -632,12 +638,13 @@ def _add_fake_metrics(translated_metrics, metric_names):
     with_fake = translated_metrics.copy()
     for metric_name in metric_names:
         with_fake[metric_name] = {
-            "value" : 1.0,
-            "scale" : 1.0,
-            "unit" : unit_info[""],
-            "color" : "#888888",
+            "value": 1.0,
+            "scale": 1.0,
+            "unit": unit_info[""],
+            "color": "#888888",
         }
     return with_fake
+
 
 #.
 #   .--Colors--------------------------------------------------------------.
@@ -655,55 +662,55 @@ def _add_fake_metrics(translated_metrics, metric_names):
 # Try to distribute colors in a whay that the psychological
 # colors distance is distributed evenly.
 _hsv_color_distribution = [
-  (0.1, 10.0), # orange ... red
-  (0.2, 10.0), # orange ... yellow(-greenish)
-  (0.3,  5.0), # green-yellow
-  (0.4,  2.0), # green
-  (0.5,  5.0), # green .... cyan
-  (0.6, 20.0), # cyan ... seablue
-  (0.7, 10.0), # seablue ... dark blue
-  (0.8, 20.0), # dark blue ... violet
-  (0.9, 20.0), # violet .. magenta
-  (1.0, 20.0), # magenta .. red
+    (0.1, 10.0),  # orange ... red
+    (0.2, 10.0),  # orange ... yellow(-greenish)
+    (0.3, 5.0),  # green-yellow
+    (0.4, 2.0),  # green
+    (0.5, 5.0),  # green .... cyan
+    (0.6, 20.0),  # cyan ... seablue
+    (0.7, 10.0),  # seablue ... dark blue
+    (0.8, 20.0),  # dark blue ... violet
+    (0.9, 20.0),  # violet .. magenta
+    (1.0, 20.0),  # magenta .. red
 ]
 
 _cmk_color_palette = {
-# do not use:
-#   "0"     : (0.33, 1, 1),  # green
-#   "1"     : (0.167, 1, 1), # yellow
-#   "2"     : (0, 1, 1),     # red
-# red area
-    "11"    : (0.775, 1, 1),
-    "12"    : (0.8, 1, 1),
-    "13"    : (0.83, 1, 1),
-    "14"    : (0.05, 1, 1),
-    "15"    : (0.08, 1, 1),
-    "16"    : (0.105, 1, 1),
-# yellow area
-    "21"    : (0.13, 1, 1),
-    "22"    : (0.14, 1, 1),
-    "23"    : (0.155, 1, 1),
-    "24"    : (0.185, 1, 1),
-    "25"    : (0.21, 1, 1),
-    "26"    : (0.25, 1, 1),
-# green area
-    "31"    : (0.45, 1, 1),
-    "32"    : (0.5, 1, 1),
-    "33"    : (0.515, 1, 1),
-    "34"    : (0.53, 1, 1),
-    "35"    : (0.55, 1, 1),
-    "36"    : (0.57, 1, 1),
-# blue area
-    "41"    : (0.59, 1, 1),
-    "42"    : (0.62, 1, 1),
-    "43"    : (0.66, 1, 1),
-    "44"    : (0.71, 1, 1),
-    "45"    : (0.73, 1, 1),
-    "46"    : (0.75, 1, 1),
-# special colors
-    "51"    : (0, 0, 0.5),        # grey_50
-    "52"    : (0.067, 0.7, 0.5),  # brown 1
-    "53"    : (0.083, 0.8, 0.55), # brown 2
+    # do not use:
+    #   "0"     : (0.33, 1, 1),  # green
+    #   "1"     : (0.167, 1, 1), # yellow
+    #   "2"     : (0, 1, 1),     # red
+    # red area
+    "11": (0.775, 1, 1),
+    "12": (0.8, 1, 1),
+    "13": (0.83, 1, 1),
+    "14": (0.05, 1, 1),
+    "15": (0.08, 1, 1),
+    "16": (0.105, 1, 1),
+    # yellow area
+    "21": (0.13, 1, 1),
+    "22": (0.14, 1, 1),
+    "23": (0.155, 1, 1),
+    "24": (0.185, 1, 1),
+    "25": (0.21, 1, 1),
+    "26": (0.25, 1, 1),
+    # green area
+    "31": (0.45, 1, 1),
+    "32": (0.5, 1, 1),
+    "33": (0.515, 1, 1),
+    "34": (0.53, 1, 1),
+    "35": (0.55, 1, 1),
+    "36": (0.57, 1, 1),
+    # blue area
+    "41": (0.59, 1, 1),
+    "42": (0.62, 1, 1),
+    "43": (0.66, 1, 1),
+    "44": (0.71, 1, 1),
+    "45": (0.73, 1, 1),
+    "46": (0.75, 1, 1),
+    # special colors
+    "51": (0, 0, 0.5),  # grey_50
+    "52": (0.067, 0.7, 0.5),  # brown 1
+    "53": (0.083, 0.8, 0.55),  # brown 2
 }
 
 
@@ -774,21 +781,23 @@ def parse_color_into_hexrgb(color_string):
     else:
         return "#808080"
 
+
 def hsv_to_hexrgb(hsv):
     return render_color(colorsys.hsv_to_rgb(*hsv))
 
 
 def render_color(color_rgb):
     return "#%02x%02x%02x" % (
-       int(color_rgb[0] * 255),
-       int(color_rgb[1] * 255),
-       int(color_rgb[2] * 255),)
+        int(color_rgb[0] * 255),
+        int(color_rgb[1] * 255),
+        int(color_rgb[2] * 255),
+    )
 
 
 # "#ff0080" -> (1.0, 0.0, 0.5)
 def parse_color(color):
     try:
-        return tuple([ int(color[a:a+2], 16) / 255.0 for a in (1,3,5) ])
+        return tuple([int(color[a:a + 2], 16) / 255.0 for a in (1, 3, 5)])
     except Exception:
         raise MKGeneralException(_("Invalid color specification '%s'") % color)
 
@@ -802,29 +811,29 @@ def fade_color(rgb, v):
 
 def darken_color(rgb, v):
     """Make a color darker. v ranges from 0 (not darker) to 1 (black)"""
+
     def darken(x, v):
         return x * (1.0 - v)
-    return tuple([ darken(x, v) for x in rgb ])
+
+    return tuple([darken(x, v) for x in rgb])
 
 
 def lighten_color(rgb, v):
     """Make a color lighter. v ranges from 0 (not lighter) to 1 (white)"""
+
     def lighten(x, v):
         return x + ((1.0 - x) * v)
-    return tuple([ lighten(x, v) for x in rgb ])
+
+    return tuple([lighten(x, v) for x in rgb])
 
 
 def _rgb_to_gray(rgb):
     r, g, b = rgb
-    return 0.21 * r + 0.72 * g + 0.07  * b
+    return 0.21 * r + 0.72 * g + 0.07 * b
 
 
 def _mix_colors(a, b):
-    return tuple([
-       (ca + cb) / 2.0
-       for (ca, cb)
-       in zip(a, b)
-    ])
+    return tuple([(ca + cb) / 2.0 for (ca, cb) in zip(a, b)])
 
 
 def render_color_icon(color):

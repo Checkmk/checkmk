@@ -71,7 +71,7 @@ std::ostream &operator<<(std::ostream &os, const State &state) {
     exit(static_cast<int>(state));
 }
 
-[[noreturn]] void ioError(const std::string &message) {
+    [[noreturn]] void ioError(const std::string &message) {
     reply(State::unknown, message + " (" + strerror(errno) + ")");
 }
 
@@ -200,13 +200,14 @@ int main(int argc, char **argv) {
         tv.tv_sec = 3;
         setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(struct timeval));
 
-        struct sockaddr_un addr;
-        memset(&addr, 0, sizeof(struct sockaddr_un));
-        addr.sun_family = AF_UNIX;
-        strncpy(addr.sun_path, unixsocket_path.c_str(), sizeof(addr.sun_path));
+        struct sockaddr_un sockaddr;
+        sockaddr.sun_family = AF_UNIX;
+        strncpy(sockaddr.sun_path, unixsocket_path.c_str(),
+                sizeof(sockaddr.sun_path) - 1);
+        sockaddr.sun_path[sizeof(sockaddr.sun_path) - 1] = '\0';
 
-        if (0 > connect(sock, reinterpret_cast<struct sockaddr *>(&addr),
-                        sizeof(struct sockaddr_un))) {
+        if (0 > connect(sock, reinterpret_cast<struct sockaddr *>(&sockaddr),
+                        sizeof(struct sockaddr))) {
             ioError("Cannot connect to event daemon via UNIX socket " +
                     unixsocket_path);
         }

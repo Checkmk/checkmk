@@ -1,0 +1,14 @@
+Title: 6892: alcatel_temp_aos7: Support for new switches
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cee
+Version: 1.6.0i1
+Date: 1541779833
+Class: feature
+
+This werk adds temperature monitoring (alcatel_temp) support for the new
+switch devices running at least AOS7. The check alcatel_temp_aos7 reuses
+the default values of check alcatel_temp for consistent check behaviour.
+
+CMK-1188

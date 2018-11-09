@@ -224,9 +224,9 @@ class FilterTime(Filter):
     def filter(self, infoname):
         fromsecs, untilsecs = self.get_time_range()
         filtertext = ""
-        if fromsecs != None:
+        if fromsecs is not None:
             filtertext += "Filter: %s >= %d\n" % (self.column, fromsecs)
-        if untilsecs != None:
+        if untilsecs is not None:
             filtertext += "Filter: %s <= %d\n" % (self.column, untilsecs)
         return filtertext
 

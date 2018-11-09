@@ -147,7 +147,7 @@ def _validate_general_host_attributes(host_attributes):
         except KeyError:
             attr = None
 
-        if attr != None:
+        if attr is not None:
             if attr.needs_validation("host"):
                 attr.validate_input(value, "")
 

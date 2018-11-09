@@ -11485,7 +11485,7 @@ register_check_parameters(
 
 
 def transform_ibm_svc_host(params):
-    if params == None:
+    if params is None:
         # Old inventory rule until version 1.2.7
         # params were None instead of emtpy dictionary
         params = {'always_ok': False}
@@ -14289,7 +14289,7 @@ def ps_convert_from_tuple(params):
             "okmax": okmax,
             "warnmax": warnmax,
         }
-        if user != None:
+        if user is not None:
             params["user"] = user
     return params
 

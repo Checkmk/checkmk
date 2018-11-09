@@ -328,7 +328,7 @@ def do_render_availability(what, av_rawdata, av_data, av_mode, av_object, avopti
         render_availability_tables(availability_tables, what, avoptions)
 
     annotations = availability.load_annotations()
-    show_annotations(annotations, av_rawdata, what, avoptions, omit_service=av_object != None)
+    show_annotations(annotations, av_rawdata, what, avoptions, omit_service=av_object is not None)
 
 
 def render_availability_tables(availability_tables, what, avoptions):
@@ -626,7 +626,7 @@ def render_bi_availability(title, aggr_rows):
         has_reached_logrow_limit = False
         timeline_containers, fetched_rows = availability.get_timeline_containers(
             aggr_rows, avoptions, timewarp,
-            livestatus_limit + 1 if livestatus_limit != None else None)
+            livestatus_limit + 1 if livestatus_limit is not None else None)
         if livestatus_limit and fetched_rows > livestatus_limit:
             has_reached_logrow_limit = True
 
@@ -641,7 +641,7 @@ def render_bi_availability(title, aggr_rows):
             if timewarp and timewarp_tree_state:
                 state, assumed_state, node, _subtrees = timewarp_tree_state
                 eff_state = state
-                if assumed_state != None:
+                if assumed_state is not None:
                     eff_state = assumed_state
                 row = {
                     "aggr_tree": tree,

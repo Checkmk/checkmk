@@ -395,9 +395,9 @@ _unit_sub = _unit_mult
 
 
 def _choose_operator_color(a, b):
-    if a == None:
+    if a is None:
         return b
-    elif b == None:
+    elif b is None:
         return a
     return render_color(_mix_colors(parse_color(a), parse_color(b)))
 
@@ -464,7 +464,7 @@ def _evaluate_literal(expression, translated_metrics):
     else:
         unit = translated_metrics[varname]["unit"]
 
-    if color == None:
+    if color is None:
         if varname in metric_info:
             color = parse_color_into_hexrgb(metric_info[varname]["color"])
         else:
@@ -509,7 +509,7 @@ def replace_expressions(text, translated_metrics):
         value, unit, _color = evaluate(expression, translated_metrics)
         if unit_name:
             unit = unit_info[unit_name]
-        if value != None:
+        if value is not None:
             return unit["render"](value)
         return _("n/a")
 

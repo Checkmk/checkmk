@@ -809,7 +809,7 @@ def paint_time_graph_pnp(row):
 
     pnpview = '1'
     from_ts, to_ts = 'null', 'null'
-    if pnp_timerange != None:
+    if pnp_timerange is not None:
         if pnp_timerange[0] != 'pnp_view':
             from_ts, to_ts = get_graph_timerange_from_painter_options()
         else:
@@ -1422,7 +1422,7 @@ def paint_svc_count(id_, count):
 
 def paint_host_count(id_, count):
     if count > 0:
-        if id_ != None:
+        if id_ is not None:
             return "count hstate hstate%s" % id_, str(count)
         # pending
         return "count hstate hstatep", str(count)

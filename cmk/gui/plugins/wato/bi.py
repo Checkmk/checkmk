@@ -532,10 +532,10 @@ class ModeBI(WatoMode, BIManagement):
         return pack["public"] or self.is_contact_for_pack(pack)
 
     def is_contact_for_pack(self, pack=None):
-        if self._user_contactgroups == None:
+        if self._user_contactgroups is None:
             return True  # I am BI admin
 
-        if pack == None:
+        if pack is None:
             pack = self._pack
 
         for group in self._user_contactgroups:

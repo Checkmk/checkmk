@@ -115,7 +115,7 @@ class FilterInvtableAge(Filter):
         newrows = []
         for row in rows:
             value = row.get(self.name, None)
-            if value != None:
+            if value is not None:
                 age = conv(value)
                 if from_value and age < from_value:
                     continue
@@ -157,7 +157,7 @@ class FilterInvtableIDRange(Filter):
         newrows = []
         for row in rows:
             value = row.get(self.name, None)
-            if value != None:
+            if value is not None:
                 if from_value and value < from_value:
                     continue
 
@@ -353,7 +353,7 @@ class FilterInvText(Filter):
         newrows = []
         for row in rows:
             invdata = inventory.get_inventory_data(row["host_inventory"], self._invpath)
-            if invdata == None:
+            if invdata is None:
                 invdata = ""
             if regex.search(invdata):
                 newrows.append(row)
@@ -404,15 +404,15 @@ class FilterInvFloat(Filter):
             except:
                 pass
 
-        if lower == None and upper == None:
+        if lower is None and upper == None:
             return rows
 
         newrows = []
         for row in rows:
             invdata = inventory.get_inventory_data(row["host_inventory"], self._invpath)
-            if lower != None and invdata < lower:
+            if lower is not None and invdata < lower:
                 continue
-            if upper != None and invdata > upper:
+            if upper is not None and invdata > upper:
                 continue
             newrows.append(row)
         return newrows

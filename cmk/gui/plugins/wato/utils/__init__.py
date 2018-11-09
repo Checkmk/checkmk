@@ -1368,7 +1368,7 @@ def configure_attributes(new,
     for topic in topics:
         topic_is_volatile = True  # assume topic is sometimes hidden due to dependencies
         if len(topics) > 1:
-            if topic == None:
+            if topic is None:
                 title = _("Basic settings")
             else:
                 title = _u(topic)
@@ -1499,7 +1499,7 @@ def configure_attributes(new,
             elif for_what in ["host", "cluster"] and attr.is_mandatory() and not has_inherited:
                 force_entry = True
                 active = True
-            elif cb != None:
+            elif cb is not None:
                 active = cb  # get previous state of checkbox
             elif for_what == "bulk":
                 active = unique and len(values) > 0

@@ -249,7 +249,7 @@ def render_grouped_boxes(rows,
 
             # state = row.get("service_state", row.get("aggr_state"))
             state = utils.saveint(row.get("service_state"))
-            if state == None:
+            if state is None:
                 state = utils.saveint(row.get("host_state", 0))
                 if state > 0:
                     state += 1  # 1 is critical for hosts
@@ -273,7 +273,7 @@ def render_grouped_boxes(rows,
                 if group_hidden:
                     hide = "display:none"
 
-            if group_hidden != None and num_grouped_rows == 0:
+            if group_hidden is not None and num_grouped_rows == 0:
                 # last row in group
                 css_classes.append("group_end")
                 group_hidden = None
@@ -359,7 +359,7 @@ def calculate_view_grouping_of_services(rows, row_group_cells):
                 group_id = row_id
                 last_row_group = this_row_group
 
-        if current_group == None:
+        if current_group is None:
             group_id = row_id
 
         elif current_group != group_spec:
@@ -370,7 +370,7 @@ def calculate_view_grouping_of_services(rows, row_group_cells):
         # When the service is not OK and should not be grouped, move it's row
         # in front of the group.
         if row.get("service_state", -1) != 0 or is_stale(row):
-            if current_group == None or current_group != group_spec:
+            if current_group is None or current_group != group_spec:
                 continue  # skip grouping first row
 
             elif current_group == group_spec:
@@ -703,7 +703,7 @@ def render_grouped_list(rows, view, group_cells, cells, num_columns, show_checkb
                 if group_hidden:
                     hide = "display:none"
 
-            if group_hidden != None and num_grouped_rows == 0:
+            if group_hidden is not None and num_grouped_rows == 0:
                 # last row in group
                 css_classes.append("group_end")
                 group_hidden = None
@@ -784,7 +784,7 @@ def render_matrix(rows, view, group_cells, cells, num_columns, _ignore_show_chec
                 if cell_nr > 0:
                     gv = group_value(group_row, [cell])
                     majority_value = header_majorities.get(cell_nr - 1, None)
-                    if majority_value != None and majority_value != gv:
+                    if majority_value is not None and majority_value != gv:
                         tdclass += " minority"
                 html.open_td(class_=["left", tdclass])
                 html.write(content)
@@ -814,7 +814,7 @@ def render_matrix(rows, view, group_cells, cells, num_columns, _ignore_show_chec
             # columns
             for group_id, group_row in groups:
                 cell_row = matrix_cells[row_id].get(group_id)
-                if cell_row == None:
+                if cell_row is None:
                     html.td('')
                 else:
                     if len(cells) > 2:
@@ -826,7 +826,7 @@ def render_matrix(rows, view, group_cells, cells, num_columns, _ignore_show_chec
 
                         gv = group_value(cell_row, [cell])
                         majority_value = row_majorities[row_id].get(cell_nr, None)
-                        if majority_value != None and majority_value != gv:
+                        if majority_value is not None and majority_value != gv:
                             tdclass += " minority"
 
                         if len(cells) > 2:
@@ -878,7 +878,7 @@ def csv_export_matrix(rows, view, group_cells, cells):
         for group_id, group_row in groups:
             table.cell("")
             cell_row = matrix_cells[row_id].get(group_id)
-            if cell_row != None:
+            if cell_row is not None:
                 for cell_nr, cell in enumerate(cells[1:]):
                     _tdclass, content = cell.render(cell_row)
                     if cell_nr:
@@ -951,7 +951,7 @@ def create_matrices(rows, group_cells, cells, num_columns):
         group_id = group_value(row, group_cells)
         if group_id != last_group_id:
             col_num += 1
-            if num_columns != None and col_num > num_columns:
+            if num_columns is not None and col_num > num_columns:
                 yield (groups, unique_row_ids, matrix_cells)
                 groups = []
                 unique_row_ids = []  # not a set, but a list. Need to keep sort order!

@@ -62,10 +62,11 @@ class FilterInvtableText(Filter):
         try:
             regex = re.compile(filtertext, re.IGNORECASE)
         except re.error:
-            raise MKUserError(htmlvar,
-              _('You search statement is not valid. You need to provide a regular '
-                'expression (regex). For example you need to use <tt>\\\\</tt> instead of <tt>\\</tt> '
-                'if you like to search for a single backslash.'))
+            raise MKUserError(
+                htmlvar,
+                _('You search statement is not valid. You need to provide a regular '
+                  'expression (regex). For example you need to use <tt>\\\\</tt> instead of <tt>\\</tt> '
+                  'if you like to search for a single backslash.'))
 
         newrows = []
         for row in rows:
@@ -345,10 +346,11 @@ class FilterInvText(Filter):
         try:
             regex = re.compile(filtertext, re.IGNORECASE)
         except re.error:
-            raise MKUserError(htmlvar,
-              _('You search statement is not valid. You need to provide a regular '
-                'expression (regex). For example you need to use <tt>\\\\</tt> instead of <tt>\\</tt> '
-                'if you like to search for a single backslash.'))
+            raise MKUserError(
+                htmlvar,
+                _('You search statement is not valid. You need to provide a regular '
+                  'expression (regex). For example you need to use <tt>\\\\</tt> instead of <tt>\\</tt> '
+                  'if you like to search for a single backslash.'))
 
         newrows = []
         for row in rows:
@@ -378,7 +380,7 @@ class FilterInvFloat(Filter):
         if self._unit:
             html.write(self._unit)
 
-        html.write_text("&nbsp;&nbsp;" + _("To: " ))
+        html.write_text("&nbsp;&nbsp;" + _("To: "))
         htmlvar = self.htmlvars[1]
         current_value = html.var(htmlvar, "")
         html.number_input(htmlvar, current_value)
@@ -445,7 +447,12 @@ class FilterInvBool(FilterTristate):
 
 class FilterHasInventory(FilterTristate):
     def __init__(self):
-        super(FilterHasInventory, self).__init__("has_inv", _("Has Inventory Data"), "host", "host_inventory")
+        super(FilterHasInventory, self).__init__(
+            "has_inv",
+            _("Has Inventory Data"),
+            "host",
+            "host_inventory",
+        )
 
     def need_inventory(self):
         return True
@@ -470,9 +477,13 @@ declare_filter(801, FilterHasInventory())
 class FilterInvHasSoftwarePackage(Filter):
     def __init__(self):
         self._varprefix = "invswpac_host_"
-        super(FilterInvHasSoftwarePackage, self).__init__("invswpac", _("Host has software package"), "host",
-                        [ self._varprefix + "name", self._varprefix + "version_from",
-                          self._varprefix + "version_to", self._varprefix + "negate"], [])
+        super(FilterInvHasSoftwarePackage, self).__init__("invswpac",
+                                                          _("Host has software package"), "host", [
+                                                              self._varprefix + "name",
+                                                              self._varprefix + "version_from",
+                                                              self._varprefix + "version_to",
+                                                              self._varprefix + "negate",
+                                                          ], [])
 
     def double_height(self):
         return True
@@ -485,7 +496,11 @@ class FilterInvHasSoftwarePackage(Filter):
         html.br()
         html.begin_radio_group(horizontal=True)
         html.radiobutton(self._varprefix + "match", "exact", True, label=_("exact match"))
-        html.radiobutton(self._varprefix + "match", "regex", False, label=_("regular expression, substring match"))
+        html.radiobutton(
+            self._varprefix + "match",
+            "regex",
+            False,
+            label=_("regular expression, substring match"))
         html.end_radio_group()
         html.br()
         html.write_text(_("Min.&nbsp;Version:"))
@@ -494,7 +509,10 @@ class FilterInvHasSoftwarePackage(Filter):
         html.write_text(_("Max.&nbsp;Vers.:"))
         html.text_input(self._varprefix + "version_to", size=9)
         html.br()
-        html.checkbox(self._varprefix + "negate", False, label=_("Negate: find hosts <b>not</b> having this package"))
+        html.checkbox(
+            self._varprefix + "negate",
+            False,
+            label=_("Negate: find hosts <b>not</b> having this package"))
 
     def filter_table(self, rows):
         name = html.get_unicode_input(self._varprefix + "name")
@@ -509,10 +527,11 @@ class FilterInvHasSoftwarePackage(Filter):
             try:
                 name = re.compile(name)
             except re.error:
-                raise MKUserError(self._varprefix + "name",
-                  _('You search statement is not valid. You need to provide a regular '
-                    'expression (regex). For example you need to use <tt>\\\\</tt> instead of <tt>\\</tt> '
-                    'if you like to search for a single backslash.'))
+                raise MKUserError(
+                    self._varprefix + "name",
+                    _('You search statement is not valid. You need to provide a regular '
+                      'expression (regex). For example you need to use <tt>\\\\</tt> instead of <tt>\\</tt> '
+                      'if you like to search for a single backslash.'))
 
         new_rows = []
         for row in rows:
@@ -553,9 +572,8 @@ class FilterInvHasSoftwarePackage(Filter):
 
 declare_filter(801, FilterInvHasSoftwarePackage())
 
-
 declare_info('invhist', {
-    'title'       : _('Inventory History'),
+    'title': _('Inventory History'),
     'title_plural': _('Inventory Historys'),
-    'single_spec' : None,
+    'single_spec': None,
 })

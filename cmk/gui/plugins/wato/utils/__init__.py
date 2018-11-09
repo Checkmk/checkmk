@@ -132,35 +132,35 @@ import cmk.gui.forms as forms
 
 def rule_option_elements(disabling=True):
     elements = [
-        ( "description",
-          TextUnicode(
-            title = _("Description"),
-            help = _("A description or title of this rule"),
-            size = 80,
-          )
-        ),
-        ( "comment", watolib.RuleComment()),
-        ( "docu_url",
-          TextAscii(
-            title = _("Documentation URL"),
-            help = HTML(_("An optional URL pointing to documentation or any other page. This will be displayed "
-                     "as an icon %s and open a new page when clicked. "
-                     "You can use either global URLs (beginning with <tt>http://</tt>), absolute local urls "
-                     "(beginning with <tt>/</tt>) or relative URLs (that are relative to <tt>check_mk/</tt>).") %
-                     html.render_icon("url")),
-            size = 80,
-          ),
+        ("description",
+         TextUnicode(
+             title=_("Description"),
+             help=_("A description or title of this rule"),
+             size=80,
+         )),
+        ("comment", watolib.RuleComment()),
+        (
+            "docu_url",
+            TextAscii(
+                title=_("Documentation URL"),
+                help=HTML(
+                    _("An optional URL pointing to documentation or any other page. This will be displayed "
+                      "as an icon %s and open a new page when clicked. "
+                      "You can use either global URLs (beginning with <tt>http://</tt>), absolute local urls "
+                      "(beginning with <tt>/</tt>) or relative URLs (that are relative to <tt>check_mk/</tt>)."
+                     ) % html.render_icon("url")),
+                size=80,
+            ),
         ),
     ]
     if disabling:
         elements += [
-            ( "disabled",
-              Checkbox(
-                  title = _("Rule activation"),
-                  help = _("Disabled rules are kept in the configuration but are not applied."),
-                  label = _("do not apply this rule"),
-              )
-            ),
+            ("disabled",
+             Checkbox(
+                 title=_("Rule activation"),
+                 help=_("Disabled rules are kept in the configuration but are not applied."),
+                 label=_("do not apply this rule"),
+             )),
         ]
     return elements
 
@@ -168,33 +168,37 @@ def rule_option_elements(disabling=True):
 def PluginCommandLine():
     def _validate_custom_check_command_line(value, varprefix):
         if "--pwstore=" in value:
-            raise MKUserError(varprefix, _("You are not allowed to use passwords from the password store here."))
+            raise MKUserError(
+                varprefix, _("You are not allowed to use passwords from the password store here."))
 
     return TextAscii(
-          title = _("Command line"),
-          help = _("Please enter the complete shell command including path name and arguments to execute. "
-                   "If the plugin you like to execute is located in either <tt>~/local/lib/nagios/plugins</tt> "
-                   "or <tt>~/lib/nagios/plugins</tt> within your site directory, you can strip the path name and "
-                   "just configure the plugin file name as command <tt>check_foobar</tt>.") + monitoring_macro_help(),
-          size = "max",
-          validate = _validate_custom_check_command_line,
-       )
+        title=_("Command line"),
+        help=
+        _("Please enter the complete shell command including path name and arguments to execute. "
+          "If the plugin you like to execute is located in either <tt>~/local/lib/nagios/plugins</tt> "
+          "or <tt>~/lib/nagios/plugins</tt> within your site directory, you can strip the path name and "
+          "just configure the plugin file name as command <tt>check_foobar</tt>.") +
+        monitoring_macro_help(),
+        size="max",
+        validate=_validate_custom_check_command_line,
+    )
 
 
 def monitoring_macro_help():
-    return " " + _("You can use monitoring macros here. The most important are: "
-                   "<ul>"
-                   "<li><tt>$HOSTADDRESS$</tt>: The IP address of the host</li>"
-                   "<li><tt>$HOSTNAME$</tt>: The name of the host</li>"
-                   "<li><tt>$_HOSTTAGS$</tt>: List of host tags</li>"
-                   "<li><tt>$_HOSTADDRESS_4$</tt>: The IPv4 address of the host</li>"
-                   "<li><tt>$_HOSTADDRESS_6$</tt>: The IPv6 address of the host</li>"
-                   "<li><tt>$_HOSTADDRESS_FAMILY$</tt>: The primary address family of the host</li>"
-                   "</ul>"
-                   "All custom attributes defined for the host are available as <tt>$_HOST[VARNAME]$</tt>. "
-                   "Replace <tt>[VARNAME]</tt> with the <i>upper case</i> name of your variable. "
-                   "For example, a host attribute named <tt>foo</tt> with the value <tt>bar</tt> would result in "
-                   "the macro <tt>$_HOSTFOO$</tt> being replaced with <tt>bar</tt> ")
+    return " " + _(
+        "You can use monitoring macros here. The most important are: "
+        "<ul>"
+        "<li><tt>$HOSTADDRESS$</tt>: The IP address of the host</li>"
+        "<li><tt>$HOSTNAME$</tt>: The name of the host</li>"
+        "<li><tt>$_HOSTTAGS$</tt>: List of host tags</li>"
+        "<li><tt>$_HOSTADDRESS_4$</tt>: The IPv4 address of the host</li>"
+        "<li><tt>$_HOSTADDRESS_6$</tt>: The IPv6 address of the host</li>"
+        "<li><tt>$_HOSTADDRESS_FAMILY$</tt>: The primary address family of the host</li>"
+        "</ul>"
+        "All custom attributes defined for the host are available as <tt>$_HOST[VARNAME]$</tt>. "
+        "Replace <tt>[VARNAME]</tt> with the <i>upper case</i> name of your variable. "
+        "For example, a host attribute named <tt>foo</tt> with the value <tt>bar</tt> would result in "
+        "the macro <tt>$_HOSTFOO$</tt> being replaced with <tt>bar</tt> ")
 
 
 def vs_bulk_discovery(render_form=False, include_subfolders=True):
@@ -204,52 +208,49 @@ def vs_bulk_discovery(render_form=False, include_subfolders=True):
         render = None
 
     if include_subfolders:
-        selection_elements = [Checkbox(label = _("Include all subfolders"), default_value = True)]
+        selection_elements = [Checkbox(label=_("Include all subfolders"), default_value=True)]
     else:
         selection_elements = []
 
     selection_elements += [
-        Checkbox(label = _("Only include hosts that failed on previous discovery"), default_value = False),
-        Checkbox(label = _("Only include hosts with a failed discovery check"), default_value = False),
-        Checkbox(label = _("Exclude hosts where the agent is unreachable"), default_value = False),
+        Checkbox(
+            label=_("Only include hosts that failed on previous discovery"), default_value=False),
+        Checkbox(label=_("Only include hosts with a failed discovery check"), default_value=False),
+        Checkbox(label=_("Exclude hosts where the agent is unreachable"), default_value=False),
     ]
 
     return Dictionary(
-        title    = _("Bulk discovery"),
-        render   = render,
-        elements = [
-            ("mode", RadioChoice(
-                title       = _("Mode"),
-                orientation = "vertical",
-                default_value = "new",
-                choices     = [
-                    ("new",     _("Add unmonitored services")),
-                    ("remove",  _("Remove vanished services")),
-                    ("fixall",  _("Add unmonitored & remove vanished services")),
-                    ("refresh", _("Refresh all services (tabula rasa)")),
-                ],
-            )),
-            ("selection", Tuple(
-                title    = _("Selection"),
-                elements = selection_elements
-            )),
-            ("performance", Tuple(
-                title    = _("Performance options"),
-                elements = [
-                    Checkbox(label = _("Use cached data if present"),
-                             default_value = True),
-                    Checkbox(label = _("Do full SNMP scan for SNMP devices"),
-                             default_value = True),
-                    Integer(label = _("Number of hosts to handle at once"),
-                            default_value = 10),
-                ]
-            )),
-            ("error_handling", Checkbox(
-                title = _("Error handling"),
-                label = _("Ignore errors in single check plugins"),
-                default_value = True)),
+        title=_("Bulk discovery"),
+        render=render,
+        elements=[
+            ("mode",
+             RadioChoice(
+                 title=_("Mode"),
+                 orientation="vertical",
+                 default_value="new",
+                 choices=[
+                     ("new", _("Add unmonitored services")),
+                     ("remove", _("Remove vanished services")),
+                     ("fixall", _("Add unmonitored & remove vanished services")),
+                     ("refresh", _("Refresh all services (tabula rasa)")),
+                 ],
+             )),
+            ("selection", Tuple(title=_("Selection"), elements=selection_elements)),
+            ("performance",
+             Tuple(
+                 title=_("Performance options"),
+                 elements=[
+                     Checkbox(label=_("Use cached data if present"), default_value=True),
+                     Checkbox(label=_("Do full SNMP scan for SNMP devices"), default_value=True),
+                     Integer(label=_("Number of hosts to handle at once"), default_value=10),
+                 ])),
+            ("error_handling",
+             Checkbox(
+                 title=_("Error handling"),
+                 label=_("Ignore errors in single check plugins"),
+                 default_value=True)),
         ],
-        optional_keys = [],
+        optional_keys=[],
     )
 
 
@@ -303,12 +304,11 @@ class SNMPCredentials(Alternative):
             raise MKGeneralException("invalid SNMP credential format %s" % x)
 
         if allow_none:
-            none_elements = [
-                FixedValue(None,
-                    title = _("No explicit credentials"),
-                    totext = "",
-                )
-            ]
+            none_elements = [FixedValue(
+                None,
+                title=_("No explicit credentials"),
+                totext="",
+            )]
 
             # Wrap match() function defined above
             match = lambda x: 0 if x is None else (alternative_match(x) + 1)
@@ -319,56 +319,54 @@ class SNMPCredentials(Alternative):
         kwargs.update({
             "elements": none_elements + [
                 Password(
-                    title = _("SNMP community (SNMP Versions 1 and 2c)"),
-                    allow_empty = False,
+                    title=_("SNMP community (SNMP Versions 1 and 2c)"),
+                    allow_empty=False,
                 ),
                 Transform(
                     Tuple(
-                        title = _("Credentials for SNMPv3 without authentication and privacy (noAuthNoPriv)"),
-                        elements = [
-                            FixedValue("noAuthNoPriv",
-                                title = _("Security Level"),
-                                totext = _("No authentication, no privacy"),
+                        title=
+                        _("Credentials for SNMPv3 without authentication and privacy (noAuthNoPriv)"
+                         ),
+                        elements=[
+                            FixedValue(
+                                "noAuthNoPriv",
+                                title=_("Security Level"),
+                                totext=_("No authentication, no privacy"),
                             ),
-                            TextAscii(
-                                title = _("Security name"),
-                                attrencode  = True,
-                                allow_empty = False
-                            ),
-                        ]
+                            TextAscii(title=_("Security name"), attrencode=True, allow_empty=False),
+                        ]),
+                    forth=lambda x: x if (x and len(x) == 2) else ("noAuthNoPriv", "")),
+                Tuple(
+                    title=_(
+                        "Credentials for SNMPv3 with authentication but without privacy (authNoPriv)"
                     ),
-                    forth = lambda x: x if (x and len(x) == 2) else ("noAuthNoPriv", "")
-                ),
-                Tuple(
-                    title = _("Credentials for SNMPv3 with authentication but without privacy (authNoPriv)"),
-                    elements = [
-                        FixedValue("authNoPriv",
-                            title = _("Security Level"),
-                            totext = _("authentication but no privacy"),
+                    elements=[
+                        FixedValue(
+                            "authNoPriv",
+                            title=_("Security Level"),
+                            totext=_("authentication but no privacy"),
                         ),
-                    ] + self._snmpv3_auth_elements()
-                ),
+                    ] + self._snmpv3_auth_elements()),
                 Tuple(
-                    title = _("Credentials for SNMPv3 with authentication and privacy (authPriv)"),
-                    elements = [
-                        FixedValue("authPriv",
-                            title = _("Security Level"),
-                            totext = _("authentication and encryption"),
+                    title=_("Credentials for SNMPv3 with authentication and privacy (authPriv)"),
+                    elements=[
+                        FixedValue(
+                            "authPriv",
+                            title=_("Security Level"),
+                            totext=_("authentication and encryption"),
                         ),
                     ] + self._snmpv3_auth_elements() + [
                         DropdownChoice(
-                            choices = [
-                                ( "DES", _("DES") ),
-                                ( "AES", _("AES") ),
+                            choices=[
+                                ("DES", _("DES")),
+                                ("AES", _("AES")),
                             ],
-                            title = _("Privacy protocol")
-                        ),
+                            title=_("Privacy protocol")),
                         Password(
-                            title = _("Privacy pass phrase"),
-                            minlen = 8,
+                            title=_("Privacy pass phrase"),
+                            minlen=8,
                         ),
-                    ]
-                ),
+                    ]),
             ],
             "match": match,
             "style": "dropdown",
@@ -389,19 +387,15 @@ class SNMPCredentials(Alternative):
     def _snmpv3_auth_elements(self):
         return [
             DropdownChoice(
-                choices = [
-                    ( "md5", _("MD5") ),
-                    ( "sha", _("SHA1") ),
+                choices=[
+                    ("md5", _("MD5")),
+                    ("sha", _("SHA1")),
                 ],
-                title = _("Authentication protocol")
-            ),
-            TextAscii(
-                title = _("Security name"),
-                attrencode = True
-            ),
+                title=_("Authentication protocol")),
+            TextAscii(title=_("Security name"), attrencode=True),
             Password(
-                title = _("Authentication password"),
-                minlen = 8,
+                title=_("Authentication password"),
+                minlen=8,
             )
         ]
 
@@ -411,12 +405,12 @@ class IPMIParameters(Dictionary):
         kwargs["title"] = _("IPMI credentials")
         kwargs["elements"] = [
             ("username", TextAscii(
-                  title = _("Username"),
-                  allow_empty = False,
+                title=_("Username"),
+                allow_empty=False,
             )),
             ("password", Password(
-                title = _("Password"),
-                allow_empty = False,
+                title=_("Password"),
+                allow_empty=False,
             )),
         ]
         kwargs["optional_keys"] = []
@@ -428,15 +422,15 @@ def HostnameTranslation(**kwargs):
     help_txt = kwargs.get("help")
     title = kwargs.get("title")
     return Dictionary(
-        title = title,
-        help = help_txt,
-        elements = [
-            ( "drop_domain",
-              FixedValue(
-                  True,
-                  title = _("Convert FQHN"),
-                  totext = _("Drop domain part (<tt>host123.foobar.de</tt> &#8594; <tt>host123</tt>)"),
-            )),
+        title=title,
+        help=help_txt,
+        elements=[
+            ("drop_domain",
+             FixedValue(
+                 True,
+                 title=_("Convert FQHN"),
+                 totext=_("Drop domain part (<tt>host123.foobar.de</tt> &#8594; <tt>host123</tt>)"),
+             )),
         ] + _translation_elements("host"))
 
 
@@ -463,87 +457,90 @@ def _translation_elements(what):
         raise MKGeneralException("No translations found for %s." % what)
 
     return [
-        ( "case",
-          DropdownChoice(
-              title = _("Case translation"),
-              choices = [
-                   (None,    _("Do not convert case")),
-                   ("upper", _("Convert %s to upper case") % plural),
-                   ("lower", _("Convert %s to lower case") % plural),
-              ]
-        )),
-        ( "regex",
-            Transform(
-                ListOf(
-                    Tuple(
-                        orientation = "horizontal",
-                        elements    =  [
-                            RegExpUnicode(
-                                title          = _("Regular expression"),
-                                help           = _("Must contain at least one subgroup <tt>(...)</tt>"),
-                                mingroups      = 0,
-                                maxgroups      = 9,
-                                size           = 30,
-                                allow_empty    = False,
-                                mode           = RegExp.prefix,
-                                case_sensitive = False,
-                            ),
-                            TextUnicode(
-                                title       = _("Replacement"),
-                                help        = _("Use <tt>\\1</tt>, <tt>\\2</tt> etc. to replace matched subgroups"),
-                                size        = 30,
-                                allow_empty = False,
-                            )
-                        ],
-                    ),
-                    title     = _("Multiple regular expressions"),
-                    help      = _("You can add any number of expressions here which are executed succesively until the first match. "
-                                  "Please specify a regular expression in the first field. This expression should at "
-                                  "least contain one subexpression exclosed in brackets - for example <tt>vm_(.*)_prod</tt>. "
-                                  "In the second field you specify the translated %s and can refer to the first matched "
-                                  "group with <tt>\\1</tt>, the second with <tt>\\2</tt> and so on, for example <tt>\\1.example.org</tt>. "
-                                  "") % singular,
-                    add_label = _("Add expression"),
-                    movable   = False,
-                ),
-                forth = lambda x: isinstance(x, tuple) and [x] or x,
-            )
-        ),
-        ( "mapping",
-          ListOf(
-              Tuple(
-                  orientation = "horizontal",
-                  elements =  [
-                      TextUnicode(
-                           title = _("Original %s") % singular,
-                           size = 30,
-                           allow_empty = False,
-                           attrencode = True,
-                      ),
-                      TextUnicode(
-                           title = _("Translated %s") % singular,
-                           size = 30,
-                           allow_empty = False,
-                           attrencode = True,
-                      ),
-                  ],
-              ),
-              title = _("Explicit %s mapping") % singular,
-              help = _("If case conversion and regular expression do not work for all cases then you can "
-                       "specify explicity pairs of origin {0} and translated {0} here. This "
-                       "mapping is being applied <b>after</b> the case conversion and <b>after</b> a regular "
-                       "expression conversion (if that matches).").format(singular),
-              add_label = _("Add new mapping"),
-              movable = False,
-        )),
+        ("case",
+         DropdownChoice(
+             title=_("Case translation"),
+             choices=[
+                 (None, _("Do not convert case")),
+                 ("upper", _("Convert %s to upper case") % plural),
+                 ("lower", _("Convert %s to lower case") % plural),
+             ])),
+        ("regex",
+         Transform(
+             ListOf(
+                 Tuple(
+                     orientation="horizontal",
+                     elements=[
+                         RegExpUnicode(
+                             title=_("Regular expression"),
+                             help=_("Must contain at least one subgroup <tt>(...)</tt>"),
+                             mingroups=0,
+                             maxgroups=9,
+                             size=30,
+                             allow_empty=False,
+                             mode=RegExp.prefix,
+                             case_sensitive=False,
+                         ),
+                         TextUnicode(
+                             title=_("Replacement"),
+                             help=_(
+                                 "Use <tt>\\1</tt>, <tt>\\2</tt> etc. to replace matched subgroups"
+                             ),
+                             size=30,
+                             allow_empty=False,
+                         )
+                     ],
+                 ),
+                 title=_("Multiple regular expressions"),
+                 help=
+                 _("You can add any number of expressions here which are executed succesively until the first match. "
+                   "Please specify a regular expression in the first field. This expression should at "
+                   "least contain one subexpression exclosed in brackets - for example <tt>vm_(.*)_prod</tt>. "
+                   "In the second field you specify the translated %s and can refer to the first matched "
+                   "group with <tt>\\1</tt>, the second with <tt>\\2</tt> and so on, for example <tt>\\1.example.org</tt>. "
+                   "") % singular,
+                 add_label=_("Add expression"),
+                 movable=False,
+             ),
+             forth=lambda x: isinstance(x, tuple) and [x] or x,
+         )),
+        ("mapping",
+         ListOf(
+             Tuple(
+                 orientation="horizontal",
+                 elements=[
+                     TextUnicode(
+                         title=_("Original %s") % singular,
+                         size=30,
+                         allow_empty=False,
+                         attrencode=True,
+                     ),
+                     TextUnicode(
+                         title=_("Translated %s") % singular,
+                         size=30,
+                         allow_empty=False,
+                         attrencode=True,
+                     ),
+                 ],
+             ),
+             title=_("Explicit %s mapping") % singular,
+             help=_(
+                 "If case conversion and regular expression do not work for all cases then you can "
+                 "specify explicity pairs of origin {0} and translated {0} here. This "
+                 "mapping is being applied <b>after</b> the case conversion and <b>after</b> a regular "
+                 "expression conversion (if that matches).").format(singular),
+             add_label=_("Add new mapping"),
+             movable=False,
+         )),
     ]
 
 
 class GroupSelection(ElementSelection):
     def __init__(self, what, **kwargs):
-        kwargs.setdefault('empty_text', _('You have not defined any %s group yet. Please '
-                                          '<a href="wato.py?mode=edit_%s_group">create</a> at least one first.') %
-                                                                                                    (what, what))
+        kwargs.setdefault(
+            'empty_text',
+            _('You have not defined any %s group yet. Please '
+              '<a href="wato.py?mode=edit_%s_group">create</a> at least one first.') % (what, what))
         super(GroupSelection, self).__init__(**kwargs)
         self._what = what
         # Allow to have "none" entry with the following title
@@ -570,18 +567,17 @@ def passwordstore_choices():
 class PasswordFromStore(CascadingDropdown):
     def __init__(self, *args, **kwargs):
         kwargs["choices"] = [
-            ("password", _("Password"), Password(
-                allow_empty = kwargs.get("allow_empty", True),
-            )),
-            ("store", _("Stored password"), DropdownChoice(
-                choices = passwordstore_choices,
-                sorted = True,
-                invalid_choice = "complain",
-                invalid_choice_title = _("Password does not exist or using not permitted"),
-                invalid_choice_error = _("The configured password has either be removed or you "
-                                         "are not permitted to use this password. Please choose "
-                                         "another one."),
-            )),
+            ("password", _("Password"), Password(allow_empty=kwargs.get("allow_empty", True),)),
+            ("store", _("Stored password"),
+             DropdownChoice(
+                 choices=passwordstore_choices,
+                 sorted=True,
+                 invalid_choice="complain",
+                 invalid_choice_title=_("Password does not exist or using not permitted"),
+                 invalid_choice_error=_("The configured password has either be removed or you "
+                                        "are not permitted to use this password. Please choose "
+                                        "another one."),
+             )),
         ]
         kwargs["orientation"] = "horizontal"
 
@@ -648,8 +644,10 @@ def register_check_parameters(subgroup,
         elements = [
             CheckTypeGroupSelection(
                 checkgroup,
-                title = _("Checktype"),
-                help = _("Please choose the check plugin")) ]
+                title=_("Checktype"),
+                help=_("Please choose the check plugin"),
+            )
+        ]
         if itemspec:
             elements.append(itemspec)
         else:
@@ -726,11 +724,17 @@ class TimeperiodValuespec(ValueSpec):
         if is_active:
             value = self._get_timeperiod_value(value)
             self._get_timeperiod_valuespec().render_input(varprefix, value)
-            html.buttonlink(toggle_url, _("%s timespecific parameters") % mode, class_=["toggle_timespecific_parameter"])
+            html.buttonlink(
+                toggle_url,
+                _("%s timespecific parameters") % mode,
+                class_=["toggle_timespecific_parameter"])
         else:
             value = self._get_timeless_value(value)
             r = self._enclosed_valuespec.render_input(varprefix, value)
-            html.buttonlink(toggle_url, _("%s timespecific parameters") % mode, class_=["toggle_timespecific_parameter"])
+            html.buttonlink(
+                toggle_url,
+                _("%s timespecific parameters") % mode,
+                class_=["toggle_timespecific_parameter"])
             return r
 
     def value_to_text(self, value):
@@ -772,32 +776,26 @@ class TimeperiodValuespec(ValueSpec):
 
     def _get_timeperiod_valuespec(self):
         return Dictionary(
-                elements = [
-                    (self.tp_default_value_key,
-                        Transform(
-                            self._enclosed_valuespec,
-                            title = _("Default parameters when no timeperiod matches")
-                        )
-                    ),
-                    (self.tp_values_key,
-                        ListOf(
-                            Tuple(
-                                elements = [
-                                    TimeperiodSelection(
-                                        title = _("Match only during timeperiod"),
-                                        help = _("Match this rule only during times where the "
-                                                 "selected timeperiod from the monitoring "
-                                                 "system is active."),
-                                    ),
-                                    self._enclosed_valuespec
-                                ]
-                            ),
-                            title = _("Configured timeperiod parameters"),
-                        )
-                    ),
-                ],
-                optional_keys = False,
-            )
+            elements=[
+                (self.tp_default_value_key,
+                 Transform(
+                     self._enclosed_valuespec,
+                     title=_("Default parameters when no timeperiod matches"))),
+                (self.tp_values_key,
+                 ListOf(
+                     Tuple(elements=[
+                         TimeperiodSelection(
+                             title=_("Match only during timeperiod"),
+                             help=_("Match this rule only during times where the "
+                                    "selected timeperiod from the monitoring "
+                                    "system is active."),
+                         ), self._enclosed_valuespec
+                     ]),
+                     title=_("Configured timeperiod parameters"),
+                 )),
+            ],
+            optional_keys=False,
+        )
 
     # Checks whether the tp-mode is switched on through the gui
     def _is_switched_on(self):
@@ -845,112 +843,124 @@ def PredictiveLevels(**args):
         unitname += " "
 
     return Dictionary(
-        title = _("Predictive Levels"),
-        optional_keys = [ "weight", "levels_upper", "levels_upper_min", "levels_lower", "levels_lower_max" ],
-        default_keys = [ "levels_upper" ],
-        columns = 1,
-        headers = "sup",
-        elements = [
-             ( "period",
-                DropdownChoice(
-                    title = _("Base prediction on"),
-                    choices = [
-                        ( "wday",   _("Day of the week (1-7, 1 is Monday)") ),
-                        ( "day",    _("Day of the month (1-31)") ),
-                        ( "hour",   _("Hour of the day (0-23)") ),
-                        ( "minute", _("Minute of the hour (0-59)") ),
-                    ]
+        title=_("Predictive Levels"),
+        optional_keys=[
+            "weight", "levels_upper", "levels_upper_min", "levels_lower", "levels_lower_max"
+        ],
+        default_keys=["levels_upper"],
+        columns=1,
+        headers="sup",
+        elements=[
+            ("period",
+             DropdownChoice(
+                 title=_("Base prediction on"),
+                 choices=[
+                     ("wday", _("Day of the week (1-7, 1 is Monday)")),
+                     ("day", _("Day of the month (1-31)")),
+                     ("hour", _("Hour of the day (0-23)")),
+                     ("minute", _("Minute of the hour (0-59)")),
+                 ])),
+            ("horizon",
+             Integer(
+                 title=_("Time horizon"),
+                 unit=_("days"),
+                 minvalue=1,
+                 default_value=90,
              )),
-             ( "horizon",
-               Integer(
-                   title = _("Time horizon"),
-                   unit = _("days"),
-                   minvalue = 1,
-                   default_value = 90,
-             )),
-             # ( "weight",
-             #   Percentage(
-             #       title = _("Raise weight of recent time"),
-             #       label = _("by"),
-             #       default_value = 0,
-             # )),
-             ( "levels_upper",
-               CascadingDropdown(
-                   title = _("Dynamic levels - upper bound"),
-                   choices = [
-                       ( "absolute",
-                         _("Absolute difference from prediction"),
-                         Tuple(
-                             elements = [
-                                 Float(title = _("Warning at"),
-                                       unit = unitname + _("above predicted value"), default_value = dif[0]),
-                                 Float(title = _("Critical at"),
-                                       unit = unitname + _("above predicted value"), default_value = dif[1]),
-                             ]
-                      )),
-                      ( "relative",
-                        _("Relative difference from prediction"),
-                         Tuple(
-                             elements = [
-                                 Percentage(title = _("Warning at"), unit = _("% above predicted value"), default_value = 10),
-                                 Percentage(title = _("Critical at"), unit = _("% above predicted value"), default_value = 20),
-                             ]
-                      )),
-                      ( "stdev",
-                        _("In relation to standard deviation"),
-                         Tuple(
-                             elements = [
-                                 Percentage(title = _("Warning at"), unit = _("times the standard deviation above the predicted value"), default_value = 2),
-                                 Percentage(title = _("Critical at"), unit = _("times the standard deviation above the predicted value"), default_value = 4),
-                             ]
-                      )),
-                   ]
-             )),
-             ( "levels_upper_min",
-                Tuple(
-                    title = _("Limit for upper bound dynamic levels"),
-                    help = _("Regardless of how the dynamic levels upper bound are computed according to the prediction: "
-                             "the will never be set below the following limits. This avoids false alarms "
-                             "during times where the predicted levels would be very low."),
-                    elements = [
-                        Float(title = _("Warning level is at least"), unit = unitname),
-                        Float(title = _("Critical level is at least"), unit = unitname),
-                    ]
-              )),
-             ( "levels_lower",
-               CascadingDropdown(
-                   title = _("Dynamic levels - lower bound"),
-                   choices = [
-                       ( "absolute",
-                         _("Absolute difference from prediction"),
-                         Tuple(
-                             elements = [
-                                 Float(title = _("Warning at"),
-                                       unit = unitname + _("below predicted value"), default_value = 2.0),
-                                 Float(title = _("Critical at"),
-                                       unit = unitname + _("below predicted value"), default_value = 4.0),
-                             ]
-                      )),
-                      ( "relative",
-                        _("Relative difference from prediction"),
-                         Tuple(
-                             elements = [
-                                 Percentage(title = _("Warning at"), unit = _("% below predicted value"), default_value = 10),
-                                 Percentage(title = _("Critical at"), unit = _("% below predicted value"), default_value = 20),
-                             ]
-                      )),
-                      ( "stdev",
-                        _("In relation to standard deviation"),
-                         Tuple(
-                             elements = [
-                                 Percentage(title = _("Warning at"), unit = _("times the standard deviation below the predicted value"), default_value = 2),
-                                 Percentage(title = _("Critical at"), unit = _("times the standard deviation below the predicted value"), default_value = 4),
-                             ]
-                      )),
-                   ]
-             )),
-        ]
-    )
+            # ( "weight",
+            #   Percentage(
+            #       title = _("Raise weight of recent time"),
+            #       label = _("by"),
+            #       default_value = 0,
+            # )),
+            ("levels_upper",
+             CascadingDropdown(
+                 title=_("Dynamic levels - upper bound"),
+                 choices=[
+                     ("absolute", _("Absolute difference from prediction"),
+                      Tuple(elements=[
+                          Float(
+                              title=_("Warning at"),
+                              unit=unitname + _("above predicted value"),
+                              default_value=dif[0]),
+                          Float(
+                              title=_("Critical at"),
+                              unit=unitname + _("above predicted value"),
+                              default_value=dif[1]),
+                      ])),
+                     ("relative", _("Relative difference from prediction"),
+                      Tuple(elements=[
+                          Percentage(
+                              title=_("Warning at"),
+                              unit=_("% above predicted value"),
+                              default_value=10),
+                          Percentage(
+                              title=_("Critical at"),
+                              unit=_("% above predicted value"),
+                              default_value=20),
+                      ])),
+                     ("stdev", _("In relation to standard deviation"),
+                      Tuple(elements=[
+                          Percentage(
+                              title=_("Warning at"),
+                              unit=_("times the standard deviation above the predicted value"),
+                              default_value=2),
+                          Percentage(
+                              title=_("Critical at"),
+                              unit=_("times the standard deviation above the predicted value"),
+                              default_value=4),
+                      ])),
+                 ])),
+            ("levels_upper_min",
+             Tuple(
+                 title=_("Limit for upper bound dynamic levels"),
+                 help=_(
+                     "Regardless of how the dynamic levels upper bound are computed according to the prediction: "
+                     "the will never be set below the following limits. This avoids false alarms "
+                     "during times where the predicted levels would be very low."),
+                 elements=[
+                     Float(title=_("Warning level is at least"), unit=unitname),
+                     Float(title=_("Critical level is at least"), unit=unitname),
+                 ])),
+            ("levels_lower",
+             CascadingDropdown(
+                 title=_("Dynamic levels - lower bound"),
+                 choices=[
+                     ("absolute", _("Absolute difference from prediction"),
+                      Tuple(elements=[
+                          Float(
+                              title=_("Warning at"),
+                              unit=unitname + _("below predicted value"),
+                              default_value=2.0),
+                          Float(
+                              title=_("Critical at"),
+                              unit=unitname + _("below predicted value"),
+                              default_value=4.0),
+                      ])),
+                     ("relative", _("Relative difference from prediction"),
+                      Tuple(elements=[
+                          Percentage(
+                              title=_("Warning at"),
+                              unit=_("% below predicted value"),
+                              default_value=10),
+                          Percentage(
+                              title=_("Critical at"),
+                              unit=_("% below predicted value"),
+                              default_value=20),
+                      ])),
+                     ("stdev", _("In relation to standard deviation"),
+                      Tuple(elements=[
+                          Percentage(
+                              title=_("Warning at"),
+                              unit=_("times the standard deviation below the predicted value"),
+                              default_value=2),
+                          Percentage(
+                              title=_("Critical at"),
+                              unit=_("times the standard deviation below the predicted value"),
+                              default_value=4),
+                      ])),
+                 ])),
+        ])
 
 
 # To be used as ValueSpec for levels on numeric values, with
@@ -974,29 +984,35 @@ def Levels(**kwargs):
         default_value = default_levels if default_levels else None
 
     return Alternative(
-          title = title,
-          help = help_txt,
-          show_titles = False,
-          style = "dropdown",
-          elements = [
-              FixedValue(
-                  None,
-                  title = _("No Levels"),
-                  totext = _("Do not impose levels, always be OK"),
-              ),
-              Tuple(
-                  title = _("Fixed Levels"),
-                  elements = [
-                      Float(unit = unit, title = _("Warning at"), default_value = default_levels[0], allow_int = True),
-                      Float(unit = unit, title = _("Critical at"), default_value = default_levels[1], allow_int = True),
-                  ],
-              ),
-              PredictiveLevels(
-                  default_difference = default_difference,
-              ),
-          ],
-          match = match_levels_alternative,
-          default_value = default_value,
+        title=title,
+        help=help_txt,
+        show_titles=False,
+        style="dropdown",
+        elements=[
+            FixedValue(
+                None,
+                title=_("No Levels"),
+                totext=_("Do not impose levels, always be OK"),
+            ),
+            Tuple(
+                title=_("Fixed Levels"),
+                elements=[
+                    Float(
+                        unit=unit,
+                        title=_("Warning at"),
+                        default_value=default_levels[0],
+                        allow_int=True),
+                    Float(
+                        unit=unit,
+                        title=_("Critical at"),
+                        default_value=default_levels[1],
+                        allow_int=True),
+                ],
+            ),
+            PredictiveLevels(default_difference=default_difference,),
+        ],
+        match=match_levels_alternative,
+        default_value=default_value,
     )
 
 
@@ -1036,11 +1052,11 @@ class EventsMode(WatoMode):
     def _event_rule_match_conditions(cls, flavour):
         if flavour == "notify":
             add_choices = [
-                ( 'f', _("Start or end of flapping state")),
-                ( 's', _("Start or end of a scheduled downtime")),
-                ( 'x', _("Acknowledgement of problem")),
-                ( 'as', _("Alert handler execution, successful")),
-                ( 'af', _("Alert handler execution, failed")),
+                ('f', _("Start or end of flapping state")),
+                ('s', _("Start or end of a scheduled downtime")),
+                ('x', _("Acknowledgement of problem")),
+                ('as', _("Alert handler execution, successful")),
+                ('af', _("Alert handler execution, failed")),
             ]
             add_default = ['f', 's', 'x', 'as', 'af']
         else:
@@ -1265,9 +1281,10 @@ class EventsMode(WatoMode):
         if html.has_var("_delete"):
             nr = int(html.var("_delete"))
             rule = rules[nr]
-            c = wato_confirm(_("Confirm deletion of %s") % what_title,
-                             _("Do you really want to delete the %s <b>%d</b> <i>%s</i>?") %
-                               (what_title, nr, rule.get("description","")))
+            c = wato_confirm(
+                _("Confirm deletion of %s") % what_title,
+                _("Do you really want to delete the %s <b>%d</b> <i>%s</i>?") %
+                (what_title, nr, rule.get("description", "")))
             if c:
                 self._add_change(what + "-delete-rule", _("Deleted %s %d") % (what_title, nr))
                 del rules[nr]
@@ -1286,7 +1303,7 @@ class EventsMode(WatoMode):
                 rules[to_pos:to_pos] = [rule]
                 save_rules(rules)
                 self._add_change(what + "-move-rule",
-                    _("Changed position of %s %d") % (what_title, from_pos))
+                                 _("Changed position of %s %d") % (what_title, from_pos))
 
 
 # Sort given sites argument by local, followed by slaves
@@ -1382,7 +1399,11 @@ def configure_attributes(new,
             else:
                 topic_id = None
 
-            forms.header(title, isopen = topic in [ None, _("Address"), _("Data sources") ], table_id = topic_id)
+            forms.header(
+                title,
+                isopen=topic in [None, _("Address"), _("Data sources")],
+                table_id=topic_id,
+            )
 
         for attr, atopic in sorted(watolib.all_host_attributes(), cmp=sort_host_attributes):
             if atopic != topic:
@@ -1449,7 +1470,8 @@ def configure_attributes(new,
                 while container:
                     if attrname in container.attributes():
                         url = container.edit_url()
-                        inherited_from = _("Inherited from ") + html.render_a(container.title(), href=url)
+                        inherited_from = _("Inherited from ") + html.render_a(
+                            container.title(), href=url)
 
                         inherited_value = container.attributes()[attrname]
                         has_inherited = True

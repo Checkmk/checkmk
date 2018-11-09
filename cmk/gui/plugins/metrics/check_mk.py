@@ -194,16 +194,12 @@ def bytes_human_readable_list(values, *args, **kwargs):
 
 # Output in bytes/days, value is in bytes/s
 unit_info["bytes/d"] = {
-    "title":
-        _("Bytes per day"),
-    "symbol":
-        _("B/d"),
-    "render":
-        lambda v: cmk.render.fmt_bytes(v * 86400.0) + "/d",
+    "title": _("Bytes per day"),
+    "symbol": _("B/d"),
+    "render": lambda v: cmk.render.fmt_bytes(v * 86400.0) + "/d",
     "graph_unit":
         lambda values: bytes_human_readable_list([v * 86400.0 for v in values], unit=_("B/d")),
-    "stepping":
-        "binary",  # for vertical graph labels
+    "stepping": "binary",  # for vertical graph labels
 }
 
 unit_info["c"] = {
@@ -1235,28 +1231,20 @@ for what, color in [("msg", "12"), ("rollovers", "13"), ("regular", "14"), ("war
     }
 
 metric_info["vol_context_switches"] = {
-    "title":
-        _("Voluntary context switches"),
-    "help":
-        _("A voluntary context switch occurs when a thread blocks "
-          "because it requires a resource that is unavailable"),
-    "unit":
-        "count",
-    "color":
-        "36/a",
+    "title": _("Voluntary context switches"),
+    "help": _("A voluntary context switch occurs when a thread blocks "
+              "because it requires a resource that is unavailable"),
+    "unit": "count",
+    "color": "36/a",
 }
 
 metric_info["invol_context_switches"] = {
-    "title":
-        _("Involuntary context switches"),
-    "help":
-        _("An involuntary context switch takes place when a thread "
-          "executes for the duration of its time slice or when the "
-          "system identifies a higher-priority thread to run"),
-    "unit":
-        "count",
-    "color":
-        "45/b",
+    "title": _("Involuntary context switches"),
+    "help": _("An involuntary context switch takes place when a thread "
+              "executes for the duration of its time slice or when the "
+              "system identifies a higher-priority thread to run"),
+    "unit": "count",
+    "color": "45/b",
 }
 
 metric_info["tapes_total"] = {
@@ -3063,15 +3051,12 @@ metric_info["logswitches_last_hour"] = {
 }
 
 metric_info["database_apply_lag"] = {
-    "title":
-        _("Database apply lag"),
-    "help":
-        _("Amount of time that the application of redo data on the standby database lags behind the primary database"
-         ),
-    "unit":
-        "s",
-    "color":
-        "#006040",
+    "title": _("Database apply lag"),
+    "help": _(
+        "Amount of time that the application of redo data on the standby database lags behind the primary database"
+    ),
+    "unit": "s",
+    "color": "#006040",
 }
 
 metric_info["direct_io"] = {
@@ -3102,15 +3087,12 @@ metric_info["total_cache_usage"] = {
 # TODO: Was heißt Garbage collection? Dauer? Anzahl pro Zeit?
 # Größe in MB???
 metric_info["gc_reclaimed_redundant_memory_areas"] = {
-    "title":
-        _("Reclaimed redundant memory areas"),
-    "help":
-        _("The garbage collector attempts to reclaim garbage, or memory occupied by objects that are no longer in use by a program"
-         ),
-    "unit":
-        "count",
-    "color":
-        "31/a",
+    "title": _("Reclaimed redundant memory areas"),
+    "help": _(
+        "The garbage collector attempts to reclaim garbage, or memory occupied by objects that are no longer in use by a program"
+    ),
+    "unit": "count",
+    "color": "31/a",
 }
 
 # TODO: ? GCs/sec? oder Avg time? Oder was?
@@ -6588,8 +6570,7 @@ check_metrics["check_mk-fortigate_sessions_base"] = {
 #                 which show equal data for sorting them together in a single sort domain.
 
 perfometer_info.append({
-    "type":
-        "dual",
+    "type": "dual",
     "perfometers": [{
         "type": "logarithmic",
         "metric": "tcp_active_sessions",
@@ -6766,8 +6747,7 @@ perfometer_info.append({
 })
 
 perfometer_info.append({
-    "type":
-        "stacked",
+    "type": "stacked",
     "perfometers": [{
         "type": "logarithmic",
         "metric": "checkpoint_age",
@@ -6789,8 +6769,7 @@ perfometer_info.append({
 })
 
 perfometer_info.append({
-    "type":
-        "stacked",
+    "type": "stacked",
     "perfometers": [{
         "type": "logarithmic",
         "metric": "read_latency",
@@ -6832,8 +6811,7 @@ perfometer_info.append({
 })
 
 perfometer_info.append({
-    "type":
-        "stacked",
+    "type": "stacked",
     "perfometers": [{
         "type": "logarithmic",
         "metric": "mem_heap",
@@ -6848,8 +6826,7 @@ perfometer_info.append({
 })
 
 perfometer_info.append({
-    "type":
-        "stacked",
+    "type": "stacked",
     "perfometers": [{
         "type": "linear",
         "segments": ["threads_idle"],
@@ -6990,17 +6967,14 @@ perfometer_info.append({
 
 # Filesystem check with provisioning, but not over-provisioning
 perfometer_info.append({
-    "type":
-        "linear",
-    "condition":
-        "fs_provisioning(%),100,<=",
+    "type": "linear",
+    "condition": "fs_provisioning(%),100,<=",
     "segments": [
         "fs_used(%)",
         "fs_provisioning(%),fs_used(%),-#ffc030",
         "100,fs_provisioning(%),fs_used(%),-,-#e3fff9",
     ],
-    "total":
-        100,
+    "total": 100,
     "label": ("fs_used(%)", "%"),
 })
 
@@ -7041,8 +7015,7 @@ perfometer_info.append({
 })
 
 perfometer_info.append({
-    "type":
-        "stacked",
+    "type": "stacked",
     "perfometers": [
         {
             "type": "logarithmic",
@@ -7087,8 +7060,7 @@ perfometer_info.append({
 })
 
 perfometer_info.append({
-    "type":
-        "dual",
+    "type": "dual",
     "perfometers": [
         {
             "type": "logarithmic",
@@ -7106,8 +7078,7 @@ perfometer_info.append({
 })
 
 perfometer_info.append({
-    "type":
-        "dual",
+    "type": "dual",
     "perfometers": [
         {
             "type": "logarithmic",
@@ -7125,8 +7096,7 @@ perfometer_info.append({
 })
 
 perfometer_info.append({
-    "type":
-        "dual",
+    "type": "dual",
     "perfometers": [
         {
             "type": "logarithmic",
@@ -7144,8 +7114,7 @@ perfometer_info.append({
 })
 
 perfometer_info.append({
-    "type":
-        "dual",
+    "type": "dual",
     "perfometers": [
         {
             "type": "logarithmic",
@@ -7170,8 +7139,7 @@ perfometer_info.append({
 })
 
 perfometer_info.append({
-    "type":
-        "dual",
+    "type": "dual",
     "perfometers": [
         {
             "type": "logarithmic",
@@ -7207,12 +7175,10 @@ perfometer_info.append({
 })
 
 perfometer_info.append({
-    "type":
-        "stacked",
+    "type": "stacked",
     "perfometers": [
         {
-            "type":
-                "dual",
+            "type": "dual",
             "perfometers": [
                 {
                     "type": "linear",
@@ -7229,8 +7195,7 @@ perfometer_info.append({
             ],
         },
         {
-            "type":
-                "dual",
+            "type": "dual",
             "perfometers": [
                 {
                     "type": "linear",
@@ -7296,8 +7261,7 @@ perfometer_info.append({
 })
 
 perfometer_info.append({
-    "type":
-        "stacked",
+    "type": "stacked",
     "perfometers": [
         {
             "type": "logarithmic",
@@ -7339,8 +7303,7 @@ perfometer_info.append({
 })
 
 perfometer_info.append({
-    "type":
-        "stacked",
+    "type": "stacked",
     "perfometers": [
         {
             "type": "logarithmic",
@@ -7364,8 +7327,7 @@ perfometer_info.append({
 })  # Fallback if no codewords are available
 
 perfometer_info.append({
-    "type":
-        "dual",
+    "type": "dual",
     "perfometers": [
         {
             "type": "logarithmic",
@@ -7485,8 +7447,7 @@ perfometer_info.append({
 })
 
 perfometer_info.append({
-    "type":
-        "stacked",
+    "type": "stacked",
     "perfometers": [
         {
             "type": "logarithmic",
@@ -7511,8 +7472,7 @@ perfometer_info.append({
 })
 
 perfometer_info.append({
-    "type":
-        "stacked",
+    "type": "stacked",
     "perfometers": [
         {
             "type": "logarithmic",
@@ -7530,8 +7490,7 @@ perfometer_info.append({
 })
 
 perfometer_info.append({
-    "type":
-        "stacked",
+    "type": "stacked",
     "perfometers": [
         {
             "type": "logarithmic",
@@ -7563,8 +7522,7 @@ perfometer_info.append({
 })
 
 perfometer_info.append({
-    "type":
-        "stacked",
+    "type": "stacked",
     "perfometers": [{
         "type": "logarithmic",
         "metric": "mail_queue_deferred_length",
@@ -7600,8 +7558,7 @@ perfometer_info.append({
 })
 
 perfometer_info.append({
-    "type":
-        "dual",
+    "type": "dual",
     "perfometers": [
         {
             "type": "linear",
@@ -7638,8 +7595,7 @@ perfometer_info.append({
 })
 
 perfometer_info.append({
-    "type":
-        "dual",
+    "type": "dual",
     "perfometers": [
         {
             "type": "logarithmic",
@@ -7684,8 +7640,7 @@ perfometer_info.append({
 
 for x in reversed(range(1, MAX_NUMBER_HOPS)):
     perfometer_info.append({
-        "type":
-            "dual",
+        "type": "dual",
         "perfometers": [
             {
                 "type": "linear",
@@ -7871,8 +7826,7 @@ graph_info["total_and_open_slots"] = {
 }
 
 graph_info["connections"] = {
-    "title":
-        _("Connections"),
+    "title": _("Connections"),
     "metrics": [
         ("connections_async_writing", "area"),
         ("connections_async_keepalive", "stack"),
@@ -7882,8 +7836,7 @@ graph_info["connections"] = {
 }
 
 graph_info["apache_status"] = {
-    "title":
-        _("Apache status"),
+    "title": _("Apache status"),
     "metrics": [
         ("apache_state_startingup", "area"),
         ("apache_state_waiting", "stack"),
@@ -7912,8 +7865,7 @@ graph_info["battery_capacity"] = {
 }
 
 graph_info["qos_class_traffic"] = {
-    "title":
-        _("QoS class traffic"),
+    "title": _("QoS class traffic"),
     "metrics": [
         ("qos_outbound_bytes_rate,8,*@bits/s", "area", _("QoS outbound bits")),
         ("qos_dropped_bytes_rate,8,*@bits/s", "-area", _("QoS dropped bits")),
@@ -7929,8 +7881,7 @@ graph_info["read_and_written_blocks"] = {
 }
 
 graph_info["rmon_packets_per_second"] = {
-    "title":
-        _("RMON packets per second"),
+    "title": _("RMON packets per second"),
     "metrics": [
         ("broadcast_packets", "area"),
         ("multicast_packets", "stack"),
@@ -7976,8 +7927,7 @@ graph_info["backup_time"] = {
 }
 
 graph_info["ntp_time_offset"] = {
-    "title":
-        _("NTP time offset"),
+    "title": _("NTP time offset"),
     "metrics": [("time_offset", "area"), ("jitter", "line")],
     "scalars": [
         ("time_offset:crit", _("Upper critical level")),
@@ -7994,8 +7944,7 @@ graph_info["total_cache_usage"] = {
 }
 
 graph_info["zfs_meta_data"] = {
-    "title":
-        _("ZFS meta data"),
+    "title": _("ZFS meta data"),
     "metrics": [
         ("zfs_metadata_max", "area"),
         ("zfs_metadata_used", "area"),
@@ -8004,8 +7953,7 @@ graph_info["zfs_meta_data"] = {
 }
 
 graph_info["cache_hit_ratio"] = {
-    "title":
-        _("Cache hit ratio"),
+    "title": _("Cache hit ratio"),
     "metrics": [
         ("cache_hit_ratio", "area"),
         ("prefetch_metadata_hit_ratio", "line"),
@@ -8020,8 +7968,7 @@ graph_info["citrix_serverload"] = {
 }
 
 graph_info["used_cpu_time"] = {
-    "title":
-        _("Used CPU Time"),
+    "title": _("Used CPU Time"),
     "metrics": [
         ("user_time", "area"),
         ("children_user_time", "stack"),
@@ -8030,14 +7977,12 @@ graph_info["used_cpu_time"] = {
         ("user_time,children_user_time,system_time,children_system_time,+,+,+#888888", "line",
          _("Total")),
     ],
-    "omit_zero_metrics":
-        True,
+    "omit_zero_metrics": True,
     "conflicting_metrics": ["cmk_time_agent", "cmk_time_snmp", "cmk_time_ds"],
 }
 
 graph_info["cmk_cpu_time_by_phase"] = {
-    "title":
-        _("Time usage by phase"),
+    "title": _("Time usage by phase"),
     "metrics": [
         ("user_time,children_user_time,+", "stack", _("CPU time in user space")),
         ("system_time,children_system_time,+", "stack", _("CPU time in operating system")),
@@ -8050,8 +7995,7 @@ graph_info["cmk_cpu_time_by_phase"] = {
 }
 
 graph_info["cpu_time"] = {
-    "title":
-        _("CPU Time"),
+    "title": _("CPU Time"),
     "metrics": [
         ("user_time", "area"),
         ("system_time", "stack"),
@@ -8119,8 +8063,7 @@ graph_info["util_average"] = {
 }
 
 graph_info["cpu_utilization_1"] = {
-    "title":
-        _("CPU utilization (%(util:max@count) CPU Threads)"),
+    "title": _("CPU utilization (%(util:max@count) CPU Threads)"),
     "metrics": [
         ("util,user,-#ff6000", "stack", _("Privileged")),
         ("user", "area"),
@@ -8221,8 +8164,7 @@ graph_info["cpu_utilization_4"] = {
 }
 
 graph_info["cpu_utilization_5"] = {
-    "title":
-        _("CPU utilization"),
+    "title": _("CPU utilization"),
     "metrics": [
         ("user", "area"),
         ("system", "stack"),
@@ -8237,8 +8179,7 @@ graph_info["cpu_utilization_5"] = {
 }
 
 graph_info["cpu_utilization_6"] = {
-    "title":
-        _("CPU utilization"),
+    "title": _("CPU utilization"),
     "metrics": [
         ("user", "area"),
         ("system", "stack"),
@@ -8247,14 +8188,12 @@ graph_info["cpu_utilization_6"] = {
         ("user,system,io_wait,cpu_util_steal,+,+,+#004080", "line", _("Total")),
     ],
     "conflicting_metrics": ["cpu_util_guest",],
-    "omit_zero_metrics":
-        True,
+    "omit_zero_metrics": True,
     "range": (0, 100),
 }
 
 graph_info["cpu_utilization_7"] = {
-    "title":
-        _("CPU utilization"),
+    "title": _("CPU utilization"),
     "metrics": [
         ("user", "area"),
         ("system", "stack"),
@@ -8263,8 +8202,7 @@ graph_info["cpu_utilization_7"] = {
         ("cpu_util_steal", "stack"),
         ("user,system,io_wait,cpu_util_guest,cpu_util_steal,+,+,+,+#004080", "line", _("Total")),
     ],
-    "omit_zero_metrics":
-        True,
+    "omit_zero_metrics": True,
     "range": (0, 100),
 }
 
@@ -8289,8 +8227,7 @@ graph_info["wasted_space_of_tables_and_indexes"] = {
 }
 
 graph_info["firewall_connections"] = {
-    "title":
-        _("Firewall connections"),
+    "title": _("Firewall connections"),
     "metrics": [
         ("fw_connections_active", "stack"),
         ("fw_connections_established", "stack"),
@@ -8332,8 +8269,7 @@ graph_info["disk_utilization"] = {
 }
 
 graph_info["disk_throughput"] = {
-    "title":
-        _("Disk throughput"),
+    "title": _("Disk throughput"),
     "metrics": [
         ("disk_read_throughput", "area"),
         ("disk_write_throughput", "-area"),
@@ -8344,8 +8280,7 @@ graph_info["disk_throughput"] = {
         ("disk_write_throughput:warn,-1,*", "Warning write"),
         ("disk_write_throughput:crit,-1,*", "Critical write"),
     ],
-    "legend_scale":
-        MB,
+    "legend_scale": MB,
 }
 
 graph_info["disk_io_operations"] = {
@@ -8365,14 +8300,12 @@ graph_info["direct_and_buffered_io_operations"] = {
 }
 
 graph_info["average_request_size"] = {
-    "title":
-        _("Average request size"),
+    "title": _("Average request size"),
     "metrics": [
         ("disk_average_read_request_size", "area"),
         ("disk_average_write_request_size", "-area"),
     ],
-    "legend_scale":
-        KB,
+    "legend_scale": KB,
 }
 
 graph_info["average_end_to_end_wait_time"] = {
@@ -8393,8 +8326,7 @@ graph_info["spare_and_broken_disks"] = {
 }
 
 graph_info["database_sizes"] = {
-    "title":
-        _("Database sizes"),
+    "title": _("Database sizes"),
     "metrics": [
         ("database_size", "area"),
         ("unallocated_size", "stack"),
@@ -8412,8 +8344,7 @@ graph_info["database_sizes"] = {
         "unused_size",
         "database_reclaimable",
     ],
-    "legend_scale":
-        MB,
+    "legend_scale": MB,
 }
 
 # TODO: Warum ist hier überall line? Default ist Area.
@@ -8421,8 +8352,7 @@ graph_info["database_sizes"] = {
 # nicht total die Summe der anderen?
 
 graph_info["bufferpool_hitratios"] = {
-    "title":
-        _("Bufferpool Hitratios"),
+    "title": _("Bufferpool Hitratios"),
     "metrics": [
         ("total_hitratio", "line"),
         ("data_hitratio", "line"),
@@ -8484,8 +8414,7 @@ graph_info["supply_toner_other"] = {
 }
 
 graph_info["printed_pages"] = {
-    "title":
-        _("Printed pages"),
+    "title": _("Printed pages"),
     "metrics": [
         ("pages_color_a4", "stack"),
         ("pages_color_a3", "stack"),
@@ -8509,8 +8438,7 @@ graph_info["printed_pages"] = {
 # Networking
 
 graph_info["bandwidth_translated"] = {
-    "title":
-        _("Bandwidth"),
+    "title": _("Bandwidth"),
     "metrics": [
         ("if_in_octets,8,*@bits/s", "area", _("Input bandwidth")),
         ("if_out_octets,8,*@bits/s", "-area", _("Output bandwidth")),
@@ -8533,8 +8461,7 @@ graph_info["bandwidth"] = {
 }
 
 graph_info["packets_2"] = {
-    "title":
-        _("Packets"),
+    "title": _("Packets"),
     "metrics": [
         ("if_in_pkts", "area"),
         ("if_out_non_unicast", "-area"),
@@ -8543,8 +8470,7 @@ graph_info["packets_2"] = {
 }
 
 graph_info["traffic"] = {
-    "title":
-        _("Traffic"),
+    "title": _("Traffic"),
     "metrics": [
         ("if_in_octets", "area"),
         ("if_out_non_unicast_octets", "-area"),
@@ -8553,8 +8479,7 @@ graph_info["traffic"] = {
 }
 
 graph_info["wlan_errors"] = {
-    "title":
-        _("WLAN errors, reset operations and transmission retries"),
+    "title": _("WLAN errors, reset operations and transmission retries"),
     "metrics": [
         ("wlan_physical_errors", "area"),
         ("wlan_resets", "stack"),
@@ -8577,8 +8502,7 @@ graph_info["wlan_errors"] = {
 # }
 
 graph_info["packets_1"] = {
-    "title":
-        _("Packets"),
+    "title": _("Packets"),
     "metrics": [
         ("if_in_unicast", "area"),
         ("if_in_non_unicast", "stack"),
@@ -8588,8 +8512,7 @@ graph_info["packets_1"] = {
 }
 
 graph_info["if_errors"] = {
-    "title":
-        _("Errors"),
+    "title": _("Errors"),
     "metrics": [
         ("if_in_errors", "area"),
         ("if_in_discards", "stack"),
@@ -8599,8 +8522,7 @@ graph_info["if_errors"] = {
 }
 
 graph_info["ram_swap_used"] = {
-    "title":
-        _("RAM + Swap used"),
+    "title": _("RAM + Swap used"),
     "metrics": [
         ("mem_used", "area"),
         ("swap_used", "stack"),
@@ -8644,8 +8566,7 @@ graph_info["mem_shrinking"] = {
 # Linux memory graphs. They are a lot...
 
 graph_info["ram_swap_overview"] = {
-    "title":
-        _("RAM + Swap overview"),
+    "title": _("RAM + Swap overview"),
     "metrics": [
         ("mem_total", "area"),
         ("swap_total", "stack"),
@@ -8664,8 +8585,7 @@ graph_info["swap"] = {
 }
 
 graph_info["caches"] = {
-    "title":
-        _("Caches"),
+    "title": _("Caches"),
     "metrics": [
         ("mem_lnx_slab", "stack"),
         ("swap_cached", "stack"),
@@ -8675,8 +8595,7 @@ graph_info["caches"] = {
 }
 
 graph_info["active_and_inactive_memory_anon"] = {
-    "title":
-        _("Active and Inactive Memory"),
+    "title": _("Active and Inactive Memory"),
     "metrics": [
         ("mem_lnx_inactive_anon", "stack"),
         ("mem_lnx_inactive_file", "stack"),
@@ -8699,8 +8618,7 @@ graph_info["active_and_inactive_memory"] = {
 }
 
 graph_info["ram_used"] = {
-    "title":
-        _("RAM used"),
+    "title": _("RAM used"),
     "metrics": [("mem_used", "area"),],
     "scalars": [
         ("mem_used:max#000000", "Maximum"),
@@ -8711,8 +8629,7 @@ graph_info["ram_used"] = {
 }
 
 graph_info["commit_charge"] = {
-    "title":
-        _("Commit Charge"),
+    "title": _("Commit Charge"),
     "metrics": [("pagefile_used", "area"),],
     "scalars": [
         ("pagefile_used:max#000000", "Maximum"),
@@ -8723,8 +8640,7 @@ graph_info["commit_charge"] = {
 }
 
 graph_info["filesystem_writeback"] = {
-    "title":
-        _("Filesystem Writeback"),
+    "title": _("Filesystem Writeback"),
     "metrics": [
         ("mem_lnx_dirty", "area"),
         ("mem_lnx_writeback", "stack"),
@@ -8735,8 +8651,7 @@ graph_info["filesystem_writeback"] = {
 }
 
 graph_info["memory_committing"] = {
-    "title":
-        _("Memory committing"),
+    "title": _("Memory committing"),
     "metrics": [
         ("mem_lnx_total_total", "area"),
         ("mem_lnx_committed_as", "area"),
@@ -8745,8 +8660,7 @@ graph_info["memory_committing"] = {
 }
 
 graph_info["memory_that_cannot_be_swapped_out"] = {
-    "title":
-        _("Memory that cannot be swapped out"),
+    "title": _("Memory that cannot be swapped out"),
     "metrics": [
         ("mem_lnx_kernel_stack", "area"),
         ("mem_lnx_page_tables", "stack"),
@@ -8755,8 +8669,7 @@ graph_info["memory_that_cannot_be_swapped_out"] = {
 }
 
 graph_info["huge_pages"] = {
-    "title":
-        _("Huge Pages"),
+    "title": _("Huge Pages"),
     "metrics": [
         ("mem_lnx_huge_pages_total", "area"),
         ("mem_lnx_huge_pages_free", "area"),
@@ -8766,8 +8679,7 @@ graph_info["huge_pages"] = {
 }
 
 graph_info["vmalloc_address_space_1"] = {
-    "title":
-        _("VMalloc Address Space"),
+    "title": _("VMalloc Address Space"),
     "metrics": [
         ("mem_lnx_vmalloc_total", "area"),
         ("mem_lnx_vmalloc_used", "area"),
@@ -8831,8 +8743,7 @@ graph_info["private_and_shared_memory"] = {
 }
 
 graph_info["tcp_connection_states"] = {
-    "title":
-        _("TCP Connection States"),
+    "title": _("TCP Connection States"),
     "metrics": [
         ("tcp_listen", "stack"),
         ("tcp_syn_sent", "stack"),
@@ -8848,13 +8759,11 @@ graph_info["tcp_connection_states"] = {
         ("tcp_bound", "stack"),
         ("tcp_idle", "stack"),
     ],
-    "omit_zero_metrics":
-        True,
+    "omit_zero_metrics": True,
 }
 
 graph_info["cluster_hosts"] = {
-    "title":
-        _("Hosts"),
+    "title": _("Hosts"),
     "metrics": [
         ("hosts_active", "stack"),
         ("hosts_inactive", "stack"),
@@ -8906,8 +8815,7 @@ graph_info["rule_efficiency"] = {
 }
 
 graph_info["livestatus_requests_per_connection"] = {
-    "title":
-        _("Livestatus Requests per Connection"),
+    "title": _("Livestatus Requests per Connection"),
     "metrics": [("livestatus_request_rate,livestatus_connect_rate,/#88aa33", "area",
                  _("Average requests per connection")),],
 }
@@ -8944,8 +8852,7 @@ graph_info["pending_updates"] = {
 }
 
 graph_info["dhcp_leases"] = {
-    "title":
-        _("DHCP Leases"),
+    "title": _("DHCP Leases"),
     "metrics": [
         ("used_dhcp_leases", "area"),
         ("free_dhcp_leases", "stack"),
@@ -8956,8 +8863,7 @@ graph_info["dhcp_leases"] = {
         "free_dhcp_leases:crit",
     ],
     "range": (0, "free_dhcp_leases:max"),
-    "omit_zero_metrics":
-        True,
+    "omit_zero_metrics": True,
     "optional_metrics": ["pending_dhcp_leases"]
 }
 
@@ -8975,8 +8881,7 @@ graph_info["dhcp_leases"] = {
 #}
 
 graph_info["handled_requests"] = {
-    "title":
-        _("Handled Requests"),
+    "title": _("Handled Requests"),
     "metrics": [
         ("requests_cmk_views", "stack"),
         ("requests_cmk_wato", "stack"),
@@ -8992,13 +8897,11 @@ graph_info["handled_requests"] = {
         ("requests_scripts", "stack"),
         ("requests_other", "stack"),
     ],
-    "omit_zero_metrics":
-        True,
+    "omit_zero_metrics": True,
 }
 
 graph_info["cmk_http_pagetimes"] = {
-    "title":
-        _("Time spent for various page types"),
+    "title": _("Time spent for various page types"),
     "metrics": [
         ("secs_cmk_views", "stack"),
         ("secs_cmk_wato", "stack"),
@@ -9014,13 +8917,11 @@ graph_info["cmk_http_pagetimes"] = {
         ("secs_scripts", "stack"),
         ("secs_other", "stack"),
     ],
-    "omit_zero_metrics":
-        True,
+    "omit_zero_metrics": True,
 }
 
 graph_info["cmk_http_traffic"] = {
-    "title":
-        _("Bytes sent"),
+    "title": _("Bytes sent"),
     "metrics": [
         ("bytes_cmk_views", "stack"),
         ("bytes_cmk_wato", "stack"),
@@ -9036,8 +8937,7 @@ graph_info["cmk_http_traffic"] = {
         ("bytes_scripts", "stack"),
         ("bytes_other", "stack"),
     ],
-    "omit_zero_metrics":
-        True,
+    "omit_zero_metrics": True,
 }
 
 graph_info["amount_of_mails_in_queues"] = {
@@ -9065,8 +8965,7 @@ graph_info["inbound_and_outbound_messages"] = {
 }
 
 graph_info["modems"] = {
-    "title":
-        _("Modems"),
+    "title": _("Modems"),
     "metrics": [
         ("active_modems", "area"),
         ("registered_modems", "line"),
@@ -9088,8 +8987,7 @@ graph_info["number_of_processes"] = {
 }
 
 graph_info["size_of_processes"] = {
-    "title":
-        _("Size of processes"),
+    "title": _("Size of processes"),
     "metrics": [
         ("process_resident_size", "area"),
         ("process_virtual_size", "stack"),
@@ -9099,8 +8997,7 @@ graph_info["size_of_processes"] = {
 }
 
 graph_info["size_per_process"] = {
-    "title":
-        _("Size per process"),
+    "title": _("Size per process"),
     "metrics": [
         ("process_resident_size,processes,/", "area", _("Average resident size per process")),
         ("process_virtual_size,processes,/", "stack", _("Average virtual size per process")),
@@ -9132,8 +9029,7 @@ graph_info["words"] = {
 }
 
 graph_info["fc_errors"] = {
-    "title":
-        _("Errors"),
+    "title": _("Errors"),
     "metrics": [
         ("fc_crc_errors", "area"),
         ("fc_c3discards", "stack"),
@@ -9149,8 +9045,7 @@ graph_info["fc_errors"] = {
 }
 
 graph_info["fc_errors_detailed"] = {
-    "title":
-        _("Errors"),
+    "title": _("Errors"),
     "metrics": [
         ("fc_link_fails", "stack"),
         ("fc_sync_losses", "stack"),
@@ -9194,8 +9089,7 @@ for what, text in [
     }
 
 graph_info["harddrive_health_statistic"] = {
-    "title":
-        _("Harddrive health statistic"),
+    "title": _("Harddrive health statistic"),
     "metrics": [
         ("harddrive_power_cycle", "stack"),
         ("harddrive_reallocated_sectors", "stack"),
@@ -9210,8 +9104,7 @@ graph_info["harddrive_health_statistic"] = {
 }
 
 graph_info["access_point_statistics"] = {
-    "title":
-        _("Access point statistics"),
+    "title": _("Access point statistics"),
     "metrics": [
         ("ap_devices_total", "area"),
         ("ap_devices_drifted", "area"),
@@ -9243,8 +9136,7 @@ graph_info["packet_loss"] = {
 
 for idx in range(1, MAX_NUMBER_HOPS):
     graph_info["hop_%d_round_trip_average" % idx] = {
-        "title":
-            _("Hop %d Round trip average") % idx,
+        "title": _("Hop %d Round trip average") % idx,
         "metrics": [
             ("hop_%d_rtmax" % idx, "area"),
             ("hop_%d_rtmin" % idx, "area"),
@@ -9287,8 +9179,7 @@ graph_info["mem_perm_used"] = {
 }
 
 graph_info["palo_alto_sessions"] = {
-    "title":
-        _("Palo Alto Sessions"),
+    "title": _("Palo Alto Sessions"),
     "metrics": [
         ("tcp_active_sessions", "area"),
         ("udp_active_sessions", "stack"),
@@ -9298,8 +9189,7 @@ graph_info["palo_alto_sessions"] = {
 }
 
 graph_info["varnish_backend_connections"] = {
-    "title":
-        _("Varnish Backend Connections"),
+    "title": _("Varnish Backend Connections"),
     "metrics": [
         ("varnish_backend_busy_rate", "line"),
         ("varnish_backend_unhealthy_rate", "line"),
@@ -9314,8 +9204,7 @@ graph_info["varnish_backend_connections"] = {
 }
 
 graph_info["varnish_cache"] = {
-    "title":
-        _("Varnish Cache"),
+    "title": _("Varnish Cache"),
     "metrics": [
         ("varnish_cache_miss_rate", "line"),
         ("varnish_cache_hit_rate", "line"),
@@ -9324,8 +9213,7 @@ graph_info["varnish_cache"] = {
 }
 
 graph_info["varnish_clients"] = {
-    "title":
-        _("Varnish Clients"),
+    "title": _("Varnish Clients"),
     "metrics": [
         ("varnish_client_req_rate", "line"),
         ("varnish_client_conn_rate", "line"),
@@ -9343,8 +9231,7 @@ graph_info["varnish_esi_errors_and_warnings"] = {
 }
 
 graph_info["varnish_fetch"] = {
-    "title":
-        _("Varnish Fetch"),
+    "title": _("Varnish Fetch"),
     "metrics": [
         ("varnish_fetch_oldhttp_rate", "line"),
         ("varnish_fetch_head_rate", "line"),
@@ -9362,8 +9249,7 @@ graph_info["varnish_fetch"] = {
 }
 
 graph_info["varnish_objects"] = {
-    "title":
-        _("Varnish Objects"),
+    "title": _("Varnish Objects"),
     "metrics": [
         ("varnish_objects_expired_rate", "line"),
         ("varnish_objects_lru_nuked_rate", "line"),
@@ -9372,8 +9258,7 @@ graph_info["varnish_objects"] = {
 }
 
 graph_info["varnish_worker"] = {
-    "title":
-        _("Varnish Worker"),
+    "title": _("Varnish Worker"),
     "metrics": [
         ("varnish_worker_lqueue_rate", "line"),
         ("varnish_worker_create_rate", "line"),
@@ -9415,8 +9300,7 @@ graph_info["authentication_failures"] = {
 }
 
 graph_info["allocate_requests_exceeding_port_limit"] = {
-    "title":
-        _("Allocate Requests Exceeding Port Limit"),
+    "title": _("Allocate Requests Exceeding Port Limit"),
     "metrics": [("udp_allocate_requests_exceeding_port_limit", "line"),
                 ("tcp_allocate_requests_exceeding_port_limit", "line")]
 }
@@ -9430,8 +9314,7 @@ graph_info["packets_dropped"] = {
 }
 
 graph_info["active_sessions"] = {
-    "title":
-        _("Active Sessions"),
+    "title": _("Active Sessions"),
     "metrics": [("active_sessions_%s" % device, idx == 0 and "area" or "stack")
                 for idx, (device, name, color) in enumerate(skype_mobile_devices[::-1])]
 }
@@ -9458,8 +9341,7 @@ graph_info["oracle_db_time_statistics"] = {
 }
 
 graph_info["oracle_buffer_pool_statistics"] = {
-    "title":
-        _("ORACLE buffer pool statistics"),
+    "title": _("ORACLE buffer pool statistics"),
     "metrics": [
         ("oracle_db_block_gets", "line"),
         ("oracle_db_block_change", "line"),
@@ -9478,8 +9360,7 @@ graph_info["oracle_library_cache_statistics"] = {
 }
 
 graph_info["dhcp_statistics_received"] = {
-    "title":
-        _("DHCP statistics (received messages)"),
+    "title": _("DHCP statistics (received messages)"),
     "metrics": [
         ("dhcp_discovery", "area"),
         ("dhcp_requests", "stack"),
@@ -9500,8 +9381,7 @@ graph_info["dhcp_statistics_sent"] = {
 }
 
 graph_info["dns_statistics"] = {
-    "title":
-        _("DNS statistics"),
+    "title": _("DNS statistics"),
     "metrics": [
         ("dns_successes", "area"),
         ("dns_referrals", "stack"),
@@ -9513,8 +9393,7 @@ graph_info["dns_statistics"] = {
 }
 
 graph_info["connection_durations"] = {
-    "title":
-        _("Connection durations"),
+    "title": _("Connection durations"),
     "metrics": [
         ("connections_duration_min", "line"),
         ("connections_duration_max", "line"),
@@ -9523,8 +9402,7 @@ graph_info["connection_durations"] = {
 }
 
 graph_info["http_timings"] = {
-    "title":
-        _("HTTP Timings"),
+    "title": _("HTTP Timings"),
     "metrics": [
         ("time_connect", "area", _("Connect")),
         ("time_ssl", "stack", _("Negotiate SSL")),
@@ -9561,8 +9439,7 @@ graph_info["emcvnx_storage_pools_capacity"] = {
 }
 
 graph_info["emcvnx_storage_pools_movement"] = {
-    "title":
-        _("EMC VNX storage pools movement"),
+    "title": _("EMC VNX storage pools movement"),
     "metrics": [
         ("emcvnx_move_up", "area"),
         ("emcvnx_move_down", "stack"),
@@ -9571,8 +9448,7 @@ graph_info["emcvnx_storage_pools_movement"] = {
 }
 
 graph_info["emcvnx_storage_pools_targeted"] = {
-    "title":
-        _("EMC VNX storage pools targeted tiers"),
+    "title": _("EMC VNX storage pools targeted tiers"),
     "metrics": [
         ("emcvnx_targeted_higher", "area"),
         ("emcvnx_targeted_lower", "stack"),
@@ -9581,8 +9457,7 @@ graph_info["emcvnx_storage_pools_targeted"] = {
 }
 
 graph_info['amount_of_mails_in_secondary_queues'] = {
-    'title':
-        _('Amount of mails in queues'),
+    'title': _('Amount of mails in queues'),
     'metrics': [
         ('mail_queue_hold_length', 'stack'),
         ('mail_queue_incoming_length', 'stack'),

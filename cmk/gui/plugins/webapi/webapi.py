@@ -585,7 +585,6 @@ api_actions["edit_users"] = {
     "locking": True,
 }
 
-
 #.
 #   .--Rules---------------------------------------------------------------.
 #   |                       ____        _                                  |
@@ -700,9 +699,14 @@ class APICallRules(APICallCollection):
             folder_rulesets = watolib.FolderRulesets(folder)
             folder_rulesets.load()
             # TODO: This add_change() call should be made by the data classes
-            watolib.add_change("edit-ruleset", _("Set ruleset '%s' for '%s' with %d rules") %
-                                (new_ruleset.title(), folder.title(), len(rules)),
-                       sites=folder.all_site_ids())
+            watolib.add_change(
+                "edit-ruleset",
+                _("Set ruleset '%s' for '%s' with %d rules") % (
+                    new_ruleset.title(),
+                    folder.title(),
+                    len(rules),
+                ),
+                sites=folder.all_site_ids())
             folder_rulesets.set(ruleset_name, new_ruleset)
             folder_rulesets.save()
 
@@ -713,9 +717,13 @@ class APICallRules(APICallCollection):
             folder_rulesets = watolib.FolderRulesets(folder)
             folder_rulesets.load()
             # TODO: This add_change() call should be made by the data classes
-            watolib.add_change("edit-ruleset", _("Deleted ruleset '%s' for '%s'") %
-                                (watolib.Ruleset(ruleset_name).title(), folder.title()),
-                       sites=folder.all_site_ids())
+            watolib.add_change(
+                "edit-ruleset",
+                _("Deleted ruleset '%s' for '%s'") % (
+                    watolib.Ruleset(ruleset_name).title(),
+                    folder.title(),
+                ),
+                sites=folder.all_site_ids())
 
             new_ruleset = watolib.Ruleset(ruleset_name)
             new_ruleset.from_config(folder, [])
@@ -777,7 +785,7 @@ class APICallHosttags(APICallCollection):
         hosttags_dict = hosttags_config.get_dict_format()
 
         # The configuration hash is computed for the configurable hosttags
-        add_configuration_hash(hosttags_dict, hosttags_dict) # Looks strange, but is OK
+        add_configuration_hash(hosttags_dict, hosttags_dict)  # Looks strange, but is OK
 
         hosttags_dict["builtin"] = self._get_builtin_tags_configuration()
         return hosttags_dict
@@ -789,7 +797,9 @@ class APICallHosttags(APICallCollection):
 
     def _set(self, request):
         validate_request_keys(
-            request, required_keys=["tag_groups", "aux_tags"], optional_keys=["configuration_hash", "builtin"])
+            request,
+            required_keys=["tag_groups", "aux_tags"],
+            optional_keys=["configuration_hash", "builtin"])
 
         hosttags_config = watolib.HosttagsConfiguration()
         hosttags_config.load()
@@ -824,9 +834,11 @@ class APICallHosttags(APICallCollection):
 
         missing_tags = used_tags - new_tags
         if missing_tags:
-            raise MKUserError(None, _("Unable to apply new hosttag configuration. The following tags "
-                                      "are still in use, but not mentioned in the updated "
-                                      "configuration: %s") % ", ".join(missing_tags))
+            raise MKUserError(
+                None,
+                _("Unable to apply new hosttag configuration. The following tags "
+                  "are still in use, but not mentioned in the updated "
+                  "configuration: %s") % ", ".join(missing_tags))
 
         changed_hosttags_config.save()
         watolib.add_change("edit-hosttags", _("Updated host tags through Web-API"))
@@ -1051,19 +1063,23 @@ def action_discover_services(request):
     if failed_hosts:
         if not host.discovery_failed():
             host.set_discovery_failed()
-        raise MKUserError(None, _("Failed to inventorize %s: %s") % (hostname, failed_hosts[hostname]))
+        raise MKUserError(None,
+                          _("Failed to inventorize %s: %s") % (hostname, failed_hosts[hostname]))
 
     if host.discovery_failed():
         host.clear_discovery_failed()
 
     if mode == "refresh":
-        message = _("Refreshed check configuration of host [%s] with %d services") % (hostname, counts[hostname][3])
+        message = _("Refreshed check configuration of host [%s] with %d services") % (
+            hostname, counts[hostname][3])
         watolib.add_service_change(host, "refresh-autochecks", message)
     else:
-        message = _("Saved check configuration of host [%s] with %d services") % (hostname, counts[hostname][3])
+        message = _("Saved check configuration of host [%s] with %d services") % (
+            hostname, counts[hostname][3])
         watolib.add_service_change(host, "set-autochecks", message)
 
-    msg = _("Service discovery successful. Added %d, Removed %d, Kept %d, New Count %d") % tuple(counts[hostname])
+    msg = _("Service discovery successful. Added %d, Removed %d, Kept %d, New Count %d") % tuple(
+        counts[hostname])
     return msg
 
 

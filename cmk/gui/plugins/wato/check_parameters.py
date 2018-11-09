@@ -4441,40 +4441,37 @@ register_check_parameters(
     match_type='dict',
 )
 
-
-
-
 register_check_parameters(
     subgroup_applications,
     'azure_vms',
     _("Azure Virtual Machines"),
     Dictionary(
-        help = _("To obtain the data required for this check, please configure"
-                 " the datasource program \"Agent Azure\"."),
-        elements = [
-            ('map_provisioning_states', Dictionary(
-                title = _("Map provisioning states"),
-                elements = [
-                    ("succeeded", MonitoringState(title="succeeded")),
-                    ("failed", MonitoringState(title="failed", default_value=2)),
-                ])
-            ),
-            ('map_power_states', Dictionary(
-                title = _("Map power states"),
-                elements = [
-                    ("starting", MonitoringState(title="starting")),
-                    ("running", MonitoringState(title="running")),
-                    ("stopping", MonitoringState(title="stopping", default_value=1)),
-                    ("stopped", MonitoringState(title="stopped", default_value=1)),
-                    ("deallocating", MonitoringState(title="deallocating")),
-                    ("deallocated", MonitoringState(title="deallocated")),
-                    ("unknown", MonitoringState(title=_("unknown"), default_value=3)),
-                ])
-            ),
+        help=_("To obtain the data required for this check, please configure"
+               " the datasource program \"Agent Azure\"."),
+        elements=[
+            ('map_provisioning_states',
+             Dictionary(
+                 title=_("Map provisioning states"),
+                 elements=[
+                     ("succeeded", MonitoringState(title="succeeded")),
+                     ("failed", MonitoringState(title="failed", default_value=2)),
+                 ])),
+            ('map_power_states',
+             Dictionary(
+                 title=_("Map power states"),
+                 elements=[
+                     ("starting", MonitoringState(title="starting")),
+                     ("running", MonitoringState(title="running")),
+                     ("stopping", MonitoringState(title="stopping", default_value=1)),
+                     ("stopped", MonitoringState(title="stopped", default_value=1)),
+                     ("deallocating", MonitoringState(title="deallocating")),
+                     ("deallocated", MonitoringState(title="deallocated")),
+                     ("unknown", MonitoringState(title=_("unknown"), default_value=3)),
+                 ])),
         ],
     ),
-    TextAscii(title = _("VM name")),
-    match_type = 'dict',
+    TextAscii(title=_("VM name")),
+    match_type='dict',
 )
 
 
@@ -4482,22 +4479,21 @@ def _azure_vms_summary_levels(title, lower=(None, None), upper=(None, None)):
     return Dictionary(
         title=_(title),
         elements=[
-            ("levels_lower", Tuple(
-                title=_("Lower levels"),
-                elements=[
-                    Integer(title=_("Warning below"), default_value=lower[0]),
-                    Integer(title=_("Critical below"), default_value=lower[1]),
-                ])
-            ),
-            ("levels", Tuple(
-                title=_("Upper levels"),
-                elements=[
-                    Integer(title=_("Warning at"), default_value=upper[0]),
-                    Integer(title=_("Critical at"), default_value=upper[1]),
-                ])
-            ),
-        ]
-    )
+            ("levels_lower",
+             Tuple(
+                 title=_("Lower levels"),
+                 elements=[
+                     Integer(title=_("Warning below"), default_value=lower[0]),
+                     Integer(title=_("Critical below"), default_value=lower[1]),
+                 ])),
+            ("levels",
+             Tuple(
+                 title=_("Upper levels"),
+                 elements=[
+                     Integer(title=_("Warning at"), default_value=upper[0]),
+                     Integer(title=_("Critical at"), default_value=upper[1]),
+                 ])),
+        ])
 
 
 register_check_parameters(
@@ -4505,41 +4501,33 @@ register_check_parameters(
     'azure_vms_summary',
     _("Azure Virtual Machines Summary"),
     Dictionary(
-        help = _("To obtain the data required for this check, please configure"
-                 " the datasource program \"Agent Azure\"."),
-        elements = [
-            ('levels_provisioning', Dictionary(
-                title = _("Levels for provisioning count"),
-                elements = [
-                    ("succeeded", _azure_vms_summary_levels(
-                        "Succeeded provionings", (0, -1))),
-                    ("failed", _azure_vms_summary_levels(
-                        "Failed provisionings", (-1, -1), (1, 1))),
-                ])
-            ),
-            ('levels_power', Dictionary(
-                title = _("Levels for power state count"),
-                elements = [
-                    ("starting", _azure_vms_summary_levels(
-                        "Starting VMs")),
-                    ("running", _azure_vms_summary_levels(
-                        "Running VMs")),
-                    ("stopping", _azure_vms_summary_levels(
-                        "Stopping VMs")),
-                    ("stopped", _azure_vms_summary_levels(
-                        "Stopped VMs")),
-                    ("deallocating", _azure_vms_summary_levels(
-                        "Deallocating VMs")),
-                    ("unknown", _azure_vms_summary_levels(
-                        "VMs in unknown state", upper=(1, 1))),
-                ])
-            ),
+        help=_("To obtain the data required for this check, please configure"
+               " the datasource program \"Agent Azure\"."),
+        elements=[
+            ('levels_provisioning',
+             Dictionary(
+                 title=_("Levels for provisioning count"),
+                 elements=[
+                     ("succeeded", _azure_vms_summary_levels("Succeeded provionings", (0, -1))),
+                     ("failed", _azure_vms_summary_levels("Failed provisionings", (-1, -1),
+                                                          (1, 1))),
+                 ])),
+            ('levels_power',
+             Dictionary(
+                 title=_("Levels for power state count"),
+                 elements=[
+                     ("starting", _azure_vms_summary_levels("Starting VMs")),
+                     ("running", _azure_vms_summary_levels("Running VMs")),
+                     ("stopping", _azure_vms_summary_levels("Stopping VMs")),
+                     ("stopped", _azure_vms_summary_levels("Stopped VMs")),
+                     ("deallocating", _azure_vms_summary_levels("Deallocating VMs")),
+                     ("unknown", _azure_vms_summary_levels("VMs in unknown state", upper=(1, 1))),
+                 ])),
         ],
     ),
     None,
-    match_type = 'dict',
+    match_type='dict',
 )
-
 
 #.
 #   .--Environment---------------------------------------------------------.

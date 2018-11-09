@@ -86,7 +86,10 @@ def check_hostname(hostname, should_exist=True):
             raise MKUserError(None, _("No such host"))
     else:
         if watolib.Host.host_exists(hostname):
-            raise MKUserError(None, _("Host %s already exists in the folder %s") % (hostname, watolib.Host.host(hostname).folder().path()))
+            raise MKUserError(
+                None,
+                _("Host %s already exists in the folder %s") %
+                (hostname, watolib.Host.host(hostname).folder().path()))
 
 
 def validate_request_keys(request, required_keys=None, optional_keys=None):

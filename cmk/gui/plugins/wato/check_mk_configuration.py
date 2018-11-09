@@ -2920,7 +2920,8 @@ register_rule(
         ),
         # In the past, this was a OptionalDropdownChoice() which values could be strings:
         # ignore, site or a custom string representing a version number.
-        forth=lambda x: isinstance(x, str) and x not in ["ignore", "site"] and ("specific", x) or x))
+        forth=lambda x: isinstance(x, str) and x not in ["ignore", "site"] and ("specific", x) or x,
+    ))
 
 register_rule(
     "agents/" + _("Generic Options"),

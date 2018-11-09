@@ -86,7 +86,7 @@ class Perfometer(object):
             return None, None
 
         # Legacy Perf-O-Meters: find matching Perf-O-Meter function
-        logger.warning("Legacy perfometer rendered for %s / %s / %s" % \
+        logger.info("Legacy perfometer rendered for %s / %s / %s" % \
              (self._row["host_name"], self._row["service_description"],
               self._row["service_check_command"]))
         return self._render_legacy_perfometer()

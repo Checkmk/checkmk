@@ -79,7 +79,7 @@ class Perfometer(object):
 
         # Try new metrics module
         title, h = self._render_metrics_perfometer()
-        if title != None:
+        if title is not None:
             return title, h
 
         if not self._has_legacy_perfometer():

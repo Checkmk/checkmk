@@ -467,7 +467,7 @@ function virtual_host_tree_enter(path)
                 return entry[0], entry[1]  # tag, title
         # Not found -> try empty entry
         for entry in groupentries:
-            if entry[0] == None:
+            if entry[0] is None:
                 return None, entry[1]
 
         # No empty entry found -> get default (i.e. first entry)

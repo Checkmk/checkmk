@@ -98,7 +98,7 @@ register_rule(
                "<b>Note:</b> in order to get any useful "
                "result for agent based hosts make sure that you have installed "
                "the agent plugin <tt>mk_inventory</tt> on these hosts."),
-        forth=lambda x: x != None and x or {},  # convert from legacy None
+        forth=lambda x: x is not None and x or {},  # convert from legacy None
     ),
     match="all",
 )

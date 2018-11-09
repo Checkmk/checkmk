@@ -401,7 +401,7 @@ class FilterGroupCombo(Filter):
             current_value = sites.live().query_value(
                 "GET %sgroups\nCache: reload\nColumns: name\nLimit: 1\n" % table, None)
 
-        if current_value == None:
+        if current_value is None:
             return ""  # no {what}group exists!
 
         col = self.what + "_groups"
@@ -1315,7 +1315,7 @@ class FilterDiscoveryState(Filter):
         val = {}
         for varname in self.htmlvars:
             value = html.get_checkbox(varname)
-            if value == None:
+            if value is None:
                 value = True  # Default setting for filter: all checked!
             val[varname] = value
         return val
@@ -1580,7 +1580,7 @@ class BIStatusFilter(Filter):
                 allowed_states.append(s)
         newrows = []
         for row in rows:
-            if row[self.column] != None:
+            if row[self.column] is not None:
                 s = row[self.column]["state"]
             else:
                 s = None
@@ -1684,7 +1684,7 @@ if config.mkeventd_enabled:
 
     class EventFilterDropdown(Filter):
         def __init__(self, name, title, choices, operator='=', column=None):
-            if column == None:
+            if column is None:
                 column = name
             self._varname = "event_" + name
             Filter.__init__(self, "event_" + name, title, "event", [self._varname],
@@ -1736,7 +1736,7 @@ if config.mkeventd_enabled:
                 current_value = sites.live().query_value(
                     "GET contactgroups\nCache: reload\nColumns: name\nLimit: 1\n", None)
 
-            if current_value == None:
+            if current_value is None:
                 return ""  # no {what}group exists!
 
             if not self.enforce and html.var(self.htmlvars[1]):

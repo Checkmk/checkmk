@@ -225,7 +225,7 @@ def iconpainter_columns(what, toplevel):
         ])
 
     for icon in get_multisite_icons().itervalues():
-        if toplevel == None or toplevel == icon['toplevel']:
+        if toplevel is None or toplevel == icon['toplevel']:
             if 'columns' in icon:
                 cols.update([what + '_' + c for c in icon['columns']])
             cols.update(["host_" + c for c in icon.get("host_columns", [])])

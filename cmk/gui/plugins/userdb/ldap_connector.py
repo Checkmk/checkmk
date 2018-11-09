@@ -495,7 +495,7 @@ class LDAPUserConnector(UserConnector):
         return self._config.get('suffix')
 
     def _has_suffix(self):
-        return self._config.get('suffix') != None
+        return self._config.get('suffix') is not None
 
     def _save_suffix(self):
         suffix = self._get_suffix()

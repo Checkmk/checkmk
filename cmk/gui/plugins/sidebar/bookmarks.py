@@ -270,7 +270,7 @@ function add_bookmark() {
             if (instance.is_mine() and instance.may_see()) or \
                (not instance.is_mine() and instance.is_public() and instance.may_see()):
                 for topic, bookmarks in instance.bookmarks_by_topic():
-                    if topic == None:
+                    if topic is None:
                         topic = instance.default_bookmark_topic()
                     bookmark_list = topics.setdefault(topic, [])
                     bookmark_list += bookmarks

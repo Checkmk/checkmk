@@ -136,7 +136,7 @@ multisite_painters["aggr_acknowledged"] = {
 
 
 def paint_aggr_state_short(state, assumed=False):
-    if state == None:
+    if state is None:
         return "", ""
     else:
         name = short_service_state_name(state["state"], "")

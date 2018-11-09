@@ -1,0 +1,15 @@
+title: Alcatel switches (>=AOS7): Board Temperatures
+agents: snmp
+catalog: hw/network/alcatel
+license: GPL
+distribution: check_mk
+description:
+ This check monitors board temperatures on Alcatel switches running
+ operating system AOS7 or higher and supporting the ALCATEL-IND1-CHASSIS-MIB
+ (version for >=AOS7). Considered board temperatures are control module boards
+ (CPMA and CPMB), fabric boards (CFMA, CFMB, CFMC and CMFD), fantrays 1 und 2
+ (FTA und FTB) and network interface boards in slot 1 to slot 8 (NI1 to NI8).
+
+inventory:
+ One service is created for each connected board connected to the switch.
+

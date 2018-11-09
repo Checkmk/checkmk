@@ -1129,6 +1129,12 @@ div.add_snapin div.snapinadder, div.add_snapin div.snapinadder:hover {
   div.add_snapin div.snapinadder .content {
     color: #1A243D; }
 
+div#side_footer span#msg_label {
+    left: -10px;
+    top: -6px;
+    font-size: 12px;
+}
+
 #mk_side_search, #wiki_search {
   width: 100%; }
   #mk_side_search input, #mk_side_search select, #mk_side_search textarea, #mk_side_search #mk_side_search_field, #wiki_search input, #wiki_search select, #wiki_search textarea, #wiki_search #mk_side_search_field {

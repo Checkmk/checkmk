@@ -185,8 +185,8 @@ def fetch_var(protocol, server, port, path, suburi, itemspec, service_url, servi
 # convert single values into lists of items in
 # case value is a 1-levelled or 2-levelled dict
 def make_item_list(path, value, itemspec):
-    if type(value) != dict:
-        if type(value) == str:
+    if not isinstance(value, dict):
+        if isinstance(value, str):
             value = value.replace(r'\/', '/')
         return [(path, value)]
     else:
@@ -279,7 +279,7 @@ def query_instance(inst):
 
     sys.stdout.write('<<<jolokia_metrics>>>\n')
     # Fetch the general information first
-    for var in global_vars + specific_vars.get(product, []):
+    for var in global_vars + specific_vars.get(inst["product"], []):
         # support old and new configuration format so we stay compatible with older
         # configuration files
         if len(var) == 3:
@@ -295,19 +295,20 @@ def query_instance(inst):
                 paths = mbean_search_results[mbean]
             else:
                 paths = fetch_var(inst["protocol"], inst["server"], inst["port"], mbean,
-                                inst["suburi"], "", None, None, None, function="search")[0][1]
+                                  inst["suburi"], "", None, None, None, function="search")[0][1]
                 mbean_search_results[mbean] = paths
 
             for mbean_exp in paths:
-                queries.append( ("%s/%s" % (urllib2.quote(mbean_exp), path), path,
-                                    itemspec, mbean_exp) )
+                queries.append(("%s/%s" % (urllib2.quote(mbean_exp), path), path,
+                                itemspec, mbean_exp))
         else:
-            queries.append( (mbean + "/" + path, title, itemspec) )
+            queries.append((mbean + "/" + path, title, itemspec))
 
         for mbean_path, title, itemspec in queries:
             try:
-                for out_item, out_title, out_value in fetch_metric(inst, mbean_path, title, itemspec):
-                    sys.stdout.write("%s %s %s\n" % (out_item, out_title, out_value) )
+                for out_item, out_title, out_value in fetch_metric(
+                        inst, mbean_path, title, itemspec):
+                    sys.stdout.write("%s %s %s\n" % (out_item, out_title, out_value))
             except IOError:
                 raise SkipInstance()
             except socket.timeout:
@@ -369,60 +370,109 @@ def output_jolokia_info(inst):
 
 
 def output_custom_vars(inst, mbean_search_results):
+    custom_vars = inst.get("custom_vars")
     if not custom_vars:
         return
 
     sys.stdout.write('<<<jolokia_generic>>>\n')
     for var in custom_vars:
-            mbean, path, title, itemspec, do_search, value_type = var
-            queries = []
-            if do_search:
-                if mbean in mbean_search_results:
-                    paths = mbean_search_results[mbean]
-                else:
-                    paths = fetch_var(inst["protocol"], inst["server"], inst["port"], mbean,
-                                    inst["suburi"], "", None, None, None, function="search")[0][1]
-                    mbean_search_results[mbean] = paths
-
-                for mbean_exp in paths:
-                    queries.append( ("%s/%s" % (urllib2.quote(mbean_exp), path), path,
-                                        itemspec, mbean_exp) )
+        mbean, path, title, itemspec, do_search, value_type = var
+        queries = []
+        if do_search:
+            if mbean in mbean_search_results:
+                paths = mbean_search_results[mbean]
             else:
-                queries.append( (mbean + "/" + path, title, itemspec) )
+                paths = fetch_var(inst["protocol"], inst["server"], inst["port"], mbean,
+                                  inst["suburi"], "", None, None, None, function="search")[0][1]
+                mbean_search_results[mbean] = paths
 
-            for mbean_path, title, itemspec in queries:
-                try:
-                    for out_item, out_title, out_value in fetch_metric(inst, mbean_path, title, itemspec):
-                        sys.stdout.write("%s %s %s %s\n" % (out_item, out_title, out_value, value_type) )
-                except IOError:
-                    raise SkipInstance()
-                except socket.timeout:
-                    raise SkipInstance()
-                except:
-                    if opt_debug:
-                        raise
-                    # Simply ignore exceptions. Need to be removed for debugging
-                    continue
+            for mbean_exp in paths:
+                queries.append(("%s/%s" % (urllib2.quote(mbean_exp), path), path,
+                                itemspec, mbean_exp))
+        else:
+            queries.append((mbean + "/" + path, title, itemspec))
+
+        for mbean_path, title, itemspec in queries:
+            try:
+                for out_item, out_title, out_value in fetch_metric(
+                        inst, mbean_path, title, itemspec):
+                    sys.stdout.write("%s %s %s %s\n" % (out_item, out_title, out_value, value_type))
+            except IOError:
+                raise SkipInstance()
+            except socket.timeout:
+                raise SkipInstance()
+            except:
+                if opt_debug:
+                    raise
+                # Simply ignore exceptions. Need to be removed for debugging
+                continue
 
 
+def yield_configured_instances():
 
+    # Default configuration for all instances
+    protocol = "http"
+    server = "localhost"
+    port = 8080
+    user = "monitoring"
+    password = None
+    mode = "digest"
+    suburi = "jolokia"
+    instance = None
+    cert_path = "_default"
+    client_cert = None
+    client_key = None
+    service_url = None
+    service_user = None
+    service_password = None
+    product = None
+    custom_vars = []
 
-# Default configuration for all instances
-protocol         = "http"
-server           = "localhost"
-port             = 8080
-user             = "monitoring"
-password         = None
-mode             = "digest"
-suburi           = "jolokia"
-instance         = None
-cert_path        = "_default"
-client_cert      = None
-client_key       = None
-service_url      = None
-service_user     = None
-service_password = None
-product          = None
+    # List of instances to monitor. Each instance is a dict where
+    # the global configuration values can be overridden.
+    instances = [{}]
+
+    conffile = os.getenv("MK_CONFDIR", "/etc/check_mk") + "/jolokia.cfg"
+    if os.path.exists(conffile):
+        execfile(conffile)
+
+    if instance is None:
+        instance = str(port)
+
+    default_config = {
+        "protocol": protocol,
+        "server": server,
+        "port": port,
+        "user": user,
+        "password": password,
+        "mode": mode,
+        "suburi": suburi,
+        "instance": instance,
+        "cert_path": cert_path,
+        "client_cert": client_cert,
+        "client_key": client_key,
+        "service_url": service_url,
+        "service_user": service_user,
+        "service_password": service_password,
+        "product": product,
+        "custom_vars": custom_vars,
+    }
+
+    # Compute list of instances to monitor. If the user has defined
+    # instances in his configuration, we will use this (a list
+    # of dicts).
+    for inst in instances:
+        config = {k: inst.get(k, default_config[k]) for k in default_config}
+
+        if not config["instance"]:
+            config["instance"] = str(config["port"])
+        config["instance"] = config["instance"].replace(" ", "_")
+
+        if config.get("server") == "use fqdn":
+            config["server"] = socket.getfqdn()
+
+        yield config
+
 
 global_vars = [
   ( "java.lang:type=Memory",                           "NonHeapMemoryUsage/used", "NonHeapMemoryUsage",      [], False),
@@ -495,60 +545,20 @@ specific_vars = {
 #   ( "Catalina:J2EEApplication=none,J2EEServer=none,WebModule=*,j2eeType=Servlet,name=*", None, [ "WebModule", "name" ]),
 
 
-# List of instances to monitor. Each instance is a dict where
-# the global configuration values can be overridden.
-instances = [{}]
-
-custom_vars = []
-
-conffile = os.getenv("MK_CONFDIR", "/etc/check_mk") + "/jolokia.cfg"
-
-if os.path.exists(conffile):
-    execfile(conffile)
-
-if server == "use fqdn":
-    server = socket.getfqdn()
-
-if instance == None:
-    instance = str(port)
-
 # We have to deal with socket timeouts. Python > 2.6
 # supports timeout parameter for the urllib2.urlopen method
 # but we are on a python 2.5 system here which seem to use the
 # default socket timeout. We are local here so  set it to 1 second.
 socket.setdefaulttimeout(1.0)
 
-# Compute list of instances to monitor. If the user has defined
-# instances in his configuration, we will use this (a list
-# of dicts).
-for inst in instances:
-    for varname,              value in [
-        ("protocol",         protocol),
-        ("server",           server),
-        ("port",             port),
-        ("user",             user),
-        ("password",         password),
-        ("mode",             mode),
-        ("suburi",           suburi),
-        ("instance",         instance),
-        ("cert_path",        cert_path),
-        ("client_cert",      client_cert),
-        ("client_key",       client_key),
-        ("service_url",      service_url),
-        ("service_user",     service_user),
-        ("service_password", service_password),
-        ( "product",  product ),
-    ]:
-        if varname not in inst:
-            inst[varname] = value
-    if not inst["instance"]:
-        inst["instance"] = str(inst["port"])
-    inst["instance"] = inst["instance"].replace(" ", "_")
 
-    if inst.get("server") == "use fqdn":
-        inst["server"] = socket.getfqdn()
+def main():
+    for instance in yield_configured_instances():
+        try:
+            query_instance(instance)
+        except SkipInstance:
+            pass
 
-    try:
-        query_instance(inst)
-    except SkipInstance:
-        pass
+
+if __name__ == "__main__":
+    main()

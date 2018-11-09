@@ -308,7 +308,7 @@ class ModeUsers(WatoMode):
             if user.get("locked", False):
                 html.icon(_('The login is currently locked'), 'user_locked')
 
-            if "disable_notifications" in user and type(user["disable_notifications"]) == bool:
+            if "disable_notifications" in user and isinstance(user["disable_notifications"], bool):
                 disable_notifications_opts = {"disable": user["disable_notifications"]}
             else:
                 disable_notifications_opts = user.get("disable_notifications", {})

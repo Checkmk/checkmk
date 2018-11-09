@@ -159,13 +159,13 @@ class ModeCheckPlugins(WatoMode):
 
         # searches in {"name" : "asd", "title" : "das", ...}
         def get_matched_entry(entry):
-            if type(entry) == dict:
+            if isinstance(entry, dict):
                 name = entry.get("name", "")
-                if type(name) == str:
+                if isinstance(name, str):
                     name = name.decode("utf8")
 
                 title = entry.get("title", "")
-                if type(title) == str:
+                if isinstance(title, str):
                     title = title.decode("utf8")
                 if self._search in name.lower() or self._search in title.lower():
                     return entry
@@ -173,7 +173,7 @@ class ModeCheckPlugins(WatoMode):
             return None
 
         def check_entries(key, entries):
-            if type(entries) == list:
+            if isinstance(entries, list):
                 these_matches = []
                 for entry in entries:
                     match = get_matched_entry(entry)
@@ -193,7 +193,7 @@ class ModeCheckPlugins(WatoMode):
                             if name:
                                 handled_check_names.add(name)
 
-            elif type(entries) == dict:
+            elif isinstance(entries, dict):
                 for k, subentries in entries.items():
                     check_entries(k, subentries)
 
@@ -236,7 +236,7 @@ class ModeCheckPlugins(WatoMode):
         return tree
 
     def _render_manpage_topic(self):
-        if type(self._manpages) == list:
+        if isinstance(self._manpages, list):
             self._render_manpage_list(self._manpages, self._path[-1], self._topic_title)
             return
 
@@ -271,7 +271,7 @@ class ModeCheckPlugins(WatoMode):
                 self._render_manpage_list(subnode, path_comp, title)
 
     def _get_check_plugin_stats(self, subnode):
-        if type(subnode) == list:
+        if isinstance(subnode, list):
             num_cats = 1
             num_plugins = len(subnode)
         else:
@@ -293,7 +293,7 @@ class ModeCheckPlugins(WatoMode):
         html.h2(heading)
         table.begin(searchable=False, sortable=False, css="check_catalog")
         for entry in sorted(manpage_list, cmp=lambda a, b: cmp(a["title"], b["title"])):
-            if type(entry) != dict:
+            if not isinstance(entry, dict):
                 continue
             table.row()
             url = html.makeuri([("mode", "check_manpage"), ("check_type", entry["name"]),

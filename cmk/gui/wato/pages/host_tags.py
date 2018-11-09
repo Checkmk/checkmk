@@ -611,9 +611,8 @@ def rename_host_tags_after_confirmation(tag_id, operations):
         raise MKUserError("id_0", _("Aborting change."))
 
     elif mode:
-        if tag_id and type(
-                operations
-        ) == list:  # make attribute unknown to system, important for save() operations
+        # make attribute unknown to system, important for save() operations
+        if tag_id and isinstance(operations, list):
             watolib.undeclare_host_tag_attribute(tag_id)
         affected_folders, affected_hosts, affected_rulesets = \
         _change_host_tags_in_folders(tag_id, operations, mode, watolib.Folder.root_folder())
@@ -651,7 +650,7 @@ def rename_host_tags_after_confirmation(tag_id, operations):
                 [("mode", "edit_ruleset"), ("varname", ruleset.name)]), ruleset.title())
         message += "</ul>"
 
-    if not message and type(operations) == tuple:  # deletion of unused tag group
+    if not message and isinstance(operations, tuple):  # deletion of unused tag group
         html.open_div(class_="really")
         html.begin_form("confirm")
         html.write_text(_("Please confirm the deletion of the tag group."))
@@ -662,7 +661,7 @@ def rename_host_tags_after_confirmation(tag_id, operations):
         html.close_div()
 
     elif message:
-        if type(operations) == list:
+        if isinstance(operations, list):
             wato_html_head(_("Confirm tag deletion"))
         else:
             wato_html_head(_("Confirm tag modifications"))
@@ -677,7 +676,7 @@ def rename_host_tags_after_confirmation(tag_id, operations):
         html.begin_form("confirm")
 
         # Check if operations contains removal
-        if type(operations) == list:
+        if isinstance(operations, list):
             have_removal = True
         else:
             have_removal = False
@@ -722,7 +721,7 @@ def _change_host_tags_in_folders(tag_id, operations, mode, folder):
         attrname = "tag_" + tag_id
         attributes = folder.attributes()
         if attrname in attributes:  # this folder has set the tag group in question
-            if type(operations) == list:  # deletion of tag group
+            if isinstance(operations, list):  # deletion of tag group
                 if attrname in attributes:
                     affected_folders.append(folder)
                     if mode != "check":
@@ -767,7 +766,7 @@ def _change_host_tags_in_hosts(folder, tag_id, operations, mode, hostlist):
         attributes = host.attributes()
         attrname = "tag_" + tag_id
         if attrname in attributes:
-            if type(operations) == list:  # delete complete tag group
+            if isinstance(operations, list):  # delete complete tag group
                 affected_hosts.append(host)
                 if mode != "check":
                     del attributes[attrname]
@@ -808,7 +807,7 @@ def _change_host_tags_in_rules(folder, operations, mode):
     for ruleset in rulesets.get_rulesets().itervalues():
         for _folder, _rulenr, rule in ruleset.get_rules():
             # Handle deletion of complete tag group
-            if type(operations) == list:  # this list of tags to remove
+            if isinstance(operations, list):  # this list of tags to remove
                 for tag in operations:
                     if tag != None and (tag in rule.tag_specs or "!" + tag in rule.tag_specs):
                         affected_rulesets.add(ruleset)

@@ -163,7 +163,7 @@ class ModePatternEditor(WatoMode):
 
             # TODO: What's this?
             pattern_list = rule.value
-            if type(pattern_list) == dict:
+            if isinstance(pattern_list, dict):
                 pattern_list = pattern_list["reclassify_patterns"]
 
             # Each rule can hold no, one or several patterns. Loop them all here

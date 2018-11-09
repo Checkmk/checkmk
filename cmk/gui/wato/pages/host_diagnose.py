@@ -163,7 +163,7 @@ class ModeDiagHost(WatoMode):
         # snmp_community or the snmp_v3_credentials
         vs_dict = {}
         for key, value in self._host.attributes().items():
-            if key == "snmp_community" and type(value) == tuple:
+            if key == "snmp_community" and isinstance(value, tuple):
                 vs_dict["snmp_v3_credentials"] = value
                 continue
             vs_dict[key] = value

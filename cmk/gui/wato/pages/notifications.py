@@ -625,7 +625,7 @@ class ModeNotifications(NotificationsMode):
     def _convert_context_to_unicode(self, context):
         # Convert all values to unicode
         for key, value in context.iteritems():
-            if type(value) == str:
+            if isinstance(value, str):
                 try:
                     value_unicode = value.decode("utf-8")
                 except:

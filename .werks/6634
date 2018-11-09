@@ -1,0 +1,11 @@
+Title: cmciii: Fix incorrect values due to ignored unit value
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0p8
+Date: 1541757759
+Class: fix
+
+In some cases, power or energy values would be off by a factor 1000
+due to the unit reported via SNMP not being queried. This has been fixed.

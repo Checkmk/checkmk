@@ -1,0 +1,21 @@
+Title: mknotifyd: set a default timeout if no value is given for a method
+Level: 1
+Component: notifications
+Compatible: incomp
+Edition: cee
+Version: 1.5.0p8
+Date: 1541754179
+Class: fix
+
+If the option "Timing settings for specific methods" was used for a notification
+method and no explicit timeout was given an exception was raised in the mknotifyd
+if a timeout occured. As a result notification processes that run in a timeout
+are not killed, the list of notifications that are in progress are not updated
+as long as the timed out process exists and the output of the timed out process
+is discarded.
+
+The issue is now fixed and the default timeout of 60s is set if no timeout
+is specified in the global settings.
+
+If you use the option "Timing settings for specific methods" in versions prior
+to 1.5.0p8 please set a timeout explicitlyto circumvent this issue.

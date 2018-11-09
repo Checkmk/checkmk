@@ -38,31 +38,20 @@ from cmk.gui.i18n import _u, _
 from cmk.gui.globals import html
 
 g_acknowledgement_time = {}
-g_modified_time        = 0
-g_columns              = ["time", "contact_name", "type", "host_name",
-                          "service_description", "comment"]
-loaded_with_language   = False
+g_modified_time = 0
+g_columns = ["time", "contact_name", "type", "host_name", "service_description", "comment"]
 
 
+# The permissions need to be loaded dynamically on each page load instead of
+# only when the plugins need to be loaded because the user may have placed
+# new notification plugins in the local hierarchy.
 def load_plugins(force):
-    global loaded_with_language
-    if loaded_with_language == cmk.gui.i18n.get_current_language() and not force:
-        return
-
-    config.declare_permission_section("notification_plugin",
-                                      _("Notification plugins"),
-                                      do_sort = True)
+    config.declare_permission_section(
+        "notification_plugin", _("Notification plugins"), do_sort=True)
 
     for name, attrs in watolib.load_notification_scripts().items():
-        config.declare_permission(
-            "notification_plugin.%s" % name,
-            _u(attrs["title"]), u"",
-            [ "admin", "user" ])
-
-    # This must be set after plugin loading to make broken plugins raise
-    # exceptions all the time and not only the first time (when the plugins
-    # are loaded).
-    loaded_with_language = cmk.gui.i18n.get_current_language()
+        config.declare_permission("notification_plugin.%s" % name, _u(attrs["title"]), u"",
+                                  ["admin", "user"])
 
 
 def acknowledge_failed_notifications(timestamp):
@@ -139,7 +128,7 @@ def load_failed_notifications(before=None, after=None, stat_only=False, extra_he
     if stat_only:
         result = sites.live().query_summed_stats(query)
         if result is None:
-            result = [0] # Normalize the result when no site answered
+            result = [0]  # Normalize the result when no site answered
 
         if result[0] == 0 and not sites.live().dead_sites():
             # In case there are no errors and all sites are reachable:
@@ -159,19 +148,20 @@ def render_notification_table(failed_notifications):
 
     for row in failed_notifications:
         table.row()
-        table.cell(_("Time"),    cmk.render.approx_age(time.time() - row[header['time']]))
+        table.cell(_("Time"), cmk.render.approx_age(time.time() - row[header['time']]))
         table.cell(_("Contact"), row[header['contact_name']])
-        table.cell(_("Plugin"),  row[header['type']])
-        table.cell(_("Host"),    row[header['host_name']])
+        table.cell(_("Plugin"), row[header['type']])
+        table.cell(_("Host"), row[header['host_name']])
         table.cell(_("Service"), row[header['service_description']])
-        table.cell(_("Output"),  row[header['comment']])
+        table.cell(_("Output"), row[header['comment']])
 
     table.end()
 
 
 # TODO: We should really recode this to use the view and a normal view command / action
 def render_page_confirm(acktime, prev_url, failed_notifications):
-    html.header(_("Confirm failed notifications"), javascripts=[], stylesheets=[ "pages", "check_mk" ])
+    html.header(
+        _("Confirm failed notifications"), javascripts=[], stylesheets=["pages", "check_mk"])
 
     if failed_notifications:
         html.open_div(class_="really")
@@ -206,6 +196,5 @@ def page_clear():
             cmk.gui.wato.user_profile.user_profile_async_replication_page()
             return
 
-    failed_notifications = load_failed_notifications(before=acktime,
-                                                     after=acknowledged_time())
+    failed_notifications = load_failed_notifications(before=acktime, after=acknowledged_time())
     render_page_confirm(acktime, prev_url, failed_notifications)

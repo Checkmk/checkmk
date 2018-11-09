@@ -950,7 +950,6 @@ class ModeBI(WatoMode, BIManagement):
         return selection
 
 
-
 #.
 #   .--Packs---------------------------------------------------------------.
 #   |                      ____            _                               |
@@ -1334,7 +1333,6 @@ class ModeBIAggregations(ModeBI):
             toplevel_rule["id"], toplevel_rule["id"], tree_prefix="%s_" % aggregation_id)
 
 
-
 #.
 #   .--Rules---------------------------------------------------------------.
 #   |                       ____        _                                  |
@@ -1591,7 +1589,6 @@ class ModeBIRules(ModeBI):
         table.end()
 
 
-
 #.
 #   .--Rule Tree-----------------------------------------------------------.
 #   |               ____        _        _____                             |
@@ -1634,8 +1631,6 @@ class ModeBIRuleTree(ModeBI):
             table.cell(_("Rule Tree"), css="bi_rule_tree")
             self.render_rule_tree(self._ruleid, self._ruleid)
             table.end()
-
-
 
 
 #.
@@ -1740,7 +1735,7 @@ class ModeBIEditRule(ModeBI):
 
     def __init__(self):
         ModeBI.__init__(self)
-        self._ruleid = html.get_ascii_input("id") # In case of Aggregations: index in list
+        self._ruleid = html.get_ascii_input("id")  # In case of Aggregations: index in list
         self._new = self._ruleid is None
 
         if not self._new and not self.pack_containing_rule(self._ruleid):
@@ -2078,52 +2073,47 @@ class ModeBIEditRule(ModeBI):
 bi_aggregation_functions = {}
 
 bi_aggregation_functions["worst"] = {
-    "title":
-        _("Worst - take worst of all node states"),
-    "valuespec":
-        Tuple(elements=[
-            Integer(
-                help=
-                _("Normally this value is <tt>1</tt>, which means that the worst state "
-                  "of all child nodes is being used as the total state. If you set it for example "
-                  "to <tt>3</tt>, then instead the node with the 3rd worst state is being regarded. "
-                  "Example: In the case of five nodes with the states CRIT CRIT WARN OK OK then "
-                  "resulting state would be WARN. Or you could say that the worst to nodes are "
-                  "first dropped and then the worst of the remaining nodes defines the state. "),
-                title=_("Take n'th worst state for n = "),
-                default_value=1,
-                min_value=1),
-            MonitoringState(
-                title=_("Restrict severity to at worst"),
-                help=_("Here a maximum severity of the node state can be set. This severity is not "
-                       "exceeded, even if some of the childs have more severe states."),
-                default_value=2,
-            ),
-        ]),
+    "title": _("Worst - take worst of all node states"),
+    "valuespec": Tuple(elements=[
+        Integer(
+            help=_(
+                "Normally this value is <tt>1</tt>, which means that the worst state "
+                "of all child nodes is being used as the total state. If you set it for example "
+                "to <tt>3</tt>, then instead the node with the 3rd worst state is being regarded. "
+                "Example: In the case of five nodes with the states CRIT CRIT WARN OK OK then "
+                "resulting state would be WARN. Or you could say that the worst to nodes are "
+                "first dropped and then the worst of the remaining nodes defines the state. "),
+            title=_("Take n'th worst state for n = "),
+            default_value=1,
+            min_value=1),
+        MonitoringState(
+            title=_("Restrict severity to at worst"),
+            help=_("Here a maximum severity of the node state can be set. This severity is not "
+                   "exceeded, even if some of the childs have more severe states."),
+            default_value=2,
+        ),
+    ]),
 }
 
 bi_aggregation_functions["best"] = {
-    "title":
-        _("Best - take best of all node states"),
-    "valuespec":
-        Tuple(elements=[
-            Integer(
-                help=_(
-                    "Normally this value is <tt>1</tt>, which means that the best state "
-                    "of all child nodes is being used as the total state. If you set it for example "
-                    "to <tt>2</tt>, then the node with the best state is not being regarded. "
-                    "If the states of the child nodes would be CRIT, WARN and OK, then to total "
-                    "state would be WARN."),
-                title=_("Take n'th best state for n = "),
-                default_value=1,
-                min_value=1),
-            MonitoringState(
-                title=_("Restrict severity to at worst"),
-                help=_("Here a maximum severity of the node state can be set. This severity is not "
-                       "exceeded, even if some of the childs have more severe states."),
-                default_value=2,
-            ),
-        ]),
+    "title": _("Best - take best of all node states"),
+    "valuespec": Tuple(elements=[
+        Integer(
+            help=_("Normally this value is <tt>1</tt>, which means that the best state "
+                   "of all child nodes is being used as the total state. If you set it for example "
+                   "to <tt>2</tt>, then the node with the best state is not being regarded. "
+                   "If the states of the child nodes would be CRIT, WARN and OK, then to total "
+                   "state would be WARN."),
+            title=_("Take n'th best state for n = "),
+            default_value=1,
+            min_value=1),
+        MonitoringState(
+            title=_("Restrict severity to at worst"),
+            help=_("Here a maximum severity of the node state can be set. This severity is not "
+                   "exceeded, even if some of the childs have more severe states."),
+            default_value=2,
+        ),
+    ]),
 }
 
 
@@ -2150,13 +2140,11 @@ def vs_count_ok_count(title, defval, defvalperc):
 
 
 bi_aggregation_functions["count_ok"] = {
-    "title":
-        _("Count the number of nodes in state OK"),
-    "valuespec":
-        Tuple(elements=[
-            vs_count_ok_count(_("Required number of OK-nodes for a total state of OK:"), 2, 50),
-            vs_count_ok_count(_("Required number of OK-nodes for a total state of WARN:"), 1, 25),
-        ]),
+    "title": _("Count the number of nodes in state OK"),
+    "valuespec": Tuple(elements=[
+        vs_count_ok_count(_("Required number of OK-nodes for a total state of OK:"), 2, 50),
+        vs_count_ok_count(_("Required number of OK-nodes for a total state of WARN:"), 1, 25),
+    ]),
 }
 
 #.
@@ -2322,7 +2310,6 @@ config.declare_permission(
 register_modules(
     WatoModule("bi_packs", _("Business Intelligence"), "aggr", "bi_rules",
                _("Configuration of Check_MK's Business Intelligence component."), 70))
-
 
 #.
 #   .--Rename Hosts--------------------------------------------------------.

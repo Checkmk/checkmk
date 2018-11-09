@@ -1021,30 +1021,20 @@ class LDAPUserConnector(UserConnector):
     def _do_migrate_config(cls):
         # Create a default connection out of the old config format
         connection = {
-            'id':
-                'default',
-            'type':
-                'ldap',
-            'description':
-                _('This is the default LDAP connection.'),
-            'disabled':
-                'ldap' not in getattr(config, 'user_connectors', []),
-            'cache_livetime':
-                getattr(config, 'ldap_cache_livetime', 300),
-            'active_plugins':
-                getattr(config, 'ldap_active_plugins', []) or {
-                    'email': {},
-                    'alias': {},
-                    'auth_expire': {}
-                },
-            'directory_type':
-                getattr(config, 'ldap_connection', {}).get('type', 'ad'),
-            'user_id_umlauts':
-                'keep',
-            'user_dn':
-                '',
-            'user_scope':
-                'sub',
+            'id': 'default',
+            'type': 'ldap',
+            'description': _('This is the default LDAP connection.'),
+            'disabled': 'ldap' not in getattr(config, 'user_connectors', []),
+            'cache_livetime': getattr(config, 'ldap_cache_livetime', 300),
+            'active_plugins': getattr(config, 'ldap_active_plugins', []) or {
+                'email': {},
+                'alias': {},
+                'auth_expire': {}
+            },
+            'directory_type': getattr(config, 'ldap_connection', {}).get('type', 'ad'),
+            'user_id_umlauts': 'keep',
+            'user_dn': '',
+            'user_scope': 'sub',
         }
 
         old_connection_cfg = getattr(config, 'ldap_connection', {})
@@ -2071,14 +2061,10 @@ def ldap_needed_attributes_mail(connection, params):
 
 
 ldap_attribute_plugins['email'] = {
-    'title':
-        _('Email address'),
-    'help':
-        _('Synchronizes the email of the LDAP user account into Check_MK.'),
-    'needed_attributes':
-        ldap_needed_attributes_mail,
-    'sync_func':
-        ldap_sync_mail,
+    'title': _('Email address'),
+    'help': _('Synchronizes the email of the LDAP user account into Check_MK.'),
+    'needed_attributes': ldap_needed_attributes_mail,
+    'sync_func': ldap_sync_mail,
     'lock_attributes': ['email'],
     'parameters': [
         ("attr",
@@ -2111,15 +2097,11 @@ def ldap_needed_attributes_alias(connection, params):
 
 
 ldap_attribute_plugins['alias'] = {
-    'title':
-        _('Alias'),
-    'help':
-        _('Populates the alias attribute of the WATO user by syncrhonizing an attribute '
-          'from the LDAP user account. By default the LDAP attribute <tt>cn</tt> is used.'),
-    'needed_attributes':
-        ldap_needed_attributes_alias,
-    'sync_func':
-        ldap_sync_alias,
+    'title': _('Alias'),
+    'help': _('Populates the alias attribute of the WATO user by syncrhonizing an attribute '
+              'from the LDAP user account. By default the LDAP attribute <tt>cn</tt> is used.'),
+    'needed_attributes': ldap_needed_attributes_alias,
+    'sync_func': ldap_sync_alias,
     'lock_attributes': ['alias'],
     'parameters': [
         ("attr",
@@ -2197,16 +2179,12 @@ def ldap_needed_attributes_auth_expire(connection, params):
 
 
 ldap_attribute_plugins['auth_expire'] = {
-    'title':
-        _('Authentication Expiration'),
-    'help':
-        _('This plugin fetches all information which are needed to check whether or '
-          'not an already authenticated user should be deauthenticated, e.g. because '
-          'the password has changed in LDAP or the account has been locked.'),
-    'needed_attributes':
-        ldap_needed_attributes_auth_expire,
-    'sync_func':
-        ldap_sync_auth_expire,
+    'title': _('Authentication Expiration'),
+    'help': _('This plugin fetches all information which are needed to check whether or '
+              'not an already authenticated user should be deauthenticated, e.g. because '
+              'the password has changed in LDAP or the account has been locked.'),
+    'needed_attributes': ldap_needed_attributes_auth_expire,
+    'sync_func': ldap_sync_auth_expire,
     'lock_attributes': ['locked'],
     # When a plugin introduces new user attributes, it should declare the output target for
     # this attribute. It can either be written to the multisites users.mk or the check_mk
@@ -2248,16 +2226,13 @@ def ldap_needed_attributes_pager(connection, params):
 
 
 ldap_attribute_plugins['pager'] = {
-    'title':
-        _('Pager'),
-    'help':
-        _('This plugin synchronizes a field of the users LDAP account to the pager attribute '
-          'of the WATO user accounts, which is then forwarded to the monitoring core and can be used'
-          'for notifications. By default the LDAP attribute <tt>mobile</tt> is used.'),
-    'needed_attributes':
-        ldap_needed_attributes_pager,
-    'sync_func':
-        ldap_sync_pager,
+    'title': _('Pager'),
+    'help': _(
+        'This plugin synchronizes a field of the users LDAP account to the pager attribute '
+        'of the WATO user accounts, which is then forwarded to the monitoring core and can be used'
+        'for notifications. By default the LDAP attribute <tt>mobile</tt> is used.'),
+    'needed_attributes': ldap_needed_attributes_pager,
+    'sync_func': ldap_sync_pager,
     'lock_attributes': ['pager'],
     'parameters': [
         ('attr',
@@ -2286,24 +2261,20 @@ def ldap_sync_groups_to_contactgroups(connection, plugin, params, user_id, ldap_
     cg_names = userdb.load_group_information().get("contact", {}).keys()
 
     return {
-        "contactgroups":
-            get_groups_of_user(connection, user_id, ldap_user, cg_names, params.get(
-                'nested', False), params.get("other_connections", []))
+        "contactgroups": get_groups_of_user(connection, user_id, ldap_user, cg_names,
+                                            params.get('nested', False),
+                                            params.get("other_connections", []))
     }
 
 
 ldap_attribute_plugins['groups_to_contactgroups'] = {
-    'title':
-        _('Contactgroup Membership'),
-    'help':
-        _('Adds the user to contactgroups based on the group memberships in LDAP. This '
-          'plugin adds the user only to existing contactgroups while the name of the '
-          'contactgroup must match the common name (cn) of the LDAP group.'),
-    'sync_func':
-        ldap_sync_groups_to_contactgroups,
+    'title': _('Contactgroup Membership'),
+    'help': _('Adds the user to contactgroups based on the group memberships in LDAP. This '
+              'plugin adds the user only to existing contactgroups while the name of the '
+              'contactgroup must match the common name (cn) of the LDAP group.'),
+    'sync_func': ldap_sync_groups_to_contactgroups,
     'lock_attributes': ['contactgroups'],
-    'parameters':
-        group_membership_parameters,
+    'parameters': group_membership_parameters,
 }
 
 #.
@@ -2372,46 +2343,41 @@ def get_user_attribute_choices():
 
 
 ldap_attribute_plugins['groups_to_attributes'] = {
-    'title':
-        _('Groups to custom user attributes'),
-    'help':
-        _('Sets custom user attributes based on the group memberships in LDAP. This '
-          'plugin can be used to set custom user attributes to specified values '
-          'for all users which are member of a group in LDAP. The specified group '
-          'name must match the common name (CN) of the LDAP group.'),
-    'sync_func':
-        ldap_sync_groups_to_attributes,
-    'lock_attributes':
-        ldap_locked_attributes_groups_to_attributes,
-    'parameters':
-        group_membership_parameters + [
-            ('groups',
-             ListOf(
-                 Dictionary(
-                     elements=[
-                         ('cn',
-                          TextUnicode(
-                              title=_("Group<nobr> </nobr>CN"),
-                              size=40,
-                              allow_empty=False,
-                          )),
-                         ('attribute',
-                          CascadingDropdown(
-                              title=_("Attribute to set"),
-                              choices=get_user_attribute_choices,
-                          )),
-                     ],
-                     optional_keys=[],
-                 ),
-                 title=_("Groups to synchronize"),
-                 help=
-                 _("Specify the groups to control the value of a given user attribute. If a user is "
-                   "not a member of a group, the attribute will be left at it's default value. When "
-                   "a single attribute is set by multiple groups and a user is member of multiple "
-                   "of these groups, the later plugin in the list will override the others."),
-                 allow_empty=False,
-             )),
-        ],
+    'title': _('Groups to custom user attributes'),
+    'help': _('Sets custom user attributes based on the group memberships in LDAP. This '
+              'plugin can be used to set custom user attributes to specified values '
+              'for all users which are member of a group in LDAP. The specified group '
+              'name must match the common name (CN) of the LDAP group.'),
+    'sync_func': ldap_sync_groups_to_attributes,
+    'lock_attributes': ldap_locked_attributes_groups_to_attributes,
+    'parameters': group_membership_parameters + [
+        ('groups',
+         ListOf(
+             Dictionary(
+                 elements=[
+                     ('cn',
+                      TextUnicode(
+                          title=_("Group<nobr> </nobr>CN"),
+                          size=40,
+                          allow_empty=False,
+                      )),
+                     ('attribute',
+                      CascadingDropdown(
+                          title=_("Attribute to set"),
+                          choices=get_user_attribute_choices,
+                      )),
+                 ],
+                 optional_keys=[],
+             ),
+             title=_("Groups to synchronize"),
+             help=_(
+                 "Specify the groups to control the value of a given user attribute. If a user is "
+                 "not a member of a group, the attribute will be left at it's default value. When "
+                 "a single attribute is set by multiple groups and a user is member of multiple "
+                 "of these groups, the later plugin in the list will override the others."),
+             allow_empty=False,
+         )),
+    ],
     'required_parameters': ["groups"],
 }
 
@@ -2556,19 +2522,16 @@ def ldap_list_roles_with_group_dn():
 
 
 ldap_attribute_plugins['groups_to_roles'] = {
-    'title':
-        _('Roles'),
-    'help':
-        _('Configures the roles of the user depending on its group memberships '
-          'in LDAP.<br><br>'
-          'Please note: Additionally the user is assigned to the '
-          '<a href="wato.py?mode=edit_configvar&varname=default_user_profile&site=&folder=">Default Roles</a>. '
-          'Deactivate them if unwanted.'),
-    'sync_func':
-        ldap_sync_groups_to_roles,
+    'title': _('Roles'),
+    'help': _(
+        'Configures the roles of the user depending on its group memberships '
+        'in LDAP.<br><br>'
+        'Please note: Additionally the user is assigned to the '
+        '<a href="wato.py?mode=edit_configvar&varname=default_user_profile&site=&folder=">Default Roles</a>. '
+        'Deactivate them if unwanted.'),
+    'sync_func': ldap_sync_groups_to_roles,
     'lock_attributes': ['roles'],
-    'parameters':
-        ldap_list_roles_with_group_dn,
+    'parameters': ldap_list_roles_with_group_dn,
 }
 
 #.

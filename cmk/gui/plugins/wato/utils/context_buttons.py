@@ -57,28 +57,27 @@ def changelog_button():
 
 
 def host_status_button(hostname, viewname):
-    html.context_button(_("Status"),
-       "view.py?" + html.urlencode_vars([
-           ("view_name", viewname),
-           ("filename", watolib.Folder.current().path() + "/hosts.mk"),
-           ("host",     hostname),
-           ("site",     "")]),
-           "status")
+    html.context_button(
+        _("Status"), "view.py?" + html.urlencode_vars([
+            ("view_name", viewname),
+            ("filename", watolib.Folder.current().path() + "/hosts.mk"),
+            ("host", hostname),
+            ("site", ""),
+        ]), "status")
 
 
 def service_status_button(hostname, servicedesc):
-    html.context_button(_("Status"),
-       "view.py?" + html.urlencode_vars([
-           ("view_name", "service"),
-           ("host",     hostname),
-           ("service",  servicedesc),
-           ]),
-           "status")
+    html.context_button(
+        _("Status"), "view.py?" + html.urlencode_vars([
+            ("view_name", "service"),
+            ("host", hostname),
+            ("service", servicedesc),
+        ]), "status")
 
 
 def folder_status_button(viewname="allhosts"):
-    html.context_button(_("Status"),
-       "view.py?" + html.urlencode_vars([
-           ("view_name", viewname),
-           ("wato_folder", watolib.Folder.current().path())]),
-           "status")
+    html.context_button(
+        _("Status"), "view.py?" + html.urlencode_vars([
+            ("view_name", viewname),
+            ("wato_folder", watolib.Folder.current().path()),
+        ]), "status")

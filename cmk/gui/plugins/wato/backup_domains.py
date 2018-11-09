@@ -31,13 +31,11 @@ import cmk.paths
 
 watolib.backup_domains.update({
     "check_mk": {
-        "group":
-            _("Configuration"),
-        "title":
-            _("Hosts, Services, Groups, Timeperiods, Business Intelligence and Monitoring Configuration"
-             ),
-        "prefix":
-            cmk.paths.default_config_dir,
+        "group": _("Configuration"),
+        "title": _(
+            "Hosts, Services, Groups, Timeperiods, Business Intelligence and Monitoring Configuration"
+        ),
+        "prefix": cmk.paths.default_config_dir,
         "paths": [
             ("file", "liveproxyd.mk"),
             ("file", "main.mk"),
@@ -50,16 +48,12 @@ watolib.backup_domains.update({
             ("dir", "mkeventd.d"),
             ("dir", "mknotifyd.d"),
         ],
-        "default":
-            True,
+        "default": True,
     },
     "authorization_v1": {
-        "group":
-            _("Configuration"),
-        "title":
-            _("Local Authentication Data"),
-        "prefix":
-            cmk.paths.omd_root,
+        "group": _("Configuration"),
+        "title": _("Local Authentication Data"),
+        "prefix": cmk.paths.omd_root,
         "paths": [
             ("file", "etc/htpasswd"),
             ("file", "etc/auth.secret"),
@@ -67,10 +61,8 @@ watolib.backup_domains.update({
             ("file", "var/check_mk/web/*/serial.mk"),
             ("file", "var/check_mk/web/*/automation.secret"),
         ],
-        "cleanup":
-            False,
-        "default":
-            True
+        "cleanup": False,
+        "default": True
     },
     "mkeventstatus": {
         "group": _("Configuration"),

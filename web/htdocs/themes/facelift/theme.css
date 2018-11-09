@@ -76,7 +76,7 @@ input, input[type=text], input[type=password], select, textarea, div.snapin sele
   height: auto;
   box-shadow: none;
   border: 1px solid #cccfdb !important;
-  max-width: 640px; }
+  }
   #snapin_tag_tree select {
     background: #FFFFFF !important;
     color: #1A243D !important; }
@@ -108,9 +108,6 @@ input, input[type=text], input[type=password], select, textarea, div.snapin sele
     margin-bottom: 0px; }
   input.toggle_timespecific_parameter, select.toggle_timespecific_parameter, textarea.toggle_timespecific_parameter, div.snapin select.toggle_timespecific_parameter, div.snapin textarea.toggle_timespecific_parameter, .toggle_timespecific_parameter#mk_side_search_field {
     display: block; }
-
-select[multiple=multiple] {
-  resize: none !important; }
 
 div.snapin select {
   width: 100% !important;

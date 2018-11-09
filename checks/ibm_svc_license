@@ -59,10 +59,10 @@ def parse_ibm_svc_license(info):
     return licenses
 
 def inventory_ibm_svc_license(parsed):
-    for license, data in parsed.items():
+    for item, data in parsed.items():
         if data != [0.0, 0.0]:
             # Omit unused svc features
-            yield license, None
+            yield item, None
 
 def check_ibm_svc_license(item, params, parsed):
     licensed, used = parsed[item]

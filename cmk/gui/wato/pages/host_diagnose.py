@@ -31,7 +31,7 @@ import cmk.gui.pages
 import cmk.gui.config as config
 import cmk.gui.watolib as watolib
 import cmk.gui.forms as forms
-from cmk.gui.exceptions import MKAuthException, MKGeneralException
+from cmk.gui.exceptions import MKAuthException, MKGeneralException, MKUserError
 from cmk.gui.plugins.wato.utils.base_modes import WatoWebApiMode
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
@@ -103,6 +103,13 @@ class ModeDiagHost(WatoMode):
         if not html.check_transaction():
             return
 
+        if html.var('_try'):
+            try:
+                self._validate_diag_html_vars()
+            except MKUserError, e:
+                html.add_user_error(e.varname, e)
+            return
+
         if html.var('_save'):
             # Save the ipaddress and/or community
             vs_host = self._vs_host()
@@ -128,6 +135,15 @@ class ModeDiagHost(WatoMode):
             html.set_var("host", self._hostname)
             html.set_var("folder", watolib.Folder.current().path())
             return "edit_host", return_message
+
+    def _validate_diag_html_vars(self):
+        vs_host = self._vs_host()
+        host_vars = vs_host.from_html_vars("vs_host")
+        vs_host.validate_value(host_vars, "vs_host")
+
+        vs_rules = self._vs_rules()
+        rule_vars = vs_rules.from_html_vars("vs_rules")
+        vs_rules.validate_value(rule_vars, "vs_rules")
 
     def page(self):
         html.open_div(class_="diag_host")
@@ -179,44 +195,49 @@ class ModeDiagHost(WatoMode):
         html.close_td()
         html.open_td(style="padding-left:10px;")
 
+        self._show_diagnose_output()
+
+    def _show_diagnose_output(self):
         if not html.var('_try'):
             html.message(_('You can diagnose the connection to a specific host using this dialog. '
                            'You can either test whether your current configuration is still working '
                            'or investigate in which ways a host can be reached. Simply configure the '
                            'connection options you like to try on the right side of the screen and '
                            'press the "Test" button. The results will be displayed here.'))
-        else:
-            # TODO: Insert any vs_host valuespec validation
-            #       These tests can be called with invalid valuespec settings...
-            # TODO: Replace hard coded icon paths with dynamic ones to old or new theme
-            for ident, title in ModeDiagHost.diag_host_tests():
-                html.h3(title)
-                html.open_table(class_=["data", "test"])
-                html.open_tr(class_=["data", "odd0"])
+            return
 
-                html.open_td(class_="icons")
-                html.open_div()
-                html.img("images/icon_reload.png", class_="icon", id_="%s_img" % ident)
-                html.open_a(href="")
-                html.img("images/icon_reload.png", class_=["icon", "retry"], id_="%s_retry" % ident, title=_('Retry this test'))
-                html.close_a()
-                html.close_div()
-                html.close_td()
+        if html.has_user_errors():
+            html.show_user_errors()
+            return
 
-                html.open_td()
-                html.div('', class_="log", id="%s_log" % ident)
-                html.close_td()
 
-                html.close_tr()
-                html.close_table()
-                html.javascript('start_host_diag_test(%s, %s, %s)' %
-                                (json.dumps(ident), json.dumps(self._hostname),
-                                 json.dumps(html.transaction_manager.fresh_transid())))
+        # TODO: Insert any vs_host valuespec validation
+        #       These tests can be called with invalid valuespec settings...
+        # TODO: Replace hard coded icon paths with dynamic ones to old or new theme
+        for ident, title in ModeDiagHost.diag_host_tests():
+            html.h3(title)
+            html.open_table(class_=["data", "test"])
+            html.open_tr(class_=["data", "odd0"])
 
-        html.close_td()
-        html.close_tr()
-        html.close_table()
-        html.close_div()
+            html.open_td(class_="icons")
+            html.open_div()
+            html.img("images/icon_reload.png", class_="icon", id_="%s_img" % ident)
+            html.open_a(href="")
+            html.img("images/icon_reload.png", class_=["icon", "retry"], id_="%s_retry" % ident, title=_('Retry this test'))
+            html.close_a()
+            html.close_div()
+            html.close_td()
+
+            html.open_td()
+            html.div('', class_="log", id="%s_log" % ident)
+            html.close_td()
+
+            html.close_tr()
+            html.close_table()
+            html.javascript('start_host_diag_test(%s, %s, %s)' %
+                            (json.dumps(ident), json.dumps(self._hostname),
+                             json.dumps(html.transaction_manager.fresh_transid())))
+
 
     def _vs_host(self):
         return Dictionary(
@@ -261,6 +282,7 @@ class ModeDiagHost(WatoMode):
             optional_keys = False,
             elements = [
                 ('agent_port', Integer(
+                    allow_empty = False,
                     minvalue = 1,
                     maxvalue = 65535,
                     default_value = 6556,
@@ -270,6 +292,7 @@ class ModeDiagHost(WatoMode):
                              "be used to connect to the agent on a per-host-basis.")
                 )),
                 ('tcp_connect_timeout', Float(
+                    allow_empty = False,
                     minvalue = 1.0,
                     default_value = 5.0,
                     unit = _("sec"),
@@ -282,6 +305,7 @@ class ModeDiagHost(WatoMode):
                             "If the agent does not respond within this time, it is considered to be unreachable.")
                 )),
                 ('snmp_timeout', Integer(
+                    allow_empty = False,
                     title = _("SNMP-Timeout (<a href=\"%s\">Rules</a>)") % \
                         watolib.folder_preserving_link([('mode', 'edit_ruleset'), ('varname', 'snmp_timing')]),
                     help = _("After a request is sent to the remote SNMP agent we will wait up to this "
@@ -292,6 +316,7 @@ class ModeDiagHost(WatoMode):
                     unit = _("sec"),
                 )),
                 ('snmp_retries', Integer(
+                    allow_empty = False,
                     title = _("SNMP-Retries (<a href=\"%s\">Rules</a>)") % \
                         watolib.folder_preserving_link([('mode', 'edit_ruleset'), ('varname', 'snmp_timing')]),
                     default_value = 5,

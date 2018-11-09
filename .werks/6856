@@ -1,0 +1,11 @@
+Title: Host permission fields are now resizable with modern theme
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.5.0p8
+Date: 1541778965
+Class: fix
+
+When using the modern theme it was not possible to resize the permission
+contact group list fields which is useful when having long group names.

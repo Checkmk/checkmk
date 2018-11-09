@@ -1,0 +1,15 @@
+Title: Locally installed notification plugins were not immediately available
+Level: 1
+Component: notifications
+Compatible: compat
+Edition: cre
+Version: 1.5.0p8
+Date: 1541754471
+Class: fix
+
+When installing a new notification plugin to local/share/check_mk/notifications
+this script was not immediately visible in the configuration GUI in all
+previous 1.5 releases.
+
+Workaround: Restarting the site apache made the script available in previous
+versions.

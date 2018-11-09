@@ -35,14 +35,12 @@ g_acknowledgement_time = {}
 g_modified_time        = 0
 g_columns              = ["time", "contact_name", "type", "host_name",
                           "service_description", "comment"]
-loaded_with_language   = False
 
 
+# The permissions need to be loaded dynamically on each page load instead of
+# only when the plugins need to be loaded because the user may have placed
+# new notification plugins in the local hierarchy.
 def load_plugins(force):
-    global loaded_with_language
-    if loaded_with_language == current_language and not force:
-        return
-
     config.declare_permission_section("notification_plugin",
                                       _("Notification plugins"),
                                       do_sort = True)
@@ -52,11 +50,6 @@ def load_plugins(force):
             "notification_plugin.%s" % name,
             _u(attrs["title"]), u"",
             [ "admin", "user" ])
-
-    # This must be set after plugin loading to make broken plugins raise
-    # exceptions all the time and not only the first time (when the plugins
-    # are loaded).
-    loaded_with_language = current_language
 
 
 def acknowledge_failed_notifications(timestamp):

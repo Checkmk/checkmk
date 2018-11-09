@@ -32,7 +32,7 @@ def check_wmi_webservices(item, params, parsed):
 
 
 check_info['wmi_webservices'] = {
-    'inventory_function'  : inventory_wmi_table,
+    'inventory_function'  : inventory_wmi_table_instances,
     'check_function'      : check_wmi_webservices,
     'parse_function'      : parse_wmi_table,
     'has_perfdata'        : True,

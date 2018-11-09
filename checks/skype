@@ -506,7 +506,7 @@ def check_skype_data_proxy(item, params, parsed):
 
 
 check_info['skype.data_proxy'] = {
-    'inventory_function'      : lambda parsed: inventory_wmi_table(parsed, required_tables=[
+    'inventory_function'      : lambda parsed: inventory_wmi_table_instances(parsed, required_tables=[
         "LS:DATAPROXY - Server Connections"]),
     'check_function'          : check_skype_data_proxy,
     'has_perfdata'            : True,

@@ -4,6 +4,14 @@ blank_line_before_nested_class_or_def=False
 column_limit=100
 indent_dictionary_value=True
 
+# Dictionary values sometimes exced the line length limit and are thus
+# placed in a new line. But at the same time all dictionary elements follow
+# this format to guard uniformity. This is inconvenient since we trade
+# convenience at readtime(because short length values still appear in new
+# lines) for format uniformity. Therefore we enforce dictionary values to
+# remain on same line.
+allow_split_before_dict_value=False
+
 # We do not use i18n comments. Therefore we allow yapf to also format these things.
 # Most declarations e.g. in cmk/gui/plugins/wato/active_checks.py are only reformatted
 # with this change.

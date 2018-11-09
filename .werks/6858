@@ -1,0 +1,13 @@
+Title: Do not log "Legacy perfometer rendered" messages to web.log by default
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 1.5.0p8
+Date: 1541781768
+Class: fix
+
+This log message is currently only used for internal cleanups but was logged
+to the web.log web performing regular GUI actions in the default log level.
+These messages are now only logged when increasing the "web" log level to 
+informational.

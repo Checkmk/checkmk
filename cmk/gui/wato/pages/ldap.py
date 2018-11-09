@@ -373,7 +373,7 @@ class ModeEditLDAPConnection(LDAPMode):
 
         num_groups = 0
         for role_id, group_distinguished_names in active_plugins['groups_to_roles'].items():
-            if type(group_distinguished_names) != list:
+            if not isinstance(group_distinguished_names, list):
                 group_distinguished_names = [group_distinguished_names]
 
             for dn, _search_connection_id in group_distinguished_names:

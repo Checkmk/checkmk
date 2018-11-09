@@ -1462,7 +1462,7 @@ class ModeEventConsoleRulePacks(EventConsoleMode):
 
                 for rule in rule_pack["rules"]:
                     result = cmk.gui.mkeventd.event_rule_matches(rule_pack, rule, event)
-                    if type(result) == tuple:
+                    if isinstance(result, tuple):
                         cancelling, groups = result
 
                         if not cancelling and rule.get("drop") == "skip_pack":
@@ -1680,7 +1680,7 @@ class ModeEventConsoleRules(EventConsoleMode):
                 html.icon(_("This rule is currently disabled and will not be applied"), "disabled")
             elif event:
                 result = cmk.gui.mkeventd.event_rule_matches(self._rule_pack, rule, event)
-                if type(result) != tuple:
+                if not isinstance(result, tuple):
                     html.icon(_("Rule does not match: %s") % result, "rulenmatch")
                 else:
                     cancelling, groups = result
@@ -1724,7 +1724,7 @@ class ModeEventConsoleRules(EventConsoleMode):
                 else:
                     html.write_text(_("DROP"))
             else:
-                if type(rule['state']) == tuple:
+                if isinstance(rule['state'], tuple):
                     stateval = rule["state"][0]
                 else:
                     stateval = rule["state"]
@@ -3328,7 +3328,7 @@ group = "eventconsole"
 
 
 def convert_mkevents_hostspec(value):
-    if type(value) == list:
+    if isinstance(value, list):
         return value
     elif value == "$HOSTADDRESS$":
         return [ "$HOSTADDRESS$" ]

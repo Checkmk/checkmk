@@ -423,10 +423,10 @@ def _operator_minmax(a, b, func):
 
 
 def _evaluate_literal(expression, translated_metrics):
-    if type(expression) == int:
+    if isinstance(expression, int):
         return float(expression), unit_info["count"], None
 
-    elif type(expression) == float:
+    elif isinstance(expression, float):
         return expression, unit_info[""], None
 
     elif expression[0].isdigit() or expression[0] == '-':

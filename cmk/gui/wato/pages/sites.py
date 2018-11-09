@@ -164,7 +164,7 @@ class ModeEditSite(ModeSites):
         vs_connection = self._site_mgmt.connection_method_valuespec()
         method = vs_connection.from_html_vars("method")
         vs_connection.validate_value(method, "method")
-        if type(method) == tuple and method[0] in ["unix", "tcp"]:
+        if isinstance(method, tuple) and method[0] in ["unix", "tcp"]:
             if method[0] == "unix":
                 self._new_site["socket"] = "unix:" + method[1]
             else:
@@ -268,10 +268,10 @@ class ModeEditSite(ModeSites):
         forms.section(_("Connection"))
         method = self._site.get("socket", None)
 
-        if type(method) == str and method.startswith("unix:"):
+        if isinstance(method, str) and method.startswith("unix:"):
             method = ('unix', method[5:])
 
-        elif type(method) == str and method.startswith("tcp:"):
+        elif isinstance(method, str) and method.startswith("tcp:"):
             parts = method.split(":")[1:]  # pylint: disable=no-member
             method = ('tcp', (parts[0], int(parts[1])))
 
@@ -623,7 +623,7 @@ class ModeDistributedMonitoring(ModeSites):
         if socket == "disabled:":
             socket = _("don't query status")
         table.cell(_("Socket"))
-        if type(socket) == tuple and socket[0] == "proxy":
+        if isinstance(socket, tuple) and socket[0] == "proxy":
             html.write_text(_("Use livestatus Proxy-Daemon"))
         else:
             html.write_text(socket)

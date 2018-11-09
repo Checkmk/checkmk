@@ -156,10 +156,10 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
 
     # TODO: Remove once new changes mechanism has been implemented
     def _extract_from_file(self, filename, elements):
-        if type(elements) == list:
+        if isinstance(elements, list):
             multitar.extract(tarfile.open(filename, "r"), elements)
 
-        elif type(elements) == dict:
+        elif isinstance(elements, dict):
             multitar.extract_domains(tarfile.open(filename, "r"), elements)
 
     # TODO: Remove once new changes mechanism has been implemented

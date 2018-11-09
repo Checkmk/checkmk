@@ -447,7 +447,7 @@ def page_handler():
                 raise MKUserError(None, watolib.read_only_message())
 
             result = mode.action()
-            if type(result) == tuple:
+            if isinstance(result, tuple):
                 newmode, action_message = result
             else:
                 newmode = result
@@ -535,7 +535,7 @@ def get_mode_permission_and_class(mode_name):
     if mode_class is None:
         raise MKGeneralException(_("No such WATO module '<tt>%s</tt>'") % mode_name)
 
-    if type(mode_class) == type(lambda: None):
+    if callable(mode_class):
         raise MKGeneralException(_("Deprecated WATO module: Implemented as function. "
                                    "This needs to be refactored as WatoMode child class."))
 
@@ -779,7 +779,7 @@ def execute_network_scan_job():
             found = watolib.do_remote_automation(config.site(folder.site_id()), "network-scan",
                                           [("folder", folder.path())])
 
-        if type(found) != list:
+        if not isinstance(found, list):
             raise MKGeneralException(_("Received an invalid network scan result: %r") % found)
 
         add_scanned_hosts_to_folder(folder, found)

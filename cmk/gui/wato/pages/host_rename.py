@@ -555,7 +555,7 @@ def rename_host_in_event_rules(oldname, newname):
     # Notification channels of flexible notifications also can have host conditions
     for user in users.itervalues():
         method = user.get("notification_method")
-        if method and type(method) == tuple and method[0] == "flexible":
+        if method and isinstance(method, tuple) and method[0] == "flexible":
             channels_changed = 0
             for channel in method[1]:
                 if channel.get("only_hosts"):

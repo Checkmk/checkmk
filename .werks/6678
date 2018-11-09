@@ -1,0 +1,18 @@
+Title: The hostname painter now has configurable background colors
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1541766366
+Class: feature
+
+In addition you can also configure that the background color changes if the host is in downtime.
+The following coloring options are now available
+<ul>
+<li>Colorize background if host is up</li>
+<li>Colorize background if host is down</li>
+<li>Colorize background if host is unreachable</li>
+<li>Colorize background if host is pending</li>
+<li>Colorize background if host is in downtime</li>
+</ul>

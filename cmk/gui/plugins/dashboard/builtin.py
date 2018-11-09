@@ -35,17 +35,12 @@ from . import (
 builtin_dashboards["main"] = {
     "single_infos": [],
     "context": {},
-    "mtime":
-        0,
-    "show_title":
-        True,
-    "title":
-        _("Main Overview"),
-    "topic":
-        _("Overview"),
-    "description":
-        _("This dashboard gives you a general overview on the state of your "
-          "monitored devices."),
+    "mtime": 0,
+    "show_title": True,
+    "title": _("Main Overview"),
+    "topic": _("Overview"),
+    "description": _("This dashboard gives you a general overview on the state of your "
+                     "monitored devices."),
     "dashlets": [
         {
             "title": _("Host Statistics"),
@@ -74,22 +69,15 @@ builtin_dashboards["main"] = {
             'single_infos': [],
         },
         {
-            "type":
-                "view",
-            "title":
-                _("Host Problems (unhandled)"),
-            "title_url":
-                "view.py?view_name=hostproblems&is_host_acknowledged=0",
+            "type": "view",
+            "title": _("Host Problems (unhandled)"),
+            "title_url": "view.py?view_name=hostproblems&is_host_acknowledged=0",
             "position": (-1, 1),
             "size": (GROW, 18),
-            "show_title":
-                True,
-            'browser_reload':
-                30,
-            'column_headers':
-                'pergroup',
-            'datasource':
-                'hosts',
+            "show_title": True,
+            'browser_reload': 30,
+            'column_headers': 'pergroup',
+            'datasource': 'hosts',
             'single_infos': [],
             'group_painters': [],
             'context': {
@@ -106,20 +94,13 @@ builtin_dashboards["main"] = {
                     'is_host_scheduled_downtime_depth': '0'
                 },
             },
-            'hidden':
-                True,
-            'hidebutton':
-                True,
-            'layout':
-                'table',
-            'mustsearch':
-                False,
-            'name':
-                'dashlet_2',
-            'num_columns':
-                1,
-            'owner':
-                '',
+            'hidden': True,
+            'hidebutton': True,
+            'layout': 'table',
+            'mustsearch': False,
+            'name': 'dashlet_2',
+            'num_columns': 1,
+            'owner': '',
             'painters': [
                 ('host_state', None),
                 ('host', 'host'),
@@ -127,29 +108,20 @@ builtin_dashboards["main"] = {
                 ('host_state_age', None),
                 ('host_plugin_output', None),
             ],
-            'public':
-                True,
+            'public': True,
             'sorters': [('hoststate', True)],
-            'topic':
-                None,
+            'topic': None,
         },
         {
-            "type":
-                "view",
-            "title":
-                _("Service Problems (unhandled)"),
-            "title_url":
-                "view.py?view_name=svcproblems&is_service_acknowledged=0",
+            "type": "view",
+            "title": _("Service Problems (unhandled)"),
+            "title_url": "view.py?view_name=svcproblems&is_service_acknowledged=0",
             "position": (1, 19),
             "size": (GROW, MAX),
-            "show_title":
-                True,
-            'browser_reload':
-                30,
-            'column_headers':
-                'pergroup',
-            'datasource':
-                'services',
+            "show_title": True,
+            'browser_reload': 30,
+            'column_headers': 'pergroup',
+            'datasource': 'services',
             'single_infos': [],
             'group_painters': [],
             'context': {
@@ -173,18 +145,12 @@ builtin_dashboards["main"] = {
                     'stp': '',
                 }
             },
-            'hidden':
-                True,
-            'layout':
-                'table',
-            'mustsearch':
-                False,
-            'name':
-                'dashlet_3',
-            'num_columns':
-                1,
-            'owner':
-                '',
+            'hidden': True,
+            'layout': 'table',
+            'mustsearch': False,
+            'name': 'dashlet_3',
+            'num_columns': 1,
+            'owner': '',
             'painters': [
                 ('service_state', None),
                 ('host', 'host'),
@@ -194,29 +160,20 @@ builtin_dashboards["main"] = {
                 ('svc_state_age', None),
                 ('svc_check_age', None),
             ],
-            'play_sounds':
-                True,
-            'public':
-                True,
+            'play_sounds': True,
+            'public': True,
             'sorters': [('svcstate', True), ('stateage', False), ('svcdescr', False)],
         },
         {
-            "type":
-                "view",
-            "title":
-                _("Events of recent 4 hours"),
-            "title_url":
-                "view.py?view_name=events_dash",
+            "type": "view",
+            "title": _("Events of recent 4 hours"),
+            "title_url": "view.py?view_name=events_dash",
             "position": (-1, -1),
             "size": (GROW, GROW),
-            "show_title":
-                True,
-            'browser_reload':
-                90,
-            'column_headers':
-                'pergroup',
-            'datasource':
-                'log_events',
+            "show_title": True,
+            'browser_reload': 90,
+            'column_headers': 'pergroup',
+            'datasource': 'log_events',
             'single_infos': [],
             'group_painters': [],
             'context': {
@@ -225,26 +182,17 @@ builtin_dashboards["main"] = {
                     'logtime_from': '4',
                 },
             },
-            'hidden':
-                True,
-            'layout':
-                'table',
-            'linktitle':
-                'Events',
-            'mustsearch':
-                False,
-            'name':
-                'dashlet_4',
-            'num_columns':
-                1,
-            'owner':
-                'admin',
+            'hidden': True,
+            'layout': 'table',
+            'linktitle': 'Events',
+            'mustsearch': False,
+            'name': 'dashlet_4',
+            'num_columns': 1,
+            'owner': 'admin',
             'painters': [('log_icon', None), ('log_time', None), ('host', 'hostsvcevents'),
                          ('service_description', 'svcevents'), ('log_plugin_output', None)],
-            'play_sounds':
-                False,
-            'public':
-                True,
+            'play_sounds': False,
+            'public': True,
             'sorters': [('log_time', True)],
         },
     ]
@@ -253,17 +201,12 @@ builtin_dashboards["main"] = {
 builtin_dashboards["topology"] = {
     "single_infos": [],
     "context": {},
-    "mtime":
-        0,
-    "show_title":
-        True,
-    "title":
-        _("Network Topology"),
-    "topic":
-        _("Overview"),
-    "description":
-        _("This dashboard uses the parent relationships of your hosts to display a "
-          "hierarchical map."),
+    "mtime": 0,
+    "show_title": True,
+    "title": _("Network Topology"),
+    "topic": _("Overview"),
+    "description": _("This dashboard uses the parent relationships of your hosts to display a "
+                     "hierarchical map."),
     "dashlets": [{
         "type": "network_topology",
         "position": (1, 1),
@@ -276,34 +219,22 @@ builtin_dashboards["topology"] = {
 builtin_dashboards["simple_problems"] = {
     "single_infos": [],
     "context": {},
-    "mtime":
-        0,
-    "show_title":
-        True,
-    "title":
-        _("Host & Services Problems"),
-    "topic":
-        _("Overview"),
-    "description":
-        _("A compact dashboard which lists your unhandled host and service problems."),
+    "mtime": 0,
+    "show_title": True,
+    "title": _("Host & Services Problems"),
+    "topic": _("Overview"),
+    "description": _("A compact dashboard which lists your unhandled host and service problems."),
     "dashlets": [
         {
-            "type":
-                "view",
-            "title":
-                _("Host Problems (unhandled)"),
-            "title_url":
-                "view.py?view_name=hostproblems&is_host_acknowledged=0",
-            "show_title":
-                True,
+            "type": "view",
+            "title": _("Host Problems (unhandled)"),
+            "title_url": "view.py?view_name=hostproblems&is_host_acknowledged=0",
+            "show_title": True,
             "position": (1, 1),
             "size": (GROW, 18),
-            'browser_reload':
-                30,
-            'column_headers':
-                'pergroup',
-            'datasource':
-                'hosts',
+            'browser_reload': 30,
+            'column_headers': 'pergroup',
+            'datasource': 'hosts',
             'single_infos': [],
             'group_painters': [],
             'context': {
@@ -320,20 +251,13 @@ builtin_dashboards["simple_problems"] = {
                     'hstp': ''
                 },
             },
-            'hidden':
-                True,
-            'hidebutton':
-                True,
-            'layout':
-                'table',
-            'mustsearch':
-                False,
-            'name':
-                'dashlet_0',
-            'num_columns':
-                1,
-            'owner':
-                '',
+            'hidden': True,
+            'hidebutton': True,
+            'layout': 'table',
+            'mustsearch': False,
+            'name': 'dashlet_0',
+            'num_columns': 1,
+            'owner': '',
             'painters': [
                 ('host_state', None),
                 ('host', 'host'),
@@ -341,29 +265,20 @@ builtin_dashboards["simple_problems"] = {
                 ('host_state_age', None),
                 ('host_plugin_output', None),
             ],
-            'public':
-                True,
+            'public': True,
             'sorters': [('hoststate', True)],
-            'topic':
-                None,
+            'topic': None,
         },
         {
-            "type":
-                "view",
-            "title":
-                _("Service Problems (unhandled)"),
-            "title_url":
-                "view.py?view_name=svcproblems&is_service_acknowledged=0",
-            "show_title":
-                True,
+            "type": "view",
+            "title": _("Service Problems (unhandled)"),
+            "title_url": "view.py?view_name=svcproblems&is_service_acknowledged=0",
+            "show_title": True,
             "position": (1, 19),
             "size": (GROW, MAX),
-            'browser_reload':
-                30,
-            'column_headers':
-                'pergroup',
-            'datasource':
-                'services',
+            'browser_reload': 30,
+            'column_headers': 'pergroup',
+            'datasource': 'services',
             'single_infos': [],
             'group_painters': [],
             'context': {
@@ -387,18 +302,12 @@ builtin_dashboards["simple_problems"] = {
                     'stp': '',
                 }
             },
-            'hidden':
-                True,
-            'layout':
-                'table',
-            'mustsearch':
-                False,
-            'name':
-                'dashlet_1',
-            'num_columns':
-                1,
-            'owner':
-                '',
+            'hidden': True,
+            'layout': 'table',
+            'mustsearch': False,
+            'name': 'dashlet_1',
+            'num_columns': 1,
+            'owner': '',
             'painters': [
                 ('service_state', None),
                 ('host', 'host'),
@@ -408,10 +317,8 @@ builtin_dashboards["simple_problems"] = {
                 ('svc_state_age', None),
                 ('svc_check_age', None),
             ],
-            'play_sounds':
-                True,
-            'public':
-                True,
+            'play_sounds': True,
+            'public': True,
             'sorters': [('svcstate', True), ('stateage', False), ('svcdescr', False)],
         },
     ]

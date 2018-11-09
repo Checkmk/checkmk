@@ -1,4 +1,4 @@
-Title: skype.data_proxy: Fix failing inventory for missing proxies
+Title: skype.data_proxy, wmi_webservices: Fix failing inventory for missing items
 Level: 1
 Component: checks
 Compatible: compat
@@ -7,5 +7,5 @@ Version: 1.5.0p8
 Date: 1541746494
 Class: fix
 
-No longer report fail in service discovery if no data proxies are
+No longer report fail in service discovery if no items are
 listed in wmi tables. 

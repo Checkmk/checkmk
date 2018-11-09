@@ -186,10 +186,10 @@ class FilterTime(Filter):
         self.column = column
         self.name = name
         self.ranges = [
-           (86400,  _("days")),
-           (3600,   _("hours")),
-           (60,     _("min")),
-           (1,      _("sec")),
+            (86400, _("days")),
+            (3600, _("hours")),
+            (60, _("min")),
+            (1, _("sec")),
         ]
         varnames = [name + "_from", name + "_from_range", name + "_until", name + "_until_range"]
 
@@ -204,9 +204,7 @@ class FilterTime(Filter):
                     ("unix", _("UNIX timestamp")) ]
 
         html.open_table(class_="filtertime")
-        for what, whatname in [
-            ( "from", _("From") ),
-            ( "until", _("Until") ) ]:
+        for what, whatname in [("from", _("From")), ("until", _("Until"))]:
             varprefix = self.name + "_" + what
             html.open_tr()
             html.open_td()
@@ -260,7 +258,13 @@ class FilterTime(Filter):
 
 class FilterSite(Filter):
     def __init__(self, name, enforce):
-        super(FilterSite, self).__init__(name, _("Site") + (enforce and _( " (enforced)") or ""), 'host', ["site"], [])
+        super(FilterSite, self).__init__(
+            name,
+            _("Site") + (enforce and _(" (enforced)") or ""),
+            'host',
+            ["site"],
+            [],
+        )
         self.enforce = enforce
 
     def display(self):

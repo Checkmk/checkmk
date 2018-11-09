@@ -40,7 +40,13 @@ from . import (
 
 class FilterWatoFile(Filter):
     def __init__(self):
-        super(FilterWatoFile, self).__init__("wato_folder", _("WATO Folder"), "host", ["wato_folder"], [])
+        super(FilterWatoFile, self).__init__(
+            "wato_folder",
+            _("WATO Folder"),
+            "host",
+            ["wato_folder"],
+            [],
+        )
         self.last_wato_data_update = None
 
     def available(self):

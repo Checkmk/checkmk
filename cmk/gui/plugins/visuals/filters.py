@@ -138,29 +138,51 @@ class FilterHostnameOrAlias(FilterUnicode):
             return ""
 
 
-#                               filter          title              info       column           htmlvar
-declare_filter(100, FilterText("hostregex",    _("Hostname"),        "host",    "host_name",      "host_regex",    "~~" , True),
-                          _("Search field allowing regular expressions and partial matches"))
-
-declare_filter(101, FilterText("host",    _("Hostname (exact match)"),             "host",    "host_name",          "host",    "=", True),
-                          _("Exact match, used for linking"))
-
-declare_filter(102, FilterUnicode("hostalias",   _("Hostalias"),      "host",     "host_alias",      "hostalias",    "~~", True),
-                          _("Search field allowing regular expressions and partial matches"))
-
-declare_filter(200, FilterUnicode("serviceregex", _("Service"),         "service", "service_description",   "service_regex", "~~", True),
-                          _("Search field allowing regular expressions and partial matches"))
-
-declare_filter(201, FilterUnicode("service", _("Service (exact match)"),              "service", "service_description",   "service", "="),
-                          _("Exact match, used for linking"))
-
-declare_filter(202, FilterUnicode("service_display_name", _("Service alternative display name"),   "service", "service_display_name",   "service_display_name", "~~"),
-                          _("Alternative display name of the service, regex match"))
-
-declare_filter(202, FilterUnicode("output",  _("Status detail"), "service", "service_plugin_output", "service_output", "~~", True))
-
-declare_filter(102, FilterHostnameOrAlias("hostnameoralias",   _("Hostname or Alias"), "host", ["host_alias", "host_name"],  "hostnameoralias", "~~", False),
-                          _("Search field allowing regular expressions and partial matches"))
+#            filter          title          info     column      htmlvar
+declare_filter(
+    100,
+    FilterText("hostregex", _("Hostname"), "host", "host_name", "host_regex", "~~", True),
+    _("Search field allowing regular expressions and partial matches"),
+)
+declare_filter(
+    101,
+    FilterText("host", _("Hostname (exact match)"), "host", "host_name", "host", "=", True),
+    _("Exact match, used for linking"),
+)
+declare_filter(
+    102,
+    FilterUnicode("hostalias", _("Hostalias"), "host", "host_alias", "hostalias", "~~", True),
+    _("Search field allowing regular expressions and partial matches"),
+)
+declare_filter(
+    200,
+    FilterUnicode("serviceregex", _("Service"), "service", "service_description", "service_regex",
+                  "~~", True),
+    _("Search field allowing regular expressions and partial matches"),
+)
+declare_filter(
+    201,
+    FilterUnicode("service", _("Service (exact match)"), "service", "service_description",
+                  "service", "="),
+    _("Exact match, used for linking"),
+)
+declare_filter(
+    202,
+    FilterUnicode("service_display_name", _("Service alternative display name"), "service",
+                  "service_display_name", "service_display_name", "~~"),
+    _("Alternative display name of the service, regex match"),
+)
+declare_filter(
+    202,
+    FilterUnicode("output", _("Status detail"), "service", "service_plugin_output",
+                  "service_output", "~~", True),
+)
+declare_filter(
+    102,
+    FilterHostnameOrAlias("hostnameoralias", _("Hostname or Alias"), "host",
+                          ["host_alias", "host_name"], "hostnameoralias", "~~", False),
+    _("Search field allowing regular expressions and partial matches"),
+)
 
 
 class FilterIPAddress(Filter):
@@ -227,8 +249,13 @@ declare_filter(102, FilterIPAddress(what="ipv6"))
 
 class FilterAddressFamily(Filter):
     def __init__(self):
-        Filter.__init__(self, name="address_family", title=_("Host address family (Primary)"),
-                        info="host", htmlvars=[ "address_family" ], link_columns=[])
+        Filter.__init__(
+            self,
+            name="address_family",
+            title=_("Host address family (Primary)"),
+            info="host",
+            htmlvars=["address_family"],
+            link_columns=[])
 
     def display(self):
         html.begin_radio_group()
@@ -249,9 +276,15 @@ declare_filter(103, FilterAddressFamily())
 
 class FilterAddressFamilies(Filter):
     def __init__(self):
-        Filter.__init__(self,
-            name="address_families", title=_("Host address families"),
-            info="host", htmlvars=[ "address_families", ], link_columns=[])
+        Filter.__init__(
+            self,
+            name="address_families",
+            title=_("Host address families"),
+            info="host",
+            htmlvars=[
+                "address_families",
+            ],
+            link_columns=[])
 
     def display(self):
         html.begin_radio_group()
@@ -434,19 +467,63 @@ class FilterGroupCombo(Filter):
                 (table, livestatus.lqencode(current_value)), current_value)
             return alias
 
-declare_filter(104, FilterGroupCombo("host",            _("Host is in Group"),        False), _("Optional selection of host group"))
-declare_filter(105, FilterMultigroup("host",            _("Several Host Groups"),     True),  _("Selection of multiple host groups"))
-declare_filter(204, FilterGroupCombo("service",         _("Service is in Group"),     False), _("Optional selection of service group"))
-declare_filter(205, FilterGroupCombo("service",         _("Servicegroup (enforced)"), True),  _("Dropdown list, selection of service group is <b>enforced</b>"))
-declare_filter(205, FilterMultigroup("service",         _("Several Service Groups"),  True),  _("Selection of multiple service groups"))
 
-declare_filter(106, FilterGroupCombo("host_contact",    _("Host Contact Group"),    False), _("Optional selection of host contact group"))
-declare_filter(206, FilterGroupCombo("service_contact", _("Service Contact Group"), False), _("Optional selection of service contact group"))
+declare_filter(
+    104,
+    FilterGroupCombo("host", _("Host is in Group"), False),
+    _("Optional selection of host group"),
+)
+declare_filter(
+    105,
+    FilterMultigroup("host", _("Several Host Groups"), True),
+    _("Selection of multiple host groups"),
+)
+declare_filter(
+    204,
+    FilterGroupCombo("service", _("Service is in Group"), False),
+    _("Optional selection of service group"),
+)
+declare_filter(
+    205,
+    FilterGroupCombo("service", _("Servicegroup (enforced)"), True),
+    _("Dropdown list, selection of service group is <b>enforced</b>"),
+)
+declare_filter(
+    205,
+    FilterMultigroup("service", _("Several Service Groups"), True),
+    _("Selection of multiple service groups"),
+)
 
-declare_filter(107, FilterText("host_ctc",          _("Host Contact"),            "host",    "host_contacts",    "host_ctc",          ">="))
-declare_filter(107, FilterText("host_ctc_regex",    _("Host Contact (Regex)"),    "host",    "host_contacts",    "host_ctc_regex",    "~~"))
-declare_filter(207, FilterText("service_ctc",       _("Service Contact"),         "service", "service_contacts", "service_ctc",       ">="))
-declare_filter(207, FilterText("service_ctc_regex", _("Service Contact (Regex)"), "service", "service_contacts", "service_ctc_regex", "~~"))
+declare_filter(
+    106,
+    FilterGroupCombo("host_contact", _("Host Contact Group"), False),
+    _("Optional selection of host contact group"),
+)
+declare_filter(
+    206,
+    FilterGroupCombo("service_contact", _("Service Contact Group"), False),
+    _("Optional selection of service contact group"),
+)
+
+declare_filter(
+    107,
+    FilterText("host_ctc", _("Host Contact"), "host", "host_contacts", "host_ctc", ">="),
+)
+declare_filter(
+    107,
+    FilterText("host_ctc_regex", _("Host Contact (Regex)"), "host", "host_contacts",
+               "host_ctc_regex", "~~"),
+)
+declare_filter(
+    207,
+    FilterText("service_ctc", _("Service Contact"), "service", "service_contacts", "service_ctc",
+               ">="),
+)
+declare_filter(
+    207,
+    FilterText("service_ctc_regex", _("Service Contact (Regex)"), "service", "service_contacts",
+               "service_ctc_regex", "~~"),
+)
 
 
 # Selection of one group to be used in the info "hostgroup" or "servicegroup".
@@ -475,8 +552,10 @@ class FilterGroupSelection(Filter):
 
 
 # Filter for selecting one specific host group in the hostgroup views
-declare_filter(104, FilterGroupSelection("hostgroup",    _("Host Group")),       _("Selection of the host group"))
-declare_filter(104, FilterGroupSelection("servicegroup", _("Service Group")), _("Selection of the service group"))
+declare_filter(104, FilterGroupSelection("hostgroup", _("Host Group")),
+               _("Selection of the host group"))
+declare_filter(104, FilterGroupSelection("servicegroup", _("Service Group")),
+               _("Selection of the service group"))
 
 
 class FilterHostgroupVisibility(Filter):
@@ -497,17 +576,37 @@ class FilterHostgroupVisibility(Filter):
             return ""
         return "Filter: hostgroup_num_hosts > 0\n"
 
-declare_filter(101, FilterText("hostgroupnameregex",    _("Hostgroup (Regex)"),        "hostgroup",    "hostgroup_name",      "hostgroup_regex",    "~~"),
-                               _("Search field allowing regular expressions and partial matches on the names of hostgroups"))
 
-declare_filter(102, FilterHostgroupVisibility("hostgroupvisibility", _("Empty Hostgroup Visibilitiy")),
-                               _("You can enable this checkbox to show empty hostgroups"))
+declare_filter(
+    101,
+    FilterText("hostgroupnameregex", _("Hostgroup (Regex)"), "hostgroup", "hostgroup_name",
+               "hostgroup_regex", "~~"),
+    _("Search field allowing regular expressions and partial matches on the names of hostgroups"),
+)
+declare_filter(
+    102,
+    FilterHostgroupVisibility("hostgroupvisibility", _("Empty Hostgroup Visibilitiy")),
+    _("You can enable this checkbox to show empty hostgroups"),
+)
+declare_filter(
+    101,
+    FilterText(
+        "servicegroupnameregex",
+        _("Servicegroup (Regex)"),
+        "servicegroup",
+        "servicegroup_name",
+        "servicegroup_regex",
+        "~~",
+        negateable=True),
+    _("Search field allowing regular expression and partial matches"),
+)
 
-declare_filter(101, FilterText("servicegroupnameregex", _("Servicegroup (Regex)"),   "servicegroup", "servicegroup_name",   "servicegroup_regex", "~~", negateable=True),
-                          _("Search field allowing regular expression and partial matches"))
-
-declare_filter(101, FilterText("servicegroupname", _("Servicegroup (enforced)"),   "servicegroup", "servicegroup_name",   "servicegroup_name", "="),
-                          _("Exact match, used for linking"))
+declare_filter(
+    101,
+    FilterText("servicegroupname", _("Servicegroup (enforced)"), "servicegroup",
+               "servicegroup_name", "servicegroup_name", "="),
+    _("Exact match, used for linking"),
+)
 
 
 class FilterQueryDropdown(Filter):
@@ -584,20 +683,31 @@ class FilterServiceState(Filter):
             return ""
         return "".join(headers)
 
-declare_filter(215, FilterServiceState("svcstate",     _("Service states"),      ""))
+
+declare_filter(215, FilterServiceState("svcstate", _("Service states"), ""))
 declare_filter(216, FilterServiceState("svchardstate", _("Service hard states"), "hd"))
 
 
 class FilterHostState(Filter):
     def __init__(self):
-        Filter.__init__(self, "hoststate", _("Host states"),
-                "host", [ "hoststate_filled", "hst0", "hst1", "hst2", "hstp" ], [])
+        Filter.__init__(
+            self,
+            "hoststate",
+            _("Host states"),
+            "host",
+            ["hoststate_filled", "hst0", "hst1", "hst2", "hstp"],
+            [],
+        )
 
     def display(self):
         html.begin_checkbox_group()
         html.hidden_field("hoststate_filled", "1", add_var=True)
-        for var, text in [("hst0", _("UP")), ("hst1", _("DOWN")),
-                          ("hst2", _("UNREACH")), ("hstp", _("PENDING"))]:
+        for var, text in [
+            ("hst0", _("UP")),
+            ("hst1", _("DOWN")),
+            ("hst2", _("UNREACH")),
+            ("hstp", _("PENDING")),
+        ]:
             html.checkbox(var, True if not self._filter_used() else False, label=text)
         html.end_checkbox_group()
 
@@ -635,17 +745,21 @@ declare_filter(115, FilterHostState())
 class FilterHostsHavingServiceProblems(Filter):
     def __init__(self):
         Filter.__init__(self, "hosts_having_service_problems",
-            _("Hosts having certain service problems"), "host",
-            ["hosts_having_services_warn", "hosts_having_services_crit",
-             "hosts_having_services_pending", "hosts_having_services_unknown"], [])
+                        _("Hosts having certain service problems"), "host", [
+                            "hosts_having_services_warn",
+                            "hosts_having_services_crit",
+                            "hosts_having_services_pending",
+                            "hosts_having_services_unknown",
+                        ], [])
 
     def display(self):
         html.begin_checkbox_group()
         for var, text in [
-            ("warn",    _("WARN")),
-            ("crit",    _("CRIT")),
+            ("warn", _("WARN")),
+            ("crit", _("CRIT")),
             ("pending", _("PEND")),
-            ("unknown", _("UNKNOWN")), ]:
+            ("unknown", _("UNKNOWN")),
+        ]:
             html.checkbox("hosts_having_services_%s" % var, True, label=text)
         html.end_checkbox_group()
 
@@ -680,7 +794,8 @@ class FilterStateType(FilterTristate):
     def filter_code(self, infoname, positive):
         return "Filter: state_type = %d\n" % int(positive)
 
-declare_filter(116, FilterStateType("host", "host_state_type",       _("Host state type")))
+
+declare_filter(116, FilterStateType("host", "host_state_type", _("Host state type")))
 declare_filter(217, FilterStateType("service", "service_state_type", _("Service state type")))
 
 
@@ -703,34 +818,59 @@ class FilterNagiosExpression(FilterTristate):
     def filter_code(self, infoname, positive):
         return self.pos if positive else self.neg
 
-declare_filter(250, FilterNagiosFlag("service",       "service_process_performance_data", _("Processes performance data")))
-declare_filter(251, FilterNagiosExpression("service", "has_performance_data",             _("Has performance data"),
-            "Filter: service_perf_data != \n",
-            "Filter: service_perf_data = \n"))
 
-declare_filter(130, FilterNagiosFlag("host",    "host_in_notification_period",      _("Host in notification period")))
-declare_filter(130, FilterNagiosFlag("host",    "host_in_service_period",           _("Host in service period")))
-declare_filter(131, FilterNagiosFlag("host",    "host_acknowledged",                _("Host problem has been acknowledged")))
-declare_filter(132, FilterNagiosFlag("host",    "host_active_checks_enabled",       _("Host active checks enabled")))
-declare_filter(133, FilterNagiosFlag("host",    "host_notifications_enabled",       _("Host notifications enabled")))
-declare_filter(230, FilterNagiosFlag("service", "service_acknowledged",             _("Problem acknowledged")))
-declare_filter(231, FilterNagiosFlag("service", "service_in_notification_period",   _("Service in notification period")))
-declare_filter(231, FilterNagiosFlag("service", "service_in_service_period",        _("Service in service period")))
-declare_filter(233, FilterNagiosFlag("service", "service_active_checks_enabled",    _("Active checks enabled")))
-declare_filter(234, FilterNagiosFlag("service", "service_notifications_enabled",    _("Notifications enabled")))
-declare_filter(236, FilterNagiosFlag("service", "service_is_flapping",              _("Flapping")))
-declare_filter(231, FilterNagiosFlag("service", "service_scheduled_downtime_depth", _("Service in downtime")))
-declare_filter(132, FilterNagiosFlag("host",    "host_scheduled_downtime_depth",    _("Host in downtime")))
-declare_filter(232, FilterNagiosExpression("service", "in_downtime",                _("Host/service in downtime"),
-            "Filter: service_scheduled_downtime_depth > 0\nFilter: host_scheduled_downtime_depth > 0\nOr: 2\n",
-            "Filter: service_scheduled_downtime_depth = 0\nFilter: host_scheduled_downtime_depth = 0\nAnd: 2\n"))
+declare_filter(
+    250,
+    FilterNagiosFlag("service", "service_process_performance_data",
+                     _("Processes performance data")))
+declare_filter(
+    251,
+    FilterNagiosExpression("service", "has_performance_data", _("Has performance data"),
+                           "Filter: service_perf_data != \n", "Filter: service_perf_data = \n"))
 
-declare_filter(232, FilterNagiosExpression("host", "host_staleness",                _("Host is stale"),
-            "Filter: host_staleness >= %0.2f\n" % config.staleness_threshold,
-            "Filter: host_staleness < %0.2f\n" % config.staleness_threshold))
-declare_filter(232, FilterNagiosExpression("service", "service_staleness",          _("Service is stale"),
-            "Filter: service_staleness >= %0.2f\n" % config.staleness_threshold,
-            "Filter: service_staleness < %0.2f\n" % config.staleness_threshold))
+declare_filter(
+    130, FilterNagiosFlag("host", "host_in_notification_period", _("Host in notification period")))
+declare_filter(130, FilterNagiosFlag("host", "host_in_service_period", _("Host in service period")))
+declare_filter(
+    131, FilterNagiosFlag("host", "host_acknowledged", _("Host problem has been acknowledged")))
+declare_filter(
+    132, FilterNagiosFlag("host", "host_active_checks_enabled", _("Host active checks enabled")))
+declare_filter(
+    133, FilterNagiosFlag("host", "host_notifications_enabled", _("Host notifications enabled")))
+declare_filter(230, FilterNagiosFlag("service", "service_acknowledged", _("Problem acknowledged")))
+declare_filter(
+    231,
+    FilterNagiosFlag("service", "service_in_notification_period",
+                     _("Service in notification period")))
+declare_filter(
+    231, FilterNagiosFlag("service", "service_in_service_period", _("Service in service period")))
+declare_filter(
+    233, FilterNagiosFlag("service", "service_active_checks_enabled", _("Active checks enabled")))
+declare_filter(
+    234, FilterNagiosFlag("service", "service_notifications_enabled", _("Notifications enabled")))
+declare_filter(236, FilterNagiosFlag("service", "service_is_flapping", _("Flapping")))
+declare_filter(
+    231, FilterNagiosFlag("service", "service_scheduled_downtime_depth", _("Service in downtime")))
+declare_filter(132, FilterNagiosFlag("host", "host_scheduled_downtime_depth",
+                                     _("Host in downtime")))
+declare_filter(
+    232,
+    FilterNagiosExpression(
+        "service", "in_downtime", _("Host/service in downtime"),
+        "Filter: service_scheduled_downtime_depth > 0\nFilter: host_scheduled_downtime_depth > 0\nOr: 2\n",
+        "Filter: service_scheduled_downtime_depth = 0\nFilter: host_scheduled_downtime_depth = 0\nAnd: 2\n"
+    ))
+
+declare_filter(
+    232,
+    FilterNagiosExpression("host", "host_staleness", _("Host is stale"),
+                           "Filter: host_staleness >= %0.2f\n" % config.staleness_threshold,
+                           "Filter: host_staleness < %0.2f\n" % config.staleness_threshold))
+declare_filter(
+    232,
+    FilterNagiosExpression("service", "service_staleness", _("Service is stale"),
+                           "Filter: service_staleness >= %0.2f\n" % config.staleness_threshold,
+                           "Filter: service_staleness < %0.2f\n" % config.staleness_threshold))
 
 
 def declare_site_filters():
@@ -740,9 +880,8 @@ def declare_site_filters():
     else:
         cls = FilterSite
 
-    declare_filter(500, cls("siteopt", False),
-                   _("Optional selection of a site"))
-    declare_filter(501, cls("site",    True),
+    declare_filter(500, cls("siteopt", False), _("Optional selection of a site"))
+    declare_filter(501, cls("site", True),
                    _("Selection of site is enforced, use this filter for joining"))
 
 
@@ -777,25 +916,59 @@ class FilterNumberRange(Filter):  # type is int
         return lql
 
 
-declare_filter(232, FilterNumberRange("host_notif_number", _("Current Host Notification Number"), "host", "current_notification_number"))
-declare_filter(232, FilterNumberRange("svc_notif_number", _("Current Service Notification Number"), "service", "current_notification_number"))
+declare_filter(
+    232,
+    FilterNumberRange("host_notif_number", _("Current Host Notification Number"), "host",
+                      "current_notification_number"))
+declare_filter(
+    232,
+    FilterNumberRange("svc_notif_number", _("Current Service Notification Number"), "service",
+                      "current_notification_number"))
 
-declare_filter(234, FilterNumberRange("host_num_services", _("Number of Services of the Host"), "host", "num_services"))
+declare_filter(
+    234,
+    FilterNumberRange("host_num_services", _("Number of Services of the Host"), "host",
+                      "num_services"))
 
-declare_filter(250, FilterTime("service", "svc_last_state_change", _("Last service state change"), "service_last_state_change"))
-declare_filter(251, FilterTime("service", "svc_last_check", _("Last service check"), "service_last_check"))
+declare_filter(
+    250,
+    FilterTime("service", "svc_last_state_change", _("Last service state change"),
+               "service_last_state_change"))
+declare_filter(
+    251, FilterTime("service", "svc_last_check", _("Last service check"), "service_last_check"))
 
-declare_filter(250, FilterTime("host", "host_last_state_change", _("Last host state change"), "host_last_state_change"))
+declare_filter(
+    250,
+    FilterTime("host", "host_last_state_change", _("Last host state change"),
+               "host_last_state_change"))
 declare_filter(251, FilterTime("host", "host_last_check", _("Last host check"), "host_last_check"))
-declare_filter(253, FilterTime("comment", "comment_entry_time", _("Time of comment"), "comment_entry_time" ))
+declare_filter(
+    253, FilterTime("comment", "comment_entry_time", _("Time of comment"), "comment_entry_time"))
 
-declare_filter(258, FilterText("comment_comment", _("Comment"), "comment", "comment_comment", "comment_comment", "~~" , True))
-declare_filter(259, FilterText("comment_author", _("Author comment"), "comment", "comment_author", "comment_author", "~~" , True))
+declare_filter(
+    258,
+    FilterText("comment_comment", _("Comment"), "comment", "comment_comment", "comment_comment",
+               "~~", True))
+declare_filter(
+    259,
+    FilterText("comment_author", _("Author comment"), "comment", "comment_author", "comment_author",
+               "~~", True))
 
-declare_filter(253, FilterTime("downtime", "downtime_entry_time", _("Time when downtime was created"), "downtime_entry_time" ))
-declare_filter(254, FilterText("downtime_comment", _("Downtime comment"), "downtime", "downtime_comment", "downtime_comment", "~"))
-declare_filter(255, FilterTime("downtime", "downtime_start_time", _("Start of downtime"), "downtime_start_time" ))
-declare_filter(256, FilterText("downtime_author", _("Downtime author"), "downtime", "downtime_author", "downtime_author", "~"))
+declare_filter(
+    253,
+    FilterTime("downtime", "downtime_entry_time", _("Time when downtime was created"),
+               "downtime_entry_time"))
+declare_filter(
+    254,
+    FilterText("downtime_comment", _("Downtime comment"), "downtime", "downtime_comment",
+               "downtime_comment", "~"))
+declare_filter(
+    255, FilterTime("downtime", "downtime_start_time", _("Start of downtime"),
+                    "downtime_start_time"))
+declare_filter(
+    256,
+    FilterText("downtime_author", _("Downtime author"), "downtime", "downtime_author",
+               "downtime_author", "~"))
 
 #    _
 #   | |    ___   __ _
@@ -826,10 +999,17 @@ class FilterLogClass(Filter):
             (4, _("Passive checks")),
             (5, _("Commands")),
             (6, _("States")),
-            (8, _("Alert Handlers")) ]
+            (8, _("Alert Handlers")),
+        ]
 
-        Filter.__init__(self, "log_class", _("Logentry class"),
-                "log", [ "logclass_filled" ] + [ "logclass%d" % l for l, _c in self.log_classes ], [])
+        Filter.__init__(
+            self,
+            "log_class",
+            _("Logentry class"),
+            "log",
+            ["logclass_filled"] + ["logclass%d" % l for l, _c in self.log_classes],
+            [],
+        )
 
     def double_height(self):
         return True
@@ -872,24 +1052,66 @@ class FilterLogClass(Filter):
 
 
 declare_filter(255, FilterLogClass())
-#                               filter          title              info       column           htmlvar
-declare_filter(202, FilterUnicode("log_plugin_output",  _("Log: plugin output"), "log", "log_plugin_output", "log_plugin_output", "~~"))
-declare_filter(203, FilterText("log_type",           _("Log: message type"), "log", "log_type", "log_type", "~~", show_heading=False))
-declare_filter(204, FilterText("log_state_type",     _("Log: state type"), "log", "log_state_type", "log_state_type", "~~"))
-declare_filter(260, FilterText("log_contact_name",   _("Log: contact name (exact match)"),  "log", "log_contact_name",  "log_contact_name",  "="),
-                                                                                                  _("Exact match, used for linking"))
-declare_filter(261, FilterText("log_contact_name_regex",   _("Log: contact name"),  "log", "log_contact_name",  "log_contact_name_regex",  "~~", negateable=True))
-declare_filter(262, FilterText("log_command_name_regex",  _("Log: command"),  "log", "log_command_name",  "log_command_name_regex",  "~~", negateable=True))
+#                       filter          title              info       column           htmlvar
+declare_filter(
+    202,
+    FilterUnicode("log_plugin_output", _("Log: plugin output"), "log", "log_plugin_output",
+                  "log_plugin_output", "~~"))
+declare_filter(
+    203,
+    FilterText(
+        "log_type", _("Log: message type"), "log", "log_type", "log_type", "~~",
+        show_heading=False))
+declare_filter(
+    204,
+    FilterText("log_state_type", _("Log: state type"), "log", "log_state_type", "log_state_type",
+               "~~"))
+declare_filter(
+    260,
+    FilterText("log_contact_name", _("Log: contact name (exact match)"), "log", "log_contact_name",
+               "log_contact_name", "="), _("Exact match, used for linking"))
+declare_filter(
+    261,
+    FilterText(
+        "log_contact_name_regex",
+        _("Log: contact name"),
+        "log",
+        "log_contact_name",
+        "log_contact_name_regex",
+        "~~",
+        negateable=True))
+declare_filter(
+    262,
+    FilterText(
+        "log_command_name_regex",
+        _("Log: command"),
+        "log",
+        "log_command_name",
+        "log_command_name_regex",
+        "~~",
+        negateable=True))
 
 
 class FilterLogState(Filter):
     def __init__(self):
-        self._items = [ ("h0", "host", 0, _("Up")),("h1", "host", 1, _("Down")),("h2", "host", 2, _("Unreachable")),
-                        ("s0", "service", 0, _("OK")), ("s1", "service", 1, _("Warning")),
-                        ("s2", "service", 2, _("Critical")),("s3", "service", 3, _("Unknown")) ]
+        self._items = [
+            ("h0", "host", 0, _("Up")),
+            ("h1", "host", 1, _("Down")),
+            ("h2", "host", 2, _("Unreachable")),
+            ("s0", "service", 0, _("OK")),
+            ("s1", "service", 1, _("Warning")),
+            ("s2", "service", 2, _("Critical")),
+            ("s3", "service", 3, _("Unknown")),
+        ]
 
-        Filter.__init__(self, "log_state", _("Type of alerts of hosts and services"),
-                "log", [ "logst_" + e[0] for e in self._items ], [])
+        Filter.__init__(
+            self,
+            "log_state",
+            _("Type of alerts of hosts and services"),
+            "log",
+            ["logst_" + e[0] for e in self._items],
+            [],
+        )
 
     def double_height(self):
         return True
@@ -936,7 +1158,14 @@ declare_filter(270, FilterLogState())
 
 class NotificationPhaseFilter(FilterTristate):
     def __init__(self):
-        FilterTristate.__init__(self, "log_notification_phase", _("Notification phase"), "log", "log_command_name", -1)
+        FilterTristate.__init__(
+            self,
+            "log_notification_phase",
+            _("Notification phase"),
+            "log",
+            "log_command_name",
+            -1,
+        )
 
     def double_height(self):
         return True
@@ -946,8 +1175,8 @@ class NotificationPhaseFilter(FilterTristate):
         html.begin_radio_group(horizontal=False)
         for value, text in [
             ("-1", _("Show all phases of notifications")),
-            ("1",  _("Show just preliminary notifications")),
-            ("0",  _("Show just end-user-notifications")),
+            ("1", _("Show just preliminary notifications")),
+            ("0", _("Show just end-user-notifications")),
         ]:
             checked = current == value or (current in [None, ""] and int(value) == self.deflt)
             html.radiobutton(self.varname, value, checked, text + " &nbsp; ")
@@ -968,7 +1197,13 @@ declare_filter(271, NotificationPhaseFilter())
 
 class BIServiceIsUsedFilter(FilterTristate):
     def __init__(self):
-        FilterTristate.__init__(self, "aggr_service_used", _("Used in BI aggregate"), "service", None)
+        FilterTristate.__init__(
+            self,
+            "aggr_service_used",
+            _("Used in BI aggregate"),
+            "service",
+            None,
+        )
 
     def filter(self, infoname):
         return ""
@@ -992,7 +1227,8 @@ class BIServiceIsUsedFilter(FilterTristate):
 
 declare_filter(300, BIServiceIsUsedFilter())
 
-declare_filter(301, FilterText("downtime_id", _("Downtime ID"), "downtime", "downtime_id", "downtime_id", "="))
+declare_filter(
+    301, FilterText("downtime_id", _("Downtime ID"), "downtime", "downtime_id", "downtime_id", "="))
 
 
 class FilterHostTags(Filter):
@@ -1002,13 +1238,13 @@ class FilterHostTags(Filter):
         for num in range(self.count):
             htmlvars += ['host_tag_%d_grp' % num, 'host_tag_%d_op' % num, 'host_tag_%d_val' % num]
 
-        Filter.__init__(self,
-            name = 'host_tags',
-            title = _('Host Tags'),
-            info = 'host',
-            htmlvars = htmlvars,
-            link_columns = []
-        )
+        Filter.__init__(
+            self,
+            name='host_tags',
+            title=_('Host Tags'),
+            info='host',
+            htmlvars=htmlvars,
+            link_columns=[])
 
     def display(self):
         groups = [(e[0], e[1].lstrip("/")) for e in config.host_tag_groups()]
@@ -1117,13 +1353,13 @@ class FilterHostAuxTags(Filter):
             htmlvars.append("%s_%d" % (self.prefix, num))
             htmlvars.append("%s_%d_neg" % (self.prefix, num))
 
-        Filter.__init__(self,
-            name     = 'host_auxtags',
-            title    = _('Host Auxiliary Tags'),
-            info     = 'host',
-            htmlvars = htmlvars,
-            link_columns = []
-        )
+        Filter.__init__(
+            self,
+            name='host_auxtags',
+            title=_('Host Auxiliary Tags'),
+            info='host',
+            htmlvars=htmlvars,
+            link_columns=[])
 
         self.auxtags = config.wato_aux_tags
 
@@ -1223,13 +1459,10 @@ class FilterECServiceLevelRange(Filter):
         return True
 
 
+declare_filter(
+    310, FilterECServiceLevelRange("svc_service_level", _("Service service level"), "service"))
 
-declare_filter(310, FilterECServiceLevelRange(
-        "svc_service_level", _("Service service level"), "service"))
-
-
-declare_filter(310, FilterECServiceLevelRange(
-        "hst_service_level", _("Host service level"), "host"))
+declare_filter(310, FilterECServiceLevelRange("hst_service_level", _("Host service level"), "host"))
 
 
 class FilterStarred(FilterTristate):
@@ -1297,12 +1530,18 @@ declare_filter(501, FilterStarred("service"))
 class FilterDiscoveryState(Filter):
     def __init__(self):
         self.__options = [
-            ("discovery_state_ignored",     _("Hidden")),
-            ("discovery_state_vanished",    _("Vanished")),
+            ("discovery_state_ignored", _("Hidden")),
+            ("discovery_state_vanished", _("Vanished")),
             ("discovery_state_unmonitored", _("New")),
         ]
-        Filter.__init__(self, "discovery_state", _("Discovery state"), "discovery_state",
-                [ o[0] for o in self.__options ], [])
+        Filter.__init__(
+            self,
+            "discovery_state",
+            _("Discovery state"),
+            "discovery_state",
+            [o[0] for o in self.__options],
+            [],
+        )
         self.__varname = "discovery_state"
 
     def display(self):
@@ -1338,8 +1577,8 @@ declare_filter(601, FilterDiscoveryState())
 class BIGroupFilter(FilterUnicodeFilter):
     def __init__(self):
         self.column = "aggr_group"
-        FilterUnicodeFilter.__init__(self, self.column, _("Aggregation group"),
-                                     self.column, [self.column], [self.column])
+        FilterUnicodeFilter.__init__(self, self.column, _("Aggregation group"), self.column,
+                                     [self.column], [self.column])
 
     def variable_settings(self, row):
         return [(self.htmlvars[0], row[self.column])]
@@ -1368,8 +1607,8 @@ declare_filter(90, BIGroupFilter())
 class BIGroupTreeFilter(FilterUnicodeFilter):
     def __init__(self):
         self.column = "aggr_group_tree"
-        FilterUnicodeFilter.__init__(self, self.column, _("Aggregation group tree"),
-                                     "aggr_group", [self.column], [self.column])
+        FilterUnicodeFilter.__init__(self, self.column, _("Aggregation group tree"), "aggr_group",
+                                     [self.column], [self.column])
 
     def variable_settings(self, row):
         return [(self.htmlvars[0], row[self.column])]
@@ -1471,7 +1710,14 @@ declare_filter(121, BITextFilter("output"))
 class BIHostFilter(Filter):
     def __init__(self):
         self.column = "aggr_hosts"
-        Filter.__init__(self, self.column, _("Affected hosts contain"), "aggr", ["aggr_host_site", "aggr_host_host"], [])
+        Filter.__init__(
+            self,
+            self.column,
+            _("Affected hosts contain"),
+            "aggr",
+            ["aggr_host_site", "aggr_host_host"],
+            [],
+        )
 
     def display(self):
         html.text_input(self.htmlvars[1])
@@ -1496,12 +1742,22 @@ class BIHostFilter(Filter):
         return [row for row in rows if self.find_host(val, row["aggr_hosts"])]
 
 
-declare_filter(130, BIHostFilter(), _("Filter for all aggregations that base on status information of that host. Exact match (no regular expression)"))
+declare_filter(
+    130, BIHostFilter(),
+    _("Filter for all aggregations that base on status information of that host. Exact match (no regular expression)"
+     ))
 
 
 class BIServiceFilter(Filter):
     def __init__(self):
-        Filter.__init__(self, "aggr_service", _("Affected by service"), "aggr", ["aggr_service_site", "aggr_service_host", "aggr_service_service"], [])
+        Filter.__init__(
+            self,
+            "aggr_service",
+            _("Affected by service"),
+            "aggr",
+            ["aggr_service_site", "aggr_service_host", "aggr_service_service"],
+            [],
+        )
 
     def double_height(self):
         return True
@@ -1527,7 +1783,10 @@ class BIServiceFilter(Filter):
                 ("service", row["service_description"])]
 
 
-declare_filter(131, BIServiceFilter(), _("Filter for all aggregations that are affected by one specific service on a specific host (no regular expression)"))
+declare_filter(
+    131, BIServiceFilter(),
+    _("Filter for all aggregations that are affected by one specific service on a specific host (no regular expression)"
+     ))
 
 
 class BIStatusFilter(Filter):
@@ -1555,8 +1814,14 @@ class BIStatusFilter(Filter):
             defval = ""
         else:
             defval = "on"
-        for varend, text in [('0', _('OK')), ('1', _('WARN')), ('2', _('CRIT')),
-                             ('3', _('UNKN')), ('-1', _('PENDING')), ('n', _('no assumed state set'))]:
+        for varend, text in [
+            ('0', _('OK')),
+            ('1', _('WARN')),
+            ('2', _('CRIT')),
+            ('3', _('UNKN')),
+            ('-1', _('PENDING')),
+            ('n', _('no assumed state set')),
+        ]:
             if self.code != 'a' and varend == 'n':
                 continue  # no unset for read and effective state
             if varend == 'n':
@@ -1594,19 +1859,54 @@ declare_filter(151, BIStatusFilter("effective_"))
 declare_filter(152, BIStatusFilter("assumed_"))
 
 if config.mkeventd_enabled:
-    declare_filter(200, FilterText("event_id",         _("Event ID"),                        "event",   "event_id",           "event_id",               "="))
-    declare_filter(200, FilterText("event_rule_id",    _("ID of rule"),                      "event",   "event_rule_id",      "event_rule_id",          "="))
-    declare_filter(201, FilterText("event_text",       _("Message/Text of event"),           "event",   "event_text",         "event_text",             "~~"))
-    declare_filter(201, FilterText("event_application",_("Application / Syslog-Tag"),        "event",   "event_application",  "event_application",      "~~"))
-    declare_filter(201, FilterText("event_contact",    _("Contact Person"),                  "event",   "event_contact",      "event_contact",          "~~"))
-    declare_filter(201, FilterText("event_comment",    _("Comment to the event"),            "event",   "event_comment",      "event_comment",          "~~"))
-    declare_filter(201, FilterText("event_host_regex", _("Hostname of original event"),      "event",   "event_host",         "event_host",             "~~"))
-    declare_filter(201, FilterText("event_host",       _("Hostname of event, exact match"),  "event",   "event_host",         "event_host",             "="))
-    declare_filter(201, FilterText("event_ipaddress",  _("Original IP Address of event"),    "event",   "event_ipaddress",    "event_ipaddress",        "~~"))
-    declare_filter(201, FilterText("event_owner",      _("Owner of event"),                  "event",   "event_owner",        "event_owner",            "~~"))
-    declare_filter(221, FilterText("history_who",      _("User that performed action"),      "history", "history_who",        "history_who",            "~~"))
-    declare_filter(222, FilterText("history_line",     _("Line number in history logfile"),  "history", "history_line",       "history_line",           "="))
-    declare_filter(223, FilterNagiosFlag("event", "event_host_in_downtime", _("Host in downtime during event creation")))
+    declare_filter(200, FilterText("event_id", _("Event ID"), "event", "event_id", "event_id", "="))
+    declare_filter(
+        200,
+        FilterText("event_rule_id", _("ID of rule"), "event", "event_rule_id", "event_rule_id",
+                   "="))
+    declare_filter(
+        201,
+        FilterText("event_text", _("Message/Text of event"), "event", "event_text", "event_text",
+                   "~~"))
+    declare_filter(
+        201,
+        FilterText("event_application", _("Application / Syslog-Tag"), "event", "event_application",
+                   "event_application", "~~"))
+    declare_filter(
+        201,
+        FilterText("event_contact", _("Contact Person"), "event", "event_contact", "event_contact",
+                   "~~"))
+    declare_filter(
+        201,
+        FilterText("event_comment", _("Comment to the event"), "event", "event_comment",
+                   "event_comment", "~~"))
+    declare_filter(
+        201,
+        FilterText("event_host_regex", _("Hostname of original event"), "event", "event_host",
+                   "event_host", "~~"))
+    declare_filter(
+        201,
+        FilterText("event_host", _("Hostname of event, exact match"), "event", "event_host",
+                   "event_host", "="))
+    declare_filter(
+        201,
+        FilterText("event_ipaddress", _("Original IP Address of event"), "event", "event_ipaddress",
+                   "event_ipaddress", "~~"))
+    declare_filter(
+        201,
+        FilterText("event_owner", _("Owner of event"), "event", "event_owner", "event_owner", "~~"))
+    declare_filter(
+        221,
+        FilterText("history_who", _("User that performed action"), "history", "history_who",
+                   "history_who", "~~"))
+    declare_filter(
+        222,
+        FilterText("history_line", _("Line number in history logfile"), "history", "history_line",
+                   "history_line", "="))
+    declare_filter(
+        223,
+        FilterNagiosFlag("event", "event_host_in_downtime",
+                         _("Host in downtime during event creation")))
 
     class EventFilterCount(Filter):
         def __init__(self, name, title):
@@ -1627,7 +1927,6 @@ if config.mkeventd_enabled:
             if html.var(self._name + "_to"):
                 f += "Filter: event_count <= %d\n" % int(html.var(self._name + "_to"))
             return f
-
 
     declare_filter(205, EventFilterCount("event_count", _("Message count")))
 
@@ -1672,15 +1971,30 @@ if config.mkeventd_enabled:
 
             return f + "\n"
 
+    declare_filter(
+        206,
+        EventFilterState("event", "event_state", _("State classification"), [(0, _("OK")),
+                                                                             (1, _("WARN")),
+                                                                             (2, _("CRIT")),
+                                                                             (3, _("UNKNOWN"))]))
+    declare_filter(
+        207, EventFilterState("event", "event_phase", _("Phase"), mkeventd.phase_names.items()))
+    declare_filter(
+        209,
+        EventFilterState("event", "event_priority", _("Syslog Priority"),
+                         mkeventd.syslog_priorities))
+    declare_filter(
+        225,
+        EventFilterState("history", "history_what", _("History action type"),
+                         [(k, k) for k in mkeventd.action_whats]))
 
-    declare_filter(206, EventFilterState("event", "event_state", _("State classification"), [ (0, _("OK")), (1, _("WARN")), (2, _("CRIT")), (3,_("UNKNOWN")) ]))
-    declare_filter(207, EventFilterState("event", "event_phase", _("Phase"), mkeventd.phase_names.items()))
-    declare_filter(209, EventFilterState("event", "event_priority", _("Syslog Priority"), mkeventd.syslog_priorities))
-    declare_filter(225, EventFilterState("history", "history_what", _("History action type"), [(k,k) for k in mkeventd.action_whats]))
-
-    declare_filter(220, FilterTime("event",   "event_first",  _("First occurrence of event"),      "event_first", ))
-    declare_filter(221, FilterTime("event",   "event_last",   _("Last occurrance of event"),       "event_last",  ))
-    declare_filter(222, FilterTime("history", "history_time", _("Time of entry in event history"), "history_time",))
+    declare_filter(
+        220, FilterTime("event", "event_first", _("First occurrence of event"), "event_first"))
+    declare_filter(221,
+                   FilterTime("event", "event_last", _("Last occurrance of event"), "event_last"))
+    declare_filter(
+        222,
+        FilterTime("history", "history_time", _("Time of entry in event history"), "history_time"))
 
     class EventFilterDropdown(Filter):
         def __init__(self, name, title, choices, operator='=', column=None):
@@ -1706,15 +2020,26 @@ if config.mkeventd_enabled:
                 return "Filter: event_%s %s %s\n" % (self._column, self._operator, val)
             return ""
 
-
-    declare_filter(210, EventFilterDropdown("facility", _("Syslog Facility"), mkeventd.syslog_facilities))
-    declare_filter(211, EventFilterDropdown("sl", _("Service Level at least"), mkeventd.service_levels, operator='>='))
-    declare_filter(211, EventFilterDropdown("sl_max", _("Service Level at most"), mkeventd.service_levels, operator='<=', column="sl"))
+    declare_filter(
+        210, EventFilterDropdown("facility", _("Syslog Facility"), mkeventd.syslog_facilities))
+    declare_filter(
+        211,
+        EventFilterDropdown(
+            "sl", _("Service Level at least"), mkeventd.service_levels, operator='>='))
+    declare_filter(
+        211,
+        EventFilterDropdown(
+            "sl_max",
+            _("Service Level at most"),
+            mkeventd.service_levels,
+            operator='<=',
+            column="sl"))
 
     class EventFilterEffectiveContactGroupCombo(FilterGroupCombo):
         def __init__(self, enforce=False):
             # TODO: Cleanup hierarchy here. The FilterGroupCombo constructor needs to be refactored
-            FilterGroupCombo.__init__(self,
+            FilterGroupCombo.__init__(
+                self,
                 what="event_effective_contact",
                 title=_("Contact group (effective)"),
                 enforce=enforce,

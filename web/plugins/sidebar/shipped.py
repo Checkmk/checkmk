@@ -50,18 +50,15 @@ import cmk.store as store
 #   '----------------------------------------------------------------------'
 
 def render_about():
-    html.write(_("Version: ") + cmk.__version__)
     html.open_ul()
-    bulletlink(_("Homepage"),        "https://mathias-kettner.com/check_mk.html")
-    bulletlink(_("Documentation"),   "https://mathias-kettner.com/checkmk.html")
-    bulletlink(_("Download"),        "https://mathias-kettner.com/check_mk_download.html")
-    bulletlink("Mathias Kettner",    "https://mathias-kettner.com")
+    bulletlink(_("Homepage"),        "https://mathias-kettner.com/check_mk.html", target="_blank")
+    bulletlink(_("Documentation"),   "https://mathias-kettner.com/cms.html", target="_blank")
+    bulletlink(_("Download"),        "https://mathias-kettner.com/download.php", target="_blank")
     html.close_ul()
 
 sidebar_snapins["about"] = {
     "title" : _("About Check_MK"),
-    "description" : _("Version information and Links to Documentation, "
-                      "Homepage and Download of Check_MK"),
+    "description" : _("Links to webpage, documentation and download of Check_MK"),
     "render" : render_about,
     "allowed" : [ "admin", "user", "guest" ],
 }

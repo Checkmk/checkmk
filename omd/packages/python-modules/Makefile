@@ -5,6 +5,7 @@ SHELL    = /bin/bash
 VERSION  = $(OMD_VERSION)
 
 PATCHES  := $(wildcard patches/*.dif)
+PATCHES += patches/0018-mysqlclient-fortify-source.patch
 
 MODULES =
 
@@ -28,6 +29,7 @@ MODULES += pymssql-2.1.3.tar.gz # needed for check_sql (together with freetds)
 LEGACY_LDAP=0
 ifeq ($(DISTRO_CODE),el5)
     LEGACY_LDAP=1
+    PATCHES += patches/0018-mysqlclient-fortify-source.patch
 endif
 
 ifeq ($(LEGACY_LDAP), 1)

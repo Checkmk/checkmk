@@ -2,6 +2,7 @@ include ../../Makefile.omd
 
 NAME    = navicli
 VERSION = 0.7.1
+SOURCE_DIR := navisphere-64
 
 
 .PHONY: build install skel clean

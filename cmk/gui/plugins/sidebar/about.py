@@ -43,8 +43,8 @@ class About(SidebarSnapin):
 
     @classmethod
     def description(cls):
-        return _("Version information and Links to Documentation, "
-                 "Homepage and Download of Check_MK")
+        return _("Version information and Links to webpage, documentation, "
+                 "and download of Check_MK")
 
     def show(self):
         html.write(_("Version: ") + cmk.__version__)

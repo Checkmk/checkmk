@@ -68,7 +68,7 @@ def authenticate(request):
 # After the user has been authenticated, tell the different components
 # of the GUI which user is authenticated.
 def login(user_id):
-    if type(user_id) != unicode:
+    if not isinstance(user_id, unicode):
         raise MKInternalError("Invalid user id type")
     config.set_user_by_id(user_id)
     html.set_user_id(user_id)
@@ -283,7 +283,7 @@ def check_auth(request):
     if user_id is None:
         user_id = check_auth_by_cookie()
 
-    if (user_id is not None and type(user_id) != unicode) or user_id == u'':
+    if (user_id is not None and not isinstance(user_id, unicode)) or user_id == u'':
         raise MKInternalError(_("Invalid user authentication"))
 
     if user_id and not userdb.is_customer_user_allowed_to_login(user_id):
@@ -422,7 +422,7 @@ def page_login(no_html_output = False):
     cmk.gui.i18n.localize(html.var("lang", config.get_language()))
 
     result = do_login()
-    if type(result) == tuple:
+    if isinstance(result, tuple):
         return result # Successful login
     elif no_html_output:
         raise MKAuthException(_("Invalid login credentials."))

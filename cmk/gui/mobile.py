@@ -398,7 +398,7 @@ def do_commands(view, what, rows):
         nagios_commands, title, executor = views.core_command(what, row, nr, len(rows))
         for command in nagios_commands:
             if command not in already_executed:
-                if type(command) == unicode:
+                if isinstance(command, unicode):
                     command = command.encode("utf-8")
                 executor(command, row["site"])
                 already_executed.add(command)

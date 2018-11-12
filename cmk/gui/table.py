@@ -195,7 +195,7 @@ class Table(object):
         else:
             if isinstance(text, HTML):
                 text = "%s" % text
-            if type(text) != unicode:
+            if not isinstance(text, unicode):
                 text = str(text)
 
         htmlcode = text + html.drain()

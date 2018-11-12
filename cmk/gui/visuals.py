@@ -301,7 +301,7 @@ def available(what, all_visuals):
         if visual["public"] is True:
             return True
 
-        if type(visual["public"]) == tuple and visual["public"][0] == "contact_groups":
+        if isinstance(visual["public"], tuple) and visual["public"][0] == "contact_groups":
             user_groups = set(userdb.contactgroups_of_user(user))
             if user_groups.intersection(visual["public"][1]):
                 return True
@@ -1031,7 +1031,7 @@ def filters_of_visual(visual, info_keys, link_filters=None):
             continue
 
         for key, val in visual['context'].items():
-            if type(val) == dict: # this is a real filter
+            if isinstance(val, dict): # this is a real filter
                 try:
                     filters.append(get_filter(key))
                 except KeyError:
@@ -1085,7 +1085,7 @@ def add_context_to_uri_vars(visual, only_count=False):
 
     # Now apply the multiple context filters
     for filter_vars in visual['context'].itervalues():
-        if type(filter_vars) == dict: # this is a multi-context filter
+        if isinstance(filter_vars, dict): # this is a multi-context filter
             # We add the filter only if *none* of its HTML variables are present on the URL
             # This important because checkbox variables are not present if the box is not checked.
             skip = any(html.has_var(uri_varname) for uri_varname in filter_vars.iterkeys())
@@ -1124,7 +1124,7 @@ def get_filter_headers(datasource, context):
     html.stash_vars()
     for filter_name, filter_vars in context.items():
         # first set the HTML variables. Sorry - the filters need this
-        if type(filter_vars) == dict: # this is a multi-context filter
+        if isinstance(filter_vars, dict): # this is a multi-context filter
             for uri_varname, value in filter_vars.items():
                 html.set_var(uri_varname, value)
         else:
@@ -1224,7 +1224,7 @@ class VisualFilter(ValueSpec):
         return self._filter.value()
 
     def validate_datatype(self, value, varprefix):
-        if type(value) != dict:
+        if not isinstance(value, dict):
             raise MKUserError(varprefix, _("The value must be of type dict, but it has type %s") %
                                                                     type_name(value))
 

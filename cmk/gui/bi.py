@@ -1135,7 +1135,7 @@ class BICacheManager(object):
                     self._compiled_trees[what].setdefault(key, [])
                     for value in values:
                         new_value = value
-                        if type(value[1]) == str:  # a reference
+                        if isinstance(value[1], str):  # a reference
                             new_value = self._compiled_trees["aggr_ref"][value[1]]
                         self._compiled_trees[what][key].append((value[0], new_value))
 
@@ -1143,7 +1143,7 @@ class BICacheManager(object):
                 self._compiled_trees["forest"][key] = []
                 for aggr in values:
                     new_value = aggr
-                    if type(aggr) == str:
+                    if isinstance(aggr, str):
                         new_value = self._compiled_trees["aggr_ref"][aggr]
                     self._compiled_trees["forest"][key].append(new_value)
 
@@ -1531,7 +1531,7 @@ def find_matching_services(aggr_type, what, calllist):
         calllist = calllist[2:]
 
     # honor list of host tags preceding the host_re
-    if type(calllist[0]) == list:
+    if isinstance(calllist[0], list):
         required_tags = calllist[0]
         calllist = calllist[1:]
     else:
@@ -1553,7 +1553,7 @@ def find_matching_services(aggr_type, what, calllist):
 
     matches = set([])
 
-    if type(host_spec) == tuple:
+    if isinstance(host_spec, tuple):
         host_spec, honor_site, entries = get_services_filtered_by_host_alias(host_spec)
     else:
         host_spec, honor_site, entries = get_services_filtered_by_host_name(host_spec)
@@ -1810,7 +1810,7 @@ def compile_aggregation_rule(aggr_type, rule, args, lvl):
                     new_new_elements.append(entry)
             new_elements = new_new_elements
 
-        elif type(node[-1]) != list:
+        elif not isinstance(node[-1], list):
             if node[0] in [
                     config.FOREACH_HOST,
                     config.FOREACH_CHILD,
@@ -1921,9 +1921,9 @@ def find_variables(pattern, varname):
 
 
 def subst_vars(pattern, arginfo):
-    if type(pattern) == list:
+    if isinstance(pattern, list):
         return [subst_vars(x, arginfo) for x in pattern]
-    elif type(pattern) == tuple:
+    elif isinstance(pattern, tuple):
         return tuple([subst_vars(x, arginfo) for x in pattern])
 
     for name, value in arginfo.iteritems():
@@ -1957,7 +1957,7 @@ def match_host(hostname, hostalias, host_spec, tags, required_tags, site, honor_
     if not match_host_tags(tags, required_tags):
         return None
 
-    if type(host_spec) != tuple:  # matching by host name
+    if not isinstance(host_spec, tuple):  # matching by host name
         pattern = host_spec
         to_match = hostname
     else:
@@ -3516,7 +3516,7 @@ def _convert_aggregation(aggr_tuple):
     tmp_aggr_list[1] = updated_groups
     aggr_tuple = tuple(tmp_aggr_list)
 
-    if type(aggr_tuple[0]) == dict:
+    if isinstance(aggr_tuple[0], dict):
         return aggr_tuple  # already converted
 
     options = {}

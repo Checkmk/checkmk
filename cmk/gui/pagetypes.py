@@ -1267,7 +1267,7 @@ class OverridableContainer(Overridable, Container):
                                                             element_type, create_info)
         # Redirect user to tha page this displays the thing we just added to
         if target_page:
-            if type(target_page) != str:
+            if not isinstance(target_page, str):
                 target_page = target_page.page_url()
             html.write(target_page)
         html.write_text("\n%s" % ("true" if need_sidebar_reload else "false"))

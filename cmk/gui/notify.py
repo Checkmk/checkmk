@@ -214,7 +214,7 @@ def _validate_msg(msg, varprefix):
             raise MKUserError('methods', _('Invalid notitification method selected.'))
 
     # On manually entered list of users validate the names
-    if type(msg['dest']) == tuple and msg['dest'][0] == 'list':
+    if isinstance(msg['dest'], tuple) and msg['dest'][0] == 'list':
         existing = config.multisite_users.keys()
         for user_id in msg['dest'][1]:
             if user_id not in existing:
@@ -227,7 +227,7 @@ def _process_notify_message(msg):
     # construct the list of recipients
     recipients = []
 
-    if type(msg['dest']) == str:
+    if isinstance(msg['dest'], str):
         dest_what = msg['dest']
     else:
         dest_what = msg['dest'][0]

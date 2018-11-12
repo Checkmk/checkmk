@@ -973,9 +973,9 @@ def show_view(view, show_heading = False, show_buttons = True,
         # is a list of argument to hand over to the function together with all other arguments that
         # are passed to query_data().
 
-        if type(tablename) == type(lambda x:None):
+        if callable(tablename):
             rows = tablename(columns, query, only_sites, limit, all_active_filters)
-        elif type(tablename) == tuple:
+        elif isinstance(tablename, tuple):
             func, args = tablename
             rows = func(datasource, columns, add_columns, query, only_sites, limit, *args)
         else:
@@ -1067,11 +1067,11 @@ def show_view(view, show_heading = False, show_buttons = True,
 
 
 def get_join_cells(cell_list):
-    return [x for x in cell_list if type(x) == JoinCell]
+    return [x for x in cell_list if isinstance(x, JoinCell)]
 
 
 def get_regular_cells(cell_list):
-    return [x for x in cell_list if type(x) == Cell]
+    return [x for x in cell_list if isinstance(x, Cell)]
 
 
 def get_needed_regular_columns(cells, sorters, datasource):
@@ -1182,7 +1182,7 @@ def render_view(view, rows, datasource, group_painters, painters,
     if show_buttons:
         show_combined_graphs_button  = \
             ("host" in datasource["infos"] or "service" in datasource["infos"]) and \
-            (type(datasource["table"]) == str) and \
+            (isinstance(datasource["table"], str)) and \
             ("host" in datasource["table"] or "service" in datasource["table"])
         show_context_links(view, datasource, show_filters,
                        # Take into account: permissions, display_options
@@ -1426,7 +1426,7 @@ def ajax_set_viewoption():
     option = html.var("option")
     value = html.var("value")
     value = { 'true' : True, 'false' : False }.get(value, value)
-    if type(value) == str and value[0].isdigit():
+    if isinstance(value, str) and value[0].isdigit():
         try:
             value = int(value)
         except:
@@ -1831,7 +1831,7 @@ def core_command(what, row, row_nr, total_rows):
 
     # Some commands return lists of commands, others
     # just return one basic command. Convert those
-    if type(commands) != list:
+    if not isinstance(commands, list):
         commands = [commands]
 
     return commands, title, executor
@@ -1879,12 +1879,12 @@ def do_actions(view, what, action_rows, backurl):
             site = row.get("site") # site is missing for BI rows (aggregations can spawn several sites)
             if (site, command_entry) not in already_executed:
                 # Some command functions return the information about the site per-command (e.g. for BI)
-                if type(command_entry) == tuple:
+                if isinstance(command_entry, tuple):
                     site, command = command_entry
                 else:
                     command = command_entry
 
-                if type(command) == unicode:
+                if isinstance(command, unicode):
                     command = command.encode("utf-8")
 
                 executor(command, site)

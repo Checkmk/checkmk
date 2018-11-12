@@ -284,7 +284,7 @@ def hide_language(lang):
 def all_nonfunction_vars(var_dict):
     return set([
         name for name, value in var_dict.items()
-        if name[0] != '_' and type(value) != type(lambda: 0)
+        if name[0] != '_' and not callable(value)
     ])
 
 
@@ -1027,7 +1027,7 @@ def site(site_id):
     s.setdefault("alias", site_id)
     s.setdefault("socket", "unix:" + cmk.paths.livestatus_unix_socket)
     s.setdefault("url_prefix", "../")  # relative URL from /check_mk/
-    if type(s["socket"]) == tuple and s["socket"][0] == "proxy":
+    if isinstance(s["socket"], tuple) and s["socket"][0] == "proxy":
         s["cache"] = s["socket"][1].get("cache", True)
         s["socket"] = "unix:" + cmk.paths.livestatus_unix_socket + "proxy/" + site_id
     else:
@@ -1043,7 +1043,7 @@ def site_is_local(site_name):
     if not sock or sock == "unix:" + cmk.paths.livestatus_unix_socket:
         return True
 
-    if type(s["socket"]) == tuple and s["socket"][0] == "proxy" \
+    if isinstance(s["socket"], tuple) and s["socket"][0] == "proxy" \
        and s["socket"][1]["socket"] is None:
         return True
 

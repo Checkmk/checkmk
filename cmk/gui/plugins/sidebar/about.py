@@ -24,8 +24,6 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import cmk
-
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
 from . import SidebarSnapin, snapin_registry, bulletlink
@@ -43,17 +41,11 @@ class About(SidebarSnapin):
 
     @classmethod
     def description(cls):
-        return _("Version information and Links to webpage, documentation, "
-                 "and download of Check_MK")
+        return _("Links to webpage, documentation and download of Check_MK")
 
     def show(self):
-        html.write(_("Version: ") + cmk.__version__)
         html.open_ul()
-        bulletlink(_("Homepage"), "https://mathias-kettner.com/index.html")
-        bulletlink(_("Documentation"), "https://mathias-kettner.com/cms.html")
-        bulletlink(_("Download"), "https://mathias-kettner.com/download.php")
+        bulletlink(_("Homepage"), "https://mathias-kettner.com/check_mk.html", target="_blank")
+        bulletlink(_("Documentation"), "https://mathias-kettner.com/cms.html", target="_blank")
+        bulletlink(_("Download"), "https://mathias-kettner.com/download.php", target="_blank")
         html.close_ul()
-
-    @classmethod
-    def allowed_roles(cls):
-        return ["admin", "user", "guest"]

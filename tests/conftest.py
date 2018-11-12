@@ -80,6 +80,20 @@ def pytest_collection_modifyitems(items):
         item.add_marker(pytest.mark.type.with_args(ty))
 
 
+def pytest_runtest_setup(item):
+    """Skip tests of unwanted types"""
+    test_type = item.get_closest_marker("type")
+    if test_type is None:
+        raise Exception("Test is not TYPE marked: %s" % item)
+
+    if not item.config.getoption("-T"):
+        raise SystemExit("Please specify type of tests to be executed (py.test -T TYPE)")
+
+    test_type_name = test_type.args[0]
+    if test_type_name != item.config.getoption("-T"):
+        pytest.skip("Not testing type %r" % test_type_name)
+
+
 # Some cmk.* code is calling things like cmk. is_raw_edition() at import time
 # (e.g. cmk_base/default_config/notify.py) for edition specific variable
 # defaults. In integration tests we want to use the exact version of the

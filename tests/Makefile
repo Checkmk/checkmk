@@ -19,17 +19,29 @@ help:
 	@echo "test-bandit               - Run bandit (security) tests"
 	@echo "test-shellcheck           - Run shellcheck tests"
 	@echo "test-docker               - Run docker tests"
+	@echo "test-format-python        - Test the python formatting"
 
 # This target needs to be phony so it is run every time because only the other
 # makefile can determine that there's nothing to be done.
 # TODO: Move everything to top level makefile?
-.PHONY: ../.venv bandit.ini
+.PHONY: ../.venv bandit.ini test-format-python
 
 ../.venv:
 	$(MAKE) -C .. .venv
 
 pipenv-check: ../.venv
 	$(PIPENV) check
+
+test-format-python: ../.venv
+# Explicitly specify --style [FILE] to prevent costly searching in parent directories
+# for each file specified via command line
+#
+# Saw some mixed up lines on stdout after adding the --parallel option. Leaving it on
+# for the moment to get the performance boost this option brings.
+	PYTHON_FILES=$${PYTHON_FILES-$$(./find-python-files)} ; \
+	$(PIPENV) run yapf --parallel --style ../.style.yapf --verbose --diff $$PYTHON_FILES \
+	    | grep -e "^Reformatting " -e "(reformatted)$$" \
+	    | awk '{if ($$1 == "+++") { print "Unformatted: "$$2 } else {print "Checking "$$2"..."}}' ; exit $${PIPESTATUS[0]}
 
 test-unit: ../.venv
 	$(PYTEST) -T unit

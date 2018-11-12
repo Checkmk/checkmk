@@ -94,7 +94,7 @@ PNG_FILES          := $(wildcard $(addsuffix /*.png,web/htdocs/images web/htdocs
 
 
 .PHONY: all analyze build check check-binaries check-permissions \
-        check-version clean compile-neb-cmc cppcheck dist documentation format \
+        check-version clean compile-neb-cmc cppcheck dist documentation format format-c format-python \
         GTAGS headers help install iwyu mrproper \
         optimize-images packages setup setversion tidy version \
 	am--refresh skel
@@ -477,11 +477,22 @@ ifeq ($(ENTERPRISE),yes)
 	$(MAKE) -C enterprise/core/src cppcheck-xml
 endif
 
+format: format-python format-c
+
 # TODO: We should probably handle this rule via AM_EXTRA_RECURSIVE_TARGETS in
 # src/configure.ac, but this needs at least automake-1.13, which in turn is only
 # available from e.g. Ubuntu Saucy (13) onwards, so some magic is needed.
-format:
+format-c:
 	$(CLANG_FORMAT) -style=file -i $(FILES_TO_FORMAT)
+
+format-python: .venv
+# Explicitly specify --style [FILE] to prevent costly searching in parent directories
+# for each file specified via command line
+#
+# Saw some mixed up lines on stdout after adding the --parallel option. Leaving it on
+# for the moment to get the performance boost this option brings.
+	PYTHON_FILES=$${PYTHON_FILES-$$(tests/find-python-files)} ; \
+	$(PIPENV) run yapf --parallel --style .style.yapf --verbose -i $$PYTHON_FILES
 
 # Note: You need the doxygen and graphviz packages.
 documentation: config.h

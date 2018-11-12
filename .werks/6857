@@ -1,0 +1,13 @@
+Title: Fixed broken links in about snapin
+Level: 1
+Component: multisite
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0i1
+Date: 1541779730
+
+Fixed broken links in about snapin and removed version information which is
+already shown in the header. The links are now opened in a new window/tab
+instead of the right frame.

@@ -103,11 +103,11 @@ class DisableNotificationsUserAttribute(UserAttribute):
         return Transform(
             Dictionary(
                 title=_("Disable Notifications"),
-                help=_("When this option is active the you will not get <b>any</b> "
+                help=_("When this option is active you will not get <b>any</b> "
                        "alerts or other notifications via email, SMS or similar. "
-                       "This overrides all other notification settings or rules, so make "
-                       "sure that you know what you do. Moreover you can customize a timerange "
-                       "within no notifications are generated."),
+                       "This overrides all other notification settings and rules, so make "
+                       "sure that you know what you do. Moreover you can specify a timerange "
+                       "where no notifications are generated."),
                 elements=[("disable",
                            FixedValue(
                                True,
@@ -125,8 +125,10 @@ class DisableNotificationsUserAttribute(UserAttribute):
             forth=self._transform_disable_notification)
 
     def _transform_disable_notification(self, p):
-        if not isinstance(p, dict):
-            return {"disable": True}
+        if isinstance(p, bool):
+            if p:
+                return {"disable": True}
+            return {}
         return p
 
     def permission(self):

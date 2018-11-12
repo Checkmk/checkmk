@@ -1,0 +1,10 @@
+Title: The "Parameters for this service" page now correctly displays the computed results for timespecific parameters
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.5.0p8
+Date: 1542039239
+Class: fix
+
+This fixes a display error for the mentioned page, the computation itself was always correct.

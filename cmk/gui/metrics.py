@@ -40,6 +40,13 @@ import string
 import json
 import traceback
 
+try:
+    # does not exist in Py3, but is supper class of str & unicode in py2
+    basestring
+except NameError:
+    basestring = str  # pylint: disable=redefined-builtin
+    unicode = str  # pylint: disable=redefined-builtin
+
 import cmk.utils
 import cmk.render
 import cmk.plugin_registry
@@ -207,7 +214,7 @@ def _required_trivial_metric_names(required_expressions):
     allowed_chars = string.ascii_letters + string.digits + "_"
 
     for entry in required_expressions:
-        if type(entry) in [str, unicode]:
+        if isinstance(entry, basestring):
             if any(char not in allowed_chars for char in entry):
                 # Found a non trivial metric expression. Totally skip this mechanism
                 return None

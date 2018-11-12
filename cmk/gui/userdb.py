@@ -32,6 +32,13 @@ import traceback
 import copy
 import pathlib2 as pathlib
 
+try:
+    # does not exist in Py3, but is supper class of str & unicode in py2
+    basestring
+except NameError:
+    basestring = str  # pylint: disable=redefined-builtin
+    unicode = str  # pylint: disable=redefined-builtin
+
 import cmk.utils
 import cmk.paths
 import cmk.store as store
@@ -1217,7 +1224,7 @@ def hook_login(username, password):
         # False       -> failed
         if result not in [False, None]:
             username = result
-            if type(username) not in [str, unicode]:
+            if not isinstance(username, basestring):
                 raise MKInternalError(
                     _("The username returned by the %s "
                       "connector is not of type string (%r).") % (connection_id, username))

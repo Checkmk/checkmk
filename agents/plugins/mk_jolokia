@@ -286,6 +286,30 @@ def fetch_metric(inst, path, title, itemspec, inst_add=None):
         yield (item.replace(" ", "_"), tit, value)
 
 
+def _get_queries(do_search, inst, itemspec, title, path, mbean, mbean_search_results):
+    if not do_search:
+        return [(mbean + "/" + path, title, itemspec)]
+
+    if mbean in mbean_search_results:
+        paths = mbean_search_results[mbean]
+    else:
+        paths = fetch_var(
+            inst["protocol"],
+            inst["server"],
+            inst["port"],
+            mbean,
+            inst["suburi"],
+            "",
+            None,
+            None,
+            None,
+            function="search")[0][1]
+        mbean_search_results[mbean] = paths
+
+    return [("%s/%s" % (urllib2.quote(mbean_exp), path), path, itemspec, mbean_exp)
+            for mbean_exp in paths]
+
+
 def query_instance(inst):
     try:
         prepare_http_opener(inst)
@@ -313,29 +337,7 @@ def query_instance(inst):
         else:
             mbean, path, title, itemspec, do_search = var
 
-        queries = []
-        if do_search:
-            if mbean in mbean_search_results:
-                paths = mbean_search_results[mbean]
-            else:
-                paths = fetch_var(
-                    inst["protocol"],
-                    inst["server"],
-                    inst["port"],
-                    mbean,
-                    inst["suburi"],
-                    "",
-                    None,
-                    None,
-                    None,
-                    function="search")[0][1]
-                mbean_search_results[mbean] = paths
-
-            for mbean_exp in paths:
-                queries.append(("%s/%s" % (urllib2.quote(mbean_exp), path), path, itemspec,
-                                mbean_exp))
-        else:
-            queries.append((mbean + "/" + path, title, itemspec))
+        queries = _get_queries(do_search, inst, itemspec, title, path, mbean, mbean_search_results)
 
         for mbean_path, title, itemspec in queries:
             try:
@@ -410,29 +412,7 @@ def output_custom_vars(inst, mbean_search_results):
     sys.stdout.write('<<<jolokia_generic>>>\n')
     for var in custom_vars:
         mbean, path, title, itemspec, do_search, value_type = var
-        queries = []
-        if do_search:
-            if mbean in mbean_search_results:
-                paths = mbean_search_results[mbean]
-            else:
-                paths = fetch_var(
-                    inst["protocol"],
-                    inst["server"],
-                    inst["port"],
-                    mbean,
-                    inst["suburi"],
-                    "",
-                    None,
-                    None,
-                    None,
-                    function="search")[0][1]
-                mbean_search_results[mbean] = paths
-
-            for mbean_exp in paths:
-                queries.append(("%s/%s" % (urllib2.quote(mbean_exp), path), path, itemspec,
-                                mbean_exp))
-        else:
-            queries.append((mbean + "/" + path, title, itemspec))
+        queries = _get_queries(do_search, inst, itemspec, title, path, mbean, mbean_search_results)
 
         for mbean_path, title, itemspec in queries:
             try:

@@ -7,7 +7,7 @@ description:
  This check queries the maintenance State of an ESX host
  system via the vsphere agent and returns:
 
- {OK} if the ESX host has the same sate since the last service detection
+ {OK} if the ESX host has the same state since the last service detection.
 
  {CRIT} if the state has changed.
 

@@ -463,7 +463,7 @@ def _sanitize_yield_check_result(result, is_snmp):
         st, text, perf = _sanitize_tuple_check_result(subresult, allow_missing_infotext=True)
         status = cmk_base.utils.worst_service_state(st, status)
 
-        if text != None:
+        if text:
             infotexts.append(text + ["", "(!)", "(!!)", "(?)"][st])
 
         if perf != None:

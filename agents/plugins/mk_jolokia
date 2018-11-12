@@ -112,9 +112,9 @@ class HTTPSAuthHandler(urllib2.HTTPSHandler):
 
 
 def write_section(name, iterable):
-    sys.stdout.write('<<<%s>>>\n' % name)
+    sys.stdout.write('<<<%s:sep(0)>>>\n' % name)
     for line in iterable:
-        sys.stdout.write(' '.join(map(str, line)) + '\n')
+        sys.stdout.write(chr(0).join(map(str, line)) + '\n')
 
 
 def cached(function):

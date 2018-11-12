@@ -53,21 +53,22 @@ declare_user_attribute(
 
 
 def transform_disable_notification(p):
-    if type(p) is not dict:
-        return {"disable": True}
-    else:
-        return p
+    if isinstance(p, bool):
+        if p:
+            return {"disable": True}
+        return {}
+    return p
 
 
 declare_user_attribute(
     "disable_notifications",
     Transform(Dictionary(
         title=_("Disable Notifications"),
-        help = _("When this option is active the you will not get <b>any</b> "
+        help = _("When this option is active you will not get <b>any</b> "
                  "alerts or other notifications via email, SMS or similar. "
-                 "This overrides all other notification settings or rules, so make "
-                 "sure that you know what you do. Moreover you can customize a timerange "
-                 "within no notifications are generated."),
+                 "This overrides all other notification settings and rules, so make "
+                 "sure that you know what you do. Moreover you can specify a timerange "
+                 "where no notifications are generated."),
         elements = [
             ("disable", FixedValue(True,
                 title=_("Temporarily disable <b>all</b> notifications!"),

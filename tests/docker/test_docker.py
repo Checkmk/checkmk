@@ -105,7 +105,8 @@ def _build(request, client, edition, version, add_args=None):
         u'6557/tcp': {},
     }
 
-    assert attrs["Size"] < 900000000
+    assert attrs["Size"] < 900 * 1024 * 1024, \
+        "Docker image size increased: Please verify that this is intended"
 
     assert len(attrs["RootFS"]["Layers"]) == 6
 

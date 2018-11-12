@@ -175,6 +175,7 @@ printer_code_map = {
 
 printer_alerts_text_map = {
     'Energiesparen' : 0,
+    'Sleep'         : 0,
 }
 
 def inventory_printer_alerts(info):

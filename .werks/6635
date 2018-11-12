@@ -1,0 +1,14 @@
+Title: printer_alerts: Fix handling for Sleep state
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0i1
+Date: 1542039777
+
+Some printers report states not defined in the MIB. A 
+reasonably common case appears to be the printer going
+to sleep, which should be treated as OK instead
+of UNKNOWN.

@@ -5,7 +5,6 @@ SHELL    = /bin/bash
 VERSION  = $(OMD_VERSION)
 
 PATCHES  := $(wildcard patches/*.dif)
-PATCHES += patches/0018-mysqlclient-fortify-source.patch
 
 MODULES =
 

@@ -1,0 +1,17 @@
+Title: Fixed random backup issues: "Connection reset by peer"
+Level: 1
+Component: omd
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0i1
+Date: 1542022142
+
+The "mkbackup" and "omd backup" commands could fail while backing up a site when
+the rrdcached process was reloaded, restarted or stopped during the backup. This
+could also be triggered by an "Activate changes" action in the GUI.
+
+The backup was then aborted with an error like this: "Failed to perform backup: [Errno 104] Connection reset by peer".
+
+This issue did not affect backups performed for not running sites.

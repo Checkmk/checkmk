@@ -1,0 +1,9 @@
+#!/usr/bin/env python
+# PagerDuty
+from cmk.notification_plugins.pagerduty import pagerduty_msg
+from cmk.notification_plugins.utils import post_request
+
+if __name__ == "__main__":
+    # PagerDuty replies with 202 because the request is further processed
+    # by them. Thus their reply only includes field validation checks.
+    post_request(pagerduty_msg, success_code=202)

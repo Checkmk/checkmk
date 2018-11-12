@@ -319,6 +319,57 @@ register_notification_parameters(
         ]))
 
 register_notification_parameters(
+    "pagerduty",
+    Dictionary(
+        optional_keys=["url_prefix"],
+        hidden_keys=["webhook_url"],
+        elements=[
+            ("routing_key",
+             CascadingDropdown(
+                 title=_("PagerDuty Service Integration Key"),
+                 help=_("After setting up a new Service in PagerDuty you will receive an "
+                        "Integration key associated with that service. Copy that value here."),
+                 choices=[("routing_key", _("Integration Key"), TextAscii(size=32)),
+                          ("store", _("Key from password store"),
+                           DropdownChoice(sorted=True, choices=passwordstore_choices))],
+             )),
+            ("webhook_url",
+             FixedValue(
+                 "https://events.pagerduty.com/v2/enqueue",
+                 title=_("API Endpoint from PagerDuty V2"))),
+            ("url_prefix",
+             Transform(
+                 CascadingDropdown(
+                     style="dropdown",
+                     title=_("URL prefix for links to Check_MK"),
+                     help=_(
+                         "If you use <b>Automatic HTTP/s</b> the URL prefix for "
+                         "host and service links within the notification mail "
+                         "is filled automatically. "
+                         "If you specify an URL prefix here, then several parts of the "
+                         "VictorOPS message are armed with hyperlinks to your Check_MK GUI. In both cases "
+                         "the recipient of the message can directly visit the host or "
+                         "service in question in Check_MK. Specify an absolute URL including "
+                         "the <tt>.../check_mk/</tt>"),
+                     choices=[
+                         ("automatic_http", _("Automatic HTTP")),
+                         ("automatic_https", _("Automatic HTTPs")),
+                         ("manual", _("Specify URL prefix"),
+                          TextAscii(
+                              regex="^(http|https)://.*/check_mk/$",
+                              regex_error=_("The URL must begin with <tt>http</tt> or "
+                                            "<tt>https</tt> and end with <tt>/check_mk/</tt>."),
+                              size=64,
+                              default_value="http://" + socket.gethostname() + "/" +
+                              (config.omd_site() and config.omd_site() + "/" or "") + "check_mk/",
+                          )),
+                     ],
+                 ),
+                 forth=transform_forth_html_mail_url_prefix,
+                 back=transform_back_html_mail_url_prefix)),
+        ]))
+
+register_notification_parameters(
     "asciimail",
     Dictionary(elements=[
         ("from", EmailAddress(

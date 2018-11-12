@@ -78,3 +78,13 @@ def test_read_bulk_contents(monkeypatch, capsys):
 ])
 def test_get_bulk_notification_subject(context, hosts, result):
     assert utils.get_bulk_notification_subject(context, hosts) == result
+
+
+@pytest.mark.parametrize("value, result", [
+    ("http://local.host", "http://local.host"),
+    ("webhook_url\thttp://webhook.host", "http://webhook.host"),
+    ("store\tpwservice", "http://secret.host"),
+])
+def test_api_endpoint_url(monkeypatch, value, result):
+    monkeypatch.setattr('cmk.password_store.extract', lambda x: 'http://secret.host')
+    assert utils.retrieve_from_passwordstore(value) == result

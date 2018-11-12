@@ -23,7 +23,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-from typing import Dict  # pylint: disable=unused-import
+from typing import Dict, Optional  # pylint: disable=unused-import
 import os
 import re
 import requests
@@ -52,6 +52,22 @@ def collect_context():
 
 def extend_context_with_link_urls(context, link_template):
     # type: (Dict, str) -> None
+
+    host_url, service_url = cmk_links(context)
+
+    if host_url:
+        context['LINKEDHOSTNAME'] = link_template.format(host_url, context['HOSTNAME'])
+    else:
+        context['LINKEDHOSTNAME'] = context['HOSTNAME']
+
+    if service_url:
+        context['LINKEDSERVICEDESC'] = link_template.format(service_url, context['SERVICEDESC'])
+    else:
+        context['LINKEDSERVICEDESC'] = context.get('SERVICEDESC', '')
+
+
+def cmk_links(context):
+    # type: (Dict) -> (Optional[str], Optional[str])
     if context.get("PARAMETER_URL_PREFIX"):
         url_prefix = context["PARAMETER_URL_PREFIX"]
     elif context.get("PARAMETER_URL_PREFIX_MANUAL"):
@@ -67,15 +83,13 @@ def extend_context_with_link_urls(context, link_template):
         base_url = re.sub('/check_mk/?', '', url_prefix)
         host_url = base_url + context['HOSTURL']
 
-        context['LINKEDHOSTNAME'] = link_template.format(host_url, context['HOSTNAME'])
-
         if context['WHAT'] == 'SERVICE':
             service_url = base_url + context['SERVICEURL']
-            context['LINKEDSERVICEDESC'] = link_template.format(service_url, context['SERVICEDESC'])
+            return host_url, service_url
 
-    else:
-        context['LINKEDHOSTNAME'] = context['HOSTNAME']
-        context['LINKEDSERVICEDESC'] = context.get('SERVICEDESC', '')
+        return host_url, None
+
+    return None, None
 
 
 def replace_variable_context(template, context):
@@ -209,19 +223,28 @@ def get_bulk_notification_subject(contexts, hosts):
 
 #################################################################################################
 # REST
-def post_request(message_constructor):
+def retrieve_from_passwordstore(parameter):
+    value = parameter.split()
+
+    if len(value) == 2:
+        if value[0] == 'store':
+            value = cmk.password_store.extract(value[1])
+        else:
+            value = value[1]
+    else:
+        value = value[0]
+
+    return value
+
+
+def post_request(message_constructor, success_code=200):
     context = collect_context()
 
-    url = context.get("PARAMETER_WEBHOOK_URL").split()
-
-    if url[0] == 'store':
-        url = cmk.password_store.extract(url[1])
-    else:
-        url = url[1]
+    url = retrieve_from_passwordstore(context.get("PARAMETER_WEBHOOK_URL"))
 
     r = requests.post(url=url, json=message_constructor(context))
 
-    if r.status_code == 200:
+    if r.status_code == success_code:
         sys.exit(0)
     else:
         sys.stderr.write(

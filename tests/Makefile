@@ -23,7 +23,7 @@ help:
 # This target needs to be phony so it is run every time because only the other
 # makefile can determine that there's nothing to be done.
 # TODO: Move everything to top level makefile?
-.PHONY: ../.venv
+.PHONY: ../.venv bandit.ini
 
 ../.venv:
 	$(MAKE) -C .. .venv
@@ -53,33 +53,10 @@ test-docker: ../.venv
 	$(MAKE) -C ../docker test-lint-dockerfile test-lint-entrypoint
 	$(PYTEST) -T docker
 
-test-bandit: ../.venv
-# Finding all the Python stuff in our project is a bit tricky/ugly...
-	( cd .. ; \
-	  echo '[bandit]'; \
-	  echo -n 'targets: '; \
-	  for i in $$(find $$(realpath active_checks \
-	                               agents \
-	                               bin \
-	                               checks \
-	                               cmk \
-	                               cmk_base \
-	                               doc \
-	                               enterprise \
-	                               inventory \
-	                               livestatus \
-	                               managed \
-	                               notifications \
-	                               omd/packages/cma \
-	                               omd/packages/maintenance \
-	                               omd/packages/omd \
-	                               scripts \
-	                               tests \
-	                               web/app \
-	                               werk ) \
-	                   -type f | sort ); do \
-	      { [[ "$$i" == *.py ]] || { head -n 1 "$$i" | grep -q '^#!.*python$$'; } ; } && echo -n "$$i,"; \
-	  done ) | sed 's/,$$//' > bandit.ini
+bandit.ini:
+	echo -e "[bandit]\ntargets: $$(./find-python-files | tr '\n' ',' | sed 's/,$$//')" > bandit.ini
+
+test-bandit: ../.venv bandit.ini
 # Currently only care about high severity reported issues. Once this is reached,
 # go and enable the medium/low checks.
 	$(BANDIT) -c ../bandit.yaml -r -lll --ini bandit.ini $(BANDIT_OUTPUT_ARGS)

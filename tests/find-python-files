@@ -1,0 +1,39 @@
+#!/bin/bash
+# Find and print the absolute paths of all python source code files
+set -e
+
+REPO_PATH=$(dirname $(dirname $(realpath "$0")))
+cd "$REPO_PATH"
+
+SEARCH=
+SEARCH+=" active_checks"
+SEARCH+=" agents"
+SEARCH+=" bin"
+SEARCH+=" checks"
+SEARCH+=" cmk"
+SEARCH+=" cmk_base"
+SEARCH+=" doc"
+SEARCH+=" enterprise"
+SEARCH+=" inventory"
+SEARCH+=" livestatus"
+SEARCH+=" managed"
+SEARCH+=" notifications"
+# Do not search whole omd/ because it may contain unpacked sub-packages
+SEARCH+=" omd/packages/cma"
+SEARCH+=" omd/packages/maintenance"
+SEARCH+=" omd/packages/omd"
+
+SEARCH+=" scripts"
+SEARCH+=" tests"
+SEARCH+=" web/app"
+SEARCH+=" werk"
+
+# Resolve search paths to real paths before the search for performance reasons
+REAL_SEARCH=$(realpath $SEARCH)
+
+# while read F is used to deal with files containing whitespaces
+find $REAL_SEARCH -name .venv -prune -o -type f -print | while read F; do
+    if [[ "$F" == *.py ]] || head -n 1 "$F" | grep -q '^#!.*python$' >/dev/null 2>&1; then
+        echo "$F"
+    fi
+done

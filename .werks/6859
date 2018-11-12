@@ -1,0 +1,15 @@
+Title: Fixed problem creating custom graphs with many metrics
+Level: 1
+Component: metrics
+Class: fix
+Compatible: compat
+Edition: cee
+State: unknown
+Version: 1.6.0i1
+Date: 1542013340
+
+Since 1.5 creating custom graphs out of graphs with many metrics,
+e.g. combined graphs, could fail. The custom graph was not created
+when clicking on "New custom graph..." and nothing visible happened.
+
+CMK-1219

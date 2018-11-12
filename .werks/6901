@@ -1,0 +1,12 @@
+Title: jolokia_generic: Allow spaces in Title
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1542007535
+Class: fix
+
+The jolokia_generic check no longer fails when confronted with
+titles containing spaces.
+

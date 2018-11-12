@@ -24,7 +24,6 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-
 # Example output from agent:
 # <<<jolokia_metrics>>>
 # 8080 NonHeapMemoryUsage 101078952
@@ -42,7 +41,7 @@
 # jolokia_metrics_mem_default_levels = (2000, 3000)
 
 # Number of threads warn, crit
-jolokia_metrics_threads_default_levels  = (80, 100)
+jolokia_metrics_threads_default_levels = (80, 100)
 
 # Number of sessions low crit, low warn, high warn, high crit
 jolokia_metrics_app_sess_default_levels = (-1, -1, 800, 1000)
@@ -50,13 +49,12 @@ jolokia_metrics_app_sess_default_levels = (-1, -1, 800, 1000)
 # Number of requests low crit, low warn, high warn, high crit
 jolokia_metrics_serv_req_default_levels = (-1, -1, 5000, 6000)
 
-jolokia_metrics_queue_default_levels = ( 20, 50 )
+jolokia_metrics_queue_default_levels = (20, 50)
 
 # Tomcat ThreadPools Count/Busy in relation to max value
 factory_settings["jolokia_metrics_tp_default_levels"] = {
-            'currentThreadsBusy': (80, 90),
+    'currentThreadsBusy': (80, 90),
 }
-
 
 #   .--Parse function------------------------------------------------------.
 #   |  ____                        __                  _   _               |
@@ -72,10 +70,15 @@ def jolokia_metrics_parse(info):
     parsed = {}
     for line in info:
         if line[1] == "ERROR":
-            parsed[line[0]] = None # error
             continue
 
-        inst, var, value = line
+        try:
+            inst = line[0]
+            var = ' '.join(line[1:-1])
+            value = line[-1]
+        except IndexError:
+            continue
+
         attributes = {}
         positional = []
 
@@ -99,10 +102,7 @@ def jolokia_metrics_parse(info):
             bean_name = attributes['name']
             bean_type = attributes['type']
             # backwards compatibility
-            bean_type = {
-                "GarbageCollector": "gc",
-                "ThreadPool": "tp"
-            }.get(bean_type, bean_type)
+            bean_type = {"GarbageCollector": "gc", "ThreadPool": "tp"}.get(bean_type, bean_type)
             # maybe do this for all types?
             if bean_type == "tp":
                 bean_name = bean_name.replace('"', '')
@@ -113,7 +113,7 @@ def jolokia_metrics_parse(info):
                 if attr_key not in set(['name', 'type']):
                     parsed[inst][bean_type][bean_name][attr_key] = attr_value
         else:
-            if len(positional) > 0:
+            if positional:
                 app = positional[0]
                 parsed[inst].setdefault('apps', {}).setdefault(app, {})
                 if len(positional) > 1:
@@ -149,6 +149,7 @@ def jolokia_metrics_parse(info):
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
+
 def inventory_jolokia_metrics(info, what):
     parsed = jolokia_metrics_parse(info)
 
@@ -161,12 +162,12 @@ def inventory_jolokia_metrics(info, what):
 
     for instance, data in parsed.items():
         if data is None:
-            continue # No connection to agent currently
+            continue  # No connection to agent currently
 
         if what == 'uptime' and "Uptime" not in data:
             continue
-        if what == 'mem' and ("HeapMemoryUsage" not in data or "NonHeapMemoryUsage" not in data
-                              or "HeapMemoryMax" not in data or "NonHeapMemoryMax" not in data):
+        if what == 'mem' and ("HeapMemoryUsage" not in data or "NonHeapMemoryUsage" not in data or
+                              "HeapMemoryMax" not in data or "NonHeapMemoryMax" not in data):
             # don't add memory check if we don't have the necessary data
             continue
         yield instance, levels
@@ -178,25 +179,25 @@ def inventory_jolokia_metrics_apps(info, what):
 
     if what == 'app_sess':
         levels = 'jolokia_metrics_app_sess_default_levels'
-        needed_key = [ "Sessions", "activeSessions" ]
-    elif what  == 'bea_app_sess':
+        needed_key = ["Sessions", "activeSessions"]
+    elif what == 'bea_app_sess':
         levels = 'jolokia_metrics_app_sess_default_levels'
-        needed_key = [ "OpenSessionsCurrentCount" ]
+        needed_key = ["OpenSessionsCurrentCount"]
     elif what == 'queue':
-        needed_key = [ "QueueLength" ]
+        needed_key = ["QueueLength"]
         levels = "jolokia_metrics_queue_default_levels"
     # Only works on BEA
     elif what == 'bea_requests':
-        needed_key = [ "CompletedRequestCount" ]
+        needed_key = ["CompletedRequestCount"]
         levels = None
     elif what == 'requests':
-        needed_key = [ "requestCount" ]
+        needed_key = ["requestCount"]
         levels = None
     elif what == 'threads':
-        needed_key = [ "StandbyThreadCount" ]
+        needed_key = ["StandbyThreadCount"]
         levels = None
     else:
-        needed_key = [ "Running", "stateName" ]
+        needed_key = ["Running", "stateName"]
         levels = None
 
     # this handles information from BEA, they stack one level
@@ -204,7 +205,7 @@ def inventory_jolokia_metrics_apps(info, what):
     if what == 'bea_app_sess':
         for inst, vals in parsed.iteritems():
             if vals is None:
-                continue # no data from agent
+                continue  # no data from agent
 
             for app, appstate in vals.get('apps', {}).items():
                 if 'servlets' in appstate:
@@ -216,7 +217,7 @@ def inventory_jolokia_metrics_apps(info, what):
     # This does the same for tomcat
     for inst, vals in parsed.iteritems():
         if vals is None:
-            continue # no data from agent
+            continue  # no data from agent
 
         for app, appstate in vals.get('apps', {}).items():
             for nk in needed_key:
@@ -244,6 +245,7 @@ def inventory_jolokia_metrics_apps(info, what):
 #   | TODO: See if these can be removed altogether                         |
 #   '----------------------------------------------------------------------'
 
+
 # This bisects the app server and its values
 def jolokia_metrics_app(info, split_item):
     inst, app = split_item
@@ -256,6 +258,7 @@ def jolokia_metrics_app(info, split_item):
         return None
     return parsed[inst]['apps'][app]
 
+
 # This bisects info from BEA and passes on to jolokia_metrics_app
 def jolokia_metrics_serv(info, split_item):
     inst, app, serv = split_item
@@ -263,6 +266,7 @@ def jolokia_metrics_serv(info, split_item):
     if not app or not serv in app.get('servlets', {}):
         return None
     return app['servlets'][serv]
+
 
 def jolokia_metrics_gc(info, split_item):
     inst, _typ, gc = split_item
@@ -275,6 +279,7 @@ def jolokia_metrics_gc(info, split_item):
         return None
     return parsed[inst]['gc'][gc]
 
+
 #.
 #   .--Number of Requests--------------------------------------------------.
 #   |               ____                            _                      |
@@ -285,6 +290,7 @@ def jolokia_metrics_gc(info, split_item):
 #   |                            |_|                                       |
 #   '----------------------------------------------------------------------'
 
+
 def inventory_jolokia_metrics_serv(info):
     inv = []
     parsed = jolokia_metrics_parse(info)
@@ -293,7 +299,7 @@ def inventory_jolokia_metrics_serv(info):
     needed_key = "Requests"
     for inst, vals in parsed.iteritems():
         if vals is None:
-            continue # no data from agent
+            continue  # no data from agent
         for app, val in vals.get('apps', {}).iteritems():
             for serv, servinfo in val.get('servlets', {}).items():
                 if needed_key in servinfo:
@@ -308,7 +314,7 @@ def check_jolokia_metrics_serv_req(item, params, info):
         return (3, "data not found in agent output")
     req = saveint(serv['Requests'])
 
-    status    = 0
+    status = 0
     status_txt = ''
     if lo_crit is not None and req <= lo_crit:
         status = 2
@@ -323,9 +329,9 @@ def check_jolokia_metrics_serv_req(item, params, info):
         status = 1
         status_txt = ' (Above or equal %d)' % hi_warn
 
-    output    = ['Requests: %d%s' % (req, status_txt)]
-    perfdata  = [('Requests', req, hi_warn, hi_crit)]
-    wrapped   = False
+    output = ['Requests: %d%s' % (req, status_txt)]
+    perfdata = [('Requests', req, hi_warn, hi_crit)]
+    wrapped = False
     this_time = time.time()
     try:
         rate = get_rate("jolokia_metrics.serv_req.%s" % item, this_time, req)
@@ -340,11 +346,11 @@ def check_jolokia_metrics_serv_req(item, params, info):
 
 
 check_info["jolokia_metrics.serv_req"] = {
-    "service_description" : "JVM %s Requests",
-    "check_function"      : check_jolokia_metrics_serv_req,
-    "inventory_function"  : inventory_jolokia_metrics_serv,
-    "group"               : "jvm_requests",
-    "has_perfdata"        : True,
+    "service_description": "JVM %s Requests",
+    "check_function": check_jolokia_metrics_serv_req,
+    "inventory_function": inventory_jolokia_metrics_serv,
+    "group": "jvm_requests",
+    "has_perfdata": True,
 }
 
 #.
@@ -363,14 +369,15 @@ check_info["jolokia_metrics.serv_req"] = {
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
+
 def inventory_jolokia_metrics_gc(info):
     inv = []
     parsed = jolokia_metrics_parse(info)
     for inst, vals in parsed.iteritems():
         if vals is None:
-            continue # no data from agent
+            continue  # no data from agent
         for gc in vals.get('gc', {}).iterkeys():
-            inv.append(("%s GC %s" % (inst ,gc) , {}))
+            inv.append(("%s GC %s" % (inst, gc), {}))
     return inv
 
 
@@ -422,11 +429,11 @@ def check_jolokia_metrics_gc(item, params, info):
 
 
 check_info["jolokia_metrics.gc"] = {
-    "service_description"       : "JVM %s",
-    "check_function"            : check_jolokia_metrics_gc,
-    "inventory_function"        : inventory_jolokia_metrics_gc,
-    "group"                     : "jvm_gc",
-    "has_perfdata"              : True,
+    "service_description": "JVM %s",
+    "check_function": check_jolokia_metrics_gc,
+    "inventory_function": inventory_jolokia_metrics_gc,
+    "group": "jvm_gc",
+    "has_perfdata": True,
 }
 
 #.
@@ -445,6 +452,7 @@ check_info["jolokia_metrics.gc"] = {
 #   |                        |_|                                           |
 #   '----------------------------------------------------------------------'
 
+
 def jolokia_metrics_tp(info, split_item):
     inst, _typ, threadpool_name = split_item
     parsed = jolokia_metrics_parse(info)
@@ -462,10 +470,10 @@ def inventory_jolokia_metrics_tp(info):
     parsed = jolokia_metrics_parse(info)
     for inst, vals in parsed.iteritems():
         if vals is None:
-            continue # no data from agent
+            continue  # no data from agent
         for threadpool_name, threadpool_info in vals.get('tp', {}).iteritems():
             if "maxThreads" in threadpool_info:
-                inv.append(("%s ThreadPool %s" % (inst, threadpool_name) , {}))
+                inv.append(("%s ThreadPool %s" % (inst, threadpool_name), {}))
     return inv
 
 
@@ -499,7 +507,7 @@ def check_jolokia_metrics_tp(item, params, info):
                 infotext += levelstext
         else:
             warn, crit = ("", "")
-        perfdata = [ (what, threads_abs, warn, crit, 0, max_threads) ]
+        perfdata = [(what, threads_abs, warn, crit, 0, max_threads)]
         return status, infotext, perfdata
 
     if 'currentThreadsBusy' in threadpool_info:
@@ -510,12 +518,12 @@ def check_jolokia_metrics_tp(item, params, info):
 
 
 check_info["jolokia_metrics.tp"] = {
-    "default_levels_variable"   : "jolokia_metrics_tp_default_levels",
-    "service_description"       : "JVM %s",
-    "check_function"            : check_jolokia_metrics_tp,
-    "inventory_function"        : inventory_jolokia_metrics_tp,
-    "group"                     : "jvm_tp",
-    "has_perfdata"              : True,
+    "default_levels_variable": "jolokia_metrics_tp_default_levels",
+    "service_description": "JVM %s",
+    "check_function": check_jolokia_metrics_tp,
+    "inventory_function": inventory_jolokia_metrics_tp,
+    "group": "jvm_tp",
+    "has_perfdata": True,
 }
 
 #.
@@ -527,6 +535,7 @@ check_info["jolokia_metrics.tp"] = {
 #   |              |_|  |_|\___|_| |_| |_|\___/|_|   \__, |                |
 #   |                                                |___/                 |
 #   '----------------------------------------------------------------------'
+
 
 def check_jolokia_metrics_mem(item, params, info):
     parsed = jolokia_metrics_parse(info)
@@ -554,32 +563,32 @@ def check_jolokia_metrics_mem(item, params, info):
 
     if "HeapMemoryUsage" not in d or "NonHeapMemoryUsage" not in d\
         or "HeapMemoryMax" not in d or "NonHeapMemoryMax" not in d:
-            return 3, "data in agent output incomplete"
+        return 3, "data in agent output incomplete"
 
     heap = saveint(d["HeapMemoryUsage"]) / mb
-    heapmax = saveint(d.get("HeapMemoryMax",-1)) / mb
+    heapmax = saveint(d.get("HeapMemoryMax", -1)) / mb
     nonheap = saveint(d["NonHeapMemoryUsage"]) / mb
-    nonheapmax = saveint(d.get("NonHeapMemoryMax",-1)) / mb
+    nonheapmax = saveint(d.get("NonHeapMemoryMax", -1)) / mb
     total = heap + nonheap
     if heapmax > 0 and nonheapmax > 0:
         totalmax = heapmax + nonheapmax
     else:
-        totalmax    = 0
-        heapmax     = max(0, heapmax)
-        nonheapmax  = max(0, nonheapmax)
+        totalmax = 0
+        heapmax = max(0, heapmax)
+        nonheapmax = max(0, nonheapmax)
 
     worst_state = 0
-    perfdata    = []
-    info_list   = []
+    perfdata = []
+    info_list = []
 
     for what, value, value_max in [
-            ("heap",     heap,    heapmax),
-            ("nonheap",  nonheap, nonheapmax),
-            ("total",    total,   totalmax),
-        ]:
+        ("heap", heap, heapmax),
+        ("nonheap", nonheap, nonheapmax),
+        ("total", total, totalmax),
+    ]:
         param_state = 0
-        level_info  = ""
-        used_info   = ""
+        level_info = ""
+        used_info = ""
         if params.get(what):
             warn_level = 0
             crit_level = 0
@@ -628,12 +637,12 @@ def check_jolokia_metrics_mem(item, params, info):
 
 
 check_info["jolokia_metrics.mem"] = {
-    "service_description"     : "JVM %s Memory",
-    "check_function"          : check_jolokia_metrics_mem,
-    "inventory_function"      : lambda i: inventory_jolokia_metrics(i, "mem"),
-    "has_perfdata"            : True,
-    "group"                   : "jvm_memory",
-    "default_levels_variable" : "jolokia_metrics_mem_default_levels"
+    "service_description": "JVM %s Memory",
+    "check_function": check_jolokia_metrics_mem,
+    "inventory_function": lambda i: inventory_jolokia_metrics(i, "mem"),
+    "has_perfdata": True,
+    "group": "jvm_memory",
+    "default_levels_variable": "jolokia_metrics_mem_default_levels"
 }
 
 #.
@@ -646,6 +655,7 @@ check_info["jolokia_metrics.mem"] = {
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
+
 def check_jolokia_metrics_threads(item, params, info):
     warn, crit = params
     parsed = jolokia_metrics_parse(info)
@@ -657,11 +667,11 @@ def check_jolokia_metrics_threads(item, params, info):
 
     this_time = time.time()
     perfdata = []
-    output   = []
-    status   = 0
-    for key in [ 'ThreadCount', 'DeamonThreadCount', 'PeakThreadCount', 'TotalStartedThreadCount' ]:
+    output = []
+    status = 0
+    for key in ['ThreadCount', 'DeamonThreadCount', 'PeakThreadCount', 'TotalStartedThreadCount']:
         if key not in d:
-            continue # The keys might be optional (saw jboss only sending ThreadCount)
+            continue  # The keys might be optional (saw jboss only sending ThreadCount)
 
         val = int(d[key])
         status_info = ""
@@ -675,7 +685,8 @@ def check_jolokia_metrics_threads(item, params, info):
                 status_info = "(!) (Levels at %d/%d)" % (warn, crit)
 
             # Calculate the thread increase rate
-            rate = get_rate("jolokia_metrics.threads.%s" % item, this_time, val, allow_negative=True)
+            rate = get_rate(
+                "jolokia_metrics.threads.%s" % item, this_time, val, allow_negative=True)
             output.append('ThreadRate: %0.2f' % rate)
             perfdata.append(('ThreadRate', rate))
 
@@ -685,11 +696,11 @@ def check_jolokia_metrics_threads(item, params, info):
 
 
 check_info["jolokia_metrics.threads"] = {
-    "service_description" : "JVM %s Threads",
-    "check_function"      : check_jolokia_metrics_threads,
-    "inventory_function"  : lambda i: inventory_jolokia_metrics(i, "threads"),
-    "group"               : "jvm_threads",
-    "has_perfdata"        : True,
+    "service_description": "JVM %s Threads",
+    "check_function": check_jolokia_metrics_threads,
+    "inventory_function": lambda i: inventory_jolokia_metrics(i, "threads"),
+    "group": "jvm_threads",
+    "has_perfdata": True,
 }
 
 #.
@@ -702,6 +713,7 @@ check_info["jolokia_metrics.threads"] = {
 #   |                       |_|                                            |
 #   '----------------------------------------------------------------------'
 
+
 def check_jolokia_metrics_uptime(item, params, info):
     parsed = jolokia_metrics_parse(info)
     if parsed.get(item, "") is None:
@@ -713,12 +725,12 @@ def check_jolokia_metrics_uptime(item, params, info):
 
 
 check_info["jolokia_metrics.uptime"] = {
-    "service_description" : "JVM %s Uptime",
-    "check_function"      : check_jolokia_metrics_uptime,
-    "inventory_function"  : lambda i: inventory_jolokia_metrics(i, "uptime"),
-    "group"               : "jvm_uptime",
-    'includes'            : [ 'uptime.include' ],
-    "has_perfdata"        : True,
+    "service_description": "JVM %s Uptime",
+    "check_function": check_jolokia_metrics_uptime,
+    "inventory_function": lambda i: inventory_jolokia_metrics(i, "uptime"),
+    "group": "jvm_uptime",
+    'includes': ['uptime.include'],
+    "has_perfdata": True,
 }
 
 #.
@@ -731,13 +743,14 @@ check_info["jolokia_metrics.uptime"] = {
 #   |                    |_|   |_|                                         |
 #   '----------------------------------------------------------------------'
 
+
 def check_jolokia_metrics_app_state(item, _unused, info):
-    app_state=3
+    app_state = 3
     app = jolokia_metrics_app(info, item.split())
 
     # FIXME: this could be nicer.
-    if   app and "Running" in app:
-        if app['Running']   == '1':
+    if app and "Running" in app:
+        if app['Running'] == '1':
             app_state = 0
         else:
             app_state = 2
@@ -747,24 +760,22 @@ def check_jolokia_metrics_app_state(item, _unused, info):
             app_state = 0
         else:
             app_state = 2
-    if   app_state == 3:
+    if app_state == 3:
         return (3, "data not found in agent output")
     elif app_state == 0:
         return (0, 'application is running')
     elif app_state == 2:
         return (2, 'application is not running (Running: %s)')
 
-
     return (3, 'error in agent output')
 
 
 check_info["jolokia_metrics.app_state"] = {
-    "service_description" : "JVM %s State",
-    "check_function"      : check_jolokia_metrics_app_state,
-    "inventory_function"  : lambda i: inventory_jolokia_metrics_apps(i, "app_state"),
-    "has_perfdata"        : False,
+    "service_description": "JVM %s State",
+    "check_function": check_jolokia_metrics_app_state,
+    "inventory_function": lambda i: inventory_jolokia_metrics_apps(i, "app_state"),
+    "has_perfdata": False,
 }
-
 
 #.
 #   .--Unsorted------------------------------------------------------------.
@@ -776,11 +787,12 @@ check_info["jolokia_metrics.app_state"] = {
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
+
 def check_jolokia_metrics_app_sess(item, params, info):
     lo_crit, lo_warn, hi_warn, hi_crit = params
-    if   len(item.split()) == 3:
+    if len(item.split()) == 3:
         app = jolokia_metrics_serv(info, item.split())
-    elif len (item.split()) == 2:
+    elif len(item.split()) == 2:
         app = jolokia_metrics_app(info, item.split())
     if not app:
         return (3, "application not found")
@@ -788,7 +800,8 @@ def check_jolokia_metrics_app_sess(item, params, info):
     if sessions is None:
         return (3, "data not found in agent output")
     sess = saveint(sessions)
-    maxActive = saveint(app.get('Sessions', app.get('maxActiveSessions', app.get('OpenSessionsCurrentCount'))))
+    maxActive = saveint(
+        app.get('Sessions', app.get('maxActiveSessions', app.get('OpenSessionsCurrentCount'))))
 
     status = 0
     status_txt = ''
@@ -808,8 +821,7 @@ def check_jolokia_metrics_app_sess(item, params, info):
     if maxActive and maxActive > 0:
         status_txt += " (max active sessions: %d)" % maxActive
 
-    return (status, '%d Sessions%s' % (sess, status_txt),
-            [('sessions', sess, hi_warn, hi_crit)])
+    return (status, '%d Sessions%s' % (sess, status_txt), [('sessions', sess, hi_warn, hi_crit)])
 
 
 def check_jolokia_metrics_bea_queue(item, params, info):
@@ -826,8 +838,7 @@ def check_jolokia_metrics_bea_queue(item, params, info):
         status = 2
     elif queuelength >= warn:
         status = 1
-    return (status, 'queue length is %d' % queuelength,
-             [("length", queuelength, warn, crit)])
+    return (status, 'queue length is %d' % queuelength, [("length", queuelength, warn, crit)])
 
 
 # FIXME: This check could work with any JVM
@@ -838,11 +849,11 @@ def check_jolokia_metrics_bea_requests(item, _no_params, info):
     if not app:
         return (3, "application not found")
 
-    for nk in [ "CompletedRequestCount", "requestCount" ]:
-       if nk in app:
-           requests = int(app[nk])
-           rate = get_rate("j4p.bea.requests.%s" % item, time.time(), requests)
-           return (0, "%.2f requests/sec" % rate, [("rate", rate)])
+    for nk in ["CompletedRequestCount", "requestCount"]:
+        if nk in app:
+            requests = int(app[nk])
+            rate = get_rate("j4p.bea.requests.%s" % item, time.time(), requests)
+            return (0, "%.2f requests/sec" % rate, [("rate", rate)])
 
     return (3, "data not found in agent output")
 
@@ -854,11 +865,8 @@ def check_jolokia_metrics_bea_threads(item, _no_params, info):
 
     perfdata = []
     infos = []
-    for varname, title in [
-        ( "ExecuteThreadTotalCount", "total" ),
-        ( "ExecuteThreadIdleCount", "idle" ),
-        ( "StandbyThreadCount", "standby" ),
-        ( "HoggingThreadCount", "hogging" ) ]:
+    for varname, title in [("ExecuteThreadTotalCount", "total"), ("ExecuteThreadIdleCount", "idle"),
+                           ("StandbyThreadCount", "standby"), ("HoggingThreadCount", "hogging")]:
         value = int(app[varname])
         perfdata.append((varname, value))
         infos.append("%s: %d" % (title, value))
@@ -867,61 +875,63 @@ def check_jolokia_metrics_bea_threads(item, _no_params, info):
 
 
 check_info["jolokia_metrics.app_sess"] = {
-    "service_description" : "JVM %s Sessions",
-    "check_function"      : check_jolokia_metrics_app_sess,
-    "inventory_function"  : lambda i: inventory_jolokia_metrics_apps(i, "app_sess"),
-    "group"               : "jvm_sessions",
-    "has_perfdata"        : True,
+    "service_description": "JVM %s Sessions",
+    "check_function": check_jolokia_metrics_app_sess,
+    "inventory_function": lambda i: inventory_jolokia_metrics_apps(i, "app_sess"),
+    "group": "jvm_sessions",
+    "has_perfdata": True,
 }
 
 check_info["jolokia_metrics.requests"] = {
-    "service_description" : "JVM %s Requests",
-    "check_function"      : check_jolokia_metrics_bea_requests,
-    "inventory_function"  : lambda i: inventory_jolokia_metrics_apps(i, "requests"),
-    "group"               : "jvm_requests",
-    "has_perfdata"        : True,
+    "service_description": "JVM %s Requests",
+    "check_function": check_jolokia_metrics_bea_requests,
+    "inventory_function": lambda i: inventory_jolokia_metrics_apps(i, "requests"),
+    "group": "jvm_requests",
+    "has_perfdata": True,
 }
 
 # Stuff found on BEA Weblogic
 check_info["jolokia_metrics.bea_queue"] = {
-    "service_description" : "JVM %s Queue",
-    "check_function"      : check_jolokia_metrics_bea_queue,
-    "inventory_function"  : lambda i: inventory_jolokia_metrics_apps(i, "queue"),
-    "group"               : "jvm_queue",
-    "has_perfdata"        : True,
+    "service_description": "JVM %s Queue",
+    "check_function": check_jolokia_metrics_bea_queue,
+    "inventory_function": lambda i: inventory_jolokia_metrics_apps(i, "queue"),
+    "group": "jvm_queue",
+    "has_perfdata": True,
 }
 
 check_info["jolokia_metrics.bea_requests"] = {
-    "service_description" : "JVM %s Requests",
-    "check_function"      : check_jolokia_metrics_bea_requests,
-    "inventory_function"  : lambda i: inventory_jolokia_metrics_apps(i, "bea_requests"),
-    "group"               : "jvm_requests",
-    "has_perfdata"        : True,
+    "service_description": "JVM %s Requests",
+    "check_function": check_jolokia_metrics_bea_requests,
+    "inventory_function": lambda i: inventory_jolokia_metrics_apps(i, "bea_requests"),
+    "group": "jvm_requests",
+    "has_perfdata": True,
 }
 
 check_info["jolokia_metrics.bea_threads"] = {
-    "service_description" : "JVM %s Threads",
-    "check_function"      : check_jolokia_metrics_bea_threads,
-    "inventory_function"  : lambda i: inventory_jolokia_metrics_apps(i, "threads"),
-    "group"               : "jvm_threads",
-    "has_perfdata"        : True,
+    "service_description": "JVM %s Threads",
+    "check_function": check_jolokia_metrics_bea_threads,
+    "inventory_function": lambda i: inventory_jolokia_metrics_apps(i, "threads"),
+    "group": "jvm_threads",
+    "has_perfdata": True,
 }
 
 check_info["jolokia_metrics.bea_sess"] = {
-    "service_description" : "JVM %s Sessions",
-    "check_function"      : check_jolokia_metrics_app_sess,
-    "inventory_function"  : lambda i: inventory_jolokia_metrics_apps(i, "bea_app_sess"),
-    "group"               : "jvm_sessions",
-    "has_perfdata"        : True,
+    "service_description": "JVM %s Sessions",
+    "check_function": check_jolokia_metrics_app_sess,
+    "inventory_function": lambda i: inventory_jolokia_metrics_apps(i, "bea_app_sess"),
+    "group": "jvm_sessions",
+    "has_perfdata": True,
 }
 
-jolokia_metrics_perm_gen_default_levels = { "perm" : ( 80.0, 100.0 ) }
+jolokia_metrics_perm_gen_default_levels = {"perm": (80.0, 100.0)}
+
 
 def inventory_jolokia_metrics_perm_gen(info):
     parsed = jolokia_metrics_parse(info)
     for instance, values in parsed.items():
         if values and "PermGenUsage" in values:
             yield instance, "jolokia_metrics_perm_gen_default_levels"
+
 
 def check_jolokia_metrics_perm_gen(item, params, info):
     parsed = jolokia_metrics_parse(info)
@@ -942,28 +952,29 @@ def check_jolokia_metrics_perm_gen(item, params, info):
         elif usage_perc >= warn:
             state = 1
         if state != 0:
-            levels = "(warn/crit at %2.f/%.2f %%)" % ( warn, crit )
+            levels = "(warn/crit at %2.f/%.2f %%)" % (warn, crit)
         else:
             levels = ""
         return state, "Usage: %.2f %% (%s of %s used) %s" % \
           ( usage_perc, get_bytes_human_readable(usage_bytes), get_bytes_human_readable(size_bytes), levels ), \
           perfdata
 
+
 check_info["jolokia_metrics.perm_gen"] = {
-    "service_description" : "JVM %s PermGen Usage",
-    "check_function"      : check_jolokia_metrics_perm_gen,
-    "inventory_function"  : inventory_jolokia_metrics_perm_gen,
-    "group"               : "jvm_memory",
-    "has_perfdata"        : True,
+    "service_description": "JVM %s PermGen Usage",
+    "check_function": check_jolokia_metrics_perm_gen,
+    "inventory_function": inventory_jolokia_metrics_perm_gen,
+    "group": "jvm_memory",
+    "has_perfdata": True,
 }
 
-
 jolokia_metrics_cache_hits_default_levels = {}
+
 
 def inventory_jolokia_metrics_cache(key, metrics, info):
     parsed = jolokia_metrics_parse(info)
     metrics_set = set(metrics)
-    for inst, vals in [ x for x in parsed.iteritems() if x[1] != None ]:
+    for inst, vals in [x for x in parsed.iteritems() if x[1] != None]:
         for cache, cache_vars in vals.get("CacheStatistics", {}).iteritems():
             if metrics_set.intersection(cache_vars) == metrics_set:
                 if key is None:
@@ -974,10 +985,10 @@ def inventory_jolokia_metrics_cache(key, metrics, info):
 
 def check_jolokia_metrics_cache(metrics, totals, item, params, info):
     type_map = {
-        "CacheHitPercentage"    : (float, 100.0, "%.1f%%"),
-        "InMemoryHitPercentage" : (float, 100.0, "%.1f%%"),
-        "OnDiskHitPercentage"   : (float, 100.0, "%.1f%%"),
-        "OffHeapHitPercentage"  : (float, 100.0, "%.1f%%"),
+        "CacheHitPercentage": (float, 100.0, "%.1f%%"),
+        "InMemoryHitPercentage": (float, 100.0, "%.1f%%"),
+        "OnDiskHitPercentage": (float, 100.0, "%.1f%%"),
+        "OffHeapHitPercentage": (float, 100.0, "%.1f%%"),
     }
 
     parsed = jolokia_metrics_parse(info)
@@ -992,7 +1003,7 @@ def check_jolokia_metrics_cache(metrics, totals, item, params, info):
                 break
 
         for metric in metrics:
-            type_, scale, format_str = type_map.get(metric, (int, 1,"%d"))
+            type_, scale, format_str = type_map.get(metric, (int, 1, "%d"))
 
             val = type_(parsed[inst]["CacheStatistics"][cache][metric]) * scale
             if isinstance(val, float) and val == 0.0:
@@ -1003,7 +1014,7 @@ def check_jolokia_metrics_cache(metrics, totals, item, params, info):
             yield 0, ("%s: " + format_str) % (metric, val), [(metric, val)]
 
         for total in totals:
-            type_, scale, format_str = type_map.get(total, (int, 1,"%d"))
+            type_, scale, format_str = type_map.get(total, (int, 1, "%d"))
             val = type_(parsed[inst]["CacheStatistics"][cache][total]) * scale
             yield 0, ("%s: " + format_str) % (total, val), []
     except KeyError:

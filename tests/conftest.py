@@ -43,6 +43,12 @@ test_types = collections.OrderedDict([
 
 def pytest_addoption(parser):
     """Register the -T option to pytest"""
+    options = [ name for opt in parser._anonymous.options for name in opt.names() ]
+    # conftest.py is symlinked from enterprise/tests/conftest.py which makes it being executed
+    # twice. Only register this option once.
+    if "-T" in options:
+        return
+
     parser.addoption("-T", action="store", metavar="TYPE", default=None,
         help="Run tests of the given TYPE. Available types are: %s" %
                                            ", ".join(test_types.keys()))
@@ -82,16 +88,7 @@ def pytest_collection_modifyitems(items):
 
 def pytest_runtest_setup(item):
     """Skip tests of unwanted types"""
-    test_type = item.get_closest_marker("type")
-    if test_type is None:
-        raise Exception("Test is not TYPE marked: %s" % item)
-
-    if not item.config.getoption("-T"):
-        raise SystemExit("Please specify type of tests to be executed (py.test -T TYPE)")
-
-    test_type_name = test_type.args[0]
-    if test_type_name != item.config.getoption("-T"):
-        pytest.skip("Not testing type %r" % test_type_name)
+    testlib.skip_unwanted_test_types(item)
 
 
 # Some cmk.* code is calling things like cmk. is_raw_edition() at import time

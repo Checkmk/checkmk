@@ -22,9 +22,11 @@ SEARCH+=" notifications"
 SEARCH+=" omd/packages/cma"
 SEARCH+=" omd/packages/maintenance"
 SEARCH+=" omd/packages/omd"
-
 SEARCH+=" scripts"
-SEARCH+=" tests"
+# Tests contain some very large data structures (e.g.
+# tests/unit/checks/test_docker_parse_node_images.py).  Skip them for the
+# moment because they make YAPF run more than 60 minutes instead of 8 minutes
+#SEARCH+=" tests"
 SEARCH+=" web/app"
 SEARCH+=" werk"
 

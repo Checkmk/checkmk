@@ -157,6 +157,8 @@ MODULES += urllib3-1.24.tar.gz
 # Added for the GUI
 MODULES += Werkzeug-0.14.1.tar.gz
 MODULES += passlib-1.7.1.tar.gz
+# Added for AWS special agent
+MODULES += boto3-1.9.42.tar.gz
 
 .PHONY: build check-freetds install skel clean
 

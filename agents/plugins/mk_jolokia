@@ -328,14 +328,7 @@ def query_instance(inst):
     sys.stdout.write('<<<jolokia_metrics>>>\n')
     # Fetch the general information first
     for var in global_vars + specific_vars.get(inst["product"], []):
-        # support old and new configuration format so we stay compatible with older
-        # configuration files
-        if len(var) == 3:
-            path, title, itemspec = var
-            mbean, path = path.split("/", 1)
-            do_search = False
-        else:
-            mbean, path, title, itemspec, do_search = var
+        mbean, path, title, itemspec, do_search = var
 
         queries = _get_queries(do_search, inst, itemspec, title, path, mbean, mbean_search_results)
 
@@ -412,6 +405,7 @@ def output_custom_vars(inst, mbean_search_results):
     sys.stdout.write('<<<jolokia_generic>>>\n')
     for var in custom_vars:
         mbean, path, title, itemspec, do_search, value_type = var
+
         queries = _get_queries(do_search, inst, itemspec, title, path, mbean, mbean_search_results)
 
         for mbean_path, title, itemspec in queries:

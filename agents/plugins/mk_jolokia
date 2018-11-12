@@ -306,6 +306,17 @@ def _get_queries(do_search, inst, itemspec, title, path, mbean, mbean_search_res
             for mbean_exp in paths]
 
 
+def _process_queries(inst, queries):
+    for mbean_path, title, itemspec in queries:
+        try:
+            for item, out_title, value in fetch_metric(inst, mbean_path, title, itemspec):
+                yield item, out_title, value
+        except (IOError, socket.timeout):
+            raise SkipInstance()
+        except () if DEBUG else Exception:
+            continue
+
+
 def query_instance(inst):
     try:
         prepare_http_opener(inst)
@@ -321,24 +332,16 @@ def query_instance(inst):
     # TODO: Untie mbean_search_results / query calculation and jolokia_metrics processing
     mbean_search_results = {}
 
+    shipped_vars = QUERY_SPECS_GENERIC + QUERY_SPECS_SPECIFIC.get(inst["product"], [])
+    custom_vars = inst.get("custom_vars")
+
     sys.stdout.write('<<<jolokia_metrics>>>\n')
-    # Fetch the general information first
-    for var in QUERY_SPECS_GENERIC + QUERY_SPECS_SPECIFIC.get(inst["product"], []):
-        mbean, path, title, itemspec, do_search = var
+    for result in generate_values(inst, shipped_vars, mbean_search_results):
+        sys.stdout.write(' '.join(map(str, result)) + '\n')
 
-        queries = _get_queries(do_search, inst, itemspec, title, path, mbean, mbean_search_results)
-
-        for mbean_path, title, itemspec in queries:
-            try:
-                for out_item, out_title, out_value in fetch_metric(inst, mbean_path, title,
-                                                                   itemspec):
-                    sys.stdout.write("%s %s %s\n" % (out_item, out_title, out_value))
-            except (IOError, socket.timeout):
-                raise SkipInstance()
-            except () if DEBUG else Exception:
-                continue
-
-    output_custom_vars(inst, mbean_search_results)
+    sys.stdout.write('<<<jolokia_generic>>>\n')
+    for result in generate_values(inst, custom_vars, mbean_search_results):
+        sys.stdout.write(' '.join(map(str, result)) + '\n')
 
 
 def prepare_http_opener(inst):
@@ -388,26 +391,18 @@ def output_jolokia_info(inst):
         raise SkipInstance()
 
 
-def output_custom_vars(inst, mbean_search_results):
-    custom_vars = inst.get("custom_vars")
-    if not custom_vars:
-        return
-
-    sys.stdout.write('<<<jolokia_generic>>>\n')
-    for var in custom_vars:
-        mbean, path, title, itemspec, do_search, value_type = var
+def generate_values(inst, var_list, mbean_search_results):
+    for var in var_list:
+        mbean, path, title, itemspec, do_search = var[:5]
+        value_type = var[5] if len(var) >= 6 else None
 
         queries = _get_queries(do_search, inst, itemspec, title, path, mbean, mbean_search_results)
 
-        for mbean_path, title, itemspec in queries:
-            try:
-                for out_item, out_title, out_value in fetch_metric(inst, mbean_path, title,
-                                                                   itemspec):
-                    sys.stdout.write("%s %s %s %s\n" % (out_item, out_title, out_value, value_type))
-            except (IOError, socket.timeout):
-                raise SkipInstance()
-            except () if DEBUG else Exception:
-                continue
+        for item, title, value in _process_queries(inst, queries):
+            if value_type:
+                yield item, title, value, value_type
+            else:
+                yield item, title, value
 
 
 def yield_configured_instances():

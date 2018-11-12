@@ -1,0 +1,34 @@
+Title: Users may disable notifications by accident after upgrading to 1.5.0
+Level: 2
+Component: notifications
+Class: fix
+Compatible: incomp
+Edition: cre
+State: unknown
+Version: 1.6.0i1
+Date: 1542012103
+
+Due to a rendering issue in the personal settings the option "Temporarily disable
+all notifications" is always set in the GUI when a user or admin edits the settings
+for the first time after an update to version 1.5.0.
+
+If the user or admin then saves the settings and does not enable the notifications,
+the setting is saved and the user does not receive notifications anymore. If a
+user profile was not modified after an update, notifications worked as expected.
+If a profile is saved for the first time after an update, the old configuration
+file format is transformed to the new format. After that the setting is rendered
+correctly.
+
+To circumvent any problems please make sure that the notification settings of all
+users are set properly after the update and that the settings are saved at least
+once with the correct value.
+
+For a large amount of users it may be tedious to change the settings off all users.
+In this case it may be more straight forward to edit the file
+~/etc/check_mk/conf.d/wato/contacts.mk directly. In the file all values for the key
+"disable_notifications" have to be modified. The old value "True" has to be replaced
+by the dictionary "{'disable': True}" and the old value "False" has to be replaced
+by the empty dictionary "{}".
+
+The issue is fixed in version 1.5.0p8. If you update from 1.4.0 to a version
+>= 1.5.0p8 you are not affected by this issue.

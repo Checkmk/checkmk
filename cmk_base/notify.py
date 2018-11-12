@@ -123,7 +123,6 @@ $LONGSERVICEOUTPUT$
 def _transform_user_disable_notifications_opts(contact):
     if "disable_notifications" in contact and isinstance(contact["disable_notifications"], bool):
         return {"disable": contact["disable_notifications"]}
-
     return contact.get("disable_notifications", {})
 
 

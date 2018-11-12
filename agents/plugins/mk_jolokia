@@ -42,8 +42,8 @@ except ImportError:
         sys.stdout.write("Error: Missing JSON library for Agent Plugin mk_jolokia\n")
         exit()
 
-opt_verbose = '--verbose' in sys.argv
-opt_debug = '--debug' in sys.argv
+VERBOSE = '--verbose' in sys.argv
+DEBUG = '--debug' in sys.argv
 
 
 class SkipInstance(Exception):
@@ -59,9 +59,9 @@ class PreemptiveBasicAuthHandler(urllib2.HTTPBasicAuthHandler):
     def http_request(self, req):
         url = req.get_full_url()
         realm = None
-        user, pw = self.passwd.find_user_password(realm, url)
-        if pw:
-            raw = "%s:%s" % (user, pw)
+        user, pwd = self.passwd.find_user_password(realm, url)
+        if pwd:
+            raw = "%s:%s" % (user, pwd)
             auth = 'Basic %s' % base64.b64encode(raw).strip()
             req.add_unredirected_header(self.auth_header, auth)
         return req
@@ -104,9 +104,9 @@ class HTTPSAuthHandler(urllib2.HTTPSHandler):
     def https_open(self, req):
         # do_open expects a class as the first parameter but getConnection will act
         # as a facotry function
-        return self.do_open(self.getConnection, req)
+        return self.do_open(self.get_connection, req)
 
-    def getConnection(self, host, timeout):
+    def get_connection(self, host, _timeout):
         return HTTPSValidatingConnection(
             host, ca_file=self.__ca_file, key_file=self.__key, cert_file=self.__cert)
 
@@ -117,16 +117,14 @@ def fetch_url_get(base_url, path, function):
     else:
         url = base_url + "/"
 
-    if opt_verbose:
+    if VERBOSE:
         sys.stderr.write("DEBUG: Fetching: %s\n" % url)
     try:
         json_data = urllib2.urlopen(url).read()
-        if opt_verbose:
+        if VERBOSE:
             sys.stderr.write("DEBUG: Result: %s\n\n" % json_data)
-    except Exception, e:
-        if opt_debug:
-            raise
-        sys.stderr.write("ERROR: %s\n" % e)
+    except () if DEBUG else Exception, exc:
+        sys.stderr.write("ERROR: %s\n" % exc)
         return []
     return json_data
 
@@ -149,16 +147,14 @@ def fetch_url_post(base_url, path, service_url, service_user, service_password, 
         data["target"]["user"] = service_user
         data["target"]["password"] = service_password
 
-    if opt_verbose:
+    if VERBOSE:
         sys.stderr.write("DEBUG: Fetching: %s\n" % base_url)
     try:
         json_data = urllib2.urlopen(base_url, data=json.dumps(data)).read()
-        if opt_verbose:
+        if VERBOSE:
             sys.stderr.write("DEBUG: Result: %s\n\n" % json_data)
-    except Exception, e:
-        if opt_debug:
-            raise
-        sys.stderr.write("ERROR: %s\n" % e)
+    except () if DEBUG else Exception, exc:
+        sys.stderr.write("ERROR: %s\n" % exc)
         return []
     return json_data
 
@@ -183,8 +179,8 @@ def fetch_var(protocol,
 
     try:
         obj = json.loads(json_data)
-    except Exception, e:
-        sys.stderr.write('ERROR: Invalid json code (%s)\n' % e)
+    except (ValueError, TypeError), exc:
+        sys.stderr.write('ERROR: Invalid json code (%s)\n' % exc)
         sys.stderr.write('       Response %s\n' % json_data)
         return []
 
@@ -197,7 +193,7 @@ def fetch_var(protocol,
     # take the first items first value.
     # {'Catalina:host=localhost,path=\\/test,type=Manager': {'activeSessions': 0}}
     if 'value' not in obj:
-        if opt_verbose:
+        if VERBOSE:
             sys.stderr.write("ERROR: not found: %s\n" % path)
         return []
     val = obj.get('value', None)
@@ -211,23 +207,23 @@ def make_item_list(path, value, itemspec):
         if isinstance(value, str):
             value = value.replace(r'\/', '/')
         return [(path, value)]
-    else:
-        result = []
-        for key, subvalue in value.items():
-            # Handle filtering via itemspec
-            miss = False
-            while itemspec and '=' in itemspec[0]:
-                if itemspec[0] not in key:
-                    miss = True
-                    break
-                itemspec = itemspec[1:]
-            if miss:
-                continue
-            item = extract_item(key, itemspec)
-            if not item:
-                item = (key,)
-            result += make_item_list(path + item, subvalue, [])
-        return result
+
+    result = []
+    for key, subvalue in value.items():
+        # Handle filtering via itemspec
+        miss = False
+        while itemspec and '=' in itemspec[0]:
+            if itemspec[0] not in key:
+                miss = True
+                break
+            itemspec = itemspec[1:]
+        if miss:
+            continue
+        item = extract_item(key, itemspec)
+        if not item:
+            item = (key,)
+        result += make_item_list(path + item, subvalue, [])
+    return result
 
 
 # Example:
@@ -313,11 +309,11 @@ def _get_queries(do_search, inst, itemspec, title, path, mbean, mbean_search_res
 def query_instance(inst):
     try:
         prepare_http_opener(inst)
-    except Exception, e:
-        if opt_debug:
+    except () if DEBUG else Exception, exc:
+        if DEBUG:
             raise
         sys.stdout.write('<<<jolokia_info>>>\n')
-        sys.stderr.write("ERROR: %s\n" % e)
+        sys.stderr.write("ERROR: %s\n" % exc)
         raise SkipInstance()
 
     output_jolokia_info(inst)
@@ -327,7 +323,7 @@ def query_instance(inst):
 
     sys.stdout.write('<<<jolokia_metrics>>>\n')
     # Fetch the general information first
-    for var in global_vars + specific_vars.get(inst["product"], []):
+    for var in QUERY_SPECS_GENERIC + QUERY_SPECS_SPECIFIC.get(inst["product"], []):
         mbean, path, title, itemspec, do_search = var
 
         queries = _get_queries(do_search, inst, itemspec, title, path, mbean, mbean_search_results)
@@ -337,14 +333,9 @@ def query_instance(inst):
                 for out_item, out_title, out_value in fetch_metric(inst, mbean_path, title,
                                                                    itemspec):
                     sys.stdout.write("%s %s %s\n" % (out_item, out_title, out_value))
-            except IOError:
+            except (IOError, socket.timeout):
                 raise SkipInstance()
-            except socket.timeout:
-                raise SkipInstance()
-            except:
-                if opt_debug:
-                    raise
-                # Simply ignore exceptions. Need to be removed for debugging
+            except () if DEBUG else Exception:
                 continue
 
     output_custom_vars(inst, mbean_search_results)
@@ -383,12 +374,12 @@ def output_jolokia_info(inst):
 
     sys.stdout.write('<<<jolokia_info>>>\n')
     if server_info:
-        d = dict(server_info)
-        version = d.get(('info', 'version'), "unknown")
-        product = d.get(('info', 'product'), "unknown")
+        info_dict = dict(server_info)
+        version = info_dict.get(('info', 'version'), "unknown")
+        product = info_dict.get(('info', 'product'), "unknown")
         if inst.get("product"):
             product = inst["product"]
-        agentversion = d.get(('agent',), "unknown")
+        agentversion = info_dict.get(('agent',), "unknown")
         sys.stdout.write("%s %s %s %s\n" % (inst["instance"], product, version, agentversion))
     else:
         sys.stdout.write("%s ERROR\n" % (inst["instance"],))
@@ -413,14 +404,9 @@ def output_custom_vars(inst, mbean_search_results):
                 for out_item, out_title, out_value in fetch_metric(inst, mbean_path, title,
                                                                    itemspec):
                     sys.stdout.write("%s %s %s %s\n" % (out_item, out_title, out_value, value_type))
-            except IOError:
+            except (IOError, socket.timeout):
                 raise SkipInstance()
-            except socket.timeout:
-                raise SkipInstance()
-            except:
-                if opt_debug:
-                    raise
-                # Simply ignore exceptions. Need to be removed for debugging
+            except () if DEBUG else Exception:
                 continue
 
 
@@ -490,7 +476,7 @@ def yield_configured_instances():
         yield config
 
 
-global_vars = [
+QUERY_SPECS_GENERIC = [
     ("java.lang:type=Memory", "NonHeapMemoryUsage/used", "NonHeapMemoryUsage", [], False),
     ("java.lang:type=Memory", "NonHeapMemoryUsage/max", "NonHeapMemoryMax", [], False),
     ("java.lang:type=Memory", "HeapMemoryUsage/used", "HeapMemoryUsage", [], False),
@@ -546,7 +532,7 @@ global_vars = [
      [], True),
 ]
 
-specific_vars = {
+QUERY_SPECS_SPECIFIC = {
     "weblogic": [
         ("*:*", "CompletedRequestCount", None, ["ServerRuntime"], False),
         ("*:*", "QueueLength", None, ["ServerRuntime"], False),
@@ -573,9 +559,11 @@ specific_vars = {
                False),],
 }
 
-#   ( '*:j2eeType=WebModule,name=/--/localhost/-/%(app)s,*/state', None, [ "name" ]),
-#   ( '*:j2eeType=Servlet,WebModule=/--/localhost/-/%(app)s,name=%(servlet)s,*/requestCount', None, [ "WebModule", "name" ]),
-#   ( "Catalina:J2EEApplication=none,J2EEServer=none,WebModule=*,j2eeType=Servlet,name=*", None, [ "WebModule", "name" ]),
+#   ('*:j2eeType=WebModule,name=/--/localhost/-/%(app)s,*/state', None, [ "name" ]),
+#   ('*:j2eeType=Servlet,WebModule=/--/localhost/-/%(app)s,name=%(servlet)s,*/requestCount',
+#    None, [ "WebModule", "name" ]),
+#   ("Catalina:J2EEApplication=none,J2EEServer=none,WebModule=*,j2eeType=Servlet,name=*",
+#    None, [ "WebModule", "name" ]),
 
 # We have to deal with socket timeouts. Python > 2.6
 # supports timeout parameter for the urllib2.urlopen method

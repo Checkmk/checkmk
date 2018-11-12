@@ -193,7 +193,7 @@ class FixedValue(ValueSpec):
     def value_to_text(self, value):
         if self._totext != None:
             return self._totext
-        elif type(value) == unicode:
+        elif isinstance(value, unicode):
             return value
         return str(value)
 
@@ -276,7 +276,7 @@ class Age(ValueSpec):
 
 
     def validate_datatype(self, value, varprefix):
-        if type(value) != int:
+        if not isinstance(value, int):
             raise MKUserError(varprefix, _("The value %r has type %s, but must be of type int") %
                         (value, type_name(value)))
 
@@ -301,7 +301,7 @@ class Integer(ValueSpec):
 
         if "size" not in kwargs and "maxvalue" in kwargs and kwargs["maxvalue"] != None:
             self._size = 1 + int(math.log10(self._maxvalue)) + \
-               (3 if type(self._maxvalue) == float else 0)
+               (3 if isinstance(self._maxvalue, float) else 0)
 
     def canonical_value(self):
         if self._minvalue:
@@ -419,7 +419,7 @@ class TextAscii(ValueSpec):
         self._regex_error   = kwargs.get("regex_error",
             _("Your input does not match the required format."))
         self._minlen        = kwargs.get('minlen', None)
-        if type(self._regex) == str:
+        if isinstance(self._regex, str):
             self._regex = re.compile(self._regex)
         self._onkeyup        = kwargs.get("onkeyup")
         self._autocomplete   = kwargs.get("autocomplete", True)
@@ -478,7 +478,7 @@ class TextAscii(ValueSpec):
         if self._none_is_empty and value == None:
             return
 
-        if type(value) != str:
+        if not isinstance(value, str):
             raise MKUserError(varprefix, _("The value must be of type str, but it has type %s") %
                                                                     type_name(value))
 
@@ -762,7 +762,7 @@ class TextAsciiAutocomplete(TextAscii):
         result_data = cls.idents()[ident].autocomplete_choices(value, params)
 
         # Check for correct result_data format
-        assert type(result_data) == list
+        assert isinstance(result_data, list)
         if result_data:
             assert type(result_data[0]) in [list, tuple]
             assert len(result_data[0]) == 2
@@ -1150,7 +1150,7 @@ class ListOfStrings(ValueSpec):
         return value
 
     def validate_datatype(self, value, varprefix):
-        if type(value) != list:
+        if not isinstance(value, list):
             raise MKUserError(varprefix, _("Expected data type is list, but your type is %s.") %
                                                                         type_name(value))
         for nr, s in enumerate(value):
@@ -1424,7 +1424,7 @@ class ListOf(ValueSpec):
 
 
     def validate_datatype(self, value, varprefix):
-        if type(value) != list:
+        if not isinstance(value, list):
             raise MKUserError(varprefix, _("The type must be list, but is %s") % type_name(value))
         for n, v in enumerate(value):
             self._valuespec.validate_datatype(v, varprefix + "_%d" % (n+1))
@@ -1536,7 +1536,7 @@ class ListOfMultiple(ValueSpec):
         return value
 
     def validate_datatype(self, value, varprefix):
-        if type(value) != dict:
+        if not isinstance(value, dict):
             raise MKUserError(varprefix, _("The type must be dict, but is %s") % type_name(value))
         for ident, val in value.items():
             self._choice_dict[ident].validate_datatype(val, varprefix + '_' + ident)
@@ -1576,7 +1576,7 @@ class Float(Integer):
             _("The text <b><tt>%s</tt></b> is not a valid floating point number.") % html.var(varprefix))
 
     def validate_datatype(self, value, varprefix):
-        if type(value) == float:
+        if isinstance(value, float):
             return
 
         if type(value) in [ int, long ] and self._allow_int:
@@ -1634,7 +1634,7 @@ class Checkbox(ValueSpec):
         return bool(html.var(varprefix))
 
     def validate_datatype(self, value, varprefix):
-        if type(value) != bool:
+        if not isinstance(value, bool):
             raise MKUserError(varprefix, _("The value %r has type %s, but must be of type bool") %
                     (value, type_name(value)))
 
@@ -1669,9 +1669,9 @@ class DropdownChoice(ValueSpec):
 
     def choices(self):
         result = []
-        if type(self._choices) == list:
+        if isinstance(self._choices, list):
             result = self._choices
-        elif type(self._choices) == dict:
+        elif isinstance(self._choices, dict):
             result = ListChoice.dict_choices(self._choices)
         else:
             result = self._choices()
@@ -1831,7 +1831,7 @@ class CascadingDropdown(ValueSpec):
     def __init__(self, **kwargs):
         ValueSpec.__init__(self, **kwargs)
 
-        if type(kwargs["choices"]) == list:
+        if isinstance(kwargs["choices"], list):
             self._choices = self.normalize_choices(kwargs["choices"])
         else:
             self._choices = kwargs["choices"] # function, store for later
@@ -1864,7 +1864,7 @@ class CascadingDropdown(ValueSpec):
 
 
     def choices(self):
-        if type(self._choices) == list:
+        if isinstance(self._choices, list):
             result = self._choices
         else:
             result = self.normalize_choices(self._choices())
@@ -1914,7 +1914,7 @@ class CascadingDropdown(ValueSpec):
             # selection, if the HTML variable varprefix_sel aleady
             # exists.
             if value == val or (
-                type(value) == self._encoding_type and value[0] == val):
+                isinstance(value, self._encoding_type) and value[0] == val):
                 def_val = str(nr)
 
         vp = varprefix + "_sel"
@@ -1946,8 +1946,8 @@ class CascadingDropdown(ValueSpec):
                         disp = "none"
                 else: # form painted the first time
                     if value == val \
-                       or (type(value) == self._encoding_type and value[0] == val):
-                        if type(value) == self._encoding_type:
+                       or (isinstance(value, self._encoding_type) and value[0] == val):
+                        if isinstance(value, self._encoding_type):
                             def_val_2 = value[1]
                         else:
                             def_val_2 = vs.default_value()
@@ -1993,9 +1993,9 @@ class CascadingDropdown(ValueSpec):
         choices = self.choices()
         for nr, (val, _title, vs) in enumerate(choices):
             if value == val or (
-                type(value) == self._encoding_type and value[0] == val):
+                isinstance(value, self._encoding_type) and value[0] == val):
                 if vs:
-                    if type(value) != self._encoding_type or len(value) != 2:
+                    if not isinstance(value, self._encoding_type) or len(value) != 2:
                         raise MKUserError(varprefix + "_sel",
                              _("Value must be a %s with two elements.") % self._encoding_type.__name__)
                     vs.validate_datatype(value[1], varprefix + "_%d" % nr)
@@ -2009,7 +2009,7 @@ class CascadingDropdown(ValueSpec):
         choices = self.choices()
         for nr, (val, _title, vs) in enumerate(choices):
             if value == val or (
-                type(value) == self._encoding_type and value[0] == val):
+                isinstance(value, self._encoding_type) and value[0] == val):
                 if vs:
                     vs.validate_value(value[1], varprefix + "_%d" % nr)
                 ValueSpec.custom_validate(self, value, varprefix)
@@ -2105,9 +2105,9 @@ class ListChoice(ValueSpec):
     # In case of overloaded functions with dynamic elements
     def load_elements(self):
         if self._choices != None:
-            if type(self._choices) == list:
+            if isinstance(self._choices, list):
                 self._elements = self._choices
-            elif type(self._choices) == dict:
+            elif isinstance(self._choices, dict):
                 self._elements = ListChoice.dict_choices(self._choices)
             else:
                 self._elements = self._choices()
@@ -2183,7 +2183,7 @@ class ListChoice(ValueSpec):
     def validate_datatype(self, value, varprefix):
         self.load_elements()
 
-        if type(value) != list:
+        if not isinstance(value, list):
             raise MKUserError(varprefix, _("The datatype must be list, but is %s") % type_name(value))
 
         for v in value:
@@ -2706,14 +2706,14 @@ class Timeofday(ValueSpec):
         if self._allow_empty and value == None:
             return
 
-        if type(value) != tuple:
+        if not isinstance(value, tuple):
             raise MKUserError(varprefix, _("The datatype must be tuple, but ist %s") % type_name(value))
 
         if len(value) != 2:
             raise MKUserError(varprefix, _("The tuple must contain two elements, but you have %d") % len(value))
 
         for x in value:
-            if type(x) != int:
+            if not isinstance(x, int):
                 raise MKUserError(varprefix, _("All elements of the tuple must be of type int, you have %s") % type_name(x))
 
     def validate_value(self, value, varprefix):
@@ -2777,7 +2777,7 @@ class TimeofdayRange(ValueSpec):
         if self._allow_empty and value == None:
             return
 
-        if type(value) != tuple:
+        if not isinstance(value, tuple):
             raise MKUserError(varprefix, _("The datatype must be tuple, but ist %s") % type_name(value))
 
         if len(value) != 2:
@@ -3274,7 +3274,7 @@ class Alternative(ValueSpec):
 
     def default_value(self):
         try:
-            if type(self._default_value) == type(lambda:True):
+            if isinstance(self._default_value, type(lambda:True)):
                 return self._default_value()
             return self._default_value
         except:
@@ -3414,7 +3414,7 @@ class Tuple(ValueSpec):
         ValueSpec.custom_validate(self, value, varprefix)
 
     def validate_datatype(self, value, varprefix):
-        if type(value) != tuple:
+        if not isinstance(value, tuple):
             raise MKUserError(varprefix,
             _("The datatype must be a tuple, but is %s") % type_name(value))
         if len(value) != len(self._elements):
@@ -3439,7 +3439,7 @@ class Dictionary(ValueSpec):
         self._default_keys = kwargs.get("default_keys", []) # keys present in default value
         if "optional_keys" in kwargs:
             ok = kwargs["optional_keys"]
-            if type(ok) == list:
+            if isinstance(ok, list):
                 self._required_keys = \
                     [ e[0] for e in self._get_elements() if e[0] not in ok ]
                 self._optional_keys = True
@@ -3468,9 +3468,9 @@ class Dictionary(ValueSpec):
         return value
 
     def _get_elements(self):
-        if type(self._elements) == type(lambda: None) or isinstance(self._elements, types.MethodType):
+        if callable(self._elements) or isinstance(self._elements, types.MethodType):
             return self._elements()
-        elif type(self._elements) == list:
+        elif isinstance(self._elements, list):
             return self._elements
         return []
 
@@ -3557,7 +3557,7 @@ class Dictionary(ValueSpec):
             # Remember: in complain mode we do not render 'value' (the default value),
             # but re-display the values from the HTML variables. We must not use 'value'
             # in that case.
-            if type(value) == dict:
+            if isinstance(value, dict):
                 vs.render_input(vp, value.get(param, vs.default_value()))
             else:
                 vs.render_input(vp, None)
@@ -3671,7 +3671,7 @@ class Dictionary(ValueSpec):
     def validate_datatype(self, value, varprefix):
         value = self.migrate(value)
 
-        if type(value) != dict:
+        if not isinstance(value, dict):
             raise MKUserError(varprefix, _("The type must be a dictionary, but it is a %s") % type_name(value))
 
         for param, vs in self._get_elements():
@@ -3765,7 +3765,7 @@ class ElementSelection(ValueSpec):
         if len(self._elements) == 0 and value == None:
             return
 
-        if type(value) != str:
+        if not isinstance(value, str):
             raise MKUserError(varprefix, _("The datatype must be str (string), but is %s") % type_name(value))
 
 
@@ -4115,7 +4115,7 @@ class UploadOrPasteTextFile(Alternative):
     def from_html_vars(self, varprefix):
         value = Alternative.from_html_vars(self, varprefix)
         # Convert textarea value to format of upload field
-        if type(value) != tuple:
+        if not isinstance(value, tuple):
             value = (None, None, value)
         return value
 
@@ -4363,7 +4363,7 @@ class IconSelector(ValueSpec):
 
 
     def validate_datatype(self, value, varprefix):
-        if value is not None and type(value) != str:
+        if value is not None and not isinstance(value, str):
             raise MKUserError(varprefix, _("The type is %s, but should be str") % type(value))
 
 
@@ -4467,7 +4467,7 @@ class Color(ValueSpec):
 
 
     def validate_datatype(self, value, varprefix):
-        if value is not None and type(value) != str:
+        if value is not None and not isinstance(value, str):
             raise MKUserError(varprefix, _("The type is %s, but should be str") % type(value))
 
 
@@ -4561,7 +4561,7 @@ class CAorCAChain(UploadOrPasteTextFile):
 
     def from_html_vars(self, varprefix):
         value = Alternative.from_html_vars(self, varprefix)
-        if type(value) == tuple:
+        if isinstance(value, tuple):
             value = value[2] # FileUpload sends (filename, mime-type, content)
         return value
 

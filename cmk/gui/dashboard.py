@@ -364,7 +364,7 @@ def transform_builtin_dashboards():
 
                 del dashlet['url']
 
-            elif dashlet.get('urlfunc') and type(dashlet['urlfunc']) != str:
+            elif dashlet.get('urlfunc') and not isinstance(dashlet['urlfunc'], str):
                 raise MKGeneralException(_('Unable to transform dashlet %d of dashboard %s: '
                                            'the dashlet is using "urlfunc" which can not be '
                                            'converted automatically.') % (nr, name))
@@ -1207,7 +1207,7 @@ def page_edit_dashlet():
     params = dashlet_type.vs_parameters()
     render_input_func = None
     handle_input_func = None
-    if type(params) == list:
+    if isinstance(params, list):
         # TODO: Refactor all params to be a Dictionary() and remove this special case
         vs_type = Dictionary(
             title = _('Properties'),
@@ -1220,7 +1220,7 @@ def page_edit_dashlet():
     elif isinstance(params, (Dictionary, Transform)):
         vs_type = params
 
-    elif type(params) == type(lambda x: x):
+    elif callable(params):
         # It's a tuple of functions which should be used to render and parse the params
         render_input_func, handle_input_func = params()
 

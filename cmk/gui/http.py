@@ -208,7 +208,7 @@ class Request(object):
 
     def var_utf8(self, varname, deflt = None):
         val = self.vars.get(varname, deflt)
-        if type(val) == str:
+        if isinstance(val, str):
             return val.decode("utf-8")
         return val
 
@@ -322,7 +322,7 @@ class Response(object):
     def set_cookie(self, varname, value, expires=None):
         """Send the given cookie to the client with the response"""
         if expires is not None:
-            assert type(expires) == int
+            assert isinstance(expires, int)
 
         cookie_header = werkzeug.http.dump_cookie(
             varname,

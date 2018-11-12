@@ -145,10 +145,10 @@ def fixup_perfometer_info():
 # TODO: Remove this one day.
 def _convert_legacy_tuple_perfometers(perfometers):
     for index, perfometer in reversed(list(enumerate(perfometers))):
-        if type(perfometer) == dict:
+        if isinstance(perfometer, dict):
             continue
 
-        if type(perfometer) != tuple or len(perfometer) != 2:
+        if not isinstance(perfometer, tuple) or len(perfometer) != 2:
             raise MKGeneralException(_("Invalid perfometer declaration: %r") % perfometer)
 
         # Convert legacy tuple based perfometer

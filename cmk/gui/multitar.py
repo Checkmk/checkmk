@@ -415,15 +415,15 @@ def extract_from_buffer(buffer_, elements):
     stream = cStringIO.StringIO()
     stream.write(buffer_)
     stream.seek(0)
-    if type(elements) == list:
+    if isinstance(elements, list):
         extract(tarfile.open(None, "r", stream), elements)
-    elif type(elements) == dict:
+    elif isinstance(elements, dict):
         extract_domains(tarfile.open(None, "r", stream), elements)
 
 def list_tar_content(the_tarfile):
     files = {}
     try:
-        if type(the_tarfile) != str:
+        if not isinstance(the_tarfile, str):
             the_tarfile.seek(0)
             tar = tarfile.open("r", fileobj = the_tarfile)
         else:
@@ -435,7 +435,7 @@ def list_tar_content(the_tarfile):
     return files
 
 def get_file_content(the_tarfile, filename):
-    if type(the_tarfile) != str:
+    if not isinstance(the_tarfile, str):
         the_tarfile.seek(0)
         tar = tarfile.open("r", fileobj = the_tarfile)
     else:

@@ -178,14 +178,14 @@ class Encoder(object):
         Note: This should be changed once we change everything to
         unicode internally.
         """
-        assert type(vars_) == list
+        assert isinstance(vars_, list)
         pairs = []
         for varname, value in sorted(vars_):
-            assert type(varname) == str
+            assert isinstance(varname, str)
 
-            if type(value) == int:
+            if isinstance(value, int):
                 value = str(value)
-            elif type(value) == unicode:
+            elif isinstance(value, unicode):
                 value = value.encode("utf-8")
             elif value is None:
                 # TODO: This is not ideal and should better be cleaned up somehow. Shouldn't
@@ -208,12 +208,12 @@ class Encoder(object):
         Note: This should be changed once we change everything to
         unicode internally.
         """
-        if type(value) == unicode:
+        if isinstance(value, unicode):
             value = value.encode("utf-8")
         elif value == None:
             return ""
 
-        assert type(value) == str
+        assert isinstance(value, str)
 
         return urllib.quote_plus(value)
 
@@ -407,7 +407,7 @@ class OutputFunnel(object):
             # encode when really writing out the data. Not when writing plugged,
             # because the plugged code will be handled somehow by our code. We
             # only encode when leaving the pythonic world.
-            if type(text) == unicode:
+            if isinstance(text, unicode):
                 text = text.encode("utf-8")
             self._lowlevel_write(text)
 
@@ -2023,7 +2023,7 @@ class html(HTMLGenerator):
 
     def bottom_focuscode(self):
         if self.focus_object:
-            if type(self.focus_object) == tuple:
+            if isinstance(self.focus_object, tuple):
                 formname, varname = self.focus_object
                 obj_ident = formname + "." + varname
             else:
@@ -2193,7 +2193,7 @@ class html(HTMLGenerator):
         # Same API as other elements: class_ can be a list or string/None
         css_classes = ["button", "buttonlink"]
         if class_:
-            if type(class_) != list:
+            if not isinstance(class_, list):
                 css_classes.append(class_)
             else:
                 css_classes.extend(class_)
@@ -2276,7 +2276,7 @@ class html(HTMLGenerator):
         else:
             message = msg_or_exc
 
-        if type(varname) == list:
+        if isinstance(varname, list):
             for v in varname:
                 self.add_user_error(v, message)
         else:
@@ -2375,7 +2375,7 @@ class html(HTMLGenerator):
     def toggle_switch(self, enabled, help_txt, **attrs):
         # Same API as other elements: class_ can be a list or string/None
         if "class_" in attrs:
-            if type(attrs["class_"]) != list:
+            if not isinstance(attrs["class_"], list):
                 attrs["class_"] = [ attrs["class_"] ]
         else:
             attrs["class_"] = []
@@ -2774,7 +2774,7 @@ class html(HTMLGenerator):
         if hot:
             css_classes.append("hot")
         if class_:
-            if type(class_) == list:
+            if isinstance(class_, list):
                 css_classes += class_
             else:
                 css_classes += class_.split(" ")
@@ -3019,7 +3019,7 @@ hy
             for k, v in self.page_context.items():
                 if v == None:
                     v = ''
-                elif type(v) == unicode:
+                elif isinstance(v, unicode):
                     v = v.encode('utf-8')
                 encoded_vars[k] = v
 
@@ -3039,7 +3039,7 @@ hy
 
 
         for img, tooltip in self.status_icons.items():
-            if type(tooltip) == tuple:
+            if isinstance(tooltip, tuple):
                 tooltip, url = tooltip
                 self.icon_button(url, tooltip, img, cssclass="inline")
             else:

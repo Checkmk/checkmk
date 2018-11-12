@@ -302,7 +302,7 @@ def get_stats_per_site(only_sites, stats_keys):
 def event_rule_matches(rule_pack, rule, event):
     result = event_rule_matches_non_inverted(rule_pack, rule, event)
     if rule.get("invert_matching"):
-        if type(result) == tuple:
+        if isinstance(result, tuple):
             return _("The rule would match, but matching is inverted.")
         return False, ()
     return result

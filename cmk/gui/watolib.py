@@ -1028,7 +1028,7 @@ class ConfigDomainOMD(ConfigDomain):
                 config["MKEVENTD"] = "off"
 
         for key, value in config.items():
-            if type(value) == bool:
+            if isinstance(value, bool):
                 settings[key] = "on" if value else "off"
             else:
                 settings[key] = "%s" % value
@@ -3789,7 +3789,7 @@ class NagiosValueSpecAttribute(ValueSpecAttribute):
 # Convert old tuple representation to new dict representation of
 # folder's group settings
 def convert_cgroups_from_tuple(value):
-    if type(value) == dict:
+    if isinstance(value, dict):
         if "use_for_services" in value:
             return value
 
@@ -4303,7 +4303,7 @@ class SiteManagement(object):
                 site['disabled'] = True
                 del site['socket']
 
-            elif type(socket) == tuple and socket[0] == "proxy":
+            elif isinstance(socket, tuple) and socket[0] == "proxy":
                 site["socket"] = ("proxy", cls.transform_old_connection_params(socket[1]))
 
         if not vars_["sites"]:
@@ -4609,7 +4609,7 @@ class CEESiteManagement(SiteManagement):
         conf = {}
         for siteid, siteconf in sites.items():
             s = siteconf.get("socket")
-            if type(s) == tuple and s[0] == "proxy":
+            if isinstance(s, tuple) and s[0] == "proxy":
                 conf[siteid] = {
                     "socket": s[1]["socket"],
                 }
@@ -4682,8 +4682,8 @@ def create_nagvis_backends(sites):
             continue # skip sites without configured sockets
 
         # Handle special data format of livestatus proxy config
-        if type(site['socket']) == tuple:
-            if type(site['socket'][1]['socket']) == tuple:
+        if isinstance(site['socket'], tuple):
+            if isinstance(site['socket'][1]['socket'], tuple):
                 socket = 'tcp:%s:%d' % site['socket'][1]['socket']
             elif site['socket'][1]['socket'] is None:
                 socket = 'unix:%s' % cmk.paths.livestatus_unix_socket
@@ -6439,7 +6439,7 @@ def do_snapshot_maintenance():
 # Returns status information for snapshots or snapshots in progress
 # TODO: Remove once new changes mechanism has been implemented
 def get_snapshot_status(snapshot, validate_checksums = False):
-    if type(snapshot) == tuple:
+    if isinstance(snapshot, tuple):
         name, file_stream = snapshot
     else:
         name = snapshot
@@ -7561,11 +7561,11 @@ class HostTagCondition(ValueSpec):
         return "|".join(value)
 
     def validate_datatype(self, value, varprefix):
-        if type(value) != list:
+        if not isinstance(value, list):
             raise MKUserError(varprefix, _("The list of host tags must be a list, but "
                                            "is %r") % type(value))
         for x in value:
-            if type(x) != str:
+            if not isinstance(x, str):
                 raise MKUserError(varprefix, _("The list of host tags must only contain strings "
                                            "but also contains %r") % x)
 
@@ -8651,7 +8651,7 @@ class Rule(object):
 
 
     def _parse_tuple_rule(self, rule_config):
-        if type(rule_config[-1]) == dict:
+        if isinstance(rule_config[-1], dict):
             self.rule_options = rule_config[-1]
             rule_config = rule_config[:-1]
 
@@ -9025,7 +9025,7 @@ def read_only_message():
     if config.wato_read_only["enabled"] == True:
         text += _("The read only mode is enabled until it is turned of manually. ")
 
-    elif type(config.wato_read_only['enabled']) == tuple:
+    elif isinstance(config.wato_read_only['enabled'], tuple):
         end_time = config.wato_read_only['enabled'][1]
         text += _("The read only mode is enabled until %s. ") % render.date_and_time(end_time)
 
@@ -9044,7 +9044,7 @@ def is_read_only_mode_enabled():
     enabled = False
     if config.wato_read_only["enabled"] == True:
         enabled = True
-    elif type(config.wato_read_only['enabled']) == tuple:
+    elif isinstance(config.wato_read_only['enabled'], tuple):
         start_time, end_time = config.wato_read_only['enabled']
         now = time.time()
         enabled = now >= start_time and now <= end_time
@@ -10325,7 +10325,7 @@ def site_is_using_livestatus_proxy(site_id):
     if not socket:
         return False # local site
 
-    return type(socket) == tuple and socket[0] == "proxy"
+    return isinstance(socket, tuple) and socket[0] == "proxy"
 
 #.
 #   .--MIXED STUFF---------------------------------------------------------.

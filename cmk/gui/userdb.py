@@ -345,7 +345,7 @@ def transform_userdb_automatic_sync(val):
         # legacy compat - disabled
         return None
 
-    elif type(val) == list and val:
+    elif isinstance(val, list) and val:
         # legacy compat - all connections
         return "all"
 
@@ -590,7 +590,7 @@ def load_users(lock = False):
         result[uid] = profile
 
         # Convert non unicode mail addresses
-        if type(profile.get("email")) == str:
+        if isinstance(profile.get("email"), str):
             profile["email"] = profile["email"].decode("utf-8")
 
     # This loop is only neccessary if someone has edited

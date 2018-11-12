@@ -69,7 +69,7 @@ def edit_dictionaries(dictionaries, value, focus=None, hover_help=True,
     # Convert list of entries/dictionaries
     sections = []
     for keyname, d in dictionaries:
-        if type(d) == list:
+        if isinstance(d, list):
             sections.append((keyname, title or _("Properties"), d))
         else:
             sections.append((keyname, None, d)) # valuespec Dictionary, title used from dict
@@ -81,7 +81,7 @@ def edit_dictionaries(dictionaries, value, focus=None, hover_help=True,
         messages = []
         new_value = {}
         for keyname, _section_title, entries in sections:
-            if type(entries) == list:
+            if isinstance(entries, list):
                 new_value[keyname] = value.get(keyname, {}).copy()
                 for name, vs in entries:
                     if len(sections) == 1:
@@ -129,7 +129,7 @@ def edit_dictionaries(dictionaries, value, focus=None, hover_help=True,
     html.begin_form(formname, method=method)
     for keyname, title1, entries in sections:
         subvalue = value.get(keyname, {})
-        if type(entries) == list:
+        if isinstance(entries, list):
             header(title1)
             first = True
             for name, vs in entries:
@@ -212,7 +212,7 @@ twofivesix = "".join(map(chr, range(0,256)))
 def strip_bad_chars(x):
     s = "".join([c for c in x if c > ' ' and c < 'z'])
 
-    if type(x) == unicode:
+    if isinstance(x, unicode):
         s = unicode(s)
         return s.translate({
             ord(u"'"): None,

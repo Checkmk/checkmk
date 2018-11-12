@@ -53,6 +53,8 @@ declare_user_attribute(
 
 
 def transform_disable_notification(p):
+    if p is None:
+        return {}
     if isinstance(p, bool):
         if p:
             return {"disable": True}

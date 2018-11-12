@@ -3343,11 +3343,11 @@ function pagetype_add_to_container(page_type, page_name)
     var url = 'ajax_pagetype_add_element.py'
               + '?page_type=' + page_type
               + '&page_name=' + page_name
-              + '&element_type=' + element_type
-              + '&create_info='  + encodeURIComponent(create_info_json);
+              + '&element_type=' + element_type;
 
     call_ajax(url, {
-        method           : "GET",
+        method           : "POST",
+        post_data        : "create_info=" + encodeURIComponent(create_info_json),
         response_handler : function(handler_data, response_body) {
             // We get to lines of response. The first is an URL we should be
             // redirected to. The second is "true" if we should reload the

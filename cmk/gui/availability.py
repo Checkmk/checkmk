@@ -60,36 +60,40 @@ from cmk.gui.globals import html
 #   '----------------------------------------------------------------------'
 
 host_availability_columns = [
-    ( "up",                        "state0",        _("UP"),          None ),
-    ( "down",                      "state2",        _("DOWN"),        None ),
-    ( "unreach",                   "state3",        _("UNREACH"),     None ),
-    ( "flapping",                  "flapping",      _("Flapping"),    None ),
-    ( "in_downtime",               "downtime",      _("Downtime"),    _("The host was in a scheduled downtime") ),
-    ( "outof_notification_period", "",              _("OO/Notif"),    _("Out of Notification Period") ),
-    ( "outof_service_period",      "ooservice",     _("OO/Service") , _("Out of Service Period") ),
-    ( "unmonitored",               "unmonitored",   _("N/A"),         _("During this time period no monitoring data is available") ),
+    ("up", "state0", _("UP"), None),
+    ("down", "state2", _("DOWN"), None),
+    ("unreach", "state3", _("UNREACH"), None),
+    ("flapping", "flapping", _("Flapping"), None),
+    ("in_downtime", "downtime", _("Downtime"), _("The host was in a scheduled downtime")),
+    ("outof_notification_period", "", _("OO/Notif"), _("Out of Notification Period")),
+    ("outof_service_period", "ooservice", _("OO/Service"), _("Out of Service Period")),
+    ("unmonitored", "unmonitored", _("N/A"),
+     _("During this time period no monitoring data is available")),
 ]
 
 service_availability_columns = [
-    ( "ok",                        "state0",        _("OK"),          None ),
-    ( "warn",                      "state1",        _("WARN"),        None ),
-    ( "crit",                      "state2",        _("CRIT"),        None ),
-    ( "unknown",                   "state3",        _("UNKNOWN"),     None ),
-    ( "flapping",                  "flapping",      _("Flapping"),    None ),
-    ( "host_down",                 "hostdown",      _("H.Down"),      _("The host was down") ),
-    ( "in_downtime",               "downtime",      _("Downtime"),    _("The host or service was in a scheduled downtime") ),
-    ( "outof_notification_period", "",              _("OO/Notif"),    _("Out of Notification Period") ),
-    ( "outof_service_period",      "ooservice",     _("OO/Service"),  _("Out of Service Period") ),
-    ( "unmonitored",               "unmonitored",   _("N/A"),         _("During this time period no monitoring data is available") ),
+    ("ok", "state0", _("OK"), None),
+    ("warn", "state1", _("WARN"), None),
+    ("crit", "state2", _("CRIT"), None),
+    ("unknown", "state3", _("UNKNOWN"), None),
+    ("flapping", "flapping", _("Flapping"), None),
+    ("host_down", "hostdown", _("H.Down"), _("The host was down")),
+    ("in_downtime", "downtime", _("Downtime"),
+     _("The host or service was in a scheduled downtime")),
+    ("outof_notification_period", "", _("OO/Notif"), _("Out of Notification Period")),
+    ("outof_service_period", "ooservice", _("OO/Service"), _("Out of Service Period")),
+    ("unmonitored", "unmonitored", _("N/A"),
+     _("During this time period no monitoring data is available")),
 ]
 
 bi_availability_columns = [
-    ( "ok",                        "state0",        _("OK"),          None ),
-    ( "warn",                      "state1",        _("WARN"),        None ),
-    ( "crit",                      "state2",        _("CRIT"),        None ),
-    ( "unknown",                   "state3",        _("UNKNOWN"),     None ),
-    ( "in_downtime",               "downtime",      _("Downtime"),    _("The aggregate was in a scheduled downtime") ),
-    ( "unmonitored",               "unmonitored",   _("N/A"),         _("During this time period no monitoring data is available") ),
+    ("ok", "state0", _("OK"), None),
+    ("warn", "state1", _("WARN"), None),
+    ("crit", "state2", _("CRIT"), None),
+    ("unknown", "state3", _("UNKNOWN"), None),
+    ("in_downtime", "downtime", _("Downtime"), _("The aggregate was in a scheduled downtime")),
+    ("unmonitored", "unmonitored", _("N/A"),
+     _("During this time period no monitoring data is available")),
 ]
 
 availability_columns = {
@@ -99,12 +103,11 @@ availability_columns = {
 }
 
 statistics_headers = {
-    "min" : _("Shortest"),
-    "max" : _("Longest"),
-    "avg" : _("Average"),
-    "cnt" : _("Count"),
+    "min": _("Shortest"),
+    "max": _("Longest"),
+    "avg": _("Average"),
+    "cnt": _("Count"),
 }
-
 
 #.
 #   .--Options-------------------------------------------------------------.
@@ -134,406 +137,342 @@ def get_avoption_entries(what):
 def get_av_display_options(what):
     if what == "bi":
         grouping_choices = [
-          ( None,             _("Do not group") ),
-          ( "host",           _("By Aggregation Group") ),
+            (None, _("Do not group")),
+            ("host", _("By Aggregation Group")),
         ]
     else:
         grouping_choices = [
-          ( None,             _("Do not group") ),
-          ( "host",           _("By Host")       ),
-          ( "host_groups",    _("By Host group") ),
-          ( "service_groups", _("By Service group") ),
+            (None, _("Do not group")),
+            ("host", _("By Host")),
+            ("host_groups", _("By Host group")),
+            ("service_groups", _("By Service group")),
         ]
 
     return [
         # Time range selection
-        ( "rangespec",
-          "double",
-          False,
-          Timerange(
-              title = _("Time Range"),
-              default_value = 'd0',
+        ("rangespec", "double", False, Timerange(
+            title=_("Time Range"),
+            default_value='d0',
         )),
 
         # Labelling and Texts
-        ( "labelling",
-          "double",
-          True,
-          ListChoice(
-              title = _("Labelling Options"),
-              choices = [
-                  ( "omit_headers",            _("Do not display column headers")),
-                  ( "omit_host",               _("Do not display the host name")),
-                  ( "show_alias",              _("Display the host alias")),
-                  ( "use_display_name",        _("Use alternative display name for services")),
-                  ( "omit_buttons",            _("Do not display icons for history and timeline")),
-                  ( "display_timeline_legend", _("Display legend for timeline")),
-                  ( "omit_av_levels",          _("Do not display legend for availability levels")),
-              ]
-        )),
+        ("labelling", "double", True,
+         ListChoice(
+             title=_("Labelling Options"),
+             choices=[
+                 ("omit_headers", _("Do not display column headers")),
+                 ("omit_host", _("Do not display the host name")),
+                 ("show_alias", _("Display the host alias")),
+                 ("use_display_name", _("Use alternative display name for services")),
+                 ("omit_buttons", _("Do not display icons for history and timeline")),
+                 ("display_timeline_legend", _("Display legend for timeline")),
+                 ("omit_av_levels", _("Do not display legend for availability levels")),
+             ])),
 
         # Visual levels for the availability
-        ( "av_levels",
-          "double",
-          True,
-          Optional(
-              Tuple(
-                  elements = [
-                      Percentage(title = _("Warning below"), default_value = 99, display_format="%.3f", size=7),
-                      Percentage(title = _("Critical below"), default_value = 95, display_format="%.3f", size=7),
-                  ]
-              ),
-              title = _("Visual levels for the availability (OK percentage)"),
-        )),
+        ("av_levels", "double", True,
+         Optional(
+             Tuple(elements=[
+                 Percentage(
+                     title=_("Warning below"), default_value=99, display_format="%.3f", size=7),
+                 Percentage(
+                     title=_("Critical below"), default_value=95, display_format="%.3f", size=7),
+             ]),
+             title=_("Visual levels for the availability (OK percentage)"),
+         )),
 
         # Show colummns for min, max, avg duration and count
-        ( "outage_statistics",
-          "double",
-          True,
-          Tuple(
-              title = _("Outage statistics"),
-              orientation = "horizontal",
-              elements = [
-                  ListChoice(
-                      title = _("Aggregations"),
-                      choices = [
-                        ( "min", _("min. duration" )),
-                        ( "max", _("max. duration" )),
-                        ( "avg", _("avg. duration" )),
-                        ( "cnt", _("count" )),
-                      ]
-                  ),
-                  ListChoice(
-                      title = _("For these states:"),
-                      columns = 2,
-                      choices = [
-                          ( "ok",                        _("OK/Up") ),
-                          ( "warn",                      _("Warn") ),
-                          ( "crit",                      _("Crit/Down") ),
-                          ( "unknown",                   _("Unknown/Unreach") ),
-                          ( "flapping",                  _("Flapping") ),
-                          ( "host_down",                 _("Host Down") ),
-                          ( "in_downtime",               _("Downtime") ),
-                          ( "outof_notification_period", _("OO/Notif") ),
-                      ]
-                  )
-              ]
-        )),
-
-        ( "timeformat",
-          "double",
-          True,
-          Tuple(
-              title = _("Format time ranges"),
-              elements = [
-                  RadioChoice(
-                      choices = [
-                          ("both", _("Percent and time")),
-                          ("perc", _("Only percent")),
-                          ("time", _("Only time")),
-                      ],
-                      default_value = "perc",
-                  ),
-                  DropdownChoice(
-                      choices = [
-                          ("percentage_0", _("Percentage - XX %") ),
-                          ("percentage_1", _("Percentage - XX.X %") ),
-                          ("percentage_2", _("Percentage - XX.XX %") ),
-                          ("percentage_3", _("Percentage - XX.XXX %") ),
-                      ],
-                      default_value = "percentage_2"
-                  ),
-                  DropdownChoice(
-                      choices = [
-                          ("seconds", _("Seconds") ),
-                          ("minutes", _("Minutes") ),
-                          ("hours",   _("Hours") ),
-                          ("hhmmss",  _("HH:MM:SS") ),
-                      ],
-                      default_value = None
-                  ),
-              ],
-        )),
+        ("outage_statistics", "double", True,
+         Tuple(
+             title=_("Outage statistics"),
+             orientation="horizontal",
+             elements=[
+                 ListChoice(
+                     title=_("Aggregations"),
+                     choices=[
+                         ("min", _("min. duration")),
+                         ("max", _("max. duration")),
+                         ("avg", _("avg. duration")),
+                         ("cnt", _("count")),
+                     ]),
+                 ListChoice(
+                     title=_("For these states:"),
+                     columns=2,
+                     choices=[
+                         ("ok", _("OK/Up")),
+                         ("warn", _("Warn")),
+                         ("crit", _("Crit/Down")),
+                         ("unknown", _("Unknown/Unreach")),
+                         ("flapping", _("Flapping")),
+                         ("host_down", _("Host Down")),
+                         ("in_downtime", _("Downtime")),
+                         ("outof_notification_period", _("OO/Notif")),
+                     ])
+             ])),
+        ("timeformat", "double", True,
+         Tuple(
+             title=_("Format time ranges"),
+             elements=[
+                 RadioChoice(
+                     choices=[
+                         ("both", _("Percent and time")),
+                         ("perc", _("Only percent")),
+                         ("time", _("Only time")),
+                     ],
+                     default_value="perc",
+                 ),
+                 DropdownChoice(
+                     choices=[
+                         ("percentage_0", _("Percentage - XX %")),
+                         ("percentage_1", _("Percentage - XX.X %")),
+                         ("percentage_2", _("Percentage - XX.XX %")),
+                         ("percentage_3", _("Percentage - XX.XXX %")),
+                     ],
+                     default_value="percentage_2"),
+                 DropdownChoice(
+                     choices=[
+                         ("seconds", _("Seconds")),
+                         ("minutes", _("Minutes")),
+                         ("hours", _("Hours")),
+                         ("hhmmss", _("HH:MM:SS")),
+                     ],
+                     default_value=None),
+             ],
+         )),
 
         # Omit all non-OK columns
-        ( "av_mode",
-          "single",
-          True,
-          Checkbox(
-              title = _("Availability"),
-              label = _("Just show the availability (i.e. OK/UP)"),
-        )),
+        ("av_mode", "single", True,
+         Checkbox(
+             title=_("Availability"),
+             label=_("Just show the availability (i.e. OK/UP)"),
+         )),
 
         # Group by Host, Hostgroup or Servicegroup?
-        ( "grouping",
-          "single",
-          True,
-          DropdownChoice(
-              title = _("Grouping"),
-              choices = grouping_choices,
-              default_value = None,
-        )),
+        ("grouping", "single", True,
+         DropdownChoice(
+             title=_("Grouping"),
+             choices=grouping_choices,
+             default_value=None,
+         )),
 
         # Format of numbers
-        ( "dateformat",
-          "single",
-          True,
-          DropdownChoice(
-              title = _("Format time stamps as"),
-              choices = [
-                  ("yyyy-mm-dd hh:mm:ss", _("YYYY-MM-DD HH:MM:SS") ),
-                  ("epoch",               _("Unix Timestamp (Epoch)") ),
-              ],
-              default_value = "yyyy-mm-dd hh:mm:ss",
-        )),
+        ("dateformat", "single", True,
+         DropdownChoice(
+             title=_("Format time stamps as"),
+             choices=[
+                 ("yyyy-mm-dd hh:mm:ss", _("YYYY-MM-DD HH:MM:SS")),
+                 ("epoch", _("Unix Timestamp (Epoch)")),
+             ],
+             default_value="yyyy-mm-dd hh:mm:ss",
+         )),
 
         # Summary line
-        ( "summary",
-          "single",
-          True,
-          DropdownChoice(
-              title = _("Summary line"),
-              choices = [
-                  ( None,      _("Do not show a summary line") ),
-                  ( "sum",     _("Display total sum (for % the average)") ),
-                  ( "average", _("Display average") ),
-              ],
-              default_value = "sum",
-        )),
+        ("summary", "single", True,
+         DropdownChoice(
+             title=_("Summary line"),
+             choices=[
+                 (None, _("Do not show a summary line")),
+                 ("sum", _("Display total sum (for % the average)")),
+                 ("average", _("Display average")),
+             ],
+             default_value="sum",
+         )),
 
         # Timeline
-        ( "show_timeline",
-          "single",
-          True,
-          Checkbox(
-              title = _("Timeline"),
-              label = _("Show timeline of each object directly in table"),
-        )),
-
+        ("show_timeline", "single", True,
+         Checkbox(
+             title=_("Timeline"),
+             label=_("Show timeline of each object directly in table"),
+         )),
     ]
 
 
 def get_av_computation_options():
     return [
         # How to deal with downtimes
-        ( "downtimes",
-          "double",
-          True,
-          Dictionary(
-              title = _("Scheduled Downtimes"),
-              columns = 2,
-              elements = [
-                  ( "include",
-                    DropdownChoice(
-                        title = _("Handling"),
-                        choices = [
-                          ( "honor", _("Honor scheduled downtimes") ),
-                          ( "ignore", _("Ignore scheduled downtimes") ),
-                          ( "exclude", _("Exclude scheduled downtimes" ) ),
-                       ],
-                       default_value = "honor",
-                    )
-                  ),
-                  ( "exclude_ok",
-                    Checkbox(
-                        title = _("Phases"),
-                        label = _("Treat phases of UP/OK as non-downtime"))
-                  ),
-              ],
-              optional_keys = False,
-        )),
+        ("downtimes", "double", True,
+         Dictionary(
+             title=_("Scheduled Downtimes"),
+             columns=2,
+             elements=[
+                 ("include",
+                  DropdownChoice(
+                      title=_("Handling"),
+                      choices=[
+                          ("honor", _("Honor scheduled downtimes")),
+                          ("ignore", _("Ignore scheduled downtimes")),
+                          ("exclude", _("Exclude scheduled downtimes")),
+                      ],
+                      default_value="honor",
+                  )),
+                 ("exclude_ok",
+                  Checkbox(title=_("Phases"), label=_("Treat phases of UP/OK as non-downtime"))),
+             ],
+             optional_keys=False,
+         )),
 
         # How to deal with downtimes, etc.
-        ( "consider",
-          "double",
-          True,
-          Dictionary(
-             title = _("Status Classification"),
-             columns = 2,
-             elements = [
-                 ( "flapping",
-                    Checkbox(
-                        title = _("Consider periods of flapping states"),
-                        default_value = True),
-                 ),
-                 ( "host_down",
-                    Checkbox(
-                        title = _("Consider times where the host is down"),
-                        default_value = True),
-                 ),
-                 ( "unmonitored",
-                    Checkbox(
-                        title = _("Include unmonitored time"),
-                        default_value = True),
-                 ),
+        ("consider", "double", True,
+         Dictionary(
+             title=_("Status Classification"),
+             columns=2,
+             elements=[
+                 ("flapping",
+                  Checkbox(title=_("Consider periods of flapping states"), default_value=True)),
+                 ("host_down",
+                  Checkbox(title=_("Consider times where the host is down"), default_value=True)),
+                 ("unmonitored", Checkbox(title=_("Include unmonitored time"), default_value=True)),
              ],
-             optional_keys = False,
-        )),
-
-        ( "state_grouping",
-          "double",
-          True,
-          Dictionary(
-             title = _("Service Status Grouping"),
-             columns = 2,
-             elements = [
-                 ( "warn",
-                    DropdownChoice(
-                        title = _("Treat Warning as"),
-                        choices = [
-                          ( "ok",      _("OK") ),
-                          ( "warn",    _("WARN") ),
-                          ( "crit",    _("CRIT") ),
-                          ( "unknown", _("UNKNOWN") ),
-                        ],
-                        default_value = "warn",
-                      ),
-                 ),
-                 ( "unknown",
-                    DropdownChoice(
-                        title = _("Treat Unknown/Unreachable as"),
-                        choices = [
-                          ( "ok",      _("OK") ),
-                          ( "warn",    _("WARN") ),
-                          ( "crit",    _("CRIT") ),
-                          ( "unknown", _("UNKNOWN") ),
-                        ],
-                        default_value = "unknown",
-                      ),
-                 ),
-                 ( "host_down",
-                    DropdownChoice(
-                        title = _("Treat Host Down as"),
-                        choices = [
-                          ( "ok",        _("OK") ),
-                          ( "warn",      _("WARN") ),
-                          ( "crit",      _("CRIT") ),
-                          ( "unknown",   _("UNKNOWN") ),
-                          ( "host_down", _("Host Down") ),
-                        ],
-                        default_value = "host_down",
-                      ),
-                 ),
+             optional_keys=False,
+         )),
+        ("state_grouping", "double", True,
+         Dictionary(
+             title=_("Service Status Grouping"),
+             columns=2,
+             elements=[
+                 ("warn",
+                  DropdownChoice(
+                      title=_("Treat Warning as"),
+                      choices=[
+                          ("ok", _("OK")),
+                          ("warn", _("WARN")),
+                          ("crit", _("CRIT")),
+                          ("unknown", _("UNKNOWN")),
+                      ],
+                      default_value="warn",
+                  )),
+                 ("unknown",
+                  DropdownChoice(
+                      title=_("Treat Unknown/Unreachable as"),
+                      choices=[
+                          ("ok", _("OK")),
+                          ("warn", _("WARN")),
+                          ("crit", _("CRIT")),
+                          ("unknown", _("UNKNOWN")),
+                      ],
+                      default_value="unknown",
+                  )),
+                 ("host_down",
+                  DropdownChoice(
+                      title=_("Treat Host Down as"),
+                      choices=[
+                          ("ok", _("OK")),
+                          ("warn", _("WARN")),
+                          ("crit", _("CRIT")),
+                          ("unknown", _("UNKNOWN")),
+                          ("host_down", _("Host Down")),
+                      ],
+                      default_value="host_down",
+                  )),
              ],
-             optional_keys = False,
-        )),
+             optional_keys=False,
+         )),
 
         # Filter rows according to actual availability
-        ( "av_filter_outages",
-          "double",
-          True,
-          Dictionary(
-              title = _("Only show objects with outages"),
-              columns = 2,
-              elements = [
-                 ( "warn",   Percentage(title = _("Show only rows with WARN of at least"), default_value = 0.0)),
-                 ( "crit",   Percentage(title = _("Show only rows with CRIT of at least"), default_value = 0.0)),
-                 ( "non-ok", Percentage(title = _("Show only rows with non-OK of at least"), default_value = 0.0)),
-              ],
-              optional_keys = False,
-        )),
+        ("av_filter_outages", "double", True,
+         Dictionary(
+             title=_("Only show objects with outages"),
+             columns=2,
+             elements=[
+                 ("warn",
+                  Percentage(title=_("Show only rows with WARN of at least"), default_value=0.0)),
+                 ("crit",
+                  Percentage(title=_("Show only rows with CRIT of at least"), default_value=0.0)),
+                 ("non-ok",
+                  Percentage(title=_("Show only rows with non-OK of at least"), default_value=0.0)),
+             ],
+             optional_keys=False,
+         )),
 
         # Optionally group some states together
-        ( "host_state_grouping",
-          "single",
-          True,
-          Dictionary(
-             title = _("Host Status Grouping"),
-             columns = 2,
-             elements = [
-                 ( "unreach",
-                    DropdownChoice(
-                        # TOOD: aligned
-                        title = _("Treat Unreachable as"),
-                        choices = [
-                          ( "up",        _("UP") ),
-                          ( "down",      _("DOWN") ),
-                          ( "unreach",   _("UNREACH") ),
-                        ],
-                        default_value = "unreach",
-                      ),
-                 ),
-             ],
-             optional_keys = False,
-        )),
+        (
+            "host_state_grouping",
+            "single",
+            True,
+            Dictionary(
+                title=_("Host Status Grouping"),
+                columns=2,
+                elements=[
+                    (
+                        "unreach",
+                        DropdownChoice(
+                            # TOOD: aligned
+                            title=_("Treat Unreachable as"),
+                            choices=[
+                                ("up", _("UP")),
+                                ("down", _("DOWN")),
+                                ("unreach", _("UNREACH")),
+                            ],
+                            default_value="unreach",
+                        ),
+                    ),
+                ],
+                optional_keys=False,
+            )),
 
         # How to deal with the service periods
-        ( "service_period",
-          "single",
-          True,
-           DropdownChoice(
-               title = _("Service Time"),
-               choices = [
-                  ( "honor",    _("Base report only on service times") ),
-                  ( "ignore",   _("Include both service and non-service times" ) ),
-                  ( "exclude",  _("Base report only on non-service times" ) ),
-               ],
-               default_value = "honor",
-        )),
+        ("service_period", "single", True,
+         DropdownChoice(
+             title=_("Service Time"),
+             choices=[
+                 ("honor", _("Base report only on service times")),
+                 ("ignore", _("Include both service and non-service times")),
+                 ("exclude", _("Base report only on non-service times")),
+             ],
+             default_value="honor",
+         )),
 
         # How to deal with times out of the notification period
-        ( "notification_period",
-          "single",
-          True,
-           DropdownChoice(
-               title = _("Notification Period"),
-               choices = [
-                  ( "honor", _("Distinguish times in and out of notification period") ),
-                  ( "exclude", _("Exclude times out of notification period" ) ),
-                  ( "ignore", _("Ignore notification period") ),
-               ],
-               default_value = "ignore",
-        )),
+        ("notification_period", "single", True,
+         DropdownChoice(
+             title=_("Notification Period"),
+             choices=[
+                 ("honor", _("Distinguish times in and out of notification period")),
+                 ("exclude", _("Exclude times out of notification period")),
+                 ("ignore", _("Ignore notification period")),
+             ],
+             default_value="ignore",
+         )),
 
         # Short time intervals
-        ( "short_intervals",
-          "single",
-          True,
-          Integer(
-              title = _("Short Time Intervals"),
-              label = _("Ignore intervals shorter or equal"),
-              minvalue = 0,
-              unit = _("sec"),
-              default_value = 0,
-        )),
+        ("short_intervals", "single", True,
+         Integer(
+             title=_("Short Time Intervals"),
+             label=_("Ignore intervals shorter or equal"),
+             minvalue=0,
+             unit=_("sec"),
+             default_value=0,
+         )),
 
         # Merging
-        ( "dont_merge",
-          "single",
-          True,
-          Checkbox(
-              title = _("Phase Merging"),
-              label = _("Do not merge consecutive phases with equal state"),
-        )),
-
-        ( "timelimit",
-          "single",
-          False,
-          Age(
-              title = _("Query Time Limit"),
-              help = _("Limit the execution time of the query, in order to "
-                       "avoid a hanging system."),
-              unit = _("sec"),
-              default_value = 30,
-        )),
-
-        ( "logrow_limit",
-          "single",
-          True,
-          Integer(
-              title = _("Limit processed data"),
-              help  = _("The availability is computed by processing entries from a data table "
-                        "of historic events and state phases. In order to avoid a hanging system "
-                        "in cases where your time range and filtering would accept a vast amount "
-                        "of data entries, the number of processed entries is limited. You can raise "
-                        "this limit here if you really need to process a huge amount of data. Set this "
-                        "to zero in order to disable the limit."),
-              label = _("Process at most"),
-              unit = _("status entries"),
-              minvalue = 0,
-              default_value = 5000,
-        )),
-      ]
+        ("dont_merge", "single", True,
+         Checkbox(
+             title=_("Phase Merging"),
+             label=_("Do not merge consecutive phases with equal state"),
+         )),
+        ("timelimit", "single", False,
+         Age(
+             title=_("Query Time Limit"),
+             help=_("Limit the execution time of the query, in order to "
+                    "avoid a hanging system."),
+             unit=_("sec"),
+             default_value=30,
+         )),
+        ("logrow_limit", "single", True,
+         Integer(
+             title=_("Limit processed data"),
+             help=_("The availability is computed by processing entries from a data table "
+                    "of historic events and state phases. In order to avoid a hanging system "
+                    "in cases where your time range and filtering would accept a vast amount "
+                    "of data entries, the number of processed entries is limited. You can raise "
+                    "this limit here if you really need to process a huge amount of data. Set this "
+                    "to zero in order to disable the limit."),
+             label=_("Process at most"),
+             unit=_("status entries"),
+             minvalue=0,
+             default_value=5000,
+         )),
+    ]
 
 
 # Creates a function for rendering time values according to
@@ -1337,9 +1276,10 @@ def layout_availability_table(what, group_title, availability_table, avoptions):
             else:
                 timeline_url = html.makeuri([("av_mode", "timeline"), ("av_aggr_group", host),
                                              ("aggr_name", service), ("view_name", "aggr_single")])
-            urls.append(( "timeline", _("Timeline"), timeline_url ))
+            urls.append(("timeline", _("Timeline"), timeline_url))
             if what != "bi":
-                urls.append(("history", _("Event History"), history_url_of((site, host, service), time_range)))
+                urls.append(("history", _("Event History"),
+                             history_url_of((site, host, service), time_range)))
         row["urls"] = urls
 
         # Column with host/service or aggregate name
@@ -1528,8 +1468,7 @@ def layout_timeline(what, timeline_rows, considered_duration, avoptions, style):
 
     def chaos_period(chaos_begin, chaos_end, chaos_count, chaos_width):
         title = _("%d chaotic state changes from %s until %s (%s)") % (
-            chaos_count,
-            render_date(chaos_begin), render_date(chaos_end),
+            chaos_count, render_date(chaos_begin), render_date(chaos_end),
             apply_render_number_functions(chaos_end - chaos_begin, considered_duration))
         return (None, title, chaos_width, "chaos")
 
@@ -1554,7 +1493,8 @@ def layout_timeline(what, timeline_rows, considered_duration, avoptions, style):
             if sid != state_id:
                 continue
 
-            title = _("From %s until %s (%s) %s") % (from_text, until_text, duration_text, help_txt and help_txt or sname)
+            title = _("From %s until %s (%s) %s") % (from_text, until_text, duration_text,
+                                                     help_txt and help_txt or sname)
             if "log_output" in row and row["log_output"]:
                 title += " - " + row["log_output"]
             width = rest_percentage * row["duration"] / total_duration
@@ -1701,6 +1641,7 @@ def find_next_choord(broken, scale):
     elif old_dst == 0 and dst == 1:
         epoch -= 3600
     return epoch, title
+
 
 #.
 #   .--BI------------------------------------------------------------------.

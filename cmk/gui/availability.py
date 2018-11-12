@@ -508,7 +508,7 @@ def render_number_function(timeformat):
 
 def prepare_avo_timeformats(timeformat):
     this_timeformat = [("percentage_2", render_number_function("percentage_2"))]
-    if type(timeformat) in [list, tuple]:
+    if isinstance(timeformat, (list, tuple)):
         if timeformat[0] == "both":
             this_timeformat = [(x, render_number_function(x)) for x in timeformat[1:]]
         elif timeformat[0] == "perc":

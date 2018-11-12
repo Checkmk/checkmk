@@ -45,7 +45,16 @@ import types
 import base64
 import hashlib
 import socket
+import numbers
 import ipaddress
+
+try:
+    # does not exist in Py3, but is supper class of str & unicode in py2
+    basestring
+except NameError:
+    basestring = str  # pylint: disable=redefined-builtin
+    unicode = str  # pylint: disable=redefined-builtin
+
 from Cryptodome.PublicKey import RSA
 from UserDict import DictMixin
 from enum import Enum
@@ -93,7 +102,7 @@ class ValueSpec(object):
         return self._title
 
     def help(self):
-        if type(self._help) in [types.FunctionType, types.MethodType]:
+        if isinstance(self._help, (types.FunctionType, types.MethodType)):
             return self._help()
         return self._help
 
@@ -122,7 +131,7 @@ class ValueSpec(object):
     # for same cases where the default value is known.
     def default_value(self):
         try:
-            if type(self._default_value) in [types.FunctionType, types.MethodType]:
+            if isinstance(self._default_value, (types.FunctionType, types.MethodType)):
                 return self._default_value()
             return self._default_value
         except:
@@ -354,7 +363,7 @@ class Integer(ValueSpec):
         return text
 
     def validate_datatype(self, value, varprefix):
-        if type(value) not in [int, long]:
+        if isinstance(value, numbers.Integral):
             raise MKUserError(
                 varprefix,
                 _("The value %r has the wrong type %s, but must be of type int") %
@@ -522,7 +531,7 @@ class TextUnicode(TextAscii):
         return html.get_unicode_input(varprefix, "").strip()
 
     def validate_datatype(self, value, varprefix):
-        if type(value) not in [str, unicode]:
+        if not isinstance(value, basestring):
             raise MKUserError(
                 varprefix,
                 _("The value must be of type str or unicode, but it has type %s") %
@@ -766,7 +775,7 @@ class TextAsciiAutocomplete(TextAscii):
         # Check for correct result_data format
         assert isinstance(result_data, list)
         if result_data:
-            assert type(result_data[0]) in [list, tuple]
+            assert isinstance(result_data[0], (list, tuple))
             assert len(result_data[0]) == 2
 
         html.write(json.dumps(result_data))
@@ -1585,7 +1594,7 @@ class Float(Integer):
         if isinstance(value, float):
             return
 
-        if type(value) in [int, long] and self._allow_int:
+        if isinstance(value, numbers.Integral) and self._allow_int:
             return
 
         raise MKUserError(
@@ -1613,7 +1622,7 @@ class Percentage(Float):
 
     def validate_datatype(self, value, varprefix):
         if self._allow_int:
-            if type(value) not in [int, float]:
+            if not isinstance(value, (int, float)):
                 raise MKUserError(
                     varprefix,
                     _("The value %r has type %s, but must be either float or int") %
@@ -2518,7 +2527,7 @@ class RelativeDate(OptionalDropdownChoice):
         return today() + reldays * seconds_per_day
 
     def validate_datatype(self, value, varprefix):
-        if type(value) not in [float, int]:
+        if not isinstance(value, (int, float)):
             raise MKUserError(varprefix, _("Date must be a number value"))
 
     def validate_value(self, value, varprefix):
@@ -2669,7 +2678,7 @@ class AbsoluteDate(ValueSpec):
     def validate_datatype(self, value, varprefix):
         if value == None and self._allow_empty:
             return
-        if type(value) not in [int, float]:
+        if not isinstance(value, (int, float)):
             raise MKUserError(
                 varprefix,
                 _("The type of the timestamp must be int or float, but is %s") % type_name(value))
@@ -3828,7 +3837,7 @@ class AutoTimestamp(FixedValue):
         return time.strftime("%F %T", time.localtime(value))
 
     def validate_datatype(self, value, varprefix):
-        if type(value) not in [int, float]:
+        if not isinstance(value, (int, float)):
             return MKUserError(varprefix, _("Invalid datatype of timestamp: must be int or float."))
 
 

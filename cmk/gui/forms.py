@@ -29,6 +29,7 @@ from cmk.gui.i18n import _
 from cmk.gui.globals import html
 from cmk.gui.exceptions import MKUserError
 
+
 # A input function with the same call syntax as htmllib.textinput()
 def textinput(valuespec, varprefix, defvalue):
     if html.form_filled_in():
@@ -36,6 +37,7 @@ def textinput(valuespec, varprefix, defvalue):
     else:
         value = defvalue
     valuespec.render_input(varprefix, value)
+
 
 def get_input(valuespec, varprefix):
     value = valuespec.from_html_vars(varprefix)
@@ -52,6 +54,7 @@ def edit_dictionary(entries, value, **args):
         return result["value"]
     return result
 
+
 # Edit a list of several dictionaries. Those can either be dictionary
 # valuespec or just a list of elements. Each entry in dictionaries is
 # a pair of key and either a list of elements or a Dictionary.
@@ -61,10 +64,19 @@ def edit_dictionary(entries, value, **args):
 # TODO: Remove all call sites and clean this up! The mechanic of this
 # and the edit_dictionary() is very uncommon compared to the other
 # usages of valuespecs.
-def edit_dictionaries(dictionaries, value, focus=None, hover_help=True,
-                    validate=None, buttontext=None, title=None,
-                    buttons = None, method="GET", preview=False,
-                    varprefix="", formname="form", consume_transid = True):
+def edit_dictionaries(dictionaries,
+                      value,
+                      focus=None,
+                      hover_help=True,
+                      validate=None,
+                      buttontext=None,
+                      title=None,
+                      buttons=None,
+                      method="GET",
+                      preview=False,
+                      varprefix="",
+                      formname="form",
+                      consume_transid=True):
 
     # Convert list of entries/dictionaries
     sections = []
@@ -72,7 +84,7 @@ def edit_dictionaries(dictionaries, value, focus=None, hover_help=True,
         if isinstance(d, list):
             sections.append((keyname, title or _("Properties"), d))
         else:
-            sections.append((keyname, None, d)) # valuespec Dictionary, title used from dict
+            sections.append((keyname, None, d))  # valuespec Dictionary, title used from dict
 
     if html.var("filled_in") == formname and html.transaction_valid():
         if not preview and consume_transid:
@@ -125,7 +137,6 @@ def edit_dictionaries(dictionaries, value, focus=None, hover_help=True,
         else:
             return new_value
 
-
     html.begin_form(formname, method=method)
     for keyname, title1, entries in sections:
         subvalue = value.get(keyname, {})
@@ -150,7 +161,6 @@ def edit_dictionaries(dictionaries, value, focus=None, hover_help=True,
         else:
             entries.render_input_as_form(keyname, subvalue)
 
-
     end()
     if buttons:
         for name, button_title, _icon in buttons:
@@ -159,13 +169,22 @@ def edit_dictionaries(dictionaries, value, focus=None, hover_help=True,
         if buttontext == None:
             buttontext = _("Save")
         html.button("save", buttontext)
-    html.del_var("filled_in") # Should be ignored be hidden_fields, but I do not dare to change it there
+    # Should be ignored be hidden_fields, but I do not dare to change it there
+    html.del_var("filled_in")
     html.hidden_fields()
     html.end_form()
 
+
 # Similar but for editing an arbitrary valuespec
-def edit_valuespec(vs, value, buttontext=None, method="GET", varprefix="",
-                   validate=None, formname="form", consume_transid = True, focus=None):
+def edit_valuespec(vs,
+                   value,
+                   buttontext=None,
+                   method="GET",
+                   varprefix="",
+                   validate=None,
+                   formname="form",
+                   consume_transid=True,
+                   focus=None):
 
     if html.var("filled_in") == formname and html.transaction_valid():
         if consume_transid:
@@ -198,7 +217,8 @@ def edit_valuespec(vs, value, buttontext=None, method="GET", varprefix="",
     if buttontext == None:
         buttontext = _("Save")
     html.button("save", buttontext)
-    html.del_var("filled_in") # Should be ignored be hidden_fields, but I do not dare to change it there
+    # Should be ignored be hidden_fields, but I do not dare to change it there
+    html.del_var("filled_in")
     html.hidden_fields()
     if focus:
         html.set_focus(focus)
@@ -206,9 +226,12 @@ def edit_valuespec(vs, value, buttontext=None, method="GET", varprefix="",
         vs.set_focus(varprefix)
     html.end_form()
 
+
 # New functions for painting forms
 
-twofivesix = "".join(map(chr, range(0,256)))
+twofivesix = "".join(map(chr, range(0, 256)))
+
+
 def strip_bad_chars(x):
     s = "".join([c for c in x if c > ' ' and c < 'z'])
 
@@ -224,7 +247,8 @@ def strip_bad_chars(x):
         })
     return s.translate(twofivesix, "'&;<>\"")
 
-def header(title, isopen = True, table_id = "", narrow = False, css=None):
+
+def header(title, isopen=True, table_id="", narrow=False, css=None):
     #html.guitest_record_output("forms", ("header", title))
     global g_header_open
     global g_section_open
@@ -235,14 +259,16 @@ def header(title, isopen = True, table_id = "", narrow = False, css=None):
     except:
         pass
 
-    html.open_table(id_=table_id if table_id else None,
-                    class_=["nform", "narrow" if narrow else None, css if css else None])
+    html.open_table(
+        id_=table_id if table_id else None,
+        class_=["nform", "narrow" if narrow else None, css if css else None])
     fold_id = strip_bad_chars(title)
     g_section_isopen = html.begin_foldable_container(
-            html.form_name and html.form_name or "nform", fold_id, isopen, title, indent="nform")
+        html.form_name and html.form_name or "nform", fold_id, isopen, title, indent="nform")
     html.tr(html.render_td('', colspan=2), class_=["top", "open" if g_section_isopen else "closed"])
     g_header_open = True
     g_section_open = False
+
 
 # container without legend and content
 def container():
@@ -259,22 +285,26 @@ def space():
     html.tr(html.render_td('', colspan=2, style="height:15px;"))
 
 
-def section(title = None, checkbox = None, section_id = None, simple=False, hide = False, legend = True):
+def section(title=None, checkbox=None, section_id=None, simple=False, hide=False, legend=True):
 
     #html.guitest_record_output("forms", ("section", title))
     global g_section_open
     if g_section_open:
         html.close_td()
         html.close_tr()
-    html.open_tr(id_=section_id, class_="open" if g_section_isopen else "closed",
-                 style="display:none;" if hide else None)
+    html.open_tr(
+        id_=section_id,
+        class_="open" if g_section_isopen else "closed",
+        style="display:none;" if hide else None)
 
     if legend:
         html.open_td(class_=["legend", "simple" if simple else None])
         if title:
-            html.open_div(class_=["title", "withcheckbox" if checkbox else None], title=html.strip_tags(title))
+            html.open_div(
+                class_=["title", "withcheckbox" if checkbox else None],
+                title=html.strip_tags(title))
             html.write(html.permissive_attrencode(title))
-            html.span('.'*100, class_="dots")
+            html.span('.' * 100, class_="dots")
             html.close_div()
         if checkbox:
             html.open_div(class_="checkbox")
@@ -282,11 +312,13 @@ def section(title = None, checkbox = None, section_id = None, simple=False, hide
                 html.write(checkbox)
             else:
                 name, active, attrname = checkbox
-                html.checkbox(name, active, onclick = 'wato_toggle_attribute(this, \'%s\')' % attrname)
+                html.checkbox(
+                    name, active, onclick='wato_toggle_attribute(this, \'%s\')' % attrname)
             html.close_div()
         html.close_td()
     html.open_td(class_=["content", "simple" if simple else None])
     g_section_open = True
+
 
 def end():
     global g_header_open
@@ -295,5 +327,6 @@ def end():
         html.close_td()
         html.close_tr()
     html.end_foldable_container()
-    html.tr(html.render_td('', colspan=2), class_=["bottom", "open" if g_section_isopen else "closed"])
+    html.tr(
+        html.render_td('', colspan=2), class_=["bottom", "open" if g_section_isopen else "closed"])
     html.close_table()

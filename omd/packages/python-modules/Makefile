@@ -158,6 +158,11 @@ MODULES += urllib3-1.24.tar.gz
 MODULES += Werkzeug-0.14.1.tar.gz
 MODULES += passlib-1.7.1.tar.gz
 # Added for AWS special agent
+MODULES += docutils-0.14.tar.gz
+MODULES += futures-3.2.0.tar.gz
+MODULES += jmespath-0.9.3.tar.gz
+MODULES += s3transfer-0.1.13.tar.gz
+MODULES += botocore-1.12.42.tar.gz
 MODULES += boto3-1.9.42.tar.gz
 
 .PHONY: build check-freetds install skel clean

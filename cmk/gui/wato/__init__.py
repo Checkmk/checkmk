@@ -94,6 +94,7 @@ import sys
 import time
 import traceback
 import copy
+import inspect
 from hashlib import sha256
 
 import cmk
@@ -535,7 +536,7 @@ def get_mode_permission_and_class(mode_name):
     if mode_class is None:
         raise MKGeneralException(_("No such WATO module '<tt>%s</tt>'") % mode_name)
 
-    if callable(mode_class):
+    if inspect.isfunction(mode_class):
         raise MKGeneralException(_("Deprecated WATO module: Implemented as function. "
                                    "This needs to be refactored as WatoMode child class."))
 

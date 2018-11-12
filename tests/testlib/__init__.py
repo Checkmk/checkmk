@@ -27,6 +27,20 @@ from bs4 import BeautifulSoup
 # Disable insecure requests warning message during SSL testing
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
+
+def skip_unwanted_test_types(item):
+    test_type = item.get_closest_marker("type")
+    if test_type is None:
+        raise Exception("Test is not TYPE marked: %s" % item)
+
+    if not item.config.getoption("-T"):
+        raise SystemExit("Please specify type of tests to be executed (py.test -T TYPE)")
+
+    test_type_name = test_type.args[0]
+    if test_type_name != item.config.getoption("-T"):
+        pytest.skip("Not testing type %r" % test_type_name)
+
+
 def repo_path():
     return os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 

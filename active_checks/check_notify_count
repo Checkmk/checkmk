@@ -52,6 +52,7 @@ OPTIONS:
 
 """)
 
+
 short_options = 'hr:w:c:l:'
 
 try:
@@ -60,11 +61,11 @@ except getopt.GetoptError, err:
     sys.stderr.write("%s\n" % err)
     sys.exit(1)
 
-socket_path  = ''
-timerange    = 60
-warn, crit   = None, None
+socket_path = ''
+timerange = 60
+warn, crit = None, None
 
-for o,a in opts:
+for o, a in opts:
     if o == '-h':
         usage()
         sys.exit(0)
@@ -88,20 +89,18 @@ if not os.path.exists(socket_path):
     sys.stderr.write('ERROR: Livestatus socket (%s) does not exist\n' % socket_path)
     sys.exit(1)
 
-query = (
-    'GET log\n'
-    'Columns: log_contact_name\n'
-    'Filter: log_time >= %d\n'
-    'Filter: class = 3\n'
-    'Stats: state != 999\n'
-) % (int(time.time() - (timerange * 60)))
+query = ('GET log\n'
+         'Columns: log_contact_name\n'
+         'Filter: log_time >= %d\n'
+         'Filter: class = 3\n'
+         'Stats: state != 999\n') % (int(time.time() - (timerange * 60)))
 
 c = livestatus.SingleSiteConnection('unix:' + socket_path)
 
 total_num = 0
-perfdata  = []
-state     = 0
-details   = []
+perfdata = []
+state = 0
+details = []
 
 num_users = 0
 raw_notifications = 0
@@ -123,4 +122,4 @@ for contact_name, num in c.query_table(query):
 
 detail_txt = ' (%s)' % ', '.join(details) if details else ''
 sys.stdout.write('%d raw notifications, %d user notifications within last %d minutes%s | %s\n' %
-                        (raw_notifications, total_num, timerange, detail_txt, ' '.join(perfdata)))
+                 (raw_notifications, total_num, timerange, detail_txt, ' '.join(perfdata)))

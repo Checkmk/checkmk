@@ -65,7 +65,8 @@ import sys
 
 
 def option_to_state(c):
-    return { "w" : 1, "c" : 2 }[c.lower()]
+    return {"w": 1, "c": 2}[c.lower()]
+
 
 def check_traceroute(target, routes, nodns, method):
     args = ["traceroute"]
@@ -84,8 +85,7 @@ def check_traceroute(target, routes, nodns, method):
     for line in sto.split("\n")[1:]:
         parts = line.strip().split()
         for part in parts:
-            if part.count(".") == 3 or (
-                not part[0].isdigit() and part not in [ "ms", "*" ]):
+            if part.count(".") == 3 or (not part[0].isdigit() and part not in ["ms", "*"]):
                 part = part.lstrip("(").rstrip(",").rstrip(")")
                 routers.add(part)
 
@@ -96,22 +96,29 @@ def check_traceroute(target, routes, nodns, method):
         s = option_to_state(option)
         if option.islower() and route in routers:
             state = max(state, s)
-            bad_routers.append("%s(%s)" % (route, "!"*s))
+            bad_routers.append("%s(%s)" % (route, "!" * s))
         elif option.isupper() and route not in routers:
             state = max(state, s)
-            missing_routers.append("%s(%s)" % (route, "!"*s))
+            missing_routers.append("%s(%s)" % (route, "!" * s))
 
     info = "%s - %d hops, missing routers: %s, bad routers: %s" % (
-        { 0:"OK", 1:"WARN", 2:"CRIT" }[state],
+        {
+            0: "OK",
+            1: "WARN",
+            2: "CRIT"
+        }[state],
         len(sto.split("\n")[1:]),
         missing_routers and ", ".join(missing_routers) or "none",
-        bad_routers and ", ".join(bad_routers) or "none")
+        bad_routers and ", ".join(bad_routers) or "none",
+    )
 
     return state, info, sto
+
 
 def bail_out(reason):
     sys.stderr.write("FATAL ERROR: %s\n" % reason)
     sys.exit(3)
+
 
 def usage():
     sys.stdout.write("""check_traceroute -{c|w|C|W} ROUTE  [-{o|c|w|O|C|W} ROUTE...] TARGET
@@ -134,15 +141,20 @@ Other options:
 
 """)
 
+
 os.unsetenv("LANG")
 
-opt_verbose       = 0
-opt_debug         = False
-opt_nodns         = False
-opt_method        = None
+opt_verbose = 0
+opt_debug = False
+opt_nodns = False
+opt_method = None
 
 short_options = "hw:W:c:C:nTI"
-long_options = [ "verbose", "help", "debug", ]
+long_options = [
+    "verbose",
+    "help",
+    "debug",
+]
 
 routes = []
 
@@ -151,20 +163,20 @@ try:
 
     # first parse modifers
     for o, a in opts:
-        if o in [ '-v', '--verbose' ]:
+        if o in ['-v', '--verbose']:
             opt_verbose += 1
-        elif o in [ '-d', '--debug' ]:
+        elif o in ['-d', '--debug']:
             opt_debug = True
-        elif o in [ '-w', '-W', '-c', '-C' ]:
+        elif o in ['-w', '-W', '-c', '-C']:
             routes.append((o[1], a))
         elif o == '-n':
             opt_nodns = True
-        elif o in [ '-T', '-I' ]:
+        elif o in ['-T', '-I']:
             opt_method = o
 
     # now handle action options
     for o, a in opts:
-        if o in [ '-h', '--help' ]:
+        if o in ['-h', '--help']:
             usage()
             sys.exit(0)
 
@@ -176,7 +188,6 @@ try:
     status, output, long_output = check_traceroute(target, routes, opt_nodns, opt_method)
     sys.stdout.write(output.strip() + "\n" + long_output)
     sys.exit(status)
-
 
 except Exception, e:
     if opt_debug:

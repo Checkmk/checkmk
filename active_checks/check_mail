@@ -39,11 +39,13 @@ import cmk.password_store
 
 cmk.password_store.replace_passwords()
 
+
 def parse_exception(e):
     e = str(e)
     if e[0] == '{':
         e = "%d - %s" % eval(e).values()[0]
     return str(e)
+
 
 def bail_out(rc, s, perfdata=None):
     if perfdata is None:
@@ -52,9 +54,11 @@ def bail_out(rc, s, perfdata=None):
     stxt = ['OK', 'WARN', 'CRIT', 'UNKNOWN'][rc]
     sys.stdout.write('%s - %s' % (stxt, parse_exception(s)))
     if perfdata:
-        sys.stdout.write(' | %s' % (' '.join(['%s=%s' % (p[0], ';'.join(map(str, p[1:]))) for p in perfdata ])))
+        sys.stdout.write(
+            ' | %s' % (' '.join(['%s=%s' % (p[0], ';'.join(map(str, p[1:]))) for p in perfdata])))
     sys.stdout.write('\n')
     sys.exit(rc)
+
 
 def usage(msg=None):
     if msg:
@@ -106,14 +110,32 @@ OPTIONS:
 """)
     sys.exit(1)
 
+
 short_options = 'dh'
-long_options  = ['protocol=', 'server=', 'port=', 'username=', 'password=', 'ssl',
-    'connect-timeout=', 'cleanup=', 'forward-ec', 'match-subject=',
-    'forward-facility=', 'forward-app=', 'forward-method=', 'forward-host=', 'body-limit=',
-    'help', 'debug', ]
+long_options = [
+    'protocol=',
+    'server=',
+    'port=',
+    'username=',
+    'password=',
+    'ssl',
+    'connect-timeout=',
+    'cleanup=',
+    'forward-ec',
+    'match-subject=',
+    'forward-facility=',
+    'forward-app=',
+    'forward-method=',
+    'forward-host=',
+    'body-limit=',
+    'help',
+    'debug',
+]
 
 required_params = [
-    'server', 'username', 'password',
+    'server',
+    'username',
+    'password',
 ]
 
 try:
@@ -122,31 +144,30 @@ except getopt.GetoptError, err:
     sys.stderr.write("%s\n" % err)
     sys.exit(1)
 
-opt_debug        = False
-fetch_proto      = 'IMAP'
-fetch_server     = None
-fetch_port       = None
-fetch_user       = None
-fetch_pass       = None
-fetch_ssl        = False
-conn_timeout     = 10
+opt_debug = False
+fetch_proto = 'IMAP'
+fetch_server = None
+fetch_port = None
+fetch_user = None
+fetch_pass = None
+fetch_ssl = False
+conn_timeout = 10
 cleanup_messages = ""
-forward_ec       = False
-forward_facility = 16 # default to "mail" (2 << 3)
-forward_app      = None
-forward_method   = None # local event console
-forward_host     = ''
-match_subject    = None
-body_limit       = 1000
+forward_ec = False
+forward_facility = 16  # default to "mail" (2 << 3)
+forward_app = None
+forward_method = None  # local event console
+forward_host = ''
+match_subject = None
+body_limit = 1000
 
-g_M         = None
+g_M = None
 g_forwarded = []
 
-
-for o,a in opts:
-    if o in [ '-h', '--help' ]:
+for o, a in opts:
+    if o in ['-h', '--help']:
         usage()
-    elif o in [ '-d', '--debug' ]:
+    elif o in ['-d', '--debug']:
         opt_debug = True
     elif o == '--protocol':
         fetch_proto = a
@@ -184,10 +205,10 @@ for o,a in opts:
 
 param_names = dict(opts).keys()
 for p in required_params:
-    if '--'+p not in param_names:
+    if '--' + p not in param_names:
         usage('The needed parameter --%s is missing' % p)
 
-if fetch_proto not in [ 'IMAP', 'POP3' ]:
+if fetch_proto not in ['IMAP', 'POP3']:
     usage('The given protocol is not supported.')
 
 if fetch_port == None:
@@ -195,6 +216,7 @@ if fetch_port == None:
         fetch_port = 995 if fetch_ssl else 110
     else:
         fetch_port = 993 if fetch_ssl else 143
+
 
 def connect():
     global g_M
@@ -208,11 +230,12 @@ def connect():
             fetch_class = imaplib.IMAP4_SSL if fetch_ssl else imaplib.IMAP4
             g_M = fetch_class(fetch_server, fetch_port)
             g_M.login(fetch_user, fetch_pass)
-            g_M.select('INBOX', readonly=False) # select INBOX
+            g_M.select('INBOX', readonly=False)  # select INBOX
     except Exception, e:
         if opt_debug:
             raise
         bail_out(3, 'Failed connect to %s:%d: %s' % (fetch_server, fetch_port, parse_exception(e)))
+
 
 def fetch_mails():
     mails = {}
@@ -221,7 +244,7 @@ def fetch_mails():
         if fetch_proto == 'POP3':
             num_messages = len(g_M.list()[1])
             for i in range(num_messages):
-                index = i+1
+                index = i + 1
                 lines = g_M.retr(index)[1]
                 mails[i] = email.message_from_string("\n".join(lines))
         else:
@@ -232,7 +255,8 @@ def fetch_mails():
                         data = g_M.fetch(num, '(RFC822)')[1]
                         mails[num] = email.message_from_string(data[0][1])
                     except Exception, e:
-                        raise Exception('Failed to fetch mail %s (%s). Available messages: %r' % (num, parse_exception(e), messages))
+                        raise Exception('Failed to fetch mail %s (%s). Available messages: %r' %
+                                        (num, parse_exception(e), messages))
 
         if match_subject:
             # Now filter out the messages not wanted to be handled by this check
@@ -247,16 +271,17 @@ def fetch_mails():
             raise
         bail_out(3, 'Failed to check for mails: %s' % parse_exception(e))
 
+
 def cleanup_mailbox():
     if not g_M:
-        return # do not deal with mailbox when none sent yet
+        return  # do not deal with mailbox when none sent yet
     try:
         # Do not delete all messages in the inbox. Only the ones which were
         # processed before! In the meantime there might be occured new ones.
         for index in g_forwarded:
             if fetch_proto == 'POP3':
                 if cleanup_messages == 'delete':
-                    response = g_M.dele(index+1)
+                    response = g_M.dele(index + 1)
                 if not response.startswith("+OK"):
                     raise Exception("Response from server: [%s]" % response)
             else:
@@ -272,7 +297,7 @@ def cleanup_mailbox():
                         g_M.create(target)
 
                     # Copy the mail
-                    ty, data= g_M.copy(str(index), folder)
+                    ty, data = g_M.copy(str(index), folder)
                     if ty != 'OK':
                         raise Exception("Response from server: [%s]" % data)
 
@@ -288,20 +313,23 @@ def cleanup_mailbox():
             raise
         bail_out(2, 'Failed to delete mail: %s' % parse_exception(e))
 
+
 def close_mailbox():
     if not g_M:
-        return # do not deal with mailbox when none sent yet
+        return  # do not deal with mailbox when none sent yet
     if fetch_proto == 'POP3':
         g_M.quit()
     else:
         g_M.close()
         g_M.logout()
 
+
 def syslog_time():
     localtime = time.localtime()
-    day = int(time.strftime("%d", localtime)) # strip leading 0
+    day = int(time.strftime("%d", localtime))  # strip leading 0
     value = time.strftime("%b %%d %H:%M:%S", localtime)
     return value % day
+
 
 def forward_to_ec(mails):
     # create syslog message from each mail
@@ -309,9 +337,9 @@ def forward_to_ec(mails):
     # <facility+priority> timestamp hostname application: message
     messages = []
     cur_time = syslog_time()
-    priority = 5 # OK
+    priority = 5  # OK
     for index, msg in mails.items():
-        subject  = msg.get('Subject', 'None')
+        subject = msg.get('Subject', 'None')
         encoding = msg.get('Content-Transfer-Encoding', 'None')
         log_line = subject
         # Now add the body to the event
@@ -341,7 +369,7 @@ def forward_to_ec(mails):
             application = forward_app
             matches = match_subject.match(subject)
             for num, match in enumerate(matches.groups()):
-                application = application.replace('\\%d' % (num+1,), match)
+                application = application.replace('\\%d' % (num + 1,), match)
         else:
             application = subject.replace('\n', '')
 
@@ -375,7 +403,7 @@ def forward_to_ec(mails):
                     sock.send(message + "\n")
                 sock.close()
 
-            elif not forward_method.startswith('spool:'): # pylint: disable=no-member
+            elif not forward_method.startswith('spool:'):  # pylint: disable=no-member
                 # write into local event pipe
                 # Important: When the event daemon is stopped, then the pipe
                 # is *not* existing! This prevents us from hanging in such
@@ -391,7 +419,7 @@ def forward_to_ec(mails):
                 # First write a file which is not read into ec, then
                 # perform the move to make the file visible for ec
                 spool_path = forward_method[6:]
-                file_name  = '.%s_%d_%d' % (forward_host, os.getpid(), time.time())
+                file_name = '.%s_%d_%d' % (forward_host, os.getpid(), time.time())
                 if not os.path.exists(spool_path):
                     os.makedirs(spool_path)
                 file('%s/%s' % (spool_path, file_name), 'w').write('\n'.join(messages) + '\n')
@@ -400,9 +428,13 @@ def forward_to_ec(mails):
         if cleanup_messages:
             cleanup_mailbox()
 
-        bail_out(0, 'Forwarded %d messages to event console' % len(messages), [('messages', len(messages))])
+        bail_out(0, 'Forwarded %d messages to event console' % len(messages),
+                 [('messages', len(messages))])
     except Exception, e:
-        bail_out(3, 'Unable to forward messages to event console (%s). Left %d messages untouched.' % (e, len(messages)))
+        bail_out(
+            3, 'Unable to forward messages to event console (%s). Left %d messages untouched.' %
+            (e, len(messages)))
+
 
 def main():
     # Enable showing protocol messages of imap for debugging
@@ -417,6 +449,7 @@ def main():
             bail_out(0, 'Successfully logged in to mailbox')
     finally:
         close_mailbox()
+
 
 socket.setdefaulttimeout(conn_timeout)
 

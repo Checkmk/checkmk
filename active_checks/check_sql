@@ -37,22 +37,20 @@ import sys
 import cmk.password_store
 cmk.password_store.replace_passwords()
 
-
 log = logging.getLogger(__name__)
-
 
 DEFAULT_PORTS = {
     "postgres": 5432,
-    "mysql"   : 3306,
-    "mssql"   : 1433,
-    "oracle"  : 1521,
-    "db2"     : 50000,
+    "mysql": 3306,
+    "mssql": 1433,
+    "oracle": 1521,
+    "db2": 50000,
 }
-
 
 MP_INF = (float('-inf'), float('+inf'))
 
 #   . parse commandline argumens
+
 
 def levels(values):
     lower, upper = values.split(':')
@@ -70,55 +68,118 @@ def parse_args(argv):
     """Parse commandline arguments (incl password store and logging set up)"""
     this = str(os.path.basename(argv[0]))
     fmt = argparse.RawDescriptionHelpFormatter
-    parser = argparse.ArgumentParser(prog=this, description=__doc__,
-                                     formatter_class=fmt)
+    parser = argparse.ArgumentParser(prog=this, description=__doc__, formatter_class=fmt)
     # flags
-    parser.add_argument("-v", "--verbose", action="count", default=0,
-                        help='''Verbose mode: print SQL statement and levels
-                             (for even more output use -vv''')
-    parser.add_argument("--debug", action="store_true",
-                        help='''Debug mode: let Python exceptions come through''')
-    parser.add_argument("-m", "--metrics", action="store_true",
-                        help='''Add performance data to the output''')
-    parser.add_argument("-o", "--procedure", action="store_true",
-                        help='''treat the main argument as a procedure instead
-                              of an SQL-Statement''')
-    parser.add_argument("-i", "--input", metavar="CSV", default=[],
-                        type=lambda s: s.split(','),
-                        help='''comma separated list if values of input variables
-                             if required by the procedure''')
+    parser.add_argument(
+        "-v",
+        "--verbose",
+        action="count",
+        default=0,
+        help='''Verbose mode: print SQL statement and levels
+                             (for even more output use -vv''',
+    )
+    parser.add_argument(
+        "--debug",
+        action="store_true",
+        help='''Debug mode: let Python exceptions come through''',
+    )
+    parser.add_argument(
+        "-m",
+        "--metrics",
+        action="store_true",
+        help='''Add performance data to the output''',
+    )
+    parser.add_argument(
+        "-o",
+        "--procedure",
+        action="store_true",
+        help='''treat the main argument as a procedure instead
+                              of an SQL-Statement''',
+    )
+    parser.add_argument(
+        "-i",
+        "--input",
+        metavar="CSV",
+        default=[],
+        type=lambda s: s.split(','),
+        help='''comma separated list if values of input variables
+                             if required by the procedure''',
+    )
     # optional arguments
-    parser.add_argument("-d", "--dbms", default='postgres',
-                        choices=['postgres', 'mysql', 'mssql', 'oracle', 'db2'],
-                        help='''Name of the database management system.
-                             Default is "postgres"''')
-    parser.add_argument("-H", "--hostname", metavar='HOST',  default='127.0.0.1',
-                        help='''Hostname or IP-Address where the database lives.
-                             Default is "127.0.0.1"''')
-    parser.add_argument("-P", "--port", default=None, type=int,
-                        help='''Port used to connect to the database.
-                             Default depends on DBMS''')
-    parser.add_argument("-w", "--warning", metavar='RANGE', default=MP_INF,
-                        type=levels,
-                        help='''lower and upper level for the warning state,
-                             separated by a colon''')
-    parser.add_argument("-c", "--critical", metavar='RANGE', default=MP_INF,
-                        type=levels,
-                        help='''lower and upper level for the critical state,
-                             separated by a colon''')
-    parser.add_argument("-t", "--text", default='',
-                        help='''Additional text prefixed to the output''')
+    parser.add_argument(
+        "-d",
+        "--dbms",
+        default='postgres',
+        choices=['postgres', 'mysql', 'mssql', 'oracle', 'db2'],
+        help='''Name of the database management system.
+                             Default is "postgres"''',
+    )
+    parser.add_argument(
+        "-H",
+        "--hostname",
+        metavar='HOST',
+        default='127.0.0.1',
+        help='''Hostname or IP-Address where the database lives.
+                             Default is "127.0.0.1"''',
+    )
+    parser.add_argument(
+        "-P",
+        "--port",
+        default=None,
+        type=int,
+        help='''Port used to connect to the database.
+                             Default depends on DBMS''',
+    )
+    parser.add_argument(
+        "-w",
+        "--warning",
+        metavar='RANGE',
+        default=MP_INF,
+        type=levels,
+        help='''lower and upper level for the warning state,
+                             separated by a colon''',
+    )
+    parser.add_argument(
+        "-c",
+        "--critical",
+        metavar='RANGE',
+        default=MP_INF,
+        type=levels,
+        help='''lower and upper level for the critical state,
+                             separated by a colon''',
+    )
+    parser.add_argument(
+        "-t",
+        "--text",
+        default='',
+        help='''Additional text prefixed to the output''',
+    )
 
     # required arguments
-    parser.add_argument("-n", "--name", required=True,
-                        help='''Name of the database on the DBMS''')
-    parser.add_argument("-u", "--user", required=True,
-                        help='''Username for database access''')
-    parser.add_argument("-p", "--password", required=True,
-                        help='''Password for database access''')
-    parser.add_argument("cmd", metavar="SQL-Statement|Procedure",
-                        type=sql_cmd_piece, nargs='+',
-                        help='''Valid SQL-Statement for the selected database.
+    parser.add_argument(
+        "-n",
+        "--name",
+        required=True,
+        help='''Name of the database on the DBMS''',
+    )
+    parser.add_argument(
+        "-u",
+        "--user",
+        required=True,
+        help='''Username for database access''',
+    )
+    parser.add_argument(
+        "-p",
+        "--password",
+        required=True,
+        help='''Password for database access''',
+    )
+    parser.add_argument(
+        "cmd",
+        metavar="SQL-Statement|Procedure",
+        type=sql_cmd_piece,
+        nargs='+',
+        help='''Valid SQL-Statement for the selected database.
                              The statement must return at least a number and a
                              string, plus optional performance data.
 
@@ -127,7 +188,8 @@ def parse_args(argv):
 
                              The procedure must return one output variable,
                              which content is evaluated the same way as the
-                             output of the SQL-Statement''')
+                             output of the SQL-Statement''',
+    )
     args = parser.parse_args(argv[1:])
     args.cmd = ' '.join(args.cmd)
 
@@ -137,8 +199,7 @@ def parse_args(argv):
         fmt = "%(levelname)s: %(lineno)s: " + fmt
         if args.dbms == "mssql":
             os.environ["TDSDUMP"] = "stdout"
-    logging.basicConfig(level=max(30 - 10 * args.verbose, 0),
-                        format=fmt)
+    logging.basicConfig(level=max(30 - 10 * args.verbose, 0), format=fmt)
 
     # V-VERBOSE INFO
     for k, v in args.__dict__.items():
@@ -146,11 +207,13 @@ def parse_args(argv):
             v = '****'
         log.debug('argparse: %s = %r', k, v)
     return args
+
+
 #.
 
 
 def bail_out(exit_code, output):
-    state_txt = [ "OK", "WARN", "CRIT", "UNKNOWN" ][exit_code]
+    state_txt = ["OK", "WARN", "CRIT", "UNKNOWN"][exit_code]
     sys.stdout.write("%s - %s\n" % (state_txt, output))
     sys.exit(exit_code)
 
@@ -212,8 +275,8 @@ def mssql_execute(cursor, cmd, inpt, procedure):
 
 
 def oracle_connect(host, port, db_name, user, pwd):
-    sys.path.append('/usr/lib/python%s.%s/site-packages'
-                    % (sys.version_info.major, sys.version_info.minor))
+    sys.path.append(
+        '/usr/lib/python%s.%s/site-packages' % (sys.version_info.major, sys.version_info.minor))
     try:
         import cx_Oracle  # pylint: disable=import-error
     except ImportError as e:
@@ -236,7 +299,7 @@ def oracle_execute(cursor, cmd, inpt, procedure):
         # NOTE: In an earlier version, this code-branch
         #       had been executed regardles of the dbms.
         #       clearly this   vvv  is oracle specific.
-        outvar = cursor.var(cx_Oracle.STRING) # pylint:disable=undefined-variable
+        outvar = cursor.var(cx_Oracle.STRING)  # pylint:disable=undefined-variable
         #       However, I have not been able to test it.
         inpt.append(outvar)
 
@@ -262,7 +325,7 @@ def oracle_execute(cursor, cmd, inpt, procedure):
 def db2_connect(host, port, db_name, user, pwd):
     # IBM data server driver
     try:
-        import ibm_db      # pylint: disable=import-error
+        import ibm_db  # pylint: disable=import-error
         import ibm_db_dbi  # pylint: disable=import-error
     except ImportError as e:
         bail_out(3, "%s. Please install it via pip." % e)
@@ -276,6 +339,8 @@ def db2_connect(host, port, db_name, user, pwd):
 
 def db2_execute(cursor, cmd, inpt, procedure):
     return _default_execute(cursor, cmd, inpt, procedure)
+
+
 #.
 
 
@@ -288,12 +353,13 @@ def connect(dbms, host, port, db_name, user, pwd):
     if port is None:
         port = DEFAULT_PORTS[dbms]
 
-    return {'postgres': postgres_connect,
-            'mysql': mysql_connect,
-            'mssql': mssql_connect,
-            'oracle': oracle_connect,
-            'db2': db2_connect,
-           }[dbms](host, port, db_name, user, pwd)
+    return {
+        'postgres': postgres_connect,
+        'mysql': mysql_connect,
+        'mssql': mssql_connect,
+        'oracle': oracle_connect,
+        'db2': db2_connect,
+    }[dbms](host, port, db_name, user, pwd)
 
 
 def execute(dbms, connection, cmd, inpt, procedure=False):
@@ -305,12 +371,13 @@ def execute(dbms, connection, cmd, inpt, procedure=False):
     cursor = connection.cursor()
 
     try:
-        result = {'postgres': postgres_execute,
-                  'mysql': mysql_execute,
-                  'mssql': mssql_execute,
-                  'oracle': oracle_execute,
-                  'db2': db2_execute,
-                 }[dbms](cursor, cmd, inpt, procedure)
+        result = {
+            'postgres': postgres_execute,
+            'mysql': mysql_execute,
+            'mssql': mssql_execute,
+            'oracle': oracle_execute,
+            'db2': db2_execute,
+        }[dbms](cursor, cmd, inpt, procedure)
     finally:
         cursor.close()
         connection.close()
@@ -355,7 +422,7 @@ def process_result(result, warn, crit, metrics=False, debug=False):
         if not crit[0] < number < crit[1]:
             state = 2
         text += ": %s" % number
-    else: # no levels were given
+    else:  # no levels were given
         if number in (0, 1, 2, 3):
             state = int(number)
         else:
@@ -370,16 +437,19 @@ def main(argv=None):
 
     try:
         msg = "connecting to database"
-        conn = connect(args.dbms, args.hostname, args.port,
-                       args.name, args.user, args.password)
+        conn = connect(args.dbms, args.hostname, args.port, args.name, args.user, args.password)
 
         msg = "executing SQL command"
-        result = execute(args.dbms, conn, args.cmd, args.input,
-                         procedure=args.procedure)
+        result = execute(args.dbms, conn, args.cmd, args.input, procedure=args.procedure)
 
         msg = "processing result of SQL statement/procedure"
-        state, text = process_result(result, args.warning, args.critical,
-                                     metrics=args.metrics, debug=args.debug)
+        state, text = process_result(
+            result,
+            args.warning,
+            args.critical,
+            metrics=args.metrics,
+            debug=args.debug,
+        )
     except () if args.debug else Exception as e:
         errmsg = str(e).strip('()').replace(r'\n', ' ')
         bail_out(3, "Error while %s: %s" % (msg, errmsg))

@@ -29,30 +29,34 @@ import socket
 
 BUFFER_SIZE = 1024
 try:
-    HOST        = sys.argv[1]
-    TCP_PORT    = int(sys.argv[2])
-    SERVICE     = sys.argv[3]
-    JOB         = sys.argv[4]
+    HOST = sys.argv[1]
+    TCP_PORT = int(sys.argv[2])
+    SERVICE = sys.argv[3]
+    JOB = sys.argv[4]
     if JOB == "ADDRESS":
-        STREET      = sys.argv[5]
-        STREET_NR   = sys.argv[6]
-        CITY        = sys.argv[7]
-        REGEX       = sys.argv[8]
+        STREET = sys.argv[5]
+        STREET_NR = sys.argv[6]
+        CITY = sys.argv[7]
+        REGEX = sys.argv[8]
 except:
-    sys.stdout.write(" Usage: check_uniserv HOSTNAME PORT SERVICE (VERSION|ADDRESS STREET NR CITY SEARCH_REGEX)\n")
+    sys.stdout.write(
+        " Usage: check_uniserv HOSTNAME PORT SERVICE (VERSION|ADDRESS STREET NR CITY SEARCH_REGEX)\n"
+    )
     sys.exit(3)
 
+
 def parse_response(data):
-    info = dict([ x.split('=') for x in data.split(";") ][:-1])
+    info = dict([x.split('=') for x in data.split(";")][:-1])
     if info['type'] == '1':
         sys.stdout.write("Invalid response: %s\n" % info)
         sys.exit(3)
     return info
 
+
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 s.connect((HOST, TCP_PORT))
 
-sendstring = "open:service="+SERVICE+";servicehost="+HOST+"\n"
+sendstring = "open:service=" + SERVICE + ";servicehost=" + HOST + "\n"
 s.send(sendstring)
 
 data = parse_response(s.recv(BUFFER_SIZE))
@@ -62,7 +66,7 @@ if not data.get('session'):
 sid = data.get('session')
 
 if JOB == "VERSION":
-    sendstring = "version:session="+sid+"\n"
+    sendstring = "version:session=" + sid + "\n"
     s.send(sendstring)
     data = parse_response(s.recv(BUFFER_SIZE))
     state = 0
@@ -74,20 +78,20 @@ elif JOB == "ADDRESS":
     s.send(sendstring)
     data = parse_response(s.recv(BUFFER_SIZE))
 
-    sendstring = "fetch:session="+sid+";out_zip=?;out_city=?\n"
+    sendstring = "fetch:session=" + sid + ";out_zip=?;out_city=?\n"
     s.send(sendstring)
     data = parse_response(s.recv(BUFFER_SIZE))
 
     state = 0
-    infotext = "Address is %s %s" % ( data['out_zip'], data['out_city'])
-    if not re.match( REGEX, data['out_city']):
+    infotext = "Address is %s %s" % (data['out_zip'], data['out_city'])
+    if not re.match(REGEX, data['out_city']):
         infotext += " But excpects %s" % REGEX
         state = 2
 else:
     state = 3
     infotext = "JOB not known"
 
-s.send("close:session="+sid+"\n")
+s.send("close:session=" + sid + "\n")
 s.close()
 
 sys.stdout.write("%s\n" % infotext)

@@ -46,6 +46,7 @@ proxies = {
     'https': None,
 }
 
+
 def usage():
     sys.stderr.write("""
 USAGE: check_bi_aggr -b <BASE_URL> -a <AGGR_NAME> -u <USER> -s <SECRET>
@@ -75,8 +76,9 @@ OPTIONS:
 
 """)
 
+
 short_options = 'b:a:u:s:m:t:n:dhr'
-long_options = [ "help", "in-downtime=", "acknowledged=" ]
+long_options = ["help", "in-downtime=", "acknowledged="]
 
 try:
     opts, args = getopt.getopt(sys.argv[1:], short_options, long_options)
@@ -84,21 +86,20 @@ except getopt.GetoptError, err:
     sys.stderr.write("%s\n" % err)
     sys.exit(1)
 
-base_url         = None
-aggr_name        = None
-username         = None
-password         = None
-auth_mode        = 'cookie'
-timeout          = 60
-debug            = False
-opt_in_downtime  = None
+base_url = None
+aggr_name = None
+username = None
+password = None
+auth_mode = 'cookie'
+timeout = 60
+debug = False
+opt_in_downtime = None
 opt_acknowledged = None
-track_downtime   = False
-hostname         = None
+track_downtime = False
+hostname = None
 
-
-for o,a in opts:
-    if o in [ '-h', '--help' ]:
+for o, a in opts:
+    if o in ['-h', '--help']:
         usage()
         sys.exit(0)
     elif o == '-b':
@@ -124,7 +125,6 @@ for o,a in opts:
     elif o == '--acknowledged':
         opt_acknowledged = a
 
-
 if not base_url:
     sys.stderr.write('Please provide the URL to the monitoring instance.\n')
     usage()
@@ -141,8 +141,7 @@ if not username or not password:
     sys.exit(1)
 
 if track_downtime and not hostname:
-    sys.stderr.write('Please provide a hostname when using '
-                     'downtime tracking.\n')
+    sys.stderr.write('Please provide a hostname when using downtime tracking.\n')
     usage()
     sys.exit(1)
 
@@ -159,7 +158,8 @@ def init_auth():
             kinit.wait()
             if kinit.returncode or errors:
                 sys.stderr.write("Error getting Kerberos Ticket:\n")
-                sys.stderr.write("stdout: %s\nstderr: %s\nrc: %s" % (output, errors, kinit.returncode))
+                sys.stderr.write(
+                    "stdout: %s\nstderr: %s\nrc: %s" % (output, errors, kinit.returncode))
                 sys.exit(1)
 
             auth = HTTPKerberosAuth(principal=username)
@@ -195,8 +195,8 @@ except requests.URLRequired, e:
     sys.stdout.write("UNKNOWN: %s\n" % e)
     sys.exit(3)
 except Exception, e:
-    sys.stdout.write('ERROR: Exception while opening URL: %s - %s\n%s' %
-                                            (url, e, traceback.format_exc()))
+    sys.stdout.write(
+        'ERROR: Exception while opening URL: %s - %s\n%s' % (url, e, traceback.format_exc()))
     sys.exit(3)
 
 try:
@@ -206,7 +206,8 @@ except Exception, e:
     sys.exit(3)
 
 if len(obj) == 1:
-    sys.stdout.write('ERROR: Aggregation "%s" does not exist or user is not permitted\n' % aggr_name)
+    sys.stdout.write(
+        'ERROR: Aggregation "%s" does not exist or user is not permitted\n' % aggr_name)
     sys.exit(3)
 
 if type(obj) != list or len(obj) != 2:
@@ -230,7 +231,7 @@ if opt_in_downtime and row["aggr_in_downtime"] == '1':
     aggr_output += ", currently in downtime"
     if opt_in_downtime == "ok":
         aggr_state = 0
-    else: # "warn"
+    else:  # "warn"
         aggr_state = min(aggr_state, 1)
 
 if track_downtime:
@@ -239,7 +240,7 @@ if track_downtime:
         import livestatus
     except ImportError:
         sys.stderr.write('The python livestatus api module is missing. Please install from\n'
-                        'Check_MK livestatus sources to a python import path.\n')
+                         'Check_MK livestatus sources to a python import path.\n')
         sys.exit(1)
 
     socket_path = os.environ['OMD_ROOT'] + '/tmp/run/live'
@@ -264,14 +265,12 @@ if track_downtime:
             for dt_id in ids:
                 conn.command("[%d] DEL_SVC_DOWNTIME;%d" % (now, dt_id[0]))
 
-
 if opt_acknowledged and row["aggr_acknowledged"] == '1':
     aggr_output += ", is acknowledged"
     if opt_acknowledged == "ok":
         aggr_state = 0
-    else: # "warn"
+    else:  # "warn"
         aggr_state = min(aggr_state, 1)
-
 
 sys.stdout.write('%s\n' % aggr_output)
 sys.exit(aggr_state)

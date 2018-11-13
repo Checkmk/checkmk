@@ -3,8 +3,7 @@
 import glob
 import os
 import pytest
-from remote import (assert_subprocess, remote_ip, remotedir, remoteuser,
-                    run_subprocess, sshopts)
+from remote import (assert_subprocess, remote_ip, remotedir, remoteuser, run_subprocess, sshopts)
 import sys
 
 localdir = os.path.dirname(os.path.abspath(__file__))
@@ -48,12 +47,10 @@ def scp_agent_exe():
 
 def scp_tests():
     test_files = [
-        os.path.abspath(t)
-        for t in glob.glob(os.path.join(localdir, 'test_*')) +
+        os.path.abspath(t) for t in glob.glob(os.path.join(localdir, 'test_*')) +
         [os.path.join(localdir, 'remote.py')]
     ]
-    cmd = ['scp'
-           ] + test_files + ['%s@%s:%s' % (remoteuser, remote_ip, remotedir)]
+    cmd = ['scp'] + test_files + ['%s@%s:%s' % (remoteuser, remote_ip, remotedir)]
     assert_subprocess(cmd)
 
 

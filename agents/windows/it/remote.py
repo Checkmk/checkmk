@@ -95,16 +95,14 @@ class DuplicateSectionError(Exception):
     """Raised when a section is multiply-created."""
 
     def __init__(self, section):
-        super(DuplicateSectionError,
-              self).__init__(self, 'Section %r already exists' % section)
+        super(DuplicateSectionError, self).__init__(self, 'Section %r already exists' % section)
 
 
 class NoSectionError(Exception):
     """Raised when no section matches a requested option."""
 
     def __init__(self, section):
-        super(NoSectionError, self).__init__(self,
-                                             'No section: %r' % (section))
+        super(NoSectionError, self).__init__(self, 'No section: %r' % (section))
 
 
 class IniWriter(ConfigParser.RawConfigParser):
@@ -144,20 +142,15 @@ class IniWriter(ConfigParser.RawConfigParser):
                     filehandle.write('    %s = %s\r\n' % (key, value))
 
 
-def remotetest(expected_output,
-               actual_output,
-               testfile,
-               testname=None,
-               testclass=None):
+def remotetest(expected_output, actual_output, testfile, testname=None, testclass=None):
     # Not on Windows: call given test remotely over ssh
     if platform.system() != 'Windows':
         cmd = [
             'ssh', sshopts,
             '%s@%s' % (remoteuser, remote_ip),
             'py.test %s%s%s' % (os.path.join(remotedir, testfile),
-                                ('::%s' % testclass)
-                                if testclass else '', ('::%s' % testname)
-                                if testname else '')
+                                ('::%s' % testclass) if testclass else '',
+                                ('::%s' % testname) if testname else '')
         ]
         assert_subprocess(cmd)
     # On Windows: verify output against expected
@@ -170,18 +163,17 @@ def remotetest(expected_output,
             # if re.match(expected, actual) is None:
             #     print 'DEBUG: actual output\r\n', '\r\n'.join(actual_output)
             #     print 'DEBUG: expected output\r\n', '\r\n'.join(expected_output)
-            assert re.match(
-                expected, actual) is not None, ("expected '%s', actual '%s'" %
-                                                (expected, actual))
+            assert re.match(expected,
+                            actual) is not None, ("expected '%s', actual '%s'" % (expected, actual))
         try:
             assert len(actual_output) >= len(expected_output), (
                 'actual output is shorter than expected:\n'
-                'expected output:\n%s\nactual output:\n%s' %
-                ('\n'.join(expected_output), '\n'.join(actual_output)))
+                'expected output:\n%s\nactual output:\n%s' % ('\n'.join(expected_output),
+                                                              '\n'.join(actual_output)))
             assert len(actual_output) <= len(expected_output), (
                 'actual output is longer than expected:\n'
-                'expected output:\n%s\nactual output:\n%s' %
-                ('\n'.join(expected_output), '\n'.join(actual_output)))
+                'expected output:\n%s\nactual output:\n%s' % ('\n'.join(expected_output),
+                                                              '\n'.join(actual_output)))
         except TypeError:
             # expected_output may be an iterator without len
             assert len(actual_output) > 0, 'Actual output was empty'

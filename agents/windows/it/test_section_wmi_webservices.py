@@ -17,11 +17,10 @@ def testfile():
 
 
 @pytest.fixture(
-    params=[('webservices', True), ('wmi_webservices', True),
-            ('webservices', False), ('wmi_webservices', False)],
+    params=[('webservices', True), ('wmi_webservices', True), ('webservices', False),
+            ('wmi_webservices', False)],
     ids=[
-        'sections=webservices', 'sections=wmi_webservices',
-        'sections=webservices_systemtime',
+        'sections=webservices', 'sections=wmi_webservices', 'sections=webservices_systemtime',
         'sections=wmi_webservices_systemtime'
     ])
 def testconfig(request, config):
@@ -36,13 +35,12 @@ def testconfig(request, config):
 
 @pytest.fixture
 def expected_output():
-    re_str = (
-        r'^\d+,\d+,\d+,\d+,,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,'
-        r'\d+,,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,'
-        r'\d+,\d+,\d+,\d+,\d+,\d+,\d+,[^,]+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,'
-        r'\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,'
-        r'\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,'
-        r'\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+')
+    re_str = (r'^\d+,\d+,\d+,\d+,,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,'
+              r'\d+,,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,'
+              r'\d+,\d+,\d+,\d+,\d+,\d+,\d+,[^,]+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,'
+              r'\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,'
+              r'\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,'
+              r'\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+')
     if not Globals.alone:
         re_str += r'|' + re.escape(r'<<<systemtime>>>') + r'|\d+'
     re_str += r'$'
@@ -93,7 +91,6 @@ def expected_output():
     ], repeat(re_str))
 
 
-def test_section_wmi_webservices(request, testconfig, expected_output,
-                                 actual_output, testfile):
+def test_section_wmi_webservices(request, testconfig, expected_output, actual_output, testfile):
     # request.node.name gives test name
     remotetest(expected_output, actual_output, testfile, request.node.name)

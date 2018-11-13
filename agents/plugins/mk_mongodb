@@ -23,8 +23,8 @@ except ImportError, e:
     sys.exit(2)
 
 # TODO: might be implemented in the future..
-host   = None
-port   = None
+host = None
+port = None
 
 try:
     con = pymongo.MongoClient(host, port)
@@ -32,7 +32,7 @@ try:
         # pylint: disable=no-member
         con = pymongo.database_names()
     except:
-        con = pymongo.MongoClient(None, None,  read_preference=pymongo.ReadPreference.SECONDARY)
+        con = pymongo.MongoClient(None, None, read_preference=pymongo.ReadPreference.SECONDARY)
 
     con.admin.read_preference = pymongo.ReadPreference.SECONDARY
 
@@ -82,19 +82,17 @@ sys.stdout.write("<<<mongodb_asserts>>>\n")
 for key, value in server_status.get("asserts", {}).items():
     sys.stdout.write("%s %s\n" % (key, value))
 
-
 sys.stdout.write("<<<mongodb_connections>>>\n")
 sys.stdout.write("%s\n" % "\n".join("%s %s" % x for x in server_status["connections"].items()))
 
-databases = {x : {} for x in con.database_names()}
+databases = {x: {} for x in con.database_names()}
 
 for name in databases.keys():
     databases[name]["collections"] = con[name].collection_names()
-    databases[name]["stats"]       = con[name].command("dbstats")
-    databases[name]["collstats"]   = {}
+    databases[name]["stats"] = con[name].command("dbstats")
+    databases[name]["collstats"] = {}
     for collection in databases[name]["collections"]:
         databases[name]["collstats"][collection] = con[name].command("collstats", collection)
-
 
 sys.stdout.write("<<<mongodb_chunks>>>\n")
 col = con.config.chunks
@@ -105,20 +103,24 @@ for db_name, db_data in databases.items():
         nsfilter = "%s.%s" % (db_name, collection)
         sys.stdout.write("nscount %s %s\n" % (nsfilter, col.find({"ns": nsfilter}).count()))
         for shard in shards:
-            sys.stdout.write("shardmatches %s#%s %s\n" % (nsfilter, shard, col.find({"ns": nsfilter, "shard": shard}).count()))
+            sys.stdout.write("shardmatches %s#%s %s\n" % (nsfilter, shard,
+                                                          col.find({
+                                                              "ns": nsfilter,
+                                                              "shard": shard
+                                                          }).count()))
 
 sys.stdout.write("<<<mongodb_locks>>>\n")
 global_lock_info = server_status.get("globalLock")
 if global_lock_info:
-    for what in [ "activeClients", "currentQueue" ]:
+    for what in ["activeClients", "currentQueue"]:
         if what in global_lock_info:
             for key, value in global_lock_info[what].items():
                 sys.stdout.write("%s %s %s\n" % (what, key, value))
 
 sys.stdout.write("<<<mongodb_flushing>>>\n")
 sys.stdout.write("average_ms %s\n" % server_status["backgroundFlushing"]["average_ms"])
-sys.stdout.write("last_ms %s\n" %    server_status["backgroundFlushing"]["last_ms"])
-sys.stdout.write("flushed %s\n" %    server_status["backgroundFlushing"]["flushes"])
+sys.stdout.write("last_ms %s\n" % server_status["backgroundFlushing"]["last_ms"])
+sys.stdout.write("flushed %s\n" % server_status["backgroundFlushing"]["flushes"])
 
 # Unused
 #try:
@@ -155,15 +157,14 @@ startup_warnings = con.admin.command({"getLog": "startupWarnings"})
 
 var_dir = os.environ.get("MK_VARDIR")
 if var_dir:
-    state_file     = "%s/mongodb.state" % var_dir
+    state_file = "%s/mongodb.state" % var_dir
     last_timestamp = None
-    output_all     = False
+    output_all = False
 
     # Supports: Nov  6 13:44:09
     #           2015-10-17T05:35:24
     def get_timestamp(text):
-        for pattern in [ "%a %b %d %H:%M:%S",
-                         "%Y-%m-%dT%H:%M:%S" ]:
+        for pattern in ["%a %b %d %H:%M:%S", "%Y-%m-%dT%H:%M:%S"]:
             try:
                 result = time.mktime(time.strptime(text, pattern))
                 return result
@@ -186,7 +187,7 @@ if var_dir:
 
     for line in startup_warnings["log"]:
         state = "C"
-        state_index = line.find("]")+2
+        state_index = line.find("]") + 2
         if len(line) == state_index or line[state_index:].startswith("**  "):
             state = "."
 

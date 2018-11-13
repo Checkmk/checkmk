@@ -31,10 +31,11 @@ from xml.dom import minidom
 
 now = int(time.time())
 start = now - 24 * 60 * 60
-end =  now
-dpu =  1
+end = now
+dpu = 1
 
-url = "http://localhost/recoveryconsole/bpl/syncstatus.php?type=replicate&arguments=start:%s,end:%s&sid=%s&auth=1:" % ( start, end, dpu )
+url = "http://localhost/recoveryconsole/bpl/syncstatus.php?type=replicate&arguments=start:%s,end:%s&sid=%s&auth=1:" % (
+    start, end, dpu)
 xml = urllib.urlopen(url)
 
 sys.stdout.write("<<<unitrends_replication:sep(124)>>>\n")
@@ -49,5 +50,5 @@ for item in dom.getElementsByTagName('SecureSyncStatus'):
     completed = item.getElementsByTagName('Complete')[0].firstChild.data
     targetname = item.getElementsByTagName('TargetName')[0].firstChild.data
     instancename = item.getElementsByTagName('InstanceName')[0].firstChild.data
-    sys.stdout.write("%s|%s|%s|%s|%s\n" %
-        (application, result, completed, targetname, instancename))
+    sys.stdout.write(
+        "%s|%s|%s|%s|%s\n" % (application, result, completed, targetname, instancename))

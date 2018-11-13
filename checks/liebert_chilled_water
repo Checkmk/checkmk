@@ -35,7 +35,8 @@
 
 def inventory_liebert_chilled_water(parsed):
     for key in parsed.iterkeys():
-        yield (key, {})
+        if key:
+            yield (key, {})
 
 
 def check_liebert_chilled_water(item, params, parsed):

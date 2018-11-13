@@ -292,7 +292,6 @@ class BackgroundJobDefines(object):
     process_name = "cmk-job"  # NOTE: keep this name short! psutil.Process tends to truncate long names
 
 
-
 #.
 #   .--Background Job------------------------------------------------------.
 #   |       ____             _                                   _         |

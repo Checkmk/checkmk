@@ -1,0 +1,19 @@
+Title: apache_status: Ignore certificate for localhost
+Level: 1
+Component: checks
+Compatible: incomp
+Edition: cre
+Version: 1.6.0i1
+Date: 1542097441
+Class: fix
+
+If a https server at 127.0.0.1 or [::1] is checked, ignore the certificate in
+case the name does not match.
+
+Previously we tried to contact the server via http on port 80 instead,
+but the server may not be listening on that port.
+
+You need to change the protocol to http if you are monitoring a https
+server that also listenes on port 80 and the servers address is not
+either the address the certificate was issued for or one of
+127.0.0.1, [::1] and "localhost".

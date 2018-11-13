@@ -36,6 +36,7 @@ import abc
 # TODO: Decide which base class to implement
 # (https://docs.python.org/2/library/collections.html) and cleanup
 
+
 class ClassRegistry(object):
     """The management object for all available plugins of a component.
 
@@ -51,18 +52,15 @@ class ClassRegistry(object):
         super(ClassRegistry, self).__init__()
         self._entries = {}
 
-
     # TODO: Make staticmethod (But abc.abstractstaticmethod not available. How to make this possible?)
     @abc.abstractmethod
     def plugin_base_class(self):
         raise NotImplementedError()
 
-
     def register(self, plugin_class):
         """Decorator to register a class with the registry"""
         self._register(plugin_class)
         return plugin_class
-
 
     def register_plugin(self, plugin_class):
         """Method for registering a plugin with the registry.
@@ -70,35 +68,27 @@ class ClassRegistry(object):
         Result is equal to use the register() decorator"""
         self._register(plugin_class)
 
-
     @abc.abstractmethod
     def _register(self, plugin_class):
         raise NotImplementedError()
 
-
     def __contains__(self, text):
         return text in self._entries
-
 
     def __delitem__(self, key):
         del self._entries[key]
 
-
     def __getitem__(self, key):
         return self._entries[key]
-
 
     def values(self):
         return self._entries.values()
 
-
     def items(self):
         return self._entries.items()
 
-
     def keys(self):
         return self._entries.keys()
-
 
     def get(self, key, deflt=None):
         return self._entries.get(key, deflt)

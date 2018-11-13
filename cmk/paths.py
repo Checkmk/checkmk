@@ -192,34 +192,23 @@ def _set_overridable_paths(local=False):
     var_prefix = "local_" if local else ""
 
     globals().update({
-        var_prefix + "share_dir":
-            os.path.join(omd_root, rel_base, "share/check_mk"),
-        var_prefix + "checks_dir":
-            os.path.join(omd_root, rel_base, "share/check_mk/checks"),
-        var_prefix + "notifications_dir":
-            os.path.join(omd_root, rel_base, "share/check_mk/notifications"),
-        var_prefix + "inventory_dir":
-            os.path.join(omd_root, rel_base, "share/check_mk/inventory"),
-        var_prefix + "check_manpages_dir":
-            os.path.join(omd_root, rel_base, "share/check_mk/checkman"),
-        var_prefix + "agents_dir":
-            os.path.join(omd_root, rel_base, "share/check_mk/agents"),
-        var_prefix + "mibs_dir":
-            os.path.join(omd_root, rel_base, "share/check_mk/mibs"),
-        var_prefix + "web_dir":
-            os.path.join(omd_root, rel_base, "share/check_mk/web"),
-        var_prefix + "pnp_templates_dir":
-            os.path.join(omd_root, rel_base, "share/check_mk/pnp-templates"),
-        var_prefix + "doc_dir":
-            os.path.join(omd_root, rel_base, "share/doc/check_mk"),
-        var_prefix + "locale_dir":
-            os.path.join(omd_root, rel_base, "share/check_mk/locale"),
-        var_prefix + "bin_dir":
-            os.path.join(omd_root, rel_base, "bin"),
-        var_prefix + "lib_dir":
-            os.path.join(omd_root, rel_base, "lib"),
-        var_prefix + "mib_dir":
-            os.path.join(omd_root, rel_base, "share/snmp/mibs"),
+        var_prefix + "share_dir": os.path.join(omd_root, rel_base, "share/check_mk"),
+        var_prefix + "checks_dir": os.path.join(omd_root, rel_base, "share/check_mk/checks"),
+        var_prefix + "notifications_dir": os.path.join(omd_root, rel_base,
+                                                       "share/check_mk/notifications"),
+        var_prefix + "inventory_dir": os.path.join(omd_root, rel_base, "share/check_mk/inventory"),
+        var_prefix + "check_manpages_dir": os.path.join(omd_root, rel_base,
+                                                        "share/check_mk/checkman"),
+        var_prefix + "agents_dir": os.path.join(omd_root, rel_base, "share/check_mk/agents"),
+        var_prefix + "mibs_dir": os.path.join(omd_root, rel_base, "share/check_mk/mibs"),
+        var_prefix + "web_dir": os.path.join(omd_root, rel_base, "share/check_mk/web"),
+        var_prefix + "pnp_templates_dir": os.path.join(omd_root, rel_base,
+                                                       "share/check_mk/pnp-templates"),
+        var_prefix + "doc_dir": os.path.join(omd_root, rel_base, "share/doc/check_mk"),
+        var_prefix + "locale_dir": os.path.join(omd_root, rel_base, "share/check_mk/locale"),
+        var_prefix + "bin_dir": os.path.join(omd_root, rel_base, "bin"),
+        var_prefix + "lib_dir": os.path.join(omd_root, rel_base, "lib"),
+        var_prefix + "mib_dir": os.path.join(omd_root, rel_base, "share/snmp/mibs"),
     })
 
 

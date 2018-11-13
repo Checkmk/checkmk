@@ -86,9 +86,10 @@ def makedirs(path, mode=0770):
 # that are read with execfile().
 def load_mk_file(path, default=None, lock=False):
     if default == None:
-        raise MKGeneralException(_("You need to provide a config dictionary to merge with the "
-                                   "read configuration. The dictionary should have all expected "
-                                   "keys and their default values set."))
+        raise MKGeneralException(
+            _("You need to provide a config dictionary to merge with the "
+              "read configuration. The dictionary should have all expected "
+              "keys and their default values set."))
 
     if lock:
         aquire_lock(path)
@@ -242,8 +243,6 @@ def save_to_mk_file(path, key, value, pprint_value=False):
         formated = "%s += %s" % (key, format_func(value))
 
     save_mk_file(path, formated)
-
-
 
 
 #.

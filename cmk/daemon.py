@@ -30,7 +30,7 @@ from pwd import getpwnam
 from grp import getgrnam
 import ctypes
 import ctypes.util
-from pathlib2 import Path # pylint: disable=unused-import
+from pathlib2 import Path  # pylint: disable=unused-import
 from contextlib import contextmanager
 
 import cmk.store

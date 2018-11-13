@@ -37,59 +37,59 @@ from cmk.i18n import _
 
 def werk_classes():
     return {
-        "feature"  : _("New feature"),
-        "fix"      : _("Bug fix"),
-        "security" : _("Security fix"),
+        "feature": _("New feature"),
+        "fix": _("Bug fix"),
+        "security": _("Security fix"),
     }
 
 
 def werk_components():
     return {
         # CRE
-        "core" :          _("Core & setup"),
-        "checks" :        _("Checks & agents"),
-        "multisite" :     _("User interface"),
-        "wato" :          _("WATO"),
-        "notifications" : _("Notifications"),
-        "bi" :            _("BI"),
-        "reporting" :     _("Reporting & availability"),
-        "ec" :            _("Event console"),
-        "livestatus" :    _("Livestatus"),
-        "liveproxy" :     _("Livestatus proxy"),
-        "inv" :           _("HW/SW inventory"),
+        "core": _("Core & setup"),
+        "checks": _("Checks & agents"),
+        "multisite": _("User interface"),
+        "wato": _("WATO"),
+        "notifications": _("Notifications"),
+        "bi": _("BI"),
+        "reporting": _("Reporting & availability"),
+        "ec": _("Event console"),
+        "livestatus": _("Livestatus"),
+        "liveproxy": _("Livestatus proxy"),
+        "inv": _("HW/SW inventory"),
 
         # CEE
-        "cmc" :           _("The Check_MK Micro Core"),
-        "setup" :         _("Setup, site management"),
-        "config" :        _("Configuration generation"),
-        "inline-snmp" :   _("Inline SNMP"),
-        "agents" :        _("Agent bakery"),
-        "metrics" :       _("Metrics system"),
-        "alerts":         _("Alert handlers"),
+        "cmc": _("The Check_MK Micro Core"),
+        "setup": _("Setup, site management"),
+        "config": _("Configuration generation"),
+        "inline-snmp": _("Inline SNMP"),
+        "agents": _("Agent bakery"),
+        "metrics": _("Metrics system"),
+        "alerts": _("Alert handlers"),
 
         # CMK-OMD
-        "omd":            _("Site management"),
-        "rpm":            _("RPM packaging"),
-        "deb":            _("DEB packaging"),
-        "nagvis":         _("NagVis"),
-        "packages":       _("Other components"),
-        "distros":        _("Linux distributions"),
+        "omd": _("Site management"),
+        "rpm": _("RPM packaging"),
+        "deb": _("DEB packaging"),
+        "nagvis": _("NagVis"),
+        "packages": _("Other components"),
+        "distros": _("Linux distributions"),
     }
 
 
 def werk_levels():
     return {
-        1 : _("Trivial change"),
-        2 : _("Prominent change"),
-        3 : _("Major change"),
+        1: _("Trivial change"),
+        2: _("Prominent change"),
+        3: _("Major change"),
     }
 
 
 def werk_compatibilities():
     return {
-        "compat"       : _("Compatible"),
-        "incomp_ack"   : _("Incompatible"),
-        "incomp_unack" : _("Incompatible - TODO"),
+        "compat": _("Compatible"),
+        "incomp_ack": _("Incompatible"),
+        "incomp_unack": _("Incompatible - TODO"),
     }
 
 

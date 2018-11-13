@@ -3,7 +3,7 @@
 
 set -x
 set -e
-version=0048647619
+version=release-1.8.1
 [[ -z $CHROOT_BUILD_DIR ]] && exit 1
 
 . $CHROOT_BUILD_DIR/agents/windows/build.sh

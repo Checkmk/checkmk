@@ -37,36 +37,34 @@ except:
     sys.exit(1)
 
 try:
-   # Make a single connection for each query
-   print "\nPerformance:"
-   for key, value in livestatus.SingleSiteConnection(socket_path).query_row_assoc("GET status").items():
-      print "%-30s: %s" % (key, value)
-   print "\nHosts:"
-   hosts = livestatus.SingleSiteConnection(socket_path).query_table("GET hosts\nColumns: name alias address")
-   for name, alias, address in hosts:
-      print "%-16s %-16s %s" % (name, address, alias)
+    # Make a single connection for each query
+    print "\nPerformance:"
+    for key, value in livestatus.SingleSiteConnection(socket_path).query_row_assoc(
+            "GET status").items():
+        print "%-30s: %s" % (key, value)
+    print "\nHosts:"
+    hosts = livestatus.SingleSiteConnection(socket_path).query_table(
+        "GET hosts\nColumns: name alias address")
+    for name, alias, address in hosts:
+        print "%-16s %-16s %s" % (name, address, alias)
 
-   # Do several queries in one connection
-   conn = livestatus.SingleSiteConnection(socket_path)
-   num_up = conn.query_value("GET hosts\nStats: hard_state = 0")
-   print "\nHosts up: %d" % num_up
+    # Do several queries in one connection
+    conn = livestatus.SingleSiteConnection(socket_path)
+    num_up = conn.query_value("GET hosts\nStats: hard_state = 0")
+    print "\nHosts up: %d" % num_up
 
-   stats = conn.query_row(
-         "GET services\n"
-         "Stats: state = 0\n"
-         "Stats: state = 1\n"
-         "Stats: state = 2\n"
-         "Stats: state = 3\n")
-   print "Service stats: %d/%d/%d/%d" % tuple(stats)
+    stats = conn.query_row("GET services\n"
+                           "Stats: state = 0\n"
+                           "Stats: state = 1\n"
+                           "Stats: state = 2\n"
+                           "Stats: state = 3\n")
+    print "Service stats: %d/%d/%d/%d" % tuple(stats)
 
-   print "List of commands: %s" % \
-      ", ".join(conn.query_column("GET commands\nColumns: name"))
+    print "List of commands: %s" % \
+       ", ".join(conn.query_column("GET commands\nColumns: name"))
 
-   print "Query error:"
-   conn.query_value("GET hosts\nColumns: hirni")
+    print "Query error:"
+    conn.query_value("GET hosts\nColumns: hirni")
 
-
-except Exception, e: # livestatus.MKLivestatusException, e:
-   print "Livestatus error: %s" % str(e)
-
-
+except Exception, e:  # livestatus.MKLivestatusException, e:
+    print "Livestatus error: %s" % str(e)

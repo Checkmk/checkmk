@@ -37,5 +37,5 @@ def inv_citrix_state(info):
 
 
 inv_info["citrix_state"] = {
-    "inv_function"      : inv_citrix_state,
+    "inv_function": inv_citrix_state,
 }

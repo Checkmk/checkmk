@@ -32,11 +32,11 @@ def inv_docker_node_network_networks(info, inventory_tree, status_data_tree):
         containers = []
         for container_id, container in network["Containers"].items():
             containers.append({
-                "name"         : container["Name"],
-                "id"           : _docker_trunc_id(container_id),
-                "ipv4_address" : container["IPv4Address"],
-                "ipv6_address" : container["IPv6Address"],
-                "mac_address"  : container["MacAddress"],
+                "name": container["Name"],
+                "id": _docker_trunc_id(container_id),
+                "ipv4_address": container["IPv4Address"],
+                "ipv6_address": container["IPv6Address"],
+                "mac_address": container["MacAddress"],
             })
 
         network_name = network["Name"]
@@ -45,18 +45,20 @@ def inv_docker_node_network_networks(info, inventory_tree, status_data_tree):
         status_networks = status_data_tree.get_dict(path)
 
         status_networks.update({
-            "name"              : network_name,
-            "containers"        : [{"name": 1}],
+            "name": network_name,
+            "containers": [{
+                "name": 1
+            }],
         })
 
         network_ = {
-            "name"              : network_name,
-            "host_ifname"       : network["Options"]["com.docker.network.bridge.name"],
-            "network_id"        : _docker_trunc_id(network["Id"]),
-            "scope"             : network["Scope"],
+            "name": network_name,
+            "host_ifname": network["Options"]["com.docker.network.bridge.name"],
+            "network_id": _docker_trunc_id(network["Id"]),
+            "scope": network["Scope"],
         }
 
-        labels = sorted(["%s: %s" % (k,v) for k,v in network.get("Labels", {}).items()])
+        labels = sorted(["%s: %s" % (k, v) for k, v in network.get("Labels", {}).items()])
         if labels:
             network_["labels"] = ", ".join(labels)
         inventory_networks.update(network_)

@@ -39,12 +39,12 @@
 # Status                    : OK
 
 
-def win_cpuinfo_parse_speed(v): # into Hz (float)
+def win_cpuinfo_parse_speed(v):  # into Hz (float)
     if v == "Unknown" or v == "":
         return None
     parts = v.split()
     if len(parts) == 1:
-        return float(parts[0]) * 1000000.0 # seems to be in MHz as default
+        return float(parts[0]) * 1000000.0  # seems to be in MHz as default
     elif parts[1] == "GHz":
         return float(parts[0]) * 1000000000.0
     elif parts[1] == "MHz":
@@ -54,35 +54,37 @@ def win_cpuinfo_parse_speed(v): # into Hz (float)
     elif parts[1] == "Hz":
         return float(parts[0])
 
+
 def win_cpuinfo_parse_voltage(v):
     if v == "Unknown" or v == "":
         return None
     parts = v.split()
     return float(parts[0])
 
+
 def inv_win_cpuinfo(info):
     node = inv_tree("hardware.cpu.")
     num_procs = 0
     for varname, value in info:
-        varname = re.sub(" *","", varname)
+        varname = re.sub(" *", "", varname)
         value = re.sub("^ ", "", value)
 
         if varname == "NumberOfCores" and value != "":
             if value != "":
                 node["cores_per_cpu"] = int(value)
             else:
-                node["cores_per_cpu"] = 1 # missing on Windows 2003
+                node["cores_per_cpu"] = 1  # missing on Windows 2003
 
         elif varname == "NumberOfLogicalProcessors":
             if value != "":
                 node["threads_per_cpu"] = int(value)
             else:
-                node["threads_per_cpu"] = 1 # missing on Windows 2003
+                node["threads_per_cpu"] = 1  # missing on Windows 2003
 
         elif varname == "Manufacturer":
             node["vendor"] = {
-                "GenuineIntel" : "intel",
-                "AuthenticAMD" : "amd",
+                "GenuineIntel": "intel",
+                "AuthenticAMD": "amd",
             }.get(value, value)
 
         # there is also the L3CacheSize
@@ -105,22 +107,23 @@ def inv_win_cpuinfo(info):
         #    else:
         #        node["arch"] = "i386"
         elif varname == "Architecture":
-                node["arch"] = {
-                        "0" : "i386",
-                        "1" : "MIPS",
-                        "2" : "Alpha",
-                        "3" : "PowerPC",
-                        "6" : "Itanium",
-                        "9" : "x86_64",
-                }.get(value,value)
+            node["arch"] = {
+                "0": "i386",
+                "1": "MIPS",
+                "2": "Alpha",
+                "3": "PowerPC",
+                "6": "Itanium",
+                "9": "x86_64",
+            }.get(value, value)
 
     if num_procs:
         node.setdefault("cores_per_cpu", 1)
         node.setdefault("threads_per_cpu", 1)
-        node["cpus"]    = num_procs
-        node["cores"]   = num_procs * node["cores_per_cpu"]
+        node["cpus"] = num_procs
+        node["cores"] = num_procs * node["cores_per_cpu"]
         node["threads"] = num_procs * node["threads_per_cpu"]
 
+
 inv_info['win_cpuinfo'] = {
-   "inv_function"           : inv_win_cpuinfo,
+    "inv_function": inv_win_cpuinfo,
 }

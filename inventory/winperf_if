@@ -30,8 +30,9 @@ def inv_winperf_if(parsed, params):
     _agent_timestamp, perf, _dhcp, _nic_names, _nic_index = parsed
     node = inv_tree_list("networking.interfaces:")
 
-    usage_port_types = params.get("usage_port_types",
-           [ '6', '32', '62', '117', '127', '128', '129', '180', '181', '182', '205', '229' ])
+    usage_port_types = params.get(
+        "usage_port_types",
+        ['6', '32', '62', '117', '127', '128', '129', '180', '181', '182', '205', '229'])
 
     def render_mac_address(bytestring):
         return ":".join(["%02s" % hex(ord(m))[2:] for m in bytestring]).replace(' ', '0').upper()
@@ -43,18 +44,18 @@ def inv_winperf_if(parsed, params):
         _if_in_errors, _if_out_octets, _outucast, _outmcast, _outbcast, \
         _if_out_discards, _if_out_errors, _if_out_qlen, if_alias, if_phys_address in perf:
 
-        if if_type in ( "231", "232" ) or not if_speed:
-            continue # Useless entries for "TenGigabitEthernet2/1/21--Uncontrolled"
-                     # Ignore useless half-empty tables (e.g. Viprinet-Router)
+        if if_type in ("231", "232") or not if_speed:
+            continue  # Useless entries for "TenGigabitEthernet2/1/21--Uncontrolled"
+            # Ignore useless half-empty tables (e.g. Viprinet-Router)
 
         if_info = {
-            "index"        : int(if_index[-1]),
-            "description"  : if_descr,
-            "alias"        : if_alias,
-            "speed"        : int(if_speed),
-            "phys_address" : render_mac_address(if_phys_address),
-            "oper_status"  : int(if_oper_status[0]),
-            "port_type"    : int(if_type),
+            "index": int(if_index[-1]),
+            "description": if_descr,
+            "alias": if_alias,
+            "speed": int(if_speed),
+            "phys_address": render_mac_address(if_phys_address),
+            "oper_status": int(if_oper_status[0]),
+            "port_type": int(if_type),
         }
 
         if if_type in usage_port_types:
@@ -75,5 +76,5 @@ def inv_winperf_if(parsed, params):
 
 
 inv_info['winperf_if'] = {
-    'inv_function' : inv_winperf_if,
+    'inv_function': inv_winperf_if,
 }

@@ -24,7 +24,6 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-
 # <<<oracle_performance:sep(124)>>>
 # XE|SGA_info|Maximum SGA Size|367439872
 
@@ -35,21 +34,21 @@ def inv_oracle_performance(parsed, status_data_tree):
         if "SGA_info" in entryinfo:
             sga_data = entryinfo["SGA_info"]
             status_node.append({
-                "sid"                   : entry,
-                "fixed_size"            : sga_data.get("Fixed SGA Size"),
-                "max_size"              : sga_data.get("Maximum SGA Size"),
-                "redo_buffer"           : sga_data.get("Redo Buffers"),
-                "buf_cache_size"        : sga_data.get("Buffer Cache Size"),
-                "in_mem_area_size"      : sga_data.get("In-Memory Area Size"),
-                "shared_pool_size"      : sga_data.get("Shared Pool Size"),
-                "large_pool_size"       : sga_data.get("Large Pool Size"),
-                "java_pool_size"        : sga_data.get("Java Pool Size"),
-                "streams_pool_size"     : sga_data.get("Streams Pool Size"),
-                "shared_io_pool_size"   : sga_data.get("Shared IO Pool Size"),
-                "data_trans_cache_size" : sga_data.get("Data Transfer Cache Size"),
-                "granule_size"          : sga_data.get("Granule Size"),
-                "start_oh_shared_pool"  : sga_data.get("Startup overhead in Shared Pool"),
-                "free_mem_avail"        : sga_data.get("Free SGA Memory Available"),
+                "sid": entry,
+                "fixed_size": sga_data.get("Fixed SGA Size"),
+                "max_size": sga_data.get("Maximum SGA Size"),
+                "redo_buffer": sga_data.get("Redo Buffers"),
+                "buf_cache_size": sga_data.get("Buffer Cache Size"),
+                "in_mem_area_size": sga_data.get("In-Memory Area Size"),
+                "shared_pool_size": sga_data.get("Shared Pool Size"),
+                "large_pool_size": sga_data.get("Large Pool Size"),
+                "java_pool_size": sga_data.get("Java Pool Size"),
+                "streams_pool_size": sga_data.get("Streams Pool Size"),
+                "shared_io_pool_size": sga_data.get("Shared IO Pool Size"),
+                "data_trans_cache_size": sga_data.get("Data Transfer Cache Size"),
+                "granule_size": sga_data.get("Granule Size"),
+                "start_oh_shared_pool": sga_data.get("Startup overhead in Shared Pool"),
+                "free_mem_avail": sga_data.get("Free SGA Memory Available"),
             })
 
 

@@ -24,7 +24,6 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-
 #<<<solaris_psrinfo:persist(1405715354)>>>
 #The physical processor has 8 virtual processors (0-7)
 #  SPARC64-VII+ (portid 1024 impl 0x7 ver 0xc1 clock 2660 MHz)
@@ -57,9 +56,9 @@
 def inv_solaris_psrinfo(info):
     node = inv_tree("hardware.cpu.")
     node["Model"] = info[-1][0]
-    node["Maximum Speed"] = "%s %s" % (info[-1][-2], info[-1][-1].strip(')') )
+    node["Maximum Speed"] = "%s %s" % (info[-1][-2], info[-1][-1].strip(')'))
 
 
 inv_info['solaris_psrinfo'] = {
-   "inv_function"           : inv_solaris_psrinfo,
+    "inv_function": inv_solaris_psrinfo,
 }

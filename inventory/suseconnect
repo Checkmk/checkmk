@@ -41,6 +41,4 @@ def inv_suseconnect(parsed, params):
         node[description] = parsed.get(key, 'Unknown')
 
 
-inv_info['suseconnect'] = {
-    'inv_function': inv_suseconnect
-}
+inv_info['suseconnect'] = {'inv_function': inv_suseconnect}

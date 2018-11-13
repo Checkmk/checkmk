@@ -24,7 +24,6 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-
 # Example output from agent:
 # <<<ip_a_r>>>
 # 1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN group default
@@ -45,9 +44,9 @@ def inv_lnx_ip_a(info):
     def parse_address(device, network):
         address = network.split("/")[0]
         return {
-            "device" : device,
-            "address" : address,
-            "type" : '.' in address and "ipv4" or "ipv6",
+            "device": device,
+            "address": address,
+            "type": '.' in address and "ipv4" or "ipv6",
         }
 
     addresses = inv_tree_list("networking.addresses:")
@@ -59,5 +58,5 @@ def inv_lnx_ip_a(info):
 
 
 inv_info['lnx_ip_a'] = {
-    "inv_function" : inv_lnx_ip_a,
+    "inv_function": inv_lnx_ip_a,
 }

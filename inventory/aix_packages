@@ -59,14 +59,14 @@ def inv_aix_packages(info):
             package_type = "aix"
 
         entry = {
-            "name"         : row["Package Name"],
-            "summary"      : row["Description"],
-            "version"      : row["Level"],
-            "package_type" : package_type,
+            "name": row["Package Name"],
+            "summary": row["Description"],
+            "version": row["Level"],
+            "package_type": package_type,
         }
         paclist.append(entry)
 
 
 inv_info['aix_packages'] = {
-   "inv_function"           : inv_aix_packages,
+    "inv_function": inv_aix_packages,
 }

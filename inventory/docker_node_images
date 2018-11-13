@@ -33,26 +33,26 @@ def inv_docker_node_images(info, inventory_tree, status_data_tree):
 
     for image in sorted(images.itervalues(), key=lambda i: i["ID"]):
         inv_node.append({
-            "repository"        : image["Repository"],
-            "tag"               : image["Tag"],
-            "id"                : image["ID"],
-            "creation"          : image["CreatedAt"],
-            "size"              : image["VirtualSize"],
-            "labels"            : _format_labels(image.get("__labels__", {})),
+            "repository": image["Repository"],
+            "tag": image["Tag"],
+            "id": image["ID"],
+            "creation": image["CreatedAt"],
+            "size": image["VirtualSize"],
+            "labels": _format_labels(image.get("__labels__", {})),
         })
 
         status_node.append({
-            "repository"        : image["Repository"],
-            "tag"               : image["Tag"],
-            "id"                : image["ID"],
-            "amount_containers" : image["amount_containers"],
+            "repository": image["Repository"],
+            "tag": image["Tag"],
+            "id": image["ID"],
+            "amount_containers": image["amount_containers"],
         })
 
 
 inv_info['docker_node_images'] = {
-    'includes'        : ['docker.include'],
-    'inv_function'    : inv_docker_node_images,
-    'has_status_data' : True,
+    'includes': ['docker.include'],
+    'inv_function': inv_docker_node_images,
+    'has_status_data': True,
 }
 
 
@@ -62,13 +62,13 @@ def inv_docker_node_images_containers(info, inventory_tree, status_data_tree):
 
     for container in sorted(containers.itervalues(), key=lambda c: c["ID"]):
         status_node.append({
-            "id"                : container["ID"],
-            "repository"        : container["Repository"],
-            "tag"               : container["Tag"],
-            "name"              : container["Names"],
-            "creation"          : container["CreatedAt"],
-            "labels"            : _format_labels(container["Labels"]),
-            "status"            : container["Status"],
+            "id": container["ID"],
+            "repository": container["Repository"],
+            "tag": container["Tag"],
+            "name": container["Names"],
+            "creation": container["CreatedAt"],
+            "labels": _format_labels(container["Labels"]),
+            "status": container["Status"],
         })
 
 
@@ -77,12 +77,13 @@ def _format_labels(labels):
         labels = labels.iteritems()
     return ", ".join(["%s: %s" % item for item in labels])
 
+
 # TODO: This section contains also information about the containers. We should
 # better split it into multiple sections and add them to the different plugins
 # using the extra_sections feature. In case this is not possible for the inventory
 # plugins at the moment we should make it possible.
 inv_info['docker_node_images.containers'] = {
-    'includes'        : ['docker.include'],
-    'inv_function'    : inv_docker_node_images_containers,
-    'has_status_data' : True,
+    'includes': ['docker.include'],
+    'inv_function': inv_docker_node_images_containers,
+    'has_status_data': True,
 }

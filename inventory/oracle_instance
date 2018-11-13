@@ -24,7 +24,6 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-
 # <<<oracle_instance:sep(124)>>>
 # XE|11.2.0.2.0|OPEN|ALLOWED|STOPPED|3524|2752243048|NOARCHIVELOG|PRIMARY|NO|XE|080220151025
 # last entry: db creation time 'ddmmyyyyhh24mi'
@@ -38,8 +37,8 @@ def inv_oracle_instance(info, inventory_tree, status_data_tree):
         db_creation_time = None
         if len(line) == 6:
             sid, version, openmode, logins, _unused, _unused2 = line
-            logmode          = None
-            up_seconds       = None
+            logmode = None
+            up_seconds = None
 
         elif len(line) >= 11:
             sid, version, openmode, logins, _archiver, up_seconds_str, _dbid, \
@@ -52,20 +51,20 @@ def inv_oracle_instance(info, inventory_tree, status_data_tree):
             continue
 
         inv_node.append({
-            "sid"              : sid,
-            "version"          : version,
-            "openmode"         : openmode,
-            "logmode"          : logmode,
-            "logins"           : logins,
-            "db_creation_time" : db_creation_time,
+            "sid": sid,
+            "version": version,
+            "openmode": openmode,
+            "logmode": logmode,
+            "logins": logins,
+            "db_creation_time": db_creation_time,
         })
 
         status_node.append({
-            "sid"       : sid,
-            "db_uptime" : up_seconds,
+            "sid": sid,
+            "db_uptime": up_seconds,
         })
 
 
 inv_info['oracle_instance'] = {
-    'inv_function' : inv_oracle_instance,
+    'inv_function': inv_oracle_instance,
 }

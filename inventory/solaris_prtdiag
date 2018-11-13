@@ -111,28 +111,29 @@ def inv_solaris_prtdiag(info):
             # 'System Configuration: SUN MICROSYSTEMS SUN FIRE X4270 SERVER'
             # 'System Configuration: Sun Microsystems SUN FIRE X4450'
             node = inv_tree("hardware.system.")
-            system_info = line[0].split(":", 1)[1].strip().replace("SERVER", "").replace("Server", "")
+            system_info = line[0].split(":", 1)[1].strip().replace("SERVER", "").replace(
+                "Server", "")
 
             if "sun microsystems" in system_info.lower():
                 vendor = "Sun Microsystems"
-                index  = 2
+                index = 2
             elif "oracle corporation" in system_info.lower():
                 vendor = "Oracle Corporation"
-                index  = 2
+                index = 2
             elif "supermicro" in system_info.lower():
                 vendor = "Supermicro"
-                index  = 1
+                index = 1
             elif "vmware, inc." in system_info.lower():
                 vendor = "VMWare, Inc."
-                index  = 2
+                index = 2
             elif "hp" in system_info.lower():
                 vendor = "HP"
-                index  = 1
+                index = 1
             else:
                 vendor = system_info.split(" ")[0]
-                index  = 1
+                index = 1
 
-            system_info    = " ".join(system_info.split(" ")[index:]).strip()
+            system_info = " ".join(system_info.split(" ")[index:]).strip()
             node["vendor"] = vendor
 
             if "sun fire" in system_info.lower():
@@ -146,12 +147,12 @@ def inv_solaris_prtdiag(info):
                 index = 1
 
             node["product"] = " ".join(system_info.split(" ")[:index])
-            family          = " ".join(system_info.split(" ")[index:])
+            family = " ".join(system_info.split(" ")[index:])
 
             if family:
                 node["family"] = "%s-series" % family[0].upper()
 
 
 inv_info['solaris_prtdiag'] = {
-   "inv_function"           : inv_solaris_prtdiag,
+    "inv_function": inv_solaris_prtdiag,
 }

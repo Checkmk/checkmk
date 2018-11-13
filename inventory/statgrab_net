@@ -27,8 +27,9 @@
 
 # executed after solaris_addresses which provides some information
 def inv_statgrab_net(info, params):
-    usage_port_types = params.get("usage_port_types",
-           [ '6', '32', '62', '117', '127', '128', '129', '180', '181', '182', '205', '229' ])
+    usage_port_types = params.get(
+        "usage_port_types",
+        ['6', '32', '62', '117', '127', '128', '129', '180', '181', '182', '205', '229'])
     total_ethernet_ports = 0
 
     parsed = {}
@@ -39,19 +40,20 @@ def inv_statgrab_net(info, params):
         if not if_speed:
             continue
 
-        parsed.setdefault(if_descr, {
-            "index"        : int(if_index),
-            "description"  : if_descr,
-            "alias"        : if_alias,
-            "speed"        : int(if_speed),
-            "phys_address" : if_phys_address,
-            "oper_status"  : int(if_oper_status),
-            "port_type"    : int(if_type),
-        })
+        parsed.setdefault(
+            if_descr, {
+                "index": int(if_index),
+                "description": if_descr,
+                "alias": if_alias,
+                "speed": int(if_speed),
+                "phys_address": if_phys_address,
+                "oper_status": int(if_oper_status),
+                "port_type": int(if_type),
+            })
 
     node = inv_tree_list("networking.interfaces:")
     for entry in node:
-        descr     = entry.get("description")
+        descr = entry.get("description")
         phys_addr = entry.get("phys_address")
         if parsed.get(descr):
             entry.update(parsed[descr])
@@ -71,5 +73,5 @@ def inv_statgrab_net(info, params):
 
 
 inv_info['statgrab_net'] = {
-    'inv_function'      : inv_statgrab_net,
+    'inv_function': inv_statgrab_net,
 }

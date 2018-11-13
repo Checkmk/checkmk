@@ -58,5 +58,5 @@ def inv_lnx_video(info):
 
 
 inv_info['lnx_video'] = {
-   "inv_function"           : inv_lnx_video,
+    "inv_function": inv_lnx_video,
 }

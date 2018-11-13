@@ -30,12 +30,11 @@
 # cpu', '(cpu        = thread
 
 
-
 def inv_solaris_prtpicl(info):
     node = inv_tree("hardware.cpu.")
-    cmp_no  = 0
+    cmp_no = 0
     core_no = 0
-    cpu_no  = 0
+    cpu_no = 0
     for line in info:
         if line[0] == "cmp":
             cmp_no += 1
@@ -48,6 +47,7 @@ def inv_solaris_prtpicl(info):
     node["cores"] = core_no
     node["threads"] = cpu_no
 
+
 inv_info['solaris_prtpicl'] = {
-   "inv_function"           : inv_solaris_prtpicl,
+    "inv_function": inv_solaris_prtpicl,
 }

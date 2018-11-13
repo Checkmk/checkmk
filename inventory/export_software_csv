@@ -26,10 +26,11 @@
 
 import cmk.paths
 
+
 def inv_export_software_csv(hostname, params, tree):
     separator = params.get("separator", ";")
-    quotes    = params.get("quotes", None) # Also: "single", "double"
-    headers   = params.get("headers", False)
+    quotes = params.get("quotes", None)  # Also: "single", "double"
+    headers = params.get("headers", False)
 
     if quotes == "single":
         quote = lambda s: "'" + s.replace("'", "\\'") + "'"
@@ -41,9 +42,9 @@ def inv_export_software_csv(hostname, params, tree):
     try:
         packages = tree["software"]["packages"]
     except KeyError:
-        return # No software information available
+        return  # No software information available
 
-    filename  = params["filename"].replace("<HOST>", hostname)
+    filename = params["filename"].replace("<HOST>", hostname)
     if not filename.startswith("/"):
         filename = cmk.paths.var_dir + "/" + filename
     dirname = filename.rsplit("/", 1)[0]
@@ -53,11 +54,10 @@ def inv_export_software_csv(hostname, params, tree):
         except Exception, e:
             if cmk.debug.enabled():
                 raise
-            raise MKGeneralException("Cannot create missing directory %s: %s" % (
-                    dirname, e))
+            raise MKGeneralException("Cannot create missing directory %s: %s" % (dirname, e))
 
     out = file(filename, "w")
-    keys = [ "name", "version", "arch" ]
+    keys = ["name", "version", "arch"]
 
     if headers:
         out.write(separator.join(map(quote, keys)) + "\n")
@@ -70,5 +70,5 @@ def inv_export_software_csv(hostname, params, tree):
 
 
 inv_export['software_csv'] = {
-    "export_function" : inv_export_software_csv,
+    "export_function": inv_export_software_csv,
 }

@@ -46,25 +46,28 @@
 # ### Clustermode
 # node clu1-02  cpu-microcode-version 21    prod-type FAS   system-model SIMBOX memory-size 8192    board-speed 2933
 
+
 def inv_netapp_api_info(info):
     info_dict = dict((x[0], x[1]) for x in info if x[0] != "node")
 
     sw_os = inv_tree("software.os.")
     hw_chassis = inv_tree("hardware.chassis.")
     hw_system = inv_tree("hardware.system.")
-    hw_cpu= inv_tree("hardware.cpu.")
+    hw_cpu = inv_tree("hardware.cpu.")
 
     # General data
-    for what, name, where_to in [("backplane-serial-number",    "serial",   hw_chassis),
-                                 ("system-model",               "model",    hw_system),
-                                 ("system-machine-type",        "product",  hw_system),
-                                 ("system-serial-number",       "serial",   hw_system),
-                                 ("system-id",                  "id",       hw_system),
-# TODO: find good location for the configurable system name
-#                                 ("system-name",                "system_name",     sw_os),
-                                 ("vendor-id",                  "vendor",   sw_os),
-                                 ("number-of-processors",       "cores",    hw_cpu),
-                                 ("cpu-processor-type",         "model",    hw_cpu)]:
+    for what, name, where_to in [
+        ("backplane-serial-number", "serial", hw_chassis),
+        ("system-model", "model", hw_system),
+        ("system-machine-type", "product", hw_system),
+        ("system-serial-number", "serial", hw_system),
+        ("system-id", "id", hw_system),
+            # TODO: find good location for the configurable system name
+            #                                 ("system-name",                "system_name",     sw_os),
+        ("vendor-id", "vendor", sw_os),
+        ("number-of-processors", "cores", hw_cpu),
+        ("cpu-processor-type", "model", hw_cpu)
+    ]:
         if what in info_dict:
             where_to[name] = info_dict[what]
 
@@ -82,5 +85,5 @@ def inv_netapp_api_info(info):
 #
 
 inv_info['netapp_api_info'] = {
-   "inv_function"           : inv_netapp_api_info,
+    "inv_function": inv_netapp_api_info,
 }

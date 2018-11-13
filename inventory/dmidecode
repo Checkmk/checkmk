@@ -62,6 +62,7 @@
 #
 # ... any many other sections...
 
+
 # Note: on Linux \t is replaced by : and then the split
 # is done by :. On Windows the \t comes 1:1 and no splitting
 # is being done. So we need to split manually here
@@ -72,7 +73,7 @@ def inv_dmidecode(info):
         # Windows plugin keeps tabs and has no separator
         if len(line) == 1:
             parts = line[0].replace("\t", ":").split(":")
-            line = [ x.strip() for x in parts ]
+            line = [x.strip() for x in parts]
         if len(line) == 1:
             if section_name:
                 inv_dmidecode_parse_section(section_name, section_lines)
@@ -85,7 +86,7 @@ def inv_dmidecode(info):
 
 
 def inv_dmidecode_parse_section(name, lines):
-    lines = [ [ w.strip() for w in words ] for words in lines ]
+    lines = [[w.strip() for w in words] for words in lines]
     if name == "BIOS Information":
         inv_dmidecode_parse_bios(lines)
     elif name == "System Information":
@@ -94,6 +95,8 @@ def inv_dmidecode_parse_section(name, lines):
         inv_dmidecode_parse_chassis(lines)
     elif name == "Processor Information":
         inv_dmidecode_parse_processor(lines)
+
+
 #    elif name == "Memory Controller Information":
 #        inv_dmidecode_parse_mem_controller(lines)
 #    elif name == "Memory Module Information":
@@ -105,6 +108,7 @@ def inv_dmidecode_parse_section(name, lines):
 
     # TODO: Summe ueber alle Arrays ausrechnen
 
+
 def inv_dmidecode_parse_date(value):
     try:
         # 10/17/2008
@@ -112,30 +116,36 @@ def inv_dmidecode_parse_date(value):
     except Exception:
         return
 
+
 def inv_dmidecode_parse_bios(lines):
-    inv_dmidecode_parse_generic("hardware.bios.", lines, {
-        "Vendor"            : "vendor",
-        "Version"           : "version",
-        "Release Date"      : ("date", inv_dmidecode_parse_date),
-        "BIOS Revision"     : "revision",
-        "Firmware Revision" : "firmware",
-    })
+    inv_dmidecode_parse_generic(
+        "hardware.bios.", lines, {
+            "Vendor": "vendor",
+            "Version": "version",
+            "Release Date": ("date", inv_dmidecode_parse_date),
+            "BIOS Revision": "revision",
+            "Firmware Revision": "firmware",
+        })
+
 
 def inv_dmidecode_parse_system(lines):
-    inv_dmidecode_parse_generic("hardware.system.", lines, {
-        "Manufacturer"  : "manufacturer",
-        "Product Name"  : "product",
-        "Version"       : "version",
-        "Serial Number" : "serial",
-        "UUID"          : "uuid",
-        "Family"        : "family",
-    })
+    inv_dmidecode_parse_generic(
+        "hardware.system.", lines, {
+            "Manufacturer": "manufacturer",
+            "Product Name": "product",
+            "Version": "version",
+            "Serial Number": "serial",
+            "UUID": "uuid",
+            "Family": "family",
+        })
+
 
 def inv_dmidecode_parse_chassis(lines):
     inv_dmidecode_parse_generic("hardware.chassis.", lines, {
-        "Manufacturer" : "manufacturer",
-        "Type"         : "type",
+        "Manufacturer": "manufacturer",
+        "Type": "type",
     })
+
 
 # Note: This node is also being filled by lnx_cpuinfo
 def inv_dmidecode_parse_processor(lines):
@@ -143,11 +153,11 @@ def inv_dmidecode_parse_processor(lines):
     for line in lines:
         if line[0] == "Manufacturer":
             cpu_info["vendor"] = {
-                "GenuineIntel" : "intel",
-                "Intel(R) Corporation" : "intel",
-                "AuthenticAMD" : "amd",
+                "GenuineIntel": "intel",
+                "Intel(R) Corporation": "intel",
+                "AuthenticAMD": "amd",
             }.get(line[1], line[1])
-        elif line[0] == "Max Speed": # 2530 MHz
+        elif line[0] == "Max Speed":  # 2530 MHz
             cpu_info["max_speed"] = dmidecode_parse_speed(line[1])
         elif line[0] == "Voltage":
             cpu_info["voltage"] = dmidecode_parse_voltage(line[1])
@@ -157,6 +167,7 @@ def inv_dmidecode_parse_processor(lines):
 
     # Only update our CPU information if the socket is populated
     inv_tree("hardware.cpu.").update(cpu_info)
+
 
 # def inv_dmidecode_parse_mem_controller(lines):
 #     # TODO: Can we have multiple memory controllers
@@ -187,50 +198,53 @@ def inv_dmidecode_parse_processor(lines):
 #             speed = 1.0 / time_sec
 #             module["current_speed"] = speed
 
+
 def inv_dmidecode_parse_physical_mem_array(lines):
     # We expect several possible arrays
     node = inv_tree_list("hardware.memory.arrays:")
 
     # If we have a dummy entry from previous Memory Devices (see below)
     # then we fill that entry rather than creating a new one
-    if len(node) == 1 and node[0].keys() == [ "devices" ]:
+    if len(node) == 1 and node[0].keys() == ["devices"]:
         array = node[0]
     else:
-        array = {
-            "devices" : []
-        }
+        array = {"devices": []}
         node.append(array)
 
     for line in lines:
-         if line[0] == "Location":
-             array["location"] = line[1]
-         elif line[0] == "Use":
-             array["use"] = line[1]
-         elif line[0] == "Error Correction Type":
-             array["error_correction"] = line[1]
-         elif line[0] == "Maximum Capacity":
-             array["maximum_capacity"] = dmidecode_parse_size(line[1])
+        if line[0] == "Location":
+            array["location"] = line[1]
+        elif line[0] == "Use":
+            array["use"] = line[1]
+        elif line[0] == "Error Correction Type":
+            array["error_correction"] = line[1]
+        elif line[0] == "Maximum Capacity":
+            array["maximum_capacity"] = dmidecode_parse_size(line[1])
+
 
 def inv_dmidecode_parse_mem_device(lines):
-    node   = inv_tree_list("hardware.memory.arrays:")
+    node = inv_tree_list("hardware.memory.arrays:")
     device = {}
 
-    inv_dmidecode_parse_generic(device, lines, {
-        "Total Width"   : "total_width",  # 64 bits
-        "Data Width"    : "data_width",   # 64 bits
-        "Form Factor"   : "form_factor",  # SODIMM
-        "Set"           : "set",          # None
-        "Locator"       : "locator",      # PROC 1 DIMM 2
-        "Bank Locator"  : "bank_locator", # Bank 2/3
-        "Type"          : "type",         # DDR2
-        "Type Detail"   : "type_detail",  # Synchronous
-        "Manufacturer"  : "manufacturer", # Not Specified
-        "Serial Number" : "serial",       # Not Specified
-        "Asset Tag"     : "asset_tag",    # Not Specified
-        "Part Number"   : "part_number",  # Not Specified
-        "Speed"         : "speed",        # 667 MHz
-        "Size"          : "size",         # 2048 MB
-    })
+    inv_dmidecode_parse_generic(
+        device,
+        lines,
+        {
+            "Total Width": "total_width",  # 64 bits
+            "Data Width": "data_width",  # 64 bits
+            "Form Factor": "form_factor",  # SODIMM
+            "Set": "set",  # None
+            "Locator": "locator",  # PROC 1 DIMM 2
+            "Bank Locator": "bank_locator",  # Bank 2/3
+            "Type": "type",  # DDR2
+            "Type Detail": "type_detail",  # Synchronous
+            "Manufacturer": "manufacturer",  # Not Specified
+            "Serial Number": "serial",  # Not Specified
+            "Asset Tag": "asset_tag",  # Not Specified
+            "Part Number": "part_number",  # Not Specified
+            "Speed": "speed",  # 667 MHz
+            "Size": "size",  # 2048 MB
+        })
 
     # Do we already have an entry for a memory array? Then
     # we assume that this device belongs to the most recently
@@ -248,13 +262,13 @@ def inv_dmidecode_parse_mem_device(lines):
         except:
             array = node[-1]
     else:
-        array = { "devices": [] }
+        array = {"devices": []}
         node.append(array)
 
     if device["size"] != "No Module Installed":
         # Convert speed and size into numbers
         device["speed"] = dmidecode_parse_speed(device.get("speed", "Unknown"))
-        device["size"]  = dmidecode_parse_size(device.get("size", "Unknown"))
+        device["size"] = dmidecode_parse_size(device.get("size", "Unknown"))
         array["devices"].append(device)
 
 
@@ -274,7 +288,7 @@ def inv_dmidecode_parse_generic(node, lines, keyinfo):
                 node[key] = value
 
 
-def dmidecode_parse_size(v): # into Bytes (int)
+def dmidecode_parse_size(v):  # into Bytes (int)
     if v == "Unknown":
         return None
 
@@ -289,7 +303,8 @@ def dmidecode_parse_size(v): # into Bytes (int)
         return int(parts[0]) * 1024
     return int(parts[0])
 
-def dmidecode_parse_speed(v): # into Hz (float)
+
+def dmidecode_parse_speed(v):  # into Hz (float)
     if v == "Unknown":
         return None
 
@@ -303,18 +318,20 @@ def dmidecode_parse_speed(v): # into Hz (float)
     elif parts[1] == "Hz":
         return float(parts[0])
 
+
 def dmidecode_parse_voltage(v):
     if v == "Unknown":
         return None
     return float(v.split()[0])
 
-def dmidecode_parse_time(v): # 155 ns
+
+def dmidecode_parse_time(v):  # 155 ns
     parts = v.split()
     if parts[1] == "ns":
         return float(parts[0]) / 1000000000.0
-    return float(parts[0]) # assume seconds
+    return float(parts[0])  # assume seconds
 
 
 inv_info['dmidecode'] = {
-   "inv_function"           : inv_dmidecode,
+    "inv_function": inv_dmidecode,
 }

@@ -24,6 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+
 def parse_mgmt_ipmi_firmware(info):
     parsed = {}
 
@@ -49,5 +50,5 @@ def inv_mgmt_ipmi_firmware(info, inventory_tree):
 
 
 inv_info["mgmt_ipmi_firmware"] = {
-   "inv_function"           : inv_mgmt_ipmi_firmware,
+    "inv_function": inv_mgmt_ipmi_firmware,
 }

@@ -40,6 +40,7 @@
 # hardware.cpuPkg.vendor.0 intel
 # hardware.cpuPkg.vendor.1 intel
 
+
 def inv_esx_vsphere_hostsystem_parse(info, inv_items=None):
     if inv_items is None:
         inv_items = {}
@@ -60,14 +61,25 @@ def inv_esx_vsphere_hostsystem_parse(info, inv_items=None):
                 break
     return result
 
+
 def inv_esx_vsphere_hostsystem(info):
     inv_items = {
-                  "hardware.cpuPkg":     { "index": True},
-                  "hardware.cpuInfo":    { "index": False},
-                  "hardware.biosInfo":   { "index": False},
-                  "hardware.systemInfo": { "index": False},
-                  "hardware.memorySize": { "index": False}
-                }
+        "hardware.cpuPkg": {
+            "index": True
+        },
+        "hardware.cpuInfo": {
+            "index": False
+        },
+        "hardware.biosInfo": {
+            "index": False
+        },
+        "hardware.systemInfo": {
+            "index": False
+        },
+        "hardware.memorySize": {
+            "index": False
+        }
+    }
 
     data = inv_esx_vsphere_hostsystem_parse(info, inv_items)
     # data example: {'hardware.cpuPkg': {'0': {'busHz': '133338028',
@@ -78,17 +90,17 @@ def inv_esx_vsphere_hostsystem(info):
 
     node = inv_tree("hardware.cpu.")
     if "hardware.cpuInfo" in data:
-        node["max_speed"]       = float(data["hardware.cpuInfo"]["hz"])
-        node["cpus"]            = int(data["hardware.cpuInfo"]["numCpuPackages"])
-        node["cores"]           = int(data["hardware.cpuInfo"]["numCpuCores"])
-        node["threads"]         = int(data["hardware.cpuInfo"]["numCpuThreads"])
+        node["max_speed"] = float(data["hardware.cpuInfo"]["hz"])
+        node["cpus"] = int(data["hardware.cpuInfo"]["numCpuPackages"])
+        node["cores"] = int(data["hardware.cpuInfo"]["numCpuCores"])
+        node["threads"] = int(data["hardware.cpuInfo"]["numCpuThreads"])
 
-    node["cores_per_cpu"]   = node["cores"] / node["cpus"]
+    node["cores_per_cpu"] = node["cores"] / node["cpus"]
     node["threads_per_cpu"] = node["threads"] / node["cpus"]
     if "hardware.cpuPkg" in data:
-        node["model"]           = data["hardware.cpuPkg"]["0"]["description"]
-        node["vendor"]          = data["hardware.cpuPkg"]["0"]["vendor"]
-        node["bus_speed"]       = float(data["hardware.cpuPkg"]["0"]["busHz"])
+        node["model"] = data["hardware.cpuPkg"]["0"]["description"]
+        node["vendor"] = data["hardware.cpuPkg"]["0"]["vendor"]
+        node["bus_speed"] = float(data["hardware.cpuPkg"]["0"]["busHz"])
 
     if "hardware.biosInfo" in data:
         node = inv_tree("hardware.bios.")
@@ -103,21 +115,21 @@ def inv_esx_vsphere_hostsystem(info):
     if "hardware.systemInfo" in data:
         node = inv_tree("hardware.system.")
         node["product"] = data["hardware.systemInfo"]["model"]
-        node["vendor"]  = data["hardware.systemInfo"]["vendor"]
+        node["vendor"] = data["hardware.systemInfo"]["vendor"]
         # We only know for HP that ServiceTag is the serial
         if node["vendor"] == "HP":
-            node["serial"]	= data["hardware.systemInfo.otherIdentifyingInfo.ServiceTag"]["0"]
+            node["serial"] = data["hardware.systemInfo.otherIdentifyingInfo.ServiceTag"]["0"]
 
     hardware_systeminfo = data.get("hardware.systemInfo", {})
     if "uuid" in hardware_systeminfo:
-        node["uuid"]  = hardware_systeminfo["uuid"]
+        node["uuid"] = hardware_systeminfo["uuid"]
     if "0" in hardware_systeminfo:
-        node["serial"]  = hardware_systeminfo["0"]["ServiceTag"]
+        node["serial"] = hardware_systeminfo["0"]["ServiceTag"]
     if "memorySize" in data["hardware"]:
         node = inv_tree("hardware.memory.")
         node["total_ram_usable"] = int(data["hardware"]["memorySize"])
 
 
 inv_info['esx_vsphere_hostsystem'] = {
-   "inv_function"           : inv_esx_vsphere_hostsystem,
+    "inv_function": inv_esx_vsphere_hostsystem,
 }

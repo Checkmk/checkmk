@@ -29,7 +29,7 @@ def inv_docker_container_labels(info, inventory_tree):
     import json
     data = json.loads(" ".join(info[0]))
     container = inventory_tree.get_dict("software.applications.docker.container.")
-    container["labels"] = ", ".join(["%s: %s" % (k,v) for k,v in data.items()])
+    container["labels"] = ", ".join(["%s: %s" % (k, v) for k, v in data.items()])
 
 
 inv_info['docker_container_labels'] = {

@@ -28,6 +28,7 @@
 # <<<win_reg_uninstall:sep(124)>>>
 # ...
 
+
 def inv_win_reg_uninstall(info):
     paclist = inv_tree_list("software.packages:")
     for line in info:
@@ -60,18 +61,19 @@ def inv_win_reg_uninstall(info):
             continue
 
         entry = {
-            "name"            : pacname,
-            "version"         : version,
-            "vendor"          : publisher,
-            "summary"         : display_name,
-            "install_date"    : install_date,
-            "size"            : size,
-            "path"            : path,
-            "language"        : language,
-            "package_type"    : "registry",
+            "name": pacname,
+            "version": version,
+            "vendor": publisher,
+            "summary": display_name,
+            "install_date": install_date,
+            "size": size,
+            "path": path,
+            "language": language,
+            "package_type": "registry",
         }
         paclist.append(entry)
 
+
 inv_info['win_reg_uninstall'] = {
-   "inv_function"           : inv_win_reg_uninstall,
+    "inv_function": inv_win_reg_uninstall,
 }

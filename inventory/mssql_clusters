@@ -27,6 +27,7 @@
 # <<<mssql_clusters>>>
 # MSSQL_VIM_SQLEXP node1 node1,node2
 
+
 def inv_mssql_clusters(info):
     node = inv_tree_list("software.applications.mssql.instances:")
 
@@ -39,17 +40,18 @@ def inv_mssql_clusters(info):
         return node[-1]
 
     for line in info:
-        instance_id  = line[0]
-        active_node  = line[2]
-        nodes        = line[3].split(",")
+        instance_id = line[0]
+        active_node = line[2]
+        nodes = line[3].split(",")
 
         instance = get_list_item("name", instance_id)
         instance.update({
-            "name"         : instance_id,
-            "active_node"  : active_node,
-            "node_names"   : nodes,
+            "name": instance_id,
+            "active_node": active_node,
+            "node_names": nodes,
         })
 
+
 inv_info["mssql_clusters"] = {
-   "inv_function"           : inv_mssql_clusters,
+    "inv_function": inv_mssql_clusters,
 }

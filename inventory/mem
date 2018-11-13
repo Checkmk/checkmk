@@ -31,10 +31,11 @@
 # VmallocTotal:   34359738367 kB
 
 inv_mem_keys = {
-    "MemTotal"    : "total_ram_usable",
-    "SwapTotal"   : "total_swap",
+    "MemTotal": "total_ram_usable",
+    "SwapTotal": "total_swap",
     "VmallocTotal": "total_vmalloc",
 }
+
 
 def inv_mem(info):
     node = inv_tree("hardware.memory.")
@@ -45,5 +46,5 @@ def inv_mem(info):
 
 
 inv_info['mem'] = {
-   "inv_function"           : inv_mem,
+    "inv_function": inv_mem,
 }

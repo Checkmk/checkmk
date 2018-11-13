@@ -27,24 +27,24 @@
 
 def inv_hp_proliant_mem(info):
     map_mem_types = {
-        "1"  : 'other',
-        "2"  : 'board',
-        "3"  : 'cpqSingleWidthModule',
-        "4"  : 'cpqDoubleWidthModule',
-        "5"  : 'simm',
-        "6"  : 'pcmcia',
-        "7"  : 'compaq-specific',
-        "8"  : 'DIMM',
-        "9"  : 'smallOutlineDimm',
-        "10" : 'RIMM',
-        "11" : 'SRIMM',
-        "12" : 'FB-DIMM',
-        "13" : 'DIMM DDR',
-        "14" : 'DIMM DDR2',
-        "15" : 'DIMM DDR3',
-        "16" : 'DIMM FBD2',
-        "17" : 'FB-DIMM DDR2',
-        "18" : 'FB-DIMM DDR3',
+        "1": 'other',
+        "2": 'board',
+        "3": 'cpqSingleWidthModule',
+        "4": 'cpqDoubleWidthModule',
+        "5": 'simm',
+        "6": 'pcmcia',
+        "7": 'compaq-specific',
+        "8": 'DIMM',
+        "9": 'smallOutlineDimm',
+        "10": 'RIMM',
+        "11": 'SRIMM',
+        "12": 'FB-DIMM',
+        "13": 'DIMM DDR',
+        "14": 'DIMM DDR2',
+        "15": 'DIMM DDR3',
+        "16": 'DIMM FBD2',
+        "17": 'FB-DIMM DDR2',
+        "18": 'FB-DIMM DDR3',
     }
 
     node = inv_tree_list("hardware.memory.arrays:")
@@ -52,10 +52,11 @@ def inv_hp_proliant_mem(info):
     infos = {}
     for _board_index, module_index, module_size_str, module_type, \
         _module_status, _module_condition, module_serial, cpu_num in info:
-        infos.setdefault((int(cpu_num)-1, module_index), {
-            "serial" : module_serial,
-            "type"   : map_mem_types.get(module_type, "unknown(%s)" % module_type),
-        })
+        infos.setdefault(
+            (int(cpu_num) - 1, module_index), {
+                "serial": module_serial,
+                "type": map_mem_types.get(module_type, "unknown(%s)" % module_type),
+            })
 
     # From dmidecode in case of dual host config we have to proof
     # if there's already an existing devices table
@@ -65,33 +66,35 @@ def inv_hp_proliant_mem(info):
                 if entry["set"] == module_index:
                     entry.update(module_info)
     except:
-        array = { "devices" : [] }
+        array = {"devices": []}
         for _board_index, module_index, module_size_str, module_type, \
             _module_status, _module_condition, module_serial, cpu_num in info:
 
             array["devices"].append({
-                "size"    : float(module_size_str) * 1024,
-                "serial"  : module_serial,
-                "type"    : map_mem_types.get(module_type, "unknown(%s)" % module_type),
-                "set"     : module_index,
-                "locator" : cpu_num
+                "size": float(module_size_str) * 1024,
+                "serial": module_serial,
+                "type": map_mem_types.get(module_type, "unknown(%s)" % module_type),
+                "set": module_index,
+                "locator": cpu_num
             })
 
         node.append(array)
 
 
 inv_info['hp_proliant_mem'] = {
-    'inv_function'       : inv_hp_proliant_mem,
+    'inv_function': inv_hp_proliant_mem,
     # If something changes here please adopt the related check
-    'snmp_info'          : (".1.3.6.1.4.1.232.6.2.14.13.1", [
-                                "2",    # CPQHLTH-MIB::cpqHeResMem2BoardNum
-                                "1",    # CPQHLTH-MIB::cpqHeResMem2Module
-                                "6",    # CPQHLTH-MIB::cpqHeResMem2ModuleSize
-                                "7",    # CPQHLTH-MIB::cpqHeResMem2ModuleType
-                                "19",   # CPQHLTH-MIB::cpqHeResMem2ModuleStatus
-                                "20",   # CPQHLTH-MIB::cpqHeResMem2ModuleCondition
-                                "12",   # CPQHLTH-MIB::cpqHeResMem2SerialNo
-                                "3",    # CPQHLTH-MIB::cpqHeResMem2CpuNum
-                           ]),
-    'snmp_scan_function' : lambda oid: "proliant" in oid(".1.3.6.1.4.1.232.2.2.4.2.0", "").lower(),
+    'snmp_info': (
+        ".1.3.6.1.4.1.232.6.2.14.13.1",
+        [
+            "2",  # CPQHLTH-MIB::cpqHeResMem2BoardNum
+            "1",  # CPQHLTH-MIB::cpqHeResMem2Module
+            "6",  # CPQHLTH-MIB::cpqHeResMem2ModuleSize
+            "7",  # CPQHLTH-MIB::cpqHeResMem2ModuleType
+            "19",  # CPQHLTH-MIB::cpqHeResMem2ModuleStatus
+            "20",  # CPQHLTH-MIB::cpqHeResMem2ModuleCondition
+            "12",  # CPQHLTH-MIB::cpqHeResMem2SerialNo
+            "3",  # CPQHLTH-MIB::cpqHeResMem2CpuNum
+        ]),
+    'snmp_scan_function': lambda oid: "proliant" in oid(".1.3.6.1.4.1.232.2.2.4.2.0", "").lower(),
 }

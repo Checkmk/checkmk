@@ -24,11 +24,11 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-
 # Example output from agent:
 # <<<ip_a_r>>>
 # default via 10.10.0.1 dev wlan0  proto static
 # 10.10.0.0/16 dev wlan0  proto kernel  scope link  src 10.10.0.41  metric 9
+
 
 def parse_lnx_ip_route(line):
     def parse_network(n):
@@ -37,7 +37,7 @@ def parse_lnx_ip_route(line):
         return n
 
     route = {
-        "target" : parse_network(line[0]),
+        "target": parse_network(line[0]),
     }
 
     line = line[1:]
@@ -63,5 +63,5 @@ def inv_lnx_ip_r(info):
 
 
 inv_info['lnx_ip_r'] = {
-    "inv_function" : inv_lnx_ip_r,
+    "inv_function": inv_lnx_ip_r,
 }

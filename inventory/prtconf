@@ -47,6 +47,7 @@
 # Note: this is only the header. Much more stuff follows, but is currently
 # not being parsed.
 
+
 def inv_prtconf(info):
     confdict = {}
     for line in info:
@@ -56,7 +57,7 @@ def inv_prtconf(info):
             confdict[varname] = value
 
         if line[0].startswith("========="):
-            break # ignore the rest of the output currently
+            break  # ignore the rest of the output currently
 
     for varname, value in confdict.items():
         if varname == "CPU Type":
@@ -102,5 +103,5 @@ def inv_prtconf(info):
 
 
 inv_info['prtconf'] = {
-   "inv_function"           : inv_prtconf,
+    "inv_function": inv_prtconf,
 }

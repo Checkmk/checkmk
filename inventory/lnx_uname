@@ -28,6 +28,7 @@
 # <<<lnx_uname>>>
 # Linux klappmesser 3.10.17 #2 SMP PREEMPT Mon Nov 25 19:51:52 CET 2013 x86_64 GNU/Linux
 
+
 def inv_lnx_uname(info):
     node = inv_tree("software.os.")
     if len(info) >= 1:
@@ -35,6 +36,7 @@ def inv_lnx_uname(info):
     if len(info) >= 2:
         node["kernel_version"] = info[1][0]
 
+
 inv_info['lnx_uname'] = {
-   "inv_function"           : inv_lnx_uname,
+    "inv_function": inv_lnx_uname,
 }

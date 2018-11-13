@@ -24,18 +24,20 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+
 def inv_solaris_uname(info):
     solaris_uname = {}
     node = inv_tree("software.os.")
     for key, value in info:
         solaris_uname[key.strip()] = value.strip()
-    node["vendor"]   = "Oracle"
-    node["type"]    = solaris_uname["System"]
+    node["vendor"] = "Oracle"
+    node["type"] = solaris_uname["System"]
     node["version"] = solaris_uname["Release"]
-    node["name"]    = "%s %s" % (solaris_uname["System"],solaris_uname["Release"])
+    node["name"] = "%s %s" % (solaris_uname["System"], solaris_uname["Release"])
     node["kernel_version"] = solaris_uname["KernelID"]
     node["hostname"] = solaris_uname["Node"]
 
+
 inv_info['solaris_uname'] = {
-   "inv_function"           : inv_solaris_uname,
+    "inv_function": inv_solaris_uname,
 }

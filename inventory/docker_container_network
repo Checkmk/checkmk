@@ -37,12 +37,12 @@ def inv_docker_container_network_networks(info, inventory_tree):
 
     for network_name, network in parsed["Networks"].items():
         networks.append({
-            "name"              : network_name,
-            "network_id"        : network["NetworkID"],
-            "ip_address"        : network["IPAddress"],
-            "ip_prefixlen"      : network["IPPrefixLen"],
-            "gateway"           : network["Gateway"],
-            "mac_address"       : network["MacAddress"],
+            "name": network_name,
+            "network_id": network["NetworkID"],
+            "ip_address": network["IPAddress"],
+            "ip_prefixlen": network["IPPrefixLen"],
+            "gateway": network["Gateway"],
+            "mac_address": network["MacAddress"],
         })
 
 
@@ -60,14 +60,15 @@ def inv_docker_container_network_ports(info, inventory_tree):
         port, proto = container_port_spec.split("/", 1)
 
         if host_ports:
-            host_addresses = ", ".join([ "%s:%s" % (hp["HostIp"], hp["HostPort"]) for hp in host_ports ])
+            host_addresses = ", ".join(
+                ["%s:%s" % (hp["HostIp"], hp["HostPort"]) for hp in host_ports])
         else:
             host_addresses = ""
 
         ports.append({
-            "port"           : int(port),
-            "protocol"       : proto,
-            "host_addresses" : host_addresses,
+            "port": int(port),
+            "protocol": proto,
+            "host_addresses": host_addresses,
         })
 
 

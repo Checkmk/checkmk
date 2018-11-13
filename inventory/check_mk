@@ -32,6 +32,7 @@
 # AgentOS: windows
 # Hostname: dbserver-01
 
+
 def inv_check_mk(info):
     node = inv_tree("networking.")
     for line in info:
@@ -40,6 +41,5 @@ def inv_check_mk(info):
 
 
 inv_info['check_mk'] = {
-    "inv_function"          : inv_check_mk,
+    "inv_function": inv_check_mk,
 }
-

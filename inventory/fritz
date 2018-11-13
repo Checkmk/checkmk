@@ -41,7 +41,7 @@ def inv_fritz(parsed):
     node_sw = inv_tree('software.os.')
     node_sw['version'] = parsed.get('VersionOS')
 
-inv_info['fritz'] = {
-   "inv_function"           : inv_fritz,
-}
 
+inv_info['fritz'] = {
+    "inv_function": inv_fritz,
+}

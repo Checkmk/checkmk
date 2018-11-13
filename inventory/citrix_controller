@@ -33,5 +33,5 @@ def inv_citrix_controller(info):
 
 
 inv_info["citrix_controller"] = {
-    "inv_function"      : inv_citrix_controller,
+    "inv_function": inv_citrix_controller,
 }

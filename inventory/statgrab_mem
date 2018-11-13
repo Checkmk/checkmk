@@ -33,6 +33,7 @@
 # swap.total 203939356672
 # swap.used 116191281152
 
+
 # statgrab_mem has a parse function with the following output:
 # {
 #    'SwapTotal' : 0,
@@ -48,5 +49,5 @@ def inv_statgrab_mem(parsed):
 
 
 inv_info['statgrab_mem'] = {
-   "inv_function"           : inv_statgrab_mem,
+    "inv_function": inv_statgrab_mem,
 }

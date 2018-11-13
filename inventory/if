@@ -38,15 +38,17 @@ def scan_inv_if(oid):
 def inv_if(info, params):
     def round_to_day(ts):
         broken = time.localtime(ts)
-        return time.mktime((broken.tm_year, broken.tm_mon, broken.tm_mday, 0, 0, 0, broken.tm_wday, broken.tm_yday, broken.tm_isdst))
+        return time.mktime((broken.tm_year, broken.tm_mon, broken.tm_mday, 0, 0, 0, broken.tm_wday,
+                            broken.tm_yday, broken.tm_isdst))
 
     now = time.time()
 
     port_info, uptime_info = info
     uptime = parse_snmp_uptime(uptime_info[0][0])
 
-    usage_port_types = params.get("usage_port_types",
-           [ '6', '32', '62', '117', '127', '128', '129', '180', '181', '182', '205', '229' ])
+    usage_port_types = params.get(
+        "usage_port_types",
+        ['6', '32', '62', '117', '127', '128', '129', '180', '181', '182', '205', '229'])
     unused_duration = params.get("unused_duration", 30 * 86400)
 
     total_ethernet_ports = 0
@@ -56,11 +58,11 @@ def inv_if(info, params):
     for if_index, if_descr, if_alias, if_type, if_speed, if_high_speed, \
         if_oper_status, if_admin_status, if_phys_address, if_last_change in port_info:
 
-        if if_type in ( "231", "232" ):
-            continue # Useless entries for "TenGigabitEthernet2/1/21--Uncontrolled"
+        if if_type in ("231", "232"):
+            continue  # Useless entries for "TenGigabitEthernet2/1/21--Uncontrolled"
 
         if not if_last_change or not if_speed:
-            continue # Ignore useless half-empty tables (e.g. Viprinet-Router)
+            continue  # Ignore useless half-empty tables (e.g. Viprinet-Router)
 
         # if_last_change can be of type Timeticks (100th of seconds) or
         # a human readable time stamp (yurks)
@@ -69,11 +71,11 @@ def inv_if(info, params):
         except:
             # Example: 0:0:01:09.96
             parts = if_last_change.split(":")
-            days    = int(parts[0])
-            hours   = int(parts[1])
+            days = int(parts[0])
+            hours = int(parts[1])
             minutes = int(parts[2])
             seconds = float(parts[3])
-            last_change = seconds + 60*minutes + 3600*hours + 86400*days
+            last_change = seconds + 60 * minutes + 3600 * hours + 86400 * days
 
         if if_high_speed:
             speed = int(if_high_speed) * 1000 * 1000
@@ -99,17 +101,16 @@ def inv_if(info, params):
         last_change_timestamp = round_to_day(now - state_age)
 
         node.append({
-            "index"        : int(if_index),
-            "description"  : if_descr,
-            "alias"        : if_alias,
-            "speed"        : speed,
-            "phys_address" : if_render_mac_address(if_phys_address),
-            "oper_status"  : int(if_oper_status),
-            "admin_status" : int(if_admin_status), # 1(up) or 2(down)
-            "port_type"    : int(if_type),
-            "last_change"  : int(last_change_timestamp),
+            "index": int(if_index),
+            "description": if_descr,
+            "alias": if_alias,
+            "speed": speed,
+            "phys_address": if_render_mac_address(if_phys_address),
+            "oper_status": int(if_oper_status),
+            "admin_status": int(if_admin_status),  # 1(up) or 2(down)
+            "port_type": int(if_type),
+            "last_change": int(last_change_timestamp),
         })
-
 
         if if_type in usage_port_types:
             if_available = if_oper_status == '2' and state_age > unused_duration
@@ -125,22 +126,25 @@ def inv_if(info, params):
     node["total_ethernet_ports"] = total_ethernet_ports
     node["total_interfaces"] = len(info)
 
+
 inv_info['inv_if'] = {
-    "inv_function" : inv_if,
+    "inv_function": inv_if,
     'snmp_info': [
-        ( ".1.3.6.1.2.1", [
-           "2.2.1.1",            # ifIndex
-           "2.2.1.2",            # ifDescr
-           "31.1.1.1.18",        # ifAlias
-           "2.2.1.3",            # ifType
-           "2.2.1.5",            # ifSpeed
-           "31.1.1.1.15",        # ifHighSpeed   .. 1000 means 1Gbit
-           "2.2.1.8",            # ifOperStatus
-           "2.2.1.7",            # ifAdminStatus
-           BINARY("2.2.1.6"),    # ifPhysAddress
-           "2.2.1.9",            # ifLastChange
-        ]),
-        ( ".1.3.6.1.2.1.1", [ "3.0" ] ), # uptime
+        (
+            ".1.3.6.1.2.1",
+            [
+                "2.2.1.1",  # ifIndex
+                "2.2.1.2",  # ifDescr
+                "31.1.1.1.18",  # ifAlias
+                "2.2.1.3",  # ifType
+                "2.2.1.5",  # ifSpeed
+                "31.1.1.1.15",  # ifHighSpeed   .. 1000 means 1Gbit
+                "2.2.1.8",  # ifOperStatus
+                "2.2.1.7",  # ifAdminStatus
+                BINARY("2.2.1.6"),  # ifPhysAddress
+                "2.2.1.9",  # ifLastChange
+            ]),
+        (".1.3.6.1.2.1.1", ["3.0"]),  # uptime
     ],
     'snmp_scan_function': scan_inv_if,
     'includes': ['if.include', 'uptime.include'],

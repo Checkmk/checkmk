@@ -66,11 +66,11 @@ def inv_lnx_packages(info):
         if arch == "amd64":
             arch = "x86_64"
         entry = {
-            "name"            : pacname,
-            "version"         : version,
-            "arch"            : arch,
-            "package_type"    : pactype,
-            "summary"         : summary,
+            "name": pacname,
+            "version": version,
+            "arch": arch,
+            "package_type": pactype,
+            "summary": summary,
         }
         # Split version into version of contained software and version of the
         # packages (RPM calls the later "release")
@@ -85,5 +85,5 @@ def inv_lnx_packages(info):
 
 
 inv_info['lnx_packages'] = {
-   "inv_function"           : inv_lnx_packages,
+    "inv_function": inv_lnx_packages,
 }

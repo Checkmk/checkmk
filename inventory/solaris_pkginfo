@@ -50,20 +50,20 @@ def inv_solaris_pkginfo(info):
     paclist = inv_tree_list("software.packages:")
     entry = {}
     translation_dict = {
-            "ARCH"      : "arch",
-            "CATEGORY"  : "package_type",
-            "DESC"      : "summary",
-            "VERSION"   : "version",
-            "VENDOR"    : "vendor",
-            }
+        "ARCH": "arch",
+        "CATEGORY": "package_type",
+        "DESC": "summary",
+        "VERSION": "version",
+        "VENDOR": "vendor",
+    }
 
     for line in info:
         # key / value declaration is clear
         if len(line) == 2:
             key, value = line
         else:
-         # in any other case the first element is the key an the rest will be joined to value
-            key   = line[0]
+            # in any other case the first element is the key an the rest will be joined to value
+            key = line[0]
             value = " ".join(line[1:])
         if key == "PKGINST":
             #append the dict wich was build before to paclist
@@ -72,24 +72,25 @@ def inv_solaris_pkginfo(info):
         elif key == "NAME":
             # build a dict for each package initiator = PKGINST
             # concat solaris pkginst and name to mk inventory name and write to dict
-            entry = {'name' : "%s - %s" % (pkginst, value) }
+            entry = {'name': "%s - %s" % (pkginst, value)}
         elif key == "INSTDATE":
             # 'try, except' blog is necessary because date conversion may fail because of non en_US
             # locale settings on the remote solaris server
             try:
-                install_date_epoch = int(time.mktime(time.strptime(value.strip(), "%b %d %Y %H %M")))
-                entry.update({'install_date' : install_date_epoch})
+                install_date_epoch = int(
+                    time.mktime(time.strptime(value.strip(), "%b %d %Y %H %M")))
+                entry.update({'install_date': install_date_epoch})
             except Exception:
                 pass
         else:
             # iterate over translation dict and update entries
             for tkey in translation_dict:
                 if key == tkey:
-                    entry.update({ translation_dict[tkey] : value.strip()})
+                    entry.update({translation_dict[tkey]: value.strip()})
     if entry:
         paclist.append(entry)
 
 
 inv_info['solaris_pkginfo'] = {
-   "inv_function"           : inv_solaris_pkginfo,
+    "inv_function": inv_solaris_pkginfo,
 }

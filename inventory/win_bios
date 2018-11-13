@@ -36,6 +36,7 @@
 # SMBIOSMajorVersion : 2
 # SMBIOSMinorVersion : 5
 
+
 def inv_win_bios(info):
     node = inv_tree("hardware.bios.")
     smbios_version = ""
@@ -43,9 +44,9 @@ def inv_win_bios(info):
     for line in info:
         # Separator : seams not ideal. Some systems have : in the BIOS version
         if len(line) > 2:
-            line = [ line[0], ":".join(line[1:]) ]
+            line = [line[0], ":".join(line[1:])]
         varname, value = line
-        varname = re.sub(" *","", varname)
+        varname = re.sub(" *", "", varname)
         value = re.sub("^ ", "", value)
         if varname == "BIOSVersion":
             bios_version = value
@@ -72,7 +73,7 @@ def inv_win_bios(info):
     else:
         node["version"] = bios_version
 
-inv_info['win_bios'] = {
-   "inv_function"           : inv_win_bios,
-}
 
+inv_info['win_bios'] = {
+    "inv_function": inv_win_bios,
+}

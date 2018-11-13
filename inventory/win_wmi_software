@@ -54,16 +54,16 @@ def inv_win_wmi_software(info):
             language = ""
 
         entry = {
-            "name"            : pacname,
-            "version"         : version,
-            "vendor"          : vendor.replace('\x00', ''), # Can happen, reason unclear
-            "install_date"    : install_date,
-            "language"        : language,
-            "package_type"    : "wmi",
+            "name": pacname,
+            "version": version,
+            "vendor": vendor.replace('\x00', ''),  # Can happen, reason unclear
+            "install_date": install_date,
+            "language": language,
+            "package_type": "wmi",
         }
         paclist.append(entry)
 
 
 inv_info['win_wmi_software'] = {
-   "inv_function"           : inv_win_wmi_software,
+    "inv_function": inv_win_wmi_software,
 }

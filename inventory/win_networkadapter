@@ -37,6 +37,7 @@
 # Subnet: 255.255.255.0
 # DefaultGateway: 192.168.178.1
 
+
 def inv_win_networkadapter(info):
     node = inv_tree_list("hardware.nwadapter:")
     array = {}
@@ -44,9 +45,9 @@ def inv_win_networkadapter(info):
     addrtypes = {}
     for line in info:
         if len(line) > 2:
-            line = [ line[0], ":".join(line[1:]) ]
+            line = [line[0], ":".join(line[1:])]
         varname, value = line
-        varname = re.sub(" *","", varname)
+        varname = re.sub(" *", "", varname)
         value = re.sub("^ ", "", value)
 
         if not value:
@@ -92,5 +93,5 @@ def inv_win_networkadapter(info):
 
 
 inv_info['win_networkadapter'] = {
-   "inv_function"           : inv_win_networkadapter,
+    "inv_function": inv_win_networkadapter,
 }

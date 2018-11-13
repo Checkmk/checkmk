@@ -24,7 +24,6 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-
 # -- (type|target|mask|gateway|device)
 # <<<win_ip_r:sep(124):persist(1495544240)>>>
 # indirect|0.0.0.0|0.0.0.0|11.112.81.1|vmxnet3 Ethernet Adapter #2
@@ -56,13 +55,13 @@ def inv_win_ip_r(info):
     routes = inv_tree_list("networking.routes:")
     for _type, target, _mask, gateway, device in info:
         routes.append({
-            "target"  : target,
-            "device"  : device,
-            "gateway" : gateway,
-            "type"    : _type,
+            "target": target,
+            "device": device,
+            "gateway": gateway,
+            "type": _type,
         })
 
 
 inv_info['win_ip_r'] = {
-    'inv_function' : inv_win_ip_r,
+    'inv_function': inv_win_ip_r,
 }

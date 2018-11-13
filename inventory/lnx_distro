@@ -198,5 +198,5 @@ def inv_lnx_parse_gentoo(node, line):
 
 
 inv_info['lnx_distro'] = {
-   "inv_function": inv_lnx_distro,
+    "inv_function": inv_lnx_distro,
 }

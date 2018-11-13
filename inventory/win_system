@@ -39,9 +39,9 @@ def inv_win_system(info):
     node = inv_tree("hardware.system.")
     for line in info:
         if len(line) > 2:
-            line = [ line[0], ":".join(line[1:]) ]
+            line = [line[0], ":".join(line[1:])]
         varname, value = line
-        varname = re.sub(" *","", varname)
+        varname = re.sub(" *", "", varname)
         value = re.sub("^ ", "", value)
         if varname == "SerialNumber":
             node["serial"] = value
@@ -54,5 +54,5 @@ def inv_win_system(info):
 
 
 inv_info['win_system'] = {
-   "inv_function": inv_win_system,
+    "inv_function": inv_win_system,
 }

@@ -28,6 +28,7 @@
 # <<<win_os>>>
 # WIN2003|Microsoft(R) Windows(R) Server 2003 Standard Edition|5.2.3790||2|0|20100620230628.000000+120
 
+
 def inv_win_os(info):
     node = inv_tree("software.os.")
 
@@ -52,20 +53,20 @@ def inv_win_os(info):
             else:
                 node["arch"] = "i386"
 
-        node["service_pack"] = line[4]+"."+line[5]
+        node["service_pack"] = line[4] + "." + line[5]
 
         if '+' in line[6]:
             datestr, tz = line[6].split('+')
             tz = int(tz)
         elif '-' in line[6]:
             datestr, tz = line[6].split('-')
-            tz = int(tz)*-1
+            tz = int(tz) * -1
         else:
             datestr, tz = line[6], 0
 
-        node["install_date"] = int(time.mktime(time.strptime(datestr, "%Y%m%d%H%M%S.%f"))) - tz*60
+        node["install_date"] = int(time.mktime(time.strptime(datestr, "%Y%m%d%H%M%S.%f"))) - tz * 60
 
 
 inv_info['win_os'] = {
-   "inv_function"           : inv_win_os,
+    "inv_function": inv_win_os,
 }

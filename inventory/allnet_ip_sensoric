@@ -34,5 +34,5 @@ def inv_allnet_ip_sensoric(parsed, inventory_tree):
 
 
 inv_info['allnet_ip_sensoric'] = {
-    'inv_function'       : inv_allnet_ip_sensoric,
+    'inv_function': inv_allnet_ip_sensoric,
 }

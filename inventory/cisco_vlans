@@ -24,7 +24,6 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-
 # 1.3.6.1.4.1.9.9.68.1.2.2.1.1 --> vmVlanType: static(1), dynamic(2), multiVlan(3)
 # 1.3.6.1.4.1.9.9.68.1.2.2.1.2 --> vmVlan: id of the vlan the port is asssigned to
 #                                  if type = 1 or 2.
@@ -57,7 +56,6 @@
 # This function compresses a list of vlans, eg [1,3,4,7,8,9,...,1024],
 # into a readable format: "1, 3-4, 7-1024" in case of multi-vlans
 def parse_multi_vlan(vlan_multi):
-
     def concatenate_vlans(vlan, subinfo):
         if vlan not in subinfo:
             subinfo.append(vlan)
@@ -67,13 +65,13 @@ def parse_multi_vlan(vlan_multi):
     for k, hex_ in enumerate(vlan_multi):
         for l, bit in enumerate(bin(ord(hex_))[2:]):
             if bit == '1':
-                vlans.append(k*8 + l+1)
+                vlans.append(k * 8 + l + 1)
 
     if not vlans:
         return ""
 
     infotexts = []
-    subinfo   = vlans[:1]
+    subinfo = vlans[:1]
     last_vlan = vlans[0]
 
     for vlan in vlans[1:]:
@@ -92,14 +90,14 @@ def parse_multi_vlan(vlan_multi):
 def inv_cisco_vlans(info, params):
     node = inv_tree("networking.interfaces:")
     map_vlans = {
-        '1' : 'static',
-        '2' : 'dynamic',
-        '3' : 'multi-VLAN',
+        '1': 'static',
+        '2': 'dynamic',
+        '3': 'multi-VLAN',
     }
 
     for if_id, vlan_type, vlan_single, vlan_multi in info:
         vlan_readable = map_vlans.get(vlan_type, "")
-        vlans         = None
+        vlans = None
         if vlan_single != '0' and vlan_type in ['1', '2']:
             vlans = vlan_single
         elif vlan_type == '3':
@@ -108,18 +106,20 @@ def inv_cisco_vlans(info, params):
         if vlans:
             for if_info in node:
                 if if_info["index"] == int(if_id):
-                    if_info["vlans"]    = vlans
+                    if_info["vlans"] = vlans
                     if_info["vlantype"] = vlan_readable
                     break
 
 
 inv_info['inv_cisco_vlans'] = {
-    "inv_function"      : inv_cisco_vlans,
-    'snmp_info'         : (".1.3.6.1.4.1.9.9.68.1.2.2.1", [
-                                OID_END,
-                                "1",     # vmVlanType
-                                "2",     # vmVlan
-                                "4",     # vmVlans
-                          ]),
+    "inv_function": inv_cisco_vlans,
+    'snmp_info': (
+        ".1.3.6.1.4.1.9.9.68.1.2.2.1",
+        [
+            OID_END,
+            "1",  # vmVlanType
+            "2",  # vmVlan
+            "4",  # vmVlans
+        ]),
     'snmp_scan_function': lambda oid: "cisco" in oid(".1.3.6.1.2.1.1.1.0").lower(),
 }

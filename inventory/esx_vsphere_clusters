@@ -43,13 +43,12 @@ def inv_esx_vsphere_clusters(info):
         datacenters[datacenter][cluster][what] = ", ".join(entries)
 
     for dc_name, clusters in datacenters.items():
-        data = { "name": dc_name, "clusters": [] }
+        data = {"name": dc_name, "clusters": []}
         for cluster_name, values in clusters.items():
             data["clusters"].append(dict([("name", cluster_name)] + values.items()))
         node.append(data)
 
 
 inv_info['esx_vsphere_clusters'] = {
-   "inv_function"           : inv_esx_vsphere_clusters,
+    "inv_function": inv_esx_vsphere_clusters,
 }
-

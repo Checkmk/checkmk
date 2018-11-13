@@ -42,9 +42,9 @@ def inv_win_video(info):
     first_varname = None
     for line in info:
         if len(line) > 2:
-            line = [ line[0], ":".join(line[1:]) ]
+            line = [line[0], ":".join(line[1:])]
         varname, value = line
-        varname = re.sub(" *","", varname)
+        varname = re.sub(" *", "", varname)
         value = re.sub("^ ", "", value)
 
         if first_varname and varname == first_varname:
@@ -61,7 +61,8 @@ def inv_win_video(info):
             array["driver_version"] = value
         elif varname == "DriverDate":
             try:
-                array["driver_date"] = int(time.mktime(time.strptime(value.split(".")[0], "%Y%m%d%H%M%S")))
+                array["driver_date"] = int(
+                    time.mktime(time.strptime(value.split(".")[0], "%Y%m%d%H%M%S")))
             except ValueError:
                 pass
         elif varname == "AdapterRAM":
@@ -71,5 +72,5 @@ def inv_win_video(info):
 
 
 inv_info['win_video'] = {
-   "inv_function"           : inv_win_video,
+    "inv_function": inv_win_video,
 }

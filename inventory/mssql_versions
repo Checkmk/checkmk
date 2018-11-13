@@ -32,6 +32,7 @@
 # <<<mssql_versions:sep(124)>>>
 # MSSQL_MSSQLSERVER|10.50.1600.1|Enterprise Edition
 
+
 def inv_mssql_versions(info):
     node = inv_tree_list("software.applications.mssql.instances:")
 
@@ -69,21 +70,22 @@ def inv_mssql_versions(info):
             instance_id = line[0].split("_", 1)[1]
         else:
             instance_id = line[0]
-        version      = line[1]
-        edition      = line[2] if len(line) == 4 else ''
-        clustered    = len(line) == 4 and line[3] != ""
+        version = line[1]
+        edition = line[2] if len(line) == 4 else ''
+        clustered = len(line) == 4 and line[3] != ""
         cluster_name = line[3] if len(line) == 4 else ''
 
         instance = get_list_item("name", instance_id)
         instance.update({
-            "name"         : instance_id,
-            "version"      : version,
-            "product"      : product(version),
-            "edition"      : edition,
-            "clustered"    : clustered,
-            "cluster_name" : cluster_name,
+            "name": instance_id,
+            "version": version,
+            "product": product(version),
+            "edition": edition,
+            "clustered": clustered,
+            "cluster_name": cluster_name,
         })
 
+
 inv_info["mssql_versions"] = {
-   "inv_function"           : inv_mssql_versions,
+    "inv_function": inv_mssql_versions,
 }

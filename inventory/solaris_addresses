@@ -24,7 +24,6 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-
 # ifconfig -a
 # lo0: flags=2001000849 <UP,LOOPBACK,RUNNING,MULTICAST,IPv4,VIRTUAL> mtu 8232 index 1
 # inet 127.0.0.1 netmask ff000000
@@ -38,14 +37,14 @@
 
 # executed before statgrab_net which provides some information
 def inv_solaris_addresses(info, params):
-    parsed   = {}
+    parsed = {}
     dev_name = None
     for line in info:
         if line[0][-1] == ":":
             dev_name = line[0][:-1]
             parsed.setdefault(dev_name, {
-                "description" : dev_name,
-                "index"       : int(line[-1]),
+                "description": dev_name,
+                "index": int(line[-1]),
             })
         elif "ether" in line and dev_name:
             parsed[dev_name]["phys_address"] = line[1]
@@ -61,34 +60,30 @@ def inv_solaris_addresses(info, params):
     for device, attrs in parsed.items():
         if attrs.get("phys_address"):
             node.append({
-                "index"        : attrs.get("index"),
-                "description"  : device,
-                "alias"        : device,
-                "speed"        : 0,
-                "phys_address" : attrs.get("phys_address", ""),
-                "port_type"    : 6,
+                "index": attrs.get("index"),
+                "description": device,
+                "alias": device,
+                "speed": 0,
+                "phys_address": attrs.get("phys_address", ""),
+                "port_type": 6,
             })
 
     addresses = inv_tree_list("networking.addresses:")
     for device, attrs in parsed.items():
-        address = {"device"  : device}
+        address = {"device": device}
         if "IPv4" in attrs:
             address.update({
-                "address" : attrs["IPv4"],
-                "type"    : "IPv4",
+                "address": attrs["IPv4"],
+                "type": "IPv4",
             })
         elif "IPv6" in attrs:
             address.update({
-                "address" : attrs["IPv6"],
-                "type"    : "IPv6",
+                "address": attrs["IPv6"],
+                "type": "IPv6",
             })
         addresses.append(address)
 
 
 inv_info['solaris_addresses'] = {
-    'inv_function'      : inv_solaris_addresses,
+    'inv_function': inv_solaris_addresses,
 }
-
-
-
-

@@ -54,6 +54,7 @@
 # processor:1
 # ...
 
+
 # Note: This node is also being filled by dmidecode
 def inv_lnx_cpuinfo(info):
     node = inv_tree("hardware.cpu.")
@@ -66,11 +67,11 @@ def inv_lnx_cpuinfo(info):
             node["threads_per_cpu"] = int(value)
         elif varname == "vendor_id":
             node["vendor"] = {
-                "GenuineIntel" : "intel",
-                "AuthenticAMD" : "amd",
+                "GenuineIntel": "intel",
+                "AuthenticAMD": "amd",
             }.get(value, value)
         elif varname == "cache size":
-            node["cache_size"] = int(value.split()[0]) * 1024 # everything is normalized to bytes!
+            node["cache_size"] = int(value.split()[0]) * 1024  # everything is normalized to bytes!
         elif varname == "model name":
             node["model"] = value
         # For the following two entries we assume that all
@@ -90,11 +91,11 @@ def inv_lnx_cpuinfo(info):
     if num_threads_total:
         node.setdefault("cores_per_cpu", 1)
         node.setdefault("threads_per_cpu", 1)
-        node["cores"]   = num_sockets * node["cores_per_cpu"]
+        node["cores"] = num_sockets * node["cores_per_cpu"]
         node["threads"] = num_sockets * node["threads_per_cpu"]
-        node["cpus"]    = num_sockets
+        node["cpus"] = num_sockets
+
 
 inv_info['lnx_cpuinfo'] = {
-   "inv_function"           : inv_lnx_cpuinfo,
+    "inv_function": inv_lnx_cpuinfo,
 }
-

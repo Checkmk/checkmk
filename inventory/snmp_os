@@ -24,17 +24,19 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+
 def inv_snmp_os(info):
     sys_descr, sys_obj, _sys_uptime, _sys_name = info[0]
     descr_short = sys_descr.split()
     descr_long = sys_descr.split(",")
     node = inv_tree("software.os.")
 
-# Cisco IOS Devices:
+    # Cisco IOS Devices:
     if "ios" and "cisco" in sys_descr.lower():
         node["type"] = descr_long[0]
         if "Version" in descr_short:
-            node["version"] = (descr_short[descr_short.index("Version")+1]).replace("," , "")
+            node["version"] = (descr_short[descr_short.index("Version") + 1]).replace(",", "")
+
 
 # Fireeye Devices
     if "linux" in sys_descr.lower() and ".1.3.6.1.4.1.25597.1" in sys_obj:
@@ -42,14 +44,15 @@ def inv_snmp_os(info):
         node["kernel_version"] = descr_short[2]
         node["arch"] = descr_short[-1]
 
-
 inv_info['snmp_os'] = {
-    "inv_function"          : inv_snmp_os,
-    'snmp_info'             : ('.1.3.6.1.2.1.1', [
-                                    '1.0', # sysDescr
-                                    '2.0', # sysObjectID
-                                    '3.0', # sysUpTime
-                                    '5.0', # sysName
-                              ]),
-    'snmp_scan_function'    : lambda oid: oid(".1.3.6.1.2.1.1.1.0") not in [ None, "" ],
+    "inv_function": inv_snmp_os,
+    'snmp_info': (
+        '.1.3.6.1.2.1.1',
+        [
+            '1.0',  # sysDescr
+            '2.0',  # sysObjectID
+            '3.0',  # sysUpTime
+            '5.0',  # sysName
+        ]),
+    'snmp_scan_function': lambda oid: oid(".1.3.6.1.2.1.1.1.0") not in [None, ""],
 }

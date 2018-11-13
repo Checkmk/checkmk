@@ -49,5 +49,5 @@ def inv_win_computersystem(info):
 
 
 inv_info['win_computersystem'] = {
-   "inv_function": inv_win_computersystem,
+    "inv_function": inv_win_computersystem,
 }

@@ -28,13 +28,14 @@
 # <<<netapp_api_disk:sep(9)>>>
 # disk 4E455441:50502020:56442D39:3030304D:422D465A:2D353230:38383633:32303037:00000000:00000000  used-space 9458679808   serial-number 88632007  raid-type pending vendor-id ..
 
+
 def inv_netapp_api_disk(info):
     node = inv_tree_list("hardware.storage.disks:")
     for line in info:
         disk = {}
         line_dict = dict(x.split(" ", 1) for x in line)
 
-        for what, inv_name in [ ("serial-number", "serial"), ("vendor-id", "vendor") ]:
+        for what, inv_name in [("serial-number", "serial"), ("vendor-id", "vendor")]:
             if line_dict.get(what):
                 disk[inv_name] = line_dict[what]
         if line_dict.get("bay") not in [None, "?"]:
@@ -44,5 +45,5 @@ def inv_netapp_api_disk(info):
 
 
 inv_info['netapp_api_disk'] = {
-   "inv_function"           : inv_netapp_api_disk,
+    "inv_function": inv_netapp_api_disk,
 }

@@ -25,7 +25,6 @@
 # Boston, MA 02110-1301 USA.
 
 
-
 def inv_docker_node_info(parsed, inventory_tree, status_data_tree):
     if not parsed or not isinstance(parsed, dict):
         # String with error message in case the daemon is not running
@@ -39,27 +38,27 @@ def inv_docker_node_info(parsed, inventory_tree, status_data_tree):
         node["swarm_state"] = parsed["Swarm"]["LocalNodeState"]
     else:
         node.update({
-            "swarm_state"   : parsed["Swarm"]["LocalNodeState"],
-            "swarm_manager" : parsed["Swarm"]["RemoteManagers"],
-            "swarm_node_id" : parsed["Swarm"]["NodeID"],
+            "swarm_state": parsed["Swarm"]["LocalNodeState"],
+            "swarm_manager": parsed["Swarm"]["RemoteManagers"],
+            "swarm_node_id": parsed["Swarm"]["NodeID"],
         })
 
     labels = parsed[u"Labels"]
     if labels:
         node_labels = inventory_tree.get_list("software.applications.docker.node_labels:")
-        node_labels +=  [ {"label": label} for label in labels ]
+        node_labels += [{"label": label} for label in labels]
 
     status_node = status_data_tree.get_dict("software.applications.docker.")
     status_node.update({
-        "num_containers_total"   : parsed["Containers"],
-        "num_containers_running" : parsed["ContainersRunning"],
-        "num_containers_paused"  : parsed["ContainersPaused"],
-        "num_containers_stopped" : parsed["ContainersStopped"],
-        "num_images"             : parsed["Images"],
+        "num_containers_total": parsed["Containers"],
+        "num_containers_running": parsed["ContainersRunning"],
+        "num_containers_paused": parsed["ContainersPaused"],
+        "num_containers_stopped": parsed["ContainersStopped"],
+        "num_images": parsed["Images"],
     })
 
 
 inv_info['docker_node_info'] = {
-    'inv_function'    : inv_docker_node_info,
-    'has_status_data' : True,
+    'inv_function': inv_docker_node_info,
+    'has_status_data': True,
 }

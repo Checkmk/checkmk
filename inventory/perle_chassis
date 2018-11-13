@@ -24,7 +24,6 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-
 # .1.3.6.1.4.1.1966.21.1.1.1.1.1.1.2.1 MCR1900 --> PERLE-MCR-MGT-MIB::chassisModelName.1
 # .1.3.6.1.4.1.1966.21.1.1.1.1.1.1.4.1 103-001715T10033 --> PERLE-MCR-MGT-MIB::chassisSerialNumber.1
 # .1.3.6.1.4.1.1966.21.1.1.1.1.1.1.5.1 0.0 --> PERLE-MCR-MGT-MIB::chassisBootloaderVersion.1
@@ -38,24 +37,26 @@ def inv_perle_chassis(info):
     node = inv_tree("hardware.chassis.")
     model, serial, bootloader, fw, _alarms, _diagstate, _temp_str = info[0]
 
-    node["serial"]     = serial
-    node["model"]      = model
+    node["serial"] = serial
+    node["model"] = model
     node["bootloader"] = bootloader
-    node["firmware"]   = fw
+    node["firmware"] = fw
 
 
 inv_info['perle_chassis'] = {
-    'inv_function'          : inv_perle_chassis,
+    'inv_function': inv_perle_chassis,
     # If you change snmp info please adapt the related check plugin
-    'snmp_info'             : ('.1.3.6.1.4.1.1966.21.1.1.1.1.1.1', [
-                                    '2',    # PERLE-MCR-MGT-MIB::chassisModelName
-                                    '4',    # PERLE-MCR-MGT-MIB::chassisSerialNumber
-                                    '5',    # PERLE-MCR-MGT-MIB::chassisBootloaderVersion
-                                    '6',    # PERLE-MCR-MGT-MIB::chassisFirmwareVersion
-                                    '7',    # PERLE-MCR-MGT-MIB::chassisOutStandWarnAlarms
-                                    '8',    # PERLE-MCR-MGT-MIB::chassisDiagStatus
-                                    '9',    # PERLE-MCR-MGT-MIB::chassisTemperature
-                              ]),
-    'snmp_scan_function'    : perle_scan_function,
-    'includes'              : [ 'perle.include' ],
+    'snmp_info': (
+        '.1.3.6.1.4.1.1966.21.1.1.1.1.1.1',
+        [
+            '2',  # PERLE-MCR-MGT-MIB::chassisModelName
+            '4',  # PERLE-MCR-MGT-MIB::chassisSerialNumber
+            '5',  # PERLE-MCR-MGT-MIB::chassisBootloaderVersion
+            '6',  # PERLE-MCR-MGT-MIB::chassisFirmwareVersion
+            '7',  # PERLE-MCR-MGT-MIB::chassisOutStandWarnAlarms
+            '8',  # PERLE-MCR-MGT-MIB::chassisDiagStatus
+            '9',  # PERLE-MCR-MGT-MIB::chassisTemperature
+        ]),
+    'snmp_scan_function': perle_scan_function,
+    'includes': ['perle.include'],
 }

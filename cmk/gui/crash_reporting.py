@@ -70,9 +70,10 @@ def page_crashed(what):
     if not config.user.may("general.see_crash_reports"):
         html.header(_("Internal error"), stylesheets=["status", "pages"])
         html.show_error("<b>%s:</b> %s" % (_("Internal error"), sys.exc_info()[1]))
-        html.p(_("An internal error occurred while processing your request. "
-                 "You can report this issue to your Check_MK administrator. "
-                 "Detailed information can be found in <tt>var/log/web.log</tt>."))
+        html.p(
+            _("An internal error occurred while processing your request. "
+              "You can report this issue to your Check_MK administrator. "
+              "Detailed information can be found in <tt>var/log/web.log</tt>."))
         html.footer()
         return
 
@@ -110,9 +111,10 @@ def page_crashed(what):
             exc_txt = str(exc_value).decode("utf-8")
 
         html.show_error("<b>%s:</b> %s" % (_("Internal error"), exc_txt))
-        html.p(_("An internal error occured while processing your request. "
-                 "You can report this issue to the Check_MK team to help "
-                 "fixing this issue. Please use the form below for reporting."))
+        html.p(
+            _("An internal error occured while processing your request. "
+              "You can report this issue to the Check_MK team to help "
+              "fixing this issue. Please use the form below for reporting."))
 
     if info:
         warn_about_local_files(info)
@@ -122,9 +124,10 @@ def page_crashed(what):
     else:
         report_url = html.makeuri([("subject", "Check_MK Crash Report - " + get_version(what))],
                                   filename="mailto:" + get_crash_report_target(what))
-        html.message(_("This crash report is in a legacy format and can not be submitted "
-                       "automatically. Please download it manually and send it to <a href=\"%s\">%s</a>")
-                                % (report_url , get_crash_report_target(what)))
+        html.message(
+            _("This crash report is in a legacy format and can not be submitted "
+              "automatically. Please download it manually and send it to <a href=\"%s\">%s</a>") %
+            (report_url, get_crash_report_target(what)))
         show_old_dump_trace(tardata)
 
     show_agent_output(tardata)
@@ -160,7 +163,9 @@ def show_context_buttons(what, tardata):
 
     elif what == "gui":
         download_data_url = "data:application/octet-stream;base64,%s" % base64.b64encode(tardata)
-        html.context_button(_("Download"), "javascript:download_gui_crash_report('%s')" % download_data_url, "download")
+        html.context_button(
+            _("Download"), "javascript:download_gui_crash_report('%s')" % download_data_url,
+            "download")
 
     html.end_context_buttons()
 
@@ -213,19 +218,19 @@ def output_box(title, content):
 
 def vs_crash_report():
     return Dictionary(
-        title = _("Crash Report"),
-        elements = [
+        title=_("Crash Report"),
+        elements=[
             ("name", TextUnicode(
-                title = _("Name"),
-                allow_empty = False,
+                title=_("Name"),
+                allow_empty=False,
             )),
             ("mail", EmailAddress(
-                title = _("Email Address"),
-                allow_empty = False,
+                title=_("Email Address"),
+                allow_empty=False,
             )),
         ],
-        optional_keys = [],
-        render = "form",
+        optional_keys=[],
+        render="form",
     )
 
 
@@ -244,31 +249,32 @@ def handle_report_form(tardata, what):
         html.message(_("Submitting crash report..."))
         html.close_div()
         html.open_div(id_="success_msg", style="display:none")
-        html.message(_(
-            "Your crash report has been submitted (ID: ###ID###). Thanks for your participation, "
-            "it is very important for the quality of Check_MK.<br><br>"
-            "Please note:"
-            "<ul>"
-            "<li>In general we do <i>not</i> respond to crash reports, "
-            "except we need further information from you.</li>"
-            "<li>We read every feedback thoroughly, but this might happen "
-            "not before a couple of weeks or even months have passed and is "
-            "often aligned with our release cycle.</li>"
-            "<li>If you are in need of a quick solution for your problem, then "
-            "we can help you within the scope of professional support. If you "
-            "already have a support contract, then please use your personal "
-            "support email address to send us a mail refering to your crash "
-            "report.<br>If you are interested in the details about support, "
-            "you find details on <a href=\"http://mathias-kettner.com/"
-            "checkmk_support_contract.html\" target=_blank>our website</a>."))
+        html.message(
+            _("Your crash report has been submitted (ID: ###ID###). Thanks for your participation, "
+              "it is very important for the quality of Check_MK.<br><br>"
+              "Please note:"
+              "<ul>"
+              "<li>In general we do <i>not</i> respond to crash reports, "
+              "except we need further information from you.</li>"
+              "<li>We read every feedback thoroughly, but this might happen "
+              "not before a couple of weeks or even months have passed and is "
+              "often aligned with our release cycle.</li>"
+              "<li>If you are in need of a quick solution for your problem, then "
+              "we can help you within the scope of professional support. If you "
+              "already have a support contract, then please use your personal "
+              "support email address to send us a mail refering to your crash "
+              "report.<br>If you are interested in the details about support, "
+              "you find details on <a href=\"http://mathias-kettner.com/"
+              "checkmk_support_contract.html\" target=_blank>our website</a>."))
         html.close_div()
         html.open_div(id_="fail_msg", style="display:none")
         report_url = html.makeuri([
             ("subject", "Check_MK Crash Report - " + get_version(what)),
         ],
                                   filename="mailto:" + get_crash_report_target(what))
-        html.show_error(_("Failed to send the crash report. Please download it manually and send it "
-                          "to <a href=\"%s\">%s</a>") % (report_url , get_crash_report_target(what)))
+        html.show_error(
+            _("Failed to send the crash report. Please download it manually and send it "
+              "to <a href=\"%s\">%s</a>") % (report_url, get_crash_report_target(what)))
         html.close_div()
         html.javascript("submit_crash_report('https://mathias-kettner.de/crash_report.php', " \
                                             "'%s');" % url_encoded_params)
@@ -302,7 +308,9 @@ def warn_about_local_files(info):
                 files.append(filepath)
 
         if files:
-            warn_text = _("The following files located in the local hierarchy of your site are involved in this exception:")
+            warn_text = _(
+                "The following files located in the local hierarchy of your site are involved in this exception:"
+            )
             warn_text += html.render_ul(HTML("\n").join(map(html.render_li, files)))
             warn_text += _("Maybe these files are not compatible with your current Check_MK "
                            "version. Please verify and only report this crash when you think "
@@ -349,8 +357,9 @@ def show_crash_report(info):
     html.h2(_("Crash Report"))
     html.open_table(class_="data")
 
-    _crash_row(_("Crash Type"), info["crash_type"], odd=False,  legend=True)
-    _crash_row(_("Time"), time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(info["time"])), odd=True)
+    _crash_row(_("Crash Type"), info["crash_type"], odd=False, legend=True)
+    _crash_row(
+        _("Time"), time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(info["time"])), odd=True)
     _crash_row(_("Operating System"), info["os"], False)
     if info["crash_type"] == "cma":
         version_title = _("CMA Version")
@@ -360,12 +369,17 @@ def show_crash_report(info):
     _crash_row(_("Edition"), info.get("edition", ""), False)
     _crash_row(_("Core"), info.get("core", ""), True)
     _crash_row(_("Python Version"), info.get("python_version", _("Unknown")), False)
-    _crash_row(_("Exception"), "%s (%s)" % (info["exc_type"], info["exc_value"]), odd=True, pre=True)
+    _crash_row(
+        _("Exception"), "%s (%s)" % (info["exc_type"], info["exc_value"]), odd=True, pre=True)
     _crash_row(_("Traceback"), format_traceback(info["exc_traceback"]), odd=False, pre=True)
-    _crash_row(_("Local Variables"),
-        format_local_vars(info["local_vars"]) if "local_vars" in info else "", odd=True, pre=True)
+    _crash_row(
+        _("Local Variables"),
+        format_local_vars(info["local_vars"]) if "local_vars" in info else "",
+        odd=True,
+        pre=True)
 
-    joined_paths = "<br>".join([ html.attrencode(p) for p in info.get("python_paths", [_("Unknown")]) ])
+    joined_paths = "<br>".join(
+        [html.attrencode(p) for p in info.get("python_paths", [_("Unknown")])])
     _crash_row(_("Python Module Paths"), joined_paths, odd=False)
 
     html.close_table()
@@ -380,9 +394,9 @@ def format_local_vars(local_vars):
 def show_crashed_check_details(info):
     def format_bool(val):
         return {
-            True  : _("Yes"),
-            False : _("No"),
-            None  : _("Unknown"),
+            True: _("Yes"),
+            False: _("No"),
+            None: _("Unknown"),
         }[val]
 
     details = info["details"]

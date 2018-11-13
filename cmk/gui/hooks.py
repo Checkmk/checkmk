@@ -38,6 +38,7 @@ hooks = {}
 # Datastructures and functions needed before plugins can be loaded
 loaded_with_language = False
 
+
 # Load all login plugins
 def load_plugins(force):
     global loaded_with_language
@@ -53,19 +54,24 @@ def load_plugins(force):
     # are loaded).
     loaded_with_language = cmk.gui.i18n.get_current_language()
 
+
 def unregister():
     global hooks
     hooks = {}
 
+
 def register(name, func):
     hooks.setdefault(name, []).append(func)
+
 
 def get(name):
     return hooks.get(name, [])
 
+
 def registered(name):
     """ Returns True if at least one function is registered for the given hook """
     return hooks.get(name, []) != []
+
 
 def call(name, *args):
     n = 0

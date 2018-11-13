@@ -41,28 +41,28 @@ from cmk.gui.globals import html
 #   | An upper-case char means enabled, lower-case means disabled.         |
 #   '----------------------------------------------------------------------'
 
-class DisplayOptions(object):
-    H = "H" # The HTML header and body-tag (containing the tags <HTML> and <BODY>)
-    T = "T" # The title line showing the header and the logged in user
-    B = "B" # The blue context buttons that link to other views
-    F = "F" # The button for using filters
-    C = "C" # The button for using commands and all icons for commands (e.g. the reschedule icon)
-    O = "O" # The view options number of columns and refresh
-    D = "D" # The Display button, which contains column specific formatting settings
-    E = "E" # The button for editing the view
-    Z = "Z" # The footer line, where refresh: 30s is being displayed
-    R = "R" # The auto-refreshing in general (browser reload)
-    S = "S" # The playing of alarm sounds (on critical and warning services)
-    U = "U" # Load persisted user row selections
-    I = "I" # All hyperlinks pointing to other views
-    X = "X" # All other hyperlinks (pointing to external applications like PNP, WATO or others)
-    M = "M" # If this option is not set, then all hyperlinks are targeted to the HTML frame
-            # with the name main. This is useful when using views as elements in the dashboard.
-    L = "L" # The column title links in multisite views
-    W = "W" # The limit and livestatus error message in views
-    N = "N" # Switching to inline display mode when disabled
-            # (e.g. no padding round page)
 
+class DisplayOptions(object):
+    H = "H"  # The HTML header and body-tag (containing the tags <HTML> and <BODY>)
+    T = "T"  # The title line showing the header and the logged in user
+    B = "B"  # The blue context buttons that link to other views
+    F = "F"  # The button for using filters
+    C = "C"  # The button for using commands and all icons for commands (e.g. the reschedule icon)
+    O = "O"  # The view options number of columns and refresh
+    D = "D"  # The Display button, which contains column specific formatting settings
+    E = "E"  # The button for editing the view
+    Z = "Z"  # The footer line, where refresh: 30s is being displayed
+    R = "R"  # The auto-refreshing in general (browser reload)
+    S = "S"  # The playing of alarm sounds (on critical and warning services)
+    U = "U"  # Load persisted user row selections
+    I = "I"  # All hyperlinks pointing to other views
+    X = "X"  # All other hyperlinks (pointing to external applications like PNP, WATO or others)
+    M = "M"  # If this option is not set, then all hyperlinks are targeted to the HTML frame
+    # with the name main. This is useful when using views as elements in the dashboard.
+    L = "L"  # The column title links in multisite views
+    W = "W"  # The limit and livestatus error message in views
+    N = "N"  # Switching to inline display mode when disabled
+    # (e.g. no padding round page)
 
     @classmethod
     def all_on(cls):
@@ -72,17 +72,14 @@ class DisplayOptions(object):
                 opts += k
         return opts
 
-
     @classmethod
     def all_off(cls):
         return cls.all_on().lower()
 
-
     def __init__(self):
         super(DisplayOptions, self).__init__()
-        self.options       = self.all_off()
+        self.options = self.all_off()
         self.title_options = None
-
 
     def load_from_html(self):
         # Parse display options and
@@ -117,7 +114,6 @@ class DisplayOptions(object):
             html.set_link_target("main")
             html.del_var("display_options")
 
-
     # If all display_options are upper case assume all not given values default
     # to lower-case. Vice versa when all display_options are lower case.
     # When the display_options are mixed case assume all unset options to be enabled
@@ -128,10 +124,8 @@ class DisplayOptions(object):
                 opts += c
         return opts
 
-
     def enabled(self, opt):
         return opt in self.options
-
 
     def disabled(self, opt):
         return opt not in self.options

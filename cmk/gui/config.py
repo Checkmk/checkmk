@@ -130,7 +130,6 @@ class DT_AGGR_WARN(object):
 # definitions).
 aggregation_functions = {}
 
-
 #.
 #   .--Functions-----------------------------------------------------------.
 #   |             _____                 _   _                              |
@@ -282,10 +281,7 @@ def hide_language(lang):
 
 
 def all_nonfunction_vars(var_dict):
-    return set([
-        name for name, value in var_dict.items()
-        if name[0] != '_' and not callable(value)
-    ])
+    return set([name for name, value in var_dict.items() if name[0] != '_' and not callable(value)])
 
 
 def get_language(default=None):
@@ -312,6 +308,7 @@ def tag_group_title(tag):
         for t in tags:
             if t[0] == tag:
                 return title
+
 
 #.
 #   .--Permissions---------------------------------------------------------.
@@ -418,7 +415,6 @@ def _may_with_roles(some_role_ids, pname):
         if he_may:
             return True
     return False
-
 
 
 #.
@@ -574,10 +570,11 @@ class LoggedInUser(object):
     def need_permission(self, pname):
         if not self.may(pname):
             perm = permissions_by_name[pname]
-            raise MKAuthException(_("We are sorry, but you lack the permission "
-                                  "for this operation. If you do not like this "
-                                  "then please ask you administrator to provide you with "
-                                  "the following permission: '<b>%s</b>'.") % perm["title"])
+            raise MKAuthException(
+                _("We are sorry, but you lack the permission "
+                  "for this operation. If you do not like this "
+                  "then please ask you administrator to provide you with "
+                  "the following permission: '<b>%s</b>'.") % perm["title"])
 
     def load_file(self, name, deflt, lock=False):
         # In some early error during login phase there are cases where it might
@@ -737,36 +734,33 @@ class BuiltinTags(object):
     def host_tags(self):
         return [
             ("agent", "%s/%s" % (_("Data sources"), _("Check_MK Agent")), [
-                    ("cmk-agent",      _("Contact either Check_MK Agent or use datasource program"), ["tcp"]),
-                    ("all-agents",     _("Contact Check_MK agent and all enabled datasource programs"), ["tcp"]),
-                    ("special-agents", _("Use all enabled datasource programs"), ["tcp"]),
-                    ("no-agent",       _("No agent"), []),
-                ],
-                ["!ping"],
-            ),
+                ("cmk-agent", _("Contact either Check_MK Agent or use datasource program"),
+                 ["tcp"]),
+                ("all-agents", _("Contact Check_MK agent and all enabled datasource programs"),
+                 ["tcp"]),
+                ("special-agents", _("Use all enabled datasource programs"), ["tcp"]),
+                ("no-agent", _("No agent"), []),
+            ], ["!ping"]),
             ("snmp", "%s/%s" % (_("Data sources"), _("SNMP")), [
-                    ("no-snmp",        _("No SNMP"), []),
-                    ("snmp-v2",        _("SNMP v2 or v3"), ["snmp"]),
-                    ("snmp-v1",        _("SNMP v1"), ["snmp"]),
-                ],
-                ["!ping"],
-            ),
+                ("no-snmp", _("No SNMP"), []),
+                ("snmp-v2", _("SNMP v2 or v3"), ["snmp"]),
+                ("snmp-v1", _("SNMP v1"), ["snmp"]),
+            ], ["!ping"]),
             ("address_family", "%s/%s " % (_("Address"), _("IP Address Family")), [
-                    ("ip-v4-only", _("IPv4 only"), ["ip-v4"]),
-                    ("ip-v6-only", _("IPv6 only"), ["ip-v6"]),
-                    ("ip-v4v6",    _("IPv4/IPv6 dual-stack"), ["ip-v4", "ip-v6"]),
-                    ("no-ip",      _("No IP"),     []),
-                ]
-            ),
+                ("ip-v4-only", _("IPv4 only"), ["ip-v4"]),
+                ("ip-v6-only", _("IPv6 only"), ["ip-v6"]),
+                ("ip-v4v6", _("IPv4/IPv6 dual-stack"), ["ip-v4", "ip-v6"]),
+                ("no-ip", _("No IP"), []),
+            ]),
         ]
 
     def aux_tags(self):
         return [
             ("ip-v4", "%s/%s" % (_("Address"), _("IPv4"))),
             ("ip-v6", "%s/%s" % (_("Address"), _("IPv6"))),
-            ("snmp",  "%s/%s" % (_("Data sources"), _("Monitor via SNMP"))),
-            ("tcp",   "%s/%s" % (_("Data sources"), _("Monitor via Check_MK Agent"))),
-            ("ping",  "%s/%s" % (_("Data sources"), _("Only ping this device"))),
+            ("snmp", "%s/%s" % (_("Data sources"), _("Monitor via SNMP"))),
+            ("tcp", "%s/%s" % (_("Data sources"), _("Monitor via Check_MK Agent"))),
+            ("ping", "%s/%s" % (_("Data sources"), _("Only ping this device"))),
         ]
 
     def get_effective_tag_groups(self, tag_groups):
@@ -881,16 +875,20 @@ def extend_user_modified_tag_groups(host_tags):
     tag_choices = [c[0] for c in tag_group[2]]
 
     if "no-agent" not in tag_choices:
-        tag_group[2].insert(0, ("no-agent",       _("No agent"), []))
+        tag_group[2].insert(0, ("no-agent", _("No agent"), []))
 
     if "special-agents" not in tag_choices:
-        tag_group[2].insert(0, ("special-agents", _("Use all enabled datasource programs"), ["tcp"]))
+        tag_group[2].insert(0,
+                            ("special-agents", _("Use all enabled datasource programs"), ["tcp"]))
 
     if "all-agents" not in tag_choices:
-        tag_group[2].insert(0, ("all-agents",     _("Contact Check_MK agent and all enabled datasource programs"), ["tcp"]))
+        tag_group[2].insert(
+            0, ("all-agents", _("Contact Check_MK agent and all enabled datasource programs"),
+                ["tcp"]))
 
     if "cmk-agent" not in tag_choices:
-        tag_group[2].insert(0, ("cmk-agent",      _("Contact either Check_MK Agent or use datasource program"), ["tcp"]))
+        tag_group[2].insert(
+            0, ("cmk-agent", _("Contact either Check_MK Agent or use datasource program"), ["tcp"]))
     else:
         # Change title of cmk-agent tag choice and move to top
         for index, tag_choice in enumerate(tag_group[2]):
@@ -942,17 +940,18 @@ use_siteicons = False
 def default_single_site_configuration():
     return {
         omd_site(): {
-            'alias'        : _("Local site %s") % omd_site(),
-            'disable_wato' : True,
-            'disabled'     : False,
-            'insecure'     : False,
-            'multisiteurl' : '',
-            'persist'      : False,
-            'replicate_ec' : False,
-            'replication'  : '',
-            'timeout'      : 10,
-            'user_login'   : True,
-    }}
+            'alias': _("Local site %s") % omd_site(),
+            'disable_wato': True,
+            'disabled': False,
+            'insecure': False,
+            'multisiteurl': '',
+            'persist': False,
+            'replicate_ec': False,
+            'replication': '',
+            'timeout': 10,
+            'user_login': True,
+        }
+    }
 
 
 sites = {}
@@ -1098,6 +1097,7 @@ def site_choices(filter_func=None):
 def get_event_console_site_choices():
     return site_choices(
         filter_func=lambda site_id, site: site_is_local(site_id) or site.get("replicate_ec"))
+
 
 #.
 #   .--Plugins-------------------------------------------------------------.

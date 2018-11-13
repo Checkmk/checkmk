@@ -1,0 +1,15 @@
+Title: mk_jolokia: CA default for https connection
+Level: 1
+Component: checks
+Compatible: incomp
+Edition: cre
+Version: 1.5.0p8
+Date: 1542121791
+Class: fix
+
+The previous default value for "cert_path" in the mk_jolokia
+plugin configuration led to a crash.
+
+The new default is 'None' which means the server certificate is
+ignored altogether.
+

@@ -350,9 +350,9 @@ def _manpage_browser_folder(cat, subtrees):
     choices = [(str(n + 1), t[0]) for n, t in enumerate(titles)]
 
     while True:
-        x = _dialog_menu(_("Man Page Browser"),
-                         _manpage_display_header(cat),
-                         choices, "0", _("Enter"), cat and _("Back") or _("Quit"))
+        x = _dialog_menu(
+            _("Man Page Browser"), _manpage_display_header(cat), choices, "0", _("Enter"),
+            cat and _("Back") or _("Quit"))
         if x[0] == True:
             index = int(x[1])
             subcat = titles[index - 1][1]
@@ -370,9 +370,9 @@ def _manpage_browse_entries(cat, entries):
     choices = [(str(n + 1), c[0]) for n, c in enumerate(checks)]
 
     while True:
-        x = _dialog_menu(_("Man Page Browser"),
-                         _manpage_display_header(cat),
-                         choices, "0", _("Show Manpage"), _("Back"))
+        x = _dialog_menu(
+            _("Man Page Browser"), _manpage_display_header(cat), choices, "0", _("Show Manpage"),
+            _("Back"))
         if x[0] == True:
             index = int(x[1]) - 1
             name = checks[index][1]
@@ -404,14 +404,14 @@ def _run_dialog(args):
 
 def _create_fallback_man_page(name, path, error_message):
     return {
-        "name"         : name,
-        "path"         : path,
-        "description"  : file(path).read().strip().decode("utf-8"),
-        "title"        : _("%s: Cannot parse man page: %s") % (name, error_message),
-        "agents"       : "",
-        "license"      : "unknown",
-        "distribution" : "unknown",
-        "catalog"      : [ "generic" ],
+        "name": name,
+        "path": path,
+        "description": file(path).read().strip().decode("utf-8"),
+        "title": _("%s: Cannot parse man page: %s") % (name, error_message),
+        "agents": "",
+        "license": "unknown",
+        "distribution": "unknown",
+        "catalog": ["generic"],
     }
 
 

@@ -2213,10 +2213,8 @@ class EventServer(ECServerThread):
 
         elif ty == "by_host":
             new_event.update({
-                "host":
-                    event["host"],
-                "ipaddress":
-                    event["ipaddress"],
+                "host": event["host"],
+                "ipaddress": event["ipaddress"],
                 "text": ("The host event limit of %d open events has been reached for host \"%s\". "
                          "Not opening any additional event for this host until open events have "
                          "been archived." % (limit, event["host"]))
@@ -2228,14 +2226,10 @@ class EventServer(ECServerThread):
 
         elif ty == "by_rule":
             new_event.update({
-                "rule_id":
-                    event["rule_id"],
-                "contact_groups":
-                    event["contact_groups"],
-                "contact_groups_notify":
-                    event.get("contact_groups_notify", False),
-                "contact_groups_precedence":
-                    event.get("contact_groups_precedence", "host"),
+                "rule_id": event["rule_id"],
+                "contact_groups": event["contact_groups"],
+                "contact_groups_notify": event.get("contact_groups_notify", False),
+                "contact_groups_precedence": event.get("contact_groups_precedence", "host"),
                 "text": ("The rule event limit of %d open events has been reached for rule \"%s\". "
                          "Not opening any additional event for this rule until open events have "
                          "been archived." % (limit, event["rule_id"]))
@@ -2470,7 +2464,6 @@ class RuleMatcher(object):
             return False
 
         return True
-
 
 
 #.

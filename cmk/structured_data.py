@@ -287,6 +287,7 @@ class StructuredDataTree(object):
     def show(self, renderer, path=None):
         self._root.show(renderer, path=path)
 
+
 #.
 #   .--NodeAttribute-------------------------------------------------------.
 #   |  _   _           _         _   _   _        _ _           _          |
@@ -343,6 +344,7 @@ class NodeAttribute(object):
 
     def show(self, renderer, path=None):
         raise NotImplementedError()
+
 
 #.
 #   .--Container-----------------------------------------------------------.
@@ -626,6 +628,7 @@ numerated nodes ('arrays') containing real numerations ('devices').
     def show(self, renderer, path=None):
         renderer.show_container(self, path=path)
 
+
 #.
 #   .--Leaf----------------------------------------------------------------.
 #   |                         _                __                          |
@@ -682,6 +685,7 @@ Format of compared entries:
             else:
                 filtered.setdefault(k, None)
         return filtered
+
 
 #.
 #   .--Numeration----------------------------------------------------------.
@@ -892,6 +896,7 @@ class Numeration(Leaf):
     def show(self, renderer, path=None):
         renderer.show_numeration(self, path=path)
 
+
 #.
 #   .--Attributes----------------------------------------------------------.
 #   |              _   _   _        _ _           _                        |
@@ -978,6 +983,7 @@ class Attributes(Leaf):
     def show(self, renderer, path=None):
         renderer.show_attributes(self, path=path)
 
+
 #.
 #   .--Node----------------------------------------------------------------.
 #   |                       _   _           _                              |
@@ -1049,5 +1055,6 @@ class Node(object):
         for child in self._children.values():
             new.add_node_child(child.copy())
         return new
+
 
 #.

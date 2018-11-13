@@ -312,89 +312,50 @@ def _create_notification_context(event_server, event, username, is_cancelling, l
 
 def _base_notification_context(event, username, is_cancelling):
     return {
-        "WHAT":
-            "SERVICE",
-        "CONTACTNAME":
-            "check-mk-notify",
-        "DATE":
-            str(int(event["last"])),  # -> Event: Time
-        "MICROTIME":
-            str(int(event["last"] * 1000000)),
-        "LASTSERVICESTATE":
-            is_cancelling and "CRITICAL"
-            or "OK",  # better assume OK, we have no transition information
-        "LASTSERVICESTATEID":
-            is_cancelling and "2" or "0",  # -> immer OK
-        "LASTSERVICEOK":
-            "0",  # 1.1.1970
-        "LASTSERVICESTATECHANGE":
-            str(int(event["last"])),
-        "LONGSERVICEOUTPUT":
-            "",
-        "NOTIFICATIONAUTHOR":
-            username or "",
-        "NOTIFICATIONAUTHORALIAS":
-            username or "",
-        "NOTIFICATIONAUTHORNAME":
-            username or "",
-        "NOTIFICATIONCOMMENT":
-            "",
-        "NOTIFICATIONTYPE":
-            is_cancelling and "RECOVERY" or "PROBLEM",
-        "SERVICEACKAUTHOR":
-            "",
-        "SERVICEACKCOMMENT":
-            "",
-        "SERVICEATTEMPT":
-            "1",
-        "SERVICECHECKCOMMAND":
-            event["rule_id"] is None and "ec-internal" or "ec-rule-" + event["rule_id"],
-        "SERVICEDESC":
-            event["application"] or "Event Console",
-        "SERVICENOTIFICATIONNUMBER":
-            "1",
-        "SERVICEOUTPUT":
-            event["text"],
-        "SERVICEPERFDATA":
-            "",
-        "SERVICEPROBLEMID":
-            "ec-id-" + str(event["id"]),
-        "SERVICESTATE":
-            cmk.defines.service_state_name(event["state"]),
-        "SERVICESTATEID":
-            str(event["state"]),
-        "SERVICE_EC_CONTACT":
-            event.get("owner", ""),
-        "SERVICE_SL":
-            str(event["sl"]),
-        "SVC_SL":
-            str(event["sl"]),
+        "WHAT": "SERVICE",
+        "CONTACTNAME": "check-mk-notify",
+        "DATE": str(int(event["last"])),  # -> Event: Time
+        "MICROTIME": str(int(event["last"] * 1000000)),
+        "LASTSERVICESTATE": is_cancelling and "CRITICAL"
+                            or "OK",  # better assume OK, we have no transition information
+        "LASTSERVICESTATEID": is_cancelling and "2" or "0",  # -> immer OK
+        "LASTSERVICEOK": "0",  # 1.1.1970
+        "LASTSERVICESTATECHANGE": str(int(event["last"])),
+        "LONGSERVICEOUTPUT": "",
+        "NOTIFICATIONAUTHOR": username or "",
+        "NOTIFICATIONAUTHORALIAS": username or "",
+        "NOTIFICATIONAUTHORNAME": username or "",
+        "NOTIFICATIONCOMMENT": "",
+        "NOTIFICATIONTYPE": is_cancelling and "RECOVERY" or "PROBLEM",
+        "SERVICEACKAUTHOR": "",
+        "SERVICEACKCOMMENT": "",
+        "SERVICEATTEMPT": "1",
+        "SERVICECHECKCOMMAND": event["rule_id"] is None and "ec-internal"
+                               or "ec-rule-" + event["rule_id"],
+        "SERVICEDESC": event["application"] or "Event Console",
+        "SERVICENOTIFICATIONNUMBER": "1",
+        "SERVICEOUTPUT": event["text"],
+        "SERVICEPERFDATA": "",
+        "SERVICEPROBLEMID": "ec-id-" + str(event["id"]),
+        "SERVICESTATE": cmk.defines.service_state_name(event["state"]),
+        "SERVICESTATEID": str(event["state"]),
+        "SERVICE_EC_CONTACT": event.get("owner", ""),
+        "SERVICE_SL": str(event["sl"]),
+        "SVC_SL": str(event["sl"]),
 
         # Some fields only found in EC notifications
-        "EC_ID":
-            str(event["id"]),
-        "EC_RULE_ID":
-            event["rule_id"] or "",
-        "EC_PRIORITY":
-            str(event["priority"]),
-        "EC_FACILITY":
-            str(event["facility"]),
-        "EC_PHASE":
-            event["phase"],
-        "EC_COMMENT":
-            event.get("comment", ""),
-        "EC_OWNER":
-            event.get("owner", ""),
-        "EC_CONTACT":
-            event.get("contact", ""),
-        "EC_PID":
-            str(event.get("pid", 0)),
-        "EC_MATCH_GROUPS":
-            "\t".join(event["match_groups"]),
-        "EC_CONTACT_GROUPS":
-            " ".join(event.get("contact_groups") or []),
-        "EC_ORIG_HOST":
-            event.get("orig_host", event["host"]),
+        "EC_ID": str(event["id"]),
+        "EC_RULE_ID": event["rule_id"] or "",
+        "EC_PRIORITY": str(event["priority"]),
+        "EC_FACILITY": str(event["facility"]),
+        "EC_PHASE": event["phase"],
+        "EC_COMMENT": event.get("comment", ""),
+        "EC_OWNER": event.get("owner", ""),
+        "EC_CONTACT": event.get("contact", ""),
+        "EC_PID": str(event.get("pid", 0)),
+        "EC_MATCH_GROUPS": "\t".join(event["match_groups"]),
+        "EC_CONTACT_GROUPS": " ".join(event.get("contact_groups") or []),
+        "EC_ORIG_HOST": event.get("orig_host", event["host"]),
     }
 
 

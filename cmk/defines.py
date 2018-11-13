@@ -36,11 +36,11 @@ from cmk.i18n import _
 # TODO: Rename to service_state_names()
 def core_state_names():
     return {
-        -1 : _("NODATA"),
-         0 : _("OK"),
-         1 : _("WARNING"),
-         2 : _("CRITICAL"),
-         3 : _("UNKNOWN"),
+        -1: _("NODATA"),
+        0: _("OK"),
+        1: _("WARNING"),
+        2: _("CRITICAL"),
+        3: _("UNKNOWN"),
     }
 
 
@@ -51,10 +51,10 @@ def service_state_name(state_num, deflt=""):
 def short_service_state_names():
     return {
         -1: _("PEND"),
-         0: _("OK"),
-         1: _("WARN"),
-         2: _("CRIT"),
-         3: _("UNKN"),
+        0: _("OK"),
+        1: _("WARN"),
+        2: _("CRIT"),
+        3: _("UNKN"),
     }
 
 
@@ -72,11 +72,7 @@ def host_state_name(state_num, deflt=""):
 
 
 def short_host_state_name(state_num, deflt=""):
-    states = {
-        0: _("UP"),
-        1: _("DOWN"),
-        2: _("UNREACH")
-    }
+    states = {0: _("UP"), 1: _("DOWN"), 2: _("UNREACH")}
     return states.get(state_num, deflt)
 
 
@@ -93,26 +89,26 @@ def weekday_ids():
 def weekdays():
     """Returns a map of weekday number (starting with 0 at Monday) to the human readable day name"""
     return {
-       0: _("Monday"),
-       1: _("Tuesday"),
-       2: _("Wednesday"),
-       3: _("Thursday"),
-       4: _("Friday"),
-       5: _("Saturday"),
-       6: _("Sunday"),
+        0: _("Monday"),
+        1: _("Tuesday"),
+        2: _("Wednesday"),
+        3: _("Thursday"),
+        4: _("Friday"),
+        5: _("Saturday"),
+        6: _("Sunday"),
     }
 
 
 def weekdays_by_name():
     """Returns a list of two element tuples containing the weekday ID and the human readable day name"""
     return [
-       ( "monday",    _("Monday") ),
-       ( "tuesday",   _("Tuesday") ),
-       ( "wednesday", _("Wednesday") ),
-       ( "thursday",  _("Thursday") ),
-       ( "friday",    _("Friday") ),
-       ( "saturday",  _("Saturday") ),
-       ( "sunday",    _("Sunday") ),
+        ("monday", _("Monday")),
+        ("tuesday", _("Tuesday")),
+        ("wednesday", _("Wednesday")),
+        ("thursday", _("Thursday")),
+        ("friday", _("Friday")),
+        ("saturday", _("Saturday")),
+        ("sunday", _("Sunday")),
     ]
 
 
@@ -120,18 +116,18 @@ def month_name(month_num):
     """Returns the human readable month name of a given month number
     (starting with 0 = January)"""
     return [
-      _("January"),
-      _("February"),
-      _("March"),
-      _("April"),
-      _("May"),
-      _("June"),
-      _("July"),
-      _("August"),
-      _("September"),
-      _("October"),
-      _("November"),
-      _("December"),
+        _("January"),
+        _("February"),
+        _("March"),
+        _("April"),
+        _("May"),
+        _("June"),
+        _("July"),
+        _("August"),
+        _("September"),
+        _("October"),
+        _("November"),
+        _("December"),
     ][month_num]
 
 
@@ -148,7 +144,7 @@ def interface_oper_states():
         5: _("dormant"),
         6: _("not present"),
         7: _("lower layer down"),
-        8: _("degraded"),    # artificial, not official
+        8: _("degraded"),  # artificial, not official
         9: _("admin down"),  # artificial, not official
     }
 

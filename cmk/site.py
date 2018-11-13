@@ -26,6 +26,7 @@
 
 import os
 
+
 def get_omd_config(key):
     for l in file(os.environ["OMD_ROOT"] + "/etc/omd/site.conf"):
         if l.startswith(key + "="):

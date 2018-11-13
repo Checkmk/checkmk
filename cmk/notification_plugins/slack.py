@@ -71,15 +71,11 @@ def slack_msg(context):
                 "text": text,
             },
             {
-                "color":
-                    color,
-                "title":
-                    "Additional Info",
-                "text":
-                    output + "\nPlease take a look: " + ", ".join(
-                        map("@{}".format, context["CONTACTNAME"].split(','))),
-                "footer":
-                    "Check_MK notification: {LONGDATETIME}".format(**context),
+                "color": color,
+                "title": "Additional Info",
+                "text": output + "\nPlease take a look: " + ", ".join(
+                    map("@{}".format, context["CONTACTNAME"].split(','))),
+                "footer": "Check_MK notification: {LONGDATETIME}".format(**context),
             },
         ]
     }

@@ -45,8 +45,9 @@ def omd_site():
     try:
         return os.environ["OMD_SITE"]
     except KeyError:
-        raise MKGeneralException(_("OMD_SITE environment variable not set. You can "
-                                   "only execute this in an OMD site."))
+        raise MKGeneralException(
+            _("OMD_SITE environment variable not set. You can "
+              "only execute this in an OMD site."))
 
 
 def edition_short():

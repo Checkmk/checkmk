@@ -1,0 +1,11 @@
+Title: check_bi_aggr: Fixed check exception when an aggregation was assigned to multiple groups
+Level: 1
+Component: bi
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0i1
+Date: 1542103644
+
+

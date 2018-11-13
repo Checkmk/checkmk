@@ -133,7 +133,7 @@ MODULES += typing-3.6.6.tar.gz
 MODULES += scandir-1.9.0.tar.gz
 MODULES += pathlib2-2.3.2.tar.gz
 # Added for scheduling (cmk/schedule.py)
-MODULES += python-dateutil-2.7.3.tar.gz
+MODULES += python-dateutil-2.7.5.tar.gz
 MODULES += python-snap7-0.10.tar.gz
 # Added for azure special agent
 MODULES += PyJWT-1.6.4.tar.gz
@@ -153,7 +153,7 @@ MODULES += msrest-0.6.1.tar.gz
 MODULES += msrestazure-0.5.0.tar.gz
 MODULES += oauthlib-2.1.0.tar.gz
 MODULES += requests-oauthlib-1.0.0.tar.gz
-MODULES += urllib3-1.24.tar.gz
+MODULES += urllib3-1.24.1.tar.gz
 # Added for the GUI
 MODULES += Werkzeug-0.14.1.tar.gz
 MODULES += passlib-1.7.1.tar.gz
@@ -161,8 +161,8 @@ MODULES += passlib-1.7.1.tar.gz
 MODULES += docutils-0.14.tar.gz
 MODULES += futures-3.2.0.tar.gz
 MODULES += jmespath-0.9.3.tar.gz
+MODULES += botocore-1.12.43.tar.gz
 MODULES += s3transfer-0.1.13.tar.gz
-MODULES += botocore-1.12.42.tar.gz
 MODULES += boto3-1.9.42.tar.gz
 
 .PHONY: build check-freetds install skel clean

@@ -72,7 +72,6 @@ def expected_output():
     return expected
 
 
-def test_section_wmi_cpuload(request, testconfig, expected_output, actual_output,
-                             testfile):
+def test_section_wmi_cpuload(request, testconfig, expected_output, actual_output, testfile):
     # request.node.name gives test name
     remotetest(expected_output, actual_output, testfile, request.node.name)

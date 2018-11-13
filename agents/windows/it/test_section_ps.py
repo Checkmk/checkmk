@@ -4,8 +4,7 @@ from itertools import chain, repeat
 import os
 import pytest
 import re
-from remote import (actual_output, config, remotetest, remotedir, wait_agent,
-                    write_config)
+from remote import (actual_output, config, remotetest, remotedir, wait_agent, write_config)
 
 
 class Globals(object):
@@ -52,7 +51,6 @@ def expected_output():
     return chain([re.escape(r'<<<ps:sep(9)>>>')], repeat(re_str))
 
 
-def test_section_ps(request, full_path_config, expected_output, actual_output,
-                    testfile):
+def test_section_ps(request, full_path_config, expected_output, actual_output, testfile):
     # request.node.name gives test name
     remotetest(expected_output, actual_output, testfile, request.node.name)

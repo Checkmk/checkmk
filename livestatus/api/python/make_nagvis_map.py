@@ -38,6 +38,7 @@ x_hostgroup = 30
 x_therm = 200
 x_usv = 560
 
+
 def make_label(text, x, y, width):
     print """
 define textbox {
@@ -56,6 +57,7 @@ def render_hostgroup(name, alias):
 
     # Name des Serverraums
     make_label(alias, x_hostgroup, g_y, x_therm - x_hostgroup - 20)
+
     def display_servicegroup(name, x):
         if live.query_value("GET servicegroups\nStats: name = %s\n" % name) == 1:
             print """
@@ -68,7 +70,8 @@ define servicegroup {
             # Einzelauflistung der Thermometer
             num = 0
             shift = 16
-            for host, service in live.query("GET services\nFilter: groups >= %s\nColumns: host_name description" % name):
+            for host, service in live.query(
+                    "GET services\nFilter: groups >= %s\nColumns: host_name description" % name):
                 num += 1
                 print """
 define service {
@@ -85,8 +88,6 @@ define service {
 
     # Auflistung der USV-Parameter
     display_servicegroup(name + "_usv", x_usv)
-    
-
 
 
 socket_path = "unix:/var/run/nagios/rw/live"
@@ -101,19 +102,17 @@ define global {
 }
 """
 
-
 # hostgroups = live.query("GET hostgroups\nColumns: name alias")
 hostgroups = [
- ( "s02",   "S-02" ),
- ( "s06",   "S-06" ),
- ( "s48",   "S-48" ),
- ( "ad214", "AD-214" ),
- ( "ik026", "IK-026" ),
- ( "etage", "Etagenverteiler" ),
- ]
+    ("s02", "S-02"),
+    ("s06", "S-06"),
+    ("s48", "S-48"),
+    ("ad214", "AD-214"),
+    ("ik026", "IK-026"),
+    ("etage", "Etagenverteiler"),
+]
 for name, alias in hostgroups:
-   render_hostgroup(name, alias)
+    render_hostgroup(name, alias)
 
 make_label("Temperaturen", x_therm, y_title, 250)
-make_label("USV-Status",   x_usv,   y_title, 160)
-
+make_label("USV-Status", x_usv, y_title, 160)

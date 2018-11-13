@@ -24,7 +24,6 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-
 import sys
 import time
 import imaplib
@@ -41,7 +40,6 @@ cmk.password_store.replace_passwords()
 
 
 class Mail(object):
-
     def __init__(self, conn, mail_id):
         self.__mail = None
         self.__timestamp = None
@@ -130,42 +128,94 @@ class ImapWrapper(object):
 
 
 def output(message):
-    sys.stdout.write(message+"\n")
+    sys.stdout.write(message + "\n")
+
 
 def parse_args():
     parser = OptionParser()
-    parser.add_option("-d", "--debug", action="store_true", default=False,
-                      help="print debugging information")
-    parser.add_option("--server", help="the imap server to connect to (hostname or ip)")
-    parser.add_option("--port", type="int",
-                      help="tcp port of the imap server (default is 143 for unencrypted and 993 for SSL)")
-    parser.add_option("--ssl", action="store_true", default=False,
-                      help="enables ssl encrypted communication with the server")
-    parser.add_option("--username", help="Username to use for IMAP")
-    parser.add_option("--password", help="Password to use for IMAP")
-    parser.add_option("--timeout", type="int", default=10,
-                      help="Timeout in seconds for network connects")
+    parser.add_option(
+        "-d",
+        "--debug",
+        action="store_true",
+        default=False,
+        help="print debugging information",
+    )
+    parser.add_option(
+        "--server",
+        help="the imap server to connect to (hostname or ip)",
+    )
+    parser.add_option(
+        "--port",
+        type="int",
+        help="tcp port of the imap server (default is 143 for unencrypted and 993 for SSL)",
+    )
+    parser.add_option(
+        "--ssl",
+        action="store_true",
+        default=False,
+        help="enables ssl encrypted communication with the server",
+    )
+    parser.add_option(
+        "--username",
+        help="Username to use for IMAP",
+    )
+    parser.add_option(
+        "--password",
+        help="Password to use for IMAP",
+    )
+    parser.add_option(
+        "--timeout",
+        type="int",
+        default=10,
+        help="Timeout in seconds for network connects",
+    )
 
-    parser.add_option("--warn-age", type="int",
-                      help="age (in seconds) of mails above which the check will warn")
-    parser.add_option("--crit-age", type="int",
-                      help="age (in seconds) of mails above which the check will become critical")
+    parser.add_option(
+        "--warn-age",
+        type="int",
+        help="age (in seconds) of mails above which the check will warn",
+    )
+    parser.add_option(
+        "--crit-age",
+        type="int",
+        help="age (in seconds) of mails above which the check will become critical",
+    )
 
-    parser.add_option("--warn-new", type="int",
-                      help="warn if the newest message is older than this value (in seconds)")
-    parser.add_option("--crit-new", type="int",
-                      help="crit if the newest message is older than this value (in seconds)")
+    parser.add_option(
+        "--warn-new",
+        type="int",
+        help="warn if the newest message is older than this value (in seconds)",
+    )
+    parser.add_option(
+        "--crit-new",
+        type="int",
+        help="crit if the newest message is older than this value (in seconds)",
+    )
 
-    parser.add_option("--warn-count", type="int",
-                      help="number of mails above which the check will warn")
-    parser.add_option("--crit-count", type="int",
-                      help="number of mails above which the check will become critical")
+    parser.add_option(
+        "--warn-count",
+        type="int",
+        help="number of mails above which the check will warn",
+    )
+    parser.add_option(
+        "--crit-count",
+        type="int",
+        help="number of mails above which the check will become critical",
+    )
 
-    parser.add_option("--mailbox", dest="mailboxes", action="append",
-                      help="mailbox to check. Can appear repeatedly to monitor multiple mailboxes")
+    parser.add_option(
+        "--mailbox",
+        dest="mailboxes",
+        action="append",
+        help="mailbox to check. Can appear repeatedly to monitor multiple mailboxes",
+    )
 
-    parser.add_option("--retrieve-max", type="int", default=5,
-                      help="limit the number of mails retrieved per mailbox. Only relevant when checking age")
+    parser.add_option(
+        "--retrieve-max",
+        type="int",
+        default=5,
+        help="limit the number of mails retrieved per mailbox. Only relevant when checking age",
+    )
 
     options = parser.parse_args()[0]
 
@@ -211,7 +261,7 @@ def main(options):
             # but imap search doesn't allow more than day-precision, so we have to
             # retrieve all mails from the day before the relevant age and
             # filter the result
-            old_mails = imap.mails(mb,  before=(now - options.warn_age) + 86400)
+            old_mails = imap.mails(mb, before=(now - options.warn_age) + 86400)
             if old_mails:
                 old_mails = old_mails[:options.retrieve_max]
                 status = 0

@@ -85,8 +85,9 @@ OPTIONS:
 
 """)
 
+
 short_options = 'I:u:p:H:f:q:e:t:n:sd'
-long_options = [ "help" ]
+long_options = ["help"]
 
 try:
     opts, args = getopt.getopt(sys.argv[1:], short_options, long_options)
@@ -94,22 +95,22 @@ except getopt.GetoptError, err:
     sys.stderr.write("%s\n" % err)
     sys.exit(1)
 
-hosts        = []
-multiple     = False
-uri          = '/'
-port         = 80
-ssl          = False
-vhost        = None
-form_name    = None
-params       = {}
+hosts = []
+multiple = False
+uri = '/'
+port = 80
+ssl = False
+vhost = None
+form_name = None
+params = {}
 expect_regex = None
-opt_debug    = False
-timeout      = 10 # seconds
-num_warn     = None
-num_crit     = None
+opt_debug = False
+timeout = 10  # seconds
+num_warn = None
+num_crit = None
 
-for o,a in opts:
-    if o in [ '-h', '--help' ]:
+for o, a in opts:
+    if o in ['-h', '--help']:
         usage()
         sys.exit(0)
     elif o == '-I':
@@ -125,7 +126,7 @@ for o,a in opts:
     elif o == '-f':
         form_name = a
     elif o == '-q':
-        params = dict([ parts.split('=', 1) for parts in a.split('&') ])
+        params = dict([parts.split('=', 1) for parts in a.split('&')])
     elif o == '-e':
         expect_regex = a
     elif o == '-t':
@@ -149,14 +150,17 @@ if len(hosts) > 1:
 if not ssl and port == 443:
     ssl = True
 
+
 def debug(s):
     if opt_debug:
         sys.stderr.write('%s\n' % s)
+
 
 class HostResult(Exception):
     def __init__(self, result):
         super(HostResult, self).__init__()
         self.result = result
+
 
 def new_state(rc, s):
     if multiple:
@@ -164,10 +168,12 @@ def new_state(rc, s):
     else:
         bail_out(rc, s)
 
+
 def bail_out(rc, s):
     stxt = ['OK', 'WARN', 'CRIT', 'UNKN'][rc]
     sys.stdout.write('%s - %s\n' % (stxt, s))
     sys.exit(rc)
+
 
 proto = 'https' if ssl else 'http'
 if (proto == 'http' and port == 80) or (proto == 'https' and port == 443):
@@ -175,20 +181,21 @@ if (proto == 'http' and port == 80) or (proto == 'https' and port == 443):
 else:
     portspec = ':%d' % port
 
+
 def get_full_uri(host, uri):
     return '%s://%s%s%s' % (proto, host, portspec, uri)
+
 
 def init_http():
     global g_cookies, g_opener
     g_cookies = cookielib.CookieJar()
-    g_opener = urllib2.build_opener(
-        urllib2.HTTPRedirectHandler(),
-        urllib2.HTTPHandler(debuglevel=0),
-        urllib2.HTTPSHandler(debuglevel=0),
-        urllib2.HTTPCookieProcessor(g_cookies)
-    )
+    g_opener = urllib2.build_opener(urllib2.HTTPRedirectHandler(),
+                                    urllib2.HTTPHandler(debuglevel=0),
+                                    urllib2.HTTPSHandler(debuglevel=0),
+                                    urllib2.HTTPCookieProcessor(g_cookies))
 
-def open_url(url, method = 'GET', data = None):
+
+def open_url(url, method='GET', data=None):
     if method == 'GET' and data is not None:
         # Add the query string to the url in this case
         start = '&' if '?' in url else '?'
@@ -200,10 +207,10 @@ def open_url(url, method = 'GET', data = None):
             debug('POST %s' % url)
             data = urllib.urlencode(data.items())
             debug('  => %s' % data)
-            fd = g_opener.open(url, data, timeout) # will be a POST
+            fd = g_opener.open(url, data, timeout)  # will be a POST
         else:
             debug('GET %s' % url)
-            fd = g_opener.open(url, timeout = timeout) # GET
+            fd = g_opener.open(url, timeout=timeout)  # GET
     except urllib2.HTTPError, e:
         new_state(2, 'Unable to open %s: [%d] %s' % (url, e.code, e))
     except urllib2.URLError, e:
@@ -211,15 +218,16 @@ def open_url(url, method = 'GET', data = None):
     except socket.timeout, e:
         new_state(2, 'Unable to open %s: %s' % (url, e))
     real_url = fd.geturl()
-    code     = fd.getcode()
-    content  = fd.read()
+    code = fd.getcode()
+    content = fd.read()
 
     encoding = fd.headers.getparam('charset')
     if encoding:
         content = content.decode(encoding)
 
     debug('CODE: %s RESPONSE:' % code)
-    debug('\n'.join([ '    %02d %s' % (index + 1, line) for index, line in enumerate(content.split('\n')) ]))
+    debug('\n'.join(
+        ['    %02d %s' % (index + 1, line) for index, line in enumerate(content.split('\n'))]))
     return code, real_url, content
 
 
@@ -235,7 +243,7 @@ class FormParser(HTMLParser):
         if tag == 'form':
             name = attrs.get('name', 'unnamed-%d' % (len(self.forms) + 1))
             self.forms[name] = {
-                'attrs':    dict(attrs),
+                'attrs': dict(attrs),
                 'elements': {},
             }
             self.current_form = self.forms[name]
@@ -252,6 +260,7 @@ class FormParser(HTMLParser):
         if tag == 'form':
             self.current_form = None
 
+
 # Parse XML to find all form elements
 # One form found and no form_name given, use that one
 # Loop all forms for the given form_name, use the matching one
@@ -266,28 +275,33 @@ def parse_form(content):
         new_state(2, 'Found no form element in HTML code')
 
     elif num_forms == 1 and form_name is not None and form_name in forms:
-        new_state(2, 'Found one form with name "%s" but expected name "%s"' %
-                                          (forms.keys()[0], form_name))
+        new_state(
+            2,
+            'Found one form with name "%s" but expected name "%s"' % (forms.keys()[0], form_name))
 
     elif num_forms == 1:
         form = forms[forms.keys()[0]]
 
     elif form_name is None:
-        new_state(2, 'No form name provided but found multiple forms (Names: %s)' %
-            (', '.join(forms.keys())))
+        new_state(
+            2, 'No form name provided but found multiple forms (Names: %s)' % (', '.join(
+                forms.keys())))
 
     else:
         form = forms.get(form_name)
         if form is None:
-            new_state(2, 'Found no form with name "%s" (Available: %s)' %
-                (form_name, ', '.join(forms.keys())))
+            new_state(
+                2, 'Found no form with name "%s" (Available: %s)' % (form_name, ', '.join(
+                    forms.keys())))
 
     return form
+
 
 def update_form_vars(form):
     v = form['elements'].copy()
     v.update(params)
     return v
+
 
 try:
     init_http()
@@ -324,16 +338,17 @@ try:
                 if matches is not None:
                     new_state(0, 'Found expected regex "%s" in form response' % expect_regex)
                 else:
-                    new_state(2, 'Expected regex "%s" could not be found in form response' % expect_regex)
+                    new_state(
+                        2, 'Expected regex "%s" could not be found in form response' % expect_regex)
             else:
                 new_state(0, 'Form has been submitted')
         except HostResult, e:
             states[host] = e.result
 
     if multiple:
-        failed  = [ pair for pair in states.items() if pair[1][0] != 0 ]
-        success = [ pair for pair in states.items() if pair[1][0] == 0 ]
-        max_state   = max([ state for state, output in states.values() ])
+        failed = [pair for pair in states.items() if pair[1][0] != 0]
+        success = [pair for pair in states.items() if pair[1][0] == 0]
+        max_state = max([state for state, output in states.values()])
 
         sum_state = 0
         if num_warn is None and num_crit is None:
@@ -348,7 +363,7 @@ try:
 
         txt = '%d succeeded, %d failed' % (len(success), len(failed))
         if failed:
-            txt += ' (%s)' % ', '.join([ '%s: %s' % (n, s[1]) for n, s in failed ])
+            txt += ' (%s)' % ', '.join(['%s: %s' % (n, s[1]) for n, s in failed])
         bail_out(sum_state, txt)
 
 except Exception, e:

@@ -30,9 +30,9 @@ import time
 import getopt
 import paramiko
 
-
 client = None
 sftp = None
+
 
 def usage():
     sys.stderr.write("""
@@ -56,56 +56,69 @@ OPTIONS:
     """)
     sys.exit(1)
 
-opt_host        = None
-opt_user        = None
-opt_pass        = None
-opt_key         = None
-opt_port        = 22
-opt_get_remote  = None
-opt_get_local   = None
-opt_put_local   = None
-opt_put_remote  = None
-opt_timestamp   = None
-opt_timeout     = 10.0
-opt_verbose     = False
+
+opt_host = None
+opt_user = None
+opt_pass = None
+opt_key = None
+opt_port = 22
+opt_get_remote = None
+opt_get_local = None
+opt_put_local = None
+opt_put_remote = None
+opt_timestamp = None
+opt_timeout = 10.0
+opt_verbose = False
 
 short_options = 'hv'
-long_options = ['host=', 'user=', 'secret=', 'privat-key', 'port=',
-                'get-remote=', 'get-local=', 'put-local=', 'put-remote=',
-                'get-timestamp=', 'verbose', 'help', 'timeout=']
+long_options = [
+    'host=',
+    'user=',
+    'secret=',
+    'privat-key',
+    'port=',
+    'get-remote=',
+    'get-local=',
+    'put-local=',
+    'put-remote=',
+    'get-timestamp=',
+    'verbose',
+    'help',
+    'timeout=',
+]
 
 try:
-    opts, args = getopt.getopt( sys.argv[1:], short_options, long_options )
+    opts, args = getopt.getopt(sys.argv[1:], short_options, long_options)
 except getopt.GetoptError, err:
     sys.stderr.write("%s\n" % err)
     sys.exit(1)
 
 for opt, arg in opts:
-    if opt in [ '-h', 'help' ]:
+    if opt in ['-h', 'help']:
         usage()
-    elif opt in [ '--host' ]:
+    elif opt in ['--host']:
         opt_host = arg
-    elif opt in [ '--user' ]:
+    elif opt in ['--user']:
         opt_user = arg
-    elif opt in [ '--secret' ]:
+    elif opt in ['--secret']:
         opt_pass = arg
-    elif opt in [ '--private-key' ]:
+    elif opt in ['--private-key']:
         opt_pass = arg
-    elif opt in [ '--port' ]:
+    elif opt in ['--port']:
         opt_port = arg
-    elif opt in [ '--timeout' ]:
+    elif opt in ['--timeout']:
         opt_timeout = float(arg)
-    elif opt in [ '--put-local' ]:
+    elif opt in ['--put-local']:
         opt_put_local = arg
-    elif opt in [ '--put-remote' ]:
+    elif opt in ['--put-remote']:
         opt_put_remote = arg
-    elif opt in [ '--get-local' ]:
+    elif opt in ['--get-local']:
         opt_get_local = arg
-    elif opt in [ '--get-remote' ]:
+    elif opt in ['--get-remote']:
         opt_get_remote = arg
-    elif opt in [ '--get-timestamp' ]:
+    elif opt in ['--get-timestamp']:
         opt_timestamp = arg
-    elif opt in [ '-v', '--verbose' ]:
+    elif opt in ['-v', '--verbose']:
         opt_verbose = True
 
 
@@ -181,7 +194,7 @@ def main():
     global sftp
     messages = []
     states = []
-    try: # Establish connection
+    try:  # Establish connection
         client = connection()
         sftp = client.open_sftp()
         messages.append("Login successful")
@@ -199,7 +212,7 @@ def main():
     testfile_remote = True
 
     # .. and eventually execute them!
-    try: # Put a file to the server
+    try:  # Put a file to the server
         if opt_put_local != None:
             create_testfile(paths)
             testfile_remote = file_available(working_dir)
@@ -212,7 +225,7 @@ def main():
         states.append(2)
         messages.append("Could not put file to SFTP server! (!!)")
 
-    try: # Get a file from the server
+    try:  # Get a file from the server
         if opt_get_remote != None:
             get_file(paths)
             states.append(0)
@@ -223,7 +236,7 @@ def main():
         states.append(2)
         messages.append("Could not get file from SFTP server! (!!)")
 
-    try: # Get timestamp of a remote file
+    try:  # Get timestamp of a remote file
         if opt_timestamp != None:
             file_stats = get_timestamp(paths)
             states.append(0)
@@ -241,5 +254,6 @@ def main():
         sftp.remove(paths["remote_put_path"])
 
     write_out(max(states), ", ".join(messages))
+
 
 main()

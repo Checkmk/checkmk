@@ -54,6 +54,7 @@ OPTIONS:
   -d   Debug mode - let Python exceptions come through
 """)
 
+
 if len(sys.argv) < 2:
     usage()
     sys.exit(1)
@@ -62,25 +63,25 @@ short_options = "vw:c:f:u:d"
 opts, args = getopt.getopt(sys.argv[1:], short_options)
 
 opt_verbose = False
-opt_debug   = False
-host        = None
-warn_level  = None
-crit_level  = None
-fromtime    = None
-untiltime   = None
+opt_debug = False
+host = None
+warn_level = None
+crit_level = None
+fromtime = None
+untiltime = None
 
-for o,a in opts:
-    if o in [ '-v' ]:
+for o, a in opts:
+    if o in ['-v']:
         opt_verbose = True
-    elif o in [ '-d' ]:
+    elif o in ['-d']:
         opt_debug = True
-    elif o in [ '-w' ]:
+    elif o in ['-w']:
         warn_level = int(a)
-    elif o in [ '-c' ]:
+    elif o in ['-c']:
         crit_level = int(a)
-    elif o in [ '-f' ]:
+    elif o in ['-f']:
         fromtime = int(a)
-    elif o in [ '-u' ]:
+    elif o in ['-u']:
         untiltime = int(a)
 
 if len(args) == 1:
@@ -92,10 +93,10 @@ else:
 if not untiltime:
     untiltime = time.time()
 if not fromtime:
-    fromtime  = untiltime - 86400 * 30
+    fromtime = untiltime - 86400 * 30
 
 try:
-    datasets  = []
+    datasets = []
     step_secs = 0
     util_total = []
     is_windows = True
@@ -104,7 +105,7 @@ try:
         datasets.append(data[1])
         step_secs = data[0]
         #util_total = [ x for x in datasets[0] if x != None ]
-        util_total = [ x for x in datasets[0] ]
+        util_total = [x for x in datasets[0]]
     except Exception, e:
         if opt_debug:
             raise
@@ -131,7 +132,7 @@ try:
             sys.stdout.write("idx: %d " % idx)
             sys.stdout.write("%s\t" % int(datasets[0][idx] or -1))
             sys.stdout.write("%s\t" % int(datasets[1][idx] or -1))
-            sys.stdout.write("%s\n" %   int(datasets[2][idx] or -1))
+            sys.stdout.write("%s\n" % int(datasets[2][idx] or -1))
 
     if is_windows:
         info = [ "CPU utilization from %s until %s" %\
@@ -143,22 +144,22 @@ try:
              time.strftime("%b %d %H:%M:%S", time.localtime(untiltime))) ]
 
     if cpu_peak:
-            info.append("Highest Peak of %d%% at %s" % (cpu_peak, time.strftime("%b %d %H:%M:%S", peak_time)))
-            state = 0
-            if crit_level and cpu_peak <= crit_level:
-                info.append("less than %d (!!)" % crit_level)
-                state = 2
-            elif warn_level and cpu_peak <= warn_level:
-                info.append("less than %d (!)" % warn_level)
-                state = 1
-            sys.stdout.write("%s\n" % ", ".join(info))
-            sys.exit(state)
+        info.append(
+            "Highest Peak of %d%% at %s" % (cpu_peak, time.strftime("%b %d %H:%M:%S", peak_time)))
+        state = 0
+        if crit_level and cpu_peak <= crit_level:
+            info.append("less than %d (!!)" % crit_level)
+            state = 2
+        elif warn_level and cpu_peak <= warn_level:
+            info.append("less than %d (!)" % warn_level)
+            state = 1
+        sys.stdout.write("%s\n" % ", ".join(info))
+        sys.exit(state)
     else:
-            info.append("No data available in time period")
-            state = 0
-            sys.stdout.write("%s\n" % ": ".join(info))
-            sys.exit(state)
-
+        info.append("No data available in time period")
+        state = 0
+        sys.stdout.write("%s\n" % ": ".join(info))
+        sys.exit(state)
 
 except MKGeneralException, e:
     if opt_debug:

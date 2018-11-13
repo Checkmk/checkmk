@@ -204,7 +204,7 @@ if len(obj) == 1:
     sys.stdout.write('ERROR: Aggregation "%s" does not exist or user is not permitted\n' % aggr_name)
     sys.exit(3)
 
-if type(obj) != list or len(obj) != 2:
+if not isinstance(obj, list):
     sys.stdout.write('ERROR: Invalid response: %s\n' % (json.replace("\n", "")))
     sys.exit(3)
 

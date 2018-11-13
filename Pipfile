@@ -69,7 +69,7 @@ pyghmi = "==1.2.14"
 typing = "==3.6.6"
 scandir = "==1.9"
 pathlib2 = "==2.3.2"
-python-dateutil = "==2.7.3"
+python-dateutil = "==2.7.5"
 python-snap7 = "==0.10"
 rrdtool = "==0.1.14"  # Actually we ship the binding which comes with rrdtool itself...
 azure-common = "==1.1.16"
@@ -89,9 +89,14 @@ msrest = "==0.6.1"  # needed by azure stuff
 msrestazure = "==0.5.0"  # needed by azure stuff
 oauthlib = "==2.1.0"  # needed by azure stuff
 requests-oauthlib = "==1.0.0"  # needed by azure stuff
-urllib3 = "==1.24"  # needed by azure stuff
+urllib3 = "==1.24.1"  # needed by azure stuff
 Werkzeug = "==0.14.1" # Added for the GUI
 passlib = "==1.7.1" # Added for the GUI
+docutils = "==0.14" # needed for aws stuff
+futures = "==3.2.0" # needed for aws stuff
+jmespath = "==0.9.3" # needed for aws stuff
+botocore = "==1.12.43" # needed for aws stuff
+s3transfer = "==0.1.13" # needed for aws stuff
 boto3 = "==1.9.42" # needed for aws stuff
 
 [requires]

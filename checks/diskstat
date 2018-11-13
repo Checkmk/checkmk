@@ -54,6 +54,15 @@
 # c7 6978 /dev/vx/dsk/datadg/lalavol
 # c7 6979 /dev/vx/dsk/datadg/oravol
 
+# output may have zeros appended
+#
+# 8 0 sda 111918756 929875 3960367050 349083041 20142495 1149711 1021234448 851284769 0 233177192 1197549009 0 0 0 0
+# 8 1 sda1 226 0 27481 3388 381 3 31472 35862 0 8123 39260 0 0 0 0
+# 8 2 sda2 111918500 929875 3960337473 349079568 20142114 1149708 1021202976 851248906 0 233176504 1197492420 0 0 0 0
+# 253 0 dm-0 883953 0 92124097 10287533 108572 0 2251672 809814 0 7545567 11097424 0 0 0 0
+# 253 1 dm-1 21046 0 172072 157766 164020 0 1312160 29292970 0 124138 29451007 0 0 0 0
+# 253 2 dm-2 750714 0 19747073 7702216 1445987 0 36811608 9817313 0 7159271 17520030 0 0 0 0
+
 # Fields in /proc/diskstats
 #  Index 0 -- major number
 #  Index 1 -- minor number
@@ -102,6 +111,8 @@
 # parsed = timestamp, disks
 def parse_diskstat(info):
     timestamp_str, proc_diskstat, name_info = diskstat_extract_name_info(info)
+    # limit diskstat to first elements before actual parsing
+    proc_diskstat = [ds[:15] for ds in proc_diskstat]
     timestamp = int(timestamp_str)
 
     disks = {}

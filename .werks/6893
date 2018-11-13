@@ -1,0 +1,12 @@
+Title: diskstat: Make check compatible with addional kernel versions
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.4.0p38
+Date: 1542128326
+
+Previuously the diskstat check could potentially not work due to kernel dependencies.
+The werk add ensures proper working for additional kernel versions.

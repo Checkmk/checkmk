@@ -1363,7 +1363,8 @@ div.color {
   color: #fff !important;
   border-color: #7b7b7b !important; }
 
-.stated, .hstated, .stated a, .stated body.main .popup_menu span, body.main .popup_menu .stated span, .hstated a, .hstated body.main .popup_menu span, body.main .popup_menu .hstated span {
+.stated, .hstated, .stated a, .stated body.main .popup_menu span, body.main .popup_menu .stated span, .hstated a, .hstated body.main .popup_menu span, body.main .popup_menu .hstated span,
+.even0 .hstated, .odd0 .hstated, .even0 .hstated a, .odd0 .hstated a {
   background-color: #888 !important;
   color: #fff !important;
   border-color: #7b7b7b !important; }

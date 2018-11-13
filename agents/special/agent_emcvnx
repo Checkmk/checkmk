@@ -44,9 +44,7 @@ import os
 import sys
 
 
-#############################################################################
 def usage():
-#############################################################################
     sys.stderr.write("""Check_MK EMC VNX Agent
 
 USAGE: agent_emcvnx [OPTIONS] HOST
@@ -79,11 +77,12 @@ OPTIONS:
 
 """)
 
+
 #############################################################################
 # command line options
 #############################################################################
 short_options = 'hu:p:t:m:i:'
-long_options  = [ 'help', 'user=', 'password=', 'debug', 'timeout=', 'profile', 'modules=' ]
+long_options = ['help', 'user=', 'password=', 'debug', 'timeout=', 'profile', 'modules=']
 
 try:
     opts, args = getopt.getopt(sys.argv[1:], short_options, long_options)
@@ -91,48 +90,79 @@ except getopt.GetoptError, err:
     sys.stderr.write("%s\n" % err)
     sys.exit(1)
 
-opt_debug      = False
-opt_timeout    = 60
+opt_debug = False
+opt_timeout = 60
 
-g_profile      = None
+g_profile = None
 g_profile_path = "emcvnx_profile.out"
 
-host_address   = None
-user           = None
-password       = None
-mortypes       = [ 'all' ]
+host_address = None
+user = None
+password = None
+mortypes = ['all']
 fetch_agent_info = False
 
 naviseccli_options = {
-    "disks"         : {"cmd_options" : [(None, "getall -disk")],      "active" : False, "sep" : None},
-    "hba"           : {"cmd_options" : [(None, "getall -hba")],       "active" : False, "sep" : None},
-    "hwstatus"      : {"cmd_options" : [(None, "getall -array")],     "active" : False, "sep" : None},
-    "raidgroups"    : {"cmd_options" : [(None, "getall -rg")],        "active" : False, "sep" : None},
-#   "agent-info"    : {"cmd_options" : [(None, "-sp")],               "active" : False, "sep" : None},
-    "sp_util"       : {"cmd_options" : [(None, "getcontrol -cbt")],   "active" : False, "sep" : 58},
-    "writecache"    : {"cmd_options" : [(None, "getcache -wst")],     "active" : False, "sep" : None},
-    "mirrorview"    : {"cmd_options" : [(None, "mirrorview -list")],  "active" : False, "sep" : 58},
-    "storage_pools" : {"cmd_options" : [("storage_pools", "storagepool -list -all"),
-                                        ("auto_tiering",  "autoTiering -info -opStatus -loadBalance")],
-                                                                      "active" : False, "sep" : 58},
+    "disks": {
+        "cmd_options": [(None, "getall -disk")],
+        "active": False,
+        "sep": None
+    },
+    "hba": {
+        "cmd_options": [(None, "getall -hba")],
+        "active": False,
+        "sep": None
+    },
+    "hwstatus": {
+        "cmd_options": [(None, "getall -array")],
+        "active": False,
+        "sep": None
+    },
+    "raidgroups": {
+        "cmd_options": [(None, "getall -rg")],
+        "active": False,
+        "sep": None
+    },
+    #   "agent-info"    : {"cmd_options" : [(None, "-sp")],               "active" : False, "sep" : None},
+    "sp_util": {
+        "cmd_options": [(None, "getcontrol -cbt")],
+        "active": False,
+        "sep": 58
+    },
+    "writecache": {
+        "cmd_options": [(None, "getcache -wst")],
+        "active": False,
+        "sep": None
+    },
+    "mirrorview": {
+        "cmd_options": [(None, "mirrorview -list")],
+        "active": False,
+        "sep": 58
+    },
+    "storage_pools": {
+        "cmd_options": [("storage_pools", "storagepool -list -all"),
+                        ("auto_tiering", "autoTiering -info -opStatus -loadBalance")],
+        "active": False,
+        "sep": 58
+    },
 }
 
-for o,a in opts:
-    if o in [ '--debug' ]:
+for o, a in opts:
+    if o in ['--debug']:
         opt_debug = True
-    elif o in [ '--profile' ]:
+    elif o in ['--profile']:
         import cProfile
         g_profile = cProfile.Profile()
         g_profile.enable()
-    elif o in [ '-u', '--user' ]:
+    elif o in ['-u', '--user']:
         user = a
-    elif o in [ '-p', '--password' ]:
+    elif o in ['-p', '--password']:
         password = a
-    elif o in [ '-i', '--modules' ]:
+    elif o in ['-i', '--modules']:
         mortypes = a.split(',')
-    elif o in [ '-t', '--timeout' ]:
+    elif o in ['-t', '--timeout']:
         opt_timeout = int(a)
-    elif o in [ '-h', '--help' ]:
+    elif o in ['-h', '--help']:
         usage()
         sys.exit(0)
 
@@ -184,7 +214,7 @@ if opt_debug:
     sys.stderr.write("executing external command: %s\n" % cmd)
 
 # Now read the whole output of the command
-cmdout = [ l.strip() for l in os.popen(cmd + " 2>&1").readlines() ]
+cmdout = [l.strip() for l in os.popen(cmd + " 2>&1").readlines()]
 
 if cmdout:
     if "naviseccli: not found" in cmdout[0]:
@@ -204,7 +234,7 @@ for line in cmdout:
 # agent, e. g. Model and Revision
 if fetch_agent_info:
     print "<<<emcvnx_agent:sep(58)>>>"
-    cmd=basecmd + "getagent"
+    cmd = basecmd + "getagent"
     if opt_debug:
         sys.stderr.write("executing external command: %s\n" % cmd)
 
@@ -232,9 +262,7 @@ for module, module_options in naviseccli_options.items():
                 print line,
 
 
-#############################################################################
 def output_profile():
-#############################################################################
     g_profile.dump_stats(g_profile_path)
     show_profile = os.path.join(os.path.dirname(g_profile_path), 'show_profile.py')
     file(show_profile, "w")\
@@ -245,6 +273,7 @@ def output_profile():
     os.chmod(show_profile, 0755)
 
     sys.stderr.write("Profile '%s' written. Please run %s.\n" % (g_profile_path, show_profile))
+
 
 if g_profile:
     output_profile()

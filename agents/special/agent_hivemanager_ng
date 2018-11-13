@@ -24,7 +24,6 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-
 from __future__ import print_function
 
 import argparse
@@ -50,9 +49,7 @@ class ArgParser(argparse.ArgumentParser):
 
 
 def parse_args():
-    parser = ArgParser(
-        description='Special agent to retrieve data from Aerohive HiveManagerNG'
-    )
+    parser = ArgParser(description='Special agent to retrieve data from Aerohive HiveManagerNG')
     parser.add_argument('-d', '--debug', help='enable debugging', action='store_true')
     parser.add_argument('url', help='URL to Aerohive NG, e.g. https://cloud.aerohive.com')
     parser.add_argument('vhm_id', help='Numericl ID of the VHM e.g. 102')
@@ -84,9 +81,9 @@ def main():
     try:
         response = requests.get(address, headers=headers, params=params)
     except requests.RequestException, e:
-        bail_out('Request to the API failed. Please check your connection settings. '
-                 'A guide to setup the API can be found on the Aerohive homepage.',
-                 args.debug)
+        bail_out(
+            'Request to the API failed. Please check your connection settings. '
+            'A guide to setup the API can be found on the Aerohive homepage.', args.debug)
 
     try:
         json = response.json()
@@ -94,17 +91,23 @@ def main():
         bail_out(e.message, args.debug)
 
     if json['error']:
-        bail_out('Error in JSON response. Please check your connection settings. '
-                 'A guide to setup the API can be found on the Aerohive '
-                 'homepage.', args.debug)
+        bail_out(
+            'Error in JSON response. Please check your connection settings. '
+            'A guide to setup the API can be found on the Aerohive '
+            'homepage.', args.debug)
 
-    used = set(['hostName', 'connected', 'activeClients', 'ip',
-                'serialId', 'osVersion', 'lastUpdated'])
+    used = set([
+        'hostName',
+        'connected',
+        'activeClients',
+        'ip',
+        'serialId',
+        'osVersion',
+        'lastUpdated',
+    ])
 
     for device in json['data']:
-        device_txt = "|".join(
-            ["%s::%s" % (k, v) for (k, v) in device.items() if k in used]
-        )
+        device_txt = "|".join(["%s::%s" % (k, v) for (k, v) in device.items() if k in used])
         print(device_txt)
 
 

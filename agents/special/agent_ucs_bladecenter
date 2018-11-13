@@ -27,7 +27,6 @@
 # This agent uses UPNP API calls to the Fritz!Box to gather information
 # about connection configuration and status.
 
-
 import re
 import sys
 import getopt
@@ -52,10 +51,9 @@ OPTIONS:
   --debug                       Debug mode: let Python exceptions come through
 """)
 
+
 short_options = 'hu:p:'
-long_options  = [
-    'help', 'username=', 'password=', 'debug', 'no-cert-check'
-]
+long_options = ['help', 'username=', 'password=', 'debug', 'no-cert-check']
 
 try:
     opts, args = getopt.getopt(sys.argv[1:], short_options, long_options)
@@ -63,21 +61,21 @@ except getopt.GetoptError, err:
     sys.stderr.write("%s\n" % err)
     sys.exit(1)
 
-opt_debug    = False
+opt_debug = False
 opt_username = ""
 opt_password = ""
-opt_verify   = True
+opt_verify = True
 
-for o,a in opts:
-    if o in [ '--debug' ]:
+for o, a in opts:
+    if o in ['--debug']:
         opt_debug = True
-    elif o in [ '-u', '--username' ]:
+    elif o in ['-u', '--username']:
         opt_username = a
-    elif o in [ '-p', '--password' ]:
+    elif o in ['-p', '--password']:
         opt_password = a
-    elif o in [ '--no-cert-check' ]:
+    elif o in ['--no-cert-check']:
         opt_verify = False
-    elif o in [ '-h', '--help' ]:
+    elif o in ['-h', '--help']:
         usage()
         sys.exit(0)
 
@@ -90,17 +88,19 @@ else:
     sys.stderr.write("ERROR: Please specify exactly one host.\n")
     sys.exit(1)
 
+
 def get_pattern(pattern, line):
     if not line:
         return []
     p = re.compile(pattern)
     return p.findall(line)
 
+
 class Server(object):
     def __init__(self, host_address):
-        self.netloc         = host_address
+        self.netloc = host_address
         self.session_handle = requests.Session()
-        self.cookie         = None
+        self.cookie = None
 
         if opt_debug:
             sys.stderr.write("Connecting to %s...\n" % self.netloc)
@@ -123,8 +123,8 @@ class Server(object):
             "Content-Type": 'text/xml; charset="utf-8"'
         }
 
-        response = self.session_handle.post("https://%s/nuova" % self.netloc, headers=headers,
-                                            data=payload, verify=opt_verify)
+        response = self.session_handle.post(
+            "https://%s/nuova" % self.netloc, headers=headers, data=payload, verify=opt_verify)
         data = response.text
         if opt_debug:
             sys.stderr.write("<==== %s\n" % data)
@@ -140,7 +140,6 @@ class Server(object):
                              "and try again. Server response: %s" % elements[0])
             sys.exit(1)
         self.cookie = get_pattern('outCookie="(.*?)"', response)[0]
-
 
     # wrapper to circumvent some if/else
     def Logout(self):
@@ -162,41 +161,54 @@ handle.login(opt_username, opt_password)
 entities = [
     ## FANS
     ("ucs_bladecenter_fans", [
-        ("equipmentFan",                    ["Dn", "Model", "OperState"]),
-        ("equipmentFanModuleStats",         ["Dn", "AmbientTemp"]),
+        ("equipmentFan", ["Dn", "Model", "OperState"]),
+        ("equipmentFanModuleStats", ["Dn", "AmbientTemp"]),
         ("equipmentNetworkElementFanStats", ["Dn", "SpeedAvg"]),
-        ("equipmentRackUnitFanStats",       ["Dn", "SpeedAvg"]),
-        ("equipmentFanStats",               ["Dn", "SpeedAvg"]),
+        ("equipmentRackUnitFanStats", ["Dn", "SpeedAvg"]),
+        ("equipmentFanStats", ["Dn", "SpeedAvg"]),
     ]),
     ### PSU
     ("ucs_bladecenter_psu", [
-        ("equipmentPsuInputStats",  ["Dn", "Current", "PowerAvg", "Voltage"]),
-        ("equipmentPsuStats",       ["Dn", "AmbientTemp", "Output12vAvg", "Output3v3Avg"]),
+        ("equipmentPsuInputStats", ["Dn", "Current", "PowerAvg", "Voltage"]),
+        ("equipmentPsuStats", ["Dn", "AmbientTemp", "Output12vAvg", "Output3v3Avg"]),
     ]),
     # NETWORK
-    ("ucs_bladecenter_if", [
-        # Fibrechannel
-        ("fcStats",    ["Dn", "BytesRx", "BytesTx", "PacketsRx", "PacketsTx", "Suspect"]),
-        ("fcErrStats", ["Dn", "Rx", "Tx", "CrcRx", "DiscardRx", "DiscardTx"]),
-        ("fabricFcSanEp",   ["Dn", "EpDn", "AdminState", "OperState", "PortId", "SwitchId", "SlotId"]),
-        ("fabricFcSanPc",   ["Dn",         "AdminState", "OperState", "OperSpeed"]),
-        ("fabricFcSanPcEp", ["Dn", "EpDn", "AdminState", "OperState", "PortId", "SwitchId", "SlotId"]),
+    (
+        "ucs_bladecenter_if",
+        [
+            # Fibrechannel
+            ("fcStats", ["Dn", "BytesRx", "BytesTx", "PacketsRx", "PacketsTx", "Suspect"]),
+            ("fcErrStats", ["Dn", "Rx", "Tx", "CrcRx", "DiscardRx", "DiscardTx"]),
+            ("fabricFcSanEp",
+             ["Dn", "EpDn", "AdminState", "OperState", "PortId", "SwitchId", "SlotId"]),
+            ("fabricFcSanPc", ["Dn", "AdminState", "OperState", "OperSpeed"]),
+            ("fabricFcSanPcEp",
+             ["Dn", "EpDn", "AdminState", "OperState", "PortId", "SwitchId", "SlotId"]),
 
-        # Errors stats. These are also used by interconnects
-        ("etherTxStats", ["Dn", "TotalBytes", "UnicastPackets", "MulticastPackets", "BroadcastPackets"]),
-        ("etherRxStats", ["Dn", "TotalBytes", "UnicastPackets", "MulticastPackets", "BroadcastPackets"]),
-        ("etherErrStats", ["Dn", "OutDiscard", "Rcv"]),
+            # Errors stats. These are also used by interconnects
+            ("etherTxStats",
+             ["Dn", "TotalBytes", "UnicastPackets", "MulticastPackets", "BroadcastPackets"]),
+            ("etherRxStats",
+             ["Dn", "TotalBytes", "UnicastPackets", "MulticastPackets", "BroadcastPackets"]),
+            ("etherErrStats", ["Dn", "OutDiscard", "Rcv"]),
 
-        # Ethernet
-        ("fabricEthLanEp",     ["Dn", "EpDn", "AdminState", "OperState", "AdminSpeed", "PortId", "SwitchId", "SlotId"]),
-        ("fabricEthLanPc",     ["Dn",         "AdminState", "OperState", "AdminSpeed", "OperSpeed", "Name", "PortId"]),
-        ("fabricEthLanPcEp",   ["Dn", "EpDn", "AdminState", "OperState",               "PortId", "SwitchId", "SlotId"]),
+            # Ethernet
+            ("fabricEthLanEp", [
+                "Dn", "EpDn", "AdminState", "OperState", "AdminSpeed", "PortId", "SwitchId",
+                "SlotId"
+            ]),
+            ("fabricEthLanPc",
+             ["Dn", "AdminState", "OperState", "AdminSpeed", "OperSpeed", "Name", "PortId"]),
+            ("fabricEthLanPcEp",
+             ["Dn", "EpDn", "AdminState", "OperState", "PortId", "SwitchId", "SlotId"]),
 
-        # Interconnects
-        ("fabricDceSwSrvEp",   ["Dn", "EpDn", "AdminState", "OperState",               "PortId", "SwitchId", "SlotId"]),
-        ("fabricDceSwSrvPc",   ["Dn",         "AdminState", "OperState",               "OperSpeed", "Name", "PortId"]),
-        ("fabricDceSwSrvPcEp", ["Dn", "EpDn", "AdminState", "OperState",               "PortId", "SwitchId", "SlotId"]),
-    ]),
+            # Interconnects
+            ("fabricDceSwSrvEp",
+             ["Dn", "EpDn", "AdminState", "OperState", "PortId", "SwitchId", "SlotId"]),
+            ("fabricDceSwSrvPc", ["Dn", "AdminState", "OperState", "OperSpeed", "Name", "PortId"]),
+            ("fabricDceSwSrvPcEp",
+             ["Dn", "EpDn", "AdminState", "OperState", "PortId", "SwitchId", "SlotId"]),
+        ]),
     # Fault Instances
     ("ucs_bladecenter_faultinst", [
         ("faultInst", ["Dn", "Descr", "Severity"]),
@@ -217,7 +229,7 @@ for header, entries in entities:
                 sys.stdout.write("%s\t" % entry)
                 values = []
                 for field in fields:
-                    tmp_field = field[0].lower()+ field[1:] # workaround
+                    tmp_field = field[0].lower() + field[1:]  # workaround
                     value = get_pattern('%s="(.*?)"' % tmp_field, element)[0]
                     if value:
                         values.append("%s %s" % (field, value))

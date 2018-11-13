@@ -37,6 +37,7 @@ from httplib import HTTPConnection, HTTPSConnection
 opt_verbose = False
 opt_debug = False
 
+
 class PreemptiveBasicAuthHandler(urllib2.HTTPBasicAuthHandler):
     """
     sends basic authentication with the first request,
@@ -57,49 +58,47 @@ class PreemptiveBasicAuthHandler(urllib2.HTTPBasicAuthHandler):
 
 
 global_vars = [
-    ( "java.lang:type=Memory/NonHeapMemoryUsage/used",                "NonHeapMemoryUsage",       [] ),
-    ( "java.lang:type=Memory/NonHeapMemoryUsage/max",                 "NonHeapMemoryMax",         [] ),
-    ( "java.lang:type=Memory/HeapMemoryUsage/used",                   "HeapMemoryUsage",          [] ),
-    ( "java.lang:type=Memory/HeapMemoryUsage/max",                    "HeapMemoryMax",            [] ),
-    ( "java.lang:type=Threading/ThreadCount",                         "ThreadCount",              [] ),
-    ( "java.lang:type=Threading/DaemonThreadCount",                   "DeamonThreadCount",        [] ),
-    ( "java.lang:type=Threading/PeakThreadCount",                     "PeakThreadCount",          [] ),
-    ( "java.lang:type=Threading/TotalStartedThreadCount",             "TotalStartedThreadCount",  [] ),
-    ( "java.lang:type=Runtime/Uptime",                                "Uptime",                   [] ),
-    ( "java.lang:type=GarbageCollector,name=*/CollectionCount",       "",                         [] ),
-    ( "java.lang:type=GarbageCollector,name=*/CollectionTime",        "",                         [] ),
-    ( "java.lang:name=CMS%20Perm%20Gen,type=MemoryPool/Usage/used",   "PermGenUsage",             [] ),
-    ( "java.lang:name=CMS%20Perm%20Gen,type=MemoryPool/Usage/max",    "PermGenMax",               [] ),
+    ("java.lang:type=Memory/NonHeapMemoryUsage/used", "NonHeapMemoryUsage", []),
+    ("java.lang:type=Memory/NonHeapMemoryUsage/max", "NonHeapMemoryMax", []),
+    ("java.lang:type=Memory/HeapMemoryUsage/used", "HeapMemoryUsage", []),
+    ("java.lang:type=Memory/HeapMemoryUsage/max", "HeapMemoryMax", []),
+    ("java.lang:type=Threading/ThreadCount", "ThreadCount", []),
+    ("java.lang:type=Threading/DaemonThreadCount", "DeamonThreadCount", []),
+    ("java.lang:type=Threading/PeakThreadCount", "PeakThreadCount", []),
+    ("java.lang:type=Threading/TotalStartedThreadCount", "TotalStartedThreadCount", []),
+    ("java.lang:type=Runtime/Uptime", "Uptime", []),
+    ("java.lang:type=GarbageCollector,name=*/CollectionCount", "", []),
+    ("java.lang:type=GarbageCollector,name=*/CollectionTime", "", []),
+    ("java.lang:name=CMS%20Perm%20Gen,type=MemoryPool/Usage/used", "PermGenUsage", []),
+    ("java.lang:name=CMS%20Perm%20Gen,type=MemoryPool/Usage/max", "PermGenMax", []),
 ]
 
-
 specific_vars = {
-    "weblogic" : [
-        ( "*:*/CompletedRequestCount",                          None,                      [ "ServerRuntime" ] ),
-        ( "*:*/QueueLength",                                    None,                      [ "ServerRuntime" ] ),
-        ( "*:*/StandbyThreadCount",                             None,                      [ "ServerRuntime" ] ),
-        ( "*:*/PendingUserRequestCount",                        None,                      [ "ServerRuntime" ] ),
-        ( "*:Name=ThreadPoolRuntime,*/ExecuteThreadTotalCount", None,                      [ "ServerRuntime" ] ),
-        ( "*:*/ExecuteThreadIdleCount",                         None,                      [ "ServerRuntime" ] ),
-        ( "*:*/HoggingThreadCount",                             None,                      [ "ServerRuntime" ] ),
-        ( "*:Type=WebAppComponentRuntime,*/OpenSessionsCurrentCount", None,                [ "ServerRuntime", "ApplicationRuntime" ] ),
+    "weblogic": [
+        ("*:*/CompletedRequestCount", None, ["ServerRuntime"]),
+        ("*:*/QueueLength", None, ["ServerRuntime"]),
+        ("*:*/StandbyThreadCount", None, ["ServerRuntime"]),
+        ("*:*/PendingUserRequestCount", None, ["ServerRuntime"]),
+        ("*:Name=ThreadPoolRuntime,*/ExecuteThreadTotalCount", None, ["ServerRuntime"]),
+        ("*:*/ExecuteThreadIdleCount", None, ["ServerRuntime"]),
+        ("*:*/HoggingThreadCount", None, ["ServerRuntime"]),
+        ("*:Type=WebAppComponentRuntime,*/OpenSessionsCurrentCount", None,
+         ["ServerRuntime", "ApplicationRuntime"]),
     ],
-    "tomcat" : [
-        ( "*:type=Manager,*/activeSessions,maxActiveSessions",  None,                      [ "path", "context" ] ),
-        ( "*:j2eeType=Servlet,name=default,*/stateName", None, [ "WebModule" ] ),
+    "tomcat": [
+        ("*:type=Manager,*/activeSessions,maxActiveSessions", None, ["path", "context"]),
+        ("*:j2eeType=Servlet,name=default,*/stateName", None, ["WebModule"]),
         # Check not yet working
-        ( "*:j2eeType=Servlet,name=default,*/requestCount", None, [ "WebModule" ]),
-        ( "*:name=*,type=ThreadPool/maxThreads", None, []),
-        ( "*:name=*,type=ThreadPool/currentThreadCount", None, []),
-        ( "*:name=*,type=ThreadPool/currentThreadsBusy", None, []),
+        ("*:j2eeType=Servlet,name=default,*/requestCount", None, ["WebModule"]),
+        ("*:name=*,type=ThreadPool/maxThreads", None, []),
+        ("*:name=*,type=ThreadPool/currentThreadCount", None, []),
+        ("*:name=*,type=ThreadPool/currentThreadsBusy", None, []),
         # too wide location for addressing the right info
         # ( "*:j2eeType=Servlet,*/requestCount", None, [ "WebModule" ] ),
-
     ],
-    "jboss" : [
-        ( "*:type=Manager,*/activeSessions,maxActiveSessions",  None,                      [ "path", "context" ] ),
-    ],
+    "jboss": [("*:type=Manager,*/activeSessions,maxActiveSessions", None, ["path", "context"]),],
 }
+
 
 class HTTPSValidatingConnection(HTTPSConnection):
     def __init__(self, host, ca_file, key_file, cert_file):
@@ -111,11 +110,19 @@ class HTTPSValidatingConnection(HTTPSConnection):
     def connect(self):
         HTTPConnection.connect(self)
         if self.__ca_file:
-            self.sock = ssl.wrap_socket(self.sock, keyfile=self.key_file, certfile=self.cert_file,
-                                        ca_certs=self.__ca_file, cert_reqs=ssl.CERT_REQUIRED)
+            self.sock = ssl.wrap_socket(
+                self.sock,
+                keyfile=self.key_file,
+                certfile=self.cert_file,
+                ca_certs=self.__ca_file,
+                cert_reqs=ssl.CERT_REQUIRED)
         else:
-            self.sock = ssl.wrap_socket(self.sock, keyfile=self.key_file, certfile=self.cert_file,
-                                        ca_certs=self.__ca_file, cert_reqs=ssl.CERT_NONE)
+            self.sock = ssl.wrap_socket(
+                self.sock,
+                keyfile=self.key_file,
+                certfile=self.cert_file,
+                ca_certs=self.__ca_file,
+                cert_reqs=ssl.CERT_NONE)
 
 
 class HTTPSAuthHandler(urllib2.HTTPSHandler):
@@ -131,8 +138,8 @@ class HTTPSAuthHandler(urllib2.HTTPSHandler):
         return self.do_open(self.getConnection, req)
 
     def getConnection(self, host, timeout):
-        return HTTPSValidatingConnection(host, ca_file=self.__ca_file,
-                                         key_file=self.__key, cert_file=self.__cert)
+        return HTTPSValidatingConnection(
+            host, ca_file=self.__ca_file, key_file=self.__key, cert_file=self.__cert)
 
 
 def fetch_var(protocol, server, port, path, suburi, cert_path, itemspec):
@@ -173,6 +180,7 @@ def fetch_var(protocol, server, port, path, suburi, cert_path, itemspec):
     val = obj.get('value', None)
     return make_item_list((), val, itemspec)
 
+
 # convert single values into lists of items in
 # case value is a 1-levelled or 2-levelled dict
 def make_item_list(path, value, itemspec):
@@ -198,10 +206,12 @@ def make_item_list(path, value, itemspec):
             result += make_item_list(path + item, subvalue, [])
         return result
 
+
 # Example:
 # key = 'Catalina:host=localhost,path=\\/,type=Manager'
 # itemsepc = [ "path" ]
 # --> "/"
+
 
 def extract_item(key, itemspec):
     path = key.split(":", 1)[-1]
@@ -227,19 +237,19 @@ def query_instance(inst):
     # Prepare user/password authentication via HTTP Auth
     password_mngr = urllib2.HTTPPasswordMgrWithDefaultRealm()
     if inst.get("password"):
-        password_mngr.add_password(None, "%s://%s:%d/" %
-                (inst["protocol"], inst["server"], inst["port"]), inst["user"], inst["password"])
+        password_mngr.add_password(None,
+                                   "%s://%s:%d/" % (inst["protocol"], inst["server"], inst["port"]),
+                                   inst["user"], inst["password"])
 
     handlers = []
     if inst["protocol"] == "https":
-        if inst["mode"] == 'https' and (inst["client_key"] is None or
-                                        inst["client_cert"] is None):
+        if inst["mode"] == 'https' and (inst["client_key"] is None or inst["client_cert"] is None):
             sys.stdout.write('<<<jolokia_info>>>\n')
             sys.stderr.write("ERROR: https set up as authentication method but certificate "
-                                "wasn't provided\n")
+                             "wasn't provided\n")
             return
-        handlers.append(HTTPSAuthHandler(inst["cert_path"],
-                                         inst["client_key"], inst["client_cert"]))
+        handlers.append(
+            HTTPSAuthHandler(inst["cert_path"], inst["client_key"], inst["client_cert"]))
     if inst["mode"] == 'digest':
         handlers.append(urllib2.HTTPDigestAuthHandler(password_mngr))
     elif inst["mode"] == "basic_preemptive":
@@ -311,8 +321,7 @@ def query_instance(inst):
 
 
 def usage():
-    sys.stderr.write(
-"""Check_MK Jolokia Agent
+    sys.stderr.write("""Check_MK Jolokia Agent
 USAGE: mk_jolokia [OPTIONS]
        mk_jolokia --help
 
@@ -332,9 +341,9 @@ OPTIONS:
 
 def parse_arguments():
     short_options = ''
-    long_options  = [
-        'help', 'verbose', 'server=', 'port=', 'user=', 'password=', 'mode=', 'suburi=', 'instance=',
-        'protocol=', 'cert_path=', 'client_cert=', 'client_key='
+    long_options = [
+        'help', 'verbose', 'server=', 'port=', 'user=', 'password=', 'mode=', 'suburi=',
+        'instance=', 'protocol=', 'cert_path=', 'client_cert=', 'client_key='
     ]
 
     try:
@@ -354,17 +363,19 @@ def parse_arguments():
     global opt_verbose
     opt_verbose = 'verbose' in opts
 
-    for optional, default in [('server',      "localhost"),
-                              ('user',        "monitoring"),
-                              ('password',    None),
-                              ('mode',        "digest"),
-                              ('suburi',      "jolokia"),
-                              ('port',        8080),
-                              ('instance',    lambda: str(opts['port'])),
-                              ('protocol',    "http"),
-                              ('cert_path',   None),
-                              ('client_cert', None),
-                              ('client_key',  None)]:
+    for optional, default in [
+        ('server', "localhost"),
+        ('user', "monitoring"),
+        ('password', None),
+        ('mode', "digest"),
+        ('suburi', "jolokia"),
+        ('port', 8080),
+        ('instance', lambda: str(opts['port'])),
+        ('protocol', "http"),
+        ('cert_path', None),
+        ('client_cert', None),
+        ('client_key', None),
+    ]:
         if optional not in opts:
             if callable(default):
                 opts[optional] = default()
@@ -384,28 +395,30 @@ def main():
     # the global configuration values can be overridden.
     instances = [{}]
 
-# We have to deal with socket timeouts. Python > 2.6
-# supports timeout parameter for the urllib2.urlopen method
-# but we are on a python 2.5 system here which seem to use the
-# default socket timeout. We are local here so  set it to 1 second.
+    # We have to deal with socket timeouts. Python > 2.6
+    # supports timeout parameter for the urllib2.urlopen method
+    # but we are on a python 2.5 system here which seem to use the
+    # default socket timeout. We are local here so  set it to 1 second.
     socket.setdefaulttimeout(1.0)
 
     print "<<<jolokia>>>"
-# Compute list of instances to monitor. If the user has defined
-# instances in his configuration, we will use this (a list
-# of dicts).
+    # Compute list of instances to monitor. If the user has defined
+    # instances in his configuration, we will use this (a list
+    # of dicts).
     for inst in instances:
-        for varname, value in [("server",      opts['server']),
-                               ("port",        int(opts['port'])),
-                               ("user",        opts['user']),
-                               ("password",    opts['password']),
-                               ("mode",        opts['mode']),
-                               ("suburi",      opts['suburi']),
-                               ("instance",    opts['instance']),
-                               ("protocol",    opts['protocol']),
-                               ("cert_path",   opts['cert_path']),
-                               ("client_cert", opts['client_cert']),
-                               ("client_key",  opts['client_key'])]:
+        for varname, value in [
+            ("server", opts['server']),
+            ("port", int(opts['port'])),
+            ("user", opts['user']),
+            ("password", opts['password']),
+            ("mode", opts['mode']),
+            ("suburi", opts['suburi']),
+            ("instance", opts['instance']),
+            ("protocol", opts['protocol']),
+            ("cert_path", opts['cert_path']),
+            ("client_cert", opts['client_cert']),
+            ("client_key", opts['client_key']),
+        ]:
             if varname not in inst:
                 inst[varname] = value
         if not inst["instance"]:
@@ -414,6 +427,7 @@ def main():
 
         query_instance(inst)
     return 0
+
 
 if __name__ == "__main__":
     main()

@@ -76,14 +76,13 @@ OPTIONS:
   --debug                       Debug mode: let Python exceptions come through
 """)
 
-short_options = 'h:t:d'
-long_options  = [
-    'help', 'timeout=', 'debug'
-]
 
-devices           = []
-opt_debug         = False
-opt_timeout       = 10
+short_options = 'h:t:d'
+long_options = ['help', 'timeout=', 'debug']
+
+devices = []
+opt_debug = False
+opt_timeout = 10
 
 try:
     opts, args = getopt.getopt(sys.argv[1:], short_options, long_options)
@@ -91,12 +90,12 @@ except getopt.GetoptError, err:
     sys.stderr.write("%s\n" % err)
     sys.exit(1)
 
-for o,a in opts:
-    if o in [ '--debug' ]:
+for o, a in opts:
+    if o in ['--debug']:
         opt_debug = True
-    elif o in [ '-t', '--timeout' ]:
+    elif o in ['-t', '--timeout']:
         opt_timeout = int(a)
-    elif o in [ '-h', '--help' ]:
+    elif o in ['-h', '--help']:
         usage()
         sys.exit(0)
 
@@ -140,12 +139,12 @@ for arg in args:
         values.append((area, (byte, bit), datatype, p[3], p[4]))
 
     devices.append({
-        'host_name'     : parts[0],
-        'host_address'  : parts[1],
-        'rack'          : int(parts[2]),
-        'slot'          : int(parts[3]),
-        'port'          : int(parts[4]),
-        'values'        : values,
+        'host_name': parts[0],
+        'host_address': parts[1],
+        'rack': int(parts[2]),
+        'slot': int(parts[3]),
+        'port': int(parts[4]),
+        'values': values,
     })
 
 socket.setdefaulttimeout(opt_timeout)
@@ -166,35 +165,34 @@ def get_dint(_bytearray, byte_index):
 
 def area_name_to_area_id(name):
     return {
-        'db'      : S7AreaDB,
-        'input'   : S7AreaPE,
-        'output'  : S7AreaPA,
-        'merker'  : S7AreaMK,
-        'timer'   : S7AreaTM,
-        'counter' : S7AreaCT,
+        'db': S7AreaDB,
+        'input': S7AreaPE,
+        'output': S7AreaPA,
+        'merker': S7AreaMK,
+        'timer': S7AreaTM,
+        'counter': S7AreaCT,
     }[name]
 
 
 datatypes = {
     # type-name   size(bytes) parse-function
     # A size of None means the size is provided by configuration
-    'dint':      (4,          lambda data, offset, size, bit: get_dint(data, offset)),
-    'real':      (8,          lambda data, offset, size, bit: snap7.util.get_real(data, offset)),
-    'bit':       (1,          lambda data, offset, size, bit: snap7.util.get_bool(data, offset, bit)),
+    'dint': (4, lambda data, offset, size, bit: get_dint(data, offset)),
+    'real': (8, lambda data, offset, size, bit: snap7.util.get_real(data, offset)),
+    'bit': (1, lambda data, offset, size, bit: snap7.util.get_bool(data, offset, bit)),
     # str currently handles "zeichen" (character?) formated strings. For byte coded strings
     # we would have to use get_string(data, offset-1)) from snap7.utils
-    'str':       (None,       lambda data, offset, size, bit: data[offset:offset+size]),
+    'str': (None, lambda data, offset, size, bit: data[offset:offset + size]),
 }
 
 unhandled_error = False
 for device in devices:
     try:
         client = snap7.client.Client()
-        client.connect(device['host_address'], device['rack'],
-                       device['slot'], device['port'])
+        client.connect(device['host_address'], device['rack'], device['slot'], device['port'])
 
         sys.stdout.write("<<<siemens_plc_cpu_state>>>\n")
-        sys.stdout.write(client.get_cpu_state()+"\n")
+        sys.stdout.write(client.get_cpu_state() + "\n")
 
         sys.stdout.write("<<<siemens_plc>>>\n")
         # We want to have a minimum number of reads. We try to only use
@@ -202,7 +200,7 @@ for device in devices:
         # based on the configured values
         addresses = {}
         start_address = None
-        end_address   = None
+        end_address = None
         for area, (byte, bit), datatype, valuetype, ident in device['values']:
             if type(datatype) == tuple:
                 size = datatype[1]
@@ -222,7 +220,8 @@ for device in devices:
         data = {}
         for (area_name, db_number), (start, end) in addresses.items():
             area_id = area_name_to_area_id(area_name)
-            data[(area_name, db_number)] = client.read_area(area_id, db_number, start, size=end-start)
+            data[(area_name, db_number)] = client.read_area(
+                area_id, db_number, start, size=end - start)
 
         # Now loop all values to be fetched and extract the data
         # from the bytes fetched above
@@ -236,7 +235,7 @@ for device in devices:
             start, end = addresses[(area_name, db_number)]
             fetched_data = data[(area_name, db_number)]
 
-            value = parse_func(fetched_data, byte-start, size, bit)
+            value = parse_func(fetched_data, byte - start, size, bit)
             sys.stdout.write("%s %s %s %s\n" % (device['host_name'], valuetype, ident, value))
     except:
         sys.stderr.write('%s: Unhandled error: %s' % (device['host_name'], traceback.format_exc()))

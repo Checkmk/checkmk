@@ -37,7 +37,6 @@ try:
 except ImportError:
     import json
 
-
 field_separator = "\t"
 # set once parameters have been parsed
 base_url = None
@@ -59,8 +58,8 @@ class HTTPSConfigurableConnection(HTTPSConnection):
             if self.__ca_file == HTTPSConfigurableConnection.IGNORE:
                 self.sock = ssl.wrap_socket(self.sock, cert_reqs=ssl.CERT_NONE)
             else:
-                self.sock = ssl.wrap_socket(self.sock, ca_certs=self.__ca_file,
-                                            cert_reqs=ssl.CERT_REQUIRED)
+                self.sock = ssl.wrap_socket(
+                    self.sock, ca_certs=self.__ca_file, cert_reqs=ssl.CERT_REQUIRED)
 
 
 class HTTPSAuthHandler(urllib2.HTTPSHandler):
@@ -81,6 +80,7 @@ def flatten(d, separator="."):
     with no nested dicts or lists and each element is a path using the
     specified separator
     """
+
     def flatten_int(d, separator="."):
         result = []
         if isinstance(d, list):
@@ -105,6 +105,7 @@ def flatten(d, separator="."):
         else:
             result.append((None, d))
         return result
+
     return dict(flatten_int(d, separator))
 
 
@@ -125,8 +126,7 @@ def write_title(section):
 def send_request(opener, path, headers, parameters=None):
     url = "%s/PrismGateway/services/rest/v1/%s/" % (base_url, path)
     if parameters is not None:
-        url = "%s?%s" % (url, "&".join(["%s=%s" % par
-                                        for par in parameters.iteritems()]))
+        url = "%s?%s" % (url, "&".join(["%s=%s" % par for par in parameters.iteritems()]))
     req = urllib2.Request(url, headers=headers)
     response = opener.open(req)
     res = response.read()
@@ -142,15 +142,19 @@ def output_containers(opener, headers):
     writer.writerow(["name", "usage", "capacity"])
 
     for entity in obj['entities']:
-        writer.writerow([entity['name'],
-                         entity['usageStats']['storage.usage_bytes'],
-                         entity['usageStats']['storage.capacity_bytes']])
+        writer.writerow([
+            entity['name'], entity['usageStats']['storage.usage_bytes'],
+            entity['usageStats']['storage.capacity_bytes']
+        ])
 
 
 def output_alerts(opener, headers):
     write_title("alerts")
-    obj = send_request(opener, "alerts", headers, parameters={'resolved': "false",
-                                                              'acknowledged': "false"})
+    obj = send_request(
+        opener, "alerts", headers, parameters={
+            'resolved': "false",
+            'acknowledged': "false"
+        })
 
     writer = gen_csv_writer()
     writer.writerow(["timestamp", "message", "severity"])
@@ -161,9 +165,7 @@ def output_alerts(opener, headers):
         # context_types
         context = zip(entity['contextTypes'], entity['contextValues'])
         message = entity['message'].format(**dict(context))
-        writer.writerow([entity['createdTimeStampInUsecs'],
-                         message,
-                         entity['severity']])
+        writer.writerow([entity['createdTimeStampInUsecs'], message, entity['severity']])
 
 
 def output_cluster(opener, headers):
@@ -174,13 +176,11 @@ def output_cluster(opener, headers):
     writer.writerow(["name", "version"])
     writer.writerow([obj['name'], obj['version']])
 
+
 def main():
     if os.path.basename(__file__) == "mk_prism.py":
-        settings = {
-            'port': 9440
-        }
-        cfg_path = os.path.join(os.getenv("MK_CONFDIR", "/etc/check_mk"),
-                                "prism.cfg")
+        settings = {'port': 9440}
+        cfg_path = os.path.join(os.getenv("MK_CONFDIR", "/etc/check_mk"), "prism.cfg")
         if os.path.isfile(cfg_path):
             execfile(cfg_path, settings, settings)
     else:

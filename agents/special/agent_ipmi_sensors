@@ -24,7 +24,6 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-
 import os
 import errno
 import sys
@@ -33,7 +32,7 @@ import subprocess
 
 
 def agent_ipmi_sensors_usage():
-    sys.stderr.write( """Check_MK IPMI Sensors
+    sys.stderr.write("""Check_MK IPMI Sensors
 
 USAGE: agent_ipmi_sensors [OPTIONS] HOST
        agent_ipmi_sensors --help
@@ -62,7 +61,7 @@ FreeIPMI OPTIONS:
   --output-sensor-thresholds        Output sensor thresholds in output.
   -k KEY                            Specify the K_g BMC key to use when authenticating
                                     with the remote host for IPMI 2.0.
-""" )
+""")
 
 
 def parse_data(data, excludes):
@@ -83,71 +82,71 @@ def parse_data(data, excludes):
 
 def agent_ipmi_sensors_main(cmdline_args):
     short_options = 'u:p:l:D:k:'
-    long_options  = [ 'help', 'debug',
-                      'ipmi-command=',
-                      'quiet-cache', 'sdr-cache-recreate', 'interpret-oem-data',
-                      'output-sensor-state', 'ignore-not-available-sensors',
-                      'driver-type=', 'output-sensor-thresholds' ]
+    long_options = [
+        'help', 'debug', 'ipmi-command=', 'quiet-cache', 'sdr-cache-recreate', 'interpret-oem-data',
+        'output-sensor-state', 'ignore-not-available-sensors', 'driver-type=',
+        'output-sensor-thresholds'
+    ]
 
-    opt_debug     = False
-    hostname      = None
-    username      = None
-    password      = None
+    opt_debug = False
+    hostname = None
+    username = None
+    password = None
     privilege_lvl = None
     ipmi_cmd_type = None
 
     try:
-        opts, args = getopt.getopt( cmdline_args, short_options, long_options )
+        opts, args = getopt.getopt(cmdline_args, short_options, long_options)
     except getopt.GetoptError, err:
-        sys.stderr.write( "%s\n" % err )
+        sys.stderr.write("%s\n" % err)
         sys.exit(1)
 
     additional_opts = []
     for o, a in opts:
-        if o in [ '--help' ]:
+        if o in ['--help']:
             agent_ipmi_sensors_usage()
             sys.exit(0)
-        elif o in [ '--debug' ]:
+        elif o in ['--debug']:
             opt_debug = True
 
         # Common options
-        elif o in [ '--ipmi-command' ]:
+        elif o in ['--ipmi-command']:
             ipmi_cmd_type = a
-        elif o in [ '-u' ]:
+        elif o in ['-u']:
             username = a
-        elif o in [ '-p' ]:
+        elif o in ['-p']:
             password = a
-        elif o in [ '-l' ]:
+        elif o in ['-l']:
             privilege_lvl = a
 
         # FreeIPMI options
-        elif o in [ '-D' ]:
-            additional_opts += [ "%s %s" % (o, a) ]
-        elif o in [ '--driver-type' ]:
-            additional_opts += [ "%s=%s" % (o, a) ]
-        elif o in [ '-k' ]:
-            additional_opts += [ "%s %s" % (o, a) ]
-        elif o in [ '--quiet-cache' ]:
-            additional_opts.append( o )
-        elif o in [ '--sdr-cache-recreate' ]:
-            additional_opts.append( o )
-        elif o in [ '--interpret-oem-data' ]:
-            additional_opts.append( o )
-        elif o in [ '--output-sensor-state' ]:
-            additional_opts.append( o )
-        elif o in [ '--ignore-not-available-sensors' ]:
-            additional_opts.append( o )
-        elif o in [ '--output-sensor-thresholds' ]:
-            additional_opts.append( o )
+        elif o in ['-D']:
+            additional_opts += ["%s %s" % (o, a)]
+        elif o in ['--driver-type']:
+            additional_opts += ["%s=%s" % (o, a)]
+        elif o in ['-k']:
+            additional_opts += ["%s %s" % (o, a)]
+        elif o in ['--quiet-cache']:
+            additional_opts.append(o)
+        elif o in ['--sdr-cache-recreate']:
+            additional_opts.append(o)
+        elif o in ['--interpret-oem-data']:
+            additional_opts.append(o)
+        elif o in ['--output-sensor-state']:
+            additional_opts.append(o)
+        elif o in ['--ignore-not-available-sensors']:
+            additional_opts.append(o)
+        elif o in ['--output-sensor-thresholds']:
+            additional_opts.append(o)
 
     if len(args) == 1:
         hostname = args[0]
     else:
-        sys.stderr.write( "ERROR: Please specify exactly one host.\n" )
+        sys.stderr.write("ERROR: Please specify exactly one host.\n")
         sys.exit(1)
 
     if not (username and password and privilege_lvl):
-        sys.stderr.write( "ERROR: Credentials are missing.\n" )
+        sys.stderr.write("ERROR: Credentials are missing.\n")
         sys.exit(1)
 
     os.environ["PATH"] = "/usr/local/sbin:/usr/sbin:/sbin:" + os.environ["PATH"]
@@ -157,14 +156,14 @@ def agent_ipmi_sensors_main(cmdline_args):
                      "-h", hostname, "-u", username,
                      "-p", password, "-l", privilege_lvl ] + \
                      additional_opts
-        queries = {"_sensors" : ([], [])}
+        queries = {"_sensors": ([], [])}
     elif ipmi_cmd_type == 'ipmitool':
-        ipmi_cmd = [ "ipmitool",
-                     "-H", hostname, "-U", username,
-                     "-P", password, "-L", privilege_lvl ]
+        ipmi_cmd = ["ipmitool", "-H", hostname, "-U", username, "-P", password, "-L", privilege_lvl]
         # As in check_mk_agent
-        queries = {"": (["sensor", "list"], ['command failed', 'discrete']),
-                   "_discrete": (["sdr", "elist", "compact"], [])}
+        queries = {
+            "": (["sensor", "list"], ['command failed', 'discrete']),
+            "_discrete": (["sdr", "elist", "compact"], [])
+        }
 
     else:
         sys.stderr.write("ERROR: Unknown IPMI command '%s'.\n" % ipmi_cmd_type)
@@ -177,14 +176,18 @@ def agent_ipmi_sensors_main(cmdline_args):
 
     errors = []
     for section, (types, excludes) in queries.iteritems():
-        sys.stdout.write( "<<<ipmi%s:sep(124)>>>\n" % section )
+        sys.stdout.write("<<<ipmi%s:sep(124)>>>\n" % section)
         try:
             try:
-                p = subprocess.Popen(ipmi_cmd + types, shell=False, close_fds=True,
-                                     stdin=open(os.devnull),
-                                     stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                p = subprocess.Popen(
+                    ipmi_cmd + types,
+                    shell=False,
+                    close_fds=True,
+                    stdin=open(os.devnull),
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE)
             except OSError, e:
-                if e.errno == errno.ENOENT: # No such file or directory
+                if e.errno == errno.ENOENT:  # No such file or directory
                     raise Exception("Could not find '%s' command (PATH: %s)"\
                                     % (ipmi_cmd_type, os.environ.get("PATH")))
                 else:

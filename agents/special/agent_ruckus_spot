@@ -43,12 +43,14 @@ OPTIONS:
   --apikey                      API key
 """)
     sys.exit(1)
-short_options = 'h:'
-long_options  = ['help', 'address=', 'venueid=', 'apikey=', 'agent_port=']
 
-address    = None
-venueid    = None
-api_key    = None
+
+short_options = 'h:'
+long_options = ['help', 'address=', 'venueid=', 'apikey=', 'agent_port=']
+
+address = None
+venueid = None
+api_key = None
 agent_port = None
 
 try:
@@ -57,20 +59,21 @@ except getopt.GetoptError, err:
     sys.stderr.write("%s\n" % err)
     sys.exit(1)
 
-for o,a in opts:
-    if o in [ '--address' ]:
+for o, a in opts:
+    if o in ['--address']:
         address = a
-    elif o in [ '--venueid' ]:
+    elif o in ['--venueid']:
         venueid = a
-    elif o in [ '--apikey']:
+    elif o in ['--apikey']:
         api_key = a
-    elif o in [ '--agent_port']:
+    elif o in ['--agent_port']:
         agent_port = a
-    elif o in [ '-h', '--help' ]:
+    elif o in ['-h', '--help']:
         usage()
 
 if len(args) > 0 or not api_key or not venueid or not address:
     usage()
+
 
 # TODO: put into special_agent lib
 def get_agent_info_tcp(hostname):
@@ -97,13 +100,14 @@ def get_agent_info_tcp(hostname):
 
     return response
 
+
 try:
 
     for url_end, section_type in [("access_points/statuses.json", "ap"),
-                                  ("locations/last_known.json",   "locations")]:
+                                  ("locations/last_known.json", "locations")]:
         url = "http://%(address)s/api/v1/venues/%(venueid)s/%(url_end)s" % \
               {"address": address, "venueid": venueid, "url_end": url_end}
-        response = requests.get(url, auth = (api_key, "X"))
+        response = requests.get(url, auth=(api_key, "X"))
         data = json.loads(response.text)
 
         sys.stdout.write("<<<ruckus_spot_%s:sep(0)>>>\n" % section_type)

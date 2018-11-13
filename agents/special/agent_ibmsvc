@@ -33,9 +33,7 @@ import getopt
 import subprocess
 
 
-#############################################################################
 def usage():
-#############################################################################
     sys.stderr.write("""Check_MK SVC / V7000 Agent
 
 USAGE: agent_ibmsvc [OPTIONS] HOST
@@ -72,11 +70,12 @@ OPTIONS:
 
 """)
 
+
 #############################################################################
 # command line options
 #############################################################################
 short_options = 'hu:p:t:m:i:k'
-long_options  = [ 'help', 'user=', 'debug', 'timeout=', 'profile', 'modules=', 'accept-any-hostkey' ]
+long_options = ['help', 'user=', 'debug', 'timeout=', 'profile', 'modules=', 'accept-any-hostkey']
 
 try:
     opts, args = getopt.getopt(sys.argv[1:], short_options, long_options)
@@ -84,66 +83,111 @@ except getopt.GetoptError, err:
     sys.stderr.write("%s\n" % err)
     sys.exit(1)
 
-opt_debug       = False
-opt_timeout     = 10
+opt_debug = False
+opt_timeout = 10
 opt_any_hostkey = ""
 
-g_profile       = None
-g_profile_path  = "ibmsvc_profile.out"
+g_profile = None
+g_profile_path = "ibmsvc_profile.out"
 
-host_address    = None
-user            = None
-mortypes        = [ 'all' ]
+host_address = None
+user = None
+mortypes = ['all']
 
 command_options = {
-    "lshost"        : {"section_header" : "ibm_svc_host",        "active" : False,
-                       "command" : "lshost -nohdr -delim :"},
-    "lslicense"     : {"section_header" : "ibm_svc_license",     "active" : False,
-                       "command" : "lslicense -delim :"},
-    "lsmdisk"       : {"section_header" : "ibm_svc_mdisk",       "active" : False,
-                       "command" : "lsmdisk -nohdr -delim :"},
-    "lsmdiskgrp"    : {"section_header" : "ibm_svc_mdiskgrp",    "active" : False,
-                       "command" : "lsmdiskgrp -nohdr -delim :"},
-    "lsnode"        : {"section_header" : "ibm_svc_node",        "active" : False,
-                       "command" : "lsnode -nohdr -delim :"},
-    "lsnodestats"   : {"section_header" : "ibm_svc_nodestats",   "active" : False,
-                       "command" : "lsnodestats -nohdr -delim :"},
-    "lssystem"      : {"section_header" : "ibm_svc_system",      "active" : False,
-                       "command" : "lssystem -delim :"},
-    "lssystemstats" : {"section_header" : "ibm_svc_systemstats", "active" : False,
-                       "command" : "lssystemstats -nohdr -delim :"},
-    "lseventlog"    : {"section_header" : "ibm_svc_eventlog",    "active" : False,
-                       "command" : "lseventlog -expired no -fixed no -monitoring no -order severity -message no -delim : -nohdr"},
-    "lsportfc"      : {"section_header" : "ibm_svc_portfc",      "active" : False,
-                       "command" : "lsportfc -nohdr -delim :"},
-    "lsenclosure"   : {"section_header" : "ibm_svc_enclosure",   "active" : False,
-                       "command" : "lsenclosure -nohdr -delim :"},
-    "lsenclosurestats" : {"section_header" : "ibm_svc_enclosurestats", "active" : False,
-                       "command" : "lsenclosurestats -nohdr -delim :"},
-    "lsarray"       : {"section_header" : "ibm_svc_array",       "active" : False,
-                       "command" : "lsarray -nohdr -delim :"},
-    "lsportsas"     : {"section_header" : "ibm_svc_portsas",     "active" : False,
-                       "command" : "lsportsas -nohdr -delim :"},
-    "disks"         : {"section_header" : "ibm_svc_disks",     "active" : False,
-                       "command" : "svcinfo lsdrive -nohdr -delim :"},
+    "lshost": {
+        "section_header": "ibm_svc_host",
+        "active": False,
+        "command": "lshost -nohdr -delim :"
+    },
+    "lslicense": {
+        "section_header": "ibm_svc_license",
+        "active": False,
+        "command": "lslicense -delim :"
+    },
+    "lsmdisk": {
+        "section_header": "ibm_svc_mdisk",
+        "active": False,
+        "command": "lsmdisk -nohdr -delim :"
+    },
+    "lsmdiskgrp": {
+        "section_header": "ibm_svc_mdiskgrp",
+        "active": False,
+        "command": "lsmdiskgrp -nohdr -delim :"
+    },
+    "lsnode": {
+        "section_header": "ibm_svc_node",
+        "active": False,
+        "command": "lsnode -nohdr -delim :"
+    },
+    "lsnodestats": {
+        "section_header": "ibm_svc_nodestats",
+        "active": False,
+        "command": "lsnodestats -nohdr -delim :"
+    },
+    "lssystem": {
+        "section_header": "ibm_svc_system",
+        "active": False,
+        "command": "lssystem -delim :"
+    },
+    "lssystemstats": {
+        "section_header": "ibm_svc_systemstats",
+        "active": False,
+        "command": "lssystemstats -nohdr -delim :"
+    },
+    "lseventlog": {
+        "section_header": "ibm_svc_eventlog",
+        "active": False,
+        "command": "lseventlog -expired no -fixed no -monitoring no -order severity -message no -delim : -nohdr"
+    },
+    "lsportfc": {
+        "section_header": "ibm_svc_portfc",
+        "active": False,
+        "command": "lsportfc -nohdr -delim :"
+    },
+    "lsenclosure": {
+        "section_header": "ibm_svc_enclosure",
+        "active": False,
+        "command": "lsenclosure -nohdr -delim :"
+    },
+    "lsenclosurestats": {
+        "section_header": "ibm_svc_enclosurestats",
+        "active": False,
+        "command": "lsenclosurestats -nohdr -delim :"
+    },
+    "lsarray": {
+        "section_header": "ibm_svc_array",
+        "active": False,
+        "command": "lsarray -nohdr -delim :"
+    },
+    "lsportsas": {
+        "section_header": "ibm_svc_portsas",
+        "active": False,
+        "command": "lsportsas -nohdr -delim :"
+    },
+    "disks": {
+        "section_header": "ibm_svc_disks",
+        "active": False,
+        "command": "svcinfo lsdrive -nohdr -delim :"
+    },
 }
 
-for o,a in opts:
-    if o in [ '--debug' ]:
+for o, a in opts:
+    if o in ['--debug']:
         opt_debug = True
-    elif o in [ '--profile' ]:
+    elif o in ['--profile']:
         import cProfile
         g_profile = cProfile.Profile()
         g_profile.enable()
-    elif o in [ '-u', '--user' ]:
+    elif o in ['-u', '--user']:
         user = a
-    elif o in [ '-i', '--modules' ]:
+    elif o in ['-i', '--modules']:
         mortypes = a.split(',')
-    elif o in [ '-t', '--timeout' ]:
+    elif o in ['-t', '--timeout']:
         opt_timeout = int(a)
-    elif o in [ '-k', '--accept-any-hostkey' ]:
+    elif o in ['-k', '--accept-any-hostkey']:
         opt_any_hostkey = "-o StrictHostKeyChecking=no"
-    elif o in [ '-h', '--help' ]:
+    elif o in ['-h', '--help']:
         usage()
         sys.exit(0)
 
@@ -173,7 +217,6 @@ for module in command_options:
     except ValueError:
         pass
 
-
 #############################################################################
 # fetch information by ssh
 #############################################################################
@@ -189,12 +232,12 @@ cmd += "'"
 if opt_debug:
     sys.stderr.write("executing external command: %s\n" % cmd)
 
-
-result = subprocess.Popen(cmd, shell=True, stdout = subprocess.PIPE, stderr = subprocess.PIPE, stdin = None)
+result = subprocess.Popen(
+    cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=None)
 stdout, stderr = result.communicate()
 exit_code = result.wait()
 
-if exit_code not in  [ 0, 1 ]:
+if exit_code not in [0, 1]:
     sys.stderr.write("Error connecting via ssh: %s\n" % stderr)
     sys.exit(2)
 
@@ -209,9 +252,7 @@ for line in lines:
     print line
 
 
-#############################################################################
 def output_profile():
-#############################################################################
     g_profile.dump_stats(g_profile_path)
     show_profile = os.path.join(os.path.dirname(g_profile_path), 'show_profile.py')
     file(show_profile, "w")\
@@ -222,6 +263,7 @@ def output_profile():
     os.chmod(show_profile, 0755)
 
     sys.stderr.write("Profile '%s' written. Please run %s.\n" % (g_profile_path, show_profile))
+
 
 if g_profile:
     output_profile()

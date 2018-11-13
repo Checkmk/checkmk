@@ -47,8 +47,10 @@ port = args.port
 username = args.username
 password = args.password
 
+
 def commandstring(command, username, password):
     return "%s@%s@%s@0@0@$" % (command, username, password)
+
 
 def query(sock, commandstring):
     sock.sendall(commandstring)
@@ -73,6 +75,6 @@ sections = [
 for command, section in sections:
     print "<<<%s>>>" % section
     sock = socket.socket(family=socket.AF_INET, type=socket.SOCK_STREAM)
-    sock.connect( (ip_address, port) )
+    sock.connect((ip_address, port))
     print query(sock, commandstring(command, username, password))
     sock.close()

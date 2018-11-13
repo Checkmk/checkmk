@@ -24,7 +24,6 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-
 import re
 import sys
 import getopt
@@ -55,16 +54,15 @@ OPTIONS:
   --debug                       Debug mode: let Python exceptions come through
 """)
 
-short_options = 'h:du:p:'
-long_options  = [
-    'help', 'debug'
-]
 
-host_address  = None
-opt_debug     = False
-username      = None
-password      = None
-opt_timeout   = 10
+short_options = 'h:du:p:'
+long_options = ['help', 'debug']
+
+host_address = None
+opt_debug = False
+username = None
+password = None
+opt_timeout = 10
 
 try:
     opts, args = getopt.getopt(sys.argv[1:], short_options, long_options)
@@ -72,17 +70,16 @@ except getopt.GetoptError, err:
     sys.stderr.write("%s\n" % err)
     sys.exit(1)
 
-for o,a in opts:
-    if o in [ '--debug' ]:
+for o, a in opts:
+    if o in ['--debug']:
         opt_debug = True
-    elif o in [ '-h', '--help' ]:
+    elif o in ['-h', '--help']:
         usage()
         sys.exit(0)
-    elif o in [ '-u' ]:
+    elif o in ['-u']:
         username = a
-    elif o in [ '-p' ]:
+    elif o in ['-p']:
         password = a
-
 
 if len(args) == 1:
     host_address = args[0]
@@ -97,70 +94,62 @@ if not username or not password:
     sys.stderr.write("ERROR: Credentials are missing.\n")
     sys.exit(1)
 
-
 # The dict key is the section, the values the list of lines
 sections = {}
 
 # Which objects to get
 api_get_objects = [
-    "controllers",
-    "controller-statistics",
-    "disks",
-    "disk-statistics",
-    "frus",
-    "port",
-    "host-port-statistics",
-    "power-supplies",
-    "system",
-    "volumes",
-    "volume-statistics"
+    "controllers", "controller-statistics", "disks", "disk-statistics", "frus", "port",
+    "host-port-statistics", "power-supplies", "system", "volumes", "volume-statistics"
 ]
 
 # Where to put the properties from any response
 # There is no mapping of object:property -> check_mk section, so far
 # Just a simple mapping of property -> check_mk section
 property_to_section = {
-    "controller-statistics" : "controller",
-    "controller"            : "controller",
-    "disk-statistics"       : "disk",
-    "drives"                : "disk",
-    "enclosure-fru"         : "fru",
-    "port"                  : "if",
-    "fc-port"               : "if",
-    "host-port-statistics"  : "if",
-    "power-supplies"        : "psu",
-    "fan"                   : "fan",
-    "system"                : "system",
-    "redundancy"            : "system",
-    "volumes"               : "volume",
-    "volume-statistics"     : "volume",
+    "controller-statistics": "controller",
+    "controller": "controller",
+    "disk-statistics": "disk",
+    "drives": "disk",
+    "enclosure-fru": "fru",
+    "port": "if",
+    "fc-port": "if",
+    "host-port-statistics": "if",
+    "power-supplies": "psu",
+    "fan": "fan",
+    "system": "system",
+    "redundancy": "system",
+    "volumes": "volume",
+    "volume-statistics": "volume",
 }
 
 # Debug parameter. Contains full list of variables
-complete_list      = []
+complete_list = []
+
 
 def store_property(prop):
-    complete_list.append(prop) # Used for debugging
+    complete_list.append(prop)  # Used for debugging
     if prop[0] in property_to_section:
         sections.setdefault(property_to_section[prop[0]], []).append(" ".join(prop))
+
 
 class HTMLObjectParser(HTMLParser):
     def feed(self, data):
         self.current_object_key = None
-        self.current_property   = None
+        self.current_property = None
         HTMLParser.feed(self, data)
 
     def handle_starttag(self, tag, attrs):
         if tag == "object":
             keys = dict(attrs)
-            self.current_object_key = [ keys["basetype"], keys["oid"] ]
+            self.current_object_key = [keys["basetype"], keys["oid"]]
         elif tag == "property":
             keys = dict(attrs)
             if self.current_object_key:
-                self.current_property = self.current_object_key + [ keys["name"] ]
+                self.current_property = self.current_object_key + [keys["name"]]
 
     def handle_endtag(self, tag):
-        if tag in [ "property", "object" ]:
+        if tag in ["property", "object"]:
             if self.current_property:
                 store_property(self.current_property)
             self.current_property = None
@@ -171,9 +160,8 @@ class HTMLObjectParser(HTMLParser):
         if self.current_property:
             self.current_property.append(data.replace("\n", "").replace("\r", ""))
 
+
 parser = HTMLObjectParser()
-
-
 
 try:
     session = requests.Session()
@@ -186,8 +174,7 @@ try:
 
     # Extract sessionKey
     session_key = re.match('.*"response">(.*?)<.*', r.text).groups()[0]
-    session.headers.update({"sessionKey": session_key,
-                            "User-agent": "Check_MK agent_hp_msa"})
+    session.headers.update({"sessionKey": session_key, "User-agent": "Check_MK agent_hp_msa"})
 
     # Query objects
     for element in api_get_objects:

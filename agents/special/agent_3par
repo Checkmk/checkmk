@@ -69,6 +69,7 @@ OPTIONS:
                                                                 cpgs
 """)
 
+
 opt_host = None
 opt_user = None
 opt_pass = None
@@ -76,29 +77,29 @@ opt_values = ["system", "cpgs", "volumes", "hosts", "capacity", "ports", "remote
 opt_verify = False
 
 short_options = "hh:u:p:v:"
-long_options = [ "help", "user=", "password=", "values=", "verify-certs=" ]
+long_options = ["help", "user=", "password=", "values=", "verify-certs="]
 
 try:
-    opts, args = getopt.getopt( sys.argv[1:], short_options, long_options )
+    opts, args = getopt.getopt(sys.argv[1:], short_options, long_options)
 except getopt.GetoptError, err:
     sys.stderr.write("%s\n" % err)
     sys.exit(1)
 
 for opt, arg in opts:
-        if opt in ['-h', '--help']:
-            usage()
-            sys.exit(0)
-        elif opt in ["-u", "--user"]:
-            opt_user = arg
-        elif opt in ["-p", "--password"]:
-            opt_password = arg
-        elif opt in ["-v", "--values"]:
-            opt_values = arg.split(",")
-        elif opt in [ '--verify-certs' ]:
-            opt_verify = arg == "yes"
-        elif not opt:
-            usage()
-            sys.exit(0)
+    if opt in ['-h', '--help']:
+        usage()
+        sys.exit(0)
+    elif opt in ["-u", "--user"]:
+        opt_user = arg
+    elif opt in ["-p", "--password"]:
+        opt_password = arg
+    elif opt in ["-v", "--values"]:
+        opt_values = arg.split(",")
+    elif opt in ['--verify-certs']:
+        opt_verify = arg == "yes"
+    elif not opt:
+        usage()
+        sys.exit(0)
 
 if len(args) == 1:
     opt_host = args[0]
@@ -112,8 +113,8 @@ else:
 
 url = "https://%s:8080/api/v1" % opt_host
 headers = {
-        "Content-Type": "application/json",
-        "Accept": "application/json",
+    "Content-Type": "application/json",
+    "Accept": "application/json",
 }
 
 if not opt_verify:
@@ -123,20 +124,24 @@ if not opt_verify:
 # in json format. The standard port for all requests is 8080 as it is hard
 # coded above. Maybe this will be changed later!
 try:
-    req = requests.post("%s/credentials" % url,
-                        json={'user':opt_user,'password':opt_password},
-                        headers=headers,
-                        timeout=10,
-                        verify=opt_verify)
+    req = requests.post(
+        "%s/credentials" % url,
+        json={
+            'user': opt_user,
+            'password': opt_password
+        },
+        headers=headers,
+        timeout=10,
+        verify=opt_verify)
 
 except requests.exceptions.RequestException as e:
     sys.stderr.write("Error: %s\n" % e)
     sys.exit(1)
 
 # Status code should be 201.
-if not req.status_code == requests.codes.CREATED: # pylint: disable=no-member
-    sys.stderr.write("Wrong status code: %s. Expected: %s \n" % (req.status_code,
-                                                               requests.codes.CREATED)) # pylint: disable=no-member
+if not req.status_code == requests.codes.CREATED:  # pylint: disable=no-member
+    sys.stderr.write(
+        "Wrong status code: %s. Expected: %s \n" % (req.status_code, requests.codes.CREATED))  # pylint: disable=no-member
     sys.exit(1)
 else:
     try:
@@ -152,21 +157,19 @@ else:
 
 for value in opt_values:
     print "<<<3par_%s:sep(0)>>>" % value
-    req = requests.get("%s/%s" % (url, value),
-                       headers=headers,
-                       timeout=10,
-                       verify=opt_verify)
-    value_data = req.text.replace("\r\n", "").replace("\n", "").replace(" ","")
+    req = requests.get("%s/%s" % (url, value), headers=headers, timeout=10, verify=opt_verify)
+    value_data = req.text.replace("\r\n", "").replace("\n", "").replace(" ", "")
     print value_data
 
 # Perform a proper disconnect. The Connection is closed if the session key
 # is deleted. The standard timeout for a session would be 15 minutes.
-req = requests.delete("%s/credentials/%s" % (url, headers["X-HP3PAR-WSAPI-SessionKey"]),
-                      headers=headers,
-                      timeout=10,
-                      verify=opt_verify)
+req = requests.delete(
+    "%s/credentials/%s" % (url, headers["X-HP3PAR-WSAPI-SessionKey"]),
+    headers=headers,
+    timeout=10,
+    verify=opt_verify)
 
-if not req.status_code == requests.codes.OK: # pylint: disable=no-member
-    sys.stderr.write("Wrong status code: %s. Expected: %s \n" % (req.status_code,
-                                                               requests.codes.OK)) # pylint: disable=no-member
+if not req.status_code == requests.codes.OK:  # pylint: disable=no-member
+    sys.stderr.write(
+        "Wrong status code: %s. Expected: %s \n" % (req.status_code, requests.codes.OK))  # pylint: disable=no-member
     sys.exit(1)

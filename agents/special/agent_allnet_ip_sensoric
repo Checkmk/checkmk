@@ -54,14 +54,13 @@ OPTIONS:
   --debug                       Debug mode: let Python exceptions come through
 """)
 
-short_options = 'h:t:d'
-long_options  = [
-    'help', 'timeout=', 'debug'
-]
 
-host_address      = None
-opt_debug         = False
-opt_timeout       = 10
+short_options = 'h:t:d'
+long_options = ['help', 'timeout=', 'debug']
+
+host_address = None
+opt_debug = False
+opt_timeout = 10
 
 try:
     opts, args = getopt.getopt(sys.argv[1:], short_options, long_options)
@@ -69,12 +68,12 @@ except getopt.GetoptError, err:
     sys.stderr.write("%s\n" % err)
     sys.exit(1)
 
-for o,a in opts:
-    if o in [ '--debug' ]:
+for o, a in opts:
+    if o in ['--debug']:
         opt_debug = True
-    elif o in [ '-t', '--timeout' ]:
+    elif o in ['-t', '--timeout']:
         opt_timeout = int(a)
-    elif o in [ '-h', '--help' ]:
+    elif o in ['-h', '--help']:
         usage()
         sys.exit(0)
 
@@ -89,14 +88,16 @@ else:
 
 socket.setdefaulttimeout(opt_timeout)
 
+
 class RequestError(Exception):
     pass
+
 
 def get_allnet_ip_sensoric_info():
     url = 'http://%s/xml/sensordata.xml' % (host_address)
 
     headers = {
-        'User-agent':   'Check_MK agent_allnet_ip_sensoric',
+        'User-agent': 'Check_MK agent_allnet_ip_sensoric',
     }
 
     if opt_debug:
@@ -113,7 +114,7 @@ def get_allnet_ip_sensoric_info():
             sys.stdout.write('============================\n')
         raise RequestError('Error during http call')
 
-    infos    = handle.info()
+    infos = handle.info()
     contents = handle.read()
 
     if opt_debug:
@@ -146,6 +147,7 @@ def get_allnet_ip_sensoric_info():
         sys.stdout.write('Parsed: %s\n' % pprint.pformat(attrs))
 
     return attrs
+
 
 try:
     status = {}

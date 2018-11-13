@@ -48,26 +48,24 @@ except:
     history = {}
 
 services = [
-  "Gnarz Usage",
-  "Fnorz Utilization",
-  "Average Grumblage",
-  "Snarks 011",
-  "Snarks 012",
-  "Snarks 022",
-  "Gnogomatic Turbler",
-  "Gnogomatic Murbler",
-  "Gnogomatic Garglebox",
+    "Gnarz Usage",
+    "Fnorz Utilization",
+    "Average Grumblage",
+    "Snarks 011",
+    "Snarks 012",
+    "Snarks 022",
+    "Gnogomatic Turbler",
+    "Gnogomatic Murbler",
+    "Gnogomatic Garglebox",
 ]
 
-
-
 print '<<<local>>>'
-state_names = [ "OK", "WARN", "CRIT", "UNKNOWN" ]
+state_names = ["OK", "WARN", "CRIT", "UNKNOWN"]
 state_texts = [
-  "Everying is OK now",
-  "The freibl might go slisk",
-  "Bad luck, everything is broken",
-  "Something really weird happened",
+    "Everying is OK now",
+    "The freibl might go slisk",
+    "Bad luck, everything is broken",
+    "Something really weird happened",
 ]
 
 now = time.time()
@@ -85,7 +83,7 @@ for service in services:
             history[service] = (now, new_state)
     else:
         new_state = last_state
-    print "%d %s - %s - %s" % (
-       new_state, service.replace(" ", "_"), state_names[new_state], state_texts[new_state])
+    print "%d %s - %s - %s" % (new_state, service.replace(" ", "_"), state_names[new_state],
+                               state_texts[new_state])
 
 file(state_file, "w").write("%r\n" % history)

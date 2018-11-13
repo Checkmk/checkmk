@@ -24,10 +24,8 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-
 import sys
 import cmk_special_agent_api as special_agent_api
-
 
 agent = special_agent_api.AgentJSON("salesforce", "Salesforce")
 content = agent.get_content()

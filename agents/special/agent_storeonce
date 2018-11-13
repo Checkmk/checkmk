@@ -47,8 +47,9 @@ OPTIONS:
 """)
     sys.exit(1)
 
+
 short_options = "h"
-long_options  = ["help", "username=", "password=", "address=", "demo", "no-cert-check"]
+long_options = ["help", "username=", "password=", "address=", "demo", "no-cert-check"]
 
 try:
     opts, args = getopt.getopt(sys.argv[1:], short_options, long_options)
@@ -56,38 +57,40 @@ except getopt.GetoptError, err:
     sys.stderr.write("%s\n" % err)
     sys.exit(1)
 
-
 opt_demo = False
 opt_cert = True
 args_dict = {}
 
-for o,a in opts:
-    if o in [ "--address" ]:
+for o, a in opts:
+    if o in ["--address"]:
         args_dict["address"] = a
-    elif o in [ "--username" ]:
+    elif o in ["--username"]:
         args_dict["username"] = a
-    elif o in [ "--password" ]:
+    elif o in ["--password"]:
         args_dict["password"] = a
-    elif o in [ "--demo" ]:
+    elif o in ["--demo"]:
         opt_demo = True
-    elif o in [ "--no-cert-check" ]:
+    elif o in ["--no-cert-check"]:
         opt_cert = False
-    elif o in [ "-h", "--help" ]:
+    elif o in ["-h", "--help"]:
         usage()
 
 
 def query(url):
     if opt_cert == False:
         urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-    response     = requests.get(url, auth = (args_dict["username"], args_dict["password"]), verify=opt_cert)
-    raw_xml      = response.text
+    response = requests.get(
+        url, auth=(args_dict["username"], args_dict["password"]), verify=opt_cert)
+    raw_xml = response.text
     # Remove namespace nonsense
-    raw_xml      = re.sub(' xmlns="[^"]+"', '', raw_xml, count=1)
+    raw_xml = re.sub(' xmlns="[^"]+"', '', raw_xml, count=1)
     xml_instance = ET.fromstring(raw_xml)
     return xml_instance
 
 
 output_lines = []
+
+
 def output(line):
     output_lines.append(line)
 
@@ -97,20 +100,22 @@ def process_cluster_info():
     xml_instance = query_cluster_info()
     tbody = xml_instance.find("body").find("div").find("table").find("tbody")
     for child in tbody:
-        name  = child[0].text
+        name = child[0].text
         value = child[1].text
         output("%s\t%s" % (name, value))
 
 
 def query_cluster_info():
     if opt_demo:
-        raw_xml      = re.sub(' xmlns="[^"]+"', '', cluster_xml, count=1)
+        raw_xml = re.sub(' xmlns="[^"]+"', '', cluster_xml, count=1)
         return ET.fromstring(raw_xml)
     url = "https://%(address)s/storeonceservices/cluster/" % args_dict
     return query(url)
 
 
 serviceset_ids = set()
+
+
 def process_servicesets():
     output("<<<storeonce_servicesets:sep(9)>>>")
     xml_instance = query_servicesets()
@@ -121,7 +126,7 @@ def process_servicesets():
         serviceset_ids.add(serviceset_id)
         output("[%s]" % serviceset_id)
         for child in tbody:
-            name  = child[0].text
+            name = child[0].text
             value = child[1].text
             output("%s\t%s" % (name, value))
 
@@ -145,7 +150,7 @@ def process_stores_info():
             output("[%s/%s]" % (serviceset_id, store_id))
             serviceset_ids.add(serviceset_id)
             for child in tbody:
-                name  = child[0].text
+                name = child[0].text
                 value = child[1].text
                 output("%s\t%s" % (name, value))
 
@@ -312,7 +317,6 @@ cluster_xml = \
         </div>
     </body>
 </html>"""
-
 
 # https://zdeoko04sbac03.deoko.zeiss.org/storeonceservices/cluster/servicesets/
 servicesets_xml = \

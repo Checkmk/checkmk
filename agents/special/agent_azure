@@ -483,8 +483,8 @@ class AzureClient(object):
             if metrics_req_dim:
                 for metr in metrics_req_dim:
                     dim_names = ','.join(d.value for d in metr.dimensions)
-                    err.add("warning", rid, "metric %r requires dimension (%s)" % (metr.name.value,
-                                                                                   dim_names))
+                    err.add("warning", rid,
+                            "metric %r requires dimension (%s)" % (metr.name.value, dim_names))
 
         return metrics
 
@@ -502,9 +502,10 @@ class AzureClient(object):
 
         try:
             timespan = {"PT1M": self.timespan_min, "PT1H": self.timespan_hrs}[time_grain]
-            LOG.debug("metrics.list(%r, timespan=%r, interval=%r, metric=%r, "
-                      "aggregation=%r, filter=%r, raw=True)", rid, timespan, time_grain,
-                      metricnames, aggregations, filters)
+            LOG.debug(
+                "metrics.list(%r, timespan=%r, interval=%r, metric=%r, "
+                "aggregation=%r, filter=%r, raw=True)", rid, timespan, time_grain, metricnames,
+                aggregations, filters)
             # azure-api-call
             raw = self._monitor_client.metrics.list(
                 rid,

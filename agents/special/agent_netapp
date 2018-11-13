@@ -44,6 +44,7 @@ warnings.filterwarnings("ignore")
 #
 #ssl.wrap_socket = sslwrap(ssl.wrap_socket)
 
+
 def usage():
     sys.stderr.write("""Check_MK NetApp Agent
 
@@ -108,18 +109,19 @@ Cluster-Mode specific:
  quota-report-iter
 """)
 
+
 # NetApp credentials
-user   = None
+user = None
 secret = None
 
-opt_timeout     = 120
-opt_debug       = False
-opt_dump_xml    = False
+opt_timeout = 120
+opt_debug = False
+opt_dump_xml = False
 opt_no_counters = []
-opt_legacy      = False
+opt_legacy = False
 
 short_options = 'hu:s:t:o'
-long_options  = ['help', 'debug', 'user=', 'secret=', 'timeout=', 'xml', "nocounters=", "legacy"]
+long_options = ['help', 'debug', 'user=', 'secret=', 'timeout=', 'xml', "nocounters=", "legacy"]
 
 section_errors = []
 
@@ -129,22 +131,22 @@ except getopt.GetoptError, err:
     sys.stderr.write("%s\n" % err)
     sys.exit(1)
 
-for o,a in opts:
-    if o in [ '--debug' ]:
+for o, a in opts:
+    if o in ['--debug']:
         opt_debug = True
-    elif o in [ '--legacy' ]:
+    elif o in ['--legacy']:
         opt_legacy = True
-    elif o in [ '-u', '--user' ]:
+    elif o in ['-u', '--user']:
         user = a
-    elif o in [ '-s', '--secret' ]:
+    elif o in ['-s', '--secret']:
         secret = a
-    elif o in [ '--nocounters']:
+    elif o in ['--nocounters']:
         opt_no_counters = a.split(",")
-    elif o in [ '--xml']:
+    elif o in ['--xml']:
         opt_dump_xml = True
-    elif o in [ '-t', '--timeout' ]:
+    elif o in ['-t', '--timeout']:
         opt_timeout = int(a)
-    elif o in [ '-h', '--help' ]:
+    elif o in ['-h', '--help']:
         usage()
         sys.exit(0)
 
@@ -157,11 +159,10 @@ else:
     sys.stderr.write("ERROR: Please specify exactly one host.\n")
     sys.exit(1)
 
-
 if opt_legacy:
     try:
-        from NaElement import NaElement # pylint: disable=import-error
-        from NaServer import NaServer # pylint: disable=import-error
+        from NaElement import NaElement  # pylint: disable=import-error
+        from NaServer import NaServer  # pylint: disable=import-error
     except Exception, e:
         sys.stderr.write("Unable to import the files NaServer.py/NaElement.py.\nThese files are "\
                          "provided by the NetApp Managability SDK and must be put into "\
@@ -174,14 +175,13 @@ else:
 
     urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
     urllib3.util.ssl_.DEFAULT_CIPHERS += ":" + ":".join([
-       "DH+3DES",
-       "DH+HIGH",
-       "ECDH+3DES",
-       "ECDH+HIGH",
-       "RSA+3DES",
-       "RSA+HIGH",
+        "DH+3DES",
+        "DH+HIGH",
+        "ECDH+3DES",
+        "ECDH+HIGH",
+        "RSA+3DES",
+        "RSA+HIGH",
     ])
-
 
     try:
         # lxml was quite promising in our test environment: Uses 2 times less CPU resources
@@ -218,21 +218,21 @@ else:
     class NetAppConnection(object):
         def __init__(self, hostname, user, password):
             self.hostname = hostname
-            self.user     = user
+            self.user = user
             self.password = password
-            self.vfiler   = None
+            self.vfiler = None
 
-            self.status   = None
+            self.status = None
             self.error_messages = ErrorMessages()
             self.suppress_errors = False
 
             self.headers = {}
-            self.headers["Content-type"]  = "text/xml; charset=\"UTF-8\""
+            self.headers["Content-type"] = "text/xml; charset=\"UTF-8\""
             self.session = requests.Session()
-            self.debug   = False
+            self.debug = False
 
         def get_xml_message_from_node(self, node):
-            return ET.tostring(node, encoding = "UTF-8")
+            return ET.tostring(node, encoding="UTF-8")
 
         def add_error_message(self, message):
             if not self.suppress_errors:
@@ -252,7 +252,7 @@ else:
                 for entry in the_list[1]:
                     if isinstance(entry[1], list):
                         self.create_node_from_list(entry, new_node)
-                    else: # simple (key, value) pair
+                    else:  # simple (key, value) pair
                         ET.SubElement(new_node, entry[0]).text = entry[1]
 
             if parent_node is None:
@@ -265,7 +265,7 @@ else:
             node = self.create_node_from_list(query_content, None)
 
             # Nodes are always enveloped in the root_node
-            root_node = NetAppRootNode(vfiler = self.vfiler)
+            root_node = NetAppRootNode(vfiler=self.vfiler)
             root_node.append(node)
 
             request_message = self.get_xml_message_from_node(root_node.get_node())
@@ -273,21 +273,24 @@ else:
                 print "######## START QUERY ########"
                 print prettify(root_node.get_node())
 
-            req = requests.Request('POST', "https://%s/servlets/netapp.servlets.admin.XMLrequest_filer" % self.hostname,
-                                            data    = request_message,
-                                            headers = self.headers,
-                                            auth    = (self.user, self.password))
-            prepped  = self.session.prepare_request(req)
+            req = requests.Request(
+                'POST',
+                "https://%s/servlets/netapp.servlets.admin.XMLrequest_filer" % self.hostname,
+                data=request_message,
+                headers=self.headers,
+                auth=(self.user, self.password))
+            prepped = self.session.prepare_request(req)
             # No SSL certificate check..
 
-            response = self.session.send(prepped, verify = False)
+            response = self.session.send(prepped, verify=False)
 
             netapp_response = NetAppResponse(response)
 
             if self.debug:
                 print "######## GOT RESPONSE #######"
                 if netapp_response.results_status() != "passed":
-                    print "Error: Unable to parse content of response:\n%s" % netapp_response.results_reason()
+                    print "Error: Unable to parse content of response:\n%s" % netapp_response.results_reason(
+                    )
                     if netapp_response.results_status() == "parse-exception":
                         print "Raw response text:\n%s" % netapp_response.raw_response_text
                 else:
@@ -295,10 +298,10 @@ else:
 
             if netapp_response.results_status() != "passed":
                 if not netapp_response.results_reason().startswith("Unable to find API"):
-                    self.add_error_message("Querying class %s: %s" % (node.tag, netapp_response.results_reason()))
+                    self.add_error_message(
+                        "Querying class %s: %s" % (node.tag, netapp_response.results_reason()))
 
             return netapp_response
-
 
         def invoke(self, *args):
             invoke_list = [args[0], map(list, zip(args[1::2], args[2::2]))]
@@ -309,12 +312,11 @@ else:
         def set_vfiler(self, name):
             self.vfiler = name
 
-
     class NetAppNode(object):
         def __init__(self, xml_element):
             if type(xml_element) == str:
                 xml_element = ET.Element(xml_element)
-            self.node  = xml_element
+            self.node = xml_element
             self.element = self
 
         def __getitem__(self, what):
@@ -338,7 +340,6 @@ else:
                     return NetAppNode(element)
             return None
 
-
         def children_get(self):
             return map(NetAppNode, self.node)
 
@@ -358,41 +359,39 @@ else:
         def get_node(self):
             return self.node
 
-
-
     class NetAppRootNode(NetAppNode):
-        def __init__(self, vfiler = False):
-            root_node = ET.Element("netapp",
-                version = "1.8",
-                xmlns   = "http://www.netapp.com/filer/admin",
-                nmsdk_language = "Python",
-                nmsdk_version  = "5.2",
+        def __init__(self, vfiler=False):
+            root_node = ET.Element(
+                "netapp",
+                version="1.8",
+                xmlns="http://www.netapp.com/filer/admin",
+                nmsdk_language="Python",
+                nmsdk_version="5.2",
             )
             NetAppNode.__init__(self, root_node)
             if vfiler:
                 self.node.attrib["vfiler"] = vfiler
 
-
     # NetApp Response Oject, holds the actual content in the NetAppNode member variable
     class NetAppResponse(object):
         def __init__(self, response):
             self.content = None
-            self.reason  = None
+            self.reason = None
 
             self.raw_response_text = response.text.encode("utf-8")
 
             # Check for invalid authorization
             if response.status_code == 401:
-                self.status  = "failed"
-                self.reason  = "Authorization failed"
+                self.status = "failed"
+                self.reason = "Authorization failed"
                 return
 
             # We except an XML answer (not HTML)
             try:
                 self.content = NetAppNode(ET.fromstring(self.raw_response_text))
             except ET.ParseError, exc:
-                self.status  = "parse-exception"
-                self.reason  = str(exc)
+                self.status = "parse-exception"
+                self.reason = str(exc)
                 return
 
             self.status = self.content.child_get("results").node.attrib["status"]
@@ -409,7 +408,6 @@ else:
             return self.content.child_get("results")
 
 
-
 #.
 #   .--Format-Fctns--------------------------------------------------------.
 #   |   _____                          _        _____    _                 |
@@ -420,7 +418,8 @@ else:
 #   |                                                                      |
 #   +----------------------------------------------------------------------+
 
-def create_dict(instances, custom_key = None, is_counter = True):
+
+def create_dict(instances, custom_key=None, is_counter=True):
     if custom_key is None:
         custom_key = []
 
@@ -451,27 +450,32 @@ def create_dict(instances, custom_key = None, is_counter = True):
         result[key] = values
     return result
 
+
 # Format config as one liner. Might add extra info identified by config_key
-def format_config(instances, prefix, config_key, config_report = "all",
-                  config_scale = None, config_rename = None,
-                  extra_info = None, extra_info_report = "all",
-                  delimeter = "\t", skip_missing_config_key = False):
+def format_config(instances,
+                  prefix,
+                  config_key,
+                  config_report="all",
+                  config_scale=None,
+                  config_rename=None,
+                  extra_info=None,
+                  extra_info_report="all",
+                  delimeter="\t",
+                  skip_missing_config_key=False):
 
-
-    config_scale  = {} if config_scale == None else config_scale
+    config_scale = {} if config_scale == None else config_scale
     config_rename = {} if config_rename == None else config_rename
-    extra_info    = {} if extra_info == None else extra_info
+    extra_info = {} if extra_info == None else extra_info
 
     result = []
     values = {}
 
-    def collect_values(node, namespace = ""):
+    def collect_values(node, namespace=""):
         for entry in node.children_get():
             collect_values(entry, namespace + node.element["name"] + ".")
 
         if node.element["content"]:
             values["%s%s" % (namespace, node.element["name"])] = node.element["content"]
-
 
     for instance in instances.children_get():
         values = {}
@@ -482,7 +486,7 @@ def format_config(instances, prefix, config_key, config_report = "all",
         if type(config_key) == list:
             instance_key = []
             for entry in config_key:
-               instance_key.append(values.get(entry))
+                instance_key.append(values.get(entry))
             instance_key = ".".join(instance_key)
         else:
             if skip_missing_config_key and config_key not in values:
@@ -509,17 +513,20 @@ def format_config(instances, prefix, config_key, config_report = "all",
         result.append(("%s" % delimeter).join(x.encode("utf-8") for x in line))
     return "\n".join(result)
 
+
 # Format instance without subnodes as key/value lines
-def format_as_key_value(plain_instance, prefix = "", report = "all", delimeter = "\t"):
+def format_as_key_value(plain_instance, prefix="", report="all", delimeter="\t"):
     result = []
     for node in plain_instance.children_get():
         if report == "all" or node.element["name"] in report:
             if node.element["content"]:
-                result.append("%s%s%s%s" % (prefix, node.element["name"], delimeter, node.element["content"]))
+                result.append(
+                    "%s%s%s%s" % (prefix, node.element["name"], delimeter, node.element["content"]))
     return "\n".join(result)
 
+
 # Output a single dictionary
-def format_dict(the_dict, prefix = "", report = "all", delimeter = "\t", as_line = False):
+def format_dict(the_dict, prefix="", report="all", delimeter="\t", as_line=False):
     result = []
 
     values = {}
@@ -540,7 +547,6 @@ def format_dict(the_dict, prefix = "", report = "all", delimeter = "\t", as_line
     return "\n".join(result)
 
 
-
 #.
 #   .--Query-Helpers-------------------------------------------------------.
 #   |  ___                              _   _      _                       |
@@ -551,11 +557,13 @@ def format_dict(the_dict, prefix = "", report = "all", delimeter = "\t", as_line
 #   |                       |___/                   |_|                    |
 #   +----------------------------------------------------------------------+
 
+
 def debug_node(node):
     if opt_legacy:
         print node.sprintf()
     else:
         print prettify(node.get_node())
+
 
 def output_error_section():
     if opt_legacy:
@@ -564,26 +572,30 @@ def output_error_section():
     else:
         print "<<<netapp_api_connection>>>"
         # Remove some messages which may appear on a Netapp Simulator
-        server.error_messages.remove_messages("storage-shelf-environment-list-info: Enclosure services scan not done")
+        server.error_messages.remove_messages(
+            "storage-shelf-environment-list-info: Enclosure services scan not done")
         server.error_messages.remove_messages("environment-sensors-get-iter: invalid operation")
         print server.error_messages.format_messages()
 
+
 nodes = []
-def query_nodes(what, node_attribute = "node-name"):
+
+
+def query_nodes(what, node_attribute="node-name"):
     global nodes
     if opt_legacy:
         if not nodes:
-            node_query = NaElement("system-get-node-info-iter") # pylint: disable=undefined-variable
-            node_list = server.invoke_elem(node_query)          # pylint: disable=no-member
+            node_query = NaElement("system-get-node-info-iter")  # pylint: disable=undefined-variable
+            node_list = server.invoke_elem(node_query)  # pylint: disable=no-member
             nodes = []
             for instance in node_list.child_get("attributes-list").children_get():
                 nodes.append(instance.child_get_string("system-name"))
 
         results = {}
         for node in nodes:
-            query = NaElement(what) # pylint: disable=undefined-variable
+            query = NaElement(what)  # pylint: disable=undefined-variable
             query.child_add_string(node_attribute, node)
-            response = server.invoke_elem(query) # pylint: disable=no-member
+            response = server.invoke_elem(query)  # pylint: disable=no-member
             if response.results_status() == "failed":
                 section_errors.append("In class %s: %s" % (what, response.results_reason()))
                 continue
@@ -597,7 +609,7 @@ def query_nodes(what, node_attribute = "node-name"):
                 return
 
             nodename_field = "system-name"
-            attr_list      = response.get_results().child_get("attributes-list")
+            attr_list = response.get_results().child_get("attributes-list")
 
             # Fallback query to determine the available node names
             if not attr_list:
@@ -605,7 +617,7 @@ def query_nodes(what, node_attribute = "node-name"):
                 if response.results_status() == "failed":
                     return
 
-                attr_list  = response.get_results().child_get("attributes-list")
+                attr_list = response.get_results().child_get("attributes-list")
                 nodename_field = "node"
 
             nodes = []
@@ -626,8 +638,7 @@ def query_nodes(what, node_attribute = "node-name"):
     return results
 
 
-
-def query(what, return_toplevel_node = False):
+def query(what, return_toplevel_node=False):
     if opt_legacy:
         # HACK: if "what" endswith "iter", add max_records = 5000
         # This approach is way easier than reading the tag, invoke another command and merge all answers together
@@ -653,11 +664,12 @@ def query(what, return_toplevel_node = False):
         if response.results_status() != "passed":
             return
 
-        results    = response.get_results()
+        results = response.get_results()
         tag_string = results.child_get_string("next-tag")
         while tag_string:
             # We need to start additinal query until all data is fetched
-            tag_response = server.get_response([what, [["max-records", max_records],["tag", tag_string]]])
+            tag_response = server.get_response(
+                [what, [["max-records", max_records], ["tag", tag_string]]])
             if tag_response.result_status() != "passed":
                 return
             if tag_response.get_results().child_get_string("num-records") == "0":
@@ -679,13 +691,13 @@ def query(what, return_toplevel_node = False):
 def query_counters(what):
     instance_uuids = []
     if opt_legacy:
-        counter_query = NaElement("perf-object-get-instances") # pylint: disable=undefined-variable
+        counter_query = NaElement("perf-object-get-instances")  # pylint: disable=undefined-variable
         counter_query.child_add_string("objectname", what)
 
         # In clustermode there is no "get all" command for performance counters
         # We need to determine the instance names first and add them to the query
         if netapp_mode == "clustermode":
-            instance_query = NaElement("perf-object-instance-list-info-iter") # pylint: disable=undefined-variable
+            instance_query = NaElement("perf-object-instance-list-info-iter")  # pylint: disable=undefined-variable
             instance_query.child_add_string("objectname", what)
 
             instance_query_response = server.invoke_elem(instance_query)  # pylint: disable=no-member
@@ -697,7 +709,7 @@ def query_counters(what):
                     # Nothing to query..
                     return
 
-                instances_to_query = NaElement("instance-uuids") # pylint: disable=undefined-variable
+                instances_to_query = NaElement("instance-uuids")  # pylint: disable=undefined-variable
                 for uuid in instance_uuids:
                     instances_to_query.child_add_string("instance-uuid", uuid)
                 counter_query.child_add(instances_to_query)
@@ -705,7 +717,7 @@ def query_counters(what):
                 return
 
         # Query counters
-        response = server.invoke_elem(counter_query) # pylint: disable=no-member
+        response = server.invoke_elem(counter_query)  # pylint: disable=no-member
         if response.results_status() == "failed":
             section_errors.append("In counter %s: %s" % (what, response.results_reason()))
         else:
@@ -713,15 +725,19 @@ def query_counters(what):
     else:
         if netapp_mode == "clustermode":
             max_records = "3000"
-            response = server.get_response(["perf-object-instance-list-info-iter",
-                                           [["objectname", what], ["max-records", max_records]]])
+            response = server.get_response([
+                "perf-object-instance-list-info-iter",
+                [["objectname", what], ["max-records", max_records]]
+            ])
 
-            results    = response.get_results()
+            results = response.get_results()
             tag_string = results.child_get_string("next-tag")
             while tag_string:
                 # We need to start additinal query until all data is fetched
-                tag_response = server.get_response(["perf-object-instance-list-info-iter",
-                                                   [["objectname", what], ["max-records", max_records], ["tag", tag_string]]])
+                tag_response = server.get_response([
+                    "perf-object-instance-list-info-iter",
+                    [["objectname", what], ["max-records", max_records], ["tag", tag_string]]
+                ])
                 if tag_response.result_status() != "passed":
                     return
                 if tag_response.get_results().child_get_string("num-records") == "0":
@@ -743,7 +759,7 @@ def query_counters(what):
                 instance_uuids.append(instance_data.child_get_string("uuid"))
 
             if not instance_uuids:
-                return # Nothing to query..
+                return  # Nothing to query..
 
             # I was unable to find an iterator API to query clustermode perfcounters...
             # Maybe the perf-object-get-instances is already able to provide huge amounts
@@ -771,22 +787,24 @@ def query_counters(what):
                 the_instances = response.get_results().child_get("instances")
                 initial_results.extend_instances_list(the_instances)
             return initial_results.child_get("instances")
-        else: # 7 Mode
+        else:  # 7 Mode
             perfobject_node = ["perf-object-get-instances-iter-start", [["objectname", what]]]
             response = server.get_response(perfobject_node)
-            results  = response.get_results()
-            records  = results.child_get_string("records")
-            tag      = results.child_get_string("tag")
+            results = response.get_results()
+            records = results.child_get_string("records")
+            tag = results.child_get_string("tag")
 
             if not records or records == "0":
                 return
 
             responses = []
             while records != "0":
-                perfobject_node = ["perf-object-get-instances-iter-next", [["tag", tag], ["maximum", "1000"]]]
+                perfobject_node = [
+                    "perf-object-get-instances-iter-next", [["tag", tag], ["maximum", "1000"]]
+                ]
                 response = server.get_response(perfobject_node)
-                results  = response.get_results()
-                records  = results.child_get_string("records")
+                results = response.get_results()
+                records = results.child_get_string("records")
                 responses.append(response)
                 if not records or records == "0":
                     perfobject_node = ["perf-object-get-instances-iter-end", [["tag", tag]]]
@@ -816,7 +834,7 @@ try:
     if opt_legacy:
         if opt_debug:
             print "Running in legacy mode"
-        server = NaServer(host_address,1,8) # pylint: disable=undefined-variable
+        server = NaServer(host_address, 1, 8)  # pylint: disable=undefined-variable
         server.set_admin_user(user, secret)
         server.set_timeout(opt_timeout)
         server.set_transport_type("HTTPS")
@@ -838,8 +856,7 @@ except Exception, e:
     sys.exit(1)
 
 # Determine if this filer is running 7mode or clustermode
-version_info = query("system-get-version", return_toplevel_node = True)
-
+version_info = query("system-get-version", return_toplevel_node=True)
 
 if not version_info:
     sys.stderr.write(",".join(section_errors))
@@ -847,7 +864,7 @@ if not version_info:
 
 clustered_info = version_info.child_get_string("is-clustered")
 if clustered_info:
-    netapp_mode  = '7mode' if clustered_info.lower() == 'false' else 'clustermode'
+    netapp_mode = '7mode' if clustered_info.lower() == 'false' else 'clustermode'
 else:
     # Looks like the is-clustered attribute is not set, e.g. NetApp 7-Mode Version 8.0
     version_string = version_info.child_get_string("version").lower()
@@ -855,9 +872,9 @@ else:
     # exact info whether its a 7mode or a clustermode system
     # Possible approach: Query a class which does not exist in 7-mode and evaluate response
     if "NetApp Release 7.3.5.1".lower() in version_string:
-        netapp_mode  = "7mode"
+        netapp_mode = "7mode"
     else:
-        netapp_mode  = '7mode' if '7-mode' in version_string else 'clustermode'
+        netapp_mode = '7mode' if '7-mode' in version_string else 'clustermode'
 
 # DEBUG
 #version_info = query("system-api-list")
@@ -867,7 +884,7 @@ server.suppress_errors = True
 licenses = {"v1": {}, "v1_disabled": {}, "v2": {}, "v2_disabled": {}}
 license_info = query("license-list-info")
 if license_info:
-    licenses["v1"] = create_dict(license_info, custom_key = ["service"], is_counter = False)
+    licenses["v1"] = create_dict(license_info, custom_key=["service"], is_counter=False)
     for license_, values in licenses["v1"].items():
         if values.get("is-licensed", "") == "false":
             licenses["v1_disabled"][license_] = values
@@ -875,9 +892,8 @@ if license_info:
 # The v2 license info is not used, yet
 licensev2_info = query("license-v2-list-info")
 if licensev2_info:
-    licenses["v2"] = create_dict(licensev2_info, custom_key = ["package"], is_counter = False)
+    licenses["v2"] = create_dict(licensev2_info, custom_key=["package"], is_counter=False)
 server.suppress_errors = False
-
 
 #.
 #   .--Clustermode Settings------------------------------------------------.
@@ -895,14 +911,13 @@ server.suppress_errors = False
 #   |                                           |___/                      |
 #   +----------------------------------------------------------------------+
 
-
 try:
     if netapp_mode == "clustermode":
         # VServer
         vservers = query("vserver-get-iter")
         if vservers:
             print "<<<netapp_api_vs_status:sep(9)>>>"
-            vserver_dict = create_dict(vservers, custom_key = [ "vserver-name" ], is_counter = False)
+            vserver_dict = create_dict(vservers, custom_key=["vserver-name"], is_counter=False)
 
             vserver_info = {}
             for key, values in vserver_dict.items():
@@ -912,31 +927,33 @@ try:
 
         # VServer Stats
         print "<<<netapp_api_vs_traffic:sep(9)>>>"
-        for what in ["lif:vserver", "fcp_lif:vserver", "iscsi_lif:vserver", "cifs:vserver", "nfsv3", "nfsv4", "nfsv4_1"]:
+        for what in [
+                "lif:vserver", "fcp_lif:vserver", "iscsi_lif:vserver", "cifs:vserver", "nfsv3",
+                "nfsv4", "nfsv4_1"
+        ]:
             result = query_counters(what)
             if result:
                 result_dict = create_dict(result)
                 for key, value in result_dict.items():
-                    print format_dict(value, prefix = "protocol %s" % what, as_line = True)
+                    print format_dict(value, prefix="protocol %s" % what, as_line=True)
 
         # Interfaces
-        interfaces  = query("net-interface-get-iter")
-        ports       = query("net-port-get-iter")
+        interfaces = query("net-interface-get-iter")
+        ports = query("net-port-get-iter")
         if_counters = query_counters("lif")
 
         if interfaces:
             print "<<<netapp_api_if:sep(9)>>>"
             extra_info = {}
-            interface_dict   = create_dict(interfaces, custom_key = "interface-name", is_counter = False)
-            port_dict        = create_dict(ports, custom_key = ["node", "port"], is_counter = False)
-            if_counters_dict = create_dict(if_counters, custom_key = "instance_name")
+            interface_dict = create_dict(interfaces, custom_key="interface-name", is_counter=False)
+            port_dict = create_dict(ports, custom_key=["node", "port"], is_counter=False)
+            if_counters_dict = create_dict(if_counters, custom_key="instance_name")
 
             # Process counters
             # NetApp clustermode reports sent_data instead of send_data..
             for key, values in if_counters_dict.items():
-                for old, new in [ ("sent_data",    "send_data"),
-                                  ("sent_packet",  "send_packet"),
-                                  ("sent_errors",  "send_errors") ]:
+                for old, new in [("sent_data", "send_data"), ("sent_packet", "send_packet"),
+                                 ("sent_errors", "send_errors")]:
                     values[new] = values[old]
                     del values[old]
 
@@ -966,56 +983,72 @@ try:
                 extra_info.setdefault(key, {})
                 extra_info[key].update(values)
 
-            print format_config(interfaces, "interface", "interface-name",
-                                extra_info = extra_info,
-                                extra_info_report = [ "recv_data", "send_data",
-                                                      "recv_mcasts", "send_mcasts",
-                                                      "recv_errors", "send_errors",
-                                                      "instance_name", "link-status", "operational-speed",
-                                                      "recv_packet", "send_packet", ])
-
+            print format_config(
+                interfaces,
+                "interface",
+                "interface-name",
+                extra_info=extra_info,
+                extra_info_report=[
+                    "recv_data",
+                    "send_data",
+                    "recv_mcasts",
+                    "send_mcasts",
+                    "recv_errors",
+                    "send_errors",
+                    "instance_name",
+                    "link-status",
+                    "operational-speed",
+                    "recv_packet",
+                    "send_packet",
+                ])
 
         # Fibrechannels
         fcp_counters = query_counters("fcp_lif")
-        fcp_ports    = query("fcp-interface-get-iter")
-        fcp_adapter  = query("fcp-adapter-get-iter")
+        fcp_ports = query("fcp-interface-get-iter")
+        fcp_adapter = query("fcp-adapter-get-iter")
 
         if fcp_counters:
             print "<<<netapp_api_fcp:sep(9)>>>"
-            port_dict = create_dict(fcp_adapter, custom_key = "port-name", is_counter = False)
-            fcp_counter_dict = create_dict(fcp_counters, custom_key = "instance_name")
+            port_dict = create_dict(fcp_adapter, custom_key="port-name", is_counter=False)
+            fcp_counter_dict = create_dict(fcp_counters, custom_key="instance_name")
 
             port_extra_info = {}
             for key, values in fcp_counter_dict.items():
                 if values["port_wwpn"] in port_dict:
                     values.update(port_dict[values["port_wwpn"]])
 
-            print format_config(fcp_ports, "fcp", "interface-name",
-                                extra_info = fcp_counter_dict)
-
+            print format_config(fcp_ports, "fcp", "interface-name", extra_info=fcp_counter_dict)
 
         # CPU Util for both nodes
         node_info = query("system-get-node-info-iter")
         system_info = query("system-node-get-iter")
         if node_info and system_info:
             print "<<<netapp_api_cpu:sep(9)>>>"
-            print format_config(node_info, "cpu-info", "system-name", config_report = ["number-of-processors"],
-                                                                      config_rename = {"number-of-processors": "num_processors"})
-            print format_config(system_info, "cpu-info", "node", config_scale = {"cpu-busytime": 1000000},
-                                                                 config_report = ["cpu-busytime", "nvram-battery-status"],
-                                                                 config_rename = {"cpu-busytime": "cpu_busy"})
+            print format_config(
+                node_info,
+                "cpu-info",
+                "system-name",
+                config_report=["number-of-processors"],
+                config_rename={"number-of-processors": "num_processors"})
+            print format_config(
+                system_info,
+                "cpu-info",
+                "node",
+                config_scale={"cpu-busytime": 1000000},
+                config_report=["cpu-busytime", "nvram-battery-status"],
+                config_rename={"cpu-busytime": "cpu_busy"})
 
         # Cluster info
         # TODO: check is missing
-        ha_partners = {} # Used later on by environmental sensors
+        ha_partners = {}  # Used later on by environmental sensors
         if "cf" not in licenses["v1_disabled"]:
-            cluster_status = query_nodes("cf-status", node_attribute = "node")
+            cluster_status = query_nodes("cf-status", node_attribute="node")
             if cluster_status:
                 print "<<<netapp_api_cm_cluster:sep(9)>>>"
                 for node, entry in cluster_status.items():
                     # Small trick to improve formatting
                     if opt_legacy:
-                        container = NaElement("container") # pylint: disable=undefined-variable
+                        container = NaElement("container")  # pylint: disable=undefined-variable
                         container.child_add(entry)
                     else:
                         container = NetAppNode("container")
@@ -1024,7 +1057,7 @@ try:
                     partner_name = entry.child_get_string("partner-name")
                     if partner_name:
                         ha_partners[node] = partner_name
-                    print format_config(container, "cluster", node.split(".",1)[1])
+                    print format_config(container, "cluster", node.split(".", 1)[1])
 
                 # Systemtime for each node
                 current_time = int(time.time())
@@ -1033,30 +1066,33 @@ try:
                     node_current_time = entry.child_get_string("current-time")
                     print "%s\t%s\t%s" % (node[10:], current_time, node_current_time)
 
-
         # Disk
         disks = query("storage-disk-get-iter")
         if disks:
             print "<<<netapp_api_disk:sep(9)>>>"
-            print format_config(disks, "disk", "disk-uid",
-                                        config_report = [ "disk-inventory-info.shelf-bay",
-                                                          "disk-inventory-info.serial-number",
-                                                          "disk-inventory-info.vendor",
-                                                          "disk-raid-info.container-type",
-                                                          "disk-raid-info.position",
-                                                          "disk-raid-info.used-blocks",
-                                                          "disk-raid-info.physical-blocks" ],
-                                        config_scale  = { "disk-raid-info.physical-blocks": 4096,
-                                                          "disk-raid-info.used-blocks": 4096 },
-                                        config_rename = { "disk-inventory-info.shelf-bay": "bay",
-                                                          "disk-inventory-info.serial-number": "serial-number",
-                                                          "disk-inventory-info.vendor": "vendor-id",
-                                                          "disk-raid-info.container-type": "raid-state",
-                                                          "disk-raid-info.position": "raid-type",
-                                                          "disk-raid-info.used-blocks": "used-space",
-                                                          "disk-raid-info.physical-blocks": "physical-space"}
-            )
-
+            print format_config(
+                disks,
+                "disk",
+                "disk-uid",
+                config_report=[
+                    "disk-inventory-info.shelf-bay", "disk-inventory-info.serial-number",
+                    "disk-inventory-info.vendor", "disk-raid-info.container-type",
+                    "disk-raid-info.position", "disk-raid-info.used-blocks",
+                    "disk-raid-info.physical-blocks"
+                ],
+                config_scale={
+                    "disk-raid-info.physical-blocks": 4096,
+                    "disk-raid-info.used-blocks": 4096
+                },
+                config_rename={
+                    "disk-inventory-info.shelf-bay": "bay",
+                    "disk-inventory-info.serial-number": "serial-number",
+                    "disk-inventory-info.vendor": "vendor-id",
+                    "disk-raid-info.container-type": "raid-state",
+                    "disk-raid-info.position": "raid-type",
+                    "disk-raid-info.used-blocks": "used-space",
+                    "disk-raid-info.physical-blocks": "physical-space"
+                })
 
         # Volumes
         volumes = query("volume-get-iter")
@@ -1098,28 +1134,29 @@ try:
         aggregations = query("aggr-get-iter")
         if aggregations:
             print "<<<netapp_api_aggr:sep(9)>>>"
-            print format_config(aggregations, "aggregation", "aggregate-name",
-                                        config_report = [ "aggr-space-attributes.size-available",
-                                                          "aggr-space-attributes.size-total"],
-                                        config_rename = { "aggr-space-attributes.size-available": "size-available",
-                                                          "aggr-space-attributes.size-total"    : "size-total"})
-
+            print format_config(
+                aggregations,
+                "aggregation",
+                "aggregate-name",
+                config_report=[
+                    "aggr-space-attributes.size-available", "aggr-space-attributes.size-total"
+                ],
+                config_rename={
+                    "aggr-space-attributes.size-available": "size-available",
+                    "aggr-space-attributes.size-total": "size-total"
+                })
 
         # LUNs
         luns = query("lun-get-iter")
         if luns:
             print "<<<netapp_api_luns:sep(9)>>>"
-            print format_config(luns, "lun", "path",
-                                config_report = [
-                                "size",
-                                "size-used",
-                                "path",
-                                "online",
-                                "read-only",
-                                "vserver",
-                                "volume"
-                                ])
-
+            print format_config(
+                luns,
+                "lun",
+                "path",
+                config_report=[
+                    "size", "size-used", "path", "online", "read-only", "vserver", "volume"
+                ])
 
         # Diagnosis status
         diag_status = query("diagnosis-status-get")
@@ -1128,32 +1165,34 @@ try:
             print format_config(diag_status, "status", "status")
 
         # NetApp System Version/Info
-        system_version = query("system-get-version", return_toplevel_node = True)
-        system_info    = query("system-get-node-info-iter")
+        system_version = query("system-get-version", return_toplevel_node=True)
+        system_info = query("system-get-node-info-iter")
         if system_version:
             print "<<<netapp_api_info:sep(9)>>>"
             print format_as_key_value(system_version)
             if system_info:
-                child_dict = create_dict(system_info, custom_key = "system-name", is_counter = False)
+                child_dict = create_dict(system_info, custom_key="system-name", is_counter=False)
                 for key, values in child_dict.items():
-                    print format_dict(values, prefix = "node %s" % key, as_line = True)
+                    print format_dict(values, prefix="node %s" % key, as_line=True)
 
         # Snapmirror / Snapvault lag-time
         snapmirror_info = query("snapmirror-get-iter")
         if snapmirror_info:
             print "<<<netapp_api_snapvault:sep(9)>>>"
-            print format_config(snapmirror_info, "snapvault", "destination-volume",
-                                        config_report = [ "destination-volume-node",
-                                                          "policy",
-                                                          "mirror-state",
-                                                          "source-vserver",
-                                                          "lag-time",
-                                                          "relationship-status" ],
-                                        config_rename = { "destination-volume-node": "destination-system",
-                                                          "mirror-state": "state",
-                                                          "source-vserver": "source-system",
-                                                          "relationship-status": "status" }
-            )
+            print format_config(
+                snapmirror_info,
+                "snapvault",
+                "destination-volume",
+                config_report=[
+                    "destination-volume-node", "policy", "mirror-state", "source-vserver",
+                    "lag-time", "relationship-status"
+                ],
+                config_rename={
+                    "destination-volume-node": "destination-system",
+                    "mirror-state": "state",
+                    "source-vserver": "source-system",
+                    "relationship-status": "status"
+                })
 
         # Environmental sensors
         environment_info = query_nodes("storage-shelf-environment-list-info")
@@ -1174,16 +1213,16 @@ try:
                 if not channel_list:
                     continue
 
-                for channel in channel_list.children_get():                                    # cycle channel list
-                    for shelf in channel.child_get("shelf-environ-shelf-list").children_get(): # cycle shelf list
+                for channel in channel_list.children_get():  # cycle channel list
+                    for shelf in channel.child_get(
+                            "shelf-environ-shelf-list").children_get():  # cycle shelf list
                         shelf_id = shelf.child_get_string("shelf-id")
-                        for what, section in [ ("power-supply-list",    "netapp_api_psu"),
-                                               ("cooling-element-list", "netapp_api_fan"),
-                                               ("temp-sensor-list",     "netapp_api_temp") ]:
+                        for what, section in [("power-supply-list", "netapp_api_psu"),
+                                              ("cooling-element-list", "netapp_api_fan"),
+                                              ("temp-sensor-list", "netapp_api_temp")]:
                             print "<<<%s:sep(9)>>>" % section
                             node = shelf.child_get(what)
                             print format_config(node, what, shelf_id)
-
 
         # Controller Status
         environment = query("environment-sensors-get-iter")
@@ -1191,32 +1230,31 @@ try:
             print "<<<netapp_api_environment:sep(9)>>>"
             print format_config(environment, "sensor-name", "sensor-name")
 
-
         # Qtree quota usage
         quota_info = query("quota-report-iter")
         if quota_info:
             print "<<<netapp_api_qtree_quota:sep(9)>>>"
-            print format_config(quota_info, "quota", "tree",
-                                config_report = ["volume", "tree", "disk-limit", "disk-used",
-                                                 "quota-type", "quota-users.quota-user.quota-user-name"],
-                                config_rename = {"quota-users.quota-user.quota-user-name": "quota-users"})
-
+            print format_config(
+                quota_info,
+                "quota",
+                "tree",
+                config_report=[
+                    "volume", "tree", "disk-limit", "disk-used", "quota-type",
+                    "quota-users.quota-user.quota-user-name"
+                ],
+                config_rename={"quota-users.quota-user.quota-user-name": "quota-users"})
 
         # LUNs
         luns = query("lun-get-iter")
         if luns:
             print "<<<netapp_api_luns:sep(9)>>>"
-            print format_config(luns, "lun", "path",
-                                config_report = [
-                                "size",
-                                "size-used",
-                                "path",
-                                "online",
-                                "read-only",
-                                "vserver",
-                                "volume"
-                                ])
-
+            print format_config(
+                luns,
+                "lun",
+                "path",
+                config_report=[
+                    "size", "size-used", "path", "online", "read-only", "vserver", "volume"
+                ])
 
 #.
 #   .--7Mode Settings------------------------------------------------------.
@@ -1235,16 +1273,19 @@ try:
 #   +----------------------------------------------------------------------+
     else:
         # Interfaces
-        interfaces  = query("net-ifconfig-get")
+        interfaces = query("net-ifconfig-get")
         if_counters = query_counters("ifnet")
         if interfaces:
             print "<<<netapp_api_if:sep(9)>>>"
-            print format_config(interfaces, "interface", "interface-name",
-                                extra_info = create_dict(if_counters), extra_info_report = [ "recv_data", "send_data",
-                                                                                             "recv_mcasts", "send_mcasts",
-                                                                                             "recv_errors", "send_errors",
-                                                                                             "instance_name", "mediatype",
-                                                                                             "recv_packet", "send_packet" ])
+            print format_config(
+                interfaces,
+                "interface",
+                "interface-name",
+                extra_info=create_dict(if_counters),
+                extra_info_report=[
+                    "recv_data", "send_data", "recv_mcasts", "send_mcasts", "recv_errors",
+                    "send_errors", "instance_name", "mediatype", "recv_packet", "send_packet"
+                ])
 
         # TODO: Fibrechannel interfaces
 
@@ -1253,8 +1294,7 @@ try:
         if system_counters:
             print "<<<netapp_api_cpu:sep(9)>>>"
             dict_counters = create_dict(system_counters)
-            print format_dict(dict_counters.get("system"), report = ["cpu_busy", "num_processors"])
-
+            print format_dict(dict_counters.get("system"), report=["cpu_busy", "num_processors"])
 
         # Volumes
         volumes = query("volume-list-info")
@@ -1274,37 +1314,54 @@ try:
                                                      for z in ["", "nfs_", "cifs_", "san_", "fcp_", "iscsi_"]] + \
                                                     [ "instance_name" ])
 
-
         # Aggregation
         aggregations = query("aggr-list-info")
         if aggregations:
             print "<<<netapp_api_aggr:sep(9)>>>"
-            print format_config(aggregations, "aggregation", "name",
-                                config_report = ["name", "size-total", "size-available"])
+            print format_config(
+                aggregations,
+                "aggregation",
+                "name",
+                config_report=["name", "size-total", "size-available"])
 
         # Snapshot info
         print "<<<netapp_api_snapshots:sep(9)>>>"
         for volume in volumes.children_get():
             # Small trick improve formatting
             if opt_legacy:
-                container = NaElement("container") # pylint: disable=undefined-variable
+                container = NaElement("container")  # pylint: disable=undefined-variable
                 container.child_add(volume)
             else:
                 container = NetAppNode("container")
                 container.append(volume.get_node())
-            print format_config(container, "volume_snapshot", "name",
-                        config_report = ["name", "size-total", "snapshot-percent-reserved", "state",
-                                         "snapshot-blocks-reserved", "reserve-used-actual"])
+            print format_config(
+                container,
+                "volume_snapshot",
+                "name",
+                config_report=[
+                    "name", "size-total", "snapshot-percent-reserved", "state",
+                    "snapshot-blocks-reserved", "reserve-used-actual"
+                ])
 
         # Protocols
         print "<<<netapp_api_protocol:sep(9)>>>"
-        for what, key in [ ("nfsv3", "nfs"), ("nfsv4", "nfsv4"), ("iscsi", "iscsi"), ("cifs", "cifs"), ("fcp", "fcp") ]:
+        for what, key in [
+            ("nfsv3", "nfs"),
+            ("nfsv4", "nfsv4"),
+            ("iscsi", "iscsi"),
+            ("cifs", "cifs"),
+            ("fcp", "fcp"),
+        ]:
             protocol_counters = query_counters(what)
             if protocol_counters:
                 protocol_dict = create_dict(protocol_counters)
-                print format_dict(protocol_dict[key],
-                                  report = [ "instance_name", "%s_read_ops" % what, "%s_write_ops" % what ],
-                                  prefix = "protocol %s" % key, as_line = True)
+                print format_dict(
+                    protocol_dict[key],
+                    report=["instance_name",
+                            "%s_read_ops" % what,
+                            "%s_write_ops" % what],
+                    prefix="protocol %s" % key,
+                    as_line=True)
 
         # Diagnosis status
         diag_status = query("diagnosis-status-get")
@@ -1312,20 +1369,22 @@ try:
             print "<<<netapp_api_status>>>"
             print format_config(diag_status, "status", "status")
 
-
         # Disks
         disk_info = query("disk-list-info")
         if disk_info:
             print "<<<netapp_api_disk:sep(9)>>>"
-            print format_config(disk_info, "disk", "disk-uid",
-                                    config_report = [ "raid-state", "raid-type", "physical-space", "bay",
-                                                      "raid-type", "used-space", "serial-number", "disk-uid",
-                                                      "disk-model", "vendor-id" ]
-            )
+            print format_config(
+                disk_info,
+                "disk",
+                "disk-uid",
+                config_report=[
+                    "raid-state", "raid-type", "physical-space", "bay", "raid-type", "used-space",
+                    "serial-number", "disk-uid", "disk-model", "vendor-id"
+                ])
 
         # VFiler
-        vfiler_info  = query("vfiler-list-info")
-        vfiler_names = [""] # default is no vfiler
+        vfiler_info = query("vfiler-list-info")
+        vfiler_names = [""]  # default is no vfiler
         if vfiler_info:
             print "<<<netapp_api_vf_status:sep(9)>>>"
             for vfiler in vfiler_info.children_get():
@@ -1334,23 +1393,27 @@ try:
                 response = server.invoke("vfiler-get-status", "vfiler", name)
                 print "%s\t%s" % (name, response.child_get_string("status"))
 
-
         # Snapvaults
         if "sv_ontap_sec" not in licenses["v1_disabled"]:
             print "<<<netapp_api_snapvault:sep(9)>>>"
             for vfiler in vfiler_names:
                 server.set_vfiler(vfiler)
                 response = server.invoke("snapvault-secondary-relationship-status-list-iter-start")
-                records  = response.child_get_string("records")
+                records = response.child_get_string("records")
                 if not records or records == "0":
                     continue
                 tag = response.child_get_string("tag")
-                response = server.invoke("snapvault-secondary-relationship-status-list-iter-next", "maximum", records, "tag", tag)
-                print format_config(response.child_get("status-list"), "snapvault", "source-path",
-                                        config_report = ["lag-time", "state", "status", "source-system", "destination-system"])
-                server.invoke("snapvault-secondary-relationship-status-list-iter-end","tag", tag)
-            server.set_vfiler("") # revert back to default (no) vfiler
-
+                response = server.invoke("snapvault-secondary-relationship-status-list-iter-next",
+                                         "maximum", records, "tag", tag)
+                print format_config(
+                    response.child_get("status-list"),
+                    "snapvault",
+                    "source-path",
+                    config_report=[
+                        "lag-time", "state", "status", "source-system", "destination-system"
+                    ])
+                server.invoke("snapvault-secondary-relationship-status-list-iter-end", "tag", tag)
+            server.set_vfiler("")  # revert back to default (no) vfiler
 
         # Snapmirror
         for vfiler in vfiler_names + [""]:
@@ -1360,11 +1423,18 @@ try:
             if not data or len(data) <= 1:
                 continue
             data = data[1]
-            print format_config(data, "snapvault", "source-location",
-                                config_report = ["lag-time", "state", "status", "source-location", "destination-location"],
-                                config_rename = {"source-location": "source-system", "destination-location": "destination-system"})
+            print format_config(
+                data,
+                "snapvault",
+                "source-location",
+                config_report=[
+                    "lag-time", "state", "status", "source-location", "destination-location"
+                ],
+                config_rename={
+                    "source-location": "source-system",
+                    "destination-location": "destination-system"
+                })
         server.set_vfiler("")
-
 
         # VFiler Counters
         vfiler_counters = query_counters("vfiler")
@@ -1372,20 +1442,19 @@ try:
             print "<<<netapp_api_vf_stats:sep(9)>>>"
             vfiler_dict = create_dict(vfiler_counters)
             for key, values in vfiler_dict.items():
-                print format_dict(values, prefix = "vfiler %s" % key, as_line = True)
+                print format_dict(values, prefix="vfiler %s" % key, as_line=True)
 
         # NetApp System Version/Info
-        system_info    = query("system-get-info")
-        system_version = query("system-get-version", return_toplevel_node = True)
+        system_info = query("system-get-info")
+        system_version = query("system-get-version", return_toplevel_node=True)
         if system_info:
             print "<<<netapp_api_info:sep(9)>>>"
             print format_as_key_value(system_info)
             print format_as_key_value(system_version)
 
-
         # 7Mode Cluster info
         if "cf" not in licenses["v1_disabled"]:
-            cluster_status = query("cf-status", return_toplevel_node = True)
+            cluster_status = query("cf-status", return_toplevel_node=True)
             if cluster_status:
                 print "<<<netapp_api_cluster:sep(9)>>>"
                 print format_as_key_value(cluster_status)
@@ -1397,11 +1466,10 @@ try:
                     current_time = int(time.time())
                     print "%s\t%s\t%s" % (system_name, current_time, node_current_time)
 
-
         # Sensors: Temp, Fan, PSU
         # Definition: all sensors are always monitored by one of the filers
         # We choose this filer by an alphanumerical compare
-        system_name         = system_info.child_get_string("system-name")
+        system_name = system_info.child_get_string("system-name")
         partner_system_name = system_info.child_get_string("partner-system-name")
         if not partner_system_name or system_name < partner_system_name:
             environ_info = query("storage-shelf-environment-list-info")
@@ -1411,9 +1479,9 @@ try:
                     if shelf_list:
                         for shelf in shelf_list.children_get():
                             shelf_id = shelf.child_get_string("shelf-id")
-                            for what, section in [ ("power-supply-list",    "netapp_api_psu"),
-                                                   ("cooling-element-list", "netapp_api_fan"),
-                                                   ("temp-sensor-list",     "netapp_api_temp") ]:
+                            for what, section in [("power-supply-list", "netapp_api_psu"),
+                                                  ("cooling-element-list", "netapp_api_fan"),
+                                                  ("temp-sensor-list", "netapp_api_temp")]:
                                 print "<<<%s:sep(9)>>>" % section
                                 node = shelf.child_get(what)
                                 print format_config(node, what, shelf_id)
@@ -1428,11 +1496,15 @@ try:
         quota_info = query("quota-report")
         if quota_info:
             print "<<<netapp_api_qtree_quota:sep(9)>>>"
-            print format_config(quota_info, "quota", "tree",
-                                config_report = ["volume", "tree", "disk-limit", "disk-used",
-                                                 "quota-type", "quota-users.quota-user.quota-user-name"],
-                                config_rename = {"quota-users.quota-user.quota-user-name": "quota-users"})
-
+            print format_config(
+                quota_info,
+                "quota",
+                "tree",
+                config_report=[
+                    "volume", "tree", "disk-limit", "disk-used", "quota-type",
+                    "quota-users.quota-user.quota-user-name"
+                ],
+                config_rename={"quota-users.quota-user.quota-user-name": "quota-users"})
 
 except Exception, e:
     # Shouldn't happen at all...

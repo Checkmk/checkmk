@@ -35,8 +35,8 @@ import cmk
 import cmk.site
 from cmk.regex import regex
 
-
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+
 
 class AggregationData(object):
     def __init__(self, bi_rawdata, config, error):
@@ -93,7 +93,6 @@ class AggregationData(object):
             self._output.append("<<<bi_aggregation:sep(0)>>>")
             self._output.append(repr(aggregations))
 
-
     def _rewrite_aggregation(self, aggr_tree):
         aggr_state = aggr_tree["aggr_state"]
         aggr_state["state_computed_by_agent"] = aggr_state["state"]
@@ -134,7 +133,8 @@ class AggregationRawdataGenerator(object):
         if self._credentials == "automation":
             self._username = self._credentials
 
-            secret_file_path = Path(cmk.paths.var_dir) / "web" / self._username / "automation.secret"
+            secret_file_path = Path(
+                cmk.paths.var_dir) / "web" / self._username / "automation.secret"
             self._secret = file(secret_file_path).read()
         else:
             self._username, self._secret = self._credentials[1]
@@ -157,7 +157,6 @@ class AggregationRawdataGenerator(object):
             return AggregationData(None, self._config, str(e))
         except requests.exceptions.RequestException as e:
             return AggregationData(None, self._config, "Request Error %s" % e)
-
 
     def _fetch_aggregation_data(self):
         response = requests.post(
@@ -238,6 +237,7 @@ def main():
         sys.stderr.write("%s" % e)
         return 1
     return 0
+
 
 if __name__ == "__main__":
     sys.exit(main())

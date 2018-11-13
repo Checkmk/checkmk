@@ -690,6 +690,7 @@ telegram_list = {
   </ns1:RetrievePropertiesEx>"""
 }
 
+
 def put_in_envelope(payload):
     return '<SOAP-ENV:Envelope xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/" '\
            'xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ZSI="http://www.zolera.com/schemas/ZSI/" '\
@@ -697,10 +698,12 @@ def put_in_envelope(payload):
            'xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">'\
            '<SOAP-ENV:Header></SOAP-ENV:Header><SOAP-ENV:Body xmlns:ns1="urn:vim25">' + payload + '</SOAP-ENV:Body></SOAP-ENV:Envelope>'
 
+
 def convert_hostname(h):
     if opt_spaces == "cut":
         return h.split()[0]
     return h.replace(" ", "_")
+
 
 def get_counters(esx_version_num):
     needed_ids = [
@@ -732,32 +735,39 @@ def get_counters(esx_version_num):
         #  'disk.totalWriteLatency': 131089,
         #  'disk.usage': 131073,
         # datastore counters
-#  'datastore.datastoreIops': 655367,
-#  'datastore.datastoreMaxQueueDepth': 655376,
-#  'datastore.datastoreNormalReadLatency': 655372,
-#  'datastore.datastoreNormalWriteLatency': 655373,
-#  'datastore.datastoreReadBytes': 655368,
-#  'datastore.datastoreReadIops': 655370,
-#  'datastore.datastoreReadLoadMetric': 655377,
-#  'datastore.datastoreReadOIO': 655374,
-#  'datastore.datastoreWriteBytes': 655369,
-#  'datastore.datastoreWriteIops': 655371,
-#  'datastore.datastoreWriteLoadMetric': 655378,
-#  'datastore.datastoreWriteOIO': 655375,
-#  'datastore.maxTotalLatency': 655379,
-#  'datastore.numberReadAveraged': 655360,
-#  'datastore.numberWriteAveraged': 655361,
-#  'datastore.read': 655362,
-#  'datastore.sizeNormalizedDatastoreLatency': 655366,
-#  'datastore.totalReadLatency': 655364,
-#  'datastore.totalWriteLatency': 655365,
-#  'datastore.write': 655363,
-        655362,655363,655370,655371,655366,
+        #  'datastore.datastoreIops': 655367,
+        #  'datastore.datastoreMaxQueueDepth': 655376,
+        #  'datastore.datastoreNormalReadLatency': 655372,
+        #  'datastore.datastoreNormalWriteLatency': 655373,
+        #  'datastore.datastoreReadBytes': 655368,
+        #  'datastore.datastoreReadIops': 655370,
+        #  'datastore.datastoreReadLoadMetric': 655377,
+        #  'datastore.datastoreReadOIO': 655374,
+        #  'datastore.datastoreWriteBytes': 655369,
+        #  'datastore.datastoreWriteIops': 655371,
+        #  'datastore.datastoreWriteLoadMetric': 655378,
+        #  'datastore.datastoreWriteOIO': 655375,
+        #  'datastore.maxTotalLatency': 655379,
+        #  'datastore.numberReadAveraged': 655360,
+        #  'datastore.numberWriteAveraged': 655361,
+        #  'datastore.read': 655362,
+        #  'datastore.sizeNormalizedDatastoreLatency': 655366,
+        #  'datastore.totalReadLatency': 655364,
+        #  'datastore.totalWriteLatency': 655365,
+        #  'datastore.write': 655363,
+        655362,
+        655363,
+        655370,
+        655371,
+        655366,
 
         # disk.read/write/deviceLatency/numberRead/numberWrite
-        131078, 131079, 131091, 131076, 131077,
+        131078,
+        131079,
+        131091,
+        131076,
+        131077,
     ]
-
 
     #needed_ids = [
     #    # sys.resourceMem*
@@ -774,11 +784,26 @@ def get_counters(esx_version_num):
     if esx_version_num > 4.1:
         needed_ids += [
             # net.*
-            196616, 196621, 196617, 196625, 196619, 196623, 196609, 196614,
-            196620, 196624, 196615, 196622, 196618, 196612, 196613, 196626,
+            196616,
+            196621,
+            196617,
+            196625,
+            196619,
+            196623,
+            196609,
+            196614,
+            196620,
+            196624,
+            196615,
+            196622,
+            196618,
+            196612,
+            196613,
+            196626,
         ]
 
     return needed_ids
+
 
 def usage():
     sys.stderr.write("""Check_MK vSphere Agent
@@ -843,38 +868,39 @@ OPTIONS:
                                                         * vCenter : show on vCenter
 """)
 
+
 short_options = "hi:u:s:Dat:H:Pp:S:"
-long_options  = [
+long_options = [
     "help", "user=", "secret=", "direct", "agent", "debug", "modules=", "timeout=", "no-cert-check",
-    "hostname=", "tracefile=", "pysphere", "port=", "spaces=", "host_pwr_display=", "vm_pwr_display=",
-    "snapshot_display=", "vm_piggyname="
+    "hostname=", "tracefile=", "pysphere", "port=", "spaces=", "host_pwr_display=",
+    "vm_pwr_display=", "snapshot_display=", "vm_piggyname="
 ]
 
-opt_debug               = False
-opt_direct              = False
-opt_agent               = False
-opt_timeout             = 60
-opt_port                = 443
-opt_hostname            = None
+opt_debug = False
+opt_direct = False
+opt_agent = False
+opt_timeout = 60
+opt_port = 443
+opt_hostname = None
 opt_skip_placeholder_vm = False
-opt_pysphere            = False
-opt_tracefile           = None
-opt_host_pwr_display    = None
-opt_vm_pwr_display      = None
-opt_snapshot_display    = None
-opt_vm_piggyname        = "alias"
-opt_spaces              = "underscore"
-opt_no_cert             = False
+opt_pysphere = False
+opt_tracefile = None
+opt_host_pwr_display = None
+opt_vm_pwr_display = None
+opt_snapshot_display = None
+opt_vm_piggyname = "alias"
+opt_spaces = "underscore"
+opt_no_cert = False
 
 win_agent_output = ""
 error = None
 error_exit = 1
 
-host_address  = None
-user          = None
-secret        = None
-tracefile     = None
-query_objects = [ 'hostsystem', 'virtualmachine', 'datastore', 'counters', 'licenses' ]
+host_address = None
+user = None
+secret = None
+tracefile = None
+query_objects = ['hostsystem', 'virtualmachine', 'datastore', 'counters', 'licenses']
 
 try:
     opts, args = getopt.getopt(sys.argv[1:], short_options, long_options)
@@ -882,55 +908,54 @@ except getopt.GetoptError, err:
     sys.stderr.write("%s\n" % err)
     sys.exit(1)
 
-for o,a in opts:
-    if o in [ '--debug' ]:
+for o, a in opts:
+    if o in ['--debug']:
         opt_debug = True
-    elif o in [ '--tracefile' ]:
+    elif o in ['--tracefile']:
         opt_tracefile = a
-    elif o in [ '-D', '--direct' ]:
+    elif o in ['-D', '--direct']:
         opt_direct = True
-    elif o in [ '-a', '--agent' ]:
+    elif o in ['-a', '--agent']:
         opt_agent = True
     elif o == '-P':
         opt_skip_placeholder_vm = True
-    elif o in [ '-p', '--port' ]:
+    elif o in ['-p', '--port']:
         opt_port = a
-    elif o in [ '--no-cert-check' ]:
+    elif o in ['--no-cert-check']:
         opt_no_cert = True
     elif o == '--pysphere':
         opt_pysphere = True
-    elif o in [ '-u', '--user' ]:
+    elif o in ['-u', '--user']:
         user = a
-    elif o in [ '-s', '--secret' ]:
+    elif o in ['-s', '--secret']:
         secret = a
-    elif o in [ '-i', '--modules' ]:
+    elif o in ['-i', '--modules']:
         query_objects = a.split(',')
-    elif o in [ '-t', '--timeout' ]:
+    elif o in ['-t', '--timeout']:
         opt_timeout = int(a)
-    elif o in [ '-H', '--hostname' ]:
+    elif o in ['-H', '--hostname']:
         opt_hostname = a
-    elif o in [ '--vm_piggyname' ]:
+    elif o in ['--vm_piggyname']:
         opt_vm_piggyname = a
-    elif o in [ '--vm_pwr_display' ]:
+    elif o in ['--vm_pwr_display']:
         opt_vm_pwr_display = a
-    elif o in [ '--host_pwr_display' ]:
+    elif o in ['--host_pwr_display']:
         opt_host_pwr_display = a
-    elif o in [ '--snapshot_display' ]:
+    elif o in ['--snapshot_display']:
         opt_snapshot_display = a
-    elif o in [ '-S', '--spaces']:
-        if a not in [ "cut", "underscore" ]:
+    elif o in ['-S', '--spaces']:
+        if a not in ["cut", "underscore"]:
             usage()
             sys.exit(1)
         opt_spaces = a
-    elif o in [ '-h', '--help' ]:
+    elif o in ['-h', '--help']:
         usage()
         sys.exit(0)
-
 
 # If the --pysphere option is set we use the legacy pysphere agent, though 50 times slower...
 if opt_pysphere:
     path_vsphere_pysphere = os.path.dirname(os.path.abspath(__file__))
-    cmd = [ "%s/agent_vsphere.pysphere" % path_vsphere_pysphere ]
+    cmd = ["%s/agent_vsphere.pysphere" % path_vsphere_pysphere]
     import subprocess
     p = subprocess.Popen(cmd + sys.argv[1:], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
     out, err = p.communicate()
@@ -949,8 +974,9 @@ else:
     sys.stderr.write("ERROR: Please specify exactly one host.\n")
     sys.exit(1)
 
-
 vsphere_output = []
+
+
 def output(line):
     vsphere_output.append(line)
 
@@ -966,6 +992,8 @@ def write_output(vsphere_output, opt_agent, host):
 
 
 socket.setdefaulttimeout(opt_timeout)
+
+
 def get_agent_info_tcp(hostname):
     response = ""
     try:
@@ -980,7 +1008,7 @@ def get_agent_info_tcp(hostname):
         try:
             s.settimeout(opt_timeout)
         except:
-            pass # some old Python versions lack settimeout(). Better ignore than fail
+            pass  # some old Python versions lack settimeout(). Better ignore than fail
         s.connect((ipaddress, 6556))
         try:
             s.setblocking(1)
@@ -1003,17 +1031,17 @@ def get_agent_info_tcp(hostname):
 
 # Globals of ESX System. These settings are available after the first "systeminfo" query
 systemfields = [
- "apiVersion",
- "name",
- "rootFolder",
- "perfManager",
- "sessionManager",
- "licenseManager",
- "propertyCollector",
- "version",
- "build",
- "vendor",
- "osType",
+    "apiVersion",
+    "name",
+    "rootFolder",
+    "perfManager",
+    "sessionManager",
+    "licenseManager",
+    "propertyCollector",
+    "version",
+    "build",
+    "vendor",
+    "osType",
 ]
 
 systeminfo = {}
@@ -1035,24 +1063,27 @@ def create_search_pattern(tokens):
         pattern_elements.append("<%(token)s>(.*?)</%(token)s>" % {"token": token})
     return ".*?".join(pattern_elements)
 
+
 def get_pattern(pattern, line):
     if not line:
         return []
     p = re.compile(pattern, re.MULTILINE)
     return p.findall(line)
 
+
 if tracefile:
     tracefile.write("Tracefile %s Host address: %s\n" %
                     (datetime.datetime.now().strftime("%Y-%m-%d %H:%M"), host_address))
 
-
-host_cookie_path        = None
+host_cookie_path = None
 last_cookie_access_time = None
-server_cookie           = None
-server_handle           = None
+server_cookie = None
+server_handle = None
+
 
 class MKQueryServerException(Exception):
     pass
+
 
 # Cookie storage is only available in OMD setups
 if "OMD_SITE" in os.environ:
@@ -1083,10 +1114,11 @@ def query_server(payload, payload_params=None):
         server_handle.putheader("Content-Length", "%d" % len(soapdata))
         server_handle.putheader("Content-Type", 'text/xml; charset="utf-8"')
         server_handle.putheader("SOAPAction", "urn:vim25/5.0")
-        server_handle.putheader("User-Agent", "VMware VI Client/5.0.0") # TODO: set client version?
+        server_handle.putheader("User-Agent", "VMware VI Client/5.0.0")  # TODO: set client version?
         if server_cookie:
             server_handle.putheader("Cookie", server_cookie)
         server_handle.endheaders()
+
     init_headers(soapdata)
 
     response_data = []
@@ -1098,7 +1130,7 @@ def query_server(payload, payload_params=None):
         if "NotAuthenticatedFault" in text:
             raise MKQueryServerException("No longer authenticated")
 
-    response  = server_handle.getresponse()
+    response = server_handle.getresponse()
     response_data.append(response.read())
 
     check_not_authenticated(response_data[0][:512])
@@ -1113,12 +1145,11 @@ def query_server(payload, payload_params=None):
             soapdata = put_in_envelope(telegram_list["continuetoken"]) % payload_params
             init_headers(soapdata)
             server_handle.send(soapdata)
-            response  = server_handle.getresponse()
+            response = server_handle.getresponse()
             response_data.append(response.read())
             check_not_authenticated(response_data[-1][:512])
         else:
             break
-
 
     time_response = time.time()
 
@@ -1131,11 +1162,8 @@ def query_server(payload, payload_params=None):
 
 
 def encode_url(text):
-    for char, replacement in [ ( "&",  "&amp;"),
-                               ( ">",  "&gt;" ),
-                               ( "<",  "&lt;"),
-                               ( "'",  "&apos;"),
-                               ( "\"", "&quot;") ]:
+    for char, replacement in [("&", "&amp;"), (">", "&gt;"), ("<", "&lt;"), ("'", "&apos;"),
+                              ("\"", "&quot;")]:
         text = text.replace(char, replacement)
     return text
 
@@ -1149,7 +1177,8 @@ def connect_to_server():
         if opt_no_cert:
             try:
                 import ssl
-                server_handle = httplib.HTTPSConnection(netloc, context = ssl._create_unverified_context())
+                server_handle = httplib.HTTPSConnection(
+                    netloc, context=ssl._create_unverified_context())
             except:
                 server_handle = httplib.HTTPSConnection(netloc)
         else:
@@ -1173,9 +1202,9 @@ def retrieve_systeminfo():
     payload = telegram_list["systeminfo"]
     _reply_code, _reply_msg, _reply_headers, reply_data = query_server(payload)
     for entry in systemfields:
-         element = get_pattern("<%(entry)s.*>(.*)</%(entry)s>" % { "entry": entry }, reply_data)
-         if element:
-             systeminfo[entry] = element[0]
+        element = get_pattern("<%(entry)s.*>(.*)</%(entry)s>" % {"entry": entry}, reply_data)
+        if element:
+            systeminfo[entry] = element[0]
 
 
 def login():
@@ -1246,7 +1275,7 @@ connect_to_server()
 retrieve_systeminfo()
 
 if not systeminfo:
-    sys.stderr.write("Unable to get data from Web API"+ "\n")
+    sys.stderr.write("Unable to get data from Web API" + "\n")
     sys.exit(1)
 
 # The cookie access time is required to determine the agents check interval
@@ -1254,7 +1283,7 @@ if not systeminfo:
 # interval we need more or less real-time samples
 if host_cookie_path and os.path.exists(host_cookie_path):
     last_cookie_access_time = os.stat(host_cookie_path).st_mtime
-    os.utime(host_cookie_path, None) # Touch the cookie file, whenever it is accessed
+    os.utime(host_cookie_path, None)  # Touch the cookie file, whenever it is accessed
 
 login()
 
@@ -1275,8 +1304,11 @@ if not error:
             #############################
             hostsystems = {}
 
-            reply_code, reply_msg, reply_headers, hostsystems_response = query_server(telegram_list["hostsystems"])
-            elements = get_pattern('<obj type="HostSystem">(.*?)</obj>.*?<val xsi:type="xsd:string">(.*?)</val>', hostsystems_response)
+            reply_code, reply_msg, reply_headers, hostsystems_response = query_server(
+                telegram_list["hostsystems"])
+            elements = get_pattern(
+                '<obj type="HostSystem">(.*?)</obj>.*?<val xsi:type="xsd:string">(.*?)</val>',
+                hostsystems_response)
 
             # On some ESX systems the cookie login does not work as expected, when the agent_vsphere
             # is called only once or twice a day. The cookie is somehow outdated, but there is no authentification
@@ -1293,26 +1325,29 @@ if not error:
             # Licenses
             ###########################
             if "licenses" in query_objects:
-                reply_code, reply_msg, reply_headers, licenses_response = query_server(telegram_list["licensesused"])
+                reply_code, reply_msg, reply_headers, licenses_response = query_server(
+                    telegram_list["licensesused"])
 
                 output("<<<esx_vsphere_licenses:sep(9)>>>")
-                root_node     = minidom.parseString(licenses_response)
+                root_node = minidom.parseString(licenses_response)
                 licenses_node = root_node.getElementsByTagName("LicenseManagerLicenseInfo")
                 for license_node in licenses_node:
                     total = license_node.getElementsByTagName("total")[0].firstChild.data
                     if total == "0":
                         continue
-                    name  = license_node.getElementsByTagName("name")[0].firstChild.data
-                    used  = license_node.getElementsByTagName("used")[0].firstChild.data
+                    name = license_node.getElementsByTagName("name")[0].firstChild.data
+                    used = license_node.getElementsByTagName("used")[0].firstChild.data
                     output("%s\t%s %s" % (name, used, total))
-
 
             ###########################
             # Datastores
             ###########################
-            datastores = {} # We need the datastore info later on in the virtualmachines and counter sections
-            reply_code, reply_msg, reply_headers, datastores_response = query_server(telegram_list["datastores"])
-            elements = get_pattern('<objects><obj type="Datastore">(.*?)</obj>(.*?)</objects>', datastores_response)
+            datastores = {
+            }  # We need the datastore info later on in the virtualmachines and counter sections
+            reply_code, reply_msg, reply_headers, datastores_response = query_server(
+                telegram_list["datastores"])
+            elements = get_pattern('<objects><obj type="Datastore">(.*?)</obj>(.*?)</objects>',
+                                   datastores_response)
             for datastore, content in elements:
                 entries = get_pattern('<name>(.*?)</name><val xsi:type.*?>(.*?)</val>', content)
                 datastores[datastore] = {}
@@ -1337,16 +1372,21 @@ if not error:
                 # TODO: get this info from the vcenter
                 net_extra_info = []
                 if opt_direct:
-                    reply_code, reply_msg, reply_headers, networksystem_response = query_server(telegram_list["networksystem"])
+                    reply_code, reply_msg, reply_headers, networksystem_response = query_server(
+                        telegram_list["networksystem"])
                     nic_objects = get_pattern('<pnic><key>(.*?)</pnic>', networksystem_response)
                     for nic in nic_objects:
-                        nic_if = get_pattern('(.*?)</key><device>(.*?)</device>(.*)<mac>(.*?)</mac>', nic)
+                        nic_if = get_pattern(
+                            '(.*?)</key><device>(.*?)</device>(.*)<mac>(.*?)</mac>', nic)
                         try:
                             bandwidth_block = nic_if[0][2]
-                            bandwidth = get_pattern('</driver><linkSpeed><speedMb>(.*?)</speedMb>', bandwidth_block)
-                            net_extra_info.append("net.macaddress|%s|%s|mac" % (nic_if[0][1], nic_if[0][3]))
+                            bandwidth = get_pattern('</driver><linkSpeed><speedMb>(.*?)</speedMb>',
+                                                    bandwidth_block)
+                            net_extra_info.append(
+                                "net.macaddress|%s|%s|mac" % (nic_if[0][1], nic_if[0][3]))
                             if bandwidth:
-                                net_extra_info.append("net.bandwidth|%s|%s|bytes" % (nic_if[0][1], int(bandwidth[0]) * 1000000))
+                                net_extra_info.append("net.bandwidth|%s|%s|bytes" %
+                                                      (nic_if[0][1], int(bandwidth[0]) * 1000000))
                                 net_extra_info.append("net.state|%s|1|state" % nic_if[0][1])
                             else:
                                 net_extra_info.append("net.state|%s|2|state" % nic_if[0][1])
@@ -1355,7 +1395,7 @@ if not error:
 
                 # Get counter syntax
                 counter_syntax_payload = telegram_list["perfcountersyntax"]
-                needed_ids             = get_counters(systeminfo["apiVersion"])
+                needed_ids = get_counters(systeminfo["apiVersion"])
                 counter_data = []
                 for entry in needed_ids:
                     counter_data.append("<ns1:counterId>%s</ns1:counterId>" % entry)
@@ -1368,8 +1408,7 @@ if not error:
                                        '<key>(.*?)</key>.*?<key>(.*?)</key>.*?', counters_syntax_response)
 
                 for key, nameInfo, groupInfo, unitInfo in elements:
-                    counters_syntax[key] = { "name": nameInfo, "group": groupInfo, "unit": unitInfo }
-
+                    counters_syntax[key] = {"name": nameInfo, "group": groupInfo, "unit": unitInfo}
 
                 # Determine the needed number of real-time samples
                 # One real-time sample is 20 seconds -> With a check interval of 1 minute we need the last 3 samples
@@ -1390,18 +1429,22 @@ if not error:
                     ### TODO: check if this host supports perfdata
                     ### TODO: try to get esx hosts perfdata from vCenter
                     counter_avail = telegram_list["perfcounteravail"]
-                    reply_code, reply_msg, reply_headers, counter_avail_response = query_server(counter_avail, payload_params = { "esxhost": host })
+                    reply_code, reply_msg, reply_headers, counter_avail_response = query_server(
+                        counter_avail, payload_params={"esxhost": host})
 
-                    counters_avail  = {}
+                    counters_avail = {}
                     p = re.compile("<counterId>([0-9]*)</counterId><instance>([^<]*)")
-                    elements = get_pattern("<counterId>([0-9]*)</counterId><instance>([^<]*)", counter_avail_response)
+                    elements = get_pattern("<counterId>([0-9]*)</counterId><instance>([^<]*)",
+                                           counter_avail_response)
                     for counter, instance in elements:
                         counters_avail.setdefault(counter, []).append(instance)
 
                     counter_data = []
                     for entry in needed_ids:
                         for instance in counters_avail.get(entry, []):
-                            counter_data.append("<ns1:metricId><ns1:counterId>%d</ns1:counterId><ns1:instance>%s</ns1:instance></ns1:metricId>" % (entry, instance))
+                            counter_data.append(
+                                "<ns1:metricId><ns1:counterId>%d</ns1:counterId><ns1:instance>%s</ns1:instance></ns1:metricId>"
+                                % (entry, instance))
                     counters_value = {}
                     reply_code, reply_msg, reply_headers, counter_data_response = \
                         query_server(counter_data_payload, payload_params = { "esxhost": host, "counters": "".join(counter_data), "samples": max_samples })
@@ -1410,23 +1453,30 @@ if not error:
                     # This is a perfect candidate for "Catastrophic Backtracking" :)
                     # Someday we should replace all of these get_pattern calls with
                     # one of these new and fancy xml parsers I've heard from
-                    elements = get_pattern("<id><counterId>(.*?)</counterId><instance>(.*?)</instance></id>(%s)" % ("<value>.*?</value>" * max_samples), counter_data_response)
+                    elements = get_pattern(
+                        "<id><counterId>(.*?)</counterId><instance>(.*?)</instance></id>(%s)" %
+                        ("<value>.*?</value>" * max_samples), counter_data_response)
                     for entry in elements:
                         counter, instance, valuestring = entry
                         values = get_pattern("<value>(.*?)</value>", valuestring)
                         if counter in counters_syntax:
-                            counters_value["%s.%s" % (counter, instance)] = { "id": counter, "instance": instance, "value": "#".join(values)}
+                            counters_value["%s.%s" % (counter, instance)] = {
+                                "id": counter,
+                                "instance": instance,
+                                "value": "#".join(values)
+                            }
 
                     output("<<<esx_vsphere_counters:sep(124)>>>")
                     counters_output = {}
                     for key in sorted(counters_value.keys()):
                         value = counters_value[key]
-                        desc  = counters_syntax[value["id"]]
-                        counters_output[ (desc["group"], desc["name"], value["instance"]) ] = ( value["value"], desc["unit"] )
+                        desc = counters_syntax[value["id"]]
+                        counters_output[(desc["group"], desc["name"],
+                                         value["instance"])] = (value["value"], desc["unit"])
 
                     # Add datastore name to counters
                     for key, values in datastores.items():
-                        counters_output[ ("datastore", "name", key) ] = (values.get("name"), "string")
+                        counters_output[("datastore", "name", key)] = (values.get("name"), "string")
 
                     for key in sorted(counters_output.keys()):
                         value = counters_output[key]
@@ -1443,50 +1493,67 @@ if not error:
             ###########################
             if "hostsystem" in query_objects:
                 hostsystems_properties = {}
-                hostsystems_sensors    = {}
-
+                hostsystems_sensors = {}
 
                 # Propsets
-                reply_code, reply_msg, reply_headers, esxhostdetails_response = query_server(telegram_list["esxhostdetails"])
-                hostsystems_objects = get_pattern('<objects>(.*?)</objects>', esxhostdetails_response)
+                reply_code, reply_msg, reply_headers, esxhostdetails_response = query_server(
+                    telegram_list["esxhostdetails"])
+                hostsystems_objects = get_pattern('<objects>(.*?)</objects>',
+                                                  esxhostdetails_response)
 
                 for entry in hostsystems_objects:
                     hostname = get_pattern('<obj type="HostSystem">(.*)</obj>', entry[:512])[0]
                     hostsystems_properties[hostname] = {}
-                    hostsystems_sensors[hostname]    = {}
+                    hostsystems_sensors[hostname] = {}
 
                     current_propname = ""
 
                     def eval_sensor_info(hostname, current_propname, sensor_propset):
                         sensor_pattern = ""
-                        for key in [ "name", "label", "summary", "key", "currentReading",
-                                     "unitModifier", "baseUnits", "sensorType" ]:
-                            sensor_pattern += "<%(name)s>(.*?)</%(name)s>.*?" % { "name": key}
+                        for key in [
+                                "name", "label", "summary", "key", "currentReading", "unitModifier",
+                                "baseUnits", "sensorType"
+                        ]:
+                            sensor_pattern += "<%(name)s>(.*?)</%(name)s>.*?" % {"name": key}
 
                         sensor_data = get_pattern(sensor_pattern, sensor_propset)
                         for name, label, summary, key, currentReading, unitModifier, baseUnits, sensorType in sensor_data:
-                            hostsystems_sensors[hostname][name] = { "name": name, "label": label, "summary": summary, "key": key,
-                                                                    "currentReading": currentReading, "unitModifier": unitModifier,
-                                                                    "baseUnits": baseUnits, "sensorType": sensorType }
+                            hostsystems_sensors[hostname][name] = {
+                                "name": name,
+                                "label": label,
+                                "summary": summary,
+                                "key": key,
+                                "currentReading": currentReading,
+                                "unitModifier": unitModifier,
+                                "baseUnits": baseUnits,
+                                "sensorType": sensorType
+                            }
 
                     def eval_hardwarestatus_info(hostname, current_propname, sensor_propset):
                         sensor_pattern = ""
-                        for key in [ "name", "label", "summary", "key" ]:
-                            sensor_pattern += "<%(name)s>(.*?)</%(name)s>.*?" % { "name": key}
+                        for key in ["name", "label", "summary", "key"]:
+                            sensor_pattern += "<%(name)s>(.*?)</%(name)s>.*?" % {"name": key}
 
                         sensor_data = get_pattern(sensor_pattern, sensor_propset)
                         for name, label, summary, key in sensor_data:
-                            hostsystems_sensors[hostname][name] = { "name": name, "label": label, "summary": summary, "key": key }
+                            hostsystems_sensors[hostname][name] = {
+                                "name": name,
+                                "label": label,
+                                "summary": summary,
+                                "key": key
+                            }
 
                     def eval_multipath_state(hostname, current_propname, multipath_propset):
-                        multipaths = get_pattern("<name>(.*?)</name><pathState>(.*?)</pathState>", value)
+                        multipaths = get_pattern("<name>(.*?)</name><pathState>(.*?)</pathState>",
+                                                 value)
                         for mp_name, mp_state in multipaths:
-                            hostsystems_properties[hostname].setdefault(current_propname, []).append("%s %s" % (mp_name, mp_state))
+                            hostsystems_properties[hostname].setdefault(
+                                current_propname, []).append("%s %s" % (mp_name, mp_state))
 
                     def eval_propset_block(hostname, current_propname, elements, id_key, propset):
                         pattern = ""
                         for key in elements:
-                            pattern += "<%(name)s>(.*?)</%(name)s>.*?" % { "name": key}
+                            pattern += "<%(name)s>(.*?)</%(name)s>.*?" % {"name": key}
 
                         data = get_pattern(pattern, propset)
                         for match_groups in data:
@@ -1496,13 +1563,18 @@ if not error:
                                     (current_propname, key, entries[id_key]), []).append(value)
 
                     def eval_cpu_pkg(hostname, current_propname, cpu_pkg_propset):
-                        eval_propset_block(hostname, current_propname, [ "index", "vendor", "hz", "busHz", "description" ], "index", cpu_pkg_propset)
+                        eval_propset_block(hostname, current_propname,
+                                           ["index", "vendor", "hz", "busHz", "description"],
+                                           "index", cpu_pkg_propset)
 
                     def eval_pci_device(hostname, current_propname, pci_propset):
-                        eval_propset_block(hostname, current_propname, [ "id", "vendorName", "deviceName" ], "id", pci_propset)
+                        eval_propset_block(hostname, current_propname,
+                                           ["id", "vendorName", "deviceName"], "id", pci_propset)
 
                     def eval_systeminfo_other(hostname, current_propname, otherinfo_propset):
-                        data       = get_pattern("<identifierValue>(.*?)</identifierValue>.*?<key>(.*?)</key>", otherinfo_propset)
+                        data = get_pattern(
+                            "<identifierValue>(.*?)</identifierValue>.*?<key>(.*?)</key>",
+                            otherinfo_propset)
                         keys_index = {}
 
                         for value, key in data:
@@ -1510,26 +1582,31 @@ if not error:
                             if key in keys_index:
                                 keys_index[key] = keys_index[key] + 1
                                 idx = keys_index[key]
-                            hostsystems_properties[hostname]["hardware.systemInfo.otherIdentifyingInfo.%s.%d" % (key, idx)] = [ value ]
+                            hostsystems_properties[hostname][
+                                "hardware.systemInfo.otherIdentifyingInfo.%s.%d" % (key, idx)] = [
+                                    value
+                                ]
                             keys_index[key] = idx
 
                     eval_functions = {
-                        "config.multipathState.path"                                      : eval_multipath_state,
-                        "runtime.healthSystemRuntime.systemHealthInfo.numericSensorInfo"  : eval_sensor_info,
+                        "config.multipathState.path": eval_multipath_state,
+                        "runtime.healthSystemRuntime.systemHealthInfo.numericSensorInfo": eval_sensor_info,
                         "runtime.healthSystemRuntime.hardwareStatusInfo.storageStatusInfo": eval_hardwarestatus_info,
-                        "runtime.healthSystemRuntime.hardwareStatusInfo.cpuStatusInfo"    : eval_hardwarestatus_info,
-                        "runtime.healthSystemRuntime.hardwareStatusInfo.memoryStatusInfo" : eval_hardwarestatus_info,
-                        "hardware.cpuPkg"                                                 : eval_cpu_pkg,
-                        "hardware.pciDevice"                                              : eval_pci_device,
-                        "hardware.systemInfo.otherIdentifyingInfo"                        : eval_systeminfo_other,
+                        "runtime.healthSystemRuntime.hardwareStatusInfo.cpuStatusInfo": eval_hardwarestatus_info,
+                        "runtime.healthSystemRuntime.hardwareStatusInfo.memoryStatusInfo": eval_hardwarestatus_info,
+                        "hardware.cpuPkg": eval_cpu_pkg,
+                        "hardware.pciDevice": eval_pci_device,
+                        "hardware.systemInfo.otherIdentifyingInfo": eval_systeminfo_other,
                     }
 
-                    elements = get_pattern('<propSet><name>(.*?)</name><val.*?>(.*?)</val></propSet>', entry)
+                    elements = get_pattern(
+                        '<propSet><name>(.*?)</name><val.*?>(.*?)</val></propSet>', entry)
                     for current_propname, value in elements:
                         if eval_functions.get(current_propname):
                             eval_functions[current_propname](hostname, current_propname, value)
                         else:
-                            hostsystems_properties[hostname].setdefault(current_propname, []).append(value)
+                            hostsystems_properties[hostname].setdefault(current_propname,
+                                                                        []).append(value)
 
                 # TODO: improve error handling: check if multiple results and opt_direct
                 for hostname, properties in hostsystems_properties.items():
@@ -1545,17 +1622,11 @@ if not error:
                         data = hostsystems_sensors[hostname][key]
                         if data["key"].lower() in ["green", "unknown"]:
                             continue
-                        output('%s;%s;%s;%s;%s;%s;%s;%s;%s' % (
-                                        data["name"].replace(";", "_"),
-                                        data.get("baseUnits", ""),
-                                        data.get("currentReading", ""),
-                                        data.get("sensorType", ""),
-                                        data.get("unitModifier", ""),
-                                        data.get("rateUnits", ""),
-                                        data["key"],
-                                        data["label"],
-                                        data["summary"].replace(";", "_")))
-
+                        output('%s;%s;%s;%s;%s;%s;%s;%s;%s' %
+                               (data["name"].replace(";", "_"), data.get("baseUnits", ""),
+                                data.get("currentReading", ""), data.get("sensorType", ""),
+                                data.get("unitModifier", ""), data.get("rateUnits", ""),
+                                data["key"], data["label"], data["summary"].replace(";", "_")))
 
             ###########################
             # Virtual machines
@@ -1571,49 +1642,54 @@ if not error:
                     return False
 
                 # <objects><propSet><name>...</name><val ..>...</val></propSet></objects>
-                reply_code, reply_msg, reply_headers, vmdetails_response = query_server(telegram_list["vmdetails"])
+                reply_code, reply_msg, reply_headers, vmdetails_response = query_server(
+                    telegram_list["vmdetails"])
 
                 elements = get_pattern("<objects>(.*?)</objects>", vmdetails_response)
                 for entry in elements:
                     vm_data = dict(get_pattern("<name>(.*?)</name><val.*?>(.*?)</val>", entry))
-                    if opt_skip_placeholder_vm and is_placeholder_vm(vm_data.get("config.hardware.device")):
+                    if opt_skip_placeholder_vm and is_placeholder_vm(
+                            vm_data.get("config.hardware.device")):
                         continue
 
                     if "runtime.host" in vm_data:
-                        vm_data["runtime.host"] = hostsystems.get(vm_data["runtime.host"], vm_data["runtime.host"])
+                        vm_data["runtime.host"] = hostsystems.get(vm_data["runtime.host"],
+                                                                  vm_data["runtime.host"])
 
                     vm_esx_host.setdefault(vm_data["runtime.host"], []).append(vm_data["name"])
-
 
                     def eval_virtual_device(info):
                         response = []
                         virtual_devices = get_pattern("<VirtualDevice (.*?)</VirtualDevice>", info)
-                        show_fields = ["label", "summary", "startConnected", "allowGuestControl", "connected", "status"]
+                        show_fields = [
+                            "label", "summary", "startConnected", "allowGuestControl", "connected",
+                            "status"
+                        ]
                         search_pattern = create_search_pattern(show_fields)
                         for virtual_device in virtual_devices:
-                            type_info   = get_pattern("type=\"(.*?)\"", virtual_device)
+                            type_info = get_pattern("type=\"(.*?)\"", virtual_device)
                             device_info = get_pattern(search_pattern, virtual_device)
                             if device_info:
-                                response.append("virtualDeviceType %s|%s" %
-                                                (type_info[0],
-                                                 "|".join("%s %s" % x  for x in zip(show_fields, device_info[0])))
-                                               )
+                                response.append("virtualDeviceType %s|%s" % (type_info[0], "|".join(
+                                    "%s %s" % x for x in zip(show_fields, device_info[0]))))
 
                         return "@@".join(response)
 
-
                     def eval_snapshot_list(info):
                         response = []
-                        snapshot_info = get_pattern("<name>(.*?)</name>.*?<id>(.*?)</id><createTime>(.*?)</createTime><state>(.*?)</state>", info)
+                        snapshot_info = get_pattern(
+                            "<name>(.*?)</name>.*?<id>(.*?)</id><createTime>(.*?)</createTime><state>(.*?)</state>",
+                            info)
                         for entry in snapshot_info:
                             try:
                                 # 2013-11-06T15:39:39.347543Z
-                                creation_time = int(time.mktime(time.strptime(entry[2][:19], "%Y-%m-%dT%H:%M:%S")))
+                                creation_time = int(
+                                    time.mktime(time.strptime(entry[2][:19], "%Y-%m-%dT%H:%M:%S")))
                             except:
                                 creation_time = 0
-                            response.append("%s %s %s %s" % (entry[1], creation_time, entry[3], entry[0].replace("|", " ")))
+                            response.append("%s %s %s %s" % (entry[1], creation_time, entry[3],
+                                                             entry[0].replace("|", " ")))
                         return "|".join(response)
-
 
                     def eval_datastores(info):
                         datastore_urls = get_pattern("<name>(.*?)</name><url>(.*?)</url>", info)
@@ -1634,9 +1710,9 @@ if not error:
                         return "@@".join(response)
 
                     transform_functions = {
-                        "snapshot.rootSnapshotList" : eval_snapshot_list,
-                        "config.datastoreUrl"       : eval_datastores,
-                        "config.hardware.device"    : eval_virtual_device,
+                        "snapshot.rootSnapshotList": eval_snapshot_list,
+                        "config.datastoreUrl": eval_datastores,
+                        "config.hardware.device": eval_virtual_device,
                     }
                     for key, transform in transform_functions.items():
                         if key in vm_data:
@@ -1646,7 +1722,6 @@ if not error:
                         vms[vm_data.get("summary.guest.hostName")] = vm_data
                     else:
                         vms[vm_data.get("name")] = vm_data
-
 
                 for key in sorted(vms.keys()):
                     data = vms[key]
@@ -1664,39 +1739,53 @@ if not error:
             output("<<<<>>>>")
 
             if not opt_direct:
-                reply_code, reply_msg, reply_headers, response = query_server(telegram_list["datacenters"])
+                reply_code, reply_msg, reply_headers, response = query_server(
+                    telegram_list["datacenters"])
                 datacenters = get_pattern('<objects><obj type="Datacenter">(.*?)</obj>', response)
                 for datacenter in datacenters:
-                    reply_code, reply_msg, reply_headers, response = query_server(telegram_list["clustersofdatacenter"],
-                                                                                  payload_params = {"datacenter": datacenter} )
-                    clusters = get_pattern('<objects><obj type="ClusterComputeResource">(.*?)</obj>.*?string">(.*?)</val></propSet></objects>', response)
+                    reply_code, reply_msg, reply_headers, response = query_server(
+                        telegram_list["clustersofdatacenter"],
+                        payload_params={"datacenter": datacenter})
+                    clusters = get_pattern(
+                        '<objects><obj type="ClusterComputeResource">(.*?)</obj>.*?string">(.*?)</val></propSet></objects>',
+                        response)
 
                     output("<<<esx_vsphere_clusters:sep(9)>>>")
                     for cluster in clusters:
-                        reply_code, reply_msg, reply_headers, response = query_server(telegram_list["esxhostsofcluster"],
-                                                                                      payload_params = {"clustername": cluster[0]} )
+                        reply_code, reply_msg, reply_headers, response = query_server(
+                            telegram_list["esxhostsofcluster"],
+                            payload_params={"clustername": cluster[0]})
                         cluster_vms = []
-                        hosts = get_pattern('<objects><obj type="HostSystem">.*?string">(.*?)</val></propSet></objects>', response)
+                        hosts = get_pattern(
+                            '<objects><obj type="HostSystem">.*?string">(.*?)</val></propSet></objects>',
+                            response)
                         for host in hosts:
                             cluster_vms.extend(vm_esx_host.get(host, []))
-                        output("%s\thostsystems\t%s\t%s" % (datacenter, cluster[1], "\t".join(hosts)))
-                        output("%s\tvms\t%s\t%s" % (datacenter, cluster[1], "\t".join(map(convert_hostname, cluster_vms))))
+                        output(
+                            "%s\thostsystems\t%s\t%s" % (datacenter, cluster[1], "\t".join(hosts)))
+                        output("%s\tvms\t%s\t%s" % (datacenter, cluster[1], "\t".join(
+                            map(convert_hostname, cluster_vms))))
 
             output("<<<esx_vsphere_objects:sep(9)>>>")
 
             # the piggybacked data is printed later on, because it looks quite messy...
-            vm_piggy_data   = {}
+            vm_piggy_data = {}
             host_piggy_data = {}
 
             if "hostsystem" in query_objects:
-                if opt_host_pwr_display != "vm": # handled later on..
+                if opt_host_pwr_display != "vm":  # handled later on..
                     if opt_direct and opt_hostname:
                         for hostname, data in hostsystems_properties.items():
-                            output("hostsystem\t%s\t\t%s" % (opt_hostname, hostsystems_properties[hostname]["runtime.powerState"][0]))
+                            output("hostsystem\t%s\t\t%s" %
+                                   (opt_hostname,
+                                    hostsystems_properties[hostname]["runtime.powerState"][0]))
                     else:
                         for hostname, data in hostsystems_properties.items():
-                            converted_hostname = convert_hostname(hostsystems_properties[hostname]["name"][0])
-                            host_info = "hostsystem\t%s\t\t%s" % (converted_hostname, hostsystems_properties[hostname]["runtime.powerState"][0])
+                            converted_hostname = convert_hostname(
+                                hostsystems_properties[hostname]["name"][0])
+                            host_info = "hostsystem\t%s\t\t%s" % (
+                                converted_hostname,
+                                hostsystems_properties[hostname]["runtime.powerState"][0])
                             if opt_host_pwr_display == "esxhost" and not opt_direct:
                                 host_piggy_data.setdefault(converted_hostname, []).append(host_info)
                             output(host_info)
@@ -1705,7 +1794,8 @@ if not error:
                 for key in vms:
                     data = vms[key]
                     running_on = hostsystems.get(data.get("runtime.host"), data.get("runtime.host"))
-                    vm_info = "virtualmachine\t%s\t%s\t%s" % (convert_hostname(key), running_on, data.get("runtime.powerState"))
+                    vm_info = "virtualmachine\t%s\t%s\t%s" % (convert_hostname(key), running_on,
+                                                              data.get("runtime.powerState"))
 
                     if opt_vm_pwr_display == "vm":
                         vm_name = convert_hostname(key)
@@ -1715,6 +1805,7 @@ if not error:
                     output(vm_info)
 
             if "virtualmachine" in query_objects and "hostsystem" in query_objects and opt_host_pwr_display == "vm":
+
                 def find_host(hostname):
                     for key, value in hostsystems_properties.items():
                         if value.get("name")[0] == hostname:
@@ -1727,11 +1818,12 @@ if not error:
                     if not vm_host:
                         continue
 
-                    vm_info = "hostsystem\t%s\t\t%s" % (running_on, hostsystems_properties[vm_host]["runtime.powerState"][0])
+                    vm_info = "hostsystem\t%s\t\t%s" % (
+                        running_on, hostsystems_properties[vm_host]["runtime.powerState"][0])
                     vm_name = convert_hostname(key)
                     vm_piggy_data.setdefault(vm_name, []).append(vm_info)
 
-            for entries in [ host_piggy_data, vm_piggy_data ]:
+            for entries in [host_piggy_data, vm_piggy_data]:
                 for key, values in entries.items():
                     output("<<<<%s>>>>" % key)
                     output("<<<esx_vsphere_objects:sep(9)>>>")
@@ -1749,15 +1841,14 @@ if not error:
             # There was a problem during the query.
             # It is possible that the server cookie got invalid.
             # We are delete the cookie and start a second run
-            vsphere_output = []    # Reset current output
+            vsphere_output = []  # Reset current output
             delete_server_cookie()
             login()
-            continue # do a second run
+            continue  # do a second run
         except Exception, e:
             if opt_debug:
                 raise
             error = "Error while processing received data"
-
 
 write_output(vsphere_output, opt_agent, host_address)
 

@@ -33,17 +33,19 @@ server = sys.argv[1]
 user = sys.argv[2]
 password = sys.argv[3]
 
+
 def get_url(address):
     request = urllib2.Request(address)
     base64string = base64.encodestring('%s:%s' % (user, password)).replace('\n', '')
     request.add_header("Authorization", "Basic %s" % base64string)
     return urllib2.urlopen(request)
 
+
 def get_informations(name, xml_id, org_name):
     data_url = "/LOG0/CNT/mod_cmd.xml?cmd=xml-count&x="
-    address = "http://%s%s%s" % ( server, data_url, xml_id )
+    address = "http://%s%s%s" % (server, data_url, xml_id)
     c = False
-    for line in  etree.parse(get_url(address)).getroot():
+    for line in etree.parse(get_url(address)).getroot():
         for child in line:
             if child.get('c'):
                 c = child.get('c')
@@ -51,39 +53,41 @@ def get_informations(name, xml_id, org_name):
         print "<<<%s>>>" % name
         print org_name + " " + c
 
+
 def get_pri_channel(channel_name):
     data_url = "/%s/mod_cmd.xml" % channel_name
-    address = "http://%s%s" % ( server, data_url)
+    address = "http://%s%s" % (server, data_url)
     data = etree.parse(get_url(address)).getroot()
-    link =  data.get('link')
+    link = data.get('link')
     physical = data.get('physical')
     if link != "Up" or physical != "Up":
-        print "%s %s %s 0 0 0" % ( channel_name, link, physical )
+        print "%s %s %s 0 0 0" % (channel_name, link, physical)
         return
     idle = 0
     total = 0
-    for channel in  data.findall('ch'):
+    for channel in data.findall('ch'):
         if channel.get('state') == 'Idle':
             idle += 1
         total += 1
     total -= 1
-    print "%s %s %s %s %s" % ( channel_name, link, physical, idle, total)
+    print "%s %s %s %s %s" % (channel_name, link, physical, idle, total)
+
 
 def get_licenses():
     address = "http://%s/PBX0/ADMIN/mod_cmd_login.xml" % server
     data = etree.parse(get_url(address)).getroot()
-    for child in  data.findall('lic'):
+    for child in data.findall('lic'):
         if child.get('name') == "Port":
-            count =  child.get('count')
-            used =  child.get('used')
+            count = child.get('count')
+            used = child.get('used')
             print count, used
             break
 
 
 base_url = "/LOG0/CNT/mod_cmd.xml?cmd=xml-counts"
-counter_address = "http://%s%s" % ( server, base_url )
+counter_address = "http://%s%s" % (server, base_url)
 p = etree.parse(get_url(counter_address))
-data= p.getroot()
+data = p.getroot()
 
 informations = {}
 for line in data:
@@ -92,14 +96,14 @@ for line in data:
     informations[n] = x
 
 s_prefix = "innovaphone_"
-for what in [ "CPU", "MEM", "TEMP"]:
+for what in ["CPU", "MEM", "TEMP"]:
     if informations.get(what):
-        name = s_prefix+what.lower()
+        name = s_prefix + what.lower()
         get_informations(name, informations[what], what)
 
 print "<<<%schannels>>>" % s_prefix
-for channel in range(1,5):
-    get_pri_channel('PRI'+str(channel))
+for channel in range(1, 5):
+    get_pri_channel('PRI' + str(channel))
 
 print "<<<%slicenses>>>" % s_prefix
 get_licenses()

@@ -26,29 +26,26 @@
 
 # Imports are needed for type hints. These type hints are useful for
 # editors completion of "html" object methods and for mypy.
-from typing import Union # pylint: disable=unused-import
-import cmk.gui.htmllib # pylint: disable=unused-import
+from typing import Union  # pylint: disable=unused-import
+import cmk.gui.htmllib  # pylint: disable=unused-import
+
 
 class HTMLProxy(object):
     def __init__(self):
         super(HTMLProxy, self).__init__()
         self._current_html = None
 
-
     def set_current(self, obj):
         self._current_html = obj
-
 
     def unset_current(self):
         self._current_html = None
 
-
     def in_html_context(self):
         return self._current_html is not None
 
-
     def __getattribute__(self, name):
-        if name in [ "set_current", "unset_current", "in_html_context", "_current_html" ]:
+        if name in ["set_current", "unset_current", "in_html_context", "_current_html"]:
             return object.__getattribute__(self, name)
 
         h = self._current_html
@@ -56,9 +53,8 @@ class HTMLProxy(object):
             raise AttributeError("Not in html context")
         return getattr(h, name)
 
-
     def __repr__(self):
         return repr(self._current_html)
 
 
-html = HTMLProxy() # type: Union[cmk.gui.htmllib.html, HTMLProxy]
+html = HTMLProxy()  # type: Union[cmk.gui.htmllib.html, HTMLProxy]

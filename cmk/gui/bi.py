@@ -62,13 +62,12 @@ def load_plugins(force):
         return
 
     config.declare_permission_section("bi", _("BI - Check_MK Business Intelligence"))
-    config.declare_permission("bi.see_all",
-        _("See all hosts and services"),
+    config.declare_permission(
+        "bi.see_all", _("See all hosts and services"),
         _("With this permission set, the BI aggregation rules are applied to all "
-        "hosts and services - not only those the user is a contact for. If you "
-        "remove this permissions then the user will see incomplete aggregation "
-        "trees with status based only on those items."),
-        [ "admin", "guest" ])
+          "hosts and services - not only those the user is a contact for. If you "
+          "remove this permissions then the user will see incomplete aggregation "
+          "trees with status based only on those items."), ["admin", "guest"])
 
     # This must be set after plugin loading to make broken plugins raise
     # exceptions all the time and not only the first time (when the plugins
@@ -107,7 +106,7 @@ service_state_names = {
 host_state_names = {
     0: _("UP"),
     1: _("DOWN"),
-    2: _("UNREACHABLE")
+    2: _("UNREACHABLE"),
 }
 
 AGGR_HOST = 0
@@ -189,7 +188,6 @@ def load_services(only_hosts):
         entry = (tags, svcs, childs, parents, alias)
         g_services[(site, host)] = entry
         g_services_by_hostname.setdefault(host, []).append((site, entry))
-
 
 
 # The sitestats are used to define the integrity of the currently used cache
@@ -410,8 +408,9 @@ class JobWorker(multiprocessing.Process):
         downtime_aggr_warn = aggr_options.get("downtime_aggr_warn")
 
         if len(aggr) < 3:
-            raise MKConfigError(_("<h1>Invalid aggregation <tt>%s</tt></h1>"
-                                  "Must have at least 3 entries (has %d)") % (aggr, len(aggr)))
+            raise MKConfigError(
+                _("<h1>Invalid aggregation <tt>%s</tt></h1>"
+                  "Must have at least 3 entries (has %d)") % (aggr, len(aggr)))
 
         new_entries = compile_rule_node(aggr_type, aggr[1:], 0)
 
@@ -1463,11 +1462,11 @@ def check_title_uniqueness(forest):
         for aggr in aggrs:
             title = aggr["title"]
             if title in known_titles:
-                raise MKConfigError(_("Duplicate BI aggregation with the title \"<b>%s</b>\". "
-                         "Please check your BI configuration and make sure that within each group no aggregation has "
-                         "the same title as any other. Note: you can use arguments in the top level "
-                         "aggregation rule, like <tt>Host $HOST$</tt>.") % (
-                    html.attrencode(title)))
+                raise MKConfigError(
+                    _("Duplicate BI aggregation with the title \"<b>%s</b>\". "
+                      "Please check your BI configuration and make sure that within each group no aggregation has "
+                      "the same title as any other. Note: you can use arguments in the top level "
+                      "aggregation rule, like <tt>Host $HOST$</tt>.") % (html.attrencode(title)))
             else:
                 known_titles.add(title)
 
@@ -1493,9 +1492,10 @@ def compile_rule_node(aggr_type, calllist, lvl):
     rulename, arglist = calllist[-2:]
     what = calllist[0]
     if rulename not in config.aggregation_rules:
-        raise MKConfigError(_("<h1>Invalid configuration in variable <tt>aggregations</tt></h1>"
-                "There is no rule named <tt>%s</tt>. Available are: <tt>%s</tt>") %
-                (rulename, "</tt>, <tt>".join(config.aggregation_rules.keys())))
+        raise MKConfigError(
+            _("<h1>Invalid configuration in variable <tt>aggregations</tt></h1>"
+              "There is no rule named <tt>%s</tt>. Available are: <tt>%s</tt>") %
+            (rulename, "</tt>, <tt>".join(config.aggregation_rules.keys())))
     rule = config.aggregation_rules[rulename]
     if rule.get("disabled", False):
         return []
@@ -1695,7 +1695,8 @@ def make_arginfo(arglist, args):
             expansion = MULTIPLE
             name = name[:-1]
         else:
-            raise MKConfigError(_("Invalid argument name %s. Must begin with 'a' or end with 's'.") % name)
+            raise MKConfigError(
+                _("Invalid argument name %s. Must begin with 'a' or end with 's'.") % name)
         arginfo[name] = (expansion, value)
     return arginfo
 
@@ -1763,17 +1764,19 @@ def compile_aggregation_rule(aggr_type, rule, args, lvl):
     icon = rule.get("icon")
 
     if lvl == 50:
-        raise MKConfigError(_("<b>BI depth limit reached</b>: "
-                "The nesting level of aggregations is limited to 50. You either configured "
-                "too many levels or built an infinite recursion. This happened in rule %s")
-                  % pprint.pformat(rule))
+        raise MKConfigError(
+            _("<b>BI depth limit reached</b>: "
+              "The nesting level of aggregations is limited to 50. You either configured "
+              "too many levels or built an infinite recursion. This happened in rule %s") %
+            pprint.pformat(rule))
 
     # check arguments and convert into dictionary
     if len(arglist) != len(args):
-        raise MKConfigError(_("<b>Invalid BI rule usage</b>: "
-                "The rule '%s' needs %d arguments: <tt>%s</tt>. "
-                "You've specified %d arguments: <tt>%s</tt>") % (
-                    description, len(arglist), repr(arglist), len(args), repr(args)))
+        raise MKConfigError(
+            _("<b>Invalid BI rule usage</b>: "
+              "The rule '%s' needs %d arguments: <tt>%s</tt>. "
+              "You've specified %d arguments: <tt>%s</tt>") %
+            (description, len(arglist), repr(arglist), len(args), repr(args)))
 
     arginfo = dict(zip(arglist, args))
     inst_description = subst_vars(description, arginfo)
@@ -2135,11 +2138,11 @@ def execute_leaf_node(node, status_info, aggregation_options):
     status = status_info.get((site, host))
     if status == None:
         return ({
-            "state"               : None,
-            "output"              : _("Host %s not found") % host,
-            "in_downtime"         : 0,
-            "acknowledged"        : False,
-            "in_service_period"   : True,
+            "state": None,
+            "output": _("Host %s not found") % host,
+            "in_downtime": 0,
+            "acknowledged": False,
+            "in_service_period": True,
         }, None, node)
     host_state, host_hard_state, host_output, host_in_downtime, host_acknowledged, host_in_service_period, service_state = status
 
@@ -2175,11 +2178,11 @@ def execute_leaf_node(node, status_info, aggregation_options):
                 }
                 if state_assumption != None:
                     assumed_state = {
-                        "state"             : state_assumption,
-                        "output"            : _("Assumed to be %s") % service_state_names[state_assumption],
-                        "in_downtime"       : downtime_depth > 0 and 2 or host_in_downtime != 0 and 1 or 0,
-                        "acknowledged"      : bool(acknowledged),
-                        "in_service_period" : in_service_period,
+                        "state": state_assumption,
+                        "output": _("Assumed to be %s") % service_state_names[state_assumption],
+                        "in_downtime": downtime_depth > 0 and 2 or host_in_downtime != 0 and 1 or 0,
+                        "acknowledged": bool(acknowledged),
+                        "in_service_period": in_service_period,
                     }
 
                 else:
@@ -2187,12 +2190,12 @@ def execute_leaf_node(node, status_info, aggregation_options):
                 return (state, assumed_state, node)
 
         return ({
-                "state"             : None,
-                "output"            : _("This host has no such service"),
-                "in_downtime"       : host_in_downtime,
-                "acknowledged"      : False,
-                "in_service_period" : True,
-            }, None, node)
+            "state": None,
+            "output": _("This host has no such service"),
+            "in_downtime": host_in_downtime,
+            "acknowledged": False,
+            "in_service_period": True,
+        }, None, node)
 
     else:
         if aggregation_options["use_hard_states"]:
@@ -2209,11 +2212,11 @@ def execute_leaf_node(node, status_info, aggregation_options):
         }
         if state_assumption != None:
             assumed_state = {
-                "state"             : state_assumption,
-                "output"            : _("Assumed to be %s") % host_state_names[state_assumption],
-                "in_downtime"       : host_in_downtime != 0,
-                "acknowledged"      : host_acknowledged,
-                "in_service_period" : host_in_service_period,
+                "state": state_assumption,
+                "output": _("Assumed to be %s") % host_state_names[state_assumption],
+                "in_downtime": host_in_downtime != 0,
+                "acknowledged": host_acknowledged,
+                "in_service_period": host_in_service_period,
             }
         else:
             assumed_state = None
@@ -2228,8 +2231,9 @@ def execute_rule_node(node, status_info, aggregation_options):
     funcargs = parts[1:]
     func = config.aggregation_functions.get(funcname)
     if not func:
-        raise MKConfigError(_("Undefined aggregation function '%s'. Available are: %s") %
-                (funcname, ", ".join(config.aggregation_functions.keys())))
+        raise MKConfigError(
+            _("Undefined aggregation function '%s'. Available are: %s") % (funcname, ", ".join(
+                config.aggregation_functions.keys())))
 
     # prepare information for aggregation function
     subtrees = []
@@ -2288,7 +2292,7 @@ def execute_rule_node(node, status_info, aggregation_options):
             assumed_states.append(node_states[-1])
 
     if len(node_states) == 0:
-        state = { "state": None, "output" : _("Not yet monitored") }
+        state = {"state": None, "output": _("Not yet monitored")}
         downtime_state = state
     else:
         state = func(*([node_states] + funcargs))
@@ -2537,7 +2541,7 @@ def aggr_running_on(nodes, regex):
                 return state
 
     # host we run on not found. Strange...
-    return {"state": UNKNOWN, "output": _("running on unknown host '%s'") % running_on }
+    return {"state": UNKNOWN, "output": _("running on unknown host '%s'") % running_on}
 
 
 config.aggregation_functions['running_on'] = aggr_running_on
@@ -2628,8 +2632,9 @@ def ajax_render_tree():
 
     # Now look for our aggregation
     if aggr_group not in g_tree_cache["forest"]:
-        raise MKGeneralException(_("Unknown BI Aggregation group %s. Available are: %s") % (
-            aggr_group, ", ".join(g_tree_cache["forest"].keys())))
+        raise MKGeneralException(
+            _("Unknown BI Aggregation group %s. Available are: %s") % (aggr_group, ", ".join(
+                g_tree_cache["forest"].keys())))
 
     trees = g_tree_cache["forest"][aggr_group]
     for tree in trees:
@@ -2873,18 +2878,20 @@ class FoldableTreeRenderer(object):
             url=None,
             title=_("Assume another state for this item (reload page to activate)"),
             icon="assume_%s" % current_state,
-            onclick="toggle_assumption(this, '%s', '%s', '%s');" % (site, host, service.replace('\\', '\\\\') if service else ''),
+            onclick="toggle_assumption(this, '%s', '%s', '%s');" %
+            (site, host, service.replace('\\', '\\\\') if service else ''),
             cssclass="assumption",
         )
 
     def _render_bi_state(self, state):
-        return { PENDING: _("PD"),
-                 OK:      _("OK"),
-                 WARN:    _("WA"),
-                 CRIT:    _("CR"),
-                 UNKNOWN: _("UN"),
-                 MISSING: _("MI"),
-                 UNAVAIL: _("NA"),
+        return {
+            PENDING: _("PD"),
+            OK: _("OK"),
+            WARN: _("WA"),
+            CRIT: _("CR"),
+            UNKNOWN: _("UN"),
+            MISSING: _("MI"),
+            UNAVAIL: _("NA"),
         }.get(state, _("??"))
 
 
@@ -2916,8 +2923,11 @@ class FoldableTreeRendererTree(FoldableTreeRenderer):
                 html.write("&nbsp;")
 
             if tree[2].get("docu_url"):
-                html.icon_button(tree[2]["docu_url"], _("Context information about this rule"),
-                                 "url", target="_blank")
+                html.icon_button(
+                    tree[2]["docu_url"],
+                    _("Context information about this rule"),
+                    "url",
+                    target="_blank")
                 html.write("&nbsp;")
 
             html.write_text(tree[2]["title"])
@@ -3172,8 +3182,7 @@ def create_aggregation_row(tree, status_info=None):
         "aggr_treestate": tree_state,
         "aggr_state": state,  # state disregarding assumptions
         "aggr_assumed_state": assumed_state,  # is None, if there are no assumptions
-        "aggr_effective_state":
-            eff_state,  # is assumed_state, if there are assumptions, else real state
+        "aggr_effective_state": eff_state,  # is assumed_state, if there are assumptions, else real state
         "aggr_name": node["title"],
         "aggr_output": output,
         "aggr_hosts": node["reqhosts"],

@@ -40,8 +40,13 @@
 #
 # It is also possible to override or extend the ssl_ports variable to make the
 # check contact other ports than 443 with HTTPS requests.
+import os
+import re
+import socket
+import sys
+import urllib2
+import ssl
 
-import os, sys, urllib2, re, socket
 
 config_dir = os.getenv("MK_CONFDIR", "/etc/check_mk")
 config_file = config_dir + "/apache_status.conf"
@@ -58,7 +63,8 @@ socket.setdefaulttimeout(5.0)
 # None or list of (proto, ipaddress, port) tuples.
 # proto is 'http' or 'https'
 servers = None
-ssl_ports = [ 443, ]
+ssl_ports = [443]
+
 
 if os.path.exists(config_file):
     execfile(config_file)
@@ -146,12 +152,13 @@ for server in servers:
             else:
                 raise
         except Exception, e:
-            if 'doesn\'t match' in str(e):
+            if 'doesn\'t match' in str(e) and address in ("127.0.0.1", "[::1]", "localhost"):
                 # HACK: workaround if SSL port is found and localhost is using
                 # SSL connections but certificate does not match
-                portspec = ':80'
-                url = 'http://%s%s/server-status?auto' % (address, portspec)
-                fd = urllib2.urlopen(url)
+                no_cert_context = ssl.create_default_context()
+                no_cert_context.check_hostname = False
+                no_cert_context.verify_mode = ssl.CERT_NONE
+                fd = urllib2.urlopen(url, context=no_cert_context)
             else:
                 raise
 

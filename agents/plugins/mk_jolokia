@@ -117,6 +117,16 @@ def write_section(name, iterable):
         sys.stdout.write(' '.join(map(str, line)) + '\n')
 
 
+def cached(function):
+    cache = {}
+    def cached_function(*args):
+        try:
+            return cache[args]
+        except KeyError:
+            return cache.setdefault(args, function(*args))
+    return cached_function
+
+
 def fetch_url_get(base_url, path, function):
     if path:
         url = "%s/%s/%s" % (base_url, function, path)
@@ -288,25 +298,13 @@ def fetch_metric(inst, path, title, itemspec, inst_add=None):
         yield (item.replace(" ", "_"), tit, value)
 
 
-def _get_queries(do_search, inst, itemspec, title, path, mbean, mbean_search_results):
+@cached
+def _get_queries(do_search, inst, itemspec, title, path, mbean):
     if not do_search:
         return [(mbean + "/" + path, title, itemspec)]
 
-    if mbean in mbean_search_results:
-        paths = mbean_search_results[mbean]
-    else:
-        paths = fetch_var(
-            inst["protocol"],
-            inst["server"],
-            inst["port"],
-            mbean,
-            inst["suburi"],
-            "",
-            None,
-            None,
-            None,
-            function="search")[0][1]
-        mbean_search_results[mbean] = paths
+    paths = fetch_var(inst["protocol"], inst["server"], inst["port"], mbean,
+                      inst["suburi"], "", None, None, None, function="search")[0][1]
 
     return [("%s/%s" % (urllib2.quote(mbean_exp), path), path, itemspec, mbean_exp)
             for mbean_exp in paths]
@@ -330,15 +328,12 @@ def query_instance(inst):
         sys.stderr.write("ERROR: %s\n" % exc)
         raise SkipInstance()
 
-    # TODO: Untie mbean_search_results / query calculation and jolokia_metrics processing
-    mbean_search_results = {}
-
     shipped_vars = QUERY_SPECS_GENERIC + QUERY_SPECS_SPECIFIC.get(inst["product"], [])
     custom_vars = inst.get("custom_vars")
 
     write_section('jolokia_info', generate_jolokia_info(inst))
-    write_section('jolokia_metrics', generate_values(inst, shipped_vars, mbean_search_results))
-    write_section('jolokia_generic', generate_values(inst, custom_vars, mbean_search_results))
+    write_section('jolokia_metrics', generate_values(inst, shipped_vars))
+    write_section('jolokia_generic', generate_values(inst, custom_vars))
 
 
 def prepare_http_opener(inst):
@@ -385,12 +380,12 @@ def generate_jolokia_info(inst):
     yield inst["instance"], product, version, agentversion
 
 
-def generate_values(inst, var_list, mbean_search_results):
+def generate_values(inst, var_list):
     for var in var_list:
         mbean, path, title, itemspec, do_search = var[:5]
         value_type = var[5] if len(var) >= 6 else None
 
-        queries = _get_queries(do_search, inst, itemspec, title, path, mbean, mbean_search_results)
+        queries = _get_queries(do_search, inst, itemspec, title, path, mbean)
 
         for item, title, value in _process_queries(inst, queries):
             if value_type:

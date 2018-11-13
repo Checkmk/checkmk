@@ -40,7 +40,7 @@ factory_settings['liebert_humidity_air_default_levels'] = {
 
 def inventory_liebert_humidity_air(parsed):
     for key, values in parsed[0].iteritems():
-        if not "Unavailable" in values[0]:
+        if values[0] and "Unavailable" not in values[0]:
             yield (key.replace(" Humidity", ""), {})
 
 

@@ -1,7 +1,11 @@
 SHELL = /bin/bash
 
 include Makefile.omd
+include packages/packages.make
 
+# You can build singele packages by calling macke <PACKAGENAME>
+# e.g.: make nagios rrdtool
+#
 # You can select a subset of the packages by overriding this
 # variale, e.g. make PACKAGES='nagios rrdtool' pack
 #
@@ -11,7 +15,8 @@ include Makefile.omd
 #
 # You can also create a file named .config and override the
 # PACKAGES variable there to customzie the list of packages.
-PACKAGES=\
+
+PACKAGES := \
     libgsf \
     perl-modules \
     python \
@@ -29,7 +34,7 @@ PACKAGES=\
     check_multi \
     check_mysql_health \
     check_oracle_health \
-    check_webinject \
+    Webinject \
     dokuwiki \
     jmx4perl \
     mk-livestatus \
@@ -45,17 +50,10 @@ PACKAGES=\
     pnp4nagios \
     maintenance \
     patch \
-    nail \
+    heirloom-mailx \
     snap7 \
     heirloom-pkgtools
 
-ifeq ($(EDITION),enterprise)
-    PACKAGES+=check_mk_enterprise
-endif
-ifeq ($(EDITION),managed)
-    PACKAGES+=check_mk_enterprise
-    PACKAGES+=check_mk_managed
-endif
 
 default: build
 
@@ -65,6 +63,12 @@ DESTDIR ?=$(shell pwd)/destdir
 RPM_TOPDIR=$$(pwd)/rpm.topdir
 BIN_TGZ=check-mk-$(EDITION)-bin-$(OMD_VERSION).tar.gz
 NEW_SERIAL=$$(($(OMD_SERIAL) + 1))
+SKEL := $(DESTDIR)$(OMD_ROOT)/skel
+# NEW_VERSION should be set on the command line.
+# Replace all '/' since sed tries to interpret them
+# '/' might occur in custom branches
+# filenames and sed arguments should not contain '/'
+NEW_VERSION_STRING := $(subst /,-,$(NEW_VERSION))
 
 .PHONY: install-global
 
@@ -74,22 +78,28 @@ check-edition:
 	    exit 1 ; \
 	fi
 
-build: check-edition
-	@set -e ; cd packages ; for p in $(PACKAGES) ; do \
-	    if [ -d $$p ]; then \
-	        echo "[$$(date '+%F %T')] ============================== build for package $$p started..." ; \
-	        $(MAKE) -C $$p build ; \
-	        echo "[$$(date '+%F %T')] ============================== build for package $$p finished" ; \
-	    fi ; \
-        done
+build: check-edition $(PACKAGES)
+# TODO: Clean up build for enterprise and managed. Those 2 package Makefiles are Symlinked to the top level Makefile.
+ifeq ($(EDITION),enterprise)
+	$(MAKE) -C $(PACKAGE_DIR)/check_mk_enterprise build
+endif
+ifeq ($(EDITION),managed)
+	$(MAKE) -C $(PACKAGE_DIR)/check_mk_enterprise
+	$(MAKE) -C $(PACKAGE_DIR)/check_mk_managed
+endif
 
-pack: check-edition
+pack: check-edition skel
+
+#TODO: Define dependecies here correctly...
+pre-install:
 	rm -rf $(DESTDIR)
 	mkdir -p $(DESTDIR)$(OMD_PHYSICAL_BASE)
 	A="$(OMD_PHYSICAL_BASE)" ; ln -s $${A:1} $(DESTDIR)/omd
+
+install: $(addsuffix -install,$(PACKAGES))
+# TODO: Add hook install target where needed
 	@set -e ; cd packages ; for p in $(PACKAGES) ; do \
 	    if [ -d $$p ]; then \
-	        $(MAKE) -C $$p DESTDIR=$(DESTDIR) install ; \
                 for hook in $$(cd $$p ; ls *.hook 2>/dev/null) ; do \
                     mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/omd/hooks ; \
                     install -m 755 $$p/$$hook $(DESTDIR)$(OMD_ROOT)/lib/omd/hooks/$${hook%.hook} ; \
@@ -99,17 +109,18 @@ pack: check-edition
 
 	# Repair packages that install with silly modes (such as Nagios)
 	chmod -R o+Xr $(DESTDIR)$(OMD_ROOT)
-	$(MAKE) install-global
 
+
+pre-skel: install-global
 	# Install skeleton files (subdirs skel/ in packages' directories)
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/skel
 	@set -e ; cd packages ; for p in $(PACKAGES) ; do \
             if [ -d "$$p" ] && [ -d "$$p/skel" ] ; then  \
               tar cf - -C $$p/skel --exclude="*~" --exclude=".gitignore" . | tar xvf - -C $(DESTDIR)$(OMD_ROOT)/skel ; \
             fi ;\
-            $(MAKE) DESTDIR=$(DESTDIR) SKEL=$(DESTDIR)$(OMD_ROOT)/skel -C $$p skel ;\
         done
 
+skel: pre-skel $(addsuffix -skel,$(PACKAGES))
         # Create permissions file for skel
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/omd
 	@set -e ; cd packages ; for p in $(PACKAGES) ; do \
@@ -144,7 +155,7 @@ pack: check-edition
 	# Pack the whole stuff into a tarball
 	tar czf $(BIN_TGZ) --owner=root --group=root -C $(DESTDIR) .
 
-clean:
+clean: $(addsuffix -clean,$(PACKAGES))
 	@if [ -d $(DESTDIR) ]; then \
 	    rm -rf $(DESTDIR) ; \
 	fi
@@ -154,10 +165,11 @@ clean:
 		$(MAKE) -C $$p clean ; \
 	    fi ; \
 	done
+	$(RM) -r $(BUILD_HELPER_DIR)
 
 # Create installations files that do not lie beyond /omd/versions/$(OMD_VERSION)
 # and files not owned by a specific package.
-install-global:
+install-global: install
 	# Create link to default version
 	ln -s $(OMD_VERSION) $(DESTDIR)$(OMD_BASE)/versions/default
 
@@ -231,7 +243,7 @@ deb-environment:
 	  exit 1; \
 	fi
 
-# create a debian/changelog to build the package 
+# create a debian/changelog to build the package
 deb-changelog: deb-environment
 	# this is a hack!
 	rm -f debian/changelog
@@ -289,7 +301,7 @@ alt:
 	fi ;
 
 setversion:
-	NEW_OMD_VERSION=$(NEW_VERSION).$(EDITION_SHORT)$(DEMO_SUFFIX) ; \
+	NEW_OMD_VERSION=$(NEW_VERSION_STRING).$(EDITION_SHORT)$(DEMO_SUFFIX) ; \
 	if [ -n "$$NEW_OMD_VERSION" ] && [ "$$NEW_OMD_VERSION" != "$(OMD_VERSION)" ]; then \
 	    sed -ri 's/^(OMD_SERIAL[[:space:]]*= *).*/\1'"$(NEW_SERIAL)/" Makefile.omd ; \
 	fi ; \

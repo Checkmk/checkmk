@@ -1,0 +1,41 @@
+MK_LIVESTATUS := mk-livestatus
+MK_LIVESTATUS_DIR := $(MK_LIVESTATUS)-$(CMK_VERSION)
+
+CXX_FLAGS := -g -O3 -Wall -Wextra
+BOOST_OPT := --with-boost=$(PACKAGE_BOOST_DESTDIR) 
+# Attention: copy-n-paste from check_mk/Makefile below...
+MK_LIVESTATUS_BUILD := $(BUILD_HELPER_DIR)/$(MK_LIVESTATUS)-build
+MK_LIVESTATUS_INSTALL := $(BUILD_HELPER_DIR)/$(MK_LIVESTATUS)-install
+MK_LIVESTATUS_SKEL := $(BUILD_HELPER_DIR)/$(MK_LIVESTATUS)-skel
+
+.PHONY: $(MK_LIVESTATUS) $(MK_LIVESTATUS)-install $(MK_LIVESTATUS)-skel $(MK_LIVESTATUS)-clean
+
+$(MK_LIVESTATUS): $(MK_LIVESTATUS_BUILD)
+
+$(MK_LIVESTATUS)-install: $(MK_LIVESTATUS_INSTALL)
+
+$(MK_LIVESTATUS)-skel: $(MK_LIVESTATUS_SKEL)
+
+$(REPO_PATH)/$(MK_LIVESTATUS_DIR).tar.gz:
+	$(MAKE) -C $(REPO_PATH) $(MK_LIVESTATUS_DIR).tar.gz
+
+$(MK_LIVESTATUS_BUILD): $(REPO_PATH)/$(MK_LIVESTATUS_DIR).tar.gz $(BOOST_BUILD)
+	$(TAR_GZ) $(REPO_PATH)/$(MK_LIVESTATUS_DIR).tar.gz
+	cd $(MK_LIVESTATUS_DIR) ; \
+	$(ECHO) ./configure CXXFLAGS="$(CXX_FLAGS)" $(BOOST_OPT) --prefix=$(OMD_ROOT) ; \
+	./configure CXXFLAGS="$(CXX_FLAGS)" $(BOOST_OPT) --prefix=$(OMD_ROOT)
+	$(MAKE) -C $(MK_LIVESTATUS_DIR) all
+	$(TOUCH) $@
+
+$(MK_LIVESTATUS_INSTALL): $(MK_LIVESTATUS_BUILD)
+	$(MAKE) DESTDIR=$(DESTDIR) -C $(MK_LIVESTATUS_DIR) install
+	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/bin
+	install -m 755 $(PACKAGE_DIR)/$(MK_LIVESTATUS)/lq $(DESTDIR)$(OMD_ROOT)/bin
+	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/lib/python
+	install -m 644 $(MK_LIVESTATUS_DIR)/api/python/livestatus.py $(DESTDIR)$(OMD_ROOT)/lib/python
+	$(TOUCH) $@
+
+$(MK_LIVESTATUS)-skel:
+
+$(MK_LIVESTATUS)-clean:
+	$(RM) -r mk-livestatus-*.*.*[0-9] $(BUILD_HELPER_DIR)/$(MK_LIVESTATUS)*

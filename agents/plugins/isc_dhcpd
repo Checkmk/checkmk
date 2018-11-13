@@ -8,7 +8,7 @@ import sys
 import time
 
 conf_file = None
-for path in [ '/etc/dhcpd.conf', '/etc/dhcp/dhcpd.conf', '/usr/local/etc/dhcpd.conf' ]:
+for path in ['/etc/dhcpd.conf', '/etc/dhcp/dhcpd.conf', '/usr/local/etc/dhcpd.conf']:
     if os.path.exists(path):
         conf_file = path
         break
@@ -17,8 +17,8 @@ leases_file = None
 for path in [
         '/var/lib/dhcp/db/dhcpd.leases',
         '/var/lib/dhcp/dhcpd.leases',
-        '/var/lib/dhcpd/dhcpd.leases', # CentOS
-    ]:
+        '/var/lib/dhcpd/dhcpd.leases',  # CentOS
+]:
     if os.path.exists(path):
         leases_file = path
         break
@@ -43,8 +43,8 @@ def parse_config(filename):
         elif line.startswith("range"):
             sys.stdout.write(line[5:].strip("\t ;") + "\n")
 
-parse_config(conf_file)
 
+parse_config(conf_file)
 
 # lease 10.1.1.81 {
 #   starts 3 2015/09/09 11:42:20;
@@ -75,7 +75,7 @@ for line in file(leases_file):
             ends_date_string = parts[2] + " " + parts[3]
             ends_date = calendar.timegm(time.strptime(ends_date_string, "%Y/%m/%d %H:%M:%S"))
             if ends_date < now:
-                ip_address = None # skip this address, this lease is outdated
+                ip_address = None  # skip this address, this lease is outdated
 
     elif parts[0] == "binding" and parts[1] == "state":
         binding_state = parts[2]

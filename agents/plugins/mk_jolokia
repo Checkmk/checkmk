@@ -119,11 +119,13 @@ def write_section(name, iterable):
 
 def cached(function):
     cache = {}
+
     def cached_function(*args):
         try:
             return cache[args]
         except KeyError:
             return cache.setdefault(args, function(*args))
+
     return cached_function
 
 
@@ -303,8 +305,17 @@ def _get_queries(do_search, inst, itemspec, title, path, mbean):
     if not do_search:
         return [(mbean + "/" + path, title, itemspec)]
 
-    paths = fetch_var(inst["protocol"], inst["server"], inst["port"], mbean,
-                      inst["suburi"], "", None, None, None, function="search")[0][1]
+    paths = fetch_var(
+        inst["protocol"],
+        inst["server"],
+        inst["port"],
+        mbean,
+        inst["suburi"],
+        "",
+        None,
+        None,
+        None,
+        function="search")[0][1]
 
     return [("%s/%s" % (urllib2.quote(mbean_exp), path), path, itemspec, mbean_exp)
             for mbean_exp in paths]
@@ -340,9 +351,9 @@ def prepare_http_opener(inst):
     # Prepare user/password authentication via HTTP Auth
     password_mngr = urllib2.HTTPPasswordMgrWithDefaultRealm()
     if inst.get("password"):
-        password_mngr.add_password(None, "%s://%s:%d/" % (inst["protocol"], inst["server"],
-                                                          inst["port"]), inst["user"],
-                                   inst["password"])
+        password_mngr.add_password(None,
+                                   "%s://%s:%d/" % (inst["protocol"], inst["server"], inst["port"]),
+                                   inst["user"], inst["password"])
 
     handlers = []
     if inst["protocol"] == "https":

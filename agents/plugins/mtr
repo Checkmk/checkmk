@@ -48,9 +48,9 @@ mk_confdir = os.getenv("MK_CONFDIR") or "/etc/check_mk"
 mk_vardir = os.getenv("MK_VARDIR") or "/var/lib/check_mk_agent"
 
 config_filename = mk_confdir + "/mtr.cfg"
-config_dir      = mk_confdir + "/mtr.d/*.cfg"
-status_filename = mk_vardir  + "/mtr.state"
-report_filepre  = mk_vardir  + "/mtr.report."
+config_dir = mk_confdir + "/mtr.d/*.cfg"
+status_filename = mk_vardir + "/mtr.state"
+report_filepre = mk_vardir + "/mtr.report."
 
 debug = '-d' in sys.argv[2:] or '--debug' in sys.argv[1:]
 
@@ -82,17 +82,17 @@ if mtr_prog == None:
 
 def read_config():
     default_options = {
-        'type'      : 'icmp',
-        'count'     : "10",
+        'type': 'icmp',
+        'count': "10",
         'force_ipv4': "0",
         'force_ipv6': "0",
-        'size'      : "64",
-        'time'      : "0",
-        'dns'       : "0",
-        'port'      : None,
-        'address'   : None,
-        'interval'  : None,
-        'timeout'   : None
+        'size': "64",
+        'time': "0",
+        'dns': "0",
+        'port': None,
+        'address': None,
+        'interval': None,
+        'timeout': None
     }
     if not os.path.exists(config_filename):
         if debug:
@@ -101,18 +101,20 @@ def read_config():
 
     config = ConfigParser.SafeConfigParser(default_options)
     # Let ConfigParser figure it out
-    for config_file in [ config_filename ] + glob.glob(config_dir):
+    for config_file in [config_filename] + glob.glob(config_dir):
         try:
             if not config.read(config_file):
                 sys.stdout.write("**ERROR** Failed to parse configuration file %s!\n" % config_file)
         except Exception as e:
-            sys.stdout.write("**ERROR** Failed to parse config file %s: %s\n" % (config_file, repr(e)))
+            sys.stdout.write(
+                "**ERROR** Failed to parse config file %s: %s\n" % (config_file, repr(e)))
 
     if len(config.sections()) == 0:
         sys.stdout.write("**ERROR** Configuration defines no hosts!\n")
         sys.exit(0)
 
     return config
+
 
 # structure of statusfile
 # # HOST        |LASTTIME |HOPCOUNT|HOP1|Loss%|Snt|Last|Avg|Best|Wrst|StDev|HOP2|...|HOP8|...|StdDev
@@ -134,19 +136,21 @@ def read_status():
             status[host] = {'hops': {}, 'lasttime': lasttime}
             hops = int(parts[2])
             for i in range(0, hops):
-                status[host]["hops"][i+1] = {
-                    'hopname': parts[i*8 + 3].rstrip(),
-                    'loss'   : parts[i*8 + 4].rstrip(),
-                    'snt'    : parts[i*8 + 5].rstrip(),
-                    'last'   : parts[i*8 + 6].rstrip(),
-                    'avg'    : parts[i*8 + 7].rstrip(),
-                    'best'   : parts[i*8 + 8].rstrip(),
-                    'wrst'   : parts[i*8 + 9].rstrip(),
-                    'stddev' : parts[i*8 + 10].rstrip(),
+                status[host]["hops"][i + 1] = {
+                    'hopname': parts[i * 8 + 3].rstrip(),
+                    'loss': parts[i * 8 + 4].rstrip(),
+                    'snt': parts[i * 8 + 5].rstrip(),
+                    'last': parts[i * 8 + 6].rstrip(),
+                    'avg': parts[i * 8 + 7].rstrip(),
+                    'best': parts[i * 8 + 8].rstrip(),
+                    'wrst': parts[i * 8 + 9].rstrip(),
+                    'stddev': parts[i * 8 + 10].rstrip(),
                 }
         except Exception as e:
-            sys.stdout.write("*ERROR** (BUG) Could not parse status line: %s, reason: %s\n" % (line, repr(e)))
+            sys.stdout.write(
+                "*ERROR** (BUG) Could not parse status line: %s, reason: %s\n" % (line, repr(e)))
     return status
+
 
 def save_status(status):
     f = file(status_filename, "w")
@@ -156,15 +160,27 @@ def save_status(status):
         hoststring = "%s|%s|%s" % (host, lastreport, hopnum)
         for hop in hostdict["hops"].keys():
             hi = hostdict["hops"][hop]
-            hoststring += '|%s|%s|%s|%s|%s|%s|%s|%s' % (hi['hopname'], hi['loss'], hi['snt'], hi['last'], hi['avg'], hi['best'], hi['wrst'], hi['stddev'])
+            hoststring += '|%s|%s|%s|%s|%s|%s|%s|%s' % (
+                hi['hopname'],
+                hi['loss'],
+                hi['snt'],
+                hi['last'],
+                hi['avg'],
+                hi['best'],
+                hi['wrst'],
+                hi['stddev'],
+            )
         hoststring = hoststring.rstrip()
         f.write("%s\n" % hoststring)
 
+
 _punct_re = re.compile(r'[\t !"#$%&\'()*\-/<=>?@\[\\\]^_`{|},.:]+')
+
+
 def host_to_filename(host, delim=u'-'):
     # Get rid of gibberish chars, stolen from Django
     """Generates an slightly worse ASCII-only slug."""
-    host=unicode(host, 'UTF-8')
+    host = unicode(host, 'UTF-8')
     result = []
     for word in _punct_re.split(host.lower()):
         word = normalize('NFKD', word).encode('ascii', 'ignore')
@@ -172,38 +188,41 @@ def host_to_filename(host, delim=u'-'):
             result.append(word)
     return unicode(delim.join(result))
 
+
 def check_mtr_pid(pid):
     """ Check for the existence of a unix pid and if the process matches. """
     try:
         os.kill(pid, 0)
     except OSError:
-        return False # process does no longer exist
+        return False  # process does no longer exist
     else:
         pid_cmdline = "/proc/%d/cmdline" % pid
         try:
             return os.path.exists(pid_cmdline) and \
                    file(pid_cmdline).read().startswith("mtr\x00--report\x00--report-wide")
         except:
-            return False # any error
+            return False  # any error
+
 
 def parse_report(host):
     reportfile = report_filepre + host_to_filename(host)
     if not os.path.exists(reportfile):
         if not host in status.keys():
             # New host
-            status[host] = {'hops':{}, 'lasttime': 0}
+            status[host] = {'hops': {}, 'lasttime': 0}
         return
-# 1451228358
-# Start: Sun Dec 27 14:35:18 2015
-#HOST: purple         Loss%   Snt   Last   Avg  Best  Wrst StDev
-#  1.|-- 80.69.76.120    0.0%    10    0.3   0.4   0.3   0.6   0.0
-#  2.|-- 80.249.209.100  0.0%    10    1.0   1.1   0.8   1.4   0.0
-#  3.|-- 209.85.240.63   0.0%    10    1.3   1.7   1.1   3.6   0.5
-#  4.|-- 209.85.253.242  0.0%    10    1.6   1.8   1.6   2.1   0.0
-#  5.|-- 209.85.253.201  0.0%    10    4.8   5.0   4.8   5.4   0.0
-#  6.|-- 216.239.56.6    0.0%    10    4.7   5.1   4.7   5.5   0.0
-#  7.|-- ???            100.0    10    0.0   0.0   0.0   0.0   0.0
-#  8.|-- 74.125.136.147  0.0%    10    4.5   4.6   4.3   5.2   0.0
+
+    # 1451228358
+    # Start: Sun Dec 27 14:35:18 2015
+    #HOST: purple         Loss%   Snt   Last   Avg  Best  Wrst StDev
+    #  1.|-- 80.69.76.120    0.0%    10    0.3   0.4   0.3   0.6   0.0
+    #  2.|-- 80.249.209.100  0.0%    10    1.0   1.1   0.8   1.4   0.0
+    #  3.|-- 209.85.240.63   0.0%    10    1.3   1.7   1.1   3.6   0.5
+    #  4.|-- 209.85.253.242  0.0%    10    1.6   1.8   1.6   2.1   0.0
+    #  5.|-- 209.85.253.201  0.0%    10    4.8   5.0   4.8   5.4   0.0
+    #  6.|-- 216.239.56.6    0.0%    10    4.7   5.1   4.7   5.5   0.0
+    #  7.|-- ???            100.0    10    0.0   0.0   0.0   0.0   0.0
+    #  8.|-- 74.125.136.147  0.0%    10    4.5   4.6   4.3   5.2   0.0
     # See if pidfile exists and if mtr is still running
     if os.path.exists(reportfile + ".pid"):
         # See if it's running
@@ -213,7 +232,7 @@ def parse_report(host):
                 # Still running, we're done.
                 if not host in status.keys():
                     # New host
-                    status[host] = {'hops':{}, 'lasttime': 0}
+                    status[host] = {'hops': {}, 'lasttime': 0}
                 status[host]['running'] = True
                 return
         except ValueError:
@@ -230,22 +249,23 @@ def parse_report(host):
         os.unlink(reportfile)
         if not host in status.keys():
             # New host
-            status[host] = {'hops':{}, 'lasttime': 0}
+            status[host] = {'hops': {}, 'lasttime': 0}
         return
-    status[host] = {'hops':{}, 'lasttime': 0}
+    status[host] = {'hops': {}, 'lasttime': 0}
 
     hopcount = 0
     status[host]["lasttime"] = int(float(lines.pop(0)))
     while len(lines) > 0 and not lines[0].startswith("HOST:"):
         lines.pop(0)
-    if len(lines) < 2: # Not enough lines
+    if len(lines) < 2:  # Not enough lines
         return
     try:
-        lines.pop(0) # Get rid of HOST: header
-        hopline = re.compile(r'^\s*\d+\.') #  10.|-- 129.250.2.147   0.0%    10  325.6 315.5 310.3 325.6   5.0
+        lines.pop(0)  # Get rid of HOST: header
+        hopline = re.compile(
+            r'^\s*\d+\.')  #  10.|-- 129.250.2.147   0.0%    10  325.6 315.5 310.3 325.6   5.0
         for line in lines:
             if not hopline.match(line):
-                continue #     |  `|-- 129.250.2.159
+                continue  #     |  `|-- 129.250.2.159
             hopcount += 1
             parts = line.split()
             if len(parts) < 8:
@@ -254,19 +274,20 @@ def parse_report(host):
                 continue
             status[host]['hops'][hopcount] = {
                 'hopname': parts[1],
-                'loss'   : parts[2],
-                'snt'    : parts[3],
-                'last'   : parts[4],
-                'avg'    : parts[5],
-                'best'   : parts[6],
-                'wrst'   : parts[7],
-                'stddev' : parts[8],
+                'loss': parts[2],
+                'snt': parts[3],
+                'last': parts[4],
+                'avg': parts[5],
+                'best': parts[6],
+                'wrst': parts[7],
+                'stddev': parts[8],
             }
     except Exception, e:
         sys.stdout.write("**ERROR** Could not parse report file %s, "
                          "tossing away invalid data %s\n" % (reportfile, e))
         del status[host]
     os.unlink(reportfile)
+
 
 def output_report(host):
     hostdict = status.get(host)
@@ -278,22 +299,32 @@ def output_report(host):
     hoststring = "%s|%s|%s" % (host, lastreport, hopnum)
     for hop in hostdict["hops"].keys():
         hi = hostdict["hops"][hop]
-        hoststring += '|%s|%s|%s|%s|%s|%s|%s|%s' % (hi['hopname'], hi['loss'], hi['snt'], hi['last'], hi['avg'], hi['best'], hi['wrst'], hi['stddev'])
+        hoststring += '|%s|%s|%s|%s|%s|%s|%s|%s' % (
+            hi['hopname'],
+            hi['loss'],
+            hi['snt'],
+            hi['last'],
+            hi['avg'],
+            hi['best'],
+            hi['wrst'],
+            hi['stddev'],
+        )
     sys.stdout.write("%s\n" % hoststring)
 
+
 def start_mtr(host):
-    options  = [mtr_prog, '--report', '--report-wide']
+    options = [mtr_prog, '--report', '--report-wide']
     pingtype = config.get(host, "type")
-    count    = config.getint(host, "count")
-    ipv4     = config.getboolean(host, "force_ipv4")
-    ipv6     = config.getboolean(host, "force_ipv6")
-    size     = config.getint(host, "size")
+    count = config.getint(host, "count")
+    ipv4 = config.getboolean(host, "force_ipv4")
+    ipv6 = config.getboolean(host, "force_ipv6")
+    size = config.getint(host, "size")
     lasttime = config.getint(host, "time")
-    dns      = config.getboolean(host, "dns")
-    port     = config.get(host, "port")
-    address  = config.get(host, "address")
+    dns = config.getboolean(host, "dns")
+    port = config.get(host, "port")
+    address = config.get(host, "address")
     interval = config.get(host, "interval")
-    timeout  = config.get(host, "timeout")
+    timeout = config.get(host, "timeout")
 
     if "running" in status[host].keys():
         if debug:
@@ -303,9 +334,9 @@ def start_mtr(host):
     if time.time() - status[host]["lasttime"] < lasttime:
         if debug:
             sys.stdout.write("%s - %s = %s is smaller than %s => mtr run not needed yet.\n" %
-                (time.time(), status[host]["lasttime"], time.time() - status[host]["lasttime"], lasttime))
+                             (time.time(), status[host]["lasttime"],
+                              time.time() - status[host]["lasttime"], lasttime))
         return
-
 
     pid = os.fork()
     if pid > 0:
@@ -356,16 +387,17 @@ def start_mtr(host):
     reportfile = report_filepre + host_to_filename(host)
     if os.path.exists(reportfile):
         os.unlink(reportfile)
-    report=open(reportfile, 'a+')
+    report = open(reportfile, 'a+')
     report.write(str(int(time.time())) + "\n")
     report.flush()
     process = subprocess.Popen(options, stdout=report, stderr=report)
     # Write pid to report.pid
-    pidfile=open(reportfile + ".pid", 'w')
+    pidfile = open(reportfile + ".pid", 'w')
     pidfile.write("%d\n" % process.pid)
     pidfile.flush()
     pidfile.close()
     os._exit(os.EX_OK)
+
 
 # Parse config
 sys.stdout.write("<<<mtr:sep(124)>>>\n")

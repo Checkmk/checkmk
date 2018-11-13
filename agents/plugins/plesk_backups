@@ -43,15 +43,16 @@ def connect():
     # pylint: disable=no-member
     try:
         return MySQLdb.connect(
-	    host    = 'localhost',
-            db      = 'psa',
-            user    = 'admin',
-            passwd  = file('/etc/psa/.psa.shadow').read().strip(),
-            charset = 'utf8',
+            host='localhost',
+            db='psa',
+            user='admin',
+            passwd=file('/etc/psa/.psa.shadow').read().strip(),
+            charset='utf8',
         )
     except MySQLdb.Error, e:
         sys.stderr.write("MySQL-Error %d: %s\n" % (e.args[0], e.args[1]))
         sys.exit(1)
+
 
 def get_domains():
     cursor = db.cursor()
@@ -68,6 +69,7 @@ def get_domains():
     cursor2.close()
     cursor.close()
     return domains
+
 
 #
 # MAIN
@@ -90,27 +92,24 @@ output = ['<<<plesk_backups>>>']
 for domain, p in domains.iteritems():
     try:
         if not p:
-            output.append('%s 4' % domain) # Backup nicht konfiguriert
+            output.append('%s 4' % domain)  # Backup nicht konfiguriert
             continue
 
         ftp = FTP(
             p['backup_ftp_settinghost'],
             p['backup_ftp_settinglogin'],
-            p['backup_ftp_settingpassword']
+            p['backup_ftp_settingpassword'],
         )
 
         # Zeilen holen
         files = []
-        ftp.retrlines(
-            'LIST %s' % p['backup_ftp_settingdirectory'],
-            callback = files.append
-        )
+        ftp.retrlines('LIST %s' % p['backup_ftp_settingdirectory'], callback=files.append)
         # example line:
         # -rw----r--   1 b091045  cust     13660160 Dec  3 01:50 bla_v8_bla-v8.bla0.net_1212030250.tar
 
         # Zeilen formatieren
         last_backup = None
-        backups     = []
+        backups = []
         for line in files:
             parts = line.split()
             if parts[-1].endswith('.tar'):
@@ -122,12 +121,13 @@ for domain, p in domains.iteritems():
                 backups.append(backup)
 
         if not backups:
-            output.append('%s 5' % domain) # Keine Sicherungen vorhanden
+            output.append('%s 5' % domain)  # Keine Sicherungen vorhanden
             continue
 
         # Get total size of all files on FTP
         f = []
-        def get_size(ftp, base_dir, l = None):
+
+        def get_size(ftp, base_dir, l=None):
             if l and l.split()[-1] in ['.', '..']:
                 return 0
 
@@ -135,17 +135,17 @@ for domain, p in domains.iteritems():
             if not l or l[0] == 'd':
                 subdir = '/' + l.split()[-1] if l else ''
                 dir_files = []
-                ftp.retrlines('LIST %s%s' % (base_dir, subdir),
-                    callback = dir_files.append
-                )
+                ftp.retrlines('LIST %s%s' % (base_dir, subdir), callback=dir_files.append)
                 for line in dir_files:
                     size += get_size(ftp, '%s%s' % (base_dir, subdir), line)
             else:
                 size += int(l.split()[-5])
             return size
+
         total_size = get_size(ftp, '')
 
-        output.append('%s 0 %s %d %d' % (domain, last_backup[1].strftime('%s'), last_backup[2], total_size))
+        output.append(
+            '%s 0 %s %d %d' % (domain, last_backup[1].strftime('%s'), last_backup[2], total_size))
 
     except Exception, e:
         output.append('%s 2 %s' % (domain, e))

@@ -51,13 +51,16 @@ config_file = config_dir + "/nginx_status.cfg"
 # None or list of (proto, ipaddress, port) tuples.
 # proto is 'http' or 'https'
 servers = None
-ssl_ports = [ 443, ]
+ssl_ports = [
+    443,
+]
 
 if os.path.exists(config_file):
     execfile(config_file)
 
+
 def try_detect_servers():
-    pids    = []
+    pids = []
     results = []
     for line in os.popen('netstat -tlnp 2>/dev/null').readlines():
         parts = line.split()
@@ -69,11 +72,11 @@ def try_detect_servers():
         to_replace = re.compile('^.*/')
         proc = to_replace.sub('', proc)
 
-        procs = [ 'nginx', 'nginx:', 'nginx.conf' ]
+        procs = ['nginx', 'nginx:', 'nginx.conf']
         # the pid/proc field length is limited to 19 chars. Thus in case of
         # long PIDs, the process names are stripped of by that length.
         # Workaround this problem here
-        procs = [ p[:19 - len(pid) - 1] for p in procs ]
+        procs = [p[:19 - len(pid) - 1] for p in procs]
 
         # Skip unwanted processes
         if proc not in procs:
@@ -103,6 +106,7 @@ def try_detect_servers():
 
     return results
 
+
 if servers is None:
     servers = try_detect_servers()
 
@@ -124,7 +128,7 @@ for server in servers:
         url = '%s://%s:%s/%s' % (proto, address, port, page)
         # Try to fetch the status page for each server
         try:
-            request = urllib2.Request(url, headers={"Accept" : "text/plain"})
+            request = urllib2.Request(url, headers={"Accept": "text/plain"})
             fd = urllib2.urlopen(request)
         except urllib2.URLError, e:
             if 'SSL23_GET_SERVER_HELLO:unknown protocol' in str(e):

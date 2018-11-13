@@ -86,6 +86,7 @@ class DataSource(object):
         # Runtime data (managed by self.run()) - Meant for self.get_summary_result()
         self._exception = None
         self._host_sections = None
+        self._persisted_sections = None
 
 
     def _setup_logger(self):
@@ -118,10 +119,12 @@ class DataSource(object):
 
         self._exception = None
         self._host_sections = None
+        self._persisted_sections = None
 
         try:
             cpu_tracking.push_phase(self._cpu_tracking_id())
 
+            self._persisted_sections = self._load_persisted_sections()
             raw_data, is_cached_data = self._get_raw_data()
 
             self._host_sections = host_sections = self._convert_to_sections(raw_data)
@@ -459,11 +462,10 @@ class DataSource(object):
 
 
     def _update_info_with_persisted_sections(self, host_sections):
-        persisted_sections = self._load_persisted_sections()
-        if not persisted_sections:
+        if not self._persisted_sections:
             return host_sections
 
-        for section_name, entry in persisted_sections.items():
+        for section_name, entry in self._persisted_sections.items():
             if len(entry) == 2:
                 continue # Skip entries of "old" format
 

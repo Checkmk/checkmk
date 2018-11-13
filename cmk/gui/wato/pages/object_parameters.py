@@ -27,6 +27,9 @@
 parameters. This is a host/service overview page over all things that can be
 modified via rules."""
 
+
+import cmk
+
 import cmk.gui.config as config
 import cmk.gui.watolib as watolib
 import cmk.gui.forms as forms
@@ -306,6 +309,14 @@ class ModeObjectParameters(WatoMode):
 
         # Show the resulting value or factory setting
         html.open_td(class_=["settingvalue", "used" if len(rules) > 0 else "unused"])
+
+
+        if isinstance(known_settings, dict) and "tp_computed_params" in known_settings:
+            computed_at = known_settings["tp_computed_params"]["computed_at"]
+            html.write_text(_("Timespecific parameters computed at %s") % cmk.render.date_and_time(computed_at))
+            html.br()
+            known_settings = known_settings["tp_computed_params"]["params"]
+
 
         # In some cases we now the settings from a check_mk automation
         if known_settings is self._PARAMETERS_OMIT:

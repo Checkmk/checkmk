@@ -30,31 +30,31 @@ opt_debug = "-d" in sys.argv or "--debug" in sys.argv
 
 # The following settings are tried to be autodetected
 target_values = {
-    'apache_config_dir' : "Configuration directory of Apache",
-    'cgiurl'            : "URL of Nagios CGI programs",
-    'check_icmp_path'   : "Path to check_icmp Plugin",
-    'htdocsdir'         : "Directory of Nagios' static web pages",
-    'htpasswd_file'     : "File of Nagios' HTTP users and passwords",
-    'livestatus_in_nagioscfg' : "Wether nagios.cfg loads livestatus module",
-    'nagconfdir'        : "Directory of Nagios objects (see cfg_dir)",
-    'nagiosaddconf'     : "Snippet to add to nagios.cfg",
-    'nagios_auth_name'  : "HTTP Basic AuthName for Nagios",
-    'nagios_binary'     : "Absolute path to Nagios binary itself",
-    'nagios_version'    : "Nagios version",
+    'apache_config_dir': "Configuration directory of Apache",
+    'cgiurl': "URL of Nagios CGI programs",
+    'check_icmp_path': "Path to check_icmp Plugin",
+    'htdocsdir': "Directory of Nagios' static web pages",
+    'htpasswd_file': "File of Nagios' HTTP users and passwords",
+    'livestatus_in_nagioscfg': "Wether nagios.cfg loads livestatus module",
+    'nagconfdir': "Directory of Nagios objects (see cfg_dir)",
+    'nagiosaddconf': "Snippet to add to nagios.cfg",
+    'nagios_auth_name': "HTTP Basic AuthName for Nagios",
+    'nagios_binary': "Absolute path to Nagios binary itself",
+    'nagios_version': "Nagios version",
     'nagios_config_file': "Absolute path to nagios.cfg",
     'nagios_startscript': "Nagios startskript (usually in /etc/init.d)",
     'nagios_status_file': "Absolute path to Nagios' status.dat",
-    'nagiosurl'         : "Base-URL of Nagios web pages",
-    'nagiosuser'        : "System user running the Nagios process",
-    'nagpipe'           : "Absolute path to Nagios' command pipe (nagios.cmd)",
-    'check_result_path' : "Absolute path to Nagios' checkresults directory",
-    'pnp_url'           : "URL of PNP4Nagios",
-    'pnpconffile'       : "PNP4Nagios configuration file for its PHP pages",
-    'pnphtdocsdir'      : "PNP4Nagios www document root directory",
-    'pnptemplates'      : "directory of PHP templates for PNP4Nagios",
-    'rrddir'            : "Base directory where RRDs are stored",
-    'wwwgroup'          : "Common group of Nagios and Apache",
-    'wwwuser'           : "System user apache runs with",
+    'nagiosurl': "Base-URL of Nagios web pages",
+    'nagiosuser': "System user running the Nagios process",
+    'nagpipe': "Absolute path to Nagios' command pipe (nagios.cmd)",
+    'check_result_path': "Absolute path to Nagios' checkresults directory",
+    'pnp_url': "URL of PNP4Nagios",
+    'pnpconffile': "PNP4Nagios configuration file for its PHP pages",
+    'pnphtdocsdir': "PNP4Nagios www document root directory",
+    'pnptemplates': "directory of PHP templates for PNP4Nagios",
+    'rrddir': "Base directory where RRDs are stored",
+    'wwwgroup': "Common group of Nagios and Apache",
+    'wwwuser': "System user apache runs with",
 }
 
 # Ich suche nach Prozessen mit folgenden Kriterien:
@@ -64,10 +64,12 @@ target_values = {
 # Beispiel:
 # /usr/sbin/nagios3 -d /etc/nagios3/nagios.cfg
 
+
 class Sorry(Exception):
     def __init__(self, reason):
         self.reason = reason
         super(Sorry, self).__init__(reason)
+
 
 def find_pid_and_configfile():
     procs = os.popen("ps ax -o pid,ppid,user,command").readlines()
@@ -81,13 +83,13 @@ def find_pid_and_configfile():
             try:
                 words = line.split()
                 if '-d' in words or '--daemon' in words:
-                    pid        = words[0]
-                    ppid       = words[1]
-                    user       = words[2]
+                    pid = words[0]
+                    ppid = words[1]
+                    user = words[2]
                     configfile = words[-1]
                     if ppid in pids:
-                        continue # this is not the main thread. It has
-                                 # another process as parent!
+                        continue  # this is not the main thread. It has
+                        # another process as parent!
                     if os.path.exists(configfile):
                         return int(pid), user, configfile
             except Exception, e:
@@ -95,6 +97,7 @@ def find_pid_and_configfile():
                     raise
 
     raise Sorry("Cannot find Nagios/Icinga process. Is it running?")
+
 
 def find_apache_properties(nagiosuser, nagios_htdocs_dir):
     wwwuser = None
@@ -129,14 +132,13 @@ def find_apache_properties(nagiosuser, nagios_htdocs_dir):
                         confdir = httpd_root + "/" + confdir
                     if not os.path.exists(confdir):
                         continue
-                    confdirs.append(confdir) # put at front of list
+                    confdirs.append(confdir)  # put at front of list
                 else:
                     try:
-                        confdirs += scan_apacheconf(parts[1]) # recursive scan
+                        confdirs += scan_apacheconf(parts[1])  # recursive scan
                     except:
                         pass
         return confdirs
-
 
     # Find binary
     try:
@@ -180,7 +182,6 @@ def find_apache_properties(nagiosuser, nagios_htdocs_dir):
                     pass
                 return text
 
-
             auth_files = []
             auth_names = []
             try:
@@ -203,14 +204,17 @@ def find_apache_properties(nagiosuser, nagios_htdocs_dir):
                                     parts = line.split(None, 1)
                                     new_auth_names.append(remove_quotes(parts[1].strip()))
                                 try:
-                                    if len(parts) > 1 and parts[0].lower().startswith("<directory") and "pnp4nagios" in line:
-                                        cleanedup = line.replace("<", "").replace(">", "").replace('"', "")
+                                    if len(parts) > 1 and parts[0].lower().startswith(
+                                            "<directory") and "pnp4nagios" in line:
+                                        cleanedup = line.replace("<", "").replace(">", "").replace(
+                                            '"', "")
                                         cleanedup = cleanedup[9:]
                                         dir = cleanedup.strip()
-                                        if os.path.exists(dir) and os.path.exists(dir + "/application/config/config.php"):
+                                        if os.path.exists(dir) and os.path.exists(
+                                                dir + "/application/config/config.php"):
                                             result['pnphtdocsdir'] = dir
                                             result['pnptemplates'] = dir + "/templates"
-                                except Exception,e :
+                                except Exception, e:
                                     pass
                             if file_good:
                                 auth_names += new_auth_names
@@ -227,16 +231,15 @@ def find_apache_properties(nagiosuser, nagios_htdocs_dir):
                     raise
                 pass
 
-
     except:
         if opt_debug:
             raise
         apache_confdir = None
         nagios_htpasswd_file = None
 
-    www_groups    = os.popen("id -nG " + wwwuser).read().split()
+    www_groups = os.popen("id -nG " + wwwuser).read().split()
     nagios_groups = os.popen("id -nG " + nagiosuser).read().split()
-    common_groups = [ g for g in www_groups if g in nagios_groups ]
+    common_groups = [g for g in www_groups if g in nagios_groups]
     if len(common_groups) > 1:
         if 'nagios' in common_groups:
             common_group = 'nagios'
@@ -263,25 +266,25 @@ def process_environment(pid):
                 env[var] = value
         return env
     except:
-        raise Sorry("Cannot get environment of process %d. Aren't you root?" %
-                    pid)
+        raise Sorry("Cannot get environment of process %d. Aren't you root?" % pid)
+
 
 def process_executable(pid):
     try:
         return os.readlink("/proc/%d/exe" % pid).split(" ", 1)[0]
     except:
-        raise Sorry("Cannot get executable of process %d. Aren't you root?" %
-                    pid)
+        raise Sorry("Cannot get executable of process %d. Aren't you root?" % pid)
+
 
 def open_files(pid):
     try:
         # Liste der offenen Dateien. Das ist schon nuetzlicher,
         # denn hier sieht man z.B. die Commandpipe
         procpath = "/proc/%d/fd" % pid
-        return [ os.readlink(procpath + "/" + entry) for entry in os.listdir(procpath) ]
+        return [os.readlink(procpath + "/" + entry) for entry in os.listdir(procpath)]
     except:
-        raise Sorry("Cannot get open files of process %d. Aren't you root?" %
-                    pid)
+        raise Sorry("Cannot get open files of process %d. Aren't you root?" % pid)
+
 
 def find_pipes(filenames):
     pipes = []
@@ -294,6 +297,7 @@ def find_pipes(filenames):
             pass
     return pipes
 
+
 def parse_nagios_config(configfile):
     conf = []
     for line in file(configfile):
@@ -304,7 +308,7 @@ def parse_nagios_config(configfile):
             key, value = line.split('=', 1)
             conf.append((key, value))
         except:
-            pass # ignore invalid line (as Nagios seems to do)
+            pass  # ignore invalid line (as Nagios seems to do)
     return conf
 
 
@@ -319,9 +323,11 @@ def detect_pnp():
     if 'pnptemplates' not in result:
         try:
             found = []
+
             def func(arg, dirname, names):
                 if 'templates' in names and 'templates.dist' in names:
                     found.append(dirname + "/templates")
+
             os.path.walk(cgiconf['physical_html_path'], func, None)
             result['pnptemplates'] = found[0]
             if 'pnphtdocsdir' not in result:
@@ -389,31 +395,31 @@ def detect_omd():
         return None
     else:
         return {
-      'apache_config_dir'       : root + "/etc/apache/conf.d",
-      'cgiurl'                  : "/" + site + "/nagios/cgi-bin/",
-      'check_icmp_path'         : root + "/lib/nagios/plugins/check_icmp",
-      'htdocsdir'               : root + "/share/nagios/htdocs",
-      'htpasswd_file'           : root + "/etc/htpasswd",
-      'livestatus_in_nagioscfg' : False,
-      'nagconfdir'              : root + "/etc/nagios/conf.d",
-      'nagiosaddconf'           : "",
-      'nagios_auth_name'        : "OMD Monitoring Site " + site,
-      'nagios_binary'           : root + "/bin/nagios",
-      'nagios_config_file'      : root + "/tmp/nagios/nagios.cfg",
-      'nagios_startscript'      : root + "/etc/init.d/nagios",
-      'nagios_status_file'      : root + "/var/nagios/status.dat",
-      'nagiosurl'               : "/" + site + "/nagios/",
-      'nagiosuser'              : site,
-      'nagpipe'                 : root + "/tmp/run/nagios.cmd",
-      'check_result_path'       : root + "/tmp/nagios/checkresults",
-      'pnp_url'                 : "/" + site + "/pnp4nagios/",
-      'pnpconffile'             : root + "/etc/pnp4nagios/config.php",
-      'pnphtdocsdir'            : root + "/share/pnp4nagios/htdocs",
-      'pnptemplates'            : root + "/local/share/check_mk/pnp-templates",
-      'rrddir'                  : root + "/var/pnp4nagios/perfdata",
-      'wwwgroup'                : site,
-      'wwwuser'                 : site,
-    }
+            'apache_config_dir': root + "/etc/apache/conf.d",
+            'cgiurl': "/" + site + "/nagios/cgi-bin/",
+            'check_icmp_path': root + "/lib/nagios/plugins/check_icmp",
+            'htdocsdir': root + "/share/nagios/htdocs",
+            'htpasswd_file': root + "/etc/htpasswd",
+            'livestatus_in_nagioscfg': False,
+            'nagconfdir': root + "/etc/nagios/conf.d",
+            'nagiosaddconf': "",
+            'nagios_auth_name': "OMD Monitoring Site " + site,
+            'nagios_binary': root + "/bin/nagios",
+            'nagios_config_file': root + "/tmp/nagios/nagios.cfg",
+            'nagios_startscript': root + "/etc/init.d/nagios",
+            'nagios_status_file': root + "/var/nagios/status.dat",
+            'nagiosurl': "/" + site + "/nagios/",
+            'nagiosuser': site,
+            'nagpipe': root + "/tmp/run/nagios.cmd",
+            'check_result_path': root + "/tmp/nagios/checkresults",
+            'pnp_url': "/" + site + "/pnp4nagios/",
+            'pnpconffile': root + "/etc/pnp4nagios/config.php",
+            'pnphtdocsdir': root + "/share/pnp4nagios/htdocs",
+            'pnptemplates': root + "/local/share/check_mk/pnp-templates",
+            'rrddir': root + "/var/pnp4nagios/perfdata",
+            'wwwgroup': site,
+            'wwwuser': site,
+        }
 
 
 #                    _
@@ -441,12 +447,12 @@ try:
 
         # Nagios version
         result['nagios_version'] = ""
-        for line in os.popen(result["nagios_binary"]+ " --version 2>/dev/null"):
+        for line in os.popen(result["nagios_binary"] + " --version 2>/dev/null"):
             if line.startswith("Nagios Core") or line.startswith("Icinga Core"):
                 result['nagios_version'] = line.split()[2]
 
         # Path to startscript
-        for path in [ '/etc/init.d/nagios', '/etc/init.d/nagios3', '/etc/init.d/icinga' ]:
+        for path in ['/etc/init.d/nagios', '/etc/init.d/nagios3', '/etc/init.d/icinga']:
             if os.path.exists(path):
                 result['nagios_startscript'] = path
                 break
@@ -465,7 +471,7 @@ try:
 
         # Suche nach cfg_dir Direktiven. Wir suchen
         # einen flauschigen Platz fuer unsere Konfigdateien
-        cfg_dirs = [ value for key, value in nagconf if key == 'cfg_dir' ]
+        cfg_dirs = [value for key, value in nagconf if key == 'cfg_dir']
         if len(cfg_dirs) > 0:
             # Wenn es mehrere gibt, bevorzuge ich das, das im gleichen
             # Verzeichnis, wie die Nagios-Konfigdatei selbst liegt.
@@ -495,7 +501,7 @@ try:
         # have a chance by parsing the output of nagios3stats.
         nagios_status_file = nagconf_dict.get("status_file")
         if not nagios_status_file:
-            for stats_name in [ "stats", "tats" ]:
+            for stats_name in ["stats", "tats"]:
                 try:
                     stats_bin = result['nagios_binary'] + stats_name
                     for line in os.popen(stats_bin + " 2>/dev/null"):
@@ -513,7 +519,6 @@ try:
         if nagios_status_file:
             result['nagios_status_file'] = nagios_status_file
 
-
         # Ermittle $USER1$ Variablen, da sie in den Plugin-Pfaden
         # auftauchen koennen.
         uservars = {}
@@ -525,7 +530,6 @@ try:
                     uservars[varname.strip()] = value.strip()
         except:
             pass
-
 
         # Suche nach einem Eintrag zum Laden des livestatus
         # Moduls. Er darf auch auskommentiert sein. Dann lassen
@@ -549,7 +553,7 @@ try:
         # und '/usr/local/nagios/plugins'
         found = []
         for dir in cfg_dirs:
-            os.path.walk(dir, lambda x,dirname,names: found.append((dirname, names)), None)
+            os.path.walk(dir, lambda x, dirname, names: found.append((dirname, names)), None)
         plugin_paths = []
         for dirname, names in found:
             for name in names:
@@ -587,7 +591,6 @@ try:
             except:
                 pass
 
-
         # Die Basis-Url fuer Nagios ist leider auch nicht immer
         # gleich
         try:
@@ -602,7 +605,7 @@ try:
             wwwuser, wwwgroup, apache_confdir, nagios_htpasswd_file, nagios_auth_name = \
                      find_apache_properties(nagiosuser, result['htdocsdir'])
             if wwwuser:
-                result['wwwuser']  = wwwuser
+                result['wwwuser'] = wwwuser
             if wwwgroup:
                 result['wwwgroup'] = wwwgroup
             if apache_confdir:
@@ -614,7 +617,6 @@ try:
         except Exception, e:
             sys.stderr.write("\033[1;41;35m Cannot determine Apache properties. \033[0m\n"
                              "Reason: %s\n" % e)
-
 
         detect_pnp()
 

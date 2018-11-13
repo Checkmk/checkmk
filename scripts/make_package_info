@@ -5,20 +5,19 @@ import sys, os, pprint
 filelists = {}
 
 package = {
-    "name"                 : "check_mk",
-    "title"                : "Files shipped with Check_MK",
-    "description"          :
-        "This package is automatically created during setup of Check_MK "
-        "and contains files shipped with the official release of Check_MK.",
-    "version"              : sys.argv[1],
-    "version.packaged"     : sys.argv[1],
-    "version.min_required" : sys.argv[1],
-    "author"               : "Mathias Kettner",
-    "download_url"         : "http://mathias-kettner.de/check_mk.html",
-    "files"                : filelists
+    "name": "check_mk",
+    "title": "Files shipped with Check_MK",
+    "description": "This package is automatically created during setup of Check_MK "
+                   "and contains files shipped with the official release of Check_MK.",
+    "version": sys.argv[1],
+    "version.packaged": sys.argv[1],
+    "version.min_required": sys.argv[1],
+    "author": "Mathias Kettner",
+    "download_url": "http://mathias-kettner.de/check_mk.html",
+    "files": filelists
 }
 
-parts = [ "checks", "checkman", "agents", "web", "pnp-templates", "doc" ]
+parts = ["checks", "checkman", "agents", "web", "pnp-templates", "doc"]
 for part in parts:
     tarfile = part + ".tar.gz"
     filelist = []

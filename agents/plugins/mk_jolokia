@@ -46,7 +46,7 @@ VERBOSE = '--verbose' in sys.argv
 DEBUG = '--debug' in sys.argv
 
 
-class SkipInstance(Exception):
+class SkipInstance(RuntimeError):
     pass
 
 
@@ -109,6 +109,12 @@ class HTTPSAuthHandler(urllib2.HTTPSHandler):
     def get_connection(self, host, _timeout):
         return HTTPSValidatingConnection(
             host, ca_file=self.__ca_file, key_file=self.__key, cert_file=self.__cert)
+
+
+def write_section(name, iterable):
+    sys.stdout.write('<<<%s>>>\n' % name)
+    for line in iterable:
+        sys.stdout.write(' '.join(map(str, line)) + '\n')
 
 
 def fetch_url_get(base_url, path, function):
@@ -259,7 +265,7 @@ def fetch_metric(inst, path, title, itemspec, inst_add=None):
 
     for subinstance, value in values:
         if not subinstance and not title:
-            sys.stdout.write("INTERNAL ERROR: %s\n" % value)
+            sys.stderr.write("INTERNAL ERROR: %s\n" % value)
             continue
 
         if "threadStatus" in subinstance or "threadParam" in subinstance:
@@ -321,13 +327,8 @@ def query_instance(inst):
     try:
         prepare_http_opener(inst)
     except () if DEBUG else Exception, exc:
-        if DEBUG:
-            raise
-        sys.stdout.write('<<<jolokia_info>>>\n')
         sys.stderr.write("ERROR: %s\n" % exc)
         raise SkipInstance()
-
-    output_jolokia_info(inst)
 
     # TODO: Untie mbean_search_results / query calculation and jolokia_metrics processing
     mbean_search_results = {}
@@ -335,13 +336,9 @@ def query_instance(inst):
     shipped_vars = QUERY_SPECS_GENERIC + QUERY_SPECS_SPECIFIC.get(inst["product"], [])
     custom_vars = inst.get("custom_vars")
 
-    sys.stdout.write('<<<jolokia_metrics>>>\n')
-    for result in generate_values(inst, shipped_vars, mbean_search_results):
-        sys.stdout.write(' '.join(map(str, result)) + '\n')
-
-    sys.stdout.write('<<<jolokia_generic>>>\n')
-    for result in generate_values(inst, custom_vars, mbean_search_results):
-        sys.stdout.write(' '.join(map(str, result)) + '\n')
+    write_section('jolokia_info', generate_jolokia_info(inst))
+    write_section('jolokia_metrics', generate_values(inst, shipped_vars, mbean_search_results))
+    write_section('jolokia_generic', generate_values(inst, custom_vars, mbean_search_results))
 
 
 def prepare_http_opener(inst):
@@ -355,7 +352,7 @@ def prepare_http_opener(inst):
     handlers = []
     if inst["protocol"] == "https":
         if inst["mode"] == 'https' and (inst["client_key"] is None or inst["client_cert"] is None):
-            raise Exception("HTTPS set up as authentication method but certificate wasn't provided")
+            raise ValueError("Missing client certificate for HTTPS authentication")
         handlers.append(
             HTTPSAuthHandler(inst["cert_path"], inst["client_key"], inst["client_cert"]))
     if inst["mode"] == 'digest':
@@ -370,25 +367,22 @@ def prepare_http_opener(inst):
         urllib2.install_opener(opener)
 
 
-def output_jolokia_info(inst):
+def generate_jolokia_info(inst):
     # Determine type of server
     server_info = fetch_var(inst["protocol"], inst["server"], inst["port"], "", inst["suburi"], "",
                             None, None, None)
 
-    sys.stdout.write('<<<jolokia_info>>>\n')
-    if server_info:
-        info_dict = dict(server_info)
-        version = info_dict.get(('info', 'version'), "unknown")
-        product = info_dict.get(('info', 'product'), "unknown")
-        if inst.get("product"):
-            product = inst["product"]
-        agentversion = info_dict.get(('agent',), "unknown")
-        sys.stdout.write("%s %s %s %s\n" % (inst["instance"], product, version, agentversion))
-    else:
-        sys.stdout.write("%s ERROR\n" % (inst["instance"],))
-        sys.stdout.write('<<<jolokia_metrics>>>\n')
-        sys.stdout.write("%s ERROR\n" % (inst["instance"],))
+    if not server_info:
+        sys.stderr.write("%s ERROR: Empty server info\n" % (inst["instance"],))
         raise SkipInstance()
+
+    info_dict = dict(server_info)
+    version = info_dict.get(('info', 'version'), "unknown")
+    product = info_dict.get(('info', 'product'), "unknown")
+    if inst.get("product"):
+        product = inst["product"]
+    agentversion = info_dict.get(('agent',), "unknown")
+    yield inst["instance"], product, version, agentversion
 
 
 def generate_values(inst, var_list, mbean_search_results):

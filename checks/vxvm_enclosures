@@ -28,18 +28,18 @@
 # <<<vxvm_enclosures>>>
 # LIO-Sechs         aluadisk       ALUAdisk             CONNECTED    ALUA        3
 
+
 def check_vxvm_enclosures(item, params, info):
     for line in info:
         if line[0] == item:
             if line[3] != "CONNECTED":
-                return(2, "Status is %s" % line[3])
-            return(0, "Status is CONNECTED")
-    return(3, "Item not found")
+                return (2, "Status is %s" % line[3])
+            return (0, "Status is CONNECTED")
+    return (3, "Item not found")
 
 
 check_info["vxvm_enclosures"] = {
-    "check_function"          : check_vxvm_enclosures,
-    "inventory_function"      : lambda info: [(item[0], None) for item in info],
-    "service_description"     : "Enclosure %s",
+    "check_function": check_vxvm_enclosures,
+    "inventory_function": lambda info: [(item[0], None) for item in info],
+    "service_description": "Enclosure %s",
 }
-

@@ -31,9 +31,9 @@ def detect_webtherm(oid):
 
 def parse_wut_webtherm(info):
     map_sensor_type = {
-        "1" : "temp",
-        "2" : "humid",
-        "3" : "air_pressure",
+        "1": "temp",
+        "2": "humid",
+        "3": "air_pressure",
     }
     parsed = {}
     for index, reading_de, reading_en in info:
@@ -50,17 +50,17 @@ def parse_wut_webtherm(info):
         # declare more sensor types here.
         if "---" not in reading_str and reading_str:
             # We have only temperature sensors
-            if int(webtherm_type) <= 9: # TODO: this is just a guess
+            if int(webtherm_type) <= 9:  # TODO: this is just a guess
                 parsed[sensor_id] = {
-                    "type"    : "temp",
-                    "reading" : float(reading_str),
+                    "type": "temp",
+                    "reading": float(reading_str),
                 }
             # Here we have three different types of sensors:
             # 1 = temp, 2 = humid, 3 = air pressure
             else:
                 parsed[sensor_id] = {
-                    "type"    : map_sensor_type[sensor_id],
-                    "reading" : float(reading_str),
+                    "type": map_sensor_type[sensor_id],
+                    "reading": float(reading_str),
                 }
 
     return parsed
@@ -77,9 +77,8 @@ def parse_wut_webtherm(info):
 #   |                             main check                               |
 #   '----------------------------------------------------------------------'
 
-
 factory_settings["wut_webtherm_defaultlevels"] = {
-    "levels"    : (30, 35),
+    "levels": (30, 35),
 }
 
 
@@ -94,20 +93,23 @@ def check_wut_webtherm(item, params, parsed):
 
 
 check_info["wut_webtherm"] = {
-    'default_levels_variable'   : "wut_webtherm_defaultlevels",
-    'parse_function'            : parse_wut_webtherm,
-    'inventory_function'        : inventory_wut_webtherm,
-    'check_function'            : check_wut_webtherm,
-    'service_description'       : 'Temperature %s',
-    'has_perfdata'              : True,
-    'snmp_info'                 : ('.1.3.6.1.4.1.5040.1.2', ['1', '2', '3', '6', '7', '8', '9', '16', '18', '36', '37', '42'], [
-                                        '1.2.1.1',  # WebGraph-Thermo-Hygro-Barometer-MIB::wtWebGraphThermoBaroSensorNo
-                                        '1.3.1.1',  # WebGraph-Thermo-Hygro-Barometer-MIB::wtWebGraphThermoBaroTempValue
-                                        '1.8.1.1',  # WebGraph-Thermo-Hygro-Barometer-MIB::wtWebGraphThermoBaroTempValuePkt
-                                  ]),
-    'snmp_scan_function'        : detect_webtherm,
-    'group'                     : 'temperature',
-    'includes'                  : [ 'temperature.include' ],
+    'default_levels_variable': "wut_webtherm_defaultlevels",
+    'parse_function': parse_wut_webtherm,
+    'inventory_function': inventory_wut_webtherm,
+    'check_function': check_wut_webtherm,
+    'service_description': 'Temperature %s',
+    'has_perfdata': True,
+    'snmp_info': (
+        '.1.3.6.1.4.1.5040.1.2',
+        ['1', '2', '3', '6', '7', '8', '9', '16', '18', '36', '37', '42'],
+        [
+            '1.2.1.1',  # WebGraph-Thermo-Hygro-Barometer-MIB::wtWebGraphThermoBaroSensorNo
+            '1.3.1.1',  # WebGraph-Thermo-Hygro-Barometer-MIB::wtWebGraphThermoBaroTempValue
+            '1.8.1.1',  # WebGraph-Thermo-Hygro-Barometer-MIB::wtWebGraphThermoBaroTempValuePkt
+        ]),
+    'snmp_scan_function': detect_webtherm,
+    'group': 'temperature',
+    'includes': ['temperature.include'],
 }
 
 #.
@@ -120,6 +122,7 @@ check_info["wut_webtherm"] = {
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
+
 def inventory_wut_webtherm_pressure(parsed):
     return [ (sensor_id, None) for sensor_id, values in parsed.items() \
              if values["type"] == "air_pressure" ]
@@ -131,11 +134,10 @@ def check_wut_webtherm_pressure(item, _no_params, parsed):
 
 
 check_info["wut_webtherm.pressure"] = {
-    "inventory_function"        : inventory_wut_webtherm_pressure,
-    "check_function"            : check_wut_webtherm_pressure,
-    "service_description"       : "Pressure %s",
+    "inventory_function": inventory_wut_webtherm_pressure,
+    "check_function": check_wut_webtherm_pressure,
+    "service_description": "Pressure %s",
 }
-
 
 #.
 #   .--Humidity------------------------------------------------------------.
@@ -146,7 +148,6 @@ check_info["wut_webtherm.pressure"] = {
 #   |             |_| |_|\__,_|_| |_| |_|_|\__,_|_|\__|\__, |              |
 #   |                                                  |___/               |
 #   '----------------------------------------------------------------------'
-
 
 wut_webtherm_humidity_defaultlevels = (35, 40, 60, 65)
 
@@ -162,13 +163,12 @@ def check_wut_webtherm_humidity(item, params, parsed):
 
 
 check_info["wut_webtherm.humidity"] = {
-    "inventory_function"        : inventory_wut_webtherm_humidity,
-    "check_function"            : check_wut_webtherm_humidity,
-    "service_description"       : "Humidity %s",
-    "includes"                  : [ "humidity.include" ],
-    'has_perfdata'              : True,
-    "group"                     : "humidity",
+    "inventory_function": inventory_wut_webtherm_humidity,
+    "check_function": check_wut_webtherm_humidity,
+    "service_description": "Humidity %s",
+    "includes": ["humidity.include"],
+    'has_perfdata': True,
+    "group": "humidity",
 }
 
 #.
-

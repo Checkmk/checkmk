@@ -24,6 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+
 def convert_vms_if(info):
     # Due to signed 32-bit arithmetics we sometimes get negative values. Those
     # must be converted to positive ones.
@@ -45,9 +46,9 @@ def convert_vms_if(info):
         new_info.append((
             str(ifIndex),
             ifDescr,
-            '6',         # ifType = Ethernet
-            '1000000000',# ifHighSpeed
-            '1',         # ifOperStatus
+            '6',  # ifType = Ethernet
+            '1000000000',  # ifHighSpeed
+            '1',  # ifOperStatus
             ifInOctets,
             ifInUcastPkts,
             ifInMulticastPkts,
@@ -60,9 +61,9 @@ def convert_vms_if(info):
             ifOutBroadcastPkts,
             ifOutDiscards,
             ifOutErrors,
-            '0',         # ifOutQLen
+            '0',  # ifOutQLen
             ifDescr,
-            '',         # ifPhysAddress
+            '',  # ifPhysAddress
         ))
     return new_info
 
@@ -70,17 +71,17 @@ def convert_vms_if(info):
 def inventory_vms_if(info):
     return inventory_if_common(convert_vms_if(info))
 
+
 def check_vms_if(item, params, info):
     return check_if_common(item, params, convert_vms_if(info))
 
 
 check_info['vms_if'] = {
-    "check_function"          : check_vms_if,
-    "inventory_function"      : inventory_vms_if,
-    "service_description"     : "Interface %s",
-    "has_perfdata"            : True,
-    "includes"                : [ "if.include" ],
-    "group"                   : "if",
-    "default_levels_variable" : "if_default_levels",
+    "check_function": check_vms_if,
+    "inventory_function": inventory_vms_if,
+    "service_description": "Interface %s",
+    "has_perfdata": True,
+    "includes": ["if.include"],
+    "group": "if",
+    "default_levels_variable": "if_default_levels",
 }
-

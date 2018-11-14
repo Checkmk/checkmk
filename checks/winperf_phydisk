@@ -61,14 +61,13 @@
 # 1250 1330 1330 counter
 
 
-
 def winperf_phydisk_convert(info):
     # node_info has been activated. This check simply ignores this
     # for now.
     # In case disk performance counters are not enabled, the agent sends
     # an almost empty section, where the second line is missing completely
     def disk_perfcounters_disabled(info):
-        nodes = set([ l[0] for l in info ])
+        nodes = set([l[0] for l in info])
         return len(nodes) == len(info)
 
     if disk_perfcounters_disabled(info):
@@ -81,20 +80,19 @@ def winperf_phydisk_convert(info):
         # Missing columns are donted by negative values (Linux sends here latency information)
         return zip(
             [nodename for _x in current_disks],
-            current_disks                        or [],
-            current_disk_read_bytes              or [],
-            current_disk_write_bytes             or [],
-            current_disk_reads                   or [],
-            current_disk_writes                  or [],
+            current_disks or [],
+            current_disk_read_bytes or [],
+            current_disk_write_bytes or [],
+            current_disk_reads or [],
+            current_disk_writes or [],
             [-1 for _x in current_disks],
-            current_disk_readq_ctrs              or [],
-            current_disk_writeq_ctrs             or [],
-            current_disk_seconds_per_read        or [],
-            current_disk_seconds_per_read_base   or [],
-            current_disk_seconds_per_write       or [],
-            current_disk_seconds_per_write_base  or []
+            current_disk_readq_ctrs or [],
+            current_disk_writeq_ctrs or [],
+            current_disk_seconds_per_read or [],
+            current_disk_seconds_per_read_base or [],
+            current_disk_seconds_per_write or [],
+            current_disk_seconds_per_write_base or [],
         )
-
 
     current_node = ""
     try:
@@ -114,16 +112,16 @@ def winperf_phydisk_convert(info):
                         disk_id = "%s_%s" % (disk_id[-1], disk_id[0])
                     current_disks.append(disk_id)
             elif line[1] == '-14':
-                current_disk_read_bytes  = map(int, line[2:-2])
+                current_disk_read_bytes = map(int, line[2:-2])
             elif line[1] == '-12':
                 current_disk_write_bytes = map(int, line[2:-2])
             elif line[1] == '-20':
-                current_disk_reads       = map(int, line[2:-2])
+                current_disk_reads = map(int, line[2:-2])
             elif line[1] == '-18':
-                current_disk_writes      = map(int, line[2:-2])
-            elif line[1] == '1168': # Average Disk Read Queue Length
-                current_disk_readq_ctrs  = map(int, line[2:-2])
-            elif line[1] == '1170': # Average Disk Read Queue Length
+                current_disk_writes = map(int, line[2:-2])
+            elif line[1] == '1168':  # Average Disk Read Queue Length
+                current_disk_readq_ctrs = map(int, line[2:-2])
+            elif line[1] == '1170':  # Average Disk Read Queue Length
                 current_disk_writeq_ctrs = map(int, line[2:-2])
             elif line[1] == '-24':
                 if line[-1] == 'average_base':
@@ -141,8 +139,10 @@ def winperf_phydisk_convert(info):
 
     return entries
 
+
 def inventory_winperf_phydisk(info):
     return inventory_diskstat_generic(winperf_phydisk_convert(info))
+
 
 def check_winperf_phydisk(item, params, info):
     init_line = info[0]
@@ -162,47 +162,42 @@ def check_winperf_phydisk(item, params, info):
         for disk in converted_info:
             disk_id = "%s_%s" % (disk[0], disk[1])
 
-
             result[disk[1]] = {
-                'node'               : disk[0],
-                'read_ios'           : get_rate("readios_" + disk_id, this_time, disk[4]),
-                'read_throughput'    : get_rate("readtp_" + disk_id, this_time, disk[2]),
-                'write_ios'          : get_rate("writeios_" + disk_id, this_time, disk[5]),
-                'write_throughput'   : get_rate("writetp_" + disk_id, this_time, disk[3]),
+                'node': disk[0],
+                'read_ios': get_rate("readios_" + disk_id, this_time, disk[4]),
+                'read_throughput': get_rate("readtp_" + disk_id, this_time, disk[2]),
+                'write_ios': get_rate("writeios_" + disk_id, this_time, disk[5]),
+                'write_throughput': get_rate("writetp_" + disk_id, this_time, disk[3]),
             }
             if frequency:
                 # using 1 for the base if the counter didn't increase. This makes little to no sense
-                sec_per_read_counter  = get_rate("spr_counter_" + disk_id, this_time, disk[9])
-                sec_per_read_base     = get_rate("spr_base_" + disk_id, this_time, disk[10]) or 1
+                sec_per_read_counter = get_rate("spr_counter_" + disk_id, this_time, disk[9])
+                sec_per_read_base = get_rate("spr_base_" + disk_id, this_time, disk[10]) or 1
                 sec_per_write_counter = get_rate("spw_counter_" + disk_id, this_time, disk[11])
-                sec_per_write_base    = get_rate("spw_base_" + disk_id, this_time, disk[12]) or 1
+                sec_per_write_base = get_rate("spw_base_" + disk_id, this_time, disk[12]) or 1
                 result[disk[1]].update({
-                    'average_read_wait'  : (sec_per_read_counter / frequency) / sec_per_read_base,
-                    'average_write_wait' : (sec_per_write_counter / frequency) / sec_per_write_base,
+                    'average_read_wait': (sec_per_read_counter / frequency) / sec_per_read_base,
+                    'average_write_wait': (sec_per_write_counter / frequency) / sec_per_write_base,
                 })
-
 
             # Queue Lengths (currently only Windows). Windows uses counters here.
             # I have not understood, why....
-            for what, ctr in [ ("read_ql",  disk[7]),
-                               ("write_ql", disk[8]) ]:
-                qlx = get_rate("%s_%s" % (what, disk_id) , this_time, int(ctr))
+            for what, ctr in [("read_ql", disk[7]), ("write_ql", disk[8])]:
+                qlx = get_rate("%s_%s" % (what, disk_id), this_time, int(ctr))
                 ql = qlx / 10000000.0
                 result[disk[1]].update({what: ql})
-
 
         return result
 
     return check_diskstat_dict(item, params, dictify(winperf_phydisk_convert(info)))
 
 
-
 check_info["winperf_phydisk"] = {
-    'check_function':          check_winperf_phydisk,
-    'inventory_function':      inventory_winperf_phydisk,
-    'service_description':     'Disk IO %s',
-    'node_info':               True,
-    'has_perfdata':            True,
-    'includes':                [ "diskstat.include" ],
-    'group':                   'disk_io',
+    'check_function': check_winperf_phydisk,
+    'inventory_function': inventory_winperf_phydisk,
+    'service_description': 'Disk IO %s',
+    'node_info': True,
+    'has_perfdata': True,
+    'includes': ["diskstat.include"],
+    'group': 'disk_io',
 }

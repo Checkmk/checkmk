@@ -43,9 +43,7 @@ def check_winperf_util(_no_item, params, info):
 
     this_time = int(float(info[0][0]))
 
-    what_map = { "-232": "util",
-                  "-96": "user",
-                  "-94": "privileged"}
+    what_map = {"-232": "util", "-96": "user", "-94": "privileged"}
 
     winperf_lines = []
     for line in info[1:]:
@@ -97,8 +95,8 @@ def check_winperf_util(_no_item, params, info):
                 for i in range(num_cpus):
                     core_ticks = int(line[1 + i])
                     try:
-                        core_ticks_per_sec = get_rate("winperf_util.core%d.util" % i, this_time,
-                                                      core_ticks, onwrap = RAISE)
+                        core_ticks_per_sec = get_rate(
+                            "winperf_util.core%d.util" % i, this_time, core_ticks, onwrap=RAISE)
                     except MKCounterWrapped:
                         wrapped = True
                         core_ticks_per_sec = 0
@@ -109,14 +107,14 @@ def check_winperf_util(_no_item, params, info):
                     cores.append(("core%d" % i, core_used_perc))
 
                 if not wrapped:
-                    for status, infotext, perfdata in check_cpu_util(used_perc, params,
-                                                                     this_time, cores):
+                    for status, infotext, perfdata in check_cpu_util(used_perc, params, this_time,
+                                                                     cores):
                         if perfdata and perfdata[0][0] == "util":
                             perfdata[0] = perfdata[0][:5] + (num_cpus,)
                         yield status, infotext, perfdata
             elif what == "user":
                 yield 0, "%s perc: %.1f %%" % (what, used_perc), [(what, used_perc)]
-            else: # privileged
+            else:  # privileged
                 yield 0, "%s perc: %.1f %%" % (what, used_perc)
 
     if not matched:
@@ -130,12 +128,12 @@ def check_winperf_util(_no_item, params, info):
 
 
 check_info["winperf_processor.util"] = {
-    'check_function'            : check_winperf_util,
-    'inventory_function'        : inventory_winperf_util,
-    'service_description'       : 'CPU utilization',
-    'has_perfdata'              : True,
-    'handle_real_time_checks'   : True,
-    'group'                     : 'cpu_utilization_os',
-    'default_levels_variable'   : 'winperf_cpu_default_levels',
-    'includes'                  : ["cpu_util.include", "winperf.include"],
+    'check_function': check_winperf_util,
+    'inventory_function': inventory_winperf_util,
+    'service_description': 'CPU utilization',
+    'has_perfdata': True,
+    'handle_real_time_checks': True,
+    'group': 'cpu_utilization_os',
+    'default_levels_variable': 'winperf_cpu_default_levels',
+    'includes': ["cpu_util.include", "winperf.include"],
 }

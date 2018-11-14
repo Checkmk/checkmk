@@ -24,58 +24,74 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-wagner_titanus_topsense_info = [(".1.3.6.1.2.1.1",               [1,          # sysDescr            0
-                                                                  3,          # sysUpTimeInstance   1
-                                                                  4,          # sysContact          2
-                                                                  5,          # sysName             3
-                                                                  6]),        # sysLocation         4
-                                # topsens LSN
-                                (".1.3.6.1.4.1.34187.21501.1.1", [1,          # company             0
-                                                                  2,          # model               1
-                                                                  3,          # revision            2
-                                                                  1000,       # pswMainAlarmD1      3
-                                                                  1001,       # pswPreAlarmD1       4
-                                                                  1002,       # pswInfAlarmD1       5
-                                                                  1003,       # pswMainAlarmD2      6
-                                                                  1004,       # pswPreAlarmD2       7
-                                                                  1005,       # pswInfAlarmD2       8
-                                                                  1006]),     # pswFailureDisplayOn 9
-                                                                              # off(0), on(1)
+wagner_titanus_topsense_info = [
+    (
+        ".1.3.6.1.2.1.1",
+        [
+            1,  # sysDescr            0
+            3,  # sysUpTimeInstance   1
+            4,  # sysContact          2
+            5,  # sysName             3
+            6,  # sysLocation         4
+        ]),
+    # topsens LSN
+    (
+        ".1.3.6.1.4.1.34187.21501.1.1",
+        [
+            1,  # company                0
+            2,  # model                  1
+            3,  # revision               2
+            1000,  # pswMainAlarmD1      3
+            1001,  # pswPreAlarmD1       4
+            1002,  # pswInfAlarmD1       5
+            1003,  # pswMainAlarmD2      6
+            1004,  # pswPreAlarmD2       7
+            1005,  # pswInfAlarmD2       8
+            1006,  # pswFailureDisplayOn 9
+        ]),  # off(0), on(1)
+    (
+        ".1.3.6.1.4.1.34187.21501.2.1",
+        [
+            245810000,  # tsBarGraph1String
+            245820000,  # tsBarGraph2String
+            245950000,  # tsD1ChamberValueString
+            246090000,  # tsD2ChamberValueString
+            245960000,  # tsD1AirFlowDeviationString
+            246100000,  # tsD2AirFlowDeviationString
+            245970000,  # tsD1AirTemperatureString
+            246110000,  # tsD2AirTemperatureString
+            24584008,  # tsLSNbusOnline      0
+            # offline(0),online(1)
+        ]),
+    # topsens non-LSN
+    (
+        ".1.3.6.1.4.1.34187.74195.1.1",
+        [
+            1,  # company                0
+            2,  # model                  1
+            3,  # revision               2
+            1000,  # pswMainAlarmD1      3
+            1001,  # pswPreAlarmD1       4
+            1002,  # pswInfAlarmD1       5
+            1003,  # pswMainAlarmD2      6
+            1004,  # pswPreAlarmD2       7
+            1005,  # pswInfAlarmD2       8
+            1006,  # pswFailureDisplayOn 9
+        ]),  # off(0), on(1)
+    (
+        ".1.3.6.1.4.1.34187.74195.2.1",
+        [
+            245790000,  # tsBarGraph1String
+            245800000,  # tsBarGraph2String
+            245940000,  # tsD1ChamberValueString
+            246060000,  # tsD2ChamberValueString
+            245950000,  # tsD1AirFlowDeviationString
+            246070000,  # tsD2AirFlowDeviationString
+            245960000,  # tsD1AirTemperatureString
+            246080000,  # tsD2AirTemperatureString
+        ]),
+]
 
-                                (".1.3.6.1.4.1.34187.21501.2.1", [245810000,   # tsBarGraph1String
-                                                                  245820000,   # tsBarGraph2String
-                                                                  245950000,   # tsD1ChamberValueString
-                                                                  246090000,   # tsD2ChamberValueString
-                                                                  245960000,   # tsD1AirFlowDeviationString
-                                                                  246100000,   # tsD2AirFlowDeviationString
-                                                                  245970000,   # tsD1AirTemperatureString
-                                                                  246110000,   # tsD2AirTemperatureString
-                                                                  24584008,    # tsLSNbusOnline      0
-                                                                               # offline(0),online(1)
-                                                                  ]),
-                                # topsens non-LSN
-                                (".1.3.6.1.4.1.34187.74195.1.1", [1,          # company             0
-                                                                  2,          # model               1
-                                                                  3,          # revision            2
-                                                                  1000,       # pswMainAlarmD1      3
-                                                                  1001,       # pswPreAlarmD1       4
-                                                                  1002,       # pswInfAlarmD1       5
-                                                                  1003,       # pswMainAlarmD2      6
-                                                                  1004,       # pswPreAlarmD2       7
-                                                                  1005,       # pswInfAlarmD2       8
-                                                                  1006]),     # pswFailureDisplayOn 9
-                                                                              # off(0), on(1)
-
-                                (".1.3.6.1.4.1.34187.74195.2.1", [245790000,   # tsBarGraph1String
-                                                                  245800000,   # tsBarGraph2String
-                                                                  245940000,   # tsD1ChamberValueString
-                                                                  246060000,   # tsD2ChamberValueString
-                                                                  245950000,   # tsD1AirFlowDeviationString
-                                                                  246070000,   # tsD2AirFlowDeviationString
-                                                                  245960000,   # tsD1AirTemperatureString
-                                                                  246080000]), # tsD2AirTemperatureString
-
-                  ]
 
 def wagner_titanus_topsense_scan(oid):
     return oid(".1.3.6.1.2.1.1.2.0") in [".1.3.6.1.4.1.34187.21501", ".1.3.6.1.4.1.34187.74195"]
@@ -84,9 +100,7 @@ def wagner_titanus_topsense_scan(oid):
 def parse_wagner_titanus_topsens(info):
     # not much of a parse function. simply retrieves the info blocks that apply for the
     # respective topsens model and returns only those
-    res = [info[0],
-            info[1] or info[3],
-            info[2] or info[4]]
+    res = [info[0], info[1] or info[3], info[2] or info[4]]
     return res
 
 
@@ -99,12 +113,14 @@ def parse_wagner_titanus_topsens(info):
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
+
 def inventory_wagner_titanus_topsense_info(info):
-    return [ (None, None) ]
+    return [(None, None)]
+
 
 def check_wagner_titanus_topsense_info(item, _no_params, info):
     parsed = parse_wagner_titanus_topsens(info)
-    message  = "System: " + parsed[0][0][0]
+    message = "System: " + parsed[0][0][0]
     message += ", Uptime: " + get_age_human_readable(int(parsed[0][0][1]) / 100)
     message += ", System Name: " + parsed[0][0][3]
     message += ", System Contact: " + parsed[0][0][2]
@@ -124,12 +140,13 @@ def check_wagner_titanus_topsense_info(item, _no_params, info):
         message += ", LSNi bus: " + ts_lsn_bus
     return 0, message
 
+
 check_info["wagner_titanus_topsense.info"] = {
-    "check_function"        : check_wagner_titanus_topsense_info,
-    "inventory_function"    : inventory_wagner_titanus_topsense_info,
-    "service_description"   : "Topsense Info",
-    "snmp_info"             : wagner_titanus_topsense_info,
-    "snmp_scan_function"    : wagner_titanus_topsense_scan
+    "check_function": check_wagner_titanus_topsense_info,
+    "inventory_function": inventory_wagner_titanus_topsense_info,
+    "service_description": "Topsense Info",
+    "snmp_info": wagner_titanus_topsense_info,
+    "snmp_scan_function": wagner_titanus_topsense_scan
 }
 
 #.
@@ -144,7 +161,8 @@ check_info["wagner_titanus_topsense.info"] = {
 
 
 def inventory_wagner_titanus_topsense_overall_status(info):
-    return [ (None, None) ]
+    return [(None, None)]
+
 
 def check_wagner_titanus_topsense_overall_status(item, _no_params, info):
     parsed = parse_wagner_titanus_topsens(info)
@@ -158,12 +176,13 @@ def check_wagner_titanus_topsense_overall_status(item, _no_params, info):
         status = 2
     return status, message
 
+
 check_info["wagner_titanus_topsense.overall_status"] = {
-    "check_function"        : check_wagner_titanus_topsense_overall_status,
-    "inventory_function"    : inventory_wagner_titanus_topsense_overall_status,
-    "service_description"   : "Overall Status",
-    "snmp_info"             : wagner_titanus_topsense_info,
-    "snmp_scan_function"    : wagner_titanus_topsense_scan
+    "check_function": check_wagner_titanus_topsense_overall_status,
+    "inventory_function": inventory_wagner_titanus_topsense_overall_status,
+    "service_description": "Overall Status",
+    "snmp_info": wagner_titanus_topsense_info,
+    "snmp_scan_function": wagner_titanus_topsense_scan
 }
 
 #.
@@ -176,18 +195,20 @@ check_info["wagner_titanus_topsense.overall_status"] = {
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
+
 def inventory_wagner_titanus_topsense_alarm(info):
-    return [ ("1", None), ("2", None) ]
+    return [("1", None), ("2", None)]
+
 
 def check_wagner_titanus_topsense_alarm(item, _no_params, info):
     parsed = parse_wagner_titanus_topsens(info)
     if item == "1":
         main_alarm = parsed[1][0][3]
-        pre_alarm  = parsed[1][0][4]
+        pre_alarm = parsed[1][0][4]
         info_alarm = parsed[1][0][5]
     elif item == "2":
         main_alarm = parsed[1][0][6]
-        pre_alarm  = parsed[1][0][7]
+        pre_alarm = parsed[1][0][7]
         info_alarm = parsed[1][0][8]
     else:
         return 3, "Alarm Detector %s not found in SNMP" % item
@@ -206,12 +227,13 @@ def check_wagner_titanus_topsense_alarm(item, _no_params, info):
 
     return status, message
 
+
 check_info["wagner_titanus_topsense.alarm"] = {
-    "check_function"        : check_wagner_titanus_topsense_alarm,
-    "inventory_function"    : inventory_wagner_titanus_topsense_alarm,
-    "service_description"   : "Alarm Detector %s",
-    "snmp_info"             : wagner_titanus_topsense_info,
-    "snmp_scan_function"    : wagner_titanus_topsense_scan
+    "check_function": check_wagner_titanus_topsense_alarm,
+    "inventory_function": inventory_wagner_titanus_topsense_alarm,
+    "service_description": "Alarm Detector %s",
+    "snmp_info": wagner_titanus_topsense_info,
+    "snmp_scan_function": wagner_titanus_topsense_scan
 }
 
 #.
@@ -224,8 +246,10 @@ check_info["wagner_titanus_topsense.alarm"] = {
 #   |                                |_|                                   |
 #   '----------------------------------------------------------------------'
 
+
 def inventory_wagner_titanus_topsense_smoke(info):
-    return [ ("1", None), ("2", None) ]
+    return [("1", None), ("2", None)]
+
 
 def check_wagner_titanus_topsense_smoke(item, _no_params, info):
     parsed = parse_wagner_titanus_topsens(info)
@@ -246,13 +270,14 @@ def check_wagner_titanus_topsense_smoke(item, _no_params, info):
 
     return status, "%0.6f%% smoke detected" % smoke_perc, perfdata
 
+
 check_info["wagner_titanus_topsense.smoke"] = {
-    "check_function"        : check_wagner_titanus_topsense_smoke,
-    "inventory_function"    : inventory_wagner_titanus_topsense_smoke,
-    "service_description"   : "Smoke Detector %s",
-    "has_perfdata"          : True,
-    "snmp_info"             : wagner_titanus_topsense_info,
-    "snmp_scan_function"    : wagner_titanus_topsense_scan
+    "check_function": check_wagner_titanus_topsense_smoke,
+    "inventory_function": inventory_wagner_titanus_topsense_smoke,
+    "service_description": "Smoke Detector %s",
+    "has_perfdata": True,
+    "snmp_info": wagner_titanus_topsense_info,
+    "snmp_scan_function": wagner_titanus_topsense_scan
 }
 
 #.
@@ -265,8 +290,10 @@ check_info["wagner_titanus_topsense.smoke"] = {
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
+
 def inventory_wagner_titanus_topsense_chamber_deviation(info):
-    return [ ("1", None), ("2", None) ]
+    return [("1", None), ("2", None)]
+
 
 def check_wagner_titanus_topsense_chamber_deviation(item, _no_params, info):
     parsed = parse_wagner_titanus_topsens(info)
@@ -281,13 +308,14 @@ def check_wagner_titanus_topsense_chamber_deviation(item, _no_params, info):
 
     return 0, "%0.6f%% Chamber Deviation" % chamber_deviation, perfdata
 
+
 check_info["wagner_titanus_topsense.chamber_deviation"] = {
-    "check_function"        : check_wagner_titanus_topsense_chamber_deviation,
-    "inventory_function"    : inventory_wagner_titanus_topsense_chamber_deviation,
-    "service_description"   : "Chamber Deviation Detector %s",
-    "has_perfdata"          : True,
-    "snmp_info"             : wagner_titanus_topsense_info,
-    "snmp_scan_function"    : wagner_titanus_topsense_scan
+    "check_function": check_wagner_titanus_topsense_chamber_deviation,
+    "inventory_function": inventory_wagner_titanus_topsense_chamber_deviation,
+    "service_description": "Chamber Deviation Detector %s",
+    "has_perfdata": True,
+    "snmp_info": wagner_titanus_topsense_info,
+    "snmp_scan_function": wagner_titanus_topsense_scan
 }
 
 #.
@@ -302,14 +330,16 @@ check_info["wagner_titanus_topsense.chamber_deviation"] = {
 
 wagner_titanus_topsense_airflow_deviation_default_values = (-20.0, -20.0, 20.0, 20.0)
 
+
 def inventory_wagner_titanus_topsense_airflow_deviation(info):
-    return [ ("1", "wagner_titanus_topsense_airflow_deviation_default_values"),
-             ("2", "wagner_titanus_topsense_airflow_deviation_default_values") ]
+    return [("1", "wagner_titanus_topsense_airflow_deviation_default_values"),
+            ("2", "wagner_titanus_topsense_airflow_deviation_default_values")]
+
 
 def check_wagner_titanus_topsense_airflow_deviation(item, params, info):
     parsed = parse_wagner_titanus_topsens(info)
     lower_crit, lower_warn, upper_warn, upper_crit = params
-    status=0
+    status = 0
     if item == "1":
         airflow_deviation = float(parsed[2][0][4])
     elif item == "2":
@@ -326,14 +356,15 @@ def check_wagner_titanus_topsense_airflow_deviation(item, params, info):
 
     return status, "Airflow Deviation is %0.6f%%" % airflow_deviation, perfdata
 
+
 check_info["wagner_titanus_topsense.airflow_deviation"] = {
-    "check_function"        : check_wagner_titanus_topsense_airflow_deviation,
-    "inventory_function"    : inventory_wagner_titanus_topsense_airflow_deviation,
-    "service_description"   : "Airflow Deviation Detector %s",
-    "has_perfdata"          : True,
-    "group"                 : "airflow_deviation",
-    "snmp_info"             : wagner_titanus_topsense_info,
-    "snmp_scan_function"    : wagner_titanus_topsense_scan
+    "check_function": check_wagner_titanus_topsense_airflow_deviation,
+    "inventory_function": inventory_wagner_titanus_topsense_airflow_deviation,
+    "service_description": "Airflow Deviation Detector %s",
+    "has_perfdata": True,
+    "group": "airflow_deviation",
+    "snmp_info": wagner_titanus_topsense_info,
+    "snmp_scan_function": wagner_titanus_topsense_scan
 }
 
 #.
@@ -347,12 +378,13 @@ check_info["wagner_titanus_topsense.airflow_deviation"] = {
 #   '----------------------------------------------------------------------'
 
 factory_settings["wagner_titanus_topsense_temperature_default_values"] = {
-    "levels"    : (30, 35),
+    "levels": (30, 35),
 }
 
+
 def inventory_wagner_titanus_topsense_temp(info):
-    return [ ("Ambient 1", {}),
-             ("Ambient 2", {}) ]
+    return [("Ambient 1", {}), ("Ambient 2", {})]
+
 
 def check_wagner_titanus_topsense_temp(item, params, info):
     parsed = parse_wagner_titanus_topsens(info)
@@ -368,16 +400,17 @@ def check_wagner_titanus_topsense_temp(item, params, info):
 
     return check_temperature(temp, params, "wagner_titanus_topsense_%s" % item)
 
+
 check_info["wagner_titanus_topsense.temp"] = {
-    "check_function"         : check_wagner_titanus_topsense_temp,
+    "check_function": check_wagner_titanus_topsense_temp,
     "default_levels_variable": "wagner_titanus_topsense_temperature_default_values",
-    "inventory_function"     : inventory_wagner_titanus_topsense_temp,
-    "service_description"    : "Temperature %s",
-    "has_perfdata"           : True,
-    "group"                  : "temperature",
-    "snmp_info"              : wagner_titanus_topsense_info,
-    "snmp_scan_function"     : wagner_titanus_topsense_scan,
-    "includes"               : [ "temperature.include" ],
+    "inventory_function": inventory_wagner_titanus_topsense_temp,
+    "service_description": "Temperature %s",
+    "has_perfdata": True,
+    "group": "temperature",
+    "snmp_info": wagner_titanus_topsense_info,
+    "snmp_scan_function": wagner_titanus_topsense_scan,
+    "includes": ["temperature.include"],
 }
 
 #.

@@ -24,7 +24,6 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-
 # <<<windows_intel_bonding>>>
 # Caption    Name                                    RedundancyStatus
 # Bond_10.4  {714F579F-D17A-40DC-B684-083C561EE352}  2
@@ -48,6 +47,7 @@ def get_real_adapter_name(bond, name):
     prefix = "TEAM : %s - " % bond
     return name[len(prefix):]
 
+
 def parse_windows_intel_bonding(info):
     lines = iter(info)
     bonds = {}
@@ -64,7 +64,7 @@ def parse_windows_intel_bonding(info):
                     break
                 bond_caption = " ".join(line[:-2])
                 bond_name, bond_mode = line[-2], line[-1]
-                bonds[bond_name] = { "caption": bond_caption, "mode": bond_mode}
+                bonds[bond_name] = {"caption": bond_caption, "mode": bond_mode}
 
         # Get adapter info
         line = lines.next()
@@ -76,10 +76,14 @@ def parse_windows_intel_bonding(info):
                 adapter_function, adapter_status = line[0], line[1]
                 adapter_bond = line[2].split(",")[-1].split("=")[1][1:-1]
                 adapter = line[3].split(",")[1].split("=")[1][1:-1]
-                adapters[adapter] = { "function": adapter_function, "status": adapter_status, "bond": adapter_bond }
+                adapters[adapter] = {
+                    "function": adapter_function,
+                    "status": adapter_status,
+                    "bond": adapter_bond
+                }
 
         # Get adapter names
-        line = lines.next() # Skip header
+        line = lines.next()  # Skip header
         while True:
             line = lines.next()
             adapter_names[line[-1]] = " ".join(line[1:-1])
@@ -87,10 +91,9 @@ def parse_windows_intel_bonding(info):
     except StopIteration:
         pass
 
-
     # Now convert to generic dict, also used by other bonding checks
     converted = {}
-    map_adapter_status = { "0": "Unknown", "1": "up", "2": "up", "3": "down"}
+    map_adapter_status = {"0": "Unknown", "1": "up", "2": "up", "3": "down"}
     for bond, status in bonds.items():
         interfaces = {}
         bond_status = "down"
@@ -101,27 +104,27 @@ def parse_windows_intel_bonding(info):
                 if adapter_info["function"] == "1":
                     converted[status["caption"]]["primary"] = real_adapter_name
                 if adapter_info["status"] == "1":
-                    converted[status["caption"]]["active"]  = real_adapter_name
+                    converted[status["caption"]]["active"] = real_adapter_name
                     bond_status = "up"
                 interfaces[real_adapter_name] = {
-                    "status"   : map_adapter_status.get(adapter_info["status"], "down"),
+                    "status": map_adapter_status.get(adapter_info["status"], "down"),
                 }
 
         converted[status["caption"]].update({
-            "status"      : bond_status,
-            "mode"        : status["mode"],
-            "interfaces"  : interfaces,
+            "status": bond_status,
+            "mode": status["mode"],
+            "interfaces": interfaces,
         })
 
     return converted
 
 
 check_info['windows_intel_bonding'] = {
-    "parse_function"          : parse_windows_intel_bonding,
-    "check_function"          : check_bonding,
-    "inventory_function"      : inventory_bonding,
-    "service_description"     : "Bonding interface %s",
-    "default_levels_variable" : "bonding_default_levels",
-    "group"                   : "bonding",
-    "includes"                : [ "bonding.include" ],
+    "parse_function": parse_windows_intel_bonding,
+    "check_function": check_bonding,
+    "inventory_function": inventory_bonding,
+    "service_description": "Bonding interface %s",
+    "default_levels_variable": "bonding_default_levels",
+    "group": "bonding",
+    "includes": ["bonding.include"],
 }

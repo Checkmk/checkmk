@@ -36,9 +36,11 @@
 
 windows_updates_default_params = (0, 0, 0, 0, 604800, 172800, True)
 
+
 def inventory_windows_updates(info):
     if info and len(info[0]) == 3:
         return [(None, "windows_updates_default_params")]
+
 
 def check_windows_updates(_no_item, params, info):
     if info and len(info[0]) == 3:
@@ -75,8 +77,10 @@ def check_windows_updates(_no_item, params, info):
 
         txt = []
         perfdata = []
-        for label, updates, cur, warn, crit in [ ('important', important, num_imp, imp_warn, imp_crit),
-                                                 ('optional',  optional,  num_opt, opt_warn, opt_crit) ]:
+        for label, updates, cur, warn, crit in [('important', important, num_imp, imp_warn,
+                                                 imp_crit),
+                                                ('optional', optional, num_opt, opt_warn,
+                                                 opt_crit)]:
             this_txt = '%d %s updates' % (cur, label)
             if crit and cur >= crit:
                 this_txt += ' >=%d (!!)' % crit
@@ -111,7 +115,8 @@ def check_windows_updates(_no_item, params, info):
                     sym = "(!)"
                     status = max(status, 1)
 
-                boot_txt = 'Reboot enforced in %s to finish updates%s' % (get_age_human_readable(delta), sym)
+                boot_txt = 'Reboot enforced in %s to finish updates%s' % (
+                    get_age_human_readable(delta), sym)
                 txt.append(boot_txt)
 
         return (status, ', '.join(txt), perfdata)
@@ -120,9 +125,9 @@ def check_windows_updates(_no_item, params, info):
 
 
 check_info["windows_updates"] = {
-    'check_function':          check_windows_updates,
-    'inventory_function':      inventory_windows_updates,
-    'service_description':     'System Updates',
-    'group':                   'windows_updates',
-    'has_perfdata':            True,
+    'check_function': check_windows_updates,
+    'inventory_function': inventory_windows_updates,
+    'service_description': 'System Updates',
+    'group': 'windows_updates',
+    'has_perfdata': True,
 }

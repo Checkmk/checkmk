@@ -103,8 +103,10 @@ win_dhcp_pools_stats_translate = {
     "Nb d'offres en attente": 'No. of pending offers',
 }
 
+
 def parse_win_dhcp_pools(info):
-    return [ ' '.join(line).rstrip('.').split(' = ') for line in info ]
+    return [' '.join(line).rstrip('.').split(' = ') for line in info]
+
 
 def inventory_win_dhcp_pools(info):
     settings = host_extra_conf_merged(host_name(), discovery_win_dhcp_pools)
@@ -130,6 +132,7 @@ def inventory_win_dhcp_pools(info):
             if size > 0 or discover_empty:
                 inventory.append((last_pool, 'win_dhcp_pools_default_levels'))
     return inventory
+
 
 def check_win_dhcp_pools(item, params, info):
     in_block = False
@@ -162,14 +165,13 @@ def check_win_dhcp_pools(item, params, info):
 
 
 check_info["win_dhcp_pools"] = {
-    'check_function':          check_win_dhcp_pools,
-    'inventory_function':      inventory_win_dhcp_pools,
-    'service_description':     'DHCP Pool %s',
-    'has_perfdata':            True,
-    'group':                   'win_dhcp_pools',
-    'includes':                ['dhcp_pools.include'],
+    'check_function': check_win_dhcp_pools,
+    'inventory_function': inventory_win_dhcp_pools,
+    'service_description': 'DHCP Pool %s',
+    'has_perfdata': True,
+    'group': 'win_dhcp_pools',
+    'includes': ['dhcp_pools.include'],
 }
-
 
 #.
 #   .--Pool stats----------------------------------------------------------.
@@ -181,8 +183,10 @@ check_info["win_dhcp_pools"] = {
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
+
 def inventory_win_dhcp_pools_stats(info):
-    return [ (None, None) for line in info if line[0] != '' ]
+    return [(None, None) for line in info if line[0] != '']
+
 
 def check_win_dhcp_pools_stats(item, params, info):
     output = ''
@@ -192,8 +196,16 @@ def check_win_dhcp_pools_stats(item, params, info):
     for line in parse_win_dhcp_pools(info):
         if len(line) > 0:
             key = win_dhcp_pools_stats_translate.get(line[0], line[0])
-            if key in [ 'Discovers', 'Offers', 'Requests', 'Acks',
-                        'Nacks', 'Declines', 'Releases', 'Scopes' ]:
+            if key in [
+                    'Discovers',
+                    'Offers',
+                    'Requests',
+                    'Acks',
+                    'Nacks',
+                    'Declines',
+                    'Releases',
+                    'Scopes',
+            ]:
                 value = saveint(line[1])
                 per_sec = get_rate("win_dhcp_stats.%s" % key, this_time, value)
                 output += '%s: %.0f/s, ' % (key, per_sec)
@@ -205,8 +217,8 @@ def check_win_dhcp_pools_stats(item, params, info):
 
 
 check_info["win_dhcp_pools.stats"] = {
-    'check_function':          check_win_dhcp_pools_stats,
-    'inventory_function':      inventory_win_dhcp_pools_stats,
-    'service_description':     'DHCP Stats',
-    'has_perfdata':            True,
+    'check_function': check_win_dhcp_pools_stats,
+    'inventory_function': inventory_win_dhcp_pools_stats,
+    'service_description': 'DHCP Stats',
+    'has_perfdata': True,
 }

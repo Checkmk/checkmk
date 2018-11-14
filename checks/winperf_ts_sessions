@@ -36,14 +36,16 @@
 # 4 Number of active Terminal Services sessions.
 # 6 Number of inactive Terminal Services sessions.
 
+
 def inventory_winperf_ts_sessions(info):
     if len(info) > 1:
-        return [ (None, {}) ]
+        return [(None, {})]
+
 
 def check_winperf_ts_sessions(_unused, params, info):
     if not info or len(info) == 1:
         return 3, "Performance counters not available"
-    total, active, inactive = [ int(l[1]) for l in info[1:4] ]
+    total, active, inactive = [int(l[1]) for l in info[1:4]]
 
     # Tom Moore said, that the order of the columns has recently changed
     # in newer Windows versions (hooray!) and is now active, inactive, total.
@@ -53,8 +55,7 @@ def check_winperf_ts_sessions(_unused, params, info):
 
     state = 0
     state_txt = []
-    for val, key, title in [ (active, 'active', 'Active'),
-                             (inactive, 'inactive', 'Inactive') ]:
+    for val, key, title in [(active, 'active', 'Active'), (inactive, 'inactive', 'Inactive')]:
         txt = '%d %s' % (val, title)
         if key in params:
             if val > params[key][0]:
@@ -65,13 +66,14 @@ def check_winperf_ts_sessions(_unused, params, info):
                 txt += '(!)'
         state_txt.append(txt)
 
-    perfdata = [ ('active', active, ), ('inactive', inactive) ]
+    perfdata = [('active', active), ('inactive', inactive)]
     return state, ", ".join(state_txt), perfdata
 
+
 check_info["winperf_ts_sessions"] = {
-    'check_function':          check_winperf_ts_sessions,
-    'inventory_function':      inventory_winperf_ts_sessions,
-    'service_description':     'Sessions',
-    'has_perfdata':            True,
-    'group':                   'winperf_ts_sessions',
+    'check_function': check_winperf_ts_sessions,
+    'inventory_function': inventory_winperf_ts_sessions,
+    'service_description': 'Sessions',
+    'has_perfdata': True,
+    'group': 'winperf_ts_sessions',
 }

@@ -283,14 +283,13 @@ def check_varnish_uptime(_no_item, _no_params, parsed):
 
 
 check_info["varnish"] = {
-    "parse_function"        : parse_varnish,
-    "inventory_function"    : inventory_varnish_uptime,
-    "check_function"        : check_varnish_uptime,
-    "service_description"   : "Varnish Uptime",
-    "has_perfdata"          : True,
-    "includes"              : [ "uptime.include" ],
+    "parse_function": parse_varnish,
+    "inventory_function": inventory_varnish_uptime,
+    "check_function": check_varnish_uptime,
+    "service_description": "Varnish Uptime",
+    "has_perfdata": True,
+    "includes": ["uptime.include"],
 }
-
 
 #.
 #   .--common--------------------------------------------------------------.
@@ -310,7 +309,7 @@ def inventory_varnish(parsed, what, needed_keys):
             if needed_key not in parsed[what]:
                 needed_keys_avail = False
         if needed_keys_avail is True:
-            return [ (None, {}) ]
+            return [(None, {})]
 
 
 # use selection to get list of keys from parsed[what] or in case of None all keys
@@ -320,9 +319,8 @@ def check_varnish_stats(_no_item, params, parsed, what, selection):
 
         whatitemlist = parsed[what]
         if selection:
-            whatitemlist = [ whatitem
-                for key in selection
-                for whatitem in whatitemlist
+            whatitemlist = [
+                whatitem for key in selection for whatitem in whatitemlist
                 if whatitem.startswith(key)
             ]
 
@@ -362,7 +360,7 @@ def check_varnish_ratio(_no_item, params, parsed, what, ratio_info):
         if total > 0:
             ratio = parsed[what][ratio_info[0]][0] / total * 100
 
-        infotext   = "%.1f%%" % ratio
+        infotext = "%.1f%%" % ratio
         warn, crit = params["levels_lower"]
 
         if ratio < crit:
@@ -396,7 +394,6 @@ check_info["varnish.cache"] = {
     "has_perfdata"            : True,
 }
 
-
 #.
 #   .--client--------------------------------------------------------------.
 #   |                            _ _            _                          |
@@ -417,7 +414,6 @@ check_info["varnish.client"] = {
     "group"               : "varnish_client",
     "has_perfdata"        : True,
 }
-
 
 #.
 #   .--backend-------------------------------------------------------------.
@@ -440,7 +436,6 @@ check_info["varnish.backend"] = {
     "has_perfdata"        : True,
 }
 
-
 #.
 #   .--fetch---------------------------------------------------------------.
 #   |                        __      _       _                             |
@@ -462,7 +457,6 @@ check_info["varnish.fetch"] = {
     "has_perfdata"        : True,
 }
 
-
 #.
 #   .--ESI-----------------------------------------------------------------.
 #   |                           _____ ____ ___                             |
@@ -473,10 +467,7 @@ check_info["varnish.fetch"] = {
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-
-factory_settings["varnish_esi_default_levels"] = {
-    'errors': (1.0, 2.0)
-}
+factory_settings["varnish_esi_default_levels"] = {'errors': (1.0, 2.0)}
 
 
 check_info["varnish.esi"] = {
@@ -489,7 +480,6 @@ check_info["varnish.esi"] = {
     "group"                   : "varnish_esi",
     "has_perfdata"            : True,
 }
-
 
 #.
 #   .--objects-------------------------------------------------------------.
@@ -512,7 +502,6 @@ check_info["varnish.objects"] = {
     "has_perfdata"        : True,
 }
 
-
 #.
 #   .--worker--------------------------------------------------------------.
 #   |                                     _                                |
@@ -534,7 +523,6 @@ check_info["varnish.worker"] = {
     "has_perfdata"        : True,
 }
 
-
 #.
 #   .--cache hit ratio-----------------------------------------------------.
 #   |                  _            _     _ _               _   _          |
@@ -545,10 +533,7 @@ check_info["varnish.worker"] = {
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-
-factory_settings["varnish_cache_hit_ratio_default_levels"] = {
-    'levels_lower': (70.0, 60.0)
-}
+factory_settings["varnish_cache_hit_ratio_default_levels"] = {'levels_lower': (70.0, 60.0)}
 
 
 check_info["varnish.cache_hit_ratio"] = {
@@ -561,7 +546,6 @@ check_info["varnish.cache_hit_ratio"] = {
     "group"                   : "varnish_cache_hit_ratio",
     "has_perfdata"            : True,
 }
-
 
 #.
 #   .--backend success ratio-----------------------------------------------.
@@ -579,10 +563,7 @@ check_info["varnish.cache_hit_ratio"] = {
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-
-factory_settings["varnish_backend_success_ratio_default_levels"] = {
-    'levels_lower': (70.0, 60.0)
-}
+factory_settings["varnish_backend_success_ratio_default_levels"] = {'levels_lower': (70.0, 60.0)}
 
 
 check_info["varnish.backend_success_ratio"] = {
@@ -595,7 +576,6 @@ check_info["varnish.backend_success_ratio"] = {
     "group"                   : "varnish_backend_success_ratio",
     "has_perfdata"            : True,
 }
-
 
 #.
 #   .--worker thread ratio-------------------------------------------------.
@@ -613,10 +593,7 @@ check_info["varnish.backend_success_ratio"] = {
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-
-factory_settings["varnish_worker_thread_ratio_default_levels"] = {
-    'levels_lower' : (70.0, 60.0)
-}
+factory_settings["varnish_worker_thread_ratio_default_levels"] = {'levels_lower': (70.0, 60.0)}
 
 
 def check_varnish_worker_thread_ratio(_no_item, params, parsed):

@@ -278,16 +278,16 @@ def parse_zfs_arc_cache(info):
 
 def inventory_zfs_arc_cache(parsed):
     if parsed.get("hits") and parsed.get("misses"):
-        return [ (None, None) ]
+        return [(None, None)]
     return []
 
 
 def check_zfs_arc_cache(_no_item, _no_params, parsed):
     # Solaris >= 11.3 do not provide these data pretech_*data
-    for key in [ "", "prefetch_data_", "prefetch_metadata_" ]:
+    for key in ["", "prefetch_data_", "prefetch_metadata_"]:
         if "%shits" % key in parsed and "%smisses" % key in parsed:
             total_hits_misses = parsed["%shits" % key] + parsed["%smisses" % key]
-            human_key         = key.replace("_", " ")
+            human_key = key.replace("_", " ")
 
             if total_hits_misses:
                 hit_ratio = float(parsed["%shits" % key]) / total_hits_misses * 100
@@ -300,7 +300,7 @@ def check_zfs_arc_cache(_no_item, _no_params, parsed):
 
     # size
     if "size" in parsed.keys():
-        size_bytes    = parsed["size"]
+        size_bytes = parsed["size"]
         size_readable = get_bytes_human_readable(size_bytes)
         yield 0, "Cache size: %s" % size_readable, \
               [("size", float(size_bytes), None, None, 0)]
@@ -320,13 +320,12 @@ def check_zfs_arc_cache(_no_item, _no_params, parsed):
 
 
 check_info["zfs_arc_cache"] = {
-    "parse_function"        : parse_zfs_arc_cache,
-    "check_function"        : check_zfs_arc_cache,
-    "inventory_function"    : inventory_zfs_arc_cache,
-    "service_description"   : "ZFS arc cache",
-    "has_perfdata"          : True,
+    "parse_function": parse_zfs_arc_cache,
+    "check_function": check_zfs_arc_cache,
+    "inventory_function": inventory_zfs_arc_cache,
+    "service_description": "ZFS arc cache",
+    "has_perfdata": True,
 }
-
 
 #.
 #   .--L2 cache------------------------------------------------------------.
@@ -342,7 +341,7 @@ check_info["zfs_arc_cache"] = {
 def inventory_zfs_arc_cache_l2(parsed):
     # if l2_size == 0 there is no l2 cache available at all
     if "l2_size" in parsed.keys() and parsed["l2_size"] > 0:
-        return [ (None, None) ]
+        return [(None, None)]
     return []
 
 
@@ -375,8 +374,8 @@ def check_zfs_arc_cache_l2(_no_item, _no_params, parsed):
 
 
 check_info["zfs_arc_cache.l2"] = {
-    "check_function"        : check_zfs_arc_cache_l2,
-    "inventory_function"    : inventory_zfs_arc_cache_l2,
-    "service_description"   : "ZFS arc cache L2",
-    "has_perfdata"          : True,
+    "check_function": check_zfs_arc_cache_l2,
+    "inventory_function": inventory_zfs_arc_cache_l2,
+    "service_description": "ZFS arc cache L2",
+    "has_perfdata": True,
 }

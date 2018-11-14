@@ -35,6 +35,7 @@ def inventory_vms_users(info):
     if len(info) > 0:
         return [(None, {})]
 
+
 def check_vms_users(item, params, info):
 
     infos = []
@@ -55,8 +56,8 @@ def check_vms_users(item, params, info):
 
 
 check_info['vms_users'] = {
-    "check_function" :      check_vms_users,
-    "inventory_function" :  inventory_vms_users,
-    "service_description" : "VMS Users",
-    "has_perfdata" :        True,
+    "check_function": check_vms_users,
+    "inventory_function": inventory_vms_users,
+    "service_description": "VMS Users",
+    "has_perfdata": True,
 }

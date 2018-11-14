@@ -49,7 +49,7 @@ def parse_windows_os_bonding(info):
     bonds = {}
 
     for line in info:
-        if len(line)>1:
+        if len(line) > 1:
             item = line[1].lstrip()
         if line[0] == "Team Name":
             bond = item
@@ -72,11 +72,11 @@ def parse_windows_os_bonding(info):
 
 
 check_info['windows_os_bonding'] = {
-    "parse_function"          : parse_windows_os_bonding,
-    "check_function"          : check_bonding,
-    "inventory_function"      : inventory_bonding,
-    "service_description"     : "Bonding Interface %s",
-    "default_levels_variable" : "bonding_default_levels",
-    "group"                   : "bonding",
-    "includes"                : [ "bonding.include" ],
+    "parse_function": parse_windows_os_bonding,
+    "check_function": check_bonding,
+    "inventory_function": inventory_bonding,
+    "service_description": "Bonding Interface %s",
+    "default_levels_variable": "bonding_default_levels",
+    "group": "bonding",
+    "includes": ["bonding.include"],
 }

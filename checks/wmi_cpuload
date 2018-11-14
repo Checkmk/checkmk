@@ -38,9 +38,9 @@ def check_wmi_cpuload(item, params, parsed):
     # so unless to cpu is (almost) fully utilized, this will be 0.
 
     try:
-        load      = int(parsed["system_perf"].get(0, "ProcessorQueueLength"))
+        load = int(parsed["system_perf"].get(0, "ProcessorQueueLength"))
         this_time = get_wmi_time(parsed["system_perf"], 0)
-        load5min  = get_average("load_5min", this_time, load, 5)
+        load5min = get_average("load_5min", this_time, load, 5)
         load15min = get_average("load_15min", this_time, load, 15)
         computer_system = parsed["computer_system"]
     except KeyError, e:
@@ -56,11 +56,11 @@ def check_wmi_cpuload(item, params, parsed):
 
 
 check_info['wmi_cpuload'] = {
-    'parse_function'      : parse_wmi_table,
-    'inventory_function'  : inventory_wmi_cpuload,
-    'check_function'      : check_wmi_cpuload,
-    'has_perfdata'        : True,
-    'service_description' : "Processor Queue",
-    'includes'            : ['wmi.include', 'cpu_load.include'],
-    'group'               : 'cpu_load',
+    'parse_function': parse_wmi_table,
+    'inventory_function': inventory_wmi_cpuload,
+    'check_function': check_wmi_cpuload,
+    'has_perfdata': True,
+    'service_description': "Processor Queue",
+    'includes': ['wmi.include', 'cpu_load.include'],
+    'group': 'cpu_load',
 }

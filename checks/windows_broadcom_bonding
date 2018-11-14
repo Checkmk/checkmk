@@ -24,34 +24,36 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-
 # <<<windows_broadcom_bonding>>>
 # Caption            RedundancyStatus
 # BOND_10.3          2
 # BOND_HeartbeatMS   2
 #
 
+
 def inventory_windows_broadcom_bonding(info):
-   inventory = []
-   for line in info[1:]:
-      inventory.append( (" ".join(line[:-1]), None) )
-   return inventory
+    inventory = []
+    for line in info[1:]:
+        inventory.append((" ".join(line[:-1]), None))
+    return inventory
+
 
 def check_windows_broadcom_bonding(item, params, info):
-   for line in info:
-      if " ".join(line[:-1]) == item:
-        status = int(line[-1])
-        if status == 5:
-            return (2, "Bond not working")
-        elif status == 4:
-            return (1, "Bond partly working")
-        elif status == 2:
-            return (0, "Bond fully working")
-        return (3, "Bond status cannot be recognized")
-   return (3, "Bond %s not found in agent output" % item)
+    for line in info:
+        if " ".join(line[:-1]) == item:
+            status = int(line[-1])
+            if status == 5:
+                return (2, "Bond not working")
+            elif status == 4:
+                return (1, "Bond partly working")
+            elif status == 2:
+                return (0, "Bond fully working")
+            return (3, "Bond status cannot be recognized")
+    return (3, "Bond %s not found in agent output" % item)
+
 
 check_info['windows_broadcom_bonding'] = {
-    "check_function"          : check_windows_broadcom_bonding,
-    "inventory_function"      : inventory_windows_broadcom_bonding,
-    "service_description"     : "Bonding Interface %s",
+    "check_function": check_windows_broadcom_bonding,
+    "inventory_function": inventory_windows_broadcom_bonding,
+    "service_description": "Bonding Interface %s",
 }

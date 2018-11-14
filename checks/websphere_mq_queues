@@ -24,7 +24,6 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-
 # <<<websphere_mq_queues>>>
 # 0 CD.ISS.CATSOS.REPLY.C000052 5000
 # 0 CD.ISS.COBA.REPLY.C000052 5000
@@ -55,10 +54,9 @@
 # 0  DEAD.QUEUE.IGNORE  100000  CURDEPTH(0)LGETDATE()LGETTIME() 2016_04_08-15_31_43
 # 0  DEAD.QUEUE.SECURITY  100000  CURDEPTH(0)LGETDATE()LGETTIME() 2016_04_08-15_31_43
 
-
 websphere_mq_queues_default_levels = {
-    'message_count'      : ( 1000, 1200 ),
-    'message_count_perc' : ( 80.0, 90.0 )
+    'message_count': (1000, 1200),
+    'message_count_perc': (80.0, 90.0)
 }
 
 
@@ -82,8 +80,8 @@ def parse_websphere_mq_queues(info):
                         key, val = what.split('(')
                         parsed[queue_name].setdefault(key, val)
 
-                parsed[queue_name].setdefault("time_on_client",
-                    time.mktime(time.strptime(line[-1], "%Y_%m_%d-%H_%M_%S")))
+                parsed[queue_name].setdefault(
+                    "time_on_client", time.mktime(time.strptime(line[-1], "%Y_%m_%d-%H_%M_%S")))
 
     return parsed
 
@@ -97,21 +95,21 @@ def check_websphere_mq_queues(item, params, parsed):
     if item in parsed:
         if isinstance(params, tuple):
             params = {
-                'message_count'     : params,
+                'message_count': params,
                 'message_count_perc': websphere_mq_queues_default_levels["message_count_perc"]
             }
 
-        data      = parsed[item]
+        data = parsed[item]
         cur_depth = data['cur_depth']
-        infotext  = "%d" % cur_depth
+        infotext = "%d" % cur_depth
 
-        max_depth  = None
+        max_depth = None
         if data.get('max_depth'):
             state_perc = 0
-            max_depth  = data['max_depth']
-            infotext  += "/%d" % max_depth
+            max_depth = data['max_depth']
+            infotext += "/%d" % max_depth
 
-            used_perc = float(cur_depth)/max_depth * 100
+            used_perc = float(cur_depth) / max_depth * 100
             info_perc = "%.1f%%" % used_perc
 
             if params.get("message_count_perc"):
@@ -121,9 +119,9 @@ def check_websphere_mq_queues(item, params, parsed):
                 elif used_perc >= warn_perc:
                     state_perc = 1
 
-        state     = 0
+        state = 0
         infotext += " messages in queue"
-        perfdata  = [ ( "queue", cur_depth, None, None, None, max_depth ) ]
+        perfdata = [("queue", cur_depth, None, None, None, max_depth)]
 
         if params.get("message_count"):
             warn, crit = params['message_count']
@@ -134,7 +132,7 @@ def check_websphere_mq_queues(item, params, parsed):
             if state:
                 infotext += " (warn/crit at %d/%d)" % (warn, crit)
 
-            perfdata = [ ( "queue", cur_depth, warn, crit, None, max_depth ) ]
+            perfdata = [("queue", cur_depth, warn, crit, None, max_depth)]
 
         yield state, infotext, perfdata
 
@@ -150,11 +148,11 @@ def check_websphere_mq_queues(item, params, parsed):
             params = params.get("messages_not_processed", {})
 
             if cur_depth and data["LGETDATE"] and data["LGETTIME"]:
-                time_str   = "%s %s" % (data['LGETDATE'], data['LGETTIME'])
+                time_str = "%s %s" % (data['LGETDATE'], data['LGETTIME'])
                 time_diff  = data["time_on_client"] - \
                     time.mktime(time.strptime(time_str, "%Y-%m-%d %H.%M.%S"))
                 state_diff = 0
-                info_diff  = "Messages not processed since %s" % get_age_human_readable(time_diff)
+                info_diff = "Messages not processed since %s" % get_age_human_readable(time_diff)
 
                 if 'age' in params:
                     warn_diff, crit_diff = params['age']
@@ -178,16 +176,15 @@ def check_websphere_mq_queues(item, params, parsed):
             else:
                 yield 0, "Messages processed"
 
-
     else:
         raise MKCounterWrapped("Login into database failed")
 
 
 check_info["websphere_mq_queues"] = {
-    "parse_function"        : parse_websphere_mq_queues,
-    "inventory_function"    : inventory_websphere_mq_queues,
-    "check_function"        : check_websphere_mq_queues,
-    "service_description"   : "MQ Queue %s",
-    "has_perfdata"          : True,
-    "group"                 : "websphere_mq",
+    "parse_function": parse_websphere_mq_queues,
+    "inventory_function": inventory_websphere_mq_queues,
+    "check_function": check_websphere_mq_queues,
+    "service_description": "MQ Queue %s",
+    "has_perfdata": True,
+    "group": "websphere_mq",
 }

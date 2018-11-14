@@ -59,20 +59,23 @@
 # tsrdb10exp           5128704      21 4982717     1%    /tsrdb10exp
 # tsrdb10dat           30707712 19914358 10789464    65%    /u01
 
+
 def parse_zfs_entry(info):
     def mb(x):
         return saveint(x) / (1024.0 * 1024)
+
     entry = {}
     for _name, what, value in info:
         if what in ["used", "available"]:
             entry[what] = mb(value)
         elif what == "quota":
-            if value not in [ '0', '-' ]:
+            if value not in ['0', '-']:
                 entry[what] = mb(value)
-        elif what in [ 'mountpoint', 'type', 'name' ]:
+        elif what in ['mountpoint', 'type', 'name']:
             entry[what] = value
 
     return entry
+
 
 def parse_zfsget(info):
     run_zfs = True
@@ -118,15 +121,15 @@ def parse_zfsget(info):
                 # Then the received data from the agent looks like "/ 0 12445007 19012273 5% /".
                 # In this case we compute the total size as the sum of used and available.
                 total = int(kbytes)
-                used  = int(used)
+                used = int(used)
                 avail = int(avail)
                 if used and avail and not total:
                     total = used + avail
                 else:
                     avail = total - used
-                entry["total"]        = total / 1024.0
-                entry["used"]         = used / 1024.0
-                entry["available"]    = avail / 1024.0
+                entry["total"] = total / 1024.0
+                entry["used"] = used / 1024.0
+                entry["available"] = avail / 1024.0
                 df_parsed[mountpoint] = entry
 
     # Now remove duplicate entries for the root filesystem, such
@@ -152,7 +155,7 @@ def parse_zfsget(info):
     for entry in zfs_converted:
         if entry["mountpoint"].startswith("/"):
             entry["is_pool"] = '/' not in entry["name"]
-            if entry['available'] !=0 and entry['type'] == 'filesystem':
+            if entry['available'] != 0 and entry['type'] == 'filesystem':
                 zfs_parsed[entry["name"]] = entry
 
     # parsed_df and parsed_final have the mount point as key
@@ -171,6 +174,7 @@ def parse_zfsget(info):
             parsed_final[mountpoint] = entry_df
 
     return parsed_final
+
 
 def inventory_zfsget(info):
     mplist = []
@@ -212,12 +216,13 @@ def check_zfsget(item, params, info):
 
     return df_check_filesystem_list(item, params, fslist)
 
+
 check_info['zfsget'] = {
-    "check_function"          : check_zfsget,
-    "inventory_function"      : inventory_zfsget,
-    "service_description"     : "Filesystem %s",
-    "has_perfdata"            : True,
-    "group"                   : "filesystem",
-    "default_levels_variable" : "filesystem_default_levels",
-    "includes"                : [ "size_trend.include", "df.include" ],
+    "check_function": check_zfsget,
+    "inventory_function": inventory_zfsget,
+    "service_description": "Filesystem %s",
+    "has_perfdata": True,
+    "group": "filesystem",
+    "default_levels_variable": "filesystem_default_levels",
+    "includes": ["size_trend.include", "df.include"],
 }

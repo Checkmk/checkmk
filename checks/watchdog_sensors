@@ -24,7 +24,6 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-
 # very odd and confusing example outputs:
 
 # version 3.0.0
@@ -48,16 +47,17 @@
 # .1.3.6.1.4.1.21239.5.1.2.1.6.1 46
 # .1.3.6.1.4.1.21239.5.1.2.1.7.1 56
 
+
 def parse_watchdog_sensors(info):
     translate_unit = {
-        '1' : 'C',
-        '0' : 'F',
+        '1': 'C',
+        '0': 'F',
     }
 
     translate_availability = {
-        '0' : (2, 'unavailable'),
-        '1' : (0, 'available'),
-        '2' : (1, 'partially unavailable'),
+        '0': (2, 'unavailable'),
+        '1': (0, 'available'),
+        '2': (1, 'partially unavailable'),
     }
 
     parsed = {}
@@ -108,9 +108,10 @@ def parse_watchdog_sensors(info):
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
+
 def inventory_watchdog_sensors(parsed):
     for key in parsed:
-        yield ( key, {} )
+        yield (key, {})
 
 
 def check_watchdog_sensors(item, params, parsed):
@@ -130,26 +131,33 @@ def check_watchdog_sensors(item, params, parsed):
 
 
 check_info['watchdog_sensors'] = {
-    'parse_function'        : parse_watchdog_sensors,
-    'inventory_function'    : inventory_watchdog_sensors,
-    'check_function'        : check_watchdog_sensors,
-    'service_description'   : 'Watchdog %s',
-    'snmp_info'             : [ ('.1.3.6.1.4.1.21239.5.1.1', [
-                                        '2', #GEIST-V4-MIB::productVersion
-                                        '7', #GEIST-V4-MIB::temperatureUnits
-                                ]),
-                                ('.1.3.6.1.4.1.21239.5.1.2.1', [OID_END,
-                                        '3', #GEIST-V4-MIB::internalName
-                                        '4', #GEIST-V4-MIB::internalLabel    but internalAvail    if version 3.2.0
-                                        '5', #GEIST-V4-MIB::internalAvail    but internalTemp     if version 3.2.0
-                                        '6', #GEIST-V4-MIB::internalTemp     but internalHumidity if version 3.2.0
-                                        '7', #GEIST-V4-MIB::internalHumidity but internalDewPoint if version 3.2.0
-                                        '8', #GEIST-V4-MIB::internalDewPoint but empty            if version 3.2.0
-                                ]) ],
-    'snmp_scan_function'    : lambda oid: oid('.1.3.6.1.2.1.1.2.0').startswith('.1.3.6.1.4.1.21239.5.1'),
-    'includes'              : [ 'temperature.include' ]
+    'parse_function': parse_watchdog_sensors,
+    'inventory_function': inventory_watchdog_sensors,
+    'check_function': check_watchdog_sensors,
+    'service_description': 'Watchdog %s',
+    'snmp_info': [
+        (
+            '.1.3.6.1.4.1.21239.5.1.1',
+            [
+                '2',  #GEIST-V4-MIB::productVersion
+                '7',  #GEIST-V4-MIB::temperatureUnits
+            ]),
+        (
+            '.1.3.6.1.4.1.21239.5.1.2.1',
+            [
+                OID_END,
+                '3',  #GEIST-V4-MIB::internalName
+                '4',  #GEIST-V4-MIB::internalLabel    but internalAvail    if version 3.2.0
+                '5',  #GEIST-V4-MIB::internalAvail    but internalTemp     if version 3.2.0
+                '6',  #GEIST-V4-MIB::internalTemp     but internalHumidity if version 3.2.0
+                '7',  #GEIST-V4-MIB::internalHumidity but internalDewPoint if version 3.2.0
+                '8',  #GEIST-V4-MIB::internalDewPoint but empty            if version 3.2.0
+            ])
+    ],
+    'snmp_scan_function':
+        lambda oid: oid('.1.3.6.1.2.1.1.2.0').startswith('.1.3.6.1.4.1.21239.5.1'),
+    'includes': ['temperature.include']
 }
-
 
 #.
 #   .--temp----------------------------------------------------------------.
@@ -163,6 +171,7 @@ check_info['watchdog_sensors'] = {
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
+
 def inventory_watchdog_sensors_temp(parsed):
     for key in parsed:
         yield (key, {})
@@ -171,17 +180,19 @@ def inventory_watchdog_sensors_temp(parsed):
 def check_watchdog_sensors_temp(item, params, parsed):
     if item in parsed:
         temperature_str, unit = parsed[item]['temp']
-        return check_temperature(float(temperature_str) / 10.0, params,
-               "check_watchdog_sensors.%s" % item,
-               dev_unit=unit.lower())
+        return check_temperature(
+            float(temperature_str) / 10.0,
+            params,
+            "check_watchdog_sensors.%s" % item,
+            dev_unit=unit.lower())
 
 
 check_info['watchdog_sensors.temp'] = {
-    'inventory_function'    : inventory_watchdog_sensors_temp,
-    'check_function'        : check_watchdog_sensors_temp,
-    'service_description'   : 'Temperature %s ',
-    'has_perfdata'          : True,
-    'group'                 : 'temperature',
+    'inventory_function': inventory_watchdog_sensors_temp,
+    'check_function': check_watchdog_sensors_temp,
+    'service_description': 'Temperature %s ',
+    'has_perfdata': True,
+    'group': 'temperature',
 }
 
 #.
@@ -197,13 +208,14 @@ check_info['watchdog_sensors.temp'] = {
 #   '----------------------------------------------------------------------'
 
 factory_settings['watchdog_sensors_humidity_default_levels'] = {
-            'levels'        : (50, 55),
-            'levels_lower'  : (10, 15),
+    'levels': (50, 55),
+    'levels_lower': (10, 15),
 }
+
 
 def inventory_watchdog_sensors_humidity(parsed):
     for key in parsed:
-        yield ( key, {} )
+        yield (key, {})
 
 
 def check_watchdog_sensors_humidity(item, params, parsed):
@@ -215,7 +227,7 @@ def check_watchdog_sensors_humidity(item, params, parsed):
         warn, crit = params['levels']
         warn_lower, crit_lower = params['levels_lower']
 
-        yield 0, "%.1f%%" % humidity, [ ('humidity', humidity, warn, crit) ]
+        yield 0, "%.1f%%" % humidity, [('humidity', humidity, warn, crit)]
 
         if humidity >= crit:
             yield 2, "warn/crit at %s/%s" % (warn, crit)
@@ -228,12 +240,12 @@ def check_watchdog_sensors_humidity(item, params, parsed):
 
 
 check_info['watchdog_sensors.humidity'] = {
-    'inventory_function'        : inventory_watchdog_sensors_humidity,
-    'check_function'            : check_watchdog_sensors_humidity,
-    'service_description'       : 'Humidity %s',
-    'has_perfdata'              : True,
-    'group'                     : 'humidity',
-    'default_levels_variable'   : 'watchdog_sensors_humidity_default_levels',
+    'inventory_function': inventory_watchdog_sensors_humidity,
+    'check_function': check_watchdog_sensors_humidity,
+    'service_description': 'Humidity %s',
+    'has_perfdata': True,
+    'group': 'humidity',
+    'default_levels_variable': 'watchdog_sensors_humidity_default_levels',
 }
 
 #.
@@ -248,9 +260,10 @@ check_info['watchdog_sensors.humidity'] = {
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
+
 def inventory_watchdog_sensors_dew(parsed):
     for key in parsed:
-        yield ( key, {} )
+        yield (key, {})
 
 
 def check_watchdog_sensors_dew(item, params, parsed):
@@ -258,17 +271,17 @@ def check_watchdog_sensors_dew(item, params, parsed):
         if key == item:
             data = parsed[key]
 
-        dew = float(data['dew'][0])/10.0
+        dew = float(data['dew'][0]) / 10.0
         unit = data['dew'][1]
         if unit == "F":
-            dew = 5.0/9.0*(dew-32)
+            dew = 5.0 / 9.0 * (dew - 32)
         yield check_temperature(dew, params, "check_watchdog_sensors.%s" % item)
 
 
 check_info['watchdog_sensors.dew'] = {
-    'inventory_function'    : inventory_watchdog_sensors_dew,
-    'check_function'        : check_watchdog_sensors_dew,
-    'service_description'   : 'Dew point %s',
-    'has_perfdata'          : True,
-    'group'                 : 'temperature',
+    'inventory_function': inventory_watchdog_sensors_dew,
+    'check_function': check_watchdog_sensors_dew,
+    'service_description': 'Dew point %s',
+    'has_perfdata': True,
+    'group': 'temperature',
 }

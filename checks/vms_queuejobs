@@ -29,8 +29,10 @@
 # 2036F23D SRV_WATCHPROD LEF 0 05:10:00.39 945007498 7721395
 # 20201AF1 DRS_WATCHDOG_22 LEF 0 00:01:39.97 284611 2030
 
+
 def inventory_vms_queuejobs(info):
     return [(None, {})]
+
 
 def check_vms_queuejobs(_no_item, params, info):
     names = []
@@ -56,7 +58,7 @@ def check_vms_queuejobs(_no_item, params, info):
 
 
 check_info['vms_queuejobs'] = {
-    "check_function" :      check_vms_queuejobs,
-    "inventory_function" :  inventory_vms_queuejobs,
-    "service_description" : "Queue Jobs",
+    "check_function": check_vms_queuejobs,
+    "inventory_function": inventory_vms_queuejobs,
+    "service_description": "Queue Jobs",
 }

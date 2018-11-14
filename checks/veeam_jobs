@@ -37,7 +37,8 @@
 
 
 def inventory_veeam_jobs(info):
-    return [ (x[0], None) for x in info ]
+    return [(x[0], None) for x in info]
+
 
 def check_veeam_jobs(item, _no_params, info):
     for line in info:
@@ -51,7 +52,7 @@ def check_veeam_jobs(item, _no_params, info):
             elif backup_current == 'Idle' and backup_type == "BackupSync":
                 # A sync job is always idle
                 state = 0
-            elif backup_current in [ "Working", "Postprocessing" ]:
+            elif backup_current in ["Working", "Postprocessing"]:
                 state = 0
                 line = line[:6]
             elif backup_status == "Failed":
@@ -66,8 +67,9 @@ def check_veeam_jobs(item, _no_params, info):
 
     return 3, "No such job found"
 
+
 check_info["veeam_jobs"] = {
-    'check_function':          check_veeam_jobs,
-    'inventory_function':      inventory_veeam_jobs,
-    'service_description':     'VEEAM Job %s',
+    'check_function': check_veeam_jobs,
+    'inventory_function': inventory_veeam_jobs,
+    'service_description': 'VEEAM Job %s',
 }

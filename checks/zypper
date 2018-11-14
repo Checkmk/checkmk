@@ -61,11 +61,13 @@
 # SLES12-SP0-Updates | SUSE-SLE-SERVER-12-2016-987  | recommended | low        | needed | Recommended update for procps
 # SLES12-SP0-Updates | SUSE-SLE-SERVER-12-2016-997  | recommended | moderate   | needed | Recommended update for bind
 
+
 def inventory_zypper(info):
     # the agent section is only present when the agent has
     # detected that zypper is installed, therefore the check
     # can always register
-    return [(None,{})]
+    return [(None, {})]
+
 
 def check_zypper(_no_item, _no_params, info):
     patch_types = {}
@@ -78,7 +80,7 @@ def check_zypper(_no_item, _no_params, info):
         # 5 patches needed (2 security patches)
         if len(line) >= 5:
             patch_type = None
-            if len(line) >= 7 and line[5].lower().strip() == 'needed': # since SLES12
+            if len(line) >= 7 and line[5].lower().strip() == 'needed':  # since SLES12
                 patch_type = line[2].strip()
             elif line[4].lower().strip() == 'needed':
                 patch_type = line[3].strip()
@@ -96,7 +98,7 @@ def check_zypper(_no_item, _no_params, info):
         patch_items = patch_types.items()
         patch_items.sort()
         infos = []
-        for t,c in patch_items:
+        for t, c in patch_items:
             if t == "security":
                 marker = '(!!)'
                 state = 2
@@ -114,9 +116,10 @@ def check_zypper(_no_item, _no_params, info):
 
     return state, infotext
 
+
 check_info['zypper'] = {
-    "check_function"          : check_zypper,
-    "inventory_function"      : inventory_zypper,
-    "service_description"     : "Zypper Updates",
-    "group"                   : "zypper",
+    "check_function": check_zypper,
+    "inventory_function": inventory_zypper,
+    "service_description": "Zypper Updates",
+    "group": "zypper",
 }

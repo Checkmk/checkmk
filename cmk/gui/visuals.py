@@ -158,7 +158,7 @@ _user_visuals_cache = UserVisualsCache()
 
 
 def save(what, visuals, user_id=None):
-    if user_id == None:
+    if user_id is None:
         user_id = config.user.id
 
     uservisuals = {}
@@ -1020,7 +1020,7 @@ def filters_allowed_for_info(info):
     """Returns a map of filter names and filter objects that are registered for the given info"""
     allowed = {}
     for fname, filt in multisite_filters.items():
-        if filt.info == None or info == filt.info:
+        if filt.info is None or info == filt.info:
             allowed[fname] = filt
     return allowed
 
@@ -1138,7 +1138,7 @@ def get_context_from_uri_vars(only_infos=None, single_infos=None):
 
     context = {}
     for filter_name, filter_object in multisite_filters.items():
-        if only_infos == None or filter_object.info in only_infos:
+        if only_infos is None or filter_object.info in only_infos:
             this_filter_vars = {}
             for varname in filter_object.htmlvars:
                 if html.has_var(varname):
@@ -1247,7 +1247,7 @@ class VisualFilter(ValueSpec):
     def render_input(self, varprefix, value):
         # kind of a hack to make the current/old filter API work. This should
         # be cleaned up some day
-        if value != None:
+        if value is not None:
             self._filter.set_value(value)
 
         # A filter can not be used twice on a page, because the varprefix is not used
@@ -1329,7 +1329,7 @@ def single_infos_spec(single_infos):
 
 def verify_single_contexts(what, visual, link_filters):
     for k, v in get_singlecontext_html_vars(visual).items():
-        if v == None and k not in link_filters:
+        if v is None and k not in link_filters:
             raise MKUserError(
                 k,
                 _('This %s can not be displayed, because the '
@@ -1376,7 +1376,7 @@ def visual_title(what, visual):
     # function is used.
     for func in title_functions:
         result = func(what, visual, title)
-        if result != None:
+        if result is not None:
             return result
 
     return title
@@ -1389,7 +1389,7 @@ def visual_title(what, visual):
 # to exactly specify one history entry.
 def info_params(info_key):
     single_spec = infos[info_key]['single_spec']
-    if single_spec == None:
+    if single_spec is None:
         return []
     return dict(single_spec).keys()
 
@@ -1412,7 +1412,7 @@ def get_singlecontext_html_vars(visual):
     vars_ = get_singlecontext_vars(visual)
     for key in get_single_info_keys(visual):
         val = html.get_unicode_input(key)
-        if val != None:
+        if val is not None:
             vars_[key] = val
     return vars_
 

@@ -70,7 +70,7 @@ class ModeEditSite(ModeSites):
         super(ModeEditSite, self).__init__()
         self._from_html_vars()
 
-        self._new = self._site_id == None
+        self._new = self._site_id is None
         self._new_site = {}
         configured_sites = self._site_mgmt.load_sites()
 

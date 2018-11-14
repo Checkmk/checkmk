@@ -146,7 +146,7 @@ def page_werk():
 
 def load_werks():
     global g_werks
-    if g_werks == None:
+    if g_werks is None:
         g_werks = cmk.werks.load()
 
     ack_ids = load_acknowledgements()
@@ -368,7 +368,7 @@ def render_werks_table():
 
 
 def werk_group_value(werk, grouping):
-    if grouping == None:
+    if grouping is None:
         return None
     elif grouping == "version":
         return werk["version"]

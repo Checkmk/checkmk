@@ -579,7 +579,7 @@ class ModeEditTimeperiod(WatoMode):
     def _from_vars(self):
         self._timeperiods = watolib.load_timeperiods()
         self._name = html.var("edit")  # missing -> new group
-        self._new = self._name == None
+        self._new = self._name is None
 
         if self._name in watolib.builtin_timeperiods():
             raise MKUserError("edit", _("Builtin timeperiods can not be modified"))

@@ -106,7 +106,7 @@ def cmp_version(a, b):
     """Compare two version numbers with each other
     Allow numeric version numbers, but also characters.
     """
-    if a == None or b == None:
+    if a is None or b is None:
         return cmp(a, b)
     aa = map(num_split, a.split("."))
     bb = map(num_split, b.split("."))

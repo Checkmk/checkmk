@@ -285,7 +285,7 @@ def all_nonfunction_vars(var_dict):
 
 
 def get_language(default=None):
-    if default == None:
+    if default is None:
         return default_language
     return default
 
@@ -400,10 +400,10 @@ def _may_with_roles(some_role_ids, pname):
         he_may = role.get("permissions", {}).get(pname)
         # Handle compatibility with permissions without "general." that
         # users might have saved in their own custom roles.
-        if he_may == None and pname.startswith("general."):
+        if he_may is None and pname.startswith("general."):
             he_may = role.get("permissions", {}).get(pname[8:])
 
-        if he_may == None:  # not explicitely listed -> take defaults
+        if he_may is None:  # not explicitely listed -> take defaults
             if "basedon" in role:
                 base_role_id = role["basedon"]
             else:
@@ -480,7 +480,7 @@ class LoggedInUser(object):
 
     def _load_attributes(self):
         self.attributes = self.load_file("cached_profile", None)
-        if self.attributes == None:
+        if self.attributes is None:
             if self.id in multisite_users:
                 self.attributes = multisite_users[self.id]
             else:
@@ -590,7 +590,7 @@ class LoggedInUser(object):
         save_user_file(name, content, self.id, unlock)
 
     def file_modified(self, name):
-        if self.confdir == None:
+        if self.confdir is None:
             return 0
 
         try:
@@ -689,7 +689,7 @@ def roles_of_user(user_id):
         return ["admin"]
     elif user_id in guest_users:
         return ["guest"]
-    elif users != None and user_id in users:
+    elif users is not None and user_id in users:
         return ["user"]
     elif os.path.exists(config_dir + "/" + user_id.encode("utf-8") + "/automation.secret"):
         return ["guest"]  # unknown user with automation account

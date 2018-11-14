@@ -196,7 +196,7 @@ def _perfometer_expressions(perfometer):
     else:
         raise NotImplementedError(_("Invalid perfometer type: %s") % perfometer["type"])
 
-    if "label" in perfometer and perfometer["label"] != None:
+    if "label" in perfometer and perfometer["label"] is not None:
         required.append(perfometer["label"][0])
     if "total" in perfometer:
         required.append(perfometer["total"])
@@ -239,7 +239,7 @@ def _required_trivial_metric_names(required_expressions):
 
 
 def metric_to_text(metric, value=None):
-    if value == None:
+    if value is None:
         value = metric["value"]
     return metric["unit"]["render"](value)
 
@@ -355,7 +355,7 @@ class MetricometerRenderer(object):
 
         # "label" option in all Perf-O-Meters overrides automatic label
         if "label" in self._perfometer:
-            if self._perfometer["label"] == None:
+            if self._perfometer["label"] is None:
                 return ""
 
             expr, unit_name = self._perfometer["label"]
@@ -814,7 +814,7 @@ def render_graph_pnp(graph_template, translated_metrics):
         vertical_label or " "), cmk.utils.quote_shell_string(graph_title))
 
     min_value, max_value = get_graph_range(graph_template, translated_metrics)
-    if min_value != None and max_value != None:
+    if min_value is not None and max_value is not None:
         rrdgraph_arguments += " -l %f -u %f" % (min_value, max_value)
     else:
         rrdgraph_arguments += " -l 0"

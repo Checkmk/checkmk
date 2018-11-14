@@ -406,7 +406,7 @@ class FilterInvFloat(Filter):
             except:
                 pass
 
-        if lower is None and upper == None:
+        if lower is None and upper is None:
             return rows
 
         newrows = []

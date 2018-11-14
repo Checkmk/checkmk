@@ -1563,7 +1563,7 @@ class ModeEventConsoleRulePacks(EventConsoleMode):
                 css="number")
 
             hits = rule_pack.get('hits')
-            table.cell(_("Hits"), hits != None and hits or '', css="number")
+            table.cell(_("Hits"), hits is not None and hits or '', css="number")
 
         table.end()
 
@@ -1763,7 +1763,7 @@ class ModeEventConsoleRules(EventConsoleMode):
             if rule.get("invert_matching"):
                 html.icon(_("Matching is inverted in this rule"), "inverted")
 
-            if rule.get("contact_groups") != None:
+            if rule.get("contact_groups") is not None:
                 html.icon(
                     _("This rule attaches contact group(s) to the events: %s") %
                     (", ".join(rule["contact_groups"]["groups"]) or _("(none)")), "contactgroups")
@@ -1822,7 +1822,7 @@ class ModeEventConsoleRules(EventConsoleMode):
                 dict(cmk.gui.mkeventd.service_levels()).get(rule["sl"]["value"],
                                                             rule["sl"]["value"]))
             hits = rule.get('hits')
-            table.cell(_("Hits"), hits != None and hits or '', css="number")
+            table.cell(_("Hits"), hits is not None and hits or '', css="number")
 
             # Text to match
             table.cell(_("Text to match"), rule.get("match"))
@@ -1978,7 +1978,7 @@ class ModeEventConsoleEditRule(EventConsoleMode):
             # In links from multisite views the rule pack is not known.
             # We just know the rule id and need to find the pack ourselves.
             rule_id = html.var("rule_id")
-            if rule_id == None:
+            if rule_id is None:
                 raise MKUserError("rule_id", _("The rule you are trying to edit does not exist."))
 
             self._rule_pack = None

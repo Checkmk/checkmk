@@ -386,7 +386,7 @@ class ModeEditRole(RoleManagement, WatoMode):
             if not filtered_perms:
                 continue
 
-            forms.header(section_title, isopen=search != None)
+            forms.header(section_title, isopen=search is not None)
             for perm in filtered_perms:
                 pname = perm["name"]
 

@@ -385,7 +385,7 @@ def transform_builtin_dashboards():
         dashboard.setdefault('mtime', 0)
 
         dashboard.setdefault('show_title', True)
-        if dashboard['title'] == None:
+        if dashboard['title'] is None:
             dashboard['title'] = _('No title')
             dashboard['show_title'] = False
 
@@ -1120,7 +1120,7 @@ def page_edit_dashlet():
     else:
         ident = None
 
-    if ident == None and not ty:
+    if ident is None and not ty:
         raise MKUserError("id", _('The ID of the dashlet is missing.'))
 
     load_dashboards(lock=html.is_transaction())
@@ -1129,7 +1129,7 @@ def page_edit_dashlet():
         raise MKUserError("name", _('The requested dashboard does not exist.'))
     dashboard = available_dashboards[board]
 
-    if ident == None:
+    if ident is None:
         mode = 'add'
         title = _('Add Dashlet')
 

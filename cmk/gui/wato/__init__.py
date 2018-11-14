@@ -431,7 +431,7 @@ def page_handler():
             raise
 
     # Check general permission for this mode
-    if mode_permissions != None and not config.user.may("wato.seeall"):
+    if mode_permissions is not None and not config.user.may("wato.seeall"):
         ensure_mode_permissions(mode_permissions)
 
     mode = mode_class()
@@ -465,7 +465,7 @@ def page_handler():
                 return
 
             # if newmode is not None, then the mode has been changed
-            elif newmode != None:
+            elif newmode is not None:
                 if newmode == "":  # no further information: configuration dialog, etc.
                     if action_message:
                         html.message(action_message)
@@ -477,7 +477,7 @@ def page_handler():
                 html.set_var("mode", newmode)  # will be used by makeuri
 
                 # Check general permissions for the new mode
-                if mode_permissions != None and not config.user.may("wato.seeall"):
+                if mode_permissions is not None and not config.user.may("wato.seeall"):
                     for pname in mode_permissions:
                         if '.' not in pname:
                             pname = "wato." + pname
@@ -548,7 +548,7 @@ def get_mode_permission_and_class(mode_name):
             _("Deprecated WATO module: Implemented as function. "
               "This needs to be refactored as WatoMode child class."))
 
-    if mode_permissions != None and not config.user.may("wato.use"):
+    if mode_permissions is not None and not config.user.may("wato.use"):
         raise MKAuthException(_("You are not allowed to use WATO."))
 
     return mode_permissions, mode_class
@@ -818,8 +818,8 @@ def find_folder_to_scan():
     folder_to_scan = None
     for folder in watolib.Folder.all_folders().itervalues():
         scheduled_time = folder.next_network_scan_at()
-        if scheduled_time != None and scheduled_time < time.time():
-            if folder_to_scan == None:
+        if scheduled_time is not None and scheduled_time < time.time():
+            if folder_to_scan is None:
                 folder_to_scan = folder
             elif folder_to_scan.next_network_scan_at() > folder.next_network_scan_at():
                 folder_to_scan = folder

@@ -265,7 +265,7 @@ def user_locked(username):
 
 def login_timed_out(username, last_activity):
     idle_timeout = load_custom_attr(username, "idle_timeout", convert_idle_timeout, None)
-    if idle_timeout == None:
+    if idle_timeout is None:
         idle_timeout = config.user_idle_timeout
 
     if idle_timeout in [None, False]:
@@ -288,7 +288,7 @@ def update_user_access_time(username):
 
 def on_succeeded_login(username):
     num_failed_logins = load_custom_attr(username, 'num_failed_logins', utils.saveint)
-    if num_failed_logins != None and num_failed_logins != 0:
+    if num_failed_logins is not None and num_failed_logins != 0:
         save_custom_attr(username, 'num_failed_logins', '0')
 
     update_user_access_time(username)
@@ -388,11 +388,11 @@ def transform_userdb_automatic_sync(val):
 
 
 def is_valid_user_session(username, session_id):
-    if config.single_user_session == None:
+    if config.single_user_session is None:
         return True  # No login session limitation enabled, no validation
 
     session_info = load_session_info(username)
-    if session_info == None:
+    if session_info is None:
         return False  # no session active
     else:
         active_session_id, last_activity = session_info
@@ -407,13 +407,13 @@ def is_valid_user_session(username, session_id):
 
 
 def ensure_user_can_init_session(username):
-    if config.single_user_session == None:
+    if config.single_user_session is None:
         return True  # No login session limitation enabled, no validation
 
     session_timeout = config.single_user_session
 
     session_info = load_session_info(username)
-    if session_info == None:
+    if session_info is None:
         return True  # No session active
 
     last_activity = session_info[1]
@@ -449,7 +449,7 @@ def refresh_session(username):
         return ""
 
     session_info = load_session_info(username)
-    if session_info == None:
+    if session_info is None:
         return  # Don't refresh. Session is not valid anymore
 
     session_id = session_info[0]
@@ -687,7 +687,7 @@ def load_users(lock=False):
                     ('session_id', convert_session_info),
                 ]:
                     val = load_custom_attr(uid, attr, conv_func)
-                    if val != None:
+                    if val is not None:
                         result[uid][attr] = val
 
             # read automation secrets and add them to existing
@@ -995,7 +995,7 @@ def load_cached_profile():
 
 def contactgroups_of_user(user_id):
     user = load_cached_profile()
-    if user == None:
+    if user is None:
         # No cached profile present. Load all users to get the users data
         user = load_users(lock=False).get(user_id, {})
 
@@ -1332,7 +1332,7 @@ def user_sync_config():
 def userdb_sync_job_enabled():
     cfg = user_sync_config()
 
-    if cfg == None:
+    if cfg is None:
         return False  # not enabled at all
 
     if cfg == "master" and config.is_wato_slave_site():

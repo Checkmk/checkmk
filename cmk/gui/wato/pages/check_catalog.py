@@ -348,7 +348,7 @@ class ModeCheckManPage(WatoMode):
         # data is also available in the "cmk." module because the get-check-manpage automation not only
         # fetches the man page. It also contains info from check_info. What a hack.
         self._manpage = watolib.check_mk_local_automation("get-check-manpage", [self._check_type])
-        if self._manpage == None:
+        if self._manpage is None:
             raise MKUserError(None, _("There is no manpage for this check."))
 
     def title(self):

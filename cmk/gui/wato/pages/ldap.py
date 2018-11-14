@@ -168,7 +168,7 @@ class ModeEditLDAPConnection(LDAPMode):
         self._connection_cfg = {}
         self._connections = userdb.load_connection_config(lock=html.is_transaction())
 
-        if self._connection_id == None:
+        if self._connection_id is None:
             clone_id = html.var("clone")
             if clone_id is not None:
                 self._connection_cfg = self._get_connection_cfg_and_index(clone_id)[0]

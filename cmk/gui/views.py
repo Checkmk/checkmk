@@ -774,7 +774,7 @@ def show_filter_form(is_open, filters):
 def page_view():
     load_views()
     view_name = html.get_ascii_input("view_name")
-    if view_name == None:
+    if view_name is None:
         raise MKUserError("view_name", _("Missing the variable view_name in the URL."))
     view = available_views.get(view_name)
     if not view:
@@ -901,7 +901,7 @@ def show_view(view,
     # the limit was not applied on the resulting rows but on the
     # lines of the log processed. This resulted in wrong stats.
     # For these datasources we ignore the query limits.
-    if limit == None:  # Otherwise: specified as argument
+    if limit is None:  # Otherwise: specified as argument
         if not datasource.get('ignore_limit', False):
             limit = get_limit()
 
@@ -1608,11 +1608,11 @@ def sort_data(data, sorters):
 
     # Handle case where join columns are not present for all rows
     def save_compare(compfunc, row1, row2, args):
-        if row1 == None and row2 == None:
+        if row1 is None and row2 is None:
             return 0
-        elif row1 == None:
+        elif row1 is None:
             return -1
-        elif row2 == None:
+        elif row2 is None:
             return 1
 
         if args:

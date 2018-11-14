@@ -318,7 +318,7 @@ class ModeBulkDiscovery(WatoMode):
             # That saves automation calls and speeds up mass inventories.
             entries = self._recurse_hosts(watolib.Folder.current())
             for host_name, folder in entries:
-                if restrict_to_hosts != None and host_name not in restrict_to_hosts:
+                if restrict_to_hosts is not None and host_name not in restrict_to_hosts:
                     continue
                 if host_name in skip_hosts:
                     continue

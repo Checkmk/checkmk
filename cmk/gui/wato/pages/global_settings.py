@@ -223,7 +223,7 @@ class EditGlobalSettingMode(WatoMode):
                       "back to its default value?"))
                 if c == False:
                     return ""
-                elif c == None:
+                elif c is None:
                     return None
             elif not html.check_transaction():
                 return

@@ -514,7 +514,7 @@ class BILock(object):
         super(BILock, self).__init__()
 
     def has_lock(self):
-        return self._fd != None
+        return self._fd is not None
 
     def __enter__(self):
         if not os.path.exists(self._filepath):
@@ -588,7 +588,7 @@ class BICacheFile(object):
         super(BICacheFile, self).__init__()
 
     def clear_cache(self):
-        if self._cached_data != None:
+        if self._cached_data is not None:
             log("Discarded cached data from file %s" % self._filepath)
             self._cached_data = None
 
@@ -1374,7 +1374,7 @@ def api_get_aggregation_state(filter_names=None, filter_groups=None):
 
     for aggr_title in required_trees:
         aggr_tree = create_aggregation_row(tree_lookup[aggr_title]["tree"], status_info)
-        if aggr_tree["aggr_state"]["state"] == None:
+        if aggr_tree["aggr_state"]["state"] is None:
             continue  # Not yet monitored, aggregation is not displayed
 
         aggr_response = {"groups": list(tree_lookup[aggr_title]["groups"]), "tree": aggr_tree}
@@ -1573,7 +1573,7 @@ def find_matching_services(aggr_type, what, calllist):
 
         host_matches = match_host(hostname, alias, host_spec, tags, required_tags, site, honor_site)
         list_of_matches = []
-        if host_matches != None:
+        if host_matches is not None:
             if what == config.FOREACH_CHILD:
                 list_of_matches = [host_matches + (child_name,) for child_name in childs]
 
@@ -1583,7 +1583,7 @@ def find_matching_services(aggr_type, what, calllist):
                     child_alias = g_services_by_hostname[child_name][0][1][4]
                     child_matches = match_host(child_name, child_alias, child_spec, child_tags,
                                                required_child_tags, site, honor_site)
-                    if child_matches != None:
+                    if child_matches is not None:
                         list_of_matches.append(host_matches + child_matches)
 
             elif what == config.FOREACH_PARENT:
@@ -2124,7 +2124,7 @@ def execute_tree(tree, status_info=None):
         "downtime_aggr_warn": tree["downtime_aggr_warn"],
     }
 
-    if status_info == None:
+    if status_info is None:
         required_hosts = tree["reqhosts"]
         status_info = get_status_info(required_hosts)
     return execute_node(tree, status_info, aggregation_options)
@@ -2143,7 +2143,7 @@ def execute_leaf_node(node, status_info, aggregation_options):
 
     # Get current state of host and services
     status = status_info.get((site, host))
-    if status == None:
+    if status is None:
         return ({
             "state": None,
             "output": _("Host %s not found") % host,
@@ -2183,7 +2183,7 @@ def execute_leaf_node(node, status_info, aggregation_options):
                     "acknowledged": bool(acknowledged),
                     "in_service_period": in_service_period,
                 }
-                if state_assumption != None:
+                if state_assumption is not None:
                     assumed_state = {
                         "state": state_assumption,
                         "output": _("Assumed to be %s") % service_state_names[state_assumption],
@@ -2217,7 +2217,7 @@ def execute_leaf_node(node, status_info, aggregation_options):
             "acknowledged": host_acknowledged,
             "in_service_period": host_in_service_period,
         }
-        if state_assumption != None:
+        if state_assumption is not None:
             assumed_state = {
                 "state": state_assumption,
                 "output": _("Assumed to be %s") % host_state_names[state_assumption],
@@ -2255,7 +2255,7 @@ def execute_rule_node(node, status_info, aggregation_options):
         result = execute_node(n, status_info, aggregation_options)
 
         if result[0][
-                "state"] == None:  # Omit this node (used in availability for unmonitored things)
+                "state"] is None:  # Omit this node (used in availability for unmonitored things)
             continue
         subtrees.append(result)
 
@@ -2291,7 +2291,7 @@ def execute_rule_node(node, status_info, aggregation_options):
         ))
 
         node_states.append((result[0], result[2]))
-        if result[1] != None:
+        if result[1] is not None:
             assumed_states.append((result[1], result[2]))
             one_assumption = True
         else:
@@ -2647,7 +2647,7 @@ def ajax_render_tree():
     for tree in trees:
         if tree["title"] == aggr_title:
             row = create_aggregation_row(tree)
-            if row["aggr_state"]["state"] == None:
+            if row["aggr_state"]["state"] is None:
                 continue  # Not yet monitored, aggregation is not displayed
             row["aggr_group"] = aggr_group
 
@@ -2820,7 +2820,7 @@ class FoldableTreeRenderer(object):
 
     def _is_open(self, path):
         is_open = self._treestate.get(self._path_id(path))
-        if is_open == None:
+        if is_open is None:
             is_open = len(path) <= self._expansion_level
 
         # Make sure that in case of BI Boxes (omit root) the root level is *always* visible
@@ -2843,10 +2843,10 @@ class FoldableTreeRenderer(object):
         service = tree[2].get("service")
 
         # Four cases:
-        # (1) zbghora17 . Host status   (show_host == True, service == None)
-        # (2) zbghora17 . CPU load      (show_host == True, service != None)
-        # (3) Host Status               (show_host == False, service == None)
-        # (4) CPU load                  (show_host == False, service != None)
+        # (1) zbghora17 . Host status   (show_host == True, service is None)
+        # (2) zbghora17 . CPU load      (show_host == True, service is not None)
+        # (3) Host Status               (show_host == False, service is None)
+        # (4) CPU load                  (show_host == False, service is not None)
 
         if show_host or not service:
             host_url = html.makeuri_contextless([("view_name", "hoststatus"), ("site", site),
@@ -2969,7 +2969,7 @@ class FoldableTreeRendererTree(FoldableTreeRenderer):
         html.open_span(class_=[
             "content", "state",
             "state%d" %
-            effective_state["state"] if effective_state["state"] != None else -1, addclass
+            effective_state["state"] if effective_state["state"] is not None else -1, addclass
         ])
         html.write_text(self._render_bi_state(effective_state["state"]))
         html.close_span()
@@ -3179,7 +3179,7 @@ def create_aggregation_row(tree, status_info=None):
 
     state, assumed_state, node, _subtrees = tree_state
     eff_state = state
-    if assumed_state != None:
+    if assumed_state is not None:
         eff_state = assumed_state
 
     output = compute_output_message(eff_state, node)
@@ -3234,7 +3234,7 @@ def table(columns, add_headers, only_sites, limit, filters):
     # TODO: Optimation of affected_hosts filter!
     if only_service:
         affected = g_tree_cache["affected_services"].get(only_service)
-        if affected == None:
+        if affected is None:
             items = {}
         else:
             by_groups = {}
@@ -3278,7 +3278,7 @@ def table(columns, add_headers, only_sites, limit, filters):
                 continue
 
             row = create_aggregation_row(tree, status_info)
-            if row["aggr_state"]["state"] == None:
+            if row["aggr_state"]["state"] is None:
                 continue  # Not yet monitored, aggregation is not displayed
 
             row["aggr_group"] = group
@@ -3387,7 +3387,7 @@ def singlehost_table(columns, add_headers, only_sites, limit, filters, joinbynam
                             hostrow["host_in_service_period"],
                             row["services_with_fullstate"],
                         ]
-                if status_info == None:
+                if status_info is None:
                     break
         else:
             aggrs = g_tree_cache["host_aggregations"].get((site, host), [])
@@ -3426,7 +3426,7 @@ def singlehost_table(columns, add_headers, only_sites, limit, filters, joinbynam
                         ]
 
             new_row = create_aggregation_row(aggregation, status_info)
-            if new_row["aggr_state"]["state"] == None:
+            if new_row["aggr_state"]["state"] is None:
                 continue  # Not yet monitored, aggregation is not displayed
 
             row.update(new_row)

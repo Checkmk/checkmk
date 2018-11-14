@@ -401,7 +401,7 @@ class JobRenderer(object):
             (_("PID"), job_status.get("pid", "")),
             (_("Result"), "<br>".join(progress_info["JobResult"])),
         ]:
-            if right == None:
+            if right is None:
                 continue
             html.open_tr()
             html.th(left)

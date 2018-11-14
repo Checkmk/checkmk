@@ -243,7 +243,7 @@ class ModeBulkImport(WatoMode):
                               "attribute \"%s\".") % attribute)
                     attributes[attribute] = value
 
-        if host_name == None:
+        if host_name is None:
             raise MKUserError(None, _("The host name attribute needs to be assigned to a column."))
 
         return host_name, attributes
@@ -296,7 +296,7 @@ class ModeBulkImport(WatoMode):
 
         html.h2(_("Preview"))
         attribute_list = "<ul>%s</ul>" % "".join(
-            ["<li>%s (%s)</li>" % a for a in attributes if a[0] != None])
+            ["<li>%s (%s)</li>" % a for a in attributes if a[0] is not None])
         html.help(
             _("This list shows you the first 10 rows from your CSV file in the way the import is "
               "currently parsing it. If the lines are not splitted correctly or the title line is "
@@ -355,7 +355,7 @@ class ModeBulkImport(WatoMode):
         html.end_form()
 
     def _preview_form(self):
-        if self._params != None:
+        if self._params is not None:
             params = self._params
         else:
             params = self._vs_parse_params().default_value()
@@ -412,7 +412,7 @@ class ModeBulkImport(WatoMode):
     # Try to detect the host attribute to choose for this column based on the header
     # of this column (if there is some).
     def _try_detect_default_attribute(self, attributes, header):
-        if header == None:
+        if header is None:
             return ""
 
         def similarity(a, b):
@@ -421,7 +421,7 @@ class ModeBulkImport(WatoMode):
         highscore = 0.0
         best_key = ""
         for key, title in attributes:
-            if key != None:
+            if key is not None:
                 key_match_score = similarity(key, header)
                 title_match_score = similarity(title, header)
                 score = key_match_score if key_match_score > title_match_score else title_match_score

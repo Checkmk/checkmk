@@ -358,7 +358,7 @@ def event_rule_matches_non_inverted(rule_pack, rule, event):
         if sl_from > sl_to:
             sl_to, sl_from = sl_from, sl_to
         p = event.get("sl")
-        if p == None:
+        if p is None:
             return _("No service level is set in event")
 
         if p < sl_from or p > sl_to:
@@ -404,7 +404,7 @@ def check_timeperiod(tpname):
 
 
 def match(pattern, text, complete=True):
-    if pattern == None:
+    if pattern is None:
         return True
     else:
         if complete:

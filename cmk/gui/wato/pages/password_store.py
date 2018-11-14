@@ -131,7 +131,7 @@ class ModePasswords(WatoMode, watolib.PasswordStore):
 
         table.cell(_("Title"), html.render_text(password["title"]))
         table.cell(_("Editable by"))
-        if password["owned_by"] == None:
+        if password["owned_by"] is None:
             html.write_text(
                 _("Administrators (having the permission "
                   "\"Write access to all passwords\")"))
@@ -162,7 +162,7 @@ class ModeEditPassword(WatoMode, watolib.PasswordStore):
         super(ModeEditPassword, self).__init__()
         ident = html.var("ident")
 
-        if ident != None:
+        if ident is not None:
             try:
                 password = self._owned_passwords()[ident]
             except KeyError:

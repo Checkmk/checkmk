@@ -443,7 +443,7 @@ class ModeEditUser(WatoMode):
     def _from_vars(self):
         self._user_id = html.get_unicode_input("edit")  # missing -> new user
         self._cloneid = html.get_unicode_input("clone")  # Only needed in 'new' mode
-        self._is_new_user = self._user_id == None
+        self._is_new_user = self._user_id is None
 
         self._users = userdb.load_users(lock=html.is_transaction())
 
@@ -537,9 +537,9 @@ class ModeEditUser(WatoMode):
 
         idle_timeout = watolib.get_vs_user_idle_timeout().from_html_vars("idle_timeout")
         user_attrs["idle_timeout"] = idle_timeout
-        if idle_timeout != None:
+        if idle_timeout is not None:
             user_attrs["idle_timeout"] = idle_timeout
-        elif idle_timeout == None and "idle_timeout" in user_attrs:
+        elif idle_timeout is None and "idle_timeout" in user_attrs:
             del user_attrs["idle_timeout"]
 
         # Pager
@@ -684,7 +684,7 @@ class ModeEditUser(WatoMode):
         forms.header(_("Security"))
         forms.section(_("Authentication"))
 
-        is_automation = self._user.get("automation_secret", None) != None
+        is_automation = self._user.get("automation_secret", None) is not None
         html.radiobutton("authmethod", "password", not is_automation,
                          _("Normal user login with password"))
         html.open_ul()
@@ -1012,7 +1012,7 @@ def select_language(user):
             style="display: none" if active else "")
         html.open_div(id_="attr_entry_language", style="display: none" if not active else "")
 
-        language = user.get('language') if user.get('language') != None else ''
+        language = user.get('language') if user.get('language') is not None else ''
 
         # Transform 'en' configured language to empty string for compatibility reasons
         if language == "en":

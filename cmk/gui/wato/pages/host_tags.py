@@ -105,7 +105,7 @@ class ModeHostTags(WatoMode, watolib.HosttagsConfiguration):
                       "host tag group '%s'?") % del_id)
                 if c == False:
                     return ""
-                elif c == None:
+                elif c is None:
                     return None
 
             if message:
@@ -143,7 +143,7 @@ class ModeHostTags(WatoMode, watolib.HosttagsConfiguration):
                       "auxiliary tag '%s'?") % del_id)
                 if c == False:
                     return ""
-                elif c == None:
+                elif c is None:
                     return None
 
             if message:
@@ -163,7 +163,7 @@ class ModeHostTags(WatoMode, watolib.HosttagsConfiguration):
                 return "hosttags", message != True and message or None
 
         move_nr = html.var("_move")
-        if move_nr != None:
+        if move_nr is not None:
             if html.check_transaction():
                 move_nr = int(move_nr)
                 if move_nr >= 0:
@@ -337,7 +337,7 @@ class ModeEditAuxtag(ModeEditHosttagConfiguration):
         return _("Edit auxiliary tag")
 
     def _is_new_aux_tag(self):
-        return html.var("edit") == None
+        return html.var("edit") is None
 
     def buttons(self):
         html.context_button(
@@ -454,7 +454,7 @@ class ModeEditHosttagGroup(ModeEditHosttagConfiguration):
         return _("Edit tag group")
 
     def _is_new_hosttag_group(self):
-        return html.var("edit") == None
+        return html.var("edit") is None
 
     def buttons(self):
         html.context_button(
@@ -516,7 +516,7 @@ class ModeEditHosttagGroup(ModeEditHosttagConfiguration):
 
             # Detect removal
             for former_tag in self._untainted_tag_group.tags:
-                if former_tag.id != None \
+                if former_tag.id is not None \
                     and former_tag.id not in [ tmp_tag.id for tmp_tag in changed_tag_group.tags ] \
                     and former_tag.id not in operations:
                     # remove explicit tag (hosts/folders) or remove it from tag specs (rules)
@@ -739,8 +739,8 @@ def rename_host_tags_after_confirmation(tag_id, operations):
     return True
 
 
-# operation == None -> tag group is deleted completely
-# tag_id == None -> Auxiliary tag has been deleted, no tag group affected
+# operation is None -> tag group is deleted completely
+# tag_id is None -> Auxiliary tag has been deleted, no tag group affected
 def _change_host_tags_in_folders(tag_id, operations, mode, folder):
     need_save = False
     affected_folders = []
@@ -838,7 +838,7 @@ def _change_host_tags_in_rules(folder, operations, mode):
             # Handle deletion of complete tag group
             if isinstance(operations, list):  # this list of tags to remove
                 for tag in operations:
-                    if tag != None and (tag in rule.tag_specs or "!" + tag in rule.tag_specs):
+                    if tag is not None and (tag in rule.tag_specs or "!" + tag in rule.tag_specs):
                         affected_rulesets.add(ruleset)
 
                         if mode != "check":

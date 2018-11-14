@@ -327,7 +327,7 @@ def page_host_inv_api():
 
         else:
             host_name = request.get("host")
-            if host_name == None:
+            if host_name is None:
                 raise MKUserError("host", _("You need to provide a \"host\"."))
 
             result = _inventory_of_host(host_name, request)

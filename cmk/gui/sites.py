@@ -46,7 +46,7 @@ from cmk.gui.globals import html
 def live():
     """Get Livestatus connection object matching the current site configuration
        and user settings. On the first call the actual connection is being made."""
-    if _live == None:
+    if _live is None:
         _connect()
     return _live
 
@@ -56,14 +56,14 @@ def state(site_id, deflt=None):
     """Get the status of a certain site. Returns a dictionary with various
        entries. deflt is being returned in case the specified site doe not
        exist or has no state."""
-    if _live == None:
+    if _live is None:
         _connect()
     return _site_status.get(site_id, deflt)
 
 
 def states():
     """Returns dictionary of all known site states."""
-    if _live == None:
+    if _live is None:
         _connect()
     return _site_status
 
@@ -220,7 +220,7 @@ def update_site_states_from_dead_sites():
 
 
 def _status_host_state_name(shs):
-    if shs == None:
+    if shs is None:
         return "dead"
     return {
         1: "down",
@@ -254,7 +254,7 @@ def _update_site_status(site_id, status):
 # AuthUser: header for livestatus.
 def _set_livestatus_auth():
     user_id = _livestatus_auth_user()
-    if user_id != None:
+    if user_id is not None:
         _live.set_auth_user('read', user_id)
         _live.set_auth_user('action', user_id)
 

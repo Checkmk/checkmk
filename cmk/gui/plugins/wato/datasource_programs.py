@@ -1445,3 +1445,49 @@ register_rule(
     help=_("This rule allows you to check multiple BI aggregations from multiple sites at once. "
            "You can also assign aggregations to specific hosts through the piggyback mechanism."),
     match='first')
+
+register_rule(
+    'datasource_programs',
+    'special_agents:aws',
+    Dictionary(
+        elements=[
+            ("--aws-access-key-id",
+             TextAscii(
+                 title=_("The access key for your AWS account"),
+                 allow_empty=False,
+             )),
+            ("--aws-secret-access-key",
+             IndividualOrStoredPassword(
+                 title=_("The secret key for your AWS account"),
+                 allow_empty=False,
+             )),
+            ("--region",
+             DropdownChoice(
+                 title=_("The region to use"),
+                 choices=sorted([
+                     ("ap-south-1", _("Asia Pacific (Mumbai)")),
+                     ("ap-northeast-3", _("Asia Pacific (Osaka-Local)")),
+                     ("ap-northeast-2", _("Asia Pacific (Seoul)")),
+                     ("ap-southeast-1", _("Asia Pacific (Singapore)")),
+                     ("ap-southeast-2", _("Asia Pacific (Sydney)")),
+                     ("ap-northeast-1", _("Asia Pacific (Tokyo)")),
+                     ("ca-central-1", _("Canada (Central)")),
+                     ("cn-north-1", _("China (Beijing)")),
+                     ("cn-northwest-1", _("China (Ningxia)")),
+                     ("eu-central-1", _("EU (Frankfurt)")),
+                     ("eu-west-1", _("EU (Ireland)")),
+                     ("eu-west-2", _("EU (London)")),
+                     ("eu-west-3", _("EU (Paris)")),
+                     ("sa-east-1", _("South America (Sao Paulo)")),
+                     ("us-east-2", _("US East (Ohio)")),
+                     ("us-east-1", _("US East (N. Virginia)")),
+                     ("us-west-1", _("US West (N. California)")),
+                     ("us-west-2", _("US West (Oregon)")),
+                 ],
+                                key=lambda x: x[1]),
+             )),
+        ],
+        optional_keys=[],
+    ),
+    title=_('Amazon Web Services (AWS)'),
+    match='first')

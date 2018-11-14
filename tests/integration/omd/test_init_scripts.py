@@ -4,6 +4,7 @@
 import os
 import stat
 
+
 def test_init_scripts(site):
     scripts = [
         "apache",
@@ -22,6 +23,7 @@ def test_init_scripts(site):
     if site.version.edition() == "enterprise":
         scripts += [
             "cmc",
+            "dcd",
             "liveproxyd",
             "mknotifyd",
         ]

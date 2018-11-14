@@ -33,6 +33,7 @@ def test_registered_config_domains():
         'apache',
         'ca-certificates',
         'check_mk',
+        'dcd',
         'diskspace',
         'ec',
         'liveproxyd',

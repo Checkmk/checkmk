@@ -1,4 +1,6 @@
 FILES_TO_CHECK := $(realpath $(addprefix ../../cmk/ec/,defaults.py export.py main.py settings.py)) \
+		  $(realpath $(addprefix ../../cmk/cee/dcd/,main.py Config.py Manager.py CommandManager.py)) \
+		  $(realpath $(addprefix ../../cmk/cee/dcd/connectors,piggyback.py utils.py)) \
 		  $(realpath $(addprefix ../../cmk/,daemon.py i18n.py paths.py regex.py render.py structured_data.py)) \
 		  $(realpath $(addprefix ../../cmk/gui/,dashboard.py exceptions.py globals.py htmllib.py http_status.py \
 																						i18n.py sidebar.py sites.py table.py visuals.py)) \

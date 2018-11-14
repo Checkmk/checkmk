@@ -436,9 +436,6 @@ def yield_configured_instances():
     if os.path.exists(conffile):
         execfile(conffile)
 
-    if instance is None:
-        instance = str(port)
-
     default_config = {
         "protocol": protocol,
         "server": server,

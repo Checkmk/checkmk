@@ -53,7 +53,12 @@ def inventory_hr_fs(info):
     mplist = []
     for hrtype, hrdescr, _hrunits, hrsize, _hrused in info:
         hrdescr = fix_hr_fs_mountpoint(hrdescr)
-        if hrtype in [ ".1.3.6.1.2.1.25.2.1.4" ] and \
+        # NOTE: These types are defined in the HR-TYPES-MIB.
+        #       .1.3.6.1.2.1.25.2.1 +
+        #                           +-> .4 "hrStorageFixedDisk"
+        if hrtype in [ ".1.3.6.1.2.1.25.2.1.4",
+                       # This strange value below is needed for VCenter Appliances
+                       ".1.3.6.1.2.1.25.2.3.1.2.4"] and \
                 hrdescr not in inventory_df_exclude_mountpoints and \
                 saveint(hrsize) != 0:
             mplist.append(hrdescr)

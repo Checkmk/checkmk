@@ -164,6 +164,12 @@ set_os_env () {
         STATCX='file_mtime'
         STATCY='file_mtime'
 
+    elif [ "$OS_TYPE" = 'HP-UX' ]; then
+        GREP=$(which grep)
+        AWK=$(which awk)
+        STATCX="perl -le 'print((stat shift)[8])'"
+        STATCY="perl -le 'print((stat shift)[9])'"
+
     else
         logging -c "[set_os_env]" "Unsupported OS: ${OS_TYPE}"
         echo "Unsupported OS: $OS_TYPE" >&2

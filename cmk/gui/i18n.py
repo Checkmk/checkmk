@@ -44,11 +44,12 @@ import cmk.paths
 
 Translation = NamedTuple("Translation", [
     ("translation", gettext_module.NullTranslations),
-    ("name", str)
+    ("name", str),
 ])
 
 # Current active translation object
-_translation = None # type: Optional[Translation]
+_translation = None  # type: Optional[Translation]
+
 
 def _(message):
     # type: (str) -> Text
@@ -66,7 +67,7 @@ def get_current_language():
 
 def _get_language_dirs():
     # type: () -> List[str]
-    return [ cmk.paths.locale_dir, cmk.paths.local_locale_dir ]
+    return [cmk.paths.locale_dir, cmk.paths.local_locale_dir]
 
 
 def get_language_alias(lang):
@@ -88,12 +89,13 @@ def get_languages():
     # Add the hard coded english language to the language list
     # It must be choosable even if the administrator changed the default
     # language to a custom value
-    languages = set([ ('', _('English')) ])
+    languages = set([('', _('English'))])
 
     for lang_dir in _get_language_dirs():
         try:
-            languages.update([ (val, _("%s") % get_language_alias(val))
-                for val in os.listdir(lang_dir) if not '.' in val ])
+            languages.update([(val, _("%s") % get_language_alias(val))
+                              for val in os.listdir(lang_dir)
+                              if not '.' in val])
         except OSError:
             # Catch "OSError: [Errno 2] No such file or
             # directory:" when directory not exists
@@ -126,8 +128,9 @@ def localize(lang):
 def _init_language(lang):
     # type: (str) -> Optional[gettext_module.NullTranslations]
     try:
-        translation = gettext_module.translation("multisite", _get_cmk_locale_path(lang),
-                languages = [ lang ], codeset = 'UTF-8') # type: Optional[gettext_module.NullTranslations]
+        translation = gettext_module.translation(
+            "multisite", _get_cmk_locale_path(lang), languages=[lang],
+            codeset='UTF-8')  # type: Optional[gettext_module.NullTranslations]
     except IOError:
         translation = None
 
@@ -160,6 +163,7 @@ def initialize():
 #   '----------------------------------------------------------------------'
 
 _user_localizations = {}
+
 
 # Localization of user supplied texts
 def _u(text):

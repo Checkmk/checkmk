@@ -24,7 +24,6 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-
 import os
 import json
 import ast
@@ -53,7 +52,7 @@ def get_inventory_data(inventory_tree, tree_path):
         if numeration is not None:
             invdata = numeration.get_child_data()
     elif attributes_key:
-        attributes =  inventory_tree.get_sub_attributes(parsed_path)
+        attributes = inventory_tree.get_sub_attributes(parsed_path)
         if attributes is not None:
             invdata = attributes.get_child_data().get(attributes_key)
     return invdata
@@ -123,7 +122,8 @@ def load_filtered_and_merged_tree(row):
 
 
 def get_status_data_via_livestatus(site, hostname):
-    query = "GET hosts\nColumns: host_structured_status\nFilter: host_name = %s\n" % livestatus.lqencode(hostname)
+    query = "GET hosts\nColumns: host_structured_status\nFilter: host_name = %s\n" % livestatus.lqencode(
+        hostname)
     try:
         sites.live().set_only_sites([site] if site else None)
         result = sites.live().query(query)
@@ -151,7 +151,7 @@ def load_delta_tree(hostname, timestamp):
 def get_history(hostname):
     # List of triple: timestamp (old), old tree, new tree
     if '/' in hostname:
-        return None # just for security reasons
+        return None  # just for security reasons
 
     history = []
     try:
@@ -164,7 +164,7 @@ def get_history(hostname):
         # TODO: We should really change this error handling. There is currently
         # no chance to react on issues that occur during processing of
         # inventory data.
-        return [] # No inventory for this host
+        return []  # No inventory for this host
 
     inventory_archive_dir = "%s/inventory_archive/%s" % (cmk.paths.var_dir, hostname)
     if os.path.exists(inventory_archive_dir):
@@ -172,7 +172,8 @@ def get_history(hostname):
             try:
                 timestamp = int(timestamp_str)
                 inventory_archive_path = "%s/%d" % (inventory_archive_dir, timestamp)
-                inventory_tree = _filter_tree(StructuredDataTree().load_from(inventory_archive_path))
+                inventory_tree = _filter_tree(
+                    StructuredDataTree().load_from(inventory_archive_path))
             except:
                 # TODO: We should really change this error handling. There is currently
                 # no chance to react on issues that occur during processing of
@@ -192,13 +193,14 @@ def get_history(hostname):
 def parent_path(invpath):
     # Gets the parent path by dropping the last component
     if invpath == ".":
-        return None # No parent
+        return None  # No parent
 
-    if invpath[-1] in ".:": # drop trailing type specifyer
+    if invpath[-1] in ".:":  # drop trailing type specifyer
         invpath = invpath[:-1]
 
     last_sep = max(invpath.rfind(":"), invpath.rfind("."))
-    return invpath[:last_sep+1]
+    return invpath[:last_sep + 1]
+
 
 #.
 #   .--helpers-------------------------------------------------------------.
@@ -209,6 +211,7 @@ def parent_path(invpath):
 #   |                 |_| |_|\___|_| .__/ \___|_|  |___/                   |
 #   |                              |_|                                     |
 #   '----------------------------------------------------------------------'
+
 
 def _load_inventory_tree(hostname):
     # Load data of a host, cache it in the current HTTP request
@@ -294,6 +297,7 @@ None in case the user is allowed to see the whole tree.
         return []
     return permitted_paths
 
+
 #.
 #   .--Inventory API-------------------------------------------------------.
 #   |   ___                      _                        _    ____ ___    |
@@ -303,6 +307,7 @@ None in case the user is allowed to see the whole tree.
 #   |  |___|_| |_|\_/ \___|_| |_|\__\___/|_|   \__, | /_/   \_\_|  |___|   |
 #   |                                          |___/                       |
 #   '----------------------------------------------------------------------'
+
 
 @cmk.gui.pages.register("host_inv_api")
 def page_host_inv_api():
@@ -330,15 +335,15 @@ def page_host_inv_api():
             if not result and not has_inventory(host_name):
                 raise MKGeneralException(_("Found no inventory data for this host."))
 
-        response = { "result_code": 0, "result": result }
+        response = {"result_code": 0, "result": result}
 
     except MKException, e:
-        response = { "result_code": 1, "result": "%s" % e }
+        response = {"result_code": 1, "result": "%s" % e}
 
     except Exception, e:
         if config.debug:
             raise
-        response = { "result_code": 1, "result": "%s" % e }
+        response = {"result_code": 1, "result": "%s" % e}
 
     if html.output_format == "json":
         _write_json(response)

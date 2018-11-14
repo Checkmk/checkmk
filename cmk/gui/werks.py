@@ -57,11 +57,12 @@ acknowledgement_path = cmk.paths.var_dir + "/acknowledged_werks.mk"
 # Keep global variable for caching werks between requests. The never change.
 g_werks = None
 
-werks_stylesheets = [ "pages", "check_mk", "status", "wato", "views" ]
+werks_stylesheets = ["pages", "check_mk", "status", "wato", "views"]
+
 
 @cmk.gui.pages.register("version")
 def page_version():
-    html.header(_("Check_MK %s Release Notes") % cmk.__version__, stylesheets = werks_stylesheets)
+    html.header(_("Check_MK %s Release Notes") % cmk.__version__, stylesheets=werks_stylesheets)
     load_werks()
     handle_acknowledgement()
     render_werks_table()
@@ -77,17 +78,21 @@ def handle_acknowledgement():
 
         if werk["compatible"] == "incomp_unack":
             acknowledge_werk(werk)
-            html.message(_("Werk %s - %s has been acknowledged.") % (render_werk_id(werk, with_link=True), render_werk_title(werk)))
+            html.message(
+                _("Werk %s - %s has been acknowledged.") % (render_werk_id(werk, with_link=True),
+                                                            render_werk_title(werk)))
             html.reload_sidebar()
-            load_werks() # reload ack states after modification
+            load_werks()  # reload ack states after modification
 
     elif html.var("_ack_all"):
-        if html.confirm(_("Do you really want to acknowledge <b>all</b> incompatible werks?"), method="GET"):
+        if html.confirm(
+                _("Do you really want to acknowledge <b>all</b> incompatible werks?"),
+                method="GET"):
             num = len(unacknowledged_incompatible_werks())
             acknowledge_all_werks()
             html.message(_("%d incompatible Werks have been acknowledged.") % num)
             html.reload_sidebar()
-            load_werks() # reload ack states after modification
+            load_werks()  # reload ack states after modification
 
     render_unacknowleged_werks()
 
@@ -100,9 +105,11 @@ def page_werk():
         raise MKUserError("werk", _("This werk does not exist."))
     werk = g_werks[werk_id]
 
-    html.header(("%s %s - %s") % (_("Werk"), render_werk_id(werk, with_link=False), werk["title"]), stylesheets = werks_stylesheets)
+    html.header(
+        ("%s %s - %s") % (_("Werk"), render_werk_id(werk, with_link=False), werk["title"]),
+        stylesheets=werks_stylesheets)
     html.begin_context_buttons()
-    back_url = html.makeuri([], filename="version.py", delvars=["werk"]) # keeps filter settings
+    back_url = html.makeuri([], filename="version.py", delvars=["werk"])  # keeps filter settings
     html.context_button(_("Back"), back_url, "back")
     if werk["compatible"] == "incomp_unack" and may_acknowledge():
         ack_url = html.makeactionuri([("_werk_ack", werk["id"])], filename="version.py")
@@ -126,13 +133,15 @@ def page_werk():
     werk_table_row(_("Check_MK Version"), werk["version"])
     werk_table_row(_("Level"), render_werk_level(werk), css="werklevel werklevel%d" % werk["level"])
     werk_table_row(_("Class"), render_werk_class(werk), css="werkclass werkclass%s" % werk["class"])
-    werk_table_row(_("Compatibility"), render_werk_compatibility(werk), css="werkcomp werkcomp%s" % werk["compatible"])
+    werk_table_row(
+        _("Compatibility"),
+        render_werk_compatibility(werk),
+        css="werkcomp werkcomp%s" % werk["compatible"])
     werk_table_row(_("Description"), render_werk_description(werk), css="nowiki")
 
     html.close_table()
 
     html.footer()
-
 
 
 def load_werks():
@@ -142,7 +151,7 @@ def load_werks():
 
     ack_ids = load_acknowledgements()
     for werk in g_werks.values():
-        if werk["compatible"] in [ "incomp", "incomp_unack" ]:
+        if werk["compatible"] in ["incomp", "incomp_unack"]:
             if werk["id"] in ack_ids or werk_is_pre_127(werk):
                 werk["compatible"] = "incomp_ack"
             else:
@@ -187,10 +196,8 @@ def load_acknowledgements():
 
 
 def unacknowledged_incompatible_werks():
-    return werks_sorted_by_date([
-        werk
-        for werk in g_werks.values()
-        if werk["compatible"] == "incomp_unack"])
+    return werks_sorted_by_date(
+        [werk for werk in g_werks.values() if werk["compatible"] == "incomp_unack"])
 
 
 def num_unacknowledged_incompatible_werks():
@@ -200,119 +207,80 @@ def num_unacknowledged_incompatible_werks():
 
 def werk_table_option_entries():
     return [
-        ( "classes",
-          "double",
-          ListChoice(
-              title = _("Classes"),
-              choices = sorted(cmk.werks.werk_classes().items()),
-          ),
-          [ "feature", "fix", "security" ],
-        ),
-        ( "levels",
-          "double",
-          ListChoice(
-              title = _("Levels"),
-              choices = sorted(cmk.werks.werk_levels().items()),
-          ),
-          [ 1, 2, 3 ],
-        ),
-         ( "date",
-           "double",
-           Timerange(
-               title = _("Date"),
-            ),
-            ( 'date', ( 1383149313, int(time.time()) ) ),
-         ),
-        ( "id",
-          "single",
-          TextAscii(
-              title = _("Werk ID"),
-              label = "#",
-              regex = "[0-9]{4}",
-              allow_empty = True,
-              size = 4,
-          ),
-          "",
-        ),
-        ( "compatibility",
-          "single",
-          DropdownChoice(
-              title = _("Compatibility"),
-              choices = [
-                ( [ "compat", "incomp_ack", "incomp_unack" ], _("Compatible and incompatible Werks") ),
-                ( [ "compat" ],                                _("Compatible Werks") ),
-                ( [ "incomp_ack", "incomp_unack" ],           _("Incompatible Werks") ),
-                ( [ "incomp_unack" ],                         _("Unacknowledged incompatible Werks") ),
-                ( [ "incomp_ack" ],                            _("Acknowledged incompatible Werks") ),
-              ]
-          ),
-          [ "compat", "incomp_ack", "incomp_unack" ],
-        ),
-        ( "component",
-          "single",
-          DropdownChoice(
-              title = _("Component"),
-              choices = [
-                ( None, _("All components") ),
-              ] + sorted(cmk.werks.werk_components().items()),
-          ),
-          None,
-         ),
-         ( "edition",
-           "single",
-           DropdownChoice(
-               title = _("Edition"),
-               choices = [
-                   ( None, _("All editions") ),
-                   ( "cme", _("Werks only concerning the Managed Services Edition") ),
-                   ( "cee", _("Werks only concerning the Enterprise Edition") ),
-                   ( "cre", _("Werks also concerning the Raw Edition") ),
-                ],
-            ),
-            None,
-         ),
-         ( "werk_content",
-           "single",
-           TextUnicode(
-               title = _("Werk title or content"),
-               size = 41,
-           ),
-           ""
-         ),
-         ( "version",
-           "single",
-           Tuple(
-               title = _("Check_MK Version"),
-               orientation = "float",
-               elements = [
-                   TextAscii(label = _("from:"), size=12),
-                   TextAscii(label = _("to:"), size=12),
-               ]
-           ),
-           ( "", "" ),
-         ),
-         ( "grouping",
-           "single",
-           DropdownChoice(
-               title = _("Group Werks by"),
-               choices = [
-                 ( "version", _("Check_MK Version") ),
-                 ( "day",     _("Day of creation") ),
-                 ( "week",    _("Week of creation") ),
-                 ( None,      _("Do not group") ),
-               ],
-           ),
-           "version",
-         ),
-         ( "group_limit",
-           "single",
-           Integer(
-               title = _("Show number of groups"),
-               unit = _("groups"),
-               minvalue = 1,
-           ),
-           20,
-         ),
+        ("classes", "double",
+         ListChoice(
+             title=_("Classes"),
+             choices=sorted(cmk.werks.werk_classes().items()),
+         ), ["feature", "fix", "security"]),
+        ("levels", "double",
+         ListChoice(
+             title=_("Levels"),
+             choices=sorted(cmk.werks.werk_levels().items()),
+         ), [1, 2, 3]),
+        ("date", "double", Timerange(title=_("Date")), ('date', (1383149313, int(time.time())))),
+        ("id", "single",
+         TextAscii(
+             title=_("Werk ID"),
+             label="#",
+             regex="[0-9]{4}",
+             allow_empty=True,
+             size=4,
+         ), ""),
+        ("compatibility", "single",
+         DropdownChoice(
+             title=_("Compatibility"),
+             choices=[
+                 (["compat", "incomp_ack", "incomp_unack"], _("Compatible and incompatible Werks")),
+                 (["compat"], _("Compatible Werks")),
+                 (["incomp_ack", "incomp_unack"], _("Incompatible Werks")),
+                 (["incomp_unack"], _("Unacknowledged incompatible Werks")),
+                 (["incomp_ack"], _("Acknowledged incompatible Werks")),
+             ]), ["compat", "incomp_ack", "incomp_unack"]),
+        ("component", "single",
+         DropdownChoice(
+             title=_("Component"),
+             choices=[
+                 (None, _("All components")),
+             ] + sorted(cmk.werks.werk_components().items()),
+         ), None),
+        ("edition", "single",
+         DropdownChoice(
+             title=_("Edition"),
+             choices=[
+                 (None, _("All editions")),
+                 ("cme", _("Werks only concerning the Managed Services Edition")),
+                 ("cee", _("Werks only concerning the Enterprise Edition")),
+                 ("cre", _("Werks also concerning the Raw Edition")),
+             ],
+         ), None),
+        ("werk_content", "single", TextUnicode(
+            title=_("Werk title or content"),
+            size=41,
+        ), ""),
+        ("version", "single",
+         Tuple(
+             title=_("Check_MK Version"),
+             orientation="float",
+             elements=[
+                 TextAscii(label=_("from:"), size=12),
+                 TextAscii(label=_("to:"), size=12),
+             ]), ("", "")),
+        ("grouping", "single",
+         DropdownChoice(
+             title=_("Group Werks by"),
+             choices=[
+                 ("version", _("Check_MK Version")),
+                 ("day", _("Day of creation")),
+                 ("week", _("Week of creation")),
+                 (None, _("Do not group")),
+             ],
+         ), "version"),
+        ("group_limit", "single",
+         Integer(
+             title=_("Show number of groups"),
+             unit=_("groups"),
+             minvalue=1,
+         ), 20),
     ]
 
 
@@ -320,16 +288,19 @@ def render_unacknowleged_werks():
     werks = unacknowledged_incompatible_werks()
     if werks and may_acknowledge():
         html.begin_context_buttons()
-        html.context_button(_("Acknowledge all"), html.makeactionuri([("_ack_all", "1")]), "werk_ack")
+        html.context_button(
+            _("Acknowledge all"), html.makeactionuri([("_ack_all", "1")]), "werk_ack")
         html.end_context_buttons()
 
     if werks and not html.has_var("show_unack"):
         html.open_div(class_=["warning"])
-        html.write_text(_("<b>Warning:</b> There are %d unacknowledged incompatible werks:") % len(werks))
+        html.write_text(
+            _("<b>Warning:</b> There are %d unacknowledged incompatible werks:") % len(werks))
         html.br()
         html.br()
-        html.a(_("Show unacknowledged incompatible werks"),
-               href=html.makeuri_contextless([("show_unack", "1"), ("wo_compatibility", "3")]))
+        html.a(
+            _("Show unacknowledged incompatible werks"),
+            href=html.makeuri_contextless([("show_unack", "1"), ("wo_compatibility", "3")]))
         html.close_div()
 
 
@@ -339,13 +310,18 @@ def render_werks_table():
 
     if html.var("show_unack") and not html.has_var("wo_set"):
         werk_table_options = default_werk_table_options()
-        werk_table_options["compatibility"] = [ "incomp_unack" ]
+        werk_table_options["compatibility"] = ["incomp_unack"]
 
     current_group, number_of_groups, number_of_werks = False, 0, 0
 
     def begin_group(title):
-        table.begin(title=title, limit=None, searchable = False, sortable = False, css="werks",
-                    update_page_head=False)
+        table.begin(
+            title=title,
+            limit=None,
+            searchable=False,
+            sortable=False,
+            css="werks",
+            update_page_head=False)
 
     werklist = []
 
@@ -373,9 +349,14 @@ def render_werks_table():
             table.cell(_("ID"), render_werk_id(werk, with_link=True), css="number narrow")
             table.cell(_("Version"), werk["version"], css="number narrow")
             table.cell(_("Date"), render_werk_date(werk), css="number narrow")
-            table.cell(_("Class"), render_werk_class(werk), css="werkclass werkclass%s" % werk["class"])
-            table.cell(_("Level"), render_werk_level(werk), css="werklevel werklevel%d" % werk["level"])
-            table.cell(_("Compatibility"), render_werk_compatibility(werk), css="werkcomp werkcomp%s" % werk["compatible"])
+            table.cell(
+                _("Class"), render_werk_class(werk), css="werkclass werkclass%s" % werk["class"])
+            table.cell(
+                _("Level"), render_werk_level(werk), css="werklevel werklevel%d" % werk["level"])
+            table.cell(
+                _("Compatibility"),
+                render_werk_compatibility(werk),
+                css="werkcomp werkcomp%s" % werk["compatible"])
             table.cell(_("Component"), render_werk_component(werk), css="nowrap")
             table.cell(_("Title"), render_werk_title(werk))
 
@@ -384,6 +365,7 @@ def render_werks_table():
         table.update_headinfo(number_of_werks)
     else:
         html.h3(_("No matching Werks found."))
+
 
 def werk_group_value(werk, grouping):
     if grouping == None:
@@ -396,6 +378,7 @@ def werk_group_value(werk, grouping):
         return time.strftime("%Y-%m-%d", broken_time)
     return time.strftime("%s %%U - %%Y" % _("Week"), broken_time)
 
+
 def werk_matches_options(werk, werk_table_options):
     if not ((not werk_table_options["id"] or werk["id"] == int(werk_table_options["id"])) and \
            werk["level"] in werk_table_options["levels"] and \
@@ -405,7 +388,6 @@ def werk_matches_options(werk, werk_table_options):
            werk["date"] >= werk_table_options["date_range"][0] and \
            werk["date"] <= werk_table_options["date_range"][1]):
         return False
-
 
     if werk_table_options["edition"] and werk["edition"] != werk_table_options["edition"]:
         return False
@@ -431,8 +413,9 @@ def werk_matches_options(werk, werk_table_options):
 
 
 def default_werk_table_options():
-    werk_table_options = { name: default_value
-                           for name, _height, _vs, default_value in werk_table_option_entries() }
+    werk_table_options = {
+        name: default_value for name, _height, _vs, default_value in werk_table_option_entries()
+    }
     werk_table_options["date_range"] = (1, time.time())
     return werk_table_options
 
@@ -451,13 +434,14 @@ def render_werk_table_options():
 
         werk_table_options.setdefault(name, value)
 
-    html.begin_foldable_container("werks", "options", isopen=True, title=_("Searching and Filtering"), indent=False)
+    html.begin_foldable_container(
+        "werks", "options", isopen=True, title=_("Searching and Filtering"), indent=False)
     html.begin_form("werks")
     html.hidden_field("wo_set", "set")
     html.begin_floating_options("werks", is_open=True)
     for name, height, vs, default_value in werk_table_option_entries():
         html.render_floating_option(name, height, "wo_", vs, werk_table_options[name])
-    html.end_floating_options(reset_url = html.makeuri([], remove_prefix = ""))
+    html.end_floating_options(reset_url=html.makeuri([], remove_prefix=""))
     html.hidden_fields()
     html.end_form()
     html.end_foldable_container()
@@ -474,17 +458,22 @@ def render_werk_id(werk, with_link):
         return html.render_a(render_werk_id(werk, with_link=False), url)
     return "#%04d" % werk["id"]
 
+
 def render_werk_date(werk):
     return time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(werk["date"]))
+
 
 def render_werk_level(werk):
     return cmk.werks.werk_levels()[werk["level"]]
 
+
 def render_werk_class(werk):
     return cmk.werks.werk_classes()[werk["class"]]
 
+
 def render_werk_compatibility(werk):
     return cmk.werks.werk_compatibilities()[werk["compatible"]]
+
 
 def render_werk_component(werk):
     return cmk.werks.werk_components().get(werk["component"], werk["component"])
@@ -498,6 +487,7 @@ def render_werk_title(werk):
         parts = title.split(":", 1)
         title = insert_manpage_links(parts[0]) + ":" + parts[1]
     return title
+
 
 def render_werk_description(werk):
     html_code = "<p>"
@@ -540,10 +530,12 @@ def render_werk_description(werk):
     if in_list:
         html_code += "</ul>"
 
-    html_code = html_code.replace("<script>", "&lt;script&gt;").replace("</script>", "&lt;/script&gt;")
+    html_code = html_code.replace("<script>", "&lt;script&gt;").replace(
+        "</script>", "&lt;/script&gt;")
 
     html_code += "</p>"
     return html_code
+
 
 def insert_manpage_links(text):
     parts = text.replace(",", " ").split()
@@ -557,4 +549,4 @@ def insert_manpage_links(text):
 
 
 def werks_sorted_by_date(werks):
-    return sorted(werks, cmp = lambda a, b: -cmp(a["date"], b["date"]))
+    return sorted(werks, cmp=lambda a, b: -cmp(a["date"], b["date"]))

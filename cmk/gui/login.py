@@ -47,6 +47,7 @@ from cmk.gui.exceptions import MKInternalError, MKAuthException, MKUserError, Fi
 auth_type = None
 auth_logger = logger.getChild("auth")
 
+
 # Perform the user authentication. This is called by index.py to ensure user
 # authentication and initialization of the user related data structures.
 #
@@ -87,6 +88,7 @@ def site_cookie_suffix():
 
     return os.path.dirname(url_prefix).replace('/', '_')
 
+
 # Reads the auth secret from a file. Creates the files if it does
 # not exist. Having access to the secret means that one can issue valid
 # cookies for the cookie auth.
@@ -108,8 +110,10 @@ def load_secret():
 
     return secret
 
+
 def generate_secret():
     return utils.get_random_string(256)
+
 
 # Load the password serial of the user. This serial identifies the current config
 # state of the user account. If either the password is changed or the account gets
@@ -144,7 +148,7 @@ def del_auth_cookie():
 
 def auth_cookie_value(username):
     now = str(time.time())
-    return ":".join([ username, now, generate_auth_hash(username, now) ])
+    return ":".join([username, now, generate_auth_hash(username, now)])
 
 
 def invalidate_auth_session():
@@ -205,7 +209,8 @@ def renew_cookie(cookie_name, username):
     # b) A logout is requested
     if (html.myfile != 'logout' and not html.has_var('_ajaxid')) \
        and cookie_name == auth_cookie_name():
-        auth_logger.debug("Renewing auth cookie (%s.py, vars: %r)" % (html.myfile, html.request.vars))
+        auth_logger.debug(
+            "Renewing auth cookie (%s.py, vars: %r)" % (html.myfile, html.request.vars))
         renew_auth_session(username)
 
 
@@ -233,7 +238,8 @@ def check_auth_cookie(cookie_name):
     if html.myfile != 'user_change_pw':
         result = userdb.need_to_change_pw(username)
         if result:
-            html.response.http_redirect('user_change_pw.py?_origtarget=%s&reason=%s' % (html.urlencode(html.makeuri([])), result))
+            html.response.http_redirect('user_change_pw.py?_origtarget=%s&reason=%s' %
+                                        (html.urlencode(html.makeuri([])), result))
 
     # Return the authenticated username
     return username
@@ -342,10 +348,10 @@ def check_auth_by_cookie():
             except MKAuthException:
                 # Suppress cookie validation errors from other sites cookies
                 auth_logger.debug('Exception while checking cookie %s: %s' %
-                                        (cookie_name, traceback.format_exc()))
+                                  (cookie_name, traceback.format_exc()))
             except Exception:
                 auth_logger.error('Exception while checking cookie %s: %s' %
-                                    (cookie_name, traceback.format_exc()))
+                                  (cookie_name, traceback.format_exc()))
 
 
 def set_auth_type(ty):
@@ -404,7 +410,8 @@ def do_login():
                 # password needs to be changed
                 result = userdb.need_to_change_pw(username)
                 if result:
-                    html.response.http_redirect('user_change_pw.py?_origtarget=%s&reason=%s' % (html.urlencode(origtarget), result))
+                    html.response.http_redirect('user_change_pw.py?_origtarget=%s&reason=%s' %
+                                                (html.urlencode(origtarget), result))
                 else:
                     html.response.http_redirect(origtarget)
             else:
@@ -416,14 +423,14 @@ def do_login():
 
 
 @cmk.gui.pages.register("login")
-def page_login(no_html_output = False):
+def page_login(no_html_output=False):
     # Initialize the cmk.gui.i18n for the login dialog. This might be overridden
     # later after user login
     cmk.gui.i18n.localize(html.var("lang", config.get_language()))
 
     result = do_login()
     if isinstance(result, tuple):
-        return result # Successful login
+        return result  # Successful login
     elif no_html_output:
         raise MKAuthException(_("Invalid login credentials."))
 
@@ -431,11 +438,12 @@ def page_login(no_html_output = False):
         return cmk.gui.mobile.page_login()
     return normal_login_page()
 
-def normal_login_page(called_directly = True):
+
+def normal_login_page(called_directly=True):
     html.set_render_headfoot(False)
     html.header(config.get_page_heading(), javascripts=[], stylesheets=["pages", "login"])
 
-    default_origtarget = "index.py" if html.myfile in [ "login", "logout" ] else html.makeuri([])
+    default_origtarget = "index.py" if html.myfile in ["login", "logout"] else html.makeuri([])
     origtarget = html.get_url_input("_origtarget", default_origtarget)
 
     # Never allow the login page to be opened in a frameset. Redirect top page to login page.
@@ -454,7 +462,7 @@ def normal_login_page(called_directly = True):
 
     html.div("" if "hide_version" in config.login_screen else cmk.__version__, id_="version")
 
-    html.begin_form("login", method = 'POST', add_transid = False, action = 'login.py')
+    html.begin_form("login", method='POST', add_transid=False, action='login.py')
     html.hidden_field('_login', '1')
     html.hidden_field('_origtarget', origtarget)
     html.label("%s:" % _('Username'), id_="label_user", class_=["legend"], for_="_username")
@@ -488,15 +496,17 @@ def normal_login_page(called_directly = True):
     if "hide_version" not in config.login_screen:
         footer.append("Version: %s" % cmk.__version__)
 
-    footer.append("&copy; %s" % html.render_a("Mathias Kettner", href="https://mathias-kettner.com"))
+    footer.append(
+        "&copy; %s" % html.render_a("Mathias Kettner", href="https://mathias-kettner.com"))
 
     html.write(HTML(" - ").join(footer))
 
     if cmk.is_raw_edition():
         html.br()
         html.br()
-        html.write(_('You can use, modify and distribute Check_MK under the terms of the <a href="%s">'
-                     'GNU GPL Version 2</a>.') % "https://mathias-kettner.com/gpl.html")
+        html.write(
+            _('You can use, modify and distribute Check_MK under the terms of the <a href="%s">'
+              'GNU GPL Version 2</a>.') % "https://mathias-kettner.com/gpl.html")
 
     html.close_div()
 
@@ -517,7 +527,8 @@ def page_logout():
     else:
         # Implement HTTP logout with cookie hack
         if not html.request.has_cookie('logout'):
-            html.response.set_http_header('WWW-Authenticate', 'Basic realm="OMD Monitoring Site %s"' % config.omd_site())
+            html.response.set_http_header(
+                'WWW-Authenticate', 'Basic realm="OMD Monitoring Site %s"' % config.omd_site())
             html.response.set_cookie('logout', '1')
             raise FinalizeRequest(401)
         else:

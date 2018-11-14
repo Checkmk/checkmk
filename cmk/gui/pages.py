@@ -26,6 +26,7 @@
 
 _pages = {}
 
+
 def register(path):
     """Register a function to be called when the given URL is called.
 
@@ -35,12 +36,14 @@ def register(path):
 
     It is essentially a decorator that calls register_page_handler().
     """
+
     def wrap(page_func):
         if isinstance(page_func, (staticmethod, classmethod)):
             raise NotImplementedError()
 
         register_page_handler(path, page_func)
         return page_func
+
     return wrap
 
 

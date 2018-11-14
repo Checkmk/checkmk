@@ -23,7 +23,6 @@
 # License along with GNU Make; see the file  COPYING.  If  not,  write
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
-
 """Wrapper layer between WSGI and the GUI application code"""
 
 import re
@@ -34,6 +33,7 @@ import cmk.gui.log as log
 from cmk.gui.i18n import _
 import cmk.gui.http_status
 from cmk.gui.exceptions import HTTPRedirect
+
 
 class Request(object):
     """Provides information about the users HTTP request to the application
@@ -50,17 +50,16 @@ class Request(object):
         self._wsgi_environ = wsgi_environ
 
         # Structures filled using the request environment
-        self.vars     = {}
-        self.listvars = {} # for variables with more than one occurrence
-        self.uploads  = {}
+        self.vars = {}
+        self.listvars = {}  # for variables with more than one occurrence
+        self.uploads = {}
         # TODO: To be compatible with Check_MK <1.5 handling / code base we
         # prevent parse_cookie() from decoding the stuff to unicode. One bright
         # day we'll switch all input stuff to be parsed to unicode, then we'll
         # clean this up!
-        self.cookies  = werkzeug.http.parse_cookie(wsgi_environ, charset=None)
+        self.cookies = werkzeug.http.parse_cookie(wsgi_environ, charset=None)
 
         self._init_vars(wsgi_environ)
-
 
     def _init_vars(self, wsgi_environ):
         wsgi_input = wsgi_environ["wsgi.input"]
@@ -69,13 +68,11 @@ class Request(object):
 
         fields = None
         try:
-            fields = cgi.FieldStorage(wsgi_input, None, "", wsgi_environ,
-                                    keep_blank_values=1)
+            fields = cgi.FieldStorage(wsgi_input, None, "", wsgi_environ, keep_blank_values=1)
         except MemoryError:
             raise Exception('The maximum request size has been exceeded.')
 
         self._init_vars_from_field_storage(fields)
-
 
     def _init_vars_from_field_storage(self, fields):
         # TODO: Previously the regex below matched any alphanumeric character plus any character
@@ -97,33 +94,29 @@ class Request(object):
             if field.filename is not None:
                 self.uploads[varname] = (field.filename, field.type, field.value)
 
-            else: # normal variable
+            else:  # normal variable
                 # Multiple occurrance of a variable? Store in extra list dict
                 if varname in self.vars:
                     if varname in self.listvars:
                         self.listvars[varname].append(field.value)
                     else:
-                        self.listvars[varname] = [ self.vars[varname], field.value ]
+                        self.listvars[varname] = [self.vars[varname], field.value]
                 # In the single-value-store the last occurrance of a variable
                 # has precedence. That makes appending variables to the current
                 # URL simpler.
                 self.vars[varname] = field.value
 
-
     @property
     def requested_file(self):
         return self._wsgi_environ["SCRIPT_NAME"]
-
 
     @property
     def requested_url(self):
         return self._wsgi_environ["REQUEST_URI"]
 
-
     @property
     def request_method(self):
         return self._wsgi_environ['REQUEST_METHOD']
-
 
     @property
     def remote_ip(self):
@@ -132,32 +125,26 @@ class Request(object):
         except KeyError:
             return self._wsgi_environ["REMOTE_ADDR"]
 
-
     @property
     def remote_user(self):
         """Returns either the REMOTE_USER authenticated with the web server or None"""
         return self._wsgi_environ.get("REMOTE_USER")
 
-
     @property
     def is_ssl_request(self):
         return self._wsgi_environ.get("HTTP_X_FORWARDED_PROTO") == "https"
-
 
     @property
     def is_multithreaded(self):
         return self._wsgi_environ.get("wsgi.multithread", False)
 
-
     @property
     def user_agent(self):
         return self._wsgi_environ.get("USER_AGENT", "")
 
-
     @property
     def referer(self):
         return self._wsgi_environ.get("REFERER")
-
 
     @property
     def request_timeout(self):
@@ -167,20 +154,16 @@ class Request(object):
         # the timeout for the moment.
         return 110
 
-
     def get_request_header(self, key, deflt=None):
         return self._wsgi_environ.get(key, deflt)
-
 
     def has_cookie(self, varname):
         """Whether or not the client provides a cookie with the given name"""
         return varname in self.cookies
 
-
     def get_cookie_names(self):
         """Return the names of all cookies sent by the client"""
         return self.cookies.keys()
-
 
     def cookie(self, varname, deflt=None):
         """Return either the value of the cookie provided by the client, the given deflt value or None"""
@@ -193,35 +176,29 @@ class Request(object):
     # Variable handling
     #
 
-    def var(self, varname, deflt = None):
+    def var(self, varname, deflt=None):
         return self.vars.get(varname, deflt)
-
 
     def has_var(self, varname):
         return varname in self.vars
-
 
     def has_var_prefix(self, prefix):
         """Checks if a variable with a given prefix is present"""
         return any(var.startswith(prefix) for var in self.vars)
 
-
-    def var_utf8(self, varname, deflt = None):
+    def var_utf8(self, varname, deflt=None):
         val = self.vars.get(varname, deflt)
         if isinstance(val, str):
             return val.decode("utf-8")
         return val
 
-
     def all_vars(self):
         return self.vars
-
 
     def all_varnames_with_prefix(self, prefix):
         for varname in self.vars:
             if varname.startswith(prefix):
                 yield varname
-
 
     # Return all values of a variable that possible occurs more
     # than once in the URL. note: self.listvars does contain those
@@ -233,48 +210,41 @@ class Request(object):
             return [self.vars[varname]]
         return []
 
-
     # Adds a variable to listvars and also set it
     def add_var(self, varname, value):
         self.listvars.setdefault(varname, [])
         self.listvars[varname].append(value)
         self.vars[varname] = value
 
-
     # TODO: self.vars should be strictly read only in the Request() object
     def set_var(self, varname, value):
         if value is None:
             self.del_var(varname)
 
-        elif type(value) in [ str, unicode ]:
+        elif type(value) in [str, unicode]:
             self.vars[varname] = value
 
         else:
             # crash report please
             raise TypeError(_("Only str and unicode values are allowed, got %s") % type(value))
 
-
     # TODO: self.vars should be strictly read only in the Request() object
     def del_var(self, varname):
         self.vars.pop(varname, None)
         self.listvars.pop(varname, None)
 
-
     # TODO: self.vars should be strictly read only in the Request() object
-    def del_all_vars(self, prefix = None):
+    def del_all_vars(self, prefix=None):
         if not prefix:
             self.vars = {}
             self.listvars = {}
         else:
-            self.vars = dict(p for p in self.vars.iteritems()
-                             if not p[0].startswith(prefix))
-            self.listvars = dict(p for p in self.listvars.iteritems()
-                                 if not p[0].startswith(prefix))
+            self.vars = dict(p for p in self.vars.iteritems() if not p[0].startswith(prefix))
+            self.listvars = dict(
+                p for p in self.listvars.iteritems() if not p[0].startswith(prefix))
 
-
-    def uploaded_file(self, varname, default = None):
+    def uploaded_file(self, varname, default=None):
         return self.uploads.get(varname, default)
-
 
 
 class Response(object):
@@ -294,16 +264,13 @@ class Response(object):
         self._output = []
         self._headers_out = []
 
-
     def set_status_code(self, code):
         """Set the HTTP status code of the response to the given code"""
         self._status_code = code
 
-
     def set_content_type(self, ty):
         """Set the content type of the response to the given type"""
         self.set_http_header("Content-type", ty)
-
 
     def set_http_header(self, key, val, prevent_duplicate=True):
         """Set a HTTP header to send to the client with the response.
@@ -317,7 +284,6 @@ class Response(object):
                     self._headers_out.remove((this_key, this_val))
 
         self._headers_out.append((key, val))
-
 
     def set_cookie(self, varname, value, expires=None):
         """Send the given cookie to the client with the response"""
@@ -338,33 +304,27 @@ class Response(object):
 
         self.set_http_header("Set-Cookie", cookie_header, prevent_duplicate=False)
 
-
     def del_cookie(self, varname):
         """Tell the client to invalidate cookies with the given varname"""
         self.set_cookie(varname, '', expires=-60)
-
 
     def http_redirect(self, url):
         """Finalize the currently processed page with a HTTP redirect to the given URL"""
         raise HTTPRedirect(url)
 
-
     def write(self, text):
         """Extend the response body with the given text"""
         self._output.append(text)
-
 
     @property
     def http_status(self):
         """Provides the HTTP response status header (code incl. text)"""
         return cmk.gui.http_status.status_with_reason(self._status_code)
 
-
     @property
     def headers(self):
         """Provides the HTTP response headers to be sent to the client"""
         return self._headers_out
-
 
     def flush_output(self):
         """Get response body iterable for the response
@@ -372,4 +332,4 @@ class Response(object):
         The output is handed over as list with a single byte string
         as recommended by PEP 3333."""
         output, self._output = self._output, []
-        return [ "".join(output) ]
+        return ["".join(output)]

@@ -40,31 +40,35 @@ from cmk.gui.i18n import _
 from cmk.gui.globals import html
 from cmk.gui.exceptions import MKGeneralException
 
-
 graph_size = 2000, 700
 
 
 @cmk.gui.pages.register("prediction_graph")
 def page_graph():
-    host    = html.var("host")
+    host = html.var("host")
     service = html.var("service")
-    dsname  = html.var("dsname")
+    dsname = html.var("dsname")
 
-    html.header(_("Prediction for %s - %s - %s") %
-            (host, service, dsname),
-            javascripts=["prediction"],
-            stylesheets=["pages", "prediction"])
+    html.header(
+        _("Prediction for %s - %s - %s") % (host, service, dsname),
+        javascripts=["prediction"],
+        stylesheets=["pages", "prediction"])
 
     # Get current value from perf_data via Livestatus
     current_value = get_current_perfdata(host, service, dsname)
 
-    pred_dir = os.path.join(cmk.paths.var_dir, "prediction", host,
-                            cmk.utils.pnp_cleanup(service),
-                            cmk.utils.pnp_cleanup(dsname))
+    pred_dir = os.path.join(
+        cmk.paths.var_dir,
+        "prediction",
+        host,
+        cmk.utils.pnp_cleanup(service),
+        cmk.utils.pnp_cleanup(dsname),
+    )
 
     if not os.path.exists(pred_dir):
-        raise MKGeneralException(_("There is currently no prediction information "
-                                   "available for this service."))
+        raise MKGeneralException(
+            _("There is currently no prediction information "
+              "available for this service."))
 
     # Load all prediction information, sort by time of generation
     tg_name = html.var("timegroup")
@@ -86,14 +90,13 @@ def page_graph():
             timegroup = tg_info
             tg_name = tg_info["name"]
 
-    timegroups.sort(cmp = lambda a,b: cmp(a["range"][0], b["range"][0]))
+    timegroups.sort(cmp=lambda a, b: cmp(a["range"][0], b["range"][0]))
 
-    choices = [ (tg_info["name"], tg_info["name"].title())
-                for tg_info in timegroups ]
+    choices = [(tg_info["name"], tg_info["name"].title()) for tg_info in timegroups]
 
     if not timegroup:
         if timegroups:
-            timegroup  = timegroups[0]
+            timegroup = timegroups[0]
             tg_name = choices[0][0]
         else:
             raise MKGeneralException(_("Missing prediction information."))
@@ -113,13 +116,13 @@ def page_graph():
     swapped = swap_and_compute_levels(tg_data, timegroup)
     vertical_range = compute_vertical_range(swapped)
     legend = [
-       ( "#000000", _("Reference") ),
-       ( "#ffffff", _("OK area") ),
-       ( "#ffff00", _("Warning area") ),
-       ( "#ff0000", _("Critical area") ),
+        ("#000000", _("Reference")),
+        ("#ffffff", _("OK area")),
+        ("#ffff00", _("Warning area")),
+        ("#ff0000", _("Critical area")),
     ]
     if current_value != None:
-        legend.append( ("#0000ff", _("Current value: %.2f") % current_value) )
+        legend.append(("#0000ff", _("Current value: %.2f") % current_value))
 
     create_graph(timegroup["name"], graph_size, timegroup["range"], vertical_range, legend)
 
@@ -134,7 +137,7 @@ def page_graph():
     vscala_low = vertical_range[0]
     vscala_high = vertical_range[1]
     vert_scala = compute_vertical_scala(vscala_low, vscala_high)
-    time_scala = [ [timegroup["range"][0] + i*3600, "%02d:00" % i] for i in range(0, 25, 2) ]
+    time_scala = [[timegroup["range"][0] + i * 3600, "%02d:00" % i] for i in range(0, 25, 2)]
     render_coordinates(vert_scala, time_scala)
 
     if "levels_lower" in timegroup:
@@ -165,16 +168,18 @@ def page_graph():
 
     html.footer()
 
+
 vranges = [
- ( 'n', 1024.0**-3 ),
- ( 'u', 1024.0**-2 ),
- ( 'm', 1024.0**-1 ),
- ( '',  1024.0**0 ),
- ( 'K', 1024.0**1 ),
- ( 'M', 1024.0**2 ),
- ( 'G', 1024.0**3 ),
- ( 'T', 1024.0**4 ),
+    ('n', 1024.0**-3),
+    ('u', 1024.0**-2),
+    ('m', 1024.0**-1),
+    ('', 1024.0**0),
+    ('K', 1024.0**1),
+    ('M', 1024.0**2),
+    ('G', 1024.0**3),
+    ('T', 1024.0**4),
 ]
+
 
 def compute_vertical_scala(low, high):
     m = max(abs(low), abs(high))
@@ -200,12 +205,12 @@ def compute_vertical_scala(low, high):
         step = factor
 
     while v <= max(0, high):
-        vert_scala.append( [v, "%.1f%s" % (v / factor, letter)] )
+        vert_scala.append([v, "%.1f%s" % (v / factor, letter)])
         v += step
 
     v = -factor
     while v >= min(0, low):
-        vert_scala = [ [v, "%.1f%s" % (v / factor, letter)] ] + vert_scala
+        vert_scala = [[v, "%.1f%s" % (v / factor, letter)]] + vert_scala
         v -= step
 
     # Remove trailing ".0", if that is present for *all* entries
@@ -213,15 +218,15 @@ def compute_vertical_scala(low, high):
         if not entry[1].endswith(".0"):
             break
     else:
-        vert_scala = [ [e[0],e[1][:-2]] for e in vert_scala ]
+        vert_scala = [[e[0], e[1][:-2]] for e in vert_scala]
 
     return vert_scala
 
 
 def get_current_perfdata(host, service, dsname):
     perf_data = sites.live().query_value(
-                    "GET services\nFilter: host_name = %s\nFilter: description = %s\n"
-                    "Columns: perf_data" % (livestatus.lqencode(host), livestatus.lqencode(service)))
+        "GET services\nFilter: host_name = %s\nFilter: description = %s\n"
+        "Columns: perf_data" % (livestatus.lqencode(host), livestatus.lqencode(service)))
 
     for part in perf_data.split():
         name, rest = part.split("=")
@@ -235,7 +240,7 @@ def get_current_perfdata(host, service, dsname):
 # the function get_rrd_data() from modules/prediction.py.
 def get_rrd_data(hostname, service_description, varname, cf, fromtime, untiltime):
     step = 1
-    rpn = "%s.%s" % (varname, cf.lower()) # "MAX" -> "max"
+    rpn = "%s.%s" % (varname, cf.lower())  # "MAX" -> "max"
     query = "GET services\n" \
           "Columns: rrddata:m1:%s:%d:%d:%d\n" \
           "Filter: host_name = %s\n" \
@@ -261,7 +266,7 @@ def get_rrd_data(hostname, service_description, varname, cf, fromtime, untiltime
 # Compute check levels from prediction data and check parameters
 def swap_and_compute_levels(tg_data, tg_info):
     columns = tg_data["columns"]
-    swapped = dict([ (c, []) for c in columns])
+    swapped = dict([(c, []) for c in columns])
     for step in tg_data["points"]:
         row = dict(zip(columns, step))
         for k, v in row.items():
@@ -282,8 +287,9 @@ def swap_and_compute_levels(tg_data, tg_info):
 
     return swapped
 
+
 def stack(apoints, bpoints, scale):
-    return [ a + scale * b for (a,b) in zip(apoints, bpoints) ]
+    return [a + scale * b for (a, b) in zip(apoints, bpoints)]
 
 
 # Compute levels according to check parameters. Beware: this
@@ -301,21 +307,24 @@ def compute_level(params, ref_value, stdev, param, sig):
 
     how, (warn, crit) = params[param]
     if how == "absolute":
-        levels = (ref_value + (sig * warn),
-                  ref_value + (sig * crit))
+        levels = (
+            ref_value + (sig * warn),
+            ref_value + (sig * crit),
+        )
 
     elif how == "relative":
         levels = (ref_value + sig * (ref_value * warn / 100),
                   ref_value + sig * (ref_value * crit / 100))
 
-    else: #  how == "stdev":
-        levels = (ref_value + sig * (stdev * warn),
-                  ref_value + sig * (stdev * crit))
+    else:  #  how == "stdev":
+        levels = (
+            ref_value + sig * (stdev * warn),
+            ref_value + sig * (stdev * crit),
+        )
 
     if param == "levels_upper" and "levels_upper_min" in params:
         limit_warn, limit_crit = params["levels_upper_min"]
-        levels = (max(limit_warn, levels[0]),
-                  max(limit_crit, levels[1]))
+        levels = (max(limit_warn, levels[0]), max(limit_crit, levels[1]))
 
     return levels
 
@@ -323,40 +332,47 @@ def compute_level(params, ref_value, stdev, param, sig):
 def compute_vertical_range(swapped):
     mmin, mmax = 0.0, 0.0
     for points in swapped.itervalues():
-        mmax = max(mmax, max(points)) or 0.0 # convert None into 0.0
+        mmax = max(mmax, max(points)) or 0.0  # convert None into 0.0
         mmin = min(mmin, min(points)) or 0.0
     return mmin, mmax
 
+
 def create_graph(name, size, bounds, v_range, legend):
     html.write('<table class=prediction><tr><td>')
-    html.write('<canvas class=prediction id="content_%s" style="width: %dpx; height: %dpx;" width=%d height=%d></canvas>' % (
-       name, size[0]/2, size[1]/2, size[0], size[1]))
+    html.write(
+        '<canvas class=prediction id="content_%s" style="width: %dpx; height: %dpx;" width=%d height=%d></canvas>'
+        % (name, size[0] / 2, size[1] / 2, size[0], size[1]))
     html.write('</td></tr><tr><td class=legend>')
     for color, title in legend:
-        html.write('<div class=color style="background-color: %s"></div><div class=entry>%s</div>' % (
-                    color, title))
+        html.write('<div class=color style="background-color: %s"></div><div class=entry>%s</div>' %
+                   (color, title))
     html.write('</div></td></tr></table>')
-    html.javascript('create_graph("content_%s", %.4f, %.4f, %.4f, %.4f);' % (
-                 name, bounds[0], bounds[1], v_range[0], v_range[1]))
+    html.javascript('create_graph("content_%s", %.4f, %.4f, %.4f, %.4f);' %
+                    (name, bounds[0], bounds[1], v_range[0], v_range[1]))
+
 
 def render_coordinates(v_scala, t_scala):
     html.javascript('render_coordinates(%s, %s);' % (json.dumps(v_scala), json.dumps(t_scala)))
 
 
 def render_curve(points, color, width=1, square=False):
-    html.javascript('render_curve(%s, %s, %d, %d);' % (
-              json.dumps(points), json.dumps(color), width, square and 1 or 0))
+    html.javascript('render_curve(%s, %s, %d, %d);' % (json.dumps(points), json.dumps(color), width,
+                                                       square and 1 or 0))
+
 
 def render_point(t, v, color):
     html.javascript('render_point(%s, %s, %s);' % (json.dumps(t), json.dumps(v), json.dumps(color)))
 
+
 def render_area(points, color, alpha=1.0):
     html.javascript('render_area(%s, %s, %f);' % (json.dumps(points), json.dumps(color), alpha))
 
+
 def render_area_reverse(points, color, alpha=1.0):
-    html.javascript('render_area_reverse(%s, %s, %f);' %
-        (json.dumps(points), json.dumps(color), alpha))
+    html.javascript(
+        'render_area_reverse(%s, %s, %f);' % (json.dumps(points), json.dumps(color), alpha))
+
 
 def render_dual_area(lower_points, upper_points, color, alpha=1.0):
     html.javascript('render_dual_area(%s, %s, %s, %f);' %
-        (json.dumps(lower_points), json.dumps(upper_points), json.dumps(color), alpha))
+                    (json.dumps(lower_points), json.dumps(upper_points), json.dumps(color), alpha))

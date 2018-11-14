@@ -23,7 +23,6 @@
 # License along with GNU Make; see the file  COPYING.  If  not,  write
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
-
 """This is an unsorted collection of small unrelated helper functions which are
 usable in all components of the Web GUI of Check_MK
 
@@ -97,8 +96,10 @@ def is_allowed_url(url):
 
 def validate_start_url(value, varprefix):
     if not is_allowed_url(value):
-        raise MKUserError(varprefix, _("The given value is not allowed. You may only configure "
-                                       "relative URLs like <tt>dashboard.py?name=my_dashboard</tt>."))
+        raise MKUserError(
+            varprefix,
+            _("The given value is not allowed. You may only configure "
+              "relative URLs like <tt>dashboard.py?name=my_dashboard</tt>."))
 
 
 def cmp_version(a, b):
@@ -164,8 +165,10 @@ def gen_id():
 # TODO: Replace the execfile thing by some more pythonic plugin structure. But this would
 #       be a large rewrite :-/
 def load_web_plugins(forwhat, globalvars):
-    for plugins_path in [ cmk.paths.web_dir + "/plugins/" + forwhat,
-                          cmk.paths.local_web_dir + "/plugins/" + forwhat ]:
+    for plugins_path in [
+            cmk.paths.web_dir + "/plugins/" + forwhat,
+            cmk.paths.local_web_dir + "/plugins/" + forwhat
+    ]:
         if not os.path.exists(plugins_path):
             continue
 

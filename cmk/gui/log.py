@@ -31,6 +31,7 @@ import cmk.paths
 
 from cmk.gui.i18n import _
 
+
 class CMKWebLogger(_logging.getLoggerClass()):
     def exception(self, *args, **kwargs):
         """Logs an optional message together with the traceback of the
@@ -55,7 +56,6 @@ class CMKWebLogger(_logging.getLoggerClass()):
 
 _logging.setLoggerClass(CMKWebLogger)
 
-
 logger = cmk.log.get_logger("web")
 
 
@@ -64,10 +64,9 @@ def init_logging():
 
 
 def _setup_web_log_logging():
-    del logger.handlers[:] # First remove all handlers
+    del logger.handlers[:]  # First remove all handlers
 
-    handler = _logging.FileHandler("%s/web.log" % cmk.paths.log_dir,
-                                   encoding="UTF-8")
+    handler = _logging.FileHandler("%s/web.log" % cmk.paths.log_dir, encoding="UTF-8")
 
     handler.setFormatter(cmk.log.get_formatter())
     logger.addHandler(handler)

@@ -49,7 +49,8 @@ from cmk.gui.valuespec import (
     DualListChoice,
 )
 
-def get_gui_messages(user_id = None):
+
+def get_gui_messages(user_id=None):
     if user_id is None:
         user_id = config.user.id
     path = config.config_dir + "/" + user_id.encode("utf-8") + '/messages.mk'
@@ -69,6 +70,7 @@ def get_gui_messages(user_id = None):
 
     return messages
 
+
 def delete_gui_message(msg_id):
     messages = get_gui_messages()
     for index, msg in enumerate(messages):
@@ -76,14 +78,18 @@ def delete_gui_message(msg_id):
             messages.pop(index)
     save_gui_messages(messages)
 
-def save_gui_messages(messages, user_id = None):
+
+def save_gui_messages(messages, user_id=None):
     if user_id is None:
         user_id = config.user.id
     path = config.config_dir + "/" + user_id.encode("utf-8") + '/messages.mk'
     store.mkdir(os.path.dirname(path))
     store.save_data_to_file(path, messages)
 
+
 loaded_with_language = False
+
+
 def load_plugins(force):
     global loaded_with_language
     if loaded_with_language == cmk.gui.i18n.get_current_language() and not force:
@@ -92,28 +98,30 @@ def load_plugins(force):
     global notify_methods
     notify_methods = {
         'gui_popup': {
-            'title':  _('Popup Message in the GUI (shows up alert window)'),
+            'title': _('Popup Message in the GUI (shows up alert window)'),
             'handler': notify_gui_msg,
         },
         'gui_hint': {
-            'title':  _('Send hint to message inbox (bottom of sidebar)'),
+            'title': _('Send hint to message inbox (bottom of sidebar)'),
             'handler': notify_gui_msg,
         },
         'mail': {
-            'title':  _('Send an E-Mail'),
+            'title': _('Send an E-Mail'),
             'handler': notify_mail,
         },
         'dashlet': {
-            'title':  _('Send hint to dashlet'),
+            'title': _('Send hint to dashlet'),
             'handler': notify_gui_msg,
         },
     }
 
-    config.declare_permission("general.notify",
-         _("Notify Users"),
-         _("This permissions allows users to send notifications to the users of "
-           "the monitoring system using the web interface."),
-         [ "admin" ])
+    config.declare_permission(
+        "general.notify",
+        _("Notify Users"),
+        _("This permissions allows users to send notifications to the users of "
+          "the monitoring system using the web interface."),
+        ["admin"],
+    )
 
     # This must be set after plugin loading to make broken plugins raise
     # exceptions all the time and not only the first time (when the plugins
@@ -126,7 +134,7 @@ def page_notify():
     if not config.user.may("general.notify"):
         raise MKAuthException(_("You are not allowed to use the notification module."))
 
-    html.header(_('Notify Users'), stylesheets = ['pages', 'status', 'views'])
+    html.header(_('Notify Users'), stylesheets=['pages', 'status', 'views'])
 
     html.begin_context_buttons()
     html.context_button(_("Users"), "wato.py?mode=users", "back")
@@ -155,10 +163,11 @@ def page_notify():
 def _vs_notify():
     dest_choices = [
         ('broadcast', _('Everybody (Broadcast)')),
-        ('list', _('A list of specific users'), DualListChoice(
-            choices = [ (uid, u.get('alias', uid)) for uid, u in config.multisite_users.items() ],
-            allow_empty = False,
-        )),
+        ('list', _('A list of specific users'),
+         DualListChoice(
+             choices=[(uid, u.get('alias', uid)) for uid, u in config.multisite_users.items()],
+             allow_empty=False,
+         )),
         #('contactgroup', _('All members of a contact group')),
     ]
 
@@ -166,38 +175,39 @@ def _vs_notify():
         dest_choices.append(('online', _('All online users')))
 
     return Dictionary(
-        elements = [
-            ('text', TextAreaUnicode(
-                title = _('Text'),
-                help = _('Insert the text to be sent to all reciepents.'),
-                cols = 50,
-                rows = 10
-            )),
-            ('dest', CascadingDropdown(
-                title = _('Send notification to'),
-                help = _('You can send the notification to a list of multiple users, which '
-                         'can be choosen out of these predefined filters.'),
-                choices = dest_choices,
-            )),
-            ('methods', ListChoice(
-                title = _('How to notify'),
-                choices = [ (k, v['title']) for k, v in notify_methods.items() ],
-                default_value = ['popup'],
-            )),
-            ('valid_till', Optional(
-                AbsoluteDate(
-                    include_time = True,
-                ),
-                title = _('Automatically invalidate notification'),
-                label = _('Enable automatic invalidation at'),
-                help = _('It is possible to automatically delete messages when the '
-                         'configured time is reached. This makes it possible to inform '
-                         'users about a scheduled event but suppress the notification '
-                         'after the event has happened.'),
-            )),
+        elements=[
+            ('text',
+             TextAreaUnicode(
+                 title=_('Text'),
+                 help=_('Insert the text to be sent to all reciepents.'),
+                 cols=50,
+                 rows=10)),
+            ('dest',
+             CascadingDropdown(
+                 title=_('Send notification to'),
+                 help=_('You can send the notification to a list of multiple users, which '
+                        'can be choosen out of these predefined filters.'),
+                 choices=dest_choices,
+             )),
+            ('methods',
+             ListChoice(
+                 title=_('How to notify'),
+                 choices=[(k, v['title']) for k, v in notify_methods.items()],
+                 default_value=['popup'],
+             )),
+            ('valid_till',
+             Optional(
+                 AbsoluteDate(include_time=True,),
+                 title=_('Automatically invalidate notification'),
+                 label=_('Enable automatic invalidation at'),
+                 help=_('It is possible to automatically delete messages when the '
+                        'configured time is reached. This makes it possible to inform '
+                        'users about a scheduled event but suppress the notification '
+                        'after the event has happened.'),
+             )),
         ],
-        validate = _validate_msg,
-        optional_keys = [],
+        validate=_validate_msg,
+        optional_keys=[],
     )
 
 
@@ -220,8 +230,9 @@ def _validate_msg(msg, varprefix):
             if user_id not in existing:
                 raise MKUserError('dest', _('A user with the id "%s" does not exist.') % user_id)
 
+
 def _process_notify_message(msg):
-    msg['id']   = utils.gen_id()
+    msg['id'] = utils.gen_id()
     msg['time'] = time.time()
 
     # construct the list of recipients
@@ -290,6 +301,7 @@ def _process_notify_message(msg):
 #   |                          |___/                 |___/                 |
 #   +----------------------------------------------------------------------+
 
+
 def notify_gui_msg(user_id, msg):
     messages = get_gui_messages(user_id)
     if msg not in messages:
@@ -299,7 +311,7 @@ def notify_gui_msg(user_id, msg):
 
 
 def notify_mail(user_id, msg):
-    users = userdb.load_users(lock = False)
+    users = userdb.load_users(lock=False)
     user = users.get(user_id)
 
     if not user:
@@ -331,8 +343,7 @@ def notify_mail(user_id, msg):
     if msg['valid_till']:
         body += _('This notification has been created at %s and is valid till %s.') % (
             time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(msg['time'])),
-            time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(msg['valid_till']))
-        )
+            time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(msg['valid_till'])))
 
     # FIXME: Maybe use the configured mail command for Check_MK-Notify one day
     # TODO: mail does not accept umlauts: "contains invalid character '\303'" in mail
@@ -353,20 +364,26 @@ def notify_mail(user_id, msg):
             os.putenv("LANG", encoding)
             break
     else:
-        raise MKInternalError(_('No UTF-8 encoding found in your locale -a! Please provide C.UTF-8 encoding.'))
+        raise MKInternalError(
+            _('No UTF-8 encoding found in your locale -a! Please provide C.UTF-8 encoding.'))
 
     try:
-        p = subprocess.Popen(command, stdout=subprocess.PIPE,
-                         stderr=subprocess.STDOUT, stdin=subprocess.PIPE,
-                         close_fds=True)
+        p = subprocess.Popen(
+            command,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            stdin=subprocess.PIPE,
+            close_fds=True)
     except OSError, e:
-        raise MKInternalError(_('Mail could not be delivered. '
-                                'Failed to execute command "%s": %s') % (" ".join(command), e))
+        raise MKInternalError(
+            _('Mail could not be delivered. '
+              'Failed to execute command "%s": %s') % (" ".join(command), e))
 
     output = p.communicate(body.encode("utf-8"))[0]
     exitcode = p.returncode
     if exitcode != 0:
-        raise MKInternalError(_('Mail could not be delivered. Exit code of command is %r. '
-                                'Output is: %s') % (exitcode, output))
+        raise MKInternalError(
+            _('Mail could not be delivered. Exit code of command is %r. '
+              'Output is: %s') % (exitcode, output))
     else:
         return True

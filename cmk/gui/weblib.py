@@ -36,6 +36,7 @@ from cmk.gui.globals import html
 
 from cmk.gui.exceptions import MKUserError
 
+
 @cmk.gui.pages.register("tree_openclose")
 def ajax_tree_openclose():
     html.load_tree_states()
@@ -48,7 +49,8 @@ def ajax_tree_openclose():
 
     html.set_tree_state(tree, name, html.var("state"))
     html.save_tree_states()
-    html.write('OK') # Write out something to make debugging easier
+    html.write('OK')  # Write out something to make debugging easier
+
 
 #   .--Row Selector--------------------------------------------------------.
 #   |      ____                 ____       _           _                   |
@@ -61,11 +63,13 @@ def ajax_tree_openclose():
 #   | Saves and loads selected row information of the current user         |
 #   +----------------------------------------------------------------------+
 
+
 def init_selection():
     # Generate the initial selection_id
     selection_id()
 
     cleanup_old_selections()
+
 
 def cleanup_old_selections():
     # Loop all selection files and compare the last modification time with
@@ -79,7 +83,8 @@ def cleanup_old_selections():
                 if time.time() - os.stat(p).st_mtime > config.selection_livetime:
                     os.unlink(p)
     except OSError:
-        pass # no directory -> no cleanup
+        pass  # no directory -> no cleanup
+
 
 # Generates a selection id or uses the given one
 def selection_id():
@@ -96,9 +101,11 @@ def selection_id():
         return new_id
     return sel_id
 
+
 def get_rowselection(ident):
     vo = config.user.load_file("rowselection/%s" % selection_id(), {})
     return vo.get(ident, [])
+
 
 def set_rowselection(ident, rows, action):
     vo = config.user.load_file("rowselection/%s" % selection_id(), {}, lock=True)
@@ -123,9 +130,9 @@ def ajax_set_rowselection():
     ident = html.var('id')
 
     action = html.var('action', 'set')
-    if action not in [ 'add', 'del', 'set', 'unset' ]:
+    if action not in ['add', 'del', 'set', 'unset']:
         raise MKUserError(None, _('Invalid action'))
 
-    rows  = html.var('rows', '').split(',')
+    rows = html.var('rows', '').split(',')
 
     set_rowselection(ident, rows, action)

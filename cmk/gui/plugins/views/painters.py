@@ -1286,11 +1286,11 @@ def paint_hostname_configurable(row, cell):
 
     # Also apply other css classes, even if its already in downtime
     for key, option_state in [
-                   ("colorize_up", 0),
-                   ("colorize_down", 1),
-                   ("colorize_unreachable", 2),
-                   ("colorize_pending", "p"),
-                   ]:
+        ("colorize_up", 0),
+        ("colorize_down", 1),
+        ("colorize_unreachable", 2),
+        ("colorize_pending", "p"),
+    ]:
         if key in color_choices and state == option_state:
             if "hstate" not in css:
                 css.append("hstate")
@@ -1301,37 +1301,31 @@ def paint_hostname_configurable(row, cell):
 
 
 def params_hostname_configurable():
-    elements = [
-            ("color_choices", ListChoice(
-                choices = [
-                    ("colorize_up", _("Colorize background if host is up")),
-                    ("colorize_down", _("Colorize background if host is down")),
-                    ("colorize_unreachable", _("Colorize background if host unreachable")),
-                    ("colorize_pending", _("Colorize background if host is pending")),
-                    ("colorize_downtime", _("Colorize background if host is downtime"))
-                    ],
-                title=_("Coloring"),
-                help=_("Here you can configure the background color for specific states. "
-                       "The coloring for host in dowtime overrules all other coloring.")
-                ))
-                ]
+    elements = [("color_choices",
+                 ListChoice(
+                     choices=[("colorize_up", _("Colorize background if host is up")),
+                              ("colorize_down", _("Colorize background if host is down")),
+                              ("colorize_unreachable",
+                               _("Colorize background if host unreachable")),
+                              ("colorize_pending", _("Colorize background if host is pending")),
+                              ("colorize_downtime", _("Colorize background if host is downtime"))],
+                     title=_("Coloring"),
+                     help=_("Here you can configure the background color for specific states. "
+                            "The coloring for host in dowtime overrules all other coloring.")))]
 
-    return Dictionary(
-            elements = elements,
-            title = _("Options"),
-            optional_keys = []
-            )
+    return Dictionary(elements=elements, title=_("Options"), optional_keys=[])
 
 
 multisite_painters["host"] = {
-    "title" : _("Hostname, with configurable colors"),
-    "short" : _("Host"),
-    "columns" : ["host_name", "host_state", "host_has_been_checked", "host_scheduled_downtime_depth"],
+    "title": _("Hostname, with configurable colors"),
+    "short": _("Host"),
+    "columns": [
+        "host_name", "host_state", "host_has_been_checked", "host_scheduled_downtime_depth"
+    ],
     "params": params_hostname_configurable,
-    "paint" : paint_hostname_configurable,
-    "sorter"  : 'site_host',
+    "paint": paint_hostname_configurable,
+    "sorter": 'site_host',
 }
-
 
 multisite_painters["alias"] = {
     "title": _("Host alias"),

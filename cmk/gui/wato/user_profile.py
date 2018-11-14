@@ -23,7 +23,6 @@
 # License along with GNU Make; see the file  COPYING.  If  not,  write
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
-
 """Page user can change several aspects of it's own profile"""
 
 import time
@@ -41,16 +40,16 @@ from cmk.gui.i18n import _, _u
 from cmk.gui.globals import html
 
 from cmk.gui.wato.pages.users import (
-    select_language,
-)
+    select_language,)
 
 from cmk.gui.plugins.wato.utils.base_modes import WatoWebApiMode
 
 
 def user_profile_async_replication_page():
-    html.header(_('Replicate new User Profile'),
-                javascripts = ['wato'],
-                stylesheets = ['check_mk', 'pages', 'wato', 'status'])
+    html.header(
+        _('Replicate new User Profile'),
+        javascripts=['wato'],
+        stylesheets=['check_mk', 'pages', 'wato', 'status'])
 
     html.begin_context_buttons()
     html.context_button(_('User Profile'), 'user_profile.py', 'back')
@@ -63,10 +62,11 @@ def user_profile_async_replication_page():
 
 
 def user_profile_async_replication_dialog(sites):
-    html.p(_('In order to activate your changes available on all remote sites, your user profile needs '
-             'to be replicated to the remote sites. This is done on this page now. Each site '
-             'is being represented by a single image which is first shown gray and then fills '
-             'to green during synchronisation.'))
+    html.p(
+        _('In order to activate your changes available on all remote sites, your user profile needs '
+          'to be replicated to the remote sites. This is done on this page now. Each site '
+          'is being represented by a single image which is first shown gray and then fills '
+          'to green during synchronisation.'))
 
     html.h3(_('Replication States'))
     html.open_div(id_="profile_repl")
@@ -76,11 +76,11 @@ def user_profile_async_replication_dialog(sites):
         if not "secret" in site:
             status_txt = _('Not logged in.')
             start_sync = False
-            icon       = 'repl_locked'
+            icon = 'repl_locked'
         else:
             status_txt = _('Waiting for replication to start')
             start_sync = True
-            icon       = 'repl_pending'
+            icon = 'repl_pending'
 
         html.open_div(class_="site", id_="site-%s" % site_id)
 
@@ -88,9 +88,11 @@ def user_profile_async_replication_dialog(sites):
         if start_sync:
             changes_manager = watolib.ActivateChanges()
             changes_manager.load()
-            estimated_duration = changes_manager.get_activation_time(site_id, watolib.ACTIVATION_TIME_PROFILE_SYNC, 2.0)
-            html.javascript('wato_do_profile_replication(\'%s\', %d, \'%s\');' %
-                      (site_id, int(estimated_duration * 1000.0), _('Replication in progress')))
+            estimated_duration = changes_manager.get_activation_time(
+                site_id, watolib.ACTIVATION_TIME_PROFILE_SYNC, 2.0)
+            html.javascript(
+                'wato_do_profile_replication(\'%s\', %d, \'%s\');' %
+                (site_id, int(estimated_duration * 1000.0), _('Replication in progress')))
             num_replsites += 1
         else:
             watolib.add_profile_replication_change(site_id, status_txt)
@@ -115,7 +117,8 @@ def page_user_profile(change_pw=False):
     if not config.user.id:
         raise MKUserError(None, _('Not logged in.'))
 
-    if not config.user.may('general.edit_profile') and not config.user.may('general.change_password'):
+    if not config.user.may('general.edit_profile') and not config.user.may(
+            'general.change_password'):
         raise MKAuthException(_("You are not allowed to edit your user profile."))
 
     if not config.wato_enabled:
@@ -123,7 +126,7 @@ def page_user_profile(change_pw=False):
 
     success = None
     if html.has_var('_save') and html.check_transaction():
-        users = userdb.load_users(lock = True)
+        users = userdb.load_users(lock=True)
 
         try:
             # Profile edit (user options like language etc.)
@@ -150,8 +153,10 @@ def page_user_profile(change_pw=False):
                     cmk.gui.i18n.localize(config.user.language())
 
                     user = users.get(config.user.id)
-                    if config.user.may('general.edit_notifications') and user.get("notifications_enabled"):
-                        value = forms.get_input(watolib.get_vs_flexible_notifications(), "notification_method")
+                    if config.user.may('general.edit_notifications') and user.get(
+                            "notifications_enabled"):
+                        value = forms.get_input(watolib.get_vs_flexible_notifications(),
+                                                "notification_method")
                         users[config.user.id]["notification_method"] = value
 
                     # Custom attributes
@@ -168,20 +173,22 @@ def page_user_profile(change_pw=False):
             password_changed = False
             if config.user.may('general.change_password'):
                 cur_password = html.var('cur_password')
-                password     = html.var('password')
-                password2    = html.var('password2', '')
+                password = html.var('password')
+                password2 = html.var('password2', '')
 
                 if change_pw:
                     # Force change pw mode
                     if not cur_password:
-                        raise MKUserError("cur_password", _("You need to provide your current password."))
+                        raise MKUserError("cur_password",
+                                          _("You need to provide your current password."))
                     if not password:
                         raise MKUserError("password", _("You need to change your password."))
                     if cur_password == password:
-                        raise MKUserError("password", _("The new password must differ from your current one."))
+                        raise MKUserError("password",
+                                          _("The new password must differ from your current one."))
 
                 if cur_password and password:
-                    if userdb.hook_login(config.user.id, cur_password) in [ None, False ]:
+                    if userdb.hook_login(config.user.id, cur_password) in [None, False]:
                         raise MKUserError("cur_password", _("Your old password is wrong."))
                     if password2 and password != password2:
                         raise MKUserError("password2", _("The both new passwords do not match."))
@@ -233,13 +240,14 @@ def page_user_profile(change_pw=False):
     else:
         title = _("Edit User Profile")
 
-    html.header(title, javascripts = ['wato'], stylesheets = ['check_mk', 'pages', 'wato', 'status'])
+    html.header(title, javascripts=['wato'], stylesheets=['check_mk', 'pages', 'wato', 'status'])
 
     # Rule based notifications: The user currently cannot simply call the according
     # WATO module due to WATO permission issues. So we cannot show this button
     # right now.
     if not change_pw:
-        rulebased_notifications = watolib.load_configuration_settings().get("enable_rulebased_notifications")
+        rulebased_notifications = watolib.load_configuration_settings().get(
+            "enable_rulebased_notifications")
         if rulebased_notifications and config.user.may('general.edit_notifications'):
             html.begin_context_buttons()
             url = "wato.py?mode=user_notifications_p"
@@ -262,7 +270,6 @@ def page_user_profile(change_pw=False):
             # Ensure theme changes are applied without additional user interaction
             html.immediate_browser_redirect(0.5, html.makeuri([]))
 
-
     if html.has_user_errors():
         html.show_user_errors()
 
@@ -275,6 +282,7 @@ def page_user_profile(change_pw=False):
     # Returns true if an attribute is locked and should be read only. Is only
     # checked when modifying an existing user
     locked_attributes = userdb.locked_attributes(user.get('connector'))
+
     def is_locked(attr):
         return attr in locked_attributes
 
@@ -305,9 +313,11 @@ def page_user_profile(change_pw=False):
             and config.user.may('general.edit_notifications') \
             and user.get("notifications_enabled"):
             forms.section(_("Notifications"))
-            html.help(_("Here you can configure how you want to be notified about host and service problems and "
-                        "other monitoring events."))
-            watolib.get_vs_flexible_notifications().render_input("notification_method", user.get("notification_method"))
+            html.help(
+                _("Here you can configure how you want to be notified about host and service problems and "
+                  "other monitoring events."))
+            watolib.get_vs_flexible_notifications().render_input("notification_method",
+                                                                 user.get("notification_method"))
 
         if config.user.may('general.edit_user_attributes'):
             for name, attr in userdb.get_user_attributes():
@@ -356,18 +366,18 @@ class ModeAjaxProfileReplication(WatoWebApiMode):
 
         return _("Replication completed successfully.")
 
-
     def _synchronize_profile(self, site_id, site, user_id):
-        users = userdb.load_users(lock = False)
+        users = userdb.load_users(lock=False)
         if not user_id in users:
             raise MKUserError(None, _('The requested user does not exist'))
 
         start = time.time()
         result = watolib.push_user_profile_to_site(site, user_id, users[user_id])
         duration = time.time() - start
-        watolib.ActivateChanges().update_activation_time(site_id, watolib.ACTIVATION_TIME_PROFILE_SYNC, duration)
+        watolib.ActivateChanges().update_activation_time(
+            site_id, watolib.ACTIVATION_TIME_PROFILE_SYNC, duration)
         return result
 
 
 cmk.gui.pages.register_page_handler("wato_ajax_profile_repl",
-    lambda: ModeAjaxProfileReplication().handle_page())
+                                    lambda: ModeAjaxProfileReplication().handle_page())

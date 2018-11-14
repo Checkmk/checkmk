@@ -1489,10 +1489,10 @@ def inv_history_table(columns, add_headers, only_sites, limit, filters):
 
 
 def _create_hist_rows(hostname, columns):
-    for old_timestamp, old_tree, new_tree in inventory.get_history(hostname):
-        new, changed, removed, delta_tree = new_tree.compare_with(old_tree)
+    for timestamp, delta_info in inventory.get_history_deltas(hostname):
+        new, changed, removed, delta_tree = delta_info
         newrow = {
-            "invhist_time"    : old_timestamp,
+            "invhist_time"    : int(timestamp),
             "invhist_delta"   : delta_tree,
             "invhist_removed" : removed,
             "invhist_new"     : new,

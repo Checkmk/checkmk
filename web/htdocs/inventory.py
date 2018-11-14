@@ -30,6 +30,7 @@ import os
 import json
 
 import ast
+import time
 import config
 import userdb
 import sites
@@ -37,7 +38,10 @@ import cmk.paths
 import cmk.store as store
 from lib import MKException, MKGeneralException, MKAuthException, MKUserError, lqencode
 from cmk.structured_data import StructuredDataTree, Container, Numeration, Attributes
+import htmllib
 
+import shutil
+from pathlib2 import Path
 
 def get_inventory_data(inventory_tree, tree_path):
     invdata = None
@@ -135,52 +139,97 @@ def load_delta_tree(hostname, timestamp):
     # Timestamp is timestamp of the younger of both trees. For the oldest
     # tree we will just return the complete tree - without any delta
     # computation.
-    for old_timestamp, old_tree, new_tree in get_history(hostname):
-        if old_timestamp == timestamp:
-            _, __, ___, delta = new_tree.compare_with(old_tree)
-            return delta
-    return None
+
+    delta_history = get_history_deltas(hostname, search_timestamp=str(timestamp))
+    if not delta_history:
+        return
+    return delta_history[0][1][3]
 
 
-def get_history(hostname):
-    # List of triple: timestamp (old), old tree, new tree
+def get_history_deltas(hostname, search_timestamp = None):
     if '/' in hostname:
         return None # just for security reasons
 
-    history = []
-    try:
-        inventory_tree = load_filtered_inventory_tree(hostname)
-        if inventory_tree is not None:
-            inventory_path = "%s/inventory/%s" % (cmk.paths.var_dir, hostname)
-            timestamp = int(os.stat(inventory_path).st_mtime)
-            history.append((timestamp, inventory_tree))
-    except:
-        # TODO: We should really change this error handling. There is currently
-        # no chance to react on issues that occur during processing of
-        # inventory data.
-        return [] # No inventory for this host
+    inventory_path = "%s/inventory/%s" % (cmk.paths.var_dir, hostname)
+    if not os.path.exists(inventory_path):
+        return []
 
+    latest_timestamp = str(int(os.stat(inventory_path).st_mtime))
     inventory_archive_dir = "%s/inventory_archive/%s" % (cmk.paths.var_dir, hostname)
-    if os.path.exists(inventory_archive_dir):
-        for timestamp_str in os.listdir(inventory_archive_dir):
-            try:
-                timestamp = int(timestamp_str)
-                inventory_archive_path = "%s/%d" % (inventory_archive_dir, timestamp)
-                inventory_tree = _filter_tree(StructuredDataTree().load_from(inventory_archive_path))
-            except:
-                # TODO: We should really change this error handling. There is currently
-                # no chance to react on issues that occur during processing of
-                # inventory data.
-                pass
-            else:
-                history.append((timestamp, inventory_tree))
+    try:
+        archived_timestamps = sorted(os.listdir(inventory_archive_dir))
+    except OSError:
+        return []
 
-    comparable_trees, previous_tree = [], StructuredDataTree()
-    for this_timestamp, inventory_tree in sorted(history, key=lambda x: x[0]):
-        comparable_trees.append((this_timestamp, previous_tree, inventory_tree))
-        previous_tree = inventory_tree
+    all_timestamps = archived_timestamps + [latest_timestamp]
+    previous_timestamp = None
 
-    return reversed(comparable_trees)
+    if not search_timestamp:
+        required_timestamps = all_timestamps
+    else:
+        new_timestamp_idx = all_timestamps.index(search_timestamp)
+        if new_timestamp_idx == 0:
+            required_timestamps = [search_timestamp]
+        else:
+            previous_timestamp = all_timestamps[new_timestamp_idx-1]
+            required_timestamps = [search_timestamp]
+
+    tree_lookup = {}
+    def get_tree(timestamp):
+        if timestamp is None:
+            return StructuredDataTree()
+
+        if timestamp in tree_lookup:
+            return tree_lookup[timestamp]
+
+        if timestamp == latest_timestamp:
+            inventory_tree = load_filtered_inventory_tree(hostname)
+            if inventory_tree is None:
+               return
+            tree_lookup[timestamp] = inventory_tree
+        else:
+            inventory_archive_path = "%s/%s" % (inventory_archive_dir, timestamp)
+            tree_lookup[timestamp] = _filter_tree(StructuredDataTree().load_from(inventory_archive_path))
+        return tree_lookup[timestamp]
+
+
+    delta_history = []
+    for idx, timestamp in enumerate(required_timestamps):
+        cached_delta_path = os.path.join(cmk.paths.var_dir,
+                                         "inventory_delta_cache",
+                                         hostname,
+                                         "%s_%s" % (previous_timestamp, timestamp))
+
+        cached_data = None
+        try:
+            cached_data = cmk.store.load_data_from_file(cached_delta_path)
+        except MKGeneralException:
+            pass
+
+        if cached_data:
+            new, changed, removed, delta_tree_data = cached_data
+            delta_tree = cmk.structured_data.StructuredDataTree()
+            delta_tree.create_tree_from_raw_tree(delta_tree_data)
+            delta_history.append((timestamp, (new, changed, removed, delta_tree)))
+            previous_timestamp = timestamp
+            continue
+
+        try:
+            previous_tree = get_tree(previous_timestamp)
+            current_tree = get_tree(timestamp)
+            delta_data = current_tree.compare_with(previous_tree)
+            new, changed, removed, delta_tree = delta_data
+
+            cmk.store.save_file(cached_delta_path, repr((new, changed, removed, delta_tree.get_raw_tree())))
+            delta_history.append((timestamp, delta_data))
+        except htmllib.RequestTimeout:
+            raise
+        except Exception, e:
+            return [] # No inventory for this host
+
+        previous_timestamp = timestamp
+
+    return delta_history
 
 
 def parent_path(invpath):
@@ -417,3 +466,58 @@ def _write_json(response):
 
 def _write_python(response):
     html.write(repr(response))
+
+
+class InventoryHousekeeping(object):
+    def __init__(self):
+        super(InventoryHousekeeping, self).__init__()
+        self._inventory_path = Path(cmk.paths.var_dir) / "inventory"
+        self._inventory_archive_path = Path(cmk.paths.var_dir) / "inventory_archive"
+        self._inventory_delta_cache_path = Path(cmk.paths.var_dir) / "inventory_delta_cache"
+
+    def run(self):
+        if not self._inventory_delta_cache_path.exists() or not self._inventory_archive_path.exists(): # pylint: disable=no-member
+            return
+
+        last_cleanup = self._inventory_delta_cache_path / "last_cleanup"
+        # TODO: remove with pylint 2
+        if last_cleanup.exists() and time.time() - last_cleanup.stat().st_mtime < 3600 * 12: # pylint: disable=no-member
+            return
+
+        # TODO: remove with pylint 2
+        inventory_archive_hosts = set([x.name for x in self._inventory_archive_path.iterdir() if x.is_dir()]) # pylint: disable=no-member
+        inventory_delta_cache_hosts = set([x.name for x in self._inventory_delta_cache_path.iterdir() if x.is_dir()]) # pylint: disable=no-member
+
+        folders_to_delete = inventory_delta_cache_hosts - inventory_archive_hosts
+        for foldername in folders_to_delete:
+            shutil.rmtree(str(self._inventory_delta_cache_path / foldername))
+
+        inventory_delta_cache_hosts -= folders_to_delete
+        for hostname in inventory_delta_cache_hosts:
+            available_timestamps = self._get_timestamps_for_host(hostname)
+            for filename in [x.name for x in (self._inventory_delta_cache_path / hostname).iterdir() if not x.is_dir()]:
+                delete = False
+                try:
+                    first, second = filename.split("_")
+                    if first not in available_timestamps or second not in available_timestamps:
+                        delete = True
+                except ValueError:
+                    delete = True
+                if delete:
+                    (self._inventory_delta_cache_path / hostname / filename).unlink()
+
+        # TODO: remove with pylint 2
+        last_cleanup.touch() # pylint: disable=no-member
+
+
+    def _get_timestamps_for_host(self, hostname):
+        timestamps = set(["None"]) # 'None' refers to the histories start
+        try:
+            timestamps.add("%d" % (self._inventory_path / hostname).stat().st_mtime)
+        except OSError, e:
+            pass
+
+        for filename in [x for x in (self._inventory_archive_path / hostname).iterdir() if not x.is_dir()]:
+            timestamps.add(filename.name)
+        return timestamps
+

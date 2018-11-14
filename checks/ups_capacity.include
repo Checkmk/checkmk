@@ -24,25 +24,26 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+
 def check_ups_capacity(item, params, info):
     # To support inventories with the old version
     if type(params) is tuple:  # old format with 2 params in tuple
         warn, crit = params
-        cap_warn, cap_crit =  (95, 90)
+        cap_warn, cap_crit = (95, 90)
     elif type(params) is dict:  # new dict format
         warn, crit = params.get('battime', (0, 0))
         cap_warn, cap_crit = params.get('capacity', (95, 90))
     else:
         warn, crit = (0, 0)
-        cap_warn, cap_crit =  (95, 90)
+        cap_warn, cap_crit = (95, 90)
 
     time_on_bat, minutes_left, percent_fuel = info[0]
 
     # Check time left on battery
     if minutes_left:
         minutes_left = int(minutes_left)
-        state        = 0
-        infotext     = "%d min left on battery" % minutes_left
+        state = 0
+        infotext = "%d min left on battery" % minutes_left
 
         if minutes_left <= crit:
             state = 2
@@ -52,13 +53,13 @@ def check_ups_capacity(item, params, info):
         if state:
             infotext += " (warn/crit below %d min/%d min)" % (warn, crit)
 
-        yield state, infotext, [ ('capacity', minutes_left, warn, crit) ]
+        yield state, infotext, [('capacity', minutes_left, warn, crit)]
 
     # Check percentual capacity
     if percent_fuel:
         percent_fuel = int(percent_fuel)
-        infotext     = "capacity: %d%%" % percent_fuel
-        state        = 0
+        infotext = "capacity: %d%%" % percent_fuel
+        state = 0
 
         if percent_fuel <= cap_crit:
             state = 2
@@ -68,10 +69,8 @@ def check_ups_capacity(item, params, info):
         if state:
             infotext += " (warn/crit below %d%%/%d%%)" % (cap_warn, cap_crit)
 
-        yield state, infotext, [ ('percent', percent_fuel, cap_warn, cap_crit) ]
+        yield state, infotext, [('percent', percent_fuel, cap_warn, cap_crit)]
 
     # Output time on battery
     if time_on_bat and int(time_on_bat) > 0:
         yield 0, "On battery for %d min" % int(time_on_bat)
-
-

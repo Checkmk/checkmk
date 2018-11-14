@@ -30,21 +30,22 @@
 
 
 def inventory_brocade_vdx_status(info):
-    return [ ( None, None )]
+    return [(None, None)]
+
 
 def check_brocade_vdx_status(_no_item, _no_params, info):
     states = {
-        1 : "online",
-        2 : "offline",
-        3 : "testing",
-        4 : "faulty",
+        1: "online",
+        2: "offline",
+        3: "testing",
+        4: "faulty",
     }
     firmware = info[0][0]
     state = saveint(info[0][1])
-    message = "State: %s, Firmware: %s" % ( states[state], firmware)
+    message = "State: %s, Firmware: %s" % (states[state], firmware)
     if state == 1:
         return 0, message
-    if state in [ 2, 4 ]:
+    if state in [2, 4]:
         return 2, message
     if state == 3:
         return 1, message
@@ -64,4 +65,3 @@ check_info["brocade_vdx_status"] = {
                                                                 7  # Status
                                                                 ]  ),
 }
-

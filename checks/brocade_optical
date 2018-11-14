@@ -24,7 +24,6 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-
 # .1.3.6.1.4.1.1991.1.1.3.3.6.1.1.1  41.4960 C: Normal
 # .1.3.6.1.4.1.1991.1.1.3.3.6.1.1.2  50.9531 C: Normal
 # .1.3.6.1.4.1.1991.1.1.3.3.6.1.1.65  49.8007 C: Normal
@@ -91,7 +90,6 @@
 # .1.3.6.1.4.1.1991.1.1.3.3.10.1.4.65.4  -021.8045 dBm: Low-Alarm
 
 
-
 def parse_brocade_optical(info):
     def parse_value(value_string):
         if value_string == 'N/A' or value_string.lower() == "not supported":
@@ -110,45 +108,40 @@ def parse_brocade_optical(info):
     # interpret per-interface data
     for temp, tx_light, rx_light, if_id in if_data:
         result[if_id] = {
-            'temp'     : parse_value(temp),
-            'tx_light' : parse_value(tx_light),
-            'rx_light' : parse_value(rx_light),
+            'temp': parse_value(temp),
+            'tx_light': parse_value(tx_light),
+            'rx_light': parse_value(rx_light),
         }
 
     for if_id, if_descr, if_type, if_operstatus in if_info:
         if if_id in result:
             result[if_id].update({
-                'port_type' : if_type,
-                'description' : if_descr,
-                'operational_status' : if_operstatus
+                'port_type': if_type,
+                'description': if_descr,
+                'operational_status': if_operstatus
             })
-
 
     # add informational values
     for media_type, part, serial, if_id in if_ids:
-        result[if_id].update({
-            'type'     : media_type,
-            'part'     : part,
-            'serial'   : serial
-        })
+        result[if_id].update({'type': media_type, 'part': part, 'serial': serial})
 
     # add per-lane data
     for temp, tx_light, rx_light, lane in lanes:
         if_id, lane = lane.split('.')
         result[if_id].setdefault('lanes', {})[int(lane)] = {
-            'temp'     : parse_value(temp),
-            'tx_light' : parse_value(tx_light),
-            'rx_light' : parse_value(rx_light)
+            'temp': parse_value(temp),
+            'tx_light': parse_value(tx_light),
+            'rx_light': parse_value(rx_light)
         }
 
     return result
 
 
 def inventory_brocade_optical(parsed):
-    settings            = host_extra_conf_merged(host_name(), inventory_if_rules)
-    porttypes           = set(settings.get('porttypes', if_inventory_porttypes))
-    portstates          = settings.get('portstates', if_inventory_portstates)
-    match_desc          = settings.get('match_desc')
+    settings = host_extra_conf_merged(host_name(), inventory_if_rules)
+    porttypes = set(settings.get('porttypes', if_inventory_porttypes))
+    portstates = settings.get('portstates', if_inventory_portstates)
+    match_desc = settings.get('match_desc')
 
     pad_width = max([int(len(key)) for key in parsed.keys()])
 
@@ -161,9 +154,8 @@ def inventory_brocade_optical(parsed):
         return False
 
     for key, entry in parsed.iteritems():
-        if (entry['port_type'] in porttypes and
-            entry['operational_status'] in portstates and
-            port_match(entry['description'], match_desc)):
+        if (entry['port_type'] in porttypes and entry['operational_status'] in portstates and
+                port_match(entry['description'], match_desc)):
             yield "0" * (pad_width - len(key)) + key, {}
 
 
@@ -194,8 +186,11 @@ def check_brocade_optical(item, params, parsed):
         iface = parsed[item]
         yield 0, "[S/N %s, P/N %s]" % (iface['serial'], iface['part'])
 
-        state, text, perf = check_temperature(iface['temp'][0], params, "brocade_optical_%s" % item,
-                                              dev_status=nagios_state(iface, 'temp'))
+        state, text, perf = check_temperature(
+            iface['temp'][0],
+            params,
+            "brocade_optical_%s" % item,
+            dev_status=nagios_state(iface, 'temp'))
         yield state, "Temperature: %s" % text, perf
 
         if iface['tx_light'][0] is not None:
@@ -208,9 +203,11 @@ def check_brocade_optical(item, params, parsed):
 
         if 'lanes' in iface and params.get('lanes', False):
             for num, lane in iface['lanes'].iteritems():
-                state, text, perf = check_temperature(lane['temp'][0], params,
-                                                      "brocade_optical_lane%d_%s" % (num, item),
-                                                      dev_status=nagios_state(lane, 'temp'))
+                state, text, perf = check_temperature(
+                    lane['temp'][0],
+                    params,
+                    "brocade_optical_lane%d_%s" % (num, item),
+                    dev_status=nagios_state(lane, 'temp'))
                 perf = [("port_%s_%d" % (perf[0][0], num), perf[0][1])]
                 if state in [1, 2]:
                     yield state, "Temperature (Lane %d) %s" % (num, text), perf
@@ -235,34 +232,46 @@ def check_brocade_optical(item, params, parsed):
 
 
 check_info['brocade_optical'] = {
-    'parse_function'      : parse_brocade_optical,
-    'check_function'      : check_brocade_optical,
-    'inventory_function'  : inventory_brocade_optical,
-    'service_description' : "Interface %s Optical",
-    'snmp_info'           : [
-        (".1.3.6.1.2.1.2.2.1", [1,            # ifIndex
-                                2,            # ifDescr
-                                3,            # ifType
-                                8,            # ifOperStatus
-                                ]),
-        (".1.3.6.1.4.1.1991.1.1.3.3.6.1", [1,   # temperature
-                                           2,   # TX light level
-                                           3,   # RX light level
-                                           OID_END
-                                           ]),
-        (".1.3.6.1.4.1.1991.1.1.3.3.9.1", [1,   # media type
-                                           4,   # part number
-                                           5,   # serial number
-                                           OID_END
-                                           ]),
-        (".1.3.6.1.4.1.1991.1.1.3.3.10.1", [2,   # lane temperature
-                                            3,   # lane TX light level
-                                            4,   # lane RX light level
-                                            OID_END
-                                            ]),
+    'parse_function': parse_brocade_optical,
+    'check_function': check_brocade_optical,
+    'inventory_function': inventory_brocade_optical,
+    'service_description': "Interface %s Optical",
+    'snmp_info': [
+        (
+            ".1.3.6.1.2.1.2.2.1",
+            [
+                1,  # ifIndex
+                2,  # ifDescr
+                3,  # ifType
+                8,  # ifOperStatus
+            ]),
+        (
+            ".1.3.6.1.4.1.1991.1.1.3.3.6.1",
+            [
+                1,  # temperature
+                2,  # TX light level
+                3,  # RX light level
+                OID_END
+            ]),
+        (
+            ".1.3.6.1.4.1.1991.1.1.3.3.9.1",
+            [
+                1,  # media type
+                4,  # part number
+                5,  # serial number
+                OID_END
+            ]),
+        (
+            ".1.3.6.1.4.1.1991.1.1.3.3.10.1",
+            [
+                2,  # lane temperature
+                3,  # lane TX light level
+                4,  # lane RX light level
+                OID_END
+            ]),
     ],
-    'snmp_scan_function'  : lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.1991.1."),
-    'has_perfdata'        : True,
-    'group'               : "brocade_optical",
-    'includes'            : ["temperature.include", "if.include"],
+    'snmp_scan_function': lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.1991.1."),
+    'has_perfdata': True,
+    'group': "brocade_optical",
+    'includes': ["temperature.include", "if.include"],
 }

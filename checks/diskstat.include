@@ -24,14 +24,14 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-diskstat_inventory_mode = "rule" # "summary", "single", "legacy"
+diskstat_inventory_mode = "rule"  # "summary", "single", "legacy"
 
 diskstat_default_levels = {
-#    "read" :    (10, 20),   # MB/sec
-#    "write" :   (20, 40),   # MB/sec
-#    "average" : 15,         # min
-#    "latency" : (10, 20),   # ms
-#    "latency_perfdata" : True,
+    #    "read" :    (10, 20),   # MB/sec
+    #    "write" :   (20, 40),   # MB/sec
+    #    "average" : 15,         # min
+    #    "latency" : (10, 20),   # ms
+    #    "latency_perfdata" : True,
 }
 
 # Rule for controlling diskstat inventory more fine grained
@@ -57,21 +57,21 @@ def inventory_diskstat_generic(parsed):
         if len(hits) > 0:
             modes = hits[0]
         else:
-            modes = [ "summary" ]
+            modes = ["summary"]
 
     elif diskstat_inventory_mode == "single":
-        modes = [ "physical" ]
+        modes = ["physical"]
     elif diskstat_inventory_mode == "summary":
-        modes = [ "summary" ]
+        modes = ["summary"]
     else:
-        modes = [ "legacy" ]
+        modes = ["legacy"]
 
     inventory = []
     if "summary" in modes:
-        inventory.append( ( "SUMMARY", "diskstat_default_levels" ) )
+        inventory.append(("SUMMARY", "diskstat_default_levels"))
 
     if "legacy" in modes:
-        inventory += [ ( "read", None ), ( "write", None ) ]
+        inventory += [("read", None), ("write", None)]
 
     for line in parsed:
         name = line[1]
@@ -100,7 +100,7 @@ def inventory_diskstat_generic(parsed):
 def check_diskstat_line(this_time, item, params, line, mode='sectors'):
     average_range = params.get("average")
     if average_range == 0:
-        average_range = None # disable averaging when 0 is set
+        average_range = None  # disable averaging when 0 is set
 
     perfdata = []
     infos = []
@@ -109,7 +109,7 @@ def check_diskstat_line(this_time, item, params, line, mode='sectors'):
     if node != None and node != "":
         infos.append("Node %s" % node)
     prediction_perf = []
-    for what, ctr in [ ("read",  line[2]), ("write", line[3]) ]:
+    for what, ctr in [("read", line[2]), ("write", line[3])]:
         if node:
             countername = "diskstat.%s.%s.%s" % (node, item, what)
         else:
@@ -130,19 +130,19 @@ def check_diskstat_line(this_time, item, params, line, mode='sectors'):
             bytes_per_sec = per_sec
 
         infos.append("%s/sec %s" % (get_bytes_human_readable(bytes_per_sec), what))
-        perfdata.append( (what, bytes_per_sec, warn, crit) )
+        perfdata.append((what, bytes_per_sec, warn, crit))
         dsname = what
 
         # compute average of the rate over ___ minutes
         if average_range != None:
             avg = get_average(countername + ".avg", this_time, bytes_per_sec, average_range)
             dsname = what + ".avg"
-            perfdata.append( (dsname, avg) )
+            perfdata.append((dsname, avg))
             bytes_per_sec = avg
 
         # check levels
-        state, text, extraperf = check_levels(bytes_per_sec, dsname, levels,
-                                              unit = "MB/s", scale = 1048576, statemarkers=True)
+        state, text, extraperf = check_levels(
+            bytes_per_sec, dsname, levels, unit="MB/s", scale=1048576, statemarkers=True)
         if text:
             infos.append(text)
         status = max(state, status)
@@ -150,7 +150,7 @@ def check_diskstat_line(this_time, item, params, line, mode='sectors'):
 
     # Add performance data for averaged IO
     if average_range != None:
-        perfdata = [ perfdata[0], perfdata[2], perfdata[1], perfdata[3] ]
+        perfdata = [perfdata[0], perfdata[2], perfdata[1], perfdata[3]]
 
     # Process IOs when available
     ios_per_sec = None
@@ -189,7 +189,7 @@ def check_diskstat_line(this_time, item, params, line, mode='sectors'):
     # Queue Lengths (currently only Windows). Windows uses counters here.
     # I have not understood, why....
     if len(line) >= 9:
-        for what, ctr in [ ("read",  line[7]), ("write", line[8]) ]:
+        for what, ctr in [("read", line[7]), ("write", line[8])]:
             countername = "diskstat.%s.ql.%s" % (item, what)
             levels = params.get(what + "_ql")
             if levels:
@@ -215,12 +215,12 @@ def check_diskstat_line(this_time, item, params, line, mode='sectors'):
 
     perfdata += prediction_perf
 
-    return (status, ", ".join(infos) , perfdata)
+    return (status, ", ".join(infos), perfdata)
 
 
 def check_diskstat_generic(item, params, this_time, info, mode='sectors'):
     # legacy version if item is "read" or "write"
-    if item in [ 'read', 'write' ]:
+    if item in ['read', 'write']:
         return _check_diskstat_old(item, params, this_time, info)
 
     # Sum up either all physical disks (if item is "SUMMARY") or
@@ -236,7 +236,7 @@ def check_diskstat_generic(item, params, this_time, info, mode='sectors'):
             return 3, "summary mode not supported in a cluster"
 
         elif item == 'SUMMARY' and ' ' in line[1]:
-            continue # skip non-physical disks
+            continue  # skip non-physical disks
 
         elif item == 'SUMMARY' or line[1] == item:
             matching += 1
@@ -253,9 +253,9 @@ def check_diskstat_generic(item, params, this_time, info, mode='sectors'):
 def _check_diskstat_old(item, params, this_time, info):
     # sum up over all devices
     if item == 'read':
-        index = 2 # sectors read
+        index = 2  # sectors read
     elif item == 'write':
-        index = 3 # sectors written
+        index = 3  # sectors written
     else:
         return (3, "invalid item %s" % (item,))
 
@@ -267,9 +267,9 @@ def _check_diskstat_old(item, params, this_time, info):
             this_val += int(line[index])
 
     per_sec = get_rate("diskstat." + item, this_time, this_val)
-    mb_per_s = per_sec / 2048.0    # Diskstat output is in sectors a 512 Byte
+    mb_per_s = per_sec / 2048.0  # Diskstat output is in sectors a 512 Byte
     kb_per_s = per_sec / 2.0
-    perfdata = [ (item, "%f" % kb_per_s ) ]
+    perfdata = [(item, "%f" % kb_per_s)]
     return (0, "%.1f MB/s" % mb_per_s, perfdata)
 
 
@@ -287,6 +287,7 @@ def _check_diskstat_old(item, params, this_time, info):
 #   |  (the Linux diskstat check) for an example.                          |
 #   '----------------------------------------------------------------------'
 
+
 def diskstat_select_disk(disks, item):
 
     # In summary mode we add up the throughput values, but
@@ -299,7 +300,7 @@ def diskstat_select_disk(disks, item):
 
     if item == "SUMMARY":
         summarized = {
-            "node"                       : None,
+            "node": None,
             # We do not set these settings explictly because some
             # devices may not provide all of them.
             # "read_ios"                   : 0.0,
@@ -329,9 +330,9 @@ def diskstat_select_disk(disks, item):
                         summarized.setdefault(key, 0.0)
 
                 if device.startswith("LVM "):
-                    continue # skip LVM devices for summary
+                    continue  # skip LVM devices for summary
 
-                if True or disk["read_throughput"] + disk["write_throughput"] > 0: # skip idle disks
+                if True or disk["read_throughput"] + disk["write_throughput"] > 0:  # skip idle disks
                     num_averaged += 1
                     for key, value in disk.items():
                         if key != "node":
@@ -349,6 +350,7 @@ def diskstat_select_disk(disks, item):
 
     else:
         return disks[item]
+
 
 # New version for this diskstat checks that use the new dict
 # format. The first one is "diskstat" - the Linux version of
@@ -384,65 +386,81 @@ def check_diskstat_dict(item, params, disks):
     if not disk:
         return
 
-
     # Averaging
     # Note: this check uses a simple method of averaging: As soon as averaging
     # is turned on the actual metrics are *replaced* by the averaged ones. No
     # duplication of performance data or check output here. This is because we
     # have so many metrics...
     prefix = ""
-    averaging = params.get("average") # in seconds here!
+    averaging = params.get("average")  # in seconds here!
     if averaging:
-        avg_disk = {} # Do not modify our arguments!!
+        avg_disk = {}  # Do not modify our arguments!!
         for key, value in disk.items():
             if type(value) in (int, float):
-                avg_disk[key] = get_average("diskstat.%s.%s.avg" % (item, key), this_time, value, averaging / 60.0)
+                avg_disk[key] = get_average("diskstat.%s.%s.avg" % (item, key), this_time, value,
+                                            averaging / 60.0)
             else:
                 avg_disk[key] = value
         disk = avg_disk
         prefix = "%s average: " % get_age_human_readable(averaging)
 
-
     # Utilization
     if "utilization" in disk:
         util = disk["utilization"]
-        state, text, extraperf = check_levels(util, "disk_utilization", params.get("utilization"),
-                                              unit = "%", scale = 0.01, statemarkers=False)
+        state, text, extraperf = check_levels(
+            util,
+            "disk_utilization",
+            params.get("utilization"),
+            unit="%",
+            scale=0.01,
+            statemarkers=False)
         yield state, "%sUtilization: %.1f%%%s" % (prefix, util * 100, text), extraperf
-
 
     # Throughput
     for what in "read", "write":
         if what + "_throughput" in disk:
             throughput = disk[what + "_throughput"]
-            state, text, extraperf = check_levels(throughput, "disk_" + what + "_throughput", params.get(what),
-                                                  unit = "MB/s", scale = 1048576, statemarkers=False)
-            yield state, "%s: %s/s%s" % (what.title(), get_bytes_human_readable(throughput), text), extraperf
-
+            state, text, extraperf = check_levels(
+                throughput,
+                "disk_" + what + "_throughput",
+                params.get(what),
+                unit="MB/s",
+                scale=1048576,
+                statemarkers=False)
+            yield state, "%s: %s/s%s" % (what.title(), get_bytes_human_readable(throughput),
+                                         text), extraperf
 
     # Average wait from end to end
-    for what in [ "wait", "read_wait", "write_wait"]:
+    for what in ["wait", "read_wait", "write_wait"]:
         if "average_" + what in disk:
             wait = disk["average_" + what]
-            state, text, extraperf = check_levels(wait, what, params.get(what),
-                                                  unit = "ms", scale = 0.001, statemarkers=False)
-            yield state, "Average %s: %.2f ms%s" % (what.title().replace("_", " "), wait * 1000, text), extraperf
+            state, text, extraperf = check_levels(
+                wait, what, params.get(what), unit="ms", scale=0.001, statemarkers=False)
+            yield state, "Average %s: %.2f ms%s" % (what.title().replace("_", " "), wait * 1000,
+                                                    text), extraperf
 
     # Average disk latency
     if "latency" in disk:
         latency = disk["latency"]
-        state, text, extraperf = check_levels(latency, "disk_latency", params.get("latency"),
-                                              unit = "ms", scale = 0.001, statemarkers=False)
+        state, text, extraperf = check_levels(
+            latency,
+            "disk_latency",
+            params.get("latency"),
+            unit="ms",
+            scale=0.001,
+            statemarkers=False)
         yield state, "Latency: %.2f ms%s" % (latency * 1000.0, text), extraperf
 
     # Queue lengths
-    for what, plugin_text in [ ("queue_length", "Queue Length"),
-                               ("read_ql",      "Read Queue Length"),
-                               ("write_ql",     "Write Queue Length") ]:
+    for what, plugin_text in [
+        ("queue_length", "Queue Length"),
+        ("read_ql", "Read Queue Length"),
+        ("write_ql", "Write Queue Length"),
+    ]:
         if what in disk:
             ql = disk[what]
-            state, levels_text, extraperf = check_levels(ql, what, params.get(what),
-                                                         statemarkers=False)
+            state, levels_text, extraperf = check_levels(
+                ql, what, params.get(what), statemarkers=False)
             yield state, "Average %s: %.2f%s" % (plugin_text, ql, levels_text), extraperf
 
     # All the other metrics are currently not output in the plugin output - simply because

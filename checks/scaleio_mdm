@@ -24,7 +24,6 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-
 #<<<scaleio_mdm:sep(44)>>>
 #Cluster:
 #    Mode: 3_node, State: Normal, Active: 3/3, Replicas: 2/2
@@ -94,11 +93,11 @@ def inventory_scaleio_mdm(parsed):
 
 def check_scaleio_mdm(item, params, parsed):
     translate_status = {
-        "Normal"            : 0,
-        "Degraded"          : 1,
-        "Error"             : 2,
-        "Disconnected"      : 2,
-        "Not synchronized"  : 1,
+        "Normal": 0,
+        "Degraded": 1,
+        "Error": 2,
+        "Disconnected": 2,
+        "Not synchronized": 1,
     }
 
     data = get_scaleio_data("Cluster", parsed)
@@ -116,8 +115,7 @@ def check_scaleio_mdm(item, params, parsed):
 
         yield state, "Active: %s, Replicas: %s" % ("/".join(active), "/".join(replicas))
 
-    for role in [ "Master MDM", "Slave MDMs",
-                  "Tie-Breakers", "Standby MDMs" ]:
+    for role in ["Master MDM", "Slave MDMs", "Tie-Breakers", "Standby MDMs"]:
         state, nodes = 0, []
         for node in parsed.get(role, {}):
             nodes.append(node)
@@ -137,9 +135,9 @@ def check_scaleio_mdm(item, params, parsed):
 
 
 check_info['scaleio_mdm'] = {
-    'parse_function'        : parse_scaleio_mdm,
-    'inventory_function'    : inventory_scaleio_mdm,
-    'check_function'        : check_scaleio_mdm,
-    'service_description'   : 'ScaleIO cluster status',
-    'includes'              : [ 'scaleio.include' ],
+    'parse_function': parse_scaleio_mdm,
+    'inventory_function': inventory_scaleio_mdm,
+    'check_function': check_scaleio_mdm,
+    'service_description': 'ScaleIO cluster status',
+    'includes': ['scaleio.include'],
 }

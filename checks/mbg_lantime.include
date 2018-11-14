@@ -24,22 +24,23 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-
 factory_settings["mbg_lantime_state_default_levels"] = {
-     "stratum" : (2,   3),
-     "offset"  : (10, 20), # us
+    "stratum": (2, 3),
+    "offset": (10, 20),  # us
 }
+
 
 def snmp_scan_mbg_lantime_ng_hw(oid):
     return oid(".1.3.6.1.2.1.1.2.0") == ".1.3.6.1.4.1.5597.3" or \
             oid(".1.3.6.1.2.1.1.2.0") == ".1.3.6.1.4.1.5597.30"
 
+
 def check_mbg_lantime_state_common(states, _no_item, params, info):
     ntp_state, stratum, refclock_name, refclock_offset = info[0]
     if type(params) != dict:
         params = {
-             "stratum" : (params[0], params[1]),
-             "offset"  : (params[2], params[3]),
+            "stratum": (params[0], params[1]),
+            "offset": (params[2], params[3]),
         }
 
     # Handle State
@@ -72,6 +73,5 @@ def check_mbg_lantime_state_common(states, _no_item, params, info):
         state = 1
     if state != 0:
         levels_text = u" (warn/crit at %d/%d µs)" % (warn, crit)
-    perfdata = [("offset", refclock_offset, warn * 1000, crit * 1000)] # all in us
+    perfdata = [("offset", refclock_offset, warn * 1000, crit * 1000)]  # all in us
     yield state, u"Reference clock offset: %g µs%s" % (refclock_offset, levels_text), perfdata
-

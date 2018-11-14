@@ -48,71 +48,75 @@
 
 lparstat_default_levels = (5, 10)
 
+
 def inventory_lparstat(info):
     if len(info) >= 1 and len(info[-1]) >= 5:
         return [(None, "lparstat_default_levels")]
+
 
 def check_lparstat(item, params, info):
     if len(info) == 1:
         # Old agent provided only the values in a single line
         line = info[0]
         if len(line) == 12:
-            cols   = [ 'physc', 'entc', 'lbusy', 'app', 'vcsw', 'phint', 'nsp', 'utcyc' ]
-            uom    = [ '',      '%',    '',      '',    '',     '',       '%',  '%' ]
+            cols = ['physc', 'entc', 'lbusy', 'app', 'vcsw', 'phint', 'nsp', 'utcyc']
+            uom = ['', '%', '', '', '', '', '%', '%']
             values = line[-8:]
         elif len(line) == 11:
-            cols   = [ 'physc', 'entc', 'lbusy', 'app', 'vcsw', 'phint', 'nsp' ]
-            uom    = [ '',      '%',    '',      '',    '',     '',       '%' ]
+            cols = ['physc', 'entc', 'lbusy', 'app', 'vcsw', 'phint', 'nsp']
+            uom = ['', '%', '', '', '', '', '%']
             values = line[-7:]
         elif len(line) == 10:
-            cols   = [ 'physc', 'entc', 'lbusy', 'app', 'vcsw', 'phint' ]
-            uom    = [ '',      '%',    '',      '',    '',     '' ]
+            cols = ['physc', 'entc', 'lbusy', 'app', 'vcsw', 'phint']
+            uom = ['', '%', '', '', '', '']
             values = line[-6:]
         elif len(line) == 9:
-            cols   = [ 'physc', 'entc', 'lbusy', 'app' ]
-            uom    = [ '',      '%',    '',      '' ]
+            cols = ['physc', 'entc', 'lbusy', 'app']
+            uom = ['', '%', '', '']
             values = line[-4:]
         elif len(line) == 6:
-            cols   = [ 'nsp', 'utcyc' ]
-            uom    = [ '%',   '%' ]
+            cols = ['nsp', 'utcyc']
+            uom = ['%', '%']
             values = line[-2:]
         # else:
-            # Invalid output, let exception happen
+        # Invalid output, let exception happen
     else:
         # The new agent provides three lines, the title line, spacer line and the values
-        cols   = [ c.replace('%', '') for c in info[-3] ]
-        uom    = [ '%' * ('%' in c) for c in info[-3] ]
+        cols = [c.replace('%', '') for c in info[-3]]
+        uom = ['%' * ('%' in c) for c in info[-3]]
         values = info[-1]
 
     perfdata = zip(cols, map(float, values))
-    output   = ', '.join("%s: %s%s" % (c.title(), v, u)
-                         for c, v, u in zip(cols, values, uom))
+    output = ', '.join("%s: %s%s" % (c.title(), v, u) for c, v, u in zip(cols, values, uom))
     return 0, output, perfdata
 
+
 check_info["lparstat_aix"] = {
-    'check_function':          check_lparstat,
-    'inventory_function':      inventory_lparstat,
-    'service_description':     'lparstat',
-    'has_perfdata':            True,
+    'check_function': check_lparstat,
+    'inventory_function': inventory_lparstat,
+    'service_description': 'lparstat',
+    'has_perfdata': True,
 }
 
 # Utilization and IO/Wait
 kernel_util_default_levels = None
 
+
 def inventory_lparstat_aix_cpu(info):
     if len(info) >= 1 and len(info[-1]) >= 4:
         return [(None, "kernel_util_default_levels")]
 
+
 def check_lparstat_aix_cpu(_no_item, params, info):
     if len(info) == 1:
-        line = info[0] # old (single line) agent output
+        line = info[0]  # old (single line) agent output
     else:
         line = info[-1]
     user, system, wait, _idle = map(float, line[:4])
     perfdata = [
-          ("user",   user),
-          ("system", system),
-          ("wait",   wait),
+        ("user", user),
+        ("system", system),
+        ("wait", wait),
     ]
 
     util = user + system + wait
@@ -124,7 +128,7 @@ def check_lparstat_aix_cpu(_no_item, params, info):
     # a pair of (warn, crit)
     result = 0
 
-    if type(params) == tuple: # old config only levels io wait
+    if type(params) == tuple:  # old config only levels io wait
         warn, crit = params
         if wait >= crit:
             result = max(result, 2)
@@ -149,10 +153,11 @@ def check_lparstat_aix_cpu(_no_item, params, info):
 
     return (result, infotext, perfdata)
 
+
 check_info['lparstat_aix.cpu_util'] = {
-    "check_function"         : check_lparstat_aix_cpu,
-    "inventory_function"     : inventory_lparstat_aix_cpu,
-    "service_description"    : "CPU utilization",
-    "has_perfdata"           : True,
-    "group"                  : "cpu_iowait",
+    "check_function": check_lparstat_aix_cpu,
+    "inventory_function": inventory_lparstat_aix_cpu,
+    "service_description": "CPU utilization",
+    "has_perfdata": True,
+    "group": "cpu_iowait",
 }

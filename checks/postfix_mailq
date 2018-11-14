@@ -77,10 +77,9 @@
 # QUEUE_deferred 0 0
 # QUEUE_active 0 0
 
-
 factory_settings['postfix_mailq_default_levels'] = {
-    "deferred" : (10, 20),
-    "active"   : (200, 300), # may become large for big mailservers
+    "deferred": (10, 20),
+    "active": (200, 300),  # may become large for big mailservers
 }
 
 
@@ -95,7 +94,7 @@ def postfix_mailq_to_bytes(value, uom):
 
 
 def parse_postfix_mailq(info):
-    parsed        = {}
+    parsed = {}
     instance_name = ""
     for line in info:
         if line[0].startswith("[[[") and line[0].endswith("]]]"):
@@ -107,30 +106,30 @@ def parse_postfix_mailq(info):
             # Deal with old agent (pre 1.2.8) which did not send size
             # infos in case of different error cases
             if len(line) == 2:
-                size   = 0
-                length = int(line[1]) # number of mails
+                size = 0
+                length = int(line[1])  # number of mails
             else:
-                size   = int(line[1]) # in bytes
-                length = int(line[2]) # number of mails
+                size = int(line[1])  # in bytes
+                length = int(line[2])  # number of mails
 
             queueinfo = line[0].split("_")[1], size, length
 
         elif " ".join(line[-2:]) == 'is empty':
             queueinfo = "empty", 0, 0
 
-        elif line[0] == '--' or line[0:2] == [ 'Total', 'requests:']:
+        elif line[0] == '--' or line[0:2] == ['Total', 'requests:']:
             if line[0] == '--':
-                size    = postfix_mailq_to_bytes(float(line[1]), line[2])
-                length  = int(line[4])
+                size = postfix_mailq_to_bytes(float(line[1]), line[2])
+                length = int(line[4])
             else:
-                size    = 0
-                length  = int(line[2])
+                size = 0
+                length = int(line[2])
 
             queueinfo = "mail", size, length
 
         if queueinfo is not None:
             parsed.setdefault(instance_name, [])
-            parsed[instance_name].append( queueinfo )
+            parsed[instance_name].append(queueinfo)
 
     return parsed
 
@@ -149,21 +148,21 @@ def check_postfix_mailq(item, params, parsed):
         return
 
     if type(params) is not dict:
-        params = { "deferred" : params }
+        params = {"deferred": params}
 
     for what, size, length in parsed[item]:
         # In previous check version mail and deferred had same params
         warn, crit = params.get({"mail": "deferred"}.get(what, what), (None, None))
-        if what in [ "active", "deferred", "mail" ]:
-            state    = 0
+        if what in ["active", "deferred", "mail"]:
+            state = 0
             infotext = "%s queue length: %d" % (what.title(), length)
 
-            if what in [ "deferred", "mail" ]:
+            if what in ["deferred", "mail"]:
                 length_var = "length"
-                size_var   = "size"
+                size_var = "size"
             else:
                 length_var = "mail_queue_active_length"
-                size_var   = "mail_queue_active_size"
+                size_var = "mail_queue_active_size"
 
             if crit is not None and length >= crit:
                 state = 2
@@ -172,18 +171,18 @@ def check_postfix_mailq(item, params, parsed):
                 state = 1
                 infotext += " (warn/crit at %d/%d)" % (warn, crit)
 
-            yield state, infotext, [ (length_var, length, warn, crit), (size_var, size) ]
+            yield state, infotext, [(length_var, length, warn, crit), (size_var, size)]
 
         elif what == "empty":
-            yield 0, 'The mailqueue is empty', [ ('length', 0, warn, crit), ('size', 0) ]
+            yield 0, 'The mailqueue is empty', [('length', 0, warn, crit), ('size', 0)]
 
 
 check_info["postfix_mailq"] = {
-    'parse_function'          : parse_postfix_mailq,
-    'inventory_function'      : inventory_postfix_mailq,
-    'check_function'          : check_postfix_mailq,
-    'service_description'     : 'Postfix Queue %s',
-    'default_levels_variable' : 'postfix_mailq_default_levels',
-    'group'                   : "mail_queue_length",
-    'has_perfdata'            : True,
+    'parse_function': parse_postfix_mailq,
+    'inventory_function': inventory_postfix_mailq,
+    'check_function': check_postfix_mailq,
+    'service_description': 'Postfix Queue %s',
+    'default_levels_variable': 'postfix_mailq_default_levels',
+    'group': "mail_queue_length",
+    'has_perfdata': True,
 }

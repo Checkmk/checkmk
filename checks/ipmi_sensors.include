@@ -105,14 +105,13 @@
 # 3  | Power Supply 2  | Power Supply | Nominal  | N/A        | N/A   | N/A        | N/A        | N/A        | N/A        | N/A        | N/A        | 'Presence detected'
 # 4  | Power Supplies  | Power Supply | Nominal  | N/A        | N/A   | N/A        | N/A        | N/A        | N/A        | N/A        | N/A        | 'Fully Redundant'
 
-
 #.
 
 
 def parse_freeipmi(info):
     def add_valid_values(values):
         for key, value, ty in values:
-            if value not in [ "NA", "N/A" ]:
+            if value not in ["NA", "N/A"]:
                 instance[key] = ty(value)
 
     parsed = {}
@@ -123,7 +122,7 @@ def parse_freeipmi(info):
             status_txt = status_txt[1:]
         if status_txt.endswith("]") or status_txt.endswith("'"):
             status_txt = status_txt[:-1]
-        if status_txt in [ "NA", "N/A", "Unknown" ] or "_=_" in status_txt:
+        if status_txt in ["NA", "N/A", "Unknown"] or "_=_" in status_txt:
             status_txt = None
         elif status_txt == "S0G0":
             status_txt = "System full operational, working"
@@ -131,17 +130,18 @@ def parse_freeipmi(info):
             status_txt = status_txt.replace("_", " ")
 
         sensorname = stripped_line[1].replace(" ", "_")
-        instance = parsed.setdefault(sensorname, {
-            "value"      : None,
-            "unit"       : None,
-            "status_txt" : status_txt,
-            "unrec_low"  : None,
-            "crit_low"   : None,
-            "warn_low"   : None,
-            "warn_high"  : None,
-            "crit_high"  : None,
-            "unrec_high" : None,
-        })
+        instance = parsed.setdefault(
+            sensorname, {
+                "value": None,
+                "unit": None,
+                "status_txt": status_txt,
+                "unrec_low": None,
+                "crit_low": None,
+                "warn_low": None,
+                "warn_high": None,
+                "crit_high": None,
+                "unrec_high": None,
+            })
 
         if len(stripped_line) == 4:
             current, levels = stripped_line[2].split("(")
@@ -151,19 +151,19 @@ def parse_freeipmi(info):
                 unit = cparts[1]
 
             lower, upper = levels[:-1].split("/")
-            add_valid_values([ ("value", cparts[0], float), ("unit", unit, str),
-                ("crit_low", lower, float), ( "crit_high", upper, float) ] )
+            add_valid_values([("value", cparts[0], float), ("unit", unit, str),
+                              ("crit_low", lower, float), ("crit_high", upper, float)])
 
         elif len(stripped_line) == 6:
             _sid, _name, _sensortype, reading_str, unit = stripped_line[:-1]
-            add_valid_values( [ ("value", reading_str, float), ("unit", unit, str) ] )
+            add_valid_values([("value", reading_str, float), ("unit", unit, str)])
 
         elif len(stripped_line) == 13:
             _sid, _name, _stype, _sstate, reading_str, unit, _lower_nr, lower_c, \
                 lower_nc, upper_nc, upper_c, _upper_nr = stripped_line[:-1]
-            add_valid_values( [ ("value", reading_str, float), ("unit", unit, str),
-                ("crit_low", lower_c, float), ("warn_low", lower_nc, float),
-                ("warn_high", upper_nc, float), ("crit_high", upper_c, float) ] )
+            add_valid_values([("value", reading_str, float), ("unit", unit, str),
+                              ("crit_low", lower_c, float), ("warn_low", lower_nc, float),
+                              ("warn_high", upper_nc, float), ("crit_high", upper_c, float)])
 
     return parsed
 
@@ -174,7 +174,7 @@ inventory_ipmi_rules = []
 def inventory_freeipmi(parsed):
     rules = host_extra_conf(host_name(), inventory_ipmi_rules)
     if rules == []:
-        rules = [ ('single', {}) ]
+        rules = [('single', {})]
 
     if type(rules[0]) == tuple:
         single_rules = rules[0][1].copy()
@@ -190,11 +190,13 @@ def freeipmi_status_txt_mapping(status_txt):
     if status_txt is None:
         return 3
 
-    state = {"ok": 0,
-             "warning": 1,
-             "critical": 2, "failed": 2,
-             "unknown": 3,
-            }.get(status_txt.lower())
+    state = {
+        "ok": 0,
+        "warning": 1,
+        "critical": 2,
+        "failed": 2,
+        "unknown": 3,
+    }.get(status_txt.lower())
     if state is not None:
         return state
 

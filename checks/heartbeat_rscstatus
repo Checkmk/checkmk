@@ -32,19 +32,22 @@
 # <<<heartbeat_rscstatus>>>
 # all
 
+
 def inventory_heartbeat_rscstatus(info):
-    return [ (None, '"%s"' % line[0]) for line in info if line[0] != '' ]
+    return [(None, '"%s"' % line[0]) for line in info if line[0] != '']
+
 
 def check_heartbeat_rscstatus(item, expected_state, info):
     if len(info) > 0 and len(info[0]) > 0:
-        if (type(expected_state) == list and info[0][0] in expected_state) or info[0][0] == expected_state:
+        if (type(expected_state) == list and
+                info[0][0] in expected_state) or info[0][0] == expected_state:
             return (0, "Current state: %s" % (info[0][0]))
         return (2, "Current state: %s (Expected: %s)" % (info[0][0], expected_state))
     return (3, "Got no information from agent")
 
 
 check_info["heartbeat_rscstatus"] = {
-    'check_function':          check_heartbeat_rscstatus,
-    'inventory_function':      inventory_heartbeat_rscstatus,
-    'service_description':     'Heartbeat Ressource Status',
+    'check_function': check_heartbeat_rscstatus,
+    'inventory_function': inventory_heartbeat_rscstatus,
+    'service_description': 'Heartbeat Ressource Status',
 }

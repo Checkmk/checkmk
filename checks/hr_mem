@@ -27,17 +27,17 @@
 
 def parse_hr_mem(info):
     map_types = {
-            '.1.3.6.1.2.1.25.2.1.1' : 'other',
-            '.1.3.6.1.2.1.25.2.1.2' : 'RAM',
-            '.1.3.6.1.2.1.25.2.1.3' : 'virtual memory',
-            '.1.3.6.1.2.1.25.2.1.4' : 'fixed disk',
-            '.1.3.6.1.2.1.25.2.1.5' : 'removeable disk',
-            '.1.3.6.1.2.1.25.2.1.6' : 'floppy disk',
-            '.1.3.6.1.2.1.25.2.1.7' : 'compact disk',
-            '.1.3.6.1.2.1.25.2.1.8' : 'RAM disk',
-            '.1.3.6.1.2.1.25.2.1.9' : 'flash memory',
-            '.1.3.6.1.2.1.25.2.1.10': 'network disk',
-            }
+        '.1.3.6.1.2.1.25.2.1.1': 'other',
+        '.1.3.6.1.2.1.25.2.1.2': 'RAM',
+        '.1.3.6.1.2.1.25.2.1.3': 'virtual memory',
+        '.1.3.6.1.2.1.25.2.1.4': 'fixed disk',
+        '.1.3.6.1.2.1.25.2.1.5': 'removeable disk',
+        '.1.3.6.1.2.1.25.2.1.6': 'floppy disk',
+        '.1.3.6.1.2.1.25.2.1.7': 'compact disk',
+        '.1.3.6.1.2.1.25.2.1.8': 'RAM disk',
+        '.1.3.6.1.2.1.25.2.1.9': 'flash memory',
+        '.1.3.6.1.2.1.25.2.1.10': 'network disk',
+    }
 
     parsed = {}
     for hrtype, hrdescr, hrunits, hrsize, hrused in info:
@@ -81,7 +81,7 @@ def check_hr_mem(_no_item, params, parsed):
                 # entries that are not useful.
                 usage.setdefault(type_readable, (size, used))
 
-            if descr in [ "cached memory", "memory buffers" ] and used > 0:
+            if descr in ["cached memory", "memory buffers"] and used > 0:
                 # Account for cached memory (this works at least for systems using
                 # the UCD snmpd (such as Linux based applicances)
                 # some devices report negative used cache values...
@@ -95,24 +95,23 @@ def check_hr_mem(_no_item, params, parsed):
     if totalmem_mb > 0 and totalram_mb > 0:
         totalused_perc = 100 * totalused_mb / totalram_mb
 
-        perfdata = [
-            ('ramused', str(ramused_mb) + 'MB', None, None, 0, totalram_mb),
-            ('swapused', str(virtused_mb) + 'MB', None, None, 0, totalvirt_mb) ]
+        perfdata = [('ramused', str(ramused_mb) + 'MB', None, None, 0, totalram_mb),
+                    ('swapused', str(virtused_mb) + 'MB', None, None, 0, totalvirt_mb)]
 
         infotext = "%.2f GB used (%.2f GB RAM + %.2f GB SWAP, this is %.1f%% of %.2f GB RAM)" % \
                (totalused_mb / 1024.0, ramused_mb / 1024, virtused_mb / 1024, totalused_perc, totalram_mb / 1024.0)
 
         warn, crit = params
         if type(warn) == float:
-            perfdata.append(('memused', str(totalused_mb)+'MB', int(warn/100.0 * totalram_mb),
-                        int(crit/100.0 * totalram_mb), 0, totalvirt_mb))
+            perfdata.append(('memused', str(totalused_mb) + 'MB', int(warn / 100.0 * totalram_mb),
+                             int(crit / 100.0 * totalram_mb), 0, totalvirt_mb))
             if totalused_perc >= crit:
                 return (2, '%s, critical at %.1f%%' % (infotext, crit), perfdata)
             elif totalused_perc >= warn:
                 return (1, '%s, warning at %.1f%%' % (infotext, warn), perfdata)
             return (0, '%s' % infotext, perfdata)
 
-        perfdata.append(('memused', str(totalused_mb)+'MB', warn, crit, 0, totalram_mb))
+        perfdata.append(('memused', str(totalused_mb) + 'MB', warn, crit, 0, totalram_mb))
         if totalused_mb >= crit:
             return (2, '%s, critical at %.2f GB' % (infotext, crit / 1024.0), perfdata)
         elif totalused_mb >= warn:
@@ -123,22 +122,24 @@ def check_hr_mem(_no_item, params, parsed):
 
 
 check_info["hr_mem"] = {
-    'parse_function'            : parse_hr_mem,
-    'inventory_function'        : inventory_hr_mem,
-    'check_function'            : check_hr_mem,
-    'service_description'       : 'Memory used',
-    'has_perfdata'              : True,
-    'snmp_info'                 : ('.1.3.6.1.2.1.25.2.3.1', [
-                                    2, # hrStorageType
-                                    3, # hrStorageDescr
-                                    4, # hrStorageAllocationUnits
-                                    5, # hrStorageSize
-                                    6, # hrStorageUsed
-                                  ]),
-                                  # Some devices are reporting wrong data on
-                                  # HOST-RESOURCES-MIB. Use UCD-MIB in these
-                                  # cases instead
-    'snmp_scan_function'        : is_hr_mem,
-    'group'                     : 'memory',
-    'includes'                  : ["ucd_hr.include"]
+    'parse_function': parse_hr_mem,
+    'inventory_function': inventory_hr_mem,
+    'check_function': check_hr_mem,
+    'service_description': 'Memory used',
+    'has_perfdata': True,
+    'snmp_info': (
+        '.1.3.6.1.2.1.25.2.3.1',
+        [
+            2,  # hrStorageType
+            3,  # hrStorageDescr
+            4,  # hrStorageAllocationUnits
+            5,  # hrStorageSize
+            6,  # hrStorageUsed
+        ]),
+    # Some devices are reporting wrong data on
+    # HOST-RESOURCES-MIB. Use UCD-MIB in these
+    # cases instead
+    'snmp_scan_function': is_hr_mem,
+    'group': 'memory',
+    'includes': ["ucd_hr.include"]
 }

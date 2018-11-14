@@ -29,16 +29,18 @@
 # 8 1
 
 factory_settings['nullmailer_mailq_default_levels'] = {
-    "deferred" : (10, 20),
+    "deferred": (10, 20),
 }
+
 
 def inventory_nullmailer_mailq(info):
     return [("", {})]
 
+
 def check_nullmailer_mailq(_no_item, params, info):
     if type(params) != dict:
         params = {
-            "deferred" : params,
+            "deferred": params,
         }
 
     if not info:
@@ -47,9 +49,9 @@ def check_nullmailer_mailq(_no_item, params, info):
     warn, crit = params["deferred"]
     size_bytes, length = map(int, info[0])
 
-    state    = 0
-    output   = ""
-    perfdata = [ ("length", length), ("size", size_bytes) ]
+    state = 0
+    output = ""
+    perfdata = [("length", length), ("size", size_bytes)]
 
     if length == 0:
         output = "Mailqueue is empty"
@@ -69,11 +71,12 @@ def check_nullmailer_mailq(_no_item, params, info):
 
     return state, output, perfdata
 
+
 check_info["nullmailer_mailq"] = {
-    'check_function'          : check_nullmailer_mailq,
-    'inventory_function'      : inventory_nullmailer_mailq,
-    'service_description'     : 'Nullmailer Queue %s',
-    'default_levels_variable' : 'nullmailer_mailq_default_levels',
-    'group'                   : "mail_queue_length",
-    'has_perfdata'            : True,
+    'check_function': check_nullmailer_mailq,
+    'inventory_function': inventory_nullmailer_mailq,
+    'service_description': 'Nullmailer Queue %s',
+    'default_levels_variable': 'nullmailer_mailq_default_levels',
+    'group': "mail_queue_length",
+    'has_perfdata': True,
 }

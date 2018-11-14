@@ -36,22 +36,23 @@
 #   '----------------------------------------------------------------------'
 
 # Inventory creates three checks per default:
-inventory_kernel_counters = [ "pgmajfault", "ctxt", "processes" ]
+inventory_kernel_counters = ["pgmajfault", "ctxt", "processes"]
 kernel_default_levels = None
 
 kernel_counter_names = {
-  "ctxt"       : "Context Switches",
-  "processes"  : "Process Creations",
-  "pgmajfault" : "Major Page Faults",
+    "ctxt": "Context Switches",
+    "processes": "Process Creations",
+    "pgmajfault": "Major Page Faults",
 }
+
 
 def inventory_kernel(info):
     inventory = []
     for counter in inventory_kernel_counters:
-        hits = [ line[0] for line in info[1:] if line[0] == counter ]
+        hits = [line[0] for line in info[1:] if line[0] == counter]
         if len(hits) == 1:
             countername = kernel_counter_names.get(counter, counter)
-            inventory.append( (countername, "kernel_default_levels") )
+            inventory.append((countername, "kernel_default_levels"))
     return inventory
 
 
@@ -61,9 +62,9 @@ def check_kernel(item, params, info):
         return
 
     this_time = int(info[0][0])
-    hits = [ (line[0], line[1])
-             for line in info[1:]
-             if line[0] == item or kernel_counter_names.get(line[0], line[0]) == item ]
+    hits = [(line[0], line[1])
+            for line in info[1:]
+            if line[0] == item or kernel_counter_names.get(line[0], line[0]) == item]
     if len(hits) == 0:
         return (3, "item '%s' not found in agent output" % item)
     elif len(hits) > 1:
@@ -77,7 +78,7 @@ def check_kernel(item, params, info):
         warn, crit = params
     else:
         warn, crit = None, None
-    perfdata = [ (counter, per_sec, warn, crit) ]
+    perfdata = [(counter, per_sec, warn, crit)]
     state, text, extraperf = check_levels(per_sec, counter, params)
     perfdata += extraperf
     infotext = "%.0f/s" % per_sec
@@ -87,11 +88,11 @@ def check_kernel(item, params, info):
 
 
 check_info["kernel"] = {
-    'check_function':          check_kernel,
-    'inventory_function':      inventory_kernel,
-    'service_description':     'Kernel %s',
-    'has_perfdata':            True,
-    'group':                   'vm_counter',
+    'check_function': check_kernel,
+    'inventory_function': inventory_kernel,
+    'service_description': 'Kernel %s',
+    'has_perfdata': True,
+    'group': 'vm_counter',
 }
 
 #.
@@ -106,6 +107,7 @@ check_info["kernel"] = {
 #   |  Check system/user/io-wait                                           |
 #   '----------------------------------------------------------------------'
 
+
 @discover
 def inventory_cpu_utilization(line):
     return len(line) > 0 and line[0] == 'cpu'
@@ -114,8 +116,9 @@ def inventory_cpu_utilization(line):
 def transform_cpu_info(element):
     transele = [element[0]] + map(int, element[1:])
     if len(transele) < 8:
-        transele += [0] * 4 # needed for Linux 2.4
+        transele += [0] * 4  # needed for Linux 2.4
     return transele
+
 
 # Columns of cpu usage /proc/stat:
 # - cpuX: number of CPU or only 'cpu' for aggregation
@@ -131,32 +134,32 @@ def transform_cpu_info(element):
 # - guest: Time spent running a virtual CPU for guest operating systems (since Linux 2.6.24)
 # - guest_nice: Time spent running a niced guest (since Linux 2.6.33)
 
+
 def kernel_check_cpu_utilization(item, params, info):
     # Convert old style tuple-parameter to new dict
     if type(params) != dict:
-        params = { "iowait": params }
+        params = {"iowait": params}
 
     # Look for entry matching "cpu" (this is the combined load of all cores)
-    total = [transform_cpu_info(line)
-         for line in info
-         if line[0] == "cpu"]
+    total = [transform_cpu_info(line) for line in info if line[0] == "cpu"]
 
     if len(total) != 1:
         return 3, "More than one line with CPU info found. This check is not cluster-enabled."
 
-    cores = [transform_cpu_info(line)
-             for line in info
-             if line[0].startswith("cpu") and len(line[0]) > 3]
+    cores = [
+        transform_cpu_info(line) for line in info if line[0].startswith("cpu") and len(line[0]) > 3
+    ]
     # total contains now the following columns:
     # 'cpu' user nice system idle wait hw-int sw-int (steal ...)
     # convert number to int
     return check_cpu_util_unix(total[0][1:], params, cores)
 
+
 check_info["kernel.util"] = {
-    'check_function':           kernel_check_cpu_utilization,
-    'inventory_function':       inventory_cpu_utilization,
-    'service_description':      'CPU utilization',
-    'has_perfdata':             True,
-    'group':                    'cpu_iowait',
-    'includes':                 ['cpu_util.include'],
+    'check_function': kernel_check_cpu_utilization,
+    'inventory_function': inventory_cpu_utilization,
+    'service_description': 'CPU utilization',
+    'has_perfdata': True,
+    'group': 'cpu_iowait',
+    'includes': ['cpu_util.include'],
 }

@@ -24,11 +24,11 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-ntp_default_levels = (10, 200.0, 500.0) # stratum, ms offset
+ntp_default_levels = (10, 200.0, 500.0)  # stratum, ms offset
 
 factory_settings["ntp_time_default_levels"] = {
-    "ntp_levels"  : ntp_default_levels,
-    "alert_delay" : (300, 3600),
+    "ntp_levels": ntp_default_levels,
+    "alert_delay": (300, 3600),
 }
 
 # Example output from agent:
@@ -44,23 +44,23 @@ factory_settings["ntp_time_default_levels"] = {
 # % 127.127.1.0     .LOCL.          10 l   40   64  377    0.000    0.000   0.001
 
 ntp_state_codes = {
-  'x' : "falsetick",
-  '.' : "excess",
-  '-' : "outlyer",
-  '+' : "candidat",
-  '#' : "selected",
-  '*' : "sys.peer",
-  'o' : "pps.peer",
-  '%' : "discarded",
+    'x': "falsetick",
+    '.': "excess",
+    '-': "outlyer",
+    '+': "candidat",
+    '#': "selected",
+    '*': "sys.peer",
+    'o': "pps.peer",
+    '%': "discarded",
 }
-
 
 # possible values: "summary", "detailed", "both", None
 ntp_inventory_mode = "summary"
 
+
 # We monitor all servers we have reached at least once
 def inventory_ntp(info):
-    if ntp_inventory_mode not in [ "detailed", "both" ]:
+    if ntp_inventory_mode not in ["detailed", "both"]:
         return []
     inventory = []
     for _statecode, peer, refid, _stratum, _t, _when, _poll, reach, _delay, _offset, _jitter in info:
@@ -68,11 +68,13 @@ def inventory_ntp(info):
             inventory.append((peer, "ntp_default_levels"))
     return inventory
 
+
 def inventory_ntp_summary(info):
-    if ntp_inventory_mode not in [ "summary", "both" ]:
+    if ntp_inventory_mode not in ["summary", "both"]:
         return []
     if len(info) > 0:
         return [(None, {})]
+
 
 def ntp_fmt_time(t):
     if t == '-':
@@ -85,6 +87,7 @@ def ntp_fmt_time(t):
         return int(t[:-1]) * 60 * 60 * 24
     return int(t)
 
+
 # Helper function that parses the information about one
 # peer and returns a tuple of
 # 0. Nagios state (0, 1, 2 or 3)
@@ -96,11 +99,11 @@ def check_ntp_server_state(line, params):
     if reach == "0":
         return (3, "peer is unreachable")
 
-    offset  = float(offset)
-    jitter  = float(jitter)
+    offset = float(offset)
+    jitter = float(jitter)
 
-    when    = ntp_fmt_time(when)
-    poll    = ntp_fmt_time(poll)
+    when = ntp_fmt_time(when)
+    poll = ntp_fmt_time(poll)
     stratum = int(stratum)
     state = ntp_state_codes.get(statecode, "unknown")
     infotext = "%s - stratum %d, offset %.2f ms, jitter %.2f ms" % (state, stratum, offset, jitter)
@@ -110,10 +113,11 @@ def check_ntp_server_state(line, params):
     crit_stratum, warn, crit = params
     if abs(offset) >= crit:
         return (2, "critical offset" + " " + infotext, offset, jitter)
-    elif state in [ "falsetick" ]:
+    elif state in ["falsetick"]:
         return (2, infotext, offset, jitter)
     elif stratum >= crit_stratum:
-        return (2, infotext + (", stratum is too high (max allowed is %d)(!!)" % (crit_stratum - 1)))
+        return (2,
+                infotext + (", stratum is too high (max allowed is %d)(!!)" % (crit_stratum - 1)))
 
     # The following check in some cases produces false alarms. The poll interval can
     # switch back to a low value while 'when' still being at a high value. While
@@ -134,8 +138,8 @@ def check_ntp(item, params, info):
             if len(state) == 4:
                 state, text, offset, jitter = state
                 _crit_stratum, warn, crit = params
-                perfdata = [ ( "offset",  offset, warn, crit, 0, None ),
-                             ( "jitter",  jitter, warn, crit, 0, None ) ]
+                perfdata = [("offset", offset, warn, crit, 0, None),
+                            ("jitter", jitter, warn, crit, 0, None)]
             else:
                 state, text = state
                 perfdata = []
@@ -147,8 +151,8 @@ def check_ntp(item, params, info):
 def check_ntp_summary(_no_item, params, info):
     if type(params) == tuple:
         params = {
-            "ntp_levels" : params,
-            "alert_delay" : (300, 3600),
+            "ntp_levels": params,
+            "alert_delay": (300, 3600),
         }
     # No information at all? NTP daemon not running or timeout in ntpq -p
     if len(info) == 0:
@@ -157,10 +161,11 @@ def check_ntp_summary(_no_item, params, info):
 
     # We only are interested in our system peer or pulse per second source (pps)
     for line in info:
-        if line[0] in [ "*", "o" ]:
+        if line[0] in ["*", "o"]:
             state, text, perfdata = check_ntp(line[1], params["ntp_levels"], [line])
             text += " (synchronized on %s)" % line[1]
-            set_item_state(None, ("sync", time.time(), state, "last successful sync")) # remember last successfull sync
+            set_item_state(None, ("sync", time.time(), state,
+                                  "last successful sync"))  # remember last successfull sync
             yield state, text, perfdata
             return
 
@@ -189,20 +194,19 @@ def check_ntp_summary(_no_item, params, info):
         yield 1, levelstext
 
 
-
 check_info["ntp"] = {
-    'check_function':          check_ntp,
-    'inventory_function':      inventory_ntp,
-    'service_description':     'NTP Peer %s',
-    'has_perfdata':            True,
-    'group':                   'ntp_peer',
+    'check_function': check_ntp,
+    'inventory_function': inventory_ntp,
+    'service_description': 'NTP Peer %s',
+    'has_perfdata': True,
+    'group': 'ntp_peer',
 }
 
 check_info["ntp.time"] = {
-    'check_function':          check_ntp_summary,
-    'inventory_function':      inventory_ntp_summary,
-    'service_description':     'NTP Time',
-    'has_perfdata':            True,
-    'group':                   'ntp_time',
+    'check_function': check_ntp_summary,
+    'inventory_function': inventory_ntp_summary,
+    'service_description': 'NTP Time',
+    'has_perfdata': True,
+    'group': 'ntp_time',
     'default_levels_variable': "ntp_time_default_levels",
 }

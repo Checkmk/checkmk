@@ -27,74 +27,74 @@
 # lookup tables for check implementation
 # Taken from swFCPortPhyState
 brocade_fcport_phystates = {
-    0  : '',
-    1  : 'no card',
-    2  : 'no transceiver',
-    3  : 'laser fault',
-    4  : 'no light',
-    5  : 'no sync',
-    6  : 'in sync',
-    7  : 'port fault',
-    8  : 'diag fault',
-    9  : 'lock ref',
-    10 : 'validating',
-    11 : 'invalid module',
-    12 : 'no sig det',
-    13 : 'unknown',
+    0: '',
+    1: 'no card',
+    2: 'no transceiver',
+    3: 'laser fault',
+    4: 'no light',
+    5: 'no sync',
+    6: 'in sync',
+    7: 'port fault',
+    8: 'diag fault',
+    9: 'lock ref',
+    10: 'validating',
+    11: 'invalid module',
+    12: 'no sig det',
+    13: 'unknown',
 }
 
 # Taken from swFCPortOpStatus
-brocade_fcport_opstates  = {
-    0 : 'unknown',
-    1 : 'online',
-    2 : 'offline',
-    3 : 'testing',
-    4 : 'faulty',
+brocade_fcport_opstates = {
+    0: 'unknown',
+    1: 'online',
+    2: 'offline',
+    3: 'testing',
+    4: 'faulty',
 }
 
 # Taken from swFCPortAdmStatus
 brocade_fcport_admstates = {
-    0 : '',
-    1 : 'online',
-    2 : 'offline',
-    3 : 'testing',
-    4 : 'faulty',
+    0: '',
+    1: 'online',
+    2: 'offline',
+    3: 'testing',
+    4: 'faulty',
 }
 
 # Taken from swFCPortSpeed
 brocade_fcport_speed = {
-    0 : 'unknown',
-    1 : '1Gbit',
-    2 : '2Gbit',
-    3 : 'auto-Neg',
-    4 : '4Gbit',
-    5 : '8Gbit',
-    6 : '10Gbit',
-    7 : 'unknown',
-    8 : '16Gbit',
+    0: 'unknown',
+    1: '1Gbit',
+    2: '2Gbit',
+    3: 'auto-Neg',
+    4: '4Gbit',
+    5: '8Gbit',
+    6: '10Gbit',
+    7: 'unknown',
+    8: '16Gbit',
 }
 
 # Taken from swNbBaudRate
 isl_speed = {
-        "1": 0, # other (1) - None of the following.
-        "2": 0.155, # oneEighth (2) - 155 Mbaud.
-        "4": 0.266, # quarter (4) - 266 Mbaud.
-        "8": 0.532, # half (8) - 532 Mbaud.
-        "16": 1, # full (16) - 1 Gbaud.
-        "32": 2, # double (32) - 2 Gbaud.
-        "64": 4, # quadruple (64) - 4 Gbaud.
-        "128": 8, # octuple (128) - 8 Gbaud.
-        "256": 10, # decuple (256) - 10 Gbaud.
-        "512": 16, # sexdecuple (512) - 16 Gbaud
+    "1": 0,  # other (1) - None of the following.
+    "2": 0.155,  # oneEighth (2) - 155 Mbaud.
+    "4": 0.266,  # quarter (4) - 266 Mbaud.
+    "8": 0.532,  # half (8) - 532 Mbaud.
+    "16": 1,  # full (16) - 1 Gbaud.
+    "32": 2,  # double (32) - 2 Gbaud.
+    "64": 4,  # quadruple (64) - 4 Gbaud.
+    "128": 8,  # octuple (128) - 8 Gbaud.
+    "256": 10,  # decuple (256) - 10 Gbaud.
+    "512": 16,  # sexdecuple (512) - 16 Gbaud
 }
 
 factory_settings["brocade_fcport_default_levels"] = {
-    "rxcrcs":           (3.0, 20.0),   # allowed percentage of CRC errors
-    "rxencoutframes":   (3.0, 20.0),   # allowed percentage of Enc-OUT Frames
-    "rxencinframes":    (3.0, 20.0),   # allowed percentage of Enc-In Frames
-    "notxcredits":      (3.0, 20.0),   # allowed percentage of No Tx Credits
-    "c3discards":       (3.0, 20.0),   # allowed percentage of C3 discards
-    "assumed_speed":    2.0,           # used if speed not available in SNMP data
+    "rxcrcs": (3.0, 20.0),  # allowed percentage of CRC errors
+    "rxencoutframes": (3.0, 20.0),  # allowed percentage of Enc-OUT Frames
+    "rxencinframes": (3.0, 20.0),  # allowed percentage of Enc-In Frames
+    "notxcredits": (3.0, 20.0),  # allowed percentage of No Tx Credits
+    "c3discards": (3.0, 20.0),  # allowed percentage of C3 discards
+    "assumed_speed": 2.0,  # used if speed not available in SNMP data
 }
 
 
@@ -121,7 +121,7 @@ def parse_brocade_fcport(info):
         # here we go through ports of the IF-NIB, but consider only FC ports (type 56)
         # and assume that the sequence number of the FC port here is the same
         # as the sequence number in the borcade MIB (pindex = item_index)
-        if_table = [x + y if y[0] == "56" else ["", x[-2]] for x,y in zip(if_info, speed_info)]
+        if_table = [x + y if y[0] == "56" else ["", x[-2]] for x, y in zip(if_info, speed_info)]
     else:
         if_table = [x + ["", x[-2]] for x in if_info]
 
@@ -157,26 +157,26 @@ def parse_brocade_fcport(info):
                 islspeed = isl_speed.get(isl_ports[index])
 
             parsed.append({
-                "index":          int(index),
-                "phystate":       int(phystate),
-                "opstate":        int(opstate),
-                "admstate":       int(admstate),
-                "txwords":        int(txwords),
-                "rxwords":        int(rxwords),
-                "txframes":       int(txframes),
-                "rxframes":       int(rxframes),
-                "notxcredits":    int(notxcredits),
-                "rxcrcs":         int(rxcrcs),
-                "rxencinframes":  int(rxencinframes),
+                "index": int(index),
+                "phystate": int(phystate),
+                "opstate": int(opstate),
+                "admstate": int(admstate),
+                "txwords": int(txwords),
+                "rxwords": int(rxwords),
+                "txframes": int(txframes),
+                "rxframes": int(rxframes),
+                "notxcredits": int(notxcredits),
+                "rxcrcs": int(rxcrcs),
+                "rxencinframes": int(rxencinframes),
                 "rxencoutframes": int(rxencoutframes),
-                "c3discards":     int(c3discards),
-                "brocade_speed":  brocade_speed,
-                "portname":       portname,
-                "porttype":       porttype,
-                "ifspeed":        int(ifspeed),
-                "is_isl":         index in isl_ports,
-                "islspeed":       islspeed,             # Might be None
-                "bbcredits":      bbcredits,            # Might be None
+                "c3discards": int(c3discards),
+                "brocade_speed": brocade_speed,
+                "portname": portname,
+                "porttype": porttype,
+                "ifspeed": int(ifspeed),
+                "is_isl": index in isl_ports,
+                "islspeed": islspeed,  # Might be None
+                "bbcredits": bbcredits,  # Might be None
             })
         except ValueError:
             continue
@@ -191,18 +191,22 @@ def inventory_brocade_fcport(parsed):
         admstate = if_entry["admstate"]
         phystate = if_entry["phystate"]
         opstate = if_entry["opstate"]
-        if brocade_fcport_inventory_this_port(admstate=admstate,
-                                              phystate=phystate,
-                                              opstate=opstate,
-                                              settings=settings):
-            inventory.append((brocade_fcport_getitem(
-                                                number_of_ports=len(parsed),
-                                                index=if_entry["index"],
-                                                portname=if_entry["portname"],
-                                                is_isl=if_entry["is_isl"],
-                                                settings=settings),
-                             '{ "phystate": [%d], "opstate": [%d], "admstate": [%d] }' % \
-                             (phystate, opstate, admstate)))
+        if brocade_fcport_inventory_this_port(
+                admstate=admstate,
+                phystate=phystate,
+                opstate=opstate,
+                settings=settings,
+        ):
+            inventory.append((
+                brocade_fcport_getitem(
+                    number_of_ports=len(parsed),
+                    index=if_entry["index"],
+                    portname=if_entry["portname"],
+                    is_isl=if_entry["is_isl"],
+                    settings=settings),
+                '{ "phystate": [%d], "opstate": [%d], "admstate": [%d] }' % (phystate, opstate,
+                                                                             admstate),
+            ))
     return inventory
 
 
@@ -233,7 +237,7 @@ def check_brocade_fcport(item, params, parsed):
     speed = found_entry["ifspeed"]
 
     this_time = time.time()
-    average = params.get("average") # range in minutes
+    average = params.get("average")  # range in minutes
     bw_thresh = params.get("bw")
 
     summarystate = 0
@@ -245,10 +249,10 @@ def check_brocade_fcport(item, params, parsed):
     # information in the normal table)
     if is_isl and isl_speed is not None:
         gbit = isl_speed
-        speedmsg = ("ISL speed: %.0f Gbit/s"  % isl_speed)
+        speedmsg = ("ISL speed: %.0f Gbit/s" % isl_speed)
 
-    else: # no ISL port
-        if brocade_fcport_speed.get(brocade_speed, "unknown") in [ "auto-Neg", "unknown" ]:
+    else:  # no ISL port
+        if brocade_fcport_speed.get(brocade_speed, "unknown") in ["auto-Neg", "unknown"]:
             if speed > 0:
                 # use actual speed of port if available
                 gbit = speed / 1000
@@ -270,17 +274,17 @@ def check_brocade_fcport(item, params, parsed):
 
     # B A N D W I D T H
     # convert thresholds in percentage into MB/s
-    if bw_thresh is None: # no levels
+    if bw_thresh is None:  # no levels
         warn_bytes, crit_bytes = None, None
     else:
         warn, crit = bw_thresh
         if type(warn) == float:
             warn_bytes = wirespeed * warn / 100.0
-        else: # in MB
+        else:  # in MB
             warn_bytes = warn * 1048576.0
         if type(crit) == float:
             crit_bytes = wirespeed * crit / 100.0
-        else: # in MB
+        else:  # in MB
             crit_bytes = crit * 1048576.0
 
     for what, value in [("In", in_bytes), ("Out", out_bytes)]:
@@ -288,9 +292,11 @@ def check_brocade_fcport(item, params, parsed):
         perfdata.append((what.lower(), value, warn_bytes, crit_bytes, 0, wirespeed))
         # average turned on: use averaged traffic values instead of current ones
         if average:
-            value = get_average("brocade_fcport.%s.%s.avg" % (what, item), this_time, value, average)
+            value = get_average("brocade_fcport.%s.%s.avg" % (what, item), this_time, value,
+                                average)
             output.append("Average (%d min): %s/s" % (average, get_bytes_human_readable(value)))
-            perfaverages.append( ("%s_avg" % what.lower(), value, warn_bytes, crit_bytes, 0, wirespeed))
+            perfaverages.append(("%s_avg" % what.lower(), value, warn_bytes, crit_bytes, 0,
+                                 wirespeed))
 
         # handle levels for in/out
         if crit_bytes != None and value >= crit_bytes:
@@ -305,22 +311,23 @@ def check_brocade_fcport(item, params, parsed):
 
     # R X F R A M E S & T X F R A M E S
     # Put number of frames into performance data (honor averaging)
-    rxframes_rate = get_rate("brocade_fcport.rxframes.%s"  % index, this_time, rxframes)
-    txframes_rate = get_rate("brocade_fcport.txframes.%s"  % index, this_time, txframes)
-    for what, value in [ ("rxframes", rxframes_rate), ("txframes", txframes_rate) ]:
+    rxframes_rate = get_rate("brocade_fcport.rxframes.%s" % index, this_time, rxframes)
+    txframes_rate = get_rate("brocade_fcport.txframes.%s" % index, this_time, txframes)
+    for what, value in [("rxframes", rxframes_rate), ("txframes", txframes_rate)]:
         perfdata.append((what, value))
         if average:
-            value = get_average("brocade_fcport.%s.%s.avg" % (what, item), this_time, value, average)
-            perfdata.append( ("%s_avg" % what, value) )
+            value = get_average("brocade_fcport.%s.%s.avg" % (what, item), this_time, value,
+                                average)
+            perfdata.append(("%s_avg" % what, value))
 
     # E R R O R C O U N T E R S
     # handle levels on error counters
     for descr, counter, value, ref in [
-           ("CRC errors",           "rxcrcs",              rxcrcs,          rxframes_rate, ),
-           ("ENC-Out",              "rxencoutframes",      rxencoutframes,  rxframes_rate, ),
-           ("ENC-In",               "rxencinframes",       rxencinframes,   rxframes_rate, ),
-           ("C3 discards",          "c3discards",          c3discards,      txframes_rate, ),
-           ("No TX buffer credits", "notxcredits",         notxcredits,     txframes_rate, ),
+        ("CRC errors", "rxcrcs", rxcrcs, rxframes_rate),
+        ("ENC-Out", "rxencoutframes", rxencoutframes, rxframes_rate),
+        ("ENC-In", "rxencinframes", rxencinframes, rxframes_rate),
+        ("C3 discards", "c3discards", c3discards, txframes_rate),
+        ("No TX buffer credits", "notxcredits", notxcredits, txframes_rate),
     ]:
         per_sec = get_rate("brocade_fcport.%s.%s" % (counter, index), this_time, value)
         perfdata.append((counter, per_sec))
@@ -329,7 +336,7 @@ def check_brocade_fcport(item, params, parsed):
         if average:
             per_sec_avg = get_average("brocade_fcport.%s.%s.avg" % \
                     (counter, item), this_time, per_sec, average)
-            perfdata.append( ("%s_avg" % counter, per_sec_avg ) )
+            perfdata.append(("%s_avg" % counter, per_sec_avg))
 
         # compute error rate (errors in relation to number of frames) (from 0.0 to 1.0)
         if ref > 0 or per_sec > 0:
@@ -340,8 +347,8 @@ def check_brocade_fcport(item, params, parsed):
 
         # Honor averaging of error rate
         if average:
-            rate = get_average("brocade_fcport.%s.%s.avgrate" %
-                    (counter, item), this_time, rate, average)
+            rate = get_average("brocade_fcport.%s.%s.avgrate" % (counter, item), this_time, rate,
+                               average)
             text += ", Average: %.2f%%" % (rate * 100.0)
 
         error_percentage = rate * 100.0
@@ -359,7 +366,8 @@ def check_brocade_fcport(item, params, parsed):
     for dev_state, state_key, state_info, warn_states, state_map in [
         (found_entry["phystate"], "phystate", "Physical", [1, 6], brocade_fcport_phystates),
         (found_entry["opstate"], "opstate", "Operational", [1, 3], brocade_fcport_opstates),
-        (found_entry["admstate"], "admstate", "Administrative", [0, 1, 3], brocade_fcport_admstates),
+        (found_entry["admstate"], "admstate", "Administrative", [0, 1, 3],
+         brocade_fcport_admstates),
     ]:
         errorflag = ""
         if params.get(state_key) != None and dev_state != params[state_key] \
@@ -374,7 +382,7 @@ def check_brocade_fcport(item, params, parsed):
 
     if bbcredits is not None:
         bbcredit_rate = get_rate("brocade_fcport.bbcredit.%s" % (item), this_time, bbcredits)
-        perfdata.append( ("fc_bbcredit_zero", bbcredit_rate) )
+        perfdata.append(("fc_bbcredit_zero", bbcredit_rate))
 
     return (summarystate, ', '.join(output), perfdata)
 

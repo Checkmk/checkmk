@@ -28,8 +28,8 @@
 def parse_brocade_sys(info):
     try:
         return {
-            "cpu_util"          : int(info[0][0]),
-            "mem_used_percent"  : int(info[0][1]),
+            "cpu_util": int(info[0][0]),
+            "mem_used_percent": int(info[0][1]),
         }
     except (IndexError, ValueError):
         return {}
@@ -44,19 +44,20 @@ def parse_brocade_sys(info):
 #   |                                                |___/                 |
 #   '----------------------------------------------------------------------'
 
+
 def inventory_brocade_sys_mem(parsed):
-    return [ (None, None) ]
+    return [(None, None)]
 
 
 def check_brocade_sys_mem(item, params, parsed):
     mem_used_percent = parsed["mem_used_percent"]
     infotext = "%s%%" % mem_used_percent
     if params is None:
-        perfdata = [ ("mem_used_percent", mem_used_percent) ]
+        perfdata = [("mem_used_percent", mem_used_percent)]
         return 0, infotext, perfdata
     else:
         warn, crit = params
-        perfdata = [ ("mem_used_percent", mem_used_percent, warn, crit) ]
+        perfdata = [("mem_used_percent", mem_used_percent, warn, crit)]
         levelstext = " (warn/crit at %d/%d%%)" % (warn, crit)
         if mem_used_percent >= crit:
             status = 2
@@ -70,11 +71,11 @@ def check_brocade_sys_mem(item, params, parsed):
 
 
 check_info['brocade_sys.mem'] = {
-    'inventory_function'    : inventory_brocade_sys_mem,
-    'check_function'        : check_brocade_sys_mem,
-    'service_description'   : 'Memory used',
-    'group'                 : 'memory_relative',
-    'has_perfdata'          : True,
+    'inventory_function': inventory_brocade_sys_mem,
+    'check_function': check_brocade_sys_mem,
+    'service_description': 'Memory used',
+    'group': 'memory_relative',
+    'has_perfdata': True,
 }
 
 #.
@@ -89,7 +90,7 @@ check_info['brocade_sys.mem'] = {
 
 
 def inventory_brocade_sys(parsed):
-    return [ (None, None) ]
+    return [(None, None)]
 
 
 def check_brocade_sys(item, params, parsed):
@@ -97,16 +98,19 @@ def check_brocade_sys(item, params, parsed):
 
 
 check_info['brocade_sys'] = {
-    'parse_function'        : parse_brocade_sys,
-    'inventory_function'    : inventory_brocade_sys,
-    'check_function'        : check_brocade_sys,
-    'service_description'   : 'CPU utilization',
-    'snmp_info'             : ('.1.3.6.1.4.1.1588.2.1.1.1.26', [ # Brocade-REG-MIB
-                                            "1",    # swCpuUsage
-                                            "6",    # swMemoryUsage
-                                ]),
-    'snmp_scan_function'    : lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.1588.2.1.1"),
-    'group'                 : 'cpu_utilization',
-    'includes'              : [ 'cpu_util.include' ],
-    'has_perfdata'          : True,
+    'parse_function': parse_brocade_sys,
+    'inventory_function': inventory_brocade_sys,
+    'check_function': check_brocade_sys,
+    'service_description': 'CPU utilization',
+    'snmp_info': (
+        '.1.3.6.1.4.1.1588.2.1.1.1.26',
+        [  # Brocade-REG-MIB
+            "1",  # swCpuUsage
+            "6",  # swMemoryUsage
+        ]),
+    'snmp_scan_function':
+        lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.1588.2.1.1"),
+    'group': 'cpu_utilization',
+    'includes': ['cpu_util.include'],
+    'has_perfdata': True,
 }

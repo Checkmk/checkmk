@@ -27,10 +27,11 @@
 #TODO Cleanup the whole status text mapping in
 # ipmi_common.include, ipmi_sensors.include, ipmi
 
+
 def ipmi_ignore_entry(name, status_txt, rules):
     if status_txt is None:
         return True
-    ignored_sensors      = rules.get("ignored_sensors", [])
+    ignored_sensors = rules.get("ignored_sensors", [])
     ignored_sensorstates = rules.get("ignored_sensorstates", [])
     for cmp_status in ignored_sensorstates:
         if status_txt.startswith(cmp_status):
@@ -58,9 +59,11 @@ def ipmi_common_check_levels(sensorname, val, params):
             if levels.get("lower"):
                 warn, crit = levels["lower"]
                 if val < crit:
-                    crit_texts.append("%s %s (warn/crit below %s/%s)" % (sensorname, val, warn, crit))
+                    crit_texts.append(
+                        "%s %s (warn/crit below %s/%s)" % (sensorname, val, warn, crit))
                 elif val < warn:
-                    warn_texts.append("%s %s (warn/crit below %s/%s)" % (sensorname, val, warn, crit))
+                    warn_texts.append(
+                        "%s %s (warn/crit below %s/%s)" % (sensorname, val, warn, crit))
             if levels.get("upper"):
                 warn, crit = levels["upper"]
                 if val >= crit:
@@ -72,13 +75,13 @@ def ipmi_common_check_levels(sensorname, val, params):
 
 
 def check_ipmi_common_detailed(item, params, data, what, status_txt_mapping):
-    val        = data["value"]
-    unit       = data["unit"]
+    val = data["value"]
+    unit = data["unit"]
     status_txt = data["status_txt"]
-    crit_low   = data["crit_low"]
-    warn_low   = data["warn_low"]
-    warn_high  = data["warn_high"]
-    crit_high  = data["crit_high"]
+    crit_low = data["crit_low"]
+    warn_low = data["warn_low"]
+    warn_high = data["warn_high"]
+    crit_high = data["crit_high"]
 
     # stay compatible with older versions
     infotext = status_txt
@@ -95,21 +98,19 @@ def check_ipmi_common_detailed(item, params, data, what, status_txt_mapping):
             old_perf_val = str(val)
             if unit is not None:
                 old_perf_val += unit
-            perfdata = [ (item, old_perf_val, warn_high, crit_high) ]
+            perfdata = [(item, old_perf_val, warn_high, crit_high)]
 
         elif what == "freeipmi" and \
              ("temperature" in item.lower() or "temp" in item.lower()):
             # Do not save performance data for FANs. This produces
             # much data and is - in my opinion - useless.
-            perfdata = [ ("value", val, None, crit_high) ]
+            perfdata = [("value", val, None, crit_high)]
 
     warn_texts = []
     crit_texts = []
-    state      = status_txt_mapping(status_txt)
+    state = status_txt_mapping(status_txt)
     if state:
-        for ty, warn, crit in [
-            ("below", warn_low,  crit_low),
-            ("at",    warn_high, crit_high) ]:
+        for ty, warn, crit in [("below", warn_low, crit_low), ("at", warn_high, crit_high)]:
             if warn is not None and crit is None:
                 warn_texts.append("warn %s %s" % (ty, warn))
             elif warn is not None and crit is not None:
@@ -138,23 +139,23 @@ def check_ipmi_common_detailed(item, params, data, what, status_txt_mapping):
 
 
 def check_ipmi_common_summarized(params, parsed, status_txt_mapping):
-    states        = [0]
-    warn_texts    = []
-    crit_texts    = []
-    ok_texts      = []
+    states = [0]
+    warn_texts = []
+    crit_texts = []
+    ok_texts = []
     skipped_texts = []
     ambient_count = 0
-    ambient_sum   = 0.0
+    ambient_sum = 0.0
 
     for sensorname, data in parsed.items():
-        val        = data["value"]
-        unit       = data["unit"]
+        val = data["value"]
+        unit = data["unit"]
         status_txt = data["status_txt"]
 
         # Skip datasets which have no valid data (zero value, no unit and state nc)
         if ipmi_ignore_entry(sensorname, status_txt, params) or \
            (val == '0.000' and unit is None and status_txt.startswith('nc')):
-            skipped_texts.append( "%s (%s)" % (sensorname, status_txt) )
+            skipped_texts.append("%s (%s)" % (sensorname, status_txt))
             continue
 
         sensorstate = status_txt_mapping(status_txt)
@@ -180,32 +181,33 @@ def check_ipmi_common_summarized(params, parsed, status_txt_mapping):
         if "amb" in sensorname or "Ambient" in sensorname:
             try:
                 ambient_count += 1
-                ambient_sum   += float(val)
+                ambient_sum += float(val)
             except:
                 pass
 
     if ambient_count > 0:
-        perfdata = [ ("ambient_temp", ambient_sum / ambient_count) ]
+        perfdata = [("ambient_temp", ambient_sum / ambient_count)]
     else:
         perfdata = []
 
-    infotexts  = [ "%d sensors" % len(parsed) ]
-    for title, texts, extrainfo, text_state in [
-        ("OK",   ok_texts,   "",     0), ("WARN",    warn_texts,    "(!)", 1),
-        ("CRIT", crit_texts, "(!!)", 2), ("skipped", skipped_texts, "",    0) ]:
+    infotexts = ["%d sensors" % len(parsed)]
+    for title, texts, extrainfo, text_state in [("OK", ok_texts, "", 0),
+                                                ("WARN", warn_texts, "(!)", 1),
+                                                ("CRIT", crit_texts, "(!!)", 2),
+                                                ("skipped", skipped_texts, "", 0)]:
         if len(parsed) == len(texts):
             # Everything OK
             infotext = "%d sensors %s" % (len(parsed), title)
             if extrainfo:
                 infotext += ": %s%s" % (", ".join(texts), extrainfo)
-            infotexts = [ infotext ]
+            infotexts = [infotext]
             break
 
         elif texts:
             infotext = "%d %s" % (len(texts), title)
             if extrainfo:
                 infotext += ": %s%s" % (", ".join(texts), extrainfo)
-            infotexts.append( infotext )
+            infotexts.append(infotext)
 
             if text_state:
                 states.append(text_state)

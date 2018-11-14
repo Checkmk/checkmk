@@ -29,9 +29,8 @@
 # hirni  22
 # newdb  47 772 65
 
-
 factory_settings["oracle_sessions_default_levels"] = {
-    "sessions_abs" : (150, 300),
+    "sessions_abs": (150, 300),
 }
 
 
@@ -42,16 +41,16 @@ def parse_oracle_sessions(info):
             # new format with max values
             sid, cursess, maxsess, curmax = line
             parsed.setdefault(sid, {
-                 "cursess" : int(cursess),
-                 "maxsess" : int(maxsess),
-                 "curmax"  : int(curmax),
+                "cursess": int(cursess),
+                "maxsess": int(maxsess),
+                "curmax": int(curmax),
             })
 
         elif len(line) == 2:
             # old agent format!
             sid, cursess = line
             parsed.setdefault(sid, {
-                 "cursess" : int(cursess),
+                "cursess": int(cursess),
             })
 
     return parsed
@@ -64,17 +63,17 @@ def inventory_oracle_sessions(parsed):
 
 def check_oracle_sessions(item, params, parsed):
     if type(params) == tuple:
-        params = { "sessions_abs" : params }
+        params = {"sessions_abs": params}
 
     if item in parsed and 'cursess' in parsed[item]:
-        data         = parsed[item]
-        sessions     = data['cursess']
+        data = parsed[item]
+        sessions = data['cursess']
         sessions_max = data.get('maxsess')
 
         if sessions_max is not None:
-            state         = 0
-            infotext      = "%d of %d sessions" % (sessions, sessions_max)
-            sessions_perc = 100.0*sessions/sessions_max
+            state = 0
+            infotext = "%d of %d sessions" % (sessions, sessions_max)
+            sessions_perc = 100.0 * sessions / sessions_max
             infotext_perc = "%.2f%%" % sessions_perc
             if "sessions_perc" in params:
                 warn_perc, crit_perc = params["sessions_perc"]
@@ -99,7 +98,7 @@ def check_oracle_sessions(item, params, parsed):
                 state = 1
             if state:
                 infotext += " (warn/crit at %d/%d)" % (warn, crit)
-        yield state, infotext, [ ("sessions", sessions, warn, crit, 0, sessions_max) ]
+        yield state, infotext, [("sessions", sessions, warn, crit, 0, sessions_max)]
 
         return
 
@@ -110,11 +109,11 @@ def check_oracle_sessions(item, params, parsed):
 
 
 check_info["oracle_sessions"] = {
-    "parse_function"          : parse_oracle_sessions,
-    'inventory_function'      : inventory_oracle_sessions,
-    'check_function'          : check_oracle_sessions,
-    'service_description'     : 'ORA %s Sessions',
-    'has_perfdata'            : True,
-    'group'                   : 'oracle_sessions',
-    'default_levels_variable' : 'oracle_sessions_default_levels'
+    "parse_function": parse_oracle_sessions,
+    'inventory_function': inventory_oracle_sessions,
+    'check_function': check_oracle_sessions,
+    'service_description': 'ORA %s Sessions',
+    'has_perfdata': True,
+    'group': 'oracle_sessions',
+    'default_levels_variable': 'oracle_sessions_default_levels'
 }

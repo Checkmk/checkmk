@@ -24,9 +24,10 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+
 def check_fan(rpm, params):
     if type(params) == tuple:
-        params = { "lower" : params }
+        params = {"lower": params}
 
     warn, crit = params["lower"]
     warn_upper, crit_upper = params.get("upper", (None, None))
@@ -38,7 +39,7 @@ def check_fan(rpm, params):
 
     perfdata = []
     if params.get("output_metrics"):
-        perfdata = [ ("fan", rpm, warn, crit, warn_upper, crit_upper)]
+        perfdata = [("fan", rpm, warn, crit, warn_upper, crit_upper)]
 
     # Note that None < int
     if rpm < crit or crit_upper != None and rpm >= crit_upper:

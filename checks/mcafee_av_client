@@ -24,18 +24,16 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-
 # <<<mcafee_av_client>>>
 # 2015/05/06
 
-
 factory_settings['mcafee_av_client_default_levels'] = {
-    'signature_age' : ( 86400, 7*86400 ),
+    'signature_age': (86400, 7 * 86400),
 }
 
 
 def inventory_mcafee_av_client(info):
-    return [ (None, {}) ]
+    return [(None, {})]
 
 
 def check_mcafee_av_client(_no_item, params, info):
@@ -59,17 +57,16 @@ def check_mcafee_av_client(_no_item, params, info):
     infotext = "Last update of signatures %s ago" % (get_age_human_readable(age))
 
     if state > 0:
-        infotext += " (warn/crit at %s/%s)" % (
-            get_age_human_readable(warn),
-            get_age_human_readable(crit))
+        infotext += " (warn/crit at %s/%s)" % (get_age_human_readable(warn),
+                                               get_age_human_readable(crit))
 
     return state, infotext
 
 
 check_info['mcafee_av_client'] = {
-    'check_function'            : check_mcafee_av_client,
-    'inventory_function'        : inventory_mcafee_av_client,
-    'service_description'       : 'McAfee AV',
-    'default_levels_variable'   : 'mcafee_av_client_default_levels',
-    'group'                     : 'mcafee_av_client',
+    'check_function': check_mcafee_av_client,
+    'inventory_function': inventory_mcafee_av_client,
+    'service_description': 'McAfee AV',
+    'default_levels_variable': 'mcafee_av_client_default_levels',
+    'group': 'mcafee_av_client',
 }

@@ -28,7 +28,8 @@
 def inventory_brocade_info(info):
     data = "".join(brocade_info_try_it(info))
     if data != "----":
-        return [ ( None, None ) ]
+        return [(None, None)]
+
 
 def brocade_info_try_it(info):
     try:
@@ -37,7 +38,7 @@ def brocade_info_try_it(info):
         model = "-"
     try:
         wwn = info[2][0][0]
-        wwn = " ".join([ "%02X" % ord(tok) for tok in wwn ])
+        wwn = " ".join(["%02X" % ord(tok) for tok in wwn])
     except:
         wwn = "-"
     try:
@@ -51,6 +52,7 @@ def brocade_info_try_it(info):
 
     return model, ssn, fw, wwn
 
+
 def brocade_info_parse_wwn(val):
     if val == "":
         val = "-"
@@ -58,12 +60,13 @@ def brocade_info_parse_wwn(val):
         val = ":".join(val.split(" ")[:8])
     return val
 
+
 def check_brocade_info(item, params, info):
     model, ssn, fw, wwn = brocade_info_try_it(info)
     data = "".join((model, ssn, fw, wwn))
     if data != "----":
         wwn = brocade_info_parse_wwn(wwn)
-        infotext = "Model: %s, SSN: %s, Firmware Version: %s, WWN: %s" % ( model, ssn, fw, wwn )
+        infotext = "Model: %s, SSN: %s, Firmware Version: %s, WWN: %s" % (model, ssn, fw, wwn)
         return 0, infotext
     return 3, "no information found"
 

@@ -48,35 +48,35 @@ def _certificate_args(address_family, address, settings):
 
     if "cert_host" in settings:
         if settings.get('proxy'):
-            args += [ '-I', settings['proxy'] ]
-            args += [ '-H', settings['cert_host'] ]
+            args += ['-I', settings['proxy']]
+            args += ['-H', settings['cert_host']]
             args.append('--ssl')
             args += ['-j', 'CONNECT']
         elif settings.get("sni"):
-            args += [ '-H', settings['cert_host'] ]
+            args += ['-H', settings['cert_host']]
         else:
-            args += [ '-I', settings['cert_host'] ]
-            args += [ '-H', address ]
+            args += ['-I', settings['cert_host']]
+            args += ['-H', address]
     else:
-        args += [ "-I", address ]
+        args += ["-I", address]
 
     if address_family == 'ipv6':
         args += ['-6']
 
     if "port" in settings:
-        args += [ '-p', settings["port"] ]
+        args += ['-p', settings["port"]]
 
     if "proxy_auth" in settings:
         username, password = settings["proxy_auth"]
-        args += [ "-b", passwordstore_get_cmdline("%s:%%s" % username, password) ]
+        args += ["-b", passwordstore_get_cmdline("%s:%%s" % username, password)]
 
     if "cert_days" in settings:
         # legacy behavior
         if type(settings["cert_days"]) == int:
-            args += [ '-C', settings["cert_days"] ]
+            args += ['-C', settings["cert_days"]]
         else:
             warn, crit = settings["cert_days"]
-            args += [ '-C', '%d,%d' % (warn, crit) ]
+            args += ['-C', '%d,%d' % (warn, crit)]
 
     if "sni" in settings:
         args += ['--sni']
@@ -93,28 +93,28 @@ def _url_args(address_family, address, settings):
     args = []
 
     if (not _omit_ip(settings)) and ("proxy" not in settings):
-        args += [ "-I", address ]
+        args += ["-I", address]
     elif "proxy" in settings:
-        args += [ "-I", settings["proxy"] ]
+        args += ["-I", settings["proxy"]]
 
     if "vhost" in settings:
-        args += [ "-H", settings["vhost"] ]
+        args += ["-H", settings["vhost"]]
 
     if "virthost" in settings:
         vhost = settings["virthost"][0]
-        args += [ "-H", vhost ]
+        args += ["-H", vhost]
 
     if address_family == 'ipv6':
         args += ['-6']
 
     if "port" in settings:
-        args += [ '-p', settings["port"] ]
+        args += ['-p', settings["port"]]
 
     if "uri" in settings:
-        args += [ '-u', settings["uri"] ]
+        args += ['-u', settings["uri"]]
 
     ssl = settings.get("ssl")
-    if ssl in [ True, "auto" ]:
+    if ssl in [True, "auto"]:
         args += ['--ssl']
     elif ssl:
         args += ['--ssl=%s' % ssl]
@@ -123,37 +123,40 @@ def _url_args(address_family, address, settings):
         args += ['--sni']
 
     if "response_time" in settings:
-        args += [ '-w', '%f' % (settings["response_time"][0]/1000.0),
-                  '-c', '%f' % (settings["response_time"][1]/1000.0) ]
+        args += [
+            '-w',
+            '%f' % (settings["response_time"][0] / 1000.0), '-c',
+            '%f' % (settings["response_time"][1] / 1000.0)
+        ]
 
     if "timeout" in settings:
-        args += [ '-t', settings["timeout"] ]
+        args += ['-t', settings["timeout"]]
 
     if "user_agent" in settings:
-        args += [ '-A', settings["user_agent"] ]
+        args += ['-A', settings["user_agent"]]
 
     for header in settings.get("add_headers", []):
-        args += [ '-k', header ]
+        args += ['-k', header]
 
     if "auth" in settings:
         username, password = settings["auth"]
-        args += [ "-a", passwordstore_get_cmdline("%s:%%s" % username, password) ]
+        args += ["-a", passwordstore_get_cmdline("%s:%%s" % username, password)]
 
     if "proxy_auth" in settings:
         username, password = settings["proxy_auth"]
-        args += [ "-b", passwordstore_get_cmdline("%s:%%s" % username, password) ]
+        args += ["-b", passwordstore_get_cmdline("%s:%%s" % username, password)]
 
     if "onredirect" in settings:
-        args += [ '--onredirect=%s' % settings["onredirect"] ]
+        args += ['--onredirect=%s' % settings["onredirect"]]
 
     if "expect_response" in settings:
-        args += [ '-e', ",".join(settings["expect_response"]) ]
+        args += ['-e', ",".join(settings["expect_response"])]
 
     if "expect_string" in settings:
-        args += [ '-s', settings["expect_string"] ]
+        args += ['-s', settings["expect_string"]]
 
     if "expect_response_header" in settings:
-        args += [ '-d', settings["expect_response_header"] ]
+        args += ['-d', settings["expect_response_header"]]
 
     if "expect_regex" in settings:
         if len(settings['expect_regex']) >= 4 and settings['expect_regex'][3]:
@@ -171,19 +174,19 @@ def _url_args(address_family, address, settings):
 
     if "post_data" in settings:
         data, content_type = settings["post_data"]
-        args += [ '-P', data, '-T', content_type ]
+        args += ['-P', data, '-T', content_type]
 
     if "method" in settings:
-        args += [ '-j', settings["method"] ]
+        args += ['-j', settings["method"]]
 
     if settings.get("no_body"):
         args += ['--no-body']
 
     if "page_size" in settings:
-        args += [ '-m', '%d:%d' % settings["page_size"] ]
+        args += ['-m', '%d:%d' % settings["page_size"]]
 
     if "max_age" in settings:
-        args += [ '-M', settings["max_age"] ]
+        args += ['-M', settings["max_age"]]
 
     # FIXME: This option is deprecated. According to the monitoring-plugins
     # the "urlize" plugin should be used.
@@ -226,8 +229,8 @@ def check_http_description(params):
 
 
 active_check_info['http'] = {
-    "command_line"        : '$USER1$/check_http $ARG1$',
-    "argument_function"   : check_http_arguments,
-    "service_description" : check_http_description,
-    "has_perfdata"        : True,
+    "command_line": '$USER1$/check_http $ARG1$',
+    "argument_function": check_http_arguments,
+    "service_description": check_http_description,
+    "has_perfdata": True,
 }

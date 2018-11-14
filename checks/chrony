@@ -24,11 +24,11 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-ntp_default_levels = (10, 200.0, 500.0) # stratum, ms offset
+ntp_default_levels = (10, 200.0, 500.0)  # stratum, ms offset
 
 factory_settings["ntp_time_default_levels"] = {
-    "ntp_levels" : ntp_default_levels,
-    "alert_delay" : (300, 3600),
+    "ntp_levels": ntp_default_levels,
+    "alert_delay": (300, 3600),
 }
 
 # Example output from agent:
@@ -46,6 +46,7 @@ factory_settings["ntp_time_default_levels"] = {
 # <<<chrony>>>
 # 506 Cannot talk to daemon
 
+
 def parse_chrony(info):
     parsed = {}
     for line in info:
@@ -53,6 +54,7 @@ def parse_chrony(info):
             varname, value = " ".join(line).split(":", 1)
             parsed[varname.strip()] = value.strip()
     return parsed
+
 
 # We monitor all servers we have reached at least once
 def inventory_chrony(info):
@@ -76,7 +78,7 @@ def check_chrony(_no_item, params, info):
     crit_stratum, warn, crit = params["ntp_levels"]
 
     # Check offset and stratum, output a few info texsts
-    offset = float(parsed["System time"].split()[0]) * 1000 # converted to ms
+    offset = float(parsed["System time"].split()[0]) * 1000  # converted to ms
     stratum = int(parsed["Stratum"])
 
     # Check stratum
@@ -95,17 +97,17 @@ def check_chrony(_no_item, params, info):
         status = 1
     if status:
         infotext += " (warn/crit at %.4f/%.4f ms)" % (warn, crit)
-    yield status, infotext, [ ("offset", offset, warn, crit, 0, None) ]
+    yield status, infotext, [("offset", offset, warn, crit, 0, None)]
 
     # Show additional information
     yield 0, "reference: %s" % parsed["Reference ID"]
 
 
 check_info["chrony"] = {
-    'check_function':          check_chrony,
-    'inventory_function':      inventory_chrony,
-    'service_description':     'NTP Time',
-    'has_perfdata':            True,
-    'group':                   'ntp_time',
+    'check_function': check_chrony,
+    'inventory_function': inventory_chrony,
+    'service_description': 'NTP Time',
+    'has_perfdata': True,
+    'group': 'ntp_time',
     'default_levels_variable': "ntp_time_default_levels",
 }

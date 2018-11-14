@@ -24,6 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+
 def check_dns_arguments(params):
     description, settings = params
     args = '-H %s' % quote_shell_string(description)
@@ -37,8 +38,8 @@ def check_dns_arguments(params):
     if "expected_address" in settings:
         # Convert from old (str) to new (list of strings)
         exp = settings["expected_address"]
-        if type(exp) in ( str, unicode ):
-            exp = [ exp ]
+        if type(exp) in (str, unicode):
+            exp = [exp]
         for entry in exp:
             args += ' -a %s' % quote_shell_string(entry)
 
@@ -49,21 +50,21 @@ def check_dns_arguments(params):
         args += ' -w %f' % float(settings["response_time"][0])
         args += ' -c %f' % float(settings["response_time"][1])
 
-
     if "timeout" in settings:
         args += ' -t %d' % int(settings['timeout'])
 
     return args
+
 
 def check_dns_desc(params):
     if "name" in params[1]:
         return params[1]['name']
     return "DNS %s" % params[0]
 
-active_check_info['dns'] = {
-    "command_line"        : '$USER1$/check_dns $ARG1$',
-    "argument_function"   : check_dns_arguments,
-    "service_description" : check_dns_desc,
-    "has_perfdata"        : True,
-}
 
+active_check_info['dns'] = {
+    "command_line": '$USER1$/check_dns $ARG1$',
+    "argument_function": check_dns_arguments,
+    "service_description": check_dns_desc,
+    "has_perfdata": True,
+}

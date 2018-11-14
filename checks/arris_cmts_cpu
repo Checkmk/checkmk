@@ -24,7 +24,8 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-arris_cmts_cpu_default_levels = ( 90, 95 )
+arris_cmts_cpu_default_levels = (90, 95)
+
 
 def inventory_arris_cmts_cpu(info):
     for oid_id, cpu_id, _cpu_idle_util in info:
@@ -37,16 +38,17 @@ def inventory_arris_cmts_cpu(info):
             item = int(oid_id) - 1
             yield item, 'arris_cmts_cpu_default_levels'
 
+
 def check_arris_cmts_cpu(item, params, info):
     if type(params) is tuple:
-        params = { "levels" : params, }
+        params = {"levels": params}
 
     for oid_id, cpu_id, cpu_idle_util in info:
         # see inventory function
         if cpu_id:
             citem = cpu_id
         else:
-            citem = int(oid_id) -1
+            citem = int(oid_id) - 1
 
         if citem == item:
             # We get the IDLE percentage, but need the usage
@@ -55,7 +57,7 @@ def check_arris_cmts_cpu(item, params, info):
 
             infotext = "Current utilization is: %d %% " % cpu_util
             levels = " (warn/crit at %.1f/%.1f %%)" % (warn, crit)
-            perfdata = [ ( "util", cpu_util, warn, crit ) ]
+            perfdata = [("util", cpu_util, warn, crit)]
             if cpu_util >= crit:
                 yield 2, infotext + levels, perfdata
             elif cpu_util >= warn:
@@ -65,17 +67,20 @@ def check_arris_cmts_cpu(item, params, info):
             return
     yield 3, "CPU information not found"
 
+
 check_info["arris_cmts_cpu"] = {
-    "check_function"        : check_arris_cmts_cpu,
-    "inventory_function"    : inventory_arris_cmts_cpu,
-    "service_description"   : "CPU utilization Module %s",
-    "has_perfdata"          : True,
-    "snmp_scan_function"    : arris_cmts_scan_function,
-    "snmp_info"             : ( ".1.3.6.1.4.1.4998.1.1.5.3.1.1.1", [
-                                          OID_END,
-                                          1, # cadCpuCardId
-                                          8, # cadIdleCpuRecentPercent
-                                          ] ),
-    "group"                 : "cpu_utilization_multiitem",
-    "includes"              : [ "arris_cmts.include" ]
+    "check_function": check_arris_cmts_cpu,
+    "inventory_function": inventory_arris_cmts_cpu,
+    "service_description": "CPU utilization Module %s",
+    "has_perfdata": True,
+    "snmp_scan_function": arris_cmts_scan_function,
+    "snmp_info": (
+        ".1.3.6.1.4.1.4998.1.1.5.3.1.1.1",
+        [
+            OID_END,
+            1,  # cadCpuCardId
+            8,  # cadIdleCpuRecentPercent
+        ]),
+    "group": "cpu_utilization_multiitem",
+    "includes": ["arris_cmts.include"]
 }

@@ -24,6 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+
 def check_ftp_arguments(params):
     if type(params) == tuple:
         host, settings = params
@@ -37,9 +38,8 @@ def check_ftp_arguments(params):
         args += ' -p %d' % settings['port']
 
     if "response_time" in settings:
-        args += ' -w %f -c %f' % (
-            settings["response_time"][0]/1000.0,
-            settings["response_time"][1]/1000.0)
+        args += ' -w %f -c %f' % (settings["response_time"][0] / 1000.0,
+                                  settings["response_time"][1] / 1000.0)
 
     if "timeout" in settings:
         args += ' -t %d' % settings["timeout"]
@@ -79,10 +79,10 @@ def check_ftp_get_item(params):
             return "FTP Port " + str(params["port"])
         return "FTP"
 
-active_check_info['ftp'] = {
-    "command_line"        : '$USER1$/check_ftp $ARG1$',
-    "argument_function"   : check_ftp_arguments,
-    "service_description" : check_ftp_get_item,
-    "has_perfdata"        : True,
-}
 
+active_check_info['ftp'] = {
+    "command_line": '$USER1$/check_ftp $ARG1$',
+    "argument_function": check_ftp_arguments,
+    "service_description": check_ftp_get_item,
+    "has_perfdata": True,
+}

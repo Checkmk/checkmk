@@ -24,7 +24,6 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-
 # parsed = {
 #     "Summary" : (13, ""),
 #     "NAME 1"  : (5, INTERFACE),
@@ -33,14 +32,14 @@
 
 
 def inventory_wlc_clients(parsed):
-    return [ (name, {}) for name in parsed ]
+    return [(name, {}) for name in parsed]
 
 
 def check_wlc_clients(item, params, parsed):
     if type(params) == tuple:
         params = {
-            "levels_lower" : (params[1], params[0]),
-            "levels"       : (params[2], params[3]),
+            "levels_lower": (params[1], params[0]),
+            "levels": (params[2], params[3]),
         }
 
     if item in parsed:

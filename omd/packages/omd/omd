@@ -28,6 +28,11 @@
 
 isort:skip_file"""
 
+# Disable YAPF for the moment. There is a larger commit pending that
+# needs to be merged before YAPFing this file.
+
+# yapf: disable
+
 import os
 import sys
 

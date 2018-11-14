@@ -71,36 +71,53 @@ class ModeFolder(WatoMode):
         global_buttons()
         if self._folder.is_disk_folder():
             if config.user.may("wato.rulesets") or config.user.may("wato.seeall"):
-                html.context_button(_("Rulesets"),        watolib.folder_preserving_link([("mode", "ruleeditor")]), "rulesets")
-                html.context_button(_("Manual Checks"),   watolib.folder_preserving_link([("mode", "static_checks")]), "static_checks")
+                html.context_button(
+                    _("Rulesets"), watolib.folder_preserving_link([("mode", "ruleeditor")]),
+                    "rulesets")
+                html.context_button(
+                    _("Manual Checks"), watolib.folder_preserving_link([("mode", "static_checks")]),
+                    "static_checks")
             if self._folder.may("read"):
-                html.context_button(_("Folder Properties"), self._folder.edit_url(backfolder=self._folder), "edit")
+                html.context_button(
+                    _("Folder Properties"), self._folder.edit_url(backfolder=self._folder), "edit")
             if not self._folder.locked_subfolders() and config.user.may(
                     "wato.manage_folders") and self._folder.may("write"):
-                html.context_button(_("New folder"),        self._folder.url([("mode", "newfolder")]), "newfolder")
+                html.context_button(
+                    _("New folder"), self._folder.url([("mode", "newfolder")]), "newfolder")
             if not self._folder.locked_hosts() and config.user.may(
                     "wato.manage_hosts") and self._folder.may("write"):
-                html.context_button(_("New host"),    self._folder.url([("mode", "newhost")]), "new")
-                html.context_button(_("New cluster"), self._folder.url([("mode", "newcluster")]), "new_cluster")
-                html.context_button(_("Bulk import"), self._folder.url([("mode", "bulk_import")]), "bulk_import")
+                html.context_button(_("New host"), self._folder.url([("mode", "newhost")]), "new")
+                html.context_button(
+                    _("New cluster"), self._folder.url([("mode", "newcluster")]), "new_cluster")
+                html.context_button(
+                    _("Bulk import"), self._folder.url([("mode", "bulk_import")]), "bulk_import")
             if config.user.may("wato.services"):
-                html.context_button(_("Bulk discovery"), self._folder.url([("mode", "bulkinventory"), ("all", "1")]),
-                            "inventory")
+                html.context_button(
+                    _("Bulk discovery"), self._folder.url([("mode", "bulkinventory"),
+                                                           ("all", "1")]), "inventory")
             if config.user.may("wato.rename_hosts"):
-                html.context_button(_("Bulk renaming"), self._folder.url([("mode", "bulk_rename_host")]), "rename_host")
+                html.context_button(
+                    _("Bulk renaming"), self._folder.url([("mode", "bulk_rename_host")]),
+                    "rename_host")
             if config.user.may("wato.custom_attributes"):
-                html.context_button(_("Custom attributes"), watolib.folder_preserving_link([("mode", "host_attrs")]), "custom_attr")
+                html.context_button(
+                    _("Custom attributes"),
+                    watolib.folder_preserving_link([("mode", "host_attrs")]), "custom_attr")
             if not self._folder.locked_hosts() and config.user.may(
                     "wato.parentscan") and self._folder.may("write"):
-                html.context_button(_("Parent scan"), self._folder.url([("mode", "parentscan"), ("all", "1")]),
-                            "parentscan")
+                html.context_button(
+                    _("Parent scan"), self._folder.url([("mode", "parentscan"), ("all", "1")]),
+                    "parentscan")
             folder_status_button()
             if config.user.may("wato.random_hosts"):
-                html.context_button(_("Random Hosts"), self._folder.url([("mode", "random_hosts")]), "random")
-            html.context_button(_("Search"), watolib.folder_preserving_link([("mode", "search")]), "search")
+                html.context_button(
+                    _("Random Hosts"), self._folder.url([("mode", "random_hosts")]), "random")
+            html.context_button(
+                _("Search"), watolib.folder_preserving_link([("mode", "search")]), "search")
         else:
             html.context_button(_("Back"), self._folder.parent().url(), "back")
-            html.context_button(_("Refine Search"), self._folder.url([("mode", "search")]), "search")
+            html.context_button(
+                _("Refine Search"), self._folder.url([("mode", "search")]), "search")
 
     def action(self):
         if html.var("_search"):  # just commit to search form
@@ -146,7 +163,7 @@ class ModeFolder(WatoMode):
         selected_host_names = watolib.get_hostnames_from_checkboxes()
         if len(selected_host_names) == 0:
             raise MKUserError(None,
-            _("Please select some hosts before doing bulk operations on hosts."))
+                              _("Please select some hosts before doing bulk operations on hosts."))
 
         if html.var("_bulk_inventory"):
             return "bulkinventory"
@@ -165,7 +182,8 @@ class ModeFolder(WatoMode):
                 raise MKUserError("bulk_moveto", _("Please select the destination folder"))
             target_folder = watolib.Folder.folder(target_folder_path)
             watolib.Folder.current().move_hosts(selected_host_names, target_folder)
-            return None, _("Moved %d hosts to %s") % (len(selected_host_names), target_folder.title())
+            return None, _("Moved %d hosts to %s") % (len(selected_host_names),
+                                                      target_folder.title())
 
         # Move to target folder (from import)
         elif html.var("_bulk_movetotarget"):
@@ -184,7 +202,8 @@ class ModeFolder(WatoMode):
             msg += _(" Its directory is <tt>%s</tt>.") % subfolder.filesystem_path()
         num_hosts = subfolder.num_hosts_recursively()
         if num_hosts:
-            msg += _(" The folder contains <b>%d</b> hosts, which will also be deleted!") % num_hosts
+            msg += _(
+                " The folder contains <b>%d</b> hosts, which will also be deleted!") % num_hosts
         c = wato_confirm(_("Confirm folder deletion"), msg)
 
         if c:
@@ -218,16 +237,19 @@ class ModeFolder(WatoMode):
 
         if not self._folder.locked_hosts():
             menu_items.extend([
-            MenuItem("newhost", _("Create new host"), "new", "hosts",
-              _("Add a new host to the monitoring (agent must be installed)")),
-            MenuItem("newcluster", _("Create new cluster"), "new_cluster", "hosts",
-              _("Use Check_MK clusters if an item can move from one host "
-                "to another at runtime"))])
+                MenuItem("newhost", _("Create new host"), "new", "hosts",
+                         _("Add a new host to the monitoring (agent must be installed)")),
+                MenuItem(
+                    "newcluster", _("Create new cluster"), "new_cluster", "hosts",
+                    _("Use Check_MK clusters if an item can move from one host "
+                      "to another at runtime"))
+            ])
 
         if not self._folder.locked_subfolders():
             menu_items.extend([
-            MenuItem("newfolder", _("Create new folder"), "newfolder", "hosts",
-              _("Folders group your hosts, can inherit attributes and can have permissions."))
+                MenuItem(
+                    "newfolder", _("Create new folder"), "newfolder", "hosts",
+                    _("Folders group your hosts, can inherit attributes and can have permissions."))
             ])
 
         MainMenu(menu_items).show()
@@ -292,9 +314,9 @@ class ModeFolder(WatoMode):
             subfolder.edit_url(subfolder.parent()),
             _("Edit the properties of this folder"),
             "edit",
-            id_ = 'edit_' + subfolder.name(),
-            cssclass = 'edit',
-            style = 'display:none',
+            id_='edit_' + subfolder.name(),
+            cssclass='edit',
+            style='display:none',
         )
 
     def _show_subfolder_delete_button(self, subfolder):
@@ -302,9 +324,9 @@ class ModeFolder(WatoMode):
             watolib.make_action_link([("mode", "folder"), ("_delete_folder", subfolder.name())]),
             _("Delete this folder"),
             "delete",
-            id_ = 'delete_' + subfolder.name(),
-            cssclass = 'delete',
-            style = 'display:none',
+            id_='delete_' + subfolder.name(),
+            cssclass='delete',
+            style='display:none',
         )
 
     def _show_subfolder_infos(self, subfolder):
@@ -318,7 +340,8 @@ class ModeFolder(WatoMode):
             html.write_text(' %s' % cgalias)
             html.br()
             if num > 1 and len(permitted_groups) > 4:
-                html.write_text(_('<i>%d more contact groups</i><br>') % (len(permitted_groups) - num - 1))
+                html.write_text(
+                    _('<i>%d more contact groups</i><br>') % (len(permitted_groups) - num - 1))
                 break
 
         num_hosts = subfolder.num_hosts_recursively()
@@ -344,9 +367,11 @@ class ModeFolder(WatoMode):
             style = "display:none"
 
         html.popup_trigger(
-            html.render_icon("move", title=_("Move this %s to another folder") % what_title,
-                             cssclass="iconbutton"),
-            ident="move_"+obj.name(),
+            html.render_icon(
+                "move",
+                title=_("Move this %s to another folder") % what_title,
+                cssclass="iconbutton"),
+            ident="move_" + obj.name(),
             what="move_to_folder",
             url_vars=[
                 ("what", what),
@@ -516,7 +541,8 @@ class ModeFolder(WatoMode):
                 html.nbsp()
 
             if host.is_cluster():
-                html.icon(_("This host is a cluster of %s") % ", ".join(host.cluster_nodes()), "cluster")
+                html.icon(
+                    _("This host is a cluster of %s") % ", ".join(host.cluster_nodes()), "cluster")
                 html.nbsp()
 
             html.a(hostname, href=host.edit_url())
@@ -545,8 +571,12 @@ class ModeFolder(WatoMode):
 
             # Permissions and Contact groups - through complete recursion and inhertance
             permitted_groups, host_contact_groups, _use_for_services = host.groups()
-            table.cell(_("Permissions"), HTML(", ").join(map(render_contact_group, permitted_groups)))
-            table.cell(_("Contact Groups"), HTML(", ").join(map(render_contact_group, host_contact_groups)))
+            table.cell(
+                _("Permissions"),
+                HTML(", ").join(map(render_contact_group, permitted_groups)))
+            table.cell(
+                _("Contact Groups"),
+                HTML(", ").join(map(render_contact_group, host_contact_groups)))
 
             if not config.wato_hide_hosttags:
                 # Raw tags
@@ -587,7 +617,8 @@ class ModeFolder(WatoMode):
     def _show_host_actions(self, host):
         html.icon_button(host.edit_url(), _("Edit the properties of this host"), "edit")
         if config.user.may("wato.rulesets"):
-            html.icon_button(host.params_url(), _("View the rule based parameters of this host"), "rulesets")
+            html.icon_button(host.params_url(), _("View the rule based parameters of this host"),
+                             "rulesets")
 
         if host.may('read'):
             if config.user.may("wato.services"):
@@ -597,7 +628,9 @@ class ModeFolder(WatoMode):
             image = "services"
             if host.discovery_failed():
                 image = "inventory_failed"
-                msg += ". " + _("The service discovery of this host failed during a previous bulk service discovery.")
+                msg += ". " + _(
+                    "The service discovery of this host failed during a previous bulk service discovery."
+                )
             html.icon_button(host.services_url(), msg, image)
 
         if not host.locked():
@@ -613,8 +646,9 @@ class ModeFolder(WatoMode):
                 html.icon_button(delete_url, _("Delete this host"), "delete")
 
     def _delete_hosts_after_confirm(self, host_names):
-        c = wato_confirm(_("Confirm deletion of %d hosts") % len(host_names),
-                         _("Do you really want to delete the %d selected hosts?") % len(host_names))
+        c = wato_confirm(
+            _("Confirm deletion of %d hosts") % len(host_names),
+            _("Do you really want to delete the %d selected hosts?") % len(host_names))
         if c:
             self._folder.delete_hosts(host_names)
             return "folder", _("Successfully deleted %d hosts") % len(host_names)
@@ -643,11 +677,11 @@ class ModeFolder(WatoMode):
 
     def _move_to_imported_folders(self, host_names_to_move):
         c = wato_confirm(
-                  _("Confirm moving hosts"),
-                  _('You are going to move the selected hosts to folders '
-                    'representing their original folder location in the system '
-                    'you did the import from. Please make sure that you have '
-                    'done an <b>inventory</b> before moving the hosts.'))
+            _("Confirm moving hosts"),
+            _('You are going to move the selected hosts to folders '
+              'representing their original folder location in the system '
+              'you did the import from. Please make sure that you have '
+              'done an <b>inventory</b> before moving the hosts.'))
         if c == False:  # not yet confirmed
             return ""
         elif not c:
@@ -700,8 +734,9 @@ class ModeFolder(WatoMode):
 
 # TODO: Move to WatoHostFolderMode() once mode_edit_host has been migrated
 def delete_host_after_confirm(delname):
-    c = wato_confirm(_("Confirm host deletion"),
-                     _("Do you really want to delete the host <tt>%s</tt>?") % delname)
+    c = wato_confirm(
+        _("Confirm host deletion"),
+        _("Do you really want to delete the host <tt>%s</tt>?") % delname)
     if c:
         watolib.Folder.current().delete_hosts([delname])
         # Delete host files
@@ -838,8 +873,9 @@ class FolderMode(WatoMode):
                     html.text_input("name")
                 else:
                     html.write_text(self._folder.name())
-                html.help(_("This is the name of subdirectory where the files and "
-                    "other folders will be created. You cannot change this later."))
+                html.help(
+                    _("This is the name of subdirectory where the files and "
+                      "other folders will be created. You cannot change this later."))
 
         # Attributes inherited to hosts
         if new:

@@ -67,7 +67,7 @@ from cmk.gui.plugins.wato import (
 
 @gui_background_job.job_registry.register
 class RenameHostsBackgroundJob(watolib.WatoBackgroundJob):
-    gui_title  = _("Host renaming")
+    gui_title = _("Host renaming")
     job_prefix = "rename-hosts"
 
     def __init__(self, title=None):
@@ -121,10 +121,12 @@ class ModeBulkRenameHost(WatoMode):
         return _("Bulk renaming of hosts")
 
     def buttons(self):
-        html.context_button(_("Folder"), watolib.folder_preserving_link([("mode", "folder")]), "back")
+        html.context_button(
+            _("Folder"), watolib.folder_preserving_link([("mode", "folder")]), "back")
         host_renaming_job = RenameHostsBackgroundJob()
         if host_renaming_job.is_available():
-            html.context_button(_("Last result"), host_renaming_job.detail_url(), "background_job_details")
+            html.context_button(
+                _("Last result"), host_renaming_job.detail_url(), "background_job_details")
 
     def action(self):
         renaming_config = self._vs_renaming_config().from_html_vars("")
@@ -138,7 +140,9 @@ class ModeBulkRenameHost(WatoMode):
         if warning:
             return None, warning
 
-        message = _("<b>Do you really want to rename to following hosts? This involves a restart of the monitoring core!</b>")
+        message = _(
+            "<b>Do you really want to rename to following hosts? This involves a restart of the monitoring core!</b>"
+        )
         message += "<table>"
         for _folder, host_name, target_name in renamings:
             message += u"<tr><td>%s</td><td> → %s</td></tr>" % (host_name, target_name)
@@ -173,7 +177,8 @@ class ModeBulkRenameHost(WatoMode):
                 name_collisions.add(name)
 
         if name_collisions:
-            warning = "<b>%s</b><ul>" % _("You cannot do this renaming since the following host names would collide:")
+            warning = "<b>%s</b><ul>" % _(
+                "You cannot do this renaming since the following host names would collide:")
             for name in sorted(list(name_collisions)):
                 warning += "<li>%s</li>" % name
             warning += "</ul>"
@@ -248,90 +253,81 @@ class ModeBulkRenameHost(WatoMode):
 
     def _vs_renaming_config(self):
         return Dictionary(
-            title = _("Bulk Renaming"),
-            render = "form",
-            elements = [
-                ( "recurse",
-                  Checkbox(
-                      title = _("Folder Selection"),
-                      label = _("Include all subfolders"),
-                      default_value = True,
-                )),
-                ( "match_hostname",
-                  RegExp(
-                      title = _("Hostname matching"),
-                      help = _("Only rename hostnames whose names <i>begin</i> with the regular expression entered here."),
-                      mode = RegExp.complete,
-                )),
-                ( "renamings",
-                  ListOf(
-                      self._vs_host_renaming(),
-                      title = _("Renaming Operations"),
-                      add_label = _("Add renaming"),
-                      allow_empty = False,
-                )),
+            title=_("Bulk Renaming"),
+            render="form",
+            elements=[
+                ("recurse",
+                 Checkbox(
+                     title=_("Folder Selection"),
+                     label=_("Include all subfolders"),
+                     default_value=True,
+                 )),
+                ("match_hostname",
+                 RegExp(
+                     title=_("Hostname matching"),
+                     help=
+                     _("Only rename hostnames whose names <i>begin</i> with the regular expression entered here."
+                      ),
+                     mode=RegExp.complete,
+                 )),
+                ("renamings",
+                 ListOf(
+                     self._vs_host_renaming(),
+                     title=_("Renaming Operations"),
+                     add_label=_("Add renaming"),
+                     allow_empty=False,
+                 )),
             ],
-            optional_keys = [],
+            optional_keys=[],
         )
 
     def _vs_host_renaming(self):
         return CascadingDropdown(
-            orientation = "horizontal",
-            choices = [
-                ( "case",
-                  _("Case translation"),
-                  DropdownChoice(
-                      choices = [
-                           ( "upper", _("Convert hostnames to upper case") ),
-                           ( "lower", _("Convert hostnames to lower case") ),
-                      ]
-                )),
-                ( "add_suffix",
-                  _("Add Suffix"),
-                  Hostname()),
-                ( "add_prefix",
-                  _("Add Prefix"),
-                  Hostname()),
-                ( "drop_domain",
-                  _("Drop Domain Suffix")
-                ),
-                ( "reverse_dns",
-                  _("Convert IP addresses of hosts into host their DNS names")
-                ),
-                ( "regex",
-                  _("Regular expression substitution"),
-                  Tuple(
-                      help = _("Please specify a regular expression in the first field. This expression should at "
-                               "least contain one subexpression exclosed in brackets - for example <tt>vm_(.*)_prod</tt>. "
-                               "In the second field you specify the translated host name and can refer to the first matched "
-                               "group with <tt>\\1</tt>, the second with <tt>\\2</tt> and so on, for example <tt>\\1.example.org</tt>"),
-                      elements = [
-                          RegExpUnicode(
-                              title = _("Regular expression for the beginning of the host name"),
-                              help = _("Must contain at least one subgroup <tt>(...)</tt>"),
-                              mingroups = 0,
-                              maxgroups = 9,
-                              size = 30,
-                              allow_empty = False,
-                              mode = RegExpUnicode.prefix,
-                          ),
-                          TextUnicode(
-                              title = _("Replacement"),
-                              help = _("Use <tt>\\1</tt>, <tt>\\2</tt> etc. to replace matched subgroups, <tt>\\0</tt> to insert to original host name"),
-                              size = 30,
-                              allow_empty = False,
-                          )
-                     ]
-                )),
-                ( "explicit",
-                  _("Explicit renaming"),
-                  Tuple(
-                      orientation = "horizontal",
-                      elements = [
-                          Hostname(title = _("current host name"), allow_empty = False),
-                          Hostname(title = _("new host name"), allow_empty = False),
-                      ]
-                )),
+            orientation="horizontal",
+            choices=[
+                ("case", _("Case translation"),
+                 DropdownChoice(choices=[
+                     ("upper", _("Convert hostnames to upper case")),
+                     ("lower", _("Convert hostnames to lower case")),
+                 ])),
+                ("add_suffix", _("Add Suffix"), Hostname()),
+                ("add_prefix", _("Add Prefix"), Hostname()),
+                ("drop_domain", _("Drop Domain Suffix")),
+                ("reverse_dns", _("Convert IP addresses of hosts into host their DNS names")),
+                ("regex", _("Regular expression substitution"),
+                 Tuple(
+                     help=
+                     _("Please specify a regular expression in the first field. This expression should at "
+                       "least contain one subexpression exclosed in brackets - for example <tt>vm_(.*)_prod</tt>. "
+                       "In the second field you specify the translated host name and can refer to the first matched "
+                       "group with <tt>\\1</tt>, the second with <tt>\\2</tt> and so on, for example <tt>\\1.example.org</tt>"
+                      ),
+                     elements=[
+                         RegExpUnicode(
+                             title=_("Regular expression for the beginning of the host name"),
+                             help=_("Must contain at least one subgroup <tt>(...)</tt>"),
+                             mingroups=0,
+                             maxgroups=9,
+                             size=30,
+                             allow_empty=False,
+                             mode=RegExpUnicode.prefix,
+                         ),
+                         TextUnicode(
+                             title=_("Replacement"),
+                             help=
+                             _("Use <tt>\\1</tt>, <tt>\\2</tt> etc. to replace matched subgroups, <tt>\\0</tt> to insert to original host name"
+                              ),
+                             size=30,
+                             allow_empty=False,
+                         )
+                     ])),
+                ("explicit", _("Explicit renaming"),
+                 Tuple(
+                     orientation="horizontal",
+                     elements=[
+                         Hostname(title=_("current host name"), allow_empty=False),
+                         Hostname(title=_("new host name"), allow_empty=False),
+                     ])),
             ])
 
 
@@ -340,11 +336,12 @@ def rename_hosts_background_job(renamings, job_interface=None):
         renamings, job_interface=job_interface)  # Already activates the changes!
     watolib.confirm_all_local_changes()  # All activated by the underlying rename automation
     action_txt = "".join(["<li>%s</li>" % a for a in actions])
-    message = _("Renamed %d hosts at the following places:<br><ul>%s</ul>") % (len(renamings), action_txt)
+    message = _("Renamed %d hosts at the following places:<br><ul>%s</ul>") % (len(renamings),
+                                                                               action_txt)
     if auth_problems:
-        message += _("The following hosts could not be renamed because of missing permissions: %s") % ", ".join([
-            "%s (%s)" % (host_name, reason) for (host_name, reason) in auth_problems
-        ])
+        message += _("The following hosts could not be renamed because of missing permissions: %s"
+                    ) % ", ".join(
+                        ["%s (%s)" % (host_name, reason) for (host_name, reason) in auth_problems])
     job_interface.send_result_message(message)
 
 
@@ -371,7 +368,8 @@ class ModeRenameHost(WatoMode):
         self._host.need_permission("write")
 
     def title(self):
-        return _("Rename %s %s") % (_("Cluster") if self._host.is_cluster() else _("Host"), self._host.name())
+        return _("Rename %s %s") % (_("Cluster") if self._host.is_cluster() else _("Host"),
+                                    self._host.name())
 
     def buttons(self):
         global_buttons()
@@ -379,22 +377,25 @@ class ModeRenameHost(WatoMode):
 
         host_renaming_job = RenameHostBackgroundJob(self._host)
         if host_renaming_job.is_available():
-            html.context_button(_("Last result"), host_renaming_job.detail_url(), "background_job_details")
+            html.context_button(
+                _("Last result"), host_renaming_job.detail_url(), "background_job_details")
 
     def action(self):
         if watolib.get_number_of_pending_changes():
-            raise MKUserError("newname", _("You cannot rename a host while you have pending changes."))
+            raise MKUserError("newname",
+                              _("You cannot rename a host while you have pending changes."))
 
         newname = html.var("newname")
         self._check_new_host_name("newname", newname)
-        c = wato_confirm(_("Confirm renaming of host"),
-                         _("Are you sure you want to rename the host <b>%s</b> into <b>%s</b>? "
-                           "This involves a restart of the monitoring core!") %
-                         (self._host.name(), newname))
+        c = wato_confirm(
+            _("Confirm renaming of host"),
+            _("Are you sure you want to rename the host <b>%s</b> into <b>%s</b>? "
+              "This involves a restart of the monitoring core!") % (self._host.name(), newname))
         if c:
             # Creating pending entry. That makes the site dirty and that will force a sync of
             # the config to that site before the automation is being done.
-            host_renaming_job = RenameHostBackgroundJob(self._host, title=_("Renaming of %s -> %s") % (self._host.name(), newname))
+            host_renaming_job = RenameHostBackgroundJob(
+                self._host, title=_("Renaming of %s -> %s") % (self._host.name(), newname))
             renamings = [(watolib.Folder.current(), self._host.name(), newname)]
             host_renaming_job.set_function(rename_hosts_background_job, renamings)
 
@@ -417,9 +418,10 @@ class ModeRenameHost(WatoMode):
         Hostname().validate_value(host_name, varname)
 
     def page(self):
-        html.help(_("The renaming of hosts is a complex operation since a host's name is being "
-                   "used as a unique key in various places. It also involves stopping and starting "
-                   "of the monitoring core. You cannot rename a host while you have pending changes."))
+        html.help(
+            _("The renaming of hosts is a complex operation since a host's name is being "
+              "used as a unique key in various places. It also involves stopping and starting "
+              "of the monitoring core. You cannot rename a host while you have pending changes."))
 
         html.begin_form("rename_host", method="POST")
         forms.header(_("Rename host %s") % self._host.name())
@@ -492,8 +494,10 @@ def rename_host_in_rulesets(folder, oldname, newname):
                     changed = True
 
         if changed:
-            add_change("edit-ruleset", _("Renamed host in %d rulesets of folder %s") %
-                                                    (len(changed_rulesets), folder.title),
+            add_change(
+                "edit-ruleset",
+                _("Renamed host in %d rulesets of folder %s") % (len(changed_rulesets),
+                                                                 folder.title),
                 obj=folder,
                 sites=folder.all_site_ids())
             rulesets.save()
@@ -672,8 +676,10 @@ def rename_hosts(renamings, job_interface=None):
             auth_problems.append((oldname, e))
 
     # 2. Check_MK stuff ------------------------------------------------
-    job_interface.send_progress_update(_("Renaming host(s) in base configuration, rrd, history files, etc."))
-    job_interface.send_progress_update(_("This might take some time and involves a core restart..."))
+    job_interface.send_progress_update(
+        _("Renaming host(s) in base configuration, rrd, history files, etc."))
+    job_interface.send_progress_update(
+        _("This might take some time and involves a core restart..."))
     action_counts = rename_hosts_in_check_mk(successful_renamings)
 
     # 3. Notification settings ----------------------------------------------
@@ -696,41 +702,43 @@ def rename_hosts(renamings, job_interface=None):
 
 def render_renaming_actions(action_counts):
     action_titles = {
-        "folder"           : _("WATO folder"),
-        "notify_user"      : _("Users' notification rule"),
-        "notify_global"    : _("Global notification rule"),
-        "notify_flexible"  : _("Flexible notification rule"),
-        "wato_rules"       : _("Host and service configuration rule"),
-        "alert_rules"      : _("Alert handler rule"),
-        "parents"          : _("Parent definition"),
-        "cluster_nodes"    : _("Cluster node definition"),
-        "bi"               : _("BI rule or aggregation"),
-        "favorites"        : _("Favorite entry of user"),
-        "cache"            : _("Cached output of monitoring agent"),
-        "counters"         : _("File with performance counter"),
-        "agent"            : _("Baked host specific agent"),
-        "agent_deployment" : _("Agent deployment status"),
-        "piggyback-load"   : _("Piggyback information from other host"),
-        "piggyback-pig"    : _("Piggyback information for other hosts"),
-        "autochecks"       : _("Auto-disovered services of the host"),
-        "logwatch"         : _("Logfile information of logwatch plugin"),
-        "snmpwalk"         : _("A stored SNMP walk"),
-        "rrd"              : _("RRD databases with performance data"),
-        "rrdcached"        : _("RRD updates in journal of RRD Cache"),
-        "pnpspool"         : _("Spool files of PNP4Nagios"),
-        "nagvis"           : _("NagVis map"),
-        "history"          : _("Monitoring history entries (events and availability)"),
-        "retention"        : _("The current monitoring state (including acknowledgements and downtimes)"),
-        "inv"              : _("Recent hardware/software inventory"),
-        "invarch"          : _("History of hardware/software inventory"),
+        "folder": _("WATO folder"),
+        "notify_user": _("Users' notification rule"),
+        "notify_global": _("Global notification rule"),
+        "notify_flexible": _("Flexible notification rule"),
+        "wato_rules": _("Host and service configuration rule"),
+        "alert_rules": _("Alert handler rule"),
+        "parents": _("Parent definition"),
+        "cluster_nodes": _("Cluster node definition"),
+        "bi": _("BI rule or aggregation"),
+        "favorites": _("Favorite entry of user"),
+        "cache": _("Cached output of monitoring agent"),
+        "counters": _("File with performance counter"),
+        "agent": _("Baked host specific agent"),
+        "agent_deployment": _("Agent deployment status"),
+        "piggyback-load": _("Piggyback information from other host"),
+        "piggyback-pig": _("Piggyback information for other hosts"),
+        "autochecks": _("Auto-disovered services of the host"),
+        "logwatch": _("Logfile information of logwatch plugin"),
+        "snmpwalk": _("A stored SNMP walk"),
+        "rrd": _("RRD databases with performance data"),
+        "rrdcached": _("RRD updates in journal of RRD Cache"),
+        "pnpspool": _("Spool files of PNP4Nagios"),
+        "nagvis": _("NagVis map"),
+        "history": _("Monitoring history entries (events and availability)"),
+        "retention": _("The current monitoring state (including acknowledgements and downtimes)"),
+        "inv": _("Recent hardware/software inventory"),
+        "invarch": _("History of hardware/software inventory"),
     }
 
     texts = []
     for what, count in sorted(action_counts.items()):
         if what.startswith("dnsfail-"):
-            text = _("<b>WARNING: </b> the IP address lookup of <b>%s</b> has failed. The core has been "
-                                 "started by using the address <tt>0.0.0.0</tt> for the while. "
-                                 "Please update your DNS or configure an IP address for the affected host.") % what.split("-", 1)[1]
+            text = _(
+                "<b>WARNING: </b> the IP address lookup of <b>%s</b> has failed. The core has been "
+                "started by using the address <tt>0.0.0.0</tt> for the while. "
+                "Please update your DNS or configure an IP address for the affected host."
+            ) % what.split("-", 1)[1]
         else:
             text = action_titles.get(what, what)
 

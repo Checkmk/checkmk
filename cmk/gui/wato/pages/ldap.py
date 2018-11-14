@@ -74,19 +74,22 @@ class ModeLDAPConfig(LDAPMode):
     def buttons(self):
         global_buttons()
         html.context_button(_("Back"), watolib.folder_preserving_link([("mode", "users")]), "back")
-        html.context_button(_("New connection"), watolib.folder_preserving_link([("mode", "edit_ldap_connection")]), "new")
+        html.context_button(
+            _("New connection"), watolib.folder_preserving_link([("mode", "edit_ldap_connection")]),
+            "new")
 
     def action(self):
         connections = userdb.load_connection_config(lock=True)
         if html.has_var("_delete"):
             index = int(html.var("_delete"))
             connection = connections[index]
-            c = wato_confirm(_("Confirm deletion of LDAP connection"),
-                             _("Do you really want to delete the LDAP connection <b>%s</b>?") %
-                               (connection["id"]))
+            c = wato_confirm(
+                _("Confirm deletion of LDAP connection"),
+                _("Do you really want to delete the LDAP connection <b>%s</b>?") %
+                (connection["id"]))
             if c:
                 self._add_change("delete-ldap-connection",
-                    _("Deleted LDAP connection %s") % (connection["id"]))
+                                 _("Deleted LDAP connection %s") % (connection["id"]))
                 del connections[index]
                 userdb.save_connection_config(connections)
             elif c == False:
@@ -101,7 +104,8 @@ class ModeLDAPConfig(LDAPMode):
             from_pos = html.get_integer_input("_move")
             to_pos = html.get_integer_input("_index")
             connection = connections[from_pos]
-            self._add_change("move-ldap-connection",
+            self._add_change(
+                "move-ldap-connection",
                 _("Changed position of LDAP connection %s to %d") % (connection["id"], to_pos))
             del connections[from_pos]  # make to_pos now match!
             connections[to_pos:to_pos] = [connection]
@@ -127,7 +131,9 @@ class ModeLDAPConfig(LDAPMode):
 
             table.cell("", css="narrow")
             if connection.get("disabled"):
-                html.icon(_("This connection is currently not being used for synchronization."), "disabled")
+                html.icon(
+                    _("This connection is currently not being used for synchronization."),
+                    "disabled")
             else:
                 html.empty_icon_button()
 
@@ -139,7 +145,8 @@ class ModeLDAPConfig(LDAPMode):
             table.cell(_("Description"))
             url = connection.get("docu_url")
             if url:
-                html.icon_button(url, _("Context information about this connection"), "url", target="_blank")
+                html.icon_button(
+                    url, _("Context information about this connection"), "url", target="_blank")
                 html.write("&nbsp;")
             html.write_text(connection["description"])
 
@@ -188,7 +195,8 @@ class ModeEditLDAPConnection(LDAPMode):
 
     def buttons(self):
         global_buttons()
-        html.context_button(_("Back"), watolib.folder_preserving_link([("mode", "ldap_config")]), "back")
+        html.context_button(
+            _("Back"), watolib.folder_preserving_link([("mode", "ldap_config")]), "back")
 
     def action(self):
         if not html.check_transaction():
@@ -241,15 +249,17 @@ class ModeEditLDAPConnection(LDAPMode):
         html.open_td(style="padding-left:10px;vertical-align:top")
         html.h2(_('Diagnostics'))
         if not html.var('_test') or not self._connection_id:
-            html.message(HTML('<p>%s</p><p>%s</p>' %
-                        (_('You can verify the single parts of your ldap configuration using this '
-                           'dialog. Simply make your configuration in the form on the left side and '
-                           'hit the "Save & Test" button to execute the tests. After '
-                           'the page reload, you should see the results of the test here.'),
-                         _('If you need help during configuration or experience problems, please refer '
-                           'to the Multisite <a target="_blank" '
-                           'href="https://mathias-kettner.com/checkmk_multisite_ldap_integration.html">'
-                           'LDAP Documentation</a>.'))))
+            html.message(
+                HTML(
+                    '<p>%s</p><p>%s</p>' %
+                    (_('You can verify the single parts of your ldap configuration using this '
+                       'dialog. Simply make your configuration in the form on the left side and '
+                       'hit the "Save & Test" button to execute the tests. After '
+                       'the page reload, you should see the results of the test here.'),
+                     _('If you need help during configuration or experience problems, please refer '
+                       'to the Multisite <a target="_blank" '
+                       'href="https://mathias-kettner.com/checkmk_multisite_ldap_integration.html">'
+                       'LDAP Documentation</a>.'))))
         else:
             # type: cmk.gui.plugins.userdb.ldap_connector.LDAPUserConnector
             connection = userdb.get_connection(self._connection_id)
@@ -271,8 +281,8 @@ class ModeEditLDAPConnection(LDAPMode):
                     else:
                         img = html.render_icon("failed", _("Failed"))
 
-                    table.cell(_("Test"),   title)
-                    table.cell(_("State"),   img)
+                    table.cell(_("Test"), title)
+                    table.cell(_("State"), img)
                     table.cell(_("Details"), msg)
 
                 table.end()
@@ -286,12 +296,12 @@ class ModeEditLDAPConnection(LDAPMode):
 
     def _tests(self):
         return [
-            (_('Connection'),          self._test_connect),
-            (_('User Base-DN'),        self._test_user_base_dn),
-            (_('Count Users'),         self._test_user_count),
-            (_('Group Base-DN'),       self._test_group_base_dn),
-            (_('Count Groups'),        self._test_group_count),
-            (_('Sync-Plugin: Roles'),  self._test_groups_to_roles),
+            (_('Connection'), self._test_connect),
+            (_('User Base-DN'), self._test_user_base_dn),
+            (_('Count Users'), self._test_user_count),
+            (_('Group Base-DN'), self._test_group_base_dn),
+            (_('Count Groups'), self._test_group_count),
+            (_('Sync-Plugin: Roles'), self._test_groups_to_roles),
         ]
 
     def _test_connect(self, connection, address):
@@ -307,11 +317,13 @@ class ModeEditLDAPConnection(LDAPMode):
         if connection.user_base_dn_exists():
             return (True, _('The User Base DN could be found.'))
         elif connection.has_bind_credentials_configured():
-            return (False, _('The User Base DN could not be found. Maybe the provided '
-                             'user (provided via bind credentials) has no permission to '
-                             'access the Base DN or the credentials are wrong.'))
-        return (False, _('The User Base DN could not be found. Seems you need '
-                         'to configure proper bind credentials.'))
+            return (False,
+                    _('The User Base DN could not be found. Maybe the provided '
+                      'user (provided via bind credentials) has no permission to '
+                      'access the Base DN or the credentials are wrong.'))
+        return (False,
+                _('The User Base DN could not be found. Seems you need '
+                  'to configure proper bind credentials.'))
 
     def _test_user_count(self, connection, address):
         if not connection.has_user_base_dn_configured():
@@ -326,8 +338,9 @@ class ModeEditLDAPConnection(LDAPMode):
             if 'successful bind must be completed' in msg:
                 if not connection.has_bind_credentials_configured():
                     return (False, _('Please configure proper bind credentials.'))
-                return (False, _('Maybe the provided user (provided via bind credentials) has not '
-                                     'enough permissions or the credentials are wrong.'))
+                return (False,
+                        _('Maybe the provided user (provided via bind credentials) has not '
+                          'enough permissions or the credentials are wrong.'))
 
         if ldap_users and len(ldap_users) > 0:
             return (True, _('Found %d users for synchronization.') % len(ldap_users))
@@ -354,8 +367,9 @@ class ModeEditLDAPConnection(LDAPMode):
             if 'successful bind must be completed' in msg:
                 if not connection.has_bind_credentials_configured():
                     return (False, _('Please configure proper bind credentials.'))
-                return (False, _('Maybe the provided user (provided via bind credentials) has not '
-                                     'enough permissions or the credentials are wrong.'))
+                return (False,
+                        _('Maybe the provided user (provided via bind credentials) has not '
+                          'enough permissions or the credentials are wrong.'))
         if ldap_groups and len(ldap_groups) > 0:
             return (True, _('Found %d groups for synchronization.') % len(ldap_groups))
         return (False, msg)

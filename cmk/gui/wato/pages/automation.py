@@ -142,8 +142,8 @@ class ModeAutomation(WatoWebApiMode):
 
         if our_id != None and our_id != site_id:
             raise MKGeneralException(
-              _("Site ID mismatch. Our ID is '%s', but you are saying we are '%s'.") %
-                (our_id, site_id))
+                _("Site ID mismatch. Our ID is '%s', but you are saying we are '%s'.") % (our_id,
+                                                                                          site_id))
 
         profile = html.var("profile")
         if not profile:

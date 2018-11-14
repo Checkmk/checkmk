@@ -68,13 +68,13 @@ class ModeDiagHost(WatoMode):
     @classmethod
     def diag_host_tests(cls):
         return [
-            ('ping',          _('Ping')),
-            ('agent',         _('Agent')),
-            ('snmpv1',        _('SNMPv1')),
-            ('snmpv2',        _('SNMPv2c')),
+            ('ping', _('Ping')),
+            ('agent', _('Agent')),
+            ('snmpv1', _('SNMPv1')),
+            ('snmpv2', _('SNMPv2c')),
             ('snmpv2_nobulk', _('SNMPv2c (without Bulkwalk)')),
-            ('snmpv3',        _('SNMPv3')),
-            ('traceroute',    _('Traceroute')),
+            ('snmpv3', _('SNMPv3')),
+            ('traceroute', _('Traceroute')),
         ]
 
     def _from_vars(self):
@@ -92,7 +92,8 @@ class ModeDiagHost(WatoMode):
         return _('Diagnostic of host') + " " + self._hostname
 
     def buttons(self):
-        html.context_button(_("Folder"), watolib.folder_preserving_link([("mode", "folder")]), "back")
+        html.context_button(
+            _("Folder"), watolib.folder_preserving_link([("mode", "folder")]), "back")
         host_status_button(self._hostname, "hoststatus")
         html.context_button(_("Properties"), self._host.edit_url(), "edit")
         if config.user.may('wato.rulesets'):
@@ -187,7 +188,7 @@ class ModeDiagHost(WatoMode):
         html.help(vs_rules.help())
         forms.end()
 
-        html.button("_try",  _("Test"))
+        html.button("_try", _("Test"))
 
         html.hidden_fields()
         html.end_form()
@@ -199,17 +200,17 @@ class ModeDiagHost(WatoMode):
 
     def _show_diagnose_output(self):
         if not html.var('_try'):
-            html.message(_('You can diagnose the connection to a specific host using this dialog. '
-                           'You can either test whether your current configuration is still working '
-                           'or investigate in which ways a host can be reached. Simply configure the '
-                           'connection options you like to try on the right side of the screen and '
-                           'press the "Test" button. The results will be displayed here.'))
+            html.message(
+                _('You can diagnose the connection to a specific host using this dialog. '
+                  'You can either test whether your current configuration is still working '
+                  'or investigate in which ways a host can be reached. Simply configure the '
+                  'connection options you like to try on the right side of the screen and '
+                  'press the "Test" button. The results will be displayed here.'))
             return
 
         if html.has_user_errors():
             html.show_user_errors()
             return
-
 
         # TODO: Insert any vs_host valuespec validation
         #       These tests can be called with invalid valuespec settings...
@@ -223,7 +224,11 @@ class ModeDiagHost(WatoMode):
             html.open_div()
             html.img("images/icon_reload.png", class_="icon", id_="%s_img" % ident)
             html.open_a(href="")
-            html.img("images/icon_reload.png", class_=["icon", "retry"], id_="%s_retry" % ident, title=_('Retry this test'))
+            html.img(
+                "images/icon_reload.png",
+                class_=["icon", "retry"],
+                id_="%s_retry" % ident,
+                title=_('Retry this test'))
             html.close_a()
             html.close_div()
             html.close_td()
@@ -234,33 +239,25 @@ class ModeDiagHost(WatoMode):
 
             html.close_tr()
             html.close_table()
-            html.javascript('start_host_diag_test(%s, %s, %s)' %
-                            (json.dumps(ident), json.dumps(self._hostname),
-                             json.dumps(html.transaction_manager.fresh_transid())))
-
+            html.javascript(
+                'start_host_diag_test(%s, %s, %s)' % (json.dumps(ident), json.dumps(
+                    self._hostname), json.dumps(html.transaction_manager.fresh_transid())))
 
     def _vs_host(self):
         return Dictionary(
-            required_keys = ['hostname'],
-            elements = [
-                ('hostname', FixedValue(self._hostname,
-                    title = _('Hostname'),
-                    allow_empty = False
-                )),
-                ('ipaddress', HostAddress(
-                    title = _("IPv4 Address"),
-                    allow_empty = False,
-                    allow_ipv6_address = False,
-                )),
-                ('snmp_community', Password(
-                    title = _("SNMPv1/2 community"),
-                    allow_empty = False
-                )),
+            required_keys=['hostname'],
+            elements=[
+                ('hostname', FixedValue(self._hostname, title=_('Hostname'), allow_empty=False)),
+                ('ipaddress',
+                 HostAddress(
+                     title=_("IPv4 Address"),
+                     allow_empty=False,
+                     allow_ipv6_address=False,
+                 )),
+                ('snmp_community', Password(title=_("SNMPv1/2 community"), allow_empty=False)),
                 ('snmp_v3_credentials',
-                    cmk.gui.plugins.wato.SNMPCredentials(default_value = None, only_v3 = True)
-                ),
-            ]
-        )
+                 cmk.gui.plugins.wato.SNMPCredentials(default_value=None, only_v3=True)),
+            ])
 
     def _vs_rules(self):
         if config.user.may('wato.add_or_modify_executables'):

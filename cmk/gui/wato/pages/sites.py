@@ -101,11 +101,13 @@ class ModeEditSite(ModeSites):
 
     def buttons(self):
         super(ModeEditSite, self).buttons()
-        html.context_button(_("All Sites"), watolib.folder_preserving_link([("mode", "sites")]), "back")
+        html.context_button(
+            _("All Sites"), watolib.folder_preserving_link([("mode", "sites")]), "back")
         if not self._new and self._site.get("replication"):
-            html.context_button(_("Site-Globals"),
-                                watolib.folder_preserving_link([("mode", "edit_site_globals"),
-                                ("site", self._site_id)]), "configuration")
+            html.context_button(
+                _("Site-Globals"),
+                watolib.folder_preserving_link([("mode", "edit_site_globals"),
+                                                ("site", self._site_id)]), "configuration")
 
     def action(self):
         if not html.check_transaction():
@@ -121,7 +123,8 @@ class ModeEditSite(ModeSites):
             raise MKUserError("id", _("This id is already being used by another connection."))
 
         if not re.match("^[-a-z0-9A-Z_]+$", self._id):
-            raise MKUserError("id", _("The site id must consist only of letters, digit and the underscore."))
+            raise MKUserError(
+                "id", _("The site id must consist only of letters, digit and the underscore."))
 
         detail_msg = self._set_site_attributes()
         configured_sites[self._id] = self._new_site
@@ -180,7 +183,9 @@ class ModeEditSite(ModeSites):
             try:
                 self._new_site["timeout"] = int(self._timeout)
             except ValueError:
-                raise MKUserError("timeout", _("The timeout %s is not a valid integer number.") % self._timeout)
+                raise MKUserError(
+                    "timeout",
+                    _("The timeout %s is not a valid integer number.") % self._timeout)
 
         # Persist
         self._new_site["persist"] = html.get_checkbox("persist")
@@ -248,14 +253,15 @@ class ModeEditSite(ModeSites):
     def _page_basic_settings(self):
         forms.header(_("Basic settings"))
         # ID
-        forms.section(_("Site ID"), simple = not self._new)
+        forms.section(_("Site ID"), simple=not self._new)
         if self._new:
             html.text_input("id", self._site_id or self._clone_id)
             html.set_focus("id")
         else:
             html.write_text(self._site_id)
 
-        html.help(_("The site ID must be identical (case sensitive) with the instance's exact name."))
+        html.help(
+            _("The site ID must be identical (case sensitive) with the instance's exact name."))
         # Alias
         forms.section(_("Alias"))
         html.text_input("alias", self._site.get("alias", ""), size=60)
@@ -276,40 +282,47 @@ class ModeEditSite(ModeSites):
             method = ('tcp', (parts[0], int(parts[1])))
 
         self._site_mgmt.connection_method_valuespec().render_input("method", method)
-        html.help( _("When connecting to remote site please make sure "
-                   "that Livestatus over TCP is activated there. You can use UNIX sockets "
-                   "to connect to foreign sites on localhost. Please make sure that this "
-                   "site has proper read and write permissions to the UNIX socket of the "
-                   "foreign site."))
+        html.help(
+            _("When connecting to remote site please make sure "
+              "that Livestatus over TCP is activated there. You can use UNIX sockets "
+              "to connect to foreign sites on localhost. Please make sure that this "
+              "site has proper read and write permissions to the UNIX socket of the "
+              "foreign site."))
 
         # Timeout
         forms.section(_("Connect Timeout"))
         timeout = self._site.get("timeout", 10)
         html.number_input("timeout", timeout, size=2)
         html.write_text(_(" seconds"))
-        html.help(_("This sets the time that Multisite waits for a connection "
-                     "to the site to be established before the site is considered to be unreachable. "
-                     "If not set, the operating system defaults are begin used and just one login attempt is being. "
-                     "performed."))
+        html.help(
+            _("This sets the time that Multisite waits for a connection "
+              "to the site to be established before the site is considered to be unreachable. "
+              "If not set, the operating system defaults are begin used and just one login attempt is being. "
+              "performed."))
 
         # Persistent connections
         forms.section(_("Persistent Connection"), simple=True)
-        html.checkbox("persist", self._site.get("persist", False), label=_("Use persistent connections"))
-        html.help(_("If you enable persistent connections then Multisite will try to keep open "
-                  "the connection to the remote sites. This brings a great speed up in high-latency "
-                  "situations but locks a number of threads in the Livestatus module of the target site."))
+        html.checkbox(
+            "persist", self._site.get("persist", False), label=_("Use persistent connections"))
+        html.help(
+            _("If you enable persistent connections then Multisite will try to keep open "
+              "the connection to the remote sites. This brings a great speed up in high-latency "
+              "situations but locks a number of threads in the Livestatus module of the target site."
+             ))
 
         # URL-Prefix
         docu_url = "https://mathias-kettner.com/checkmk_multisite_modproxy.html"
         forms.section(_("URL prefix"))
         html.text_input("url_prefix", self._site.get("url_prefix", ""), size=60)
-        html.help(_("The URL prefix will be prepended to links of addons like PNP4Nagios "
-                     "or the classical Nagios GUI when a link to such applications points to a host or "
-                     "service on that site. You can either use an absolute URL prefix like <tt>http://some.host/mysite/</tt> "
-                     "or a relative URL like <tt>/mysite/</tt>. When using relative prefixes you needed a mod_proxy "
-                     "configuration in your local system apache that proxies such URLs to the according remote site. "
-                     "Please refer to the <a target=_blank href='%s'>online documentation</a> for details. "
-                     "The prefix should end with a slash. Omit the <tt>/pnp4nagios/</tt> from the prefix.") % docu_url)
+        html.help(
+            _("The URL prefix will be prepended to links of addons like PNP4Nagios "
+              "or the classical Nagios GUI when a link to such applications points to a host or "
+              "service on that site. You can either use an absolute URL prefix like <tt>http://some.host/mysite/</tt> "
+              "or a relative URL like <tt>/mysite/</tt>. When using relative prefixes you needed a mod_proxy "
+              "configuration in your local system apache that proxies such URLs to the according remote site. "
+              "Please refer to the <a target=_blank href='%s'>online documentation</a> for details. "
+              "The prefix should end with a slash. Omit the <tt>/pnp4nagios/</tt> from the prefix.")
+            % docu_url)
 
         # Status-Host
         docu_url = "https://mathias-kettner.com/checkmk_multisite_statushost.html"
@@ -326,61 +339,78 @@ class ModeEditSite(ModeSites):
         html.text_input("sh_host", self._sh_host, size=10)
         html.write_text(_(" on monitoring site: "))
 
-        choices = [ ("", _("(no status host)")) ] + [ (sk, si.get("alias", sk)) for (sk, si) in self._site_mgmt.load_sites().items() ]
+        choices = [("", _("(no status host)"))] + [
+            (sk, si.get("alias", sk)) for (sk, si) in self._site_mgmt.load_sites().items()
+        ]
         html.dropdown("sh_site", choices, deflt=self._sh_site, ordered=True)
 
-        html.help( _("By specifying a status host for each non-local connection "
-                     "you prevent Multisite from running into timeouts when remote sites do not respond. "
-                     "You need to add the remote monitoring servers as hosts into your local monitoring "
-                     "site and use their host state as a reachability state of the remote site. Please "
-                     "refer to the <a target=_blank href='%s'>online documentation</a> for details.") % docu_url)
+        html.help(
+            _("By specifying a status host for each non-local connection "
+              "you prevent Multisite from running into timeouts when remote sites do not respond. "
+              "You need to add the remote monitoring servers as hosts into your local monitoring "
+              "site and use their host state as a reachability state of the remote site. Please "
+              "refer to the <a target=_blank href='%s'>online documentation</a> for details.") %
+            docu_url)
 
         # Disabled
         forms.section(_("Disable"), simple=True)
-        html.checkbox("disabled", self._site.get("disabled", False), label = _("Temporarily disable this connection"))
-        html.help( _("If you disable a connection, then no data of this site will be shown in the status GUI. "
-                     "The replication is not affected by this, however."))
+        html.checkbox(
+            "disabled",
+            self._site.get("disabled", False),
+            label=_("Temporarily disable this connection"))
+        html.help(
+            _("If you disable a connection, then no data of this site will be shown in the status GUI. "
+              "The replication is not affected by this, however."))
 
     def _page_replication_configuration(self):
         # Replication
         forms.header(_("Configuration Replication (Distributed WATO)"))
         forms.section(_("Replication method"))
-        html.dropdown("replication",
-            [ (None,  _("No replication with this site")),
-              ("slave", _("Slave: push configuration to this site"))
-            ], deflt=self._site.get("replication"))
-        html.help( _("WATO replication allows you to manage several monitoring sites with a "
-                    "logically centralized WATO. Slave sites receive their configuration "
-                    "from master sites. <br><br>Note: Slave sites "
-                    "do not need any replication configuration. They will be remote-controlled "
-                    "by the master sites."))
+        html.dropdown(
+            "replication", [(None, _("No replication with this site")),
+                            ("slave", _("Slave: push configuration to this site"))],
+            deflt=self._site.get("replication"))
+        html.help(
+            _("WATO replication allows you to manage several monitoring sites with a "
+              "logically centralized WATO. Slave sites receive their configuration "
+              "from master sites. <br><br>Note: Slave sites "
+              "do not need any replication configuration. They will be remote-controlled "
+              "by the master sites."))
 
         forms.section(_("Multisite-URL of remote site"))
         html.text_input("multisiteurl", self._site.get("multisiteurl", ""), size=60)
-        html.help( _("URL of the remote Check_MK including <tt>/check_mk/</tt>. "
-                       "This URL is in many cases the same as the URL-Prefix but with <tt>check_mk/</tt> "
-                       "appended, but it must always be an absolute URL. Please note, that "
-                       "that URL will be fetched by the Apache server of the local "
-                       "site itself, whilst the URL-Prefix is used by your local Browser."))
+        html.help(
+            _("URL of the remote Check_MK including <tt>/check_mk/</tt>. "
+              "This URL is in many cases the same as the URL-Prefix but with <tt>check_mk/</tt> "
+              "appended, but it must always be an absolute URL. Please note, that "
+              "that URL will be fetched by the Apache server of the local "
+              "site itself, whilst the URL-Prefix is used by your local Browser."))
 
         forms.section(_("WATO"), simple=True)
-        html.checkbox("disable_wato", self._site.get("disable_wato", True),
-                      label = _('Disable configuration via WATO on this site'))
-        html.help( _('It is a good idea to disable access to WATO completely on the slave site. '
-                     'Otherwise a user who does not now about the replication could make local '
-                     'changes that are overridden at the next configuration activation.'))
+        html.checkbox(
+            "disable_wato",
+            self._site.get("disable_wato", True),
+            label=_('Disable configuration via WATO on this site'))
+        html.help(
+            _('It is a good idea to disable access to WATO completely on the slave site. '
+              'Otherwise a user who does not now about the replication could make local '
+              'changes that are overridden at the next configuration activation.'))
 
         forms.section(_("SSL"), simple=True)
-        html.checkbox("insecure", self._site.get("insecure", False),
-                      label = _('Ignore SSL certificate errors'))
-        html.help( _('This might be needed to make the synchronization accept problems with '
-                     'SSL certificates when using an SSL secured connection.'))
+        html.checkbox(
+            "insecure", self._site.get("insecure", False), label=_('Ignore SSL certificate errors'))
+        html.help(
+            _('This might be needed to make the synchronization accept problems with '
+              'SSL certificates when using an SSL secured connection.'))
 
         forms.section(_('Direct login to Web GUI allowed'), simple=True)
-        html.checkbox('user_login', self._site.get('user_login', True),
-                      label = _('Users are allowed to directly login into the Web GUI of this site'))
-        html.help(_('When enabled, this site is marked for synchronisation every time a Web GUI '
-                    'related option is changed in the master site.'))
+        html.checkbox(
+            'user_login',
+            self._site.get('user_login', True),
+            label=_('Users are allowed to directly login into the Web GUI of this site'))
+        html.help(
+            _('When enabled, this site is marked for synchronisation every time a Web GUI '
+              'related option is changed in the master site.'))
 
         forms.section(_("Sync with LDAP connections"), simple=True)
         self._site_mgmt.user_sync_valuespec().render_input(
@@ -388,33 +418,40 @@ class ModeEditSite(ModeSites):
             self._site.get("user_sync",
                            None if self._new else userdb.user_sync_default_config(self._site_id)))
         html.br()
-        html.help(_('By default the users are synchronized automatically in the interval configured '
-                    'in the connection. For example the LDAP connector synchronizes the users every '
-                    'five minutes by default. The interval can be changed for each connection '
-                    'individually in the <a href="wato.py?mode=ldap_config">connection settings</a>. '
-                    'Please note that the synchronization is only performed on the master site in '
-                    'distributed setups by default.<br>'
-                    'The remote sites don\'t perform automatic user synchronizations with the '
-                    'configured connections. But you can configure each site to either '
-                    'synchronize the users with all configured connections or a specific list of '
-                    'connections.'))
+        html.help(
+            _('By default the users are synchronized automatically in the interval configured '
+              'in the connection. For example the LDAP connector synchronizes the users every '
+              'five minutes by default. The interval can be changed for each connection '
+              'individually in the <a href="wato.py?mode=ldap_config">connection settings</a>. '
+              'Please note that the synchronization is only performed on the master site in '
+              'distributed setups by default.<br>'
+              'The remote sites don\'t perform automatic user synchronizations with the '
+              'configured connections. But you can configure each site to either '
+              'synchronize the users with all configured connections or a specific list of '
+              'connections.'))
 
         if config.mkeventd_enabled:
             forms.section(_('Event Console'), simple=True)
-            html.checkbox('replicate_ec', self._site.get("replicate_ec", True),
-                          label = _("Replicate Event Console configuration to this site"))
-            html.help(_("This option enables the distribution of global settings and rules of the Event Console "
-                        "to the remote site. Any change in the local Event Console settings will mark the site "
-                        "as <i>need sync</i>. A synchronization will automatically reload the Event Console of "
-                        "the remote site."))
+            html.checkbox(
+                'replicate_ec',
+                self._site.get("replicate_ec", True),
+                label=_("Replicate Event Console configuration to this site"))
+            html.help(
+                _("This option enables the distribution of global settings and rules of the Event Console "
+                  "to the remote site. Any change in the local Event Console settings will mark the site "
+                  "as <i>need sync</i>. A synchronization will automatically reload the Event Console of "
+                  "the remote site."))
 
         forms.section(_("Extensions"), simple=True)
-        html.checkbox("replicate_mkps", self._site.get("replicate_mkps", False),
-                      label = _("Replicate extensions (MKPs and files in <tt>~/local/</tt>)"))
-        html.help(_("If you enable the replication of MKPs then during each <i>Activate Changes</i> MKPs "
-                    "that are installed on your master site and all other files below the <tt>~/local/</tt> "
-                    "directory will be also transferred to the slave site. Note: <b>all other MKPs and files "
-                    "below <tt>~/local/</tt> on the slave will be removed</b>."))
+        html.checkbox(
+            "replicate_mkps",
+            self._site.get("replicate_mkps", False),
+            label=_("Replicate extensions (MKPs and files in <tt>~/local/</tt>)"))
+        html.help(
+            _("If you enable the replication of MKPs then during each <i>Activate Changes</i> MKPs "
+              "that are installed on your master site and all other files below the <tt>~/local/</tt> "
+              "directory will be also transferred to the slave site. Note: <b>all other MKPs and files "
+              "below <tt>~/local/</tt> on the slave will be removed</b>."))
 
 
 @mode_registry.register
@@ -432,9 +469,8 @@ class ModeDistributedMonitoring(ModeSites):
 
     def buttons(self):
         super(ModeDistributedMonitoring, self).buttons()
-        html.context_button(_("New connection"),
-                            watolib.folder_preserving_link([("mode", "edit_site")]),
-                            "new")
+        html.context_button(
+            _("New connection"), watolib.folder_preserving_link([("mode", "edit_site")]), "new")
 
     def action(self):
         delete_id = html.var("_delete")
@@ -467,7 +503,8 @@ class ModeDistributedMonitoring(ModeSites):
                 ("mode", "search"),
                 ("filled_in", "edit_host"),
             ])
-            raise MKUserError(None,
+            raise MKUserError(
+                None,
                 _("You cannot delete this connection. It has folders/hosts "
                   "assigned to it. You can use the <a href=\"%s\">host "
                   "search</a> to get a list of the hosts.") % search_url)
@@ -495,8 +532,11 @@ class ModeDistributedMonitoring(ModeSites):
             if "secret" in site:
                 del site["secret"]
             self._site_mgmt.save_sites(configured_sites)
-            watolib.add_change("edit-site", _("Logged out of remote site %s") % html.render_tt(site["alias"]),
-                       domains=[watolib.ConfigDomainGUI], sites=[watolib.default_site()])
+            watolib.add_change(
+                "edit-site",
+                _("Logged out of remote site %s") % html.render_tt(site["alias"]),
+                domains=[watolib.ConfigDomainGUI],
+                sites=[watolib.default_site()])
             return None, _("Logged out.")
 
         elif c == False:
@@ -523,7 +563,8 @@ class ModeDistributedMonitoring(ModeSites):
                 secret = watolib.do_site_login(login_id, name, passwd)
                 site["secret"] = secret
                 self._site_mgmt.save_sites(configured_sites)
-                message = _("Successfully logged into remote site %s.") % html.render_tt(site["alias"])
+                message = _("Successfully logged into remote site %s.") % html.render_tt(
+                    site["alias"])
                 watolib.log_audit(None, "edit-site", message)
                 return None, message
 
@@ -539,18 +580,20 @@ class ModeDistributedMonitoring(ModeSites):
                 if config.debug:
                     raise
                 html.add_user_error("_name", error)
-                error = (_("Internal error: %s\n%s") % (e, traceback.format_exc())).replace("\n", "\n<br>")
+                error = (_("Internal error: %s\n%s") % (e, traceback.format_exc())).replace(
+                    "\n", "\n<br>")
 
         wato_html_head(_("Login into site \"%s\"") % site["alias"])
         if error:
             html.show_error(error)
 
-        html.p(_("For the initial login into the slave site %s "
-                 "we need once your administration login for the Multsite "
-                 "GUI on that site. Your credentials will only be used for "
-                 "the initial handshake and not be stored. If the login is "
-                 "successful then both side will exchange a login secret "
-                 "which is used for the further remote calls.") % html.render_tt(site["alias"]))
+        html.p(
+            _("For the initial login into the slave site %s "
+              "we need once your administration login for the Multsite "
+              "GUI on that site. Your credentials will only be used for "
+              "the initial handshake and not be stored. If the login is "
+              "successful then both side will exchange a login secret "
+              "which is used for the further remote calls.") % html.render_tt(site["alias"]))
 
         html.begin_form("login", method="POST")
         forms.header(_('Login credentials'))
@@ -569,11 +612,14 @@ class ModeDistributedMonitoring(ModeSites):
         return False
 
     def page(self):
-        table.begin("sites", _("Connections to local and remote sites"),
-                    empty_text = _("You have not configured any local or remotes sites. Multisite will "
-                                   "implicitely add the data of the local monitoring site. If you add remotes "
-                                   "sites, please do not forget to add your local monitoring site also, if "
-                                   "you want to display its data."))
+        table.begin(
+            "sites",
+            _("Connections to local and remote sites"),
+            empty_text=_(
+                "You have not configured any local or remotes sites. Multisite will "
+                "implicitely add the data of the local monitoring site. If you add remotes "
+                "sites, please do not forget to add your local monitoring site also, if "
+                "you want to display its data."))
 
         sites = sort_sites(self._site_mgmt.load_sites().items())
         for site_id, site in sites:
@@ -592,7 +638,8 @@ class ModeDistributedMonitoring(ModeSites):
         html.icon_button(edit_url, _("Properties"), "edit")
 
         clone_url = watolib.folder_preserving_link([("mode", "edit_site"), ("clone", site_id)])
-        html.icon_button(clone_url, _("Clone this connection in order to create a new one"), "clone")
+        html.icon_button(clone_url, _("Clone this connection in order to create a new one"),
+                         "clone")
 
         delete_url = html.makeactionuri([("_delete", site_id)])
         html.icon_button(delete_url, _("Delete"), "delete")
@@ -711,12 +758,12 @@ class ModeEditSiteGlobals(ModeSites, GlobalSettingsMode):
 
     def buttons(self):
         super(ModeEditSiteGlobals, self).buttons()
-        html.context_button(_("All Sites"),
-                            watolib.folder_preserving_link([("mode", "sites")]),
-                            "back")
-        html.context_button(_("Connection"),
-                            watolib.folder_preserving_link([("mode", "edit_site"),
-                            ("edit", self._site_id)]), "sites")
+        html.context_button(
+            _("All Sites"), watolib.folder_preserving_link([("mode", "sites")]), "back")
+        html.context_button(
+            _("Connection"),
+            watolib.folder_preserving_link([("mode", "edit_site"), ("edit", self._site_id)]),
+            "sites")
 
     # TODO: Consolidate with ModeEditGlobals.action()
     def action(self):
@@ -734,8 +781,7 @@ class ModeEditSiteGlobals(ModeSites, GlobalSettingsMode):
                 _("Removing site specific configuration variable"),
                 _("Do you really want to remove the configuration variable <b>%s</b> "
                   "of the specific configuration of this site and that way use the global value "
-                  "of <b><tt>%s</tt></b>?") %
-                  (varname, valuespec.value_to_text(def_value)))
+                  "of <b><tt>%s</tt></b>?") % (varname, valuespec.value_to_text(def_value)))
 
         else:
             if not html.check_transaction():
@@ -772,19 +818,22 @@ class ModeEditSiteGlobals(ModeSites, GlobalSettingsMode):
         return "edit_site_configvar"
 
     def page(self):
-        html.help(_("Here you can configure global settings, that should just be applied "
-                    "on that site. <b>Note</b>: this only makes sense if the site "
-                    "is part of a distributed setup."))
+        html.help(
+            _("Here you can configure global settings, that should just be applied "
+              "on that site. <b>Note</b>: this only makes sense if the site "
+              "is part of a distributed setup."))
 
         if not watolib.is_wato_slave_site():
             if not config.has_wato_slave_sites():
-                html.show_error(_("You can not configure site specific global settings "
-                                  "in non distributed setups."))
+                html.show_error(
+                    _("You can not configure site specific global settings "
+                      "in non distributed setups."))
                 return
 
             if not self._site.get("replication") and not config.site_is_local(self._site_id):
-                html.show_error(_("This site is not the master site nor a replication slave. "
-                                  "You cannot configure specific settings for it."))
+                html.show_error(
+                    _("This site is not the master site nor a replication slave. "
+                      "You cannot configure specific settings for it."))
                 return
 
         group_names = self._group_names(show_all=True)

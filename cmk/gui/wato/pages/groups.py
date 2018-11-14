@@ -88,7 +88,8 @@ class ModeGroups(WatoMode):
                 message += "</ul>"
                 raise MKUserError(None, message)
 
-            confirm_txt = _('Do you really want to delete the %s group "%s"?') % (self.type_name, delname)
+            confirm_txt = _('Do you really want to delete the %s group "%s"?') % (self.type_name,
+                                                                                  delname)
 
             c = wato_confirm(_("Confirm deletion of group \"%s\"") % delname, confirm_txt)
             if c:
@@ -179,7 +180,8 @@ class ModeEditGroup(WatoMode):
             raise MKUserError(None, _("This group does not exist."))
 
     def buttons(self):
-        html.context_button(_("All groups"),
+        html.context_button(
+            _("All groups"),
             watolib.folder_preserving_link([("mode", "%s_groups" % self.type_name)]), "back")
 
     def _determine_additional_group_data(self):
@@ -211,9 +213,10 @@ class ModeEditGroup(WatoMode):
     def page(self):
         html.begin_form("group")
         forms.header(_("Properties"))
-        forms.section(_("Name"), simple = not self._new)
-        html.help(_("The name of the group is used as an internal key. It cannot be "
-                     "changed later. It is also visible in the status GUI."))
+        forms.section(_("Name"), simple=not self._new)
+        html.help(
+            _("The name of the group is used as an internal key. It cannot be "
+              "changed later. It is also visible in the status GUI."))
         if self._new:
             html.text_input("name", self._name)
             html.set_focus("name")
@@ -250,20 +253,28 @@ class ModeHostgroups(ModeGroups):
 
     def _page_no_groups(self):
         menu = MainMenu()
-        menu.add_item(MenuItem(
-            mode_or_url="edit_host_group",
-            title=_("Create new host group"),
-            icon="new",
-            permission="groups",
-            description=_("Host groups are used for visualization and filtering of host"),
-        ))
+        menu.add_item(
+            MenuItem(
+                mode_or_url="edit_host_group",
+                title=_("Create new host group"),
+                icon="new",
+                permission="groups",
+                description=_("Host groups are used for visualization and filtering of host"),
+            ))
         menu.show()
 
     def buttons(self):
         super(ModeHostgroups, self).buttons()
-        html.context_button(_("Service groups"), watolib.folder_preserving_link([("mode", "service_groups")]), "hostgroups")
-        html.context_button(_("New host group"), watolib.folder_preserving_link([("mode", "edit_host_group")]), "new")
-        html.context_button(_("Rules"), watolib.folder_preserving_link([("mode", "edit_ruleset"), ("varname", "host_groups")]), "rulesets")
+        html.context_button(
+            _("Service groups"), watolib.folder_preserving_link([("mode", "service_groups")]),
+            "hostgroups")
+        html.context_button(
+            _("New host group"), watolib.folder_preserving_link([("mode", "edit_host_group")]),
+            "new")
+        html.context_button(
+            _("Rules"),
+            watolib.folder_preserving_link([("mode", "edit_ruleset"), ("varname", "host_groups")]),
+            "rulesets")
 
 
 @mode_registry.register
@@ -283,20 +294,29 @@ class ModeServicegroups(ModeGroups):
 
     def _page_no_groups(self):
         menu = MainMenu()
-        menu.add_item(MenuItem(
-            mode_or_url="edit_service_group",
-            title=_("Create new service group"),
-            icon="new",
-            permission="groups",
-            description=_("Service groups are used for visualization and filtering of services"),
-        ))
+        menu.add_item(
+            MenuItem(
+                mode_or_url="edit_service_group",
+                title=_("Create new service group"),
+                icon="new",
+                permission="groups",
+                description=_(
+                    "Service groups are used for visualization and filtering of services"),
+            ))
         menu.show()
 
     def buttons(self):
         super(ModeServicegroups, self).buttons()
-        html.context_button(_("Host groups"), watolib.folder_preserving_link([("mode", "host_groups")]), "servicegroups")
-        html.context_button(_("New service group"), watolib.folder_preserving_link([("mode", "edit_service_group")]), "new")
-        html.context_button(_("Rules"), watolib.folder_preserving_link([("mode", "edit_ruleset"), ("varname", "service_groups")]), "rulesets")
+        html.context_button(
+            _("Host groups"), watolib.folder_preserving_link([("mode", "host_groups")]),
+            "servicegroups")
+        html.context_button(
+            _("New service group"), watolib.folder_preserving_link([("mode",
+                                                                     "edit_service_group")]), "new")
+        html.context_button(
+            _("Rules"),
+            watolib.folder_preserving_link([("mode", "edit_ruleset"),
+                                            ("varname", "service_groups")]), "rulesets")
 
 
 @mode_registry.register
@@ -317,19 +337,25 @@ class ModeContactgroups(ModeGroups):
 
     def buttons(self):
         super(ModeContactgroups, self).buttons()
-        html.context_button(_("New contact group"), watolib.folder_preserving_link([("mode", "edit_contact_group")]), "new")
-        html.context_button(_("Rules"), watolib.folder_preserving_link([("mode", "rulesets"),
-                             ("filled_in", "search"), ("search", "contactgroups")]), "rulesets")
+        html.context_button(
+            _("New contact group"), watolib.folder_preserving_link([("mode",
+                                                                     "edit_contact_group")]), "new")
+        html.context_button(
+            _("Rules"),
+            watolib.folder_preserving_link([("mode", "rulesets"), ("filled_in", "search"),
+                                            ("search", "contactgroups")]), "rulesets")
 
     def _page_no_groups(self):
         menu = MainMenu()
-        menu.add_item(MenuItem(
-            mode_or_url="edit_contact_group",
-            title=_("Create new contact group"),
-            icon="new",
-            permission="users",
-            description=_("Contact groups are needed for assigning hosts and services to people (contacts)")
-        ))
+        menu.add_item(
+            MenuItem(
+                mode_or_url="edit_contact_group",
+                title=_("Create new contact group"),
+                icon="new",
+                permission="users",
+                description=_(
+                    "Contact groups are needed for assigning hosts and services to people (contacts)"
+                )))
         menu.show()
 
     def _collect_additional_data(self):
@@ -436,33 +462,34 @@ class ModeEditContactgroup(ModeEditGroup):
             choices=[
                 ("allow_all", _("Allowed to see the whole tree")),
                 ("forbid_all", _("Forbid to see the whole tree")),
-                ("paths", _("Allowed to see the following entries"), ListOf(
-                    Dictionary(
-                        elements=[
-                        ("path", TextAscii(
-                            title=_("Path"),
-                            size=60,
-                            allow_empty=False,
-                        )),
-                        ("attributes", ListOfStrings(
-                            orientation="horizontal",
-                            title=_("Attributes"),
-                            size=15,
-                            allow_empty=True,
-                        ))],
-                        optional_keys=["attributes"],
-                    ),
-                    allow_empty=False,
-                )),
+                ("paths", _("Allowed to see the following entries"),
+                 ListOf(
+                     Dictionary(
+                         elements=[("path", TextAscii(
+                             title=_("Path"),
+                             size=60,
+                             allow_empty=False,
+                         )),
+                                   ("attributes",
+                                    ListOfStrings(
+                                        orientation="horizontal",
+                                        title=_("Attributes"),
+                                        size=15,
+                                        allow_empty=True,
+                                    ))],
+                         optional_keys=["attributes"],
+                     ),
+                     allow_empty=False,
+                 )),
             ],
             default_value="allow_all",
         )
 
     def _vs_nagvis_maps(self):
         return ListChoice(
-            title = _('NagVis Maps'),
-            choices = self._get_nagvis_maps,
-            toggle_all = True,
+            title=_('NagVis Maps'),
+            choices=self._get_nagvis_maps,
+            toggle_all=True,
         )
 
     def _get_nagvis_maps(self):

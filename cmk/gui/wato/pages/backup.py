@@ -90,7 +90,8 @@ class ModeBackupTargets(backup.PageBackupTargets, WatoMode):
 
     def page(self):
         self.targets().show_list()
-        backup.SystemBackupTargetsReadOnly().show_list(editable=False, title=_("System global targets"))
+        backup.SystemBackupTargetsReadOnly().show_list(
+            editable=False, title=_("System global targets"))
 
 
 @mode_registry.register
@@ -219,8 +220,7 @@ class ModeBackupUploadKey(SiteBackupKeypairStore, backup.PageBackupUploadKey, Wa
         return ["backups"]
 
     def _upload_key(self, key_file, value):
-        watolib.log_audit(None, "upload-backup-key",
-                  _("Uploaded backup key '%s'") % value["alias"])
+        watolib.log_audit(None, "upload-backup-key", _("Uploaded backup key '%s'") % value["alias"])
         super(ModeBackupUploadKey, self)._upload_key(key_file, value)
 
 
@@ -268,7 +268,7 @@ class ModeBackupRestore(backup.PageBackupRestore, WatoMode):
     def _show_target_list(self):
         super(ModeBackupRestore, self)._show_target_list()
         backup.SystemBackupTargetsReadOnly().show_list(
-                                editable=False, title=_("System global targets"))
+            editable=False, title=_("System global targets"))
 
     def _show_backup_list(self):
         self._target.show_backup_list("Check_MK")

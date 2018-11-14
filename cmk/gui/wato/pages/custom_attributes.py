@@ -153,7 +153,9 @@ class ModeEditCustomAttr(WatoMode):
 
         for this_attr in self._attrs:
             if title == this_attr['title'] and self._name != this_attr['name']:
-                raise MKUserError("alias", _("This alias is already used by the attribute %s.") % this_attr['name'])
+                raise MKUserError(
+                    "alias",
+                    _("This alias is already used by the attribute %s.") % this_attr['name'])
 
         topic = html.var('topic', '').strip()
         help_txt = html.get_unicode_input('help').strip()
@@ -167,7 +169,10 @@ class ModeEditCustomAttr(WatoMode):
             if ' ' in self._name:
                 raise MKUserError("name", _("Sorry, spaces are not allowed in attribute names."))
             if not re.match("^[-a-z0-9A-Z_]*$", self._name):
-                raise MKUserError("name", _("Invalid attribute name. Only the characters a-z, A-Z, 0-9, _ and - are allowed."))
+                raise MKUserError(
+                    "name",
+                    _("Invalid attribute name. Only the characters a-z, A-Z, 0-9, _ and - are allowed."
+                     ))
             if [a for a in self._attrs if a['name'] == self._name]:
                 raise MKUserError("name", _("Sorry, there is already an attribute with that name."))
 
@@ -181,9 +186,11 @@ class ModeEditCustomAttr(WatoMode):
             }
             self._attrs.append(self._attr)
 
-            add_change("edit-%sattr" % self._type, _("Create new %s attribute %s") % (self._type, self._name))
+            add_change("edit-%sattr" % self._type,
+                       _("Create new %s attribute %s") % (self._type, self._name))
         else:
-            add_change("edit-%sattr" % self._type, _("Modified %s attribute %s") % (self._type, self._name))
+            add_change("edit-%sattr" % self._type,
+                       _("Modified %s attribute %s") % (self._type, self._name))
         self._attr.update({
             'title': title,
             'topic': topic,
@@ -203,9 +210,10 @@ class ModeEditCustomAttr(WatoMode):
         # TODO: remove subclass specific things specifict things (everything with _type == 'user')
         html.begin_form("attr")
         forms.header(_("Properties"))
-        forms.section(_("Name"), simple = not self._new)
-        html.help(_("The name of the attribute is used as an internal key. It cannot be "
-                    "changed later."))
+        forms.section(_("Name"), simple=not self._new)
+        html.help(
+            _("The name of the attribute is used as an internal key. It cannot be "
+              "changed later."))
         if self._new:
             html.text_input("name", self._attr.get('name'))
             html.set_focus("name")
@@ -235,10 +243,13 @@ class ModeEditCustomAttr(WatoMode):
         self._add_extra_form_sections()
 
         forms.section(_('Show in Table'))
-        html.help(_('This attribute is only visibile on the detail pages by default, but '
-                    'you can also make it visible in the overview tables.'))
-        html.checkbox('show_in_table', self._attr.get('show_in_table', False),
-                      label = _("Show the setting of the attribute in the list table"))
+        html.help(
+            _('This attribute is only visibile on the detail pages by default, but '
+              'you can also make it visible in the overview tables.'))
+        html.checkbox(
+            'show_in_table',
+            self._attr.get('show_in_table', False),
+            label=_("Show the setting of the attribute in the list table"))
 
         forms.section(_('Add as custom macro'))
         html.help(self._macro_help)
@@ -269,9 +280,9 @@ class ModeEditCustomUserAttr(ModeEditCustomAttr):
     @property
     def _topics(self):
         return [
-            ('ident',    _('Identity')),
+            ('ident', _('Identity')),
             ('security', _('Security')),
-            ('notify',   _('Notifications')),
+            ('notify', _('Notifications')),
             ('personal', _('Personal Settings')),
         ]
 
@@ -281,7 +292,9 @@ class ModeEditCustomUserAttr(ModeEditCustomAttr):
 
     @property
     def _macro_help(self):
-        return _('The attribute can be added to the contact definiton in order to use it for notifications.')
+        return _(
+            'The attribute can be added to the contact definiton in order to use it for notifications.'
+        )
 
     @property
     def _macro_label(self):
@@ -296,8 +309,10 @@ class ModeEditCustomUserAttr(ModeEditCustomAttr):
     def _add_extra_form_sections(self):
         forms.section(_('Editable by Users'))
         html.help(_('It is possible to let users edit their custom attributes.'))
-        html.checkbox('user_editable', self._attr.get('user_editable', True),
-                      label = _("Users can change this attribute in their personal settings"))
+        html.checkbox(
+            'user_editable',
+            self._attr.get('user_editable', True),
+            label=_("Users can change this attribute in their personal settings"))
 
     def title(self):
         if self._new:
@@ -305,8 +320,8 @@ class ModeEditCustomUserAttr(ModeEditCustomAttr):
         return _("Edit User Attribute")
 
     def buttons(self):
-        html.context_button(_("Back"), watolib.folder_preserving_link([
-                                            ("mode", "user_attrs")]), "back")
+        html.context_button(
+            _("Back"), watolib.folder_preserving_link([("mode", "user_attrs")]), "back")
 
 
 @mode_registry.register
@@ -355,8 +370,8 @@ class ModeEditCustomHostAttr(ModeEditCustomAttr):
         return _("Edit Host Attribute")
 
     def buttons(self):
-        html.context_button(_("Back"), watolib.folder_preserving_link([
-                                            ("mode", "host_attrs")]), "back")
+        html.context_button(
+            _("Back"), watolib.folder_preserving_link([("mode", "host_attrs")]), "back")
 
 
 class ModeCustomAttrs(WatoMode):
@@ -420,9 +435,9 @@ class ModeCustomAttrs(WatoMode):
             html.icon_button(edit_url, _("Properties"), "edit")
             html.icon_button(delete_url, _("Delete"), "delete")
 
-            table.text_cell(_("Name"),  custom_attr['name'])
+            table.text_cell(_("Name"), custom_attr['name'])
             table.text_cell(_("Title"), custom_attr['title'])
-            table.cell(_("Type"),  dict(custom_attr_types())[custom_attr['type']])
+            table.cell(_("Type"), dict(custom_attr_types())[custom_attr['type']])
 
         table.end()
 
@@ -449,7 +464,8 @@ class ModeCustomUserAttrs(ModeCustomAttrs):
 
     def buttons(self):
         html.context_button(_("Users"), watolib.folder_preserving_link([("mode", "users")]), "back")
-        html.context_button(_("New attribute"), watolib.folder_preserving_link([("mode", "edit_user_attr")]), "new")
+        html.context_button(
+            _("New attribute"), watolib.folder_preserving_link([("mode", "edit_user_attr")]), "new")
 
 
 @mode_registry.register
@@ -473,8 +489,10 @@ class ModeCustomHostAttrs(ModeCustomAttrs):
         return _("Custom Host Attributes")
 
     def buttons(self):
-        html.context_button(_("Folder"), watolib.folder_preserving_link([("mode", "folder")]), "back")
-        html.context_button(_("New attribute"), watolib.folder_preserving_link([("mode", "edit_host_attr")]), "new")
+        html.context_button(
+            _("Folder"), watolib.folder_preserving_link([("mode", "folder")]), "back")
+        html.context_button(
+            _("New attribute"), watolib.folder_preserving_link([("mode", "edit_host_attr")]), "new")
 
     def get_attributes(self):
         return self._attrs

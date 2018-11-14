@@ -112,8 +112,9 @@ class ModeAnalyzeConfig(WatoMode):
 
     def page(self):
         if not self._analyze_site_ids():
-            html.show_info(_("Analyze configuration can only be used with the local site and "
-                             "distributed WATO slave sites. You currently have no such site configured."))
+            html.show_info(
+                _("Analyze configuration can only be used with the local site and "
+                  "distributed WATO slave sites. You currently have no such site configured."))
             return
 
         results_by_category = self._perform_tests()
@@ -138,9 +139,11 @@ class ModeAnalyzeConfig(WatoMode):
         table.row()
 
         table.cell(_("Actions"), css="buttons", sortable=False)
-        html.icon_button(None, _("Toggle result details"),
-                         "toggle_details",
-                         onclick="toggle_container('test_result_details_%s')" % test_id)
+        html.icon_button(
+            None,
+            _("Toggle result details"),
+            "toggle_details",
+            onclick="toggle_container('test_result_details_%s')" % test_id)
 
         worst_result = sorted(
             test_results_by_site["site_results"].values(), key=lambda result: result.status)[0]
@@ -149,17 +152,19 @@ class ModeAnalyzeConfig(WatoMode):
         is_test_disabled = self._is_test_disabled(test_id)
         if is_test_disabled:
             html.icon_button(
-                html.makeactionuri(
-                    [("_do",        "enable"),
-                     ("_test_id",   worst_result.test_id)]),
+                html.makeactionuri([
+                    ("_do", "enable"),
+                    ("_test_id", worst_result.test_id),
+                ]),
                 _("Reenable this test"),
                 "enable_test",
             )
         else:
             html.icon_button(
-                html.makeactionuri(
-                    [("_do",        "disable"),
-                     ("_test_id",   worst_result.test_id)]),
+                html.makeactionuri([
+                    ("_do", "disable"),
+                    ("_test_id", worst_result.test_id),
+                ]),
                 _("Disable this test"),
                 "disable_test",
             )
@@ -198,21 +203,23 @@ class ModeAnalyzeConfig(WatoMode):
             if result.status != 0:
                 if is_acknowledged:
                     html.icon_button(
-                        html.makeactionuri(
-                            [("_do",        "unack"),
-                             ("_site_id",   result.site_id),
-                             ("_status_id", result.status),
-                             ("_test_id",   result.test_id)]),
+                        html.makeactionuri([
+                            ("_do", "unack"),
+                            ("_site_id", result.site_id),
+                            ("_status_id", result.status),
+                            ("_test_id", result.test_id),
+                        ]),
                         _("Unacknowledge this test result for site %s") % site_id,
                         "unacknowledge_test",
                     )
                 else:
                     html.icon_button(
-                        html.makeactionuri(
-                            [("_do",        "ack"),
-                             ("_site_id",   result.site_id),
-                             ("_status_id", result.status),
-                             ("_test_id",   result.test_id)]),
+                        html.makeactionuri([
+                            ("_do", "ack"),
+                            ("_site_id", result.site_id),
+                            ("_status_id", result.status),
+                            ("_test_id", result.test_id),
+                        ]),
                         _("Acknowledge this test result for site %s") % site_id,
                         "acknowledge_test",
                     )

@@ -70,7 +70,8 @@ class ModeManageReadOnly(WatoMode):
 
     def buttons(self):
         global_buttons()
-        html.context_button(_("Back"), watolib.folder_preserving_link([("mode", "globalvars")]), "back")
+        html.context_button(
+            _("Back"), watolib.folder_preserving_link([("mode", "globalvars")]), "back")
 
     def action(self):
         settings = self._vs().from_html_vars("_read_only")
@@ -99,53 +100,50 @@ class ModeManageReadOnly(WatoMode):
 
     def _vs(self):
         return Dictionary(
-            title = _("Read only mode"),
-            optional_keys = False,
-            render = "form",
-            elements = [
+            title=_("Read only mode"),
+            optional_keys=False,
+            render="form",
+            elements=[
                 ("enabled",
-                    Alternative(
-                        title = _("Enabled"),
-                        style = "dropdown",
-                        elements = [
-                            FixedValue(
-                                False,
-                                title = _("Disabled "),
-                                totext = "Not enabled",
-                            ),
-                            FixedValue(
-                                True,
-                                title = _("Enabled permanently"),
-                                totext = _("Enabled until disabling"),
-                            ),
-                            Tuple(
-                                title = _("Enabled in time range"),
-                                elements = [
-                                    AbsoluteDate(
-                                        title = _("Start"),
-                                        include_time = True,
-                                    ),
-                                    AbsoluteDate(
-                                        title = _("Until"),
-                                        include_time = True,
-                                        default_value = time.time() + 3600,
-                                    ),
-                                ],
-                            ),
-                        ],
-                    ),
-                ),
-                ("rw_users", ListOf(
-                    watolib.UserSelection(),
-                    title = _("Can still edit"),
-                    help = _("Users listed here are still allowed to modify things."),
-                    movable = False,
-                    add_label = _("Add user"),
-                    default_value = [config.user.id],
-                )),
+                 Alternative(
+                     title=_("Enabled"),
+                     style="dropdown",
+                     elements=[
+                         FixedValue(
+                             False,
+                             title=_("Disabled "),
+                             totext="Not enabled",
+                         ),
+                         FixedValue(
+                             True,
+                             title=_("Enabled permanently"),
+                             totext=_("Enabled until disabling"),
+                         ),
+                         Tuple(
+                             title=_("Enabled in time range"),
+                             elements=[
+                                 AbsoluteDate(
+                                     title=_("Start"),
+                                     include_time=True,
+                                 ),
+                                 AbsoluteDate(
+                                     title=_("Until"),
+                                     include_time=True,
+                                     default_value=time.time() + 3600,
+                                 ),
+                             ])
+                     ])),
+                ("rw_users",
+                 ListOf(
+                     watolib.UserSelection(),
+                     title=_("Can still edit"),
+                     help=_("Users listed here are still allowed to modify things."),
+                     movable=False,
+                     add_label=_("Add user"),
+                     default_value=[config.user.id],
+                 )),
                 ("message", TextAreaUnicode(
-                    title = _("Message"),
-                    rows = 3,
+                    title=_("Message"),
+                    rows=3,
                 )),
-            ]
-        )
+            ])

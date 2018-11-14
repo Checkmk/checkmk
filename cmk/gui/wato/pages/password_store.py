@@ -73,16 +73,18 @@ class ModePasswords(WatoMode, watolib.PasswordStore):
 
     def buttons(self):
         global_buttons()
-        html.context_button(_("New password"), html.makeuri_contextless([("mode", "edit_password")]), "new")
+        html.context_button(
+            _("New password"), html.makeuri_contextless([("mode", "edit_password")]), "new")
 
     def action(self):
         if not html.transaction_valid():
             return
 
-        confirm = wato_confirm(_("Confirm deletion of password"),
-                        _("The password may be used in checks. If you delete the password, the "
-                          "checks won't be able to authenticate with this password anymore."
-                          "<br><br>Do you really want to delete this password?"))
+        confirm = wato_confirm(
+            _("Confirm deletion of password"),
+            _("The password may be used in checks. If you delete the password, the "
+              "checks won't be able to authenticate with this password anymore."
+              "<br><br>Do you really want to delete this password?"))
         if confirm == False:
             return False
 
@@ -102,12 +104,15 @@ class ModePasswords(WatoMode, watolib.PasswordStore):
             return None, _("The password has been deleted.")
 
     def page(self):
-        html.p(_("This password management module stores the passwords you use in your checks and "
-                 "special agents in a central place. Please note that this password store is no "
-                 "kind of password safe. Your passwords will not be encrypted."))
-        html.p(_("All the passwords you store in your monitoring configuration, "
-                 "including this password store, are needed in plain text to contact remote systems "
-                 "for monitoring. So all those passwords have to be stored readable by the monitoring."))
+        html.p(
+            _("This password management module stores the passwords you use in your checks and "
+              "special agents in a central place. Please note that this password store is no "
+              "kind of password safe. Your passwords will not be encrypted."))
+        html.p(
+            _("All the passwords you store in your monitoring configuration, "
+              "including this password store, are needed in plain text to contact remote systems "
+              "for monitoring. So all those passwords have to be stored readable by the monitoring."
+             ))
 
         passwords = self._owned_passwords()
         table.begin("passwords", _("Passwords"))
@@ -127,8 +132,9 @@ class ModePasswords(WatoMode, watolib.PasswordStore):
         table.cell(_("Title"), html.render_text(password["title"]))
         table.cell(_("Editable by"))
         if password["owned_by"] == None:
-            html.write_text(_("Administrators (having the permission "
-                              "\"Write access to all passwords\")"))
+            html.write_text(
+                _("Administrators (having the permission "
+                  "\"Write access to all passwords\")"))
         else:
             html.write_text(self._contact_group_alias(password["owned_by"]))
         table.cell(_("Shared with"))
@@ -180,35 +186,39 @@ class ModeEditPassword(WatoMode, watolib.PasswordStore):
 
     def valuespec(self):
         return Dictionary(
-            title         = _("Password"),
-            elements      = self._vs_elements(),
-            optional_keys = ["contact_groups"],
-            render        = "form", )
+            title=_("Password"),
+            elements=self._vs_elements(),
+            optional_keys=["contact_groups"],
+            render="form",
+        )
 
     def _vs_elements(self):
         if self._new:
             ident_attr = [
-                ("ident", ID(
-                    title = _("Unique ID"),
-                    help = _("The ID must be a unique text. It will be used as an internal key "
-                             "when objects refer to this password."),
-                    allow_empty = False,
-                    size = 12,
-                )),
+                ("ident",
+                 ID(
+                     title=_("Unique ID"),
+                     help=_("The ID must be a unique text. It will be used as an internal key "
+                            "when objects refer to this password."),
+                     allow_empty=False,
+                     size=12,
+                 )),
             ]
         else:
             ident_attr = [
-                ("ident", FixedValue(self._ident,
-                    title = _("Unique ID"),
+                ("ident", FixedValue(
+                    self._ident,
+                    title=_("Unique ID"),
                 )),
             ]
 
         if config.user.may("wato.edit_all_passwords"):
             admin_element = [
-                FixedValue(None,
-                    title = _("Administrators"),
-                    totext = _("Administrators (having the permission "
-                               "\"Write access to all passwords\")"),
+                FixedValue(
+                    None,
+                    title=_("Administrators"),
+                    totext=_("Administrators (having the permission "
+                             "\"Write access to all passwords\")"),
                 )
             ]
         else:
@@ -216,41 +226,43 @@ class ModeEditPassword(WatoMode, watolib.PasswordStore):
 
         return ident_attr + [
             ("title", TextUnicode(
-                title = _("Title"),
-                allow_empty = False,
-                size = 64,
+                title=_("Title"),
+                allow_empty=False,
+                size=64,
             )),
             ("password", PasswordSpec(
-                title = _("Password"),
-                allow_empty = False,
+                title=_("Password"),
+                allow_empty=False,
             )),
-            ("owned_by", Alternative(
-                title = _("Editable by"),
-                help  = _("Each password is owned by a group of users which are able to edit, "
-                          "delete and use existing passwords."),
-                style = "dropdown",
-                elements = admin_element + [
-                    DropdownChoice(
-                        title = _("Members of the contact group:"),
-                        choices = lambda: self.__contact_group_choices(only_own=True),
-                        invalid_choice = "complain",
-                        empty_text = _("You need to be member of at least one contact group to be able to "
-                                       "create a password."),
-                        invalid_choice_title = _("Group not existant or not member"),
-                        invalid_choice_error = _("The choosen group is either not existant "
-                                                 "anymore or you are not a member of this "
-                                                 "group. Please choose another one."),
-                    ),
-                ]
-            )),
-            ("shared_with", DualListChoice(
-                title = _("Share with"),
-                help  = _("By default only the members of the owner contact group are permitted "
-                          "to use a a configured password. It is possible to share a password with "
-                          "other groups of users to make them able to use a password in checks."),
-                choices = self.__contact_group_choices,
-                autoheight = False,
-            )),
+            ("owned_by",
+             Alternative(
+                 title=_("Editable by"),
+                 help=_("Each password is owned by a group of users which are able to edit, "
+                        "delete and use existing passwords."),
+                 style="dropdown",
+                 elements=admin_element + [
+                     DropdownChoice(
+                         title=_("Members of the contact group:"),
+                         choices=lambda: self.__contact_group_choices(only_own=True),
+                         invalid_choice="complain",
+                         empty_text=_(
+                             "You need to be member of at least one contact group to be able to "
+                             "create a password."),
+                         invalid_choice_title=_("Group not existant or not member"),
+                         invalid_choice_error=_("The choosen group is either not existant "
+                                                "anymore or you are not a member of this "
+                                                "group. Please choose another one."),
+                     ),
+                 ])),
+            ("shared_with",
+             DualListChoice(
+                 title=_("Share with"),
+                 help=_("By default only the members of the owner contact group are permitted "
+                        "to use a a configured password. It is possible to share a password with "
+                        "other groups of users to make them able to use a password in checks."),
+                 choices=self.__contact_group_choices,
+                 autoheight=False,
+             )),
         ]
 
     def __contact_group_choices(self, only_own=False):

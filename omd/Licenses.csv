@@ -12,7 +12,6 @@ icinga,1.13.3,GPL-2.0,https://opensource.org/licenses/GPL-2.0,omd/packages/icing
 jmx4perl,1.11,GPL-2.0,https://opensource.org/licenses/GPL-2.0,omd/packages/jmx4perl/jmx4perl-1.11.tar.gz,,,,
 lcab,1.0b12,GPL-2.0,https://opensource.org/licenses/GPL-2.0,omd/packages/msitools/lcab-1.0b12.tar.gz,,,,
 mod_fcgid,2.3.9,Apache-2.0,https://opensource.org/licenses/Apache-2.0,omd/packages/mod_fcgid/mod_fcgid-2.3.9.tar.gz,,,,
-mod_python,3.3.1,GPL-2.0,https://opensource.org/licenses/GPL-2.0,omd/packages/mod_python/mod_python-3.3.1.tar.gz,,,,
 Monitoring Plugins,2.2,GPL-3.0,https://opensource.org/licenses/GPL-3.0,omd/packages/monitoring-plugins/monitoring-plugins-2.2.tar.gz,,,,
 msitools,0.94,GPL-2.0,https://opensource.org/licenses/GPL-2.0,agents/windows/msibuild/msitools-0.94.tar.xz,,,,
 msitools,0.94,GPL-2.0,https://opensource.org/licenses/GPL-2.0,omd/packages/msitools/msitools-0.94.tar.gz,bereits gelistet in Zeile 3 zu Pfad: ./agents/windows/msibuild/msitools-0.94.tar.xz,,,

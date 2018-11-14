@@ -419,7 +419,7 @@ def yield_configured_instances():
     mode = "digest"
     suburi = "jolokia"
     instance = None
-    cert_path = "_default"
+    cert_path = None
     client_cert = None
     client_key = None
     service_url = None

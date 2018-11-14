@@ -54,10 +54,10 @@ test-format-python: $(VENV) ../.style.yapf
 # There are some mixed up lines on stdout caused by the --parallel option.
 # Nevertheless, we keep that option to get a big performance boost. GitHub issue
 # opened for this problem: https://github.com/google/yapf/issues/644.
-	PYTHON_FILES=$${PYTHON_FILES-$$(./find-python-files)} ; \
+	@PYTHON_FILES=$${PYTHON_FILES-$$(./find-python-files)} ; \
 	$(YAPF) --parallel --style ../.style.yapf --verbose --diff $$PYTHON_FILES | \
-		grep '^+++ .*(reformatted)$$' | \
-		sed -e 's/^+++ //' -e 's/[[:blank:]]*(reformatted)$$/:1:1: error: file needs formatting/'
+	grep '^+++ .*(reformatted)$$' | \
+	sed -e 's/^+++ //' -e 's/[[:blank:]]*(reformatted)$$/:1:1: error: file needs formatting/'
 
 test-gui-crawl: $(VENV)
 	$(PYTEST) -T gui_crawl

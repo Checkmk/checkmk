@@ -76,6 +76,13 @@ except ImportError:
     # Default to python2
     from cgi import escape as html_escape
 
+try:
+    # does not exist in Py3, but is super class of str & unicode in py2
+    basestring
+except NameError:
+    basestring = str  # pylint: disable=redefined-builtin
+    unicode = str  # pylint: disable=redefined-builtin
+
 
 # Monkey patch in order to make the HTML class below json-serializable without changing the default json calls.
 def _default(self, obj):
@@ -377,7 +384,7 @@ class OutputFunnel(object):
         if isinstance(text, HTML):
             text = "%s" % text
 
-        if type(text) not in [str, unicode]:  # also possible: type Exception!
+        if not isinstance(text, basestring):  # also possible: type Exception!
             raise MKGeneralException(
                 _('Type Error: html.write accepts str and unicode input objects only!'))
 
@@ -1332,7 +1339,7 @@ class html(HTMLGenerator):
         if isinstance(ht, HTML):
             ht = "%s" % ht
 
-        if type(ht) not in [str, unicode]:
+        if not isinstance(ht, basestring):
             return ht
 
         while True:

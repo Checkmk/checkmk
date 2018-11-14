@@ -29,6 +29,13 @@ import re
 import werkzeug.http
 import cgi
 
+try:
+    # does not exist in Py3, but is super class of str & unicode in py2
+    basestring
+except NameError:
+    basestring = str  # pylint: disable=redefined-builtin
+    unicode = str  # pylint: disable=redefined-builtin
+
 import cmk.gui.log as log
 from cmk.gui.i18n import _
 import cmk.gui.http_status
@@ -221,7 +228,7 @@ class Request(object):
         if value is None:
             self.del_var(varname)
 
-        elif type(value) in [str, unicode]:
+        elif isinstance(value, basestring):
             self.vars[varname] = value
 
         else:

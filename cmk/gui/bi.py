@@ -35,6 +35,13 @@ import multiprocessing
 from contextlib import contextmanager
 import traceback
 
+try:
+    # does not exist in Py3, but is super class of str & unicode in py2
+    basestring
+except NameError:
+    basestring = str  # pylint: disable=redefined-builtin
+    unicode = str  # pylint: disable=redefined-builtin
+
 from cmk.regex import regex
 import cmk
 
@@ -272,7 +279,7 @@ def aggregation_group_choices():
 
 def log(*args):
     for idx, arg in enumerate(args):
-        if type(arg) not in [unicode, str]:
+        if isinstance(arg, basestring):
             arg = pprint.pformat(arg)
         compile_logger.debug('BI: %s%s' % (idx > 5 and "\n" or "", arg))
 
@@ -1825,7 +1832,7 @@ def compile_aggregation_rule(aggr_type, rule, args, lvl):
                 # 2: (['waage'], '(.*)')
                 calllist = []
                 for n in node[1:-2]:
-                    if type(n) in [str, unicode, list, tuple]:
+                    if isinstance(n, (basestring, list, tuple)):
                         n = subst_vars(n, arginfo)
                     calllist.append(n)
 
@@ -1930,7 +1937,7 @@ def subst_vars(pattern, arginfo):
         return tuple([subst_vars(x, arginfo) for x in pattern])
 
     for name, value in arginfo.iteritems():
-        if type(pattern) in [str, unicode]:
+        if isinstance(pattern, basestring):
             pattern = pattern.replace('$' + name + '$', value)
     return pattern
 

@@ -72,14 +72,17 @@ def get_disks(item, read_data, write_data):
     write_tp = convert_to_bytes(int(write_data[-3].strip("(")), \
                                 write_data[-2].strip(")"))
 
-    disks = { item : {
-        'node'              : None,
-        'read_ios'          : int(read_data[0]),
-        'read_throughput'   : read_tp,
-        'write_ios'         : int(write_data[0]),
-        'write_throughput'  : write_tp,
-    }}
+    disks = {
+        item: {
+            'node': None,
+            'read_ios': int(read_data[0]),
+            'read_throughput': read_tp,
+            'write_ios': int(write_data[0]),
+            'write_throughput': write_tp,
+        }
+    }
     return disks
+
 
 def get_scaleio_data(item, parsed):
     return parsed.get(item)

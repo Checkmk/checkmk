@@ -24,24 +24,25 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-
 # <<<ucs_bladecenter_faultinst:sep(9)>>>
 # faultInst   Dn sys/chassis-2/bl...ault-F1256 Descr Local disk 2 missing on server 2/3    Severity info
 # faultInst   Dn sys/chassis-2/bl...ault-F1256 Descr Local disk 1 missing on server 2/3    Severity info
 # faultInst   Dn sys/chassis-1/bl...ault-F1256 Descr Local disk 2 missing on server 1/3    Severity info
 
+
 def inventory_ucs_bladecenter_faultinst(parsed):
     yield None, None
 
+
 def check_ucs_bladecenter_faultinst(item, _no_params, parsed):
     severity_map = {
-        "critical"  : 2,
-        "major"     : 1,
-        "warning"   : 1,
-        "minor"     : 1,
-        "info"      : 0,
-        "condition" : 0,
-        "cleared"   : 0,
+        "critical": 2,
+        "major": 1,
+        "warning": 1,
+        "minor": 1,
+        "info": 0,
+        "condition": 0,
+        "cleared": 0,
     }
     severities = {}
     for values in parsed.get("faultInst", {}).itervalues():
@@ -68,10 +69,11 @@ def check_ucs_bladecenter_faultinst(item, _no_params, parsed):
 
         yield sev_state, "%d %s Instances%s" % (len(instances), sev.upper(), extra_info)
 
+
 check_info["ucs_bladecenter_faultinst"] = {
-    'parse_function':          ucs_bladecenter_convert_info,
-    'inventory_function':      inventory_ucs_bladecenter_faultinst,
-    'check_function':          check_ucs_bladecenter_faultinst,
-    'service_description':     'Fault Instances',
-    'includes':                [ 'ucs_bladecenter.include' ],
+    'parse_function': ucs_bladecenter_convert_info,
+    'inventory_function': inventory_ucs_bladecenter_faultinst,
+    'check_function': check_ucs_bladecenter_faultinst,
+    'service_description': 'Fault Instances',
+    'includes': ['ucs_bladecenter.include'],
 }

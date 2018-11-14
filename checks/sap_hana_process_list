@@ -38,12 +38,18 @@ def parse_sap_hana_process_list(info):
             continue
 
         line = [x.replace('"', '').strip() for x in line]
-        if line == ['name', 'description', 'dispstatus', 'textstatus',
-                    'starttime', 'elapsedtime', 'pid']:
+        if line == [
+                'name',
+                'description',
+                'dispstatus',
+                'textstatus',
+                'starttime',
+                'elapsedtime',
+                'pid',
+        ]:
             header = line[1:]
         elif header is not None:
-            parsed.setdefault(("%s %s" % (instance, line[0])).strip(),
-                               dict(zip(header, line[1:])))
+            parsed.setdefault(("%s %s" % (instance, line[0])).strip(), dict(zip(header, line[1:])))
     return parsed
 
 
@@ -65,8 +71,8 @@ def check_sap_hana_process_list(item, params, parsed):
 
 
 check_info['sap_hana_process_list'] = {
-    'parse_function'        : parse_sap_hana_process_list,
-    'inventory_function'    : inventory_sap_hana_process_list,
-    'check_function'        : check_sap_hana_process_list,
-    'service_description'   : 'SAP HANA Process %s',
+    'parse_function': parse_sap_hana_process_list,
+    'inventory_function': inventory_sap_hana_process_list,
+    'check_function': check_sap_hana_process_list,
+    'service_description': 'SAP HANA Process %s',
 }

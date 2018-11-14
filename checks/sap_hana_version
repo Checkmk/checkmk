@@ -30,14 +30,17 @@ def parse_sap_hana_version(info):
     instance = ""
     for line in info:
         if line[0].startswith("[[[") and line[0].endswith("]]]"):
-            instance  = line[0][3:-3]
+            instance = line[0][3:-3]
             continue
 
         line = [x.strip() for x in line]
         if line[0].lower() == "hdb version info":
             continue
 
-        if line[0] in ["git merge time", "compile date", ]:
+        if line[0] in [
+                "git merge time",
+                "compile date",
+        ]:
             line_data = ":".join(line[1:])
         else:
             line_data = " ".join(line[1:])
@@ -58,8 +61,8 @@ def check_sap_hana_version(item, params, parsed):
 
 
 check_info['sap_hana_version'] = {
-    'parse_function'        : parse_sap_hana_version,
-    'inventory_function'    : inventory_sap_hana_version,
-    'check_function'        : check_sap_hana_version,
-    'service_description'   : 'SAP HANA Version',
+    'parse_function': parse_sap_hana_version,
+    'inventory_function': inventory_sap_hana_version,
+    'check_function': check_sap_hana_version,
+    'service_description': 'SAP HANA Version',
 }

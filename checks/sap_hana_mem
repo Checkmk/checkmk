@@ -24,7 +24,6 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-
 # TODO WATO group 'memory_simple' for items
 
 
@@ -87,10 +86,7 @@ def check_sap_hana_mem(item, params, parsed, _type):
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-
-factory_settings["sap_hana_mem_resident_default_levels"] = {
-    "levels" : ("perc_used", (80.0, 90.0))
-}
+factory_settings["sap_hana_mem_resident_default_levels"] = {"levels": ("perc_used", (80.0, 90.0))}
 
 
 def inventory_sap_hana_mem_resident(parsed):
@@ -102,16 +98,15 @@ def check_sap_hana_mem_resident(item, params, parsed):
 
 
 check_info['sap_hana_mem'] = {
-    'parse_function'        : parse_sap_hana_mem,
-    'inventory_function'    : inventory_sap_hana_mem_resident,
-    'check_function'        : check_sap_hana_mem_resident,
-    'service_description'   : 'SAP HANA Resident Memory %s',
-    'includes'              : ['memory.include'],
+    'parse_function': parse_sap_hana_mem,
+    'inventory_function': inventory_sap_hana_mem_resident,
+    'check_function': check_sap_hana_mem_resident,
+    'service_description': 'SAP HANA Resident Memory %s',
+    'includes': ['memory.include'],
     #'group'                 : 'memory_simple',
-    'has_perfdata'                : True,
-    'default_levels_variable' : 'sap_hana_mem_resident_default_levels',
+    'has_perfdata': True,
+    'default_levels_variable': 'sap_hana_mem_resident_default_levels',
 }
-
 
 #.
 #   .--database------------------------------------------------------------.
@@ -123,10 +118,7 @@ check_info['sap_hana_mem'] = {
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-
-factory_settings["sap_hana_mem_database_default_levels"] = {
-    "levels" : ("perc_used", (80.0, 90.0))
-}
+factory_settings["sap_hana_mem_database_default_levels"] = {"levels": ("perc_used", (80.0, 90.0))}
 
 
 def inventory_sap_hana_mem_db(parsed):
@@ -138,11 +130,11 @@ def check_sap_hana_mem_db(item, params, parsed):
 
 
 check_info['sap_hana_mem.database'] = {
-    'inventory_function'    : inventory_sap_hana_mem_db,
-    'check_function'        : check_sap_hana_mem_db,
-    'service_description'   : 'SAP HANA Used Memory %s',
-    'includes'              : ['memory.include'],
+    'inventory_function': inventory_sap_hana_mem_db,
+    'check_function': check_sap_hana_mem_db,
+    'service_description': 'SAP HANA Used Memory %s',
+    'includes': ['memory.include'],
     #'group'                 : 'memory_simple',
-    'has_perfdata'                : True,
-    'default_levels_variable' : 'sap_hana_mem_database_default_levels',
+    'has_perfdata': True,
+    'default_levels_variable': 'sap_hana_mem_database_default_levels',
 }

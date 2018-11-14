@@ -24,6 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+
 def parse_ups_cps_inphase(info):
     parsed = {}
     parsed["1"] = {}
@@ -34,19 +35,22 @@ def parse_ups_cps_inphase(info):
 
 def inventory_ups_cps_inphase(parsed):
     if parsed:
-        return [ ("1", {}) ]
+        return [("1", {})]
 
 
 check_info["ups_cps_inphase"] = {
-    "parse_function"            : parse_ups_cps_inphase,
-    "inventory_function"        : inventory_ups_cps_inphase,
-    "check_function"            : check_elphase,
-    "service_description"       : "UPS Input Phase %s",
-    "snmp_scan_function"        : lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.3808.1.1.1"),
-    "snmp_info"                 : (".1.3.6.1.4.1.3808.1.1.1.3.2", [
-                                        "1", #upsAdvanceInputLineVoltage "in 1/10 VAC"
-                                        "4", #upsAdvanceInputFrequency "in 1/10 Hz"
-                                    ]),
-    "includes"                  : [ "elphase.include" ],
-    "group"                     : "el_inphase",
+    "parse_function": parse_ups_cps_inphase,
+    "inventory_function": inventory_ups_cps_inphase,
+    "check_function": check_elphase,
+    "service_description": "UPS Input Phase %s",
+    "snmp_scan_function":
+        lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.3808.1.1.1"),
+    "snmp_info": (
+        ".1.3.6.1.4.1.3808.1.1.1.3.2",
+        [
+            "1",  #upsAdvanceInputLineVoltage "in 1/10 VAC"
+            "4",  #upsAdvanceInputFrequency "in 1/10 Hz"
+        ]),
+    "includes": ["elphase.include"],
+    "group": "el_inphase",
 }

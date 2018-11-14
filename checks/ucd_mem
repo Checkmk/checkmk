@@ -27,11 +27,8 @@
 # .1.3.6.1.4.1.2021.4.5.0 4003584 --> UCD-SNMP-MIB::memTotalReal.0
 # .1.3.6.1.4.1.2021.4.6.0 188296  --> UCD-SNMP-MIB::memAvailReal.0
 
-
 # suggested by cutomer
-factory_settings["ucd_mem_default_levels"] = {
-    "levels" : ("perc_used", (80.0, 90.0))
-}
+factory_settings["ucd_mem_default_levels"] = {"levels": ("perc_used", (80.0, 90.0))}
 
 
 def inventory_ucd_mem(info):
@@ -39,7 +36,7 @@ def inventory_ucd_mem(info):
         for line in info[0]:
             if line == "":
                 return []
-        return [ ("", {}) ]
+        return [("", {})]
 
 
 def check_ucd_mem(_no_item, params, info):
@@ -50,19 +47,21 @@ def check_ucd_mem(_no_item, params, info):
 
 
 check_info['ucd_mem'] = {
-    'inventory_function'        : inventory_ucd_mem,
-    'check_function'            : check_ucd_mem,
-    'service_description'       : 'Memory',
-    'has_perfdata'              : True,
-    'snmp_info'                 : (".1.3.6.1.4.1.2021.4", [
-                                        "5", # memTotal     -> kB
-                                        "6", # memAvailable -> kB
-                                  ]),
-                                  # Some devices are reporting wrong data on
-                                  # HOST-RESOURCES-MIB. Use UCD-MIB in these
-                                  # cases instead
-    'snmp_scan_function'        : is_ucd_mem,
-    'default_levels_variable'   : 'ucd_mem_default_levels',
-    'group'                     : 'memory_simple',
-    'includes'                  : ["ucd_hr.include", "memory.include"],
+    'inventory_function': inventory_ucd_mem,
+    'check_function': check_ucd_mem,
+    'service_description': 'Memory',
+    'has_perfdata': True,
+    'snmp_info': (
+        ".1.3.6.1.4.1.2021.4",
+        [
+            "5",  # memTotal     -> kB
+            "6",  # memAvailable -> kB
+        ]),
+    # Some devices are reporting wrong data on
+    # HOST-RESOURCES-MIB. Use UCD-MIB in these
+    # cases instead
+    'snmp_scan_function': is_ucd_mem,
+    'default_levels_variable': 'ucd_mem_default_levels',
+    'group': 'memory_simple',
+    'includes': ["ucd_hr.include", "memory.include"],
 }

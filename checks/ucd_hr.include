@@ -35,10 +35,13 @@
 # of check 'ucd_cpu_load' because the HR-MIB has not data
 # about cpu load
 
+
 def is_ucd(oid):
     return _is_ucd(oid)
 
+
 #   ---general ucd/hr-------------------------------------------------------
+
 
 def is_hr(oid):
     return bool(oid('.1.3.6.1.2.1.25.1.1.0'))
@@ -47,7 +50,9 @@ def is_hr(oid):
 def prefer_hr_else_ucd(oid):
     return _is_ucd(oid) and not oid(".1.3.6.1.2.1.25.1.1.0")
 
+
 #   ---memory---------------------------------------------------------------
+
 
 def is_ucd_mem(oid):
     # Avoid inverting output of a function in a check plugin and be
@@ -65,16 +70,22 @@ def is_hr_mem(oid):
         return False
     return not _is_ucd_mem(oid)
 
+
 #   ---helper---------------------------------------------------------------
 
 # Within _is_ucd or _is_ucd_mem we make use of a whitelist
 # in order to expand this list of devices easily.
 
+
 def _is_ucd(oid):
     sys_descr = oid(".1.3.6.1.2.1.1.1.0").lower()
     for name in [
-        "linux", "cmc-tc", "hp onboard administrator",
-        "barracuda", "pfsense", "genugate",
+            "linux",
+            "cmc-tc",
+            "hp onboard administrator",
+            "barracuda",
+            "pfsense",
+            "genugate",
     ]:
         if name in sys_descr:
             return True
@@ -92,7 +103,8 @@ def _is_ucd_mem(oid):
     # Devices for which ucd_mem should be used
     # if and only if HR-table is not available
     for name in [
-        "pfsense", "ironport model c3",
+            "pfsense",
+            "ironport model c3",
     ]:
         if name in sys_descr and not oid(".1.3.6.1.2.1.25.1.1.0"):
             return True

@@ -24,7 +24,6 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-
 # example output
 #
 # <<<storeonce_servicesets:sep(9)>>>
@@ -72,10 +71,9 @@
 # combinedUserBytes   265622218292968
 
 
-
 def inventory_storeonce_servicesets(parsed):
     for values in parsed.itervalues():
-        yield ( values["ServiceSet ID"], {} )
+        yield (values["ServiceSet ID"], {})
 
 
 def check_storeonce_servicesets(item, params, parsed):
@@ -91,9 +89,11 @@ def check_storeonce_servicesets(item, params, parsed):
         yield 0, "Overall Status: %s, Overall Health: %s" % \
                 (values['Overall Status'], values['Overall Health'])
 
-        for component in ['ServiceSet Health',
-                          'Replication Health',
-                          'Housekeeping Health']:
+        for component in [
+                'ServiceSet Health',
+                'Replication Health',
+                'Housekeeping Health',
+        ]:
             state = translate_storeonce_status(values["%s Level" % component])
             state_readable = "%s: %s" % (component, values[component])
             if state > 0:
@@ -101,17 +101,17 @@ def check_storeonce_servicesets(item, params, parsed):
 
 
 check_info['storeonce_servicesets'] = {
-    'parse_function'        : parse_storeonce_servicesets,
-    'inventory_function'    : inventory_storeonce_servicesets,
-    'check_function'        : check_storeonce_servicesets,
-    'service_description'   : 'ServiceSet %s Status',
-    'includes'              : [ 'storeonce.include' ],
+    'parse_function': parse_storeonce_servicesets,
+    'inventory_function': inventory_storeonce_servicesets,
+    'check_function': check_storeonce_servicesets,
+    'service_description': 'ServiceSet %s Status',
+    'includes': ['storeonce.include'],
 }
 
 
 def inventory_storeonce_servicesets_capacity(parsed):
     for values in parsed.itervalues():
-        yield ( values["ServiceSet ID"], {} )
+        yield (values["ServiceSet ID"], {})
 
 
 def check_storeonce_servicesets_capacity(item, params, parsed):
@@ -122,10 +122,10 @@ def check_storeonce_servicesets_capacity(item, params, parsed):
 
 
 check_info['storeonce_servicesets.capacity'] = {
-    'inventory_function'    : inventory_storeonce_servicesets_capacity,
-    'check_function'        : check_storeonce_servicesets_capacity,
-    'service_description'   : "ServiceSet %s Capacity",
-    'has_perfdata'          : True,
-    'group'                 : "filesystem",
-    'includes'              : ["size_trend.include", "df.include", "storeonce.include"],
+    'inventory_function': inventory_storeonce_servicesets_capacity,
+    'check_function': check_storeonce_servicesets_capacity,
+    'service_description': "ServiceSet %s Capacity",
+    'has_perfdata': True,
+    'group': "filesystem",
+    'includes': ["size_trend.include", "df.include", "storeonce.include"],
 }

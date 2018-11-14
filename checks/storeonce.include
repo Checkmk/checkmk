@@ -45,11 +45,11 @@ def parse_storeonce_servicesets(info):
 
 def translate_storeonce_status(status):
     translate_state = {
-        '0'     : 3, # Unknown
-        '1'     : 0, # OK
-        '2'     : 0, # Information
-        '3'     : 1, # Warning
-        '4'     : 2, # Critical
+        '0': 3,  # Unknown
+        '1': 0,  # OK
+        '2': 0,  # Information
+        '3': 1,  # Warning
+        '4': 2,  # Critical
     }
     return translate_state[status]
 
@@ -71,17 +71,16 @@ def _get_storeonce_space_values(values, type_):
 def check_storeonce_space(item, params, values):
     total_bytes, cloud_bytes, local_bytes = _get_storeonce_space_values(values, "Capacity")
     free_bytes, free_cloud_bytes, free_local_bytes = _get_storeonce_space_values(values, "Free")
-    factor = 1024*2
-    yield df_check_filesystem_list(item, params, [(item, total_bytes/factor, free_bytes/factor, 0)])
+    factor = 1024 * 2
+    yield df_check_filesystem_list(item, params,
+                                   [(item, total_bytes / factor, free_bytes / factor, 0)])
 
     if cloud_bytes and local_bytes:
-        yield 0, "Total cloud: %s, Total local: %s" % (
-              get_bytes_human_readable(cloud_bytes),
-              get_bytes_human_readable(local_bytes))
+        yield 0, "Total cloud: %s, Total local: %s" % (get_bytes_human_readable(cloud_bytes),
+                                                       get_bytes_human_readable(local_bytes))
 
     if free_cloud_bytes and free_local_bytes:
-        yield 0, "Free cloud: %s, Free local: %s" % (
-              get_bytes_human_readable(free_cloud_bytes),
-              get_bytes_human_readable(free_local_bytes))
+        yield 0, "Free cloud: %s, Free local: %s" % (get_bytes_human_readable(free_cloud_bytes),
+                                                     get_bytes_human_readable(free_local_bytes))
 
     yield 0, "Dedup ratio: %.2f" % float(values['Deduplication Ratio'])

@@ -25,21 +25,23 @@
 # Boston, MA 02110-1301 USA.
 
 factory_settings["synology_update_levels"] = {
-    "ok_states"     : [ 2 ],
-    "warn_states"   : [ 5 ],
-    "crit_states"    : [ 1, 4 ],
+    "ok_states": [2],
+    "warn_states": [5],
+    "crit_states": [1, 4],
 }
+
 
 def inventory_synology_update(info):
     return [(None, {})]
 
+
 def check_synology_update(_no_item, params, info):
     states = {
-       1 : "Available",
-       2 : "Unavailable",
-       3 : "Connection",
-       4 : "Disconnected",
-       5 : "Others",
+        1: "Available",
+        2: "Unavailable",
+        3: "Connection",
+        4: "Disconnected",
+        5: "Others",
     }
     version, device_state = info[0]
     device_state = int(device_state)
@@ -55,17 +57,19 @@ def check_synology_update(_no_item, params, info):
         raise MKCounterWrapped("Devices try to connect to the update server")
     return state, "Update Status: %s, Current Version: %s" % (states[device_state], version)
 
-check_info["synology_update"] = {
-    "check_function"          : check_synology_update,
-    "inventory_function"      : inventory_synology_update,
-    "service_description"     : "Update",
-    "snmp_scan_function"      : synology_scan_function,
-    "snmp_info"               : (".1.3.6.1.4.1.6574.1.5", [
-                                                 3, #Version
-                                                 4, #Status
-                                              ]),
-    "includes"                : [ "synology.include" ],
-    "default_levels_variable" : "synology_update_levels",
-    "group"                   : "synology_update",
-}
 
+check_info["synology_update"] = {
+    "check_function": check_synology_update,
+    "inventory_function": inventory_synology_update,
+    "service_description": "Update",
+    "snmp_scan_function": synology_scan_function,
+    "snmp_info": (
+        ".1.3.6.1.4.1.6574.1.5",
+        [
+            3,  #Version
+            4,  #Status
+        ]),
+    "includes": ["synology.include"],
+    "default_levels_variable": "synology_update_levels",
+    "group": "synology_update",
+}

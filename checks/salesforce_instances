@@ -67,15 +67,15 @@ def check_salesforce_instances(item, params, parsed):
         for key, title in [
             ("environment", "Environment"),
             ("releaseNumber", "Release Number"),
-            ("releaseVersion", "Release Version")
+            ("releaseVersion", "Release Version"),
         ]:
             if data.get(key):
                 yield 0, "%s: %s" % (title, data[key])
 
 
 check_info['salesforce_instances'] = {
-    'parse_function'        : parse_salesforce,
-    'inventory_function'    : inventory_salesforce_instances,
-    'check_function'        : check_salesforce_instances,
-    'service_description'   : 'Salesforce Instance %s',
+    'parse_function': parse_salesforce,
+    'inventory_function': inventory_salesforce_instances,
+    'check_function': check_salesforce_instances,
+    'service_description': 'Salesforce Instance %s',
 }

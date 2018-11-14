@@ -52,6 +52,7 @@
 # UNAVAILABLE_SINCE?
 # POLLING?
 
+
 def inventory_tsm_drives(info):
     inventory = []
     for line in info:
@@ -63,6 +64,7 @@ def inventory_tsm_drives(info):
             inventory.append((item, None))
 
     return inventory
+
 
 def check_tsm_drives(item, params, info):
     for line in info:
@@ -79,7 +81,7 @@ def check_tsm_drives(item, params, info):
 
                 monstate = 0
                 infotext += "state: %s" % state
-                if state in [ "UNAVAILABLE", "UNKNOWN" ]:
+                if state in ["UNAVAILABLE", "UNKNOWN"]:
                     monstate = 2
                     infotext += "(!!)"
 
@@ -92,9 +94,8 @@ def check_tsm_drives(item, params, info):
     return (3, "drive not found")
 
 
-
 check_info['tsm_drives'] = {
-    "check_function"          : check_tsm_drives,
-    "inventory_function"      : inventory_tsm_drives,
-    "service_description"     : "TSM Drive %s",
+    "check_function": check_tsm_drives,
+    "inventory_function": inventory_tsm_drives,
+    "service_description": "TSM Drive %s",
 }

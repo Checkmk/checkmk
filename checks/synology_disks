@@ -24,12 +24,13 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+
 def inventory_synology_disks(info):
     for disk, model, status, _temperature in info:
         # SSD used as cache are "not initialized". We remember that
         # here.
         if "SSD" in model and status == '3':
-            params = { "used_as_cache" : True }
+            params = {"used_as_cache": True}
         else:
             params = {}
 
@@ -38,12 +39,11 @@ def inventory_synology_disks(info):
 
 def check_synology_disks(item, params, info):
     states = {
-        1 : (0, "OK"),
-        2 : (0, "OK"),
-        3 : (1, "not initialized"),
-        4 : (2, "system partition failed"),
-        5 : (2, "crashed")
-
+        1: (0, "OK"),
+        2: (0, "OK"),
+        3: (1, "not initialized"),
+        4: (2, "system partition failed"),
+        5: (2, "crashed")
     }
 
     if params is None:
@@ -58,21 +58,23 @@ def check_synology_disks(item, params, info):
             else:
                 status_code, status_text = states[int(status)]
 
-            message = u"Status: %s, Temperature: %d °C, Model: %s" % ( status_text, temp, model )
-            return status_code, message, [("temp", temp )]
+            message = u"Status: %s, Temperature: %d °C, Model: %s" % (status_text, temp, model)
+            return status_code, message, [("temp", temp)]
 
 
 check_info["synology_disks"] = {
-    "check_function"        : check_synology_disks,
-    "inventory_function"    : inventory_synology_disks,
-    "service_description"   : "Disk %s",
-    "has_perfdata"          : True,
-    "snmp_scan_function"    : synology_scan_function,
-    "snmp_info"             : (".1.3.6.1.4.1.6574.2.1.1", [
-                                2, #SYNOLOGY-DISK-MIB::diskID
-                                3, #SYNOLOGY-DISK-MIB::diskModel
-                                5, #SYNOLOGY-DISK-MIB::diskStatus
-                                6, #SYNOLOGY-DISK-MIB::diskTemperature
-                              ]),
-    "includes"              : [ "synology.include" ]
+    "check_function": check_synology_disks,
+    "inventory_function": inventory_synology_disks,
+    "service_description": "Disk %s",
+    "has_perfdata": True,
+    "snmp_scan_function": synology_scan_function,
+    "snmp_info": (
+        ".1.3.6.1.4.1.6574.2.1.1",
+        [
+            2,  #SYNOLOGY-DISK-MIB::diskID
+            3,  #SYNOLOGY-DISK-MIB::diskModel
+            5,  #SYNOLOGY-DISK-MIB::diskStatus
+            6,  #SYNOLOGY-DISK-MIB::diskTemperature
+        ]),
+    "includes": ["synology.include"]
 }

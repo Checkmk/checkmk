@@ -24,19 +24,21 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+
 def inventory_tsm_paths(info):
     return [(None, None)]
 
+
 def check_tsm_paths(item, _no_params, info):
     count_pathes = len(info)
-    error_paths  = [ x[1] for x in info if x[2] != 'YES' ]
+    error_paths = [x[1] for x in info if x[2] != 'YES']
     if len(error_paths) > 0:
         return 2, "Paths with errors: %s" % ", ".join(error_paths)
     return 0, " %d paths OK" % count_pathes
 
-check_info["tsm_paths"] = {
-    "check_function"        : check_tsm_paths,
-    "inventory_function"    : inventory_tsm_paths,
-    "service_description"   : "TSM Paths",
-}
 
+check_info["tsm_paths"] = {
+    "check_function": check_tsm_paths,
+    "inventory_function": inventory_tsm_paths,
+    "service_description": "TSM Paths",
+}

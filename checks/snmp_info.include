@@ -27,9 +27,10 @@
 
 def inventory_snmp_info(info):
     if len(info[0]) >= 4:
-        return [ (None, None) ]
+        return [(None, None)]
+
 
 def check_snmp_info(checktype, params, info):
     if len(info[0]) >= 4:
-        return (0, ', '.join([ info[0][i] for i in [0, 2, 3, 1] if info[0][i] ]))
+        return (0, ', '.join([info[0][i] for i in [0, 2, 3, 1] if info[0][i]]))
     return (3, "No data retrieved")

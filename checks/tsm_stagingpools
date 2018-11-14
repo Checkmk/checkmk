@@ -39,20 +39,22 @@
 # }
 
 factory_settings["tsm_stagingpools_default_levels"] = {
-    "free_below" : 70,
+    "free_below": 70,
 }
+
 
 def parse_tsm_stagingpools(info):
     parsed = {}
+
     def add_item(node, lineinfo):
         inst, pool, util = lineinfo
         if inst == "default":
             item = pool
         else:
             item = inst + " / " + pool
-        parsed.setdefault( item, {} )
-        parsed[item].setdefault( node, [] )
-        parsed[item][node].append( util.replace(",", ".") )
+        parsed.setdefault(item, {})
+        parsed[item].setdefault(node, [])
+        parsed[item][node].append(util.replace(",", "."))
 
     for line in info:
         node = line[0]
@@ -78,20 +80,20 @@ def check_tsm_stagingpools(item, params, parsed):
     for node, data in parsed[item].items():
         if node is not None:
             nodeinfos.append(node)
-        datasets.append( tuple(data) )
+        datasets.append(tuple(data))
 
-    num_tapes      = 0
+    num_tapes = 0
     num_free_tapes = 0
-    utilization    = 0.0 # in relation to one tape size
+    utilization = 0.0  # in relation to one tape size
     for util in datasets[0]:
         util = float(util) / 100.0
         utilization += util
-        num_tapes   += 1
+        num_tapes += 1
         if util <= params["free_below"] / 100.0:
             num_free_tapes += 1
 
     if nodeinfos:
-        infotext = "%s: " % "/".join( nodeinfos )
+        infotext = "%s: " % "/".join(nodeinfos)
     else:
         infotext = ""
     infotext += "Total tapes: %d, Tapes less then %d%% full: %d, Utilization: %.1f tapes" % \
@@ -114,20 +116,21 @@ def check_tsm_stagingpools(item, params, parsed):
 
     # In cluster mode we check if data sets are equal from all nodes
     # else we have only one data set
-    if len(set( datasets )) > 1:
+    if len(set(datasets)) > 1:
         state = 3
         infotext += ", Cluster: data from nodes are not equal"
 
-    return state, infotext, [ ("tapes", num_tapes), ("free", num_free_tapes, warn, crit), ("util", utilization) ]
+    return state, infotext, [("tapes", num_tapes), ("free", num_free_tapes, warn, crit),
+                             ("util", utilization)]
 
 
 check_info['tsm_stagingpools'] = {
-    "parse_function"          : parse_tsm_stagingpools,
-    "check_function"          : check_tsm_stagingpools,
-    "inventory_function"      : inventory_tsm_stagingpools,
-    "service_description"     : "TSM Stagingpool %s",
-    "has_perfdata"            : True,
-    "group"                   : "tsm_stagingpools",
-    "default_levels_variable" : "tsm_stagingpools_default_levels",
-    "node_info"               : True,
+    "parse_function": parse_tsm_stagingpools,
+    "check_function": check_tsm_stagingpools,
+    "inventory_function": inventory_tsm_stagingpools,
+    "service_description": "TSM Stagingpool %s",
+    "has_perfdata": True,
+    "group": "tsm_stagingpools",
+    "default_levels_variable": "tsm_stagingpools_default_levels",
+    "node_info": True,
 }

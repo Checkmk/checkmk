@@ -24,7 +24,6 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-
 # <<<systemd_units>>>
 #   UNIT                                   LOAD   ACTIVE SUB    DESCRIPTION
 # ● check-mk-enterprise-2018.07.24.service loaded failed failed LSB: OMD sites
@@ -38,7 +37,6 @@
 # 3 loaded units listed. Pass --all to see loaded but inactive units, too.
 # To show all installed unit files use 'systemctl list-unit-files'.
 
-
 #   .--Parse function------------------------------------------------------.
 #   |  ____                        __                  _   _               |
 #   | |  _ \ __ _ _ __ ___  ___   / _|_   _ _ __   ___| |_(_) ___  _ __    |
@@ -48,19 +46,19 @@
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-
-_SYSTEMD_UNITS = ['.service ', # A service unit describes how to manage a service or application on the server. This will include how to start or stop the service, under which circumstances it should be automatically started, and the dependency and ordering information for related software.
-                  '.socket ', # A socket unit file describes a network or IPC socket, or a FIFO buffer that systemd uses for socket-based activation. These always have an associated .service file that will be started when activity is seen on the socket that this unit defines.
-                  '.device ', # A unit that describes a device that has been designated as needing systemd management by udev or the sysfs filesystem. Not all devices will have .device files. Some scenarios where .device units may be necessary are for ordering, mounting, and accessing the devices.
-                  '.mount ', # This unit defines a mountpoint on the system to be managed by systemd. These are named after the mount path, with slashes changed to dashes. Entries within /etc/fstab can have units created automatically.
-                  '.automount ', # An .automount unit configures a mountpoint that will be automatically mounted. These must be named after the mount point they refer to and must have a matching .mount unit to define the specifics of the mount.
-                  '.swap ', # This unit describes swap space on the system. The name of these units must reflect the device or file path of the space.
-                  '.target ', # A target unit is used to provide synchronization points for other units when booting up or changing states. They also can be used to bring the system to a new state. Other units specify their relation to targets to become tied to the target's operations.
-                  '.path ', # This unit defines a path that can be used for path-based activation. By default, a .service unit of the same base name will be started when the path reaches the specified state. This uses inotify to monitor the path for changes.
-                  '.timer ', # A .timer unit defines a timer that will be managed by systemd, similar to a cron job for delayed or scheduled activation. A matching unit will be started when the timer is reached.
-                  '.snapshot ', # A .snapshot unit is created automatically by the systemctl snapshot command. It allows you to reconstruct the current state of the system after making changes. Snapshots do not survive across sessions and are used to roll back temporary states.
-                  '.slice ', # A .slice unit is associated with Linux Control Group nodes, allowing resources to be restricted or assigned to any processes associated with the slice. The name reflects its hierarchical position within the cgroup tree. Units are placed in certain slices by default depending on their type.
-                  '.scope ', # Scope units are created automatically by systemd from information received from its bus interfaces. These are used to manage sets of system processes that are created externally.
+_SYSTEMD_UNITS = [
+    '.service ',  # A service unit describes how to manage a service or application on the server. This will include how to start or stop the service, under which circumstances it should be automatically started, and the dependency and ordering information for related software.
+    '.socket ',  # A socket unit file describes a network or IPC socket, or a FIFO buffer that systemd uses for socket-based activation. These always have an associated .service file that will be started when activity is seen on the socket that this unit defines.
+    '.device ',  # A unit that describes a device that has been designated as needing systemd management by udev or the sysfs filesystem. Not all devices will have .device files. Some scenarios where .device units may be necessary are for ordering, mounting, and accessing the devices.
+    '.mount ',  # This unit defines a mountpoint on the system to be managed by systemd. These are named after the mount path, with slashes changed to dashes. Entries within /etc/fstab can have units created automatically.
+    '.automount ',  # An .automount unit configures a mountpoint that will be automatically mounted. These must be named after the mount point they refer to and must have a matching .mount unit to define the specifics of the mount.
+    '.swap ',  # This unit describes swap space on the system. The name of these units must reflect the device or file path of the space.
+    '.target ',  # A target unit is used to provide synchronization points for other units when booting up or changing states. They also can be used to bring the system to a new state. Other units specify their relation to targets to become tied to the target's operations.
+    '.path ',  # This unit defines a path that can be used for path-based activation. By default, a .service unit of the same base name will be started when the path reaches the specified state. This uses inotify to monitor the path for changes.
+    '.timer ',  # A .timer unit defines a timer that will be managed by systemd, similar to a cron job for delayed or scheduled activation. A matching unit will be started when the timer is reached.
+    '.snapshot ',  # A .snapshot unit is created automatically by the systemctl snapshot command. It allows you to reconstruct the current state of the system after making changes. Snapshots do not survive across sessions and are used to roll back temporary states.
+    '.slice ',  # A .slice unit is associated with Linux Control Group nodes, allowing resources to be restricted or assigned to any processes associated with the slice. The name reflects its hierarchical position within the cgroup tree. Units are placed in certain slices by default depending on their type.
+    '.scope ',  # Scope units are created automatically by systemd from information received from its bus interfaces. These are used to manage sets of system processes that are created externally.
 ]
 
 
@@ -75,7 +73,7 @@ def parse_systemd_units(info):
     UnitEntry = collections.namedtuple("UnitEntry",
                                        ['name', 'type', 'load', 'active', 'sub', 'description'])
     for row in info[1:count + 1]:
-        if row[0] == '*': # remove the '● ' (seems to get converted to '*')
+        if row[0] == '*':  # remove the '● ' (seems to get converted to '*')
             row.pop(0)
         line = ' '.join(row)
         for unit_marker in _SYSTEMD_UNITS:
@@ -88,13 +86,13 @@ def parse_systemd_units(info):
                 break
 
     return parsed
+
+
 #.
 
-
 check_info['systemd_units'] = {
-    'parse_function'         : parse_systemd_units,
+    'parse_function': parse_systemd_units,
 }
-
 
 #   .--services------------------------------------------------------------.
 #   |                                     _                                |
@@ -105,16 +103,15 @@ check_info['systemd_units'] = {
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-
 factory_settings["systemd_services_default_levels"] = {
-    "states" : {"active": 0,
-                "inactive": 0,
-                "failed": 2,
-               },
-    "states_default" : 2,
-    "else" : 2,  # missleading name, used if service vanishes
+    "states": {
+        "active": 0,
+        "inactive": 0,
+        "failed": 2,
+    },
+    "states_default": 2,
+    "else": 2,  # missleading name, used if service vanishes
 }
-
 
 discovery_systemd_units_services_rules = []
 
@@ -146,8 +143,7 @@ def discovery_systemd_units_services(parsed):
         states = settings.get("states")
         for service in services.values():
             if (regex_match(descriptions, service.description) and
-                regex_match(names, service.name) and
-                state_match(states, service.active)):
+                    regex_match(names, service.name) and state_match(states, service.active)):
                 yield service.name, {}
 
 
@@ -165,10 +161,10 @@ def check_systemd_units_services(item, params, parsed):
 
 
 check_info['systemd_units.services'] = {
-    'inventory_function'     : discovery_systemd_units_services,
-    'check_function'         : check_systemd_units_services,
-    'service_description'    : 'Systemd Service %s',
-    'group'                  : 'systemd_services',
+    'inventory_function': discovery_systemd_units_services,
+    'check_function': check_systemd_units_services,
+    'service_description': 'Systemd Service %s',
+    'group': 'systemd_services',
     'default_levels_variable': 'systemd_services_default_levels',
 }
 
@@ -192,14 +188,15 @@ def check_systemd_units_services_summary(_no_item, params, parsed):
         service_names = [s.name for s in services if s.active == active_state]
         cnt = len(service_names)
         service_names = ", ".join(service_names)
-        yield state, "%d service%s %s (%s)" % (cnt, '' if cnt == 1 else 's', active_state, service_names)
+        yield state, "%d service%s %s (%s)" % (cnt, '' if cnt == 1 else 's', active_state,
+                                               service_names)
 
 
 check_info['systemd_units.services_summary'] = {
-    'inventory_function'     : discovery_systemd_units_services_summary,
-    'check_function'         : check_systemd_units_services_summary,
-    'service_description'    : 'Systemd Service %s',
-    'group'                  : 'systemd_services',
+    'inventory_function': discovery_systemd_units_services_summary,
+    'check_function': check_systemd_units_services_summary,
+    'service_description': 'Systemd Service %s',
+    'group': 'systemd_services',
     'default_levels_variable': 'systemd_services_default_levels',
 }
 

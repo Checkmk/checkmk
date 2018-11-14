@@ -24,7 +24,6 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-
 # iso.3.6.1.4.1.231.7.2.9.1.1.0 = INTEGER: 1
 #The actual error state of the Octopus E PABX. Contains the highest severity level of the recent error events. This object is updated automatically, but it can also be modified manually.
 
@@ -37,21 +36,22 @@ def inventory_octopus_status(info):
 
 
 def check_octopus_status(_no_item, _no_params_info, info):
-   octopus_states_map = { 1 : (0, "normal"  ),
-                         2 : (1, "warning" ),
-                         3 : (1, "minor"   ),
-                         4 : (2, "major"   ),
-                         5 : (2, "critical")}
+    octopus_states_map = {
+        1: (0, "normal"),
+        2: (1, "warning"),
+        3: (1, "minor"),
+        4: (2, "major"),
+        5: (2, "critical")
+    }
 
+    octopus_state = int(info[0][0][0])
+    state = octopus_states_map[octopus_state][0]
+    desc = octopus_states_map[octopus_state][1]
 
-   octopus_state = int(info[0][0][0])
-   state = octopus_states_map[octopus_state][0]
-   desc  = octopus_states_map[octopus_state][1]
-
-   msg = "PBX system state is %s" % desc
-   if octopus_state >= 3:
-       msg += " error"
-   return (state, msg)
+    msg = "PBX system state is %s" % desc
+    if octopus_state >= 3:
+        msg += " error"
+    return (state, msg)
 
 
 check_info['sni_octopuse_status'] = {

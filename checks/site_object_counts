@@ -24,7 +24,6 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-
 # <<<site_object_counts:sep(124)>>>
 # [[[heute]]]
 # Tags|snmp;prod|1;1
@@ -49,8 +48,7 @@ def parse_site_object_counts(info):
 
         _, type_, header, data = line
         if site_objects is not None and data:
-            site_objects.setdefault(type_, dict(zip(header.split(),
-                                           map(int, data.split(";")))))
+            site_objects.setdefault(type_, dict(zip(header.split(), map(int, data.split(";")))))
     return parsed
 
 
@@ -70,7 +68,7 @@ def check_site_object_counts(item, params, parsed):
         for type_, type_data in data.iteritems():
             summary_of_type = summary.setdefault(type_, {})
             data_info = []
-            for k,v in type_data.iteritems():
+            for k, v in type_data.iteritems():
                 summary_of_type.setdefault(k, 0)
                 summary_of_type[k] += v
                 data_info.append("%s %s" % (v, k))
@@ -81,7 +79,7 @@ def check_site_object_counts(item, params, parsed):
     perfdata = []
     for type_, data in summary.iteritems():
         type_infos = []
-        for k,v in data.iteritems():
+        for k, v in data.iteritems():
             perfdata.append((("%s %s" % (type_, k)).lower()\
                                                    .replace(" ", "_")\
                                                    .replace(".", "_"), v))
@@ -92,10 +90,10 @@ def check_site_object_counts(item, params, parsed):
 
 
 check_info['site_object_counts'] = {
-    'parse_function'        : parse_site_object_counts,
-    'inventory_function'    : inventory_site_object_counts,
-    'check_function'        : check_site_object_counts,
-    'service_description'   : 'OMD objects', # Leave 'OMD' to be consistent (OMD %s apache,...)
-    'has_perfdata'          : True,
-    'node_info'             : True,
+    'parse_function': parse_site_object_counts,
+    'inventory_function': inventory_site_object_counts,
+    'check_function': check_site_object_counts,
+    'service_description': 'OMD objects',  # Leave 'OMD' to be consistent (OMD %s apache,...)
+    'has_perfdata': True,
+    'node_info': True,
 }

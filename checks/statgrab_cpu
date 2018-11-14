@@ -25,7 +25,6 @@
 # Boston, MA 02110-1301 USA.
 
 
-
 def inventory_statgrab_cpu(info):
     if len(info) > 1:
         return [(None, {})]
@@ -49,16 +48,16 @@ def check_statgrab_cpu(_no_item, params, info):
             wait = int(value)
 
     # user, nice, system, idle, iowait, hw-int, sw-int, steal
-    values = [ user, nice, system, idle, wait, 0, 0, 0 ]
+    values = [user, nice, system, idle, wait, 0, 0, 0]
 
     return check_cpu_util_unix(values, params)
 
 
 check_info["statgrab_cpu"] = {
-    'check_function':       check_statgrab_cpu,
-    'inventory_function':   inventory_statgrab_cpu,
-    'service_description':  'CPU utilization',
-    'has_perfdata':         True,
-    'includes':             ['cpu_util.include'],
-    'group':                'cpu_iowait',
+    'check_function': check_statgrab_cpu,
+    'inventory_function': inventory_statgrab_cpu,
+    'service_description': 'CPU utilization',
+    'has_perfdata': True,
+    'includes': ['cpu_util.include'],
+    'group': 'cpu_iowait',
 }

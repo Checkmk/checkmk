@@ -24,10 +24,9 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-
 factory_settings["socomec_outphase_default_levels"] = {
-    "voltage"      : (210, 200),
-    "output_load"  : (80, 90),
+    "voltage": (210, 200),
+    "output_load": (80, 90),
 }
 
 
@@ -35,9 +34,9 @@ def parse_ups_socomec_outphase(info):
     parsed = {}
     for index, rawvolt, rawcurr, rawload in info:
         parsed["Phase " + index] = {
-            "voltage"     : (int(rawvolt) / 10, None), # The actual precision does not appear to
-            "current"     : (int(rawcurr) / 10, None), # go beyond degrees, thus we drop the trailing 0
-            "output_load" : (int(rawload), None),
+            "voltage": (int(rawvolt) / 10, None),  # The actual precision does not appear to
+            "current": (int(rawcurr) / 10, None),  # go beyond degrees, thus we drop the trailing 0
+            "output_load": (int(rawload), None),
         }
     return parsed
 
@@ -50,15 +49,15 @@ def check_ups_socomec_outphase(item, params, parsed):
 
 
 check_info['ups_socomec_outphase'] = {
-    "parse_function"           : parse_ups_socomec_outphase,
-    "inventory_function"       : inventory_elphase,
-    "check_function"           : check_ups_socomec_outphase,
-    "default_levels_variable"  : "socomec_outphase_default_levels",
-    "service_description"      : "Output %s",
-    "has_perfdata"             : True,
-    "group"                    : "ups_outphase",
-    "includes"                 : [ 'elphase.include' ],
-                                                  # Phase Index, Voltage/dV, Current/dA, Load/%
-    "snmp_info"                : ( ".1.3.6.1.4.1.4555.1.1.1.1.4.4.1" , [ '1', '2', '3', '4' ] ) ,
-    "snmp_scan_function"       : lambda oid: oid(".1.3.6.1.2.1.1.2.0") == ".1.3.6.1.4.1.4555.1.1.1",
+    "parse_function": parse_ups_socomec_outphase,
+    "inventory_function": inventory_elphase,
+    "check_function": check_ups_socomec_outphase,
+    "default_levels_variable": "socomec_outphase_default_levels",
+    "service_description": "Output %s",
+    "has_perfdata": True,
+    "group": "ups_outphase",
+    "includes": ['elphase.include'],
+    # Phase Index, Voltage/dV, Current/dA, Load/%
+    "snmp_info": (".1.3.6.1.4.1.4555.1.1.1.1.4.4.1", ['1', '2', '3', '4']),
+    "snmp_scan_function": lambda oid: oid(".1.3.6.1.2.1.1.2.0") == ".1.3.6.1.4.1.4555.1.1.1",
 }

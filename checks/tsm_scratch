@@ -28,23 +28,26 @@
 # Put here the example output from your TCP-Based agent. If the
 # check is SNMP-Based, then remove this section
 
-tsm_scratch_default_levels = ( 5, 7 )
+tsm_scratch_default_levels = (5, 7)
+
+
 def inventory_tsm_scratch(info):
     inventory = []
     for inst, _tapes, library in info:
         if inst != 'default':
-            item = "%s / %s" % ( inst, library )
+            item = "%s / %s" % (inst, library)
         else:
             item = library
         inventory.append((item, "tsm_scratch_default_levels"))
 
     return inventory
 
+
 def check_tsm_scratch(item, params, info):
     crit, warn = params
     for inst, tapes, library in info:
         if inst != 'default':
-            found_item = "%s / %s" % ( inst, library )
+            found_item = "%s / %s" % (inst, library)
         else:
             found_item = library
         if found_item == item:
@@ -58,12 +61,12 @@ def check_tsm_scratch(item, params, info):
             return state, "Found %d tapes" % tapes, \
                         [ ("tapes_free"), tapes, warn, crit ]
 
-
     return 3, "UNKNOWN - Check no implemented"
 
+
 check_info["tsm_scratch"] = {
-    "inventory_function"    : inventory_tsm_scratch,
-    "check_function"        : check_tsm_scratch,
-    "service_description"   : "Scratch Pool %s",
-    "has_perfdata"          : True,
+    "inventory_function": inventory_tsm_scratch,
+    "check_function": check_tsm_scratch,
+    "service_description": "Scratch Pool %s",
+    "has_perfdata": True,
 }

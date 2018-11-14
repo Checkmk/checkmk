@@ -24,7 +24,6 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-
 # Example output from agent:
 # <<<uptime>>>
 # 15876.96 187476.72
@@ -37,10 +36,10 @@ def check_uptime(_no_item, params, info):
 
 
 check_info["uptime"] = {
-    'check_function'      : check_uptime,
-    'inventory_function'  : discover_single,
-    'service_description' : 'Uptime',
-    'has_perfdata'        : True,
-    'includes'            : [ 'uptime.include' ],
-    'group'               : 'uptime',
+    'check_function': check_uptime,
+    'inventory_function': discover_single,
+    'service_description': 'Uptime',
+    'has_perfdata': True,
+    'includes': ['uptime.include'],
+    'group': 'uptime',
 }

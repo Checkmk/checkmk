@@ -28,6 +28,7 @@
 # equipmentPsuInputStats  Dn sys/switch-A/psu-2/input-stats       Current 0.656250        PowerAvg 153.335938     Voltage 231.500000
 # equipmentPsuStats       Dn sys/chassis-1/psu-1/stats    AmbientTemp 17.000000   Output12vAvg 12.008000  Output3v3Avg 3.336000
 
+
 def ucs_bladecenter_psu_parse(info):
     data = ucs_bladecenter_convert_info(info)
     psu = {}
@@ -40,7 +41,7 @@ def ucs_bladecenter_psu_parse(info):
 
     for component, key_low, key_high in [
         ("equipmentPsuInputStats", 4, -12),
-        ("equipmentPsuStats",      4, -6),
+        ("equipmentPsuStats", 4, -6),
     ]:
         for key, values in data.get(component, {}).items():
             name = get_item_name(key[key_low:key_high])
@@ -61,21 +62,25 @@ def ucs_bladecenter_psu_parse(info):
 #   '----------------------------------------------------------------------'
 
 factory_settings["ucs_bladecenter_psu_default_levels"] = {
-    "levels_3v_lower"  : (3.25, 3.20),
-    "levels_3v_upper"  : (3.4 , 3.45),
-    "levels_12v_lower" : (11.9, 11.8),
-    "levels_12v_upper" : (12.1, 12.2)
+    "levels_3v_lower": (3.25, 3.20),
+    "levels_3v_upper": (3.4, 3.45),
+    "levels_12v_lower": (11.9, 11.8),
+    "levels_12v_upper": (12.1, 12.2)
 }
+
 
 def inventory_ucs_bladecenter_psu(parsed):
     for key in parsed.keys():
         if key.startswith("Chassis"):
             yield key, {}
 
+
 @get_parsed_item_data
 def check_ucs_bladecenter_psu(item, params, psu):
-    for param_key, perfname, key, text in [ ("levels_3v_", "3_3v", "Output3v3Avg", "Output 3.3V-Average"),
-                                            ("levels_12v_", "12v", "Output12vAvg", "Output 12V-Average") ]:
+    for param_key, perfname, key, text in [("levels_3v_", "3_3v", "Output3v3Avg",
+                                            "Output 3.3V-Average"),
+                                           ("levels_12v_", "12v", "Output12vAvg",
+                                            "Output 12V-Average")]:
         voltage = float(psu[key])
         yield 0, "%s: %.2f V" % (text, voltage), [(perfname, voltage)]
         if key in psu.keys():
@@ -93,14 +98,14 @@ def check_ucs_bladecenter_psu(item, params, psu):
 
 
 check_info["ucs_bladecenter_psu"] = {
-    'parse_function'          : ucs_bladecenter_psu_parse,
-    'inventory_function'      : inventory_ucs_bladecenter_psu,
-    'check_function'          : check_ucs_bladecenter_psu,
-    'service_description'     : 'Voltage %s',
-    'group'                   : 'ucs_bladecenter_chassis_voltage',
-    'includes'                : [ 'ucs_bladecenter.include' ],
-    'has_perfdata'            : True,
-    'default_levels_variable' : "ucs_bladecenter_psu_default_levels",
+    'parse_function': ucs_bladecenter_psu_parse,
+    'inventory_function': inventory_ucs_bladecenter_psu,
+    'check_function': check_ucs_bladecenter_psu,
+    'service_description': 'Voltage %s',
+    'group': 'ucs_bladecenter_chassis_voltage',
+    'includes': ['ucs_bladecenter.include'],
+    'has_perfdata': True,
+    'default_levels_variable': "ucs_bladecenter_psu_default_levels",
 }
 
 #.
@@ -113,6 +118,7 @@ check_info["ucs_bladecenter_psu"] = {
 #   |                                             |_|   |_|      |___/     |
 #   '----------------------------------------------------------------------'
 
+
 def inventory_ucs_bladecenter_psu_switch_power(parsed):
     for key in parsed.iterkeys():
         if key.startswith("Switch"):
@@ -122,9 +128,7 @@ def inventory_ucs_bladecenter_psu_switch_power(parsed):
 @get_parsed_item_data
 def check_ucs_bladecenter_psu_switch_power(item, params, psu):
     # Convert fields
-    KEY_MAP = {"Current": "current",
-               "PowerAvg": "power",
-               "Voltage": "voltage"}
+    KEY_MAP = {"Current": "current", "PowerAvg": "power", "Voltage": "voltage"}
 
     psu_new = {}
     for k, v in psu.iteritems():
@@ -134,15 +138,15 @@ def check_ucs_bladecenter_psu_switch_power(item, params, psu):
 
     return check_elphase(item, params, {item: psu_new})
 
-check_info["ucs_bladecenter_psu.switch_power"] = {
-    'inventory_function':      inventory_ucs_bladecenter_psu_switch_power,
-    'check_function':          check_ucs_bladecenter_psu_switch_power,
-    'service_description':     'Power Supply %s',
-    'includes':                [ 'ucs_bladecenter.include', 'elphase.include' ],
-    'has_perfdata':            True,
-    'group':                   "el_inphase"
-}
 
+check_info["ucs_bladecenter_psu.switch_power"] = {
+    'inventory_function': inventory_ucs_bladecenter_psu_switch_power,
+    'check_function': check_ucs_bladecenter_psu_switch_power,
+    'service_description': 'Power Supply %s',
+    'includes': ['ucs_bladecenter.include', 'elphase.include'],
+    'has_perfdata': True,
+    'group': "el_inphase"
+}
 
 #.
 #   .--Temperature---------------------------------------------------------.
@@ -155,8 +159,9 @@ check_info["ucs_bladecenter_psu.switch_power"] = {
 #   '----------------------------------------------------------------------'
 
 factory_settings["ucs_bladecenter_psu_chassis_temp_default_levels"] = {
-    "levels" : (35, 40),
+    "levels": (35, 40),
 }
+
 
 def inventory_ucs_bladecenter_psu_chassis_temp(parsed):
     for key, values in parsed.items():
@@ -165,7 +170,7 @@ def inventory_ucs_bladecenter_psu_chassis_temp(parsed):
 
 
 def check_ucs_bladecenter_psu_chassis_temp(item, params, parsed):
-    sensor_item = item[8:] # drop "Ambient "
+    sensor_item = item[8:]  # drop "Ambient "
     sensor_list = []
 
     for key, values in sorted(parsed.items()):
@@ -178,11 +183,11 @@ def check_ucs_bladecenter_psu_chassis_temp(item, params, parsed):
 
 
 check_info["ucs_bladecenter_psu.chassis_temp"] = {
-    'inventory_function'      : inventory_ucs_bladecenter_psu_chassis_temp,
-    'check_function'          : check_ucs_bladecenter_psu_chassis_temp,
-    'service_description'     : 'Temperature %s',
-    'group'                   : 'temperature',
-    'has_perfdata'            : True,
-    'default_levels_variable' : "ucs_bladecenter_psu_chassis_temp_default_levels",
-    'includes'                : [ 'ucs_bladecenter.include', 'temperature.include' ],
+    'inventory_function': inventory_ucs_bladecenter_psu_chassis_temp,
+    'check_function': check_ucs_bladecenter_psu_chassis_temp,
+    'service_description': 'Temperature %s',
+    'group': 'temperature',
+    'has_perfdata': True,
+    'default_levels_variable': "ucs_bladecenter_psu_chassis_temp_default_levels",
+    'includes': ['ucs_bladecenter.include', 'temperature.include'],
 }

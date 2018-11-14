@@ -32,7 +32,7 @@ def inventory_octopus_cpu(info):
 
 def check_octopus_cpu(_no_item, _no_params_info, info):
     cpu_perc = int(info[0][0][0])
-    perfdata = [ ("util", "%.3f" % cpu_perc) ]
+    perfdata = [("util", "%.3f" % cpu_perc)]
     return 0, "CPU utilization is %d%%" % cpu_perc, perfdata
 
 

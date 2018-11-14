@@ -24,7 +24,6 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-
 # parsed = {
 #     "ESTABLISHED" : 6,
 #     "BOUND"       : 17,
@@ -32,13 +31,12 @@
 #     "LISTEN"      : 10,
 # }
 
-
 tcp_conn_stats_default_levels = {}
 
 
 def inventory_tcp_connections(parsed):
     if parsed:
-        return [ (None, 'tcp_conn_stats_default_levels') ]
+        return [(None, 'tcp_conn_stats_default_levels')]
 
 
 def check_tcp_connections(item, params, parsed):

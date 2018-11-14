@@ -24,7 +24,6 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-
 #<<<scaleio_volume>>>
 #VOLUME f6a9425800000002:
 #        ID                                                 f6a9425800000002
@@ -49,9 +48,9 @@ def inventory_scaleio_volume(parsed):
 
 def check_scaleio_volume(item, params, parsed):
     change_unit = {
-        "KB" : "MB",
-        "MB" : "GB",
-        "GB" : "TB",
+        "KB": "MB",
+        "MB": "GB",
+        "GB": "TB",
     }
 
     data = get_scaleio_data(item, parsed)
@@ -76,11 +75,11 @@ def check_scaleio_volume(item, params, parsed):
 
 
 check_info['scaleio_volume'] = {
-    'parse_function'        : lambda info: parse_scaleio(info, "VOLUME"),
-    'inventory_function'    : inventory_scaleio_volume,
-    'check_function'        : check_scaleio_volume,
-    'service_description'   : 'ScaleIO Volume %s',
-    'includes'              : [ 'scaleio.include', 'diskstat.include' ],
-    'has_perfdata'          : True,
-    'group'                 : 'diskstat',
+    'parse_function': lambda info: parse_scaleio(info, "VOLUME"),
+    'inventory_function': inventory_scaleio_volume,
+    'check_function': check_scaleio_volume,
+    'service_description': 'ScaleIO Volume %s',
+    'includes': ['scaleio.include', 'diskstat.include'],
+    'has_perfdata': True,
+    'group': 'diskstat',
 }

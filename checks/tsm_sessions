@@ -27,10 +27,12 @@
 # Example output from agent:
 # Put here the example output from your TCP-Based agent. If the
 # check is SNMP-Based, then remove this section
-tsm_session_default_levels = ( 300, 600 )
+tsm_session_default_levels = (300, 600)
+
 
 def inventory_tsm_sessions(info):
     return [(None, tsm_session_default_levels)]
+
 
 def check_tsm_sessions(item, params, info):
     state = 0
@@ -56,7 +58,7 @@ def check_tsm_sessions(item, params, info):
 
 
 check_info["tsm_sessions"] = {
-    "check_function"        : check_tsm_sessions,
-    "inventory_function"    : inventory_tsm_sessions,
-    "service_description"   : "tsm_sessions",
+    "check_function": check_tsm_sessions,
+    "inventory_function": inventory_tsm_sessions,
+    "service_description": "tsm_sessions",
 }

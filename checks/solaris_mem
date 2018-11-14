@@ -39,6 +39,7 @@
 # <<<solaris_mem>>>
 # Memory: 2048M real, 913M free, 723M swap in use, 2863M swap free
 
+
 def parse_solaris_mem(info):
     # The 1.2.4 agent seems to create an empty section under some circumstances
     if not info:
@@ -56,7 +57,7 @@ def parse_solaris_mem(info):
     if not is_total_swap:
         values[2] = values[2] + values[3]
 
-    keys   = ['MemTotal', 'MemFree', 'SwapTotal', 'SwapFree']
+    keys = ['MemTotal', 'MemFree', 'SwapTotal', 'SwapFree']
     return dict(zip(keys, values))
 
 
@@ -81,12 +82,12 @@ def check_solaris_mem_used(_no_item, params, parsed):
 
 
 check_info['solaris_mem'] = {
-    "parse_function"          : parse_solaris_mem,
-    "check_function"          : check_solaris_mem_used,
-    "inventory_function"      : inventory_solaris_mem_used,
-    "service_description"     : "Memory used",
-    "has_perfdata"            : True,
-    "group"                   : "memory",
-    "default_levels_variable" : "memory_default_levels",
-    "includes"                : [ "mem.include" ],
+    "parse_function": parse_solaris_mem,
+    "check_function": check_solaris_mem_used,
+    "inventory_function": inventory_solaris_mem_used,
+    "service_description": "Memory used",
+    "has_perfdata": True,
+    "group": "memory",
+    "default_levels_variable": "memory_default_levels",
+    "includes": ["mem.include"],
 }

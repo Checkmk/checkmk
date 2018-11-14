@@ -24,7 +24,6 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-
 # .1.3.6.1.4.1.393.200.130.2.1.2.1 = INTEGER: 1
 # .1.3.6.1.4.1.393.200.130.2.1.2.2 = INTEGER: 1
 # .1.3.6.1.4.1.393.200.130.2.2.1.1.1.1 = INTEGER: 1
@@ -58,12 +57,12 @@ def parse_sym_brightmail_queues(info):
     for descr, connections, dataRate, deferredMessages, \
         messageRate, queueSize, queuedMessages in info:
         for k, v in [
-            ("connections",      connections),
-            ("dataRate",         dataRate),
+            ("connections", connections),
+            ("dataRate", dataRate),
             ("deferredMessages", deferredMessages),
-            ("messageRate",      messageRate),
-            ("queueSize",        queueSize),
-            ("queuedMessages",   queuedMessages),
+            ("messageRate", messageRate),
+            ("queueSize", queueSize),
+            ("queuedMessages", queuedMessages),
         ]:
             try:
                 parsed.setdefault(descr, {}).setdefault(k, int(v))
@@ -84,14 +83,14 @@ def check_sym_brightmail_queues(item, params, parsed):
 
     data = parsed[item]
     for key, title in [
-        ("connections",      "Connections"),
-        ("dataRate",         "Data rate"),
+        ("connections", "Connections"),
+        ("dataRate", "Data rate"),
         ("deferredMessages", "Deferred messages"),
-        ("messageRate",      "Message rate"),
-        # Symantec did not document the Unit for the queue. You can still set
-        # some level if you wish.
-        ("queueSize",        "Queue size"),
-        ("queuedMessages",   "Queued messages"),
+        ("messageRate", "Message rate"),
+            # Symantec did not document the Unit for the queue. You can still set
+            # some level if you wish.
+        ("queueSize", "Queue size"),
+        ("queuedMessages", "Queued messages"),
     ]:
         warn, crit = params.get(key, (None, None))
         value = data.get(key)

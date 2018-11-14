@@ -24,8 +24,10 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+
 def inventory_stulz_powerstate(info):
-    return [ (x[0], None ) for x in info ]
+    return [(x[0], None) for x in info]
+
 
 def check_stulz_powerstate(item, _no_params, info):
     for line in info:
@@ -37,15 +39,15 @@ def check_stulz_powerstate(item, _no_params, info):
                 message = "Device powered on"
                 power_state = 6
 
-            return 0, message, [ ('state', power_state ) ]
+            return 0, message, [('state', power_state)]
     return 3, "No information found about the device"
 
-check_info["stulz_powerstate"] = {
-    "check_function"        : check_stulz_powerstate,
-    "inventory_function"    : inventory_stulz_powerstate,
-    "service_description"   : "State %s ",
-    "has_perfdata"          : True,
-    "snmp_scan_function"    : lambda oid: oid(".1.3.6.1.2.1.1.2.0") == ".1.3.6.1.4.1.29462.10",
-    "snmp_info"             : ( ".1.3.6.1.4.1.29462.10.2.1.4.1.1.1.1013", [ OID_END, 1] ),
-}
 
+check_info["stulz_powerstate"] = {
+    "check_function": check_stulz_powerstate,
+    "inventory_function": inventory_stulz_powerstate,
+    "service_description": "State %s ",
+    "has_perfdata": True,
+    "snmp_scan_function": lambda oid: oid(".1.3.6.1.2.1.1.2.0") == ".1.3.6.1.4.1.29462.10",
+    "snmp_info": (".1.3.6.1.4.1.29462.10.2.1.4.1.1.1.1013", [OID_END, 1]),
+}

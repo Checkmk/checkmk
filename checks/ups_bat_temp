@@ -24,9 +24,8 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-
 factory_settings["ups_bat_temp_default"] = {
-    "levels"    : (40, 50),
+    "levels": (40, 50),
 }
 
 
@@ -40,31 +39,32 @@ def inventory_ups_bat_temp(info):
     # 2nd condition is needed to catch some UPS devices which do not have
     # any temperature sensor but report a 0 as upsBatteryTemperature. Skip those lines
     if len(info) > 0 and saveint(info[0][1]) != 0:
-        return [(format_item_ups_bat_temp(line[0], True), "ups_bat_temp_default")
-                for line in info]
+        return [(format_item_ups_bat_temp(line[0], True), "ups_bat_temp_default") for line in info]
 
 
 def check_ups_bat_temp(item, params, info):
     for line in info:
         name = format_item_ups_bat_temp(line[0], "Battery" in item)
         if name == item:
-            status, infotext, perfdata = check_temperature(int(line[1]), params,
-                                                           "ups_bat_temp_%s" % item)
-            perfdatanew = [ perfdata[0] + (80,) ]
+            status, infotext, perfdata = check_temperature(
+                int(line[1]), params, "ups_bat_temp_%s" % item)
+            perfdatanew = [perfdata[0] + (80,)]
             return status, infotext, perfdatanew
 
 
 check_info['ups_bat_temp'] = {
-  "inventory_function"     : inventory_ups_bat_temp,
-  "check_function"         : check_ups_bat_temp,
-  "default_levels_variable": "ups_bat_temp_default",
-  "service_description"    : "Temperature %s",
-  "has_perfdata"           : True,
-  "group"                  : "temperature",
-  "snmp_info"              : ( ".1.3.6.1.2.1.33.1", [
-                              "1.5", # upsIdentName
-                              "2.7", # upsBatteryTemperature
-                          ] ),
-  "snmp_scan_function"     : ups_generic_scan_function,
-  "includes"               : [ "temperature.include", "ups_generic.include" ],
+    "inventory_function": inventory_ups_bat_temp,
+    "check_function": check_ups_bat_temp,
+    "default_levels_variable": "ups_bat_temp_default",
+    "service_description": "Temperature %s",
+    "has_perfdata": True,
+    "group": "temperature",
+    "snmp_info": (
+        ".1.3.6.1.2.1.33.1",
+        [
+            "1.5",  # upsIdentName
+            "2.7",  # upsBatteryTemperature
+        ]),
+    "snmp_scan_function": ups_generic_scan_function,
+    "includes": ["temperature.include", "ups_generic.include"],
 }

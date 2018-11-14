@@ -30,6 +30,7 @@
 # equipmentFan    Dn sys/chassis-1/fan-module-1-1/fan-1   Model N20-FAN5  OperState operable
 # equipmentFanStats       Dn sys/chassis-2/fan-module-1-1/fan-1/stats     SpeedAvg 3652
 
+
 def parse_ucs_bladecenter_fans(info):
     data = ucs_bladecenter_convert_info(info)
     fans = {}
@@ -43,10 +44,10 @@ def parse_ucs_bladecenter_fans(info):
         return " ".join(tokens).replace("-", " ")
 
     for component, key_low, key_high in [
-        ("equipmentNetworkElementFanStats",   4,   -6),
-        ("equipmentFanModuleStats",           4,   -6),
-        ("equipmentFan",                      4,  100),
-        ("equipmentFanStats",                 4,   -6),
+        ("equipmentNetworkElementFanStats", 4, -6),
+        ("equipmentFanModuleStats", 4, -6),
+        ("equipmentFan", 4, 100),
+        ("equipmentFanStats", 4, -6),
     ]:
         for key, values in data.get(component, {}).items():
             fan = key[key_low:key_high]
@@ -56,6 +57,7 @@ def parse_ucs_bladecenter_fans(info):
 
     return fans
 
+
 #   .--Fans----------------------------------------------------------------.
 #   |                         _____                                        |
 #   |                        |  ___|_ _ _ __  ___                          |
@@ -64,6 +66,7 @@ def parse_ucs_bladecenter_fans(info):
 #   |                        |_|  \__,_|_| |_|___/                         |
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
+
 
 def inventory_ucs_bladecenter_fans(parsed):
     for key, values in parsed.items():
@@ -89,11 +92,11 @@ def check_ucs_bladecenter_fans(item, _no_params, parsed):
 
 
 check_info["ucs_bladecenter_fans"] = {
-    'parse_function':          parse_ucs_bladecenter_fans,
-    'inventory_function':      inventory_ucs_bladecenter_fans,
-    'check_function':          check_ucs_bladecenter_fans,
-    'service_description':     'Fans %s',
-    'includes':                [ 'ucs_bladecenter.include' ],
+    'parse_function': parse_ucs_bladecenter_fans,
+    'inventory_function': inventory_ucs_bladecenter_fans,
+    'check_function': check_ucs_bladecenter_fans,
+    'service_description': 'Fans %s',
+    'includes': ['ucs_bladecenter.include'],
 }
 
 #.
@@ -107,8 +110,9 @@ check_info["ucs_bladecenter_fans"] = {
 #   '----------------------------------------------------------------------'
 
 factory_settings["ucs_bladecenter_fans_temp_default_levels"] = {
-    "levels" : (40, 50),
+    "levels": (40, 50),
 }
+
 
 # Fans are grouped per module, usually 8 components
 def inventory_ucs_bladecenter_fans_temp(parsed):
@@ -118,7 +122,7 @@ def inventory_ucs_bladecenter_fans_temp(parsed):
 
 
 def check_ucs_bladecenter_fans_temp(item, params, parsed):
-    sensor_item = item[8:-4] # drop "Ambient " and " FAN"
+    sensor_item = item[8:-4]  # drop "Ambient " and " FAN"
     sensor_list = []
     for key, values in parsed.items():
         if key.startswith(sensor_item) and "AmbientTemp" in values:
@@ -131,11 +135,11 @@ def check_ucs_bladecenter_fans_temp(item, params, parsed):
 
 
 check_info["ucs_bladecenter_fans.temp"] = {
-    'inventory_function'  : inventory_ucs_bladecenter_fans_temp,
-    'check_function'      : check_ucs_bladecenter_fans_temp,
-    'service_description' : 'Temperature %s',
-    'group'               : 'temperature',
-    'has_perfdata'        : True,
-    'includes'            : [ 'ucs_bladecenter.include', 'temperature.include' ],
-    'default_levels_variable' :'ucs_bladecenter_fans_temp_default_levels'
+    'inventory_function': inventory_ucs_bladecenter_fans_temp,
+    'check_function': check_ucs_bladecenter_fans_temp,
+    'service_description': 'Temperature %s',
+    'group': 'temperature',
+    'has_perfdata': True,
+    'includes': ['ucs_bladecenter.include', 'temperature.include'],
+    'default_levels_variable': 'ucs_bladecenter_fans_temp_default_levels'
 }

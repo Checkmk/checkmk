@@ -26,14 +26,15 @@
 
 sansymphony_alerts_default_values = (1, 2)
 
+
 def inventory_sansymphony_alerts(info):
-    return [ (None, "sansymphony_alerts_default_values") ]
+    return [(None, "sansymphony_alerts_default_values")]
 
 
 def check_sansymphony_alerts(_no_item, params, info):
     warn, crit = params
     nr_of_alerts = int(info[0][0])
-    perfdata = [ ( "alerts", nr_of_alerts, warn, crit ) ]
+    perfdata = [("alerts", nr_of_alerts, warn, crit)]
     infotxt = "Unacknowlegded alerts: %d" % nr_of_alerts
     levels = " (warn/crit at %d/%d)" % (warn, crit)
 
@@ -48,9 +49,9 @@ def check_sansymphony_alerts(_no_item, params, info):
 
 
 check_info["sansymphony_alerts"] = {
-    "check_function"        : check_sansymphony_alerts,
-    "inventory_function"    : inventory_sansymphony_alerts,
-    "service_description"   : "sansymphony Alerts",
-    "has_perfdata"          : True,
-    "group"                 : "sansymphony_alerts",
+    "check_function": check_sansymphony_alerts,
+    "inventory_function": inventory_sansymphony_alerts,
+    "service_description": "sansymphony Alerts",
+    "has_perfdata": True,
+    "group": "sansymphony_alerts",
 }

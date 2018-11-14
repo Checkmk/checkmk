@@ -47,9 +47,11 @@
 # 2: crit fill level in percent
 sylo_default_levels = (70, 5, 25)
 
+
 def inventory_sylo(info):
     if len(info) > 0 and len(info[0]) == 4:
-        return [ (None, "", "sylo_default_levels") ]
+        return [(None, "", "sylo_default_levels")]
+
 
 def check_sylo(item, params, info):
     if len(info) != 1:
@@ -60,13 +62,13 @@ def check_sylo(item, params, info):
 
         alive_report, warn, crit = params
 
-        mtime     = int(info[0][0])
-        inOffset  = int(info[0][1])
+        mtime = int(info[0][0])
+        inOffset = int(info[0][1])
         outOffset = int(info[0][2])
-        size      = int(info[0][3])
-        size_mb   = size / (1024 * 1024.0)
-        warn_mb   = size_mb * warn / 100.0
-        crit_mb   = size_mb * crit / 100.0
+        size = int(info[0][3])
+        size_mb = size / (1024 * 1024.0)
+        warn_mb = size_mb * warn / 100.0
+        crit_mb = size_mb * crit / 100.0
 
         # CRIT: too old
         now = int(time.time())
@@ -83,10 +85,10 @@ def check_sylo(item, params, info):
         elif inOffset < outOffset:
             bytesUsed = size - outOffset + inOffset
         percUsed = float(bytesUsed) / size * 100
-        used_mb  = bytesUsed / (1024 * 1024.0)
+        used_mb = bytesUsed / (1024 * 1024.0)
 
         # Rates for input and output
-        in_rate  = get_rate("sylo.in",  mtime, inOffset)
+        in_rate = get_rate("sylo.in", mtime, inOffset)
         out_rate = get_rate("sylo.out", mtime, outOffset)
         msg += "Silo is filled %.1fMB (%.1f%%), in %.1f B/s, out %.1f B/s" % \
                (bytesUsed / (1024*1024.0), percUsed, in_rate, out_rate)
@@ -103,10 +105,9 @@ def check_sylo(item, params, info):
     return (3, "Invalid hint file contents: " % info)
 
 
-
 check_info["sylo"] = {
-    'check_function':          check_sylo,
-    'inventory_function':      inventory_sylo,
-    'service_description':     'Sylo',
-    'has_perfdata':            True,
+    'check_function': check_sylo,
+    'inventory_function': inventory_sylo,
+    'service_description': 'Sylo',
+    'has_perfdata': True,
 }

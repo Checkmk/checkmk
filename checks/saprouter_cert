@@ -24,7 +24,6 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-
 # Valid
 # <<<saprouter_cert>>>
 # SSO for USER "prdadm"
@@ -44,10 +43,9 @@
 # <<<saprouter_cert>>>
 # get_my_name: Couldn't open PSE "/usr/users/prdadm/saprouter/local.pse" (Decoding error)
 
-
 # Suggested by customer
 factory_settings["saprouter_cert_default_levels"] = {
-    "validity_age" : (86400 * 30, 86400 * 7),
+    "validity_age": (86400 * 30, 86400 * 7),
 }
 
 
@@ -56,7 +54,7 @@ def parse_saprouter_cert(info):
         time_struct = time.strptime(" ".join(list_), "%b %d %H:%M:%S %Y")
         return time.mktime(time_struct), "%s-%s-%s" % time_struct[:3]
 
-    parsed   = {}
+    parsed = {}
     validity = None
     for line in info:
         if line[0] == "Validity":
@@ -77,20 +75,20 @@ def parse_saprouter_cert(info):
 
         elif not validity:
             parsed.setdefault("failed", [])
-            parsed["failed"].append( " ".join(line) )
+            parsed["failed"].append(" ".join(line))
 
     return parsed
 
 
 def inventory_saprouter_cert(parsed):
     if parsed:
-        return [ (None, None) ]
+        return [(None, None)]
 
 
 def check_saprouter_cert(_no_item, params, parsed):
     if "valid" in parsed:
         _not_before, not_before_readable = parsed["valid"]["not_before"]
-        not_after,  not_after_readable  = parsed["valid"]["not_after"]
+        not_after, not_after_readable = parsed["valid"]["not_after"]
         validity_age = not_after - time.time()
 
         warn, crit = params["validity_age"]
@@ -115,10 +113,10 @@ def check_saprouter_cert(_no_item, params, parsed):
 
 
 check_info['saprouter_cert'] = {
-    'parse_function'            : parse_saprouter_cert,
-    'inventory_function'        : inventory_saprouter_cert,
-    'check_function'            : check_saprouter_cert,
-    'service_description'       : 'SAP router certificate',
-    'default_levels_variable'   : 'saprouter_cert_default_levels',
-    'group'                     : 'saprouter_cert_age'
+    'parse_function': parse_saprouter_cert,
+    'inventory_function': inventory_saprouter_cert,
+    'check_function': check_saprouter_cert,
+    'service_description': 'SAP router certificate',
+    'default_levels_variable': 'saprouter_cert_default_levels',
+    'group': 'saprouter_cert_age'
 }

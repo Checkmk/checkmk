@@ -25,24 +25,24 @@
 # Boston, MA 02110-1301 USA.
 
 factory_settings["storcli_pdisks_default_levels"] = {
-    "Dedicated Hot Spare"  : 0,
-    "Global Hot Spare"     : 0,
-    "Unconfigured Good"    : 0,
-    "Unconfigured Bad"     : 1,
-    "Online"               : 0,
-    "Offline"              : 2,
+    "Dedicated Hot Spare": 0,
+    "Global Hot Spare": 0,
+    "Unconfigured Good": 0,
+    "Unconfigured Bad": 1,
+    "Online": 0,
+    "Offline": 2,
 }
 
 
 def parse_storcli_pdisks(info):
 
     statenames = {
-        "DHS"       : "Dedicated Hot Spare",
-        "GHS"       : "Global Hot Spare",
-        "UGood"     : "Unconfigured Good",
-        "Ubad"      : "Unconfigured Bad",
-        "Onln"      : "Online",
-        "Offln"     : "Offline",
+        "DHS": "Dedicated Hot Spare",
+        "GHS": "Global Hot Spare",
+        "UGood": "Unconfigured Good",
+        "Ubad": "Unconfigured Bad",
+        "Onln": "Online",
+        "Offln": "Offline",
     }
 
     parsed = {}
@@ -54,8 +54,8 @@ def parse_storcli_pdisks(info):
         elif separator_count == 2:
             eid_and_slot, device, state, _drivegroup, size, size_unit = line[:6]
             parsed[eid_and_slot + "-" + device] = {
-                "state"     : statenames.get(state, state),
-                "size"      : (float(size), size_unit)
+                "state": statenames.get(state, state),
+                "size": (float(size), size_unit)
             }
         if separator_count == 3:
             break
@@ -81,10 +81,10 @@ def check_storcli_pdisks(item, params, parsed):
 
 
 check_info["storcli_pdisks"] = {
-    "default_levels_variable"   : "storcli_pdisks_default_levels",
-    "parse_function"            : parse_storcli_pdisks,
-    "inventory_function"        : inventory_storcli_pdisks,
-    "check_function"            : check_storcli_pdisks,
-    "service_description"       : "RAID PDisk EID:Slot-Device %s",
-    "group"                     : "storcli_pdisks",
+    "default_levels_variable": "storcli_pdisks_default_levels",
+    "parse_function": parse_storcli_pdisks,
+    "inventory_function": inventory_storcli_pdisks,
+    "check_function": check_storcli_pdisks,
+    "service_description": "RAID PDisk EID:Slot-Device %s",
+    "group": "storcli_pdisks",
 }

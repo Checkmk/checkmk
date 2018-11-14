@@ -1,0 +1,12 @@
+Title: Improved performance during activate changes
+Level: 1
+Component: wato
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0i1
+Date: 1542182491
+
+The duration of the activate changes phase was highly influenced by the number of WATO snapshots on disk.
+This has been fixed.

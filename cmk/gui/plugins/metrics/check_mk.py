@@ -298,7 +298,7 @@ unit_info['bytes/op'] = {
     'title': _('Read size per operation'),
     'unit': 'bytes/op',
     'color': '#4080c0',
-    "render": bytes_human_readable,
+    "render": cmk.render.fmt_bytes,
 }
 
 #.
@@ -4501,7 +4501,7 @@ metric_info['read_b_op'] = {
     'title': _('Read size per operation'),
     'unit': 'bytes/op',
     'color': '#4080c0',
-    "render"   : bytes_human_readable,
+    "render"   : cmk.render.fmt_bytes,
 }
 
 metric_info['read_retrans'] = {
@@ -4538,7 +4538,7 @@ metric_info['write_b_op'] = {
     'title': _('Writes size per operation'),
     'unit': 'bytes/op',
     'color': '#4080c0',
-    "render"   : bytes_human_readable,
+    "render"   : cmk.render.fmt_bytes,
 }
 
 metric_info['write_avg_rtt_ms'] = {

@@ -1,0 +1,13 @@
+Title: hr_fs: Fix discovery for VCenter appliances
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0i1
+Date: 1542198055
+
+Previously, due to a bogus type value provided by
+these appliances via SNMP, the filesystem checks
+would not be discovered. This has been fixed.

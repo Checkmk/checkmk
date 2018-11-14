@@ -184,8 +184,8 @@ def fetch_var(protocol, server, port, path, suburi, cert_path, itemspec):
 # convert single values into lists of items in
 # case value is a 1-levelled or 2-levelled dict
 def make_item_list(path, value, itemspec):
-    if type(value) != dict:
-        if type(value) == str:
+    if not isinstance(value, dict):
+        if isinstance(value, str):
             value = value.replace(r'\/', '/')
         return [(path, value)]
     else:

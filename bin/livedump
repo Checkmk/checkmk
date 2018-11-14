@@ -72,7 +72,7 @@ define timeperiod {
 
 def encode_row(row):
     for key, val in row.items():
-        if type(val) == unicode:
+        if isinstance(val, unicode):
             row[key] = val.encode("utf-8")
 
 

@@ -303,11 +303,11 @@ def dump(x, indent=""):
                     print indent + k
                     dump_object(v, indent + "    ")
 
-            elif type(value) == str:
+            elif isinstance(value, str):
                 print indent + value
             elif is_dict:
                 dump_dict(value, indent)
-            elif type(value) == list:
+            elif isinstance(value, list):
                 dump_list(value, indent)
             else:
                 debug(value)
@@ -666,7 +666,7 @@ def output_mors(what, properties, direct=False):
         running_on = ''
         power_state = ''
         for name, value in items:
-            if type(value) == tuple:
+            if isinstance(value, tuple):
                 sections.append(value)
             else:
                 if name == 'runtime.host' and value:

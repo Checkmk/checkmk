@@ -314,7 +314,7 @@ else:
 
     class NetAppNode(object):
         def __init__(self, xml_element):
-            if type(xml_element) == str:
+            if isinstance(xml_element, str):
                 xml_element = ET.Element(xml_element)
             self.node = xml_element
             self.element = self
@@ -437,7 +437,7 @@ def create_dict(instances, custom_key=None, is_counter=True):
                 values[node.element["name"]] = node.element["content"] or ""
 
         if custom_key:
-            if type(custom_key) == list:
+            if isinstance(custom_key, list):
                 tokens = []
                 for name in custom_key:
                     tokens.append(values[name])
@@ -483,7 +483,7 @@ def format_config(instances,
             collect_values(node)
 
         line = []
-        if type(config_key) == list:
+        if isinstance(config_key, list):
             instance_key = []
             for entry in config_key:
                 instance_key.append(values.get(entry))

@@ -433,7 +433,7 @@ def process_logfile(logfile, patterns, opt, status):
 
                 # Check for continuation lines
                 for cont_pattern in cont_patterns:
-                    if type(cont_pattern) == int:  # add that many lines
+                    if isinstance(cont_pattern, int):  # add that many lines
                         for _unused_x in range(cont_pattern):
                             cont_line, pushed_back_line = next_line(file_handle, pushed_back_line)
                             if cont_line is None:  # end of file

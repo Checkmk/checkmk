@@ -58,30 +58,32 @@ def inventory_3ware_disks(info):
             if line[1] == 'NOT-PRESENT':
                 continue
             disk = line[0]
-            inventory.append( (disk, None) )
+            inventory.append((disk, None))
     return inventory
+
 
 def check_3ware_disks(item, _no_params, info):
     for line in info:
         if line[0] == item:
             status = line[1]
             unit_type = line[2]
-            size      = line[3]
+            size = line[3]
             size_type = line[4]
             disk_type = line[5]
-            model     = line[-1]
+            model = line[-1]
             infotext = "%s (unit: %s, size: %s,%s, type: %s, model: %s)" % \
                        (status, unit_type, size, size_type, disk_type, model)
-            if status in [ "OK", "VERIFYING" ]:
+            if status in ["OK", "VERIFYING"]:
                 return (0, "disk status is " + infotext)
             return (2, "disk status is " + infotext)
     return (3, "disk %s not found in agent output" % item)
 
+
 # declare the check to Check_MK
 
 check_info["3ware_disks"] = {
-    'check_function':          check_3ware_disks,
-    'inventory_function':      inventory_3ware_disks,
-    'service_description':     'RAID 3ware disk %s',
-    'group':                   'raid_disk',
+    'check_function': check_3ware_disks,
+    'inventory_function': inventory_3ware_disks,
+    'service_description': 'RAID 3ware disk %s',
+    'group': 'raid_disk',
 }

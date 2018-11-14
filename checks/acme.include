@@ -24,17 +24,16 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-
 acme_environment_states = {
-    "1" : (0, "initial"),
-    "2" : (0, "normal"),
-    "3" : (1, "minor"),
-    "4" : (1, "major"),
-    "5" : (2, "critical"),
-    "6" : (2, "shutdown"),
-    "7" : (2, "not present"),
-    "8" : (2, "not functioning"),
-    "9" : (2, "unknown"),
+    "1": (0, "initial"),
+    "2": (0, "normal"),
+    "3": (1, "minor"),
+    "4": (1, "major"),
+    "5": (2, "critical"),
+    "6": (2, "shutdown"),
+    "7": (2, "not present"),
+    "8": (2, "not functioning"),
+    "9": (2, "unknown"),
 }
 
 

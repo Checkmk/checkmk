@@ -29,7 +29,7 @@ def inventory_3par_volumes(parsed):
     for entry in parsed.get('members', {}):
         if not entry['policies']['system'] is True and \
                 "name" in entry:
-            yield ( entry['name'], {} )
+            yield (entry['name'], {})
 
 
 def check_3par_volumes(item, params, parsed):
@@ -40,20 +40,20 @@ def check_3par_volumes(item, params, parsed):
     }
 
     provisioning_map = {
-        1 : "FULL",
-        2 : "TPVV",
-        3 : "SNP",
-        4 : "PEER",
-        5 : "UNKNOWN",
-        6 : "TDVV",
-        7 : "DDS",
+        1: "FULL",
+        2: "TPVV",
+        3: "SNP",
+        4: "PEER",
+        5: "UNKNOWN",
+        6: "TDVV",
+        7: "DDS",
     }
 
     for entry in parsed.get('members', {}):
         if entry.get('name') == item:
             total = entry['sizeMiB']
             usr_free = total - entry['userSpace']['usedMiB']
-            yield df_check_filesystem_list(item, params, [ (item, total, usr_free, 0) ])
+            yield df_check_filesystem_list(item, params, [(item, total, usr_free, 0)])
 
             # This section seems not always to be present...
             if "capacityEfficiency" in entry:
@@ -71,11 +71,11 @@ def check_3par_volumes(item, params, parsed):
 
 
 check_info['3par_volumes'] = {
-    'parse_function'        : parse_3par,
-    'inventory_function'    : inventory_3par_volumes,
-    'check_function'        : check_3par_volumes,
-    'service_description'   : "Volume %s",
-    'has_perfdata'          : True,
-    'group'                 : "filesystem",
-    'includes'              : [ "3par.include", "size_trend.include", "df.include" ]
+    'parse_function': parse_3par,
+    'inventory_function': inventory_3par_volumes,
+    'check_function': check_3par_volumes,
+    'service_description': "Volume %s",
+    'has_perfdata': True,
+    'group': "filesystem",
+    'includes': ["3par.include", "size_trend.include", "df.include"]
 }

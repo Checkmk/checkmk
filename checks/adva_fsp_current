@@ -24,7 +24,6 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-
 # .1.3.6.1.4.1.2544.1.11.2.4.2.2.1.1.101318912  8110
 # .1.3.6.1.4.1.2544.1.11.2.4.2.2.1.2.101318912  65600
 # .1.3.6.1.4.1.2544.1.11.2.4.2.2.1.3.101318912  9
@@ -47,9 +46,13 @@ def check_adva_fsp_current(item, _no_params, info):
             current = float(current_str) / 1000.0
             upper_threshold = float(upper_threshold_str) / 1000
 
-            infotext = "[%s] %.3f A (crit at %.3f A)" % (
-                       unit_name, current, upper_threshold)
-            perfdata = [("current", current, None, upper_threshold,)]
+            infotext = "[%s] %.3f A (crit at %.3f A)" % (unit_name, current, upper_threshold)
+            perfdata = [(
+                "current",
+                current,
+                None,
+                upper_threshold,
+            )]
 
             if current <= 0:
                 return 3, "Invalid sensor data"
@@ -59,16 +62,18 @@ def check_adva_fsp_current(item, _no_params, info):
 
 
 check_info['adva_fsp_current'] = {
-    "inventory_function"    : inventory_adva_fsp_current,
-    "check_function"        : check_adva_fsp_current,
-    "service_description"   : "Power Supply %s",
-    "has_perfdata"          : True,
-    "snmp_info"             : ( ".1.3.6.1.4.1.2544", [
-                                    "1.11.2.4.2.2.1.1", # currentDiagnosticsAmpere
-                                    "1.11.2.4.2.2.1.2", # currentDiagnosticsUpperThres
-                                    "1.11.2.4.2.2.1.3", # currentDiagnosticsPsuOutputPower
-                                    "2.5.5.1.1.1", # inventoryUnitName
-                                    "2.5.5.2.1.5", # entityIndexAid
-                              ]),
-    "snmp_scan_function"    : lambda oid: oid(".1.3.6.1.2.1.1.1.0") == "Fiber Service Platform F7",
+    "inventory_function": inventory_adva_fsp_current,
+    "check_function": check_adva_fsp_current,
+    "service_description": "Power Supply %s",
+    "has_perfdata": True,
+    "snmp_info": (
+        ".1.3.6.1.4.1.2544",
+        [
+            "1.11.2.4.2.2.1.1",  # currentDiagnosticsAmpere
+            "1.11.2.4.2.2.1.2",  # currentDiagnosticsUpperThres
+            "1.11.2.4.2.2.1.3",  # currentDiagnosticsPsuOutputPower
+            "2.5.5.1.1.1",  # inventoryUnitName
+            "2.5.5.2.1.5",  # entityIndexAid
+        ]),
+    "snmp_scan_function": lambda oid: oid(".1.3.6.1.2.1.1.1.0") == "Fiber Service Platform F7",
 }

@@ -24,56 +24,57 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-
 # example output
 
 factory_settings['threepar_remotecopy_default_levels'] = {
-                1 : 0, # NORMAL
-                2 : 1, # STARTUP
-                3 : 1, # SHUTDOWN
-                4 : 0, # ENABLE
-                5 : 2, # DISABLE
-                6 : 2, # INVALID
-                7 : 1, # NODEDUP
-                8 : 0, # UPGRADE
+    1: 0,  # NORMAL
+    2: 1,  # STARTUP
+    3: 1,  # SHUTDOWN
+    4: 0,  # ENABLE
+    5: 2,  # DISABLE
+    6: 2,  # INVALID
+    7: 1,  # NODEDUP
+    8: 0,  # UPGRADE
 }
+
 
 def inventory_3par_remotecopy(parsed):
     if parsed.get("mode", 0) > 1:
-        return [ (None, {}) ]
+        return [(None, {})]
 
 
 def check_3par_remotecopy(_no_item, params, parsed):
     mode_translate = {
-        1 : (3, "NONE"),
-        2 : (0, "STARTED"),
-        3 : (2, "STOPPED"),
+        1: (3, "NONE"),
+        2: (0, "STARTED"),
+        3: (2, "STOPPED"),
     }
 
     state, state_readable = mode_translate[parsed.get('mode', 1)]
     yield state, "Mode: %s" % state_readable
 
     status_translate = {
-        1 : "NORMAL",
-        2 : "STARTUP",
-        3 : "SHUTDOWN",
-        4 : "ENABLE",
-        5 : "DISABLE",
-        6 : "INVALID",
-        7 : "NODEDUP",
-        8 : "UPGRADE",
+        1: "NORMAL",
+        2: "STARTUP",
+        3: "SHUTDOWN",
+        4: "ENABLE",
+        5: "DISABLE",
+        6: "INVALID",
+        7: "NODEDUP",
+        8: "UPGRADE",
     }
 
     status = parsed.get('status', 6)
     state_readable = status_translate[status]
     yield params[status], "Status: %s" % state_readable
 
+
 check_info['3par_remotecopy'] = {
-    'parse_function'            : parse_3par,
-    'inventory_function'        : inventory_3par_remotecopy,
-    'check_function'            : check_3par_remotecopy,
-    'service_description'       : "Remote copy",
-    'group'                     : "threepar_remotecopy",
-    'default_levels_variable'   : "threepar_remotecopy_default_levels",
-    'includes'                  : [ "3par.include" ],
+    'parse_function': parse_3par,
+    'inventory_function': inventory_3par_remotecopy,
+    'check_function': check_3par_remotecopy,
+    'service_description': "Remote copy",
+    'group': "threepar_remotecopy",
+    'default_levels_variable': "threepar_remotecopy_default_levels",
+    'includes': ["3par.include"],
 }

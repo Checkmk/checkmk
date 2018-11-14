@@ -356,7 +356,7 @@ class ModeRulesets(RulesetMode):
             self._title = _("Used rulesets")
             self._help = _("Non-empty rulesets")
 
-        elif self._group_name == None:
+        elif self._group_name is None:
             self._title = _("Rulesets")
             self._help = None
 
@@ -636,7 +636,7 @@ class ModeEditRuleset(WatoMode):
                     skip_this_folder = True
                     continue
 
-                if last_folder != None:
+                if last_folder is not None:
                     table.end()
 
                 last_folder = folder
@@ -757,7 +757,7 @@ class ModeEditRuleset(WatoMode):
 
             self._rule_cells(rule)
 
-        if last_folder != None:
+        if last_folder is not None:
             table.end()
 
     def _action_url(self, action, folder, rulenr):
@@ -1526,7 +1526,7 @@ class EditRuleMode(WatoMode):
                 raise MKUserError(None, "Invalid item type '%s'" % itemtype)
 
             checked = html.get_checkbox("explicit_services")
-            if checked == None:  # read from rule itself
+            if checked is None:  # read from rule itself
                 checked = len(self._rule.item_list) == 0 or self._rule.item_list[0] != ""
             div_id = "item_list"
             html.checkbox(

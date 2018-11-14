@@ -95,7 +95,7 @@ def system_config_path():
 
 
 def site_config_path(site_id=None):
-    if site_id == None:
+    if site_id is None:
         if not is_site():
             raise Exception(_("Not executed in OMD environment!"))
         site_id = os.environ["OMD_SITE"]
@@ -318,7 +318,7 @@ class Job(MKBackupJob, BackupEntity):
         return self._config["encrypt"]
 
     def is_encrypted(self):
-        return self._config["encrypt"] != None
+        return self._config["encrypt"] is not None
 
     # TODO: Duplicated code with mkbackup (globalize_job_id())
     def global_ident(self):
@@ -419,7 +419,7 @@ class Jobs(BackupEntityCollection):
                 html.icon_button(edit_url, _("Edit this backup job"), "edit")
                 html.icon_button(delete_url, _("Delete this backup job"), "delete")
 
-            if state["state"] != None:
+            if state["state"] is not None:
                 html.icon_button(state_url, _("Show current / last state of this backup job"),
                                  "backup_state")
 
@@ -450,7 +450,7 @@ class Jobs(BackupEntityCollection):
                     state_txt = _("Failed")
                 else:
                     state_txt = _("Finished")
-            elif state["state"] == None:
+            elif state["state"] is None:
                 css = ""
 
             table.cell(_("State"), css=css)
@@ -611,7 +611,7 @@ class PageEditBackupJob(object):
         super(PageEditBackupJob, self).__init__()
         job_ident = html.var("job")
 
-        if job_ident != None:
+        if job_ident is not None:
             try:
                 job = self.jobs().get(job_ident)
             except KeyError:
@@ -840,7 +840,7 @@ class PageAbstractBackupJobState(object):
                 state_txt = _("Failed")
             else:
                 state_txt = _("Finished")
-        elif state["state"] == None:
+        elif state["state"] is None:
             css = None
 
         html.open_tr(class_=["data", "even0"])
@@ -883,7 +883,7 @@ class PageBackupJobState(PageAbstractBackupJobState):
 
     def _from_vars(self):
         job_ident = html.var("job")
-        if job_ident != None:
+        if job_ident is not None:
             try:
                 self._job = self.jobs().get(job_ident)
             except KeyError:
@@ -952,7 +952,7 @@ class Target(BackupEntity):
             table.cell(_("Finished"), render.date_and_time(info["finished"]))
             table.cell(_("Size"), render.fmt_bytes(info["size"]))
             table.cell(_("Encrypted"))
-            if info["config"]["encrypt"] != None:
+            if info["config"]["encrypt"] is not None:
                 html.write(info["config"]["encrypt"])
             else:
                 html.write_text(_("No"))
@@ -1085,7 +1085,7 @@ class PageEditBackupTarget(object):
         super(PageEditBackupTarget, self).__init__()
         target_ident = html.var("target")
 
-        if target_ident != None:
+        if target_ident is not None:
             try:
                 target = self.targets().get(target_ident)
             except KeyError:
@@ -1393,7 +1393,7 @@ class PageBackupKeyManagement(key_mgmt.PageKeyManagement):
     def _key_in_use(self, key_id, key):
         for job in self.jobs().objects.itervalues():
             job_key_id = job.key_ident()
-            if job_key_id != None and key_id == job_key_id:
+            if job_key_id is not None and key_id == job_key_id:
                 return True
         return False
 
@@ -1506,7 +1506,7 @@ class RestoreJob(MKBackupJob):
         return [mkbackup_path(), "restore", "--background", self._target_ident, self._backup_ident]
 
     def start(self, env=None):
-        if self._passphrase != None:
+        if self._passphrase is not None:
             if env is None:
                 env = {}
             env.update(os.environ.copy())
@@ -1524,7 +1524,7 @@ class PageBackupRestore(object):
 
     def _load_target(self):
         ident = html.var("target")
-        if ident == None:
+        if ident is None:
             self._target_ident = None
             self._target = None
             return
@@ -1560,7 +1560,7 @@ class PageBackupRestore(object):
         action = html.var("_action")
         backup_ident = html.var("_backup")
 
-        if action == None:
+        if action is None:
             return  # Only choosen the target
 
         if not html.transaction_valid():
@@ -1610,7 +1610,7 @@ class PageBackupRestore(object):
 
     def _start_restore(self, backup_ident):
         backup_info = self._target.get_backup(backup_ident)
-        if backup_info["config"]["encrypt"] != None:
+        if backup_info["config"]["encrypt"] is not None:
             return self._start_encrypted_restore(backup_ident, backup_info)
         return self._start_unencrypted_restore(backup_ident)
 

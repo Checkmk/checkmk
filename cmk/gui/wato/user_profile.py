@@ -274,7 +274,7 @@ def page_user_profile(change_pw=False):
         html.show_user_errors()
 
     user = users.get(config.user.id)
-    if user == None:
+    if user is None:
         html.show_warning(_("Sorry, your user account does not exist."))
         html.footer()
         return

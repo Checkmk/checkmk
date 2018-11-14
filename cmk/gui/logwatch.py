@@ -210,7 +210,7 @@ def show_file(site, host_name, file_name):
         html.footer()
         return
 
-    if log_chunks == None:
+    if log_chunks is None:
         html.end_context_buttons()
         html.show_error(_("The logfile does not exist."))
         html.footer()
@@ -373,7 +373,7 @@ def parse_file(site, host_name, file_name, hidecontext=False):
     try:
         chunk = None
         lines = get_logfile_lines(site, host_name, file_name)
-        if lines == None:
+        if lines is None:
             return None
         # skip hash line. this doesn't exist in older files
         while lines and lines[0].startswith('#'):
@@ -561,7 +561,7 @@ def logfiles_of_host(site, host_name):
                                           "Filter: name = %s\n" % livestatus.lqencode(host_name))
     if site:  # Honor site hint if available
         sites.live().set_only_sites(None)
-    if file_names == None:  # Not supported by that Livestatus version
+    if file_names is None:  # Not supported by that Livestatus version
         raise MKGeneralException(
             _("The monitoring core of the target site '%s' has the version '%s'. That "
               "does not support fetching logfile information. Please upgrade "
@@ -579,7 +579,7 @@ def get_logfile_lines(site, host_name, file_name):
     file_content = sites.live().query_value(query)
     if site:  # Honor site hint if available
         sites.live().set_only_sites(None)
-    if file_content == None:
+    if file_content is None:
         return None
     return file_content.splitlines()
 

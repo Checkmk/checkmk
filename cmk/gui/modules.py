@@ -118,7 +118,7 @@ def load_all_plugins():
     need_plugins_reload = _local_web_plugins_have_changed()
 
     for module in _cmk_gui_top_level_modules() + _legacy_modules:
-        if only_modules != None and module.__name__ not in only_modules:
+        if only_modules is not None and module.__name__ not in only_modules:
             continue
         try:
             module.load_plugins  # just check if this function exists

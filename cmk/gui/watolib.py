@@ -487,12 +487,12 @@ def log_entry(linkinfo, action, message, user_id=None):
         link = linkinfo.path() + ":"
     elif isinstance(linkinfo, Host):
         link = linkinfo.folder().path() + ":" + linkinfo.name()
-    elif linkinfo == None:
+    elif linkinfo is None:
         link = "-"
     else:
         link = linkinfo
 
-    if user_id == None and config.user.id != None:
+    if user_id is None and config.user.id is not None:
         user_id = config.user.id
     elif user_id == '':
         user_id = '-'
@@ -1152,7 +1152,7 @@ class BaseFolder(WithPermissionsAndAttributes):
         return False
 
     def has_parent(self):
-        return self.parent() != None
+        return self.parent() is not None
 
     def parent(self):
         raise NotImplementedError()
@@ -1438,7 +1438,7 @@ class CREFolder(BaseFolder):
         else:
             self._root_dir = wato_root_dir
 
-        if folder_path != None:
+        if folder_path is not None:
             self._init_by_loading_existing_directory(folder_path)
         else:
             self._init_by_creating_new(title, attributes)
@@ -1474,7 +1474,7 @@ class CREFolder(BaseFolder):
         return True
 
     def _load_hosts_on_demand(self):
-        if self._hosts == None:
+        if self._hosts is None:
             self._load_hosts()
 
     def _load_hosts(self):
@@ -1519,7 +1519,7 @@ class CREFolder(BaseFolder):
             # information is not available and all tags are set explicitely
             attributes = {}
             alias = self._get_alias_from_extra_conf(host_name, variables)
-            if alias != None:
+            if alias is not None:
                 attributes["alias"] = alias
             attributes.update(self._get_attributes_from_tags(host_tags))
             for attribute_key, config_dict in [
@@ -1606,7 +1606,7 @@ class CREFolder(BaseFolder):
 
     def _transform_none_value_site_attribute(self, attributes):
         # Old WATO was saving "site" attribute with value of None. Skip this key.
-        if "site" in attributes and attributes["site"] == None:
+        if "site" in attributes and attributes["site"] is None:
             del attributes["site"]
         return attributes
 
@@ -1639,7 +1639,7 @@ class CREFolder(BaseFolder):
     def save_hosts(self):
         self.need_unlocked_hosts()
         self.need_permission("write")
-        if self._hosts != None:
+        if self._hosts is not None:
             self._save_hosts_file()
 
             # Clean up caches of all hosts in this folder, just to be sure. We could also
@@ -1730,7 +1730,7 @@ class CREFolder(BaseFolder):
                     if custom_varname:
                         value = effective.get(attrname)
                         nagstring = attr.to_nagios(value)
-                        if nagstring != None:
+                        if nagstring is not None:
                             if custom_varname not in custom_macros:
                                 custom_macros[custom_varname] = {}
                             custom_macros[custom_varname][hostname] = nagstring
@@ -1986,7 +1986,7 @@ class CREFolder(BaseFolder):
         return self._choices_for_moving("folder")
 
     def choices_for_moving_host(self):
-        if self._choices_for_moving_host != None:
+        if self._choices_for_moving_host is not None:
             return self._choices_for_moving_host  # Cached
 
         self._choices_for_moving_host = self._choices_for_moving("host")
@@ -2203,7 +2203,7 @@ class CREFolder(BaseFolder):
         return html.makeuri_contextless(url_vars, filename="wato.py")
 
     def edit_url(self, backfolder=None):
-        if backfolder == None:
+        if backfolder is None:
             if self.has_parent():
                 backfolder = self.parent()
             else:
@@ -2233,13 +2233,13 @@ class CREFolder(BaseFolder):
 
         interval = self._attributes["network_scan"]["scan_interval"]
         last_end = self._attributes.get("network_scan_result", {}).get("end", None)
-        if last_end == None:
+        if last_end is None:
             next_time = time.time()
         else:
             next_time = last_end + interval
 
         time_allowed = self._attributes["network_scan"].get("time_allowed")
-        if time_allowed == None:
+        if time_allowed is None:
             return next_time  # No time frame limit
 
         # First transform the time given by the user to UTC time
@@ -2736,7 +2736,7 @@ class SearchFolder(BaseFolder):
         return _("Search results for folder %s") % self._base_folder.title()
 
     def hosts(self):
-        if self._found_hosts == None:
+        if self._found_hosts is None:
             self._found_hosts = self._search_hosts_recursively(self._base_folder)
         return self._found_hosts
 
@@ -2886,7 +2886,7 @@ class CREHost(WithPermissionsAndAttributes):
 
     @staticmethod
     def host_exists(host_name):
-        return Host.host(host_name) != None
+        return Host.host(host_name) is not None
 
     # .--------------------------------------------------------------------.
     # | CONSTRUCTION, LOADING & SAVING                                     |
@@ -2931,7 +2931,7 @@ class CREHost(WithPermissionsAndAttributes):
         return self.folder().need_unlocked_hosts()
 
     def is_cluster(self):
-        return self._cluster_nodes != None
+        return self._cluster_nodes is not None
 
     def cluster_nodes(self):
         return self._cluster_nodes
@@ -3378,13 +3378,13 @@ class TextAttribute(Attribute):
         return self._mandatory
 
     def render_input(self, varprefix, value):
-        if value == None:
+        if value is None:
             value = ""
         html.text_input(varprefix + "attr_" + self.name(), value, size=self._size)
 
     def from_html_vars(self, varprefix):
         value = html.get_unicode_input(varprefix + "attr_" + self.name())
-        if value == None:
+        if value is None:
             value = ""
         return value.strip()
 
@@ -3398,7 +3398,7 @@ class TextAttribute(Attribute):
                 _("%s may be missing, if must not be empty if it is set.") % self.title())
 
     def filter_matches(self, crit, value, hostname):
-        if value == None:  # Host does not have this attribute
+        if value is None:  # Host does not have this attribute
             value = ""
 
         return host_attribute_matches(crit, value)
@@ -3407,7 +3407,7 @@ class TextAttribute(Attribute):
 def host_attribute_matches(crit, value):
     if crit and crit[0] == "~":
         # insensitive infix regex match
-        return re.search(crit[1:], value, re.IGNORECASE) != None
+        return re.search(crit[1:], value, re.IGNORECASE) is not None
 
     # insensitive infix search
     return crit.lower() in value.lower()
@@ -3423,7 +3423,7 @@ class FixedTextAttribute(TextAttribute):
         self._mandatory = False
 
     def render_input(self, varprefix, value):
-        if value != None:
+        if value is not None:
             html.hidden_field(varprefix + "attr_" + self.name(), value)
             html.write(value)
 
@@ -3512,7 +3512,7 @@ class HostTagAttribute(Attribute):
 
     def render_input(self, varprefix, value):
         varname = varprefix + "attr_" + self.name()
-        if value == None:
+        if value is None:
             value = html.var(varname, "")  # "" is important for tag groups with an empty tag entry
 
         # Tag groups with just one entry are being displayed
@@ -3570,7 +3570,7 @@ class HostTagAttribute(Attribute):
                     taglist = [value] + entry[2]
                 else:
                     taglist = [value]
-                if taglist[0] == None:
+                if taglist[0] is None:
                     taglist = taglist[1:]
                 return taglist
         return []  # No matching tag
@@ -3965,7 +3965,7 @@ def register_configvar(group,
 
 
 def register_configvar_group(title, order=None):
-    if order != None:
+    if order is not None:
         configvar_order()[title] = 18
 
 
@@ -4103,7 +4103,7 @@ class SiteManagement(object):
             raise MKUserError("url_prefix", _("The URL prefix must end with a slash."))
 
         # Connection
-        if site_configuration.get("socket") == None and site_id != config.omd_site():
+        if site_configuration.get("socket") is None and site_id != config.omd_site():
             raise MKUserError(
                 "method_sel",
                 _("You can only configure a local site connection for "
@@ -4506,7 +4506,7 @@ def get_login_secret(create_on_demand=False):
     path = var_dir + "automation_secret.mk"
 
     secret = store.load_data_from_file(path)
-    if secret != None:
+    if secret is not None:
         return secret
 
     if not create_on_demand:
@@ -4901,7 +4901,7 @@ def verify_slave_site_config(site_id):
             _("Configuration error. You treat us as "
               "a <b>slave</b>, but we have an own distributed WATO configuration!"))
 
-    if our_id != None and our_id != site_id:
+    if our_id is not None and our_id != site_id:
         raise MKGeneralException(
             _("Site ID mismatch. Our ID is '%s', but you are saying we are '%s'.") % (our_id,
                                                                                       site_id))
@@ -5200,11 +5200,11 @@ class ActivateChanges(object):
 class ActivateChangesWriter(ActivateChanges):
     def add_change(self, action_name, text, obj, add_user, need_sync, need_restart, domains, sites):
         # Default to a core only change
-        if domains == None:
+        if domains is None:
             domains = [ConfigDomainCore]
 
         # All replication sites in case no specific site is given
-        if sites == None:
+        if sites is None:
             sites = self.activation_site_ids()
 
         change_id = self._new_change_id()
@@ -5219,14 +5219,14 @@ class ActivateChangesWriter(ActivateChanges):
     def _add_change_to_site(self, site_id, change_id, action_name, text, obj, add_user, need_sync,
                             need_restart, domains):
         # Individual changes may override the domain restart default value
-        if need_restart == None:
+        if need_restart is None:
             need_restart = any([d.needs_activation for d in domains])
 
-        if need_sync == None:
+        if need_sync is None:
             need_sync = any([d.needs_sync for d in domains])
 
         def serialize_object(obj):
-            if obj == None:
+            if obj is None:
                 return None
             return obj.__class__.__name__, obj.ident()
 
@@ -5295,7 +5295,7 @@ class ActivateChangesManager(ActivateChanges):
               prevent_activate=False):
         self._sites = self._get_sites(sites)
 
-        if activate_until == None:
+        if activate_until is None:
             self._activate_until = self._get_last_change_id()
         else:
             self._activate_until = activate_until
@@ -7021,7 +7021,7 @@ class HosttagsConfiguration(object):
 
         if len(tag_group.tags) == 0:
             raise MKUserError("id_0", _("Please specify at least one tag."))
-        if len(tag_group.tags) == 1 and tag_group.tags[0] == None:
+        if len(tag_group.tags) == 1 and tag_group.tags[0] is None:
             raise MKUserError("id_0", _("Tags with only one choice must have an ID."))
 
     def load(self):
@@ -7263,7 +7263,7 @@ def check_mk_local_automation(command, args=None, indata="", stdin_data=None, ti
     except Exception, e:
         raise MKGeneralException("Cannot execute <tt>%s</tt>: %s" % (" ".join(cmd), e))
 
-    if stdin_data != None:
+    if stdin_data is not None:
         auto_logger.info("STDIN: %r" % stdin_data)
         p.stdin.write(stdin_data)
     else:
@@ -7444,7 +7444,7 @@ def render_condition_editor(tag_specs, varprefix=""):
                     else:
                         html.dropdown(
                             varprefix + "tagvalue_" + id_,
-                            [(t[0], _u(t[1])) for t in choices if t[0] != None],
+                            [(t[0], _u(t[1])) for t in choices if t[0] is not None],
                             deflt=default_tag)
                     html.close_div()
                     html.close_td()
@@ -8099,7 +8099,7 @@ class Ruleset(object):
             content += "\nglobals().setdefault(%r, [])\n" % (varname)
 
             if self.is_optional():
-                content += "\nif %s == None:\n    %s = []\n" % (varname, varname)
+                content += "\nif %s is None:\n    %s = []\n" % (varname, varname)
 
         content += "\n%s = [\n" % varname
         for rule in self._rules[folder.path()]:
@@ -8493,7 +8493,7 @@ class Rule(object):
             rule.append(self.tag_specs)
 
         rule.append(self.host_list)
-        if self.item_list != None:
+        if self.item_list is not None:
             rule.append(self.item_list)
 
         ro = self._rule_options_to_config()
@@ -8629,8 +8629,8 @@ class Rule(object):
                     _("Failed to search rule of ruleset '%s' in folder '%s' (%s): %s") %
                     (self.ruleset.title(), self.folder.title(), self.to_config(), e))
 
-        if value_text != None and not match_search_expression(search_options, "rule_value",
-                                                              value_text):
+        if value_text is not None and not match_search_expression(search_options, "rule_value",
+                                                                  value_text):
             return False
 
         if not match_one_of_search_expression(search_options, "rule_host_list", self.host_list):
@@ -8646,7 +8646,7 @@ class Rule(object):
         ] + self.host_list \
           + (self.item_list or [])
 
-        if value_text != None:
+        if value_text is not None:
             to_search.append(value_text)
 
         if not match_one_of_search_expression(search_options, "fulltext", to_search):
@@ -8693,7 +8693,7 @@ def match_search_expression(search_options, attr_name, search_in):
     if attr_name not in search_options:
         return True  # not searched for this. Matching!
 
-    return search_in and re.search(search_options[attr_name], search_in, re.I) != None
+    return search_in and re.search(search_options[attr_name], search_in, re.I) is not None
 
 
 def match_one_of_search_expression(search_options, attr_name, search_in_list):
@@ -9635,7 +9635,7 @@ def edit_users(changed_users):
 
 def do_network_scan_automation():
     folder_path = html.var("folder")
-    if folder_path == None:
+    if folder_path is None:
         raise MKGeneralException(_("Folder path is missing"))
     folder = Folder.folder(folder_path)
 
@@ -10147,7 +10147,7 @@ class UserSelection(DropdownChoice):
                         for (name, us) in users.items()
                         if (not only_contacts or us.get("contactgroups"))]
             elements.sort()
-            if nv != None:
+            if nv is not None:
                 elements = [(None, none_value)] + elements
             return elements
 
@@ -10320,7 +10320,7 @@ def is_a_checkbox(vs):
 
 def get_search_expression():
     search = html.get_unicode_input("search")
-    if search != None:
+    if search is not None:
         search = search.strip().lower()
     return search
 
@@ -10498,7 +10498,7 @@ def must_be_in_contactgroups(cgspec):
         return
 
     # No contact groups specified
-    if cgspec == None:
+    if cgspec is None:
         return
 
     cgconf = convert_cgroups_from_tuple(cgspec)
@@ -10538,7 +10538,7 @@ def check_wato_foldername(htmlvarname, name, just_name=False):
 
 # TODO: Move to Folder()?
 def create_wato_foldername(title, in_folder=None):
-    if in_folder == None:
+    if in_folder is None:
         in_folder = Folder.current()
 
     basename = convert_title_to_filename(title)
@@ -10641,7 +10641,7 @@ def get_hostnames_from_checkboxes(filterfunc=None):
     for host_name, host in sorted(Folder.current().hosts().items()):
         if (not search_text or (search_text.lower() in host_name.lower())) \
             and (not show_checkboxes or ('_c_' + host_name) in selected):
-            if filterfunc == None or \
+            if filterfunc is None or \
                filterfunc(host):
                 selected_host_names.append(host_name)
     return selected_host_names

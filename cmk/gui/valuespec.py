@@ -199,7 +199,7 @@ class FixedValue(ValueSpec):
         html.write(self.value_to_text(value))
 
     def value_to_text(self, value):
-        if self._totext != None:
+        if self._totext is not None:
             return self._totext
         elif isinstance(value, unicode):
             return value
@@ -289,7 +289,7 @@ class Age(ValueSpec):
                 _("The value %r has type %s, but must be of type int") % (value, type_name(value)))
 
     def validate_value(self, value, varprefix):
-        if self._minvalue != None and value < self._minvalue:
+        if self._minvalue is not None and value < self._minvalue:
             raise MKUserError(
                 varprefix,
                 _("%s is too low. The minimum allowed value is %s.") % (value, self._minvalue))
@@ -309,7 +309,7 @@ class Integer(ValueSpec):
         self._display_format = kwargs.get("display_format", "%d")
         self._align = kwargs.get("align", "left")
 
-        if "size" not in kwargs and "maxvalue" in kwargs and kwargs["maxvalue"] != None:
+        if "size" not in kwargs and "maxvalue" in kwargs and kwargs["maxvalue"] is not None:
             self._size = 1 + int(math.log10(self._maxvalue)) + \
                (3 if isinstance(self._maxvalue, float) else 0)
 
@@ -370,11 +370,11 @@ class Integer(ValueSpec):
                 (value, type_name(value)))
 
     def validate_value(self, value, varprefix):
-        if self._minvalue != None and value < self._minvalue:
+        if self._minvalue is not None and value < self._minvalue:
             raise MKUserError(
                 varprefix,
                 _("%s is too low. The minimum allowed value is %s.") % (value, self._minvalue))
-        if self._maxvalue != None and value > self._maxvalue:
+        if self._maxvalue is not None and value > self._maxvalue:
             raise MKUserError(
                 varprefix,
                 _("%s is too high. The maximum allowed value is %s.") % (value, self._maxvalue))
@@ -443,7 +443,7 @@ class TextAscii(ValueSpec):
 
     def render_input(self, varprefix, value):
         self.classtype_info()
-        if value == None:
+        if value is None:
             value = ""
         else:
             value = "%s" % value
@@ -490,7 +490,7 @@ class TextAscii(ValueSpec):
         return value
 
     def validate_datatype(self, value, varprefix):
-        if self._none_is_empty and value == None:
+        if self._none_is_empty and value is None:
             return
 
         if not isinstance(value, str):
@@ -516,7 +516,7 @@ class TextAscii(ValueSpec):
             if not self._regex.match(value):
                 raise MKUserError(varprefix, self._regex_error)
 
-        if self._minlen != None and len(value) < self._minlen:
+        if self._minlen is not None and len(value) < self._minlen:
             raise MKUserError(varprefix,
                               _("You need to provide at least %d characters.") % self._minlen)
 
@@ -583,7 +583,7 @@ class RegExp(TextAscii):
         help_text = []
 
         default_help_text = TextAscii.help(self)
-        if default_help_text != None:
+        if default_help_text is not None:
             help_text.append(default_help_text + "<br><br>")
 
         help_text.append(_("The text entered here is handled as a regular expression pattern."))
@@ -623,7 +623,7 @@ class RegExp(TextAscii):
         elif self._case_sensitive == False:
             classes.append("case_insensitive")
 
-        if self._mode != None:
+        if self._mode is not None:
             classes.append(self._mode)
 
         return " ".join(classes)
@@ -642,7 +642,7 @@ class RegExp(TextAscii):
                 varprefix,
                 _("Your regular expression containes <b>%d</b> groups. "
                   "You need at least <b>%d</b> groups.") % (compiled.groups, self._mingroups))
-        if self._maxgroups != None and compiled.groups > self._maxgroups:
+        if self._maxgroups is not None and compiled.groups > self._maxgroups:
             raise MKUserError(
                 varprefix,
                 _("Your regular expression containes <b>%d</b> groups. "
@@ -985,7 +985,7 @@ class TextAreaUnicode(TextUnicode):
 
     def render_input(self, varprefix, value):
         self.classtype_info()
-        if value == None:
+        if value is None:
             value = ""  # should never happen, but avoids exception for invalid input
         if self._rows == "auto":
             func = 'valuespec_textarea_resize(this, %s);' % json.dumps(html.get_theme())
@@ -1180,7 +1180,7 @@ class ListOfStrings(ValueSpec):
                 msg = _("Please specify at least one value")
             raise MKUserError(varprefix + "_0", msg)
 
-        if self._max_entries != None and len(value) > self._max_entries:
+        if self._max_entries is not None and len(value) > self._max_entries:
             raise MKUserError(varprefix + "_%d" % self._max_entries,
                               _("You can specify at most %d entries") % self._max_entries)
 
@@ -1418,7 +1418,7 @@ class ListOf(ValueSpec):
         while n <= count:
             indexof = html.var(varprefix + "_indexof_%d" % n)
             # for deleted entries, we have removed the whole row, therefore indexof is None
-            if indexof != None:
+            if indexof is not None:
                 indexes[int(indexof)] = n
             n += 1
         return indexes
@@ -1728,11 +1728,12 @@ class DropdownChoice(ValueSpec):
                 defval = entry[0]
 
         # In complain mode: Use the value received from the HTML variable
-        if self._invalid_choice == "complain" and value != None and self._value_is_invalid(value):
+        if self._invalid_choice == "complain" and value is not None and self._value_is_invalid(
+                value):
             defval = value
             options.append((defval, self._get_invalid_choice_title(value)))
 
-        if value == None and not options:
+        if value is None and not options:
             html.write(self._empty_text)
             return
 
@@ -1798,7 +1799,7 @@ class DropdownChoice(ValueSpec):
             raise MKUserError(varprefix, self._no_preselect_error)
 
         if self._invalid_choice == "complain" and self._value_is_invalid(value):
-            if value != None:
+            if value is not None:
                 raise MKUserError(varprefix, self._invalid_choice_error)
             else:
                 raise MKUserError(varprefix, self._empty_text)
@@ -1954,7 +1955,7 @@ class CascadingDropdown(ValueSpec):
             if vs:
                 vp = varprefix + "_%d" % nr
                 # Form already submitted once (and probably in complain state)
-                if cur_val != None:
+                if cur_val is not None:
                     try:
                         def_val_2 = vs.from_html_vars(vp)
                     except MKUserError:
@@ -2038,7 +2039,7 @@ class CascadingDropdown(ValueSpec):
 
 # The same logic as the dropdown choice, but rendered
 # as a group of radio buttons.
-# columns == None or unset -> separate with "&nbsp;"
+# columns is None or unset -> separate with "&nbsp;"
 class RadioChoice(DropdownChoice):
     def __init__(self, **kwargs):
         DropdownChoice.__init__(self, **kwargs)
@@ -2053,7 +2054,7 @@ class RadioChoice(DropdownChoice):
     def render_input(self, varprefix, value):
         self.classtype_info()
         html.begin_radio_group()
-        if self._columns != None:
+        if self._columns is not None:
             html.open_table(class_=["radiochoice"])
             html.open_tr()
 
@@ -2064,10 +2065,10 @@ class RadioChoice(DropdownChoice):
             choices = self._choices
 
         for index, entry in enumerate(choices):
-            if self._columns != None:
+            if self._columns is not None:
                 html.open_td()
 
-            if len(entry) > 2 and entry[2] != None:  # icon!
+            if len(entry) > 2 and entry[2] is not None:  # icon!
                 label = html.render_icon(entry[2], entry[1])
             else:
                 label = entry[1]
@@ -2079,14 +2080,14 @@ class RadioChoice(DropdownChoice):
                 html.write(entry[3])
                 html.close_p()
 
-            if self._columns != None:
+            if self._columns is not None:
                 html.close_td()
                 if (index + 1) % self._columns == 0 and (index + 1) < len(self._choices):
                     html.tr('')
             else:
                 html.nbsp()
 
-        if self._columns != None:
+        if self._columns is not None:
             mod = len(self._choices) % self._columns
             if mod:
                 for _td_counter in range(self._columns - mod - 1):
@@ -2119,7 +2120,7 @@ class ListChoice(ValueSpec):
 
     # In case of overloaded functions with dynamic elements
     def load_elements(self):
-        if self._choices != None:
+        if self._choices is not None:
             if isinstance(self._choices, list):
                 self._elements = self._choices
             elif isinstance(self._choices, dict):
@@ -2554,7 +2555,7 @@ class AbsoluteDate(ValueSpec):
         self._none_means_empty = kwargs.get("none_means_empty", False)
 
     def default_value(self):
-        if self._default_value != None:
+        if self._default_value is not None:
             return self._default_value
 
         if self._allow_empty:
@@ -2568,7 +2569,7 @@ class AbsoluteDate(ValueSpec):
         return self.default_value()
 
     def split_date(self, value):
-        if self._none_means_empty and value == None:
+        if self._none_means_empty and value is None:
             return (None,) * 6
         lt = time.localtime(value)
         return lt.tm_year, lt.tm_mon, lt.tm_mday, \
@@ -2676,7 +2677,7 @@ class AbsoluteDate(ValueSpec):
         return time.mktime(tuple(parts))
 
     def validate_datatype(self, value, varprefix):
-        if value == None and self._allow_empty:
+        if value is None and self._allow_empty:
             return
         if not isinstance(value, (int, float)):
             raise MKUserError(
@@ -2684,7 +2685,7 @@ class AbsoluteDate(ValueSpec):
                 _("The type of the timestamp must be int or float, but is %s") % type_name(value))
 
     def validate_value(self, value, varprefix):
-        if (not self._allow_empty and value == None) or value < 0 or int(value) > (2**31 - 1):
+        if (not self._allow_empty and value is None) or value < 0 or int(value) > (2**31 - 1):
             return MKUserError(varprefix, _("%s is not a valid UNIX timestamp") % value)
         ValueSpec.custom_validate(self, value, varprefix)
 
@@ -2711,7 +2712,7 @@ class Timeofday(ValueSpec):
         html.text_input(varprefix, text, size=5)
 
     def value_to_text(self, value):
-        if value == None:
+        if value is None:
             return ""
         return "%02d:%02d" % value
 
@@ -2734,7 +2735,7 @@ class Timeofday(ValueSpec):
                 _("Invalid time format '<tt>%s</tt>', please use <tt>24:00</tt> format.") % text)
 
     def validate_datatype(self, value, varprefix):
-        if self._allow_empty and value == None:
+        if self._allow_empty and value is None:
             return
 
         if not isinstance(value, tuple):
@@ -2753,7 +2754,7 @@ class Timeofday(ValueSpec):
                     _("All elements of the tuple must be of type int, you have %s") % type_name(x))
 
     def validate_value(self, value, varprefix):
-        if not self._allow_empty and value == None:
+        if not self._allow_empty and value is None:
             raise MKUserError(varprefix, _("Please enter a time."))
         if self._allow_24_00:
             max_value = (24, 0)
@@ -2784,7 +2785,7 @@ class TimeofdayRange(ValueSpec):
 
     def render_input(self, varprefix, value):
         self.classtype_info()
-        if value == None:
+        if value is None:
             value = (None, None)
         self._bounds[0].render_input(varprefix + "_from", value[0])
         html.nbsp()
@@ -2793,7 +2794,7 @@ class TimeofdayRange(ValueSpec):
         self._bounds[1].render_input(varprefix + "_until", value[1])
 
     def value_to_text(self, value):
-        if value == None:
+        if value is None:
             return ""
 
         return self._bounds[0].value_to_text(value[0]) + "-" + \
@@ -2802,16 +2803,16 @@ class TimeofdayRange(ValueSpec):
     def from_html_vars(self, varprefix):
         from_value = self._bounds[0].from_html_vars(varprefix + "_from")
         until_value = self._bounds[1].from_html_vars(varprefix + "_until")
-        if (from_value == None) != (until_value == None):
+        if (from_value is None) != (until_value is None):
             raise MKUserError(
                 varprefix + "_from",
                 _("Please leave either both from and until empty or enter two times."))
-        if from_value == None:
+        if from_value is None:
             return None
         return (from_value, until_value)
 
     def validate_datatype(self, value, varprefix):
-        if self._allow_empty and value == None:
+        if self._allow_empty and value is None:
             return
 
         if not isinstance(value, tuple):
@@ -2827,7 +2828,7 @@ class TimeofdayRange(ValueSpec):
         self._bounds[1].validate_datatype(value[1], varprefix + "_until")
 
     def validate_value(self, value, varprefix):
-        if value == None:
+        if value is None:
             if self._allow_empty:
                 return
             else:
@@ -2961,7 +2962,7 @@ class Timerange(CascadingDropdown):
             ]
 
     def compute_range(self, rangespec):
-        if rangespec == None:
+        if rangespec is None:
             rangespec = "4h"
 
         # Compatibility with previous versions
@@ -3076,7 +3077,7 @@ class Optional(ValueSpec):
         self.classtype_info()
         div_id = "option_" + varprefix
         checked = html.get_checkbox(varprefix + "_use")
-        if checked == None:
+        if checked is None:
             if self._negate:
                 checked = value == self._none_value
             else:
@@ -3155,7 +3156,7 @@ class OptionalEdit(Optional):
         self.classtype_info()
         div_id = "option_" + varprefix
         checked = html.get_checkbox(varprefix + "_use")
-        if checked == None:
+        if checked is None:
             checked = self._negate
 
         html.open_span()
@@ -3179,7 +3180,7 @@ class OptionalEdit(Optional):
         html.nbsp()
         html.close_span()
 
-        if value == None:
+        if value is None:
             value = self._valuespec.default_value()
 
         html.open_span(
@@ -3554,7 +3555,7 @@ class Dictionary(ValueSpec):
             colon_printed = False
             if self._optional_keys and param not in self._required_keys:
                 visible = html.get_checkbox(vp + "_USE")
-                if visible == None:
+                if visible is None:
                     visible = param in value
                 label = vs.title()
                 if self._columns == 2:
@@ -3645,7 +3646,7 @@ class Dictionary(ValueSpec):
             vp = varprefix + "_p_" + param
             if self._optional_keys and param not in self._required_keys:
                 visible = html.get_checkbox(vp + "_USE")
-                if visible == None:
+                if visible is None:
                     visible = param in value
                 checkbox_code = html.render_checkbox(
                     vp + "_USE",
@@ -3815,7 +3816,7 @@ class ElementSelection(ValueSpec):
         # handed over to validate_datatype() before rendering the input form. Disable the
         # validation in this case to prevent validation errors. A helpful message is shown
         # during render_input()
-        if len(self._elements) == 0 and value == None:
+        if len(self._elements) == 0 and value is None:
             return
 
         if not isinstance(value, str):
@@ -3995,7 +3996,7 @@ class Password(TextAscii):
 
     def render_input(self, varprefix, value):
         self.classtype_info()
-        if value == None:
+        if value is None:
             value = ""
 
         if self._label:
@@ -4019,7 +4020,7 @@ class Password(TextAscii):
                   "<br>on the Check_MK server."))
 
     def value_to_text(self, value):
-        if value == None:
+        if value is None:
             return _("none")
         return '******'
 
@@ -4062,7 +4063,7 @@ class FileUpload(ValueSpec):
         if not self._allow_empty_content and len(content) == 0:
             raise MKUserError(varprefix,
                               _('The selected file is empty. Please select a non-empty file.'))
-        if self._allowed_extensions != None:
+        if self._allowed_extensions is not None:
             matched = False
             for extension in self._allowed_extensions:
                 if file_name.endswith(extension):

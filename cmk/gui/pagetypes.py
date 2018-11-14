@@ -1048,7 +1048,7 @@ class Overridable(Base):
                 else:
                     page = cls.find_foreign_page(owner_user_id, page_name)
 
-                if page == None:
+                if page is None:
                     raise MKUserError(None,
                                       _("The requested %s does not exist") % cls.phrase("title"))
 
@@ -1094,7 +1094,7 @@ class Overridable(Base):
 
         new_page_dict = forms.edit_valuespec(
             vs, page_dict, validate=validate, focus="_p_title", method="POST")
-        if new_page_dict != None:
+        if new_page_dict is not None:
             # Take over keys from previous value that are specific to the page type
             # and not edited here.
             if mode in ("edit", "clone"):

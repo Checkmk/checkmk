@@ -458,7 +458,7 @@ def rename_host_in_parents(oldname, newname):
 
 
 def rename_host_as_parent(oldname, newname, in_folder=None):
-    if in_folder == None:
+    if in_folder is None:
         in_folder = watolib.Folder.root_folder()
 
     parents = []

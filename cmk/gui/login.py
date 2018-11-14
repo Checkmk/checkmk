@@ -152,7 +152,7 @@ def auth_cookie_value(username):
 
 
 def invalidate_auth_session():
-    if config.single_user_session != None:
+    if config.single_user_session is not None:
         userdb.invalidate_session(config.user.id)
 
     del_auth_cookie()
@@ -160,14 +160,14 @@ def invalidate_auth_session():
 
 
 def renew_auth_session(username):
-    if config.single_user_session != None:
+    if config.single_user_session is not None:
         userdb.refresh_session(username)
 
     set_auth_cookie(username)
 
 
 def create_auth_session(username):
-    if config.single_user_session != None:
+    if config.single_user_session is not None:
         session_id = userdb.initialize_session(username)
         set_session_cookie(username, session_id)
 
@@ -226,7 +226,7 @@ def check_auth_cookie(cookie_name):
 
     # Check whether or not a single user session is allowed at a time and the user
     # is doing this request with the currently active session.
-    if config.single_user_session != None:
+    if config.single_user_session is not None:
         session_id = get_session_id_from_cookie(username)
         if not userdb.is_valid_user_session(username, session_id):
             del_auth_cookie()
@@ -334,7 +334,7 @@ def check_auth_http_header():
 # case a user is provided, we trust that user.
 def check_auth_web_server(request):
     user = request.remote_user
-    if user != None:
+    if user is not None:
         set_auth_type("web_server")
         return user.decode("utf-8")
 

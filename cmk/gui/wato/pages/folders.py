@@ -692,7 +692,7 @@ class ModeFolder(WatoMode):
         for host_name in host_names_to_move:
             host = self._folder.host(host_name)
             imported_folder_name = host.attribute('imported_folder')
-            if imported_folder_name == None:
+            if imported_folder_name is None:
                 continue
             target_folder_names.setdefault(imported_folder_name, []).append(host_name)
 

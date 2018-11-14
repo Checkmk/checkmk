@@ -80,13 +80,13 @@ def page_graph():
             continue
 
         tg_info = store.load_data_from_file(pred_dir + "/" + f)
-        if tg_info == None:
+        if tg_info is None:
             continue
 
         tg_info["name"] = f[:-5]
         timegroups.append(tg_info)
         if tg_info["name"] == tg_name or \
-            (tg_name == None and now >= tg_info["range"][0] and now <= tg_info["range"][1]):
+            (tg_name is None and now >= tg_info["range"][0] and now <= tg_info["range"][1]):
             timegroup = tg_info
             tg_name = tg_info["name"]
 
@@ -110,7 +110,7 @@ def page_graph():
     # Get prediction data
     path = pred_dir + "/" + timegroup["name"]
     tg_data = store.load_data_from_file(path)
-    if tg_data == None:
+    if tg_data is None:
         raise MKGeneralException(_("Missing prediction data."))
 
     swapped = swap_and_compute_levels(tg_data, timegroup)
@@ -121,7 +121,7 @@ def page_graph():
         ("#ffff00", _("Warning area")),
         ("#ff0000", _("Critical area")),
     ]
-    if current_value != None:
+    if current_value is not None:
         legend.append(("#0000ff", _("Current value: %.2f") % current_value))
 
     create_graph(timegroup["name"], graph_size, timegroup["range"], vertical_range, legend)
@@ -162,7 +162,7 @@ def page_graph():
             tz_offset = time.timezone
         _rrd_step, rrd_data = get_rrd_data(host, service, dsname, "MAX", from_time, until_time)
         render_curve(rrd_data, "#0000ff", 2)
-        if current_value != None:
+        if current_value is not None:
             rel_time = (now - tz_offset) % timegroup["slice"]
             render_point(timegroup["range"][0] + rel_time, current_value, "#0000ff")
 
@@ -271,12 +271,12 @@ def swap_and_compute_levels(tg_data, tg_info):
         row = dict(zip(columns, step))
         for k, v in row.items():
             swapped[k].append(v)
-        if row["average"] != None and row["stdev"] != None:
+        if row["average"] is not None and row["stdev"] is not None:
             upper, lower = compute_levels(tg_info, row["average"], row["stdev"])
-            if upper[0] != None:
+            if upper[0] is not None:
                 swapped.setdefault("upper_warn", []).append(upper[0])
                 swapped.setdefault("upper_crit", []).append(upper[1])
-            if lower[0] != None:
+            if lower[0] is not None:
                 swapped.setdefault("lower_warn", []).append(lower[0])
                 swapped.setdefault("lower_crit", []).append(lower[1])
         else:

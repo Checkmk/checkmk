@@ -116,7 +116,7 @@ class ModeDownloadAgents(WatoMode):
         for title, file_paths in other_sections:
             useful_file_paths = [
                 p for p in file_paths
-                if file_titles.get(p, "") != None \
+                if file_titles.get(p, "") is not None \
                     and not p.endswith("/CONTENTS")
             ]
             file_titles.update(self._read_plugin_inline_comments(useful_file_paths))

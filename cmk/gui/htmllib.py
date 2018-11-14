@@ -219,7 +219,7 @@ class Encoder(object):
         """
         if isinstance(value, unicode):
             value = value.encode("utf-8")
-        elif value == None:
+        elif value is None:
             return ""
 
         assert isinstance(value, str)
@@ -1262,7 +1262,7 @@ class html(HTMLGenerator):
     # which contains the request data encoded as JSON, or provide multiple GET/POST vars which
     # are then used as top level entries in the request object.
     def get_request(self, exclude_vars=None):
-        if exclude_vars == None:
+        if exclude_vars is None:
             exclude_vars = []
 
         if self.var("request_format") == "python":
@@ -1506,7 +1506,7 @@ class html(HTMLGenerator):
         config.user.save_file("treestates", self.treestates)
 
     def load_tree_states(self):
-        if self.treestates == None:
+        if self.treestates is None:
             self.treestates = config.user.load_file("treestates", {})
 
     def finalize(self):
@@ -1576,7 +1576,7 @@ class html(HTMLGenerator):
         # type: (str) -> None
         cookie_lang = self.request.cookie("language")
         if cookie_lang != lang:
-            if lang != None:
+            if lang is not None:
                 self.response.set_cookie("language", lang)
             else:
                 self.del_language_cookie()
@@ -1615,10 +1615,10 @@ class html(HTMLGenerator):
         vars_ = [(v, self.var(v))
                  for v in self.request.vars
                  if v[0] != "_" and v not in new_vars and (not delvars or v not in delvars)]
-        if remove_prefix != None:
+        if remove_prefix is not None:
             vars_ = [i for i in vars_ if not i[0].startswith(remove_prefix)]
         vars_ = vars_ + addvars
-        if filename == None:
+        if filename is None:
             filename = self.urlencode(self.myfile) + ".py"
         if vars_:
             return filename + "?" + self.urlencode_vars(vars_)
@@ -1923,7 +1923,7 @@ class html(HTMLGenerator):
 
     def begin_form(self, name, action=None, method="GET", onsubmit=None, add_transid=True):
         self.form_vars = []
-        if action == None:
+        if action is None:
             action = self.myfile + ".py"
         self.current_form = name
         self.open_form(
@@ -1944,7 +1944,7 @@ class html(HTMLGenerator):
         self.form_name = None
 
     def in_form(self):
-        return self.form_name != None
+        return self.form_name is not None
 
     def prevent_password_auto_completion(self):
         # These fields are not really used by the form. They are used to prevent the browsers
@@ -1965,7 +1965,7 @@ class html(HTMLGenerator):
     # input fields after this method has been called).
     def hidden_fields(self, varlist=None, **args):
         add_action_vars = args.get("add_action_vars", False)
-        if varlist != None:
+        if varlist is not None:
             for var in varlist:
                 value = self.request.vars.get(var, "")
                 self.hidden_field(var, value)
@@ -1980,7 +1980,7 @@ class html(HTMLGenerator):
             self.render_hidden_field(var=var, value=value, id_=id_, add_var=add_var, class_=class_))
 
     def render_hidden_field(self, var, value, id_=None, add_var=False, class_=None):
-        if value == None:
+        if value is None:
             return ""
         if add_var:
             self.add_form_var(var)
@@ -1994,11 +1994,11 @@ class html(HTMLGenerator):
     # the form a second time while showing value typed in at the first
     # time and complaining about invalid user input)
     def form_filled_in(self, form_name=None):
-        if form_name == None:
+        if form_name is None:
             form_name = self.form_name
 
         return self.has_var("filled_in") and (
-            form_name == None or \
+            form_name is None or \
             form_name in self.list_var("filled_in"))
 
     def do_actions(self):
@@ -2280,7 +2280,7 @@ class html(HTMLGenerator):
         self.close_div()
 
     def number_input(self, varname, deflt="", size=8, style="", submit=None):
-        if deflt != None:
+        if deflt is not None:
             deflt = str(deflt)
         self.text_input(varname, deflt, "number", size=size, style=style, submit=submit)
 
@@ -2938,7 +2938,7 @@ hy
 
             encoded_vars = {}
             for k, v in self.page_context.items():
-                if v == None:
+                if v is None:
                     v = ''
                 elif isinstance(v, unicode):
                     v = v.encode('utf-8')

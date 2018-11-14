@@ -315,7 +315,7 @@ class NotificationsMode(EventsMode):
                 notify_plugin = notify_method[0]
 
                 table.cell(_("Type"), css="narrow")
-                if notify_method[1] == None:
+                if notify_method[1] is None:
                     html.icon(_("Cancel notifications for this plugin type"), "notify_cancel")
                 else:
                     html.icon(_("Create a notification"), "notify_create")
@@ -1166,7 +1166,7 @@ class EditNotificationRuleMode(NotificationsMode):
         )
 
     def _validate_notification_rule(self, rule, varprefix):
-        if "bulk" in rule and rule["notify_plugin"][1] == None:
+        if "bulk" in rule and rule["notify_plugin"][1] is None:
             raise MKUserError(
                 varprefix + "_p_bulk_USE",
                 _("It does not make sense to add a bulk configuration for cancelling rules."))

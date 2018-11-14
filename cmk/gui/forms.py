@@ -173,7 +173,7 @@ def edit_dictionaries(dictionaries,
         for name, button_title, _icon in buttons:
             html.button(name, button_title)
     else:
-        if buttontext == None:
+        if buttontext is None:
             buttontext = _("Save")
         html.button("save", buttontext)
     # Should be ignored be hidden_fields, but I do not dare to change it there
@@ -221,7 +221,7 @@ def edit_valuespec(vs,
     html.begin_form(formname, method=method)
     html.help(vs.help())
     vs.render_input(varprefix, value)
-    if buttontext == None:
+    if buttontext is None:
         buttontext = _("Save")
     html.button("save", buttontext)
     # Should be ignored be hidden_fields, but I do not dare to change it there

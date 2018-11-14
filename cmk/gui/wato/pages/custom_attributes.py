@@ -92,7 +92,7 @@ class ModeEditCustomAttr(WatoMode):
 
     def _from_vars(self):
         self._name = html.var("edit")  # missing -> new custom attr
-        self._new = self._name == None
+        self._new = self._name is None
 
         # TODO: Inappropriate Intimacy: custom host attributes should not now about
         #       custom user attributes and vice versa. The only reason they now about

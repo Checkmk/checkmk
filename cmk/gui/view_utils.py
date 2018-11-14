@@ -96,7 +96,7 @@ def get_host_list_links(site, hosts):
 
 def check_limit(rows, limit, user):
     count = len(rows)
-    if limit != None and count >= limit + 1:
+    if limit is not None and count >= limit + 1:
         text = _("Your query produced more than %d results. ") % limit
 
         if html.get_ascii_input("limit",

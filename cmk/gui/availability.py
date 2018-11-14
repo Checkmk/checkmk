@@ -753,7 +753,7 @@ def spans_by_object(spans, logrow_limit_reached_entry):
             del av_rawdata[site_host]
 
     # We have to remember if rawdata was modified
-    return av_rawdata, logrow_limit_reached_entry != None
+    return av_rawdata, logrow_limit_reached_entry is not None
 
 
 # Compute an availability table. what is one of "bi", "host", "service".
@@ -937,7 +937,7 @@ def reclassify_service_history_by_annotations(service_history, annotation_entrie
     new_history = service_history
     for annotation in annotation_entries:
         downtime = annotation.get("downtime")
-        if downtime == None:
+        if downtime is None:
             continue
         new_history = reclassify_service_history_by_annotation(new_history, annotation,
                                                                key_to_change)
@@ -1170,7 +1170,7 @@ def delete_annotation(annotations, site_host_svc, fromtime, untiltime):
             and annotation["until"] == untiltime:
             found = nr
             break
-    if found != None:
+    if found is not None:
         del entries[found]
 
 
@@ -1347,7 +1347,7 @@ def layout_availability_table(what, group_title, availability_table, avoptions):
                 os_aggrs, os_states = get_outage_statistic_options(avoptions)
                 if sid in os_states:
                     for aggr in os_aggrs:
-                        if x_cnt != None:
+                        if x_cnt is not None:
                             if aggr == "avg":
                                 r = render_number(number / x_cnt, entry["considered_duration"])
                             elif aggr == "min":

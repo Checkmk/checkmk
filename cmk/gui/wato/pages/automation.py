@@ -140,7 +140,7 @@ class ModeAutomation(WatoWebApiMode):
 
         our_id = config.omd_site()
 
-        if our_id != None and our_id != site_id:
+        if our_id is not None and our_id != site_id:
             raise MKGeneralException(
                 _("Site ID mismatch. Our ID is '%s', but you are saying we are '%s'.") % (our_id,
                                                                                           site_id))

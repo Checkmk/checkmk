@@ -440,7 +440,7 @@ def do_commands(view, what, rows):
             "what": title_what,
         })
     if r != True:
-        return r == None  # Show commands on negative answer
+        return r is None  # Show commands on negative answer
 
     count = 0
     already_executed = set([])

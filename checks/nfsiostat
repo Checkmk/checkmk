@@ -86,7 +86,6 @@ def check_nfsiostat(item, params, parsed):
     def check_nfsiostat_params(count, value):
         item = param_name[str(count)][0]
         title = param_name[str(count)][1]
-        factor = param_name[str(count)][2]
         fmt = param_name[str(count)][3]
         value = float(value)
 
@@ -110,7 +109,7 @@ def check_nfsiostat(item, params, parsed):
             count = 0
             for value in values:
                 if count != 5 and count != 12:
-                    yield(check_nfsiostat_params(count, value))
+                    yield check_nfsiostat_params(count, value)
                 count = count + 1
 
 

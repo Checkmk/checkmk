@@ -202,7 +202,7 @@ for device in devices:
         start_address = None
         end_address = None
         for area, (byte, bit), datatype, valuetype, ident in device['values']:
-            if type(datatype) == tuple:
+            if isinstance(datatype, tuple):
                 size = datatype[1]
             else:
                 size = datatypes[datatype][0]
@@ -226,7 +226,7 @@ for device in devices:
         # Now loop all values to be fetched and extract the data
         # from the bytes fetched above
         for (area_name, db_number), (byte, bit), datatype, valuetype, ident in device['values']:
-            if type(datatype) == tuple:
+            if isinstance(datatype, tuple):
                 typename, size = datatype
                 parse_func = datatypes[typename][1]
             else:

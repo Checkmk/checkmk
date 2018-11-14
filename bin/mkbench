@@ -582,7 +582,7 @@ class TestRunner(threading.Thread):
                 result_msg = "Test case aborted: %s" % e
                 self.test.error(result_msg)
 
-                if type(e) == MKFailTestCaseHighLatency:
+                if isinstance(e, MKFailTestCaseHighLatency):
                     self._increase_helpers()
                 else:
                     break

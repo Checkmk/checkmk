@@ -987,7 +987,7 @@ def write_output(vsphere_output, opt_agent, host):
         sys.stdout.write(win_agent_output)
 
     for line in vsphere_output:
-        sys.stdout.write((line.encode("utf-8") if type(line) == unicode else line) + "\n")
+        sys.stdout.write((line.encode("utf-8") if isinstance(line, unicode) else line) + "\n")
     sys.stdout.flush()
 
 

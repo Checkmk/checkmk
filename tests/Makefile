@@ -51,12 +51,14 @@ test-format-python: $(VENV) ../.style.yapf
 # Explicitly specify --style [FILE] to prevent costly searching in parent directories
 # for each file specified via command line
 #
-# Saw some mixed up lines on stdout after adding the --parallel option. Leaving it on
-# for the moment to get the performance boost this option brings.
+# There are some mixed up lines on stdout caused by the --parallel option.
+# Nevertheless, we keep that option to get a big performance boost. GitHub issue
+# opened for this problem: https://github.com/google/yapf/issues/644.
 	PYTHON_FILES=$${PYTHON_FILES-$$(./find-python-files)} ; \
-	$(YAPF) --parallel --style ../.style.yapf --verbose --diff $$PYTHON_FILES \
-	    | grep -e "^Reformatting " -e "(reformatted)$$" \
-	    | awk '{if ($$1 == "+++") { print "Unformatted: "$$2 } else {print "Checking "$$2"..."}}' ; exit $${PIPESTATUS[0]}
+	$(YAPF) --parallel --style ../.style.yapf --verbose --diff $$PYTHON_FILES | \
+		grep '^+++ .*(reformatted)$$' | \
+		sed -e 's/^+++ //' -e 's/[[:blank:]]*(reformatted)$$/:1:1: error: file needs formatting/' ; \
+	exit $${PIPESTATUS[0]}
 
 test-gui-crawl: $(VENV)
 	$(PYTEST) -T gui_crawl

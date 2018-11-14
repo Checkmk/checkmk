@@ -990,24 +990,21 @@ class APICallSites(APICallCollection):
             site_mgmt.save_sites(all_sites)
 
 
-
-
 @api_call_collection_registry.register
 class APICallBIAggregationState(APICallCollection):
     def get_api_calls(self):
         required_permissions = ["bi.see_all"]
         return {
             "get_bi_aggregations": {
-                "handler"             : self._get,
+                "handler": self._get,
                 "required_permissions": required_permissions,
             },
         }
 
-
     def _get(self, request):
-        return bi.api_get_aggregation_state(filter_names  = request.get("filter", {}).get("names"),
-                                            filter_groups = request.get("filter", {}).get("groups"))
-
+        return bi.api_get_aggregation_state(
+            filter_names=request.get("filter", {}).get("names"),
+            filter_groups=request.get("filter", {}).get("groups"))
 
 
 #.

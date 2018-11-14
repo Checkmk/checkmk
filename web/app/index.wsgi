@@ -113,10 +113,10 @@ class Application(object):
 
             ty = type(e)
             if ty == livestatus.MKLivestatusNotFoundError:
-                title       = _("Data not found")
+                title = _("Data not found")
                 plain_title = _("Livestatus-data not found")
             elif isinstance(e, livestatus.MKLivestatusException):
-                title       = _("Livestatus problem")
+                title = _("Livestatus problem")
                 plain_title = _("Livestatus problem")
             else:
                 title = e.title()
@@ -282,20 +282,24 @@ class Application(object):
         if config.user.may("general.use"):
             return
 
-        reason = [ _("You are not authorized to use the Check_MK GUI. Sorry. "
-                   "You are logged in as <b>%s</b>.") % config.user.id ]
+        reason = [
+            _("You are not authorized to use the Check_MK GUI. Sorry. "
+              "You are logged in as <b>%s</b>.") % config.user.id
+        ]
 
         if config.user.role_ids:
             reason.append(_("Your roles are <b>%s</b>.") % ", ".join(config.user.role_ids))
         else:
             reason.append(_("<b>You do not have any roles.</b>"))
 
-        reason.append(_("If you think this is an error, please ask your administrator "
-                        "to check the permissions configuration."))
+        reason.append(
+            _("If you think this is an error, please ask your administrator "
+              "to check the permissions configuration."))
 
         if login.auth_type == 'cookie':
-            reason.append(_("<p>You have been logged out. Please reload the page "
-                            "to re-authenticate.</p>"))
+            reason.append(
+                _("<p>You have been logged out. Please reload the page "
+                  "to re-authenticate.</p>"))
             login.del_auth_cookie()
 
         raise MKAuthException(" ".join(reason))

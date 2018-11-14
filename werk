@@ -4,50 +4,54 @@ import sys, os, time, termios, tty, subprocess
 
 # colored output, if stdout is a tty
 if sys.stdout.isatty():
-    tty_red       = '\033[31m'
-    tty_green     = '\033[32m'
-    tty_yellow    = '\033[33m'
-    tty_blue      = '\033[34m'
-    tty_magenta   = '\033[35m'
-    tty_cyan      = '\033[36m'
-    tty_white     = '\033[37m'
-    tty_bgred     = '\033[41m'
-    tty_bgyellow  = '\033[43m'
-    tty_bgblue    = '\033[44m'
+    tty_red = '\033[31m'
+    tty_green = '\033[32m'
+    tty_yellow = '\033[33m'
+    tty_blue = '\033[34m'
+    tty_magenta = '\033[35m'
+    tty_cyan = '\033[36m'
+    tty_white = '\033[37m'
+    tty_bgred = '\033[41m'
+    tty_bgyellow = '\033[43m'
+    tty_bgblue = '\033[44m'
     tty_bgmagenta = '\033[45m'
-    tty_bgcyan    = '\033[46m'
-    tty_bgwhite   = '\033[47m'
-    tty_bold      = '\033[1m'
+    tty_bgcyan = '\033[46m'
+    tty_bgwhite = '\033[47m'
+    tty_bold = '\033[1m'
     tty_underline = '\033[4m'
-    tty_normal    = '\033[0m'
+    tty_normal = '\033[0m'
+
     def tty_colors(codes):
         return '\033[%sm' % (';'.join([str(c) for c in codes]))
 else:
-    tty_red       = ''
-    tty_green     = ''
-    tty_yellow    = ''
-    tty_blue      = ''
-    tty_magenta   = ''
-    tty_cyan      = ''
-    tty_white     = ''
-    tty_bgblue    = ''
+    tty_red = ''
+    tty_green = ''
+    tty_yellow = ''
+    tty_blue = ''
+    tty_magenta = ''
+    tty_cyan = ''
+    tty_white = ''
+    tty_bgblue = ''
     tty_bgmagenta = ''
-    tty_bgcyan    = ''
-    tty_bold      = ''
+    tty_bgcyan = ''
+    tty_bold = ''
     tty_underline = ''
-    tty_normal    = ''
-    tty_ok        = 'OK'
+    tty_normal = ''
+    tty_ok = 'OK'
+
     def tty_colors(c):
         return ""
 
+
 grep_colors = [
-   tty_bold + tty_magenta,
-   tty_bold + tty_cyan,
-   tty_bold + tty_green,
+    tty_bold + tty_magenta,
+    tty_bold + tty_cyan,
+    tty_bold + tty_green,
 ]
 
+
 def get_tty_size():
-    import termios,struct,fcntl
+    import termios, struct, fcntl
     try:
         ws = struct.pack("HHHH", 0, 0, 0, 0)
         ws = fcntl.ioctl(sys.stdout.fileno(), termios.TIOCGWINSZ, ws)
@@ -58,9 +62,11 @@ def get_tty_size():
         pass
     return (24, 99999)
 
+
 def bail_out(text):
     sys.stderr.write(text + "\n")
     sys.exit(1)
+
 
 def goto_werksdir():
     global g_base_dir
@@ -98,6 +104,7 @@ def load_werks():
         except:
             continue
 
+
 def save_last_werkid(id):
     try:
         file(".last", "w").write("%d\n" % int(id))
@@ -125,18 +132,19 @@ def check_modified():
             except:
                 pass
 
+
 def werk_is_modified(werkid):
     return werkid in g_modified
 
 
 def load_werk(werkid):
     werk = {
-        "id"             : werkid,
-        "state"          : "unknown",
-        "title"          : "unknown",
-        "component"      : "general",
-        "compatible"     : "compat",
-        "edition"        : "cre",
+        "id": werkid,
+        "state": "unknown",
+        "title": "unknown",
+        "component": "general",
+        "compatible": "compat",
+        "edition": "cre",
     }
 
     f = file(str(werkid))
@@ -155,11 +163,12 @@ def load_werk(werkid):
     versions.add(werk["version"])
     return werk
 
+
 def save_werk(werk):
     f = file(str(werk["id"]), "w")
     f.write("Title: %s\n" % werk["title"])
     for key, val in werk.items():
-        if key not in [ "title", "description", "id" ]:
+        if key not in ["title", "description", "id"]:
             f.write("%s%s: %s\n" % (key[0].upper(), key[1:], val))
     f.write("\n")
     f.write(werk["description"])
@@ -167,14 +176,17 @@ def save_werk(werk):
     git_add(werk)
     save_last_werkid(werk["id"])
 
+
 def change_werk_version(werk_id, new_version):
     werk = g_werks[werk_id]
     werk["version"] = new_version
     save_werk(werk)
     git_add(werk)
 
+
 def git_add(werk):
     os.system("git add %d" % werk["id"])
+
 
 def git_commit(werk, custom_files):
     title = werk["title"]
@@ -187,13 +199,14 @@ def git_commit(werk, custom_files):
 
     if custom_files:
         files_to_commit = custom_files
-        default_files   = [ ".werks" ]
+        default_files = [".werks"]
         for entry in default_files:
             files_to_commit.append("%s/%s" % (git_top_level(), entry))
 
         os.chdir(g_base_dir)
-        os.system("git commit %s -m %s" % (" ".join(files_to_commit),
-                                           quote_shell_string(title + "\n\n" +  werk["description"])))
+        os.system(
+            "git commit %s -m %s" % (" ".join(files_to_commit),
+                                     quote_shell_string(title + "\n\n" + werk["description"])))
 
     else:
         if something_in_git_index():
@@ -202,7 +215,9 @@ def git_commit(werk, custom_files):
         else:
             dash_a = '-a'
 
-        os.system("git commit %s -m %s" % (dash_a, quote_shell_string(title + "\n\n" +  werk["description"])))
+        os.system("git commit %s -m %s" %
+                  (dash_a, quote_shell_string(title + "\n\n" + werk["description"])))
+
 
 def git_top_level():
     info = subprocess.Popen(["git", "rev-parse", "--show-toplevel"], stdout=subprocess.PIPE)
@@ -224,14 +239,16 @@ def quote_shell_string(s):
 def next_werk_id():
     my_werk_ids = get_werk_ids()
     if not my_werk_ids:
-        bail_out('You have no werk IDS left. You can reserve 10 additional Werk IDS with "./werk ids 10".')
+        bail_out(
+            'You have no werk IDS left. You can reserve 10 additional Werk IDS with "./werk ids 10".'
+        )
     return my_werk_ids[0]
+
 
 def add_comment(werk, title, comment):
     werk["description"] += """
 %s: %s
 %s""" % (time.strftime("%F %T"), title, comment)
-
 
 
 def usage():
@@ -254,14 +271,16 @@ where COMMAND is one of:
 """)
     sys.exit(1)
 
+
 def num_color(n, colors, inverse):
     if inverse:
         b = 40
     else:
         b = 30
 
-    c = colors[n-1]
+    c = colors[n - 1]
     return tty_colors([b + c, 1])
+
 
 def list_werk(werk):
     if werk_is_modified(werk["id"]):
@@ -270,16 +289,12 @@ def list_werk(werk):
         bold = ""
     lines, cols = get_tty_size()
     title = werk["title"][:cols - 45]
-    sys.stdout.write("#%04d %-9s %s %3s %-13s %-6s %s%s%s %-8s %s%s%s\n" %
-            (int(werk["id"]),
-             time.strftime("%F", time.localtime(int(werk["date"]))),
-             colored_class(werk["class"], 8),
-             werk["edition"],
-             werk["component"],
-             werk["compatible"],
-             tty_bold, werk["level"], tty_normal,
-             werk["version"],
-             bold, title, tty_normal))
+    sys.stdout.write(
+        "#%04d %-9s %s %3s %-13s %-6s %s%s%s %-8s %s%s%s\n" %
+        (int(werk["id"]), time.strftime("%F", time.localtime(int(werk["date"]))),
+         colored_class(werk["class"], 8), werk["edition"], werk["component"], werk["compatible"],
+         tty_bold, werk["level"], tty_normal, werk["version"], bold, title, tty_normal))
+
 
 def colored_class(classname, digits):
     if classname == "fix":
@@ -287,9 +302,11 @@ def colored_class(classname, digits):
     else:
         return ("%-" + str(digits) + "s") % classname
 
+
 def show_werk(werk):
     list_werk(werk)
     sys.stdout.write("\n%s\n" % werk["description"])
+
 
 def main_list(args, format):
     werks = g_werks.values()
@@ -298,7 +315,7 @@ def main_list(args, format):
     # in one class are orred. Multiple types are anded.
     filters = {}
 
-    sort = lambda a,b: cmp(a['date'], b['date'])
+    sort = lambda a, b: cmp(a['date'], b['date'])
     reverse = False
     for a in args:
 
@@ -311,13 +328,13 @@ def main_list(args, format):
 
         hit = False
         for tp, values in [
-          ( "edition",        editions ),
-          ( "component",      all_components()),
-          ( "level",          levels ),
-          ( "class",          classes ),
-          ( "version",        versions ),
-          ( "compatible",     compatible ),
-          ]:
+            ("edition", editions),
+            ("component", all_components()),
+            ("level", levels),
+            ("class", classes),
+            ("version", versions),
+            ("compatible", compatible),
+        ]:
             for v in values:
                 if type(v) == tuple:
                     v = v[0]
@@ -386,6 +403,7 @@ def output_csv(werks):
                 line(werk["id"], werk["title"], werk_class(werk), werk_effort(werk))
                 line("", werk["description"].replace("\n", " ").replace('"', "'"), "", "")
 
+
 def werk_class(werk):
     cl = werk["class"]
     for entry in classes:
@@ -395,28 +413,32 @@ def werk_class(werk):
             return entry[1]
     return cl
 
+
 def werk_effort(werk):
     return int(werk.get("effort", "0"))
+
 
 def main_show(args):
     ids = args
     if len(ids) == 0:
         if g_last_werk == None:
             bail_out("No last werk known. Please specify id.")
-        ids = [ g_last_werk ]
+        ids = [g_last_werk]
     elif ids[0] == 'all':
-        ids = [ id for (id, werk) in g_werks.items() ]
+        ids = [id for (id, werk) in g_werks.items()]
 
     for id in ids:
         if id != ids[0]:
-            sys.stdout.write("-------------------------------------------------------------------------------\n")
+            sys.stdout.write(
+                "-------------------------------------------------------------------------------\n")
         try:
             show_werk(g_werks[int(id)])
         except 1:
             sys.stderr.write("Skipping invalid werk id '%s'\n" % id)
     save_last_werkid(ids[-1])
 
-def get_input(what, default = ""):
+
+def get_input(what, default=""):
     sys.stdout.write("%s: " % what)
     sys.stdout.flush()
     value = sys.stdin.readline().strip()
@@ -424,6 +446,7 @@ def get_input(what, default = ""):
         return default
     else:
         return value
+
 
 def get_long_input(what):
     sys.stdout.write("Enter %s. End with CTRL-D.\n" % what)
@@ -434,6 +457,7 @@ def get_long_input(what):
     while usertext.endswith("\n\n"):
         usertext = usertext[:-1]
     return usertext
+
 
 def getch():
     fd = sys.stdin.fileno()
@@ -446,6 +470,7 @@ def getch():
     if ord(ch) == 3:
         raise KeyboardInterrupt()
     return ch
+
 
 def input_choice(what, choices):
     next_index = 0
@@ -471,14 +496,12 @@ def input_choice(what, choices):
             texts.append("%s:%s" % ("%s%d%s" % (tty_bold, next_index, tty_normal), choice))
             next_index += 1
 
-
     while True:
         sys.stdout.write("%s (%s): " % (what, ", ".join(texts)))
         sys.stdout.flush()
         c = getch()
         if c in ctc:
-            sys.stdout.write(" %s%s%s\n" % (
-                        tty_bold, ctc[c], tty_normal))
+            sys.stdout.write(" %s%s%s\n" % (tty_bold, ctc[c], tty_normal))
             return ctc[c]
         else:
             sys.stdout.write("\n")
@@ -497,19 +520,19 @@ def all_components():
 
 def main_new(args):
     werk = {}
-    werk["id"]      = next_werk_id()
-    werk["date"]    = int(time.time())
+    werk["id"] = next_werk_id()
+    werk["date"] = int(time.time())
     werk["version"] = g_current_version
-    werk["title"]   = get_input("Title")
-    if  werk["title"] == "":
+    werk["title"] = get_input("Title")
+    if werk["title"] == "":
         sys.stderr.write("Cancelled.\n")
         sys.exit(0)
-    werk["class"]         = input_choice("Class",        classes)
-    werk["edition"]       = input_choice("Edition",      editions)
-    werk["component"]     = input_choice("Component",    get_edition_components(werk["edition"]))
-    werk["level"]         = input_choice("Level",        levels)
-    werk["compatible"]    = input_choice("Compatible",   compatible)
-    werk["description"]   = u"\n"
+    werk["class"] = input_choice("Class", classes)
+    werk["edition"] = input_choice("Edition", editions)
+    werk["component"] = input_choice("Component", get_edition_components(werk["edition"]))
+    werk["level"] = input_choice("Level", levels)
+    werk["compatible"] = input_choice("Compatible", compatible)
+    werk["description"] = u"\n"
 
     g_werks[werk["id"]] = werk
     save_werk(werk)
@@ -517,6 +540,7 @@ def main_new(args):
     edit_werk(werk["id"], args)
 
     sys.stdout.write("Werk saved with id %d.\n" % werk["id"])
+
 
 def get_werk_arg(args):
     if len(args) == 0:
@@ -567,10 +591,12 @@ def main_resolve(args):
     werk["state"] = state
     save_werk(werk)
 
+
 def main_delete(args):
     for ids in args:
         if 0 == os.system("git rm %s" % ids):
             sys.stdout.write("Deleted werk %s (%s).\n" % (ids, g_werks[int(ids)]["description"]))
+
 
 def grep(line, kw, n):
     lc = kw.lower()
@@ -579,13 +605,13 @@ def grep(line, kw, n):
         return None
     else:
         col = grep_colors[n % len(grep_colors)]
-        return line[0:i] + col + line[i:i+len(kw)] + tty_normal + line[i+len(kw):]
+        return line[0:i] + col + line[i:i + len(kw)] + tty_normal + line[i + len(kw):]
 
 
 def main_grep(args):
     if '-v' in args:
         verbose = True
-        args = [ a for a in args if a != '-v' ]
+        args = [a for a in args if a != '-v']
     else:
         verbose = False
 
@@ -623,7 +649,6 @@ def main_grep(args):
             if not this_kw_matched:
                 one_kw_didnt_match = True
 
-
         if not one_kw_didnt_match:
             list_werk(werk)
             if verbose:
@@ -645,16 +670,16 @@ def main_edit(args):
             if werkid == None:
                 bail_out("No last werk. Please specify id.")
 
-    edit_werk(werkid, args, commit = False)
+    edit_werk(werkid, args, commit=False)
     save_last_werkid(werkid)
 
 
-def edit_werk(werkid, custom_files = [], commit = True):
+def edit_werk(werkid, custom_files=[], commit=True):
     if not os.path.exists(str(werkid)):
         bail_out("No werk with this id.")
     editor = os.getenv("EDITOR")
     if not editor:
-        for p in [ "/usr/bin/editor", "/usr/bin/vim", "/bin/vi" ]:
+        for p in ["/usr/bin/editor", "/usr/bin/vim", "/bin/vi"]:
             if os.path.exists(p):
                 editor = p
                 break
@@ -676,8 +701,8 @@ def main_commit(args):
         sys.stdout.write("Commiting:\n")
         for id in g_modified:
             list_werk(g_werks[id])
-        if 0 == os.system("git commit -m 'Updated werk entries %s' ." % (
-              ", ".join(["#%04d" % id for id in g_modified]))):
+        if 0 == os.system("git commit -m 'Updated werk entries %s' ." % (", ".join(
+            ["#%04d" % id for id in g_modified]))):
             sys.stdout.write("--> Successfully committed %d werks.\n" % len(g_modified))
         else:
             bail_out("Cannot commit.")
@@ -702,7 +727,7 @@ def werk_cherry_pick(commit_id, no_commit):
 
     # Find werks that have been cherry-picked and change their version
     # to our current version
-    load_werks() # might have changed
+    load_werks()  # might have changed
     for line in os.popen("git status --porcelain"):
         # M  .werks/103
         #  M werk
@@ -710,7 +735,8 @@ def werk_cherry_pick(commit_id, no_commit):
         if filename.startswith(".werks/") and filename[7].isdigit():
             werk_id = int(filename[7:])
             change_werk_version(werk_id, g_current_version)
-            sys.stdout.write("Changed version of werk #%04d to %s.\n" % (werk_id, g_current_version))
+            sys.stdout.write(
+                "Changed version of werk #%04d to %s.\n" % (werk_id, g_current_version))
 
     # Commit
     if not no_commit:
@@ -740,7 +766,8 @@ def store_werk_ids(l):
 
 
 def current_branch():
-    return [ l for l in os.popen("git branch") if l.startswith("*") ][0].split()[-1]
+    return [l for l in os.popen("git branch") if l.startswith("*")][0].split()[-1]
+
 
 def main_fetch_ids(args):
     if not args:
@@ -778,8 +805,8 @@ def main_fetch_ids(args):
     # Store the new reserved werk ids
     file('first_free', 'w').write(str(new_first_free) + "\n")
 
-    sys.stdout.write('Reserved %d additional IDs now. You have %d reserved IDs now.\n' %
-                                                                      (num, len(my_ids)))
+    sys.stdout.write(
+        'Reserved %d additional IDs now. You have %d reserved IDs now.\n' % (num, len(my_ids)))
 
     if 0 == os.system("git commit -m 'Reserved %d Werk IDS' ." % num):
         sys.stdout.write("--> Successfully committed reserved werk IDS. Please push it soon!\n")
@@ -795,13 +822,13 @@ def main_fetch_ids(args):
 #
 
 # default config
-editions           = []
-components         = []
+editions = []
+components = []
 edition_components = {}
-classes            = []
-levels             = []
-compatible         = []
-online_url         = None
+classes = []
+levels = []
+compatible = []
+online_url = None
 
 versions = set([])
 goto_werksdir()
@@ -814,24 +841,24 @@ if len(sys.argv) < 2:
 
 cmd = sys.argv[1]
 commands = {
-  "list"        : lambda args: main_list(args, "console"),
-  "export"      : lambda args: main_list(args, "csv"),
-  "show"        : main_show,
-  "new"         : main_new,
-  "blame"       : main_blame,
-  "delete"      : main_delete,
-  "grep"        : main_grep,
-  "edit"        : main_edit,
-  "ids"         : main_fetch_ids,
-  "pick"        : main_pick,
-  "cherry-pick" : main_pick,
-  "url"         : main_url,
+    "list": lambda args: main_list(args, "console"),
+    "export": lambda args: main_list(args, "csv"),
+    "show": main_show,
+    "new": main_new,
+    "blame": main_blame,
+    "delete": main_delete,
+    "grep": main_grep,
+    "edit": main_edit,
+    "ids": main_fetch_ids,
+    "pick": main_pick,
+    "cherry-pick": main_pick,
+    "url": main_url,
 }
 
 hits = []
 for name, func in commands.items():
     if name == cmd:
-        hits = [ (name, func) ]
+        hits = [(name, func)]
         break
     elif name.startswith(cmd):
         hits.append((name, func))
@@ -845,4 +872,3 @@ elif len(hits) > 1:
 
 else:
     hits[0][1](sys.argv[2:])
-

@@ -26,6 +26,7 @@
 
 import cmk.paths
 
+
 # put this script into local/share/check_mk/web/plugins/wato
 # of a slave site
 # this deletes all WATO folders immediatelly after sync except one
@@ -35,7 +36,7 @@ import cmk.paths
 # for this to work you need to have one folder per customer on the top
 # level and one site per customer with exactly the same name
 def pre_activate_changes_cleanup(_unused):
-    log = open('%s/tmp/hook.log' % cmk.paths.omd_root,'w')
+    log = open('%s/tmp/hook.log' % cmk.paths.omd_root, 'w')
     log.write('omd_site: %s, omd_root: %s\n' % (cmk.paths.omd_site, cmk.paths.omd_root))
     confd = "%s/etc/check_mk/conf.d/wato/" % cmk.paths.omd_root
     for dirname, dirnames, filenames in os.walk(confd):
@@ -47,5 +48,6 @@ def pre_activate_changes_cleanup(_unused):
                 shutil.rmtree(confd + subdirname)
         break
     log.close()
+
 
 api.register_hook('pre-activate-changes', pre_activate_changes_cleanup)

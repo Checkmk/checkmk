@@ -26,12 +26,11 @@ sys.stdout.write("PATH=%s\n" % os.environ['PATH'])
 sys.stdout.write("MAILTO=\"%s\"\n" % omd_config.get('CONFIG_ADMIN_MAIL', ''))
 sys.stdout.write("# ------------------------------------------------------------\n")
 
-
 for fn in sys.argv[1:]:
     lineno = 0
     sys.stdout.write("# %s\n" % (fn))
     for line in file(fn):
-	lineno += 1
-	ls = line.strip()
-	sys.stdout.write(line)
+        lineno += 1
+        ls = line.strip()
+        sys.stdout.write(line)
     sys.stdout.write("# ------------------------------------------------------------\n")

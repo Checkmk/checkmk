@@ -33,7 +33,7 @@
 #    user with read access to Multisite.
 # 4. Add password OR automation secret of this user
 
-url_prefix = "" # non-OMD installations
+url_prefix = ""  # non-OMD installations
 # url_prefix = "mysite/" # with OMD site name
 
 # Authentication credentials
@@ -43,7 +43,7 @@ user = "omdadmin"
 # set the other one to the empty string ""
 # either:
 password = "omd"
-automation_secret=""
+automation_secret = ""
 
 # or:
 # password = ""
@@ -83,14 +83,14 @@ elif password != "":
           '&_origtarget=view.py%%3Fview_name=aggr_summary%%26output_format=python' % \
           (protocol, url_prefix, user, password)
 else:
-    sys.stderr.write("You need to specify a password or an automation secret in the script source\n")
+    sys.stderr.write(
+        "You need to specify a password or an automation secret in the script source\n")
     sys.exit(1)
-
 
 try:
     command = "curl -u \"%s:%s\" -b /dev/null -L --noproxy localhost %s --silent '%s'" % \
                     (user, password, cert_option, url)
-    output = os.popen(command).read() # nosec
+    output = os.popen(command).read()  # nosec
     data = eval(output)
 except:
     sys.stderr.write("Invalid output from URL %s:\n" % url)
@@ -99,10 +99,10 @@ except:
     sys.exit(1)
 
 states = {
-  "OK"   : 0,
-  "WARN" : 1,
-  "CRIT" : 2,
-  "UNKN" : 3,
+    "OK": 0,
+    "WARN": 1,
+    "CRIT": 2,
+    "UNKN": 3,
 }
 
 for name, state, output in data[1:]:
@@ -113,4 +113,3 @@ for name, state, output in data[1:]:
         if output:
             text += " - " + output
         print text.encode("utf-8")
-

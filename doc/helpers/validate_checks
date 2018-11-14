@@ -13,48 +13,46 @@ import reindent
 on_tty = sys.stdout.isatty()
 
 if on_tty:
-    tty_black     = '\033[30m'
-    tty_red       = '\033[31m'
-    tty_green     = '\033[32m'
-    tty_yellow    = '\033[33m'
-    tty_blue      = '\033[34m'
-    tty_magenta   = '\033[35m'
-    tty_cyan      = '\033[36m'
-    tty_white     = '\033[37m'
-    tty_bgred     = '\033[41m'
-    tty_bggreen   = '\033[42m'
-    tty_bgyellow  = '\033[43m'
-    tty_bgblue    = '\033[44m'
+    tty_black = '\033[30m'
+    tty_red = '\033[31m'
+    tty_green = '\033[32m'
+    tty_yellow = '\033[33m'
+    tty_blue = '\033[34m'
+    tty_magenta = '\033[35m'
+    tty_cyan = '\033[36m'
+    tty_white = '\033[37m'
+    tty_bgred = '\033[41m'
+    tty_bggreen = '\033[42m'
+    tty_bgyellow = '\033[43m'
+    tty_bgblue = '\033[44m'
     tty_bgmagenta = '\033[45m'
-    tty_bgcyan    = '\033[46m'
-    tty_bgwhite   = '\033[47m'
-    tty_bold      = '\033[1m'
+    tty_bgcyan = '\033[46m'
+    tty_bgwhite = '\033[47m'
+    tty_bold = '\033[1m'
     tty_underline = '\033[4m'
-    tty_normal    = '\033[0m'
-    tty_ok        = tty_green + tty_bold + 'OK' + tty_normal
-    tty_error     = tty_red + tty_bold + 'ERROR' + tty_normal
+    tty_normal = '\033[0m'
+    tty_ok = tty_green + tty_bold + 'OK' + tty_normal
+    tty_error = tty_red + tty_bold + 'ERROR' + tty_normal
 else:
-    tty_black     = ''
-    tty_red       = ''
-    tty_green     = ''
-    tty_yellow    = ''
-    tty_blue      = ''
-    tty_magenta   = ''
-    tty_cyan      = ''
-    tty_white     = ''
-    tty_bgred     = ''
-    tty_bggreen   = ''
-    tty_bgyellow  = ''
-    tty_bgblue    = ''
+    tty_black = ''
+    tty_red = ''
+    tty_green = ''
+    tty_yellow = ''
+    tty_blue = ''
+    tty_magenta = ''
+    tty_cyan = ''
+    tty_white = ''
+    tty_bgred = ''
+    tty_bggreen = ''
+    tty_bgyellow = ''
+    tty_bgblue = ''
     tty_bgmagenta = ''
-    tty_bgcyan    = ''
-    tty_bold      = ''
+    tty_bgcyan = ''
+    tty_bold = ''
     tty_underline = ''
-    tty_normal    = ''
-    tty_ok        = 'OK'
-    tty_error     = 'ERROR'
-
-
+    tty_normal = ''
+    tty_ok = 'OK'
+    tty_error = 'ERROR'
 
 __name__ = 'asd'
 if os.path.exists("validate_checks"):
@@ -64,28 +62,38 @@ defaults_path = 'defaults'
 execfile('check_mk')
 __name__ = '__main__'
 
+
 def get_checks():
     files = os.listdir('checks')
     return [ f for f in files if f.endswith(".include") and not f.startswith('.') ] + \
        [ f for f in files if not f.endswith(".include") and not f.startswith('.') ]
 
+
 def get_perfometer_files():
     files = os.listdir('web/plugins/perfometer')
-    return [ f for f in files if f.endswith(".py") and not f.startswith('.') ]
+    return [f for f in files if f.endswith(".py") and not f.startswith('.')]
+
 
 def check_has_perfdata(check):
     return check_info[check].get("has_perfdata", False)
+
 
 def get_all_checks():
     k = check_info.keys()
     k.sort()
     return k
 
+
 def is_snmp_check(check):
     return check in snmp_info
 
+
 def all_nonfunction_vars():
-    return set([ name for name,value in globals().items() if name[0] != '_' and type(value) != type(lambda:0) ])
+    return set([
+        name for name, value in globals().items()
+        if name[0] != '_' and type(value) != type(lambda: 0)
+    ])
+
 
 def get_manpage(check):
     if not check in manpage:
@@ -95,6 +103,7 @@ def get_manpage(check):
             manpage[check] = ""
     return manpage[check]
 
+
 def get_checkfile(check):
     if not check in checkfiles:
         try:
@@ -103,13 +112,14 @@ def get_checkfile(check):
             checkfiles[check] = ""
     return checkfiles[check]
 
-def grep_manpage(check, match, section = None):
+
+def grep_manpage(check, match, section=None):
     manpage = get_manpage(check)
     if section is None:
         return not re.search(match, manpage) is None
     else:
         sec_started = False
-        for line in [ l.strip() for l in manpage.split("\n") ]:
+        for line in [l.strip() for l in manpage.split("\n")]:
             if line == '[%s]' % section:
                 # Block starts with this line
                 sec_started = True
@@ -121,20 +131,23 @@ def grep_manpage(check, match, section = None):
                     return True
         return False
 
-def usage(msg = ''):
+
+def usage(msg=''):
     if msg:
         sys.stderr.write("%s\n" % msg)
     sys.stderr.write("\n")
     for s, l, t in _args:
-        sys.stderr.write('  %3s, --%-15s    %s\n' % ('-'+s.rstrip(':'), l, t))
+        sys.stderr.write('  %3s, --%-15s    %s\n' % ('-' + s.rstrip(':'), l, t))
     sys.stderr.write("\n")
     sys.exit(0)
 
+
 ignored_variables = [
-  # Python Module
-  'datetime', 'timedelta',
-  # Misc vars
-  'vars_before_check',
+    # Python Module
+    'datetime',
+    'timedelta',
+    # Misc vars
+    'vars_before_check',
 ]
 
 # Load all checks and record global var definitions
@@ -149,7 +162,7 @@ for check in get_checks():
     global_vars[check] = []
     for name in vars_after_check:
         if name not in ignored_variables and name not in vars_before_check:
-            global_vars[check] += [ name ]
+            global_vars[check] += [name]
 
 # Load all perfometers
 perfometers = {}
@@ -158,34 +171,34 @@ for f in get_perfometer_files():
 
 SCORE_START = 10
 
-C_OK        = 1
-C_FAILED    = 2
-C_INVALID   = 3
+C_OK = 1
+C_FAILED = 2
+C_INVALID = 3
 
 LINELENGTH_LIMIT = 140
 
 TESTS = {
-    'manpage':     C_OK,
-    'snmp_scan':   C_OK,
-    'pnp_tmpl':    C_OK,
-    'perfometer':  C_OK,
-    'snmp_scan':   C_OK,
-    'reindent':    C_OK,
+    'manpage': C_OK,
+    'snmp_scan': C_OK,
+    'pnp_tmpl': C_OK,
+    'perfometer': C_OK,
+    'snmp_scan': C_OK,
+    'reindent': C_OK,
     'global_vars': C_OK,
-    'linelength':  C_OK,
-    'wato':        C_OK,
-    'debug':       C_OK,
+    'linelength': C_OK,
+    'wato': C_OK,
+    'debug': C_OK,
 }
 
 WEIGHT = {
-    'manpage':      2,
-    'global_vars':  2,
-    'reindent':     2,
-    'linelength':   2,
-    'debug':       10,
+    'manpage': 2,
+    'global_vars': 2,
+    'reindent': 2,
+    'linelength': 2,
+    'debug': 10,
 }
 
-manpage    = {}
+manpage = {}
 checkfiles = {}
 
 # #############################################################################
@@ -196,8 +209,10 @@ checkfiles = {}
 # - Are the global configuration vars mentioned in the manpage
 # - Are the other (internal) helper vars namend correctly
 
+
 def is_valid_global_vars(check):
     return True
+
 
 def verify_global_vars(check):
     check_file = check.split('.')[0]
@@ -222,17 +237,20 @@ def verify_global_vars(check):
 
         if invalid:
             if not check_file in invalid_global_vars:
-                invalid_global_vars[check_file] = [ var ]
+                invalid_global_vars[check_file] = [var]
             else:
-                invalid_global_vars[check_file] += [ var ]
+                invalid_global_vars[check_file] += [var]
 
     return not check_file in invalid_global_vars
+
 
 # Reindent code:
 # - Is there some code to be reindented?
 
+
 def is_valid_reindent(check):
     return True
+
 
 def verify_reindent(check):
     f = open('checks/%s' % check.split('.')[0])
@@ -245,8 +263,10 @@ def verify_reindent(check):
 # - are there 'print' statements in the code?
 # - are there 'sys.*.write' statements?
 
+
 def is_valid_debug(check):
     return True
+
 
 def verify_debug(check):
     f = open('checks/%s' % check.split('.')[0])
@@ -261,11 +281,14 @@ def verify_debug(check):
     f.close()
     return True
 
+
 # Toooo long lines:
 # - Are there too long lines in the check?
 
+
 def is_valid_linelength(check):
     return True
+
 
 def verify_linelength(check):
     """ Read the checkfile and compare all lines with the maximum line length """
@@ -274,45 +297,59 @@ def verify_linelength(check):
             return False
     return True
 
+
 # Manpage:
 # - Does the check have a manpage?
+
 
 def is_valid_manpage(check):
     return True
 
+
 def verify_manpage(check):
     return os.path.exists('checkman/%s' % check)
+
 
 # SNMP scan function:
 # - Does the snmp check have a scan function?
 
+
 def is_valid_snmp_scan(check):
     return is_snmp_check(check)
+
 
 def verify_snmp_scan(check):
     return check in snmp_scan_functions
 
+
 # PNP-Template:
 # Does the chekc which produces perfdata have a pnp template?
+
 
 def is_valid_pnp_tmpl(check):
     return check_has_perfdata(check)
 
+
 def verify_pnp_tmpl(check):
     return os.path.exists('pnp-templates/check_mk-%s.php' % check)
+
 
 # Perfometer:
 # Checks with perfdata should provide a perfometer
 
+
 def is_valid_perfometer(check):
     return check_has_perfdata(check)
+
 
 def verify_perfometer(check):
     return 'check_mk-' + check in perfometers
 
+
 # Has this check a group assigned to?
 def is_valid_wato(check):
     return True
+
 
 def verify_wato(check):
     group = check_info[check]["group"]
@@ -333,27 +370,29 @@ def verify_wato(check):
             now = False
     return False
 
+
 # #############################################################################
 # MAIN
 # #############################################################################
 
 _args = [
-    ('t:', 'tests=',       'Put one or more tests (comma separated) to limit the validations to perform'),
-    ('c:', 'checks=',      'Put one or more checks (comma separated) to limit the checks to validate'),
-    ('l:', 'score-limit=', 'Set an upper score limit. Only checks with a lower score will be shown'),
+    ('t:', 'tests=', 'Put one or more tests (comma separated) to limit the validations to perform'),
+    ('c:', 'checks=', 'Put one or more checks (comma separated) to limit the checks to validate'),
+    ('l:', 'score-limit=',
+     'Set an upper score limit. Only checks with a lower score will be shown'),
     ('a', 'alternative-output', 'Choose an alternative output format (only listing the problems)'),
-    ('v',  'verbose',      'Enable verbose output'),
-    ('h',  'help',         'Show help message'),
+    ('v', 'verbose', 'Enable verbose output'),
+    ('h', 'help', 'Show help message'),
 ]
 
-_verbose            = 0
-_score_limit        = None
-_checks             = []
-_tests              = []
+_verbose = 0
+_score_limit = None
+_checks = []
+_tests = []
 _alternative_output = False
 
 try:
-    opts, args = getopt.getopt(sys.argv[1:], ''.join([ x[0] for x in _args ]), [ x[1] for x in _args ])
+    opts, args = getopt.getopt(sys.argv[1:], ''.join([x[0] for x in _args]), [x[1] for x in _args])
 except getopt.error, msg:
     usage(msg)
 for o, a in opts:
@@ -368,7 +407,7 @@ for o, a in opts:
         _checks = a.split(',')
     elif o in ('-t', '--tests'):
         _tests = a.split(',')
-        TESTS = dict([ (k, v) for k, v in TESTS.iteritems() if k in _tests ])
+        TESTS = dict([(k, v) for k, v in TESTS.iteritems() if k in _tests])
     elif o in ('-h', '--help'):
         usage()
     else:
@@ -383,7 +422,7 @@ for check in get_all_checks():
     if _checks and not check in _checks:
         continue
 
-    score         = SCORE_START
+    score = SCORE_START
     check_results = TESTS.copy()
 
     for test in TESTS.keys():
@@ -408,7 +447,7 @@ results = sorted(results.iteritems(), key=lambda x: (x[1], x[0]))
 if not _alternative_output:
     sys.stdout.write('%-25s' % 'Check')
     for _f in TESTS.keys():
-        sys.stdout.write('%-15s' % (_f+' (%d)' % WEIGHT.get(_f, 1)))
+        sys.stdout.write('%-15s' % (_f + ' (%d)' % WEIGHT.get(_f, 1)))
     sys.stdout.write('%-8s' % 'Score')
     sys.stdout.write("\n")
 
@@ -451,9 +490,11 @@ for check, (score, check_results) in results:
 
 if _verbose > 0:
     sys.stdout.write("\n")
-    sys.stdout.write("===========================================================================\n")
+    sys.stdout.write(
+        "===========================================================================\n")
     sys.stdout.write("Invalid global vars by check:\n")
-    sys.stdout.write("===========================================================================\n")
+    sys.stdout.write(
+        "===========================================================================\n")
     # sort checks by name
     for check, vars in sorted(invalid_global_vars.iteritems(), key=operator.itemgetter(0)):
         for var in vars:

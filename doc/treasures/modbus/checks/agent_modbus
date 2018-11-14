@@ -24,15 +24,17 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+
 # example: agent_modbus 192.168.0.1 502 856:2:counter:active_energy 790:2:gauge:active_power
 def agent_modbus_arguments(params, hostname, ipaddress):
     port, vars = params
     args = quote_shell_string(ipaddress)
 
-    args +=  ' ' + str(port)
+    args += ' ' + str(port)
     for cid, ctype, words, name in vars:
-        args += " %s:%s:%s:%s" % ( cid, ctype, words, name.replace(" ", "_"))
+        args += " %s:%s:%s:%s" % (cid, ctype, words, name.replace(" ", "_"))
 
     return args
+
 
 special_agent_info['modbus'] = agent_modbus_arguments

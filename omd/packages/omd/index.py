@@ -1,9 +1,11 @@
-from mod_python import apache,util # pylint: disable=import-error
+from mod_python import apache, util  # pylint: disable=import-error
 import os
 import re
 
+
 def site_name(req):
     return os.path.normpath(req.uri).split("/")[1]
+
 
 def handler(req):
     req.content_type = "text/html; charset=UTF-8"
@@ -15,7 +17,8 @@ def handler(req):
             show_apache_log(req)
             return apache.OK
         except Exception, e:
-            req.write("<html><body><h1>Internal Error</h1>Cannot output error log: %s</body></html>" % html_escape(e))
+            req.write("<html><body><h1>Internal Error</h1>Cannot output error log: %s</body></html>"
+                      % html_escape(e))
             return apache.OK
 
     # Redirect requests not asking for the error.py to the Check_MK GUI
@@ -24,11 +27,13 @@ def handler(req):
 
     return apache.OK
 
+
 def html_escape(value):
     return value.replace("&", "&amp;")\
                 .replace('"', "&quot;")\
                 .replace("<", "&lt;")\
                 .replace(">", "&gt;")
+
 
 def show_apache_log(req):
     log_path = '/omd/sites/%s/var/log/apache/error_log' % site_name(req)
@@ -60,13 +65,14 @@ def show_apache_log(req):
         for line in lines:
             parts = line.split(']', 2)
             if len(parts) < 3:
-                parts += [ "" ] * (3 - len(parts))
+                parts += [""] * (3 - len(parts))
             date = parts[0].lstrip('[').strip()
             level = parts[1].strip().lstrip('[')
             message = parts[2].strip()
             message = re.sub("line ([0-9]+)", "line <b class=line>\\1</b>", message)
-            req.write("<b class=date>%s</b> <b class=\"level %s\">%s</b> <b class=\"msg %s\">%s</b>\n" %
-                      (html_escape(date), html_escape(level), "%-7s" % html_escape(level),
-                       html_escape(level), html_escape(message)))
+            req.write(
+                "<b class=date>%s</b> <b class=\"level %s\">%s</b> <b class=\"msg %s\">%s</b>\n" %
+                (html_escape(date), html_escape(level), "%-7s" % html_escape(level),
+                 html_escape(level), html_escape(message)))
         req.write("</pre>\n")
     req.write("</body></html>\n")

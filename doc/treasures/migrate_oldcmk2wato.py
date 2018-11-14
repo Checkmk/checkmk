@@ -61,7 +61,7 @@ confd_folder = os.path.expanduser("~/etc/check_mk/conf.d")
 wato_folder = "wato"
 
 hosttags_file = os.path.expanduser("~/etc/check_mk/multisite.d/wato/hosttags.mk")
-host_tags_info = { "wato_aux_tags": [], "wato_host_tags": [] }
+host_tags_info = {"wato_aux_tags": [], "wato_host_tags": []}
 
 # For each unknown host tag a tag group with a single value is created (checkbox)
 # Here you can configure its prefix. Example:
@@ -78,7 +78,6 @@ file_section_to_folder = {
     #                      "hosts.mk":          "AP", # hosts.mk is stored in the folder AP
     #"*": {"ALL": "MIGRATION"} # Put everything (hosts/rules) into MIGRATION folder
 }
-
 
 #   .--Globals-------------------------------------------------------------.
 #   |                    ____ _       _           _                        |
@@ -99,9 +98,9 @@ all_file_vars = {}
 new_host_tags = set([])
 
 # combined information of all config files
-all_ipaddresses  = {}
-all_alias        = []
-all_parents      = []
+all_ipaddresses = {}
+all_alias = []
+all_parents = []
 all_host_parents = {}
 
 # result folders
@@ -109,21 +108,20 @@ result_files = {}
 
 # unconverted settings sorted by file
 partial_unconverted_data = ""  # partially unconverted sections
-unconverted_data         = ""  # complete  unconverted sections
+unconverted_data = ""  # complete  unconverted sections
 
 # host tags stuff
 if os.path.exists(hosttags_file):
     execfile(hosttags_file, globals(), host_tags_info)
 
 map_tag_to_taggroup = {}
-map_tag_to_auxtags  = {}
-known_aux_tags      = set()
+map_tag_to_auxtags = {}
+known_aux_tags = set()
 for tag_group, tag_descr, tag_choices in host_tags_info["wato_host_tags"]:
     for choice in tag_choices:
-        map_tag_to_taggroup[choice[0]] = tag_group # tag name
-        map_tag_to_auxtags[choice[0]]  = choice[2] # aux tags
-        known_aux_tags |= set(choice[2])           # list of known aux tags
-
+        map_tag_to_taggroup[choice[0]] = tag_group  # tag name
+        map_tag_to_auxtags[choice[0]] = choice[2]  # aux tags
+        known_aux_tags |= set(choice[2])  # list of known aux tags
 
 # template for hosts.mk files
 hosts_mk_template = """# Created by converter script
@@ -164,14 +162,16 @@ host_attributes.update(
 #   |                                                                      |
 #   +----------------------------------------------------------------------+
 
+
 def reinstate_orig_vars(content):
-    for what in [ "ALL_HOSTS", "ANY_USER", "ALL_SERVICES" ]:
+    for what in ["ALL_HOSTS", "ANY_USER", "ALL_SERVICES"]:
         content = content.replace("'$%s$'" % what, what)
         content = content.replace("$%s$" % what, what)
     return content
 
+
 def get_target_folder(filename, what):
-    filename = filename[:-3] # strip .mk
+    filename = filename[:-3]  # strip .mk
 
     settings = file_section_to_folder.get(filename, file_section_to_folder.get("*"))
     if not settings:
@@ -179,13 +179,15 @@ def get_target_folder(filename, what):
 
     return settings.get(what, settings.get("ALL", filename))
 
+
 def add_to_folder(content, what, foldername):
     content = reinstate_orig_vars(content)
     result_files.setdefault(foldername, {"hosts.mk": "", "rules.mk": ""})
     result_files[foldername][what] += content + "\n\n\n"
 
+
 def get_hosts_mk(file_vars):
-    wato_config   = {}
+    wato_config = {}
     tags_of_hosts = {}
 
     def add_wato_parameter(host, what, value):
@@ -195,19 +197,19 @@ def get_hosts_mk(file_vars):
     # ALL HOSTS
     # Add wato tag and folder path to all_host
     def analyze_tags(line):
-        hostname               = line.split("|")[0]
-        tags                   = line.split("|")[1:]
+        hostname = line.split("|")[0]
+        tags = line.split("|")[1:]
         tags_of_hosts[hostname] = tags
         for tag in tags:
             available_tags.setdefault(tag, 0)
             available_tags[tag] += 1
 
     all_hosts_info = []
-    host_dict      = {}
+    host_dict = {}
     for entry in file_vars["all_hosts"]:
         analyze_tags(entry)
         host_dict[entry.split("|")[0]] = None
-        all_hosts_info.append("\"%s\"," % (entry + "|wato|/\" + FOLDER_PATH + \"/") )
+        all_hosts_info.append("\"%s\"," % (entry + "|wato|/\" + FOLDER_PATH + \"/"))
 
     # Parents
     parent_list = []
@@ -216,7 +218,6 @@ def get_hosts_mk(file_vars):
             add_wato_parameter(hostname, "parents", list(all_host_parents[hostname]))
             parent_list.append((",".join(all_host_parents[hostname]), [hostname]))
 
-
     # IP Addresses
     ip_dict = {}
     for hostname in host_dict.keys():
@@ -224,13 +225,11 @@ def get_hosts_mk(file_vars):
             ip_dict[hostname] = all_ipaddresses[hostname]
             add_wato_parameter(hostname, "ipaddress", all_ipaddresses[hostname])
 
-
     # Alias
     alias_info = []
     for entry in file_vars["extra_host_conf"].get("alias", []):
         for hostname in entry[1]:
             add_wato_parameter(hostname, "alias", entry[0])
-
 
     # Add wato config host tags (tricky...)
     for hostname, tags in tags_of_hosts.items():
@@ -238,6 +237,7 @@ def get_hosts_mk(file_vars):
             if tag in known_aux_tags:
                 # ignore, these are not shown in WATO
                 continue
+
 
 #   Here you can add some special cases, create extra tags for found tags, etc.
 #            found_match = False
@@ -257,18 +257,20 @@ def get_hosts_mk(file_vars):
                 add_wato_parameter(hostname, "tag_%s_%s" % (taggroup_prefix, tag), tag)
                 new_host_tags.add(tag)
 
-
-    content = hosts_mk_template % { "all_hosts_info"       : "    " + "\n    ".join(all_hosts_info),
-                                    "ip_address_info"      : pprint.pformat(ip_dict),
-                                    "alias_info"           : pprint.pformat(file_vars["extra_host_conf"].get("alias", [])),
-                                    "parent_info"          : pprint.pformat(parent_list),
-                                    "host_attributes_info" : pprint.pformat(wato_config).replace("\"", "\\\"")}
+    content = hosts_mk_template % {
+        "all_hosts_info": "    " + "\n    ".join(all_hosts_info),
+        "ip_address_info": pprint.pformat(ip_dict),
+        "alias_info": pprint.pformat(file_vars["extra_host_conf"].get("alias", [])),
+        "parent_info": pprint.pformat(parent_list),
+        "host_attributes_info": pprint.pformat(wato_config).replace("\"", "\\\"")
+    }
 
     for what in ["all_hosts", "extra_host_conf"]:
         if what in file_vars:
             del file_vars[what]
 
     return content
+
 
 def create_wato_folder(filename, file_vars):
     global unconverted_data
@@ -333,14 +335,15 @@ def create_wato_folder(filename, file_vars):
         content += "inventory_processes_rules = [\n"
         for entry in file_vars["inventory_processes"]:
             levels = entry[-4:]
-            rest   = entry[:-4]
+            rest = entry[:-4]
             if len(rest) == 5:
                 tags, hosts, name, match, user = rest
             elif len(rest) == 4:
                 tags = []
                 hosts, name, match, user = rest
             else:
-                partial_unconverted_data += "%s: Unable to convert process rule %r" % (filename, entry)
+                partial_unconverted_data += "%s: Unable to convert process rule %r" % (filename,
+                                                                                       entry)
 
             content += "( {'default_params': {'levels': %r}, 'descr': %r, 'match': %r, 'user': %r}, %r, %r),\n" % \
                     (levels, name, match, user != "$ANY_USER$" and user or None, tags, hosts)
@@ -373,7 +376,8 @@ def create_wato_folder(filename, file_vars):
                 for value in values:
                     pattern_info.append("(%r, %r, \"(auto generated)\")" % (state, value[3]))
 
-                content += "( [%s], %s, %s, [\"%s\"]),\n" % (", ".join(pattern_info), tags, hosts, logfile)
+                content += "( [%s], %s, %s, [\"%s\"]),\n" % (", ".join(pattern_info), tags, hosts,
+                                                             logfile)
 
         content += "] + logwatch_rules"
 
@@ -381,15 +385,15 @@ def create_wato_folder(filename, file_vars):
 
         add_to_folder(content, "rules.mk", get_target_folder(filename, "logwatch_patterns"))
 
-
     # Log unconverted
     unconverted_data += "##########################\n"\
                    "## Unconverted data of file %s\n" % filename
     for key, value in file_vars.items():
         if value == [] or value == {} or key in ["ALL_HOSTS", "ALL_SERVICES", "ANY_USER"]:
             continue
-        unconverted_data += "Parameter: %s\nValue:\n%s\n\n\n" % (key, pprint.pformat(value)
-)
+        unconverted_data += "Parameter: %s\nValue:\n%s\n\n\n" % (key, pprint.pformat(value))
+
+
 #   .--Main----------------------------------------------------------------.
 #   |                        __  __       _                                |
 #   |                       |  \/  | __ _(_)_ __                           |
@@ -409,26 +413,28 @@ for filename in os.listdir("."):
 
         print "Process file: %s" % filename
         file_vars = {
-            "all_hosts"                   : [],               # converted
-            "extra_host_conf"             : {"alias": []},    # converted
-            "parents"                     : [],               # converted
-            "ignored_services"            : [],               # converted
-            "fileinfo_groups"             : [],               # converted
-            "ipaddresses"                : {},                # converted
-            "legacy_checks"               : [],               # not converted - you need to create active checks
-            "extra_nagios_conf"           : "",               # not possible
-            "inventory_services"          : [],               # converted
-            "inventory_processes"         : [],               # converted
-            "scanparent_hosts"            : [],               # not converted
-            "inventory_processes_rules"   : [],               # not converted
-            "datasource_programs"         : [],               # not converted
-            "clustered_services_of"       : {},               # not converted
-            "logwatch_patterns"           : {},               # converted
-            "check_parameters"            : [],               # not converted
-            "checks"                      : [],               # not converted
-            "ALL_HOSTS"                   : "$ALL_HOSTS$",    # Placeholder
-            "ALL_SERVICES"                : "$ALL_SERVICES$", # Placeholder
-            "ANY_USER"                    : "$ANY_USER$",     # Placeholder
+            "all_hosts": [],  # converted
+            "extra_host_conf": {
+                "alias": []
+            },  # converted
+            "parents": [],  # converted
+            "ignored_services": [],  # converted
+            "fileinfo_groups": [],  # converted
+            "ipaddresses": {},  # converted
+            "legacy_checks": [],  # not converted - you need to create active checks
+            "extra_nagios_conf": "",  # not possible
+            "inventory_services": [],  # converted
+            "inventory_processes": [],  # converted
+            "scanparent_hosts": [],  # not converted
+            "inventory_processes_rules": [],  # not converted
+            "datasource_programs": [],  # not converted
+            "clustered_services_of": {},  # not converted
+            "logwatch_patterns": {},  # converted
+            "check_parameters": [],  # not converted
+            "checks": [],  # not converted
+            "ALL_HOSTS": "$ALL_HOSTS$",  # Placeholder
+            "ALL_SERVICES": "$ALL_SERVICES$",  # Placeholder
+            "ANY_USER": "$ANY_USER$",  # Placeholder
         }
         execfile(filename, globals(), file_vars)
         all_file_vars[filename] = file_vars
@@ -445,7 +451,8 @@ for filename, file_vars in all_file_vars.items():
     for entry in file_vars.get("parents", []):
         if len(entry) == 3:
             parents, tags, hosts = entry
-            partial_unconverted_data += "%s: Unable to convert parent configuration: %s" % (filename, pprint.pformat(entry))
+            partial_unconverted_data += "%s: Unable to convert parent configuration: %s" % (
+                filename, pprint.pformat(entry))
         elif len(entry) == 2:
             parents, hosts = entry
             parent_tokens = parents.split(",")
@@ -461,7 +468,7 @@ for filename, file_vars in all_file_vars.items():
 # Debug, shows overall tag usage
 print "Tag usage statistics"
 print "####################"
-tag_counts = sorted(available_tags.items(), key=operator.itemgetter(1), reverse = True)
+tag_counts = sorted(available_tags.items(), key=operator.itemgetter(1), reverse=True)
 for key, value in tag_counts:
     print "%-20s %s" % (key, value)
 print ""
@@ -470,8 +477,9 @@ print ""
 print "hosttags.mk"
 print "###########"
 
-print "Creating hosttags.mk in %s (inspect and copy this to ~/etc/check_mk/multisite.d/wato)" % os.path.expanduser("~")
-tag_template ="('%(taggroup_prefix)s_%(tag)s', u'%(tag)s', [('%(tag)s', u'%(tag)s (auto generated)', [])]),"
+print "Creating hosttags.mk in %s (inspect and copy this to ~/etc/check_mk/multisite.d/wato)" % os.path.expanduser(
+    "~")
+tag_template = "('%(taggroup_prefix)s_%(tag)s', u'%(tag)s', [('%(tag)s', u'%(tag)s (auto generated)', [])]),"
 extra_host_tags = []
 for tag in new_host_tags:
     extra_host_tags.append(tag_template % {"tag": tag, "taggroup_prefix": taggroup_prefix})
@@ -488,9 +496,11 @@ wato_aux_tags += \
 wato_host_tags += [\n\
 %(extra_host_tags)s
 ]
-""" % {"wato_host_tags": pprint.pformat(host_tags_info["wato_host_tags"]),
-       "wato_aux_tags":  pprint.pformat(host_tags_info["wato_aux_tags"]),
-       "extra_host_tags": "\n".join(extra_host_tags)}
+""" % {
+    "wato_host_tags": pprint.pformat(host_tags_info["wato_host_tags"]),
+    "wato_aux_tags": pprint.pformat(host_tags_info["wato_aux_tags"]),
+    "extra_host_tags": "\n".join(extra_host_tags)
+}
 file(os.path.expanduser("~/hosttags.mk"), "w").write(hosttags_content)
 print ""
 

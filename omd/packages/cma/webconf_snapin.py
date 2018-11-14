@@ -24,6 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+
 def render_webconf():
     # Our version of iconlink -> the images are located elsewhere
     def iconlink(text, url, icon):
@@ -43,9 +44,10 @@ def render_webconf():
         url = base_url + url
         iconlink(title, url, icon)
 
+
 sidebar_snapins["webconf"] = {
-    "title"         : _("Check_MK Appliance"),
-    "description"   : _("Access to the Check_MK Appliance Web Configuration"),
-    "render"        : render_webconf,
-    "allowed"       : [ "admin" ],
+    "title": _("Check_MK Appliance"),
+    "description": _("Access to the Check_MK Appliance Web Configuration"),
+    "render": render_webconf,
+    "allowed": ["admin"],
 }

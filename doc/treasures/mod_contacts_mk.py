@@ -15,8 +15,7 @@ except:
     print "Run this script inside a OMD site"
     sys.exit()
 
-
-user_id =  sys.argv[1]
+user_id = sys.argv[1]
 field = sys.argv[2]
 content = sys.argv[3]
 
@@ -26,7 +25,7 @@ eval(file(contacts_mk).read())
 
 contacts[user_id][field] = content
 
-file(contacts_mk, "w").write( """
+file(contacts_mk, "w").write("""
 # Written by Multisite UserDB
 # encoding: utf-8
 

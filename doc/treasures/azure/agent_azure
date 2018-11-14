@@ -43,6 +43,8 @@ num_threads = 0
 thread_started = False
 outputs = []
 lock = allocate_lock()
+
+
 def check_errors(management, hostname):
     global num_threads, thread_started
     lock.acquire()
@@ -50,9 +52,7 @@ def check_errors(management, hostname):
     thread_started = True
     lock.release()
     try:
-        service = management.get_hosted_service_properties(
-            hostname,
-            embed_detail=True)
+        service = management.get_hosted_service_properties(hostname, embed_detail=True)
     except azure.WindowsAzureMissingResourceError, error:
         lock.acquire()
         num_threads -= 1
@@ -60,17 +60,19 @@ def check_errors(management, hostname):
         sys.stderr.write('Hosted service %s not found\n' % hostname)
         return
     output = ""
-    output += "<<<<"+hostname+">>>>\n"
+    output += "<<<<" + hostname + ">>>>\n"
     output += "<<<azure_deployments>>>\n"
     if not service.deployments:
         output += "deployments not_found\n"
     for deployment in service.deployments:
         for role_inst in deployment.role_instance_list:
-            output += "%s %s %s\n" % ( role_inst.role_name, role_inst.power_state, role_inst.instance_status )
+            output += "%s %s %s\n" % (role_inst.role_name, role_inst.power_state,
+                                      role_inst.instance_status)
     lock.acquire()
     num_threads -= 1
     outputs.append(output)
     lock.release()
+
 
 try:
     publishsettings = PublishSettings(sys.argv[1])
@@ -79,16 +81,13 @@ except Exception, error:
     sys.exit(1)
 
 pem_path = publishsettings.write_pem()
-management = ServiceManagementService(
-    subscription_id=publishsettings.sub_id,
-    cert_file=pem_path)
+management = ServiceManagementService(subscription_id=publishsettings.sub_id, cert_file=pem_path)
 
 hosted_services = management.list_hosted_services()
 service_count = 0
 for service in hosted_services:
     start_new_thread(check_errors, (management, service.service_name))
     #check_errors(management, service.service_name)
-
 
 while not thread_started:
     pass
@@ -100,4 +99,3 @@ print service_count
 
 print "".join(outputs)
 sys.exit()
-

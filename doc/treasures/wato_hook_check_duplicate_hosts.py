@@ -39,11 +39,10 @@ def pre_activate_changes_check_duplicate_host(hosts):
             host_names = addresses.setdefault(attrs["ipaddress"], [])
             host_names.append(host_name)
 
-
     for address, host_names in addresses.items():
         if len(host_names) > 1:
             html.show_warning("The IP address %s is used for multiple hosts: %s" %
-                                                    (address, ", ".join(host_names)))
+                              (address, ", ".join(host_names)))
 
 
 register_hook('pre-activate-changes', pre_activate_changes_check_duplicate_host)

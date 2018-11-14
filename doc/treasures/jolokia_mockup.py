@@ -24,10 +24,8 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-
 # small mock server simulating a jolokia server. Not very sophisticated
 # but enough to get several checks to display something
-
 
 import SocketServer
 import SimpleHTTPServer
@@ -35,11 +33,11 @@ import urlparse
 
 PORT = 8080
 
+
 class FakeHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
     def do_GET(self):
         parsedParams = urlparse.urlparse(self.path)
-        params = [par for par in parsedParams.path.split('/')
-                  if par]
+        params = [par for par in parsedParams.path.split('/') if par]
 
         print(params)
 
@@ -53,11 +51,12 @@ class FakeHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
             self.wfile.write('{"value": {"info":'\
                  '{"version": "1.0", "product": "Fake_Product"}, "agent": "Fake_Agent"}}')
 
-        self.wfile.close();
+        self.wfile.close()
+
 
 class FakeTCPServer(SocketServer.TCPServer):
     allow_reuse_address = True
 
+
 httpd = FakeTCPServer(("", 8080), FakeHandler)
 httpd.serve_forever()
-

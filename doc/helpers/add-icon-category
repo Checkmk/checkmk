@@ -9,7 +9,7 @@ if len(sys.argv) < 3:
     sys.exit(1)
 
 category = sys.argv[1]
-images   = sys.argv[2:]
+images = sys.argv[2:]
 
 for image in images:
     im = Image.open(image)
@@ -17,7 +17,7 @@ for image in images:
 
     from PIL import PngImagePlugin
     meta = PngImagePlugin.PngInfo()
-    for k,v in im.info.iteritems():
+    for k, v in im.info.iteritems():
         if k not in ('interlace', 'gamma', 'dpi', 'transparency', 'aspect'):
             meta.add_text(k, v, 0)
     im.save(image, 'PNG', pnginfo=meta)

@@ -36,16 +36,18 @@ def inventory_azure_deployments(info):
     for name, power_state, inst_state in info:
         yield name, None
 
+
 def check_azure_deployments(item, _no_params, info):
     for name, power_state, inst_state in info:
         if name == item:
             state = 0
-            if inst_state != "ReadyRole" or power_state != "Started": 
+            if inst_state != "ReadyRole" or power_state != "Started":
                 state = 2
-            return state, "Powerstate: %s, Instancestate: %s" % ( power_state, inst_state)
+            return state, "Powerstate: %s, Instancestate: %s" % (power_state, inst_state)
+
 
 check_info["azure_deployments"] = {
-    "check_function"        : check_azure_deployments,
-    "inventory_function"    : inventory_azure_deployments,
-    "service_description"   : "Azure deployment %s",
+    "check_function": check_azure_deployments,
+    "inventory_function": inventory_azure_deployments,
+    "service_description": "Azure deployment %s",
 }

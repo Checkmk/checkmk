@@ -13,6 +13,7 @@ except ImportError:
                      'Check_MK livestatus sources to a python import path.\n')
     sys.exit(1)
 
+
 def usage():
     sys.stderr.write("""check_flapping
 
@@ -33,6 +34,7 @@ OPTIONS:
 
 """)
 
+
 short_options = 'hr:w:c:l:'
 
 try:
@@ -41,18 +43,18 @@ except getopt.GetoptError, err:
     sys.stderr.write("%s\n" % err)
     sys.exit(1)
 
-hostname     = None
-socket_path  = ''
+hostname = None
+socket_path = ''
 svc_patterns = []
-timerange    = 60
-warn, crit   = 2, 3
+timerange = 60
+warn, crit = 2, 3
 
-for o,a in opts:
+for o, a in opts:
     if o == '-h':
         usage()
         sys.exit(0)
     elif o == '-r':
-    	timerange = int(a)
+        timerange = int(a)
     elif o == '-w':
         warn = int(a)
     elif o == '-c':
@@ -81,26 +83,24 @@ svc_filter = ''
 for pattern in svc_patterns:
     svc_filter += 'Filter: service_description ~ %s\n' % pattern
 if len(svc_patterns) > 1:
-    svc_filter += 'Or: %d\n'  % len(svc_patterns)
+    svc_filter += 'Or: %d\n' % len(svc_patterns)
 
-query = (
-    'GET log\n'
-    'Columns: service_description current_service_scheduled_downtime_depth\n'
-    'Filter: host_name = %s\n'
-    '%s'
-    'Filter: log_time >= %d\n'
-    'Filter: class = 1\n'
-    'Stats: state != 999\n'
-) % (hostname, svc_filter, int(time.time() - (timerange * 60)))
+query = ('GET log\n'
+         'Columns: service_description current_service_scheduled_downtime_depth\n'
+         'Filter: host_name = %s\n'
+         '%s'
+         'Filter: log_time >= %d\n'
+         'Filter: class = 1\n'
+         'Stats: state != 999\n') % (hostname, svc_filter, int(time.time() - (timerange * 60)))
 
 c = livestatus.SingleSiteConnection('unix:' + socket_path)
 response = c.query_table(query)
 
-state  = 0
+state = 0
 output = []
 for svc_desc, downtime_depth, num in response:
     if int(downtime_depth) != 0:
-        continue # skip services in downtime
+        continue  # skip services in downtime
     if num >= crit:
         output.append('%s: %d (!!)' % (svc_desc, num))
         state = 2

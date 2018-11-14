@@ -31,4 +31,3 @@ for row in response[1:]:
     for key, value in with_headers:
         print "%-20s: %s" % (key, value)
     print
-

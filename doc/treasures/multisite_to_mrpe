@@ -37,17 +37,21 @@ import os, sys, getopt, time, urllib, subprocess
 omd_site = os.getenv("OMD_SITE")
 omd_root = os.getenv("OMD_ROOT")
 
+
 def convert_from_multisite(response):
     headers = response[0]
-    return [ dict(zip(headers, line)) for line in response[1:] ]
+    return [dict(zip(headers, line)) for line in response[1:]]
+
 
 def bail_out(reason):
     sys.stderr.write(reason + "\n")
     sys.exit(1)
 
+
 def verbose(text):
     if opt_verbose:
         sys.stdout.write(text + "\n")
+
 
 def usage():
     sys.stdout.write("""Usage: multisite_to_mrpe -U URL {-P PASSWORD|-S SECRET} [OPTIONS] HOST
@@ -74,7 +78,7 @@ Options:
 
 
 short_options = 'hvu:U:S:P:'
-long_options = [ "help", "verbose", "user=", "url=", "secret=", "debug", "password=" ]
+long_options = ["help", "verbose", "user=", "url=", "secret=", "debug", "password="]
 
 opt_verbose = False
 opt_user = "automation"
@@ -93,24 +97,24 @@ except getopt.GetoptError, err:
     usage()
     sys.exit(1)
 
-for o,a in opts:
+for o, a in opts:
     # Docu modes
-    if o in [ '-h', '--help' ]:
+    if o in ['-h', '--help']:
         usage()
         sys.exit(0)
 
     # Modifiers
-    elif o in [ '-v', '--verbose']:
+    elif o in ['-v', '--verbose']:
         opt_verbose = True
     elif o == '--debug':
         opt_debug = True
-    elif o in [ '-u', '--user']:
+    elif o in ['-u', '--user']:
         opt_user = a
-    elif o in [ '-S', '--secret']:
+    elif o in ['-S', '--secret']:
         opt_secret = a
-    elif o in [ '-P', '--password']:
+    elif o in ['-P', '--password']:
         opt_password = a
-    elif o in [ '-U', '--url']:
+    elif o in ['-U', '--url']:
         opt_url = a
 
 if not opt_secret and not opt_password:
@@ -141,23 +145,25 @@ else:
 def make_url(base, variables):
     return base + "?" + urllib.urlencode(variables)
 
+
 variables = [
-    ( "host",           arg_host ),
-    ( "view_name",      "host_export" ),
-    ( "output_format",  "python" ),
+    ("host", arg_host),
+    ("view_name", "host_export"),
+    ("output_format", "python"),
 ]
 
 if opt_secret:
-    variables += [
-       ( "_username",      opt_user ),
-       ( "_secret", opt_secret )
-   ]
+    variables += [("_username", opt_user), ("_secret", opt_secret)]
 
 url = make_url(opt_url + "view.py", variables)
 verbose("URL:              " + url)
 
 try:
-    arguments = [ 'curl', '--silent', '--insecure', ]
+    arguments = [
+        'curl',
+        '--silent',
+        '--insecure',
+    ]
     if opt_password:
         arguments.append('--user')
         arguments.append("%s:%s" % (opt_user, opt_password))
@@ -165,7 +171,6 @@ try:
         arguments.append(opt_user)
     arguments.append(url)
     verbose("Calling:          " + " ".join(arguments))
-
 
     process = subprocess.Popen(arguments, executable='curl', stdout=subprocess.PIPE)
     answer, stderrdata = process.communicate()
@@ -187,11 +192,8 @@ except Exception, e:
 sys.stdout.write('<<<mrpe>>>\n')
 
 for service in services:
-    state = { "OK" : 0, "WARN" : 1, "CRIT" : 2, "UNKNOWN" : 3}.get(service['service_state'])
-    if state != None: # skip pending services
-        sys.stdout.write("(%s) %s %d %s|%s\n" % (
-            service["svc_check_command"].replace(" ", "_"),
-            service["service_description"].replace(" ", "_"),
-            state,
-            service["svc_plugin_output"],
-            service["svc_perf_data"]))
+    state = {"OK": 0, "WARN": 1, "CRIT": 2, "UNKNOWN": 3}.get(service['service_state'])
+    if state != None:  # skip pending services
+        sys.stdout.write("(%s) %s %d %s|%s\n" % (service["svc_check_command"].replace(
+            " ", "_"), service["service_description"].replace(
+                " ", "_"), state, service["svc_plugin_output"], service["svc_perf_data"]))

@@ -54,6 +54,7 @@
 
 import pprint
 
+
 def remove_nonrelated_site_folders(effective_hosts):
     # Note: most of the paths here are hardcorded
     # I do not want to use any helper functions from the WATO world, because
@@ -65,6 +66,7 @@ def remove_nonrelated_site_folders(effective_hosts):
     do_remove_folders = False
 
     logfile = file(os.path.expanduser("~/var/log/remove_site_folders.log"), "w")
+
     def log_info(info):
         logfile.write(info + "\n")
 
@@ -78,7 +80,7 @@ def remove_nonrelated_site_folders(effective_hosts):
 
     # Parse the file with the site name
     file_vars_g = {}
-    file_vars   = {}
+    file_vars = {}
     try:
         execfile(cmk.paths.check_mk_config_dir + "/distributed_wato.mk", file_vars_g, file_vars)
     except Exception, e:
@@ -90,18 +92,18 @@ def remove_nonrelated_site_folders(effective_hosts):
         # Looks like the file is empty -> return
         return
 
-
     # Get all folders in WATO dir
-    config_dir   = cmk.paths.check_mk_config_dir + "/wato/"
-    all_folders  = sorted([x[0][len(config_dir):] for x in os.walk(config_dir)])[1:] # Skip first folder (WATO root!)
+    config_dir = cmk.paths.check_mk_config_dir + "/wato/"
+    all_folders = sorted(
+        [x[0][len(config_dir):] for x in os.walk(config_dir)])[1:]  # Skip first folder (WATO root!)
 
     keep_folders = set([])
-    total_hosts  = 0
+    total_hosts = 0
     for host, attributes in effective_hosts.items():
         host_folder = attributes[".folder"][".path"]
 
         host_site = None
-        host_tags   = attributes.get(".tags", [])
+        host_tags = attributes.get(".tags", [])
         for tag in host_tags:
             if tag.startswith("site:"):
                 host_site = tag.split(":", 1)[1]
@@ -115,7 +117,6 @@ def remove_nonrelated_site_folders(effective_hosts):
             total_hosts += 1
             keep_folders.add(host_folder)
 
-
     def folder_required(foldername):
         for folder in keep_folders:
             if folder.startswith(foldername):
@@ -128,13 +129,12 @@ def remove_nonrelated_site_folders(effective_hosts):
         if not folder_required(folder):
             remove_folders.append(folder)
 
-
     if do_remove_folders:
         import shutil
         for folder in remove_folders:
-            if folder: # This is just another safety mechanism to prevent the deletion of the
-                       # WATO root folder. The WATO root folder should never appear in this list of folders,
-                       # because it is filtered out earlier on. Just in case..
+            if folder:  # This is just another safety mechanism to prevent the deletion of the
+                # WATO root folder. The WATO root folder should never appear in this list of folders,
+                # because it is filtered out earlier on. Just in case..
                 the_folder = "%s%s" % (config_dir, folder)
                 if os.path.exists(the_folder):
                     shutil.rmtree(the_folder)
@@ -152,6 +152,3 @@ def remove_nonrelated_site_folders(effective_hosts):
 
 
 register_hook("pre-activate-changes", remove_nonrelated_site_folders)
-
-
-

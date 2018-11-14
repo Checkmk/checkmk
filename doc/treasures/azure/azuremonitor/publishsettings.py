@@ -19,8 +19,8 @@ import base64
 import os
 import tempfile
 import xml.dom.minidom
-
 """Contains the PublishSettings class."""
+
 
 class PublishSettings:
     """Class to represent a Windows Azure .publishsettings file"""
@@ -51,10 +51,8 @@ class PublishSettings:
         pkcs12 = OpenSSL.crypto.load_pkcs12(self.pkcs12_buf)
         cert = pkcs12.get_certificate()
         private_key = pkcs12.get_privatekey()
-        cert_pem = OpenSSL.crypto.dump_certificate(
-            OpenSSL.crypto.FILETYPE_PEM, cert)
-        pkey_pem = OpenSSL.crypto.dump_privatekey(
-            OpenSSL.crypto.FILETYPE_PEM, private_key)
+        cert_pem = OpenSSL.crypto.dump_certificate(OpenSSL.crypto.FILETYPE_PEM, cert)
+        pkey_pem = OpenSSL.crypto.dump_privatekey(OpenSSL.crypto.FILETYPE_PEM, private_key)
         pem_file = None
         if location is None:
             (pem_fd, location) = tempfile.mkstemp()

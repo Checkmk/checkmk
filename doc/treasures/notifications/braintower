@@ -33,13 +33,13 @@
 import sys, os, urllib
 
 # user with permission to use Web-API of gateway
-username    = "XXXXXXXXXXXXXXXXXXXXXXXXXXX"
-password    = "XXXXXXXXXXXXXXXXXXXXXXXXXXX"
+username = "XXXXXXXXXXXXXXXXXXXXXXXXXXX"
+password = "XXXXXXXXXXXXXXXXXXXXXXXXXXX"
 # location (http://servername/api.php)
-location    = "XXXXXXXXXXXXXXXXXXXXXXXXXXX"
+location = "XXXXXXXXXXXXXXXXXXXXXXXXXXX"
 
-to          = os.environ.get("NOTIFY_CONTACTPAGER")
-message     = os.environ['NOTIFY_HOSTNAME'] + " "
+to = os.environ.get("NOTIFY_CONTACTPAGER")
+message = os.environ['NOTIFY_HOSTNAME'] + " "
 
 if os.environ['NOTIFY_WHAT'] == 'SERVICE':
     message += os.environ['NOTIFY_SERVICESTATE'] + " "
@@ -48,12 +48,8 @@ else:
     # Host message
     message += "is " + os.environ['NOTIFY_HOSTSTATE']
 
-url = "%s?" % location + urllib.urlencode([
-    ( "username",   username ),
-    ( "password",   password ),
-    ( "to",         to       ),
-    ( "text",       message  )
-])
+url = "%s?" % location + urllib.urlencode([("username", username), ("password", password),
+                                           ("to", to), ("text", message)])
 
 try:
     handle = urllib.urlopen(url)

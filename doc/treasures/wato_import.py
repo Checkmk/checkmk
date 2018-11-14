@@ -34,7 +34,7 @@ try:
     path = os.environ.pop('OMD_ROOT')
     pathlokal = "~/etc/check_mk/conf.d/wato/"
     pathlokal = os.path.expanduser(pathlokal)
-    csv_file = open(sys.argv[1],'r')
+    csv_file = open(sys.argv[1], 'r')
 except:
     print """Run this script inside a OMD site
     Usage: ./wato_import.py csvfile.csv
@@ -49,33 +49,33 @@ for line in csv_file:
     target_folder, name, alias, ipaddress = line.split(';')[:5]
     if target_folder:
         try:
-            os.makedirs(pathlokal+target_folder)
+            os.makedirs(pathlokal + target_folder)
         except os.error:
             pass
-        folders.setdefault(target_folder,[])
+        folders.setdefault(target_folder, [])
         ipaddress = ipaddress.strip()
         if ipaddress == "None":
             ipaddress = False
         folders[target_folder].append((name, alias, ipaddress))
 csv_file.close()
 
-host_tags_info = { "wato_aux_tags": [], "wato_host_tags": [] }
+host_tags_info = {"wato_aux_tags": [], "wato_host_tags": []}
 execfile("%s/../../multisite.d/wato/hosttags.mk" % pathlokal, globals(), host_tags_info)
 
 host_tag_mapping = {}
-aux_tag_mapping  = {}
+aux_tag_mapping = {}
 for tag_group, tag_descr, tag_choices in host_tags_info["wato_host_tags"]:
     for choice in tag_choices:
-        host_tag_mapping[choice[0]] = tag_group # tag name
-        aux_tag_mapping[choice[0]]  = choice[2] # aux tags
+        host_tag_mapping[choice[0]] = tag_group  # tag name
+        aux_tag_mapping[choice[0]] = choice[2]  # aux tags
 
 for folder in folders:
     all_hosts = ""
     host_attributes = ""
     ips = ""
     for name, alias, ipaddress in folders[folder]:
-        name_tokens    = name.split("|")
-        real_name      = name_tokens[0]
+        name_tokens = name.split("|")
+        real_name = name_tokens[0]
 
         extra_infos = []
         # WATO Tag extra info
@@ -91,21 +91,21 @@ for folder in folders:
         extra_aux_tags = ""
         if host_aux_tags:
             extra_aux_tags = "|".join(host_aux_tags) + "|"
-        all_hosts += "'%s|%swato|/' + FOLDER_PATH + '/',\n" % (name.replace(" ","|"), extra_aux_tags)
-
+        all_hosts += "'%s|%swato|/' + FOLDER_PATH + '/',\n" % (name.replace(" ", "|"),
+                                                               extra_aux_tags)
 
         # WATO Alias extra info
         if alias:
             extra_infos.append("'alias' : u'%s'" % alias)
 
         if ipaddress:
-            host_attributes += "'%s' : {'ipaddress' : '%s', %s},\n" % (real_name, ipaddress, ", ".join(extra_infos))
-            ips += "'%s' : '%s',\n" % ( real_name, ipaddress )
+            host_attributes += "'%s' : {'ipaddress' : '%s', %s},\n" % (real_name, ipaddress,
+                                                                       ", ".join(extra_infos))
+            ips += "'%s' : '%s',\n" % (real_name, ipaddress)
         else:
             host_attributes += "'%s' : {%s},\n" % (real_name, ", ".join(extra_infos))
 
-
-    hosts_mk_file = open(pathlokal + folder + '/hosts.mk','w')
+    hosts_mk_file = open(pathlokal + folder + '/hosts.mk', 'w')
     hosts_mk_file.write('all_hosts += [\n')
     hosts_mk_file.write(all_hosts)
     hosts_mk_file.write(']\n\n')
@@ -120,8 +120,7 @@ for folder in folders:
     hosts_mk_file.write('})\n\n')
     hosts_mk_file.close()
 
-
-    wato_file = open(pathlokal + folder + '/.wato','w')
-    wato_file.write("{'attributes': {}, 'num_hosts': %d, 'title': '%s'}\n" % ( len(folders[folder]), folder) )
+    wato_file = open(pathlokal + folder + '/.wato', 'w')
+    wato_file.write(
+        "{'attributes': {}, 'num_hosts': %d, 'title': '%s'}\n" % (len(folders[folder]), folder))
     wato_file.close()
-

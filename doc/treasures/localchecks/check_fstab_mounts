@@ -11,7 +11,7 @@
 # tmpfs  /opt/omd/sites/hirn/tmp tmpfs noauto,user,mode=755,uid=hirn,gid=hirn 0 0
 # tmpfs  /opt/omd/sites/heute/tmp tmpfs noauto,user,mode=755,uid=heute,gid=heute 0 0
 
-mounted = [ l.split()[1] for l in file("/proc/mounts") ]
+mounted = [l.split()[1] for l in file("/proc/mounts")]
 
 missing = []
 count = 0

@@ -15,6 +15,7 @@
 import os, sys, getopt
 import livestatus
 
+
 def usage():
     usage = """
     -h --help                 Prints this
@@ -24,17 +25,19 @@ def usage():
     """
     print usage
 
+
 def main(argv):
     clustername = 'NoClusterName'
-    warning     = float(5)
-    critical    = float(50)
+    warning = float(5)
+    critical = float(50)
 
     if len(argv) == 0 or not sys.argv[1].startswith('-'):
         usage()
         sys.exit(2)
 
     try:
-        opt, args = getopt.getopt(argv, "h:n:w:c:", [ 'help', 'clustername=', 'warning=', 'critical=' ] )
+        opt, args = getopt.getopt(argv, "h:n:w:c:",
+                                  ['help', 'clustername=', 'warning=', 'critical='])
     except getopt.GetoptError, err:
         print str(err)
         usage()
@@ -70,10 +73,14 @@ def main(argv):
         down_list = []
         unknown_list = []
 
-        parents = livestatus.SingleSiteConnection(socket_path).query_table("GET hosts\nColumns: parents\nFilter: host_name = %s\n" % clustername)
+        parents = livestatus.SingleSiteConnection(socket_path).query_table(
+            "GET hosts\nColumns: parents\nFilter: host_name = %s\n" % clustername)
         for i in range(len(parents[0][0])):
-            state = livestatus.SingleSiteConnection(socket_path).query_table("GET hosts\nColumns: name hard_state\nFilter: host_name = %s\n" % parents[0][0][i])
-            cmk_state = livestatus.SingleSiteConnection(socket_path).query_table("GET services\nColumns: host_name description state\nFilter: description ~ Check_MK$\nFilter: host_name = %s\n" % parents[0][0][i])
+            state = livestatus.SingleSiteConnection(socket_path).query_table(
+                "GET hosts\nColumns: name hard_state\nFilter: host_name = %s\n" % parents[0][0][i])
+            cmk_state = livestatus.SingleSiteConnection(socket_path).query_table(
+                "GET services\nColumns: host_name description state\nFilter: description ~ Check_MK$\nFilter: host_name = %s\n"
+                % parents[0][0][i])
             nodename = state[0][0]
             if state[0][1] == 0 and cmk_state[0][2] == 0:
                 nodestate = "up"
@@ -104,11 +111,11 @@ def main(argv):
             if value.count('unknown') > 0:
                 unknown_list.append(key)
 
-        all_nodes         = float(len(clusternodes))
-        up_nodes          = float(len(up_list))
+        all_nodes = float(len(clusternodes))
+        up_nodes = float(len(up_list))
         unreachable_nodes = float(len(unreachable_list))
-        down_nodes        = float(len(down_list))
-        unknown_nodes     = float(len(unknown_list))
+        down_nodes = float(len(down_list))
+        unknown_nodes = float(len(unknown_list))
 
         failedpercent = ((down_nodes + unreachable_nodes + unknown_nodes) / all_nodes) * 100.0
 
@@ -121,9 +128,11 @@ def main(argv):
         if len(down_list) > 0:
             str_down = ("(!!)%s " % ([str(item) for item in down_list])).translate(None, "'[,]")
         if len(unreachable_list) > 0:
-            str_unreachable = ("(ur)%s " % ([str(item) for item in unreachable_list])).translate(None, "'[,]")
+            str_unreachable = ("(ur)%s " % ([str(item) for item in unreachable_list])).translate(
+                None, "'[,]")
         if len(unknown_list) > 0:
-            str_unknown = ("(?)%s " % ([str(item) for item in unknown_list])).translate(None, "'[,]")
+            str_unknown = ("(?)%s " % ([str(item) for item in unknown_list])).translate(
+                None, "'[,]")
 
         if failedpercent > warning and failedpercent < critical:
             print "WARN - (.)" + str_up + str_down + str_unreachable + str_unknown
@@ -138,8 +147,9 @@ def main(argv):
             print "OK - (.)" + str_up
             sys.exit(0)
 
-    except Exception, e: # livestatus.MKLivestatusException, e:
+    except Exception, e:  # livestatus.MKLivestatusException, e:
         print "Livestatus error: %s" % str(e)
 
+
 if __name__ == "__main__":
-    main(sys.argv[1:]) # [1:] slices off the first argument which is the name of the program
+    main(sys.argv[1:])  # [1:] slices off the first argument which is the name of the program

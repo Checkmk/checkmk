@@ -22,8 +22,8 @@ import tempfile
 
 omd_root = os.environ.get('OMD_ROOT')
 
-mode    = None
-first   = True
+mode = None
+first = True
 content = ""
 
 for line in sys.stdin:
@@ -31,15 +31,14 @@ for line in sys.stdin:
         if line.startswith("status"):
             mode = "status"
         elif line.startswith("config"):
-            mode  = "config"
+            mode = "config"
             ident = line[6:].strip().replace("/", "_").replace(".", "_")
         first = False
     else:
         content += line
 
 if mode == "config":
-    file("%s/etc/nagios/conf.d/remote-%s.cfg" %
-         (omd_root, ident), "w").write(content)
+    file("%s/etc/nagios/conf.d/remote-%s.cfg" % (omd_root, ident), "w").write(content)
 
 elif mode == "status":
     fd, path = tempfile.mkstemp('', 'c', "%s/tmp/nagios/checkresults" % omd_root)

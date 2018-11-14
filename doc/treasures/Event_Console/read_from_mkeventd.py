@@ -5,6 +5,7 @@ import json
 import os
 import socket
 
+
 class EventConsoleConnection:
     def __init__(self, path, timeout=3):
         self._socket = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
@@ -13,7 +14,7 @@ class EventConsoleConnection:
         self._buffer = ""
 
     def send_request(self, request):
-        self._socket.sendall(request);
+        self._socket.sendall(request)
         self._socket.shutdown(socket.SHUT_WR)
 
     def read_response(self):
@@ -56,11 +57,13 @@ class EventConsoleConnection:
     def __exit__(self, ty, value, traceback):
         self.close()
 
+
 def request(what, path):
     """Submit a request to the event console, returning the reply as a python object"""
     with EventConsoleConnection(path) as c:
         c.send_request(what + "\nOutputFormat: json")
         return json.loads(c.read_response())
+
 
 ################################################################################
 

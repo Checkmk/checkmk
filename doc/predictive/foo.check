@@ -2,16 +2,18 @@
 
 # Example check. Put this into local/share/check_mk/checks
 
+
 # Inventory function without any specialities. Return
 # None as a default parameter (meaning: no levels).
 def inventory_foo(info):
     if len(info) > 0:
         return [(None, None)]
 
+
 def check_foo(_no_item, params, info):
     # Step 1: extract the measured value from the agent output. Here
     # of course trivial
-    value = float(info[0][0]) 
+    value = float(info[0][0])
 
     # Step 2: Output the value (and maybe others) as performance data.
     # This is mandatory when using predictive levels. The name of the
@@ -37,10 +39,9 @@ def check_foo(_no_item, params, info):
 
 
 check_info['foo'] = {
-    "check_function"          : check_foo,
-    "inventory_function"      : inventory_foo,
-    "service_description"     : "FOO",
-    "has_perfdata"            : True,  # must be true
-    "group"                   : "foobar", # configuration group for WATO
+    "check_function": check_foo,
+    "inventory_function": inventory_foo,
+    "service_description": "FOO",
+    "has_perfdata": True,  # must be true
+    "group": "foobar",  # configuration group for WATO
 }
-

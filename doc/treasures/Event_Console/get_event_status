@@ -3,7 +3,7 @@
 # This is an active check that retrieves current performance
 # data of the Event Console (mkeventd). If you are running OMD,
 # then no further arguments are necessary. Otherwise please
-# use -H and specify either the path to the UNIX socket of 
+# use -H and specify either the path to the UNIX socket of
 # the mkeventd ("status") or HOSTNAME:PORT and enable TCP
 # access to the socket.
 
@@ -13,6 +13,7 @@
 import os, socket, sys
 
 socket_path = os.getenv("OMD_ROOT") + "/tmp/run/mkeventd/status"
+
 
 def query(query, remote_host):
     try:
@@ -54,6 +55,7 @@ def query(query, remote_host):
         sys.stdout.write("UNKNOWN - Cannot connect to event daemon via %s: %s\n" % (via, e))
         sys.exit(3)
 
+
 try:
     remote_host = None
     if len(sys.argv) == 1:
@@ -77,19 +79,22 @@ for line in response[1:]:
     processing_time = row["status_average_processing_time"]
     processing_time = processing_time * 1000
     processing_rate_av = row["status_average_message_rate"]
-    busy=processing_time * processing_rate_av / 10
+    busy = processing_time * processing_rate_av / 10
     count += 1
 
-exit_code=0
+exit_code = 0
 if processing_rate_av > 800 or processing_time > 50 or busy > 70:
-    exit_code=1
+    exit_code = 1
 if processing_rate_av > 1000 or processing_time > 100 or busy > 100:
-    exit_code=2
-
+    exit_code = 2
 
 if count == 0:
-    sys.stdout.write("Error - no Status Information\n" )
+    sys.stdout.write("Error - no Status Information\n")
     sys.exit(3)
 else:
-    sys.stdout.write("Message Rate per sec: %d, Processing Time: %2.1f ms Busy: %2.1f %% | rate_sec=%d;800;1000;; processing_times=%2.1f""ms;50;100;; busy=%2.1f""%%;70;100;;\n" % (processing_rate_av, processing_time, busy, processing_rate_av, processing_time, busy) ) 
+    sys.stdout.write(
+        "Message Rate per sec: %d, Processing Time: %2.1f ms Busy: %2.1f %% | rate_sec=%d;800;1000;; processing_times=%2.1f"
+        "ms;50;100;; busy=%2.1f"
+        "%%;70;100;;\n" % (processing_rate_av, processing_time, busy, processing_rate_av,
+                           processing_time, busy))
     sys.exit(exit_code)

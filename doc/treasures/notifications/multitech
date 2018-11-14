@@ -76,16 +76,14 @@
 #   they will be lost on next reboot.
 #
 
-
 import sys, os, urllib
 
 # This does not need to be changed
-to       = os.environ.get("NOTIFY_CONTACTPAGER")
+to = os.environ.get("NOTIFY_CONTACTPAGER")
 fromname = "Check_MK"
-user     = "nagios"
-passwd   = "test123"
-url      = "http://isms.example.com/sendmsg?"
-
+user = "nagios"
+passwd = "test123"
+url = "http://isms.example.com/sendmsg?"
 
 if len(sys.argv) > 1:
     to = sys.argv[1]
@@ -93,7 +91,6 @@ if len(sys.argv) > 1:
 if not to:
     sys.stderr.write("NOTIFY_CONTACTPAGER is not set.\n")
     sys.exit(1)
-
 
 max_len = 160
 message = os.environ['NOTIFY_HOSTNAME'] + " "
@@ -109,15 +106,9 @@ else:
     message += "is " + os.environ['NOTIFY_HOSTSTATE']
 
 # constructing a url like
-# http://isms.example.com/sendmsg?user=nagios&passwd=test123&cat=1&to=017012345678&text=sample' 
-url += urllib.urlencode([ 
-   ( "user", user ),
-   ( "passwd", passwd ),
-   ( "cat", "1" ),
-   ( "to", to ),
-   ( "text", message )
-])
-
+# http://isms.example.com/sendmsg?user=nagios&passwd=test123&cat=1&to=017012345678&text=sample'
+url += urllib.urlencode([("user", user), ("passwd", passwd), ("cat", "1"), ("to", to),
+                         ("text", message)])
 
 try:
     handle = urllib.urlopen(url)
@@ -130,4 +121,3 @@ try:
         sys.stderr.write("URL was %s\n" % url)
 except Exception, e:
     sys.stderr.write("Error sending SMS to %s. Exception: %s%s\n" % e)
-

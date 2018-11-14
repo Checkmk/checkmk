@@ -35,7 +35,7 @@ SEARCH+=" werk"
 REAL_SEARCH=$(realpath $SEARCH)
 
 # while read F is used to deal with files containing whitespaces
-find $REAL_SEARCH -name .venv -prune -o -type f -print | while read F; do
+find $REAL_SEARCH -name .venv -prune -o -type f -print | sort | while read F; do
     if [[ "$F" == *.py ]] || head -n 1 "$F" | grep -q '^#!.*python$' >/dev/null 2>&1; then
         echo "$F"
     fi

@@ -305,17 +305,20 @@ def _get_queries(do_search, inst, itemspec, title, path, mbean):
     if not do_search:
         return [(mbean + "/" + path, title, itemspec)]
 
-    paths = fetch_var(
-        inst["protocol"],
-        inst["server"],
-        inst["port"],
-        mbean,
-        inst["suburi"],
-        "",
-        None,
-        None,
-        None,
-        function="search")[0][1]
+    try:
+        paths = fetch_var(
+            inst["protocol"],
+            inst["server"],
+            inst["port"],
+            mbean,
+            inst["suburi"],
+            "",
+            None,
+            None,
+            None,
+            function="search")[0][1]
+    except IndexError:
+        return []
 
     return [("%s/%s" % (urllib2.quote(mbean_exp), path), path, itemspec, mbean_exp)
             for mbean_exp in paths]

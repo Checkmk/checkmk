@@ -75,11 +75,10 @@ class ModeAuditLog(WatoMode):
         home_button()
         if self._log_exists() and config.user.may("wato.clear_auditlog") \
            and config.user.may("wato.auditlog") and config.user.may("wato.edit"):
-            html.context_button(_("Download"),
-                html.makeactionuri([("_action", "csv")]), "download")
+            html.context_button(_("Download"), html.makeactionuri([("_action", "csv")]), "download")
             if config.user.may("wato.edit"):
-                html.context_button(_("Clear Log"),
-                    html.makeactionuri([("_action", "clear")]), "trash")
+                html.context_button(
+                    _("Clear Log"), html.makeactionuri([("_action", "clear")]), "trash")
 
     def _log_exists(self):
         return os.path.exists(self.log_path)
@@ -132,9 +131,9 @@ class ModeAuditLog(WatoMode):
         self._display_audit_log_options()
 
         if display_options.enabled(display_options.T):
-            html.h3(_("Audit log for %s and %d days ago") %
-                    (render.date(self._get_start_date()),
-                    self._options["display"][1]))
+            html.h3(
+                _("Audit log for %s and %d days ago") % (render.date(self._get_start_date()),
+                                                         self._options["display"][1]))
 
         self._display_log(log)
 
@@ -228,21 +227,22 @@ class ModeAuditLog(WatoMode):
             ]
 
         if next_log_time is not None:
-            html.icon_button(html.makeactionuri([
-                ("options_p_start_sel", "0"),
-            ]), _("Most recent events"), "start")
+            html.icon_button(
+                html.makeactionuri([
+                    ("options_p_start_sel", "0"),
+                ]), _("Most recent events"), "start")
 
-            html.icon_button(html.makeactionuri(time_url_args(next_log_time)),
-               "%s: %s" % (_("Newer events"), render.date(next_log_time)),
-               "back")
+            html.icon_button(
+                html.makeactionuri(time_url_args(next_log_time)),
+                "%s: %s" % (_("Newer events"), render.date(next_log_time)), "back")
         else:
             html.empty_icon_button()
             html.empty_icon_button()
 
         if previous_log_time is not None:
-            html.icon_button(html.makeactionuri(time_url_args(previous_log_time)),
-                "%s: %s" % (_("Older events"), render.date(previous_log_time)),
-                "forth")
+            html.icon_button(
+                html.makeactionuri(time_url_args(previous_log_time)),
+                "%s: %s" % (_("Older events"), render.date(previous_log_time)), "forth")
         else:
             html.empty_icon_button()
 
@@ -270,42 +270,45 @@ class ModeAuditLog(WatoMode):
 
     def _vs_audit_log_options(self):
         return Dictionary(
-            title = _("Options"),
-            elements = [
+            title=_("Options"),
+            elements=[
                 ("filter_regex", RegExp(
-                    title = _("Filter pattern (RegExp)"),
-                    mode = "infix",
+                    title=_("Filter pattern (RegExp)"),
+                    mode="infix",
                 )),
-                ("start", CascadingDropdown(
-                    title = _("Start log from"),
-                    default_value = "now",
-                    orientation = "horizontal",
-                    choices = [
-                        ("now",  _("Current date")),
-                        ("time", _("Specific date"), AbsoluteDate()),
-                    ],
-                )),
-                ("display", CascadingDropdown(
-                    title = _("Display mode of entries"),
-                    default_value = "daily",
-                    orientation = "horizontal",
-                    choices = [
-                        ("daily",          _("Daily paged display")),
-                        ("number_of_days", _("Number of days from now (single page)"), Integer(
-                            minval = 1,
-                            unit = _("days"),
-                            default_value = 1,
-                            allow_empty = False,
-                        )),
-                    ],
-                )),
+                ("start",
+                 CascadingDropdown(
+                     title=_("Start log from"),
+                     default_value="now",
+                     orientation="horizontal",
+                     choices=[
+                         ("now", _("Current date")),
+                         ("time", _("Specific date"), AbsoluteDate()),
+                     ],
+                 )),
+                ("display",
+                 CascadingDropdown(
+                     title=_("Display mode of entries"),
+                     default_value="daily",
+                     orientation="horizontal",
+                     choices=[
+                         ("daily", _("Daily paged display")),
+                         ("number_of_days", _("Number of days from now (single page)"),
+                          Integer(
+                              minval=1,
+                              unit=_("days"),
+                              default_value=1,
+                              allow_empty=False,
+                          )),
+                     ],
+                 )),
             ],
-            optional_keys = [],
+            optional_keys=[],
         )
 
     def _clear_audit_log_after_confirm(self):
-        c = wato_confirm(_("Confirm deletion of audit log"),
-                         _("Do you really want to clear the audit log?"))
+        c = wato_confirm(
+            _("Confirm deletion of audit log"), _("Do you really want to clear the audit log?"))
         if c:
             self._clear_audit_log()
             return None, _("Cleared audit log.")

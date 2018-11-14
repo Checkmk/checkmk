@@ -94,12 +94,13 @@ def interactive_progress(items,
     html.close_td()
 
     html.open_td(class_="buttons")
-    html.jsbutton('progress_pause',    _('Pause'),   'javascript:progress_pause()')
-    html.jsbutton('progress_proceed',  _('Proceed'), 'javascript:progress_proceed()',  'display:none')
-    html.jsbutton('progress_finished', _('Finish'),  'javascript:progress_end()', 'display:none')
-    html.jsbutton('progress_retry',    _('Retry Failed Hosts'), 'javascript:progress_retry()', 'display:none')
-    html.jsbutton('progress_restart',  _('Restart'), 'javascript:location.reload()')
-    html.jsbutton('progress_abort',    _('Abort'),   'javascript:progress_end()')
+    html.jsbutton('progress_pause', _('Pause'), 'javascript:progress_pause()')
+    html.jsbutton('progress_proceed', _('Proceed'), 'javascript:progress_proceed()', 'display:none')
+    html.jsbutton('progress_finished', _('Finish'), 'javascript:progress_end()', 'display:none')
+    html.jsbutton('progress_retry', _('Retry Failed Hosts'), 'javascript:progress_retry()',
+                  'display:none')
+    html.jsbutton('progress_restart', _('Restart'), 'javascript:location.reload()')
+    html.jsbutton('progress_abort', _('Abort'), 'javascript:progress_end()')
     html.close_td()
     html.close_tr()
 
@@ -113,6 +114,7 @@ def interactive_progress(items,
     finish_url = watolib.folder_preserving_link([("mode", "folder")] + finishvars)
     term_url = watolib.folder_preserving_link([("mode", "folder")] + termvars)
 
-    html.javascript(('progress_scheduler("%s", "%s", 50, %s, "%s", %s, %s, "%s", "' + _("FINISHED.") + '");') %
-                     (html.var('mode'), base_url, json.dumps(items), finish_url,
-                      json.dumps(success_stats), json.dumps(fail_stats), term_url))
+    html.javascript(
+        ('progress_scheduler("%s", "%s", 50, %s, "%s", %s, %s, "%s", "' + _("FINISHED.") + '");') %
+        (html.var('mode'), base_url, json.dumps(items), finish_url, json.dumps(success_stats),
+         json.dumps(fail_stats), term_url))

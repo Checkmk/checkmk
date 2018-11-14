@@ -85,17 +85,18 @@ class ModePatternEditor(WatoMode):
                 html.makeuri_contextless([("host", self._hostname), ("file", self._item)],
                                          filename="logwatch.py"), 'logwatch')
 
-        html.context_button(_('Edit Logfile Rules'), watolib.folder_preserving_link([
+        html.context_button(
+            _('Edit Logfile Rules'),
+            watolib.folder_preserving_link([
                 ('mode', 'edit_ruleset'),
-                ('varname', 'logwatch_rules')
-            ]),
-            'edit'
-        )
+                ('varname', 'logwatch_rules'),
+            ]), 'edit')
 
     def page(self):
-        html.help(_('On this page you can test the defined logfile patterns against a custom text, '
-                    'for example a line from a logfile. Using this dialog it is possible to analyze '
-                    'and debug your whole set of logfile patterns.'))
+        html.help(
+            _('On this page you can test the defined logfile patterns against a custom text, '
+              'for example a line from a logfile. Using this dialog it is possible to analyze '
+              'and debug your whole set of logfile patterns.'))
 
         self._show_try_form()
         self._show_patterns()
@@ -108,10 +109,10 @@ class ModePatternEditor(WatoMode):
         forms.section(_('Logfile'))
         html.text_input('file')
         forms.section(_('Text to match'))
-        html.help(_('You can insert some text (e.g. a line of the logfile) to test the patterns defined '
+        html.help(
+            _('You can insert some text (e.g. a line of the logfile) to test the patterns defined '
               'for this logfile. All patterns for this logfile are listed below. Matching patterns '
-              'will be highlighted after clicking the "Try out" button.')
-        )
+              'will be highlighted after clicking the "Try out" button.'))
         html.text_input('match', cssclass='match', size=100)
         forms.end()
         html.button('_try', _('Try out'))
@@ -189,14 +190,16 @@ class ModePatternEditor(WatoMode):
                             # First match
                             match_class = 'match first'
                             match_img = 'match'
-                            match_title = _('This logfile pattern matches first and will be used for '
-                                            'defining the state of the given line.')
+                            match_title = _(
+                                'This logfile pattern matches first and will be used for '
+                                'defining the state of the given line.')
                             already_matched = True
                         else:
                             # subsequent match
                             match_class = 'match'
                             match_img = 'imatch'
-                            match_title = _('This logfile pattern matches but another matched first.')
+                            match_title = _(
+                                'This logfile pattern matches but another matched first.')
                     else:
                         match_img = 'nmatch'
                         match_title = _('This logfile pattern does not match the given string.')

@@ -73,15 +73,20 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
 
         # TODO: Remove once new changes mechanism has been implemented
         if self._may_discard_changes():
-            html.context_button(_("Discard Changes!"),
+            html.context_button(
+                _("Discard Changes!"),
                 html.makeactionuri([("_action", "discard")]),
-                "discard", id_="discard_changes_button")
+                "discard",
+                id_="discard_changes_button")
 
         if config.user.may("wato.sites"):
-            html.context_button(_("Site Configuration"), watolib.folder_preserving_link([("mode", "sites")]), "sites")
+            html.context_button(
+                _("Site Configuration"), watolib.folder_preserving_link([("mode", "sites")]),
+                "sites")
 
         if config.user.may("wato.auditlog"):
-            html.context_button(_("Audit Log"), watolib.folder_preserving_link([("mode", "auditlog")]), "auditlog")
+            html.context_button(
+                _("Audit Log"), watolib.folder_preserving_link([("mode", "auditlog")]), "auditlog")
 
     def _may_discard_changes(self):
         if not config.user.may("wato.activate"):
@@ -236,10 +241,12 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
                       "a permitted user to do it for you."))
 
         forms.end()
-        html.jsbutton("activate_affected", _("Activate affected"),
-                      "activate_changes(\"affected\")", cssclass="hot")
-        html.jsbutton("activate_selected", _("Activate selected"),
-                      "activate_changes(\"selected\")")
+        html.jsbutton(
+            "activate_affected",
+            _("Activate affected"),
+            "activate_changes(\"affected\")",
+            cssclass="hot")
+        html.jsbutton("activate_selected", _("Activate selected"), "activate_changes(\"selected\")")
 
         html.hidden_fields()
         html.end_form()
@@ -247,29 +254,31 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
     def _vs_activation(self):
         if self.has_foreign_changes() and config.user.may("wato.activateforeign"):
             foreign_changes_elements = [
-                ("foreign", Checkbox(
-                    title = _("Activate foreign changes"),
-                    label = _("Activate changes of other users"),
-                )),
+                ("foreign",
+                 Checkbox(
+                     title=_("Activate foreign changes"),
+                     label=_("Activate changes of other users"),
+                 )),
             ]
         else:
             foreign_changes_elements = []
 
         return Dictionary(
-            title = self.title(),
-            elements = [
-                ("comment", TextAreaUnicode(
-                    title = _("Comment (optional)"),
-                    cols = 40,
-                    try_max_width = True,
-                    rows = 3,
-                    help = _("You can provide an optional comment for the current activation. "
-                             "This can be useful to document the reason why the changes you "
-                             "activate have been made."),
-                )),
+            title=self.title(),
+            elements=[
+                ("comment",
+                 TextAreaUnicode(
+                     title=_("Comment (optional)"),
+                     cols=40,
+                     try_max_width=True,
+                     rows=3,
+                     help=_("You can provide an optional comment for the current activation. "
+                            "This can be useful to document the reason why the changes you "
+                            "activate have been made."),
+                 )),
             ] + foreign_changes_elements,
-            optional_keys = [],
-            render = "form_part",
+            optional_keys=[],
+            render="form_part",
         )
 
     def _change_table(self):
@@ -361,7 +370,8 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
 
             # State
             if can_activate_all and need_sync:
-                html.icon_button(url="javascript:void(0)",
+                html.icon_button(
+                    url="javascript:void(0)",
                     id_="activate_%s" % site_id,
                     cssclass=["activate_site"],
                     title=_("This site is not update and needs a replication. Start it now."),
@@ -369,7 +379,8 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
                     onclick="activate_changes(\"site\", \"%s\")" % site_id)
 
             if can_activate_all and need_restart:
-                html.icon_button(url="javascript:void(0)",
+                html.icon_button(
+                    url="javascript:void(0)",
                     id_="activate_%s" % site_id,
                     cssclass=["activate_site"],
                     title=_("This site needs a restart for activating the changes. Start it now."),
@@ -381,7 +392,11 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
 
             site_url = site.get("multisiteurl")
             if site_url:
-                html.icon_button(site_url, _("Open this site's local web user interface"), "url", target="_blank")
+                html.icon_button(
+                    site_url,
+                    _("Open this site's local web user interface"),
+                    "url",
+                    target="_blank")
 
             table.text_cell(_("Site"), site.get("alias", site_id))
 
@@ -392,7 +407,8 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
             # Livestatus-/Check_MK-Version
             table.cell(_("Version"), site_status.get("livestatus_version", ""), css="narrow nobr")
 
-            table.cell(_("Changes"), "%d" % len(self._changes_of_site(site_id)), css="number narrow nobr")
+            table.cell(
+                _("Changes"), "%d" % len(self._changes_of_site(site_id)), css="number narrow nobr")
 
             table.cell(_("Progress"), css="repprogress")
             html.open_div(id_="site_%s_status" % site_id, class_=["msg"])
@@ -486,7 +502,8 @@ def do_activate_changes_automation():
     try:
         domains = ast.literal_eval(html.var("domains"))
     except SyntaxError:
-        raise watolib.MKAutomationException(_("Garbled automation response: '%s'") % html.var("domains"))
+        raise watolib.MKAutomationException(
+            _("Garbled automation response: '%s'") % html.var("domains"))
 
     return watolib.execute_activate_changes(domains)
 

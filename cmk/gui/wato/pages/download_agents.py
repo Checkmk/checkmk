@@ -59,7 +59,9 @@ class ModeDownloadAgents(WatoMode):
     def buttons(self):
         global_buttons()
         if watolib.has_agent_bakery():
-            html.context_button(_("Baked agents"), watolib.folder_preserving_link([("mode", "agents")]), "download_agents")
+            html.context_button(
+                _("Baked agents"), watolib.folder_preserving_link([("mode", "agents")]),
+                "download_agents")
         html.context_button(_("Release Notes"), "version.py", "mk")
 
     def page(self):
@@ -71,17 +73,17 @@ class ModeDownloadAgents(WatoMode):
         self._download_table(_("Packaged Agents"), {}, packed)
 
         titles = {
-            ''                         : _('Linux/Unix Agents'),
-            '/plugins'                 : _('Linux/Unix Agents - Plugins'),
-            '/cfg_examples'            : _('Linux/Unix Agents - Example Configurations'),
-            '/cfg_examples/systemd'    : _('Linux Agent - Example configuration using with systemd'),
-            '/windows'                 : _('Windows Agent'),
-            '/windows/plugins'         : _('Windows Agent - Plugins'),
-            '/windows/mrpe'            : _('Windows Agent - MRPE Scripts'),
-            '/windows/cfg_examples'    : _('Windows Agent - Example Configurations'),
-            '/windows/ohm'             : _('Windows Agent - OpenHardwareMonitor (headless)'),
-            '/z_os'                    : _('z/OS'),
-            '/sap'                     : _('SAP R/3'),
+            '': _('Linux/Unix Agents'),
+            '/plugins': _('Linux/Unix Agents - Plugins'),
+            '/cfg_examples': _('Linux/Unix Agents - Example Configurations'),
+            '/cfg_examples/systemd': _('Linux Agent - Example configuration using with systemd'),
+            '/windows': _('Windows Agent'),
+            '/windows/plugins': _('Windows Agent - Plugins'),
+            '/windows/mrpe': _('Windows Agent - MRPE Scripts'),
+            '/windows/cfg_examples': _('Windows Agent - Example Configurations'),
+            '/windows/ohm': _('Windows Agent - OpenHardwareMonitor (headless)'),
+            '/z_os': _('z/OS'),
+            '/sap': _('SAP R/3'),
         }
 
         banned_paths = [

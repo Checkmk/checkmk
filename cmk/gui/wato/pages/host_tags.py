@@ -80,8 +80,10 @@ class ModeHostTags(WatoMode, watolib.HosttagsConfiguration):
 
     def buttons(self):
         global_buttons()
-        html.context_button(_("New Tag group"), watolib.folder_preserving_link([("mode", "edit_hosttag")]), "new")
-        html.context_button(_("New Aux tag"), watolib.folder_preserving_link([("mode", "edit_auxtag")]), "new")
+        html.context_button(
+            _("New Tag group"), watolib.folder_preserving_link([("mode", "edit_hosttag")]), "new")
+        html.context_button(
+            _("New Aux tag"), watolib.folder_preserving_link([("mode", "edit_auxtag")]), "new")
 
     def action(self):
         # Deletion of tag groups
@@ -96,10 +98,11 @@ class ModeHostTags(WatoMode, watolib.HosttagsConfiguration):
 
             message = rename_host_tags_after_confirmation(del_id, operations)
             if message == True:  # no confirmation yet
-                c = wato_confirm(_("Confirm deletion of the host "
-                                   "tag group '%s'") % del_id,
-                                _("Do you really want to delete the "
-                                  "host tag group '%s'?") % del_id)
+                c = wato_confirm(
+                    _("Confirm deletion of the host "
+                      "tag group '%s'") % del_id,
+                    _("Do you really want to delete the "
+                      "host tag group '%s'?") % del_id)
                 if c == False:
                     return ""
                 elif c == None:
@@ -125,16 +128,19 @@ class ModeHostTags(WatoMode, watolib.HosttagsConfiguration):
                 for e in choices:
                     if len(e) > 2:
                         if del_id in e[2]:
-                            raise MKUserError(None, _("You cannot delete this auxiliary tag. "
-                               "It is being used in the tag group <b>%s</b>.") % entry[1])
+                            raise MKUserError(
+                                None,
+                                _("You cannot delete this auxiliary tag. "
+                                  "It is being used in the tag group <b>%s</b>.") % entry[1])
 
             operations = {del_id: False}
             message = rename_host_tags_after_confirmation(None, operations)
             if message == True:  # no confirmation yet
-                c = wato_confirm(_("Confirm deletion of the auxiliary "
-                                   "tag '%s'") % del_id,
-                                _("Do you really want to delete the "
-                                  "auxiliary tag '%s'?") % del_id)
+                c = wato_confirm(
+                    _("Confirm deletion of the auxiliary "
+                      "tag '%s'") % del_id,
+                    _("Do you really want to delete the "
+                      "auxiliary tag '%s'?") % del_id)
                 if c == False:
                     return ""
                 elif c == None:
@@ -175,26 +181,33 @@ class ModeHostTags(WatoMode, watolib.HosttagsConfiguration):
     def page(self):
         if not self._hosttags + self._auxtags:
             MainMenu([
-                MenuItem("edit_hosttag", _("Create new tag group"), "new", "hosttags",
-                    _("Each host tag group will create one dropdown choice in the host configuration.")),
-                MenuItem("edit_auxtag", _("Create new auxiliary tag"), "new", "hosttags",
-                    _("You can have these tags automatically added if certain primary tags are set.")),
-                ]).show()
+                MenuItem(
+                    "edit_hosttag", _("Create new tag group"), "new", "hosttags",
+                    _("Each host tag group will create one dropdown choice in the host configuration."
+                     )),
+                MenuItem(
+                    "edit_auxtag", _("Create new auxiliary tag"), "new", "hosttags",
+                    _("You can have these tags automatically added if certain primary tags are set."
+                     )),
+            ]).show()
 
         else:
             self._render_host_tag_list()
             self._render_aux_tag_list()
 
     def _render_host_tag_list(self):
-        table.begin("hosttags", _("Host tag groups"),
-                    help = (_("Host tags are the basis of Check_MK's rule based configuration. "
-                             "If the first step you define arbitrary tag groups. A host "
-                             "has assigned exactly one tag out of each group. These tags can "
-                             "later be used for defining parameters for hosts and services, "
-                             "such as <i>disable notifications for all hosts with the tags "
-                             "<b>Network device</b> and <b>Test</b></i>.")),
-                    empty_text = _("You haven't defined any tag groups yet."),
-                    searchable = False, sortable = False)
+        table.begin(
+            "hosttags",
+            _("Host tag groups"),
+            help=(_("Host tags are the basis of Check_MK's rule based configuration. "
+                    "If the first step you define arbitrary tag groups. A host "
+                    "has assigned exactly one tag out of each group. These tags can "
+                    "later be used for defining parameters for hosts and services, "
+                    "such as <i>disable notifications for all hosts with the tags "
+                    "<b>Network device</b> and <b>Test</b></i>.")),
+            empty_text=_("You haven't defined any tag groups yet."),
+            searchable=False,
+            sortable=False)
 
         effective_tag_groups = self._get_effective_tag_groups()
 
@@ -216,17 +229,19 @@ class ModeHostTags(WatoMode, watolib.HosttagsConfiguration):
                 if nr == 0:
                     html.empty_icon_button()
                 else:
-                    html.icon_button(make_action_link([("mode", "hosttags"), ("_move", str(-nr))]),
-                                _("Move this tag group one position up"), "up")
+                    html.icon_button(
+                        make_action_link([("mode", "hosttags"), ("_move", str(-nr))]),
+                        _("Move this tag group one position up"), "up")
 
                 if nr == len(effective_tag_groups) - 1 \
                    or watolib.is_builtin_host_tag_group(effective_tag_groups[nr+1][0]):
                     html.empty_icon_button()
                 else:
-                    html.icon_button(make_action_link([("mode", "hosttags"), ("_move", str(nr))]),
-                                _("Move this tag group one position down"), "down")
+                    html.icon_button(
+                        make_action_link([("mode", "hosttags"), ("_move", str(nr))]),
+                        _("Move this tag group one position down"), "down")
 
-                html.icon_button(edit_url,   _("Edit this tag group"), "edit")
+                html.icon_button(edit_url, _("Edit this tag group"), "edit")
                 html.icon_button(delete_url, _("Delete this tag group"), "delete")
 
             table.text_cell(_("ID"), tag_id)
@@ -241,13 +256,15 @@ class ModeHostTags(WatoMode, watolib.HosttagsConfiguration):
         table.end()
 
     def _render_aux_tag_list(self):
-        table.begin("auxtags", _("Auxiliary tags"),
-                    help = _("Auxiliary tags can be attached to other tags. That way "
-                             "you can for example have all hosts with the tag <tt>cmk-agent</tt> "
-                             "get also the tag <tt>tcp</tt>. This makes the configuration of "
-                             "your hosts easier."),
-                    empty_text = _("You haven't defined any auxiliary tags."),
-                    searchable = False)
+        table.begin(
+            "auxtags",
+            _("Auxiliary tags"),
+            help=_("Auxiliary tags can be attached to other tags. That way "
+                   "you can for example have all hosts with the tag <tt>cmk-agent</tt> "
+                   "get also the tag <tt>tcp</tt>. This makes the configuration of "
+                   "your hosts easier."),
+            empty_text=_("You haven't defined any auxiliary tags."),
+            searchable=False)
 
         aux_tags = config.BuiltinTags().get_effective_aux_tags(self._auxtags)
         effective_tag_groups = self._get_effective_tag_groups()
@@ -271,8 +288,9 @@ class ModeHostTags(WatoMode, watolib.HosttagsConfiguration):
 
             table.text_cell(_("Title"), _u(title))
             table.text_cell(_("Topic"), _u(topic) or '')
-            table.text_cell(_("Tags using this auxiliary tag"),
-                            ", ".join(self._get_tags_using_aux_tag(effective_tag_groups, tag_id)))
+            table.text_cell(
+                _("Tags using this auxiliary tag"), ", ".join(
+                    self._get_tags_using_aux_tag(effective_tag_groups, tag_id)))
         table.end()
 
     def _get_effective_tag_groups(self):
@@ -295,13 +313,12 @@ class ModeEditHosttagConfiguration(WatoMode):
 
     def _get_topic_valuespec(self):
         return OptionalDropdownChoice(
-            title = _("Topic"),
-            choices = self._untainted_hosttags_config.get_hosttag_topics(),
-            explicit = TextUnicode(),
-            otherlabel = _("Create New Topic"),
-            default_value = None,
-            sorted = True
-        )
+            title=_("Topic"),
+            choices=self._untainted_hosttags_config.get_hosttag_topics(),
+            explicit=TextUnicode(),
+            otherlabel=_("Create New Topic"),
+            default_value=None,
+            sorted=True)
 
 
 @mode_registry.register
@@ -323,7 +340,8 @@ class ModeEditAuxtag(ModeEditHosttagConfiguration):
         return html.var("edit") == None
 
     def buttons(self):
-        html.context_button(_("All Hosttags"), watolib.folder_preserving_link([("mode", "hosttags")]), "back")
+        html.context_button(
+            _("All Hosttags"), watolib.folder_preserving_link([("mode", "hosttags")]), "back")
 
     def action(self):
         if not html.transaction_valid():
@@ -349,8 +367,10 @@ class ModeEditAuxtag(ModeEditHosttagConfiguration):
         # Make sure that this ID is not used elsewhere
         for tag_group in self._untainted_hosttags_config.tag_groups:
             if changed_aux_tag.id in tag_group.get_tag_ids():
-                raise MKUserError("tag_id",
-                _("This tag id is already being used in the host tag group %s") % tag_group.title)
+                raise MKUserError(
+                    "tag_id",
+                    _("This tag id is already being used in the host tag group %s") %
+                    tag_group.title)
 
         changed_hosttags_config = watolib.HosttagsConfiguration()
         changed_hosttags_config.load()
@@ -386,9 +406,10 @@ class ModeEditAuxtag(ModeEditHosttagConfiguration):
             html.set_focus("tag_id")
         else:
             html.write_text(self._get_tag_id())
-        html.help(_("The internal name of the tag. The special tags "
-                    "<tt>snmp</tt>, <tt>tcp</tt> and <tt>ping</tt> can "
-                    "be used here in order to specify the agent type."))
+        html.help(
+            _("The internal name of the tag. The special tags "
+              "<tt>snmp</tt>, <tt>tcp</tt> and <tt>ping</tt> can "
+              "be used here in order to specify the agent type."))
 
         # Title
         forms.section(_("Title") + "<sup>*</sup>")
@@ -397,8 +418,9 @@ class ModeEditAuxtag(ModeEditHosttagConfiguration):
 
         # The (optional) topic
         forms.section(_("Topic") + "<sup>*</sup>")
-        html.help(_("Different taggroups can be grouped in topics to make the visualization and "
-                    "selections in the GUI more comfortable."))
+        html.help(
+            _("Different taggroups can be grouped in topics to make the visualization and "
+              "selections in the GUI more comfortable."))
         forms.textinput(self._get_topic_valuespec(), "topic", changed_aux_tag.topic)
 
         # Button and end
@@ -435,7 +457,8 @@ class ModeEditHosttagGroup(ModeEditHosttagConfiguration):
         return html.var("edit") == None
 
     def buttons(self):
-        html.context_button(_("All Hosttags"), watolib.folder_preserving_link([("mode", "hosttags")]), "back")
+        html.context_button(
+            _("All Hosttags"), watolib.folder_preserving_link([("mode", "hosttags")]), "back")
 
     def action(self):
         if not html.transaction_valid():
@@ -505,19 +528,23 @@ class ModeEditHosttagGroup(ModeEditHosttagConfiguration):
                 changed_hosttags_config.save()
                 config.load_config()
                 watolib.update_config_based_host_attributes()
-                add_change("edit-hosttags", _("Edited host tag group %s (%s)") % (message, self._get_taggroup_id()))
+                add_change("edit-hosttags",
+                           _("Edited host tag group %s (%s)") % (message, self._get_taggroup_id()))
                 return "hosttags", message != True and message or None
 
         return "hosttags"
 
     def page(self):
         html.begin_form("hosttaggroup", method='POST')
-        forms.header(_("Edit group") + (self._untainted_tag_group.title and " %s" % self._untainted_tag_group.title or ""))
+        forms.header(
+            _("Edit group") +
+            (self._untainted_tag_group.title and " %s" % self._untainted_tag_group.title or ""))
 
         # Tag ID
         forms.section(_("Internal ID"))
-        html.help(_("The internal ID of the tag group is used to store the tag's "
-                    "value in the host properties. It cannot be changed later."))
+        html.help(
+            _("The internal ID of the tag group is used to store the tag's "
+              "value in the host properties. It cannot be changed later."))
         if self._is_new_hosttag_group():
             html.text_input("tag_id")
             html.set_focus("tag_id")
@@ -531,23 +558,25 @@ class ModeEditHosttagGroup(ModeEditHosttagConfiguration):
 
         # The (optional) topic
         forms.section(_("Topic") + "<sup>*</sup>")
-        html.help(_("Different taggroups can be grouped in topics to make the visualization and "
-                    "selections in the GUI more comfortable."))
+        html.help(
+            _("Different taggroups can be grouped in topics to make the visualization and "
+              "selections in the GUI more comfortable."))
         forms.textinput(self._get_topic_valuespec(), "topic", self._untainted_tag_group.topic)
 
         # Choices
         forms.section(_("Choices"))
-        html.help(_("The first choice of a tag group will be its default value. "
-                     "If a tag group has only one choice, it will be displayed "
-                     "as a checkbox and set or not set the only tag. If it has "
-                     "more choices you may leave at most one tag id empty. A host "
-                     "with that choice will not get any tag of this group.<br><br>"
-                     "The tag ID must contain only of letters, digits and "
-                     "underscores.<br><br><b>Renaming tags ID:</b> if you want "
-                     "to rename the ID of a tag, then please make sure that you do not "
-                     "change its title at the same time! Otherwise WATO will not "
-                     "be able to detect the renaming and cannot exchange the tags "
-                     "in all folders, hosts and rules accordingly."))
+        html.help(
+            _("The first choice of a tag group will be its default value. "
+              "If a tag group has only one choice, it will be displayed "
+              "as a checkbox and set or not set the only tag. If it has "
+              "more choices you may leave at most one tag id empty. A host "
+              "with that choice will not get any tag of this group.<br><br>"
+              "The tag ID must contain only of letters, digits and "
+              "underscores.<br><br><b>Renaming tags ID:</b> if you want "
+              "to rename the ID of a tag, then please make sure that you do not "
+              "change its title at the same time! Otherwise WATO will not "
+              "be able to detect the renaming and cannot exchange the tags "
+              "in all folders, hosts and rules accordingly."))
         forms.textinput(self._get_taggroups_valuespec(), "choices",
                         self._untainted_tag_group.get_tags_legacy_format())
 
@@ -568,34 +597,28 @@ class ModeEditHosttagGroup(ModeEditHosttagConfiguration):
 
         return ListOf(
             Tuple(
-                elements = [
+                elements=[
                     TextAscii(
-                        title = _("Tag ID"),
-                        size = 16,
+                        title=_("Tag ID"),
+                        size=16,
                         regex="^[-a-z0-9A-Z_]*$",
-                        none_is_empty = True,
-                        regex_error = _("Invalid tag ID. Only the characters a-z, A-Z, "
+                        none_is_empty=True,
+                        regex_error=_("Invalid tag ID. Only the characters a-z, A-Z, "
                                       "0-9, _ and - are allowed.")),
-                    TextUnicode(
-                        title = _("Description") + "*",
-                        allow_empty = False,
-                        size = 40),
-
+                    TextUnicode(title=_("Description") + "*", allow_empty=False, size=40),
                     Foldable(
                         ListChoice(
-                            title = _("Auxiliary tags"),
+                            title=_("Auxiliary tags"),
                             # help = _("These tags will implicitely added to a host if the "
                             #          "user selects this entry in the tag group. Select multiple "
                             #          "entries with the <b>Ctrl</b> key."),
-                            choices = aux_tags)),
-
+                            choices=aux_tags)),
                 ],
-                show_titles = True,
-                orientation = "horizontal"),
-
-            add_label = _("Add tag choice"),
-            row_label = "@. Choice",
-            sort_by = 1, # sort by description
+                show_titles=True,
+                orientation="horizontal"),
+            add_label=_("Add tag choice"),
+            row_label="@. Choice",
+            sort_by=1,  # sort by description
         )
 
 
@@ -669,10 +692,11 @@ def rename_host_tags_after_confirmation(tag_id, operations):
         html.h3(_("Your modifications affect some objects"))
         html.write_text(message)
         html.br()
-        html.write_text(_("WATO can repair things for you. It can rename tags in folders, host and rules. "
-                          "Removed tag groups will be removed from hosts and folders, removed tags will be "
-                          "replaced with the default value for the tag group (for hosts and folders). What "
-                          "rules concern, you have to decide how to proceed."))
+        html.write_text(
+            _("WATO can repair things for you. It can rename tags in folders, host and rules. "
+              "Removed tag groups will be removed from hosts and folders, removed tags will be "
+              "replaced with the default value for the tag group (for hosts and folders). What "
+              "rules concern, you have to decide how to proceed."))
         html.begin_form("confirm")
 
         # Check if operations contains removal
@@ -687,12 +711,17 @@ def rename_host_tags_after_confirmation(tag_id, operations):
 
         if affected_rulesets and have_removal:
             html.br()
-            html.b(_("Some tags that are used in rules have been removed by you. What "
-                     "shall we do with that rules?"))
+            html.b(
+                _("Some tags that are used in rules have been removed by you. What "
+                  "shall we do with that rules?"))
             html.open_ul()
-            html.radiobutton("_repair", "remove", True, _("Just remove the affected tags from the rules."))
+            html.radiobutton("_repair", "remove", True,
+                             _("Just remove the affected tags from the rules."))
             html.br()
-            html.radiobutton("_repair", "delete", False, _("Delete rules containing tags that have been removed, if tag is used in a positive sense. Just remove that tag if it's used negated."))
+            html.radiobutton(
+                "_repair", "delete", False,
+                _("Delete rules containing tags that have been removed, if tag is used in a positive sense. Just remove that tag if it's used negated."
+                 ))
         else:
             html.open_ul()
             html.radiobutton("_repair", "repair", True, _("Fix affected folders, hosts and rules."))

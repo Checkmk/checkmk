@@ -27,7 +27,6 @@
 parameters. This is a host/service overview page over all things that can be
 modified via rules."""
 
-
 import cmk
 
 import cmk.gui.config as config
@@ -82,16 +81,25 @@ class ModeObjectParameters(WatoMode):
             prefix = _("Host-")
         else:
             prefix = u""
-        html.context_button(_("Folder"), watolib.folder_preserving_link([("mode", "folder")]), "back")
+        html.context_button(
+            _("Folder"), watolib.folder_preserving_link([("mode", "folder")]), "back")
         if self._service:
             service_status_button(self._hostname, self._service)
         else:
             host_status_button(self._hostname, "hoststatus")
-        html.context_button(prefix + _("Properties"), watolib.folder_preserving_link([("mode", "edit_host"), ("host", self._hostname)]), "edit")
-        html.context_button(_("Services"), watolib.folder_preserving_link([("mode", "inventory"), ("host", self._hostname)]), "services")
+        html.context_button(
+            prefix + _("Properties"),
+            watolib.folder_preserving_link([("mode", "edit_host"), ("host", self._hostname)]),
+            "edit")
+        html.context_button(
+            _("Services"),
+            watolib.folder_preserving_link([("mode", "inventory"), ("host", self._hostname)]),
+            "services")
         if not self._host.is_cluster():
-            html.context_button(prefix + _("Diagnostic"),
-              watolib.folder_preserving_link([("mode", "diag_host"), ("host", self._hostname)]), "diagnose")
+            html.context_button(
+                prefix + _("Diagnostic"),
+                watolib.folder_preserving_link([("mode", "diag_host"), ("host", self._hostname)]),
+                "diagnose")
 
     def page(self):
         all_rulesets = watolib.AllRulesets()
@@ -131,13 +139,13 @@ class ModeObjectParameters(WatoMode):
         if not serviceinfo:
             return
 
-        forms.header(_("Check origin and parameters"), isopen = True, narrow=True, css="rulesettings")
+        forms.header(_("Check origin and parameters"), isopen=True, narrow=True, css="rulesettings")
         origin = serviceinfo["origin"]
         origin_txt = {
-            "active"  : _("Active check"),
-            "static"  : _("Manual check"),
-            "auto"    : _("Inventorized check"),
-            "classic" : _("Classical check"),
+            "active": _("Active check"),
+            "static": _("Manual check"),
+            "auto": _("Inventorized check"),
+            "classic": _("Classical check"),
         }[origin]
         self._render_rule_reason(_("Type of check"), None, "", "", False, origin_txt)
 
@@ -146,7 +154,9 @@ class ModeObjectParameters(WatoMode):
             checkgroup = serviceinfo["checkgroup"]
             checktype = serviceinfo["checktype"]
             if not checkgroup:
-                self._render_rule_reason(_("Parameters"), None, "", "", True, _("This check is not configurable via WATO"))
+                self._render_rule_reason(
+                    _("Parameters"), None, "", "", True,
+                    _("This check is not configurable via WATO"))
 
             # Logwatch needs a special handling, since it is not configured
             # via checkgroup_parameters but via "logwatch_rules" in a special
@@ -175,10 +185,14 @@ class ModeObjectParameters(WatoMode):
                                                               ('varname',
                                                                "static_checks:" + checkgroup),
                                                               ('host', self._hostname)])
-                        self._render_rule_reason(_("Parameters"), url, _("Determined by discovery"), None, False,
-                                   rulespec.valuespec._elements[2].value_to_text(serviceinfo["parameters"]))
+                        self._render_rule_reason(
+                            _("Parameters"), url, _("Determined by discovery"), None, False,
+                            rulespec.valuespec._elements[2].value_to_text(
+                                serviceinfo["parameters"]))
                     else:
-                        self._render_rule_reason(_("Parameters"), None, "", "", True, _("This check is not configurable via WATO"))
+                        self._render_rule_reason(
+                            _("Parameters"), None, "", "", True,
+                            _("This check is not configurable via WATO"))
 
                 else:
                     rulespec = watolib.g_rulespecs.get(grouprule)
@@ -230,7 +244,8 @@ class ModeObjectParameters(WatoMode):
             html.open_tr()
 
             html.open_td(class_="reason")
-            html.a("%s %d %s %s" % (_("Rule"), rule_index + 1, _("in"), rule_folder.title()), href=url)
+            html.a(
+                "%s %d %s %s" % (_("Rule"), rule_index + 1, _("in"), rule_folder.title()), href=url)
             html.close_td()
             html.open_td(class_=["settingvalue", "used"])
             if "command_line" in serviceinfo:
@@ -310,13 +325,12 @@ class ModeObjectParameters(WatoMode):
         # Show the resulting value or factory setting
         html.open_td(class_=["settingvalue", "used" if len(rules) > 0 else "unused"])
 
-
         if isinstance(known_settings, dict) and "tp_computed_params" in known_settings:
             computed_at = known_settings["tp_computed_params"]["computed_at"]
-            html.write_text(_("Timespecific parameters computed at %s") % cmk.render.date_and_time(computed_at))
+            html.write_text(
+                _("Timespecific parameters computed at %s") % cmk.render.date_and_time(computed_at))
             html.br()
             known_settings = known_settings["tp_computed_params"]["params"]
-
 
         # In some cases we now the settings from a check_mk automation
         if known_settings is self._PARAMETERS_OMIT:
@@ -375,8 +389,12 @@ class ModeObjectParameters(WatoMode):
 
             # Binary rule, no valuespec, outcome is True or False
             else:
-                html.img("images/rule_%s%s.png" % ("yes" if setting else "no", "_off" if not rules else ''),
-                         class_="icon", align="absmiddle", title=_("yes") if setting else _("no"))
+                html.img(
+                    "images/rule_%s%s.png" % ("yes" if setting else "no",
+                                              "_off" if not rules else ''),
+                    class_="icon",
+                    align="absmiddle",
+                    title=_("yes") if setting else _("no"))
         html.close_td()
         html.close_tr()
         html.close_table()

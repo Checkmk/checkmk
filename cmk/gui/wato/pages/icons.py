@@ -76,37 +76,39 @@ class ModeIcons(WatoMode):
 
     def _vs_upload(self):
         return Dictionary(
-            title = _('Icon'),
-            optional_keys = False,
-            render = "form",
-            elements = [
-                ('icon', ImageUpload(
-                    title = _('Icon'),
-                    allow_empty = False,
-                    max_size = (80, 80),
-                    validate = self._validate_icon,
-                )),
-                ('category', DropdownChoice(
-                    title = _('Category'),
-                    choices = config.wato_icon_categories,
-                    no_preselect = True,
-                ))
-            ]
-        )
+            title=_('Icon'),
+            optional_keys=False,
+            render="form",
+            elements=[('icon',
+                       ImageUpload(
+                           title=_('Icon'),
+                           allow_empty=False,
+                           max_size=(80, 80),
+                           validate=self._validate_icon,
+                       )),
+                      ('category',
+                       DropdownChoice(
+                           title=_('Category'),
+                           choices=config.wato_icon_categories,
+                           no_preselect=True,
+                       ))])
 
     def _validate_icon(self, value, varprefix):
         file_name = value[0]
         if os.path.exists("%s/share/check_mk/web/htdocs/images/icon_%s" % (cmk.paths.omd_root, file_name)) \
            or os.path.exists("%s/share/check_mk/web/htdocs/images/icons/%s" % (cmk.paths.omd_root, file_name)):
-            raise MKUserError(varprefix, _('Your icon conflicts with a Check_MK builtin icon. Please '
-                                           'choose another name for your icon.'))
+            raise MKUserError(
+                varprefix,
+                _('Your icon conflicts with a Check_MK builtin icon. Please '
+                  'choose another name for your icon.'))
 
     def action(self):
         if html.has_var("_delete"):
             icon_name = html.var("_delete")
             if icon_name in self._load_custom_icons():
-                c = wato_confirm(_("Confirm Icon deletion"),
-                                 _("Do you really want to delete the icon <b>%s</b>?") % icon_name)
+                c = wato_confirm(
+                    _("Confirm Icon deletion"),
+                    _("Do you really want to delete the icon <b>%s</b>?") % icon_name)
                 if c:
                     os.remove("%s/local/share/check_mk/web/htdocs/images/icons/%s.png" %
                               (cmk.paths.omd_root, icon_name))

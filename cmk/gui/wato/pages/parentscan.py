@@ -232,18 +232,19 @@ class ModeParentScan(WatoMode):
         interactive_progress(
             self._items,
             _("Parent scan"),  # title
-            [ (_("Total hosts"),               0),
-              (_("Gateways found"),            0),
-              (_("Directly reachable hosts"),  0),
-              (_("Unreachable gateways"),      0),
-              (_("No gateway found"),          0),
-              (_("New parents configured"),    0),
-              (_("Gateway hosts created"),     0),
-              (_("Errors"),                    0),
+            [
+                (_("Total hosts"), 0),
+                (_("Gateways found"), 0),
+                (_("Directly reachable hosts"), 0),
+                (_("Unreachable gateways"), 0),
+                (_("No gateway found"), 0),
+                (_("New parents configured"), 0),
+                (_("Gateway hosts created"), 0),
+                (_("Errors"), 0),
             ],
-            [ ("mode", "folder") ], # URL for "Stop/Finish" button
-            50, # ms to sleep between two steps
-            fail_stats = [ 1 ],
+            [("mode", "folder")],  # URL for "Stop/Finish" button
+            50,  # ms to sleep between two steps
+            fail_stats=[1],
         )
 
     def _show_parameter_form(self):
@@ -253,29 +254,32 @@ class ModeParentScan(WatoMode):
         # Mode of action
         html.open_p()
         if not self._complete_folder:
-            html.write_text(_("You have selected <b>%d</b> hosts for parent scan. ") % len(self._items))
-        html.p(_("The parent scan will try to detect the last gateway "
-                 "on layer 3 (IP) before a host. This will be done by "
-                 "calling <tt>traceroute</tt>. If a gateway is found by "
-                 "that way and its IP address belongs to one of your "
-                 "monitored hosts, that host will be used as the hosts "
-                 "parent. If no such host exists, an artifical ping-only "
-                 "gateway host will be created if you have not disabled "
-                 "this feature."))
+            html.write_text(
+                _("You have selected <b>%d</b> hosts for parent scan. ") % len(self._items))
+        html.p(
+            _("The parent scan will try to detect the last gateway "
+              "on layer 3 (IP) before a host. This will be done by "
+              "calling <tt>traceroute</tt>. If a gateway is found by "
+              "that way and its IP address belongs to one of your "
+              "monitored hosts, that host will be used as the hosts "
+              "parent. If no such host exists, an artifical ping-only "
+              "gateway host will be created if you have not disabled "
+              "this feature."))
 
         forms.header(_("Settings for Parent Scan"))
 
-        self._settings = config.user.load_file("parentscan", {
-            "where"          : "subfolder",
-            "alias"          : _("Created by parent scan"),
-            "recurse"        : True,
-            "select"         : "noexplicit",
-            "timeout"        : 8,
-            "probes"         : 2,
-            "ping_probes"    : 5,
-            "max_ttl"        : 10,
-            "force_explicit" : False,
-        })
+        self._settings = config.user.load_file(
+            "parentscan", {
+                "where": "subfolder",
+                "alias": _("Created by parent scan"),
+                "recurse": True,
+                "select": "noexplicit",
+                "timeout": 8,
+                "probes": 2,
+                "ping_probes": 5,
+                "max_ttl": 10,
+                "force_explicit": False,
+            })
 
         # Selection
         forms.section(_("Selection"))
@@ -283,11 +287,11 @@ class ModeParentScan(WatoMode):
             html.checkbox("recurse", self._settings["recurse"], label=_("Include all subfolders"))
             html.br()
         html.radiobutton("select", "noexplicit", self._settings["select"] == "noexplicit",
-                _("Skip hosts with explicit parent definitions (even if empty)") + "<br>")
-        html.radiobutton("select", "no",  self._settings["select"] == "no",
-                _("Skip hosts hosts with non-empty parents (also if inherited)") + "<br>")
-        html.radiobutton("select", "ignore",  self._settings["select"] == "ignore",
-                _("Scan all hosts") + "<br>")
+                         _("Skip hosts with explicit parent definitions (even if empty)") + "<br>")
+        html.radiobutton("select", "no", self._settings["select"] == "no",
+                         _("Skip hosts hosts with non-empty parents (also if inherited)") + "<br>")
+        html.radiobutton("select", "ignore", self._settings["select"] == "ignore",
+                         _("Scan all hosts") + "<br>")
 
         # Performance
         forms.section(_("Performance"))
@@ -323,10 +327,11 @@ class ModeParentScan(WatoMode):
         html.open_tr()
         html.open_td()
         html.write_text(_("Number of PING probes") + ":")
-        html.help(_("After a gateway has been found, Check_MK checks if it is reachable "
-                    "via PING. If not, it is skipped and the next gateway nearer to the "
-                    "monitoring core is being tried. You can disable this check by setting "
-                    "the number of PING probes to 0."))
+        html.help(
+            _("After a gateway has been found, Check_MK checks if it is reachable "
+              "via PING. If not, it is skipped and the next gateway nearer to the "
+              "monitoring core is being tried. You can disable this check by setting "
+              "the number of PING probes to 0."))
         html.close_td()
         html.open_td()
         html.number_input("ping_probes", self._settings.get("ping_probes", 5), size=2)
@@ -336,26 +341,31 @@ class ModeParentScan(WatoMode):
 
         # Configuring parent
         forms.section(_("Configuration"))
-        html.checkbox("force_explicit",
-            self._settings["force_explicit"], label=_("Force explicit setting for parents even if setting matches that of the folder"))
+        html.checkbox(
+            "force_explicit",
+            self._settings["force_explicit"],
+            label=_(
+                "Force explicit setting for parents even if setting matches that of the folder"))
 
         # Gateway creation
         forms.section(_("Creation of gateway hosts"))
         html.write_text(_("Create gateway hosts in"))
         html.open_ul()
 
-        html.radiobutton("where", "subfolder", self._settings["where"] == "subfolder",
-                _("in the subfolder <b>%s/Parents</b>") % watolib.Folder.current_disk_folder().title())
+        html.radiobutton(
+            "where", "subfolder", self._settings["where"] == "subfolder",
+            _("in the subfolder <b>%s/Parents</b>") % watolib.Folder.current_disk_folder().title())
 
         html.br()
-        html.radiobutton("where", "here", self._settings["where"] == "here",
-                _("directly in the folder <b>%s</b>") % watolib.Folder.current_disk_folder().title())
+        html.radiobutton(
+            "where", "here", self._settings["where"] == "here",
+            _("directly in the folder <b>%s</b>") % watolib.Folder.current_disk_folder().title())
         html.br()
         html.radiobutton("where", "there", self._settings["where"] == "there",
-                _("in the same folder as the host"))
+                         _("in the same folder as the host"))
         html.br()
         html.radiobutton("where", "nowhere", self._settings["where"] == "nowhere",
-                _("do not create gateway hosts"))
+                         _("do not create gateway hosts"))
         html.close_ul()
         html.write_text(_("Alias for created gateway hosts") + ": ")
         html.text_input("alias", self._settings["alias"])

@@ -51,7 +51,6 @@ from cmk.gui.plugins.wato import (
     global_buttons,
 )
 
-
 #.
 #   .--Check Plugins-------------------------------------------------------.
 #   |     ____ _               _      ____  _             _                |
@@ -105,7 +104,7 @@ class ModeCheckPlugins(WatoMode):
 
     def title(self):
         if self._topic and not self._search:
-            heading = "%s - %s" % ( _("Catalog of Check Plugins"), self._topic_title )
+            heading = "%s - %s" % (_("Catalog of Check Plugins"), self._topic_title)
         elif self._search:
             heading = html.render_text("%s: %s" % (_("Check plugins matching"), self._search))
         else:
@@ -122,13 +121,14 @@ class ModeCheckPlugins(WatoMode):
             html.context_button(_("Back"), back_url, "back")
 
     def page(self):
-        html.help(_("This catalog of check plugins gives you a complete listing of all plugins "
-                    "that are shipped with your Check_MK installation. It also allows you to "
-                    "access the rule sets for configuring the parameters of the checks and to "
-                    "manually create services in case you cannot or do not want to rely on the "
-                    "automatic service discovery."))
+        html.help(
+            _("This catalog of check plugins gives you a complete listing of all plugins "
+              "that are shipped with your Check_MK installation. It also allows you to "
+              "access the rule sets for configuring the parameters of the checks and to "
+              "manually create services in case you cannot or do not want to rely on the "
+              "automatic service discovery."))
 
-        search_form( "%s: " % _("Search for check plugins"), "check_plugins" )
+        search_form("%s: " % _("Search for check plugins"), "check_plugins")
 
         # The maxium depth of the catalog paths is 3. The top level is being rendered
         # like the WATO main menu. The second and third level are being rendered like
@@ -298,33 +298,31 @@ class ModeCheckPlugins(WatoMode):
             table.row()
             url = html.makeuri([("mode", "check_manpage"), ("check_type", entry["name"]),
                                 ("back", html.makeuri([]))])
-            table.cell(_("Type of Check"), "<a href='%s'>%s</a>" % (url, entry["title"]), css="title")
+            table.cell(
+                _("Type of Check"), "<a href='%s'>%s</a>" % (url, entry["title"]), css="title")
             table.cell(_("Plugin Name"), "<tt>%s</tt>" % entry["name"], css="name")
-            table.cell(_("Agents"), ", ".join(map(translate, sorted(entry["agents"]))), css="agents")
+            table.cell(
+                _("Agents"), ", ".join(map(translate, sorted(entry["agents"]))), css="agents")
         table.end()
 
     def _man_page_catalog_topics(self):
         # topic, has_second_level, title, description
         return [
             ("hw", True, _("Appliances, other dedicated hardware"),
-                _("Switches, load balancers, storage, UPSes, "
-                  "environmental sensors, etc. ")),
-
+             _("Switches, load balancers, storage, UPSes, "
+               "environmental sensors, etc. ")),
             ("os", True, _("Operating systems"),
-                _("Plugins for operating systems, things "
-                  "like memory, CPU, filesystems, etc.")),
-
+             _("Plugins for operating systems, things "
+               "like memory, CPU, filesystems, etc.")),
             ("app", False, _("Applications"),
-                _("Monitoring of applications such as "
-                  "processes, services or databases")),
-
+             _("Monitoring of applications such as "
+               "processes, services or databases")),
             ("agentless", False, _("Networking checks without agent"),
-                _("Plugins that directly check networking "
-                  "protocols like HTTP or IMAP")),
-
-            ("generic", False,  _("Generic check plugins"),
-               _("Plugins for local agent extensions or "
-                 "communication with the agent in general")),
+             _("Plugins that directly check networking "
+               "protocols like HTTP or IMAP")),
+            ("generic", False, _("Generic check plugins"),
+             _("Plugins for local agent extensions or "
+               "communication with the agent in general")),
         ]
 
 
@@ -362,7 +360,9 @@ class ModeCheckManPage(WatoMode):
             back_url = html.get_url_input("back")
             html.context_button(_("Back"), back_url, "back")
 
-        html.context_button(_("All Check Plugins"), html.makeuri_contextless([("mode", "check_plugins")]), "check_plugins")
+        html.context_button(
+            _("All Check Plugins"), html.makeuri_contextless([("mode", "check_plugins")]),
+            "check_plugins")
 
         if self._check_type.startswith("check_"):
             command = "check_mk_active-" + self._check_type[6:]
@@ -409,7 +409,8 @@ class ModeCheckManPage(WatoMode):
                 html.open_tr()
                 html.th(_("Parameter rule set"))
                 html.open_td()
-                html.icon_button(url, _("Edit parameter rule set for this check type"), "check_parameters")
+                html.icon_button(url, _("Edit parameter rule set for this check type"),
+                                 "check_parameters")
                 html.write(param_ruleset)
                 html.close_td()
                 html.close_tr()

@@ -89,120 +89,126 @@ class NotificationsMode(EventsMode):
             return [val]
 
         return [
-           ( "match_escalation",
+            ("match_escalation",
              Tuple(
-                 title = _("Restrict to n<sup>th</sup> to m<sup>th</sup> notification"),
-                 orientation = "float",
-                 elements = [
+                 title=_("Restrict to n<sup>th</sup> to m<sup>th</sup> notification"),
+                 orientation="float",
+                 elements=[
                      Integer(
-                         label = _("from"),
-                         help = _("Let through notifications counting from this number. "
-                                  "For normal alerts The first notification has the number 1. "
-                                  "For custom notifications the number is 0."),
-                         default_value = 0,
-                         minvalue = 0,
-                         maxvalue = 999999,
+                         label=_("from"),
+                         help=_("Let through notifications counting from this number. "
+                                "For normal alerts The first notification has the number 1. "
+                                "For custom notifications the number is 0."),
+                         default_value=0,
+                         minvalue=0,
+                         maxvalue=999999,
                      ),
                      Integer(
-                         label = _("to"),
-                         help = _("Let through notifications counting upto this number"),
-                         default_value = 999999,
-                         minvalue = 1,
-                         maxvalue = 999999,
+                         label=_("to"),
+                         help=_("Let through notifications counting upto this number"),
+                         default_value=999999,
+                         minvalue=1,
+                         maxvalue=999999,
                      ),
-               ],
-             ),
-           ),
-           ( "match_escalation_throttle",
-             Tuple(
-                 title = _("Throttle periodic notifications"),
-                 help = _("This match option allows you to throttle periodic notifications after "
-                          "a certain number of notifications have been created by the monitoring "
-                          "core. If you for example select 10 as the beginning and 5 as the rate "
-                          "then you will receive the notification 1 through 10 and then 15, 20, "
-                          "25... and so on. Note that recovery notifications are not affected by throttling."),
-                 orientation = "float",
-                 elements = [
-                    Integer(
-                        label = _("beginning from notification number"),
-                        default_value = 10,
-                        minvalue = 1,
-                    ),
-                    Integer(
-                        label = _("send only every"),
-                        default_value = 5,
-                        unit = _("th notification"),
-                        minvalue = 1,
-                   )
                  ],
-             )
-           ),
-            ( "match_notification_comment",
-              RegExpUnicode(
-                 title = _("Match notification comment"),
-                 help = _("This match only makes sense for custom notifications. When a user creates "
-                          "a custom notification then he/she can enter a comment. This comment is shipped "
-                          "in the notification context variable <tt>NOTIFICATIONCOMMENT</tt>. Here you can "
-                          "make a condition of that comment. It is a regular expression matching the beginning "
-                          "of the comment."),
-                 size = 60,
-                 mode = RegExpUnicode.prefix,
-            )),
-            ( "match_ec",
-              Alternative(
-                  title = _("Event Console alerts"),
-                  help = _("The Event Console can have events create notifications in Check_MK. "
-                           "These notifications will be processed by the rule based notification "
-                           "system of Check_MK. This matching option helps you distinguishing "
-                           "and also gives you access to special event fields."),
-                  style = "dropdown",
-                  elements = [
-                       FixedValue(False, title = _("Do not match Event Console alerts"), totext=""),
-                       Dictionary(
-                           title = _("Match only Event Console alerts"),
-                           elements = [
-                               ( "match_rule_id",
-                                Transform(
-                                    ListOf(
-                                        ID(title = _("Match event rule"), label = _("Rule ID:"), size=12, allow_empty=False),
-                                        add_label = _("Add Rule ID"),
-                                        title = _("Rule IDs")
-                                    ),
-                                    forth = transform_ec_rule_id_match,
-                                )
-                               ),
-                               ( "match_priority",
-                                 Tuple(
-                                     title = _("Match syslog priority"),
-                                     help = _("Define a range of syslog priorities this rule matches"),
-                                     orientation = "horizontal",
-                                     show_titles = False,
-                                     elements = [
-                                        DropdownChoice(label = _("from:"), choices = cmk.gui.mkeventd.syslog_priorities, default_value = 4),
-                                        DropdownChoice(label = _(" to:"),   choices = cmk.gui.mkeventd.syslog_priorities, default_value = 0),
-                                     ],
-                                 ),
-                               ),
-                               ( "match_facility",
-                                 DropdownChoice(
-                                     title = _("Match syslog facility"),
-                                     help = _("Make the rule match only if the event has a certain syslog facility. "
-                                              "Messages not having a facility are classified as <tt>user</tt>."),
-                                     choices = cmk.gui.mkeventd.syslog_facilities,
-                                 )
-                               ),
-                               ( "match_comment",
-                                 RegExpUnicode(
-                                     title = _("Match event comment"),
-                                     help = _("This is a regular expression for matching the event's comment."),
-                                     mode = RegExpUnicode.prefix,
-                                 )
-                               ),
-                           ]
-                       )
-                  ]
-              )
-            )
+             )),
+            ("match_escalation_throttle",
+             Tuple(
+                 title=_("Throttle periodic notifications"),
+                 help=_(
+                     "This match option allows you to throttle periodic notifications after "
+                     "a certain number of notifications have been created by the monitoring "
+                     "core. If you for example select 10 as the beginning and 5 as the rate "
+                     "then you will receive the notification 1 through 10 and then 15, 20, "
+                     "25... and so on. Note that recovery notifications are not affected by throttling."
+                 ),
+                 orientation="float",
+                 elements=[
+                     Integer(
+                         label=_("beginning from notification number"),
+                         default_value=10,
+                         minvalue=1,
+                     ),
+                     Integer(
+                         label=_("send only every"),
+                         default_value=5,
+                         unit=_("th notification"),
+                         minvalue=1,
+                     )
+                 ],
+             )),
+            ("match_notification_comment",
+             RegExpUnicode(
+                 title=_("Match notification comment"),
+                 help=
+                 _("This match only makes sense for custom notifications. When a user creates "
+                   "a custom notification then he/she can enter a comment. This comment is shipped "
+                   "in the notification context variable <tt>NOTIFICATIONCOMMENT</tt>. Here you can "
+                   "make a condition of that comment. It is a regular expression matching the beginning "
+                   "of the comment."),
+                 size=60,
+                 mode=RegExpUnicode.prefix,
+             )),
+            ("match_ec",
+             Alternative(
+                 title=_("Event Console alerts"),
+                 help=_("The Event Console can have events create notifications in Check_MK. "
+                        "These notifications will be processed by the rule based notification "
+                        "system of Check_MK. This matching option helps you distinguishing "
+                        "and also gives you access to special event fields."),
+                 style="dropdown",
+                 elements=[
+                     FixedValue(False, title=_("Do not match Event Console alerts"), totext=""),
+                     Dictionary(
+                         title=_("Match only Event Console alerts"),
+                         elements=[
+                             ("match_rule_id",
+                              Transform(
+                                  ListOf(
+                                      ID(title=_("Match event rule"),
+                                         label=_("Rule ID:"),
+                                         size=12,
+                                         allow_empty=False),
+                                      add_label=_("Add Rule ID"),
+                                      title=_("Rule IDs")),
+                                  forth=transform_ec_rule_id_match,
+                              )),
+                             ("match_priority",
+                              Tuple(
+                                  title=_("Match syslog priority"),
+                                  help=_("Define a range of syslog priorities this rule matches"),
+                                  orientation="horizontal",
+                                  show_titles=False,
+                                  elements=[
+                                      DropdownChoice(
+                                          label=_("from:"),
+                                          choices=cmk.gui.mkeventd.syslog_priorities,
+                                          default_value=4),
+                                      DropdownChoice(
+                                          label=_(" to:"),
+                                          choices=cmk.gui.mkeventd.syslog_priorities,
+                                          default_value=0),
+                                  ],
+                              )),
+                             ("match_facility",
+                              DropdownChoice(
+                                  title=_("Match syslog facility"),
+                                  help=
+                                  _("Make the rule match only if the event has a certain syslog facility. "
+                                    "Messages not having a facility are classified as <tt>user</tt>."
+                                   ),
+                                  choices=cmk.gui.mkeventd.syslog_facilities,
+                              )),
+                             ("match_comment",
+                              RegExpUnicode(
+                                  title=_("Match event comment"),
+                                  help=
+                                  _("This is a regular expression for matching the event's comment."
+                                   ),
+                                  mode=RegExpUnicode.prefix,
+                              )),
+                         ])
+                 ]))
         ]
 
     def _render_notification_rules(self,
@@ -260,21 +266,33 @@ class NotificationsMode(EventsMode):
 
                 if show_buttons and actions_allowed:
                     anavar = html.var("analyse", "")
-                    delete_url = make_action_link([("mode", listmode), ("user", userid),
-                                                   ("_delete", nr)])
-                    drag_url = make_action_link([("mode", listmode), ("analyse", anavar),
-                                                 ("user", userid), ("_move", nr)])
+                    delete_url = make_action_link([
+                        ("mode", listmode),
+                        ("user", userid),
+                        ("_delete", nr),
+                    ])
+                    drag_url = make_action_link([
+                        ("mode", listmode),
+                        ("analyse", anavar),
+                        ("user", userid),
+                        ("_move", nr),
+                    ])
                     suffix = "_p" if profilemode else ""
-                    edit_url = watolib.folder_preserving_link([("mode",
-                                                                "notification_rule" + suffix),
-                                                               ("edit", nr), ("user", userid)])
-                    clone_url = watolib.folder_preserving_link([("mode",
-                                                                 "notification_rule" + suffix),
-                                                                ("clone", nr), ("user", userid)])
+                    edit_url = watolib.folder_preserving_link([
+                        ("mode", "notification_rule" + suffix),
+                        ("edit", nr),
+                        ("user", userid),
+                    ])
+                    clone_url = watolib.folder_preserving_link([
+                        ("mode", "notification_rule" + suffix),
+                        ("clone", nr),
+                        ("user", userid),
+                    ])
 
                     table.cell(_("Actions"), css="buttons")
                     html.icon_button(edit_url, _("Edit this notification rule"), "edit")
-                    html.icon_button(clone_url, _("Create a copy of this notification rule"), "clone")
+                    html.icon_button(clone_url, _("Create a copy of this notification rule"),
+                                     "clone")
                     html.element_dragger_url("tr", base_url=drag_url)
                     html.icon_button(delete_url, _("Delete this notification rule"), "delete")
                 else:
@@ -284,7 +302,8 @@ class NotificationsMode(EventsMode):
 
                 table.cell("", css="narrow")
                 if rule.get("disabled"):
-                    html.icon(_("This rule is currently disabled and will not be applied"), "disabled")
+                    html.icon(
+                        _("This rule is currently disabled and will not be applied"), "disabled")
                 else:
                     html.empty_icon_button()
 
@@ -310,7 +329,8 @@ class NotificationsMode(EventsMode):
                 table.cell(_("Description"))
                 url = rule.get("docu_url")
                 if url:
-                    html.icon_button(url, _("Context information about this rule"), "url", target="_blank")
+                    html.icon_button(
+                        url, _("Context information about this rule"), "url", target="_blank")
                     html.write("&nbsp;")
                 html.write_text(rule["description"])
                 table.cell(_("Contacts"))
@@ -359,18 +379,18 @@ class NotificationsMode(EventsMode):
 
     def _vs_notification_bulkby(self):
         return ListChoice(
-          title = _("Create separate notification bulks based on"),
-          choices = [
-            ( "folder",     _("Folder") ),
-            ( "host",       _("Host") ),
-            ( "service",    _("Service description") ),
-            ( "sl",         _("Service level") ),
-            ( "check_type", _("Check type") ),
-            ( "state",      _("Host/Service state") ),
-            ( "ec_contact", _("Event Console contact") ),
-            ( "ec_comment", _("Event Console comment") ),
-          ],
-          default_value = [ "host" ],
+            title=_("Create separate notification bulks based on"),
+            choices=[
+                ("folder", _("Folder")),
+                ("host", _("Host")),
+                ("service", _("Service description")),
+                ("sl", _("Service level")),
+                ("check_type", _("Check type")),
+                ("state", _("Host/Service state")),
+                ("ec_contact", _("Event Console contact")),
+                ("ec_comment", _("Event Console comment")),
+            ],
+            default_value=["host"],
         )
 
 
@@ -396,16 +416,21 @@ class ModeNotifications(NotificationsMode):
 
     def buttons(self):
         global_buttons()
-        html.context_button(_("New Rule"), watolib.folder_preserving_link([("mode", "notification_rule")]), "new")
+        html.context_button(
+            _("New Rule"), watolib.folder_preserving_link([("mode", "notification_rule")]), "new")
         if self._show_user_rules:
-            html.context_button(_("Hide user rules"), html.makeactionuri([("_show_user", "")]), "users")
+            html.context_button(
+                _("Hide user rules"), html.makeactionuri([("_show_user", "")]), "users")
         else:
-            html.context_button(_("Show user rules"), html.makeactionuri([("_show_user", "1")]), "users")
+            html.context_button(
+                _("Show user rules"), html.makeactionuri([("_show_user", "1")]), "users")
 
         if self._show_backlog:
-            html.context_button(_("Hide Analysis"), html.makeactionuri([("_show_backlog", "")]), "analyze")
+            html.context_button(
+                _("Hide Analysis"), html.makeactionuri([("_show_backlog", "")]), "analyze")
         else:
-            html.context_button(_("Analyse"), html.makeactionuri([("_show_backlog", "1")]), "analyze")
+            html.context_button(
+                _("Analyse"), html.makeactionuri([("_show_backlog", "1")]), "analyze")
 
         if self._show_bulks:
             html.context_button(_("Hide Bulks"), html.makeactionuri([("_show_bulks", "")]), "bulk")
@@ -435,7 +460,9 @@ class ModeNotifications(NotificationsMode):
                 return None, _("Replayed notifiation number %d") % (nr + 1)
 
         else:
-            return self._generic_rule_list_actions(self._get_notification_rules(), "notification", _("notification rule"),  watolib.save_notification_rules)
+            return self._generic_rule_list_actions(self._get_notification_rules(), "notification",
+                                                   _("notification rule"),
+                                                   watolib.save_notification_rules)
 
     def _get_notification_rules(self):
         return watolib.load_notification_rules()
@@ -463,23 +490,23 @@ class ModeNotifications(NotificationsMode):
         if not current_settings.get("enable_rulebased_notifications"):
             url = 'wato.py?mode=edit_configvar&varname=enable_rulebased_notifications'
             html.show_warning(
-               _("<b>Warning</b><br><br>Rule based notifications are disabled in your global settings. "
-                 "The rules that you edit here will have affect only on notifications that are "
-                 "created by the Event Console. Normal monitoring alerts will <b>not</b> use the "
-                 "rule based notifications now."
-                 "<br><br>"
-                 "You can change this setting <a href=\"%s\">here</a>.") % url)
+                _("<b>Warning</b><br><br>Rule based notifications are disabled in your global settings. "
+                  "The rules that you edit here will have affect only on notifications that are "
+                  "created by the Event Console. Normal monitoring alerts will <b>not</b> use the "
+                  "rule based notifications now."
+                  "<br><br>"
+                  "You can change this setting <a href=\"%s\">here</a>.") % url)
 
     def _show_no_fallback_contact_warning(self):
         if not self._fallback_mail_contacts_configured():
             url = 'wato.py?mode=edit_configvar&varname=notification_fallback_email'
             html.show_warning(
-              _("<b>Warning</b><br><br>You haven't configured a "
-                "<a href=\"%s\">fallback email address</a> nor enabled receiving fallback emails for "
-                "any user. If your monitoring produces a notification that is not matched by any of your "
-                "notification rules, the notification will not be sent out. To prevent that, please "
-                "configure either the global setting or enable the fallback contact option for at least "
-                "one of your users.") % url)
+                _("<b>Warning</b><br><br>You haven't configured a "
+                  "<a href=\"%s\">fallback email address</a> nor enabled receiving fallback emails for "
+                  "any user. If your monitoring produces a notification that is not matched by any of your "
+                  "notification rules, the notification will not be sent out. To prevent that, please "
+                  "configure either the global setting or enable the fallback contact option for at least "
+                  "one of your users.") % url)
 
     def _fallback_mail_contacts_configured(self):
         current_settings = watolib.load_configuration_settings()
@@ -508,9 +535,9 @@ class ModeNotifications(NotificationsMode):
             return False
 
         if only_ripe:
-            table.begin(title = _("Overdue bulk notifications!"))
+            table.begin(title=_("Overdue bulk notifications!"))
         else:
-            table.begin(title = _("Open bulk notifications"))
+            table.begin(title=_("Open bulk notifications"))
 
         for directory, age, interval, timeperiod, maxcount, uuids in bulks:
             dirparts = directory.split("/")
@@ -542,7 +569,8 @@ class ModeNotifications(NotificationsMode):
         if not backlog:
             return
 
-        table.begin(table_id = "backlog", title = _("Recent notifications (for analysis)"), sortable=False)
+        table.begin(
+            table_id="backlog", title=_("Recent notifications (for analysis)"), sortable=False)
         for nr, context in enumerate(backlog):
             self._convert_context_to_unicode(context)
             table.row()
@@ -551,9 +579,11 @@ class ModeNotifications(NotificationsMode):
             analyse_url = html.makeuri([("analyse", str(nr))])
             html.icon_button(analyse_url, _("Analyze ruleset with this notification"), "analyze")
 
-            html.icon_button(None, _("Show / hide notification context"),
-                             "toggle_context",
-                             onclick="toggle_container('notification_context_%d')" % nr)
+            html.icon_button(
+                None,
+                _("Show / hide notification context"),
+                "toggle_context",
+                onclick="toggle_container('notification_context_%d')" % nr)
 
             replay_url = html.makeactionuri([("_replay", str(nr))])
             html.icon_button(replay_url, _("Replay this notification, send it again!"), "replay")
@@ -561,7 +591,7 @@ class ModeNotifications(NotificationsMode):
             if html.var("analyse") and nr == int(html.var("analyse")):
                 html.icon(_("You are analysing this notification"), "rulematch")
 
-            table.cell(_("Nr."), nr+1, css="number")
+            table.cell(_("Nr."), nr + 1, css="number")
             if "MICROTIME" in context:
                 date = time.strftime("%Y-%m-%d %H:%M:%S",
                                      time.localtime(int(context["MICROTIME"]) / 1000000.0))
@@ -601,7 +631,10 @@ class ModeNotifications(NotificationsMode):
             table.cell(_("Service"), context.get("SERVICEDESC", ""))
             output = context.get("SERVICEOUTPUT", context.get("HOSTOUTPUT"))
 
-            table.cell(_("Plugin output"), cmk.gui.view_utils.format_plugin_output(output, shall_escape=config.escape_plugin_output))
+            table.cell(
+                _("Plugin output"),
+                cmk.gui.view_utils.format_plugin_output(
+                    output, shall_escape=config.escape_plugin_output))
 
             # Add toggleable notitication context
             table.row(class_="notification_context hidden", id_="notification_context_%d" % nr)
@@ -667,7 +700,7 @@ class ModeNotifications(NotificationsMode):
                     start_nr += len(user_rules)
 
         if analyse:
-            table.begin(table_id = "plugins", title = _("Resulting notifications"))
+            table.begin(table_id="plugins", title=_("Resulting notifications"))
             for contact, plugin, parameters, bulk in analyse[1]:
                 table.row()
                 if contact.startswith('mailto:'):
@@ -679,16 +712,17 @@ class ModeNotifications(NotificationsMode):
                 if bulk:
                     html.write(_("Time horizon") + ": " + Age().value_to_text(bulk["interval"]))
                     html.write_text(", %s: %d" % (_("Maximum count"), bulk["count"]))
-                    html.write(", %s %s" % (_("group by"), self._vs_notification_bulkby().value_to_text(bulk["groupby"])))
+                    html.write(
+                        ", %s %s" % (_("group by"), self._vs_notification_bulkby().value_to_text(
+                            bulk["groupby"])))
 
             table.end()
 
     def _vs_notification_scripts(self):
         return DropdownChoice(
-           title = _("Notification Script"),
-           choices = watolib.notification_script_choices,
-           default_value = "mail"
-        )
+            title=_("Notification Script"),
+            choices=watolib.notification_script_choices,
+            default_value="mail")
 
 
 class UserNotificationsMode(NotificationsMode):
@@ -714,24 +748,31 @@ class UserNotificationsMode(NotificationsMode):
         return _("Custom notification table for user ") + self._user_id()
 
     def buttons(self):
-        html.context_button(_("All Users"), watolib.folder_preserving_link([("mode", "users")]), "back")
-        html.context_button(_("User Properties"),
-            watolib.folder_preserving_link([("mode", "edit_user"), ("edit", self._user_id())]), "edit")
-        html.context_button(_("New Rule"),
-            watolib.folder_preserving_link([("mode", "notification_rule"), ("user", self._user_id())]), "new")
+        html.context_button(
+            _("All Users"), watolib.folder_preserving_link([("mode", "users")]), "back")
+        html.context_button(
+            _("User Properties"),
+            watolib.folder_preserving_link([("mode", "edit_user"), ("edit", self._user_id())]),
+            "edit")
+        html.context_button(
+            _("New Rule"),
+            watolib.folder_preserving_link([("mode", "notification_rule"),
+                                            ("user", self._user_id())]), "new")
 
     def action(self):
         if html.has_var("_delete"):
             nr = int(html.var("_delete"))
             rule = self._rules[nr]
-            c = wato_confirm(_("Confirm notification rule deletion"),
-                             _("Do you really want to delete the notification rule <b>%d</b> <i>%s</i>?") %
-                               (nr, rule.get("description","")))
+            c = wato_confirm(
+                _("Confirm notification rule deletion"),
+                _("Do you really want to delete the notification rule <b>%d</b> <i>%s</i>?") %
+                (nr, rule.get("description", "")))
             if c:
                 del self._rules[nr]
                 userdb.save_users(self._users)
 
-                self._add_change("notification-delete-user-rule",
+                self._add_change(
+                    "notification-delete-user-rule",
                     _("Deleted notification rule %d of user %s") % (nr, self._user_id()))
             elif c == False:
                 return ""
@@ -747,8 +788,10 @@ class UserNotificationsMode(NotificationsMode):
                 self._rules[to_pos:to_pos] = [rule]
                 userdb.save_users(self._users)
 
-                self._add_change("notification-move-user-rule",
-                    _("Changed position of notification rule %d of user %s") % (from_pos, self._user_id()))
+                self._add_change(
+                    "notification-move-user-rule",
+                    _("Changed position of notification rule %d of user %s") % (from_pos,
+                                                                                self._user_id()))
 
     def page(self):
         if self._start_async_repl:
@@ -805,7 +848,8 @@ class ModePersonalUserNotifications(UserNotificationsMode):
 
     def buttons(self):
         html.context_button(_("Profile"), "user_profile.py", "back")
-        html.context_button(_("New Rule"), watolib.folder_preserving_link([("mode", "notification_rule_p")]), "new")
+        html.context_button(
+            _("New Rule"), watolib.folder_preserving_link([("mode", "notification_rule_p")]), "new")
 
 
 # TODO: Split editing of user notification rule and global notification rule
@@ -824,8 +868,10 @@ class EditNotificationRuleMode(NotificationsMode):
         if self._user_id():
             self._users = userdb.load_users(lock=html.is_transaction())
             if self._user_id() not in self._users:
-                raise MKUserError(None, _("The user you are trying to edit "
-                                          "notification rules for does not exist."))
+                raise MKUserError(
+                    None,
+                    _("The user you are trying to edit "
+                      "notification rules for does not exist."))
             user = self._users[self._user_id()]
             self._rules = user.setdefault("notification_rules", [])
         else:
@@ -857,260 +903,286 @@ class EditNotificationRuleMode(NotificationsMode):
             section_override = []
         else:
             contact_headers = [
-                ( _("Contact Selection"), [ "contact_all", "contact_all_with_email", "contact_object",
-                                            "contact_users", "contact_groups", "contact_emails", "contact_match_macros",
-                                            "contact_match_groups", ] ),
+                (_("Contact Selection"), [
+                    "contact_all",
+                    "contact_all_with_email",
+                    "contact_object",
+                    "contact_users",
+                    "contact_groups",
+                    "contact_emails",
+                    "contact_match_macros",
+                    "contact_match_groups",
+                ]),
             ]
             section_contacts = [
                 # Contact selection
-                ( "contact_object",
-                  Checkbox(
-                      title = _("All contacts of the notified object"),
-                      label = _("Notify all contacts of the notified host or service."),
-                      default_value = True,
-                  )
-                ),
-                ( "contact_all",
-                  Checkbox(
-                      title = _("All users"),
-                      label = _("Notify all users"),
-                  )
-                ),
-                ( "contact_all_with_email",
-                  Checkbox(
-                      title = _("All users with an email address"),
-                      label = _("Notify all users that have configured an email address in their profile"),
-                  )
-                ),
-                ( "contact_users",
-                  ListOf(
-                      watolib.UserSelection(only_contacts = False),
-                      title = _("The following users"),
-                      help = _("Enter a list of user IDs to be notified here. These users need to be members "
-                               "of at least one contact group in order to be notified."),
-                      movable = False,
-                      add_label = _("Add user"),
-                  )
-                ),
-                ( "contact_groups",
-                  ListOf(
-                      cmk.gui.plugins.wato.GroupSelection("contact"),
-                      title = _("The members of certain contact groups"),
-                      movable = False,
-                  )
-                ),
-                ( "contact_emails",
-                  ListOfStrings(
-                      valuespec = EmailAddress(size = 44),
-                      title = _("The following explicit email addresses"),
-                      orientation = "vertical",
-                  )
-                ),
-                ( "contact_match_macros",
-                  ListOf(
-                      Tuple(
-                          elements = [
-                              TextAscii(
-                                  title = _("Name of the macro"),
-                                  help = _("As configured in the users settings. Do not add a leading underscore."),
-                                  allow_empty = False,
+                ("contact_object",
+                 Checkbox(
+                     title=_("All contacts of the notified object"),
+                     label=_("Notify all contacts of the notified host or service."),
+                     default_value=True,
+                 )),
+                ("contact_all", Checkbox(
+                    title=_("All users"),
+                    label=_("Notify all users"),
+                )),
+                ("contact_all_with_email",
+                 Checkbox(
+                     title=_("All users with an email address"),
+                     label=_(
+                         "Notify all users that have configured an email address in their profile"),
+                 )),
+                ("contact_users",
+                 ListOf(
+                     watolib.UserSelection(only_contacts=False),
+                     title=_("The following users"),
+                     help=_(
+                         "Enter a list of user IDs to be notified here. These users need to be members "
+                         "of at least one contact group in order to be notified."),
+                     movable=False,
+                     add_label=_("Add user"),
+                 )),
+                ("contact_groups",
+                 ListOf(
+                     cmk.gui.plugins.wato.GroupSelection("contact"),
+                     title=_("The members of certain contact groups"),
+                     movable=False,
+                 )),
+                ("contact_emails",
+                 ListOfStrings(
+                     valuespec=EmailAddress(size=44),
+                     title=_("The following explicit email addresses"),
+                     orientation="vertical",
+                 )),
+                ("contact_match_macros",
+                 ListOf(
+                     Tuple(elements=[
+                         TextAscii(
+                             title=_("Name of the macro"),
+                             help=
+                             _("As configured in the users settings. Do not add a leading underscore."
                               ),
-                              RegExp(
-                                  title = _("Required match (regular expression)"),
-                                  help = _("This expression must match the value of the variable"),
-                                  allow_empty = False,
-                                  mode = RegExp.complete,
-                             ),
-                          ]
-                      ),
-                      title = _("Restrict by custom macros"),
-                      help = _("Here you can <i>restrict</i> the list of contacts that has been "
-                               "built up by the previous options to those who have certain values "
-                               "in certain custom macros. If you add more than one macro here then "
-                               "<i>all</i> macros must match. The matches are regular expressions "
-                               "that must fully match the value of the macro."),
-                      add_label = _("Add condition"),
-                  )
-                ),
-                ( "contact_match_groups",
-                  ListOf(
-                      cmk.gui.plugins.wato.GroupSelection("contact"),
-                      title = _("Restrict by contact groups"),
-                      help = _("Here you can <i>restrict</i> the list of contacts that has been "
-                               "built up by the previous options to those that are members of "
-                               "selected contact groups. If you select more than one contact group here then "
-                               "the user must be member of <i>all</i> these groups."),
-                      add_label = _("Add Group"),
-                      movable = False,
-                  )
-                ),
+                             allow_empty=False,
+                         ),
+                         RegExp(
+                             title=_("Required match (regular expression)"),
+                             help=_("This expression must match the value of the variable"),
+                             allow_empty=False,
+                             mode=RegExp.complete,
+                         ),
+                     ]),
+                     title=_("Restrict by custom macros"),
+                     help=_("Here you can <i>restrict</i> the list of contacts that has been "
+                            "built up by the previous options to those who have certain values "
+                            "in certain custom macros. If you add more than one macro here then "
+                            "<i>all</i> macros must match. The matches are regular expressions "
+                            "that must fully match the value of the macro."),
+                     add_label=_("Add condition"),
+                 )),
+                ("contact_match_groups",
+                 ListOf(
+                     cmk.gui.plugins.wato.GroupSelection("contact"),
+                     title=_("Restrict by contact groups"),
+                     help=_(
+                         "Here you can <i>restrict</i> the list of contacts that has been "
+                         "built up by the previous options to those that are members of "
+                         "selected contact groups. If you select more than one contact group here then "
+                         "the user must be member of <i>all</i> these groups."),
+                     add_label=_("Add Group"),
+                     movable=False,
+                 )),
             ]
             section_override = [
-                ( "allow_disable",
-                  Checkbox(
-                    title = _("Overriding by users"),
-                    help = _("If you uncheck this option then users are not allowed to deactive notifications "
-                             "that are created by this rule."),
-                    label = _("allow users to deactivate this notification"),
-                    default_value = True,
-                  )
-                ),
+                ("allow_disable",
+                 Checkbox(
+                     title=_("Overriding by users"),
+                     help=_(
+                         "If you uncheck this option then users are not allowed to deactive notifications "
+                         "that are created by this rule."),
+                     label=_("allow users to deactivate this notification"),
+                     default_value=True,
+                 )),
             ]
 
         bulk_options = [
-                    ("count", Integer(
-                        title = _("Maximum bulk size"),
-                        label = _("Bulk up to"),
-                        unit  = _("Notifications"),
-                        help = _("At most that many Notifications are kept back for bulking. A value of "
-                                "1 essentially turns off notification bulking."),
-                        default_value = 1000,
-                        minvalue = 1,
-                    )),
-                    ("groupby",
-                        self._vs_notification_bulkby(),
-                    ),
-                    ("groupby_custom", ListOfStrings(
-                        valuespec = ID(),
-                        orientation = "horizontal",
-                        title = _("Create separate notification bulks for different values of the following custom macros"),
-                        help = _("If you enter the names of host/service-custom macros here then for each different "
-                                "combination of values of those macros a separate bulk will be created. This can be used "
-                                "in combination with the grouping by folder, host etc. Omit any leading underscore. "
-                                "<b>Note</b>: If you are using "
-                                "Nagios as a core you need to make sure that the values of the required macros are "
-                                "present in the notification context. This is done in <tt>check_mk_templates.cfg</tt>. If you "
-                                "macro is <tt>_FOO</tt> then you need to add the variables <tt>NOTIFY_HOST_FOO</tt> and "
-                                "<tt>NOTIFY_SERVICE_FOO</tt>."),
-                    )),
-                    ("bulk_subject", TextAscii(
-                        title = _("Subject for bulk notifications"),
-                        help = _("Customize the subject for bulk notifications and overwrite "
-                                    "default subject <tt>Check_MK: $COUNT_NOTIFICATIONS$ notifications for HOST</tt>"
-                                    " resp. <tt>Check_MK: $COUNT_NOTIFICATIONS$ notifications for $COUNT_HOSTS$ hosts</tt>. "
-                                    "Both macros <tt>$COUNT_NOTIFICATIONS$</tt> and <tt>$COUNT_HOSTS$</tt> can be used in "
-                                    "any customized subject. If <tt>$COUNT_NOTIFICATIONS$</tt> is used, the amount of "
-                                    "notifications will be inserted and if you use <tt>$COUNT_HOSTS$</tt> then the "
-                                    "amount of hosts will be applied."),
-                        size = 80,
-                        default_value = "Check_MK: $COUNT_NOTIFICATIONS$ notifications for $COUNT_HOSTS$ hosts"
-                    )),
+            ("count",
+             Integer(
+                 title=_("Maximum bulk size"),
+                 label=_("Bulk up to"),
+                 unit=_("Notifications"),
+                 help=_("At most that many Notifications are kept back for bulking. A value of "
+                        "1 essentially turns off notification bulking."),
+                 default_value=1000,
+                 minvalue=1,
+             )),
+            (
+                "groupby",
+                self._vs_notification_bulkby(),
+            ),
+            ("groupby_custom",
+             ListOfStrings(
+                 valuespec=ID(),
+                 orientation="horizontal",
+                 title=
+                 _("Create separate notification bulks for different values of the following custom macros"
+                  ),
+                 help=
+                 _("If you enter the names of host/service-custom macros here then for each different "
+                   "combination of values of those macros a separate bulk will be created. This can be used "
+                   "in combination with the grouping by folder, host etc. Omit any leading underscore. "
+                   "<b>Note</b>: If you are using "
+                   "Nagios as a core you need to make sure that the values of the required macros are "
+                   "present in the notification context. This is done in <tt>check_mk_templates.cfg</tt>. If you "
+                   "macro is <tt>_FOO</tt> then you need to add the variables <tt>NOTIFY_HOST_FOO</tt> and "
+                   "<tt>NOTIFY_SERVICE_FOO</tt>."),
+             )),
+            ("bulk_subject",
+             TextAscii(
+                 title=_("Subject for bulk notifications"),
+                 help=
+                 _("Customize the subject for bulk notifications and overwrite "
+                   "default subject <tt>Check_MK: $COUNT_NOTIFICATIONS$ notifications for HOST</tt>"
+                   " resp. <tt>Check_MK: $COUNT_NOTIFICATIONS$ notifications for $COUNT_HOSTS$ hosts</tt>. "
+                   "Both macros <tt>$COUNT_NOTIFICATIONS$</tt> and <tt>$COUNT_HOSTS$</tt> can be used in "
+                   "any customized subject. If <tt>$COUNT_NOTIFICATIONS$</tt> is used, the amount of "
+                   "notifications will be inserted and if you use <tt>$COUNT_HOSTS$</tt> then the "
+                   "amount of hosts will be applied."),
+                 size=80,
+                 default_value=
+                 "Check_MK: $COUNT_NOTIFICATIONS$ notifications for $COUNT_HOSTS$ hosts")),
         ]
 
         return Dictionary(
-            title = _("Rule Properties"),
-            elements = rule_option_elements()
-                + section_override
-                + self._rule_match_conditions()
-                + section_contacts
-                + [
-                    # Notification
-                    ( "notify_plugin",
+            title=_("Rule Properties"),
+            elements=rule_option_elements() + section_override + self._rule_match_conditions() +
+            section_contacts + [
+                # Notification
+                (
+                    "notify_plugin",
                     watolib.get_vs_notification_methods(),
-                    ),
-                    ("bulk", Transform(
-                        CascadingDropdown(
-                            title = "Notification Bulking",
-                            orientation = "vertical",
-                            choices = [
-                                ("always", _("Always bulk"), Dictionary(
-                                    help = _("Enabling the bulk notifications will collect several subsequent notifications "
-                                            "for the same contact into one single notification, which lists of all the "
-                                            "actual problems, e.g. in a single email. This cuts down the number of notifications "
-                                            "in cases where many (related) problems occur within a short time."),
-                                    elements = [
-                                        ( "interval", Age(
-                                            title = _("Time horizon"),
-                                            label = _("Bulk up to"),
-                                            help = _("Notifications are kept back for bulking at most for this time."),
-                                            default_value = 60,
-                                        )),
-                                        ] + bulk_options,
-                                    columns = 1,
-                                    optional_keys = ["bulk_subject"],
-                                )),
-                                ("timeperiod", _("Bulk during timeperiod"), Dictionary(
-                                    help = _("By enabling this option notifications will be bulked only if the "
-                                            "specified timeperiod is active. When the timeperiod ends a "
-                                            "bulk containing all notifications that appeared during that time "
-                                            "will be sent. "
-                                            "If bulking should be enabled outside of the timeperiod as well, "
-                                            "the option \"Also Bulk outside of timeperiod\" can be used."),
-                                    elements = [
-                                        ("timeperiod",
-                                        watolib.TimeperiodSelection(
-                                            title = _("Only bulk notifications during the following timeperiod"),
-                                        )),
-                                    ] + bulk_options + [
-                                        ("bulk_outside", Dictionary(
-                                            title = _("Also bulk outside of timeperiod"),
-                                            help = _("By enabling this option notifications will be bulked "
-                                                    "outside of the defined timeperiod as well."),
-                                            elements = [
-                                                ( "interval", Age(
-                                                    title = _("Time horizon"),
-                                                    label = _("Bulk up to"),
-                                                    help = _("Notifications are kept back for bulking at most for this time."),
-                                                    default_value = 60,
+                ),
+                ("bulk",
+                 Transform(
+                     CascadingDropdown(
+                         title="Notification Bulking",
+                         orientation="vertical",
+                         choices=[
+                             ("always", _("Always bulk"),
+                              Dictionary(
+                                  help=
+                                  _("Enabling the bulk notifications will collect several subsequent notifications "
+                                    "for the same contact into one single notification, which lists of all the "
+                                    "actual problems, e.g. in a single email. This cuts down the number of notifications "
+                                    "in cases where many (related) problems occur within a short time."
+                                   ),
+                                  elements=[
+                                      ("interval",
+                                       Age(
+                                           title=_("Time horizon"),
+                                           label=_("Bulk up to"),
+                                           help=
+                                           _("Notifications are kept back for bulking at most for this time."
+                                            ),
+                                           default_value=60,
+                                       )),
+                                  ] + bulk_options,
+                                  columns=1,
+                                  optional_keys=["bulk_subject"],
+                              )),
+                             ("timeperiod", _("Bulk during timeperiod"),
+                              Dictionary(
+                                  help=
+                                  _("By enabling this option notifications will be bulked only if the "
+                                    "specified timeperiod is active. When the timeperiod ends a "
+                                    "bulk containing all notifications that appeared during that time "
+                                    "will be sent. "
+                                    "If bulking should be enabled outside of the timeperiod as well, "
+                                    "the option \"Also Bulk outside of timeperiod\" can be used."),
+                                  elements=[
+                                      ("timeperiod",
+                                       watolib.TimeperiodSelection(
+                                           title=
+                                           _("Only bulk notifications during the following timeperiod"
+                                            ),)),
+                                  ] + bulk_options + [
+                                      ("bulk_outside",
+                                       Dictionary(
+                                           title=_("Also bulk outside of timeperiod"),
+                                           help=_(
+                                               "By enabling this option notifications will be bulked "
+                                               "outside of the defined timeperiod as well."),
+                                           elements=[
+                                               ("interval",
+                                                Age(
+                                                    title=_("Time horizon"),
+                                                    label=_("Bulk up to"),
+                                                    help=
+                                                    _("Notifications are kept back for bulking at most for this time."
+                                                     ),
+                                                    default_value=60,
                                                 )),
-                                                ] + bulk_options,
-                                            columns = 1,
-                                            optional_keys = ["bulk_subject"],
-                                        )),
-                                    ],
-                                    columns = 1,
-                                    optional_keys = ["bulk_subject", "bulk_outside"],
-                                )),
-                            ],
-                        ),
-                        forth = lambda x: x if isinstance(x, tuple) else ("always", x)
-                    )),
+                                           ] + bulk_options,
+                                           columns=1,
+                                           optional_keys=["bulk_subject"],
+                                       )),
+                                  ],
+                                  columns=1,
+                                  optional_keys=["bulk_subject", "bulk_outside"],
+                              )),
+                         ],
+                     ),
+                     forth=lambda x: x if isinstance(x, tuple) else ("always", x))),
             ],
-            optional_keys = [ "match_site", "match_folder", "match_hosttags", "match_hostgroups", "match_hosts", "match_exclude_hosts",
-                              "match_servicegroups", "match_exclude_servicegroups", "match_servicegroups_regex", "match_exclude_servicegroups_regex",
-                              "match_services", "match_exclude_services",
-                              "match_contacts", "match_contactgroups",
-                              "match_plugin_output",
-                              "match_timeperiod", "match_escalation", "match_escalation_throttle",
-                              "match_sl", "match_host_event", "match_service_event", "match_ec", "match_notification_comment",
-                              "match_checktype", "bulk", "contact_users", "contact_groups", "contact_emails",
-                              "contact_match_macros", "contact_match_groups" ],
-            headers = [
-                ( _("Rule Properties"), [ "description", "comment", "disabled", "docu_url", "allow_disable" ] ),
-                ( _("Notification Method"), [ "notify_plugin", "notify_method", "bulk" ] ),]
-                + contact_headers
-                + [
-                ( _("Conditions"),         [ "match_site", "match_folder", "match_hosttags", "match_hostgroups",
-                                             "match_hosts", "match_exclude_hosts", "match_servicegroups",
-                                             "match_exclude_servicegroups", "match_servicegroups_regex", "match_exclude_servicegroups_regex",
-                                             "match_services", "match_exclude_services",
-                                             "match_checktype",
-                                             "match_contacts", "match_contactgroups",
-                                             "match_plugin_output",
-                                             "match_timeperiod",
-                                             "match_escalation", "match_escalation_throttle",
-                                             "match_sl", "match_host_event", "match_service_event", "match_ec", "match_notification_comment" ] ),
+            optional_keys=[
+                "match_site", "match_folder", "match_hosttags", "match_hostgroups", "match_hosts",
+                "match_exclude_hosts", "match_servicegroups", "match_exclude_servicegroups",
+                "match_servicegroups_regex", "match_exclude_servicegroups_regex", "match_services",
+                "match_exclude_services", "match_contacts", "match_contactgroups",
+                "match_plugin_output", "match_timeperiod", "match_escalation",
+                "match_escalation_throttle", "match_sl", "match_host_event", "match_service_event",
+                "match_ec", "match_notification_comment", "match_checktype", "bulk",
+                "contact_users", "contact_groups", "contact_emails", "contact_match_macros",
+                "contact_match_groups"
             ],
-            render = "form",
-            form_narrow = True,
-            validate = self._validate_notification_rule,
+            headers=[
+                (_("Rule Properties"),
+                 ["description", "comment", "disabled", "docu_url", "allow_disable"]),
+                (_("Notification Method"), ["notify_plugin", "notify_method", "bulk"]),
+            ] + contact_headers + [
+                (_("Conditions"), [
+                    "match_site", "match_folder", "match_hosttags", "match_hostgroups",
+                    "match_hosts", "match_exclude_hosts", "match_servicegroups",
+                    "match_exclude_servicegroups", "match_servicegroups_regex",
+                    "match_exclude_servicegroups_regex", "match_services", "match_exclude_services",
+                    "match_checktype", "match_contacts", "match_contactgroups",
+                    "match_plugin_output", "match_timeperiod", "match_escalation",
+                    "match_escalation_throttle", "match_sl", "match_host_event",
+                    "match_service_event", "match_ec", "match_notification_comment"
+                ]),
+            ],
+            render="form",
+            form_narrow=True,
+            validate=self._validate_notification_rule,
         )
 
     def _validate_notification_rule(self, rule, varprefix):
         if "bulk" in rule and rule["notify_plugin"][1] == None:
-            raise MKUserError(varprefix + "_p_bulk_USE",
-                 _("It does not make sense to add a bulk configuration for cancelling rules."))
+            raise MKUserError(
+                varprefix + "_p_bulk_USE",
+                _("It does not make sense to add a bulk configuration for cancelling rules."))
 
         if "bulk" in rule or "bulk_period" in rule:
             if rule["notify_plugin"][0]:
                 info = watolib.load_notification_scripts()[rule["notify_plugin"][0]]
                 if not info["bulk"]:
-                    raise MKUserError(varprefix + "_p_notify_plugin",
-                          _("The notification script %s does not allow bulking.") % info["title"])
+                    raise MKUserError(
+                        varprefix + "_p_notify_plugin",
+                        _("The notification script %s does not allow bulking.") % info["title"])
             else:
-                raise MKUserError(varprefix + "_p_notify_plugin",
-                      _("Legacy ASCII Emails do not support bulking. You can either disable notification "
-                        "bulking or choose another notification plugin which allows bulking."))
+                raise MKUserError(
+                    varprefix + "_p_notify_plugin",
+                    _("Legacy ASCII Emails do not support bulking. You can either disable notification "
+                      "bulking or choose another notification plugin which allows bulking."))
 
     @abc.abstractmethod
     def _user_id(self):
@@ -1131,8 +1203,10 @@ class EditNotificationRuleMode(NotificationsMode):
         return _("Edit notification rule %d") % self._edit_nr
 
     def buttons(self):
-        html.context_button(_("All Rules"),
-            watolib.folder_preserving_link([("mode", "notifications"), ("userid", self._user_id())]), "back")
+        html.context_button(
+            _("All Rules"),
+            watolib.folder_preserving_link([("mode", "notifications"), ("userid",
+                                                                        self._user_id())]), "back")
 
     def action(self):
         if not html.check_transaction():
@@ -1173,7 +1247,8 @@ class EditNotificationRuleMode(NotificationsMode):
         else:
             log_what = "edit-notification-rule"
             if self._user_id():
-                log_text = _("Changed notification rule %d of user %s") % (self._edit_nr, self._user_id())
+                log_text = _("Changed notification rule %d of user %s") % (self._edit_nr,
+                                                                           self._user_id())
             else:
                 log_text = _("Changed notification rule %d") % self._edit_nr
         self._add_change(log_what, log_text)
@@ -1250,5 +1325,6 @@ class ModeEditPersonalNotificationRule(EditNotificationRuleMode):
         return _("Edit notification rule %d") % self._edit_nr
 
     def buttons(self):
-        html.context_button(_("All Rules"),
-            watolib.folder_preserving_link([("mode", "user_notifications_p")]), "back")
+        html.context_button(
+            _("All Rules"), watolib.folder_preserving_link([("mode", "user_notifications_p")]),
+            "back")

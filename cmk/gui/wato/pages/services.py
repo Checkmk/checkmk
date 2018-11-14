@@ -116,29 +116,33 @@ class ModeDiscovery(WatoMode):
 
     def buttons(self):
         global_buttons()
-        html.context_button(_("Folder"),
-             watolib.folder_preserving_link([("mode", "folder")]), "back")
+        html.context_button(
+            _("Folder"), watolib.folder_preserving_link([("mode", "folder")]), "back")
 
         host_status_button(self._host_name, "host")
 
-        html.context_button(_("Properties"), watolib.folder_preserving_link([
-                                                ("mode", "edit_host"),
-                                                ("host", self._host_name)]), "edit")
+        html.context_button(
+            _("Properties"),
+            watolib.folder_preserving_link([("mode", "edit_host"), ("host", self._host_name)]),
+            "edit")
 
         if config.user.may('wato.rulesets'):
-            html.context_button(_("Parameters"), watolib.folder_preserving_link([
-                                                    ("mode", "object_parameters"),
-                                                    ("host", self._host_name)]), "rulesets")
+            html.context_button(
+                _("Parameters"),
+                watolib.folder_preserving_link([("mode", "object_parameters"),
+                                                ("host", self._host_name)]), "rulesets")
             if self._host.is_cluster():
-                html.context_button(_("Clustered services"),
-                     watolib.folder_preserving_link([("mode", "edit_ruleset"),
-                                             ("varname", "clustered_services")]), "rulesets")
+                html.context_button(
+                    _("Clustered services"),
+                    watolib.folder_preserving_link([("mode", "edit_ruleset"),
+                                                    ("varname", "clustered_services")]), "rulesets")
 
         if not self._host.is_cluster():
             # only display for non cluster hosts
-            html.context_button(_("Diagnostic"),
-                 watolib.folder_preserving_link([("mode", "diag_host"),
-                                         ("host", self._host_name)]), "diagnose")
+            html.context_button(
+                _("Diagnostic"),
+                watolib.folder_preserving_link([("mode", "diag_host"), ("host", self._host_name)]),
+                "diagnose")
 
     def action(self):
         if not html.check_transaction():
@@ -251,9 +255,9 @@ class ModeDiscovery(WatoMode):
             if config.debug:
                 raise
             retry_link = html.render_a(
-                content=_("Retry discovery while ignoring this error (Result might be incomplete)."),
-                href=html.makeuri([("ignoreerrors", "1"), ("_scan", "")])
-            )
+                content=_(
+                    "Retry discovery while ignoring this error (Result might be incomplete)."),
+                href=html.makeuri([("ignoreerrors", "1"), ("_scan", "")]))
             html.show_warning("<b>%s</b>: %s<br><br>%s" %
                               (_("Service discovery failed for this host"), e, retry_link))
             return
@@ -261,10 +265,11 @@ class ModeDiscovery(WatoMode):
         if not check_table and self._host.is_cluster():
             url = watolib.folder_preserving_link([("mode", "edit_ruleset"),
                                                   ("varname", "clustered_services")])
-            html.show_info(_("Could not find any service for your cluster. You first need to "
-                             "specify which services of your nodes shal be added to the "
-                             "cluster. This is done using the <a href=\"%s\">%s</a> ruleset.") %
-                                (url, _("Clustered services")))
+            html.show_info(
+                _("Could not find any service for your cluster. You first need to "
+                  "specify which services of your nodes shal be added to the "
+                  "cluster. This is done using the <a href=\"%s\">%s</a> ruleset.") %
+                (url, _("Clustered services")))
             return
 
         map_icons = {
@@ -464,11 +469,9 @@ class ModeDiscovery(WatoMode):
 
         html.buttonlink(checkbox_uri, checkbox_title)
         if self._show_parameter_column():
-            html.buttonlink(html.makeuri([("_hide_parameters", "yes")]),
-                            _("Hide check parameters"))
+            html.buttonlink(html.makeuri([("_hide_parameters", "yes")]), _("Hide check parameters"))
         else:
-            html.buttonlink(html.makeuri([("_hide_parameters", "no")]),
-                            _("Show check parameters"))
+            html.buttonlink(html.makeuri([("_hide_parameters", "no")]), _("Show check parameters"))
 
     def _show_parameter_column(self):
         return config.user.load_file("parameter_column", False)
@@ -478,8 +481,10 @@ class ModeDiscovery(WatoMode):
             return
 
         def bulk_button(source, target, target_label, label):
-            html.button("_bulk_%s_%s" % (source, target), target_label,
-                        help_=_("Move %s to %s services") % (label, target))
+            html.button(
+                "_bulk_%s_%s" % (source, target),
+                target_label,
+                help_=_("Move %s to %s services") % (label, target))
 
         table.row(collect_headers=collect_headers, fixed=True)
         table.cell(css="bulkactions service_discovery", colspan=self._bulk_action_colspan())
@@ -503,8 +508,10 @@ class ModeDiscovery(WatoMode):
 
         elif table_source == self.SERVICE_VANISHED:
             if config.user.may("wato.service_discovery_to_removed"):
-                html.button("_bulk_%s_removed" % table_source, _("Remove"),
-                            help_=_("Remove %s services") % label)
+                html.button(
+                    "_bulk_%s_removed" % table_source,
+                    _("Remove"),
+                    help_=_("Remove %s services") % label)
             if config.user.may("wato.service_discovery_to_ignored"):
                 bulk_button(table_source, self.SERVICE_IGNORED, _("Disable"), label)
 
@@ -577,8 +584,8 @@ class ModeDiscovery(WatoMode):
             " onclick=\"toggle_group_rows(this);\" value=\"X\" />",
             sortable=False,
             css="checkbox")
-        html.checkbox(self._checkbox_name(check_type, item),
-                      True, title=_("Temporarily ignore this service"))
+        html.checkbox(
+            self._checkbox_name(check_type, item), True, title=_("Temporarily ignore this service"))
 
     def _bulk_action_colspan(self):
         colspan = 5
@@ -590,19 +597,26 @@ class ModeDiscovery(WatoMode):
 
     def _show_actions(self, check):
         def icon_button(table_source, checkbox_name, table_target, descr_target):
-            html.icon_button(html.makeactionuri([(checkbox_name, table_target), ]),
+            html.icon_button(
+                html.makeactionuri([
+                    (checkbox_name, table_target),
+                ]),
                 _("Move to %s services") % descr_target, "service_to_%s" % descr_target)
 
         def icon_button_removed(table_source, checkbox_name):
-            html.icon_button(html.makeactionuri([(checkbox_name, self.SERVICE_REMOVED), ]),
-                _("Remove service"), "service_to_removed")
+            html.icon_button(
+                html.makeactionuri([
+                    (checkbox_name, self.SERVICE_REMOVED),
+                ]), _("Remove service"), "service_to_removed")
 
         def rulesets_button():
             # Link to list of all rulesets affecting this service
-            html.icon_button(watolib.folder_preserving_link(
-                             [("mode", "object_parameters"), ("host", self._host_name),
-                              ("service", descr), ]),
-                _("View and edit the parameters for this service"), "rulesets")
+            html.icon_button(
+                watolib.folder_preserving_link([
+                    ("mode", "object_parameters"),
+                    ("host", self._host_name),
+                    ("service", descr),
+                ]), _("View and edit the parameters for this service"), "rulesets")
 
         def check_parameters_button():
             if table_source == self.SERVICE_MANUAL:
@@ -623,14 +637,17 @@ class ModeDiscovery(WatoMode):
                     ("item", watolib.mk_repr(item)),
                 ]),
 
-            html.icon_button(url,
-                _("Edit and analyze the check parameters of this service"), "check_parameters")
+            html.icon_button(url, _("Edit and analyze the check parameters of this service"),
+                             "check_parameters")
 
         def disabled_services_button():
-            html.icon_button(watolib.folder_preserving_link(
-                             [("mode", "edit_ruleset"), ("varname", "ignored_services"),
-                              ("host", self._host_name), ("item", watolib.mk_repr(descr)), ]),
-                _("Edit and analyze the disabled services rules"), "rulesets")
+            html.icon_button(
+                watolib.folder_preserving_link([
+                    ("mode", "edit_ruleset"),
+                    ("varname", "ignored_services"),
+                    ("host", self._host_name),
+                    ("item", watolib.mk_repr(descr)),
+                ]), _("Edit and analyze the disabled services rules"), "rulesets")
 
         table.cell(css="buttons")
         if not config.user.may("wato.services"):
@@ -713,7 +730,9 @@ class ModeDiscovery(WatoMode):
             rulespec = watolib.g_rulespecs.get(varname)
             try:
                 if isinstance(params, dict) and "tp_computed_params" in params:
-                    html.write_text(_("Timespecific parameters computed at %s") % cmk.render.date_and_time(params["tp_computed_params"]["computed_at"]))
+                    html.write_text(
+                        _("Timespecific parameters computed at %s") % cmk.render.date_and_time(
+                            params["tp_computed_params"]["computed_at"]))
                     html.br()
                     params = params["tp_computed_params"]["params"]
                 rulespec.valuespec.validate_datatype(params, "")
@@ -745,61 +764,62 @@ class ModeDiscovery(WatoMode):
     def _ordered_table_groups(self):
         return [
             # table group, show bulk actions, title, help
-            (self.SERVICE_UNDECIDED,      True, _("Undecided services (currently not monitored)"),
-            _("These services have been found by the service discovery but are not yet added "
-              "to the monitoring. You should either decide to monitor them or to permanently "
-              "disable them. If you are sure that they are just transitional, just leave them "
-              "until they vanish.")), # undecided
-            (self.SERVICE_VANISHED,       True, _("Vanished services (monitored, but no longer exist)"),
-            _("These services had been added to the monitoring by a previous discovery "
-              "but the actual items that are monitored are not present anymore. This might "
-              "be due to a real failure. In that case you should leave them in the monitoring. "
-              "If the actually monitored things are really not relevant for the monitoring "
-              "anymore then you should remove them in order to avoid UNKNOWN services in the "
-              "monitoring.")),
-            (self.SERVICE_MONITORED,      True, _("Monitored services"),
-            _("These services had been found by a discovery and are currently configured "
-              "to be monitored.")),
-            (self.SERVICE_IGNORED,        True, _("Disabled services"),
-            _("These services are being discovered but have been disabled by creating a rule "
-              "in the rule set <i>Disabled services</i> or <i>Disabled checks</i>.")),
-            (self.SERVICE_ACTIVE,         False, _("Active checks"),
-            _("These services do not use the Check_MK agent or Check_MK-SNMP engine but actively "
-              "call classical check plugins. They have been added by a rule in the section "
-              "<i>Active checks</i> or implicitely by Check_MK.")),
-            (self.SERVICE_MANUAL,         False, _("Manual checks"),
-            _("These services have not been found by the discovery but have been added "
-              "manually by a rule in the WATO module <i>Manual checks</i>.")),
-            (self.SERVICE_LEGACY,         False, _("Legacy services (defined in main.mk)"),
-            _("These services have been configured by the deprecated variable <tt>legacy_checks</tt> "
-              "in <tt>main.mk</tt> or a similar configuration file.")),
-            (self.SERVICE_CUSTOM,         False, _("Custom checks (defined via rule)"),
-            _("These services do not use the Check_MK agent or Check_MK-SNMP engine but actively "
-              "call a classical check plugin, that you have installed yourself.")),
-            (self.SERVICE_CLUSTERED_OLD,  False, _("Monitored clustered services (located on cluster host)"),
-            _("These services have been found on this host but have been mapped to "
-              "a cluster host by a rule in the set <i>Clustered services</i>.")),
-            (self.SERVICE_CLUSTERED_NEW,  False, _("Undecided clustered services"),
-            _("These services have been found on this host and have been mapped to "
-              "a cluster host by a rule in the set <i>Clustered services</i>, but are not "
-              "yet added to the active monitoring. Please either add them or permanently disable "
-              "them.")),
+            (self.SERVICE_UNDECIDED, True, _("Undecided services (currently not monitored)"),
+             _("These services have been found by the service discovery but are not yet added "
+               "to the monitoring. You should either decide to monitor them or to permanently "
+               "disable them. If you are sure that they are just transitional, just leave them "
+               "until they vanish.")),  # undecided
+            (self.SERVICE_VANISHED, True, _("Vanished services (monitored, but no longer exist)"),
+             _("These services had been added to the monitoring by a previous discovery "
+               "but the actual items that are monitored are not present anymore. This might "
+               "be due to a real failure. In that case you should leave them in the monitoring. "
+               "If the actually monitored things are really not relevant for the monitoring "
+               "anymore then you should remove them in order to avoid UNKNOWN services in the "
+               "monitoring.")),
+            (self.SERVICE_MONITORED, True, _("Monitored services"),
+             _("These services had been found by a discovery and are currently configured "
+               "to be monitored.")),
+            (self.SERVICE_IGNORED, True, _("Disabled services"),
+             _("These services are being discovered but have been disabled by creating a rule "
+               "in the rule set <i>Disabled services</i> or <i>Disabled checks</i>.")),
+            (self.SERVICE_ACTIVE, False, _("Active checks"),
+             _("These services do not use the Check_MK agent or Check_MK-SNMP engine but actively "
+               "call classical check plugins. They have been added by a rule in the section "
+               "<i>Active checks</i> or implicitely by Check_MK.")),
+            (self.SERVICE_MANUAL, False, _("Manual checks"),
+             _("These services have not been found by the discovery but have been added "
+               "manually by a rule in the WATO module <i>Manual checks</i>.")),
+            (self.SERVICE_LEGACY, False, _("Legacy services (defined in main.mk)"),
+             _("These services have been configured by the deprecated variable <tt>legacy_checks</tt> "
+               "in <tt>main.mk</tt> or a similar configuration file.")),
+            (self.SERVICE_CUSTOM, False, _("Custom checks (defined via rule)"),
+             _("These services do not use the Check_MK agent or Check_MK-SNMP engine but actively "
+               "call a classical check plugin, that you have installed yourself.")),
+            (self.SERVICE_CLUSTERED_OLD, False,
+             _("Monitored clustered services (located on cluster host)"),
+             _("These services have been found on this host but have been mapped to "
+               "a cluster host by a rule in the set <i>Clustered services</i>.")),
+            (self.SERVICE_CLUSTERED_NEW, False, _("Undecided clustered services"),
+             _("These services have been found on this host and have been mapped to "
+               "a cluster host by a rule in the set <i>Clustered services</i>, but are not "
+               "yet added to the active monitoring. Please either add them or permanently disable "
+               "them.")),
             (self.SERVICE_ACTIVE_IGNORED, False, _("Disabled active checks"),
-            _("These services do not use the Check_MK agent or Check_MK-SNMP engine but actively "
-              "call classical check plugins. They have been added by a rule in the section "
-              "<i>Active checks</i> or implicitely by Check_MK. "
-              "These services have been disabled by creating a rule in the rule set "
-              "<i>Disabled services</i> oder <i>Disabled checks</i>.")),
+             _("These services do not use the Check_MK agent or Check_MK-SNMP engine but actively "
+               "call classical check plugins. They have been added by a rule in the section "
+               "<i>Active checks</i> or implicitely by Check_MK. "
+               "These services have been disabled by creating a rule in the rule set "
+               "<i>Disabled services</i> oder <i>Disabled checks</i>.")),
             (self.SERVICE_CUSTOM_IGNORED, False, _("Disabled custom checks (defined via rule)"),
-            _("These services do not use the Check_MK agent or Check_MK-SNMP engine but actively "
-              "call a classical check plugin, that you have installed yourself. "
-              "These services have been disabled by creating a rule in the rule set "
-              "<i>Disabled services</i> oder <i>Disabled checks</i>.")),
+             _("These services do not use the Check_MK agent or Check_MK-SNMP engine but actively "
+               "call a classical check plugin, that you have installed yourself. "
+               "These services have been disabled by creating a rule in the rule set "
+               "<i>Disabled services</i> oder <i>Disabled checks</i>.")),
             (self.SERVICE_LEGACY_IGNORED, False, _("Disabled legacy services (defined in main.mk)"),
-            _("These services have been configured by the deprecated variable <tt>legacy_checks</tt> "
-              "in <tt>main.mk</tt> or a similar configuration file. "
-              "These services have been disabled by creating a rule in the rule set "
-              "<i>Disabled services</i> oder <i>Disabled checks</i>.")),
+             _("These services have been configured by the deprecated variable <tt>legacy_checks</tt> "
+               "in <tt>main.mk</tt> or a similar configuration file. "
+               "These services have been disabled by creating a rule in the rule set "
+               "<i>Disabled services</i> oder <i>Disabled checks</i>.")),
         ]
 
     # This function returns the HTTP variable name to use for a service. This needs to be unique
@@ -819,10 +839,10 @@ class ModeFirstDiscovery(ModeDiscovery):
 class ModeAjaxExecuteCheck(WatoWebApiMode):
     def _from_vars(self):
         # TODO: Validate the site
-        self._site      = html.get_ascii_input("site")
+        self._site = html.get_ascii_input("site")
 
         self._host_name = html.get_ascii_input("host")
-        self._host      = watolib.Folder.current().host(self._host_name)
+        self._host = watolib.Folder.current().host(self._host_name)
         if not self._host:
             raise MKUserError("host", _("You called this page with an invalid host name."))
 

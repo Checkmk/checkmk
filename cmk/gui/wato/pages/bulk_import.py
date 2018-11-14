@@ -80,9 +80,11 @@ class ModeBulkImport(WatoMode):
         return _("Bulk host import")
 
     def buttons(self):
-        html.context_button(_("Abort"), watolib.folder_preserving_link([("mode", "folder")]), "abort")
+        html.context_button(
+            _("Abort"), watolib.folder_preserving_link([("mode", "folder")]), "abort")
         if html.has_var("file_id"):
-            html.context_button(_("Back"), watolib.folder_preserving_link([("mode", "bulk_import")]), "back")
+            html.context_button(
+                _("Back"), watolib.folder_preserving_link([("mode", "bulk_import")]), "back")
 
     def action(self):
         if html.transaction_valid():
@@ -137,7 +139,8 @@ class ModeBulkImport(WatoMode):
         try:
             csv_file = file(self._file_path())
         except IOError:
-            raise MKUserError(None, _("Failed to read the previously uploaded CSV file. Please upload it again."))
+            raise MKUserError(
+                None, _("Failed to read the previously uploaded CSV file. Please upload it again."))
 
         params = self._vs_parse_params().from_html_vars("_preview")
         self._vs_parse_params().validate_value(params, "_preview")
@@ -183,7 +186,8 @@ class ModeBulkImport(WatoMode):
                 selected.append('_c_%s' % host_name)
                 num_succeeded += 1
             except Exception, e:
-                fail_messages.append(_("Failed to create a host from line %d: %s") % (self._csv_reader.line_num, e))
+                fail_messages.append(
+                    _("Failed to create a host from line %d: %s") % (self._csv_reader.line_num, e))
                 num_failed += 1
 
         self._delete_csv_file()
@@ -220,9 +224,11 @@ class ModeBulkImport(WatoMode):
 
             elif attribute and attribute != "-":
                 if attribute in attributes:
-                    raise MKUserError(None, _("The attribute \"%s\" is assigned to multiple columns. "
-                                              "You can not populate one attribute from multiple columns. "
-                                              "The column to attribute associations need to be unique.") % attribute)
+                    raise MKUserError(
+                        None,
+                        _("The attribute \"%s\" is assigned to multiple columns. "
+                          "You can not populate one attribute from multiple columns. "
+                          "The column to attribute associations need to be unique.") % attribute)
 
                 # FIXME: Couldn't we decode all attributes?
                 if attribute == "alias":
@@ -231,8 +237,10 @@ class ModeBulkImport(WatoMode):
                     try:
                         unicode(value)
                     except:
-                        raise MKUserError(None, _("Non-ASCII characters are not allowed in the "
-                                                  "attribute \"%s\".") % attribute)
+                        raise MKUserError(
+                            None,
+                            _("Non-ASCII characters are not allowed in the "
+                              "attribute \"%s\".") % attribute)
                     attributes[attribute] = value
 
         if host_name == None:
@@ -248,9 +256,11 @@ class ModeBulkImport(WatoMode):
 
     def _upload_form(self):
         html.begin_form("upload", method="POST")
-        html.p(_("Using this page you can import several hosts at once into the choosen folder. You can "
-                 "choose a CSV file from your workstation to be uploaded, paste a CSV files contents "
-                 "into the textarea or simply enter a list of hostnames (one per line) to the textarea."))
+        html.p(
+            _("Using this page you can import several hosts at once into the choosen folder. You can "
+              "choose a CSV file from your workstation to be uploaded, paste a CSV files contents "
+              "into the textarea or simply enter a list of hostnames (one per line) to the textarea."
+             ))
 
         self._vs_upload().render_input("_upload", None)
         html.hidden_fields()
@@ -259,20 +269,19 @@ class ModeBulkImport(WatoMode):
 
     def _vs_upload(self):
         return Dictionary(
-            elements = [
-                ("file", UploadOrPasteTextFile(
-                    title = _("Import Hosts"),
-                    file_title = _("CSV File"),
-                    allow_empty = False,
-                    default_mode = "upload",
-                )),
-                ("do_service_detection", Checkbox(
-                    title = _("Perform automatic service discovery"),
-                )),
+            elements=[
+                ("file",
+                 UploadOrPasteTextFile(
+                     title=_("Import Hosts"),
+                     file_title=_("CSV File"),
+                     allow_empty=False,
+                     default_mode="upload",
+                 )),
+                ("do_service_detection", Checkbox(title=_("Perform automatic service discovery"),)),
             ],
-            render = "form",
-            title = _("Import Hosts"),
-            optional_keys = [],
+            render="form",
+            title=_("Import Hosts"),
+            optional_keys=[],
         )
 
     def _preview(self):
@@ -293,14 +302,14 @@ class ModeBulkImport(WatoMode):
               "currently parsing it. If the lines are not splitted correctly or the title line is "
               "not shown as title of the table, you may change the import settings above and try "
               "again.") + "<br><br>" +
-             _("The first row below the titles contains fields to specify which column of the "
-               "CSV file should be imported to which attribute of the created hosts. The import "
-               "progress is trying to match the columns to attributes automatically by using the "
-               "titles found in the title row (if you have some). "
-               "If you use the correct titles, the attributes can be mapped automatically. The "
-               "currently available attributes are:") + attribute_list +
-             _("You can change these assignments according to your needs and then start the "
-               "import by clicking on the <i>Import</i> button above."))
+            _("The first row below the titles contains fields to specify which column of the "
+              "CSV file should be imported to which attribute of the created hosts. The import "
+              "progress is trying to match the columns to attributes automatically by using the "
+              "titles found in the title row (if you have some). "
+              "If you use the correct titles, the attributes can be mapped automatically. The "
+              "currently available attributes are:") + attribute_list +
+            _("You can change these assignments according to your needs and then start the "
+              "import by clicking on the <i>Import</i> button above."))
 
         # Wenn bei einem Host ein Fehler passiert, dann wird die Fehlermeldung zu dem Host angezeigt, so dass man sehen kann, was man anpassen muss.
         # Die problematischen Zeilen sollen angezeigt werden, so dass man diese als Block in ein neues CSV-File eintragen kann und dann diese Datei
@@ -357,33 +366,36 @@ class ModeBulkImport(WatoMode):
 
     def _vs_parse_params(self):
         return Dictionary(
-            elements = [
-                ("field_delimiter", TextAscii(
-                    title = _("Set field delimiter"),
-                    default_value = ";",
-                    size = 1,
-                    allow_empty = False,
-                )),
-                ("has_title_line", FixedValue(True,
-                    title = _("Has title line"),
-                    totext = _("The first line in the file contains titles."),
-                )),
+            elements=[
+                ("field_delimiter",
+                 TextAscii(
+                     title=_("Set field delimiter"),
+                     default_value=";",
+                     size=1,
+                     allow_empty=False,
+                 )),
+                ("has_title_line",
+                 FixedValue(
+                     True,
+                     title=_("Has title line"),
+                     totext=_("The first line in the file contains titles."),
+                 )),
             ],
-            render = "form",
-            title = _("File Parsing Settings"),
-            default_keys = ["has_title_line"],
+            render="form",
+            title=_("File Parsing Settings"),
+            default_keys=["has_title_line"],
         )
 
     def _attribute_choices(self):
         attributes = [
-            (None,              _("(please select)")),
-            ("-",               _("Don't import")),
-            ("host_name",       _("Hostname")),
-            ("alias",           _("Alias")),
-            ("site",            _("Monitored on site")),
-            ("ipaddress",       _("IPv4 Address")),
-            ("ipv6address",     _("IPv6 Address")),
-            ("snmp_community",  _("SNMP Community")),
+            (None, _("(please select)")),
+            ("-", _("Don't import")),
+            ("host_name", _("Hostname")),
+            ("alias", _("Alias")),
+            ("site", _("Monitored on site")),
+            ("ipaddress", _("IPv4 Address")),
+            ("ipv6address", _("IPv6 Address")),
+            ("snmp_community", _("SNMP Community")),
         ]
 
         # Add tag groups

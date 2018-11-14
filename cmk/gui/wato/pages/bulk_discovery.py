@@ -54,11 +54,11 @@ DiscoveryTask = namedtuple("DiscoveryTask", ["site_id", "folder_path", "host_nam
 @gui_background_job.job_registry.register
 class BulkDiscoveryBackgroundJob(WatoBackgroundJob):
     job_prefix = "bulk_discovery"
-    gui_title  = _("Bulk Discovery")
+    gui_title = _("Bulk Discovery")
 
     def __init__(self):
         kwargs = {}
-        kwargs["title"]     = _("Bulk discovery")
+        kwargs["title"] = _("Bulk discovery")
         kwargs["lock_wato"] = False
         kwargs["deletable"] = False
         kwargs["stoppable"] = False
@@ -77,10 +77,14 @@ class BulkDiscoveryBackgroundJob(WatoBackgroundJob):
 
         job_interface.send_progress_update(_("Bulk discovery finished."))
 
-        job_interface.send_progress_update(_("Hosts: %d total, %d succeeded, %d skipped, %d failed") %
-                (self._num_hosts_total, self._num_hosts_succeeded, self._num_hosts_skipped, self._num_hosts_failed))
-        job_interface.send_progress_update(_("Services: %d total, %d added, %d removed, %d kept") %
-            (self._num_services_total, self._num_services_added, self._num_services_removed, self._num_services_kept))
+        job_interface.send_progress_update(
+            _("Hosts: %d total, %d succeeded, %d skipped, %d failed") %
+            (self._num_hosts_total, self._num_hosts_succeeded, self._num_hosts_skipped,
+             self._num_hosts_failed))
+        job_interface.send_progress_update(
+            _("Services: %d total, %d added, %d removed, %d kept") %
+            (self._num_services_total, self._num_services_added, self._num_services_removed,
+             self._num_services_kept))
 
         job_interface.send_result_message(_("Bulk discovery successful"))
 
@@ -164,7 +168,8 @@ class BulkDiscoveryBackgroundJob(WatoBackgroundJob):
 
         self._num_hosts_succeeded += 1
 
-        watolib.add_service_change(host, "bulk-discovery",
+        watolib.add_service_change(
+            host, "bulk-discovery",
             _("Did service discovery on host %s: %d added, %d removed, %d kept, "
               "%d total services") % tuple([host.name()] + host_counts))
 
@@ -229,7 +234,9 @@ class ModeBulkDiscovery(WatoMode):
             if config.debug:
                 raise
             logger.exception("Failed to start bulk discovery")
-            raise MKUserError(None, _("Failed to start discovery: %s") % ("%s" % e).replace("\n", "\n<br>"))
+            raise MKUserError(
+                None,
+                _("Failed to start discovery: %s") % ("%s" % e).replace("\n", "\n<br>"))
 
         html.response.http_redirect(self._job.detail_url())
 
@@ -238,7 +245,9 @@ class ModeBulkDiscovery(WatoMode):
 
         job_status_snapshot = self._job.get_status_snapshot()
         if job_status_snapshot.is_running():
-            html.message(_("Bulk discovery currently running in <a href=\"%s\">background</a>.") % self._job.detail_url())
+            html.message(
+                _("Bulk discovery currently running in <a href=\"%s\">background</a>.") %
+                self._job.detail_url())
             return
 
         self._show_start_form()
@@ -256,12 +265,15 @@ class ModeBulkDiscovery(WatoMode):
             # - Below 'Bulk import' a automatic service discovery for
             #   imported/selected hosts can be executed
             vs = cmk.gui.plugins.wato.vs_bulk_discovery(render_form=True, include_subfolders=False)
-            msgs.append(_("You have selected <b>%d</b> hosts for bulk discovery.") % len(self._get_hosts_to_discover()))
+            msgs.append(
+                _("You have selected <b>%d</b> hosts for bulk discovery.") % len(
+                    self._get_hosts_to_discover()))
             selection = self._bulk_discovery_params["selection"]
             self._bulk_discovery_params["selection"] = [False] + list(selection[1:])
 
-        msgs.append(_("Check_MK service discovery will automatically find and "
-                      "configure services to be checked on your hosts."))
+        msgs.append(
+            _("Check_MK service discovery will automatically find and "
+              "configure services to be checked on your hosts."))
         html.open_p()
         html.write_text(" ".join(msgs))
         vs.render_input("bulkinventory", self._bulk_discovery_params)

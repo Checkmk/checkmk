@@ -82,8 +82,12 @@ class ModeTimeperiods(WatoMode):
 
     def buttons(self):
         global_buttons()
-        html.context_button(_("New Timeperiod"), watolib.folder_preserving_link([("mode", "edit_timeperiod")]), "new")
-        html.context_button(_("Import iCalendar"), watolib.folder_preserving_link([("mode", "import_ical")]), "ical")
+        html.context_button(
+            _("New Timeperiod"), watolib.folder_preserving_link([("mode", "edit_timeperiod")]),
+            "new")
+        html.context_button(
+            _("Import iCalendar"), watolib.folder_preserving_link([("mode", "import_ical")]),
+            "ical")
 
     def action(self):
         delname = html.var("_delete")
@@ -101,9 +105,10 @@ class ModeTimeperiods(WatoMode):
                 message += "</ul>"
                 raise MKUserError(None, message)
 
-            c = wato_confirm(_("Confirm deletion of time period %s") % delname,
-                  _("Do you really want to delete the time period '%s'? I've checked it: "
-                    "it is not being used by any rule or user profile right now.") % delname)
+            c = wato_confirm(
+                _("Confirm deletion of time period %s") % delname,
+                _("Do you really want to delete the time period '%s'? I've checked it: "
+                  "it is not being used by any rule or user profile right now.") % delname)
             if c:
                 del self._timeperiods[delname]
                 watolib.save_timeperiods(self._timeperiods)
@@ -145,7 +150,8 @@ class ModeTimeperiods(WatoMode):
             for _folder, _rulenr, rule in ruleset.get_rules():
                 if rule.value == tpname:
                     used_in.append(("%s: %s" % (_("Ruleset"), ruleset.title()),
-                                   watolib.folder_preserving_link([("mode", "edit_ruleset"), ("varname", varname)])))
+                                    watolib.folder_preserving_link([("mode", "edit_ruleset"),
+                                                                    ("varname", varname)])))
                     break
 
         return used_in
@@ -156,7 +162,8 @@ class ModeTimeperiods(WatoMode):
             tp = user.get("notification_period")
             if tp == tpname:
                 used_in.append(("%s: %s" % (_("User"), userid),
-                    watolib.folder_preserving_link([("mode", "edit_user"), ("edit", userid)])))
+                                watolib.folder_preserving_link([("mode", "edit_user"),
+                                                                ("edit", userid)])))
 
             for index, rule in enumerate(user.get("notification_rules", [])):
                 used_in += self._find_usages_in_notification_rule(
@@ -167,9 +174,9 @@ class ModeTimeperiods(WatoMode):
         used_in = []
         for tpn, tp in watolib.load_timeperiods().items():
             if tpname in tp.get("exclude", []):
-                used_in.append(("%s: %s (%s)" % (_("Timeperiod"), tp.get("alias", tpn),
-                        _("excluded")),
-                        watolib.folder_preserving_link([("mode", "edit_timeperiod"), ("edit", tpn)])))
+                used_in.append(
+                    ("%s: %s (%s)" % (_("Timeperiod"), tp.get("alias", tpn), _("excluded")),
+                     watolib.folder_preserving_link([("mode", "edit_timeperiod"), ("edit", tpn)])))
         return used_in
 
     def _find_usages_in_notification_rules(self, tpname):
@@ -267,7 +274,7 @@ class ModeTimeperiods(WatoMode):
         return used_in
 
     def page(self):
-        table.begin("timeperiods", empty_text = _("There are no timeperiods defined yet."))
+        table.begin("timeperiods", empty_text=_("There are no timeperiods defined yet."))
         for name, timeperiod in sorted(self._timeperiods.items()):
             table.row()
 
@@ -318,49 +325,54 @@ class ModeTimeperiodImportICal(WatoMode):
         return _("Import iCalendar File to create a Timeperiod")
 
     def buttons(self):
-        html.context_button(_("All Timeperiods"),
-            watolib.folder_preserving_link([("mode", "timeperiods")]), "back")
+        html.context_button(
+            _("All Timeperiods"), watolib.folder_preserving_link([("mode", "timeperiods")]), "back")
 
     def _vs_ical(self):
         return Dictionary(
-            title = _('Import iCalendar File'),
-            render = "form",
-            optional_keys = None,
-            elements = [
-                ('file', FileUpload(
-                    title = _('iCalendar File'),
-                    help = _("Select an iCalendar file (<tt>*.ics</tt>) from your PC"),
-                    allow_empty = False,
-                    custom_validate = self._validate_ical_file,
-                )),
-                ('horizon', Integer(
-                    title = _('Time horizon for repeated events'),
-                    help = _("When the iCalendar file contains definitions of repeating events, these repeating "
-                             "events will be resolved to single events for the number of years you specify here."),
-                    minvalue = 0,
-                    maxvalue = 50,
-                    default_value = 10,
-                    unit = _('years'),
-                    allow_empty = False,
-                )),
-                ('times', Optional(
-                    ListOfTimeRanges(
-                        default_value = [None],
-                    ),
-                    title = _('Use specific times'),
-                    label = _('Use specific times instead of whole day'),
-                    help = _("When you specify explicit time definitions here, these will be added to each "
-                             "date which is added to the resulting time period. By default the whole day is "
-                             "used."),
-                )),
-            ]
-        )
+            title=_('Import iCalendar File'),
+            render="form",
+            optional_keys=None,
+            elements=[
+                ('file',
+                 FileUpload(
+                     title=_('iCalendar File'),
+                     help=_("Select an iCalendar file (<tt>*.ics</tt>) from your PC"),
+                     allow_empty=False,
+                     custom_validate=self._validate_ical_file,
+                 )),
+                ('horizon',
+                 Integer(
+                     title=_('Time horizon for repeated events'),
+                     help=
+                     _("When the iCalendar file contains definitions of repeating events, these repeating "
+                       "events will be resolved to single events for the number of years you specify here."
+                      ),
+                     minvalue=0,
+                     maxvalue=50,
+                     default_value=10,
+                     unit=_('years'),
+                     allow_empty=False,
+                 )),
+                ('times',
+                 Optional(
+                     ListOfTimeRanges(default_value=[None],),
+                     title=_('Use specific times'),
+                     label=_('Use specific times instead of whole day'),
+                     help=
+                     _("When you specify explicit time definitions here, these will be added to each "
+                       "date which is added to the resulting time period. By default the whole day is "
+                       "used."),
+                 )),
+            ])
 
     def _validate_ical_file(self, value, varprefix):
         filename, _ty, content = value
         if not filename.endswith('.ics'):
-            raise MKUserError(varprefix, _('The given file does not seem to be a valid iCalendar file. '
-                                           'It needs to have the file extension <tt>.ics</tt>.'))
+            raise MKUserError(
+                varprefix,
+                _('The given file does not seem to be a valid iCalendar file. '
+                  'It needs to have the file extension <tt>.ics</tt>.'))
 
         if not content.startswith('BEGIN:VCALENDAR'):
             raise MKUserError(varprefix, _('The file does not seem to be a valid iCalendar file.'))
@@ -510,8 +522,8 @@ class ModeTimeperiodImportICal(WatoMode):
             resolved, cur_timestamp, day = [], time.mktime(cur_start_time), 1
             while cur_timestamp < time.mktime(event["end"]):
                 resolved.append({
-                    "name" : "%s %s" % (event["name"], _(" (day %d)") % day),
-                    "date" : time.strftime("%Y-%m-%d", time.localtime(cur_timestamp)),
+                    "name": "%s %s" % (event["name"], _(" (day %d)") % day),
+                    "date": time.strftime("%Y-%m-%d", time.localtime(cur_timestamp)),
                 })
                 cur_timestamp += 86400
                 day += 1
@@ -540,10 +552,11 @@ class ModeTimeperiodImportICal(WatoMode):
         return ical
 
     def page(self):
-        html.p(_('This page can be used to generate a new timeperiod definition based '
-                 'on the appointments of an iCalendar (<tt>*.ics</tt>) file. This import is normally used '
-                 'to import events like holidays, therefore only single whole day appointments are '
-                 'handled by this import.'))
+        html.p(
+            _('This page can be used to generate a new timeperiod definition based '
+              'on the appointments of an iCalendar (<tt>*.ics</tt>) file. This import is normally used '
+              'to import events like holidays, therefore only single whole day appointments are '
+              'handled by this import.'))
 
         html.begin_form("import_ical", method="POST")
         self._vs_ical().render_input("ical", {})
@@ -595,46 +608,49 @@ class ModeEditTimeperiod(WatoMode):
         return _("Edit time period")
 
     def buttons(self):
-        html.context_button(_("All Timeperiods"), watolib.folder_preserving_link([("mode", "timeperiods")]), "back")
+        html.context_button(
+            _("All Timeperiods"), watolib.folder_preserving_link([("mode", "timeperiods")]), "back")
 
     def _valuespec(self):
         if self._new:
             # Cannot use ID() here because old versions of the GUI allowed time periods to start
             # with numbers and so on. The ID() valuespec does not allow it.
             name_element = TextAscii(
-                title = _("Internal ID"),
-                regex = r"^[-a-z0-9A-Z_]*$",
-                regex_error = _("Invalid timeperiod name. Only the characters a-z, A-Z, 0-9, "
-                                "_ and - are allowed."),
-                allow_empty = False,
-                size = 80,
-                validate = self._validate_id,
+                title=_("Internal ID"),
+                regex=r"^[-a-z0-9A-Z_]*$",
+                regex_error=_("Invalid timeperiod name. Only the characters a-z, A-Z, 0-9, "
+                              "_ and - are allowed."),
+                allow_empty=False,
+                size=80,
+                validate=self._validate_id,
             )
         else:
             name_element = FixedValue(self._name,)
 
         return Dictionary(
-            title = _("Timeperiod"),
-            elements = [
+            title=_("Timeperiod"),
+            elements=[
                 ("name", name_element),
-                ("alias", TextUnicode(
-                    title = _("Alias"),
-                    help = _("An alias or description of the timeperiod"),
-                    allow_empty = False,
-                    size = 80,
-                    validate = self._validate_alias,
-                )),
+                ("alias",
+                 TextUnicode(
+                     title=_("Alias"),
+                     help=_("An alias or description of the timeperiod"),
+                     allow_empty=False,
+                     size=80,
+                     validate=self._validate_alias,
+                 )),
                 ("weekdays", self._vs_weekdays()),
                 ("exceptions", self._vs_exceptions()),
                 ("exclude", self._vs_exclude()),
             ],
-            render = "form",
-            optional_keys = None,
+            render="form",
+            optional_keys=None,
         )
 
     def _validate_id(self, value, varprefix):
         if value in self._timeperiods:
-            raise MKUserError(varprefix, _("This name is already being used by another timeperiod."))
+            raise MKUserError(varprefix,
+                              _("This name is already being used by another timeperiod."))
 
     def _validate_alias(self, value, varprefix):
         unique, message = watolib.is_alias_used("timeperiods", self._name, value)
@@ -643,17 +659,18 @@ class ModeEditTimeperiod(WatoMode):
 
     def _vs_weekdays(self):
         return CascadingDropdown(
-            title = _("Active time range"),
-            help = _("For each weekday you can setup no, one or several "
-                     "time ranges in the format <tt>23:39</tt>, in which the time period "
-                     "should be active."),
-            choices = [
+            title=_("Active time range"),
+            help=_("For each weekday you can setup no, one or several "
+                   "time ranges in the format <tt>23:39</tt>, in which the time period "
+                   "should be active."),
+            choices=[
                 ("whole_week", _("Same times for all weekdays"), ListOfTimeRanges()),
-                ("day_specific", _("Weekday specific times"), Dictionary(
-                    elements = self._weekday_elements(),
-                    optional_keys = None,
-                    indent = False,
-                )),
+                ("day_specific", _("Weekday specific times"),
+                 Dictionary(
+                     elements=self._weekday_elements(),
+                     optional_keys=None,
+                     indent=False,
+                 )),
             ],
         )
 
@@ -666,30 +683,31 @@ class ModeEditTimeperiod(WatoMode):
     def _vs_exceptions(self):
         return ListOf(
             Tuple(
-                orientation = "horizontal",
-                show_titles = False,
-                elements = [
+                orientation="horizontal",
+                show_titles=False,
+                elements=[
                     TextAscii(
-                        regex = "^[-a-z0-9A-Z /]*$",
-                        regex_error = _("This is not a valid Nagios timeperiod day specification."),
-                        allow_empty = False,
-                        validate = self._validate_timeperiod_exception,
+                        regex="^[-a-z0-9A-Z /]*$",
+                        regex_error=_("This is not a valid Nagios timeperiod day specification."),
+                        allow_empty=False,
+                        validate=self._validate_timeperiod_exception,
                     ),
                     ListOfTimeRanges()
                 ],
             ),
-            title = _("Exceptions (from weekdays)"),
-            help = _("Here you can specify exceptional time ranges for certain "
-                     "dates in the form YYYY-MM-DD which are used to define more "
-                     "specific definitions to override the times configured for the matching "
-                     "weekday."),
-            movable = False,
-            add_label = _("Add Exception"),
+            title=_("Exceptions (from weekdays)"),
+            help=_("Here you can specify exceptional time ranges for certain "
+                   "dates in the form YYYY-MM-DD which are used to define more "
+                   "specific definitions to override the times configured for the matching "
+                   "weekday."),
+            movable=False,
+            add_label=_("Add Exception"),
         )
 
     def _validate_timeperiod_exception(self, value, varprefix):
         if value in defines.weekday_ids():
-            raise MKUserError(varprefix, _("You cannot use weekday names (%s) in exceptions") % value)
+            raise MKUserError(varprefix,
+                              _("You cannot use weekday names (%s) in exceptions") % value)
 
         if value in ["name", "alias", "timeperiod_name", "register", "use", "exclude"]:
             raise MKUserError(varprefix, _("<tt>%s</tt> is a reserved keyword."))
@@ -699,14 +717,15 @@ class ModeEditTimeperiod(WatoMode):
             try:
                 time.strptime(value, "%Y-%m-%d")
             except ValueError:
-                raise MKUserError(varprefix, _("You need to provide timeperiod exceptions in YYYY-MM-DD format"))
+                raise MKUserError(
+                    varprefix, _("You need to provide timeperiod exceptions in YYYY-MM-DD format"))
 
     def _vs_exclude(self):
         return ListChoice(
             choices=self._other_timeperiod_choices(),
-            title = _("Exclude"),
-            help = _('You can use other timeperiod definitions to exclude the times '
-                     'defined in the other timeperiods from this current timeperiod.'),
+            title=_("Exclude"),
+            help=_('You can use other timeperiod definitions to exclude the times '
+                   'defined in the other timeperiods from this current timeperiod.'),
         )
 
     def _other_timeperiod_choices(self):

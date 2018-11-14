@@ -30,6 +30,7 @@ import socket
 import ssl
 import sys
 import urllib2
+import copy
 from httplib import HTTPConnection, HTTPSConnection
 
 try:
@@ -44,6 +45,29 @@ except ImportError:
 
 VERBOSE = '--verbose' in sys.argv
 DEBUG = '--debug' in sys.argv
+
+DEFAULT_CONFIG = {
+    # Default global configuration values
+    "protocol": "http",
+    "server": "localhost",
+    "port": 8080,
+    "user": "monitoring",
+    "password": None,
+    "mode": "digest",
+    "suburi": "jolokia",
+    "instance": None,
+    "cert_path": None,
+    "client_cert": None,
+    "client_key": None,
+    "service_url": None,
+    "service_user": None,
+    "service_password": None,
+    "product": None,
+    "custom_vars": [],
+    # List of instances to monitor. Each instance is a dict where
+    # the global configuration values can be overridden.
+    "instances": [{}],
+}
 
 
 class SkipInstance(RuntimeError):
@@ -410,56 +434,18 @@ def generate_values(inst, var_list):
 
 def yield_configured_instances():
 
-    # Default configuration for all instances
-    protocol = "http"
-    server = "localhost"
-    port = 8080
-    user = "monitoring"
-    password = None
-    mode = "digest"
-    suburi = "jolokia"
-    instance = None
-    cert_path = None
-    client_cert = None
-    client_key = None
-    service_url = None
-    service_user = None
-    service_password = None
-    product = None
-    custom_vars = []
+    custom_config = copy.deepcopy(DEFAULT_CONFIG)
 
-    # List of instances to monitor. Each instance is a dict where
-    # the global configuration values can be overridden.
-    instances = [{}]
-
-    conffile = os.getenv("MK_CONFDIR", "/etc/check_mk") + "/jolokia.cfg"
+    conffile = os.path.join(os.getenv("MK_CONFDIR", "/etc/check_mk"), "jolokia.cfg")
     if os.path.exists(conffile):
-        execfile(conffile)
-
-    default_config = {
-        "protocol": protocol,
-        "server": server,
-        "port": port,
-        "user": user,
-        "password": password,
-        "mode": mode,
-        "suburi": suburi,
-        "instance": instance,
-        "cert_path": cert_path,
-        "client_cert": client_cert,
-        "client_key": client_key,
-        "service_url": service_url,
-        "service_user": service_user,
-        "service_password": service_password,
-        "product": product,
-        "custom_vars": custom_vars,
-    }
+        execfile(conffile, {}, custom_config)
 
     # Compute list of instances to monitor. If the user has defined
     # instances in his configuration, we will use this (a list
     # of dicts).
+    instances = custom_config.pop("instances", [{}])
     for inst in instances:
-        config = {k: inst.get(k, default_config[k]) for k in default_config}
+        config = {k: inst.get(k, custom_config[k]) for k in custom_config}
 
         if not config["instance"]:
             config["instance"] = str(config["port"])

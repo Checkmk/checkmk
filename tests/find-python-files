@@ -21,7 +21,8 @@ SEARCH+=" notifications"
 # Do not search whole omd/ because it may contain unpacked sub-packages
 SEARCH+=" omd/packages/cma"
 SEARCH+=" omd/packages/maintenance"
-SEARCH+=" omd/packages/omd"
+# Temporarily disable YAPF for omd
+#SEARCH+=" omd/packages/omd"
 SEARCH+=" scripts"
 # Tests contain some very large data structures (e.g.
 # tests/unit/checks/test_docker_parse_node_images.py).  Skip them for the

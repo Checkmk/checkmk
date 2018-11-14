@@ -321,8 +321,11 @@ def query_instance(inst):
             if mbean in mbean_search_results:
                 paths = mbean_search_results[mbean]
             else:
-                paths = fetch_var(inst["protocol"], inst["server"], inst["port"], mbean,
-                                inst["suburi"], "", None, None, None, function="search")[0][1]
+                try:
+                    paths = fetch_var(inst["protocol"], inst["server"], inst["port"], mbean,
+                                      inst["suburi"], "", None, None, None, function="search")[0][1]
+                except IndexError:
+                    paths = []
                 mbean_search_results[mbean] = paths
 
             for mbean_exp in paths:
@@ -354,8 +357,11 @@ def query_instance(inst):
                 if mbean in mbean_search_results:
                     paths = mbean_search_results[mbean]
                 else:
-                    paths = fetch_var(inst["protocol"], inst["server"], inst["port"], mbean,
-                                    inst["suburi"], "", None, None, None, function="search")[0][1]
+                    try:
+                        paths = fetch_var(inst["protocol"], inst["server"], inst["port"], mbean,
+                                          inst["suburi"], "", None, None, None, function="search")[0][1]
+                    except IndexError:
+                        paths = []
                     mbean_search_results[mbean] = paths
 
                 for mbean_exp in paths:

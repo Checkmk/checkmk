@@ -121,9 +121,10 @@ def parse_diskstat(info):
     # Sort of partitions with disks - typical in XEN virtual setups.
     # Eg. there are xvda1, xvda2, but no xvda...
     device_names = [line[3] for line in proc_diskstat]
-    real_partitions = {device_name for device_name in device_names
-                       if diskstat_diskless_pattern.match(device_name)
-                          and re.sub('[0-9]+$', '', device_name)}
+    real_partitions = {
+        device_name for device_name in device_names
+        if diskstat_diskless_pattern.match(device_name) and re.sub('[0-9]+$', '', device_name)
+    }
     disks = {}
     for line in proc_diskstat:
         if line[3] in real_partitions:
@@ -146,27 +147,32 @@ def parse_diskstat(info):
         # Note: we use onwrap=0.0 here because the parse function is being used also during
         # service discovery. If we raise a counter wrap exception here, then nothing will
         # be inventorized.
-        read_ticks_rate  = get_rate(counter_base + "read_ticks",   timestamp, int(read_ticks), onwrap=0.0)
-        write_ticks_rate = get_rate(counter_base + "write_ticks",  timestamp, int(write_ticks), onwrap=0.0)
-        total_ticks_rate = get_rate(counter_base + "total_ticks",  timestamp, int(total_ticks), onwrap=0.0)
-        read_ios_rate    = get_rate(counter_base + "read_ios",     timestamp, int(read_ios), onwrap=0.0)
-        write_ios_rate   = get_rate(counter_base + "write_ios",    timestamp, int(write_ios), onwrap=0.0)
-        total_ios_rate   = read_ios_rate + write_ios_rate
-        utilization      = total_ticks_rate / 1000 # not percent, but 0...1
-        read_bytes_rate  = get_rate(counter_base + "read_sectors",  timestamp, int(read_sectors), onwrap=0.0) * 512
-        write_bytes_rate = get_rate(counter_base + "write_sectors", timestamp, int(write_sectors), onwrap=0.0) * 512
+        read_ticks_rate = get_rate(
+            counter_base + "read_ticks", timestamp, int(read_ticks), onwrap=0.0)
+        write_ticks_rate = get_rate(
+            counter_base + "write_ticks", timestamp, int(write_ticks), onwrap=0.0)
+        total_ticks_rate = get_rate(
+            counter_base + "total_ticks", timestamp, int(total_ticks), onwrap=0.0)
+        read_ios_rate = get_rate(counter_base + "read_ios", timestamp, int(read_ios), onwrap=0.0)
+        write_ios_rate = get_rate(counter_base + "write_ios", timestamp, int(write_ios), onwrap=0.0)
+        total_ios_rate = read_ios_rate + write_ios_rate
+        utilization = total_ticks_rate / 1000  # not percent, but 0...1
+        read_bytes_rate = get_rate(
+            counter_base + "read_sectors", timestamp, int(read_sectors), onwrap=0.0) * 512
+        write_bytes_rate = get_rate(
+            counter_base + "write_sectors", timestamp, int(write_sectors), onwrap=0.0) * 512
         total_bytes_rate = read_bytes_rate + write_bytes_rate
 
         # The service time is computed from the utilization. If we work
         # e.g. 0.34 (34%) of the time and we can do 17 operations in that
         # time then the average latency is time * 0.34 / 17
         if total_ios_rate:
-            latency              = utilization / total_ios_rate
-            average_wait         = (read_ticks_rate + write_ticks_rate) / total_ios_rate / 1000.0
+            latency = utilization / total_ios_rate
+            average_wait = (read_ticks_rate + write_ticks_rate) / total_ios_rate / 1000.0
             average_request_size = total_bytes_rate / total_ios_rate
         else:
-            latency              = 0.0
-            average_wait         = 0.0
+            latency = 0.0
+            average_wait = 0.0
             average_request_size = 0.0
 
         # Average read and write rate, from end to end, including queuing, etc.
@@ -186,20 +192,20 @@ def parse_diskstat(info):
             average_write_size = 0.0
 
         disks[device] = {
-            "node"                       : node_name,
-            "read_ios"                   : read_ios_rate,
-            "write_ios"                  : write_ios_rate,
-            "read_throughput"            : read_bytes_rate,
-            "write_throughput"           : write_bytes_rate,
-            "utilization"                : utilization,
-            "latency"                    : latency,
-            "average_request_size"       : average_request_size,
-            "average_wait"               : average_wait,
-            "average_read_wait"          : average_read_wait,
-            "average_read_request_size"  : average_read_size,
-            "average_write_wait"         : average_write_wait,
-            "average_write_request_size" : average_write_size,
-            "queue_length"               : int(ios_in_prog),
+            "node": node_name,
+            "read_ios": read_ios_rate,
+            "write_ios": write_ios_rate,
+            "read_throughput": read_bytes_rate,
+            "write_throughput": write_bytes_rate,
+            "utilization": utilization,
+            "latency": latency,
+            "average_request_size": average_request_size,
+            "average_wait": average_wait,
+            "average_read_wait": average_read_wait,
+            "average_read_request_size": average_read_size,
+            "average_write_wait": average_write_wait,
+            "average_write_request_size": average_write_size,
+            "queue_length": int(ios_in_prog),
         }
 
     return disks
@@ -272,7 +278,7 @@ def parse_diskstat(info):
 #     (None, 253, 6): 'LVM vgappl-applvol',
 # }
 def diskstat_extract_name_info(info):
-    name_info = {} # dict from (node, major, minor) to itemname
+    name_info = {}  # dict from (node, major, minor) to itemname
     timestamp = None
 
     info_plain = []
@@ -305,7 +311,7 @@ def diskstat_extract_name_info(info):
                         name = "DM %s" % line[1]
                     name_info[node, major, minor] = name
                 except:
-                    pass # ignore such crap as "No Devices Found"
+                    pass  # ignore such crap as "No Devices Found"
             elif phase == 'vx_dsk':
                 major = int(line[1], 16)
                 minor = int(line[2], 16)
@@ -315,9 +321,10 @@ def diskstat_extract_name_info(info):
 
     return timestamp, info_plain, name_info
 
+
 def diskstat_convert_info(parsed):
     disks, multipath_info = parsed
-    converted_disks = dict(disks.items()) # we must not modify info!
+    converted_disks = dict(disks.items())  # we must not modify info!
 
     # If we have information about multipathing, then remove the
     # physical path devices from the disks array. But only do this,
@@ -359,8 +366,8 @@ def inventory_diskstat(parsed):
 
     # Use generic diskstat inventory function that is used also for other
     # Disk IO checks. That expects a table of (node, device, ...)
-    return inventory_diskstat_generic([
-        (disk["node"], device) for device, disk in converted_disks.items()])
+    return inventory_diskstat_generic(
+        [(disk["node"], device) for device, disk in converted_disks.items()])
 
 
 def check_diskstat(item, params, parsed):
@@ -368,13 +375,13 @@ def check_diskstat(item, params, parsed):
 
 
 check_info["diskstat"] = {
-    'parse_function'      : parse_diskstat,
-    'inventory_function'  : inventory_diskstat,
-    'check_function'      : check_diskstat,
-    'service_description' : 'Disk IO %s',
-    'has_perfdata'        : True,
-    'group'               : 'diskstat',
-    "node_info"           : True, # add first column with actual host name
-    'includes'            : [ "diskstat.include" ],
-    'extra_sections'      : [ "multipath" ],
+    'parse_function': parse_diskstat,
+    'inventory_function': inventory_diskstat,
+    'check_function': check_diskstat,
+    'service_description': 'Disk IO %s',
+    'has_perfdata': True,
+    'group': 'diskstat',
+    "node_info": True,  # add first column with actual host name
+    'includes': ["diskstat.include"],
+    'extra_sections': ["multipath"],
 }

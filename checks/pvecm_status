@@ -24,7 +24,6 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-
 # healthy
 # <<<pvecm_status:sep(58)>>>
 # Version: 6.2.0
@@ -96,8 +95,7 @@ def check_pvecm_status(_no_item, _no_params, parsed):
         yield 2, "Cluster management tool: %s" % parsed["cman_tool"]
 
     else:
-        name = parsed.get("cluster name",
-                          parsed.get("quorum provider", "unknown"))
+        name = parsed.get("cluster name", parsed.get("quorum provider", "unknown"))
 
         yield 0, "Name: %s, Nodes: %s" % \
                  (name, parsed["nodes"])
@@ -113,8 +111,8 @@ def check_pvecm_status(_no_item, _no_params, parsed):
 
 
 check_info['pvecm_status'] = {
-    'parse_function'            : parse_pvecm_status,
-    'inventory_function'        : inventory_pvecm_status,
-    'check_function'            : check_pvecm_status,
-    'service_description'       : 'PVE Cluster State',
+    'parse_function': parse_pvecm_status,
+    'inventory_function': inventory_pvecm_status,
+    'check_function': check_pvecm_status,
+    'service_description': 'PVE Cluster State',
 }

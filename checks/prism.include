@@ -33,4 +33,3 @@ def parse_prism(info):
     for row in info[1:]:
         result.append(dict(zip(header, row)))
     return result
-

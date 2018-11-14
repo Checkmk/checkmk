@@ -24,7 +24,6 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-
 # --VOLUME INFORMATION--
 #
 # Name:              Vol1
@@ -111,6 +110,7 @@ def parse_rstcli_disks(rows):
 
     return disks
 
+
 def parse_rstcli(info):
     volumes = {}
 
@@ -145,9 +145,9 @@ def check_rstcli(item, params, parsed):
 
 
 check_info["rstcli"] = {
-    'check_function':      check_rstcli,
-    'inventory_function':  inventory_rstcli,
-    'parse_function':      parse_rstcli,
+    'check_function': check_rstcli,
+    'inventory_function': inventory_rstcli,
+    'parse_function': parse_rstcli,
     'service_description': 'RAID Volume %s',
 }
 
@@ -176,8 +176,7 @@ def check_rstcli_pdisks(item, params, parsed):
 
 
 check_info["rstcli.pdisks"] = {
-    'check_function':      check_rstcli_pdisks,
-    'inventory_function':  inventory_rstcli_pdisks,
+    'check_function': check_rstcli_pdisks,
+    'inventory_function': inventory_rstcli_pdisks,
     'service_description': 'RAID Disk %s',
 }
-

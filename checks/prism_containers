@@ -24,14 +24,12 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-
 # <<<prism_containers:sep(9)>>>
 # name    usage   capacity
 # DS01_NFS_Nutanix_B2B_Intern_SAS_Contrainer      2518694292480   38575532134515
 
-
 factory_settings['prism_container_default_levels'] = {
-    'levels': (80.0, 90.0), # in percent, defaults based on df checks
+    'levels': (80.0, 90.0),  # in percent, defaults based on df checks
 }
 
 
@@ -69,12 +67,12 @@ def check_prism_container(item, params, parsed):
 
 
 check_info['prism_containers'] = {
-    'check_function':          check_prism_container,
-    'inventory_function':      inventory_prism_container,
-    'parse_function':          parse_prism,
-    'group':                   "prism_container",
-    'has_perfdata':            True,
-    'service_description':     "Container %s",
-    'includes':                ["prism.include"],
+    'check_function': check_prism_container,
+    'inventory_function': inventory_prism_container,
+    'parse_function': parse_prism,
+    'group': "prism_container",
+    'has_perfdata': True,
+    'service_description': "Container %s",
+    'includes': ["prism.include"],
     'default_levels_variable': 'prism_container_default_levels'
 }

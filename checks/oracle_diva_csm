@@ -24,7 +24,6 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-
 # .1.3.6.1.4.1.110901.1.2.1.1.1.2.1       lib status
 # .1.3.6.1.4.1.110901.1.2.2.1.1.8.1.1.x   drive x status
 # .1.3.6.1.4.1.110901.1.3.1.1.4.1         actor status
@@ -35,7 +34,6 @@
 # .1.3.6.1.4.1.110901.1.4.4.0             remaining size on tapes
 # .1.3.6.1.4.1.110901.1.4.5.0             total size on tapes
 
-
 #
 # Note: These checks was designed a bit atypically (for no good reason):
 #   The drive, actor, archive, tapes and library checks are subchecks of the status
@@ -43,8 +41,6 @@
 #   As a result, "info" is always a list of 6 sublists and each check only
 #   acceses exactly one of the sublists.
 #
-
-
 
 #.
 #   .--Status--------------------------------------------------------------.
@@ -55,7 +51,6 @@
 #   |                   |____/ \__\__,_|\__|\__,_|___/                     |
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
-
 
 
 def item_name_oracle_diva_csm(name, element_id):
@@ -95,41 +90,47 @@ def check_oracle_diva_csm_status(name, idx, item, params, info):
 
 
 check_info['oracle_diva_csm'] = {
-    "check_function"      : lambda item, params, info: check_oracle_diva_csm_status("Library", 0, item, params, info),
-    "inventory_function"  : lambda info: inventory_oracle_diva_csm_status("Library", 0, info),
-    "service_description" : "DIVA Status %s",
-    "snmp_info"           : [ ( ".1.3.6.1.4.1.110901.1.2.1.1.1", [ '1',   '2' ] ),   # lib status
-                              ( ".1.3.6.1.4.1.110901.1.2.2.1.1", [ '3',   '8' ] ),   # drive status
-                              ( ".1.3.6.1.4.1.110901.1.3.1.1",   [ '2',   '4' ] ),   # actor status
-                              ( ".1.3.6.1.4.1.110901.1.4",       [ '1' ] ),          # archive status
-                              ( ".1.3.6.1.4.1.110901.1.4",       [ '2',      # object count
-                                                                   '4',      # remaining size
-                                                                   '5' ] ),  # total size
-                              ( ".1.3.6.1.4.1.110901.1.4",       [ '3' ] ),  # blank tape count
-                            ],
-    "snmp_scan_function"  : lambda oid: oid(".1.3.6.1.2.1.1.2.0") == ".1.3.6.1.4.1.311.1.1.3.1.2",
+    "check_function":
+        lambda item, params, info: check_oracle_diva_csm_status("Library", 0, item, params, info),
+    "inventory_function": lambda info: inventory_oracle_diva_csm_status("Library", 0, info),
+    "service_description": "DIVA Status %s",
+    "snmp_info": [
+        (".1.3.6.1.4.1.110901.1.2.1.1.1", ['1', '2']),  # lib status
+        (".1.3.6.1.4.1.110901.1.2.2.1.1", ['3', '8']),  # drive status
+        (".1.3.6.1.4.1.110901.1.3.1.1", ['2', '4']),  # actor status
+        (".1.3.6.1.4.1.110901.1.4", ['1']),  # archive status
+        (
+            ".1.3.6.1.4.1.110901.1.4",
+            [
+                '2',  # object count
+                '4',  # remaining size
+                '5'
+            ]),  # total size
+        (".1.3.6.1.4.1.110901.1.4", ['3']),  # blank tape count
+    ],
+    "snmp_scan_function": lambda oid: oid(".1.3.6.1.2.1.1.2.0") == ".1.3.6.1.4.1.311.1.1.3.1.2",
 }
 
 check_info['oracle_diva_csm.drive'] = {
-    "check_function"      : lambda item, params, info: check_oracle_diva_csm_status("Drive", 1, item, params, info),
-    "inventory_function"  : lambda info: inventory_oracle_diva_csm_status("Drive", 1, info),
-    "service_description" : "DIVA Status %s",
+    "check_function":
+        lambda item, params, info: check_oracle_diva_csm_status("Drive", 1, item, params, info),
+    "inventory_function": lambda info: inventory_oracle_diva_csm_status("Drive", 1, info),
+    "service_description": "DIVA Status %s",
 }
 
 check_info['oracle_diva_csm.actor'] = {
-    "check_function"      : lambda item, params, info: check_oracle_diva_csm_status("Actor", 2, item, params, info),
-    "inventory_function"  : lambda info: inventory_oracle_diva_csm_status("Actor", 2, info),
-    "service_description" : "DIVA Status %s",
+    "check_function":
+        lambda item, params, info: check_oracle_diva_csm_status("Actor", 2, item, params, info),
+    "inventory_function": lambda info: inventory_oracle_diva_csm_status("Actor", 2, info),
+    "service_description": "DIVA Status %s",
 }
-
 
 check_info['oracle_diva_csm.archive'] = {
-    "check_function"      : lambda item, params, info: check_oracle_diva_csm_status("Manager", 3, item, params, info),
-    "inventory_function"  : lambda info: inventory_oracle_diva_csm_status("Manager", 3, info),
-    "service_description" : "DIVA Status %s",
+    "check_function":
+        lambda item, params, info: check_oracle_diva_csm_status("Manager", 3, item, params, info),
+    "inventory_function": lambda info: inventory_oracle_diva_csm_status("Manager", 3, info),
+    "service_description": "DIVA Status %s",
 }
-
-
 
 #.
 #   .--Managed Objects-----------------------------------------------------.
@@ -158,20 +159,20 @@ def check_oracle_diva_csm_objects(item, params, info):
     if len(info) > 4 and len(info[4]) > 0:
         object_count, remaining_size, total_size = map(int, info[4][0])
 
-        infotext = "managed objects: %s, remaining size: %s GB of %s GB" % (object_count, remaining_size, total_size)
+        infotext = "managed objects: %s, remaining size: %s GB of %s GB" % (
+            object_count, remaining_size, total_size)
 
         return 0, infotext, [("managed_object_count", object_count),
-                            ("storage_used", (total_size - remaining_size) * GB,
-                            None, None, 0, total_size * GB)]
+                             ("storage_used", (total_size - remaining_size) * GB, None, None, 0,
+                              total_size * GB)]
 
 
 check_info['oracle_diva_csm.objects'] = {
-    "check_function"      : check_oracle_diva_csm_objects,
-    "inventory_function"  : inventory_oracle_diva_csm_objects,
-    "has_perfdata"        : True,
-    "service_description" : "DIVA Managed Objects",
+    "check_function": check_oracle_diva_csm_objects,
+    "inventory_function": inventory_oracle_diva_csm_objects,
+    "has_perfdata": True,
+    "service_description": "DIVA Managed Objects",
 }
-
 
 #.
 #   .--Tapes---------------------------------------------------------------.
@@ -183,8 +184,7 @@ check_info['oracle_diva_csm.objects'] = {
 #   |                               |_|                                    |
 #   '----------------------------------------------------------------------'
 
-
-oracle_diva_csm_tapes_default_levels = (5, 1)       # number of remaining blank tapes. invented levels
+oracle_diva_csm_tapes_default_levels = (5, 1)  # number of remaining blank tapes. invented levels
 
 
 def inventory_oracle_diva_csm_tapes(info):
@@ -208,9 +208,9 @@ def check_oracle_diva_csm_tapes(item, params, info):
 
 
 check_info['oracle_diva_csm.tapes'] = {
-    "check_function"          : check_oracle_diva_csm_tapes,
-    "inventory_function"      : inventory_oracle_diva_csm_tapes,
-    "group"                   : "blank_tapes",
-    "has_perfdata"            : True,
-    "service_description"     : "DIVA Blank Tapes",
+    "check_function": check_oracle_diva_csm_tapes,
+    "inventory_function": inventory_oracle_diva_csm_tapes,
+    "group": "blank_tapes",
+    "has_perfdata": True,
+    "service_description": "DIVA Blank Tapes",
 }

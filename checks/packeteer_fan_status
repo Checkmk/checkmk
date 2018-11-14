@@ -27,7 +27,7 @@
 
 def inventory_packeteer_fan_status(info):
     for nr, fan_status in enumerate(info[0]):
-        if fan_status in [ u"1", u"2" ]:
+        if fan_status in [u"1", u"2"]:
             yield ("%d" % nr, None)
 
 
@@ -42,9 +42,9 @@ def check_packeteer_fan_status(item, _no_params, info):
 
 
 check_info["packeteer_fan_status"] = {
-    "inventory_function"    : inventory_packeteer_fan_status,
-    "check_function"        : check_packeteer_fan_status,
-    "service_description"   : "Fan Status",
-    "snmp_scan_function"    : lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.2334"),
-    "snmp_info"             : ( ".1.3.6.1.4.1.2334.2.1.5", [ "12", "14", "22", "24" ]),
+    "inventory_function": inventory_packeteer_fan_status,
+    "check_function": check_packeteer_fan_status,
+    "service_description": "Fan Status",
+    "snmp_scan_function": lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.2334"),
+    "snmp_info": (".1.3.6.1.4.1.2334.2.1.5", ["12", "14", "22", "24"]),
 }

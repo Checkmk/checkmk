@@ -42,18 +42,17 @@
 inventory_oracle_rman_incremental_details = True
 
 
-
 def parse_oracle_rman(info):
     parsed = {}
-    error_sids  = {}
+    error_sids = {}
 
     for line in info:
-        line      = line[1:]
+        line = line[1:]
 
         # Check for query errors
         err = oracle_handle_ora_errors(line)
         if err == False:
-            continue # ignore ancient agent outputs
+            continue  # ignore ancient agent outputs
         elif isinstance(err, tuple):
             sid = line[0]
             error_sids[sid] = err
@@ -85,7 +84,7 @@ def parse_oracle_rman(info):
                     item = "%s.%s_%s" % (sid, backuptype, backuplevel)
                 else:
                     # This is for really old plugins without an information for the backuplevel
-                    item = "%s.%s" % (sid, backuptype )
+                    item = "%s.%s" % (sid, backuptype)
             else:
                 item = "%s.%s" % (sid, backuptype)
 
@@ -98,26 +97,28 @@ def parse_oracle_rman(info):
         except (ValueError, TypeError):
             backupage = None
 
-        parsed.setdefault(item, {
-             "sid"         : sid,
-             "backuptype"  : backuptype,
-             "backuplevel" : backuplevel,
-             "backupage"   : backupage,
-             "status"      : status,
-             "backupscn"   : backupscn,
-             "used_incr_0" : False,          # True when last incr0 is newer then incr1
-        })
+        parsed.setdefault(
+            item,
+            {
+                "sid": sid,
+                "backuptype": backuptype,
+                "backuplevel": backuplevel,
+                "backupage": backupage,
+                "status": status,
+                "backupscn": backupscn,
+                "used_incr_0": False,  # True when last incr0 is newer then incr1
+            })
 
         # take the most current backupage in clustered environments
         if parsed[item]['backupage'] is None or parsed[item]['backupage'] > backupage:
-            parsed[item].update ({"backupage": backupage})
+            parsed[item].update({"backupage": backupage})
 
     # some tweaks in aprsed for change in behavior of oracle
     # correct backupage for INCR_1 when newer INCR_0 is existing
     for line in parsed:
 
         # search DB_INCR_1 in parsed
-        if line.rsplit('.',1)[1] == 'DB_INCR_1':
+        if line.rsplit('.', 1)[1] == 'DB_INCR_1':
 
             # check backupage
             sid_level0 = "%s0" % (line[0:-1])
@@ -125,11 +126,12 @@ def parse_oracle_rman(info):
             if sid_level0 in parsed and parsed[sid_level0]['backupage'] < parsed[line]['backupage']:
 
                 parsed[line].update({
-                     "backupage": backupage,
-                     "used_incr_0" : True,
+                    "backupage": backupage,
+                    "used_incr_0": True,
                 })
 
-    return  parsed
+    return parsed
+
 
 def inventory_oracle_rman(parsed):
     inventory = []
@@ -149,6 +151,7 @@ def inventory_oracle_rman(parsed):
                 inventory.append(("%s.%s" % (sid, backuptype), {}))
 
     return inventory
+
 
 # Cannot use generic decorator @get_parsed_item_data because this check function
 # needs special treatment
@@ -170,7 +173,7 @@ def check_oracle_rman(item, params, parsed):
             # => INCR_1 in item and INCR_0 found
             # => Switch to INCR_0 + used_incr_0
             rman_backup = parsed.get(sid_level0)
-            rman_backup.update({"used_incr_0" : True})
+            rman_backup.update({"used_incr_0": True})
 
         else:
 
@@ -179,21 +182,21 @@ def check_oracle_rman(item, params, parsed):
             # switch to UNKNOWN, but will get stale.
             raise MKCounterWrapped("Login into database failed. Working on %s" % item)
 
-    status      = rman_backup['status']
-    backupage   = rman_backup['backupage']
-    backupscn   = rman_backup['backupscn']
+    status = rman_backup['status']
+    backupage = rman_backup['backupage']
+    backupscn = rman_backup['backupscn']
 
     perfdata = []
     state = 2
 
-    if status in  ('COMPLETED', 'COMPLETED WITH WARNINGS'):
+    if status in ('COMPLETED', 'COMPLETED WITH WARNINGS'):
 
         if backupage is None:
             # backupage in agent was empty. That's only possible with really old agents.
             return 3, "Unknown backupage in check found. Please update agent."
 
         # backupage is time in minutes from agent!
-        backupage = backupage*60
+        backupage = backupage * 60
         infotext = "Last backup %s ago" % get_age_human_readable(backupage)
 
         state = 0
@@ -203,13 +206,12 @@ def check_oracle_rman(item, params, parsed):
                 state = 2
             elif backupage >= warn:
                 state = 1
-            infotext += " (warn/crit at %s/%s)" % (
-                get_age_human_readable(warn),
-                get_age_human_readable(crit))
+            infotext += " (warn/crit at %s/%s)" % (get_age_human_readable(warn),
+                                                   get_age_human_readable(crit))
 
-            perfdata = [ ("age", backupage, warn, crit) ]
+            perfdata = [("age", backupage, warn, crit)]
         else:
-            perfdata = [ ("age", backupage, ) ]
+            perfdata = [("age", backupage)]
 
         if backupscn > 0:
             infotext += ", incremental SCN %i" % backupscn
@@ -221,13 +223,14 @@ def check_oracle_rman(item, params, parsed):
 
     return state, infotext, perfdata
 
+
 check_info['oracle_rman'] = {
-    "check_function"          : check_oracle_rman,
-    "parse_function"          : parse_oracle_rman,
-    "inventory_function"      : inventory_oracle_rman,
-    "service_description"     : "ORA %s RMAN Backup",
-    "has_perfdata"            : True,
-    "node_info"               : True,
-    "group"                   : "oracle_rman",
-    "includes"                : [ "oracle.include", "db.include" ]
+    "check_function": check_oracle_rman,
+    "parse_function": parse_oracle_rman,
+    "inventory_function": inventory_oracle_rman,
+    "service_description": "ORA %s RMAN Backup",
+    "has_perfdata": True,
+    "node_info": True,
+    "group": "oracle_rman",
+    "includes": ["oracle.include", "db.include"]
 }

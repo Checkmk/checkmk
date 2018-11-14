@@ -24,7 +24,6 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-
 # .1.3.6.1.4.1.3652.3.2.3.1.2.1 3 --> SPEEDCARRIER-MIB::nmFanGroupStatus.1
 # .1.3.6.1.4.1.3652.3.2.3.1.2.2 3 --> SPEEDCARRIER-MIB::nmFanGroupStatus.2
 # .1.3.6.1.4.1.3652.3.2.3.1.2.3 3 --> SPEEDCARRIER-MIB::nmFanGroupStatus.3
@@ -46,13 +45,13 @@ def inventory_pandacom_fan(info):
 
 def check_pandacom_fan(item, params, info):
     map_fan_state = {
-        "0" : (3, "not available"),
-        "1" : (0, "on"),
-        "2" : (2, "off"),
-        "3" : (0, "pass"),
-        "4" : (2, "fail"),
-        "5" : (3, "not installed"),
-        "6" : (0, "auto"),
+        "0": (3, "not available"),
+        "1": (0, "on"),
+        "2": (2, "off"),
+        "3": (0, "pass"),
+        "4": (2, "fail"),
+        "5": (3, "not installed"),
+        "6": (0, "auto"),
     }
     for fan_nr, fan_state in info:
         if fan_nr == item:
@@ -61,12 +60,14 @@ def check_pandacom_fan(item, params, info):
 
 
 check_info['pandacom_fan'] = {
-    'inventory_function'        : inventory_pandacom_fan,
-    'check_function'            : check_pandacom_fan,
-    'service_description'       : 'Fan %s',
-    'snmp_info'                 : (".1.3.6.1.4.1.3652.3.2.3.1", [
-                                        "1",    # fanGroupNumber
-                                        "2",    # fanGroupStatus
-                                  ]),
-    'snmp_scan_function'        : lambda oid: oid(".1.3.6.1.2.1.1.2.0") == ".1.3.6.1.4.1.3652.3",
+    'inventory_function': inventory_pandacom_fan,
+    'check_function': check_pandacom_fan,
+    'service_description': 'Fan %s',
+    'snmp_info': (
+        ".1.3.6.1.4.1.3652.3.2.3.1",
+        [
+            "1",  # fanGroupNumber
+            "2",  # fanGroupStatus
+        ]),
+    'snmp_scan_function': lambda oid: oid(".1.3.6.1.2.1.1.2.0") == ".1.3.6.1.4.1.3652.3",
 }

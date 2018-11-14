@@ -55,8 +55,8 @@ def check_postgres_version(item, _no_params, parsed):
 
 
 check_info['postgres_version'] = {
-    "parse_function"          : parse_postgres_version,
-    "inventory_function"      : inventory_postgres_version,
-    "check_function"          : check_postgres_version,
-    "service_description"     : "PostgreSQL Version %s",
+    "parse_function": parse_postgres_version,
+    "inventory_function": inventory_postgres_version,
+    "check_function": check_postgres_version,
+    "service_description": "PostgreSQL Version %s",
 }

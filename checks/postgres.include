@@ -24,6 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+
 def parse_postgres_dbs(info):
     dbs = {}
     inst_name = ""
@@ -45,7 +46,7 @@ def parse_postgres_dbs(info):
                 continue
 
             else:
-                if "%s%s" % (inst_name, line[0]) in dbs: # Templates are ignored
+                if "%s%s" % (inst_name, line[0]) in dbs:  # Templates are ignored
                     dbs["%s%s" % (inst_name, line[0])].append(dict(zip(headers, line[1:])))
 
     except StopIteration:

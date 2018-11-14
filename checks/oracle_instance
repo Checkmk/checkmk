@@ -35,12 +35,11 @@
 # ERROR:$
 # ORA-28002: the password will expire within 1 days$
 
-
 factory_settings["oracle_instance_defaults"] = {
-    "logins"  : 2,
-    "noforcelogging"  : 1,
-    "noarchivelog"  : 1,
-    "primarynotopen"  : 2,
+    "logins": 2,
+    "noforcelogging": 1,
+    "noarchivelog": 1,
+    "primarynotopen": 2,
 }
 
 
@@ -53,7 +52,7 @@ def inventory_oracle_instance(info):
         # Skip ORA- error messages from broken old oracle agent
         # <<<oracle_instance:sep(124)>>>
         # ORA-99999 tnsping failed for +ASM1
-        if not (line[0].startswith('ORA-') and line[0][4].isdigit() and len(line[0]) < 16 ):
+        if not (line[0].startswith('ORA-') and line[0][4].isdigit() and len(line[0]) < 16):
 
             # possible multitenant entry?
             if len(line) > 12:
@@ -123,7 +122,6 @@ def check_oracle_instance(item, params, info):
             else:
                 return 2, "Database not running, login failed or unvalid data from agent"
 
-
             if pdb is True:
                 if prestricted.lower == 'no':
                     logins = 'restricted'
@@ -153,7 +151,6 @@ def check_oracle_instance(item, params, info):
                 elif state == 0:
                     infotext += ' (allowed by rule)'
 
-
             if pdb is False:
                 infotext += ", Role %s, Version %s" % (database_role, version)
 
@@ -168,7 +165,8 @@ def check_oracle_instance(item, params, info):
                 warn = int(warn)
                 crit = int(crit)
 
-                infotext += ' (warn/crit at %s/%s)' % (get_age_human_readable(warn), get_age_human_readable(crit))
+                infotext += ' (warn/crit at %s/%s)' % (get_age_human_readable(warn),
+                                                       get_age_human_readable(crit))
                 if up_seconds == -1:
                     # PDB in mounted state has no uptime information
                     state = 0
@@ -190,9 +188,11 @@ def check_oracle_instance(item, params, info):
                 # the new internal database _MGMTDB from 12.1.0.2 is always in NOARCHIVELOG mode
                 if name != '_MGMTDB' and sid != '-MGMTDB' and pdb is False:
                     infotext += ', Log Mode %s' % (log_mode.lower())
-                    state, infotext = state_marker(state, infotext, 'archivelog', log_mode, 'ARCHIVELOG')
+                    state, infotext = state_marker(state, infotext, 'archivelog', log_mode,
+                                                   'ARCHIVELOG')
                     if not params.get('ignore_noarchivelog', False):
-                        state, infotext = state_marker(state, infotext, 'noarchivelog',log_mode,  'NOARCHIVELOG')
+                        state, infotext = state_marker(state, infotext, 'noarchivelog', log_mode,
+                                                       'NOARCHIVELOG')
 
                     # archivelog is only valid in non pdb
                     # force logging is only usable when archivelog is enabled
@@ -202,8 +202,10 @@ def check_oracle_instance(item, params, info):
                             state = 2
 
                         infotext += ', Force Logging %s' % (force_logging.lower())
-                        state, infotext = state_marker(state, infotext, 'forcelogging', force_logging, 'YES')
-                        state, infotext = state_marker(state, infotext, 'noforcelogging', force_logging, 'NO')
+                        state, infotext = state_marker(state, infotext, 'forcelogging',
+                                                       force_logging, 'YES')
+                        state, infotext = state_marker(state, infotext, 'noforcelogging',
+                                                       force_logging, 'NO')
 
             perfdata = [['uptime', up_seconds]]
 
@@ -221,10 +223,10 @@ def check_oracle_instance(item, params, info):
 
 
 check_info['oracle_instance'] = {
-    "check_function"          : check_oracle_instance,
-    "inventory_function"      : inventory_oracle_instance,
-    "service_description"     : "ORA %s Instance",
-    "default_levels_variable" : "oracle_instance_defaults",
-    "group"                   : "oracle_instance",
-    "has_perfdata"            : True,
+    "check_function": check_oracle_instance,
+    "inventory_function": inventory_oracle_instance,
+    "service_description": "ORA %s Instance",
+    "default_levels_variable": "oracle_instance_defaults",
+    "group": "oracle_instance",
+    "has_perfdata": True,
 }

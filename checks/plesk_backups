@@ -24,11 +24,13 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+
 def inventory_plesk_backups(info):
     inventory = []
     for line in info:
         inventory.append((line[0], {}))
     return inventory
+
 
 def check_plesk_backups(item, params, info):
     for line in info:
@@ -50,19 +52,19 @@ def check_plesk_backups(item, params, info):
             return (3, 'Unexpected line %r' % line)
 
         _domain, _rc, timestamp, size, total_size = line
-        size       = saveint(size)
+        size = saveint(size)
         total_size = saveint(total_size)
-        timestamp  = saveint(timestamp)
+        timestamp = saveint(timestamp)
 
-        status   = 0
-        output   = []
+        status = 0
+        output = []
         perfdata = []
 
         # 1. check last backup size not 0 bytes
         status_txt = ''
         if size == 0:
-           status = 2
-           status_txt = ' (!!)'
+            status = 2
+            status_txt = ' (!!)'
         output.append('Last Backup - Size: %s%s' % (get_bytes_human_readable(size), status_txt))
         perfdata.append(('last_backup_size', size))
 
@@ -86,8 +88,8 @@ def check_plesk_backups(item, params, info):
                 status_txt = ' (!)'
 
         backup_time = time.strftime("%c", time.localtime(timestamp))
-        output.append('Age: %s (%dd %02d:%02d:%02d)%s' %
-             (backup_time, days, hours, minutes, seconds, status_txt))
+        output.append('Age: %s (%dd %02d:%02d:%02d)%s' % (backup_time, days, hours, minutes,
+                                                          seconds, status_txt))
         perfdata.append(('last_backup_age', age_seconds, warn, crit))
 
         # 3. check total size of directory above configured threshold
@@ -110,9 +112,9 @@ def check_plesk_backups(item, params, info):
 
 
 check_info['plesk_backups'] = {
-    'check_function':      check_plesk_backups,
-    'inventory_function':  inventory_plesk_backups,
+    'check_function': check_plesk_backups,
+    'inventory_function': inventory_plesk_backups,
     'service_description': "Plesk Backup %s",
-    'has_perfdata':        True,
-    'group':               'plesk_backups',
+    'has_perfdata': True,
+    'group': 'plesk_backups',
 }

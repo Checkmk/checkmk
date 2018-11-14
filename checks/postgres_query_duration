@@ -77,9 +77,9 @@ def check_postgres_query_duration(item, _no_params, parsed):
 
 
 check_info['postgres_query_duration'] = {
-    "parse_function"          : parse_postgres_dbs,
-    "check_function"          : check_postgres_query_duration,
-    "inventory_function"      : inventory_postgres_query_duration,
-    "service_description"     : "PostgreSQL Query Duration %s",
-    "includes"                : [ "postgres.include" ]
+    "parse_function": parse_postgres_dbs,
+    "check_function": check_postgres_query_duration,
+    "inventory_function": inventory_postgres_query_duration,
+    "service_description": "PostgreSQL Query Duration %s",
+    "includes": ["postgres.include"]
 }

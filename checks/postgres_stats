@@ -39,7 +39,7 @@
 
 def inventory_postgres_stats(parsed):
     for db in parsed:
-        yield "VACUUM %s"  % db, {}
+        yield "VACUUM %s" % db, {}
         yield "ANALYZE %s" % db, {}
 
 
@@ -60,7 +60,7 @@ def check_postgres_stats(item, params, parsed):
     # namespace,  tablename, last_vacuum,  last_analyze
     # ['public', 'my_table', '1424352356', '1424352356'],
     oldest_element = None
-    never_checked  = []
+    never_checked = []
     for line in parsed[database]:
         # Tables with metadata are ignored
         if line["sname"] == "pg_catalog":
@@ -78,7 +78,7 @@ def check_postgres_stats(item, params, parsed):
     now = time.time()
     if oldest_element:
         oldest_time = int(oldest_element[stats_field])
-        warn, crit  = params.get("last_%s" % paramskey, (None, None))
+        warn, crit = params.get("last_%s" % paramskey, (None, None))
         yield 0, "Table: %s" % oldest_element["tname"]
 
         state = 0
@@ -89,8 +89,10 @@ def check_postgres_stats(item, params, parsed):
 
         extra_info = ""
         if state:
-            extra_info = " (warn/crit at %s/%s)" % (get_age_human_readable(warn), get_age_human_readable(crit))
-        yield state, "Time since last vacuum %s%s" % (get_age_human_readable(now - oldest_time), extra_info)
+            extra_info = " (warn/crit at %s/%s)" % (get_age_human_readable(warn),
+                                                    get_age_human_readable(crit))
+        yield state, "Time since last vacuum %s%s" % (get_age_human_readable(now - oldest_time),
+                                                      extra_info)
 
     key = "postgres_stats.%s" % item
     if not never_checked:
@@ -127,11 +129,10 @@ def check_postgres_stats(item, params, parsed):
 
 
 check_info['postgres_stats'] = {
-    "parse_function"          : parse_postgres_dbs,
-    "check_function"          : check_postgres_stats,
-    "inventory_function"      : inventory_postgres_stats,
-    "service_description"     : "PostgreSQL %s",
-    "group"                   : "postgres_maintenance",
-    "includes"                : ["postgres.include"],
+    "parse_function": parse_postgres_dbs,
+    "check_function": check_postgres_stats,
+    "inventory_function": inventory_postgres_stats,
+    "service_description": "PostgreSQL %s",
+    "group": "postgres_maintenance",
+    "includes": ["postgres.include"],
 }
-

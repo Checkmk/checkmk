@@ -24,7 +24,6 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-
 # <<<prism_containers:sep(9)>>>
 # name    usage   capacity
 # DS01_NFS_Nutanix_B2B_Intern_SAS_Contrainer      2518694292480   38575532134515
@@ -46,9 +45,9 @@ def check_prism_cluster(_no_item, _no_params, parsed):
 
 
 check_info['prism_info'] = {
-    'check_function':      check_prism_cluster,
-    'inventory_function':  inventory_prism_cluster,
-    'parse_function':      parse_prism,
+    'check_function': check_prism_cluster,
+    'inventory_function': inventory_prism_cluster,
+    'parse_function': parse_prism,
     'service_description': "Prism Cluster",
-    'includes':            ["prism.include"]
+    'includes': ["prism.include"]
 }

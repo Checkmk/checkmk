@@ -34,17 +34,17 @@
 # 1-16    1
 # 1-9     1
 
-
 ruckus_spot_ap_bands = {
     "1": "2.4 GHz",
     "2": "5 GHz",
 }
 ruckus_spot_ap_default_levels = ((None, None), (None, None))
 
+
 def parse_ruckus_spot_ap(info):
     import json
     data = json.loads(info[0][0])
-    bands        = {}
+    bands = {}
     for band_info in data:
         band_id = str(band_info["band"])
         bands.setdefault(band_id, [])
@@ -53,10 +53,12 @@ def parse_ruckus_spot_ap(info):
 
     return bands
 
+
 def inventory_ruckus_spot_ap(parsed):
     for band in parsed.keys():
         if band in ruckus_spot_ap_bands:
             yield ruckus_spot_ap_bands[band], "ruckus_spot_ap_default_levels"
+
 
 def check_ruckus_spot_ap(item, params, parsed):
     inverse_map = dict((v, k) for k, v in ruckus_spot_ap_bands.items())
@@ -66,12 +68,12 @@ def check_ruckus_spot_ap(item, params, parsed):
 
     (drift_warn, drift_crit), (down_warn, down_crit) = params
     state = 0
-    info  = 0
+    info = 0
     perfdata = [("ap_devices_total", len(band))]
 
     extra_info = []
-    for what, ap_state, warn, crit in [ ("drifted",        2, drift_warn, drift_crit),
-                                        ("not responding", 0, down_warn,  down_crit) ]:
+    for what, ap_state, warn, crit in [("drifted", 2, drift_warn, drift_crit),
+                                       ("not responding", 0, down_warn, down_crit)]:
         problems = len([x for x in band if x[1] == ap_state])
         if crit and problems >= crit:
             state = 2
@@ -88,13 +90,12 @@ def check_ruckus_spot_ap(item, params, parsed):
 
     yield state, info, perfdata
 
+
 check_info["ruckus_spot_ap"] = {
-    "parse_function"      : parse_ruckus_spot_ap,
-    "inventory_function"  : inventory_ruckus_spot_ap,
-    "check_function"      : check_ruckus_spot_ap,
-    "service_description" : "Ruckus Spot Access Points %s",
-    "group"               : "ruckus_ap",
-    "has_perfdata"        : True
+    "parse_function": parse_ruckus_spot_ap,
+    "inventory_function": inventory_ruckus_spot_ap,
+    "check_function": check_ruckus_spot_ap,
+    "service_description": "Ruckus Spot Access Points %s",
+    "group": "ruckus_ap",
+    "has_perfdata": True
 }
-
-

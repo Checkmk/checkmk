@@ -24,34 +24,37 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+
 def inventory_raritan_pdu_outletcount(info):
     if len(info) > 0 and len(info[0]) > 0:
-        return [ (None, None) ]
+        return [(None, None)]
     return []
+
 
 def check_raritan_pdu_outletcount(item, params, info):
     outletcount = int(info[0][0])
     status = 0
     if params:
         crit_low, warn_low, warn_high, crit_high = params
-        perfdata = [ ("outletcount", outletcount, "%d:%d" % (warn_low, warn_high), "%d:%d" % (crit_low, crit_high), 0) ]
+        perfdata = [("outletcount", outletcount, "%d:%d" % (warn_low, warn_high),
+                     "%d:%d" % (crit_low, crit_high), 0)]
         if outletcount <= warn_low or outletcount >= warn_high:
             status = 1
         if outletcount <= crit_low or outletcount >= crit_high:
             status = 2
     else:
-        perfdata = [ ("outletcount", outletcount, None, None, 0) ]
+        perfdata = [("outletcount", outletcount, None, None, 0)]
 
-    message  = "Outlet Count is %s" % outletcount
+    message = "Outlet Count is %s" % outletcount
     return status, message, perfdata
 
 check_info['raritan_pdu_outletcount'] = {
-  "inventory_function"  : inventory_raritan_pdu_outletcount,
-  "check_function"      : check_raritan_pdu_outletcount,
-  "service_description" : "Outlet Count",
-  "group"               : "plug_count",
-  "has_perfdata"        : True,
-  "snmp_info"           : (".1.3.6.1.4.1.13742.6.3.2.2.1.4", ["1"]),  # outletCount
-  "snmp_scan_function"  : lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.13742.6") and \
+    "inventory_function"  : inventory_raritan_pdu_outletcount,
+    "check_function"      : check_raritan_pdu_outletcount,
+    "service_description" : "Outlet Count",
+    "group"               : "plug_count",
+    "has_perfdata"        : True,
+    "snmp_info"           : (".1.3.6.1.4.1.13742.6.3.2.2.1.4", ["1"]),  # outletCount
+    "snmp_scan_function"  : lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.13742.6") and \
                                       oid(".1.3.6.1.4.1.13742.6.3.2.1.1.3.1").startswith("PX2-2")
 }

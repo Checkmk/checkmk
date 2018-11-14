@@ -258,7 +258,8 @@ def inventory_ps(info):
 
 
 def check_ps(item, params, info):
-    (cpu_cores, parsed), mem_info, solaris_mem_info, statgrab_mem_info, aix_memory_info, cpu_info = info
+    (cpu_cores,
+     parsed), mem_info, solaris_mem_info, statgrab_mem_info, aix_memory_info, cpu_info = info
 
     # cpu_info for non windows systems
     if cpu_info and len(cpu_info[0]) == 6:

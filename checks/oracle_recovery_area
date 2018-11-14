@@ -31,12 +31,12 @@
 # ORACLE_SID used_pct size used reclaimable
 
 factory_settings["oracle_recovery_area_defaults"] = {
-    "levels"         : (70.0, 90.0),
+    "levels": (70.0, 90.0),
 }
 
 
 def inventory_oracle_recovery_area(info):
-    return [ (line[0], {}) for line in info ]
+    return [(line[0], {}) for line in info]
 
 
 def check_oracle_recovery_area(item, params, info):
@@ -59,7 +59,7 @@ def check_oracle_recovery_area(item, params, info):
             else:
                 state = 0
 
-            mb = 1024*1024
+            mb = 1024 * 1024
             return state, "%s out of %s used (%.1f%%, warn/crit at %s%%/%s%%), %s reclaimable" \
                 % (get_bytes_human_readable(used_mb*mb), get_bytes_human_readable(size_mb*mb), \
                    perc_used, warn, crit, get_bytes_human_readable(reclaimable_mb*mb)), \
@@ -72,10 +72,10 @@ def check_oracle_recovery_area(item, params, info):
 
 
 check_info['oracle_recovery_area'] = {
-    "check_function"          : check_oracle_recovery_area,
-    "inventory_function"      : inventory_oracle_recovery_area,
-    "service_description"     : "ORA %s Recovery Area",
-    "has_perfdata"            : True,
-    "default_levels_variable" : "oracle_recovery_area_defaults",
-    "group"                   : "oracle_recovery_area",
+    "check_function": check_oracle_recovery_area,
+    "inventory_function": inventory_oracle_recovery_area,
+    "service_description": "ORA %s Recovery Area",
+    "has_perfdata": True,
+    "default_levels_variable": "oracle_recovery_area_defaults",
+    "group": "oracle_recovery_area",
 }

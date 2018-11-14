@@ -27,7 +27,6 @@
 # future todos in checkcode
 # - RAC: 1 of 3 nodes has a DISMOUNTED DG. This is not a CRIT!
 
-
 # Example output from asmcmd lsdg:
 # State    Type    Rebal  Sector  Block       AU  Total_MB  Free_MB  Req_mir_free_MB  Usable_file_MB  Offline_disks  Voting_files  Name
 # MOUNTED  NORMAL  N         512   4096  1048576    512000    92888                0           46444              0             N  DATA/
@@ -49,14 +48,13 @@
 # MOUNTED|NORMAL|DATA|4096|4194304|102396|614376|476280|NS1|N|REGULAR|0|8640000|3
 # MOUNTED|NORMAL|DATA|4096|4194304|102396|614376|476280|NS2|N|REGULAR|0|8640000|3
 
-
 factory_settings["asm_diskgroup_default_levels"] = {
-    "levels"          : (80.0, 90.0), # warn/crit in percent
-    "magic_normsize"  : 20,       # Standard size if 20 GB
-    "levels_low"      : (50.0, 60.0), # Never move warn level below 50% due to magic factor
-    "trend_range"     : 24,
-    "trend_perfdata"  : True,    # do send performance data for trends
-    "req_mir_free"    : False,   # Ignore Requirre mirror free space in DG
+    "levels": (80.0, 90.0),  # warn/crit in percent
+    "magic_normsize": 20,  # Standard size if 20 GB
+    "levels_low": (50.0, 60.0),  # Never move warn level below 50% due to magic factor
+    "trend_range": 24,
+    "trend_perfdata": True,  # do send performance data for trends
+    "req_mir_free": False,  # Ignore Requirre mirror free space in DG
 }
 
 
@@ -73,8 +71,8 @@ def parse_oracle_asm_diskgroup(info):
         dgstate = line[1]
 
         if dgstate == "DISMOUNTED":
-            dgtype     = None
-            index        = 2
+            dgtype = None
+            index = 2
 
             if len(line) == 15:
 
@@ -83,8 +81,8 @@ def parse_oracle_asm_diskgroup(info):
                 index = 3
 
         elif dgstate == "MOUNTED":
-            dgtype     = line[2]
-            index        = 3
+            dgtype = line[2]
+            index = 3
 
         else:
             continue
@@ -99,7 +97,6 @@ def parse_oracle_asm_diskgroup(info):
         elif len(stripped_line) == 11:
             _rebal, _sector, _block, _au, total_mb, free_mb, req_mir_free_mb, \
                 _usable_file_mb, offline_disks, voting_files, dgname = stripped_line
-
 
         elif len(stripped_line) == 12:
             # new format with Failuregroup details
@@ -128,15 +125,16 @@ def parse_oracle_asm_diskgroup(info):
         if len(stripped_line) <> 12:
 
             # old format without fg data
-            parsed.setdefault(dgname, {
-                "dgstate"         : dgstate,
-                "dgtype"          : dgtype,
-                "total_mb"        : total_mb,
-                "free_mb"         : free_mb,
-                "req_mir_free_mb" : req_mir_free_mb,
-                "offline_disks"   : offline_disks,
-                "voting_files"    : voting_files,
-            })
+            parsed.setdefault(
+                dgname, {
+                    "dgstate": dgstate,
+                    "dgtype": dgtype,
+                    "total_mb": total_mb,
+                    "free_mb": free_mb,
+                    "req_mir_free_mb": req_mir_free_mb,
+                    "offline_disks": offline_disks,
+                    "voting_files": voting_files,
+                })
 
         else:
 
@@ -149,12 +147,12 @@ def parse_oracle_asm_diskgroup(info):
             else:
 
                 this_failgroup = {
-                    "fg_name"           : fg_name,
-                    "fg_voting_files"   : voting_files,
-                    "fg_type"           : fg_type,
-                    "fg_free_mb"        : int(free_mb),
-                    "fg_total_mb"       : int(total_mb),
-                    "fg_disks"          : int(fg_disks),
+                    "fg_name": fg_name,
+                    "fg_voting_files": voting_files,
+                    "fg_type": fg_type,
+                    "fg_free_mb": int(free_mb),
+                    "fg_total_mb": int(total_mb),
+                    "fg_disks": int(fg_disks),
                     "fg_min_repair_tima": int(fg_min_repair_tima),
                 }
 
@@ -169,22 +167,23 @@ def parse_oracle_asm_diskgroup(info):
             else:
                 failgroups.append(this_failgroup)
 
-            parsed.setdefault(dgname, {
-                "dgstate"         : dgstate,
-                "dgtype"          : dgtype,
-                "total_mb"        : total_mb,
-                "free_mb"         : free_mb,
-                "req_mir_free_mb" : req_mir_free_mb,
-                "offline_disks"   : offline_disks,
-                "voting_files"    : voting_files,
-                "failgroups"      : failgroups,
-            })
+            parsed.setdefault(
+                dgname, {
+                    "dgstate": dgstate,
+                    "dgtype": dgtype,
+                    "total_mb": total_mb,
+                    "free_mb": free_mb,
+                    "req_mir_free_mb": req_mir_free_mb,
+                    "offline_disks": offline_disks,
+                    "voting_files": voting_files,
+                    "failgroups": failgroups,
+                })
     return parsed
 
 
 def inventory_oracle_asm_diskgroup(parsed):
     for asm_diskgroup_name, attrs in parsed.items():
-        if attrs["dgstate"] in [ "MOUNTED", "DISMOUNTED" ]:
+        if attrs["dgstate"] in ["MOUNTED", "DISMOUNTED"]:
             yield asm_diskgroup_name, {}
 
 
@@ -192,13 +191,13 @@ def check_oracle_asm_diskgroup(item, params, parsed):
     if item in parsed:
         data = parsed[item]
 
-        dgstate         = data["dgstate"]
-        dgtype          = data["dgtype"]
-        total_mb        = 0
-        free_mb         = 0
+        dgstate = data["dgstate"]
+        dgtype = data["dgtype"]
+        total_mb = 0
+        free_mb = 0
         req_mir_free_mb = data["req_mir_free_mb"]
-        offline_disks   = data["offline_disks"]
-        voting_files    = data["voting_files"]
+        offline_disks = data["offline_disks"]
+        voting_files = data["voting_files"]
 
         if dgstate == "DISMOUNTED":
             return 2, "Diskgroup dismounted"
@@ -276,8 +275,8 @@ def check_oracle_asm_diskgroup(item, params, parsed):
 
             # work on old agentformat
 
-            total_mb        = data["total_mb"]
-            free_mb         = data["free_mb"]
+            total_mb = data["total_mb"]
+            free_mb = data["free_mb"]
 
             # => some estimates with possible errors are expected. Use new agentformat for correct results
             if dgtype == 'EXTERN':
@@ -302,8 +301,8 @@ def check_oracle_asm_diskgroup(item, params, parsed):
                     else:
                         dg_sizefactor = 3
 
-        total_mb = int(total_mb)/dg_sizefactor
-        free_space_mb = int(free_mb)/dg_sizefactor
+        total_mb = int(total_mb) / dg_sizefactor
+        free_space_mb = int(free_mb) / dg_sizefactor
 
         if params.get('req_mir_free'):
             req_mir_free_mb = int(req_mir_free_mb)
@@ -313,9 +312,8 @@ def check_oracle_asm_diskgroup(item, params, parsed):
 
             add_text = ', required mirror free space used'
 
-
-        status, infotext, perfdata = df_check_filesystem_single(item, int(total_mb),
-                                                         free_space_mb, 0, None, None, params)
+        status, infotext, perfdata = df_check_filesystem_single(item, int(total_mb), free_space_mb,
+                                                                0, None, None, params)
         if dgtype is not None:
             infotext += ', %s redundancy' % dgtype.lower()
 
@@ -338,15 +336,15 @@ def check_oracle_asm_diskgroup(item, params, parsed):
                     votemarker = ''
                     if (dgtype == 'HIGH' and dg_votecount < 5):
 
-                       # HIGH redundancy allows a loss of 2 votes. => 1 is only a WARN
-                       status = min(status, 1)
-                       votemarker = ', not enough votings, 5 expected (!)'
+                        # HIGH redundancy allows a loss of 2 votes. => 1 is only a WARN
+                        status = min(status, 1)
+                        votemarker = ', not enough votings, 5 expected (!)'
 
                     elif (dgtype == 'NORMAL' and dg_votecount < 3) \
                       or (dgtype == 'HIGH' and dg_votecount < 4):
 
-                       status = max(status, 2)
-                       votemarker = ', not enough votings, 3 expected (!!)'
+                        status = max(status, 2)
+                        votemarker = ', not enough votings, 3 expected (!!)'
 
                     infotext += ', %i votings' % dg_votecount
                     infotext += votemarker
@@ -354,7 +352,8 @@ def check_oracle_asm_diskgroup(item, params, parsed):
                 if dg_min_repair < 8640000:
 
                     # no need to set a state due to offline disks
-                    infotext += ', disk repair timer for offline disks at %s (!)' % get_age_human_readable(dg_min_repair)
+                    infotext += ', disk repair timer for offline disks at %s (!)' % get_age_human_readable(
+                        dg_min_repair)
 
         infotext += add_text
 
@@ -372,13 +371,13 @@ def check_oracle_asm_diskgroup(item, params, parsed):
 
 
 check_info["oracle_asm_diskgroup"] = {
-    'parse_function'          : parse_oracle_asm_diskgroup,
-    'inventory_function'      : inventory_oracle_asm_diskgroup,
-    'check_function'          : check_oracle_asm_diskgroup,
-    'service_description'     : 'ASM Diskgroup %s',
-    'has_perfdata'            : True,
-    'node_info'               : True,
-    'group'                   : 'asm_diskgroup',
-    'default_levels_variable' : 'asm_diskgroup_default_levels',
-    "includes"                : [ "df.include", "size_trend.include" ],
+    'parse_function': parse_oracle_asm_diskgroup,
+    'inventory_function': inventory_oracle_asm_diskgroup,
+    'check_function': check_oracle_asm_diskgroup,
+    'service_description': 'ASM Diskgroup %s',
+    'has_perfdata': True,
+    'node_info': True,
+    'group': 'asm_diskgroup',
+    'default_levels_variable': 'asm_diskgroup_default_levels',
+    "includes": ["df.include", "size_trend.include"],
 }

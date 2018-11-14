@@ -44,14 +44,13 @@
 # [databases_end]
 # ...
 
-
 factory_settings["postgres_connections_default_levels"] = {
-    'levels_perc': (80.0, 90.0), # Levels at 80%/90% of maximum
+    'levels_perc': (80.0, 90.0),  # Levels at 80%/90% of maximum
 }
 
 
 def inventory_postgres_connections(parsed):
-    return [ (db, {}) for db in parsed.iterkeys() ]
+    return [(db, {}) for db in parsed.iterkeys()]
 
 
 def check_postgres_connections(item, params, parsed):
@@ -62,7 +61,7 @@ def check_postgres_connections(item, params, parsed):
         raise MKCounterWrapped("Login into database failed")
 
     database = parsed[item]
-    warn, crit = params.get("levels_abs", (0,0))
+    warn, crit = params.get("levels_abs", (0, 0))
     if database == []:
         yield 0, "No active query", [("connections", 0, warn, crit, 0, 0)]
         return
@@ -79,7 +78,7 @@ def check_postgres_connections(item, params, parsed):
             state = 2
         elif current >= warn:
             state = 1
-        if state :
+        if state:
             extra_info = " (Levels at %s/%s)" % (warn, crit)
     yield state, "Used connections %d%s" % (current, extra_info),\
                     [("connections", current, warn, crit, 0, maximum)]
@@ -97,12 +96,12 @@ def check_postgres_connections(item, params, parsed):
 
 
 check_info['postgres_connections'] = {
-    "parse_function"          : parse_postgres_dbs,
-    "check_function"          : check_postgres_connections,
-    "inventory_function"      : inventory_postgres_connections,
-    "service_description"     : "PostgreSQL Connections %s",
-    "group"                   : "db_connections",
-    "has_perfdata"            : True,
-    "default_levels_variable" : "postgres_connections_default_levels",
-    "includes"                : [ "postgres.include" ]
+    "parse_function": parse_postgres_dbs,
+    "check_function": check_postgres_connections,
+    "inventory_function": inventory_postgres_connections,
+    "service_description": "PostgreSQL Connections %s",
+    "group": "db_connections",
+    "has_perfdata": True,
+    "default_levels_variable": "postgres_connections_default_levels",
+    "includes": ["postgres.include"]
 }

@@ -32,6 +32,7 @@
 # TUX12C|TUXSTDB|PHYSICAL STANDBY|apply finish time|+00 00:00:17.180
 # TUX12C|TUXSTDB|PHYSICAL STANDBY|estimated startup time|20
 
+
 def inventory_oracle_dataguard_stats(info):
     inventory = []
     for line in info:
@@ -39,6 +40,7 @@ def inventory_oracle_dataguard_stats(info):
             continue
         inventory.append(("%s.%s" % (line[0], line[1]), {}))
     return inventory
+
 
 def check_oracle_dataguard_stats(item, params, info):
     def get_seconds(timestamp):
@@ -48,10 +50,9 @@ def check_oracle_dataguard_stats(item, params, info):
             min_ = int(timestamp[7:9])
             sec = int(timestamp[10:12])
 
-            seconds = int(sec + min_*60 + h*3600 + days*24*3600)
+            seconds = int(sec + min_ * 60 + h * 3600 + days * 24 * 3600)
             return seconds
         return int(-1)
-
 
     state = 0
 
@@ -69,7 +70,7 @@ def check_oracle_dataguard_stats(item, params, info):
             if infotext == '':
                 infotext = 'Database Role %s' % (database_role.lower())
 
-            if parameter in('transport lag', 'apply lag', 'apply finish time'):
+            if parameter in ('transport lag', 'apply lag', 'apply finish time'):
 
                 if parameter == 'apply lag':
                     params_value = 'apply_lag'
@@ -84,10 +85,10 @@ def check_oracle_dataguard_stats(item, params, info):
 
                 seconds = int(get_seconds(value))
 
-                infotext += ' %s %s' % (parameter,  get_age_human_readable(seconds))
+                infotext += ' %s %s' % (parameter, get_age_human_readable(seconds))
 
                 if params.get(params_value):
-                    infotext +=' (warn/crit at '
+                    infotext += ' (warn/crit at '
 
                     if parameter == 'apply lag' and params.get('apply_lag_min'):
 
@@ -129,10 +130,11 @@ def check_oracle_dataguard_stats(item, params, info):
     # switch to UNKNOWN, but will get stale.
     raise MKCounterWrapped("Dataguard disabled or Instance not running")
 
+
 check_info['oracle_dataguard_stats'] = {
-    "check_function"          : check_oracle_dataguard_stats,
-    "inventory_function"      : inventory_oracle_dataguard_stats,
-    "service_description"     : "ORA %s Dataguard-Stats",
-    "has_perfdata"            : True,
-    "group"                   : "oracle_dataguard_stats",
+    "check_function": check_oracle_dataguard_stats,
+    "inventory_function": inventory_oracle_dataguard_stats,
+    "service_description": "ORA %s Dataguard-Stats",
+    "has_perfdata": True,
+    "group": "oracle_dataguard_stats",
 }

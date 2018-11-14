@@ -24,7 +24,6 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-
 # .1.3.6.1.4.1.18248.20.1.2.1.1.1.1 0
 # .1.3.6.1.4.1.18248.20.1.2.1.1.1.2 0
 # .1.3.6.1.4.1.18248.20.1.2.1.1.1.3 0
@@ -38,34 +37,37 @@
 
 def parse_papouch_th2e_sensors(info):
     map_sensor_type = {
-        "1" : "temp",
-        "2" : "humidity",
-        "3" : "dewpoint",
+        "1": "temp",
+        "2": "humidity",
+        "3": "dewpoint",
     }
 
     map_units = {
-        "0" : "c",
-        "1" : "f",
-        "2" : "k",
-        "3" : "percent",
+        "0": "c",
+        "1": "f",
+        "2": "k",
+        "3": "percent",
     }
 
     map_states = {
-        "0" : (0, "OK"),
-        "1" : (3, "not available"),
-        "2" : (1, "over-flow"),
-        "3" : (1, "under-flow"),
-        "4" : (2, "error"),
+        "0": (0, "OK"),
+        "1": (3, "not available"),
+        "2": (1, "over-flow"),
+        "3": (1, "under-flow"),
+        "4": (2, "error"),
     }
 
     parsed = {}
     for oidend, state, reading_str, unit in info:
         if state != "3":
-            sensor_ty   = map_sensor_type[oidend]
+            sensor_ty = map_sensor_type[oidend]
             sensor_unit = map_units[unit]
             parsed.setdefault(sensor_ty, {})
-            parsed[sensor_ty].setdefault("Sensor %s" % oidend,
-                (map_states[state], float(reading_str)/10, sensor_unit))
+            parsed[sensor_ty].setdefault("Sensor %s" % oidend, (
+                map_states[state],
+                float(reading_str) / 10,
+                sensor_unit,
+            ))
 
     return parsed
 
@@ -90,9 +92,13 @@ def inventory_papouch_th2e_sensors_temp(parsed, what):
 def check_papouch_th2e_sensors_temp(item, params, parsed, what):
     if item in parsed[what]:
         (state, state_readable), reading, unit = parsed[what][item]
-        return check_temperature(reading, params,
-                    "papouch_th2e_sensors_%s_%s" % (what, item),
-                    dev_unit=unit, dev_status=state, dev_status_name=state_readable)
+        return check_temperature(
+            reading,
+            params,
+            "papouch_th2e_sensors_%s_%s" % (what, item),
+            dev_unit=unit,
+            dev_status=state,
+            dev_status_name=state_readable)
 
 
 check_info['papouch_th2e_sensors'] = {
@@ -114,7 +120,6 @@ check_info['papouch_th2e_sensors'] = {
     'includes'                  : [ 'temperature.include' ],
     'group'                     : 'temperature',
 }
-
 
 #.
 #   .--dew point-----------------------------------------------------------.
@@ -138,7 +143,6 @@ check_info['papouch_th2e_sensors.dewpoint'] = {
     'group'                     : 'temperature',
 }
 
-
 #.
 #   .--humidity------------------------------------------------------------.
 #   |              _                     _     _ _ _                       |
@@ -148,7 +152,6 @@ check_info['papouch_th2e_sensors.dewpoint'] = {
 #   |             |_| |_|\__,_|_| |_| |_|_|\__,_|_|\__|\__, |              |
 #   |                                                  |___/               |
 #   '----------------------------------------------------------------------'
-
 
 # Suggested by customer
 papouch_th2e_sensors_humidity_default_levels = (8, 12, 30, 35)
@@ -167,10 +170,10 @@ def check_papouch_th2e_sensors_humidity(item, params, parsed):
 
 
 check_info['papouch_th2e_sensors.humidity'] = {
-    'inventory_function'        : inventory_papouch_th2e_sensors_humidity,
-    'check_function'            : check_papouch_th2e_sensors_humidity,
-    'service_description'       : 'Humidity %s',
-    'has_perfdata'              : True,
-    'includes'                  : [ 'humidity.include' ],
-    'group'                     : 'humidity',
+    'inventory_function': inventory_papouch_th2e_sensors_humidity,
+    'check_function': check_papouch_th2e_sensors_humidity,
+    'service_description': 'Humidity %s',
+    'has_perfdata': True,
+    'includes': ['humidity.include'],
+    'group': 'humidity',
 }

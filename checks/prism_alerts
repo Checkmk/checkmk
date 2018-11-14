@@ -24,7 +24,6 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-
 # <<<prism_alerts:sep(9)>>>
 # timestamp       message severity
 # 1456749413164951        DIMM fault detected on host 172.25.209.110. The node is running with 384 GB whereas 512 GB was installed.       kCritical
@@ -38,11 +37,7 @@ def inventory_prism_alerts(parsed):
 def check_prism_alerts(__no_item, __no_params, parsed):
     def severity(name):
         # first value is for sorting second is the nagios status codes
-        return {
-            'kInfo':     (0, 0),
-            'kWarning':  (1, 1),
-            'kCritical': (3, 2)
-        }.get(name, (2, 3))
+        return {'kInfo': (0, 0), 'kWarning': (1, 1), 'kCritical': (3, 2)}.get(name, (2, 3))
 
     if len(parsed) == 0:
         return 0, "No alerts"
@@ -50,9 +45,8 @@ def check_prism_alerts(__no_item, __no_params, parsed):
     # sort messages by severity, then timestamp, both reversed
     # this way the first element should be the newest among those
     # with the highest severity
-    row_sorted = sorted(parsed,
-                        key=lambda x: (severity(x['severity'][0]), x['timestamp']),
-                        reverse=True)
+    row_sorted = sorted(
+        parsed, key=lambda x: (severity(x['severity'][0]), x['timestamp']), reverse=True)
     sever = row_sorted[0]
     time_str = time.strftime("%c", time.localtime(int(sever['timestamp']) / 1000000))
     return severity(sever['severity'])[1], "%d alerts, Last worst on %s: \"%s\"" %\
@@ -60,9 +54,10 @@ def check_prism_alerts(__no_item, __no_params, parsed):
 
 
 check_info['prism_alerts'] = {
-    'check_function':          check_prism_alerts,
-    'inventory_function':      inventory_prism_alerts,
-    'parse_function':          parse_prism,
-    'has_perfdata':            True,
-    'service_description':     "Prism Alerts",
-    'includes':                ["prism.include"],}
+    'check_function': check_prism_alerts,
+    'inventory_function': inventory_prism_alerts,
+    'parse_function': parse_prism,
+    'has_perfdata': True,
+    'service_description': "Prism Alerts",
+    'includes': ["prism.include"],
+}

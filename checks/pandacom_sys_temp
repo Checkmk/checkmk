@@ -24,12 +24,11 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-
 # .1.3.6.1.4.1.3652.3.1.1.6.0 27
 
 
 def inventory_pandacom_sys_temp(info):
-    return [ ("System", {}) ]
+    return [("System", {})]
 
 
 def check_pandacom_sys_temp(item, params, info):
@@ -37,13 +36,13 @@ def check_pandacom_sys_temp(item, params, info):
 
 
 check_info['pandacom_sys_temp'] = {
-    'inventory_function'        : inventory_pandacom_sys_temp,
-    'check_function'            : check_pandacom_sys_temp,
-    'service_description'       : 'Temperature %s',
-    'has_perfdata'              : True,
-    'snmp_info'                 : (".1.3.6.1.4.1.3652.3.1.1.6", [ "" ] ),
-    'snmp_scan_function'        : lambda oid: oid(".1.3.6.1.2.1.1.2.0") == ".1.3.6.1.4.1.3652.3",
-    'default_levels_variable'   : "pandacom_temp_default_levels",
-    'group'                     : 'temperature',
-    'includes'                  : [ "temperature.include", "pandacom_temp.include" ],
+    'inventory_function': inventory_pandacom_sys_temp,
+    'check_function': check_pandacom_sys_temp,
+    'service_description': 'Temperature %s',
+    'has_perfdata': True,
+    'snmp_info': (".1.3.6.1.4.1.3652.3.1.1.6", [""]),
+    'snmp_scan_function': lambda oid: oid(".1.3.6.1.2.1.1.2.0") == ".1.3.6.1.4.1.3652.3",
+    'default_levels_variable': "pandacom_temp_default_levels",
+    'group': 'temperature',
+    'includes': ["temperature.include", "pandacom_temp.include"],
 }

@@ -57,7 +57,7 @@ def parse_postgres_sessions(info):
 
 
 def inventory_postgres_sessions(parsed):
-    return [ (db, {}) for db, dbinfo in parsed.items() if dbinfo  ]
+    return [(db, {}) for db, dbinfo in parsed.items() if dbinfo]
 
 
 def check_postgres_sessions(item, params, parsed):
@@ -73,13 +73,13 @@ def check_postgres_sessions(item, params, parsed):
     total = idle + running
 
     for key, val in [
-        ("total",   total),
+        ("total", total),
         ("running", running),
     ]:
         infotext = "%s: %s" % (key.title(), val)
         warn, crit = params.get(key, (None, None))
         state = 0
-        if crit is not None  and val >= crit:
+        if crit is not None and val >= crit:
             state = 2
         elif warn is not None and val >= warn:
             state = 1
@@ -89,10 +89,10 @@ def check_postgres_sessions(item, params, parsed):
 
 
 check_info['postgres_sessions'] = {
-    "parse_function"          : parse_postgres_sessions,
-    "inventory_function"      : inventory_postgres_sessions,
-    "check_function"          : check_postgres_sessions,
-    "service_description"     : "PostgreSQL Daemon Sessions %s",
-    "has_perfdata"            : True,
-    "group"                   : "postgres_instance_sessions",
+    "parse_function": parse_postgres_sessions,
+    "inventory_function": inventory_postgres_sessions,
+    "check_function": check_postgres_sessions,
+    "service_description": "PostgreSQL Daemon Sessions %s",
+    "has_perfdata": True,
+    "group": "postgres_instance_sessions",
 }

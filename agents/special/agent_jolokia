@@ -23,411 +23,57 @@
 # License along with GNU Make; see the file  COPYING.  If  not,  write
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
-
-import ssl
+"""Check_MK Special agent to monitor JMX using Mbeans exposed by jolokia
+"""
+import os
 import sys
-import json
-import base64
-import getopt
-import socket
-import urllib2
-from httplib import HTTPConnection, HTTPSConnection
+import argparse
 
-# assigned in parse_arguments
-opt_verbose = False
-opt_debug = False
+# TODO: is there a better way to do this?
+import cmk.utils.paths
+sys.path.append(os.path.join(cmk.utils.paths.local_agents_dir, 'plugins'))
+sys.path.append(os.path.join(cmk.utils.paths.agents_dir, 'plugins'))
+import mk_jolokia  # pylint: disable=import-error,wrong-import-position
 
 
-class PreemptiveBasicAuthHandler(urllib2.HTTPBasicAuthHandler):
-    """
-    sends basic authentication with the first request,
-    before the server even asks for it
-    """
+def parse_arguments(argv=None):
+    if argv is None:
+        argv = sys.argv[1:]
 
-    def http_request(self, req):
-        url = req.get_full_url()
-        realm = None
-        user, pw = self.passwd.find_user_password(realm, url)
-        if pw:
-            raw = "%s:%s" % (user, pw)
-            auth = 'Basic %s' % base64.b64encode(raw).strip()
-            req.add_unredirected_header(self.auth_header, auth)
-        return req
+    parser = argparse.ArgumentParser(description=__doc__)
 
-    https_request = http_request
+    parser.add_argument("-v", "--verbose", help='''Verbose mode''')
+    parser.add_argument("--debug", help="Debug mode: let python exceptions come through")
 
+    opts_with_help = (t for t in mk_jolokia.DEFAULT_CONFIG_TUPLES if len(t) == 3)
 
-global_vars = [
-    ("java.lang:type=Memory/NonHeapMemoryUsage/used", "NonHeapMemoryUsage", []),
-    ("java.lang:type=Memory/NonHeapMemoryUsage/max", "NonHeapMemoryMax", []),
-    ("java.lang:type=Memory/HeapMemoryUsage/used", "HeapMemoryUsage", []),
-    ("java.lang:type=Memory/HeapMemoryUsage/max", "HeapMemoryMax", []),
-    ("java.lang:type=Threading/ThreadCount", "ThreadCount", []),
-    ("java.lang:type=Threading/DaemonThreadCount", "DeamonThreadCount", []),
-    ("java.lang:type=Threading/PeakThreadCount", "PeakThreadCount", []),
-    ("java.lang:type=Threading/TotalStartedThreadCount", "TotalStartedThreadCount", []),
-    ("java.lang:type=Runtime/Uptime", "Uptime", []),
-    ("java.lang:type=GarbageCollector,name=*/CollectionCount", "", []),
-    ("java.lang:type=GarbageCollector,name=*/CollectionTime", "", []),
-    ("java.lang:name=CMS%20Perm%20Gen,type=MemoryPool/Usage/used", "PermGenUsage", []),
-    ("java.lang:name=CMS%20Perm%20Gen,type=MemoryPool/Usage/max", "PermGenMax", []),
-]
+    for key, default, help_str in opts_with_help:
+        if default is not None:
+            help_str += " Default: %s" % default
 
-specific_vars = {
-    "weblogic": [
-        ("*:*/CompletedRequestCount", None, ["ServerRuntime"]),
-        ("*:*/QueueLength", None, ["ServerRuntime"]),
-        ("*:*/StandbyThreadCount", None, ["ServerRuntime"]),
-        ("*:*/PendingUserRequestCount", None, ["ServerRuntime"]),
-        ("*:Name=ThreadPoolRuntime,*/ExecuteThreadTotalCount", None, ["ServerRuntime"]),
-        ("*:*/ExecuteThreadIdleCount", None, ["ServerRuntime"]),
-        ("*:*/HoggingThreadCount", None, ["ServerRuntime"]),
-        ("*:Type=WebAppComponentRuntime,*/OpenSessionsCurrentCount", None,
-         ["ServerRuntime", "ApplicationRuntime"]),
-    ],
-    "tomcat": [
-        ("*:type=Manager,*/activeSessions,maxActiveSessions", None, ["path", "context"]),
-        ("*:j2eeType=Servlet,name=default,*/stateName", None, ["WebModule"]),
-        # Check not yet working
-        ("*:j2eeType=Servlet,name=default,*/requestCount", None, ["WebModule"]),
-        ("*:name=*,type=ThreadPool/maxThreads", None, []),
-        ("*:name=*,type=ThreadPool/currentThreadCount", None, []),
-        ("*:name=*,type=ThreadPool/currentThreadsBusy", None, []),
-        # too wide location for addressing the right info
-        # ( "*:j2eeType=Servlet,*/requestCount", None, [ "WebModule" ] ),
-    ],
-    "jboss": [("*:type=Manager,*/activeSessions,maxActiveSessions", None, ["path", "context"]),],
-}
+        parser.add_argument("--%s" % key, default=default, help=help_str)
+
+    # now add some arguments we cannot define in the way above:
+    parser.add_argument(
+        "--no-cert-check",
+        action="store_true",
+        help='''Skip SSL certificate verification (not recommended)''')
+
+    return parser.parse_args(argv)
 
 
-class HTTPSValidatingConnection(HTTPSConnection):
-    def __init__(self, host, ca_file, key_file, cert_file):
-        HTTPSConnection.__init__(self, host, key_file=key_file, cert_file=cert_file)
-        self.__ca_file = ca_file
-        self.__key_file = key_file
-        self.__cert_file = cert_file
+def yield_configured_instances():
+    args = parse_arguments()
+    defaults = mk_jolokia.get_default_config_dict()
 
-    def connect(self):
-        HTTPConnection.connect(self)
-        if self.__ca_file:
-            self.sock = ssl.wrap_socket(
-                self.sock,
-                keyfile=self.key_file,
-                certfile=self.cert_file,
-                ca_certs=self.__ca_file,
-                cert_reqs=ssl.CERT_REQUIRED)
-        else:
-            self.sock = ssl.wrap_socket(
-                self.sock,
-                keyfile=self.key_file,
-                certfile=self.cert_file,
-                ca_certs=self.__ca_file,
-                cert_reqs=ssl.CERT_NONE)
+    if args.no_cert_check:
+        defaults["verify"] = False
+    for key in defaults:
+        if hasattr(args, key):
+            defaults[key] = getattr(args, key)
 
-
-class HTTPSAuthHandler(urllib2.HTTPSHandler):
-    def __init__(self, ca_file, key, cert):
-        urllib2.HTTPSHandler.__init__(self)
-        self.__ca_file = ca_file
-        self.__key = key
-        self.__cert = cert
-
-    def https_open(self, req):
-        # do_open expects a class as the first parameter but getConnection will act
-        # as a facotry function
-        return self.do_open(self.getConnection, req)
-
-    def getConnection(self, host, timeout):
-        return HTTPSValidatingConnection(
-            host, ca_file=self.__ca_file, key_file=self.__key, cert_file=self.__cert)
-
-
-def fetch_var(protocol, server, port, path, suburi, cert_path, itemspec):
-    url = "%s://%s:%d/%s/%s" % (protocol, server, port, suburi, path)
-    if opt_verbose:
-        sys.stderr.write("Fetching: %s\n" % url)
-    try:
-        conn = urllib2.urlopen(url)
-        json_data = conn.read()
-
-        if opt_verbose:
-            sys.stderr.write("Result: %s\n\n" % json_data)
-    except Exception, e:
-        if opt_debug:
-            raise
-        sys.stderr.write("ERROR: %s\n" % e)
-        return []
-
-    try:
-        obj = json.loads(json_data)
-    except Exception, e:
-        sys.stderr.write('ERROR: Invalid json code (%s)\n' % e)
-        sys.stderr.write('       Response %s\n' % json_data)
-        return []
-
-    if obj.get('status', 200) != 200:
-        sys.stderr.write('ERROR: Invalid response when fetching url %s\n' % url)
-        sys.stderr.write('       Response: %s\n' % json_data)
-        return []
-
-    # Only take the value of the object. If the value is an object
-    # take the first items first value.
-    # {'Catalina:host=localhost,path=\\/test,type=Manager': {'activeSessions': 0}}
-    if 'value' not in obj:
-        if opt_verbose:
-            sys.stderr.write("ERROR: not found: %s\n" % path)
-        return []
-    val = obj.get('value', None)
-    return make_item_list((), val, itemspec)
-
-
-# convert single values into lists of items in
-# case value is a 1-levelled or 2-levelled dict
-def make_item_list(path, value, itemspec):
-    if not isinstance(value, dict):
-        if isinstance(value, str):
-            value = value.replace(r'\/', '/')
-        return [(path, value)]
-    else:
-        result = []
-        for key, subvalue in value.items():
-            # Handle filtering via itemspec
-            miss = False
-            while itemspec and '=' in itemspec[0]:
-                if itemspec[0] not in key:
-                    miss = True
-                    break
-                itemspec = itemspec[1:]
-            if miss:
-                continue
-            item = extract_item(key, itemspec)
-            if not item:
-                item = (key,)
-            result += make_item_list(path + item, subvalue, [])
-        return result
-
-
-# Example:
-# key = 'Catalina:host=localhost,path=\\/,type=Manager'
-# itemsepc = [ "path" ]
-# --> "/"
-
-
-def extract_item(key, itemspec):
-    path = key.split(":", 1)[-1]
-    components = path.split(",")
-    item = ()
-    comp_dict = {}
-    for comp in components:
-        parts = comp.split("=")
-        if len(parts) == 2:
-            left, right = parts
-            comp_dict[left] = right
-    for pathkey in itemspec:
-        if pathkey in comp_dict:
-            right = comp_dict[pathkey]
-            right = right.replace(r'\/', '/')
-            if '/' in right:
-                right = '/' + right.split('/')[-1]
-            item = item + (right,)
-    return item
-
-
-def query_instance(inst):
-    # Prepare user/password authentication via HTTP Auth
-    password_mngr = urllib2.HTTPPasswordMgrWithDefaultRealm()
-    if inst.get("password"):
-        password_mngr.add_password(None,
-                                   "%s://%s:%d/" % (inst["protocol"], inst["server"], inst["port"]),
-                                   inst["user"], inst["password"])
-
-    handlers = []
-    if inst["protocol"] == "https":
-        if inst["mode"] == 'https' and (inst["client_key"] is None or inst["client_cert"] is None):
-            sys.stdout.write('<<<jolokia_info>>>\n')
-            sys.stderr.write("ERROR: https set up as authentication method but certificate "
-                             "wasn't provided\n")
-            return
-        handlers.append(
-            HTTPSAuthHandler(inst["cert_path"], inst["client_key"], inst["client_cert"]))
-    if inst["mode"] == 'digest':
-        handlers.append(urllib2.HTTPDigestAuthHandler(password_mngr))
-    elif inst["mode"] == "basic_preemptive":
-        handlers.append(PreemptiveBasicAuthHandler(password_mngr))
-    elif inst["mode"] == "basic" and inst["protocol"] != "https":
-        handlers.append(urllib2.HTTPBasicAuthHandler(password_mngr))
-
-    if handlers:
-        opener = urllib2.build_opener(*handlers)
-        urllib2.install_opener(opener)
-
-    # Determine type of server
-    server_info = fetch_var(inst["protocol"], inst["server"], inst["port"], "", inst["suburi"],
-                            inst["cert_path"], "")
-    sys.stdout.write('<<<jolokia_info>>>\n')
-    if server_info:
-        d = dict(server_info)
-        version = d.get(('info', 'version'), "unknown")
-        product = d.get(('info', 'product'), "unknown")
-        if inst.has_key("product"):
-            product = inst["product"]
-        agentversion = d.get(('agent',), "unknown")
-        sys.stdout.write("%s %s %s %s\n" % (inst["instance"], product, version, agentversion))
-    else:
-        sys.stdout.write("%s ERROR\n" % (inst["instance"],))
-        sys.stdout.write('<<<jolokia_metrics>>>\n')
-        sys.stdout.write("%s ERROR\n" % (inst["instance"],))
-        return
-
-    sys.stdout.write('<<<jolokia_metrics>>>\n')
-    # Fetch the general information first
-    for path, title, itemspec in global_vars + specific_vars.get(product, []):
-        try:
-            values = fetch_var(inst["protocol"], inst["server"], inst["port"], "read/" + path,
-                               inst["suburi"], inst["cert_path"], itemspec)
-
-        # In case of network errors skip this server
-        except IOError:
-            return
-        except socket.timeout:
-            return
-        except:
-            if opt_debug:
-                raise
-            # Simply ignore exceptions. Need to be removed for debugging
-            continue
-
-        for subinstance, value in values:
-            if not subinstance and not title:
-                print "INTERNAL ERROR: %s" % value
-                continue
-
-            if "threadStatus" in subinstance or "threadParam" in subinstance:
-                continue
-
-            if len(subinstance) > 1:
-                item = ",".join((inst["instance"],) + subinstance[:-1])
-            else:
-                item = inst["instance"]
-            if title:
-                if subinstance:
-                    tit = title + "." + subinstance[-1]
-                else:
-                    tit = title
-            else:
-                tit = subinstance[-1]
-
-            sys.stdout.write("%s %s %s\n" % (item.replace(" ", "_"), tit, value))
-
-
-def usage():
-    sys.stderr.write("""Check_MK Jolokia Agent
-USAGE: mk_jolokia [OPTIONS]
-       mk_jolokia --help
-
-OPTIONS:
-  --help                        Show this help message and exit
-  --server=SERVER               Host name or IP address of the Jolokia server. Default: localhost
-  --port=PORT                   TCP Port of the Jolokia server. Default: 8080
-  --user=USER                   Username to use for the connection. Default: monitoring
-  --password=PASSWORD           Password to use for connecting. Default: none
-  --mode=MODE                   Authentication mode. Can be "basic" or "digest". Default: digest
-  --suburi=SUBURI               Path-component of the URI to query. Default: jolokia
-  --instance=INSTANCE           Name of the instance in the monitoring
-  --debug                       Debug mode: let Python exceptions come through
-  --verbose                     Output some more detailed information
-""")
-
-
-def parse_arguments():
-    short_options = ''
-    long_options = [
-        'help', 'verbose', 'server=', 'port=', 'user=', 'password=', 'mode=', 'suburi=',
-        'instance=', 'protocol=', 'cert_path=', 'client_cert=', 'client_key='
-    ]
-
-    try:
-        opts, _args = getopt.getopt(sys.argv[1:], short_options, long_options)
-    except getopt.GetoptError, err:
-        sys.stderr.write("%s\n" % err)
-        sys.exit(1)
-
-    opts = dict([(o.replace("--", ""), a) for o, a in opts])
-
-    if 'help' in opts:
-        return None
-
-    global opt_debug
-    opt_debug = 'debug' in opts
-
-    global opt_verbose
-    opt_verbose = 'verbose' in opts
-
-    for optional, default in [
-        ('server', "localhost"),
-        ('user', "monitoring"),
-        ('password', None),
-        ('mode', "digest"),
-        ('suburi', "jolokia"),
-        ('port', 8080),
-        ('instance', lambda: str(opts['port'])),
-        ('protocol', "http"),
-        ('cert_path', None),
-        ('client_cert', None),
-        ('client_key', None),
-    ]:
-        if optional not in opts:
-            if callable(default):
-                opts[optional] = default()
-            else:
-                opts[optional] = default
-
-    return opts
-
-
-def main():
-    opts = parse_arguments()
-    if not opts:
-        usage()
-        return 0
-
-    # List of instances to monitor. Each instance is a dict where
-    # the global configuration values can be overridden.
-    instances = [{}]
-
-    # We have to deal with socket timeouts. Python > 2.6
-    # supports timeout parameter for the urllib2.urlopen method
-    # but we are on a python 2.5 system here which seem to use the
-    # default socket timeout. We are local here so  set it to 1 second.
-    socket.setdefaulttimeout(1.0)
-
-    print "<<<jolokia>>>"
-    # Compute list of instances to monitor. If the user has defined
-    # instances in his configuration, we will use this (a list
-    # of dicts).
-    for inst in instances:
-        for varname, value in [
-            ("server", opts['server']),
-            ("port", int(opts['port'])),
-            ("user", opts['user']),
-            ("password", opts['password']),
-            ("mode", opts['mode']),
-            ("suburi", opts['suburi']),
-            ("instance", opts['instance']),
-            ("protocol", opts['protocol']),
-            ("cert_path", opts['cert_path']),
-            ("client_cert", opts['client_cert']),
-            ("client_key", opts['client_key']),
-        ]:
-            if varname not in inst:
-                inst[varname] = value
-        if not inst["instance"]:
-            inst["instance"] = str(inst["port"])
-        inst["instance"] = inst["instance"].replace(" ", "_")
-
-        query_instance(inst)
-    return 0
+    yield defaults
 
 
 if __name__ == "__main__":
-    main()
+    mk_jolokia.main(yield_configured_instances())

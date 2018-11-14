@@ -261,7 +261,6 @@ class ModeEditLDAPConnection(LDAPMode):
                        'href="https://mathias-kettner.com/checkmk_multisite_ldap_integration.html">'
                        'LDAP Documentation</a>.'))))
         else:
-            # type: cmk.gui.plugins.userdb.ldap_connector.LDAPUserConnector
             connection = userdb.get_connection(self._connection_id)
             for address in connection.servers():
                 html.h3("%s: %s" % (_('Server'), address))

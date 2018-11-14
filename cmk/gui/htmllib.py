@@ -71,14 +71,16 @@ from contextlib import contextmanager
 
 try:
     # First try python3
-    from html import escape as html_escape
+    # suppress missing import error from mypy
+    from html import escape as html_escape  # type: ignore
 except ImportError:
     # Default to python2
     from cgi import escape as html_escape
 
 try:
     # does not exist in Py3, but is super class of str & unicode in py2
-    basestring
+    # suppress mypys "Cannot determine type of 'basestring'" error
+    basestring  # type: ignore
 except NameError:
     basestring = str  # pylint: disable=redefined-builtin
     unicode = str  # pylint: disable=redefined-builtin
@@ -89,8 +91,12 @@ def _default(self, obj):
     return getattr(obj.__class__, "to_json", _default.default)(obj)
 
 
-_default.default = json.JSONEncoder().default  # Save unmodified default.
-json.JSONEncoder.default = _default  # replacement
+# TODO: suppress mypy warnings for this monkey patch right now. See also:
+# https://github.com/python/mypy/issues/2087
+# Save unmodified default:
+_default.default = json.JSONEncoder().default  # type: ignore
+# replacement:
+json.JSONEncoder.default = _default  # type: ignore
 
 import cmk.paths
 from cmk.exceptions import MKGeneralException

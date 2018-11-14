@@ -32,6 +32,7 @@ import ctypes
 import ctypes.util
 from pathlib2 import Path  # pylint: disable=unused-import
 from contextlib import contextmanager
+from typing import Generator  # pylint: disable=unused-import
 
 import cmk.store
 from cmk.exceptions import MKGeneralException
@@ -135,7 +136,7 @@ def _cleanup_locked_pid_file(path):
 
 @contextmanager
 def pid_file_lock(path):
-    # type: (Path) -> None
+    # type: (Path) -> Generator[None, None, None]
     """Context manager for PID file based locking"""
     lock_with_pid_file("%s" % path)
     try:

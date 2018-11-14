@@ -29,7 +29,7 @@ import traceback
 import json
 import time
 from enum import Enum
-from typing import Type, Union, List  # pylint: disable=unused-import
+from typing import Any, Dict, List, Optional, Type, Union  # pylint: disable=unused-import
 
 import cmk
 import cmk.paths
@@ -70,7 +70,7 @@ from cmk.gui.plugins.sidebar.utils import (  # pylint: disable=unused-import
 
 from cmk.gui.plugins.sidebar.quicksearch import QuicksearchMatchPlugin  # pylint: disable=unused-import
 
-quicksearch_match_plugins = []
+quicksearch_match_plugins = []  # type: List[QuicksearchMatchPlugin]
 
 # Datastructures and functions needed before plugins can be loaded
 loaded_with_language = False
@@ -113,6 +113,7 @@ def load_plugins(force):
 # Convert it to objects to be compatible
 # TODO: Deprecate this one day.
 def transform_old_dict_based_snapins():
+    # type: () -> None
     for snapin_id, snapin in sidebar_snapins.items():
 
         @snapin_registry.register
@@ -156,6 +157,7 @@ def transform_old_dict_based_snapins():
 
 # TODO: Deprecate this one day.
 def transform_old_quicksearch_match_plugins():
+    # type: () -> None
     for match_plugin in quicksearch_match_plugins:
         cmk.gui.plugins.sidebar.quicksearch.match_plugin_registry.register(match_plugin)
 
@@ -183,16 +185,16 @@ class UserSidebarConfig(object):
         self.snapins.append(snapin)
 
     def move_snapin_before(self, snapin, other):
-        # type: (UserSidebarSnapin, Union[UserSidebarSnapin,None]) -> None
+        # type: (UserSidebarSnapin, Optional[UserSidebarSnapin]) -> None
         """Move the given snapin before the other given snapin.
         The other may be None. In this case the snapin is moved to the end.
         """
         self.snapins.remove(snapin)
 
-        try:
+        if other in self.snapins:
             other_index = self.snapins.index(other)
             self.snapins.insert(other_index, snapin)
-        except ValueError:
+        else:
             self.snapins.append(snapin)
 
     def remove_snapin(self, snapin):
@@ -201,6 +203,7 @@ class UserSidebarConfig(object):
         self.snapins.remove(snapin)
 
     def get_snapin(self, snapin_id):
+        # type: (str) -> UserSidebarSnapin
         for snapin in self.snapins:
             if snapin.snapin_type.type_name() == snapin_id:
                 return snapin
@@ -212,6 +215,7 @@ class UserSidebarConfig(object):
         return self._config["snapins"]
 
     def _initial_config(self):
+        # type: () -> Dict[str, Union[bool, List[Dict[str, Any]]]]
         return {
             "snapins": self._transform_legacy_tuples(self._default_config),
             "fold": False,
@@ -258,12 +262,14 @@ class UserSidebarConfig(object):
         return [e for e in snapins if e["visibility"] != "off"]
 
     def _transform_legacy_tuples(self, snapins):
+        # type: (Any) -> List[Dict[str, Any]]
         return [{
             "snapin_type_id": e[0],
             "visibility": e[1]
         } if isinstance(e, tuple) else e for e in snapins]
 
     def save(self):
+        # type: () -> None
         if self._user.may("general.configure_sidebar"):
             self._user.save_file("sidebar", self._to_config())
 
@@ -274,6 +280,7 @@ class UserSidebarConfig(object):
         }
 
     def _to_config(self):
+        # type: () -> Dict[str, Any]
         return {
             "fold": self._config["fold"],
             "snapins": [e.to_config() for e in self._config["snapins"]]
@@ -290,14 +297,14 @@ class UserSidebarSnapin(object):
 
     @staticmethod
     def from_config(config):
-        # type: (dict) -> UserSidebarSnapin
+        # type: (Dict[str, Type[cmk.gui.plugins.sidebar.SidebarSnapin]]) -> UserSidebarSnapin
         """ Construct a UserSidebarSnapin object from the persisted data structure"""
         snapin_class = snapin_registry[config["snapin_type_id"]]
         return UserSidebarSnapin(snapin_class, SnapinVisibility(config["visibility"]))
 
     @staticmethod
     def from_snapin_type_id(snapin_type_id):
-        # type: (bytes) -> UserSidebarSnapin
+        # type: (str) -> UserSidebarSnapin
         return UserSidebarSnapin(snapin_registry[snapin_type_id])
 
     def __init__(self, snapin_type, visibility=SnapinVisibility.OPEN):
@@ -307,22 +314,29 @@ class UserSidebarSnapin(object):
         self.visible = visibility
 
     def to_config(self):
+        # type: () -> Dict[str, Any]
         return {
             "snapin_type_id": self.snapin_type.type_name(),
             "visibility": self.visible.value,
         }
 
     def __eq__(self, other):
+        # type: (Any) -> bool
         if not isinstance(other, UserSidebarSnapin):
-            return NotImplemented
+            return False
 
         return self.snapin_type == other.snapin_type and self.visible == other.visible
+
+    def __ne__(self, other):
+        # type: (Any) -> bool
+        return not self.__eq__(other)
 
 
 class SidebarRenderer(object):
     def show(self):
+        # type: () -> None
         if not config.user.may("general.see_sidebar"):
-            return
+            return None
         if config.sidebar_notify_interval is not None:
             interval = config.sidebar_notify_interval
         else:
@@ -379,7 +393,7 @@ class SidebarRenderer(object):
         html.body_end()
 
     def render_snapin(self, snapin):
-        # type: (UserSidebarSnapin) -> bytes
+        # type: (UserSidebarSnapin) -> str
         snapin_class = snapin.snapin_type
         name = snapin_class.type_name()
         snapin_instance = snapin_class()
@@ -396,7 +410,7 @@ class SidebarRenderer(object):
         toggle_url = "sidebar_openclose.py?name=%s&state=" % name
 
         # If the user may modify the sidebar then add code for dragging the snapin
-        head_actions = {}
+        head_actions = {}  # type: Dict[str, str]
         if config.user.may("general.configure_sidebar"):
             head_actions = {
                 "onmouseover": "document.body.style.cursor='move';",
@@ -426,7 +440,7 @@ class SidebarRenderer(object):
             html.close_div()
 
         # The heading. A click on the heading mini/maximizes the snapin
-        toggle_actions = {}
+        toggle_actions = {}  # type: Dict[str, str]
         if config.user.may("general.configure_sidebar"):
             toggle_actions = {
                 "onclick": "toggle_sidebar_snapin(this,'%s')" % toggle_url,
@@ -624,9 +638,10 @@ def ajax_fold():
 
 @cmk.gui.pages.register("sidebar_openclose")
 def ajax_openclose():
+    # type: () -> None
     html.set_output_format("json")
     if not config.user.may("general.configure_sidebar"):
-        return
+        return None
 
     snapin_id = html.var("name")
     state = html.var("state")
@@ -638,7 +653,7 @@ def ajax_openclose():
     try:
         snapin = user_config.get_snapin(snapin_id)
     except KeyError:
-        return
+        return None
 
     if state == "off":
         user_config.remove_snapin(snapin)
@@ -650,9 +665,10 @@ def ajax_openclose():
 
 @cmk.gui.pages.register("sidebar_move_snapin")
 def move_snapin():
+    # type: () -> None
     html.set_output_format("json")
     if not config.user.may("general.configure_sidebar"):
-        return
+        return None
 
     snapin_id = html.var("name")
     before_id = html.var("before")
@@ -662,10 +678,10 @@ def move_snapin():
     try:
         snapin = user_config.get_snapin(snapin_id)
     except KeyError:
-        return
+        return None
 
     try:
-        before_snapin = user_config.get_snapin(before_id)
+        before_snapin = user_config.get_snapin(before_id)  # type: Optional[UserSidebarSnapin]
     except KeyError:
         before_snapin = None
 
@@ -778,6 +794,7 @@ class PageAddSnapin(object):
         self._user_config = UserSidebarConfig(user, default_config)
 
     def show(self):
+        # type: () -> None
         if not config.user.may("general.configure_sidebar"):
             raise MKGeneralException(_("You are not allowed to change the sidebar."))
 
@@ -797,6 +814,7 @@ class PageAddSnapin(object):
         self._show_builtin_snapins()
 
     def _show_builtin_snapins(self):
+        # type: () -> None
         used_snapins = self._used_snapins()
 
         html.open_div(class_=["add_snapin"])
@@ -824,6 +842,7 @@ class PageAddSnapin(object):
         html.footer()
 
     def _used_snapins(self):
+        # type: () -> List[Any]
         return [snapin.snapin_type.type_name() for snapin in self._user_config.snapins]
 
 

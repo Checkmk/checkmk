@@ -26,6 +26,7 @@
 
 import re
 from contextlib import contextmanager
+from typing import Optional, Text  # pylint: disable=unused-import
 
 import cmk.gui.utils as utils
 import cmk.gui.config as config

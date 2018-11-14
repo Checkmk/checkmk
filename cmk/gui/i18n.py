@@ -26,7 +26,9 @@
 
 import os
 import gettext as gettext_module
-from typing import NamedTuple, Optional, List, Tuple  # pylint: disable=unused-import
+from typing import (  # pylint: disable=unused-import
+    Dict, NamedTuple, Optional, List, Tuple, Text,
+)
 
 import cmk.paths
 
@@ -42,6 +44,7 @@ import cmk.paths
 #   | Handling of the regular localization of the GUI                      |
 #   '----------------------------------------------------------------------'
 
+# NullTranslations is the base class used by all translation classes in gettext
 Translation = NamedTuple("Translation", [
     ("translation", gettext_module.NullTranslations),
     ("name", str),
@@ -162,11 +165,12 @@ def initialize():
 #   | Users can localize custom strings using the global configuration     |
 #   '----------------------------------------------------------------------'
 
-_user_localizations = {}
+_user_localizations = {}  # type: Dict[Text, Dict[Optional[str], Text]]
 
 
 # Localization of user supplied texts
 def _u(text):
+    # type: (Text) -> Text
     ldict = _user_localizations.get(text)
     if ldict:
         return ldict.get(get_current_language(), text)
@@ -174,6 +178,7 @@ def _u(text):
 
 
 def set_user_localizations(localizations):
+    # type: (Dict[Text, Dict[Optional[str], Text]]) -> None
     _user_localizations.clear()
     _user_localizations.update(localizations)
 

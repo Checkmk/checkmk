@@ -26,6 +26,7 @@
 
 import abc
 import json
+from typing import List  # pylint: disable=unused-import
 
 import cmk.gui.config as config
 from cmk.gui.i18n import _

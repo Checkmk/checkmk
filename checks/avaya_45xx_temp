@@ -24,34 +24,35 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-
 factory_settings["avaya_45xx_temp_default_levels"] = {
-    "levels" : (55, 60),
+    "levels": (55, 60),
 }
+
 
 def inventory_avaya_45xx_temp(info):
     for idx, _line in enumerate(info):
         yield str(idx), {}
 
+
 def check_avaya_45xx_temp(item, params, info):
     for idx, temp in enumerate(info):
         if str(idx) == item:
-            return check_temperature(float(temp[0])/2.0, params,
-                                     "avaya_45xx_temp_%s" % item)
+            return check_temperature(float(temp[0]) / 2.0, params, "avaya_45xx_temp_%s" % item)
+
 
 check_info["avaya_45xx_temp"] = {
-    "check_function":       check_avaya_45xx_temp,
-    "inventory_function":   inventory_avaya_45xx_temp,
-    "service_description":  "Temperature Chassis %s",
+    "check_function": check_avaya_45xx_temp,
+    "inventory_function": inventory_avaya_45xx_temp,
+    "service_description": "Temperature Chassis %s",
     "default_levels_variable": "avaya_45xx_temp_temp_default_levels",
-    "has_perfdata":         True,
-    "group":                "temperature",
+    "has_perfdata": True,
+    "group": "temperature",
     # S5-CHASSIS-MIB::s5ChasTmpSnrTmpValue
     # The current temperature value of the temperature
     # sensor. This is measured in units of a half degree
     # centigrade, e.g. a value of 121 indicates a temperature
     # of 60.5 degrees C.
-    "snmp_info":            ( ".1.3.6.1.4.1.45.1.6.3.7.1.1.5", [ 5 ] ),
-    "snmp_scan_function":   lambda oid: ".1.3.6.1.4.1.45.3" in oid(".1.3.6.1.2.1.1.2.0"),
-    "includes":             [ "temperature.include" ],
+    "snmp_info": (".1.3.6.1.4.1.45.1.6.3.7.1.1.5", [5]),
+    "snmp_scan_function": lambda oid: ".1.3.6.1.4.1.45.3" in oid(".1.3.6.1.2.1.1.2.0"),
+    "includes": ["temperature.include"],
 }

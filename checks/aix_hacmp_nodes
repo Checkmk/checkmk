@@ -24,7 +24,6 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-
 # <<<aix_hacmp_nodes>>>
 # pasv0449
 # pasv0450
@@ -65,28 +64,25 @@ def parse_aix_hacmp_nodes(info):
             parsed[line[0]] = {}
 
         elif 'NODE' in line[0]:
-            if line[1].replace(':','') in parsed:
-                node_name = line[1].replace(':','')
+            if line[1].replace(':', '') in parsed:
+                node_name = line[1].replace(':', '')
                 get_details = True
             else:
                 get_details = False
 
         elif 'Interfaces' in line[0] and get_details:
-            network_name = line[3].replace(',','')
+            network_name = line[3].replace(',', '')
             parsed[node_name][network_name] = []
 
         elif 'Communication' in line[0] and get_details:
-            parsed[node_name][network_name].append(
-                ( line[3].replace(',',''),
-                  line[5].replace(',',''),
-                  line[8].replace(',','')
-                ))
+            parsed[node_name][network_name].append((line[3].replace(',', ''), line[5].replace(
+                ',', ''), line[8].replace(',', '')))
 
     return parsed
 
 
 def inventory_aix_hacmp_nodes(parsed):
-    return [ (key, None) for key in parsed ]
+    return [(key, None) for key in parsed]
 
 
 def check_aix_hacmp_nodes(item, _no_params, parsed):
@@ -101,8 +97,8 @@ def check_aix_hacmp_nodes(item, _no_params, parsed):
 
 
 check_info['aix_hacmp_nodes'] = {
-    'parse_function'            : parse_aix_hacmp_nodes,
-    'inventory_function'        : inventory_aix_hacmp_nodes,
-    'check_function'            : check_aix_hacmp_nodes,
-    'service_description'       : 'HACMP Node %s',
+    'parse_function': parse_aix_hacmp_nodes,
+    'inventory_function': inventory_aix_hacmp_nodes,
+    'check_function': check_aix_hacmp_nodes,
+    'service_description': 'HACMP Node %s',
 }

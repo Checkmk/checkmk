@@ -53,6 +53,7 @@
 # The first part is the output of vmstat -v, the last line is the output
 # of swap -s and show the swap space usage
 
+
 # Parse AIX vmstat output into something compatible with the Linux
 # output from /proc/meminfo. AIX speaks of 4k pages while Linux of kilobytes.
 def parse_aix_memory(info):
@@ -61,7 +62,7 @@ def parse_aix_memory(info):
     parsed["SwapTotal"] = 0
     parsed["SwapFree"] = 0
     for line in info:
-        if line[0] == "allocated": # Swap space
+        if line[0] == "allocated":  # Swap space
             parsed["SwapTotal"] = int(line[2]) * 4
             parsed["SwapFree"] = int(line[10]) * 4
         else:
@@ -87,11 +88,11 @@ def inventory_aix_memory(info):
 
 
 check_info['aix_memory'] = {
-    "check_function"          : check_aix_memory,
-    "inventory_function"      : inventory_aix_memory,
-    "service_description"     : "Memory used",
-    "has_perfdata"            : True,
-    "group"                   : "memory",
-    "default_levels_variable" : "memory_default_levels",
-    "includes"                : [ "mem.include" ],
+    "check_function": check_aix_memory,
+    "inventory_function": inventory_aix_memory,
+    "service_description": "Memory used",
+    "has_perfdata": True,
+    "group": "memory",
+    "default_levels_variable": "memory_default_levels",
+    "includes": ["mem.include"],
 }

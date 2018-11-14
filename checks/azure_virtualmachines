@@ -91,7 +91,6 @@ check_info['azure_virtualmachines'] = {
     'group': 'azure_vms',
 }
 
-
 factory_settings['levels_azure_virtualmachines_summary'] = {
     "levels_provisioning": {
         "failed": {

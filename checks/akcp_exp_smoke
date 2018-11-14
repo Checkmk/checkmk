@@ -24,21 +24,21 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-
 # Example for contents of info
 #           description                 state  online
 # ["Port 4 Rauchmelder USV Raum A",      "2",   "1"]
 
-
 check_info["akcp_exp_smoke"] = {
-    "check_function"      : check_akcp_sensor_relay,
-    "inventory_function"  : inventory_akcp_sensor_no_params,
-    "service_description" : "Smoke %s",
-    "snmp_scan_function"  : snmp_scan_akcp_exp,
-    "snmp_info"           : ( ".1.3.6.1.4.1.3854.2.3.14.1", [
-                                         2, # SPAGENT-MIB::sensorSmokeDescription
-                                         6, # SPAGENT-MIB::sensorSmokeStatus
-                                         8, # SPAGENT-MIB::sensorSmokeGoOffline
-                                         ] ),
-    "includes"            : [ "akcp_sensor.include" ],
+    "check_function": check_akcp_sensor_relay,
+    "inventory_function": inventory_akcp_sensor_no_params,
+    "service_description": "Smoke %s",
+    "snmp_scan_function": snmp_scan_akcp_exp,
+    "snmp_info": (
+        ".1.3.6.1.4.1.3854.2.3.14.1",
+        [
+            2,  # SPAGENT-MIB::sensorSmokeDescription
+            6,  # SPAGENT-MIB::sensorSmokeStatus
+            8,  # SPAGENT-MIB::sensorSmokeGoOffline
+        ]),
+    "includes": ["akcp_sensor.include"],
 }

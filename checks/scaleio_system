@@ -24,7 +24,6 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-
 #<<<scaleio_system:sep(9)>>>
 #SYSTEM 5914d6b47d479d5a:
 #        ID                                                 5914d6b47d479d5a
@@ -52,15 +51,15 @@ def check_scaleio_system(item, params, parsed):
     total = int(data["MAX_CAPACITY_IN_KB"][2].strip("(")) * 1024
     free = int(data["UNUSED_CAPACITY_IN_KB"][2].strip("(")) * 1024
 
-    yield df_check_filesystem_list(item, params, [ (item, total, free, 0) ])
+    yield df_check_filesystem_list(item, params, [(item, total, free, 0)])
 
 
 check_info['scaleio_system'] = {
-    'parse_function'        : lambda info: parse_scaleio(info, "SYSTEM"),
-    'inventory_function'    : inventory_scaleio_system,
-    'check_function'        : check_scaleio_system,
-    'service_description'   : 'ScaleIO System %s',
-    'includes'              : [ 'size_trend.include', 'df.include', 'scaleio.include' ],
-    'group'                 : 'filesystem',
-    'has_perfdata'          : True,
+    'parse_function': lambda info: parse_scaleio(info, "SYSTEM"),
+    'inventory_function': inventory_scaleio_system,
+    'check_function': check_scaleio_system,
+    'service_description': 'ScaleIO System %s',
+    'includes': ['size_trend.include', 'df.include', 'scaleio.include'],
+    'group': 'filesystem',
+    'has_perfdata': True,
 }

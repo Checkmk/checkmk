@@ -24,7 +24,6 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-
 # No faults:
 # Agent section is empty
 
@@ -168,10 +167,10 @@ def parse_solaris_fmadm(info):
             event.append(entry)
 
     parsed = {
-        "event" : {
-            "time" : " ".join(event[:-3]),
-            "id"   : event[-3],
-            "msg"  : event[-2],
+        "event": {
+            "time": " ".join(event[:-3]),
+            "id": event[-3],
+            "msg": event[-2],
             "severity": event[-1].lower(),
         },
         "problems": [],
@@ -196,9 +195,9 @@ def check_solaris_fmadm(_no_item, params, parsed):
         return
 
     map_state = {
-        "minor"    : (1, "minor"),
-        "major"    : (2, "major"),
-        "critical" : (2, "critical"),
+        "minor": (1, "minor"),
+        "major": (2, "major"),
+        "critical": (2, "critical"),
     }
 
     event = parsed["event"]
@@ -211,8 +210,8 @@ def check_solaris_fmadm(_no_item, params, parsed):
 
 
 check_info['solaris_fmadm'] = {
-    'parse_function'            : parse_solaris_fmadm,
-    'inventory_function'        : inventory_solaris_fmadm,
-    'check_function'            : check_solaris_fmadm,
-    'service_description'       : 'FMD Status',
+    'parse_function': parse_solaris_fmadm,
+    'inventory_function': inventory_solaris_fmadm,
+    'check_function': check_solaris_fmadm,
+    'service_description': 'FMD Status',
 }

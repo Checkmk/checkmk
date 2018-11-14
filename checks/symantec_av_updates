@@ -33,15 +33,14 @@
 # <<<symantec_av_updates>>>
 # 09/18/15 rev. 1
 
-
-symantec_av_updates_default_levels = ( 259200, 345600 )
+symantec_av_updates_default_levels = (259200, 345600)
 
 
 def inventory_symantec_av_updates(info):
-    return [( None, 'symantec_av_updates_default_levels' )]
+    return [(None, 'symantec_av_updates_default_levels')]
 
 
-def check_symantec_av_updates( _no_item, params, info):
+def check_symantec_av_updates(_no_item, params, info):
     warn, crit = params
     last_text = info[0][0]
     if '/' in last_text:
@@ -64,9 +63,8 @@ def check_symantec_av_updates( _no_item, params, info):
 
 
 check_info["symantec_av_updates"] = {
-    "check_function"        : check_symantec_av_updates,
-    "group"                 : "antivir_update_age",
-    "inventory_function"    : inventory_symantec_av_updates,
-    "service_description"   : "AV Update Status",
+    "check_function": check_symantec_av_updates,
+    "group": "antivir_update_age",
+    "inventory_function": inventory_symantec_av_updates,
+    "service_description": "AV Update Status",
 }
-

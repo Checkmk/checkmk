@@ -27,19 +27,22 @@
 # <<<sansymphony_serverstatus>>>
 # Online WritebackGlobal
 
+
 def inventory_sansymphony_serverstatus(info):
     return [(None, None)]
+
 
 def check_sansymphony_serverstatus(_no_item, _no_params, info):
     status, cachestate = info[0]
     if status == "Online" and cachestate == "WritebackGlobal":
-        return 0, "SANsymphony is %s and its cache is in %s mode" % (status,cachestate)
+        return 0, "SANsymphony is %s and its cache is in %s mode" % (status, cachestate)
     elif status == "Online" and cachestate != "WritebackGlobal":
-        return 1, "SANsymphony is %s but its cache is in %s mode" % (status,cachestate)
+        return 1, "SANsymphony is %s but its cache is in %s mode" % (status, cachestate)
     return 2, "SANsymphony is %s" % status
 
+
 check_info['sansymphony_serverstatus'] = {
-    "check_function"          : check_sansymphony_serverstatus,
-    "inventory_function"      : inventory_sansymphony_serverstatus,
-    "service_description"     : "sansymphony Serverstatus",
+    "check_function": check_sansymphony_serverstatus,
+    "inventory_function": inventory_sansymphony_serverstatus,
+    "service_description": "sansymphony Serverstatus",
 }

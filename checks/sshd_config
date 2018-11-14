@@ -47,17 +47,17 @@ def parse_sshd_config(info):
 
     relevant_options = {
         #option                             parse function
-        "Protocol":                         lambda x: ",".join(sorted(x.split(","))),
+        "Protocol": lambda x: ",".join(sorted(x.split(","))),
         # Port can be defined multiple times in sshd_config.
         # Therefore we use a list of ints.
-        "Port":                             lambda x: [int(x)],
-        "PermitRootLogin":                  map_permit_root_login,
-        "PasswordAuthentication":           identity,
-        "PermitEmptyPasswords":             identity,
-        "ChallengeResponseAuthentication":  identity,
-        "X11Forwarding":                    identity,
-        "UsePAM":                           identity,
-        "Ciphers":                          lambda x: sorted(x.split(",")),
+        "Port": lambda x: [int(x)],
+        "PermitRootLogin": map_permit_root_login,
+        "PasswordAuthentication": identity,
+        "PermitEmptyPasswords": identity,
+        "ChallengeResponseAuthentication": identity,
+        "X11Forwarding": identity,
+        "UsePAM": identity,
+        "Ciphers": lambda x: sorted(x.split(",")),
     }
 
     parsed = {}
@@ -90,8 +90,7 @@ def check_sshd_config(_no_item, params, parsed):
         params["PermitRootLogin"] = "key-based"
 
     # type_ is needed because info contains unicode and params str
-    convert = lambda x, type_: (x if isinstance(x, type_)
-                                else ", ".join(map(type_, x)))
+    convert = lambda x, type_: (x if isinstance(x, type_) else ", ".join(map(type_, x)))
 
     for option, val in parsed.iteritems():
         state = 0
@@ -110,10 +109,9 @@ def check_sshd_config(_no_item, params, parsed):
 
 
 check_info["sshd_config"] = {
-    "parse_function":          parse_sshd_config,
-    "inventory_function":      inventory_sshd_config,
-    "check_function":          check_sshd_config,
-    "service_description":     "SSH daemon configuration",
-    "group":                   "sshd_config",
+    "parse_function": parse_sshd_config,
+    "inventory_function": inventory_sshd_config,
+    "check_function": check_sshd_config,
+    "service_description": "SSH daemon configuration",
+    "group": "sshd_config",
 }
-

@@ -24,12 +24,10 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-
 # OLD
 # <<<solaris_services>>>
 # STATE    STIME    FMRI
 # $STATE   $STIME   $TYPE:${/CATEGORY/PATH/}$NAME:$INSTANCE
-
 
 inventory_solaris_services_rules = []
 
@@ -50,14 +48,15 @@ def parse_solaris_services(info):
             continue
         svc_descr = line[2]
         type_, category, name, instance = get_parts_of_descr(svc_descr)
-        parsed.setdefault(svc_descr, {
-            "state": line[0],
-            "stime": line[1],
-            "type": type_,
-            "category": category,
-            "name": name,
-            "instance": instance,
-        })
+        parsed.setdefault(
+            svc_descr, {
+                "state": line[0],
+                "stime": line[1],
+                "type": type_,
+                "category": category,
+                "name": name,
+                "instance": instance,
+            })
     return parsed
 
 
@@ -70,13 +69,14 @@ def parse_solaris_services(info):
 #   |                                  |___/                               |
 #   '----------------------------------------------------------------------'
 
-
 factory_settings["solaris_services_default_levels"] = {
-    "states" : [("online", None, 0),
-                ("disabled", None, 2),
-                ("legacy_run", None, 0),
-                ("maintenance", None, 0)],
-    "else" : 2,
+    "states": [
+        ("online", None, 0),
+        ("disabled", None, 2),
+        ("legacy_run", None, 0),
+        ("maintenance", None, 0),
+    ],
+    "else": 2,
     "additional_servicenames": [],
 }
 
@@ -147,14 +147,13 @@ def check_solaris_services(item, params, parsed):
 
 
 check_info['solaris_services'] = {
-    'parse_function'            : parse_solaris_services,
-    'inventory_function'        : inventory_solaris_services,
-    'check_function'            : check_solaris_services,
-    'service_description'       : 'SMF Service %s', # Service Management Facility
-    'group'                     : 'solaris_services',
-    'default_levels_variable'   : 'solaris_services_default_levels',
+    'parse_function': parse_solaris_services,
+    'inventory_function': inventory_solaris_services,
+    'check_function': check_solaris_services,
+    'service_description': 'SMF Service %s',  # Service Management Facility
+    'group': 'solaris_services',
+    'default_levels_variable': 'solaris_services_default_levels',
 }
-
 
 #.
 #   .--summary-------------------------------------------------------------.
@@ -168,7 +167,7 @@ check_info['solaris_services'] = {
 
 
 def inventory_solaris_services_summary(parsed):
-    return [ (None, {}) ]
+    return [(None, {})]
 
 
 def check_solaris_services_summary(_no_item, params, parsed):
@@ -190,9 +189,9 @@ def check_solaris_services_summary(_no_item, params, parsed):
 
 
 check_info['solaris_services.summary'] = {
-    'parse_function'      : parse_solaris_services,
-    'inventory_function'  : inventory_solaris_services_summary,
-    'check_function'      : check_solaris_services_summary,
-    'service_description' : 'SMF Services Summary', # Service Management Facility
-    'group'               : 'solaris_services_summary',
+    'parse_function': parse_solaris_services,
+    'inventory_function': inventory_solaris_services_summary,
+    'check_function': check_solaris_services_summary,
+    'service_description': 'SMF Services Summary',  # Service Management Facility
+    'group': 'solaris_services_summary',
 }

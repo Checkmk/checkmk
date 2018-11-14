@@ -24,12 +24,13 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+
 def check_ups_in_voltage(item, params, info):
     warn, crit = params
     for line in info:
         if line[0] == item:
             power = int(line[1])
-            perfdata = [ ( "in_voltage", power, warn, crit, 150 ) ]
+            perfdata = [("in_voltage", power, warn, crit, 150)]
             infotext = "in voltage: %dV, (warn/crit at %dV/%dV)" % \
                  (power, warn, crit)
 

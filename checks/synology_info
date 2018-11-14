@@ -24,23 +24,27 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+
 def inventory_synology_info(info):
     return [(None, None)]
+
 
 def check_synology_info(_no_item, _no_params, info):
     model, serial, osver = info[0]
     return 0, "Model: %s, S/N: %s, OS Version: %s" % (model, serial, osver)
 
-check_info["synology_info"] = {
-    "check_function"        : check_synology_info,
-    "inventory_function"    : inventory_synology_info,
-    "service_description"   : "Info",
-    "snmp_scan_function"    : synology_scan_function,
-    "snmp_info"             : (".1.3.6.1.4.1.6574.1.5", [
-                                                      1, #Model
-                                                      2, #SerialNumber
-                                                      3, #OS Version
-                                                   ]),
-    "includes"              : [ "synology.include" ]
-}
 
+check_info["synology_info"] = {
+    "check_function": check_synology_info,
+    "inventory_function": inventory_synology_info,
+    "service_description": "Info",
+    "snmp_scan_function": synology_scan_function,
+    "snmp_info": (
+        ".1.3.6.1.4.1.6574.1.5",
+        [
+            1,  #Model
+            2,  #SerialNumber
+            3,  #OS Version
+        ]),
+    "includes": ["synology.include"]
+}

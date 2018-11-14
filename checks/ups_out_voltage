@@ -24,16 +24,15 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-
-ups_out_voltage_default_levels = (210, 180) # warning / critical
+ups_out_voltage_default_levels = (210, 180)  # warning / critical
 
 check_info['ups_out_voltage'] = {
-  "inventory_function"  : discover(lambda line: int(line[1]) > 0, "ups_out_voltage_default_levels"),
-  "check_function"      : check_ups_out_voltage,
-  "service_description" : "OUT voltage phase %s",
-  "has_perfdata"        : True,
-  "group"               : "evolt",
-  "includes"            : [ 'ups_out_voltage.include', "ups_generic.include" ],
-  "snmp_info"           : ( ".1.3.6.1.2.1.33.1.4.4.1", [ 0, 2 ] ),
-  "snmp_scan_function"  : ups_generic_scan_function,
+    "inventory_function": discover(lambda line: int(line[1]) > 0, "ups_out_voltage_default_levels"),
+    "check_function": check_ups_out_voltage,
+    "service_description": "OUT voltage phase %s",
+    "has_perfdata": True,
+    "group": "evolt",
+    "includes": ['ups_out_voltage.include', "ups_generic.include"],
+    "snmp_info": (".1.3.6.1.2.1.33.1.4.4.1", [0, 2]),
+    "snmp_scan_function": ups_generic_scan_function,
 }

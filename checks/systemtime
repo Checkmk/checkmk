@@ -24,8 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-
-systemtime_default_values = (30, 60) # warn/crit sec. offset
+systemtime_default_values = (30, 60)  # warn/crit sec. offset
 
 
 def inventory_systemtime(info):
@@ -43,11 +42,11 @@ def check_systemtime(item, params, info):
     except (NameError, TypeError):
         pass
 
-    ourtime    = int(time.time())
-    offset     = systemtime - ourtime
+    ourtime = int(time.time())
+    offset = systemtime - ourtime
     warn, crit = params
-    infotext   = "Offset is %d sec (warn/crit at %d/%d sec)" % (offset, warn, crit)
-    perfdata   = [ ("offset", offset, warn, crit, 0) ]
+    infotext = "Offset is %d sec (warn/crit at %d/%d sec)" % (offset, warn, crit)
+    perfdata = [("offset", offset, warn, crit, 0)]
 
     if abs(offset) >= crit:
         return (2, infotext, perfdata)
@@ -57,9 +56,9 @@ def check_systemtime(item, params, info):
 
 
 check_info["systemtime"] = {
-    'check_function':          check_systemtime,
-    'inventory_function':      inventory_systemtime,
-    'service_description':     'System Time',
-    'has_perfdata':            True,
-    'group':                   'systemtime',
+    'check_function': check_systemtime,
+    'inventory_function': inventory_systemtime,
+    'service_description': 'System Time',
+    'has_perfdata': True,
+    'group': 'systemtime',
 }

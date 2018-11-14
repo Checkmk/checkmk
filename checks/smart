@@ -42,26 +42,24 @@
 #/dev/sda ATA WDC_SSC-D0128SC- 170 Unknown_Attribute       0x0003   100   100   010    Pre-fail  Always       -       1769478
 #/dev/sda ATA WDC_SSC-D0128SC- 173 Unknown_Attribute       0x0012   100   100   000    Old_age   Always       -       4217788040605
 
-
 # TODO: Need to completely rework smart check. Use IDs instead of changing
 # descriptions! But be careful: There is no standard neither for IDs nor for
 # descriptions. Only use those, which are common sense.
 
-factory_settings["smart_temp_default_levels"] = {
-    "levels": (35, 40)
-}
+factory_settings["smart_temp_default_levels"] = {"levels": (35, 40)}
 
 smart_stats_default_levels = {
-   'realloc_events':  (1,  1),
-   'realloc_sectors': (1,  1),
-   'spin_retries':    (1,  1),
-   'pending_retries': (1,  1),
-   'pending_sectors': (1,  1),
-   'cmd_timeouts':    (5, 10),
-   'e2e_errs':        (1,  1),
-   'uncorr_errs':     (1,  1),
-   'udma_crcs':       (1,  1),
+    'realloc_events': (1, 1),
+    'realloc_sectors': (1, 1),
+    'spin_retries': (1, 1),
+    'pending_retries': (1, 1),
+    'pending_sectors': (1, 1),
+    'cmd_timeouts': (5, 10),
+    'e2e_errs': (1, 1),
+    'uncorr_errs': (1, 1),
+    'udma_crcs': (1, 1),
 }
+
 
 def parse_smart_raw_values(info):
     disks = {}
@@ -113,14 +111,16 @@ smart_stats_fields = [
     'Reported_Uncorrect',
     'Uncorrectable_Error_Cnt',
     'UDMA_CRC_Error_Count',
-    'CRC_Error_Count', ]
+    'CRC_Error_Count',
+]
+
 
 def inventory_smart_stats(info):
     disks = parse_smart_raw_values(info)
     inventory = []
     for disk_name, disk in disks.items():
         for field in disk.keys():
-            if field in smart_stats_fields: # found at least one interesting field
+            if field in smart_stats_fields:  # found at least one interesting field
                 cleaned = dict([(f, disk[f]) for f in smart_stats_fields if f in disk])
                 inventory.append((disk_name, cleaned))
                 break
@@ -138,22 +138,23 @@ def check_smart_stats(item, params, info):
     disk = disks[item]
 
     state = 0
-    infos   = []
+    infos = []
     perfdata = []
 
     for unit, field, descr in [
-                  (' hours', 'Power_On_Hours',          'Powered on',           ),
-                  ('',       'Power_Cycle_Count',       'Power cycles',         ),
-                  ('',       'Reallocated_Sector_Ct',   'Reallocated sectors',  ),
-                  ('',       'Reallocated_Event_Count', 'Reallocated events',   ),
-                  ('',       'Spin_Retry_Count',        'Spin retries',         ),
-                  ('',       'Current_Pending_Sector',  'Pending sectors',      ),
-                  ('',       'Command_Timeout',         'Command timeouts',     ),
-                  ('',       'End-to-End_Error',        'End-to-End errors',    ),
-                  ('',       'Reported_Uncorrect',      'Uncorrectable errors', ),
-                  ('',       'Uncorrectable_Error_Cnt', 'Uncorrectable errors', ),
-                  ('',       'UDMA_CRC_Error_Count',    'UDMA CRC errors',      ),
-                  ('',       'CRC_Error_Count',         'UDMA CRC errors',      )]:
+        (' hours', 'Power_On_Hours', 'Powered on'),
+        ('', 'Power_Cycle_Count', 'Power cycles'),
+        ('', 'Reallocated_Sector_Ct', 'Reallocated sectors'),
+        ('', 'Reallocated_Event_Count', 'Reallocated events'),
+        ('', 'Spin_Retry_Count', 'Spin retries'),
+        ('', 'Current_Pending_Sector', 'Pending sectors'),
+        ('', 'Command_Timeout', 'Command timeouts'),
+        ('', 'End-to-End_Error', 'End-to-End errors'),
+        ('', 'Reported_Uncorrect', 'Uncorrectable errors'),
+        ('', 'Uncorrectable_Error_Cnt', 'Uncorrectable errors'),
+        ('', 'UDMA_CRC_Error_Count', 'UDMA CRC errors'),
+        ('', 'CRC_Error_Count', 'UDMA CRC errors'),
+    ]:
         if field in disk:
             value = disk[field]
             infos.append("%s: %d%s" % (descr, value, unit))
@@ -178,11 +179,12 @@ def check_smart_stats(item, params, info):
 
     return state, ", ".join(infos), perfdata
 
+
 check_info["smart.stats"] = {
-    'check_function':            check_smart_stats,
-    'inventory_function':        inventory_smart_stats,
-    'has_perfdata':              True,
-    'service_description':       'SMART %s Stats',
+    'check_function': check_smart_stats,
+    'inventory_function': inventory_smart_stats,
+    'has_perfdata': True,
+    'service_description': 'SMART %s Stats',
 }
 
 
@@ -208,11 +210,11 @@ def check_smart_temp(item, params, info):
 
 
 check_info["smart.temp"] = {
-    'check_function'          : check_smart_temp,
-    'inventory_function'      : inventory_smart_temp,
-    'service_description'     : 'Temperature SMART %s',
-    'group'                   : 'temperature',
-    'has_perfdata'            : True,
-    'includes'                : [ 'temperature.include' ],
-    'default_levels_variable' : "smart_temp_default_levels"
+    'check_function': check_smart_temp,
+    'inventory_function': inventory_smart_temp,
+    'service_description': 'Temperature SMART %s',
+    'group': 'temperature',
+    'has_perfdata': True,
+    'includes': ['temperature.include'],
+    'default_levels_variable': "smart_temp_default_levels"
 }

@@ -46,10 +46,10 @@ def inventory_sap_hana_filesystem(parsed):
 
 
 check_info["sap_hana_filesystem"] = {
-    "parse_function"        : parse_sap_hana_filesystem,
-    "inventory_function"    : inventory_sap_hana_filesystem,
-    "check_function"        : df_check_filesystem_list,
-    "service_description"   : "SAP HANA Filesystem %s",
-    "includes"              : ["df.include", "size_trend.include"],
-    "has_perfdata"          : True,
+    "parse_function": parse_sap_hana_filesystem,
+    "inventory_function": inventory_sap_hana_filesystem,
+    "check_function": df_check_filesystem_list,
+    "service_description": "SAP HANA Filesystem %s",
+    "includes": ["df.include", "size_trend.include"],
+    "has_perfdata": True,
 }

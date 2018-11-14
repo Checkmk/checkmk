@@ -24,12 +24,10 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-
 # <<<tinkerforge:sep(44)>>>
 # temperature,6QHSgJ.a.tiq,2181
 # humidity,6QHSgJ.c.ugg,250
 # ambient,6JLy11.c.uKA,124
-
 
 # based on customers investigation
 tinkerforge_humidity_default_levels = (35, 40, 50, 55)
@@ -71,8 +69,8 @@ def parse_tinkerforge(info):
     res = {}
     for brick_type, bricks in temp.iteritems():
         counter = 1
-        for brick in sorted(bricks,
-                            key=lambda b: gen_pos(b[0], b[1]).rjust(len(master_index) + 1, ' ')):
+        for brick in sorted(
+                bricks, key=lambda b: gen_pos(b[0], b[1]).rjust(len(master_index) + 1, ' ')):
             name = str(counter)
             if brick[2]:
                 name = "%s %s" % (brick[2], counter)
@@ -129,14 +127,13 @@ def check_tinkerforge_motion(item, params, parsed):
     def test_in_period(time, periods):
         time_mins = time[0] * 60 + time[1]
         for per in periods:
-            per_mins_low  = per[0][0] * 60 + per[0][1]
+            per_mins_low = per[0][0] * 60 + per[0][1]
             per_mins_high = per[1][0] * 60 + per[1][1]
             if time_mins >= per_mins_low and time_mins < per_mins_high:
                 return True
         return False
 
-    weekdays = ["monday", "tuesday", "wednesday", "thursday",
-                "friday", "saturday", "sunday"]
+    weekdays = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"]
     if 'motion' in parsed and item in parsed['motion']:
         today = time.localtime()
         if 'time_periods' in params:
@@ -151,46 +148,42 @@ def check_tinkerforge_motion(item, params, parsed):
 
 
 check_info['tinkerforge'] = {
-    'inventory_function'  : lambda parsed: inventory_tinkerforge('master', parsed),
-    'check_function'      : check_tinkerforge_master,
-    'parse_function'      : parse_tinkerforge,
-    'service_description' : "Master %s"
+    'inventory_function': lambda parsed: inventory_tinkerforge('master', parsed),
+    'check_function': check_tinkerforge_master,
+    'parse_function': parse_tinkerforge,
+    'service_description': "Master %s"
 }
-
 
 check_info['tinkerforge.temperature'] = {
-    'inventory_function'      : lambda parsed: inventory_tinkerforge('temperature', parsed),
-    'check_function'          : check_tinkerforge_temperature,
-    'has_perfdata'            : True,
-    'service_description'     : "Temperature %s",
-    'group'                   : 'temperature',
-    'includes'                : ['temperature.include']
+    'inventory_function': lambda parsed: inventory_tinkerforge('temperature', parsed),
+    'check_function': check_tinkerforge_temperature,
+    'has_perfdata': True,
+    'service_description': "Temperature %s",
+    'group': 'temperature',
+    'includes': ['temperature.include']
 }
-
 
 check_info['tinkerforge.ambient'] = {
-    'inventory_function'      : lambda parsed: inventory_tinkerforge('ambient', parsed),
-    'check_function'          : check_tinkerforge_ambient,
-    'has_perfdata'            : True,
-    'group'                   : 'brightness',
-    'service_description'     : "Ambient Light %s"
+    'inventory_function': lambda parsed: inventory_tinkerforge('ambient', parsed),
+    'check_function': check_tinkerforge_ambient,
+    'has_perfdata': True,
+    'group': 'brightness',
+    'service_description': "Ambient Light %s"
 }
-
 
 check_info['tinkerforge.humidity'] = {
-    'inventory_function'      : lambda parsed: inventory_tinkerforge('humidity', parsed),
-    'check_function'          : check_tinkerforge_humidity,
-    'has_perfdata'            : True,
-    'group'                   : 'humidity',
-    'service_description'     : "Humidity %s",
-    'includes'                : ["humidity.include"],
+    'inventory_function': lambda parsed: inventory_tinkerforge('humidity', parsed),
+    'check_function': check_tinkerforge_humidity,
+    'has_perfdata': True,
+    'group': 'humidity',
+    'service_description': "Humidity %s",
+    'includes': ["humidity.include"],
 }
 
-
 check_info['tinkerforge.motion'] = {
-    'inventory_function'      : lambda parsed: inventory_tinkerforge('motion', parsed),
-    'check_function'          : check_tinkerforge_motion,
-    'has_perfdata'            : True,
-    'group'                   : 'motion',
-    'service_description'     : "Motion Detector %s",
+    'inventory_function': lambda parsed: inventory_tinkerforge('motion', parsed),
+    'check_function': check_tinkerforge_motion,
+    'has_perfdata': True,
+    'group': 'motion',
+    'service_description': "Motion Detector %s",
 }

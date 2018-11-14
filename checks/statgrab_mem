@@ -24,7 +24,6 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-
 memused_default_levels = (150.0, 200.0)
 
 
@@ -42,10 +41,10 @@ def parse_statgrab_mem(info):
         totalswap_kb = parsed['swap.total']
         swapused_kb = parsed['swap.used']
         instance = {
-            "MemTotal"  : totalmem_kb,
-            "MemFree"   : totalmem_kb - memused_kb,
-            "SwapTotal" : totalswap_kb,
-            "SwapFree"  : totalswap_kb - swapused_kb,
+            "MemTotal": totalmem_kb,
+            "MemFree": totalmem_kb - memused_kb,
+            "SwapTotal": totalswap_kb,
+            "SwapFree": totalswap_kb - swapused_kb,
         }
         if 'mem.cache' in parsed:
             instance.setdefault("Cached", parsed['mem.cache'])
@@ -65,11 +64,11 @@ def check_statgrab_mem(_no_item, params, parsed):
 
 
 check_info["statgrab_mem"] = {
-    'parse_function'      : parse_statgrab_mem,
-    'inventory_function'  : inventory_statgrab_mem,
-    'check_function'      : check_statgrab_mem,
-    'service_description' : 'Memory used',
-    'has_perfdata'        : True,
-    'group'               : "memory",
-    'includes'            : [ "mem.include" ],
+    'parse_function': parse_statgrab_mem,
+    'inventory_function': inventory_statgrab_mem,
+    'check_function': check_statgrab_mem,
+    'service_description': 'Memory used',
+    'has_perfdata': True,
+    'group': "memory",
+    'includes': ["mem.include"],
 }

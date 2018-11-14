@@ -24,7 +24,6 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-
 # <<<suse_connect:sep(58)>>>
 # identifier: SLES
 # version: 12.1
@@ -36,7 +35,6 @@
 # subscription_status: ACTIVE
 # type: full
 
-
 factory_settings['sles_license_default_levels'] = {
     'status': 'Registered',
     'subscription_status': 'ACTIVE',
@@ -46,10 +44,7 @@ factory_settings['sles_license_default_levels'] = {
 
 def parse_suseconnect(info):
     parsed = {}
-    used_keys = {
-        'status', 'regcode', 'starts_at', 'expires_at',
-        'subscription_status', 'type'
-    }
+    used_keys = {'status', 'regcode', 'starts_at', 'expires_at', 'subscription_status', 'type'}
 
     is_sles = False
     for item in info:
@@ -87,8 +82,7 @@ def check_suseconnect(_no_item, params, parsed):
     yield state, infotext
 
     yield 0, (', Subscription type: %(type)s, Registration code: %(regcode)s, '
-              'Starts at: %(starts_at)s, Expires at: %(expires_at)s'
-             ) % parsed
+              'Starts at: %(starts_at)s, Expires at: %(expires_at)s') % parsed
 
     expiration_date = time.strptime(parsed['expires_at'], '%Y-%m-%d %H:%M:%S %Z')
     expiration_time = time.mktime(expiration_date) - time.time()
@@ -110,7 +104,7 @@ def check_suseconnect(_no_item, params, parsed):
 
         yield state, infotext
     else:
-        yield 2, ', Expired since: %s' % get_age_human_readable(-1.0*expiration_time)
+        yield 2, ', Expired since: %s' % get_age_human_readable(-1.0 * expiration_time)
 
 
 check_info['suseconnect'] = {

@@ -32,33 +32,32 @@
 # <<<timemachine>>>
 # Unable to locate machine directory for host.
 
-
 factory_settings["timemachine_default_levels"] = {
-    "age": ( 86400, 172800 ) # 1d/2d
+    "age": (86400, 172800)  # 1d/2d
 }
 
 
 def inventory_timemachine(info):
     if " ".join(info[0]) != "Unable to locate machine directory for host.":
-        return [ (None, {}) ]
+        return [(None, {})]
 
 
 def check_timemachine(item, params, info):
-    line = " ".join(info[0]) # We expect at least one line
+    line = " ".join(info[0])  # We expect at least one line
     if not line.startswith("/Volumes/"):
         return 2, "Backup seems to have failed, message was: " + line
 
-    tokens       = line.split("/")
-    timestamp    = tokens[-1]
+    tokens = line.split("/")
+    timestamp = tokens[-1]
     backup_timeb = time.strptime(timestamp, "%Y-%m-%d-%H%M%S")
-    backup_time  = time.mktime(backup_timeb)
-    backup_age   = time.time() - backup_time
+    backup_time = time.mktime(backup_timeb)
+    backup_age = time.time() - backup_time
 
     if backup_age < 0:
         return 3, "Timestamp of last backup is in the future: " + timestamp
 
-    infotext = "Last backup was at %s (%s ago)" % (
-                   time.strftime("%c", backup_timeb), get_age_human_readable(backup_age))
+    infotext = "Last backup was at %s (%s ago)" % (time.strftime("%c", backup_timeb),
+                                                   get_age_human_readable(backup_age))
 
     warn, crit = params['age']
     if backup_age >= crit:
@@ -74,9 +73,9 @@ def check_timemachine(item, params, info):
 
 
 check_info["timemachine"] = {
-    "check_function"          : check_timemachine,
-    "inventory_function"      : inventory_timemachine,
-    "default_levels_variable" : "timemachine_default_levels",
-    "service_description"     : "Backup Timemachine",
-    "group"                   : "backup_timemachine",
+    "check_function": check_timemachine,
+    "inventory_function": inventory_timemachine,
+    "default_levels_variable": "timemachine_default_levels",
+    "service_description": "Backup Timemachine",
+    "group": "backup_timemachine",
 }

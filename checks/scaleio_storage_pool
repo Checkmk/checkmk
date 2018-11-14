@@ -24,7 +24,6 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-
 #<<<scaleio_storage_pool>>>
 #STORAGE_POOL 59c7748300000000:
 #        ID                                                 59c7748300000000
@@ -51,13 +50,11 @@ def check_scaleio_storage_pool(item, params, parsed):
 
     # How will the data be represented? It's magic and the only
     # indication is the unit. We need to handle this!
-    unit    = data["MAX_CAPACITY_IN_KB"][3].strip(")")
-    total   = convert_scaleio_space(unit,
-                                    int(data["MAX_CAPACITY_IN_KB"][2].strip("(")))
-    free    = convert_scaleio_space(unit,
-                                    int(data["UNUSED_CAPACITY_IN_KB"][2].strip("(")))
+    unit = data["MAX_CAPACITY_IN_KB"][3].strip(")")
+    total = convert_scaleio_space(unit, int(data["MAX_CAPACITY_IN_KB"][2].strip("(")))
+    free = convert_scaleio_space(unit, int(data["UNUSED_CAPACITY_IN_KB"][2].strip("(")))
 
-    yield df_check_filesystem_list(item, params, [ (item, total, free, 0) ])
+    yield df_check_filesystem_list(item, params, [(item, total, free, 0)])
 
     failed_value = int(data["FAILED_CAPACITY_IN_KB"][0])
     if failed_value > 0:
@@ -66,14 +63,13 @@ def check_scaleio_storage_pool(item, params, parsed):
 
 
 check_info['scaleio_storage_pool'] = {
-    'parse_function'        : lambda info: parse_scaleio(info, "STORAGE_POOL"),
-    'inventory_function'    : inventory_scaleio_storage_pool,
-    'check_function'        : check_scaleio_storage_pool,
-    'service_description'   : 'ScaleIO SP capacity %s',
-    'includes'              : [ 'scaleio.include', 'size_trend.include',
-                                'df.include', 'diskstat.include' ],
-    'has_perfdata'          : True,
-    'group'                 : 'filesystem',
+    'parse_function': lambda info: parse_scaleio(info, "STORAGE_POOL"),
+    'inventory_function': inventory_scaleio_storage_pool,
+    'check_function': check_scaleio_storage_pool,
+    'service_description': 'ScaleIO SP capacity %s',
+    'includes': ['scaleio.include', 'size_trend.include', 'df.include', 'diskstat.include'],
+    'has_perfdata': True,
+    'group': 'filesystem',
 }
 
 
@@ -96,12 +92,11 @@ def check_scaleio_storage_pool_totalrw(item, params, parsed):
 
 
 check_info['scaleio_storage_pool.totalrw'] = {
-    'inventory_function'    : inventory_scaleio_storage_pool_totalrw,
-    'check_function'        : check_scaleio_storage_pool_totalrw,
-    'service_description'   : 'ScaleIO SP total IO %s',
-    'has_perfdata'          : True,
-    'group'                 : 'diskstat',
-
+    'inventory_function': inventory_scaleio_storage_pool_totalrw,
+    'check_function': check_scaleio_storage_pool_totalrw,
+    'service_description': 'ScaleIO SP total IO %s',
+    'has_perfdata': True,
+    'group': 'diskstat',
 }
 
 
@@ -124,10 +119,9 @@ def check_scaleio_storage_pool_rebalancerw(item, params, parsed):
 
 
 check_info['scaleio_storage_pool.rebalancerw'] = {
-    'inventory_function'    : inventory_scaleio_storage_pool_rebalancerw,
-    'check_function'        : check_scaleio_storage_pool_rebalancerw,
-    'service_description'   : 'ScaleIO SP rebalance IO %s',
-    'has_perfdata'          : True,
-    'group'                 : 'diskstat',
-
+    'inventory_function': inventory_scaleio_storage_pool_rebalancerw,
+    'check_function': check_scaleio_storage_pool_rebalancerw,
+    'service_description': 'ScaleIO SP rebalance IO %s',
+    'has_perfdata': True,
+    'group': 'diskstat',
 }

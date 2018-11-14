@@ -35,9 +35,8 @@
 #.1.3.6.1.4.1.231.7.2.9.3.8.1.4.13  1
 
 
-
 def inventory_octopus_trunks(info):
-    trunkports = [ "S0 trunk: extern" ]
+    trunkports = ["S0 trunk: extern"]
     inventory = []
     for line in info[0]:
         if len(line) == 4:
@@ -55,7 +54,7 @@ def check_octopus_trunks(item, _no_params, info):
         if item == portdesc:
             # There are two relevant card states, we use the one from
             # octoPortTable
-            if   portstate == "1":
+            if portstate == "1":
                 return (2, "Port [%s] is inactive" % porttype)
             return (0, "Port [%s] is active" % porttype)
 
@@ -75,4 +74,3 @@ check_info['sni_octopuse_trunks'] = {
                                  ]),
                             ]
 }
-

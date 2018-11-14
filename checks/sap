@@ -24,7 +24,6 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-
 # <<<sap:sep(9)>>>
 # sap_XYZ    1    50 Nagios/Allgemein/Intern/ResponseTime    249 msec
 # sap_XYZ    1    50 Nagios/Allgemein/Intern/ResponseTimeDialog  249 msec
@@ -39,16 +38,15 @@
 # sap_XYZ    1    50 SAP CCMS Monitor Templates/Dialog Overview/Standardized Response Time/ResponseTime(StandardTran.)   7   msec
 # sap_XYZ    1    50 SAP CCMS Monitor Templates/Dialog Overview/Users Logged On/UsersLoggedIn    97  -
 
-
-
 # This map converts between the SAP color codes (key values) and the
 # nagios state codes
 sap_nagios_state_map = [
-    0, # GRAY  (inactive or no current info available) -> OK
-    0, # GREEN  -> OK
-    1, # YELLOW -> WARNING
-    2, # RED    -> CRITICAL
+    0,  # GRAY  (inactive or no current info available) -> OK
+    0,  # GREEN  -> OK
+    1,  # YELLOW -> WARNING
+    2,  # RED    -> CRITICAL
 ]
+
 
 def inventory_sap_dialog(info):
     inv = []
@@ -56,6 +54,7 @@ def inventory_sap_dialog(info):
         if line[3] == 'SAP CCMS Monitor Templates/Dialog Overview/Dialog Response Time/ResponseTime':
             inv.append((line[0], {}))
     return inv
+
 
 def check_sap_dialog(item, params, info):
     # First extract all infos
@@ -89,14 +88,17 @@ def check_sap_dialog(item, params, info):
                 state = 2
             elif value[0] >= warn:
                 state = 1
-        yield state, "%s: %d%s" % (key, value[0], (value[1] != '-' and value[1] or '') ), [ (perf_clean_key(key), value[0]) ]
+        yield state, "%s: %d%s" % (key, value[0],
+                                   (value[1] != '-' and value[1] or '')), [(perf_clean_key(key),
+                                                                            value[0])]
+
 
 check_info['sap.dialog'] = {
-    "check_function"      : check_sap_dialog,
-    "group"               : "sap_dialog",
-    "inventory_function"  : inventory_sap_dialog,
-    "service_description" : "%s Dialog",
-    "has_perfdata"        : True,
+    "check_function": check_sap_dialog,
+    "group": "sap_dialog",
+    "inventory_function": inventory_sap_dialog,
+    "service_description": "%s Dialog",
+    "has_perfdata": True,
 }
 
 #
@@ -110,6 +112,8 @@ check_info['sap.dialog'] = {
 # 1. match: the sap-path matching definition
 inventory_sap_values = []
 sap_value_groups = []
+
+
 def inventory_sap_value(info):
     inv = []
 
@@ -137,6 +141,7 @@ def inventory_sap_value(info):
 
     return inv
 
+
 def sap_value_path_matches(path, pattern):
     if pattern is None:
         return True
@@ -152,6 +157,7 @@ def sap_value_path_matches(path, pattern):
             return True
     return False
 
+
 def check_sap_value(item, params, info):
     status = None
     perfdata = []
@@ -163,16 +169,16 @@ def check_sap_value(item, params, info):
             this_path = line[3]
 
         if line[0] + ' ' + this_path == item:
-            status  = sap_nagios_state_map[int(line[1])]
+            status = sap_nagios_state_map[int(line[1])]
             if line[4] != '-':
                 # This is a performance value, has no output
-                perfval  = savefloat(line[4])
+                perfval = savefloat(line[4])
                 perfdata = [('value', perfval)]
-                uom      = line[5]
-                output   = "%0.2f%s" % (perfval, uom)
+                uom = line[5]
+                output = "%0.2f%s" % (perfval, uom)
             else:
                 # This is a status field without perfdata
-                output  = ' '.join(line[6:])
+                output = ' '.join(line[6:])
             break
 
     if status is None:
@@ -180,17 +186,20 @@ def check_sap_value(item, params, info):
 
     return (status, output, perfdata)
 
+
 check_info['sap.value'] = {
-    "check_function"      : check_sap_value,
-    "inventory_function"  : inventory_sap_value,
-    "service_description" : "%s",
-    "has_perfdata"        : True,
+    "check_function": check_sap_value,
+    "inventory_function": inventory_sap_value,
+    "service_description": "%s",
+    "has_perfdata": True,
 }
+
 
 def sap_value_groups_precompile(hostname, item, _unused):
     return host_extra_conf(hostname, sap_value_groups)
 
-def sap_groups_of_value( value_name, patterns=False ):
+
+def sap_groups_of_value(value_name, patterns=False):
     groups = []
     if not patterns:
         patterns = host_extra_conf(host_name(), sap_value_groups)
@@ -215,16 +224,18 @@ def sap_groups_of_value( value_name, patterns=False ):
                 groups.append(group_name)
     return groups
 
-def inventory_sap_value_groups( info ):
+
+def inventory_sap_value_groups(info):
     inventory = []
     found_groups = []
     for line in info:
         path = line[3]
-        for group in sap_groups_of_value( path ):
+        for group in sap_groups_of_value(path):
             if group not in found_groups:
-                inventory.append(( group, None ))
+                inventory.append((group, None))
                 found_groups.append(group)
     return inventory
+
 
 def check_sap_value_groups(item, params, info, deprecated=False):
     crit_texts, all_texts = [], []
@@ -232,17 +243,17 @@ def check_sap_value_groups(item, params, info, deprecated=False):
     state = None
     for line in info:
         path = line[3]
-        if item in sap_groups_of_value( path, params ):
+        if item in sap_groups_of_value(path, params):
             status = sap_nagios_state_map[int(line[1])]
             output = ''
             if line[4] == '-':
-                output  = ' '.join(line[6:])
+                output = ' '.join(line[6:])
 
             all_texts.append(path + output + " " + core_state_names[status])
             state = max(state, status)
             if status > 0:
                 count_crit += 1
-                crit_texts.append( path + output + " " + core_state_names[status] )
+                crit_texts.append(path + output + " " + core_state_names[status])
             else:
                 count_ok += 1
 
@@ -271,10 +282,9 @@ check_info['sap.value-groups'] = {
 }
 precompile_params['sap.value-groups'] = sap_value_groups_precompile
 
-
 check_info['sap.value_groups'] = {
-    'check_function'      : check_sap_value_groups,
-    'inventory_function'  : inventory_sap_value_groups,
-    'service_description' : "%s",
+    'check_function': check_sap_value_groups,
+    'inventory_function': inventory_sap_value_groups,
+    'service_description': "%s",
 }
 precompile_params['sap.value_groups'] = sap_value_groups_precompile

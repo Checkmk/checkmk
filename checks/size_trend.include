@@ -73,8 +73,8 @@ def size_trend(check, item, resource, levels, used_mb, size_mb, timestamp=None):
 
     # compute current rate in MB/s by computing delta since last check
     try:
-        rate = get_rate("%s.%s.delta" % (check, item), timestamp,
-                        used_mb, allow_negative=True, onwrap=ZERO)
+        rate = get_rate(
+            "%s.%s.delta" % (check, item), timestamp, used_mb, allow_negative=True, onwrap=ZERO)
     except MKCounterWrapped:
         # need more data for computing a trend
         return 0, '', []
@@ -83,8 +83,7 @@ def size_trend(check, item, resource, levels, used_mb, size_mb, timestamp=None):
         perfdata.append(("growth", rate * H24))
 
     # average trend in MB/s, initialized with zero
-    rate_avg = get_average("%s.%s.trend" % (check, item), timestamp,
-                           rate, range_sec / 60.0, True)
+    rate_avg = get_average("%s.%s.trend" % (check, item), timestamp, rate, range_sec / 60.0, True)
 
     trend = rate_avg * range_sec
     sign = '+' if trend > 0 else ""
@@ -100,13 +99,11 @@ def size_trend(check, item, resource, levels, used_mb, size_mb, timestamp=None):
         wa, cr = trend_mb
         warn_perf, crit_perf = wa, cr
         if trend >= wa:
-            problems.append(
-                "growing too fast (warn/crit at %s/%s per %.1f h)(!" % (
-                    get_bytes_human_readable(wa * MB),
-                    get_bytes_human_readable(cr * MB),
-                    range_hours
-                )
-            )
+            problems.append("growing too fast (warn/crit at %s/%s per %.1f h)(!" % (
+                get_bytes_human_readable(wa * MB),
+                get_bytes_human_readable(cr * MB),
+                range_hours,
+            ))
             state = max(1, state)
             if trend >= cr:
                 state = 2
@@ -125,11 +122,8 @@ def size_trend(check, item, resource, levels, used_mb, size_mb, timestamp=None):
         else:
             warn_perf, crit_perf = wa, cr
         if trend >= wa:
-            problems.append(
-                "growing too fast (warn/crit at %.3f%%/%.3f%% per %.1f h)(!" % (
-                    wa_perc, cr_perc, range_hours
-                )
-            )
+            problems.append("growing too fast (warn/crit at %.3f%%/%.3f%% per %.1f h)(!" %
+                            (wa_perc, cr_perc, range_hours))
             state = max(1, state)
             if trend >= cr:
                 state = 2
@@ -142,17 +136,18 @@ def size_trend(check, item, resource, levels, used_mb, size_mb, timestamp=None):
     # will interpret this as inifinite -> not growing
     hours_left = -1
     if trend > 0:
+
         def format_hours(hours):
             if hours > 365 * 24:
                 return "more than a year"
             elif hours > 90 * 24:
-                return "%0d months" % (hours/ (30 * 24))
-            elif hours > 4 * 7 * 24: # 4 weeks
-                return "%0d weeks" % (hours/ (7 * 24))
-            elif hours > 7 * 24:   # 1 week
-                return "%0.1f weeks" % (hours/ (7 * 24))
-            elif hours > 2 * 24:   # 2 days
-                return "%0.1f days" % (hours/24)
+                return "%0d months" % (hours / (30 * 24))
+            elif hours > 4 * 7 * 24:  # 4 weeks
+                return "%0d weeks" % (hours / (7 * 24))
+            elif hours > 7 * 24:  # 1 week
+                return "%0.1f weeks" % (hours / (7 * 24))
+            elif hours > 2 * 24:  # 2 days
+                return "%0.1f days" % (hours / 24)
             return "%d hours" % hours
 
         hours_left = (size_mb - used_mb) / trend * range_hours
@@ -173,12 +168,14 @@ def size_trend(check, item, resource, levels, used_mb, size_mb, timestamp=None):
             problems.append("time left until %s full: %s" % (resource, hours_txt))
 
     if levels.get("trend_perfdata"):
-        perfdata.append(
-            ("trend", rate_avg * H24,
-             (warn_perf / range_sec * H24) if warn_perf != None else None,
-             (crit_perf / range_sec * H24) if crit_perf != None else None,
-             0, size_mb / range_hours)
-        )
+        perfdata.append((
+            "trend",
+            rate_avg * H24,
+            (warn_perf / range_sec * H24) if warn_perf != None else None,
+            (crit_perf / range_sec * H24) if crit_perf != None else None,
+            0,
+            size_mb / range_hours,
+        ))
 
     if levels.get("trend_showtimeleft"):
         perfdata.append(("trend_hoursleft", hours_left))

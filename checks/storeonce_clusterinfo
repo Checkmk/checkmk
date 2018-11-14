@@ -24,7 +24,6 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-
 # example output:
 #
 # <<<storeonce_clusterinfo:sep(9)>>>
@@ -53,7 +52,6 @@
 # sysLocation     None
 # isMixedCluster  false
 
-
 #.
 #   .--general-------------------------------------------------------------.
 #   |                                                  _                   |
@@ -69,7 +67,7 @@
 
 def inventory_storeonce_clusterinfo(parsed):
     if "Product Class" in parsed:
-        return [ (parsed['Product Class'], None) ]
+        return [(parsed['Product Class'], None)]
 
 
 def check_storeonce_clusterinfo(item, _no_params, parsed):
@@ -80,11 +78,11 @@ def check_storeonce_clusterinfo(item, _no_params, parsed):
 
 
 check_info['storeonce_clusterinfo'] = {
-    'parse_function'        : parse_storeonce_clusterinfo,
-    'inventory_function'    : inventory_storeonce_clusterinfo,
-    'check_function'        : check_storeonce_clusterinfo,
-    'service_description'   : '%s',
-    'includes'              : [ 'storeonce.include' ],
+    'parse_function': parse_storeonce_clusterinfo,
+    'inventory_function': inventory_storeonce_clusterinfo,
+    'check_function': check_storeonce_clusterinfo,
+    'service_description': '%s',
+    'includes': ['storeonce.include'],
 }
 
 #.
@@ -99,9 +97,11 @@ check_info['storeonce_clusterinfo'] = {
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
+
 def inventory_storeonce_clusterinfo_cluster(parsed):
     if "Cluster Health" in parsed:
-        return [ (None, {}) ]
+        return [(None, {})]
+
 
 def check_storeonce_clusterinfo_cluster(item, params, parsed):
     yield 0, "Cluster Status: %s, Replication Status: %s" % \
@@ -114,10 +114,11 @@ def check_storeonce_clusterinfo_cluster(item, params, parsed):
         if state > 0:
             yield state, state_readable
 
+
 check_info['storeonce_clusterinfo.cluster'] = {
-    'inventory_function'    : inventory_storeonce_clusterinfo_cluster,
-    'check_function'        : check_storeonce_clusterinfo_cluster,
-    'service_description'   : 'Appliance Status',
+    'inventory_function': inventory_storeonce_clusterinfo_cluster,
+    'check_function': check_storeonce_clusterinfo_cluster,
+    'service_description': 'Appliance Status',
 }
 
 #.
@@ -134,17 +135,17 @@ check_info['storeonce_clusterinfo.cluster'] = {
 
 
 def inventory_storeonce_clusterinfo_space(parsed):
-    return [ ('Total Capacity', {}) ]
+    return [('Total Capacity', {})]
 
 
 check_info['storeonce_clusterinfo.space'] = {
-    'inventory_function'      : inventory_storeonce_clusterinfo_space,
-    'check_function'          : check_storeonce_space,
-    'service_description'     : "%s",
-    'has_perfdata'            : True,
-    'includes'                : [ "size_trend.include", "df.include", "storeonce.include"],
-    'group'                   : "filesystem",
-    'default_levels_variable' : "filesystem_Default_levels",
+    'inventory_function': inventory_storeonce_clusterinfo_space,
+    'check_function': check_storeonce_space,
+    'service_description': "%s",
+    'has_perfdata': True,
+    'includes': ["size_trend.include", "df.include", "storeonce.include"],
+    'group': "filesystem",
+    'default_levels_variable': "filesystem_Default_levels",
 }
 
 #.
@@ -159,18 +160,21 @@ check_info['storeonce_clusterinfo.space'] = {
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
+
 def inventory_storeonce_clusterinfo_uptime(parsed):
-    return [ (None, {}) ]
+    return [(None, {})]
+
 
 def check_storeonce_clusterinfo_uptime(item, params, parsed):
     uptime = float(parsed['Uptime Seconds'])
     return check_uptime_seconds(params, uptime)
 
+
 check_info['storeonce_clusterinfo.uptime'] = {
-    'inventory_function'    : inventory_storeonce_clusterinfo_uptime,
-    'check_function'        : check_storeonce_clusterinfo_uptime,
-    'service_description'   : "Uptime",
-    'has_perfdata'          : True,
-    'includes'              : [ "uptime.include"],
-    'group'                 : "uptime",
+    'inventory_function': inventory_storeonce_clusterinfo_uptime,
+    'check_function': check_storeonce_clusterinfo_uptime,
+    'service_description': "Uptime",
+    'has_perfdata': True,
+    'includes': ["uptime.include"],
+    'group': "uptime",
 }

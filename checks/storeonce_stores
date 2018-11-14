@@ -24,8 +24,6 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-
-
 # <<<storeonce_stores:sep(9)>>>
 # [1/0]
 # Store ID        0
@@ -83,6 +81,7 @@ def inventory_storeonce_stores(parsed):
                 (values["ServiceSet ID"], values["Name"]), \
                 {})
 
+
 def check_storeonce_stores(item, params, parsed):
     for values in parsed.itervalues():
         item_name = "ServiceSet %s Store %s" % \
@@ -105,10 +104,10 @@ def check_storeonce_stores(item, params, parsed):
 
 
 check_info['storeonce_stores'] = {
-    'parse_function'        : parse_storeonce_servicesets,
-    'inventory_function'    : inventory_storeonce_stores,
-    'check_function'        : check_storeonce_stores,
-    'service_description'   : '%s',
-    'has_perfdata'          : True,
-    'includes'              : [ "storeonce.include" ],
+    'parse_function': parse_storeonce_servicesets,
+    'inventory_function': inventory_storeonce_stores,
+    'check_function': check_storeonce_stores,
+    'service_description': '%s',
+    'has_perfdata': True,
+    'includes': ["storeonce.include"],
 }

@@ -26,17 +26,19 @@
 
 # Example output from agent:
 
-def inventory_symantec_av_progstate(info):
-    return [ ( None, None ) ]
 
-def check_symantec_av_progstate( _no_item, _no_params, info):
+def inventory_symantec_av_progstate(info):
+    return [(None, None)]
+
+
+def check_symantec_av_progstate(_no_item, _no_params, info):
     if info[0][0].lower() != 'enabled':
         return 2, "Program Status is " + info[0][0]
     return 0, "Program enabled"
 
-check_info["symantec_av_progstate"] = {
-    "check_function"        : check_symantec_av_progstate,
-    "inventory_function"    : inventory_symantec_av_progstate,
-    "service_description"   : "AV Program Status",
-}
 
+check_info["symantec_av_progstate"] = {
+    "check_function": check_symantec_av_progstate,
+    "inventory_function": inventory_symantec_av_progstate,
+    "service_description": "AV Program Status",
+}

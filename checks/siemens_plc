@@ -57,29 +57,30 @@
 #   '----------------------------------------------------------------------'
 
 factory_settings["siemens_plc_temp_default_levels"] = {
-    "levels"                    : (70, 80),
-    "device_levels_handling"    : "devdefault",
+    "levels": (70, 80),
+    "device_levels_handling": "devdefault",
 }
 
+
 def inventory_siemens_plc_temp(info):
-    return [ (l[0]+" "+l[2], {}) for l in info if l[1] == "temp" ]
+    return [(l[0] + " " + l[2], {}) for l in info if l[1] == "temp"]
 
 
 def check_siemens_plc_temp(item, params, info):
     for line in info:
-        if line[1] == "temp" and line[0]+" "+line[2] == item:
+        if line[1] == "temp" and line[0] + " " + line[2] == item:
             temp = float(line[-1])
             return check_temperature(temp, params, "siemens_plc_%s" % item)
 
 
 check_info['siemens_plc.temp'] = {
-    "inventory_function"      : inventory_siemens_plc_temp,
-    "check_function"          : check_siemens_plc_temp,
-    "service_description"     : "Temperature %s",
-    "has_perfdata"            : True,
-    "group"                   : "temperature",
-    "default_levels_variable" : "siemens_plc_temp_default_levels",
-    "includes"                : [ "temperature.include" ],
+    "inventory_function": inventory_siemens_plc_temp,
+    "check_function": check_siemens_plc_temp,
+    "service_description": "Temperature %s",
+    "has_perfdata": True,
+    "group": "temperature",
+    "default_levels_variable": "siemens_plc_temp_default_levels",
+    "includes": ["temperature.include"],
 }
 
 #.
@@ -94,14 +95,15 @@ check_info['siemens_plc.temp'] = {
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
+
 def inventory_siemens_plc_flag(info):
-    return [ (l[0]+" "+l[2], False) for l in info if l[1] == "flag" ]
+    return [(l[0] + " " + l[2], False) for l in info if l[1] == "flag"]
 
 
 def check_siemens_plc_flag(item, params, info):
     expected_state = params
     for line in info:
-        if line[1] == "flag" and line[0]+" "+line[2] == item:
+        if line[1] == "flag" and line[0] + " " + line[2] == item:
             flag_state = line[-1] == 'True'
             if flag_state:
                 state = 0 if expected_state else 2
@@ -112,10 +114,10 @@ def check_siemens_plc_flag(item, params, info):
 
 
 check_info['siemens_plc.flag'] = {
-    "inventory_function"      : inventory_siemens_plc_flag,
-    "check_function"          : check_siemens_plc_flag,
-    "service_description"     : "Flag %s",
-    "group"                   : "siemens_plc_flag",
+    "inventory_function": inventory_siemens_plc_flag,
+    "check_function": check_siemens_plc_flag,
+    "service_description": "Flag %s",
+    "group": "siemens_plc_flag",
 }
 
 #.
@@ -130,16 +132,19 @@ check_info['siemens_plc.flag'] = {
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
+
 def inventory_siemens_plc_duration(info):
-    return [ (l[0]+" "+l[2], {}) for l in info if l[1].startswith("hours")
-                                               or l[1].startswith("seconds") ]
+    return [(l[0] + " " + l[2], {})
+            for l in info
+            if l[1].startswith("hours") or l[1].startswith("seconds")]
 
 
 def check_siemens_plc_duration(item, params, info):
     for line in info:
-        if (line[1].startswith("hours") or line[1].startswith("seconds")) and line[0]+" "+line[2] == item:
+        if (line[1].startswith("hours") or
+                line[1].startswith("seconds")) and line[0] + " " + line[2] == item:
             if line[1].startswith("hours"):
-                seconds = int(line[-1])*3600
+                seconds = int(line[-1]) * 3600
             else:
                 seconds = int(line[-1])
 
@@ -164,11 +169,11 @@ def check_siemens_plc_duration(item, params, info):
 
 
 check_info['siemens_plc.duration'] = {
-    "inventory_function"      : inventory_siemens_plc_duration,
-    "check_function"          : check_siemens_plc_duration,
-    "service_description"     : "Duration %s",
-    "has_perfdata"            : True,
-    "group"                   : "siemens_plc_duration",
+    "inventory_function": inventory_siemens_plc_duration,
+    "check_function": check_siemens_plc_duration,
+    "service_description": "Duration %s",
+    "has_perfdata": True,
+    "group": "siemens_plc_duration",
 }
 
 #.
@@ -183,13 +188,14 @@ check_info['siemens_plc.duration'] = {
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
+
 def inventory_siemens_plc_counter(info):
-    return [ (l[0]+" "+l[2], {}) for l in info if l[1].startswith("counter") ]
+    return [(l[0] + " " + l[2], {}) for l in info if l[1].startswith("counter")]
 
 
 def check_siemens_plc_counter(item, params, info):
     for line in info:
-        if line[1].startswith("counter") and line[0]+" "+line[2] == item:
+        if line[1].startswith("counter") and line[0] + " " + line[2] == item:
             value = int(line[-1])
             perfdata = [(line[1], value)]
 
@@ -210,11 +216,11 @@ def check_siemens_plc_counter(item, params, info):
 
 
 check_info['siemens_plc.counter'] = {
-    "inventory_function"      : inventory_siemens_plc_counter,
-    "check_function"          : check_siemens_plc_counter,
-    "service_description"     : "Counter %s",
-    "has_perfdata"            : True,
-    "group"                   : "siemens_plc_counter",
+    "inventory_function": inventory_siemens_plc_counter,
+    "check_function": check_siemens_plc_counter,
+    "service_description": "Counter %s",
+    "has_perfdata": True,
+    "group": "siemens_plc_counter",
 }
 
 #.
@@ -229,20 +235,21 @@ check_info['siemens_plc.counter'] = {
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
+
 def inventory_siemens_plc_info(info):
-    return [ (l[0]+" "+l[2], {}) for l in info if l[1] == "text" ]
+    return [(l[0] + " " + l[2], {}) for l in info if l[1] == "text"]
 
 
 def check_siemens_plc_info(item, _no_params, info):
     for line in info:
-        if line[1] == "text" and line[0]+" "+line[2] == item:
+        if line[1] == "text" and line[0] + " " + line[2] == item:
             return 0, line[-1]
 
 
 check_info['siemens_plc.info'] = {
-    "inventory_function"      : inventory_siemens_plc_info,
-    "check_function"          : check_siemens_plc_info,
-    "service_description"     : "Info %s",
+    "inventory_function": inventory_siemens_plc_info,
+    "check_function": check_siemens_plc_info,
+    "service_description": "Info %s",
 }
 
 #.
@@ -257,8 +264,9 @@ check_info['siemens_plc.info'] = {
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
+
 def inventory_siemens_plc_cpu_state(info):
-    return [ (None, None) ]
+    return [(None, None)]
 
 
 def check_siemens_plc_cpu_state(_no_item, _no_params, info):
@@ -275,7 +283,7 @@ def check_siemens_plc_cpu_state(_no_item, _no_params, info):
 
 
 check_info['siemens_plc_cpu_state'] = {
-    "inventory_function"      : inventory_siemens_plc_cpu_state,
-    "check_function"          : check_siemens_plc_cpu_state,
-    "service_description"     : "CPU state",
+    "inventory_function": inventory_siemens_plc_cpu_state,
+    "check_function": check_siemens_plc_cpu_state,
+    "service_description": "CPU state",
 }

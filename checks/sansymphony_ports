@@ -32,10 +32,12 @@
 # Server_iSCSI_Port_1 iSCSI True
 # Microsoft_iSCSI-Initiator iSCSI True
 
+
 def inventory_sansymphony_ports(info):
     for portname, _porttype, portstatus in info:
         if portstatus == "True":
             yield portname, None
+
 
 def check_sansymphony_ports(item, _no_params, info):
     for portname, porttype, portstatus in info:
@@ -44,8 +46,9 @@ def check_sansymphony_ports(item, _no_params, info):
                 return 0, "%s Port %s is up" % (porttype, portname)
             return 2, "%s Port %s is down" % (porttype, portname)
 
+
 check_info['sansymphony_ports'] = {
-    "check_function"          : check_sansymphony_ports,
-    "inventory_function"      : inventory_sansymphony_ports,
-    "service_description"     : "sansymphony Port %s",
+    "check_function": check_sansymphony_ports,
+    "inventory_function": inventory_sansymphony_ports,
+    "service_description": "sansymphony Port %s",
 }

@@ -32,13 +32,13 @@ def inventory_sentry_pdu(info):
 
 def check_sentry_pdu(item, params, info):
     states = {
-        0 : "off",
-        1 : "on",
-        2 : "off wait",
-        3 : "on wait",
-        4 : "off error",
-        5 : "on error",
-        6 : "no comm",
+        0: "off",
+        1: "on",
+        2: "off wait",
+        3: "on wait",
+        4: "off error",
+        5: "on error",
+        6: "no comm",
     }
 
     for name, state, power_str in info:
@@ -51,7 +51,7 @@ def check_sentry_pdu(item, params, info):
                 required_state = 0
             state = int(state)
             infotext = "Status: %s" % states[state]
-            if state  != required_state:
+            if state != required_state:
                 yield 2, infotext
             else:
                 yield 0, infotext
@@ -59,15 +59,15 @@ def check_sentry_pdu(item, params, info):
             if power_str:
                 power = int(power_str)
                 infotext = "Power: %s Watt" % power
-                perfdata = [ ('power', power )]
+                perfdata = [('power', power)]
                 yield 0, infotext, perfdata
 
 
 check_info["sentry_pdu"] = {
-    "check_function"        : check_sentry_pdu,
-    "inventory_function"    : inventory_sentry_pdu,
-    "service_description"   : "Plug %s",
-    "group"                 : "plugs",
-    "snmp_info"             : ( ".1.3.6.1.4.1.1718.3.2.2.1", [ 3, 5, 12 ] ),
-    "snmp_scan_function"    : lambda oid: oid(".1.3.6.1.2.1.1.2.0") == ".1.3.6.1.4.1.1718.3",
+    "check_function": check_sentry_pdu,
+    "inventory_function": inventory_sentry_pdu,
+    "service_description": "Plug %s",
+    "group": "plugs",
+    "snmp_info": (".1.3.6.1.4.1.1718.3.2.2.1", [3, 5, 12]),
+    "snmp_scan_function": lambda oid: oid(".1.3.6.1.2.1.1.2.0") == ".1.3.6.1.4.1.1718.3",
 }

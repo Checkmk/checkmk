@@ -78,9 +78,11 @@
 
 ups_test_default = (0, 0)
 
+
 def inventory_ups_test(info):
     if info[1]:
-        return [ (None, "ups_test_default") ]
+        return [(None, "ups_test_default")]
+
 
 def check_ups_test(_no_item, params, info):
     warn, crit = params
@@ -92,9 +94,9 @@ def check_ups_test(_no_item, params, info):
 
     # State of test
     state = 0
-    if ResultsSummary in [ '3', '4' ]:
+    if ResultsSummary in ['3', '4']:
         state = 2
-    elif ResultsSummary in [ '2' ]:
+    elif ResultsSummary in ['2']:
         state = 1
     if upsTestResultsDetail or state:
         yield state, upsTestResultsDetail
@@ -109,18 +111,19 @@ def check_ups_test(_no_item, params, info):
     if start_time:
         yield state, "time elapsed since start of last test: %s" % get_age_human_readable(elapsed)
     else:
-        yield state, "no battery test since start of device (%s ago)" % get_age_human_readable(uptime)
+        yield state, "no battery test since start of device (%s ago)" % get_age_human_readable(
+            uptime)
 
 
 check_info['ups_test'] = {
-    "inventory_function"    : inventory_ups_test,
-    "check_function"        : check_ups_test,
-    "service_description"   : "Self Test",
-    "group"                 : "ups_test",
-    "snmp_info"             : [
-                                 ('.1.3.6.1.2.1.1',       ['3.0']),    # sysUptime
-                                 ( ".1.3.6.1.2.1.33.1.7", [ 3, 5, 4 ] ),
-                              ],
-    "snmp_scan_function"    : ups_generic_scan_function,
-    "includes"              : [ 'uptime.include', "ups_generic.include" ],
+    "inventory_function": inventory_ups_test,
+    "check_function": check_ups_test,
+    "service_description": "Self Test",
+    "group": "ups_test",
+    "snmp_info": [
+        ('.1.3.6.1.2.1.1', ['3.0']),  # sysUptime
+        (".1.3.6.1.2.1.33.1.7", [3, 5, 4]),
+    ],
+    "snmp_scan_function": ups_generic_scan_function,
+    "includes": ['uptime.include', "ups_generic.include"],
 }

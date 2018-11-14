@@ -24,30 +24,28 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-
 factory_settings['threepar_ports_default_levels'] = {
-                "1_link" : 1,
-                "2_link" : 1,
-                "3_link" : 1,
-                "4_link" : 0,
-                "5_link" : 2,
-                "6_link" : 2,
-                "7_link" : 1,
-                "8_link" : 0,
-                "9_link" : 1,
-               "10_link" : 1,
-               "11_link" : 1,
-               "12_link" : 1,
-               "13_link" : 1,
-               "14_link" : 1,
-
-                "1_fail" : 0,
-                "2_fail" : 2,
-                "3_fail" : 2,
-                "4_fail" : 2,
-                "5_fail" : 2,
-                "6_fail" : 2,
-                "7_fail" : 1,
+    "1_link": 1,
+    "2_link": 1,
+    "3_link": 1,
+    "4_link": 0,
+    "5_link": 2,
+    "6_link": 2,
+    "7_link": 1,
+    "8_link": 0,
+    "9_link": 1,
+    "10_link": 1,
+    "11_link": 1,
+    "12_link": 1,
+    "13_link": 1,
+    "14_link": 1,
+    "1_fail": 0,
+    "2_fail": 2,
+    "3_fail": 2,
+    "4_fail": 2,
+    "5_fail": 2,
+    "6_fail": 2,
+    "7_fail": 1,
 }
 
 
@@ -60,6 +58,7 @@ def translate_protocol_3par_ports(number):
         5: "SAS",
     }
     return protocols[number]
+
 
 def inventory_3par_ports(parsed):
     for entry in parsed.get('members', {}):
@@ -75,37 +74,37 @@ def inventory_3par_ports(parsed):
 
 def check_3par_ports(item, params, parsed):
     failover_translate = {
-        1 : "NONE",
-        2 : "FAILOVER_PENDING",
-        3 : "FAILED_OVER",
-        4 : "ACTIVE",
-        5 : "ACTIVE_DOWN",
-        6 : "ACTIVE_FAILED",
-        7 : "FAILBACK_PENDING",
+        1: "NONE",
+        2: "FAILOVER_PENDING",
+        3: "FAILED_OVER",
+        4: "ACTIVE",
+        5: "ACTIVE_DOWN",
+        6: "ACTIVE_FAILED",
+        7: "FAILBACK_PENDING",
     }
 
     link_translate = {
-        1 : "CONFIG_WAIT",
-        2 : "ALPA_WAIT",
-        3 : "LOGIN_WAIT",
-        4 : "READY",
-        5 : "LOSS_SYNC",
-        6 : "ERROR_STATE",
-        7 : "XXX",
-        8 : "NONPARTICIPATE",
-        9 : "COREDUMP",
-       10 : "OFFLINE",
-       11 : "FWDEAD",
-       12 : "IDLE_FOR_RESET",
-       13 : "DHCP_IN_PROGRESS",
-       14 : "PENDING_RESET",
+        1: "CONFIG_WAIT",
+        2: "ALPA_WAIT",
+        3: "LOGIN_WAIT",
+        4: "READY",
+        5: "LOSS_SYNC",
+        6: "ERROR_STATE",
+        7: "XXX",
+        8: "NONPARTICIPATE",
+        9: "COREDUMP",
+        10: "OFFLINE",
+        11: "FWDEAD",
+        12: "IDLE_FOR_RESET",
+        13: "DHCP_IN_PROGRESS",
+        14: "PENDING_RESET",
     }
 
     mode_translate = {
-        1 : "SUSPENDED",
-        2 : "TARGET",
-        3 : "INITIATOR",
-        4 : "PEER",
+        1: "SUSPENDED",
+        2: "TARGET",
+        3: "INITIATOR",
+        4: "PEER",
     }
 
     for entry in parsed.get('members', {}):
@@ -132,11 +131,11 @@ def check_3par_ports(item, params, parsed):
 
 
 check_info['3par_ports'] = {
-    'parse_function'            : parse_3par,
-    'inventory_function'        : inventory_3par_ports,
-    'check_function'            : check_3par_ports,
-    'service_description'       : "Port %s",
-    'default_levels_variable'   : "threepar_ports_default_levels",
-    'group'                     : "threepar_ports",
-    'includes'                  : [ "3par.include" ],
+    'parse_function': parse_3par,
+    'inventory_function': inventory_3par_ports,
+    'check_function': check_3par_ports,
+    'service_description': "Port %s",
+    'default_levels_variable': "threepar_ports_default_levels",
+    'group': "threepar_ports",
+    'includes': ["3par.include"],
 }

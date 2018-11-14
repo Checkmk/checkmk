@@ -24,7 +24,6 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-
 # .1.3.6.1.4.1.9148.3.3.1.4.1.1.3.1 MAIN FAN1 --> ACMEPACKET-ENVMON-MIB::apEnvMonFanStatusDescr.1
 # .1.3.6.1.4.1.9148.3.3.1.4.1.1.3.2 MAIN FAN2 --> ACMEPACKET-ENVMON-MIB::apEnvMonFanStatusDescr.2
 # .1.3.6.1.4.1.9148.3.3.1.4.1.1.3.3 MAIN FAN3 --> ACMEPACKET-ENVMON-MIB::apEnvMonFanStatusDescr.3
@@ -40,8 +39,7 @@
 
 
 def inventory_acme_fan(info):
-    return [ (descr, {}) for descr, _value_str, state in info
-             if state != "7" ]
+    return [(descr, {}) for descr, _value_str, state in info if state != "7"]
 
 
 def check_acme_fan(item, params, info):
@@ -53,15 +51,17 @@ def check_acme_fan(item, params, info):
 
 
 check_info['acme_fan'] = {
-    'inventory_function'    : inventory_acme_fan,
-    'check_function'        : check_acme_fan,
-    'service_description'   : 'Fan %s',
-    'snmp_info'             : ('.1.3.6.1.4.1.9148.3.3.1.4.1.1', [
-                                "3",    # ACMEPACKET-ENVMON-MIB::apEnvMonFanStatusDescr
-                                "4",    # ACMEPACKET-ENVMON-MIB::apEnvMonFanStatusValue
-                                "5",    # ACMEPACKET-ENVMON-MIB::apEnvMonFanState
-                              ]),
-    'snmp_scan_function'    : scan_acme,
-    'includes'              : ['acme.include'],
-    'group'                 : 'hw_fans_perc',
+    'inventory_function': inventory_acme_fan,
+    'check_function': check_acme_fan,
+    'service_description': 'Fan %s',
+    'snmp_info': (
+        '.1.3.6.1.4.1.9148.3.3.1.4.1.1',
+        [
+            "3",  # ACMEPACKET-ENVMON-MIB::apEnvMonFanStatusDescr
+            "4",  # ACMEPACKET-ENVMON-MIB::apEnvMonFanStatusValue
+            "5",  # ACMEPACKET-ENVMON-MIB::apEnvMonFanState
+        ]),
+    'snmp_scan_function': scan_acme,
+    'includes': ['acme.include'],
+    'group': 'hw_fans_perc',
 }

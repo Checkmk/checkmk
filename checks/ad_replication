@@ -34,7 +34,8 @@
 # showrepl_INFO,Standardname-des-ersten-Standorts,WIN2003,"CN=Schema,CN=Configuration,DC=corp,\
 #DC=de",Standardname-des-ersten-Standorts,WIN2003-DC2,RPC,0,0,2010-07-02 12:46:28,0
 
-ad_replication_default_params = (15,20)
+ad_replication_default_params = (15, 20)
+
 
 def parse_ad_replication_dates(s):
     if s == '0' or s == '(never)':
@@ -44,15 +45,17 @@ def parse_ad_replication_dates(s):
     s_txt = get_relative_date_human_readable(s_val)
     return s_val, s_txt
 
+
 def parse_ad_replication_info(info):
     lines = []
     for line_parts in info:
         # Make lines split by , instead of spaces
         line_txt = ' '.join(line_parts).replace(',CN=', ';CN=').replace(',DC=', ';DC=')
         line_parts = line_txt.split(',')
-        if len(line_parts) in [ 11, 10 ]:
+        if len(line_parts) in [11, 10]:
             lines.append(line_parts)
     return lines
+
 
 def inventory_ad_replication(info):
     inv = []
@@ -62,32 +65,31 @@ def inventory_ad_replication(info):
             source_dc = line[5]
         elif len(line) == 10:
             source_site = line[3]
-            source_dc =  line[4]
+            source_dc = line[4]
         else:
-            break # unhandled data
+            break  # unhandled data
         entry = ('%s/%s' % (source_site, source_dc), 'ad_replication_default_params')
         if line[0] == 'showrepl_INFO' and entry not in inv:
             inv.append(entry)
     return inv
 
+
 def check_ad_replication(item, params, info):
-    status    = 0
-    output    = ''
+    status = 0
+    output = ''
     foundLine = False
 
     for l in parse_ad_replication_info(info):
         if len(l) == 11:
-            (lineType, _destSite, _destDC, naming_context, source_site, source_dc,
-             _transport, num_failures, time_last_failure, time_last_success,
-             statusLastFailure ) = l
+            (lineType, _destSite, _destDC, naming_context, source_site, source_dc, _transport,
+             num_failures, time_last_failure, time_last_success, statusLastFailure) = l
         elif len(l) == 10:
-            (lineType, _destSite, naming_context, source_site, source_dc,
-             _transport, num_failures, time_last_failure, time_last_success,
-             statusLastFailure ) = l
+            (lineType, _destSite, naming_context, source_site, source_dc, _transport, num_failures,
+             time_last_failure, time_last_success, statusLastFailure) = l
         else:
-            break # unhandled data
+            break  # unhandled data
 
-        if lineType == 'showrepl_INFO' and source_site+'/'+source_dc == item:
+        if lineType == 'showrepl_INFO' and source_site + '/' + source_dc == item:
             foundLine = True
             time_last_failure, time_last_failure_txt = parse_ad_replication_dates(time_last_failure)
             time_last_success, time_last_success_txt = parse_ad_replication_dates(time_last_success)
@@ -128,8 +130,8 @@ def check_ad_replication(item, params, info):
 
 
 check_info["ad_replication"] = {
-    'check_function':          check_ad_replication,
-    'inventory_function':      inventory_ad_replication,
-    'service_description':     'AD Replication %s',
-    'group':                   'ad_replication',
+    'check_function': check_ad_replication,
+    'inventory_function': inventory_ad_replication,
+    'service_description': 'AD Replication %s',
+    'group': 'ad_replication',
 }

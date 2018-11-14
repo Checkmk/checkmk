@@ -24,7 +24,6 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-
 # .1.3.6.1.4.1.9148.3.3.1.5.1.1.3.1 Power Supply A --> ACMEPACKET-ENVMON-MIB::apEnvMonPowerSupplyStatusDescr.1
 # .1.3.6.1.4.1.9148.3.3.1.5.1.1.3.2 Power Supply B --> ACMEPACKET-ENVMON-MIB::apEnvMonPowerSupplyStatusDescr.2
 # .1.3.6.1.4.1.9148.3.3.1.5.1.1.4.1 2 --> ACMEPACKET-ENVMON-MIB::apEnvMonPowerSupplyState.1
@@ -32,8 +31,7 @@
 
 
 def inventory_acme_powersupply(info):
-    return [ (descr, None) for descr, state in info
-             if state != "7" ]
+    return [(descr, None) for descr, state in info if state != "7"]
 
 
 def check_acme_powersupply(item, _no_params, info):
@@ -44,13 +42,15 @@ def check_acme_powersupply(item, _no_params, info):
 
 
 check_info['acme_powersupply'] = {
-    'inventory_function'    : inventory_acme_powersupply,
-    'check_function'        : check_acme_powersupply,
-    'service_description'   : 'Power supply %s',
-    'snmp_info'             : ('.1.3.6.1.4.1.9148.3.3.1.5.1.1', [
-                                "3",    # ADCMEPACKET-ENVMON-MIB::apEnvMonPowersDescr
-                                "4",    # ACMEPACKET-ENVMON-MIB::apEnvMonPowerSupplyState
-                              ]),
-    'snmp_scan_function'    : scan_acme,
-    'includes'              : ['acme.include'],
+    'inventory_function': inventory_acme_powersupply,
+    'check_function': check_acme_powersupply,
+    'service_description': 'Power supply %s',
+    'snmp_info': (
+        '.1.3.6.1.4.1.9148.3.3.1.5.1.1',
+        [
+            "3",  # ADCMEPACKET-ENVMON-MIB::apEnvMonPowersDescr
+            "4",  # ACMEPACKET-ENVMON-MIB::apEnvMonPowerSupplyState
+        ]),
+    'snmp_scan_function': scan_acme,
+    'includes': ['acme.include'],
 }

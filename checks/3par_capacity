@@ -29,7 +29,7 @@ def inventory_3par_capacity(parsed):
     for key, value in parsed.iteritems():
         if value['totalMiB'] == 0:
             continue
-        yield (key.replace("Capacity", ""), {} )
+        yield (key.replace("Capacity", ""), {})
 
 
 def check_3par_capacity(item, params, parsed):
@@ -39,7 +39,7 @@ def check_3par_capacity(item, params, parsed):
             free = value['freeMiB']
             failed = value['failedCapacityMiB']
 
-            yield df_check_filesystem_list(item, params, [ (item, total, free, failed) ])
+            yield df_check_filesystem_list(item, params, [(item, total, free, failed)])
 
             if failed == 0:
                 return
@@ -55,12 +55,12 @@ def check_3par_capacity(item, params, parsed):
 
 
 check_info['3par_capacity'] = {
-    'parse_function'            : parse_3par,
-    'inventory_function'        : inventory_3par_capacity,
-    'check_function'            : check_3par_capacity,
-    'service_description'       : "Capacity %s",
-    'has_perfdata'              : True,
-    'includes'                  : [ "3par.include", "size_trend.include", "df.include" ],
-    'group'                     : "threepar_capacity",
-    'default_levels_variable'   : "filesystem_default_levels",
+    'parse_function': parse_3par,
+    'inventory_function': inventory_3par_capacity,
+    'check_function': check_3par_capacity,
+    'service_description': "Capacity %s",
+    'has_perfdata': True,
+    'includes': ["3par.include", "size_trend.include", "df.include"],
+    'group': "threepar_capacity",
+    'default_levels_variable': "filesystem_default_levels",
 }

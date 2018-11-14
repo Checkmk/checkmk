@@ -64,6 +64,13 @@ import threading
 from hashlib import sha256
 from pathlib2 import Path
 
+try:
+    # does not exist in Py3, but is super class of str & unicode in py2
+    basestring
+except NameError:
+    basestring = str  # pylint: disable=redefined-builtin
+    unicode = str  # pylint: disable=redefined-builtin
+
 import cmk.daemon as daemon
 import cmk.paths
 import cmk.defines
@@ -3950,7 +3957,7 @@ def register_configvar(group,
 
     # New API is to hand over the class via domain argument. But not all calls have been
     # migrated. Perform the translation here.
-    if type(domain) in [str, unicode]:
+    if isinstance(domain, basestring):
         domain = ConfigDomain.get_class(domain)
 
     g_configvar_groups.setdefault(group, []).append((domain, varname, valuespec))
@@ -5968,7 +5975,7 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
 
             # In case of an exception it returns a str/unicode message. Wrap the
             # message in a list to be compatible to regular response
-            if type(cmk_configuration_warnings) in [str, unicode]:
+            if isinstance(cmk_configuration_warnings, basestring):
                 cmk_configuration_warnings = [cmk_configuration_warnings]
 
             return {"check_mk": cmk_configuration_warnings}

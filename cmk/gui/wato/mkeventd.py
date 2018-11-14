@@ -30,6 +30,13 @@ import time
 import zipfile
 import cStringIO
 
+try:
+    # does not exist in Py3, but is super class of str & unicode in py2
+    basestring
+except NameError:
+    basestring = str  # pylint: disable=redefined-builtin
+    unicode = str  # pylint: disable=redefined-builtin
+
 import cmk.paths
 import cmk.store as store
 import cmk.render
@@ -2065,7 +2072,7 @@ class ModeEventConsoleEditRule(EventConsoleMode):
         while num_repl > num_groups:
             repl = "\\%d" % num_repl
             for name, value in self._rule.items():
-                if name.startswith("set_") and type(value) in [str, unicode]:
+                if name.startswith("set_") and isinstance(value, basestring):
                     if repl in value:
                         raise MKUserError(
                             "rule_p_" + name,

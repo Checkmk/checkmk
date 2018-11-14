@@ -1720,7 +1720,7 @@ def get_painter_title_for_choices(painter):
     if painter["columns"] == ["site"]:
         info_title = _("Site")
 
-    if type(painter["title"]) in [types.FunctionType, types.MethodType]:
+    if isinstance(painter["title"], (types.FunctionType, types.MethodType)):
         title = painter["title"]()
     else:
         title = painter["title"]

@@ -24,7 +24,6 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-
 # Knowledge from customer:
 # Devices with OID_END=38 are 12 port power switches with two powerbanks.
 # Means each powerbank has 6 outlets. Here we can use ChanStatus in order
@@ -34,18 +33,21 @@
 # Once it's plugged in, the state is "on". Thus we use PortState in
 # discovering function.
 
-
 factory_settings["gude_powerbank_default_levels"] = {
-    "voltage" : (  220,  210 ),
-    "current" : (   15,   16 ),
+    "voltage": (220, 210),
+    "current": (15, 16),
 }
 
 
 def parse_gude_powerbanks(info):
-    map_port_states = {"0" : (2, "off"),
-                       "1" : (0, "on"),}
-    map_channel_states = {"0" : (2, "data not active"),
-                          "1" : (0, "data valid"),}
+    map_port_states = {
+        "0": (2, "off"),
+        "1": (0, "on"),
+    }
+    map_channel_states = {
+        "0": (2, "data not active"),
+        "1": (0, "data valid"),
+    }
 
     ports = dict(info[0])
     parsed = {}
@@ -62,24 +64,24 @@ def parse_gude_powerbanks(info):
         if device_state is None:
             continue
 
-        parsed.setdefault(idx, {
-            "device_state" : device_state
-        })
+        parsed.setdefault(idx, {"device_state": device_state})
 
         for what, key, factor in [
-            (energy_str,       "energy",    1.0),
-            (active_power_str, "power",     1.0),
-            (current_str,      "current",   0.001),
-            (volt_str,         "voltage",   1.0),
-            (freq_str,         "frequency", 0.01),
-            (appower_str,      "appower",   1.0),]:
+            (energy_str, "energy", 1.0),
+            (active_power_str, "power", 1.0),
+            (current_str, "current", 0.001),
+            (volt_str, "voltage", 1.0),
+            (freq_str, "frequency", 0.01),
+            (appower_str, "appower", 1.0),
+        ]:
             parsed[idx][key] = float(what) * factor
 
     return parsed
 
 
 def inventory_gude_powerbanks(parsed):
-    return [(powerbank, {}) for powerbank, attrs in parsed.items()
+    return [(powerbank, {})
+            for powerbank, attrs in parsed.items()
             if attrs["device_state"][1] not in ["off", "data not active"]]
 
 

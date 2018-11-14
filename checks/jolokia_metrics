@@ -75,8 +75,13 @@ def jolokia_metrics_parse(info):
             parsed[line[0]] = None # error
             continue
 
-        inst, var, value = line
-        module  = None
+        try:
+            inst = line[0]
+            var = ' '.join(line[1:-1])
+            value = line[-1]
+        except IndexError:
+            continue
+
         attributes = {}
         positional = []
 

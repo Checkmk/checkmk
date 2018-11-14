@@ -28,14 +28,15 @@
 def parse_jolokia_generic(info):
     parsed = {}
     for line in info:
-        instance, mbean, value, value_type = line
-
-        item = instance + " " + mbean
-
-        parsed[item] = {
-            "type"  : value_type,
-            "value" : value
-        }
+        try:
+            # lines should consist of four tokens, however
+            # spaces may be in the mbean. Asume first is instance
+            # second to last and last are value and type - the
+            # rest is regarded to be the Mbean.
+            item = "%s MBean %s" % (line[0], ' '.join(line[1:-2]))
+            parsed[item] = {"type": line[-1], "value": line[-2]}
+        except IndexError:
+            pass
 
     return parsed
 

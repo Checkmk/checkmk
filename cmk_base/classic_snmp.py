@@ -29,7 +29,7 @@ import subprocess
 import signal
 
 try:
-    # does not exist in Py3, but is supper class of str & unicode in py2
+    # does not exist in Py3, but is super class of str & unicode in py2
     basestring
 except NameError:
     basestring = str  # pylint: disable=redefined-builtin
@@ -41,7 +41,6 @@ from cmk.exceptions import MKGeneralException
 import cmk_base.console as console
 import cmk_base.config as config
 from cmk_base.exceptions import MKSNMPError, MKTimeout
-
 
 #.
 #   .--SNMP interface------------------------------------------------------.
@@ -286,6 +285,7 @@ def _snmp_base_command(what, access_data, context_name):
         options += ["-n", context_name]
 
     return command + options
+
 
 #.
 #   .--SNMP helpers--------------------------------------------------------.

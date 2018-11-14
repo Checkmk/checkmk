@@ -36,7 +36,7 @@ import traceback
 import urllib
 
 try:
-    # does not exist in Py3, but is supper class of str & unicode in py2
+    # does not exist in Py3, but is super class of str & unicode in py2
     basestring
 except NameError:
     basestring = str  # pylint: disable=redefined-builtin

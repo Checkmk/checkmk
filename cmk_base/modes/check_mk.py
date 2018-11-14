@@ -179,7 +179,6 @@ modes.register_general_option(
         argument_descr="IP",
     ))
 
-
 #.
 #.
 #   .--list-hosts----------------------------------------------------------.
@@ -406,7 +405,6 @@ modes.register(
             "Does not work on clusters but only on real hosts. "
         ]))
 
-
 #.
 #   .--dump----------------------------------------------------------------.
 #   |                         _                                            |
@@ -441,7 +439,6 @@ modes.register(
             "about one, several or all hosts. It shows all services, hostgroups, "
             "contacts and other information about that host.",
         ]))
-
 
 #.
 #   .--paths---------------------------------------------------------------.
@@ -710,7 +707,6 @@ modes.register(
         short_help="Check configuration for invalid vars",
     ))
 
-
 #.
 #   .--update-dns-cache----------------------------------------------------.
 #   |                        _            _                                |
@@ -834,7 +830,6 @@ modes.register(Mode(
     ],
 ))
 
-
 #.
 #   .--snmpwalk------------------------------------------------------------.
 #   |                                                   _ _                |
@@ -924,7 +919,6 @@ modes.register(
             "no host is given, all known SNMP hosts are queried."
         ],
     ))
-
 
 #.
 #   .--flush---------------------------------------------------------------.
@@ -1088,7 +1082,6 @@ modes.register(
         ],
     ))
 
-
 #.
 #   .--compile-------------------------------------------------------------.
 #   |                                           _ _                        |
@@ -1153,7 +1146,6 @@ modes.register(
         ],
     ))
 
-
 #.
 #   .--restart-------------------------------------------------------------.
 #   |                                 _             _                      |
@@ -1177,7 +1169,6 @@ modes.register(
         handler_function=mode_restart,
         short_help="Precompile + config + core restart",
     ))
-
 
 #.
 #   .--reload--------------------------------------------------------------.
@@ -1238,7 +1229,6 @@ modes.register(
             "Use -M without an argument to show a list of all manual pages."
         ],
     ))
-
 
 #.
 #   .--browse-man----------------------------------------------------------.
@@ -1412,7 +1402,6 @@ modes.register(
         short_help="Internal helper to invoke Check_MK actions",
     ))
 
-
 #.
 #   .--notify--------------------------------------------------------------.
 #   |                                 _   _  __                            |
@@ -1481,7 +1470,6 @@ modes.register(
             "automatically if configured.",
         ],
     ))
-
 
 #.
 #   .--check-discovery-----------------------------------------------------.
@@ -1715,7 +1703,6 @@ modes.register(
         needs_config=False,
         needs_checks=False,
     ))
-
 
 #.
 #   .--help----------------------------------------------------------------.

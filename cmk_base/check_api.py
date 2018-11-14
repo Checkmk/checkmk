@@ -96,7 +96,7 @@ Global variables:
 from typing import List, Dict, Tuple, Union, Optional, Iterable  # pylint: disable=unused-import
 
 try:
-    # does not exist in Py3, but is supper class of str & unicode in py2
+    # does not exist in Py3, but is super class of str & unicode in py2
     basestring
 except NameError:
     basestring = str  # pylint: disable=redefined-builtin
@@ -124,6 +124,7 @@ def get_check_api_context():
     """This is called from cmk_base code to get the Check API things. Don't
     use this from checks."""
     return {k: v for k, v in globals().items() if not k.startswith("_")}
+
 
 #.
 #   .--Check API-----------------------------------------------------------.

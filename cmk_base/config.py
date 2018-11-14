@@ -36,7 +36,7 @@ import struct
 import sys
 
 try:
-    # does not exist in Py3, but is supper class of str & unicode in py2
+    # does not exist in Py3, but is super class of str & unicode in py2
     basestring
 except NameError:
     basestring = str  # pylint: disable=redefined-builtin
@@ -415,10 +415,8 @@ def verify_snmp_communities_type():
 
 
 def all_nonfunction_vars():
-    return set([
-        name for name, value in globals().items()
-        if name[0] != '_' and not callable(value)
-    ])
+    return set(
+        [name for name, value in globals().items() if name[0] != '_' and not callable(value)])
 
 
 class PackedConfig(object):
@@ -767,7 +765,6 @@ def all_configured_offline_hosts():
     hostlist = all_configured_realhosts().union(all_configured_clusters())
 
     return set([hostname for hostname in hostlist if not in_binary_hostlist(hostname, only_hosts)])
-
 
 
 #.
@@ -1196,6 +1193,7 @@ def check_interval_of(hostname, section_name):
     for match, minutes in host_extra_conf(hostname, snmp_check_interval):
         if match is None or match.split(".")[0] == section_name:
             return minutes  # use first match
+
 
 #.
 #   .--Cluster-------------------------------------------------------------.
@@ -1789,6 +1787,7 @@ def host_extra_conf_merged(hostname, conf):
             rule_dict.setdefault(key, value)
     return rule_dict
 
+
 #.
 #   .--Host matching-------------------------------------------------------.
 #   |  _   _           _                     _       _     _               |
@@ -2144,7 +2143,6 @@ _all_checks_loaded = False
 #   the item is None
 service_rule_groups = set(["temperature"])
 
-
 #.
 #   .--Loading-------------------------------------------------------------.
 #   |                _                    _ _                              |
@@ -2490,7 +2488,6 @@ def _is_plugin_precompiled(path, precompiled_path):
     except struct.error:
         return False
 
-
     if long(os.stat(path).st_mtime) != origin_file_mtime:
         return False
 
@@ -2681,6 +2678,7 @@ def initialize_check_type_caches():
         section_name = cmk_base.check_utils.section_name_of(check_plugin_name)
         if section_name not in snmp_cache:
             tcp_cache.add(section_name)
+
 
 #.
 #   .--Helpers-------------------------------------------------------------.

@@ -616,8 +616,12 @@ class AutomationAnalyseServices(Automation):
                 check_parameters = config.compute_check_parameters(hostname, ct, item, params)
                 if isinstance(check_parameters, cmk_base.config.TimespecificParamList):
                     check_parameters = cmk_base.checking.determine_check_params(check_parameters)
-                    check_parameters = {"tp_computed_params": {"params": check_parameters, "computed_at": time.time()}}
-
+                    check_parameters = {
+                        "tp_computed_params": {
+                            "params": check_parameters,
+                            "computed_at": time.time()
+                        }
+                    }
 
                 return {
                     "origin": "auto",
@@ -626,7 +630,7 @@ class AutomationAnalyseServices(Automation):
                     "item": item,
                     "inv_parameters": params,
                     "factory_settings": fs,
-                    "parameters":  check_parameters,
+                    "parameters": check_parameters,
                 }
 
         # 3. Classical checks

@@ -171,6 +171,7 @@ def do_core_action(action, quiet=False):
         if not quiet:
             console.output(tty.ok + "\n")
 
+
 #.
 #   .--Timeperiods---------------------------------------------------------.
 #   |      _____ _                                _           _            |

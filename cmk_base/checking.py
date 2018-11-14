@@ -32,7 +32,7 @@ import time
 import copy
 
 try:
-    # does not exist in Py3, but is supper class of str & unicode in py2
+    # does not exist in Py3, but is super class of str & unicode in py2
     basestring
 except NameError:
     basestring = str  # pylint: disable=redefined-builtin
@@ -71,7 +71,6 @@ _checkresult_file_path = None
 
 _submit_to_core = True
 _show_perfdata = False
-
 
 #.
 #   .--Checking------------------------------------------------------------.
@@ -698,6 +697,7 @@ def _open_command_pipe():
 
 def _core_pipe_open_timeout(signum, stackframe):
     raise IOError("Timeout while opening pipe")
+
 
 #.
 #   .--Misc----------------------------------------------------------------.

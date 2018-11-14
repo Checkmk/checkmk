@@ -131,6 +131,6 @@ def _row_template(lengths, colors, indent):
 
 
 def _make_utf8(x):
-    if type(x) == unicode:
+    if isinstance(x, unicode):
         return x.encode('utf-8')
     return str(x)

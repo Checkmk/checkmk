@@ -53,7 +53,7 @@ def _translate(translation, name):
         name = name.split(".", 1)[0]
 
     # 3. Multiple regular expression conversion
-    if type(translation.get("regex")) == tuple:
+    if isinstance(translation.get("regex"), tuple):
         translations = [translation.get("regex")]
     else:
         translations = translation.get("regex", [])

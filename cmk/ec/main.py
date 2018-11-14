@@ -47,6 +47,12 @@ import threading
 import time
 import traceback
 from typing import Any, Dict, List, Optional, Tuple  # pylint: disable=unused-import
+try:
+    # does not exist in Py3, but is super class of str & unicode in py2
+    basestring
+except NameError:
+    basestring = str  # pylint: disable=redefined-builtin
+    unicode = str  # pylint: disable=redefined-builtin
 
 import cmk
 import cmk.daemon
@@ -147,7 +153,7 @@ def decode_from_bytes(string_as_bytes):
     # conversions between str and unicode are a fundamentally broken idea, just
     # like all implicit things and "helpful" ideas in general. :-P For further
     # info see e.g. http://nedbatchelder.com/text/unipain.html
-    if type(string_as_bytes) == unicode:
+    if isinstance(string_as_bytes, unicode):
         return string_as_bytes
 
     try:
@@ -289,7 +295,7 @@ def match(pattern, text, complete=True):
     if pattern is None:
         return ()
 
-    elif type(pattern) in [str, unicode]:
+    elif isinstance(pattern, basestring):
         if complete:
             return () if pattern == text.lower() else False
         return () if pattern in text.lower() else False
@@ -357,7 +363,7 @@ def replace_groups(text, origtext, match_groups):
 
     # Generic replacement with \1, \2, ...
     match_groups_message = match_groups.get("match_groups_message")
-    if type(match_groups_message) == tuple:
+    if isinstance(match_groups_message, tuple):
         for nr, g in enumerate(match_groups_message):
             text = text.replace("\\%d" % (nr + 1), g)
 
@@ -366,7 +372,7 @@ def replace_groups(text, origtext, match_groups):
     # $MATCH_GROUPS_MESSAGE_x$
     # $MATCH_GROUPS_SYSLOG_APPLICATION_x$
     for key_prefix, values in match_groups.iteritems():
-        if type(values) != tuple:
+        if not isinstance(values, tuple):
             continue
 
         for idx, match in enumerate(values):
@@ -1395,7 +1401,7 @@ class EventServer(ECServerThread):
 
                                 rule[key] = value
 
-                        if 'state' in rule and type(rule['state']) == tuple \
+                        if 'state' in rule and isinstance(rule['state'], tuple) \
                            and rule['state'][0] == 'text_pattern':
                             for key in ['2', '1', '0']:
                                 if key in rule['state'][1]:
@@ -1718,7 +1724,7 @@ class EventServer(ECServerThread):
                 event["state"] = 2
             else:
                 event["state"] = 1
-        elif type(rule["state"]) == tuple and rule["state"][0] == "text_pattern":
+        elif isinstance(rule["state"], tuple) and rule["state"][0] == "text_pattern":
             for key in ['2', '1', '0', '3']:
                 if key in rule["state"][1]:
                     match_groups = match(rule["state"][1][key], event["text"], complete=False)
@@ -1979,7 +1985,7 @@ class EventServer(ECServerThread):
                 # There is no datetime information in the message, use current time
                 event['time'] = time.time()
                 # There is no host information, use the provided address
-                if address and type(address) == tuple:
+                if address and isinstance(address, tuple):
                     event["host"] = address[0]
 
             # Variant 10
@@ -3383,7 +3389,7 @@ class EventStatus(object):
             return start
 
     def next_interval_start(self, interval, previous_start):
-        if type(interval) == tuple:
+        if isinstance(interval, tuple):
             length, offset = interval
             offset *= 3600
         else:

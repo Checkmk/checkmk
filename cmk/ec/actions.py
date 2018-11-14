@@ -27,6 +27,12 @@
 import os
 import subprocess
 import time
+try:
+    # does not exist in Py3, but is super class of str & unicode in py2
+    basestring
+except NameError:
+    basestring = str  # pylint: disable=redefined-builtin
+    unicode = str  # pylint: disable=redefined-builtin
 
 import cmk
 import cmk.defines
@@ -137,10 +143,10 @@ def _get_quoted_event(event, logger):
             new_event[key] = value
         else:
             try:
-                if type(value) in [list, tuple]:
+                if isinstance(value, list):
                     new_value = map(quote_shell_string, value)
-                    if type(value) == tuple:
-                        new_value = tuple(value)
+                elif isinstance(value, tuple):
+                    new_value = value
                 else:
                     new_value = quote_shell_string(value)
                 new_event[key] = new_value
@@ -198,9 +204,9 @@ def _execute_script(event_columns, body, event, logger):
     script_env = os.environ.copy()
 
     for key, value in _get_event_tags(event_columns, event).iteritems():
-        if type(key) == unicode:
+        if isinstance(key, unicode):
             key = key.encode("utf-8")
-        if type(value) == unicode:
+        if isinstance(value, unicode):
             value = value.encode("utf-8")
         script_env["CMK_" + key.upper()] = value
 
@@ -230,13 +236,13 @@ def _get_event_tags(event_columns, event):
         substs.append((varname, event.get(varname, defaultvalue)))
 
     def to_string(v):
-        if type(v) in [str, unicode]:
+        if isinstance(v, basestring):
             return v
         return "%s" % v
 
     tags = {}
     for key, value in substs:
-        if type(value) == tuple:
+        if isinstance(value, tuple):
             value = " ".join(map(to_string, value))
         else:
             value = to_string(value)
@@ -462,6 +468,6 @@ def _core_has_notifications_disabled(event, logger):
 
 
 def to_utf8(x):
-    if type(x) == unicode:
+    if isinstance(x, unicode):
         return x.encode("utf-8")
     return x

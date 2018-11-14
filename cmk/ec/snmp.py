@@ -92,7 +92,7 @@ class SNMPTrapEngine(object):
             user_num += 1
 
             # SNMPv1/v2
-            if type(credentials) != tuple:
+            if not isinstance(credentials, tuple):
                 community_index = 'snmpv2-%d' % user_num
                 self._logger.info("adding SNMPv1 system: communityIndex=%s" % community_index)
                 pysnmp.entity.config.addV1System(self.snmp_engine, community_index, credentials)

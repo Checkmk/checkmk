@@ -5926,7 +5926,7 @@ def do_snapshot_maintenance():
     snapshots = []
     for f in os.listdir(snapshot_dir):
         if f.startswith('wato-snapshot-'):
-            status = get_snapshot_status(f)
+            status = get_snapshot_status(f, check_correct_core = False)
             # only remove automatic and legacy snapshots
             if status.get("type") in [ "automatic", "legacy" ]:
                 snapshots.append(f)
@@ -5939,7 +5939,7 @@ def do_snapshot_maintenance():
 
 # Returns status information for snapshots or snapshots in progress
 # TODO: Remove once new changes mechanism has been implemented
-def get_snapshot_status(snapshot, validate_checksums = False):
+def get_snapshot_status(snapshot, validate_checksums = False, check_correct_core = True):
     if type(snapshot) == tuple:
         name, file_stream = snapshot
     else:
@@ -6099,7 +6099,8 @@ def get_snapshot_status(snapshot, validate_checksums = False):
         check_size()
         check_extension()
         check_content()
-        check_core()
+        if check_correct_core:
+            check_core()
 
         if validate_checksums:
             check_checksums()

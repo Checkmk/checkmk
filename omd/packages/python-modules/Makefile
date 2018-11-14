@@ -21,8 +21,6 @@ MODULES += ordereddict-1.1.tar.gz # needed by pysmi
 MODULES += ply-3.11.tar.gz # needed by pysmi
 MODULES += pysmi-0.3.2.tar.gz # needed by EC (for trap translation)
 MODULES += pysnmp-4.4.4.tar.gz # needed by EC (for trap translation)
-
-MODULES += setuptools-git-1.2.tar.gz # needed for pymssql
 MODULES += pymssql-2.1.3.tar.gz # needed for check_sql (together with freetds)
 
 LEGACY_LDAP=0
@@ -115,6 +113,9 @@ else
     MODULES += cryptography-2.3.1.tar.gz
 endif
 
+MODULES += certifi-2018.10.15.tar.gz
+MODULES += chardet-3.0.4.tar.gz
+MODULES += urllib3-1.24.1.tar.gz
 # Added for NetApp special agent, but may be used in other components too in future
 MODULES += requests-2.20.0.tar.gz
 # Has requests as dependency -> must be built after
@@ -125,6 +126,8 @@ MODULES += requests-kerberos-0.12.0.tar.gz
 # Added for tinkerforge special agent
 MODULES += tinkerforge-2.1.19.tar.gz
 # Added for check_sftp
+MODULES += bcrypt-3.1.4.tar.gz
+MODULES += PyNaCl-1.3.0.tar.gz
 MODULES += paramiko-2.4.2.tar.gz
 # Added for IPMI monitoring of management interface
 MODULES += pbr-5.1.0.tar.gz
@@ -140,21 +143,20 @@ MODULES += python-snap7-0.10.tar.gz
 MODULES += PyJWT-1.6.4.tar.gz
 MODULES += SecretStorage-2.3.1.tar.gz
 MODULES += adal-1.2.0.tar.gz
+MODULES += azure-nspkg-3.0.2.zip
 MODULES += azure-common-1.1.16.zip
+MODULES += azure-mgmt-nspkg-3.0.2.zip
+MODULES += isodate-0.6.0.tar.gz
+MODULES += oauthlib-2.1.0.tar.gz
+MODULES += requests-oauthlib-1.0.0.tar.gz
+MODULES += msrest-0.6.1.tar.gz
+MODULES += msrestazure-0.5.0.tar.gz
 MODULES += azure-mgmt-monitor-0.5.2.zip
 MODULES += azure-mgmt-resource-2.0.0.zip
 MODULES += azure-mgmt-compute-4.3.1.zip
-MODULES += certifi-2018.10.15.tar.gz
-MODULES += chardet-3.0.4.tar.gz
 MODULES += configparser-3.5.0.tar.gz
 MODULES += entrypoints-0.2.3.tar.gz
-MODULES += isodate-0.6.0.tar.gz
 MODULES += keyring-15.1.0.tar.gz
-MODULES += msrest-0.6.1.tar.gz
-MODULES += msrestazure-0.5.0.tar.gz
-MODULES += oauthlib-2.1.0.tar.gz
-MODULES += requests-oauthlib-1.0.0.tar.gz
-MODULES += urllib3-1.24.1.tar.gz
 # Added for the GUI
 MODULES += Werkzeug-0.14.1.tar.gz
 MODULES += passlib-1.7.1.tar.gz

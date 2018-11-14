@@ -582,9 +582,9 @@ def _get_logfile_timespan(path):
 # Check_MK. To keep backwards compatibility with old history files, we have no
 # choice and continue to do it wrong... :-/
 def scrub_string(s):
-    if type(s) == str:
+    if isinstance(s, str):
         return s.translate(scrub_string.str_table, "\0\1\2\n")
-    if type(s) == unicode:
+    if isinstance(s, unicode):
         return s.translate(scrub_string.unicode_table)
     raise TypeError("scrub_string expects a string argument")
 

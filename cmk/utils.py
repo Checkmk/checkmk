@@ -30,7 +30,7 @@ Please try to find a better place for the things you want to put here."""
 
 
 def make_utf8(x):
-    if type(x) == unicode:
+    if isinstance(x, unicode):
         return x.encode('utf-8')
     return x
 

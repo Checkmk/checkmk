@@ -260,7 +260,7 @@ def calculate_physical_precision(v, precision):
     # -> a: (2.23399998, -2)  b: (4.5, 6)    c: (1.3756, 2)
     _mantissa, exponent = _frexp10(float(v))
 
-    if type(v) == int:
+    if isinstance(v, int):
         precision = min(precision, exponent + 1)
 
     # Choose a power where no artifical zero (due to rounding) needs to be

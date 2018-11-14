@@ -237,7 +237,7 @@ def save_file(path, content, mode=0660):
 def save_to_mk_file(path, key, value, pprint_value=False):
     format_func = pprint.pformat if pprint_value else repr
 
-    if type(value) == dict:
+    if isinstance(value, dict):
         formated = "%s.update(%s)" % (key, format_func(value))
     else:
         formated = "%s += %s" % (key, format_func(value))

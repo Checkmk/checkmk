@@ -36,6 +36,12 @@ import time
 import traceback
 import subprocess
 import json
+try:
+    # does not exist in Py3, but is super class of str & unicode in py2
+    basestring
+except NameError:
+    basestring = str  # pylint: disable=redefined-builtin
+    unicode = str  # pylint: disable=redefined-builtin
 
 import cmk
 
@@ -171,7 +177,7 @@ def format_var_for_export(val, maxdepth=4, maxsize=1024 * 1024):
         val = new_val
 
     # Check and limit size
-    if type(val) in (str, unicode):
+    if isinstance(val, basestring):
         size = len(val)
         if size > maxsize:
             val = val[:maxsize] + "... (%d bytes stripped)" % (size - maxsize)

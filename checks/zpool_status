@@ -74,14 +74,14 @@ def check_zpool_status(_no_item, _no_params, info):
     elif " ".join(info[0]) == "no pools available":
         return 3, "No pools available"
 
-    start_pool    = False
-    multiline     = False
-    last_pool     = None
-    error_pools   = {}
+    start_pool = False
+    multiline = False
+    last_pool = None
+    error_pools = {}
     warning_pools = {}
     pool_messages = {}
     message = []
-    state   = 0
+    state = 0
 
     for line in info:
         if line[0] == "pool:":
@@ -90,25 +90,25 @@ def check_zpool_status(_no_item, _no_params, info):
             continue
 
         if line[0] == "state:":
-            if   line[1] == "ONLINE":
-                 state = 0
+            if line[1] == "ONLINE":
+                state = 0
             elif line[1] == "DEGRADED":
-                 state = 1
-                 message.append("DEGRADED State")
+                state = 1
+                message.append("DEGRADED State")
             elif line[1] == "FAULTED":
-                 state = 2
-                 message.append("FAULTED State")
+                state = 2
+                message.append("FAULTED State")
             elif line[1] == "UNAVIL":
-                 state = 2
-                 message.append("UNAVIL State")
+                state = 2
+                message.append("UNAVIL State")
             elif line[1] == "REMOVED":
-                 state = 2
-                 message.append("REMOVED State")
+                state = 2
+                message.append("REMOVED State")
             elif line[1] == "OFFLINE":
-                 state = 0
+                state = 0
             else:
-                 message.append("Unknown State")
-                 state = 1
+                message.append("Unknown State")
+                state = 1
             continue
 
         if line[0] in ["status:", "action:"]:
@@ -121,12 +121,12 @@ def check_zpool_status(_no_item, _no_params, info):
             continue
 
         if line[0] == "NAME":
-            multiline  = False
+            multiline = False
             start_pool = True
             continue
 
         if line[0] == "errors:":
-            multiline  = False
+            multiline = False
             start_pool = False
             msg = " ".join(line[1:])
             if msg != 'No known data errors':
@@ -169,8 +169,8 @@ def check_zpool_status(_no_item, _no_params, info):
 
 
 check_info["zpool_status"] = {
-    'check_function'      : check_zpool_status,
-    'inventory_function'  : inventory_zpool_status,
-    'service_description' : 'zpool status',
-    'group'               : 'zpool_status',
+    'check_function': check_zpool_status,
+    'inventory_function': inventory_zpool_status,
+    'service_description': 'zpool status',
+    'group': 'zpool_status',
 }

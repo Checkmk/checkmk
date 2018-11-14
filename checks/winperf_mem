@@ -61,7 +61,8 @@
 
 def inventory_winperf_mem(info):
     if len(info) > 1:
-        return [ (None, {}) ]
+        return [(None, {})]
+
 
 def check_winperf_mem(_unused, params, info):
     init_line = info[0]
@@ -88,10 +89,11 @@ def check_winperf_mem(_unused, params, info):
 
     yield state, "Pages/s: %d" % pages_per_sec, [("mem_pages_rate", pages_per_sec)]
 
+
 check_info["winperf_mem"] = {
-    'check_function':          check_winperf_mem,
-    'inventory_function':      inventory_winperf_mem,
-    'service_description':     'Memory Pages',
-    'group':                   'mem_pages',
-    'has_perfdata':            True
+    'check_function': check_winperf_mem,
+    'inventory_function': inventory_winperf_mem,
+    'service_description': 'Memory Pages',
+    'group': 'mem_pages',
+    'has_perfdata': True
 }

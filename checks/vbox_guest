@@ -24,8 +24,10 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+
 def vbox_guest_make_dict(info):
-    return dict([(l[1].split('/',2)[2].rstrip(','), l[3]) for l in info])
+    return dict([(l[1].split('/', 2)[2].rstrip(','), l[3]) for l in info])
+
 
 def check_vbox_guest(_no_item, _no_params, info):
     if len(info) == 1 and info[0][0] == "ERROR":
@@ -50,14 +52,15 @@ def check_vbox_guest(_no_item, _no_params, info):
         return (1, infotext + ", Host has %s/%s" % (host_version, host_revision))
     return (0, infotext)
 
+
 def inventory_vbox_guest(info):
     if len(info) > 0:
         return [(None, None)]
 
 
 check_info["vbox_guest"] = {
-    'check_function':          check_vbox_guest,
-    'inventory_function':      inventory_vbox_guest,
-    'service_description':     'VBox Guest Additions',
-    'group':                   'vm_state',
+    'check_function': check_vbox_guest,
+    'inventory_function': inventory_vbox_guest,
+    'service_description': 'VBox Guest Additions',
+    'group': 'vm_state',
 }

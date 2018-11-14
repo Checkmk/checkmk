@@ -39,10 +39,10 @@ def check_wmic_process(item, params, info):
         elif "ThreadCount" in legend and psinfo["Name"].lower() == "system idle process":
             cpucores = int(psinfo["ThreadCount"])
         elif psinfo["Name"].lower() == name.lower():
-            count   += 1
-            mem     += int(psinfo["WorkingSetSize"])
-            page    += int(psinfo["PageFileUsage"])
-            userc   += int(psinfo["UserModeTime"])
+            count += 1
+            mem += int(psinfo["WorkingSetSize"])
+            page += int(psinfo["PageFileUsage"])
+            userc += int(psinfo["UserModeTime"])
             kernelc += int(psinfo["KernelModeTime"])
 
     mem_mb = mem / 1048576.0
@@ -53,16 +53,17 @@ def check_wmic_process(item, params, info):
     kernel_perc = kernel_per_sec / 100000.0 / cpucores
     cpu_perc = user_perc + kernel_perc
     perfdata = [
-            ("mem",    mem_mb,      memwarn,  memcrit),
-            ("page",   page_mb,     pagewarn, pagecrit),
-            ("user",   user_perc,   cpuwarn,  cpucrit,  0, 100),
-            ("kernel", kernel_perc, cpuwarn,  cpucrit,  0, 100) ]
+        ("mem", mem_mb, memwarn, memcrit),
+        ("page", page_mb, pagewarn, pagecrit),
+        ("user", user_perc, cpuwarn, cpucrit, 0, 100),
+        ("kernel", kernel_perc, cpuwarn, cpucrit, 0, 100),
+    ]
 
     messages = []
     messages.append("%d processes" % count)
     state = 0
 
-    msg =  "%.0f%%/%.0f%% User/Kernel" % (user_perc, kernel_perc)
+    msg = "%.0f%%/%.0f%% User/Kernel" % (user_perc, kernel_perc)
     if cpu_perc >= cpucrit:
         state = 2
         msg += "(!!) (critical at %d%%)" % cpucrit
@@ -91,9 +92,10 @@ def check_wmic_process(item, params, info):
 
     return (state, ", ".join(messages), perfdata)
 
+
 check_info["wmic_process"] = {
-    'check_function':          check_wmic_process,
-    'service_description':     'Process %s',
-    'has_perfdata':            True,
-    'group':                   'wmic_process'
+    'check_function': check_wmic_process,
+    'service_description': 'Process %s',
+    'has_perfdata': True,
+    'group': 'wmic_process'
 }

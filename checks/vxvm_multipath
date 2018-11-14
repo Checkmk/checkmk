@@ -32,22 +32,23 @@
 # LIO-Sechs_2          ENABLED      aluadisk     1      1     0     LIO-Sechs
 #
 
+
 def check_vxvm_multipath(item, params, info):
     state = 0
     for disk, status_txt, _enc_type, paths, paths_act, paths_inact, enclosure in info:
         if disk == item:
             if paths_act != paths and float(paths_act) >= float(paths) / 2:
                 state = 1
-            elif int(paths_inact) > 0 and float(paths_inact) > float(paths) /2:
+            elif int(paths_inact) > 0 and float(paths_inact) > float(paths) / 2:
                 state = 2
-            return(state, "Status: %s, (%d/%d) Paths to enclosure %s enabled" % (status_txt, int(paths_act), int(paths), enclosure  ))
+            return (state, "Status: %s, (%d/%d) Paths to enclosure %s enabled" %
+                    (status_txt, int(paths_act), int(paths), enclosure))
 
-    return(3, "Item not found")
+    return (3, "Item not found")
 
 
 check_info["vxvm_multipath"] = {
-    "check_function"          : check_vxvm_multipath,
-    "inventory_function"      : lambda info: [(item[0], None) for item in info],
-    "service_description"     : "Multipath %s",
+    "check_function": check_vxvm_multipath,
+    "inventory_function": lambda info: [(item[0], None) for item in info],
+    "service_description": "Multipath %s",
 }
-

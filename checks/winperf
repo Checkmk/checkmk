@@ -39,7 +39,7 @@ def check_win_cpuusage(item, params, info):
         warn, crit = params
     elif isinstance(params, dict):
         warn, crit = params['levels']
-    else: # legacy: old params may be None
+    else:  # legacy: old params may be None
         warn, crit = None, None
 
     for line in info:
@@ -74,9 +74,8 @@ def check_win_cpuusage(item, params, info):
             elif warn is not None and used_perc >= warn:
                 state = 1
             if state:
-                infotext += " (warn/crit at %s/%s)" % (
-                            get_percent_human_readable(warn),
-                            get_percent_human_readable(crit))
+                infotext += " (warn/crit at %s/%s)" % (get_percent_human_readable(warn),
+                                                       get_percent_human_readable(crit))
             return state, infotext, [("cpuusage", "%.2f" % used_perc, warn, crit, 0, 100)]
     return (3, "counter for cpu (238:6) not found")
 
@@ -107,7 +106,7 @@ def check_win_diskstat(item, params, info):
         return
 
     try:
-        read_per_sec  = get_rate("diskstat.read",  this_time, read_bytes_ctr)
+        read_per_sec = get_rate("diskstat.read", this_time, read_bytes_ctr)
         write_per_sec = get_rate("diskstat.write", this_time, write_bytes_ctr)
     except MKCounterWrapped, e:
         # make sure that inital check does not need three cycles for all counters
@@ -115,25 +114,25 @@ def check_win_diskstat(item, params, info):
         get_rate("diskstat.write", this_time, write_bytes_ctr)
         raise e
 
-    perfdata = [ ("read", "%dc" % read_bytes_ctr),
-                 ("write", "%dc" % write_bytes_ctr) ]
-    return (0, "reading %.1f MB/s, writing %.1f MB/s" %
-            (read_per_sec / 1048576, write_per_sec / 1048576), perfdata)
+    perfdata = [("read", "%dc" % read_bytes_ctr), ("write", "%dc" % write_bytes_ctr)]
+    return (
+        0,
+        "reading %.1f MB/s, writing %.1f MB/s" % (read_per_sec / 1048576, write_per_sec / 1048576),
+        perfdata)
 
 
 check_info["winperf.cpuusage"] = {
-    'check_function'            : check_win_cpuusage,
-    'inventory_function'        : inventory_win_cpuusage,
-    'service_description'       : 'CPU Usage',
-    'has_perfdata'              : True,
-    'default_levels_variable'   : 'winperf_cpu_default_levels',
-    'includes'                  : ["winperf.include"],
+    'check_function': check_win_cpuusage,
+    'inventory_function': inventory_win_cpuusage,
+    'service_description': 'CPU Usage',
+    'has_perfdata': True,
+    'default_levels_variable': 'winperf_cpu_default_levels',
+    'includes': ["winperf.include"],
 }
 
-
 check_info["winperf.diskstat"] = {
-    'check_function':          check_win_diskstat,
-    'inventory_function':      inventory_win_diskstat,
-    'service_description':     'Disk IO',
-    'has_perfdata':            True,
+    'check_function': check_win_diskstat,
+    'inventory_function': inventory_win_diskstat,
+    'service_description': 'Disk IO',
+    'has_perfdata': True,
 }

@@ -26,16 +26,15 @@
 
 
 def check_wmi_webservices(item, params, parsed):
-    yield wmi_yield_raw_persec(parsed[""], item, "CurrentConnections",
-                               label=" connections",
-                               perfvar="connections")
+    yield wmi_yield_raw_persec(
+        parsed[""], item, "CurrentConnections", label=" connections", perfvar="connections")
 
 
 check_info['wmi_webservices'] = {
-    'inventory_function'  : inventory_wmi_table_instances,
-    'check_function'      : check_wmi_webservices,
-    'parse_function'      : parse_wmi_table,
-    'has_perfdata'        : True,
-    'service_description' : "Web Service %s",
-    'includes'            : ["wmi.include"]
+    'inventory_function': inventory_wmi_table_instances,
+    'check_function': check_wmi_webservices,
+    'parse_function': parse_wmi_table,
+    'has_perfdata': True,
+    'service_description': "Web Service %s",
+    'includes': ["wmi.include"]
 }

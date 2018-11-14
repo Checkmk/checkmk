@@ -25,8 +25,9 @@
 # Boston, MA 02110-1301 USA.
 
 factory_settings["veeam_client"] = {
-    "age": ( 108000, 172800 ), # 30h/2d
+    "age": (108000, 172800),  # 30h/2d
 }
+
 
 def parse_veeam_client(info):
     data = {}
@@ -52,6 +53,7 @@ def inventory_veeam_client(parsed):
     for job in parsed.keys():
         yield job, {}
 
+
 def check_veeam_client(item, params, parsed):
     # Fallback for old None item version
     #FIXME Can be remvoed in CMK 2.0
@@ -72,13 +74,11 @@ def check_veeam_client(item, params, parsed):
         state = 1
     if data['Status'] == 'Failed':
         state = 2
-    infotexts.append("Status: %s" % data['Status'] )
+    infotexts.append("Status: %s" % data['Status'])
 
     # Only output the Job name
     if data.get('JobName'):
-        infotexts.append("Job: %s" % data['JobName'] )
-
-
+        infotexts.append("Job: %s" % data['JobName'])
 
     size_info = []
     size_legend = []
@@ -103,7 +103,6 @@ def check_veeam_client(item, params, parsed):
 
     infotexts.append("Size (%s): %s" % ("/".join(size_legend), "/ ".join(size_info)))
 
-
     # Bugged agent plugins were reporting . instead of : as separator for
     # the time. This has been fixed in the agent, but be compatible to old agent.
     timesep = ":"
@@ -115,25 +114,28 @@ def check_veeam_client(item, params, parsed):
         state = 2
         infotexts.append("No complete Backup(!!)")
     # If the Backup currently is running, the stop time is strange.
-    elif data['StopTime'] != "01.01.1900 00"+timesep+"00"+timesep+"00":
-        stop_time = time.mktime(time.strptime( data['StopTime'], "%d.%m.%Y %H"+timesep+"%M"+timesep+"%S"))
+    elif data['StopTime'] != "01.01.1900 00" + timesep + "00" + timesep + "00":
+        stop_time = time.mktime(
+            time.strptime(data['StopTime'], "%d.%m.%Y %H" + timesep + "%M" + timesep + "%S"))
         now = time.time()
-        age =  now - stop_time
+        age = now - stop_time
         warn, crit = params['age']
         levels = ""
         label = ""
         if age >= crit:
             state = 2
             label = "(!!)"
-            levels = " (Warn/Crit: %s/%s)" % ( get_age_human_readable(warn), get_age_human_readable(crit))
+            levels = " (Warn/Crit: %s/%s)" % (get_age_human_readable(warn),
+                                              get_age_human_readable(crit))
         elif age >= warn:
             state = max(state, 1)
             label = "(!)"
-            levels = " (Warn/Crit: %s/%s)" % ( get_age_human_readable(warn), get_age_human_readable(crit))
-        infotexts.append("Last backup: %s ago%s%s" % ( get_age_human_readable(age), label, levels ))
+            levels = " (Warn/Crit: %s/%s)" % (get_age_human_readable(warn),
+                                              get_age_human_readable(crit))
+        infotexts.append("Last backup: %s ago%s%s" % (get_age_human_readable(age), label, levels))
 
     # Check duration only if currently not running
-    if data['Status'] not in [ 'InProgress', 'Pending' ]:
+    if data['Status'] not in ['InProgress', 'Pending']:
         # Information may missing
         if data.get('DurationDDHHMMSS'):
             duration = 0
@@ -143,7 +145,7 @@ def check_veeam_client(item, params, parsed):
             duration += hours * 60 * 60
             duration += days * 60 * 60 * 24
             infotexts.append("Duration: %s" % get_age_human_readable(duration))
-            perfdata.append(('duration', duration ))
+            perfdata.append(('duration', duration))
 
     AvgSpeedBps = int(data['AvgSpeedBps'])
     perfdata.append(('avgspeed', AvgSpeedBps))
@@ -155,12 +157,13 @@ def check_veeam_client(item, params, parsed):
 
     return state, ", ".join(infotexts), perfdata
 
+
 check_info["veeam_client"] = {
-    'parse_function':          parse_veeam_client,
-    'check_function':          check_veeam_client,
-    'inventory_function':      inventory_veeam_client,
-    'service_description':     'VEEAM Client %s',
-    'group':                   'veeam_backup',
-    'default_levels_variable' : 'veeam_client',
-    'has_perfdata':            True,
+    'parse_function': parse_veeam_client,
+    'check_function': check_veeam_client,
+    'inventory_function': inventory_veeam_client,
+    'service_description': 'VEEAM Client %s',
+    'group': 'veeam_backup',
+    'default_levels_variable': 'veeam_client',
+    'has_perfdata': True,
 }

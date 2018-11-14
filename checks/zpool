@@ -24,7 +24,6 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-
 # NAME    SIZE  ALLOC   FREE  CAP  HEALTH  ALTROOT
 # app02  39.8G  14.1G  25.6G  35%  ONLINE  -
 # rpool  39.8G  32.9G  6.81G  82%  ONLINE  -
@@ -34,9 +33,7 @@
 # sth_ds      278G   127G   151G    45%  ONLINE  -
 
 
-
 def parse_zpool(info):
-
     def canonize_header_entry(entry):
         if entry == "used":
             return "alloc"
@@ -48,10 +45,11 @@ def parse_zpool(info):
     if len(info) == 0:
         return result
 
-    header = [ canonize_header_entry(item.lower()) for item in info[0]]
+    header = [canonize_header_entry(item.lower()) for item in info[0]]
     for line in info[1:]:
         result[line[0]] = dict(zip(header, line))
     return result
+
 
 def inventory_zpool(parsed):
     return df_inventory(parsed.keys())
@@ -59,7 +57,7 @@ def inventory_zpool(parsed):
 
 def check_zpool(item, params, parsed):
     def mb(val):
-        idx=None
+        idx = None
         # split number from unit
         for idx, ch in enumerate(val):
             if ch not in "0123456789.-":
@@ -68,7 +66,7 @@ def check_zpool(item, params, parsed):
         unit = val[idx:].lstrip().lower()
         unit = ["b", "k", "m", "g", "t"].index(unit)
 
-        return num * (1024 ** (unit - 2))
+        return num * (1024**(unit - 2))
 
     fslist = []
     for pool, entry in parsed.iteritems():
@@ -79,12 +77,11 @@ def check_zpool(item, params, parsed):
 
 
 check_info['zpool'] = {
-    "check_function"      : check_zpool,
-    "inventory_function"  : inventory_zpool,
-    "parse_function"      : parse_zpool,
-    "service_description" : "Storage Pool %s",
-    "has_perfdata"        : True,
-    "group"               : "filesystem",
-    "includes"            : ["size_trend.include", "df.include"],
+    "check_function": check_zpool,
+    "inventory_function": inventory_zpool,
+    "parse_function": parse_zpool,
+    "service_description": "Storage Pool %s",
+    "has_perfdata": True,
+    "group": "filesystem",
+    "includes": ["size_trend.include", "df.include"],
 }
-

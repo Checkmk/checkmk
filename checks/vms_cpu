@@ -35,6 +35,7 @@ def inventory_vms_cpu(info):
     if len(info) > 0:
         return [(None, "vms_cpu_default_levels")]
 
+
 def check_vms_cpu(item, params, info):
     num_cpus = int(info[0][0])
     idle, user, wait_interrupt, wait_npsync = [float(x) / num_cpus for x in info[0][1:]]
@@ -43,15 +44,17 @@ def check_vms_cpu(item, params, info):
     infotext = "user: %2.1f%%, system: %2.1f%%, wait: %2.1f%%" % (user, system, wait)
     state = 0
     perfdata = [
-          ( "user",   user ),
-          ( "system", system ),
-          ( "wait",   wait, 0, 0 ) ]
+        ("user", user),
+        ("system", system),
+        ("wait", wait, 0, 0),
+    ]
     if params:
         warn, crit = params
         perfdata = [
-              ( "user",   user ),
-              ( "system", system ),
-              ( "wait",   wait, warn, crit ) ]
+            ("user", user),
+            ("system", system),
+            ("wait", wait, warn, crit),
+        ]
         if wait >= crit:
             state = 2
             infotext += '(!!)'
@@ -61,10 +64,11 @@ def check_vms_cpu(item, params, info):
 
     return (state, infotext, perfdata)
 
+
 check_info['vms_cpu'] = {
-    "check_function" :      check_vms_cpu,
-    "inventory_function" :  inventory_vms_cpu,
-    "service_description" : "CPU utilization",
-    "has_perfdata" :        True,
-    "group" :               "cpu_iowait",
+    "check_function": check_vms_cpu,
+    "inventory_function": inventory_vms_cpu,
+    "service_description": "CPU utilization",
+    "has_perfdata": True,
+    "group": "cpu_iowait",
 }

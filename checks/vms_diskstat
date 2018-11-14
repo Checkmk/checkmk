@@ -36,8 +36,10 @@
 # $1$DGA1124: TEMP_02 3171743836 102431184 1.10
 # $1$DGA1125: DATA_01 1171743836 202431184 0.20
 
+
 def inventory_vms_diskstat_fs(info):
-    return df_inventory([ line[1] for line in info ])
+    return df_inventory([line[1] for line in info])
+
 
 def check_vms_diskstat_fs(item, params, info):
     for line in info:
@@ -51,11 +53,11 @@ def check_vms_diskstat_fs(item, params, info):
 
 
 check_info['vms_diskstat.df'] = {
-    "check_function" :      check_vms_diskstat_fs,
-    "inventory_function" :  inventory_vms_diskstat_fs,
-    "service_description" : "Filesystem %s",
-    "has_perfdata" :        True,
-    "group" :               "filesystem",
-    "includes" :            [ "size_trend.include", "df.include" ],
-    "default_levels_variable" : "filesystem_default_levels",
+    "check_function": check_vms_diskstat_fs,
+    "inventory_function": inventory_vms_diskstat_fs,
+    "service_description": "Filesystem %s",
+    "has_perfdata": True,
+    "group": "filesystem",
+    "includes": ["size_trend.include", "df.include"],
+    "default_levels_variable": "filesystem_default_levels",
 }

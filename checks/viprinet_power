@@ -24,20 +24,22 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+
 def check_viprinet_power(_no_item, params, info):
     power_map = {
-                    "0" : "no failure",
-                    "1" : "a single PSU is out of order"
-                }
+        "0": "no failure",
+        "1": "a single PSU is out of order",
+    }
     power_info = power_map.get(info[0][0])
     if power_info:
         return (0, power_info)
     return (3, "Invalid power status")
 
+
 check_info["viprinet_power"] = {
-    'check_function'        : check_viprinet_power,
-    'inventory_function'    : lambda info: len(info) > 0 and [(None, None)] or [],
-    'service_description'   : "Power-Supply",
-    'snmp_info'             : (".1.3.6.1.4.1.35424.1.2", [5]),
-    'snmp_scan_function'    : lambda oid: oid(".1.3.6.1.2.1.1.2.0") in [".1.3.6.1.4.1.35424"],
+    'check_function': check_viprinet_power,
+    'inventory_function': lambda info: len(info) > 0 and [(None, None)] or [],
+    'service_description': "Power-Supply",
+    'snmp_info': (".1.3.6.1.4.1.35424.1.2", [5]),
+    'snmp_scan_function': lambda oid: oid(".1.3.6.1.2.1.1.2.0") in [".1.3.6.1.4.1.35424"],
 }

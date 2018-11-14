@@ -33,29 +33,33 @@
 # <<<vms_system>>>
 # 0.00 0.00 15.00
 
+
 def inventory_vms_system(info):
     if len(info) > 0:
         return [(None, None)]
 
+
 def check_vms_system_ios(_no_item, _no_params, info):
     direct_ios, buffered_ios = map(float, info[0][:2])
-    return (0, "Direct IOs: %.2f/sec, Buffered IOs: %.2f/sec" % (
-            direct_ios, buffered_ios), [ ("direct", direct_ios), ("buffered", buffered_ios)])
+    return (0, "Direct IOs: %.2f/sec, Buffered IOs: %.2f/sec" % (direct_ios, buffered_ios),
+            [("direct", direct_ios), ("buffered", buffered_ios)])
+
 
 check_info["vms_system.ios"] = {
-    "check_function" :        check_vms_system_ios,
-    "inventory_function" :    inventory_vms_system,
-    "service_description" :   "IOs",
-    "has_perfdata" :          True,
+    "check_function": check_vms_system_ios,
+    "inventory_function": inventory_vms_system,
+    "service_description": "IOs",
+    "has_perfdata": True,
 }
+
 
 def check_vms_system_procs(_no_item, params, info):
     procs = int(float(info[0][2]))
-    perfdata = [('procs', procs, 0, 0, 0 )]
+    perfdata = [('procs', procs, 0, 0, 0)]
 
     if params:
         warn, crit = params
-        perfdata = [('procs', procs, warn, crit, 0 )]
+        perfdata = [('procs', procs, warn, crit, 0)]
         if procs >= crit:
             return (2, "%d processes (critical at %d)" % (procs, crit), perfdata)
         elif procs >= warn:
@@ -65,10 +69,9 @@ def check_vms_system_procs(_no_item, params, info):
 
 
 check_info["vms_system.procs"] = {
-    "check_function"        : check_vms_system_procs,
-    "inventory_function"    : inventory_vms_system,
-    "service_description"   : "Number of processes",
-    "has_perfdata"          : True,
-    "group"                 : "vms_procs",
+    "check_function": check_vms_system_procs,
+    "inventory_function": inventory_vms_system,
+    "service_description": "Number of processes",
+    "has_perfdata": True,
+    "group": "vms_procs",
 }
-

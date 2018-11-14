@@ -41,7 +41,6 @@
 # A list of all task state can be found here:
 # http://msdn.microsoft.com/en-us/library/aa383604%28VS.85%29.aspx
 
-
 # From here: http://systemcentercore.com/?GetElement=Custom.TaskScheduler2.Task.LastResult.Monitor&Type=UnitMonitor&ManagementPack=Custom.Windows.TaskScheduler.Windows2008.Monitoring&Version=1.1.1.0
 
 # Windows Scheduled Task Last Result Monitor.
@@ -72,8 +71,7 @@ def parse_windows_tasks(info):
 
 
 def inventory_windows_tasks(parsed):
-    return [(n, None) for n, v in parsed.items()
-            if v.get('Scheduled Task State') == "Enabled"]
+    return [(n, None) for n, v in parsed.items() if v.get('Scheduled Task State') == "Enabled"]
 
 
 def check_windows_tasks(item, _no_params, parsed):
@@ -106,8 +104,13 @@ def check_windows_tasks(item, _no_params, parsed):
 
     state = 0
     if last_result not in [
-        "0", "1", "267009", "267014", "267045",
-        "-2147216609", "-2147750687",
+            "0",
+            "1",
+            "267009",
+            "267014",
+            "267045",
+            "-2147216609",
+            "-2147750687",
     ]:
         state = 2
     yield state, infotext
@@ -127,11 +130,9 @@ def check_windows_tasks(item, _no_params, parsed):
         yield 0, ", ".join(additional_infos)
 
 
-
 check_info["windows_tasks"] = {
-    "parse_function"        : parse_windows_tasks,
-    "check_function"        : check_windows_tasks,
-    "inventory_function"    : inventory_windows_tasks,
-    "service_description"   : "Task %s",
+    "parse_function": parse_windows_tasks,
+    "check_function": check_windows_tasks,
+    "inventory_function": inventory_windows_tasks,
+    "service_description": "Task %s",
 }
-

@@ -24,7 +24,6 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-
 # This set of functions are used for checks that handle "generic" windows
 # performance counters as reported via wmi
 # They also work with performance counters reported through other means
@@ -35,7 +34,6 @@
 # AllocatedBytesPersec,Caption,Description,FinalizationSurvivors,Frequency_Object,...
 # 26812621794240,,,32398,0,...
 # 2252985000,,,0,0,...
-
 
 #   .--Parse---------------------------------------------------------------.
 #   |                      ____                                            |
@@ -49,6 +47,7 @@
 
 class NullTable(object):
     """Represents an empty table caused by a WMI timeout."""
+
     def __getattr__(self, name):
         raise MKCounterWrapped('WMI query timed out')
 
@@ -106,11 +105,13 @@ class WMITable(object):
                 if index == self.__key_index:
                     key_field = header
 
-        headers = [name for name, index
-                   in sorted(self.__headers.iteritems(), lambda x, y: x[1] - y[1])]
+        headers = [
+            name for name, index in sorted(self.__headers.iteritems(), lambda x, y: x[1] - y[1])
+        ]
 
-        return "%s(%r, %r, %r, %r, %r, %r)" % (self.__class__.__name__, self.__name, headers, key_field,
-                                               self.__timestamp, self.__frequency, self.__rows)
+        return "%s(%r, %r, %r, %r, %r, %r)" % (self.__class__.__name__, self.__name, headers,
+                                               key_field, self.__timestamp, self.__frequency,
+                                               self.__rows)
 
     def __eq__(self, other):
         if isinstance(other, self.__class__):
@@ -251,6 +252,7 @@ def wmi_filter_global_only(tables, row):
 #   |                                                   |___/              |
 #   '----------------------------------------------------------------------'
 
+
 def _required_tables_missing(tables, required_tables):
     is_subset = set(required_tables).issubset(set(tables.keys()))
     contains_null = any(isinstance(table, NullTable) for table in tables.itervalues())
@@ -279,7 +281,6 @@ def inventory_wmi_table_instances(tables, required_tables=None, filt=None, level
     return [(row, levels) for row in potential_instances if filt is None or filt(tables, row)]
 
 
-
 def inventory_wmi_table_total(tables, required_tables=None, filt=None, levels=None):
     if required_tables is None:
         required_tables = tables.keys()
@@ -290,8 +291,8 @@ def inventory_wmi_table_total(tables, required_tables=None, filt=None, levels=No
     if filt is not None and not filt(tables, None):
         return []
 
-    total_present = all(None in tables[required_table].row_labels()
-                        for required_table in required_tables)
+    total_present = all(
+        None in tables[required_table].row_labels() for required_table in required_tables)
 
     if not total_present:
         return []
@@ -389,8 +390,7 @@ def wmi_yield_raw_persec(table, row, column, label, perfvar, levels=None, perfsc
     except KeyError:
         return 3, "item not present anymore", []
 
-    value_per_sec = get_rate("%s_%s" % (column, table.name()),
-                             get_wmi_time(table, row), value)
+    value_per_sec = get_rate("%s_%s" % (column, table.name()), get_wmi_time(table, row), value)
 
     status, levels_text = wmi_determine_status(value_per_sec, levels)
 
@@ -398,8 +398,7 @@ def wmi_yield_raw_persec(table, row, column, label, perfvar, levels=None, perfsc
             [wmi_make_perfvar(perfvar, value_per_sec, perfscale, levels)])
 
 
-def wmi_yield_raw_counter(table, row, column, label, perfvar,
-                          levels=None, perfscale=1.0):
+def wmi_yield_raw_counter(table, row, column, label, perfvar, levels=None, perfscale=1.0):
     if row == "":
         row = 0
 
@@ -451,10 +450,8 @@ def wmi_calculate_raw_average_time(table, row, column):
 
     sample_time = get_wmi_time(table, row)
 
-    value_per_sec = get_rate("%s_%s" % (column, table.name()),
-                             sample_time, value)
-    base_per_sec  = get_rate("%s_%s_Base" % (column, table.name()),
-                             sample_time, base)
+    value_per_sec = get_rate("%s_%s" % (column, table.name()), sample_time, value)
+    base_per_sec = get_rate("%s_%s_Base" % (column, table.name()), sample_time, base)
 
     if base_per_sec == 0:
         return 0
@@ -471,11 +468,8 @@ def wmi_yield_raw_average(table, row, column, label, perfvar, levels=None, perfs
 
     status, levels_text = wmi_determine_status(average, levels)
 
-    return (
-        status,
-        "%.2f%s%s" % (average, label, levels_text),
-        [wmi_make_perfvar(perfvar, average, perfscale, levels)]
-    )
+    return (status, "%.2f%s%s" % (average, label, levels_text),
+            [wmi_make_perfvar(perfvar, average, perfscale, levels)])
 
 
 def wmi_yield_raw_average_timer(table, row, column, label, perfvar, levels=None, perfscale=1.0):
@@ -487,11 +481,8 @@ def wmi_yield_raw_average_timer(table, row, column, label, perfvar, levels=None,
         return 3, "item not present anymore", []
     status, levels_text = wmi_determine_status(average, levels)
 
-    return (
-        status,
-        "%.2f%s%s" % (average, label, levels_text),
-        [wmi_make_perfvar(perfvar, average, perfscale, levels)]
-    )
+    return (status, "%.2f%s%s" % (average, label, levels_text),
+            [wmi_make_perfvar(perfvar, average, perfscale, levels)])
 
 
 def wmi_yield_raw_fraction(table, row, column, label, perfvar, levels=None):
@@ -504,10 +495,8 @@ def wmi_yield_raw_fraction(table, row, column, label, perfvar, levels=None):
 
     status, levels_text = wmi_determine_status(average, levels)
 
-    return (
-        status,
-        "%.2f%s%s" % (average, label, levels_text),
-        [wmi_make_perfvar(perfvar, average, 1.0, levels, 0, 100)]
-    )
+    return (status, "%.2f%s%s" % (average, label, levels_text),
+            [wmi_make_perfvar(perfvar, average, 1.0, levels, 0, 100)])
+
 
 #.

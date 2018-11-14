@@ -24,7 +24,6 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-
 # <<<websphere_mq_instance:sep(41)>>>
 # QMNAME(QMIMIQ11) STATUS(Running)
 #     INSTANCE(iasv0001) MODE(Active)
@@ -47,7 +46,6 @@
 # MQv8.0.0.5,p800-005-160516.2,64-bit;
 # QMNAME(QMIMIQ11) STATUS(Running as standby) DEFAULT(yes) STANDBY(Permitted) INSTNAME(Installation1) INSTPATH(/usr/mqm) INSTVER(8.0.0.5)
 
-
 #   .--helpers-------------------------------------------------------------.
 #   |                  _          _                                        |
 #   |                 | |__   ___| |_ __   ___ _ __ ___                    |
@@ -60,28 +58,28 @@
 
 def get_websphere_mq_status(what, status, params):
     state, statekey = {
-        "manager" : {
-            "Starting"              : (0, "starting"             ),
-            "Running"               : (0, "running"              ),
-            "Running as standby"    : (0, "running_as_standby"   ),
-            "Running elsewhere"     : (0, "running_elsewhere"    ),
-            "Quiescing"             : (0, "quiescing"            ),
-            "Ending immediately"    : (0, "ending_immediately"   ),
-            "Ending pre-emptively"  : (0, "ending_pre_emptively" ),
-            "Ended normally"        : (0, "ended_normally"       ),
-            "Ended immediately"     : (0, "ended_immediately"    ),
-            "Ended unexpectedly"    : (2, "ended_unexpectedly"   ),
-            "Ended pre-emptively"   : (1, "ended_pre_emptively"  ),
-            "Status not available"  : (0, "status_not_available" ),
+        "manager": {
+            "Starting": (0, "starting"),
+            "Running": (0, "running"),
+            "Running as standby": (0, "running_as_standby"),
+            "Running elsewhere": (0, "running_elsewhere"),
+            "Quiescing": (0, "quiescing"),
+            "Ending immediately": (0, "ending_immediately"),
+            "Ending pre-emptively": (0, "ending_pre_emptively"),
+            "Ended normally": (0, "ended_normally"),
+            "Ended immediately": (0, "ended_immediately"),
+            "Ended unexpectedly": (2, "ended_unexpectedly"),
+            "Ended pre-emptively": (1, "ended_pre_emptively"),
+            "Status not available": (0, "status_not_available"),
         },
-        "standby" : {
-            "Permitted"      : (0, "permitted"),
-            "Not permitted"  : (0, "not_permitted"),
-            "Not applicable" : (0, "not_applicable"),
+        "standby": {
+            "Permitted": (0, "permitted"),
+            "Not permitted": (0, "not_permitted"),
+            "Not applicable": (0, "not_applicable"),
         },
-        "instance" : {
-            "Active"  : (0, "active"),
-            "Standby" : (0, "standby"),
+        "instance": {
+            "Active": (0, "active"),
+            "Standby": (0, "standby"),
         }
     }[what].get(status, (3, "unknown"))
 
@@ -99,7 +97,7 @@ def parse_websphere_mq_instance(info):
                 data.setdefault(key.strip(), exp.strip())
         return data
 
-    parsed = { "manager" : {}, "instances" : {} }
+    parsed = {"manager": {}, "instances": {}}
     for line in info:
         data = get_data_of_line(line)
         if data:
@@ -130,26 +128,25 @@ def parse_websphere_mq_instance(info):
 
 
 def inventory_websphere_mq_instance(parsed):
-    return [ (item, {}) for item in parsed["instances"] ]
+    return [(item, {}) for item in parsed["instances"]]
 
 
 def check_websphere_mq_instance(item, params, parsed):
     if item in parsed["instances"]:
-        data    = parsed["instances"][item]
-        mode    = data["MODE"]
+        data = parsed["instances"][item]
+        mode = data["MODE"]
         qm_name = data["QMNAME"]
         return get_websphere_mq_status("instance", mode, params), \
                'Status: %s, Manager: %s' % (mode.lower(), qm_name)
 
 
 check_info['websphere_mq_instance'] = {
-    'parse_function'        : parse_websphere_mq_instance,
-    'inventory_function'    : inventory_websphere_mq_instance,
-    'check_function'        : check_websphere_mq_instance,
-    'service_description'   : 'MQ Instance %s',
-    'group'                 : 'websphere_mq_instance',
+    'parse_function': parse_websphere_mq_instance,
+    'inventory_function': inventory_websphere_mq_instance,
+    'check_function': check_websphere_mq_instance,
+    'service_description': 'MQ Instance %s',
+    'group': 'websphere_mq_instance',
 }
-
 
 #.
 #   .--manager-------------------------------------------------------------.
@@ -169,17 +166,17 @@ def inventory_websphere_mq_manager(parsed):
 
 def check_websphere_mq_manager(item, params, parsed):
     if item in parsed["manager"]:
-        data    = parsed["manager"][item]
-        status  = data["STATUS"]
+        data = parsed["manager"][item]
+        status = data["STATUS"]
         standby = data.get("STANDBY", "")
-        installation_name    = data.get("INSTNAME")
-        installation_path    = data.get("INSTPATH")
+        installation_name = data.get("INSTNAME")
+        installation_path = data.get("INSTPATH")
         installation_version = data.get("INSTVER")
 
         instances_modes = []
         for _instance, instance_info in parsed["instances"].items():
             if instance_info["QMNAME"] == item:
-                instances_modes.append( instance_info["MODE"] )
+                instances_modes.append(instance_info["MODE"])
 
         yield get_websphere_mq_status("manager", status, params), \
               'Status: %s' % status.lower()
@@ -193,7 +190,7 @@ def check_websphere_mq_manager(item, params, parsed):
                 state = 1
                 standby_info += " (standalone but %d instances)" % len(instances_modes)
         elif standby == "Permitted":
-            if instances_modes in [ [ "Active", "Standby" ], [ "Standby", "Active" ] ]:
+            if instances_modes in [["Active", "Standby"], ["Standby", "Active"]]:
                 state = 0
             else:
                 state = 1
@@ -208,16 +205,18 @@ def check_websphere_mq_manager(item, params, parsed):
         yield state, "Standby: %s" % standby_info.strip()
         yield 0, "Default: %s" % data["DEFAULT"]
 
-        for what, title in [ (installation_name,    "Name"),
-                             (installation_path,    "Path"),
-                             (installation_version, "Version") ]:
+        for what, title in [
+            (installation_name, "Name"),
+            (installation_path, "Path"),
+            (installation_version, "Version"),
+        ]:
             if what:
                 yield 0, "%s: %s" % (title, what)
 
 
 check_info['websphere_mq_instance.manager'] = {
-    'inventory_function'    : inventory_websphere_mq_manager,
-    'check_function'        : check_websphere_mq_manager,
-    'service_description'   : 'MQ Manager %s',
-    'group'                 : 'websphere_mq_manager',
+    'inventory_function': inventory_websphere_mq_manager,
+    'check_function': check_websphere_mq_manager,
+    'service_description': 'MQ Manager %s',
+    'group': 'websphere_mq_manager',
 }

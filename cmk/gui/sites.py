@@ -24,7 +24,10 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import livestatus
+from typing import List, Tuple  # pylint: disable=unused-import
+
+# suppress "Cannot fine module" error from mypy
+import livestatus  # type: ignore
 
 import cmk
 

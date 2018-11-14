@@ -32,6 +32,7 @@ are just for optical output purposes."""
 
 import time
 import math
+from typing import Tuple  # pylint: disable=unused-import
 
 from cmk.i18n import _
 
@@ -149,7 +150,7 @@ def approx_age(secs):
 
 
 def scale_factor_prefix(value, base, prefixes=('', 'k', 'M', 'G', 'T', 'P')):
-    # type: (int, float, Tuple[str]) -> (float, str)
+    # type: (int, float, Tuple[str, ...]) -> Tuple[float, str]
     base = float(base)
 
     prefix = prefixes[-1]
@@ -163,7 +164,7 @@ def scale_factor_prefix(value, base, prefixes=('', 'k', 'M', 'G', 'T', 'P')):
 
 
 def fmt_bytes(b, base=1024.0, precision=2, unit="B"):
-    # type: (int, float, bool, str) -> str
+    # type: (int, float, int, str) -> str
     """Formats byte values to be used in texts for humans.
 
     Takes bytes as integer and returns a string which represents the bytes in a

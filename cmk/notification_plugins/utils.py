@@ -23,7 +23,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-from typing import Dict, Optional  # pylint: disable=unused-import
+from typing import AnyStr, Dict, Optional, Tuple  # pylint: disable=unused-import
 import os
 import re
 import requests
@@ -32,7 +32,8 @@ import sys
 
 try:
     # First try python3
-    from html import escape as html_escape
+    # suppress missing import error from mypy
+    from html import escape as html_escape  # type: ignore
 except ImportError:
     # Default to python2
     from cgi import escape as html_escape
@@ -51,7 +52,7 @@ def collect_context():
 
 
 def extend_context_with_link_urls(context, link_template):
-    # type: (Dict, str) -> None
+    # type: (Dict, AnyStr) -> None
 
     host_url, service_url = cmk_links(context)
 
@@ -67,7 +68,7 @@ def extend_context_with_link_urls(context, link_template):
 
 
 def cmk_links(context):
-    # type: (Dict) -> (Optional[str], Optional[str])
+    # type: (Dict) -> Tuple[Optional[str], Optional[str]]
     if context.get("PARAMETER_URL_PREFIX"):
         url_prefix = context["PARAMETER_URL_PREFIX"]
     elif context.get("PARAMETER_URL_PREFIX_MANUAL"):

@@ -28,8 +28,10 @@ import os
 import pathlib2 as pathlib
 from typing import Dict, Text  # pylint: disable=unused-import
 
-from passlib.context import CryptContext
-from passlib.hash import sha256_crypt
+# TODO: Import errors from passlib are suppressed right now since now
+# stub files for mypy are not available.
+from passlib.context import CryptContext  # type: ignore
+from passlib.hash import sha256_crypt  # type: ignore
 
 import cmk.paths
 import cmk.store as store
@@ -56,7 +58,7 @@ class Htpasswd(object):
         self._path = path
 
     def load(self):
-        # type: (None) -> Dict[Text, Text]
+        # type: () -> Dict[Text, Text]
         """Loads the contents of a valid htpasswd file into a dictionary and returns the dictionary"""
         entries = {}
 
@@ -71,8 +73,8 @@ class Htpasswd(object):
         return entries
 
     def exists(self, user_id):
-        """Whether or not a user exists according to the htpasswd file"""
         # type: (Text) -> bool
+        """Whether or not a user exists according to the htpasswd file"""
         return user_id in self.load()
 
     def save(self, entries):

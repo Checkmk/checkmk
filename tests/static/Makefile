@@ -1,16 +1,15 @@
-FILES_TO_CHECK := $(realpath ../../cmk)\
-		  $(realpath ../../cmk/gui/app/index.wsgi)
+FILES_TO_CHECK := $(realpath $(addprefix ../../cmk/ec/,defaults.py export.py main.py settings.py)) \
+		  $(realpath $(addprefix ../../cmk/,daemon.py i18n.py paths.py regex.py render.py structured_data.py)) \
+		  $(realpath $(addprefix ../../cmk/gui/,dashboard.py exceptions.py globals.py htmllib.py http_status.py \
+																						i18n.py sidebar.py sites.py table.py visuals.py)) \
+		  $(realpath $(addprefix ../../cmk/gui/plugins/userdb/,htpasswd.py utils.py)) \
+		  $(realpath $(addprefix ../../cmk/gui/plugins/wato/utils/,base_modes.py)) \
+		  $(realpath $(addprefix ../../cmk/notification_plugins/,pagerduty.py slack.py utils.py victorops.py)) \
+			$(realpath $(addprefix ../../cmk_base/,check_api.py))
 MYPYPATH       := $(realpath typeshed)
 PIPENV         := PIPENV_NO_INHERIT=true PIPENV_VENV_IN_PROJECT=true pipenv
 
-.PHONY: sanitize format format-yapf test-mypy
-
-sanitize: format test-mypy
-
-format: format-yapf
-
-format-yapf: .venv
-	$(PIPENV) run yapf -i $(FILES_TO_CHECK)
+.PHONY: test-mypy
 
 test-mypy: .venv
 	MYPYPATH="$(MYPYPATH)" $(PIPENV) run mypy --py2 --follow-imports=silent --strict-optional $(FILES_TO_CHECK)

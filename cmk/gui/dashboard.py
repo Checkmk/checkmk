@@ -27,6 +27,9 @@
 import time
 import copy
 import json
+from typing import (  # pylint: disable=unused-import
+    Any, Dict, Optional,
+)
 
 import cmk.gui.pages
 import cmk.gui.notify as notify
@@ -122,7 +125,7 @@ def load_plugins(force):
 class LegacyDashlet(cmk.gui.plugins.dashboard.IFrameDashlet):
     """Helper to be able to handle pre 1.6 dashlet_type declared dashlets"""
     _type_name = ""
-    _spec = {}
+    _spec = {}  # type: Dict[str, Any]
 
     @classmethod
     def type_name(cls):
@@ -232,9 +235,9 @@ class LegacyDashlet(cmk.gui.plugins.dashboard.IFrameDashlet):
             self._show_initial_iframe_container()
 
     def _get_iframe_url(self):
-        # type: (str, dict, int, dict) -> Union[None, str]
+        # type: () -> Optional[str]
         if not self.is_iframe_dashlet():
-            return
+            return None
 
         if "iframe_urlfunc" in self._spec:
             # Optional way to render a dynamic iframe URL

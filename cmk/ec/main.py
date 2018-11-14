@@ -46,10 +46,11 @@ import sys
 import threading
 import time
 import traceback
-from typing import Any, Dict, List, Optional, Tuple  # pylint: disable=unused-import
+from typing import Any, Dict, List, Optional, Tuple, Union  # pylint: disable=unused-import
 try:
     # does not exist in Py3, but is super class of str & unicode in py2
-    basestring
+    # suppress mypys "Cannot determine type of 'basestring'" error
+    basestring  # type: ignore
 except NameError:
     basestring = str  # pylint: disable=redefined-builtin
     unicode = str  # pylint: disable=redefined-builtin
@@ -68,7 +69,8 @@ import cmk.profile
 import cmk.render
 import cmk.regex
 
-import livestatus
+# suppress "Cannot fine module" error from mypy
+import livestatus  # type: ignore
 
 
 class SyslogPriority(object):
@@ -2284,7 +2286,7 @@ class RuleMatcher(object):
         return self._check_match_outcome(rule, match_groups, match_priority)
 
     def _check_match_outcome(self, rule, match_groups, match_priority):
-        # type: (Dict[str, Any], Dict[str, Any], Dict[str, Any]) -> Tuple[bool, Dict[str, Any]]
+        # type: (Dict[str, Any], Dict[str, Any], Dict[str, Any]) -> Union[bool, Tuple[bool, Dict[str, Any]]]
         """Decide or not a event is created, canceled or nothing is done"""
 
         # Check canceling-event

@@ -30,6 +30,7 @@ import sys
 import traceback
 import json
 import importlib
+from typing import Dict, List, Type  # pylint: disable=unused-import
 
 import cmk.gui.pages
 import cmk.gui.utils as utils
@@ -1016,7 +1017,7 @@ def get_filter(name):
 
 
 def filters_allowed_for_info(info):
-    # type (str) -> Dict[str, Type[Filter]]
+    # type: (str) -> Dict[str, Type[Filter]]
     """Returns a map of filter names and filter objects that are registered for the given info"""
     allowed = {}
     for fname, filt in multisite_filters.items():
@@ -1026,7 +1027,7 @@ def filters_allowed_for_info(info):
 
 
 def filters_allowed_for_infos(infos):
-    # type (List[str]) -> Dict[str, Type[Filter]]
+    # type: (List[str]) -> Dict[str, Type[Filter]]
     """Same as filters_allowed_for_info() but for multiple infos"""
     filters = {}
     for info in infos:

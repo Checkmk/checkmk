@@ -93,11 +93,12 @@ Global variables:
 # We import several modules here for the checks
 # pylint: disable=unused-import
 
-from typing import List, Dict, Tuple, Union, Optional, Iterable  # pylint: disable=unused-import
+from typing import Callable, Dict, Iterable, List, Optional, Tuple, Union  # pylint: disable=unused-import
 
 try:
     # does not exist in Py3, but is super class of str & unicode in py2
-    basestring
+    # suppress mypy error "Cannot determine type of 'basestring'"
+    basestring  # type: ignore
 except NameError:
     basestring = str  # pylint: disable=redefined-builtin
     unicode = str  # pylint: disable=redefined-builtin
@@ -531,7 +532,7 @@ def discover_single(info):
 
 
 def validate_filter(filter_function):
-    # type: Callable -> Callable
+    # type: (Callable) -> Callable
     """Validate function argument is a callable and return it"""
 
     if callable(filter_function):

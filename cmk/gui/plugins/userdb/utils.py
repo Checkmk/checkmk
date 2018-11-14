@@ -25,6 +25,7 @@
 # Boston, MA 02110-1301 USA.
 
 import abc
+from typing import Optional  # pylint: disable=unused-import
 
 import cmk.plugin_registry
 

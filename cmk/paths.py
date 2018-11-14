@@ -33,8 +33,8 @@ import os
 #
 
 # TODO: Add piggyback_dir and use it in code
-omd_root = None  # type: str
-default_config_dir = None  # type: str
+omd_root = ''  # type: str
+default_config_dir = ''  # type: str
 main_config_file = None
 final_config_file = None
 local_config_file = None
@@ -77,7 +77,7 @@ mibs_dir = None
 web_dir = None
 pnp_templates_dir = None
 doc_dir = None
-locale_dir = None  # type: str
+locale_dir = ''  # type: str
 bin_dir = None
 lib_dir = None
 mib_dir = None
@@ -93,7 +93,7 @@ local_mibs_dir = None
 local_web_dir = None
 local_pnp_templates_dir = None
 local_doc_dir = None
-local_locale_dir = None  # type: str
+local_locale_dir = ''  # type: str
 local_bin_dir = None
 local_lib_dir = None
 local_mib_dir = None

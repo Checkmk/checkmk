@@ -110,10 +110,6 @@ else ifneq ($(filter $(DISTRO_CODE),el6),)
     MODULES += cryptography-1.5.3.tar.gz
     PATCHES += patches/0004-CMS_DEBUG_DECRYPT-fix.patch
     PATCHES += patches/0009-cryptography-1.5.3-disable-version-warning.patch
-else ifneq ($(filter $(DISTRO_CODE),lenny),)
-# NOTE: This branch is probably dead...
-    MODULES += asn1crypto-0.24.0.tar.gz
-    MODULES += cryptography-1.9.tar.gz
 else
     MODULES += asn1crypto-0.24.0.tar.gz
     MODULES += cryptography-2.3.1.tar.gz

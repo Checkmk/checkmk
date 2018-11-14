@@ -30,7 +30,8 @@
 # .1.3.6.1.4.1.3717.2.1.1.6.2 = INTEGER: 1268
 # .1.3.6.1.4.1.3717.2.1.1.6.3 = INTEGER: 1
 
-genua_pfstate_default_levels = { "used": ( None , None ) }
+genua_pfstate_default_levels = {"used": (None, None)}
+
 
 def inventory_genua_pfstate(info):
     # remove empty elements due to alternative enterprise id in snmp_info
@@ -40,15 +41,15 @@ def inventory_genua_pfstate(info):
         return
 
     if len(info[0][0]) == 3:
-        return [ (None, genua_pfstate_default_levels) ]
+        return [(None, genua_pfstate_default_levels)]
 
 
 def pfstate(st):
     names = {
-                '0' : 'notOK',
-                '1' : 'OK',
-                '2' : 'unknown',
-            }
+        '0': 'notOK',
+        '1': 'OK',
+        '2': 'unknown',
+    }
     return names.get(st, st)
 
 
@@ -62,9 +63,9 @@ def check_genua_pfstate(item, params, info):
             pfstateUsed = saveint(info[0][0][1])
             pfstateStatus = info[0][0][2]
     else:
-        return(3, "Invalid Output from Agent")
+        return (3, "Invalid Output from Agent")
 
-    warn,crit = params.get("used")
+    warn, crit = params.get("used")
     if crit is None:
         crit = pfstateMax
 
@@ -85,24 +86,31 @@ def check_genua_pfstate(item, params, info):
     pfstatus = pfstate(str(pfstateStatus))
     infotext = "PF State: %s%s States used: %d%s States max: %d" \
                 % (pfstatus, statussym, pfstateUsed, usedsym, pfstateMax )
-    perfdata = [ ( "statesused", pfstateUsed, None, pfstateMax ) ]
+    perfdata = [("statesused", pfstateUsed, None, pfstateMax)]
     return (state, infotext, perfdata)
 
+
 check_info['genua_pfstate'] = {
-    "inventory_function" : inventory_genua_pfstate,
-    "check_function"     : check_genua_pfstate,
+    "inventory_function": inventory_genua_pfstate,
+    "check_function": check_genua_pfstate,
     "service_description": "Paketfilter Status",
-    "has_perfdata"       : True,
-    "group"              : "pf_used_states",
-    "snmp_info"          : [( ".1.3.6.1.4.1.3717.2.1.1.6",[
-                                1, # "pfstateMax"
-                                2, # "pfstateUsed"
-                                3, # "pfstateStatus"
-                            ]),
-                            ( ".1.3.6.1.4.1.3137.2.1.1.6",[
-                                1, # "pfstateMax"
-                                2, # "pfstateUsed"
-                                3, # "pfstateStatus"
-                          ])],
-    "snmp_scan_function" : lambda oid: "genuscreen" in oid(".1.3.6.1.2.1.1.1.0").lower()
+    "has_perfdata": True,
+    "group": "pf_used_states",
+    "snmp_info": [
+        (
+            ".1.3.6.1.4.1.3717.2.1.1.6",
+            [
+                1,  # "pfstateMax"
+                2,  # "pfstateUsed"
+                3,  # "pfstateStatus"
+            ]),
+        (
+            ".1.3.6.1.4.1.3137.2.1.1.6",
+            [
+                1,  # "pfstateMax"
+                2,  # "pfstateUsed"
+                3,  # "pfstateStatus"
+            ])
+    ],
+    "snmp_scan_function": lambda oid: "genuscreen" in oid(".1.3.6.1.2.1.1.1.0").lower()
 }

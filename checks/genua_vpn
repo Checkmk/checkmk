@@ -49,8 +49,9 @@
 # .1.3.6.1.4.1.3717.2.1.3.1.6.3 2
 # .1.3.6.1.4.1.3717.2.1.3.1.6.4 2
 
+
 def inventory_genua_vpn(info):
-    return [ (line[0], None) for line in info ]
+    return [(line[0], None) for line in info]
 
 
 def check_genua_vpn(item, params, info):
@@ -69,16 +70,18 @@ def check_genua_vpn(item, params, info):
 
 
 check_info['genua_vpn'] = {
-    'inventory_function'        : inventory_genua_vpn,
-    'check_function'            : check_genua_vpn,
-    'service_description'       : 'VPN %s',
-    'snmp_info'                 : (".1.3.6.1.4.1.3717.2.1.3.1", [
-                                        "1",    # vpn id
-                                        "2",    # hostname opposite
-                                        "3",    # ip opposite
-                                        "4",    # vpn private
-                                        "5",    # vpn remote
-                                        "6",    # vpn status (2:OK, 1:FAULT)
-                                  ]),
-    'snmp_scan_function'        : lambda oid: "genuscreen" in oid(".1.3.6.1.2.1.1.1.0").lower(),
+    'inventory_function': inventory_genua_vpn,
+    'check_function': check_genua_vpn,
+    'service_description': 'VPN %s',
+    'snmp_info': (
+        ".1.3.6.1.4.1.3717.2.1.3.1",
+        [
+            "1",  # vpn id
+            "2",  # hostname opposite
+            "3",  # ip opposite
+            "4",  # vpn private
+            "5",  # vpn remote
+            "6",  # vpn status (2:OK, 1:FAULT)
+        ]),
+    'snmp_scan_function': lambda oid: "genuscreen" in oid(".1.3.6.1.2.1.1.1.0").lower(),
 }

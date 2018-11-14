@@ -57,8 +57,7 @@ test-format-python: $(VENV) ../.style.yapf
 	PYTHON_FILES=$${PYTHON_FILES-$$(./find-python-files)} ; \
 	$(YAPF) --parallel --style ../.style.yapf --verbose --diff $$PYTHON_FILES | \
 		grep '^+++ .*(reformatted)$$' | \
-		sed -e 's/^+++ //' -e 's/[[:blank:]]*(reformatted)$$/:1:1: error: file needs formatting/' ; \
-	exit $${PIPESTATUS[0]}
+		sed -e 's/^+++ //' -e 's/[[:blank:]]*(reformatted)$$/:1:1: error: file needs formatting/'
 
 test-gui-crawl: $(VENV)
 	$(PYTEST) -T gui_crawl

@@ -5051,7 +5051,10 @@ class ActivateChangesManager(ActivateChanges):
 
 
     def _load_activation(self):
-        self.__dict__.update(store.load_data_from_file(self._info_path(), {}))
+        try:
+            self.__dict__.update(store.load_data_from_file(self._info_path(), {}))
+        except MKGeneralException, e:
+            raise MKUserError(None, str(e))
 
 
     def _save_activation(self):

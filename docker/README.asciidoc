@@ -21,7 +21,7 @@ Quick start
 You can start a Check_MK container like this:
 
 ....
-docker container run -dit -p 8080:5000 --tmpfs /omd/sites/cmk/tmp -v /omd/sites --name monitoring -v /etc/localtime:/etc/localtime --restart always checkmk/check-mk-raw:1.5.0p5
+docker container run -dit -p 8080:5000 -v /omd/sites --name monitoring -v /etc/localtime:/etc/localtime --restart always checkmk/check-mk-raw:1.5.0p5
 ....
 
 The Check_MK GUI should now be reachable via
@@ -49,7 +49,9 @@ it. For more flexible options or HTTPS have a look below
 |`--tmpfs /omd/sites/cmk/tmp`
 |For best performance you should mount a
 tmpfs at the sites `tmp` directory. In case you rename your site ID (see
-below for details), you will have to change this path.
+below for details), you will have to change this path. This option seems
+to be unstable and not working for some distributions. Therefore it is not included
+in our example command, although we recommend it for best performance.
 
 |`-v /omd/sites`
 |This makes all site data be persisted even when the container is

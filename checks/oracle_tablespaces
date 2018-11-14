@@ -30,7 +30,6 @@
 # This restriction is only working with newer agents, because we need an
 # additional parameter at end if each datafile
 
-
 # This definition needs to be removed at a later stage
 # A previous version of this check didn't write the parameter
 # name into the autochecks file, but the parameter itself
@@ -39,10 +38,10 @@
 oracle_tablespaces_default_levels = (10.0, 5.0)
 
 factory_settings["oracle_tablespaces_defaults"] = {
-    "levels"           : (10.0, 5.0),
-    "magic_normsize"   : 1000,
-    "magic_maxlevels"  : (60.0, 50.0),
-    "defaultincrement" : True,
+    "levels": (10.0, 5.0),
+    "magic_normsize": 1000,
+    "magic_maxlevels": (60.0, 50.0),
+    "defaultincrement": True,
 }
 
 # Whether to check auto extend settings. Note: this setting is not ment to
@@ -86,16 +85,16 @@ oracle_tablespaces_check_default_increment = True
 
 def parse_oracle_tablespaces(info):
     tablespaces = {}
-    error_sids  = {}
+    error_sids = {}
 
     for line in info:
         node_name = line[0]
-        line      = line[1:]
+        line = line[1:]
 
         # Check for query errors
         err = oracle_handle_ora_errors(line)
         if err is False:
-            continue # ignore ancient agent outputs
+            continue  # ignore ancient agent outputs
         elif isinstance(err, tuple):
             sid = line[0]
             error_sids[sid] = err
@@ -121,33 +120,33 @@ def parse_oracle_tablespaces(info):
         tablespaces.setdefault((node_name, sid, ts_name, db_version), [])
 
         this_tablespace = {
-            "name"               : datafile_name,
-            "status"             : datafile_status,
-            "autoextensible"     : autoextensible == "YES",
-            "ts_type"            : ts_type,
-            "ts_status"          : ts_status,
-            "file_online_status" : file_online_status,
+            "name": datafile_name,
+            "status": datafile_status,
+            "autoextensible": autoextensible == "YES",
+            "ts_type": ts_type,
+            "ts_status": ts_status,
+            "file_online_status": file_online_status,
         }
 
         try:
             bs = int(block_size)
             this_tablespace.update({
-                "block_size"         : bs,
-                "size"               : int(filesize_blocks) * bs,
-                "max_size"           : int(max_filesize_blocks) * bs,
-                "used_size"          : int(used_blocks) * bs,
-                "free_space"         : int(free_space) * bs,
-                "increment_size"     : int(increment_size) * bs,
+                "block_size": bs,
+                "size": int(filesize_blocks) * bs,
+                "max_size": int(max_filesize_blocks) * bs,
+                "used_size": int(used_blocks) * bs,
+                "free_space": int(free_space) * bs,
+                "increment_size": int(increment_size) * bs,
             })
 
         except:
             this_tablespace.update({
-                "block_size"         : None,
-                "size"               : None,
-                "max_size"           : None,
-                "used_size"          : None,
-                "free_space"         : None,
-                "increment_size"     : None,
+                "block_size": None,
+                "size": None,
+                "max_size": None,
+                "used_size": None,
+                "free_space": None,
+                "increment_size": None,
             })
 
         tablespaces[(node_name, sid, ts_name, db_version)].append(this_tablespace)
@@ -164,11 +163,11 @@ def parse_oracle_tablespaces(info):
            len(result[ts_key]["datafiles"]) < len(datafiles):
 
             result[ts_key] = {
-                "db_version"     : db_version,
-                "datafiles"      : datafiles,
-                "type"           : datafiles[0]["ts_type"],
-                "status"         : datafiles[0]["ts_status"],
-                "autoextensible" : False,
+                "db_version": db_version,
+                "datafiles": datafiles,
+                "type": datafiles[0]["ts_type"],
+                "status": datafiles[0]["ts_status"],
+                "autoextensible": False,
                 "amount_missing_filenames": len([f for f in datafiles if f['name'] == ''])
             }
 
@@ -182,13 +181,13 @@ def parse_oracle_tablespaces(info):
 def inventory_oracle_tablespaces(parsed):
     tablespaces, _error_sids = parsed
     for (sid, ts_name), tablespace in tablespaces.items():
-        if tablespace["status"] in ( "ONLINE", "READONLY", "OFFLINE" ):
+        if tablespace["status"] in ("ONLINE", "READONLY", "OFFLINE"):
             if oracle_tablespaces_check_autoext:
                 ae = tablespace["autoextensible"]
             else:
-                ae = None # means: ignore, only display setting
+                ae = None  # means: ignore, only display setting
 
-            parameters = { "autoextend" : ae }
+            parameters = {"autoextend": ae}
             yield "%s.%s" % (sid, ts_name), parameters
 
 
@@ -199,7 +198,7 @@ def check_oracle_tablespaces(item, params, parsed):
             cdb, pdb, ts_name = item.split('.')
             sid = cdb + "." + pdb
         else:
-            sid, ts_name = item.split('.',1)
+            sid, ts_name = item.split('.', 1)
     except ValueError:
         yield 3, 'Invalid check item (must be <SID>.<tablespace>)'
         return
@@ -218,23 +217,23 @@ def check_oracle_tablespaces(item, params, parsed):
     if not tablespace or tablespace["status"] is None:
         raise MKCounterWrapped("Login into database failed")
 
-    ts_type        = tablespace["type"]
-    ts_status      = tablespace["status"]
-    db_version     = tablespace["db_version"]
-    num_files      = 0
-    num_avail      = 0
+    ts_type = tablespace["type"]
+    ts_status = tablespace["status"]
+    db_version = tablespace["db_version"]
+    num_files = 0
+    num_avail = 0
     num_extensible = 0
-    current_size   = 0
-    max_size       = 0
-    used_size      = 0
+    current_size = 0
+    max_size = 0
+    used_size = 0
     num_increments = 0
     increment_size = 0
-    free_space     = 0
+    free_space = 0
     file_online_states = {}
 
     # Conversion of old autochecks params
     if type(params) == tuple:
-        params = { "autoextend" : params[0], "levels" : params[1:] }
+        params = {"autoextend": params[0], "levels": params[1:]}
 
     autoext = params.get("autoextend")
     uses_default_increment = False
@@ -251,15 +250,15 @@ def check_oracle_tablespaces(item, params, parsed):
     for datafile in tablespace["datafiles"]:
 
         df_file_online_status = datafile["file_online_status"]
-        if df_file_online_status in [ "OFFLINE", "RECOVER" ]:
+        if df_file_online_status in ["OFFLINE", "RECOVER"]:
 
             file_online_states_params = dict(params.get("map_file_online_states", []))
             if datafile["block_size"] is not None and file_online_states_params and \
                df_file_online_status in file_online_states_params:
 
                 file_online_states.setdefault(df_file_online_status, {
-                    "state" : file_online_states_params[df_file_online_status],
-                    "sids"  : [],
+                    "state": file_online_states_params[df_file_online_status],
+                    "sids": [],
                 })
                 file_online_states[df_file_online_status]["sids"].append(sid)
 
@@ -268,28 +267,28 @@ def check_oracle_tablespaces(item, params, parsed):
                 return
 
         num_files += 1
-        if datafile["status"] in [ "AVAILABLE", "ONLINE", "READONLY" ]:
-            df_size       = datafile["size"]
+        if datafile["status"] in ["AVAILABLE", "ONLINE", "READONLY"]:
+            df_size = datafile["size"]
             df_free_space = datafile["free_space"]
-            df_max_size   = datafile["max_size"]
+            df_max_size = datafile["max_size"]
 
-            num_avail    += 1
+            num_avail += 1
             current_size += df_size
-            used_size    += df_size - df_free_space
+            used_size += df_size - df_free_space
 
             # Autoextensible? Honor max size. Everything is computed in
             # *Bytes* here!
             if datafile["autoextensible"]:
                 num_extensible += 1
-                incsize         = datafile["increment_size"]
+                incsize = datafile["increment_size"]
 
                 if df_size > df_max_size:
-                    max_size       += df_size
+                    max_size += df_size
                     # current file size > df_max_size => no more extents available
-                    free_extension  = 0
+                    free_extension = 0
                 else:
-                    max_size       += df_max_size
-                    free_extension  = df_max_size - df_size # free extension space
+                    max_size += df_max_size
+                    free_extension = df_max_size - df_size  # free extension space
 
                 if incsize == datafile["block_size"]:
                     uses_default_increment = True
@@ -310,7 +309,7 @@ def check_oracle_tablespaces(item, params, parsed):
 
             # not autoextensible: take current size as maximum
             else:
-                max_size   += df_size
+                max_size += df_size
                 free_space += df_free_space
 
     infotexts = ["%s (%s), Size: %s, %s used (%s of max. %s), Free: %s" % \
@@ -379,13 +378,13 @@ def check_oracle_tablespaces(item, params, parsed):
 
 # If something changes adapt calculations in related inventory plugin
 check_info['oracle_tablespaces'] = {
-    "parse_function"          : parse_oracle_tablespaces,
-    "inventory_function"      : inventory_oracle_tablespaces,
-    "check_function"          : check_oracle_tablespaces,
-    "service_description"     : "ORA %s Tablespace",
-    "has_perfdata"            : True,
-    "node_info"               : True,
-    "group"                   : "oracle_tablespaces",
-    "default_levels_variable" : "oracle_tablespaces_defaults",
-    "includes"                : [ "oracle.include", "db.include" ]
+    "parse_function": parse_oracle_tablespaces,
+    "inventory_function": inventory_oracle_tablespaces,
+    "check_function": check_oracle_tablespaces,
+    "service_description": "ORA %s Tablespace",
+    "has_perfdata": True,
+    "node_info": True,
+    "group": "oracle_tablespaces",
+    "default_levels_variable": "oracle_tablespaces_defaults",
+    "includes": ["oracle.include", "db.include"]
 }

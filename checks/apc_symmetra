@@ -24,7 +24,6 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-
 # .1.3.6.1.4.1.318.1.1.1.2.1.1.0 2
 # .1.3.6.1.4.1.318.1.1.1.4.1.1.0 2
 # .1.3.6.1.4.1.318.1.1.1.11.1.1.0 0001010000000000001000000000000000000000000000000000000000000000
@@ -76,14 +75,19 @@ def parse_apc_symmetra(info):
         output_state_bitmask = int(state_output_state, 2)
     else:
         output_state_bitmask = 0
-    self_test_in_progress = output_state_bitmask & 1<<35 != 0
+    self_test_in_progress = output_state_bitmask & 1 << 35 != 0
 
     for key, val in [
-        ("status",      battery_status),        ("output",    output_status),
-        ("self_test",   self_test_in_progress), ("capacity",  battery_capacity),
-        ("replace",     battery_replace),       ("num_packs", battery_num_batt_packs),
-        ("time_remain", battery_time_remain),   ("calib",     calib_result),
-        ("diag_date",   last_diag_date), ]:
+        ("status", battery_status),
+        ("output", output_status),
+        ("self_test", self_test_in_progress),
+        ("capacity", battery_capacity),
+        ("replace", battery_replace),
+        ("num_packs", battery_num_batt_packs),
+        ("time_remain", battery_time_remain),
+        ("calib", calib_result),
+        ("diag_date", last_diag_date),
+    ]:
         if val:
             parsed.setdefault("status", {})
             parsed["status"][key] = val
@@ -92,9 +96,7 @@ def parse_apc_symmetra(info):
         parsed["temp"] = float(battery_temp)
 
     if battery_current:
-        parsed["elphase"] = {
-            "Battery" : { "current" : float(battery_current) }
-        }
+        parsed["elphase"] = {"Battery": {"current": float(battery_current)}}
 
     return parsed
 
@@ -108,65 +110,65 @@ def parse_apc_symmetra(info):
 #   |                                |___/                                 |
 #   '----------------------------------------------------------------------'
 
-
 # old format:
 # apc_default_levels = ( 95, 40, 1, 220 )  or  { "levels" : ( 95, 40, 1, 220 ) }
 # crit_capacity, crit_sys_temp, crit_batt_curr, crit_voltage = levels
 # Temperature default now 60C: regadring to a apc technician a temperature up tp 70C is possible
 factory_settings["apc_default_levels"] = {
-    "capacity"              : ( 95, 80 ),
-    "calibration_state"     : 0,
-    "battery_replace_state" : 1,
+    "capacity": (95, 80),
+    "calibration_state": 0,
+    "battery_replace_state": 1,
 }
 
 
 def inventory_apc_symmetra(parsed):
-    return [ (None, {}) ]
+    return [(None, {})]
 
 
 def check_apc_symmetra(_no_item, params, parsed):
     data = parsed["status"]
-    battery_status         = data["status"]
-    output_status          = data.get("output")
-    self_test_in_progress  = data.get("self_test")
-    battery_capacity       = data.get("capacity")
-    battery_replace        = data.get("replace")
+    battery_status = data["status"]
+    output_status = data.get("output")
+    self_test_in_progress = data.get("self_test")
+    battery_capacity = data.get("capacity")
+    battery_replace = data.get("replace")
     battery_num_batt_packs = data.get("num_packs")
-    battery_time_remain    = data.get("time_remain")
-    calib_result           = data.get("calib")
-    last_diag_date         = data.get("diag_date")
+    battery_time_remain = data.get("time_remain")
+    calib_result = data.get("calib")
+    last_diag_date = data.get("diag_date")
 
     # convert old format tuple to dict, new format with up to 6 params in dict
     if type(params) is tuple:
-        params = { "levels" : params }
+        params = {"levels": params}
 
     if "levels" in params:
-        crit_cap           = params["levels"][0]
+        crit_cap = params["levels"][0]
         params["capacity"] = (crit_cap, crit_cap)
 
-    alt_crit_capacity  = None
+    alt_crit_capacity = None
     warn_cap, crit_cap = params['capacity']
     # the last_diag_date is reported as %m/%d/%Y or %y
     if params.get("post_calibration_levels") and \
        last_diag_date not in [ None, 'Unknown' ] and \
        len(last_diag_date) in [8, 10]:
-        year_format       = '%y' if len(last_diag_date) == 8 else '%Y'
-        last_ts           = time.mktime(time.strptime(last_diag_date, '%m/%d/'+year_format))
-        diff_sec          = time.time() - last_ts
+        year_format = '%y' if len(last_diag_date) == 8 else '%Y'
+        last_ts = time.mktime(time.strptime(last_diag_date, '%m/%d/' + year_format))
+        diff_sec = time.time() - last_ts
         allowed_delay_sec = 86400 + params['post_calibration_levels']['additional_time_span']
         alt_crit_capacity = params['post_calibration_levels']['altcapacity']
 
     state, state_readable = {
-        "1" : (3, "unknown"),
-        "2" : (0, "normal"),
-        "3" : (2, "low"),
-        "4" : (2, "in fault condition"), }.get(battery_status, (3, "unexpected(%s)" % battery_status))
+        "1": (3, "unknown"),
+        "2": (0, "normal"),
+        "3": (2, "low"),
+        "4": (2, "in fault condition"),
+    }.get(battery_status, (3, "unexpected(%s)" % battery_status))
     yield state, "Battery status: %s" % state_readable
 
     if battery_replace:
         state, state_readable = {
-            "1" : (0, "no battery needs replacing"),
-            "2" : (params.get("battery_replace_state", 1), "battery needs replacing"),
+            "1": (0, "no battery needs replacing"),
+            "2": (params.get("battery_replace_state", 1), "battery needs replacing"),
         }.get(battery_replace, (3, "battery needs replacing: unknown"))
         if battery_num_batt_packs and int(battery_num_batt_packs) > 1:
             yield 2, "%i batteries need replacement" % int(battery_num_batt_packs)
@@ -175,16 +177,27 @@ def check_apc_symmetra(_no_item, params, parsed):
 
     if output_status:
         output_status_txts = {
-            "1"  : "unknown",                       "2"  : "on line",
-            "3"  : "on battery",                    "4"  : "on smart boost",
-            "5"  : "timed sleeping",                "6"  : "software bypass",
-            "7"  : "off",                           "8"  : "rebooting",
-            "9"  : "switched bypass",               "10" : "hardware failure bypass",
-            "11" : "sleeping until power return",   "12" : "on smart trim",
-            "13" : "eco mode",                      "14" : "hot standby",
-            "15" : "on battery test",               "16" : "emergency static bypass",
-            "17" : "static bypass standby",         "18" : "power saving mode",
-            "19" : "spot mode",                     "20" : "e conversion", }
+            "1": "unknown",
+            "2": "on line",
+            "3": "on battery",
+            "4": "on smart boost",
+            "5": "timed sleeping",
+            "6": "software bypass",
+            "7": "off",
+            "8": "rebooting",
+            "9": "switched bypass",
+            "10": "hardware failure bypass",
+            "11": "sleeping until power return",
+            "12": "on smart trim",
+            "13": "eco mode",
+            "14": "hot standby",
+            "15": "on battery test",
+            "16": "emergency static bypass",
+            "17": "static bypass standby",
+            "18": "power saving mode",
+            "19": "spot mode",
+            "20": "e conversion",
+        }
         state_readable = output_status_txts.get(output_status, "unexpected(%s)" % output_status)
 
         if output_status not in output_status_txts:
@@ -199,37 +212,38 @@ def check_apc_symmetra(_no_item, params, parsed):
             state = 0
 
         calib_text = {
-            "1" : "",
-            "2" : " (calibration invalid)",
-            "3" : " (calibration in progress)", }.get(calib_result, " (calibration unexpected(%s))" % calib_result)
+            "1": "",
+            "2": " (calibration invalid)",
+            "3": " (calibration in progress)",
+        }.get(calib_result, " (calibration unexpected(%s))" % calib_result)
 
-        yield state, "Output status: %s%s%s" % (state_readable, calib_text,
-                      self_test_in_progress and " (self-test running)" or "")
+        yield state, "Output status: %s%s%s" % (
+            state_readable, calib_text, self_test_in_progress and " (self-test running)" or "")
 
     if battery_capacity:
         battery_capacity = int(battery_capacity)
-        state            = 0
-        levelstxt        = ""
+        state = 0
+        levelstxt = ""
         if alt_crit_capacity != None and diff_sec < allowed_delay_sec:
             if battery_capacity < alt_crit_capacity:
-                state     = 2
+                state = 2
                 levelstxt = " (crit below %d%% in delay after calibration)" % alt_crit_capacity
         else:
             if battery_capacity < crit_cap:
-                state     = 2
+                state = 2
                 levelstxt = " (warn/crit below %.1f%%/%.1f%%)" % (warn_cap, crit_cap)
             elif battery_capacity < warn_cap:
-                state     = 1
+                state = 1
                 levelstxt = " (warn/crit below %.1f%%/%.1f%%)" % (warn_cap, crit_cap)
 
         yield state, "Capacity: %d%%%s" % (battery_capacity, levelstxt), \
               [("capacity", battery_capacity, warn_cap, crit_cap, 0, 100)]
 
     if battery_time_remain:
-        battery_time_remain          = float(battery_time_remain)/100
+        battery_time_remain = float(battery_time_remain) / 100
         battery_time_remain_readable = get_age_human_readable(battery_time_remain)
-        state                        = 0
-        levelstxt                    = ""
+        state = 0
+        levelstxt = ""
         battery_time_warn, battery_time_crit = None, None
         if params.get('battime'):
             battery_time_warn, battery_time_crit = params['battime']
@@ -247,31 +261,32 @@ def check_apc_symmetra(_no_item, params, parsed):
 
 
 check_info['apc_symmetra'] = {
-  "parse_function"          : parse_apc_symmetra,
-  "inventory_function"      : inventory_apc_symmetra,
-  "check_function"          : check_apc_symmetra,
-  "service_description"     : "APC Symmetra status",
-                                # A Note on the order of OIDs: If the 11.1.1.0 is not the last to be polled,
-                                # this leads to bogus values for some other OIDs on some devices.
-  "snmp_info"               : (".1.3.6.1.4.1.318.1.1.1", [
-                                    "2.1.1.0",  # PowerNet-MIB::upsBasicBatteryStatus,
-                                    "4.1.1.0",  # PowerNet-MIB::upsBasicOutputStatus,
-                                    "2.2.1.0",  # PowerNet-MIB::upsAdvBatteryCapacity,
-                                    "2.2.4.0",  # PowerNet-MIB::upsAdvBatteryReplaceIndicator,
-                                    "2.2.6.0",  # PowerNet-MIB::upsAdvBatteryNumOfBadBattPacks,
-                                    "2.2.3.0",  # PowerNet-MIB::upsAdvBatteryRunTimeRemaining,
-                                    "7.2.6.0",  # PowerNet-MIB::upsAdvTestCalibrationResults
-                                    "7.2.4.0",  # PowerNet-MIB::upsLastDiagnosticsDate
-                                    "2.2.2.0",  # PowerNet-MIB::upsAdvBatteryTemperature,
-                                    "2.2.9.0",  # PowerNet-MIB::upsAdvBatteryCurrent,
-                                    "11.1.1.0", # PowerNet-MIB::upsBasicStateOutputState
-                              ]),
-  "snmp_scan_function"      : lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.318.1.3"),
-  "has_perfdata"            : True,
-  "group"                   : "apc_symentra",
-  "default_levels_variable" : "apc_default_levels",
+    "parse_function": parse_apc_symmetra,
+    "inventory_function": inventory_apc_symmetra,
+    "check_function": check_apc_symmetra,
+    "service_description": "APC Symmetra status",
+    # A Note on the order of OIDs: If the 11.1.1.0 is not the last to be polled,
+    # this leads to bogus values for some other OIDs on some devices.
+    "snmp_info": (
+        ".1.3.6.1.4.1.318.1.1.1",
+        [
+            "2.1.1.0",  # PowerNet-MIB::upsBasicBatteryStatus,
+            "4.1.1.0",  # PowerNet-MIB::upsBasicOutputStatus,
+            "2.2.1.0",  # PowerNet-MIB::upsAdvBatteryCapacity,
+            "2.2.4.0",  # PowerNet-MIB::upsAdvBatteryReplaceIndicator,
+            "2.2.6.0",  # PowerNet-MIB::upsAdvBatteryNumOfBadBattPacks,
+            "2.2.3.0",  # PowerNet-MIB::upsAdvBatteryRunTimeRemaining,
+            "7.2.6.0",  # PowerNet-MIB::upsAdvTestCalibrationResults
+            "7.2.4.0",  # PowerNet-MIB::upsLastDiagnosticsDate
+            "2.2.2.0",  # PowerNet-MIB::upsAdvBatteryTemperature,
+            "2.2.9.0",  # PowerNet-MIB::upsAdvBatteryCurrent,
+            "11.1.1.0",  # PowerNet-MIB::upsBasicStateOutputState
+        ]),
+    "snmp_scan_function": lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.318.1.3"),
+    "has_perfdata": True,
+    "group": "apc_symentra",
+    "default_levels_variable": "apc_default_levels",
 }
-
 
 #.
 #   .--temperature---------------------------------------------------------.
@@ -283,16 +298,13 @@ check_info['apc_symmetra'] = {
 #   |                       |_|                                            |
 #   '----------------------------------------------------------------------'
 
-
 # Temperature default now 60C: regadring to a apc technician a temperature up tp 70C is possible
-factory_settings["apc_symmetra_temp_default_levels"] = {
-    "levels" : (50, 60)
-}
+factory_settings["apc_symmetra_temp_default_levels"] = {"levels": (50, 60)}
 
 
 def inventory_apc_symmetra_temp(parsed):
     if "temp" in parsed:
-        return [ ("Battery", {}) ]
+        return [("Battery", {})]
 
 
 def check_apc_symmetra_temp(item, params, parsed):
@@ -300,15 +312,14 @@ def check_apc_symmetra_temp(item, params, parsed):
 
 
 check_info['apc_symmetra.temp'] = {
-    'inventory_function'        : inventory_apc_symmetra_temp,
-    'check_function'            : check_apc_symmetra_temp,
-    'service_description'       : "Temperature %s",
-    'default_levels_variable'   : 'apc_symmetra_temp_default_levels',
-    'has_perfdata'              : True,
-    'group'                     : 'temperature',
-    'includes'                  : [ 'temperature.include' ],
+    'inventory_function': inventory_apc_symmetra_temp,
+    'check_function': check_apc_symmetra_temp,
+    'service_description': "Temperature %s",
+    'default_levels_variable': 'apc_symmetra_temp_default_levels',
+    'has_perfdata': True,
+    'group': 'temperature',
+    'includes': ['temperature.include'],
 }
-
 
 #.
 #   .--el phase------------------------------------------------------------.
@@ -320,10 +331,7 @@ check_info['apc_symmetra.temp'] = {
 #   |                         |_|                                          |
 #   '----------------------------------------------------------------------'
 
-
-factory_settings["apc_symmetra_elphase_default_levels"] = {
-    "current" : (1, 1)
-}
+factory_settings["apc_symmetra_elphase_default_levels"] = {"current": (1, 1)}
 
 
 def inventory_apc_symmetra_elphase(parsed):
@@ -336,12 +344,11 @@ def check_apc_symmetra_elphase(item, params, parsed):
 
 
 check_info['apc_symmetra.elphase'] = {
-    'inventory_function'        : inventory_apc_symmetra_elphase,
-    'check_function'            : check_apc_symmetra_elphase,
-    'service_description'       : "Phase %s",
-    'has_perfdata'              : True,
-    'default_levels_variable'   : 'apc_symmetra_elphase_default_levels',
-    'group'                     : 'ups_outphase',
-    'includes'                  : [ 'elphase.include' ],
+    'inventory_function': inventory_apc_symmetra_elphase,
+    'check_function': check_apc_symmetra_elphase,
+    'service_description': "Phase %s",
+    'has_perfdata': True,
+    'default_levels_variable': 'apc_symmetra_elphase_default_levels',
+    'group': 'ups_outphase',
+    'includes': ['elphase.include'],
 }
-

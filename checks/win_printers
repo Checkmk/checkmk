@@ -30,40 +30,41 @@
 # PrinterStockholm                      0                   3                   0
 # WH1_BC_O3_UPS                         0                   3                   0
 
-
 factory_settings['win_printer_default_levels'] = {
-        "warn_states"   : [ 8, 11 ],
-        "crit_states"   : [ 9, 10 ],
+    "warn_states": [8, 11],
+    "crit_states": [9, 10],
 }
+
 
 def inventory_win_printers(info):
     for line in info:
-        if line[-1] != '9': # Do not discovery offline printers
+        if line[-1] != '9':  # Do not discovery offline printers
             yield " ".join(line[:-3]), {}
+
 
 def check_win_printers(item, params, info):
     status_map = {
-        1 : "Other",
-        2 : "Unkown",
-        3 : "Idle",
-        4 : "Printing",
-        5 : "Warming Up",
-        6 : "Stopped Printing",
-        7 : "Offline",
+        1: "Other",
+        2: "Unkown",
+        3: "Idle",
+        4: "Printing",
+        5: "Warming Up",
+        6: "Stopped Printing",
+        7: "Offline",
     }
     error_map = {
-        0 : "Unkown",
-        1 : "Other",
-        2 : "No Error",
-        3 : "Low Paper",
-        4 : "No Paper",
-        5 : "Low Toner",
-        6 : "No Toner",
-        7 : "Door Open",
-        8 : "Jammed",
-        9 : "Offline",
-        10 : "Service Requested",
-        11 : "Output Bin Full"
+        0: "Unkown",
+        1: "Other",
+        2: "No Error",
+        3: "Low Paper",
+        4: "No Paper",
+        5: "Low Toner",
+        6: "No Toner",
+        7: "Door Open",
+        8: "Jammed",
+        9: "Offline",
+        10: "Service Requested",
+        11: "Output Bin Full"
     }
 
     if type(params) != dict:
@@ -73,8 +74,8 @@ def check_win_printers(item, params, info):
         else:
             warn, crit = params
         params = {}
-        params['crit_states'] = [9,10]
-        params['warn_states'] = [8,11]
+        params['crit_states'] = [9, 10]
+        params['warn_states'] = [8, 11]
     else:
         warn, crit = params.get('levels', (None, None))
 
@@ -87,7 +88,7 @@ def check_win_printers(item, params, info):
             error_text = ""
             if error in params['crit_states']:
                 state = 2
-                error_text = "Error State: %s(!!)" %  error_map[error]
+                error_text = "Error State: %s(!!)" % error_map[error]
             elif error in params['warn_states']:
                 state = 1
                 error_text = "Error State: %s(!)" % error_map[error]
@@ -105,11 +106,11 @@ def check_win_printers(item, params, info):
 
     return 3, "Printer not found in agent output"
 
-check_info["win_printers"] = {
-    "check_function"         : check_win_printers,
-    "group"                  : "windows_printer_queues",
-    "inventory_function"     : inventory_win_printers,
-    "service_description"    : "Printer %s",
-    "default_levels_variable" : "win_printer_default_levels",
-}
 
+check_info["win_printers"] = {
+    "check_function": check_win_printers,
+    "group": "windows_printer_queues",
+    "inventory_function": inventory_win_printers,
+    "service_description": "Printer %s",
+    "default_levels_variable": "win_printer_default_levels",
+}

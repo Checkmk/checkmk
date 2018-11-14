@@ -29,9 +29,11 @@
 # Hans|http-8180|Error Count:0|Busy Threads:0|Current Threads In Pool:0|Request Count:0|Maximum Threads:200
 # Hans|jk-8109|Error Count:0|Request Count:2
 
+
 def inventory_appdynamics_web_container(info):
     for line in info:
         yield ' '.join(line[0:2]), {}
+
 
 def check_appdynamics_web_container(item, params, info):
     for line in info:
@@ -41,12 +43,12 @@ def check_appdynamics_web_container(item, params, info):
                 name, value = metric.split(':')
                 values[name] = int(value)
 
-            error_count     = values.get('Error Count', None)
-            request_count   = values.get('Request Count', None)
+            error_count = values.get('Error Count', None)
+            request_count = values.get('Request Count', None)
 
             current_threads = values.get('Current Threads In Pool', None)
-            busy_threads    = values.get('Busy Threads', None)
-            max_threads     = values.get('Maximum Threads', None)
+            busy_threads = values.get('Busy Threads', None)
+            max_threads = values.get('Maximum Threads', None)
 
             if type(params) == tuple:
                 warn, crit = params
@@ -71,7 +73,8 @@ def check_appdynamics_web_container(item, params, info):
                 else:
                     perfdata = [('current_threads', current_threads, warn, crit)]
                     max_info = ''
-                yield state, 'Current threads: %d%s%s' % (current_threads, max_info, thread_levels_label), perfdata
+                yield state, 'Current threads: %d%s%s' % (current_threads, max_info,
+                                                          thread_levels_label), perfdata
 
                 if busy_threads != None:
                     perfdata = [('busy_threads', busy_threads)]
@@ -91,10 +94,11 @@ def check_appdynamics_web_container(item, params, info):
                 perfdata = [('request_rate', request_rate)]
                 yield 0, 'Requests: %.2f/sec' % request_rate, perfdata
 
+
 check_info['appdynamics_web_container'] = {
-  'inventory_function'  : inventory_appdynamics_web_container,
-  'check_function'      : check_appdynamics_web_container,
-  'service_description' : 'AppDynamics Web Container %s',
-  'has_perfdata'        : True,
-  'group'               : 'jvm_threads',
+    'inventory_function': inventory_appdynamics_web_container,
+    'check_function': check_appdynamics_web_container,
+    'service_description': 'AppDynamics Web Container %s',
+    'has_perfdata': True,
+    'group': 'jvm_threads',
 }

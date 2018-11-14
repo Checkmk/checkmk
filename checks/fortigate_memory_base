@@ -24,7 +24,6 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-
 fortigate_memory_base_default_levels = (70, 80)  # taken from fortigate_memory
 
 
@@ -57,13 +56,16 @@ def check_fortigate_memory_base(item, params, info):
 
 
 check_info["fortigate_memory_base"] = {
-    "check_function"      : check_fortigate_memory_base,
-    "inventory_function"  : inventory_fortigate_memory_base,
-    "service_description" : "Memory usage",
-    "has_perfdata"        : True,
-    "group"               : "memory",
-    "snmp_scan_function"  : lambda oid: ".1.3.6.1.4.1.12356.101.1" in oid(".1.3.6.1.2.1.1.2.0"),
-    "snmp_info"           : ( ".1.3.6.1.4.1.12356.101.4.1", [4,    # fgSysMemUsage
-                                                             5]),  # fgSysMemCapacity
+    "check_function": check_fortigate_memory_base,
+    "inventory_function": inventory_fortigate_memory_base,
+    "service_description": "Memory usage",
+    "has_perfdata": True,
+    "group": "memory",
+    "snmp_scan_function": lambda oid: ".1.3.6.1.4.1.12356.101.1" in oid(".1.3.6.1.2.1.1.2.0"),
+    "snmp_info": (
+        ".1.3.6.1.4.1.12356.101.4.1",
+        [
+            4,  # fgSysMemUsage
+            5  # fgSysMemCapacity
+        ]),
 }
-

@@ -24,6 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+
 def check_uniserv_arguments(params):
     args = " $HOSTADDRESS$"
     args += " " + str(params['port'])
@@ -44,6 +45,7 @@ def check_uniserv_arguments(params):
 
     return args
 
+
 def check_uniserv_desc(params):
     job = params['job']
     if type(job) == tuple:
@@ -55,8 +57,7 @@ def check_uniserv_desc(params):
 
 
 active_check_info['uniserv'] = {
-    "command_line"        : '$USER1$/check_uniserv $ARG1$',
-    "argument_function"   : check_uniserv_arguments,
-    "service_description" : check_uniserv_desc,
+    "command_line": '$USER1$/check_uniserv $ARG1$',
+    "argument_function": check_uniserv_arguments,
+    "service_description": check_uniserv_desc,
 }
-

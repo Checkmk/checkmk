@@ -24,7 +24,6 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-
 # Output of old agent (< 1.1.10i2):
 # AeLookupSvc        running  Application Experience Lookup Service
 # Alerter            stopped  Alerter
@@ -65,12 +64,13 @@ inventory_services = []
 # All above attributes can be set to None or not set to disable this filter option for the entry.
 inventory_services_rules = []
 
+
 def inventory_windows_services(info):
     # Handle single entries (type str)
     def add_matching_services(name, description, state, start_type, entry):
         if type(entry) == tuple:
             # New wato rule handling
-            svc  = entry[0]
+            svc = entry[0]
             statespec = entry[1:]
 
         elif ' ' in entry and len(entry.split()) == 2:
@@ -97,7 +97,7 @@ def inventory_windows_services(info):
 
         else:
             for n in statespec.split("/"):
-                if n not in [ state, start_type ]:
+                if n not in [state, start_type]:
                     return []
 
         return [(name, {})]
@@ -106,7 +106,7 @@ def inventory_windows_services(info):
     def add_services_with_tags(name, description, state, start_type, entry):
         matching = []
         if len(entry) == 2:
-            entry = ( [], ) + entry
+            entry = ([],) + entry
         taglist, hostlist, svclist = entry
         if hosttags_match_taglist(tags_of_host(host_name()), taglist):
             if in_extraconf_hostlist(hostlist, host_name()):
@@ -130,9 +130,9 @@ def inventory_windows_services(info):
 
         # 2. Now extract the list of service regexes
         value = rule[0]
-        svcs  = value.get('services', [])
+        svcs = value.get('services', [])
         state = value.get('state', None)
-        start_mode  = value.get('start_mode', None)
+        start_mode = value.get('start_mode', None)
         if svcs:
             for svc in svcs:
                 rules.append(('~' + svc, state, start_mode))
@@ -177,6 +177,7 @@ def inventory_windows_services(info):
 #    "else" : 2,
 # }
 
+
 def check_windows_services(item, params, info):
     # Hack for old manually defined checks:
     if params is None:
@@ -217,44 +218,43 @@ def check_windows_services(item, params, info):
             this_state = params["else"]
 
         if best_state is None or this_state < best_state:
-            best_state      = this_state
-            best_info       = state, start_type
+            best_state = this_state
+            best_info = state, start_type
             best_running_on = running_on
-            best_desc       = desc
+            best_desc = desc
 
     infotext = best_desc + ": %s (start type is %s)" % best_info
-    if best_running_on and best_state != 2: #if best state ist critical, there should no message "running on"
+    if best_running_on and best_state != 2:  #if best state ist critical, there should no message "running on"
         infotext += " (running on: %s)" % best_running_on
 
     return (best_state, infotext)
 
 
 factory_settings["services_default_levels"] = {
-    "states"                    : [ ( "running", None, 0 ) ],
-    "else"                      : 2,
-    "additional_servicenames"   : [],
+    "states": [("running", None, 0)],
+    "else": 2,
+    "additional_servicenames": [],
 }
 
 check_info['services'] = {
-    "check_function"          : check_windows_services,
-    "inventory_function"      : inventory_windows_services,
-    "service_description"     : "Service %s",
-    "node_info"               : True,
-    "group"                   : "services",
-    "default_levels_variable" : "services_default_levels",
+    "check_function": check_windows_services,
+    "inventory_function": inventory_windows_services,
+    "service_description": "Service %s",
+    "node_info": True,
+    "group": "services",
+    "default_levels_variable": "services_default_levels",
 }
 
-factory_settings["services_summary_default_levels"] = {
-        "ignored": [],
-        "state_if_stopped": 0
-}
+factory_settings["services_summary_default_levels"] = {"ignored": [], "state_if_stopped": 0}
+
 
 def inventory_services_summary(info):
     if info[0]:
-        return [ (None, "services_summary_default_levels") ]
+        return [(None, "services_summary_default_levels")]
+
 
 def check_services_summary(item, params, info):
-    blacklist = params.get("ignored", () )
+    blacklist = params.get("ignored", ())
     stoplist = []
     num_blacklist = 0
     num_auto = 0
@@ -265,14 +265,14 @@ def check_services_summary(item, params, info):
             startstop, auto = line[2].split('/')
         else:
             startstop = line[2]
-            auto      = "unknown"
+            auto = "unknown"
         srv_name = line[1]
         if auto == "auto":
             num_auto += 1
             if startstop == "stopped":
                 match = False
                 for srv in blacklist:
-                    if  re.match(srv,srv_name):
+                    if re.match(srv, srv_name):
                         match = True
                 if match is False:
                     stoplist.append(srv_name)
@@ -283,12 +283,12 @@ def check_services_summary(item, params, info):
     num_srv = len(info)
 
     if len(stoplist) > 0:
-        stopped_srvs = " ("+", ".join(stoplist)+")"
+        stopped_srvs = " (" + ", ".join(stoplist) + ")"
         state = params.get("state_if_stopped")
         if state == 1:
             sym = "(!)"
         elif state == 2:
-            sym="(!!)"
+            sym = "(!!)"
         else:
             sym = ""
     else:
@@ -302,11 +302,12 @@ def check_services_summary(item, params, info):
 
     return state, infotext
 
+
 check_info['services.summary'] = {
-    "check_function"          : check_services_summary,
-    "inventory_function"      : inventory_services_summary,
-    "default_levels_variable" : "services_summary_default_levels",
-    "service_description"     : "Services Summary",
-    "node_info"               : True,
-    "group"                   : "services_summary",
+    "check_function": check_services_summary,
+    "inventory_function": inventory_services_summary,
+    "default_levels_variable": "services_summary_default_levels",
+    "service_description": "Services Summary",
+    "node_info": True,
+    "group": "services_summary",
 }

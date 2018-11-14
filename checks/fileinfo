@@ -46,7 +46,6 @@
 # "maxage"  : ( 6000, 12000 ), in seconds
 import collections
 
-
 fileinfo_groups = []
 
 
@@ -80,8 +79,7 @@ def parse_fileinfo(info):
 
     parsed['reftime'] = _get_field(info[0], 0, int)
 
-    FileinfoItem = collections.namedtuple(
-        "FileinfoItem", "name missing failed size time")
+    FileinfoItem = collections.namedtuple("FileinfoItem", "name missing failed size time")
 
     # deal with old agents' output:
     if len(info) > 1 and _get_field(info[1], 0, str) != '[[[header]]]':
@@ -108,8 +106,7 @@ def parse_fileinfo(info):
         if name is None or stat is None:
             continue
 
-        fi = FileinfoItem(name, ('missing' in stat),
-                          ('stat failed' in stat), size, time)
+        fi = FileinfoItem(name, ('missing' in stat), ('stat failed' in stat), size, time)
         parsed['files'][fi.name] = fi
 
     return parsed
@@ -118,12 +115,12 @@ def parse_fileinfo(info):
 def fileinfo_groups_get_group_name(group_patterns, filename, reftime):
     found_these_groups = {}
     for group_name, pattern in group_patterns:
-        if type(pattern) == str: # support old format
+        if type(pattern) == str:  # support old format
             pattern = (pattern, '')
 
         inclusion, exclusion = pattern
-        inclusion_is_regex   = False
-        exclusion_is_regex   = False
+        inclusion_is_regex = False
+        exclusion_is_regex = False
 
         if inclusion.startswith("~"):
             inclusion_is_regex = True
@@ -136,13 +133,13 @@ def fileinfo_groups_get_group_name(group_patterns, filename, reftime):
         if inclusion != inclusion_tmp:
             inclusion = inclusion_tmp
 
-        matches    = []
+        matches = []
         num_perc_s = 0
         if inclusion_is_regex:
             incl_match = regex(inclusion).match(filename)
             if incl_match:
                 num_perc_s = group_name.count("%s")
-                matches    = [g and g or "" for g in incl_match.groups()]
+                matches = [g and g or "" for g in incl_match.groups()]
         else:
             incl_match = fnmatch.fnmatch(filename, inclusion)
 
@@ -152,31 +149,32 @@ def fileinfo_groups_get_group_name(group_patterns, filename, reftime):
             excl_match = fnmatch.fnmatch(filename, exclusion)
 
         if len(matches) < num_perc_s:
-            raise MKGeneralException("Invalid entry in inventory_fileinfo_groups: "
-                                     "group name '%s' contains %d times '%%s', but regular expression "
-                                     "'%s' contains only %d subexpression(s)." %
-                                     (group_name, num_perc_s, inclusion, len(matches)))
+            raise MKGeneralException(
+                "Invalid entry in inventory_fileinfo_groups: "
+                "group name '%s' contains %d times '%%s', but regular expression "
+                "'%s' contains only %d subexpression(s)." % (group_name, num_perc_s, inclusion,
+                                                             len(matches)))
 
         this_group_name = None
         if incl_match and not excl_match:
             if matches:
                 for nr, group in enumerate(matches):
-                    inclusion  = instantiate_regex_pattern_once(inclusion, group)
+                    inclusion = instantiate_regex_pattern_once(inclusion, group)
                     group_name = group_name.replace("%%%d" % (nr + 1), group)
 
                 this_group_name = group_name % tuple(matches[:num_perc_s])
-                this_pattern    = ("~%s" % inclusion, exclusion)
+                this_pattern = ("~%s" % inclusion, exclusion)
 
             else:
                 this_group_name = group_name
-                this_pattern    = pattern
+                this_pattern = pattern
 
         if this_group_name is not None:
             found_these_groups.setdefault(this_group_name, set())
             found_these_groups[this_group_name].add(this_pattern)
 
     # Convert pattern containers to lists (sets are not possible in autochecks)
-    return dict([ (k, list(v)) for k, v in found_these_groups.items() ])
+    return dict([(k, list(v)) for k, v in found_these_groups.items()])
 
 
 def inventory_fileinfo_common(parsed, case):
@@ -191,8 +189,7 @@ def inventory_fileinfo_common(parsed, case):
     for item in parsed['files'].itervalues():
         found_groups = {}
         for group_patterns in inventory_groups:
-            found_groups.update(fileinfo_groups_get_group_name(group_patterns,
-                                item.name, reftime))
+            found_groups.update(fileinfo_groups_get_group_name(group_patterns, item.name, reftime))
 
         if not found_groups and case == 'single' and not item.missing:
             inventory.append((item.name, {}))
@@ -207,12 +204,12 @@ def inventory_fileinfo_common(parsed, case):
 def fileinfo_process_date(pattern, reftime):
     for what, the_time in [("DATE", reftime), ("YESTERDAY", reftime - 86400)]:
         the_regex = r'((?:/|[A-Za-z]).*)\$%s:((?:%%\w.?){1,})\$(.*)' % what
-        disect    = re.match(the_regex, pattern)
+        disect = re.match(the_regex, pattern)
         if disect:
-            prefix      = disect.group(1)
-            datepattern = time.strftime(disect.group(2),time.localtime(the_time))
-            postfix     = disect.group(3)
-            pattern     = prefix + datepattern + postfix
+            prefix = disect.group(1)
+            datepattern = time.strftime(disect.group(2), time.localtime(the_time))
+            postfix = disect.group(3)
+            pattern = prefix + datepattern + postfix
             return pattern
     return pattern
 
@@ -231,8 +228,8 @@ def fileinfo_check_timeranges(params):
 
 def fileinfo_in_timerange(now, range_from, range_to):
     minutes_from = range_from[0] * 60 + range_from[1]
-    minutes_to   = range_to[0] * 60 + range_to[1]
-    minutes_now  = now.tm_hour * 60 + now.tm_min
+    minutes_to = range_to[0] * 60 + range_to[1]
+    minutes_now = now.tm_hour * 60 + now.tm_min
     return minutes_now >= minutes_from and minutes_now < minutes_to
 
 
@@ -242,7 +239,7 @@ def check_fileinfo(item, params, parsed):
     if reftime is None:
         return 3, "Missing reference timestamp"
 
-    outof_range_txt  = fileinfo_check_timeranges(params)
+    outof_range_txt = fileinfo_check_timeranges(params)
 
     file_stat = parsed['files'].get(item)
     if file_stat is not None and not file_stat.missing:
@@ -251,7 +248,7 @@ def check_fileinfo(item, params, parsed):
         age = reftime - file_stat.time
         check_definition = [
             ("Size", "size", file_stat.size, get_filesize_human_readable),
-            ("Age",  "age",  age,  get_age_human_readable),
+            ("Age", "age", age, get_age_human_readable),
         ]
         return _fileinfo_check_function(check_definition, params, outof_range_txt)
     else:
@@ -307,18 +304,18 @@ def _filename_matches(filename, reftime, inclusion, exclusion):
 
 def check_fileinfo_groups(_item, params, parsed):
 
-    outof_range_txt    = fileinfo_check_timeranges(params)
-    count_all          = 0
-    age_oldest         = None
-    age_newest         = 0
-    size_all           = 0
-    size_smallest      = None
-    size_largest       = 0
-    date_inclusion     = ""
-    include_patterns   = set()
-    exclude_patterns   = set()
-    files_stat_failed  = set()
-    files_matching     = {}
+    outof_range_txt = fileinfo_check_timeranges(params)
+    count_all = 0
+    age_oldest = None
+    age_newest = 0
+    size_all = 0
+    size_smallest = None
+    size_largest = 0
+    date_inclusion = ""
+    include_patterns = set()
+    exclude_patterns = set()
+    files_stat_failed = set()
+    files_matching = {}
 
     reftime = parsed.get('reftime')
     if reftime is None:
@@ -340,7 +337,8 @@ def check_fileinfo_groups(_item, params, parsed):
             include_patterns.add(inclusion)
             exclude_patterns.add(exclusion)
 
-            filename_matches, date_inclusion = _filename_matches(file_stat.name, reftime, inclusion, exclusion)
+            filename_matches, date_inclusion = _filename_matches(file_stat.name, reftime, inclusion,
+                                                                 exclusion)
             if not filename_matches:
                 continue
             if file_stat.missing:
@@ -367,18 +365,20 @@ def check_fileinfo_groups(_item, params, parsed):
 
             # Used for long ouput information
             for key, value in [
-                ("age_oldest",    age),
-                ("age_newest",    age),
+                ("age_oldest", age),
+                ("age_newest", age),
                 ("size_smallest", file_stat.size),
-                ("size_largest",  file_stat.size),
-                ("size",          file_stat.size),
+                ("size_largest", file_stat.size),
+                ("size", file_stat.size),
             ]:
                 skip_ok_files = params.get('shorten_multiline_output', False)
                 for state, _, __, ___ in _fileinfo_check_file(value, params, key):
                     if skip_ok_files and not state:
                         continue
                     files_matching.setdefault(file_stat.name, {
-                        "size": file_stat.size, "age": age, "states": [],
+                        "size": file_stat.size,
+                        "age": age,
+                        "states": [],
                     })["states"].append(state)
 
     if age_oldest is None:
@@ -386,13 +386,13 @@ def check_fileinfo_groups(_item, params, parsed):
 
     # Start Checking
     check_definition = [
-        ("Count",         "count",         count_all,      saveint),
-        ("Size",          "size",          size_all,       get_filesize_human_readable),
-        ("Largest size",  "size_largest",  size_largest,   get_filesize_human_readable),
-        ("Smallest size", "size_smallest", size_smallest,  get_filesize_human_readable),
-        ("Oldest age",    "age_oldest",    age_oldest,     get_age_human_readable),
-        ("Newest age",    "age_newest",    age_newest,     get_age_human_readable),
-        ("Date pattern",  "date pattern",  date_inclusion, str),
+        ("Count", "count", count_all, saveint),
+        ("Size", "size", size_all, get_filesize_human_readable),
+        ("Largest size", "size_largest", size_largest, get_filesize_human_readable),
+        ("Smallest size", "size_smallest", size_smallest, get_filesize_human_readable),
+        ("Oldest age", "age_oldest", age_oldest, get_age_human_readable),
+        ("Newest age", "age_newest", age_newest, get_age_human_readable),
+        ("Date pattern", "date pattern", date_inclusion, str),
     ]
 
     if files_stat_failed:
@@ -432,8 +432,7 @@ def _fileinfo_check_function(check_definition, params, outof_range_txt):
         for state, warn, crit, comp_text in _fileinfo_check_file(value, params, key):
             if not state:
                 continue
-            infotext += " (warn/crit %s %s/%s)" % (comp_text,
-                           verbfunc(warn), verbfunc(crit))
+            infotext += " (warn/crit %s %s/%s)" % (comp_text, verbfunc(warn), verbfunc(crit))
             states.append(state)
         infotexts.append(infotext)
         perfdata.append((key, value, warn, crit))
@@ -451,7 +450,7 @@ def _fileinfo_check_file(value, params, key):
     results = []
     for how, comp_text, cfunc in [
         ("min", "below", lambda a, b: a < b),
-        ("max", "at",    lambda a, b: a > b),
+        ("max", "at", lambda a, b: a > b),
     ]:
         state = 0
         warn, crit = params.get(how + key, (None, None))
@@ -489,12 +488,12 @@ def _fileinfo_check_conjunctions(check_definition, params):
 
 
 check_info["fileinfo"] = {
-    "parse_function"          : parse_fileinfo,
-    "check_function"          : check_fileinfo,
-    "inventory_function"      : inventory_fileinfo,
-    "service_description"     : "File %s",
-    "has_perfdata"            : True,
-    "group"                   : "fileinfo",
+    "parse_function": parse_fileinfo,
+    "check_function": check_fileinfo,
+    "inventory_function": inventory_fileinfo,
+    "service_description": "File %s",
+    "has_perfdata": True,
+    "group": "fileinfo",
 }
 
 
@@ -503,12 +502,12 @@ def inventory_fileinfo_groups(parsed):
 
 
 check_info['fileinfo.groups'] = {
-    "check_function"          : check_fileinfo_groups,
-    "inventory_function"      : inventory_fileinfo_groups,
-    "service_description"     : "File group %s",
-    "has_perfdata"            : True,
-    "group"                   : "fileinfo-groups",
-    "includes"                : [ "ps.include" ],
+    "check_function": check_fileinfo_groups,
+    "inventory_function": inventory_fileinfo_groups,
+    "service_description": "File group %s",
+    "has_perfdata": True,
+    "group": "fileinfo-groups",
+    "includes": ["ps.include"],
 }
 
 precompile_params['fileinfo.groups'] = fileinfo_groups_precompile

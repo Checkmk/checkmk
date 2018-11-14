@@ -27,8 +27,9 @@
 memused_default_levels = (150.0, 200.0)
 
 factory_settings["memory_default_levels"] = {
-    "levels" : memused_default_levels,
+    "levels": memused_default_levels,
 }
+
 
 # Parse /proc/meminfo into the canonical form: into bytes, not kB
 # This function is also used by the ps check
@@ -41,14 +42,15 @@ def parse_proc_meminfo_bytes(info):
         meminfo[line[0][:-1]] = value
     return meminfo
 
+
 def check_memory(params, meminfo):
     swapused_kb = meminfo['SwapTotal'] - meminfo['SwapFree']
     swapused = swapused_kb * 1024.0
-    memused_kb  = meminfo['MemTotal']  - meminfo['MemFree']
+    memused_kb = meminfo['MemTotal'] - meminfo['MemFree']
     memused = memused_kb * 1024.0
 
     # Buffers and Cached are optional. On Linux both mean basically the same.
-    caches_kb   = meminfo.get('Buffers', 0) + meminfo.get('Cached', 0)
+    caches_kb = meminfo.get('Buffers', 0) + meminfo.get('Cached', 0)
     caches = caches_kb * 1024.0
 
     # Size of Pagetable on Linux can be relevant e.g. on ORACLE
@@ -67,7 +69,7 @@ def check_memory(params, meminfo):
     totalvirt_mb = (meminfo['SwapTotal'] + meminfo['MemTotal']) / 1024.0
 
     if type(params) == tuple:
-        params = { "levels" : params }
+        params = {"levels": params}
     warn, crit = params["levels"]
 
     details = []
@@ -92,24 +94,22 @@ def check_memory(params, meminfo):
                (render.fmt_bytes(totalused), details_txt,
                 totalused_perc, render.fmt_bytes(totalmem), swap_txt)
 
-
     # Take into account averaging
     average_min = params.get("average")
     if average_min:
-        totalused_mb_avg = get_average("mem.used.total", time.time(),
-                                                totalused_mb, average_min, initialize_zero = False)
+        totalused_mb_avg = get_average(
+            "mem.used.total", time.time(), totalused_mb, average_min, initialize_zero=False)
         totalused_perc_avg = totalused_mb_avg / totalmem_mb * 100
         infotext += ", %d min average %.1f%%" % (average_min, totalused_perc_avg)
         comp_mb = totalused_mb_avg
     else:
         comp_mb = totalused_mb
 
-
     # levels may be given either in int -> MB or in float -> percentages. So convert
     # effective levels to MB now
     if type(warn) == float:
-        warn_mb = int(warn/100.0 * totalmem_mb)
-        crit_mb = int(crit/100.0 * totalmem_mb)
+        warn_mb = int(warn / 100.0 * totalmem_mb)
+        crit_mb = int(crit / 100.0 * totalmem_mb)
         leveltext = lambda x: "%.1f%%" % x
     else:
         warn_mb = warn
@@ -118,9 +118,9 @@ def check_memory(params, meminfo):
 
     # Prepare performance data
     perfdata = [
-        ('ramused',  (memused_kb - caches_kb) / 1024, None, None, 0, totalmem_mb),
-        ('swapused', swapused_kb / 1024, None, None, 0, meminfo['SwapTotal']/1024),
-        ('memused',  totalused_mb, warn_mb, crit_mb, 0, totalvirt_mb),
+        ('ramused', (memused_kb - caches_kb) / 1024, None, None, 0, totalmem_mb),
+        ('swapused', swapused_kb / 1024, None, None, 0, meminfo['SwapTotal'] / 1024),
+        ('memused', totalused_mb, warn_mb, crit_mb, 0, totalvirt_mb),
     ]
 
     if average_min:
@@ -128,14 +128,14 @@ def check_memory(params, meminfo):
 
     # Check levels
     state = 0
-    if warn_mb > 0: # positive levels - used memory
+    if warn_mb > 0:  # positive levels - used memory
         if comp_mb >= crit_mb:
             state = 2
             infotext += ", critical at %s used" % leveltext(crit)
         elif comp_mb >= warn_mb:
             state = 1
             infotext += ", warning at %s used" % leveltext(warn)
-    else:           # negative levels - free memory
+    else:  # negative levels - free memory
         freemem_mb = totalvirt_mb - comp_mb
         if freemem_mb <= -crit_mb:
             state = 2
@@ -144,19 +144,18 @@ def check_memory(params, meminfo):
             state = 1
             infotext += ", warning at %s free" % leveltext(-warn)
 
-
     # Add additional metrics, provided by Linux.
     mapped = meminfo.get('Mapped')
     if mapped:
-        mapped_mb       = int(mapped) / 1024
+        mapped_mb = int(mapped) / 1024
         committed_as_mb = int(meminfo.get('Committed_AS', 0)) / 1024
-        shared_mb       = int(meminfo.get('Shmem', 0)) / 1024
+        shared_mb = int(meminfo.get('Shmem', 0)) / 1024
 
         perfdata += [
-            ('mapped',       mapped_mb),
+            ('mapped', mapped_mb),
             ('committed_as', committed_as_mb),
-            ('pagetables',   pagetables_mb),
-            ('shared',       shared_mb),
+            ('pagetables', pagetables_mb),
+            ('shared', shared_mb),
         ]
         infotext += ", %.1f mapped, %.1f committed, %.1f shared" % \
                     (mapped_mb / 1024.0, committed_as_mb / 1024.0, shared_mb / 1024.0)

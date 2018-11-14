@@ -24,7 +24,6 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-
 # new params format
 # params = {
 #    'free_leases' : (warn, crit),
@@ -36,7 +35,7 @@ def check_dhcp_pools_levels(free, used, pending, size, params):
     if type(params) == tuple:
         # In case of win_dhcp_pools old params are percent but of type
         # integer, thus we have to change them into floats
-        params = {"free_leases" : (float(params[0]), float(params[1]))}
+        params = {"free_leases": (float(params[0]), float(params[1]))}
 
     for what, value in [("free", free), ("used", used)]:
         state = 0
@@ -50,13 +49,13 @@ def check_dhcp_pools_levels(free, used, pending, size, params):
         infotext = "%s: %d leases (%.1f%%)" % (what, value, value_perc)
         if params.get("%s_leases" % what, ""):
             warn, crit = params["%s_leases" % what]
-            if type(warn) == float: # here we have levels in percent
+            if type(warn) == float:  # here we have levels in percent
                 value = value_perc
                 text_format = "%.1f"
                 unit = "%%"
                 warn_abs = int(size * (warn / 100.0))
                 crit_abs = int(size * (crit / 100.0))
-            else: # otherwise we use absolute values as integers
+            else:  # otherwise we use absolute values as integers
                 text_format = "%d"
                 unit = " %s pool entries" % what
                 warn_abs = warn
@@ -78,4 +77,5 @@ def check_dhcp_pools_levels(free, used, pending, size, params):
         yield state, infotext, [("%s_dhcp_leases" % what, value_abs, warn_abs, crit_abs, 0, size)]
 
     if pending != None:
-        yield 0, "%d leases pending" % pending, [("pending_dhcp_leases", pending, None, None, 0, size)]
+        yield 0, "%d leases pending" % pending, [("pending_dhcp_leases", pending, None, None, 0,
+                                                  size)]

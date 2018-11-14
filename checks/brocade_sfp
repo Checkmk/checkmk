@@ -40,16 +40,16 @@ def parse_brocade_sfp(info):
         port_index = int(fcport_info[0])
 
         parsed[port_index] = {
-            "port_name"         : fcport_info[4],
-            "temp"              : int(values[0]),          # °C
-            "phystate"          : int(fcport_info[1]),
-            "opstate"           : int(fcport_info[2]),
-            "admstate"          : int(fcport_info[3]),
-            "voltage"           : float(values[1]) / 1000, # mV -> V
-            "current"           : float(values[2]) / 1000, # mA -> A
-            "rx_power"          : float(values[3]),        # dBm
-            "tx_power"          : float(values[4]),        # dBm
-            "is_isl"            : bool(port_index in isl_ports),
+            "port_name": fcport_info[4],
+            "temp": int(values[0]),  # °C
+            "phystate": int(fcport_info[1]),
+            "opstate": int(fcport_info[2]),
+            "admstate": int(fcport_info[3]),
+            "voltage": float(values[1]) / 1000,  # mV -> V
+            "current": float(values[2]) / 1000,  # mA -> A
+            "rx_power": float(values[3]),  # dBm
+            "tx_power": float(values[4]),  # dBm
+            "is_isl": bool(port_index in isl_ports),
         }
 
     return parsed
@@ -59,16 +59,17 @@ def inventory_brocade_sfp(parsed):
     settings = host_extra_conf_merged(host_name(), brocade_fcport_inventory)
     number_of_ports = len(parsed)
     for port_index, port_info in parsed.iteritems():
-        if brocade_fcport_inventory_this_port(admstate=port_info["admstate"],
-                                              phystate=port_info["phystate"],
-                                              opstate=port_info["opstate"],
-                                              settings=settings):
+        if brocade_fcport_inventory_this_port(
+                admstate=port_info["admstate"],
+                phystate=port_info["phystate"],
+                opstate=port_info["opstate"],
+                settings=settings):
             yield brocade_fcport_getitem(
-                        number_of_ports=number_of_ports,
-                        index=port_index,
-                        portname=port_info["port_name"],
-                        is_isl=port_info["is_isl"],
-                        settings=settings), {}
+                number_of_ports=number_of_ports,
+                index=port_index,
+                portname=port_info["port_name"],
+                is_isl=port_info["is_isl"],
+                settings=settings), {}
 
 
 #   .--Temperature---------------------------------------------------------.
@@ -80,22 +81,23 @@ def inventory_brocade_sfp(parsed):
 #   |                       |_|                                            |
 #   '----------------------------------------------------------------------'
 
+
 def check_brocade_sfp_temp(item, params, parsed):
 
-    port_index = int(item.split()[0]) + 1 # TODO: Move this magical plucking apart of the
-    port_info = parsed[port_index]        #       item to brocade.include and do the same
-                                          #       for brocade.fcport.
+    port_index = int(item.split()[0]) + 1  # TODO: Move this magical plucking apart of the
+    port_info = parsed[port_index]  #       item to brocade.include and do the same
+    #       for brocade.fcport.
 
     return check_temperature(port_info["temp"], params, item)
 
 
 check_info['brocade_sfp.temp'] = {
-    'inventory_function'        : inventory_brocade_sfp,
-    'check_function'            : check_brocade_sfp_temp,
-    'service_description'       : "SFP Temperature %s",
-    'has_perfdata'              : True,
-    'group'                     : "temperature",
-    'includes'                  : [ "brocade.include", "temperature.include" ],
+    'inventory_function': inventory_brocade_sfp,
+    'check_function': check_brocade_sfp_temp,
+    'service_description': "SFP Temperature %s",
+    'has_perfdata': True,
+    'group': "temperature",
+    'includes': ["brocade.include", "temperature.include"],
 }
 
 #.
@@ -110,6 +112,7 @@ check_info['brocade_sfp.temp'] = {
 #   | Also includes information about current and voltage                  |
 #   '----------------------------------------------------------------------'
 
+
 def check_brocade_sfp(item, params, parsed):
 
     # NOTE: We do not use the generic check_levels function from
@@ -119,10 +122,10 @@ def check_brocade_sfp(item, params, parsed):
     def check_levels(value, perf_name, params, infotext_prefix, unit):
         infotext = infotext_prefix + ("%.2f %s" % (value, unit))
         if not params:
-            return 0, infotext, [ (perf_name, value) ]
+            return 0, infotext, [(perf_name, value)]
         else:
             crit_lower, warn_lower, warn, crit = params
-            perfdata = [ (perf_name, value, warn, crit) ]
+            perfdata = [(perf_name, value, warn, crit)]
             if value >= crit or value < crit_lower:
                 status = 2
             elif value >= warn or value < warn_lower:
@@ -131,12 +134,14 @@ def check_brocade_sfp(item, params, parsed):
                 status = 0
             return status, infotext, perfdata
 
-    port_index = int(item.split()[0]) + 1 # TODO: Move this magical plucking apart of the
-    port_info = parsed[port_index]        #       item to brocade.include and do the same
-                                          #       for brocade.fcport.
+    port_index = int(item.split()[0]) + 1  # TODO: Move this magical plucking apart of the
+    port_info = parsed[port_index]  #       item to brocade.include and do the same
+    #       for brocade.fcport.
 
-    yield check_levels(port_info["rx_power"], "input_signal_power_dbm", params.get("rx_power"), "Rx: ", "dBm")
-    yield check_levels(port_info["tx_power"], "output_signal_power_dbm", params.get("tx_power"), "Tx: ", "dBm")
+    yield check_levels(port_info["rx_power"], "input_signal_power_dbm", params.get("rx_power"),
+                       "Rx: ", "dBm")
+    yield check_levels(port_info["tx_power"], "output_signal_power_dbm", params.get("tx_power"),
+                       "Tx: ", "dBm")
     yield check_levels(port_info["current"], "current", params.get("current"), "current: ", "A")
     yield check_levels(port_info["voltage"], "voltage", params.get("voltage"), "voltage: ", "V")
 

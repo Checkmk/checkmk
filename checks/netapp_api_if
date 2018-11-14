@@ -33,8 +33,8 @@ def netapp_convert_to_if64(info):
     interfaces = netapp_api_parse_lines(info)
 
     # Calculate speed, state and create mac-address list
-    if_mac_list = {} # Dictionary with lists of common mac addresses
-    vif_list    = [] # List of virtual interfaces
+    if_mac_list = {}  # Dictionary with lists of common mac addresses
+    vif_list = []  # List of virtual interfaces
     for name, values in interfaces.items():
         # Reported by 7Mode
         mediatype = values.get("mediatype")
@@ -59,7 +59,7 @@ def netapp_convert_to_if64(info):
             vif_list.append(name)
 
         # Reported by Clustermode
-        for status_key in [ "link-status", "operational-status" ]:
+        for status_key in ["link-status", "operational-status"]:
             if status_key in values:
                 if values[status_key] == "up":
                     values["state"] = "1"
@@ -75,8 +75,7 @@ def netapp_convert_to_if64(info):
             if_mac_list.setdefault(values["mac-address"], [])
             if_mac_list[values["mac-address"]].append((name, values.get("state")))
 
-
-    nics       = []
+    nics = []
     extra_info = {}
     for idx, entry in enumerate(sorted(interfaces)):
         nic_name, values = entry, interfaces[entry]
@@ -92,9 +91,9 @@ def netapp_convert_to_if64(info):
         if not speed:
             if "mac-address" in values:
                 mac_list = if_mac_list[values["mac-address"]]
-                if len(mac_list) > 1: # check if this interface is grouped
+                if len(mac_list) > 1:  # check if this interface is grouped
                     extra_info.setdefault(nic_name, {})
-                    extra_info[nic_name]["grouped_if"] = [ x for x in mac_list if x not in vif_list ]
+                    extra_info[nic_name]["grouped_if"] = [x for x in mac_list if x not in vif_list]
 
                     max_speed = 0
                     min_speed = 1024**5
@@ -124,36 +123,38 @@ def netapp_convert_to_if64(info):
                 mac = ''
 
             nic = ['0'] * 20
-            nic[0]  = str(idx + 1)                          # Index
-            nic[1]  = nic_name                              # Description
-            nic[2]  = "6" # Fake ethernet                   # Type
-            nic[3]  = speed                                 # Speed
-            nic[4]  = state                                 # Status
+            nic[0] = str(idx + 1)  # Index
+            nic[1] = nic_name  # Description
+            nic[2] = "6"  # Fake ethernet                   # Type
+            nic[3] = speed  # Speed
+            nic[4] = state  # Status
             # IN
-            nic[5]  = values.get("recv_data", 0)            # inoctets
-            nic[6]  = values.get("recv_packet", 0)          # inucast
-            nic[7]  = values.get("recv_mcasts", 0)          # inmcast
-            nic[8]  = 0                                     # ibcast
-            nic[9]  = 0                                     # indiscards
-            nic[10] = values.get("recv_errors", 0)          # inerrors
+            nic[5] = values.get("recv_data", 0)  # inoctets
+            nic[6] = values.get("recv_packet", 0)  # inucast
+            nic[7] = values.get("recv_mcasts", 0)  # inmcast
+            nic[8] = 0  # ibcast
+            nic[9] = 0  # indiscards
+            nic[10] = values.get("recv_errors", 0)  # inerrors
             # OUT
-            nic[11] = values.get("send_data", 0)            # outoctets
-            nic[12] = values.get("send_packet", 0)          # outucast
-            nic[13] = values.get("send_mcasts", 0)          # outmcast
-            nic[14] = 0                                     # outbcast
-            nic[15] = 0                                     # outdiscards
-            nic[16] = values.get("send_errors", 0)          # outspeed
-            nic[17] = 0                                     # outqlen
-            nic[18] = values.get("interface-name", "")      # Alias
-            nic[19] = mac                                   # MAC
+            nic[11] = values.get("send_data", 0)  # outoctets
+            nic[12] = values.get("send_packet", 0)  # outucast
+            nic[13] = values.get("send_mcasts", 0)  # outmcast
+            nic[14] = 0  # outbcast
+            nic[15] = 0  # outdiscards
+            nic[16] = values.get("send_errors", 0)  # outspeed
+            nic[17] = 0  # outqlen
+            nic[18] = values.get("interface-name", "")  # Alias
+            nic[19] = mac  # MAC
 
             nics.append(nic)
 
     return nics, extra_info
 
+
 def inventory_netapp_api_if(parsed):
     nics, _extra_info = parsed
     return inventory_if_common(nics)
+
 
 def check_netapp_api_if(item, params, parsed):
     nics, extra_info = parsed
@@ -174,7 +175,7 @@ def check_netapp_api_if(item, params, parsed):
                 vif_group = extra_info[ifDescr]
                 for member_name, member_state in vif_group["grouped_if"]:
                     if member_state is None or member_name == ifDescr:
-                        continue # Not a real member or the grouped interface itself
+                        continue  # Not a real member or the grouped interface itself
 
                     if member_state == "2":
                         state = 1
@@ -182,7 +183,8 @@ def check_netapp_api_if(item, params, parsed):
                         state = 0
 
                     if first_member:
-                        yield state, "Physical interfaces: %s(%s)" % (member_name, if_statename(member_state))
+                        yield state, "Physical interfaces: %s(%s)" % (member_name,
+                                                                      if_statename(member_state))
                         first_member = False
                     else:
                         yield state, "%s(%s)" % (member_name, if_statename(member_state))
@@ -192,12 +194,12 @@ def check_netapp_api_if(item, params, parsed):
 
 
 check_info["netapp_api_if"] = {
-    'check_function'          : check_netapp_api_if,
-    'inventory_function'      : inventory_netapp_api_if,
-    'parse_function'          : netapp_convert_to_if64,
-    'service_description'     : 'Interface %s',
-    'has_perfdata'            : True,
-    'group'                   : 'if',
-    'includes'                : [ 'if.include', 'netapp_api.include' ],
-    'default_levels_variable' : 'if_default_levels',
+    'check_function': check_netapp_api_if,
+    'inventory_function': inventory_netapp_api_if,
+    'parse_function': netapp_convert_to_if64,
+    'service_description': 'Interface %s',
+    'has_perfdata': True,
+    'group': 'if',
+    'includes': ['if.include', 'netapp_api.include'],
+    'default_levels_variable': 'if_default_levels',
 }

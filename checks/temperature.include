@@ -33,6 +33,7 @@ def fahrenheit_to_celsius(tempf, relative=False):
         return float(tempf) * (5.0 / 9.0)
     return (float(tempf) - 32) * (5.0 / 9.0)
 
+
 def celsius_to_fahrenheit(tempc, relative=False):
     if tempc is None:
         return None
@@ -40,6 +41,7 @@ def celsius_to_fahrenheit(tempc, relative=False):
     if relative:
         return float(tempc) * (9.0 / 5.0)
     return (float(tempc) * (9.0 / 5.0)) + 32
+
 
 def from_celsius(tempc, unit, relative=False):
     if unit == "f":
@@ -49,6 +51,7 @@ def from_celsius(tempc, unit, relative=False):
             return tempc
         return tempc + 273.15
     return tempc
+
 
 def to_celsius(reading, unit, relative=False):
     if type(reading) == tuple:
@@ -63,9 +66,10 @@ def to_celsius(reading, unit, relative=False):
         return reading - 273.15
     return reading
 
+
 def convert_unit_relative(value, in_unit, out_unit):
-    return from_celsius(to_celsius(value, in_unit, relative=True),
-                        out_unit, relative=True)
+    return from_celsius(to_celsius(value, in_unit, relative=True), out_unit, relative=True)
+
 
 # Format number according to its datatype
 def render_temp(n, output_unit, relative=False):
@@ -73,6 +77,7 @@ def render_temp(n, output_unit, relative=False):
     if type(n) == int:
         return "%d" % t
     return "%.1f" % t
+
 
 temp_unitsym = {
     "c": u"°C",
@@ -104,12 +109,14 @@ def check_temperature_determine_levels(dlh, usr_warn, usr_crit, usr_warn_lower, 
     # minn is a min that deals with None in the way we want here.
     elif dlh == "best":
         warn, crit = max(usr_warn, dev_warn), max(usr_crit, dev_crit)
-        warn_lower, crit_lower = minn(usr_warn_lower, dev_warn_lower), minn(usr_crit_lower, dev_crit_lower)
+        warn_lower, crit_lower = minn(usr_warn_lower, dev_warn_lower), minn(
+            usr_crit_lower, dev_crit_lower)
 
     # Use most critical of your and device's levels
     elif dlh == "worst":
         warn, crit = minn(usr_warn, dev_warn), minn(usr_crit, dev_crit)
-        warn_lower, crit_lower = max(usr_warn_lower, dev_warn_lower), max(usr_crit_lower, dev_crit_lower)
+        warn_lower, crit_lower = max(usr_warn_lower, dev_warn_lower), max(
+            usr_crit_lower, dev_crit_lower)
 
     # Use user's levels if present, otherwise the device's
     elif dlh == "usrdefault":
@@ -158,8 +165,8 @@ def check_temperature_trend(temp, params, output_unit, crit, crit_lower, unique_
         rate = get_rate("temp.%s.delta" % unique_name, this_time, temp, True)
 
         # average trend, initialize with zero, rate_avg is in C/s
-        rate_avg = get_average("temp.%s.trend" % unique_name,
-                                this_time, rate, trend_range_min, True)
+        rate_avg = get_average("temp.%s.trend" % unique_name, this_time, rate, trend_range_min,
+                               True)
 
         # rate_avg is growth in C/s, trend is in C per trend range minutes
         trend = float(rate_avg * trend_range_min * 60.0)
@@ -208,9 +215,9 @@ def check_temperature_trend(temp, params, output_unit, crit, crit_lower, unique_
                     minutes_left = float("inf")
 
                 def format_minutes(minutes):
-                    if minutes > 60:   # hours
+                    if minutes > 60:  # hours
                         hours = minutes / 60
-                        minutes += - int(hours) * 60
+                        minutes += -int(hours) * 60
                         return "%dh %02dm" % (hours, minutes)
                     return "%d minutes" % minutes
 
@@ -222,6 +229,7 @@ def check_temperature_trend(temp, params, output_unit, crit, crit_lower, unique_
     except MKCounterWrapped:
         pass
     return combiner.status, combiner.infotext
+
 
 # Checks Celsius temperature against crit/warn levels defined in params. temp must
 # be int or float. Parameters:
@@ -235,11 +243,15 @@ def check_temperature_trend(temp, params, output_unit, crit, crit_lower, unique_
 # dev_status_name:   the device name (will be added in the check output)
 # Note: you must not specify dev_status and dev_levels at the same time!
 
-def check_temperature(reading, params, unique_name, dev_unit="c",
-                      dev_levels=None, dev_levels_lower=None,
-                      dev_status=None, dev_status_name=None):
 
-
+def check_temperature(reading,
+                      params,
+                      unique_name,
+                      dev_unit="c",
+                      dev_levels=None,
+                      dev_levels_lower=None,
+                      dev_status=None,
+                      dev_status_name=None):
     def check_temp_levels(temp, warn, crit, warn_lower, crit_lower):
         if crit != None and temp >= crit:
             status = 2
@@ -253,12 +265,11 @@ def check_temperature(reading, params, unique_name, dev_unit="c",
             status = 0
         return status
 
-
     # Convert legacy tuple params into new dict
     if params is None or params == (None, None):
         params = {}
     elif type(params) == tuple:
-        params = { "levels" : params }
+        params = {"levels": params}
 
     # Convert reading into Celsius
     input_unit = params.get("input_unit", dev_unit)
@@ -270,11 +281,11 @@ def check_temperature(reading, params, unique_name, dev_unit="c",
     usr_levels_lower = params.get("levels_lower")
 
     # Set all user levels to None. None means do not impose a level
-    usr_warn, usr_crit             = usr_levels or (None, None)
+    usr_warn, usr_crit = usr_levels or (None, None)
     usr_warn_lower, usr_crit_lower = usr_levels_lower or (None, None)
 
     # Same for device levels
-    dev_warn, dev_crit             = to_celsius(dev_levels or (None, None), dev_unit)
+    dev_warn, dev_crit = to_celsius(dev_levels or (None, None), dev_unit)
     dev_warn_lower, dev_crit_lower = to_celsius(dev_levels_lower or (None, None), dev_unit)
 
     # Decide which of user's and device's levels should be used according to the setting
@@ -299,44 +310,40 @@ def check_temperature(reading, params, unique_name, dev_unit="c",
         else:
             status = max(status, dev_status)
 
-    perfdata = [ ("temp", temp, warn, crit) ]
+    perfdata = [("temp", temp, warn, crit)]
 
     # Render actual temperature, e.g. "17.8 °F"
     infotext = "%s %s" % (render_temp(temp, output_unit), temp_unitsym[output_unit])
 
-    if dev_status is not None and dev_status != 0 and dev_status_name: # omit status in OK case
+    if dev_status is not None and dev_status != 0 and dev_status_name:  # omit status in OK case
         infotext += ", %s" % dev_status_name
 
     # In case of a non-OK status output the information about the levels
     if status != 0:
-        usr_levelstext       = ""
+        usr_levelstext = ""
         usr_levelstext_lower = ""
-        dev_levelstext       = ""
+        dev_levelstext = ""
         dev_levelstext_lower = ""
 
         if usr_levels:
-            usr_levelstext = " (warn/crit at %s/%s %s)" % (
-                render_temp(usr_warn, output_unit),
-                render_temp(usr_crit, output_unit),
-                temp_unitsym[output_unit])
+            usr_levelstext = " (warn/crit at %s/%s %s)" % (render_temp(usr_warn, output_unit),
+                                                           render_temp(usr_crit, output_unit),
+                                                           temp_unitsym[output_unit])
 
         if usr_levels_lower:
-            usr_levelstext_lower = " (warn/crit below %s/%s %s)" % (
-                render_temp(usr_warn_lower, output_unit),
-                render_temp(usr_crit_lower, output_unit),
-                temp_unitsym[output_unit])
+            usr_levelstext_lower = " (warn/crit below %s/%s %s)" % (render_temp(
+                usr_warn_lower, output_unit), render_temp(usr_crit_lower, output_unit),
+                                                                    temp_unitsym[output_unit])
 
         if dev_levels:
-            dev_levelstext = " (device warn/crit at %s/%s %s)" % (
-                render_temp(dev_warn, output_unit),
-                render_temp(dev_crit, output_unit),
-                temp_unitsym[output_unit])
+            dev_levelstext = " (device warn/crit at %s/%s %s)" % (render_temp(
+                dev_warn, output_unit), render_temp(dev_crit, output_unit),
+                                                                  temp_unitsym[output_unit])
 
         if dev_levels_lower:
-            dev_levelstext_lower = " (device warn/crit below %s/%s %s)" % (
-                render_temp(dev_warn_lower, output_unit),
-                render_temp(dev_crit_lower, output_unit),
-                temp_unitsym[output_unit])
+            dev_levelstext_lower = " (device warn/crit below %s/%s %s)" % (render_temp(
+                dev_warn_lower, output_unit), render_temp(dev_crit_lower,
+                                                          output_unit), temp_unitsym[output_unit])
 
         # Output only levels that are relevant when computing the state
         if dlh == "usr":
@@ -382,6 +389,7 @@ def check_temperature(reading, params, unique_name, dev_unit="c",
 
     return status, infotext, perfdata
 
+
 # Wraps around check_temperature to check a list of sensors.
 # sensorlist is a list of tuples:
 # (subitem, temp, kwargs) or (subitem, temp)
@@ -389,10 +397,11 @@ def check_temperature(reading, params, unique_name, dev_unit="c",
 # temp is a string, float or int temperature value
 # and kwargs a dict of keyword arguments for check_temperature
 
+
 def check_temperature_list(sensorlist, params, unique_name):
 
     if type(params) == tuple:
-        params = { "levels" : params }
+        params = {"levels": params}
     elif params is None:
         params = {}
 
@@ -400,7 +409,7 @@ def check_temperature_list(sensorlist, params, unique_name):
 
     def worststate(a, b):
         if a != 3 and b != 3:
-            return max(a,b)
+            return max(a, b)
         elif a != 2 and b != 2:
             return 3
         return 2
@@ -421,33 +430,30 @@ def check_temperature_list(sensorlist, params, unique_name):
             kwargs = {}
         else:
             sub_item, temp, kwargs = entry
-        if type(temp) not in [ float, int ]:
+        if type(temp) not in [float, int]:
             temp = float(temp)
 
         tempsum += temp
         tempmax = max(tempmax, temp)
         tempmin = min(tempmin, temp)
-        sub_status, sub_infotext, _sub_perfdata = check_temperature(temp, params,
-                                                                    None,
-                                                                    **kwargs)
+        sub_status, sub_infotext, _sub_perfdata = check_temperature(temp, params, None, **kwargs)
         status = worststate(status, sub_status)
         if status != 0:
             detailtext += (sub_item + ": " + sub_infotext + state_markers[sub_status] + ", ")
     if detailtext:
-        detailtext = " " + detailtext[:-2] # Drop trailing ", ", add space to join with summary
+        detailtext = " " + detailtext[:-2]  # Drop trailing ", ", add space to join with summary
 
     unitsym = temp_unitsym[output_unit]
     tempavg = tempsum / float(sensor_count)
-    summarytext = "%d Sensors; Highest: %s %s, Average: %s %s, Lowest: %s %s" % ( sensor_count,
-                                                        render_temp(tempmax, output_unit), unitsym,
-                                                        render_temp(tempavg, output_unit), unitsym,
-                                                        render_temp(tempmin, output_unit), unitsym )
+    summarytext = "%d Sensors; Highest: %s %s, Average: %s %s, Lowest: %s %s" % (
+        sensor_count, render_temp(tempmax, output_unit), unitsym, render_temp(
+            tempavg, output_unit), unitsym, render_temp(tempmin, output_unit), unitsym)
     infotext = summarytext + detailtext
-    perfdata = [ ("temp", tempmax) ]
+    perfdata = [("temp", tempmax)]
 
     if "trend_compute" in params and\
             "period" in params["trend_compute"]:
-        usr_warn, usr_crit             = params.get("levels") or (None, None)
+        usr_warn, usr_crit = params.get("levels") or (None, None)
         usr_warn_lower, usr_crit_lower = params.get("levels_lower") or (None, None)
 
         # no support for dev_unit or dev_levels in check_temperature_list so

@@ -26,7 +26,6 @@
 
 # We use the following OIDs:
 
-
 # PowerNet-MIB::upsAdvTestDiagnosticsResults   .1.3.6.1.4.1.318.1.1.1.7.2.3
 # upsAdvTestDiagnosticsResults OBJECT-TYPE
 #         SYNTAX INTEGER {
@@ -54,21 +53,22 @@
 
 ups_test_default = (0, 0)
 
+
 def check_apc_test(item, params, info):
     days_warn, days_crit = params
     if not info:
         return 3, "Data Missing"
     last_result = int(info[0][0])
-    last_date   = info[0][1]
+    last_date = info[0][1]
 
     if last_date == 'Unknown' or len(last_date) not in [8, 10]:
         return 3, "Date of last self test is unknown"
 
     year_format = '%y' if len(last_date) == 8 else '%Y'
-    last_ts = time.mktime(time.strptime(last_date, '%m/%d/'+year_format))
+    last_ts = time.mktime(time.strptime(last_date, '%m/%d/' + year_format))
     days_diff = (time.time() - last_ts) / 86400
 
-    diagnostic_status_text = { 1:"OK", 2:"failed", 3:"invalid", 4:"in progress" }
+    diagnostic_status_text = {1: "OK", 2: "failed", 3: "invalid", 4: "in progress"}
 
     state = 0
     diag_label = ""
@@ -97,10 +97,10 @@ def inventory_apc_test(info):
 
 
 check_info['apc_symmetra_test'] = {
-  "inventory_function"  : inventory_apc_test,
-  "check_function"      : check_apc_test,
-  "service_description" : "Self Test",
-  "group"               : "ups_test",
-  "snmp_scan_function"  : lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.318.1.3"),
-  "snmp_info"           : (".1.3.6.1.4.1.318.1.1.1.7.2", [ 3,4 ] )
+    "inventory_function": inventory_apc_test,
+    "check_function": check_apc_test,
+    "service_description": "Self Test",
+    "group": "ups_test",
+    "snmp_scan_function": lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.318.1.3"),
+    "snmp_info": (".1.3.6.1.4.1.318.1.1.1.7.2", [3, 4])
 }

@@ -24,7 +24,6 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-
 #   .--output--------------------------------------------------------------.
 #   |                               _               _                      |
 #   |                    ___  _   _| |_ _ __  _   _| |_                    |
@@ -153,7 +152,7 @@
 def parse_ipmi(info):
     parsed = {}
     ipmi_info, ipmi_discrete_info = info
-    for section in [ ipmi_info, ipmi_discrete_info ]:
+    for section in [ipmi_info, ipmi_discrete_info]:
         if not section:
             continue
 
@@ -161,7 +160,7 @@ def parse_ipmi(info):
             if len(line) >= 2:
                 # Compatible with older check versions
                 name = line[0].strip().replace(" ", "_")
-                line = [ name ] + [x.strip() for x in line[1:]]
+                line = [name] + [x.strip() for x in line[1:]]
 
                 # Discrete sensors have no values
                 if len(line) == 5:
@@ -171,19 +170,29 @@ def parse_ipmi(info):
                     line = [line[0], None, None, state, None, None, None, None, None, None]
 
             if len(line) == 10:
-                parsed.setdefault(name, dict( zip([
-                    "value", "unit", "status_txt", "unrec_low", "crit_low",
-                    "warn_low", "warn_high", "crit_high", "unrec_high", ],
-                    line[1:] )))
+                parsed.setdefault(
+                    name,
+                    dict(
+                        zip([
+                            "value",
+                            "unit",
+                            "status_txt",
+                            "unrec_low",
+                            "crit_low",
+                            "warn_low",
+                            "warn_high",
+                            "crit_high",
+                            "unrec_high",
+                        ], line[1:])))
 
                 # For each entry either we have valid value or None
-                for what in [ "value", "crit_low", "warn_low", "warn_high", "crit_high" ]:
+                for what in ["value", "crit_low", "warn_low", "warn_high", "crit_high"]:
                     try:
                         parsed[name][what] = float(parsed[name][what])
                     except:
                         parsed[name][what] = None
 
-                if parsed[name]["unit"] in [ "unspecified", "" ]:
+                if parsed[name]["unit"] in ["unspecified", ""]:
                     parsed[name]["unit"] = None
                 elif parsed[name]["unit"] != None:
                     parsed[name]["unit"] = parsed[name]["unit"].replace(" ", "_")
@@ -192,22 +201,20 @@ def parse_ipmi(info):
 
 
 inventory_ipmi_rules = []
-factory_settings["ipmi_default_levels"] = {
-    "ignored_sensorstates" : [ "ns", "nr", "na" ]
-}
+factory_settings["ipmi_default_levels"] = {"ignored_sensorstates": ["ns", "nr", "na"]}
 
 
 def inventory_ipmi(info):
     # TODO: Cleanup Check API so extra_sections can be passed to parse_function.
     #       For the moment, this seemingly strange contraption has to remain as is.
     parsed = parse_ipmi(info)
-    rules  = host_extra_conf(host_name(), inventory_ipmi_rules)
+    rules = host_extra_conf(host_name(), inventory_ipmi_rules)
     if rules and type(rules[0]) == dict:
         if rules[0].get("summarize", True):
-            rules = [ 'summarize' ]
+            rules = ['summarize']
         else:
             if rules[0].get('ignored_sensors', []):
-                rules = [('single', {'ignored_sensors' : rules[0]["ignored_sensors"]})]
+                rules = [('single', {'ignored_sensors': rules[0]["ignored_sensors"]})]
             else:
                 rules = [('single', {})]
 
@@ -217,7 +224,7 @@ def inventory_ipmi(info):
     elif type(rules[0]) == tuple:
         single_rules = rules[0][1].copy()
         if "ignored_sensorstates" not in single_rules:
-            single_rules["ignored_sensorstates"] = [ "ns", "nr", "na" ]
+            single_rules["ignored_sensorstates"] = ["ns", "nr", "na"]
         for sensorname, data in parsed.items():
             if not ipmi_ignore_entry(sensorname, data["status_txt"], single_rules):
                 yield sensorname, {}
@@ -238,12 +245,12 @@ def check_ipmi(item, params, info):
 
 
 check_info["ipmi"] = {
-    'inventory_function'        : inventory_ipmi,
-    'check_function'            : check_ipmi,
-    'service_description'       : 'IPMI Sensor %s',
-    'has_perfdata'              : True,
-    'extra_sections'            : [ "ipmi_discrete" ],
-    'group'                     : 'ipmi',
-    'default_levels_variable'   : 'ipmi_default_levels',
-    'includes'                  : [ 'ipmi_common.include' ],
+    'inventory_function': inventory_ipmi,
+    'check_function': check_ipmi,
+    'service_description': 'IPMI Sensor %s',
+    'has_perfdata': True,
+    'extra_sections': ["ipmi_discrete"],
+    'group': 'ipmi',
+    'default_levels_variable': 'ipmi_default_levels',
+    'includes': ['ipmi_common.include'],
 }

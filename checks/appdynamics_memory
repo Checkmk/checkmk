@@ -45,20 +45,20 @@ def check_appdynamics_memory(item, params, info):
             elif item.endswith('Heap'):
                 mem_type = 'heap'
             else:
-                mem_type = '' # Should not happen...
+                mem_type = ''  # Should not happen...
 
             values = {}
             for metric in line[2:]:
                 name, value = metric.split(':')
                 values[name] = int(value)
 
-            used        = values.get('Current Usage (MB)', 0) * mb
-            committed   = values.get('Committed (MB)', 0) * mb
+            used = values.get('Current Usage (MB)', 0) * mb
+            committed = values.get('Committed (MB)', 0) * mb
 
             try:
                 max_available = values['Max Available (MB)'] * mb
             except KeyError:
-                max_available = -1 # Java 8 has no maximum for Non-Heap
+                max_available = -1  # Java 8 has no maximum for Non-Heap
 
             if max_available > 0:
                 used_percent = 100.0 * used / max_available
@@ -98,26 +98,27 @@ def check_appdynamics_memory(item, params, info):
             if max_available > 0:
                 perfdata = [('mem_%s' % mem_type, used, warn, crit, 0, max_available)]
                 yield state, 'Used: %s of %s (%.2f%%)%s' % (
-                        get_bytes_human_readable(used),
-                        get_bytes_human_readable(max_available),
-                        used_percent,
-                        levels_label,
-                    ), perfdata
+                    get_bytes_human_readable(used),
+                    get_bytes_human_readable(max_available),
+                    used_percent,
+                    levels_label,
+                ), perfdata
             else:
                 perfdata = [('mem_%s' % mem_type, used)]
                 yield state, 'Used: %s' % get_bytes_human_readable(used), perfdata
 
             if max_available > 0:
-                perfdata = [('mem_%s_committed' % mem_type, committed, None, None, 0, max_available)]
+                perfdata = [('mem_%s_committed' % mem_type, committed, None, None, 0,
+                             max_available)]
             else:
                 perfdata = [('mem_%s_committed' % mem_type, committed)]
             yield 0, 'Committed: %s' % get_bytes_human_readable(committed), perfdata
 
 
 check_info['appdynamics_memory'] = {
-  'inventory_function'  : inventory_appdynamics_memory,
-  'check_function'      : check_appdynamics_memory,
-  'service_description' : 'AppDynamics Memory %s',
-  'has_perfdata'        : True,
-  'group'               : 'jvm_memory',
+    'inventory_function': inventory_appdynamics_memory,
+    'check_function': check_appdynamics_memory,
+    'service_description': 'AppDynamics Memory %s',
+    'has_perfdata': True,
+    'group': 'jvm_memory',
 }

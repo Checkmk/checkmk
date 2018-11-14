@@ -24,6 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+
 def agent_siemens_plc_arguments(params, hostname, ipaddress):
     args = ''
 
@@ -31,7 +32,7 @@ def agent_siemens_plc_arguments(params, hostname, ipaddress):
         args += ' --timeout %d' % params["timeout"]
 
     for device in params["devices"]:
-        dev_args  = device["host_name"]
+        dev_args = device["host_name"]
         dev_args += ";%s" % device["host_address"]
         dev_args += ";%d" % device["rack"]
         dev_args += ";%d" % device["slot"]
@@ -49,5 +50,6 @@ def agent_siemens_plc_arguments(params, hostname, ipaddress):
         args += " " + quote_shell_string(dev_args)
 
     return args
+
 
 special_agent_info['siemens_plc'] = agent_siemens_plc_arguments

@@ -58,19 +58,19 @@ msx_queues_default_levels = (500, 2000)
 
 # Default warn/crit levels for length of queues
 factory_settings['winperf_msx_queues_factory'] = {
-        'levels': ( 500, 2000 ),
+    'levels': (500, 2000),
 }
-
 
 # Queues to be inventorized (number are relative to counter base)
 winperf_msx_queues = {
-   "Active Remote Delivery"  :  "2",
-   "Retry Remote Delivery"   :  "4",
-   "Active Mailbox Delivery" :  "6",
-   "Poison Queue Length"     :  "44",
+    "Active Remote Delivery": "2",
+    "Retry Remote Delivery": "4",
+    "Active Mailbox Delivery": "6",
+    "Poison Queue Length": "44",
 }
 
 winperf_msx_queues_inventory = []
+
 
 def inventory_winperf_msx_queues(info):
     if len(info) > 1:
@@ -86,7 +86,8 @@ def inventory_winperf_msx_queues(info):
                 queues = inventory_rules
             else:
                 queues = winperf_msx_queues
-            return [ (name, { "offset" : int(offset) } ) for name, offset in queues.items() ]
+            return [(name, {"offset": int(offset)}) for name, offset in queues.items()]
+
 
 def check_winperf_msx_queues(item, params, info):
     # current windows  agents should not produce winperf sections with no data after the header but
@@ -123,10 +124,10 @@ def check_winperf_msx_queues(item, params, info):
 check_config_variables.append("winperf_msx_queues")
 
 check_info["winperf_msx_queues"] = {
-    'check_function':          check_winperf_msx_queues,
-    'inventory_function':      inventory_winperf_msx_queues,
-    'service_description':     'Queue %s',
-    'has_perfdata':            True,
-    "default_levels_variable" : "winperf_msx_queues_factory",
-    'group':                   'msx_queues',
+    'check_function': check_winperf_msx_queues,
+    'inventory_function': inventory_winperf_msx_queues,
+    'service_description': 'Queue %s',
+    'has_perfdata': True,
+    "default_levels_variable": "winperf_msx_queues_factory",
+    'group': 'msx_queues',
 }

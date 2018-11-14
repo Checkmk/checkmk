@@ -34,7 +34,7 @@
 def db_get_tablespace_levels_in_bytes(size_bytes, params):
     # If the magic factor is used, take table size and magic factor
     # into account in order to move levels
-    magic  = params.get("magic")
+    magic = params.get("magic")
 
     # Use tablespace size dependent dynamic levels or static levels
     if type(params.get("levels")) == tuple:
@@ -55,7 +55,7 @@ def db_get_tablespace_levels_in_bytes(size_bytes, params):
         if magic:
             normsize = params["magic_normsize"] * 1024 * 1024
             hbytes_size = size_bytes / float(normsize)
-            felt_size = hbytes_size ** magic
+            felt_size = hbytes_size**magic
             scale = felt_size / hbytes_size
             warn *= scale
             crit *= scale
@@ -71,7 +71,7 @@ def db_get_tablespace_levels_in_bytes(size_bytes, params):
         output_as_percentage = False
         warn_bytes = warn * 1024 * 1024
         crit_bytes = crit * 1024 * 1024
-        levels_text = " (warn/crit at %s/%s)" % (get_bytes_human_readable(warn_bytes), get_bytes_human_readable(crit_bytes))
-
+        levels_text = " (warn/crit at %s/%s)" % (get_bytes_human_readable(warn_bytes),
+                                                 get_bytes_human_readable(crit_bytes))
 
     return warn_bytes, crit_bytes, levels_text, output_as_percentage

@@ -66,8 +66,9 @@ heartbeat_crm_resources_naildown = True
 inventory_heartbeat_crm_rules = []
 
 factory_settings["heartbeat_crm_default_levels"] = {
-    "max_age" : heartbeat_crm_default_max_age,
+    "max_age": heartbeat_crm_default_max_age,
 }
+
 
 def heartbeat_crm_parse_general(info):
     last_updated = None
@@ -89,7 +90,7 @@ def heartbeat_crm_parse_general(info):
 
         elif "nodes and" in line_txt and "resources configured" in line_txt:
             # Some versions put number of nodes and resources in one line
-            num_nodes     = int(line[0])
+            num_nodes = int(line[0])
             num_resources = int(line[3])
 
         elif ' '.join(line[1:3]).rstrip('.,').lower() == 'nodes configured':
@@ -108,6 +109,7 @@ def heartbeat_crm_parse_general(info):
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
+
 def inventory_heartbeat_crm(info):
     # Use these lines to gather the inventory and perform this check:
     # ============
@@ -125,10 +127,10 @@ def inventory_heartbeat_crm(info):
         _last_updated, dc, num_nodes, num_resources = heartbeat_crm_parse_general(info)
     except:
         # In the case that CRM is not working, add it as a service and show the error later
-        dc, num_nodes, num_resources = 0,0,0
+        dc, num_nodes, num_resources = 0, 0, 0
     params = {
-        'num_nodes'     : num_nodes,
-        'num_resources' : num_resources,
+        'num_nodes': num_nodes,
+        'num_resources': num_resources,
     }
     if settings.get('naildown_dc', False):
         params['dc'] = dc
@@ -140,7 +142,8 @@ def check_heartbeat_crm(item, params, info):
         return
 
     first_line = ' '.join(info[0])
-    if first_line.lower().startswith("critical") or 'connection to cluster failed' in first_line.lower():
+    if first_line.lower().startswith(
+            "critical") or 'connection to cluster failed' in first_line.lower():
         return 2, first_line
 
     last_updated, dc, numNodes, numResources = heartbeat_crm_parse_general(info)
@@ -148,10 +151,10 @@ def check_heartbeat_crm(item, params, info):
     # Convert old tuple params (pre 1.2.5i6)
     if type(params) == tuple:
         params = {
-            'max_age'       : params[0],
-            'dc'            : params[1] != "" and params[1] or None,
-            'num_nodes'     : params[2] != -1 and params[2] or None,
-            'num_resources' : params[3] != -1 and params[3] or None,
+            'max_age': params[0],
+            'dc': params[1] != "" and params[1] or None,
+            'num_nodes': params[2] != -1 and params[2] or None,
+            'num_resources': params[3] != -1 and params[3] or None,
         }
 
     # Check the freshness of the crm_mon output and terminate with CRITICAL
@@ -160,7 +163,8 @@ def check_heartbeat_crm(item, params, info):
     now = time.time()
     delta = now - dt
     if delta > params['max_age']:
-        return 3, 'Ignoring reported data (Status output too old: %s)' % get_age_human_readable(delta)
+        return 3, 'Ignoring reported data (Status output too old: %s)' % get_age_human_readable(
+            delta)
 
     status, output = 0, ''
 
@@ -191,13 +195,12 @@ def check_heartbeat_crm(item, params, info):
 
 
 check_info["heartbeat_crm"] = {
-    'check_function'          : check_heartbeat_crm,
-    'inventory_function'      : inventory_heartbeat_crm,
-    'service_description'     : 'Heartbeat CRM General',
-    'group'                   : 'heartbeat_crm',
-    'default_levels_variable' : 'heartbeat_crm_default_levels',
+    'check_function': check_heartbeat_crm,
+    'inventory_function': inventory_heartbeat_crm,
+    'service_description': 'Heartbeat CRM General',
+    'group': 'heartbeat_crm',
+    'default_levels_variable': 'heartbeat_crm_default_levels',
 }
-
 
 #.
 #   .--Resources-----------------------------------------------------------.
@@ -208,6 +211,7 @@ check_info["heartbeat_crm"] = {
 #   |           |_| \_\___||___/\___/ \__,_|_|  \___\___||___/             |
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
+
 
 def heartbeat_crm_parse_resources(info):
     blockStart = False
@@ -248,15 +252,16 @@ def heartbeat_crm_parse_resources(info):
                     resources[resource].append(fixed_parts)
                 elif mode == 'cloneset':
                     if fixed_parts[0] == 'Started:':
-                        resources[resource].append([ resource, 'Clone', 'Started', fixed_parts[2:-1] ])
+                        resources[resource].append(
+                            [resource, 'Clone', 'Started', fixed_parts[2:-1]])
                 elif mode == 'masterslaveset':
                     if fixed_parts[0] == 'Masters:':
-                        resources[resource].append([ resource, 'Master', 'Started', fixed_parts[2] ])
+                        resources[resource].append([resource, 'Master', 'Started', fixed_parts[2]])
                     if fixed_parts[0] == 'Slaves:':
-                        resources[resource].append([ resource, 'Slave', 'Started', fixed_parts[2] ])
+                        resources[resource].append([resource, 'Slave', 'Started', fixed_parts[2]])
             else:
                 # Single resource
-                resources[parts[0]] = [ parts ]
+                resources[parts[0]] = [parts]
 
     return resources
 
@@ -293,11 +298,12 @@ def check_heartbeat_crm_resources(item, target_node, info):
         return
 
     for resource in resources:
-        output += ' '.join([ type(p) == list and repr(p) or p for p in resource ])
+        output += ' '.join([type(p) == list and repr(p) or p for p in resource])
         if len(resource) == 3 or resource[2] != 'Started':
             status = 2
             output += ' (Resource is in state "%s" (!!))' % resource[2]
-        elif target_node and target_node != resource[3] and resource[1] != 'Slave' and resource[1] != 'Clone':
+        elif target_node and target_node != resource[3] and resource[1] != 'Slave' and resource[
+                1] != 'Clone':
             status = 2
             output += ' (Expected node: %s (!!))' % target_node
         output += ', '
@@ -308,8 +314,8 @@ def check_heartbeat_crm_resources(item, target_node, info):
 
 
 check_info["heartbeat_crm.resources"] = {
-    'check_function'      : check_heartbeat_crm_resources,
-    'inventory_function'  : inventory_heartbeat_crm_resources,
-    'service_description' : 'Heartbeat CRM %s',
-    'group'               : 'heartbeat_crm_resources',
+    'check_function': check_heartbeat_crm_resources,
+    'inventory_function': inventory_heartbeat_crm_resources,
+    'service_description': 'Heartbeat CRM %s',
+    'group': 'heartbeat_crm_resources',
 }

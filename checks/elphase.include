@@ -24,6 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+
 def inventory_elphase(parsed):
     for item in parsed.keys():
         yield item, {}
@@ -39,7 +40,7 @@ def inventory_elphase(parsed):
 # }
 def check_elphase(item, params, parsed):
     if item not in parsed:
-        return # Item not found in SNMP data
+        return  # Item not found in SNMP data
 
     def tostring(value):
         if type(value) == int:
@@ -67,27 +68,28 @@ def check_elphase(item, params, parsed):
         yield state, "Device status: %s(%s)" % (device_state_readable, device_state)
 
     for what, title, unit, bound, factor in [
-        ( "voltage",     "Voltage",        " V",  Bounds.Lower, 1),
-        ( "current",     "Current",        " A",  Bounds.Upper, 1),
-        ( "output_load", "Load",           "%",   Bounds.Upper, 1),
-        ( "power",       "Power",          " W",  Bounds.Upper, 1),
-        ( "appower",     "Apparent Power", " VA", Bounds.Upper, 1),
-        ( "energy",      "Energy",         " Wh", Bounds.Upper, 1),
-        ( "frequency",   "Frequency",      " hz", Bounds.Both,  1),
-        ( "differential_current_ac", "Differential current AC", " mA", Bounds.Upper, 0.001),
-        ( "differential_current_dc", "Differential current DC", " mA", Bounds.Upper, 0.001)]:
+        ("voltage", "Voltage", " V", Bounds.Lower, 1),
+        ("current", "Current", " A", Bounds.Upper, 1),
+        ("output_load", "Load", "%", Bounds.Upper, 1),
+        ("power", "Power", " W", Bounds.Upper, 1),
+        ("appower", "Apparent Power", " VA", Bounds.Upper, 1),
+        ("energy", "Energy", " Wh", Bounds.Upper, 1),
+        ("frequency", "Frequency", " hz", Bounds.Both, 1),
+        ("differential_current_ac", "Differential current AC", " mA", Bounds.Upper, 0.001),
+        ("differential_current_dc", "Differential current DC", " mA", Bounds.Upper, 0.001),
+    ]:
 
         if what in parsed[item]:
             entry = parsed[item][what]
             if type(entry) == tuple:
-                value, state_info = entry # (220.17, (1, "Voltage is too low"))
+                value, state_info = entry  # (220.17, (1, "Voltage is too low"))
             else:
-                value = entry             # 12.0
+                value = entry  # 12.0
                 state_info = None
 
             infotext = "%s: %s%s" % (title, tostring(value), unit)
-            status   = 0
-            perfdata = [ (what, value * factor) ]
+            status = 0
+            perfdata = [(what, value * factor)]
 
             if what in params:
                 warn_lower = crit_lower = warn = crit = None
@@ -118,7 +120,7 @@ def check_elphase(item, params, parsed):
                         status = max(status, 1)
                         infotext += levelstext
 
-                    perfdata = [ (what, value * factor, warn * factor, crit * factor) ]
+                    perfdata = [(what, value * factor, warn * factor, crit * factor)]
 
             yield status, infotext, perfdata
 

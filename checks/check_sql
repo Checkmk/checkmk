@@ -24,7 +24,6 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-
 #active_checks['sql'] = [
 #  ( {'dbms': 'postgres', 'description': u'SQL Test', 'user': 'golla',
 #             'sql': 'testerer', 'password': 'toor',
@@ -37,23 +36,23 @@ def check_sql_arguments(params):
     args = []
 
     if "host" in params:
-        args += [ "--hostname=%s" % params["host"] ]
+        args += ["--hostname=%s" % params["host"]]
     else:
-        args += [ "--hostname=$HOSTADDRESS$" ]
+        args += ["--hostname=$HOSTADDRESS$"]
 
-    args += [ "--dbms=%s" % params["dbms"] ]
-    args += [ "--name=%s" % params["name"] ]
-    args += [ "--user=%s" % params["user"] ]
-    args += [ passwordstore_get_cmdline("--password=%s", params["password"]) ]
+    args += ["--dbms=%s" % params["dbms"]]
+    args += ["--name=%s" % params["name"]]
+    args += ["--user=%s" % params["user"]]
+    args += [passwordstore_get_cmdline("--password=%s", params["password"])]
 
     if "port" in params:
-        args += [ "--port=%s" % params["port"] ]
+        args += ["--port=%s" % params["port"]]
 
     if "procedure" in params:
         if "procedure" in params and "useprocs" in params["procedure"]:
-            args += [ "--procedure" ]
+            args += ["--procedure"]
             if "input" in params["procedure"]:
-                args += [ "--inputvars=%s" % params["procedure"]["input"] ]
+                args += ["--inputvars=%s" % params["procedure"]["input"]]
 
     if "levels" in params:
         upper = params["levels"]
@@ -66,26 +65,25 @@ def check_sql_arguments(params):
         lower = "", ""
 
     if "perfdata" in params:
-        args += [ "--metrics" ]
+        args += ["--metrics"]
 
     if "levels" in params or "levels_low" in params:
-        args += [ "-w%s:%s" % (lower[0], upper[0]) ]
-        args += [ "-c%s:%s" % (lower[1], upper[1]) ]
+        args += ["-w%s:%s" % (lower[0], upper[0])]
+        args += ["-c%s:%s" % (lower[1], upper[1])]
 
     if type(params["sql"]) == tuple:
         sql_tmp = params["sql"][-1]
     else:
         sql_tmp = params["sql"]
 
-    args += [ "%s" % sql_tmp.replace("\n", r"\n").replace(";", r"\;") ]
+    args += ["%s" % sql_tmp.replace("\n", r"\n").replace(";", r"\;")]
 
     return args
 
 
 active_check_info['sql'] = {
-    "command_line"        : '$USER1$/check_sql $ARG1$',
-    "argument_function"   : check_sql_arguments,
-    "service_description" : lambda args: args["description"],
-    "has_perfdata"        : True,
+    "command_line": '$USER1$/check_sql $ARG1$',
+    "argument_function": check_sql_arguments,
+    "service_description": lambda args: args["description"],
+    "has_perfdata": True,
 }
-

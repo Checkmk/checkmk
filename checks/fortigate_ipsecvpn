@@ -24,9 +24,8 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-
 factory_settings['fortigate_ipsecvpn_default_levels'] = {
-    "levels" : (1, 2),
+    "levels": (1, 2),
 }
 
 
@@ -37,14 +36,14 @@ def inventory_fortigate_ipsecvpn(info):
 
 def check_fortigate_ipsecvpn(item, params, info):
     if type(params) == tuple:
-        params = {"levels" : params}
+        params = {"levels": params}
 
     tunnels_ignore_levels = params.get("tunnels_ignore_levels", [])
 
     tunnels_down = set()
     tunnels_ignored = set()
     for p2name, ent_status in info:
-        if ent_status == "1": # down(1), up(2)
+        if ent_status == "1":  # down(1), up(2)
             tunnels_down.add(p2name)
             if p2name in tunnels_ignore_levels:
                 tunnels_ignored.add(p2name)
@@ -73,8 +72,8 @@ def check_fortigate_ipsecvpn(item, params, info):
     long_output = []
     for title, tunnels in [
         ("Down and not ignored", set(tunnels_down) - set(tunnels_ignored)),
-        ("Down",                 tunnels_down),
-        ("Ignored",              tunnels_ignored),
+        ("Down", tunnels_down),
+        ("Ignored", tunnels_ignored),
     ]:
         if tunnels:
             long_output.append("%s:" % title)
@@ -84,15 +83,17 @@ def check_fortigate_ipsecvpn(item, params, info):
 
 
 check_info["fortigate_ipsecvpn"] = {
-    "inventory_function"        : inventory_fortigate_ipsecvpn,
-    "check_function"            : check_fortigate_ipsecvpn,
-    "service_description"       : "VPN IPSec Tunnels",
-    "has_perfdata"              : True,
-    "snmp_scan_function"        : lambda oid: ".1.3.6.1.4.1.12356.101.1" in oid(".1.3.6.1.2.1.1.2.0"),
-    "snmp_info"                 : (".1.3.6.1.4.1.12356.101.12.2.2.1", [
-                                    3,  # fgVpnTunEntPhase2Name
-                                    20, # fgVpnTunEntStatus
-                                  ]),
-    "default_levels_variable"   : "fortigate_ipsecvpn_default_levels",
-    "group"                     : "ipsecvpn",
+    "inventory_function": inventory_fortigate_ipsecvpn,
+    "check_function": check_fortigate_ipsecvpn,
+    "service_description": "VPN IPSec Tunnels",
+    "has_perfdata": True,
+    "snmp_scan_function": lambda oid: ".1.3.6.1.4.1.12356.101.1" in oid(".1.3.6.1.2.1.1.2.0"),
+    "snmp_info": (
+        ".1.3.6.1.4.1.12356.101.12.2.2.1",
+        [
+            3,  # fgVpnTunEntPhase2Name
+            20,  # fgVpnTunEntStatus
+        ]),
+    "default_levels_variable": "fortigate_ipsecvpn_default_levels",
+    "group": "ipsecvpn",
 }

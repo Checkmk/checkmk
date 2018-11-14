@@ -24,14 +24,13 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-
 check_info["ipmi_sensors"] = {
-    'parse_function'        : parse_freeipmi,
-    'inventory_function'    : inventory_freeipmi,
-    'check_function'        : check_freeipmi,
-    'service_description'   : 'IPMI Sensor %s',
-    'has_perfdata'          : True,
-    'group'                 : 'ipmi',
-    'includes'              : [ 'ipmi_sensors.include', 'ipmi_common.include' ],
-    "management_board"      : HOST_ONLY,
+    'parse_function': parse_freeipmi,
+    'inventory_function': inventory_freeipmi,
+    'check_function': check_freeipmi,
+    'service_description': 'IPMI Sensor %s',
+    'has_perfdata': True,
+    'group': 'ipmi',
+    'includes': ['ipmi_sensors.include', 'ipmi_common.include'],
+    "management_board": HOST_ONLY,
 }

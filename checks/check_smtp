@@ -24,6 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+
 def check_smtp_arguments(params):
     _description, settings = params
     args = ''
@@ -32,7 +33,7 @@ def check_smtp_arguments(params):
         args += ' -e %s' % quote_shell_string(settings["expect"])
 
     if "port" in settings:
-        port = int(settings["port"]) # ValueSpec was broken, convert to int
+        port = int(settings["port"])  # ValueSpec was broken, convert to int
         args += ' -p %d' % port
 
     # Be compatible to legacy option
@@ -61,9 +62,7 @@ def check_smtp_arguments(params):
         args += ' -f %s' % quote_shell_string(settings["from"])
 
     if "response_time" in settings:
-        args += ' -w %d -c %d' % (
-            settings["response_time"][0],
-            settings["response_time"][1])
+        args += ' -w %d -c %d' % (settings["response_time"][0], settings["response_time"][1])
 
     if "timeout" in settings:
         args += ' -t %d' % settings["timeout"]
@@ -92,14 +91,16 @@ def check_smtp_arguments(params):
         args += ' -H ' + address
     return args
 
+
 def check_smtp_desc(params):
     if params[0].startswith("^"):
         return params[0][1:]
     return "SMTP %s" % params[0]
 
+
 active_check_info['smtp'] = {
-    "command_line"        : '$USER1$/check_smtp $ARG1$',
-    "argument_function"   : check_smtp_arguments,
-    "service_description" : check_smtp_desc,
-    "has_perfdata"        : True,
+    "command_line": '$USER1$/check_smtp $ARG1$',
+    "argument_function": check_smtp_arguments,
+    "service_description": check_smtp_desc,
+    "has_perfdata": True,
 }

@@ -24,22 +24,25 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+
 def parse_f5_bigip_snat(info):
     snats = {}
     for line in info:
         name = line[0]
         snats.setdefault(name, {})
-        snats[name].setdefault("if_in_pkts"              , []).append(int(line[1]))
-        snats[name].setdefault("if_out_pkts"             , []).append(int(line[2]))
-        snats[name].setdefault("if_in_octets"            , []).append(int(line[3]))
-        snats[name].setdefault("if_out_octets"           , []).append(int(line[4]))
-        snats[name].setdefault("connections_rate"        , []).append(int(line[5]))
-        snats[name].setdefault("connections"             , []).append(int(line[6]))
+        snats[name].setdefault("if_in_pkts", []).append(int(line[1]))
+        snats[name].setdefault("if_out_pkts", []).append(int(line[2]))
+        snats[name].setdefault("if_in_octets", []).append(int(line[3]))
+        snats[name].setdefault("if_out_octets", []).append(int(line[4]))
+        snats[name].setdefault("connections_rate", []).append(int(line[5]))
+        snats[name].setdefault("connections", []).append(int(line[6]))
     return snats
+
 
 def inventory_f5_bigip_snat(parsed):
     for name in parsed.iterkeys():
         yield name, {}
+
 
 def check_f5_bigip_snat(item, params, parsed):
     if item in parsed:
@@ -49,19 +52,19 @@ def check_f5_bigip_snat(item, params, parsed):
         now = time.time()
         # Calculate counters
         for what in [
-                        "if_in_pkts",
-                        "if_out_pkts",
-                        "if_in_octets",
-                        "if_out_octets",
-                        "connections_rate",
-                    ]:
+                "if_in_pkts",
+                "if_out_pkts",
+                "if_in_octets",
+                "if_out_octets",
+                "connections_rate",
+        ]:
             summed_values.setdefault(what, 0)
             for idx, entry in enumerate(snat[what]):
                 rate = get_rate("%s.%s" % (what, idx), now, entry)
                 summed_values[what] += rate
 
         # Calculate sum value
-        for what, function in [ ("connections",  sum) ]:
+        for what, function in [("connections", sum)]:
             summed_values[what] = function(snat[what])
 
         perfdata = summed_values.items()
@@ -74,15 +77,16 @@ def check_f5_bigip_snat(item, params, parsed):
 
         # Check configured limits
         map_paramvar_to_text = {
-            "if_in_octets":    "Incoming Bytes",
-            "if_out_octets":   "Outgoing Bytes",
+            "if_in_octets": "Incoming Bytes",
+            "if_out_octets": "Outgoing Bytes",
             "if_total_octets": "Total Bytes",
-            "if_in_pkts":      "Incoming Packets",
-            "if_out_pkts":     "Outgoing Packets",
-            "if_total_pkts":   "Total Packets",
+            "if_in_pkts": "Incoming Packets",
+            "if_out_pkts": "Outgoing Packets",
+            "if_total_pkts": "Total Packets",
         }
-        summed_values["if_total_octets"] = summed_values["if_in_octets"]  + summed_values["if_out_octets"]
-        summed_values["if_total_pkts"]   = summed_values["if_in_pkts"]    + summed_values["if_out_pkts"]
+        summed_values[
+            "if_total_octets"] = summed_values["if_in_octets"] + summed_values["if_out_octets"]
+        summed_values["if_total_pkts"] = summed_values["if_in_pkts"] + summed_values["if_out_pkts"]
         for param_var, levels in params.items():
             if param_var.endswith("_lower") and type(levels) == tuple:
                 levels = (None, None) + levels
@@ -90,8 +94,9 @@ def check_f5_bigip_snat(item, params, parsed):
             state, extra_text, _extra_perfdata = check_levels(value, param_var, levels)
             if state:
                 if "octets" in param_var:
-                    value = get_bytes_human_readable(value, base = 1000.0)
-                yield state, "%s: %s%s" % (map_paramvar_to_text[param_var.rstrip("_lower")], value, extra_text)
+                    value = get_bytes_human_readable(value, base=1000.0)
+                yield state, "%s: %s%s" % (map_paramvar_to_text[param_var.rstrip("_lower")], value,
+                                           extra_text)
 
 
 check_info["f5_bigip_snat"] = {

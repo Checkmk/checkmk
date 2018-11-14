@@ -36,10 +36,10 @@ def license_check_levels(have, used, params):
         warn = max(0, have - params[0])
         crit = max(0, have - params[1])
     else:
-        warn = have * (1 - params[0]/100)
-        crit = have * (1 - params[1]/100)
+        warn = have * (1 - params[0] / 100)
+        crit = have * (1 - params[1] / 100)
 
-    perfdata = [ ( "licenses", used, warn, crit, 0, have )]
+    perfdata = [("licenses", used, warn, crit, 0, have)]
     if used <= have:
         infotext = "used %d out of %d licenses" % (used, have)
     else:

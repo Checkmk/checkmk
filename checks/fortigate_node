@@ -24,7 +24,6 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-
 #
 # monitoring of cluster members (nodes) in fortigate high availability tree
 #
@@ -48,7 +47,6 @@
 # .1.3.6.1.4.1.12356.101.13.2.1.1.3.1  0
 # .1.3.6.1.4.1.12356.101.13.2.1.1.4.1  19
 # .1.3.6.1.4.1.12356.101.13.2.1.1.6.1  443
-
 
 #   .--Info----------------------------------------------------------------.
 #   |                         ___        __                                |
@@ -76,9 +74,9 @@ def parse_fortigate_node(info):
 
         parsed.setdefault("nodes", {})
         parsed["nodes"].setdefault(item_name, {
-            "cpu"      : float(cpu_str),
-            "memory"   : int(memory_str),
-            "sessions" : int(sessions_str),
+            "cpu": float(cpu_str),
+            "memory": int(memory_str),
+            "sessions": int(sessions_str),
         })
 
     return parsed
@@ -93,7 +91,7 @@ def check_fortigate_cluster(_no_item, _no_params, parsed):
     map_mode = {
         "1": "Standalone",
         "2": "Active/Active",
-        "3": "Active/Passive"
+        "3": "Active/Passive",
     }
 
     if "cluster_info" in parsed:
@@ -102,24 +100,29 @@ def check_fortigate_cluster(_no_item, _no_params, parsed):
 
 
 check_info["fortigate_node"] = {
-    "parse_function"      : parse_fortigate_node,
-    "inventory_function"  : inventory_fortigate_cluster,
-    "check_function"      : check_fortigate_cluster,
-    "service_description" : "Cluster Info",
-    "snmp_scan_function"  : lambda oid: ".1.3.6.1.4.1.12356.101.1" in oid(".1.3.6.1.2.1.1.2.0"),
-    "snmp_info"           : [
-        (".1.3.6.1.4.1.12356.101.13.1", [1,  # fgHaSystemMode
-                                         7,  # fgHaGroupName
-                                         ]),
-        (".1.3.6.1.4.1.12356.101.13.2.1.1", [11, # fgHaStatsHostname
-                                             3,  # fgHaStatsCpuUsage
-                                             4,  # fgHaStatsMemUsage
-                                             6,  # fgHaStatsSesCount
-                                             OID_END
-                                             ])
+    "parse_function": parse_fortigate_node,
+    "inventory_function": inventory_fortigate_cluster,
+    "check_function": check_fortigate_cluster,
+    "service_description": "Cluster Info",
+    "snmp_scan_function": lambda oid: ".1.3.6.1.4.1.12356.101.1" in oid(".1.3.6.1.2.1.1.2.0"),
+    "snmp_info": [
+        (
+            ".1.3.6.1.4.1.12356.101.13.1",
+            [
+                1,  # fgHaSystemMode
+                7,  # fgHaGroupName
+            ]),
+        (
+            ".1.3.6.1.4.1.12356.101.13.2.1.1",
+            [
+                11,  # fgHaStatsHostname
+                3,  # fgHaStatsCpuUsage
+                4,  # fgHaStatsMemUsage
+                6,  # fgHaStatsSesCount
+                OID_END
+            ])
     ],
 }
-
 
 #.
 #   .--CPU-----------------------------------------------------------------.
@@ -130,7 +133,6 @@ check_info["fortigate_node"] = {
 #   |                          \____|_|    \___/                           |
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
-
 
 fortigate_node_cpu_default_levels = (80.0, 90.0)
 
@@ -146,13 +148,12 @@ def check_fortigate_node_cpu(item, params, parsed):
 
 
 check_info["fortigate_node.cpu"] = {
-    "inventory_function"  : inventory_fortigate_node_cpu,
-    "check_function"      : check_fortigate_node_cpu,
-    "service_description" : "CPU utilization %s",
-    "has_perfdata"        : True,
-    "includes"            : [ "cpu_util.include" ],
+    "inventory_function": inventory_fortigate_node_cpu,
+    "check_function": check_fortigate_node_cpu,
+    "service_description": "CPU utilization %s",
+    "has_perfdata": True,
+    "includes": ["cpu_util.include"],
 }
-
 
 #.
 #   .--Memory--------------------------------------------------------------.
@@ -164,10 +165,9 @@ check_info["fortigate_node.cpu"] = {
 #   |                                                |___/                 |
 #   '----------------------------------------------------------------------'
 
-
 #fortigate_node_memory_default_levels = (70, 80)
 factory_settings['fortigate_node_memory_default_levels'] = {
-        'levels'  : ( 70.0, 80.0 ),
+    'levels': (70.0, 80.0),
 }
 
 
@@ -205,14 +205,13 @@ def check_fortigate_node_mem(item, params, parsed):
 
 
 check_info["fortigate_node.memory"] = {
-    "inventory_function"        : inventory_fortigate_node_mem,
-    "check_function"            : check_fortigate_node_mem,
-    "service_description"       : "Memory usage %s",
-    "has_perfdata"              : True,
-    "default_levels_variable"   : "fortigate_node_memory_default_levels",
-    "group"                     : "fortigate_node_memory",
+    "inventory_function": inventory_fortigate_node_mem,
+    "check_function": check_fortigate_node_mem,
+    "service_description": "Memory usage %s",
+    "has_perfdata": True,
+    "default_levels_variable": "fortigate_node_memory_default_levels",
+    "group": "fortigate_node_memory",
 }
-
 
 #.
 #   .--Sessions------------------------------------------------------------.
@@ -225,6 +224,7 @@ check_info["fortigate_node.memory"] = {
 #   '----------------------------------------------------------------------'
 
 fortigate_node_sessions_default_levels = (100000, 150000)
+
 
 def inventory_fortigate_node_ses(parsed):
     for hostname in parsed["nodes"]:
@@ -239,10 +239,10 @@ def check_fortigate_node_ses(item, params, parsed):
 
 
 check_info["fortigate_node.sessions"] = {
-    "inventory_function"  : inventory_fortigate_node_ses,
-    "check_function"      : check_fortigate_node_ses,
-    "service_description" : "Sessions %s",
-    "has_perfdata"        : True,
-    "group"               : "fortigate_node_sessions",
-    "includes"            : ["fortigate_sessions.include"],
+    "inventory_function": inventory_fortigate_node_ses,
+    "check_function": check_fortigate_node_ses,
+    "service_description": "Sessions %s",
+    "has_perfdata": True,
+    "group": "fortigate_node_sessions",
+    "includes": ["fortigate_sessions.include"],
 }

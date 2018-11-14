@@ -33,15 +33,15 @@ def apache_status_check_params(value, params, op_txt):
             return val < param
 
     warn, crit = params
-    extra_perf = [ warn, crit ]
-    levelstxt  = ""
-    state      = 0
+    extra_perf = [warn, crit]
+    levelstxt = ""
+    state = 0
 
     if apply_operator(value, crit, op_txt):
-        state  = 2
+        state = 2
         symbol = "(!!)"
     elif apply_operator(value, warn, op_txt):
-        state  = 1
+        state = 1
         symbol = "(!)"
 
     if state:
@@ -53,44 +53,45 @@ def apache_status_check_params(value, params, op_txt):
 
 _apache_status_fields = {
     # key                sort  convert-func param_function
-    'Uptime':              (0,  int),
-    'IdleWorkers':         (5,  int),
-    'BusyWorkers':         (6,  int, apache_status_check_params, "at"),
-    'OpenSlots':           (7,  int, apache_status_check_params, "below"),
-    'TotalSlots':          (8,  int),
-    'Total Accesses':      (9,  int),
-    'CPULoad':             (10, float),
-    'Total kBytes':        (11, float),
-    'ReqPerSec':           (12, float),
-    'BytesPerReq':         (13, float),
-    'BytesPerSec':         (14, float),
-    'Scoreboard':          (15, str),
-    'ConnsTotal':          (16, int),
-    'ConnsAsyncWriting':   (17, int),
+    'Uptime': (0, int),
+    'IdleWorkers': (5, int),
+    'BusyWorkers': (6, int, apache_status_check_params, "at"),
+    'OpenSlots': (7, int, apache_status_check_params, "below"),
+    'TotalSlots': (8, int),
+    'Total Accesses': (9, int),
+    'CPULoad': (10, float),
+    'Total kBytes': (11, float),
+    'ReqPerSec': (12, float),
+    'BytesPerReq': (13, float),
+    'BytesPerSec': (14, float),
+    'Scoreboard': (15, str),
+    'ConnsTotal': (16, int),
+    'ConnsAsyncWriting': (17, int),
     'ConnsAsyncKeepAlive': (18, int),
-    'ConnsAsyncClosing':   (19, int),
-    'BusyServers':         (20, int),
-    'IdleServers':         (21, int),
+    'ConnsAsyncClosing': (19, int),
+    'BusyServers': (20, int),
+    'IdleServers': (21, int),
 }
 
 _apache_status_stats = {
-    'Waiting':        '_',
-    'StartingUp':     'S',
+    'Waiting': '_',
+    'StartingUp': 'S',
     'ReadingRequest': 'R',
-    'SendingReply':   'W',
-    'Keepalive':      'K',
-    'DNS':            'D',
-    'Closing':        'C',
-    'Logging':        'L',
-    'Finishing':      'G',
-    'IdleCleanup':    'O',
+    'SendingReply': 'W',
+    'Keepalive': 'K',
+    'DNS': 'D',
+    'Closing': 'C',
+    'Logging': 'L',
+    'Finishing': 'G',
+    'IdleCleanup': 'O',
 }
+
 
 def apache_status_parse(info):
     data = {}
     for line in info:
         if len(line) != 4 and not (len(line) == 5 and line[2] == 'Total'):
-            continue # Skip unexpected lines
+            continue  # Skip unexpected lines
         label = (' '.join(line[2:-1])).rstrip(':')
         if label not in _apache_status_fields:
             continue
@@ -122,9 +123,10 @@ def apache_status_parse(info):
 
     return data
 
+
 def inventory_apache_status(info):
-    return [ (item, {})
-             for item in apache_status_parse(info) ]
+    return [(item, {}) for item in apache_status_parse(info)]
+
 
 def check_apache_status(item, params, info):
     if params is None:
@@ -153,8 +155,8 @@ def check_apache_status(item, params, info):
     data = data_dict.items()
 
     worst_state = 0
-    output      = []
-    perfdata    = []
+    output = []
+    perfdata = []
 
     # Sort keys
     data.sort(cmp = lambda x, y: cmp(_apache_status_fields.get(x[0], (0, None))[0],
@@ -195,10 +197,11 @@ def check_apache_status(item, params, info):
 
     return (worst_state, ', '.join(output), perfdata)
 
+
 check_info['apache_status'] = {
-    "check_function" :      check_apache_status,
-    "inventory_function" :  inventory_apache_status,
-    "service_description" : "Apache %s Status",
-    "has_perfdata" :        True,
-    "group" :               "apache_status"
+    "check_function": check_apache_status,
+    "inventory_function": inventory_apache_status,
+    "service_description": "Apache %s Status",
+    "has_perfdata": True,
+    "group": "apache_status"
 }

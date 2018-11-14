@@ -24,14 +24,14 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+
 def check_tcp_arguments(params):
     port, settings = params
     args = ' -p %d' % port
 
     if "response_time" in settings:
-        args += ' -w %f -c %f' % (
-            settings["response_time"][0]/1000.0,
-            settings["response_time"][1]/1000.0)
+        args += ' -w %f -c %f' % (settings["response_time"][0] / 1000.0,
+                                  settings["response_time"][1] / 1000.0)
 
     if "timeout" in settings:
         args += ' -t %d' % settings["timeout"]
@@ -85,11 +85,9 @@ def check_tcp_arguments(params):
     return args
 
 
-
 active_check_info['tcp'] = {
-    "command_line"        : '$USER1$/check_tcp $ARG1$',
-    "argument_function"   : check_tcp_arguments,
-    "service_description" : lambda args: args[1].get("svc_description", "TCP Port %d" % args[0]),
-    "has_perfdata"        : True,
+    "command_line": '$USER1$/check_tcp $ARG1$',
+    "argument_function": check_tcp_arguments,
+    "service_description": lambda args: args[1].get("svc_description", "TCP Port %d" % args[0]),
+    "has_perfdata": True,
 }
-

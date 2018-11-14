@@ -1,6 +1,7 @@
 #!/usr/bin/python
 # -*- encoding: utf-8; py-indent-offset: 4 -*-
 
+
 def check_mkevents_arguments(params):
     args = ""
     if "remote" in params:
@@ -22,14 +23,16 @@ def check_mkevents_arguments(params):
         args += " " + quote_shell_string(params["application"])
     return args
 
+
 def check_mkevents_description(params):
     item = params.get('item', params.get('application'))
     if item:
         return "Events %s" % item
     return "Events"
 
+
 active_check_info['mkevents'] = {
-    "command_line"        : '$USER1$/check_mkevents $ARG1$',
-    "argument_function"   : check_mkevents_arguments,
-    "service_description" : check_mkevents_description,
+    "command_line": '$USER1$/check_mkevents $ARG1$',
+    "argument_function": check_mkevents_arguments,
+    "service_description": check_mkevents_description,
 }

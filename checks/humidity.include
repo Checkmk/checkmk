@@ -29,28 +29,26 @@
 def check_humidity(humidity, params):
     if not params:
         params = {
-            "levels_lower" : (-1, -1),
-            "levels"       : (101, 101),
+            "levels_lower": (-1, -1),
+            "levels": (101, 101),
         }
-    elif type(params) in [ list, tuple ]:
+    elif type(params) in [list, tuple]:
         params = {
-            "levels_lower" : (params[1], params[0]),
-            "levels"       : (params[2], params[3]),
+            "levels_lower": (params[1], params[0]),
+            "levels": (params[2], params[3]),
         }
 
     warn_lower, crit_lower = params.get("levels_lower", (None, None))
     warn_upper, crit_upper = params.get("levels", (None, None))
-    perfdata = [ ("humidity", humidity, warn_upper, crit_upper, 0, 100) ]
+    perfdata = [("humidity", humidity, warn_upper, crit_upper, 0, 100)]
     infotext = get_percent_human_readable(humidity)
 
     if warn_lower is not None and crit_lower is not None:
-        levelstext_lower = " (warn/crit below %s/%s)" % (
-                            get_percent_human_readable(warn_lower),
-                            get_percent_human_readable(crit_lower))
+        levelstext_lower = " (warn/crit below %s/%s)" % (get_percent_human_readable(warn_lower),
+                                                         get_percent_human_readable(crit_lower))
     if warn_upper is not None and crit_upper is not None:
-        levelstext_upper = " (warn/crit at %s/%s)" % (
-                            get_percent_human_readable(warn_upper),
-                            get_percent_human_readable(crit_upper))
+        levelstext_upper = " (warn/crit at %s/%s)" % (get_percent_human_readable(warn_upper),
+                                                      get_percent_human_readable(crit_upper))
 
     status = 0
     levelstext = ""

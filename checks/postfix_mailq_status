@@ -24,7 +24,6 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-
 # single
 # <<<postfix_mailq_status:sep(58)>>>
 # postfix/postfix-script: the Postfix mail system is running: PID: 2839
@@ -36,7 +35,6 @@
 # postfix-external/postfix-script: the Postfix mail system is running: PID: 12982
 # postfix-internal/postfix-script: the Postfix mail system is running: PID: 13051
 # postfix-uat-cdi/postfix-script: the Postfix mail system is not running
-
 
 
 def parse_postfix_mailq_status(info):
@@ -58,7 +56,7 @@ def parse_postfix_mailq_status(info):
 
 
 def inventory_postfix_mailq_status(parsed):
-    return [ (queuename, None) for queuename in parsed ]
+    return [(queuename, None) for queuename in parsed]
 
 
 def check_postfix_mailq_status(item, params, parsed):
@@ -76,8 +74,8 @@ def check_postfix_mailq_status(item, params, parsed):
 
 
 check_info['postfix_mailq_status'] = {
-    'parse_function'        : parse_postfix_mailq_status,
-    'inventory_function'    : inventory_postfix_mailq_status,
-    'check_function'        : check_postfix_mailq_status,
-    'service_description'   : 'Postfix status %s',
+    'parse_function': parse_postfix_mailq_status,
+    'inventory_function': inventory_postfix_mailq_status,
+    'check_function': check_postfix_mailq_status,
+    'service_description': 'Postfix status %s',
 }

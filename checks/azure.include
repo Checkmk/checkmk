@@ -186,4 +186,6 @@ def discover_azure_by_metrics(*desired_metrics):
                 yield name, {}
 
     return discovery_function
+
+
 #.

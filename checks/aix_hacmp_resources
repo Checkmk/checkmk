@@ -24,7 +24,6 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-
 # <<<aix_hacmp_resources:sep(58)>>>
 # pdb213rg:ONLINE:pasv0450:non-concurrent:OHN:FNPN:NFB:ignore::: : :::
 # pdb213rg:OFFLINE:pasv0449:non-concurrent:OHN:FNPN:NFB:ignore::: : :::
@@ -36,7 +35,7 @@
 #  u'pmon01rg': [(u'pasv0449', u'online'), (u'pasv0450', u'offline')]}
 
 factory_settings["aix_hacmp_resources"] = {
-    "expect_online_on"  : "first",
+    "expect_online_on": "first",
 }
 
 
@@ -44,17 +43,15 @@ def parse_aix_hacmp_resources(info):
     parsed = {}
     for line in info:
         if line[0] not in parsed:
-            parsed[line[0]] = [ (line[2], line[1].lower()) ]
+            parsed[line[0]] = [(line[2], line[1].lower())]
         else:
-            parsed[line[0]].append(
-                (line[2], line[1].lower())
-            )
+            parsed[line[0]].append((line[2], line[1].lower()))
 
     return parsed
 
 
 def inventory_aix_hacmp_resources(parsed):
-    return [ (key, None) for key in parsed ]
+    return [(key, None) for key in parsed]
 
 
 @get_parsed_item_data
@@ -82,10 +79,10 @@ def check_aix_hacmp_resources(item, params, data):
 
 
 check_info['aix_hacmp_resources'] = {
-    'default_levels_variable'   : "aix_hacmp_resources",
-    'parse_function'            : parse_aix_hacmp_resources,
-    'inventory_function'        : inventory_aix_hacmp_resources,
-    'check_function'            : check_aix_hacmp_resources,
-    'service_description'       : 'HACMP RG %s',
-    'group'                     : 'hacmp_resources',
+    'default_levels_variable': "aix_hacmp_resources",
+    'parse_function': parse_aix_hacmp_resources,
+    'inventory_function': inventory_aix_hacmp_resources,
+    'check_function': check_aix_hacmp_resources,
+    'service_description': 'HACMP RG %s',
+    'group': 'hacmp_resources',
 }

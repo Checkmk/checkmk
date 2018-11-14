@@ -55,7 +55,7 @@ def parse_aix_if(info):
         if line[0].startswith('['):
             nic = line[0][1:-1]
             index += 1
-            nic_info[nic] = { "ifIndex": index }
+            nic_info[nic] = {"ifIndex": index}
             nic_info[nic]["ifDescr"] = nic
             nic_info[nic]["ifAlias"] = nic
             if nic.startswith("lo"):
@@ -82,7 +82,7 @@ def parse_aix_if(info):
         elif " ".join(line[0:3]) == "Adapter Data Rate:":
             # speed is in Mb/s
             nic_info[nic]["ifSpeed"] = int(line[3]) * 1000000
-        elif  " ".join(line[0:2]) == "Driver Flags:":
+        elif " ".join(line[0:2]) == "Driver Flags:":
             nic_info[nic]["flags"] = line[2:]
         elif " ".join(line[0:3]) == "KIM Driver Flags:":
             nic_info[nic]["flags"] = line[3:]
@@ -99,7 +99,7 @@ def parse_aix_if(info):
         # if they have been used at least some time since the
         # system boot.
         elif nic_info[nic]["ifInOctets"] > 0:
-             nic_info[nic]["ifOperStatus"] = 1
+            nic_info[nic]["ifOperStatus"] = 1
         else:
             # unknown, or never been up
             nic_info[nic]["ifOperStatus"] = 4
@@ -109,11 +109,13 @@ def parse_aix_if(info):
         nic_info[nic]["ifOutDiscards"] = 0
 
         nic_list = []
-        for attr in [ "ifIndex", "ifDescr", "ifType", "ifSpeed", "ifOperStatus",
-          "ifInOctets", "inucast", "inmcast", "inbcast", "ifInDiscards",
-          "ifInErrors", "ifOutOctets", "outucast", "outmcast", "outbcast",
-          "ifOutDiscards", "ifOutErrors", "ifOutQLen", "ifAlias", "ifPhysAddress" ]:
-           nic_list.append(nic_info[nic].get(attr,0))
+        for attr in [
+                "ifIndex", "ifDescr", "ifType", "ifSpeed", "ifOperStatus", "ifInOctets", "inucast",
+                "inmcast", "inbcast", "ifInDiscards", "ifInErrors", "ifOutOctets", "outucast",
+                "outmcast", "outbcast", "ifOutDiscards", "ifOutErrors", "ifOutQLen", "ifAlias",
+                "ifPhysAddress"
+        ]:
+            nic_list.append(nic_info[nic].get(attr, 0))
         if_table.append(map(str, nic_list))
     return if_table
 
@@ -127,12 +129,12 @@ def check_aix_if(item, params, info):
 
 
 check_info["aix_if"] = {
-    'inventory_function'     : inventory_aix_if,
-    'check_function'         : check_aix_if,
-    'parse_function'         : parse_aix_if,
-    'service_description'    : 'Interface %s',
-    'has_perfdata'           : True,
-    'group'                  : 'if',
+    'inventory_function': inventory_aix_if,
+    'check_function': check_aix_if,
+    'parse_function': parse_aix_if,
+    'service_description': 'Interface %s',
+    'has_perfdata': True,
+    'group': 'if',
     'default_levels_variable': 'if_default_levels',
-    'includes'               : ['if.include']
+    'includes': ['if.include']
 }

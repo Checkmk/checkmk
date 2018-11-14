@@ -146,18 +146,13 @@ def check_azure_databases_connections(_item, params, resource):
 
 
 check_info['azure_databases.connections'] = {
-    'inventory_function':
-        discover_azure_by_metrics('average_connection_successful', 'average_connection_failed'),
-    'check_function':
-        check_azure_databases_connections,
-    'has_perfdata':
-        True,
-    'service_description':
-        "DB %s Connections",
-    'default_levels_variable':
-        'azure_databases_default_levels',
-    'group':
-        'azure_databases',
+    'inventory_function': discover_azure_by_metrics('average_connection_successful',
+                                                    'average_connection_failed'),
+    'check_function': check_azure_databases_connections,
+    'has_perfdata': True,
+    'service_description': "DB %s Connections",
+    'default_levels_variable': 'azure_databases_default_levels',
+    'group': 'azure_databases',
 }
 
 

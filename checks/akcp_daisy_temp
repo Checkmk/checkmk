@@ -24,15 +24,14 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-factory_settings["akcp_daisy_temp_defaultlevels"] = {
-    "levels": (28, 32)
-}
+factory_settings["akcp_daisy_temp_defaultlevels"] = {"levels": (28, 32)}
+
 
 def inventory_akcp_daisy_temp(info):
     for _port, subport, name, _temp in info:
         # Ignore sensors that are found by the non-daisychaining-version of
         # this check (akcp_sensor_temp)
-        if subport not in [ '-1', '0' ]:
+        if subport not in ['-1', '0']:
             yield name, {}
 
 

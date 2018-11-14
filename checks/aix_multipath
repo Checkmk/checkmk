@@ -31,6 +31,7 @@
 #hdisk1 vscsi0 Available Enabled
 #hdisk2 vscsi0 Available Enabled
 
+
 def inventory_aix_multipath(info):
     disks = {}
     for disk, _controller, _status in info:
@@ -38,7 +39,8 @@ def inventory_aix_multipath(info):
         # too, but those have incomplete status => false positives
         if disk.startswith("hdisk"):
             disks[disk] = disks.get(disk, 0) + 1
-    return [(disk, {'paths' : p}) for disk, p in disks.iteritems()]
+    return [(disk, {'paths': p}) for disk, p in disks.iteritems()]
+
 
 def check_aix_multipath(item, params, info):
     path_count = 0
@@ -54,7 +56,7 @@ def check_aix_multipath(item, params, info):
                 state_count += 1
 
     #How many Paths are not enabled
-    if state_count != 0 and (100 / path_count *  state_count ) < 50:
+    if state_count != 0 and (100 / path_count * state_count) < 50:
         state = 1
         message.append('%d paths not enabled (!)' % (state_count))
     elif state_count != 0:
@@ -73,8 +75,7 @@ def check_aix_multipath(item, params, info):
 
 
 check_info["aix_multipath"] = {
-    "check_function"          : check_aix_multipath,
-    "inventory_function"      : inventory_aix_multipath,
-    "service_description"     : "Multipath %s",
+    "check_function": check_aix_multipath,
+    "inventory_function": inventory_aix_multipath,
+    "service_description": "Multipath %s",
 }
-

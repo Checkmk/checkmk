@@ -24,23 +24,23 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-
 # Example for contents of info
 #           description            state  online  critical_desc  normal_desc
 # ["Diesel1 Generatorbetrieb",      "2",   "1",        "An",         "Aus"]]
 
-
 check_info["akcp_exp_drycontact"] = {
-    "check_function"      : check_akcp_sensor_drycontact,
-    "inventory_function"  : inventory_akcp_sensor_no_params,
-    "service_description" : "Dry Contact %s",
-    "snmp_scan_function"  : snmp_scan_akcp_exp,
-    "snmp_info"           : ( ".1.3.6.1.4.1.3854.2.3.4.1", [
-                                         2, # SPAGENT-MIB::sensorDryContactDescription
-                                         6, # SPAGENT-MIB::sensorDryContactStatus
-                                        46, # SPAGENT-MIB::sensorDryContactCriticalDesc
-                                        48, # SPAGENT-MIB::sensorDryContactNormalDesc
-                                         8, # SPAGENT-MIB::sensorDryContactGoOffline
-                                         ] ),
-    "includes"            : [ "akcp_sensor.include" ],
+    "check_function": check_akcp_sensor_drycontact,
+    "inventory_function": inventory_akcp_sensor_no_params,
+    "service_description": "Dry Contact %s",
+    "snmp_scan_function": snmp_scan_akcp_exp,
+    "snmp_info": (
+        ".1.3.6.1.4.1.3854.2.3.4.1",
+        [
+            2,  # SPAGENT-MIB::sensorDryContactDescription
+            6,  # SPAGENT-MIB::sensorDryContactStatus
+            46,  # SPAGENT-MIB::sensorDryContactCriticalDesc
+            48,  # SPAGENT-MIB::sensorDryContactNormalDesc
+            8,  # SPAGENT-MIB::sensorDryContactGoOffline
+        ]),
+    "includes": ["akcp_sensor.include"],
 }

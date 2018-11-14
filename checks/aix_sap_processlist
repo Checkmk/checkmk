@@ -24,7 +24,6 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-
 # Example output from agent:
 # <<<aix_sap_processlist:sep(44)>>>
 # [01]
@@ -65,18 +64,18 @@ def parse_aix_sap_processlist(info):
             instance = None
 
         elif instance and len(line) == 7 and line[-1] != " pid":
-            description, status, textstatus, start = [re.sub("^ ","",x) for x in line[1:5]]
+            description, status, textstatus, start = [re.sub("^ ", "", x) for x in line[1:5]]
 
         elif instance and len(line) == 9:
-            description, status, textstatus = [re.sub("^ ","",x) for x in line[1:4]]
-            start = re.sub("^ ","", line[6])
+            description, status, textstatus = [re.sub("^ ", "", x) for x in line[1:4]]
+            start = re.sub("^ ", "", line[6])
 
         else:
             continue
 
         if instance is not None and description is not None:
             itemname = "%s on Instance %s" % (description, instance)
-            parsed.setdefault(itemname, { "status" : status, "textstatus" : textstatus })
+            parsed.setdefault(itemname, {"status": status, "textstatus": textstatus})
             try:
                 parsed[itemname]["start_time"] = time.strptime(start, "%Y %m %d %H:%M:%S")
             except ValueError:
@@ -92,18 +91,19 @@ def inventory_aix_sap_processlist(parsed):
 
 def check_aix_sap_processlist(item, _no_params, parsed):
     if item in parsed:
-        data       = parsed[item]
-        status     = data["status"]
+        data = parsed[item]
+        status = data["status"]
         textstatus = data["textstatus"]
-        infotexts  = [ "Status: %s" % textstatus ]
-        perfdata   = []
+        infotexts = ["Status: %s" % textstatus]
+        perfdata = []
 
         if "start_time" in data:
             start_time = data["start_time"]
-            start      = time.strftime("%c", start_time)
-            elapsed    = time.time() - time.mktime(start_time)
-            perfdata   = [ ("runtime", elapsed) ]
-            infotexts.append( "Start Time: %s, Elapsed Time: %s" % (start, get_age_human_readable(elapsed)) )
+            start = time.strftime("%c", start_time)
+            elapsed = time.time() - time.mktime(start_time)
+            perfdata = [("runtime", elapsed)]
+            infotexts.append(
+                "Start Time: %s, Elapsed Time: %s" % (start, get_age_human_readable(elapsed)))
 
         if status == "GREEN":
             state = 0
@@ -115,9 +115,9 @@ def check_aix_sap_processlist(item, _no_params, parsed):
 
 
 check_info["aix_sap_processlist"] = {
-    'parse_function'         : parse_aix_sap_processlist,
-    'inventory_function'     : inventory_aix_sap_processlist,
-    'check_function'         : check_aix_sap_processlist,
-    'service_description'    : 'SAP Process %s',
-    'has_perfdata'           : True,
+    'parse_function': parse_aix_sap_processlist,
+    'inventory_function': inventory_aix_sap_processlist,
+    'check_function': check_aix_sap_processlist,
+    'service_description': 'SAP Process %s',
+    'has_perfdata': True,
 }

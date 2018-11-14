@@ -24,24 +24,24 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-
 # Example for contents of info
 #      description       percent  status  online
 # ["Humdity1 Description", "0",    "0",    "2"]
 
-
 check_info["akcp_sensor_humidity"] = {
-    "check_function"      : check_akcp_humidity,
-    "inventory_function"  : inventory_akcp_humidity,
-    "service_description" : "Humidity %s",
-    "has_perfdata"        : True,
-    "snmp_scan_function"  : snmp_scan_akcp_sensor,
-    "snmp_info"           : ( ".1.3.6.1.4.1.3854.1.2.2.1.17.1", [
-                                         1, # SPAGENT-MIB::sensorProbeHumidityDescription
-                                         3, # SPAGENT-MIB::sensorProbeHumidityPercent
-                                         4, # SPAGENT-MIB::sensorProbeHumidityStatus
-                                         5, # SPAGENT-MIB::sensorProbeHumidityOnline
-                                        ] ),
-    "group"               : "humidity",
-    "includes"            : ["humidity.include", "akcp_sensor.include"],
+    "check_function": check_akcp_humidity,
+    "inventory_function": inventory_akcp_humidity,
+    "service_description": "Humidity %s",
+    "has_perfdata": True,
+    "snmp_scan_function": snmp_scan_akcp_sensor,
+    "snmp_info": (
+        ".1.3.6.1.4.1.3854.1.2.2.1.17.1",
+        [
+            1,  # SPAGENT-MIB::sensorProbeHumidityDescription
+            3,  # SPAGENT-MIB::sensorProbeHumidityPercent
+            4,  # SPAGENT-MIB::sensorProbeHumidityStatus
+            5,  # SPAGENT-MIB::sensorProbeHumidityOnline
+        ]),
+    "group": "humidity",
+    "includes": ["humidity.include", "akcp_sensor.include"],
 }

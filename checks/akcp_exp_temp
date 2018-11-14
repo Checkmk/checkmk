@@ -24,31 +24,31 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-
 # Example for contents of info
 #           description         degree unit status low_crit low_warn high_warn high_crit degreeraw online
 # ["Port 8 Temperatur CL Lager", "20", "C",   "5",   "10",    "20",    "30",     "40",      "0",     1]
 
-
 check_info["akcp_exp_temp"] = {
-    "check_function"          : check_akcp_sensor_temp,
-    "inventory_function"      : inventory_akcp_sensor_temp,
-    "service_description"     : "Temperature %s",
-    "has_perfdata"            : True,
-    "default_levels_variable" : "akcp_temp_default_levels",
-    "snmp_scan_function"      : snmp_scan_akcp_exp,
-    "snmp_info"               : ( ".1.3.6.1.4.1.3854.2.3.2.1", [
-                                         2,  # SPAGENT-MIB::sensorTemperatureDescription
-                                         4,  # SPAGENT-MIB::sensorTemperatureDegree
-                                         5,  # SPAGENT-MIB::sensorTemperatureUnit
-                                         6,  # SPAGENT-MIB::sensorTemperatureStatus
-                                         9,  # SPAGENT-MIB::sensorTemperatureLowCritical
-                                        10,  # SPAGENT-MIB::sensorTemperatureLowWarning
-                                        11,  # SPAGENT-MIB::sensorTemperatureHighWarning
-                                        12,  # SPAGENT-MIB::sensorTemperatureHighCritical
-                                        19,  # SPAGENT-MIB::sensorTemperatureRaw
-                                         8,  # SPAGENT-MIB::sensorTemperatureGoOffline
-                                         ] ),
-    "group"                   : "temperature",
-    "includes"                : [ "temperature.include", "akcp_sensor.include" ],
+    "check_function": check_akcp_sensor_temp,
+    "inventory_function": inventory_akcp_sensor_temp,
+    "service_description": "Temperature %s",
+    "has_perfdata": True,
+    "default_levels_variable": "akcp_temp_default_levels",
+    "snmp_scan_function": snmp_scan_akcp_exp,
+    "snmp_info": (
+        ".1.3.6.1.4.1.3854.2.3.2.1",
+        [
+            2,  # SPAGENT-MIB::sensorTemperatureDescription
+            4,  # SPAGENT-MIB::sensorTemperatureDegree
+            5,  # SPAGENT-MIB::sensorTemperatureUnit
+            6,  # SPAGENT-MIB::sensorTemperatureStatus
+            9,  # SPAGENT-MIB::sensorTemperatureLowCritical
+            10,  # SPAGENT-MIB::sensorTemperatureLowWarning
+            11,  # SPAGENT-MIB::sensorTemperatureHighWarning
+            12,  # SPAGENT-MIB::sensorTemperatureHighCritical
+            19,  # SPAGENT-MIB::sensorTemperatureRaw
+            8,  # SPAGENT-MIB::sensorTemperatureGoOffline
+        ]),
+    "group": "temperature",
+    "includes": ["temperature.include", "akcp_sensor.include"],
 }

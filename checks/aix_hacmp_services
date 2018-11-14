@@ -24,7 +24,6 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-
 # hacmp-aix
 # <<<aix_hacmp_services>>>
 # Status of the RSCT subsystems used by PowerHA SystemMirror:
@@ -89,7 +88,7 @@
 
 def parse_aix_hacmp_services(info):
     parsed = {}
-    check_block = False # are we in the check relevant info block?
+    check_block = False  # are we in the check relevant info block?
     for line in info:
 
         if line[0] == 'Details':
@@ -111,7 +110,7 @@ def parse_aix_hacmp_services(info):
 
 
 def inventory_aix_hacmp_services(parsed):
-    return [ (key, None) for key in parsed ]
+    return [(key, None) for key in parsed]
 
 
 def check_aix_hacmp_services(item, _no_params, parsed):
@@ -130,8 +129,8 @@ def check_aix_hacmp_services(item, _no_params, parsed):
 
 
 check_info['aix_hacmp_services'] = {
-    'parse_function'            : parse_aix_hacmp_services,
-    'inventory_function'        : inventory_aix_hacmp_services,
-    'check_function'            : check_aix_hacmp_services,
-    'service_description'       : 'HACMP Service %s',
+    'parse_function': parse_aix_hacmp_services,
+    'inventory_function': inventory_aix_hacmp_services,
+    'check_function': check_aix_hacmp_services,
+    'service_description': 'HACMP Service %s',
 }

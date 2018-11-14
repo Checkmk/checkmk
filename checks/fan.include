@@ -26,7 +26,7 @@
 
 
 def check_fan(rpm, params):
-    if type(params) == tuple:
+    if isinstance(params, tuple):
         params = {"lower": params}
 
     warn, crit = params["lower"]

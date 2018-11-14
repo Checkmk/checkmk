@@ -72,7 +72,7 @@ def _certificate_args(address_family, address, settings):
 
     if "cert_days" in settings:
         # legacy behavior
-        if type(settings["cert_days"]) == int:
+        if isinstance(settings["cert_days"], int):
             args += ['-C', settings["cert_days"]]
         else:
             warn, crit = settings["cert_days"]

@@ -128,7 +128,7 @@ def check_lparstat_aix_cpu(_no_item, params, info):
     # a pair of (warn, crit)
     result = 0
 
-    if type(params) == tuple:  # old config only levels io wait
+    if isinstance(params, tuple):  # old config only levels io wait
         warn, crit = params
         if wait >= crit:
             result = max(result, 2)
@@ -137,7 +137,7 @@ def check_lparstat_aix_cpu(_no_item, params, info):
             result = max(result, 1)
             infotext += "(!)"
 
-    elif type(params) == dict:
+    elif isinstance(params, dict):
         if 'util' in params:
             warn, crit = params['util']
             if util >= crit:

@@ -183,7 +183,7 @@ def check_fortigate_node_mem(item, params, parsed):
         # This check is only able to check the used space
         # The checkgroup "memory" might set negative values which act as levels for free space
         # These levels are converted to used space, too..
-        if type(params) == dict:
+        if isinstance(params, dict):
             warn, crit = map(abs, params["levels"])
         else:
             warn, crit = map(abs, params)
@@ -233,7 +233,7 @@ def inventory_fortigate_node_ses(parsed):
 
 def check_fortigate_node_ses(item, params, parsed):
     if item in parsed["nodes"]:
-        if type(params) == dict:
+        if isinstance(params, dict):
             params = params["levels"]
         return fortigate_sessions(parsed["nodes"][item]["sessions"], params)
 

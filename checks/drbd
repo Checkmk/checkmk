@@ -284,7 +284,7 @@ def drbd_get_block(item, info, checktype):
 def check_drbd_general(item, params, info):
     parsed = drbd_get_block(item, info, 'drbd')
 
-    if type(params) == tuple:
+    if isinstance(params, tuple):
         params_conv = {}
         params_conv.update({"roles_inventory": params[0] and params[0] or None})
         params_conv.update({

@@ -35,7 +35,7 @@ def inventory_qmail_stats(info):
 
 
 def check_qmail_stats(_no_item, params, info):
-    if type(params) != dict:
+    if not isinstance(params, dict):
         params = {
             "deferred": params,
         }

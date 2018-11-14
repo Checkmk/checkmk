@@ -38,7 +38,7 @@ def inventory_nullmailer_mailq(info):
 
 
 def check_nullmailer_mailq(_no_item, params, info):
-    if type(params) != dict:
+    if not isinstance(params, dict):
         params = {
             "deferred": params,
         }

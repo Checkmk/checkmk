@@ -42,10 +42,10 @@ def inventory_ups_socomec_capacity(info):
 def check_ups_socomec_capacity(item, params, info):
     # To support inventories with the old version
     # TODO This needs to be reworked. Defaults should not be coded into a check in such a fashion.
-    if type(params) is tuple:  # old format with 2 params in tuple
+    if isinstance(params, tuple):  # old format with 2 params in tuple
         warn, crit = params
         cap_warn, cap_crit = (95, 90)
-    elif type(params) is dict:  # new dict format
+    elif isinstance(params, dict):  # new dict format
         warn, crit = params.get('battime', (0, 0))
         cap_warn, cap_crit = params.get('capacity', (95, 90))
     else:

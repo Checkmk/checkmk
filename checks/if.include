@@ -61,7 +61,7 @@ def if64_disabled(hostname):
 
 def fix_if_64_highspeed(info):
     for line in info:
-        if type(line[3]) in [str, unicode]:  # not yet converted
+        if isinstance(line[3], basestring):  # not yet converted
             line[3] = saveint(line[3]) * 1000000
 
 
@@ -114,7 +114,7 @@ def if_extract_node(line, has_nodeinfo):
 
 
 def if_render_mac_address(ifPhysAddress):
-    if type(ifPhysAddress) != list:
+    if not isinstance(ifPhysAddress, list):
         mac_bytes = map(ord, ifPhysAddress)
     else:
         mac_bytes = ifPhysAddress
@@ -140,7 +140,7 @@ def if_pad_with_zeroes(info, ifIndex, has_nodeinfo, pad_portnumbers):
     if pad_portnumbers:
 
         def get_index(line):
-            if type(line[index]) == tuple:
+            if isinstance(line[index], tuple):
                 return line[index][1]
             return line[index]
 
@@ -153,20 +153,20 @@ def if_pad_with_zeroes(info, ifIndex, has_nodeinfo, pad_portnumbers):
 def if_get_traffic_levels(params):
     # Transform old style traffic parameters to new CascadingDropdown based data format
     new_traffic = []
-    if 'traffic' in params and type(params['traffic']) != list:
+    if 'traffic' in params and not isinstance(params['traffic'], list):
         warn, crit = params['traffic']
         if warn is None:
             new_traffic.append(('both', ('upper', (None, (None, None)))))
-        elif type(warn) == int:
+        elif isinstance(warn, int):
             new_traffic.append(('both', ('upper', ('abs', (warn, crit)))))
-        elif type(warn) == float:
+        elif isinstance(warn, float):
             new_traffic.append(('both', ('upper', ('perc', (warn, crit)))))
 
     if 'traffic_minimum' in params:
         warn, crit = params['traffic_minimum']
-        if type(warn) == int:
+        if isinstance(warn, int):
             new_traffic.append(('both', ('lower', ('abs', (warn, crit)))))
-        elif type(warn) == float:
+        elif isinstance(warn, float):
             new_traffic.append(('both', ('lower', ('perc', (warn, crit)))))
         del params['traffic_minimum']
 
@@ -202,7 +202,7 @@ def get_specific_traffic_levels(general_traffic_levels, unit, ref_speed, assumed
                                 assumed_speed_out):
     traffic_levels = {}
     for (traffic_dir, up_or_low), (level_type, levels) in general_traffic_levels.items():
-        if type(levels) != tuple:
+        if not isinstance(levels, tuple):
             traffic_levels[(traffic_dir, 'predictive')] = levels
             traffic_levels[(traffic_dir, up_or_low, 'warn')] = None
             traffic_levels[(traffic_dir, up_or_low, 'crit')] = None
@@ -330,11 +330,11 @@ def inventory_if_common(info, has_nodeinfo=False):
 
             # Windows NICs sends pairs of ifOperStatus and its Windows-Name instead
             # of just the ifOperStatus
-            if type(ifOperStatus) == tuple:
+            if isinstance(ifOperStatus, tuple):
                 ifOperStatus = ifOperStatus[0]
 
             ifGroup = None
-            if type(ifIndex) == tuple:
+            if isinstance(ifIndex, tuple):
                 ifGroup, ifIndex = ifIndex
 
             ifDescr = cleanup_if_strings(ifDescr)
@@ -535,7 +535,7 @@ def check_if_common(item, params, info, has_nodeinfo=False, group_name="Group", 
                 ifOutQLen, ifAlias, _ifPhysAddress = line
 
             ifGroup = None
-            if type(ifIndex) == tuple:
+            if isinstance(ifIndex, tuple):
                 ifGroup, ifIndex = ifIndex
 
             service_name_type = params["aggregate"].get("item_type")
@@ -609,7 +609,7 @@ def check_if_common(item, params, info, has_nodeinfo=False, group_name="Group", 
 
             # Windows NICs sends pairs of ifOperStatus and its Windows-Name instead
             # of just the ifOperStatus
-            if type(ifOperStatus) == tuple:
+            if isinstance(ifOperStatus, tuple):
                 ifOperStatus, ifOperStatusName = ifOperStatus
             else:
                 ifOperStatusName = if_statename(ifOperStatus)
@@ -619,7 +619,7 @@ def check_if_common(item, params, info, has_nodeinfo=False, group_name="Group", 
                 num_up += 1
 
             ifGroup = None
-            if type(ifIndex) == tuple:
+            if isinstance(ifIndex, tuple):
                 ifGroup, ifIndex = ifIndex
 
             group_members.setdefault(node, [])
@@ -793,12 +793,12 @@ def check_if_common_single(item,
 
         # Windows NICs sends pairs of ifOperStatus and its Windows-Name instead
         # of just the ifOperStatus
-        if type(ifOperStatus) == tuple:
+        if isinstance(ifOperStatus, tuple):
             ifOperStatus, ifOperStatusName = ifOperStatus
         else:
             ifOperStatusName = if_statename(ifOperStatus)
 
-        if type(ifIndex) == tuple:
+        if isinstance(ifIndex, tuple):
             _ifGroup, ifIndex = ifIndex
 
         ifDescr = cleanup_if_strings(ifDescr)
@@ -847,9 +847,9 @@ def check_if_common_single(item,
 
             state = 0
             infotext += "(%s)" % ifOperStatusName
-            if targetstates and \
-                (ifOperStatus != targetstates
-                and not (type(targetstates) in [ list, tuple ] and ifOperStatus in targetstates)):
+            if targetstates and (ifOperStatus != targetstates and
+                                 not (isinstance(targetstates,
+                                                 (list, tuple)) and ifOperStatus in targetstates)):
                 state = 2
 
             if map_operstates and ifOperStatus in map_operstates:
@@ -1030,14 +1030,14 @@ def check_if_common_single(item,
                         errperc = 100.0 * errorrate / pacrate
                         if errperc > 0:
                             infotext += ", %s-errors: %.2f%%" % (what, errperc)
-                            if type(err_crit) == float:  # percentual levels
+                            if isinstance(err_crit, float):  # percentual levels
                                 if errperc >= err_crit:
                                     state = 2
                                     infotext += "(!!) >= %s%%" % str(err_crit)
                                 elif errperc >= err_warn:
                                     state = max(state, 1)
                                     infotext += "(!) >= %s%%" % str(err_warn)
-                            elif type(err_crit) == int:  # absolute levels
+                            elif isinstance(err_crit, int):  # absolute levels
                                 if errorrate >= err_crit:
                                     state = 2
                                     infotext += ", %s-error packets: %d (!!) >= %s" % (

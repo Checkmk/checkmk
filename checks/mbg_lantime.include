@@ -37,7 +37,7 @@ def snmp_scan_mbg_lantime_ng_hw(oid):
 
 def check_mbg_lantime_state_common(states, _no_item, params, info):
     ntp_state, stratum, refclock_name, refclock_offset = info[0]
-    if type(params) != dict:
+    if not isinstance(params, dict):
         params = {
             "stratum": (params[0], params[1]),
             "offset": (params[2], params[3]),

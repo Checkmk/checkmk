@@ -32,7 +32,7 @@ def inventory_fsc_fans(info):
 
 
 def check_fsc_fans(item, params, info):
-    if type(params) == tuple:
+    if isinstance(params, tuple):
         params = {'lower': params}
 
     for line in info:  # , value1, value2 in info:

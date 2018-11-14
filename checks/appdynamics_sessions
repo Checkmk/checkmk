@@ -53,7 +53,7 @@ def check_appdynamics_sessions(item, params, info):
 
             state = 0
             perfdata = []
-            if type(params) == tuple:
+            if isinstance(params, tuple):
                 min_warn, min_crit, max_warn, max_crit = params
                 perfdata.append(('running_sessions', active, max_warn, max_crit))
 

@@ -545,17 +545,17 @@ def check_mem_windows(item, params, info):
         infotext = "%s: %.1f%% (%.1f/%.1f GB)" % \
                 (title, perc, used_kb / MB, total_kb / MB)
 
-        if type(params[paramname]) == tuple:
+        if isinstance(params[paramname], tuple):
             warn, crit = params[paramname]
 
             # In perfdata show warn/crit as absolute values
             # Absolute thresholds are in MB -> transform to KB
-            if type(warn) == float:
+            if isinstance(warn, float):
                 warn_kb = total_kb * warn / 100
             else:
                 warn_kb = warn * 1024
 
-            if type(crit) == float:
+            if isinstance(crit, float):
                 crit_kb = total_kb * crit / 100
             else:
                 crit_kb = crit * 1024
@@ -584,12 +584,12 @@ def check_mem_windows(item, params, info):
             perfdata.append((paramname + "_avg", used_kb / 1024.0))
 
         # Now check the levels
-        if type(params[paramname]) == tuple:
-            if (type(crit) == int and free_mb <= crit) or \
-                (type(crit) == float and perc >= crit):
+        if isinstance(params[paramname], tuple):
+            if (isinstance(crit, int) and free_mb <= crit) or \
+                (isinstance(crit, float) and perc >= crit):
                 state = 2
-            elif (type(warn) == int and free_mb <= warn) or \
-                (type(warn) == float and perc >= warn):
+            elif (isinstance(warn, int) and free_mb <= warn) or \
+                (isinstance(warn, float) and perc >= warn):
                 state = 1
             else:
                 state = 0
@@ -670,12 +670,12 @@ def check_mem_vmalloc(item, params, info):
                                      "largest chunk")]:
 
         # convert levels from percentage to MB values
-        if type(w) == float:
+        if isinstance(w, float):
             w_mb = total_mb * w / 100
         else:
             w_mb = float(w)
 
-        if type(c) == float:
+        if isinstance(c, float):
             c_mb = total_mb * c / 100
         else:
             c_mb = float(c)

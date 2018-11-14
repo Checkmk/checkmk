@@ -40,7 +40,7 @@ def inventory_arris_cmts_cpu(info):
 
 
 def check_arris_cmts_cpu(item, params, info):
-    if type(params) is tuple:
+    if isinstance(params, tuple):
         params = {"levels": params}
 
     for oid_id, cpu_id, cpu_idle_util in info:

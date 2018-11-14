@@ -34,7 +34,7 @@
 # the last 1, 5 or 15 minutes
 def check_cpu_load_generic(params, load, num_cpus=1):
     # Prepare performance data
-    if type(params) == tuple:
+    if isinstance(params, tuple):
         warn, crit = [p * num_cpus for p in params]
     else:
         warn, crit = None, None

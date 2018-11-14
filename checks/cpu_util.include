@@ -60,7 +60,7 @@ def check_cpu_util(util, params, this_time=None, cores=None):
 
     if params is None:
         params = {}
-    elif type(params) == tuple:
+    elif isinstance(params, tuple):
         params = {"levels": params}
 
     infotext = "%.1f%% used" % util
@@ -76,7 +76,7 @@ def check_cpu_util(util, params, this_time=None, cores=None):
         perfvar = "util"
 
     levels = params.get("levels")
-    if type(levels) == tuple:
+    if isinstance(levels, tuple):
         warn, crit = levels  # only for perfdata
     else:
         warn, crit = None, None

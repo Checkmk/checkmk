@@ -101,7 +101,7 @@ def inventory_printer_supply(info):
 
 
 def check_printer_supply(item, params, info):
-    if type(params) == tuple:
+    if isinstance(params, tuple):
         if len(params) == 2:
             params = {"levels": params}
         else:

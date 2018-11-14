@@ -79,7 +79,7 @@ def parse_scaleio_mdm(info):
                     name = l[0].strip()
                     parsed[id_][node][name] = l[1].strip()
                 else:
-                    if type(parsed[id_][node][name]) != list:
+                    if not isinstance(parsed[id_][node][name], list):
                         parsed[id_][node][name] = [parsed[id_][node][name]]
                     parsed[id_][node][name].append(l[0].replace(" ", ""))
 

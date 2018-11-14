@@ -496,7 +496,7 @@ def check_esx_vsphere_hostsystem_multipath(item, params, info):
                 path_names.append(path_info)
 
             # Check warn, critical
-            if not params or type(params) == list:
+            if not params or isinstance(params, list):
                 if state_infos["standby"][1] > 0 and \
                    state_infos["standby"][1] != state_infos["active"][1]:
                     state = max(state_infos["standby"][0], state)

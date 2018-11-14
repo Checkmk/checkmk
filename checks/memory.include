@@ -28,7 +28,7 @@
 def check_memory_simple(used, total, params):
     # Convert old-style tuple params to dict
     if params:
-        if type(params) == tuple:
+        if isinstance(params, tuple):
             params = {"levels": ("perc_used", params)}
     else:
         params = {"levels": ("ignore")}
@@ -91,12 +91,12 @@ def check_memory_multiitem(params, data, base=1024):
     state = 0
     if 'levels' in params:
         warn, crit = params['levels']
-        if type(warn) is int:
+        if isinstance(warn, int):
             warn_absolute = warn
         else:
             warn_absolute = int(mem_total * warn / 100)
 
-        if type(crit) is int:
+        if isinstance(crit, int):
             crit_absolute = crit
         else:
             crit_absolute = int(mem_total * crit / 100)

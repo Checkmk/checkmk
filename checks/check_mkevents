@@ -6,7 +6,7 @@ def check_mkevents_arguments(params):
     args = ""
     if "remote" in params:
         remote = params["remote"]
-        if type(remote) == tuple:
+        if isinstance(remote, tuple):
             args += "-H %s:%d " % (quote_shell_string(remote[0]), remote[1])
         elif remote:
             args += "-s %s " % quote_shell_string(remote)
@@ -15,7 +15,7 @@ def check_mkevents_arguments(params):
         args += "-a "
 
     hostspec = params.get("hostspec", "$HOSTADDRESS$")
-    if type(hostspec) == list:
+    if isinstance(hostspec, list):
         hostspec = "/".join(hostspec)
     args += hostspec
 

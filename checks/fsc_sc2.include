@@ -190,7 +190,7 @@ def check_fsc_sc2_fans(item, params, info):
         '8': (0, 'Status is not-present'),
     }
 
-    if type(params) == tuple:
+    if isinstance(params, tuple):
         params = {'lower': params}
 
     for designation, status, rpm in info:

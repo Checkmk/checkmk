@@ -149,7 +149,7 @@ def check_ntp(item, params, info):
 
 
 def check_ntp_summary(_no_item, params, info):
-    if type(params) == tuple:
+    if isinstance(params, tuple):
         params = {
             "ntp_levels": params,
             "alert_delay": (300, 3600),

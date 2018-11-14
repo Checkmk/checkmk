@@ -278,11 +278,11 @@ def check_brocade_fcport(item, params, parsed):
         warn_bytes, crit_bytes = None, None
     else:
         warn, crit = bw_thresh
-        if type(warn) == float:
+        if isinstance(warn, float):
             warn_bytes = wirespeed * warn / 100.0
         else:  # in MB
             warn_bytes = warn * 1048576.0
-        if type(crit) == float:
+        if isinstance(crit, float):
             crit_bytes = wirespeed * crit / 100.0
         else:  # in MB
             crit_bytes = crit * 1048576.0
@@ -371,7 +371,7 @@ def check_brocade_fcport(item, params, parsed):
     ]:
         errorflag = ""
         if params.get(state_key) != None and dev_state != params[state_key] \
-            and not (type(params[state_key]) == list and dev_state in map(int, params[state_key])):
+            and not (isinstance(params[state_key], list) and dev_state in map(int, params[state_key])):
             if dev_state in warn_states:
                 errorflag = "(!)"
                 summarystate = max(summarystate, 1)

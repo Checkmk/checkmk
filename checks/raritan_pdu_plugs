@@ -41,7 +41,7 @@ def check_raritan_pdu_plugs(item, params, info):
         if outlet_label == item:
             state, state_info = raritan_map_state[outlet_state]
 
-            if type(required_state) == int:
+            if isinstance(required_state, int):
                 if int(outlet_state) != required_state:
                     state = 2
             elif state_info != required_state:

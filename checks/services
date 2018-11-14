@@ -68,7 +68,7 @@ inventory_services_rules = []
 def inventory_windows_services(info):
     # Handle single entries (type str)
     def add_matching_services(name, description, state, start_type, entry):
-        if type(entry) == tuple:
+        if isinstance(entry, tuple):
             # New wato rule handling
             svc = entry[0]
             statespec = entry[1:]
@@ -89,7 +89,7 @@ def inventory_windows_services(info):
             elif svc != name and svc != description:
                 return []
 
-        if type(statespec) == tuple:
+        if isinstance(statespec, tuple):
             # New wato rule handling (always given as tuple of two)
             if (statespec[0] and statespec[0] != state) \
                or (statespec[1] and statespec[1] != start_type):
@@ -153,9 +153,9 @@ def inventory_windows_services(info):
         # Handle "old" inventory_services notation
         #
         for entry in inventory_services:
-            if type(entry) == str:
+            if isinstance(entry, str):
                 inventory += add_matching_services(name, description, state, start_type, entry)
-            elif type(entry) == tuple:
+            elif isinstance(entry, tuple):
                 inventory += add_services_with_tags(name, description, state, start_type, entry)
             else:
                 raise MKGeneralException("Invalid entry %r in inventory_services" % entry)

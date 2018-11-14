@@ -99,7 +99,7 @@ def inventory_cups_queues(parsed):
 def check_cups_queues(item, params, parsed):
     if item in parsed:
         data = parsed[item]
-        if type(params) == tuple and len(params) == 4:
+        if isinstance(params, tuple) and len(params) == 4:
             params = {
                 "job_count": (params[0], params[1]),
                 "job_age": (params[2], params[3]),

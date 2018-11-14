@@ -29,7 +29,7 @@ def check_uniserv_arguments(params):
     args = " $HOSTADDRESS$"
     args += " " + str(params['port'])
     args += " " + quote_shell_string(params['service'])
-    if type(params['job']) == tuple:
+    if isinstance(params['job'], tuple):
         job = params['job'][0]
     else:
         job = params['job']
@@ -48,7 +48,7 @@ def check_uniserv_arguments(params):
 
 def check_uniserv_desc(params):
     job = params['job']
-    if type(job) == tuple:
+    if isinstance(job, tuple):
         job = job[0]
 
     if job == "version":

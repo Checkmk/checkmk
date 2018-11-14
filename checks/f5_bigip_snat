@@ -88,7 +88,7 @@ def check_f5_bigip_snat(item, params, parsed):
             "if_total_octets"] = summed_values["if_in_octets"] + summed_values["if_out_octets"]
         summed_values["if_total_pkts"] = summed_values["if_in_pkts"] + summed_values["if_out_pkts"]
         for param_var, levels in params.items():
-            if param_var.endswith("_lower") and type(levels) == tuple:
+            if param_var.endswith("_lower") and isinstance(levels, tuple):
                 levels = (None, None) + levels
             value = summed_values[param_var.rstrip("_lower")]
             state, extra_text, _extra_perfdata = check_levels(value, param_var, levels)

@@ -149,7 +149,7 @@ def check_heartbeat_crm(item, params, info):
     last_updated, dc, numNodes, numResources = heartbeat_crm_parse_general(info)
 
     # Convert old tuple params (pre 1.2.5i6)
-    if type(params) == tuple:
+    if isinstance(params, tuple):
         params = {
             'max_age': params[0],
             'dc': params[1] != "" and params[1] or None,
@@ -298,7 +298,7 @@ def check_heartbeat_crm_resources(item, target_node, info):
         return
 
     for resource in resources:
-        output += ' '.join([type(p) == list and repr(p) or p for p in resource])
+        output += ' '.join([isinstance(p, list) and repr(p) or p for p in resource])
         if len(resource) == 3 or resource[2] != 'Started':
             status = 2
             output += ' (Resource is in state "%s" (!!))' % resource[2]

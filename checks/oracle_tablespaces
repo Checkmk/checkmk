@@ -232,7 +232,7 @@ def check_oracle_tablespaces(item, params, parsed):
     file_online_states = {}
 
     # Conversion of old autochecks params
-    if type(params) == tuple:
+    if isinstance(params, tuple):
         params = {"autoextend": params[0], "levels": params[1:]}
 
     autoext = params.get("autoextend")

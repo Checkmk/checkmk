@@ -54,7 +54,7 @@ def from_celsius(tempc, unit, relative=False):
 
 
 def to_celsius(reading, unit, relative=False):
-    if type(reading) == tuple:
+    if isinstance(reading, tuple):
         return tuple([to_celsius(x, unit, relative) for x in reading])
     elif unit == "f":
         return fahrenheit_to_celsius(reading, relative)
@@ -74,7 +74,7 @@ def convert_unit_relative(value, in_unit, out_unit):
 # Format number according to its datatype
 def render_temp(n, output_unit, relative=False):
     t = from_celsius(n, output_unit, relative)
-    if type(n) == int:
+    if isinstance(n, int):
         return "%d" % t
     return "%.1f" % t
 
@@ -268,7 +268,7 @@ def check_temperature(reading,
     # Convert legacy tuple params into new dict
     if params is None or params == (None, None):
         params = {}
-    elif type(params) == tuple:
+    elif isinstance(params, tuple):
         params = {"levels": params}
 
     # Convert reading into Celsius
@@ -400,7 +400,7 @@ def check_temperature(reading,
 
 def check_temperature_list(sensorlist, params, unique_name):
 
-    if type(params) == tuple:
+    if isinstance(params, tuple):
         params = {"levels": params}
     elif params is None:
         params = {}
@@ -430,7 +430,7 @@ def check_temperature_list(sensorlist, params, unique_name):
             kwargs = {}
         else:
             sub_item, temp, kwargs = entry
-        if type(temp) not in [float, int]:
+        if not isinstance(temp, (float, int)):
             temp = float(temp)
 
         tempsum += temp

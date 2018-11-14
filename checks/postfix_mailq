@@ -147,7 +147,7 @@ def check_postfix_mailq(item, params, parsed):
         yield 3, "Item not found"
         return
 
-    if type(params) is not dict:
+    if not isinstance(params, dict):
         params = {"deferred": params}
 
     for what, size, length in parsed[item]:

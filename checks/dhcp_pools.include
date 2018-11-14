@@ -32,7 +32,7 @@
 
 
 def check_dhcp_pools_levels(free, used, pending, size, params):
-    if type(params) == tuple:
+    if isinstance(params, tuple):
         # In case of win_dhcp_pools old params are percent but of type
         # integer, thus we have to change them into floats
         params = {"free_leases": (float(params[0]), float(params[1]))}
@@ -49,7 +49,7 @@ def check_dhcp_pools_levels(free, used, pending, size, params):
         infotext = "%s: %d leases (%.1f%%)" % (what, value, value_perc)
         if params.get("%s_leases" % what, ""):
             warn, crit = params["%s_leases" % what]
-            if type(warn) == float:  # here we have levels in percent
+            if isinstance(warn, float):  # here we have levels in percent
                 value = value_perc
                 text_format = "%.1f"
                 unit = "%%"

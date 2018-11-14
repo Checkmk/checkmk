@@ -32,7 +32,7 @@ def license_check_levels(have, used, params):
     elif params is False:
         warn = None
         crit = None
-    elif type(params[0]) == int:
+    elif isinstance(params[0], int):
         warn = max(0, have - params[0])
         crit = max(0, have - params[1])
     else:

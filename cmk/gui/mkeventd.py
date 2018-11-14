@@ -46,26 +46,25 @@ from cmk.gui.exceptions import MKGeneralException
 
 # ASN1 MIB source directory candidates. Non existing dirs are ok.
 # Please sync these paths with htdocs/mkeventd.py
-mib_dirs = [ ('/usr/share/snmp/mibs', _('System MIBs')) ]
+mib_dirs = [('/usr/share/snmp/mibs', _('System MIBs'))]
 
-socket_path       = cmk.paths.omd_root + "/tmp/run/mkeventd/status"
+socket_path = cmk.paths.omd_root + "/tmp/run/mkeventd/status"
 compiled_mibs_dir = cmk.paths.omd_root + "/local/share/check_mk/compiled_mibs"
 
 # Please sync these paths with htdocs/mkeventd.py
-mib_upload_dir    = cmk.paths.omd_root + "/local/share/snmp/mibs"
+mib_upload_dir = cmk.paths.omd_root + "/local/share/snmp/mibs"
 mib_dirs.insert(0, (cmk.paths.omd_root + "/share/snmp/mibs", _('MIBs shipped with Check_MK')))
 mib_dirs.insert(0, (mib_upload_dir, _('Custom MIBs')))
 
-
 syslog_priorities = [
-    (0, "emerg" ),
-    (1, "alert" ),
-    (2, "crit" ),
-    (3, "err" ),
-    (4, "warning" ),
-    (5, "notice" ),
-    (6, "info" ),
-    (7, "debug" ),
+    (0, "emerg"),
+    (1, "alert"),
+    (2, "crit"),
+    (3, "err"),
+    (4, "warning"),
+    (5, "notice"),
+    (6, "info"),
+    (7, "debug"),
 ]
 
 syslog_facilities = [
@@ -97,29 +96,32 @@ syslog_facilities = [
 ]
 
 phase_names = {
-    'counting' : _("counting"),
-    'delayed'  : _("delayed"),
-    'open'     : _("open"),
-    'ack'      : _("acknowledged"),
-    'closed'   : _("closed"),
+    'counting': _("counting"),
+    'delayed': _("delayed"),
+    'open': _("open"),
+    'ack': _("acknowledged"),
+    'closed': _("closed"),
 }
 
 action_whats = {
-  "ORPHANED"     : _("Event deleted in counting state because rule was deleted."),
-  "NOCOUNT"      : _("Event deleted in counting state because rule does not count anymore"),
-  "DELAYOVER"    : _("Event opened because the delay time has elapsed before cancelling event arrived."),
-  "EXPIRED"      : _("Event deleted because its livetime expired"),
-  "COUNTREACHED" : _("Event deleted because required count had been reached"),
-  "COUNTFAILED"  : _("Event created by required count was not reached in time"),
-  "UPDATE"       : _("Event information updated by user"),
-  "NEW"          : _("New event created"),
-  "DELETE"       : _("Event deleted manually by user"),
-  "EMAIL"        : _("Email sent"),
-  "SCRIPT"       : _("Script executed"),
-  "CANCELLED"    : _("The event was cancelled because the corresponding OK message was received"),
-  "ARCHIVED"     : _("Event was archived because no rule matched and archiving is activated in global settings."),
-  "AUTODELETE"   : _("Event was deleted automatically"),
-  "CHANGESTATE"  : _("State of event changed by user"),
+    "ORPHANED": _("Event deleted in counting state because rule was deleted."),
+    "NOCOUNT": _("Event deleted in counting state because rule does not count anymore"),
+    "DELAYOVER":
+        _("Event opened because the delay time has elapsed before cancelling event arrived."),
+    "EXPIRED": _("Event deleted because its livetime expired"),
+    "COUNTREACHED": _("Event deleted because required count had been reached"),
+    "COUNTFAILED": _("Event created by required count was not reached in time"),
+    "UPDATE": _("Event information updated by user"),
+    "NEW": _("New event created"),
+    "DELETE": _("Event deleted manually by user"),
+    "EMAIL": _("Email sent"),
+    "SCRIPT": _("Script executed"),
+    "CANCELLED": _("The event was cancelled because the corresponding OK message was received"),
+    "ARCHIVED": _(
+        "Event was archived because no rule matched and archiving is activated in global settings."
+    ),
+    "AUTODELETE": _("Event was deleted automatically"),
+    "CHANGESTATE": _("State of event changed by user"),
 }
 
 
@@ -130,7 +132,7 @@ def service_levels():
         return [(0, "(no service level)")]
 
 
-def action_choices(omit_hidden = False):
+def action_choices(omit_hidden=False):
     # The possible actions are configured in mkeventd.mk,
     # not in multisite.mk (like the service levels). That
     # way we have not direct access to them but need
@@ -142,15 +144,15 @@ def action_choices(omit_hidden = False):
 
 
 cached_config = None
+
+
 def eventd_configuration():
     global cached_config
     if cached_config and cached_config[0] is html:
         return cached_config[1]
 
-    settings = cmk.ec.settings.settings('',
-                                        Path(cmk.paths.omd_root),
-                                        Path(cmk.paths.default_config_dir),
-                                        [''])
+    settings = cmk.ec.settings.settings('', Path(cmk.paths.omd_root),
+                                        Path(cmk.paths.default_config_dir), [''])
     config = cmk.ec.export.load_config(settings)
     cached_config = (html, config)
     return config
@@ -169,8 +171,8 @@ def send_event(event):
 
     rfc = [
         "<%d>@%d" % (prio, int(time.time())),
-        "%d %s|%s %s: %s\n" % (event["sl"], event["host"],
-                event["ipaddress"], event["application"], event["text"]),
+        "%d %s|%s %s: %s\n" % (event["sl"], event["host"], event["ipaddress"], event["application"],
+                               event["text"]),
     ]
 
     execute_command("CREATE", map(cmk.utils.make_utf8, rfc), site=event["site"])
@@ -214,12 +216,12 @@ def query_ec_directly(query):
 
         return ast.literal_eval(response_text)
     except SyntaxError, e:
-        raise MKGeneralException(_("Invalid response from event daemon: "
-                                 "<pre>%s</pre>") % response_text)
+        raise MKGeneralException(
+            _("Invalid response from event daemon: "
+              "<pre>%s</pre>") % response_text)
 
     except Exception, e:
-        raise MKGeneralException(_("Cannot connect to event daemon via %s: %s") %
-                                                                (socket_path, e))
+        raise MKGeneralException(_("Cannot connect to event daemon via %s: %s") % (socket_path, e))
 
 
 def execute_command(name, args=None, site=None):
@@ -265,11 +267,11 @@ def get_total_stats(only_sites):
 
     for row in stats_per_site:
         for time_key, in_relation_to in [
-            ( "status_average_processing_time", "status_average_message_rate" ),
-            ( "status_average_request_time",    "status_average_connect_rate" ),
+            ("status_average_processing_time", "status_average_message_rate"),
+            ("status_average_request_time", "status_average_connect_rate"),
         ]:
             total_stats.setdefault(time_key, 0.0)
-            if total_stats[in_relation_to]: # avoid division by zero
+            if total_stats[in_relation_to]:  # avoid division by zero
                 my_weight = row[in_relation_to] / total_stats[in_relation_to]
                 total_stats[time_key] += my_weight * row[time_key]
 
@@ -289,7 +291,8 @@ def get_total_stats(only_sites):
 def get_stats_per_site(only_sites, stats_keys):
     try:
         sites.live().set_only_sites(only_sites)
-        for list_row in sites.live().query("GET eventconsolestatus\nColumns: %s" % " ".join(stats_keys)):
+        for list_row in sites.live().query(
+                "GET eventconsolestatus\nColumns: %s" % " ".join(stats_keys)):
             yield dict(zip(stats_keys, list_row))
     finally:
         sites.live().set_only_sites(None)
@@ -321,7 +324,6 @@ def event_rule_matches_non_inverted(rule_pack, rule, event):
     if "match_facility" in rule and event["facility"] != rule["match_facility"]:
         return _("The syslog facility does not match")
 
-
     # First try cancelling rules
     if "match_ok" in rule or "cancel_priority" in rule:
         if "cancel_priority" in rule:
@@ -330,14 +332,14 @@ def event_rule_matches_non_inverted(rule_pack, rule, event):
         else:
             cp = True
 
-        match_groups = match(rule.get("match_ok", ""), event["text"], complete = False)
+        match_groups = match(rule.get("match_ok", ""), event["text"], complete=False)
         if match_groups != False and cp:
             if match_groups == True:
                 match_groups = ()
             return True, match_groups
 
     try:
-        match_groups = match(rule.get("match"), event["text"], complete = False)
+        match_groups = match(rule.get("match"), event["text"], complete=False)
     except Exception, e:
         return _("Invalid regular expression: %s") % e
     if match_groups == False:
@@ -380,8 +382,9 @@ def event_rule_matches_non_inverted(rule_pack, rule, event):
             return _("Wrong customer")
 
     if match_groups == True:
-        match_groups = () # no matching groups
+        match_groups = ()  # no matching groups
     return False, match_groups
+
 
 def check_timeperiod(tpname):
     try:
@@ -399,7 +402,8 @@ def check_timeperiod(tpname):
             raise
         return _("Cannot update timeperiod information for %s: %s") % (tpname, e)
 
-def match(pattern, text, complete = True):
+
+def match(pattern, text, complete=True):
     if pattern == None:
         return True
     else:
@@ -413,14 +417,15 @@ def match(pattern, text, complete = True):
             return m.groups()
         return False
 
+
 def match_ipv4_network(pattern, ipaddress_text):
-    network, network_bits = parse_ipv4_network(pattern) # is validated by valuespec
+    network, network_bits = parse_ipv4_network(pattern)  # is validated by valuespec
     if network_bits == 0:
-        return True # event if ipaddress is empty
+        return True  # event if ipaddress is empty
     try:
         ipaddress = parse_ipv4_address(ipaddress_text)
     except:
-        return False # invalid address never matches
+        return False  # invalid address never matches
 
     # first network_bits of network and ipaddress must be
     # identical. Create a bitmask.
@@ -435,9 +440,11 @@ def match_ipv4_network(pattern, ipaddress_text):
 
     return (network & bitmask) == (ipaddress & bitmask)
 
+
 def parse_ipv4_address(text):
     parts = map(int, text.split("."))
     return (parts[0] << 24) + (parts[1] << 16) + (parts[2] << 8) + parts[3]
+
 
 def parse_ipv4_network(text):
     if "/" not in text:

@@ -29,10 +29,12 @@ import cmk.gui.config as config
 import cmk.gui.utils as utils
 from cmk.gui.globals import html
 
+
 @cmk.gui.pages.register("index")
 def page_index():
-    html.write('<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Frameset//EN" "http://www.w3.org/TR/html4/frameset.dtd">\n'
-               '<html><head>\n')
+    html.write(
+        '<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Frameset//EN" "http://www.w3.org/TR/html4/frameset.dtd">\n'
+        '<html><head>\n')
     html.default_html_headers()
     html.write("""<title>%s</title>
 </head>

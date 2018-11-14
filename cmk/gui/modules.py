@@ -72,6 +72,7 @@ pagehandlers = {}
 # initialize them.
 _legacy_modules = []
 
+
 def register_handlers(handlers):
     pagehandlers.update(handlers)
 
@@ -96,10 +97,11 @@ def init_modules():
     utils.load_web_plugins('pages', globals())
 
     # Save the modules loaded during the former steps in the modules list
-    _legacy_modules += [ sys.modules[m] for m in set(_imports()).difference(module_names_prev) ]
+    _legacy_modules += [sys.modules[m] for m in set(_imports()).difference(module_names_prev)]
 
 
 g_all_modules_loaded = False
+
 
 # Call the load_plugins() function in all modules
 def load_all_plugins():
@@ -119,11 +121,11 @@ def load_all_plugins():
         if only_modules != None and module.__name__ not in only_modules:
             continue
         try:
-            module.load_plugins # just check if this function exists
+            module.load_plugins  # just check if this function exists
         except AttributeError:
             pass
         else:
-            module.load_plugins(force = need_plugins_reload)
+            module.load_plugins(force=need_plugins_reload)
 
     # TODO: Clean this up once we drop support for the legacy plugins
     for path, page_func in pagehandlers.items():
@@ -135,14 +137,14 @@ def load_all_plugins():
 
 
 def _cmk_gui_top_level_modules():
-    return [ module for name, module in sys.modules.items()
-             # None entries are only an import optimization of cPython and can be removed:
-             # https://www.python.org/dev/peps/pep-0328/#relative-imports-and-indirection-entries-in-sys-modules
-             if module is not None
-             and ((name.startswith("cmk.gui.") and len(name.split(".")) == 3)
-                  or (name.startswith("cmk.gui.cee.") and len(name.split(".")) == 4)
-                  or (name.startswith("cmk.gui.cme.") and len(name.split(".")) == 4)) ]
-
+    return [
+        module for name, module in sys.modules.items()
+        # None entries are only an import optimization of cPython and can be removed:
+        # https://www.python.org/dev/peps/pep-0328/#relative-imports-and-indirection-entries-in-sys-modules
+        if module is not None and ((name.startswith("cmk.gui.") and len(name.split(".")) == 3) or (
+            name.startswith("cmk.gui.cee.") and len(name.split(".")) == 4) or
+                                   (name.startswith("cmk.gui.cme.") and len(name.split(".")) == 4))
+    ]
 
 
 def _find_local_web_plugins():
@@ -158,7 +160,7 @@ def _find_local_web_plugins():
 
     for plugins_dir in plugin_dirs:
         dir_path = basedir + plugins_dir
-        yield dir_path # Changes in the directory like deletion of files!
+        yield dir_path  # Changes in the directory like deletion of files!
         if os.path.isdir(dir_path):
             for file_name in os.listdir(dir_path):
                 if file_name.endswith(".py") or file_name.endswith(".pyc"):
@@ -166,6 +168,8 @@ def _find_local_web_plugins():
 
 
 _last_web_plugins_update = 0
+
+
 def _local_web_plugins_have_changed():
     global _last_web_plugins_update
 

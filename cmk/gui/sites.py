@@ -42,6 +42,7 @@ from cmk.gui.globals import html
 #   |  Functions und names for the public                                  |
 #   '----------------------------------------------------------------------'
 
+
 def live():
     """Get Livestatus connection object matching the current site configuration
        and user settings. On the first call the actual connection is being made."""
@@ -77,7 +78,7 @@ def disconnect():
 def sites_using_foreign_cores():
     site_ids = []
     for site_id, core in cores_by_site().items():
-        if core not in [ "cmc", None ]:
+        if core not in ["cmc", None]:
             site_ids.append(site_id)
 
     return sorted(site_ids)
@@ -108,7 +109,8 @@ def all_groups(what):
     Groups are collected via livestatus from all sites. In case no alias is defined
     the name is used as second element. The list is sorted by lower case alias in the first place."""
     groups = live().query("GET %sgroups\nCache: reload\nColumns: name alias\n" % what)
-    return sorted([ (name, alias or name) for name, alias in groups ], key=lambda e: e[1].lower())
+    return sorted([(name, alias or name) for name, alias in groups], key=lambda e: e[1].lower())
+
 
 #.
 #   .--Internal------------------------------------------------------------.
@@ -157,33 +159,33 @@ def _connect_multiple_sites():
     # This may be cached by a proxy for up to the next configuration reload.
     _live.set_prepend_site(True)
     for response in _live.query(
-          "GET status\n"
-          "Cache: reload\n"
-          "Columns: livestatus_version program_version program_start num_hosts num_services"):
+            "GET status\n"
+            "Cache: reload\n"
+            "Columns: livestatus_version program_version program_start num_hosts num_services"):
 
         try:
             site_id, v1, v2, ps, num_hosts, num_services = response
         except ValueError:
-            e = livestatus.MKLivestatusQueryError(
-                "Invalid response to status query: %s" % response)
+            e = livestatus.MKLivestatusQueryError("Invalid response to status query: %s" % response)
 
             site_id = response[0]
             _update_site_status(site_id, {
-                "exception"         : e,
-                "status_host_state" : None,
-                "state"             : _status_host_state_name(None),
+                "exception": e,
+                "status_host_state": None,
+                "state": _status_host_state_name(None),
             })
             continue
 
-        _update_site_status(site_id, {
-            "state"              : "online",
-            "livestatus_version" : v1,
-            "program_version"    : v2,
-            "program_start"      : ps,
-            "num_hosts"          : num_hosts,
-            "num_services"       : num_services,
-            "core"               : v2.startswith("Check_MK") and "cmc" or "nagios",
-        })
+        _update_site_status(
+            site_id, {
+                "state": "online",
+                "livestatus_version": v1,
+                "program_version": v2,
+                "program_start": ps,
+                "num_hosts": num_hosts,
+                "num_services": num_services,
+                "core": v2.startswith("Check_MK") and "cmc" or "nagios",
+            })
     _live.set_prepend_site(False)
 
     # TODO(lm): Find a better way to make the Livestatus object trigger the update
@@ -209,17 +211,22 @@ def update_site_states_from_dead_sites():
     # Get exceptions in case of dead sites
     for site_id, deadinfo in live().dead_sites().items():
         status_host_state = deadinfo.get("status_host_state")
-        _update_site_status(site_id, {
-            "exception"         : deadinfo["exception"],
-            "status_host_state" : status_host_state,
-            "state"             : _status_host_state_name(status_host_state),
-        })
+        _update_site_status(
+            site_id, {
+                "exception": deadinfo["exception"],
+                "status_host_state": status_host_state,
+                "state": _status_host_state_name(status_host_state),
+            })
 
 
 def _status_host_state_name(shs):
     if shs == None:
         return "dead"
-    return { 1:"down", 2:"unreach", 3:"waiting", }.get(shs, "unknown")
+    return {
+        1: "down",
+        2: "unreach",
+        3: "waiting",
+    }.get(shs, "unknown")
 
 
 def _init_site_status():
@@ -229,16 +236,10 @@ def _init_site_status():
 
 def _set_initial_site_states(enabled_sites, disabled_sites):
     for site_id, site in enabled_sites.items():
-        _set_site_status(site_id, {
-            "state" : "dead",
-            "site" : site
-        })
+        _set_site_status(site_id, {"state": "dead", "site": site})
 
     for site_id, site in disabled_sites.items():
-        _set_site_status(site_id, {
-            "state" : "disabled",
-            "site" : site
-        })
+        _set_site_status(site_id, {"state": "disabled", "site": site})
 
 
 def _set_site_status(site_id, status):
@@ -254,7 +255,7 @@ def _update_site_status(site_id, status):
 def _set_livestatus_auth():
     user_id = _livestatus_auth_user()
     if user_id != None:
-        _live.set_auth_user('read',   user_id)
+        _live.set_auth_user('read', user_id)
         _live.set_auth_user('action', user_id)
 
     # May the user see all objects in BI aggregations or only some?
@@ -281,7 +282,7 @@ def _livestatus_auth_user():
     elif force_authuser == "0":
         return None
     elif force_authuser:
-        return force_authuser # set a different user
+        return force_authuser  # set a different user
 
     # TODO: Remove this with 1.5.0/1.6.0
     if html.output_format != 'html' \

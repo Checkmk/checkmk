@@ -60,16 +60,9 @@ from cmk.gui.i18n import _u, _
 from cmk.gui.globals import html
 
 # Needed for legacy (pre 1.6) plugins
-from cmk.gui.plugins.visuals.utils import ( # pylint: disable=unused-import
-    declare_info,
-    declare_filter,
-    multisite_filters,
-    visual_types,
-    Filter,
-    FilterTime,
-    FilterTristate,
-    FilterUnicodeFilter,
-    FilterSite,
+from cmk.gui.plugins.visuals.utils import (  # pylint: disable=unused-import
+    declare_info, declare_filter, multisite_filters, visual_types, Filter, FilterTime,
+    FilterTristate, FilterUnicodeFilter, FilterSite,
 )
 from cmk.gui.plugins.visuals.utils import _infos as infos
 
@@ -92,6 +85,7 @@ if cmk.is_managed_edition():
 
 loaded_with_language = False
 
+
 def load_plugins(force):
     global loaded_with_language
     if loaded_with_language == cmk.gui.i18n.get_current_language() and not force:
@@ -99,22 +93,22 @@ def load_plugins(force):
 
     visual_types.update({
         'views': {
-            'show_url'           : 'view.py',
-            'ident_attr'         : 'view_name',
-            'title'              : _("view"),
-            'plural_title'       : _("views"),
-            'module_name'        : 'cmk.gui.views',
-            'multicontext_links' : False,
+            'show_url': 'view.py',
+            'ident_attr': 'view_name',
+            'title': _("view"),
+            'plural_title': _("views"),
+            'module_name': 'cmk.gui.views',
+            'multicontext_links': False,
         },
         'dashboards': {
-            'show_url'           : 'dashboard.py',
-            'ident_attr'         : 'name',
-            'title'              : _("dashboard"),
-            'plural_title'       : _("dashboards"),
-            'module_name'        : 'cmk.gui.dashboard',
-            'popup_add_handler'  : 'popup_list_dashboards',
-            'add_visual_handler' : 'popup_add_dashlet',
-            'multicontext_links' : False,
+            'show_url': 'dashboard.py',
+            'ident_attr': 'name',
+            'title': _("dashboard"),
+            'plural_title': _("dashboards"),
+            'module_name': 'cmk.gui.dashboard',
+            'popup_add_handler': 'popup_list_dashboards',
+            'add_visual_handler': 'popup_add_dashlet',
+            'multicontext_links': False,
         },
     })
 
@@ -124,6 +118,7 @@ def load_plugins(force):
     utils.load_web_plugins('visuals', globals())
 
     loaded_with_language = cmk.gui.i18n.get_current_language()
+
 
 #.
 #   .--Save/Load-----------------------------------------------------------.
@@ -137,14 +132,15 @@ def load_plugins(force):
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
+
 class UserVisualsCache(object):
     """Realizes a in memory cache (per apache process). This has been introduced to improve the
     situation where there are hundrets of custom visuals (views here). These visuals are rarely
     changed, but read and evaluated(!) during each page request which costs a lot of time."""
+
     def __init__(self):
         super(UserVisualsCache, self).__init__()
         self._cache = {}
-
 
     def get(self, path):
         try:
@@ -154,7 +150,6 @@ class UserVisualsCache(object):
         except (KeyError, IOError):
             return None
 
-
     def add(self, path, modification_timestamp, user_visuals):
         self._cache[path] = modification_timestamp, user_visuals
 
@@ -162,8 +157,7 @@ class UserVisualsCache(object):
 _user_visuals_cache = UserVisualsCache()
 
 
-
-def save(what, visuals, user_id = None):
+def save(what, visuals, user_id=None):
     if user_id == None:
         user_id = config.user.id
 
@@ -171,17 +165,17 @@ def save(what, visuals, user_id = None):
     for (owner_id, name), visual in visuals.items():
         if user_id == owner_id:
             uservisuals[name] = visual
-    config.save_user_file('user_' + what, uservisuals, user = user_id)
+    config.save_user_file('user_' + what, uservisuals, user=user_id)
 
 
 # FIXME: Currently all user visual files of this type are locked. We could optimize
 # this not to lock all files but only lock the files the user is about to modify.
-def load(what, builtin_visuals, skip_func = None, lock=False):
+def load(what, builtin_visuals, skip_func=None, lock=False):
     visuals = {}
 
     # first load builtins. Set username to ''
     for name, visual in builtin_visuals.items():
-        visual["owner"] = '' # might have been forgotten on copy action
+        visual["owner"] = ''  # might have been forgotten on copy action
         visual["public"] = True
         visual["name"] = name
 
@@ -224,7 +218,8 @@ def load_user_visuals(what, builtin_visuals, skip_func, lock):
             user_visuals = _user_visuals_cache.get(path)
             if user_visuals is None:
                 modification_timestamp = os.stat(path).st_mtime
-                user_visuals = load_visuals_of_a_user(what, builtin_visuals, skip_func, lock, path, user)
+                user_visuals = load_visuals_of_a_user(what, builtin_visuals, skip_func, lock, path,
+                                                      user)
                 _user_visuals_cache.add(path, modification_timestamp, user_visuals)
 
             visuals.update(user_visuals)
@@ -251,7 +246,7 @@ def load_visuals_of_a_user(what, builtin_visuals, skip_func, lock, path, user):
         # attributes get the attributes from their builtin visual.
         builtin_visual = builtin_visuals.get(name)
         if builtin_visual:
-            for attr in [ 'title', 'linktitle', 'topic', 'description' ]:
+            for attr in ['title', 'linktitle', 'topic', 'description']:
                 if attr not in visual and attr in builtin_visual:
                     visual[attr] = builtin_visual[attr]
 
@@ -270,8 +265,9 @@ def load_visuals_of_a_user(what, builtin_visuals, skip_func, lock, path, user):
 def declare_visual_permission(what, name, visual):
     permname = "%s.%s" % (what[:-1], name)
     if visual["public"] and not config.permission_exists(permname):
-       config.declare_permission(permname, visual["title"],
-                         visual["description"], ['admin','user','guest'])
+        config.declare_permission(permname, visual["title"], visual["description"],
+                                  ['admin', 'user', 'guest'])
+
 
 # Load all users visuals just in order to declare permissions of custom visuals
 def declare_custom_permissions(what):
@@ -289,6 +285,7 @@ def declare_custom_permissions(what):
         except:
             if config.debug:
                 raise
+
 
 # Get the list of visuals which are available to the user
 # (which could be retrieved with get_visual)
@@ -316,7 +313,8 @@ def available(what, all_visuals):
 
     # 2. visuals of special users allowed to globally override builtin visuals
     for (u, n), visual in all_visuals.items():
-        if n not in visuals and published_to_user(visual) and config.user_may(u, "general.force_" + what):
+        if n not in visuals and published_to_user(visual) and config.user_may(
+                u, "general.force_" + what):
             # Honor original permissions for the current user
             permname = "%s.%s" % (permprefix, n)
             if config.permission_exists(permname) \
@@ -334,7 +332,8 @@ def available(what, all_visuals):
     #    necessary.
     if config.user.may("general.see_user_" + what):
         for (u, n), visual in all_visuals.items():
-            if n not in visuals and published_to_user(visual) and config.user_may(u, "general.publish_" + what):
+            if n not in visuals and published_to_user(visual) and config.user_may(
+                    u, "general.publish_" + what):
                 # Is there a builtin visual with the same name? If yes, honor permissions.
                 permname = "%s.%s" % (permprefix, n)
                 if config.permission_exists(permname) \
@@ -343,6 +342,7 @@ def available(what, all_visuals):
                 visuals[n] = visual
 
     return visuals
+
 
 #.
 #   .--Listing-------------------------------------------------------------.
@@ -356,14 +356,18 @@ def available(what, all_visuals):
 #   | Show a list of all visuals with actions to delete/clone/edit         |
 #   '----------------------------------------------------------------------'
 
+
 # TODO: This code has been copied to a new live into htdocs/pagetypes.py
 # We need to convert all existing page types (views, dashboards, reports)
 # to pagetypes.py and then remove this function!
-def page_list(what, title, visuals, custom_columns = None,
-    render_custom_buttons = None,
-    render_custom_columns = None,
-    render_custom_context_buttons = None,
-    check_deletable_handler = None):
+def page_list(what,
+              title,
+              visuals,
+              custom_columns=None,
+              render_custom_buttons=None,
+              render_custom_columns=None,
+              render_custom_context_buttons=None,
+              check_deletable_handler=None):
 
     if custom_columns is None:
         custom_columns = []
@@ -380,7 +384,8 @@ def page_list(what, title, visuals, custom_columns = None,
         render_custom_context_buttons()
     for other_what, info in visual_types.items():
         if what != other_what:
-            html.context_button(info["plural_title"].title(), 'edit_%s.py' % other_what, other_what[:-1])
+            html.context_button(info["plural_title"].title(), 'edit_%s.py' % other_what,
+                                other_what[:-1])
 
     # TODO: We hack in those visuals that already have been moved to pagetypes here
     if pagetypes.has_page_type("graph_collection"):
@@ -422,13 +427,12 @@ def page_list(what, title, visuals, custom_columns = None,
         except MKUserError, e:
             html.user_error(e)
 
-    keys_sorted = sorted(visuals.keys(),
-                         cmp=lambda a, b: -cmp(a[0], b[0]) or cmp(a[1], b[1]))
+    keys_sorted = sorted(visuals.keys(), cmp=lambda a, b: -cmp(a[0], b[0]) or cmp(a[1], b[1]))
 
-    my_visuals, foreign_visuals, builtin_visuals  = [], [], []
+    my_visuals, foreign_visuals, builtin_visuals = [], [], []
     for (owner, visual_name) in keys_sorted:
         if owner == "" and not config.user.may("%s.%s" % (what_s, visual_name)):
-            continue # not allowed to see this view
+            continue  # not allowed to see this view
 
         visual = visuals[(owner, visual_name)]
         if visual["public"] and owner == "":
@@ -439,20 +443,20 @@ def page_list(what, title, visuals, custom_columns = None,
                 config.user.may("general.edit_foreign_%s" % what):
             foreign_visuals.append((owner, visual_name, visual))
 
-    for title1, items in [(_('Customized'), my_visuals),
-                         (_("Owned by other users"), foreign_visuals),
-                         (_('Builtin'), builtin_visuals)]:
+    for title1, items in [(_('Customized'), my_visuals), (_("Owned by other users"),
+                                                          foreign_visuals),
+                          (_('Builtin'), builtin_visuals)]:
         html.open_h3()
         html.write(title1)
         html.close_h3()
 
-        table.begin(css = 'data', limit = None)
+        table.begin(css='data', limit=None)
 
         for owner, visual_name, visual in items:
-            table.row(css = 'data')
+            table.row(css='data')
 
             # Actions
-            table.cell(_('Actions'), css = 'buttons visuals')
+            table.cell(_('Actions'), css='buttons visuals')
 
             # Clone / Customize
             buttontext = _("Create a customized copy of this")
@@ -462,14 +466,16 @@ def page_list(what, title, visuals, custom_columns = None,
             html.icon_button(clone_url, buttontext, "clone")
 
             # Delete
-            if owner and (owner == config.user.id or config.user.may('general.delete_foreign_%s' % what)):
+            if owner and (owner == config.user.id or
+                          config.user.may('general.delete_foreign_%s' % what)):
                 add_vars = [('_delete', visual_name)]
                 if owner != config.user.id:
                     add_vars.append(('_user_id', owner))
                 html.icon_button(html.makeactionuri(add_vars), _("Delete!"), "delete")
 
             # Edit
-            if owner == config.user.id or (owner != "" and config.user.may("general.edit_foreign_%s" % what)):
+            if owner == config.user.id or (owner != "" and
+                                           config.user.may("general.edit_foreign_%s" % what)):
                 edit_vars = [("load_name", visual_name)]
                 if owner != config.user.id:
                     edit_vars.append(("owner", owner))
@@ -487,7 +493,9 @@ def page_list(what, title, visuals, custom_columns = None,
             table.cell(_('Title'))
             title2 = _u(visual['title'])
             if _visual_can_be_linked(what, visual_name, visuals, visual, owner):
-                html.a(title2, href="%s.py?%s=%s" % (what_s, visual_types[what]['ident_attr'], visual_name))
+                html.a(
+                    title2,
+                    href="%s.py?%s=%s" % (what_s, visual_types[what]['ident_attr'], visual_name))
             else:
                 html.write_text(title2)
             html.help(_u(visual['description']))
@@ -515,7 +523,7 @@ def page_list(what, title, visuals, custom_columns = None,
 
 def _visual_can_be_linked(what, visual_name, all_visuals, visual, owner):
     if visual["hidden"]:
-        return False # don't link to hidden visuals
+        return False  # don't link to hidden visuals
 
     if owner == config.user.id:
         return True
@@ -527,6 +535,7 @@ def _visual_can_be_linked(what, visual_name, all_visuals, visual, owner):
         return False
 
     return visual["public"]
+
 
 #.
 #   .--Create Visual-------------------------------------------------------.
@@ -540,7 +549,8 @@ def _visual_can_be_linked(what, visual_name, all_visuals, visual, owner):
 #   | Realizes the steps before getting to the editor (context type)       |
 #   '----------------------------------------------------------------------'
 
-def page_create_visual(what, info_keys, next_url = None):
+
+def page_create_visual(what, info_keys, next_url=None):
     title = visual_types[what]['title']
     what_s = what[:-1]
 
@@ -573,7 +583,8 @@ def page_create_visual(what, info_keys, next_url = None):
             vs_infos.validate_value(single_infos, 'single_infos')
 
             if not next_url:
-                next_url = 'edit_'+what_s+'.py?mode=create&single_infos=%s' % ','.join(single_infos)
+                next_url = 'edit_' + what_s + '.py?mode=create&single_infos=%s' % ','.join(
+                    single_infos)
             else:
                 next_url += '&single_infos=%s' % ','.join(single_infos)
             html.response.http_redirect(next_url)
@@ -597,6 +608,7 @@ def page_create_visual(what, info_keys, next_url = None):
     html.end_form()
     html.footer()
 
+
 #.
 #   .--Edit Visual---------------------------------------------------------.
 #   |           _____    _ _ _    __     ___                 _             |
@@ -609,6 +621,7 @@ def page_create_visual(what, info_keys, next_url = None):
 #   | Edit global settings of the visual                                   |
 #   '----------------------------------------------------------------------'
 
+
 def get_context_specs(visual, info_handler):
     info_keys = []
     if info_handler:
@@ -618,7 +631,7 @@ def get_context_specs(visual, info_handler):
         info_keys = infos.keys()
 
     single_info_keys = [key for key in info_keys if key in visual['single_infos']]
-    multi_info_keys =  [key for key in info_keys if key not in single_info_keys]
+    multi_info_keys = [key for key in info_keys if key not in single_info_keys]
 
     def visual_spec_single(info_key):
         info = infos[info_key]
@@ -626,16 +639,18 @@ def get_context_specs(visual, info_handler):
         optional = True
         isopen = True
         return Dictionary(
-            title = info['title'],
+            title=info['title'],
             # render = 'form',
-            form_isopen = isopen,
-            optional_keys = optional,
-            elements = params,
+            form_isopen=isopen,
+            optional_keys=optional,
+            elements=params,
         )
 
     def visual_spec_multi(info_key):
         info = infos[info_key]
-        filter_list  = VisualFilterList([info_key], title=info['title'], ignore=set(single_info_keys))
+        filter_list = VisualFilterList([info_key],
+                                       title=info['title'],
+                                       ignore=set(single_info_keys))
         filter_names = filter_list.filter_names()
         # Skip infos which have no filters available
         return filter_list if filter_names else None
@@ -658,6 +673,7 @@ def process_context_specs(context_specs):
         context.update(attrs)
     return context
 
+
 def render_context_specs(visual, context_specs):
     forms.header(_("Context / Search Filters"))
     for info_key, spec in context_specs:
@@ -669,10 +685,14 @@ def render_context_specs(visual, context_specs):
         value = visual.get('context', {})
         spec.render_input(ident, value)
 
-def page_edit_visual(what, all_visuals, custom_field_handler = None,
-                     create_handler = None,
-                     load_handler = None, info_handler = None,
-                     sub_pages = None):
+
+def page_edit_visual(what,
+                     all_visuals,
+                     custom_field_handler=None,
+                     create_handler=None,
+                     load_handler=None,
+                     info_handler=None,
+                     sub_pages=None):
     if sub_pages is None:
         sub_pages = []
 
@@ -685,19 +705,19 @@ def page_edit_visual(what, all_visuals, custom_field_handler = None,
 
     # Load existing visual from disk - and create a copy if 'load_user' is set
     visualname = html.var("load_name")
-    oldname  = visualname
-    mode     = html.var('mode', 'edit')
+    oldname = visualname
+    mode = html.var('mode', 'edit')
     owner_user_id = config.user.id
     if visualname:
         cloneuser = html.var("load_user")
         if cloneuser is not None:
-            mode  = 'clone'
+            mode = 'clone'
             visual = copy.deepcopy(all_visuals.get((cloneuser, visualname), None))
             if not visual:
                 raise MKUserError('cloneuser', _('The %s does not exist.') % visual_type["title"])
 
             # Make sure, name is unique
-            if cloneuser == owner_user_id: # Clone own visual
+            if cloneuser == owner_user_id:  # Clone own visual
                 newname = visualname + "_clone"
             else:
                 newname = visualname
@@ -709,17 +729,19 @@ def page_edit_visual(what, all_visuals, custom_field_handler = None,
             visual["name"] = newname
             visual["public"] = False
             visualname = newname
-            oldname = None # Prevent renaming
+            oldname = None  # Prevent renaming
             if cloneuser == owner_user_id:
                 visual["title"] += _(" (Copy)")
         else:
             owner_user_id = html.var("owner", config.user.id)
             visual = all_visuals.get((owner_user_id, visualname))
             if not visual:
-                visual = all_visuals.get(('', visualname)) # load builtin visual
+                visual = all_visuals.get(('', visualname))  # load builtin visual
                 mode = 'clone'
                 if not visual:
-                    raise MKUserError(None, _('The requested %s does not exist.') % visual_types[what]['title'])
+                    raise MKUserError(
+                        None,
+                        _('The requested %s does not exist.') % visual_types[what]['title'])
                 visual["public"] = False
 
         single_infos = visual['single_infos']
@@ -752,10 +774,10 @@ def page_edit_visual(what, all_visuals, custom_field_handler = None,
 
     # Extra buttons to sub modules. These are used for things to edit about
     # this visual that are more complex to be done in one value spec.
-    if mode not in [ "clone", "create" ]:
+    if mode not in ["clone", "create"]:
         for title, pagename, icon in sub_pages:
             uri = html.makeuri_contextless([(visual_types[what]['ident_attr'], visualname)],
-                                           filename = pagename + '.py')
+                                           filename=pagename + '.py')
             html.context_button(title, uri, icon)
     html.end_context_buttons()
 
@@ -763,61 +785,62 @@ def page_edit_visual(what, all_visuals, custom_field_handler = None,
     # appear as boolean-keys directly in the visual dict, but encapsulated
     # in a list choice in the value spec.
     visibility_elements = [
-        ('hidden', FixedValue(True,
-            title = _('Hide this %s from the sidebar') % visual_type["title"],
-            totext = "",
-        )),
-        ('hidebutton', FixedValue(True,
-            title = _('Do not show a context button to this %s') % visual_type["title"],
-            totext = "",
-        )),
+        ('hidden',
+         FixedValue(
+             True,
+             title=_('Hide this %s from the sidebar') % visual_type["title"],
+             totext="",
+         )),
+        ('hidebutton',
+         FixedValue(
+             True,
+             title=_('Do not show a context button to this %s') % visual_type["title"],
+             totext="",
+         )),
     ]
     if config.user.may("general.publish_" + what):
         with_foreign_groups = config.user.may("general.publish_" + what + "_to_foreign_groups")
-        visibility_elements.append(('public', PublishTo(
-            type_title=visual_type["title"],
-            with_foreign_groups=with_foreign_groups,
-        )))
+        visibility_elements.append(('public',
+                                    PublishTo(
+                                        type_title=visual_type["title"],
+                                        with_foreign_groups=with_foreign_groups,
+                                    )))
 
     vs_general = Dictionary(
-        title = _("General Properties"),
-        render = 'form',
-        optional_keys = None,
-        elements = [
+        title=_("General Properties"),
+        render='form',
+        optional_keys=None,
+        elements=[
             single_infos_spec(single_infos),
-            ('name', TextAscii(
-                title = _('Unique ID'),
-                help = _("The ID will be used in URLs that point to a view, e.g. "
-                         "<tt>view.py?view_name=<b>myview</b></tt>. It will also be used "
-                         "internally for identifying a view. You can create several views "
-                         "with the same title but only one per view name. If you create a "
-                         "view that has the same view name as a builtin view, then your "
-                         "view will override that (shadowing it)."),
-                regex = '^[a-zA-Z0-9_]+$',
-                regex_error = _('The name of the view may only contain letters, digits and underscores.'),
-                size = 50,
-                allow_empty = False)
-            ),
-            ('title', TextUnicode(
-                title = _('Title') + '<sup>*</sup>',
-                size = 50, allow_empty = False)),
-            ('topic', TextUnicode(
-                title = _('Topic') + '<sup>*</sup>',
-                size = 50)),
+            ('name',
+             TextAscii(
+                 title=_('Unique ID'),
+                 help=_("The ID will be used in URLs that point to a view, e.g. "
+                        "<tt>view.py?view_name=<b>myview</b></tt>. It will also be used "
+                        "internally for identifying a view. You can create several views "
+                        "with the same title but only one per view name. If you create a "
+                        "view that has the same view name as a builtin view, then your "
+                        "view will override that (shadowing it)."),
+                 regex='^[a-zA-Z0-9_]+$',
+                 regex_error=_(
+                     'The name of the view may only contain letters, digits and underscores.'),
+                 size=50,
+                 allow_empty=False)),
+            ('title', TextUnicode(title=_('Title') + '<sup>*</sup>', size=50, allow_empty=False)),
+            ('topic', TextUnicode(title=_('Topic') + '<sup>*</sup>', size=50)),
             ('description', TextAreaUnicode(
-                title = _('Description') + '<sup>*</sup>',
-                rows = 4, cols = 50)),
-            ('linktitle', TextUnicode(
-                title = _('Button Text') + '<sup>*</sup>',
-                help = _('If you define a text here, then it will be used in '
-                         'context buttons linking to the %s instead of the regular title.') % visual_type["title"],
-                size = 26)),
-            ('icon', IconSelector(
-                title = _('Button Icon'),
-            )),
+                title=_('Description') + '<sup>*</sup>', rows=4, cols=50)),
+            ('linktitle',
+             TextUnicode(
+                 title=_('Button Text') + '<sup>*</sup>',
+                 help=_('If you define a text here, then it will be used in '
+                        'context buttons linking to the %s instead of the regular title.') %
+                 visual_type["title"],
+                 size=26)),
+            ('icon', IconSelector(title=_('Button Icon'),)),
             ('visibility', Dictionary(
-                title = _('Visibility'),
-                elements = visibility_elements,
+                title=_('Visibility'),
+                elements=visibility_elements,
             )),
         ],
     )
@@ -845,8 +868,15 @@ def page_edit_visual(what, all_visuals, custom_field_handler = None,
 
             # The dict of the value spec does not match exactly the dict
             # of the visual. We take over some keys...
-            for key in ['single_infos', 'name', 'title',
-                        'topic', 'description', 'linktitle', 'icon']:
+            for key in [
+                    'single_infos',
+                    'name',
+                    'title',
+                    'topic',
+                    'description',
+                    'linktitle',
+                    'icon',
+            ]:
                 visual[key] = general_properties[key]
 
             # ...and import the visibility flags directly into the visual
@@ -863,8 +893,9 @@ def page_edit_visual(what, all_visuals, custom_field_handler = None,
 
             if html.var("save") or save_and_go:
                 if save_and_go:
-                    back_url = html.makeuri_contextless([(visual_types[what]['ident_attr'], visual['name'])],
-                                                   filename = save_and_go + '.py')
+                    back_url = html.makeuri_contextless(
+                        [(visual_types[what]['ident_attr'], visual['name'])],
+                        filename=save_and_go + '.py')
 
                 if html.check_transaction():
                     all_visuals[(owner_user_id, visual["name"])] = visual
@@ -876,7 +907,8 @@ def page_edit_visual(what, all_visuals, custom_field_handler = None,
                         # -> change visual_name in back parameter
                         if back_url:
                             varstring = visual_type["ident_attr"] + "="
-                            back_url = back_url.replace(varstring + oldname, varstring + visual["name"])
+                            back_url = back_url.replace(varstring + oldname,
+                                                        varstring + visual["name"])
                     save(what, all_visuals, owner_user_id)
 
                 html.immediate_browser_redirect(1, back_url)
@@ -888,12 +920,13 @@ def page_edit_visual(what, all_visuals, custom_field_handler = None,
         except MKUserError, e:
             html.user_error(e)
 
-    html.begin_form("visual", method = "POST")
+    html.begin_form("visual", method="POST")
     html.hidden_field("back", back_url)
     html.hidden_field("mode", mode)
     if html.has_var("load_user"):
-        html.hidden_field("load_user", html.var("load_user")) # safe old name in case user changes it
-    html.hidden_field("load_name", oldname) # safe old name in case user changes it
+        html.hidden_field("load_user",
+                          html.var("load_user"))  # safe old name in case user changes it
+    html.hidden_field("load_name", oldname)  # safe old name in case user changes it
 
     # FIXME: Hier werden die Flags aus visibility nicht korrekt geladen. Wäre es nicht besser,
     # diese in einem Unter-Dict zu lassen, anstatt diese extra umzukopieren?
@@ -923,23 +956,23 @@ def page_edit_visual(what, all_visuals, custom_field_handler = None,
     html.footer()
 
 
-
 class PublishTo(CascadingDropdown):
     def __init__(self, type_title=None, with_foreign_groups=True, **kwargs):
         super(PublishTo, self).__init__(
-            choices = [
+            choices=[
                 (True, _("Publish to all users")),
-                ("contact_groups", _("Publish to members of contact groups"), userdb.GroupChoice(
-                    "contact",
-                    with_foreign_groups=with_foreign_groups,
-                    title = _("Publish to members of contact groups"),
-                    rows = 5,
-                    size = 80,
-                )),
+                ("contact_groups", _("Publish to members of contact groups"),
+                 userdb.GroupChoice(
+                     "contact",
+                     with_foreign_groups=with_foreign_groups,
+                     title=_("Publish to members of contact groups"),
+                     rows=5,
+                     size=80,
+                 )),
             ],
-            title = _('Make this %s available for other users') % type_title,
-            **kwargs
-        )
+            title=_('Make this %s available for other users') % type_title,
+            **kwargs)
+
 
 #.
 #   .--Filters-------------------------------------------------------------.
@@ -952,6 +985,7 @@ class PublishTo(CascadingDropdown):
 #   +----------------------------------------------------------------------+
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
+
 
 def show_filter(f):
     html.open_div(class_=["floatfilter", "double" if f.double_height() else "single"])
@@ -1017,6 +1051,7 @@ def get_link_filter_names(visual, info_keys, link_filters):
                     names.append((key, link_filters[key]))
     return names
 
+
 # Collects all filters to be used for the given visual
 def filters_of_visual(visual, info_keys, link_filters=None):
     if link_filters is None:
@@ -1031,11 +1066,11 @@ def filters_of_visual(visual, info_keys, link_filters=None):
             continue
 
         for key, val in visual['context'].items():
-            if isinstance(val, dict): # this is a real filter
+            if isinstance(val, dict):  # this is a real filter
                 try:
                     filters.append(get_filter(key))
                 except KeyError:
-                    pass # Silently ignore not existing filters
+                    pass  # Silently ignore not existing filters
 
     # See get_link_filter_names() comment for details
     for key, dst_key in get_link_filter_names(visual, info_keys, link_filters):
@@ -1051,12 +1086,12 @@ def filters_of_visual(visual, info_keys, link_filters=None):
         if not filter_.info or filter_.info in info_keys:
             filters.append(filter_)
 
-    return list(set(filters)) # remove duplicates
+    return list(set(filters))  # remove duplicates
 
 
 # TODO: Cleanup this special case
 def get_ubiquitary_filters():
-    return [ "wato_folder" ]
+    return ["wato_folder"]
 
 
 # Reduces the list of the visuals used filters. The result are the ones
@@ -1075,6 +1110,7 @@ def visible_filters_of_visual(visual, use_filters):
 
     return show_filters
 
+
 def add_context_to_uri_vars(visual, only_count=False):
     # Populate the HTML vars with missing context vars. The context vars set
     # in single context are enforced (can not be overwritten by URL). The normal
@@ -1085,13 +1121,14 @@ def add_context_to_uri_vars(visual, only_count=False):
 
     # Now apply the multiple context filters
     for filter_vars in visual['context'].itervalues():
-        if isinstance(filter_vars, dict): # this is a multi-context filter
+        if isinstance(filter_vars, dict):  # this is a multi-context filter
             # We add the filter only if *none* of its HTML variables are present on the URL
             # This important because checkbox variables are not present if the box is not checked.
             skip = any(html.has_var(uri_varname) for uri_varname in filter_vars.iterkeys())
             if not skip or only_count:
                 for uri_varname, value in filter_vars.items():
                     html.set_var(uri_varname, "%s" % value)
+
 
 # Vice versa: find all filters that belong to the current URI variables
 # and create a context dictionary from that.
@@ -1124,7 +1161,7 @@ def get_filter_headers(datasource, context):
     html.stash_vars()
     for filter_name, filter_vars in context.items():
         # first set the HTML variables. Sorry - the filters need this
-        if isinstance(filter_vars, dict): # this is a multi-context filter
+        if isinstance(filter_vars, dict):  # this is a multi-context filter
             for uri_varname, value in filter_vars.items():
                 html.set_var(uri_varname, value)
         else:
@@ -1155,6 +1192,7 @@ def get_filter_headers(datasource, context):
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
+
 # Implements a list of available filters for the given infos. By default no
 # filter is selected. The user may select a filter to be activated, then the
 # filter is rendered and the user can provide a default value.
@@ -1171,14 +1209,14 @@ class VisualFilterList(ListOfMultiple):
         for info in self._infos:
             for fname, filter_ in filters_allowed_for_info(info).items():
                 if fname not in fspecs and fname not in ignore:
-                    fspecs[fname] = VisualFilter(fname,
-                        title = filter_.title,
+                    fspecs[fname] = VisualFilter(
+                        fname,
+                        title=filter_.title,
                     )
                     self._filters[fname] = fspecs[fname]._filter
 
         # Convert to list and sort them!
-        fspecs = sorted(fspecs.items(),
-            key=lambda x: (x[1]._filter.sort_index, x[1].title()))
+        fspecs = sorted(fspecs.items(), key=lambda x: (x[1]._filter.sort_index, x[1].title()))
 
         kwargs.setdefault('title', _('Filters'))
         kwargs.setdefault('add_label', _('Add filter'))
@@ -1195,7 +1233,7 @@ class VisualFilterList(ListOfMultiple):
 # the filled in values and provide the filled in information for persistance.
 class VisualFilter(ValueSpec):
     def __init__(self, name, **kwargs):
-        self._name   = name
+        self._name = name
         self._filter = multisite_filters[name]
 
         ValueSpec.__init__(self, **kwargs)
@@ -1225,8 +1263,9 @@ class VisualFilter(ValueSpec):
 
     def validate_datatype(self, value, varprefix):
         if not isinstance(value, dict):
-            raise MKUserError(varprefix, _("The value must be of type dict, but it has type %s") %
-                                                                    type_name(value))
+            raise MKUserError(
+                varprefix,
+                _("The value must be of type dict, but it has type %s") % type_name(value))
 
     def validate_value(self, value, varprefix):
         ValueSpec.custom_validate(self, value, varprefix)
@@ -1239,7 +1278,8 @@ def SingleInfoSelection(info_keys, **args):
 
     args.setdefault("title", _('Specific objects'))
     args["choices"] = info_choices
-    return  ListChoice(**args)
+    return ListChoice(**args)
+
 
 # Converts a context from the form { filtername : { ... } } into
 # the for { infoname : { filtername : { } } for editing.
@@ -1254,12 +1294,12 @@ def pack_context_for_editing(visual, info_handler):
         packed_context[info_name] = visual.get('context', {})
     return packed_context
 
+
 def unpack_context_after_editing(packed_context):
     context = {}
     for _info_type, its_context in packed_context.items():
         context.update(its_context)
     return context
-
 
 
 #.
@@ -1274,8 +1314,10 @@ def unpack_context_after_editing(packed_context):
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
+
 def is_single_site_info(info_key):
     return infos[info_key].get('single_site', True)
+
 
 def single_infos_spec(single_infos):
     return ('single_infos', FixedValue(single_infos,
@@ -1284,20 +1326,22 @@ def single_infos_spec(single_infos):
                     or _('Not restricted to showing a specific object.'),
     ))
 
+
 def verify_single_contexts(what, visual, link_filters):
     for k, v in get_singlecontext_html_vars(visual).items():
         if v == None and k not in link_filters:
-            raise MKUserError(k, _('This %s can not be displayed, because the '
-                                   'necessary context information "%s" is missing.') %
-                                                    (visual_types[what]['title'], k))
+            raise MKUserError(
+                k,
+                _('This %s can not be displayed, because the '
+                  'necessary context information "%s" is missing.') % (visual_types[what]['title'],
+                                                                       k))
+
 
 def visual_title(what, visual):
     # Beware: if a single context visual is being visited *without* a context, then
     # the value of the context variable(s) is None. In order to avoid exceptions,
     # we simply drop these here.
-    extra_titles = [v
-                    for v in get_singlecontext_html_vars(visual).itervalues()
-                    if v is not None]
+    extra_titles = [v for v in get_singlecontext_html_vars(visual).itervalues() if v is not None]
 
     # FIXME: Is this really only needed for visuals without single infos?
     if not visual['single_infos']:
@@ -1306,7 +1350,7 @@ def visual_title(what, visual):
             try:
                 used_filters.append(get_filter(fn))
             except KeyError:
-                pass # silently ignore not existing filters
+                pass  # silently ignore not existing filters
 
         for filt in used_filters:
             heading = filt.heading_info()
@@ -1337,6 +1381,7 @@ def visual_title(what, visual):
 
     return title
 
+
 # Determines the names of HTML variables to be set in order to
 # specify a specify row in a datasource with a certain info.
 # Example: the info "history" (Event Console History) needs
@@ -1348,17 +1393,20 @@ def info_params(info_key):
         return []
     return dict(single_spec).keys()
 
+
 def get_single_info_keys(visual):
     keys = []
     for info_key in visual.get('single_infos', []):
         keys += info_params(info_key)
     return list(set(keys))
 
+
 def get_singlecontext_vars(visual):
     vars_ = {}
     for key in get_single_info_keys(visual):
         vars_[key] = visual['context'].get(key)
     return vars_
+
 
 def get_singlecontext_html_vars(visual):
     vars_ = get_singlecontext_vars(visual)
@@ -1368,9 +1416,10 @@ def get_singlecontext_html_vars(visual):
             vars_[key] = val
     return vars_
 
+
 # Collect all visuals that share a context with visual. For example
 # if a visual has a host context, get all relevant visuals.
-def collect_context_links(this_visual, mobile = False, only_types = None):
+def collect_context_links(this_visual, mobile=False, only_types=None):
     if only_types is None:
         only_types = []
 
@@ -1386,6 +1435,7 @@ def collect_context_links(this_visual, mobile = False, only_types = None):
             context_links += collect_context_links_of(what, this_visual, active_filter_vars, mobile)
     return context_links
 
+
 def collect_context_links_of(visual_type_name, this_visual, active_filter_vars, mobile):
     context_links = []
 
@@ -1393,15 +1443,15 @@ def collect_context_links_of(visual_type_name, this_visual, active_filter_vars, 
     visual_type = visual_types[visual_type_name]
     module_name = visual_type["module_name"]
     thing_module = importlib.import_module(module_name)
-    load_func_name = 'load_%s'% visual_type_name
+    load_func_name = 'load_%s' % visual_type_name
     if load_func_name not in thing_module.__dict__:
-        return context_links # in case of exception in "reporting", the load function might be missing
-    thing_module.__dict__['load_%s'% visual_type_name]()
+        return context_links  # in case of exception in "reporting", the load function might be missing
+    thing_module.__dict__['load_%s' % visual_type_name]()
     available = thing_module.__dict__['permitted_%s' % visual_type_name]()
 
     # sort buttons somehow
     visuals = available.values()
-    visuals.sort(cmp = lambda b,a: cmp(a.get('icon'), b.get('icon')))
+    visuals.sort(cmp=lambda b, a: cmp(a.get('icon'), b.get('icon')))
 
     for visual in visuals:
         name = visual["name"]
@@ -1411,7 +1461,7 @@ def collect_context_links_of(visual_type_name, this_visual, active_filter_vars, 
         if visual == this_visual:
             continue
         if visual.get("hidebutton", False):
-            continue # this visual does not want a button to be displayed
+            continue  # this visual does not want a button to be displayed
 
         if not mobile and visual.get('mobile') \
            or mobile and not visual.get('mobile'):
@@ -1421,7 +1471,7 @@ def collect_context_links_of(visual_type_name, this_visual, active_filter_vars, 
         # if the target dashboard/view shares a single info with the
         # current visual.
         if not visual['single_infos'] and not visual_type["multicontext_links"]:
-            continue # skip non single visuals for dashboard, views
+            continue  # skip non single visuals for dashboard, views
 
         # We can show a button only if all single contexts of the
         # target visual are known currently
@@ -1430,12 +1480,15 @@ def collect_context_links_of(visual_type_name, this_visual, active_filter_vars, 
         vars_values = []
         for var, val in needed_vars:
             if var not in active_filter_vars:
-                skip = True # At least one single context missing
+                skip = True  # At least one single context missing
                 break
             vars_values.append((var, val))
 
-        add_site_hint = may_add_site_hint(name, info_keys=infos.keys(), single_info_keys=visual["single_infos"],
-                                          filter_names=dict(vars_values).keys())
+        add_site_hint = may_add_site_hint(
+            name,
+            info_keys=infos.keys(),
+            single_info_keys=visual["single_infos"],
+            filter_names=dict(vars_values).keys())
 
         if add_site_hint and html.var('site'):
             vars_values.append(('site', html.var('site')))
@@ -1452,13 +1505,14 @@ def collect_context_links_of(visual_type_name, this_visual, active_filter_vars, 
             # the *complete* context, even the non-single one.
             if visual_type["multicontext_links"]:
                 uri = html.makeuri([(visual_type['ident_attr'], name)],
-                                     filename = visual_type["show_url"])
+                                   filename=visual_type["show_url"])
 
             # For views and dashboards currently the current filter
             # settings
             else:
-                uri = html.makeuri_contextless(vars_values + [(visual_type['ident_attr'], name)],
-                                               filename = visual_type["show_url"])
+                uri = html.makeuri_contextless(
+                    vars_values + [(visual_type['ident_attr'], name)],
+                    filename=visual_type["show_url"])
             icon = visual.get("icon")
             buttonid = "cb_" + name
             context_links.append((_u(linktitle), uri, icon, buttonid))
@@ -1469,7 +1523,7 @@ def collect_context_links_of(visual_type_name, this_visual, active_filter_vars, 
 def may_add_site_hint(visual_name, info_keys, single_info_keys, filter_names):
     """Whether or not the site hint may be set when linking to a visual with the given details"""
     # When there is one non single site info used don't add the site hint
-    if [ info_key for info_key in single_info_keys if not is_single_site_info(info_key) ]:
+    if [info_key for info_key in single_info_keys if not is_single_site_info(info_key)]:
         return False
 
     # Alternatively when the infos allow a site hint it is also needed to skip the site hint based
@@ -1481,7 +1535,7 @@ def may_add_site_hint(visual_name, info_keys, single_info_keys, filter_names):
 
     # Hack for servicedesc view which is meant to show all services with the given
     # description: Don't add the site filter for this view.
-    if visual_name in [ "servicedesc", "servicedescpnp" ]:
+    if visual_name in ["servicedesc", "servicedescpnp"]:
         return False
 
     return True
@@ -1489,10 +1543,10 @@ def may_add_site_hint(visual_name, info_keys, single_info_keys, filter_names):
 
 def transform_old_visual(visual):
     if 'context_type' in visual:
-        if visual['context_type'] in [ 'host', 'service', 'hostgroup', 'servicegroup' ]:
+        if visual['context_type'] in ['host', 'service', 'hostgroup', 'servicegroup']:
             visual['single_infos'] = [visual['context_type']]
         else:
-            visual['single_infos'] = [] # drop the context type and assume a "multiple visual"
+            visual['single_infos'] = []  # drop the context type and assume a "multiple visual"
         del visual['context_type']
     elif 'single_infos' not in visual:
         visual['single_infos'] = []
@@ -1511,6 +1565,7 @@ def transform_old_visual(visual):
 #   +----------------------------------------------------------------------+
 #   |  Handling of popup for adding a visual element to a dashboard, etc.  |
 #   '----------------------------------------------------------------------'
+
 
 # TODO: Remove this code as soon as everything is moved over to pagetypes.py
 @cmk.gui.pages.register("ajax_popup_add_visual")
@@ -1539,8 +1594,9 @@ def ajax_popup_add():
 
             for name, title in sorted(visuals, key=lambda x: x[1]):
                 html.open_li()
-                html.open_a(href="javascript:void(0)",
-                            onclick="add_to_visual(\'%s\', \'%s\')" % (visual_type_name, name))
+                html.open_a(
+                    href="javascript:void(0)",
+                    onclick="add_to_visual(\'%s\', \'%s\')" % (visual_type_name, name))
                 html.icon(None, visual_type_name.rstrip('s'))
                 html.write(title)
                 html.close_a()
@@ -1570,19 +1626,19 @@ def ajax_popup_add():
 
 @cmk.gui.pages.register("ajax_add_visual")
 def ajax_add_visual():
-    visual_type_name = html.var('visual_type') # dashboards / views / ...
+    visual_type_name = html.var('visual_type')  # dashboards / views / ...
     visual_type = visual_types[visual_type_name]
     module_name = visual_type["module_name"]
     visual_module = importlib.import_module(module_name)
     handler = visual_module.__dict__[visual_type["add_visual_handler"]]
 
-    visual_name = html.var("visual_name") # add to this visual
+    visual_name = html.var("visual_name")  # add to this visual
 
     # type of the visual to add (e.g. view)
     element_type = html.var("type")
 
     extra_data = []
-    for what in [ 'context', 'params' ]:
+    for what in ['context', 'params']:
         extra_data.append(json.loads(html.var(what)))
 
     handler(visual_name, element_type, *extra_data)

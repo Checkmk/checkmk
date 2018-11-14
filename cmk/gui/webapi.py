@@ -40,7 +40,7 @@ from cmk.gui.globals import html
 from cmk.gui.exceptions import (
     MKUserError,
     MKAuthException,
-    MKException
+    MKException,
 )
 
 import cmk.gui.plugins.webapi
@@ -49,17 +49,13 @@ if not cmk.is_raw_edition():
     import cmk.gui.cee.plugins.webapi
 
 # TODO: Kept for compatibility reasons with legacy plugins
-from cmk.gui.plugins.webapi.utils import ( # pylint: disable=unused-import
-    api_actions,
-    add_configuration_hash,
-    validate_request_keys,
-    validate_config_hash,
-    validate_host_attributes,
-    check_hostname,
+from cmk.gui.plugins.webapi.utils import (  # pylint: disable=unused-import
+    api_actions, add_configuration_hash, validate_request_keys, validate_config_hash,
+    validate_host_attributes, check_hostname,
 )
 
-
 loaded_with_language = False
+
 
 def load_plugins(force):
     global loaded_with_language
@@ -85,7 +81,7 @@ def page_api():
     try:
         # The API uses JSON format by default and python as optional alternative
         output_format = html.var("output_format", "json")
-        if output_format not in [ "json", "python" ]:
+        if output_format not in ["json", "python"]:
             raise MKUserError(None, "Only \"json\" and \"python\" are supported as output formats")
         else:
             html.set_output_format(output_format)
@@ -99,11 +95,9 @@ def page_api():
         config.user.need_permission("wato.use")
         config.user.need_permission("wato.api_allowed")
 
-
         action = html.var('action')
         if action not in api_actions:
             raise MKUserError(None, "Unknown API action %s" % html.attrencode(action))
-
 
         for permission in api_actions[action].get("required_permissions", []):
             config.user.need_permission(permission)
@@ -121,45 +115,50 @@ def page_api():
         else:
             request_object = html.get_request(exclude_vars=["action"])
 
-
         # Check if the data was sent with the correct data format
         # Some API calls only allow python code
         # TODO: convert the api_action dict into an object which handles the validation
         required_input_format = api_actions[action].get("required_input_format")
         if required_input_format:
             if required_input_format != request_object["request_format"]:
-                raise MKUserError(None, "This API call requires a %s-encoded request parameter" % required_input_format)
+                raise MKUserError(
+                    None,
+                    "This API call requires a %s-encoded request parameter" % required_input_format)
 
         required_output_format = api_actions[action].get("required_output_format")
         if required_output_format:
             if required_output_format != html.output_format:
-                raise MKUserError(None, "This API call requires the parameter output_format=%s" % required_output_format)
-
+                raise MKUserError(
+                    None, "This API call requires the parameter output_format=%s" %
+                    required_output_format)
 
         # The request_format parameter is not forwarded into the API action
         if "request_format" in request_object:
             del request_object["request_format"]
 
         if api_actions[action].get("locking", True):
-            watolib.lock_exclusive() # unlock is done automatically
+            watolib.lock_exclusive()  # unlock is done automatically
 
         if watolib.is_read_only_mode_enabled() and not watolib.may_override_read_only_mode():
             raise MKUserError(None, watolib.read_only_message())
 
         action_response = api_actions[action]["handler"](request_object)
-        response = { "result_code": 0, "result": action_response }
+        response = {"result_code": 0, "result": action_response}
 
     except MKAuthException, e:
-        response = { "result_code": 1, "result": _("Authorization Error. Insufficent permissions for '%s'") % e }
+        response = {
+            "result_code": 1,
+            "result": _("Authorization Error. Insufficent permissions for '%s'") % e
+        }
     except MKException, e:
-        response = { "result_code": 1, "result": _("Check_MK exception: %s") % e }
+        response = {"result_code": 1, "result": _("Check_MK exception: %s") % e}
     except Exception, e:
         if config.debug:
             raise
         logger.exception()
         response = {
-            "result_code" : 1,
-            "result"      : _("Unhandled exception: %s") % traceback.format_exc(),
+            "result_code": 1,
+            "result": _("Unhandled exception: %s") % traceback.format_exc(),
         }
 
     if html.output_format == "json":

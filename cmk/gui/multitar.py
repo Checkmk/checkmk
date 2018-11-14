@@ -47,7 +47,6 @@ from cmk.gui.i18n import _
 from cmk.gui.exceptions import MKGeneralException
 
 
-
 class SnapshotComponentsParser(object):
     def __init__(self, component_list):
         super(SnapshotComponentsParser, self).__init__()
@@ -59,22 +58,20 @@ class SnapshotComponentsParser(object):
             self.components.append(SnapshotComponent(component))
 
     def get_component_names(self):
-        return [ x.name for x in self.components ]
-
+        return [x.name for x in self.components]
 
 
 class SnapshotComponent(object):
     def __init__(self, component):
-        self.component_type = None # file or dir
-        self.excludes = None       # exclude files from dir
-        self.name = None           # the name of the subtar
+        self.component_type = None  # file or dir
+        self.excludes = None  # exclude files from dir
+        self.name = None  # the name of the subtar
 
-        self.configured_path = None # complete path, dir or file
-        self.base_dir        = None # real path
-        self.filename        = None # real filename, . for directories
+        self.configured_path = None  # complete path, dir or file
+        self.base_dir = None  # real path
+        self.filename = None  # real filename, . for directories
 
         self._from_tuple(component)
-
 
     def _from_tuple(self, component):
         # Self explanatory, tuples are ugly to parse..
@@ -86,15 +83,14 @@ class SnapshotComponent(object):
             self.excludes = []
 
         self.configured_path = os.path.abspath(self.configured_path).rstrip("/")
-        if self.component_type== "dir":
+        if self.component_type == "dir":
             self.filename = None
             self.base_dir = self.configured_path
         else:
             self.filename = os.path.basename(self.configured_path)
-            self.base_dir = os.path.dirname( self.configured_path)
+            self.base_dir = os.path.dirname(self.configured_path)
 
-        self.excludes.append(".*new*")    # exclude all temporary files
-
+        self.excludes.append(".*new*")  # exclude all temporary files
 
     def __str__(self):
         return "type: %s, name: %s, configured_path: %s, base_dir: %s, filename: %s, excludes: %s" % \
@@ -108,13 +104,12 @@ class SnapshotCreationBase(object):
         self._work_dir = work_dir
         self._multitar_workdir = os.path.join(self._work_dir, "multitar_workdir")
         self._rsync_target_dir = os.path.join(self._multitar_workdir, "synced_files")
-        self._tarfile_dir      = os.path.join(self._multitar_workdir, "subtars")
+        self._tarfile_dir = os.path.join(self._multitar_workdir, "subtars")
 
         self._available_snapshots = {}
 
         # Debugging stuff
         self._statistics = {"rsync": [], "tar": {}}
-
 
     def output_statistics(self):
         self._logger.debug(_("============= Snapshot creation statistics ============="))
@@ -126,11 +121,11 @@ class SnapshotCreationBase(object):
             for line in lines:
                 self._logger.debug("TAR:     - %s" % line)
 
-
-    def _generate_snapshot(self, target_filepath,
-                                 generic_components,
-                                 custom_components,
-                                 reuse_identical_snapshots = False):
+    def _generate_snapshot(self,
+                           target_filepath,
+                           generic_components,
+                           custom_components,
+                           reuse_identical_snapshots=False):
         generate_start_time = time.time()
         if not custom_components:
             custom_components = []
@@ -139,8 +134,7 @@ class SnapshotCreationBase(object):
 
         # Convert the tuple lists into a more managable format
         parsed_generic_components = SnapshotComponentsParser(generic_components)
-        parsed_custom_components  = SnapshotComponentsParser(custom_components)
-
+        parsed_custom_components = SnapshotComponentsParser(custom_components)
 
         # This is not supported in CME, most of the CME files are customized!
         # Only the sitespecific custom component is currently supported
@@ -148,7 +142,8 @@ class SnapshotCreationBase(object):
             # Note/Requirement: There is (currently) no need to rsync custom components, since these components are always
             #                   generated on the fly in a custom directory
             # Check if a snapshot with the same content has already been packed.
-            snapshot_fingerprint = self._get_snapshot_fingerprint(parsed_generic_components, parsed_custom_components)
+            snapshot_fingerprint = self._get_snapshot_fingerprint(parsed_generic_components,
+                                                                  parsed_custom_components)
             identical_snapshot = self._available_snapshots.get(snapshot_fingerprint)
             if identical_snapshot:
                 os.symlink(identical_snapshot, target_filepath)
@@ -156,11 +151,11 @@ class SnapshotCreationBase(object):
                                                                         (target_basename, time.time() - generate_start_time))
                 return
 
-
         # Generate the final tar command
         required_subtars = ["%s.tar" % x for x in parsed_generic_components.get_component_names()]
-        final_tar_command = ["tar", "czf", target_filepath, "--owner=0", "--group=0", "-C", self._tarfile_dir] + required_subtars
-
+        final_tar_command = [
+            "tar", "czf", target_filepath, "--owner=0", "--group=0", "-C", self._tarfile_dir
+        ] + required_subtars
 
         # Add custom files to final tar command
         if parsed_custom_components.components:
@@ -169,9 +164,10 @@ class SnapshotCreationBase(object):
             os.makedirs(tarfile_dir)
 
             self._create_custom_components_tarfiles(parsed_custom_components, tarfile_dir)
-            required_custom_subtars = ["%s.tar" % x for x in parsed_custom_components.get_component_names()]
+            required_custom_subtars = [
+                "%s.tar" % x for x in parsed_custom_components.get_component_names()
+            ]
             final_tar_command.extend(["-C", tarfile_dir] + required_custom_subtars)
-
 
         # Execute final tar command, create the snapshot
         self._execute_bash_commands([final_tar_command])
@@ -179,9 +175,10 @@ class SnapshotCreationBase(object):
         if reuse_identical_snapshots:
             self._available_snapshots[snapshot_fingerprint] = target_filepath
 
-        self._statistics["tar"].setdefault(target_basename, []).append("Snapshot creation took %.4fsec" % (time.time() - generate_start_time))
-        self._logger.debug("Snapshot %-30s took %.4fsec" % (target_basename, (time.time() - generate_start_time)))
-
+        self._statistics["tar"].setdefault(target_basename, []).append(
+            "Snapshot creation took %.4fsec" % (time.time() - generate_start_time))
+        self._logger.debug("Snapshot %-30s took %.4fsec" % (target_basename,
+                                                            (time.time() - generate_start_time)))
 
     def _get_rsync_and_tar_commands(self, component, rsync_target_dir, tarfile_target_dir):
         bash_commands = []
@@ -190,12 +187,13 @@ class SnapshotCreationBase(object):
         bash_commands.append(self._get_rsync_command(component, rsync_target_dir))
 
         # Create subtar
-        bash_commands.append(self._get_subtar_command(component, rsync_target_dir, tarfile_target_dir))
+        bash_commands.append(
+            self._get_subtar_command(component, rsync_target_dir, tarfile_target_dir))
         return bash_commands
 
-
     def _get_rsync_command(self, component, rsync_target_dir):
-        exclude_args = list(itertools.chain.from_iterable([ ("--exclude", f) for f in component.excludes ]))
+        exclude_args = list(
+            itertools.chain.from_iterable([("--exclude", f) for f in component.excludes]))
         if component.component_type == "dir":
             # Sync the content of the directory, but not the directory itself
             archive_path = "%s/" % component.configured_path
@@ -203,8 +201,7 @@ class SnapshotCreationBase(object):
             # component.configured_path points to the file
             archive_path = component.configured_path
 
-        return [ "rsync", "-av", "--delete", archive_path, rsync_target_dir] + exclude_args
-
+        return ["rsync", "-av", "--delete", archive_path, rsync_target_dir] + exclude_args
 
     def _get_subtar_command(self, component, source_dir, tarfile_target_dir):
         if component.component_type == "dir":
@@ -212,11 +209,12 @@ class SnapshotCreationBase(object):
         else:
             files_location = [source_dir, component.filename]
 
-        return [ "tar", "cf", os.path.join(tarfile_target_dir, component.name + ".tar"),
-                              "--force-local", "-C" ] + files_location
+        return [
+            "tar", "cf",
+            os.path.join(tarfile_target_dir, component.name + ".tar"), "--force-local", "-C"
+        ] + files_location
 
-
-    def _execute_bash_commands(self, commands, debug = False):
+    def _execute_bash_commands(self, commands, debug=False):
         if not commands:
             return
 
@@ -224,14 +222,21 @@ class SnapshotCreationBase(object):
             if debug:
                 self._logger.debug(" ".join(command))
             try:
-                p = subprocess.Popen(command, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=False, close_fds=True)
+                p = subprocess.Popen(
+                    command,
+                    stdin=subprocess.PIPE,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                    shell=False,
+                    close_fds=True)
                 stdout, stderr = p.communicate()
                 if p.returncode != 0:
                     raise MKGeneralException(_("Activate changes error. Unable to prepare site snapshots. Failed command: %r; StdOut: %r; StdErr: %s") %\
                                                         (command, stdout, stderr))
             except OSError, e:
-                raise MKGeneralException(_("Activate changes error. Unable to prepare site snapshots. Failed command: %r, Exception: %s") % (command, e))
-
+                raise MKGeneralException(
+                    _("Activate changes error. Unable to prepare site snapshots. Failed command: %r, Exception: %s"
+                     ) % (command, e))
 
     def _create_custom_components_tarfiles(self, parsed_custom_components, tarfile_dir):
         # Add any custom_components
@@ -242,14 +247,14 @@ class SnapshotCreationBase(object):
                 tar = tarfile.open(os.path.join(tarfile_dir, "%s.tar" % component.name), "w")
                 tar.close()
                 continue
-            custom_components_commands.append(self._get_subtar_command(component, component.base_dir, tarfile_dir))
+            custom_components_commands.append(
+                self._get_subtar_command(component, component.base_dir, tarfile_dir))
         self._execute_bash_commands(custom_components_commands)
-
 
     def _get_snapshot_fingerprint(self, parsed_generic_components, parsed_custom_components):
         custom_components_md5sum = self._get_custom_components_md5sum(parsed_custom_components)
-        return tuple(sorted(parsed_generic_components.get_component_names()) + [custom_components_md5sum])
-
+        return tuple(
+            sorted(parsed_generic_components.get_component_names()) + [custom_components_md5sum])
 
     def _get_custom_components_md5sum(self, parsed_custom_components):
         if not parsed_custom_components:
@@ -267,15 +272,15 @@ class SnapshotCreationBase(object):
                 return False
             return True
 
-
         for component in parsed_custom_components.components:
             if not is_supported(component):
-                raise MKGeneralException(_("Identical snapshot detection not supported. Cannot create md5sum. "
-                                           "Unsupported custom snapshot component: %s.") % str(component))
+                raise MKGeneralException(
+                    _("Identical snapshot detection not supported. Cannot create md5sum. "
+                      "Unsupported custom snapshot component: %s.") % str(component))
 
         # Simply compute the checksum of the sitespecific.mk
-        return hashlib.md5(file(parsed_custom_components.components[0].configured_path).read()).hexdigest()
-
+        return hashlib.md5(file(
+            parsed_custom_components.components[0].configured_path).read()).hexdigest()
 
 
 class SnapshotWorkerSubprocess(SnapshotCreationBase, multiprocessing.Process):
@@ -291,7 +296,6 @@ class SnapshotWorkerSubprocess(SnapshotCreationBase, multiprocessing.Process):
             self._logger.error(traceback.format_exc())
 
 
-
 class SnapshotCreator(SnapshotCreationBase):
     def __init__(self, work_dir, all_generic_components):
         super(SnapshotCreator, self).__init__(work_dir)
@@ -299,37 +303,30 @@ class SnapshotCreator(SnapshotCreationBase):
         self._parsed_generic_components = SnapshotComponentsParser(all_generic_components)
         self._worker_subprocesses = []
 
-
     def generate_snapshot(self, *args, **kwargs):
         self._generate_snapshot(*args, **kwargs)
 
-
     def generate_snapshot_in_subprocess(self, *args, **kwargs):
         new_worker = SnapshotWorkerSubprocess(self._work_dir)
-        new_worker._args   = args
+        new_worker._args = args
         new_worker._kwargs = kwargs
         new_worker.daemon = True
         new_worker.start()
         self._worker_subprocesses.append(new_worker)
 
-
     def _setup_directories(self):
-        for path in [ self._rsync_target_dir,
-                      self._tarfile_dir ]:
+        for path in [self._rsync_target_dir, self._tarfile_dir]:
             if not os.path.exists(path):
                 os.makedirs(path)
-
 
     def __enter__(self):
         self._prepare_generic_tar_files()
         return self
 
-
     def __exit__(self, exception_type, exception_value, traceback):
         for worker in self._worker_subprocesses:
             worker.join()
         self.output_statistics()
-
 
     def _prepare_generic_tar_files(self):
         bash_commands = []
@@ -340,17 +337,16 @@ class SnapshotCreator(SnapshotCreationBase):
 
             if os.path.exists(component.configured_path):
                 bash_commands.extend(
-                        self._get_rsync_and_tar_commands(component,
-                                                         rsync_target_dir,
-                                                         self._tarfile_dir))
+                    self._get_rsync_and_tar_commands(component, rsync_target_dir,
+                                                     self._tarfile_dir))
             else:
                 # create an empty tarfile for this component
                 tar = tarfile.open(os.path.join(self._tarfile_dir, "%s.tar" % component.name), "w")
                 tar.close()
 
         self._execute_bash_commands(bash_commands)
-        self._statistics["rsync"].append(_("RSync of generic files took %.4fsec") % (time.time() - prepare_start_time))
-
+        self._statistics["rsync"].append(
+            _("RSync of generic files took %.4fsec") % (time.time() - prepare_start_time))
 
 
 # Can be removed soon, since it is deprecated by the SnapshotCreator
@@ -379,10 +375,12 @@ def create(tar_filename, components):
 
             subtar_buffer = cStringIO.StringIO()
             with tarfile.TarFile(fileobj=subtar_buffer, mode="w") as subtar_obj:
+
                 def exclude_filter(x, excludes=excludes):
                     return filter_subtar_files(x, excludes)
-                subtar_obj.add(os.path.join(basedir, filename), arcname=filename,
-                                filter=exclude_filter)
+
+                subtar_obj.add(
+                    os.path.join(basedir, filename), arcname=filename, filter=exclude_filter)
 
             subtar_size = len(subtar_buffer.getvalue())
             subtar_buffer.seek(0)
@@ -397,7 +395,9 @@ def create(tar_filename, components):
 
             tar.addfile(info, subtar_buffer)
 
-    logger.debug("Packaging %s took %.3fsec" % (os.path.basename(tar_filename), time.time() - start))
+    logger.debug(
+        "Packaging %s took %.3fsec" % (os.path.basename(tar_filename), time.time() - start))
+
 
 def filter_subtar_files(tarinfo, excludes):
     filename = os.path.basename(tarinfo.name)
@@ -420,12 +420,13 @@ def extract_from_buffer(buffer_, elements):
     elif isinstance(elements, dict):
         extract_domains(tarfile.open(None, "r", stream), elements)
 
+
 def list_tar_content(the_tarfile):
     files = {}
     try:
         if not isinstance(the_tarfile, str):
             the_tarfile.seek(0)
-            tar = tarfile.open("r", fileobj = the_tarfile)
+            tar = tarfile.open("r", fileobj=the_tarfile)
         else:
             tar = tarfile.open(the_tarfile, "r")
         for x in tar.getmembers():
@@ -434,10 +435,11 @@ def list_tar_content(the_tarfile):
         return {}
     return files
 
+
 def get_file_content(the_tarfile, filename):
     if not isinstance(the_tarfile, str):
         the_tarfile.seek(0)
-        tar = tarfile.open("r", fileobj = the_tarfile)
+        tar = tarfile.open("r", fileobj=the_tarfile)
     else:
         tar = tarfile.open(the_tarfile, "r")
     return tar.extractfile(filename).read()
@@ -470,7 +472,7 @@ def extract_domains(tar, domains):
                     return True  # exists and writable
 
                 errors.append(_("Permission problem: Path not writable %s") % "/".join(path_tokens))
-                return False # not writable
+                return False  # not writable
 
             return check_exists_or_writable(path_tokens[:-1])
 
@@ -479,8 +481,9 @@ def extract_domains(tar, domains):
 
         # Older versions of python tarfile handle empty subtar archives :(
         # This won't work: subtar = tarfile.open("%s/%s" % (restore_dir, tar_member.name))
-        p = subprocess.Popen(["tar", "tzf", "%s/%s" % (restore_dir, tar_member.name) ],
-                             stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        p = subprocess.Popen(["tar", "tzf", "%s/%s" % (restore_dir, tar_member.name)],
+                             stdout=subprocess.PIPE,
+                             stderr=subprocess.PIPE)
         stdout, stderr = p.communicate()
         if stderr:
             errors.append(_("Contains corrupt file %s") % tar_member.name)
@@ -495,7 +498,6 @@ def extract_domains(tar, domains):
         os.unlink("%s/%s" % (restore_dir, tar_member.name))
 
         return errors
-
 
     def cleanup_domain(domain):
         # Some domains, e.g. authorization, do not get a cleanup
@@ -533,20 +535,18 @@ def extract_domains(tar, domains):
             # The complete tar.gz file never fits in stringIO buffer..
             tar.extract(tar_member, restore_dir)
 
-            command = [ "tar", "xzf", "%s/%s" % (restore_dir, tar_member.name),
-                               "-C", target_dir ]
+            command = ["tar", "xzf", "%s/%s" % (restore_dir, tar_member.name), "-C", target_dir]
             p = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             _stdout, stderr = p.communicate()
             exit_code = p.wait()
             if exit_code:
-                return [ "%s - %s" % (domain["title"], stderr) ]
+                return ["%s - %s" % (domain["title"], stderr)]
         except Exception, e:
-            return [ "%s - %s" % (domain["title"], str(e)) ]
+            return ["%s - %s" % (domain["title"], str(e))]
 
         return []
 
-
-    def execute_restore(domain, is_pre_restore = True):
+    def execute_restore(domain, is_pre_restore=True):
         if is_pre_restore:
             if "pre_restore" in domain:
                 return domain["pre_restore"]()
@@ -559,12 +559,14 @@ def extract_domains(tar, domains):
     logger.info("Restoring snapshot: %s" % tar.name)
     logger.info("Domains: %s" % ", ".join(tar_domains.keys()))
     for what, abort_on_error, handler in [
-                            ("Permissions",  True,  check_domain),
-                            ("Pre-Restore",  True,  lambda domain, tar_member: execute_restore(domain, is_pre_restore = True)),
-                            ("Cleanup",      False, lambda domain, tar_member: cleanup_domain(domain)),
-                            ("Extract",      False, extract_domain),
-                            ("Post-Restore", False, lambda domain, tar_member: execute_restore(domain, is_pre_restore = False))
-                          ]:
+        ("Permissions", True, check_domain),
+        ("Pre-Restore", True,
+         lambda domain, tar_member: execute_restore(domain, is_pre_restore=True)),
+        ("Cleanup", False, lambda domain, tar_member: cleanup_domain(domain)),
+        ("Extract", False, extract_domain),
+        ("Post-Restore", False,
+         lambda domain, tar_member: execute_restore(domain, is_pre_restore=False))
+    ]:
         errors = []
         for name, tar_member in tar_domains.items():
             if name in domains:
@@ -573,7 +575,8 @@ def extract_domains(tar, domains):
                     errors.extend(dom_errors or [])
                 except Exception:
                     # This should NEVER happen
-                    err_info = "Restore-Phase: %s, Domain: %s\nError: %s" % (what, name, traceback.format_exc())
+                    err_info = "Restore-Phase: %s, Domain: %s\nError: %s" % (what, name,
+                                                                             traceback.format_exc())
                     errors.append(err_info)
                     logger.critical(err_info)
                     if abort_on_error == False:
@@ -587,16 +590,20 @@ def extract_domains(tar, domains):
         if errors:
             if what == "Permissions":
                 errors = list(set(errors))
-                errors.append(_("<br>If there are permission problems, please ensure the site user has write permissions."))
+                errors.append(
+                    _("<br>If there are permission problems, please ensure the site user has write permissions."
+                     ))
             if abort_on_error:
-                raise MKGeneralException(_("%s - Unable to restore snapshot:<br>%s") % (what, "<br>".join(errors)))
+                raise MKGeneralException(
+                    _("%s - Unable to restore snapshot:<br>%s") % (what, "<br>".join(errors)))
             total_errors.extend(errors)
 
     # Cleanup
     wipe_directory(restore_dir)
 
     if total_errors:
-        raise MKGeneralException(_("Errors on restoring snapshot:<br>%s") % "<br>".join(total_errors))
+        raise MKGeneralException(
+            _("Errors on restoring snapshot:<br>%s") % "<br>".join(total_errors))
 
 
 # Extract a tarball
@@ -611,8 +618,8 @@ def extract(tar, components):
             try:
                 subtarstream = tar.extractfile(name + ".tar")
             except:
-                continue # may be missing, e.g. sites.tar is only present
-                     # if some sites have been created.
+                continue  # may be missing, e.g. sites.tar is only present
+                # if some sites have been created.
 
             if what == "dir":
                 target_dir = path
@@ -629,10 +636,12 @@ def extract(tar, components):
                 os.makedirs(path)
 
             # Extract without use of temporary files
-            subtar = tarfile.open(fileobj = subtarstream)
+            subtar = tarfile.open(fileobj=subtarstream)
             subtar.extractall(target_dir)
         except Exception:
-            raise MKGeneralException('Failed to extract subtar %s: %s' % (name, traceback.format_exc()))
+            raise MKGeneralException(
+                'Failed to extract subtar %s: %s' % (name, traceback.format_exc()))
+
 
 # Try to cleanup everything starting from the root_path
 # except the specific exclude files
@@ -666,9 +675,10 @@ def cleanup_dir(root_path, exclude_files=None):
         if os.path.dirname(filename) not in paths_to_remove:
             os.remove(filename)
 
+
 def wipe_directory(path):
     for entry in os.listdir(path):
-        if entry not in [ '.', '..' ]:
+        if entry not in ['.', '..']:
             p = path + "/" + entry
             if os.path.isdir(p):
                 shutil.rmtree(p, ignore_errors=True)

@@ -37,12 +37,15 @@ from cmk.gui.globals import html
 from cmk.gui.htmllib import HTML
 from cmk.gui.exceptions import MKUserError
 
+
 def mobile_html_head(title, ready_code=""):
     html.mobile = True
-    html.write("""<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">""")
+    html.write(
+        """<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">"""
+    )
     html.open_html()
     html.open_head()
-    html.meta(content="text/html;", charset="utf-8", **{"http-equiv":"Content-Type"})
+    html.meta(content="text/html;", charset="utf-8", **{"http-equiv": "Content-Type"})
     html.meta(name="viewport", content="initial-scale=1.0")
     html.meta(name="apple-mobile-web-app-capable", content="yes")
     html.meta(name="apple-mobile-web-app-title", content="Check_MK")
@@ -55,7 +58,9 @@ def mobile_html_head(title, ready_code=""):
     if metrics.cmk_graphs_possible():
         html.stylesheet(href="graphs.css")
 
-    html.write(html._render_opening_tag("link", rel="apple-touch-icon", href="images/ios_logo.png", close_tag=True))
+    html.write(
+        html._render_opening_tag(
+            "link", rel="apple-touch-icon", href="images/ios_logo.png", close_tag=True))
     html.javascript_file(src='jquery/jquery-1.6.4.min.js')
     html.javascript_file(src='js/mobile.js')
     html.javascript_file(src='jquery/jquery.mobile-1.0.min.js')
@@ -80,67 +85,87 @@ def mobile_html_head(title, ready_code=""):
     html.close_head()
     html.open_body(class_="mobile")
 
+
 def mobile_html_foot():
     html.close_body()
     html.close_html()
 
+
 def jqm_header_button(pos, url, title, icon=""):
-    html.a('', href=url, class_="ui-btn-%s" % pos, title=title, **{"data-direction":"reverse", "data-icon":icon, "data-iconpos":"notext"})
+    html.a(
+        '',
+        href=url,
+        class_="ui-btn-%s" % pos,
+        title=title,
+        **{
+            "data-direction": "reverse",
+            "data-icon": icon,
+            "data-iconpos": "notext"
+        })
+
 
 def jqm_page_header(title, id_=None, left_button=None, right_button=None):
-    html.open_div(id_= id_ if id_ else None, **{"data-role":"page"})
-    html.open_div(**{"data-role":"header", "data-position":"fixed"})
+    html.open_div(id_=id_ if id_ else None, **{"data-role": "page"})
+    html.open_div(**{"data-role": "header", "data-position": "fixed"})
     if left_button:
         jqm_header_button("left", *left_button)
     html.h1(title)
     if right_button:
-        jqm_header_button("right",*right_button)
+        jqm_header_button("right", *right_button)
     html.close_div()
-    html.open_div(**{"data-role":"content"})
+    html.open_div(**{"data-role": "content"})
+
 
 def jqm_page_footer(content=""):
-    html.close_div() # close content-div
+    html.close_div()  # close content-div
     html.close_div()
-    html.open_div(**{"data-role":"footer"})
+    html.open_div(**{"data-role": "footer"})
     html.open_h4()
     html.write(content)
     html.close_h4()
     html.close_div()
-    html.close_div() # close page-div
+    html.close_div()  # close page-div
+
 
 def jqm_page_navfooter(items, current, page_id):
-    html.close_div() # close content
-    html.open_div(**{"data-role":"footer", "data-position":"fixed"})
-    html.open_div(**{"data-role":"navbar"})
+    html.close_div()  # close content
+    html.open_div(**{"data-role": "footer", "data-position": "fixed"})
+    html.open_div(**{"data-role": "navbar"})
     html.open_ul()
 
     for href, title, icon, custom_css in items:
-        href = html.makeuri([("page", href),("search", "Search")])
+        href = html.makeuri([("page", href), ("search", "Search")])
         if custom_css == False:
             custom_css = ""
         if current == href:
             custom_css += ' ui-state-persist ui-btn-active'
         else:
             html.open_li()
-            html.open_a(href=href, class_=custom_css,
-                        **{"data-transition":"slide", "data-icon":icon, "data-iconpos":"bottom"})
+            html.open_a(
+                href=href,
+                class_=custom_css,
+                **{
+                    "data-transition": "slide",
+                    "data-icon": icon,
+                    "data-iconpos": "bottom"
+                })
             html.write(title)
             html.close_a()
             html.close_li()
     html.close_ul()
     html.close_div()
     html.close_div()
-    html.close_div() # close page-div
+    html.close_div()  # close page-div
 
 
 def jqm_page_index(title, items):
     manual_sort = [_("Hosts"), _("Services"), _("Events")]
 
-    items.sort(cmp = lambda a,b: cmp((a[0],a[2]),(b[0],b[2])))
+    items.sort(cmp=lambda a, b: cmp((a[0], a[2]), (b[0], b[2])))
     for topic in manual_sort:
         jqm_page_index_topic_renderer(topic, items)
 
-    other_topics = list(set([ x[0] for x in items if x[0] not in manual_sort]))
+    other_topics = list(set([x[0] for x in items if x[0] not in manual_sort]))
 
     for topic in other_topics:
         jqm_page_index_topic_renderer(topic, items)
@@ -152,11 +177,11 @@ def jqm_page_index_topic_renderer(topic, items):
             html.open_p()
             html.write(topic)
             html.close_p()
-            html.open_ul(**{"data-role":"listview", "data-inset":"true"})
+            html.open_ul(**{"data-role": "listview", "data-inset": "true"})
             for top, href, title in items:
                 if top == topic:
                     html.open_li()
-                    html.open_a(href=href, **{"data-ajax":"false", "data-transition":"flip"})
+                    html.open_a(href=href, **{"data-ajax": "false", "data-transition": "flip"})
                     html.write(title)
                     html.close_a()
                     html.close_li()
@@ -169,29 +194,33 @@ def jqm_page(title, content, foot, id_=None):
     html.write(content)
     jqm_page_footer(foot)
 
+
 def page_login():
     title = _("Check_MK Mobile")
     mobile_html_head(title)
     jqm_page_header(title, id_="login")
     html.div(_("Welcome to Check_MK Mobile."), id_="loginhead")
 
-    html.begin_form("login", method = 'POST', add_transid = False)
+    html.begin_form("login", method='POST', add_transid=False)
     # Keep information about original target URL
     origtarget = html.var('_origtarget', '')
     if not origtarget and not html.myfile == 'login':
         origtarget = html.request.requested_url
     html.hidden_field('_origtarget', html.attrencode(origtarget))
 
-    html.text_input("_username", label = _("Username:"))
-    html.password_input("_password", size=None, label = _("Password:"))
+    html.text_input("_username", label=_("Username:"))
+    html.password_input("_password", size=None, label=_("Password:"))
     html.br()
     html.button("_login", _('Login'))
     html.set_focus("_username")
     html.end_form()
     html.open_div(id_="loginfoot")
     html.img("images/logo_cmk_small.png", class_="logomk")
-    html.div(HTML(_("&copy; <a target=\"_blank\" href=\"https://mathias-kettner.com\">Mathias Kettner</a>")),
-               class_="copyright")
+    html.div(
+        HTML(
+            _("&copy; <a target=\"_blank\" href=\"https://mathias-kettner.com\">Mathias Kettner</a>"
+             )),
+        class_="copyright")
     jqm_page_footer()
     mobile_html_foot()
 
@@ -200,7 +229,10 @@ def page_login():
 def page_index():
     title = _("Check_MK Mobile")
     mobile_html_head(title)
-    jqm_page_header(title, right_button=("javascript:document.location.reload();", _("Reload"), "refresh"),id_="data")
+    jqm_page_header(
+        title,
+        right_button=("javascript:document.location.reload();", _("Reload"), "refresh"),
+        id_="data")
     views.load_views()
     items = []
     for view_name, view in views.permitted_views().items():
@@ -209,22 +241,29 @@ def page_index():
             count = ""
             if not view.get("mustsearch"):
                 cmk.gui.plugins.views.utils.painter_options.load(view_name)
-                count = views.show_view(view, only_count = True)
+                count = views.show_view(view, only_count=True)
                 count = '<span class="ui-li-count">%d</span>' % count
-            items.append((view.get("topic"), url, '%s %s' % (view.get("linktitle", view["title"]), count)))
+            items.append((view.get("topic"), url,
+                          '%s %s' % (view.get("linktitle", view["title"]), count)))
     jqm_page_index(_("Check_MK Mobile"), items)
     # Link to non-mobile GUI
 
     html.hr()
-    html.open_ul(**{"data-role":"listview", "data-theme":"b", "data-inset":"true"})
+    html.open_ul(**{"data-role": "listview", "data-theme": "b", "data-inset": "true"})
     html.open_li()
-    html.a(_("Classical web GUI"), href="index.py?mobile=", **{"data-ajax":"false", "data-transition":"fade"})
+    html.a(
+        _("Classical web GUI"),
+        href="index.py?mobile=",
+        **{
+            "data-ajax": "false",
+            "data-transition": "fade"
+        })
     html.close_li()
     html.close_ul()
 
-    html.open_ul(**{"data-role":"listview", "data-theme":"f", "data-inset":"true"})
+    html.open_ul(**{"data-role": "listview", "data-theme": "f", "data-inset": "true"})
     html.open_li()
-    html.a(_("Logout"), href="logout.py", **{"data-ajax":"false", "data-transition":"fade"})
+    html.a(_("Logout"), href="logout.py", **{"data-ajax": "false", "data-transition": "fade"})
     html.close_li()
     html.close_ul()
     mobile_html_foot()
@@ -247,43 +286,44 @@ def page_view():
     cmk.gui.plugins.views.utils.painter_options.load(view_name)
 
     try:
-        views.show_view(view, show_heading = False, show_buttons = False,
-            show_footer = False, render_function = render_view)
+        views.show_view(
+            view,
+            show_heading=False,
+            show_buttons=False,
+            show_footer=False,
+            render_function=render_view)
     except Exception, e:
         if config.debug:
             raise
         html.write("ERROR showing view: %s" % html.attrencode(e))
 
-
     mobile_html_foot()
 
-def render_view(view, rows, datasource, group_painters, painters,
-                show_heading, show_buttons,
-                show_checkboxes, layout, num_columns, show_filters, show_footer,
-                browser_reload):
 
-    home=("mobile.py", "Home", "home")
+def render_view(view, rows, datasource, group_painters, painters, show_heading, show_buttons,
+                show_checkboxes, layout, num_columns, show_filters, show_footer, browser_reload):
+
+    home = ("mobile.py", "Home", "home")
 
     page = html.var("page")
     if not page:
-       if view.get("mustsearch"):
-           page = "filter"
-       else:
+        if view.get("mustsearch"):
+            page = "filter"
+        else:
             page = "data"
 
     title = views.view_title(view)
-    navbar = [ ( "data",     _("Results"), "grid", 'results_button'),
-               ( "filter",   _("Filter"),   "search", False )]
+    navbar = [("data", _("Results"), "grid", 'results_button'),
+              ("filter", _("Filter"), "search", False)]
     if config.user.may("general.act"):
-        navbar.append(( "commands", _("Commands"), "gear", False ))
+        navbar.append(("commands", _("Commands"), "gear", False))
 
     # Should we show a page with context links?
-    context_links = visuals.collect_context_links(view, mobile = True, only_types = ['views'])
+    context_links = visuals.collect_context_links(view, mobile=True, only_types=['views'])
 
     if context_links:
-        navbar.append(( "context", _("Context"), "arrow-r", False))
+        navbar.append(("context", _("Context"), "arrow-r", False))
     page_id = "view_" + view["name"]
-
 
     if page == "filter":
         jqm_page_header(_("Filter / Search"), left_button=home, id_="filter")
@@ -291,36 +331,40 @@ def render_view(view, rows, datasource, group_painters, painters,
         jqm_page_navfooter(navbar, 'filter', page_id)
 
     elif page == "commands":
-            # Page: Commands
-            if config.user.may("general.act"):
-                jqm_page_header(_("Commands"), left_button=home, id_="commands")
-                show_commands = True
-                if html.has_var("_do_actions"):
-                    try:
-                        show_commands = do_commands(view, datasource["infos"][0], rows)
-                    except MKUserError, e:
-                        html.show_error(e)
-                        html.add_user_error(e.varname, e)
-                        show_commands = True
-                if show_commands:
-                    show_command_form(view, datasource, rows)
-                jqm_page_navfooter(navbar, 'commands', page_id)
+        # Page: Commands
+        if config.user.may("general.act"):
+            jqm_page_header(_("Commands"), left_button=home, id_="commands")
+            show_commands = True
+            if html.has_var("_do_actions"):
+                try:
+                    show_commands = do_commands(view, datasource["infos"][0], rows)
+                except MKUserError, e:
+                    html.show_error(e)
+                    html.add_user_error(e.varname, e)
+                    show_commands = True
+            if show_commands:
+                show_command_form(view, datasource, rows)
+            jqm_page_navfooter(navbar, 'commands', page_id)
 
     elif page == "data":
-          # Page: data rows of view
-          jqm_page_header(title, left_button=home, right_button=("javascript:document.location.reload();", _("Reload"), "refresh"), id_="data")
-          html.open_div(id_="view_results")
-          if len(rows) == 0:
-              html.write(_("No hosts/services found."))
-          else:
-              try:
-                  cmk.gui.view_utils.check_limit(rows, views.get_limit(), config.user)
-                  layout["render"](rows, view, group_painters, painters, num_columns,
-                                  show_checkboxes and not html.do_actions())
-              except Exception, e:
-                  html.write(_("Error showing view: %s") % e)
-          html.close_div()
-          jqm_page_navfooter(navbar, 'data', page_id)
+        # Page: data rows of view
+        jqm_page_header(
+            title,
+            left_button=home,
+            right_button=("javascript:document.location.reload();", _("Reload"), "refresh"),
+            id_="data")
+        html.open_div(id_="view_results")
+        if len(rows) == 0:
+            html.write(_("No hosts/services found."))
+        else:
+            try:
+                cmk.gui.view_utils.check_limit(rows, views.get_limit(), config.user)
+                layout["render"](rows, view, group_painters, painters, num_columns,
+                                 show_checkboxes and not html.do_actions())
+            except Exception, e:
+                html.write(_("Error showing view: %s") % e)
+        html.close_div()
+        jqm_page_navfooter(navbar, 'data', page_id)
 
     # Page: Context buttons
     #if context_links:
@@ -336,9 +380,9 @@ def show_filter_form(show_filters):
     s.sort()
 
     html.begin_form("filter")
-    html.open_ul(**{"data-role":"listview", "data-inset":"false"})
+    html.open_ul(**{"data-role": "listview", "data-inset": "false"})
     for _sort_index, title, f in s:
-        html.open_li(**{"data-role":"fieldcontain"})
+        html.open_li(**{"data-role": "fieldcontain"})
         html.write("<legend>%s</legend>" % title)
         f.display()
         html.close_li()
@@ -354,6 +398,7 @@ def show_filter_form(show_filters):
       });
     """)
 
+
 def show_command_form(view, datasource, rows):
     what = datasource["infos"][0]
     html.javascript("""
@@ -365,13 +410,13 @@ def show_command_form(view, datasource, rows):
     html.begin_form("commands", html.myfile + ".py#commands")
     html.hidden_field("_do_actions", "yes")
     html.hidden_field("actions", "yes")
-    html.hidden_fields() # set all current variables, exception action vars
+    html.hidden_fields()  # set all current variables, exception action vars
 
     one_shown = False
-    html.open_div(**{"data-role":"collapsible-set"})
+    html.open_div(**{"data-role": "collapsible-set"})
     for command in views.multisite_commands:
         if what in command["tables"] and config.user.may(command["permission"]):
-            html.open_div(class_=["command_group"], **{"data-role":"collapsible"})
+            html.open_div(class_=["command_group"], **{"data-role": "collapsible"})
             html.h3(command["title"])
             html.open_p()
             command["render"]()
@@ -382,15 +427,20 @@ def show_command_form(view, datasource, rows):
     if not one_shown:
         html.write(_('No commands are possible in this view'))
 
+
 # FIXME: Reduce ducplicate code with views.py
 def do_commands(view, what, rows):
     command = None
-    title, executor = views.core_command(what, rows[0], 0, len(rows))[1:3] # just get the title
+    title, executor = views.core_command(what, rows[0], 0, len(rows))[1:3]  # just get the title
     title_what = _("hosts") if what == "host" else _("services")
-    r = html.confirm(_("Do you really want to %(title)s the %(count)d %(what)s?") %
-            { "title" : title, "count" : len(rows), "what" : title_what, })
+    r = html.confirm(
+        _("Do you really want to %(title)s the %(count)d %(what)s?") % {
+            "title": title,
+            "count": len(rows),
+            "what": title_what,
+        })
     if r != True:
-        return r == None # Show commands on negative answer
+        return r == None  # Show commands on negative answer
 
     count = 0
     already_executed = set([])
@@ -406,7 +456,8 @@ def do_commands(view, what, rows):
 
     if count > 0:
         html.message(_("Successfully sent %d commands.") % count)
-    return True # Show commands again
+    return True  # Show commands again
+
 
 def show_context_links(context_links):
     items = []

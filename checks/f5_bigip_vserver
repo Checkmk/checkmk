@@ -167,7 +167,7 @@ def check_f5_bigip_vserver(item, params, parsed):
         for param_var, levels in params.items():
             if param_var == "state":
                 continue
-            if param_var.endswith("_lower") and type(levels) == tuple:
+            if param_var.endswith("_lower") and isinstance(levels, tuple):
                 levels = (None, None) + levels
             value = summed_values[param_var.rstrip("_lower")]
             state, extra_text, _extra_perfdata = check_levels(value, param_var, levels)

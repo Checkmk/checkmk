@@ -176,7 +176,7 @@ def inventory_freeipmi(parsed):
     if rules == []:
         rules = [('single', {})]
 
-    if type(rules[0]) == tuple:
+    if isinstance(rules[0], tuple):
         single_rules = rules[0][1].copy()
         for sensorname, data in parsed.items():
             if not ipmi_ignore_entry(sensorname, data["status_txt"], single_rules):

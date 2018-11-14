@@ -43,7 +43,7 @@ def check_elphase(item, params, parsed):
         return  # Item not found in SNMP data
 
     def tostring(value):
-        if type(value) == int:
+        if isinstance(value, int):
             return "%d" % value
         return "%.1f" % value
 
@@ -81,7 +81,7 @@ def check_elphase(item, params, parsed):
 
         if what in parsed[item]:
             entry = parsed[item][what]
-            if type(entry) == tuple:
+            if isinstance(entry, tuple):
                 value, state_info = entry  # (220.17, (1, "Voltage is too low"))
             else:
                 value = entry  # 12.0

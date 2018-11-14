@@ -115,7 +115,7 @@ def parse_fileinfo(info):
 def fileinfo_groups_get_group_name(group_patterns, filename, reftime):
     found_these_groups = {}
     for group_name, pattern in group_patterns:
-        if type(pattern) == str:  # support old format
+        if isinstance(pattern, str):  # support old format
             pattern = (pattern, '')
 
         inclusion, exclusion = pattern
@@ -331,7 +331,7 @@ def check_fileinfo_groups(_item, params, parsed):
     for file_stat in parsed['files'].itervalues():
 
         for pattern in group_patterns:
-            if type(pattern) == str:  # support old format
+            if isinstance(pattern, str):  # support old format
                 pattern = (pattern, '')
             inclusion, exclusion = pattern
             include_patterns.add(inclusion)

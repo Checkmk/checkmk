@@ -38,7 +38,7 @@ def check_dns_arguments(params):
     if "expected_address" in settings:
         # Convert from old (str) to new (list of strings)
         exp = settings["expected_address"]
-        if type(exp) in (str, unicode):
+        if isinstance(exp, basestring):
             exp = [exp]
         for entry in exp:
             args += ' -a %s' % quote_shell_string(entry)

@@ -32,7 +32,7 @@ def check_humidity(humidity, params):
             "levels_lower": (-1, -1),
             "levels": (101, 101),
         }
-    elif type(params) in [list, tuple]:
+    elif isinstance(params, (list, tuple)):
         params = {
             "levels_lower": (params[1], params[0]),
             "levels": (params[2], params[3]),

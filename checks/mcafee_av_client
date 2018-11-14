@@ -42,7 +42,7 @@ def check_mcafee_av_client(_no_item, params, info):
     # the Check_MK server. This might be a problem, if e.g. the agent is located
     # in China and the Check_MK server in USA.
     age = now - time.mktime(time.strptime(info[0][0], '%Y/%m/%d'))
-    if type(params) == dict:
+    if isinstance(params, dict):
         warn, crit = params['signature_age']
     else:
         warn, crit = params

@@ -44,7 +44,7 @@ def check_cisco_mem(item, params, info):
         if line[0] != item:
             continue
 
-        if type(params) == tuple:
+        if isinstance(params, tuple):
             params = {"levels": params}
 
         mem_free = int(line[2])
@@ -62,7 +62,7 @@ def check_cisco_mem_sub(item, params, mem_used, mem_total):
     perfdata = [("mem_used", perc_used, warn, crit, 0, 100)]
 
     status = 0
-    if type(warn) == float:
+    if isinstance(warn, float):
         infotext = "%2.1f%% (%s) of %s used" % (perc_used, get_bytes_human_readable(mem_used),
                                                 get_bytes_human_readable(mem_total))
         if perc_used >= crit:

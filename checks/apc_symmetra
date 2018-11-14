@@ -138,7 +138,7 @@ def check_apc_symmetra(_no_item, params, parsed):
     last_diag_date = data.get("diag_date")
 
     # convert old format tuple to dict, new format with up to 6 params in dict
-    if type(params) is tuple:
+    if isinstance(params, tuple):
         params = {"levels": params}
 
     if "levels" in params:

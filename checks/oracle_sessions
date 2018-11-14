@@ -62,7 +62,7 @@ def inventory_oracle_sessions(parsed):
 
 
 def check_oracle_sessions(item, params, parsed):
-    if type(params) == tuple:
+    if isinstance(params, tuple):
         params = {"sessions_abs": params}
 
     if item in parsed and 'cursess' in parsed[item]:

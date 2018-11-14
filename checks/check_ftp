@@ -26,7 +26,7 @@
 
 
 def check_ftp_arguments(params):
-    if type(params) == tuple:
+    if isinstance(params, tuple):
         host, settings = params
     else:
         host = "$HOSTADDRESS$"
@@ -62,7 +62,7 @@ def check_ftp_arguments(params):
 
     if "cert_days" in settings:
         # legacy behavior
-        if type(settings["cert_days"]) == int:
+        if isinstance(settings["cert_days"], int):
             args += ' -D %d' % settings["cert_days"]
         else:
             warn, crit = settings["cert_days"]
@@ -72,7 +72,7 @@ def check_ftp_arguments(params):
 
 
 def check_ftp_get_item(params):
-    if type(params) == tuple:
+    if isinstance(params, tuple):
         return "FTP " + params[0]
     else:
         if "port" in params and params["port"] != 21:

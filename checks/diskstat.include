@@ -117,7 +117,7 @@ def check_diskstat_line(this_time, item, params, line, mode='sectors'):
 
         # unpack levels now, need also for perfdata
         levels = params.get(what)
-        if type(levels) == tuple:
+        if isinstance(levels, tuple):
             warn, crit = levels
         else:
             warn, crit = None, None
@@ -396,7 +396,7 @@ def check_diskstat_dict(item, params, disks):
     if averaging:
         avg_disk = {}  # Do not modify our arguments!!
         for key, value in disk.items():
-            if type(value) in (int, float):
+            if isinstance(value, (int, float)):
                 avg_disk[key] = get_average("diskstat.%s.%s.avg" % (item, key), this_time, value,
                                             averaging / 60.0)
             else:
@@ -470,7 +470,7 @@ def check_diskstat_dict(item, params, disks):
     perfdata = []
     for key in sorted(disk.keys()):
         value = disk[key]
-        if type(value) in (int, float):
+        if isinstance(value, (int, float)):
             # Currently the levels are not shown in the perfdata
             perfdata.append(("disk_" + key, value))
 

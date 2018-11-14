@@ -50,7 +50,7 @@ def check_appdynamics_web_container(item, params, info):
             busy_threads = values.get('Busy Threads', None)
             max_threads = values.get('Maximum Threads', None)
 
-            if type(params) == tuple:
+            if isinstance(params, tuple):
                 warn, crit = params
             else:
                 warn, crit = (None, None)

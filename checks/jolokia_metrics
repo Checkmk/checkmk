@@ -548,7 +548,7 @@ def check_jolokia_metrics_mem(item, params, info):
 
     # convert old parameter version ( warn, crit )
     # represented levels of total heap
-    if type(params) == tuple:
+    if isinstance(params, tuple):
         params = {"total": params}
 
     # rename totalheap to total
@@ -592,7 +592,7 @@ def check_jolokia_metrics_mem(item, params, info):
         if params.get(what):
             warn_level = 0
             crit_level = 0
-            if type(params[what][0]) == int:
+            if isinstance(params[what][0], int):
                 if value_max:
                     warn_level = value_max - params[what][0]
                     crit_level = value_max - params[what][1]

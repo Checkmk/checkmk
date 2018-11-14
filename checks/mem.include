@@ -68,7 +68,7 @@ def check_memory(params, meminfo):
     totalused_perc = 100 * (float(totalused_kb) / float(totalmem_kb))
     totalvirt_mb = (meminfo['SwapTotal'] + meminfo['MemTotal']) / 1024.0
 
-    if type(params) == tuple:
+    if isinstance(params, tuple):
         params = {"levels": params}
     warn, crit = params["levels"]
 
@@ -107,7 +107,7 @@ def check_memory(params, meminfo):
 
     # levels may be given either in int -> MB or in float -> percentages. So convert
     # effective levels to MB now
-    if type(warn) == float:
+    if isinstance(warn, float):
         warn_mb = int(warn / 100.0 * totalmem_mb)
         crit_mb = int(crit / 100.0 * totalmem_mb)
         leveltext = lambda x: "%.1f%%" % x

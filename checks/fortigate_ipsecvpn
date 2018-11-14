@@ -35,7 +35,7 @@ def inventory_fortigate_ipsecvpn(info):
 
 
 def check_fortigate_ipsecvpn(item, params, info):
-    if type(params) == tuple:
+    if isinstance(params, tuple):
         params = {"levels": params}
 
     tunnels_ignore_levels = params.get("tunnels_ignore_levels", [])

@@ -68,7 +68,7 @@ def inventory_hr_mem(parsed):
 def check_hr_mem(_no_item, params, parsed):
     # This check does not yet support averaging. We need to
     # convert it to mem.include
-    if type(params) == dict:
+    if isinstance(params, dict):
         params = params["levels"]
 
     usage = {}
@@ -102,7 +102,7 @@ def check_hr_mem(_no_item, params, parsed):
                (totalused_mb / 1024.0, ramused_mb / 1024, virtused_mb / 1024, totalused_perc, totalram_mb / 1024.0)
 
         warn, crit = params
-        if type(warn) == float:
+        if isinstance(warn, float):
             perfdata.append(('memused', str(totalused_mb) + 'MB', int(warn / 100.0 * totalram_mb),
                              int(crit / 100.0 * totalram_mb), 0, totalvirt_mb))
             if totalused_perc >= crit:

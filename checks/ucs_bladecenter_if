@@ -215,7 +215,7 @@ def parse_ucs_bladecenter_if(info):
                 ctr_value = 0
                 # On summing keys there is a possiblility to overlook some counter wraps.
                 # Right now, it's only Recv-Errors (therefore unlikely). We can live with that
-                if type(ctr_keys) != list:  # fixed value
+                if not isinstance(ctr_keys, list):  # fixed value
                     ctr_value = ctr_keys
                 else:
                     for ctr_class, ctr_key in ctr_keys:  # compute value from data

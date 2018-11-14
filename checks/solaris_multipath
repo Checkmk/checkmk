@@ -54,7 +54,7 @@ def check_solaris_multipath(item, params, info):
                 state = 1
                 infotext += ", expected paths unknown, please redo service discovery"
             else:
-                if type(params) == tuple:
+                if isinstance(params, tuple):
                     warn, crit = params
                     warn_num = (warn / 100.0) * total
                     crit_num = (crit / 100.0) * total

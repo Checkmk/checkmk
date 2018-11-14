@@ -223,7 +223,7 @@ def logwatch_reclassify(counts, patterns, text, old_level):
             # If the level is not fixed like 'C' or 'W' but a pair like (10, 20),
             # then we count how many times this pattern has already matched and
             # assign the levels according to the number of matches of this pattern.
-            if type(level) == tuple:
+            if isinstance(level, tuple):
                 warn, crit = level
                 newcount = counts.setdefault(id(pattern), 0) + 1
                 counts[id(pattern)] = newcount
@@ -521,7 +521,7 @@ def check_logwatch_generic(item, params, loglines, found, groups=False):
 
     # Logfile (=item) section not found and no local file found. This usually
     # means, that the corresponding logfile also vanished on the target host.
-    if type(logfile) == unicode:
+    if isinstance(logfile, unicode):
         logfile = logfile.encode("utf-8")
 
     if not found and not os.path.exists(logfile):
@@ -746,10 +746,10 @@ def inventory_logwatch_ec(info, one_svc_per_log):
 
         merged_rules = {}
         for rule in forward_settings[-1::-1]:
-            if type(rule) == dict:
+            if isinstance(rule, dict):
                 for key, value in rule.items():
                     merged_rules[key] = value
-            elif type(rule) == str:
+            elif isinstance(rule, str):
                 return  # Configured "no forwarding"
 
         separate_checks = merged_rules.get("separate_checks", False)
@@ -988,7 +988,7 @@ def logwatch_forward_spool_directory(method, item, messages):
 
 def logwatch_forward_tcp(method, new_messages):
     # Transform old format: (proto, address, port)
-    if type(method[1]) != dict:
+    if not isinstance(method[1], dict):
         method = (method[0], {"address": method[1], "port": method[2]})
 
     result = LogwatchFordwardResult()
@@ -1019,8 +1019,8 @@ def logwatch_forward_tcp(method, new_messages):
 
 
 def logwatch_shall_spool_messages(method):
-    return type(method) == tuple and method[0] == "tcp" \
-            and type(method[1]) == dict and "spool" in method[1]
+    return isinstance(method, tuple) and method[0] == "tcp" \
+            and isinstance(method[1], dict) and "spool" in method[1]
 
 
 def logwatch_forward_send_tcp(method, message_chunks, result):

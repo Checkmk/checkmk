@@ -164,7 +164,7 @@ def check_netapp_api_if(item, params, parsed):
         ifIndex = line[0]
         ifDescr = line[1]
         ifAlias = line[18]
-        if type(ifIndex) == tuple:
+        if isinstance(ifIndex, tuple):
             _ifGroup, ifIndex = ifIndex
 
         ifDescr_cln = cleanup_if_strings(ifDescr)

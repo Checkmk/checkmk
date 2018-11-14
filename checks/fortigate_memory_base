@@ -33,7 +33,7 @@ def inventory_fortigate_memory_base(info):
 
 
 def check_fortigate_memory_base(item, params, info):
-    if type(params) == dict:
+    if isinstance(params, dict):
         # accept values from "memory" wato rule
         params = params["levels"]
 

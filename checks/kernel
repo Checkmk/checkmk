@@ -74,7 +74,7 @@ def check_kernel(item, params, info):
     this_val = int(hits[0][1])
     per_sec = get_rate(None, this_time, this_val)
 
-    if type(params) == tuple:
+    if isinstance(params, tuple):
         warn, crit = params
     else:
         warn, crit = None, None
@@ -137,7 +137,7 @@ def transform_cpu_info(element):
 
 def kernel_check_cpu_utilization(item, params, info):
     # Convert old style tuple-parameter to new dict
-    if type(params) != dict:
+    if not isinstance(params, dict):
         params = {"iowait": params}
 
     # Look for entry matching "cpu" (this is the combined load of all cores)

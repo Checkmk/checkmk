@@ -67,7 +67,7 @@ def check_win_printers(item, params, info):
         11: "Output Bin Full"
     }
 
-    if type(params) != dict:
+    if not isinstance(params, dict):
         # Legacy params:
         if params is None:
             warn, crit = None, None

@@ -41,7 +41,7 @@ def agent_siemens_plc_arguments(params, hostname, ipaddress):
         for value in params["values"] + device["values"]:
             v = []
             for part in value:
-                if type(part) == tuple:
+                if isinstance(part, tuple):
                     v.append(':'.join(map(str, part)))
                 else:
                     v.append(str(part))

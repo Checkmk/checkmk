@@ -179,7 +179,7 @@ def check_apache_status(item, params, info):
 
         if key == 'Uptime':
             display_value = get_age_human_readable(value)
-        elif type(value) == float:
+        elif isinstance(value, float):
             display_value = '%0.2f' % value
         else:
             display_value = '%d' % value

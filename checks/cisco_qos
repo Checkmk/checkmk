@@ -150,7 +150,7 @@ def check_cisco_qos(item, params, info):
     # Convert old params definitions
     # Note: the float values of the post levels are converted to int
     had_legacy_params = False
-    if type(params) == tuple:
+    if isinstance(params, tuple):
         params = {
             "post": tuple(int(x) if x else None for x in params[0:2]),
             "drop": params[2:4],
@@ -258,25 +258,25 @@ def check_cisco_qos(item, params, info):
     bw = speed / 8.0
 
     # Determine post warn/crit levels
-    if type(post_warn) == float:
+    if isinstance(post_warn, float):
         post_warn = bw / 100.0 * post_warn
         post_crit = bw / 100.0 * post_crit
-    elif type(post_warn) == int:
+    elif isinstance(post_warn, int):
         if unit == 'bit':
             post_warn = post_warn / 8
             post_crit = post_crit / 8
 
     # Determine drop warn/crit levels
-    if type(drop_warn) == float and not had_legacy_params:
+    if isinstance(drop_warn, float) and not had_legacy_params:
         drop_warn = bw / 100.0 * drop_warn
         drop_crit = bw / 100.0 * drop_crit
     # Convert the drop levels to byte
     elif unit == "bit":
         # But only if our params where already provided in the new format
         if not had_legacy_params:
-            if type(drop_warn) == int:
+            if isinstance(drop_warn, int):
                 drop_warn = drop_warn / 8.0
-            if type(drop_crit) == int:
+            if isinstance(drop_crit, int):
                 drop_crit = drop_crit / 8.0
 
     # Handle counter values

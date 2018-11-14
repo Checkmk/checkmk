@@ -113,7 +113,7 @@ def inventory_fjdarye_disks(parsed):
 
 
 def check_fjdarye_disks(item, params, parsed):
-    if type(params) is str:
+    if isinstance(params, str):
         params = {"expected_state": params}
 
     if item in parsed:

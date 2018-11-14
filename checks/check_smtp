@@ -79,7 +79,7 @@ def check_smtp_arguments(params):
 
     if "cert_days" in settings:
         # legacy behavior
-        if type(settings["cert_days"]) == int:
+        if isinstance(settings["cert_days"], int):
             args += ' -D %d' % settings["cert_days"]
         else:
             warn, crit = settings["cert_days"]

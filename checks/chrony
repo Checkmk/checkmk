@@ -70,7 +70,7 @@ def check_chrony(_no_item, params, info):
         return
 
     # Prepare parameters
-    if type(params) == tuple:
+    if isinstance(params, tuple):
         params = {
             "ntp_levels": params,
             "alert_delay": (300, 3600),

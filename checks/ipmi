@@ -209,7 +209,7 @@ def inventory_ipmi(info):
     #       For the moment, this seemingly strange contraption has to remain as is.
     parsed = parse_ipmi(info)
     rules = host_extra_conf(host_name(), inventory_ipmi_rules)
-    if rules and type(rules[0]) == dict:
+    if rules and isinstance(rules[0], dict):
         if rules[0].get("summarize", True):
             rules = ['summarize']
         else:
@@ -221,7 +221,7 @@ def inventory_ipmi(info):
     if rules == [] or rules[0] == "summarize":
         yield "Summary", {}
 
-    elif type(rules[0]) == tuple:
+    elif isinstance(rules[0], tuple):
         single_rules = rules[0][1].copy()
         if "ignored_sensorstates" not in single_rules:
             single_rules["ignored_sensorstates"] = ["ns", "nr", "na"]

@@ -37,17 +37,16 @@ if len(sys.argv) < 6:
     print 'Usage: %s SYSLOGSERVER HOSTNAME PRIO APPLICATION "MESSAGE"' % sys.argv[0]
     sys.exit()
 
-host        = sys.argv[1]
-event_host  = sys.argv[2]
-prio        = sys.argv[3]
+host = sys.argv[1]
+event_host = sys.argv[2]
+prio = sys.argv[3]
 application = sys.argv[4]
-message     = sys.argv[5]
+message = sys.argv[5]
 
 port = 514
 sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
 sock.connect((host, port))
 timestamp = time.strftime("%b %d %H:%M:%S", time.localtime(time.time()))
-sock.send("<%s>%s %s %s: %s\n" % (prio, timestamp, event_host, application,  message))
+sock.send("<%s>%s %s %s: %s\n" % (prio, timestamp, event_host, application, message))
 sock.close()
-

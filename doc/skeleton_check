@@ -28,16 +28,18 @@
 # Put here the example output from your TCP-Based agent. If the
 # check is SNMP-Based, then remove this section
 
+
 def inventory_foobar(info):
     return []
+
 
 def check_foobar(item, _no_params, info):
     return 3, "UNKNOWN - Check not implemented"
 
-check_info["foobar"] = {
-    "check_function"        : check_foobar,
-    "inventory_function"    : inventory_foobar,
-    "service_description"   : "FOOBAR",
-    "has_perfdata"          : False,
-}
 
+check_info["foobar"] = {
+    "check_function": check_foobar,
+    "inventory_function": inventory_foobar,
+    "service_description": "FOOBAR",
+    "has_perfdata": False,
+}

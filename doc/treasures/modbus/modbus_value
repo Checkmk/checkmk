@@ -29,9 +29,12 @@
 # 856 1827893 counter active_energy
 # 790 11204 gauge active_power
 
-modbus_value_default_levels = ( None, None )
+modbus_value_default_levels = (None, None)
+
+
 def inventory_modbus_value(info):
-    return [ (x[-1], "modbus_value_default_levels") for x in info ]
+    return [(x[-1], "modbus_value_default_levels") for x in info]
+
 
 def check_modbus_value(item, params, info):
     for cid, value, ctype, name in info:
@@ -40,7 +43,7 @@ def check_modbus_value(item, params, info):
             message_end = ""
             if ctype == "gauge":
                 now = time.time()
-                timedif, value = get_counter( "modbus.value."+name, now, value )
+                timedif, value = get_counter("modbus.value." + name, now, value)
                 message_end = "in last %.0fsec " % timedif
             warn, crit = params
             state = 0
@@ -50,16 +53,16 @@ def check_modbus_value(item, params, info):
             if warn and warn >= value:
                 state = 1
                 message_end += "(Levels Warning/Critical at %s/%s)"
-            message = "Current: %.2f %s (%s)" % ( value, message_end, cid )
-            return state, message, [ (name, value, warn, crit ) ]
+            message = "Current: %.2f %s (%s)" % (value, message_end, cid)
+            return state, message, [(name, value, warn, crit)]
 
     return 3, "Value not found in Agent output"
 
-check_info["modbus_value"] = {
-    "check_function"        : check_modbus_value,
-    "inventory_function"    : inventory_modbus_value,
-    "service_description"   : "Value %s",
-    "has_perfdata"          : True,
-    "group"                 : "modbus_value",
-}
 
+check_info["modbus_value"] = {
+    "check_function": check_modbus_value,
+    "inventory_function": inventory_modbus_value,
+    "service_description": "Value %s",
+    "has_perfdata": True,
+    "group": "modbus_value",
+}

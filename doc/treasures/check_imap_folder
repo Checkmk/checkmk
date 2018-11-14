@@ -26,22 +26,27 @@
 
 import imaplib, sys, email, email.header, re, getopt
 
+
 class MKImapError(Exception):
     def __init__(self, reason):
         self.reason = reason
+
     def __str__(self):
         return "Error accessing IMAP folder: " + str(self.reason) + "\n"
 
+
 state_names = {
-    0 : "OK",
-    1 : "WARN",
-    2 : "CRIT",
-    3 : "UNKNOWN",
+    0: "OK",
+    1: "WARN",
+    2: "CRIT",
+    3: "UNKNOWN",
 }
+
 
 def result(code, text):
     sys.stderr.write(state_names[code] + " - " + text + "\n")
     sys.exit(code)
+
 
 def bail_out(reason):
     sys.stderr.write(reason + "\n")
@@ -56,32 +61,37 @@ def imap_login():
     imap.login(user, password)
     return imap
 
+
 # FLAGS (\Seen \Recent)
 # FLAGS ()
 def parse_flags(flagsraw):
-    flags = flagsraw.split(None, 1)[1].strip('(').strip(')').replace('\\','').split()
+    flags = flagsraw.split(None, 1)[1].strip('(').strip(')').replace('\\', '').split()
     return flags
+
 
 def decode_header_to_unicode(value):
     result = email.header.decode_header(value)
     parts = []
     for header in result:
         if header[1] == None:
-            parts.append(header[0]) # no encoding
+            parts.append(header[0])  # no encoding
         else:
             binstring, encoding = header
             parts.append(binstring.decode(encoding).strip())
     return " ".join(parts)
 
+
 def compile_patterns(plist):
     for nr, p in enumerate(plist):
         plist[nr] = re.compile(p, ignore_case and re.I or 0)
+
 
 def find_in_patterns(subject, plist):
     for p in plist:
         if p.search(subject):
             return True
     return False
+
 
 def usage():
     sys.stdout.write("""
@@ -107,42 +117,45 @@ Options:
 """)
     sys.exit(3)
 
-server            = None
-user              = None
-password          = None
-folder            = "INBOX"
-use_ssl           = False
-ignore_seen       = True
-ignore_case       = False
-critical_patterns = [ ]
-warning_patterns  = [ ]
+
+server = None
+user = None
+password = None
+folder = "INBOX"
+use_ssl = False
+ignore_seen = True
+ignore_case = False
+critical_patterns = []
+warning_patterns = []
 
 short_options = "H:su:p:f:aiw:c:h"
-long_options = [ "host=", "ssl", "user=", "password=", "folder=", 
-                 "all", "nocase", "warning=", "critical=", "help" ]
+long_options = [
+    "host=", "ssl", "user=", "password=", "folder=", "all", "nocase", "warning=", "critical=",
+    "help"
+]
 
 try:
     opts, args = getopt.getopt(sys.argv[1:], short_options, long_options)
     for o, a in opts:
-        if o in [ '-h', '--help' ]:
+        if o in ['-h', '--help']:
             usage()
-        elif o in [ '-H', '--host' ]:
+        elif o in ['-H', '--host']:
             server = a
-        elif o in [ '-s', '--ssl' ]:
+        elif o in ['-s', '--ssl']:
             use_ssl = True
-        elif o in [ '-u', '--user' ]:
+        elif o in ['-u', '--user']:
             user = a
-        elif o in [ '-p', '--password' ]:
+        elif o in ['-p', '--password']:
             password = a
-        elif o in [ '-f', '--folder' ]:
+        elif o in ['-f', '--folder']:
             folder = a
-        elif o in [ '-a', '--all' ]:
+        elif o in ['-a', '--all']:
             ignore_seen = False
-        elif o in [ '-i', '--nocase' ]:
+        elif o in ['-i', '--nocase']:
             ignore_case = True
-        elif o in [ '-w', '--warning' ]:
+        elif o in ['-w', '--warning']:
             warning_patterns.append(a)
-        elif o in [ '-c', '--critical' ]:
+        elif o in ['-c', '--critical']:
             critical_patterns.append(a)
 
 except Exception, e:
@@ -155,7 +168,6 @@ if user == None:
 if password == None:
     bail_out("Please specify a password with -p.")
 
-
 compile_patterns(warning_patterns)
 compile_patterns(critical_patterns)
 
@@ -166,7 +178,6 @@ if status != "OK":
 
 # status, message = imap.response('FLAGS')
 # print status, message
-
 
 status, message = imap.search(None, 'ALL')
 if status != "OK":
@@ -183,8 +194,7 @@ for mail_id in mail_ids:
     if "Seen" in flags and ignore_seen:
         continue
     message = email.message_from_string(header)
-    mail = dict([
-        (key, decode_header_to_unicode(val)) for (key, val) in message.items()])
+    mail = dict([(key, decode_header_to_unicode(val)) for (key, val) in message.items()])
     subject = mail["Subject"].replace("\r\n", "")
 
     num_total += 1

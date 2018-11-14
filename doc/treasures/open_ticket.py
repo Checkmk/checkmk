@@ -2,10 +2,9 @@
 
 # Custom command for creating support tickets
 
-config.declare_permission("action.sap_openticket",
-        _("Open Support Ticket"),
-        _("Open a support ticket for this host/service"),
-        [ "user", "admin" ])
+config.declare_permission("action.sap_openticket", _("Open Support Ticket"),
+                          _("Open a support ticket for this host/service"), ["user", "admin"])
+
 
 def command_open_ticket(cmdtag, spec, row):
     if html.var("_sap_openticket"):
@@ -30,5 +29,3 @@ multisite_commands.append({
     "action"      : command_open_ticket,
     "group"       : _("SAP Ticket"),
 })
-
-

@@ -2,16 +2,13 @@
 # Create/Update/Remove GLPI Ticket
 # Bulk: No
 
-
 from socket import socket, AF_UNIX, SOCK_STREAM, SHUT_WR
 import os
 import logging
 import time
 import re
 
-
 log = logging.getLogger("ticket_log")
-
 
 #.
 #   .--Incident------------------------------------------------------------.
@@ -22,6 +19,7 @@ log = logging.getLogger("ticket_log")
 #   |               |___|_| |_|\___|_|\__,_|\___|_| |_|\__|                |
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
+
 
 class Incident(object):
     """
@@ -43,29 +41,29 @@ class Incident(object):
         Problem, Recovery, Flapping, FlappingStop, Acknowledgement, Other = range(6)
 
     def __init__(self, live_status):
-        self.__source        = None
-        self.__what          = None
-        self.__type          = Incident.Type.Other
-        self.__host          = None
-        self.__service       = None
-        self.__message       = None
-        self.__state         = None
-        self.__contact       = None
+        self.__source = None
+        self.__what = None
+        self.__type = Incident.Type.Other
+        self.__host = None
+        self.__service = None
+        self.__message = None
+        self.__state = None
+        self.__contact = None
         self.__service_level = 0
         # cmk internal id where information about an incident is stored.
         # this is the event console id in the EC case or the id of a comment
         # for notifications
-        self.__tracking_id   = None
-        self.__id            = None
-        self.__live_status   = live_status
+        self.__tracking_id = None
+        self.__id = None
+        self.__live_status = live_status
 
     @staticmethod
     def from_notification(env, live_status):
         res = Incident(live_status)
-        res.__source  = Incident.Source.Notification
-        res.__host    = env['NOTIFY_HOSTNAME']
+        res.__source = Incident.Source.Notification
+        res.__host = env['NOTIFY_HOSTNAME']
         res.__contact = env['NOTIFY_CONTACTNAME']
-        res.__time    = time.strptime(env['NOTIFY_SHORTDATETIME'], "%Y-%m-%d %H:%M:%S")
+        res.__time = time.strptime(env['NOTIFY_SHORTDATETIME'], "%Y-%m-%d %H:%M:%S")
         if env.get('NOTIFY_SERVICE_SL'):
             res.__service_level = int(env['NOTIFY_SERVICE_SL'])
         elif env.get('NOTIFY_HOST_SL'):
@@ -73,24 +71,24 @@ class Incident(object):
         else:
             res.__service_level = 0
 
-        res.__type    = {
-            'PROBLEM'         : Incident.Type.Problem,
-            'RECOVERY'        : Incident.Type.Recovery,
-            'FLAPPINGSTART'   : Incident.Type.Flapping,
-            'FLAPPINGSTOP'    : Incident.Type.FlappingStop,
-            'ACKNOWLEDGEMENT' : Incident.Type.Acknowledgement
+        res.__type = {
+            'PROBLEM': Incident.Type.Problem,
+            'RECOVERY': Incident.Type.Recovery,
+            'FLAPPINGSTART': Incident.Type.Flapping,
+            'FLAPPINGSTOP': Incident.Type.FlappingStop,
+            'ACKNOWLEDGEMENT': Incident.Type.Acknowledgement
         }.get(env['NOTIFY_NOTIFICATIONTYPE'], Incident.Type.Other)
         if res.__type == Incident.Type.Other:
             log.info("Unhandled notification type %s", env['NOTIFY_NOTIFICATIONTYPE'])
 
         if env['NOTIFY_WHAT'] == 'HOST':
-            res.__what    = Incident.What.Host
+            res.__what = Incident.What.Host
             res.__message = env['NOTIFY_HOSTOUTPUT']
-            res.__state   = env['NOTIFY_HOSTSTATE']
+            res.__state = env['NOTIFY_HOSTSTATE']
         else:
-            res.__what    = Incident.What.Service
+            res.__what = Incident.What.Service
             res.__message = env['NOTIFY_SERVICEOUTPUT']
-            res.__state   = env['NOTIFY_SERVICESTATE']
+            res.__state = env['NOTIFY_SERVICESTATE']
             res.__service = env['NOTIFY_SERVICEDESC']
 
         res.__tracking_id, res.__id = res.__retrieve_incident_id_notification()
@@ -100,18 +98,18 @@ class Incident(object):
     @staticmethod
     def from_event_console(env, live_status):
         res = Incident(live_status)
-        res.__source        = Incident.Source.EventConsole
-        res.__what          = Incident.What.Host
-        res.__time          = time.localtime()
-        res.__tracking_id   = env['EC_ID']
-        res.__host          = env['EC_HOST']
-        res.__contact       = env['EC_CONTACT']
-        res.__message       = env['EC_TEXT']
-        res.__state         = env['EC_STATE']
+        res.__source = Incident.Source.EventConsole
+        res.__what = Incident.What.Host
+        res.__time = time.localtime()
+        res.__tracking_id = env['EC_ID']
+        res.__host = env['EC_HOST']
+        res.__contact = env['EC_CONTACT']
+        res.__message = env['EC_TEXT']
+        res.__state = env['EC_STATE']
         res.__service_level = int(env.get('EC_SL', 0))
-        res.__type          = {
-            'open'   : Incident.Type.Problem,
-            'closed' : Incident.Type.Recovery
+        res.__type = {
+            'open': Incident.Type.Problem,
+            'closed': Incident.Type.Recovery
         }.get(env['EC_PHASE'])
 
         res.__id = res.__retrieve_incident_id_ec(env['EC_COMMENT'])
@@ -139,19 +137,13 @@ class Incident(object):
         now = int(time.time())
         if self.__service is not None:
             query = [
-                "COMMAND [%s] ADD_SVC_COMMENT" % now,
-                self.__host,
-                self.__service,
-                "1",
+                "COMMAND [%s] ADD_SVC_COMMENT" % now, self.__host, self.__service, "1",
                 self.__contact,
                 self.__render_comment()
             ]
         else:
             query = [
-                "COMMAND [%s] ADD_HOST_COMMENT" % now,
-                self.__host,
-                "1",
-                self.__contact,
+                "COMMAND [%s] ADD_HOST_COMMENT" % now, self.__host, "1", self.__contact,
                 self.__render_comment()
             ]
         self.__live_status.execute(";".join(query))
@@ -161,15 +153,9 @@ class Incident(object):
         now = int(time.time())
         log.debug("tracking id: %s", self.__tracking_id)
         if self.__service is not None:
-            query = [
-                "COMMAND [%s] DEL_SVC_COMMENT" % now,
-                str(self.__tracking_id)
-            ]
+            query = ["COMMAND [%s] DEL_SVC_COMMENT" % now, str(self.__tracking_id)]
         else:
-            query = [
-                "COMMAND [%s] DEL_HOST_COMMENT" % now,
-                str(self.__tracking_id)
-            ]
+            query = ["COMMAND [%s] DEL_HOST_COMMENT" % now, str(self.__tracking_id)]
         self.__live_status.execute(";".join(query))
         log.debug("remove ticket id: %s", ";".join(query))
 
@@ -178,12 +164,8 @@ class Incident(object):
 
     def __store_incident_id_ec(self):
         query = [
-            "COMMAND UPDATE",
-            self.__tracking_id,
-            self.__contact,
-            "1",
-            self.__render_comment(),
-            ""
+            "COMMAND UPDATE", self.__tracking_id, self.__contact, "1",
+            self.__render_comment(), ""
         ]
 
         self.__live_status.execute(";".join(query))
@@ -258,22 +240,24 @@ class Incident(object):
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
+
 class Renderer(object):
     """
     Determines how the collected data from an incident is
     displayed to the user
     """
+
     def __init__(self, settings):
         super(Renderer, self).__init__()
 
     @staticmethod
     def __render_state(state):
         return {
-            "ok"   : "OK",
-            "crit" : "Critical",
-            "warn" : "Warning",
-            "up"   : "Up",
-            "down" : "Down"
+            "ok": "OK",
+            "crit": "Critical",
+            "warn": "Warning",
+            "up": "Up",
+            "down": "Down"
         }.get(state.lower(), state)
 
     def __render_time(self, event_time):
@@ -282,41 +266,37 @@ class Renderer(object):
     def render_title(self, incident):
         if incident.what() == Incident.What.Host:
             return "Host %(host)s is %(state)s!" % {
-                'host' : incident.host(),
+                'host': incident.host(),
                 'state': self.__render_state(incident.state())
             }
         else:
             return "Service %(service)s on host %(host)s is %(state)s!" % {
-                'service' : incident.service(),
-                'host'    : incident.host(),
-                'state'   : self.__render_state(incident.state())
+                'service': incident.service(),
+                'host': incident.host(),
+                'state': self.__render_state(incident.state())
             }
 
     def render_message(self, incident):
         if incident.what() == Incident.What.Host:
             topic = "Host %(host)s is now in state %(state)s" % {
-                'host'  : incident.host(),
-                'state' : self.__render_state(incident.state())
+                'host': incident.host(),
+                'state': self.__render_state(incident.state())
             }
-            info  = [
-                ("Time",        self.__render_time(incident.time())),
-                ("Host output", incident.message())
-            ]
+            info = [("Time", self.__render_time(incident.time())),
+                    ("Host output", incident.message())]
         else:
             topic = "Service %(service)s on host %(host)s is now in state %(state)s" % {
-                'service' : incident.service(),
-                'host'    : incident.host(),
-                'state'   : incident.state()
+                'service': incident.service(),
+                'host': incident.host(),
+                'state': incident.state()
             }
-            info = [
-                ("Time",           self.__render_time(incident.time())),
-                ("Service output", incident.message())
-            ]
+            info = [("Time", self.__render_time(incident.time())),
+                    ("Service output", incident.message())]
 
         info_width = max([len(key) for key, value in info])
 
-        return "%s\n\n%s" % (topic, "\n".join(["%s: %s" % (key.ljust(info_width), value)
-                                               for key, value in info]))
+        return "%s\n\n%s" % (topic, "\n".join(
+            ["%s: %s" % (key.ljust(info_width), value) for key, value in info]))
 
 
 #.
@@ -440,21 +420,21 @@ class TicketInterface(object):
 
 class InterfaceGLPI(TicketInterface):
 
-    from xmlrpclib import ServerProxy, Error, ProtocolError, ResponseError, Fault # nosec
+    from xmlrpclib import ServerProxy, Error, ProtocolError, ResponseError, Fault  # nosec
 
     urgency_map = {
-        TicketInterface.Urgency.Low    : 1,
-        TicketInterface.Urgency.Medium : 3,
-        TicketInterface.Urgency.High   : 5,
-        TicketInterface.Urgency.Ultra  : 6
+        TicketInterface.Urgency.Low: 1,
+        TicketInterface.Urgency.Medium: 3,
+        TicketInterface.Urgency.High: 5,
+        TicketInterface.Urgency.Ultra: 6
     }
 
     def __init__(self, settings):
         super(InterfaceGLPI, self).__init__(settings)
         self.__username = settings['username']
         self.__password = settings['password']
-        self.__server   = InterfaceGLPI.ServerProxy("http://%(host)s:%(port)s/%(url)s" % settings)
-        self.__session  = None
+        self.__server = InterfaceGLPI.ServerProxy("http://%(host)s:%(port)s/%(url)s" % settings)
+        self.__session = None
         # is the name returned by doLogin the same as the login_name? I presume not,
         # otherwise what would be the point of returning it?
         self.__own_name = None
@@ -462,8 +442,8 @@ class InterfaceGLPI(TicketInterface):
     def login(self):
         try:
             response = self.__server.glpi.doLogin({
-                'login_name'     : self.__username,
-                'login_password' : self.__password
+                'login_name': self.__username,
+                'login_password': self.__password
             })
         except InterfaceGLPI.Fault, f:
             log.error("GLPI fault code %s, details: %s", f.faultCode, f.faultString)
@@ -477,24 +457,22 @@ class InterfaceGLPI(TicketInterface):
             raise
 
         if 'session' in response and 'name' in response:
-            self.__session  = response['session']
+            self.__session = response['session']
             self.__own_name = response['name']
         else:
             raise Exception("failed to login to server. Response was: %s" % response)
 
     def logout(self):
         if self.__session:
-            self.__server.glpi.doLogout({
-                'session': self.__session
-            })
+            self.__server.glpi.doLogout({'session': self.__session})
 
     def create_ticket(self, title, message, urgency):
         # typo in glpi webservices api: "urgancy"
         response = self.__server.glpi.createTicket({
-            'session' : self.__session,
-            'title'   : title,
-            'content' : message,
-            'urgancy' : InterfaceGLPI.urgency_map[urgency],
+            'session': self.__session,
+            'title': title,
+            'content': message,
+            'urgancy': InterfaceGLPI.urgency_map[urgency],
         })
         log.debug("create ticket response: %s", response)
         return response['id']
@@ -516,22 +494,22 @@ class InterfaceGLPI(TicketInterface):
     def add_ticket_comment(self, ticket_id, message):
         log.info("sess %s, tick %s, cont %s", self.__session, ticket_id, message)
         response = self.__server.glpi.addTicketFollowup({
-            'session'  : self.__session,
-            'ticket'   : ticket_id,
-            'content'  : message
+            'session': self.__session,
+            'ticket': ticket_id,
+            'content': message
         })
 
     def close_ticket(self, ticket_id, message):
         response = self.__server.glpi.setTicketSolution({
-            'session'  : self.__session,
-            'ticket'   : ticket_id,
-            'type'     : 1,
-            'solution' : message
+            'session': self.__session,
+            'ticket': ticket_id,
+            'type': 1,
+            'solution': message
         })
         log.debug("set solution response: %s", response)
 
-TicketInterface.register("glpi", InterfaceGLPI)
 
+TicketInterface.register("glpi", InterfaceGLPI)
 
 #.
 #   .--Main----------------------------------------------------------------.
@@ -543,16 +521,17 @@ TicketInterface.register("glpi", InterfaceGLPI)
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
+
 def import_settings(base_dir):
-    ticket_cfg   = os.path.join(base_dir, "etc", "tickets.cfg")
+    ticket_cfg = os.path.join(base_dir, "etc", "tickets.cfg")
     defaults_cfg = os.path.join(base_dir, "etc", "check_mk", "defaults")
 
     settings = {
-        'product'      : os.path.splitext(os.path.basename(__file__))[0],
-        'port'         : 80,
-        'url'          : "",
-        'prio_high_sl' : 30,
-        'prio_low_sl'  : 10,
+        'product': os.path.splitext(os.path.basename(__file__))[0],
+        'port': 80,
+        'url': "",
+        'prio_high_sl': 30,
+        'prio_low_sl': 10,
     }
 
     if os.path.isfile(defaults_cfg):
@@ -564,9 +543,7 @@ def import_settings(base_dir):
     # This doesn't acually hurt but let's clean up a bit anyway
     return dict((key, value)
                 for key, value in settings.iteritems()
-                if isinstance(value, str) or
-                isinstance(value, int) or
-                isinstance(value, bool))
+                if isinstance(value, str) or isinstance(value, int) or isinstance(value, bool))
 
 
 def init_logging(base_dir, settings):
@@ -578,11 +555,11 @@ def init_logging(base_dir, settings):
     log.addHandler(base_handler)
 
     log_level = {
-        "debug"   : logging.DEBUG,
-        "info"    : logging.INFO,
-        "warn"    : logging.WARN,
-        "warning" : logging.WARNING,
-        "error"   : logging.ERROR
+        "debug": logging.DEBUG,
+        "info": logging.INFO,
+        "warn": logging.WARN,
+        "warning": logging.WARNING,
+        "error": logging.ERROR
     }.get(settings.get("log_level"), logging.INFO)
 
     log.setLevel(log_level)
@@ -616,10 +593,10 @@ def handle_recovery(renderer, ticket_interface, settings, incident):
     message = renderer.render_message(incident)
 
     if incident.identifier() is None:
-        log.error("Failed to close ticket regarding host \"%s\", service \"%s\" as the "
-                  "ticket id was not found in comments. "
-                  "Message would have been: \"%s\"",
-                  incident.host(), incident.service(), message)
+        log.error(
+            "Failed to close ticket regarding host \"%s\", service \"%s\" as the "
+            "ticket id was not found in comments. "
+            "Message would have been: \"%s\"", incident.host(), incident.service(), message)
     else:
         log.info("Closing ticket %s", incident.identifier())
         ticket_interface.close_ticket(incident.identifier(), message)
@@ -668,6 +645,5 @@ if __name__ == "__main__":
             log.exception("Unhandled exception")
         else:
             logging.exception("Unhandled exception")
-
 
 #.

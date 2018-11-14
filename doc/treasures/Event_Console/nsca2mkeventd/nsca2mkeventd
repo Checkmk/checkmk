@@ -6,11 +6,11 @@
 
 import os, sys, getopt, traceback, time, socket
 
-opt_debug       = False
-opt_verbose     = False
-opt_foreground  = False
+opt_debug = False
+opt_verbose = False
+opt_foreground = False
 
-g_application   = 'nsca'
+g_application = 'nsca'
 
 #.
 #   .--Helper functions----------------------------------------------------.
@@ -24,13 +24,16 @@ g_application   = 'nsca'
 #   |  Various helper functions                                            |
 #   '----------------------------------------------------------------------'
 
+
 def bail_out(reason):
     log("FATAL ERROR: %s" % reason)
     sys.exit(1)
 
+
 def open_logfile():
     global g_logfile
     g_logfile = file(g_logfile_path, "a")
+
 
 def log(text):
     if type(text) == unicode:
@@ -41,13 +44,15 @@ def log(text):
     except:
         sys.stderr.write("%s\n" % text)
 
+
 def verbose(txt):
     if opt_verbose:
         log(txt)
 
 
 def usage():
-    sys.stdout.write('''Usage: nsca2mkeventd [OPTIONS]
+    sys.stdout.write(
+        '''Usage: nsca2mkeventd [OPTIONS]
 
     -g, --foreground     Do not daemonize, run in foreground
     -d, --debug          Enable debug mode (let exceptions through)
@@ -62,10 +67,11 @@ Default paths:
     Log file:         %(g_logfile_path)s
 
 ''' % {
-    "g_eventsocket_path": g_eventsocket_path,
-    "g_pipe_path": g_pipe_path,
-    "g_logfile_path": g_logfile_path,
-})
+            "g_eventsocket_path": g_eventsocket_path,
+            "g_pipe_path": g_pipe_path,
+            "g_logfile_path": g_logfile_path,
+        })
+
 
 #.
 #   .--Daemonize-----------------------------------------------------------.
@@ -78,6 +84,7 @@ Default paths:
 #   +----------------------------------------------------------------------+
 #   |  Code for daemonizing                                                |
 #   '----------------------------------------------------------------------'
+
 
 def daemonize(user=0, group=0):
     # do the UNIX double-fork magic, see Stevens' "Advanced
@@ -126,14 +133,17 @@ def daemonize(user=0, group=0):
 
     log("Daemonized with PID %d." % os.getpid())
 
+
 class MKSignalException(Exception):
     def __init__(self, signum):
         Exception.__init__(self, "Got signal %d" % signum)
         self._signum = signum
 
+
 def signal_handler(signum, stack_frame):
     verbose("Got signal %d." % signum)
     raise MKSignalException(signum)
+
 
 #.
 #   .--Main----------------------------------------------------------------.
@@ -147,6 +157,7 @@ def signal_handler(signum, stack_frame):
 #   |  Main entry and option parsing                                       |
 #   '----------------------------------------------------------------------'
 
+
 def create_pipe():
     try:
         if not stat.S_ISFIFO(os.stat(g_pipe_path).st_mode):
@@ -159,6 +170,7 @@ def create_pipe():
     os.chmod(g_pipe_path, 0666)
     log("Created pipe '%s' for receiving commands from nsca" % g_pipe_path)
 
+
 # Incoming lines:
 #fprintf(command_file_fp,"[%lu] PROCESS_HOST_CHECK_RESULT;%s;%d;%s\n",(unsigned long)check_time,host_name,return_code,plugin_output);
 #fprintf(command_file_fp,"[%lu] PROCESS_SERVICE_CHECK_RESULT;%s;%s;%d;%s\n",(unsigned long)check_time,host_name,svc_description,return_code,plugin_output);
@@ -166,7 +178,8 @@ def parse_line(line):
     timestamp, command = line.split(' ', 1)
     timestamp = int(timestamp[1:-1])
     cmd = command.split(';')
-    return [ timestamp ] + cmd
+    return [timestamp] + cmd
+
 
 def state_to_prio(state):
     state = int(state)
@@ -178,6 +191,7 @@ def state_to_prio(state):
         return 2
     elif state == 3:
         return 7
+
 
 def forward_line(parsed):
     if parsed[1] == 'PROCESS_HOST_CHECK_RESULT':
@@ -195,6 +209,7 @@ def forward_line(parsed):
     s.send(line)
     s.close()
 
+
 def main():
     create_pipe()
 
@@ -206,7 +221,8 @@ def main():
                     parsed = parse_line(line.rstrip())
                     forward_line(parsed)
                 except Exception, e:
-                    log('EXCEPTION while processing line "%s" (%s). Skipping...' % (line.rstrip(), e))
+                    log('EXCEPTION while processing line "%s" (%s). Skipping...' % (line.rstrip(),
+                                                                                    e))
                     if opt_debug:
                         raise
 
@@ -220,40 +236,41 @@ def main():
                 raise
             time.sleep(1)
 
+
 os.unsetenv("LANG")
 
 omd_root = os.getenv("OMD_ROOT")
 if omd_root:
-    g_pipe_path        = omd_root + '/tmp/run/nsca2mkeventd.pipe'
+    g_pipe_path = omd_root + '/tmp/run/nsca2mkeventd.pipe'
     g_eventsocket_path = omd_root + "/tmp/run/mkeventd/eventsocket"
-    g_logfile_path     = omd_root + "/var/log/nsca2mkeventd.log"
+    g_logfile_path = omd_root + "/var/log/nsca2mkeventd.log"
 else:
-    g_pipe_path        = None
+    g_pipe_path = None
     g_eventsocket_path = None
-    g_logfile_path     = "/var/log/nsca2mkeventd.log"
+    g_logfile_path = "/var/log/nsca2mkeventd.log"
 
 short_options = "hdvgP:E:"
-long_options = [ "help", "foreground", "debug", "verbose", "eventsocket=", "pipe=" ]
+long_options = ["help", "foreground", "debug", "verbose", "eventsocket=", "pipe="]
 
 try:
     opts, args = getopt.getopt(sys.argv[1:], short_options, long_options)
 
     # first parse modifers
     for o, a in opts:
-        if o in [ '-d', '--debug' ]:
+        if o in ['-d', '--debug']:
             opt_debug = True
-        elif o in [ '-v', '--verbose' ]:
+        elif o in ['-v', '--verbose']:
             opt_verbose = True
-        elif o in [ '-g', '--foreground' ]:
+        elif o in ['-g', '--foreground']:
             opt_foreground = True
-        elif o in [ '-E', '--eventsocket' ]:
+        elif o in ['-E', '--eventsocket']:
             g_eventsocket_path = a
-        elif o in [ '-P', '--pipe' ]:
+        elif o in ['-P', '--pipe']:
             g_pipe_path = a
 
     # now handle action options
     for o, a in opts:
-        if o in [ '-h', '--help' ]:
+        if o in ['-h', '--help']:
             usage()
             sys.exit(0)
 

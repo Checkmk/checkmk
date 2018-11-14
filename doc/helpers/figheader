@@ -4,30 +4,30 @@ import os, sys
 
 if sys.argv[1] == '--css':
     first = "/*-"
-    sep   = "+"
-    cont  = ""
-    last  = "'"
-    end   = "*/"
+    sep = "+"
+    cont = ""
+    last = "'"
+    end = "*/"
 elif sys.argv[1] == '--c++':
     first = "// ."
-    cont  = "// "
-    sep  = "// +"
-    last  = "// '"
-    end   = "'"
+    cont = "// "
+    sep = "// +"
+    last = "// '"
+    end = "'"
 elif sys.argv[1] == '--js':
     print "//#."
     first = "//#   ."
-    sep   = "//#   +"
-    cont  = "//#   "
-    last  = "//#   '"
-    end   = "'"
+    sep = "//#   +"
+    cont = "//#   "
+    last = "//#   '"
+    end = "'"
 else:
     print "#."
     first = "#   .-"
-    sep   = "#   +"
-    cont  = "#   "
-    last  = "#   '-"
-    end   = "'"
+    sep = "#   +"
+    cont = "#   "
+    last = "#   '-"
+    end = "'"
 
 if sys.argv[1].startswith("-"):
     sys.argv = sys.argv[1:]
@@ -40,7 +40,7 @@ first_line = first + "-" + title
 print first_line + '-' * (width - len(first_line) - 1) + '.'
 for line in os.popen("figlet -c -w %d '%s'" % (width - 7, title), "r"):
     line = line[:-1]
-    print (cont + "|%-" + str(width - len(cont) - 2) + "s|") % line
+    print(cont + "|%-" + str(width - len(cont) - 2) + "s|") % line
 print sepmid
 print cont + "|" + " " * (width - len(cont) - 2) + "|"
 print last + '-' * (width - len(last) - len(end)) + end

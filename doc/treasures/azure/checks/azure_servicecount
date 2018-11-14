@@ -28,14 +28,17 @@
 # <<<azure_servicecount>>>
 # 10
 
+
 def inventory_azure_servicecount(info):
     return [(None, None)]
+
 
 def check_azure_servicecount(_no_item, _no_params, info):
     return 0, "Collected data for %s services" % info[0][0]
 
+
 check_info["azure_servicecount"] = {
-    "check_function"        : check_azure_servicecount,
-    "inventory_function"    : inventory_azure_servicecount,
-    "service_description"   : "Collector",
+    "check_function": check_azure_servicecount,
+    "inventory_function": inventory_azure_servicecount,
+    "service_description": "Collector",
 }

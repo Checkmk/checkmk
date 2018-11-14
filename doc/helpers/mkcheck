@@ -1,6 +1,5 @@
 #!/usr/bin/python
 
-
 import os, sys, getopt, time
 
 
@@ -70,8 +69,8 @@ def header():
 
 def get_check_content(check_name, has_parse=False, is_snmp=False):
     if has_parse:
-        info_str         = "parsed"
-        pprint_info      = ""
+        info_str = "parsed"
+        pprint_info = ""
         check_info_parse = \
           "    'parse_function'        : parse_%s,\n" % check_name
 
@@ -80,10 +79,10 @@ def get_check_content(check_name, has_parse=False, is_snmp=False):
           "    parsed = {}\n" + \
           "    return parsed\n\n\n") % check_name
     else:
-        info_str         = "info"
-        parse_func_info  = ""
+        info_str = "info"
+        parse_func_info = ""
         check_info_parse = ""
-        pprint_info      = "    pprint.pprint(info)\n"
+        pprint_info = "    pprint.pprint(info)\n"
 
     inventory_func_info = ("def inventory_%s(%s):\n%s" + \
           "    return []\n\n\n") % (check_name, info_str, pprint_info)
@@ -127,7 +126,7 @@ inventory:""" % snmp_info
 
 def main(cmdl_args):
     opts_short = "hspm"
-    opts_long  = [ "help" ]
+    opts_long = ["help"]
 
     try:
         opts, args = getopt.getopt(cmdl_args, opts_short, opts_long)
@@ -135,12 +134,12 @@ def main(cmdl_args):
         stderr(err)
         sys.exit(1)
 
-    is_snmp      = False
-    has_parse    = False
-    create_man   = False
+    is_snmp = False
+    has_parse = False
+    create_man = False
     create_check = True
     for o, a in opts:
-        if o in [ "-h", "--help" ]:
+        if o in ["-h", "--help"]:
             usage()
             sys.exit(0)
         elif o == "-s":
@@ -148,7 +147,7 @@ def main(cmdl_args):
         elif o == "-p":
             has_parse = True
         elif o == "-m":
-            create_man   = True
+            create_man = True
             create_check = False
 
     if len(args) > 0:

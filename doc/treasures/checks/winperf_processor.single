@@ -27,7 +27,8 @@
 # This Checks creates one PNP Graph for each Processor.
 # Just place it in your local/share/check_mk/checks
 
-winperf_cpu_default_levels = { "levels": ( 101.0, 101.0 ) }
+winperf_cpu_default_levels = {"levels": (101.0, 101.0)}
+
 
 def inventory_winperf_single(info):
     if len(info) <= 1:
@@ -46,10 +47,10 @@ def check_winperf_single(_no_item, params, info):
 
     for line in info[1:]:
         if line[0] == '-232':
-            num_cpus = len(line)-2
+            num_cpus = len(line) - 2
             for cpu in range(1, num_cpus):
-                ticks =  int(line[cpu])
-                ticks_per_sec = get_rate("winperf_single_"+str(cpu), this_time, ticks)
+                ticks = int(line[cpu])
+                ticks_per_sec = get_rate("winperf_single_" + str(cpu), this_time, ticks)
                 cpusecs_per_sec = ticks_per_sec / 10000000.0
                 used_perc = 100.0 * (1 - cpusecs_per_sec)
 
@@ -67,10 +68,10 @@ def check_winperf_single(_no_item, params, info):
 
 
 check_info["winperf_processor.single"] = {
-    'check_function':          check_winperf_single,
-    'inventory_function':      inventory_winperf_single,
-    'service_description':     'CPU utilization single',
-    'has_perfdata':            True,
-    'group':                   'cpu_utilization_os',
+    'check_function': check_winperf_single,
+    'inventory_function': inventory_winperf_single,
+    'service_description': 'CPU utilization single',
+    'has_perfdata': True,
+    'group': 'cpu_utilization_os',
     #'includes':                [ "cpu_single.include" ],
 }

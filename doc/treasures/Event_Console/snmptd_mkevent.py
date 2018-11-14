@@ -28,16 +28,14 @@
 # all traps to the mkeventd
 #
 # Bastian Kuhn, bk@mathias-kettner.de
-# If you use this script please keep in mind that this script is called 
+# If you use this script please keep in mind that this script is called
 # for every trap the server receives.
 # To use this Script, you have to configure your snmptrad.conf like that:
 # authCommunity execute public
 # traphandle default /path/to/this/script
 
 # Define the Hostname patterns here:
-hostname_patterns = [
-   'SMI::enterprises.2349.2.2.2.5 = "(.*)"'
-]
+hostname_patterns = ['SMI::enterprises.2349.2.2.2.5 = "(.*)"']
 
 import time
 import sys

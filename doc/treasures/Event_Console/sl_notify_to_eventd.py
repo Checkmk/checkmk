@@ -29,10 +29,11 @@
 
 mkevent_host = ''
 mkevent_port = 514
-application  = "notify"
+application = "notify"
 
 import time, socket, os
-host = os.environ['NOTIFY_HOSTNAME'] 
+host = os.environ['NOTIFY_HOSTNAME']
+
 #0       Emergency
 #1       Alert
 #2       Critical
@@ -42,10 +43,11 @@ host = os.environ['NOTIFY_HOSTNAME']
 #6       Informational
 #7       Debug
 
+
 def state_to_prio(state):
     state = int(state)
     if state == 0:
-        return 5 
+        return 5
     elif state == 1:
         return 4
     elif state == 2:
@@ -62,11 +64,11 @@ if os.environ['NOTIFY_WHAT'] == 'SERVICE':
 else:
     sl = os.environ.get('NOTIFY_HOST_SL', 0)
     prio = state_to_prio(os.environ['NOTIFY_HOSTSTATEID'])
-    message = "%s|HOSTSTATE|%s" % (sl,  os.environ['NOTIFY_HOSTOUTPUT'] ) 
+    message = "%s|HOSTSTATE|%s" % (sl, os.environ['NOTIFY_HOSTOUTPUT'])
 
 sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 sock.connect((mkevent_host, mkevent_port))
 
 timestamp = time.strftime("%b %d %H:%M:%S", time.localtime(time.time()))
-sock.send("<%s>%s %s %s: %s\n" % (prio, timestamp, host, application,  message))
+sock.send("<%s>%s %s %s: %s\n" % (prio, timestamp, host, application, message))
 sock.close()

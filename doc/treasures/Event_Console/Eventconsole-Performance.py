@@ -26,25 +26,26 @@
 
 
 def perfometer_get_event_status(row, check_command, perfdata):
-    busy = float(perfdata[2][1]) 
+    busy = float(perfdata[2][1])
     warn = float(perfdata[2][3])
     crit = float(perfdata[2][4])
     if busy > crit:
-         color = "#ff0000"
+        color = "#ff0000"
     elif busy > warn:
-         color = "#ffff00"
+        color = "#ffff00"
     else:
-         color = "#00ff00" 
+        color = "#00ff00"
     if busy > 100:
-         busytd = 100
-         freetd = 0
+        busytd = 100
+        freetd = 0
     else:
-         busytd = busy
-         freetd = 100 - busy
+        busytd = busy
+        freetd = 100 - busy
     return "%.1f %% " % busy, \
         '<table><tr>' \
         + perfometer_td(busytd, color) \
         + perfometer_td(freetd, "#ffffff") \
         + '</tr></table>'
 
-perfometers["get_event_status"]           = perfometer_get_event_status
+
+perfometers["get_event_status"] = perfometer_get_event_status

@@ -22,9 +22,11 @@ import os, sys, getopt, time, urllib
 omd_site = os.getenv("OMD_SITE")
 omd_root = os.getenv("OMD_ROOT")
 
+
 def bail_out(reason):
     sys.stderr.write(reason + "\n")
     sys.exit(1)
+
 
 def verbose(text):
     if opt_verbose:
@@ -61,16 +63,17 @@ Options:
 
 
 short_options = 'vhrsc:d:u:S:aU:'
-long_options = [ "verbose", "help", "set", "remove", "comment=", "url=",
-                 "duration=", "user=", "secret=", "all" ]
+long_options = [
+    "verbose", "help", "set", "remove", "comment=", "url=", "duration=", "user=", "secret=", "all"
+]
 
-opt_all      = False
-opt_verbose  = 0
-opt_mode     = 'set'
-opt_comment  = "Automatic downtime"
-opt_user     = "automation"
-opt_secret   = None
-opt_url      = None
+opt_all = False
+opt_verbose = 0
+opt_mode = 'set'
+opt_comment = "Automatic downtime"
+opt_user = "automation"
+opt_secret = None
+opt_url = None
 opt_duration = 120
 
 if omd_site:
@@ -82,43 +85,41 @@ except getopt.GetoptError, err:
     usage()
     sys.exit(1)
 
-for o,a in opts:
+for o, a in opts:
     # Docu modes
-    if o in [ '-h', '--help' ]:
+    if o in ['-h', '--help']:
         usage()
         sys.exit(0)
 
     # Modifiers
-    elif o in [ '-v', '--verbose']:
+    elif o in ['-v', '--verbose']:
         opt_verbose += 1
-    elif o in [ '-a', '--all']:
+    elif o in ['-a', '--all']:
         opt_all = True
-    elif o in [ '-s', '--set']:
+    elif o in ['-s', '--set']:
         opt_mode = 'set'
-    elif o in [ '-r', '--remove']:
+    elif o in ['-r', '--remove']:
         opt_mode = 'remove'
-    elif o in [ '-c', '--comment']:
+    elif o in ['-c', '--comment']:
         opt_comment = a
-    elif o in [ '-d', '--duration']:
+    elif o in ['-d', '--duration']:
         opt_duration = int(a)
-    elif o in [ '-u', '--user']:
+    elif o in ['-u', '--user']:
         opt_user = a
-    elif o in [ '-S', '--secret']:
+    elif o in ['-S', '--secret']:
         opt_secret = a
-    elif o in [ '-U', '--url']:
+    elif o in ['-U', '--url']:
         opt_url = a
 
 if omd_site and not opt_secret:
     try:
-        opt_secret = file(omd_root + "/var/check_mk/web/" + opt_user
-                          + "/automation.secret").read().strip()
+        opt_secret = file(omd_root + "/var/check_mk/web/" + opt_user +
+                          "/automation.secret").read().strip()
     except Exception, e:
-        bail_out("Cannot read automation secret from user %s: %s" %
-            (opt_user, e))
+        bail_out("Cannot read automation secret from user %s: %s" % (opt_user, e))
 
 elif not omd_site and not opt_secret:
     bail_out("Please specify the automation secret for the user '%s'!" % opt_user)
-
 
 if not opt_url:
     bail_out("Please specify the URL to Check_MK Multisite with -U.")
@@ -144,9 +145,11 @@ verbose("Multisite-URL: " + opt_url)
 verbose("User:          " + opt_user)
 verbose("Secret:        " + (opt_secret or "(none specified)"))
 
+
 def make_url(base, variables):
-    vartext = "&".join([ "%s=%s" % (varname, urllib.quote(value)) for (varname, value) in variables ])
+    vartext = "&".join(["%s=%s" % (varname, urllib.quote(value)) for (varname, value) in variables])
     return base + "?" + vartext
+
 
 def set_downtime(variables, add_vars):
     url = make_url(opt_url + "view.py", variables + add_vars)
@@ -172,27 +175,26 @@ def set_downtime(variables, add_vars):
 
 # Authentication and host selection
 variables = [
-    ( "_username",      opt_user ),
-    ( "_secret",        opt_secret ),
-    ( "_transid",       "-1" ),
-    ( "_do_confirm",    "yes" ),
-    ( "_do_actions",    "yes" ),
-    ("host",            arg_host ),
+    ("_username", opt_user),
+    ("_secret", opt_secret),
+    ("_transid", "-1"),
+    ("_do_confirm", "yes"),
+    ("_do_actions", "yes"),
+    ("host", arg_host),
 ]
 
 # Action variables for setting or removing (works in all views)
 if opt_mode == "remove":
     variables += [
         ("_remove_downtimes", "Remove"),
-        ("_down_remove",      "Remove"),
+        ("_down_remove", "Remove"),
     ]
 else:
     variables += [
-        ( "_down_from_now", "yes" ),
-        ( "_down_minutes",  str(opt_duration) ),
-        ( "_down_comment",  opt_comment ),
+        ("_down_from_now", "yes"),
+        ("_down_minutes", str(opt_duration)),
+        ("_down_comment", opt_comment),
     ]
-
 
 # Downtime on host (handles 1 & 4, needed for 3 & 6)
 if not arg_services:

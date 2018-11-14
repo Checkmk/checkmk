@@ -28,6 +28,7 @@
 
 # copy me to ~/local/share/check_mk/web/pluins/icon and restart the site apache
 
+
 def paint_nagvis_image(what, row, tags, custom_vars):
     if what != 'host' or not custom_vars.get('NAGVISMAPS'):
         return
@@ -38,6 +39,7 @@ def paint_nagvis_image(what, row, tags, custom_vars):
 
     return h
 
+
 multisite_icons.append({
-    'paint':           paint_nagvis_image,
+    'paint': paint_nagvis_image,
 })

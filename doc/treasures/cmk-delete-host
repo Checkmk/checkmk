@@ -35,7 +35,7 @@
 import os, sys, shutil, pprint
 
 # Set automation user login credentials
-automation_user   = "cmdb_automation"
+automation_user = "cmdb_automation"
 automation_secret = "UVEMFMCBITYUURHPILKP"
 
 
@@ -43,28 +43,32 @@ def usage():
     print "usage: cmk_delete_host {hostname1 hostname2}"
     print "Script needs to be executed as site user"
 
+
 if len(sys.argv) == 1:
     usage()
     sys.exit(1)
 
 # Check if the given host exists
-# Simple approach: Each host managed by wato has a host tag for its folder 
+# Simple approach: Each host managed by wato has a host tag for its folder
 #                  which starts with /wato/
 #                  If this is missing -> host does not exist
 
 # Remove the host in WATO
 omd_site = os.environ["OMD_SITE"]
 if not omd_site:
-    print "This script is only executable as site user" 
+    print "This script is only executable as site user"
     sys.exit(1)
 
 g_current_host = None
+
+
 def log(text):
     print "%s: %s" % (g_current_host, text)
 
+
 def get_wato_folder(hostname):
     process = os.popen("cmk -D " + hostname, "r")
-    output  = process.read().split("\n")
+    output = process.read().split("\n")
     for line in output:
         if line.startswith("Tags:"):
             for tag in line.split()[1:]:
@@ -127,4 +131,3 @@ for hostname in sys.argv[1:]:
         shutil.rmtree(path_rrd)
     else:
         log("Host has no perfdata")
-

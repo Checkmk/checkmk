@@ -7,26 +7,25 @@
 
 import os, sys, re
 
+
 def substitute_context(template, context):
     # First replace all known variables
     for varname, value in context.items():
-        template = template.replace('$'+varname+'$', value)
+        template = template.replace('$' + varname + '$', value)
 
     # Remove the rest of the variables and make them empty
     template = re.sub("\$[A-Z]+\$", "", template)
     return template
+
 
 def main():
     try:
         opcmsg_bin = "/opt/OV/bin/opcmsg"
 
         # gather all options from env
-        context = dict([
-            (var[7:], value.decode("utf-8"))
-            for (var, value)
-            in os.environ.items()
-            if var.startswith("NOTIFY_")])
-
+        context = dict([(var[7:], value.decode("utf-8"))
+                        for (var, value) in os.environ.items()
+                        if var.startswith("NOTIFY_")])
 
         # Severity and message text
         if context["WHAT"] == "HOST":
@@ -34,7 +33,7 @@ def main():
             severity = context["HOSTSTATEID"] == "0" and "ok" or "critical"
         else:
             msg_t = context["SERVICEOUTPUT"]
-            state_map = { "0": "normal", "1": "warning", "2": "critical", "3": "warning" }
+            state_map = {"0": "normal", "1": "warning", "2": "critical", "3": "warning"}
             try:
                 severity = state_map[context["SERVICESTATEID"]]
             except:
@@ -57,13 +56,14 @@ def main():
 
         # Assemble the command
         command = "%s severity=%s application=%s object=\"%s\" msg_grp=\"%s\" msg_t=\"%s\" node=%s" % (
-                   opcmsg_bin, severity, application, the_object, msg_grp, msg_t, node)
+            opcmsg_bin, severity, application, the_object, msg_grp, msg_t, node)
 
         # Execute the command
-        print "executing command" , command
+        print "executing command", command
         os.system(command)
     except Exception, e:
         sys.stdout.write("ERROR %r" % e)
         sys.exit(1)
+
 
 main()

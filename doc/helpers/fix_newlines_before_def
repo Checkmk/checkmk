@@ -5,7 +5,6 @@
 
 import sys, os, re
 
-
 if "--debug" in sys.argv:
     opt_debug = True
     sys.argv.remove("--debug")
@@ -37,7 +36,9 @@ def cleanup_indentation_style(filename):
     else:
         return False
 
+
 def fix_two_empty_lines_before_indented_commented_def(content):
     return re.sub(r"\n+(([ \t]*#[^\n]*\n)*)(\s*)def ", r"\n\n\n\1\3def ", content)
+
 
 main()

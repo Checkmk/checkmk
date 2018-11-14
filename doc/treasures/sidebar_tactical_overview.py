@@ -5,6 +5,7 @@
 # additional versions of "Tactical Overview" for hosts having a certain
 # tag.
 
+
 def create_tactical_overview_snapin(title, tag_group, tag_name):
     def create_render_function(tag_group, tag_name):
         return lambda: render_tactical_overview(
@@ -16,13 +17,14 @@ def create_tactical_overview_snapin(title, tag_group, tag_name):
             ])
 
     sidebar_snapins["tactical_overview_" + tag_name] = {
-        "title" : title,
-        "description" : _("Tactical overview of all hosts with the tag %s") % tag_name,
-        "refresh" : True,
-        "render" : create_render_function(tag_group, tag_name),
-        "allowed" : [ "user", "admin", "guest" ],
-        "styles" : snapin_tactical_overview_styles,
+        "title": title,
+        "description": _("Tactical overview of all hosts with the tag %s") % tag_name,
+        "refresh": True,
+        "render": create_render_function(tag_group, tag_name),
+        "allowed": ["user", "admin", "guest"],
+        "styles": snapin_tactical_overview_styles,
     }
+
 
 # Here you declare which copies of the snapin you want:
 create_tactical_overview_snapin(u"München", "stadt", "muc")

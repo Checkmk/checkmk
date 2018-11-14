@@ -66,24 +66,22 @@ from cmk.exceptions import MKTerminate, MKGeneralException
 # is e.g. used during "mkbackup backup" to store the output.
 class Log(object):
     def __init__(self, fd):
-        self.fd  = fd
+        self.fd = fd
 
         if self.fd == 1:
-            self.orig  = sys.stdout
+            self.orig = sys.stdout
             sys.stdout = self
         else:
-            self.orig  = sys.stderr
+            self.orig = sys.stderr
             sys.stderr = self
 
         self.color_replace = re.compile("\033\\[\\d{1,2}m", re.UNICODE)
-
 
     def __del__(self):
         if self.fd == 1:
             sys.stdout = self.orig
         else:
             sys.stderr = self.orig
-
 
     def write(self, data):
         self.orig.write(data)
@@ -92,13 +90,13 @@ class Log(object):
         except Exception, e:
             self.orig.write("Failed to add output: %s\n" % e)
 
-
     def flush(self):
         self.orig.flush()
 
 
 g_stdout_log = None
 g_stderr_log = None
+
 
 def start_logging():
     global g_stdout_log, g_stderr_log
@@ -166,8 +164,7 @@ def acquire_backup_lock():
             set_permissions(g_backup_lock_f.name, -1, grp.getgrnam("omd").gr_gid, 0660)
             os.rename(g_backup_lock_f.name, lock_file_path)
         except (IOError, OSError), e:
-            raise MKGeneralException("Failed to open lock file \"%s\": %s" %
-                        (lock_file_path, e))
+            raise MKGeneralException("Failed to open lock file \"%s\": %s" % (lock_file_path, e))
     else:
         g_backup_lock_f = file(lock_file_path, "a")
 
@@ -175,7 +172,7 @@ def acquire_backup_lock():
         fcntl.flock(g_backup_lock_f, fcntl.LOCK_EX | fcntl.LOCK_NB)
     except IOError, e:
         raise MKGeneralException("Failed to get the exclusive backup lock. "
-                            "Another backup/restore seems to be running (%s)." % e)
+                                 "Another backup/restore seems to be running (%s)." % e)
 
     # Ensure that the lock is not inherited to subprocessess
     try:
@@ -192,12 +189,12 @@ def set_permissions(path, uid, gid, mode):
         os.chown(path, uid, gid)
     except OSError, e:
         if e.errno == 13:
-            pass # On CIFS mounts where "uid=0,forceuid,gid=1000,forcegid" mount options
-                 # are set, this is not possible. So skip over.
+            pass  # On CIFS mounts where "uid=0,forceuid,gid=1000,forcegid" mount options
+            # are set, this is not possible. So skip over.
         elif e.errno == 1:
-            pass # On NFS mounts where "" mount options are set, we get an
-                 # "Operation not permitted" error when trying to change e.g.
-                 # the group permission.
+            pass  # On NFS mounts where "" mount options are set, we get an
+            # "Operation not permitted" error when trying to change e.g.
+            # the group permission.
         else:
             raise
 
@@ -205,12 +202,12 @@ def set_permissions(path, uid, gid, mode):
         os.chmod(path, mode)
     except OSError, e:
         if e.errno == 13:
-            pass # On CIFS mounts where "uid=0,forceuid,gid=1000,forcegid" mount options
-                 # are set, this is not possible. So skip over.
+            pass  # On CIFS mounts where "uid=0,forceuid,gid=1000,forcegid" mount options
+            # are set, this is not possible. So skip over.
         elif e.errno == 1:
-            pass # On NFS mounts where "" mount options are set, we get an
-                 # "Operation not permitted" error when trying to change e.g.
-                 # the group permission.
+            pass  # On NFS mounts where "" mount options are set, we get an
+            # "Operation not permitted" error when trying to change e.g.
+            # the group permission.
         else:
             raise
 
@@ -228,7 +225,7 @@ def makedirs(path, user=None, group=None, mode=None):
             # be happy if someone already created the path
             if e.errno != errno.EEXIST:
                 raise
-        if tail == ".": # xxx/newdir/. exists if xxx/newdir exists
+        if tail == ".":  # xxx/newdir/. exists if xxx/newdir exists
             return
     makedir(path, user, group, mode)
 
@@ -298,7 +295,7 @@ def load_backup_info(path):
 
 
 def get_site_ids_of_backup(info):
-    return [ f[0].split(".", 1)[0][5:] for f in info["files"] if f[0].startswith("site-") ]
+    return [f[0].split(".", 1)[0][5:] for f in info["files"] if f[0].startswith("site-")]
 
 
 def save_backup_info(info):
@@ -329,7 +326,7 @@ def create_backup_info():
 
 
 def add_site_info_to_backup_info(info):
-    info["site_id"]      = site_id()
+    info["site_id"] = site_id()
     info["site_version"] = site_version(info["site_id"])
 
 
@@ -341,7 +338,7 @@ def add_system_info_to_backup_info(info):
     if not cma.is_clustered():
         return
 
-    cluster_cfg  = cma.cfg("cluster")
+    cluster_cfg = cma.cfg("cluster")
 
     if cluster_cfg:
         partner_name = cma.other_node_name(cluster_cfg)
@@ -349,9 +346,9 @@ def add_system_info_to_backup_info(info):
         partner_name = None
 
     info["cma_cluster"] = {
-        "clustered"    : True,
-        "partner_name" : partner_name,
-        "is_inactive"  : is_inactive_cluster_node(),
+        "clustered": True,
+        "partner_name": partner_name,
+        "is_inactive": is_inactive_cluster_node(),
     }
 
 
@@ -379,7 +376,6 @@ class MKTarFile(TarFile):
         verbose("Extracting %s" % targetpath)
         super(MKTarFile, self)._extract_member(tarinfo, targetpath)
 
-
     def makedir(self, tarinfo, targetpath):
         if os.path.lexists(targetpath):
             if os.path.islink(targetpath) != (tarinfo.islnk() or tarinfo.issym()):
@@ -390,7 +386,6 @@ class MKTarFile(TarFile):
 
         super(MKTarFile, self).makedir(tarinfo, targetpath)
 
-
     def makelink(self, tarinfo, targetpath):
         if os.path.lexists(targetpath) and not os.path.islink(targetpath):
             if os.path.isdir(targetpath):
@@ -399,7 +394,6 @@ class MKTarFile(TarFile):
                 os.remove(targetpath)
 
         super(MKTarFile, self).makelink(tarinfo, targetpath)
-
 
     def makefile(self, tarinfo, targetpath):
         if os.path.lexists(targetpath):
@@ -429,9 +423,8 @@ class MKTarFile(TarFile):
             else:
                 raise
 
-
     def makefifo(self, tarinfo, targetpath):
-        if os.path.exists(targetpath) and targetpath in [ "/rw/var/spool/nullmailer/trigger" ]:
+        if os.path.exists(targetpath) and targetpath in ["/rw/var/spool/nullmailer/trigger"]:
             verbose("Cleaning up %s" % targetpath)
             os.remove(targetpath)
 
@@ -466,19 +459,16 @@ class MKTarFile(TarFile):
 #   Beispielbefehle:
 #     mkbackup show nfs backup-id-20
 
-
 modes = {
     "backup": {
         "description":
             "Starts creating a new backup. When executed as Check_MK site user, a backup of the "
             "current site is executed to the target of the given backup job. When executed as "
             "root user on the Check_MK Appliance, a backup of the whole system is created.",
-        "args": [
-            {
-                "id": "Job-ID",
-                "description": "The ID of the backup job to work with",
-            },
-        ],
+        "args": [{
+            "id": "Job-ID",
+            "description": "The ID of the backup job to work with",
+        },],
         "opts": {
             "background": {
                 "description": "Fork and execute the program in the background.",
@@ -526,20 +516,18 @@ modes = {
     },
     "list": {
         "description": "Output the list of all backups found on the given backup target",
-        "args": [
-            {
-                "id": "Target-ID",
-                "description": "The ID of the backup target to work with",
-            },
-        ],
+        "args": [{
+            "id": "Target-ID",
+            "description": "The ID of the backup target to work with",
+        },],
     },
 }
 
-g_job_id       = None
+g_job_id = None
 g_local_job_id = None
-g_job_config   = None
-g_target_id    = None
-g_backup_id    = None
+g_job_config = None
+g_target_id = None
+g_backup_id = None
 
 
 def mode_backup(local_job_id, opts):
@@ -563,7 +551,7 @@ def mode_backup(local_job_id, opts):
         cleanup_previous_incomplete_backup()
 
         save_state({
-            "state" : "running",
+            "state": "running",
         })
 
         do_backup(opts)
@@ -587,9 +575,9 @@ def mode_backup(local_job_id, opts):
     finally:
         stop_logging()
         save_state({
-            "state"    : "finished",
-            "finished" : time.time(),
-            "success"  : success,
+            "state": "finished",
+            "finished": time.time(),
+            "success": success,
         })
 
 
@@ -629,13 +617,12 @@ def do_site_backup(opts, site=None, try_stop=True):
     makedirs(os.path.dirname(backup_path), group="omd", mode=0775)
 
     verbose("Command: %s" % " ".join(cmd))
-    p = subprocess.Popen(cmd, close_fds=True,
-                         stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-                         stdin=open(os.devnull))
+    p = subprocess.Popen(
+        cmd, close_fds=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=open(os.devnull))
 
     with open(backup_path, "w") as backup_file:
-        s = BackupStream(stream=p.stdout, is_alive=lambda: p.poll() is None,
-                         key_ident=g_job_config["encrypt"])
+        s = BackupStream(
+            stream=p.stdout, is_alive=lambda: p.poll() is None, key_ident=g_job_config["encrypt"])
         for chunk in s.process():
             backup_file.write(chunk)
 
@@ -669,26 +656,30 @@ def do_site_backup(opts, site=None, try_stop=True):
 
 
 def stop_site(site):
-    site_arg = [ site ] if is_root() else []
+    site_arg = [site] if is_root() else []
 
     omd_command("stop", *site_arg)
 
     for c in range(5):
-        if subprocess.call(["omd", "status", "--bare" ] + site_arg,
-                           stdout=open(os.devnull, "w")) == 1:
+        if subprocess.call(
+            ["omd", "status", "--bare"] + site_arg, stdout=open(os.devnull, "w")) == 1:
             break
         elif c == 4:
             raise MKGeneralException("Failed to stop site")
 
 
 def start_site(site):
-    site_arg = [ site ] if is_root() else []
+    site_arg = [site] if is_root() else []
 
     omd_command("start", *site_arg)
 
     for c in range(5):
-        if subprocess.call(["omd", "status", "--bare", ] + site_arg,
-                           stdout=open(os.devnull, "w")) == 0:
+        if subprocess.call(
+            [
+                "omd",
+                "status",
+                "--bare",
+            ] + site_arg, stdout=open(os.devnull, "w")) == 0:
             break
         elif c == 4:
             raise MKGeneralException("Failed to start site")
@@ -697,13 +688,16 @@ def start_site(site):
 def omd_command(*args):
     cmd = ["omd"] + list(args)
     verbose("Command: %s" % " ".join(cmd))
-    p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
-                         stdin=open(os.devnull), close_fds=True)
+    p = subprocess.Popen(
+        cmd,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        stdin=open(os.devnull),
+        close_fds=True)
     stdout = p.communicate()[0]
     verbose(stdout)
     if p.returncode != 0:
-        raise MKGeneralException("Failed to run <tt>%s</tt>: %s" %
-            (" ".join(cmd), stdout))
+        raise MKGeneralException("Failed to run <tt>%s</tt>: %s" % (" ".join(cmd), stdout))
 
 
 # Using RSA directly to encrypt the whole backup is a bad idea. So we use the RSA
@@ -716,21 +710,20 @@ def omd_command(*args):
 # c) the unencrypted random key is used as AES key for encrypting the backup stream
 class MKBackupStream(object):
     def __init__(self, stream, is_alive, key_ident):
-        self._stream    = stream
-        self._is_alive  = is_alive
-        self._cipher    = None
+        self._stream = stream
+        self._is_alive = is_alive
+        self._cipher = None
         self._key_ident = key_ident
 
         self._last_state_update = time.time()
-        self._last_bps          = None
-        self._bytes_copied      = 0
+        self._last_bps = None
+        self._bytes_copied = 0
 
         # The iv is an initialization vector for the CBC mode of operation. It
         # needs to be unique per key per message. Normally, it's sent alongside
         # the data in cleartext. Here, since the key is only ever used once,
         # you can use a known IV.
         self._iv = '\x00' * AES.block_size
-
 
     def process(self):
         head = self._init_processing()
@@ -745,36 +738,30 @@ class MKBackupStream(object):
             yield self._process_chunk(chunk)
 
             if finished and not self._is_alive():
-                break # end of stream reached
+                break  # end of stream reached
 
             self._update_state()
-
 
     def _encrypt(self):
         return self._key_ident != None
 
-
     def _init_processing(self):
         raise NotImplementedError()
-
 
     def _read_from_stream(self, size):
         try:
             return self._stream.read(size)
         except ValueError:
             if self._stream.closed:
-                return "" # handle EOF transparently
+                return ""  # handle EOF transparently
             else:
                 raise
-
 
     def _read_chunk(self):
         raise NotImplementedError()
 
-
     def _process_chunk(self, chunk):
         raise NotImplementedError()
-
 
     def _update_state(self):
         timedif = time.time() - self._last_state_update
@@ -782,16 +769,15 @@ class MKBackupStream(object):
             this_bps = float(self._bytes_copied) / timedif
 
             if self._last_bps == None:
-                bps = this_bps # initialize the value
+                bps = this_bps  # initialize the value
             else:
                 percentile, backlog_sec = 0.50, 10
-                weight_per_sec = (1 - percentile) ** (1.0 / backlog_sec)
-                weight = weight_per_sec ** timedif
+                weight_per_sec = (1 - percentile)**(1.0 / backlog_sec)
+                weight = weight_per_sec**timedif
                 bps = self._last_bps * weight + this_bps * (1 - weight)
 
             save_state({"bytes_per_second": bps})
             self._last_state_update, self._last_bps, self._bytes_copied = time.time(), bps, 0
-
 
     def _get_key_spec(self, key_id):
         keys = self._load_backup_keys()
@@ -803,25 +789,23 @@ class MKBackupStream(object):
 
         raise MKGeneralException("Failed to load the configured backup key: %s" % key_id)
 
-
     def _load_backup_keys(self):
         if is_root():
             path = "/etc/cma/backup_keys.conf"
         else:
             path = "%s/etc/check_mk/backup_keys.mk" % os.environ["OMD_ROOT"]
 
-        variables = { "keys" : {} }
+        variables = {"keys": {}}
         if os.path.exists(path):
             execfile(path, variables, variables)
         return variables["keys"]
 
 
-
 class BackupStream(MKBackupStream):
     def _init_processing(self):
         if self._encrypt():
-            secret_key, encrypted_secret_key = self._derive_key(
-                                          self._get_encryption_public_key(), 32)
+            secret_key, encrypted_secret_key = self._derive_key(self._get_encryption_public_key(),
+                                                                32)
             self._cipher = AES.new(secret_key, AES.MODE_CBC, self._iv)
 
             # Write out a file version marker and  the encrypted secret key, preceded by
@@ -830,7 +814,6 @@ class BackupStream(MKBackupStream):
             #            early versions of 1.4 until moving from PyCryto to PyCryptodome
             # Version 2: Use PKCS1_OAEP for encrypting the encrypted_secret_key.
             return "%d\0%d\0%s\0" % (2, len(encrypted_secret_key), encrypted_secret_key)
-
 
     def _read_chunk(self):
         finished = False
@@ -850,24 +833,21 @@ class BackupStream(MKBackupStream):
 
         return chunk, finished
 
-
     def _process_chunk(self, chunk):
         if self._encrypt():
             return self._cipher.encrypt(chunk)
         return chunk
-
 
     def _get_encryption_public_key(self):
         key = self._get_key_spec(self._key_ident)
 
         # First extract the public key part from the certificate
         cert = crypto.load_certificate(crypto.FILETYPE_PEM, key["certificate"])
-        pub  = cert.get_pubkey()
+        pub = cert.get_pubkey()
         pub_pem = crypto.dump_publickey(crypto.FILETYPE_PEM, pub)
 
         # Now constuct the public key object
         return RSA.importKey(pub_pem)
-
 
     # logic from http://stackoverflow.com/questions/6309958/encrypting-a-file-with-rsa-in-python
     # Since our packages moved from PyCrypto to PyCryptodome we need to change this to use PKCS1_OAEP.
@@ -881,7 +861,6 @@ class BackupStream(MKBackupStream):
         return secret_key, encrypted_secret_key
 
 
-
 class RestoreStream(MKBackupStream):
     def _init_processing(self):
         if not self._encrypt():
@@ -890,7 +869,6 @@ class RestoreStream(MKBackupStream):
         file_version, encrypted_secret_key = self._read_encrypted_secret_key()
         secret_key = self._decrypt_secret_key(file_version, encrypted_secret_key)
         self._cipher = AES.new(secret_key, AES.MODE_CBC, self._iv)
-
 
     def _read_chunk(self):
         if not self._encrypt():
@@ -916,10 +894,8 @@ class RestoreStream(MKBackupStream):
         self._next_chunk = this_chunk
         return chunk, False
 
-
     def _process_chunk(self, chunk):
         return chunk
-
 
     def _read_encrypted_secret_key(self):
         def read_field():
@@ -933,8 +909,9 @@ class RestoreStream(MKBackupStream):
             return buf
 
         file_version = read_field()
-        if file_version not in [ "1", "2" ]:
-            raise MKGeneralException("Failed to process backup file (invalid version %r)" % file_version)
+        if file_version not in ["1", "2"]:
+            raise MKGeneralException(
+                "Failed to process backup file (invalid version %r)" % file_version)
 
         try:
             key_len = int(read_field())
@@ -951,7 +928,6 @@ class RestoreStream(MKBackupStream):
 
         return file_version, encrypted_secret_key
 
-
     def _get_encryption_private_key(self):
         key = self._get_key_spec(self._key_ident)
 
@@ -964,8 +940,7 @@ class RestoreStream(MKBackupStream):
 
         # First decrypt the private key using PyOpenSSL (was unable to archieve
         # this with RSA.importKey(). :-(
-        key = crypto.load_privatekey(crypto.FILETYPE_PEM, key["private_key"],
-                                     passphrase)
+        key = crypto.load_privatekey(crypto.FILETYPE_PEM, key["private_key"], passphrase)
         priv_pem = crypto.dump_privatekey(crypto.FILETYPE_PEM, key)
 
         try:
@@ -974,7 +949,6 @@ class RestoreStream(MKBackupStream):
             if opt_debug:
                 raise
             raise MKGeneralException("Failed to load private key (wrong passphrase?)")
-
 
     def _decrypt_secret_key(self, file_version, encrypted_secret_key):
         private_key = self._get_encryption_private_key()
@@ -1040,7 +1014,7 @@ def archive_suffix():
 
 def needed_backup_archive_files(info):
     if is_root():
-        needed_files = [ "system" ]
+        needed_files = ["system"]
 
         if not is_inactive_cluster_backup(info):
             needed_files.append("system-data")
@@ -1050,9 +1024,9 @@ def needed_backup_archive_files(info):
     else:
         # Care about restore from a backup made in a site with another site_id
         site = info.get("site_id", site_id())
-        needed_files = [ "site-%s" % site ]
+        needed_files = ["site-%s" % site]
 
-    return [ f + archive_suffix() for f in needed_files ]
+    return [f + archive_suffix() for f in needed_files]
 
 
 def compress_archives():
@@ -1098,8 +1072,8 @@ def verify_backup_exists():
 
 def verify_backup_consistency(info):
     log("Verifying backup consistency")
-    needed_files   = needed_backup_archive_files(info)
-    optional_files = [ e[0] for e in info["files"] if e[0] not in needed_files ]
+    needed_files = needed_backup_archive_files(info)
+    optional_files = [e[0] for e in info["files"] if e[0] not in needed_files]
 
     verify_backup_files(info, needed_files, needed=True)
     verify_backup_files(info, optional_files, needed=False)
@@ -1115,10 +1089,10 @@ def verify_backup_files(info, files, needed):
 
         if size == None:
             if needed:
-                raise MKGeneralException("The backup is missing the needed archive %s." %
-                                                                              archive_file)
+                raise MKGeneralException(
+                    "The backup is missing the needed archive %s." % archive_file)
             else:
-                continue # missing optional files are OK
+                continue  # missing optional files are OK
 
         archive_path = "%s/%s" % (backup_base_path(), archive_file)
         this_checksum = file_checksum(archive_path)
@@ -1167,17 +1141,16 @@ def do_system_backup(opts):
 def do_system_rw_backup(opts):
     with open(system_backup_archive_path(), "w") as backup_file:
         pipein_fd, pipeout_fd = os.pipe()
-        pipein  = os.fdopen(pipein_fd)
+        pipein = os.fdopen(pipein_fd)
 
         # Write to buffer in dedicated thread
-        t = threading.Thread(target=lambda: write_to_tarfile_threaded(
-                                                pipeout_fd, "/rw", ["mnt/*/*"]))
+        t = threading.Thread(
+            target=lambda: write_to_tarfile_threaded(pipeout_fd, "/rw", ["mnt/*/*"]))
         t.daemon = True
         t.start()
 
         # Process backup stream and write to destination file
-        s = BackupStream(stream=pipein, is_alive=t.is_alive,
-                         key_ident=g_job_config["encrypt"])
+        s = BackupStream(stream=pipein, is_alive=t.is_alive, key_ident=g_job_config["encrypt"])
         for chunk in s.process():
             backup_file.write(chunk)
 
@@ -1185,17 +1158,16 @@ def do_system_rw_backup(opts):
 def do_system_data_backup(opts):
     with file(system_data_backup_archive_path(), "w") as backup_file:
         pipein_fd, pipeout_fd = os.pipe()
-        pipein  = os.fdopen(pipein_fd)
+        pipein = os.fdopen(pipein_fd)
 
         # Write to buffer in dedicated thread
-        t = threading.Thread(target=lambda: write_to_tarfile_threaded(
-                                                pipeout_fd, "/omd", ["sites/*"]))
+        t = threading.Thread(
+            target=lambda: write_to_tarfile_threaded(pipeout_fd, "/omd", ["sites/*"]))
         t.daemon = True
         t.start()
 
         # Process backup stream and write to destination file
-        s = BackupStream(stream=pipein, is_alive=t.is_alive,
-                         key_ident=g_job_config["encrypt"])
+        s = BackupStream(stream=pipein, is_alive=t.is_alive, key_ident=g_job_config["encrypt"])
         for chunk in s.process():
             backup_file.write(chunk)
 
@@ -1222,18 +1194,19 @@ def is_inactive_cluster_backup(info):
 
 
 def existing_sites():
-    return sorted([ s for s in os.listdir("/omd/sites")
-                    if os.path.isdir(os.path.join("/omd/sites/", s)) ])
+    return sorted(
+        [s for s in os.listdir("/omd/sites") if os.path.isdir(os.path.join("/omd/sites/", s))])
 
 
 def backup_files_to_tarfile(fobj, base_path, exclude_patterns=None):
     if exclude_patterns:
+
         def filter_files(filename):
             for glob_pattern in exclude_patterns:
                 # patterns are relative to base_path, filename is full path.
                 # strip of the base_path prefix from full path
-                if fnmatch.fnmatch(filename[len(base_path.rstrip("/"))+1:], glob_pattern):
-                    return True # exclude this file
+                if fnmatch.fnmatch(filename[len(base_path.rstrip("/")) + 1:], glob_pattern):
+                    return True  # exclude this file
             return False
 
     else:
@@ -1272,16 +1245,14 @@ def complete_backup():
         log("Cleaning up previously completed backup")
         shutil.rmtree(job_backup_path_complete())
 
-    os.rename(job_backup_path_during_backup(),
-              job_backup_path_complete())
+    os.rename(job_backup_path_during_backup(), job_backup_path_complete())
 
     state = load_state()
     duration = time.time() - state["started"]
 
     log("--- Backup completed (Duration: %s, Size: %s, IO: %s/s) ---" %
-           (render.timespan(duration),
-           render.fmt_bytes(info["size"]),
-           render.fmt_bytes(state["bytes_per_second"])))
+        (render.timespan(duration), render.fmt_bytes(info["size"]),
+         render.fmt_bytes(state["bytes_per_second"])))
 
 
 def cleanup_previous_incomplete_backup():
@@ -1323,17 +1294,18 @@ def globalize_job_id(local_job_id):
 
     parts.append(local_job_id)
 
-    return "-".join([ p.replace("-", "+") for p in parts ])
+    return "-".join([p.replace("-", "+") for p in parts])
 
 
 def init_new_run():
     save_state({
-        "state"            : "started",
-        "pid"              : os.getpid(),
-        "started"          : time.time(),
-        "output"           : "",
-        "bytes_per_second" : 0,
-    }, update=False)
+        "state": "started",
+        "pid": os.getpid(),
+        "started": time.time(),
+        "output": "",
+        "bytes_per_second": 0,
+    },
+               update=False)
 
 
 def save_next_run():
@@ -1353,7 +1325,9 @@ def save_next_run():
 
     save_state({"next_schedule": next_schedule})
 
+
 g_state = None
+
 
 # The state file is in JSON format because it is 1:1 transfered
 # to the Check_MK server through the Check_MK agent.
@@ -1372,8 +1346,8 @@ def save_state(new_attrs, update=True):
         state = {}
     state.update(new_attrs)
 
-    store.save_file(state_path(),
-        json.dumps(state, sort_keys=True, indent=4, separators=(',', ': ')))
+    store.save_file(state_path(), json.dumps(
+        state, sort_keys=True, indent=4, separators=(',', ': ')))
 
 
 def state_path():
@@ -1446,7 +1420,7 @@ def mode_restore(target_id, backup_id, opts):
     success = False
     try:
         save_state({
-            "state" : "running",
+            "state": "running",
         })
 
         do_restore(opts, info)
@@ -1470,9 +1444,9 @@ def mode_restore(target_id, backup_id, opts):
     finally:
         stop_logging()
         save_state({
-            "state"    : "finished",
-            "finished" : time.time(),
-            "success"  : success,
+            "state": "finished",
+            "finished": time.time(),
+            "success": success,
         })
 
 
@@ -1520,12 +1494,11 @@ def do_site_restore(opts, info, site=None):
 
     backup_path = site_backup_archive_path(site)
 
-    p = subprocess.Popen(cmd, close_fds=True,
-                         stderr=subprocess.PIPE, stdin=subprocess.PIPE)
+    p = subprocess.Popen(cmd, close_fds=True, stderr=subprocess.PIPE, stdin=subprocess.PIPE)
 
     with open(backup_path, "r") as backup_file:
-        s = RestoreStream(stream=backup_file, is_alive=lambda: False,
-                          key_ident=g_job_config["encrypt"])
+        s = RestoreStream(
+            stream=backup_file, is_alive=lambda: False, key_ident=g_job_config["encrypt"])
         try:
             archive_started = False
             for chunk in s.process():
@@ -1552,8 +1525,8 @@ def do_site_restore(opts, info, site=None):
         raise MKGeneralException("Site restore failed")
 
     if not is_root():
-        site_arg = [ site ] if is_root() else []
-        if subprocess.call(["omd", "start" ] + site_arg) != 0:
+        site_arg = [site] if is_root() else []
+        if subprocess.call(["omd", "start"] + site_arg) != 0:
             raise MKGeneralException("Failed to start the site after restore")
 
 
@@ -1658,7 +1631,7 @@ def setup_standalone_environment(info):
 
 def enable_drbd_ip_addresses():
     # These modules are only available when mkbackup is executed on OS level on the appliance
-    import cma # pylint: disable=import-error
+    import cma  # pylint: disable=import-error
     import cma_net  # pylint: disable=import-error
     cma.load_config()
     cma_net.load_config()
@@ -1674,15 +1647,18 @@ def enable_drbd_ip_addresses():
 
     log("Enabling DRBD network address (%s: %s/%s)" % (drbd_if, address, netmask))
 
-    subprocess.call(["ip", "a", "a", "%s/%s" % (address, netmask),
-                     "dev", cma_net.get_simple_interface_name()])
+    subprocess.call(
+        ["ip", "a", "a",
+         "%s/%s" % (address, netmask), "dev",
+         cma_net.get_simple_interface_name()])
 
 
 def verify_cma_version_compatible(info):
     # These modules are only available when mkbackup is executed on OS level on the appliance
     import cma  # pylint: disable=import-error
     if info["cma_version"] != cma.version():
-        raise MKGeneralException("The backup can not be restored because the version of the "
+        raise MKGeneralException(
+            "The backup can not be restored because the version of the "
             "backup (%s) and the currently installed firmware (%s) are not the same. You "
             "have to install the exact same version to be able to restore the backup." %
             (info["cma_version"], cma.version()))
@@ -1748,8 +1724,8 @@ def do_system_data_restore(opts, info):
 
 def restore_system_backup(backup_path):
     with open(backup_path, "r") as backup_file:
-        s = RestoreStream(stream=backup_file, is_alive=lambda: False,
-                          key_ident=g_job_config["encrypt"])
+        s = RestoreStream(
+            stream=backup_file, is_alive=lambda: False, key_ident=g_job_config["encrypt"])
 
         pipein_fd, pipeout_fd = os.pipe()
         pipein = os.fdopen(pipein_fd)
@@ -1762,7 +1738,7 @@ def restore_system_backup(backup_path):
         try:
             with MKTarFile.open(fileobj=pipein, mode="r|*") as tar:
                 tar.extractall("/")
-                return [ "/%s" % name for name in  tar.getnames() ]
+                return ["/%s" % name for name in tar.getnames()]
         except ReadError:
             if opt_debug:
                 raise
@@ -1792,8 +1768,8 @@ def complete_restore():
 
 def mode_list(target_id, opts):
     if target_id not in g_config["targets"]:
-        raise MKGeneralException("This backup target does not exist. Choose one of: %s" %
-                                    ", ".join(g_config["targets"].keys()))
+        raise MKGeneralException("This backup target does not exist. Choose one of: %s" % ", ".join(
+            g_config["targets"].keys()))
 
     verify_target_is_ready(target_id)
 
@@ -1851,9 +1827,11 @@ def usage(error=None):
 
     for mode_name, mode in sorted(modes.items()):
         mode_indent = " " * 18
-        wrapped_descr = textwrap.fill(mode["description"], width=82,
-                                      initial_indent="    %-13s " % mode_name,
-                                      subsequent_indent=mode_indent)
+        wrapped_descr = textwrap.fill(
+            mode["description"],
+            width=82,
+            initial_indent="    %-13s " % mode_name,
+            subsequent_indent=mode_indent)
         sys.stdout.write(wrapped_descr + "\n")
         sys.stdout.write("\n")
         if "args" in mode:
@@ -1897,9 +1875,9 @@ def init_logging():
         syslog.openlog("mkbackup")
 
 
-g_config    = {}
+g_config = {}
 opt_verbose = 0
-opt_debug   = False
+opt_debug = False
 
 
 def main():
@@ -1909,7 +1887,7 @@ def main():
     init_logging()
 
     short_options = "h"
-    long_options = [ "help", "version", "verbose", "debug" ]
+    long_options = ["help", "version", "verbose", "debug"]
 
     try:
         opts, args = getopt.getopt(sys.argv[1:], short_options, long_options)
@@ -1917,7 +1895,7 @@ def main():
         usage("%s" % e)
 
     for o, _unused_a in opts:
-        if o in [ "-h", "--help" ]:
+        if o in ["-h", "--help"]:
             usage()
         elif o == "--version":
             sys.stdout.write("mkbackup %s\n" % VERSION)
@@ -1954,7 +1932,7 @@ def main():
     if len(mode_args) != len(mode.get("args", [])):
         usage("Invalid number of arguments for this mode")
 
-    opt_dict = dict([ (k.lstrip("-"), v) for k, v in opts + mode_opts ])
+    opt_dict = dict([(k.lstrip("-"), v) for k, v in opts + mode_opts])
 
     globals()["mode_%s" % mode_name](*mode_args, opts=opt_dict)
 

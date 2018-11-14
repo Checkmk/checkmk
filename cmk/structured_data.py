@@ -33,8 +33,7 @@ import re
 import pprint
 
 import cmk.store as store
-from cmk.exceptions import MKGeneralException
-
+from cmk.exceptions import MKGeneralException, MKTimeout
 
 # TODO add type annotations for mypy
 # Example:
@@ -237,7 +236,6 @@ class StructuredDataTree(object):
 
     def get_raw_tree(self):
         return self._root.get_raw_tree()
-
 
     def normalize_nodes(self):
         self._root.normalize_nodes()
@@ -1020,10 +1018,8 @@ class Attributes(Leaf):
         delta.set_child_data(data)
         return delta
 
-
     def get_raw_tree(self):
         return self._attributes
-
 
     def merge_with(self, foreign):
         self._attributes.update(foreign._attributes)

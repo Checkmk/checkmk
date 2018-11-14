@@ -1,0 +1,11 @@
+Title: Improved performance for HS/SW history archive
+Level: 1
+Component: inv
+Compatible: compat
+Edition: cre
+Version: 1.5.0p8
+Date: 1542633025
+Class: feature
+
+Needless file evaluations have been removed. This increases the performance when opening a subtree.
+Furthermore, once a delta between two trees got computed, the information is cached to disk and can be reused later on.

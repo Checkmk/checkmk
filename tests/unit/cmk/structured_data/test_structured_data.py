@@ -534,6 +534,27 @@ def test_structured_data_StructuredDataTree_building_tree():
     assert level1_nested_list_att is None
     assert level1_nested_list_con._edges.keys() == [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
 
+@pytest.mark.parametrize("two_tree_filenames", zip(tree_names[:len(tree_names)/2], tree_names[len(tree_names)/2:]))
+def test_delta_structured_data_tree_serialization(two_tree_filenames):
+    old_tree = StructuredDataTree()
+    new_tree = StructuredDataTree()
+
+    old_filename, new_filename = two_tree_filenames
+
+    old_tree.load_from(old_filename)
+    new_tree.load_from(new_filename)
+    _, __, ___, delta_tree = old_tree.compare_with(new_tree)
+
+    raw_delta_tree = delta_tree.get_raw_tree()
+
+    new_delta_tree = StructuredDataTree()
+    new_delta_tree.create_tree_from_raw_tree(raw_delta_tree)
+
+    new_raw_delta_tree = new_delta_tree.get_raw_tree()
+
+    assert raw_delta_tree == new_raw_delta_tree
+
+
 #.
 #   .--Performance---------------------------------------------------------.
 #   |    ____            __                                                |

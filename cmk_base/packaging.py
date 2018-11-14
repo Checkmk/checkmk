@@ -45,11 +45,13 @@ import cmk_base.utils
 
 pac_ext = ".mkp"
 
+
 # TODO: Subclass MKGeneralException()?
 class PackageException(Exception):
     def __init__(self, reason):
         self.reason = reason
         super(PackageException, self).__init__(reason)
+
     def __str__(self):
         return self.reason
 
@@ -62,32 +64,31 @@ try:
 except:
     pass
 
-
 # order matters! See function _get_permissions
 PERM_MAP = (
-    (cmk.paths.checks_dir,               0644),
-    (cmk.paths.local_checks_dir,         0644),
-    (cmk.paths.notifications_dir,        0755),
-    (cmk.paths.local_notifications_dir,  0755),
-    (cmk.paths.inventory_dir,            0644),
-    (cmk.paths.local_inventory_dir,      0644),
-    (cmk.paths.check_manpages_dir,       0644),
+    (cmk.paths.checks_dir, 0644),
+    (cmk.paths.local_checks_dir, 0644),
+    (cmk.paths.notifications_dir, 0755),
+    (cmk.paths.local_notifications_dir, 0755),
+    (cmk.paths.inventory_dir, 0644),
+    (cmk.paths.local_inventory_dir, 0644),
+    (cmk.paths.check_manpages_dir, 0644),
     (cmk.paths.local_check_manpages_dir, 0644),
-    (cmk.paths.agents_dir,               0755),
-    (cmk.paths.local_agents_dir,         0755),
-    (cmk.paths.web_dir,                  0644),
-    (cmk.paths.local_web_dir,            0644),
-    (cmk.paths.pnp_templates_dir,        0644),
-    (cmk.paths.local_pnp_templates_dir,  0644),
-    (cmk.paths.doc_dir,                  0644),
-    (cmk.paths.local_doc_dir,            0644),
-    (cmk.paths.locale_dir,               0644),
-    (cmk.paths.local_locale_dir,         0644),
-    (cmk.paths.local_bin_dir,            0755),
+    (cmk.paths.agents_dir, 0755),
+    (cmk.paths.local_agents_dir, 0755),
+    (cmk.paths.web_dir, 0644),
+    (cmk.paths.local_web_dir, 0644),
+    (cmk.paths.pnp_templates_dir, 0644),
+    (cmk.paths.local_pnp_templates_dir, 0644),
+    (cmk.paths.doc_dir, 0644),
+    (cmk.paths.local_doc_dir, 0644),
+    (cmk.paths.locale_dir, 0644),
+    (cmk.paths.local_locale_dir, 0644),
+    (cmk.paths.local_bin_dir, 0755),
     (os.path.join(cmk.paths.local_lib_dir, "nagios", "plugins"), 0755),
-    (cmk.paths.local_lib_dir,            0644),
-    (cmk.paths.local_mib_dir,            0644),
-    (os.path.join(cmk.paths.share_dir,       "alert_handlers"), 0755),
+    (cmk.paths.local_lib_dir, 0644),
+    (cmk.paths.local_mib_dir, 0644),
+    (os.path.join(cmk.paths.share_dir, "alert_handlers"), 0755),
     (os.path.join(cmk.paths.local_share_dir, "alert_handlers"), 0755),
     (str(cmk.ec.export.mkp_rule_pack_dir()), 0644),
 )
@@ -136,8 +137,10 @@ package_ignored_files = {
     ],
 }
 
+
 def get_package_parts():
-    return [ p for p in package_parts if p[2] != None ]
+    return [p for p in package_parts if p[2] != None]
+
 
 def packaging_usage():
     sys.stdout.write("""Usage: check_mk [-v] -P|--package COMMAND [ARGS]
@@ -169,14 +172,14 @@ def do_packaging(args):
     args = args[1:]
 
     commands = {
-        "create"  : package_create,
-        "release" : package_release,
-        "list"    : package_list,
-        "find"    : package_find,
-        "show"    : package_info,
-        "pack"    : package_pack,
-        "remove"  : package_remove,
-        "install" : package_install,
+        "create": package_create,
+        "release": package_release,
+        "list": package_list,
+        "find": package_find,
+        "show": package_info,
+        "pack": package_pack,
+        "remove": package_remove,
+        "install": package_install,
     }
     f = commands.get(command)
     if f:
@@ -188,9 +191,9 @@ def do_packaging(args):
     else:
         allc = commands.keys()
         allc.sort()
-        allc = [ tty.bold + c + tty.normal for c in allc ]
-        logger.error("Invalid packaging command. Allowed are: %s and %s.",
-                                            ", ".join(allc[:-1]), allc[-1])
+        allc = [tty.bold + c + tty.normal for c in allc]
+        logger.error("Invalid packaging command. Allowed are: %s and %s.", ", ".join(allc[:-1]),
+                     allc[-1])
         sys.exit(1)
 
 
@@ -204,7 +207,7 @@ def package_list(args):
             for pacname in all_package_names():
                 package = read_package_info(pacname)
                 table.append((pacname, package["title"], package["num_files"]))
-            tty.print_table(["Name", "Title", "Files"], [ tty.bold, "", "" ], table)
+            tty.print_table(["Name", "Title", "Files"], [tty.bold, "", ""], table)
         else:
             for pacname in all_package_names():
                 sys.stdout.write("%s\n" % pacname)
@@ -225,7 +228,7 @@ def show_package_info(name):
     show_package(name, True)
 
 
-def show_package(name, show_info = False):
+def show_package(name, show_info=False):
     try:
         if name.endswith(pac_ext):
             tar = tarfile.open(name, "r:gz")
@@ -279,15 +282,15 @@ def package_create(args):
     logger.verbose("Creating new package %s...", pacname)
     filelists = {}
     package = {
-        "title"                : "Title of %s" % pacname,
-        "name"                 : pacname,
-        "description"          : "Please add a description here",
-        "version"              : "1.0",
-        "version.packaged"     : cmk.__version__,
-        "version.min_required" : cmk.__version__,
-        "author"               : "Add your name here",
-        "download_url"         : "http://example.com/%s/" % pacname,
-        "files"                : filelists
+        "title": "Title of %s" % pacname,
+        "name": pacname,
+        "description": "Please add a description here",
+        "version": "1.0",
+        "version.packaged": cmk.__version__,
+        "version.min_required": cmk.__version__,
+        "author": "Add your name here",
+        "download_url": "http://example.com/%s/" % pacname,
+        "files": filelists
     }
     num_files = 0
     for part, title, directory in get_package_parts():
@@ -298,7 +301,6 @@ def package_create(args):
             logger.verbose("  %s%s%s:", tty.bold, title, tty.normal)
             for f in files:
                 logger.verbose("    %s", f)
-
 
     write_package_info(package)
     logger.verbose("New package %s created with %d files.", pacname, num_files)
@@ -360,11 +362,12 @@ def package_pack(args):
 
     # Make sure, user is not in data directories of Check_MK
     abs_curdir = os.path.abspath(os.curdir)
-    for directory in [cmk.paths.var_dir] + [ p[-1] for p in get_package_parts() + config_parts ]:
+    for directory in [cmk.paths.var_dir] + [p[-1] for p in get_package_parts() + config_parts]:
         if abs_curdir == directory or abs_curdir.startswith(directory + "/"):
-            raise PackageException("You are in %s!\n"
-                               "Please leave the directories of Check_MK before creating\n"
-                               "a packet file. Foreign files lying around here will mix up things." % p)
+            raise PackageException(
+                "You are in %s!\n"
+                "Please leave the directories of Check_MK before creating\n"
+                "a packet file. Foreign files lying around here will mix up things." % p)
 
     pacname = args[0]
     package = read_package_info(pacname)
@@ -410,8 +413,8 @@ def create_mkp_file(package, file_name=None, file_object=None):
             for f in filenames:
                 logger.verbose("    %s", f)
             subtarname = part + ".tar"
-            subdata = subprocess.check_output(["tar", "cf", "-", "--dereference", "--force-local",
-                                               "-C", directory] + filenames)
+            subdata = subprocess.check_output(
+                ["tar", "cf", "-", "--dereference", "--force-local", "-C", directory] + filenames)
             info = create_tar_info(subtarname, len(subdata))
             tar.addfile(info, StringIO(subdata))
     tar.close()
@@ -467,7 +470,8 @@ def edit_package(pacname, new_package_info):
     # Renaming: check for collision
     if pacname != new_package_info["name"]:
         if package_exists(new_package_info["name"]):
-            raise PackageException("Cannot rename package: a package with that name already exists.")
+            raise PackageException(
+                "Cannot rename package: a package with that name already exists.")
 
     validate_package_files(pacname, new_package_info["files"])
 
@@ -495,7 +499,8 @@ def validate_package_files_part(packages, pacname, part, directory, rel_paths):
         for other_pacname, other_package_info in packages.items():
             for other_rel_path in other_package_info["files"].get(part, []):
                 if other_rel_path == rel_path and other_pacname != pacname:
-                    raise PackageException("File %s does already belong to package %s" % (path, other_pacname))
+                    raise PackageException(
+                        "File %s does already belong to package %s" % (path, other_pacname))
 
 
 def package_install(args):
@@ -505,7 +510,7 @@ def package_install(args):
     if not os.path.exists(path):
         raise PackageException("No such file %s." % path)
 
-    return install_package(file_name = path)
+    return install_package(file_name=path)
 
 
 def install_package(file_name=None, file_object=None):
@@ -517,7 +522,8 @@ def install_package(file_name=None, file_object=None):
     pacname = package["name"]
     old_package = read_package_info(pacname)
     if old_package:
-        logger.verbose("Updating %s from version %s to %s.", pacname, old_package["version"], package["version"])
+        logger.verbose("Updating %s from version %s to %s.", pacname, old_package["version"],
+                       package["version"])
         update = True
     else:
         logger.verbose("Installing %s version %s.", pacname, package["version"])
@@ -542,7 +548,6 @@ def install_package(file_name=None, file_object=None):
             elif os.path.exists(path):
                 raise PackageException("File conflict: %s already existing." % path)
 
-
     # Now install files, but only unpack files explicitely listed
     for part, title, directory in get_package_parts() + config_parts:
         filenames = package["files"].get(part, [])
@@ -558,8 +563,8 @@ def install_package(file_name=None, file_object=None):
 
             tarsource = tar.extractfile(part + ".tar")
 
-            tardest = subprocess.Popen(["tar", "xf", "-", "-C", directory] + filenames,
-                                       stdin=subprocess.PIPE)
+            tardest = subprocess.Popen(
+                ["tar", "xf", "-", "-C", directory] + filenames, stdin=subprocess.PIPE)
             while True:
                 data = tarsource.read(4096)
                 if not data:
@@ -575,12 +580,12 @@ def install_package(file_name=None, file_object=None):
                 desired_perm = _get_permissions(path)
                 has_perm = os.stat(path).st_mode & 07777
                 if has_perm != desired_perm:
-                    logger.verbose("    Fixing permissions of %s: %04o -> %04o", path, has_perm, desired_perm)
+                    logger.verbose("    Fixing permissions of %s: %04o -> %04o", path, has_perm,
+                                   desired_perm)
                     os.chmod(path, desired_perm)
 
             if part == 'ec_rule_packs':
                 cmk.ec.export.add_rule_pack_proxies(filenames)
-
 
     # In case of an update remove files from old_package not present in new one
     if update:
@@ -615,7 +620,7 @@ def verify_check_mk_version(package):
     if cmk_base.utils.is_daily_build_version(min_version):
         min_branch = cmk_base.utils.branch_of_daily_build(min_version)
         if min_branch == "master":
-            return # can not check exact version
+            return  # can not check exact version
         else:
             # use the branch name (e.g. 1.2.8 as min version)
             min_version = min_branch
@@ -623,7 +628,7 @@ def verify_check_mk_version(package):
     if cmk_base.utils.is_daily_build_version(cmk_version):
         branch = cmk_base.utils.branch_of_daily_build(cmk_version)
         if branch == "master":
-            return # can not check exact version
+            return  # can not check exact version
         else:
             # use the branch name (e.g. 1.2.8 as min version)
             cmk_version = branch
@@ -643,19 +648,19 @@ def verify_check_mk_version(package):
                                "but you have %s installed." % (min_version, cmk_version))
 
 
-def files_in_dir(part, directory, prefix = ""):
+def files_in_dir(part, directory, prefix=""):
     if directory == None or not os.path.exists(directory):
         return []
 
     # Handle case where one part-directory lies below another
-    taboo_dirs = [ d for p, _unused_t, d in get_package_parts() + config_parts if p != part ]
+    taboo_dirs = [d for p, _unused_t, d in get_package_parts() + config_parts if p != part]
     if directory in taboo_dirs:
         return []
 
     result = []
     files = os.listdir(directory)
     for f in files:
-        if f in [ '.', '..' ] or f.startswith('.') or f.endswith('~') or f.endswith(".pyc"):
+        if f in ['.', '..'] or f.startswith('.') or f.endswith('~') or f.endswith(".pyc"):
             continue
 
         ignored = package_ignored_files.get(part, [])
@@ -687,18 +692,17 @@ def package_part_info():
             files = []
 
         part_info[part] = {
-            "title"       : title,
-            "permissions" : map(_get_permissions, [os.path.join(directory, f) for f in files]),
-            "path"        : directory,
-            "files"       : files,
+            "title": title,
+            "permissions": map(_get_permissions, [os.path.join(directory, f) for f in files]),
+            "path": directory,
+            "files": files,
         }
 
     return part_info
 
 
 def unpackaged_files_in_dir(part, directory):
-    return [f for f in files_in_dir(part, directory)
-            if f not in packaged_files_in_dir(part)]
+    return [f for f in files_in_dir(part, directory) if f not in packaged_files_in_dir(part)]
 
 
 def packaged_files_in_dir(part):
@@ -713,14 +717,15 @@ def packaged_files_in_dir(part):
 def read_package_info(pacname):
     try:
         package = parse_package_info(file(pac_dir + pacname).read())
-        package["name"] = pacname # do not trust package content
-        num_files = sum([len(fl) for fl in package["files"].values() ])
+        package["name"] = pacname  # do not trust package content
+        num_files = sum([len(fl) for fl in package["files"].values()])
         package["num_files"] = num_files
         return package
     except IOError:
         return None
     except Exception:
-        logger.verbose("Ignoring invalid package file '%s%s'. Please remove it from %s!", pac_dir, pacname, pac_dir)
+        logger.verbose("Ignoring invalid package file '%s%s'. Please remove it from %s!", pac_dir,
+                       pacname, pac_dir)
         return None
 
 

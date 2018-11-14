@@ -625,6 +625,7 @@ def _discovery_filter_by_lists(hostname, check_plugin_name, item, whitelist, bla
     return whitelist.match(description) is not None and\
         blacklist.match(description) is None
 
+
 #.
 #   .--Helpers-------------------------------------------------------------.
 #   |                  _   _      _                                        |

@@ -289,6 +289,7 @@ def _gather_snmp_check_plugin_names_inventory(access_data,
 def _get_inv_params(hostname, section_name):
     return config.host_extra_conf_merged(hostname, config.inv_parameters.get(section_name, []))
 
+
 #.
 #   .--Inventory Tree------------------------------------------------------.
 #   |  ___                      _                     _____                |
@@ -378,6 +379,7 @@ def _run_inventory_export_hooks(hostname, inventory_tree):
             if cmk.debug.enabled():
                 raise
             raise MKGeneralException("Failed to execute export hook %s: %s" % (hookname, e))
+
 
 #.
 #   .--Plugin API----------------------------------------------------------.

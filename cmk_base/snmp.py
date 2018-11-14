@@ -55,7 +55,6 @@ _g_single_oid_ipaddress = None
 _g_single_oid_cache = None
 _g_walk_cache = {}
 
-
 #.
 #   .--caching-------------------------------------------------------------.
 #   |                                _     _                               |
@@ -682,6 +681,7 @@ def _get_stored_snmpwalk(hostname, oid):
         return [rowinfo[0]]
 
     return rowinfo
+
 
 #.
 #   .--Main modes----------------------------------------------------------.

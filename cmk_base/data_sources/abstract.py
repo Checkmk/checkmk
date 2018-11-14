@@ -395,7 +395,6 @@ class DataSource(object):
         """Provides exceptions happened during last self.run() call or None"""
         return self._exception
 
-
     #.
     #   .--PersistedCache------------------------------------------------------.
     #   |  ____               _     _           _  ____           _            |

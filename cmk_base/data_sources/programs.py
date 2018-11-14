@@ -123,7 +123,6 @@ class ProgramDataSource(CheckMKAgentDataSource):
         return "\n".join(response)
 
 
-
 class DSProgramDataSource(ProgramDataSource):
     def __init__(self, hostname, ipaddress, command_template):
         super(DSProgramDataSource, self).__init__(hostname, ipaddress)
@@ -163,6 +162,7 @@ class DSProgramDataSource(ProgramDataSource):
 
 
 SpecialAgentConfiguration = collections.namedtuple("SpecialAgentConfiguration", ["args", "stdin"])
+
 
 class SpecialAgentDataSource(ProgramDataSource):
     def __init__(self, hostname, ipaddress, special_agent_id, params):

@@ -26,16 +26,16 @@
 
 
 def parse_printer_pages(info):
-    return { 'pages_total' : int(info[0][0]) }
+    return {'pages_total': int(info[0][0])}
 
 
 check_info["printer_pages"] = {
-    'parse_function'        : parse_printer_pages,
-    'inventory_function'    : inventory_printer_pages_types,
-    'check_function'        : check_printer_pages_types,
-    'service_description'   : 'Pages',
-    'has_perfdata'          : True,
-    'snmp_scan_function'    : scan_generic_printer,
-    'snmp_info'             : ('.1.3.6.1.2.1.43.10.2.1.4.1', [ 1 ]),
-    'includes'              : [ 'printer_pages.include' ],
+    'parse_function': parse_printer_pages,
+    'inventory_function': inventory_printer_pages_types,
+    'check_function': check_printer_pages_types,
+    'service_description': 'Pages',
+    'has_perfdata': True,
+    'snmp_scan_function': scan_generic_printer,
+    'snmp_info': ('.1.3.6.1.2.1.43.10.2.1.4.1', [1]),
+    'includes': ['printer_pages.include'],
 }

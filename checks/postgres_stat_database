@@ -24,7 +24,6 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-
 # <<<postgres_stat_database>>>
 # datid datname numbackends xact_commit xact_rollback blks_read blks_hit tup_returned tup_fetched tup_inserted tup_updated tup_deleted
 # 1 template1 0 0 0 0 0 0 0 0 0 0
@@ -65,8 +64,7 @@ def parse_postgres_stat_database(info):
 # Create a check for all databases that have seen at least
 # one commit in their live.
 def inventory_postgres_stat_database(parsed):
-    return [ (k, {}) for k in parsed.keys()
-             if parsed[k]["xact_commit"] > 0 ]
+    return [(k, {}) for k in parsed.keys() if parsed[k]["xact_commit"] > 0]
 
 
 def check_postgres_stat_database(item, params, parsed):
@@ -79,12 +77,13 @@ def check_postgres_stat_database(item, params, parsed):
     perfdata = []
     this_time = time.time()
     for what, title in [
-        ( "blks_read",    "Blocks Read" ),
-        ( "tup_fetched",  "Fetches" ),
-        ( "xact_commit",  "Commits" ),
-        ( "tup_deleted",  "Deletes" ),
-        ( "tup_updated",  "Updates" ),
-        ( "tup_inserted", "Inserts" ), ]:
+        ("blks_read", "Blocks Read"),
+        ("tup_fetched", "Fetches"),
+        ("xact_commit", "Commits"),
+        ("tup_deleted", "Deletes"),
+        ("tup_updated", "Updates"),
+        ("tup_inserted", "Inserts"),
+    ]:
         rate = get_rate("postgres_stat_database.%s.%s" % (item, what), this_time, stats[what])
         infos.append("%s: %.2f/s" % (title, rate))
         if what in params:
@@ -102,12 +101,12 @@ def check_postgres_stat_database(item, params, parsed):
 
 
 check_info['postgres_stat_database'] = {
-    "parse_function"          : parse_postgres_stat_database,
-    "inventory_function"      : inventory_postgres_stat_database,
-    "check_function"          : check_postgres_stat_database,
-    "service_description"     : "PostgreSQL DB %s Statistics" ,
-    "has_perfdata"            : True,
-    "group"                   : "postgres_stat_database",
+    "parse_function": parse_postgres_stat_database,
+    "inventory_function": inventory_postgres_stat_database,
+    "check_function": check_postgres_stat_database,
+    "service_description": "PostgreSQL DB %s Statistics",
+    "has_perfdata": True,
+    "group": "postgres_stat_database",
 }
 
 
@@ -124,8 +123,8 @@ def check_postgres_stat_database_size(item, _no_params, parsed):
 
 
 check_info['postgres_stat_database.size'] = {
-    "check_function"          : check_postgres_stat_database_size,
-    "inventory_function"      : inventory_postgres_stat_database,
-    "service_description"     : "PostgreSQL DB %s Size",
-    "has_perfdata"            : True,
+    "check_function": check_postgres_stat_database_size,
+    "inventory_function": inventory_postgres_stat_database,
+    "service_description": "PostgreSQL DB %s Size",
+    "has_perfdata": True,
 }

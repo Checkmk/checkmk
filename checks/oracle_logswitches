@@ -42,9 +42,10 @@ def inventory_oracle_logswitches(info):
 def check_oracle_logswitches(item, params, info):
 
     if isinstance(params, tuple):
-        params = {'levels': (params[2], params [3]),
-                  'levels_lower': (params[1], params[0]),
-                 }
+        params = {
+            'levels': (params[2], params[3]),
+            'levels_lower': (params[1], params[0]),
+        }
 
     for line in info:
         if line[0] == item:
@@ -73,11 +74,11 @@ def check_oracle_logswitches(item, params, info):
 
 
 check_info["oracle_logswitches"] = {
-    'check_function':          check_oracle_logswitches,
-    'inventory_function':      inventory_oracle_logswitches,
-    'service_description':     'ORA %s Logswitches',
-    'has_perfdata':            True,
-    'group':                   'oracle_logswitches',
+    'check_function': check_oracle_logswitches,
+    'inventory_function': inventory_oracle_logswitches,
+    'service_description': 'ORA %s Logswitches',
+    'has_perfdata': True,
+    'group': 'oracle_logswitches',
     'default_levels_variable': 'oracle_logswitches_default_levels',
-    'includes':                ['oracle.include'],
+    'includes': ['oracle.include'],
 }

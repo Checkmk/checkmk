@@ -86,11 +86,11 @@ def check_postgres_locks(item, params, parsed):
 
 
 check_info['postgres_locks'] = {
-    "parse_function"          : parse_postgres_dbs,
-    "check_function"          : check_postgres_locks,
-    "inventory_function"      : inventory_postgres_locks,
-    "service_description"     : "PostgreSQL Locks %s",
-    "has_perfdata"            : True,
-    "group"                   : "postgres_locks",
-    "includes"                : [ "postgres.include" ],
+    "parse_function": parse_postgres_dbs,
+    "check_function": check_postgres_locks,
+    "inventory_function": inventory_postgres_locks,
+    "service_description": "PostgreSQL Locks %s",
+    "has_perfdata": True,
+    "group": "postgres_locks",
+    "includes": ["postgres.include"],
 }

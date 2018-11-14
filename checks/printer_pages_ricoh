@@ -24,7 +24,6 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-
 # 1.3.6.1.4.1.367.3.2.1.2.19.5.1.5.1 Counter: Machine Total
 # 1.3.6.1.4.1.367.3.2.1.2.19.5.1.9.1 98040
 # 1.3.6.1.4.1.367.3.2.1.2.19.5.1.5.21 Total Prints: Color
@@ -48,12 +47,12 @@ def parse_printer_pages_ricoh(info):
 
 
 check_info["printer_pages_ricoh"] = {
-    'parse_function'        : parse_printer_pages_ricoh,
-    'inventory_function'    : inventory_printer_pages_types,
-    'check_function'        : check_printer_pages_types,
-    'service_description'   : 'Pages',
-    'has_perfdata'          : True,
-    'snmp_info'             : (".1.3.6.1.4.1.367.3.2.1.2.19.5.1", [ 5, 9 ]),
-    'snmp_scan_function'    : scan_ricoh_printer,
-    'includes'              : [ 'printer_pages.include' ],
+    'parse_function': parse_printer_pages_ricoh,
+    'inventory_function': inventory_printer_pages_types,
+    'check_function': check_printer_pages_types,
+    'service_description': 'Pages',
+    'has_perfdata': True,
+    'snmp_info': (".1.3.6.1.4.1.367.3.2.1.2.19.5.1", [5, 9]),
+    'snmp_scan_function': scan_ricoh_printer,
+    'includes': ['printer_pages.include'],
 }

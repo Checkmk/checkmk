@@ -43,7 +43,7 @@ def parse_ovs_bonding(info):
     for line in info:
         if line[0][0] == '[':
             bond = line[0][1:-1]
-            bonds[bond] = {"active" : None}
+            bonds[bond] = {"active": None}
         elif len(line) == 2:
             left = line[0]
             right = line[1].strip()
@@ -51,7 +51,7 @@ def parse_ovs_bonding(info):
                 bonds[bond].setdefault("interfaces", {})
                 eth = left.split()[1]
                 bonds[bond]["interfaces"][eth] = {
-                    "status" : right == "enabled" and "up" or right,
+                    "status": right == "enabled" and "up" or right,
                 }
                 last_interface = eth
             else:
@@ -70,21 +70,21 @@ def parse_ovs_bonding(info):
                 break
 
         parsed[bond] = {
-            "status"     : all_down and "down" or "up",
-            "active"     : status["active"],
-            "mode"       : status["bond_mode"],
-            "interfaces" : status["interfaces"],
+            "status": all_down and "down" or "up",
+            "active": status["active"],
+            "mode": status["bond_mode"],
+            "interfaces": status["interfaces"],
         }
 
     return parsed
 
 
 check_info['ovs_bonding'] = {
-    "parse_function"          : parse_ovs_bonding,
-    "check_function"          : check_bonding,
-    "inventory_function"      : inventory_bonding,
-    "service_description"     : "Bonding Interface %s",
-    "default_levels_variable" : "bonding_default_levels",
-    "group"                   : "bonding",
-    "includes"                : [ "bonding.include" ],
+    "parse_function": parse_ovs_bonding,
+    "check_function": check_bonding,
+    "inventory_function": inventory_bonding,
+    "service_description": "Bonding Interface %s",
+    "default_levels_variable": "bonding_default_levels",
+    "group": "bonding",
+    "includes": ["bonding.include"],
 }

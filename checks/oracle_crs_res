@@ -45,6 +45,7 @@
 # ezszds8c|TARGET=ONLINE
 # ...usw...
 
+
 # Parse output into dict of dicts of dicts:
 # nodename -> ressource name -> entry
 # ressource. Example:
@@ -58,7 +59,7 @@
 # Returns a pair of CRS node name and the former dict
 def parse_oracle_crs_res(info):
     crs_nodename = None
-    ressources   = {}
+    ressources = {}
     for nodename, varsetting in info:
         if nodename == "nodename":
             crs_nodename = varsetting
@@ -76,7 +77,7 @@ def parse_oracle_crs_res(info):
 
 
 def inventory_oracle_crs_res(parsed):
-    return [ (name, None) for name in parsed[1] ]
+    return [(name, None) for name in parsed[1]]
 
 
 def get_oracle_crs_runninginfo(item, data):
@@ -109,11 +110,12 @@ def check_oracle_crs_res(item, _no_params, parsed):
         elif item == 'ora.crsd':
             yield 2, "Cluster Resource Service Daemon not running!"
         else:
-            raise MKCounterWrapped("No ressource details found for %s. Maybe the cssd/crsd is not running" % item)
+            raise MKCounterWrapped(
+                "No ressource details found for %s. Maybe the cssd/crsd is not running" % item)
         return
 
     for nodename, entry in ressources[item].items():
-        resstate  = entry["state"].split(' ', 1)[0]
+        resstate = entry["state"].split(' ', 1)[0]
         restarget = entry["target"]
 
         if nodename == "csslocal":
@@ -130,11 +132,10 @@ def check_oracle_crs_res(item, _no_params, parsed):
         yield state, infotext
 
 
-
 check_info['oracle_crs_res'] = {
-    "parse_function"          : parse_oracle_crs_res,
-    "check_function"          : check_oracle_crs_res,
-    "inventory_function"      : inventory_oracle_crs_res,
-    "service_description"     : "ORA-GI %s Resource",
-    "group"                   : "oracle_crs_res",
+    "parse_function": parse_oracle_crs_res,
+    "check_function": check_oracle_crs_res,
+    "inventory_function": inventory_oracle_crs_res,
+    "service_description": "ORA-GI %s Resource",
+    "group": "oracle_crs_res",
 }

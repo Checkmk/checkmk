@@ -41,8 +41,10 @@
 # PV|PV|PRIMARY|READ WRITE|400|||ONLINE|||0
 # PV|PV|PRIMARY|READ WRITE|401|||ONLINE|||0
 
+
 def inventory_oracle_recovery_status(info):
-    return [ ( line[0], {} ) for line in info ]
+    return [(line[0], {}) for line in info]
+
 
 def check_oracle_recovery_status(item, params, info):
     state = 0
@@ -141,7 +143,8 @@ def check_oracle_recovery_status(item, params, info):
                     infotext += '(!)'
                     state = max(1, state)
 
-            infotext += ' (warn/crit at %s/%s )' % (get_age_human_readable(warn), get_age_human_readable(crit))
+            infotext += ' (warn/crit at %s/%s )' % (get_age_human_readable(warn),
+                                                    get_age_human_readable(crit))
 
         if offlinecount > 0:
             infotext += " %i datafiles offline(!!)" \
@@ -160,7 +163,8 @@ def check_oracle_recovery_status(item, params, info):
             if params.get("backup_age"):
 
                 warn, crit = params["backup_age"]
-                infotext += " (warn/crit at %s/%s)" % (get_age_human_readable(warn), get_age_human_readable(crit))
+                infotext += " (warn/crit at %s/%s)" % (get_age_human_readable(warn),
+                                                       get_age_human_readable(crit))
                 perfdata.append(('backup_age', oldest_backup_age, warn, crit))
 
                 if oldest_backup_age >= crit:
@@ -177,7 +181,6 @@ def check_oracle_recovery_status(item, params, info):
             # => The age from plugin is only valid when a datafile is in backup mode!
             perfdata.append(('backup_age', 0))
 
-
         return state, infotext, perfdata
 
     # In case of missing information we assume that the login into
@@ -187,9 +190,9 @@ def check_oracle_recovery_status(item, params, info):
 
 
 check_info['oracle_recovery_status'] = {
-    "check_function"          : check_oracle_recovery_status,
-    "inventory_function"      : inventory_oracle_recovery_status,
-    "service_description"     : "ORA %s Recovery Status",
-    "has_perfdata"            : True,
-    "group"                   : "oracle_recovery_status",
+    "check_function": check_oracle_recovery_status,
+    "inventory_function": inventory_oracle_recovery_status,
+    "service_description": "ORA %s Recovery Status",
+    "has_perfdata": True,
+    "group": "oracle_recovery_status",
 }

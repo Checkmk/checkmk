@@ -24,6 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+
 def inventory_pfsense_status(info):
     if info:
         return [(None, None)]
@@ -40,14 +41,16 @@ def check_pfsense_status(_no_item, params, info):
 
 
 check_info["pfsense_status"] = {
-    "inventory_function"        : inventory_pfsense_status,
-    "check_function"            : check_pfsense_status,
-    "service_description"       : "pfSense Status",
-    "snmp_info"                 : (".1.3.6.1.4.1.12325.1.200.1", [
-                                    "1.1", # pfStatusRunning
-                                  #  "1.2", # pfStatusRuntime
-                                  #  "1.3", # pfStatusDebug
-                                  #  "1.4", # pfStatusHostId
-                                    ]),
-    "snmp_scan_function"        : lambda oid: "pfsense" in oid(".1.3.6.1.2.1.1.1.0").lower(),
+    "inventory_function": inventory_pfsense_status,
+    "check_function": check_pfsense_status,
+    "service_description": "pfSense Status",
+    "snmp_info": (
+        ".1.3.6.1.4.1.12325.1.200.1",
+        [
+            "1.1",  # pfStatusRunning
+            #  "1.2", # pfStatusRuntime
+            #  "1.3", # pfStatusDebug
+            #  "1.4", # pfStatusHostId
+        ]),
+    "snmp_scan_function": lambda oid: "pfsense" in oid(".1.3.6.1.2.1.1.1.0").lower(),
 }

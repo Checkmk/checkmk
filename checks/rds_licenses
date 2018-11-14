@@ -24,7 +24,6 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-
 # <<<rds_licenses:sep(44)>>>
 # KeyPackId,Description,KeyPackType,ProductType,ProductVersion,ProductVersionID,TotalLicenses,IssuedLi...
 # 13,A02-6.00-S,4,0,Windows Server 2008 oder Windows Server 2008 R2,2,-1,100,-1,20380119031407.000000-000
@@ -36,16 +35,16 @@
 # 18,A02-6.00-S,2,0,Windows Server 2008 oder Windows Server 2008 R2,2,65,22,43,20380101083530.000000-000
 # 19,A02-6.00-S,2,0,Windows Server 2008 oder Windows Server 2008 R2,2,600,0,600,20380101083248.000000-000
 
-
 # Insert any new keys here
 # https://msdn.microsoft.com/en-us/library/aa383803%28v=vs.85%29.aspx#properties
 rds_licenses_product_versionid_map = {
     "4": "Windows Server 2012",
     "3": "Windows Server 2008 R2",
     "2": "Windows Server 2008"
-#1    Not supported.
-#0    Not supported.
+    #1    Not supported.
+    #0    Not supported.
 }
+
 
 def parse_rds_licenses(info):
     parsed = {}
@@ -60,9 +59,11 @@ def parse_rds_licenses(info):
         parsed[version].append(data)
     return parsed
 
+
 def inventory_rds_licenses(parsed):
     for key in parsed:
         yield key, None
+
 
 def check_rds_licenses(item, params, parsed):
     license_pack = parsed.get(item)
@@ -70,21 +71,22 @@ def check_rds_licenses(item, params, parsed):
         return
 
     total = 0
-    used  = 0
+    used = 0
     for pack in license_pack:
         pack_total = int(pack.get("TotalLicenses"))
         pack_avail = int(pack.get("AvailableLicenses"))
         total += pack_total
-        used  += pack_total - pack_avail
+        used += pack_total - pack_avail
 
     return license_check_levels(total, used, params)
 
+
 check_info['rds_licenses'] = {
-    'parse_function'            : parse_rds_licenses,
-    'inventory_function'        : inventory_rds_licenses,
-    'check_function'            : check_rds_licenses,
-    'service_description'       : "RDS Licenses %s",
-    'group'                     : "rds_licenses",
-    'has_perfdata'              : True,
-    'includes'                  : ['license.include'],
+    'parse_function': parse_rds_licenses,
+    'inventory_function': inventory_rds_licenses,
+    'check_function': check_rds_licenses,
+    'service_description': "RDS Licenses %s",
+    'group': "rds_licenses",
+    'has_perfdata': True,
+    'includes': ['license.include'],
 }

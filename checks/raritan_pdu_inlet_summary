@@ -24,13 +24,14 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+
 def parse_raritan_pdu_inlet_summary(info):
     summary = {}
     for sensor_type, decimal_digits, availability, sensor_state, value in info:
         if availability == '1':
-            if sensor_type in raritan_map_type:                 # handled sensor types
-                key, _key_info = raritan_map_type[sensor_type]   # get key for elphase.include
-                value = float(value) / 10 ** int(decimal_digits)
+            if sensor_type in raritan_map_type:  # handled sensor types
+                key, _key_info = raritan_map_type[sensor_type]  # get key for elphase.include
+                value = float(value) / 10**int(decimal_digits)
                 state, state_info = raritan_map_state[sensor_state]
 
                 if state > 0:
@@ -38,24 +39,25 @@ def parse_raritan_pdu_inlet_summary(info):
                 else:
                     summary[key] = (value, None)
 
-    return { "Summary" : summary }
+    return {"Summary": summary}
 
 
 check_info['raritan_pdu_inlet_summary'] = {
-    "parse_function"      : parse_raritan_pdu_inlet_summary,
-    "inventory_function"  : inventory_elphase,
-    "check_function"      : check_elphase,
-    "service_description" : "Input %s",
-    "has_perfdata"        : True,
-    "group"               : "el_inphase",
-    "snmp_info"           : ( ".1.3.6.1.4.1.13742.6", [
-                                  OID_END,
-                                  "3.3.4.1.7.1.1", # inletDecimalDigits value
-                                  "5.2.3.1.2.1.1", # inlet sensor availability
-                                  "5.2.3.1.3.1.1", # inlet sensor state
-                                  "5.2.3.1.4.1.1", # inlet sensor value
-                            ]),
-    "snmp_scan_function"  : lambda oid: oid(".1.3.6.1.2.1.1.2.0") == ".1.3.6.1.4.1.13742.6",
-    "includes"            : [ 'raritan.include', 'elphase.include' ]
+    "parse_function": parse_raritan_pdu_inlet_summary,
+    "inventory_function": inventory_elphase,
+    "check_function": check_elphase,
+    "service_description": "Input %s",
+    "has_perfdata": True,
+    "group": "el_inphase",
+    "snmp_info": (
+        ".1.3.6.1.4.1.13742.6",
+        [
+            OID_END,
+            "3.3.4.1.7.1.1",  # inletDecimalDigits value
+            "5.2.3.1.2.1.1",  # inlet sensor availability
+            "5.2.3.1.3.1.1",  # inlet sensor state
+            "5.2.3.1.4.1.1",  # inlet sensor value
+        ]),
+    "snmp_scan_function": lambda oid: oid(".1.3.6.1.2.1.1.2.0") == ".1.3.6.1.4.1.13742.6",
+    "includes": ['raritan.include', 'elphase.include']
 }
-

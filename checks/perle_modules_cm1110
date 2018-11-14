@@ -24,24 +24,25 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-
 check_info['perle_modules_cm1110'] = {
-    'inventory_function'    : inventory_perle_cm_modules,
-    'check_function'        : check_perle_cm_modules,
-    'service_description'   : 'Chassis slot %s CM1110',
-    'snmp_info'             : ('.1.3.6.1.4.1.1966.21.1.1.1.1.4.3', [
-                                    "1.1.3",    # PERLE-MCR-MGT-MIB::cm1110Modelname
-                                    "3.1.3",    # PERLE-MCR-MGT-MIB::cm1110LedPWR
-                                    "1.1.2",    # PERLE-MCR-MGT-MIB::cm1110ConfigSlotIndex
-                                    "1.1.21",   # PERLE-MCR-MGT-MIB::cm1110FiberLPRFStatus
-                                    "1.1.15",   # PERLE-MCR-MGT-MIB::cm1110FiberLinkStatus
-                                    "1.1.16",   # PERLE-MCR-MGT-MIB::cm1110FiberConnType
-                                    "1.1.18",   # PERLE-MCR-MGT-MIB::cm1110FiberSpeed
-                                    "1.1.32",   # PERLE-MCR-MGT-MIB::cm1110CopperLPRFStatus
-                                    "1.1.25",   # PERLE-MCR-MGT-MIB::cm1110CopperLinkStatus
-                                    "1.1.26",   # PERLE-MCR-MGT-MIB::cm1110CopperConnType
-                                    "1.1.28",   # PERLE-MCR-MGT-MIB::cm1110CopperSpeed
-                              ]),
-    'snmp_scan_function'    : perle_scan_function,
-    'includes'              : [ 'perle.include' ],
+    'inventory_function': inventory_perle_cm_modules,
+    'check_function': check_perle_cm_modules,
+    'service_description': 'Chassis slot %s CM1110',
+    'snmp_info': (
+        '.1.3.6.1.4.1.1966.21.1.1.1.1.4.3',
+        [
+            "1.1.3",  # PERLE-MCR-MGT-MIB::cm1110Modelname
+            "3.1.3",  # PERLE-MCR-MGT-MIB::cm1110LedPWR
+            "1.1.2",  # PERLE-MCR-MGT-MIB::cm1110ConfigSlotIndex
+            "1.1.21",  # PERLE-MCR-MGT-MIB::cm1110FiberLPRFStatus
+            "1.1.15",  # PERLE-MCR-MGT-MIB::cm1110FiberLinkStatus
+            "1.1.16",  # PERLE-MCR-MGT-MIB::cm1110FiberConnType
+            "1.1.18",  # PERLE-MCR-MGT-MIB::cm1110FiberSpeed
+            "1.1.32",  # PERLE-MCR-MGT-MIB::cm1110CopperLPRFStatus
+            "1.1.25",  # PERLE-MCR-MGT-MIB::cm1110CopperLinkStatus
+            "1.1.26",  # PERLE-MCR-MGT-MIB::cm1110CopperConnType
+            "1.1.28",  # PERLE-MCR-MGT-MIB::cm1110CopperSpeed
+        ]),
+    'snmp_scan_function': perle_scan_function,
+    'includes': ['perle.include'],
 }

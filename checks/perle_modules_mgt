@@ -24,43 +24,49 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-
 # .1.3.6.1.4.1.1966.21.1.1.1.1.4.5.1.1.2.1.1 1 --> PERLE-MCR-MGT-MIB::mcrMgtSlotIndex.1.1
 # .1.3.6.1.4.1.1966.21.1.1.1.1.4.5.1.1.3.1.1 MCR-MGT --> PERLE-MCR-MGT-MIB::mcrMgtModelName.1.1
 # .1.3.6.1.4.1.1966.21.1.1.1.1.4.5.3.1.4.1.1 0 --> PERLE-MCR-MGT-MIB::mcrMgtLedALM.1.1
 
 
 def inventory_perle_modules_mgt(info):
-    return [ (index, None)
-             for index, _name, _descr, _alarm_led, _status in info ]
+    return [(index, None) for index, _name, _descr, _alarm_led, _status in info]
 
 
 def check_perle_modules_mgt(item, _no_params, info):
-    mappings = { "alarm_led" : { "0" : (0, "no alarms"),
-                                 "1" : (2, "alarms present"), },
-                 "power_led" : { "0" : (2, "off"),
-                                 "1" : (0, "on"), }, }
+    mappings = {
+        "alarm_led": {
+            "0": (0, "no alarms"),
+            "1": (2, "alarms present"),
+        },
+        "power_led": {
+            "0": (2, "off"),
+            "1": (0, "on"),
+        },
+    }
 
     for index, _name, _descr, power_led, alarm_led in info:
         if item == index:
-            for title, value, key in [ ("Alarm LED", alarm_led, "alarm_led"),
-                                       ("Power LED", power_led, "power_led") ]:
+            for title, value, key in [("Alarm LED", alarm_led, "alarm_led"),
+                                      ("Power LED", power_led, "power_led")]:
                 state, state_readable = mappings[key][value]
                 yield state, "%s: %s" % (title, state_readable)
 
 
 check_info['perle_modules_mgt'] = {
-    'inventory_function'    : inventory_perle_modules_mgt,
-    'check_function'        : check_perle_modules_mgt,
-    'service_description'   : 'Chassis slot %s MGT',
+    'inventory_function': inventory_perle_modules_mgt,
+    'check_function': check_perle_modules_mgt,
+    'service_description': 'Chassis slot %s MGT',
     # If you change snmp info please adapt the related inventory plugin
-    'snmp_info'             : ('.1.3.6.1.4.1.1966.21.1.1.1.1.4.5', [
-                                    "1.1.2",    # PERLE-MCR-MGT-MIB::mcrMgtSlotIndex
-                                    "1.1.3",    # PERLE-MCR-MGT-MIB::mcrMgtModelName.
-                                    "1.1.4",    # PERLE-MCR-MGT-MIB::mcrMgtModelDesc
-                                    "3.1.3",    # PERLE-MCR-MGT-MIB::mcrMgtLedPWR
-                                    "3.1.4",    # PERLE-MCR-MGT-MIB::mcrMgtLedALM
-                              ]),
-    'snmp_scan_function'    : perle_scan_function,
-    'includes'              : [ 'perle.include' ],
+    'snmp_info': (
+        '.1.3.6.1.4.1.1966.21.1.1.1.1.4.5',
+        [
+            "1.1.2",  # PERLE-MCR-MGT-MIB::mcrMgtSlotIndex
+            "1.1.3",  # PERLE-MCR-MGT-MIB::mcrMgtModelName.
+            "1.1.4",  # PERLE-MCR-MGT-MIB::mcrMgtModelDesc
+            "3.1.3",  # PERLE-MCR-MGT-MIB::mcrMgtLedPWR
+            "3.1.4",  # PERLE-MCR-MGT-MIB::mcrMgtLedALM
+        ]),
+    'snmp_scan_function': perle_scan_function,
+    'includes': ['perle.include'],
 }

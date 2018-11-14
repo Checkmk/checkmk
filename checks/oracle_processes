@@ -33,12 +33,14 @@
 # Columns: SID PROCESSES_COUNT PROCESSES_LIMIT
 
 factory_settings["oracle_processes_defaults"] = {
-    "levels" : (70.0, 90.0),
+    "levels": (70.0, 90.0),
 }
+
 
 def inventory_oracle_processes(info):
 
-    return [ ( line[0], {} ) for line in info ]
+    return [(line[0], {}) for line in info]
+
 
 def check_oracle_processes(item, params, info):
     for line in info:
@@ -75,11 +77,11 @@ def check_oracle_processes(item, params, info):
 
 
 check_info['oracle_processes'] = {
-    "check_function"          : check_oracle_processes,
-    "inventory_function"      : inventory_oracle_processes,
-    "service_description"     : "ORA %s Processes",
-    "has_perfdata"            : True,
-    "default_levels_variable" : "oracle_processes_defaults",
-    "group"                   : "oracle_processes",
-    "includes"                : ["oracle.include"],
+    "check_function": check_oracle_processes,
+    "inventory_function": inventory_oracle_processes,
+    "service_description": "ORA %s Processes",
+    "has_perfdata": True,
+    "default_levels_variable": "oracle_processes_defaults",
+    "group": "oracle_processes",
+    "includes": ["oracle.include"],
 }

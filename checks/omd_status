@@ -40,9 +40,11 @@
 # crontab 1
 # OVERALL 2
 
+
 def inventory_omd_status(info):
     for site in info.keys():
         yield site, None
+
 
 def parse_omd_status(info):
     active = False
@@ -85,7 +87,6 @@ def check_omd_status(item, _no_params, parsed):
         if "overall" in services and services["overall"] == "stopped":
             stopped_nodes += 1
 
-
     # stopped sites are only CRIT when all are stopped
     if stopped_nodes == number_nodes:
         state = 2
@@ -116,9 +117,9 @@ def check_omd_status(item, _no_params, parsed):
 
 
 check_info["omd_status"] = {
-    'check_function'      : check_omd_status,
-    'inventory_function'  : inventory_omd_status,
-    'parse_function'      : parse_omd_status,
-    'service_description' : 'OMD %s status',
-    'node_info'           : True,
+    'check_function': check_omd_status,
+    'inventory_function': inventory_omd_status,
+    'parse_function': parse_omd_status,
+    'service_description': 'OMD %s status',
+    'node_info': True,
 }

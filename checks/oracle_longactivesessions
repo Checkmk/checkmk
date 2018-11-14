@@ -31,12 +31,12 @@
 # ORACLE_SID serial# machine process osuser program last_call_el sql_id
 
 factory_settings["oracle_longactivesessions_defaults"] = {
-    "levels"         : (500, 1000),
+    "levels": (500, 1000),
 }
 
 
 def inventory_oracle_longactivesessions(info):
-    return [ (line[0], {}) for line in info ]
+    return [(line[0], {}) for line in info]
 
 
 def check_oracle_longactivesessions(item, params, info):
@@ -91,10 +91,10 @@ def check_oracle_longactivesessions(item, params, info):
 
 
 check_info['oracle_longactivesessions'] = {
-    "check_function"          : check_oracle_longactivesessions,
-    "inventory_function"      : inventory_oracle_longactivesessions,
-    "service_description"     : "ORA %s Long Active Sessions",
-    "has_perfdata"            : True,
-    "default_levels_variable" : "oracle_longactivesessions_defaults",
-    "group"                   : "oracle_longactivesessions",
+    "check_function": check_oracle_longactivesessions,
+    "inventory_function": inventory_oracle_longactivesessions,
+    "service_description": "ORA %s Long Active Sessions",
+    "has_perfdata": True,
+    "default_levels_variable": "oracle_longactivesessions_defaults",
+    "group": "oracle_longactivesessions",
 }

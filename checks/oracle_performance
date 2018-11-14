@@ -77,13 +77,13 @@ def inventory_oracle_performance(parsed):
 
 def check_oracle_performance(item, _no_params, parsed):
     map_db_time_vars = {
-        "DB CPU"  : "oracle_db_cpu",
-        "DB time" : "oracle_db_time",
+        "DB CPU": "oracle_db_cpu",
+        "DB time": "oracle_db_time",
     }
 
     if item in parsed:
-        data     = parsed[item]
-        now      = time.time()
+        data = parsed[item]
+        now = time.time()
         perfdata = []
 
         infotexts = []
@@ -106,32 +106,30 @@ def check_oracle_performance(item, _no_params, parsed):
                 physical_writes, free_buffer_wait, buffer_busy_wait = \
                 buffer_pool_stats["DEFAULT"]
 
-            for what, val in [
-                ('oracle_db_block_gets',    db_block_gets),
-                ('oracle_db_block_change',  db_block_change),
-                ('oracle_consistent_gets',  consistent_gets),
-                ('oracle_physical_reads',   physical_reads),
-                ('oracle_physical_writes',  physical_writes),
-                ('oracle_free_buffer_wait', free_buffer_wait),
-                ('oracle_buffer_busy_wait', buffer_busy_wait)]:
+            for what, val in [('oracle_db_block_gets', db_block_gets),
+                              ('oracle_db_block_change', db_block_change),
+                              ('oracle_consistent_gets', consistent_gets),
+                              ('oracle_physical_reads', physical_reads),
+                              ('oracle_physical_writes', physical_writes),
+                              ('oracle_free_buffer_wait', free_buffer_wait),
+                              ('oracle_buffer_busy_wait', buffer_busy_wait)]:
                 rate = get_rate("oracle_perf.%s.buffer_pool_statistics.%s" % (item, what), now, val)
                 perfdata.append((what, rate))
 
             if db_block_gets + consistent_gets > 0:
-                hit_ratio = (1 - (float(physical_reads) / (float(db_block_gets) + float(consistent_gets)))) * 100
+                hit_ratio = (1 - (float(physical_reads) /
+                                  (float(db_block_gets) + float(consistent_gets)))) * 100
                 yield 0, "Buffer hit ratio: %.1f%%" % hit_ratio, \
                       [('oracle_buffer_hit_ratio', hit_ratio)]
 
-        pins_sum     = 0
+        pins_sum = 0
         pin_hits_sum = 0
         for what, vals in data["librarycache"].items():
             _gets, _gethits, pins, pin_hits, _reloads, _invalidations = vals
-            pins_sum     += pins
+            pins_sum += pins
             pin_hits_sum += pin_hits
 
-        for what, val in [
-            ("oracle_pins_sum",     pins_sum),
-            ("oracle_pin_hits_sum", pin_hits_sum)]:
+        for what, val in [("oracle_pins_sum", pins_sum), ("oracle_pin_hits_sum", pin_hits_sum)]:
             rate = get_rate("oracle_perf.%s.librarycache.%s" % (item, what), now, val)
             perfdata.append((what, rate))
 
@@ -150,9 +148,9 @@ def check_oracle_performance(item, _no_params, parsed):
 
 
 check_info['oracle_performance'] = {
-    "parse_function"          : parse_oracle_performance,
-    "inventory_function"      : inventory_oracle_performance,
-    "check_function"          : check_oracle_performance,
-    "service_description"     : "ORA %s Performance",
-    "has_perfdata"            : True,
+    "parse_function": parse_oracle_performance,
+    "inventory_function": inventory_oracle_performance,
+    "check_function": check_oracle_performance,
+    "service_description": "ORA %s Performance",
+    "has_perfdata": True,
 }

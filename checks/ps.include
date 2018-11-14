@@ -105,8 +105,8 @@ def ps_wato_configured_inventory_rules(invrules):
         default_params = v.get('default_params', v)
         default_params['cpu_rescale_max'] = v.get('cpu_rescale_max')
 
-        inventory_specs.append((v['descr'], v.get('match'), v.get('user'),
-                                v.get('icon'), default_params))
+        inventory_specs.append((v['descr'], v.get('match'), v.get('user'), v.get('icon'),
+                                default_params))
 
     return inventory_specs
 
@@ -596,9 +596,10 @@ class ProcessAggregator(object):
             now = time.time()
             creation_time_unix = int(now - elapsed)
             if creation_time_unix != 0:
-                process.append(("creation time",
-                                (get_timestamp_human_readable(creation_time_unix),
-                                 "")))
+                process.append((
+                    "creation time",
+                    (get_timestamp_human_readable(creation_time_unix), ""),
+                ))
 
     def cpu_usage(self, process_info, process):
 

@@ -44,15 +44,14 @@
 # [databases_end]
 # ...
 
-
 factory_settings["postgres_bloat_default_levels"] = {
-    'table_bloat_perc': (180.0, 200.0), # WARN at 180%, CRIT at 200%
+    'table_bloat_perc': (180.0, 200.0),  # WARN at 180%, CRIT at 200%
     'index_bloat_perc': (180.0, 200.0)
 }
 
 
 def inventory_postgres_bloat(parsed):
-    return [ (entry, {}) for entry, values in parsed.items() if values ]
+    return [(entry, {}) for entry, values in parsed.items() if values]
 
 
 def check_postgres_bloat(item, params, parsed):
@@ -64,18 +63,18 @@ def check_postgres_bloat(item, params, parsed):
         raise MKCounterWrapped("Login into database failed")
 
     table_perc_max = None
-    table_abs_max  = None
+    table_abs_max = None
     index_perc_max = None
-    index_abs_max  = None
+    index_abs_max = None
 
-    table_abs_total  = 0
-    index_abs_total  = 0
+    table_abs_total = 0
+    index_abs_total = 0
 
     show_levels = False
     for line in database:
-        tbloat  = float(line["tbloat"])
+        tbloat = float(line["tbloat"])
         twasted = int(line["wastedbytes"])
-        ibloat  = float(line["ibloat"])
+        ibloat = float(line["ibloat"])
         iwasted = int(line["wastedibytes"])
 
         table_abs_total += twasted
@@ -85,14 +84,13 @@ def check_postgres_bloat(item, params, parsed):
         if not table_perc_max or tbloat > float(table_perc_max["tbloat"]):
             table_perc_max = line
         if not table_abs_max or twasted > int(table_abs_max["wastedbytes"]):
-            table_abs_max  = line
+            table_abs_max = line
         if not index_perc_max or ibloat > float(index_perc_max["ibloat"]):
             index_perc_max = line
         if not index_abs_max or iwasted > int(index_abs_max["wastedibytes"]):
-            index_abs_max  = line
+            index_abs_max = line
 
-        for what, bloat, wasted in [ ("table", tbloat, twasted),
-                                     ("index", ibloat, iwasted) ]:
+        for what, bloat, wasted in [("table", tbloat, twasted), ("index", ibloat, iwasted)]:
             if "%s_bloat_perc" % what in params:
                 warn, crit = params["%s_bloat_perc" % what]
                 if bloat >= crit:
@@ -105,46 +103,52 @@ def check_postgres_bloat(item, params, parsed):
             if "%s_bloat_abs" % what in params:
                 warn, crit = params["%s_bloat_abs" % what]
                 if wasted >= crit:
-                    yield 2, "%s wasted %s bytes: %s (too high)" % (line["tablename"], what,
-                                get_bytes_human_readable(wasted))
+                    yield 2, "%s wasted %s bytes: %s (too high)" % (
+                        line["tablename"], what, get_bytes_human_readable(wasted))
                     show_levels = True
                 elif wasted >= warn:
-                    yield 1, "%s wasted %s bytes: %s (too high)" % (line["tablename"], what,
-                                get_bytes_human_readable(wasted))
+                    yield 1, "%s wasted %s bytes: %s (too high)" % (
+                        line["tablename"], what, get_bytes_human_readable(wasted))
                     show_levels = True
 
     if show_levels:
         levels_info = ["Levels:"]
         for what in ["table", "index"]:
             if "%s_bloat_perc" % what in params:
-                levels_info.append("%s Perc (%.0f%%/%.0f%%)" % ((what.title(),) + params["%s_bloat_perc" % what]))
+                levels_info.append(
+                    "%s Perc (%.0f%%/%.0f%%)" % ((what.title(),) + params["%s_bloat_perc" % what]))
             if "%s_bloat_abs" % what in params:
                 levels_info.append("%s Abs (%s/%s)" % ((what.title(),) + \
                     tuple(get_bytes_human_readable(int(x)) for x in params["%s_bloat_abs" % what])))
         yield 0, " ".join(levels_info)
     else:
         # No errors. Show some general information
-        for what, perc_max, abs_max in [ ("table", table_perc_max, table_abs_max),
-                             ("index", index_perc_max, index_abs_max) ]:
+        for what, perc_max, abs_max in [("table", table_perc_max, table_abs_max),
+                                        ("index", index_perc_max, index_abs_max)]:
             yield 0, "Maximum %s bloat at %s: %d%%" % (what, perc_max["tablename"],
                                                        float(perc_max["%sbloat" % what[0]]) * 100)
-            yield 0, "Maximum wasted %sspace at %s: %s" % (what, abs_max["tablename"],
-                         get_bytes_human_readable(int(abs_max["wasted%sbytes" % (what == "index" and "i" or "")])))
+            yield 0, "Maximum wasted %sspace at %s: %s" % (
+                what, abs_max["tablename"],
+                get_bytes_human_readable(
+                    int(abs_max["wasted%sbytes" % (what == "index" and "i" or "")])))
 
     # Summary information
-    for what, total_value in [ ("table", table_abs_total),
-                               ("index", index_abs_total) ]:
-        yield 0, "Summary of top %d wasted %sspace: %s" % (len(database), what,
-            get_bytes_human_readable(total_value)), [("%sspace_wasted" % what, total_value)]
+    for what, total_value in [("table", table_abs_total), ("index", index_abs_total)]:
+        yield (
+            0,
+            "Summary of top %d wasted %sspace: %s" % (len(database), what,
+                                                      get_bytes_human_readable(total_value)),
+            [("%sspace_wasted" % what, total_value)],
+        )
 
 
 check_info['postgres_bloat'] = {
-    "parse_function"          : parse_postgres_dbs,
-    "check_function"          : check_postgres_bloat,
-    "inventory_function"      : inventory_postgres_bloat,
-    "service_description"     : "PostgreSQL Bloat %s",
-    "group"                   : "db_bloat",
-    "default_levels_variable" : "postgres_bloat_default_levels",
-    "has_perfdata"            : True,
-    "includes"                : [ "postgres.include" ]
+    "parse_function": parse_postgres_dbs,
+    "check_function": check_postgres_bloat,
+    "inventory_function": inventory_postgres_bloat,
+    "service_description": "PostgreSQL Bloat %s",
+    "group": "db_bloat",
+    "default_levels_variable": "postgres_bloat_default_levels",
+    "has_perfdata": True,
+    "includes": ["postgres.include"]
 }

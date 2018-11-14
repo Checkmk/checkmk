@@ -28,12 +28,14 @@
 # IODBSZ1 2013-04-08T16:33:53 COMPLETED 2013-04-08_16:33:54 2013-04-08_17:56:42 DB FULL
 # IODBSZ1 2013-04-23T15:28:26 RUNNING 2013-04-23_15:28:28 2013-04-23_15:31:02 ARCHIVELOG
 
+
 def inventory_oracle_rman_backups(info):
     inventory = []
     for line in info:
         if line[1] != "FAILURE" and " ".join(line[5:]) in ('ARCHIVELOG', 'DB FULL', 'DB INCR'):
             inventory.append(("%s.%s" % (line[0], " ".join(line[5:])), {}))
     return inventory
+
 
 def check_oracle_rman_backups(item, params, info):
     try:
@@ -55,7 +57,7 @@ def check_oracle_rman_backups(item, params, info):
     job_state = data[2]
 
     txt = "State: %s" % job_state
-    if job_state not in [ "COMPLETED", "RUNNING" ]:
+    if job_state not in ["COMPLETED", "RUNNING"]:
         txt += " (!!)"
         state = max(state, 2)
     output.append(txt)
@@ -66,8 +68,9 @@ def check_oracle_rman_backups(item, params, info):
 
     return (state, ", ".join(output))
 
+
 check_info['oracle_rman_backups'] = {
-    "service_description"     : "ORA %s RMAN Backup",
-    "check_function"          : check_oracle_rman_backups,
-    "inventory_function"      : inventory_oracle_rman_backups,
+    "service_description": "ORA %s RMAN Backup",
+    "check_function": check_oracle_rman_backups,
+    "inventory_function": inventory_oracle_rman_backups,
 }

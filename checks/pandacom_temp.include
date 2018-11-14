@@ -24,19 +24,19 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-
 # suggested by customer
-factory_settings["pandacom_temp_default_levels"] = {
-    "levels" : (35, 40)
-}
+factory_settings["pandacom_temp_default_levels"] = {"levels": (35, 40)}
 
 
 def inventory_pandacom_module_temp(info):
-    return [ (line[0], {}) for line in info ]
+    return [(line[0], {}) for line in info]
 
 
 def check_pandacom_module_temp(item, params, info):
     for slot, temp_str, warn_str, crit_str in info:
         if slot == item:
-            return check_temperature(int(temp_str), params, "pandacom_%s" % item,
-                   dev_levels = (int(warn_str), int(crit_str)))
+            return check_temperature(
+                int(temp_str),
+                params,
+                "pandacom_%s" % item,
+                dev_levels=(int(warn_str), int(crit_str)))

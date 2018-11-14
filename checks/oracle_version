@@ -27,9 +27,11 @@
 # <<<oracle_version>>>
 # XE Oracle Database 11g Express Edition Release 11.2.0.2.0 - 64bit Production
 
+
 def inventory_oracle_version(info):
     oracle_handle_ora_errors_discovery(info)
-    return [ (line[0], None) for line in info if len(line) >= 2 ]
+    return [(line[0], None) for line in info if len(line) >= 2]
+
 
 def check_oracle_version(item, _no_params, info):
     for line in info:
@@ -43,9 +45,10 @@ def check_oracle_version(item, _no_params, info):
             return (0, 'Version: ' + " ".join(line[1:]))
     return (3, 'no version information, database might be stopped')
 
+
 check_info['oracle_version'] = {
-    "check_function"      : check_oracle_version,
-    "inventory_function"  : inventory_oracle_version,
-    "service_description" : "ORA Version %s",
-    "includes"            : ["oracle.include"],
+    "check_function": check_oracle_version,
+    "inventory_function": inventory_oracle_version,
+    "service_description": "ORA Version %s",
+    "includes": ["oracle.include"],
 }

@@ -40,19 +40,19 @@
 # vpn-wilhelmshilfe.access.lihas.de,79.204.249.30:59046,12596972,31933023,Sun Mar 10 09:32:22 2013
 # wilhelmshilfe-karlshof,92.198.38.214:3078,810996228,716994592,Fri Mar  8 10:02:39 2013
 
+
 def inventory_openvpn_clients(info):
-    return [ (l[0], None) for l in info ]
+    return [(l[0], None) for l in info]
+
 
 def check_openvpn_clients(item, _no_params, info):
     for line in info:
         if line[0] == item:
-            infos = [ "Channel is up" ]
+            infos = ["Channel is up"]
             perfdata = []
             _name, _address, inbytes, outbytes, _date = line
             this_time = time.time()
-            for what, val in [
-                ( "in", int(inbytes) ),
-                ( "out", int(outbytes) )]:
+            for what, val in [("in", int(inbytes)), ("out", int(outbytes))]:
                 countername = "openvpn_clients.%s.%s" % (item, what)
                 bytes_per_sec = get_rate(countername, this_time, val)
                 infos.append("%s: %s/sec" % (what, get_bytes_human_readable(bytes_per_sec)))
@@ -61,9 +61,10 @@ def check_openvpn_clients(item, _no_params, info):
 
     return 3, "Client connection not found"
 
+
 check_info["openvpn_clients"] = {
-    "check_function"        : check_openvpn_clients,
-    "inventory_function"    : inventory_openvpn_clients,
-    "service_description"   : "OpenVPN Client %s",
-    "has_perfdata"          : True,
+    "check_function": check_openvpn_clients,
+    "inventory_function": inventory_openvpn_clients,
+    "service_description": "OpenVPN Client %s",
+    "has_perfdata": True,
 }

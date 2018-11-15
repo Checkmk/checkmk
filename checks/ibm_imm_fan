@@ -24,9 +24,8 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-
 factory_settings["ibm_imm_fan_default_levels"] = {
-    "levels_lower" : (28, 25), # Just a guess. Please give feedback.
+    "levels_lower": (28, 25),  # Just a guess. Please give feedback.
 }
 
 

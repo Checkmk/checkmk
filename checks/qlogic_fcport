@@ -24,10 +24,10 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-
 # settings for inventory: which ports should be inventorized
-qlogic_fcport_inventory_opstates  = [ "1", "3" ]
-qlogic_fcport_inventory_admstates = [ "1", "3" ]
+qlogic_fcport_inventory_opstates = ["1", "3"]
+qlogic_fcport_inventory_admstates = ["1", "3"]
+
 
 # this function is needed to have the same port IDs in Check_MK
 # as within the Management interface of the device
@@ -36,6 +36,7 @@ def qlogic_fcport_generate_port_id(port_id):
     minor = int(minor) - 1
     port_id = "%s.%s" % (major, minor)
     return port_id
+
 
 def inventory_qlogic_fcport(info):
     inventory = []
@@ -52,7 +53,7 @@ def inventory_qlogic_fcport(info):
         if (admin_status == '' and oper_status == '') \
            or (admin_status in qlogic_fcport_inventory_admstates and \
               oper_status in qlogic_fcport_inventory_opstates):
-               inventory.append( (qlogic_fcport_generate_port_id(port_id), None) )
+            inventory.append((qlogic_fcport_generate_port_id(port_id), None))
 
     return inventory
 
@@ -73,7 +74,7 @@ def check_qlogic_fcport(item, params, info):
 
             # fcFxPortPhysAdminStatus
             if admin_status == "1":
-                message  += " AdminStatus: online"
+                message += " AdminStatus: online"
                 status = 0
             elif admin_status == "2":
                 message += " AdminStatus: offline (!!)"
@@ -122,26 +123,28 @@ def check_qlogic_fcport(item, params, info):
             this_time = time.time()
 
             # Bytes/sec in and out
-            in_octets  = int(c2_in_octets)  + int(c3_in_octets)
+            in_octets = int(c2_in_octets) + int(c3_in_octets)
             out_octets = int(c2_out_octets) + int(c3_out_octets)
 
-            in_octet_rate  = get_rate("qlogic_fcport.in_octets.%s"  % port_id, this_time, in_octets)
-            out_octet_rate = get_rate("qlogic_fcport.out_octets.%s" % port_id, this_time, out_octets)
+            in_octet_rate = get_rate("qlogic_fcport.in_octets.%s" % port_id, this_time, in_octets)
+            out_octet_rate = get_rate("qlogic_fcport.out_octets.%s" % port_id, this_time,
+                                      out_octets)
 
-            message += ", In: %s/s"  % get_bytes_human_readable(in_octet_rate)
+            message += ", In: %s/s" % get_bytes_human_readable(in_octet_rate)
             message += ", Out: %s/s" % get_bytes_human_readable(out_octet_rate)
 
-            perfdata.append(("in",  in_octet_rate))
+            perfdata.append(("in", in_octet_rate))
             perfdata.append(("out", out_octet_rate))
 
             # Frames in and out
-            in_frames  = int(c2_in_frames)  + int(c3_in_frames)
+            in_frames = int(c2_in_frames) + int(c3_in_frames)
             out_frames = int(c2_out_frames) + int(c3_out_frames)
 
-            in_frame_rate  = get_rate("qlogic_fcport.in_frames.%s"  % port_id, this_time, in_frames)
-            out_frame_rate = get_rate("qlogic_fcport.out_frames.%s" % port_id, this_time, out_frames)
+            in_frame_rate = get_rate("qlogic_fcport.in_frames.%s" % port_id, this_time, in_frames)
+            out_frame_rate = get_rate("qlogic_fcport.out_frames.%s" % port_id, this_time,
+                                      out_frames)
 
-            message += ", in frames: %s/s"  % in_frame_rate
+            message += ", in frames: %s/s" % in_frame_rate
             message += ", out frames: %s/s" % out_frame_rate
 
             perfdata.append(("rxframes", in_frame_rate))
@@ -151,19 +154,19 @@ def check_qlogic_fcport(item, params, info):
             discards = int(c2_discards) + int(c3_discards)
             error_sum = 0
             for descr, counter, value in [
-                ("Link Failures",         "link_failures",         link_failures),
-                ("Sync Losses",           "sync_losses",           sync_losses),
-                ("PrimitSeqErrors",       "prim_seq_proto_errors", prim_seq_proto_errors),
-                ("Invalid TX Words",      "invalid_tx_words",      invalid_tx_words),
-                ("Invalid CRCs",          "invalid_crcs",          invalid_crcs),
-                ("Address ID Errors",     "address_id_errors",     address_id_errors),
-                ("Link Resets In",        "link_reset_ins",        link_reset_ins),
-                ("Link Resets Out",       "link_reset_outs",       link_reset_outs),
-                ("Offline Sequences In",  "ols_ins",               ols_ins),
-                ("Offline Sequences Out", "ols_outs",              ols_outs),
-                ("Discards",              "discards",              discards),
-                ("F_BSY frames",          "c2_fbsy_frames",        c2_fbsy_frames),
-                ("F_RJT frames",          "c2_frjt_frames",        c2_frjt_frames),
+                ("Link Failures", "link_failures", link_failures),
+                ("Sync Losses", "sync_losses", sync_losses),
+                ("PrimitSeqErrors", "prim_seq_proto_errors", prim_seq_proto_errors),
+                ("Invalid TX Words", "invalid_tx_words", invalid_tx_words),
+                ("Invalid CRCs", "invalid_crcs", invalid_crcs),
+                ("Address ID Errors", "address_id_errors", address_id_errors),
+                ("Link Resets In", "link_reset_ins", link_reset_ins),
+                ("Link Resets Out", "link_reset_outs", link_reset_outs),
+                ("Offline Sequences In", "ols_ins", ols_ins),
+                ("Offline Sequences Out", "ols_outs", ols_outs),
+                ("Discards", "discards", discards),
+                ("F_BSY frames", "c2_fbsy_frames", c2_fbsy_frames),
+                ("F_RJT frames", "c2_frjt_frames", c2_frjt_frames),
             ]:
                 value = int(value)
                 per_sec = get_rate("qlogic_fcport.%s.%s" % (counter, port_id), this_time, value)

@@ -24,10 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-
-factory_settings['informix_dbspaces_default_levels'] = {
-    'levels_perc': (80.0, 85.0)
-}
+factory_settings['informix_dbspaces_default_levels'] = {'levels_perc': (80.0, 85.0)}
 
 
 def parse_informix_dbspaces(info):
@@ -66,9 +63,8 @@ def check_informix_dbspaces(item, params, parsed):
             size += int(entry['chksize']) * pagesize
 
         used = size - free
-        infotext = "Data files: %s, Size: %s, Used: %s" % \
-                   (len(datafiles), get_bytes_human_readable(size),
-                    get_bytes_human_readable(used))
+        infotext = "Data files: %s, Size: %s, Used: %s" % (
+            len(datafiles), get_bytes_human_readable(size), get_bytes_human_readable(used))
         state = 0
         if 'levels' in params:
             warn, crit = params['levels']
@@ -77,12 +73,10 @@ def check_informix_dbspaces(item, params, parsed):
             elif size >= warn:
                 state = 1
             if state:
-                infotext += " (warn/crit at %s/%s)" % \
-                            (get_bytes_human_readable(warn),
-                             get_bytes_human_readable(crit))
+                infotext += " (warn/crit at %s/%s)" % (get_bytes_human_readable(warn),
+                                                       get_bytes_human_readable(crit))
 
-        yield state, infotext, [("tablespace_size", size),
-                                ("tablespace_used", used)]
+        yield state, infotext, [("tablespace_size", size), ("tablespace_used", used)]
 
         if size:
             used_perc = used * 100.0 / size
@@ -99,12 +93,11 @@ def check_informix_dbspaces(item, params, parsed):
             yield state, infotext
 
 
-
 check_info['informix_dbspaces'] = {
-    'parse_function'        : parse_informix_dbspaces,
-    'inventory_function'    : inventory_informix_dbspaces,
-    'check_function'        : check_informix_dbspaces,
-    'service_description'   : 'Informix Tablespace %s',
-    'has_perfdata'          : True,
+    'parse_function': parse_informix_dbspaces,
+    'inventory_function': inventory_informix_dbspaces,
+    'check_function': check_informix_dbspaces,
+    'service_description': 'Informix Tablespace %s',
+    'has_perfdata': True,
     'default_levels_variable': 'informix_dbspaces_default_levels',
 }

@@ -31,19 +31,18 @@
 def parse_ibm_xraid_pdisks(info):
     data = {}
     for line in info:
-       slot_id, disk_id, disk_type, disk_state, slot_desc = line
-       if "slot" in slot_desc.lower():
-           slot_id = int(slot_desc.split(", ")[-1][-1])
-           enc_id  = int(slot_desc.split(", ")[-2][-1])
-           hba_id  = int(slot_desc.split(", ")[-3][-1])
-           disk_path = ("%d/%d/%d") % (hba_id, enc_id, slot_id)
-           data.update({ disk_path : ( slot_id, disk_id, disk_type, disk_state, slot_desc )})
+        slot_id, disk_id, disk_type, disk_state, slot_desc = line
+        if "slot" in slot_desc.lower():
+            slot_id = int(slot_desc.split(", ")[-1][-1])
+            enc_id = int(slot_desc.split(", ")[-2][-1])
+            hba_id = int(slot_desc.split(", ")[-3][-1])
+            disk_path = ("%d/%d/%d") % (hba_id, enc_id, slot_id)
+            data.update({disk_path: (slot_id, disk_id, disk_type, disk_state, slot_desc)})
     return data
 
 
 def inventory_ibm_xraid_pdisks(info):
-    return [ (disk_id, None)
-             for disk_id in parse_ibm_xraid_pdisks(info) ]
+    return [(disk_id, None) for disk_id in parse_ibm_xraid_pdisks(info)]
 
 
 def check_ibm_xraid_pdisks(item, _no_params, info):
@@ -52,14 +51,14 @@ def check_ibm_xraid_pdisks(item, _no_params, info):
     for disk_path, disk_entry in data.items():
         if disk_path == item:
             _slot_label, _disk_id, _disk_type, disk_state, slot_desc = disk_entry
-            if   disk_state == "3":
+            if disk_state == "3":
                 return (0, "Disk is active" + " [%s]" % slot_desc)
             elif disk_state == "4":
                 return (1, "Disk is rebuilding" + " [%s]" % slot_desc)
             elif disk_state == "5":
                 return (2, "Disk is dead" + " [%s]" % slot_desc)
 
-    return (2, "disk is missing") #  + " [%s]" % data[item][4])
+    return (2, "disk is missing")  #  + " [%s]" % data[item][4])
 
 
 check_info["ibm_xraid_pdisks"] = {

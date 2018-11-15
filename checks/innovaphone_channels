@@ -26,9 +26,11 @@
 
 innovaphone_channels_default_levels = (75.0, 80.0)
 
+
 def inventory_innovaphone_channels(info):
     return [ (x[0], 'innovaphone_channels_default_levels') for x in info \
              if x[1] == "Up" and x[2] == "Up" ]
+
 
 def check_innovaphone_channels(item, params, info):
     for line in info:
@@ -40,15 +42,15 @@ def check_innovaphone_channels(item, params, info):
             perc_used = (idle / total) * 100
             perc_free = 100 - perc_used
             message = "(used: %.0f, free: %.0f, total: %.0f)" % (total - idle, idle, total)
-            return check_innovaphone(params, [[None,perc_free]], '%', message )
+            return check_innovaphone(params, [[None, perc_free]], '%', message)
     return 3, "No Channel information found"
 
-check_info["innovaphone_channels"] = {
-    "check_function"        : check_innovaphone_channels,
-    "inventory_function"    : inventory_innovaphone_channels,
-    "service_description"   : "Channel %s",
-    "has_perfdata"          : True,
-    "group"                 : "hw_single_channelserature",
-    "includes"              : ["innovaphone.include"]
-}
 
+check_info["innovaphone_channels"] = {
+    "check_function": check_innovaphone_channels,
+    "inventory_function": inventory_innovaphone_channels,
+    "service_description": "Channel %s",
+    "has_perfdata": True,
+    "group": "hw_single_channelserature",
+    "includes": ["innovaphone.include"]
+}

@@ -26,7 +26,6 @@
 
 isc_dhcpd_default_levels = (15.0, 5.0)
 
-
 # Example output from agent:
 # <<<isc_dhcpd>>>
 # [general]
@@ -56,8 +55,8 @@ def parse_isc_dhcpd(info):
         return number
 
     parsed = {
-        "pids":   [],
-        "pools":  {},
+        "pids": [],
+        "pools": {},
         "leases": [],
     }
 
@@ -95,8 +94,8 @@ def check_isc_dhcpd(item, params, parsed):
     if len(parsed["pids"]) == 0:
         yield 2, "DHCP Daemon not running"
     elif len(parsed["pids"]) > 1:
-        yield 1, "DHCP Daemon running %d times (PIDs: %s)" % (
-            len(parsed["pids"]), ", ".join(map(str, parsed["pids"])))
+        yield 1, "DHCP Daemon running %d times (PIDs: %s)" % (len(parsed["pids"]), ", ".join(
+            map(str, parsed["pids"])))
 
     if item not in parsed["pools"]:
         return
@@ -108,16 +107,17 @@ def check_isc_dhcpd(item, params, parsed):
         if lease_dec >= range_from and lease_dec <= range_to:
             num_used += 1
 
-    for check_result in check_dhcp_pools_levels(num_leases - num_used, num_used, None, num_leases, params):
+    for check_result in check_dhcp_pools_levels(num_leases - num_used, num_used, None, num_leases,
+                                                params):
         yield check_result
 
 
 check_info["isc_dhcpd"] = {
-    'parse_function':          parse_isc_dhcpd,
-    'inventory_function':      inventory_isc_dhcpd,
-    'check_function':          check_isc_dhcpd,
-    'service_description':     'DHCP Pool %s',
-    'group':                   'win_dhcp_pools',
-    'has_perfdata':            True,
-    'includes':                ["dhcp_pools.include"],
+    'parse_function': parse_isc_dhcpd,
+    'inventory_function': inventory_isc_dhcpd,
+    'check_function': check_isc_dhcpd,
+    'service_description': 'DHCP Pool %s',
+    'group': 'win_dhcp_pools',
+    'has_perfdata': True,
+    'includes': ["dhcp_pools.include"],
 }

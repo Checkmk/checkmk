@@ -24,7 +24,6 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-
 # .1.3.6.1.4.1.10222.2.1.4.7.1.2.2.1 Power Supply 201 --> ICS-CHASSIS-MIB::icsChassisPowerSupplyDescription.2.1
 # .1.3.6.1.4.1.10222.2.1.4.7.1.2.3.2 Power Supply 202 --> ICS-CHASSIS-MIB::icsChassisPowerSupplyDescription.3.2
 # .1.3.6.1.4.1.10222.2.1.4.7.1.2.4.3 Power Supply 203 --> ICS-CHASSIS-MIB::icsChassisPowerSupplyDescription.4.3
@@ -49,40 +48,41 @@
 
 def parse_intel_true_scale_psus(info):
     map_states = {
-        "1" : (3, "unknown"),
-        "2" : (3, "disabled"),
-        "3" : (2, "failed"),
-        "4" : (1, "warning"),
-        "5" : (0, "standby"),
-        "6" : (0, "engaged"),
-        "7" : (0, "redundant"),
-        "8" : (3, "not present"),
+        "1": (3, "unknown"),
+        "2": (3, "disabled"),
+        "3": (2, "failed"),
+        "4": (1, "warning"),
+        "5": (0, "standby"),
+        "6": (0, "engaged"),
+        "7": (0, "redundant"),
+        "8": (3, "not present"),
     }
     map_sources = {
-        "0" : "invalid",
-        "1" : "ac line",
-        "2" : "dc line",
-        "3" : "none",
-        "4" : "unknown",
+        "0": "invalid",
+        "1": "ac line",
+        "2": "dc line",
+        "3": "none",
+        "4": "unknown",
     }
 
     parsed = {}
     for descr, operstate, source, voltage_str, power_str in info:
         name = descr.replace("Power Supply", "").strip()
 
-        parsed.setdefault(name, {
-            "voltage" : float(voltage_str),
-            "power"   : float(power_str),
-            "state"   : map_states[operstate],
-            "source"  : map_sources[source]
-        })
+        parsed.setdefault(
+            name, {
+                "voltage": float(voltage_str),
+                "power": float(power_str),
+                "state": map_states[operstate],
+                "source": map_sources[source]
+            })
 
     return parsed
 
 
 def inventory_intel_true_scale_psus(parsed):
     for psu in parsed:
-        if parsed[psu]["state"][-1] not in [ "not present", "disabled" ]:
+        if parsed[psu]["state"][-1] not in ["not present", "disabled"]:
             yield psu, {}
 
 
@@ -97,18 +97,20 @@ def check_intel_true_scale_psus(item, params, parsed):
 
 
 check_info['intel_true_scale_psus'] = {
-    'parse_function'            : parse_intel_true_scale_psus,
-    'inventory_function'        : inventory_intel_true_scale_psus,
-    'check_function'            : check_intel_true_scale_psus,
-    'service_description'       : 'Power supply %s',
-    'snmp_info'                 : (".1.3.6.1.4.1.10222.2.1.4.7.1", [
-                                        "2",    # ICS-CHASSIS-MIB::icsChassisPowerSupplyDescription
-                                        "3",    # ICS-CHASSIS-MIB::icsChassisPowerSupplyOperStatus
-                                        "4",    # ICS-CHASSIS-MIB::icsChassisPowerSupplyInputSource
-                                        "5",    # ICS-CHASSIS-MIB::icsChassisPowerSupplyVoltage
-                                        "6",    # ICS-CHASSIS-MIB::icsChassisPowerSupplyOutputPower
-                                  ]),
-    'snmp_scan_function'        : scan_intel_true_scale,
-    'includes'                  : [ 'intel_true_scale.include', 'elphase.include' ],
-    'group'                     : 'el_inphase',
+    'parse_function': parse_intel_true_scale_psus,
+    'inventory_function': inventory_intel_true_scale_psus,
+    'check_function': check_intel_true_scale_psus,
+    'service_description': 'Power supply %s',
+    'snmp_info': (
+        ".1.3.6.1.4.1.10222.2.1.4.7.1",
+        [
+            "2",  # ICS-CHASSIS-MIB::icsChassisPowerSupplyDescription
+            "3",  # ICS-CHASSIS-MIB::icsChassisPowerSupplyOperStatus
+            "4",  # ICS-CHASSIS-MIB::icsChassisPowerSupplyInputSource
+            "5",  # ICS-CHASSIS-MIB::icsChassisPowerSupplyVoltage
+            "6",  # ICS-CHASSIS-MIB::icsChassisPowerSupplyOutputPower
+        ]),
+    'snmp_scan_function': scan_intel_true_scale,
+    'includes': ['intel_true_scale.include', 'elphase.include'],
+    'group': 'el_inphase',
 }

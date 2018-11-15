@@ -24,20 +24,25 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+
 def inventory_if(info):
     return inventory_if_common(if_convert_to_if64(info))
+
 
 def check_if(item, params, info):
     return check_if_common(item, params, if_convert_to_if64(info))
 
+
 def if_convert_to_if64(info):
     newinfo = []
     for line in info:
-        if saveint(line[0]) > 0: #Fix for switches with empty indexes
-            newinfo.append(line[0:8] + ['0'] + line[8:12] + ['0'] + line[12:16] + line[1:2] + line[16:17])
+        if saveint(line[0]) > 0:  #Fix for switches with empty indexes
+            newinfo.append(line[0:8] + ['0'] + line[8:12] + ['0'] + line[12:16] + line[1:2] +
+                           line[16:17])
     return newinfo
 
-check_includes['if'] = [ "if.include" ]
+
+check_includes['if'] = ["if.include"]
 check_info["if"] = {
     'check_function':          check_if,
     'inventory_function':      inventory_if,

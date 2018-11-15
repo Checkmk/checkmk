@@ -36,10 +36,18 @@ import os
 # 1465470056  modify  /tmp/noti/test  5   1465470056
 # 1465470056  open    /tmp/noti/test  5   1465470056
 
+
 def parse_inotify(info):
-    parsed = {"meta": {"warnings": {}},
-              "configured": {"file": set([]), "folder": set([])},
-              "stats": {}}
+    parsed = {
+        "meta": {
+            "warnings": {}
+        },
+        "configured": {
+            "file": set([]),
+            "folder": set([])
+        },
+        "stats": {}
+    }
     for line in info:
         if line[0].startswith("warning"):
             parsed["meta"]["warnings"].setdefault(line[1], 0)
@@ -56,7 +64,7 @@ def parse_inotify(info):
 
         file_dict = {}
         file_dict["timestamp"] = int(timestamp)
-        file_dict["mode"]      = mode
+        file_dict["mode"] = mode
         # Unused
         if len(line) > 3:
             file_dict["size"] = line[3]
@@ -66,10 +74,12 @@ def parse_inotify(info):
 
     return parsed
 
+
 def inventory_inotify(parsed):
-    for what in [ "file", "folder" ]:
+    for what in ["file", "folder"]:
         for path in parsed["configured"][what]:
             yield "%s %s" % (what.title(), path), {}
+
 
 def check_inotify(item, params, parsed):
     what, path = item.split(" ", 1)
@@ -78,7 +88,7 @@ def check_inotify(item, params, parsed):
 
     data = parsed["stats"].get(path, {})
 
-    last_status = get_item_state(None, default = {})
+    last_status = get_item_state(None, default={})
     for file_dict in data:
         mode = file_dict["mode"]
         for key, value in file_dict.items():
@@ -87,6 +97,7 @@ def check_inotify(item, params, parsed):
 
     set_item_state(None, last_status)
     now = time.time()
+
     def check_levels(what):
         for mode, warn, crit in params.get("age_last_operation", []):
             if mode != what:
@@ -103,11 +114,11 @@ def check_inotify(item, params, parsed):
         levels_info = check_levels(mode)
         if levels_info:
             state = levels_info[0]
-            yield state, "Last %s: %s ago (%s)" % (mode.title(),
-                    get_age_human_readable(now - attr["timestamp"]),
-                    levels_info[1])
+            yield state, "Last %s: %s ago (%s)" % (
+                mode.title(), get_age_human_readable(now - attr["timestamp"]), levels_info[1])
         else:
-            yield 0, "Last %s: %s ago" % (mode.title(), get_age_human_readable(now - attr["timestamp"]))
+            yield 0, "Last %s: %s ago" % (mode.title(),
+                                          get_age_human_readable(now - attr["timestamp"]))
 
     for mode, _warn, _crit in params.get("age_last_operation", []):
         if mode not in last_status:
@@ -124,9 +135,9 @@ def check_inotify(item, params, parsed):
 
 
 check_info["inotify"] = {
-    "parse_function"        : parse_inotify,
-    "inventory_function"    : inventory_inotify,
-    "check_function"        : check_inotify,
-    "service_description"   : "INotify %s",
-    "group"                 : "inotify"
+    "parse_function": parse_inotify,
+    "inventory_function": inventory_inotify,
+    "check_function": check_inotify,
+    "service_description": "INotify %s",
+    "group": "inotify"
 }

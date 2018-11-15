@@ -39,7 +39,6 @@
 # 4:temp_c:22:23:140410112836
 # 4:temp_f:71:73:140410112836
 
-
 #   .--temperature---------------------------------------------------------.
 #   |      _                                      _                        |
 #   |     | |_ ___ _ __ ___  _ __   ___ _ __ __ _| |_ _   _ _ __ ___       |
@@ -49,14 +48,14 @@
 #   |                       |_|                                            |
 #   '----------------------------------------------------------------------'
 
-factory_settings["ibm_svc_enclosurestats_temperature_default_levels"] = {
-    "levels": (35, 40)
-}
+factory_settings["ibm_svc_enclosurestats_temperature_default_levels"] = {"levels": (35, 40)}
+
 
 def inventory_ibm_svc_enclosurestats_temp(info):
     for enclosure_id, stat_name, _stat_current, _stat_peak, _stat_peak_time in info:
         if stat_name == "temp_c":
             yield enclosure_id, {}
+
 
 def check_ibm_svc_enclosurestats_temp(item, params, info):
     for enclosure_id, stat_name, stat_current, _stat_peak, _stat_peak_time in info:
@@ -65,13 +64,13 @@ def check_ibm_svc_enclosurestats_temp(item, params, info):
 
 
 check_info["ibm_svc_enclosurestats.temp"] = {
-    "check_function"          : check_ibm_svc_enclosurestats_temp,
-    "inventory_function"      : inventory_ibm_svc_enclosurestats_temp,
-    "service_description"     : "Temperature Enclosure %s",
-    "has_perfdata"            : True,
-    "group"                   : "temperature",
-    "includes"                : [ "temperature.include" ],
-    'default_levels_variable' : "ibm_svc_enclosurestats_temperature_default_levels"
+    "check_function": check_ibm_svc_enclosurestats_temp,
+    "inventory_function": inventory_ibm_svc_enclosurestats_temp,
+    "service_description": "Temperature Enclosure %s",
+    "has_perfdata": True,
+    "group": "temperature",
+    "includes": ["temperature.include"],
+    'default_levels_variable': "ibm_svc_enclosurestats_temperature_default_levels"
 }
 
 #.
@@ -84,12 +83,14 @@ check_info["ibm_svc_enclosurestats.temp"] = {
 #   |                   |_|                                                |
 #   '----------------------------------------------------------------------'
 
+
 def inventory_ibm_svc_enclosurestats_power(info):
     inventory = []
     for enclosure_id, stat_name, _stat_current, _stat_peak, _stat_peak_time in info:
         if stat_name == "power_w":
-            inventory.append( (enclosure_id, None) )
+            inventory.append((enclosure_id, None))
     return inventory
+
 
 def check_ibm_svc_enclosurestats_power(item, _no_params, info):
     perfdata = []
@@ -97,14 +98,16 @@ def check_ibm_svc_enclosurestats_power(item, _no_params, info):
     for enclosure_id, stat_name, stat_current, _stat_peak, _stat_peak_time in info:
         if enclosure_id == item and stat_name == "power_w":
             stat_current = int(stat_current)
-            perfdata = [ ('power', str(stat_current)+"Watt") ]
-            return 0, "Enclosure %s Power Consumption is %s Watt" % (enclosure_id, stat_current), perfdata
+            perfdata = [('power', str(stat_current) + "Watt")]
+            return 0, "Enclosure %s Power Consumption is %s Watt" % (enclosure_id,
+                                                                     stat_current), perfdata
 
     return 3, "Power for enclosure %s not found in agent output" % item
 
+
 check_info["ibm_svc_enclosurestats.power"] = {
-    "check_function"        : check_ibm_svc_enclosurestats_power,
-    "inventory_function"    : inventory_ibm_svc_enclosurestats_power,
-    "service_description"   : "Power Enclosure %s",
-    "has_perfdata"          : True,
+    "check_function": check_ibm_svc_enclosurestats_power,
+    "inventory_function": inventory_ibm_svc_enclosurestats_power,
+    "service_description": "Power Enclosure %s",
+    "has_perfdata": True,
 }

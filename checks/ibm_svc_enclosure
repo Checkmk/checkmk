@@ -55,7 +55,7 @@ def inventory_ibm_svc_enclosure(info):
     inventory = []
     for line in info:
         enclosure_id = line[0]
-        inventory.append( (enclosure_id, None) )
+        inventory.append((enclosure_id, None))
     return inventory
 
 
@@ -63,7 +63,8 @@ def check_ibm_svc_enclosure(item, _no_params, info):
     for line in info:
         if line[0] == item:
             if len(line) == 9:
-                line = line[:2] + [None, None, None] + line[2:6] + ["0"] + line[6:] + ["0", "0", "0", "0"]
+                line = line[:2] + [None, None, None
+                                  ] + line[2:6] + ["0"] + line[6:] + ["0", "0", "0", "0"]
             elif len(line) == 13:
                 line = line + ["0", "0", "0", "0"]
             elif len(line) == 15:
@@ -91,7 +92,8 @@ def check_ibm_svc_enclosure(item, _no_params, info):
                 message += ", all %s canisters are online" % total_canisters
             else:
                 status = 2
-                message += ", only %s of %s canisters are online(!!)" % (online_canisters, total_canisters)
+                message += ", only %s of %s canisters are online(!!)" % (online_canisters,
+                                                                         total_canisters)
 
             # Check PSUs
             if online_PSUs == total_PSUs:
@@ -106,7 +108,8 @@ def check_ibm_svc_enclosure(item, _no_params, info):
                     message += ", all %s fan modules are online" % total_fan_modules
             else:
                 status = 2
-                message += ", only %s of %s fan modules are online(!!)" % (online_fan_modules, total_fan_modules)
+                message += ", only %s of %s fan modules are online(!!)" % (online_fan_modules,
+                                                                           total_fan_modules)
 
             # Check SEMs (only firmware >= 7.8)
             if online_secondary_expander_modules == total_secondary_expander_modules:
@@ -114,14 +117,16 @@ def check_ibm_svc_enclosure(item, _no_params, info):
                     message += ", all %s secondary expander modules are online" % total_secondary_expander_modules
             else:
                 status = 2
-                message += ", only %s of %s secondary expander modules are online(!!)" % (online_secondary_expander_modules, total_secondary_expander_modules)
+                message += ", only %s of %s secondary expander modules are online(!!)" % (
+                    online_secondary_expander_modules, total_secondary_expander_modules)
 
             return status, message
 
     return 3, "Enclosure %s not found in agent output" % item
 
+
 check_info["ibm_svc_enclosure"] = {
-    "check_function"        : check_ibm_svc_enclosure,
-    "inventory_function"    : inventory_ibm_svc_enclosure,
-    "service_description"   : "Enclosure %s",
+    "check_function": check_ibm_svc_enclosure,
+    "inventory_function": inventory_ibm_svc_enclosure,
+    "service_description": "Enclosure %s",
 }

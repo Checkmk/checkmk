@@ -34,6 +34,7 @@
 # 5:N3_162711:100025E317:500507680100D0A7:online:1:io_grp1:no:2040000085543047:CG8:iqn.1986-03.com.ibm:2145.svc-cl.n3162711::162711:::::
 # 6:N4_164312:100025E315:500507680100D880:online:1:io_grp1:yes:2040000085543045:CG8:iqn.1986-03.com.ibm:2145.svc-cl.n4164312::164312:::::
 
+
 def inventory_ibm_svc_node(info):
     io_groups = set()
     for line in info:
@@ -42,8 +43,8 @@ def inventory_ibm_svc_node(info):
         _iscsi_alias, _panel_name, _enclosure_id, _canister_id,\
         _enclosure_serial_number, _additional = line[:17]
         io_groups.add(io_group_name)
-    return [ (io_group_name, None)
-             for io_group_name in io_groups ]
+    return [(io_group_name, None) for io_group_name in io_groups]
+
 
 def check_ibm_svc_node(item, _no_params, info):
     message = ""
@@ -76,8 +77,9 @@ def check_ibm_svc_node(item, _no_params, info):
 
     return status, message
 
+
 check_info["ibm_svc_node"] = {
-    "check_function"        : check_ibm_svc_node,
-    "inventory_function"    : inventory_ibm_svc_node,
-    "service_description"   : "IO Group %s",
+    "check_function": check_ibm_svc_node,
+    "inventory_function": inventory_ibm_svc_node,
+    "service_description": "IO Group %s",
 }

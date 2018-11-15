@@ -60,6 +60,7 @@ def inventory_ibm_svc_portfc(info):
             item = "Node %s Slot %s Port %s" % (line[5], line[12], line[13])
             yield item, None
 
+
 def check_ibm_svc_portfc(item, _no_params, info):
     if not item.startswith("Port") and\
             not item.startswith("Node"):
@@ -76,9 +77,9 @@ def check_ibm_svc_portfc(item, _no_params, info):
 
             return state, infotext
 
-check_info["ibm_svc_portfc"] = {
-    "check_function"        : check_ibm_svc_portfc,
-    "inventory_function"    : inventory_ibm_svc_portfc,
-    "service_description"   : "FC %s",
-}
 
+check_info["ibm_svc_portfc"] = {
+    "check_function": check_ibm_svc_portfc,
+    "inventory_function": inventory_ibm_svc_portfc,
+    "service_description": "FC %s",
+}

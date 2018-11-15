@@ -24,11 +24,9 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-
 factory_settings['informix_locks_default_levels'] = {
     'levels': (70, 80),
 }
-
 
 
 def parse_informix_locks(info):
@@ -65,10 +63,10 @@ def check_informix_locks(item, params, parsed):
 
 
 check_info['informix_locks'] = {
-    'parse_function'        : parse_informix_locks,
-    'inventory_function'    : inventory_informix_locks,
-    'check_function'        : check_informix_locks,
-    'has_perfdata'          : True,
-    'service_description'   : 'Informix Locks %s',
+    'parse_function': parse_informix_locks,
+    'inventory_function': inventory_informix_locks,
+    'check_function': check_informix_locks,
+    'has_perfdata': True,
+    'service_description': 'Informix Locks %s',
     'default_levels_variable': 'informix_locks_default_levels',
 }

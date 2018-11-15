@@ -24,7 +24,6 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-
 # Example output from agent:
 #<<<iptables>>>
 #-A INPUT -j RH-Firewall-1-INPUT
@@ -55,6 +54,7 @@
 #-A RH-Firewall-1-INPUT -j REJECT --reject-with icmp-host-prohibited
 #COMMIT
 
+
 def iptables_hash(config):
     import hashlib
     return hashlib.sha256(config).hexdigest()
@@ -74,8 +74,7 @@ def check_iptables(_no_item, params, parsed):
     item_state = get_item_state("iptables.config")
 
     if not item_state:
-        set_item_state("iptables.config",
-                       {"config": parsed, "hash": iptables_hash(parsed)})
+        set_item_state("iptables.config", {"config": parsed, "hash": iptables_hash(parsed)})
         return 0, "saved initial configuration"
 
     initial_config_hash = params["config_hash"]
@@ -83,8 +82,7 @@ def check_iptables(_no_item, params, parsed):
 
     if initial_config_hash == new_config_hash:
         if initial_config_hash != item_state.get("hash"):
-            set_item_state("iptables.config",
-                           {"config": parsed, "hash": new_config_hash})
+            set_item_state("iptables.config", {"config": parsed, "hash": new_config_hash})
             return 0, "accepted new filters after service rediscovery / reboot"
         return 0, "no changes in filters table detected"
 
@@ -92,18 +90,16 @@ def check_iptables(_no_item, params, parsed):
 
     reference_config = item_state["config"].splitlines()
     actual_config = parsed.splitlines()
-    diff = difflib.context_diff(reference_config, actual_config,
-                                fromfile="before", tofile="after",
-                                lineterm="")
+    diff = difflib.context_diff(
+        reference_config, actual_config, fromfile="before", tofile="after", lineterm="")
     diff_output = "\n".join(diff)
 
-    return 2, "\r\n".join(["changes in filters table detected",
-                           diff_output])
+    return 2, "\r\n".join(["changes in filters table detected", diff_output])
 
 
 check_info["iptables"] = {
-    'parse_function'      : parse_iptables,
-    'check_function'      : check_iptables,
-    'inventory_function'  : inventory_iptables,
-    'service_description' : 'Iptables',
+    'parse_function': parse_iptables,
+    'check_function': check_iptables,
+    'inventory_function': inventory_iptables,
+    'service_description': 'Iptables',
 }

@@ -56,6 +56,7 @@
 # fan 2 health-reason
 # fan 2 health-recommendation
 
+
 def inventory_hp_msa_fan(parsed):
     for item in parsed.keys():
         yield item, None
@@ -78,9 +79,9 @@ def check_hp_msa_fan(item, params, parsed):
 
 
 check_info['hp_msa_fan'] = {
-    'parse_function'        : parse_hp_msa,
-    'inventory_function'    : inventory_hp_msa_fan,
-    'check_function'        : check_hp_msa_fan,
-    'service_description'   : 'Fan %s',
-    'includes'              : [ "hp_msa.include" ],
+    'parse_function': parse_hp_msa,
+    'inventory_function': inventory_hp_msa_fan,
+    'check_function': check_hp_msa_fan,
+    'service_description': 'Fan %s',
+    'includes': ["hp_msa.include"],
 }

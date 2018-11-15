@@ -33,60 +33,65 @@
 # .1.3.6.1.4.1.3375.2.1.1.2.1.44.0 0 sysStatMemoryTotal
 # .1.3.6.1.4.1.3375.2.1.1.2.1.45.0 0 sysStatMemoryUsed
 
-factory_settings["f5_bigip_mem_default_levels"] = {
-    "levels"    : ("perc_used", (80.0, 90.0))
-}
+factory_settings["f5_bigip_mem_default_levels"] = {"levels": ("perc_used", (80.0, 90.0))}
+
 
 def parse_f5_bigip_mem(info):
     parsed = {
-        "mem" : (info[0][0], info[0][1]),
-        "tmm" : (info[0][2], info[0][3]),
+        "mem": (info[0][0], info[0][1]),
+        "tmm": (info[0][2], info[0][3]),
     }
     return parsed
 
+
 def inventory_f5_bigip_mem(parsed):
-    return [ ( "total", {} ) ]
+    return [("total", {})]
 
 
 def check_f5_bigip_mem(item, params, parsed):
     mem_total, mem_used = parsed["mem"]
     return check_memory_simple(float(mem_used), float(mem_total), params)
 
+
 check_info['f5_bigip_mem'] = {
-    'parse_function'            : parse_f5_bigip_mem,
-    'inventory_function'        : inventory_f5_bigip_mem,
-    'check_function'            : check_f5_bigip_mem,
-    'service_description'       : 'Memory',
-    'has_perfdata'              : True,
-    'snmp_info'                 : (".1.3.6.1.4.1.3375.2.1", [
-                                        "7.1.1",     # F5-BIGIP-SYSTEM-MIB::sysHostMemoryTotal
-                                        "7.1.2",     # F5-BIGIP-SYSTEM-MIB::sysHostMemoryUsed
-                                        "1.2.1.143", # F5-BIGIP-SYSTEM-MIB::sysStatMemoryTotalKb
-                                        "1.2.1.144", # F5-BIGIP-SYSTEM-MIB::sysStatMemoryUsedKb
-                                  ]),
-    'snmp_scan_function'        : lambda oid: ".1.3.6.1.4.1.3375" in oid(".1.3.6.1.2.1.1.2.0"),
-    'default_levels_variable'   : 'f5_bigip_mem_default_levels',
-    'group'                     : 'memory_simple',
-    'includes'                  : [ "memory.include" ],
+    'parse_function': parse_f5_bigip_mem,
+    'inventory_function': inventory_f5_bigip_mem,
+    'check_function': check_f5_bigip_mem,
+    'service_description': 'Memory',
+    'has_perfdata': True,
+    'snmp_info': (
+        ".1.3.6.1.4.1.3375.2.1",
+        [
+            "7.1.1",  # F5-BIGIP-SYSTEM-MIB::sysHostMemoryTotal
+            "7.1.2",  # F5-BIGIP-SYSTEM-MIB::sysHostMemoryUsed
+            "1.2.1.143",  # F5-BIGIP-SYSTEM-MIB::sysStatMemoryTotalKb
+            "1.2.1.144",  # F5-BIGIP-SYSTEM-MIB::sysStatMemoryUsedKb
+        ]),
+    'snmp_scan_function': lambda oid: ".1.3.6.1.4.1.3375" in oid(".1.3.6.1.2.1.1.2.0"),
+    'default_levels_variable': 'f5_bigip_mem_default_levels',
+    'group': 'memory_simple',
+    'includes': ["memory.include"],
 }
+
 
 def inventory_f5_bigip_mem_tmm(parsed):
     mem = parsed["tmm"][0]
     # Some devices obviously do not deliver this information...
     if mem != '' and float(mem) != 0:
-        return [ ( "TMM", {} ) ]
+        return [("TMM", {})]
 
 
 def check_f5_bigip_mem_tmm(item, params, parsed):
     mem_total, mem_used = parsed["tmm"]
     return check_memory_simple(float(mem_used) * 1024, float(mem_total) * 1024, params)
 
+
 check_info['f5_bigip_mem.tmm'] = {
-    'inventory_function'        : inventory_f5_bigip_mem_tmm,
-    'check_function'            : check_f5_bigip_mem_tmm,
-    'service_description'       : 'Memory',
-    'has_perfdata'              : True,
-    'default_levels_variable'   : 'f5_bigip_mem_default_levels',
-    'group'                     : 'memory_simple',
-    'includes'                  : [ "memory.include" ],
+    'inventory_function': inventory_f5_bigip_mem_tmm,
+    'check_function': check_f5_bigip_mem_tmm,
+    'service_description': 'Memory',
+    'has_perfdata': True,
+    'default_levels_variable': 'f5_bigip_mem_default_levels',
+    'group': 'memory_simple',
+    'includes': ["memory.include"],
 }

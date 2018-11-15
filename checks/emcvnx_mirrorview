@@ -24,7 +24,6 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-
 # <<<emcvnx_mirrorview:sep(58)>>>
 # MirrorView Name:                     Mirror_Lun_306
 # MirrorView Description:
@@ -130,23 +129,24 @@ def inventory_emcvnx_mirrorview(parsed):
 
 def check_emcvnx_mirrorview(item, params, parsed):
     map_state = {
-        "no"        : (0, "NO, mirror is running as expected"),
-        "yes"       : (2, "YES, mirror broken"),
-        "active"    : (0, "normal (all IOs are allowed)"),
-        "attention" : (1, "something happened to the mirrored image"),
-        "inactive"  : (2, "stopped mirroring"),
+        "no": (0, "NO, mirror is running as expected"),
+        "yes": (2, "YES, mirror broken"),
+        "active": (0, "normal (all IOs are allowed)"),
+        "attention": (1, "something happened to the mirrored image"),
+        "inactive": (2, "stopped mirroring"),
     }
     if item in parsed:
         state, state_readable = map_state[parsed[item]["MirrorView State"].lower()]
         yield state, "Status: %s" % state_readable
 
-        _state_faulted, state_readable_faulted = map_state[parsed[item]["MirrorView Faulted"].lower()]
+        _state_faulted, state_readable_faulted = map_state[parsed[item]["MirrorView Faulted"].
+                                                           lower()]
         yield state, "Faulted: %s" % state_readable_faulted
 
 
 check_info['emcvnx_mirrorview'] = {
-    'parse_function'            : parse_emcvnx_mirrorview,
-    'inventory_function'        : inventory_emcvnx_mirrorview,
-    'check_function'            : check_emcvnx_mirrorview,
-    'service_description'       : 'Mirror view %s',
+    'parse_function': parse_emcvnx_mirrorview,
+    'inventory_function': inventory_emcvnx_mirrorview,
+    'check_function': check_emcvnx_mirrorview,
+    'service_description': 'Mirror view %s',
 }

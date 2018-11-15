@@ -51,6 +51,7 @@ def inventory_esx_vsphere_vm_mem(info):
     if 'summary.quickStats.guestMemoryUsage' in data:
         return [(None, {})]
 
+
 def check_esx_vsphere_vm_mem(_no_item, _no_params, info):
     data = esx_vsphere_vm_convert(info)
 
@@ -59,27 +60,28 @@ def check_esx_vsphere_vm_mem(_no_item, _no_params, info):
     if powerstate != "poweredOn":
         raise MKCounterWrapped("VM is %s, skipping this check" % powerstate)
 
-
     try:
         #consumed host memory
-        host_memory_usage   = savefloat(data["summary.quickStats.hostMemoryUsage"][0]) * 1024 * 1024
+        host_memory_usage = savefloat(data["summary.quickStats.hostMemoryUsage"][0]) * 1024 * 1024
         #active guest memory
-        guest_memory_usage  = savefloat(data["summary.quickStats.guestMemoryUsage"][0]) * 1024 * 1024
+        guest_memory_usage = savefloat(data["summary.quickStats.guestMemoryUsage"][0]) * 1024 * 1024
         #size of the balloon driver in the VM
-        ballooned_memory    = savefloat(data["summary.quickStats.balloonedMemory"][0]) * 1024 * 1024
+        ballooned_memory = savefloat(data["summary.quickStats.balloonedMemory"][0]) * 1024 * 1024
         #The portion of memory, in MB, that is granted to this VM from non-shared host memor(musst not be set)
-        shared_memory       = savefloat(data["summary.quickStats.sharedMemory"][0]) * 1024 * 1024
+        shared_memory = savefloat(data["summary.quickStats.sharedMemory"][0]) * 1024 * 1024
         #The portion of memory, in MB, that is granted to this VM from host memory that is shared between VMs.
-        private_memory      = savefloat(data.get("summary.quickStats.privateMemory",[0])[0]) * 1024 * 1024
+        private_memory = savefloat(data.get("summary.quickStats.privateMemory",
+                                            [0])[0]) * 1024 * 1024
     except:
-        raise MKCounterWrapped("Hostsystem did not provide memory information (reason may be high load)")
+        raise MKCounterWrapped(
+            "Hostsystem did not provide memory information (reason may be high load)")
 
     perf = [
-        ("host",      host_memory_usage ),
-        ("guest",     guest_memory_usage ),
-        ("ballooned", ballooned_memory ),
-        ("shared",    shared_memory ),
-        ("private",   private_memory ),
+        ("host", host_memory_usage),
+        ("guest", guest_memory_usage),
+        ("ballooned", ballooned_memory),
+        ("shared", shared_memory),
+        ("private", private_memory),
     ]
 
     message = "Host: %s, Guest: %s, " \
@@ -87,14 +89,14 @@ def check_esx_vsphere_vm_mem(_no_item, _no_params, info):
     (get_bytes_human_readable(host_memory_usage), \
      get_bytes_human_readable(guest_memory_usage), get_bytes_human_readable(ballooned_memory), \
      get_bytes_human_readable(private_memory), get_bytes_human_readable(shared_memory) )
-    return(0, message, perf)
+    return (0, message, perf)
 
 
 check_info['esx_vsphere_vm.mem_usage'] = {
-  "inventory_function"  : inventory_esx_vsphere_vm_mem,
-  "check_function"      : check_esx_vsphere_vm_mem,
-  "service_description" : "ESX Memory",
-  "has_perfdata"        : True
+    "inventory_function": inventory_esx_vsphere_vm_mem,
+    "check_function": check_esx_vsphere_vm_mem,
+    "service_description": "ESX Memory",
+    "has_perfdata": True
 }
 
 #.
@@ -107,23 +109,23 @@ check_info['esx_vsphere_vm.mem_usage'] = {
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
+
 def inventory_esx_vsphere_vm_name(info):
     data = esx_vsphere_vm_convert(info)
     if 'name' in data:
         return [(None, None)]
 
+
 def check_esx_vsphere_vm_name(_no_item, _no_params, info):
     data = esx_vsphere_vm_convert(info)
-    return(0, " ".join(data['name']))
+    return (0, " ".join(data['name']))
 
 
 check_info['esx_vsphere_vm.name'] = {
-  "inventory_function"  : inventory_esx_vsphere_vm_name,
-  "check_function"      : check_esx_vsphere_vm_name,
-  "service_description" : "ESX Name",
+    "inventory_function": inventory_esx_vsphere_vm_name,
+    "check_function": check_esx_vsphere_vm_name,
+    "service_description": "ESX Name",
 }
-
-
 
 #.
 #   .--Runtime Host--------------------------------------------------------.
@@ -137,10 +139,12 @@ check_info['esx_vsphere_vm.name'] = {
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
+
 def inventory_esx_vsphere_vm_running_on(info):
     data = esx_vsphere_vm_convert(info)
     if 'runtime.host' in data:
         return [(None, None)]
+
 
 def check_esx_vsphere_vm_running_on(no_item, no_params, info):
     data = esx_vsphere_vm_convert(info)
@@ -151,12 +155,12 @@ def check_esx_vsphere_vm_running_on(no_item, no_params, info):
 
     return 0, "Running on %s" % running_on[0]
 
-check_info['esx_vsphere_vm.running_on'] = {
-  "inventory_function"  : inventory_esx_vsphere_vm_running_on,
-  "check_function"      : check_esx_vsphere_vm_running_on,
-  "service_description" : "ESX Hostsystem",
-}
 
+check_info['esx_vsphere_vm.running_on'] = {
+    "inventory_function": inventory_esx_vsphere_vm_running_on,
+    "check_function": check_esx_vsphere_vm_running_on,
+    "service_description": "ESX Hostsystem",
+}
 
 #.
 #   .--VM Datastores--------------------------------------------------------.
@@ -170,11 +174,13 @@ check_info['esx_vsphere_vm.running_on'] = {
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
+
 def inventory_esx_vsphere_vm_datastores(info):
     data = esx_vsphere_vm_convert(info)
     # Right now we only handle one datastore per vm
     if 'config.datastoreUrl' in data:
         return [(None, None)]
+
 
 def check_esx_vsphere_vm_datastores(no_item, no_params, info):
     data = esx_vsphere_vm_convert(info)
@@ -213,10 +219,11 @@ def check_esx_vsphere_vm_datastores(no_item, no_params, info):
         output.append(output_store)
     return 0, ", ".join(output)
 
+
 check_info['esx_vsphere_vm.datastores'] = {
-  "inventory_function"  : inventory_esx_vsphere_vm_datastores,
-  "check_function"      : check_esx_vsphere_vm_datastores,
-  "service_description" : "ESX Datastores",
+    "inventory_function": inventory_esx_vsphere_vm_datastores,
+    "check_function": check_esx_vsphere_vm_datastores,
+    "service_description": "ESX Datastores",
 }
 
 #.
@@ -231,10 +238,12 @@ check_info['esx_vsphere_vm.datastores'] = {
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
+
 def inventory_esx_vsphere_vm_guest_tools(info):
     data = esx_vsphere_vm_convert(info)
     if 'guest.toolsVersionStatus' in data:
         return [(None, {})]
+
 
 def check_esx_vsphere_vm_guest_tools(_no_item, params, info):
     data = esx_vsphere_vm_convert(info)
@@ -245,10 +254,10 @@ def check_esx_vsphere_vm_guest_tools(_no_item, params, info):
         return
 
     guest_tools_map = {
-        "guestToolsCurrent":      (0, "VMware Tools are installed and the version is current"),
-        "guestToolsNeedUpgrade":  (1, "VMware Tools are installed, but the version is not current"),
+        "guestToolsCurrent": (0, "VMware Tools are installed and the version is current"),
+        "guestToolsNeedUpgrade": (1, "VMware Tools are installed, but the version is not current"),
         "guestToolsNotInstalled": (2, "VMware Tools are not installed"),
-        "guestToolsUnmanaged":    (1, "VMware Tools are installed, but are not managed by VMWare")
+        "guestToolsUnmanaged": (1, "VMware Tools are installed, but are not managed by VMWare")
     }
     state, info = guest_tools_map.get(vm_status, (3, "Unknown status for VMware Tools"))
 
@@ -257,13 +266,13 @@ def check_esx_vsphere_vm_guest_tools(_no_item, params, info):
 
     return state, info
 
-check_info['esx_vsphere_vm.guest_tools'] = {
-  "inventory_function"  : inventory_esx_vsphere_vm_guest_tools,
-  "check_function"      : check_esx_vsphere_vm_guest_tools,
-  "service_description" : "ESX Guest Tools",
-  "group"               : "vm_guest_tools"
-}
 
+check_info['esx_vsphere_vm.guest_tools'] = {
+    "inventory_function": inventory_esx_vsphere_vm_guest_tools,
+    "check_function": check_esx_vsphere_vm_guest_tools,
+    "service_description": "ESX Guest Tools",
+    "group": "vm_guest_tools"
+}
 
 #.
 #   .--Heartbeat-----------------------------------------------------------.
@@ -274,6 +283,7 @@ check_info['esx_vsphere_vm.guest_tools'] = {
 #   |          |_| |_|\___|\__,_|_|   \__|_.__/ \___|\__,_|\__|            |
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
+
 
 # Possible values (this list is taken from the official documentation)
 #    gray - VMware Tools are not installed or not running.
@@ -286,6 +296,7 @@ def inventory_esx_vsphere_vm_hb_status(info):
     if 'guestHeartbeatStatus' in data:
         return [(None, {})]
 
+
 def check_esx_vsphere_vm_hb_status(_no_item, params, info):
     data = esx_vsphere_vm_convert(info)
 
@@ -295,10 +306,12 @@ def check_esx_vsphere_vm_hb_status(_no_item, params, info):
     vm_status = data['guestHeartbeatStatus'][0]
     state = 3
 
-    vm_heartbeat_map = { "gray"   : (1, "heartbeat_no_tools"),
-                         "green"  : (0, "heartbeat_ok"),
-                         "red"    : (2, "heartbeat_missing"),
-                         "yellow" : (1, "heartbeat_intermittend") }
+    vm_heartbeat_map = {
+        "gray": (1, "heartbeat_no_tools"),
+        "green": (0, "heartbeat_ok"),
+        "red": (2, "heartbeat_missing"),
+        "yellow": (1, "heartbeat_intermittend")
+    }
     if vm_status in vm_heartbeat_map:
         if params:
             state = params.get(vm_heartbeat_map.get(vm_status)[1], 3)
@@ -311,12 +324,11 @@ def check_esx_vsphere_vm_hb_status(_no_item, params, info):
         return 3, "Unknown heartbeat status %s" % vm_status
 
 
-
 check_info['esx_vsphere_vm.heartbeat'] = {
-  "inventory_function"  : inventory_esx_vsphere_vm_hb_status,
-  "check_function"      : check_esx_vsphere_vm_hb_status,
-  "service_description" : "ESX Heartbeat",
-  "group"               : "vm_heartbeat"
+    "inventory_function": inventory_esx_vsphere_vm_hb_status,
+    "check_function": check_esx_vsphere_vm_hb_status,
+    "service_description": "ESX Heartbeat",
+    "group": "vm_heartbeat"
 }
 
 #.
@@ -336,10 +348,12 @@ check_info['esx_vsphere_vm.heartbeat'] = {
 # config.hardware.numCoresPerSocket 2
 # summary.quickStats.overallCpuUsage 8
 
+
 def inventory_esx_vsphere_vm_cpu(info):
     data = esx_vsphere_vm_convert(info)
     if 'summary.quickStats.overallCpuUsage' in data:
         return [(None, None)]
+
 
 def check_esx_vsphere_vm_cpu(_no_item, _no_params, info):
     data = esx_vsphere_vm_convert(info)
@@ -349,15 +363,15 @@ def check_esx_vsphere_vm_cpu(_no_item, _no_params, info):
 
     usage_mhz = int(data['summary.quickStats.overallCpuUsage'][0])
     cpus = int(data['config.hardware.numCPU'][0])
-    return 0, "demand is %.3f Ghz, %d virtual CPUs" % (usage_mhz / 1000.0, cpus), [ ("demand", usage_mhz) ]
-
+    return 0, "demand is %.3f Ghz, %d virtual CPUs" % (usage_mhz / 1000.0, cpus), [("demand",
+                                                                                    usage_mhz)]
 
 
 check_info['esx_vsphere_vm.cpu'] = {
-  "inventory_function"  : inventory_esx_vsphere_vm_cpu,
-  "check_function"      : check_esx_vsphere_vm_cpu,
-  "service_description" : "ESX CPU",
-  "has_perfdata"        : True,
+    "inventory_function": inventory_esx_vsphere_vm_cpu,
+    "check_function": check_esx_vsphere_vm_cpu,
+    "service_description": "ESX CPU",
+    "has_perfdata": True,
 }
 
 #.-
@@ -373,10 +387,12 @@ check_info['esx_vsphere_vm.cpu'] = {
 # <<<esx_vsphere_vm>>>
 # snapshot.rootSnapshotList 1 1363596734 poweredOff 20130318_105600_snapshot_LinuxI|2 1413977827 poweredOn LinuxI Testsnapshot
 
+
 def inventory_esx_vsphere_vm_snapshots(info):
     data = esx_vsphere_vm_convert(info)
     if data:
         return [(None, {})]
+
 
 def check_esx_vsphere_vm_snapshots(_no_item, params, info):
     def check_levels(age, warn, crit):
@@ -438,13 +454,12 @@ def check_esx_vsphere_vm_snapshots(_no_item, params, info):
 
 
 check_info['esx_vsphere_vm.snapshots'] = {
-  "inventory_function"  : inventory_esx_vsphere_vm_snapshots,
-  "check_function"      : check_esx_vsphere_vm_snapshots,
-  "service_description" : "ESX Snapshots",
-  "group"               : "vm_snapshots",
-  "has_perfdata"        : True,
+    "inventory_function": inventory_esx_vsphere_vm_snapshots,
+    "check_function": check_esx_vsphere_vm_snapshots,
+    "service_description": "ESX Snapshots",
+    "group": "vm_snapshots",
+    "has_perfdata": True,
 }
-
 
 #.
 #   .--VM devices----------------------------------------------------------.
@@ -493,7 +508,7 @@ def check_esx_vsphere_vm_mounted_devices(item, params, info):
 
 
 check_info['esx_vsphere_vm.mounted_devices'] = {
-  "inventory_function"  : inventory_esx_vsphere_vm_mounted_devices,
-  "check_function"      : check_esx_vsphere_vm_mounted_devices,
-  "service_description" : "ESX Mounted Devices",
+    "inventory_function": inventory_esx_vsphere_vm_mounted_devices,
+    "check_function": check_esx_vsphere_vm_mounted_devices,
+    "service_description": "ESX Mounted Devices",
 }

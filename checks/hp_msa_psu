@@ -69,11 +69,11 @@
 #   '----------------------------------------------------------------------'
 
 check_info['hp_msa_psu'] = {
-    'parse_function'            : parse_hp_msa,
-    'inventory_function'        : inventory_hp_msa_health,
-    'check_function'            : check_hp_msa_health,
-    'service_description'       : 'Power Supply Health %s',
-    'includes'                  : [ "hp_msa.include" ],
+    'parse_function': parse_hp_msa,
+    'inventory_function': inventory_hp_msa_health,
+    'check_function': check_hp_msa_health,
+    'service_description': 'Power Supply Health %s',
+    'includes': ["hp_msa.include"],
 }
 
 #.
@@ -88,27 +88,25 @@ check_info['hp_msa_psu'] = {
 
 # Just an assumption
 factory_settings["hp_msa_psu_default_levels"] = {
-    "levels_33v_lower" : (3.25, 3.20),
-    "levels_33v_upper" : (3.4,  3.45),
-    "levels_5v_lower"  : (4.9,  4.8),
-    "levels_5v_upper"  : (5.1,  5.2),
-    "levels_12v_lower" : (11.9, 11.8),
-    "levels_12v_upper" : (12.1, 12.2),
+    "levels_33v_lower": (3.25, 3.20),
+    "levels_33v_upper": (3.4, 3.45),
+    "levels_5v_lower": (4.9, 4.8),
+    "levels_5v_upper": (5.1, 5.2),
+    "levels_12v_lower": (11.9, 11.8),
+    "levels_12v_upper": (12.1, 12.2),
 }
 
 
 def inventory_hp_msa_psu(parsed):
-    return [ (key, {}) for key in parsed]
+    return [(key, {}) for key in parsed]
 
 
 def check_hp_msa_psu(item, params, parsed):
     state = 0
     if item in parsed:
-        for psu_type, psu_type_readable, levels_type in [
-            ("dc12v", "12 V",  "levels_12v_"),
-            ("dc5v",  "5 V",   "levels_5v_"),
-            ("dc33v", "3.3 V", "levels_33v_")
-        ]:
+        for psu_type, psu_type_readable, levels_type in [("dc12v", "12 V", "levels_12v_"),
+                                                         ("dc5v", "5 V", "levels_5v_"),
+                                                         ("dc33v", "3.3 V", "levels_33v_")]:
             psu_voltage = float(parsed[item][psu_type]) / 100
             yield state, "%s: %.2f V" % (psu_type_readable, psu_voltage)
 
@@ -126,14 +124,13 @@ def check_hp_msa_psu(item, params, parsed):
 
 
 check_info['hp_msa_psu.sensor'] = {
-    'inventory_function'        : inventory_hp_msa_psu,
-    'check_function'            : check_hp_msa_psu,
-    'service_description'       : 'Power Supply Voltage %s',
-    'default_levels_variable'   : "hp_msa_psu_default_levels",
-    'group'                     : 'hp_msa_psu_voltage',
-    'includes'                  : [ "hp_msa.include" ],
+    'inventory_function': inventory_hp_msa_psu,
+    'check_function': check_hp_msa_psu,
+    'service_description': 'Power Supply Voltage %s',
+    'default_levels_variable': "hp_msa_psu_default_levels",
+    'group': 'hp_msa_psu_voltage',
+    'includes': ["hp_msa.include"],
 }
-
 
 #.
 #   .--temperature---------------------------------------------------------.
@@ -145,9 +142,8 @@ check_info['hp_msa_psu.sensor'] = {
 #   |                       |_|                                            |
 #   +----------------------------------------------------------------------+
 
-
 factory_settings["hp_msa_psu_temp_default_levels"] = {
-    "levels"        : (40, 45), # Just assumed
+    "levels": (40, 45),  # Just assumed
 }
 
 
@@ -162,11 +158,11 @@ def check_hp_msa_psu_temp(item, params, parsed):
 
 
 check_info['hp_msa_psu.temp'] = {
-    'inventory_function'        : inventory_hp_msa_psu_temp,
-    'check_function'            : check_hp_msa_psu_temp,
-    'service_description'       : 'Temperature Power Supply %s',
-    'has_perfdata'              : True,
-    'group'                     : 'temperature',
-    'default_levels_variable'   : 'hp_msa_psu_temp_default_levels',
-    'includes'                  : [ "temperature.include", "hp_msa.include" ],
+    'inventory_function': inventory_hp_msa_psu_temp,
+    'check_function': check_hp_msa_psu_temp,
+    'service_description': 'Temperature Power Supply %s',
+    'has_perfdata': True,
+    'group': 'temperature',
+    'default_levels_variable': 'hp_msa_psu_temp_default_levels',
+    'includes': ["temperature.include", "hp_msa.include"],
 }

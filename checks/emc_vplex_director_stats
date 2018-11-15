@@ -30,29 +30,31 @@ def parse_emc_director_stats(info):
     now = time.time()
     for line in info:
         directors["%s_FE" % line[0]] = {
-              "node"                       : None,
-              "read_ios"                   : get_rate("fe_readio.%s" % line[0],  now, int(line[1])),
-              "write_ios"                  : get_rate("fe_writeio.%s" % line[0], now, int(line[2])),
-              "queue_length"               : int(line[3]),
-              "average_read_wait"          : float(line[5]) / 1000000,
-              "average_write_wait"         : float(line[6]) / 1000000,
-              "read_throughput"            : get_rate("fe_readbytes.%s" % line[0],  now, int(line[7])),
-              "write_throughput"           : get_rate("fe_writebytes.%s" % line[0], now, int(line[8])),
+            "node": None,
+            "read_ios": get_rate("fe_readio.%s" % line[0], now, int(line[1])),
+            "write_ios": get_rate("fe_writeio.%s" % line[0], now, int(line[2])),
+            "queue_length": int(line[3]),
+            "average_read_wait": float(line[5]) / 1000000,
+            "average_write_wait": float(line[6]) / 1000000,
+            "read_throughput": get_rate("fe_readbytes.%s" % line[0], now, int(line[7])),
+            "write_throughput": get_rate("fe_writebytes.%s" % line[0], now, int(line[8])),
         }
         directors["%s_BE" % line[0]] = {
-              "node"                       : None,
-              "read_ios"                   : get_rate("be_readio.%s" % line[0],  now, int(line[9])),
-              "write_ios"                  : get_rate("be_writeio.%s" % line[0], now, int(line[10])),
-              "average_read_wait"          : float(line[11]) / 1000000,
-              "average_write_wait"         : float(line[12]) / 1000000,
-              "read_throughput"            : get_rate("be_readbytes.%s" % line[0],  now, int(line[13])),
-              "write_throughput"           : get_rate("be_writebytes.%s" % line[0], now, int(line[14])),
+            "node": None,
+            "read_ios": get_rate("be_readio.%s" % line[0], now, int(line[9])),
+            "write_ios": get_rate("be_writeio.%s" % line[0], now, int(line[10])),
+            "average_read_wait": float(line[11]) / 1000000,
+            "average_write_wait": float(line[12]) / 1000000,
+            "read_throughput": get_rate("be_readbytes.%s" % line[0], now, int(line[13])),
+            "write_throughput": get_rate("be_writebytes.%s" % line[0], now, int(line[14])),
         }
 
     return directors
 
+
 def inventory_emc_director_stats(parsed):
     return inventory_diskstat_generic([(None, x) for x in parsed.keys()])
+
 
 def check_emc_director_stats(item, params, parsed):
     # The check_diskstat_dict function may compute average values
@@ -92,4 +94,3 @@ check_info["emc_vplex_director_stats"] = {
     "default_levels_variable"       : "diskstat_default_levels",
     "includes"                      : [ "diskstat.include" ],
 }
-

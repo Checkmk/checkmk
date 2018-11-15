@@ -120,13 +120,14 @@
 # host-port-statistics 2 stop-sample-time 2015-08-21 11:52:00
 # host-port-statistics 2 stop-sample-time-numeric 1440157920
 
+
 def parse_hp_msa_if(info):
     parsed = []
     for idx, (_key, values) in enumerate(sorted(parse_hp_msa(info).iteritems())):
         if values['actual-speed'] == '':
             speed = values['actual-speed'] = 0
         else:
-            speed = int(values['actual-speed'].replace('Gb', '')) * 10 ** 9
+            speed = int(values['actual-speed'].replace('Gb', '')) * 10**9
 
         if values['status'] == 'Up':
             status = '1'
@@ -134,28 +135,28 @@ def parse_hp_msa_if(info):
             status = '2'
 
         nic = ['0'] * 20
-        nic[0]  = str(idx + 1)                          # Index
-        nic[1]  = values['port']                        # Description
-        nic[2]  = "6" # Fake ethernet                   # Type
-        nic[3]  = speed                                 # Speed
-        nic[4]  = status                                # Status
+        nic[0] = str(idx + 1)  # Index
+        nic[1] = values['port']  # Description
+        nic[2] = "6"  # Fake ethernet                   # Type
+        nic[3] = speed  # Speed
+        nic[4] = status  # Status
         # IN
-        nic[5]  = int(values['data-read-numeric'])      # inoctets
-        nic[6]  = 0                                     # inucast
-        nic[7]  = 0                                     # inmcast
-        nic[8]  = 0                                     # ibcast
-        nic[9]  = 0                                     # indiscards
-        nic[10] = 0                                     # inerrors
+        nic[5] = int(values['data-read-numeric'])  # inoctets
+        nic[6] = 0  # inucast
+        nic[7] = 0  # inmcast
+        nic[8] = 0  # ibcast
+        nic[9] = 0  # indiscards
+        nic[10] = 0  # inerrors
         # OUT
-        nic[11] = int(values['data-written-numeric'])   # outoctets
-        nic[12] = 0                                     # outucast
-        nic[13] = 0                                     # outmcast
-        nic[14] = 0                                     # outbcast
-        nic[15] = 0                                     # outdiscards
-        nic[16] = 0                                     # outspeed
-        nic[17] = int(values['queue-depth'])            # outqlen
-        nic[18] = ""                                    # Alias
-        nic[19] = ""                                    # MAC
+        nic[11] = int(values['data-written-numeric'])  # outoctets
+        nic[12] = 0  # outucast
+        nic[13] = 0  # outmcast
+        nic[14] = 0  # outbcast
+        nic[15] = 0  # outdiscards
+        nic[16] = 0  # outspeed
+        nic[17] = int(values['queue-depth'])  # outqlen
+        nic[18] = ""  # Alias
+        nic[19] = ""  # MAC
 
         parsed.append(nic)
 
@@ -171,11 +172,11 @@ def check_hp_msa_if(item, params, parsed):
 
 
 check_info['hp_msa_if'] = {
-    'parse_function'            : parse_hp_msa_if,
-    'inventory_function'        : inventory_hp_msa_if,
-    'check_function'            : check_hp_msa_if,
-    'service_description'       : 'Interface %s',
-    'has_perfdata'              : True,
-    'default_levels_variable'   : 'if_default_levels',
-    'includes'                  : [ "hp_msa.include", "if.include" ],
+    'parse_function': parse_hp_msa_if,
+    'inventory_function': inventory_hp_msa_if,
+    'check_function': check_hp_msa_if,
+    'service_description': 'Interface %s',
+    'has_perfdata': True,
+    'default_levels_variable': 'if_default_levels',
+    'includes': ["hp_msa.include", "if.include"],
 }

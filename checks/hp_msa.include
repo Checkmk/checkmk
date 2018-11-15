@@ -25,14 +25,14 @@
 # Boston, MA 02110-1301 USA.
 
 hp_msa_state_map = {
-    "Up"          : (0, "up"),
-    "OK"          : (0, "OK"),
-    "Warning"     : (1, "warning"),
-    "Degraded"    : (1, "degraded"),
-    "Error"       : (2, "error"),
-    "Not Present" : (2, "not present"),
-    "Fault"       : (2, "fault"),
-    "Unknown"     : (3, "unknown"),
+    "Up": (0, "up"),
+    "OK": (0, "OK"),
+    "Warning": (1, "warning"),
+    "Degraded": (1, "degraded"),
+    "Error": (2, "error"),
+    "Not Present": (2, "not present"),
+    "Fault": (2, "fault"),
+    "Unknown": (3, "unknown"),
 }
 
 
@@ -41,7 +41,7 @@ def parse_hp_msa(info):
     for line in info:
         if line[2] == "durable-id":
             item_id = " ".join(line[3:])
-            info_enrolment.setdefault(item_id, {"item_type" : line[0]})
+            info_enrolment.setdefault(item_id, {"item_type": line[0]})
         else:
             info_enrolment[item_id][line[2]] = " ".join(line[3:])
 
@@ -62,7 +62,7 @@ def parse_hp_msa(info):
 
 
 def inventory_hp_msa_health(parsed):
-    return [ (key, None) for key in parsed ]
+    return [(key, None) for key in parsed]
 
 
 def check_hp_msa_health(item, _no_params, parsed):
@@ -104,8 +104,8 @@ def check_hp_msa_io(item, params, parsed):
     disks = {}
     for key, values in parsed.items():
         disks[key] = {
-            "read_throughput"  : values["data-read-numeric"],
-            "write_throughput" : values["data-written-numeric"],
+            "read_throughput": values["data-read-numeric"],
+            "write_throughput": values["data-written-numeric"],
         }
 
     return check_diskstat_dict(item, params, disks)

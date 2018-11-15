@@ -27,7 +27,7 @@
 
 def inventory_emc_isilon_cpu_utilization(info):
     # the device reports cpu utilization for each core and a total. This interprets only the total
-    return [ (None, None) ]
+    return [(None, None)]
 
 
 def check_emc_isilon_cpu_utilization(item, params, info):
@@ -64,26 +64,25 @@ def check_emc_isilon_cpu_utilization(item, params, info):
                 infotext.append(" (warn/crit at %.1f%%/%.1f%%)" % (warn, crit))
 
         # perfometer expects a wait value but we don't have data for that
-        perfdata = [
-            ( "user",   "%.3f" % user_perc ),
-            ( "system", "%.3f" % system_perc ),
-            ( "interrupt", "%.3f" % interrupt_perc) ]
+        perfdata = [("user", "%.3f" % user_perc), ("system", "%.3f" % system_perc),
+                    ("interrupt", "%.3f" % interrupt_perc)]
 
         return status, "".join(infotext), perfdata
 
 
 check_info["emc_isilon_cpu"] = {
-    "check_function"      : check_emc_isilon_cpu_utilization,
-    "inventory_function"  : inventory_emc_isilon_cpu_utilization,
-    "service_description" : "Node CPU utilization",
-    "has_perfdata"        : True,
-    "snmp_info"           : (".1.3.6.1.4.1.12124.2.2.3",
-                             [1,  #nodeCPUUser
-                              2,  #nodeCPUNice
-                              3,  #nodeCPUSystem
-                              4,  #nodeCPUInterrupt
-                              ]),
-    "snmp_scan_function"  : lambda oid: "isilon" in oid(".1.3.6.1.2.1.1.1.0").lower(),
-    "group"               : "cpu_utilization",
+    "check_function": check_emc_isilon_cpu_utilization,
+    "inventory_function": inventory_emc_isilon_cpu_utilization,
+    "service_description": "Node CPU utilization",
+    "has_perfdata": True,
+    "snmp_info": (
+        ".1.3.6.1.4.1.12124.2.2.3",
+        [
+            1,  #nodeCPUUser
+            2,  #nodeCPUNice
+            3,  #nodeCPUSystem
+            4,  #nodeCPUInterrupt
+        ]),
+    "snmp_scan_function": lambda oid: "isilon" in oid(".1.3.6.1.2.1.1.1.0").lower(),
+    "group": "cpu_utilization",
 }
-

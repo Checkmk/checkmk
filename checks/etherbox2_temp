@@ -38,10 +38,9 @@
 # .1.3.6.1.4.1.14848.2.1.9.1.2.3 0            --> BETTER-NETWORKS-ETHERNETBOX-MIB::ethernetboxObjects.9.1.2.3
 # .1.3.6.1.4.1.14848.2.1.9.1.2.4 248          --> BETTER-NETWORKS-ETHERNETBOX-MIB::ethernetboxObjects.9.1.2.4
 
-
 # suggested by customer
 factory_settings['etherbox2_temp_default_levels'] = {
-    'levels'       : (30, 35),
+    'levels': (30, 35),
 }
 
 
@@ -66,7 +65,7 @@ def parse_etherbox2_temp(info):
 
 
 def inventory_etherbox2_temp(parsed):
-    return [ (sensor, {}) for sensor in parsed ]
+    return [(sensor, {}) for sensor in parsed]
 
 
 def check_etherbox2_temp(item, params, parsed):

@@ -26,8 +26,7 @@
 
 
 def parse_hp_psu(info):
-    parsed = { index : { "temp": int(temp), "status" : dev_status}
-                for index, dev_status, temp in info }
+    parsed = {index: {"temp": int(temp), "status": dev_status} for index, dev_status, temp in info}
     return parsed
 
 
@@ -41,8 +40,9 @@ def parse_hp_psu(info):
 #   '----------------------------------------------------------------------'
 
 factory_settings["hp_psu_temp_default_levels"] = {
-    "levels"    : (70, 80),
+    "levels": (70, 80),
 }
+
 
 def inventory_hp_psu_temp(parsed):
     for item in parsed:
@@ -50,23 +50,22 @@ def inventory_hp_psu_temp(parsed):
 
 
 def check_hp_psu_temp(item, params, parsed):
-    temp_unknown_status = ["8"] # For some status, the device simply reports 0 as a temperature value.
+    temp_unknown_status = ["8"
+                          ]  # For some status, the device simply reports 0 as a temperature value.
     if parsed[item]["status"] in temp_unknown_status and parsed[item]["temp"] == 0:
         return 3, "No temperature data available"
     return check_temperature(parsed[item]["temp"], params, item)
 
 
-
 check_info['hp_psu.temp'] = {
-    'default_levels_variable'   : "hp_psu_temp_default_levels",
-    'inventory_function'        : inventory_hp_psu_temp,
-    'check_function'            : check_hp_psu_temp,
-    'service_description'       : "Temperature Power Supply %s",
-    'group'                     : "temperature",
-    'includes'                  : [ "temperature.include" ],
-    'has_perfdata'              : True,
+    'default_levels_variable': "hp_psu_temp_default_levels",
+    'inventory_function': inventory_hp_psu_temp,
+    'check_function': check_hp_psu_temp,
+    'service_description': "Temperature Power Supply %s",
+    'group': "temperature",
+    'includes': ["temperature.include"],
+    'has_perfdata': True,
 }
-
 
 #.
 #   .--Status--------------------------------------------------------------.
@@ -78,24 +77,25 @@ check_info['hp_psu.temp'] = {
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
+
 def inventory_hp_psu(parsed):
     for item in parsed:
         yield item, None
 
 
 def check_hp_psu(item, params, parsed):
-
     ps_statemap = {
-        "1"     : (2, "Not present"),
-        "2"     : (2, "Not plugged"),
-        "3"     : (0, "Powered"),
-        "4"     : (1, "Failed"),
-        "5"     : (2, "Permanent Failure"),
-        "6"     : (3, "Max"),
-        "8"     : (2, "Unplugged"), # This value is not specified in the MIB, but has been observed in the wild.
+        "1": (2, "Not present"),
+        "2": (2, "Not plugged"),
+        "3": (0, "Powered"),
+        "4": (1, "Failed"),
+        "5": (2, "Permanent Failure"),
+        "6": (3, "Max"),
+        # This value is not specified in the MIB, but has been observed in the wild.
+        "8": (2, "Unplugged"),
     }
 
-    return ps_statemap.get(parsed[item]["status"],(3, "Unknown status code sent by device"))
+    return ps_statemap.get(parsed[item]["status"], (3, "Unknown status code sent by device"))
 
 
 check_info['hp_psu'] = {

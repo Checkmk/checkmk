@@ -39,21 +39,25 @@
 # 04 = Fail (module has encountered errors and is therefore disabled)
 # 05 = Prefail (module exceeded the correctable errors threshold)
 fsc_ipmi_mem_status_levels = [
-  # Status Code, Label
-  (0, 'Empty slot'),
-  (0, 'Running'),
-  (0, 'Reserved'),
-  (2, 'Error (module has encountered errors, but is still in use)'),
-  (2, 'Fail (module has encountered errors and is therefore disabled)'),
-  (2, 'Prefail (module exceeded the correctable errors threshold)'),
+    # Status Code, Label
+    (0, 'Empty slot'),
+    (0, 'Running'),
+    (0, 'Reserved'),
+    (2, 'Error (module has encountered errors, but is still in use)'),
+    (2, 'Fail (module has encountered errors and is therefore disabled)'),
+    (2, 'Prefail (module exceeded the correctable errors threshold)'),
 ]
+
 
 def inventory_fsc_ipmi_mem_status(info):
     # Skip all lines which have
     # a) An error (Begin with "E")
     # b) Don't have a status (line[2])
     # c) Don't have a module
-    return [ (line[1], "", None) for line in info if line[0] != 'E' and len(line) > 2 and line[2] != '00' ]
+    return [
+        (line[1], "", None) for line in info if line[0] != 'E' and len(line) > 2 and line[2] != '00'
+    ]
+
 
 def check_fsc_ipmi_mem_status(name, _no_params, info):
     for line in info:
@@ -66,8 +70,8 @@ def check_fsc_ipmi_mem_status(name, _no_params, info):
 
 
 check_info["fsc_ipmi_mem_status"] = {
-    'check_function':          check_fsc_ipmi_mem_status,
-    'inventory_function':      inventory_fsc_ipmi_mem_status,
-    'service_description':     'IPMI Memory status %s',
-    'has_perfdata':            True,
+    'check_function': check_fsc_ipmi_mem_status,
+    'inventory_function': inventory_fsc_ipmi_mem_status,
+    'service_description': 'IPMI Memory status %s',
+    'has_perfdata': True,
 }

@@ -24,7 +24,6 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-
 # <<<haproxy:sep(44)>>>
 # # pxname,svname,qcur,qmax,scur,smax,slim,stot,bin,bout,dreq,dresp,ereq,econ,eresp,wretr,wredis,status,weight,act,bck,chkfail,chkdown,lastchg,downtime,qlimit,pid,iid,sid,throttle,lbtot,tracked,type,rate,rate_lim,rate_max,check_status,check_code,check_duration,hrsp_1xx,hrsp_2xx,hrsp_3xx,hrsp_4xx,hrsp_5xx,hrsp_other,hanafail,req_rate,req_rate_max,req_tot,cli_abrt,srv_abrt,comp_in,comp_out,comp_byp,comp_rsp,lastsess,last_chk,last_agt,qtime,ctime,rtime,ttime,
 # https_t3test.tgic.de,FRONTEND,,,0,0,2000,0,0,0,0,0,0,,,,,OPEN,,,,,,,,,1,2,0,,,,0,0,0,0,,,,0,0,0,0,0,0,,0,0,0,,,0,0,0,0,,,,,,,,
@@ -35,7 +34,6 @@
 # BLABLABFO,ELEADC05,0,0,0,5,,841,483793,1386127,,0,,0,751,0,0,UP,1,1,0,0,0,38624,0,,1,5,2,,841,,2,0,,4,L4OK,,0,,,,,,,0,,,,90,751,,,,,169,,,0,0,0,3073,
 # BLABLABLABLA,FRONTEND,,,0,0,2000,0,0,0,0,0,0,,,,,OPEN,,,,,,,,,1,2,0,,,,0,0,0,0,,,,0,0,0,0,0,0,,0,0,0,,,0,0,0,0,,,,,,,,
 # LDAP,IP.IP.IP.IP,,,0,32,250,5892,3365040,9470591,0,0,0,,,,,OPEN,,,,,,,,,1,3,1,,,,3,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
-
 
 # from http://www.haproxy.org/download/1.7/doc/management.txt
 # 0=frontend, 1=backend, 2=server, 3=socket/listener
@@ -50,13 +48,13 @@ def inventory_haproxy_frontend(info):
 def check_haproxy_frontend(item, _no_params, info):
     for line in info:
         if line[0] == item:
-            now          = time.time()
-            status       = line[17]
-            stot         = int(line[7])
+            now = time.time()
+            status = line[17]
+            stot = int(line[7])
             session_rate = get_rate("sessions.%s" % item, now, stot)
 
             infotext = "%s, Session Rate: %.2f/s" % (status, session_rate)
-            perfdata = [ ("session_rate", session_rate) ]
+            perfdata = [("session_rate", session_rate)]
 
             if status == "OPEN":
                 state = 0
@@ -67,10 +65,10 @@ def check_haproxy_frontend(item, _no_params, info):
 
 
 check_info["haproxy.frontend"] = {
-    'check_function'      : check_haproxy_frontend,
-    'inventory_function'  : inventory_haproxy_frontend,
-    'service_description' : 'HAProxy Frontend %s',
-    'has_perfdata'        : True,
+    'check_function': check_haproxy_frontend,
+    'inventory_function': inventory_haproxy_frontend,
+    'service_description': 'HAProxy Frontend %s',
+    'has_perfdata': True,
 }
 
 
@@ -83,11 +81,11 @@ def inventory_haproxy_server(info):
 def check_haproxy_server(item, _no_params, info):
     for line in info:
         if "%s/%s" % (line[0], line[1]) == item:
-            status      = line[17]
-            uptime_str  = line[23]
+            status = line[17]
+            uptime_str = line[23]
             layer_check = line[36]
-            active      = int(line[19])
-            backup      = int(line[20])
+            active = int(line[19])
+            backup = int(line[20])
 
             infotext = "Status: %s" % status
             if uptime_str:
@@ -110,7 +108,7 @@ def check_haproxy_server(item, _no_params, info):
 
 
 check_info["haproxy.server"] = {
-    'check_function'      : check_haproxy_server,
-    'inventory_function'  : inventory_haproxy_server,
-    'service_description' : 'HAProxy Server %s',
+    'check_function': check_haproxy_server,
+    'inventory_function': inventory_haproxy_server,
+    'service_description': 'HAProxy Server %s',
 }

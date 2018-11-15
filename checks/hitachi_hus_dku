@@ -24,18 +24,19 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-
 check_info["hitachi_hus_dku"] = {
-    "inventory_function"    : inventory_hitachi_hus,
-    "check_function"        : check_hitachi_hus,
-    "service_description"   : "HUS DKU Chassis %s",
-    "snmp_info"             : (".1.3.6.1.4.1.116.5.11.4.1.1.7.1", [
-                                    1, # dkuRaidListIndexSerialNumber
-                                    2, # dkuHWPS
-                                    3, # dkuHWFan
-                                    4, # dkuHWEnvironment
-                                    5, # dkuHWDrive
-                              ]),
-     "snmp_scan_function"    : scan_hitachi_hus,
-     "includes"              : [ "hitachi_hus.include" ],
+    "inventory_function": inventory_hitachi_hus,
+    "check_function": check_hitachi_hus,
+    "service_description": "HUS DKU Chassis %s",
+    "snmp_info": (
+        ".1.3.6.1.4.1.116.5.11.4.1.1.7.1",
+        [
+            1,  # dkuRaidListIndexSerialNumber
+            2,  # dkuHWPS
+            3,  # dkuHWFan
+            4,  # dkuHWEnvironment
+            5,  # dkuHWDrive
+        ]),
+    "snmp_scan_function": scan_hitachi_hus,
+    "includes": ["hitachi_hus.include"],
 }

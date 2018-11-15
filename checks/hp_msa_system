@@ -69,7 +69,7 @@ def parse_hp_msa_system(info):
     for line in info:
         if line[2] == "system-name":
             system_name = " ".join(line[3:])
-            parsed[system_name] = {"item_type" : line[0]}
+            parsed[system_name] = {"item_type": line[0]}
         elif line[2] == "health":
             parsed[system_name]["health"] = " ".join(line[3:])
         elif line[2] == "health-reason":
@@ -79,9 +79,9 @@ def parse_hp_msa_system(info):
 
 
 check_info['hp_msa_system'] = {
-    'parse_function'            : parse_hp_msa_system,
-    'inventory_function'        : inventory_hp_msa_health,
-    'check_function'            : check_hp_msa_health,
-    'service_description'       : 'System Health %s',
-    'includes'                  : [ "hp_msa.include" ],
+    'parse_function': parse_hp_msa_system,
+    'inventory_function': inventory_hp_msa_health,
+    'check_function': check_hp_msa_health,
+    'service_description': 'System Health %s',
+    'includes': ["hp_msa.include"],
 }

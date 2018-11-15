@@ -24,16 +24,15 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-
-condition_map = {'1': ('other', 3),    # the status could not be
-                                       # determined or not present.
-                 '2': ('ok', 0),       # operating normally
-                 '3': ('degraded', 2), # component is outside of
-                                       # normal operating range.
-                 '4': ('failed', 2),   # component detects condition
-                                       # that could damage system
-                }
-
+condition_map = {
+    '1': ('other', 3),  # the status could not be
+    # determined or not present.
+    '2': ('ok', 0),  # operating normally
+    '3': ('degraded', 2),  # component is outside of
+    # normal operating range.
+    '4': ('failed', 2),  # component detects condition
+    # that could damage system
+}
 
 factory_settings["hp_proliant_psu_levels"] = {
     "levels": (80, 90),
@@ -42,21 +41,19 @@ factory_settings["hp_proliant_psu_levels"] = {
 
 def parse_hp_proliant_psu(info):
     parsed = {}
-    Psu = collections.namedtuple("Psu", ['chassis', 'bay', 'condition',
-                                         'used', 'max'])
+    Psu = collections.namedtuple("Psu", ['chassis', 'bay', 'condition', 'used', 'max'])
     for chassis, bay, present, cond, used, capacity_maximum in info:
         if present != '3' or capacity_maximum == '0':
             continue
         item = "%s/%s" % (chassis, bay)
         try:
-            parsed[item] = Psu(chassis, bay, cond,
-                               int(used), int(capacity_maximum))
+            parsed[item] = Psu(chassis, bay, cond, int(used), int(capacity_maximum))
         except ValueError:
             pass
     if parsed:
         PsuTotal = collections.namedtuple("Psu", ['used', 'max'])
-        parsed['Total'] = PsuTotal(sum(v.used for v in parsed.values()),
-                                   sum(v.max for v in parsed.values()))
+        parsed['Total'] = PsuTotal(
+            sum(v.used for v in parsed.values()), sum(v.max for v in parsed.values()))
     return parsed
 
 
@@ -76,9 +73,10 @@ def check_hp_proliant_psu(item, params, psu):
     # usage info
     info = 'Usage: %d Watts' % psu.used
     cap_perc = psu.used * 100 / psu.max
-    perf_data = [('power_usage_percentage', cap_perc),
-                 ('power_usage', psu.used),
-                ]
+    perf_data = [
+        ('power_usage_percentage', cap_perc),
+        ('power_usage', psu.used),
+    ]
 
     # check for user defined thresholds here
     warn, crit = params["levels"]
@@ -109,7 +107,7 @@ check_info["hp_proliant_psu"] = {
             "8", # cpqHeFltTolPowerSupplyCapacityMaximum
         ]
     ),
-    'snmp_scan_function':      \
+    'snmp_scan_function':        \
          lambda oid: "proliant" in oid(".1.3.6.1.4.1.232.2.2.4.2.0", "").lower(),
     'has_perfdata': True,
 }

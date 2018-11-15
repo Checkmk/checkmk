@@ -24,13 +24,13 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-def inventory_h3c_lanswitch_sensors(info):
-    return [ (h3c_lanswitch_genitem(line[0]), None) for line in info if line[1] in [ '1', '2']  ]
 
+def inventory_h3c_lanswitch_sensors(info):
+    return [(h3c_lanswitch_genitem(line[0]), None) for line in info if line[1] in ['1', '2']]
 
 
 def check_h3c_lanswitch_sensors(item, params, info):
-# the values are:   active     (1), deactive   (2), not-install  (3), unsupport    (4)
+    # the values are:   active     (1), deactive   (2), not-install  (3), unsupport    (4)
     for (endoid, status) in info:
         if h3c_lanswitch_genitem(endoid) == item:
             if status == "2":
@@ -38,10 +38,12 @@ def check_h3c_lanswitch_sensors(item, params, info):
             elif status == "1":
                 return (0, "Sensor %s status is %s" % (item, status))
             return (1, "Sensor % status is %s" % (item, status))
-    return (3, "Sensor %s not found" % item )
+    return (3, "Sensor %s not found" % item)
 
 
-check_info["h3c_lanswitch_sensors"] = (check_h3c_lanswitch_sensors, "%s", 0, inventory_h3c_lanswitch_sensors )
+check_info["h3c_lanswitch_sensors"] = (check_h3c_lanswitch_sensors, "%s", 0,
+                                       inventory_h3c_lanswitch_sensors)
+
 
 def h3c_lanswitch_genitem(endoid):
     deviceclass, _one, id_ = endoid.split(".")

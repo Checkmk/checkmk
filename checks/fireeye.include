@@ -24,6 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+
 def scan_fireeye(oid):
     return oid('.1.3.6.1.2.1.1.2.0').startswith('.1.3.6.1.4.1.25597.1')
 
@@ -44,16 +45,16 @@ def check_fireeye_states(states):
     # Now we only known the OK states and health states
     # but we can expand if we know more
     map_states = {
-        "status" : {
-            'good'   : (0, 'good'),
-            'ok'     : (0, 'OK'),
+        "status": {
+            'good': (0, 'good'),
+            'ok': (0, 'OK'),
         },
-        "disk status" : {
-            'online' : (0, 'online'),
+        "disk status": {
+            'online': (0, 'online'),
         },
-        "health" : {
-            '1'      : (0, 'healthy'),
-            '2'      : (2, 'unhealthy'),
+        "health": {
+            '1': (0, 'healthy'),
+            '2': (2, 'unhealthy'),
         }
     }
     states_evaluated = {}
@@ -67,7 +68,7 @@ def check_fireeye_states(states):
 def fireeye_check_generic(infotext, counter, value, warn=None, crit=None):
     perfdata = [(counter, value, warn, crit)]
     if crit and value >= crit:
-        return (2, infotext + ' (warn/crit at %d/%d)' % (warn,crit), perfdata)
+        return (2, infotext + ' (warn/crit at %d/%d)' % (warn, crit), perfdata)
     elif warn and value >= warn:
-        return (1, infotext + ' (warn/crit at %d/%d)' % (warn,crit), perfdata)
+        return (1, infotext + ' (warn/crit at %d/%d)' % (warn, crit), perfdata)
     return (0, infotext, perfdata)

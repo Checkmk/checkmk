@@ -51,7 +51,7 @@ def esx_vsphere_datastores_parse(info):
 
             if key == "accessible":
                 value = value.lower() == "true"
-            elif key in [ "capacity", "freeSpace", "uncommitted" ]:
+            elif key in ["capacity", "freeSpace", "uncommitted"]:
                 value = int(value)
             store[key] = value
     return stores
@@ -59,7 +59,7 @@ def esx_vsphere_datastores_parse(info):
 
 def inventory_esx_vsphere_datastores(info):
     stores = esx_vsphere_datastores_parse(info)
-    return [ (name, {}) for name in stores ]
+    return [(name, {}) for name in stores]
 
 
 def check_esx_vsphere_datastores(item, params, info):
@@ -70,8 +70,8 @@ def check_esx_vsphere_datastores(item, params, info):
     size_mb = store["capacity"] / 1024.0 / 1024.0
     avail_mb = store["freeSpace"] / 1024.0 / 1024.0
 
-    state, infotext, perfdata = df_check_filesystem_single(
-        item, size_mb, avail_mb, 0, None, None, params)
+    state, infotext, perfdata = df_check_filesystem_single(item, size_mb, avail_mb, 0, None, None,
+                                                           params)
 
     if 'uncommitted' in store:
         uncommitted_mb = store["uncommitted"] / 1024.0 / 1024.0
@@ -94,8 +94,8 @@ def check_esx_vsphere_datastores(item, params, info):
                 state = max(state, 1)
                 prov_txt = levels_text + '(!)'
 
-        infotext += ", uncommitted: %.2f GB, provisioning: %.1f%%%s" % (
-                      uncommitted_mb / 1024, prov_percent, prov_txt)
+        infotext += ", uncommitted: %.2f GB, provisioning: %.1f%%%s" % (uncommitted_mb / 1024,
+                                                                        prov_percent, prov_txt)
         if perfdata:
             if warn:
                 prov_warn_mb = size_mb / 100 * warn
@@ -114,14 +114,15 @@ def check_esx_vsphere_datastores(item, params, info):
 
     return state, infotext, perfdata
 
+
 check_info['esx_vsphere_datastores'] = {
-    "inventory_function"      : inventory_esx_vsphere_datastores,
-    "check_function"          : check_esx_vsphere_datastores,
-    "service_description"     : "Filesystem %s",
-    "includes"                : [ 'size_trend.include', 'df.include' ],
-    "has_perfdata"            : True,
-    "group"                   : "esx_vsphere_datastores",
-    "default_levels_variable" : "filesystem_default_levels",
+    "inventory_function": inventory_esx_vsphere_datastores,
+    "check_function": check_esx_vsphere_datastores,
+    "service_description": "Filesystem %s",
+    "includes": ['size_trend.include', 'df.include'],
+    "has_perfdata": True,
+    "group": "esx_vsphere_datastores",
+    "default_levels_variable": "filesystem_default_levels",
 }
 
 #.

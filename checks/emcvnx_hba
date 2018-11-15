@@ -80,6 +80,7 @@
 #  'SP B Port 0': {'Blocks Read': 0, 'Blocks Written': 4348086},
 # }
 
+
 def parse_emcvnx_hba(info):
     parsed = {}
     for line in info:
@@ -119,13 +120,14 @@ def check_emcvnx_hba(item, _no_params, parsed):
     perfdata.append(("read_blocks", read_blocks_per_sec))
     perfdata.append(("write_blocks", write_blocks_per_sec))
 
-    return 0, "Read: %s Blocks/s, Write: %s Blocks/s" % (read_blocks_per_sec, write_blocks_per_sec), perfdata
+    return 0, "Read: %s Blocks/s, Write: %s Blocks/s" % (read_blocks_per_sec,
+                                                         write_blocks_per_sec), perfdata
 
 
 check_info['emcvnx_hba'] = {
-    "parse_function"          : parse_emcvnx_hba,
-    "inventory_function"      : inventory_emcvnx_hba,
-    "check_function"          : check_emcvnx_hba,
-    "service_description"     : "HBA %s",
-   'has_perfdata'             : True,
+    "parse_function": parse_emcvnx_hba,
+    "inventory_function": inventory_emcvnx_hba,
+    "check_function": check_emcvnx_hba,
+    "service_description": "HBA %s",
+    'has_perfdata': True,
 }

@@ -44,7 +44,7 @@ def parse_emcvnx_sp_util(info):
 
 def inventory_emcvnx_sp_util(parsed):
     if "idle" in parsed and "busy" in parsed:
-        return [ (None, "emcvnx_sp_util_default_levels") ]
+        return [(None, "emcvnx_sp_util_default_levels")]
 
 
 def check_emcvnx_sp_util(item, params, parsed):
@@ -70,14 +70,14 @@ def check_emcvnx_sp_util(item, params, parsed):
     if state > 0:
         infotext += " (warn/crit at %.1f%%/%.1f%%)" % (warn, crit)
 
-    return state, infotext, [ ("storage_processor_util", sp_util, warn, crit, 0, 100.0) ]
+    return state, infotext, [("storage_processor_util", sp_util, warn, crit, 0, 100.0)]
 
 
 check_info['emcvnx_sp_util'] = {
-    "parse_function"          : parse_emcvnx_sp_util,
-    "inventory_function"      : inventory_emcvnx_sp_util,
-    "check_function"          : check_emcvnx_sp_util,
-    "service_description"     : "Storage Processor Utilization",
-    "group"                   : "sp_util",
-    "has_perfdata"            : True,
+    "parse_function": parse_emcvnx_sp_util,
+    "inventory_function": inventory_emcvnx_sp_util,
+    "check_function": check_emcvnx_sp_util,
+    "service_description": "Storage Processor Utilization",
+    "group": "sp_util",
+    "has_perfdata": True,
 }

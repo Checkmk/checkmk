@@ -31,18 +31,17 @@
 # hpLocalMemFreeBytes    1.3.6.1.4.1.11.2.14.11.5.1.1.2.1.1.1.6
 # hpLocalMemAllocBytes   1.3.6.1.4.1.11.2.14.11.5.1.1.2.1.1.1.7
 
-
-factory_settings["hp_procurve_mem_default_levels"] = { "levels" : ("perc_used", (80.0, 90.0)) }
+factory_settings["hp_procurve_mem_default_levels"] = {"levels": ("perc_used", (80.0, 90.0))}
 
 
 def inventory_hp_procurve_mem(info):
     if len(info) == 1 and int(info[0][0]) >= 0:
-        return [ ("", 'hp_procurve_mem_default_levels') ]
+        return [("", 'hp_procurve_mem_default_levels')]
 
 
 def check_hp_procurve_mem(item, params, info):
     if len(info) == 1:
-        mem_total, mem_used = [ int(mem) for mem in info[0] ]
+        mem_total, mem_used = [int(mem) for mem in info[0]]
         return check_memory_simple(mem_used, mem_total, params)
 
 

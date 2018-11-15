@@ -24,39 +24,32 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-
-hp_proliant_status_map = {
-        1: 'unknown',
-        2: 'ok',
-        3: 'degraded',
-        4: 'failed',
-        5: 'disabled'
-        }
+hp_proliant_status_map = {1: 'unknown', 2: 'ok', 3: 'degraded', 4: 'failed', 5: 'disabled'}
 
 hp_proliant_status2nagios_map = {
-        'unknown': 3,
-        'other': 3,
-        'ok': 0,
-        'degraded': 2,
-        'failed': 2,
-        'disabled': 1
-        }
+    'unknown': 3,
+    'other': 3,
+    'ok': 0,
+    'degraded': 2,
+    'failed': 2,
+    'disabled': 1
+}
 
 hp_proliant_locale = {
-        1:   "other",
-        2:   "unknown",
-        3:   "system",
-        4:   "systemBoard",
-        5:   "ioBoard",
-        6:   "cpu",
-        7:   "memory",
-        8:   "storage",
-        9:   "removableMedia",
-        10:  "powerSupply",
-        11:  "ambient",
-        12:  "chassis",
-        13:  "bridgeCard",
-        }
+    1: "other",
+    2: "unknown",
+    3: "system",
+    4: "systemBoard",
+    5: "ioBoard",
+    6: "cpu",
+    7: "memory",
+    8: "storage",
+    9: "removableMedia",
+    10: "powerSupply",
+    11: "ambient",
+    12: "chassis",
+    13: "bridgeCard",
+}
 
 #   .--da cntlr------------------------------------------------------------.
 #   |                     _                    _   _                       |
@@ -89,9 +82,11 @@ hp_proliant_da_cntlr_state_map = {
     '5': (2, 'poweredOff'),
 }
 
+
 def inventory_hp_proliant_da_cntlr(info):
     if info:
-        return [ (line[0], None) for line in info ]
+        return [(line[0], None) for line in info]
+
 
 def check_hp_proliant_da_cntlr(item, params, info):
     for line in info:
@@ -102,7 +97,7 @@ def check_hp_proliant_da_cntlr(item, params, info):
 
             for val, label, map_ in [(cond, 'Condition', hp_proliant_da_cntlr_cond_map),
                                      (b_cond, 'Board-Condition', hp_proliant_da_cntlr_cond_map),
-                                     (b_status, 'Board-Status', hp_proliant_da_cntlr_state_map) ]:
+                                     (b_status, 'Board-Status', hp_proliant_da_cntlr_state_map)]:
                 this_state = map_[val][0]
                 state_txt = ''
                 if this_state == 1:
@@ -113,10 +108,11 @@ def check_hp_proliant_da_cntlr(item, params, info):
                 output.append('%s: %s%s' % (label, map_[val][1], state_txt))
 
             output.append('(Role: %s, Model: %s, Slot: %s, Serial: %s)' %
-                       (hp_proliant_da_cntlr_role_map.get(role, 'unknown'), model, slot, serial))
+                          (hp_proliant_da_cntlr_role_map.get(role, 'unknown'), model, slot, serial))
 
             return (sum_state, ', '.join(output))
     return (3, "Controller not found in snmp data")
+
 
 #.
 #   .--cpu-----------------------------------------------------------------.
@@ -128,23 +124,32 @@ def check_hp_proliant_da_cntlr(item, params, info):
 #   |                              |_|                                     |
 #   '----------------------------------------------------------------------'
 
-hp_proliant_cpu_status_map = { 1: "unknown", 2: "ok", 3: "degraded", 4: "failed", 5: "disabled" }
-hp_proliant_cpu_status2nagios_map = { 'unknown': 3, 'ok': 0, 'degraded': 2, 'failed': 2, 'disabled': 1 }
+hp_proliant_cpu_status_map = {1: "unknown", 2: "ok", 3: "degraded", 4: "failed", 5: "disabled"}
+hp_proliant_cpu_status2nagios_map = {
+    'unknown': 3,
+    'ok': 0,
+    'degraded': 2,
+    'failed': 2,
+    'disabled': 1
+}
+
 
 def inventory_hp_proliant_cpu(info):
     if len(info) > 0:
-        return [ (line[0], None) for line in info ]
+        return [(line[0], None) for line in info]
+
 
 def check_hp_proliant_cpu(item, params, info):
     for line in info:
         if line[0] == item:
             index, slot, name, status = line
             snmp_status = hp_proliant_cpu_status_map[int(status)]
-            status      = hp_proliant_cpu_status2nagios_map[snmp_status]
+            status = hp_proliant_cpu_status2nagios_map[snmp_status]
 
-            return (status, 'CPU%s "%s" in slot %s is in state "%s"' %
-                         (index, name, slot, snmp_status))
+            return (status,
+                    'CPU%s "%s" in slot %s is in state "%s"' % (index, name, slot, snmp_status))
     return (3, "item not found in snmp data")
+
 
 #.
 #   .--fans----------------------------------------------------------------.
@@ -156,35 +161,37 @@ def check_hp_proliant_cpu(item, params, info):
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-hp_proliant_fans_status_map = { 1: 'other', 2: 'ok', 3: 'degraded', 4: 'failed' }
-hp_proliant_status2nagios_map = { 'other': 3, 'ok': 0, 'degraded': 2, 'failed': 2 }
-hp_proliant_present_map = { 1: 'other', 2: 'absent', 3: 'present' }
-hp_proliant_speed_map = { 1: 'other', 2: 'normal', 3: 'high' }
+hp_proliant_fans_status_map = {1: 'other', 2: 'ok', 3: 'degraded', 4: 'failed'}
+hp_proliant_status2nagios_map = {'other': 3, 'ok': 0, 'degraded': 2, 'failed': 2}
+hp_proliant_present_map = {1: 'other', 2: 'absent', 3: 'present'}
+hp_proliant_speed_map = {1: 'other', 2: 'normal', 3: 'high'}
 hp_proliant_fans_locale = {
-    1:   "other",
-    2:   "unknown",
-    3:   "system",
-    4:   "systemBoard",
-    5:   "ioBoard",
-    6:   "cpu",
-    7:   "memory",
-    8:   "storage",
-    9:   "removableMedia",
-    10:  "powerSupply",
-    11:  "ambient",
-    12:  "chassis",
-    13:  "bridgeCard",
+    1: "other",
+    2: "unknown",
+    3: "system",
+    4: "systemBoard",
+    5: "ioBoard",
+    6: "cpu",
+    7: "memory",
+    8: "storage",
+    9: "removableMedia",
+    10: "powerSupply",
+    11: "ambient",
+    12: "chassis",
+    13: "bridgeCard",
 }
+
 
 def inventory_hp_proliant_fans(info):
     if len(info) > 0:
         items = []
-        for line in [ line for line in info if line[2] == '3' ]:
+        for line in [line for line in info if line[2] == '3']:
             label = 'other'
             if int(line[1]) in hp_proliant_fans_locale:
                 label = hp_proliant_fans_locale[int(line[1])]
             items.append(("%s (%s)" % (line[0], label), None))
         return items
+
 
 def check_hp_proliant_fans(item, params, info):
     for line in info:
@@ -195,7 +202,7 @@ def check_hp_proliant_fans(item, params, info):
         if "%s (%s)" % (line[0], label) == item:
             index, _name, _present, speed, status, currentSpeed = line
             snmp_status = hp_proliant_fans_status_map[int(status)]
-            status      = hp_proliant_status2nagios_map[snmp_status]
+            status = hp_proliant_status2nagios_map[snmp_status]
 
             detailOutput = ''
             perfdata = []
@@ -204,10 +211,10 @@ def check_hp_proliant_fans(item, params, info):
                 perfdata = [('temp', int(currentSpeed))]
 
             return (status, 'FAN Sensor %s "%s", Speed is %s, State is %s%s' %
-                         (index, label, hp_proliant_speed_map[int(speed)],
-                          snmp_status, detailOutput),
+                    (index, label, hp_proliant_speed_map[int(speed)], snmp_status, detailOutput),
                     perfdata)
     return (3, "item not found in snmp data")
+
 
 #.
 #   .--mem-----------------------------------------------------------------.
@@ -220,73 +227,73 @@ def check_hp_proliant_fans(item, params, info):
 #   '----------------------------------------------------------------------'
 
 hp_proliant_mem_type_map = {
-                1: 'other',
-                2: 'board',
-                3: 'cpqSingleWidthModule',
-                4: 'cpqDoubleWidthModule',
-                5: 'simm',
-                6: 'pcmcia',
-                7: 'compaq-specific',
-                8: 'DIMM',
-                9: 'smallOutlineDimm',
-                10: 'RIMM',
-                11: 'SRIMM',
-                12: 'FB-DIMM',
-                13: 'DIMM DDR',
-                14: 'DIMM DDR2',
-                15: 'DIMM DDR3',
-                16: 'DIMM FBD2',
-                17: 'FB-DIMM DDR2',
-                18: 'FB-DIMM DDR3',
+    1: 'other',
+    2: 'board',
+    3: 'cpqSingleWidthModule',
+    4: 'cpqDoubleWidthModule',
+    5: 'simm',
+    6: 'pcmcia',
+    7: 'compaq-specific',
+    8: 'DIMM',
+    9: 'smallOutlineDimm',
+    10: 'RIMM',
+    11: 'SRIMM',
+    12: 'FB-DIMM',
+    13: 'DIMM DDR',
+    14: 'DIMM DDR2',
+    15: 'DIMM DDR3',
+    16: 'DIMM FBD2',
+    17: 'FB-DIMM DDR2',
+    18: 'FB-DIMM DDR3',
 }
 
 hp_proliant_mem_status_map = {
-                1: "other",
-                2: "notPresent",
-                3: "present",
-                4: "good",
-                5: "add",
-                6: "upgrade",
-                7: "missing",
-                8: "doesNotMatch",
-                9: "notSupported",
-                10: "badConfig",
-                11: "degraded",
-                12: "spare",
-                13: "partial",
+    1: "other",
+    2: "notPresent",
+    3: "present",
+    4: "good",
+    5: "add",
+    6: "upgrade",
+    7: "missing",
+    8: "doesNotMatch",
+    9: "notSupported",
+    10: "badConfig",
+    11: "degraded",
+    12: "spare",
+    13: "partial",
 }
 
 hp_proliant_mem_status2nagios_map = {
-                'n/a': 3,
-                'other': 3,
-                'notPresent': 3,
-                'present': 1,
-                'good': 0,
-                'add': 1,
-                'upgrade': 1,
-                'missing': 2,
-                'doesNotMatch': 2,
-                'notSupported': 2,
-                'badConfig': 2,
-                'degraded': 2,
-                'spare': 0,
-                'partial': 1,
+    'n/a': 3,
+    'other': 3,
+    'notPresent': 3,
+    'present': 1,
+    'good': 0,
+    'add': 1,
+    'upgrade': 1,
+    'missing': 2,
+    'doesNotMatch': 2,
+    'notSupported': 2,
+    'badConfig': 2,
+    'degraded': 2,
+    'spare': 0,
+    'partial': 1,
 }
 
 hp_proliant_mem_condition_status2nagios_map = {
-                 'other'                      : 3,
-                 'ok'                         : 0,
-                 'degraded'                   : 2,
-                 'failed'                     : 2,
-                 'degradedModuleIndexUnknown' : 3
+    'other': 3,
+    'ok': 0,
+    'degraded': 2,
+    'failed': 2,
+    'degradedModuleIndexUnknown': 3
 }
 
 hp_proliant_mem_condition_map = {
-                  0: 'n/a',
-                  1: 'other',
-                  2: 'ok',
-                  3: 'degraded',
-                  4: 'degradedModuleIndexUnknown',
+    0: 'n/a',
+    1: 'other',
+    2: 'ok',
+    3: 'degraded',
+    4: 'degradedModuleIndexUnknown',
 }
 
 
@@ -341,9 +348,9 @@ def check_hp_proliant_mem(item, params, info):
                 status = condition_status
 
             return (status, 'Board: %s, Num: %s, Type: %s, Size: %s MB%s' %
-                            (board_index, module_index,
-                             type_, module_size_mb, detail_output))
+                    (board_index, module_index, type_, module_size_mb, detail_output))
     return (3, "item not found in snmp data")
+
 
 #.
 #   .--temperature---------------------------------------------------------.
@@ -355,12 +362,15 @@ def check_hp_proliant_mem(item, params, info):
 #   |                       |_|                                            |
 #   '----------------------------------------------------------------------'
 
+
 def format_hp_proliant_name(line):
     return "%s (%s)" % (line[0], hp_proliant_locale[int(line[1])])
+
 
 def inventory_hp_proliant_temp(info):
     for line in info:
         yield format_hp_proliant_name(line), {}
+
 
 def check_hp_proliant_temp(item, params, info):
     for line in info:
@@ -377,8 +387,11 @@ def check_hp_proliant_temp(item, params, info):
 
             snmp_status = hp_proliant_status_map[int(status)]
 
-            return check_temperature(float(value), params, "hp_proliant_temp_%s" % item,
-                    dev_levels=devlevels,
-                    dev_status=hp_proliant_status2nagios_map[snmp_status],
-                    dev_status_name="Unit: %s" % snmp_status)
+            return check_temperature(
+                float(value),
+                params,
+                "hp_proliant_temp_%s" % item,
+                dev_levels=devlevels,
+                dev_status=hp_proliant_status2nagios_map[snmp_status],
+                dev_status_name="Unit: %s" % snmp_status)
     return 3, "item not found in snmp data"

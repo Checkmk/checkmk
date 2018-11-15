@@ -24,15 +24,15 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-
 factory_settings["enterasys_cpu_default_levels"] = {
-    "levels" : (90.0, 95.0),
+    "levels": (90.0, 95.0),
 }
 
 
 def inventory_enterasys_cpu_util(info):
     # [:-2] to remove the oid end
-    return [ ( x[0][:-2], "enterasys_cpu_default_levels" ) for x in info ]
+    return [(x[0][:-2], "enterasys_cpu_default_levels") for x in info]
+
 
 def check_enterasys_cpu_util(item, params, info):
     for core, util in info:
@@ -53,4 +53,3 @@ check_info["enterasys_cpu_util"] = {
     "includes"                  : [ "cpu_util.include" ],
     "default_levels_variable"   : "enterasys_cpu_default_levels",
 }
-

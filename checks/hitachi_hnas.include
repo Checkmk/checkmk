@@ -61,9 +61,7 @@ def parse_virtual_volumes(map_label, virtual_volumes, quotas):
     # volume_id the virtual volume belongs to and the oid_end without
     # the first element of the virtual volume.
     def quota_oid_end(phys_volume_id, virtual_volume_oid_end):
-        return '.'.join(
-            [phys_volume_id] + virtual_volume_oid_end.split('.')[1:] + ['0']
-        )
+        return '.'.join([phys_volume_id] + virtual_volume_oid_end.split('.')[1:] + ['0'])
 
     parsed = {}
     map_quota_oid = {}
@@ -83,7 +81,7 @@ def parse_virtual_volumes(map_label, virtual_volumes, quotas):
         if usage and limit:
             volume = map_quota_oid[oid_end]
             size_mb = int(limit) / 1048576.0
-            avail_mb = size_mb - int(usage)/1048576.0
+            avail_mb = size_mb - int(usage) / 1048576.0
             parsed[volume] = (size_mb, avail_mb)
         else:
             parsed[volume] = (None, None)

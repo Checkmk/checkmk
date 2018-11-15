@@ -40,8 +40,8 @@ def inventory_emcvnx_writecache(info):
 
 def check_emcvnx_writecache(item, params, info):
     map_state = {
-        "Enabled"  : (0, "enabled"),
-        "Disabled" : (2, "disabled"),
+        "Enabled": (0, "enabled"),
+        "Disabled": (2, "disabled"),
     }
     for line in info:
         if line[0] == item:
@@ -50,7 +50,7 @@ def check_emcvnx_writecache(item, params, info):
 
 
 check_info['emcvnx_writecache'] = {
-    'inventory_function'        : inventory_emcvnx_writecache,
-    'check_function'            : check_emcvnx_writecache,
-    'service_description'       : 'Write Cache State %s',
+    'inventory_function': inventory_emcvnx_writecache,
+    'check_function': check_emcvnx_writecache,
+    'service_description': 'Write Cache State %s',
 }

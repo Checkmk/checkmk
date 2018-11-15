@@ -24,7 +24,6 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-
 # .1.3.6.1.2.1.47.1.1.1.1.7.1 PA-3020 --> ENTITY-MIB::entPhysicalName.1
 # .1.3.6.1.2.1.47.1.1.1.1.7.2 Fan #1 RPM --> ENTITY-MIB::entPhysicalName.2
 # .1.3.6.1.2.1.47.1.1.1.1.7.3 Fan #2 RPM --> ENTITY-MIB::entPhysicalName.3
@@ -81,43 +80,39 @@
 
 def parse_entity_sensors(info):
     map_types = {
-        "1"  : ("other",     "other"),
-        "2"  : ("unknown",   "unknown"),
-        "3"  : ("voltage",   "V"),
-        "4"  : ("voltage",   "V"),
-        "5"  : ("current",   "A"),
-        "6"  : ("power",     "W"),
-        "7"  : ("freqeuncy", "hz"),
-        "8"  : ("temp",      "c"),
-        "9"  : ("percent",   "%"),
-        "10" : ("fan",       "RPM"),
-        "11" : ("volume",    "cmm"), # cubic decimetre dm^3
-        "12" : ("binary",    "")
+        "1": ("other", "other"),
+        "2": ("unknown", "unknown"),
+        "3": ("voltage", "V"),
+        "4": ("voltage", "V"),
+        "5": ("current", "A"),
+        "6": ("power", "W"),
+        "7": ("freqeuncy", "hz"),
+        "8": ("temp", "c"),
+        "9": ("percent", "%"),
+        "10": ("fan", "RPM"),
+        "11": ("volume", "cmm"),  # cubic decimetre dm^3
+        "12": ("binary", "")
     }
     map_scaling = {
-        "1"  : 10**(-24),
-        "2"  : 10**(-21),
-        "3"  : 10**(-18),
-        "4"  : 10**(-15),
-        "5"  : 10**(-12),
-        "6"  : 10**(-9),
-        "7"  : 10**(-6),
-        "8"  : 10**(-3),
-        "9"  : 1,
-        "10" : 10**(3),
-        "11" : 10**(6),
-        "12" : 10**(9),
-        "13" : 10**(12),
-        "14" : 10**(15),
-        "15" : 10**(18),
-        "16" : 10**(21),
-        "17" : 10**(24),
+        "1": 10**(-24),
+        "2": 10**(-21),
+        "3": 10**(-18),
+        "4": 10**(-15),
+        "5": 10**(-12),
+        "6": 10**(-9),
+        "7": 10**(-6),
+        "8": 10**(-3),
+        "9": 1,
+        "10": 10**(3),
+        "11": 10**(6),
+        "12": 10**(9),
+        "13": 10**(12),
+        "14": 10**(15),
+        "15": 10**(18),
+        "16": 10**(21),
+        "17": 10**(24),
     }
-    map_operstate = {
-        "1" : (0, "OK"),
-        "2" : (2, "unavailable"),
-        "3" : (1, "nonoperational")
-    }
+    map_operstate = {"1": (0, "OK"), "2": (2, "unavailable"), "3": (1, "nonoperational")}
     # Some devices such as Palo Alto Network series 3000 support
     # the ENTITY-MIB including sensor/entity names.
     # Others (e.g. Palo Alto Networks Series 200) do not support
@@ -168,10 +163,9 @@ def inventory_entity_sensors(parsed, what):
 #   |                            main check                                |
 #   '----------------------------------------------------------------------'
 
-
 # Asked customer, oriented by other temperature sensor checks
 factory_settings['entity_sensors_temp_default_variables'] = {
-    'levels' : (35, 40),
+    'levels': (35, 40),
 }
 
 
@@ -179,35 +173,43 @@ def check_entity_sensors_temp(item, params, parsed):
     if item in parsed.get("temp", {}):
         operstate, reading, unit = parsed["temp"][item]
         state, state_readable = operstate
-        return check_temperature(reading, params,
-                "palo_alto_temperature_%s" % item,
-                dev_unit = unit, dev_status = state,
-                dev_status_name = state_readable)
+        return check_temperature(
+            reading,
+            params,
+            "palo_alto_temperature_%s" % item,
+            dev_unit=unit,
+            dev_status=state,
+            dev_status_name=state_readable)
 
 
 check_info['entity_sensors'] = {
-    'parse_function'            : parse_entity_sensors,
-    'inventory_function'        : lambda parsed: inventory_entity_sensors(parsed, "temp"),
-    'check_function'            : check_entity_sensors_temp,
-    'service_description'       : 'Temperature %s',
-    'has_perfdata'              : True,
-    'snmp_info'                 : [(".1.3.6.1.2.1.47.1.1.1.1", [
-                                        OID_END,
-                                        "7",    # entPhysicalName
-                                   ]),
-                                   (".1.3.6.1.2.1.99.1.1.1", [
-                                        OID_END,
-                                        "1",    # entPhySensorType
-                                        "2",    # entPhySensorScale
-                                        "4",    # entPhySensorValue
-                                        "5",    # entPhySensorOperStatus
-                                  ])],
-    'snmp_scan_function'        : lambda oid: "palo alto networks" in oid(".1.3.6.1.2.1.1.1.0").lower(),
-    'default_levels_variable'   : 'entity_sensors_temp_default_variables',
-    'group'                     : 'temperature',
-    'includes'                  : ['temperature.include'],
+    'parse_function': parse_entity_sensors,
+    'inventory_function': lambda parsed: inventory_entity_sensors(parsed, "temp"),
+    'check_function': check_entity_sensors_temp,
+    'service_description': 'Temperature %s',
+    'has_perfdata': True,
+    'snmp_info': [
+        (
+            ".1.3.6.1.2.1.47.1.1.1.1",
+            [
+                OID_END,
+                "7",  # entPhysicalName
+            ]),
+        (
+            ".1.3.6.1.2.1.99.1.1.1",
+            [
+                OID_END,
+                "1",  # entPhySensorType
+                "2",  # entPhySensorScale
+                "4",  # entPhySensorValue
+                "5",  # entPhySensorOperStatus
+            ])
+    ],
+    'snmp_scan_function': lambda oid: "palo alto networks" in oid(".1.3.6.1.2.1.1.1.0").lower(),
+    'default_levels_variable': 'entity_sensors_temp_default_variables',
+    'group': 'temperature',
+    'includes': ['temperature.include'],
 }
-
 
 #.
 #   .--fan-----------------------------------------------------------------.
@@ -219,10 +221,9 @@ check_info['entity_sensors'] = {
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-
 # Asked customer, oriented by other fan sensor checks
 factory_settings['entity_sensors_fan_default_variables'] = {
-    'lower' : (2000, 1000),
+    'lower': (2000, 1000),
 }
 
 
@@ -235,11 +236,11 @@ def check_entity_sensors_fan(item, params, parsed):
 
 
 check_info['entity_sensors.fan'] = {
-    'inventory_function'        : lambda parsed: inventory_entity_sensors(parsed, "fan"),
-    'check_function'            : check_entity_sensors_fan,
-    'service_description'       : 'Fan %s',
-    'has_perfdata'              : True,
-    'default_levels_variable'   : 'entity_sensors_fan_default_variables',
-    'group'                     : 'hw_fans',
-    'includes'                  : ['fan.include'],
+    'inventory_function': lambda parsed: inventory_entity_sensors(parsed, "fan"),
+    'check_function': check_entity_sensors_fan,
+    'service_description': 'Fan %s',
+    'has_perfdata': True,
+    'default_levels_variable': 'entity_sensors_fan_default_variables',
+    'group': 'hw_fans',
+    'includes': ['fan.include'],
 }

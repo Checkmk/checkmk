@@ -24,7 +24,6 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-
 # Note: Sometimes the esx_vsphere_sensors check reports incorrect sensor data.
 # The reason is that the data is cached on the esx system. In the worst case some sensors
 # might get stuck in an unhealthy state. You can find more information under the following link:
@@ -37,7 +36,7 @@
 
 
 def inventory_esx_vsphere_sensors(info):
-        yield None, []
+    yield None, []
 
 
 def check_esx_vsphere_sensors(_no_item, params, info):
@@ -48,12 +47,7 @@ def check_esx_vsphere_sensors(_no_item, params, info):
     for name, _base_units, _current_reading, _sensor_type, _unit_modifier, \
         _rate_units, health_key, health_label, health_summary in info:
 
-        sensor_state = {
-            "green": 0,
-            "yellow": 1,
-            "red": 2,
-            "unknown": 3
-        }.get(health_key.lower(), 2)
+        sensor_state = {"green": 0, "yellow": 1, "red": 2, "unknown": 3}.get(health_key.lower(), 2)
         txt = "%s: %s (%s)" % (name, health_label, health_summary)
 
         for entry in params:
@@ -72,8 +66,8 @@ def check_esx_vsphere_sensors(_no_item, params, info):
 
 
 check_info['esx_vsphere_sensors'] = {
-  "inventory_function"  : inventory_esx_vsphere_sensors,
-  "check_function"      : check_esx_vsphere_sensors,
-  "service_description" : "Hardware Sensors",
-  "group"               : "hostsystem_sensors"
+    "inventory_function": inventory_esx_vsphere_sensors,
+    "check_function": check_esx_vsphere_sensors,
+    "service_description": "Hardware Sensors",
+    "group": "hostsystem_sensors"
 }

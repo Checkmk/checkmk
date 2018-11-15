@@ -24,29 +24,33 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+
 def inventory_emc_isilon_iops(info):
     inventory = []
     for name, _iops in info:
-        inventory.append( (name, None) )
+        inventory.append((name, None))
     return inventory
+
 
 def check_emc_isilon_iops(item, _no_params, info):
     for name, iops in info:
         if name == item:
-            perfdata = [ ("iops", iops) ]
-            message  = "%s disk operations per second" % int(iops)
+            perfdata = [("iops", iops)]
+            message = "%s disk operations per second" % int(iops)
             return 0, message, perfdata
     return 3, "Disk not found"
 
-check_info["emc_isilon_iops"] = {
-    "check_function"        : check_emc_isilon_iops,
-    "inventory_function"    : inventory_emc_isilon_iops,
-    "service_description"   : "Disk %s IO",
-    "has_perfdata"          : True,
-    "snmp_info"             : (".1.3.6.1.4.1.12124.2.2.52.1",
-                                   [ 2,    # diskPerfDeviceName
-                                     3,    # diskPerfOpsPerSecond
-                              ]),
-    "snmp_scan_function"    : lambda oid: "isilon" in oid(".1.3.6.1.2.1.1.1.0").lower(),
-}
 
+check_info["emc_isilon_iops"] = {
+    "check_function": check_emc_isilon_iops,
+    "inventory_function": inventory_emc_isilon_iops,
+    "service_description": "Disk %s IO",
+    "has_perfdata": True,
+    "snmp_info": (
+        ".1.3.6.1.4.1.12124.2.2.52.1",
+        [
+            2,  # diskPerfDeviceName
+            3,  # diskPerfOpsPerSecond
+        ]),
+    "snmp_scan_function": lambda oid: "isilon" in oid(".1.3.6.1.2.1.1.1.0").lower(),
+}

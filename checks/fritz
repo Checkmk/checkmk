@@ -26,7 +26,7 @@
 
 
 def parse_fritz(info):
-    return {l[0]: ' '.join(l[1:]) for l in info if len(l) > 1 }
+    return {l[0]: ' '.join(l[1:]) for l in info if len(l) > 1}
 
 
 check_info["fritz"] = {
@@ -39,8 +39,7 @@ check_info["fritz"] = {
 #
 def inventory_fritz_conn(parsed):
     conn_stat = parsed.get('NewConnectionStatus')
-    if (conn_stat and conn_stat != 'Unconfigured' and
-        'NewExternalIPAddress' in parsed):
+    if (conn_stat and conn_stat != 'Unconfigured' and 'NewExternalIPAddress' in parsed):
         return [(None, {})]
 
 
@@ -68,11 +67,11 @@ def check_fritz_conn(_unused, _no_params, parsed):
 
 
 check_info['fritz.conn'] = {
-  "inventory_function"  : inventory_fritz_conn,
-  "check_function"      : check_fritz_conn,
-  "service_description" : "Connection",
-  "includes"            : [ "uptime.include" ],
-  "has_perfdata"        : True,
+    "inventory_function": inventory_fritz_conn,
+    "check_function": check_fritz_conn,
+    "service_description": "Connection",
+    "includes": ["uptime.include"],
+    "has_perfdata": True,
 }
 
 
@@ -86,13 +85,14 @@ def inventory_fritz_config(parsed):
 
 def check_fritz_config(_unused, _no_params, parsed):
 
-    label_val = [('Auto Disconnect Time', parsed.get('NewAutoDisconnectTime', '0.0.0.0')),
-                 ('DNS-Server1', parsed.get('NewDNSServer1', '0.0.0.0')),
-                 ('DNS-Server2', parsed.get('NewDNSServer2', '0.0.0.0')),
-                 ('VoIP-DNS-Server1', parsed.get('NewVoipDNSServer1', '0.0.0.0')),
-                 ('VoIP-DNS-Server2', parsed.get('NewVoipDNSServer2', '0.0.0.0')),
-                 ('uPnP Config Enabled', parsed.get('NewUpnpControlEnabled', '0.0.0.0')),
-                ]
+    label_val = [
+        ('Auto Disconnect Time', parsed.get('NewAutoDisconnectTime', '0.0.0.0')),
+        ('DNS-Server1', parsed.get('NewDNSServer1', '0.0.0.0')),
+        ('DNS-Server2', parsed.get('NewDNSServer2', '0.0.0.0')),
+        ('VoIP-DNS-Server1', parsed.get('NewVoipDNSServer1', '0.0.0.0')),
+        ('VoIP-DNS-Server2', parsed.get('NewVoipDNSServer2', '0.0.0.0')),
+        ('uPnP Config Enabled', parsed.get('NewUpnpControlEnabled', '0.0.0.0')),
+    ]
 
     output = ['%s: %s' % (l, v) for l, v in label_val if v != '0.0.0.0']
 
@@ -102,9 +102,9 @@ def check_fritz_config(_unused, _no_params, parsed):
 
 
 check_info['fritz.config'] = {
-  "inventory_function"  : inventory_fritz_config,
-  "check_function"      : check_fritz_config,
-  "service_description" : "Configuration",
+    "inventory_function": inventory_fritz_config,
+    "check_function": check_fritz_config,
+    "service_description": "Configuration",
 }
 
 
@@ -127,8 +127,7 @@ def fritz_wan_if_to_if64(parsed):
         # ifOutQLen, ifAlias, ifPhysAddress
         ('0', 'WAN', '6', parsed.get('NewLayer1DownstreamMaxBitRate'), oper_status,
          parsed.get('NewTotalBytesReceived'), '0', '0', '0', '0', '0',
-         parsed.get('NewTotalBytesSent'),     '0', '0', '0', '0', '0',
-         '0', 'WAN', '')
+         parsed.get('NewTotalBytesSent'), '0', '0', '0', '0', '0', '0', 'WAN', '')
     ]
 
 
@@ -140,23 +139,24 @@ def check_fritz_wan_if(item, params, parsed):
     if not parsed:
         return 3, 'Interface info is missing'
 
-    if_common_params = {'assumed_speed_in': int(parsed['NewLayer1DownstreamMaxBitRate']),
-                        'assumed_speed_out':int(parsed['NewLayer1UpstreamMaxBitRate']),
-                        'unit': 'bit',
-                       }
+    if_common_params = {
+        'assumed_speed_in': int(parsed['NewLayer1DownstreamMaxBitRate']),
+        'assumed_speed_out': int(parsed['NewLayer1UpstreamMaxBitRate']),
+        'unit': 'bit',
+    }
     if_common_params.update(params)
 
     return check_if_common(item, if_common_params, fritz_wan_if_to_if64(parsed))
 
 
 check_info["fritz.wan_if"] = {
-    'check_function':          check_fritz_wan_if,
-    'inventory_function':      inventory_fritz_wan_if,
-    'service_description':     'Interface %s',
-    'has_perfdata':            True,
-    'group':                   'if',
+    'check_function': check_fritz_wan_if,
+    'inventory_function': inventory_fritz_wan_if,
+    'service_description': 'Interface %s',
+    'has_perfdata': True,
+    'group': 'if',
     'default_levels_variable': 'if_default_levels',
-    'includes':                [ 'if.include' ],
+    'includes': ['if.include'],
 }
 
 
@@ -165,16 +165,17 @@ check_info["fritz.wan_if"] = {
 #
 def inventory_fritz_link(parsed):
     if 'NewLinkStatus' in parsed and 'NewPhysicalLinkStatus' in parsed:
-        return [ (None, {}) ]
+        return [(None, {})]
 
 
 def check_fritz_link(_no_item, _no_params, parsed):
 
-    label_val = [('Link Status', parsed.get('NewLinkStatus')),
-                 ('Physical Link Status', parsed.get('NewPhysicalLinkStatus')),
-                 ('Link Type', parsed.get('NewLinkType')),
-                 ('WAN Access Type', parsed.get('NewWANAccessType')),
-                ]
+    label_val = [
+        ('Link Status', parsed.get('NewLinkStatus')),
+        ('Physical Link Status', parsed.get('NewPhysicalLinkStatus')),
+        ('Link Type', parsed.get('NewLinkType')),
+        ('WAN Access Type', parsed.get('NewWANAccessType')),
+    ]
 
     output = ['%s: %s' % (l, v) for l, v in label_val if v]
 
@@ -184,8 +185,7 @@ def check_fritz_link(_no_item, _no_params, parsed):
 
 
 check_info["fritz.link"] = {
-    'check_function':          check_fritz_link,
-    'inventory_function':      inventory_fritz_link,
-    'service_description':     'Link Info',
+    'check_function': check_fritz_link,
+    'inventory_function': inventory_fritz_link,
+    'service_description': 'Link Info',
 }
-

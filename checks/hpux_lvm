@@ -41,6 +41,7 @@
 # pv_name=/dev/disk/disk11_p2:pv_status=available:total_pe=4319:free_pe=175:autoswitch=On:proactive_polling=On
 # pv_name=/dev/disk/disk10:pv_status=available:total_pe=4375:free_pe=1559:autoswitch=On:proactive_polling=On
 
+
 def inventory_hpux_lvm(info):
     inventory = []
     for line in info:
@@ -48,6 +49,7 @@ def inventory_hpux_lvm(info):
             lv_name = line[0].split("=")[1]
             inventory.append((lv_name, None))
     return inventory
+
 
 def check_hpux_lvm(item, params, info):
     for line in info:
@@ -66,7 +68,7 @@ def check_hpux_lvm(item, params, info):
 
 
 check_info["hpux_lvm"] = {
-    'check_function':          check_hpux_lvm,
-    'inventory_function':      inventory_hpux_lvm,
-    'service_description':     'Logical Volume %s',
+    'check_function': check_hpux_lvm,
+    'inventory_function': inventory_hpux_lvm,
+    'service_description': 'Logical Volume %s',
 }

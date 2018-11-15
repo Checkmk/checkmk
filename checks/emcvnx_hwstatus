@@ -79,6 +79,7 @@
 #     }
 # }
 
+
 def parse_emcvnx_hwstatus(info):
     parsed = {}
     for line in info:
@@ -122,7 +123,7 @@ def inventory_emcvnx_hwstatus(info):
     for enclosure in parsed:
         for device in parsed[enclosure]:
             if parsed[enclosure][device] != "Empty":
-                inventory.append( (enclosure + " " + device, None) )
+                inventory.append((enclosure + " " + device, None))
     return inventory
 
 
@@ -141,7 +142,7 @@ def check_emcvnx_hwstatus(item, _no_params, info):
 
 
 check_info['emcvnx_hwstatus'] = {
-    "inventory_function"      : inventory_emcvnx_hwstatus,
-    "check_function"          : check_emcvnx_hwstatus,
-    "service_description"     : "Enclosure %s", # Example for Item: "0/1 Power A"
+    "inventory_function": inventory_emcvnx_hwstatus,
+    "check_function": check_emcvnx_hwstatus,
+    "service_description": "Enclosure %s",  # Example for Item: "0/1 Power A"
 }

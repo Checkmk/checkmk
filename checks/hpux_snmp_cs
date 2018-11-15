@@ -24,7 +24,6 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-
 # Some relevant OIDs are
 # sysUpTime: 1.3.6.1.4.1.11.2.3.1.1.1
 # sysUsers: 1.3.6.1.4.1.11.2.3.1.1.2
@@ -54,21 +53,17 @@
 # .1.3.6.1.4.1.11.2.3.1.1.16.0  10
 
 
-
 def inventory_hpux_snmp_cpu(info):
     if len(info) > 0:
         return [(None, None)]
+
 
 def check_hpux_snmp_cpu(item, _no_params, info):
     parts = dict(info)
     this_time = time.time()
     total_rate = 0
     rates = []
-    for what, oid in [
-        ( "user",   "13.0" ),
-        ( "system", "14.0" ),
-        ( "idle",   "15.0" ),
-        ( "nice",   "16.0" )]:
+    for what, oid in [("user", "13.0"), ("system", "14.0"), ("idle", "15.0"), ("nice", "16.0")]:
         value = int(parts[oid])
         rate = get_rate("snmp_cpu_util.%s" % what, this_time, value)
         total_rate += rate
@@ -88,9 +83,10 @@ def check_hpux_snmp_cpu(item, _no_params, info):
     return (0, ", ".join(infos), perfdata)
 
 
-check_info['hpux_snmp_cs.cpu'] = (check_hpux_snmp_cpu, "CPU utilization", 1, inventory_hpux_snmp_cpu)
+check_info['hpux_snmp_cs.cpu'] = (check_hpux_snmp_cpu, "CPU utilization", 1,
+                                  inventory_hpux_snmp_cpu)
 
-snmp_info['hpux_snmp_cs'] = ( ".1.3.6.1.4.1.11.2.3.1", [ OID_END, 1 ])
+snmp_info['hpux_snmp_cs'] = (".1.3.6.1.4.1.11.2.3.1", [OID_END, 1])
 
 snmp_scan_functions['hpux_snmp_cs.cpu'] = \
     lambda oid: oid(".1.3.6.1.2.1.1.1.0").startswith("HP-UX")

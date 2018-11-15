@@ -14,9 +14,9 @@ build:
 
 install:
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/bin
-	install -m 755 omd.bin $(DESTDIR)$(OMD_ROOT)/bin
-	mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/omd
-	install -m 644 $(DIR)/omd/*.py $(DESTDIR)$(OMD_ROOT)/lib/python/omdlib/
+	install -m 755 omd.bin $(DESTDIR)$(OMD_ROOT)/bin/omd
+	mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/python/omdlib
+	install -m 644 omdlib/*.py $(DESTDIR)$(OMD_ROOT)/lib/python/omdlib/
 	sed -i 's|###OMD_VERSION###|$(OMD_VERSION)|g' $(DESTDIR)$(OMD_ROOT)/lib/python/omdlib/__init__.py
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/omd/htdocs
 	install -m 644 index.py $(DESTDIR)$(OMD_ROOT)/share/omd/htdocs
@@ -33,7 +33,6 @@ install:
 	install -m 644 init_profile $(DESTDIR)$(OMD_ROOT)/lib/omd/
 	install -m 755 port_is_used $(DESTDIR)$(OMD_ROOT)/lib/omd/
 	install -m 644 bash_completion $(DESTDIR)$(OMD_ROOT)/lib/omd/
-	
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/omd/scripts/post-create
 
 skel:

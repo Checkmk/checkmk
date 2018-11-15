@@ -28,15 +28,17 @@
 # lun /vol/iscsi_crm_dblogs/crm_dblogs_lu01   read-only false size 644286182400   vserver ISCSI_CRM   size-used 538924421120  online true volume iscsi_crm_dblogs
 
 factory_settings["netapp_api_luns_default_levels"] = {
-    "levels"          : (80.0, 90.0), # warn/crit in percent
-    "trend_range"     : 24,
-    "trend_perfdata"  : True,    # do send performance data for trends
-    "read_only"       : False,
+    "levels": (80.0, 90.0),  # warn/crit in percent
+    "trend_range": 24,
+    "trend_perfdata": True,  # do send performance data for trends
+    "read_only": False,
 }
+
 
 def inventory_netapp_api_luns(parsed):
     for lun in parsed.keys():
         yield lun, {}
+
 
 @get_parsed_item_data
 def check_netapp_api_luns(item, params, lun):
@@ -57,16 +59,18 @@ def check_netapp_api_luns(item, params, lun):
     else:
         yield df_check_filesystem_single(item, size_total, size_avail, 0, None, None, params)
 
+
 def netapp_api_luns_item(name):
     return name.rsplit("/", 1)[-1]
 
+
 check_info["netapp_api_luns"] = {
-    'check_function'          : check_netapp_api_luns,
-    'inventory_function'      : inventory_netapp_api_luns,
-    'parse_function'          : lambda x: netapp_api_parse_lines(x,item_func = netapp_api_luns_item),
-    'service_description'     : 'LUN %s',
-    'has_perfdata'            : True,
-    'group'                   : "netapp_luns",
-    'includes'                : [ "size_trend.include", "df.include", "netapp_api.include" ],
-    "default_levels_variable" : "netapp_api_luns_default_levels",
+    'check_function': check_netapp_api_luns,
+    'inventory_function': inventory_netapp_api_luns,
+    'parse_function': lambda x: netapp_api_parse_lines(x, item_func=netapp_api_luns_item),
+    'service_description': 'LUN %s',
+    'has_perfdata': True,
+    'group': "netapp_luns",
+    'includes': ["size_trend.include", "df.include", "netapp_api.include"],
+    "default_levels_variable": "netapp_api_luns_default_levels",
 }

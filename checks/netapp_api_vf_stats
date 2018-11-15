@@ -49,7 +49,8 @@ def check_netapp_api_vf_stats(item, params, parsed):
     ticks_per_sec = get_rate("netapp_api_vf_stats.cpu_busy", now, cpu_busy, onwrap=RAISE)
 
     cpu_busy_base = int(vf["vfiler_cpu_busy_base"])
-    ticks_per_sec_base = get_rate("netapp_api_vf_stats.cpu_busy_base", now, cpu_busy_base, onwrap=RAISE)
+    ticks_per_sec_base = get_rate(
+        "netapp_api_vf_stats.cpu_busy_base", now, cpu_busy_base, onwrap=RAISE)
 
     if ticks_per_sec == 0:
         raise MKCounterWrapped("Counter wrapped")
@@ -73,14 +74,14 @@ def check_netapp_api_vf_stats(item, params, parsed):
 
 
 check_info["netapp_api_vf_stats"] = {
-    'parse_function'      : netapp_api_parse_lines,
-    'check_function'      : check_netapp_api_vf_stats,
-    'inventory_function'  : inventory_netapp_api_vf_stats,
-    'has_perfdata'        : True,
-    'group'               : 'cpu_utilization_multiitem',
-    'service_description' : 'CPU utilization %s',
-    'includes'            : [ "cpu_util.include", "netapp_api.include" ],
-    'extra_sections'      : ['netapp_api_cpu'],
+    'parse_function': netapp_api_parse_lines,
+    'check_function': check_netapp_api_vf_stats,
+    'inventory_function': inventory_netapp_api_vf_stats,
+    'has_perfdata': True,
+    'group': 'cpu_utilization_multiitem',
+    'service_description': 'CPU utilization %s',
+    'includes': ["cpu_util.include", "netapp_api.include"],
+    'extra_sections': ['netapp_api_cpu'],
 }
 
 
@@ -98,20 +99,24 @@ def check_netapp_api_vf_stats_traffic(item, params, parsed):
         return
     else:
         now = time.time()
-        for entry, name, base, factor, unit in [ ("read_ops",       "Read",          1000.0, 1,    "OP/s"),
-                                                 ("write_ops",      "Write",         1000.0, 1,    "OP/s"),
-                                                 ("net_data_recv",  "Net Data Recv", 1024.0, 1024, "B/s"),
-                                                 ("net_data_sent",  "Net Data Sent", 1024.0, 1024, "B/s"),
-                                                 ("read_bytes",     "Read",          1024.0, 1024, "B/s"),
-                                                 ("write_bytes",    "Write",         1024.0, 1024, "B/s")]:
+        for entry, name, base, factor, unit in [
+            ("read_ops", "Read", 1000.0, 1, "OP/s"),
+            ("write_ops", "Write", 1000.0, 1, "OP/s"),
+            ("net_data_recv", "Net Data Recv", 1024.0, 1024, "B/s"),
+            ("net_data_sent", "Net Data Sent", 1024.0, 1024, "B/s"),
+            ("read_bytes", "Read", 1024.0, 1024, "B/s"),
+            ("write_bytes", "Write", 1024.0, 1024, "B/s"),
+        ]:
             traffic = int(vf["vfiler_" + entry]) * factor
-            ticks_per_sec = get_rate("netapp_api_vf_stats.traffic.%s.%s" % (item, entry), now, traffic)
-            yield 0, "%s: %s" % (name, get_bytes_human_readable(ticks_per_sec, base = base, unit = unit)), [(entry, ticks_per_sec)]
+            ticks_per_sec = get_rate("netapp_api_vf_stats.traffic.%s.%s" % (item, entry), now,
+                                     traffic)
+            yield 0, "%s: %s" % (name, get_bytes_human_readable(
+                ticks_per_sec, base=base, unit=unit)), [(entry, ticks_per_sec)]
 
 
 check_info["netapp_api_vf_stats.traffic"] = {
-    'check_function'      : check_netapp_api_vf_stats_traffic,
-    'inventory_function'  : inventory_netapp_api_vf_stats_traffic,
-    'has_perfdata'        : True,
-    'service_description' : 'Traffic vFiler %s',
+    'check_function': check_netapp_api_vf_stats_traffic,
+    'inventory_function': inventory_netapp_api_vf_stats_traffic,
+    'has_perfdata': True,
+    'service_description': 'Traffic vFiler %s',
 }

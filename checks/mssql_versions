@@ -36,12 +36,14 @@
 # check in version 1.4.0i1. The check here is kept for compatibility with
 # older agents that output the mssql_versions section.
 
+
 def inventory_mssql_versions(info):
     inventory = []
     for line in info:
         if len(line) in [2, 4] and line[0] != "Error:":
             inventory.append((line[0], None))
     return inventory
+
 
 def check_mssql_versions(item, _unused, info):
     for line in info:
@@ -50,7 +52,7 @@ def check_mssql_versions(item, _unused, info):
                 yield 0, 'Server is running version %s' % line[1]
 
             if len(line) == 4:
-                yield 0, line[2] # edition
+                yield 0, line[2]  # edition
 
                 if line[3] != "":
                     yield 0, "clustered as %s" % line[3]
@@ -65,7 +67,7 @@ def check_mssql_versions(item, _unused, info):
 
 
 check_info["mssql_versions"] = {
-    'check_function':          check_mssql_versions,
-    'inventory_function':      inventory_mssql_versions,
-    'service_description':     'MSSQL %s Version',
+    'check_function': check_mssql_versions,
+    'inventory_function': inventory_mssql_versions,
+    'service_description': 'MSSQL %s Version',
 }

@@ -24,8 +24,10 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+
 def inventory_mailman_lists(info):
-    return [ (i[0], None) for i in info ]
+    return [(i[0], None) for i in info]
+
 
 def check_mailman_lists(item, params, info):
     for line in info:
@@ -34,9 +36,10 @@ def check_mailman_lists(item, params, info):
             return (0, '%d members subscribed' % (num_members), [('count', num_members)])
     return (3, 'List could not be found in agent output')
 
+
 check_info["mailman_lists"] = {
-    "check_function"        : check_mailman_lists,
-    "inventory_function"    : inventory_mailman_lists,
-    "service_description"   : "Mailinglist %s",
-    "has_perfdata"          : True,
+    "check_function": check_mailman_lists,
+    "inventory_function": inventory_mailman_lists,
+    "service_description": "Mailinglist %s",
+    "has_perfdata": True,
 }

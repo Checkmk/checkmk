@@ -165,7 +165,8 @@ def check_mknotifyd(item, _no_params, parsed):
     else:
         state = 0
         infotext = "Spooler running"
-    yield state, infotext, [('last_updated', status_age), ('new_files', stat['spools']['New']['Count'])]
+    yield state, infotext, [('last_updated', status_age),
+                            ('new_files', stat['spools']['New']['Count'])]
 
     # Are there any corrupted files
     corrupted = stat["spools"]["Corrupted"]

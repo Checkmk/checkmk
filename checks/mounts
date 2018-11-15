@@ -38,21 +38,21 @@ def inventory_mounts(info):
         if fstype == "tmpfs":
             continue
 
-        if mp in [ "/etc/resolv.conf", "/etc/hostname", "/etc/hosts" ]:
+        if mp in ["/etc/resolv.conf", "/etc/hostname", "/etc/hosts"]:
             continue
 
         if dev not in devices:
             devices.append(dev)
             opts = options.split(",")
             opts.sort()
-            inventory.append( (mp.replace("\\040(deleted)", ""), opts) )
+            inventory.append((mp.replace("\\040(deleted)", ""), opts))
     return inventory
 
 
 def check_mounts(item, targetopts, info):
     # Ignore options that are allowed to change
     def should_ignore_option(option):
-        for ignored_option in [ "commit=", "localalloc=", "subvol=", "subvolid=" ]:
+        for ignored_option in ["commit=", "localalloc=", "subvol=", "subvolid="]:
             if option.startswith(ignored_option):
                 return True
         return False
@@ -95,8 +95,8 @@ def check_mounts(item, targetopts, info):
 
 
 check_info["mounts"] = {
-    'check_function':          check_mounts,
-    'inventory_function':      inventory_mounts,
-    'service_description':     'Mount options of %s',
-    'group':                   'fs_mount_options',
+    'check_function': check_mounts,
+    'inventory_function': inventory_mounts,
+    'service_description': 'Mount options of %s',
+    'group': 'fs_mount_options',
 }

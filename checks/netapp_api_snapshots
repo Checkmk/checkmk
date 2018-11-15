@@ -29,13 +29,13 @@
 # volume_snapshot volch150    percent-reserved 22 blocks-reserved 3322    size-total 12122 ...
 # volume_snapshot volch150    percentage-of-total-blocks 0 cumulative-total 122924 ...
 
-factory_settings["netapp_api_snapshots_default_levels"] = {
-    "levels" : (85.0, 90.0)
-}
+factory_settings["netapp_api_snapshots_default_levels"] = {"levels": (85.0, 90.0)}
+
 
 def inventory_netapp_api_snapshots(parsed):
     for key in parsed.keys():
         yield key, {}
+
 
 def check_netapp_api_snapshots(item, params, parsed):
     data = parsed.get(item)
@@ -47,17 +47,19 @@ def check_netapp_api_snapshots(item, params, parsed):
         yield 3, "No snapshot information available. Volume is %s" % data[0].get("state")
         return
 
-    snapshot_total   = int(data[0]["reserve-used-actual"]) * 1024.0
-    size_total       = int(data[0]["size-total"])
-    reserved_bytes   = int(data[0]["snapshot-blocks-reserved"]) * 1024.0
+    snapshot_total = int(data[0]["reserve-used-actual"]) * 1024.0
+    size_total = int(data[0]["size-total"])
+    reserved_bytes = int(data[0]["snapshot-blocks-reserved"]) * 1024.0
 
     if not reserved_bytes:
-        yield 0, "Used snapshot space: %s" % get_bytes_human_readable(snapshot_total),[("bytes", snapshot_total)]
+        yield 0, "Used snapshot space: %s" % get_bytes_human_readable(snapshot_total), [
+            ("bytes", snapshot_total)
+        ]
         yield params.get("state_noreserve", 1), "No snapshot reserve configured"
         return
 
-    used_percent     = snapshot_total / reserved_bytes * 100.0
-    volume_total     = size_total + reserved_bytes
+    used_percent = snapshot_total / reserved_bytes * 100.0
+    volume_total = size_total + reserved_bytes
 
     state = 0
 
@@ -69,8 +71,8 @@ def check_netapp_api_snapshots(item, params, parsed):
 
     extra_info = ("(Levels at %d%%/%d%%)" % (warn, crit)) if state else ""
 
-    yield state, "Reserve used: %.1f%% (%s)%s" % (used_percent,
-                                                get_bytes_human_readable(snapshot_total), extra_info)
+    yield state, "Reserve used: %.1f%% (%s)%s" % (
+        used_percent, get_bytes_human_readable(snapshot_total), extra_info)
 
     yield 0, "Total Reserve: %s%% (%s) of %s" % (data[0]["snapshot-percent-reserved"],
                                                  get_bytes_human_readable(reserved_bytes),

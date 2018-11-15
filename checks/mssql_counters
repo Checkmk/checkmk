@@ -39,9 +39,7 @@
 # MSSQL_SQLEXPRESS:Databases master Log_File(s)_Size_(KB)
 # FOOBAR 170
 
-
 inventory_mssql_counters_rules = []
-
 
 #TODO if not counters: raise
 
@@ -103,13 +101,12 @@ def parse_mssql_counters_base(info):
             # mssql returns localized format. great! let's try ...
             try:
                 # ... iso 8601
-                values = utc_mktime(time.strptime(" ".join(values).split(".")[0],
-                                                    "%Y-%m-%d %H:%M:%S"))
+                values = utc_mktime(
+                    time.strptime(" ".join(values).split(".")[0], "%Y-%m-%d %H:%M:%S"))
             except ValueError:
                 try:
                     # ... german
-                    values = utc_mktime(time.strptime(" ".join(values),
-                                                      "%d.%m.%Y %H:%M:%S"))
+                    values = utc_mktime(time.strptime(" ".join(values), "%d.%m.%Y %H:%M:%S"))
                 except ValueError:
                     pass
 
@@ -128,11 +125,11 @@ def check_mssql_counters_base(item, params, parsed):
 
 
 check_info['mssql_counters'] = {
-    'parse_function'        : parse_mssql_counters_base,
-    'inventory_function'    : inventory_mssql_counters_base,
-    'check_function'        : check_mssql_counters_base,
-    'service_description'   : "MSSQL",
-    'node_info'             : True,
+    'parse_function': parse_mssql_counters_base,
+    'inventory_function': inventory_mssql_counters_base,
+    'check_function': check_mssql_counters_base,
+    'service_description': "MSSQL",
+    'node_info': True,
 }
 
 #.
@@ -224,6 +221,7 @@ check_info['mssql_counters.cache_hits'] = {
 
 #   ---transactions---------------------------------------------------------
 
+
 def check_mssql_counters_transactions(item, params, parsed):
     obj, instance = item.split()
     node_data = parsed.get((obj, instance), {})
@@ -251,7 +249,8 @@ def check_mssql_counters_transactions(item, params, parsed):
             if value is None:
                 continue
 
-            rate = get_rate("mssql_counters.transactions.%s.%s.%s" % (node_name, item, counter_key), now, value)
+            rate = get_rate("mssql_counters.transactions.%s.%s.%s" % (node_name, item, counter_key),
+                            now, value)
             infotext = "%s%s: %.1f/s" % (node_info, title, rate)
             node_info = ""
             yield 0, infotext, [(counter_key, rate)]
@@ -267,6 +266,7 @@ check_info['mssql_counters.transactions'] = {
 }
 
 #   ---locks----------------------------------------------------------------
+
 
 def check_mssql_counters_locks(item, params, parsed):
     obj, instance = item.split()
@@ -296,7 +296,8 @@ def check_mssql_counters_locks(item, params, parsed):
             if value is None:
                 continue
 
-            rate = get_rate("mssql_counters.locks.%s.%s.%s" % (node_name, item, counter_key), now, value)
+            rate = get_rate("mssql_counters.locks.%s.%s.%s" % (node_name, item, counter_key), now,
+                            value)
             infotext = "%s%s: %.1f/s" % (node_info, title, rate)
             node_info = ""
 
@@ -324,6 +325,7 @@ check_info['mssql_counters.locks'] = {
 }
 
 #   ---sql stats------------------------------------------------------------
+
 
 def inventory_mssql_counters_sqlstats(parsed, want_counters, dflt=None):
     for (obj, instance), node_data in parsed.iteritems():
@@ -383,6 +385,7 @@ check_info["mssql_counters.sqlstats"] = {
 
 #   ---page activity--------------------------------------------------------
 
+
 def check_mssql_counters_pageactivity(item, params, parsed):
     obj, instance = item.split()
     node_data = parsed.get((obj, instance), {})
@@ -401,16 +404,17 @@ def check_mssql_counters_pageactivity(item, params, parsed):
         if node_name:
             node_info = "[%s] " % node_name
 
-        for counter_key, title in  [
+        for counter_key, title in [
             ("page_reads/sec", "Reads"),
             ("page_writes/sec", "Writes"),
-            ("page_lookups/sec", "Lookups")
+            ("page_lookups/sec", "Lookups"),
         ]:
             value = counters.get(counter_key)
             if value is None:
                 continue
 
-            rate = get_rate("mssql_counters.pageactivity.%s.%s.%s" % (node_name, item, counter_key), now, value)
+            rate = get_rate("mssql_counters.pageactivity.%s.%s.%s" % (node_name, item, counter_key),
+                            now, value)
             infotext = "%s%s: %.1f/s" % (node_info, title, rate)
             node_info = ""
 
@@ -439,10 +443,11 @@ check_info['mssql_counters.pageactivity'] = {
 
 #   ---locks per batch------------------------------------------------------
 
+
 def inventory_mssql_counters_locks_per_batch(parsed):
     db_names = [(obj.split(":")[0], node_name)
-                for (obj, _instance), node_data in parsed.iteritems()
-                if ":" in obj for node_name in node_data]
+                for (obj, _instance), node_data in parsed.iteritems() if ":" in obj
+                for node_name in node_data]
 
     for db_name, node_name in db_names:
         if "lock_requests/sec" in parsed.get(("%s:Locks" % db_name, "_Total"), {})\
@@ -471,8 +476,10 @@ def check_mssql_counters_locks_per_batch(item, params, parsed):
         locks = data_locks["lock_requests/sec"]
         batches = data_stats["batch_requests/sec"]
 
-        lock_rate = get_rate("mssql_counters_locks_per_batch.%s.%s.locks" % (node_name, item), now, locks)
-        batch_rate = get_rate("mssql_counters_locks_per_batch.%s.%s.batches" % (node_name, item), now, batches)
+        lock_rate = get_rate("mssql_counters_locks_per_batch.%s.%s.locks" % (node_name, item), now,
+                             locks)
+        batch_rate = get_rate("mssql_counters_locks_per_batch.%s.%s.batches" % (node_name, item),
+                              now, batches)
 
         if batch_rate == 0:
             lock_per_batch = 0
@@ -498,12 +505,12 @@ def check_mssql_counters_locks_per_batch(item, params, parsed):
 
 
 check_info["mssql_counters.locks_per_batch"] = {
-    "inventory_function"    : inventory_mssql_counters_locks_per_batch,
-    "check_function"        : check_mssql_counters_locks_per_batch,
-    "service_description"   : "MSSQL %s Locks per Batch",
-    "has_perfdata"          : True,
-    "group"                 : "mssql_stats",
-    'node_info'             : True,
+    "inventory_function": inventory_mssql_counters_locks_per_batch,
+    "check_function": check_mssql_counters_locks_per_batch,
+    "service_description": "MSSQL %s Locks per Batch",
+    "has_perfdata": True,
+    "group": "mssql_stats",
+    'node_info': True,
 }
 
 #.
@@ -537,7 +544,7 @@ def check_mssql_file_sizes(item, params, parsed):
         log_files_size = counters.get("log_file(s)_size_(kb)")
         for val_bytes, key, title in [
             (counters.get("data_file(s)_size_(kb)"), "data_files", "Data files"),
-            (log_files_size,                         "log_files",  "Log files total"),
+            (log_files_size, "log_files", "Log files total"),
         ]:
             if val_bytes is None:
                 continue
@@ -553,9 +560,8 @@ def check_mssql_file_sizes(item, params, parsed):
             elif warn is not None and val_bytes >= warn:
                 state = 1
             if state:
-                infotext += " (warn/crit at %s/%s)" % (
-                            get_bytes_human_readable(warn),
-                            get_bytes_human_readable(crit))
+                infotext += " (warn/crit at %s/%s)" % (get_bytes_human_readable(warn),
+                                                       get_bytes_human_readable(crit))
 
             yield state, infotext, [(key, val_bytes, warn, crit)]
 

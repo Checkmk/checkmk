@@ -24,7 +24,6 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-
 # <<<...mounts>>>
 # /foobar hanging 0 0 0 0
 # /with spaces ok 217492 123563 112515 524288
@@ -81,9 +80,6 @@ def check_network_fs_mounts(item, params, parsed):
     if params is not None and params.get("has_perfdata"):
         perfdata = [("fs_size", size_bytes), ("fs_used", used_bytes)]
 
-    infotext = "%.1f%% used (%s of %s)" % (
-        used_perc,
-        get_bytes_human_readable(used_bytes),
-        get_bytes_human_readable(size_bytes)
-    )
+    infotext = "%.1f%% used (%s of %s)" % (used_perc, get_bytes_human_readable(used_bytes),
+                                           get_bytes_human_readable(size_bytes))
     return 0, infotext, perfdata

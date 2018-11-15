@@ -24,7 +24,6 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-
 # This check verifies a given NFS export is registered with mountd.
 # Optionally we can add tracking of allowed clients and filesystem ID.
 
@@ -61,7 +60,7 @@ def check_nfsexports(item, _no_params, info):
 
 
 check_info["nfsexports"] = {
-    'check_function'      : check_nfsexports,
-    'inventory_function'  : inventory_nfsexports,
-    'service_description' : 'NFS export %s',
+    'check_function': check_nfsexports,
+    'inventory_function': inventory_nfsexports,
+    'service_description': 'NFS export %s',
 }

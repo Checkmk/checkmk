@@ -35,6 +35,7 @@
 #                   "error: 'Access denied for user 'root'@'localhost' (using password: NO)'" ]
 # }
 
+
 # FIXME: Crapy copy n paste! Consolidate with other mysql_* parse functions
 def parse_mysql_ping(info):
     parsed = {}
@@ -50,9 +51,10 @@ def parse_mysql_ping(info):
 
     # Support for the old plugin version without instances
     if not instance:
-        parsed['mysql'] = [ " ".join(x) for x in info ]
+        parsed['mysql'] = [" ".join(x) for x in info]
 
     return parsed
+
 
 def check_mysql_ping(item, _no_params, parsed):
     if item in parsed:
@@ -63,8 +65,8 @@ def check_mysql_ping(item, _no_params, parsed):
 
 
 check_info['mysql_ping'] = {
-    "parse_function"          : parse_mysql_ping,
-    "inventory_function"      : discover(),
-    "check_function"          : check_mysql_ping,
-    "service_description"     : "MySQL Instance %s",
+    "parse_function": parse_mysql_ping,
+    "inventory_function": discover(),
+    "check_function": check_mysql_ping,
+    "service_description": "MySQL Instance %s",
 }

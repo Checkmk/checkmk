@@ -24,32 +24,34 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-
 # Agent output:
 # <<<netapp_api_disk:sep(9)>>>
 
+
 def inventory_netapp_api_disk_summary(info):
-    return [ (None, {}) ]
+    return [(None, {})]
+
 
 def check_netapp_api_disk_summary(_no_item, params, info):
     disks_info = {}
     for line in info:
         disk_uid = line[0].split()[1]
-        disks_info.setdefault(disk_uid,{})
+        disks_info.setdefault(disk_uid, {})
         for entry in line[1:]:
             tokens = entry.split(" ", 1)
             disks_info[disk_uid][tokens[0]] = tokens[1]
 
     # Convert legacy levels
     if "broken_spare_ratio" in params:
-        params = { "failed_spare_ratio": params["broken_spare_ratio"] }
+        params = {"failed_spare_ratio": params["broken_spare_ratio"]}
 
     disks = disks_info
 
     # The device can contain disks who belongs to another filer. We only check the ones
     # belonging to this filer.
     # TODO Do we need that?
-    my_disks = dict([disk for disk in disks.items() if not disk[1].get("raid-state") in [ "remote", "partner"] ])
+    my_disks = dict(
+        [disk for disk in disks.items() if not disk[1].get("raid-state") in ["remote", "partner"]])
 
     disks_converted = []
     for disk in my_disks.itervalues():
@@ -61,11 +63,11 @@ def check_netapp_api_disk_summary(_no_item, params, info):
 
         disk['identifier'] = disk_info
         disk['type'] = False
-        raid_type  = disk.get("raid-type")
+        raid_type = disk.get("raid-type")
         raid_state = disk.get("raid-state")
-        if raid_state  == "broken":
+        if raid_state == "broken":
             disk['state'] = 'failed'
-        elif disk.get("prefailed", "false") not in [ "false", "None" ]:
+        elif disk.get("prefailed", "false") not in ["false", "None"]:
             disk['state'] = 'prefailed'
             if raid_type in ["parity", "dparity"]:
                 disk['type'] = 'parity'
@@ -82,11 +84,11 @@ def check_netapp_api_disk_summary(_no_item, params, info):
 
 
 check_info["netapp_api_disk.summary"] = {
-    'check_function'          : check_netapp_api_disk_summary,
-    'inventory_function'      : inventory_netapp_api_disk_summary,
-    'service_description'     : 'NetApp Disks Summary',
-    'group'                   : 'netapp_disks',
-    'has_perfdata'            : True,
-    'default_levels_variable' : 'filer_disks_default_levels',
-    'includes'                : ['filerdisks.include'],
+    'check_function': check_netapp_api_disk_summary,
+    'inventory_function': inventory_netapp_api_disk_summary,
+    'service_description': 'NetApp Disks Summary',
+    'group': 'netapp_disks',
+    'has_perfdata': True,
+    'default_levels_variable': 'filer_disks_default_levels',
+    'includes': ['filerdisks.include'],
 }

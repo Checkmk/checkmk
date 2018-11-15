@@ -24,7 +24,6 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-
 # source for these defaults:
 # https://blogs.technet.microsoft.com/samdrey/2015/01/26/exchange-2013-performance-counters-and-their-thresholds/
 factory_settings['msexch_rpcclientaccess_defaultlevels'] = {
@@ -37,29 +36,32 @@ def check_msexch_rpcclientaccess(item, params, parsed):
     # despite the source being raw-data, the averaged latency is
     # pre-processed
     table = parsed[""]
-    yield wmi_yield_raw_counter(table, item, "RPCAveragedLatency",
-                                label="ms average latency",
-                                perfvar="average_latency",
-                                levels=params['latency'])
-    yield wmi_yield_raw_persec(table, item, "RPCRequests",
-                               label=" RPC Requests",
-                               perfvar="requests_per_sec",
-                               levels=params['requests'])
-    yield wmi_yield_raw_counter(table, item, "UserCount",
-                                label=" users",
-                                perfvar="current_users")
-    yield wmi_yield_raw_counter(table, item, "ActiveUserCount",
-                                label=" active users",
-                                perfvar="active_users")
+    yield wmi_yield_raw_counter(
+        table,
+        item,
+        "RPCAveragedLatency",
+        label="ms average latency",
+        perfvar="average_latency",
+        levels=params['latency'])
+    yield wmi_yield_raw_persec(
+        table,
+        item,
+        "RPCRequests",
+        label=" RPC Requests",
+        perfvar="requests_per_sec",
+        levels=params['requests'])
+    yield wmi_yield_raw_counter(table, item, "UserCount", label=" users", perfvar="current_users")
+    yield wmi_yield_raw_counter(
+        table, item, "ActiveUserCount", label=" active users", perfvar="active_users")
 
 
 check_info['msexch_rpcclientaccess'] = {
-    'inventory_function'      : inventory_wmi_table,
-    'check_function'          : check_msexch_rpcclientaccess,
-    'parse_function'          : parse_wmi_table,
-    'has_perfdata'            : True,
-    'service_description'     : "Exchange RPC Client Access",
-    'includes'                : ['wmi.include'],
-    'group'                   : 'msx_rpcclientaccess',
-    'default_levels_variable' : 'msexch_rpcclientaccess_defaultlevels'
+    'inventory_function': inventory_wmi_table,
+    'check_function': check_msexch_rpcclientaccess,
+    'parse_function': parse_wmi_table,
+    'has_perfdata': True,
+    'service_description': "Exchange RPC Client Access",
+    'includes': ['wmi.include'],
+    'group': 'msx_rpcclientaccess',
+    'default_levels_variable': 'msexch_rpcclientaccess_defaultlevels'
 }

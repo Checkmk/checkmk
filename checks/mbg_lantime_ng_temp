@@ -25,26 +25,31 @@
 # Boston, MA 02110-1301 USA.
 
 factory_settings["mbg_lantime_ng_temp_default_levels"] = {
-    "levels": (80, 90), # levels for system temperature
+    "levels": (80, 90),  # levels for system temperature
 }
+
 
 def inventory_mbg_lantime_ng_temp(info):
     if info:
-        return[ ("System", {}) ]
+        return [("System", {})]
+
 
 def check_mbg_lantime_ng_temp(item, params, info):
     return check_temperature(float(info[0][0]), params, "mbg_lantime_ng_temp_%s" % item)
 
+
 check_info["mbg_lantime_ng_temp"] = {
-    "check_function"          : check_mbg_lantime_ng_temp,
-    "inventory_function"      : inventory_mbg_lantime_ng_temp,
-    "service_description"     : "Temperature %s",
-    "default_levels_variable" : "mbg_lantime_ng_temp_default_levels",
-    "has_perfdata"            : True,
-    "group"                   : "temperature",
-    "snmp_info"               : (".1.3.6.1.4.1.5597.30.0.5.2", [
-                                    1, # MBG-SNMP-LTNG-MIB::mbgLtNgSysTempCelsius
-                                  ]),
-    "snmp_scan_function"      : snmp_scan_mbg_lantime_ng_hw,
-    "includes"                : [ "mbg_lantime.include", "temperature.include" ],
+    "check_function": check_mbg_lantime_ng_temp,
+    "inventory_function": inventory_mbg_lantime_ng_temp,
+    "service_description": "Temperature %s",
+    "default_levels_variable": "mbg_lantime_ng_temp_default_levels",
+    "has_perfdata": True,
+    "group": "temperature",
+    "snmp_info": (
+        ".1.3.6.1.4.1.5597.30.0.5.2",
+        [
+            1,  # MBG-SNMP-LTNG-MIB::mbgLtNgSysTempCelsius
+        ]),
+    "snmp_scan_function": snmp_scan_mbg_lantime_ng_hw,
+    "includes": ["mbg_lantime.include", "temperature.include"],
 }

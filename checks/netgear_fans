@@ -24,7 +24,6 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-
 # .1.3.6.1.4.1.4526.10.43.1.6.1.3.1.0 2 --> FASTPATH-BOXSERVICES-PRIVATE-MIB::boxServicesFanItemState.1.0
 # .1.3.6.1.4.1.4526.10.43.1.6.1.3.1.1 2 --> FASTPATH-BOXSERVICES-PRIVATE-MIB::boxServicesFanItemState.1.1
 # .1.3.6.1.4.1.4526.10.43.1.6.1.3.1.2 2 --> FASTPATH-BOXSERVICES-PRIVATE-MIB::boxServicesFanItemState.1.2
@@ -50,47 +49,46 @@
 # .1.3.6.1.4.1.4526.10.43.1.6.1.4.2.4 0 --> FASTPATH-BOXSERVICES-PRIVATE-MIB::boxServicesFanSpeed.2.4
 # .1.3.6.1.4.1.4526.10.43.1.6.1.4.2.5 0 --> FASTPATH-BOXSERVICES-PRIVATE-MIB::boxServicesFanSpeed.2.5
 
-
 # Just assumed
 factory_settings["netgear_fans_default_levels"] = {
-    "lower" : (1500, 1200),
+    "lower": (1500, 1200),
 }
 
 
 def netgear_map_state_txt_to_int(state_nr, version):
     map_state_txt_to_int = {
-        "operational"  : 0,
-        "failed"       : 2,
-        "powering"     : 0,
-        "not powering" : 1,
-        "not present"  : 1,
-        "no power"     : 2,
-        "incompatible" : 2,
+        "operational": 0,
+        "failed": 2,
+        "powering": 0,
+        "not powering": 1,
+        "not present": 1,
+        "no power": 2,
+        "incompatible": 2,
     }
 
     if version.startswith("8."):
         map_states = {
-            "1" : "operational",
-            "2" : "failed",
-            "3" : "powering",
-            "4" : "not powering",
-            "5" : "not present",
+            "1": "operational",
+            "2": "failed",
+            "3": "powering",
+            "4": "not powering",
+            "5": "not present",
         }
     elif version.startswith("10."):
         map_states = {
-            "1" : "notpresent",
-            "2" : "operational",
-            "3" : "failed",
-            "4" : "powering",
-            "5" : "no power",
-            "6" : "not powering",
-            "7" : "incompatible",
+            "1": "notpresent",
+            "2": "operational",
+            "3": "failed",
+            "4": "powering",
+            "5": "no power",
+            "6": "not powering",
+            "7": "incompatible",
         }
     else:
         map_states = {
-            "1" : "not present",
-            "2" : "operational",
-            "3" : "failed",
+            "1": "not present",
+            "2": "operational",
+            "3": "failed",
         }
 
     state_txt = map_states.get(state_nr, "unknown(%s)" % state_nr)
@@ -100,14 +98,16 @@ def netgear_map_state_txt_to_int(state_nr, version):
 def parse_netgear_fans(info):
     versioninfo, sensorinfo = info
     if versioninfo == []:
-        parsed = { "__fans__" : {} }
+        parsed = {"__fans__": {}}
     else:
-        parsed = { "__version__" : versioninfo[0][0],
-                   "__fans__"    : {}, }
+        parsed = {
+            "__version__": versioninfo[0][0],
+            "__fans__": {},
+        }
     for oid_end, sstate, reading_str in sensorinfo:
         parsed["__fans__"].setdefault("%s" % oid_end.replace(".", "/"), {
-            "state"       : sstate,
-            "reading_str" : reading_str,
+            "state": sstate,
+            "reading_str": reading_str,
         })
     return parsed
 
@@ -128,23 +128,28 @@ def check_netgear_fans(item, params, parsed):
     reading_str = data["reading_str"]
     if reading_str != "Not Supported":
         yield check_fan(int(data["reading_str"]), params)
-    state, state_readable = netgear_map_state_txt_to_int(data["state"], parsed.get("__version__", ""))
+    state, state_readable = netgear_map_state_txt_to_int(data["state"], parsed.get(
+        "__version__", ""))
     yield state, "Status: %s" % state_readable
 
 
 check_info['netgear_fans'] = {
-    'parse_function'          : parse_netgear_fans,
-    'inventory_function'      : inventory_netgear_fans,
-    'check_function'          : check_netgear_fans,
-    'service_description'     : 'Fan %s',
-    'snmp_info'               : [('.1.3.6.1.4.1.4526.10.1.1.1.13', ['']),
-                                 ('.1.3.6.1.4.1.4526.10.43.1.6.1', [
-                                       OID_END,
-                                       "3",    # FASTPATH-BOXSERVICES-PRIVATE-MIB::boxServicesFanItemState
-                                       "4",    # FASTPATH-BOXSERVICES-PRIVATE-MIB::boxServicesFanSpeed
-                                ])],
-    'snmp_scan_function'      : lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.4526.100"),
-    'default_levels_variable' : 'netgear_fans_default_levels',
-    'includes'                : [ 'fan.include' ],
-    'group'                   : 'hw_fans',
+    'parse_function': parse_netgear_fans,
+    'inventory_function': inventory_netgear_fans,
+    'check_function': check_netgear_fans,
+    'service_description': 'Fan %s',
+    'snmp_info': [
+        ('.1.3.6.1.4.1.4526.10.1.1.1.13', ['']),
+        (
+            '.1.3.6.1.4.1.4526.10.43.1.6.1',
+            [
+                OID_END,
+                "3",  # FASTPATH-BOXSERVICES-PRIVATE-MIB::boxServicesFanItemState
+                "4",  # FASTPATH-BOXSERVICES-PRIVATE-MIB::boxServicesFanSpeed
+            ])
+    ],
+    'snmp_scan_function': lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.4526.100"),
+    'default_levels_variable': 'netgear_fans_default_levels',
+    'includes': ['fan.include'],
+    'group': 'hw_fans',
 }

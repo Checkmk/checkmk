@@ -24,7 +24,6 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-
 # TODO together with other mcafee-emailgateway-info checks?
 
 
@@ -35,13 +34,15 @@ def check_mcafee_emailgateway_spam_mcafee(item, params, info):
 
 
 check_info['mcafee_emailgateway_spam_mcafee'] = {
-    'inventory_function'    : inventory_mcafee_gateway_generic,
-    'check_function'        : check_mcafee_emailgateway_spam_mcafee,
-    'service_description'   : 'Spam McAfee',
-    'snmp_info'             : ('.1.3.6.1.4.1.1230.2.4.1.2.3.6', [
-                                '10',   # spam-mcafee-engine-version
-                                '11',   # spam-mcafee-rules-version
-                              ]),
-    'snmp_scan_function'    : scan_mcafee_emailgateway,
-    'includes'              : ['mcafee_gateway.include'],
+    'inventory_function': inventory_mcafee_gateway_generic,
+    'check_function': check_mcafee_emailgateway_spam_mcafee,
+    'service_description': 'Spam McAfee',
+    'snmp_info': (
+        '.1.3.6.1.4.1.1230.2.4.1.2.3.6',
+        [
+            '10',  # spam-mcafee-engine-version
+            '11',  # spam-mcafee-rules-version
+        ]),
+    'snmp_scan_function': scan_mcafee_emailgateway,
+    'includes': ['mcafee_gateway.include'],
 }

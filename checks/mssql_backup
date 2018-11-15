@@ -54,23 +54,22 @@
 discovery_mssql_backup = []
 
 factory_settings["mssql_backup_default_levels"] = {
-    "database":             (None, None),
-    "database_diff":        (None, None),
-    "log":                  (None, None),
-    "file_or_filegroup":    (None, None),
-    "file_diff":            (None, None),
-    "partial":              (None, None),
-    "partial_diff":         (None, None),
-    "unspecific":           (None, None),
+    "database": (None, None),
+    "database_diff": (None, None),
+    "log": (None, None),
+    "file_or_filegroup": (None, None),
+    "file_diff": (None, None),
+    "partial": (None, None),
+    "partial_diff": (None, None),
+    "unspecific": (None, None),
 }
 
 
 def parse_mssql_backup(info):
     def _parse_date_and_time(backup_date, backup_time):
         try:
-            timestamp = time.mktime(time.strptime(
-                        "%s %s" % (backup_date, backup_time),
-                        '%Y-%m-%d %H:%M:%S'))
+            timestamp = time.mktime(
+                time.strptime("%s %s" % (backup_date, backup_time), '%Y-%m-%d %H:%M:%S'))
         except ValueError:
             timestamp = None
         return timestamp
@@ -137,7 +136,7 @@ def _mssql_backup_discovery_mode():
     try:
         return rules[0]['mode']
     except (IndexError, KeyError):
-        return "summary" # default, comp. to older versions
+        return "summary"  # default, comp. to older versions
 
 
 def check_mssql_backup(item, params, parsed):
@@ -176,25 +175,24 @@ def _check_mssql_backup(backup, levels, perfkey):
     elif age_warn is not None and sec_ago >= age_warn:
         state = 1
 
-    infotext = 'Last backup was at %s (%s ago)' % (
-        time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(backup.timestamp)),
-        get_age_human_readable(sec_ago))
+    infotext = 'Last backup was at %s (%s ago)' % (time.strftime(
+        '%Y-%m-%d %H:%M:%S', time.localtime(backup.timestamp)), get_age_human_readable(sec_ago))
 
     if state:
-        infotext += " (warn/crit at %s/%s)" % (
-            get_age_human_readable(age_warn), get_age_human_readable(age_crit))
+        infotext += " (warn/crit at %s/%s)" % (get_age_human_readable(age_warn),
+                                               get_age_human_readable(age_crit))
 
     return state, infotext, [(perfkey, sec_ago, age_warn, age_crit)]
 
 
 check_info['mssql_backup'] = {
-    'parse_function'            : parse_mssql_backup,
-    'check_function'            : check_mssql_backup,
-    'inventory_function'        : inventory_mssql_backup,
-    'service_description'       : 'MSSQL %s Backup',
-    'has_perfdata'              : True,
-    'group'                     : 'mssql_backup',
-    'default_levels_variable'   : 'mssql_backup_default_levels',
+    'parse_function': parse_mssql_backup,
+    'check_function': check_mssql_backup,
+    'inventory_function': inventory_mssql_backup,
+    'service_description': 'MSSQL %s Backup',
+    'has_perfdata': True,
+    'group': 'mssql_backup',
+    'default_levels_variable': 'mssql_backup_default_levels',
 }
 
 #.
@@ -206,6 +204,7 @@ check_info['mssql_backup'] = {
 #   |                     |___/_|_| |_|\__, |_|\___|                       |
 #   |                                  |___/                               |
 #   '----------------------------------------------------------------------'
+
 
 def _mssql_backup_per_type_item(db_name, backup):
     if backup.type is None:
@@ -237,9 +236,9 @@ def check_mssql_backup_per_type(item, params, parsed):
 
 
 check_info['mssql_backup.per_type'] = {
-    'check_function'            : check_mssql_backup_per_type,
-    'inventory_function'        : inventory_mssql_backup_per_type,
-    'service_description'       : 'MSSQL %s Backup',
-    'has_perfdata'              : True,
-    'group'                     : 'mssql_backup_per_type',
+    'check_function': check_mssql_backup_per_type,
+    'inventory_function': inventory_mssql_backup_per_type,
+    'service_description': 'MSSQL %s Backup',
+    'has_perfdata': True,
+    'group': 'mssql_backup_per_type',
 }

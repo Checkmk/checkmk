@@ -37,6 +37,7 @@
 # tanserver        tans        nindexes        3
 # tanserver        tans        ns        tanserver.tans
 
+
 def parse_mongodb_collections(info):
     databases = {}
     for line in info:
@@ -49,14 +50,16 @@ def parse_mongodb_collections(info):
             parsed["%s %s" % (db, collection)] = values
     return parsed
 
+
 def inventory_mongodb_collections(parsed):
     for item in parsed:
         yield item, {}
 
+
 def check_mongodb_collections(item, params, parsed):
     fslist_blocks = []
     for coll_item, values in parsed.items():
-        used_mb  = float(values["size"]) / 1024.0**2
+        used_mb = float(values["size"]) / 1024.0**2
         total_mb = float(values["storageSize"]) / 1024.0**2
         fslist_blocks.append((coll_item, total_mb, total_mb - used_mb, 0))
 
@@ -64,14 +67,12 @@ def check_mongodb_collections(item, params, parsed):
 
 
 check_info["mongodb_collections"] = {
-    "parse_function"          : parse_mongodb_collections,
-    "check_function"          : check_mongodb_collections,
-    "inventory_function"      : inventory_mongodb_collections,
-    "service_description"     : "MongoDB Collection %s",
-    "group"                   : "mongodb_collections",
-    "default_levels_variable" : "filesystem_default_levels",
-    "includes"                : [ "size_trend.include", "df.include" ],
-    "has_perfdata"            : True,
+    "parse_function": parse_mongodb_collections,
+    "check_function": check_mongodb_collections,
+    "inventory_function": inventory_mongodb_collections,
+    "service_description": "MongoDB Collection %s",
+    "group": "mongodb_collections",
+    "default_levels_variable": "filesystem_default_levels",
+    "includes": ["size_trend.include", "df.include"],
+    "has_perfdata": True,
 }
-
-

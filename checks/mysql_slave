@@ -24,6 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+
 # FIXME: Crapy copy n paste! Consolidate with other mysql_* parse functions
 def parse_mysql_slave(info):
     def parse_line(l):
@@ -65,6 +66,7 @@ def parse_mysql_slave(info):
                 parsed['mysql'][key] = value
 
     return parsed
+
 
 @discover
 def inventory_mysql_slave(key, values):
@@ -112,11 +114,12 @@ def check_mysql_slave(item, params, data):
 
     return state, ', '.join(output), perfdata
 
+
 check_info['mysql_slave'] = {
-    "parse_function"          : parse_mysql_slave,
-    "inventory_function"      : inventory_mysql_slave,
-    "check_function"          : check_mysql_slave,
-    "service_description"     : "MySQL DB Slave %s",
-    "has_perfdata"            : True,
-    "group"                   : "mysql_slave",
+    "parse_function": parse_mysql_slave,
+    "inventory_function": inventory_mysql_slave,
+    "check_function": check_mysql_slave,
+    "service_description": "MySQL DB Slave %s",
+    "has_perfdata": True,
+    "group": "mysql_slave",
 }

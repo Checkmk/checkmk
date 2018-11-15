@@ -30,9 +30,11 @@
 # aggregation aggr1_n1    size-available 2915315712       size-total 9437184000
 # aggregation aggr1_n2    size-available 2936561664       size-total 9437184000
 
+
 def inventory_netapp_api_aggr(parsed):
     for name in parsed.keys():
         yield name, {}
+
 
 @get_parsed_item_data
 def check_netapp_api_aggr(item, params, aggr):
@@ -41,14 +43,14 @@ def check_netapp_api_aggr(item, params, aggr):
     size_avail = int(aggr.get("size-available")) / mega
     return df_check_filesystem_list(item, params, [(item, size_total, size_avail, 0)])
 
-check_info["netapp_api_aggr"] = {
-    'check_function'          : check_netapp_api_aggr,
-    'parse_function'          : netapp_api_parse_lines,
-    'inventory_function'      : inventory_netapp_api_aggr,
-    'service_description'     : 'Aggregation %s',
-    'group'                   : 'filesystem',
-    'has_perfdata'            : True,
-    'includes'                : [ "size_trend.include", "df.include", "netapp_api.include" ],
-    'default_levels_variable' : 'filesystem_default_levels',
 
+check_info["netapp_api_aggr"] = {
+    'check_function': check_netapp_api_aggr,
+    'parse_function': netapp_api_parse_lines,
+    'inventory_function': inventory_netapp_api_aggr,
+    'service_description': 'Aggregation %s',
+    'group': 'filesystem',
+    'has_perfdata': True,
+    'includes': ["size_trend.include", "df.include", "netapp_api.include"],
+    'default_levels_variable': 'filesystem_default_levels',
 }

@@ -74,29 +74,30 @@ def parse_mssql_instance(info):
         else:
             instance_id = line[0]
 
-        instance = parsed.setdefault(instance_id, {
-            # it may happen that the state line is missing, add some fallback as default here
-            "state"     : "0",
-            "error_msg" : "Unable to connect to database (Agent reported no state)",
-        })
+        instance = parsed.setdefault(
+            instance_id,
+            {
+                # it may happen that the state line is missing, add some fallback as default here
+                "state": "0",
+                "error_msg": "Unable to connect to database (Agent reported no state)",
+            })
 
         if line[1] == "config":
             instance.update({
-                "version_info" : "%s - %s" % (line[2], line[3]),
-                "cluster_name" : line[4],
+                "version_info": "%s - %s" % (line[2], line[3]),
+                "cluster_name": line[4],
             })
         elif line[1] == "state":
             instance.update({
-                "state"     : line[2],
-                "error_msg" : "|".join(line[3:]),
+                "state": line[2],
+                "error_msg": "|".join(line[3:]),
             })
 
         elif line[1] == "details":
             _parse_prod_version(line[2])
             instance.update({
-                "prod_version_info": "%s (%s) (%s) - %s" % (
-                    _parse_prod_version(line[2]), line[3], line[2], line[4]
-                )
+                "prod_version_info": "%s (%s) (%s) - %s" % (_parse_prod_version(line[2]), line[3],
+                                                            line[2], line[4])
             })
 
     return parsed
@@ -126,9 +127,9 @@ def check_mssql_instance(item, params, parsed):
 
 
 check_info["mssql_instance"] = {
-    'parse_function'      : parse_mssql_instance,
-    'check_function'      : check_mssql_instance,
-    'inventory_function'  : inventory_mssql_instance,
-    'service_description' : 'MSSQL %s Instance',
-    'group'               : 'mssql_instance',
+    'parse_function': parse_mssql_instance,
+    'check_function': check_mssql_instance,
+    'inventory_function': inventory_mssql_instance,
+    'service_description': 'MSSQL %s Instance',
+    'group': 'mssql_instance',
 }

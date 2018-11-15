@@ -33,6 +33,7 @@
 # Number Of Drives:2
 # Adapter 1: No Virtual Drive Configured.
 
+
 def megaraid_ldisks_is_new_drive(l):
     return l.startswith('Virtual Disk:') or l.startswith('Virtual Drive:') \
            or l.startswith('CacheCade Virtual Drive:')
@@ -103,8 +104,8 @@ def check_megaraid_ldisks(item, _no_params, parsed):
 
 
 check_info["megaraid_ldisks"] = {
-    'parse_function':           parse_megaraid_ldisks,
-    'check_function':           check_megaraid_ldisks,
-    'inventory_function':       inventory_megaraid_ldisks,
-    'service_description':      'RAID Adapter/LDisk %s',
+    'parse_function': parse_megaraid_ldisks,
+    'check_function': check_megaraid_ldisks,
+    'inventory_function': inventory_megaraid_ldisks,
+    'service_description': 'RAID Adapter/LDisk %s',
 }

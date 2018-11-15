@@ -24,23 +24,20 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-
 # <<<mssql_transactionlogs>>>
 # instance database table max_size_in_bytes allocated_size_in_bytes used_size_in_bytes unlimited
 
-
 factory_settings['mssql_transactionlogs_default_levels'] = {
-    'used_levels'           : (80.0, 90.0),
+    'used_levels': (80.0, 90.0),
 }
 
-
 check_info['mssql_transactionlogs'] = {
-    'parse_function'          : parse_mssql_datafiles,
-    'inventory_function'      : lambda parsed: inventory_mssql_datafiles("transactionlogs", parsed),
-    'check_function'          : check_mssql_datafiles,
-    'service_description'     : 'MSSQL Transactionlog %s',
-    'group'                   : "mssql_transactionlogs",
-    'has_perfdata'            : True,
-    'default_levels_variable' : 'mssql_transactionlogs_default_levels',
-    'includes'                : ["mssql.include"]
+    'parse_function': parse_mssql_datafiles,
+    'inventory_function': lambda parsed: inventory_mssql_datafiles("transactionlogs", parsed),
+    'check_function': check_mssql_datafiles,
+    'service_description': 'MSSQL Transactionlog %s',
+    'group': "mssql_transactionlogs",
+    'has_perfdata': True,
+    'default_levels_variable': 'mssql_transactionlogs_default_levels',
+    'includes': ["mssql.include"]
 }

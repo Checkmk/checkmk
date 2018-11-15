@@ -67,7 +67,7 @@ import cmk.store as store
 import cmk.render as render
 import cmk.ec.defaults
 import cmk.ec.export
-
+from htmllib import RequestTimeout
 
 if cmk.is_managed_edition():
     import managed
@@ -5051,10 +5051,7 @@ class ActivateChangesManager(ActivateChanges):
 
 
     def _load_activation(self):
-        try:
-            self.__dict__.update(store.load_data_from_file(self._info_path(), {}))
-        except MKGeneralException, e:
-            raise MKUserError(None, str(e))
+        self.__dict__.update(store.load_data_from_file(self._info_path(), {}))
 
 
     def _save_activation(self):
@@ -5321,7 +5318,9 @@ class ActivateChangesManager(ActivateChanges):
                 try:
                     try:
                         manager.load_activation(activation_id)
-                    except MKUserError:
+                    except RequestTimeout:
+                        raise
+                    except Exception:
                         # Not existant anymore!
                         delete = True
                         raise

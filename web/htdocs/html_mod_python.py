@@ -227,7 +227,7 @@ class html_mod_python(htmllib.html):
             logger.debug('%s' % e)
 
     def get_button_counts(self):
-        return config.user.load_file("buttoncounts", {})
+        return config.user.get_button_counts()
 
     def top_heading(self, title):
         if not isinstance(config.user, config.LoggedInNobody):

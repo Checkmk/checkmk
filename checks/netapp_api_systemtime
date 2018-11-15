@@ -24,7 +24,6 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-
 # 7 mode
 # <<<netapp_api_systemtime:sep(9)>>>
 # name 76123    123
@@ -43,10 +42,10 @@ def inventory_netapp_api_systemtime(info):
 def check_netapp_api_systemtime(item, params, info):
     for line in info:
         if line[0] == item:
-            agent_time  = int(line[1])
+            agent_time = int(line[1])
             system_time = int(line[2])
-            timediff    = agent_time - system_time
-            warn, crit  = params.get("levels", (None, None))
+            timediff = agent_time - system_time
+            warn, crit = params.get("levels", (None, None))
 
             if crit is not None and timediff >= crit:
                 state = 2
@@ -60,16 +59,15 @@ def check_netapp_api_systemtime(item, params, info):
                         get_age_human_readable(timediff))
 
             if state > 0:
-                infotext += " (warn/crit at %s/%s)" % (
-                            get_age_human_readable(warn),
-                            get_age_human_readable(crit))
+                infotext += " (warn/crit at %s/%s)" % (get_age_human_readable(warn),
+                                                       get_age_human_readable(crit))
 
             return state, infotext
 
 
 check_info['netapp_api_systemtime'] = {
-    'inventory_function'    : inventory_netapp_api_systemtime,
-    'check_function'        : check_netapp_api_systemtime,
-    'service_description'   : 'Systemtime %s',
-    'group'                 : 'netapp_systemtime'
+    'inventory_function': inventory_netapp_api_systemtime,
+    'check_function': check_netapp_api_systemtime,
+    'service_description': 'Systemtime %s',
+    'group': 'netapp_systemtime'
 }

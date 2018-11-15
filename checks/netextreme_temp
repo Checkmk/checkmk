@@ -28,12 +28,12 @@
 
 # Just an assumption
 factory_settings["netextreme_temp_default_levels"] = {
-    "levels" : (45, 50),
+    "levels": (45, 50),
 }
 
 
 def inventory_netextreme_temp(info):
-    return [ ("System", {}) ]
+    return [("System", {})]
 
 
 def check_netextreme_temp(item, params, info):
@@ -41,13 +41,13 @@ def check_netextreme_temp(item, params, info):
 
 
 check_info['netextreme_temp'] = {
-    'inventory_function'        : inventory_netextreme_temp,
-    'check_function'            : check_netextreme_temp,
-    'service_description'       : 'Temperature %s',
-    'has_perfdata'              : True,
-    'snmp_info'                 : (".1.3.6.1.4.1.1916.1.1.1.8", [ "" ]),
-    'snmp_scan_function'        : lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.1916.2"),
-    'group'                     : 'temperature',
-    'default_levels_variable'   : "netextreme_temp_default_levels",
-    'includes'                  : [ "temperature.include" ],
+    'inventory_function': inventory_netextreme_temp,
+    'check_function': check_netextreme_temp,
+    'service_description': 'Temperature %s',
+    'has_perfdata': True,
+    'snmp_info': (".1.3.6.1.4.1.1916.1.1.1.8", [""]),
+    'snmp_scan_function': lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.1916.2"),
+    'group': 'temperature',
+    'default_levels_variable': "netextreme_temp_default_levels",
+    'includes': ["temperature.include"],
 }

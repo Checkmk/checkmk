@@ -29,17 +29,18 @@
 # hosts   test0067.testsite.de:27017 test0068.testsite.de:27017
 # arbiters    test0069.testsite.de:2701
 
+
 def inventory_mongodb_replica(info):
     return [(None, None)]
+
 
 def check_mongodb_replica(_no_item, _no_params, info):
     for line in info:
         yield 0, "%s: %s" % (line[0].title(), line[1])
 
+
 check_info["mongodb_replica"] = {
-    "check_function"      : check_mongodb_replica,
-    "inventory_function"  : inventory_mongodb_replica,
-    "service_description" : "MongoDB Replica Status",
+    "check_function": check_mongodb_replica,
+    "inventory_function": inventory_mongodb_replica,
+    "service_description": "MongoDB Replica Status",
 }
-
-

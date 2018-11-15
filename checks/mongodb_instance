@@ -28,17 +28,18 @@
 # mode secondary
 # address 10.1.2.4
 
+
 def inventory_mongodb_instance(info):
     return [(None, None)]
+
 
 def check_mongodb_instance(_no_item, _no_params, info):
     infos = ["%s: %s" % (line[0].title(), line[1]) for line in info]
     yield 0, ", ".join(infos)
 
+
 check_info["mongodb_instance"] = {
-    "check_function"      : check_mongodb_instance,
-    "inventory_function"  : inventory_mongodb_instance,
-    "service_description" : "MongoDB Instance",
+    "check_function": check_mongodb_instance,
+    "inventory_function": inventory_mongodb_instance,
+    "service_description": "MongoDB Instance",
 }
-
-

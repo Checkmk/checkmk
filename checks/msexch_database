@@ -24,32 +24,28 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-
 factory_settings['msexch_database_defaultlevels'] = {
-    "read_attached_latency" : (200., 250.),
-    "read_recovery_latency" : (150., 200.),
-    "write_latency"         : (40., 50.),
-    "log_latency"           : (5., 10.),
+    "read_attached_latency": (200., 250.),
+    "read_recovery_latency": (150., 200.),
+    "write_latency": (40., 50.),
+    "log_latency": (5., 10.),
 }
 
-
 _CHECKED_COUNTERS = [  # counter, setting, name, perfvar
-    ("i/o database reads (attached) average latency",  "read_attached_latency", "db read (attached) latency",  "db_read_latency"),
-    ("i/o database reads (recovery) average latency",  "read_recovery_latency", "db read (recovery) latency",  "db_read_recovery_latency"),
-    ("i/o database writes (attached) average latency", "write_latency",         "db write (attached) latency", "db_write_latency"),
-    ("i/o log writes average latency",                 "log_latency",           "Log latency",                 "db_log_latency"),
+    ("i/o database reads (attached) average latency", "read_attached_latency",
+     "db read (attached) latency", "db_read_latency"),
+    ("i/o database reads (recovery) average latency", "read_recovery_latency",
+     "db read (recovery) latency", "db_read_recovery_latency"),
+    ("i/o database writes (attached) average latency", "write_latency",
+     "db write (attached) latency", "db_write_latency"),
+    ("i/o log writes average latency", "log_latency", "Log latency", "db_log_latency"),
 ]
 
-
 _de_DE = {
-    u'e/a: durchschnittliche wartezeit f\x81r datenbankleseoperationen (angef\x81gt)':
-        "i/o database reads (attached) average latency",
-    u'e/a: durchschnittliche wartezeit f\x81r datenbankleseoperationen (wiederherstellung)':
-        "i/o database reads (recovery) average latency",
-    u'e/a: durchschnittliche wartezeit f\x81r datenbankschreiboperationen (angef\x81gt)':
-        "i/o database writes (attached) average latency",
-    u'e/a: durchschnittliche wartezeit f\x81r protokollschreiboperationen':
-        "i/o log writes average latency",
+    u'e/a: durchschnittliche wartezeit f\x81r datenbankleseoperationen (angef\x81gt)': "i/o database reads (attached) average latency",
+    u'e/a: durchschnittliche wartezeit f\x81r datenbankleseoperationen (wiederherstellung)': "i/o database reads (recovery) average latency",
+    u'e/a: durchschnittliche wartezeit f\x81r datenbankschreiboperationen (angef\x81gt)': "i/o database writes (attached) average latency",
+    u'e/a: durchschnittliche wartezeit f\x81r protokollschreiboperationen': "i/o log writes average latency",
 }
 
 
@@ -119,11 +115,11 @@ def check_msexch_database(item, params, parsed):
 
 
 check_info['msexch_database'] = {
-    'inventory_function'      : inventory_msexch_database,
-    'check_function'          : check_msexch_database,
-    'parse_function'          : parse_msexch_database,
-    'has_perfdata'            : True,
-    'service_description'     : "Exchange Database %s",
-    'group'                   : 'msx_database',
-    'default_levels_variable' : 'msexch_database_defaultlevels'
+    'inventory_function': inventory_msexch_database,
+    'check_function': check_msexch_database,
+    'parse_function': parse_msexch_database,
+    'has_perfdata': True,
+    'service_description': "Exchange Database %s",
+    'group': 'msx_database',
+    'default_levels_variable': 'msexch_database_defaultlevels'
 }

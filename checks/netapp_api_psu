@@ -28,11 +28,13 @@
 # power-supply-list 20    is-auto-power-reset-enabled false   power-supply-part-no 114-00065+A2 ...
 # power-supply-list 20    is-auto-power-reset-enabled false   power-supply-part-no 114-00065+A2 ...
 
+
 def inventory_netapp_api_psu(parsed):
     for key, values in parsed.items():
         if values.get("power-supply-is-not-installed") != "true":
             item_name = "%s/%s" % tuple(key.split("."))
             yield item_name, None
+
 
 def check_netapp_api_psu(item, _no_params, parsed):
     psu = parsed.get("%s.%s" % tuple(item.split("/")))

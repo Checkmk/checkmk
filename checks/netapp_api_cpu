@@ -37,14 +37,13 @@
 
 netapp_api_cpu_default_levels = (90.0, 95.0)
 
-factory_settings["netapp_api_cpu_cm_default_levels"] = {
-    "levels" : (90.0, 95.0)
-}
+factory_settings["netapp_api_cpu_cm_default_levels"] = {"levels": (90.0, 95.0)}
+
 
 def parse_netapp_api_cpu(info):
     cpu_info = {}
     for line in info:
-        if line[0].startswith("cpu-info"): # clustermode
+        if line[0].startswith("cpu-info"):  # clustermode
             _, node_name = line[0].split()
             cpu_info.setdefault("clustermode", {})
             for entry in line[1:]:
@@ -56,14 +55,17 @@ def parse_netapp_api_cpu(info):
             cpu_info["7mode"][line[0]] = line[1]
     return cpu_info
 
+
 def inventory_netapp_api_cpu_utilization(parsed):
     if "7mode" in parsed:
         yield (None, "netapp_api_cpu_default_levels")
 
+
 def inventory_netapp_api_cpu(parsed):
     if "clustermode" in parsed:
-        for node in parsed.get("clustermode",{}).keys():
+        for node in parsed.get("clustermode", {}).keys():
             yield node, {}
+
 
 def check_netapp_api_cpu_utilization(item, params, parsed, mode):
     mode_data = parsed.get(mode)
@@ -76,8 +78,8 @@ def check_netapp_api_cpu_utilization(item, params, parsed, mode):
 
     now = time.time()
 
-    cpu_busy      = int(data["cpu_busy"])
-    num_cpus_str  = data.get("num_processors")
+    cpu_busy = int(data["cpu_busy"])
+    num_cpus_str = data.get("num_processors")
     ticks_per_sec = get_rate("netapp_api_cpu.utilization", now, cpu_busy, onwrap=RAISE)
     cpusecs_per_sec = ticks_per_sec / 1000000.0
     used_perc = 100.0 * cpusecs_per_sec
@@ -96,26 +98,29 @@ def check_netapp_api_cpu_utilization(item, params, parsed, mode):
         infotext += ", %d CPUs" % num_cpus
     return state, infotext, perfdata
 
+
 # Clustermode CPU utilization
 check_info["netapp_api_cpu"] = {
-    "parse_function"      : parse_netapp_api_cpu,
-    "inventory_function"  : inventory_netapp_api_cpu,
-    "check_function"      : lambda item, params, parsed: check_netapp_api_cpu_utilization(item, params, parsed, "clustermode"),
-    "service_description" : "CPU utilization Node %s",
-    "has_perfdata"        : True,
-    "group"               : "cpu_utilization_multiitem",
-    "includes"            : [ "cpu_util.include", "netapp_api.include" ]
+    "parse_function": parse_netapp_api_cpu,
+    "inventory_function": inventory_netapp_api_cpu,
+    "check_function":
+        lambda item, params, parsed: check_netapp_api_cpu_utilization(item, params, parsed, "clustermode"),
+    "service_description": "CPU utilization Node %s",
+    "has_perfdata": True,
+    "group": "cpu_utilization_multiitem",
+    "includes": ["cpu_util.include", "netapp_api.include"]
 }
 
 # 7Mode CPU utilization
 check_info["netapp_api_cpu.utilization"] = {
-    "inventory_function"      : inventory_netapp_api_cpu_utilization,
-    "check_function"          : lambda item, params, parsed: check_netapp_api_cpu_utilization(item, params, parsed, "7mode"),
-    "service_description"     : "CPU utilization",
-    "default_levels_variable" : "netapp_api_cpu_cm_default_levels",
-    "has_perfdata"            : True,
-    "group"                   : "cpu_utilization",
-    "includes"                : [ "cpu_util.include" ]
+    "inventory_function": inventory_netapp_api_cpu_utilization,
+    "check_function":
+        lambda item, params, parsed: check_netapp_api_cpu_utilization(item, params, parsed, "7mode"),
+    "service_description": "CPU utilization",
+    "default_levels_variable": "netapp_api_cpu_cm_default_levels",
+    "has_perfdata": True,
+    "group": "cpu_utilization",
+    "includes": ["cpu_util.include"]
 }
 
 
@@ -124,18 +129,19 @@ def inventory_netapp_api_nvram_bat(parsed):
         if "nvram-battery-status" in values:
             yield node, None
 
+
 def check_netapp_api_nvram_bat(item, _no_params, parsed):
     state_map = {
-          "battery_ok":                     0,
-          "battery_partially_discharged":   0,
-          "battery_fully_discharged ":      2,
-          "battery_not_present":            2,
-          "battery_near_end_of_life":       1,
-          "battery_at_end_of_life":         2,
-          "battery_unknown":                3,
-          "battery_over_charged":           1,
-          "battery_fully_charged":          0
-        }
+        "battery_ok": 0,
+        "battery_partially_discharged": 0,
+        "battery_fully_discharged ": 2,
+        "battery_not_present": 2,
+        "battery_near_end_of_life": 1,
+        "battery_at_end_of_life": 2,
+        "battery_unknown": 3,
+        "battery_over_charged": 1,
+        "battery_fully_charged": 0
+    }
 
     info = parsed.get("clustermode", {}).get(item)
     if not info or "nvram-battery-status" not in info:
@@ -147,9 +153,9 @@ def check_netapp_api_nvram_bat(item, _no_params, parsed):
 
 # Clustermode NVRAM Bat
 check_info["netapp_api_cpu.nvram_bat"] = {
-    "inventory_function"  : inventory_netapp_api_nvram_bat,
-    "check_function"      : check_netapp_api_nvram_bat,
-    "service_description" : "NVRAM Battery %s",
-    "has_perfdata"        : True,
-    "includes"            : [ "cpu_util.include", "netapp_api.include" ]
+    "inventory_function": inventory_netapp_api_nvram_bat,
+    "check_function": check_netapp_api_nvram_bat,
+    "service_description": "NVRAM Battery %s",
+    "has_perfdata": True,
+    "includes": ["cpu_util.include", "netapp_api.include"]
 }

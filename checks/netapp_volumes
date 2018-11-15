@@ -80,13 +80,15 @@
 # .1.3.6.1.4.1.789.1.5.8.1.13.3 = ""
 
 netapp_volumes_owner = {
-  '1': 'local',
-  '2': 'partner',
+    '1': 'local',
+    '2': 'partner',
 }
+
 
 def inventory_netapp_volumes(info):
     # Only inventorize local volumes
-    return [ (line[0], None) for line in info if netapp_volumes_owner.get(line[2], '') == 'local' ]
+    return [(line[0], None) for line in info if netapp_volumes_owner.get(line[2], '') == 'local']
+
 
 def check_netapp_volumes(item, _not_used, info):
     for line in info:
@@ -105,26 +107,29 @@ def check_netapp_volumes(item, _not_used, info):
             if status == 'reconstructing':
                 ret_state = 1
                 output += '(!)'
-            elif status.split(',')[0] not in [ 'normal', 'raid_dp', 'raid0',
-                                               'raid0, mirrored', 'raid4', 'mixed_raid_type' ]:
+            elif status.split(',')[0] not in [
+                    'normal', 'raid_dp', 'raid0', 'raid0, mirrored', 'raid4', 'mixed_raid_type'
+            ]:
                 ret_state = 2
                 output += '(!!)'
 
             return (ret_state, output)
     return 3, "Volume not found"
 
+
 check_info["netapp_volumes"] = {
-    'check_function':          check_netapp_volumes,
-    'inventory_function':      inventory_netapp_volumes,
-    'service_description':     'NetApp Vol %s',
-    'snmp_info':               ('.1.3.6.1.4.1.789.1.5.8.1', [
-                                    '2', # volName
-                                    '3', # volFSID
-                                    '4', # volOwningHost
-                                    '5', # volState
-                                    '6', # volStatus
-                                ]),
-    'snmp_scan_function':      \
-         lambda oid: oid(".1.3.6.1.2.1.1.1.0").startswith('NetApp Release') and \
-                     oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.789"),
+    'check_function': check_netapp_volumes,
+    'inventory_function': inventory_netapp_volumes,
+    'service_description': 'NetApp Vol %s',
+    'snmp_info': (
+        '.1.3.6.1.4.1.789.1.5.8.1',
+        [
+            '2',  # volName
+            '3',  # volFSID
+            '4',  # volOwningHost
+            '5',  # volState
+            '6',  # volStatus
+        ]),
+    'snmp_scan_function':
+        lambda oid: oid(".1.3.6.1.2.1.1.1.0").startswith('NetApp Release') and oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.789"),
 }

@@ -25,12 +25,12 @@
 # Boston, MA 02110-1301 USA.
 
 check_info["mgmt_ipmi_sensors"] = {
-    'parse_function'        : parse_freeipmi,
-    'inventory_function'    : inventory_freeipmi,
-    'check_function'        : check_freeipmi,
-    'service_description'   : 'Management Interface: IPMI Sensor %s',
-    'has_perfdata'          : True,
-    'group'                 : 'ipmi',
-    'includes'              : ['ipmi_sensors.include', 'ipmi_common.include'],
-    "management_board"      : MGMT_ONLY,
+    'parse_function': parse_freeipmi,
+    'inventory_function': inventory_freeipmi,
+    'check_function': check_freeipmi,
+    'service_description': 'Management Interface: IPMI Sensor %s',
+    'has_perfdata': True,
+    'group': 'ipmi',
+    'includes': ['ipmi_sensors.include', 'ipmi_common.include'],
+    "management_board": MGMT_ONLY,
 }

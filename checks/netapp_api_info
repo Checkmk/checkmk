@@ -37,18 +37,19 @@
 # clu1-01 number-of-processors    2
 # clu1-01 prod-type   FAS
 
+
 def inventory_netapp_api_info(info):
-    return [ (None, None) ]
+    return [(None, None)]
+
 
 def check_netapp_api_info(item, _no_params, info):
     for line in info:
         if line[0] == "version":
             return 0, "Version: %s" % line[1]
 
+
 check_info["netapp_api_info"] = {
-    'check_function'      : check_netapp_api_info,
-    'inventory_function'  : inventory_netapp_api_info,
-    'service_description' : 'NetApp Version',
+    'check_function': check_netapp_api_info,
+    'inventory_function': inventory_netapp_api_info,
+    'service_description': 'NetApp Version',
 }
-
-

@@ -26,11 +26,12 @@
 
 # "0=Off, 1=On in DI/DO mode or N=Count in DO counter mode"
 
+
 def inventory_iologik_register(info):
     inventory = []
     for line in info:
         if line[2]:
-            inventory.append((line[0], None ))
+            inventory.append((line[0], None))
     return inventory
 
 
@@ -49,7 +50,7 @@ check_info['moxa_iologik_register'] = {
     "inventory_function"    : inventory_iologik_register,
     "service_description"   : "Moxa Register",
     "group"                 : "iologik_register",
-    "snmp_scan_function"    : lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.8691.") and \
+    "snmp_scan_function"    : lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.8691.") and
                                           oid(".1.3.6.1.4.1.8691.10.2242.2.0", "").startswith("E2242-T"),
     "snmp_info"             : (".1.3.6.1.4.1.8691.10.2242.10.4.1.1",
                             [ "1", # index

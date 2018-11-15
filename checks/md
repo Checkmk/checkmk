@@ -24,7 +24,6 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-
 # Example for output from agent (contents of /proc/mdstat):
 # ---------------------------------------------------------
 #    Personalities : [raid1]
@@ -123,13 +122,14 @@ def parse_md(info):
             spare_disks = len([x for x in disk_list if x.endswith("(S)")])
             failed_disks = len([x for x in disk_list if x.endswith("(F)")])
 
-            instance = parsed.setdefault(line[0], {
-                'raid_name'     : raid_name,
-                'raid_state'    : raid_state,
-                'spare_disks'   : spare_disks,
-                'failed_disks'  : failed_disks,
-                'active_disks'  : len(disk_list) - spare_disks - failed_disks,
-            })
+            instance = parsed.setdefault(
+                line[0], {
+                    'raid_name': raid_name,
+                    'raid_state': raid_state,
+                    'spare_disks': spare_disks,
+                    'failed_disks': failed_disks,
+                    'active_disks': len(disk_list) - spare_disks - failed_disks,
+                })
 
         elif instance:
             if line[0].startswith("resync="):
@@ -143,7 +143,7 @@ def parse_md(info):
                         k, v = e.split("=")
                         instance[k] = v
                     elif e in ["recovery", "resync"]:
-                        instance["%s_values" % e] = line[idx+3]
+                        instance["%s_values" % e] = line[idx + 3]
                 continue
 
             if line[-1].startswith("[") and line[-1].endswith("]"):
@@ -219,9 +219,9 @@ def check_md(item, _no_params, parsed):
 
 
 check_info["md"] = {
-    'parse_function'        : parse_md,
-    'inventory_function'    : inventory_md,
-    'check_function'        : check_md,
-    'service_description'   : 'MD Softraid %s',
-    'group'                 : 'raid',
+    'parse_function': parse_md,
+    'inventory_function': inventory_md,
+    'check_function': check_md,
+    'service_description': 'MD Softraid %s',
+    'group': 'raid',
 }

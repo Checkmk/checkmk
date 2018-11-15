@@ -31,13 +31,15 @@
 # warning 0
 # user 85181
 
+
 def inventory_mongodb_asserts(info):
     return [(None, {})]
+
 
 def check_mongodb_asserts(_no_item, params, info):
     now = time.time()
     for line in info:
-        what  = line[0]
+        what = line[0]
         value = int(line[1])
         warn, crit = None, None
         what_rate = get_rate(what, now, value)
@@ -50,14 +52,14 @@ def check_mongodb_asserts(_no_item, params, info):
             elif what_rate >= warn:
                 state = 1
 
-        yield state, "%.2f %s Asserts/sec" % (what_rate, what.title()), [("assert_%s" % what, what_rate)]
+        yield state, "%.2f %s Asserts/sec" % (what_rate, what.title()), [("assert_%s" % what,
+                                                                          what_rate)]
 
 
 check_info['mongodb_asserts'] = {
-    "service_description"     : "MongoDB Asserts",
-    "check_function"          : check_mongodb_asserts,
-    "inventory_function"      : inventory_mongodb_asserts,
-    "group"                   : "mongodb_asserts",
-    "has_perfdata"            : True,
+    "service_description": "MongoDB Asserts",
+    "check_function": check_mongodb_asserts,
+    "inventory_function": inventory_mongodb_asserts,
+    "group": "mongodb_asserts",
+    "has_perfdata": True,
 }
-

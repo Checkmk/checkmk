@@ -41,12 +41,13 @@ def check_netstat_generic(item, params, connections):
         # Beware: port numbers are strings here.
         match = True
         for k, v in [
-            ( "local_ip",    local_ip ),
-            ( "local_port",  local_port ),
-            ( "remote_ip",   remote_ip ),
-            ( "remote_port", remote_port ),
-            ( "proto",       proto ),
-            ( "state",       connstate )]:
+            ("local_ip", local_ip),
+            ("local_port", local_port),
+            ("remote_ip", remote_ip),
+            ("remote_port", remote_port),
+            ("proto", proto),
+            ("state", connstate),
+        ]:
             if k in params and str(params[k]) != v:
                 match = False
                 break
@@ -54,7 +55,7 @@ def check_netstat_generic(item, params, connections):
             found += 1
 
     infotext = "Found %d matching entries" % found
-    states   = [0]
+    states = [0]
     if params.get("min_states"):
         min_warn, min_crit = params["min_states"]
         if found < min_crit:
@@ -69,7 +70,7 @@ def check_netstat_generic(item, params, connections):
 
     if params.get("max_states"):
         max_warn, max_crit = params["max_states"]
-        perfdata = [ ("connections", found, max_warn, max_crit) ]
+        perfdata = [("connections", found, max_warn, max_crit)]
         if found >= max_crit:
             max_state = 2
         elif found >= max_warn:
@@ -80,7 +81,6 @@ def check_netstat_generic(item, params, connections):
             states.append(max_state)
             infotext += " (warn/crit at %d/%d)" % (max_warn, max_crit)
     else:
-        perfdata = [ ("connections", found) ]
+        perfdata = [("connections", found)]
 
     yield max(states), infotext, perfdata
-

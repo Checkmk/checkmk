@@ -57,7 +57,7 @@ def parse_netstat(info):
     for line in info:
         if len(line) == 6:
             proto, _recv_q, _send_q, local, remote, connstate = line
-            if proto.startswith("tcp"): # also tcp4 and tcp6
+            if proto.startswith("tcp"):  # also tcp4 and tcp6
                 proto = "TCP"
             elif proto.startswith("udp"):
                 proto = "UDP"
@@ -65,22 +65,21 @@ def parse_netstat(info):
             if connstate == "LISTEN":
                 connstate = "LISTENING"
 
-        if len(line) == 5: # handles UDP listeners
+        if len(line) == 5:  # handles UDP listeners
             proto, _recv_q, _send_q, local, remote = line
             if proto.startswith("udp"):
                 proto = "UDP"
                 connstate = "LISTENING"
 
-        connections.append( (proto, local.rsplit(":", 1), remote.rsplit(":", 1),
-                                connstate) )
+        connections.append((proto, local.rsplit(":", 1), remote.rsplit(":", 1), connstate))
     return connections
 
 
 check_info["netstat"] = {
-    'parse_function'        : parse_netstat,
-    'check_function'        : check_netstat_generic,
-    'service_description'   : "TCP Connection %s",
-    'group'                 : "tcp_connections",
-    'includes'              : ["netstat.include"],
-    'has_perfdata'          : True,
+    'parse_function': parse_netstat,
+    'check_function': check_netstat_generic,
+    'service_description': "TCP Connection %s",
+    'group': "tcp_connections",
+    'includes': ["netstat.include"],
+    'has_perfdata': True,
 }

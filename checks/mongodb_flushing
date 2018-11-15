@@ -29,17 +29,19 @@
 # last_ms 0
 # flushed 36479
 
+
 def inventory_mongodb_flushing(info):
     # This check has no default parameters
     # The average/last flush time highly depends on the size of the mongodb setup
     return [(None, {})]
 
+
 def check_mongodb_flushing(_no_item, params, info):
     info_dict = dict(info)
 
-    last_ms       = float(info_dict["last_ms"])
+    last_ms = float(info_dict["last_ms"])
     avg_ms_plugin = float(info_dict["average_ms"])
-    flushed       = int(info_dict["flushed"])
+    flushed = int(info_dict["flushed"])
 
     if "average_time" in params:
         warn, crit, avg_interval = params["average_time"]
@@ -59,16 +61,17 @@ def check_mongodb_flushing(_no_item, params, info):
             state = 2
         elif last_ms >= warn:
             state = 1
-    yield state, "Last flush time: %s ms" % last_ms, [ ("flush_time", last_ms / 1000.0, warn, crit) ]
+    yield state, "Last flush time: %s ms" % last_ms, [("flush_time", last_ms / 1000.0, warn, crit)]
 
-    yield 0, "Flushes since restart: %s" % flushed, [ ("flushed", flushed) ]
-    yield 0, "Average flush time since restart: %.2f ms" % avg_ms_plugin, [ ("avg_flush_time", avg_ms_plugin) ]
+    yield 0, "Flushes since restart: %s" % flushed, [("flushed", flushed)]
+    yield 0, "Average flush time since restart: %.2f ms" % avg_ms_plugin, [("avg_flush_time",
+                                                                            avg_ms_plugin)]
 
 
 check_info['mongodb_flushing'] = {
-    "inventory_function"      : inventory_mongodb_flushing,
-    "check_function"          : check_mongodb_flushing,
-    "service_description"     : "MongoDB Flushing",
-    "group"                   : "mongodb_flushing",
-    "has_perfdata"            : True,
+    "inventory_function": inventory_mongodb_flushing,
+    "check_function": check_mongodb_flushing,
+    "service_description": "MongoDB Flushing",
+    "group": "mongodb_flushing",
+    "has_perfdata": True,
 }

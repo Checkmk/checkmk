@@ -32,8 +32,10 @@
 # currentQueue total 32
 # currentQueue writers 5
 
+
 def inventory_mongodb_locks(info):
     return [(None, {})]
+
 
 def check_mongodb_locks(_no_item, params, info):
     for line in info:
@@ -41,19 +43,22 @@ def check_mongodb_locks(_no_item, params, info):
         count = int(count)
         param_name = "clients" if what.startswith("active") else "queue"
         warn, crit = None, None
-        state      = 0
+        state = 0
         if "%s_%s_locks" % (param_name, name) in params:
             warn, crit = params["%s_%s_locks" % (param_name, name)]
             if count >= crit:
                 state = 2
             elif count >= warn:
                 state = 1
-        yield state, "%s-%s: %s" % (param_name.title(), name.title(), count), [("%s_%s_locks" % (param_name, name), count, warn, crit)]
+        yield state, "%s-%s: %s" % (param_name.title(), name.title(), count), [
+            ("%s_%s_locks" % (param_name, name), count, warn, crit)
+        ]
+
 
 check_info['mongodb_locks'] = {
-    "inventory_function"      : inventory_mongodb_locks,
-    "check_function"          : check_mongodb_locks,
-    "service_description"     : "MongoDB Locks",
-    "group"                   : "mongodb_locks",
-    "has_perfdata"            : True,
+    "inventory_function": inventory_mongodb_locks,
+    "check_function": check_mongodb_locks,
+    "service_description": "MongoDB Locks",
+    "group": "mongodb_locks",
+    "has_perfdata": True,
 }

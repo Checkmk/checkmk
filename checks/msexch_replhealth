@@ -45,6 +45,7 @@
 # IsValid          : True
 #
 
+
 def inventory_msexch_replhealth(info):
     for line in info:
         if line[0].strip().lower() == "check":
@@ -69,7 +70,7 @@ def check_msexch_replhealth(item, _no_params, info):
 
 
 check_info['msexch_replhealth'] = {
-    "inventory_function"    : inventory_msexch_replhealth,
-    "check_function"        : check_msexch_replhealth,
-    "service_description"   : "Exchange Replication Health %s",
+    "inventory_function": inventory_msexch_replhealth,
+    "check_function": check_msexch_replhealth,
+    "service_description": "Exchange Replication Health %s",
 }

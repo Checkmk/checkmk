@@ -52,16 +52,16 @@
 # FIXME: Crapy copy n paste! Consolidate with other mysql_* parse functions
 def parse_mysql(info):
     def parse_line(line):
-       if len(line) == 2:
-           varname, value = line
-           try:
-               value = int(value)
-           except:
+        if len(line) == 2:
+            varname, value = line
+            try:
+                value = int(value)
+            except:
                 pass
-       else:
-           varname = line[0]
-           value = None
-       return varname, value
+        else:
+            varname = line[0]
+            value = None
+        return varname, value
 
     parsed = {}
     instance = False
@@ -92,12 +92,11 @@ def check_mysql_version(item, _no_params, parsed):
 
 
 check_info['mysql'] = {
-    "parse_function":      parse_mysql,
-    "inventory_function":  discover(lambda k, values: 'version' in values),
-    "check_function":      check_mysql_version,
+    "parse_function": parse_mysql,
+    "inventory_function": discover(lambda k, values: 'version' in values),
+    "check_function": check_mysql_version,
     "service_description": "MySQL Version %s",
 }
-
 
 #.
 #   .--Sessions------------------------------------------------------------.
@@ -128,9 +127,10 @@ def check_mysql_sessions(item, params, parsed):
         status = 0
 
         for value, perfvar, what, format_str, unit in [
-            ( total_sessions,   "total_sessions",   "total",       "%d",   "" ),
-            ( running_sessions, "running_sessions", "running",     "%d",   "" ),
-            ( connects,         "connect_rate",     "connections", "%.2f", "/s")]:
+            (total_sessions, "total_sessions", "total", "%d", ""),
+            (running_sessions, "running_sessions", "running", "%d", ""),
+            (connects, "connect_rate", "connections", "%.2f", "/s"),
+        ]:
             infos.append((format_str + " %s%s") % (value, what, unit))
             if what in params:
                 warn, crit = params[what]
@@ -148,11 +148,11 @@ def check_mysql_sessions(item, params, parsed):
 
 
 check_info['mysql.sessions'] = {
-    "inventory_function":  discover(lambda k, values: len(values.keys()) > 200),
-    "check_function":      check_mysql_sessions,
+    "inventory_function": discover(lambda k, values: len(values.keys()) > 200),
+    "check_function": check_mysql_sessions,
     "service_description": "MySQL Sessions %s",
-    "has_perfdata":        True,
-    "group":               "mysql_sessions",
+    "has_perfdata": True,
+    "group": "mysql_sessions",
 }
 
 #.
@@ -178,12 +178,12 @@ def check_mysql_iostat(item, params, parsed):
 
 
 check_info['mysql.innodb_io'] = {
-    "inventory_function":  discover(lambda k, values: "Innodb_data_read" in values),
-    "check_function":      check_mysql_iostat,
+    "inventory_function": discover(lambda k, values: "Innodb_data_read" in values),
+    "check_function": check_mysql_iostat,
     "service_description": "MySQL InnoDB IO %s",
-    "has_perfdata":        True,
-    "group":               "mysql_innodb_io",
-    "includes":            ["diskstat.include"],
+    "has_perfdata": True,
+    "group": "mysql_innodb_io",
+    "includes": ["diskstat.include"],
 }
 
 #.
@@ -195,7 +195,6 @@ check_info['mysql.innodb_io'] = {
 #   |       \____\___/|_| |_|_| |_|\___|\___|\__|_|\___/|_| |_|___/        |
 #   |                                                                      |
 #   +----------------------------------------------------------------------+
-
 
 
 # TODO: This check should rather output the current number of connections.
@@ -245,9 +244,9 @@ def mysql_connections(instance, values):
 
 
 check_info['mysql.connections'] = {
-    "inventory_function":  mysql_connections,
-    "check_function":      check_mysql_connections,
+    "inventory_function": mysql_connections,
+    "check_function": check_mysql_connections,
     "service_description": "MySQL Connections %s",
-    "group":               "mysql_connections",
-    "has_perfdata":        True,
+    "group": "mysql_connections",
+    "has_perfdata": True,
 }

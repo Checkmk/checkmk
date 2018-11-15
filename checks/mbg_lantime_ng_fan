@@ -29,6 +29,7 @@ def inventory_mbg_lantime_ng_fan(info):
     for line in info:
         yield line[0], None
 
+
 def check_mbg_lantime_ng_fan(item, _no_params, info):
     fan_states = {
         "1": (0, "on"),
@@ -50,14 +51,16 @@ def check_mbg_lantime_ng_fan(item, _no_params, info):
 
 
 check_info["mbg_lantime_ng_fan"] = {
-    "check_function"        : check_mbg_lantime_ng_fan,
-    "inventory_function"    : inventory_mbg_lantime_ng_fan,
-    "service_description"   : "Fan %s",
-    "snmp_info"             : (".1.3.6.1.4.1.5597.30.0.5.1.2.1", [
-                                    1, # mgbLtNgSysFanIndex
-                                    2, # mgbLtNgSysFanStatus
-                                    3, # mgbLtNgSysFanError
-                                  ]),
-    "snmp_scan_function"    : snmp_scan_mbg_lantime_ng_hw,
-    "includes"              : [ "mbg_lantime.include" ],
+    "check_function": check_mbg_lantime_ng_fan,
+    "inventory_function": inventory_mbg_lantime_ng_fan,
+    "service_description": "Fan %s",
+    "snmp_info": (
+        ".1.3.6.1.4.1.5597.30.0.5.1.2.1",
+        [
+            1,  # mgbLtNgSysFanIndex
+            2,  # mgbLtNgSysFanStatus
+            3,  # mgbLtNgSysFanError
+        ]),
+    "snmp_scan_function": snmp_scan_mbg_lantime_ng_hw,
+    "includes": ["mbg_lantime.include"],
 }

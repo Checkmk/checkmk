@@ -30,18 +30,20 @@
 
 netscaler_mem_default_levels = (80.0, 90.0)
 
+
 def inventory_netscaler_mem(info):
     if info:
-        return [ (None, 'netscaler_mem_default_levels') ]
+        return [(None, 'netscaler_mem_default_levels')]
+
 
 def check_netscaler_mem(_no_item, params, info):
     used_mem_perc, total_mem_mb = map(float, info[0])
     warn_perc, crit_perc = params
     total_mem = total_mem_mb * 1024 * 1024
-    warn, crit, used_mem  = [s * total_mem / 100.0 for s in params + (used_mem_perc,)]
-    infotext = "%s (%d%%) of %s" % ( get_bytes_human_readable(used_mem), used_mem_perc,
-                                     get_bytes_human_readable(total_mem) )
-    perfdata = [ ("mem", used_mem, warn, crit, 0, total_mem ) ]
+    warn, crit, used_mem = [s * total_mem / 100.0 for s in params + (used_mem_perc,)]
+    infotext = "%s (%d%%) of %s" % (get_bytes_human_readable(used_mem), used_mem_perc,
+                                    get_bytes_human_readable(total_mem))
+    perfdata = [("mem", used_mem, warn, crit, 0, total_mem)]
 
     state = 0
     if used_mem >= crit:
@@ -53,15 +55,18 @@ def check_netscaler_mem(_no_item, params, info):
 
     return state, infotext, perfdata
 
+
 check_info["netscaler_mem"] = {
-    "check_function"          : check_netscaler_mem,
-    "inventory_function"      : inventory_netscaler_mem,
-    "service_description"     : "Memory used",
-    "has_perfdata"            : True,
-    "group"                   : "netscaler_mem",
-    "snmp_info"               : (".1.3.6.1.4.1.5951.4.1.1.41", [ # nsResourceGroup
-                                            2, # resMemUsage
-                                            4, # memSizeMB
-                                        ]),
-    "snmp_scan_function"      : lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.5951.1"),
+    "check_function": check_netscaler_mem,
+    "inventory_function": inventory_netscaler_mem,
+    "service_description": "Memory used",
+    "has_perfdata": True,
+    "group": "netscaler_mem",
+    "snmp_info": (
+        ".1.3.6.1.4.1.5951.4.1.1.41",
+        [  # nsResourceGroup
+            2,  # resMemUsage
+            4,  # memSizeMB
+        ]),
+    "snmp_scan_function": lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.5951.1"),
 }

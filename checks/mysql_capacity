@@ -40,6 +40,7 @@
 # performance_schema      0       0
 # test 409255936       54525952
 
+
 # FIXME: Crapy copy n paste! Consolidate with other mysql_* parse functions
 def parse_mysql_capacity(info):
     def cut_spaces(line):
@@ -74,6 +75,7 @@ def inventory_mysql_size(instance, values):
             and used != 'NULL' and avail != 'NULL':
             yield "%s:%s" % (instance, dbname)
 
+
 def check_mysql_size(item, params, parsed):
     if ":" not in item:
         # support items discovered before 1.2.7
@@ -98,11 +100,11 @@ def check_mysql_size(item, params, parsed):
                 crit_b = crit * 1024
                 perfdata = [("database_size", size, warn_b, crit_b)]
                 if size > crit_b:
-                   state = 2
-                   infotext += " (critical at %s)" % get_bytes_human_readable(crit_b)
+                    state = 2
+                    infotext += " (critical at %s)" % get_bytes_human_readable(crit_b)
                 elif size > warn_b:
-                   state = 1
-                   infotext += " (warning at %s)" % get_bytes_human_readable(crit_b)
+                    state = 1
+                    infotext += " (warning at %s)" % get_bytes_human_readable(crit_b)
             else:
                 state = 0
                 perfdata = [("database_size", size)]
@@ -110,10 +112,10 @@ def check_mysql_size(item, params, parsed):
 
 
 check_info['mysql_capacity'] = {
-    "parse_function"          : parse_mysql_capacity,
-    "inventory_function"      : inventory_mysql_size,
-    "check_function"          : check_mysql_size,
-    "service_description"     : "MySQL DB Size %s",
-    "has_perfdata"            : True,
-    "group"                   : "mysql_db_size",
+    "parse_function": parse_mysql_capacity,
+    "inventory_function": inventory_mysql_size,
+    "check_function": check_mysql_size,
+    "service_description": "MySQL DB Size %s",
+    "has_perfdata": True,
+    "group": "mysql_db_size",
 }

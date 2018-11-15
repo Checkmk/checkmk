@@ -51,6 +51,7 @@
 #     "success": true
 # }
 
+
 # TODO: Refactor this.
 def parse_mkbackup(info):
     import json
@@ -64,13 +65,13 @@ def parse_mkbackup(info):
             head = line[3:-3].split(":")
             if len(head) == 3:
                 site_id, job_id = head[1:]
-                sites  = parsed.setdefault("site", {})
-                jobs   = sites.setdefault(site_id, {})
-                job    = jobs[job_id] = {}
+                sites = parsed.setdefault("site", {})
+                jobs = sites.setdefault(site_id, {})
+                job = jobs[job_id] = {}
             else:
                 job_id = head[-1]
                 system = parsed.setdefault("system", {})
-                job    = system[job_id] = {}
+                job = system[job_id] = {}
 
         elif job != None:
             json_data += line
@@ -82,14 +83,12 @@ def parse_mkbackup(info):
 
 
 def check_mkbackup(job_state):
-    if job_state["state"] in [ "started", "running" ]:
+    if job_state["state"] in ["started", "running"]:
         duration = time.time() - job_state["started"]
 
-        yield 0, "The job is running for %s since %s" % \
-            (get_age_human_readable(duration),
-             get_timestamp_human_readable(job_state["started"])), \
-            [ ("backup_duration", duration),
-              ("backup_avgspeed", job_state["bytes_per_second"]) ]
+        yield (0, "The job is running for %s since %s" % (
+            get_age_human_readable(duration), get_timestamp_human_readable(job_state["started"])),
+               [("backup_duration", duration), ("backup_avgspeed", job_state["bytes_per_second"])])
 
     elif job_state["state"] == "finished":
         if job_state["success"] is False:
@@ -98,16 +97,14 @@ def check_mkbackup(job_state):
             yield 0, "Backup completed"
 
         duration = job_state["finished"] - job_state["started"]
-        yield 0, "it was running for %s from %s till %s" % \
-            (get_age_human_readable(duration),
-             get_timestamp_human_readable(job_state["started"]),
-             get_timestamp_human_readable(job_state["finished"])), \
-            [ ("backup_duration", duration),
-              ("backup_avgspeed", job_state["bytes_per_second"]) ]
+        yield (0, "it was running for %s from %s till %s" %
+               (get_age_human_readable(duration), get_timestamp_human_readable(
+                   job_state["started"]), get_timestamp_human_readable(job_state["finished"])),
+               [("backup_duration", duration), ("backup_avgspeed", job_state["bytes_per_second"])])
 
         if "size" in job_state:
-            yield 0, "Size: %s" % get_bytes_human_readable(job_state["size"]), \
-                    [ ("backup_size", job_state["size"]) ]
+            yield (0, "Size: %s" % get_bytes_human_readable(job_state["size"]),
+                   [("backup_size", job_state["size"])])
 
         next_run = job_state["next_schedule"]
         if next_run == "disabled":
@@ -119,7 +116,6 @@ def check_mkbackup(job_state):
             else:
                 state = 0
             yield state, "Next run: %s" % get_timestamp_human_readable(next_run)
-
 
 
 def inventory_mkbackup_system(parsed):
@@ -136,11 +132,11 @@ def check_mkbackup_system(item, _no_params, parsed):
 
 
 check_info["mkbackup"] = {
-    "parse_function"      : parse_mkbackup,
-    "inventory_function"  : inventory_mkbackup_system,
-    "check_function"      : check_mkbackup_system,
-    "service_description" : "Backup %s",
-    "has_perfdata"        : True,
+    "parse_function": parse_mkbackup,
+    "inventory_function": inventory_mkbackup_system,
+    "check_function": check_mkbackup_system,
+    "service_description": "Backup %s",
+    "has_perfdata": True,
 }
 
 
@@ -160,8 +156,8 @@ def check_mkbackup_site(item, _no_params, parsed):
 
 
 check_info["mkbackup.site"] = {
-    "inventory_function"  : inventory_mkbackup_site,
-    "check_function"      : check_mkbackup_site,
-    "service_description" : "OMD %s",
-    "has_perfdata"        : True,
+    "inventory_function": inventory_mkbackup_site,
+    "check_function": check_mkbackup_site,
+    "service_description": "OMD %s",
+    "has_perfdata": True,
 }

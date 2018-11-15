@@ -29,11 +29,13 @@
 # cooling-element-list 20 cooling-element-number 2    rpm 3000    cooling-element-is-error false
 # cooling-element-list 20 cooling-element-number 3    rpm 3000    cooling-element-is-error false
 
+
 def inventory_netapp_api_fan(parsed):
     for key, values in parsed.items():
         if values.get("cooling-element-is-not-installed") != "true":
             item_name = "%s/%s" % tuple(key.split("."))
             yield item_name, None
+
 
 def check_netapp_api_fan(item, _no_params, parsed):
     fan = parsed.get("%s.%s" % tuple(item.split("/")))
@@ -53,5 +55,3 @@ check_info["netapp_api_fan"] = {
     'service_description' : 'Fan Shelf %s',
     'includes'            : ["netapp_api.include"]
 }
-
-

@@ -24,7 +24,6 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-
 # example output
 
 
@@ -42,22 +41,25 @@ def check_nimble_volumes(item, params, info):
                 continue
             total = int(line[2])
             free = total - int(line[3])
-            yield df_check_filesystem_list(item, params, [ (item, total, free, 0) ])
+            yield df_check_filesystem_list(item, params, [(item, total, free, 0)])
 
 
 check_info['nimble_volumes'] = {
-    'inventory_function'    : inventory_nimble_volumes,
-    'check_function'        : check_nimble_volumes,
-    'service_description'   : 'Volume %s',
-    'snmp_info'             : ('.1.3.6.1.4.1.37447.1.2.1', [
-                                    "2",  # NIMBLE-MIB::volID
-                                    "3",  # NIMBLE-MIB::volName
-                                    "4",  # NIMBLE-MIB::volSizeLow
-                                    "6",  # NIMBLE-MIB::volUsageLow
-                                    "10", # NIMBLE-MIB::volOnline
-                              ]),
-    'snmp_scan_function'    : lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.37447.3.1"),
-    'has_perfdata'          : True,
-    'includes'              : [ "size_trend.include", "df.include" ],
-    'group'                 : "filesystem",
+    'inventory_function': inventory_nimble_volumes,
+    'check_function': check_nimble_volumes,
+    'service_description': 'Volume %s',
+    'snmp_info': (
+        '.1.3.6.1.4.1.37447.1.2.1',
+        [
+            "2",  # NIMBLE-MIB::volID
+            "3",  # NIMBLE-MIB::volName
+            "4",  # NIMBLE-MIB::volSizeLow
+            "6",  # NIMBLE-MIB::volUsageLow
+            "10",  # NIMBLE-MIB::volOnline
+        ]),
+    'snmp_scan_function':
+        lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.37447.3.1"),
+    'has_perfdata': True,
+    'includes': ["size_trend.include", "df.include"],
+    'group': "filesystem",
 }

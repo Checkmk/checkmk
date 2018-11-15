@@ -38,6 +38,7 @@
 # opcountersRepl query 0
 # opcountersRepl delete 31786
 
+
 def parse_mongodb_counters(info):
     parsed = {}
     for line in info:
@@ -52,9 +53,9 @@ def inventory_mongodb_counters(parsed):
     if "opcountersRepl" in parsed:
         yield "Replica Operations", None
 
+
 def check_mongodb_counters(item, _no_params, parsed):
-    item_map = { "Operations"         : "opcounters",
-                 "Replica Operations" : "opcountersRepl" }
+    item_map = {"Operations": "opcounters", "Replica Operations": "opcountersRepl"}
     real_item_name = item_map.get(item)
     data = parsed.get(real_item_name)
     if not data:
@@ -65,10 +66,11 @@ def check_mongodb_counters(item, _no_params, parsed):
         what_rate = get_rate(what, now, value)
         yield 0, "%s: %.2f/s" % (what.title(), what_rate), [("%s_ops" % what, what_rate)]
 
+
 check_info['mongodb_counters'] = {
-    "parse_function"          : parse_mongodb_counters,
-    "inventory_function"      : inventory_mongodb_counters,
-    "check_function"          : check_mongodb_counters,
-    "service_description"     : "MongoDB Counters %s",
-    "has_perfdata"            : True,
+    "parse_function": parse_mongodb_counters,
+    "inventory_function": inventory_mongodb_counters,
+    "check_function": check_mongodb_counters,
+    "service_description": "MongoDB Counters %s",
+    "has_perfdata": True,
 }

@@ -24,6 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+
 def inventory_mrpe(info):
     import urllib
     items = []
@@ -108,15 +109,14 @@ def check_mrpe(item, params, info):
                 best_result = state, "\n".join(output), perf_parsed
                 best_state = state
 
-
     if best_state is None:
         return (3, "Check output not found in output of MRPE")
     return best_result
 
 
 check_info["mrpe"] = {
-    'check_function':          check_mrpe,
-    'inventory_function':      inventory_mrpe,
-    'service_description':     '%s',
-    'has_perfdata':            True,
+    'check_function': check_mrpe,
+    'inventory_function': inventory_mrpe,
+    'service_description': '%s',
+    'has_perfdata': True,
 }

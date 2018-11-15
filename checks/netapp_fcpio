@@ -24,20 +24,22 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-netapp_fcpio_default_levels = { "read" : (None, None), "write" : (None, None)}
+netapp_fcpio_default_levels = {"read": (None, None), "write": (None, None)}
+
 
 def check_netapp_fcpio(item, params, info):
     read, write = map(int, info[0])
     this_time = int(time.time())
-    avg_read  = get_rate("netapp_fcpio.read", this_time, read)
-    avg_write  = get_rate("netapp_fcpio.write", this_time, write)
+    avg_read = get_rate("netapp_fcpio.read", this_time, read)
+    avg_write = get_rate("netapp_fcpio.write", this_time, write)
 
     read_warn, read_crit = params['read']
     write_warn, write_crit = params['write']
 
-    perfdata = [("write", avg_write, write_warn, write_crit ),
-                    ("read", avg_read, read_warn, read_crit ),
-                   ]
+    perfdata = [
+        ("write", avg_write, write_warn, write_crit),
+        ("read", avg_read, read_warn, read_crit),
+    ]
     state = 0
     read_msg = ''
     write_msg = ''
@@ -59,7 +61,7 @@ def check_netapp_fcpio(item, params, info):
     infotext = "%s read%s, %s write%s" % (get_bytes_human_readable(avg_read), \
     read_msg, get_bytes_human_readable(avg_write), write_msg)
 
-    return(state, infotext, perfdata)
+    return (state, infotext, perfdata)
 
 
 check_info["netapp_fcpio"] = {

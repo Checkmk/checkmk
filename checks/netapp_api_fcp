@@ -28,6 +28,7 @@
 # fcp 50:0a:09:84:80:91:96:6e sfp-wavelength 850  fabric-name 10:00:50:eb:1a:b8:68:46 speed auto  port-address 65536  sfp-tx-power 425.7 (uWatts) sfp-part-number AFBR-57F5MZ-NA1 hardware-rev 2  is-sfp-tx-power-in-range true   state online    sfp-connector LC    sfp-formfactor SFP  sfp-encoding 64B66B connection-established ptp  sfp-fc-speedcapabilities 4,8,16 (Gbit/sec)  node TESTSYS01-01 sfp-date-code 15:04:17  is-sfp-rx-power-in-range true   media-type ptp  node-name 50:0a:09:80:80:91:96:6e   sfp-rev 01  sfp-rx-power 423.6 (uWatts) sfp-vendor-oui 0:23:106 switch-port sansw1:0    physical-protocol fibre_channel data-link-rate 8    firmware-rev 7.4.0  adapter 0e  sfp-vendor-name AVAGO   fabric-established true is-sfp-optical-transceiver-valid true   info-name Fibre Channel Target Adapter 0e (QLogic 8324 (8362), rev. 2, 16G) max-speed 16    sfp-serial-number AC1516J01XD   is-sfp-diagnostics-internally-calibrated true   recverr_crc 0   recverr_disparity 0 portlogout_notinloopmap 0   read_ops 0  avg_write_latency 0 write_size_hist 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 portcfg_portid_change 0 read_size_hist 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0  ctio_nocontext 0    total_inot 221  other_ops 0 port_name port.0e   tprlo 0 avg_latency 0   login_affecting_tprlo 0 node_name TESTSYS01-01    login_affecting_pdisc 0 write_latency_hist 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0  login_affecting_logo 0  recverr_bad_eof 0   ls_reject 0 portlogout_ownopn_rxed 0    avg_read_latency 0  link_failure 0  portlogout_conflicting_adisc 0  invalid_crc 0   portlogout_disc_rjt 0   portlogout_disc_timeout 0   disparity_error 0   login_affecting_adisc 0 portlogout_unexp_adisc_resp 0   portcfg_bad_fan 0   portlogout_login_req 0  discared_frames 0   portlogout_transmit_failed 0    total_ops 0 recv_err 0  write_ops 0 invalid_transmission_word 0 recverr_bad_sof 0   login_affecting_plogi 0 write_data 0    read_latency_hist 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0   inits_connected 0   total_logouts 0 invalid_inot 0  port_id port.0e bad_sof 0   instance_uuid 50:0a:09:84:80:91:96:6e   read_data 0 node_uuid 129e1f94-5bab-11e5-9e99-07c86cc5b5aa  bad_eof 0   ctio_nohandle 0 portcfg_toplogy_change 0    avg_other_latency 0 instance_name port.0e   port_wwpn 50:0a:09:84:80:91:96:6e   ctio_noispexch 0    portcfg_flogi_rjt 0 dropped_atio 0  portlogout_abts_timeout 0   portcfg_flogi_timeout 0 recverr_framelen 0  login_affecting_prlo 0  total_logins 0  login_affecting_prli 0  portcfg_flogi_acc 0 frame_length_error 0
 # fcp 50:0a:09:83:80:91:96:6e sfp-wavelength 850  fabric-name 10:00:50:eb:1a:b8:78:01 speed auto  port-address 65536  sfp-tx-power 419.3 (uWatts) sfp-part-number AFBR-57F5MZ-NA1 hardware-rev 2  is-sfp-tx-power-in-range true   state online    sfp-connector LC    sfp-formfactor SFP  sfp-encoding 64B66B connection-established ptp  sfp-fc-speedcapabilities 4,8,16 (Gbit/sec)  node TESTSYS01-01 sfp-date-code 15:04:17  is-sfp-rx-power-in-range true   media-type ptp  node-name 50:0a:09:80:80:91:96:6e   sfp-rev 01  sfp-rx-power 374.7 (uWatts) sfp-vendor-oui 0:23:106 switch-port sansw2:0    physical-protocol fibre_channel data-link-rate 8    firmware-rev 7.4.0  adapter 0f  sfp-vendor-name AVAGO   fabric-established true is-sfp-optical-transceiver-valid true   info-name Fibre Channel Target Adapter 0f (QLogic 8324 (8362), rev. 2, 16G) max-speed 16    sfp-serial-number AC1516J01XB   is-sfp-diagnostics-internally-calibrated true   recverr_crc 0   recverr_disparity 0 portlogout_notinloopmap 0   read_ops 0  avg_write_latency 0 write_size_hist 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 portcfg_portid_change 0 read_size_hist 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0  ctio_nocontext 0    total_inot 206  other_ops 0 port_name port.0f   tprlo 0 avg_latency 0   login_affecting_tprlo 0 node_name TESTSYS01-01    login_affecting_pdisc 0 write_latency_hist 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0  login_affecting_logo 0  recverr_bad_eof 0   ls_reject 0 portlogout_ownopn_rxed 0    avg_read_latency 0  link_failure 0  portlogout_conflicting_adisc 0  invalid_crc 0   portlogout_disc_rjt 0   portlogout_disc_timeout 0   disparity_error 0   login_affecting_adisc 0 portlogout_unexp_adisc_resp 0   portcfg_bad_fan 0   portlogout_login_req 0  discared_frames 0   portlogout_transmit_failed 0    total_ops 0 recv_err 0  write_ops 0 invalid_transmission_word 0 recverr_bad_sof 0   login_affecting_plogi 0 write_data 0    read_latency_hist 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0   inits_connected 0   total_logouts 0 invalid_inot 0  port_id port.0f bad_sof 0   instance_uuid 50:0a:09:83:80:91:96:6e   read_data 0 node_uuid 129e1f94-5bab-11e5-9e99-07c86cc5b5aa  bad_eof 0   ctio_nohandle 0 portcfg_toplogy_change 0    avg_other_latency 0 instance_name port.0f   port_wwpn 50:0a:09:83:80:91:96:6e   ctio_noispexch 0    portcfg_flogi_rjt 0 dropped_atio 0  portlogout_abts_timeout 0   portcfg_flogi_timeout 0 recverr_framelen 0  login_affecting_prlo 0  total_logins 0  login_affecting_prli 0  portcfg_flogi_acc 0 frame_length_error 0
 
+
 def inventory_netapp_api_fcp(parsed):
     for key, values in parsed.items():
         settings = {}
@@ -55,6 +56,7 @@ def inventory_netapp_api_fcp(parsed):
 #    address: "50:0a:09:81:80:71:13:8f" # address
 # }
 
+
 def check_fibrechannel_common(item, params, parsed):
     fcp_if = parsed.get(item)
     if not fcp_if:
@@ -70,16 +72,18 @@ def check_fibrechannel_common(item, params, parsed):
     speed_info = ""
     if fcp_speed:
         speed_info += get_nic_speed_human_readable(fcp_speed)
-    for what in [ "speed", "inv_speed" ]:
+    for what in ["speed", "inv_speed"]:
         if what in params:
             if params[what] is None:
                 speed_state = 0
             elif not fcp_speed:
                 speed_state = 1
-                speed_info += "missing speed, expected %s" % (get_nic_speed_human_readable(params[what]))
+                speed_info += "missing speed, expected %s" % (get_nic_speed_human_readable(
+                    params[what]))
             elif fcp_speed != params[what]:
                 speed_state = 2
-                speed_info += " (wrong speed, expected %s)" % (get_nic_speed_human_readable(params[what]))
+                speed_info += " (wrong speed, expected %s)" % (get_nic_speed_human_readable(
+                    params[what]))
             break
     if speed_info:
         yield speed_state, speed_info
@@ -90,11 +94,13 @@ def check_fibrechannel_common(item, params, parsed):
 
     # Traffic
     general_levels = if_get_traffic_levels(params)
-    traffic_levels = get_specific_traffic_levels(general_levels, "Bytes", fcp_if.get("speed"), None, None)
-    for what, levels_what, descr, format_func in [ ("read_bytes",  "in", "Read",   lambda x: get_bytes_human_readable(x, unit="B/s")),
-                                                  ("write_bytes", "out",  "Write", lambda x: get_bytes_human_readable(x, unit="B/s")),
-                                                  ("read_ops",    None, "Read OPS", int),
-                                                  ("write_ops",   None, "Write OPS", int)]:
+    traffic_levels = get_specific_traffic_levels(general_levels, "Bytes", fcp_if.get("speed"), None,
+                                                 None)
+    for what, levels_what, descr, format_func in [
+        ("read_bytes", "in", "Read", lambda x: get_bytes_human_readable(x, unit="B/s")),
+        ("write_bytes", "out", "Write", lambda x: get_bytes_human_readable(x, unit="B/s")),
+        ("read_ops", None, "Read OPS", int), ("write_ops", None, "Write OPS", int)
+    ]:
         value = fcp_if.get(what)
         if value != None:
             value_text = format_func(value)
@@ -105,8 +111,8 @@ def check_fibrechannel_common(item, params, parsed):
                     level_params = traffic_levels[(what, 'predictive')]
                     bw_warn, bw_crit = None, None
                 else:
-                    bw_warn     = traffic_levels[(levels_what, 'upper', 'warn')]
-                    bw_crit     = traffic_levels[(levels_what, 'upper', 'crit')]
+                    bw_warn = traffic_levels[(levels_what, 'upper', 'warn')]
+                    bw_crit = traffic_levels[(levels_what, 'upper', 'crit')]
                     bw_warn_min = traffic_levels[(levels_what, 'lower', 'warn')]
                     bw_crit_min = traffic_levels[(levels_what, 'lower', 'crit')]
                     level_params = (bw_warn, bw_crit, bw_warn_min, bw_crit_min)
@@ -115,37 +121,36 @@ def check_fibrechannel_common(item, params, parsed):
             yield state, "%s: %s%s" % (descr, value_text, levels_text), perfdata
 
     # Latency
-    for what, text in [ ("latency", "Latency"),
-                        ("read_latency", "Read Latency"),
-                        ("write_latency", "Write Latency")]:
+    for what, text in [("latency", "Latency"), ("read_latency", "Read Latency"),
+                       ("write_latency", "Write Latency")]:
         value = fcp_if.get("avg_%s" % what)
         if value != None:
             state = 0
 
             perfdata = [("avg_%s_latency" % what, value)]
             if what in params:
-                state, levels_text, _extraperf = check_levels(value, "avg_%s_latency" % what, params.get(what), unit = "ms")
+                state, levels_text, _extraperf = check_levels(
+                    value, "avg_%s_latency" % what, params.get(what), unit="ms")
 
             yield state, "%s: %.2f ms%s" % (text, value, levels_text), perfdata
 
 
 def parse_netapp_api_fcp(info):
     now = time.time()
-    parsed = netapp_api_parse_lines(info, custom_keys = ["node_name", "instance_name"])
+    parsed = netapp_api_parse_lines(info, custom_keys=["node_name", "instance_name"])
     fcp_interfaces = {}
     for key, values in parsed.items():
-        fcp_data = {
-            "state": values.get("state"),
-            "address": values.get("port_wwpn")
-        }
+        fcp_data = {"state": values.get("state"), "address": values.get("port_wwpn")}
         speed = int(values.get("data-link-rate", 0)) * 1000**3
         if speed:
             fcp_data["speed"] = speed
 
-        for what, renamed in [("read_ops", "read_ops"),
-                             ("write_ops", "write_ops"),
-                             ("read_data", "read_bytes"),
-                             ("write_data", "write_bytes")]:
+        for what, renamed in [
+            ("read_ops", "read_ops"),
+            ("write_ops", "write_ops"),
+            ("read_data", "read_bytes"),
+            ("write_data", "write_bytes"),
+        ]:
             if what in values:
                 fcp_data[renamed] = get_rate("%s.%s" % (key, what), now, int(values[what]))
 
@@ -156,16 +161,17 @@ def parse_netapp_api_fcp(info):
 
     return fcp_interfaces
 
+
 def check_netapp_api_fcp(item, params, parsed):
     return check_fibrechannel_common(item, params, parsed)
 
 
 check_info["netapp_api_fcp"] = {
-    "parse_function"      : parse_netapp_api_fcp,
-    "inventory_function"  : inventory_netapp_api_fcp,
-    "check_function"      : check_netapp_api_fcp,
-    "service_description" : "Interface FCP %s",
-    "group"               : "fcp",
-    "has_perfdata"        : True,
-    "includes"            : [ "netapp_api.include", "if.include" ]
+    "parse_function": parse_netapp_api_fcp,
+    "inventory_function": inventory_netapp_api_fcp,
+    "check_function": check_netapp_api_fcp,
+    "service_description": "Interface FCP %s",
+    "group": "fcp",
+    "has_perfdata": True,
+    "includes": ["netapp_api.include", "if.include"]
 }

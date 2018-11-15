@@ -24,7 +24,6 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-
 #   .--helper--------------------------------------------------------------.
 #   |                    _          _                                      |
 #   |                   | |__   ___| |_ __   ___ _ __                      |
@@ -33,6 +32,7 @@
 #   |                   |_| |_|\___|_| .__/ \___|_|                        |
 #   |                                |_|                                   |
 #   '----------------------------------------------------------------------'
+
 
 def _format_item_mssql_datafiles(inst, database, file_name):
     if inst is None:
@@ -57,10 +57,10 @@ def _mssql_datafiles_process_sizes(params, used_size, allocated_size, max_size, 
 
     rel_levels = False
 
-    for param_key,                name,             perf_key,         value,          reference_value in [
-        ('used_levels',           "used",           "data_size",      used_size,      max_size),
-        ('allocated_used_levels', "allocated used", None,             used_size,      allocated_size),
-        ('allocated_levels',      "allocated",      "allocated_size", allocated_size, max_size),
+    for param_key, name, perf_key, value, reference_value in [
+        ('used_levels', "used", "data_size", used_size, max_size),
+        ('allocated_used_levels', "allocated used", None, used_size, allocated_size),
+        ('allocated_levels', "allocated", "allocated_size", allocated_size, max_size),
     ]:
         status = 0
 
@@ -82,9 +82,8 @@ def _mssql_datafiles_process_sizes(params, used_size, allocated_size, max_size, 
             status = 1
 
         if status > 0:
-            wc_msg = " (warn/crit at %s/%s)" % (
-                        get_bytes_human_readable(warn),
-                        get_bytes_human_readable(crit))
+            wc_msg = " (warn/crit at %s/%s)" % (get_bytes_human_readable(warn),
+                                                get_bytes_human_readable(crit))
         else:
             wc_msg = ""
 
@@ -104,8 +103,8 @@ def _mssql_datafiles_process_sizes(params, used_size, allocated_size, max_size, 
     if unlimited and rel_levels:
         yield 0, "no maximum size", []
 
-#.
 
+#.
 
 mssql_transactionlogs_discovery = []
 
@@ -123,9 +122,9 @@ def parse_mssql_datafiles(info):
 
         mssql_instance = parsed.setdefault((inst, database, file_name), {"unlimited": unlimited})
         for key, value_str in [
-            ("max_size",        max_size),
-            ("allocated_size",  allocated_size),
-            ("used_size",       used_size),
+            ("max_size", max_size),
+            ("allocated_size", allocated_size),
+            ("used_size", used_size),
         ]:
             try:
                 value = float(value_str) * 1024 * 1024
@@ -160,11 +159,11 @@ def check_mssql_datafiles(item, params, parsed):
             allocated_size = values["allocated_size"]
             used_size = values["used_size"]
             if max_size:
-                max_size_sum  += max_size
+                max_size_sum += max_size
             if allocated_size:
                 allocated_size_sum += allocated_size
             if used_size:
-                used_size_sum  += used_size
+                used_size_sum += used_size
             unlimited_sum = unlimited_sum or values["unlimited"]
 
     if not found:
@@ -172,5 +171,5 @@ def check_mssql_datafiles(item, params, parsed):
         # by the "X Instance" service and skip this check.
         raise MKCounterWrapped("Failed to connect to database")
 
-    return _mssql_datafiles_process_sizes(params, used_size_sum, allocated_size_sum,
-                                          max_size_sum, unlimited_sum)
+    return _mssql_datafiles_process_sizes(params, used_size_sum, allocated_size_sum, max_size_sum,
+                                          unlimited_sum)

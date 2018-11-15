@@ -24,7 +24,6 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-
 #   .--general-------------------------------------------------------------.
 #   |                                                  _                   |
 #   |                   __ _  ___ _ __   ___ _ __ __ _| |                  |
@@ -150,12 +149,10 @@ def mbg_lantime_ng_generalstate(clock_type, usage, state, substate):
     }
 
     state, state_txt = refclock_states[state]
-    detailed_state_txt = (' (%s)' % refclock_substates[substate]
-                          if substate != '0' else '')
-    infotext = "Type: %s, Usage: %s, State: %s%s" % (
-        mbg_lantime_ng_refclock_types[clock_type], refclock_usages[usage],
-        state_txt, detailed_state_txt
-    )
+    detailed_state_txt = (' (%s)' % refclock_substates[substate] if substate != '0' else '')
+    infotext = "Type: %s, Usage: %s, State: %s%s" % (mbg_lantime_ng_refclock_types[clock_type],
+                                                     refclock_usages[usage], state_txt,
+                                                     detailed_state_txt)
 
     return state, infotext
 
@@ -181,8 +178,8 @@ def inventory_lantime_ng_refclock_gps(info):
 
 
 def check_lantime_ng_refclock_gps(item, params, info):
-    for (index, clock_type, usage, state, substate, status_a, max_status_a,
-            _, _, _, leapsecond_date) in info:
+    for (index, clock_type, usage, state, substate, status_a, max_status_a, _, _, _,
+         leapsecond_date) in info:
 
         if item == index:
             yield mbg_lantime_ng_generalstate(clock_type, usage, state, substate)
@@ -209,10 +206,10 @@ def check_lantime_ng_refclock_gps(item, params, info):
 
 
 check_info["mbg_lantime_ng_refclock.gps"] = {
-    "check_function"            : check_lantime_ng_refclock_gps,
-    "inventory_function"        : inventory_lantime_ng_refclock_gps,
-    "service_description"       : "LANTIME Refclock %s",
-    "has_perfdata"              : True,
+    "check_function": check_lantime_ng_refclock_gps,
+    "inventory_function": inventory_lantime_ng_refclock_gps,
+    "service_description": "LANTIME Refclock %s",
+    "has_perfdata": True,
 }
 
 #.
@@ -240,8 +237,8 @@ def inventory_lantime_ng_refclock(info):
 
 def check_lantime_ng_refclock(item, _no_params, info):
 
-    for (index, clock_type, usage, state, substate, status_a, max_status_a,
-            status_b, max_status_b, _, _) in info:
+    for (index, clock_type, usage, state, substate, status_a, max_status_a, status_b, max_status_b,
+         _, _) in info:
 
         if item == index:
             yield mbg_lantime_ng_generalstate(clock_type, usage, state, substate)
@@ -259,23 +256,25 @@ def check_lantime_ng_refclock(item, _no_params, info):
 
 
 check_info["mbg_lantime_ng_refclock"] = {
-    "check_function"            : check_lantime_ng_refclock,
-    "inventory_function"        : inventory_lantime_ng_refclock,
-    "service_description"       : "LANTIME Refclock %s",
-    "has_perfdata"              : True,
-    "snmp_info"                 : (".1.3.6.1.4.1.5597.30.0.1.2.1", [
-        1,   # MBG-SNMP-LTNG-MIB::mbgLtNgRefclockIndex
-        2,   # MBG-SNMP-LTNG-MIB::mbgLtNgRefclockType
-        3,   # MBG-SNMP-LTNG-MIB::mbgLtNgRefclockUsage
-        4,   # MBG-SNMP-LTNG-MIB::mbgLtNgRefclockState
-        5,   # MBG-SNMP-LTNG-MIB::mbgLtNgRefclockSubstate
-        6,   # MBG-SNMP-LTNG-MIB::mbgLtNgRefclockStatusA
-        7,   # MBG-SNMP-LTNG-MIB::mbgLtNgRefclockMaxStatusA
-        8,   # MBG-SNMP-LTNG-MIB::mbgLtNgRefclockStatusB
-        9,   # MBG-SNMP-LTNG-MIB::mbgLtNgRefclockMaxStatusB
-        10,  # MBG-SNMP-LTNG-MIB::mbgLtNgRefclockAdditionalInfo
-        11,  # MBG-SNMP-LTNG-MIB::mbgLtNgRefclockLeapSecondDate
-    ]),
-    "snmp_scan_function"        : snmp_scan_mbg_lantime_ng_hw,
-    "includes"                  : ["mbg_lantime.include"],
+    "check_function": check_lantime_ng_refclock,
+    "inventory_function": inventory_lantime_ng_refclock,
+    "service_description": "LANTIME Refclock %s",
+    "has_perfdata": True,
+    "snmp_info": (
+        ".1.3.6.1.4.1.5597.30.0.1.2.1",
+        [
+            1,  # MBG-SNMP-LTNG-MIB::mbgLtNgRefclockIndex
+            2,  # MBG-SNMP-LTNG-MIB::mbgLtNgRefclockType
+            3,  # MBG-SNMP-LTNG-MIB::mbgLtNgRefclockUsage
+            4,  # MBG-SNMP-LTNG-MIB::mbgLtNgRefclockState
+            5,  # MBG-SNMP-LTNG-MIB::mbgLtNgRefclockSubstate
+            6,  # MBG-SNMP-LTNG-MIB::mbgLtNgRefclockStatusA
+            7,  # MBG-SNMP-LTNG-MIB::mbgLtNgRefclockMaxStatusA
+            8,  # MBG-SNMP-LTNG-MIB::mbgLtNgRefclockStatusB
+            9,  # MBG-SNMP-LTNG-MIB::mbgLtNgRefclockMaxStatusB
+            10,  # MBG-SNMP-LTNG-MIB::mbgLtNgRefclockAdditionalInfo
+            11,  # MBG-SNMP-LTNG-MIB::mbgLtNgRefclockLeapSecondDate
+        ]),
+    "snmp_scan_function": snmp_scan_mbg_lantime_ng_hw,
+    "includes": ["mbg_lantime.include"],
 }

@@ -26,7 +26,7 @@
 
 
 def inventory_mcafee_gateway_generic(info):
-    return [ (None, {}) ]
+    return [(None, {})]
 
 
 #   .--web-----------------------------------------------------------------.
@@ -37,7 +37,6 @@ def inventory_mcafee_gateway_generic(info):
 #   |                          \_/\_/ \___|_.__/                           |
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
-
 
 # There are a few different fields in the related MIB:
 # Statistics, HTTP, HTTPs, FTP, Miscellaneous

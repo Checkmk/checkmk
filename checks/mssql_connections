@@ -24,15 +24,13 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-
 # Example output:
 # <<<mssql_connections>>>
 # MSSQLSERVER master 16
 # MSSQLSERVER tempdb 1
 
-
 factory_settings["mssql_connections_default_levels"] = {
-    "levels" : (20, 50),
+    "levels": (20, 50),
 }
 
 
@@ -67,10 +65,10 @@ def check_mssql_connections(item, params, parsed):
 
 
 check_info['mssql_connections'] = {
-    'parse_function'            : parse_mssql_connections,
-    'inventory_function'        : inventory_mssql_connections,
-    'check_function'            : check_mssql_connections,
-    'service_description'       : 'MSSQL Connections %s',
-    'group'                     : 'mssql_connections',
-    'default_levels_variable'   : "mssql_connections_default_levels",
+    'parse_function': parse_mssql_connections,
+    'inventory_function': inventory_mssql_connections,
+    'check_function': check_mssql_connections,
+    'service_description': 'MSSQL Connections %s',
+    'group': 'mssql_connections',
+    'default_levels_variable': "mssql_connections_default_levels",
 }

@@ -24,24 +24,24 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-
 check_info["mgmt_hr_fs"] = {
-    'inventory_function'        : inventory_hr_fs,
-    'check_function'            : check_hr_fs,
-    'service_description'       : 'Management Interface: Filesystem %s',
-    'has_perfdata'              : True,
-    'snmp_info'                 : ('.1.3.6.1.2.1.25.2.3.1', [
-                                       2, # hrStorageType
-                                       3, # hrStorageDescr
-                                       4, # hrStorageAllocationUnits
-                                       5, # hrStorageSize
-                                       6, # hrStorageUsed
-                                  ]),
-    'snmp_scan_function'        : lambda oid: \
-                                    bool(oid('.1.3.6.1.2.1.25.1.1.0')),
-                                    # HOST-RESOURCES-MIB::hrSystemUptime.0
-    'group'                     : 'filesystem',
-    'default_levels_variable'   : 'filesystem_default_levels',
-    'includes'                  : [ "size_trend.include", "df.include", "hr_fs.include"],
-    "management_board"          : MGMT_ONLY,
+    'inventory_function': inventory_hr_fs,
+    'check_function': check_hr_fs,
+    'service_description': 'Management Interface: Filesystem %s',
+    'has_perfdata': True,
+    'snmp_info': (
+        '.1.3.6.1.2.1.25.2.3.1',
+        [
+            2,  # hrStorageType
+            3,  # hrStorageDescr
+            4,  # hrStorageAllocationUnits
+            5,  # hrStorageSize
+            6,  # hrStorageUsed
+        ]),
+    'snmp_scan_function': lambda oid: bool(oid('.1.3.6.1.2.1.25.1.1.0')),
+    # HOST-RESOURCES-MIB::hrSystemUptime.0
+    'group': 'filesystem',
+    'default_levels_variable': 'filesystem_default_levels',
+    'includes': ["size_trend.include", "df.include", "hr_fs.include"],
+    "management_board": MGMT_ONLY,
 }

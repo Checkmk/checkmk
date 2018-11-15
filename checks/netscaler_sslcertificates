@@ -34,9 +34,8 @@
 # .1.3.6.1.4.1.5951.4.1.1.56.1.1.5.21.110.115.45.115.101.114.118.101.114.45.99.101.114.116.105.102.105.99.97.116.101 3655
 # .1.3.6.1.4.1.5951.4.1.1.56.1.1.5.25.67.79.77.79.68.79.95.82.83.65.95.67.101.114.116.95.65.117.116.104.95.82.111.111.116 1106
 
-
 factory_settings["netscaler_sslcerts_default_levels"] = {
-    "age_levels" : (30, 10),
+    "age_levels": (30, 10),
 }
 
 
@@ -50,7 +49,7 @@ def check_netscaler_sslcerts(item, params, info):
     for node, certname, daysleft in info:
         if certname == item:
             state, daysleft = 0, int(daysleft)
-            warn, crit   = params["age_levels"]
+            warn, crit = params["age_levels"]
 
             if daysleft <= crit:
                 state = 2
@@ -69,16 +68,18 @@ def check_netscaler_sslcerts(item, params, info):
 
 
 check_info["netscaler_sslcertificates"] = {
-    "check_function"          : check_netscaler_sslcerts,
-    "inventory_function"      : inventory_netscaler_sslcerts,
-    "service_description"     : "SSL Certificate %s",
-    "node_info"               : True,
-    "snmp_info"               : (".1.3.6.1.4.1.5951.4.1.1.56.1.1", [
-                                            1, # sslCertKeyName
-                                            5, # sslDaysToExpire
-                                        ]),
-    "has_perfdata"            : True,
-    "snmp_scan_function"      : lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.5951.1"),
-    "group"                   : "netscaler_sslcerts",
-    "default_levels_variable" : "netscaler_sslcerts_default_levels",
+    "check_function": check_netscaler_sslcerts,
+    "inventory_function": inventory_netscaler_sslcerts,
+    "service_description": "SSL Certificate %s",
+    "node_info": True,
+    "snmp_info": (
+        ".1.3.6.1.4.1.5951.4.1.1.56.1.1",
+        [
+            1,  # sslCertKeyName
+            5,  # sslDaysToExpire
+        ]),
+    "has_perfdata": True,
+    "snmp_scan_function": lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.5951.1"),
+    "group": "netscaler_sslcerts",
+    "default_levels_variable": "netscaler_sslcerts_default_levels",
 }

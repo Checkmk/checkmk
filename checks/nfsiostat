@@ -23,7 +23,6 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-
 # example output
 #
 #y.y.y.y:/mount/name mounted on /var/log/da:
@@ -39,22 +38,32 @@
 # ...
 
 param_name = {
-    "0" : ("op_s","Operations", 1, "%.2f/s"),
-    "1" : ("rpc_backlog", "RPC Backlog", 1, "%.2f"),
-    "2" : ("read_ops", "Read operations /s", 1, "%.3f/s"),
-    "3" : ("read_b_s", "Reads size /s", 1000, "%.3fB/s"),
-    "4" : ("read_b_op", "Read bytes per operation", 1000, "%.3fB/op"),
-    "5" : ("read_retrans", "Read Retransmission", 1, "%.1f%%"),
-    "6" : ("read_retrans", "Read Retransmission", 1, "%.1f%%"),
-    "7" : ("read_avg_rtt_ms", "Read average RTT", 1000, "%.3f/s",),
-    "8" : ("read_avg_exe_ms", "Read average EXE", 1000, "%.3f/s",),
-    "9" : ("write_ops_s", "Write operations /s", 1, "%.3f/s"),
-    "10" : ("write_b_s", "Writes size /s", 1000, "%.3fkB/s"),
-    "11" : ("write_b_op", "Write bytes per operation", 1000, "%.3fB/op"),
-    "12" : ("write_retrans", "Write Retransmission", 1, "%.1f%%"),
-    "13" : ("write_retrans", "Write Retransmission", 1, "%.3f%%"),
-    "14" : ("write_avg_rtt_ms", "Write Average RTT", 1, "%.3f/ms"),
-    "15" : ("write_avg_exe_ms", "Write Average EXE", 1, "%.3f/ms"),
+    "0": ("op_s", "Operations", 1, "%.2f/s"),
+    "1": ("rpc_backlog", "RPC Backlog", 1, "%.2f"),
+    "2": ("read_ops", "Read operations /s", 1, "%.3f/s"),
+    "3": ("read_b_s", "Reads size /s", 1000, "%.3fB/s"),
+    "4": ("read_b_op", "Read bytes per operation", 1000, "%.3fB/op"),
+    "5": ("read_retrans", "Read Retransmission", 1, "%.1f%%"),
+    "6": ("read_retrans", "Read Retransmission", 1, "%.1f%%"),
+    "7": (
+        "read_avg_rtt_ms",
+        "Read average RTT",
+        1000,
+        "%.3f/s",
+    ),
+    "8": (
+        "read_avg_exe_ms",
+        "Read average EXE",
+        1000,
+        "%.3f/s",
+    ),
+    "9": ("write_ops_s", "Write operations /s", 1, "%.3f/s"),
+    "10": ("write_b_s", "Writes size /s", 1000, "%.3fkB/s"),
+    "11": ("write_b_op", "Write bytes per operation", 1000, "%.3fB/op"),
+    "12": ("write_retrans", "Write Retransmission", 1, "%.1f%%"),
+    "13": ("write_retrans", "Write Retransmission", 1, "%.3f%%"),
+    "14": ("write_avg_rtt_ms", "Write Average RTT", 1, "%.3f/ms"),
+    "15": ("write_avg_exe_ms", "Write Average EXE", 1, "%.3f/ms"),
 }
 
 
@@ -94,14 +103,14 @@ def check_nfsiostat(item, params, parsed):
                 crit = float(params[item][1])
                 warn = float(params[item][0])
                 if value >= crit:
-                    perfdata = [ (item, value, warn, crit ) ]
-                    return(2, "%s: %s" % (title, fmt % value), perfdata)
+                    perfdata = [(item, value, warn, crit)]
+                    return (2, "%s: %s" % (title, fmt % value), perfdata)
                 elif value >= warn:
-                    perfdata = [ (item, value, warn, crit ) ]
-                    return(1, "%s: %s" % (title, fmt % value), perfdata)
+                    perfdata = [(item, value, warn, crit)]
+                    return (1, "%s: %s" % (title, fmt % value), perfdata)
 
-        perfdata = [ (item, value ) ]
-        return(0, "%s: %s" % (title, fmt % value), perfdata)
+        perfdata = [(item, value)]
+        return (0, "%s: %s" % (title, fmt % value), perfdata)
 
     for mountpoint, values in parsed.items():
         # We have duplicate items at index 5 and 12. We exclude the dupes here
@@ -114,10 +123,10 @@ def check_nfsiostat(item, params, parsed):
 
 
 check_info['nfsiostat'] = {
-    'parse_function'         : parse_nfsiostat,
-    'inventory_function'     : inventory_nfsiostat,
-    'check_function'         : check_nfsiostat,
-    'service_description'    : 'NFS IO stats %s',
-    'group'                  : 'nfsiostat',
-    'has_perfdata'           : True,
+    'parse_function': parse_nfsiostat,
+    'inventory_function': inventory_nfsiostat,
+    'check_function': check_nfsiostat,
+    'service_description': 'NFS IO stats %s',
+    'group': 'nfsiostat',
+    'has_perfdata': True,
 }

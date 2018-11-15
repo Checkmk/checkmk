@@ -431,16 +431,19 @@ def yield_configured_instances():
     # of dicts).
     instances = custom_config.pop("instances", [{}])
     for inst in instances:
-        config = {k: inst.get(k, custom_config[k]) for k in custom_config}
+        yield {k: inst.get(k, custom_config[k]) for k in custom_config}
 
-        if not config["instance"]:
-            config["instance"] = str(config["port"])
-        config["instance"] = config["instance"].replace(" ", "_")
 
-        if config.get("server") == "use fqdn":
-            config["server"] = socket.getfqdn()
+def sanitize_config(config):
 
-        yield config
+    if not config["instance"]:
+        config["instance"] = str(config["port"])
+    config["instance"] = config["instance"].replace(" ", "_")
+
+    if config.get("server") == "use fqdn":
+        config["server"] = socket.getfqdn()
+
+    return config
 
 
 QUERY_SPECS_GENERIC = [
@@ -539,8 +542,12 @@ QUERY_SPECS_SPECIFIC = {
 socket.setdefaulttimeout(1.0)
 
 
-def main():
-    for instance in yield_configured_instances():
+def main(configs_iterable=None):
+    if configs_iterable is None:
+        configs_iterable = yield_configured_instances()
+
+    for config in configs_iterable:
+        instance = sanitize_config(config)
         try:
             query_instance(instance)
         except SkipInstance:

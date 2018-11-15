@@ -24,13 +24,11 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-
 check_info['fjdarye500_sum'] = {
-    'inventory_function'        : inventory_fjdarye_sum,
-    'check_function'            : check_fjdarye_sum,
-    'service_description'       : 'Summary Status %s',
-    'snmp_info'                 : ('.1.3.6.1.4.1.211.1.21.1.150.6', ['0']),
-    'snmp_scan_function'        : lambda oid: \
-                                   oid(".1.3.6.1.2.1.1.2.0") == ".1.3.6.1.4.1.211.1.21.1.150",
-    'includes'                  : [ "fjdarye.include" ],
+    'inventory_function': inventory_fjdarye_sum,
+    'check_function': check_fjdarye_sum,
+    'service_description': 'Summary Status %s',
+    'snmp_info': ('.1.3.6.1.4.1.211.1.21.1.150.6', ['0']),
+    'snmp_scan_function': lambda oid: oid(".1.3.6.1.2.1.1.2.0") == ".1.3.6.1.4.1.211.1.21.1.150",
+    'includes': ["fjdarye.include"],
 }

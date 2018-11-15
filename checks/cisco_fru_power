@@ -134,8 +134,7 @@ check_info["cisco_fru_power"] = {
                                 OID_END,
                                 CACHED_OID(7), # ENTITY-MIB::entPhysicalName
                             ])],
+    # Exclude cisco_power check
     'snmp_scan_function'  : lambda oid: "cisco" in oid(".1.3.6.1.2.1.1.1.0").lower() \
-                            # Exclude cisco_power check
-
                             and not oid(".1.3.6.1.4.1.9.9.13.1.5.1.*"),
 }

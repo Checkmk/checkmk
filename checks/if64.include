@@ -75,7 +75,7 @@ def if64_scan_function(oid, use_if64adm=False):
     if need_if64adm() != use_if64adm:
         return False
 
-    if oid(".1.3.6.1.2.1.31.1.1.1.6.*") != None:
+    if oid(".1.3.6.1.2.1.31.1.1.1.6.*") is not None:
         return True
 
     return False

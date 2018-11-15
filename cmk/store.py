@@ -85,7 +85,7 @@ def makedirs(path, mode=0770):
 # generalize the exception handling for all file IO. This function handles all those files
 # that are read with execfile().
 def load_mk_file(path, default=None, lock=False):
-    if default == None:
+    if default is None:
         raise MKGeneralException(
             _("You need to provide a config dictionary to merge with the "
               "read configuration. The dictionary should have all expected "

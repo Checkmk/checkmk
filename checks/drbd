@@ -343,7 +343,7 @@ def check_drbd_general(item, params, info):
             diskstate = "%s_%s" % (ro.lower(), ds)
             params_diskstate = params_diskstates_dict.get(diskstate)
 
-            if params_diskstate != None:
+            if params_diskstate is not None:
                 state = max(state, params_diskstate)
                 diskstates_info.add('%s/%s is %s' % (ro, ds, state_markers[params_diskstate]))
             else:

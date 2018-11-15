@@ -293,7 +293,7 @@ def test_check_credentials_invalid(mocked_ldap):
 
 
 def test_check_credentials_not_existing(mocked_ldap):
-    assert mocked_ldap.check_credentials("john", "secret") == None
+    assert mocked_ldap.check_credentials("john", "secret") is None
     _check_restored_bind_user(mocked_ldap)
 
 

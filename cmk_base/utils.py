@@ -119,7 +119,7 @@ def total_size(o, handlers=None):
                     OtherContainerClass: OtherContainerClass.get_elements}
 
     """
-    if handlers == None:
+    if handlers is None:
         handlers = {}
 
     dict_handler = lambda d: itertools.chain.from_iterable(d.items())

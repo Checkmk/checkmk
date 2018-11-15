@@ -39,7 +39,7 @@ def check_mail_arguments(params):
     fetch_use_ssl, fetch_port = fetch_params['ssl']
     if fetch_use_ssl:
         args += ['--ssl']
-    if fetch_port != None:
+    if fetch_port is not None:
         args += ['--port=%d' % fetch_port]
 
     args += ['--username=%s' % fetch_params['auth'][0]]

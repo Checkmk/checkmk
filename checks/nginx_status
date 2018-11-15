@@ -86,10 +86,10 @@ def check_nginx_status(item, params, info):
 
     conn_warn, conn_crit = params.get('active_connections', (None, None))
     conn_txt = ''
-    if conn_crit != None and data['active'] > conn_crit:
+    if conn_crit is not None and data['active'] > conn_crit:
         worst_state = max(worst_state, 2)
         conn_txt = ' (!!)'
-    elif conn_warn != None and data['active'] > conn_warn:
+    elif conn_warn is not None and data['active'] > conn_warn:
         worst_state = max(worst_state, 1)
         conn_txt = ' (!)'
 

@@ -213,11 +213,11 @@ def test_dashlet_type_defaults():
     assert dashboard.Dashlet.initial_size() == dashboard.Dashlet.minimum_size
     assert dashboard.Dashlet.initial_position() == (1, 1)
     assert dashboard.Dashlet.initial_refresh_interval() == False
-    assert dashboard.Dashlet.vs_parameters() == None
-    assert dashboard.Dashlet.opt_parameters() == None
-    assert dashboard.Dashlet.validate_parameters_func() == None
-    assert dashboard.Dashlet.styles() == None
-    assert dashboard.Dashlet.script() == None
+    assert dashboard.Dashlet.vs_parameters() is None
+    assert dashboard.Dashlet.opt_parameters() is None
+    assert dashboard.Dashlet.validate_parameters_func() is None
+    assert dashboard.Dashlet.styles() is None
+    assert dashboard.Dashlet.script() is None
     assert dashboard.Dashlet.allowed_roles() == config.builtin_role_ids
 
     assert DummyDashlet.add_url() == "edit_dashlet.py?back=index.py%3Fedit%3D1&type=dummy"

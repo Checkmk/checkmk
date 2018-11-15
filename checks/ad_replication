@@ -113,7 +113,7 @@ def check_ad_replication(item, params, info):
                          (source_site, source_dc, naming_context, max_failures_crit,
                           time_last_success_txt, time_last_failure_txt, num_failures, statusLastFailure)
 
-            if time_last_failure != None and time_last_success != None \
+            if time_last_failure is not None and time_last_success is not None \
                and time_last_failure > time_last_success:
                 status = 2
                 output += '(!!) %s/%s replication of context %s failed ' \

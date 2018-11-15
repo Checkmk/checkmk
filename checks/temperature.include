@@ -253,13 +253,13 @@ def check_temperature(reading,
                       dev_status=None,
                       dev_status_name=None):
     def check_temp_levels(temp, warn, crit, warn_lower, crit_lower):
-        if crit != None and temp >= crit:
+        if crit is not None and temp >= crit:
             status = 2
-        elif crit_lower != None and temp < crit_lower:
+        elif crit_lower is not None and temp < crit_lower:
             status = 2
-        elif warn != None and temp >= warn:
+        elif warn is not None and temp >= warn:
             status = 1
-        elif warn_lower != None and temp < warn_lower:
+        elif warn_lower is not None and temp < warn_lower:
             status = 1
         else:
             status = 0

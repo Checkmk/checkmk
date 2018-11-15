@@ -706,16 +706,16 @@ def all_active_hosts_with_duplicates():
 
 # Returns a set of active hosts for this site
 def filter_active_hosts(hostlist, keep_offline_hosts=False, keep_duplicates=False):
-    if only_hosts == None and distributed_wato_site == None:
+    if only_hosts is None and distributed_wato_site is None:
         active_hosts = hostlist
 
-    elif only_hosts == None:
+    elif only_hosts is None:
         active_hosts = [
             hostname for hostname in hostlist
             if host_is_member_of_site(hostname, distributed_wato_site)
         ]
 
-    elif distributed_wato_site == None:
+    elif distributed_wato_site is None:
         if keep_offline_hosts:
             active_hosts = hostlist
         else:
@@ -1450,7 +1450,7 @@ def get_final_service_description(hostname, description):
 def service_ignored(hostname, check_plugin_name, service_description):
     if check_plugin_name and check_plugin_name in ignored_checktypes:
         return True
-    if service_description != None \
+    if service_description is not None \
        and in_boolean_serviceconf_list(hostname, service_description, ignored_services):
         return True
     if check_plugin_name and _checktype_ignored_for_host(hostname, check_plugin_name):
@@ -1898,7 +1898,7 @@ def in_extraconf_hostlist(hostlist, hostname):
                 return not negate
             # Handle Regex. Note: hostname == True -> generic unknown host
             elif use_regex and hostname != True:
-                if regex(hostentry).match(hostname) != None:
+                if regex(hostentry).match(hostname) is not None:
                     return not negate
         except MKGeneralException:
             if cmk.debug.enabled():
@@ -2062,7 +2062,7 @@ def _convert_pattern(pattern):
 
     elif is_regex(pattern):
         # Non specific regex. Use real prefix regex matching
-        return negate, lambda txt: regex(pattern).match(txt) != None
+        return negate, lambda txt: regex(pattern).match(txt) is not None
 
     # prefix match without any regex chars
     return negate, lambda txt: txt[:len(pattern)] == pattern
@@ -2734,7 +2734,7 @@ def _update_with_default_check_parameters(checktype, params):
     # None as a parameter. We convert that to an empty dictionary
     # that will be updated with the factory settings and default
     # levels, if possible.
-    if params == None and def_levels_varname:
+    if params is None and def_levels_varname:
         fs = factory_settings.get(def_levels_varname)
         if isinstance(fs, dict):
             params = {}
@@ -2804,12 +2804,12 @@ def _get_checkgroup_parameters(host, checktype, item):
     if not checkgroup:
         return []
     rules = checkgroup_parameters.get(checkgroup)
-    if rules == None:
+    if rules is None:
         return []
 
     try:
         # checks without an item
-        if item == None and checkgroup not in service_rule_groups:
+        if item is None and checkgroup not in service_rule_groups:
             return host_extra_conf(host, rules)
 
         # checks with an item need service-specific rules

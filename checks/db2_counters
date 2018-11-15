@@ -121,9 +121,9 @@ def check_db2_counters(item, params, parsed):
 
         warn, crit = params.get(counter, (None, None))
         perfdata = [(counter, rate, warn, crit)]
-        if crit != None and rate >= crit:
+        if crit is not None and rate >= crit:
             yield 2, "%s: %.1f/s" % (label, rate), perfdata
-        elif warn != None and rate >= warn:
+        elif warn is not None and rate >= warn:
             yield 1, "%s: %.1f/s" % (label, rate), perfdata
         else:
             yield 0, "%s: %.1f/s" % (label, rate), perfdata

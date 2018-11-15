@@ -140,7 +140,7 @@ def test_mkevent_check_query_perf(config, event_status, status_server):
 
 
 def ensure_core_and_get_connection(site, ec, core):
-    if core != None:
+    if core is not None:
         site.set_config("CORE", core, with_restart=True)
         live = site.live
     else:
@@ -168,13 +168,13 @@ def test_command_reload(site, ec, core):
     assert new_t > old_t
 
 
-# core == None means direct query to status socket
+# core is None means direct query to status socket
 @pytest.mark.parametrize(("core"), [ None, "nagios", "cmc" ])
 def test_status_table_via_core(site, ec, core):
     print "Checking core: %s" % core
 
     live = ensure_core_and_get_connection(site, ec, core)
-    if core == None:
+    if core is None:
         result = live.query_table_assoc("GET status\n")
     else:
         result = live.query_table_assoc("GET eventconsolestatus\n")
@@ -220,13 +220,13 @@ def test_status_table_via_core(site, ec, core):
     assert type(status["status_event_limit_rule"]) == int
     assert type(status["status_event_limit_overall"]) == int
 
-# core == None means direct query to status socket
+# core is None means direct query to status socket
 @pytest.mark.parametrize(("core"), [ None, "nagios", "cmc" ])
 def test_rules_table_via_core(site, ec, core):
     print "Checking core: %s" % core
 
     live = ensure_core_and_get_connection(site, ec, core)
-    if core == None:
+    if core is None:
         result = live.query_table_assoc("GET rules\n")
     else:
         result = live.query_table_assoc("GET eventconsolerules\n")

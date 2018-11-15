@@ -116,7 +116,7 @@ def size_trend(check, item, resource, levels, used_mb, size_mb, timestamp=None):
         wa_perc, cr_perc = trend_perc
         wa = wa_perc / 100.0 * size_mb
         cr = cr_perc / 100.0 * size_mb
-        if warn_perf != None:
+        if warn_perf is not None:
             warn_perf = min(warn_perf, wa)
             crit_perf = min(crit_perf, cr)
         else:
@@ -171,8 +171,8 @@ def size_trend(check, item, resource, levels, used_mb, size_mb, timestamp=None):
         perfdata.append((
             "trend",
             rate_avg * H24,
-            (warn_perf / range_sec * H24) if warn_perf != None else None,
-            (crit_perf / range_sec * H24) if crit_perf != None else None,
+            (warn_perf / range_sec * H24) if warn_perf is not None else None,
+            (crit_perf / range_sec * H24) if crit_perf is not None else None,
             0,
             size_mb / range_hours,
         ))

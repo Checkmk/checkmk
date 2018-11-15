@@ -61,10 +61,10 @@ def crash_info_to_string(crash_info):
 
 # The top level keys of the crash info dict are standardized
 def create_crash_info(crash_type, details=None, version=None):
-    if details == None:
+    if details is None:
         details = {}
 
-    if version == None:
+    if version is None:
         version = cmk.__version__
 
     exc_type, exc_value, exc_traceback = sys.exc_info()

@@ -54,7 +54,7 @@ def process(output):
 
 
 def agentsim_uptime(rate=1.0, period=None):  # period = sinus wave
-    if period == None:
+    if period is None:
         return int(our_uptime() * rate)
 
     a = (rate * period) / (2.0 * math.pi)

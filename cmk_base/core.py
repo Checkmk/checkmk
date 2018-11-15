@@ -134,7 +134,7 @@ def do_restart(core, only_reload=False):
 def try_get_activation_lock():
     global _restart_lock_fd
     # In some bizarr cases (as cmk -RR) we need to avoid duplicate locking!
-    if config.restart_locking and _restart_lock_fd == None:
+    if config.restart_locking and _restart_lock_fd is None:
         lock_file = cmk.paths.default_config_dir + "/main.mk"
         _restart_lock_fd = os.open(lock_file, os.O_RDONLY)
         # Make sure that open file is not inherited to monitoring core!

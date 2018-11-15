@@ -209,11 +209,11 @@ for device in devices:
             addresses.setdefault(area, [None, None])
             start_address, end_address = addresses[area]
 
-            if start_address == None or byte < start_address:
+            if start_address is None or byte < start_address:
                 addresses[area][0] = byte
 
             end = byte + size
-            if end_address == None or end > end_address:
+            if end_address is None or end > end_address:
                 addresses[area][1] = end
 
         # Now fetch the data from each db number

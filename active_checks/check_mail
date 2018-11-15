@@ -211,7 +211,7 @@ for p in required_params:
 if fetch_proto not in ['IMAP', 'POP3']:
     usage('The given protocol is not supported.')
 
-if fetch_port == None:
+if fetch_port is None:
     if fetch_proto == 'POP3':
         fetch_port = 995 if fetch_ssl else 110
     else:

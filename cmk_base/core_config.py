@@ -196,7 +196,7 @@ def check_icmp_arguments_of(hostname, add_defaults=True, family=None):
     if not add_defaults and not levels:
         return ""
 
-    if family == None:
+    if family is None:
         family = 6 if config.is_ipv6_primary(hostname) else 4
 
     args = []
@@ -341,14 +341,14 @@ def get_host_attributes(hostname, tags):
     # Now lookup configured IP addresses
     if config.is_ipv4_host(hostname):
         attrs["_ADDRESS_4"] = ip_address_of(hostname, 4)
-        if attrs["_ADDRESS_4"] == None:
+        if attrs["_ADDRESS_4"] is None:
             attrs["_ADDRESS_4"] = ""
     else:
         attrs["_ADDRESS_4"] = ""
 
     if config.is_ipv6_host(hostname):
         attrs["_ADDRESS_6"] = ip_address_of(hostname, 6)
-        if attrs["_ADDRESS_6"] == None:
+        if attrs["_ADDRESS_6"] is None:
             attrs["_ADDRESS_6"] = ""
     else:
         attrs["_ADDRESS_6"] = ""
@@ -398,7 +398,7 @@ def _extra_host_attributes(hostname):
             if key[0] == "_":
                 key = key.upper()
 
-            if values[0] != None:
+            if values[0] is not None:
                 attrs[key] = values[0]
     return attrs
 
@@ -413,7 +413,7 @@ def get_cluster_attributes(hostname, nodes):
     if config.is_ipv4_host(hostname):
         for h in sorted_nodes:
             addr = ip_address_of(h, 4)
-            if addr != None:
+            if addr is not None:
                 node_ips_4.append(addr)
             else:
                 node_ips_4.append(fallback_ip_for(hostname, 4))
@@ -422,7 +422,7 @@ def get_cluster_attributes(hostname, nodes):
     if config.is_ipv6_host(hostname):
         for h in sorted_nodes:
             addr = ip_address_of(h, 6)
-            if addr != None:
+            if addr is not None:
                 node_ips_6.append(addr)
             else:
                 node_ips_6.append(fallback_ip_for(hostname, 6))
@@ -462,7 +462,7 @@ def _verify_cluster_address_family(hostname):
     for nodename in config.nodes_of(hostname):
         family = "IPv6" if config.is_ipv6_primary(nodename) else "IPv4"
         address_families.append("%s: %s" % (nodename, family))
-        if address_family == None:
+        if address_family is None:
             address_family = family
         elif address_family != family:
             mixed = True
@@ -496,7 +496,7 @@ def failed_ip_lookups():
 
 
 def fallback_ip_for(hostname, family=None):
-    if family == None:
+    if family is None:
         family = 6 if config.is_ipv6_primary(hostname) else 4
 
     if family == 4:

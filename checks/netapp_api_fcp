@@ -102,7 +102,7 @@ def check_fibrechannel_common(item, params, parsed):
         ("read_ops", None, "Read OPS", int), ("write_ops", None, "Write OPS", int)
     ]:
         value = fcp_if.get(what)
-        if value != None:
+        if value is not None:
             value_text = format_func(value)
             state = 0
             perfdata = [(what, value)]
@@ -124,7 +124,7 @@ def check_fibrechannel_common(item, params, parsed):
     for what, text in [("latency", "Latency"), ("read_latency", "Read Latency"),
                        ("write_latency", "Write Latency")]:
         value = fcp_if.get("avg_%s" % what)
-        if value != None:
+        if value is not None:
             state = 0
 
             perfdata = [("avg_%s_latency" % what, value)]

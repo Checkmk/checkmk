@@ -748,7 +748,7 @@ def _execute_discovery(multi_host_sections, hostname, ipaddress, check_plugin_na
 
     try:
         discovery_function = config.check_info[check_plugin_name]["inventory_function"]
-        if discovery_function == None:
+        if discovery_function is None:
             discovery_function = check_api_utils.no_discovery_possible
     except KeyError:
         raise MKGeneralException("No such check type '%s'" % check_plugin_name)
@@ -797,7 +797,7 @@ def _execute_discovery(multi_host_sections, hostname, ipaddress, check_plugin_na
             discovered_items = discovery_function(section_content)
 
         # tolerate function not explicitely returning []
-        if discovered_items == None:
+        if discovered_items is None:
             discovered_items = []
 
         # New yield based api style
@@ -1108,7 +1108,7 @@ def get_check_preview(hostname, use_caches, do_snmp_scan, on_error):
 
             item_state.set_item_state_prefix(check_plugin_name, item)
 
-            if exitcode == None:
+            if exitcode is None:
                 check_function = config.check_info[check_plugin_name]["check_function"]
                 if check_source != 'manual':
                     params = check_table.get_precompiled_check_parameters(

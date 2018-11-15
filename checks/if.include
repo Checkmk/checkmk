@@ -842,7 +842,7 @@ def check_if_common_single(item,
                     else:
                         infotext = "[%s] " % ifIndex
 
-                if node != None:
+                if node is not None:
                     infotext = "%son %s: " % (infotext, node)
 
             state = 0

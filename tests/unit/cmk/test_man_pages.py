@@ -32,7 +32,7 @@ def test_man_page_exists_both_dirs(tmpdir):
 
 def test_man_page_path_only_shipped():
     assert man_pages.man_page_path("if64") == "%s/checkman/if64" % cmk_path()
-    assert man_pages.man_page_path("not_existant") == None
+    assert man_pages.man_page_path("not_existant") is None
 
 
 def test_man_page_path_both_dirs(tmpdir):
@@ -40,7 +40,7 @@ def test_man_page_path_both_dirs(tmpdir):
     f1.write("x")
 
     assert man_pages.man_page_path("file1") == "%s/file1" % tmpdir
-    assert man_pages.man_page_path("file2") == None
+    assert man_pages.man_page_path("file2") is None
 
     f2 = tmpdir.join("if")
     f2.write("x")
@@ -163,7 +163,7 @@ def test_no_subtree_and_entries_on_same_level():
 
 
 def test_load_man_page_not_existing():
-    assert man_pages.load_man_page("not_existing") == None
+    assert man_pages.load_man_page("not_existing") is None
 
 
 def _check_man_page_structure(page):

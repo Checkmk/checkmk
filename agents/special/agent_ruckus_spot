@@ -113,7 +113,7 @@ try:
         sys.stdout.write("<<<ruckus_spot_%s:sep(0)>>>\n" % section_type)
         sys.stdout.write(response.text + "\n")
 
-    if agent_port != None:
+    if agent_port is not None:
         hostname = address.split(":")[0]
         sys.stdout.write(get_agent_info_tcp(hostname))
 

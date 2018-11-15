@@ -223,7 +223,7 @@ check_mk_agents = {
 
 
 def man_page_exists(name):
-    return man_page_path(name) != None
+    return man_page_path(name) is not None
 
 
 def man_page_path(name):
@@ -387,7 +387,7 @@ def _manpage_display_header(cat):
 
 def _dialog_menu(title, text, choices, defvalue, oktext, canceltext):
     args = ["--ok-label", oktext, "--cancel-label", canceltext]
-    if defvalue != None:
+    if defvalue is not None:
         args += ["--default-item", defvalue]
     args += ["--title", title, "--menu", text, "0", "0", "0"]  # "20", "60", "17" ]
     for txt, value in choices:
@@ -661,7 +661,7 @@ class ConsoleManPageRenderer(ManPageRenderer):
                           "\n")
 
     def _print_line(self, line, attr=None, no_markup=False):
-        if attr == None:
+        if attr is None:
             attr = self._normal_color
 
         if no_markup:

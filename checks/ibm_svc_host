@@ -81,9 +81,9 @@ def check_ibm_svc_host(item, params, info):
     else:
         warn, crit = params.get('active_hosts', (None, None))
 
-        if crit != None and active <= crit:
+        if crit is not None and active <= crit:
             yield 2, "%s active" % active
-        elif warn != None and active <= warn:
+        elif warn is not None and active <= warn:
             yield 1, "%s active" % active
         else:
             yield 0, "%s active" % active
@@ -96,9 +96,9 @@ def check_ibm_svc_host(item, params, info):
         ]:
             warn, crit = params.get(ident + '_hosts', (None, None))
 
-            if crit != None and value >= crit:
+            if crit is not None and value >= crit:
                 state = 2
-            if warn != None and value >= warn:
+            if warn is not None and value >= warn:
                 state = 1
             else:
                 state = 0

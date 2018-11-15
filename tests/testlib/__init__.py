@@ -290,7 +290,7 @@ class Site(object):
 
     @property
     def apache_port(self):
-        if self._apache_port == None:
+        if self._apache_port is None:
             self._apache_port = int(self.get_config("APACHE_TCP_PORT"))
         return self._apache_port
 
@@ -301,7 +301,7 @@ class Site(object):
 
     @property
     def livestatus_port(self):
-        if self._livestatus_port == None:
+        if self._livestatus_port is None:
             raise Exception("Livestatus TCP not opened yet")
         return self._livestatus_port
 
@@ -698,7 +698,7 @@ class Site(object):
             self.rm()
 
     def rm(self, site_id=None):
-        if site_id == None:
+        if site_id is None:
             site_id = self.id
         # TODO: LM: Temporarily disabled until "omd rm" issue is fixed.
         #assert subprocess.Popen(["/usr/bin/sudo", "/usr/bin/omd",
@@ -1249,7 +1249,7 @@ class CMKWebSession(WebSession):
                  cluster_nodes=None,
                  create_folders=True,
                  expect_error=False):
-        if attributes == None:
+        if attributes is None:
             attributes = {}
 
         result = self._api_request(
@@ -1264,7 +1264,7 @@ class CMKWebSession(WebSession):
             },
             expect_error=expect_error)
 
-        assert result == None
+        assert result is None
 
         host = self.get_host(hostname)
 
@@ -1305,7 +1305,7 @@ class CMKWebSession(WebSession):
         return "hostname" in result
 
     def add_folder(self, folder_path, attributes=None, create_folders=True, expect_error=False):
-        if attributes == None:
+        if attributes is None:
             attributes = {}
 
         result = self._api_request(
@@ -1318,7 +1318,7 @@ class CMKWebSession(WebSession):
             },
             expect_error=expect_error)
 
-        assert result == None
+        assert result is None
 
         folder = self.get_folder(folder_path)
         assert folder["attributes"] == attributes
@@ -1360,7 +1360,7 @@ class CMKWebSession(WebSession):
             }),
         })
 
-        assert result == None
+        assert result is None
         assert not self.folder_exists(folder_path)
 
     def get_ruleset(self, ruleset_name):
@@ -1390,7 +1390,7 @@ class CMKWebSession(WebSession):
             },
             output_format="python")
 
-        assert result == None
+        assert result is None
 
     def get_all_hosts(self, effective_attributes=False):
         result = self._api_request("webapi.py?action=get_all_hosts", {
@@ -1409,7 +1409,7 @@ class CMKWebSession(WebSession):
             }),
         })
 
-        assert result == None
+        assert result is None
 
         hosts = self.get_all_hosts()
         assert hostname not in hosts
@@ -1454,7 +1454,7 @@ class CMKWebSession(WebSession):
             })},
             output_format="python")
 
-        assert result == None
+        assert result is None
 
     def set_all_sites(self, configuration):
         result = self._api_request("webapi.py?action=set_all_sites&request_format=python",
@@ -1470,7 +1470,7 @@ class CMKWebSession(WebSession):
             "webapi.py?action=add_%sgroup" % group_type, {"request": json.dumps(request_object)},
             expect_error=expect_error)
 
-        assert result == None
+        assert result is None
 
     def edit_group(self, group_type, group_name, attributes, expect_error=False):
         request_object = {"groupname": group_name}
@@ -1480,7 +1480,7 @@ class CMKWebSession(WebSession):
             "webapi.py?action=edit_%sgroup" % group_type, {"request": json.dumps(request_object)},
             expect_error=expect_error)
 
-        assert result == None
+        assert result is None
 
     def delete_group(self, group_type, group_name, expect_error=False):
         result = self._api_request(
@@ -1500,7 +1500,7 @@ class CMKWebSession(WebSession):
                                    {"request": json.dumps({
                                        "users": users
                                    })})
-        assert result == None
+        assert result is None
 
     def edit_htpasswd_users(self, users):
         result = self._api_request("webapi.py?action=edit_users",
@@ -1508,7 +1508,7 @@ class CMKWebSession(WebSession):
                                        "users": users
                                    })})
 
-        assert result == None
+        assert result is None
 
     def delete_htpasswd_users(self, userlist):
         result = self._api_request("webapi.py?action=delete_users", {
@@ -1516,14 +1516,14 @@ class CMKWebSession(WebSession):
                 "users": userlist
             }),
         })
-        assert result == None
+        assert result is None
 
     def discover_services(self, hostname, mode=None):
         request = {
             "hostname": hostname,
         }
 
-        if mode != None:
+        if mode is not None:
             request["mode"] = mode
 
         result = self._api_request("webapi.py?action=discover_services", {
@@ -1536,10 +1536,10 @@ class CMKWebSession(WebSession):
     def activate_changes(self, mode=None, allow_foreign_changes=None):
         request = {}
 
-        if mode != None:
+        if mode is not None:
             request["mode"] = mode
 
-        if allow_foreign_changes != None:
+        if allow_foreign_changes is not None:
             request["allow_foreign_changes"] = "1" if allow_foreign_changes else "0"
 
         old_t = self.site.live.query_value("GET status\nColumns: program_start\n")

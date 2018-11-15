@@ -199,7 +199,7 @@ except ValueError:
 # fetch information by calling naviseccli
 #############################################################################
 
-if (user == None or user == '') and (password == None or password == ''):
+if (user is None or user == '') and (password is None or password == ''):
     # try using security files
     basecmd = "naviseccli -h %s " % host_address
 else:

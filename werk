@@ -421,7 +421,7 @@ def werk_effort(werk):
 def main_show(args):
     ids = args
     if len(ids) == 0:
-        if g_last_werk == None:
+        if g_last_werk is None:
             bail_out("No last werk known. Please specify id.")
         ids = [g_last_werk]
     elif ids[0] == 'all':
@@ -544,7 +544,7 @@ def main_new(args):
 
 def get_werk_arg(args):
     if len(args) == 0:
-        if g_last_werk == None:
+        if g_last_werk is None:
             bail_out("No last werk, please specify id.")
         id = g_last_werk
     else:
@@ -571,7 +571,7 @@ def main_url(args):
 
 def main_resolve(args):
     if len(args) == 0:
-        if g_last_werk == None:
+        if g_last_werk is None:
             bail_out("No last werk, please specify id.")
         id = g_last_werk
     else:
@@ -659,7 +659,7 @@ def main_grep(args):
 def main_edit(args):
     if len(args) == 0:
         werkid = int(g_last_werk)
-        if werkid == None:
+        if werkid is None:
             bail_out("No last werk. Please specify id.")
     else:
         try:
@@ -667,7 +667,7 @@ def main_edit(args):
             args = args[1:]
         except:
             werkid = int(g_last_werk)
-            if werkid == None:
+            if werkid is None:
                 bail_out("No last werk. Please specify id.")
 
     edit_werk(werkid, args, commit=False)

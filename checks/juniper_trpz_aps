@@ -36,7 +36,7 @@ def check_juniper_trpz_aps(_no_item, _no_params, info):
     for node, aps, sessions in info:
         # Are we a cluster?
         message = ""
-        if node != None:
+        if node is not None:
             message += "[%s] " % node
 
         total_aps += int(aps)

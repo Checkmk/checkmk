@@ -463,9 +463,9 @@ def format_config(instances,
                   delimeter="\t",
                   skip_missing_config_key=False):
 
-    config_scale = {} if config_scale == None else config_scale
-    config_rename = {} if config_rename == None else config_rename
-    extra_info = {} if extra_info == None else extra_info
+    config_scale = {} if config_scale is None else config_scale
+    config_rename = {} if config_rename is None else config_rename
+    extra_info = {} if extra_info is None else extra_info
 
     result = []
     values = {}

@@ -90,7 +90,7 @@ for hostname in sys.argv[1:]:
 
     g_current_host = hostname
     wato_folder = get_wato_folder(hostname)
-    if wato_folder == None:
+    if wato_folder is None:
         continue
 
     wato_config_changed = True

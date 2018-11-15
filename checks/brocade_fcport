@@ -299,10 +299,10 @@ def check_brocade_fcport(item, params, parsed):
                                  wirespeed))
 
         # handle levels for in/out
-        if crit_bytes != None and value >= crit_bytes:
+        if crit_bytes is not None and value >= crit_bytes:
             summarystate = 2
             output.append(" >= %s/s(!!)" % (get_bytes_human_readable(crit_bytes)))
-        elif warn_bytes != None and value >= warn_bytes:
+        elif warn_bytes is not None and value >= warn_bytes:
             summarystate = max(1, summarystate)
             output.append(" >= %s/s(!!)" % (get_bytes_human_readable(warn_bytes)))
 
@@ -353,11 +353,11 @@ def check_brocade_fcport(item, params, parsed):
 
         error_percentage = rate * 100.0
         warn, crit = params.get(counter, (None, None))
-        if crit != None and error_percentage >= crit:
+        if crit is not None and error_percentage >= crit:
             summarystate = 2
             text += "(!!)"
             output.append(text)
-        elif warn != None and error_percentage >= warn:
+        elif warn is not None and error_percentage >= warn:
             summarystate = max(1, summarystate)
             text += "(!)"
             output.append(text)
@@ -370,7 +370,7 @@ def check_brocade_fcport(item, params, parsed):
          brocade_fcport_admstates),
     ]:
         errorflag = ""
-        if params.get(state_key) != None and dev_state != params[state_key] \
+        if params.get(state_key) is not None and dev_state != params[state_key] \
             and not (isinstance(params[state_key], list) and dev_state in map(int, params[state_key])):
             if dev_state in warn_states:
                 errorflag = "(!)"
@@ -432,7 +432,7 @@ check_info["brocade_fcport"] = {
         ]),
     ],
     'snmp_scan_function'        : lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.1588.2.1.1") \
-                                        and oid(".1.3.6.1.4.1.1588.2.1.1.1.6.2.1.*") != None,
+                                        and oid(".1.3.6.1.4.1.1588.2.1.1.1.6.2.1.*") is not None,
     'includes'                  : [ 'brocade.include' ],
     'group'                     : 'brocade_fcport',
     'default_levels_variable'   : 'brocade_fcport_default_levels',

@@ -105,7 +105,7 @@ class SNMPDataSource(DataSource):
             bulk = "no"
 
         portinfo = config.snmp_port_of(self._hostname)
-        if portinfo == None:
+        if portinfo is None:
             portinfo = 'default'
 
         return "%s (%s, Bulk walk: %s, Port: %s, Inline: %s)" % \

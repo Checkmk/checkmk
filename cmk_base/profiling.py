@@ -42,7 +42,7 @@ def enable():
 
 
 def enabled():
-    return _profile != None
+    return _profile is not None
 
 
 def output_profile():

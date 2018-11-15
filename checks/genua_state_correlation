@@ -116,5 +116,5 @@ check_info['genua_state_correlation'] = {
             ])
     ],
     "snmp_scan_function": lambda oid: "genuscreen" in oid(".1.3.6.1.2.1.1.1.0").lower()
-    #"snmp_scan_function" : lambda oid: oid(".1.3.6.1.4.1.3717.2.1.2.1.7") != None
+    #"snmp_scan_function" : lambda oid: oid(".1.3.6.1.4.1.3717.2.1.2.1.7") is not None
 }

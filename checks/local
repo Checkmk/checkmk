@@ -50,7 +50,7 @@ def local_compute_state(perfdata):
         return 0.0
 
     def outof_levels(value, levels):
-        if levels == None:
+        if levels is None:
             return
 
         if ':' in levels:
@@ -60,7 +60,7 @@ def local_compute_state(perfdata):
             upper = float(levels)
         if value > upper:
             return " %s > %s" % (value, upper)
-        elif lower != None and value < lower:
+        elif lower is not None and value < lower:
             return " %s < %s" % (value, lower)
 
     worst = 0

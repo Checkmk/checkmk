@@ -11,7 +11,7 @@ import pytest
 
 def test_load_data_from_file_not_existing(tmpdir):
     data = store.load_data_from_file("%s/x" % tmpdir)
-    assert data == None
+    assert data is None
 
     data = store.load_data_from_file("%s/x" % tmpdir, "DEFAULT")
     assert data == "DEFAULT"

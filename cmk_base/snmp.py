@@ -305,7 +305,7 @@ def get_single_oid(access_data, oid, check_plugin_name=None, do_snmp_scan=True):
                     raise
                 value = None
 
-    if value != None:
+    if value is not None:
         console.vverbose("%s%s%s%s\n" % (tty.bold, tty.green, value, tty.normal))
     else:
         console.vverbose("failed.\n")
@@ -372,7 +372,7 @@ def _cmp_oid_pairs(pair1, pair2):
 
 def _snmpv3_contexts_of(hostname, check_plugin_name):
     for ty, rules in config.snmpv3_contexts_of(hostname):
-        if ty == None or ty == check_plugin_name:
+        if ty is None or ty == check_plugin_name:
             return rules
     return [None]
 
@@ -385,7 +385,7 @@ def _get_snmpwalk(access_data, check_plugin_name, oid, fetchoid, column, use_snm
         # Returns either the cached SNMP walk or None when nothing is cached
         rowinfo = _get_cached_snmpwalk(hostname, fetchoid)
 
-    if rowinfo == None:
+    if rowinfo is None:
         if _enforce_stored_walks or config.is_usewalk_host(hostname):
             rowinfo = _get_stored_snmpwalk(hostname, fetchoid)
         else:

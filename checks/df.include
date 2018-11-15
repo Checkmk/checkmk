@@ -410,7 +410,7 @@ def df_check_filesystem_single(mountpoint,
     if inodes_total:
         inodes_avail_perc = 100.0 * inodes_avail / inodes_total
         inodes_warn, inodes_crit = levels["inodes_levels"]
-        if inodes_warn != None:
+        if inodes_warn is not None:
             # Levels in absolute numbers
             if isinstance(inodes_warn, int):
                 if inodes_crit > inodes_avail:

@@ -125,7 +125,7 @@ for opt, arg in opts:
 def connection():
     client = paramiko.SSHClient()
     client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-    if opt_key == None:
+    if opt_key is None:
         client.connect(opt_host, username=opt_user, password=opt_pass, timeout=opt_timeout)
     else:
         client.connect(opt_host, username=opt_user, pkey=opt_key, timeout=opt_timeout)
@@ -213,7 +213,7 @@ def main():
 
     # .. and eventually execute them!
     try:  # Put a file to the server
-        if opt_put_local != None:
+        if opt_put_local is not None:
             create_testfile(paths)
             testfile_remote = file_available(working_dir)
             put_file(paths)
@@ -226,7 +226,7 @@ def main():
         messages.append("Could not put file to SFTP server! (!!)")
 
     try:  # Get a file from the server
-        if opt_get_remote != None:
+        if opt_get_remote is not None:
             get_file(paths)
             states.append(0)
             messages.append("Successfully got file from SFTP server")
@@ -237,7 +237,7 @@ def main():
         messages.append("Could not get file from SFTP server! (!!)")
 
     try:  # Get timestamp of a remote file
-        if opt_timestamp != None:
+        if opt_timestamp is not None:
             file_stats = get_timestamp(paths)
             states.append(0)
             messages.append("Timestamp of %s is: %s" % \

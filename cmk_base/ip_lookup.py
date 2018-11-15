@@ -63,7 +63,7 @@ def lookup_ipv6_address(hostname):
 # returns None instead of raising an exception.
 # FIXME: This different handling is bad. Clean this up!
 def lookup_ip_address(hostname, family=None):
-    if family == None:  # choose primary family
+    if family is None:  # choose primary family
         family = 6 if config.is_ipv6_primary(hostname) else 4
 
     # Quick hack, where all IP addresses are faked (--fake-dns)

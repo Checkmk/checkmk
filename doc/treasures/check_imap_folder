@@ -73,7 +73,7 @@ def decode_header_to_unicode(value):
     result = email.header.decode_header(value)
     parts = []
     for header in result:
-        if header[1] == None:
+        if header[1] is None:
             parts.append(header[0])  # no encoding
         else:
             binstring, encoding = header
@@ -161,11 +161,11 @@ try:
 except Exception, e:
     bail_out(str(e))
 
-if server == None:
+if server is None:
     bail_out("Please specify a host with -H.")
-if user == None:
+if user is None:
     bail_out("Please specify a user name with -u.")
-if password == None:
+if password is None:
     bail_out("Please specify a password with -p.")
 
 compile_patterns(warning_patterns)

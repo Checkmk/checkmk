@@ -5,7 +5,7 @@ import omdlib.main
 
 def test_root_context():
     site = omdlib.main.RootContext()
-    assert site.name == None
+    assert site.name is None
     assert site.dir == "/"
     assert not site.is_site_context()
 

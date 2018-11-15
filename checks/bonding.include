@@ -98,7 +98,7 @@ def check_bonding(item, params, parsed):
             slaves = status["interfaces"].keys()
             expected_active = min(slaves)
 
-        if expected_active != None and expected_active != active:
+        if expected_active is not None and expected_active != active:
             state = 1
             info += " (expected is %s)" % expected_active
 

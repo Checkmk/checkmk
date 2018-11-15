@@ -71,7 +71,7 @@ def inventory_oracle_instance(info):
 def check_oracle_instance(item, params, info):
     def state_marker(state, infotext, param, column, data):
         value = params.get(param)
-        if value != None and column == data:
+        if value is not None and column == data:
             state = max(state, value)
             if value == 1:
                 infotext += '(!)'

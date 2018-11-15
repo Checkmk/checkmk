@@ -100,10 +100,10 @@ def check_mysql_slave(item, params, data):
         else:
             out = 'Time behind Master: %s' % get_age_human_readable(data['Seconds_Behind_Master'])
             warn, crit = params.get('seconds_behind_master', (None, None))
-            if crit != None and data['Seconds_Behind_Master'] > crit:
+            if crit is not None and data['Seconds_Behind_Master'] > crit:
                 state = 2
                 out += '(!!)'
-            elif warn != None and data['Seconds_Behind_Master'] > warn:
+            elif warn is not None and data['Seconds_Behind_Master'] > warn:
                 state = max(state, 1)
                 out += '(!)'
             output.append(out)

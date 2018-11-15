@@ -88,7 +88,7 @@ def check_netapp_api_volumes(item, params, parsed):
             ]:
                 key = protocol + mode + field
                 value = volume.get(key)
-                if value != None:
+                if value is not None:
                     value = int(value)
                     try:
                         delta = get_rate(

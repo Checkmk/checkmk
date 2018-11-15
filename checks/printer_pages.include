@@ -32,17 +32,17 @@
 # Scan functions for some special printers that have their own MIBS
 def scan_ricoh_printer(oid):
     return ".1.3.6.1.4.1.367.1.1" in oid(".1.3.6.1.2.1.1.2.0") \
-           and oid(".1.3.6.1.4.1.367.3.2.1.2.19.5.1.5.1") != None
+           and oid(".1.3.6.1.4.1.367.3.2.1.2.19.5.1.5.1") is not None
 
 
 def scan_canon_printer(oid):
     return "canon" in oid(".1.3.6.1.2.1.1.1.0").lower() \
-           and oid(".1.3.6.1.4.1.1602.1.1.1.1.0") != None \
-           and oid(".1.3.6.1.4.1.1602.1.11.1.3.1.4") != None
+           and oid(".1.3.6.1.4.1.1602.1.1.1.1.0") is not None \
+           and oid(".1.3.6.1.4.1.1602.1.11.1.3.1.4") is not None
 
 
 def scan_generic_printer(oid):
-    return oid(".1.3.6.1.2.1.43.10.2.1.4.1.1") != None \
+    return oid(".1.3.6.1.2.1.43.10.2.1.4.1.1") is not None \
            and not scan_ricoh_printer(oid) \
            and not scan_canon_printer(oid)
 

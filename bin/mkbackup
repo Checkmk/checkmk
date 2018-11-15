@@ -237,12 +237,12 @@ def makedir(path, user=None, group=None, mode=None):
 
     os.mkdir(path)
 
-    if user != None:
+    if user is not None:
         uid = pwd.getpwnam(user).pw_uid
     else:
         uid = -1
 
-    if group != None:
+    if group is not None:
         gid = grp.getgrnam(group).gr_gid
     else:
         gid = -1
@@ -601,7 +601,7 @@ def do_site_backup(opts, site=None, try_stop=True):
     # name and always performing backup for the current site. When executed
     # as root, the site argument has to be given and must be handed over to
     # "omd backup".
-    if site == None:
+    if site is None:
         site = site_id()
     else:
         if not is_root():
@@ -727,7 +727,7 @@ class MKBackupStream(object):
 
     def process(self):
         head = self._init_processing()
-        if head != None:
+        if head is not None:
             yield head
 
         self._next_chunk = None
@@ -743,7 +743,7 @@ class MKBackupStream(object):
             self._update_state()
 
     def _encrypt(self):
-        return self._key_ident != None
+        return self._key_ident is not None
 
     def _init_processing(self):
         raise NotImplementedError()
@@ -768,7 +768,7 @@ class MKBackupStream(object):
         if timedif >= 1:
             this_bps = float(self._bytes_copied) / timedif
 
-            if self._last_bps == None:
+            if self._last_bps is None:
                 bps = this_bps  # initialize the value
             else:
                 percentile, backlog_sec = 0.50, 10
@@ -878,7 +878,7 @@ class RestoreStream(MKBackupStream):
 
         this_chunk = self._cipher.decrypt(self._read_from_stream(1024 * AES.block_size))
 
-        if self._next_chunk == None:
+        if self._next_chunk is None:
             # First chunk. Only store for next loop
             self._next_chunk = this_chunk
             return "", False
@@ -966,7 +966,7 @@ class RestoreStream(MKBackupStream):
 # Returns the base path for the backup to work with. In backup mode, this is
 # the directory of the target+job. In restore mode it is the target+backup path.
 def backup_base_path():
-    if g_job_id != None:
+    if g_job_id is not None:
         return job_backup_path_during_backup()
     return existing_backup_path()
 
@@ -1034,7 +1034,7 @@ def compress_archives():
 
 
 def encrypt_archives():
-    return g_job_config["encrypt"] != None
+    return g_job_config["encrypt"] is not None
 
 
 def target_cfg(target_ident):
@@ -1087,7 +1087,7 @@ def verify_backup_files(info, files, needed):
                 size, checksum = entry[1:]
                 break
 
-        if size == None:
+        if size is None:
             if needed:
                 raise MKGeneralException(
                     "The backup is missing the needed archive %s." % archive_file)
@@ -1333,7 +1333,7 @@ g_state = None
 # to the Check_MK server through the Check_MK agent.
 def load_state():
     global g_state
-    if g_state == None:
+    if g_state is None:
         g_state = json.load(file(state_path()))
 
     return g_state
@@ -1475,7 +1475,7 @@ def do_site_restore(opts, info, site=None):
     # name and always performing restore for the current site. When executed
     # as root, the site argument has to be given and must be handed over to
     # "omd restore".
-    if site == None:
+    if site is None:
         # Care about restore from a backup made in a site with another site_id
         site = info.get("site_id", site_id())
     else:
@@ -1787,7 +1787,7 @@ def mode_list(target_id, opts):
         sys.stdout.write(fmt_detail % ("From:", from_info))
         sys.stdout.write(fmt_detail % ("Finished:", render.date_and_time(info["finished"])))
         sys.stdout.write(fmt_detail % ("Size:", render.fmt_bytes(info["size"])))
-        if info["config"]["encrypt"] != None:
+        if info["config"]["encrypt"] is not None:
             sys.stdout.write(fmt_detail % ("Encrypted:", info["config"]["encrypt"]))
         else:
             sys.stdout.write(fmt_detail % ("Encrypted:", "No"))

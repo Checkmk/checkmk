@@ -239,7 +239,7 @@ def _get_site_object():
 
 def _site_id():
     site_id = os.environ.get("OMD_SITE")
-    if site_id == None:
+    if site_id is None:
         site_id = file(testlib.repo_path() + "/.site").read().strip()
         os.putenv("OMD_SITE", site_id)
 

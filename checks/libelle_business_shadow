@@ -230,20 +230,22 @@
 
 #.
 
+
 def check_libelle_business_shadow_to_mb(size):
     if size.endswith("MB"):
-       size = int(float(size.replace("MB", "")))
+        size = int(float(size.replace("MB", "")))
     elif size.endswith("GB"):
-       size = int(float(size.replace("GB", ""))) * 1024
+        size = int(float(size.replace("GB", ""))) * 1024
     elif size.endswith("TB"):
-       size = int(float(size.replace("TB", ""))) * 1024 * 1024
+        size = int(float(size.replace("TB", ""))) * 1024 * 1024
     elif size.endswith("PB"):
-       size = int(float(size.replace("PB", ""))) * 1024 * 1024 * 1024
+        size = int(float(size.replace("PB", ""))) * 1024 * 1024 * 1024
     elif size.endswith("EB"):
-       size = int(float(size.replace("EB", ""))) * 1024 * 1024 * 1024 * 1024
+        size = int(float(size.replace("EB", ""))) * 1024 * 1024 * 1024 * 1024
     else:
-       size = int(float(size))
+        size = int(float(size))
     return size
+
 
 # parses agent output into a dict
 def check_libelle_business_shadow_parse(info):
@@ -267,6 +269,7 @@ def check_libelle_business_shadow_parse(info):
             parsed["arch_free_mb"] = check_libelle_business_shadow_to_mb(re.sub(" ", "", line[1]))
     return parsed
 
+
 #   .--info----------------------------------------------------------------.
 #   |                          _        __                                 |
 #   |                         (_)_ __  / _| ___                            |
@@ -276,8 +279,10 @@ def check_libelle_business_shadow_parse(info):
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
+
 def inventory_libelle_business_shadow_info(info):
-    return [ (None, None) ]
+    return [(None, None)]
+
 
 def check_libelle_business_shadow_info(_no_item, _no_params, info):
     parsed = check_libelle_business_shadow_parse(info)
@@ -291,10 +296,11 @@ def check_libelle_business_shadow_info(_no_item, _no_params, info):
 
     return 0, message
 
+
 check_info["libelle_business_shadow.info"] = {
-    "check_function"        : check_libelle_business_shadow_info,
-    "inventory_function"    : inventory_libelle_business_shadow_info,
-    "service_description"   : "Libelle Business Shadow Info",
+    "check_function": check_libelle_business_shadow_info,
+    "inventory_function": inventory_libelle_business_shadow_info,
+    "service_description": "Libelle Business Shadow Info",
 }
 
 #.
@@ -307,11 +313,13 @@ check_info["libelle_business_shadow.info"] = {
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
+
 def inventory_libelle_business_shadow_status(info):
     parsed = check_libelle_business_shadow_parse(info)
     if "libelle_status" in parsed.keys():
-        return [ (None, None) ]
+        return [(None, None)]
     return []
+
 
 def check_libelle_business_shadow_status(_no_item, _no_params, info):
     parsed = check_libelle_business_shadow_parse(info)
@@ -326,10 +334,11 @@ def check_libelle_business_shadow_status(_no_item, _no_params, info):
 
     return status, message
 
+
 check_info["libelle_business_shadow.status"] = {
-    "check_function"        : check_libelle_business_shadow_status,
-    "inventory_function"    : inventory_libelle_business_shadow_status,
-    "service_description"   : "Libelle Business Shadow Status",
+    "check_function": check_libelle_business_shadow_status,
+    "inventory_function": inventory_libelle_business_shadow_status,
+    "service_description": "Libelle Business Shadow Status",
 }
 
 #.
@@ -342,11 +351,13 @@ check_info["libelle_business_shadow.status"] = {
 #   |                 |_|                                                  |
 #   '----------------------------------------------------------------------'
 
+
 def inventory_libelle_business_shadow_process(info):
     parsed = check_libelle_business_shadow_parse(info)
     if "process" in parsed.keys():
-        return [ (None, None) ]
+        return [(None, None)]
     return []
+
 
 def check_libelle_business_shadow_process(_no_item, _no_params, info):
     parsed = check_libelle_business_shadow_parse(info)
@@ -362,10 +373,11 @@ def check_libelle_business_shadow_process(_no_item, _no_params, info):
 
     return status, message
 
+
 check_info["libelle_business_shadow.process"] = {
-    "check_function"        : check_libelle_business_shadow_process,
-    "inventory_function"    : inventory_libelle_business_shadow_process,
-    "service_description"   : "Libelle Business Shadow Process",
+    "check_function": check_libelle_business_shadow_process,
+    "inventory_function": inventory_libelle_business_shadow_process,
+    "service_description": "Libelle Business Shadow Process",
 }
 
 #.
@@ -378,11 +390,13 @@ check_info["libelle_business_shadow.process"] = {
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
+
 def inventory_libelle_business_shadow_archive_dir(info):
     parsed = check_libelle_business_shadow_parse(info)
     if "arch_total_mb" in parsed.keys() and "arch_free_mb" in parsed.keys():
-        return [ ("Archive Dir", {}) ]
+        return [("Archive Dir", {})]
     return []
+
 
 def check_libelle_business_shadow_archive_dir(item, params, info):
     parsed = check_libelle_business_shadow_parse(info)
@@ -393,12 +407,12 @@ def check_libelle_business_shadow_archive_dir(item, params, info):
 
 
 check_info["libelle_business_shadow.archive_dir"] = {
-    "check_function"        : check_libelle_business_shadow_archive_dir,
-    "inventory_function"    : inventory_libelle_business_shadow_archive_dir,
-    "service_description"   : "Libelle Business Shadow %s",
-    "has_perfdata"          : True,
-    "group"                 : "filesystem",
-    "includes"              : [ "size_trend.include", "df.include" ],
+    "check_function": check_libelle_business_shadow_archive_dir,
+    "inventory_function": inventory_libelle_business_shadow_archive_dir,
+    "service_description": "Libelle Business Shadow %s",
+    "has_perfdata": True,
+    "group": "filesystem",
+    "includes": ["size_trend.include", "df.include"],
 }
 
 #.

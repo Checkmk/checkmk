@@ -24,15 +24,15 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-factory_settings["juniper_screenos_temp_default_levels"] = {
-    "levels": ( 70, 80 )
-}
+factory_settings["juniper_screenos_temp_default_levels"] = {"levels": (70, 80)}
+
 
 def inventory_juniper_screenos_temp(info):
     for name, _temp in info:
         if name.endswith("Temperature"):
             name = name.rsplit(None, 1)[0]
         yield name, {}
+
 
 def check_juniper_screenos_temp(item, params, info):
     for name, temp in info:
@@ -43,16 +43,18 @@ def check_juniper_screenos_temp(item, params, info):
 
 
 check_info["juniper_screenos_temp"] = {
-    "check_function"          : check_juniper_screenos_temp,
-    "inventory_function"      : inventory_juniper_screenos_temp,
-    "group"                   : "temperature",
-    "service_description"     : "Temperature %s",
-    "has_perfdata"            : True,
-    "snmp_scan_function"      : lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.3224.1"),
-    "snmp_info"               : (".1.3.6.1.4.1.3224.21.4.1",[
-                                                             4, # Name
-                                                             3, # Temperatur
-                                                             ]),
-    "includes"                : [ "temperature.include" ],
-    "default_levels_variable" : "juniper_screenos_temp_default_levels"
+    "check_function": check_juniper_screenos_temp,
+    "inventory_function": inventory_juniper_screenos_temp,
+    "group": "temperature",
+    "service_description": "Temperature %s",
+    "has_perfdata": True,
+    "snmp_scan_function": lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.3224.1"),
+    "snmp_info": (
+        ".1.3.6.1.4.1.3224.21.4.1",
+        [
+            4,  # Name
+            3,  # Temperatur
+        ]),
+    "includes": ["temperature.include"],
+    "default_levels_variable": "juniper_screenos_temp_default_levels"
 }

@@ -31,22 +31,25 @@
 #         Size: 0
 #         Last added: unknown
 
+
 def inventory_kaspersky_av_quarantine(info):
-    return [( None, None )]
+    return [(None, None)]
+
 
 def check_kaspersky_av_quarantine(item, _no_params, info):
     # Reformat info when some lines have more than 2 elements
-    info = dict([ [l[0], ' '.join(l[1:])] for l in info ])
+    info = dict([[l[0], ' '.join(l[1:])] for l in info])
     objects = int(info['Objects'])
-    perf = [ ( 'objects', objects ) ]
+    perf = [('objects', objects)]
     if objects > 0:
-        return 2, "%d Objects in Quarantine, Last added: %s" % (objects, info['Last added'].strip()), perf
+        return 2, "%d Objects in Quarantine, Last added: %s" % (objects,
+                                                                info['Last added'].strip()), perf
     return 0, "No objects in Quarantine", perf
 
-check_info["kaspersky_av_quarantine"] = {
-    "check_function"        : check_kaspersky_av_quarantine,
-    "inventory_function"    : inventory_kaspersky_av_quarantine,
-    "service_description"   : "AV Quarantine",
-    "has_perfdata"          : True,
-}
 
+check_info["kaspersky_av_quarantine"] = {
+    "check_function": check_kaspersky_av_quarantine,
+    "inventory_function": inventory_kaspersky_av_quarantine,
+    "service_description": "AV Quarantine",
+    "has_perfdata": True,
+}

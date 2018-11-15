@@ -48,9 +48,8 @@
 # max_res_kbytes 1984
 # avg_mem_kbytes 0
 
-
 factory_settings["job_default_levels"] = {
-    "age": (0, 0) # disabled as default
+    "age": (0, 0)  # disabled as default
 }
 
 
@@ -87,15 +86,17 @@ def parse_job(info):
             # Convert several keys/values
             if key == 'real_time':
                 val = job_parse_real_time(val)
-            elif key in [ 'user_time', 'system_time' ]:
+            elif key in ['user_time', 'system_time']:
                 val = float(val)
-            elif key in [ 'exit_code', 'invol_context_switches', 'vol_context_switches', 'start_time' ]:
+            elif key in [
+                    'exit_code', 'invol_context_switches', 'vol_context_switches', 'start_time'
+            ]:
                 val = int(val)
-            elif key in [ 'max_res_kbytes', 'avg_mem_kbytes' ]:
+            elif key in ['max_res_kbytes', 'avg_mem_kbytes']:
                 key = key.replace('kbytes', 'bytes')
                 val = int(val) * 1000
             # TODO: Fix the code and remove the pragma below!
-            job[prefix+key] = val   # pylint: disable=unsupported-assignment-operation
+            job[prefix + key] = val  # pylint: disable=unsupported-assignment-operation
 
     return parsed
 
@@ -109,7 +110,7 @@ def inventory_job(parsed):
 
 def check_job(item, params, parsed):
     def process_start_time(value, state, warn, crit):
-        display_value = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(value) )
+        display_value = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(value))
         job_age = time.time() - value
         if crit > 0 and job_age >= crit:
             state = max(state, 2)
@@ -132,7 +133,6 @@ def check_job(item, params, parsed):
             node_infotext = "[%s] " % node_info
         else:
             node_infotext = ""
-
 
         if job.get("exit_code") is None:
             results.append((3, '%sGot incomplete information for this job' % node_infotext))
@@ -158,25 +158,25 @@ def check_job(item, params, parsed):
         output.append(txt)
 
         for key, title in [
-            ('start_time',             'Started'),
-            ('real_time',              'Real-Time'),
-            ('user_time',              'User-Time'),
-            ('system_time',            'System-Time'),
-            ('reads',                  'Filesystem Reads'),
-            ('writes',                 'Filesystem Writes'),
-            ('max_res_bytes',          'Max. Memory'),
-            ('avg_mem_bytes',          'Avg. Memory'),
-            ('vol_context_switches',   'Vol. Context Switches'),
+            ('start_time', 'Started'),
+            ('real_time', 'Real-Time'),
+            ('user_time', 'User-Time'),
+            ('system_time', 'System-Time'),
+            ('reads', 'Filesystem Reads'),
+            ('writes', 'Filesystem Writes'),
+            ('max_res_bytes', 'Max. Memory'),
+            ('avg_mem_bytes', 'Avg. Memory'),
+            ('vol_context_switches', 'Vol. Context Switches'),
             ('invol_context_switches', 'Invol. Context Switches'),
-          ]:
+        ]:
             value_str = job.get(key)
             if value_str is None:
                 continue
 
-            if key in [ 'max_res_bytes', 'avg_mem_bytes' ]:
+            if key in ['max_res_bytes', 'avg_mem_bytes']:
                 value = int(value_str)
                 display_value = get_bytes_human_readable(value, 1000)
-            elif key in [ 'real_time', 'user_time', 'system_time' ]:
+            elif key in ['real_time', 'user_time', 'system_time']:
                 value = float(value_str)
                 display_value = get_age_human_readable(value)
             elif key == 'start_time':
@@ -205,12 +205,12 @@ def check_job(item, params, parsed):
 
 
 check_info["job"] = {
-    'parse_function'            : parse_job,
-    'check_function'            : check_job,
-    'inventory_function'        : inventory_job,
-    'service_description'       : 'Job %s',
-    'default_levels_variable'   : 'job_default_levels',
-    'group'                     : 'job',
-    'has_perfdata'              : True,
-    'node_info'                 : True,
+    'parse_function': parse_job,
+    'check_function': check_job,
+    'inventory_function': inventory_job,
+    'service_description': 'Job %s',
+    'default_levels_variable': 'job_default_levels',
+    'group': 'job',
+    'has_perfdata': True,
+    'node_info': True,
 }

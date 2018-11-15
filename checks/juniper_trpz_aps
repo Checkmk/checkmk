@@ -26,20 +26,20 @@
 
 
 def inventory_juniper_trpz_aps(info):
-    return [ (None, None) ]
+    return [(None, None)]
 
 
 def check_juniper_trpz_aps(_no_item, _no_params, info):
-    total_aps      = 0
+    total_aps = 0
     total_sessions = 0
-    infotexts      = []
+    infotexts = []
     for node, aps, sessions in info:
         # Are we a cluster?
         message = ""
         if node != None:
             message += "[%s] " % node
 
-        total_aps      += int(aps)
+        total_aps += int(aps)
         total_sessions += int(sessions)
         message        += "Online access points: %s, Sessions: %s" % \
                           (aps, sessions)
@@ -49,9 +49,8 @@ def check_juniper_trpz_aps(_no_item, _no_params, info):
         infotexts = ["Total: %d access points, Sessions: %d" % \
                      (total_aps, total_sessions)] + infotexts
 
-    return 0, ", ".join(infotexts), [
-           ('ap_devices_total', total_aps),
-           ("total_sessions",   total_sessions)]
+    return 0, ", ".join(infotexts), [('ap_devices_total', total_aps),
+                                     ("total_sessions", total_sessions)]
 
 
 check_info["juniper_trpz_aps"] = {

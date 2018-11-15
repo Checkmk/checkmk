@@ -24,15 +24,16 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+
 def inventory_lsi(check_type, info):
 
     # convert [ 0, 1, 2, 3, 4, 5, ...] into [ (0,1), (2,3), (4,5), ... ]
     entries = zip(info[::2], info[1::2])
 
-    arrays  = []
-    disks   = []
+    arrays = []
+    disks = []
     for entry in entries:
-        id_    = int(entry[0][1])
+        id_ = int(entry[0][1])
         state = entry[1][1].split('(')[-1][:-1]
         if entry[0][0] == 'VolumeID':
             arrays.append((id_, state))
@@ -56,13 +57,16 @@ def check_lsi_array(item, _no_params, info):
             return (2, 'Status is %s' % (status,))
     return (2, 'RAID volume %d not existing' % item)
 
-check_info["lsi.array"] = {'check_function': check_lsi_array,
- 'default_levels_variable': None,
- 'group': 'raid',
- 'inventory_function': lambda info: inventory_lsi('lsi.array', info),
- 'service_description': 'RAID array %s',
- 'snmp_info': None,
- 'snmp_scan_function': None}
+
+check_info["lsi.array"] = {
+    'check_function': check_lsi_array,
+    'default_levels_variable': None,
+    'group': 'raid',
+    'inventory_function': lambda info: inventory_lsi('lsi.array', info),
+    'service_description': 'RAID array %s',
+    'snmp_info': None,
+    'snmp_scan_function': None
+}
 
 
 def check_lsi_disk(item, target_state, info):
@@ -77,10 +81,13 @@ def check_lsi_disk(item, target_state, info):
             return (2, 'disk has state %s (should be %s)' % (state, target_state))
     return (2, 'disk not present')
 
-check_info["lsi.disk"] = {'check_function': check_lsi_disk,
- 'default_levels_variable': None,
- 'group': 'raid_disk',
- 'inventory_function': lambda info: inventory_lsi('lsi.disk', info),
- 'service_description': 'RAID disk %s',
- 'snmp_info': None,
- 'snmp_scan_function': None}
+
+check_info["lsi.disk"] = {
+    'check_function': check_lsi_disk,
+    'default_levels_variable': None,
+    'group': 'raid_disk',
+    'inventory_function': lambda info: inventory_lsi('lsi.disk', info),
+    'service_description': 'RAID disk %s',
+    'snmp_info': None,
+    'snmp_scan_function': None
+}

@@ -44,6 +44,7 @@
 #http      --      208       0       0      0      53     0     0      0
 #mysql     --  7915856       0       0      0     173     0     0      0
 
+
 def parse_lnx_quota(info):
     parsed = {}
     mode = None
@@ -69,7 +70,8 @@ def parse_lnx_quota(info):
 
         elif fs and mode and len(line) == 10:
             # new table entry for quota
-            parsed[fs][mode][line[0]] = [int(x)*1024 for x in line[2:5]] + [int(x) for x in line[5:]]
+            parsed[fs][mode][line[0]] = [int(x) * 1024 for x in line[2:5]
+                                        ] + [int(x) for x in line[5:]]
 
     return parsed
 
@@ -118,7 +120,7 @@ def inventory_lnx_quota(parsed):
     inv = []
 
     for item in parsed.keys():
-        inv.append((item, { 'user': True }))
+        inv.append((item, {'user': True}))
     return inv
 
 
@@ -131,21 +133,19 @@ def check_lnx_quota(item, params, parsed):
     if not params:
         # old discovery until version 1.2.6
         # params were empty dictionary and enabled by standard user checking
-        params = { 'user': True }
+        params = {'user': True}
 
-    for param_key, thing, name in [
-        ('user',  'usr', 'users'),
-        ('group', 'grp', 'groups')
-       ]:
+    for param_key, thing, name in [('user', 'usr', 'users'), ('group', 'grp', 'groups')]:
         if params.get(param_key) is True:
             at_least_one_problematic = False
             for user, values in parsed[item][thing].items():
                 for what, (used, soft, hard, grace) in [
                     ('blocks', values[:4]),
-                    ('files',  values[4:]) ]:
+                    ('files', values[4:]),
+                ]:
 
                     if soft == 0 and hard == 0:
-                        continue # skip entries without limits
+                        continue  # skip entries without limits
 
                     state, txt = lnx_quota_limit_check(thing, what, user, used, soft, hard, grace)
 
@@ -175,10 +175,10 @@ def check_lnx_quota(item, params, parsed):
 
 
 check_info['lnx_quota'] = {
-    'parse_function'          : parse_lnx_quota,
-    'check_function'          : check_lnx_quota,
-    'inventory_function'      : inventory_lnx_quota,
-    'service_description'     : 'Quota %s',
-    'has_perfdata'            : True,
-    'group'                   : 'lnx_quota',
+    'parse_function': parse_lnx_quota,
+    'check_function': check_lnx_quota,
+    'inventory_function': inventory_lnx_quota,
+    'service_description': 'Quota %s',
+    'has_perfdata': True,
+    'group': 'lnx_quota',
 }

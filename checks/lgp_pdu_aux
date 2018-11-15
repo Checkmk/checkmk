@@ -64,30 +64,31 @@ lgp_pdu_aux_types = {
 }
 
 lgp_pdu_aux_states = [
-  'not-specified',
-  'open',
-  'closed',
+    'not-specified',
+    'open',
+    'closed',
 ]
 
 _lgp_pdu_aux_fields = {
     # Index, Type, Factor, ID
-    '10': (str,       None, 'Type'),
-    '15': (str,       None, 'SystemLabel'),
-    '20': (str,       None, 'UserLabel'),
-    '35': (str,       None, 'SerialNumber'),
-    '70': (savefloat, 0.1,  'Temp'),
-    '75': (savefloat, 0.1,  'TempLowCrit'),
-    '80': (savefloat, 0.1,  'TempHighCrit'),
-    '85': (savefloat, 0.1,  'TempLowWarn'),
-    '90': (savefloat, 0.1,  'TempHighWarn'),
-    '95': (savefloat, 0.1,  'Hum'),
-   '100': (savefloat, 0.1,  'HumLowCrit'),
-   '105': (savefloat, 0.1,  'HumHighCrit'),
-   '110': (savefloat, 0.1,  'HumLowWarn'),
-   '115': (savefloat, 0.1,  'HumHighWarn'),
-   '120': (saveint,   None, 'DoorState'),
-   '125': (saveint,   None, 'DoorConfig'),
+    '10': (str, None, 'Type'),
+    '15': (str, None, 'SystemLabel'),
+    '20': (str, None, 'UserLabel'),
+    '35': (str, None, 'SerialNumber'),
+    '70': (savefloat, 0.1, 'Temp'),
+    '75': (savefloat, 0.1, 'TempLowCrit'),
+    '80': (savefloat, 0.1, 'TempHighCrit'),
+    '85': (savefloat, 0.1, 'TempLowWarn'),
+    '90': (savefloat, 0.1, 'TempHighWarn'),
+    '95': (savefloat, 0.1, 'Hum'),
+    '100': (savefloat, 0.1, 'HumLowCrit'),
+    '105': (savefloat, 0.1, 'HumHighCrit'),
+    '110': (savefloat, 0.1, 'HumLowWarn'),
+    '115': (savefloat, 0.1, 'HumHighWarn'),
+    '120': (saveint, None, 'DoorState'),
+    '125': (saveint, None, 'DoorConfig'),
 }
+
 
 def lgp_pdu_aux_fmt(info):
     new_info = {}
@@ -110,6 +111,7 @@ def lgp_pdu_aux_fmt(info):
             new_info[id_][key] = value
     return new_info
 
+
 def inventory_lgp_pdu_aux(info):
     info = lgp_pdu_aux_fmt(info)
     inv = []
@@ -119,12 +121,13 @@ def inventory_lgp_pdu_aux(info):
         inv.append((pdu['Type'] + '-' + pdu['SystemLabel'] + '-' + pdu['TypeIndex'], None))
     return inv
 
+
 def check_lgp_pdu_aux(item, params, info):
     info = lgp_pdu_aux_fmt(info)
     for pdu in info.itervalues():
         if item == pdu['Type'] + '-' + pdu['SystemLabel'] + '-' + pdu['TypeIndex']:
-            state    = 0
-            output   = []
+            state = 0
+            output = []
             perfdata = []
 
             if pdu['UserLabel'] != '':
@@ -135,21 +138,21 @@ def check_lgp_pdu_aux(item, params, info):
             def handle_type(ty, label, uom, pdu=pdu):
                 state = 0
                 perfdata = (ty.lower(), pdu[ty],
-                            '%0.2f:%0.2f' % (pdu[ty+'LowWarn'], pdu[ty+'HighWarn']),
-                            '%0.2f:%0.2f' % (pdu[ty+'LowCrit'], pdu[ty+'HighCrit']))
+                            '%0.2f:%0.2f' % (pdu[ty + 'LowWarn'], pdu[ty + 'HighWarn']),
+                            '%0.2f:%0.2f' % (pdu[ty + 'LowCrit'], pdu[ty + 'HighCrit']))
                 s_out = ''
-                if pdu[ty] >= pdu[ty+'HighCrit']:
+                if pdu[ty] >= pdu[ty + 'HighCrit']:
                     state = 2
-                    s_out = ' >= %0.2f (!!)' % pdu[ty+'HighCrit']
-                elif pdu[ty] <= pdu[ty+'LowCrit']:
+                    s_out = ' >= %0.2f (!!)' % pdu[ty + 'HighCrit']
+                elif pdu[ty] <= pdu[ty + 'LowCrit']:
                     state = 2
-                    s_out = ' <= %0.2f (!!)' % pdu[ty+'LowCrit']
-                elif pdu[ty] >= pdu[ty+'HighWarn']:
+                    s_out = ' <= %0.2f (!!)' % pdu[ty + 'LowCrit']
+                elif pdu[ty] >= pdu[ty + 'HighWarn']:
                     state = 1
-                    s_out = ' >= %0.2f (!)' % pdu[ty+'HighWarn']
-                elif pdu[ty] <= pdu[ty+'LowWarn']:
+                    s_out = ' >= %0.2f (!)' % pdu[ty + 'HighWarn']
+                elif pdu[ty] <= pdu[ty + 'LowWarn']:
                     state = 1
-                    s_out = ' <= %0.2f (!)' % pdu[ty+'LowWarn']
+                    s_out = ' <= %0.2f (!)' % pdu[ty + 'LowWarn']
 
                 return state, '%s: %0.2f%s%s' % (label, pdu[ty], uom, s_out), perfdata
 
@@ -175,11 +178,15 @@ def check_lgp_pdu_aux(item, params, info):
 
     return (3, 'Could not find given PDU.')
 
+
 check_info['lgp_pdu_aux'] = (check_lgp_pdu_aux, 'Liebert PDU AUX %s', 1, inventory_lgp_pdu_aux)
 
-snmp_info['lgp_pdu_aux'] = ('.1.3.6.1.4.1.476.1.42.3.8.60.15', [
-    OID_END, '1', # LIEBERT-GP-PDU-MIB::lgpPduAuxMeasTable
-])
+snmp_info['lgp_pdu_aux'] = (
+    '.1.3.6.1.4.1.476.1.42.3.8.60.15',
+    [
+        OID_END,
+        '1',  # LIEBERT-GP-PDU-MIB::lgpPduAuxMeasTable
+    ])
 
 snmp_scan_functions['lgp_pdu_aux'] = lambda oid: oid('.1.3.6.1.2.1.1.2.0') == \
                                                          '.1.3.6.1.4.1.476.1.42'

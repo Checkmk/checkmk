@@ -28,12 +28,12 @@
 def inventory_juniper_cpu_util(info):
     for line in info:
         if "Routing Engine" in line[0]:
-            yield line[0], { 'levels': (80.0, 90.0) }
+            yield line[0], {'levels': (80.0, 90.0)}
 
 
 def check_juniper_cpu_util(item, params, info):
     if not params:
-        params = { 'levels': (80.0, 90.0) }
+        params = {'levels': (80.0, 90.0)}
 
     for name, util in info:
         if name == item:
@@ -43,15 +43,18 @@ def check_juniper_cpu_util(item, params, info):
 
 
 check_info['juniper_cpu_util'] = {
-    'check_function'          : check_juniper_cpu_util,
-    'inventory_function'      : inventory_juniper_cpu_util,
-    'group'                   : 'juniper_cpu_util',
-    'service_description'     : "CPU utilization %s",
-    'has_perfdata'            : True,
-    'snmp_scan_function'      : lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.2636.1.1.1"),
-    'snmp_info'               : (".1.3.6.1.4.1.2636.3.1.13.1",[
-                                                             5, #jnxOperatingDescr
-                                                             8, #jnxOperatingCPU
-                                                             ]),
-    'includes'                : ["cpu_util.include"],
+    'check_function': check_juniper_cpu_util,
+    'inventory_function': inventory_juniper_cpu_util,
+    'group': 'juniper_cpu_util',
+    'service_description': "CPU utilization %s",
+    'has_perfdata': True,
+    'snmp_scan_function':
+        lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.2636.1.1.1"),
+    'snmp_info': (
+        ".1.3.6.1.4.1.2636.3.1.13.1",
+        [
+            5,  #jnxOperatingDescr
+            8,  #jnxOperatingCPU
+        ]),
+    'includes': ["cpu_util.include"],
 }

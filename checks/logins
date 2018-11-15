@@ -24,16 +24,17 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-
 # Example output from agent:
 # <<<logins>>>
 # 3
 
-logins_default_levels = (20,30)
+logins_default_levels = (20, 30)
+
 
 def inventory_logins(info):
     if info:
-        return [ (None, "logins_default_levels") ]
+        return [(None, "logins_default_levels")]
+
 
 def check_logins(_no_item, params, info):
     if info:
@@ -45,15 +46,15 @@ def check_logins(_no_item, params, info):
         elif logins >= warn:
             state = 1
 
-        infotext = "%d logins on system (warn/crit at %d/%d)" % ( logins, warn, crit )
-        perfdata = [ ( "logins", logins, warn, crit, 0 ) ]
+        infotext = "%d logins on system (warn/crit at %d/%d)" % (logins, warn, crit)
+        perfdata = [("logins", logins, warn, crit, 0)]
         yield state, infotext, perfdata
 
 
 check_info["logins"] = {
-    'check_function'      : check_logins,
-    'inventory_function'  : inventory_logins,
-    'service_description' : 'Logins',
-    'has_perfdata'        : True,
-    'group'               : 'logins',
+    'check_function': check_logins,
+    'inventory_function': inventory_logins,
+    'service_description': 'Logins',
+    'has_perfdata': True,
+    'group': 'logins',
 }

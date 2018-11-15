@@ -24,7 +24,6 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-
 # <<<kaspersky_av_client>>>
 # Signatures 08.05.2015 01:23:00
 # Fullscan 08.05.2015 05:43:16 0
@@ -32,10 +31,9 @@
 # <<<kaspersky_av_client>>>
 # Signatures 13.12.2016 11:55:00
 
-
 factory_settings['kaspersky_av_client_default_levels'] = {
-    'signature_age' : ( 86400, 7*86400 ),
-    'fullscan_age'  : ( 86400, 7*86400 ),
+    'signature_age': (86400, 7 * 86400),
+    'fullscan_age': (86400, 7 * 86400),
 }
 
 
@@ -67,13 +65,13 @@ def parse_kaspersky_av_client(info):
 
 
 def inventory_kaspersky_av_client(parsed):
-    return [ (None, {}) ]
+    return [(None, {})]
 
 
 def check_kaspersky_av_client(_no_item, params, parsed):
     for key, what in [
-        ( "signature_age", "Last update of signatures" ),
-        ( "fullscan_age",  "Last fullscan" ),
+        ("signature_age", "Last update of signatures"),
+        ("fullscan_age", "Last fullscan"),
     ]:
         age = parsed.get(key)
         if age is None:
@@ -89,9 +87,8 @@ def check_kaspersky_av_client(_no_item, params, parsed):
 
             infotext = "%s %s ago" % (what, get_age_human_readable(age))
             if state > 0:
-                infotext += " (warn/crit at %s/%s)" % (
-                    get_age_human_readable(warn),
-                    get_age_human_readable(crit))
+                infotext += " (warn/crit at %s/%s)" % (get_age_human_readable(warn),
+                                                       get_age_human_readable(crit))
 
             yield state, infotext
 
@@ -100,10 +97,10 @@ def check_kaspersky_av_client(_no_item, params, parsed):
 
 
 check_info['kaspersky_av_client'] = {
-    'parse_function'            : parse_kaspersky_av_client,
-    'inventory_function'        : inventory_kaspersky_av_client,
-    'check_function'            : check_kaspersky_av_client,
-    'service_description'       : 'Kaspersky AV',
-    'default_levels_variable'   : 'kaspersky_av_client_default_levels',
-    'group'                     : 'kaspersky_av_client',
+    'parse_function': parse_kaspersky_av_client,
+    'inventory_function': inventory_kaspersky_av_client,
+    'check_function': check_kaspersky_av_client,
+    'service_description': 'Kaspersky AV',
+    'default_levels_variable': 'kaspersky_av_client_default_levels',
+    'group': 'kaspersky_av_client',
 }

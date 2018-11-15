@@ -38,9 +38,11 @@ lgp_info_devices = {
     '.1.3.6.1.4.1.476.1.42.4.8.2.2': 'lgpMPH',
 }
 
+
 def inventory_lgp_info(info):
     if info and info[0] and info[0][0]:
         return [(None, None)]
+
 
 def check_lgp_info(item, params, info):
     if info and info[0] and info[0][0]:
@@ -51,10 +53,11 @@ def check_lgp_info(item, params, info):
             devices = []
             for id_, manufacturer, unit_number in info[1]:
                 id_ = lgp_info_devices.get(id_, id_)
-                devices.append('ID: %s, Manufacturer: %s, Unit-Number: %s' % (id_, manufacturer, unit_number))
+                devices.append(
+                    'ID: %s, Manufacturer: %s, Unit-Number: %s' % (id_, manufacturer, unit_number))
             device_output = '\n'.join(devices)
 
-        return (0, 'Model: %s, Firmware: %s, S/N: %s\n%s' % tuple(agent_info + [ device_output ]))
+        return (0, 'Model: %s, Firmware: %s, S/N: %s\n%s' % tuple(agent_info + [device_output]))
 
 check_info["lgp_info"] = {
     'check_function':          check_lgp_info,

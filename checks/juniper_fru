@@ -84,6 +84,7 @@
 #   |                              main check                              |
 #   '----------------------------------------------------------------------'
 
+
 def parse_juniper_fru(info):
     parsed = {}
     for fru_name, fru_type, fru_state in info:
@@ -95,8 +96,8 @@ def parse_juniper_fru(info):
                        .replace("/*", "") \
                        .strip()
         parsed[name] = {
-            "fru_type"  : fru_type,
-            "fru_state" : fru_state,
+            "fru_type": fru_type,
+            "fru_state": fru_state,
         }
     return parsed
 
@@ -109,16 +110,16 @@ def inventory_juniper_fru(parsed, fru_type):
 
 def check_juniper_fru(item, _no_params, parsed):
     map_fru_state = {
-        "1"  : (3, "unknown"),
-        "2"  : (2, "empty"),
-        "3"  : (1, "present"),
-        "4"  : (0, "ready"),
-        "5"  : (0, "announce online"),
-        "6"  : (0, "online"),
-        "7"  : (2, "anounce offline"),
-        "8"  : (2, "offline"),
-        "9"  : (1, "diagnostic"),
-        "10" : (1, "standby")
+        "1": (3, "unknown"),
+        "2": (2, "empty"),
+        "3": (1, "present"),
+        "4": (0, "ready"),
+        "5": (0, "announce online"),
+        "6": (0, "online"),
+        "7": (2, "anounce offline"),
+        "8": (2, "offline"),
+        "9": (1, "diagnostic"),
+        "10": (1, "standby")
     }
     if item in parsed:
         state, state_readable = map_fru_state[parsed[item]["fru_state"]]
@@ -126,16 +127,19 @@ def check_juniper_fru(item, _no_params, parsed):
 
 
 check_info['juniper_fru'] = {
-    'parse_function'            : parse_juniper_fru,
-    'inventory_function'        : lambda info: inventory_juniper_fru(info, "7"),
-    'check_function'            : check_juniper_fru,
-    'service_description'       : 'Power Supply FRU %s',
-    'snmp_scan_function'        : lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.2636.1.1.1"),
-    'snmp_info'                 : (".1.3.6.1.4.1.2636.3.1.15.1", [
-                                        "5",    # jnxFruName
-                                        "6",    # jnxFruType
-                                        "8",    # jnxFruState
-                                  ]),
+    'parse_function': parse_juniper_fru,
+    'inventory_function': lambda info: inventory_juniper_fru(info, "7"),
+    'check_function': check_juniper_fru,
+    'service_description': 'Power Supply FRU %s',
+    'snmp_scan_function':
+        lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.2636.1.1.1"),
+    'snmp_info': (
+        ".1.3.6.1.4.1.2636.3.1.15.1",
+        [
+            "5",  # jnxFruName
+            "6",  # jnxFruType
+            "8",  # jnxFruState
+        ]),
 }
 
 #.
@@ -149,8 +153,7 @@ check_info['juniper_fru'] = {
 #   '----------------------------------------------------------------------'
 
 check_info['juniper_fru.fan'] = {
-    'inventory_function'        : lambda info: inventory_juniper_fru(info, "13"),
-    'check_function'            : check_juniper_fru,
-    'service_description'       : 'Fan FRU %s',
+    'inventory_function': lambda info: inventory_juniper_fru(info, "13"),
+    'check_function': check_juniper_fru,
+    'service_description': 'Fan FRU %s',
 }
-

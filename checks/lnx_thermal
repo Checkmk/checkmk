@@ -36,9 +36,10 @@
 # thermal_zone1 pkg-temp-0  44000 0 passive 0 passive
 
 factory_settings["lnx_thermal_default_levels"] = {
-    "levels"                    : (70, 80),
-    "device_levels_handling"    : "devdefault",
+    "levels": (70, 80),
+    "device_levels_handling": "devdefault",
 }
+
 
 @discover
 def inventory_lnx_thermal(line):
@@ -58,7 +59,7 @@ def check_lnx_thermal(item, params, info):
                 int(line[3])
                 line = line[:2] + [''] + line[2:]
             except:
-                pass # -> regular line
+                pass  # -> regular line
 
             # convert values from millidegree
             temp = int(line[3]) / 1000.0
@@ -73,7 +74,7 @@ def check_lnx_thermal(item, params, info):
                     if tp_name == 'active':
                         continue
                     if level != 0:
-                        if tp_name in [ 'hot', 'critical' ]:
+                        if tp_name in ['hot', 'critical']:
                             dev_crit = level
                         else:
                             dev_warn = level
@@ -91,11 +92,11 @@ def check_lnx_thermal(item, params, info):
 
 
 check_info['lnx_thermal'] = {
-    "inventory_function"      : inventory_lnx_thermal,
-    "check_function"          : check_lnx_thermal,
-    "service_description"     : "Temperature %s",
-    "has_perfdata"            : True,
-    "group"                   : "temperature",
-    "default_levels_variable" : "lnx_thermal_default_levels",
-    "includes"                : [ "temperature.include" ],
+    "inventory_function": inventory_lnx_thermal,
+    "check_function": check_lnx_thermal,
+    "service_description": "Temperature %s",
+    "has_perfdata": True,
+    "group": "temperature",
+    "default_levels_variable": "lnx_thermal_default_levels",
+    "includes": ["temperature.include"],
 }

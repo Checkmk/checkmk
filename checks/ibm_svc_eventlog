@@ -35,8 +35,10 @@
 # 1690:130801070656:drive:59:::alert:no:981020::Managed Disk error count warning threshold met
 # 2058:131030112416:drive:42:::alert:no:981020::Managed Disk error count warning threshold met
 
+
 def inventory_ibm_svc_eventlog(info):
-    return [ (None, None) ]
+    return [(None, None)]
+
 
 def check_ibm_svc_eventlog(item, _no_params, info):
     messagecount = 0
@@ -52,8 +54,9 @@ def check_ibm_svc_eventlog(item, _no_params, info):
 
     return 0, "No messages not expired and not yet fixed found in event log"
 
+
 check_info["ibm_svc_eventlog"] = {
-    "check_function"        : check_ibm_svc_eventlog,
-    "inventory_function"    : inventory_ibm_svc_eventlog,
-    "service_description"   : "Eventlog",
+    "check_function": check_ibm_svc_eventlog,
+    "inventory_function": inventory_ibm_svc_eventlog,
+    "service_description": "Eventlog",
 }

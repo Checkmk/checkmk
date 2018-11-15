@@ -29,9 +29,8 @@ def check_ironport_misc(item, params, info):
     return (3, "Sorry. Check not implemented in this version.")
 
 
-
 check_info["ironport_misc"] = {
-    'check_function':          check_ironport_misc,
-    'service_description':     '%s',
-    'group':                   'obsolete',
+    'check_function': check_ironport_misc,
+    'service_description': '%s',
+    'group': 'obsolete',
 }

@@ -42,73 +42,73 @@ def scan_infoblox(oid):
 
 def parse_infoblox_services(info):
     map_service_ids = {
-        "1"  : "dhcp",
-        "2"  : "dns",
-        "3"  : "ntp",
-        "4"  : "tftp",
-        "5"  : "http-file-dist",
-        "6"  : "ftp",
-        "7"  : "bloxtools-move",
-        "8"  : "bloxtools",
-        "9"  : "node-status",
-        "10" : "disk-usage",
-        "11" : "enet-lan",
-        "12" : "enet-lan2",
-        "13" : "enet-ha",
-        "14" : "enet-mgmt",
-        "15" : "lcd",
-        "16" : "memory",
-        "17" : "replication",
-        "18" : "db-object",
-        "19" : "raid-summary",
-        "20" : "raid-disk1",
-        "21" : "raid-disk2",
-        "22" : "raid-disk3",
-        "23" : "raid-disk4",
-        "24" : "raid-disk5",
-        "25" : "raid-disk6",
-        "26" : "raid-disk7",
-        "27" : "raid-disk8",
-        "28" : "fan1",
-        "29" : "fan2",
-        "30" : "fan3",
-        "31" : "fan4",
-        "32" : "fan5",
-        "33" : "fan6",
-        "34" : "fan7",
-        "35" : "fan8",
-        "36" : "power-supply1",
-        "37" : "power-supply2",
-        "38" : "ntp-sync",
-        "39" : "cpu1-temp",
-        "40" : "cpu2-temp",
-        "41" : "sys-temp",
-        "42" : "raid-battery",
-        "43" : "cpu-usage",
-        "44" : "ospf",
-        "45" : "bgp",
-        "46" : "mgm-service",
-        "47" : "subgrid-conn",
-        "48" : "network-capacity",
-        "49" : "reporting",
-        "50" : "dns-cache-acceleration",
-        "51" : "ospf6",
-        "52" : "swap-usage",
-        "53" : "discovery-consolidator",
-        "54" : "discovery-collector",
-        "55" : "discovery-capacity",
-        "56" : "threat-protection",
-        "57" : "cloud-api",
-        "58" : "threat-analytics",
-        "59" : "taxii",
+        "1": "dhcp",
+        "2": "dns",
+        "3": "ntp",
+        "4": "tftp",
+        "5": "http-file-dist",
+        "6": "ftp",
+        "7": "bloxtools-move",
+        "8": "bloxtools",
+        "9": "node-status",
+        "10": "disk-usage",
+        "11": "enet-lan",
+        "12": "enet-lan2",
+        "13": "enet-ha",
+        "14": "enet-mgmt",
+        "15": "lcd",
+        "16": "memory",
+        "17": "replication",
+        "18": "db-object",
+        "19": "raid-summary",
+        "20": "raid-disk1",
+        "21": "raid-disk2",
+        "22": "raid-disk3",
+        "23": "raid-disk4",
+        "24": "raid-disk5",
+        "25": "raid-disk6",
+        "26": "raid-disk7",
+        "27": "raid-disk8",
+        "28": "fan1",
+        "29": "fan2",
+        "30": "fan3",
+        "31": "fan4",
+        "32": "fan5",
+        "33": "fan6",
+        "34": "fan7",
+        "35": "fan8",
+        "36": "power-supply1",
+        "37": "power-supply2",
+        "38": "ntp-sync",
+        "39": "cpu1-temp",
+        "40": "cpu2-temp",
+        "41": "sys-temp",
+        "42": "raid-battery",
+        "43": "cpu-usage",
+        "44": "ospf",
+        "45": "bgp",
+        "46": "mgm-service",
+        "47": "subgrid-conn",
+        "48": "network-capacity",
+        "49": "reporting",
+        "50": "dns-cache-acceleration",
+        "51": "ospf6",
+        "52": "swap-usage",
+        "53": "discovery-consolidator",
+        "54": "discovery-collector",
+        "55": "discovery-capacity",
+        "56": "threat-protection",
+        "57": "cloud-api",
+        "58": "threat-analytics",
+        "59": "taxii",
     }
 
     map_status_id = {
-        "1" : "working",
-        "2" : "warning",
-        "3" : "failed",
-        "4" : "inactive",
-        "5" : "unknown",
+        "1": "working",
+        "2": "warning",
+        "3": "failed",
+        "4": "inactive",
+        "5": "unknown",
     }
 
     parsed = {}
@@ -167,19 +167,19 @@ def check_infoblox_services(item, _no_params, parsed):
 
 
 def inventory_infoblox_statistics(info):
-    return [ (None, None) ]
+    return [(None, None)]
 
 
 def check_infoblox_statistics(ty, stats):
-    texts    = {}
+    texts = {}
     perfdata = []
     for what, what_val, what_textfield, what_info in stats:
         texts.setdefault(what_textfield, [])
-        texts[what_textfield].append( "%d %s" % (what_val, what_info) )
-        perfdata.append( ("%s_%s" % (ty, what), what_val) )
+        texts[what_textfield].append("%d %s" % (what_val, what_info))
+        perfdata.append(("%s_%s" % (ty, what), what_val))
 
     infotexts = []
     for what, entries in texts.items():
-        infotexts.append( "%s: %s" % (what, ", ".join(entries)) )
+        infotexts.append("%s: %s" % (what, ", ".join(entries)))
 
     return 0, " - ".join(infotexts), perfdata

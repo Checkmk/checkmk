@@ -24,7 +24,6 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-
 # .1.3.6.1.4.1.14851.3.1.11.2.1.4.1 Logical_Library: 1 --> SNIA-SML-MIB::changerDevice-ElementName.1
 # .1.3.6.1.4.1.14851.3.1.11.2.1.4.2 Logical_Library: LTO6 --> SNIA-SML-MIB::changerDevice-ElementName.2
 # .1.3.6.1.4.1.14851.3.1.11.2.1.8.1 3 --> SNIA-SML-MIB::changerDevice-Availability.1
@@ -34,8 +33,7 @@
 
 
 def inventory_ibm_tl_changer_devices(info):
-    return [ (name.replace("Logical_Library:", "").strip(), None)
-             for name, _avail, _status in info ]
+    return [(name.replace("Logical_Library:", "").strip(), None) for name, _avail, _status in info]
 
 
 def check_ibm_tl_changer_devices(item, params, info):
@@ -45,14 +43,16 @@ def check_ibm_tl_changer_devices(item, params, info):
 
 
 check_info['ibm_tl_changer_devices'] = {
-    'inventory_function'    : inventory_ibm_tl_changer_devices,
-    'check_function'        : check_ibm_tl_changer_devices,
-    'service_description'   : 'Changer device %s',
-    'snmp_info'             : ('.1.3.6.1.4.1.14851.3.1.11.2.1', [
-                                    "4",    # SNIA-SML-MIB::changerDevice-ElementName
-                                    "8",    # SNIA-SML-MIB::changerDevice-Availability
-                                    "9",    # SNIA-SML-MIB::changerDevice-OperationalStatus
-                              ]),
-    'snmp_scan_function'    : scan_ibm_tape_library,
-    'includes'              : [ 'ibm_tape_library.include' ],
+    'inventory_function': inventory_ibm_tl_changer_devices,
+    'check_function': check_ibm_tl_changer_devices,
+    'service_description': 'Changer device %s',
+    'snmp_info': (
+        '.1.3.6.1.4.1.14851.3.1.11.2.1',
+        [
+            "4",  # SNIA-SML-MIB::changerDevice-ElementName
+            "8",  # SNIA-SML-MIB::changerDevice-Availability
+            "9",  # SNIA-SML-MIB::changerDevice-OperationalStatus
+        ]),
+    'snmp_scan_function': scan_ibm_tape_library,
+    'includes': ['ibm_tape_library.include'],
 }

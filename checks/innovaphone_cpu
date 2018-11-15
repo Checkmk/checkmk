@@ -24,10 +24,12 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-innovaphone_cpu_default_levels = ( 90.0, 95.0 )
+innovaphone_cpu_default_levels = (90.0, 95.0)
+
 
 def inventory_innovaphone_cpu(info):
-    return [ ( None, "innovaphone_cpu_default_levels" )]
+    return [(None, "innovaphone_cpu_default_levels")]
+
 
 def check_innovaphone_cpu(_no_item, params, info):
     usage = saveint(info[0][1])
@@ -35,12 +37,10 @@ def check_innovaphone_cpu(_no_item, params, info):
 
 
 check_info["innovaphone_cpu"] = {
-    "check_function"        : check_innovaphone_cpu,
-    "inventory_function"    : inventory_innovaphone_cpu,
-    "service_description"   : "CPU utilization",
-    "has_perfdata"          : True,
-    "group"                 : "cpu_utilization",
-    "includes"                : [ "cpu_util.include" ],
-
+    "check_function": check_innovaphone_cpu,
+    "inventory_function": inventory_innovaphone_cpu,
+    "service_description": "CPU utilization",
+    "has_perfdata": True,
+    "group": "cpu_utilization",
+    "includes": ["cpu_util.include"],
 }
-

@@ -24,18 +24,20 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+ipr400_in_voltage_default_levels = (12, 11)  # 11.5-13.8V is the operational voltage according
 
-ipr400_in_voltage_default_levels = (12, 11) # 11.5-13.8V is the operational voltage according
-                                            # to the manual
+# to the manual
+
 
 def inventory_ipr400_in_voltage(info):
     if len(info) > 0:
         yield "1", "ipr400_in_voltage_default_levels"
 
+
 def check_ipr400_in_voltage(item, params, info):
     warn, crit = params
     power = int(info[0][0]) / 1000.0  # appears to be in mV
-    perfdata = [ ( "in_voltage", power, warn, crit ) ]
+    perfdata = [("in_voltage", power, warn, crit)]
     infotext = "in voltage: %.1fV" % power
     limitstext = "(warn/crit below %dV/%dV)" % (warn, crit)
 
@@ -45,13 +47,14 @@ def check_ipr400_in_voltage(item, params, info):
         return 1, infotext + ", " + limitstext, perfdata
     return 0, infotext, perfdata
 
-check_info["ipr400_in_voltage"] = {
-    "check_function"      : check_ipr400_in_voltage,
-    "inventory_function"  : inventory_ipr400_in_voltage,
-    "service_description" : "IN Voltage %s",
-    "has_perfdata"        : True,
-    "group"               : "evolt",
-    "snmp_scan_function"  : lambda oid: oid(".1.3.6.1.2.1.1.1.0").lower().startswith("ipr voip device ipr400"),
-    "snmp_info"           : ( ".1.3.6.1.4.1.27053.1.4.5.10", [ "0" ] ),
-}
 
+check_info["ipr400_in_voltage"] = {
+    "check_function": check_ipr400_in_voltage,
+    "inventory_function": inventory_ipr400_in_voltage,
+    "service_description": "IN Voltage %s",
+    "has_perfdata": True,
+    "group": "evolt",
+    "snmp_scan_function":
+        lambda oid: oid(".1.3.6.1.2.1.1.1.0").lower().startswith("ipr voip device ipr400"),
+    "snmp_info": (".1.3.6.1.4.1.27053.1.4.5.10", ["0"]),
+}

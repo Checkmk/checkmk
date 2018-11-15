@@ -88,25 +88,30 @@
 #  'VDisks BLUBBSVC03': {'r_mb': 12,  'w_mb': 80,  'r_io': 1345, 'w_io': 1442, 'r_ms': 1, 'w_ms': 0},
 #  'VDisks BLUBBSVC04': {'r_mb': 0,   'w_mb': 0,   'r_io': 0,    'w_io': 0,    'r_ms': 7, 'w_ms': 0}}
 
+
 def ibm_svc_nodestats_parse(info):
     parsed = {}
     for _node_id, node_name, stat_name, stat_current, _stat_peak, _stat_peak_time in info:
-        if stat_name in ("vdisk_r_mb", "vdisk_w_mb", "vdisk_r_io", "vdisk_w_io", "vdisk_r_ms", "vdisk_w_ms"):
+        if stat_name in ("vdisk_r_mb", "vdisk_w_mb", "vdisk_r_io", "vdisk_w_io", "vdisk_r_ms",
+                         "vdisk_w_ms"):
             if "VDisks %s" % node_name not in parsed.keys():
                 parsed["VDisks %s" % node_name] = {}
             stat_name = stat_name.replace("vdisk_", "")
             parsed["VDisks %s" % node_name][stat_name] = int(stat_current)
-        if stat_name in ("mdisk_r_mb", "mdisk_w_mb", "mdisk_r_io", "mdisk_w_io", "mdisk_r_ms", "mdisk_w_ms"):
+        if stat_name in ("mdisk_r_mb", "mdisk_w_mb", "mdisk_r_io", "mdisk_w_io", "mdisk_r_ms",
+                         "mdisk_w_ms"):
             if "MDisks %s" % node_name not in parsed.keys():
                 parsed["MDisks %s" % node_name] = {}
             stat_name = stat_name.replace("mdisk_", "")
             parsed["MDisks %s" % node_name][stat_name] = int(stat_current)
-        if stat_name in ("drive_r_mb", "drive_w_mb", "drive_r_io", "drive_w_io", "drive_r_ms", "drive_w_ms"):
+        if stat_name in ("drive_r_mb", "drive_w_mb", "drive_r_io", "drive_w_io", "drive_r_ms",
+                         "drive_w_ms"):
             if "Drives %s" % node_name not in parsed.keys():
                 parsed["Drives %s" % node_name] = {}
             stat_name = stat_name.replace("drive_", "")
             parsed["Drives %s" % node_name][stat_name] = int(stat_current)
     return parsed
+
 
 #   .--disk IO-------------------------------------------------------------.
 #   |                         _ _     _      ___ ___                       |
@@ -117,9 +122,10 @@ def ibm_svc_nodestats_parse(info):
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
+
 def inventory_ibm_svc_nodestats_diskio(info):
-    return [ (key, None)
-             for key in ibm_svc_nodestats_parse(info) ]
+    return [(key, None) for key in ibm_svc_nodestats_parse(info)]
+
 
 def check_ibm_svc_nodestats_diskio(item, _no_params, info):
     parsed = ibm_svc_nodestats_parse(info)
@@ -129,17 +135,18 @@ def check_ibm_svc_nodestats_diskio(item, _no_params, info):
 
     read_bytes = parsed[item]['r_mb'] * 1024 * 1024
     write_bytes = parsed[item]['w_mb'] * 1024 * 1024
-    perfdata = [ ("read", read_bytes), ("write", write_bytes) ]
+    perfdata = [("read", read_bytes), ("write", write_bytes)]
 
     return 0, "%s/s read, %s/s write" % \
         (get_bytes_human_readable(read_bytes), get_bytes_human_readable(write_bytes)), \
         perfdata
 
+
 check_info["ibm_svc_nodestats.diskio"] = {
-    "check_function"        : check_ibm_svc_nodestats_diskio,
-    "inventory_function"    : inventory_ibm_svc_nodestats_diskio,
-    "service_description"   : "Disk IO %s",
-    "has_perfdata"          : True,
+    "check_function": check_ibm_svc_nodestats_diskio,
+    "inventory_function": inventory_ibm_svc_nodestats_diskio,
+    "service_description": "Disk IO %s",
+    "has_perfdata": True,
 }
 
 #.
@@ -152,9 +159,10 @@ check_info["ibm_svc_nodestats.diskio"] = {
 #   |                                 |_|                                  |
 #   '----------------------------------------------------------------------'
 
+
 def inventory_ibm_svc_nodestats_iops(info):
-    return [ (key, None)
-             for key in ibm_svc_nodestats_parse(info) ]
+    return [(key, None) for key in ibm_svc_nodestats_parse(info)]
+
 
 def check_ibm_svc_nodestats_iops(item, _no_params, info):
     parsed = ibm_svc_nodestats_parse(info)
@@ -164,15 +172,16 @@ def check_ibm_svc_nodestats_iops(item, _no_params, info):
 
     read_iops = parsed[item]['r_io']
     write_iops = parsed[item]['w_io']
-    perfdata = [ ("read", read_iops), ("write", write_iops) ]
+    perfdata = [("read", read_iops), ("write", write_iops)]
 
-    return 0, "%s IO/s read, %s IO/s write" %  (read_iops, write_iops), perfdata
+    return 0, "%s IO/s read, %s IO/s write" % (read_iops, write_iops), perfdata
+
 
 check_info["ibm_svc_nodestats.iops"] = {
-    "check_function"        : check_ibm_svc_nodestats_iops,
-    "inventory_function"    : inventory_ibm_svc_nodestats_iops,
-    "service_description"   : "Disk IOPS %s",
-    "has_perfdata"          : True,
+    "check_function": check_ibm_svc_nodestats_iops,
+    "inventory_function": inventory_ibm_svc_nodestats_iops,
+    "service_description": "Disk IOPS %s",
+    "has_perfdata": True,
 }
 
 #.
@@ -185,9 +194,10 @@ check_info["ibm_svc_nodestats.iops"] = {
 #   |                                                       |___/          |
 #   '----------------------------------------------------------------------'
 
+
 def inventory_ibm_svc_nodestats_disk_latency(info):
-    return [ (key, None)
-             for key in ibm_svc_nodestats_parse(info) ]
+    return [(key, None) for key in ibm_svc_nodestats_parse(info)]
+
 
 def check_ibm_svc_nodestats_disk_latency(item, _no_params, info):
     parsed = ibm_svc_nodestats_parse(info)
@@ -195,18 +205,19 @@ def check_ibm_svc_nodestats_disk_latency(item, _no_params, info):
     if item not in parsed.keys():
         return 3, "%s not found in agent output" % item
 
-    read_latency  = parsed[item]['r_ms']
+    read_latency = parsed[item]['r_ms']
     write_latency = parsed[item]['w_ms']
-    perfdata = [ ("read_latency", read_latency), ("write_latency", write_latency) ]
+    perfdata = [("read_latency", read_latency), ("write_latency", write_latency)]
 
     return 0, "Latency is %s ms for read, %s ms for write" % (read_latency, write_latency), \
         perfdata
 
+
 check_info["ibm_svc_nodestats.disk_latency"] = {
-    "check_function"        : check_ibm_svc_nodestats_disk_latency,
-    "inventory_function"    : inventory_ibm_svc_nodestats_disk_latency,
-    "service_description"   : "Disk Latency %s",
-    "has_perfdata"          : True,
+    "check_function": check_ibm_svc_nodestats_disk_latency,
+    "inventory_function": inventory_ibm_svc_nodestats_disk_latency,
+    "service_description": "Disk Latency %s",
+    "has_perfdata": True,
 }
 
 #.
@@ -220,14 +231,16 @@ check_info["ibm_svc_nodestats.disk_latency"] = {
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-ibm_svc_cpu_default_levels = ( 90.0, 95.0 )
+ibm_svc_cpu_default_levels = (90.0, 95.0)
+
 
 def inventory_ibm_svc_cpu(info):
     inventory = []
     for _node_id, node_name, stat_name, _stat_current, _stat_peak, _stat_peak_time in info:
         if stat_name == "cpu_pc":
-            inventory.append( (node_name, "ibm_svc_cpu_default_levels") )
+            inventory.append((node_name, "ibm_svc_cpu_default_levels"))
     return inventory
+
 
 def check_ibm_svc_cpu(item, params, info):
     for _node_id, node_name, stat_name, stat_current, _stat_peak, _stat_peak_time in info:
@@ -236,14 +249,16 @@ def check_ibm_svc_cpu(item, params, info):
 
     return 3, "value cpu_pc not found in agent output for node %s" % item
 
+
 check_info["ibm_svc_nodestats.cpu_util"] = {
-    "check_function"        : check_ibm_svc_cpu,
-    "inventory_function"    : inventory_ibm_svc_cpu,
-    "service_description"   : "CPU utilization %s",
-    "has_perfdata"          : True,
-    "group"                 : "cpu_utilization_multiitem",
-    "includes"              : [ "cpu_util.include" ],
+    "check_function": check_ibm_svc_cpu,
+    "inventory_function": inventory_ibm_svc_cpu,
+    "service_description": "CPU utilization %s",
+    "has_perfdata": True,
+    "group": "cpu_utilization_multiitem",
+    "includes": ["cpu_util.include"],
 }
+
 #.
 #   .--cache---------------------------------------------------------------.
 #   |                                     _                                |
@@ -260,6 +275,7 @@ check_info["ibm_svc_nodestats.cpu_util"] = {
 #  'BLUBBSVC03': {'total_cache_pc': 65, 'write_cache_pc': 0},
 #  'BLUBBSVC04': {'total_cache_pc': 71, 'write_cache_pc': 0}}
 
+
 def ibm_svc_cache_parse(info):
     parsed = {}
     for _node_id, node_name, stat_name, stat_current, _stat_peak, _stat_peak_time in info:
@@ -269,9 +285,10 @@ def ibm_svc_cache_parse(info):
             parsed[node_name][stat_name] = int(stat_current)
     return parsed
 
+
 def inventory_ibm_svc_cache(info):
-    return [ (key, None)
-             for key in ibm_svc_cache_parse(info) ]
+    return [(key, None) for key in ibm_svc_cache_parse(info)]
+
 
 def check_ibm_svc_cache(item, _no_params, info):
     parsed = ibm_svc_cache_parse(info)
@@ -281,15 +298,16 @@ def check_ibm_svc_cache(item, _no_params, info):
 
     write_cache_pc = parsed[item]["write_cache_pc"]
     total_cache_pc = parsed[item]["total_cache_pc"]
-    perfdata = [ ("write_cache_pc", write_cache_pc, None, None, 0, 100),
-                 ("total_cache_pc", total_cache_pc, None, None, 0, 100) ]
+    perfdata = [("write_cache_pc", write_cache_pc, None, None, 0, 100),
+                ("total_cache_pc", total_cache_pc, None, None, 0, 100)]
 
     return 0, "Write cache usage is %d %%, total cache usage is %d %%" % \
            (write_cache_pc, total_cache_pc), perfdata
 
+
 check_info["ibm_svc_nodestats.cache"] = {
-    "check_function"        : check_ibm_svc_cache,
-    "inventory_function"    : inventory_ibm_svc_cache,
-    "service_description"   : "Cache %s",
-    "has_perfdata"          : True,
+    "check_function": check_ibm_svc_cache,
+    "inventory_function": inventory_ibm_svc_cache,
+    "service_description": "Cache %s",
+    "has_perfdata": True,
 }

@@ -26,12 +26,12 @@
 
 
 def inventory_qnap_disks(info):
-    return [ (x[0], None) for x in info if x[2] != "-5"]
+    return [(x[0], None) for x in info if x[2] != "-5"]
 
 
 def check_qnap_disks(item, _no_params, info):
     map_states = {
-        "0" : (0, "ready"),
+        "0": (0, "ready"),
         "-4": (2, "unknown"),
         "-5": (2, "no disk"),
         "-6": (2, "invalid"),

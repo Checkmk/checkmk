@@ -109,7 +109,11 @@ def check_hitachi_hus(item, _no_params, info):
             if state == 3:
                 unknown_states.append("%s: %s" % (what, state_readable))
 
-        for state, states, text in [(0, ok_states, "OK"), (3, unknown_states, "UNKNOWN"),
-                                    (1, warn_states, "WARN"), (2, crit_states, "CRIT")]:
+        for state, states, text in [
+            (0, ok_states, "OK"),
+            (3, unknown_states, "UNKNOWN"),
+            (1, warn_states, "WARN"),
+            (2, crit_states, "CRIT"),
+        ]:
             if states:
                 yield state, "%s: %s" % (text, ", ".join(states))

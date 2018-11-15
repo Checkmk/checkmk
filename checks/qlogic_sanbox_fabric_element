@@ -24,11 +24,13 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+
 def inventory_qlogic_sanbox_fabric_element(info):
     inventory = []
     for _fe_status, fe_id in info:
-            inventory.append( (fe_id, None) )
+        inventory.append((fe_id, None))
     return inventory
+
 
 def check_qlogic_sanbox_fabric_element(item, _no_params, info):
     for fe_status, fe_id in info:

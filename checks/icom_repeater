@@ -24,7 +24,6 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-
 #   .--Parse function------------------------------------------------------.
 #   |  ____                        __                  _   _               |
 #   | |  _ \ __ _ _ __ ___  ___   / _|_   _ _ __   ___| |_(_) ___  _ __    |
@@ -35,6 +34,7 @@
 #   +----------------------------------------------------------------------+
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
+
 
 def parse_icom_repeater(info):
     parsed = {}
@@ -77,11 +77,11 @@ def parse_icom_repeater(info):
                 pass
 
         elif line[1] == "Repeater frequency":
-            parsed["repeater_frequency"] = dict(
-            [ ( b.split(":")[0].lower(), int(b.split(":")[1]) ) for b in
-                [ a.lstrip() for a in line[2].split(",") ] ])
+            parsed["repeater_frequency"] = dict([(b.split(":")[0].lower(), int(b.split(":")[1]))
+                                                 for b in [a.lstrip() for a in line[2].split(",")]])
 
     return parsed
+
 
 #.
 #   .--Power Supply Voltage------------------------------------------------.
@@ -101,18 +101,19 @@ def parse_icom_repeater(info):
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-icom_ps_volt_default_levels = ( 13.5, 13.2, 14.1, 14.4 )
+icom_ps_volt_default_levels = (13.5, 13.2, 14.1, 14.4)
+
 
 def inventory_icom_repeater_ps_volt(parsed):
     if "ps_voltage" in parsed:
-        return [ (None, "icom_ps_volt_default_levels") ]
+        return [(None, "icom_ps_volt_default_levels")]
 
 
 def check_icom_repeater_ps_volt(_no_item, params, parsed):
     volt = parsed["ps_voltage"]
     warn_lower, crit_lower, warn, crit = params
 
-    perfdata = [ ("voltage", volt, warn, crit, warn_lower, crit_lower) ]
+    perfdata = [("voltage", volt, warn, crit, warn_lower, crit_lower)]
     levelstext = " (warn/crit below %.1f/%.1f V and at or above %.1f/%.1f V)" % \
                     (warn_lower, crit_lower, warn, crit)
     infotext = "%.1f V" % volt
@@ -131,11 +132,11 @@ def check_icom_repeater_ps_volt(_no_item, params, parsed):
 
 
 check_info["icom_repeater.ps_volt"] = {
-    "inventory_function"        : inventory_icom_repeater_ps_volt,
-    "check_function"            : check_icom_repeater_ps_volt,
-    "service_description"       : "Power Supply Voltage",
-    "has_perfdata"              : True,
-    "group"                     : "ps_voltage",
+    "inventory_function": inventory_icom_repeater_ps_volt,
+    "check_function": check_icom_repeater_ps_volt,
+    "service_description": "Power Supply Voltage",
+    "has_perfdata": True,
+    "group": "ps_voltage",
 }
 
 #.
@@ -164,13 +165,13 @@ def check_icom_repeater_pll_volt(item, params, parsed):
     paramlist = params.get(item.lower(), None)
 
     if not paramlist:
-        perfdata = [ ("voltage", voltage) ]
+        perfdata = [("voltage", voltage)]
         return 1, "Please specify parameters for PLL voltage", perfdata
 
     i = 0
     while i < len(paramlist):
         if paramlist[i][0] >= freq:
-            warn_lower, crit_lower, warn, crit = paramlist[i-1][1:]
+            warn_lower, crit_lower, warn, crit = paramlist[i - 1][1:]
 
     infotext = "%.1f V" % voltage
     levelstext = " (warn/crit below %.1f/%.1f V and at or above %.1f/%.1f V)" % \
@@ -184,17 +185,17 @@ def check_icom_repeater_pll_volt(item, params, parsed):
     if status:
         infotext += levelstext
 
-    perfdata = [ ("voltage", voltage, warn, crit, warn_lower, crit_lower) ]
+    perfdata = [("voltage", voltage, warn, crit, warn_lower, crit_lower)]
 
     return status, infotext, perfdata
 
 
 check_info["icom_repeater.pll_volt"] = {
-    "inventory_function"        : inventory_icom_repeater_pll_volt,
-    "check_function"            : check_icom_repeater_pll_volt,
-    "service_description"       : "%s PLL Lock Voltage",
-    "has_perfdata"              : True,
-    "group"                     : "pll_lock_voltage",
+    "inventory_function": inventory_icom_repeater_pll_volt,
+    "check_function": check_icom_repeater_pll_volt,
+    "service_description": "%s PLL Lock Voltage",
+    "has_perfdata": True,
+    "group": "pll_lock_voltage",
 }
 
 #.
@@ -209,34 +210,35 @@ check_info["icom_repeater.pll_volt"] = {
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-
 factory_settings["icom_repeater_temp_default_levels"] = {
-    "levels"        : (50, 55),
-    "levels_lower"  : (-20, -25),
+    "levels": (50, 55),
+    "levels_lower": (-20, -25),
 }
 
 
 def inventory_icom_repeater_temp(parsed):
     if "temp" in parsed:
-        return [ ("System", {}) ]
+        return [("System", {})]
 
 
 def check_icom_repeater_temp(_no_item, params, parsed):
-    return check_temperature(parsed["temp"], params, "icom_repeater_temp",
-                                dev_unit = parsed["temp_devunit"],
-                                dev_status = parsed["temp_devstatus"])
+    return check_temperature(
+        parsed["temp"],
+        params,
+        "icom_repeater_temp",
+        dev_unit=parsed["temp_devunit"],
+        dev_status=parsed["temp_devstatus"])
 
 
 check_info["icom_repeater.temp"] = {
-    "inventory_function"        : inventory_icom_repeater_temp,
-    "default_levels_variable"   : "icom_repeater_temp_default_levels",
-    "check_function"            : check_icom_repeater_temp,
-    "service_description"       : "Temperature %s",
-    "has_perfdata"              : True,
-    "group"                     : "temperature",
-    "includes"                  : [ "temperature.include" ],
+    "inventory_function": inventory_icom_repeater_temp,
+    "default_levels_variable": "icom_repeater_temp_default_levels",
+    "check_function": check_icom_repeater_temp,
+    "service_description": "Temperature %s",
+    "has_perfdata": True,
+    "group": "temperature",
+    "includes": ["temperature.include"],
 }
-
 
 #.
 #   .--Repeater Info-------------------------------------------------------.
@@ -256,6 +258,7 @@ def inventory_icom_repeater(parsed):
         return [(None, None)]
     return []
 
+
 def check_icom_repeater(_no_item, _no_params, parsed):
     yield 0, "ESN Number: %s" % parsed["esnno"]
 
@@ -267,14 +270,18 @@ def check_icom_repeater(_no_item, _no_params, parsed):
     else:
         yield 3, "Repeater operation status unknown"
 
+
 check_info["icom_repeater"] = {
-    "parse_function"            :   parse_icom_repeater,
-    "inventory_function"        :   inventory_icom_repeater,
-    "check_function"            :   check_icom_repeater,
-    "service_description"       :   "Repeater Info",
-    "snmp_scan_function"        :   lambda oid: "fr5000" in oid(".1.3.6.1.2.1.1.1.0").lower(),
-    "snmp_info"                 :   ( ".1.3.6.1.4.1.2021.8.1",
-                                    [ "1",      # Index Number
-                                      "2",      # SNMP item name
-                                      "101",]), # SNMP item value
+    "parse_function": parse_icom_repeater,
+    "inventory_function": inventory_icom_repeater,
+    "check_function": check_icom_repeater,
+    "service_description": "Repeater Info",
+    "snmp_scan_function": lambda oid: "fr5000" in oid(".1.3.6.1.2.1.1.1.0").lower(),
+    "snmp_info": (
+        ".1.3.6.1.4.1.2021.8.1",
+        [
+            "1",  # Index Number
+            "2",  # SNMP item name
+            "101",
+        ]),  # SNMP item value
 }

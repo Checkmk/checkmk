@@ -40,7 +40,6 @@ def parse_informix_status(info):
     return parsed
 
 
-
 def inventory_informix_status(parsed):
     return [(instance, {}) for instance in parsed]
 
@@ -71,8 +70,8 @@ def check_informix_status(item, params, parsed):
 
 
 check_info['informix_status'] = {
-    'parse_function'        : parse_informix_status,
-    'inventory_function'    : inventory_informix_status,
-    'check_function'        : check_informix_status,
-    'service_description'   : 'Informix Instance %s',
+    'parse_function': parse_informix_status,
+    'inventory_function': inventory_informix_status,
+    'check_function': check_informix_status,
+    'service_description': 'Informix Instance %s',
 }

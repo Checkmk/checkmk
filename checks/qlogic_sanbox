@@ -24,12 +24,14 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-qlogic_sanbox_status_map = [ "undefined", # 0
-                             "unknown",   # 1
-                             "other",     # 2
-                             "ok",        # 3
-                             "warning",   # 4
-                             "failed", ]  # 5
+qlogic_sanbox_status_map = [
+    "undefined",  # 0
+    "unknown",  # 1
+    "other",  # 2
+    "ok",  # 3
+    "warning",  # 4
+    "failed",  # 5
+]
 
 #   .--temp----------------------------------------------------------------.
 #   |                       _                                              |
@@ -40,6 +42,7 @@ qlogic_sanbox_status_map = [ "undefined", # 0
 #   |                                        |_|                           |
 #   '----------------------------------------------------------------------'
 
+
 def inventory_qlogic_sanbox_temp(info):
     inventory = []
     for sensor_name, _sensor_status, _sensor_message, sensor_type, \
@@ -47,8 +50,9 @@ def inventory_qlogic_sanbox_temp(info):
         sensor_id = sensor_id.replace("16.0.0.192.221.48.", "").replace(".0.0.0.0.0.0.0.0", "")
         if sensor_type == "8" and sensor_characteristic == "3" and \
             sensor_name != "Temperature Status":
-            inventory.append( (sensor_id, None) )
+            inventory.append((sensor_id, None))
     return inventory
+
 
 def check_qlogic_sanbox_temp(item, _no_params, info):
     for _sensor_name, sensor_status, sensor_message, _sensor_type, \
@@ -72,7 +76,7 @@ def check_qlogic_sanbox_temp(item, _no_params, info):
 
             if sensor_message.endswith(" degrees C"):
                 temp = int(sensor_message.replace(" degrees C", ""))
-                perfdata = [ ('temp', str(temp) + 'C') ]
+                perfdata = [('temp', str(temp) + 'C')]
             else:
                 perfdata = []
 
@@ -109,14 +113,16 @@ check_info["qlogic_sanbox.temp"] = {
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
+
 def inventory_qlogic_sanbox_psu(info):
     inventory = []
     for _sensor_name, _sensor_status, _sensor_message, sensor_type, \
         _sensor_characteristic, sensor_id in info:
         sensor_id = sensor_id.replace("16.0.0.192.221.48.", "").replace(".0.0.0.0.0.0.0.0", "")
         if sensor_type == "5":
-            inventory.append( (sensor_id, None) )
+            inventory.append((sensor_id, None))
     return inventory
+
 
 def check_qlogic_sanbox_psu(item, _no_params, info):
     for _sensor_name, sensor_status, _sensor_message, _sensor_type, \

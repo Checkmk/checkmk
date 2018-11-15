@@ -37,6 +37,7 @@ def inventory_ibm_svc_array(info):
         if len(line) > 10:
             yield line[0], None
 
+
 def check_ibm_svc_array(item, _no_params, info):
     for line in info:
         if len(line) > 10 and line[0] == item:
@@ -58,8 +59,9 @@ def check_ibm_svc_array(item, _no_params, info):
 
             return status, message
 
+
 check_info["ibm_svc_array"] = {
-    "check_function"        : check_ibm_svc_array,
-    "inventory_function"    : inventory_ibm_svc_array,
-    "service_description"   : "RAID Array %s",
+    "check_function": check_ibm_svc_array,
+    "inventory_function": inventory_ibm_svc_array,
+    "service_description": "RAID Array %s",
 }

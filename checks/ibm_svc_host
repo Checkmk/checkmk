@@ -31,20 +31,22 @@
 # 2:host105:2:2:online
 # 3:host106:2:2:online
 
+
 def inventory_ibm_svc_host(info):
     return [(None, {})]
 
+
 def check_ibm_svc_host(item, params, info):
     degraded = 0
-    offline  = 0
-    active   = 0
+    offline = 0
+    active = 0
     inactive = 0
-    other    = 0
+    other = 0
 
     if params is None:
         # Old inventory rule until version 1.2.7
         # params were None instead of empty dictionary
-        params = { 'always_ok': False }
+        params = {'always_ok': False}
 
     for line in info:
         if line[4] == 'degraded':
@@ -56,17 +58,18 @@ def check_ibm_svc_host(item, params, info):
         elif line[4] == 'inactive':
             inactive += 1
         else:
-            other +=1
+            other += 1
 
     if 'always_ok' in params:
         # Old configuration rule
         # This was used with only one parameter always_ok until version 1.2.7
-        perfdata = [ ("active",   active),
-                     ("inactive", inactive),
-                     ("degraded", degraded),
-                     ("offline",  offline),
-                     ("other",    other),
-                   ]
+        perfdata = [
+            ("active", active),
+            ("inactive", inactive),
+            ("degraded", degraded),
+            ("offline", offline),
+            ("other", other),
+        ]
         yield 0, "%s active, %s inactive" % (active, inactive), perfdata
 
         if degraded > 0:
@@ -85,12 +88,13 @@ def check_ibm_svc_host(item, params, info):
         else:
             yield 0, "%s active" % active
 
-        for ident, value in [ ('inactive', inactive),
-                              ('degraded', degraded),
-                              ('offline',  offline),
-                              ('other',    other),
-                            ]:
-            warn, crit = params.get(ident+'_hosts', (None, None))
+        for ident, value in [
+            ('inactive', inactive),
+            ('degraded', degraded),
+            ('offline', offline),
+            ('other', other),
+        ]:
+            warn, crit = params.get(ident + '_hosts', (None, None))
 
             if crit != None and value >= crit:
                 state = 2
@@ -98,13 +102,13 @@ def check_ibm_svc_host(item, params, info):
                 state = 1
             else:
                 state = 0
-            yield state, "%s %s" % (value, ident), [ (ident, value, warn, crit) ]
+            yield state, "%s %s" % (value, ident), [(ident, value, warn, crit)]
+
 
 check_info["ibm_svc_host"] = {
-    "check_function"        : check_ibm_svc_host,
-    "inventory_function"    : inventory_ibm_svc_host,
-    "service_description"   : "Hosts",
-    "has_perfdata"          : True,
-    "group"                 : "ibm_svc_host",
+    "check_function": check_ibm_svc_host,
+    "inventory_function": inventory_ibm_svc_host,
+    "service_description": "Hosts",
+    "has_perfdata": True,
+    "group": "ibm_svc_host",
 }
-

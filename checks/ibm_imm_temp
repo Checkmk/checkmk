@@ -24,15 +24,17 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+
 def inventory_ibm_imm_temp(info):
     for line in info:
         if line[1] != '0':
             yield line[0], {}
 
+
 def check_ibm_imm_temp(item, params, info):
     for line in info:
         if line[0] == item:
-            temp, dev_crit, dev_warn, dev_crit_lower, dev_warn_lower = map(float,line[1:])
+            temp, dev_crit, dev_warn, dev_crit_lower, dev_warn_lower = map(float, line[1:])
             dev_levels = dev_warn, dev_crit
             dev_levels_lower = dev_warn_lower, dev_crit_lower
             return check_temperature(temp, params, "ibm_imm_temp_%s" % item, \

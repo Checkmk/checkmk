@@ -24,7 +24,6 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-
 # .1.3.6.1.4.1.10222.2.1.2.9.1.1.1.1.1 1 --> ICS-CHASSIS-MIB::icsChassisSlotIndex.1.1.1
 # .1.3.6.1.4.1.10222.2.1.2.9.1.1.1.2.1 2 --> ICS-CHASSIS-MIB::icsChassisSlotIndex.1.2.1
 #
@@ -48,75 +47,72 @@
 
 def parse_intel_true_scale_sensors(info):
     map_slot_types = {
-        "0"  : "unspecified",
-        "1"  : "switch master",
-        "2"  : "switch slave",
-        "3"  : "eiou",
-        "4"  : "fciou",
-        "5"  : "other",
-        "6"  : "spine master",
-        "7"  : "spine slave",
-        "8"  : "spine",
-        "9"  : "leaf",
-        "10" : "viofx",
-        "11" : "vioex",
-        "12" : "shuttle master",
-        "13" : "shuttle slave",
-        "14" : "xMM master",
-        "15" : "xMM slave",
-        "16" : "xspine",
-        "17" : "xQleaf",
-        "18" : "xDleaf",
-        "19" : "xVioFx",
-        "20" : "xVioEx"
+        "0": "unspecified",
+        "1": "switch master",
+        "2": "switch slave",
+        "3": "eiou",
+        "4": "fciou",
+        "5": "other",
+        "6": "spine master",
+        "7": "spine slave",
+        "8": "spine",
+        "9": "leaf",
+        "10": "viofx",
+        "11": "vioex",
+        "12": "shuttle master",
+        "13": "shuttle slave",
+        "14": "xMM master",
+        "15": "xMM slave",
+        "16": "xspine",
+        "17": "xQleaf",
+        "18": "xDleaf",
+        "19": "xVioFx",
+        "20": "xVioEx"
     }
 
     map_sensor_types = {
-        "1" : "other",
-        "2" : "temp",
-        "3" : "fan",
-        "4" : "humid",
-        "5" : "acpower",
-        "6" : "dcpower",
-        "7" : "slot",
-        "8" : "fuse",
+        "1": "other",
+        "2": "temp",
+        "3": "fan",
+        "4": "humid",
+        "5": "acpower",
+        "6": "dcpower",
+        "7": "slot",
+        "8": "fuse",
     }
 
     map_states = {
-        "0" : (2, "invalid"),
-        "1" : (3, "unknown"),
-        "2" : (2, "bad"),
-        "3" : (1, "warning"),
-        "4" : (0, "good"),
-        "5" : (3, "disabled"),
+        "0": (2, "invalid"),
+        "1": (3, "unknown"),
+        "2": (2, "bad"),
+        "3": (1, "warning"),
+        "4": (0, "good"),
+        "5": (3, "disabled"),
     }
 
     slots, sensors = info
     parsed = {}
     for slot_id, slot_ty in slots:
-        parsed.setdefault("slot %s" % slot_id, {"slot_type" : map_slot_types[slot_ty]})
+        parsed.setdefault("slot %s" % slot_id, {"slot_type": map_slot_types[slot_ty]})
 
     for oid_end, ty, status, descr, reading_str in sensors:
         slot_id, sensor_id = oid_end.split(".")[1:]
-        slot_name   = "slot %s" % slot_id
+        slot_name = "slot %s" % slot_id
         sensor_name = " ".join(descr.split(" ")[2:-1])
 
         # We do not known for all sensors. Feel free to extend
-        if ty in [ "5", "6" ]:
+        if ty in ["5", "6"]:
             factor = 0.001
         else:
             factor = 1
 
         state, state_readable = map_states[status]
-        kwargs = {
-            "dev_status"      : state,
-            "dev_status_name" : state_readable
-        }
+        kwargs = {"dev_status": state, "dev_status_name": state_readable}
 
         sensor_ty = map_sensor_types[ty]
         parsed[slot_name].setdefault(sensor_ty, [])
-        parsed[slot_name][sensor_ty].append(
-            ("%s %s" % (sensor_id, sensor_name), float(reading_str) * factor, kwargs))
+        parsed[slot_name][sensor_ty].append(("%s %s" % (sensor_id, sensor_name),
+                                             float(reading_str) * factor, kwargs))
 
     return parsed
 
@@ -142,26 +138,32 @@ def inventory_intel_true_scale_sensors_temp(parsed):
 def check_intel_true_scale_sensors_temp(item, params, parsed):
     if item in parsed:
         yield check_temperature_list(parsed[item]["temp"], params,
-                        "intel_true_scale_sensors_temp_%s" % item)
+                                     "intel_true_scale_sensors_temp_%s" % item)
 
 
 check_info['intel_true_scale_sensors_temp'] = {
-    'parse_function'            : parse_intel_true_scale_sensors,
-    'inventory_function'        : inventory_intel_true_scale_sensors_temp,
-    'check_function'            : check_intel_true_scale_sensors_temp,
-    'service_description'       : 'Temperature sensors %s',
-    'has_perfdata'              : True,
-    'snmp_info'                 : [(".1.3.6.1.4.1.10222.2.1.2.9.1", [
-                                        "1",    # ICS-CHASSIS-MIB::icsChassisSlotIndex
-                                        "3",    # ICS-CHASSIS-MIB::icsChassisSlotCardType
-                                   ]),
-                                   (".1.3.6.1.4.1.10222.2.1.9.8.1", [
-                                        OID_END,
-                                        "2",    # icsChassisSensorSlotType
-                                        "3",    # icsChassisSensorSlotOperStatus
-                                        "7",    # icsChassisSensorSlotDescription
-                                        "8",    # icsChassisSensorSlotValue
-                                  ])],
-    'snmp_scan_function'        : scan_intel_true_scale,
-    'includes'                  : [ 'temperature.include', 'intel_true_scale.include' ],
+    'parse_function': parse_intel_true_scale_sensors,
+    'inventory_function': inventory_intel_true_scale_sensors_temp,
+    'check_function': check_intel_true_scale_sensors_temp,
+    'service_description': 'Temperature sensors %s',
+    'has_perfdata': True,
+    'snmp_info': [
+        (
+            ".1.3.6.1.4.1.10222.2.1.2.9.1",
+            [
+                "1",  # ICS-CHASSIS-MIB::icsChassisSlotIndex
+                "3",  # ICS-CHASSIS-MIB::icsChassisSlotCardType
+            ]),
+        (
+            ".1.3.6.1.4.1.10222.2.1.9.8.1",
+            [
+                OID_END,
+                "2",  # icsChassisSensorSlotType
+                "3",  # icsChassisSensorSlotOperStatus
+                "7",  # icsChassisSensorSlotDescription
+                "8",  # icsChassisSensorSlotValue
+            ])
+    ],
+    'snmp_scan_function': scan_intel_true_scale,
+    'includes': ['temperature.include', 'intel_true_scale.include'],
 }

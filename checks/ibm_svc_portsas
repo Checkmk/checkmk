@@ -24,7 +24,6 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-
 # Example agent output:
 # <<<ibm_svc_portsas:sep(58)>>>
 # 0:1:6Gb:1:node1:500507680305D3C0:online::host:host_controller:0:1
@@ -47,21 +46,23 @@
 # the corresponding header line
 #id:port_id:port_speed:node_id:node_name:WWPN:status:switch_WWPN:attachment:type:adapter_location:adapter_port_id
 
+
 def inventory_ibm_svc_portsas(info):
     for line in info:
         if line[6] != "offline_unconfigured":
             if len(line) == 12:
                 item = "Node %s Slot %s Port %s" % (line[3], line[10], line[11])
-                yield item, {'current_state' : line[6]}
+                yield item, {'current_state': line[6]}
             elif len(line) == 10:
                 item = "Port %s" % line[0]
-                yield item, {'current_state' : line[6]}
+                yield item, {'current_state': line[6]}
+
 
 def check_ibm_svc_portsas(item, params, info):
     # This can be removed soon, because the age of the check
     # was only about 7 days:
     if not params:
-        params = { 'current_state' : 'offline' }
+        params = {'current_state': 'offline'}
     for line in info:
         if ( len(line) == 12 and item == "Node %s Slot %s Port %s" % (line[3], line[10], line[11]) ) or \
                 ( len(line) == 10 and item == "Port %s" % line[0] ):
@@ -79,8 +80,9 @@ def check_ibm_svc_portsas(item, params, info):
 
             return state, infotext
 
+
 check_info["ibm_svc_portsas"] = {
-    "check_function"        : check_ibm_svc_portsas,
-    "inventory_function"    : inventory_ibm_svc_portsas,
-    "service_description"   : "SAS %s",
+    "check_function": check_ibm_svc_portsas,
+    "inventory_function": inventory_ibm_svc_portsas,
+    "service_description": "SAS %s",
 }

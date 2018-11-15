@@ -95,8 +95,10 @@
 # email_machine_country:DE
 # total_drive_raw_capacity:0
 
+
 def inventory_ibm_svc_system(info):
     return [(None, None)]
+
 
 def check_ibm_svc_system(item, _no_params, info):
     message = ""
@@ -107,9 +109,9 @@ def check_ibm_svc_system(item, _no_params, info):
             message += "%s: %s" % (line[0], line[1])
     return 0, message
 
-check_info["ibm_svc_system"] = {
-    "check_function"        : check_ibm_svc_system,
-    "inventory_function"    : inventory_ibm_svc_system,
-    "service_description"   : "Info",
-}
 
+check_info["ibm_svc_system"] = {
+    "check_function": check_ibm_svc_system,
+    "inventory_function": inventory_ibm_svc_system,
+    "service_description": "Info",
+}

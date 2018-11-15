@@ -24,23 +24,23 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-factory_settings["innovaphone_temp_default_levels"] = {
-    "levels": (45, 50)
-}
+factory_settings["innovaphone_temp_default_levels"] = {"levels": (45, 50)}
+
 
 def inventory_innovaphone_temp(info):
     yield "Ambient", {}
 
+
 def check_innovaphone_temp(item, params, info):
     return check_temperature(int(info[0][1]), params, "innovaphone_temp_%s" % item)
 
-check_info["innovaphone_temp"] = {
-    "check_function"          : check_innovaphone_temp,
-    "inventory_function"      : inventory_innovaphone_temp,
-    "service_description"     : "Temperature %s",
-    "has_perfdata"            : True,
-    "group"                   : "temperature",
-    "includes"                : [ "temperature.include" ],
-    "default_levels_variable" : "innovaphone_temp_default_levels"
-}
 
+check_info["innovaphone_temp"] = {
+    "check_function": check_innovaphone_temp,
+    "inventory_function": inventory_innovaphone_temp,
+    "service_description": "Temperature %s",
+    "has_perfdata": True,
+    "group": "temperature",
+    "includes": ["temperature.include"],
+    "default_levels_variable": "innovaphone_temp_default_levels"
+}

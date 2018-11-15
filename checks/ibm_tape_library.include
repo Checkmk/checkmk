@@ -31,7 +31,7 @@ def scan_ibm_tape_library(oid):
 
 def ibm_tape_library_parse_device_name(name):
     # strange name format:IBM     ULT3580-TD6     00078B5F0F
-    return " ".join([ part for part in name.split() if part ])
+    return " ".join([part for part in name.split() if part])
 
 
 def ibm_tape_library_get_device_state(avail, status):
@@ -84,7 +84,6 @@ def ibm_tape_library_get_device_state(avail, status):
             "32768" : (3, "vendor reserved"),\
         }
     }
-    for what, val, text in [("avail",  avail,  "Availability"),
-                            ("status", status, "Status")]:
+    for what, val, text in [("avail", avail, "Availability"), ("status", status, "Status")]:
         state, state_readable = mapping[what][val]
         yield state, "%s: %s" % (text, state_readable)

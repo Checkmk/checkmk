@@ -27,6 +27,7 @@
 # Common code of i64 and if64adm
 inventory_if_rules = []
 
+
 def parse_if64(info):
     parsed = []
     for line in info:
@@ -36,7 +37,7 @@ def parse_if64(info):
             # ifHighSpeed (idx 21) can't represent interfaces with less than  10^6 bit bandwidth,
             # ifSpeed (idx 4) is capped at 4GBit.
             # combine the two to get the actual interface speed
-            if line[-1] in [ "0", "" ]:
+            if line[-1] in ["0", ""]:
                 real_speed = saveint(line[4])
             else:
                 real_speed = saveint(line[-1]) * 1000000
@@ -81,25 +82,25 @@ def if64_scan_function(oid, use_if64adm=False):
 
 
 if64_snmp_end_oids = [
-    "2.2.1.1",             # ifIndex                   0
-    "2.2.1.2",             # ifDescr                   1
-    "2.2.1.3",             # ifType                    2
-    "2.2.1.5",             # ifSpeed                   3
-    "2.2.1.8",             # ifOperStatus              4
-    "31.1.1.1.6",          # ifHCInOctets              5
-    "31.1.1.1.7",          # ifHCInUcastPkts           6
-    "31.1.1.1.8",          # ifHCInMulticastPkts       7
-    "31.1.1.1.9",          # ifHCInBroadcastPkts       8
-    "2.2.1.13",            # ifInDiscards              9
-    "2.2.1.14",            # ifInErrors               10
-    "31.1.1.1.10",         # ifHCOutOctets            11
-    "31.1.1.1.11",         # ifHCOutUcastPkts         12
-    "31.1.1.1.12",         # ifHCOutMulticastPkts     13
-    "31.1.1.1.13",         # ifHCOutBroadcastPkts     14
-    "2.2.1.19",            # ifOutDiscards            15
-    "2.2.1.20",            # ifOutErrors              16
-    "2.2.1.21",            # ifOutQLen                17
-    "31.1.1.1.18",         # ifAlias                  18
-    BINARY("2.2.1.6"),     # ifPhysAddress            19
-    "31.1.1.1.15",         # ifHighSpeed              -1  (parse_if64 assumes this is the last element)
+    "2.2.1.1",  # ifIndex                   0
+    "2.2.1.2",  # ifDescr                   1
+    "2.2.1.3",  # ifType                    2
+    "2.2.1.5",  # ifSpeed                   3
+    "2.2.1.8",  # ifOperStatus              4
+    "31.1.1.1.6",  # ifHCInOctets              5
+    "31.1.1.1.7",  # ifHCInUcastPkts           6
+    "31.1.1.1.8",  # ifHCInMulticastPkts       7
+    "31.1.1.1.9",  # ifHCInBroadcastPkts       8
+    "2.2.1.13",  # ifInDiscards              9
+    "2.2.1.14",  # ifInErrors               10
+    "31.1.1.1.10",  # ifHCOutOctets            11
+    "31.1.1.1.11",  # ifHCOutUcastPkts         12
+    "31.1.1.1.12",  # ifHCOutMulticastPkts     13
+    "31.1.1.1.13",  # ifHCOutBroadcastPkts     14
+    "2.2.1.19",  # ifOutDiscards            15
+    "2.2.1.20",  # ifOutErrors              16
+    "2.2.1.21",  # ifOutQLen                17
+    "31.1.1.1.18",  # ifAlias                  18
+    BINARY("2.2.1.6"),  # ifPhysAddress            19
+    "31.1.1.1.15",  # ifHighSpeed              -1  (parse_if64 assumes this is the last element)
 ]

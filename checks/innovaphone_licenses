@@ -24,13 +24,12 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-
-innovaphone_licenses_default_levels = ( 90.0, 95.0 )
+innovaphone_licenses_default_levels = (90.0, 95.0)
 
 
 def inventory_innovaphone_licenses(info):
     if info:
-        return [ ( None, 'innovaphone_licenses_default_levels') ]
+        return [(None, 'innovaphone_licenses_default_levels')]
 
 
 def check_innovaphone_licenses(_no_item, params, info):
@@ -39,9 +38,9 @@ def check_innovaphone_licenses(_no_item, params, info):
     total, used = map(savefloat, info[0])
     perc_used = (100.0 * used) / total
     warn, crit = params
-    message = "Used %.0f/%.0f Licences (%.0f%%)" % ( used, total, perc_used)
-    levels = "Warning/ Critical at (%s/%s)" % ( warn, crit )
-    perf = [ ('licenses', used, None, None, total ) ]
+    message = "Used %.0f/%.0f Licences (%.0f%%)" % (used, total, perc_used)
+    levels = "Warning/ Critical at (%s/%s)" % (warn, crit)
+    perf = [('licenses', used, None, None, total)]
     if perc_used > crit:
         return 2, message + levels, perf
     if perc_used > warn:
@@ -50,8 +49,8 @@ def check_innovaphone_licenses(_no_item, params, info):
 
 
 check_info["innovaphone_licenses"] = {
-    "check_function"        : check_innovaphone_licenses,
-    "inventory_function"    : inventory_innovaphone_licenses,
-    "service_description"   : "Licenses",
-    "has_perfdata"          : True,
+    "check_function": check_innovaphone_licenses,
+    "inventory_function": inventory_innovaphone_licenses,
+    "service_description": "Licenses",
+    "has_perfdata": True,
 }

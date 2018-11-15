@@ -24,7 +24,6 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-
 # Agent output:
 # <<<ibm_svc_disk:sep(58)>>>
 # 0:online::member:sas_hdd:558.4GB:7:V7BRZ_mdisk08:4:1:24::
@@ -52,8 +51,10 @@
 # 0:online::member:sas_hdd:558.4GB:7:V7RZ_mdisk8:4:1:24:::inactive
 # 1:online::member:sas_hdd:558.4GB:7:V7RZ_mdisk8:3:1:23:::inactive
 
+
 def inventory_ibm_svc_disks(info):
-    return [ (None, {}) ]
+    return [(None, {})]
+
 
 def check_ibm_svc_disks(_no_item, params, info):
     disks = []
@@ -63,7 +64,8 @@ def check_ibm_svc_disks(_no_item, params, info):
         slot_id, _node_id, _node_name = line[:13]
 
         disk = {}
-        disk['identifier'] = "Enclosure: %s, Slot: %s, Type: %s" % ( enclosure_id, slot_id, tech_type )
+        disk['identifier'] = "Enclosure: %s, Slot: %s, Type: %s" % (enclosure_id, slot_id,
+                                                                    tech_type)
 
         if capacity.endswith('GB'):
             disk['capacity'] = float(capacity[:-2]) * 1024 * 1024 * 1024
@@ -77,18 +79,19 @@ def check_ibm_svc_disks(_no_item, params, info):
         if status == "offline" and use != "failed":
             disk['state'] = "offline"
 
-        disk['type'] = "" # We dont have a type
+        disk['type'] = ""  # We dont have a type
 
         disks.append(disk)
 
     return check_filer_disks(disks, params)
 
+
 check_info["ibm_svc_disks"] = {
-    'check_function'          : check_ibm_svc_disks,
-    'inventory_function'      : inventory_ibm_svc_disks,
-    'service_description'     : 'Disk Summary',
-    'group'                   : 'netapp_disks',
-    'default_levels_variable' : 'filer_disks_default_levels',
-    'has_perfdata'            : True,
-    'includes'                : ['filerdisks.include']
+    'check_function': check_ibm_svc_disks,
+    'inventory_function': inventory_ibm_svc_disks,
+    'service_description': 'Disk Summary',
+    'group': 'netapp_disks',
+    'default_levels_variable': 'filer_disks_default_levels',
+    'has_perfdata': True,
+    'includes': ['filerdisks.include']
 }

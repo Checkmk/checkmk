@@ -87,17 +87,18 @@ def check_hp_proliant_raid(item, _no_params, parsed):
 
 
 check_info["hp_proliant_raid"] = {
-    'parse_function'        : parse_hp_proliant_raid,
-    'check_function'        : check_hp_proliant_raid,
-    'inventory_function'    : inventory_hp_proliant_raid,
-    'service_description'   : 'Logical Device %s',
-    'snmp_info'             : (".1.3.6.1.4.1.232.3.2.3.1.1", [
-                                "2",    # CPQIDA-MIB::cpqDaLogDrvIndex
-                                "14",   # CPQIDA-MIB::cpqDaLogDrvOsName
-                                "4",    # CPQIDA-MIB::cpqDaLogDrvStatus
-                                "9",    # CPQIDA-MIB::cpqDaLogDrvSize
-                                "12",   # CPQIDA-MIB::cpqDaLogDrvPercentRebuild
-                               ]),
-    'snmp_scan_function'    :   \
-         lambda oid: "proliant" in oid(".1.3.6.1.4.1.232.2.2.4.2.0", "").lower(),
+    'parse_function': parse_hp_proliant_raid,
+    'check_function': check_hp_proliant_raid,
+    'inventory_function': inventory_hp_proliant_raid,
+    'service_description': 'Logical Device %s',
+    'snmp_info': (
+        ".1.3.6.1.4.1.232.3.2.3.1.1",
+        [
+            "2",  # CPQIDA-MIB::cpqDaLogDrvIndex
+            "14",  # CPQIDA-MIB::cpqDaLogDrvOsName
+            "4",  # CPQIDA-MIB::cpqDaLogDrvStatus
+            "9",  # CPQIDA-MIB::cpqDaLogDrvSize
+            "12",  # CPQIDA-MIB::cpqDaLogDrvPercentRebuild
+        ]),
+    'snmp_scan_function': lambda oid: "proliant" in oid(".1.3.6.1.4.1.232.2.2.4.2.0", "").lower(),
 }

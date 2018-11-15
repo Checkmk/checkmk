@@ -24,18 +24,22 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+
 def inventory_ibm_imm_voltage(info):
     for line in info:
         yield line[0], None
 
+
 def check_ibm_imm_voltage(item, _no_params, info):
     for line in info:
         if line[0] == item:
-            volt, crit, warn, crit_low, warn_low = [float(v)/1000 for v in line[1:]]
+            volt, crit, warn, crit_low, warn_low = [float(v) / 1000 for v in line[1:]]
             infotext = "%.2f Volt" % volt
 
-            perfdata = [ ("volt", volt, str(warn_low)+":"+str(warn), str(crit_low)+":"+str(crit)) ]
-            levelstext = " (levels warn/crit lower: %.1f/%.1f upper: %.1f/%.1f)" % (warn_low, crit_low, warn, crit)
+            perfdata = [("volt", volt, str(warn_low) + ":" + str(warn),
+                         str(crit_low) + ":" + str(crit))]
+            levelstext = " (levels warn/crit lower: %.1f/%.1f upper: %.1f/%.1f)" % (
+                warn_low, crit_low, warn, crit)
 
             if (crit_low and volt <= crit_low) or (crit and volt >= crit):
                 state = 2

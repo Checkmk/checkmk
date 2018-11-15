@@ -153,25 +153,7 @@ def cached(function):
     return cached_function
 
 
-def fetch_url_get(base_url, path, function):
-    if path:
-        url = "%s/%s/%s" % (base_url, function, path)
-    else:
-        url = base_url + "/"
-
-    if VERBOSE:
-        sys.stderr.write("DEBUG: Fetching: %s\n" % url)
-    try:
-        json_data = urllib2.urlopen(url).read()
-        if VERBOSE:
-            sys.stderr.write("DEBUG: Result: %s\n\n" % json_data)
-    except () if DEBUG else Exception, exc:
-        sys.stderr.write("ERROR: %s\n" % exc)
-        return []
-    return json_data
-
-
-def fetch_url_post(base_url, path, service_url, service_user, service_password, function):
+def _get_post_data(path, service_url, service_user, service_password, function):
     segments = path.split("/")
 
     data = {
@@ -184,19 +166,22 @@ def fetch_url_post(base_url, path, service_url, service_user, service_password, 
     }
     if len(segments) > 2:
         data["path"] = segments[2]
-
     if service_user:
         data["target"]["user"] = service_user
         data["target"]["password"] = service_password
 
+    return json.dumps(data)
+
+
+def fetch_url(request_url, post_data=None):
     if VERBOSE:
-        sys.stderr.write("DEBUG: Fetching: %s\n" % base_url)
+        sys.stderr.write("DEBUG: Fetching: %s\n" % request_url)
     try:
-        json_data = urllib2.urlopen(base_url, data=json.dumps(data)).read()
+        json_data = urllib2.urlopen(request_url, data=post_data).read()
         if VERBOSE:
             sys.stderr.write("DEBUG: Result: %s\n\n" % json_data)
     except () if DEBUG else Exception, exc:
-        sys.stderr.write("ERROR: %s\n" % exc)
+        sys.stderr.write("ERROR: %s\n\n" % exc)
         return []
     return json_data
 
@@ -214,10 +199,11 @@ def fetch_var(protocol,
     base_url = "%s://%s:%d/%s" % (protocol, server, port, suburi)
 
     if service_url is not None:
-        json_data = fetch_url_post(base_url, path, service_url, service_user, service_password,
-                                   function)
+        post_data = _get_post_data(path, service_url, service_user, service_password, function)
+        json_data = fetch_url(base_url, post_data)
     else:
-        json_data = fetch_url_get(base_url, path, function)
+        request_url = "%s/%s/%s" % (base_url, function, path) if path else base_url + "/"
+        json_data = fetch_url(request_url)
 
     try:
         obj = json.loads(json_data)

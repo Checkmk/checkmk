@@ -118,7 +118,7 @@ MODULES += certifi-2018.10.15.tar.gz
 MODULES += chardet-3.0.4.tar.gz
 MODULES += urllib3-1.24.1.tar.gz
 # Added for NetApp special agent, but may be used in other components too in future
-MODULES += requests-2.20.0.tar.gz
+MODULES += requests-2.20.1.tar.gz
 # Has requests as dependency -> must be built after
 MODULES += pyOpenSSL-18.0.0.tar.gz
 # Added for check_bi_aggr with kerberos support
@@ -168,6 +168,13 @@ MODULES += jmespath-0.9.3.tar.gz
 MODULES += botocore-1.12.43.tar.gz
 MODULES += s3transfer-0.1.13.tar.gz
 MODULES += boto3-1.9.42.tar.gz
+# Added for kubernetes monitoring
+MODULES += cachetools-3.0.0.tar.gz
+MODULES += rsa-4.0.tar.gz
+MODULES += google-auth-1.6.1.tar.gz
+MODULES += PyYAML-3.13.tar.gz
+MODULES += websocket_client-0.54.0.tar.gz
+MODULES += kubernetes-8.0.0.tar.gz
 
 .PHONY: build check-freetds install skel clean dump-Pipfile
 

@@ -69,7 +69,7 @@ factory_settings["jolokia_metrics_tp_default_levels"] = {
 def jolokia_metrics_parse(info):
     parsed = {}
     for line in info:
-        if line[1] == "ERROR":
+        if len(line) > 1 and line[1] == "ERROR":
             continue
 
         try:
@@ -99,29 +99,27 @@ def jolokia_metrics_parse(info):
         parsed.setdefault(inst, {})
 
         if 'type' in attributes:
-            bean_name = attributes['name']
-            bean_type = attributes['type']
+            bean_name = attributes.pop('name')
+            bean_type = attributes.pop('type')
             # backwards compatibility
             bean_type = {"GarbageCollector": "gc", "ThreadPool": "tp"}.get(bean_type, bean_type)
             # maybe do this for all types?
             if bean_type == "tp":
                 bean_name = bean_name.replace('"', '')
 
-            parsed[inst].setdefault(bean_type, {}).setdefault(bean_name, {})
-            parsed[inst][bean_type][bean_name][var] = value
-            for attr_key, attr_value in attributes.iteritems():
-                if attr_key not in set(['name', 'type']):
-                    parsed[inst][bean_type][bean_name][attr_key] = attr_value
+            bean = parsed[inst].setdefault(bean_type, {}).setdefault(bean_name, {})
+            bean[var] = value
+            bean.update(attributes)
         else:
             if positional:
                 app = positional[0]
-                parsed[inst].setdefault('apps', {}).setdefault(app, {})
+                app_dict = parsed[inst].setdefault('apps', {}).setdefault(app, {})
                 if len(positional) > 1:
                     servlet = positional[1]
-                    parsed[inst]['apps'][app].setdefault('servlets', {}).setdefault(servlet, {})
-                    parsed[inst]['apps'][app]['servlets'][servlet][var] = value
+                    app_dict.setdefault('servlets', {}).setdefault(servlet, {})
+                    app_dict['servlets'][servlet][var] = value
                 else:
-                    parsed[inst]['apps'][app][var] = value
+                    app_dict[var] = value
             else:
                 parsed[inst][var] = value
     return parsed

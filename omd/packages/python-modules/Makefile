@@ -28,6 +28,7 @@ LEGACY_LDAP=0
 ifeq ($(DISTRO_CODE),el5)
     LEGACY_LDAP=1
     PATCHES += patches/0018-mysqlclient-fortify-source.patch
+    PATCHES += patches/0019-PyNaCl-fortify-source.patch
 endif
 
 ifeq ($(LEGACY_LDAP), 1)

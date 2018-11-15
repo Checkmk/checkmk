@@ -443,6 +443,7 @@ class LoggedInUser(object):
         self._load_attributes()
         self._load_permissions()
         self._load_site_config()
+        self._button_counts = None
 
     # TODO: Clean up that baserole_* stuff?
     def _load_roles(self):
@@ -510,6 +511,11 @@ class LoggedInUser(object):
 
     def _load_site_config(self):
         self.siteconf = self.load_file("siteconfig", {})
+
+    def get_button_counts(self):
+        if not self._button_counts:
+            self._button_counts = self.load_file("buttoncounts", {})
+        return self._button_counts
 
     def save_site_config(self):
         self.save_file("siteconfig", self.siteconf)

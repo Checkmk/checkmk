@@ -1,0 +1,13 @@
+Title: agent_ucs_bladecenter: Support UCS C-Series Rack Servers
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1542269247
+Class: feature
+
+This werk adds agent plugin output for Cisco UCS C-Series Rack Servers and
+enables the addition of monitoring support for these devices in followup werks.
+
+CMK-1067

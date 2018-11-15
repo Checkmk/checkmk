@@ -99,7 +99,7 @@ import cmk.gui.gui_background_job as gui_background_job
 import cmk.gui.weblib as weblib
 from cmk.gui.i18n import _u, _
 from cmk.gui.globals import html
-from cmk.gui.htmllib import HTML
+from cmk.gui.htmllib import HTML, Encoder
 from cmk.gui.log import logger
 from cmk.gui.exceptions import MKGeneralException, MKAuthException, MKUserError, RequestTimeout
 from cmk.gui.valuespec import (
@@ -4661,7 +4661,7 @@ def do_remote_automation(site, command, vars_):
         raise MKAutomationException(_("You are not logged into the remote site."))
 
     url = base_url + "automation.py?" + \
-        html.urlencode_vars([
+        Encoder().urlencode_vars([
                ("command", command),
                ("secret",  secret),
                ("debug",   config.debug and '1' or '')

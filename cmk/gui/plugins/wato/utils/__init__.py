@@ -99,6 +99,7 @@ from cmk.gui.watolib import (
     add_change,
     log_audit,
     site_neutral_path,
+    register_hook,
     register_rulegroup,
     register_rule,
     declare_host_attribute,

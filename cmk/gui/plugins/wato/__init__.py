@@ -106,6 +106,7 @@ from cmk.gui.plugins.wato.utils import (
     WatoBackgroundJob,
     wato_confirm,
     wato_fileheader,
+    register_hook,
     WatoMode,
     SimpleModeType,
     SimpleListMode,

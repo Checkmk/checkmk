@@ -61,6 +61,7 @@ def test_registered_automation_commands():
     assert registered == sorted([
         'activate-changes',
         'check-analyze-config',
+        'execute-dcd-command',
         'network-scan',
         'push-snapshot',
     ])

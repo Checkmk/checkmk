@@ -156,7 +156,7 @@ def test_list_checks(test_cfg, site):
         assert output.count(" snmp ") > 300
         assert output.count(" tcp ") > 200
 
-        if output_long == None:
+        if output_long is None:
             output_long = output
         else:
             assert output == output_long
@@ -188,7 +188,7 @@ def test_dump_agent_error(test_cfg, site):
         assert stdout == ""
         assert "[agent]: Agent exited " in stderr
 
-        if output_long == None:
+        if output_long is None:
             output_long = stdout
         else:
             assert stdout == output_long

@@ -117,12 +117,12 @@ class CMKFixFileMixin(object):
     def handle_message(self, msg):
         new_path, new_line = self._orig_location_from_compiled_file(msg)
 
-        if new_path == None:
+        if new_path is None:
             new_path = self._change_path_to_repo_path(msg)
 
-        if new_path != None:
+        if new_path is not None:
             msg = msg._replace(path=new_path)
-        if new_line != None:
+        if new_line is not None:
             msg = msg._replace(line=new_line)
 
         super(CMKFixFileMixin, self).handle_message(msg)
@@ -144,7 +144,7 @@ class CMKFixFileMixin(object):
                 orig_file = line.split(": ", 1)[1].strip()
                 break
 
-        if orig_file == None:
+        if orig_file is None:
             went_back = None
 
         return orig_file, went_back

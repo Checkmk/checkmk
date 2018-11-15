@@ -134,7 +134,7 @@ def load_guitest(test_name):
 
     global range_from, range_to
     range_from = opt_steps_range[0]
-    if opt_steps_range[1] == None:
+    if opt_steps_range[1] is None:
         range_to = len(guitest) - 1
     else:
         range_to = opt_steps_range[1]

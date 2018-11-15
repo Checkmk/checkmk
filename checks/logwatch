@@ -554,7 +554,7 @@ def check_logwatch_generic(item, params, loglines, found, groups=False):
         def __reclassify_line(self, patterns, text, level):
             if patterns:
                 newlevel = logwatch_reclassify(self.counts, patterns, text, level)
-                if newlevel != None:
+                if newlevel is not None:
                     level = newlevel
             return level
 

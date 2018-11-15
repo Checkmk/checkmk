@@ -62,7 +62,7 @@ def megaraid_bbu_parse(info):
         if name in ["BBU status for Adapter", "BBU status for Adpater"]:
             current_hba = {}
             controllers[data] = current_hba
-        elif current_hba != None:
+        elif current_hba is not None:
             # We lose the numerical temperature here
             # (same key is used twice in output of megacli)
             # TODO: Fix the code and remove the pragma below!

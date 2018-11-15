@@ -74,7 +74,7 @@ def which(program):
 
 # See if we have mtr
 mtr_prog = which('mtr')
-if mtr_prog == None:
+if mtr_prog is None:
     if debug:
         sys.stdout.write("Could not find mtr binary\n")
     sys.exit(0)
@@ -358,7 +358,7 @@ def start_mtr(host):
         options.append("--tcp")
     if pingtype == 'udp':
         options.append("--udp")
-    if not port == None:
+    if not port is None:
         options.append("--port")
         options.append(str(port))
     if ipv4 == True:
@@ -371,13 +371,13 @@ def start_mtr(host):
     options.append(str(count))
     if dns == False:
         options.append("--no-dns")
-    if not address == None:
+    if not address is None:
         options.append("--address")
         options.append(str(address))
-    if not interval == None:
+    if not interval is None:
         options.append("-i")
         options.append(str(interval))
-    if not timeout == None:
+    if not timeout is None:
         options.append("--timeout")
         options.append(str(timeout))
 

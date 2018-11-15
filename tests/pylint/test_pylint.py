@@ -113,7 +113,7 @@ def inv_tree_list(path):
     return inv_tree(path, [])
 
 def inv_tree(path, default_value=None):
-    if default_value != None:
+    if default_value is not None:
         node = default_value
     else:
         node = {}

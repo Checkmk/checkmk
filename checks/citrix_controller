@@ -148,10 +148,10 @@ def check_citrix_controller_sessions(_no_item, params, info):
     for what in ['total', 'active', 'inactive']:
         warn, crit = params.get(what, (None, None))
         perf.append((what + "_sessions", session[what], warn, crit))
-        if crit != None and session[what] >= crit:
+        if crit is not None and session[what] >= crit:
             messages.append("%s: %s(!!)" % (what, session[what]))
             state = 2
-        elif warn != None and session[what] >= warn:
+        elif warn is not None and session[what] >= warn:
             messages.append("%s: %s(!)" % (what, session[what]))
             state = max(state, 1)
         else:

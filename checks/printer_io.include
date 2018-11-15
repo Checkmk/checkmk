@@ -145,19 +145,19 @@ def check_printer_io(item, params, info, what):
 
                     if what == 'input':
                         warn, crit = params['capacity_levels']  # percentage levels
-                        if crit != None and level_perc <= crit:
+                        if crit is not None and level_perc <= crit:
                             state = 2
                             levels_txt = ' (<= %0.2f)' % crit
-                        elif warn != None and level_perc <= warn:
+                        elif warn is not None and level_perc <= warn:
                             state = 1
                             levels_txt = ' (<= %0.2f%%)' % warn
 
                     else:  # output
                         warn, crit = params['capacity_levels']  # percentage levels
-                        if crit != None and level_perc >= crit:
+                        if crit is not None and level_perc >= crit:
                             state = 2
                             levels_txt = ' (>= %0.2f)' % crit
-                        elif warn != None and level_perc >= warn:
+                        elif warn is not None and level_perc >= warn:
                             state = 1
                             levels_txt = ' (>= %0.2f%%)' % warn
 

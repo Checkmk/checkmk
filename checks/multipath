@@ -258,7 +258,7 @@ def parse_multipath(info):
 
             # Proceed with next line after init
             continue
-        elif uuid != None:
+        elif uuid is not None:
             # Handle special syntax | |- 2:0:0:1 sda  ...
             if line[0] == '|':
                 line = line[1:]

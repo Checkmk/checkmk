@@ -100,8 +100,8 @@ def test_mgmt_disabled(web):
     reload_config()
     assert config.has_management_board("mgmt-host") == False
     assert config.management_address_of("mgmt-host") == "127.0.0.1"
-    assert config.management_protocol_of("mgmt-host") == None
-    assert config.management_credentials_of("mgmt-host") == None
+    assert config.management_protocol_of("mgmt-host") is None
+    assert config.management_credentials_of("mgmt-host") is None
 
 
 @pytest.mark.parametrize("protocol,cred_attribute,credentials,folder_credentials", [

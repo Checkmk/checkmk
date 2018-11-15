@@ -193,7 +193,7 @@ def get(access_data, oid, context_name=None):
 
 def _snmp_port_spec(hostname):
     port = config.snmp_port_of(hostname)
-    if port == None:
+    if port is None:
         return ""
 
     return ":%d" % port
@@ -281,7 +281,7 @@ def _snmp_base_command(what, access_data, context_name):
     if "retries" in settings:
         options += ["-r", "%d" % settings["retries"]]
 
-    if context_name != None:
+    if context_name is not None:
         options += ["-n", context_name]
 
     return command + options

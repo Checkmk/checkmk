@@ -110,11 +110,11 @@ for contact_name, num in c.query_table(query):
     else:
         total_num += num
 
-        if crit != None and num > crit:
+        if crit is not None and num > crit:
             state = max(state, 2)
             details.append('%s got %d (> %d)(!!)' % (contact_name, num, crit))
 
-        elif warn != None and num > warn:
+        elif warn is not None and num > warn:
             state = max(state, 1)
             details.append('%s got %d (> %d)(!)' % (contact_name, num, warn))
 

@@ -43,17 +43,17 @@ def check_netapp_fcpio(item, params, info):
     state = 0
     read_msg = ''
     write_msg = ''
-    if read_warn != None and read_warn >= read:
+    if read_warn is not None and read_warn >= read:
         state = 1
         read_msg = ' (!)'
-    if read_crit != None and read_crit >= read:
+    if read_crit is not None and read_crit >= read:
         state = 2
         read_msg = ' (!!)'
 
-    if write_warn != None and write_warn >= write:
+    if write_warn is not None and write_warn >= write:
         state = max(state, 1)
         write_msg = ' (!)'
-    if write_crit != None and write_crit >= write:
+    if write_crit is not None and write_crit >= write:
         state = 2
         write_msg = ' (!!)'
 

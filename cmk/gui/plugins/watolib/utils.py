@@ -197,5 +197,5 @@ def register_configvar(group,
 
 
 def register_configvar_group(title, order=None):
-    if order != None:
+    if order is not None:
         configvar_order()[title] = 18

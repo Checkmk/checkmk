@@ -139,7 +139,7 @@ def inventory_cisco_temp_sensor(info):
     inventory = []
     #    for id, descr, sensortype, scale, value, sensorstate, levels in sensors:
     #        # Use all temperature sensors with a non-empty description and valid threshold
-    #        if descr != None and sensortype == '8' and len(levels) in [ 2, 4 ]:
+    #        if descr is not None and sensortype == '8' and len(levels) in [ 2, 4 ]:
     #            warn, crit = saveint(levels[0]), saveint(levels[1])
     #            inventory.append(( descr, (warn, crit) ))
     return inventory
@@ -178,7 +178,7 @@ check_info['cisco_temp_sensor'] = {
     "service_description": "Temperature %s",
     "has_perfdata"       : True,
     "snmp_scan_function" : lambda oid: "cisco" in oid(".1.3.6.1.2.1.1.1.0").lower() and \
-                                    oid(".1.3.6.1.4.1.9.9.91.1.1.1.1.*") != None,
+                                    oid(".1.3.6.1.4.1.9.9.91.1.1.1.1.*") is not None,
     "snmp_info"          : [
                                ( ".1.3.6.1.2.1.47.1.1.1.1", [
                                  OID_END,

@@ -53,7 +53,7 @@ def inventory_vxvm_objstatus(info):
 def check_vxvm_objstatus(item, params, info):
     groups = vxvm_objstatus_disks(info)
     volumes = groups.get(item)
-    if volumes != None:
+    if volumes is not None:
         state = 0
         messages = []
         for volume, admin_state, kernel_state in volumes:

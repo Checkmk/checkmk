@@ -176,7 +176,7 @@ def check_cpu_util_unix(values, params, cores=None):
 
     # Handle level on iowait
     state = 0
-    if "iowait" in params and params["iowait"] != None:
+    if "iowait" in params and params["iowait"] is not None:
         warn, crit = params["iowait"]
         if wait_perc >= crit:
             state = 2

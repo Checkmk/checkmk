@@ -139,7 +139,7 @@ class MultiHostSections(object):
         # First abstract cluster / non cluster hosts
         host_entries = []
         nodes = config.nodes_of(hostname)
-        if nodes != None:
+        if nodes is not None:
             for node_hostname in nodes:
                 host_entries.append((node_hostname, ip_lookup.lookup_ip_address(node_hostname)))
         else:

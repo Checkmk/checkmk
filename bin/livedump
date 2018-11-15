@@ -36,7 +36,7 @@ __version__ = "1.6.0i1"
 
 def dump_templates():
     check_interval = ""
-    if opt_check_interval != None:
+    if opt_check_interval is not None:
         check_interval = "check_interval          %d" % opt_check_interval
 
     sys.stdout.write("""define host {

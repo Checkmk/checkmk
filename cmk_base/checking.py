@@ -152,7 +152,7 @@ def do_check(hostname, ipaddress, only_check_plugin_names=None):
 
         return status, infotexts, long_infotexts, perfdata
     finally:
-        if _checkresult_file_fd != None:
+        if _checkresult_file_fd is not None:
             _close_checkresult_file()
 
         if config.record_inline_snmp_stats and config.is_inline_snmp_host(hostname):
@@ -231,7 +231,7 @@ def _do_all_checks_on_host(sources, hostname, ipaddress, only_check_plugin_names
         only_check_plugin_names -= (pos_match - neg_match)
 
     for check_plugin_name, item, params, description in table:
-        if only_check_plugin_names != None and check_plugin_name not in only_check_plugin_names:
+        if only_check_plugin_names is not None and check_plugin_name not in only_check_plugin_names:
             continue
 
         if belongs_to_cluster and hostname != config.host_of_clustered_service(
@@ -348,9 +348,9 @@ def execute_check(multi_host_sections, hostname, ipaddress, check_plugin_name, i
         largest_interval = None
 
         def minn(a, b):
-            if a == None:
+            if a is None:
                 return b
-            elif b == None:
+            elif b is None:
                 return a
             return min(a, b)
 
@@ -436,7 +436,7 @@ def sanitize_check_result(result, is_snmp):
     if isinstance(result, tuple):
         return _sanitize_tuple_check_result(result)
 
-    elif result == None:
+    elif result is None:
         return _item_not_found(is_snmp)
 
     return _sanitize_yield_check_result(result, is_snmp)
@@ -465,7 +465,7 @@ def _sanitize_yield_check_result(result, is_snmp):
         if text:
             infotexts.append(text + ["", "(!)", "(!!)", "(?)"][st])
 
-        if perf != None:
+        if perf is not None:
             perfdata += perf
 
     return status, ", ".join(infotexts), perfdata
@@ -501,7 +501,7 @@ def _validate_perf_data_values(perfdata):
 
 
 def _sanitize_check_result_infotext(infotext, allow_missing_infotext):
-    if infotext == None and not allow_missing_infotext:
+    if infotext is None and not allow_missing_infotext:
         raise MKGeneralException("Invalid infotext from check: \"None\"")
 
     if isinstance(infotext, str):
@@ -647,7 +647,7 @@ output=%s
 def _open_checkresult_file():
     global _checkresult_file_fd
     global _checkresult_file_path
-    if _checkresult_file_fd == None:
+    if _checkresult_file_fd is None:
         try:
             _checkresult_file_fd, _checkresult_file_path = \
                 tempfile.mkstemp('', 'c', cmk.paths.check_result_path)
@@ -658,7 +658,7 @@ def _open_checkresult_file():
 
 def _close_checkresult_file():
     global _checkresult_file_fd
-    if _checkresult_file_fd != None:
+    if _checkresult_file_fd is not None:
         os.close(_checkresult_file_fd)
         file(_checkresult_file_path + ".ok", "w")
         _checkresult_file_fd = None
@@ -679,7 +679,7 @@ def _submit_via_command_pipe(host, service, state, output):
 
 def _open_command_pipe():
     global _nagios_command_pipe
-    if _nagios_command_pipe == None:
+    if _nagios_command_pipe is None:
         if not os.path.exists(cmk.paths.nagios_command_pipe_path):
             _nagios_command_pipe = False  # False means: tried but failed to open
             raise MKGeneralException(

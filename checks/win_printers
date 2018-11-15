@@ -94,10 +94,10 @@ def check_win_printers(item, params, info):
                 error_text = "Error State: %s(!)" % error_map[error]
 
             queue_label = ""
-            if crit != None and current_jobs >= crit:
+            if crit is not None and current_jobs >= crit:
                 state = 2
                 queue_label = "(!!)"
-            elif warn != None and current_jobs >= warn:
+            elif warn is not None and current_jobs >= warn:
                 state = max(1, state)
                 queue_label = "(!)"
 

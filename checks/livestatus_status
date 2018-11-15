@@ -66,7 +66,7 @@ def parse_livestatus_status(info):
 
 
 def inventory_livestatus_status(parsed):
-    return [(site, {}) for (site, status) in parsed.items() if status != None]
+    return [(site, {}) for (site, status) in parsed.items() if status is not None]
 
 
 def check_livestatus_status(item, params, parsed):

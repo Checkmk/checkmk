@@ -233,7 +233,7 @@ class Option(object):
         return options
 
     def has_short_option(self):
-        return self.short_option != None
+        return self.short_option is not None
 
     def takes_argument(self):
         return self.argument

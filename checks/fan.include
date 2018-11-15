@@ -42,10 +42,10 @@ def check_fan(rpm, params):
         perfdata = [("fan", rpm, warn, crit, warn_upper, crit_upper)]
 
     # Note that None < int
-    if rpm < crit or crit_upper != None and rpm >= crit_upper:
+    if rpm < crit or crit_upper is not None and rpm >= crit_upper:
         message += levelstext
         return 2, message, perfdata
-    elif rpm < warn or warn_upper != None and rpm >= warn_upper:
+    elif rpm < warn or warn_upper is not None and rpm >= warn_upper:
         message += levelstext
         return 1, message, perfdata
     return 0, message, perfdata

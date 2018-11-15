@@ -132,7 +132,7 @@ def create_config(outfile, hostnames):
         del config.extra_service_conf["service_period"]
 
     _output_conf_header(outfile)
-    if hostnames == None:
+    if hostnames is None:
         hostnames = config.all_active_hosts()
 
     for hostname in hostnames:
@@ -241,7 +241,7 @@ def _create_nagios_hostdefs(outfile, hostname, attrs):
 
     # Output alias, but only if it's not defined in extra_host_conf
     alias = config.alias_of(hostname, None)
-    if alias == None:
+    if alias is None:
         outfile.write("  alias\t\t\t\t%s\n" % alias)
     else:
         alias = cmk_base.utils.make_utf8(alias)
@@ -852,7 +852,7 @@ def _quote_nagios_string(s):
 
 
 def _extra_host_conf_of(hostname, exclude=None):
-    if exclude == None:
+    if exclude is None:
         exclude = []
     return _extra_conf_of(config.extra_host_conf, hostname, None, exclude)
 
@@ -879,12 +879,12 @@ def _extra_service_conf_of(hostname, description):
 
 
 def _extra_conf_of(confdict, hostname, service, exclude=None):
-    if exclude == None:
+    if exclude is None:
         exclude = []
 
     result = ""
     for key, conflist in confdict.items():
-        if service != None:
+        if service is not None:
             values = config.service_extra_conf(hostname, service, conflist)
         else:
             values = config.host_extra_conf(hostname, conflist)

@@ -17,7 +17,7 @@ def _all_path_names():
 def test_paths_in_site(site):
     for var_name in _all_path_names():
         value = cmk.paths.__dict__[var_name]
-        assert value != None
+        assert value is not None
         assert type(value) == str
         assert value.startswith(site.root)
 
@@ -28,7 +28,7 @@ def test_no_path_variable_none(monkeypatch):
 
     for var_name in _all_path_names():
         value = cmk.paths.__dict__[var_name]
-        assert value != None
+        assert value is not None
         assert type(value) == str
         assert value.startswith("/omd/sites/dingeling")
 

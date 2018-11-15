@@ -224,7 +224,7 @@ def check_apc_symmetra(_no_item, params, parsed):
         battery_capacity = int(battery_capacity)
         state = 0
         levelstxt = ""
-        if alt_crit_capacity != None and diff_sec < allowed_delay_sec:
+        if alt_crit_capacity is not None and diff_sec < allowed_delay_sec:
             if battery_capacity < alt_crit_capacity:
                 state = 2
                 levelstxt = " (crit below %d%% in delay after calibration)" % alt_crit_capacity

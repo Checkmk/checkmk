@@ -80,7 +80,7 @@ def _snmp_scan(access_data,
         for oid, name in [(".1.3.6.1.2.1.1.1.0", "system description"),
                           (".1.3.6.1.2.1.1.2.0", "system object")]:
             value = snmp.get_single_oid(access_data, oid, do_snmp_scan=do_snmp_scan)
-            if value == None:
+            if value is None:
                 raise MKSNMPError(
                     "Cannot fetch %s OID %s. This might be OK for some bogus devices. "
                     "In that case please configure the ruleset \"Hosts without system "

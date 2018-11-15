@@ -50,7 +50,7 @@ def check_kentix_motion(item, params, info):
                 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'
             ]
             today = time.localtime()
-            if params != None and 'time_periods' in params:
+            if params is not None and 'time_periods' in params:
                 periods = params['time_periods'][weekdays[today.tm_wday]]
             else:
                 periods = [((0, 0), (24, 0))]

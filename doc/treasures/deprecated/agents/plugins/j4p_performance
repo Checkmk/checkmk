@@ -63,7 +63,7 @@ servlets = {}
 
 conffile = os.getenv("MK_CONFDIR", "/etc/check_mk") + "/j4p.conf"
 
-if instance == None:
+if instance is None:
     instance = str(port)
 
 if os.path.exists(conffile):

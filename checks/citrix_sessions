@@ -58,9 +58,9 @@ def check_citrix_sessions(_no_item, params, info):
         value = session[key]
         infotext = "%s: %s" % (what.title(), value)
         warn, crit = params.get(what, (None, None))
-        if crit != None and value > crit:
+        if crit is not None and value > crit:
             state = 2
-        elif warn != None and value > warn:
+        elif warn is not None and value > warn:
             state = 1
         if state:
             infotext += " (warn/crit at %s/%s)" % (warn, crit)

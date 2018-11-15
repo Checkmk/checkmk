@@ -229,7 +229,7 @@ for p in required_params:
 if fetch_proto not in ['IMAP', 'POP3']:
     usage('The given protocol is not supported.')
 
-if fetch_port == None:
+if fetch_port is None:
     if fetch_proto == 'POP3':
         fetch_port = 995 if fetch_ssl else 110
     else:
@@ -409,15 +409,15 @@ def check_mails():
         if ident in g_mails:
             recv_ts = g_mails[ident][1]
 
-            if duration == None:
+            if duration is None:
                 duration = recv_ts - send_ts
             else:
                 duration = (duration + (recv_ts - send_ts)) / 2  # average
 
-            if critical != None and duration >= critical:
+            if critical is not None and duration >= critical:
                 state = 2
                 output.append(' (>= %d)' % critical)
-            elif warning != None and duration >= warning:
+            elif warning is not None and duration >= warning:
                 state = max(state, 1)
                 output.append(' (>= %d)' % warning)
 

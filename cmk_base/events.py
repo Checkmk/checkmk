@@ -265,7 +265,7 @@ def add_rulebased_macros(raw_context):
     if "CONTACTS" not in raw_context:
         contact_list = livestatus_fetch_contacts(raw_context["HOSTNAME"],
                                                  raw_context.get("SERVICEDESC"))
-        if contact_list != None:
+        if contact_list is not None:
             raw_context["CONTACTS"] = ",".join(contact_list)
         else:
             raw_context["CONTACTS"] = "?"  # means: contacts could not be determined!
@@ -492,7 +492,7 @@ def event_match_folder(rule, context):
                     mustpath = mustpath[1:]
                     haspath = haspath[1:]
 
-        if hasfolder == None:
+        if hasfolder is None:
             return "The host is not managed via WATO, but the rule requires a WATO folder"
 
 
@@ -516,9 +516,9 @@ def event_match_servicegroups(rule, context, is_regex=False):
             return "This rule requires membership in a service group, but this is a host notification"
         return
 
-    if required_groups != None:
+    if required_groups is not None:
         sgn = context.get("SERVICEGROUPNAMES")
-        if sgn == None:
+        if sgn is None:
             return "No information about service groups is in the context, but service " \
                    "must be in group %s" % ( " or ".join(required_groups))
         if sgn:
@@ -561,9 +561,9 @@ def event_match_exclude_servicegroups(rule, context, is_regex=False):
         # excluded_groups do not apply to a host notification
         return
 
-    if excluded_groups != None:
+    if excluded_groups is not None:
         context_sgn = context.get("SERVICEGROUPNAMES")
-        if context_sgn == None:
+        if context_sgn is None:
             # No actual groups means no possible negative match
             return
 
@@ -629,9 +629,9 @@ def event_match_contactgroups(rule, context):
 
 def event_match_hostgroups(rule, context):
     required_groups = rule.get("match_hostgroups")
-    if required_groups != None:
+    if required_groups is not None:
         hgn = context.get("HOSTGROUPNAMES")
-        if hgn == None:
+        if hgn is None:
             return "No information about host groups is in the context, but host " \
                    "must be in group %s" % ( " or ".join(required_groups))
         if hgn:

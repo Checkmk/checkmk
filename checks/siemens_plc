@@ -160,9 +160,9 @@ def check_siemens_plc_duration(item, params, info):
 
             state = 0
             warn, crit = params.get('duration', (None, None))
-            if crit != None and seconds >= crit:
+            if crit is not None and seconds >= crit:
                 state = 2
-            elif warn != None and seconds >= warn:
+            elif warn is not None and seconds >= warn:
                 state = 1
 
             return state, get_age_human_readable(seconds), perfdata
@@ -207,9 +207,9 @@ def check_siemens_plc_counter(item, params, info):
 
             state = 0
             warn, crit = params.get('levels', (None, None))
-            if crit != None and value >= crit:
+            if crit is not None and value >= crit:
                 state = 2
-            elif warn != None and value >= warn:
+            elif warn is not None and value >= warn:
                 state = 1
 
             return state, '%d' % value, perfdata

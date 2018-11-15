@@ -2466,9 +2466,9 @@ class TestCase(object):
         raise NotImplementedError()
 
     def duration(self):
-        if self.started_at == None:
+        if self.started_at is None:
             return 0
-        elif self.finished_at == None:
+        elif self.finished_at is None:
             return time.time() - self.started_at
         return self.finished_at - self.started_at
 
@@ -2842,11 +2842,11 @@ class TestAgentBasedStandardHosts(TestCase):
     # -> Find all helper processes and check the open file descriptors.
     def _wait_for_cmk_helpers_ready(self):
         num_not_ready, _loadavg_5_before = None, os.getloadavg()[1]
-        while num_not_ready == None or num_not_ready > 0:
+        while num_not_ready is None or num_not_ready > 0:
             if self._runner.shall_stop():
                 break
 
-            if num_not_ready == None:
+            if num_not_ready is None:
                 self._test.info("  Waiting for helper initialization")
             else:
                 self._test.info(

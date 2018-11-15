@@ -152,7 +152,7 @@ def _execute_automation(site, cmd, args=None, stdin=None,
     else:
         assert stderr == expect_stderr
 
-    if expect_stdout != None:
+    if expect_stdout is not None:
         assert stdout == expect_stdout
 
     if parse_data:
@@ -231,7 +231,7 @@ def test_automation_analyse_service_autocheck(test_cfg, site):
 
     assert data["origin"] == "auto"
     assert data["checktype"] == "cpu.loads"
-    assert data["item"] == None
+    assert data["item"] is None
     assert data["checkgroup"] == "cpu_load"
 
 
@@ -287,7 +287,7 @@ def test_automation_set_autochecks(test_cfg, site):
     try:
         data = _execute_automation(site, "set-autochecks",
                 args=["blablahost"], stdin=repr(new_items))
-        assert data == None
+        assert data is None
 
         data = _execute_automation(site, "get-autochecks",
                 args=["blablahost"])

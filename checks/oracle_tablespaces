@@ -212,7 +212,7 @@ def check_oracle_tablespaces(item, params, parsed):
     # the database has failed and we simply skip this check. It won't
     # switch to UNKNOWN, but will get stale.
     # TODO Treatment as in db2 and mssql dbs
-    # "ts_status == None" possible?
+    # "ts_status is None" possible?
     tablespace = tablespaces.get((sid, ts_name))
     if not tablespace or tablespace["status"] is None:
         raise MKCounterWrapped("Login into database failed")

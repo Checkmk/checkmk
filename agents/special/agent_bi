@@ -85,7 +85,7 @@ class AggregationData(object):
 
         # Output result
         for target_host, aggregations in self._aggregation_targets.iteritems():
-            if target_host == None:
+            if target_host is None:
                 self._output.append("<<<<>>>>")
             else:
                 self._output.append("<<<<%s>>>>" % target_host)

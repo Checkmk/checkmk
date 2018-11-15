@@ -106,7 +106,7 @@ def check_diskstat_line(this_time, item, params, line, mode='sectors'):
     infos = []
     status = 0
     node = line[0]
-    if node != None and node != "":
+    if node is not None and node != "":
         infos.append("Node %s" % node)
     prediction_perf = []
     for what, ctr in [("read", line[2]), ("write", line[3])]:
@@ -134,7 +134,7 @@ def check_diskstat_line(this_time, item, params, line, mode='sectors'):
         dsname = what
 
         # compute average of the rate over ___ minutes
-        if average_range != None:
+        if average_range is not None:
             avg = get_average(countername + ".avg", this_time, bytes_per_sec, average_range)
             dsname = what + ".avg"
             perfdata.append((dsname, avg))
@@ -149,7 +149,7 @@ def check_diskstat_line(this_time, item, params, line, mode='sectors'):
         prediction_perf += extraperf
 
     # Add performance data for averaged IO
-    if average_range != None:
+    if average_range is not None:
         perfdata = [perfdata[0], perfdata[2], perfdata[1], perfdata[3]]
 
     # Process IOs when available
@@ -202,7 +202,7 @@ def check_diskstat_line(this_time, item, params, line, mode='sectors'):
             infos.append(what.title() + " Queue: %.2f" % ql)
 
             # check levels
-            if levels != None:
+            if levels is not None:
                 if ql >= crit:
                     status = 2
                     infos[-1] += "(!!)"
@@ -232,7 +232,7 @@ def check_diskstat_generic(item, params, this_time, info, mode='sectors'):
     matching = 0
 
     for line in info:
-        if item == 'SUMMARY' and line[0] != None:
+        if item == 'SUMMARY' and line[0] is not None:
             return 3, "summary mode not supported in a cluster"
 
         elif item == 'SUMMARY' and ' ' in line[1]:
@@ -261,7 +261,7 @@ def _check_diskstat_old(item, params, this_time, info):
 
     this_val = 0
     for line in info:
-        if line[0] != None:
+        if line[0] is not None:
             return 3, "read/write mode not supported in a cluster"
         if ' ' not in line[1]:
             this_val += int(line[index])

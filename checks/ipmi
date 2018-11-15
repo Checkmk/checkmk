@@ -194,7 +194,7 @@ def parse_ipmi(info):
 
                 if parsed[name]["unit"] in ["unspecified", ""]:
                     parsed[name]["unit"] = None
-                elif parsed[name]["unit"] != None:
+                elif parsed[name]["unit"] is not None:
                     parsed[name]["unit"] = parsed[name]["unit"].replace(" ", "_")
 
     return parsed

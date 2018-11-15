@@ -197,7 +197,7 @@ patch_supports_merge = None
 def patch_has_merge():
     # check wether our version of patch supports the option '--merge'
     global patch_supports_merge
-    if patch_supports_merge == None:
+    if patch_supports_merge is None:
         patch_supports_merge = (os.system(
             "true | PATH=/omd/versions/default/bin:$PATH patch --merge >/dev/null 2>&1") == 0)
         if not patch_supports_merge:
@@ -214,7 +214,7 @@ def run_dialog(args):
 
 def dialog_menu(title, text, choices, defvalue, oktext, canceltext):
     args = ["--ok-label", oktext, "--cancel-label", canceltext]
-    if defvalue != None:
+    if defvalue is not None:
         args += ["--default-item", defvalue]
     args += ["--title", title, "--menu", text, "0", "0", "0"]  # "20", "60", "17" ]
     for choice_text, value in choices:
@@ -410,7 +410,7 @@ def groupdel(groupname):
 
 def groupadd(groupname, gid=None):
     cmd = "groupadd "
-    if gid != None:
+    if gid is not None:
         cmd += "-g %d " % int(gid)
     cmd += groupname
 
@@ -422,7 +422,7 @@ def useradd(site, uid=None, gid=None):
     # Create user for running site 'name'
     groupadd(site.name, gid)
     useradd_options = g_info.USERADD_OPTIONS
-    if uid != None:
+    if uid is not None:
         useradd_options += " -u %d" % int(uid)
     if os.system("useradd %s -r -d '%s' -c 'OMD site %s' -g %s -G omd %s -s /bin/bash" % \
                  (useradd_options, site.dir, site.name, site.name, site.name)) != 0:
@@ -548,7 +548,7 @@ def user_verify(site, allow_populated=False):
                  (site.dir, name, name))
 
     group = group_by_id(user.pw_gid)
-    if group == None or group.gr_name != name:
+    if group is None or group.gr_name != name:
         bail_out(tty_error + ": primary group for siteuser must be %s" % name)
 
     if not user_has_group(g_info.APACHE_USER, name):
@@ -762,7 +762,7 @@ def create_skeleton_file(skelbase, userbase, relpath, replacements):
 
     if not os.path.islink(skel_path):
         mode = g_skel_permissions.get(relpath)
-        if mode == None:
+        if mode is None:
             if os.path.isdir(skel_path):
                 mode = 0755
             else:
@@ -1655,7 +1655,7 @@ def add_to_fstab(site, tmpfs_size=None):
 
     # No size option: using up to 50% of the RAM
     sizespec = ''
-    if tmpfs_size != None and re.match('^[0-9]+(G|M|%)$', tmpfs_size):
+    if tmpfs_size is not None and re.match('^[0-9]+(G|M|%)$', tmpfs_size):
         sizespec = ',size=%s' % tmpfs_size
 
     # Ensure the fstab has a newline char at it's end before appending
@@ -1871,7 +1871,7 @@ def load_config_hooks(site):
             if hook_name[0] != '.':
                 hook = config_load_hook(site, hook_name)
                 # only load configuration hooks
-                if hook.get("choices", None) != None:
+                if hook.get("choices", None) is not None:
                     config_hooks[hook_name] = hook
         except:
             pass
@@ -2575,7 +2575,7 @@ def main_sites(site, args, options=None):
         else:
             disabled = site.is_disabled()
             v = site.version
-            if v == None:
+            if v is None:
                 v = "(none)"
                 tags.append("empty site dir")
             elif v == default_version():
@@ -3320,7 +3320,7 @@ def main_init_action(site, command, args, options=None):
     for sitename in all_sites():
         site = SiteContext(sitename)
 
-        if site.version == None:  # skip partially created sites
+        if site.version is None:  # skip partially created sites
             continue
 
         if only_version and site.version != only_version:
@@ -4657,7 +4657,7 @@ def main():
     # That command must be run in the target version
     if site.is_site_context() and site_must_exist and command != "update":
         v = site.version
-        if v == None:  # Site has no home directory or version link
+        if v is None:  # Site has no home directory or version link
             if command == "rm":
                 sys.stdout.write("WARNING: This site has an empty home directory and is not\n"
                                  "assigned to any OMD version. You are running version %s.\n" %

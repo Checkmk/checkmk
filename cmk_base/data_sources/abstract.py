@@ -604,7 +604,7 @@ class CheckMKAgentDataSource(DataSource):
                     section_options[opt_name] = opt_args
 
                 section_content = sections.get(section_name, None)
-                if section_content == None:  # section appears in output for the first time
+                if section_content is None:  # section appears in output for the first time
                     section_content = []
                     sections[section_name] = section_content
                 try:
@@ -645,10 +645,10 @@ class CheckMKAgentDataSource(DataSource):
         agent_info = self._get_agent_info()
         agent_version = agent_info["version"]
         output = []
-        if not config.is_cluster(self._hostname) and agent_version != None:
+        if not config.is_cluster(self._hostname) and agent_version is not None:
             output.append("Version: %s" % agent_version)
 
-        if not config.is_cluster(self._hostname) and agent_info["agentos"] != None:
+        if not config.is_cluster(self._hostname) and agent_info["agentos"] is not None:
             output.append("OS: %s" % agent_info["agentos"])
 
         return 0, ", ".join(output), []

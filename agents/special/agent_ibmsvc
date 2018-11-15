@@ -200,7 +200,7 @@ else:
     sys.stderr.write("ERROR: Please specify exactly one host.\n")
     sys.exit(1)
 
-if user == None:
+if user is None:
     sys.stderr.write("ERROR: No user name given.\n")
     sys.exit(1)
 

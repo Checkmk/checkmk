@@ -139,7 +139,7 @@ package_ignored_files = {
 
 
 def get_package_parts():
-    return [p for p in package_parts if p[2] != None]
+    return [p for p in package_parts if p[2] is not None]
 
 
 def packaging_usage():
@@ -649,7 +649,7 @@ def verify_check_mk_version(package):
 
 
 def files_in_dir(part, directory, prefix=""):
-    if directory == None or not os.path.exists(directory):
+    if directory is None or not os.path.exists(directory):
         return []
 
     # Handle case where one part-directory lies below another

@@ -158,7 +158,7 @@ def compute_prediction(hostname, service_description, pred_file, timegroup, para
         tg, fr, un = get_prediction_timegroup(begin, period_info)[:3]
         if tg == timegroup:
             step, data = get_rrd_data(hostname, service_description, dsname, cf, fr, un - 1)
-            if smallest_step == None:
+            if smallest_step is None:
                 smallest_step = step
             slices.append((fr, step / smallest_step, data))
         begin -= period_info["slice"]
@@ -173,7 +173,7 @@ def compute_prediction(hostname, service_description, pred_file, timegroup, para
             idx = int(i / float(scale))
             if idx < len(data):
                 d = data[idx]
-                if d != None:
+                if d is not None:
                     point_line.append(d)
             # else:
             #     date_str = time.strftime("%Y-%m-%d %H:%M", time.localtime(fr + ((un - fr) * i / float(num_points))))

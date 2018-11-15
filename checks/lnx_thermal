@@ -80,7 +80,7 @@ def check_lnx_thermal(item, params, info):
                             dev_warn = level
 
             # If only one relevant trip point is found, use that for both warn and crit
-            if (dev_warn != None) != (dev_crit != None):
+            if (dev_warn is not None) != (dev_crit is not None):
                 dev_warn = dev_crit = max(dev_warn, dev_crit)
 
             if dev_warn and dev_crit:

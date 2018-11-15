@@ -204,7 +204,7 @@ class Query(object):
 
         self._query = self._ensure_unicode(query)
 
-        if suppress_exceptions == None:
+        if suppress_exceptions is None:
             self.suppress_exceptions = self.default_suppressed_exceptions
         else:
             self.suppress_exceptions = suppress_exceptions
@@ -350,7 +350,7 @@ class BaseConnection:
         if not self.allow_cache:
             query = remove_cache_regex.sub("", query)
 
-        if self.socket == None:
+        if self.socket is None:
             self.connect()
 
         if not query.endswith("\n"):
@@ -420,7 +420,7 @@ class BaseConnection:
             self.disconnect()
             now = time.time()
             if query and (not timeout_at or timeout_at > now):
-                if timeout_at == None:
+                if timeout_at is None:
                     # Try until timeout reached in case there was a timeout configured.
                     # Otherwise only retry once.
                     timeout_at = now
@@ -447,7 +447,7 @@ class BaseConnection:
             raise MKLivestatusSocketError("Unhandled exception: %s" % e)
 
     def do_command(self, command):
-        if self.socket == None:
+        if self.socket is None:
             self.connect()
         if not command.endswith("\n"):
             command += "\n"
@@ -491,7 +491,7 @@ class SingleSiteConnection(BaseConnection, Helpers):
         self.limit = limit
 
     def query(self, query, add_headers=""):
-        if self.limit != None:
+        if self.limit is not None:
             query += "Limit: %d\n" % self.limit
         data = self.do_query(query, add_headers)
         if self.prepend_site:
@@ -659,7 +659,7 @@ class MultiSiteConnection(Helpers):
                 shs, lastup = status_host_states.get(status_host,
                                                      (4, now))  # None => Status host not existing
                 deltatime = now - lastup
-                if shs == 0 or shs == None:
+                if shs == 0 or shs is None:
                     connect_to_site(sitename, site)
                 else:
                     if shs == 1:
@@ -729,18 +729,18 @@ class MultiSiteConnection(Helpers):
         stillalive = []
         limit = self.limit
         for sitename, site, connection in self.connections:
-            if self.only_sites != None and sitename not in self.only_sites:
+            if self.only_sites is not None and sitename not in self.only_sites:
                 stillalive.append((sitename, site, connection))  # state unknown, assume still alive
                 continue
             try:
-                if limit != None:
+                if limit is not None:
                     limit_header = "Limit: %d\n" % limit
                 else:
                     limit_header = ""
                 r = connection.query(query, add_headers + limit_header)
                 if self.prepend_site:
                     r = [[sitename] + l for l in r]
-                if limit != None:
+                if limit is not None:
                     limit -= len(r)  # Account for portion of limit used by this site
                 result += r
                 stillalive.append((sitename, site, connection))
@@ -758,7 +758,7 @@ class MultiSiteConnection(Helpers):
     # applied to all sites - resulting in possibly more results then Limit requests.
     def query_parallel(self, query, add_headers=""):
         stillalive = []
-        if self.only_sites != None:
+        if self.only_sites is not None:
             connect_to_sites = [c for c in self.connections if c[0] in self.only_sites]
             # Unused sites are assumed to be alive
             stillalive.extend([c for c in self.connections if c[0] not in self.only_sites])
@@ -767,7 +767,7 @@ class MultiSiteConnection(Helpers):
 
         start_time = time.time()
         limit = self.limit
-        if limit != None:
+        if limit is not None:
             limit_header = "Limit: %d\n" % limit
         else:
             limit_header = ""

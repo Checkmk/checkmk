@@ -401,18 +401,18 @@ def check_levels(value, dsname, params, unit="", factor=1.0, scale=1.0, statemar
         perfdata.append(('predict_' + dsname, ref_value))
 
     # Critical cases
-    if crit_upper != None and value >= crit_upper:
+    if crit_upper is not None and value >= crit_upper:
         state = 2
         infotexts.append(levelsinfo_ty("at", warn_upper / scale, crit_upper / scale, unit))
-    elif crit_lower != None and value < crit_lower:
+    elif crit_lower is not None and value < crit_lower:
         state = 2
         infotexts.append(levelsinfo_ty("below", warn_lower / scale, crit_lower / scale, unit))
 
     # Warning cases
-    elif warn_upper != None and value >= warn_upper:
+    elif warn_upper is not None and value >= warn_upper:
         state = 1
         infotexts.append(levelsinfo_ty("at", warn_upper / scale, crit_upper / scale, unit))
-    elif warn_lower != None and value < warn_lower:
+    elif warn_lower is not None and value < warn_lower:
         state = 1
         infotexts.append(levelsinfo_ty("below", warn_lower / scale, crit_lower / scale, unit))
 

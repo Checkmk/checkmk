@@ -24,7 +24,6 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-
 bvip_util_default_levels = (90, 95)
 
 
@@ -36,9 +35,9 @@ def inventory_bvip_util(info):
 
 def check_bvip_util(item, params, info):
     items = {
-        "Total" : 0,
-        "Coder" : 1,
-        "VCA"   : 2,
+        "Total": 0,
+        "Coder": 1,
+        "VCA": 2,
     }
 
     usage = int(info[0][items[item]])
@@ -48,13 +47,12 @@ def check_bvip_util(item, params, info):
 
 
 check_info["bvip_util"] = {
-    "check_function"        : check_bvip_util,
-    "inventory_function"    : inventory_bvip_util,
-    "service_description"   : "CPU utilization %s",
-    "snmp_scan_function"    : bvip_scan_function,
-    "snmp_info"             : (".1.3.6.1.4.1.3967.1.1.9.1", [ 1,2,3 ]),
-    "includes"              : [ 'bvip.include', 'cpu_util.include' ],
-    "has_perfdata"          : True,
-    "group"                 : "cpu_utilization_multiitem",
+    "check_function": check_bvip_util,
+    "inventory_function": inventory_bvip_util,
+    "service_description": "CPU utilization %s",
+    "snmp_scan_function": bvip_scan_function,
+    "snmp_info": (".1.3.6.1.4.1.3967.1.1.9.1", [1, 2, 3]),
+    "includes": ['bvip.include', 'cpu_util.include'],
+    "has_perfdata": True,
+    "group": "cpu_utilization_multiitem",
 }
-

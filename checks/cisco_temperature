@@ -24,7 +24,6 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-
 # NOTE: Devices of type 3850 with firmware versions 3.2.0SE, 3.2.1, 3.2.2
 # have been observed to display a tenth of the actual temperature value.
 # A firmware update on the device fixes this.
@@ -32,23 +31,23 @@
 # CISCO-ENTITY-SENSOR-MIB::entSensorScale
 
 cisco_entity_exponents = {
-    "1"  : -24,  #     1:yocto
-    "2"  : -21,  #     2:zepto
-    "3"  : -18,  #     3:atto
-    "4"  : -15,  #     4:femto
-    "5"  : -12,  #     5:pico
-    "6"  : -9,   #     6:nano
-    "7"  : -6,   #     7:micro
-    "8"  : -3,   #     8:milli
-    "9"  : 0,    #     9:units
-    "10" : 3,    #     10:kilo
-    "11" : 6,    #     11:mega
-    "12" : 9,    #     12:giga
-    "13" : 12,   #     13:tera
-    "14" : 18,   #     14:exa
-    "15" : 15,   #     15:peta
-    "16" : 21,   #     16:zetta
-    "17" : 24,   #     17:yotta
+    "1": -24,  #     1:yocto
+    "2": -21,  #     2:zepto
+    "3": -18,  #     3:atto
+    "4": -15,  #     4:femto
+    "5": -12,  #     5:pico
+    "6": -9,  #     6:nano
+    "7": -6,  #     7:micro
+    "8": -3,  #     8:milli
+    "9": 0,  #     9:units
+    "10": 3,  #     10:kilo
+    "11": 6,  #     11:mega
+    "12": 9,  #     12:giga
+    "13": 12,  #     13:tera
+    "14": 18,  #     14:exa
+    "15": 15,  #     15:peta
+    "16": 21,  #     16:zetta
+    "17": 24,  #     17:yotta
 }
 
 
@@ -99,19 +98,21 @@ def parse_cisco_temperature(info):
         entity_parsed.setdefault(sensortype, {})
         sensor_attrs = {
             'descr': descr,
-            'raw_dev_state': sensorstate, # used in discovery function
+            'raw_dev_state': sensorstate,  # used in discovery function
             'dev_state': map_states.get(sensorstate, (3, 'unknown[%s]' % sensorstate))
         }
 
         if sensorstate == '1':
             scale = 10**int(magnitude)
-            scale *= 10 ** (-1 * cisco_entity_exponents[scalecode])
+            scale *= 10**(-1 * cisco_entity_exponents[scalecode])
             sensor_attrs['reading'] = float(value) / scale
-            if len(thresholds[sensor_id]) in [ 2, 4 ]:
+            if len(thresholds[sensor_id]) in [2, 4]:
                 warnraw, critraw = thresholds[sensor_id][0:2]
                 # Some devices deliver these values in the wrong order
-                dev_levels = ( min(float(warnraw)/scale, float(critraw)/scale),
-                               max(float(warnraw)/scale, float(critraw)/scale) )
+                dev_levels = (min(float(warnraw) / scale,
+                                  float(critraw) / scale),
+                              max(float(warnraw) / scale,
+                                  float(critraw) / scale))
             else:
                 dev_levels = None
             sensor_attrs['dev_levels'] = dev_levels
@@ -181,9 +182,13 @@ def check_cisco_temperature(item, params, parsed):
             return 3, "This sensor is obsolete, please rediscover"
 
         state, state_readable = data['dev_state']
-        return check_temperature(data['reading'], params, "cisco_temperature_%s" % item,
-                    dev_levels=data['dev_levels'],
-                    dev_status=state, dev_status_name=state_readable)
+        return check_temperature(
+            data['reading'],
+            params,
+            "cisco_temperature_%s" % item,
+            dev_levels=data['dev_levels'],
+            dev_status=state,
+            dev_status_name=state_readable)
 
 
 check_info['cisco_temperature'] = {
@@ -231,7 +236,6 @@ check_info['cisco_temperature'] = {
     "includes"          : [ "temperature.include", 'cisco_sensor_item.include' ],
 }
 
-
 #.
 #   .--dom-----------------------------------------------------------------.
 #   |                            _                                         |
@@ -277,9 +281,9 @@ def check_cisco_temperature_dom(item, params, parsed):
 
 
 check_info['cisco_temperature.dom'] = {
-    "inventory_function" : inventory_cisco_temperature_dom,
-    "check_function"     : check_cisco_temperature_dom,
+    "inventory_function": inventory_cisco_temperature_dom,
+    "check_function": check_cisco_temperature_dom,
     "service_description": "DOM %s",
-    "has_perfdata"       : True,
-    "includes"           : ['cisco_sensor_item.include'],
+    "has_perfdata": True,
+    "includes": ['cisco_sensor_item.include'],
 }

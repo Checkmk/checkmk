@@ -24,7 +24,6 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-
 #   .--Common--------------------------------------------------------------.
 #   |              ____                                                    |
 #   |             / ___|___  _ __ ___  _ __ ___   ___  _ __                |
@@ -33,6 +32,7 @@
 #   |             \____\___/|_| |_| |_|_| |_| |_|\___/|_| |_|              |
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
+
 
 def arbor_test_threshold(perc, name, warn, crit):
     status = perc > crit and 2\
@@ -55,10 +55,9 @@ def arbor_test_threshold(perc, name, warn, crit):
 #   |                                                |___/                 |
 #   '----------------------------------------------------------------------'
 
-
 factory_settings["arbor_memory_default_levels"] = {
-    "levels_ram"  : ("perc_used", ( 80.0, 90.0)),
-    "levels_swap" : ("perc_used", ( 80.0, 90.0)),
+    "levels_ram": ("perc_used", (80.0, 90.0)),
+    "levels_swap": ("perc_used", (80.0, 90.0)),
 }
 
 
@@ -69,7 +68,7 @@ def inventory_arbor_memory(parsed):
 
 def check_arbor_memory(no_item, params, parsed):
     def worst_status(*args):
-        order = [0,1,3,2]
+        order = [0, 1, 3, 2]
         return sorted(args, key=lambda x: order[x], reverse=True)[0]
 
     def combine_infotext(*blocks):
@@ -77,16 +76,16 @@ def check_arbor_memory(no_item, params, parsed):
 
     ram_perc, swap_perc = map(int, parsed['memory'])
 
-    ram_warn, ram_crit   = params['levels_ram'][1]
+    ram_warn, ram_crit = params['levels_ram'][1]
     swap_warn, swap_crit = params['levels_swap'][1]
 
-    ram_status, ram_info   = arbor_test_threshold(ram_perc,  "RAM", ram_warn, ram_crit)
+    ram_status, ram_info = arbor_test_threshold(ram_perc, "RAM", ram_warn, ram_crit)
     swap_status, swap_info = arbor_test_threshold(swap_perc, "Swap", swap_warn, swap_crit)
 
     infotext = combine_infotext(ram_info, swap_info)
 
     perfdata = [
-        ('mem_used_percent',  ram_perc, ram_warn, ram_crit),
+        ('mem_used_percent', ram_perc, ram_warn, ram_crit),
         ('swap_used_percent', swap_perc, swap_warn, swap_crit),
     ]
 
@@ -102,7 +101,6 @@ def check_arbor_memory(no_item, params, parsed):
 #   |             \____|_|    \___/  |_____\___/ \__,_|\__,_|              |
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
-
 
 arbor_cpuload_default_levels = (5.0, 10.0)
 
@@ -149,6 +147,7 @@ def check_arbor_disk_usage(no_item, params, parsed):
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
+
 def inventory_arbor_host_fault(parsed):
     if 'host_fault' in parsed:
         return [(None, None)]
@@ -170,6 +169,7 @@ def check_arbor_host_fault(no_item, no_params, parsed):
 #   |            |____/|_|  \___/| .__/  |_| \_\__,_|\__\___|              |
 #   |                            |_|                                       |
 #   '----------------------------------------------------------------------'
+
 
 def inventory_arbor_drop_rate(parsed):
     if 'drop_rate' in parsed:

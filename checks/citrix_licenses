@@ -35,11 +35,13 @@
 # XDS_ENT_CCS 22 0
 # PVSD_STD_CCS 42 0
 
+
 def inventory_citrix_licenses(info):
     license_types = set([])
     for license_type, _have, _used in info:
         license_types.add(license_type)
-    return [ (lt, None) for lt in license_types ]
+    return [(lt, None) for lt in license_types]
+
 
 def check_citrix_licenses(item, params, info):
     have = 0
@@ -53,11 +55,12 @@ def check_citrix_licenses(item, params, info):
 
     return license_check_levels(have, used, params)
 
+
 check_info["citrix_licenses"] = {
-    'check_function'       : check_citrix_licenses,
-    'inventory_function'   : inventory_citrix_licenses,
-    'service_description'  : 'Citrix Licenses %s',
-    'has_perfdata'         : True,
-    'group'                : "citrix_licenses",
-    'includes'             : [ "license.include" ]
+    'check_function': check_citrix_licenses,
+    'inventory_function': inventory_citrix_licenses,
+    'service_description': 'Citrix Licenses %s',
+    'has_perfdata': True,
+    'group': "citrix_licenses",
+    'includes': ["license.include"]
 }

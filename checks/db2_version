@@ -27,9 +27,11 @@
 # <<<db2_version>>>
 # db2taddm DB2v10.1.0.4,s140509(IP23577)
 
+
 def inventory_db2_version(info):
     for line in info:
         yield line[0].split(" ", 1)[0], None
+
 
 def check_db2_version(item, no_params, info):
     for line in info:
@@ -44,8 +46,9 @@ def check_db2_version(item, no_params, info):
 
     return 2, "Instance is down"
 
+
 check_info['db2_version'] = {
-    "service_description"     : "DB2 Instance %s",
-    "check_function"          : check_db2_version,
-    "inventory_function"      : inventory_db2_version,
+    "service_description": "DB2 Instance %s",
+    "check_function": check_db2_version,
+    "inventory_function": inventory_db2_version,
 }

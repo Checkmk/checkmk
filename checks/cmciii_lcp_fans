@@ -24,24 +24,26 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+
 def inventory_cmciii_lcp_fans(info):
     inventory = []
     # FAN infos have 4 elements. Split the single info line we get
     # into even sized chunks of 4 elements. In some cases there might
     # be non-fan information in the resulting data like infos about
     # water cooling. Filter them out.
-    parts = [ info[0][x+1:x+4] for x in range(0, len(info[0]), 4) ]
+    parts = [info[0][x + 1:x + 4] for x in range(0, len(info[0]), 4)]
     for i, (name, _value, status) in enumerate(parts):
         if status != "off" and 'FAN' in name:
             # FIXME: Why not use the unique name? Maybe recode
-            inventory.append((i+1 , None))
+            inventory.append((i + 1, None))
     return inventory
+
 
 def check_cmciii_lcp_fans(item, params, info):
 
-    lowlevel = int(re.sub(" .*$", "", info[0][0])) # global low warning
+    lowlevel = int(re.sub(" .*$", "", info[0][0]))  # global low warning
 
-    parts = [ info[0][x+1:x+4] for x in range(0, len(info[0]), 4) ]
+    parts = [info[0][x + 1:x + 4] for x in range(0, len(info[0]), 4)]
     for i, (name, value, status) in enumerate(parts):
         if item == i:
             rpm, unit = value.split(" ", 1)
@@ -60,7 +62,7 @@ def check_cmciii_lcp_fans(item, params, info):
             info_text = "%s RPM: %d%s (limit %d%s)%s, Status %s" \
                     %  (name, rpm, unit, lowlevel, unit, sym, status)
 
-            perfdata = [ ("rpm", str(rpm)+unit, str(lowlevel)+":", 0, 0 ) ]
+            perfdata = [("rpm", str(rpm) + unit, str(lowlevel) + ":", 0, 0)]
 
             return (state, info_text, perfdata)
 

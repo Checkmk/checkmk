@@ -24,10 +24,8 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+factory_settings["dell_chassis_temp_default_levels"] = {"levels": (60, 80)}
 
-factory_settings["dell_chassis_temp_default_levels"] = {
-    "levels" : (60, 80)
-}
 
 def inventory_dell_chassis_temp(info):
     if info and len(info[0]) == 3:
@@ -39,8 +37,8 @@ def inventory_dell_chassis_temp(info):
 def check_dell_chassis_temp(item, params, info):
 
     items = {
-        "Front Panel"  : 0,
-        "CMC Ambient"  : 1,
+        "Front Panel": 0,
+        "CMC Ambient": 1,
         "CMC Processor": 2,
     }
 
@@ -54,18 +52,19 @@ def check_dell_chassis_temp(item, params, info):
 
 
 check_info["dell_chassis_temp"] = {
-    "check_function"          : check_dell_chassis_temp,
-    "inventory_function"      : inventory_dell_chassis_temp,
-    "service_description"     : "Temperature %s",
-    "has_perfdata"            : True,
-    "group"                   : "temperature",
-    "snmp_info"               : ( ".1.3.6.1.4.1.674.10892.2.3.1", [
-                                      "10", # drsChassisFrontPanelAmbientTemperature
-                                      "11", # drsCMCAmbientTemperature
-                                      "12", # drsCMCProcessorTemperature
-                              ]),
-    "snmp_scan_function"      : lambda oid: oid('.1.3.6.1.2.1.1.2.0') == ".1.3.6.1.4.1.674.10892.2",
-    "includes"                : [ "temperature.include" ],
-    "default_levels_variable" : "dell_chassis_temp_default_levels"
+    "check_function": check_dell_chassis_temp,
+    "inventory_function": inventory_dell_chassis_temp,
+    "service_description": "Temperature %s",
+    "has_perfdata": True,
+    "group": "temperature",
+    "snmp_info": (
+        ".1.3.6.1.4.1.674.10892.2.3.1",
+        [
+            "10",  # drsChassisFrontPanelAmbientTemperature
+            "11",  # drsCMCAmbientTemperature
+            "12",  # drsCMCProcessorTemperature
+        ]),
+    "snmp_scan_function": lambda oid: oid('.1.3.6.1.2.1.1.2.0') == ".1.3.6.1.4.1.674.10892.2",
+    "includes": ["temperature.include"],
+    "default_levels_variable": "dell_chassis_temp_default_levels"
 }
-

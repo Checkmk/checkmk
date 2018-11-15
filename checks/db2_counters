@@ -54,23 +54,23 @@
 # db2ifa:DDST1 lockwaits 0
 # db2ifa:DDST1 lockwaits 80
 
-
 factory_settings["db2_counters_default_levels"] = {}
 
 db2_counters_map = {
-    "deadlocks"     : "Deadlocks",
-    "lockwaits"     : "Lockwaits",
+    "deadlocks": "Deadlocks",
+    "lockwaits": "Lockwaits",
 }
 
+
 def parse_db2_counters(info):
-    dbs            = {}
-    timestamp      = 0
-    node_infos     = []
+    dbs = {}
+    timestamp = 0
+    node_infos = []
     element_offset = {}
     for line in info:
         if line[0].startswith("TIMESTAMP"):
             element_offset = {}
-            node_infos     = []
+            node_infos = []
             timestamp = int(line[1])
         elif line[1] == "node":
             node_infos.append(" ".join(line[2:]))
@@ -91,10 +91,12 @@ def parse_db2_counters(info):
     # The instance specific timestamp is now available in the dbs
     return timestamp, dbs
 
+
 def inventory_db2_counters(parsed):
     if len(parsed) == 2:
         for db in parsed[1]:
             yield db, {}
+
 
 def check_db2_counters(item, params, parsed):
     default_timestamp = parsed[0]
@@ -112,7 +114,7 @@ def check_db2_counters(item, params, parsed):
             continue
 
         try:
-            rate = get_rate("db2_counters.%s.%s" % (item, counter), timestamp, value, onwrap = RAISE)
+            rate = get_rate("db2_counters.%s.%s" % (item, counter), timestamp, value, onwrap=RAISE)
         except MKCounterWrapped:
             wrapped = True
             continue
@@ -129,13 +131,14 @@ def check_db2_counters(item, params, parsed):
     if wrapped:
         raise MKCounterWrapped("Some counter(s) wrapped, no data this time")
 
+
 check_info['db2_counters'] = {
-    "parse_function"          : parse_db2_counters,
-    "service_description"     : "DB2 Counters %s",
-    "check_function"          : check_db2_counters,
-    "inventory_function"      : inventory_db2_counters,
-    "has_perfdata"            : True,
-    "group"                   : "db2_counters",
-    "includes"                : ["db2.include"],
-    "default_levels_variable" : "db2_counters_default_levels",
+    "parse_function": parse_db2_counters,
+    "service_description": "DB2 Counters %s",
+    "check_function": check_db2_counters,
+    "inventory_function": inventory_db2_counters,
+    "has_perfdata": True,
+    "group": "db2_counters",
+    "includes": ["db2.include"],
+    "default_levels_variable": "db2_counters_default_levels",
 }

@@ -37,9 +37,9 @@ def parse_ceph_status(info):
 def ceph_check_epoch(_id, epoch, params):
     warn, crit, avg_interval_min = params.get("epoch", (None, None, 1))
     epoch_rate = get_rate("%s.epoch.rate" % _id, time.time(), epoch, avg_interval_min)
-    epoch_avg  = get_average("%s.epoch.avg" % _id, time.time(), epoch_rate, avg_interval_min)
-    state      = 0
-    infotext   = 'Epoch: %s/%s' % (epoch_avg, get_age_human_readable(avg_interval_min*60))
+    epoch_avg = get_average("%s.epoch.avg" % _id, time.time(), epoch_rate, avg_interval_min)
+    state = 0
+    infotext = 'Epoch: %s/%s' % (epoch_avg, get_age_human_readable(avg_interval_min * 60))
 
     if warn is not None and crit is not None:
         if epoch_avg >= crit:
@@ -61,41 +61,39 @@ def ceph_check_epoch(_id, epoch, params):
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-
 # Suggested by customer: 1,3 per 30 min
 factory_settings['ceph_status_default_levels'] = {
-    'epoch' : (1, 3, 30),
+    'epoch': (1, 3, 30),
 }
 
 
 def inventory_ceph_status(parsed):
-    return [ (None, {}) ]
+    return [(None, {})]
 
 
 # TODO genereller Status -> ceph health (Ausnahmen für "too many PGs per OSD" als Option ermöglichen)
 def check_ceph_status(_no_item, params, parsed):
     map_health_states = {
-        "HEALTH_OK"   : (0, "OK"),
-        "HEALTH_WARN" : (1, "warning"),
-        "HEALTH_CRIT" : (2, "critical"),
-        "HEALTH_ERR" : (2, "error"),
+        "HEALTH_OK": (0, "OK"),
+        "HEALTH_WARN": (1, "warning"),
+        "HEALTH_CRIT": (2, "critical"),
+        "HEALTH_ERR": (2, "error"),
     }
 
     overall_status = parsed["health"]["overall_status"]
     state, state_readable = map_health_states.get(overall_status,
-                            (3, "unknown[%s]" % overall_status))
+                                                  (3, "unknown[%s]" % overall_status))
     yield state, 'Status: %s' % state_readable
     yield ceph_check_epoch("ceph_status", parsed["election_epoch"], params)
 
 
 check_info['ceph_status'] = {
-    'parse_function'            : parse_ceph_status,
-    'inventory_function'        : inventory_ceph_status,
-    'check_function'            : check_ceph_status,
-    'service_description'       : 'Ceph Status',
-    'default_levels_variable'   : 'ceph_status_default_levels',
+    'parse_function': parse_ceph_status,
+    'inventory_function': inventory_ceph_status,
+    'check_function': check_ceph_status,
+    'service_description': 'Ceph Status',
+    'default_levels_variable': 'ceph_status_default_levels',
 }
-
 
 #.
 #   .--osds----------------------------------------------------------------.
@@ -107,12 +105,11 @@ check_info['ceph_status'] = {
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-
 # Suggested by customer: 50, 100 per 15 min
 factory_settings['ceph_osds_default_levels'] = {
-    'epoch'         : (50, 100, 15),
-    'num_out_osds'  : (7.0, 5.0),
-    'num_down_osds' : (7.0, 5.0),
+    'epoch': (50, 100, 15),
+    'num_out_osds': (7.0, 5.0),
+    'num_down_osds': (7.0, 5.0),
 }
 
 
@@ -122,12 +119,12 @@ def inventory_ceph_status_osds(parsed):
 
 
 def check_ceph_status_osds(_no_item, params, parsed):
-    data     = parsed["osdmap"]["osdmap"]
+    data = parsed["osdmap"]["osdmap"]
     num_osds = int(data["num_osds"])
     yield ceph_check_epoch("ceph_osds", data["epoch"], params)
 
     for ds, title, state in [
-        ('full',     'Full',      2),
+        ('full', 'Full', 2),
         ('nearfull', 'Near full', 1),
     ]:
         ds_value = data[ds]
@@ -137,13 +134,13 @@ def check_ceph_status_osds(_no_item, params, parsed):
     yield 0, "OSDs: %s, Remapped PGs: %s" % (num_osds, data["num_remapped_pgs"])
 
     for ds, title, param_key in [
-        ('num_in_osds', 'OSDs out',  'num_out_osds'),
+        ('num_in_osds', 'OSDs out', 'num_out_osds'),
         ('num_up_osds', 'OSDs down', 'num_down_osds'),
     ]:
-        state      = 0
-        value      = num_osds - data[ds]
+        state = 0
+        value = num_osds - data[ds]
         value_perc = 100 * float(value) / num_osds
-        infotext   = "%s: %s, %s" % (title, value, get_percent_human_readable(value_perc))
+        infotext = "%s: %s, %s" % (title, value, get_percent_human_readable(value_perc))
         if params.get(param_key):
             warn, crit = params[param_key]
             if value_perc >= crit:
@@ -159,13 +156,12 @@ def check_ceph_status_osds(_no_item, params, parsed):
 
 
 check_info['ceph_status.osds'] = {
-    'inventory_function'        : inventory_ceph_status_osds,
-    'check_function'            : check_ceph_status_osds,
-    'service_description'       : 'Ceph OSDs',
-    'default_levels_variable'   : 'ceph_osds_default_levels',
-    'group'                     : 'ceph_osds',
+    'inventory_function': inventory_ceph_status_osds,
+    'check_function': check_ceph_status_osds,
+    'service_description': 'Ceph OSDs',
+    'default_levels_variable': 'ceph_osds_default_levels',
+    'group': 'ceph_osds',
 }
-
 
 #.
 #   .--pgs-----------------------------------------------------------------.
@@ -186,35 +182,35 @@ def inventory_ceph_status_pgs(parsed):
 def check_ceph_status_pgs(_no_item, params, parsed):
     # Suggested by customer
     map_pg_states = {
-        "active"           : (0, "active"),
-        "backfill"         : (0, "backfill"),
-        "backfill_wait"    : (1, "backfill wait"),
-        "backfilling"      : (1, "backfilling"),
-        "backfill_toofull" : (0, "backfill too full"),
-        "clean"            : (0, "clean"),
-        "creating"         : (0, "creating"),
-        "degraded"         : (1, "degraded"),
-        "down"             : (2, "down"),
-        "deep"             : (0, "deep"),
-        "incomplete"       : (2, "incomplete"),
-        "inconsistent"     : (2, "inconsistent"),
-        "peered"           : (2, "peered"),
-        "perring"          : (0, "peering"),
-        "recovering"       : (0, "recovering"),
-        "recovery_wait"    : (0, "recovery wait"),
-        "remapped"         : (0, "remapped"),
-        "repair"           : (0, "repair"),
-        "replay"           : (1, "replay"),
-        "scrubbing"        : (0, "scrubbing"),
-        "stale"            : (2, "stale"),
-        "undersized"       : (0, "undersized"),
-        "wait_backfill"    : (0, "wait backfill"),
+        "active": (0, "active"),
+        "backfill": (0, "backfill"),
+        "backfill_wait": (1, "backfill wait"),
+        "backfilling": (1, "backfilling"),
+        "backfill_toofull": (0, "backfill too full"),
+        "clean": (0, "clean"),
+        "creating": (0, "creating"),
+        "degraded": (1, "degraded"),
+        "down": (2, "down"),
+        "deep": (0, "deep"),
+        "incomplete": (2, "incomplete"),
+        "inconsistent": (2, "inconsistent"),
+        "peered": (2, "peered"),
+        "perring": (0, "peering"),
+        "recovering": (0, "recovering"),
+        "recovery_wait": (0, "recovery wait"),
+        "remapped": (0, "remapped"),
+        "repair": (0, "repair"),
+        "replay": (1, "replay"),
+        "scrubbing": (0, "scrubbing"),
+        "stale": (2, "stale"),
+        "undersized": (0, "undersized"),
+        "wait_backfill": (0, "wait backfill"),
     }
 
-    data      = parsed["pgmap"]
-    num_pgs   = data["num_pgs"]
-    pgs_info  = "PGs: %s" % num_pgs
-    states    = [0]
+    data = parsed["pgmap"]
+    num_pgs = data["num_pgs"]
+    pgs_info = "PGs: %s" % num_pgs
+    states = [0]
     infotexts = []
 
     for pgs_by_state in data["pgs_by_state"]:
@@ -229,11 +225,10 @@ def check_ceph_status_pgs(_no_item, params, parsed):
 
 
 check_info['ceph_status.pgs'] = {
-    'inventory_function'    : inventory_ceph_status_pgs,
-    'check_function'        : check_ceph_status_pgs,
-    'service_description'   : 'Ceph PGs',
+    'inventory_function': inventory_ceph_status_pgs,
+    'check_function': check_ceph_status_pgs,
+    'service_description': 'Ceph PGs',
 }
-
 
 #.
 #   .--mgrs----------------------------------------------------------------.
@@ -245,10 +240,9 @@ check_info['ceph_status.pgs'] = {
 #   |                                |___/                                 |
 #   '----------------------------------------------------------------------'
 
-
 # Suggested by customer: 1, 2 per 5 min
 factory_settings['ceph_mgrs_default_levels'] = {
-    'epoch'         : (1, 2, 5),
+    'epoch': (1, 2, 5),
 }
 
 
@@ -263,9 +257,9 @@ def check_ceph_status_mgrs(_no_item, params, parsed):
 
 
 check_info['ceph_status.mgrs'] = {
-    'inventory_function'        : inventory_ceph_status_mgrs,
-    'check_function'            : check_ceph_status_mgrs,
-    'service_description'       : 'Ceph MGRs',
-    'default_levels_variable'   : 'ceph_mgrs_default_levels',
-    'group'                     : 'ceph_mgrs',
+    'inventory_function': inventory_ceph_status_mgrs,
+    'check_function': check_ceph_status_mgrs,
+    'service_description': 'Ceph MGRs',
+    'default_levels_variable': 'ceph_mgrs_default_levels',
+    'group': 'ceph_mgrs',
 }

@@ -29,7 +29,7 @@
 
 
 def parse_cisco_mem_asa(info):
-    return [ info[0][0], info[1][0] ]
+    return [info[0][0], info[1][0]]
 
 
 check_info["cisco_mem_asa"] = {

@@ -24,49 +24,48 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-
 factory_settings["cisco_stack"] = {
-                        "waiting" : 0,
-                        "progressing" : 0,
-                        "added" : 0,
-                        "ready" : 0,
-                        "sdmMismatch" : 1,
-                        "verMismatch" : 1,
-                        "featureMismatch" : 1,
-                        "newMasterInit" : 0,
-                        "provisioned"  : 0,
-                        "invalid" : 2,
-                        "removed" : 2,
+    "waiting": 0,
+    "progressing": 0,
+    "added": 0,
+    "ready": 0,
+    "sdmMismatch": 1,
+    "verMismatch": 1,
+    "featureMismatch": 1,
+    "newMasterInit": 0,
+    "provisioned": 0,
+    "invalid": 2,
+    "removed": 2,
 }
 
 
 def parse_cisco_stack(info):
 
     switch_state_names = {
-        "1"  : "waiting",
-        "2"  : "progressing",
-        "3"  : "added",
-        "4"  : "ready",
-        "5"  : "sdmMismatch",
-        "6"  : "verMismatch",
-        "7"  : "featureMismatch",
-        "8"  : "newMasterInit",
-        "9"  : "provisioned",
-        "10" : "invalid",
-        "11" : "removed",
+        "1": "waiting",
+        "2": "progressing",
+        "3": "added",
+        "4": "ready",
+        "5": "sdmMismatch",
+        "6": "verMismatch",
+        "7": "featureMismatch",
+        "8": "newMasterInit",
+        "9": "provisioned",
+        "10": "invalid",
+        "11": "removed",
     }
 
     switch_role_names = {
-        "1" : "master",
-        "2" : "member",
-        "3" : "notMember",
+        "1": "master",
+        "2": "member",
+        "3": "notMember",
     }
 
     parsed = {}
     for line in info:
         parsed[line[0]] = {
-            "switch_role" : switch_role_names.get(line[1], "unknown"),
-            "switch_state" : switch_state_names.get(line[2], "unknown"),
+            "switch_role": switch_role_names.get(line[1], "unknown"),
+            "switch_state": switch_state_names.get(line[2], "unknown"),
         }
     return parsed
 
@@ -79,17 +78,17 @@ def inventory_cisco_stack(parsed):
 def check_cisco_stack(item, params, parsed):
 
     switch_state_descriptions = {
-        "waiting" : "Waiting for other switches to come online",
-        "progressing" : "Master election or mismatch checks in progress",
-        "added" : "Added to stack",
-        "ready" : "Ready",
-        "sdmMismatch" : "SDM template mismatch",
-        "verMismatch" : "OS version mismatch",
-        "featureMismatch" : "Configured feature mismatch",
-        "newMasterInit" : "Waiting for new master initialization",
-        "provisioned"  : "Not an active member of the stack",
-        "invalid" : "State machine in invalid state",
-        "removed" : "Removed from stack",
+        "waiting": "Waiting for other switches to come online",
+        "progressing": "Master election or mismatch checks in progress",
+        "added": "Added to stack",
+        "ready": "Ready",
+        "sdmMismatch": "SDM template mismatch",
+        "verMismatch": "OS version mismatch",
+        "featureMismatch": "Configured feature mismatch",
+        "newMasterInit": "Waiting for new master initialization",
+        "provisioned": "Not an active member of the stack",
+        "invalid": "State machine in invalid state",
+        "removed": "Removed from stack",
     }
 
     data = parsed.get(item)
@@ -100,23 +99,25 @@ def check_cisco_stack(item, params, parsed):
     switch_role = data["switch_role"]
 
     status = params.get(data["switch_state"], 3)
-    infotext = "Switch state: %s (%s), switch role: %s" % (switch_state_descriptions.get(switch_state, "Unknown"),
-                                                            switch_state, switch_role)
+    infotext = "Switch state: %s (%s), switch role: %s" % (switch_state_descriptions.get(
+        switch_state, "Unknown"), switch_state, switch_role)
     return status, infotext
 
 
 check_info['cisco_stack'] = {
-    'default_levels_variable' : 'cisco_stack',
-    'parse_function'          : parse_cisco_stack,
-    'inventory_function'      : inventory_cisco_stack,
-    'check_function'          : check_cisco_stack,
-    'service_description'     : 'Switch stack status %s',
-    'snmp_info'               : ('.1.3.6.1.4.1.9.9.500.1.2.1.1', [
-                                      "1", # cswSwitchNumCurrent
-                                      "3", # cswSwitchRole
-                                      "6", # cswSwitchState
-                                  ]),
-    'snmp_scan_function'      : lambda oid: (oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.9.1.1208") or
-                                             oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.9.1.1745")),
-    'group'                   : 'cisco_stack',
+    'default_levels_variable': 'cisco_stack',
+    'parse_function': parse_cisco_stack,
+    'inventory_function': inventory_cisco_stack,
+    'check_function': check_cisco_stack,
+    'service_description': 'Switch stack status %s',
+    'snmp_info': (
+        '.1.3.6.1.4.1.9.9.500.1.2.1.1',
+        [
+            "1",  # cswSwitchNumCurrent
+            "3",  # cswSwitchRole
+            "6",  # cswSwitchState
+        ]),
+    'snmp_scan_function':
+        lambda oid: (oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.9.1.1208") or oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.9.1.1745")),
+    'group': 'cisco_stack',
 }

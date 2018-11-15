@@ -48,9 +48,8 @@ def check_ssh_arguments(params):
 
 
 active_check_info['ssh'] = {
-    "command_line"        : '$USER1$/check_ssh $ARG1$',
-    "argument_function"   : check_ssh_arguments,
-    "service_description" : check_ssh_desc,
-    "has_perfdata"        : True,
+    "command_line": '$USER1$/check_ssh $ARG1$',
+    "argument_function": check_ssh_arguments,
+    "service_description": check_ssh_desc,
+    "has_perfdata": True,
 }
-

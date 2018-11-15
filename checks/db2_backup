@@ -30,9 +30,11 @@
 
 db2_backup_default_levels = (86400 * 14, 86400 * 28)
 
+
 def inventory_db2_backup(parsed):
     for instance in parsed[1]:
         yield instance, "db2_backup_default_levels"
+
 
 def check_db2_backup(item, params, parsed):
     db = parsed[1].get(item)
@@ -60,11 +62,12 @@ def check_db2_backup(item, params, parsed):
     else:
         yield 0, "Time since last backup: %s" % get_age_human_readable(age)
 
+
 check_info['db2_backup'] = {
-    "parse_function"          : parse_db2_dbs,
-    "service_description"     : "DB2 Backup %s",
-    "check_function"          : check_db2_backup,
-    "inventory_function"      : inventory_db2_backup,
-    "group"                   : "db2_backup",
-    "includes"                : ["db2.include"],
+    "parse_function": parse_db2_dbs,
+    "service_description": "DB2 Backup %s",
+    "check_function": check_db2_backup,
+    "inventory_function": inventory_db2_backup,
+    "group": "db2_backup",
+    "includes": ["db2.include"],
 }

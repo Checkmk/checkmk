@@ -29,16 +29,17 @@ def inventory_blade_bx_powermod(info):
     for line in info:
         yield (line[0], None)
 
+
 def check_blade_bx_powermod(item, _no_param, info):
     power_status = {
-        "1" : ("unknown",     3),
-        "2" : ("ok",          0),
-        "3" : ("not-present", 2),
-        "4" : ("error",       2),
-        "5" : ("critical",    2),
-        "6" : ("off",         2),
-        "7" : ("dummy",       2),
-        "8" : ("fanmodule",   0),
+        "1": ("unknown", 3),
+        "2": ("ok", 0),
+        "3": ("not-present", 2),
+        "4": ("error", 2),
+        "5": ("critical", 2),
+        "6": ("off", 2),
+        "7": ("dummy", 2),
+        "8": ("fanmodule", 0),
     }
     for line in info:
         index, status, product_name = line
@@ -60,4 +61,3 @@ check_info['blade_bx_powermod'] = {
    "snmp_scan_function" : lambda oid: "BX600" in oid(".1.3.6.1.2.1.1.1.0") \
                             or oid(".1.3.6.1.2.1.1.2.0") == ".1.3.6.1.4.1.7244.1.1.1",
 }
-

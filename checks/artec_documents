@@ -33,7 +33,7 @@
 
 
 def inventory_artec_documents(info):
-    return [ (None, None) ]
+    return [(None, None)]
 
 
 def check_artec_documents(_no_item, _no_params, info):
@@ -47,13 +47,15 @@ def check_artec_documents(_no_item, _no_params, info):
 
 
 check_info['artec_documents'] = {
-    'inventory_function'        : inventory_artec_documents,
-    'check_function'            : check_artec_documents,
-    'service_description'       : 'Documents',
-    'snmp_info'                 : (".1.3.6.1.4.1.31560.0.0.3.1", [
-                                        "3",    # artecDocumentsName
-                                        "1",    # artecDocumentsValues
-                                  ]),
-    'snmp_scan_function'        : artec_scan_function,
-    'includes'                  : [ "artec.include" ],
+    'inventory_function': inventory_artec_documents,
+    'check_function': check_artec_documents,
+    'service_description': 'Documents',
+    'snmp_info': (
+        ".1.3.6.1.4.1.31560.0.0.3.1",
+        [
+            "3",  # artecDocumentsName
+            "1",  # artecDocumentsValues
+        ]),
+    'snmp_scan_function': artec_scan_function,
+    'includes': ["artec.include"],
 }

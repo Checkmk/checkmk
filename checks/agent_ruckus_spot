@@ -24,6 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+
 def agent_ruckus_spot_arguments(params, hostname, ipaddress):
     args = ''
 
@@ -37,5 +38,6 @@ def agent_ruckus_spot_arguments(params, hostname, ipaddress):
         args += " --agent_port %s" % params["cmk_agent"]["port"]
 
     return args
+
 
 special_agent_info['ruckus_spot'] = agent_ruckus_spot_arguments

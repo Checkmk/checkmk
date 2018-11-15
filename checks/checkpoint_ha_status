@@ -24,7 +24,6 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-
 # .1.3.6.1.4.1.2620.1.5.2.0 1
 # .1.3.6.1.4.1.2620.1.5.3.0 6
 # .1.3.6.1.4.1.2620.1.5.4.0 0
@@ -52,11 +51,10 @@ def check_checkpoint_ha_status(_no_item, _no_params, info):
     else:
         yield 0, "Installed: v%s.%s" % (major, minor)
 
-        for val, infotext, ok_vals, warn_vals in [
-            (started,     "Started",   ["yes"],               None),
-            (state,       "Status",    ["active", "standby"], None),
-            (block_state, "Blocking",  ["ok"],                ["initializing"])
-        ]:
+        for val, infotext, ok_vals, warn_vals in [(started, "Started", ["yes"], None),
+                                                  (state, "Status", ["active", "standby"], None),
+                                                  (block_state, "Blocking", ["ok"],
+                                                   ["initializing"])]:
             if ok_vals is None or val.lower() in ok_vals:
                 status = 0
             elif warn_vals is not None and val.lower() in warn_vals:
@@ -71,18 +69,21 @@ def check_checkpoint_ha_status(_no_item, _no_params, info):
 
 
 check_info['checkpoint_ha_status'] = {
-    'check_function'         : check_checkpoint_ha_status,
-    'inventory_function'     : inventory_checkpoint_ha_status,
-    'service_description'    : "HA Status",
-    'snmp_scan_function'     : scan_checkpoint,
-    'snmp_info'              : ( '.1.3.6.1.4.1.2620.1.5', [2,    # haInstalled
-                                                           3,    # haVerMajor
-                                                           4,    # haVerMinor
-                                                           5,    # haStarted
-                                                           6,    # haState
-                                                           7,    # haBlockState
-                                                           101,  # haStatCode
-                                                           103,  # haStatLong
-                                                           ]),
-    'includes'               : [ 'checkpoint.include' ],
+    'check_function': check_checkpoint_ha_status,
+    'inventory_function': inventory_checkpoint_ha_status,
+    'service_description': "HA Status",
+    'snmp_scan_function': scan_checkpoint,
+    'snmp_info': (
+        '.1.3.6.1.4.1.2620.1.5',
+        [
+            2,  # haInstalled
+            3,  # haVerMajor
+            4,  # haVerMinor
+            5,  # haStarted
+            6,  # haState
+            7,  # haBlockState
+            101,  # haStatCode
+            103,  # haStatLong
+        ]),
+    'includes': ['checkpoint.include'],
 }

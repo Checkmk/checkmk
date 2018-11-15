@@ -76,8 +76,9 @@
 #                                 'result': 'Sichern konnte nicht durchgef\xc3\xbchrt werden.Anzahl an Fehlern/Warnungen: 1/0',
 #                                 'size'  : 480413566894}}
 
+
 def parse_arcserve_backup(info):
-    unit_factor = { "kb": 1024, "mb": 1024 ** 2, "gb": 1024 ** 3, "tb": 1024 ** 4 }
+    unit_factor = {"kb": 1024, "mb": 1024**2, "gb": 1024**3, "tb": 1024**4}
     parsed = {}
     for line in info:
         if line[0] == "Beschreibung:":
@@ -88,24 +89,26 @@ def parse_arcserve_backup(info):
                 parsed[backup_id] = backup
         elif len(line) > 5 and line[1] == "Verzeichnis(se)" and line[3] == "Datei(en)" \
             and line[5][-1] == ")":
-            dirs  = int(line[0].replace(".", ""))
+            dirs = int(line[0].replace(".", ""))
             files = int(line[2].replace(".", ""))
-            unit  = line[5].replace(")", "").lower()
-            size  = int(float(line[4].replace("(", "").replace(",", ".")) * unit_factor[unit])
-            backup["dirs"]  = dirs
+            unit = line[5].replace(")", "").lower()
+            size = int(float(line[4].replace("(", "").replace(",", ".")) * unit_factor[unit])
+            backup["dirs"] = dirs
             backup["files"] = files
-            backup["size"]  = size
+            backup["size"] = size
         elif len(line) > 1 and line[0] == "Vorgang":
             result = " ".join(line[1:])
             backup["result"] = result
     return parsed
 
+
 def inventory_arcserve_backup(info):
     parsed = parse_arcserve_backup(info)
     inventory = []
     for backup in parsed:
-        inventory.append( (backup, None) )
+        inventory.append((backup, None))
     return inventory
+
 
 def check_arcserve_backup(item, _no_params, info):
     parsed = parse_arcserve_backup(info)
@@ -117,30 +120,30 @@ def check_arcserve_backup(item, _no_params, info):
 
     # directories
     if "dirs" in parsed[item]:
-        dirs=parsed[item]["dirs"]
+        dirs = parsed[item]["dirs"]
         message += "%s directories" % parsed[item]["dirs"]
     else:
-        dirs=0
+        dirs = 0
     perfdata.append(("dirs", dirs))
 
     # files
     if "files" in parsed[item]:
         if message != "":
             message += ", "
-        files=parsed[item]["files"]
+        files = parsed[item]["files"]
         message += "%s files" % parsed[item]["files"]
     else:
-        files=0
+        files = 0
     perfdata.append(("files", files))
 
     # size
     if "size" in parsed[item]:
         if message != "":
             message += ", "
-        size=parsed[item]["size"]
+        size = parsed[item]["size"]
         message += "Size: %s" % get_bytes_human_readable(parsed[item]["size"])
     else:
-        size=0
+        size = 0
     perfdata.append(("size", size))
 
     # result
@@ -148,11 +151,11 @@ def check_arcserve_backup(item, _no_params, info):
         message += ", "
 
     if parsed[item]["result"].startswith("Sichern erfolgreich"):
-        status=0
+        status = 0
     elif parsed[item]["result"].startswith("Sichern unvollst"):
-        status=1
+        status = 1
     elif parsed[item]["result"].startswith("Sichern konnte nicht durchgef"):
-        status=2
+        status = 2
     else:
         message += "unknown Result: %s" % parsed[item]["result"]
         return 3, message, perfdata
@@ -161,9 +164,10 @@ def check_arcserve_backup(item, _no_params, info):
 
     return status, message, perfdata
 
+
 check_info["arcserve_backup"] = {
-    "check_function"        : check_arcserve_backup,
-    "inventory_function"    : inventory_arcserve_backup,
-    "service_description"   : "Arcserve Backup %s",
-    "has_perfdata"          : True,
+    "check_function": check_arcserve_backup,
+    "inventory_function": inventory_arcserve_backup,
+    "service_description": "Arcserve Backup %s",
+    "has_perfdata": True,
 }

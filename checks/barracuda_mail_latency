@@ -31,7 +31,7 @@ barracuda_mail_latency_default_levels = (40, 60)
 
 
 def inventory_barracuda_mail_latency(info):
-    return [(None, "barracuda_mail_latency_default_levels" )]
+    return [(None, "barracuda_mail_latency_default_levels")]
 
 
 def check_barracuda_mail_latency(_no_item, params, info):
@@ -49,7 +49,7 @@ def check_barracuda_mail_latency(_no_item, params, info):
                     (get_age_human_readable(warn),
                      get_age_human_readable(crit))
 
-    return state, infotext, [ ( "mail_latency", avg_mail_latency, warn, crit) ]
+    return state, infotext, [("mail_latency", avg_mail_latency, warn, crit)]
 
 
 check_info['barracuda_mail_latency'] = {
@@ -65,8 +65,3 @@ check_info['barracuda_mail_latency'] = {
                                               "barracuda" in oid(".1.3.6.1.2.1.1.1.0").lower(),
     'group'                     : "mail_latency",
 }
-
-
-
-
-

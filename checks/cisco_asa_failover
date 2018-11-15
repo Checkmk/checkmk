@@ -39,9 +39,9 @@
 #  ['Secondary unit (this device)', '10', 'Standby unit']]
 
 factory_settings["cisco_asa_failover_default_levels"] = {
-            "primary"            : "active",
-            "secondary"          : "standby",
-            "failover_state"     : 1,
+    "primary": "active",
+    "secondary": "standby",
+    "failover_state": 1,
 }
 
 
@@ -69,16 +69,16 @@ def inventory_cisco_asa_failover(parsed):
 
 def check_cisco_asa_failover(_no_item, params, parsed):
     asa_state_names = {
-        "1"   : "other",
-        "2"   : "up",
-        "3"   : "down",
-        "4"   : "error",
-        "5"   : "overTemp",
-        "6"   : "busy",
-        "7"   : "noMedia",
-        "8"   : "backup",
-        "9"   : "active",
-        "10"  : "standby",
+        "1": "other",
+        "2": "up",
+        "3": "down",
+        "4": "error",
+        "5": "overTemp",
+        "6": "busy",
+        "7": "noMedia",
+        "8": "backup",
+        "9": "active",
+        "10": "standby",
     }
 
     role = parsed["local"][0]
@@ -92,7 +92,7 @@ def check_cisco_asa_failover(_no_item, params, parsed):
         yield params["failover_state"], \
               "(The %s device should be %s)" % (role, params[role])
 
-    if not status in [ "9", "10" ]:
+    if not status in ["9", "10"]:
         yield 1, "Unhandled state %s reported" % status_readable
 
 

@@ -24,13 +24,13 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-factory_settings["datapower_mem_default_levels"] = {
-    "levels" : ("perc_used", (80.0, 90.0))
-}
+factory_settings["datapower_mem_default_levels"] = {"levels": ("perc_used", (80.0, 90.0))}
+
 
 def inventory_datapower_mem(info):
     if info:
-        return [ ("", {}) ]
+        return [("", {})]
+
 
 def check_datapower_mem(_no_item, params, info):
 
@@ -41,18 +41,18 @@ def check_datapower_mem(_no_item, params, info):
 
 
 check_info['datapower_mem'] = {
-  "inventory_function"      : inventory_datapower_mem,
-  "check_function"          : check_datapower_mem,
-  "service_description"     : "Memory",
-  "snmp_info"               : ( ".1.3.6.1.4.1.14685.3.1.5", [
+    "inventory_function"      : inventory_datapower_mem,
+    "check_function"          : check_datapower_mem,
+    "service_description"     : "Memory",
+    "snmp_info"               : ( ".1.3.6.1.4.1.14685.3.1.5", [
                                   "2",  # dpStatusMemoryStatusTotalMemory
                                   "3",  # dpStatusMemoryStatusUsedMemory
                               ]),
-  "snmp_scan_function"      : lambda oid: oid(".1.3.6.1.2.1.1.2.0") in [ ".1.3.6.1.4.1.14685.1.7",  ".1.3.6.1.4.1.14685.1.3" ],
-  "includes"                : [ "memory.include" ],
-  "group"                   : "memory_simple",
-  "default_levels_variable" : "datapower_mem_default_levels",
-  "has_perfdata"            : True,
+    "snmp_scan_function"      : lambda oid: oid(".1.3.6.1.2.1.1.2.0") in [ ".1.3.6.1.4.1.14685.1.7",  ".1.3.6.1.4.1.14685.1.3" ],
+    "includes"                : [ "memory.include" ],
+    "group"                   : "memory_simple",
+    "default_levels_variable" : "datapower_mem_default_levels",
+    "has_perfdata"            : True,
 
 
 }

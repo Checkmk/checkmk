@@ -26,11 +26,11 @@
 
 
 def parse_ddn_s2a_uptime(info):
-    return { key : value[0] for key, value in parse_ddn_s2a_api_response(info).items() }
+    return {key: value[0] for key, value in parse_ddn_s2a_api_response(info).items()}
 
 
 def inventory_ddn_s2a_uptime(parsed):
-    return [ (None, {}) ]
+    return [(None, {})]
 
 
 def check_ddn_s2a_uptime(_no_item, params, parsed):
@@ -39,18 +39,19 @@ def check_ddn_s2a_uptime(_no_item, params, parsed):
     uptime_hours = int(parsed[u"uptime_hours"])
     uptime_minutes = int(parsed[u"uptime_minutes"])
 
-    uptime_sec = 60*(uptime_minutes + 60*(uptime_hours + 24*(uptime_days + 365*uptime_years)))
+    uptime_sec = 60 * (uptime_minutes + 60 * (uptime_hours + 24 *
+                                              (uptime_days + 365 * uptime_years)))
     return check_uptime_seconds(params, uptime_sec)
 
 
 check_info["ddn_s2a_uptime"] = {
-    "parse_function"        : parse_ddn_s2a_uptime,
-    "inventory_function"    : inventory_ddn_s2a_uptime,
-    "check_function"        : check_ddn_s2a_uptime,
-    "service_description"   : "DDN S2A Power-On Time", # We don't use "Uptime" as a service description here,
-                                                       # because this value is different from the uptime value
-                                                       # supplied via SNMP.
-    "has_perfdata"          : True,
-    'includes'              : [ "ddn_s2a.include", "uptime.include" ],
-    "group"                 : "uptime",
+    "parse_function": parse_ddn_s2a_uptime,
+    "inventory_function": inventory_ddn_s2a_uptime,
+    "check_function": check_ddn_s2a_uptime,
+    "service_description": "DDN S2A Power-On Time",  # We don't use "Uptime" as a service description here,
+    # because this value is different from the uptime value
+    # supplied via SNMP.
+    "has_perfdata": True,
+    'includes': ["ddn_s2a.include", "uptime.include"],
+    "group": "uptime",
 }

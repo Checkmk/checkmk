@@ -24,6 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+
 def parse_bi_aggregation(info):
     import ast
     parsed = {}
@@ -31,9 +32,11 @@ def parse_bi_aggregation(info):
         parsed.update(ast.literal_eval(line[0]))
     return parsed
 
+
 def discover_bi_aggregation(parsed):
     for aggr_name in parsed:
         yield aggr_name, None
+
 
 def check_bi_aggregation(item, _no_params, parsed):
     bi_data = parsed.get(item)
@@ -57,8 +60,8 @@ def check_bi_aggregation(item, _no_params, parsed):
 
 
 check_info["bi_aggregation"] = {
-    "parse_function" : parse_bi_aggregation,
-    "inventory_function" : discover_bi_aggregation,
-    "check_function" : check_bi_aggregation,
-    "service_description" : "Aggr %s",
+    "parse_function": parse_bi_aggregation,
+    "inventory_function": discover_bi_aggregation,
+    "check_function": check_bi_aggregation,
+    "service_description": "Aggr %s",
 }

@@ -24,7 +24,6 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-
 # .1.3.6.1.4.1.2606.4.3.1.1.0 1
 # .1.3.6.1.4.1.2606.4.3.1.2.0 1
 # .1.3.6.1.4.1.2606.4.3.1.3.0 1
@@ -73,23 +72,25 @@ def check_cmctc_config(_no_item, _no_params, info):
     web_access = web_access_map.get(web_access_id)
 
     infotext = ('Web access: %s, Beeper: %s, Acknowledging: %s, '
-                'Alarm relay logic in case of alarm: %s, Temperature unit: %s'
-               ) % (web_access, beeper, acknowledging, relay_logic, temperature_unit)
+                'Alarm relay logic in case of alarm: %s, Temperature unit: %s') % (
+                    web_access, beeper, acknowledging, relay_logic, temperature_unit)
 
     return 0, infotext
 
 
 check_info['cmctc_config'] = {
-    "inventory_function"  : inventory_cmctc_config,
-    "check_function"      : check_cmctc_config,
-    "service_description" : "TC configuration",
-    "snmp_scan_function"  : cmctc_snmp_scan_function,
-    "snmp_info"           : (".1.3.6.1.4.1.2606.4.3.1", [  # cmcTcSetupGeneral from RITTAL-CMC-TC-MIB
-                                    "1",  # cmcTcTempUnit
-                                    "2",  # cmcTcSetBeeper
-                                    "3",  # cmcTcQuitRelay
-                                    "4",  # cmcTcLogicRelay
-                                    "5",  # cmcTcWebAccess
-                            ]),
-    "includes"            : [ "cmctc.include" ],
+    "inventory_function": inventory_cmctc_config,
+    "check_function": check_cmctc_config,
+    "service_description": "TC configuration",
+    "snmp_scan_function": cmctc_snmp_scan_function,
+    "snmp_info": (
+        ".1.3.6.1.4.1.2606.4.3.1",
+        [  # cmcTcSetupGeneral from RITTAL-CMC-TC-MIB
+            "1",  # cmcTcTempUnit
+            "2",  # cmcTcSetBeeper
+            "3",  # cmcTcQuitRelay
+            "4",  # cmcTcLogicRelay
+            "5",  # cmcTcWebAccess
+        ]),
+    "includes": ["cmctc.include"],
 }

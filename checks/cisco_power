@@ -32,13 +32,13 @@
 # .1.3.6.1.4.1.9.9.13.1.5.1.4.2 2
 
 cisco_power_states = (
-   '',
-   'normal',
-   'warning',
-   'critical',
-   'shutdown',
-   'not present',
-   'not functioning',
+    '',
+    'normal',
+    'warning',
+    'critical',
+    'shutdown',
+    'not present',
+    'not functioning',
 )
 
 cisco_power_sources = (
@@ -49,6 +49,7 @@ cisco_power_sources = (
     'external power supply',
     'internal redundant',
 )
+
 
 def inventory_cisco_power(info):
     # Note: the name of the power supply is not unique. We have seen
@@ -73,7 +74,7 @@ def check_cisco_power(item, no_params, info):
         if cisco_sensor_item(textinfo, sid) == item or\
                 cisco_sensor_item(textinfo, sid)+" "+sid == item or\
                 cisco_sensor_item(textinfo, sid)+"/"+sid == item:
-            state  = int(state)
+            state = int(state)
             source = int(source)
             output = 'Status: %s, Source: %s' % \
                 (cisco_power_states[state], cisco_power_sources[source])
@@ -84,17 +85,18 @@ def check_cisco_power(item, no_params, info):
             return 2, "%s" % output
 
 
-
 check_info["cisco_power"] = {
-    'check_function'      : check_cisco_power,
-    'inventory_function'  : inventory_cisco_power,
-    'service_description' : 'Power %s',
-    'snmp_info'           : ('.1.3.6.1.4.1.9.9.13.1.5.1', [ # ciscoEnvMonSupplyStatusEntry
-                                    OID_END,
-                                    2, # ciscoEnvMonSupplyStatusDescr
-                                    3, # ciscoEnvMonSupplyState
-                                    4  # ciscoEnvMonSupplySource
-                            ]),
-    'snmp_scan_function'  : lambda oid: "cisco" in oid(".1.3.6.1.2.1.1.1.0").lower(),
-    'includes'            : ['cisco_sensor_item.include'],
+    'check_function': check_cisco_power,
+    'inventory_function': inventory_cisco_power,
+    'service_description': 'Power %s',
+    'snmp_info': (
+        '.1.3.6.1.4.1.9.9.13.1.5.1',
+        [  # ciscoEnvMonSupplyStatusEntry
+            OID_END,
+            2,  # ciscoEnvMonSupplyStatusDescr
+            3,  # ciscoEnvMonSupplyState
+            4  # ciscoEnvMonSupplySource
+        ]),
+    'snmp_scan_function': lambda oid: "cisco" in oid(".1.3.6.1.2.1.1.1.0").lower(),
+    'includes': ['cisco_sensor_item.include'],
 }

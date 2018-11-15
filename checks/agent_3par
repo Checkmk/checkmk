@@ -24,18 +24,20 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+
 def agent_3par_arguments(params, hostname, ipaddress):
     args = []
 
-    args += [ "-u", params["user"] ]
-    args += [ passwordstore_get_cmdline("-p%s", params["password"]) ]
-    args += [ "--verify-certs=%s" % ("yes" if params.get("verify_cert", False) else "no") ]
+    args += ["-u", params["user"]]
+    args += [passwordstore_get_cmdline("-p%s", params["password"])]
+    args += ["--verify-certs=%s" % ("yes" if params.get("verify_cert", False) else "no")]
 
     if "values" in params:
-        args += [ "-v", ",".join(params["values"]) ]
+        args += ["-v", ",".join(params["values"])]
 
     args.append(ipaddress)
 
     return args
+
 
 special_agent_info['3par'] = agent_3par_arguments

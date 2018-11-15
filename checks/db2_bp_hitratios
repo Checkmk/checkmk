@@ -32,6 +32,7 @@
 # BUF32K                           99.99                  99.98                   99.99                     -
 # BP8                             100.00                 100.00                       -                     -
 
+
 def parse_db2_bp_hitratios(info):
     pre_parsed = parse_db2_dbs(info)
 
@@ -51,17 +52,18 @@ def parse_db2_bp_hitratios(info):
         if node_names:
             # DPF mode
             current_node_offset = -1
-            current_instance    = None
+            current_instance = None
             for line in lines[header_idx + 1:]:
                 if line[0] == "IBMDEFAULTBP":
                     current_node_offset += 1
                     current_instance = "%s DPF %s" % (instance, node_names[current_node_offset])
-                    databases.setdefault(current_instance, [ node_headers ])
+                    databases.setdefault(current_instance, [node_headers])
                 databases[current_instance].append(line)
         else:
             databases[instance] = lines
 
     return databases
+
 
 def inventory_db2_bp_hitratios(parsed):
     for key, values in parsed.items():
@@ -69,8 +71,9 @@ def inventory_db2_bp_hitratios(parsed):
             if not field[0].startswith("IBMSYSTEMBP"):
                 yield "%s:%s" % (key, field[0]), {}
 
+
 def check_db2_bp_hitratios(item, no_params, parsed):
-    db_instance, field = item.rsplit(":",1)
+    db_instance, field = item.rsplit(":", 1)
     db = parsed.get(db_instance)
     if not db:
         raise MKCounterWrapped("Login into database failed")
@@ -78,26 +81,28 @@ def check_db2_bp_hitratios(item, no_params, parsed):
     headers = db[0]
     for line in db[1:]:
         if field == line[0]:
-            hr_info = dict(zip(headers[1:], line[1:])) # skip BP_NAME
+            hr_info = dict(zip(headers[1:], line[1:]))  # skip BP_NAME
             for key in headers[1:]:
                 value = hr_info[key]
-                value = value.replace("-","0").replace(",", ".")
-                key   = key.replace("_RATIO_PERCENT","")
+                value = value.replace("-", "0").replace(",", ".")
+                key = key.replace("_RATIO_PERCENT", "")
                 map_key_to_text = {
                     "TOTAL_HIT": "Total",
                     "DATA_HIT": "Data",
                     "INDEX_HIT": "Index",
                     "XDA_HIT": "XDA",
                 }
-                yield 0, "%s: %s%%" % (map_key_to_text[key], value), [("%sratio" % key.lower(), float(value), None, None, 0, 100)]
+                yield 0, "%s: %s%%" % (map_key_to_text[key], value), [("%sratio" % key.lower(),
+                                                                       float(value), None, None, 0,
+                                                                       100)]
             break
 
-check_info['db2_bp_hitratios'] = {
-    "parse_function"          : parse_db2_bp_hitratios,
-    "service_description"     : "DB2 BP-Hitratios %s",
-    "check_function"          : check_db2_bp_hitratios,
-    "inventory_function"      : inventory_db2_bp_hitratios,
-    "has_perfdata"            : True,
-    "includes"                : ["db2.include"]
-}
 
+check_info['db2_bp_hitratios'] = {
+    "parse_function": parse_db2_bp_hitratios,
+    "service_description": "DB2 BP-Hitratios %s",
+    "check_function": check_db2_bp_hitratios,
+    "inventory_function": inventory_db2_bp_hitratios,
+    "has_perfdata": True,
+    "includes": ["db2.include"]
+}

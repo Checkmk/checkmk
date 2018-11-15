@@ -62,10 +62,4 @@ def parse_omreport(info):
 
 
 def status_translate_omreport(code):
-    return {
-        "ok"           : 0,
-        "non-critical" : 1,
-        "critical"     : 2,
-        "not found"    : 3
-    }.get(code.lower(), 2)
-
+    return {"ok": 0, "non-critical": 1, "critical": 2, "not found": 3}.get(code.lower(), 2)

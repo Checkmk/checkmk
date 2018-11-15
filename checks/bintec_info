@@ -24,9 +24,11 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+
 def inventory_bintec_info(info):
     if len(info[0]) >= 1:
-        return [ (None, None) ]
+        return [(None, None)]
+
 
 def check_bintec_info(checktype, params, info):
     if len(info[0]) < 2:
@@ -34,19 +36,20 @@ def check_bintec_info(checktype, params, info):
     sw_version, serial = info[0]
     return (0, "Serial: %s, Software: %s" % (serial, sw_version))
 
+
 # 1.3.6.1.4.1.272.4.1.26.0 SW Version
 # 1.3.6.1.4.1.272.4.1.31.0 S/N
 
 # This check works on all SNMP hosts
 
 check_info["bintec_info"] = {
-    'check_function':          check_bintec_info,
-    'inventory_function':      inventory_bintec_info,
-    'service_description':     'Bintec Info',
+    'check_function': check_bintec_info,
+    'inventory_function': inventory_bintec_info,
+    'service_description': 'Bintec Info',
     # 1.3.6.1.4.1.272.4.1.31.0 S/N
     # 1.3.6.1.4.1.272.4.1.26.0 SW Version
-    'snmp_info':               ('.1.3.6.1.4.1.272.4.1', ['26.0', '31.0']),
-    'snmp_scan_function':      lambda oid: oid(".1.3.6.1.2.1.1.2.0") in  [
-                                        ".1.3.6.1.4.1.272.4.200.83.88.67.66.0.0",
-                                        ".1.3.6.1.4.1.272.4.158.82.78.66.48.0.0", ]
+    'snmp_info': ('.1.3.6.1.4.1.272.4.1', ['26.0', '31.0']),
+    'snmp_scan_function': lambda oid: oid(".1.3.6.1.2.1.1.2.0") in [
+        ".1.3.6.1.4.1.272.4.200.83.88.67.66.0.0",
+        ".1.3.6.1.4.1.272.4.158.82.78.66.48.0.0",]
 }

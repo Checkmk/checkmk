@@ -24,6 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+
 def parse_docker_container_mem(info):
     # parsed contains memory usages in bytes
     parsed = {}
@@ -63,12 +64,12 @@ def check_docker_container_mem(_no_item, params, parsed):
 
 
 check_info["docker_container_mem"] = {
-    "parse_function"          : parse_docker_container_mem,
-    "inventory_function"      : inventory_docker_container_mem,
-    "check_function"          : check_docker_container_mem,
-    "service_description"     : "Memory used",
-    "has_perfdata"            : True,
-    "group"                   : "memory",
-    "default_levels_variable" : "memory_default_levels",
-    "includes"                : [ "mem.include" ],
+    "parse_function": parse_docker_container_mem,
+    "inventory_function": inventory_docker_container_mem,
+    "check_function": check_docker_container_mem,
+    "service_description": "Memory used",
+    "has_perfdata": True,
+    "group": "memory",
+    "default_levels_variable": "memory_default_levels",
+    "includes": ["mem.include"],
 }

@@ -33,21 +33,23 @@
 factory_settings["checkpoint_packets_default_levels"] = {
     "accepted": (100000, 200000),
     "rejected": (100000, 200000),
-    "dropped":  (100000, 200000),
-    "logged":   (100000, 200000),
+    "dropped": (100000, 200000),
+    "logged": (100000, 200000),
 }
+
 
 def inventory_checkpoint_packets(info):
     if info:
-        return [ (None, {}) ]
+        return [(None, {})]
+
 
 def check_checkpoint_packets(_no_item, params, info):
     if info:
         value = {}
         value["Accepted"] = int(info[0][0])
         value["Rejected"] = int(info[0][1])
-        value["Dropped"]  = int(info[0][2])
-        value["Logged"]   = int(info[0][3])
+        value["Dropped"] = int(info[0][2])
+        value["Logged"] = int(info[0][3])
 
         this_time = time.time()
         for name, val in value.iteritems():
@@ -57,9 +59,9 @@ def check_checkpoint_packets(_no_item, params, info):
             else:
                 warn, crit = params[key]
 
-            rate     = get_rate(key, this_time, val)
-            infotext = "%s: %.1f pkts/s" % ( name, rate )
-            state    = 0
+            rate = get_rate(key, this_time, val)
+            infotext = "%s: %.1f pkts/s" % (name, rate)
+            state = 0
             if crit is not None and rate >= crit:
                 state = 2
             elif warn is not None and rate >= warn:
@@ -67,23 +69,24 @@ def check_checkpoint_packets(_no_item, params, info):
             if state:
                 infotext += " (warn/crit at %s/%s pkts/s)" % (warn, crit)
 
-            yield state, infotext, [ (key, rate, warn, crit, 0) ]
+            yield state, infotext, [(key, rate, warn, crit, 0)]
 
 
 check_info["checkpoint_packets"] = {
-    "check_function"          : check_checkpoint_packets,
-    "inventory_function"      : inventory_checkpoint_packets,
-    "service_description"     : "Packet Statistics",
-    "has_perfdata"            : True,
-    "group"                   : "checkpoint_packets",
-    "snmp_scan_function"      : scan_checkpoint,
-    "default_levels_variable" : "checkpoint_packets_default_levels",
-    "snmp_info"               : ( ".1.3.6.1.4.1.2620.1.1",
-                                                [ 4, # fwAccepted
-                                                  5, # fwRejected
-                                                  6, # fwDropped
-                                                  7, # fwLogged
-                                                ]),
-    "includes"                : [ "checkpoint.include" ],
+    "check_function": check_checkpoint_packets,
+    "inventory_function": inventory_checkpoint_packets,
+    "service_description": "Packet Statistics",
+    "has_perfdata": True,
+    "group": "checkpoint_packets",
+    "snmp_scan_function": scan_checkpoint,
+    "default_levels_variable": "checkpoint_packets_default_levels",
+    "snmp_info": (
+        ".1.3.6.1.4.1.2620.1.1",
+        [
+            4,  # fwAccepted
+            5,  # fwRejected
+            6,  # fwDropped
+            7,  # fwLogged
+        ]),
+    "includes": ["checkpoint.include"],
 }
-

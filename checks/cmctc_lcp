@@ -24,55 +24,54 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-
 cmctc_lcp_sensors = {
-        4 : (None, "access"),
-       12 : (None, "humidity"),
+    4: (None, "access"),
+    12: (None, "humidity"),
 
-       # User Sensors
-       13 : ("normally open",   "user"),
-       14 : ("normally closed", "user"),
+    # User Sensors
+    13: ("normally open", "user"),
+    14: ("normally closed", "user"),
 
-       # Leakage
-       23 : (None, "flow"),
+    # Leakage
+    23: (None, "flow"),
+    30: (None, "current"),
+    31: (None, "status"),
+    32: (None, "position"),
 
-       30 : (None, "current"),
-       31 : (None, "status"),
-       32 : (None, "position"),
+    # Blower
+    40: ("1", "blower"),
+    41: ("2", "blower"),
+    42: ("3", "blower"),
+    43: ("4", "blower"),
+    44: ("5", "blower"),
+    45: ("6", "blower"),
+    46: ("7", "blower"),
+    47: ("8", "blower"),
 
-       # Blower
-       40 : ("1", "blower", ),
-       41 : ("2", "blower", ),
-       42 : ("3", "blower", ),
-       43 : ("4", "blower", ),
-       44 : ("5", "blower", ),
-       45 : ("6", "blower", ),
-       46 : ("7", "blower", ),
-       47 : ("8", "blower", ),
+    # Server in/out
+    48: ("Server in 1", "temp"),
+    49: ("Server out 1", "temp"),
+    50: ("Server in 2", "temp"),
+    51: ("Server out 2", "temp"),
+    52: ("Server in 3", "temp"),
+    53: ("Server out 3", "temp"),
+    54: ("Server in 4", "temp"),
+    55: ("Server out 4", "temp"),
 
-       # Server in/out
-       48 : ("Server in 1",           "temp", ),
-       49 : ("Server out 1",          "temp", ),
-       50 : ("Server in 2",           "temp", ),
-       51 : ("Server out 2",          "temp", ),
-       52 : ("Server in 3",           "temp", ),
-       53 : ("Server out 3",          "temp", ),
-       54 : ("Server in 4",           "temp", ),
-       55 : ("Server out 4",          "temp", ),
+    # Overview Server
+    56: ("Overview Server in", "temp"),
+    57: ("Overview Server out", "temp"),
 
-       # Overview Server
-       56 : ("Overview Server in",    "temp", ),
-       57 : ("Overview Server out",   "temp", ),
+    # Water
+    58: ("Water in", "temp"),
+    59: ("Water out", "temp"),
+    60: (None, "flow"),
 
-       # Water
-       58 : ("Water in",     "temp", ),
-       59 : ("Water out",    "temp", ),
-       60 : (None, "flow"),
-
-       # Other stuff
-       61 : (None, "blowergrade" ),
-       62 : (None, "regulator" ),
+    # Other stuff
+    61: (None, "blowergrade"),
+    62: (None, "regulator"),
 }
+
 
 def inventory_cmctc_lcp(info, sensortype):
     inventory = []
@@ -88,32 +87,33 @@ def inventory_cmctc_lcp(info, sensortype):
                 inventory.append((item, None))
     return inventory
 
+
 def check_cmctc_lcp(item, params, info, sensortype):
     map_sensor_state = {
-        "1" : (3, "not available"),
-        "2" : (2, "lost"),
-        "3" : (1, "changed"),
-        "4" : (0, "ok"),
-        "5" : (2, "off"),
-        "6" : (0, "on"),
-        "7" : (1, "warning"),
-        "8" : (2, "too low"),
-        "9" : (2, "too high"),
+        "1": (3, "not available"),
+        "2": (2, "lost"),
+        "3": (1, "changed"),
+        "4": (0, "ok"),
+        "5": (2, "off"),
+        "6": (0, "on"),
+        "7": (1, "warning"),
+        "8": (2, "too low"),
+        "9": (2, "too high"),
         "10": (2, "error"),
     }
 
     map_unit = {
-        "access":       "",
-        "current":      " A",
-        "status":       "",
-        "position":     "",
-        "temp" :        u" °C",
-        "blower" :      " RPM",
-        "blowergrade" : "",
-        "humidity" :    "%",
-        "flow" :        " l/min",
-        "regulator" :   "%",
-        "user" :        "",
+        "access": "",
+        "current": " A",
+        "status": "",
+        "position": "",
+        "temp": u" °C",
+        "blower": " RPM",
+        "blowergrade": "",
+        "humidity": "%",
+        "flow": " l/min",
+        "regulator": "%",
+        "user": "",
     }
 
     itemindex = item.split(" - ")[-1]
@@ -164,6 +164,7 @@ def inventory_cmctc_lcp_temp(info):
                 inventory.append((item, None))
     return inventory
 
+
 def check_cmctc_lcp_temp(item, params, info):
     itemindex = item.split(" - ")[-1]
     for index, _typeid, statuscode, value, high, low, warn, _description in info:
@@ -173,114 +174,114 @@ def check_cmctc_lcp_temp(item, params, info):
                      (float(warn), float(high))
             levels_low = None if high == low == warn == "0" else \
                          (float(low), float("-inf"))  # no lower critical level specified
-            return check_temperature(float(value), params, "cmctc_lcp_temp_%s" % item,
-                    dev_levels=levels,
-                    dev_levels_lower=levels_low,
-                    dev_status=cmctc_translate_status(status),
-                    dev_status_name="Unit: %s" % cmctc_translate_status_text(status))
+            return check_temperature(
+                float(value),
+                params,
+                "cmctc_lcp_temp_%s" % item,
+                dev_levels=levels,
+                dev_levels_lower=levels_low,
+                dev_status=cmctc_translate_status(status),
+                dev_status_name="Unit: %s" % cmctc_translate_status_text(status))
     return 3, "Sensor not found in SNMP output", []
-
 
 
 snmp_scan_functions["cmctc_lcp"] = cmctc_snmp_scan_function
 
 snmp_info["cmctc_lcp"] = (
-   ".1.3.6.1.4.1.2606.4.2",
-   [
-       "3",  # cmcTcUnit1OutputTable
-       "4",  # cmcTcUnit2OutputTable
-       "5",  # cmcTcUnit3OutputTable
-       "6"   # cmcTcUnit4OutputTable
-   ],
-   [
-     "5.2.1.1", # Index
-     "5.2.1.2", # Sensor Type
-     "5.2.1.4", # Status
-     "5.2.1.5", # Value
-     "5.2.1.6", # High
-     "5.2.1.7", # Low
-     "5.2.1.8", # Warn
-     "7.2.1.2", # Description
-   ]
-)
+    ".1.3.6.1.4.1.2606.4.2",
+    [
+        "3",  # cmcTcUnit1OutputTable
+        "4",  # cmcTcUnit2OutputTable
+        "5",  # cmcTcUnit3OutputTable
+        "6"  # cmcTcUnit4OutputTable
+    ],
+    [
+        "5.2.1.1",  # Index
+        "5.2.1.2",  # Sensor Type
+        "5.2.1.4",  # Status
+        "5.2.1.5",  # Value
+        "5.2.1.6",  # High
+        "5.2.1.7",  # Low
+        "5.2.1.8",  # Warn
+        "7.2.1.2",  # Description
+    ])
 
 check_info['cmctc_lcp.access'] = {
-    "check_function"      : lambda item,params,info: check_cmctc_lcp(item, params, info, 'access'),
-    "inventory_function"  : lambda info: inventory_cmctc_lcp(info, 'access'),
-    "has_perfdata"        : True,
-    "service_description" : "Access %s",
+    "check_function": lambda item, params, info: check_cmctc_lcp(item, params, info, 'access'),
+    "inventory_function": lambda info: inventory_cmctc_lcp(info, 'access'),
+    "has_perfdata": True,
+    "service_description": "Access %s",
 }
 
 check_info['cmctc_lcp.blower'] = {
-    "check_function"      : lambda item,params,info: check_cmctc_lcp(item, params, info, 'blower'),
-    "inventory_function"  : lambda info: inventory_cmctc_lcp(info, 'blower'),
-    "has_perfdata"        : True,
-    "service_description" : "Blower %s",
+    "check_function": lambda item, params, info: check_cmctc_lcp(item, params, info, 'blower'),
+    "inventory_function": lambda info: inventory_cmctc_lcp(info, 'blower'),
+    "has_perfdata": True,
+    "service_description": "Blower %s",
 }
 
 check_info['cmctc_lcp.blowergrade'] = {
-    "check_function"      : lambda item,params,info: check_cmctc_lcp(item, params, info, 'blowergrade'),
-    "inventory_function"  : lambda info: inventory_cmctc_lcp(info, 'blowergrade'),
-    "has_perfdata"        : True,
-    "service_description" : "Blower Grade %s",
+    "check_function": lambda item, params, info: check_cmctc_lcp(item, params, info, 'blowergrade'),
+    "inventory_function": lambda info: inventory_cmctc_lcp(info, 'blowergrade'),
+    "has_perfdata": True,
+    "service_description": "Blower Grade %s",
 }
 
 check_info['cmctc_lcp.current'] = {
-    "check_function"      : lambda item,params,info: check_cmctc_lcp(item, params, info, 'current'),
-    "inventory_function"  : lambda info: inventory_cmctc_lcp(info, 'current'),
-    "has_perfdata"        : True,
-    "service_description" : "Current %s",
+    "check_function": lambda item, params, info: check_cmctc_lcp(item, params, info, 'current'),
+    "inventory_function": lambda info: inventory_cmctc_lcp(info, 'current'),
+    "has_perfdata": True,
+    "service_description": "Current %s",
 }
 
 check_info['cmctc_lcp.flow'] = {
-    "check_function"      : lambda item,params,info: check_cmctc_lcp(item, params, info, 'flow'),
-    "inventory_function"  : lambda info: inventory_cmctc_lcp(info, 'flow'),
-    "has_perfdata"        : True,
-    "service_description" : "Waterflow %s",
+    "check_function": lambda item, params, info: check_cmctc_lcp(item, params, info, 'flow'),
+    "inventory_function": lambda info: inventory_cmctc_lcp(info, 'flow'),
+    "has_perfdata": True,
+    "service_description": "Waterflow %s",
 }
 
 check_info['cmctc_lcp.humidity'] = {
-    "check_function"      : lambda item,params,info: check_cmctc_lcp(item, params, info, 'humidity'),
-    "inventory_function"  : lambda info: inventory_cmctc_lcp(info, 'humidity'),
-    "has_perfdata"        : True,
-    "service_description" : "Humidity %s",
+    "check_function": lambda item, params, info: check_cmctc_lcp(item, params, info, 'humidity'),
+    "inventory_function": lambda info: inventory_cmctc_lcp(info, 'humidity'),
+    "has_perfdata": True,
+    "service_description": "Humidity %s",
 }
 
 check_info['cmctc_lcp.position'] = {
-    "check_function"      : lambda item,params,info: check_cmctc_lcp(item, params, info, 'position'),
-    "inventory_function"  : lambda info: inventory_cmctc_lcp(info, 'position'),
-    "has_perfdata"        : True,
-    "service_description" : "Position %s",
+    "check_function": lambda item, params, info: check_cmctc_lcp(item, params, info, 'position'),
+    "inventory_function": lambda info: inventory_cmctc_lcp(info, 'position'),
+    "has_perfdata": True,
+    "service_description": "Position %s",
 }
 
 check_info['cmctc_lcp.regulator'] = {
-    "check_function"      : lambda item,params,info: check_cmctc_lcp(item, params, info, 'regulator'),
-    "inventory_function"  : lambda info: inventory_cmctc_lcp(info, 'regulator'),
-    "has_perfdata"        : True,
-    "service_description" : "Regulator %s",
+    "check_function": lambda item, params, info: check_cmctc_lcp(item, params, info, 'regulator'),
+    "inventory_function": lambda info: inventory_cmctc_lcp(info, 'regulator'),
+    "has_perfdata": True,
+    "service_description": "Regulator %s",
 }
 
 check_info['cmctc_lcp.status'] = {
-    "check_function"      : lambda item,params,info: check_cmctc_lcp(item, params, info, 'status'),
-    "inventory_function"  : lambda info: inventory_cmctc_lcp(info, 'status'),
-    "has_perfdata"        : True,
-    "service_description" : "Status %s",
+    "check_function": lambda item, params, info: check_cmctc_lcp(item, params, info, 'status'),
+    "inventory_function": lambda info: inventory_cmctc_lcp(info, 'status'),
+    "has_perfdata": True,
+    "service_description": "Status %s",
 }
 
 check_info['cmctc_lcp.user'] = {
-    "check_function"      : lambda item,params,info: check_cmctc_lcp(item, params, info, 'user'),
-    "inventory_function"  : lambda info: inventory_cmctc_lcp(info, 'user'),
-    "has_perfdata"        : True,
-    "service_description" : "User Sensor %s",
+    "check_function": lambda item, params, info: check_cmctc_lcp(item, params, info, 'user'),
+    "inventory_function": lambda info: inventory_cmctc_lcp(info, 'user'),
+    "has_perfdata": True,
+    "service_description": "User Sensor %s",
 }
-
 
 # temperature check is standardised
 check_info['cmctc_lcp.temp'] = {
-    "check_function"      : check_cmctc_lcp_temp,
-    "inventory_function"  : inventory_cmctc_lcp_temp,
-    "has_perfdata"        : True,
-    "service_description" : "Temperature %s",
-    "group"               : "temperature",
-    "includes"            : [ "temperature.include", "cmctc.include" ]
-    }
+    "check_function": check_cmctc_lcp_temp,
+    "inventory_function": inventory_cmctc_lcp_temp,
+    "has_perfdata": True,
+    "service_description": "Temperature %s",
+    "group": "temperature",
+    "includes": ["temperature.include", "cmctc.include"]
+}

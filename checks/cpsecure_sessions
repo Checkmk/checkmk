@@ -32,14 +32,16 @@
 #  ['HTTPS', '2', '0'],
 #  ['IMAP',  '1', '48']]
 
-cpsecure_sessions_default_levels = ( 2500, 5000 )
+cpsecure_sessions_default_levels = (2500, 5000)
+
 
 def inventory_cpsecure_sessions(info):
     inventory = []
     for service, enabled, _sessions in info:
         if enabled == '1':
-            inventory.append( (service, "cpsecure_sessions_default_levels") )
+            inventory.append((service, "cpsecure_sessions_default_levels"))
     return inventory
+
 
 def check_cpsecure_sessions(item, params, info):
     for service, enabled, sessions in info:
@@ -48,7 +50,7 @@ def check_cpsecure_sessions(item, params, info):
                 return (1, "service not enabled")
             num_sessions = int(sessions)
             warn, crit = params
-            perfdata = [ ("sessions", num_sessions, warn, crit, 0 ) ]
+            perfdata = [("sessions", num_sessions, warn, crit, 0)]
 
             if num_sessions >= crit:
                 return (2, "%s sessions (critical at %d)" % (sessions, crit), perfdata)
@@ -67,6 +69,6 @@ check_info["cpsecure_sessions"] = {
     'service_description':     'Number of %s sessions',
     'has_perfdata':            True,
     'snmp_info':               ('.1.3.6.1.4.1.26546.3.1.2.1.1.1', ['1', '2', '3']),
-    'snmp_scan_function':      \
+    'snmp_scan_function':       \
      lambda oid: oid(".1.3.6.1.2.1.1.2.0") == ".1.3.6.1.4.1.26546.1.1.2",
 }

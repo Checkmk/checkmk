@@ -24,39 +24,42 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+
 def check_sftp_arguments(params):
     args = []
     host, user, secret, settings = params
-    args = [ "--host=%s" % host ]
-    args += [ "--user=%s" % user ]
-    args += [ passwordstore_get_cmdline("--secret=%s", secret[1]) ]
+    args = ["--host=%s" % host]
+    args += ["--user=%s" % user]
+    args += [passwordstore_get_cmdline("--secret=%s", secret[1])]
 
     if "port" in settings:
-        args += [ "--port=%s" % settings['port'] ]
+        args += ["--port=%s" % settings['port']]
 
     if "timeout" in settings:
-        args += [ "--timeout=%s" % settings['timeout'] ]
+        args += ["--timeout=%s" % settings['timeout']]
 
     if "timestamp" in settings:
-        args += [ "--get-timestamp=%s" % settings['timestamp'] ]
+        args += ["--get-timestamp=%s" % settings['timestamp']]
 
     if "put" in settings:
-        args += [ "--put-local=%s" % settings['put'][0] ]
-        args += [ "--put-remote=%s" % settings['put'][1] ]
+        args += ["--put-local=%s" % settings['put'][0]]
+        args += ["--put-remote=%s" % settings['put'][1]]
 
     if "get" in settings:
-        args += [ "--get-remote=%s" % settings['get'][0] ]
-        args += [ "--get-local=%s" % settings['get'][1] ]
+        args += ["--get-remote=%s" % settings['get'][0]]
+        args += ["--get-local=%s" % settings['get'][1]]
 
     return " ".join(args)
+
 
 def check_sftp_desc(params):
     if "description" in params[3]:
         return params[3]['description']
     return "SFTP %s" % params[0]
 
+
 active_check_info['sftp'] = {
-    'command_line'          : "$USER1$/check_sftp $ARG1$",
-    'argument_function'     : check_sftp_arguments,
-    'service_description'    : check_sftp_desc,
+    'command_line': "$USER1$/check_sftp $ARG1$",
+    'argument_function': check_sftp_arguments,
+    'service_description': check_sftp_desc,
 }

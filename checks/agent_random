@@ -31,7 +31,9 @@
 #     'user': 'wefwef'
 # }
 
+
 def agent_random_arguments(params, hostname, ipaddress):
     return hostname
+
 
 special_agent_info['random'] = agent_random_arguments

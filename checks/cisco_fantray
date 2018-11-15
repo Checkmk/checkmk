@@ -24,7 +24,6 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-
 # .1.3.6.1.4.1.9.9.117.1.4.1.1.1.534 2
 # .1.3.6.1.4.1.9.9.117.1.4.1.1.1.535 2
 # .1.3.6.1.4.1.9.9.117.1.4.1.1.1.536 2
@@ -80,7 +79,8 @@ def parse_cisco_fantray(info):
 
     ppre_parsed = {}
     for end_oid, oper_state in info[0]:
-        ppre_parsed.setdefault(end_oid, map_states.get(oper_state, (3, "unexpected(%s)" % oper_state)))
+        ppre_parsed.setdefault(end_oid,
+                               map_states.get(oper_state, (3, "unexpected(%s)" % oper_state)))
 
     pre_parsed = {}
     for end_oid, name in info[1]:
@@ -92,7 +92,7 @@ def parse_cisco_fantray(info):
     for name, infos in pre_parsed.items():
         if len(infos) > 1:
             for k, state_info in enumerate(infos):
-                parsed["%s-%d" % (name, k+1)] = state_info
+                parsed["%s-%d" % (name, k + 1)] = state_info
         else:
             parsed[name] = infos[0]
 
@@ -125,5 +125,6 @@ check_info["cisco_fantray"] = {
                             ])],
     'snmp_scan_function'  : lambda oid: "cisco" in oid(".1.3.6.1.2.1.1.1.0").lower() \
                             # Exclude cisco_fan check
+
                             and not oid(".1.3.6.1.4.1.9.9.13.1.4.1.2.*"),
 }

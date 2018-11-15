@@ -47,27 +47,28 @@ carel_temp_defaultlevels = {             # This still needs sensible values
     "Heating Prop. Band"    : (60, 70),
 }
 
+
 def carel_sensors_parse(info):
 
     oidtothing = {
-        "1.0"   :   ("temp", "Room"),
-        "2.0"   :   ("temp", "Outdoor"),
-        "3.0"   :   ("temp", "Delivery"),
-        "4.0"   :   ("temp", "Cold Water"),
-        "5.0"   :   ("temp", "Hot Water"),
-        "7.0"   :   ("temp", "Cold Water Outlet"),
-        "10.0"  :   ("temp", "Circuit 1 Suction"),
-        "11.0"  :   ("temp", "Circuit 2 Suction"),
-        "12.0"  :   ("temp", "Circuit 1 Evap"),
-        "13.0"  :   ("temp", "Circuit 2 Evap"),
-        "14.0"  :   ("temp", "Circuit 1 Superheat"),
-        "15.0"  :   ("temp", "Circuit 2 Superheat"),
-        "20.0"  :   ("temp", "Cooling Set Point"),
-        "21.0"  :   ("temp", "Cooling Prop. Band"),
-        "22.0"  :   ("temp", "Cooling 2nd Set Point"),
-        "23.0"  :   ("temp", "Heating Set Point"),
-        "24.0"  :   ("temp", "Heating 2nd Set Point"),
-        "25.0"  :   ("temp", "Heating Prop. Band"),
+        "1.0": ("temp", "Room"),
+        "2.0": ("temp", "Outdoor"),
+        "3.0": ("temp", "Delivery"),
+        "4.0": ("temp", "Cold Water"),
+        "5.0": ("temp", "Hot Water"),
+        "7.0": ("temp", "Cold Water Outlet"),
+        "10.0": ("temp", "Circuit 1 Suction"),
+        "11.0": ("temp", "Circuit 2 Suction"),
+        "12.0": ("temp", "Circuit 1 Evap"),
+        "13.0": ("temp", "Circuit 2 Evap"),
+        "14.0": ("temp", "Circuit 1 Superheat"),
+        "15.0": ("temp", "Circuit 2 Superheat"),
+        "20.0": ("temp", "Cooling Set Point"),
+        "21.0": ("temp", "Cooling Prop. Band"),
+        "22.0": ("temp", "Cooling 2nd Set Point"),
+        "23.0": ("temp", "Heating Set Point"),
+        "24.0": ("temp", "Heating 2nd Set Point"),
+        "25.0": ("temp", "Heating Prop. Band"),
     }
 
     parsed = {}

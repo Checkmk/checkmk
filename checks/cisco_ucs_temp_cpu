@@ -7,13 +7,15 @@
 # .1.3.6.1.4.1.9.9.719.1.41.2.1.10 cucsProcessorEnvStatsTemperature
 
 factory_settings["cisco_ucs_temp_cpu_default_levels"] = {
-    "levels" : (75, 85),
+    "levels": (75, 85),
 }
+
 
 def inventory_cisco_ucs_temp_cpu(info):
     for name, _value in info:
         name = name.split("/")[3]
         yield name, {}
+
 
 def check_cisco_ucs_temp_cpu(item, params, info):
     for name, value in info:
@@ -22,17 +24,20 @@ def check_cisco_ucs_temp_cpu(item, params, info):
             temp = int(value)
             return check_temperature(temp, params, "cisco_temp_%s" % item)
 
+
 check_info['cisco_ucs_temp_cpu'] = {
-    "inventory_function"      : inventory_cisco_ucs_temp_cpu,
-    "check_function"          : check_cisco_ucs_temp_cpu,
-    "service_description"     : "Temperature CPU %s",
-    "has_perfdata"            : True,
-    "snmp_scan_function"      : scan_cisco_ucs,
-    "snmp_info"               : (".1.3.6.1.4.1.9.9.719.1.41.2.1", [
-                                    "2",  # cpu Unit Name
-                                    "10", # cucsProcessorEnvStatsTemperature
-                                ]),
-    "group"                   : "temperature",
-    "includes"                : [ "cisco_ucs.include", "temperature.include" ],
-    "default_levels_variable" : "cisco_ucs_temp_cpu_default_levels",
+    "inventory_function": inventory_cisco_ucs_temp_cpu,
+    "check_function": check_cisco_ucs_temp_cpu,
+    "service_description": "Temperature CPU %s",
+    "has_perfdata": True,
+    "snmp_scan_function": scan_cisco_ucs,
+    "snmp_info": (
+        ".1.3.6.1.4.1.9.9.719.1.41.2.1",
+        [
+            "2",  # cpu Unit Name
+            "10",  # cucsProcessorEnvStatsTemperature
+        ]),
+    "group": "temperature",
+    "includes": ["cisco_ucs.include", "temperature.include"],
+    "default_levels_variable": "cisco_ucs_temp_cpu_default_levels",
 }

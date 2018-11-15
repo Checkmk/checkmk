@@ -59,8 +59,8 @@ def check_by_ssh_description(params):
 
 
 active_check_info['by_ssh'] = {
-    "command_line"        : '$USER1$/check_by_ssh $ARG1$',
-    "argument_function"   : check_by_ssh_arguments,
-    "service_description" : check_by_ssh_description ,
-    "has_perfdata"        : True,
+    "command_line": '$USER1$/check_by_ssh $ARG1$',
+    "argument_function": check_by_ssh_arguments,
+    "service_description": check_by_ssh_description,
+    "has_perfdata": True,
 }

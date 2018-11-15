@@ -24,10 +24,12 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+
 def inventory_bvip_info(info):
     if info:
         return [(None, None)]
     return []
+
 
 def check_bvip_info(_no_item, _no_params, info):
     unit_name, unit_id = info[0]
@@ -35,12 +37,12 @@ def check_bvip_info(_no_item, _no_params, info):
         return 0, "Unit Name/ID: " + unit_name
     return 0, "Unit Name: %s, Unit ID: %s" % (unit_name, unit_id)
 
-check_info["bvip_info"] = {
-    "check_function"        : check_bvip_info,
-    "inventory_function"    : inventory_bvip_info,
-    "service_description"   : "System Info",
-    "snmp_scan_function"    : bvip_scan_function,
-    "snmp_info"             : (".1.3.6.1.4.1.3967.1.1.1", [ 1, 2 ]),
-    "includes"              : [ 'bvip.include' ],
-}
 
+check_info["bvip_info"] = {
+    "check_function": check_bvip_info,
+    "inventory_function": inventory_bvip_info,
+    "service_description": "System Info",
+    "snmp_scan_function": bvip_scan_function,
+    "snmp_info": (".1.3.6.1.4.1.3967.1.1.1", [1, 2]),
+    "includes": ['bvip.include'],
+}

@@ -27,7 +27,6 @@
 # Output is taken from /proc/loadavg plus the number of cores:
 # 0.26 0.47 0.52 2/459 19531 4
 
-
 #   .--Load----------------------------------------------------------------.
 #   |                       _                    _                         |
 #   |                      | |    ___   __ _  __| |                        |
@@ -37,8 +36,8 @@
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-
 cpuload_default_levels = (5.0, 10.0)
+
 
 def inventory_cpu_load(info):
     if len(info) == 1 and len(info[0]) >= 5:
@@ -70,15 +69,14 @@ def check_cpu_load(item, params, info):
 
 
 check_info["cpu.loads"] = {
-    "check_function"          : check_cpu_load,
-    "inventory_function"      : inventory_cpu_load,
-    "service_description"     : "CPU load",
-    "has_perfdata"            : True,
-    "group"                   : "cpu_load",
-    "includes"                : ["cpu_load.include"],
-    "handle_real_time_checks" : True,
+    "check_function": check_cpu_load,
+    "inventory_function": inventory_cpu_load,
+    "service_description": "CPU load",
+    "has_perfdata": True,
+    "group": "cpu_load",
+    "includes": ["cpu_load.include"],
+    "handle_real_time_checks": True,
 }
-
 
 #.
 #   .--Threads-------------------------------------------------------------.
@@ -92,9 +90,11 @@ check_info["cpu.loads"] = {
 
 threads_default_levels = (2000, 4000)
 
+
 def inventory_cpu_threads(info):
     if len(info) == 1 and len(info[0]) >= 5:
         return [(None, "threads_default_levels")]
+
 
 def check_cpu_threads(item, params, info):
     try:
@@ -102,7 +102,7 @@ def check_cpu_threads(item, params, info):
     except:
         return (3, "invalid output from plugin")
     warn, crit = params
-    perfdata = [('threads', nthreads, warn, crit, 0 )]
+    perfdata = [('threads', nthreads, warn, crit, 0)]
     if nthreads >= crit:
         return (2, "%d threads (critical at %d)" % (nthreads, crit), perfdata)
     elif nthreads >= warn:
@@ -111,11 +111,10 @@ def check_cpu_threads(item, params, info):
 
 
 check_info["cpu.threads"] = {
-    "check_function"          : check_cpu_threads,
-    "inventory_function"      : inventory_cpu_threads,
-    "service_description"     : "Number of threads",
-    "has_perfdata"            : True,
-    "group"                   : "threads",
-    "handle_real_time_checks" : True,
+    "check_function": check_cpu_threads,
+    "inventory_function": inventory_cpu_threads,
+    "service_description": "Number of threads",
+    "has_perfdata": True,
+    "group": "threads",
+    "handle_real_time_checks": True,
 }
-

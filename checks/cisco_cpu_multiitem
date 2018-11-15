@@ -25,15 +25,16 @@
 # Boston, MA 02110-1301 USA.
 
 factory_settings['cisco_cpu_multiitem_default_levels'] = {
-    'levels' : ( 80.0, 90.0 ),
+    'levels': (80.0, 90.0),
 }
+
 
 def parse_cisco_cpu_multiitem(info):
     ph_idx_to_desc = {}
     parsed = {}
     for idx, desc in info[1]:
         if desc.lower().startswith("cpu "):
-           desc = desc[4:]
+            desc = desc[4:]
         ph_idx_to_desc[idx] = desc
 
     for idx, util in info[0]:
@@ -46,9 +47,11 @@ def parse_cisco_cpu_multiitem(info):
         }
     return parsed
 
+
 def inventory_cisco_cpu_multiitem(parsed):
     for name in parsed:
         yield name, {}
+
 
 def check_cisco_cpu_multiitem(item, params, parsed):
     warn, crit = params['levels']
@@ -68,7 +71,7 @@ def check_cisco_cpu_multiitem(item, params, parsed):
         yield state, infotext, [("util", util, warn, crit, 0, 100)]
 
     else:
-       yield 3, "No information about the CPU utilization available"
+        yield 3, "No information about the CPU utilization available"
 
 check_info["cisco_cpu_multiitem"] = {
     'parse_function'          : parse_cisco_cpu_multiitem,

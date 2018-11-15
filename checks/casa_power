@@ -28,8 +28,9 @@
 def inventory_casa_power(info):
     inventory = []
     for idx, _unit in enumerate(info):
-        inventory.append( (idx, None) )
+        inventory.append((idx, None))
     return inventory
+
 
 def check_casa_power(item, no_params, info):
     unit_nr = int(item)
@@ -39,10 +40,10 @@ def check_casa_power(item, no_params, info):
     status = info[unit_nr][0]
     if status == "1":
         return (0, "Power supply OK")
-    elif status == "3": # not sure if this state is possible
+    elif status == "3":  # not sure if this state is possible
         return (1, "Power supply working over threshold (!)")
-    elif status == "2": # not sure if this state is possible
-        return (0, "Power supply working under threshold (!)") # OK, backup power..
+    elif status == "2":  # not sure if this state is possible
+        return (0, "Power supply working under threshold (!)")  # OK, backup power..
     elif status == "0":
         return (3, "Power supply - Unknown status (!)")
     elif status == "4":
@@ -50,11 +51,9 @@ def check_casa_power(item, no_params, info):
 
 
 check_info["casa_power"] = {
-    "check_function"        : check_casa_power,
-    "inventory_function"    : inventory_casa_power,
-    "service_description"   : "Power %s",
-    "snmp_scan_function"    : lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.20858.2."),
-    "snmp_info"             :
-               ( ".1.3.6.1.4.1.20858.10.33.1.5.1.4", [ '' ] ), # Power State
-
+    "check_function": check_casa_power,
+    "inventory_function": inventory_casa_power,
+    "service_description": "Power %s",
+    "snmp_scan_function": lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.20858.2."),
+    "snmp_info": (".1.3.6.1.4.1.20858.10.33.1.5.1.4", ['']),  # Power State
 }

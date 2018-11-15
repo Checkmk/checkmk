@@ -24,7 +24,6 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-
 # sample agent output:
 #
 # <<<omreport_vdisk>>>
@@ -64,10 +63,9 @@ def check_dell_om_vdisks(item, params, parsed):
 
 
 check_info["dell_om_vdisks"] = {
-    "check_function"      : check_dell_om_vdisks,
-    "inventory_function"  : inventory_dell_om_vdisks,
-    "parse_function"      : parse_omreport,
-    "service_description" : "Virtual Disk %s",
-    "includes"            : ["dell_om.include"]
+    "check_function": check_dell_om_vdisks,
+    "inventory_function": inventory_dell_om_vdisks,
+    "parse_function": parse_omreport,
+    "service_description": "Virtual Disk %s",
+    "includes": ["dell_om.include"]
 }
-

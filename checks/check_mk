@@ -24,7 +24,6 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-
 #   .--only_from-----------------------------------------------------------.
 #   |                       _            __                                |
 #   |            ___  _ __ | |_   _     / _|_ __ ___  _ __ ___             |
@@ -53,9 +52,9 @@ The functionality of this service has been incorporated in the "Check_MK" servic
 
 
 check_info["check_mk.only_from"] = {
-    'check_function':          check_only_from,
-    'inventory_function':      lambda info: [],
-    'service_description':     'Check_MK Agent Access',
+    'check_function': check_only_from,
+    'inventory_function': lambda info: [],
+    'service_description': 'Check_MK Agent Access',
 }
 
 #.
@@ -76,7 +75,8 @@ check_info["check_mk.only_from"] = {
 def inventory_cmk_agent_update(info):
     for line in info:
         if line[0] == "AgentUpdate:":
-            return [ (None, {}) ]
+            return [(None, {})]
+
 
 def check_cmk_agent_update(_no_item, _no_params, info):
     for line in info:
@@ -102,7 +102,6 @@ def check_cmk_agent_update(_no_item, _no_params, info):
             else:
                 yield 0, "no errors"
 
-
             if parsed["last_check"]:
                 try:
                     last_check = float(parsed["last_check"])
@@ -117,12 +116,14 @@ def check_cmk_agent_update(_no_item, _no_params, info):
                         levels_text = " (warn at %s)" % (get_age_human_readable(warn))
                     else:
                         levels_text = ""
-                    yield state, "last update check: " + get_timestamp_human_readable(parsed["last_check"]) + levels_text
+                    yield state, "last update check: " + get_timestamp_human_readable(
+                        parsed["last_check"]) + levels_text
                 except:
                     yield 1, "no successful connect to server yet"
 
             if parsed["last_update"]:
-                yield 0, "last agent update: %s" % get_timestamp_human_readable(parsed["last_update"])
+                yield 0, "last agent update: %s" % get_timestamp_human_readable(
+                    parsed["last_update"])
 
             if parsed["aghash"]:
                 yield 0, "agent configuration: %s" % parsed["aghash"][:8]
@@ -131,7 +132,7 @@ def check_cmk_agent_update(_no_item, _no_params, info):
 
 
 check_info["check_mk.agent_update"] = {
-    'check_function'      : check_cmk_agent_update,
-    'inventory_function'  : inventory_cmk_agent_update,
-    'service_description' : 'Check_MK Agent'
+    'check_function': check_cmk_agent_update,
+    'inventory_function': inventory_cmk_agent_update,
+    'service_description': 'Check_MK Agent'
 }

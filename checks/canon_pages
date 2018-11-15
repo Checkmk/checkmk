@@ -57,12 +57,12 @@ def parse_canon_pages(info):
 
 
 check_info["canon_pages"] = {
-    'parse_function'        : parse_canon_pages,
-    'inventory_function'    : inventory_printer_pages_types,
-    'check_function'        : check_printer_pages_types,
-    'service_description'   : 'Pages',
-    'has_perfdata'          : True,
-    'snmp_info'             : ( ".1.3.6.1.4.1.1602.1.11.1.3.1.4", [ OID_END, "" ]),
-    'snmp_scan_function'    : scan_canon_printer,
-    'includes'              : [ "printer_pages.include" ],
+    'parse_function': parse_canon_pages,
+    'inventory_function': inventory_printer_pages_types,
+    'check_function': check_printer_pages_types,
+    'service_description': 'Pages',
+    'has_perfdata': True,
+    'snmp_info': (".1.3.6.1.4.1.1602.1.11.1.3.1.4", [OID_END, ""]),
+    'snmp_scan_function': scan_canon_printer,
+    'includes': ["printer_pages.include"],
 }

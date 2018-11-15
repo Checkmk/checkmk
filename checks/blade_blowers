@@ -50,32 +50,35 @@
 # How can we safely determine the number of blowers without
 # assuming that each blower has four entries?
 
+
 # We assume that all blowers are in state OK (used for
 # inventory only)
 def number_of_blowers(info):
     n = 0
-    while len(info) > n and len(info[n][0]) > 1: # state lines
+    while len(info) > n and len(info[n][0]) > 1:  # state lines
         n += 1
     return n
+
 
 def inventory_blade_blowers(info):
     inventory = []
     n = number_of_blowers(info)
     for i in range(0, n):
-        if info[i + n][0] != "0": # skip unknown blowers
-            inventory.append( ("%d/%d" % (i+1,n), None, None) )
+        if info[i + n][0] != "0":  # skip unknown blowers
+            inventory.append(("%d/%d" % (i + 1, n), None, None))
     return inventory
+
 
 def check_blade_blowers(item, _no_params, info):
     blower, num_blowers = map(int, item.split("/"))
-    text = info[blower-1][0]
+    text = info[blower - 1][0]
     perfdata = []
     output = ''
 
-    state = info[blower-1 + num_blowers][0]
+    state = info[blower - 1 + num_blowers][0]
 
     try:
-        rpm = int(info[blower-1 + 2*num_blowers][0])
+        rpm = int(info[blower - 1 + 2 * num_blowers][0])
         perfdata += [("rpm", rpm)]
         output += 'Speed at %d RMP' % rpm
     except:
@@ -85,9 +88,9 @@ def check_blade_blowers(item, _no_params, info):
         perc = int(text.split("%")[0])
         perfdata += [("perc", perc, None, None, 0, 100)]
         if output == '':
-            output +=  'Speed is at %d%% of max' % perc
+            output += 'Speed is at %d%% of max' % perc
         else:
-            output +=  ' (%d%% of max)' % perc
+            output += ' (%d%% of max)' % perc
     except:
         pass
 
@@ -104,6 +107,6 @@ check_info["blade_blowers"] = {
     'service_description':     'Blower %s',
     'has_perfdata':            True,
     'snmp_info':               ('.1.3.6.1.4.1.2.3.51.2.2', [3]),
-    'snmp_scan_function':      \
+    'snmp_scan_function':       \
      lambda oid: re.match('(BladeCenter|BladeCenter Advanced|IBM Flex Chassis|Lenovo Flex Chassis) Management Module', oid(".1.3.6.1.2.1.1.1.0")) != None,
 }

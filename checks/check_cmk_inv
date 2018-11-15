@@ -24,19 +24,18 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+
 def check_cmk_inv(params):
     if params is None:
-        params = {} # convert from legacy rule syntax
+        params = {}  # convert from legacy rule syntax
 
-    return "--inv-fail-status=%d --hw-changes=%d --sw-changes=%d --sw-missing=%d" % (
-        params.get("fail_status", 1),
-        params.get("hw_changes", 0),
-        params.get("sw_changes", 0),
-        params.get("sw_missing", 0))
+    return "--inv-fail-status=%d --hw-changes=%d --sw-changes=%d --sw-missing=%d" % (params.get(
+        "fail_status", 1), params.get("hw_changes", 0), params.get("sw_changes",
+                                                                   0), params.get("sw_missing", 0))
+
 
 active_check_info['cmk_inv'] = {
-    "command_line"        : 'cmk $ARG1$ --cache --inventory-as-check $HOSTNAME$',
-    "argument_function"   : check_cmk_inv,
-    "service_description" : lambda x: "Check_MK HW/SW Inventory",
+    "command_line": 'cmk $ARG1$ --cache --inventory-as-check $HOSTNAME$',
+    "argument_function": check_cmk_inv,
+    "service_description": lambda x: "Check_MK HW/SW Inventory",
 }
-

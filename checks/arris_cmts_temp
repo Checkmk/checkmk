@@ -24,9 +24,8 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-factory_settings["arris_cmts_temp_default_levels"] = {
-    "levels" : ( 40, 46 )
-}
+factory_settings["arris_cmts_temp_default_levels"] = {"levels": (40, 46)}
+
 
 def inventory_arris_cmts_temp(info):
     for line in info:
@@ -44,17 +43,18 @@ def check_arris_cmts_temp(item, params, info):
 
 
 check_info["arris_cmts_temp"] = {
-    "check_function"          : check_arris_cmts_temp,
-    "inventory_function"      : inventory_arris_cmts_temp,
-    "service_description"     : "Temperature Module %s",
-    "has_perfdata"            : True,
-    "snmp_scan_function"      : arris_cmts_scan_function,
-    "snmp_info"               : ( ".1.3.6.1.4.1.4998.1.1.10.1.4.2.1", [
-                                          3, # cardName
-                                          29, # Card Temperature
-                                          ] ),
-    "group"                   : "temperature",
-    "includes"                : [ "arris_cmts.include", "temperature.include" ],
-    "default_levels_variable" : "arris_cmts_temp_default_levels"
+    "check_function": check_arris_cmts_temp,
+    "inventory_function": inventory_arris_cmts_temp,
+    "service_description": "Temperature Module %s",
+    "has_perfdata": True,
+    "snmp_scan_function": arris_cmts_scan_function,
+    "snmp_info": (
+        ".1.3.6.1.4.1.4998.1.1.10.1.4.2.1",
+        [
+            3,  # cardName
+            29,  # Card Temperature
+        ]),
+    "group": "temperature",
+    "includes": ["arris_cmts.include", "temperature.include"],
+    "default_levels_variable": "arris_cmts_temp_default_levels"
 }
-

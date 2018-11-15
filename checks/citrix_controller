@@ -34,7 +34,6 @@
 # TotalFarmActiveSessions 262
 # TotalFarmInactiveSessions 14
 
-
 #   .--Active Site Services------------------------------------------------.
 #   |               _        _   _             ____  _ _                   |
 #   |              / \   ___| |_(_)_   _____  / ___|(_) |_ ___             |
@@ -50,10 +49,11 @@
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
+
 def inventory_citrix_controller_services(info):
     for line in info:
         if line[0] == "ActiveSiteServices":
-            return [ (None, None) ]
+            return [(None, None)]
 
 
 def check_citrix_controller_services(_no_item, _no_params, info):
@@ -63,9 +63,9 @@ def check_citrix_controller_services(_no_item, _no_params, info):
 
 
 check_info["citrix_controller.services"] = {
-    "inventory_function"        : inventory_citrix_controller_services,
-    "check_function"            : check_citrix_controller_services,
-    "service_description"       : "Citrix Active Site Services",
+    "inventory_function": inventory_citrix_controller_services,
+    "check_function": check_citrix_controller_services,
+    "service_description": "Citrix Active Site Services",
 }
 
 #.
@@ -84,24 +84,25 @@ check_info["citrix_controller.services"] = {
 #   |                      |___/                                           |
 #   '----------------------------------------------------------------------'
 
+
 def inventory_citrix_controller_registered(info):
     for line in info:
         if line[0] == "DesktopsRegistered":
-            return [ (None, None) ]
+            return [(None, None)]
 
 
 def check_citrix_controller_registered(_no_item, _no_params, info):
     for line in info:
         if line[0] == "DesktopsRegistered":
             desktops = int(line[1])
-            return 0, "%d" % desktops, [ ("registered_desktops", desktops) ]
+            return 0, "%d" % desktops, [("registered_desktops", desktops)]
 
 
 check_info["citrix_controller.registered"] = {
-    "inventory_function"        : inventory_citrix_controller_registered,
-    "check_function"            : check_citrix_controller_registered,
-    "service_description"       : "Citrix Desktops Registered",
-    "has_perfdata"              : True,
+    "inventory_function": inventory_citrix_controller_registered,
+    "check_function": check_citrix_controller_registered,
+    "service_description": "Citrix Desktops Registered",
+    "has_perfdata": True,
 }
 
 #.
@@ -114,13 +115,14 @@ check_info["citrix_controller.registered"] = {
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
+
 def inventory_citrix_controller_sessions(info):
     inv = False
     for line in info:
         inv = inv or ("sessions" in line[0].lower())
 
     if inv:
-        return [ (None, {}) ]
+        return [(None, {})]
     return []
 
 
@@ -129,8 +131,8 @@ def check_citrix_controller_sessions(_no_item, params, info):
         params = {}
 
     session = {
-        "active"   : 0,
-        "inactive" : 0,
+        "active": 0,
+        "inactive": 0,
     }
     for line in info:
         if line[0] == "TotalFarmActiveSessions":
@@ -143,27 +145,27 @@ def check_citrix_controller_sessions(_no_item, params, info):
     state = 0
     messages = []
     perf = []
-    for what in [ 'total', 'active', 'inactive' ]:
+    for what in ['total', 'active', 'inactive']:
         warn, crit = params.get(what, (None, None))
-        perf.append(( what + "_sessions", session[what], warn, crit ))
+        perf.append((what + "_sessions", session[what], warn, crit))
         if crit != None and session[what] >= crit:
-            messages.append("%s: %s(!!)" % ( what, session[what] ))
+            messages.append("%s: %s(!!)" % (what, session[what]))
             state = 2
         elif warn != None and session[what] >= warn:
-            messages.append("%s: %s(!)" % ( what, session[what] ))
+            messages.append("%s: %s(!)" % (what, session[what]))
             state = max(state, 1)
         else:
-            messages.append("%s: %s" % ( what, session[what] ))
+            messages.append("%s: %s" % (what, session[what]))
 
     return state, ", ".join(messages), perf
 
 
 check_info["citrix_controller.sessions"] = {
-    "inventory_function"    : inventory_citrix_controller_sessions,
-    "check_function"        : check_citrix_controller_sessions,
-    "service_description"   : "Citrix Total Sessions",
-    "has_perfdata"          : True,
-    "group"                 : "citrix_sessions",
+    "inventory_function": inventory_citrix_controller_sessions,
+    "check_function": check_citrix_controller_sessions,
+    "service_description": "Citrix Total Sessions",
+    "has_perfdata": True,
+    "group": "citrix_sessions",
 }
 
 #.
@@ -176,52 +178,48 @@ check_info["citrix_controller.sessions"] = {
 #   |                                     |___/                            |
 #   '----------------------------------------------------------------------'
 
+
 def inventory_citrix_controller_licensing(info):
     if info:
-        return [ (None, None) ]
+        return [(None, None)]
 
 
 def check_citrix_controller_licensing(_no_item, _no_params, info):
 
     statedict = {
-        "licensingserverstate"    : (
-            "Licensing Server State",
-            {
-                "ServerNotSpecified"        : (2, "server not specified"),
-                "NotConnected"              : (1, "not connected"),
-                "OK"                        : (0, "OK"),
-                "LicenseNotInstalled"       : (2, "license not installed"),
-                "LicenseExpired"            : (2, "licenese expired"),
-                "Incompatible"              : (2, "incompatible"),
-                "Failed"                    : (2, "failed"),
-            }),
-        "licensinggracestate"     : (
-            "Licensing Grace State",
-            {
-                "NotActive"                 : (0, "not active"),
-                "Active"                    : (2, "active"),
-                "InOutOfBoxGracePeriod"     : (1, "in-out-of-box grace period"),
-                "InSupplementalGracePeriod" : (1, "in-supplemental grace period"),
-                "InEmergencyGracePeriod"    : (2, "in-emergency grace period"),
-                "GracePeriodExpired"        : (2, "grace period expired"),
-            }),
+        "licensingserverstate": ("Licensing Server State", {
+            "ServerNotSpecified": (2, "server not specified"),
+            "NotConnected": (1, "not connected"),
+            "OK": (0, "OK"),
+            "LicenseNotInstalled": (2, "license not installed"),
+            "LicenseExpired": (2, "licenese expired"),
+            "Incompatible": (2, "incompatible"),
+            "Failed": (2, "failed"),
+        }),
+        "licensinggracestate": ("Licensing Grace State", {
+            "NotActive": (0, "not active"),
+            "Active": (2, "active"),
+            "InOutOfBoxGracePeriod": (1, "in-out-of-box grace period"),
+            "InSupplementalGracePeriod": (1, "in-supplemental grace period"),
+            "InEmergencyGracePeriod": (2, "in-emergency grace period"),
+            "GracePeriodExpired": (2, "grace period expired"),
+        }),
     }
     # piggy back data might deliver double data
     detected_states = []
     for line in info:
         if line[0].lower() in statedict and line[0] not in detected_states:
             detected_states.append(line[0])
-            title, states         = statedict[line[0].lower()]
+            title, states = statedict[line[0].lower()]
             state, state_readable = states[line[1]]
             yield state, "%s: %s" % (title, state_readable)
 
 
 check_info["citrix_controller.licensing"] = {
-    "inventory_function"    : inventory_citrix_controller_licensing,
-    "check_function"        : check_citrix_controller_licensing,
-    "service_description"   : "Citrix Controller Licensing",
+    "inventory_function": inventory_citrix_controller_licensing,
+    "check_function": check_citrix_controller_licensing,
+    "service_description": "Citrix Controller Licensing",
 }
-
 
 #.
 #   .--Controller State----------------------------------------------------.
@@ -239,10 +237,11 @@ check_info["citrix_controller.licensing"] = {
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
+
 def inventory_citrix_controller(info):
     for line in info:
         if line[0] == "ControllerState":
-            return [ (None, None) ]
+            return [(None, None)]
 
 
 def check_citrix_controller(_no_item, _no_params, info):
@@ -255,7 +254,7 @@ def check_citrix_controller(_no_item, _no_params, info):
 
 
 check_info["citrix_controller"] = {
-    "inventory_function"    : inventory_citrix_controller,
-    "check_function"        : check_citrix_controller,
-    "service_description"   : "Citrix Controller State",
+    "inventory_function": inventory_citrix_controller,
+    "check_function": check_citrix_controller,
+    "service_description": "Citrix Controller State",
 }

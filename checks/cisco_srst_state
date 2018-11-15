@@ -27,8 +27,9 @@
 # .1.3.6.1.4.1.9.9.441.1.3.1 CISCO-SRST-MIB::csrstState (1: active, 2: inactive)
 # .1.3.6.1.4.1.9.9.441.1.3.4 CISCO-SRST-MIB::csrstTotalUpTime
 
+
 def inventory_cisco_srst_state(info):
-    return [ (None, None) ]
+    return [(None, None)]
 
 
 def check_cisco_srst_state(_no_item, _no_params, info):
@@ -45,10 +46,10 @@ def check_cisco_srst_state(_no_item, _no_params, info):
 
 
 check_info['cisco_srst_state'] = {
-    'inventory_function'        : inventory_cisco_srst_state,
-    'check_function'            : check_cisco_srst_state,
-    'service_description'       : 'SRST State',
-    'snmp_info'                 : ( ".1.3.6.1.4.1.9.9.441.1.3", [ "1", "4" ]),
-    'snmp_scan_function'        : cisco_srst_scan_function,
-    'includes'                  : [ "cisco_srst.include", "uptime.include" ],
+    'inventory_function': inventory_cisco_srst_state,
+    'check_function': check_cisco_srst_state,
+    'service_description': 'SRST State',
+    'snmp_info': (".1.3.6.1.4.1.9.9.441.1.3", ["1", "4"]),
+    'snmp_scan_function': cisco_srst_scan_function,
+    'includes': ["cisco_srst.include", "uptime.include"],
 }

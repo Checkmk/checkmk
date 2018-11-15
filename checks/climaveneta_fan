@@ -24,7 +24,6 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-
 factory_settings["climaveneta_fan_default_levels"] = {
     "lower": (200, 100),
 }
@@ -32,7 +31,7 @@ factory_settings["climaveneta_fan_default_levels"] = {
 
 def inventory_climaveneta_fan(info):
     if len(info[0]) == 2:
-        return [ (1, {}), (2, {}) ]
+        return [(1, {}), (2, {})]
 
 
 def check_climaveneta_fan(item, params, info):
@@ -41,14 +40,13 @@ def check_climaveneta_fan(item, params, info):
 
 
 check_info["climaveneta_fan"] = {
-    "check_function"           : check_climaveneta_fan,
-    "inventory_function"       : inventory_climaveneta_fan,
-    "service_description"      : "Fan %s",
-    "snmp_scan_function"       : lambda oid: oid(".1.3.6.1.2.1.1.1.0") == "pCO Gateway",
-    "snmp_info"                : (".1.3.6.1.4.1.9839.2.1.2", [ 42, 43 ] ),
-    "has_perfdata"             : True,
-    "default_levels_variable"  : "climaveneta_fan_default_levels",
-    "group"                    : "hw_fans",
-    "includes"                 : [ "fan.include" ],
+    "check_function": check_climaveneta_fan,
+    "inventory_function": inventory_climaveneta_fan,
+    "service_description": "Fan %s",
+    "snmp_scan_function": lambda oid: oid(".1.3.6.1.2.1.1.1.0") == "pCO Gateway",
+    "snmp_info": (".1.3.6.1.4.1.9839.2.1.2", [42, 43]),
+    "has_perfdata": True,
+    "default_levels_variable": "climaveneta_fan_default_levels",
+    "group": "hw_fans",
+    "includes": ["fan.include"],
 }
-

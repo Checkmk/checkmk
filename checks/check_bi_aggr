@@ -24,13 +24,12 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+
 def check_bi_aggr_arguments(params):
     base_url, aggr_name, username, secret, opt_params = params
-    args = ' -b %s -a %s -u %s %s' % (
-            quote_shell_string(base_url),
-            quote_shell_string(aggr_name),
-            quote_shell_string(username),
-            passwordstore_get_cmdline(" -s %s", secret))
+    args = ' -b %s -a %s -u %s %s' % (quote_shell_string(base_url), quote_shell_string(aggr_name),
+                                      quote_shell_string(username),
+                                      passwordstore_get_cmdline(" -s %s", secret))
 
     if "auth_mode" in opt_params:
         args += ' -m %s' % quote_shell_string(opt_params['auth_mode'])
@@ -51,8 +50,7 @@ def check_bi_aggr_arguments(params):
 
 
 active_check_info['bi_aggr'] = {
-    "command_line"        : '$USER1$/check_bi_aggr $ARG1$',
-    "argument_function"   : check_bi_aggr_arguments,
-    "service_description" : lambda params: "Aggr %s" % params[1],
+    "command_line": '$USER1$/check_bi_aggr $ARG1$',
+    "argument_function": check_bi_aggr_arguments,
+    "service_description": lambda params: "Aggr %s" % params[1],
 }
-

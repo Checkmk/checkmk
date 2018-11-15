@@ -24,6 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+
 def parse_db2_dbs(info):
     current_instance = None
     lines = iter(info)
@@ -48,4 +49,3 @@ def parse_db2_dbs(info):
     # Even if no information is available, an empty tuple is something
     # Check_MK won't report any missing agent sections for this type of checks
     return global_timestamp, dbs
-

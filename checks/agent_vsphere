@@ -31,6 +31,7 @@
 #     'user': 'wefwef'
 # }
 
+
 def agent_vsphere_arguments(params, hostname, ipaddress):
     args = ''
     if "tcp_port" in params:
@@ -84,9 +85,10 @@ def agent_vsphere_arguments(params, hostname, ipaddress):
             args += " " + quote_shell_string(hostname)
         else:
             args += " " + quote_shell_string(params["ssl"])
-    else: # legacy mode
+    else:  # legacy mode
         args += " " + quote_shell_string(ipaddress)
 
     return args
+
 
 special_agent_info['vsphere'] = agent_vsphere_arguments

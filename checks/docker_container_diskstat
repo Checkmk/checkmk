@@ -24,6 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+
 def parse_docker_container_diskstat(info):
     node_sections = _parse_sub_sections(info)
 
@@ -105,29 +106,33 @@ def check_docker_container_diskstat(item, params, parsed):
             raise MKCounterWrapped('No time difference')
         set_item_state(counter_base + "time", timestamp)
 
-        read_ios_rate      = get_rate(counter_base + "read_ios",    timestamp, device["ios"]["Read"], onwrap=0.0)
-        write_ios_rate     = get_rate(counter_base + "write_ios",   timestamp, device["ios"]["Write"], onwrap=0.0)
-        read_bytes_rate    = get_rate(counter_base + "read_bytes",  timestamp, device["bytes"]["Read"], onwrap=0.0)
-        write_bytes_rate   = get_rate(counter_base + "write_bytes", timestamp, device["bytes"]["Write"], onwrap=0.0)
+        read_ios_rate = get_rate(
+            counter_base + "read_ios", timestamp, device["ios"]["Read"], onwrap=0.0)
+        write_ios_rate = get_rate(
+            counter_base + "write_ios", timestamp, device["ios"]["Write"], onwrap=0.0)
+        read_bytes_rate = get_rate(
+            counter_base + "read_bytes", timestamp, device["bytes"]["Read"], onwrap=0.0)
+        write_bytes_rate = get_rate(
+            counter_base + "write_bytes", timestamp, device["bytes"]["Write"], onwrap=0.0)
 
         disks[device_name] = {
-            "node"                       : node_name,
-            "read_ios"                   : read_ios_rate,
-            "write_ios"                  : write_ios_rate,
-            "read_throughput"            : read_bytes_rate,
-            "write_throughput"           : write_bytes_rate,
+            "node": node_name,
+            "read_ios": read_ios_rate,
+            "write_ios": write_ios_rate,
+            "read_throughput": read_bytes_rate,
+            "write_throughput": write_bytes_rate,
         }
 
     return check_diskstat_dict(item, params, disks)
 
 
 check_info["docker_container_diskstat"] = {
-    "parse_function"      : parse_docker_container_diskstat,
-    "inventory_function"  : inventory_docker_container_diskstat,
-    "check_function"      : check_docker_container_diskstat,
-    "service_description" : "Disk IO %s",
-    "has_perfdata"        : True,
-    "group"               : "diskstat",
-    "node_info"           : True, # add first column with actual host name
-    "includes"            : [ "diskstat.include" ],
+    "parse_function": parse_docker_container_diskstat,
+    "inventory_function": inventory_docker_container_diskstat,
+    "check_function": check_docker_container_diskstat,
+    "service_description": "Disk IO %s",
+    "has_perfdata": True,
+    "group": "diskstat",
+    "node_info": True,  # add first column with actual host name
+    "includes": ["diskstat.include"],
 }

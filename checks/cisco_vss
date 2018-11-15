@@ -69,20 +69,22 @@
 # cvsDualActiveDetectionNotifEnable.0    .1.5.1.0 2
 
 cisco_vss_role_names = {
-    '1' : 'standalone',
-    '2' : 'active',
-    '3' : 'standby',
+    '1': 'standalone',
+    '2': 'active',
+    '3': 'standby',
 }
 
 cisco_vss_operstatus_names = {
-    '1' : 'up',
-    '2' : 'down',
+    '1': 'up',
+    '2': 'down',
 }
+
 
 def inventory_cisco_vss(info):
     for _switch_id, chassis_role in info[0]:
-        if chassis_role in [ '2', '3' ]: # active, standby
-            return [ (None, None) ]
+        if chassis_role in ['2', '3']:  # active, standby
+            return [(None, None)]
+
 
 def check_cisco_vss(item, params, info):
     chassis, ports = info
@@ -100,7 +102,8 @@ def check_cisco_vss(item, params, info):
             state = 0
         else:
             state = 2
-        yield state, "core switch %s: VSL %s" % (core_switch_id, cisco_vss_operstatus_names[operstatus])
+        yield state, "core switch %s: VSL %s" % (core_switch_id,
+                                                 cisco_vss_operstatus_names[operstatus])
 
         if conf_portcount == op_portcount:
             state = 0

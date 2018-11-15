@@ -29,11 +29,12 @@
 # VMName rz1css01
 # CitrixPoolName RZ1XenPool01 - Cisco UCS
 
+
 # Note(1): The pool name is the same for all VMs on one host system
 # Note(2): for the same host and vm this section can appear
 # several times (with the same content).
 def parse_citrix_hostsystem(info):
-    parsed = { "vms"  : [], "pool" : "" }
+    parsed = {"vms": [], "pool": ""}
     for line in info:
         if line[0] == "VMName":
             vm = " ".join(line[1:])
@@ -55,9 +56,10 @@ def parse_citrix_hostsystem(info):
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
+
 def inventory_citrix_hostsystem_vms(parsed):
     if parsed["vms"]:
-        return [ (None, None) ]
+        return [(None, None)]
 
 
 def check_citrix_hostsystem_vms(_no_item, _no_params, parsed):
@@ -66,9 +68,9 @@ def check_citrix_hostsystem_vms(_no_item, _no_params, parsed):
 
 
 check_info["citrix_hostsystem.vms"] = {
-    "inventory_function"        : inventory_citrix_hostsystem_vms,
-    "check_function"            : check_citrix_hostsystem_vms,
-    "service_description"       : "Citrix VMs",
+    "inventory_function": inventory_citrix_hostsystem_vms,
+    "check_function": check_citrix_hostsystem_vms,
+    "service_description": "Citrix VMs",
 }
 
 #.
@@ -81,9 +83,10 @@ check_info["citrix_hostsystem.vms"] = {
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
+
 def inventory_citrix_hostsystem(parsed):
     if parsed["pool"]:
-        return [ (None, None) ]
+        return [(None, None)]
 
 
 def check_citrix_hostsystem(_no_item, no_params, parsed):
@@ -91,8 +94,8 @@ def check_citrix_hostsystem(_no_item, no_params, parsed):
 
 
 check_info["citrix_hostsystem"] = {
-    "parse_function"            : parse_citrix_hostsystem,
-    "inventory_function"        : inventory_citrix_hostsystem,
-    "check_function"            : check_citrix_hostsystem,
-    "service_description"       : "Citrix Host Info",
+    "parse_function": parse_citrix_hostsystem,
+    "inventory_function": inventory_citrix_hostsystem,
+    "check_function": check_citrix_hostsystem,
+    "service_description": "Citrix Host Info",
 }

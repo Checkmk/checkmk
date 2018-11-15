@@ -24,11 +24,11 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-
 # If the size_trend function is not provided via size_trend.include raise
 # an exception to provide an error message to the user. If dependencies
 # between include files are possible this will not be necessary anymore.
 if 'size_trend' not in globals():
+
     def size_trend(*_args, **_kwargs):
         raise MKGeneralException('Function size_trend not found. Please include '
                                  '"size_trend.include" in your check')
@@ -37,11 +37,11 @@ if 'size_trend' not in globals():
 # Common include file for all filesystem checks (df, df_netapp, hr_fs, ...)
 
 # Settings for filesystem checks (df, df_vms, df_netapp and maybe others)
-filesystem_levels         = []  # obsolete. Just here to check config and warn if changed
+filesystem_levels = []  # obsolete. Just here to check config and warn if changed
 filesystem_default_levels = {}  # can also be dropped some day in future
 
 # Filesystems to ignore (shouldn't be sent by agent anyway)
-inventory_df_exclude_mountpoints   = ['/dev']
+inventory_df_exclude_mountpoints = ['/dev']
 
 # Grouping of filesystems into groups that are monitored as one entity
 # Example:
@@ -64,15 +64,15 @@ filesystem_groups = []
 # }
 
 factory_settings["filesystem_default_levels"] = {
-    "levels"          : (80.0, 90.0),  # warn/crit in percent
-    "magic_normsize"  : 20,  # Standard size if 20 GB
-    "levels_low"      : (50.0, 60.0),  # Never move warn level below 50% due to magic factor
-    "trend_range"     : 24,
-    "trend_perfdata"  : True,  # do send performance data for trends
-    "show_levels"     : "onmagic",
-    "inodes_levels"   : (10.0, 5.0),
-    "show_inodes"     : "onlow",
-    "show_reserved"   : False,
+    "levels": (80.0, 90.0),  # warn/crit in percent
+    "magic_normsize": 20,  # Standard size if 20 GB
+    "levels_low": (50.0, 60.0),  # Never move warn level below 50% due to magic factor
+    "trend_range": 24,
+    "trend_perfdata": True,  # do send performance data for trends
+    "show_levels": "onmagic",
+    "inodes_levels": (10.0, 5.0),
+    "show_inodes": "onlow",
+    "show_reserved": False,
 }
 
 
@@ -108,6 +108,7 @@ def df_inventory(mplist):
 
 
 # Users might have set filesystem_default_levels to old format like (80, 90)
+
 
 # needed by df, df_netapp and vms_df and maybe others in future:
 # compute warning and critical levels. Takes into account the size of
@@ -185,7 +186,7 @@ def get_filesystem_levels(mountpoint, size_gb, params):
 
         normsize = levels["magic_normsize"]
         hgb_size = size_gb / float(normsize)
-        felt_size = hgb_size ** magic
+        felt_size = hgb_size**magic
         scale = felt_size / hgb_size
         warn_scaled = 100 - ((100 - warn) * scale)
         crit_scaled = 100 - ((100 - crit) * scale)
@@ -207,9 +208,9 @@ def get_filesystem_levels(mountpoint, size_gb, params):
         else:
             crit_scaled = crit
 
-    size_mb     = size_gb * 1024
-    warn_mb     = savefloat(size_mb * warn_scaled / 100)
-    crit_mb     = savefloat(size_mb * crit_scaled / 100)
+    size_mb = size_gb * 1024
+    warn_mb = savefloat(size_mb * warn_scaled / 100)
+    crit_mb = savefloat(size_mb * crit_scaled / 100)
     levels["levels_mb"] = (warn_mb, crit_mb)
     if isinstance(warn, float):
         if warn_scaled < 0 and crit_scaled < 0:
@@ -219,7 +220,7 @@ def get_filesystem_levels(mountpoint, size_gb, params):
         else:
             label = 'warn/crit at'
         levels["levels_text"] = "(%s %s/%s)" % (label, get_percent_human_readable(warn_scaled),
-                                                       get_percent_human_readable(crit_scaled))
+                                                get_percent_human_readable(crit_scaled))
     else:
         if warn * mega < 0 and crit * mega < 0:
             label = 'warn/crit at free space below'
@@ -258,17 +259,21 @@ def get_filesystem_levels(mountpoint, size_gb, params):
 # New function for checks that support groups.
 def df_check_filesystem_list(item, params, fslist_blocks, fslist_inodes=None):
 
-    blocks_info = {mp: {"size_mb"        : size_mb,
-                        "avail_mb"       : avail_mb,
-                        "reserved_mb"    : reserved_mb,
-                        }
-                    for (mp, size_mb, avail_mb, reserved_mb) in fslist_blocks}
+    blocks_info = {
+        mp: {
+            "size_mb": size_mb,
+            "avail_mb": avail_mb,
+            "reserved_mb": reserved_mb,
+        } for (mp, size_mb, avail_mb, reserved_mb) in fslist_blocks
+    }
 
     if fslist_inodes:
-        inodes_info = {mp: {"inodes_total"   : inodes_total,
-                            "inodes_avail"   : inodes_avail,
-                            }
-                        for (mp, inodes_total, inodes_avail) in fslist_inodes}
+        inodes_info = {
+            mp: {
+                "inodes_total": inodes_total,
+                "inodes_avail": inodes_avail,
+            } for (mp, inodes_total, inodes_avail) in fslist_inodes
+        }
     else:
         inodes_info = {}
 
@@ -281,29 +286,47 @@ def df_check_filesystem_list(item, params, fslist_blocks, fslist_inodes=None):
         if count == 0:
             return 3, "No filesystem matching the patterns"
 
-        total_size_mb = sum(block_info["size_mb"] for (mp, block_info) in blocks_info.items() if mp in matching_mountpoints)
-        total_avail_mb = sum(block_info["avail_mb"] for (mp, block_info) in blocks_info.items() if mp in matching_mountpoints)
-        total_reserved_mb = sum(block_info["reserved_mb"] for (mp, block_info) in blocks_info.items() if mp in matching_mountpoints)
+        total_size_mb = sum(block_info["size_mb"]
+                            for (mp, block_info) in blocks_info.items()
+                            if mp in matching_mountpoints)
+        total_avail_mb = sum(block_info["avail_mb"]
+                             for (mp, block_info) in blocks_info.items()
+                             if mp in matching_mountpoints)
+        total_reserved_mb = sum(block_info["reserved_mb"]
+                                for (mp, block_info) in blocks_info.items()
+                                if mp in matching_mountpoints)
 
-        total_inodes = sum(inode_info["inodes_total"] for (mp, inode_info) in inodes_info.items() if mp in matching_mountpoints)
-        total_inodes_avail = sum(inode_info["inodes_avail"] for (mp, inode_info) in inodes_info.items() if mp in matching_mountpoints)
+        total_inodes = sum(inode_info["inodes_total"]
+                           for (mp, inode_info) in inodes_info.items()
+                           if mp in matching_mountpoints)
+        total_inodes_avail = sum(inode_info["inodes_avail"]
+                                 for (mp, inode_info) in inodes_info.items()
+                                 if mp in matching_mountpoints)
 
-        status, infotext, perfdata = df_check_filesystem_single(item, total_size_mb, total_avail_mb, total_reserved_mb, total_inodes, total_inodes_avail, params)
+        status, infotext, perfdata = df_check_filesystem_single(item, total_size_mb, total_avail_mb,
+                                                                total_reserved_mb, total_inodes,
+                                                                total_inodes_avail, params)
         infotext += " (%d filesystems)" % count
         return status, infotext, perfdata
     else:
         if item in blocks_info:
             mp = item
-            return df_check_filesystem_single(mp, blocks_info[mp]["size_mb"],
-                                                  blocks_info[mp]["avail_mb"],
-                                                  blocks_info[mp]["reserved_mb"],
-                                                  inodes_info.get(mp, {}).get("inodes_total", None),
-                                                  inodes_info.get(mp, {}).get("inodes_avail", None),
-                                                  params)
+            return df_check_filesystem_single(
+                mp, blocks_info[mp]["size_mb"], blocks_info[mp]["avail_mb"],
+                blocks_info[mp]["reserved_mb"],
+                inodes_info.get(mp, {}).get("inodes_total", None),
+                inodes_info.get(mp, {}).get("inodes_avail", None), params)
         return 3, "filesystem not found"
 
 
-def df_check_filesystem_single(mountpoint, size_mb, avail_mb, reserved_mb, inodes_total, inodes_avail, params, this_time=None):
+def df_check_filesystem_single(mountpoint,
+                               size_mb,
+                               avail_mb,
+                               reserved_mb,
+                               inodes_total,
+                               inodes_avail,
+                               params,
+                               this_time=None):
     if size_mb == 0:
         return (1, "Size of filesystem is 0 MB", [])
 
@@ -326,7 +349,7 @@ def df_check_filesystem_single(mountpoint, size_mb, avail_mb, reserved_mb, inode
 
     # Get warning and critical levels already with 'magic factor' applied
     levels = get_filesystem_levels(mountpoint, size_mb / 1024., params)
-    warn_mb, crit_mb       = levels["levels_mb"]
+    warn_mb, crit_mb = levels["levels_mb"]
     warn_inode, crit_inode = levels["inodes_levels"]
 
     used_hr = get_bytes_human_readable(used_mb * 1024 * 1024)
@@ -352,8 +375,7 @@ def df_check_filesystem_single(mountpoint, size_mb, avail_mb, reserved_mb, inode
 
     # TODO: In some future version use a fixed name as perf variable
     perf_var = mountpoint.replace(" ", "_")
-    perfdata = [(perf_var, used_mb, warn_mb, crit_mb, 0, size_mb),
-                ('fs_size', size_mb)]
+    perfdata = [(perf_var, used_mb, warn_mb, crit_mb, 0, size_mb), ('fs_size', size_mb)]
 
     if show_levels == "always" or \
         (show_levels == "onproblem" and status > 0) or \
@@ -377,9 +399,8 @@ def df_check_filesystem_single(mountpoint, size_mb, avail_mb, reserved_mb, inode
         perfdata.append(("reserved", reserved_mb))
 
     if levels.get("trend_range"):
-        trend_status, trend_infotext, trend_perfdata = size_trend(
-            'df', mountpoint, "disk", levels, used_mb, size_mb, this_time
-        )
+        trend_status, trend_infotext, trend_perfdata = size_trend('df', mountpoint, "disk", levels,
+                                                                  used_mb, size_mb, this_time)
         status = max(status, trend_status)
         infotext += trend_infotext
         perfdata.extend(trend_perfdata)
@@ -405,12 +426,12 @@ def df_check_filesystem_single(mountpoint, size_mb, avail_mb, reserved_mb, inode
             else:
                 if inodes_crit > inodes_avail_perc:
                     inode_status = 2
-                    problems.append("less than %s inodes available(!!)"
-                                    % get_percent_human_readable(inodes_crit))
+                    problems.append("less than %s inodes available(!!)" %
+                                    get_percent_human_readable(inodes_crit))
                 elif inodes_warn > inodes_avail_perc:
                     inode_status = 1
-                    problems.append("less than %s inodes available(!)"
-                                    % get_percent_human_readable(inodes_warn))
+                    problems.append("less than %s inodes available(!)" %
+                                    get_percent_human_readable(inodes_warn))
                 inodes_warn_abs = (100 - inodes_warn) / 100.0 * inodes_total
                 inodes_crit_abs = (100 - inodes_crit) / 100.0 * inodes_total
 
@@ -425,9 +446,10 @@ def df_check_filesystem_single(mountpoint, size_mb, avail_mb, reserved_mb, inode
             (show_inodes == "onlow" and (inode_status or inodes_avail_perc < 50)) or \
             (show_inodes == "onproblem" and inode_status):
             infotext += ", inodes available: %dk/%s" % (
-                        inodes_avail / 1000, get_percent_human_readable(inodes_avail_perc))
+                inodes_avail / 1000, get_percent_human_readable(inodes_avail_perc))
 
-        perfdata += [ ("inodes_used", inodes_total - inodes_avail, inodes_warn_abs, inodes_crit_abs, 0, inodes_total) ]
+        perfdata += [("inodes_used", inodes_total - inodes_avail, inodes_warn_abs, inodes_crit_abs,
+                      0, inodes_total)]
 
     if problems:
         infotext += " - %s" % ", ".join(problems)

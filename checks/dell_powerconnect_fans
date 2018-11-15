@@ -48,9 +48,24 @@
 # 6 => notFunctioning
 
 # GENERAL MAPS:
-dell_powerconnect_fans_status_map = { '1': 'normal', '2': 'warning', '3': 'critical', '4': 'shutdown', '5': 'notPresent', '6': 'notFunctioning' }
-dell_powerconnect_fans_status2nagios_map = { 'normal': 0, 'warning': 1, 'critical': 2, 'shutdown': 3, 'notPresent': 1, 'notFunctioning': 2 }
-dell_powerconnect_fans_state_performance_map = { '1': 1, '2': 0, '3': 0, '4': 0, '5': 0, '6': 0 }
+dell_powerconnect_fans_status_map = {
+    '1': 'normal',
+    '2': 'warning',
+    '3': 'critical',
+    '4': 'shutdown',
+    '5': 'notPresent',
+    '6': 'notFunctioning'
+}
+dell_powerconnect_fans_status2nagios_map = {
+    'normal': 0,
+    'warning': 1,
+    'critical': 2,
+    'shutdown': 3,
+    'notPresent': 1,
+    'notFunctioning': 2
+}
+dell_powerconnect_fans_state_performance_map = {'1': 1, '2': 0, '3': 0, '4': 0, '5': 0, '6': 0}
+
 
 # Inventory of all fan related elements
 def inventory_dell_powerconnect_fans(checkname, info):
@@ -59,6 +74,7 @@ def inventory_dell_powerconnect_fans(checkname, info):
         if dell_powerconnect_fans_status_map[state] != 'notPresent':
             inventory.append((name, None))
     return inventory
+
 
 # The check for the states and details of each fan
 def check_dell_powerconnect_fans(item, _not_used, info):

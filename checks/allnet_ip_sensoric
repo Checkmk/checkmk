@@ -110,6 +110,7 @@ def allnet_ip_sensoric_compose_item(sensor_id, sensor):
         item = "Sensor %s" % (sensor_id)
     return item
 
+
 #   .--el. tension---------------------------------------------------------.
 #   |                  _     _                 _                           |
 #   |              ___| |   | |_ ___ _ __  ___(_) ___  _ __                |
@@ -119,13 +120,15 @@ def allnet_ip_sensoric_compose_item(sensor_id, sensor):
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
+
 def inventory_allnet_ip_sensoric_tension(parsed):
     inventory = []
     for sensor in parsed.keys():
         if "function" in parsed[sensor].keys() and parsed[sensor]["function"] == "12":
             item = allnet_ip_sensoric_compose_item(sensor, parsed[sensor])
-            inventory.append( (item, None) )
+            inventory.append((item, None))
     return inventory
+
 
 def check_allnet_ip_sensoric_tension(item, _no_params, parsed):
     sensor_id = "sensor" + re.sub(".+Sensor ", "", item)
@@ -135,7 +138,7 @@ def check_allnet_ip_sensoric_tension(item, _no_params, parsed):
 
     value = float(parsed[sensor_id]["value_float"])
 
-    perfdata = [ ("tension", value, None, None, 0, 100) ]
+    perfdata = [("tension", value, None, None, 0, 100)]
 
     status = 0
     if value == 0:
@@ -143,11 +146,12 @@ def check_allnet_ip_sensoric_tension(item, _no_params, parsed):
 
     return status, "%d%% of the normal level" % value, perfdata
 
+
 check_info["allnet_ip_sensoric.tension"] = {
-    "check_function"        : check_allnet_ip_sensoric_tension,
-    "inventory_function"    : inventory_allnet_ip_sensoric_tension,
-    "service_description"   : "Electric Tension %s",
-    "has_perfdata"          : True,
+    "check_function": check_allnet_ip_sensoric_tension,
+    "inventory_function": inventory_allnet_ip_sensoric_tension,
+    "service_description": "Electric Tension %s",
+    "has_perfdata": True,
 }
 
 #.
@@ -160,9 +164,8 @@ check_info["allnet_ip_sensoric.tension"] = {
 #   |                                        |_|                           |
 #   '----------------------------------------------------------------------'
 
-factory_settings["allnet_ip_sensoric_temp_default_levels"] = {
-    "levels" : (35, 40)
-}
+factory_settings["allnet_ip_sensoric_temp_default_levels"] = {"levels": (35, 40)}
+
 
 def inventory_allnet_ip_sensoric_temp(parsed):
     for sensor in parsed.keys():
@@ -170,6 +173,7 @@ def inventory_allnet_ip_sensoric_temp(parsed):
             or (parsed[sensor].get('unit') and parsed[sensor]['unit'] == u'°C'):
             item = allnet_ip_sensoric_compose_item(sensor, parsed[sensor])
             yield item, {}
+
 
 def check_allnet_ip_sensoric_temp(item, params, parsed):
     sensor_id = "sensor" + re.sub(".+Sensor ", "", item)
@@ -181,14 +185,15 @@ def check_allnet_ip_sensoric_temp(item, params, parsed):
 
     return check_temperature(temp, params, "allnet_ip_sensoric_temp_%s" % item)
 
+
 check_info["allnet_ip_sensoric.temp"] = {
-    "check_function"          : check_allnet_ip_sensoric_temp,
-    "inventory_function"      : inventory_allnet_ip_sensoric_temp,
-    "service_description"     : "Temperature %s",
-    "has_perfdata"            : True,
-    "group"                   : "temperature",
-    "includes"                : [ "temperature.include" ],
-    "default_levels_variable" : "allnet_ip_sensoric_temp_default_levels"
+    "check_function": check_allnet_ip_sensoric_temp,
+    "inventory_function": inventory_allnet_ip_sensoric_temp,
+    "service_description": "Temperature %s",
+    "has_perfdata": True,
+    "group": "temperature",
+    "includes": ["temperature.include"],
+    "default_levels_variable": "allnet_ip_sensoric_temp_default_levels"
 }
 
 #.
@@ -201,15 +206,17 @@ check_info["allnet_ip_sensoric.temp"] = {
 #   |                                                  |___/               |
 #   '----------------------------------------------------------------------'
 
-allnet_ip_sensoric_humidity_default_levels = ( 35, 40, 60, 65 )
+allnet_ip_sensoric_humidity_default_levels = (35, 40, 60, 65)
+
 
 def inventory_allnet_ip_sensoric_humidity(parsed):
     inventory = []
     for sensor in parsed.keys():
         if "function" in parsed[sensor].keys() and parsed[sensor]["function"] == "2":
             item = allnet_ip_sensoric_compose_item(sensor, parsed[sensor])
-            inventory.append( (item, "allnet_ip_sensoric_humidity_default_levels") )
+            inventory.append((item, "allnet_ip_sensoric_humidity_default_levels"))
     return inventory
+
 
 def check_allnet_ip_sensoric_humidity(item, params, parsed):
     sensor_id = "sensor" + re.sub(".+Sensor ", "", item)
@@ -218,13 +225,14 @@ def check_allnet_ip_sensoric_humidity(item, params, parsed):
 
     return check_humidity(float(parsed[sensor_id]["value_float"]), params)
 
+
 check_info["allnet_ip_sensoric.humidity"] = {
-    "check_function"        : check_allnet_ip_sensoric_humidity,
-    "inventory_function"    : inventory_allnet_ip_sensoric_humidity,
-    "service_description"   : "Humidity %s",
-    "has_perfdata"          : True,
-    "group"                 : "humidity",
-    "includes"              : ["humidity.include"],
+    "check_function": check_allnet_ip_sensoric_humidity,
+    "inventory_function": inventory_allnet_ip_sensoric_humidity,
+    "service_description": "Humidity %s",
+    "has_perfdata": True,
+    "group": "humidity",
+    "includes": ["humidity.include"],
 }
 
 #.
@@ -237,13 +245,15 @@ check_info["allnet_ip_sensoric.humidity"] = {
 #   |              |_|                                                     |
 #   '----------------------------------------------------------------------'
 
+
 def inventory_allnet_ip_sensoric_pressure(parsed):
     inventory = []
     for sensor in parsed.keys():
         if "function" in parsed[sensor].keys() and parsed[sensor]["function"] == "16":
             item = allnet_ip_sensoric_compose_item(sensor, parsed[sensor])
-            inventory.append( (item, None) )
+            inventory.append((item, None))
     return inventory
+
 
 def check_allnet_ip_sensoric_pressure(item, _no_params, parsed):
     sensor_id = "sensor" + re.sub(".+Sensor ", "", item)
@@ -253,15 +263,16 @@ def check_allnet_ip_sensoric_pressure(item, _no_params, parsed):
 
     pressure = float(parsed[sensor_id]["value_float"]) / 1000
 
-    perfdata = [ ("pressure", str(pressure) + "bars", None, None, 0 ) ]
+    perfdata = [("pressure", str(pressure) + "bars", None, None, 0)]
 
     return 0, "%s is %0.5f bars" % (item, pressure), perfdata
 
+
 check_info["allnet_ip_sensoric.pressure"] = {
-    "check_function"        : check_allnet_ip_sensoric_pressure,
-    "inventory_function"    : inventory_allnet_ip_sensoric_pressure,
-    "service_description"   : "Pressure %s",
-    "has_perfdata"          : True,
+    "check_function": check_allnet_ip_sensoric_pressure,
+    "inventory_function": inventory_allnet_ip_sensoric_pressure,
+    "service_description": "Pressure %s",
+    "has_perfdata": True,
 }
 
 #.
@@ -269,4 +280,3 @@ check_info["allnet_ip_sensoric.pressure"] = {
 check_info["allnet_ip_sensoric"] = {
     "parse_function": parse_allnet_ip_sensoric,
 }
-

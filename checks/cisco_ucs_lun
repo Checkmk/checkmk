@@ -45,28 +45,30 @@ map_luntype = {
 
 
 def inventory_cisco_ucs_lun(info):
-    return [ (None, None) ]
+    return [(None, None)]
 
 
 def check_cisco_ucs_lun(_no_item, _no_params, info):
     mode, size, status = info[0]
     state, state_readable = map_operability.get(status, (3, "Unknown, status code %s" % status))
     mode_state, mode_state_readable = map_luntype.get(mode, (3, "Unknown, status code %s" % mode))
-    size_readable = get_bytes_human_readable(int(size) * 1024 * 1024) # size is returned in MB
+    size_readable = get_bytes_human_readable(int(size) * 1024 * 1024)  # size is returned in MB
     yield state, "Status: %s" % state_readable
     yield 0, "Size: %s" % size_readable
     yield mode_state, "Mode: %s" % mode_state_readable
 
 
-check_info["cisco_ucs_lun"]  = {
-    "check_function"     : check_cisco_ucs_lun,
-    "inventory_function" : inventory_cisco_ucs_lun,
+check_info["cisco_ucs_lun"] = {
+    "check_function": check_cisco_ucs_lun,
+    "inventory_function": inventory_cisco_ucs_lun,
     "service_description": "LUN",
-    "snmp_scan_function" : scan_cisco_ucs,
-    "snmp_info"          : (".1.3.6.1.4.1.9.9.719.1.45.8.1", [
-                                "14", # cucsStorageLocalLunType
-                                "13", # cucsStorageLocalLunSize
-                                "9",  # cucsStorageLocalLunOperability
-                            ]),
-    "includes"           : [ "cisco_ucs.include" ]
+    "snmp_scan_function": scan_cisco_ucs,
+    "snmp_info": (
+        ".1.3.6.1.4.1.9.9.719.1.45.8.1",
+        [
+            "14",  # cucsStorageLocalLunType
+            "13",  # cucsStorageLocalLunSize
+            "9",  # cucsStorageLocalLunOperability
+        ]),
+    "includes": ["cisco_ucs.include"]
 }

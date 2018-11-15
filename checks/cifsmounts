@@ -29,12 +29,11 @@
 # /foobar hanging 0 0 0 0
 # /with spaces ok 217492 123563 112515 524288
 
-
 check_info["cifsmounts"] = {
-    'parse_function':          parse_network_fs_mounts,
-    'check_function':          check_network_fs_mounts,
-    'inventory_function':      inventory_network_fs_mounts,
-    'service_description':     'CIFS mount %s',
-    'group':                   'network_fs',
-    'includes':                 [ 'network_fs.include' ],
+    'parse_function': parse_network_fs_mounts,
+    'check_function': check_network_fs_mounts,
+    'inventory_function': inventory_network_fs_mounts,
+    'service_description': 'CIFS mount %s',
+    'group': 'network_fs',
+    'includes': ['network_fs.include'],
 }

@@ -24,11 +24,10 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-
 factory_settings["bvip_link_default_levels"] = {
-    'ok_states'   : [ 0, 4, 5],
-    'warn_states' : [7],
-    'crit_states' : [1, 2, 3],
+    'ok_states': [0, 4, 5],
+    'warn_states': [7],
+    'crit_states': [1, 2, 3],
 }
 
 
@@ -41,13 +40,13 @@ def inventory_bvip_link(info):
 def check_bvip_link(_no_item, params, info):
     count = 0
     states = {
-        0 : "No Link",
-        1 : "10 MBit - HalfDuplex",
-        2 : "10 MBit - FullDuplex",
-        3 : "100 Mbit - HalfDuplex",
-        4 : "100 Mbit - FullDuplex",
-        5 : "1 Gbit - FullDuplex",
-        7 : "Wifi",
+        0: "No Link",
+        1: "10 MBit - HalfDuplex",
+        2: "10 MBit - FullDuplex",
+        3: "100 Mbit - HalfDuplex",
+        4: "100 Mbit - FullDuplex",
+        5: "1 Gbit - FullDuplex",
+        7: "Wifi",
     }
     for line in info:
         count += 1
@@ -63,14 +62,14 @@ def check_bvip_link(_no_item, params, info):
         yield state, "%s: State: %s" % \
             (count, states.get(link_status, "Not Implemented (%s)" % link_status))
 
-check_info["bvip_link"] = {
-    "check_function"          : check_bvip_link,
-    "inventory_function"      : inventory_bvip_link,
-    "service_description"     : "Network Link",
-    "snmp_scan_function"      : bvip_scan_function,
-    "snmp_info"               : (".1.3.6.1.4.1.3967.1.5.1.8", [ 1 ]),
-    "includes"                : [ 'bvip.include' ],
-    "default_levels_variable" : "bvip_link_default_levels",
-    "group"                   : "bvip_link",
-}
 
+check_info["bvip_link"] = {
+    "check_function": check_bvip_link,
+    "inventory_function": inventory_bvip_link,
+    "service_description": "Network Link",
+    "snmp_scan_function": bvip_scan_function,
+    "snmp_info": (".1.3.6.1.4.1.3967.1.5.1.8", [1]),
+    "includes": ['bvip.include'],
+    "default_levels_variable": "bvip_link_default_levels",
+    "group": "bvip_link",
+}

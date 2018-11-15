@@ -29,12 +29,13 @@
 # Total sorts 100
 # Sort overflows 3
 
-factory_settings["db2_sort_overflow_default_levels"] = {
-    "levels_perc": (2.0, 4.0)
-}
+factory_settings["db2_sort_overflow_default_levels"] = {"levels_perc": (2.0, 4.0)}
+
+
 def inventory_db2_sort_overflow(parsed):
     for key in parsed[1].iterkeys():
         yield key, {}
+
 
 def check_db2_sort_overflow(item, params, parsed):
     db = parsed[1].get(item)
@@ -61,12 +62,12 @@ def check_db2_sort_overflow(item, params, parsed):
 
 
 check_info['db2_sort_overflow'] = {
-    "parse_function"          : parse_db2_dbs,
-    "service_description"     : "DB2 Sort Overflow %s",
-    "check_function"          : check_db2_sort_overflow,
-    "inventory_function"      : inventory_db2_sort_overflow,
-    "has_perfdata"            : True,
-    "group"                   : "db2_sortoverflow",
-    "default_levels_variable" : "db2_sort_overflow_default_levels",
-    "includes"                : ["db2.include"]
+    "parse_function": parse_db2_dbs,
+    "service_description": "DB2 Sort Overflow %s",
+    "check_function": check_db2_sort_overflow,
+    "inventory_function": inventory_db2_sort_overflow,
+    "has_perfdata": True,
+    "group": "db2_sortoverflow",
+    "default_levels_variable": "db2_sort_overflow_default_levels",
+    "includes": ["db2.include"]
 }

@@ -2119,7 +2119,7 @@ class html(HTMLGenerator):
         self.close_div()
 
     def get_button_counts(self):
-        return config.user.load_file("buttoncounts", {})
+        return config.user.get_button_counts()
 
     def empty_icon_button(self):
         self.write(self.render_icon("images/trans.png", cssclass="iconbutton trans"))

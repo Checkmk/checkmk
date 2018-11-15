@@ -260,6 +260,9 @@ def _filter_tree(struct_tree):
 
 
 def _get_permitted_inventory_paths():
+    cache_varname = "permitted_inventory_paths"
+    if html.is_cached(cache_varname):
+        return html.get_cached(cache_varname)
     """
 Returns either a list of permitted paths or
 None in case the user is allowed to see the whole tree.
@@ -267,6 +270,7 @@ None in case the user is allowed to see the whole tree.
     contact_groups = userdb.load_group_information().get("contact", {})
     user_groups = userdb.contactgroups_of_user(config.user.id)
     if not user_groups:
+        html.set_cache(cache_varname, None)
         return None
 
     forbid_whole_tree = False
@@ -275,9 +279,11 @@ None in case the user is allowed to see the whole tree.
         inventory_paths = contact_groups.get(user_group, {}).get('inventory_paths')
         if inventory_paths is None:
             # Old configuration: no paths configured means 'allow_all'
+            html.set_cache(cache_varname, None)
             return None
 
         if inventory_paths == "allow_all":
+            html.set_cache(cache_varname, None)
             return None
 
         elif inventory_paths == "forbid_all":
@@ -294,7 +300,10 @@ None in case the user is allowed to see the whole tree.
             permitted_paths.append((parsed, entry.get("attributes")))
 
     if forbid_whole_tree and not permitted_paths:
+        html.set_cache(cache_varname, [])
         return []
+
+    html.set_cache(cache_varname, permitted_paths)
     return permitted_paths
 
 

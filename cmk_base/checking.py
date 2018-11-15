@@ -36,7 +36,7 @@ import cmk
 import cmk.defines as defines
 import cmk.tty as tty
 import cmk.cpu_tracking as cpu_tracking
-from cmk.exceptions import MKGeneralException
+from cmk.exceptions import MKGeneralException, MKTimeout
 
 import cmk_base.utils
 import cmk_base.crash_reporting
@@ -49,7 +49,7 @@ import cmk_base.data_sources as data_sources
 import cmk_base.item_state as item_state
 import cmk_base.core as core
 import cmk_base.check_table as check_table
-from cmk_base.exceptions import MKTimeout, MKParseFunctionError, MKIPAddressLookupError, \
+from cmk_base.exceptions import MKParseFunctionError, MKIPAddressLookupError, \
                                 MKAgentError, MKSNMPError
 
 try:

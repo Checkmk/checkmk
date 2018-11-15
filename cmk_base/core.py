@@ -36,13 +36,12 @@ import cmk.paths
 import cmk.debug
 import cmk.tty as tty
 import livestatus
-from cmk.exceptions import MKGeneralException
+from cmk.exceptions import MKGeneralException, MKTimeout
 
 import cmk_base.console as console
 import cmk_base.config as config
 import cmk_base.core_config as core_config
 import cmk_base.core_nagios as core_nagios
-from cmk_base.exceptions import MKTimeout
 from cmk_base import config_cache
 
 try:

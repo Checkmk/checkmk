@@ -34,7 +34,7 @@ import signal
 from cmk.regex import regex
 import cmk.tty as tty
 import cmk.paths
-from cmk.exceptions import MKGeneralException
+from cmk.exceptions import MKGeneralException, MKTimeout
 
 import cmk.store as store
 import cmk_base.crash_reporting
@@ -52,7 +52,7 @@ import cmk_base.data_sources as data_sources
 import cmk_base.check_table as check_table
 import cmk_base.core as core
 from cmk_base.exceptions import MKAgentError, MKParseFunctionError, \
-    MKSNMPError, MKTimeout
+    MKSNMPError
 
 try:
     import cmk_base.cee.keepalive as keepalive

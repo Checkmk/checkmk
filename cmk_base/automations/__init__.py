@@ -30,14 +30,15 @@ import signal
 import sys
 import pprint
 
+
 import cmk.debug
+from cmk.exceptions import MKTimeout
 
 import cmk_base.utils
 import cmk_base.config as config
 import cmk_base.checks as checks
 import cmk_base.console as console
 import cmk_base.profiling as profiling
-from cmk_base.exceptions import MKTimeout
 
 __all__ = [ os.path.basename(f)[:-3]
             for f in glob.glob(os.path.dirname(__file__) + "/*.py")

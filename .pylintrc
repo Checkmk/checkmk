@@ -34,11 +34,6 @@ disable=
     # duplication (introduce new classes, combine methods, etc.)
     attribute-defined-outside-init,
     #---------------------------------------------------------------------------
-    # Enabling this would be very desirable, using type() instead of
-    # isinstance() is a very bad idea most of the time, as it totally ignores
-    # class hierarchies, breaking things in subtle ways.
-    unidiomatic-typecheck,
-    #---------------------------------------------------------------------------
     # This should really be fixed: Global variables are already a bad idea, but
     # depending on an implicit protocol to create them is an even worse one.
     global-variable-undefined,

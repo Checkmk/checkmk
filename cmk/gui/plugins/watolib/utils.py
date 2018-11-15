@@ -189,7 +189,7 @@ def register_configvar(group,
 
     # New API is to hand over the class via domain argument. But not all calls have been
     # migrated. Perform the translation here.
-    if type(domain) in [str, unicode]:
+    if isinstance(domain, basestring):
         domain = ConfigDomain.get_class(domain)
 
     _configvar_groups.setdefault(group, []).append((domain, varname, valuespec))

@@ -73,28 +73,11 @@ def jolokia_metrics_parse(info):
             continue
 
         try:
-            inst = line[0]
-            var = ' '.join(line[1:-1])
-            value = line[-1]
-        except IndexError:
+            inst_raw, var, value = jolokia_basic_split(line, 3)
+        except ValueError:
             continue
 
-        attributes = {}
-        positional = []
-
-        # app, servlet, gc, tp = None, None, None, None
-        if ',' in inst:
-            parts = inst.split(',')
-            inst = parts[0]
-
-            for part in parts[1:]:
-                if ":" in part:
-                    _module, part = part.split(":", 1)
-                if "=" in part:
-                    key, val = part.split("=")
-                    attributes[key] = val
-                else:
-                    positional.append(part)
+        inst, attributes, positional = jolokoia_extract_opt(inst_raw)
 
         parsed.setdefault(inst, {})
 
@@ -250,7 +233,6 @@ def jolokia_metrics_app(info, split_item):
     parsed = jolokia_metrics_parse(info)
     if parsed.get(inst, "") is None:
         raise MKCounterWrapped("No information from Jolokia agent")
-
     if not inst in parsed \
        or not app in parsed[inst].get('apps', {}):
         return None
@@ -344,6 +326,7 @@ def check_jolokia_metrics_serv_req(item, params, info):
 
 
 check_info["jolokia_metrics.serv_req"] = {
+    "includes": ["jolokia.include"],
     "service_description": "JVM %s Requests",
     "check_function": check_jolokia_metrics_serv_req,
     "inventory_function": inventory_jolokia_metrics_serv,
@@ -427,6 +410,7 @@ def check_jolokia_metrics_gc(item, params, info):
 
 
 check_info["jolokia_metrics.gc"] = {
+    "includes": ["jolokia.include"],
     "service_description": "JVM %s",
     "check_function": check_jolokia_metrics_gc,
     "inventory_function": inventory_jolokia_metrics_gc,
@@ -516,6 +500,7 @@ def check_jolokia_metrics_tp(item, params, info):
 
 
 check_info["jolokia_metrics.tp"] = {
+    "includes": ["jolokia.include"],
     "default_levels_variable": "jolokia_metrics_tp_default_levels",
     "service_description": "JVM %s",
     "check_function": check_jolokia_metrics_tp,
@@ -635,6 +620,7 @@ def check_jolokia_metrics_mem(item, params, info):
 
 
 check_info["jolokia_metrics.mem"] = {
+    "includes": ["jolokia.include"],
     "service_description": "JVM %s Memory",
     "check_function": check_jolokia_metrics_mem,
     "inventory_function": lambda i: inventory_jolokia_metrics(i, "mem"),
@@ -694,6 +680,7 @@ def check_jolokia_metrics_threads(item, params, info):
 
 
 check_info["jolokia_metrics.threads"] = {
+    "includes": ["jolokia.include"],
     "service_description": "JVM %s Threads",
     "check_function": check_jolokia_metrics_threads,
     "inventory_function": lambda i: inventory_jolokia_metrics(i, "threads"),
@@ -723,11 +710,11 @@ def check_jolokia_metrics_uptime(item, params, info):
 
 
 check_info["jolokia_metrics.uptime"] = {
+    "includes": ["jolokia.include", 'uptime.include'],
     "service_description": "JVM %s Uptime",
     "check_function": check_jolokia_metrics_uptime,
     "inventory_function": lambda i: inventory_jolokia_metrics(i, "uptime"),
     "group": "jvm_uptime",
-    'includes': ['uptime.include'],
     "has_perfdata": True,
 }
 
@@ -769,6 +756,7 @@ def check_jolokia_metrics_app_state(item, _unused, info):
 
 
 check_info["jolokia_metrics.app_state"] = {
+    "includes": ["jolokia.include"],
     "service_description": "JVM %s State",
     "check_function": check_jolokia_metrics_app_state,
     "inventory_function": lambda i: inventory_jolokia_metrics_apps(i, "app_state"),
@@ -873,6 +861,7 @@ def check_jolokia_metrics_bea_threads(item, _no_params, info):
 
 
 check_info["jolokia_metrics.app_sess"] = {
+    "includes": ["jolokia.include"],
     "service_description": "JVM %s Sessions",
     "check_function": check_jolokia_metrics_app_sess,
     "inventory_function": lambda i: inventory_jolokia_metrics_apps(i, "app_sess"),
@@ -881,6 +870,7 @@ check_info["jolokia_metrics.app_sess"] = {
 }
 
 check_info["jolokia_metrics.requests"] = {
+    "includes": ["jolokia.include"],
     "service_description": "JVM %s Requests",
     "check_function": check_jolokia_metrics_bea_requests,
     "inventory_function": lambda i: inventory_jolokia_metrics_apps(i, "requests"),
@@ -890,6 +880,7 @@ check_info["jolokia_metrics.requests"] = {
 
 # Stuff found on BEA Weblogic
 check_info["jolokia_metrics.bea_queue"] = {
+    "includes": ["jolokia.include"],
     "service_description": "JVM %s Queue",
     "check_function": check_jolokia_metrics_bea_queue,
     "inventory_function": lambda i: inventory_jolokia_metrics_apps(i, "queue"),
@@ -898,6 +889,7 @@ check_info["jolokia_metrics.bea_queue"] = {
 }
 
 check_info["jolokia_metrics.bea_requests"] = {
+    "includes": ["jolokia.include"],
     "service_description": "JVM %s Requests",
     "check_function": check_jolokia_metrics_bea_requests,
     "inventory_function": lambda i: inventory_jolokia_metrics_apps(i, "bea_requests"),
@@ -906,6 +898,7 @@ check_info["jolokia_metrics.bea_requests"] = {
 }
 
 check_info["jolokia_metrics.bea_threads"] = {
+    "includes": ["jolokia.include"],
     "service_description": "JVM %s Threads",
     "check_function": check_jolokia_metrics_bea_threads,
     "inventory_function": lambda i: inventory_jolokia_metrics_apps(i, "threads"),
@@ -914,6 +907,7 @@ check_info["jolokia_metrics.bea_threads"] = {
 }
 
 check_info["jolokia_metrics.bea_sess"] = {
+    "includes": ["jolokia.include"],
     "service_description": "JVM %s Sessions",
     "check_function": check_jolokia_metrics_app_sess,
     "inventory_function": lambda i: inventory_jolokia_metrics_apps(i, "bea_app_sess"),
@@ -959,6 +953,7 @@ def check_jolokia_metrics_perm_gen(item, params, info):
 
 
 check_info["jolokia_metrics.perm_gen"] = {
+    "includes": ["jolokia.include"],
     "service_description": "JVM %s PermGen Usage",
     "check_function": check_jolokia_metrics_perm_gen,
     "inventory_function": inventory_jolokia_metrics_perm_gen,
@@ -1021,6 +1016,7 @@ def check_jolokia_metrics_cache(metrics, totals, item, params, info):
 
 
 check_info["jolokia_metrics.cache_hits"] = {
+    "includes": ["jolokia.include"],
     "service_description" : "JVM %s Cache Usage",
     "check_function"      : lambda item, params, parsed: check_jolokia_metrics_cache(["CacheHitPercentage", "ObjectCount"], ["CacheHits", "CacheMisses"], item, params, parsed),
     "inventory_function"  : lambda info: inventory_jolokia_metrics_cache("cache_hits", ["CacheHitPercentage", "ObjectCount", "CacheHits", "CacheMisses"], info),
@@ -1028,6 +1024,7 @@ check_info["jolokia_metrics.cache_hits"] = {
 }
 
 check_info["jolokia_metrics.in_memory"] = {
+    "includes": ["jolokia.include"],
     "service_description" : "JVM %s In Memory",
     "check_function"      : lambda item, params, parsed: check_jolokia_metrics_cache(["InMemoryHitPercentage", "MemoryStoreObjectCount"], ["InMemoryHits", "InMemoryMisses"], item, params, parsed),
     "inventory_function"  : lambda info: inventory_jolokia_metrics_cache("cache_hits", ["InMemoryHitPercentage", "MemoryStoreObjectCount", "InMemoryHits", "InMemoryMisses"], info),
@@ -1035,6 +1032,7 @@ check_info["jolokia_metrics.in_memory"] = {
 }
 
 check_info["jolokia_metrics.on_disk"] = {
+    "includes": ["jolokia.include"],
     "service_description" : "JVM %s On Disk",
     "check_function"      : lambda item, params, parsed: check_jolokia_metrics_cache(["OnDiskHitPercentage", "DiskStoreObjectCount"], ["OnDiskHits", "OnDiskMisses"], item, params, parsed),
     "inventory_function"  : lambda info: inventory_jolokia_metrics_cache("cache_hits", ["OnDiskHitPercentage", "DiskStoreObjectCount", "OnDiskHits", "OnDiskMisses"], info),
@@ -1042,6 +1040,7 @@ check_info["jolokia_metrics.on_disk"] = {
 }
 
 check_info["jolokia_metrics.off_heap"] = {
+    "includes": ["jolokia.include"],
     "service_description" : "JVM %s Off Heap",
     "check_function"      : lambda item, params, parsed: check_jolokia_metrics_cache(["OffHeapHitPercentage", "OffHeapStoreObjectCount"], ["OffHeapHits", "OffHeapMisses"], item, params, parsed),
     "inventory_function"  : lambda info: inventory_jolokia_metrics_cache("cache_hits", ["OffHeapHitPercentage", "OffHeapStoreObjectCount", "OffHeapHits", "OffHeapMisses"], info),
@@ -1049,6 +1048,7 @@ check_info["jolokia_metrics.off_heap"] = {
 }
 
 check_info["jolokia_metrics.writer"] = {
+    "includes": ["jolokia.include"],
     "service_description" : "JVM %s Cache Writer",
     "check_function"      : lambda item, params, parsed: check_jolokia_metrics_cache(["WriterQueueLength", "WriterMaxQueueSize"], [], item, params, parsed),
     "inventory_function"  : lambda info: inventory_jolokia_metrics_cache("cache_hits", ["WriterQueueLength", "WriterMaxQueueSize"], info),

@@ -611,6 +611,7 @@ class Site(object):
 
     def _update_with_f12_files(self):
         paths = [
+            cmk_path() + "/omd/packages/omd",
             cmk_path() + "/livestatus",
             cmk_path() + "/livestatus/api/python",
             cmk_path() + "/bin",

@@ -503,6 +503,14 @@ endif
 
 Pipfile.lock: Pipfile
 	$(PIPENV) lock
+# TODO: Can be removed if pipenv fixes this issue.
+# See: https://github.com/pypa/pipenv/issues/3140
+#      https://github.com/pypa/pipenv/issues/3026
+# The recent pipenv version 2018.10.13 has a bug that places wrong markers in the
+# Pipfile.lock. This leads to an error when installing packages with this
+# markers and prints an error message. Example:
+# Ignoring pyopenssl: markers 'extra == "security"' don't match your environment
+	sed -i "/\"markers\": \"extra == /d" Pipfile.lock
 # TODO: pipenv and make don't really cooperate nicely: Locking alone already
 # creates a virtual environment with setuptools/pip/wheel. This could lead to a
 # wrong up-to-date status of it later, so let's remove it here. What we really

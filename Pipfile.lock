@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "519df5884af472eb9c6d1ab2dee1ce22902bb5419dc5ba2d05660d63c2db6010"
+            "sha256": "ce90d9f7e22515ae1d0200fa6fdd1037dc9e99e2e46917bb16e7efa8dc6add06"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -803,6 +803,14 @@
             "markers": "sys_platform == 'linux2' and python_version < '3.5'",
             "version": "==2.3.1"
         },
+        "setuptools-git": {
+            "hashes": [
+                "sha256:e7764dccce7d97b4b5a330d7b966aac6f9ac026385743fd6cedad553f2494cfa",
+                "sha256:ff64136da01aabba76ae88b050e7197918d8b2139ccbf6144e14d472b9c40445"
+            ],
+            "index": "pypi",
+            "version": "==1.2"
+        },
         "setuptools-scm": {
             "hashes": [
                 "sha256:1191f2a136b5e86f7ca8ab00a97ef7aef997131f1f6d4971be69a1ef387d8b40",
@@ -897,7 +905,7 @@
                 "sha256:9d98697f088eb1b0fa451391f91afb5e3ebde16bbdb272819fd091151fda4f1a",
                 "sha256:f0b0e4eba956de51238e17573b7087e852dfe9854afd2e9c873f73fc0ca0a6dd"
             ],
-            "markers": "python_version == '2.7'",
+            "markers": "python_version < '3.4'",
             "version": "==1.5"
         },
         "backports.ssl-match-hostname": {
@@ -1258,11 +1266,11 @@
         },
         "pytest": {
             "hashes": [
-                "sha256:3f193df1cfe1d1609d4c583838bea3d532b18d6160fd3f55c9447fdca30848ec",
-                "sha256:e246cf173c01169b9617fc07264b7b1316e78d7a650055235d6d897bc80d9660"
+                "sha256:488c842647bbeb350029da10325cb40af0a9c7a2fdda45aeb1dda75b60048ffb",
+                "sha256:c055690dfefa744992f563e8c3a654089a6aa5b8092dded9b6fafbd70b2e45a7"
             ],
             "index": "pypi",
-            "version": "==3.10.1"
+            "version": "==4.0.0"
         },
         "pytest-cov": {
             "hashes": [

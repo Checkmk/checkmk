@@ -21,6 +21,7 @@ MODULES += ordereddict-1.1.tar.gz # needed by pysmi
 MODULES += ply-3.11.tar.gz # needed by pysmi
 MODULES += pysmi-0.3.2.tar.gz # needed by EC (for trap translation)
 MODULES += pysnmp-4.4.4.tar.gz # needed by EC (for trap translation)
+MODULES += setuptools-git-1.2.tar.gz # needed for pymssql on some older platforms
 MODULES += pymssql-2.1.3.tar.gz # needed for check_sql (together with freetds)
 
 LEGACY_LDAP=0

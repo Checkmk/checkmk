@@ -32,18 +32,18 @@
 # 1;1;0;1;0;1;231;1.0327125668e-01;1;1;1;1;1;0;32768;0;0;0.0000000000e+00;0;0.0000000000e+00;0;0.0000000000e+00;60;1359471450;0;0;0.0000000000e+00;0;0.0000000000e+00;1;0;20;2013.01.23;0;0.0000000000e+00;15126;15263;6.5307324420e+00;0;0;0;0;1;1359469039;3.2.3;230;1.0327125668e-01;0;0.0000000000e+00
 
 factory_settings["livestatus_status_default_levels"] = {
-    "site_stopped"                  : 2,
-    "execute_host_checks"           : 2,
-    "execute_service_checks"        : 2,
-    "accept_passive_host_checks"    : 2,
-    "accept_passive_service_checks" : 2,
-    "check_host_freshness"          : 0, # Was in OMD the default up to now, better not warn
-    "check_service_freshness"       : 1,
-    "enable_event_handlers"         : 1,
-    "enable_flap_detection"         : 1,
-    "enable_notifications"          : 2,
-    "process_performance_data"      : 1,
-    "check_external_commands"       : 2,
+    "site_stopped": 2,
+    "execute_host_checks": 2,
+    "execute_service_checks": 2,
+    "accept_passive_host_checks": 2,
+    "accept_passive_service_checks": 2,
+    "check_host_freshness": 0,  # Was in OMD the default up to now, better not warn
+    "check_service_freshness": 1,
+    "enable_event_handlers": 1,
+    "enable_flap_detection": 1,
+    "enable_notifications": 2,
+    "process_performance_data": 1,
+    "check_external_commands": 2,
 }
 
 
@@ -53,7 +53,7 @@ def parse_livestatus_status(info):
     for line in info:
         if line and line[0][0] == "[" and line[0][-1] == "]":
             site = line[0][1:-1]
-            parsed[site] = None # Site is marked as down until overwritten later
+            parsed[site] = None  # Site is marked as down until overwritten later
 
         elif site:
             if headers is None:
@@ -66,7 +66,7 @@ def parse_livestatus_status(info):
 
 
 def inventory_livestatus_status(parsed):
-    return [ (site, {}) for (site, status) in parsed.items() if status != None ]
+    return [(site, {}) for (site, status) in parsed.items() if status != None]
 
 
 def check_livestatus_status(item, params, parsed):
@@ -83,13 +83,13 @@ def check_livestatus_status(item, params, parsed):
     # Check Performance counters
     this_time = time.time()
     status_counters = [
-        # factor, calc_rate, column, format, title
-        (1, True, "%.1f/s", "host_checks",    "Host Checks",         ),
-        (1, True, "%.1f/s", "service_checks", "Service Checks",      ),
-        (1, True, "%.1f/s", "forks",          "Process Creations",   ),
-        (1, True, "%.1f/s", "connections",    "Livestatus Connects", ),
-        (1, True, "%.1f/s", "requests",       "Livestatus Requests", ),
-        (1, True, "%.1f/s", "log_messages",   "Log Messages",        ),
+        # factor,calc_rate,column,format,title
+        (1, True, "%.1f/s", "host_checks", "HostChecks"),
+        (1, True, "%.1f/s", "service_checks", "ServiceChecks"),
+        (1, True, "%.1f/s", "forks", "ProcessCreations"),
+        (1, True, "%.1f/s", "connections", "LivestatusConnects"),
+        (1, True, "%.1f/s", "requests", "LivestatusRequests"),
+        (1, True, "%.1f/s", "log_messages", "LogMessages"),
     ]
 
     if status["program_version"].startswith("Check_MK"):
@@ -97,12 +97,12 @@ def check_livestatus_status(item, params, parsed):
 
         status_counters += [
             # factor, calc_rate, format, column, title
-            (1,   False, "%.3fs",  "average_latency_generic",   "Average check latency"),
-            (1,   False, "%.3fs",  "average_latency_cmk",       "Average Check_MK latency"),
-            (100, False, "%.1f%%", "helper_usage_generic",      "Check helper usage"),
-            (100, False, "%.1f%%", "helper_usage_cmk",          "Check_MK helper usage"),
-            (100, False, "%.1f%%", "livestatus_usage",          "Livestatus usage"),
-            (1,   False, "%.1f/s", "livestatus_overflows_rate", "Livestatus overflow rate"),
+            (1, False, "%.3fs", "average_latency_generic", "Average check latency"),
+            (1, False, "%.3fs", "average_latency_cmk", "Average Check_MK latency"),
+            (100, False, "%.1f%%", "helper_usage_generic", "Check helper usage"),
+            (100, False, "%.1f%%", "helper_usage_cmk", "Check_MK helper usage"),
+            (100, False, "%.1f%%", "livestatus_usage", "Livestatus usage"),
+            (1, False, "%.1f/s", "livestatus_overflows_rate", "Livestatus overflow rate"),
         ]
 
     for factor, calc_rate, fmt, counter, title in status_counters:
@@ -114,24 +114,25 @@ def check_livestatus_status(item, params, parsed):
         yield 0, ("%s: %s" % (title, fmt % value)), [(counter, value)]
 
     yield 0, "%d Hosts" % int(status["num_hosts"]), [("monitored_hosts", int(status["num_hosts"]))]
-    yield 0, "%d Services" % int(status["num_services"]), [("monitored_services", int(status["num_services"]))]
+    yield 0, "%d Services" % int(status["num_services"]), [("monitored_services",
+                                                            int(status["num_services"]))]
 
     # Output some general information
-    yield 0, "Core version: %s"       % status["program_version"]
+    yield 0, "Core version: %s" % status["program_version"]
     yield 0, "Livestatus version: %s" % status["livestatus_version"]
 
     settings = [
-        ("execute_host_checks",           "Active host checks are disabled"),
-        ("execute_service_checks",        "Active service checks are disabled"),
-        ("accept_passive_host_checks",    "Passive host check are disabled"),
+        ("execute_host_checks", "Active host checks are disabled"),
+        ("execute_service_checks", "Active service checks are disabled"),
+        ("accept_passive_host_checks", "Passive host check are disabled"),
         ("accept_passive_service_checks", "Passive service checks are disabled"),
-        ("check_host_freshness",          "Host freshness checking is disabled"),
-        ("check_service_freshness",       "Service freshness checking is disabled"),
-    #   ("enable_event_handlers",         "Alert handlers are disabled"), # special case below
-        ("enable_flap_detection",         "Flap detection is disabled"),
-        ("enable_notifications",          "Notifications are disabled"),
-        ("process_performance_data",      "Performance data is disabled"),
-        ("check_external_commands",       "External commands are disabled"),
+        ("check_host_freshness", "Host freshness checking is disabled"),
+        ("check_service_freshness", "Service freshness checking is disabled"),
+        #   ("enable_event_handlers",         "Alert handlers are disabled"), # special case below
+        ("enable_flap_detection", "Flap detection is disabled"),
+        ("enable_notifications", "Notifications are disabled"),
+        ("process_performance_data", "Performance data is disabled"),
+        ("check_external_commands", "External commands are disabled"),
     ]
     # Check settings of enablings. Here we are quiet unless a non-OK state is found
     for settingname, title in settings:
@@ -154,11 +155,11 @@ def check_livestatus_status(item, params, parsed):
 
 
 check_info['livestatus_status'] = {
-    "parse_function"          : parse_livestatus_status,
-    "inventory_function"      : inventory_livestatus_status,
-    "check_function"          : check_livestatus_status,
-    "service_description"     : "OMD %s performance",
-    "has_perfdata"            : True,
-    "group"                   : "livestatus_status",
-    "default_levels_variable" : "livestatus_status_default_levels",
+    "parse_function": parse_livestatus_status,
+    "inventory_function": inventory_livestatus_status,
+    "check_function": check_livestatus_status,
+    "service_description": "OMD %s performance",
+    "has_perfdata": True,
+    "group": "livestatus_status",
+    "default_levels_variable": "livestatus_status_default_levels",
 }

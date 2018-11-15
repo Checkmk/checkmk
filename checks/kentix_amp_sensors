@@ -31,7 +31,7 @@
 # .1.3.6.1.4.1.37954.1.2.7.5.0 0                carbon monoxide INTEGER (-100..100) # in percent
 # .1.3.6.1.4.1.37954.1.2.7.6.0 0                motion          INTEGER (0..100)
 # .1.3.6.1.4.1.37954.1.2.7.7.0 0                digital in 1    INTEGER (0..1)      # leakage sensor: 0 (no alarm, connected)
-                                                                                    #                 1 (alarm or disconnected)
+#                                                                                                     1 (alarm or disconnected)
 # .1.3.6.1.4.1.37954.1.2.7.8.0 0                digital in 2    INTEGER (0..1)
 # .1.3.6.1.4.1.37954.1.2.7.9.0 0                digital out     INTEGER (0..1)
 # .1.3.6.1.4.1.37954.1.2.7.10.0 0               comError        INTEGER (0..1)
@@ -48,19 +48,20 @@
 #  'RZ2SELI1'       : { 'smoke': 0, 'humidity': 41.9, 'temp': 15.1, 'leakage':0 }
 # }
 
+
 def parse_kentix_amp_sensors(info):
     info_flattened = []
 
     for i in xrange(0, len(info[0]), 10):
-        info_flattened.append([ a[0] for a in info[0][i:i+10] ])
+        info_flattened.append([a[0] for a in info[0][i:i + 10]])
 
     parsed = {}
     for line in info_flattened:
         if line[0] != '':
             parsed[line[0]] = {
-                'temp'      : float(line[1])/10,
-                'humidity'  : float(line[2])/10,
-                'smoke'     : int(line[4]),
+                'temp': float(line[1]) / 10,
+                'humidity': float(line[2]) / 10,
+                'smoke': int(line[4]),
             }
             if line[6] != '':
                 parsed[line[0]]['leakage'] = int(line[6])
@@ -69,7 +70,8 @@ def parse_kentix_amp_sensors(info):
 
 
 def inventory_kentix_amp_sensors(parsed, params):
-    return [ (key, params) for key in parsed ]
+    return [(key, params) for key in parsed]
+
 
 #   .--temperature---------------------------------------------------------.
 #   |      _                                      _                        |
@@ -82,21 +84,22 @@ def inventory_kentix_amp_sensors(parsed, params):
 #   |                            main check                                |
 #   '----------------------------------------------------------------------'
 
+
 def check_kentix_amp_sensors_temperature(item, params, parsed):
     if item in parsed:
         return check_temperature(parsed[item]['temp'], params, "kentix_amp_sensors_%s" % item)
 
 
 check_info['kentix_amp_sensors'] = {
-    'parse_function'            : parse_kentix_amp_sensors,
-    'inventory_function'        : lambda parsed: inventory_kentix_amp_sensors(parsed, {}),
-    'check_function'            : check_kentix_amp_sensors_temperature,
-    'service_description'       : 'Temperature %s',
-    'has_perfdata'              : True,
-    'group'                     : 'temperature',
-    'snmp_info'                 : [ ( ".1.3.6.1.4.1.37954.1.2", [ "" ]) ],
-    'snmp_scan_function'        : lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.332.11.6"),
-    'includes'                  : [ "temperature.include" ],
+    'parse_function': parse_kentix_amp_sensors,
+    'inventory_function': lambda parsed: inventory_kentix_amp_sensors(parsed, {}),
+    'check_function': check_kentix_amp_sensors_temperature,
+    'service_description': 'Temperature %s',
+    'has_perfdata': True,
+    'group': 'temperature',
+    'snmp_info': [(".1.3.6.1.4.1.37954.1.2", [""])],
+    'snmp_scan_function': lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.332.11.6"),
+    'includes': ["temperature.include"],
 }
 
 #.
@@ -116,12 +119,12 @@ def check_kentix_amp_sensors_humidity(item, params, parsed):
 
 
 check_info['kentix_amp_sensors.humidity'] = {
-    'inventory_function'        : lambda parsed: inventory_kentix_amp_sensors(parsed, {}),
-    'check_function'            : check_kentix_amp_sensors_humidity,
-    'service_description'       : 'Humidity %s',
-    'has_perfdata'              : True,
-    'group'                     : 'humidity',
-    'includes'                  : [ "humidity.include" ],
+    'inventory_function': lambda parsed: inventory_kentix_amp_sensors(parsed, {}),
+    'check_function': check_kentix_amp_sensors_humidity,
+    'service_description': 'Humidity %s',
+    'has_perfdata': True,
+    'group': 'humidity',
+    'includes': ["humidity.include"],
 }
 
 #.
@@ -154,17 +157,18 @@ def check_kentix_amp_sensors_smoke(item, params, parsed):
         if status > 0:
             infotext += " (warn/crit at %.1f%%/%.1f%%)" % (warn, crit)
 
-        perfdata = [ ('smoke_perc', sensor_smoke, warn, crit, 0, 100) ]
+        perfdata = [('smoke_perc', sensor_smoke, warn, crit, 0, 100)]
 
         yield status, infotext, perfdata
 
 
 check_info['kentix_amp_sensors.smoke'] = {
-    'inventory_function'        : lambda parsed: inventory_kentix_amp_sensors(parsed, "kentix_amp_sensors_smoke_default_levels"),
-    'check_function'            : check_kentix_amp_sensors_smoke,
-    'service_description'       : 'Smoke Detector %s',
-    'has_perfdata'              : True,
-    'group'                     : 'smoke',
+    'inventory_function':
+        lambda parsed: inventory_kentix_amp_sensors(parsed, "kentix_amp_sensors_smoke_default_levels"),
+    'check_function': check_kentix_amp_sensors_smoke,
+    'service_description': 'Smoke Detector %s',
+    'has_perfdata': True,
+    'group': 'smoke',
 }
 
 #.
@@ -177,6 +181,7 @@ check_info['kentix_amp_sensors.smoke'] = {
 #   |                                         |___/                        |
 #   +----------------------------------------------------------------------+
 
+
 def check_kentix_amp_sensors_leakage(item, params, parsed):
     if item in parsed:
         if parsed[item]['leakage'] > 0:
@@ -185,14 +190,9 @@ def check_kentix_amp_sensors_leakage(item, params, parsed):
 
 
 check_info['kentix_amp_sensors.leakage'] = {
-    'inventory_function'        : lambda i: inventory_kentix_amp_sensors(i, None),
-    'check_function'            : check_kentix_amp_sensors_leakage,
-    'service_description'       : 'Leakage %s',
+    'inventory_function': lambda i: inventory_kentix_amp_sensors(i, None),
+    'check_function': check_kentix_amp_sensors_leakage,
+    'service_description': 'Leakage %s',
 }
 
 #.
-
-
-
-
-

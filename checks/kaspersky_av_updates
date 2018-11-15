@@ -34,24 +34,26 @@
 #Update manual stops:           0
 #Updates failed:                3333
 
+
 def inventory_kaspersky_av_updates(info):
-    return [( None, None ) ]
+    return [(None, None)]
+
 
 def check_kaspersky_av_updates(item, _no_params, info):
-    info =  dict([ ( x[0], ":".join(x[1:]).strip()) for x in info ])
+    info = dict([(x[0], ":".join(x[1:]).strip()) for x in info])
     state = 0
     message = "Database State: " + info['Current AV databases state']
     if info['Current AV databases state'] != 'UpToDate':
         state = 2
         message += "(!!)"
-    message += ", Database Date: %s, Last Update: %s" % ( info['Current AV databases date'],
-                                                          info['Last AV databases update date'] )
+    message += ", Database Date: %s, Last Update: %s" % (info['Current AV databases date'],
+                                                         info['Last AV databases update date'])
 
     return state, message
 
-check_info["kaspersky_av_updates"] = {
-    "check_function"        : check_kaspersky_av_updates,
-    "inventory_function"    : inventory_kaspersky_av_updates,
-    "service_description"   : "AV Update Status",
-}
 
+check_info["kaspersky_av_updates"] = {
+    "check_function": check_kaspersky_av_updates,
+    "inventory_function": inventory_kaspersky_av_updates,
+    "service_description": "AV Update Status",
+}

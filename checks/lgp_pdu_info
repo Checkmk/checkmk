@@ -33,6 +33,7 @@
 # Example info:
 # [['1', 'TEST-123-HOST', '1', '535055G103T2010JUN240295', '1']]
 
+
 def inventory_lgp_pdu_info(info):
     if info:
         inv = []
@@ -40,6 +41,7 @@ def inventory_lgp_pdu_info(info):
             # Use the SysAssignLabel as item
             inv.append((pdu[2], None))
         return inv
+
 
 def check_lgp_pdu_info(item, params, info):
     for pdu in info:

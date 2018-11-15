@@ -30,7 +30,7 @@
 # .1.3.6.1.4.1.2636.3.1.13.1.7.7.2.0.0 43 --> SNMPv2-SMI::enterprises.2636.3.1.13.1.7.7.2.0.0
 
 factory_settings["juniper_temp_default_levels"] = {
-    "levels" : (55, 60), # Just an assumption based on observed real temperatures
+    "levels": (55, 60),  # Just an assumption based on observed real temperatures
 }
 
 
@@ -48,7 +48,7 @@ def parse_juniper_temp(info):
 
 
 def inventory_juniper_temp(parsed):
-    return [ (description, {}) for description in parsed ]
+    return [(description, {}) for description in parsed]
 
 
 def check_juniper_temp(item, params, parsed):
@@ -57,17 +57,20 @@ def check_juniper_temp(item, params, parsed):
 
 
 check_info['juniper_temp'] = {
-    'parse_function'            : parse_juniper_temp,
-    'inventory_function'        : inventory_juniper_temp,
-    'check_function'            : check_juniper_temp,
-    'service_description'       : 'Temperature %s',
-    'has_perfdata'              : True,
-    "snmp_scan_function"        : lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.2636.1.1.1.2"),
-    'snmp_info'                 : (".1.3.6.1.4.1.2636.3.1.13.1", [
-                                        "5.7",    # jnxOperatingDescr
-                                        "7.7",    # jnxOperatingTemp
-                                  ]),
-    'group'                     : 'temperature',
-    'default_levels_variable'   : "juniper_temp_default_levels",
-    'includes'                  : [ "temperature.include" ],
+    'parse_function': parse_juniper_temp,
+    'inventory_function': inventory_juniper_temp,
+    'check_function': check_juniper_temp,
+    'service_description': 'Temperature %s',
+    'has_perfdata': True,
+    "snmp_scan_function":
+        lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.2636.1.1.1.2"),
+    'snmp_info': (
+        ".1.3.6.1.4.1.2636.3.1.13.1",
+        [
+            "5.7",  # jnxOperatingDescr
+            "7.7",  # jnxOperatingTemp
+        ]),
+    'group': 'temperature',
+    'default_levels_variable': "juniper_temp_default_levels",
+    'includes': ["temperature.include"],
 }

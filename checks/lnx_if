@@ -53,10 +53,10 @@
 #         Auto-negotiation: on
 #         Link detected: yes
 
-
-check_includes['lnx_if'] = [ "if.include" ]
+check_includes['lnx_if'] = ["if.include"]
 
 linux_nic_check = "lnx_if"
+
 
 def if_lnx_extract_nic_info(info):
     def _get_next_node_line(lines):
@@ -92,9 +92,11 @@ def if_lnx_extract_nic_info(info):
                     status_info = line
                     try:
                         nic_name = status_info[1][:-1]
-                        iplink_stats[node].setdefault(nic_name, { "extra_info": status_info[2][1:-1].split(",") })
-                        iplink_stats[node][nic_name].update(dict(zip(status_info[3::2], status_info[4::2])))
-                    except: # In case of parse errors we simply ignore these lines
+                        iplink_stats[node].setdefault(
+                            nic_name, {"extra_info": status_info[2][1:-1].split(",")})
+                        iplink_stats[node][nic_name].update(
+                            dict(zip(status_info[3::2], status_info[4::2])))
+                    except:  # In case of parse errors we simply ignore these lines
                         pass
             except StopIteration:
                 break
@@ -115,7 +117,7 @@ def if_lnx_extract_nic_info(info):
         elif len(line) == 2 and len(line[1].split()) >= 16:
             # This looks like a perf-counter line
             nic = line[0]
-            nic_info[node][nic] = { "counters": map(int, line[1].split()) }
+            nic_info[node][nic] = {"counters": map(int, line[1].split())}
             if nic in iplink_stats[node]:
                 nic_info[node][nic]['iplink_stats'] = iplink_stats[node][nic]
         elif current_nic:
@@ -132,9 +134,9 @@ def parse_lnx_if(info):
     index = 0
     for node_info, nic_attrs in nic_info.iteritems():
         for nic, attr in nic_attrs.iteritems():
-            counters = attr.get("counters", [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0])
+            counters = attr.get("counters", [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
             index += 1
-            ifIndex = attr.get("index",index)
+            ifIndex = attr.get("index", index)
             ifDescr = nic
             ifAlias = nic
 
@@ -149,7 +151,7 @@ def parse_lnx_if(info):
             if speed_text is None:
                 ifSpeed = ''
             else:
-                if speed_text == '65535Mb/s': # unknown
+                if speed_text == '65535Mb/s':  # unknown
                     ifSpeed = ''
                 elif speed_text.endswith("Kb/s"):
                     ifSpeed = int(speed_text[:-4]) * 1000
@@ -188,7 +190,8 @@ def parse_lnx_if(info):
                 # system boot.
                 iplink_stats = attr.get("iplink_stats")
                 if iplink_stats:
-                    if "UP" in iplink_stats.get("extra_info", []) or iplink_stats.get("state") == "UP":
+                    if "UP" in iplink_stats.get("extra_info",
+                                                []) or iplink_stats.get("state") == "UP":
                         ifOperStatus = 1
                     elif iplink_stats.get("state") == "DOWN":
                         ifOperStatus = 2
@@ -196,21 +199,21 @@ def parse_lnx_if(info):
                         ifOperStatus = 4
                 else:
                     if ifInOctets > 0:
-                        ifOperStatus = 1 # assume up
+                        ifOperStatus = 1  # assume up
                     else:
-                        ifOperStatus = 4 # unknown (NIC has never been used)
+                        ifOperStatus = 4  # unknown (NIC has never been used)
 
             if attr.get("Address"):
-                ifPhysAddress = "".join([chr(int(x, 16)) for x in attr.get("Address", "").split(":")])
+                ifPhysAddress = "".join(
+                    [chr(int(x, 16)) for x in attr.get("Address", "").split(":")])
             else:
                 ifPhysAddress = ''
 
-
-            row = [ node_info ] + map(str, [
-              ifIndex, ifDescr, ifType, ifSpeed, ifOperStatus,
-              ifInOctets, inucast, inmcast, inbcast, ifInDiscards,
-              ifInErrors, ifOutOctets, outucast, outmcast, outbcast,
-              ifOutDiscards, ifOutErrors, ifOutQLen, ifAlias, ifPhysAddress ])
+            row = [node_info] + map(str, [
+                ifIndex, ifDescr, ifType, ifSpeed, ifOperStatus, ifInOctets, inucast, inmcast,
+                inbcast, ifInDiscards, ifInErrors, ifOutOctets, outucast, outmcast, outbcast,
+                ifOutDiscards, ifOutErrors, ifOutQLen, ifAlias, ifPhysAddress
+            ])
 
             if_table.append(row)
 
@@ -222,7 +225,7 @@ def inventory_lnx_if(parsed):
         return []
 
     # Always exclude dockers veth* interfaces on docker nodes
-    parsed = [ e for e in parsed if not e[2].startswith("veth") ]
+    parsed = [e for e in parsed if not e[2].startswith("veth")]
 
     return inventory_if_common(parsed, has_nodeinfo=True)
 
@@ -232,12 +235,12 @@ def check_lnx_if(item, params, parsed):
 
 
 check_info["lnx_if"] = {
-    'parse_function'          : parse_lnx_if,
-    'inventory_function'      : inventory_lnx_if,
-    'check_function'          : check_lnx_if,
-    'service_description'     : 'Interface %s',
-    'node_info'               : True,
-    'has_perfdata'            : True,
-    'group'                   : 'if',
-    'default_levels_variable' : 'if_default_levels',
+    'parse_function': parse_lnx_if,
+    'inventory_function': inventory_lnx_if,
+    'check_function': check_lnx_if,
+    'service_description': 'Interface %s',
+    'node_info': True,
+    'has_perfdata': True,
+    'group': 'if',
+    'default_levels_variable': 'if_default_levels',
 }

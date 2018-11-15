@@ -24,26 +24,33 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+
 def juniper_bgp_state_create_item(oid_end):
     return re.sub(r"[0-9]+\.1\.[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+\.1\.", "", oid_end)
+
 
 def inventory_juniper_bgp_state(info):
     inventory = []
     for oid_end, _bgp_state, _bgp_operational_state in info:
-        inventory.append( (juniper_bgp_state_create_item(oid_end), None) )
+        inventory.append((juniper_bgp_state_create_item(oid_end), None))
     return inventory
 
+
 def check_juniper_bgp_state(item, _no_params, info):
-    bgp_state_map = [             "undefined",   # 0 does not exist
-                                  "idle",        # 1
-                                  "connect",     # 2
-                                  "active",      # 3
-                                  "opensent",    # 4
-                                  "openconfirm", # 5
-                                  "established"] # 6
-    bgp_operational_state_map = [ "undefined",   # 0 does not exist
-                                  "halted",      # 1
-                                  "running"]     # 2
+    bgp_state_map = [
+        "undefined",  # 0 does not exist
+        "idle",  # 1
+        "connect",  # 2
+        "active",  # 3
+        "opensent",  # 4
+        "openconfirm",  # 5
+        "established",  # 6
+    ]
+    bgp_operational_state_map = [
+        "undefined",  # 0 does not exist
+        "halted",  # 1
+        "running"  # 2
+    ]
     status = 0
     for oid_end, bgp_state, bgp_operational_state in info:
         peering_partner_ip = juniper_bgp_state_create_item(oid_end)
@@ -63,21 +70,28 @@ def check_juniper_bgp_state(item, _no_params, info):
                 status = 2
                 state_error_string = "(!!)"
 
-            return status, "Status with peer %s is %s%s, operational status: %s%s" \
-                   % (peering_partner_ip, \
-                   bgp_state_map[bgp_state], state_error_string, \
-                   bgp_operational_state_map[bgp_operational_state], \
-                   operational_state_error_string)
+            return status, "Status with peer %s is %s%s, operational status: %s%s" % (
+                peering_partner_ip,
+                bgp_state_map[bgp_state],
+                state_error_string,
+                bgp_operational_state_map[bgp_operational_state],
+                operational_state_error_string,
+            )
 
     return 3, "Peering partner %s not configured" % item
 
+
 check_info["juniper_bgp_state"] = {
-    "check_function"        : check_juniper_bgp_state,
-    "inventory_function"    : inventory_juniper_bgp_state,
-    "service_description"   : "BGP Status Peer %s",
-    "snmp_info"             : ('.1.3.6.1.4.1.2636.5.1.1.2.1.1.1', [ OID_END, # take peering partner IP from this
-                                                                    2,       # jnxBgpM2PeerState
-                                                                    3 ]),    # jnxBgpM2PeerStatus
-                                                                             # (like operational status)
-    "snmp_scan_function"    : lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.2636.1.1.1"),
+    "check_function": check_juniper_bgp_state,
+    "inventory_function": inventory_juniper_bgp_state,
+    "service_description": "BGP Status Peer %s",
+    "snmp_info": (
+        '.1.3.6.1.4.1.2636.5.1.1.2.1.1.1',
+        [
+            OID_END,  # take peering partner IP from this
+            2,  # jnxBgpM2PeerState
+            3,  # jnxBgpM2PeerStatus (like operational status)
+        ]),
+    "snmp_scan_function":
+        lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.2636.1.1.1"),
 }

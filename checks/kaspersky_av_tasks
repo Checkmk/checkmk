@@ -48,17 +48,16 @@
 #         State: Started
 #
 
+
 def inventory_kaspersky_av_tasks(info):
     inventory = []
-    jobs = [
-            'Real-time protection',
-            'System:EventManager'
-    ]
-    for line in [ x for x in info if x[0].startswith("Name")]:
+    jobs = ['Real-time protection', 'System:EventManager']
+    for line in [x for x in info if x[0].startswith("Name")]:
         job = " ".join(line[1:])
         if job in jobs:
-            inventory.append( (job, None ))
+            inventory.append((job, None))
     return inventory
+
 
 def check_kaspersky_av_tasks(item, _no_params, info):
     found = False
@@ -73,9 +72,9 @@ def check_kaspersky_av_tasks(item, _no_params, info):
             found = True
     return 3, "Task not found in agent output"
 
-check_info["kaspersky_av_tasks"] = {
-    "check_function"        : check_kaspersky_av_tasks,
-    "inventory_function"    : inventory_kaspersky_av_tasks,
-    "service_description"   : "AV Task %s",
-}
 
+check_info["kaspersky_av_tasks"] = {
+    "check_function": check_kaspersky_av_tasks,
+    "inventory_function": inventory_kaspersky_av_tasks,
+    "service_description": "AV Task %s",
+}

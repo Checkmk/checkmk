@@ -49,7 +49,6 @@ def local_compute_state(perfdata):
                 return float(value)
         return 0.0
 
-
     def outof_levels(value, levels):
         if levels == None:
             return
@@ -67,7 +66,7 @@ def local_compute_state(perfdata):
     worst = 0
     for entry in perfdata:
         if len(entry) < 3:
-            continue # No levels attached
+            continue  # No levels attached
         varname = entry[0]
         value = float_ignore_uom(entry[1])
         warn = entry[2]
@@ -101,9 +100,10 @@ def inventory_local(info):
     for line in info:
         stripped_line = line[1:]
         if len(stripped_line) >= 4 or len(stripped_line) == 3 and stripped_line[0] == 'P':
-            inventory.append( (stripped_line[1], {}) )
+            inventory.append((stripped_line[1], {}))
         else:
-            raise MKGeneralException("Invalid line in agent section <<<local>>>: %s" % " ".join(stripped_line))
+            raise MKGeneralException(
+                "Invalid line in agent section <<<local>>>: %s" % " ".join(stripped_line))
     return inventory
 
 
@@ -126,11 +126,11 @@ def _parse_local_line(line):
             try:
                 varname, valuetxt = entry.split('=')
                 values = valuetxt.split(';')
-                compute_data.append( tuple([varname] + values) )
+                compute_data.append(tuple([varname] + values))
                 # perfdata must not contain values with colons. So we split
                 # these values and use the upper levels only.
                 upper_values = [v.split(':')[-1] for v in values]
-                perfdata.append( tuple([varname] + upper_values) )
+                perfdata.append(tuple([varname] + upper_values))
 
             except ValueError:
                 return 3, "Invalid performance data %s in local check output %s" % \
@@ -157,7 +157,7 @@ def _parse_local_line(line):
 
 
 def _calculate_local_best_state(collected_stats):
-    states    = []
+    states = []
     infotexts = []
     perfdatas = []
     for nodename, attrs in collected_stats.items():
@@ -181,7 +181,7 @@ def _calculate_local_worst_state(collected_stats):
 def check_local(item, params, info):
     collected_stats = {}
     for line in info:
-        nodename      = line[0]
+        nodename = line[0]
         stripped_line = line[1:]
         # Ignore invalid lines, tolerate bugs in local checks
         # of unexperienced users
@@ -202,10 +202,10 @@ def check_local(item, params, info):
 
 
 check_info["local"] = {
-    'check_function'      : check_local,
-    'inventory_function'  : inventory_local,
-    'service_description' : '%s',
-    'has_perfdata'        : True,
-    'node_info'           : True,
-    'group'               : 'local',
+    'check_function': check_local,
+    'inventory_function': inventory_local,
+    'service_description': '%s',
+    'has_perfdata': True,
+    'node_info': True,
+    'group': 'local',
 }

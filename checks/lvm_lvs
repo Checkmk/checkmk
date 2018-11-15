@@ -24,13 +24,13 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-
 # example output
 
 factory_settings["lvm_lvs_default_levels"] = {
-        "levels_data" : (80.0, 90.0),
-        "levels_meta" : (80.0, 90.0),
+    "levels_data": (80.0, 90.0),
+    "levels_meta": (80.0, 90.0),
 }
+
 
 def parse_lvm_lvs(info):
     parsed = {}
@@ -42,14 +42,14 @@ def parse_lvm_lvs(info):
     for line in info:
         item = "%s/%s" % (line[1], line[0])
         if item in parsed:
-            parsed[item] = {"data" : line[6], "meta" : line[7]}
+            parsed[item] = {"data": line[6], "meta": line[7]}
 
     return parsed
 
 
 def inventory_lvm_lvs(parsed):
     for key in parsed.iterkeys():
-        yield ( key, {} )
+        yield (key, {})
 
 
 def check_lvm_lvs(item, params, parsed):
@@ -65,18 +65,18 @@ def check_lvm_lvs(item, params, parsed):
                 else:
                     state = 0
 
-                key = key[0].upper()+key[1:]
+                key = key[0].upper() + key[1:]
                 yield 0, "%s usage: %.2f %%" % (key, value)
                 if state:
                     yield state, "(warn/crit at %s/%s)" % (warn, crit)
 
 
 check_info['lvm_lvs'] = {
-    'parse_function'            : parse_lvm_lvs,
-    'inventory_function'        : inventory_lvm_lvs,
-    'check_function'            : check_lvm_lvs,
-    'service_description'       : 'LVM LV Pool %s',
-    'has_perfdata'              : True,
-    'default_levels_variable'   : 'lvm_lvs_default_levels',
-    'group'                     : 'lvm_lvs_pools',
+    'parse_function': parse_lvm_lvs,
+    'inventory_function': inventory_lvm_lvs,
+    'check_function': check_lvm_lvs,
+    'service_description': 'LVM LV Pool %s',
+    'has_perfdata': True,
+    'default_levels_variable': 'lvm_lvs_default_levels',
+    'group': 'lvm_lvs_pools',
 }

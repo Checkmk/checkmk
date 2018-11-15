@@ -28,9 +28,9 @@
 # Please use jolokia_* instead
 
 # MB warn, crit
-j4p_performance_mem_default_levels      = (1000, 2000)
+j4p_performance_mem_default_levels = (1000, 2000)
 # Number of threads warn, crit
-j4p_performance_threads_default_levels  = (80, 100)
+j4p_performance_threads_default_levels = (80, 100)
 # Number of sessions low crit, low warn, high warn, high crit
 j4p_performance_app_sess_default_levels = (-1, -1, 800, 1000)
 # Number of requests low crit, low warn, high warn, high crit
@@ -87,7 +87,7 @@ def inventory_j4p_performance(info, what):
         levels = 'j4p_performance_mem_default_levels'
     elif what == 'threads':
         levels = 'j4p_performance_threads_default_levels'
-    return [ (k, levels) for k in parsed ]
+    return [(k, levels) for k in parsed]
 
 
 def inventory_j4p_performance_apps(info, what):
@@ -125,24 +125,30 @@ def check_j4p_performance_mem(item, params, info):
     heap = saveint(d["HeapMemoryUsage"]) / mb
     non_heap = saveint(d["NonHeapMemoryUsage"]) / mb
     total = heap + non_heap
-    perfdata = [ ("heap",    heap,     warn, crit),
-                 ("nonheap", non_heap, warn, crit) ]
-    infotext = "%.0f MB total (%.0f MB heap, %.0f MB non-heap) (warn/crit at %.0f/%.0f)" % (total, heap, non_heap, warn, crit)
+    perfdata = [
+        ("heap", heap, warn, crit),
+        ("nonheap", non_heap, warn, crit),
+    ]
+    infotext = "%.0f MB total (%.0f MB heap, %.0f MB non-heap) (warn/crit at %.0f/%.0f)" % (
+        total, heap, non_heap, warn, crit)
     if total >= crit:
         return (2, infotext, perfdata)
     elif total >= warn:
         return (1, infotext, perfdata)
     return (0, infotext, perfdata)
 
-check_info["j4p_performance.mem"] = {'check_function': check_j4p_performance_mem,
- 'default_levels_variable': None,
- 'group': 'j4p_performance.mem',
- 'has_perfdata': True,
- 'inventory_function': lambda i: inventory_j4p_performance(i, "mem"),
- 'node_info': False,
- 'service_description': 'JMX %s Memory',
- 'snmp_info': None,
- 'snmp_scan_function': None}
+
+check_info["j4p_performance.mem"] = {
+    'check_function': check_j4p_performance_mem,
+    'default_levels_variable': None,
+    'group': 'j4p_performance.mem',
+    'has_perfdata': True,
+    'inventory_function': lambda i: inventory_j4p_performance(i, "mem"),
+    'node_info': False,
+    'service_description': 'JMX %s Memory',
+    'snmp_info': None,
+    'snmp_scan_function': None
+}
 
 
 def check_j4p_performance_threads(item, params, info):
@@ -154,9 +160,9 @@ def check_j4p_performance_threads(item, params, info):
 
     this_time = time.time()
     perfdata = []
-    output   = []
-    status   = 0
-    for key in [ 'ThreadCount', 'DeamonThreadCount', 'PeakThreadCount', 'TotalStartedThreadCount' ]:
+    output = []
+    status = 0
+    for key in ['ThreadCount', 'DeamonThreadCount', 'PeakThreadCount', 'TotalStartedThreadCount']:
         val = saveint(d[key])
         if key == 'ThreadCount':
             # Thread count might lead to a warn/crit state
@@ -175,15 +181,18 @@ def check_j4p_performance_threads(item, params, info):
 
     return (status, ', '.join(output), perfdata)
 
-check_info["j4p_performance.threads"] = {'check_function': check_j4p_performance_threads,
- 'default_levels_variable': None,
- 'group': 'j4p_performance.threads',
- 'has_perfdata': True,
- 'inventory_function': lambda i: inventory_j4p_performance(i, "threads"),
- 'node_info': False,
- 'service_description': 'JMX %s Threads',
- 'snmp_info': None,
- 'snmp_scan_function': None}
+
+check_info["j4p_performance.threads"] = {
+    'check_function': check_j4p_performance_threads,
+    'default_levels_variable': None,
+    'group': 'j4p_performance.threads',
+    'has_perfdata': True,
+    'inventory_function': lambda i: inventory_j4p_performance(i, "threads"),
+    'node_info': False,
+    'service_description': 'JMX %s Threads',
+    'snmp_info': None,
+    'snmp_scan_function': None
+}
 
 
 def check_j4p_performance_uptime(item, _unused, info):
@@ -199,17 +208,21 @@ def check_j4p_performance_uptime(item, _unused, info):
     days = rem / 1440
     now = int(time.time())
     since = time.strftime("%c", time.localtime(now - uptime))
-    return (0, "up since %s (%dd %02d:%02d:%02d)" % (since, days, hours, minutes, seconds), [ ("uptime", uptime) ])
+    return (0, "up since %s (%dd %02d:%02d:%02d)" % (since, days, hours, minutes, seconds),
+            [("uptime", uptime)])
 
-check_info["j4p_performance.uptime"] = {'check_function': check_j4p_performance_uptime,
- 'default_levels_variable': None,
- 'group': 'j4p_performance.uptime',
- 'has_perfdata': True,
- 'inventory_function': lambda i: inventory_j4p_performance(i, "uptime"),
- 'node_info': False,
- 'service_description': 'JMX %s Uptime',
- 'snmp_info': None,
- 'snmp_scan_function': None}
+
+check_info["j4p_performance.uptime"] = {
+    'check_function': check_j4p_performance_uptime,
+    'default_levels_variable': None,
+    'group': 'j4p_performance.uptime',
+    'has_perfdata': True,
+    'inventory_function': lambda i: inventory_j4p_performance(i, "uptime"),
+    'node_info': False,
+    'service_description': 'JMX %s Uptime',
+    'snmp_info': None,
+    'snmp_scan_function': None
+}
 
 
 def check_j4p_performance_app_state(item, _unused, info):
@@ -222,14 +235,16 @@ def check_j4p_performance_app_state(item, _unused, info):
     return (2, 'application is not running (Running: %s)')
 
 
-check_info["j4p_performance.app_state"] = {'check_function': check_j4p_performance_app_state,
- 'default_levels_variable': None,
- 'group': 'j4p_performance.app_state',
- 'inventory_function': lambda i: inventory_j4p_performance_apps(i, "app_state"),
- 'node_info': False,
- 'service_description': 'JMX %s State',
- 'snmp_info': None,
- 'snmp_scan_function': None}
+check_info["j4p_performance.app_state"] = {
+    'check_function': check_j4p_performance_app_state,
+    'default_levels_variable': None,
+    'group': 'j4p_performance.app_state',
+    'inventory_function': lambda i: inventory_j4p_performance_apps(i, "app_state"),
+    'node_info': False,
+    'service_description': 'JMX %s State',
+    'snmp_info': None,
+    'snmp_scan_function': None
+}
 
 
 def check_j4p_performance_app_sess(item, params, info):
@@ -254,18 +269,24 @@ def check_j4p_performance_app_sess(item, params, info):
         status = 1
         status_txt = ' (Above or equal %d)' % lo_crit
 
-    return (status, '%d Sessions%s' % (sess, status_txt),
-            [('sessions', sess, hi_warn, hi_crit)])
+    return (
+        status,
+        '%d Sessions%s' % (sess, status_txt),
+        [('sessions', sess, hi_warn, hi_crit)],
+    )
 
-check_info["j4p_performance.app_sess"] = {'check_function': check_j4p_performance_app_sess,
- 'default_levels_variable': None,
- 'group': 'j4p_performance.app_sess',
- 'has_perfdata': True,
- 'inventory_function': lambda i: inventory_j4p_performance_apps(i, "app_sess"),
- 'node_info': False,
- 'service_description': 'JMX %s Sessions',
- 'snmp_info': None,
- 'snmp_scan_function': None}
+
+check_info["j4p_performance.app_sess"] = {
+    'check_function': check_j4p_performance_app_sess,
+    'default_levels_variable': None,
+    'group': 'j4p_performance.app_sess',
+    'has_perfdata': True,
+    'inventory_function': lambda i: inventory_j4p_performance_apps(i, "app_sess"),
+    'node_info': False,
+    'service_description': 'JMX %s Sessions',
+    'snmp_info': None,
+    'snmp_scan_function': None
+}
 
 
 def check_j4p_performance_serv_req(item, params, info):
@@ -275,7 +296,7 @@ def check_j4p_performance_serv_req(item, params, info):
         return (3, "data not found in agent output")
     req = saveint(serv['Requests'])
 
-    status    = 0
+    status = 0
     status_txt = ''
     if lo_crit is not None and req <= lo_crit:
         status = 2
@@ -290,20 +311,23 @@ def check_j4p_performance_serv_req(item, params, info):
         status = 1
         status_txt = ' (Above or equal %d)' % lo_crit
 
-    output    = ['Requests: %d%s' % (req, status_txt)]
-    perfdata  = [('Requests', req, hi_warn, hi_crit)]
+    output = ['Requests: %d%s' % (req, status_txt)]
+    perfdata = [('Requests', req, hi_warn, hi_crit)]
     this_time = time.time()
     rate = get_rate("j4p_performance.serv_req.%s" % item, this_time, req)
     output.append('RequestRate: %0.2f' % rate)
     perfdata.append(('RequestRate', rate))
     return (status, ', '.join(output), perfdata)
 
-check_info["j4p_performance.serv_req"] = {'check_function': check_j4p_performance_serv_req,
- 'default_levels_variable': None,
- 'group': 'j4p_performance.serv_req',
- 'has_perfdata': True,
- 'inventory_function': lambda i: inventory_j4p_performance_serv(i, "serv_req"),
- 'node_info': False,
- 'service_description': 'JMX %s Requests',
- 'snmp_info': None,
- 'snmp_scan_function': None}
+
+check_info["j4p_performance.serv_req"] = {
+    'check_function': check_j4p_performance_serv_req,
+    'default_levels_variable': None,
+    'group': 'j4p_performance.serv_req',
+    'has_perfdata': True,
+    'inventory_function': lambda i: inventory_j4p_performance_serv(i, "serv_req"),
+    'node_info': False,
+    'service_description': 'JMX %s Requests',
+    'snmp_info': None,
+    'snmp_scan_function': None
+}

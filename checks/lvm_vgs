@@ -24,9 +24,11 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+
 def inventory_lvm_vgs(info):
     for line in info:
         yield line[0], {}
+
 
 def check_lvm_vgs(item, params, info):
     vglist = []
@@ -38,11 +40,11 @@ def check_lvm_vgs(item, params, info):
 
 
 check_info['lvm_vgs'] = {
-    "check_function"          : check_lvm_vgs,
-    "inventory_function"      : inventory_lvm_vgs,
-    "service_description"     : "LVM VG %s",
-    "has_perfdata"            : True,
-    "group"                   : "volume_groups",
-    "default_levels_variable" : "filesystem_default_levels",
-    "includes"                : [ "size_trend.include", "df.include" ]
+    "check_function": check_lvm_vgs,
+    "inventory_function": inventory_lvm_vgs,
+    "service_description": "LVM VG %s",
+    "has_perfdata": True,
+    "group": "volume_groups",
+    "default_levels_variable": "filesystem_default_levels",
+    "includes": ["size_trend.include", "df.include"]
 }

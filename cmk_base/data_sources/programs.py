@@ -29,12 +29,13 @@ import signal
 import subprocess
 
 import cmk.paths
+from cmk.exceptions import MKTimeout
 
 import cmk_base.console as console
 import cmk_base.config as config
 import cmk_base.core_config as core_config
 import cmk_base.checks as checks
-from cmk_base.exceptions import MKAgentError, MKTimeout
+from cmk_base.exceptions import MKAgentError
 
 from .abstract import CheckMKAgentDataSource
 

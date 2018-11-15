@@ -36,7 +36,7 @@ import cmk.paths
 import cmk.store as store
 import cmk.tty as tty
 import cmk.cpu_tracking as cpu_tracking
-from cmk.exceptions import MKGeneralException, MKTerminate
+from cmk.exceptions import MKGeneralException, MKTerminate, MKTimeout
 
 import cmk_base.utils
 import cmk_base.console as console
@@ -46,7 +46,7 @@ import cmk_base.piggyback as piggyback
 import cmk_base.checks as checks
 import cmk_base.check_api as check_api
 from cmk_base.exceptions import MKSkipCheck, MKAgentError, MKEmptyAgentData, MKSNMPError, \
-                                MKParseFunctionError, MKTimeout, MKIPAddressLookupError
+                                MKParseFunctionError, MKIPAddressLookupError
 
 from .host_sections import HostSections
 

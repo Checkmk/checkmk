@@ -77,7 +77,7 @@ _default.default = json.JSONEncoder().default # Save unmodified default.
 json.JSONEncoder.default = _default # replacement
 
 
-from cmk.exceptions import MKGeneralException, MKException
+from cmk.exceptions import MKGeneralException, MKException, MKTimeout
 from lib import MKUserError
 
 
@@ -89,7 +89,7 @@ class InvalidUserInput(Exception):
         super(InvalidUserInput, self).__init__(varname, text)
 
 
-class RequestTimeout(MKException):
+class RequestTimeout(MKTimeout):
     pass
 
 #.

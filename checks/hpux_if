@@ -64,7 +64,7 @@ def hpux_convert_to_if64(info):
         if '***' in line:
             nic = ['0'] * 20
             nics.append(nic)
-            nic[2] = '6' # fake port type Ethernet
+            nic[2] = '6'  # fake port type Ethernet
         elif '=' in line:
             line_txt = " ".join(line)
             left, right = line_txt.split("=")
@@ -105,7 +105,7 @@ def hpux_convert_to_if64(info):
                 nic[18] = right
             elif left == "Station Address":
                 h = right[2:]
-                nic[19] = "".join([ chr(int(x+y, 16)) for (x,y) in zip(h[::2],h[1::2]) ])
+                nic[19] = "".join([chr(int(x + y, 16)) for (x, y) in zip(h[::2], h[1::2])])
     return nics
 
 
@@ -117,24 +117,28 @@ def hpux_parse_speed(speed):
         mult = 1000 * 1000
     return float(parts[0]) * mult
 
+
 def hpux_parse_operstatus(txt):
     if txt.lower() == "up":
         return '1'
     return '2'
 
+
 def inventory_hpux_if(info):
     return inventory_if_common(hpux_convert_to_if64(info))
+
 
 def check_hpux_if(item, params, info):
     return check_if_common(item, params, hpux_convert_to_if64(info))
 
-check_includes['hpux_if'] = [ "if.include" ]
+
+check_includes['hpux_if'] = ["if.include"]
 
 check_info["hpux_if"] = {
-    'check_function':          check_hpux_if,
-    'inventory_function':      inventory_hpux_if,
-    'service_description':     'NIC %s',
-    'has_perfdata':            True,
-    'group':                   'if',
+    'check_function': check_hpux_if,
+    'inventory_function': inventory_hpux_if,
+    'service_description': 'NIC %s',
+    'has_perfdata': True,
+    'group': 'if',
     'default_levels_variable': 'if_default_levels',
 }

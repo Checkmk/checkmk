@@ -64,7 +64,7 @@ def h3c_lanswitch_cpu_genitem(item):
 
 
 def inventory_h3c_lanswitch_cpu(info):
-    return [ (h3c_lanswitch_cpu_genitem(line[0]), "switch_cpu_default_levels") for line in info ]
+    return [(h3c_lanswitch_cpu_genitem(line[0]), "switch_cpu_default_levels") for line in info]
 
 
 def check_h3c_lanswitch_cpu(item, params, info):
@@ -73,7 +73,7 @@ def check_h3c_lanswitch_cpu(item, params, info):
         if h3c_lanswitch_cpu_genitem(line[0]) == item:
             util = int(line[1])
             infotext = ("average usage was %d%% over last 5 minutes." % util)
-            perfdata = [ ( "usage", util, warn, crit, 0, 100) ]
+            perfdata = [("usage", util, warn, crit, 0, 100)]
 
             if util > crit:
                 return (2, infotext, perfdata)
@@ -84,7 +84,8 @@ def check_h3c_lanswitch_cpu(item, params, info):
     return (3, "%s not found" % item)
 
 
-check_info["h3c_lanswitch_cpu"] = (check_h3c_lanswitch_cpu, "CPU Utilization %s", 1, inventory_h3c_lanswitch_cpu )
+check_info["h3c_lanswitch_cpu"] = (check_h3c_lanswitch_cpu, "CPU Utilization %s", 1,
+                                   inventory_h3c_lanswitch_cpu)
 
 snmp_info["h3c_lanswitch_cpu"] = \
     ( ".1.3.6.1.4.1.43.45.1.6.1.1.1", [

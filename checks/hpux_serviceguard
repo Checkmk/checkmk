@@ -41,6 +41,7 @@
 # package:AVDP|summary=degraded
 # package:SDBP|summary=degraded
 
+
 def inventory_hpux_serviceguard(info):
     inventory = []
     for line in info:
@@ -50,6 +51,7 @@ def inventory_hpux_serviceguard(info):
             item = line[0]
         inventory.append((item, None))
     return inventory
+
 
 def check_hpux_serviceguard(item, _no_params, info):
     for line in info:
@@ -68,7 +70,7 @@ def check_hpux_serviceguard(item, _no_params, info):
 
 
 check_info["hpux_serviceguard"] = {
-    'check_function':          check_hpux_serviceguard,
-    'inventory_function':      inventory_hpux_serviceguard,
-    'service_description':     'Serviceguard %s',
+    'check_function': check_hpux_serviceguard,
+    'inventory_function': inventory_hpux_serviceguard,
+    'service_description': 'Serviceguard %s',
 }

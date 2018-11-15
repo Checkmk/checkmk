@@ -58,13 +58,14 @@ def check_emc_isilon_quota(item, params, info):
             # note 2: even if quotaHardThresholdDefined is 0 the
             #         quotaHardThreshold is still often set to a reasonable value. Otherwise,
             #         use the "hardest" threshold that isn't 0 for the disk limit
-            hard_threshold     = int(hard_threshold)      # can't be exceeded
-            soft_threshold     = int(soft_threshold)      # write-protect after grace period
+            hard_threshold = int(hard_threshold)  # can't be exceeded
+            soft_threshold = int(soft_threshold)  # write-protect after grace period
             advisory_threshold = int(advisory_threshold)  # warning only
             assumed_size = hard_threshold or soft_threshold or advisory_threshold
 
             # If the users has not configured levels, we use the soft/advisory threshold
-            if "levels" not in params and (soft_threshold_defined == '1' or advisory_threshold_defined == '1'):
+            if "levels" not in params and (soft_threshold_defined == '1' or
+                                           advisory_threshold_defined == '1'):
                 # if a soft threshold is set, it will be used as crit (since the hard_threshold can't be
                 # exceeded anyway)
                 crit = soft_threshold or (assumed_size * 0.9)
@@ -81,30 +82,31 @@ def check_emc_isilon_quota(item, params, info):
 
 
 check_info["emc_isilon_quota"] = {
-    "check_function"          : check_emc_isilon_quota,
-    "inventory_function"      : inventory_emc_isilon_quota,
-    "service_description"     : "Quota %s",
-    "has_perfdata"            : True,
-    "snmp_info"               : (".1.3.6.1.4.1.12124.1.12.1.1",
-                                   [
-                                     5,    # quotaPath
-                                     7,    # quotaHardThreshold
-                                     8,    # quotaSoftThresholdDefined
-                                     9,    # quotaSoftThreshold
-                                     10,   # quotaAdvisoryThresholdDefined
-                                     11,   # quotaAdvisoryThreshold
-                                     13,   # quotaUsage
-                                     # 2,    # quotaType
-                                     # 6,    # quotaHardThresholdDefined
-                                     # 14,   # quotaUsageWithOverhead
-                                     # 16,   # quotaIncludesOverhead
-                                     # 12,   # quotaGracePeriod
-                                     # 15,   # quotaInodeUsage  # apparently doesn't provide the total
-                                                               # number of inodes, so this is
-                                                               # useless to us
-                              ]),
-    "snmp_scan_function"      : lambda oid: "isilon" in oid(".1.3.6.1.2.1.1.1.0").lower(),
-    "includes"                : ["size_trend.include", "df.include"],
-    "group"                   : "filesystem",
-    "default_levels_variable" : "emc_isilon_quota",
+    "check_function": check_emc_isilon_quota,
+    "inventory_function": inventory_emc_isilon_quota,
+    "service_description": "Quota %s",
+    "has_perfdata": True,
+    "snmp_info": (
+        ".1.3.6.1.4.1.12124.1.12.1.1",
+        [
+            5,  # quotaPath
+            7,  # quotaHardThreshold
+            8,  # quotaSoftThresholdDefined
+            9,  # quotaSoftThreshold
+            10,  # quotaAdvisoryThresholdDefined
+            11,  # quotaAdvisoryThreshold
+            13,  # quotaUsage
+            # 2,    # quotaType
+            # 6,    # quotaHardThresholdDefined
+            # 14,   # quotaUsageWithOverhead
+            # 16,   # quotaIncludesOverhead
+            # 12,   # quotaGracePeriod
+            # 15,   # quotaInodeUsage  # apparently doesn't provide the total
+            # number of inodes, so this is
+            # useless to us
+        ]),
+    "snmp_scan_function": lambda oid: "isilon" in oid(".1.3.6.1.2.1.1.1.0").lower(),
+    "includes": ["size_trend.include", "df.include"],
+    "group": "filesystem",
+    "default_levels_variable": "emc_isilon_quota",
 }

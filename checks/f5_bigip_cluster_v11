@@ -24,7 +24,6 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-
 # Agent / MIB output
 # see: .1.3.6.1.4.1.3375.2.1.14.1.1.0
 #      .1.3.6.1.4.1.3375.2.1.14.1.2.0
@@ -32,7 +31,6 @@
 # F5-BIGIP-SYSTEM-MIB::sysCmSyncStatusStatus
 
 # F5 nodes need to be ntp synced otherwise status reports might be wrong.
-
 
 factory_settings["f5_bigip_cluster_v11"] = {
     '0': 3,
@@ -80,18 +78,18 @@ def check_f5_bigip_cluster_v11(_no_item, params, info):
 
 
 check_info["f5_bigip_cluster_v11"] = {
- 'default_levels_variable'   : 'f5_bigip_cluster_v11',
- 'check_function'            : check_f5_bigip_cluster_v11,
- 'inventory_function'        : inventory_f5_bigip_cluster_v11,
- 'service_description'       : 'Config Sync Status',
- 'snmp_info'                 : ('.1.3.6.1.4.1.3375.2.1.14.1', [
+    'default_levels_variable'   : 'f5_bigip_cluster_v11',
+    'check_function'            : check_f5_bigip_cluster_v11,
+    'inventory_function'        : inventory_f5_bigip_cluster_v11,
+    'service_description'       : 'Config Sync Status',
+    'snmp_info'                 : ('.1.3.6.1.4.1.3375.2.1.14.1', [
                                          "1.0", # sysCmSyncStatusId
                                          "2.0" # sysCmSyncStatusStatus
                                      ]),
 
- 'snmp_scan_function'        : \
+    'snmp_scan_function'        :  \
           lambda oid: '.1.3.6.1.4.1.3375.2' in oid(".1.3.6.1.2.1.1.2.0") \
              and "big-ip" in oid(".1.3.6.1.4.1.3375.2.1.4.1.0").lower() \
              and int(oid(".1.3.6.1.4.1.3375.2.1.4.2.0").split('.')[0]) >= 11,
- 'group'                     : 'f5_bigip_cluster_v11',
+    'group'                     : 'f5_bigip_cluster_v11',
 }

@@ -37,15 +37,17 @@ def parse_hp_hh3c_ext(info):
         mem_total = int(mem_size)
         mem_used = 0.01 * int(mem_usage) * mem_total
 
-        parsed.setdefault("%s %s" % (name, index), {
-            'temp': int(temperature),
-            'cpu': int(cpu),
-            'mem_total': mem_total,
-            'mem_used': mem_used,
-            'admin': admin_state,
-            'oper': oper_state,
-        })
+        parsed.setdefault(
+            "%s %s" % (name, index), {
+                'temp': int(temperature),
+                'cpu': int(cpu),
+                'mem_total': mem_total,
+                'mem_used': mem_used,
+                'admin': admin_state,
+                'oper': oper_state,
+            })
     return parsed
+
 
 #   .--temperature---------------------------------------------------------.
 #   |      _                                      _                        |
@@ -73,30 +75,35 @@ def check_hp_hh3c_ext(item, params, parsed):
 
 
 check_info['hp_hh3c_ext'] = {
-    'parse_function'        : parse_hp_hh3c_ext,
-    'inventory_function'    : inventory_hp_hh3c_ext,
-    'check_function'        : check_hp_hh3c_ext,
-    'service_description'   : 'Temperature %s',
-    'snmp_info'             : [('.1.3.6.1.4.1.25506.2.6.1.1.1.1', [ # HH3C-ENTITY-EXT-MIB
-                                OID_END,
-                                '2',    # hh3cEntityExtAdminStatus
-                                '3',    # hh3cEntityExtOperStatus
-                                '6',    # hh3cEntityExtCpuUsage
-                                '8',    # hh3cEntityExtMemUsage
-                                '12',   # hh3cEntityExtTemperature
-                                '10',   # hh3cEntityExtMemSize
-                               ]),
-                               ('.1.3.6.1.2.1.47.1.1.1.1', [
-                                OID_END,
-                                CACHED_OID(2),    # entPhysicalDescr
-
-                              ])],
-    'snmp_scan_function'    : lambda oid: oid('.1.3.6.1.2.1.1.2.0').startswith('.1.3.6.1.4.1.25506.11.1.239'),
-    'includes'              : ['temperature.include'],
-    'group'                 : 'temperature',
-    'has_perfdata'          : True,
+    'parse_function': parse_hp_hh3c_ext,
+    'inventory_function': inventory_hp_hh3c_ext,
+    'check_function': check_hp_hh3c_ext,
+    'service_description': 'Temperature %s',
+    'snmp_info': [
+        (
+            '.1.3.6.1.4.1.25506.2.6.1.1.1.1',
+            [  # HH3C-ENTITY-EXT-MIB
+                OID_END,
+                '2',  # hh3cEntityExtAdminStatus
+                '3',  # hh3cEntityExtOperStatus
+                '6',  # hh3cEntityExtCpuUsage
+                '8',  # hh3cEntityExtMemUsage
+                '12',  # hh3cEntityExtTemperature
+                '10',  # hh3cEntityExtMemSize
+            ]),
+        (
+            '.1.3.6.1.2.1.47.1.1.1.1',
+            [
+                OID_END,
+                CACHED_OID(2),  # entPhysicalDescr
+            ])
+    ],
+    'snmp_scan_function':
+        lambda oid: oid('.1.3.6.1.2.1.1.2.0').startswith('.1.3.6.1.4.1.25506.11.1.239'),
+    'includes': ['temperature.include'],
+    'group': 'temperature',
+    'has_perfdata': True,
 }
-
 
 #.
 #   .--states--------------------------------------------------------------.
@@ -136,10 +143,8 @@ def check_hp_hh3c_ext_states(item, params, parsed):
     }
 
     attrs = parsed[item]
-    for state_type, title, mapping in [
-        ('admin', 'Administrative', map_admin_states),
-        ('oper', 'Operational', map_oper_states)
-    ]:
+    for state_type, title, mapping in [('admin', 'Administrative', map_admin_states),
+                                       ('oper', 'Operational', map_oper_states)]:
         dev_state = attrs[state_type]
         state, params_key, state_readable = mapping.get(dev_state, (3, 'unknown[%s]' % dev_state))
         params_state_type = params.get(state_type, {})
@@ -149,12 +154,11 @@ def check_hp_hh3c_ext_states(item, params, parsed):
 
 
 check_info['hp_hh3c_ext.states'] = {
-    'inventory_function'    : inventory_hp_hh3c_ext_states,
-    'check_function'        : check_hp_hh3c_ext_states,
-    'service_description'   : 'Status %s',
-    'group'                 : 'hp_hh3c_ext_states',
+    'inventory_function': inventory_hp_hh3c_ext_states,
+    'check_function': check_hp_hh3c_ext_states,
+    'service_description': 'Status %s',
+    'group': 'hp_hh3c_ext_states',
 }
-
 
 #.
 #   .--CPU utilization-----------------------------------------------------.
@@ -183,14 +187,13 @@ def check_hp_hh3c_ext_cpu(item, params, parsed):
 
 
 check_info['hp_hh3c_ext.cpu'] = {
-    'inventory_function'    : inventory_hp_hh3c_ext_cpu,
-    'check_function'        : check_hp_hh3c_ext_cpu,
-    'service_description'   : 'CPU utilization %s',
-    'includes'              : ['cpu_util.include'],
-    'group'                 : 'cpu_utilization_multiitem',
-    'has_perfdata'          : True,
+    'inventory_function': inventory_hp_hh3c_ext_cpu,
+    'check_function': check_hp_hh3c_ext_cpu,
+    'service_description': 'CPU utilization %s',
+    'includes': ['cpu_util.include'],
+    'group': 'cpu_utilization_multiitem',
+    'has_perfdata': True,
 }
-
 
 #.
 #   .--memory--------------------------------------------------------------.
@@ -201,7 +204,6 @@ check_info['hp_hh3c_ext.cpu'] = {
 #   |             |_| |_| |_|\___|_| |_| |_|\___/|_|   \__, |              |
 #   |                                                  |___/               |
 #   '----------------------------------------------------------------------'
-
 
 factory_settings['hp_hh3c_ext_mem_default_levels'] = {
     "levels": (80.0, 90.0),
@@ -224,11 +226,11 @@ def check_hp_hh3c_ext_mem(item, params, parsed):
 
 
 check_info['hp_hh3c_ext.mem'] = {
-    'inventory_function'        : inventory_hp_hh3c_ext_mem,
-    'check_function'            : check_hp_hh3c_ext_mem,
-    'service_description'       : 'Memory %s',
-    'includes'                  : ['memory.include'],
-    'group'                     : 'memory_multiitem',
-    'has_perfdata'              : True,
-    'default_levels_variable'   : 'hp_hh3c_ext_mem_default_levels',
+    'inventory_function': inventory_hp_hh3c_ext_mem,
+    'check_function': check_hp_hh3c_ext_mem,
+    'service_description': 'Memory %s',
+    'includes': ['memory.include'],
+    'group': 'memory_multiitem',
+    'has_perfdata': True,
+    'default_levels_variable': 'hp_hh3c_ext_mem_default_levels',
 }

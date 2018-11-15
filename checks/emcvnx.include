@@ -47,7 +47,7 @@ def preparse_emcvnx_info(info):
 
         # fix naviseccli error that does not output a colon for some values
         if value is None and (key.startswith('SP Read Cache State') or
-                key.startswith('SP Write Cache State')):
+                              key.startswith('SP Write Cache State')):
             tmp = key.split()
             key, value = ' '.join(tmp[:-1]), tmp[-1]
 
@@ -58,7 +58,7 @@ def preparse_emcvnx_info(info):
             skip_lines, error = 10, []
 
         if not skip_lines:
-            if key.startswith('---'): # remove headline
+            if key.startswith('---'):  # remove headline
                 preparsed.pop()
                 continue
             elif value is None:  # append in case of a line continuation
@@ -68,9 +68,7 @@ def preparse_emcvnx_info(info):
             elif not value:  # remove subheader
                 continue
             else:
-                preparsed.append(
-                    (key, convert(value))
-                )
+                preparsed.append((key, convert(value)))
         else:
             error.append(': '.join(line))
 
@@ -79,4 +77,3 @@ def preparse_emcvnx_info(info):
             skip_lines -= 1
 
     return preparsed, list(errors)
-

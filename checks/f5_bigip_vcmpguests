@@ -35,13 +35,12 @@
 
 
 def parse_f5_bigip_vcmpguests(info):
-    return {
-        guest: status.lower() for node, guest, status in info
-    }
+    return {guest: status.lower() for node, guest, status in info}
+
 
 def inventory_f5_bigip_vcmpguests(parsed):
     if parsed:
-        return [ ( None, None ) ]
+        return [(None, None)]
 
 
 def check_f5_bigip_vcmpguests(_no_item, _no_params, parsed):
@@ -50,15 +49,17 @@ def check_f5_bigip_vcmpguests(_no_item, _no_params, parsed):
 
 
 check_info["f5_bigip_vcmpguests"] = {
-    "parse_function"          : parse_f5_bigip_vcmpguests,
-    "check_function"          : check_f5_bigip_vcmpguests,
-    "inventory_function"      : inventory_f5_bigip_vcmpguests,
-    "service_description"     : "BIG-IP vCMP Guests",
-    "node_info"               : True,
-    "snmp_info"               : (".1.3.6.1.4.1.3375.2.1.13.4.2.1", [
-                                    "1", # sysVcmpStatVcmpName
-                                    "17", # sysVcmpStatPrompt
-                               ]),
-    "snmp_scan_function"      : lambda oid: scan_f5_bigip_cluster_status(oid, is_v11_2=True),
-    "includes"                : ["f5_bigip.include"],
+    "parse_function": parse_f5_bigip_vcmpguests,
+    "check_function": check_f5_bigip_vcmpguests,
+    "inventory_function": inventory_f5_bigip_vcmpguests,
+    "service_description": "BIG-IP vCMP Guests",
+    "node_info": True,
+    "snmp_info": (
+        ".1.3.6.1.4.1.3375.2.1.13.4.2.1",
+        [
+            "1",  # sysVcmpStatVcmpName
+            "17",  # sysVcmpStatPrompt
+        ]),
+    "snmp_scan_function": lambda oid: scan_f5_bigip_cluster_status(oid, is_v11_2=True),
+    "includes": ["f5_bigip.include"],
 }

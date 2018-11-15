@@ -24,7 +24,6 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-
 # .1.3.6.1.4.1.25597.11.2.1.1.0 Good --> FE-FIREEYE-MIB::feRaidStatus.0
 # .1.3.6.1.4.1.25597.11.2.1.2.0 1 --> FE-FIREEYE-MIB::feRaidIsHealthy.0
 # .1.3.6.1.4.1.25597.11.2.1.3.1.2.1 0
@@ -33,7 +32,6 @@
 # .1.3.6.1.4.1.25597.11.2.1.3.1.3.2 Online
 # .1.3.6.1.4.1.25597.11.2.1.3.1.4.1 1
 # .1.3.6.1.4.1.25597.11.2.1.3.1.4.2 1
-
 
 #   .--RAID----------------------------------------------------------------.
 #   |                      ____      _    ___ ____                         |
@@ -84,7 +82,6 @@ check_info["fireeye_raid"] = {
     "snmp_scan_function"  : scan_fireeye,
     "includes"            : [ "fireeye.include" ]
 }
-
 
 #.
 #   .--disks---------------------------------------------------------------.

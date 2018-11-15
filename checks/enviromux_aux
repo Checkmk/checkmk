@@ -24,7 +24,6 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-
 #.
 #   .--temperature---------------------------------------------------------.
 #   |      _                                      _                        |
@@ -38,30 +37,32 @@
 #   '----------------------------------------------------------------------'
 
 check_info['enviromux_aux'] = {
-    'parse_function'        : parse_enviromux,
-    'inventory_function'    : inventory_enviromux_temperature,
-    'check_function'        : check_enviromux_temperature,
-    'service_description'   : 'Sensor %s',
-    'snmp_info'             : ('.1.3.6.1.4.1.3699.1.1.11.1.4.1.1', [
-                                                  "1",  # intSensorIndex
-                                                  "2",  # intSensorType
-                                                  "3",  # intSensorDescription
-                                                  "4",  # intSensorGroupNb
-                                                  "5",  # intSensorGroup
-                                                  "6",  # intSensorValue
-                                                  "7",  # intSensorUnit
-                                                  "8",  # intSensorUnitName
-                                                  "9",  # intSensorStatus
-                                                  "10", # intSensorMinThreshold
-                                                  "11", # intSensorMaxThreshold
-                                                  # These appear to only return bogus values
-                                                  #"12", # intSensorMinWarnThreshold
-                                                  #"13", # intSensorMaxWarnThreshold
-                              ]),
-    'includes'              : [ "temperature.include" , "enviromux.include" ],
-    'has_perfdata'          : True,
-    'snmp_scan_function'    : enviromux_scan_function,
-    'group'                 : "temperature",
+    'parse_function': parse_enviromux,
+    'inventory_function': inventory_enviromux_temperature,
+    'check_function': check_enviromux_temperature,
+    'service_description': 'Sensor %s',
+    'snmp_info': (
+        '.1.3.6.1.4.1.3699.1.1.11.1.4.1.1',
+        [
+            "1",  # intSensorIndex
+            "2",  # intSensorType
+            "3",  # intSensorDescription
+            "4",  # intSensorGroupNb
+            "5",  # intSensorGroup
+            "6",  # intSensorValue
+            "7",  # intSensorUnit
+            "8",  # intSensorUnitName
+            "9",  # intSensorStatus
+            "10",  # intSensorMinThreshold
+            "11",  # intSensorMaxThreshold
+            # These appear to only return bogus values
+            #"12", # intSensorMinWarnThreshold
+            #"13", # intSensorMaxWarnThreshold
+        ]),
+    'includes': ["temperature.include", "enviromux.include"],
+    'has_perfdata': True,
+    'snmp_scan_function': enviromux_scan_function,
+    'group': "temperature",
 }
 
 #.
@@ -76,16 +77,14 @@ check_info['enviromux_aux'] = {
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-
 check_info['enviromux_aux.voltage'] = {
-    'inventory_function'      : inventory_enviromux_voltage,
-    'check_function'          : check_enviromux_voltage,
-    'service_description'     : 'Sensor %s',
-    'has_perfdata'            : True,
-    'group'                   : "voltage",
-    'default_levels_variable' : "enviromux_default_levels",
-    'includes'              : [ "enviromux.include" ],
-
+    'inventory_function': inventory_enviromux_voltage,
+    'check_function': check_enviromux_voltage,
+    'service_description': 'Sensor %s',
+    'has_perfdata': True,
+    'group': "voltage",
+    'default_levels_variable': "enviromux_default_levels",
+    'includes': ["enviromux.include"],
 }
 
 #.
@@ -101,11 +100,10 @@ check_info['enviromux_aux.voltage'] = {
 #   '----------------------------------------------------------------------'
 
 check_info['enviromux_aux.humidity'] = {
-    'inventory_function'    : inventory_enviromux_humidity,
-    'check_function'        : check_enviromux_humidity,
-    'service_description'   : 'Sensor %s',
-    'has_perfdata'           : True,
-    'includes'              : [ "humidity.include" , "enviromux.include" ],
-    'group'                 : "humidity",
-
+    'inventory_function': inventory_enviromux_humidity,
+    'check_function': check_enviromux_humidity,
+    'service_description': 'Sensor %s',
+    'has_perfdata': True,
+    'includes': ["humidity.include", "enviromux.include"],
+    'group': "humidity",
 }

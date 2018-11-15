@@ -62,7 +62,6 @@
 #   |                           main check                                 |
 #   '----------------------------------------------------------------------'
 
-
 hp_msa_controller_cpu_default_levels = (80.0, 90.0)
 
 
@@ -79,13 +78,13 @@ def check_hp_msa_controller_cpu(item, params, parsed):
 
 
 check_info['hp_msa_controller'] = {
-    'parse_function'            : parse_hp_msa,
-    'inventory_function'        : inventory_hp_msa_controller_cpu,
-    'check_function'            : check_hp_msa_controller_cpu,
-    'service_description'       : 'CPU Utilization %s',
-    'has_perfdata'              : True,
-    'group'                     : 'cpu_utilization_multiitem',
-    'includes'                  : [ "hp_msa.include", "cpu_util.include" ],
+    'parse_function': parse_hp_msa,
+    'inventory_function': inventory_hp_msa_controller_cpu,
+    'check_function': check_hp_msa_controller_cpu,
+    'service_description': 'CPU Utilization %s',
+    'has_perfdata': True,
+    'group': 'cpu_utilization_multiitem',
+    'includes': ["hp_msa.include", "cpu_util.include"],
 }
 
 #.
@@ -99,10 +98,10 @@ check_info['hp_msa_controller'] = {
 #   '----------------------------------------------------------------------'
 
 check_info['hp_msa_controller.io'] = {
-    'inventory_function'        : inventory_hp_msa_io,
-    'check_function'            : check_hp_msa_io,
-    'service_description'       : 'Controller IO %s',
-    'has_perfdata'              : True,
-    'group'                     : 'diskstat',
-    'includes'                  : [ "hp_msa.include", "diskstat.include" ],
+    'inventory_function': inventory_hp_msa_io,
+    'check_function': check_hp_msa_io,
+    'service_description': 'Controller IO %s',
+    'has_perfdata': True,
+    'group': 'diskstat',
+    'includes': ["hp_msa.include", "diskstat.include"],
 }

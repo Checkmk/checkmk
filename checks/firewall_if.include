@@ -24,10 +24,11 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+
 def check_firewall_if(item, params, parsed):
 
     infotext_names = {
-        "ip4_in_blocked"    : "Incoming IPv4 packets blocked: ",
+        "ip4_in_blocked": "Incoming IPv4 packets blocked: ",
     }
 
     this_time = time.time()
@@ -35,19 +36,18 @@ def check_firewall_if(item, params, parsed):
     for what in parsed[item]:
 
         counter = parsed[item][what]
-        rate = get_rate("firewall_if-%s.%s" % (what, item), this_time,
-                                 counter, onwrap=RAISE)
+        rate = get_rate("firewall_if-%s.%s" % (what, item), this_time, counter, onwrap=RAISE)
 
         if params.get("averaging"):
             backlog_minutes = params["averaging"]
-            avgrate = get_average("firewall_if-%s.%s" % (what, item), this_time,
-                                     rate, backlog_minutes * 60)
+            avgrate = get_average("firewall_if-%s.%s" % (what, item), this_time, rate,
+                                  backlog_minutes * 60)
             check_against = avgrate
         else:
             check_against = rate
 
         infotext = infotext_names[what] + "%.2f pkts/s" % rate
-        perfdata = [ (what, rate) ]
+        perfdata = [(what, rate)]
 
         status, extrainfo, extraperf = check_levels(check_against, what, params.get(what))
         if extrainfo:

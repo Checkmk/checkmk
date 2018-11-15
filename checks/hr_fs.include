@@ -24,7 +24,6 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-
 # .1.3.6.1.2.1.25.2.3.1.2.1 .1.3.6.1.2.1.25.2.1.2 --> HOST-RESOURCES-MIB::hrStorageType.1
 # .1.3.6.1.2.1.25.2.3.1.2.3 .1.3.6.1.2.1.25.2.1.3 --> HOST-RESOURCES-MIB::hrStorageType.3
 # .1.3.6.1.2.1.25.2.3.1.3.1 Physical memory --> HOST-RESOURCES-MIB::hrStorageDescr.1
@@ -42,7 +41,7 @@
 def fix_hr_fs_mountpoint(mp):
     mp = mp.replace("\\", "/")
     if "mounted on:" in mp:
-        return mp.rsplit(":",1)[-1].strip()
+        return mp.rsplit(":", 1)[-1].strip()
     elif "Label:" in mp:
         pos = mp.find("Label:")
         return mp[:pos].rstrip()
@@ -77,15 +76,15 @@ def check_hr_fs(item, params, info):
             unit_size = saveint(hrunits)
             hrsize = saveint(hrsize)
             if hrsize < 0:
-                hrsize = hrsize+2**32
-            size      = hrsize * unit_size
+                hrsize = hrsize + 2**32
+            size = hrsize * unit_size
             hrused = saveint(hrused)
             if hrused < 0:
-                hrused = hrused+2**32
-            used      = hrused * unit_size
-            size_mb   = size / 1048576.0
-            used_mb   = used / 1048576.0
-            avail_mb  = size_mb - used_mb
+                hrused = hrused + 2**32
+            used = hrused * unit_size
+            size_mb = size / 1048576.0
+            used_mb = used / 1048576.0
+            avail_mb = size_mb - used_mb
             fslist.append((hrdescr, size_mb, avail_mb, 0))
 
     return df_check_filesystem_list(item, params, fslist)

@@ -24,7 +24,6 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-
 inventory_fujitsu_ca_ports = []
 
 
@@ -39,11 +38,12 @@ def parse_fjdarye500_ca_ports(info):
     parsed = {}
     for index, mode, read_iops, write_iops, read_mb, write_mb in info:
         mode_readable = map_modes[mode]
-        port = parsed.setdefault(index, {
-            "mode": mode_readable,
-            "read_ios": int(read_iops),
-            "read_throughput": int(read_mb) * 1024**2,
-        })
+        port = parsed.setdefault(
+            index, {
+                "mode": mode_readable,
+                "read_ios": int(read_iops),
+                "read_throughput": int(read_mb) * 1024**2,
+            })
         if mode_readable != "Initiator":
             port.update({
                 "write_ios": int(write_iops),
@@ -77,36 +77,38 @@ def check_fjdarye500_ca_ports(item, params, parsed):
 
 
 check_info['fjdarye500_ca_ports'] = {
-    'parse_function'        : parse_fjdarye500_ca_ports,
-    'inventory_function'    : inventory_fjdarye500_ca_ports,
-    'check_function'        : check_fjdarye500_ca_ports,
-    'service_description'   : 'CA Port IO %s',
-    'snmp_info'             : ('.1.3.6.1.4.1.211.1.21.1.150.5.5.2.1', [
-                                # fjdaryPfCaPortRdIOPS
-                                #     "This shows the READ IOPS for the CA,CARA mode.
-                                #      The Initiator IOPS is shown for RA,Initiator mode."
-                                # fjdaryPfCaPortWtIOPS
-                                #     "This shows the WRITE IOPS for the CA,CARA mode.
-                                #      The Target IOPS is shown for the RA mode.
-                                #      This information is an invalid value for the Initiator mode."
-                                # fjdaryPfCaPortRdTp
-                                #     "This shows the amount of the READ Throughput for the CA,CARA mode.
-                                #      The Initiator Throughput is shown for RA,Initiator mode.
-                                #      The unit is MB/sec."
-                                # fjdaryPfCaPortWtTp
-                                #     "This shows the amount of the WRITE Throughput for the CA,CARA mode.
-                                #      The Target Throughput is shown for the RA mode.
-                                #      The unit is MB/sec.
-                                #      This information is an invalid value for the Initiator mode."
-                                '1',    # FJDARY-E150::fjdaryPfCaPortIndex
-                                '2',    # FJDARY-E150::fjdaryPfCaPortMode
-                                '3',    # FJDARY-E150::fjdaryPfCaPortRdIOPS
-                                '4',    # FJDARY-E150::fjdaryPfCaPortWtIOPS
-                                '5',    # FJDARY-E150::fjdaryPfCaPortRdTp
-                                '6',    # FJDARY-E150::fjdaryPfCaPortWtTp
-                              ]),
-    'snmp_scan_function'    : lambda oid: oid(".1.3.6.1.2.1.1.2.0") == ".1.3.6.1.4.1.211.1.21.1.150",
-    'has_perfdata'          : True,
-    'group'                 : 'diskstat',
-    'includes'              : ['diskstat.include']
+    'parse_function': parse_fjdarye500_ca_ports,
+    'inventory_function': inventory_fjdarye500_ca_ports,
+    'check_function': check_fjdarye500_ca_ports,
+    'service_description': 'CA Port IO %s',
+    'snmp_info': (
+        '.1.3.6.1.4.1.211.1.21.1.150.5.5.2.1',
+        [
+            # fjdaryPfCaPortRdIOPS
+            #     "This shows the READ IOPS for the CA,CARA mode.
+            #      The Initiator IOPS is shown for RA,Initiator mode."
+            # fjdaryPfCaPortWtIOPS
+            #     "This shows the WRITE IOPS for the CA,CARA mode.
+            #      The Target IOPS is shown for the RA mode.
+            #      This information is an invalid value for the Initiator mode."
+            # fjdaryPfCaPortRdTp
+            #     "This shows the amount of the READ Throughput for the CA,CARA mode.
+            #      The Initiator Throughput is shown for RA,Initiator mode.
+            #      The unit is MB/sec."
+            # fjdaryPfCaPortWtTp
+            #     "This shows the amount of the WRITE Throughput for the CA,CARA mode.
+            #      The Target Throughput is shown for the RA mode.
+            #      The unit is MB/sec.
+            #      This information is an invalid value for the Initiator mode."
+            '1',  # FJDARY-E150::fjdaryPfCaPortIndex
+            '2',  # FJDARY-E150::fjdaryPfCaPortMode
+            '3',  # FJDARY-E150::fjdaryPfCaPortRdIOPS
+            '4',  # FJDARY-E150::fjdaryPfCaPortWtIOPS
+            '5',  # FJDARY-E150::fjdaryPfCaPortRdTp
+            '6',  # FJDARY-E150::fjdaryPfCaPortWtTp
+        ]),
+    'snmp_scan_function': lambda oid: oid(".1.3.6.1.2.1.1.2.0") == ".1.3.6.1.4.1.211.1.21.1.150",
+    'has_perfdata': True,
+    'group': 'diskstat',
+    'includes': ['diskstat.include']
 }

@@ -142,7 +142,7 @@ def parse_hp_msa_volume(info):
         if line[0] == "volumes":
             if line[2] == "durable-id":
                 volume_id = " ".join(line[3:])
-                parsed[volume_id] = {"item_type" : line[0]}
+                parsed[volume_id] = {"item_type": line[0]}
             else:
                 parsed[volume_id][line[2]] = " ".join(line[3:])
         else:
@@ -163,13 +163,12 @@ def parse_hp_msa_volume(info):
 
 
 check_info['hp_msa_volume'] = {
-    'parse_function'            : parse_hp_msa_volume,
-    'inventory_function'        : inventory_hp_msa_health,
-    'check_function'            : check_hp_msa_health,
-    'service_description'       : 'Volume Health %s',
-    'includes'                  : [ "hp_msa.include" ],
+    'parse_function': parse_hp_msa_volume,
+    'inventory_function': inventory_hp_msa_health,
+    'check_function': check_hp_msa_health,
+    'service_description': 'Volume Health %s',
+    'includes': ["hp_msa.include"],
 }
-
 
 #.
 #   .--volume df-----------------------------------------------------------.
@@ -191,23 +190,22 @@ def check_hp_msa_volume_df(item, params, parsed):
     if item in parsed:
         yield 0, "%s (%s)" % (parsed[item]["virtual-disk-name"], parsed[item]["raidtype"])
 
-        size_mb  = (int(parsed[item]["total-size-numeric"]) * 512) / 1024 ** 2
-        alloc_mb = (int(parsed[item]["allocated-size-numeric"]) * 512) / 1024 ** 2
+        size_mb = (int(parsed[item]["total-size-numeric"]) * 512) / 1024**2
+        alloc_mb = (int(parsed[item]["allocated-size-numeric"]) * 512) / 1024**2
         avail_mb = size_mb - alloc_mb
 
         yield df_check_filesystem_single(item, size_mb, avail_mb, 0, None, None, params)
 
 
 check_info['hp_msa_volume.df'] = {
-    'inventory_function'        : inventory_hp_msa_volume_df,
-    'check_function'            : check_hp_msa_volume_df,
-    'service_description'       : 'Filesystem %s',
-    'has_perfdata'              : True,
-    "group"                     : "filesystem",
-    'default_levels_variable'   : "filesystem_default_levels",
-    'includes'                  : [ "hp_msa.include", "size_trend.include", "df.include" ],
+    'inventory_function': inventory_hp_msa_volume_df,
+    'check_function': check_hp_msa_volume_df,
+    'service_description': 'Filesystem %s',
+    'has_perfdata': True,
+    "group": "filesystem",
+    'default_levels_variable': "filesystem_default_levels",
+    'includes': ["hp_msa.include", "size_trend.include", "df.include"],
 }
-
 
 #.
 #   .--volume IO-----------------------------------------------------------.
@@ -224,8 +222,8 @@ def check_hp_msa_volume_io(item, params, parsed):
     disks = {}
     for key, values in parsed.items():
         disks[key] = {
-            "read_throughput"  : values["data-read-numeric"],
-            "write_throughput" : values["data-written-numeric"],
+            "read_throughput": values["data-read-numeric"],
+            "write_throughput": values["data-written-numeric"],
         }
 
     if item != "SUMMARY":
@@ -237,10 +235,10 @@ def check_hp_msa_volume_io(item, params, parsed):
 
 
 check_info['hp_msa_volume.io'] = {
-    'inventory_function'        : inventory_hp_msa_io,
-    'check_function'            : check_hp_msa_volume_io,
-    'service_description'       : 'Volume IO %s',
-    'has_perfdata'              : True,
-    'group'                     : 'diskstat',
-    'includes'                  : [ "hp_msa.include", "diskstat.include" ],
+    'inventory_function': inventory_hp_msa_io,
+    'check_function': check_hp_msa_volume_io,
+    'service_description': 'Volume IO %s',
+    'has_perfdata': True,
+    'group': 'diskstat',
+    'includes': ["hp_msa.include", "diskstat.include"],
 }

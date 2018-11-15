@@ -48,16 +48,17 @@ def parse_hpux_fchba(info):
     for line in info:
         if line[0].startswith("/dev/"):
             name = line[0][5:]
-            hba = { "name": name }
+            hba = {"name": name}
             hbas[name] = hba
         elif len(line) == 2:
             hba[line[0].strip()] = line[1].strip()
     return hbas
 
+
 def inventory_hpux_fchba(info):
     parsed = parse_hpux_fchba(info)
-    return [ (name, None) for name, hba in parsed.items()
-             if hba["Driver state"] == "ONLINE" ]
+    return [(name, None) for name, hba in parsed.items() if hba["Driver state"] == "ONLINE"]
+
 
 def check_hpux_fchba(item, _no_params, info):
     parsed = parse_hpux_fchba(info)
@@ -78,7 +79,10 @@ def check_hpux_fchba(item, _no_params, info):
 
     infos.append("Topology: %s" % hba.get("Topology", "(none)"))
     if hba.get("Topology") not in [
-            "PTTOPT_FABRIC", "PRIVATE_LOOP", "PUBLIC_LOOP", ]:
+            "PTTOPT_FABRIC",
+            "PRIVATE_LOOP",
+            "PUBLIC_LOOP",
+    ]:
         state = 2
         infos[-1] += "(!!)"
 
@@ -90,8 +94,7 @@ def check_hpux_fchba(item, _no_params, info):
 
 
 check_info['hpux_fchba'] = {
-    "check_function"          : check_hpux_fchba,
-    "inventory_function"      : inventory_hpux_fchba,
-    "service_description"     : "FC HBA %s",
+    "check_function": check_hpux_fchba,
+    "inventory_function": inventory_hpux_fchba,
+    "service_description": "FC HBA %s",
 }
-

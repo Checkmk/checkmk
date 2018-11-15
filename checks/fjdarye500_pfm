@@ -24,7 +24,6 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-
 # .1.3.6.1.4.1.211.1.21.1.150.2.22.2.1.2.0 1996492800
 # .1.3.6.1.4.1.211.1.21.1.150.2.22.2.1.2.1 1996492801
 # .1.3.6.1.4.1.211.1.21.1.150.2.22.2.1.3.0 1
@@ -32,25 +31,21 @@
 # .1.3.6.1.4.1.211.1.21.1.150.2.22.2.1.5.0 49
 # .1.3.6.1.4.1.211.1.21.1.150.2.22.2.1.5.1 -1
 
-
-factory_settings["fjdarye500_pfm_default_levels"] = {
-    "health_lifetime_perc" : (20.0, 15.0)
-}
+factory_settings["fjdarye500_pfm_default_levels"] = {"health_lifetime_perc": (20.0, 15.0)}
 
 
 def inventory_fjdarye500_pfm(info):
-    return [ (pfm_id, {}) for pfm_id, status, _health_lifetime_str in info
-             if status != "4" ]
+    return [(pfm_id, {}) for pfm_id, status, _health_lifetime_str in info if status != "4"]
 
 
 def check_fjdarye500_pfm(item, params, info):
     map_states = {
-        "1" : (0, "normal"),
-        "2" : (2, "alarm"),
-        "3" : (1, "warning"),
-        "4" : (2, "invalid"),
-        "5" : (0, "maintenance"),
-        "6" : (3, "undefined"),
+        "1": (0, "normal"),
+        "2": (2, "alarm"),
+        "3": (1, "warning"),
+        "4": (2, "invalid"),
+        "5": (0, "maintenance"),
+        "6": (3, "undefined"),
     }
 
     for pfm_id, status, health_lifetime_str in info:
@@ -65,7 +60,7 @@ def check_fjdarye500_pfm(item, params, info):
 
             else:
                 health_info = get_percent_human_readable(health_lifetime)
-                warn, crit  = params["health_lifetime_perc"]
+                warn, crit = params["health_lifetime_perc"]
 
                 if health_lifetime < crit:
                     state = 2
@@ -81,15 +76,17 @@ def check_fjdarye500_pfm(item, params, info):
 
 
 check_info['fjdarye500_pfm'] = {
-    'inventory_function'        : inventory_fjdarye500_pfm,
-    'check_function'            : check_fjdarye500_pfm,
-    'service_description'       : 'PCIe flash module %s',
-    'snmp_info'                 : ('.1.3.6.1.4.1.211.1.21.1.150.2.22.2.1', [
-                                        '2',    # FJDARY-E150::fjdaryPfmItemId
-                                        '3',    # FJDARY-E150::fjdaryPfmStatus
-                                        '5',    # FJDARY-E150::fjdaryPfmHealth
-                                  ]),
-    'snmp_scan_function'        : lambda oid: oid(".1.3.6.1.2.1.1.2.0") == ".1.3.6.1.4.1.211.1.21.1.150",
-    'default_levels_variable'   : "fjdarye500_pfm_default_levels",
-    'group'                     : "pfm_health",
+    'inventory_function': inventory_fjdarye500_pfm,
+    'check_function': check_fjdarye500_pfm,
+    'service_description': 'PCIe flash module %s',
+    'snmp_info': (
+        '.1.3.6.1.4.1.211.1.21.1.150.2.22.2.1',
+        [
+            '2',  # FJDARY-E150::fjdaryPfmItemId
+            '3',  # FJDARY-E150::fjdaryPfmStatus
+            '5',  # FJDARY-E150::fjdaryPfmHealth
+        ]),
+    'snmp_scan_function': lambda oid: oid(".1.3.6.1.2.1.1.2.0") == ".1.3.6.1.4.1.211.1.21.1.150",
+    'default_levels_variable': "fjdarye500_pfm_default_levels",
+    'group': "pfm_health",
 }

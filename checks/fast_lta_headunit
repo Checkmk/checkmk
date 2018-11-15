@@ -24,13 +24,19 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-fast_lta_headunit_info = [(".1.3.6.1.4.1.27417.2", [1,  # headUnitStatus
-                                                    2,  # replicationMode
-                                                    5]  # replicationRunning
-                         )]
+fast_lta_headunit_info = [(
+    ".1.3.6.1.4.1.27417.2",
+    [
+        1,  # headUnitStatus
+        2,  # replicationMode
+        5
+    ]  # replicationRunning
+)]
+
 
 def fast_lta_headunit_scan(oid):
-        return oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.8072.3.2.10")
+    return oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.8072.3.2.10")
+
 
 #   .--status--------------------------------------------------------------.
 #   |                         _        _                                   |
@@ -41,17 +47,19 @@ def fast_lta_headunit_scan(oid):
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
+
 def inventory_fast_lta_headunit_status(info):
     if len(info[0]) > 0:
-        return [ (None, None) ]
+        return [(None, None)]
     return []
+
 
 def check_fast_lta_headunit_status(item, _no_params, info):
     head_unit_status_map = {
         "-1": "workerDefect",
         "-2": "workerNotStarted",
-        "2" : "workerBooting",
-        "3" : "workerRfRRunning",
+        "2": "workerBooting",
+        "3": "workerRfRRunning",
         "10": "appBooting",
         "20": "appNoCubes",
         "30": "appVirginCubes",
@@ -80,12 +88,13 @@ def check_fast_lta_headunit_status(item, _no_params, info):
 
     return status, message
 
+
 check_info["fast_lta_headunit.status"] = {
-    "check_function"        : check_fast_lta_headunit_status,
-    "inventory_function"    : inventory_fast_lta_headunit_status,
-    "service_description"   : "Fast LTA Headunit Status",
-    "snmp_info"             : fast_lta_headunit_info,
-    "snmp_scan_function"    : fast_lta_headunit_scan
+    "check_function": check_fast_lta_headunit_status,
+    "inventory_function": inventory_fast_lta_headunit_status,
+    "service_description": "Fast LTA Headunit Status",
+    "snmp_info": fast_lta_headunit_info,
+    "snmp_scan_function": fast_lta_headunit_scan
 }
 
 #.
@@ -98,16 +107,18 @@ check_info["fast_lta_headunit.status"] = {
 #   |                   |_|                                                |
 #   '----------------------------------------------------------------------'
 
+
 def inventory_fast_lta_headunit_replication(info):
     if len(info[0]) > 0:
-        return [ (None, None) ]
+        return [(None, None)]
     return []
+
 
 def check_fast_lta_headunit_replication(item, _no_params, info):
     head_unit_replication_map = {
-        "0"   : "Slave",
-        "1"   : "Master",
-        "255" : "standalone",
+        "0": "Slave",
+        "1": "Master",
+        "255": "standalone",
     }
 
     if info[0][0][2] == "1":
@@ -125,12 +136,13 @@ def check_fast_lta_headunit_replication(item, _no_params, info):
 
     return status, message
 
+
 check_info["fast_lta_headunit.replication"] = {
-    "check_function"        : check_fast_lta_headunit_replication,
-    "inventory_function"    : inventory_fast_lta_headunit_replication,
-    "service_description"   : "Fast LTA Replication",
-    "snmp_info"             : fast_lta_headunit_info,
-    "snmp_scan_function"    : fast_lta_headunit_scan
+    "check_function": check_fast_lta_headunit_replication,
+    "inventory_function": inventory_fast_lta_headunit_replication,
+    "service_description": "Fast LTA Replication",
+    "snmp_info": fast_lta_headunit_info,
+    "snmp_scan_function": fast_lta_headunit_scan
 }
 
 #.

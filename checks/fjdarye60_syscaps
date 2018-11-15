@@ -34,6 +34,6 @@ check_info["fjdarye60_syscaps"] = {
     'service_description':     'System Capacitor Unit %s',
     # 1: fjdaryScuIndex, 3: fjdaryScuStatus
     'snmp_info':               ('.1.3.6.1.4.1.211.1.21.1.60.2.5.2.1', [1, 3]),
-    'snmp_scan_function':      \
+    'snmp_scan_function':       \
           lambda oid: oid(".1.3.6.1.2.1.1.2.0") == ".1.3.6.1.4.1.211.1.21.1.60",
 }

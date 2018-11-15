@@ -24,6 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+
 def inventory_emc_datadomain_fs(info):
     mplist = []
     for line in info:
@@ -32,34 +33,36 @@ def inventory_emc_datadomain_fs(info):
         mplist.append((line[1], None))
     return mplist
 
+
 def check_emc_datadomain_fs(item, params, info):
     fslist = []
     for line in info:
         if item == line[1] or "patterns" in params:
-            size_mb = float(line[2])*1024.0
-            avail_mb = float(line[4])*1024.0
+            size_mb = float(line[2]) * 1024.0
+            avail_mb = float(line[4]) * 1024.0
             fslist.append((item, size_mb, avail_mb, 0))
     return df_check_filesystem_list(item, params, fslist)
 
-check_info["emc_datadomain_fs"] = {
-    "check_function"          : check_emc_datadomain_fs,
-    "inventory_function"      : inventory_emc_datadomain_fs,
-    "service_description"     : "DD-Filesystem %s",
-    "includes"                : [ "size_trend.include", "df.include" ],
-    "group"                   : "filesystem",
-    "default_levels_variable" : "filesystem_default_levels",
-    "has_perfdata"            : True,
-    "snmp_scan_function"    : lambda oid: oid(".1.3.6.1.2.1.1.1.0").startswith("Data Domain OS"),
-    "snmp_info"               : (".1.3.6.1.4.1.19746.1.3.2.1.1",
-                                       [
-                                            1, # fileSystemResourceIndex
-                                            3, # fileSystemResourceName
-                                            4, # fileSystemSpaceSize
-                                            5, # fileSystemSpaceUsed
-                                            6, # fileSystemSpaceAvail
-                                            7, # fileSystemPercentUsed
-                                            8, # fileSystemSpaceCleanable
-                                       ],
-                            ),
-}
 
+check_info["emc_datadomain_fs"] = {
+    "check_function": check_emc_datadomain_fs,
+    "inventory_function": inventory_emc_datadomain_fs,
+    "service_description": "DD-Filesystem %s",
+    "includes": ["size_trend.include", "df.include"],
+    "group": "filesystem",
+    "default_levels_variable": "filesystem_default_levels",
+    "has_perfdata": True,
+    "snmp_scan_function": lambda oid: oid(".1.3.6.1.2.1.1.1.0").startswith("Data Domain OS"),
+    "snmp_info": (
+        ".1.3.6.1.4.1.19746.1.3.2.1.1",
+        [
+            1,  # fileSystemResourceIndex
+            3,  # fileSystemResourceName
+            4,  # fileSystemSpaceSize
+            5,  # fileSystemSpaceUsed
+            6,  # fileSystemSpaceAvail
+            7,  # fileSystemPercentUsed
+            8,  # fileSystemSpaceCleanable
+        ],
+    ),
+}

@@ -165,11 +165,11 @@
 #   '----------------------------------------------------------------------'
 
 check_info['hp_msa_disk'] = {
-    'parse_function'            : parse_hp_msa,
-    'inventory_function'        : inventory_hp_msa_health,
-    'check_function'            : check_hp_msa_health,
-    'service_description'       : 'Disk Health %s',
-    'includes'                  : [ "hp_msa.include" ],
+    'parse_function': parse_hp_msa,
+    'inventory_function': inventory_hp_msa_health,
+    'check_function': check_hp_msa_health,
+    'service_description': 'Disk Health %s',
+    'includes': ["hp_msa.include"],
 }
 
 #.
@@ -183,12 +183,12 @@ check_info['hp_msa_disk'] = {
 #   '----------------------------------------------------------------------'
 
 check_info['hp_msa_disk.io'] = {
-    'inventory_function'        : inventory_hp_msa_io,
-    'check_function'            : check_hp_msa_io,
-    'service_description'       : 'Disks IO %s',
-    'has_perfdata'              : True,
-    'group'                     : 'diskstat',
-    'includes'                  : [ "hp_msa.include", "diskstat.include" ],
+    'inventory_function': inventory_hp_msa_io,
+    'check_function': check_hp_msa_io,
+    'service_description': 'Disks IO %s',
+    'has_perfdata': True,
+    'group': 'diskstat',
+    'includes': ["hp_msa.include", "diskstat.include"],
 }
 
 #.
@@ -201,32 +201,31 @@ check_info['hp_msa_disk.io'] = {
 #   |                       |_|                                            |
 #   '----------------------------------------------------------------------'
 
-
 factory_settings["hp_msa_disk_temp_default_levels"] = {
-    "levels"        : (40.0, 45.0), # just an assumption
+    "levels": (40.0, 45.0),  # just an assumption
 }
 
 
 def inventory_hp_msa_disk_temp(parsed):
-    return [ ("Disks", {}) ]
+    return [("Disks", {})]
 
 
 def check_hp_msa_disk_temp(item, params, parsed):
     disks = []
     for key, values in parsed.items():
-        disks.append( (key, float( values["temperature-numeric"] )) )
+        disks.append((key, float(values["temperature-numeric"])))
 
     return check_temperature_list(disks, params, "hp_msa_disk_temp_%s" % item)
 
 
 check_info['hp_msa_disk.temp'] = {
-    'inventory_function'        : inventory_hp_msa_disk_temp,
-    'check_function'            : check_hp_msa_disk_temp,
-    'service_description'       : 'Temperature %s',
-    'group'                     : 'temperature',
-    'has_perfdata'              : True,
-    'default_levels_variable'   : "hp_msa_disk_temp_default_levels",
-    'includes'                  : [ "hp_msa.include", "temperature.include" ],
+    'inventory_function': inventory_hp_msa_disk_temp,
+    'check_function': check_hp_msa_disk_temp,
+    'service_description': 'Temperature %s',
+    'group': 'temperature',
+    'has_perfdata': True,
+    'default_levels_variable': "hp_msa_disk_temp_default_levels",
+    'includes': ["hp_msa.include", "temperature.include"],
 }
 
 #.

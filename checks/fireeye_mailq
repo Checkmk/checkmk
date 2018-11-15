@@ -32,10 +32,11 @@
 #.1.3.6.1.4.1.25597.13.1.49.0 0
 
 factory_settings['fireeye_mailq'] = {
-    'deferred'  : (1, 50),
-    'hold'      : (500,1000),
-    'drop'      : (50,500),
+    'deferred': (1, 50),
+    'hold': (500, 1000),
+    'drop': (50, 500),
 }
+
 
 def parse_fireeye_mailq(info):
     parsed = {}
@@ -53,20 +54,22 @@ def check_fireeye_mailq(item, params, parsed):
 
 
 check_info['fireeye_mailq'] = {
-    'parse_function'            : parse_fireeye_mailq,
-    'inventory_function'        : lambda parsed: inventory_fireeye_generic(parsed, False, True),
-    'check_function'            : check_fireeye_mailq,
-    'service_description'       : 'Mail Queues',
-    'default_levels_variable'   : 'fireeye_mailq',
-    'group'                     : 'fireeye_mailq',
-    'snmp_info'                 : ('.1.3.6.1.4.1.25597.13.1', [
-                                    '44',    # FE-FIREEYE-MIB::feDeferredEmailCount
-                                    '45',    # FE-FIREEYE-MIB::feHoldQueueEmailCount
-                                    '47',    # FE-FIREEYE-MIB::feIncomingEmailCount
-                                    '48',    # FE-FIREEYE-MIB::feActiveEmailCount
-                                    '49',    # FE-FIREEYE-MIB::feDropEmailCount
-                                    ]),
-    'snmp_scan_function'        : scan_fireeye,
-    'has_perfdata'              : True,
-    'includes'                  : [ 'fireeye.include' ]
+    'parse_function': parse_fireeye_mailq,
+    'inventory_function': lambda parsed: inventory_fireeye_generic(parsed, False, True),
+    'check_function': check_fireeye_mailq,
+    'service_description': 'Mail Queues',
+    'default_levels_variable': 'fireeye_mailq',
+    'group': 'fireeye_mailq',
+    'snmp_info': (
+        '.1.3.6.1.4.1.25597.13.1',
+        [
+            '44',  # FE-FIREEYE-MIB::feDeferredEmailCount
+            '45',  # FE-FIREEYE-MIB::feHoldQueueEmailCount
+            '47',  # FE-FIREEYE-MIB::feIncomingEmailCount
+            '48',  # FE-FIREEYE-MIB::feActiveEmailCount
+            '49',  # FE-FIREEYE-MIB::feDropEmailCount
+        ]),
+    'snmp_scan_function': scan_fireeye,
+    'has_perfdata': True,
+    'includes': ['fireeye.include']
 }

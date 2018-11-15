@@ -24,13 +24,13 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-factory_settings["enterasys_temp_default_levels"] = {
-    "levels": (30, 35)
-}
+factory_settings["enterasys_temp_default_levels"] = {"levels": (30, 35)}
+
 
 def inventory_enterasys_temp(info):
     if info and info[0][0] != "0":
-        return [ ("Ambient", {}) ]
+        return [("Ambient", {})]
+
 
 def check_enterasys_temp(item, params, info):
     # info for MIB: The ambient temperature of the room in which the chassis
@@ -57,4 +57,3 @@ check_info["enterasys_temp"] = {
     "group"                   : "temperature",
     "includes"                : [ "temperature.include" ],
 }
-

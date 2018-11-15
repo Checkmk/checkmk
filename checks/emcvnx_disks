@@ -99,7 +99,6 @@
 # Product Revision:        ES0F
 # [...]
 
-
 # Parse agent output into a dict of the form:
 # parsed = {
 #    '0/0 Disk 0': {'Hard Read Errors':  '0',
@@ -112,9 +111,9 @@
 # }
 
 factory_settings['emcvnx_disks_default_levels'] = {
-        'state_read_error'  : (2, 2), # (state, count of errors)
-        'state_write_error' : (2, 2), # (state, count of errors)
-        'state_rebuilding'   : 1,
+    'state_read_error': (2, 2),  # (state, count of errors)
+    'state_write_error': (2, 2),  # (state, count of errors)
+    'state_rebuilding': 1,
 }
 
 
@@ -148,7 +147,7 @@ def inventory_emcvnx_disks(parsed):
 def check_emcvnx_disks(item, params, parsed):
     now = time.time()
     perfdata = []
-    if params is None: # convert legacy params
+    if params is None:  # convert legacy params
         params = {}
 
     if item not in parsed:
@@ -196,11 +195,11 @@ def check_emcvnx_disks(item, params, parsed):
 
 
 check_info['emcvnx_disks'] = {
-    "parse_function"          : parse_emcvnx_disks,
-    "inventory_function"      : inventory_emcvnx_disks,
-    "check_function"          : check_emcvnx_disks,
-    "service_description"     : "Enclosure %s",
-    "group"                   : "emcvnx_disks",
-    "has_perfdata"            : True,
-    "default_levels_variable" : "emcvnx_disks_default_levels"
+    "parse_function": parse_emcvnx_disks,
+    "inventory_function": inventory_emcvnx_disks,
+    "check_function": check_emcvnx_disks,
+    "service_description": "Enclosure %s",
+    "group": "emcvnx_disks",
+    "has_perfdata": True,
+    "default_levels_variable": "emcvnx_disks_default_levels"
 }

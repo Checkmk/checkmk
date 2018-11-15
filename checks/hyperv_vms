@@ -66,39 +66,38 @@
 #    }
 # }
 
+
 def parse_hyperv_vms(info):
     parsed = {}
     for line in info:
         # Remove quotes
-        line = [ x.strip('"') for x in line ]
-        if line[1].endswith("..."): # broken output
+        line = [x.strip('"') for x in line]
+        if line[1].endswith("..."):  # broken output
             vm_name = line[0]
             line = line[2:]
         elif line[1].startswith("("):
             idx = 2
             while idx < len(line):
                 if line[idx].endswith(")"):
-                    vm_name = " ".join(line[:idx+1])
+                    vm_name = " ".join(line[:idx + 1])
                     break
                 idx += 1
-            line = line[idx+1:]
+            line = line[idx + 1:]
         else:
             vm_name = line[0]
             line = line[1:]
 
-        if ':' in line[1]: # skip heading line
+        if ':' in line[1]:  # skip heading line
             parsed[vm_name] = {
-                "state"  : line[0],
-                "uptime" : line[1],
-                "state_msg" : " ".join(line[2:]),
+                "state": line[0],
+                "uptime": line[1],
+                "state_msg": " ".join(line[2:]),
             }
     return parsed
 
 
 def inventory_hyperv_vms(parsed):
-    return [ (vm_name, {'state': vm["state"] })
-             for (vm_name, vm)
-             in parsed.items() ]
+    return [(vm_name, {'state': vm["state"]}) for (vm_name, vm) in parsed.items()]
 
 
 def check_hyperv_vms(item, params, parsed):
@@ -117,9 +116,8 @@ def check_hyperv_vms(item, params, parsed):
 
 
 check_info["hyperv_vms"] = {
-    "parse_function"        : parse_hyperv_vms,
-    "check_function"        : check_hyperv_vms,
-    "inventory_function"    : inventory_hyperv_vms,
-    "service_description"   : "VM %s",
+    "parse_function": parse_hyperv_vms,
+    "check_function": check_hyperv_vms,
+    "inventory_function": inventory_hyperv_vms,
+    "service_description": "VM %s",
 }
-

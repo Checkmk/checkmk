@@ -37,31 +37,34 @@ def parse_emc_vplex_volumes(info):
         name = line[0]
         instance_count.setdefault(name, 0)
         instance_count[name] += 1
-        read_delta  = get_rate("readbytes.%s.%s"  % (name, instance_count[name]), now, int(line[3]))
+        read_delta = get_rate("readbytes.%s.%s" % (name, instance_count[name]), now, int(line[3]))
         write_delta = get_rate("writebytes.%s.%s" % (name, instance_count[name]), now, int(line[4]))
-        ios         = get_rate("ios.%s.%s"        % (name, instance_count[name]), now, int(line[2]))
-        read_wait   = float(line[5]) / 1000000
-        write_wait  = float(line[6]) / 1000000
+        ios = get_rate("ios.%s.%s" % (name, instance_count[name]), now, int(line[2]))
+        read_wait = float(line[5]) / 1000000
+        write_wait = float(line[6]) / 1000000
 
         if name in volumes:
-           volumes[name]["read_throughput"]   += read_delta
-           volumes[name]["write_throughput"]  += write_delta
-           volumes[name]["ios"]               += ios
-           volumes[name]["average_read_wait"]  = max(volumes[name]["average_read_wait"], read_wait)
-           volumes[name]["average_write_wait"] = max(volumes[name]["average_write_wait"], write_wait)
+            volumes[name]["read_throughput"] += read_delta
+            volumes[name]["write_throughput"] += write_delta
+            volumes[name]["ios"] += ios
+            volumes[name]["average_read_wait"] = max(volumes[name]["average_read_wait"], read_wait)
+            volumes[name]["average_write_wait"] = max(volumes[name]["average_write_wait"],
+                                                      write_wait)
         else:
             volumes[name] = {
-              "average_read_wait"   : read_wait,
-              "average_write_wait"  : write_wait,
-              "read_throughput"     : read_delta,
-              "write_throughput"    : write_delta,
-              "ios"                 : ios
+                "average_read_wait": read_wait,
+                "average_write_wait": write_wait,
+                "read_throughput": read_delta,
+                "write_throughput": write_delta,
+                "ios": ios
             }
 
     return volumes
 
+
 def inventory_emc_vplex_volumes(parsed):
     return inventory_diskstat_generic([(None, x) for x in parsed.keys()])
+
 
 def check_emc_vplex_volumes(item, params, parsed):
     # The check_diskstat_dict function may compute average values
@@ -91,4 +94,3 @@ check_info["emc_vplex_volumes"] = {
     "group"                 : "diskstat",
     "includes"              : [ "diskstat.include" ],
 }
-

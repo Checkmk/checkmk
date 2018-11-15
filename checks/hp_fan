@@ -26,7 +26,9 @@
 
 
 def parse_hp_fan(info):
-    return { "%s/%s" % (tray_index, fan_index) : fan_state for fan_index, tray_index, fan_state in info }
+    return {
+        "%s/%s" % (tray_index, fan_index): fan_state for fan_index, tray_index, fan_state in info
+    }
 
 
 def inventory_hp_fan(parsed):
@@ -36,13 +38,13 @@ def inventory_hp_fan(parsed):
 
 def check_hp_fan(item, _no_params, parsed):
     statemap = {
-        "0" :   (3, "unknown"),
-        "1" :   (2, "removed"),
-        "2" :   (2, "off"),
-        "3" :   (1, "underspeed"),
-        "4" :   (1, "overspeed"),
-        "5" :   (0, "ok"),
-        "6" :   (3, "maxstate"),
+        "0": (3, "unknown"),
+        "1": (2, "removed"),
+        "2": (2, "off"),
+        "3": (1, "underspeed"),
+        "4": (1, "overspeed"),
+        "5": (0, "ok"),
+        "6": (3, "maxstate"),
     }
     return statemap[parsed[item]]
 

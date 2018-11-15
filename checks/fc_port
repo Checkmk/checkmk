@@ -27,61 +27,62 @@
 # Taken from connUnitPortState
 # user selected state of the port hardware
 fc_port_admstates = {
-                1: ('unknown', 1),
-                2: ('online', 0),
-                3: ('offline', 0),
-                4: ('bypassed', 1),
-                5: ('diagnostics', 1),
+    1: ('unknown', 1),
+    2: ('online', 0),
+    3: ('offline', 0),
+    4: ('bypassed', 1),
+    5: ('diagnostics', 1),
 }
 # Taken from connUnitPortStatus
 # operational status for the port
-fc_port_opstates  = {
-                1: ('unknown', 1),
-                2: ('unused', 1),
-                3: ('ready', 0),
-                4: ('warning', 1),
-                5: ('failure', 2),
-                6: ('not participating', 1),
-                7: ('initializing', 1),
-                8: ('bypass',1),
-                9: ('ols', 0),
+fc_port_opstates = {
+    1: ('unknown', 1),
+    2: ('unused', 1),
+    3: ('ready', 0),
+    4: ('warning', 1),
+    5: ('failure', 2),
+    6: ('not participating', 1),
+    7: ('initializing', 1),
+    8: ('bypass', 1),
+    9: ('ols', 0),
 }
 # Taken from connUnitPortHWState
 # hardware detected state of the port
 fc_port_phystates = {
-                1: ('unknown', 1),
-                2: ('failed', 2),
-                3: ('bypassed', 1),
-                4: ('active', 0),
-                5: ('loopback', 1),
-                6: ('txfault', 1),
-                7: ('no media', 1),
-                8: ('link down',2),
+    1: ('unknown', 1),
+    2: ('failed', 2),
+    3: ('bypassed', 1),
+    4: ('active', 0),
+    5: ('loopback', 1),
+    6: ('txfault', 1),
+    7: ('no media', 1),
+    8: ('link down', 2),
 }
 
 # taken from connUnitPortType
-porttype_list = ( 'unknown', 'unknown', 'other', 'not-present', 'hub-port', 'n-port',
-            'l-port', 'fl-port', 'f-port', 'e-port', 'g-port', 'domain-ctl',
-            'hub-controller', 'scsi', 'escon', 'lan', 'wan', 'ac', 'dc', 'ssa')
+porttype_list = ('unknown', 'unknown', 'other', 'not-present', 'hub-port', 'n-port', 'l-port',
+                 'fl-port', 'f-port', 'e-port', 'g-port', 'domain-ctl', 'hub-controller', 'scsi',
+                 'escon', 'lan', 'wan', 'ac', 'dc', 'ssa')
 
 # settings for inventory: which ports should not be inventorized
-fc_port_no_inventory_types = [ 3 ]
-fc_port_no_inventory_admstates  = [ 1, 3 ]
-fc_port_no_inventory_opstates  = [ ]
-fc_port_no_inventory_phystates  = [ ]
-fc_port_inventory_use_portname = False # use connUnitPortName as service description
+fc_port_no_inventory_types = [3]
+fc_port_no_inventory_admstates = [1, 3]
+fc_port_no_inventory_opstates = []
+fc_port_no_inventory_phystates = []
+fc_port_inventory_use_portname = False  # use connUnitPortName as service description
 
 factory_settings["fc_port_default_levels"] = {
-    "rxcrcs":           (3.0, 20.0),   # allowed percentage of CRC errors
-    "rxencoutframes":   (3.0, 20.0),   # allowed percentage of Enc-OUT Frames
-    "notxcredits":      (3.0, 20.0),   # allowed percentage of No Tx Credits
-    "c3discards":       (3.0, 20.0),   # allowed percentage of C3 discards
+    "rxcrcs": (3.0, 20.0),  # allowed percentage of CRC errors
+    "rxencoutframes": (3.0, 20.0),  # allowed percentage of Enc-OUT Frames
+    "notxcredits": (3.0, 20.0),  # allowed percentage of No Tx Credits
+    "c3discards": (3.0, 20.0),  # allowed percentage of C3 discards
 }
+
 
 # Helper function for computing item from port number
 def fc_port_getitem(num_ports, index, portname):
-    fmt = "%%0%dd" % len(str(num_ports)) # number of digits for index
-    itemname = fmt % (index - 1) # leading zeros
+    fmt = "%%0%dd" % len(str(num_ports))  # number of digits for index
+    itemname = fmt % (index - 1)  # leading zeros
     if portname.strip() and fc_port_inventory_use_portname:
         return "%s %s" % (itemname, portname.strip())
     return itemname
@@ -102,12 +103,12 @@ def inventory_fc_port(info):
     for line in info:
         if len(line) == 15:
             try:
-                index    = int(line[0])
+                index = int(line[0])
                 porttype = int(line[1])
                 admstate = int(line[2])
-                opstate  = int(line[3])
+                opstate = int(line[3])
                 phystate = int(line[6])
-            except: # missing vital data. Skipping this port
+            except:  # missing vital data. Skipping this port
                 continue
             portname = line[5]
 
@@ -124,13 +125,13 @@ def inventory_fc_port(info):
 def check_fc_port(item, params, info):
     # Accept item, even if port name has changed
     item_index = int(item.split()[0])
-    portinfo = [ line for line in info if int(line[0]) == item_index + 1 ]
-    index    = int(portinfo[0][0])
+    portinfo = [line for line in info if int(line[0]) == item_index + 1]
+    index = int(portinfo[0][0])
     porttype = int(portinfo[0][1])
     admstate = int(portinfo[0][2])
-    opstate  = int(portinfo[0][3])
+    opstate = int(portinfo[0][3])
     phystate = int(portinfo[0][6])
-    counter_list = map(fc_parse_counter,portinfo[0][7:] )
+    counter_list = map(fc_parse_counter, portinfo[0][7:])
     txobjects, rxobjects, txelements, rxelements, notxcredits, c3discards, \
                 rxcrcs, rxencoutframes = counter_list
 
@@ -139,14 +140,14 @@ def check_fc_port(item, params, info):
     perfdata = []
     perfaverages = []
 
-    wirespeed = savefloat(portinfo[0][4]) * 1000.0 # speed in Bytes/sec, 0 if unknown
+    wirespeed = savefloat(portinfo[0][4]) * 1000.0  # speed in Bytes/sec, 0 if unknown
     if wirespeed == 0:
         # let user specify assumed speed via check parameter, default is 16.0 Gbit/sec
         gbit = params.get("assumed_speed", 16.0)
-        wirespeed = gbit * 1000.0 * 1000.0 * 1000.0 / 8.0 # in Bytes/sec
-        speedmsg  = "assuming %g Gbit/s" % gbit
+        wirespeed = gbit * 1000.0 * 1000.0 * 1000.0 / 8.0  # in Bytes/sec
+        speedmsg = "assuming %g Gbit/s" % gbit
     else:
-        gbit = wirespeed * 8.0 / ( 1000.0 * 1000.0 * 1000.0 ) # in Gbit/sec
+        gbit = wirespeed * 8.0 / (1000.0 * 1000.0 * 1000.0)  # in Gbit/sec
         speedmsg = "%.1f Gbit/s" % gbit
     output.append(speedmsg)
 
@@ -158,22 +159,22 @@ def check_fc_port(item, params, info):
     out_bytes = get_rate("fc_port.txelements.%s" \
                     % index, this_time, txelements)
 
-    average = params.get("average") # range in minutes
+    average = params.get("average")  # range in minutes
 
     # B A N D W I D T H
     # convert thresholds in percentage into MB/s
     bw_thresh = params.get("bw")
-    if bw_thresh is None: # no levels
+    if bw_thresh is None:  # no levels
         warn_bytes, crit_bytes = None, None
     else:
         warn, crit = bw_thresh
         if isinstance(warn, float):
             warn_bytes = wirespeed * warn / 100.0
-        else: # in MB
+        else:  # in MB
             warn_bytes = warn * 1048576.0
         if isinstance(crit, float):
             crit_bytes = wirespeed * crit / 100.0
-        else: # in MB
+        else:  # in MB
             crit_bytes = crit * 1048576.0
 
     for what, value in [("In", in_bytes), ("Out", out_bytes)]:
@@ -184,7 +185,8 @@ def check_fc_port(item, params, info):
         if average:
             value = get_average("fc_port.%s.%s.avg" % (what, item), this_time, value, average)
             output.append("Avg(%dmin): %s/s" % (average, get_bytes_human_readable(value)))
-            perfaverages.append( ("%s_avg" % what.lower(), value, warn_bytes, crit_bytes, 0, wirespeed))
+            perfaverages.append(("%s_avg" % what.lower(), value, warn_bytes, crit_bytes, 0,
+                                 wirespeed))
 
         # handle levels for in/out
         if crit_bytes is not None and value >= crit_bytes:
@@ -203,20 +205,41 @@ def check_fc_port(item, params, info):
                     % index, this_time, rxobjects)
     txobjects_rate  = get_rate("fc_port.txobjects.%s"  \
                     % index, this_time, txobjects)
-    for what, value in [ ("rxobjects", rxobjects_rate), ("txobjects", txobjects_rate) ]:
+    for what, value in [("rxobjects", rxobjects_rate), ("txobjects", txobjects_rate)]:
         perfdata.append((what, value))
         if average:
             value = get_average("fc_port.%s.%s.avg" % (what, item), this_time, value, average)
-            perfdata.append( ("%s_avg" % what, value) )
+            perfdata.append(("%s_avg" % what, value))
 
     # E R R O R C O U N T E R S
     # handle levels on error counters
 
     for descr, counter, value, ref in [
-           ("CRC errors",           "rxcrcs",              rxcrcs,          rxobjects_rate, ),
-           ("ENC-Out",              "rxencoutframes",      rxencoutframes,  rxobjects_rate, ),
-           ("C3 discards",          "c3discards",          c3discards,      txobjects_rate, ),
-           ("no TX buffer credits", "notxcredits",         notxcredits,     txobjects_rate, ),]:
+        (
+            "CRC errors",
+            "rxcrcs",
+            rxcrcs,
+            rxobjects_rate,
+        ),
+        (
+            "ENC-Out",
+            "rxencoutframes",
+            rxencoutframes,
+            rxobjects_rate,
+        ),
+        (
+            "C3 discards",
+            "c3discards",
+            c3discards,
+            txobjects_rate,
+        ),
+        (
+            "no TX buffer credits",
+            "notxcredits",
+            notxcredits,
+            txobjects_rate,
+        ),
+    ]:
         per_sec = get_rate("fc_port.%s.%s" % (counter, index), this_time, value)
 
         perfdata.append((counter, per_sec))
@@ -225,7 +248,7 @@ def check_fc_port(item, params, info):
         if average:
             per_sec_avg = get_average("fc_port.%s.%s.avg" % \
                     (counter, item), this_time, per_sec, average)
-            perfdata.append( ("%s_avg" % counter, per_sec_avg ) )
+            perfdata.append(("%s_avg" % counter, per_sec_avg))
 
         # compute error rate (errors in relation to number of frames) (from 0.0 to 1.0)
         if ref > 0 or per_sec > 0:
@@ -236,8 +259,7 @@ def check_fc_port(item, params, info):
 
         # Honor averaging of error rate
         if average:
-            rate = get_average("fc_port.%s.%s.avgrate" %
-                    (counter, item), this_time, rate, average)
+            rate = get_average("fc_port.%s.%s.avgrate" % (counter, item), this_time, rate, average)
             text += ", Avg: %.2f%%" % (rate * 100.0)
 
         error_percentage = rate * 100.0
@@ -251,8 +273,6 @@ def check_fc_port(item, params, info):
             text += "(!)"
             output.append(text)
 
-
-
     def get_sym(state):
         if state == 0:
             return ""
@@ -260,25 +280,25 @@ def check_fc_port(item, params, info):
             sym = state_markers[state]
         return sym
 
-    statetxt, state = fc_port_admstates.get(int(admstate), ( "unknown", 3 ))
+    statetxt, state = fc_port_admstates.get(int(admstate), ("unknown", 3))
     sym = get_sym(state)
-    output.append(statetxt+sym)
+    output.append(statetxt + sym)
     summarystate = max(state, summarystate)
 
     statetxt, state = fc_port_opstates.get(int(opstate), ("unknown", 3))
     sym = get_sym(state)
-    output.append(statetxt+sym)
+    output.append(statetxt + sym)
     summarystate = max(state, summarystate)
 
     statetxt, state = fc_port_phystates.get(int(phystate), ("unknown", 3))
     sym = get_sym(state)
-    output.append(statetxt+sym)
+    output.append(statetxt + sym)
     summarystate = max(state, summarystate)
 
     output.append(porttype_list[int(porttype)])
 
-
     return (summarystate, ', '.join(output), perfdata)
+
 
 check_config_variables.append("fc_port_admstates")
 check_config_variables.append("fc_port_opstates")

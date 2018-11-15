@@ -88,11 +88,11 @@ def check_hpux_lunstats(item, params, parsed):
 
 
 check_info["hpux_lunstats"] = {
-    'parse_function':          parse_hpux_lunstats,
-    'check_function':          check_hpux_lunstats,
-    'inventory_function':      inventory_diskstat_generic,
-    'service_description':     'Disk IO %s',
-    'has_perfdata':            True,
-    'group':                   'disk_io',
-    'includes':                [ "diskstat.include" ],
+    'parse_function': parse_hpux_lunstats,
+    'check_function': check_hpux_lunstats,
+    'inventory_function': inventory_diskstat_generic,
+    'service_description': 'Disk IO %s',
+    'has_perfdata': True,
+    'group': 'disk_io',
+    'includes': ["diskstat.include"],
 }

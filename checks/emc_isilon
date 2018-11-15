@@ -24,24 +24,37 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-emc_isilon_info = [(".1.3.6.1.4.1.12124.1.1", [1,   # clusterName
-                                               2,   # clusterHealth
-                                               5,   # configuredNodes
-                                               6]), # onlineNodes
-                   (".1.3.6.1.4.1.12124.2.1", [1,   # nodeName
-                                               2]), # nodeHealth
-                  ]
+emc_isilon_info = [
+    (
+        ".1.3.6.1.4.1.12124.1.1",
+        [
+            1,  # clusterName
+            2,  # clusterHealth
+            5,  # configuredNodes
+            6
+        ]),  # onlineNodes
+    (
+        ".1.3.6.1.4.1.12124.2.1",
+        [
+            1,  # nodeName
+            2
+        ]),  # nodeHealth
+]
+
 
 def emc_isilon_scan(oid):
     return "isilon" in oid(".1.3.6.1.2.1.1.1.0").lower()
 
+
 #   .--ClusterHealth------------------------------------------------------.
+
 
 def inventory_emc_isilon_clusterhealth(info):
     return [(None, None)]
 
+
 def check_emc_isilon_clusterhealth(item, _no_params, info):
-    status=int(info[0][0][1])
+    status = int(info[0][0][1])
     statusmap = ("ok", "attn", "down", "invalid")
     if status >= len(statusmap):
         return 3, "ClusterHealth reports unidentified status %s" % status
@@ -52,24 +65,27 @@ def check_emc_isilon_clusterhealth(item, _no_params, info):
             rc = 2
         return rc, "ClusterHealth reports status %s" % statusmap[status]
 
+
 check_info["emc_isilon.clusterhealth"] = {
-    "check_function"        : check_emc_isilon_clusterhealth,
-    "inventory_function"    : inventory_emc_isilon_clusterhealth,
-    "service_description"   : "Cluster Health",
-    "snmp_info"             : emc_isilon_info,
-    "snmp_scan_function"    : emc_isilon_scan
+    "check_function": check_emc_isilon_clusterhealth,
+    "inventory_function": inventory_emc_isilon_clusterhealth,
+    "service_description": "Cluster Health",
+    "snmp_info": emc_isilon_info,
+    "snmp_scan_function": emc_isilon_scan
 }
 
 #.
 #   .--NodeHealth------------------------------------------------------.
 
+
 def inventory_emc_isilon_nodehealth(info):
     return [(None, None)]
 
+
 def check_emc_isilon_nodehealth(item, _no_params, info):
-    status=int(info[1][0][1])
+    status = int(info[1][0][1])
     statusmap = ("ok", "attn", "down", "invalid")
-    nodename=info[1][0][0]
+    nodename = info[1][0][0]
     if status >= len(statusmap):
         return 3, "nodeHealth reports unidentified status %s" % status
     else:
@@ -79,19 +95,22 @@ def check_emc_isilon_nodehealth(item, _no_params, info):
             rc = 2
         return rc, "nodeHealth for %s reports status %s" % (nodename, statusmap[status])
 
+
 check_info["emc_isilon.nodehealth"] = {
-    "check_function"        : check_emc_isilon_nodehealth,
-    "inventory_function"    : inventory_emc_isilon_nodehealth,
-    "service_description"   : "Node Health",
-    "snmp_info"             : emc_isilon_info,
-    "snmp_scan_function"    : emc_isilon_scan
+    "check_function": check_emc_isilon_nodehealth,
+    "inventory_function": inventory_emc_isilon_nodehealth,
+    "service_description": "Node Health",
+    "snmp_info": emc_isilon_info,
+    "snmp_scan_function": emc_isilon_scan
 }
 
 #.
 #   .--Nodes------------------------------------------------------.
 
+
 def inventory_emc_isilon_nodes(info):
     return [(None, None)]
+
 
 def check_emc_isilon_nodes(item, _no_params, info):
     _cluster_name, _cluster_health, configured_nodes, online_nodes = info[0][0]
@@ -101,29 +120,33 @@ def check_emc_isilon_nodes(item, _no_params, info):
         rc = 2
     return rc, "Configured Nodes: %s / Online Nodes: %s" % (configured_nodes, online_nodes)
 
+
 check_info["emc_isilon.nodes"] = {
-    "check_function"        : check_emc_isilon_nodes,
-    "inventory_function"    : inventory_emc_isilon_nodes,
-    "service_description"   : "Nodes",
-    "snmp_info"             : emc_isilon_info,
-    "snmp_scan_function"    : emc_isilon_scan
+    "check_function": check_emc_isilon_nodes,
+    "inventory_function": inventory_emc_isilon_nodes,
+    "service_description": "Nodes",
+    "snmp_info": emc_isilon_info,
+    "snmp_scan_function": emc_isilon_scan
 }
 
 #.
 #   .--Cluster- and Node Name-------------------------------------------.
 
+
 def inventory_emc_isilon_names(info):
     return [(None, None)]
+
 
 def check_emc_isilon_names(item, _no_params, info):
     return 0, "Cluster Name is %s, Node Name is %s" % (info[0][0][0], info[1][0][0])
 
+
 check_info["emc_isilon.names"] = {
-    "check_function"        : check_emc_isilon_names,
-    "inventory_function"    : inventory_emc_isilon_names,
-    "service_description"   : "Isilon Info",
-    "snmp_info"             : emc_isilon_info,
-    "snmp_scan_function"    : emc_isilon_scan
+    "check_function": check_emc_isilon_names,
+    "inventory_function": inventory_emc_isilon_names,
+    "service_description": "Isilon Info",
+    "snmp_info": emc_isilon_info,
+    "snmp_scan_function": emc_isilon_scan
 }
 
 #.

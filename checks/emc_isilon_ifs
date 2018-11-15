@@ -24,40 +24,39 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-
 # do need this, the params field can't be None
 factory_settings["emc_isilon_ifs"] = {}
 
 
 def inventory_emc_isilon_ifs(info):
     # this check handles the cluster file system so there is only one
-    return [ ("Cluster", None) ]
+    return [("Cluster", None)]
+
 
 def check_emc_isilon_ifs(item, params, info):
     ONE_MB = 1024 * 1024
     for total, avail in info:
         size_mb = int(total) / ONE_MB
         avail_mb = int(avail) / ONE_MB
-        return df_check_filesystem_list("ifs", params, [
-            ("ifs", size_mb, avail_mb, 0)
-        ])
+        return df_check_filesystem_list("ifs", params, [("ifs", size_mb, avail_mb, 0)])
+
 
 check_info["emc_isilon_ifs"] = {
-    "check_function"          : check_emc_isilon_ifs,
-    "inventory_function"      : inventory_emc_isilon_ifs,
-    "service_description"     : "Filesystem %s",
-    "includes"                : [ "size_trend.include", "df.include" ],
-    "group"                   : "filesystem",
-    "default_levels_variable" : "emc_isilon_ifs",
-    "has_perfdata"            : True,
-    "snmp_scan_function"      : lambda oid: "isilon" in oid(".1.3.6.1.2.1.1.1.0").lower(),
-    "snmp_info"               : (".1.3.6.1.4.1.12124.1.3",
-                                       [
-                                            1, # ifsTotalBytes
-                                            3, # ifsAvailableBytes
-                                            # 2, # ifsUsedBytes
-                                            # 4, # ifsFreeBytes
-                                       ],
-                            ),
+    "check_function": check_emc_isilon_ifs,
+    "inventory_function": inventory_emc_isilon_ifs,
+    "service_description": "Filesystem %s",
+    "includes": ["size_trend.include", "df.include"],
+    "group": "filesystem",
+    "default_levels_variable": "emc_isilon_ifs",
+    "has_perfdata": True,
+    "snmp_scan_function": lambda oid: "isilon" in oid(".1.3.6.1.2.1.1.1.0").lower(),
+    "snmp_info": (
+        ".1.3.6.1.4.1.12124.1.3",
+        [
+            1,  # ifsTotalBytes
+            3,  # ifsAvailableBytes
+            # 2, # ifsUsedBytes
+            # 4, # ifsFreeBytes
+        ],
+    ),
 }
-

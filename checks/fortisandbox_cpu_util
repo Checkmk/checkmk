@@ -29,6 +29,7 @@
 #Example output:
 #.1.3.6.1.4.1.12356.118.3.1.3.0 10
 
+
 def inventory_fortisandbox_cpu_util(info):
     if info:
         return [(None, {})]
@@ -41,12 +42,12 @@ def check_fortisandbox_cpu_util(_no_item, params, info):
 
 
 check_info['fortisandbox_cpu_util'] = {
-    'inventory_function'    :   inventory_fortisandbox_cpu_util,
-    'check_function'        :   check_fortisandbox_cpu_util,
-    'service_description'   :   'CPU utilization',
-    'has_perfdata'          :   True,
-    'snmp_scan_function'    :   lambda oid: oid('.1.3.6.1.2.1.1.2.0') == '.1.3.6.1.4.1.12356.118.1.30006',
-    'snmp_info'             :   ('.1.3.6.1.4.1.12356.118.3.1', ['3']), #fsaSysCpuUsage
-    'includes'              :   ['cpu_util.include'],
-    'group'                 :   'cpu_utilization',
+    'inventory_function': inventory_fortisandbox_cpu_util,
+    'check_function': check_fortisandbox_cpu_util,
+    'service_description': 'CPU utilization',
+    'has_perfdata': True,
+    'snmp_scan_function': lambda oid: oid('.1.3.6.1.2.1.1.2.0') == '.1.3.6.1.4.1.12356.118.1.30006',
+    'snmp_info': ('.1.3.6.1.4.1.12356.118.3.1', ['3']),  #fsaSysCpuUsage
+    'includes': ['cpu_util.include'],
+    'group': 'cpu_utilization',
 }

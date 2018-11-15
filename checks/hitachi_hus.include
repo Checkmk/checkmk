@@ -60,17 +60,17 @@ def inventory_hitachi_hus(info):
 def check_hitachi_hus(item, _no_params, info):
     # Maps for hitachi hus components
     hus_map_states = {
-        "0" : (3, "unknown"),
-        "1" : (0, "no error"),
-        "2" : (2, "acute"),
-        "3" : (2, "serious"),
-        "4" : (1, "moderate"),
-        "5" : (1, "service"),
+        "0": (3, "unknown"),
+        "1": (0, "no error"),
+        "2": (2, "acute"),
+        "3": (2, "serious"),
+        "4": (1, "moderate"),
+        "5": (1, "service"),
     }
 
-    ok_states      = []
-    warn_states    = []
-    crit_states    = []
+    ok_states = []
+    warn_states = []
+    crit_states = []
     unknown_states = []
 
     # We need to take care that the right map type is checked
@@ -109,8 +109,7 @@ def check_hitachi_hus(item, _no_params, info):
             if state == 3:
                 unknown_states.append("%s: %s" % (what, state_readable))
 
-        for state, states, text in [
-            (0, ok_states,  "OK"),    (3, unknown_states, "UNKNOWN"),
-            (1, warn_states, "WARN"), (2, crit_states, "CRIT")]:
+        for state, states, text in [(0, ok_states, "OK"), (3, unknown_states, "UNKNOWN"),
+                                    (1, warn_states, "WARN"), (2, crit_states, "CRIT")]:
             if states:
                 yield state, "%s: %s" % (text, ", ".join(states))

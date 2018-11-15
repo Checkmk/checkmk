@@ -47,8 +47,8 @@ def check_hyperv_checkpoints(item, params, info):
         # We assume that the last snapshot is the last line
         # of the agent output
         for title, key, snapshot in [
-            ("Oldest", "age_oldest", max(snapshots, key=lambda x:x[1])),
-            ("Last",   "age",        snapshots[-1]),
+            ("Oldest", "age_oldest", max(snapshots, key=lambda x: x[1])),
+            ("Last", "age", snapshots[-1]),
         ]:
             name, age = snapshot
             infotext = "%s: %s (%s)" % (title, get_age_human_readable(age), name)
@@ -60,18 +60,17 @@ def check_hyperv_checkpoints(item, params, info):
             else:
                 state = 0
             if state:
-                infotext += " (warn/crit at %s/%s)" % (
-                            get_age_human_readable(warn),
-                            get_age_human_readable(crit))
+                infotext += " (warn/crit at %s/%s)" % (get_age_human_readable(warn),
+                                                       get_age_human_readable(crit))
             yield state, infotext, [(key, age, warn, crit)]
     else:
         yield 0, "No Checkpoints found"
 
 
 check_info["hyperv_checkpoints"] = {
-    "check_function"        : check_hyperv_checkpoints,
-    "inventory_function"    : inventory_hyperv_checkpoints,
-    "service_description"   : "HyperV Checkpoints",
-    "group"                 : "vm_snapshots",
-    "has_perfdata"          : True,
+    "check_function": check_hyperv_checkpoints,
+    "inventory_function": inventory_hyperv_checkpoints,
+    "service_description": "HyperV Checkpoints",
+    "group": "vm_snapshots",
+    "has_perfdata": True,
 }

@@ -31,19 +31,22 @@
 # VMware vSphere 5 Enterprise 22 44 # Licenses may appear multiple times (keys different)
 # vCenter Server 5 Standard   1 1
 
+
 def parse_esx_vsphere_licenses(info):
     parsed = {}
     for line in info:
         name, values = line
         parsed.setdefault(name, {"used": 0, "total": 0, "keys": 0})
         used, total = values.split()
-        parsed[name]["used"]  += int(used)
+        parsed[name]["used"] += int(used)
         parsed[name]["total"] += int(total)
-        parsed[name]["keys"]  += 1
+        parsed[name]["keys"] += 1
     return parsed
+
 
 def inventory_esx_vsphere_licenses(parsed):
     return [(key, None) for key in parsed.keys()]
+
 
 def check_esx_vsphere_licenses(item, params, parsed):
     license_ = parsed.get(item)
@@ -56,11 +59,11 @@ def check_esx_vsphere_licenses(item, params, parsed):
 
 
 check_info['esx_vsphere_licenses'] = {
-  "parse_function"     : parse_esx_vsphere_licenses,
-  "inventory_function"  : inventory_esx_vsphere_licenses,
-  "check_function"      : check_esx_vsphere_licenses,
-  "service_description" : "License %s",
-  "has_perfdata"        : True,
-  "group"               : "esx_licenses",
-  "includes"            : [ "license.include" ]
+    "parse_function": parse_esx_vsphere_licenses,
+    "inventory_function": inventory_esx_vsphere_licenses,
+    "check_function": check_esx_vsphere_licenses,
+    "service_description": "License %s",
+    "has_perfdata": True,
+    "group": "esx_licenses",
+    "includes": ["license.include"]
 }

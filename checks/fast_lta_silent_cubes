@@ -27,28 +27,34 @@
 
 def inventory_fast_lta_silent_cubes_status(info):
     if len(info) > 0 and len(info[0]) > 1:
-        return [ ("Total", {}) ]
+        return [("Total", {})]
     return []
+
 
 def check_fast_lta_silent_cubes_status(item, params, info):
     fslist = []
     for total, used in info:
-        size_mb   = int(total) / 1048576.0
-        avail_mb  = ( int(total) - int(used) ) / 1048576.0
+        size_mb = int(total) / 1048576.0
+        avail_mb = (int(total) - int(used)) / 1048576.0
         fslist.append((item, size_mb, avail_mb, 0))
 
     return df_check_filesystem_list(item, params, fslist)
 
-check_info["fast_lta_silent_cubes.capacity"] = {
-    "check_function"        : check_fast_lta_silent_cubes_status,
-    "inventory_function"    : inventory_fast_lta_silent_cubes_status,
-    "service_description"   : "Fast LTA SC Capacity %s",
-    "has_perfdata"          : True,
-    "group"                 : "filesystem",
-    "includes"              : [ "size_trend.include", "df.include" ],
-    "snmp_info"             : (".1.3.6.1.4.1.27417.3", [2, # scTotalCapacity
-                                                        3] # scTotalUsedCapacity
-                              ),
-    "snmp_scan_function"    : lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.8072.3.2.10"),
-}
 
+check_info["fast_lta_silent_cubes.capacity"] = {
+    "check_function": check_fast_lta_silent_cubes_status,
+    "inventory_function": inventory_fast_lta_silent_cubes_status,
+    "service_description": "Fast LTA SC Capacity %s",
+    "has_perfdata": True,
+    "group": "filesystem",
+    "includes": ["size_trend.include", "df.include"],
+    "snmp_info": (
+        ".1.3.6.1.4.1.27417.3",
+        [
+            2,  # scTotalCapacity
+            3
+        ]  # scTotalUsedCapacity
+    ),
+    "snmp_scan_function":
+        lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.8072.3.2.10"),
+}

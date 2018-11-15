@@ -9,7 +9,7 @@ PATCHES  := $(wildcard patches/*.dif)
 MODULES =
 
 # Modules needed because of own packed python (would be available in OS)
-MODULES += setuptools-40.4.3.zip  # needed by rrdtool bindings
+MODULES += setuptools-40.6.2.zip  # needed by rrdtool bindings
 MODULES += setuptools_scm-3.1.0.tar.gz
 
 # Modules really needed on all platforms

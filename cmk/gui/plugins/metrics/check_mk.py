@@ -8711,6 +8711,12 @@ check_metrics["check_mk-fortigate_sessions_base"] = {
     },
 }
 
+check_metrics["check_mk-cisco_asa_svcsessions"] = {
+    "active": {
+        "name": "active_sessions"
+    },
+}
+
 #.
 #   .--Perf-O-Meters-------------------------------------------------------.
 #   |  ____            __        ___        __  __      _                  |
@@ -8751,6 +8757,13 @@ perfometer_info.append({
         "half_value": 4,
         "exponent": 2,
     }],
+})
+
+perfometer_info.append({
+    "type": "logarithmic",
+    "metric": "active_sessions",
+    "half_value": 50.0,
+    "exponent": 2,
 })
 
 perfometer_info.append({

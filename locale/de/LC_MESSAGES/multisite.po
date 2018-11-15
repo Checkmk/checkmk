@@ -2646,6 +2646,9 @@ msgstr "Active Directory Replikation (Windows)"
 msgid "Active ICMP Sessions"
 msgstr "Aktive ICMP-Sitzungen"
 
+msgid "Active IPsec sessions"
+msgstr "Aktive IPsec-Sitzungen"
+
 msgid "Active Power"
 msgstr "Aktive Leistung"
 
@@ -2654,6 +2657,9 @@ msgstr "Aktive SSL-Proxy-Sitzungen"
 
 msgid "Active Sessions"
 msgstr "Aktive Sitzungen"
+
+msgid "Active SVC sessions"
+msgstr "Aktive SVC-Sitzungen"
 
 msgid "Active Spot Fleet Requests"
 msgstr "Aktive Spot-Fleet-Anfragen"
@@ -2678,6 +2684,9 @@ msgstr "Aktive VPN-Benutzer"
 
 msgid "Active VPN Web Sessions"
 msgstr "Aktive VPN-Web-Sitzungen"
+
+msgid "Active WebVPN sessions"
+msgstr "Aktive WebVPN-Sitzungen"
 
 msgid "Active and Inactive Memory"
 msgstr "Aktiver und inaktiver Speicher"
@@ -29280,7 +29289,7 @@ msgid "Number of active paths"
 msgstr "Anzahl von aktiven Pfaden"
 
 msgid "Number of active sessions"
-msgstr "Anzahl von aktiven Sitzungen"
+msgstr "Anzahl aktiver Sitzungen"
 
 #, python-format
 msgid "Number of agents that have registered for updates: %d"

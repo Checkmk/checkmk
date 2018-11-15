@@ -4,7 +4,7 @@ Component: checks
 Compatible: compat
 Edition: cre
 Version: 1.6.0i1
-Date: 1524489614
+Date: 1542268251
 Class: feature
 
 With this patch in the plugin nfsexports.solaris the support for ZFS is

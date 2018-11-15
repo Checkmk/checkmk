@@ -731,7 +731,7 @@ class ConfigDomainCACertificates(ConfigDomain):
     def _get_certificates_from_file(self, path):
         try:
             return [match.group(0) for match in self._PEM_RE.finditer(open("%s" % path).read())]
-        except IOError, e:
+        except IOError as e:
             if e.errno == 2:  # No such file or directory
                 # Silently ignore e.g. dangling symlinks
                 return []
@@ -828,7 +828,7 @@ class ConfigDomainOMD(ConfigDomain):
                 val = value.strip().strip("'")
 
                 settings[key] = val
-        except Exception, e:
+        except Exception as e:
             raise MKGeneralException(_("Cannot read configuration file %s: %s") % (path, e))
 
         return settings
@@ -974,7 +974,7 @@ class WithPermissions(object):
         try:
             self._user_needs_permission(how)
             return False
-        except MKAuthException, e:
+        except MKAuthException as e:
             return HTML("%s" % e)
 
     def need_permission(self, how):
@@ -1305,7 +1305,7 @@ class CREFolder(BaseFolder):
         if html.has_var("folder"):
             try:
                 folder = Folder.folder(html.var("folder"))
-            except MKGeneralException, e:
+            except MKGeneralException as e:
                 raise MKUserError("folder", "%s" % e)
         else:
             host_name = html.var("host")
@@ -2702,7 +2702,7 @@ class SearchFolder(BaseFolder):
         for folder, these_host_names in self._group_hostnames_by_folder(host_names):
             try:
                 folder.delete_hosts(these_host_names)
-            except MKAuthException, e:
+            except MKAuthException as e:
                 auth_errors.append(
                     _("<li>Cannot delete hosts in folder %s: %s</li>") % (folder.alias_path(), e))
         self._invalidate_search()
@@ -2716,7 +2716,7 @@ class SearchFolder(BaseFolder):
             try:
                 # FIXME: this is not transaction safe, might get partially finished...
                 folder.move_hosts(host_names1, target_folder)
-            except MKAuthException, e:
+            except MKAuthException as e:
                 auth_errors.append(
                     _("<li>Cannot move hosts from folder %s: %s</li>") % (folder.alias_path(), e))
         self._invalidate_search()
@@ -2912,7 +2912,7 @@ class CREHost(WithPermissionsAndAttributes):
             for hook_function in hooks.get('validate-host'):
                 try:
                     hook_function(self)
-                except MKUserError, e:
+                except MKUserError as e:
                     errors.append("%s" % e)
             return errors
         return []
@@ -4205,12 +4205,12 @@ class ConfigDomainLiveproxy(ConfigDomain):
             try:
                 pid = int(file(pidfile).read().strip())
                 os.kill(pid, 10)
-            except IOError, e:
+            except IOError as e:
                 if e.errno == 2:  # No such file or directory
                     pass
                 else:
                     raise
-        except Exception, e:
+        except Exception as e:
             logger.exception()
             html.show_warning(
                 _("Could not reload Livestatus Proxy: %s. See web.log "
@@ -4720,7 +4720,7 @@ def save_site_replication_status(site_id, repl_status):
 def cleanup_legacy_replication_status():
     try:
         os.unlink(var_dir + "replication_status.mk")
-    except OSError, e:
+    except OSError as e:
         if e.errno == 2:
             pass  # Not existant -> OK
         else:
@@ -4730,7 +4730,7 @@ def cleanup_legacy_replication_status():
 def clear_site_replication_status(site_id):
     try:
         os.unlink(site_replication_status_path(site_id))
-    except OSError, e:
+    except OSError as e:
         if e.errno == 2:
             pass  # Not existant -> OK
         else:
@@ -4933,7 +4933,7 @@ class ActivateChanges(object):
             for entry in open(path).read().split("\0"):
                 if entry:
                     changes.append(ast.literal_eval(entry))
-        except IOError, e:
+        except IOError as e:
             if e.errno == 2:  # No such file or directory
                 pass
             else:
@@ -4948,7 +4948,7 @@ class ActivateChanges(object):
     def confirm_site_changes(self, site_id):
         try:
             os.unlink(site_changes_path(site_id))
-        except OSError, e:
+        except OSError as e:
             if e.errno == 2:
                 pass  # Not existant -> OK
             else:
@@ -4975,7 +4975,7 @@ class ActivateChanges(object):
 
             os.chmod(path, 0660)
 
-        except Exception, e:
+        except Exception as e:
             raise MKGeneralException(_("Cannot write file \"%s\": %s") % (path, e))
 
         finally:
@@ -5272,7 +5272,7 @@ class ActivateChangesManager(ActivateChanges):
             try:
                 os.kill(site_state["_pid"], 0)
                 return True  # -> running
-            except OSError, e:
+            except OSError as e:
                 # 3: not running
                 # 1: operation not permitted (another process reused this)
                 if e.errno in [3, 1]:
@@ -5305,7 +5305,7 @@ class ActivateChangesManager(ActivateChanges):
     def _save_activation(self):
         try:
             os.makedirs(os.path.dirname(self._info_path()))
-        except OSError, e:
+        except OSError as e:
             if e.errno == 17:  # File exists
                 pass
             else:
@@ -5327,7 +5327,7 @@ class ActivateChangesManager(ActivateChanges):
     def _pre_activate_changes(self):
         try:
             call_hook_pre_distribute_changes()
-        except Exception, e:
+        except Exception as e:
             logger.exception()
             if config.debug:
                 raise
@@ -5459,7 +5459,7 @@ class ActivateChangesManager(ActivateChanges):
     def create_site_globals_file(self, site_id, tmp_dir, sites=None):
         try:
             os.makedirs(tmp_dir)
-        except OSError, e:
+        except OSError as e:
             if e.errno == 17:  # File exists
                 pass
             else:
@@ -5656,7 +5656,7 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
         for x in range(3, 256):
             try:
                 os.close(x)
-            except OSError, e:
+            except OSError as e:
                 if e.errno == 9:  # Bad file descriptor
                     pass
                 else:
@@ -5688,7 +5688,7 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
                 self._confirm_activated_changes()
 
             self._set_done_result(configuration_warnings)
-        except Exception, e:
+        except Exception as e:
             logger.exception()
             self._set_result(PHASE_DONE, _("Failed"), _("Failed: %s") % e, state=STATE_ERROR)
 
@@ -5826,7 +5826,7 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
     def _cleanup_snapshot(self):
         try:
             os.unlink(self._snapshot_file)
-        except OSError, e:
+        except OSError as e:
             if e.errno == 2:
                 pass  # Not existant -> OK
             else:
@@ -5855,7 +5855,7 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
                     ("domains", repr(domains)),
                     ("site_id", self._site_id),
                 ])
-        except MKAutomationException, e:
+        except MKAutomationException as e:
             if "Invalid automation command: activate-changes" in "%s" % e:
                 return self._call_legacy_activate_changes_automation()
             else:
@@ -6333,7 +6333,7 @@ def get_snapshot_status(snapshot, validate_checksums=False, check_correct_core=T
         if validate_checksums:
             check_checksums()
 
-    except Exception, e:
+    except Exception as e:
         if config.debug:
             status["broken_text"] = traceback.format_exc()
             status["broken"] = True
@@ -7168,7 +7168,7 @@ def check_mk_local_automation(command, args=None, indata="", stdin_data=None, ti
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
             close_fds=True)
-    except Exception, e:
+    except Exception as e:
         raise MKGeneralException("Cannot execute <tt>%s</tt>: %s" % (" ".join(cmd), e))
 
     if stdin_data is not None:
@@ -7199,7 +7199,7 @@ def check_mk_local_automation(command, args=None, indata="", stdin_data=None, ti
 
     try:
         return ast.literal_eval(outdata)
-    except Exception, e:
+    except Exception as e:
         raise MKGeneralException(
             "Error running <tt>%s</tt>. Invalid output from webservice (%s): <pre>%s</pre>" %
             (" ".join(cmd), e, outdata))
@@ -8531,7 +8531,7 @@ class Rule(object):
         if self.ruleset.valuespec():
             try:
                 value_text = "%s" % self.ruleset.valuespec().value_to_text(self.value)
-            except Exception, e:
+            except Exception as e:
                 logger.exception()
                 html.show_warning(
                     _("Failed to search rule of ruleset '%s' in folder '%s' (%s): %s") %
@@ -10251,7 +10251,7 @@ def validate_all_hosts(hostnames, force_all=False):
             for hk in hooks.get('validate-all-hosts'):
                 try:
                     hk(eff, all_hosts)
-                except MKUserError, e:
+                except MKUserError as e:
                     errors.append("%s" % e)
             hosts_errors[name] = errors
         return hosts_errors
@@ -10297,7 +10297,7 @@ def git_command(args):
             cwd=cmk.paths.default_config_dir,
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT)
-    except OSError, e:
+    except OSError as e:
         if e.errno == 2:
             raise MKGeneralException(
                 _("Error executing GIT command <tt>%s</tt>:<br><br>%s") %
@@ -10364,7 +10364,7 @@ def git_has_pending_changes():
         return subprocess.Popen(["git", "status", "--porcelain"],
                                 cwd=cmk.paths.default_config_dir,
                                 stdout=subprocess.PIPE).stdout.read() != ""
-    except OSError, e:
+    except OSError as e:
         if e.errno == 2:
             return False  # ignore missing git command
         else:

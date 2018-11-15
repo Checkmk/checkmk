@@ -160,7 +160,7 @@ def include(filename):
     # Absence.
     try:
         execfile(filename, globals(), globals())
-    except Exception, e:
+    except Exception as e:
         raise MKConfigError(_("Cannot read configuration file %s: %s:") % (filename, e))
 
 
@@ -601,7 +601,7 @@ class LoggedInUser(object):
 
         try:
             return os.stat(self.confdir + "/" + name + ".mk").st_mtime
-        except OSError, e:
+        except OSError as e:
             if e.errno == errno.ENOENT:
                 return 0
             else:

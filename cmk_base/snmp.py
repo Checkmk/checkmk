@@ -721,7 +721,7 @@ def do_snmptranslate(walk_filename):
             for idx, line in enumerate(result):
                 result_lines.append((line.strip(), lines[idx].strip()))
 
-        except Exception, e:
+        except Exception as e:
             console.error("%s\n" % e)
 
         return result_lines
@@ -766,7 +766,7 @@ def do_snmpwalk(options, hostnames):
         }
         try:
             do_snmpwalk_on(options, access_data, cmk.paths.snmpwalks_dir + "/" + hostname)
-        except Exception, e:
+        except Exception as e:
             console.error("Error walking %s: %s\n" % (hostname, e))
             if cmk.debug.enabled():
                 raise
@@ -793,7 +793,7 @@ def _execute_walks_for_dump(hostname, access_data, oids_to_walk):
         try:
             console.verbose("Walk on \"%s\"..." % oid)
             yield walk_for_export(access_data, oid)
-        except Exception, e:
+        except Exception as e:
             console.error("Error: %s\n" % e)
             if cmk.debug.enabled():
                 raise

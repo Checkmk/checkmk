@@ -272,7 +272,7 @@ class LDAPUserConnector(UserConnector):
             self._default_bind(conn)
             return conn, None
 
-        except (ldap.SERVER_DOWN, ldap.TIMEOUT, ldap.LOCAL_ERROR, ldap.LDAPError), e:
+        except (ldap.SERVER_DOWN, ldap.TIMEOUT, ldap.LOCAL_ERROR, ldap.LDAPError) as e:
             self.clear_nearest_dc_cache()
             if isinstance(e[0], dict):
                 msg = e[0].get('info', e[0].get('desc', ''))
@@ -281,7 +281,7 @@ class LDAPUserConnector(UserConnector):
 
             return None, "%s: %s" % (uri, msg)
 
-        except MKLDAPException, e:
+        except MKLDAPException as e:
             self.clear_nearest_dc_cache()
             return None, "%s" % e
 
@@ -402,7 +402,7 @@ class LDAPUserConnector(UserConnector):
     def clear_all_ldap_caches(cls):
         try:
             shutil.rmtree(cls._ldap_caches_filepath())
-        except OSError, e:
+        except OSError as e:
             if e.errno != 2:
                 raise
 
@@ -430,7 +430,7 @@ class LDAPUserConnector(UserConnector):
         try:
             conn.simple_bind_s(user_dn.encode("utf-8"), password)
             self._logger.info('  SUCCESS')
-        except ldap.LDAPError, e:
+        except ldap.LDAPError as e:
             self._logger.info('  FAILED (%s: %s)' % (e.__class__.__name__, e))
             if catch:
                 raise MKLDAPException(_('Unable to authenticate with LDAP (%s)') % e)
@@ -604,11 +604,11 @@ class LDAPUserConnector(UserConnector):
                             new_obj[key.decode('utf-8').lower()] = [i.decode('utf-8') for i in val]
                         result.append((dn.decode('utf-8').lower(), new_obj))
                     success = True
-                except ldap.NO_SUCH_OBJECT, e:
+                except ldap.NO_SUCH_OBJECT as e:
                     raise MKLDAPException(
                         _('The given base object "%s" does not exist in LDAP (%s))') % (base, e))
 
-                except ldap.FILTER_ERROR, e:
+                except ldap.FILTER_ERROR as e:
                     raise MKLDAPException(
                         _('The given ldap filter "%s" is invalid (%s)') % (filt, e))
 
@@ -618,7 +618,7 @@ class LDAPUserConnector(UserConnector):
                           'a sizelimit configuration on the LDAP server.<br />Throwing away the '
                           'incomplete results. You should change the scope of operation '
                           'within the ldap or adapt the limit settings of the LDAP server.'))
-            except (ldap.SERVER_DOWN, ldap.TIMEOUT, MKLDAPException), e:
+            except (ldap.SERVER_DOWN, ldap.TIMEOUT, MKLDAPException) as e:
                 self.clear_nearest_dc_cache()
 
                 last_exc = e
@@ -2587,7 +2587,7 @@ def synchronize_profile_to_sites(logger, user_id, profile):
         else:
             try:
                 result = watolib.push_user_profile_to_site(site, user_id, profile)
-            except Exception, e:
+            except Exception as e:
                 result = "%s" % e
 
         if result == True:

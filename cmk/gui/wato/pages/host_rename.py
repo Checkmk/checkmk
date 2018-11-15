@@ -156,7 +156,7 @@ class ModeBulkRenameHost(WatoMode):
 
             try:
                 host_renaming_job.start()
-            except background_job.BackgroundJobAlreadyRunning, e:
+            except background_job.BackgroundJobAlreadyRunning as e:
                 raise MKGeneralException(_("Another host renaming job is already running: %s") % e)
 
             html.response.http_redirect(host_renaming_job.detail_url())
@@ -401,7 +401,7 @@ class ModeRenameHost(WatoMode):
 
             try:
                 host_renaming_job.start()
-            except background_job.BackgroundJobAlreadyRunning, e:
+            except background_job.BackgroundJobAlreadyRunning as e:
                 raise MKGeneralException(_("Another host renaming job is already running: %s") % e)
 
             html.response.http_redirect(host_renaming_job.detail_url())
@@ -672,7 +672,7 @@ def rename_hosts(renamings, job_interface=None):
             this_host_actions += rename_host_in_bi(oldname, newname)
             actions += this_host_actions
             successful_renamings.append((folder, oldname, newname))
-        except MKAuthException, e:
+        except MKAuthException as e:
             auth_problems.append((oldname, e))
 
     # 2. Check_MK stuff ------------------------------------------------

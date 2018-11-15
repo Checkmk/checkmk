@@ -464,7 +464,7 @@ class SidebarRenderer(object):
                 refresh_url = url
                 html.javascript(
                     "get_url(\"%s\", updateContents, \"snapin_%s\")" % (refresh_url, name))
-        except Exception, e:
+        except Exception as e:
             logger.exception()
             write_snapin_exception(e)
         html.close_div()
@@ -616,7 +616,7 @@ def ajax_snapin():
         with html.plugged():
             try:
                 snapin_instance.show()
-            except Exception, e:
+            except Exception as e:
                 write_snapin_exception(e)
                 e_message = _("Exception during snapin refresh (snapin \'%s\')"
                              ) % snapin_instance.type_name()

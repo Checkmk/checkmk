@@ -393,10 +393,10 @@ def page_host_inv_api():
 
         response = {"result_code": 0, "result": result}
 
-    except MKException, e:
+    except MKException as e:
         response = {"result_code": 1, "result": "%s" % e}
 
-    except Exception, e:
+    except Exception as e:
         if config.debug:
             raise
         response = {"result_code": 1, "result": "%s" % e}

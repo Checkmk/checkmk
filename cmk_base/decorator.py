@@ -62,11 +62,11 @@ def handle_check_mk_check_result(check_plugin_name, description):
                     infotexts.append("Timed out")
                     status = max(status, exit_spec.get("timeout", 2))
 
-            except (MKAgentError, MKSNMPError, MKIPAddressLookupError), e:
+            except (MKAgentError, MKSNMPError, MKIPAddressLookupError) as e:
                 infotexts.append("%s" % e)
                 status = exit_spec.get("connection", 2)
 
-            except MKGeneralException, e:
+            except MKGeneralException as e:
                 infotexts.append("%s" % e)
                 status = max(status, exit_spec.get("exception", 3))
 

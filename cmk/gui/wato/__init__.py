@@ -485,11 +485,11 @@ def page_handler():
                             pname = "wato." + pname
                         config.user.need_permission(pname)
 
-        except MKUserError, e:
+        except MKUserError as e:
             action_message = "%s" % e
             html.add_user_error(e.varname, action_message)
 
-        except MKAuthException, e:
+        except MKAuthException as e:
             action_message = e.reason
             html.add_user_error(None, e.reason)
 
@@ -799,7 +799,7 @@ def execute_network_scan_job():
             "state": True,
             "output": _("The network scan found %d new hosts.") % len(found),
         })
-    except Exception, e:
+    except Exception as e:
         result.update({
             "state": False,
             "output": _("An exception occured: %s") % e,

@@ -292,7 +292,7 @@ def page_view():
             show_buttons=False,
             show_footer=False,
             render_function=render_view)
-    except Exception, e:
+    except Exception as e:
         if config.debug:
             raise
         html.write("ERROR showing view: %s" % html.attrencode(e))
@@ -338,7 +338,7 @@ def render_view(view, rows, datasource, group_painters, painters, show_heading, 
             if html.has_var("_do_actions"):
                 try:
                     show_commands = do_commands(view, datasource["infos"][0], rows)
-                except MKUserError, e:
+                except MKUserError as e:
                     html.show_error(e)
                     html.add_user_error(e.varname, e)
                     show_commands = True
@@ -361,7 +361,7 @@ def render_view(view, rows, datasource, group_painters, painters, show_heading, 
                 cmk.gui.view_utils.check_limit(rows, views.get_limit(), config.user)
                 layout["render"](rows, view, group_painters, painters, num_columns,
                                  show_checkboxes and not html.do_actions())
-            except Exception, e:
+            except Exception as e:
                 html.write(_("Error showing view: %s") % e)
         html.close_div()
         jqm_page_navfooter(navbar, 'data', page_id)

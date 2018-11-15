@@ -438,7 +438,7 @@ for filename in os.listdir("."):
         }
         execfile(filename, globals(), file_vars)
         all_file_vars[filename] = file_vars
-    except Exception, e:
+    except Exception as e:
         print "Error parsing file %s: %s" % (filename, e)
 print ""
 

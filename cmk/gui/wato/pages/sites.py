@@ -568,14 +568,14 @@ class ModeDistributedMonitoring(ModeSites):
                 watolib.log_audit(None, "edit-site", message)
                 return None, message
 
-            except watolib.MKAutomationException, e:
+            except watolib.MKAutomationException as e:
                 error = _("Cannot connect to remote site: %s") % e
 
-            except MKUserError, e:
+            except MKUserError as e:
                 html.add_user_error(e.varname, e)
                 error = "%s" % e
 
-            except Exception, e:
+            except Exception as e:
                 logger.exception()
                 if config.debug:
                     raise

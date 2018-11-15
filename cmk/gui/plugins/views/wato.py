@@ -55,7 +55,7 @@ def get_wato_folder(row, how, with_links=True):
         # hierarchy added to the GUI.
         # Display the raw path rather than the exception text.
         title_path = wato_path.split("/")
-    except Exception, e:
+    except Exception as e:
         return "%s" % e
 
     if how == "plain":

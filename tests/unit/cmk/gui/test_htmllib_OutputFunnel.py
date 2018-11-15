@@ -105,7 +105,7 @@ def test_output_funnel_context_raise(html):
             html.write("B")
             assert html.plug_text == [['B']]
             raise Exception("Test exception")
-    except Exception, e:
+    except Exception as e:
         assert "%s" % e == "Test exception"
     finally:
         assert not html.is_plugged()
@@ -117,12 +117,12 @@ def test_output_funnel_try_finally(html):
         try:
             html.write("try2\n")
             raise Exception("Error")
-        except Exception, e:
+        except Exception as e:
             html.write("except2\n")
             raise
         finally:
             html.write("finally2\n")
-    except Exception, e:
+    except Exception as e:
         html.write("except1\n")
         html.write("%s\n" % e)
     finally:

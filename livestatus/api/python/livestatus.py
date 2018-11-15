@@ -303,7 +303,7 @@ class BaseConnection:
                     self.socket.settimeout(float(sleep_interval))
                 self.socket.connect(target)
                 break
-            except Exception, e:
+            except Exception as e:
                 if self.timeout:
                     time_left = self.timeout - (time.time() - before)
                     # only try again, if there is substantial time left
@@ -370,7 +370,7 @@ class BaseConnection:
             if type(query) == unicode:
                 query = query.encode("utf-8")
             self.socket.send(query)
-        except IOError, e:
+        except IOError as e:
             if self.persist:
                 del persistent_connections[self.socketurl]
                 self.successful_persistence = False
@@ -414,7 +414,7 @@ class BaseConnection:
             else:
                 raise MKLivestatusQueryError("%s: %s" % (code, data.strip()))
 
-        except (MKLivestatusSocketClosed, IOError), e:
+        except (MKLivestatusSocketClosed, IOError) as e:
             # In case of an IO error or the other side having
             # closed the socket do a reconnect and try again
             self.disconnect()
@@ -439,7 +439,7 @@ class BaseConnection:
         except MKLivestatusTableNotFoundError:
             raise
 
-        except Exception, e:
+        except Exception as e:
             # Catches
             # MKLivestatusQueryError
             # MKLivestatusSocketError
@@ -453,7 +453,7 @@ class BaseConnection:
             command += "\n"
         try:
             self.socket.send("COMMAND " + command + "\n")
-        except IOError, e:
+        except IOError as e:
             self.socket = None
             if self.persist:
                 del persistent_connections[self.socketurl]
@@ -564,7 +564,7 @@ class MultiSiteConnection(Helpers):
                 connection.connect()
                 self.connections.append((sitename, site, connection))
 
-            except Exception, e:
+            except Exception as e:
                 self.deadsites[sitename] = {
                     "exception": e,
                     "site": site,
@@ -639,7 +639,7 @@ class MultiSiteConnection(Helpers):
                     if has_been_checked == 0:
                         state = 3
                     status_host_states[(sitename, host)] = (state, lastup)
-            except Exception, e:
+            except Exception as e:
                 raise MKLivestatusConfigError(e)
                 status_host_states[(sitename, host)] = (str(e), None)
         self.set_only_sites()  # clear site filter
@@ -744,7 +744,7 @@ class MultiSiteConnection(Helpers):
                     limit -= len(r)  # Account for portion of limit used by this site
                 result += r
                 stillalive.append((sitename, site, connection))
-            except Exception, e:
+            except Exception as e:
                 connection.disconnect()
                 self.deadsites[sitename] = {
                     "exception": e,
@@ -776,7 +776,7 @@ class MultiSiteConnection(Helpers):
         for sitename, site, connection in connect_to_sites:
             try:
                 connection.send_query(query, add_headers + limit_header)
-            except Exception, e:
+            except Exception as e:
                 self.deadsites[sitename] = {
                     "exception": e,
                     "site": site,
@@ -801,7 +801,7 @@ class MultiSiteConnection(Helpers):
                 stillalive.append((sitename, site, connection))
                 continue
 
-            except Exception, e:
+            except Exception as e:
                 connection.disconnect()
                 self.deadsites[sitename] = {
                     "exception": e,

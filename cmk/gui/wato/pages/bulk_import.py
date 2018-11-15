@@ -153,7 +153,7 @@ class ModeBulkImport(WatoMode):
             try:
                 csv_dialect = csv.Sniffer().sniff(csv_file.read(2048), delimiters=",;\t:")
                 csv_file.seek(0)
-            except csv.Error, e:
+            except csv.Error as e:
                 if "Could not determine delimiter" in str(e):
                     # Failed to detect the CSV files field delimiter character. Using ";" now. If
                     # you need another one, please specify it manually.
@@ -185,7 +185,7 @@ class ModeBulkImport(WatoMode):
                 watolib.Folder.current().create_hosts([(host_name, attributes, None)])
                 selected.append('_c_%s' % host_name)
                 num_succeeded += 1
-            except Exception, e:
+            except Exception as e:
                 fail_messages.append(
                     _("Failed to create a host from line %d: %s") % (self._csv_reader.line_num, e))
                 num_failed += 1

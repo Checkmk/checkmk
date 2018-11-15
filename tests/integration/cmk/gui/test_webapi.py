@@ -281,7 +281,7 @@ def test_edit_group_missing(web, group_type):
             #web.edit_group(group_type, group_id, {"alias": group_alias2}, expect_error = True)
             web.edit_group(
                 group_type, "%s_missing" % group_id, {"alias": group_alias2}, expect_error=True)
-        except APIError, e:
+        except APIError as e:
             assert str(e) != str(None)
             return
 

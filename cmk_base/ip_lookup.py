@@ -134,7 +134,7 @@ def cached_dns_lookup(hostname, family):
         cache[cache_id] = ipa  # Update in-memory-cache
         return ipa
 
-    except Exception, e:
+    except Exception as e:
         # DNS failed. Use cached IP address if present, even if caching
         # is disabled.
         if cached_ip:
@@ -244,7 +244,7 @@ def update_dns_cache():
 
                     console.verbose("%s\n" % ip)
                     updated += 1
-                except Exception, e:
+                except Exception as e:
                     failed.append(hostname)
                     console.verbose("lookup failed: %s\n" % e)
                     if cmk.debug.enabled():

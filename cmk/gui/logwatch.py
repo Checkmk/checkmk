@@ -202,7 +202,7 @@ def show_file(site, host_name, file_name):
 
     try:
         log_chunks = parse_file(site, host_name, int_filename, hide)
-    except Exception, e:
+    except Exception as e:
         if config.debug:
             raise
         html.end_context_buttons()
@@ -336,7 +336,7 @@ def do_log_ack(site, host_name, file_name):
     for this_site, this_host, int_filename, display_name in logs_to_ack:
         try:
             acknowledge_logfile(this_site, this_host, int_filename, display_name)
-        except Exception, e:
+        except Exception as e:
             html.show_error(_('The log file <tt>%s</tt> of host <tt>%s</tt> could not be deleted: %s.') % \
                                       (display_name, this_host, e))
             html.footer()
@@ -438,7 +438,7 @@ def parse_file(site, host_name, file_name, hidecontext=False):
                     continue  # ignore this line
 
                 log_lines.append({'level': line_level, 'class': line_class, 'line': line_display})
-    except Exception, e:
+    except Exception as e:
         if config.debug:
             raise
         raise MKGeneralException(

@@ -98,7 +98,7 @@ def load_mk_file(path, default=None, lock=False):
         try:
             execfile(path, globals(), default)
             return default
-        except IOError, e:
+        except IOError as e:
             if e.errno == 2:  # IOError: [Errno 2] No such file or directory
                 return default
             else:
@@ -106,7 +106,7 @@ def load_mk_file(path, default=None, lock=False):
 
     except MKTimeout:
         raise
-    except Exception, e:
+    except Exception as e:
         # TODO: How to handle debug mode or logging?
         raise MKGeneralException(_("Cannot read configuration file \"%s\": %s") % (path, e))
 
@@ -139,7 +139,7 @@ def load_data_from_file(path, default=None, lock=False):
                 return default
 
             return ast.literal_eval(content)
-        except IOError, e:
+        except IOError as e:
             if e.errno == 2:  # IOError: [Errno 2] No such file or directory
                 return default
 
@@ -147,7 +147,7 @@ def load_data_from_file(path, default=None, lock=False):
 
     except MKTimeout:
         raise
-    except Exception, e:
+    except Exception as e:
         if lock:
             release_lock(path)
 
@@ -221,12 +221,12 @@ def save_file(path, content, mode=0660):
 
     except MKTimeout:
         raise
-    except Exception, e:
+    except Exception as e:
         # In case an exception happens during saving cleanup the tempfile created for writing
         try:
             if tmp_path:
                 os.unlink(tmp_path)
-        except IOError, e:
+        except IOError as e:
             if e.errno == 2:  # No such file or directory
                 pass
             else:
@@ -302,7 +302,7 @@ def try_aquire_lock(path):
     try:
         aquire_lock(path, blocking=False)
         return True
-    except IOError, e:
+    except IOError as e:
         if e.errno == 11:  # Resource temporarily unavailable
             return False
         else:

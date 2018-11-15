@@ -2369,7 +2369,7 @@ class ModeEventConsoleMIBs(EventConsoleMode):
                 try:
                     msg = self._upload_mib(filename, mimetype, content)
                     return None, msg
-                except Exception, e:
+                except Exception as e:
                     if config.debug:
                         raise
                     else:
@@ -2417,7 +2417,7 @@ class ModeEventConsoleMIBs(EventConsoleMode):
                 mib_obj = zip_obj.open(mib_file_name)
                 messages.append(self._process_uploaded_mib_file(mib_file_name, mib_obj.read()))
                 success += 1
-            except Exception, e:
+            except Exception as e:
                 messages.append(_("Skipped %s: %s") % (html.render_text(mib_file_name), e))
                 fail += 1
 
@@ -2454,7 +2454,7 @@ class ModeEventConsoleMIBs(EventConsoleMode):
 
             defaultMibPackages = PySnmpCodeGen.defaultMibPackages
             baseMibs = PySnmpCodeGen.baseMibs
-        except ImportError, e:
+        except ImportError as e:
             raise Exception(_('You are missing the needed pysmi python module (%s).') % e)
 
         store.mkdir(cmk.gui.mkeventd.compiled_mibs_dir)
@@ -2509,7 +2509,7 @@ class ModeEventConsoleMIBs(EventConsoleMode):
                 msg += '<br>\n'.join(errors)
             return msg
 
-        except PySmiError, e:
+        except PySmiError as e:
             if config.debug:
                 raise e
             raise Exception(_('Failed to process your MIB file (%s): %s') % (mibname, e))
@@ -2619,7 +2619,7 @@ class ModeEventConsoleMIBs(EventConsoleMode):
         found = {}
         try:
             file_names = os.listdir(path)
-        except OSError, e:
+        except OSError as e:
             if e.errno == 2:  # not existing directories are ok
                 return found
             else:

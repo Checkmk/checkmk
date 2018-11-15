@@ -147,7 +147,7 @@ def page_notify():
             msg = vs_notify.from_html_vars("_notify")
             vs_notify.validate_value(msg, "_notify")
             _process_notify_message(msg)
-        except MKUserError, e:
+        except MKUserError as e:
             html.user_error(e)
 
     html.begin_form("notify", method="POST")
@@ -266,7 +266,7 @@ def _process_notify_message(msg):
                 handler = notify_methods[method]['handler']
                 handler(user_id, msg)
                 num_success[method] = num_success[method] + 1
-            except MKInternalError, e:
+            except MKInternalError as e:
                 errors.setdefault(method, []).append((user_id, e))
 
     message = _('The notification has been sent via<br>')
@@ -374,7 +374,7 @@ def notify_mail(user_id, msg):
             stderr=subprocess.STDOUT,
             stdin=subprocess.PIPE,
             close_fds=True)
-    except OSError, e:
+    except OSError as e:
         raise MKInternalError(
             _('Mail could not be delivered. '
               'Failed to execute command "%s": %s') % (" ".join(command), e))

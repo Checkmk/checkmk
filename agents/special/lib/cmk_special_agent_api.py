@@ -52,7 +52,7 @@ USAGE: agent_%s --section_url [{section_name},{url}]
 
         try:
             opts, args = getopt.getopt(sys.argv[1:], short_options, long_options)
-        except getopt.GetoptError, err:
+        except getopt.GetoptError as err:
             sys.stderr.write("%s\n" % err)
             sys.exit(1)
 

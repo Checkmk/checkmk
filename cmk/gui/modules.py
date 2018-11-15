@@ -152,7 +152,7 @@ def _find_local_web_plugins():
 
     try:
         plugin_dirs = os.listdir(basedir)
-    except OSError, e:
+    except OSError as e:
         if e.errno == 2:
             return
         else:

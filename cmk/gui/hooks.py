@@ -79,7 +79,7 @@ def call(name, *args):
         n += 1
         try:
             hk(*args)
-        except Exception, e:
+        except Exception as e:
             if config.debug:
                 txt = StringIO.StringIO()
                 t, v, tb = sys.exc_info()

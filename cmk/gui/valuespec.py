@@ -635,7 +635,7 @@ class RegExp(TextAscii):
         # Check if the string is a valid regex
         try:
             compiled = re.compile(value)
-        except sre_constants.error, e:
+        except sre_constants.error as e:
             raise MKUserError(varprefix, _('Invalid regular expression: %s') % e)
 
         if compiled.groups < self._mingroups:
@@ -708,7 +708,7 @@ class IPNetwork(TextAscii):
 
         try:
             self._ip_class()(value.decode("utf-8"))
-        except ValueError, e:
+        except ValueError as e:
             raise MKUserError(varprefix, _("Invalid address: %s") % e)
 
 
@@ -764,7 +764,7 @@ class TextAsciiAutocomplete(TextAscii):
 
         try:
             params = json.loads(raw_params)
-        except ValueError, e:  # Python 3: json.JSONDecodeError
+        except ValueError as e:  # Python 3: json.JSONDecodeError
             raise MKUserError("params", _("Invalid parameters: %s") % e)
 
         value = html.var("value")
@@ -2358,7 +2358,7 @@ class DualListChoice(ListChoice):
     def validate_value(self, value, varprefix):
         try:
             ListChoice.validate_value(self, value, varprefix)
-        except MKUserError, e:
+        except MKUserError as e:
             raise MKUserError(e.varname + "_selected", e.message)
 
     def from_html_vars(self, varprefix):
@@ -3730,7 +3730,7 @@ class Dictionary(ValueSpec):
                 vp = varprefix + "_p_" + param
                 try:
                     vs.validate_datatype(value[param], vp)
-                except MKUserError, e:
+                except MKUserError as e:
                     raise MKUserError(e.varname, _("%s: %s") % (vs.title(), e))
             elif not self._optional_keys or param in self._required_keys:
                 raise MKUserError(varprefix, _("The entry %s is missing") % vs.title())
@@ -4261,7 +4261,7 @@ class IconSelector(ValueSpec):
                     # extract the category from the meta data
                     try:
                         im = Image.open(file_path)
-                    except IOError, e:
+                    except IOError as e:
                         if "%s" % e == "cannot identify image file":
                             continue  # Silently skip invalid files
                         else:

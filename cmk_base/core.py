@@ -87,7 +87,7 @@ def do_restart(core, only_reload=False):
 
         try:
             core_config.do_create_config(core, with_agents=True)
-        except Exception, e:
+        except Exception as e:
             # TODO: Replace by MKBailOut()/MKTerminate()?
             console.error("Error creating configuration: %s\n" % e)
             if backup_path:
@@ -118,7 +118,7 @@ def do_restart(core, only_reload=False):
                 os.remove(cmk.paths.nagios_objects_file)
             sys.exit(1)
 
-    except Exception, e:
+    except Exception as e:
         try:
             if backup_path and os.path.exists(backup_path):
                 os.remove(backup_path)

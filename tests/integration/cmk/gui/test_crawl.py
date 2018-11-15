@@ -69,7 +69,7 @@ class Worker(threading.Thread):
                     self.idle = False
                     try:
                         self.visit_url(url)
-                    except Exception, e:
+                    except Exception as e:
                         self.error(url, "Failed to visit: %s\n%s" %
                                      (e, traceback.format_exc()))
                     self.crawler.todo.task_done()
@@ -95,7 +95,7 @@ class Worker(threading.Thread):
         try:
             #print "FETCH", url.url_without_host()
             response = self.client.get(url.url_without_host())
-        except AssertionError, e:
+        except AssertionError as e:
             if "This view can only be used in mobile mode" in "%s" % e:
                 print "Skipping mobile mode view checking"
                 return
@@ -207,7 +207,7 @@ class Worker(threading.Thread):
 
             try:
                 self.verify_is_valid_url(url)
-            except InvalidUrl, e:
+            except InvalidUrl as e:
                 #print self.name, "skip invalid", url, e
                 self.crawler.skipped.add(url)
                 continue
@@ -330,7 +330,7 @@ class TestCrawler(object):
     def load_stats(self):
         try:
             self.stats = eval(file(self.stats_file()).read())
-        except IOError, e:
+        except IOError as e:
             if e.errno == 2:
                 pass # Not existing files are OK
             else:

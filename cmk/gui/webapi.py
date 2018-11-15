@@ -145,14 +145,14 @@ def page_api():
         action_response = api_actions[action]["handler"](request_object)
         response = {"result_code": 0, "result": action_response}
 
-    except MKAuthException, e:
+    except MKAuthException as e:
         response = {
             "result_code": 1,
             "result": _("Authorization Error. Insufficent permissions for '%s'") % e
         }
-    except MKException, e:
+    except MKException as e:
         response = {"result_code": 1, "result": _("Check_MK exception: %s") % e}
-    except Exception, e:
+    except Exception as e:
         if config.debug:
             raise
         logger.exception()

@@ -103,10 +103,10 @@ class WatoWebApiMode(object):
         try:
             action_response = self.page()
             response = {"result_code": 0, "result": action_response}
-        except MKException, e:
+        except MKException as e:
             response = {"result_code": 1, "result": "%s" % e}
 
-        except Exception, e:
+        except Exception as e:
             if config.debug:
                 raise
             logger.exception()

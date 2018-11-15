@@ -127,7 +127,7 @@ class ModeAutomation(WatoWebApiMode):
         try:
             # Don't use write_text() here (not needed, because no HTML document is rendered)
             html.write(watolib.mk_repr(self._automation_push_profile()))
-        except Exception, e:
+        except Exception as e:
             logger.exception()
             if config.debug:
                 raise
@@ -164,7 +164,7 @@ class ModeAutomation(WatoWebApiMode):
         try:
             # Don't use write_text() here (not needed, because no HTML document is rendered)
             html.write(repr(automation_command().execute()))
-        except Exception, e:
+        except Exception as e:
             logger.exception()
             if config.debug:
                 raise

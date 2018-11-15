@@ -236,7 +236,7 @@ def _load_config(with_conf_d, exclude_parents_mk):
             _new_clusters = set(clusters.keys()).difference(_clusters_before)
 
             set_folder_paths(_new_hosts.union(_new_clusters), _f)
-        except Exception, e:
+        except Exception as e:
             if cmk.debug.enabled():
                 raise
             elif sys.stderr.isatty():
@@ -2337,7 +2337,7 @@ def load_check_includes(check_file_path, check_context):
         except MKTerminate:
             raise
 
-        except Exception, e:
+        except Exception as e:
             console.error("Error in check include file %s: %s\n", include_file_path, e)
             if cmk.debug.enabled():
                 raise
@@ -2814,7 +2814,7 @@ def _get_checkgroup_parameters(host, checktype, item):
 
         # checks with an item need service-specific rules
         return service_extra_conf(host, item, rules)
-    except MKGeneralException, e:
+    except MKGeneralException as e:
         raise MKGeneralException(str(e) + " (on host %s, checktype %s)" % (host, checktype))
 
 

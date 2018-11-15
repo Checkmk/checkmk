@@ -231,7 +231,7 @@ canvas#speedometer {
                       "%.0f%% of the scheduled rate") % \
                       (scheduled_rate, current_rate, percentage)
 
-        except Exception, e:
+        except Exception as e:
             scheduled_rate = 0.0
             program_start = 0
             percentage = 0

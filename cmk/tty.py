@@ -88,7 +88,7 @@ def get_size():
             return lines, columns
     except io.UnsupportedOperation:
         pass  # When sys.stdout is StringIO() or similar, then .fileno() is not available
-    except IOError, e:
+    except IOError as e:
         if e.errno == 25:
             # Inappropriate ioctl for device: Occurs when redirecting output
             pass

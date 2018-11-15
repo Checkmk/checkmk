@@ -95,7 +95,7 @@ class ConfigDomain(object):
                     del settings[varname]
 
             return settings
-        except Exception, e:
+        except Exception as e:
             raise MKGeneralException(_("Cannot read configuration file %s: %s") % (filename, e))
 
     def load_site_globals(self):

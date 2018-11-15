@@ -100,7 +100,7 @@ def render_availability_options(what):
             try:
                 avoptions[name] = vs.from_html_vars("avo_" + name)
                 vs.validate_value(avoptions[name], "avo_" + name)
-            except MKUserError, e:
+            except MKUserError as e:
                 html.add_user_error(e.varname, e)
                 is_open = True
 
@@ -889,7 +889,7 @@ def edit_annotation():
             availability.update_annotations(site_host_svc, value, replace_existing=annotation)
             html.del_var("filled_in")
             return False
-        except MKUserError, e:
+        except MKUserError as e:
             html.user_error(e)
 
     title = _("Edit annotation of ") + hostname

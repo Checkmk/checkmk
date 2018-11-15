@@ -152,7 +152,7 @@ def total_size(o, handlers=None):
 def cachefile_age(path):
     try:
         return time.time() - os.stat(path)[8]
-    except Exception, e:
+    except Exception as e:
         raise MKGeneralException("Cannot determine age of cache file %s: %s" \
                                  % (path, e))
 

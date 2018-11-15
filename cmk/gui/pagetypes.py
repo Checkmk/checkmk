@@ -746,7 +746,7 @@ class Overridable(Base):
                     page_dict["name"] = name
                     cls.add_instance((user, name), cls(page_dict))
 
-            except SyntaxError, e:
+            except SyntaxError as e:
                 raise MKGeneralException(
                     _("Cannot load %s from %s: %s") % (cls.type_name(), path, e))
 
@@ -869,7 +869,7 @@ class Overridable(Base):
                 elif c == False:
                     html.footer()
                     return
-            except MKUserError, e:
+            except MKUserError as e:
                 html.user_error(e)
 
         # Bulk delete

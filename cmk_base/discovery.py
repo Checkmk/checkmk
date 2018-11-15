@@ -118,7 +118,7 @@ def do_discovery(hostnames, check_plugin_names, only_new):
             _do_discovery_for(hostname, ipaddress, sources, multi_host_sections, check_plugin_names,
                               only_new, on_error)
 
-        except Exception, e:
+        except Exception as e:
             if cmk.debug.enabled():
                 raise
             console.section_error("%s" % e)
@@ -287,7 +287,7 @@ def discover_on_host(mode,
     except MKTimeout:
         raise  # let general timeout through
 
-    except Exception, e:
+    except Exception as e:
         if cmk.debug.enabled():
             raise
         err = str(e)
@@ -706,7 +706,7 @@ def _discover_services(hostname, ipaddress, sources, multi_host_sections, on_err
                     discovered_services.append((check_plugin_name, item, paramstring))
             except (KeyboardInterrupt, MKTimeout):
                 raise
-            except Exception, e:
+            except Exception as e:
                 if on_error == "raise":
                     raise
                 elif on_error == "warn":
@@ -759,7 +759,7 @@ def _execute_discovery(multi_host_sections, hostname, ipaddress, check_plugin_na
         try:
             section_content = multi_host_sections.get_section_content(
                 hostname, ipaddress, check_plugin_name, for_discovery=True)
-        except MKParseFunctionError, e:
+        except MKParseFunctionError as e:
             if cmk.debug.enabled() or on_error == "raise":
                 x = e.exc_info()
                 if x[0] == item_state.MKCounterWrapped:
@@ -837,7 +837,7 @@ def _execute_discovery(multi_host_sections, hostname, ipaddress, check_plugin_na
 
             result.append((item, paramstring))
 
-    except Exception, e:
+    except Exception as e:
         if on_error == "warn":
             console.warning(
                 "  Exception in discovery function of check type '%s': %s" % (check_plugin_name, e))
@@ -878,7 +878,7 @@ def _get_node_services(hostname, ipaddress, sources, multi_host_sections, on_err
     for (check_plugin_name, item), (check_source, paramstring) in services.items():
         try:
             descr = config.service_description(hostname, check_plugin_name, item)
-        except Exception, e:
+        except Exception as e:
             if on_error == "raise":
                 raise
             elif on_error == "warn":
@@ -962,7 +962,7 @@ def _merge_manual_services(services, hostname, on_error):
 
         try:
             descr = config.service_description(hostname, check_plugin_name, item)
-        except Exception, e:
+        except Exception as e:
             if on_error == "raise":
                 raise
             elif on_error == "warn":
@@ -1064,7 +1064,7 @@ def get_check_preview(hostname, use_caches, do_snmp_scan, on_error):
 
             try:
                 descr = config.service_description(hostname, check_plugin_name, item)
-            except Exception, e:
+            except Exception as e:
                 if on_error == "raise":
                     raise
                 elif on_error == "warn":
@@ -1082,7 +1082,7 @@ def get_check_preview(hostname, use_caches, do_snmp_scan, on_error):
                 try:
                     section_content = multi_host_sections.get_section_content(
                         hostname, ipaddress, section_name, for_discovery=True)
-                except MKParseFunctionError, e:
+                except MKParseFunctionError as e:
                     if cmk.debug.enabled() or on_error == "raise":
                         x = e.exc_info()
                         # re-raise the original exception to not destory the trace. This may raise a MKCounterWrapped
@@ -1090,7 +1090,7 @@ def get_check_preview(hostname, use_caches, do_snmp_scan, on_error):
                         raise x[0], x[1], x[2]
                     else:
                         raise
-            except Exception, e:
+            except Exception as e:
                 if cmk.debug.enabled():
                     raise
                 exitcode = 3
@@ -1126,9 +1126,9 @@ def get_check_preview(hostname, use_caches, do_snmp_scan, on_error):
                                        section_content),
                         cmk_base.check_utils.is_snmp_check(check_plugin_name))
                     item_state.raise_counter_wrap()
-                except item_state.MKCounterWrapped, e:
+                except item_state.MKCounterWrapped as e:
                     result = (None, "WAITING - Counter based check, cannot be done offline")
-                except Exception, e:
+                except Exception as e:
                     if cmk.debug.enabled():
                         raise
                     result = (

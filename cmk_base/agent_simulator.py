@@ -46,7 +46,7 @@ def process(output):
             simfunc = output[i + 2:e]
             replacement = str(eval("agentsim_" + simfunc))  # nosec
             output = output[:i] + replacement + output[e + 1:]
-    except Exception, e:
+    except Exception as e:
         if cmk.debug.enabled():
             raise
 

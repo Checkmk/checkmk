@@ -223,7 +223,7 @@ class MKBackupJob(object):
     def cleanup(self):
         try:
             os.unlink(self.state_file_path())
-        except OSError, e:
+        except OSError as e:
             if e.errno == 2:
                 pass
             else:
@@ -232,7 +232,7 @@ class MKBackupJob(object):
     def state(self):
         try:
             state = json.load(file(self.state_file_path()))
-        except IOError, e:
+        except IOError as e:
             if e.errno == 2:  # not existant
                 state = {
                     "state": None,
@@ -241,7 +241,7 @@ class MKBackupJob(object):
                 }
             else:
                 raise
-        except Exception, e:
+        except Exception as e:
             raise MKGeneralException(
                 _("Failed to parse state file \"%s\": %s") % (self.state_file_path(), e))
 
@@ -288,7 +288,7 @@ class MKBackupJob(object):
 
         try:
             os.killpg(pgid, signal.SIGTERM)
-        except OSError, e:
+        except OSError as e:
             if e.errno == 3:
                 pass
             else:
@@ -303,7 +303,7 @@ class MKBackupJob(object):
         if wait == 0:
             try:
                 os.killpg(pgid, signal.SIGKILL)
-            except OSError, e:
+            except OSError as e:
                 if e.errno == 3:
                     pass
                 else:
@@ -1641,7 +1641,7 @@ class PageBackupRestore(object):
                     html.check_transaction()  # invalidate transid
                     RestoreJob(self._target_ident, backup_ident, passphrase).start()
                     return None, _("The restore has been started.")
-            except MKUserError, e:
+            except MKUserError as e:
                 html.add_user_error(e.varname, e)
 
         # Special handling for Check_MK / CMA differences

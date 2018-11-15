@@ -400,7 +400,7 @@ def groupdel(groupname):
                              stdout=open(os.devnull, "w"),
                              stderr=subprocess.PIPE,
                              close_fds=True)
-    except OSError, e:
+    except OSError as e:
         bail_out("\n" + tty_error + ": Failed to delete group '%s': %s" % (groupname, e))
 
     stderr = p.communicate()[1]
@@ -451,7 +451,7 @@ def userdel(name):
                              stdout=open(os.devnull, "w"),
                              stderr=subprocess.PIPE,
                              close_fds=True)
-    except OSError, e:
+    except OSError as e:
         bail_out("\n" + tty_error + ": Failed to delete user '%s': %s" % (name, e))
 
     stderr = p.communicate()[1]
@@ -785,7 +785,7 @@ def try_chown(filename, user):
             uid = pwd.getpwnam(user).pw_uid
             gid = pwd.getpwnam(user).pw_gid
             os.chown(filename, uid, gid)
-        except Exception, e:
+        except Exception as e:
             sys.stderr.write("Cannot chown %s to %s: %s\n" % (filename, user, e))
 
 
@@ -899,7 +899,7 @@ def patch_skeleton_files(old_site, new_site):
                 and os.path.exists(dst): # not deleted by user
                 try:
                     patch_template_file(src, dst, old_site, new_site)
-                except Exception, e:
+                except Exception as e:
                     sys.stderr.write("Error patching template file '%s': %s\n" % (dst, e))
 
 
@@ -1343,7 +1343,7 @@ def update_file(relpath, site, old_version, new_version, old_perms):
             merge_update_file(site, relpath, old_version, new_version)
         except KeyboardInterrupt:
             raise
-        except Exception, e:
+        except Exception as e:
             sys.stdout.write(StateMarkers.error + " Cannot merge: %s\n" % e)
 
     # D ---> SYMLINKS
@@ -1484,7 +1484,7 @@ def update_file(relpath, site, old_version, new_version, old_perms):
                 os.chmod(user_path, new_perm)
                 sys.stdout.write(StateMarkers.good +
                                  " Permissions    %04o -> %04o %s\n" % (user_perm, new_perm, fn))
-            except Exception, e:
+            except Exception as e:
                 sys.stdout.write(StateMarkers.error +
                                  " Permission:    cannot change %04o -> %04o %s: %s\n" %
                                  (user_perm, new_perm, fn, e))
@@ -1564,7 +1564,7 @@ def prepare_tmpfs(site):
 
         try:
             os.mkdir(site.tmp_dir)
-        except OSError, e:
+        except OSError as e:
             if e.errno != errno.EEXIST:  # File exists
                 raise
         return
@@ -1714,7 +1714,7 @@ def call_init_script(scriptpath, command):
 
     try:
         return subprocess.call([scriptpath, command]) in [0, 5]
-    except OSError, e:
+    except OSError as e:
         sys.stderr.write("ERROR: Failed to run '%s': %s\n" % (scriptpath, e))
         if e.errno == 13:  # [Errno 13] Permission denied
             return False
@@ -2180,7 +2180,7 @@ def config_configure(site, config_hooks):
             if change:
                 try:
                     config_configure_hook(site, config_hooks, current_hook_name)
-                except Exception, e:
+                except Exception as e:
                     bail_out("Error in hook %s: %s" % (current_hook_name, e))
             else:
                 menu_open = False
@@ -2348,7 +2348,7 @@ def delete_apache_hook(sitename):
         return
     try:
         os.remove(hook_path)
-    except Exception, e:
+    except Exception as e:
         sys.stderr.write("Cannot remove apache hook %s: %s\n" % (hook_path, e))
 
 
@@ -2550,7 +2550,7 @@ def default_version():
 def omd_versions():
     try:
         return sorted([v for v in os.listdir("/omd/versions") if v != "default"])
-    except OSError, e:
+    except OSError as e:
         if e.errno == 2:
             return []
         else:
@@ -2765,7 +2765,7 @@ def finalize_site(site, what, apache_reload):
 
             finalize_size_as_user(site, what)
             sys.exit(0)
-        except Exception, e:
+        except Exception as e:
             bail_out(e)
     else:
         _wpid, status = os.waitpid(pid, 0)
@@ -3390,7 +3390,7 @@ def main_init_action(site, command, args, options=None):
                     if not b:
                         break
                     buf += b
-            except IOError, e:
+            except IOError as e:
                 if e.errno == 11:  # Resource temporarily unavailable
                     pass
                 else:
@@ -3541,7 +3541,7 @@ class BackupTarFile(tarfile.TarFile):
             self._sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
             try:
                 self._sock.connect(self._rrdcached_socket_path)
-            except socket.error, e:
+            except socket.error as e:
                 # ECONNRESET: Broken pipe
                 # EPIPE:      Connection reset by peer
                 #             Happens, for example, when the rrdcached is reloaded/restarted during backup
@@ -3561,7 +3561,7 @@ class BackupTarFile(tarfile.TarFile):
             answer = ""
             while not answer.endswith("\n"):
                 answer += self._sock.recv(1024)
-        except socket.error, e:
+        except socket.error as e:
             if e.errno == 32:  # Broken pipe
                 self._sock = None
                 if opt_verbose:
@@ -3606,7 +3606,7 @@ def backup_site_to_tarfile(site, fh, mode, options):
         tar.add(site.dir + "/version", site.name + "/version")
         backup_site_files_to_tarfile(site, tar, options)
         tar.close()
-    except IOError, e:
+    except IOError as e:
         bail_out("Failed to perform backup: %s" % e)
 
 
@@ -3657,7 +3657,7 @@ def main_restore(site, args, options=None):
 
     try:
         tar = tarfile.open(fileobj=fh, mode=tar_mode)
-    except tarfile.ReadError, e:
+    except tarfile.ReadError as e:
         bail_out("Failed to open the backup: %s" % e)
 
     # Get the first file of the tar archive. Expecting <site>/version symlink
@@ -3872,7 +3872,7 @@ def kill_site_user_processes(site, exclude_current_and_parents=False):
                 if opt_verbose:
                     sys.stdout.write("Killing process %d...\n" % pid)
                 os.kill(pid, signal.SIGKILL)
-            except OSError, e:
+            except OSError as e:
                 if e.errno == 3:
                     pids.remove(pid)  # No such process
                 else:
@@ -3987,7 +3987,7 @@ def _cleanup_global_files():
     ]:
         try:
             os.unlink(path)
-        except OSError, e:
+        except OSError as e:
             if e.errno == 2:
                 pass
             else:
@@ -4678,7 +4678,7 @@ def main():
     # site user and never as root.
     try:
         g_orig_wd = os.getcwd()
-    except OSError, e:
+    except OSError as e:
         if e.errno == 2:
             g_orig_wd = "/"
         else:

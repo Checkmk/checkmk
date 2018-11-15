@@ -182,7 +182,7 @@ class BIManagement(object):
                     "contact_groups": pack["contact_groups"],
                 }
 
-        except Exception, e:
+        except Exception as e:
             if config.debug:
                 raise
 

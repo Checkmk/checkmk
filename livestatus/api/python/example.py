@@ -66,5 +66,5 @@ try:
     print "Query error:"
     conn.query_value("GET hosts\nColumns: hirni")
 
-except Exception, e:  # livestatus.MKLivestatusException, e:
+except Exception as e:  # livestatus.MKLivestatusException, e:
     print "Livestatus error: %s" % str(e)

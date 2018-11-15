@@ -121,7 +121,7 @@ def compute_config_hash(entity):
     try:
         entity_encoded = json.dumps(entity, sort_keys=True)
         entity_hash = md5(entity_encoded).hexdigest()
-    except Exception, e:
+    except Exception as e:
         logger.error("Error %s" % e)
         entity_hash = "0"
 

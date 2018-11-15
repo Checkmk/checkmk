@@ -44,7 +44,7 @@ def regex(pattern):
 
     try:
         reg = re.compile(pattern)
-    except Exception, e:
+    except Exception as e:
         raise MKGeneralException(_("Invalid regular expression '%s': %s") % (pattern, e))
 
     g_compiled_regexes[pattern] = reg

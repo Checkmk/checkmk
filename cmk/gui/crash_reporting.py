@@ -189,7 +189,7 @@ def get_crash_report_archive_as_string(site, host, service):
 
     try:
         return base64.b64decode(encoded_tardata)
-    except Exception, e:
+    except Exception as e:
         raise MKGeneralException("Encoded crash dump data is invalid: %s" % e)
 
 
@@ -278,7 +278,7 @@ def handle_report_form(tardata, what):
         html.close_div()
         html.javascript("submit_crash_report('https://mathias-kettner.de/crash_report.php', " \
                                             "'%s');" % url_encoded_params)
-    except MKUserError, e:
+    except MKUserError as e:
         action_message = "%s" % e
         html.add_user_error(e.varname, action_message)
 

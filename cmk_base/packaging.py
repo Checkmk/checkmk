@@ -185,7 +185,7 @@ def do_packaging(args):
     if f:
         try:
             f(args)
-        except PackageException, e:
+        except PackageException as e:
             logger.error("%s" % e)
             sys.exit(1)
     else:
@@ -242,7 +242,7 @@ def show_package(name, show_info=False):
                 sys.stdout.write("Package file:                  %s%s\n" % (pac_dir, name))
     except PackageException:
         raise
-    except Exception, e:
+    except Exception as e:
         raise PackageException("Cannot open package %s: %s" % (name, e))
 
     if show_info:
@@ -598,7 +598,7 @@ def install_package(file_name=None, file_object=None):
                     logger.verbose("Removing outdated file %s.", path)
                     try:
                         os.remove(path)
-                    except Exception, e:
+                    except Exception as e:
                         logger.error("Error removing %s: %s", path, e)
 
             if part == 'ec_rule_packs':

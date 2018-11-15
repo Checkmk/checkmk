@@ -1694,7 +1694,7 @@ class BITextFilter(FilterUnicodeFilter):
         if self.how == "regex":
             try:
                 reg = re.compile(val.lower())
-            except re.error, e:
+            except re.error as e:
                 html.add_user_error(None, "Invalid regular expression: %s" % e)
                 return rows
 

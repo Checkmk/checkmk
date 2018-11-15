@@ -427,7 +427,7 @@ def render_custom_links():
                 else:
                     html.write_text(
                         _("Second part of tuple must be list or string, not %s\n") % str(entry[1]))
-            except Exception, e:
+            except Exception as e:
                 html.write_text(_("invalid entry %s: %s<br>\n") % (entry, e))
 
     render_list([], links)

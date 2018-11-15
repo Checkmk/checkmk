@@ -429,7 +429,7 @@ def render_werk_table_options():
             if html.has_var("wo_set"):
                 value = vs.from_html_vars("wo_" + name)
                 vs.validate_value(value, "wo_" + name)
-        except MKUserError, e:
+        except MKUserError as e:
             html.user_error(e)
 
         werk_table_options.setdefault(name, value)

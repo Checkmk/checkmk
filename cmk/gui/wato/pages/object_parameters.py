@@ -346,7 +346,7 @@ class ModeObjectParameters(WatoMode):
         elif known_settings is not self._PARAMETERS_UNKNOWN:
             try:
                 html.write(valuespec.value_to_text(known_settings))
-            except Exception, e:
+            except Exception as e:
                 if config.debug:
                     raise
                 html.write_text(_("Invalid parameter %r: %s") % (known_settings, e))

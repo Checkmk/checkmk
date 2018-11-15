@@ -60,7 +60,7 @@ def get_rrd_data(hostname, service_description, varname, cf, fromtime, untiltime
     try:
         connection = livestatus.SingleSiteConnection("unix:%s" % cmk.paths.livestatus_unix_socket)
         response = connection.query_value(lql)
-    except Exception, e:
+    except Exception as e:
         if cmk.debug.enabled():
             raise
         raise MKGeneralException("Cannot get historic metrics via Livestatus: %s" % e)

@@ -219,9 +219,9 @@ def create_non_existing_user(connection_id, username):
     connection = get_connection(connection_id)
     try:
         connection.do_sync(add_to_changelog=False, only_username=username)
-    except cmk.gui.plugins.userdb.ldap_connector.MKLDAPException, e:
+    except cmk.gui.plugins.userdb.ldap_connector.MKLDAPException as e:
         show_exception(connection_id, _("Error during sync"), e, debug=config.debug)
-    except Exception, e:
+    except Exception as e:
         show_exception(connection_id, _("Error during sync"), e)
 
 
@@ -1264,7 +1264,7 @@ def hook_save(users):
     for connection_id, connection in active_connections():
         try:
             connection.save_users(users)
-        except Exception, e:
+        except Exception as e:
             if config.debug:
                 raise
             else:
@@ -1348,10 +1348,10 @@ def ajax_sync():
         job.set_function(job.do_sync, add_to_changelog=False, enforce_sync=True)
         try:
             job.start()
-        except background_job.BackgroundJobAlreadyRunning, e:
+        except background_job.BackgroundJobAlreadyRunning as e:
             raise MKUserError(None, _("Another user synchronization is already running: %s") % e)
         html.write('OK Started synchronization\n')
-    except Exception, e:
+    except Exception as e:
         logger.exception()
         if config.debug:
             raise
@@ -1393,7 +1393,7 @@ class UserSyncBackgroundJob(gui_background_job.GUIBackgroundJob):
                 connection.do_sync(add_to_changelog=add_to_changelog, only_username=False)
                 job_interface.send_progress_update(
                     _("[%s] Finished sync for connection") % connection_id)
-            except Exception, e:
+            except Exception as e:
                 job_interface.send_exception(_("[%s] Exception: %s") % (connection_id, e))
                 logger.error(
                     'Exception (%s, userdb_job): %s' % (connection_id, traceback.format_exc()))

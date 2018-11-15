@@ -289,7 +289,7 @@ def page_create_view(next_url=None):
             html.response.http_redirect(next_url)
             return
 
-        except MKUserError, e:
+        except MKUserError as e:
             html.div(e, class_=["error"])
             html.add_user_error(e.varname, e)
 
@@ -885,7 +885,7 @@ def show_view(view,
     for filt in all_active_filters:
         try:
             header = filt.filter(tablename)
-        except MKUserError, e:
+        except MKUserError as e:
             html.add_user_error(e.varname, e)
             continue
         filterheaders += header
@@ -1207,7 +1207,7 @@ def render_view(view, rows, datasource, group_painters, painters, show_heading, 
                 # Create URI with all actions variables removed
                 backurl = html.makeuri([], delvars=['filled_in', 'actions'])
                 has_done_actions = do_actions(view, datasource["infos"][0], rows, backurl)
-            except MKUserError, e:
+            except MKUserError as e:
                 html.show_error(e)
                 html.add_user_error(e.varname, e)
                 if display_options.enabled(display_options.C):
@@ -2152,7 +2152,7 @@ def ajax_popup_action_menu():
 def ajax_reschedule():
     try:
         do_reschedule()
-    except Exception, e:
+    except Exception as e:
         html.write("['ERROR', '%s']\n" % e)
 
 
@@ -2215,6 +2215,6 @@ def do_reschedule():
                 time.sleep(0.7)
             html.write("['OK', %d, %d, %r]\n" % (row[0], row[1], row[2].encode("utf-8")))
 
-    except Exception, e:
+    except Exception as e:
         sites.live().set_only_sites()
         raise MKGeneralException(_("Cannot reschedule check: %s") % e)

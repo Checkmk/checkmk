@@ -132,9 +132,9 @@ def load_raw_files(werks_dir):
                     werk = _load_werk(os.path.join(werks_dir, file_name))
                     werk["id"] = werk_id
                     werks[werk_id] = werk
-                except Exception, e:
+                except Exception as e:
                     raise MKGeneralException(_("Failed to load werk \"%s\": %s") % (werk_id, e))
-    except OSError, e:
+    except OSError as e:
         if e.errno == 2:
             pass  # werk directory not existing
         else:

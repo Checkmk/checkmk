@@ -46,7 +46,7 @@ def daemonize(user=0, group=0):
         if pid > 0:
             # exit first parent
             sys.exit(0)
-    except OSError, e:
+    except OSError as e:
         sys.stderr.write("Fork failed (#1): %d (%s)\n" % (e.errno, e.strerror))
         sys.exit(1)
 
@@ -68,7 +68,7 @@ def daemonize(user=0, group=0):
         pid = os.fork()
         if pid > 0:
             sys.exit(0)
-    except OSError, e:
+    except OSError as e:
         sys.stderr.write("Fork failed (#2): %d (%s)\n" % (e.errno, e.strerror))
         sys.exit(1)
 
